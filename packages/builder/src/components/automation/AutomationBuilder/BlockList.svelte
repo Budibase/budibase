@@ -14,15 +14,17 @@
       disabled: hasTrigger,
     },
     {
-      label: "Action",
+      label: "Internal",
       value: "ACTION",
+      internal: true,
       icon: "Actions",
       disabled: !hasTrigger,
     },
     {
-      label: "Logic",
-      value: "LOGIC",
-      icon: "Filter",
+      label: "External",
+      value: "ACTION",
+      internal: false,
+      icon: "Extension",
       disabled: !hasTrigger,
     },
   ]
@@ -32,9 +34,13 @@
   let popover
   let webhookModal
   $: selectedTab = selectedIndex == null ? null : tabs[selectedIndex].value
+  $: selectedInternal =
+    selectedIndex == null ? null : tabs[selectedIndex].internal
   $: anchor = selectedIndex === -1 ? null : anchors[selectedIndex]
   $: blocks = sortBy(entry => entry[1].name)(
     Object.entries($automationStore.blockDefinitions[selectedTab] ?? {})
+  ).filter(
+    entry => selectedInternal == null || entry[1].internal === selectedInternal
   )
 
   function onChangeTab(idx) {

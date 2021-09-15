@@ -25,7 +25,7 @@
   }
 
   async function testAutomation() {
-    const result = await automationStore.actions.trigger({
+    const result = await automationStore.actions.test({
       automation: $automationStore.selectedAutomation.automation,
     })
     if (result.status === 200) {

@@ -3,12 +3,13 @@ const automationUtils = require("../automationUtils")
 const env = require("../../environment")
 const usage = require("../../utilities/usageQuota")
 
-module.exports.definition = {
+exports.definition = {
   name: "Create Row",
   tagline: "Create a {{inputs.enriched.table.name}} row",
   icon: "ri-save-3-line",
   description: "Add a row to your database",
   type: "ACTION",
+  internal: true,
   stepId: "CREATE_ROW",
   inputs: {},
   schema: {
@@ -42,7 +43,7 @@ module.exports.definition = {
         },
         success: {
           type: "boolean",
-          description: "Whether the action was successful",
+          description: "Whether the row creation was successful",
         },
         id: {
           type: "string",
@@ -58,7 +59,7 @@ module.exports.definition = {
   },
 }
 
-module.exports.run = async function ({ inputs, appId, apiKey, emitter }) {
+exports.run = async function ({ inputs, appId, apiKey, emitter }) {
   if (inputs.row == null || inputs.row.tableId == null) {
     return {
       success: false,
@@ -97,7 +98,6 @@ module.exports.run = async function ({ inputs, appId, apiKey, emitter }) {
       success: ctx.status === 200,
     }
   } catch (err) {
-    console.error(err)
     return {
       success: false,
       response: err,
