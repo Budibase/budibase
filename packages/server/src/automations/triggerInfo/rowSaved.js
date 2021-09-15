@@ -1,7 +1,7 @@
 exports.definition = {
   name: "Row Created",
   event: "row:save",
-  icon: "SaveFloppy",
+  icon: "TableRowAddBottom",
   tagline: "Row is added to {{inputs.enriched.table.name}}",
   description: "Fired when a row is added to your database",
   stepId: "ROW_SAVED",
