@@ -5,7 +5,7 @@
   import ZapierLogo from "assets/zapier.png"
   import IntegromatLogo from "assets/integromat.png"
   import SlackLogo from "assets/slack.svg"
-  import n8nlogo from "assets/n8nlogo.png"
+  import n8nlogo from "assets/n8n.png"
 
   import { database } from "stores/backend"
   $: instanceId = $database._id
