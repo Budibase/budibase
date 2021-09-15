@@ -9,13 +9,13 @@
   let trigger = cloneDeep(
     $automationStore.selectedAutomation.automation.definition.trigger
   )
+  let schemaProperties = Object.entries(trigger.schema.outputs.properties || {})
 
   if (!$automationStore.selectedAutomation.automation.testData) {
     $automationStore.selectedAutomation.automation.testData = {}
   }
 
   // get the outputs so we can define the fields
-  let schemaProperties = Object.entries(trigger.schema.outputs.properties || {})
 
   // check to see if there is existing test data in the store
   $: testData = $automationStore.selectedAutomation.automation.testData
