@@ -11,7 +11,7 @@
     StatusLight,
   } from "@budibase/bbui"
   import AutomationBlockSetup from "../../SetupPanel/AutomationBlockSetup.svelte"
-  import CreateWebhookModal from "components/automation/shared/CreateWebhookModal.svelte"
+  import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
   import ResultsModal from "./ResultsModal.svelte"
   import ActionModal from "./ActionModal.svelte"
   import { database } from "stores/backend"

@@ -3,7 +3,7 @@
   import { automationStore } from "builderStore"
   import AutomationPanel from "components/automation/AutomationPanel/AutomationPanel.svelte"
   import CreateAutomationModal from "components/automation/AutomationPanel/CreateAutomationModal.svelte"
-  import CreateWebhookModal from "components/automation/shared/CreateWebhookModal.svelte"
+  import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
   $: automation = $automationStore.automations[0]
   let modal
   let webhookModal
