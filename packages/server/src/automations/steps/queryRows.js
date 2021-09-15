@@ -1,4 +1,6 @@
-//const rowController = require("../../api/controllers/row")
+const rowController = require("../../api/controllers/row")
+const tableController = require("../../api/controllers/table")
+const { FieldTypes } = require("../../constants")
 
 const SortOrders = {
   ASCENDING: "ascending",
@@ -12,7 +14,7 @@ const SortOrdersPretty = {
 
 exports.definition = {
   description: "Query rows from the database",
-  icon: "ri-search-line",
+  icon: "Search",
   name: "Query rows",
   tagline: "Query rows from {{inputs.enriched.table.name}} table",
   type: "ACTION",
@@ -48,11 +50,11 @@ exports.definition = {
           title: "Limit",
         },
       },
-      required: ["tableId", "filters"],
+      required: ["tableId"],
     },
     outputs: {
       properties: {
-        row: {
+        rows: {
           type: "array",
           customType: "rows",
           description: "The rows that were found",
@@ -67,8 +69,51 @@ exports.definition = {
   },
 }
 
+async function getTable(appId, tableId) {
+  const ctx = {
+    params: {
+      id: tableId,
+    },
+    appId,
+  }
+  await tableController.find(ctx)
+  return ctx.body
+}
+
 exports.run = async function ({ inputs, appId }) {
-  console.log(inputs)
-  console.log(appId)
-  // TODO: use the search controller
+  const { tableId, filters, sortColumn, sortOrder, limit } = inputs
+  const table = await getTable(appId, tableId)
+  let sortType = FieldTypes.STRING
+  if (table && table.schema && sortColumn) {
+    const fieldType = table.schema[sortColumn].type
+    sortType =
+      fieldType === FieldTypes.NUMBER ? FieldTypes.NUMBER : FieldTypes.STRING
+  }
+  const ctx = {
+    params: {
+      tableId,
+    },
+    request: {
+      body: {
+        sortOrder,
+        sortType,
+        sort: sortColumn,
+        query: filters || {},
+        limit,
+      },
+    },
+    appId,
+  }
+  try {
+    await rowController.search(ctx)
+    return {
+      rows: ctx.body ? ctx.body.rows : [],
+      success: ctx.status === 200,
+    }
+  } catch (err) {
+    return {
+      success: false,
+      response: err,
+    }
+  }
 }

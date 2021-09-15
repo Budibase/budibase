@@ -2,8 +2,16 @@
   import TableSelector from "./TableSelector.svelte"
   import RowSelector from "./RowSelector.svelte"
   import SchemaSetup from "./SchemaSetup.svelte"
-  import { Button, Input, Select, Label } from "@budibase/bbui"
+  import {
+    Button,
+    Input,
+    Select,
+    Label,
+    ActionButton,
+    Drawer,
+  } from "@budibase/bbui"
   import { automationStore } from "builderStore"
+  import { tables } from "stores/backend"
   import WebhookDisplay from "../Shared/WebhookDisplay.svelte"
   import DrawerBindableInput from "../../common/bindings/DrawerBindableInput.svelte"
   import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
@@ -15,11 +23,17 @@
   import { database } from "stores/backend"
   import { debounce } from "lodash"
   import ModalBindableInput from "components/common/bindings/ModalBindableInput.svelte"
+  import FilterDrawer from "components/design/PropertiesPanel/PropertyControls/FilterEditor/FilterDrawer.svelte"
+  // need the client lucene builder to convert to the structure API expects
+  import { buildLuceneQuery } from "../../../../../client/src/utils/lucene"
 
   export let block
   export let webhookModal
   export let testData
   export let schemaProperties
+  let drawer
+  let tempFilters = lookForFilters(schemaProperties) || []
+
   $: stepId = block.stepId
   $: bindings = getAvailableBindings(
     block || $automationStore.selectedBlock,
@@ -28,6 +42,11 @@
   $: instanceId = $database._id
 
   $: inputData = testData ? testData : block.inputs
+  $: tableId = inputData ? inputData.tableId : null
+  $: table = tableId
+    ? $tables.list.find(table => table._id === inputData.tableId)
+    : { schema: {} }
+  $: schemaFields = table ? Object.values(table.schema) : []
 
   const onChange = debounce(async function (e, key) {
     if (testData) {
@@ -71,6 +90,35 @@
     }
     return bindings
   }
+
+  function lookForFilters(properties) {
+    console.log("testing")
+    if (!properties) {
+      return []
+    }
+    let filters
+    const inputs = testData ? testData : block.inputs
+    for (let [key, field] of properties) {
+      // need to look for the builder definition (keyed separately, see saveFilters)
+      const defKey = `${key}-def`
+      if (field.customType === "filters" && inputs?.[defKey]) {
+        filters = inputs[defKey]
+        break
+      }
+    }
+    return filters || []
+  }
+
+  function saveFilters(key) {
+    const filters = buildLuceneQuery(tempFilters)
+    const defKey = `${key}-def`
+    inputData[key] = filters
+    inputData[defKey] = tempFilters
+    onChange({ detail: filters }, key)
+    // need to store the builder definition in the automation
+    onChange({ detail: tempFilters }, defKey)
+    drawer.hide()
+  }
 </script>
 
 <div class="fields">
@@ -84,6 +132,26 @@
           options={value.enum}
           getOptionLabel={(x, idx) => (value.pretty ? value.pretty[idx] : x)}
         />
+      {:else if value.customType === "column"}
+        <Select
+          on:change={e => onChange(e, key)}
+          value={inputData[key]}
+          options={Object.keys(table.schema)}
+        />
+      {:else if value.customType === "filters"}
+        <ActionButton on:click={drawer.show}>Define filters</ActionButton>
+        <Drawer bind:this={drawer} title="Filtering">
+          <Button cta slot="buttons" on:click={() => saveFilters(key)}
+            >Save</Button
+          >
+          <FilterDrawer
+            slot="body"
+            bind:filters={tempFilters}
+            {bindings}
+            {schemaFields}
+            panel={AutomationBindingPanel}
+          />
+        </Drawer>
       {:else if value.customType === "password"}
         <Input
           type="password"
