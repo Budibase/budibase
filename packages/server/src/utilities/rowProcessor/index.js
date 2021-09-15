@@ -185,10 +185,16 @@ exports.inputProcessing = (user = {}, table, row) => {
  * @param {object} ctx the request which is looking for enriched rows.
  * @param {object} table the table from which these rows came from originally, this is used to determine
  * the schema of the rows and then enrich.
- * @param {object[]} rows the rows which are to be enriched.
- * @returns {object[]} the enriched rows will be returned.
+ * @param {object[]|object} rows the rows which are to be enriched.
+ * @param {object} opts used to set some options for the output, such as disabling relationship squashing.
+ * @returns {object[]|object} the enriched rows will be returned.
  */
-exports.outputProcessing = async (ctx, table, rows) => {
+exports.outputProcessing = async (
+  ctx,
+  table,
+  rows,
+  opts = { squash: true }
+) => {
   const appId = ctx.appId
   let wasArray = true
   if (!(rows instanceof Array)) {
@@ -214,6 +220,12 @@ exports.outputProcessing = async (ctx, table, rows) => {
       }
     }
   }
-  enriched = await linkRows.squashLinksToPrimaryDisplay(appId, table, enriched)
+  if (opts.squash) {
+    enriched = await linkRows.squashLinksToPrimaryDisplay(
+      appId,
+      table,
+      enriched
+    )
+  }
   return wasArray ? enriched : enriched[0]
 }

@@ -123,5 +123,10 @@ exports.BaseQueryVerbs = {
   DELETE: "delete",
 }
 
+exports.MetadataTypes = {
+  AUTOMATION_TEST_INPUT: "automationTestInput",
+  AUTOMATION_TEST_HISTORY: "automationTestHistory",
+}
+
 // pass through the list from the auth/core lib
 exports.ObjectStoreBuckets = ObjectStoreBuckets

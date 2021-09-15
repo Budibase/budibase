@@ -33,7 +33,7 @@ async function allUsers() {
   return response.rows.map(row => row.doc)
 }
 
-async function saveUser(user, tenantId) {
+async function saveUser(user, tenantId, hashPassword = true) {
   if (!tenantId) {
     throw "No tenancy specified."
   }
@@ -56,7 +56,7 @@ async function saveUser(user, tenantId) {
   // get the password, make sure one is defined
   let hashedPassword
   if (password) {
-    hashedPassword = await hash(password)
+    hashedPassword = hashPassword ? await hash(password) : password
   } else if (dbUser) {
     hashedPassword = dbUser.password
   } else {
@@ -110,6 +110,15 @@ exports.save = async ctx => {
 
 exports.adminUser = async ctx => {
   const { email, password, tenantId } = ctx.request.body
+
+  // account portal sends a pre-hashed password - honour param to prevent double hashing
+  let hashPassword = ctx.request.query.hashPassword
+  if (hashPassword && hashPassword == "false") {
+    hashPassword = false
+  } else {
+    hashPassword = true
+  }
+
   if (await doesTenantExist(tenantId)) {
     ctx.throw(403, "Organisation already exists.")
   }
@@ -141,7 +150,7 @@ exports.adminUser = async ctx => {
     tenantId,
   }
   try {
-    ctx.body = await saveUser(user, tenantId)
+    ctx.body = await saveUser(user, tenantId, hashPassword)
   } catch (err) {
     ctx.throw(err.status || 400, err)
   }

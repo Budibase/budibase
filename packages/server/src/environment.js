@@ -55,6 +55,7 @@ module.exports = {
   BUDIBASE_API_KEY: process.env.BUDIBASE_API_KEY,
   USERID_API_KEY: process.env.USERID_API_KEY,
   DEPLOYMENT_CREDENTIALS_URL: process.env.DEPLOYMENT_CREDENTIALS_URL,
+  ALLOW_DEV_AUTOMATIONS: process.env.ALLOW_DEV_AUTOMATIONS,
   _set(key, value) {
     process.env[key] = value
     module.exports[key] = value

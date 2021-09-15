@@ -7,6 +7,8 @@ const {
   APP_PREFIX,
   SEPARATOR,
   StaticDatabases,
+  isDevAppID,
+  isProdAppID,
 } = require("@budibase/auth/db")
 
 const UNICODE_MAX = "\ufff0"
@@ -36,6 +38,7 @@ const DocumentTypes = {
   DATASOURCE_PLUS: "datasource_plus",
   QUERY: "query",
   DEPLOYMENTS: "deployments",
+  METADATA: "metadata",
 }
 
 const ViewNames = {
@@ -63,6 +66,8 @@ const BudibaseInternalDB = {
 
 exports.APP_PREFIX = APP_PREFIX
 exports.APP_DEV_PREFIX = APP_DEV_PREFIX
+exports.isDevAppID = isDevAppID
+exports.isProdAppID = isProdAppID
 exports.USER_METDATA_PREFIX = `${DocumentTypes.ROW}${SEPARATOR}${InternalTables.USER_METADATA}${SEPARATOR}`
 exports.LINK_USER_METADATA_PREFIX = `${DocumentTypes.LINK}${SEPARATOR}${InternalTables.USER_METADATA}${SEPARATOR}`
 exports.ViewNames = ViewNames
@@ -329,6 +334,18 @@ exports.getQueryParams = (datasourceId = null, otherProps = {}) => {
     `${datasourceId}${SEPARATOR}`,
     otherProps
   )
+}
+
+exports.generateMetadataID = (type, entityId) => {
+  return `${DocumentTypes.METADATA}${SEPARATOR}${type}${SEPARATOR}${entityId}`
+}
+
+exports.getMetadataParams = (type, entityId = null, otherProps = {}) => {
+  let docId = `${type}${SEPARATOR}`
+  if (entityId != null) {
+    docId += entityId
+  }
+  return getDocParams(DocumentTypes.METADATA, docId, otherProps)
 }
 
 /**
