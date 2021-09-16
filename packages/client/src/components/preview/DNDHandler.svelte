@@ -1,6 +1,7 @@
 <script>
   import { onMount } from "svelte"
   import IndicatorSet from "./IndicatorSet.svelte"
+  import Indicator from "./Indicator.svelte"
   import DNDPositionIndicator from "./DNDPositionIndicator.svelte"
   import { builderStore } from "stores"
 
@@ -106,6 +107,7 @@
       const child = getDOMNodeForComponent(e.target)
       const bounds = child.getBoundingClientRect()
       dropInfo = {
+        name: element.dataset.name,
         droppableInside: element.dataset.droppableInside === "true",
         bounds,
       }
@@ -160,6 +162,10 @@
   prefix="Inside"
 />
 
-{#if dropMode !== "inside" && dropInfo}
-  <DNDPositionIndicator bounds={dropInfo.bounds} mode={dropMode} zIndex="940" />
-{/if}
+<DNDPositionIndicator
+  dropInfo={dropMode !== "inside" ? dropInfo : null}
+  mode={dropMode}
+  color="var(--spectrum-global-color-static-green-500)"
+  zIndex="940"
+  transition
+/>

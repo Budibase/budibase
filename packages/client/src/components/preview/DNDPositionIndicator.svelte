@@ -1,33 +1,42 @@
 <script>
-  export let bounds
+  import Indicator from "./Indicator.svelte"
+
+  export let dropInfo
   export let mode
   export let zIndex
+  export let color
+  export let transition
 
-  $: x = bounds?.left
-  $: y = getYPos(bounds, mode)
-  $: width = bounds?.width
-  $: valid = bounds != null
+  $: dimensions = getDimensions(dropInfo?.bounds, mode)
+  $: prefix = mode === "above" ? "Above" : "Below"
+  $: text = `${prefix} ${dropInfo?.name}`
 
-  const getYPos = (bounds, mode) => {
+  const getDimensions = (bounds, mode) => {
     if (!bounds || !mode) {
       return null
     }
-    const { top, height } = bounds
-    return mode === "above" ? top - 2 : top + height
+    const { left, top, width, height } = bounds
+    return {
+      top: mode === "above" ? top - 4 : top + height,
+      left: left - 2,
+      width: width + 4,
+    }
   }
 </script>
 
-{#if valid}
-  <div
-    class="indicator"
-    style={`top:${y}px;left:${x}px;width:${width}px;z-index:${zIndex};`}
-  />
-{/if}
-
-<style>
-  .indicator {
-    position: absolute;
-    height: 2px;
-    background: var(--spectrum-global-color-static-green-500);
-  }
-</style>
+{#key mode}
+  {#if dimensions}
+    <Indicator
+      left={dimensions.left}
+      top={dimensions.top}
+      width={dimensions.width}
+      height={0}
+      {text}
+      {zIndex}
+      {color}
+      {transition}
+      flip={mode === "below"}
+      rounded
+    />
+  {/if}
+{/key}

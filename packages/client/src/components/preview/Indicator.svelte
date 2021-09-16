@@ -9,6 +9,9 @@
   export let color
   export let zIndex
   export let transition = false
+  export let flip = false
+
+  $: flipped = flip || top < 20
 </script>
 
 <div
@@ -18,11 +21,11 @@
   }}
   out:fade={{ duration: transition ? 130 : 0 }}
   class="indicator"
-  class:flipped={top < 20}
+  class:flipped
   style="top: {top}px; left: {left}px; width: {width}px; height: {height}px; --color: {color}; --zIndex: {zIndex};"
 >
   {#if text}
-    <div class="text" class:flipped={top < 20}>
+    <div class="text" class:flipped>
       {text}
     </div>
   {/if}
@@ -63,6 +66,7 @@
   }
   .text.flipped {
     border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
     transform: translateY(0%);
     top: -2px;
   }
