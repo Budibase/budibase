@@ -69,6 +69,7 @@
               label={field}
               type="string"
               {bindings}
+              fillWidth={true}
             />
           {/if}
         {/if}

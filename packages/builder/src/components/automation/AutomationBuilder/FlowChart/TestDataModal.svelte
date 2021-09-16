@@ -18,12 +18,12 @@
   // get the outputs so we can define the fields
 
   // check to see if there is existing test data in the store
-  let testData = $automationStore.selectedAutomation.automation.testData
-
+  $: testData = $automationStore.selectedAutomation.automation.testData
   // Check the schema to see if required fields have been entered
   $: isError = !trigger.schema.outputs.required.every(
     required => testData[required]
   )
+
   function parseTestJSON(e) {
     try {
       const obj = JSON.parse(e.detail)
@@ -52,6 +52,7 @@
         <AutomationBlockSetup
           bind:testData
           {schemaProperties}
+          isTestModal
           block={trigger}
         />
       </div></Tab

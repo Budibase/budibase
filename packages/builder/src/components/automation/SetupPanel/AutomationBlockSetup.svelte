@@ -31,6 +31,7 @@
   export let webhookModal
   export let testData
   export let schemaProperties
+  export let isTestModal = false
   let drawer
   let tempFilters = lookForFilters(schemaProperties) || []
   let fillWidth = true
@@ -49,17 +50,20 @@
     : { schema: {} }
   $: schemaFields = table ? Object.values(table.schema) : []
 
-  const onChange = debounce(async function (e, key) {
-    if (testData) {
-      testData[key] = e.detail
-    } else {
-      block.inputs[key] = e.detail
-      await automationStore.actions.save({
-        instanceId,
-        automation: $automationStore.selectedAutomation?.automation,
-      })
-    }
-  }, 800)
+  const onChange = debounce(
+    async function (e, key) {
+      if (isTestModal) {
+        testData[key] = e.detail
+      } else {
+        block.inputs[key] = e.detail
+        await automationStore.actions.save({
+          instanceId,
+          automation: $automationStore.selectedAutomation?.automation,
+        })
+      }
+    },
+    isTestModal ? 0 : 800
+  )
 
   function getAvailableBindings(block, automation) {
     if (!block || !automation) {
@@ -160,7 +164,7 @@
           value={inputData[key]}
         />
       {:else if value.customType === "email"}
-        {#if testData}
+        {#if isTestModal}
           <ModalBindableInput
             title={value.title}
             value={inputData[key]}
@@ -168,6 +172,7 @@
             type="email"
             on:change={e => onChange(e, key)}
             {bindings}
+            fillWidth
           />
         {:else}
           <DrawerBindableInput
@@ -221,7 +226,7 @@
           />
         </CodeEditorModal>
       {:else if value.type === "string" || value.type === "number"}
-        {#if testData}
+        {#if isTestModal}
           <ModalBindableInput
             title={value.title}
             value={inputData[key]}
@@ -233,7 +238,7 @@
         {:else}
           <div class="test">
             <DrawerBindableInput
-              fillWidth
+              fillWidth={true}
               title={value.title}
               panel={AutomationBindingPanel}
               type={value.customType}
