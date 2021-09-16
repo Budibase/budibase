@@ -25,9 +25,7 @@
 
     // Highlight being dragged by setting opacity
     const child = getDOMNodeForComponent(e.target)
-    console.log(child)
     if (child) {
-      console.log("set opacity")
       child.style.opacity = "0.5"
     }
   }
@@ -163,7 +161,8 @@
 />
 
 <DNDPositionIndicator
-  dropInfo={dropMode !== "inside" ? dropInfo : null}
+  componentId={dropTarget}
+  {dropInfo}
   mode={dropMode}
   color="var(--spectrum-global-color-static-green-500)"
   zIndex="940"
