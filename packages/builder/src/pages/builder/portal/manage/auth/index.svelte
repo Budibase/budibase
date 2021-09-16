@@ -272,7 +272,7 @@
   })
 </script>
 
-<Layout>
+<Layout noPadding>
   <Layout gap="XS" noPadding>
     <Heading size="M">Authentication</Heading>
     <Body>
@@ -285,19 +285,17 @@
     <Divider />
     <Layout gap="XS" noPadding>
       <Heading size="S">
-        <div>
+        <div class="provider-title">
           <GoogleLogo />
-          Google
-          <div class="google-save-button">
-            <div>
-              <Button
-                disabled={googleSaveButtonDisabled}
-                size="s"
-                cta
-                on:click={() => save([providers.google])}>Save</Button
-              >
-            </div>
-          </div>
+          <span>Google</span>
+          <Button
+            disabled={googleSaveButtonDisabled}
+            size="s"
+            cta
+            on:click={() => save([providers.google])}
+          >
+            Save
+          </Button>
         </div>
       </Heading>
       <Body size="S">
@@ -317,12 +315,8 @@
         </div>
       {/each}
       <div class="form-row">
-        <div class="field">
-          <Label size="L">Activated</Label>
-          <span class="alignedToggle">
-            <Toggle text="" bind:value={providers.google.config.activated} />
-          </span>
-        </div>
+        <Label size="L">Activated</Label>
+        <Toggle text="" bind:value={providers.google.config.activated} />
       </div>
     </Layout>
   {/if}
@@ -330,21 +324,19 @@
     <Divider />
     <Layout gap="XS" noPadding>
       <Heading size="S">
-        <div>
+        <div class="provider-title">
           <OidcLogo />
-          OpenID Connect
-          <div class="oidc-save-button">
-            <div>
-              <Button
-                disabled={oidcSaveButtonDisabled}
-                size="s"
-                cta
-                on:click={() => save([providers.oidc])}>Save</Button
-              >
-            </div>
-          </div>
-        </div></Heading
-      >
+          <span>OpenID Connect</span>
+          <Button
+            disabled={oidcSaveButtonDisabled}
+            size="s"
+            cta
+            on:click={() => save([providers.oidc])}
+          >
+            Save
+          </Button>
+        </div>
+      </Heading>
       <Body size="S">
         To allow users to authenticate using OIDC, fill out the fields below.
       </Body>
@@ -360,7 +352,8 @@
           />
         </div>
       {/each}
-      <br />
+    </Layout>
+    <Layout gap="XS" noPadding>
       <Body size="S">
         To customize your login button, fill out the fields below.
       </Body>
@@ -383,54 +376,37 @@
         on:change={e => onFileSelected(e)}
         bind:this={fileinput}
       />
-    </Layout>
-    <div class="form-row">
-      <div class="field">
+      <div class="form-row">
         <Label size="L">Activated</Label>
-        <span class="alignedToggle">
-          <Toggle
-            text=""
-            bind:value={providers.oidc.config.configs[0].activated}
-          />
-        </span>
+        <Toggle
+          text=""
+          bind:value={providers.oidc.config.configs[0].activated}
+        />
       </div>
-    </div>
+    </Layout>
   {/if}
 </Layout>
 
 <style>
-  .field {
-    display: flex;
-    align-items: center;
-  }
-
-  .alignedToggle {
-    margin-left: 63%;
-  }
-
   .form-row {
     display: grid;
-    grid-template-columns: 20% 1fr;
+    grid-template-columns: 100px 1fr;
     grid-gap: var(--spacing-l);
     align-items: center;
   }
-  span {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-s);
-  }
 
-  input {
+  input[type="file"] {
     display: none;
   }
 
-  .google-save-button {
-    display: inline-block;
-    margin-left: 400px;
+  .provider-title {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--spacing-m);
   }
-
-  .oidc-save-button {
-    display: inline-block;
-    margin-left: 320px;
+  .provider-title span {
+    flex: 1 1 auto;
   }
 </style>

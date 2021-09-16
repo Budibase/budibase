@@ -28,7 +28,7 @@
     </Heading>
   </div>
 </div>
-<div>
+<div class="desktop">
   {#if app.updatedAt}
     {processStringSync("Updated {{ duration time 'millisecond' }} ago", {
       time: new Date().getTime() - new Date(app.updatedAt).getTime(),
@@ -37,7 +37,7 @@
     Never updated
   {/if}
 </div>
-<div>
+<div class="desktop">
   <StatusLight
     positive={!app.lockedYou && !app.lockedOther}
     notice={app.lockedYou}
@@ -52,7 +52,7 @@
     {/if}
   </StatusLight>
 </div>
-<div>
+<div class="desktop">
   <StatusLight active={app.deployed} neutral={!app.deployed}>
     {#if app.deployed}Published{:else}Unpublished{/if}
   </StatusLight>
@@ -108,5 +108,11 @@
     color: var(--spectrum-global-color-blue-600);
     cursor: pointer;
     transition: color 130ms ease;
+  }
+
+  @media (max-width: 640px) {
+    .desktop {
+      display: none !important;
+    }
   }
 </style>

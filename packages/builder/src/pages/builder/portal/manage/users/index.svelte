@@ -49,7 +49,7 @@
   }
 </script>
 
-<Layout>
+<Layout noPadding>
   <Layout gap="XS" noPadding>
     <Heading>Users</Heading>
     <Body>
