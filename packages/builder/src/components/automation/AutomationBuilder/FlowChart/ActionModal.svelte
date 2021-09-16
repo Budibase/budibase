@@ -38,10 +38,9 @@
       actionVal
     )
     automationStore.actions.addBlockToAutomation(newBlock)
-    await automationStore.actions.save({
-      instanceId,
-      automation: $automationStore.selectedAutomation?.automation,
-    })
+    await automationStore.actions.save(
+      $automationStore.selectedAutomation?.automation
+    )
   }
 </script>
 

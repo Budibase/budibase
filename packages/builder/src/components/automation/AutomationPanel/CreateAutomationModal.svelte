@@ -29,10 +29,9 @@
       webhookModal.show
     }
 
-    await automationStore.actions.save({
-      instanceId,
-      automation: $automationStore.selectedAutomation?.automation,
-    })
+    await automationStore.actions.save(
+      $automationStore.selectedAutomation?.automation
+    )
 
     notifications.success(`Automation ${name} created.`)
 
