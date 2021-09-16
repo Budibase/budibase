@@ -125,29 +125,24 @@
       // loading is supported
       loading = false
     } else if (type === "move-component") {
-      // Copy
-      const sourceComponent = findComponent(
-        get(currentAsset).props,
-        data.componentId
-      )
-      const destinationComponent = findComponent(
-        get(currentAsset).props,
-        data.destinationComponentId
-      )
+      const { componentId, destinationComponentId } = data
+      const rootComponent = get(currentAsset).props
+
+      // Get source and destination components
+      const source = findComponent(rootComponent, componentId)
+      const destination = findComponent(rootComponent, destinationComponentId)
 
       // Stop if the target is a child of source
-      const path = findComponentPath(
-        sourceComponent,
-        data.destinationComponentId
-      )
+      const path = findComponentPath(source, destinationComponentId)
       const ids = path.map(component => component._id)
       if (ids.includes(data.destinationComponentId)) {
         return
       }
 
-      if (sourceComponent && destinationComponent) {
-        store.actions.components.copy(sourceComponent, true)
-        store.actions.components.paste(destinationComponent, data.mode)
+      // Cut and paste the component to the new destination
+      if (source && destination) {
+        store.actions.components.copy(source, true)
+        store.actions.components.paste(destination, data.mode)
       }
     } else {
       console.warning(`Client sent unknown event type: ${type}`)
