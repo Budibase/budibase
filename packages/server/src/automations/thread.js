@@ -1,5 +1,4 @@
 const actions = require("./actions")
-const logic = require("./logic")
 const automationUtils = require("./automationUtils")
 const AutomationEmitter = require("../events/AutomationEmitter")
 const { processObject } = require("@budibase/string-templates")
@@ -8,7 +7,7 @@ const CouchDB = require("../db")
 const { DocumentTypes } = require("../db/utils")
 const { doInTenant } = require("@budibase/auth/tenancy")
 
-const FILTER_STEP_ID = logic.BUILTIN_DEFINITIONS.FILTER.stepId
+const FILTER_STEP_ID = actions.ACTION_DEFINITIONS.FILTER.stepId
 
 /**
  * The automation orchestrator is a class responsible for executing automations.
@@ -30,15 +29,15 @@ class Orchestrator {
     // create an emitter which has the chain count for this automation run in it, so it can block
     // excessive chaining if required
     this._emitter = new AutomationEmitter(this._chainCount + 1)
+    this.executionOutput = { trigger: {}, steps: [] }
+    // setup the execution output
+    const triggerStepId = automation.definition.trigger.stepId
+    const triggerId = automation.definition.trigger.id
+    this.updateExecutionOutput(triggerId, triggerStepId, null, triggerOutput)
   }
 
-  async getStepFunctionality(type, stepId) {
-    let step = null
-    if (type === "ACTION") {
-      step = await actions.getAction(stepId)
-    } else if (type === "LOGIC") {
-      step = logic.getLogic(stepId)
-    }
+  async getStepFunctionality(stepId) {
+    let step = await actions.getAction(stepId)
     if (step == null) {
       throw `Cannot find automation step by name ${stepId}`
     }
@@ -55,11 +54,20 @@ class Orchestrator {
     return this._app
   }
 
+  updateExecutionOutput(id, stepId, inputs, outputs) {
+    const stepObj = { id, stepId, inputs, outputs }
+    // first entry is always the trigger (constructor)
+    if (this.executionOutput.steps.length === 0) {
+      this.executionOutput.trigger = stepObj
+    }
+    this.executionOutput.steps.push(stepObj)
+  }
+
   async execute() {
     let automation = this._automation
     const app = await this.getApp()
     for (let step of automation.definition.steps) {
-      let stepFn = await this.getStepFunctionality(step.type, step.stepId)
+      let stepFn = await this.getStepFunctionality(step.stepId)
       step.inputs = await processObject(step.inputs, this._context)
       step.inputs = automationUtils.cleanInputValues(
         step.inputs,
@@ -81,27 +89,20 @@ class Orchestrator {
           break
         }
         this._context.steps.push(outputs)
+        this.updateExecutionOutput(step.id, step.stepId, step.inputs, outputs)
       } catch (err) {
         console.error(`Automation error - ${step.stepId} - ${err}`)
+        return err
       }
     }
+    return this.executionOutput
   }
 }
 
-// callback is required for worker-farm to state that the worker thread has completed
-module.exports = async (job, cb = null) => {
-  try {
-    const automationOrchestrator = new Orchestrator(
-      job.data.automation,
-      job.data.event
-    )
-    await automationOrchestrator.execute()
-    if (cb) {
-      cb()
-    }
-  } catch (err) {
-    if (cb) {
-      cb(err)
-    }
-  }
+module.exports = async job => {
+  const automationOrchestrator = new Orchestrator(
+    job.data.automation,
+    job.data.event
+  )
+  return automationOrchestrator.execute()
 }

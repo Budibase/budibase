@@ -12,6 +12,7 @@ exports.FieldTypes = {
   OPTIONS: "options",
   NUMBER: "number",
   BOOLEAN: "boolean",
+  ARRAY: "array",
   DATETIME: "datetime",
   ATTACHMENT: "attachment",
   LINK: "link",
@@ -120,6 +121,11 @@ exports.BaseQueryVerbs = {
   READ: "read",
   UPDATE: "update",
   DELETE: "delete",
+}
+
+exports.MetadataTypes = {
+  AUTOMATION_TEST_INPUT: "automationTestInput",
+  AUTOMATION_TEST_HISTORY: "automationTestHistory",
 }
 
 // pass through the list from the auth/core lib

@@ -1,11 +1,12 @@
 const { sendSmtpEmail } = require("../../utilities/workerRequests")
 
-module.exports.definition = {
+exports.definition = {
   description: "Send an email using SMTP",
   tagline: "Send SMTP email to {{inputs.to}}",
-  icon: "ri-mail-open-line",
+  icon: "Email",
   name: "Send Email (SMTP)",
   type: "ACTION",
+  internal: true,
   stepId: "SEND_EMAIL_SMTP",
   inputs: {},
   schema: {
@@ -46,7 +47,7 @@ module.exports.definition = {
   },
 }
 
-module.exports.run = async function ({ inputs }) {
+exports.run = async function ({ inputs }) {
   let { to, from, subject, contents } = inputs
   if (!contents) {
     contents = "<h1>No content</h1>"
@@ -58,7 +59,6 @@ module.exports.run = async function ({ inputs }) {
       response,
     }
   } catch (err) {
-    console.error(err)
     return {
       success: false,
       response: err,

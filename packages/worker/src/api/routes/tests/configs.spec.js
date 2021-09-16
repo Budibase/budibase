@@ -4,7 +4,7 @@ const setup = require("./utilities")
 jest.mock("nodemailer")
 const nodemailer = require("nodemailer")
 nodemailer.createTransport.mockReturnValue({
-  verify: jest.fn()
+  verify: jest.fn(),
 })
 
 describe("/api/global/configs/checklist", () => {
@@ -25,11 +25,11 @@ describe("/api/global/configs/checklist", () => {
       .set(config.defaultHeaders())
       .expect("Content-Type", /json/)
       .expect(200)
-    
+
     const checklist = res.body
 
-    expect(checklist.apps).toBe(0)
-    expect(checklist.smtp).toBe(true)
-    expect(checklist.adminUser).toBe(true)
+    expect(checklist.apps.checked).toBeFalsy()
+    expect(checklist.smtp.checked).toBeTruthy()
+    expect(checklist.adminUser.checked).toBeTruthy()
   })
 })

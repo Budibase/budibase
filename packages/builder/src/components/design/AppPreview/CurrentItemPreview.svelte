@@ -1,5 +1,5 @@
 <script>
-  import { onMount } from "svelte"
+  import { onMount, onDestroy } from "svelte"
   import { store, currentAsset } from "builderStore"
   import iframeTemplate from "./iframeTemplate"
   import { Screen } from "builderStore/store/screenTemplates/utils/Screen"
@@ -49,6 +49,8 @@
     selectedComponentId,
     previewType: $store.currentFrontEndType,
     theme: $store.theme,
+    customTheme: $store.customTheme,
+    previewDevice: $store.previewDevice,
   }
 
   // Saving pages and screens to the DB causes them to have _revs.
@@ -95,25 +97,52 @@
       { once: true }
     )
 
-    // Add listener for events sent by cliebt library in preview
-    iframe.contentWindow.addEventListener("bb-event", event => {
-      const { type, data } = event.detail
-      if (type === "select-component" && data.id) {
-        store.actions.components.select({ _id: data.id })
-      } else if (type === "update-prop") {
-        store.actions.components.updateProp(data.prop, data.value)
-      } else if (type === "delete-component" && data.id) {
-        idToDelete = data.id
-        confirmDeleteDialog.show()
-      } else if (type === "preview-loaded") {
-        // Wait for this event to show the client library if intelligent
-        // loading is supported
-        loading = false
-      } else {
-        console.warning(`Client sent unknown event type: ${type}`)
-      }
-    })
+    // Add listener for events sent by client library in preview
+    iframe.contentWindow.addEventListener("bb-event", handleBudibaseEvent)
+    iframe.contentWindow.addEventListener("keydown", handleKeydownEvent)
   })
+
+  // remove all iframe event listeners on component destroy
+  onDestroy(() => {
+    if (iframe.contentWindow) {
+      iframe.contentWindow.removeEventListener("bb-event", handleBudibaseEvent)
+      iframe.contentWindow.removeEventListener("keydown", handleKeydownEvent)
+    }
+  })
+
+  const handleBudibaseEvent = event => {
+    const { type, data } = event.detail
+    if (type === "select-component" && data.id) {
+      store.actions.components.select({ _id: data.id })
+    } else if (type === "update-prop") {
+      store.actions.components.updateProp(data.prop, data.value)
+    } else if (type === "delete-component" && data.id) {
+      confirmDeleteComponent(data.id)
+    } else if (type === "preview-loaded") {
+      // Wait for this event to show the client library if intelligent
+      // loading is supported
+      loading = false
+    } else {
+      console.warning(`Client sent unknown event type: ${type}`)
+    }
+  }
+
+  const handleKeydownEvent = event => {
+    if (
+      (event.key === "Delete" || event.key === "Backspace") &&
+      selectedComponentId &&
+      ["input", "textarea"].indexOf(
+        iframe.contentWindow.document.activeElement?.tagName.toLowerCase()
+      ) === -1
+    ) {
+      confirmDeleteComponent(selectedComponentId)
+    }
+  }
+
+  const confirmDeleteComponent = componentId => {
+    idToDelete = componentId
+    confirmDeleteDialog.show()
+  }
 
   const deleteComponent = () => {
     store.actions.components.delete({ _id: idToDelete })
@@ -139,11 +168,12 @@
     </div>
   {/if}
   <iframe
-    style="height: 100%; width: 100%"
     title="componentPreview"
     bind:this={iframe}
     srcdoc={template}
     class:hidden={loading || error}
+    class:tablet={$store.previewDevice === "tablet"}
+    class:mobile={$store.previewDevice === "mobile"}
   />
 </div>
 <ConfirmDialog
@@ -159,6 +189,8 @@
   .component-container {
     grid-row-start: middle;
     grid-column-start: middle;
+    display: grid;
+    place-items: center;
     position: relative;
     overflow: hidden;
     margin: auto;
@@ -198,5 +230,10 @@
   .error :global(h1) {
     font-weight: 400;
     margin: 0;
+  }
+
+  iframe {
+    width: 100%;
+    height: 100%;
   }
 </style>

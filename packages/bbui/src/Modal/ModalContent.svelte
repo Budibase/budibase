@@ -46,8 +46,10 @@
       <h1
         class="spectrum-Dialog-heading spectrum-Dialog-heading--noHeader"
         class:noDivider={!showDivider}
+        class:header-spacing={$$slots.header}
       >
         {title}
+        <slot name="header" />
       </h1>
       {#if showDivider}
         <Divider size="M" />
@@ -119,5 +121,10 @@
   }
   .close-icon :global(svg) {
     margin-right: 0;
+  }
+
+  .header-spacing {
+    display: flex;
+    justify-content: space-between;
   }
 </style>

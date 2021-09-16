@@ -201,7 +201,7 @@
         <Heading>Apps</Heading>
         <ButtonGroup>
           <Button secondary on:click={initiateAppImport}>Import app</Button>
-          <Button cta on:click={initiateAppCreation}>Create new app</Button>
+          <Button cta on:click={initiateAppCreation}>Create app</Button>
         </ButtonGroup>
       </div>
       <div class="filter">
@@ -346,5 +346,11 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
+  }
+
+  @media (max-width: 640px) {
+    .appTable {
+      grid-template-columns: 1fr auto;
+    }
   }
 </style>

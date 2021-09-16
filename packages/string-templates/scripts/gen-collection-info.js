@@ -11,7 +11,15 @@ const marked = require("marked")
  */
 
 const DIRECTORY = fs.existsSync("node_modules") ? "." : ".."
-const COLLECTIONS = ["math", "array", "number", "url", "string", "comparison"]
+const COLLECTIONS = [
+  "math",
+  "array",
+  "number",
+  "url",
+  "string",
+  "comparison",
+  "object",
+]
 const FILENAME = `${DIRECTORY}/manifest.json`
 const outputJSON = {}
 const ADDED_HELPERS = {

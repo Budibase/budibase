@@ -15,11 +15,25 @@ const { FieldTypes } = require("../../../constants")
 const { isEqual } = require("lodash")
 const { validate, findRow } = require("./utils")
 const { fullSearch, paginatedSearch } = require("./internalSearch")
+const { getGlobalUsersFromMetadata } = require("../../../utilities/global")
 
 const CALCULATION_TYPES = {
   SUM: "sum",
   COUNT: "count",
   STATS: "stats",
+}
+
+async function storeResponse(ctx, db, row, oldTable, table) {
+  row.type = "row"
+  const response = await db.put(row)
+  // don't worry about rev, tables handle rev/lastID updates
+  if (!isEqual(oldTable, table)) {
+    await db.put(table)
+  }
+  row._rev = response.rev
+  // process the row before return, to include relationships
+  row = await outputProcessing(ctx, table, row, { squash: false })
+  return { row, table }
 }
 
 exports.patch = async ctx => {
@@ -76,14 +90,7 @@ exports.patch = async ctx => {
     return { row: ctx.body, table }
   }
 
-  const response = await db.put(row)
-  // don't worry about rev, tables handle rev/lastID updates
-  if (!isEqual(dbTable, table)) {
-    await db.put(table)
-  }
-  row._rev = response.rev
-  row.type = "row"
-  return { row, table }
+  return storeResponse(ctx, db, row, dbTable, table)
 }
 
 exports.save = async function (ctx) {
@@ -117,14 +124,7 @@ exports.save = async function (ctx) {
     table,
   })
 
-  row.type = "row"
-  const response = await db.put(row)
-  // don't worry about rev, tables handle rev/lastID updates
-  if (!isEqual(dbTable, table)) {
-    await db.put(table)
-  }
-  row._rev = response.rev
-  return { row, table }
+  return storeResponse(ctx, db, row, dbTable, table)
 }
 
 exports.fetchView = async ctx => {
@@ -132,7 +132,7 @@ exports.fetchView = async ctx => {
   const viewName = ctx.params.viewName
 
   // if this is a table view being looked for just transfer to that
-  if (viewName.includes(DocumentTypes.TABLE)) {
+  if (viewName.startsWith(DocumentTypes.TABLE)) {
     ctx.params.tableId = viewName
     return exports.fetch(ctx)
   }
@@ -220,34 +220,47 @@ exports.destroy = async function (ctx) {
   const appId = ctx.appId
   const db = new CouchDB(appId)
   const { _id, _rev } = ctx.request.body
-  const row = await db.get(_id)
+  let row = await db.get(_id)
 
   if (row.tableId !== ctx.params.tableId) {
     throw "Supplied tableId doesn't match the row's tableId"
   }
+  const table = await db.get(row.tableId)
+  // update the row to include full relationships before deleting them
+  row = await outputProcessing(ctx, table, row, { squash: false })
+  // now remove the relationships
   await linkRows.updateLinks({
     appId,
     eventType: linkRows.EventType.ROW_DELETE,
     row,
     tableId: row.tableId,
   })
+
+  let response
   if (ctx.params.tableId === InternalTables.USER_METADATA) {
     ctx.params = {
       id: _id,
     }
     await userController.destroyMetadata(ctx)
-    return { response: ctx.body, row }
+    response = ctx.body
   } else {
-    const response = await db.remove(_id, _rev)
-    return { response, row }
+    response = await db.remove(_id, _rev)
   }
+  return { response, row }
 }
 
 exports.bulkDestroy = async ctx => {
   const appId = ctx.appId
-  const { rows } = ctx.request.body
   const db = new CouchDB(appId)
+  const tableId = ctx.params.tableId
+  const table = await db.get(tableId)
+  let { rows } = ctx.request.body
 
+  // before carrying out any updates, make sure the rows are ready to be returned
+  // they need to be the full rows (including previous relationships) for automations
+  rows = await outputProcessing(ctx, table, rows, { squash: false })
+
+  // remove the relationships first
   let updates = rows.map(row =>
     linkRows.updateLinks({
       appId,
@@ -256,8 +269,7 @@ exports.bulkDestroy = async ctx => {
       tableId: row.tableId,
     })
   )
-  // TODO remove special user case in future
-  if (ctx.params.tableId === InternalTables.USER_METADATA) {
+  if (tableId === InternalTables.USER_METADATA) {
     updates = updates.concat(
       rows.map(row => {
         ctx.params = {
@@ -290,6 +302,10 @@ exports.search = async ctx => {
 
   // Enrich search results with relationships
   if (response.rows && response.rows.length) {
+    // enrich with global users if from users table
+    if (tableId === InternalTables.USER_METADATA) {
+      response.rows = await getGlobalUsersFromMetadata(appId, response.rows)
+    }
     const table = await db.get(tableId)
     response.rows = await outputProcessing(ctx, table, response.rows)
   }

@@ -1,12 +1,14 @@
 const queryController = require("../../api/controllers/query")
+const { buildCtx } = require("./utils")
 
-module.exports.definition = {
+exports.definition = {
   name: "External Data Connector",
   tagline: "Execute Data Connector",
-  icon: "ri-database-2-line",
+  icon: "Data",
   description: "Execute a query in an external data connector",
   type: "ACTION",
   stepId: "EXECUTE_QUERY",
+  internal: true,
   inputs: {},
   schema: {
     inputs: {
@@ -42,7 +44,7 @@ module.exports.definition = {
   },
 }
 
-module.exports.run = async function ({ inputs, appId, emitter }) {
+exports.run = async function ({ inputs, appId, emitter }) {
   if (inputs.query == null) {
     return {
       success: false,
@@ -54,28 +56,22 @@ module.exports.run = async function ({ inputs, appId, emitter }) {
 
   const { queryId, ...rest } = inputs.query
 
-  const ctx = {
+  const ctx = buildCtx(appId, emitter, {
+    body: {
+      parameters: rest,
+    },
     params: {
       queryId,
     },
-    request: {
-      body: {
-        parameters: rest,
-      },
-    },
-    appId,
-    eventEmitter: emitter,
-  }
-
-  await queryController.execute(ctx)
+  })
 
   try {
+    await queryController.execute(ctx)
     return {
       response: ctx.body,
-      success: ctx.status === 200,
+      success: true,
     }
   } catch (err) {
-    console.error(err)
     return {
       success: false,
       response: err,

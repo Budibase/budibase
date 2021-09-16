@@ -5,6 +5,7 @@ const oidc = require("./passport/oidc")
 const authenticated = require("./authenticated")
 const auditLog = require("./auditLog")
 const tenancy = require("./tenancy")
+const appTenancy = require("./appTenancy")
 
 module.exports = {
   google,
@@ -14,4 +15,5 @@ module.exports = {
   authenticated,
   auditLog,
   tenancy,
+  appTenancy,
 }

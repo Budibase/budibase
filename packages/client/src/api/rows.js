@@ -1,4 +1,4 @@
-import { notificationStore, dataSourceStore } from "../store"
+import { notificationStore, dataSourceStore } from "stores"
 import API from "./api"
 import { fetchTableDefinition } from "./tables"
 
@@ -112,16 +112,24 @@ export const enrichRows = async (rows, tableId) => {
   if (!Array.isArray(rows)) {
     return []
   }
-  if (rows.length && tableId) {
-    // Fetch table schema so we can check column types
-    const tableDefinition = await fetchTableDefinition(tableId)
-    const schema = tableDefinition && tableDefinition.schema
-    if (schema) {
-      const keys = Object.keys(schema)
-      rows.forEach(row => {
+  if (rows.length) {
+    // map of tables, incase a row being loaded is not from the same table
+    const tables = {}
+    for (let row of rows) {
+      // fallback to passed in tableId if row doesn't have it specified
+      let rowTableId = row.tableId || tableId
+      let table = tables[rowTableId]
+      if (!table) {
+        // Fetch table schema so we can check column types
+        table = await fetchTableDefinition(rowTableId)
+        tables[rowTableId] = table
+      }
+      const schema = table?.schema
+      if (schema) {
+        const keys = Object.keys(schema)
         for (let key of keys) {
           const type = schema[key].type
-          if (type === "link") {
+          if (type === "link" && Array.isArray(row[key])) {
             // Enrich row a string join of relationship fields
             row[`${key}_text`] =
               row[key]
@@ -137,7 +145,7 @@ export const enrichRows = async (rows, tableId) => {
             row[`${key}_first`] = url
           }
         }
-      })
+      }
     }
   }
   return rows
