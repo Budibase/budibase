@@ -1,5 +1,6 @@
 <script>
   import { onMount } from "svelte"
+  import { get } from "svelte/store"
   import { store, currentAsset } from "builderStore"
   import iframeTemplate from "./iframeTemplate"
   import { Screen } from "builderStore/store/screenTemplates/utils/Screen"
@@ -7,6 +8,7 @@
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { ProgressCircle, Layout, Heading, Body } from "@budibase/bbui"
   import ErrorSVG from "assets/error.svg?raw"
+  import { findComponent } from "builderStore/storeUtils"
 
   let iframe
   let layout
@@ -111,6 +113,20 @@
         // Wait for this event to show the client library if intelligent
         // loading is supported
         loading = false
+      } else if (type === "move-component") {
+        // Copy
+        const sourceComponent = findComponent(
+          get(currentAsset).props,
+          data.componentId
+        )
+        const destinationComponent = findComponent(
+          get(currentAsset).props,
+          data.destinationComponentId
+        )
+        if (sourceComponent && destinationComponent) {
+          store.actions.components.copy(sourceComponent, true)
+          store.actions.components.paste(destinationComponent, data.mode)
+        }
       } else {
         console.warning(`Client sent unknown event type: ${type}`)
       }

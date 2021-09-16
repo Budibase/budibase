@@ -178,6 +178,7 @@
       data-type={interactive ? "component" : ""}
       data-id={id}
       data-name={name}
+      data-droppable={definition?.hasChildren || false}
     >
       <svelte:component this={constructor} {...componentSettings}>
         {#if children.length}
@@ -195,5 +196,8 @@
 <style>
   .component {
     display: contents;
+  }
+  .component > :global(*:hover) {
+    cursor: pointer;
   }
 </style>

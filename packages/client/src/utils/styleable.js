@@ -23,6 +23,8 @@ export const styleable = (node, styles = {}) => {
   let applyHoverStyles
   let selectComponent
 
+  node.setAttribute("draggable", true)
+
   // Creates event listeners and applies initial styles
   const setupStyles = (newStyles = {}) => {
     // Use empty state styles as base styles if required, but let them, get
