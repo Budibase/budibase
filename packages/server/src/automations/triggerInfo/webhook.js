@@ -1,7 +1,7 @@
 exports.definition = {
   name: "Webhook",
   event: "web:trigger",
-  icon: "ri-global-line",
+  icon: "Send",
   tagline: "Webhook endpoint is hit",
   description: "Trigger an automation when a HTTP POST webhook is hit",
   stepId: "WEBHOOK",
