@@ -11,6 +11,8 @@
   import Placeholder from "components/app/Placeholder.svelte"
 
   export let instance = {}
+  export let isLayout = false
+  export let isScreen = false
 
   // The enriched component settings
   let enrichedSettings
@@ -178,7 +180,8 @@
       data-type={interactive ? "component" : ""}
       data-id={id}
       data-name={name}
-      data-droppable={definition?.hasChildren || false}
+      data-draggable={interactive && !isLayout && !isScreen ? "true" : "false"}
+      data-droppable={definition?.hasChildren ? "true" : "false"}
     >
       <svelte:component this={constructor} {...componentSettings}>
         {#if children.length}
@@ -197,7 +200,7 @@
   .component {
     display: contents;
   }
-  .component > :global(*:hover) {
+  [data-draggable="true"] {
     cursor: pointer;
   }
 </style>

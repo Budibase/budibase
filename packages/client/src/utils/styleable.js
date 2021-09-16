@@ -23,7 +23,11 @@ export const styleable = (node, styles = {}) => {
   let applyHoverStyles
   let selectComponent
 
-  node.setAttribute("draggable", true)
+  // Allow dragging if required
+  const parent = node.closest("[data-type='component']")
+  if (parent && parent.dataset.draggable === "true") {
+    node.setAttribute("draggable", true)
+  }
 
   // Creates event listeners and applies initial styles
   const setupStyles = (newStyles = {}) => {
