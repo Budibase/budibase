@@ -36,8 +36,7 @@
       {zIndex}
       {color}
       {transition}
-      flip={mode === "below"}
-      rounded
+      line
     />
   {/if}
 {/key}
