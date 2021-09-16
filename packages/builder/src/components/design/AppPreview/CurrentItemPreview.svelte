@@ -1,6 +1,6 @@
 <script>
-  import { onMount } from "svelte"
   import { get } from "svelte/store"
+  import { onMount, onDestroy } from "svelte"
   import { store, currentAsset } from "builderStore"
   import iframeTemplate from "./iframeTemplate"
   import { Screen } from "builderStore/store/screenTemplates/utils/Screen"
@@ -99,50 +99,77 @@
       { once: true }
     )
 
-    // Add listener for events sent by cliebt library in preview
-    iframe.contentWindow.addEventListener("bb-event", event => {
-      const { type, data } = event.detail
-      if (type === "select-component" && data.id) {
-        store.actions.components.select({ _id: data.id })
-      } else if (type === "update-prop") {
-        store.actions.components.updateProp(data.prop, data.value)
-      } else if (type === "delete-component" && data.id) {
-        idToDelete = data.id
-        confirmDeleteDialog.show()
-      } else if (type === "preview-loaded") {
-        // Wait for this event to show the client library if intelligent
-        // loading is supported
-        loading = false
-      } else if (type === "move-component") {
-        // Copy
-        const sourceComponent = findComponent(
-          get(currentAsset).props,
-          data.componentId
-        )
-        const destinationComponent = findComponent(
-          get(currentAsset).props,
-          data.destinationComponentId
-        )
-
-        // Stop if the target is a child of source
-        const path = findComponentPath(
-          sourceComponent,
-          data.destinationComponentId
-        )
-        const ids = path.map(component => component._id)
-        if (ids.includes(data.destinationComponentId)) {
-          return
-        }
-
-        if (sourceComponent && destinationComponent) {
-          store.actions.components.copy(sourceComponent, true)
-          store.actions.components.paste(destinationComponent, data.mode)
-        }
-      } else {
-        console.warning(`Client sent unknown event type: ${type}`)
-      }
-    })
+    // Add listener for events sent by client library in preview
+    iframe.contentWindow.addEventListener("bb-event", handleBudibaseEvent)
+    iframe.contentWindow.addEventListener("keydown", handleKeydownEvent)
   })
+
+  // Remove all iframe event listeners on component destroy
+  onDestroy(() => {
+    if (iframe.contentWindow) {
+      iframe.contentWindow.removeEventListener("bb-event", handleBudibaseEvent)
+      iframe.contentWindow.removeEventListener("keydown", handleKeydownEvent)
+    }
+  })
+
+  const handleBudibaseEvent = event => {
+    const { type, data } = event.detail
+    if (type === "select-component" && data.id) {
+      store.actions.components.select({ _id: data.id })
+    } else if (type === "update-prop") {
+      store.actions.components.updateProp(data.prop, data.value)
+    } else if (type === "delete-component" && data.id) {
+      confirmDeleteComponent(data.id)
+    } else if (type === "preview-loaded") {
+      // Wait for this event to show the client library if intelligent
+      // loading is supported
+      loading = false
+    } else if (type === "move-component") {
+      // Copy
+      const sourceComponent = findComponent(
+        get(currentAsset).props,
+        data.componentId
+      )
+      const destinationComponent = findComponent(
+        get(currentAsset).props,
+        data.destinationComponentId
+      )
+
+      // Stop if the target is a child of source
+      const path = findComponentPath(
+        sourceComponent,
+        data.destinationComponentId
+      )
+      const ids = path.map(component => component._id)
+      if (ids.includes(data.destinationComponentId)) {
+        return
+      }
+
+      if (sourceComponent && destinationComponent) {
+        store.actions.components.copy(sourceComponent, true)
+        store.actions.components.paste(destinationComponent, data.mode)
+      }
+    } else {
+      console.warning(`Client sent unknown event type: ${type}`)
+    }
+  }
+
+  const handleKeydownEvent = event => {
+    if (
+      (event.key === "Delete" || event.key === "Backspace") &&
+      selectedComponentId &&
+      ["input", "textarea"].indexOf(
+        iframe.contentWindow.document.activeElement?.tagName.toLowerCase()
+      ) === -1
+    ) {
+      confirmDeleteComponent(selectedComponentId)
+    }
+  }
+
+  const confirmDeleteComponent = componentId => {
+    idToDelete = componentId
+    confirmDeleteDialog.show()
+  }
 
   const deleteComponent = () => {
     store.actions.components.delete({ _id: idToDelete })

@@ -13,6 +13,7 @@ const zapier = require("./steps/zapier")
 const integromat = require("./steps/integromat")
 let filter = require("./steps/filter")
 let delay = require("./steps/delay")
+let queryRow = require("./steps/queryRows")
 
 const ACTION_IMPLS = {
   SEND_EMAIL_SMTP: sendSmtpEmail.run,
@@ -26,6 +27,7 @@ const ACTION_IMPLS = {
   SERVER_LOG: serverLog.run,
   DELAY: delay.run,
   FILTER: filter.run,
+  QUERY_ROWS: queryRow.run,
   // these used to be lowercase step IDs, maintain for backwards compat
   discord: discord.run,
   slack: slack.run,
@@ -44,6 +46,7 @@ const ACTION_DEFINITIONS = {
   SERVER_LOG: serverLog.definition,
   DELAY: delay.definition,
   FILTER: filter.definition,
+  QUERY_ROWS: queryRow.definition,
   // these used to be lowercase step IDs, maintain for backwards compat
   discord: discord.definition,
   slack: slack.definition,

@@ -1090,6 +1090,115 @@
       "description": "<p>Block helper that always renders the inverse block <strong>unless <code>a</code> is less than or equal to <code>b</code></strong>.</p>\n"
     }
   },
+  "object": {
+    "extend": {
+      "args": [
+        "objects"
+      ],
+      "numArgs": 1,
+      "description": "<p>Extend the context with the properties of other objects. A shallow merge is performed to avoid mutating the context.</p>\n"
+    },
+    "forIn": {
+      "args": [
+        "context",
+        "options"
+      ],
+      "numArgs": 2,
+      "description": "<p>Block helper that iterates over the properties of an object, exposing each key and value on the context.</p>\n"
+    },
+    "forOwn": {
+      "args": [
+        "obj",
+        "options"
+      ],
+      "numArgs": 2,
+      "description": "<p>Block helper that iterates over the <strong>own</strong> properties of an object, exposing each key and value on the context.</p>\n"
+    },
+    "toPath": {
+      "args": [
+        "prop"
+      ],
+      "numArgs": 1,
+      "description": "<p>Take arguments and, if they are string or number, convert them to a dot-delineated object property path.</p>\n"
+    },
+    "get": {
+      "args": [
+        "prop",
+        "context",
+        "options"
+      ],
+      "numArgs": 3,
+      "description": "<p>Use property paths (<code>a.b.c</code>) to get a value or nested value from the context. Works as a regular helper or block helper.</p>\n"
+    },
+    "getObject": {
+      "args": [
+        "prop",
+        "context"
+      ],
+      "numArgs": 2,
+      "description": "<p>Use property paths (<code>a.b.c</code>) to get an object from the context. Differs from the <code>get</code> helper in that this helper will return the actual object, including the given property key. Also, this helper does not work as a block helper.</p>\n"
+    },
+    "hasOwn": {
+      "args": [
+        "key",
+        "context"
+      ],
+      "numArgs": 2,
+      "description": "<p>Return true if <code>key</code> is an own, enumerable property of the given <code>context</code> object.</p>\n"
+    },
+    "isObject": {
+      "args": [
+        "value"
+      ],
+      "numArgs": 1,
+      "description": "<p>Return true if <code>value</code> is an object.</p>\n"
+    },
+    "JSONparse": {
+      "args": [
+        "string"
+      ],
+      "numArgs": 1,
+      "description": "<p>Parses the given string using <code>JSON.parse</code>.</p>\n"
+    },
+    "JSONstringify": {
+      "args": [
+        "obj"
+      ],
+      "numArgs": 1,
+      "description": "<p>Stringify an object using <code>JSON.stringify</code>.</p>\n"
+    },
+    "merge": {
+      "args": [
+        "object",
+        "objects"
+      ],
+      "numArgs": 2,
+      "description": "<p>Deeply merge the properties of the given <code>objects</code> with the context object.</p>\n"
+    },
+    "parseJSON": {
+      "args": [
+        "string"
+      ],
+      "numArgs": 1,
+      "description": "<p>Parses the given string using <code>JSON.parse</code>.</p>\n"
+    },
+    "pick": {
+      "args": [
+        "properties",
+        "context",
+        "options"
+      ],
+      "numArgs": 3,
+      "description": "<p>Pick properties from the context object.</p>\n"
+    },
+    "stringify": {
+      "args": [
+        "obj"
+      ],
+      "numArgs": 1,
+      "description": "<p>Stringify an object using <code>JSON.stringify</code>.</p>\n"
+    }
+  },
   "date": {
     "date": {
       "args": [

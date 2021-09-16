@@ -17,7 +17,6 @@ const automationActions = store => ({
       state.blockDefinitions = {
         TRIGGER: jsonResponses[1].trigger,
         ACTION: jsonResponses[1].action,
-        LOGIC: jsonResponses[1].logic,
       }
       // if previously selected find the new obj and select it
       if (selected) {
@@ -80,14 +79,25 @@ const automationActions = store => ({
     const { _id } = automation
     return await api.post(`/api/automations/${_id}/trigger`)
   },
-  test: async ({ automation }) => {
+  test: async ({ automation }, testData) => {
     const { _id } = automation
-    return await api.post(`/api/automations/${_id}/test`)
+    const response = await api.post(`/api/automations/${_id}/test`, testData)
+    const json = await response.json()
+    store.update(state => {
+      state.selectedAutomation.testResults = json
+      return state
+    })
   },
   select: automation => {
     store.update(state => {
       state.selectedAutomation = new Automation(cloneDeep(automation))
       state.selectedBlock = null
+      return state
+    })
+  },
+  addTestDataToAutomation: data => {
+    store.update(state => {
+      state.selectedAutomation.addTestData(data)
       return state
     })
   },
@@ -132,7 +142,6 @@ export const getAutomationStore = () => {
     blockDefinitions: {
       TRIGGER: [],
       ACTION: [],
-      LOGIC: [],
     },
     selectedAutomation: null,
   }

@@ -134,7 +134,7 @@
 </script>
 
 <ModalContent
-  title={template ? "Import app" : "Create new app"}
+  title={template ? "Import app" : "Create app"}
   confirmText={template ? "Import app" : "Create app"}
   onConfirm={createNewApp}
   disabled={!valid}
