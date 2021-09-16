@@ -37,9 +37,8 @@ Cypress.Commands.add("createApp", name => {
       cy.contains("Create app").click()
     })
     .then(() => {
-      cy.get(".selected > .content", {
-        timeout: 20000,
-      }).should("be.visible")
+      cy.expandBudibaseConnection()
+      cy.get(".nav-item.selected > .content").should("be.visible")
     })
 })
 
@@ -83,6 +82,7 @@ Cypress.Commands.add("createTable", tableName => {
 
 Cypress.Commands.add("addColumn", (tableName, columnName, type) => {
   // Select Table
+  cy.selectTable(tableName)
   cy.contains(".nav-item", tableName).click()
   cy.contains("Create column").click()
 
@@ -160,4 +160,16 @@ Cypress.Commands.add("createScreen", (screenName, route) => {
     cy.get("input").eq(1).type(route)
     cy.get(".spectrum-Button--cta").click()
   })
+})
+
+Cypress.Commands.add("expandBudibaseConnection", () => {
+  if (Cypress.$(".nav-item > .content > .opened").length === 0) {
+    // expand the Budibase DB connection string
+    cy.get(".icon.arrow").eq(0).click()
+  }
+})
+
+Cypress.Commands.add("selectTable", tableName => {
+  cy.expandBudibaseConnection()
+  cy.contains(".nav-item", tableName).click()
 })
