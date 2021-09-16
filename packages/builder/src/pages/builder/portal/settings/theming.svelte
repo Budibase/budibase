@@ -4,7 +4,7 @@
   import { capitalise } from "helpers"
 </script>
 
-<Layout>
+<Layout noPadding>
   <Layout gap="XS" noPadding>
     <Heading size="M">Theming</Heading>
     <Body>Customize how Budibase looks and feels.</Body>
@@ -30,7 +30,7 @@
   }
   .field {
     display: grid;
-    grid-template-columns: 33% 1fr;
+    grid-template-columns: 120px 1fr;
     align-items: center;
   }
 </style>
