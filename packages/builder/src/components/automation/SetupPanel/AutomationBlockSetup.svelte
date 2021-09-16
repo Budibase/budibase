@@ -33,6 +33,7 @@
   export let schemaProperties
   let drawer
   let tempFilters = lookForFilters(schemaProperties) || []
+  let fillWidth = true
 
   $: stepId = block.stepId
   $: bindings = getAvailableBindings(
@@ -140,7 +141,7 @@
         />
       {:else if value.customType === "filters"}
         <ActionButton on:click={drawer.show}>Define filters</ActionButton>
-        <Drawer bind:this={drawer} title="Filtering">
+        <Drawer bind:this={drawer} {fillWidth} title="Filtering">
           <Button cta slot="buttons" on:click={() => saveFilters(key)}
             >Save</Button
           >
