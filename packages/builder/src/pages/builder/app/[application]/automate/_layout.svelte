@@ -29,9 +29,9 @@
             >
               <use xlink:href="#spectrum-icon-18-WorkflowAdd" />
             </svg>
-            <Heading size="S">You have no automations</Heading>
-            <Body size="S">Let's fix that. Call the bots!</Body>
-            <Button on:click={() => modal.show()} size="S" cta
+            <Heading size="M">You have no automations</Heading>
+            <Body size="M">Let's fix that. Call the bots!</Body>
+            <Button on:click={() => modal.show()} size="M" cta
               >Create automation</Button
             >
           </Layout>
