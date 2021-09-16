@@ -23,6 +23,7 @@
   import SelectionIndicator from "components/preview/SelectionIndicator.svelte"
   import HoverIndicator from "components/preview/HoverIndicator.svelte"
   import CustomThemeWrapper from "./CustomThemeWrapper.svelte"
+  import DNDHandler from "components/preview/DNDHandler.svelte"
   import ErrorSVG from "../../../builder/assets/error.svg"
 
   // Provide contexts
@@ -122,6 +123,7 @@
               {#if $builderStore.inBuilder}
                 <SelectionIndicator />
                 <HoverIndicator />
+                <DNDHandler />
               {/if}
             </div>
           </StateBindingsProvider>

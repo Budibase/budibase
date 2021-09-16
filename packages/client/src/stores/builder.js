@@ -64,11 +64,16 @@ const createBuilderStore = () => {
       dispatchEvent("preview-loaded")
     },
     setSelectedPath: path => {
-      console.log("set to ")
-      console.log(path)
       writableStore.update(state => {
         state.selectedPath = path
         return state
+      })
+    },
+    moveComponent: (componentId, destinationComponentId, mode) => {
+      dispatchEvent("move-component", {
+        componentId,
+        destinationComponentId,
+        mode,
       })
     },
   }
