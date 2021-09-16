@@ -8,7 +8,6 @@
   export let title
   export let fillWidth
   let visible = false
-  $: console.log(fillWidth)
   export function show() {
     if (visible) {
       return

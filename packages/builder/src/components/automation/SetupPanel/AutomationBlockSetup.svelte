@@ -97,7 +97,6 @@
   }
 
   function lookForFilters(properties) {
-    console.log("testing")
     if (!properties) {
       return []
     }
