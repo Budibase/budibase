@@ -8,7 +8,7 @@
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { ProgressCircle, Layout, Heading, Body } from "@budibase/bbui"
   import ErrorSVG from "assets/error.svg?raw"
-  import { findComponent } from "builderStore/storeUtils"
+  import { findComponent, findComponentPath } from "builderStore/storeUtils"
 
   let iframe
   let layout
@@ -123,6 +123,17 @@
           get(currentAsset).props,
           data.destinationComponentId
         )
+
+        // Stop if the target is a child of source
+        const path = findComponentPath(
+          sourceComponent,
+          data.destinationComponentId
+        )
+        const ids = path.map(component => component._id)
+        if (ids.includes(data.destinationComponentId)) {
+          return
+        }
+
         if (sourceComponent && destinationComponent) {
           store.actions.components.copy(sourceComponent, true)
           store.actions.components.paste(destinationComponent, data.mode)
