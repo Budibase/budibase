@@ -104,8 +104,10 @@
 
   // remove all iframe event listeners on component destroy
   onDestroy(() => {
-    iframe.contentWindow.removeEventListener("bb-event", handleBudibaseEvent)
-    iframe.contentWindow.removeEventListener("keydown", handleKeydownEvent)
+    if (iframe.contentWindow) {
+      iframe.contentWindow.removeEventListener("bb-event", handleBudibaseEvent)
+      iframe.contentWindow.removeEventListener("keydown", handleKeydownEvent)
+    }
   })
 
   const handleBudibaseEvent = event => {
@@ -123,17 +125,21 @@
     } else {
       console.warning(`Client sent unknown event type: ${type}`)
     }
-  };
+  }
 
   const handleKeydownEvent = event => {
-    if ((event.key === "Delete" || event.key === "Backspace") &&
+    if (
+      (event.key === "Delete" || event.key === "Backspace") &&
       selectedComponentId &&
-      ['input', 'textarea'].indexOf(iframe.contentWindow.document.activeElement?.tagName.toLowerCase()) === -1) {
-      confirmDeleteComponent(selectedComponentId);
+      ["input", "textarea"].indexOf(
+        iframe.contentWindow.document.activeElement?.tagName.toLowerCase()
+      ) === -1
+    ) {
+      confirmDeleteComponent(selectedComponentId)
     }
   }
 
-  const confirmDeleteComponent = (componentId) => {
+  const confirmDeleteComponent = componentId => {
     idToDelete = componentId
     confirmDeleteDialog.show()
   }
