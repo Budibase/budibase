@@ -76,7 +76,7 @@
 <div class="fields">
   {#each schemaProperties as [key, value]}
     <div class="block-field">
-      <Label>{value.title || key}</Label>
+      <Label>{value.title || (key === "row" ? "Table" : key)}</Label>
       {#if value.type === "string" && value.enum}
         <Select
           on:change={e => onChange(e, key)}
@@ -102,6 +102,7 @@
           />
         {:else}
           <DrawerBindableInput
+            fillWidth
             title={value.title}
             panel={AutomationBindingPanel}
             type="email"
@@ -161,14 +162,17 @@
             {bindings}
           />
         {:else}
-          <DrawerBindableInput
-            title={value.title}
-            panel={AutomationBindingPanel}
-            type={value.customType}
-            value={inputData[key]}
-            on:change={e => onChange(e, key)}
-            {bindings}
-          />
+          <div class="test">
+            <DrawerBindableInput
+              fillWidth
+              title={value.title}
+              panel={AutomationBindingPanel}
+              type={value.customType}
+              value={inputData[key]}
+              on:change={e => onChange(e, key)}
+              {bindings}
+            />
+          </div>
         {/if}
       {/if}
     </div>
@@ -190,5 +194,9 @@
   .block-field {
     display: grid;
     grid-gap: 5px;
+  }
+
+  .test :global(.drawer) {
+    width: 10000px !important;
   }
 </style>
