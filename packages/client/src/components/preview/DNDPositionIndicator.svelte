@@ -1,6 +1,7 @@
 <script>
   import Indicator from "./Indicator.svelte"
 
+  export let componentId
   export let dropInfo
   export let mode
   export let zIndex
@@ -24,8 +25,8 @@
   }
 </script>
 
-{#key mode}
-  {#if dimensions}
+{#key `${componentId}-${mode}`}
+  {#if dimensions && mode !== "inside"}
     <Indicator
       left={dimensions.left}
       top={dimensions.top}
