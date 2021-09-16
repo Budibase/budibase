@@ -28,10 +28,10 @@
     chalk "^2.0.0"
     js-tokens "^4.0.0"
 
-"@budibase/bbui@^0.9.125":
-  version "0.9.125"
-  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-0.9.125.tgz#b1a85e38c884de5fa35de3a778be05f279dc8315"
-  integrity sha512-amU8NTeuaUrulPQM6kXZbQznZ6fX8uMw7mhsn/23TonbDyHWGSZRJ6pIA2FYc+KOESK1fL62O4yzfQA0OIViNw==
+"@budibase/bbui@^0.9.125-alpha.11":
+  version "0.9.130"
+  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-0.9.130.tgz#cad02a7aa16324eb7a056c5dc0162444fa917964"
+  integrity sha512-ULOC++363K8QEMasmsDmleF7AzjulFk/ZxGPlOJcVKJU8Bx5wG1uNFgTyJyGpmnbUWHd67eYUEettfH7I+VoOw==
   dependencies:
     "@adobe/spectrum-css-workflow-icons" "^1.2.1"
     "@spectrum-css/actionbutton" "^1.0.1"
@@ -77,10 +77,10 @@
     svelte-flatpickr "^3.1.0"
     svelte-portal "^1.0.0"
 
-"@budibase/bbui@^0.9.125-alpha.5":
-  version "0.9.128"
-  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-0.9.128.tgz#71a5e81b02a4f64baa6874bfa4b1d4fed8cc9f0b"
-  integrity sha512-UCo9SRs1xsMQ0ClJOtNB7JeVF2+0iMVOfAZE7Rrf5d51W+1YeyM9b3BbfhxHRq1yeKLHrbdczerbTHQkmF1RwQ==
+"@budibase/bbui@^0.9.129":
+  version "0.9.129"
+  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-0.9.129.tgz#989bf60d404772d4b308382faba7adac6518ec3e"
+  integrity sha512-U3uO9K3m7Ph5RQpzXx5IIy94s/KdU9Q8eJXFQwH6neYIKQk3OFo8br5px5C7lE38mtazqq9XvQy0f+MUarKk4A==
   dependencies:
     "@adobe/spectrum-css-workflow-icons" "^1.2.1"
     "@spectrum-css/actionbutton" "^1.0.1"
@@ -155,11 +155,11 @@
     year "^0.2.1"
 
 "@budibase/standard-components@^0.9.124":
-  version "0.9.125"
-  resolved "https://registry.yarnpkg.com/@budibase/standard-components/-/standard-components-0.9.125.tgz#92244f009ce22f105694ca85fdc78923f8bcba11"
-  integrity sha512-PjCJ39o0EMfrlMTUKDNHr+W1Vpz4saS5HKoOW0kigRvC7pwxnZuApB8uLryQ4hp4YCUelY30B4a7ps/JtYntDg==
+  version "0.9.129"
+  resolved "https://registry.yarnpkg.com/@budibase/standard-components/-/standard-components-0.9.129.tgz#f2cdead99b8f25177c4c291be3032fb9ffd1dac3"
+  integrity sha512-RYWBcrz4MGICg9neIPQ4CbU3WTTJoTofi2D4pwA+qvvN3uhqOCcFIZ3+yadZ5Akz2qwMztQ8WDvetowm2srZcA==
   dependencies:
-    "@budibase/bbui" "^0.9.125"
+    "@budibase/bbui" "^0.9.129"
     "@spectrum-css/button" "^3.0.3"
     "@spectrum-css/card" "^3.0.3"
     "@spectrum-css/divider" "^1.0.3"
@@ -172,10 +172,10 @@
     svelte-apexcharts "^1.0.2"
     svelte-flatpickr "^3.1.0"
 
-"@budibase/string-templates@^0.9.125-alpha.5":
-  version "0.9.128"
-  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-0.9.128.tgz#50ee46dc0d726d481bd5139cd0b38364649a8463"
-  integrity sha512-4TzmnX2o5S2cts08ukB86El4wYm7cHuV2t6a7yDMGPe1mWeKP1WEtVF6rKhXEdbPTiotW8oYondOlgOP7DT9lA==
+"@budibase/string-templates@^0.9.125-alpha.11":
+  version "0.9.130"
+  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-0.9.130.tgz#1be8affcba0dc8ff2b8044c65dd378dc76a165d0"
+  integrity sha512-DXO6Um18/k16i3hYilxvQ4RYNHhd29OJGbzjfQZ2v7z4Oin5y+WMZzpjX1hQS5g9f/CBbzu7qd7EHiz/n8gMqg==
   dependencies:
     "@budibase/handlebars-helpers" "^0.11.4"
     dayjs "^1.10.4"
@@ -1272,7 +1272,12 @@ date.js@^0.3.1:
   dependencies:
     debug "~3.1.0"
 
-dayjs@^1.10.4, dayjs@^1.10.5:
+dayjs@^1.10.4:
+  version "1.10.7"
+  resolved "https://registry.yarnpkg.com/dayjs/-/dayjs-1.10.7.tgz#2cf5f91add28116748440866a0a1d26f3a6ce468"
+  integrity sha512-P6twpd70BcPK34K26uJ1KT3wlhpuOAPoMwJzpsIWUxHZ7wpmbdZL/hQqBDfz7hGurYSa5PhzdhDHtt319hL3ig==
+
+dayjs@^1.10.5:
   version "1.10.6"
   resolved "https://registry.yarnpkg.com/dayjs/-/dayjs-1.10.6.tgz#288b2aa82f2d8418a6c9d4df5898c0737ad02a63"
   integrity sha512-AztC/IOW4L1Q41A86phW5Thhcrco3xuAA+YX/BLpLWWjRcTj5TOt/QImBLmCKlrF7u7k47arTnOyL6GnbG8Hvw==

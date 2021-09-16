@@ -1,22 +1,24 @@
 <script>
   import {
-    DatePicker,
-    Icon,
-    Button,
-    Select,
-    Combobox,
-    Input,
-    DrawerContent,
-    Layout,
     Body,
+    Button,
+    Combobox,
+    DatePicker,
+    DrawerContent,
+    Icon,
+    Input,
+    Layout,
+    Select,
   } from "@budibase/bbui"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
+  import BindingPanel from "components/common/bindings/BindingPanel.svelte"
   import { generate } from "shortid"
-  import { OperatorOptions, getValidOperatorsForType } from "helpers/lucene"
+  import { getValidOperatorsForType, OperatorOptions } from "helpers/lucene"
 
   export let schemaFields
   export let filters = []
   export let bindings = []
+  export let panel = BindingPanel
 
   const BannedTypes = ["link", "attachment", "formula"]
 
@@ -82,9 +84,7 @@
 
   const getFieldOptions = field => {
     const schema = schemaFields.find(x => x.name === field)
-    const opt = schema?.constraints?.inclusion || []
-
-    return opt
+    return schema?.constraints?.inclusion || []
   }
 </script>
 
@@ -127,6 +127,7 @@
                 title={`Value for "${filter.field}"`}
                 value={filter.value}
                 placeholder="Value"
+                {panel}
                 {bindings}
                 on:change={event => (filter.value = event.detail)}
               />
