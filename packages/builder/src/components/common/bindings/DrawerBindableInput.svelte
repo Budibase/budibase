@@ -14,7 +14,7 @@
   export let placeholder
   export let label
   export let disabled = false
-  export let fillWidth = false
+  export let fillWidth
 
   const dispatch = createEventDispatcher()
   let bindingDrawer

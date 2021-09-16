@@ -19,7 +19,6 @@
   export let onSelect
   let testDataModal
   let blocks
-
   $: instanceId = $database._id
 
   $: {
@@ -69,7 +68,9 @@
             <Icon name="DeleteOutline" />
           </span>
           <ActionButton
-            on:click={() => testDataModal.show()}
+            on:click={() => {
+              testDataModal.show()
+            }}
             icon="MultipleCheck"
             size="S">Run test</ActionButton
           >
