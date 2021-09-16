@@ -1,7 +1,7 @@
 <script>
   import { onMount } from "svelte"
+  import { get } from "svelte/store"
   import IndicatorSet from "./IndicatorSet.svelte"
-  import Indicator from "./Indicator.svelte"
   import DNDPositionIndicator from "./DNDPositionIndicator.svelte"
   import { builderStore } from "stores"
 
@@ -21,7 +21,6 @@
     // Update state
     dragTarget = e.target.dataset.componentId
     builderStore.actions.selectComponent(dragTarget)
-    builderStore.actions.showHoverIndicator(false)
 
     // Highlight being dragged by setting opacity
     const child = getDOMNodeForComponent(e.target)
@@ -97,6 +96,13 @@
       element.dataset.droppable &&
       element.dataset.id !== dragTarget
     ) {
+      // Disable hover selection again to ensure it's always disabled.
+      // There's a bit of a race condition between the app reinitialisation
+      // after selecting the DND component and setting this the first time
+      if (get(builderStore).showHoverIndicator) {
+        builderStore.actions.showHoverIndicator(false)
+      }
+
       // Store target ID
       dropTarget = element.dataset.id
 
