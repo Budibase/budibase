@@ -105,7 +105,10 @@
               <div id="app-root">
                 <CustomThemeWrapper>
                   {#key $screenStore.activeLayout._id}
-                    <Component instance={$screenStore.activeLayout.props} />
+                    <Component
+                      isLayout
+                      instance={$screenStore.activeLayout.props}
+                    />
                   {/key}
 
                   <!-- Layers on top of app -->
