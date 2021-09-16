@@ -34,7 +34,15 @@ static_resources:
                   cluster: app-service
 
               # special case for worker admin API
+              - match: { prefix: "/api/global/" }
+                route:
+                  cluster: worker-service
+
               - match: { prefix: "/api/admin/" }
+                route:
+                  cluster: worker-service
+
+              - match: { prefix: "/api/system/" }
                 route:
                   cluster: worker-service
 
@@ -120,6 +128,6 @@ static_resources:
         - endpoint:
             address:
               socket_address:
-                address: couchdb-service.budibase.svc.cluster.local
+                address: budibase-prod-svc-couchdb 
                 port_value: 5984
 
