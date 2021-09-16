@@ -13,7 +13,7 @@
     }
   }
 
-  export let value = false
+  export let value = null
   export let minValue = 0
   export let maxValue = 100
 

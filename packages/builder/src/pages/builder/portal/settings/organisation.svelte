@@ -83,7 +83,7 @@
 </script>
 
 {#if $auth.isAdmin}
-  <Layout>
+  <Layout noPadding>
     <Layout gap="XS" noPadding>
       <Heading size="M">Organisation</Heading>
       <Body>
@@ -99,7 +99,7 @@
     </Layout>
     <div class="fields">
       <div class="field">
-        <Label size="L">Organization name</Label>
+        <Label size="L">Org. name</Label>
         <Input thin bind:value={$values.company} />
       </div>
       <div class="field logo">
@@ -138,12 +138,10 @@
           please let us know below.
         </Body>
       </Layout>
-      <div class="fields">
-        <div class="field">
-          <Label size="L">Send Analytics to Budibase</Label>
-          <Toggle text="" bind:value={$values.analytics} />
-        </div>
-      </div>
+      <Toggle
+        text="Send Analytics to Budibase"
+        bind:value={$values.analytics}
+      />
       <div>
         <Button disabled={loading} on:click={saveConfig} cta>Save</Button>
       </div>
@@ -158,7 +156,7 @@
   }
   .field {
     display: grid;
-    grid-template-columns: 33% 1fr;
+    grid-template-columns: 100px 1fr;
     align-items: center;
   }
   .file {

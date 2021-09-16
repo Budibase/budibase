@@ -34,7 +34,7 @@ Cypress.Commands.add("createApp", name => {
   cy.get(".spectrum-Modal")
     .within(() => {
       cy.get("input").eq(0).type(name).should("have.value", name).blur()
-      cy.contains("Create app").click()
+      cy.get(".spectrum-ButtonGroup").contains("Create app").click()
     })
     .then(() => {
       cy.expandBudibaseConnection()
