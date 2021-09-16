@@ -1,7 +1,7 @@
 exports.definition = {
   name: "App Action",
   event: "app:trigger",
-  icon: "ri-window-fill",
+  icon: "Apps",
   tagline: "Automation fired from the frontend",
   description: "Trigger an automation from an action inside your app",
   stepId: "APP",

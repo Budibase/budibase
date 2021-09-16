@@ -4,7 +4,7 @@ const usage = require("../../utilities/usageQuota")
 
 exports.definition = {
   description: "Delete a row from your database",
-  icon: "ri-delete-bin-line",
+  icon: "TableRowRemoveCenter",
   name: "Delete Row",
   tagline: "Delete a {{inputs.enriched.table.name}} row",
   type: "ACTION",
