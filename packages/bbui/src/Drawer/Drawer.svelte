@@ -6,7 +6,7 @@
   import Heading from "../Typography/Heading.svelte"
 
   export let title
-
+  export let fillWidth
   let visible = false
 
   export function show() {
@@ -34,7 +34,7 @@
 
 {#if visible}
   <Portal>
-    <section class="drawer" transition:slide>
+    <section class:fillWidth class="drawer" transition:slide>
       <header>
         <div class="text">
           <Heading size="XS">{title}</Heading>
@@ -61,6 +61,10 @@
     background: var(--background);
     border-top: var(--border-light);
     z-index: 2;
+  }
+
+  .fillWidth {
+    width: calc(100% - 260px) !important;
   }
 
   header {
