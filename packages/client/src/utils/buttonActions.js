@@ -5,9 +5,10 @@ import {
   confirmationStore,
   authStore,
   peekStore,
-} from "../store"
-import { saveRow, deleteRow, executeQuery, triggerAutomation } from "../api"
-import { ActionTypes } from "../constants"
+  stateStore,
+} from "stores"
+import { saveRow, deleteRow, executeQuery, triggerAutomation } from "api"
+import { ActionTypes } from "constants"
 
 const saveRowHandler = async (action, context) => {
   const { fields, providerId, tableId } = action.parameters
@@ -122,6 +123,15 @@ const closeScreenModalHandler = () => {
   window.dispatchEvent(new Event("close-screen-modal"))
 }
 
+const updateStateHandler = action => {
+  const { type, key, value, persist } = action.parameters
+  if (type === "set") {
+    stateStore.actions.setValue(key, value, persist)
+  } else if (type === "delete") {
+    stateStore.actions.deleteValue(key)
+  }
+}
+
 const handlerMap = {
   ["Save Row"]: saveRowHandler,
   ["Delete Row"]: deleteRowHandler,
@@ -134,6 +144,7 @@ const handlerMap = {
   ["Clear Form"]: clearFormHandler,
   ["Close Screen Modal"]: closeScreenModalHandler,
   ["Change Form Step"]: changeFormStepHandler,
+  ["Update State"]: updateStateHandler,
 }
 
 const confirmTextMap = {

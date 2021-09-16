@@ -8,17 +8,27 @@ const REDIS_PASSWORD = !env.REDIS_PASSWORD ? "budibase" : env.REDIS_PASSWORD
 
 exports.Databases = {
   PW_RESETS: "pwReset",
+  VERIFICATIONS: "verification",
   INVITATIONS: "invitation",
   DEV_LOCKS: "devLocks",
   DEBOUNCE: "debounce",
   SESSIONS: "session",
   USER_CACHE: "users",
+  FLAGS: "flags",
 }
 
 exports.SEPARATOR = SEPARATOR
 
 exports.getRedisOptions = (clustered = false) => {
-  const [host, port] = REDIS_URL.split(":")
+  const [host, port, ...rest] = REDIS_URL.split(":")
+
+  let redisProtocolUrl
+
+  // fully qualified redis URL
+  if (rest.length && /rediss?/.test(host)) {
+    redisProtocolUrl = REDIS_URL
+  }
+
   const opts = {
     connectTimeout: CONNECT_TIMEOUT_MS,
   }
@@ -33,7 +43,7 @@ exports.getRedisOptions = (clustered = false) => {
     opts.port = port
     opts.password = REDIS_PASSWORD
   }
-  return { opts, host, port }
+  return { opts, host, port, redisProtocolUrl }
 }
 
 exports.addDbPrefix = (db, key) => {

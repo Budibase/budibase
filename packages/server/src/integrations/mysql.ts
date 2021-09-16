@@ -140,7 +140,7 @@ module MySQLModule {
       this.client = mysql.createConnection(config)
     }
 
-    async buildSchema(datasourceId: string) {
+    async buildSchema(datasourceId: string, entities: Record<string, Table>) {
       const tables: { [key: string]: Table } = {}
       const database = this.config.database
       this.client.connect()
@@ -152,7 +152,7 @@ module MySQLModule {
         false
       )
       const tableNames = tablesResp.map(
-        (obj: any) => obj[`Tables_in_${database}`]
+        (obj: any) => obj[`Tables_in_${database.toLowerCase()}`]
       )
       for (let tableName of tableNames) {
         const primaryKeys = []
@@ -191,6 +191,19 @@ module MySQLModule {
             primary: primaryKeys,
             name: tableName,
             schema,
+          }
+        }
+
+        // add the existing relationships from the entities if they exist, to prevent them from being overridden
+        if (entities && entities[tableName]) {
+          const existingTableSchema = entities[tableName].schema
+          for (let key in existingTableSchema) {
+            if (!existingTableSchema.hasOwnProperty(key)) {
+              continue
+            }
+            if (existingTableSchema[key].type === "link") {
+              tables[tableName].schema[key] = existingTableSchema[key]
+            }
           }
         }
       }

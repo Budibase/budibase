@@ -1,11 +1,13 @@
 const scriptController = require("../../api/controllers/script")
+const { buildCtx } = require("./utils")
 
-module.exports.definition = {
+exports.definition = {
   name: "JS Scripting",
   tagline: "Execute JavaScript Code",
-  icon: "ri-terminal-box-line",
+  icon: "Code",
   description: "Run a piece of JavaScript code in your automation",
   type: "ACTION",
+  internal: true,
   stepId: "EXECUTE_SCRIPT",
   inputs: {},
   schema: {
@@ -23,8 +25,7 @@ module.exports.definition = {
       properties: {
         value: {
           type: "string",
-          description:
-            "The result of the last statement of the executed script.",
+          description: "The result of the return statement",
         },
         success: {
           type: "boolean",
@@ -36,7 +37,7 @@ module.exports.definition = {
   },
 }
 
-module.exports.run = async function ({ inputs, appId, context, emitter }) {
+exports.run = async function ({ inputs, appId, context, emitter }) {
   if (inputs.code == null) {
     return {
       success: false,
@@ -46,25 +47,20 @@ module.exports.run = async function ({ inputs, appId, context, emitter }) {
     }
   }
 
-  const ctx = {
-    request: {
-      body: {
-        script: inputs.code,
-        context,
-      },
+  const ctx = buildCtx(appId, emitter, {
+    body: {
+      script: inputs.code,
+      context,
     },
-    user: { appId },
-    eventEmitter: emitter,
-  }
+  })
 
   try {
     await scriptController.execute(ctx)
     return {
-      success: ctx.status === 200,
+      success: true,
       value: ctx.body,
     }
   } catch (err) {
-    console.error(err)
     return {
       success: false,
       response: err,

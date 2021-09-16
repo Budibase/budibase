@@ -1,22 +1,24 @@
 <script>
   import {
-    DatePicker,
-    Icon,
-    Button,
-    Select,
-    Combobox,
-    Input,
-    DrawerContent,
-    Layout,
     Body,
+    Button,
+    Combobox,
+    DatePicker,
+    DrawerContent,
+    Icon,
+    Input,
+    Layout,
+    Select,
   } from "@budibase/bbui"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
+  import BindingPanel from "components/common/bindings/BindingPanel.svelte"
   import { generate } from "shortid"
-  import { OperatorOptions, getValidOperatorsForType } from "helpers/lucene"
+  import { getValidOperatorsForType, OperatorOptions } from "helpers/lucene"
 
   export let schemaFields
   export let filters = []
   export let bindings = []
+  export let panel = BindingPanel
 
   const BannedTypes = ["link", "attachment", "formula"]
 
@@ -58,6 +60,14 @@
     if (!validOperators.includes(expression.operator)) {
       expression.operator = validOperators[0] ?? OperatorOptions.Equals.value
       onOperatorChange(expression, expression.operator)
+    }
+
+    // if changed to an array, change default value to empty array
+    const idx = filters.findIndex(x => x.field === field)
+    if (expression.type === "array") {
+      filters[idx].value = []
+    } else {
+      filters[idx].value = null
     }
   }
 
@@ -117,12 +127,13 @@
                 title={`Value for "${filter.field}"`}
                 value={filter.value}
                 placeholder="Value"
+                {panel}
                 {bindings}
                 on:change={event => (filter.value = event.detail)}
               />
             {:else if ["string", "longform", "number"].includes(filter.type)}
               <Input disabled={filter.noValue} bind:value={filter.value} />
-            {:else if filter.type === "options"}
+            {:else if filter.type === "options" || "array"}
               <Combobox
                 disabled={filter.noValue}
                 options={getFieldOptions(filter.field)}

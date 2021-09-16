@@ -1,5 +1,8 @@
 <script>
   import { Input, Select } from "@budibase/bbui"
+  import { createEventDispatcher } from "svelte"
+
+  const dispatch = createEventDispatcher()
 
   export let value = {}
   $: fieldsArray = Object.entries(value).map(([name, type]) => ({
@@ -28,13 +31,13 @@
   function addField() {
     const newValue = { ...value }
     newValue[""] = "string"
-    value = newValue
+    dispatch("change", newValue)
   }
 
   function removeField(name) {
     const newValues = { ...value }
     delete newValues[name]
-    value = newValues
+    dispatch("change", newValues)
   }
 
   const fieldNameChanged = originalName => e => {
@@ -50,6 +53,7 @@
       newVals[current.name] = current.type
       return newVals
     }, {})
+    dispatch("change", value)
   }
 </script>
 
@@ -68,7 +72,10 @@
       />
       <Select
         value={field.type}
-        on:change={e => (value[field.name] = e.target.value)}
+        on:change={e => {
+          value[field.name] = e.target.value
+          dispatch("change", value)
+        }}
         options={typeOptions}
       />
       <i

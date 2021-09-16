@@ -40,6 +40,11 @@ export enum SourceNames {
   REST = "REST",
 }
 
+export enum IncludeRelationships {
+  INCLUDE = 1,
+  EXCLUDE = 0,
+}
+
 export interface QueryDefinition {
   type: QueryTypes
   displayName?: string

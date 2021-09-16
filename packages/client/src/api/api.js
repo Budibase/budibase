@@ -1,5 +1,5 @@
-import { notificationStore } from "../store"
-import { ApiVersion } from "../constants"
+import { notificationStore } from "stores"
+import { ApiVersion } from "constants"
 
 /**
  * API cache for cached request responses.

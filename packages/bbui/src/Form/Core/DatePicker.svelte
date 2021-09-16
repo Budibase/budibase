@@ -13,6 +13,7 @@
   export let enableTime = true
   export let value = null
   export let placeholder = null
+  export let appendTo = null
 
   const dispatch = createEventDispatcher()
   const flatpickrId = `${generateID()}-wrapper`
@@ -24,6 +25,7 @@
     altInput: true,
     altFormat: enableTime ? "F j Y, H:i" : "F j, Y",
     wrap: true,
+    appendTo,
   }
 
   const handleChange = event => {

@@ -211,7 +211,6 @@ class QueryBuilder {
     if (this.query.notEmpty) {
       build(this.query.notEmpty, key => `${key}:["" TO *]`)
     }
-
     return query
   }
 
@@ -253,6 +252,7 @@ const runQuery = async (url, body) => {
     method: "POST",
   })
   const json = await response.json()
+
   let output = {
     rows: [],
   }

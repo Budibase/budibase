@@ -14,6 +14,8 @@
   import { findComponent, findComponentPath } from "builderStore/storeUtils"
   import { get } from "svelte/store"
   import AppThemeSelect from "components/design/AppPreview/AppThemeSelect.svelte"
+  import ThemeEditor from "components/design/AppPreview/ThemeEditor.svelte"
+  import DevicePreviewSelect from "components/design/AppPreview/DevicePreviewSelect.svelte"
 
   // Cache previous values so we don't update the URL more than necessary
   let previousType
@@ -150,7 +152,12 @@
     {#if $currentAsset}
       <div class="preview-header">
         <ComponentSelectionList />
-        {#if $store.clientFeatures.spectrumThemes}
+        {#if $store.clientFeatures.devicePreview}
+          <DevicePreviewSelect />
+        {/if}
+        {#if $store.clientFeatures.customThemes}
+          <ThemeEditor />
+        {:else if $store.clientFeatures.spectrumThemes}
           <AppThemeSelect />
         {/if}
       </div>
@@ -202,9 +209,19 @@
     padding: var(--spacing-xl) 40px;
   }
   .preview-header {
-    display: grid;
-    grid-template-columns: 1fr 100px;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: flex-start;
+    gap: 1rem;
   }
+  .preview-header > :global(*) {
+    flex: 0 0 auto;
+  }
+  .preview-header > :global(*:first-child) {
+    flex: 1 1 auto;
+  }
+
   .preview-content {
     flex: 1 1 auto;
   }
