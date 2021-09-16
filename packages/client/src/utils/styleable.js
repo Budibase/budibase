@@ -33,6 +33,7 @@ export const styleable = (node, styles = {}) => {
   const setupStyles = (newStyles = {}) => {
     // Use empty state styles as base styles if required, but let them, get
     // overridden by any user specified styles
+    const baseString = node.style.cssText
     let baseStyles = {}
     if (newStyles.empty) {
       baseStyles.border = "2px dashed var(--spectrum-global-color-gray-600)"
@@ -50,7 +51,7 @@ export const styleable = (node, styles = {}) => {
 
     // Applies a style string to a DOM node
     const applyStyles = styleString => {
-      node.style = styleString
+      node.style = `${baseString}${styleString}`
       node.dataset.componentId = componentId
     }
 

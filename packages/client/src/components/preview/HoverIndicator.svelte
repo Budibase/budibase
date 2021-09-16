@@ -30,7 +30,7 @@
 </script>
 
 <IndicatorSet
-  {componentId}
+  componentId={$builderStore.showHoverIndicator ? componentId : null}
   color="var(--spectrum-global-color-static-blue-200)"
   transition
   {zIndex}

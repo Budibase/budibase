@@ -181,7 +181,8 @@
       data-id={id}
       data-name={name}
       data-draggable={interactive && !isLayout && !isScreen ? "true" : "false"}
-      data-droppable={definition?.hasChildren ? "true" : "false"}
+      data-droppable={interactive ? "true" : "false"}
+      data-droppable-inside={definition?.hasChildren ? "true" : "false"}
     >
       <svelte:component this={constructor} {...componentSettings}>
         {#if children.length}

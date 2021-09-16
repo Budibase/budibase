@@ -23,6 +23,7 @@ const createBuilderStore = () => {
     theme: null,
     customTheme: null,
     previewDevice: "desktop",
+    showHoverIndicator: true,
   }
   const writableStore = writable(initialState)
   const derivedStore = derived(writableStore, $state => {
@@ -76,9 +77,16 @@ const createBuilderStore = () => {
         mode,
       })
     },
+    showHoverIndicator: show => {
+      writableStore.update(state => {
+        state.showHoverIndicator = show
+        return state
+      })
+    },
   }
   return {
     ...writableStore,
+    set: state => writableStore.set({ ...initialState, ...state }),
     subscribe: derivedStore.subscribe,
     actions,
   }
