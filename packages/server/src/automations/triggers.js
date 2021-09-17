@@ -14,8 +14,10 @@ const {
 } = require("../integrations/utils")
 const { getExternalTable } = require("../api/controllers/table/utils")
 
-const { opts } = utils.getRedisOptions()
-let automationQueue = new Queue(JobQueues.AUTOMATIONS, { redis: opts })
+const { opts, redisProtocolUrl } = utils.getRedisOptions()
+
+const redisConfig = redisProtocolUrl || { redis: opts }
+let automationQueue = new Queue(JobQueues.AUTOMATIONS, redisConfig)
 
 const FAKE_STRING = "TEST"
 const FAKE_BOOL = false
