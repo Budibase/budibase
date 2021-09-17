@@ -96,7 +96,7 @@ exports.reset = async ctx => {
 exports.resetUpdate = async ctx => {
   const { resetCode, password } = ctx.request.body
   try {
-    const userId = await checkResetPasswordCode(resetCode)
+    const { userId } = await checkResetPasswordCode(resetCode)
     const db = getGlobalDB()
     const user = await db.get(userId)
     user.password = await hash(password)

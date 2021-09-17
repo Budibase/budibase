@@ -63,8 +63,8 @@ exports.shutdown = async () => {
  * @param {string} userId the ID of the user which is to be reset.
  * @return {Promise<string>} returns the code that was stored to redis.
  */
-exports.getResetPasswordCode = async userId => {
-  return writeACode(utils.Databases.PW_RESETS, userId)
+exports.getResetPasswordCode = async (userId, info) => {
+  return writeACode(utils.Databases.PW_RESETS, { userId, info })
 }
 
 /**
