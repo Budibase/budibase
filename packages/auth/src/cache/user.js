@@ -6,8 +6,10 @@ const EXPIRY_SECONDS = 3600
 /**
  * The default populate user function
  */
-const populateFromDB = (userId, tenantId) => {
-  return getGlobalDB(tenantId).get(userId)
+const populateFromDB = async (userId, tenantId) => {
+  const user = await getGlobalDB(tenantId).get(userId)
+  user.budibaseAccess = true
+  return user
 }
 
 /**

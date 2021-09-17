@@ -53,7 +53,7 @@
   }
 </script>
 
-<Layout>
+<Layout noPadding>
   <Layout gap="XS" noPadding>
     <Heading>{$t("users")}</Heading>
     <Body>

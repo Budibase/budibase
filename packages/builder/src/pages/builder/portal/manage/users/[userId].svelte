@@ -98,7 +98,7 @@
 
 <Layout noPadding>
   <Layout gap="XS" noPadding>
-    <div class="back">
+    <div>
       <ActionButton
         on:click={() => $goto("./")}
         quiet

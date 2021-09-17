@@ -7,7 +7,7 @@
   import { organisation } from "stores/portal"
 </script>
 
-<Layout>
+<Layout noPadding>
   <Layout gap="XS" noPadding>
     <Heading size="M">{$t("theming")} & {$t("language")}</Heading>
     <Body
@@ -46,7 +46,7 @@
   }
   .field {
     display: grid;
-    grid-template-columns: 33% 1fr;
+    grid-template-columns: 120px 1fr;
     align-items: center;
   }
 </style>

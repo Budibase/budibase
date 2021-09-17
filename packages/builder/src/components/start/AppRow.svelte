@@ -29,7 +29,7 @@
     </Heading>
   </div>
 </div>
-<div>
+<div class="desktop">
   {#if app.updatedAt}
     {processStringSync(
       $t("updated") + " {{ duration time 'millisecond' }} " + $t("ago"),
@@ -41,7 +41,7 @@
     {$t("never-updated")}
   {/if}
 </div>
-<div>
+<div class="desktop">
   <StatusLight
     positive={!app.lockedYou && !app.lockedOther}
     notice={app.lockedYou}
@@ -56,7 +56,7 @@
     {/if}
   </StatusLight>
 </div>
-<div>
+<div class="desktop">
   <StatusLight active={app.deployed} neutral={!app.deployed}>
     {#if app.deployed}{$t("published")}{:else}{$t("unpublished")}{/if}
   </StatusLight>
@@ -118,5 +118,11 @@
     color: var(--spectrum-global-color-blue-600);
     cursor: pointer;
     transition: color 130ms ease;
+  }
+
+  @media (max-width: 640px) {
+    .desktop {
+      display: none !important;
+    }
   }
 </style>

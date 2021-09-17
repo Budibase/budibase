@@ -206,9 +206,7 @@
           <Button secondary on:click={initiateAppImport}
             >{$t("import-app")}</Button
           >
-          <Button cta on:click={initiateAppCreation}
-            >{$t("create-new-app")}</Button
-          >
+          <Button cta on:click={initiateAppCreation}>{$t("create-app")}</Button>
         </ButtonGroup>
       </div>
       <div class="filter">
@@ -357,5 +355,11 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
+  }
+
+  @media (max-width: 640px) {
+    .appTable {
+      grid-template-columns: 1fr auto;
+    }
   }
 </style>

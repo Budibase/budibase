@@ -86,7 +86,7 @@
 </script>
 
 {#if $auth.isAdmin}
-  <Layout>
+  <Layout noPadding>
     <Layout gap="XS" noPadding>
       <Heading size="M">{$t("organisation")}</Heading>
       <Body>
@@ -104,7 +104,7 @@
     </Layout>
     <div class="fields">
       <div class="field">
-        <Label size="L">{$t("organization-name")}</Label>
+        <Label size="L">Org. name</Label>
         <Input thin bind:value={$values.company} />
       </div>
       <div class="field logo">
@@ -149,12 +149,10 @@
           )}
         </Body>
       </Layout>
-      <div class="fields">
-        <div class="field">
-          <Label size="L">{$t("send-analytics-to-us")}</Label>
-          <Toggle text="" bind:value={$values.analytics} />
-        </div>
-      </div>
+      <Toggle
+        text={$t("send-analytics-to-us")}
+        bind:value={$values.analytics}
+      />
       <div>
         <Button disabled={loading} on:click={saveConfig} cta
           >{$t("save")}</Button
@@ -171,7 +169,7 @@
   }
   .field {
     display: grid;
-    grid-template-columns: 33% 1fr;
+    grid-template-columns: 100px 1fr;
     align-items: center;
   }
   .file {

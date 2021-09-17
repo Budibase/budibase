@@ -3,13 +3,15 @@
   import { database } from "stores/backend"
   import { automationStore } from "builderStore"
   import { notifications } from "@budibase/bbui"
-  import { Icon, Input, ModalContent } from "@budibase/bbui"
+  import { Input, ModalContent, Layout, Body, Icon } from "@budibase/bbui"
   import analytics from "analytics"
   import { _ as t } from "svelte-i18n"
 
   let name
+  let selectedTrigger
+  let triggerVal
+  export let webhookModal
 
-  $: valid = !!name
   $: instanceId = $database._id
 
   async function createAutomation() {
@@ -17,42 +19,90 @@
       name,
       instanceId,
     })
-    notifications.success(`${$t("automation")} ${name} ${$t("created")}.`)
+    const newBlock = $automationStore.selectedAutomation.constructBlock(
+      "TRIGGER",
+      triggerVal.stepId,
+      triggerVal
+    )
+
+    automationStore.actions.addBlockToAutomation(newBlock)
+    if (triggerVal.stepId === "WEBHOOK") {
+      webhookModal.show
+    }
+
+    await automationStore.actions.save({
+      instanceId,
+      automation: $automationStore.selectedAutomation?.automation,
+    })
+
+    notifications.success(`Automation ${name} created.`)
+
     $goto(`./${$automationStore.selectedAutomation.automation._id}`)
     analytics.captureEvent($t("automation-created"), { name })
+  }
+  $: triggers = Object.entries($automationStore.blockDefinitions.TRIGGER)
+
+  const selectTrigger = trigger => {
+    triggerVal = trigger
+    selectedTrigger = trigger.name
   }
 </script>
 
 <ModalContent
-  cancelText={$t("cancel")}
-  title={$t("create-automation")}
-  confirmText={$t("create-0")}
-  size="L"
-  onConfirm={createAutomation}
-  disabled={!valid}
->
-  <Input bind:value={name} label={$t("name")} />
-  <a
-    slot="footer"
-    target="_blank"
-    href="https://docs.budibase.com/automate/introduction-to-automate"
-  >
-    <Icon name="InfoOutline" />
-    <span>{$t("learn-about-automations")}</span>
-  </a>
+  <Body size="XS">
+    { $t('please-name-your-automation-then-select-a-trigger-every-automation-must-start-with-a-trigger') }
+  </Body>
+  <Input bind:value={name} label={ $t('name') } />
+
+  <Layout noPadding>
+    <Body size="S">{ $t('triggers') }</Body>
+
+    <div class="item-list">
+      {#each triggers as [idx, trigger]}
+        <div
+          class="item"
+          class:selected={selectedTrigger === trigger.name}
+          on:click={() => selectTrigger(trigger)}
+        >
+          <div class="item-body">
+            <Icon name={trigger.icon} />
+            <span class="icon-spacing">
+              <Body size="S">{trigger.name}</Body></span
+            >
+          </div>
+        </div>
+      {/each}
+    </div>
+  </Layout>
 </ModalContent>
 
 <style>
-  a {
-    color: var(--ink);
-    font-size: 14px;
-    vertical-align: middle;
-    display: flex;
-    align-items: center;
-    text-decoration: none;
+  .icon-spacing {
+    margin-left: var(--spacing-m);
   }
-  a span {
-    text-decoration: underline;
-    margin-left: var(--spectrum-alias-item-padding-s);
+  .item-body {
+    display: flex;
+    margin-left: var(--spacing-m);
+  }
+  .item-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-gap: var(--spectrum-alias-grid-baseline);
+  }
+
+  .item {
+    cursor: pointer;
+    display: grid;
+    grid-gap: var(--spectrum-alias-grid-margin-xsmall);
+    padding: var(--spectrum-alias-item-padding-s);
+    background: var(--spectrum-alias-background-color-secondary);
+    transition: 0.3s all;
+    border: solid #3b3d3c;
+    border-radius: 5px;
+    box-sizing: border-box;
+    border-width: 2px;
+  }
+  .selected {
+    background: var(--spectrum-alias-background-color-tertiary);
   }
 </style>

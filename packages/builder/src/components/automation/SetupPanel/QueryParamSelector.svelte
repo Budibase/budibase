@@ -39,6 +39,7 @@
         label={field.name}
         type="string"
         {bindings}
+        fillWidth={true}
       />
     {/each}
   </div>

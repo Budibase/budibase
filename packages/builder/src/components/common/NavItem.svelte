@@ -1,5 +1,6 @@
 <script>
   import { Icon } from "@budibase/bbui"
+  import { createEventDispatcher } from "svelte"
 
   export let icon
   export let withArrow = false
@@ -10,6 +11,13 @@
   export let selected = false
   export let opened = false
   export let draggable = false
+
+  const dispatch = createEventDispatcher()
+
+  function onIconClick(event) {
+    event.stopPropagation()
+    dispatch("iconClick")
+  }
 </script>
 
 <div
@@ -28,7 +36,7 @@
 >
   <div class="content">
     {#if withArrow}
-      <div class:opened class="icon arrow">
+      <div class:opened class="icon arrow" on:click={onIconClick}>
         <Icon size="S" name="ChevronRight" />
       </div>
     {/if}

@@ -15,6 +15,7 @@
   export let placeholder
   export let label
   export let disabled = false
+  export let fillWidth
 
   const dispatch = createEventDispatcher()
   let bindingDrawer
@@ -46,7 +47,7 @@
     </div>
   {/if}
 </div>
-<Drawer bind:this={bindingDrawer} {title} cancelText={$t("cancel")}>
+<Drawer {fillWidth} bind:this={bindingDrawer} {title}>
   <svelte:fragment slot="description">
     {$t("add-the-objects-on-the-left-to-enrich-your-text")}
   </svelte:fragment>

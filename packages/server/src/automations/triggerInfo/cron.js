@@ -1,7 +1,7 @@
 exports.definition = {
   name: "Cron Trigger",
   event: "cron:trigger",
-  icon: "ri-timer-line",
+  icon: "Clock",
   tagline: "Cron Trigger (<b>{{inputs.cron}}</b>)",
   description: "Triggers automation on a cron schedule.",
   stepId: "CRON",

@@ -72,92 +72,111 @@
   }
 </script>
 
-<Layout gap="XS" noPadding>
-  <div class="back">
-    <ActionButton
-      on:click={() => $goto("./")}
-      quiet
-      size="S"
-      icon="BackAndroid"
-    >
-      {$t("back-to-email-settings")}
-    </ActionButton>
+<Layout noPadding>
+  <Layout gap="XS" noPadding>
+    <div>
+      <ActionButton
+        on:click={() => $goto("./")}
+        quiet
+        size="S"
+        icon="BackAndroid"
+      >
+        {$t("back-to-email-settings")}
+      </ActionButton>
+    </div>
+    <header>
+      <Heading>
+        {$t("email-template")}
+        {name}
+      </Heading>
+      <Button cta on:click={saveTemplate}>{$t("save")}</Button>
+    </header>
+    <Body>
+      {description}
+      <br />
+      {$t(
+        "change-the-email-template-here-add-dynamic-content-by-using-the-bindings-menu-on-the-right"
+      )}
+    </Body>
+  </Layout>
+  <div>
+    <Tabs selected="Edit" on:select={fixMountBug}>
+      <Tab title="Edit">
+        <div class="template-editor">
+          <div class="template-text-editor">
+            <Editor
+              editorHeight={640}
+              bind:this={htmlEditor}
+              mode="handlebars"
+              on:change={e => {
+                selectedTemplate.contents = e.detail.value
+              }}
+              value={selectedTemplate?.contents}
+            />
+          </div>
+          <div class="bindings-editor">
+            <Detail size="L">{$t("bindings")}</Detail>
+            {#if mounted}
+              <Tabs selected="Template">
+                <Tab title="Template">
+                  <TemplateBindings
+                    title={$t("template-bindings")}
+                    bindings={templateBindings}
+                    onBindingClick={setTemplateBinding}
+                  />
+                </Tab>
+                <Tab title="Common">
+                  <TemplateBindings
+                    title={$t("common-bindings")}
+                    bindings={$email?.definitions?.bindings?.common}
+                    onBindingClick={setTemplateBinding}
+                  />
+                </Tab>
+              </Tabs>
+            {/if}
+          </div>
+        </div>
+      </Tab>
+      <Tab title="Preview">
+        <div class="preview">
+          <iframe title={$t("preview")} srcdoc={previewContent} />
+        </div>
+      </Tab>
+    </Tabs>
   </div>
-  <header>
-    <Heading>
-      {$t("email-template")}
-      {name}
-    </Heading>
-    <Button cta on:click={saveTemplate}>{$t("save")}</Button>
-  </header>
-  <Detail>{$t("description")}</Detail>
-  <Body>{description}</Body>
-  <Body
-    >{$t(
-      "change-the-email-template-here-add-dynamic-content-by-using-the-bindings-menu-on-the-right"
-    )}</Body
-  >
 </Layout>
-<Tabs selected="Edit" on:select={fixMountBug}>
-  <Tab title="Edit" label={$t("edit")}>
-    <div class="template-editor">
-      <Editor
-        editorHeight={800}
-        bind:this={htmlEditor}
-        mode="handlebars"
-        on:change={e => {
-          selectedTemplate.contents = e.detail.value
-        }}
-        value={selectedTemplate?.contents}
-      />
-      <div class="bindings-editor">
-        <Detail size="L">{$t("bindings")}</Detail>
-        {#if mounted}
-          <Tabs selected="Template">
-            <Tab title="Template" label={$t("template")}>
-              <TemplateBindings
-                title={$t("template-bindings")}
-                bindings={templateBindings}
-                onBindingClick={setTemplateBinding}
-              />
-            </Tab>
-            <Tab title="Common" label={$t("common")}>
-              <TemplateBindings
-                title={$t("common-bindings")}
-                bindings={$email?.definitions?.bindings?.common}
-                onBindingClick={setTemplateBinding}
-              />
-            </Tab>
-          </Tabs>
-        {/if}
-      </div>
-    </div>
-  </Tab>
-  <Tab title="Preview" label={$t("preview")}>
-    <div class="preview">
-      <iframe title="preview" srcdoc={previewContent} />
-    </div>
-  </Tab>
-</Tabs>
 
 <style>
   .template-editor {
-    display: grid;
-    grid-template-columns: 1fr minmax(250px, 20%);
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: stretch;
+    flex-wrap: wrap;
     grid-gap: var(--spacing-xl);
     margin-top: var(--spacing-xl);
+  }
+  .template-text-editor {
+    flex: 1 1 0;
+    min-width: 250px;
+  }
+  .bindings-editor {
+    margin-top: var(--spacing-s);
+    max-height: 640px;
+    overflow: auto;
+    flex: 0 0 300px;
   }
 
   header {
     display: flex;
     width: 100%;
     justify-content: space-between;
-    margin-top: var(--spacing-l);
+    align-items: flex-start;
   }
 
   .preview {
-    height: 800px;
-    padding: var(--spacing-xl) 0;
+    height: 640px;
+    margin-top: calc(var(--spacing-xl) + var(--spacing-s));
     position: relative;
   }
   iframe {

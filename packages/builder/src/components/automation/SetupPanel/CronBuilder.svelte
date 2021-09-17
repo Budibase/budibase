@@ -1,8 +1,15 @@
 <script>
   import { Button, Select, Input } from "@budibase/bbui"
+  import { createEventDispatcher } from "svelte"
   import { _ as t } from "svelte-i18n"
 
+  const dispatch = createEventDispatcher()
+
   export let value
+  const onChange = e => {
+    value = e.detail
+    dispatch("change", e.detail)
+  }
 
   let presets = false
 
@@ -31,7 +38,7 @@
 </script>
 
 <div class="block-field">
-  <Input bind:value />
+  <Input on:change={onChange} {value} />
 
   <div class="presets">
     <Button on:click={() => (presets = !presets)}
@@ -39,7 +46,8 @@
     >
     {#if presets}
       <Select
-        bind:value
+        on:change={onChange}
+        {value}
         secondary
         extraThin
         label={$t("presets")}

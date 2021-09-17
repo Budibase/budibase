@@ -100,7 +100,7 @@
         <ActionGroup />
       </div>
       <div class="toprightnav">
-        {#if $admin.sandbox}
+        {#if $admin.cloud}
           <UpgradeModal />
         {/if}
         <VersionModal />

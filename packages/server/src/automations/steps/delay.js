@@ -2,7 +2,7 @@ let { wait } = require("../../utilities")
 
 exports.definition = {
   name: "Delay",
-  icon: "ri-time-line",
+  icon: "Clock",
   tagline: "Delay for {{inputs.time}} milliseconds",
   description: "Delay the automation until an amount of time has passed",
   stepId: "DELAY",
