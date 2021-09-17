@@ -44,7 +44,7 @@ module.exports.run = async function ({ inputs, context }) {
 
     let stdout
     try {
-      stdout = execSync(command, { timeout: 500 })
+      stdout = execSync(command, { timeout: 500 }).toString()
     } catch (err) {
       stdout = err.message
     }
