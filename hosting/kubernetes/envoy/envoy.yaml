@@ -28,7 +28,7 @@ static_resources:
               - match: { prefix: "/builder" }
                 route:
                   cluster: app-service
-              
+
               - match: { prefix: "/app_" }
                 route:
                   cluster: app-service
@@ -50,13 +50,13 @@ static_resources:
                 route:
                   cluster: app-service
 
-              # special case for when API requests are made, can just forward, not to minio    
+              # special case for when API requests are made, can just forward, not to minio
               - match: { prefix: "/api/" }
                 route:
                   cluster: app-service
 
               - match: { prefix: "/worker/" }
-                route: 
+                route:
                   cluster: worker-service
                   prefix_rewrite: "/"
 
@@ -85,7 +85,7 @@ static_resources:
       - lb_endpoints:
         - endpoint:
             address:
-              socket_address: 
+              socket_address:
                 address: app-service.budibase.svc.cluster.local
                 port_value: 4002
 
@@ -113,7 +113,7 @@ static_resources:
       - lb_endpoints:
         - endpoint:
             address:
-              socket_address: 
+              socket_address:
                 address: worker-service.budibase.svc.cluster.local
                 port_value: 4001
 

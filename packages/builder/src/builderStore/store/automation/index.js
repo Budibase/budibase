@@ -45,21 +45,24 @@ const automationActions = store => ({
       return state
     })
   },
-  save: async ({ automation }) => {
+  save: async automation => {
     const UPDATE_AUTOMATION_URL = `/api/automations`
     const response = await api.put(UPDATE_AUTOMATION_URL, automation)
     const json = await response.json()
     store.update(state => {
+      const newAutomation = json.automation
       const existingIdx = state.automations.findIndex(
         existing => existing._id === automation._id
       )
-      state.automations.splice(existingIdx, 1, json.automation)
-      state.automations = state.automations
-      store.actions.select(json.automation)
-      return state
+      if (existingIdx !== -1) {
+        state.automations.splice(existingIdx, 1, newAutomation)
+        state.automations = [...state.automations]
+        store.actions.select(newAutomation)
+        return state
+      }
     })
   },
-  delete: async ({ automation }) => {
+  delete: async automation => {
     const { _id, _rev } = automation
     const DELETE_AUTOMATION_URL = `/api/automations/${_id}/${_rev}`
     await api.delete(DELETE_AUTOMATION_URL)
@@ -69,17 +72,17 @@ const automationActions = store => ({
         existing => existing._id === _id
       )
       state.automations.splice(existingIdx, 1)
-      state.automations = state.automations
+      state.automations = [...state.automations]
       state.selectedAutomation = null
       state.selectedBlock = null
       return state
     })
   },
-  trigger: async ({ automation }) => {
+  trigger: async automation => {
     const { _id } = automation
     return await api.post(`/api/automations/${_id}/trigger`)
   },
-  test: async ({ automation }, testData) => {
+  test: async (automation, testData) => {
     const { _id } = automation
     const response = await api.post(`/api/automations/${_id}/test`, testData)
     const json = await response.json()
