@@ -943,17 +943,10 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-<<<<<<< HEAD
-"@budibase/auth@^0.9.125-alpha.1.jq":
-  version "0.9.125-alpha.1.jq"
-  resolved "http://www.jqapaas.tk:10011/artifactory/api/npm/jq-npm-local/@budibase/auth/-/@budibase/auth-0.9.125-alpha.1.jq.tgz#a7af2f3d4c27d8ce79f1d229aeeca007d52bf406"
-  integrity sha1-p68vPUwn2M558dIpruygB9Ur9AY=
-=======
 "@budibase/auth@^0.9.125-alpha.11":
   version "0.9.130"
   resolved "https://registry.yarnpkg.com/@budibase/auth/-/auth-0.9.130.tgz#04ff77b862e87e22b08ee7bebd5409ff479a2b35"
   integrity sha512-wCgbnk8YvBtRQhmWd7w9UGNLL1ocJPHCq10652Dxm8nLnY0oAsgzVVoMsMULyTypfHiYtUEnOs7+JQ/nYa2zkA==
->>>>>>> remote/develop
   dependencies:
     "@techpass/passport-openidconnect" "^0.3.0"
     aws-sdk "^2.901.0"
@@ -973,17 +966,10 @@
     uuid "^8.3.2"
     zlib "^1.0.5"
 
-<<<<<<< HEAD
-"@budibase/bbui@^0.9.124", "@budibase/bbui@^0.9.125-alpha.1.jq":
-  version "0.9.125-alpha.1.jq"
-  resolved "http://www.jqapaas.tk:10011/artifactory/api/npm/jq-npm-local/@budibase/bbui/-/@budibase/bbui-0.9.125-alpha.1.jq.tgz#45a9c8bc14953cbcc1d4907588e4da6beb819141"
-  integrity sha1-RanIvBSVPLzB1JB1iOTaa+uBkUE=
-=======
 "@budibase/bbui@^0.9.127":
   version "0.9.127"
   resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-0.9.127.tgz#e038338d69476d45afe1d4c4ef36971d8d0c59bd"
   integrity sha512-fcUVzC7lOGUxLFEptaLTNSproMQa4cf5tSCo5atU9gDoPHVdIncocPWJuuLM1hM2JIlk8IiJ+up9CdiDur8FsA==
->>>>>>> remote/develop
   dependencies:
     "@adobe/spectrum-css-workflow-icons" "^1.2.1"
     "@spectrum-css/actionbutton" "^1.0.1"
@@ -1029,16 +1015,6 @@
     svelte-flatpickr "^3.1.0"
     svelte-portal "^1.0.0"
 
-<<<<<<< HEAD
-"@budibase/client@^0.9.125-alpha.1.jq":
-  version "0.9.125-alpha.1.jq"
-  resolved "http://www.jqapaas.tk:10011/artifactory/api/npm/jq-npm-local/@budibase/client/-/@budibase/client-0.9.125-alpha.1.jq.tgz#83a1fe6309c5af689af7f4694ba04c9896b5bd83"
-  integrity sha1-g6H+YwnFr2ia9/RpS6BMmJa1vYM=
-  dependencies:
-    "@budibase/bbui" "^0.9.125-alpha.1.jq"
-    "@budibase/standard-components" "^0.9.124"
-    "@budibase/string-templates" "^0.9.125-alpha.1.jq"
-=======
 "@budibase/bbui@^0.9.130":
   version "0.9.130"
   resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-0.9.130.tgz#cad02a7aa16324eb7a056c5dc0162444fa917964"
@@ -1096,7 +1072,6 @@
     "@budibase/bbui" "^0.9.130"
     "@budibase/standard-components" "^0.9.130"
     "@budibase/string-templates" "^0.9.130"
->>>>>>> remote/develop
     regexparam "^1.3.0"
     shortid "^2.2.15"
     svelte-spa-router "^3.0.5"
@@ -1134,19 +1109,11 @@
     year "^0.2.1"
 
 "@budibase/standard-components@^0.9.124":
-<<<<<<< HEAD
-  version "0.9.124"
-  resolved "http://www.jqapaas.tk:10011/artifactory/api/npm/jq-npm-local/@budibase/standard-components/-/@budibase/standard-components-0.9.124.tgz#f42db8dbe668115374ed1fa4216dea8a3354cfa6"
-  integrity sha1-9C242+ZoEVN07R+kIW3qijNUz6Y=
-  dependencies:
-    "@budibase/bbui" "^0.9.124"
-=======
   version "0.9.127"
   resolved "https://registry.yarnpkg.com/@budibase/standard-components/-/standard-components-0.9.127.tgz#91366b8376eb388f8bcab16e96a2913e4b4af649"
   integrity sha512-NlJB+y28/gKRu1FtTZQzEifJNA7N8suaZ8FlZpqh4Aq/LzRh0Q301BXx1emVnPqMW/fEHBum47iRYboO5XSmMA==
   dependencies:
     "@budibase/bbui" "^0.9.127"
->>>>>>> remote/develop
     "@spectrum-css/button" "^3.0.3"
     "@spectrum-css/card" "^3.0.3"
     "@spectrum-css/divider" "^1.0.3"
@@ -1159,12 +1126,6 @@
     svelte-apexcharts "^1.0.2"
     svelte-flatpickr "^3.1.0"
 
-<<<<<<< HEAD
-"@budibase/string-templates@^0.9.125-alpha.1.jq":
-  version "0.9.125-alpha.1.jq"
-  resolved "http://www.jqapaas.tk:10011/artifactory/api/npm/jq-npm-local/@budibase/string-templates/-/@budibase/string-templates-0.9.125-alpha.1.jq.tgz#e6184e5449407317778ec975022db52fc564391d"
-  integrity sha1-5hhOVElAcxd3jsl1Ai21L8VkOR0=
-=======
 "@budibase/standard-components@^0.9.130":
   version "0.9.130"
   resolved "https://registry.yarnpkg.com/@budibase/standard-components/-/standard-components-0.9.130.tgz#ed24eaafcca959e15c76b81e2340371d268ab131"
@@ -1187,7 +1148,6 @@
   version "0.9.130"
   resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-0.9.130.tgz#1be8affcba0dc8ff2b8044c65dd378dc76a165d0"
   integrity sha512-DXO6Um18/k16i3hYilxvQ4RYNHhd29OJGbzjfQZ2v7z4Oin5y+WMZzpjX1hQS5g9f/CBbzu7qd7EHiz/n8gMqg==
->>>>>>> remote/develop
   dependencies:
     "@budibase/handlebars-helpers" "0.11.4"
     dayjs "^1.10.4"
@@ -2209,15 +2169,9 @@
     defer-to-connect "^1.0.1"
 
 "@techpass/passport-openidconnect@^0.3.0":
-<<<<<<< HEAD
-  version "0.3.0"
-  resolved "https://registry.nlark.com/@techpass/passport-openidconnect/download/@techpass/passport-openidconnect-0.3.0.tgz#a60b2bbf3f262649a5a02d5d186219944acc3010"
-  integrity sha1-pgsrvz8mJkmloC1dGGIZlErMMBA=
-=======
   version "0.3.2"
   resolved "https://registry.yarnpkg.com/@techpass/passport-openidconnect/-/passport-openidconnect-0.3.2.tgz#f8fd5d97256286665dbf26dac92431f977ab1e63"
   integrity sha512-fnCtEiexXSHA029B//hJcCJlLJrT3lhpNCyA0rnz58Qttz0BLGCVv6yMT8HmOnGThH6vcDOVwdgKM3kbCQtEhw==
->>>>>>> remote/develop
   dependencies:
     base64url "^3.0.1"
     oauth "^0.9.15"
@@ -3258,15 +3212,9 @@ aws-sdk@^2.767.0:
     xml2js "0.4.19"
 
 aws-sdk@^2.901.0:
-<<<<<<< HEAD
-  version "2.987.0"
-  resolved "https://registry.nlark.com/aws-sdk/download/aws-sdk-2.987.0.tgz#a6e952ae3d3adf352516402d88397fbe2b9e3480"
-  integrity sha1-pulSrj063zUlFkAtiDl/viueNIA=
-=======
   version "2.989.0"
   resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.989.0.tgz#ed3cce6b94856b469784bc3312a0b64438b9fe67"
   integrity sha512-sMjvqeF9mEOxXkhOAUjCrBt2iYafclkmaIbgSdjJ+te7zKXeReqrc6P3VgIGUxU8kwmdSro0n1NjrXbzKQJhcw==
->>>>>>> remote/develop
   dependencies:
     buffer "4.9.2"
     events "1.1.1"

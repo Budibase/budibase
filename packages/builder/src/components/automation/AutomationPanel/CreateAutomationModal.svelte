@@ -49,13 +49,21 @@
 </script>
 
 <ModalContent
-  <Body size="XS">
-    { $t('please-name-your-automation-then-select-a-trigger-every-automation-must-start-with-a-trigger') }
+  title={$t("create-automation")}
+  confirmText={$t("save")}
+  size="M"
+  onConfirm={createAutomation}
+  disabled={!selectedTrigger}
+>
+  <Body size="XS"
+    >{$t(
+      "please-name-your-automation-then-select-a-trigger-every-automation-must-start-with-a-trigger"
+    )}
   </Body>
-  <Input bind:value={name} label={ $t('name') } />
+  <Input bind:value={name} label="Name" />
 
   <Layout noPadding>
-    <Body size="S">{ $t('triggers') }</Body>
+    <Body size="S">{$t("triggers")}</Body>
 
     <div class="item-list">
       {#each triggers as [idx, trigger]}
