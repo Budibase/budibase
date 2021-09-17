@@ -1,7 +1,7 @@
 <script>
   import { setContext, getContext } from "svelte"
   import Router, { querystring } from "svelte-spa-router"
-  import { routeStore } from "../store"
+  import { routeStore } from "stores"
   import Screen from "./Screen.svelte"
 
   const { styleable } = getContext("sdk")

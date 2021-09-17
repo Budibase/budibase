@@ -9,7 +9,10 @@
   import TableNavigator from "components/backend/TableNavigator/TableNavigator.svelte"
   import ICONS from "./icons"
 
+  let openDataSources = []
+
   function selectDatasource(datasource) {
+    toggleNode(datasource)
     datasources.select(datasource._id)
     $goto(`./datasource/${datasource._id}`)
   }
@@ -17,6 +20,15 @@
   function onClickQuery(query) {
     queries.select(query)
     $goto(`./datasource/${query.datasourceId}/${query._id}`)
+  }
+
+  function toggleNode(datasource) {
+    const isOpen = openDataSources.includes(datasource._id)
+    if (isOpen) {
+      openDataSources = openDataSources.filter(id => datasource._id !== id)
+    } else {
+      openDataSources = [...openDataSources, datasource._id]
+    }
   }
 
   onMount(() => {
@@ -31,8 +43,11 @@
       <NavItem
         border={idx > 0}
         text={datasource.name}
+        opened={openDataSources.includes(datasource._id)}
         selected={$datasources.selected === datasource._id}
+        withArrow={true}
         on:click={() => selectDatasource(datasource)}
+        on:iconClick={() => toggleNode(datasource)}
       >
         <div class="datasource-icon" slot="icon">
           <svelte:component
@@ -46,13 +61,16 @@
         {/if}
       </NavItem>
 
-      <TableNavigator sourceId={datasource._id} />
+      {#if openDataSources.includes(datasource._id)}
+        <TableNavigator sourceId={datasource._id} />
+      {/if}
 
       {#each $queries.list.filter(query => query.datasourceId === datasource._id) as query}
         <NavItem
           indentLevel={1}
           icon="SQLQuery"
           text={query.name}
+          opened={$queries.selected === query._id}
           selected={$queries.selected === query._id}
           on:click={() => onClickQuery(query)}
         >

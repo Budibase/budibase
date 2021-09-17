@@ -86,7 +86,7 @@ const createScreen = table => {
           valueType: "Binding",
         },
       ],
-      limit: table.type === "external" ? undefined : 1,
+      limit: 1,
       paginate: false,
     })
 
@@ -94,13 +94,13 @@ const createScreen = table => {
     .instanceName("Repeater")
     .customProps({
       dataProvider: `{{ literal ${makePropSafe(provider._json._id)} }}`,
+      noRowsMessage: "We couldn't find a row to display",
     })
 
   const form = makeMainForm()
     .instanceName("Form")
     .customProps({
       actionType: "Update",
-      theme: "spectrum--lightest",
       size: "spectrum--medium",
       dataSource: {
         label: table.name,

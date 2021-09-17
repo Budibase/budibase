@@ -113,6 +113,10 @@
       label: "Options",
       value: FIELDS.OPTIONS.type,
     },
+    {
+      label: "Multi-select",
+      value: FIELDS.ARRAY.type,
+    },
   ]
 </script>
 
@@ -153,6 +157,7 @@
       label="Display Column"
       bind:value={primaryDisplay}
       options={fields}
+      sort
     />
   </div>
 {/if}

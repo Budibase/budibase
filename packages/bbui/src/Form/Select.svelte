@@ -16,6 +16,7 @@
   export let getOptionIcon = option => option?.icon
   export let quiet = false
   export let autoWidth = false
+  export let sort = false
 
   const dispatch = createEventDispatcher()
   const onChange = e => {
@@ -41,6 +42,7 @@
     {options}
     {placeholder}
     {autoWidth}
+    {sort}
     {getOptionLabel}
     {getOptionValue}
     {getOptionIcon}

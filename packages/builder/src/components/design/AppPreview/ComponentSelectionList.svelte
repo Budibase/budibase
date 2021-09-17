@@ -46,7 +46,7 @@
     <ActionMenu disabled={!item.isCategory}>
       <ActionButton
         icon={item.icon}
-        disabled={isChildAllowed(item, $selectedComponent)}
+        disabled={!item.isCategory && isChildAllowed(item, $selectedComponent)}
         quiet
         size="S"
         slot="control"
@@ -66,6 +66,7 @@
             dataCy={`component-${item.name}`}
             icon={item.icon}
             on:click={() => onItemChosen(item)}
+            disabled={isChildAllowed(item, $selectedComponent)}
           >
             {item.name}
           </MenuItem>
@@ -82,10 +83,11 @@
     justify-content: flex-start;
     align-items: center;
     flex-wrap: wrap;
-    margin-top: -10px;
   }
   .components :global(> *) {
-    margin-top: 10px;
+    height: 32px;
+    display: grid;
+    place-items: center;
   }
 
   .buttonContent {

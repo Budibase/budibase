@@ -1,4 +1,4 @@
-import { Checkbox, Input, Select } from "@budibase/bbui"
+import { Checkbox, Input, Select, Stepper } from "@budibase/bbui"
 import DataSourceSelect from "./DataSourceSelect.svelte"
 import DataProviderSelect from "./DataProviderSelect.svelte"
 import EventsEditor from "./EventsEditor"
@@ -22,7 +22,7 @@ const componentMap = {
   dataSource: DataSourceSelect,
   dataProvider: DataProviderSelect,
   boolean: Checkbox,
-  number: Input,
+  number: Stepper,
   event: EventsEditor,
   table: TableSelect,
   color: ColorPicker,
@@ -43,9 +43,11 @@ const componentMap = {
   "field/datetime": FormFieldSelect,
   "field/attachment": FormFieldSelect,
   "field/link": FormFieldSelect,
+  "field/array": FormFieldSelect,
   // Some validation types are the same as others, so not all types are
   // explicitly listed here. e.g. options uses string validation
   "validation/string": ValidationEditor,
+  "validation/array": ValidationEditor,
   "validation/number": ValidationEditor,
   "validation/boolean": ValidationEditor,
   "validation/datetime": ValidationEditor,

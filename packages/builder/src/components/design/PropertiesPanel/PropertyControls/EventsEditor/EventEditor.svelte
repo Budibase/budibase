@@ -9,11 +9,12 @@
     ActionMenu,
     MenuItem,
   } from "@budibase/bbui"
-  import actionTypes from "./actions"
+  import { getAvailableActions } from "./actions"
   import { generate } from "shortid"
 
   const flipDurationMs = 150
   const EVENT_TYPE_KEY = "##eventHandlerType"
+  const actionTypes = getAvailableActions()
 
   export let actions
   export let bindings = []
@@ -33,7 +34,7 @@
 
   $: selectedActionComponent =
     selectedAction &&
-    actionTypes.find(t => t.name === selectedAction[EVENT_TYPE_KEY]).component
+    actionTypes.find(t => t.name === selectedAction[EVENT_TYPE_KEY])?.component
 
   // Select the first action if we delete an action
   $: {
@@ -116,7 +117,7 @@
     </ActionMenu>
   </Layout>
   <Layout noPadding>
-    {#if selectedAction}
+    {#if selectedActionComponent}
       <div class="selected-action-container">
         <svelte:component
           this={selectedActionComponent}

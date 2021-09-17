@@ -10,6 +10,7 @@
     "icon": "Form",
     "children": [
       "form",
+      "formstep",
       "fieldgroup",
       "stringfield",
       "numberfield",
@@ -20,7 +21,8 @@
       "datetimefield",
       "attachmentfield",
       "relationshipfield",
-      "daterangepicker"
+      "daterangepicker",
+      "multifieldselect"
     ]
   },
   {

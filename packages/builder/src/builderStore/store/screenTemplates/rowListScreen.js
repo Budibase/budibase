@@ -65,6 +65,7 @@ const createScreen = table => {
         tableId: table._id,
         type: "table",
       },
+      size: "spectrum--medium",
       paginate: true,
       limit: 8,
     })

@@ -88,8 +88,8 @@ module.exports = server.listen(env.PORT || 0, async () => {
   env._set("PORT", server.address().port)
   eventEmitter.emitPort(env.PORT)
   fileSystem.init()
-  await automations.init()
   await redis.init()
+  await automations.init()
 })
 
 process.on("uncaughtException", err => {

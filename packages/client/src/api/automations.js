@@ -1,5 +1,6 @@
-import { notificationStore } from "../store/notification"
+import { notificationStore } from "stores/notification"
 import API from "./api"
+
 /**
  * Executes an automation. Must have "App Action" trigger.
  */

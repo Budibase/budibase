@@ -10,6 +10,7 @@
   export let error = null
   export let enableTime = true
   export let placeholder = null
+  export let appendTo = null
 
   const dispatch = createEventDispatcher()
   const onChange = e => {
@@ -26,6 +27,7 @@
     {value}
     {placeholder}
     {enableTime}
+    {appendTo}
     on:change={onChange}
   />
 </Field>
