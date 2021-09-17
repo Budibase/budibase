@@ -21,6 +21,7 @@
     // Update state
     dragTarget = e.target.dataset.componentId
     builderStore.actions.selectComponent(dragTarget)
+    builderStore.actions.setDragging(true)
 
     // Highlight being dragged by setting opacity
     const child = getDOMNodeForComponent(e.target)
@@ -34,15 +35,13 @@
     // Reset state and styles
     dropTarget = null
     dropInfo = null
+    builderStore.actions.setDragging(false)
 
     // Reset opacity style
     const child = getDOMNodeForComponent(e.target)
     if (child) {
       child.style.opacity = ""
     }
-
-    // Re-enable the hover indicator
-    builderStore.actions.showHoverIndicator(true)
   }
 
   // Callback when on top of a component
@@ -96,11 +95,11 @@
       element.dataset.droppable &&
       element.dataset.id !== dragTarget
     ) {
-      // Disable hover selection again to ensure it's always disabled.
+      // Ensure the dragging flag is always set.
       // There's a bit of a race condition between the app reinitialisation
       // after selecting the DND component and setting this the first time
-      if (get(builderStore).showHoverIndicator) {
-        builderStore.actions.showHoverIndicator(false)
+      if (!get(builderStore).isDragging) {
+        builderStore.actions.setDragging(true)
       }
 
       // Store target ID

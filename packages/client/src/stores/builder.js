@@ -23,7 +23,7 @@ const createBuilderStore = () => {
     theme: null,
     customTheme: null,
     previewDevice: "desktop",
-    showHoverIndicator: true,
+    isDragging: false,
   }
   const writableStore = writable(initialState)
   const derivedStore = derived(writableStore, $state => {
@@ -77,16 +77,15 @@ const createBuilderStore = () => {
         mode,
       })
     },
-    showHoverIndicator: show => {
+    setDragging: dragging => {
       writableStore.update(state => {
-        state.showHoverIndicator = show
+        state.isDragging = dragging
         return state
       })
     },
   }
   return {
     ...writableStore,
-    set: state => writableStore.set({ ...initialState, ...state }),
     subscribe: derivedStore.subscribe,
     actions,
   }
