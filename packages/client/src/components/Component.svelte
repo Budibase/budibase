@@ -201,7 +201,7 @@
   .component {
     display: contents;
   }
-  [data-draggable="true"] {
-    cursor: pointer;
+  [data-draggable="true"] :global(*:hover) {
+    cursor: grab !important;
   }
 </style>
