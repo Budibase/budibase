@@ -63,6 +63,7 @@ exports.tryAddTenant = async (tenantId, userId, email) => {
   }
   if (emailDoc) {
     emailDoc.tenantId = tenantId
+    emailDoc.userId = userId
     promises.push(db.put(emailDoc))
   }
   if (tenants.tenantIds.indexOf(tenantId) === -1) {
