@@ -51,7 +51,7 @@ function createSMTPTransport(config) {
 async function getLinkCode(purpose, email, user, info = null) {
   switch (purpose) {
     case EmailTemplatePurpose.PASSWORD_RECOVERY:
-      return getResetPasswordCode(user._id)
+      return getResetPasswordCode(user._id, info)
     case EmailTemplatePurpose.INVITATION:
       return getInviteCode(email, info)
     default:
