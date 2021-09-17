@@ -189,15 +189,27 @@ exports.trigger = async function (ctx) {
   }
 }
 
+function prepareTestInput(input) {
+  // prepare the test parameters
+  if (input.id && input.row) {
+    input.row._id = input.id
+  }
+  if (input.revision && input.row) {
+    input.row._rev = input.revision
+  }
+  return input
+}
+
 exports.test = async function (ctx) {
   const appId = ctx.appId
   const db = new CouchDB(appId)
   let automation = await db.get(ctx.params.id)
   await setTestFlag(automation._id)
+  const testInput = prepareTestInput(ctx.request.body)
   const response = await triggers.externalTrigger(
     automation,
     {
-      ...ctx.request.body,
+      ...testInput,
       appId,
     },
     { getResponses: true }
