@@ -61,7 +61,7 @@
     border-top: var(--border-light);
     border-left: var(--border-light);
     border-right: var(--border-light);
-    z-index: 2;
+    z-index: 12;
   }
 
   .fillWidth {
