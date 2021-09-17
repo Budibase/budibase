@@ -42,7 +42,10 @@
   disabled={isError}
   onConfirm={() => {
     automationStore.actions.addTestDataToAutomation(testData)
-    automationStore.actions.test($automationStore.selectedAutomation, testData)
+    automationStore.actions.test(
+      $automationStore.selectedAutomation?.automation,
+      testData
+    )
   }}
   cancelText="Cancel"
 >

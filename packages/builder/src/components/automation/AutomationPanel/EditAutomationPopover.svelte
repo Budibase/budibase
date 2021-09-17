@@ -1,20 +1,17 @@
 <script>
   import { goto } from "@roxi/routify"
   import { automationStore } from "builderStore"
-  import { database } from "stores/backend"
   import { ActionMenu, MenuItem, notifications, Icon } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+  import UpdateAutomationModal from "components/automation/AutomationPanel/UpdateAutomationModal.svelte"
 
   export let automation
 
   let confirmDeleteDialog
-  $: instanceId = $database._id
+  let updateAutomationDialog
 
   async function deleteAutomation() {
-    await automationStore.actions.delete({
-      instanceId,
-      automation,
-    })
+    await automationStore.actions.delete(automation)
     notifications.success("Automation deleted.")
     $goto("../automate")
   }
@@ -24,9 +21,8 @@
   <div slot="control" class="icon">
     <Icon s hoverable name="MoreSmallList" />
   </div>
-  <MenuItem noClose icon="Delete" on:click={confirmDeleteDialog.show}>
-    Delete
-  </MenuItem>
+  <MenuItem icon="Edit" on:click={updateAutomationDialog.show}>Edit</MenuItem>
+  <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}>Delete</MenuItem>
 </ActionMenu>
 
 <ConfirmDialog
@@ -39,6 +35,7 @@
   <i>{automation.name}?</i>
   This action cannot be undone.
 </ConfirmDialog>
+<UpdateAutomationModal {automation} bind:this={updateAutomationDialog} />
 
 <style>
   div.icon {

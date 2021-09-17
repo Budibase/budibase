@@ -2049,7 +2049,7 @@
           "setting": "optionsSource",
           "value": "provider"
         }
-      }, 
+      },
       {
         "type": "options",
         "key": "customOptions",

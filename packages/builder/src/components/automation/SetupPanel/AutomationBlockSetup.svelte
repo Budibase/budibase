@@ -56,10 +56,9 @@
         testData[key] = e.detail
       } else {
         block.inputs[key] = e.detail
-        await automationStore.actions.save({
-          instanceId,
-          automation: $automationStore.selectedAutomation?.automation,
-        })
+        await automationStore.actions.save(
+          $automationStore.selectedAutomation?.automation
+        )
       }
     },
     isTestModal ? 0 : 800
