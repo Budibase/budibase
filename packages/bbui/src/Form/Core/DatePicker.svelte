@@ -13,7 +13,7 @@
   export let enableTime = true
   export let value = null
   export let placeholder = null
-  export let appendTo = null
+  export let appendTo = undefined
 
   const dispatch = createEventDispatcher()
   const flatpickrId = `${generateID()}-wrapper`
