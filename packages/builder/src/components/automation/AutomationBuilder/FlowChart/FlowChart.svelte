@@ -32,16 +32,15 @@
   }
 
   async function deleteAutomation() {
-    await automationStore.actions.delete({
-      instanceId,
-      automation: $automationStore.selectedAutomation?.automation,
-    })
+    await automationStore.actions.delete(
+      $automationStore.selectedAutomation?.automation
+    )
   }
 
   async function testAutomation() {
-    const result = await automationStore.actions.trigger({
-      automation: $automationStore.selectedAutomation.automation,
-    })
+    const result = await automationStore.actions.trigger(
+      $automationStore.selectedAutomation.automation
+    )
     if (result.status === 200) {
       notifications.success(
         `Automation ${$automationStore.selectedAutomation.automation.name} triggered successfully.`

@@ -1,6 +1,6 @@
 name: Budibase Release
 
-on: 
+on:
  push:
     branches:
       - master
@@ -9,20 +9,20 @@ env:
   POSTHOG_TOKEN: ${{ secrets.POSTHOG_TOKEN }}
   POSTHOG_URL: ${{ secrets.POSTHOG_URL }}
   SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-      
+
 jobs:
   release:
-    runs-on: ubuntu-latest 
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
         with:
           node-version: 12.x
-      - run: yarn 
-      - run: yarn bootstrap 
-      - run: yarn lint 
-      - run: yarn build 
+      - run: yarn
+      - run: yarn bootstrap
+      - run: yarn lint
+      - run: yarn build
       - run: yarn test
 
       - name: Configure AWS Credentials
@@ -35,11 +35,11 @@ jobs:
       - name: Publish budibase packages to NPM
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: | 
+        run: |
           # setup the username and email. I tend to use 'GitHub Actions Bot' with no email by default
           git config user.name "Budibase Release Bot"
           git config user.email "<>"
-          echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} >> .npmrc 
+          echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} >> .npmrc
           yarn release
 
       - name: 'Get Previous tag'
@@ -47,7 +47,7 @@ jobs:
         uses: "WyriHaximus/github-action-get-previous-tag@v1"
 
       - name: Build/release Docker images
-        run: | 
+        run: |
           docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
           yarn build
           yarn build:docker
@@ -68,4 +68,3 @@ jobs:
           charts_dir: docs
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-    
