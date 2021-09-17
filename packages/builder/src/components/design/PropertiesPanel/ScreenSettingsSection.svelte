@@ -7,13 +7,17 @@
   import RoleSelect from "./PropertyControls/RoleSelect.svelte"
   import { currentAsset, store } from "builderStore"
   import { FrontendTypes } from "constants"
+  import sanitizeUrl from "builderStore/store/screenTemplates/utils/sanitizeUrl"
 
   export let componentInstance
   export let bindings
 
   function setAssetProps(name, value, parser) {
     if (parser && typeof parser === "function") {
+      console.log("before", value)
       value = parser(value)
+      console.log("after", value)
+      console.log("deepGet", deepGet($currentAsset, name))
     }
 
     const selectedAsset = get(currentAsset)
@@ -37,7 +41,12 @@
       key: "routing.route",
       label: "Route",
       control: Input,
-      parser: val => val.replace(/ +/g, "-"),
+      parser: val => {
+        if (!val.startsWith("/")) {
+          val = "/" + val
+        }
+        return sanitizeUrl(val)
+      },
     },
     { key: "routing.roleId", label: "Access", control: RoleSelect },
     { key: "layoutId", label: "Layout", control: LayoutSelect },
