@@ -6,9 +6,6 @@ import path from "path"
 export default ({ mode }) => {
   const isProduction = mode === "production"
   return {
-    server: {
-      watch: { usePolling: true },
-    },
     base: "/builder/",
     build: {
       minify: isProduction,

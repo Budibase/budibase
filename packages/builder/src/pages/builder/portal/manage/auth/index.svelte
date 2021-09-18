@@ -243,6 +243,7 @@
       originalGoogleDoc = cloneDeep(googleDoc)
       providers.google = googleDoc
     }
+
     //Get the list of user uploaded logos and push it to the dropdown options.
     //This needs to be done before the config call so they're available when the dropdown renders
     const res = await api.get(`/api/global/configs/logos_oidc`)

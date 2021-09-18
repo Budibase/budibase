@@ -54,17 +54,9 @@
       "divider",
       "image",
       "backgroundimage",
-      "video",
       "link",
       "icon",
       "embed"
-    ]
-  },
-  {
-    "name": "3D",
-    "icon": "3DMaterials",
-    "children": [
-      "gis"
     ]
   }
 ]

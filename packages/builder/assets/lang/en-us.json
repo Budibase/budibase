@@ -874,5 +874,6 @@
   "you-cannot-delete-the-display-column": "You cannot delete the display column",
   "you-dont-have-access-to-any-apps-yet": "You don't have access to any apps yet.",
   "your-application-must-have-a-name": "Your application must have a name",
-  "your-data-will-be-deleted-and-this-action-cannot-be-undone": "Your data will be deleted and this action cannot be undone"
+  "your-data-will-be-deleted-and-this-action-cannot-be-undone": "Your data will be deleted and this action cannot be undone",
+  "account": "Account"
 }

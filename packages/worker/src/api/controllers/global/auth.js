@@ -13,7 +13,6 @@ const {
   getTenantId,
   isMultiTenant,
 } = require("@budibase/auth/tenancy")
-const { DEFAULT_TENANT_ID } = require("@budibase/auth/constants")
 const env = require("../../../environment")
 
 function googleCallbackUrl(config) {
@@ -24,8 +23,6 @@ function googleCallbackUrl(config) {
   let callbackUrl = `/api/global/auth`
   if (isMultiTenant()) {
     callbackUrl += `/${getTenantId()}`
-  } else {
-    callbackUrl += `/${DEFAULT_TENANT_ID}`
   }
   callbackUrl += `/google/callback`
   return callbackUrl
@@ -166,13 +163,10 @@ async function oidcStrategyFactory(ctx, configId) {
 
   const chosenConfig = config.configs.filter(c => c.uuid === configId)[0]
 
-  const protocol =
-    env.PROTOCOL || (env.NODE_ENV === "production" ? "https" : "http")
+  const protocol = env.NODE_ENV === "production" ? "https" : "http"
   let callbackUrl = `${protocol}://${ctx.host}/api/global/auth`
   if (isMultiTenant()) {
     callbackUrl += `/${getTenantId()}`
-  } else {
-    callbackUrl += `/${DEFAULT_TENANT_ID}`
   }
   callbackUrl += `/oidc/callback`
 

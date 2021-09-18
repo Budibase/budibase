@@ -64,7 +64,7 @@
     if ($auth?.user?.accountPortalAccess) {
       menu = menu.concat([
         {
-          title: "Account",
+          title: $t("account"),
           href: $adminStore.accountPortalUrl,
         },
       ])

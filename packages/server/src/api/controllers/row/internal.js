@@ -144,7 +144,7 @@ exports.fetchView = async ctx => {
   if (!viewInfo) {
     throw "View does not exist."
   }
-  const response = await db.query(`database/${encodeURIComponent(viewName)}`, {
+  const response = await db.query(`database/${viewName}`, {
     include_docs: !calculation,
     group: !!group,
   })

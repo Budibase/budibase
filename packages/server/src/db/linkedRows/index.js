@@ -194,25 +194,22 @@ exports.squashLinksToPrimaryDisplay = async (appId, table, enriched) => {
   const linkedTables = [table]
   for (let row of enriched) {
     // this only fetches the table if its not already in array
-    if (row.tableId) {
-      const rowTable = await getLinkedTable(db, row.tableId, linkedTables)
-      for (let [column, schema] of Object.entries(rowTable.schema)) {
-        if (schema.type !== FieldTypes.LINK || !Array.isArray(row[column])) {
-          continue
-        }
-        const newLinks = []
-        for (let link of row[column]) {
-          const linkTblId =
-            link.tableId || getRelatedTableForField(table, column)
-          const linkedTable = await getLinkedTable(db, linkTblId, linkedTables)
-          const obj = { _id: link._id }
-          if (link[linkedTable.primaryDisplay]) {
-            obj.primaryDisplay = link[linkedTable.primaryDisplay]
-          }
-          newLinks.push(obj)
-        }
-        row[column] = newLinks
+    const rowTable = await getLinkedTable(db, row.tableId, linkedTables)
+    for (let [column, schema] of Object.entries(rowTable.schema)) {
+      if (schema.type !== FieldTypes.LINK || !Array.isArray(row[column])) {
+        continue
       }
+      const newLinks = []
+      for (let link of row[column]) {
+        const linkTblId = link.tableId || getRelatedTableForField(table, column)
+        const linkedTable = await getLinkedTable(db, linkTblId, linkedTables)
+        const obj = { _id: link._id }
+        if (link[linkedTable.primaryDisplay]) {
+          obj.primaryDisplay = link[linkedTable.primaryDisplay]
+        }
+        newLinks.push(obj)
+      }
+      row[column] = newLinks
     }
   }
   return enriched

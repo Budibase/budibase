@@ -3,8 +3,6 @@
   import { onMount } from "svelte"
   import api from "builderStore/api"
   import ICONS from "../icons"
-  import { organisation } from "stores/portal"
-  import { BUDIBASE_INTERNAL_DB_TYPE } from "constants"
 
   export let integration = {}
   let integrations = []
@@ -50,21 +48,11 @@
         class:selected={integration.type === integrationType}
         on:click={() => selectIntegration(integrationType)}
       >
-        {#if $organisation.logoUrl && integrationType === BUDIBASE_INTERNAL_DB_TYPE}
-          <img
-            height="50"
-            width="50"
-            alt={$organisation.company}
-            src={$organisation.logoUrl}
-          />
-        {:else}
-          <svelte:component
-            this={ICONS[integrationType]}
-            height="50"
-            width="50"
-          />
-        {/if}
-
+        <svelte:component
+          this={ICONS[integrationType]}
+          height="50"
+          width="50"
+        />
         <Body size="XS">{schema.name || integrationType}</Body>
       </div>
     {/each}
