@@ -30,7 +30,7 @@
 <ModalContent
   cancelText={$t("cancel")}
   title={$t("create-view")}
-  confirmText={$t("create-view-0")}
+  confirmText={$t("create-view")}
   onConfirm={saveView}
 >
   <Input label={$t("view-name")} thin bind:value={name} />

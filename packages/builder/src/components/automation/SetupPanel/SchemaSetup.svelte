@@ -24,7 +24,7 @@
       value: "boolean",
     },
     {
-      label: $t("datetime-0"),
+      label: $t("datetime"),
       value: "datetime",
     },
   ]

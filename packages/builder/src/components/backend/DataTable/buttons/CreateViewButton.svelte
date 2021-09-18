@@ -7,7 +7,7 @@
 </script>
 
 <ActionButton icon="CollectionAdd" size="S" quiet on:click={modal.show}>
-  {$t("create-view-1")}
+  {$t("create-view")}
 </ActionButton>
 <Modal bind:this={modal}>
   <CreateViewModal />

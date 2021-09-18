@@ -178,7 +178,7 @@
           ` → ` +
           $t("many-0") +
           ` ${linkName} ` +
-          $t("rows-0"),
+          $t("rows"),
         alt:
           $t("many") +
           ` ${table.name} ` +
@@ -186,45 +186,45 @@
           ` → ` +
           $t("many-0") +
           ` ${linkTable.name} ` +
-          $t("rows-0"),
+          $t("rows"),
         value: RelationshipTypes.MANY_TO_MANY,
       },
       {
         name:
-          $t("one-0") +
+          $t("one") +
           ` ${linkName} ` +
           $t("rows") +
           ` → ` +
           $t("many-0") +
           ` ${thisName} ` +
-          $t("rows-0"),
+          $t("rows"),
         alt:
-          $t("one-0") +
+          $t("one") +
           ` ${linkTable.name} ` +
           $t("rows") +
           ` → ` +
           $t("many-0") +
           ` ${table.name} ` +
-          $t("rows-0"),
+          $t("rows"),
         value: RelationshipTypes.ONE_TO_MANY,
       },
       {
         name:
-          $t("one-0") +
+          $t("one") +
           ` ${thisName} ` +
           $t("rows") +
           ` → ` +
           $t("many-0") +
           ` ${linkName} ` +
-          $t("rows-0"),
+          $t("rows"),
         alt:
-          $t("one-0") +
+          $t("one") +
           ` ${table.name} ` +
           $t("rows") +
           ` → ` +
           $t("many-0") +
           ` ${linkTable.name} ` +
-          $t("rows-0"),
+          $t("rows"),
         value: RelationshipTypes.MANY_TO_ONE,
       },
     ]
@@ -300,7 +300,7 @@
   {#if field.type === "string"}
     <Input
       type="number"
-      label={$t("max-length-0")}
+      label={$t("max-length")}
       bind:value={field.constraints.length.maximum}
     />
   {:else if field.type === "options"}
@@ -325,12 +325,12 @@
   {:else if field.type === "number"}
     <Input
       type="number"
-      label={$t("min-value-0")}
+      label={$t("min-value")}
       bind:value={field.constraints.numericality.greaterThanOrEqualTo}
     />
     <Input
       type="number"
-      label={$t("max-value-0")}
+      label={$t("max-value")}
       bind:value={field.constraints.numericality.lessThanOrEqualTo}
     />
   {:else if field.type === "link"}

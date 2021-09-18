@@ -7,7 +7,7 @@
 </script>
 
 <ActionButton icon="TableColumnAddRight" quiet size="S" on:click={modal.show}>
-  {$t("create-column-0")}
+  {$t("create-column")}
 </ActionButton>
 <Modal bind:this={modal}>
   <CreateEditColumn />

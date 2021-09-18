@@ -44,7 +44,7 @@ ingress:
   nginx: true
   certificateArn: ""
   className: ""
-  annotations: 
+  annotations:
     kubernetes.io/ingress.class: nginx
   hosts:
     - host: # change if using custom domain
@@ -55,7 +55,7 @@ ingress:
           service:
             name: proxy-service
             port:
-              number: 10000 
+              number: 10000
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
@@ -86,7 +86,7 @@ globals:
   budibaseEnv: PRODUCTION
   enableAnalytics: false
   posthogToken: ""
-  sentryDSN: "" 
+  sentryDSN: ""
   logLevel: info
   selfHosted: 1
   accountPortalUrL: ""
@@ -121,7 +121,7 @@ services:
     password: "" # only change if pointing to existing couch server
     port: 5984
     storage: 100Mi
-  
+
   redis:
     enabled: true # disable if using external redis
     port: 6379
@@ -129,15 +129,15 @@ services:
     url: "" # only change if pointing to existing redis cluster and enabled: false
     password: "budibase" # recommended to override if using built-in redis
     storage: 100Mi
-  
+
   objectStore:
     minio: true
     browser: true
     port: 9000
     replicaCount: 1
     accessKey: "" # AWS_ACCESS_KEY if using S3 or existing minio access key
-    secretKey: "" # AWS_SECRET_ACCESS_KEY if using S3 or existing minio secret 
-    region: "" # AWS_REGION if using S3 or existing minio secret 
-    url: "" # only change if pointing to existing minio cluster and minio: false 
+    secretKey: "" # AWS_SECRET_ACCESS_KEY if using S3 or existing minio secret
+    region: "" # AWS_REGION if using S3 or existing minio secret
+    url: "" # only change if pointing to existing minio cluster and minio: false
     storage: 100Mi
 

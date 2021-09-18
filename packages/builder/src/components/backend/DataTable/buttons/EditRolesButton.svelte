@@ -8,7 +8,7 @@
 
 <div>
   <Button icon="UsersLock" primary size="S" quiet on:click={modal.show}>
-    {$t("edit-roles-0")}
+    {$t("edit-roles")}
   </Button>
 </div>
 <Modal bind:this={modal}>

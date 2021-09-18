@@ -91,7 +91,7 @@
     meta={{
       ...tableSchema.firstName,
       name: "First Name",
-      label: $t("first-name-0"),
+      label: $t("first-name"),
     }}
     bind:value={row.firstName}
     readonly={!creating}
@@ -100,7 +100,7 @@
     meta={{
       ...tableSchema.lastName,
       name: "Last Name",
-      label: $t("last-name-0"),
+      label: $t("last-name"),
     }}
     bind:value={row.lastName}
     readonly={!creating}

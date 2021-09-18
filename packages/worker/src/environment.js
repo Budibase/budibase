@@ -18,7 +18,6 @@ if (!LOADED && isDev() && !isTest()) {
 
 module.exports = {
   NODE_ENV: process.env.NODE_ENV,
-  PROTOCOL: process.env.PROTOCOL,
   SELF_HOSTED: process.env.SELF_HOSTED,
   PORT: process.env.PORT,
   CLUSTER_PORT: process.env.CLUSTER_PORT,

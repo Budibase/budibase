@@ -17,4 +17,4 @@ exports.AnalyticsEvents = {
 
 exports.BUDIBASE_POSTHOG_URL = "https://app.posthog.com"
 exports.BUDIBASE_POSTHOG_TOKEN =
-  "phc_ho7RbWbelzFe0ovbPe5OwJ18UmWYo57sFCBsTi2IS70"
+  "phc_yGOn4i7jWKaCTapdGR6lfA4AvmuEQ2ijn5zAVSFYPlS"

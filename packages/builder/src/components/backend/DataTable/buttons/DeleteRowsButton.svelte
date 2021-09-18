@@ -23,7 +23,7 @@
   bind:this={modal}
   okText={$t("delete")}
   onOk={confirmDeletion}
-  title={$t("confirm-deletion-0")}
+  title={$t("confirm-deletion")}
 >
   {$t("are-you-sure-you-want-to-delete")}
   {selectedRows.length}

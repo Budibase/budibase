@@ -39,7 +39,7 @@
   bind:this={confirmDeleteDialog}
   okText={$t("delete-datasource")}
   onOk={deleteDatasource}
-  title={$t("confirm-deletion-0")}
+  title={$t("confirm-deletion")}
 >
   {$t("are-you-sure-you-wish-to-delete-the-datasource")}
   <i>{datasource.name}?</i>

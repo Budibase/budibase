@@ -27,7 +27,7 @@
   bind:this={confirmDeleteDialog}
   okText={$t("delete-query")}
   onOk={deleteQuery}
-  title={$t("confirm-deletion-0")}
+  title={$t("confirm-deletion")}
 >
   {$t(
     "are-you-sure-you-wish-to-delete-this-query-this-action-cannot-be-undone"

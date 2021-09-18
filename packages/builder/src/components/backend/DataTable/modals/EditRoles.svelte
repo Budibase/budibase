@@ -115,7 +115,7 @@
   />
   {#if selectedRole}
     <Input
-      label={$t("name-0")}
+      label={$t("name")}
       bind:value={selectedRole.name}
       disabled={builtInRoles.includes(selectedRole.name)}
     />
@@ -138,7 +138,7 @@
   {/if}
   <div slot="footer">
     {#if !isCreating}
-      <Button warning on:click={deleteRole}>{$t("delete-0")}</Button>
+      <Button warning on:click={deleteRole}>{$t("delete")}</Button>
     {/if}
   </div>
 </ModalContent>

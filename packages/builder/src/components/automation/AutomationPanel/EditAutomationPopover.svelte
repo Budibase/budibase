@@ -34,7 +34,7 @@
   bind:this={confirmDeleteDialog}
   okText={$t("delete-automation")}
   onOk={deleteAutomation}
-  title={$t("confirm-deletion-0")}
+  title={$t("confirm-deletion")}
 >
   {$t("are-you-sure-you-wish-to-delete-the-automation")}
   <i>{automation.name}?</i>

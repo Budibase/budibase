@@ -18,8 +18,8 @@ const AnalyticsClient = require("../analytics/Client")
 const BUDIBASE_SERVICES = ["app-service", "worker-service"]
 const ERROR_FILE = "docker-error.log"
 const FILE_URLS = [
-  "https://raw.githubusercontents.com/jianzhichun/budibase/master/hosting/docker-compose.yaml",
-  "https://raw.githubusercontents.com/jianzhichun/budibase/master/hosting/envoy.yaml",
+  "https://raw.githubusercontent.com/Budibase/budibase/master/hosting/docker-compose.yaml",
+  "https://raw.githubusercontent.com/Budibase/budibase/master/hosting/envoy.yaml",
 ]
 const DO_USER_DATA_URL = "http://169.254.169.254/metadata/v1/user-data"
 
