@@ -37,7 +37,9 @@
 
 <ConfirmDialog
   bind:this={confirmResetFieldsDialog}
-  body={$t("all-components-inside-this-group-will-be-deleted-and-replaced")}
+  body={$t(
+    "all-components-inside-this-group-will-be-deleted-and-replaced-with-fields-to-match-the-schema-are-you-sure-you-want-to-update-this-field-group"
+  )}
   okText={$t("update")}
   onOk={resetFormFields}
   title={$t("confirm-form-field-update")}

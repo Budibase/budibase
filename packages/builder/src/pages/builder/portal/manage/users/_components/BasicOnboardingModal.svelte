@@ -37,7 +37,9 @@
   showCloseIcon={false}
 >
   <Body size="S">
-    {$t("below-you-will-find-the-users-username-and-password")}
+    {$t(
+      "below-you-will-find-the-users-username-and-password-the-password-will-not-be-accessible-from-this-point-please-save-the-credentials"
+    )}
   </Body>
   <Input
     type="email"

@@ -35,7 +35,7 @@
 >
   <Body noPadding
     >{$t(
-      "before-you-reset-the-users-password-do-not-forget-to-copy-the-new-password"
+      "before-you-reset-the-users-password-do-not-forget-to-copy-the-new-password-the-user-will-need-this-to-login-once-the-user-has-logged-in-they-will-be-asked-to-create-a-new-password-that-is-more-secure"
     )}</Body
   >
   <Input disabled label={$t("password")} value={password} />
