@@ -10,7 +10,7 @@
   export let error = null
   export let enableTime = true
   export let placeholder = null
-  export let appendTo = null
+  export let appendTo = undefined
 
   const dispatch = createEventDispatcher()
   const onChange = e => {

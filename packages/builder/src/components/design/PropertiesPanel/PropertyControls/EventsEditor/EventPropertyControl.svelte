@@ -47,7 +47,9 @@
     }
 
     automationStore.actions.addBlockToAutomation(newBlock)
-    await automationStore.actions.save($automationStore.selectedAutomation)
+    await automationStore.actions.save(
+      $automationStore.selectedAutomation?.automation
+    )
     parameters.automationId = $automationStore.selectedAutomation.automation._id
     delete parameters.newAutomationName
   }

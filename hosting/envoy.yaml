@@ -75,11 +75,6 @@ static_resources:
                 route:
                   cluster: minio-service
 
-              - match: { prefix: "/minio-console" }
-                route:
-                  cluster: minio-console-service
-                  prefix_rewrite: "/"
-
           http_filters:
           - name: envoy.filters.http.router
 
@@ -111,20 +106,6 @@ static_resources:
               socket_address:
                 address: minio-service
                 port_value: 9000
-
-  - name: minio-console-service
-    connect_timeout: 0.25s
-    type: strict_dns
-    lb_policy: round_robin
-    load_assignment:
-      cluster_name: minio-service
-      endpoints:
-      - lb_endpoints:
-        - endpoint:
-            address:
-              socket_address:
-                address: minio-service
-                port_value: 9001
 
   - name: worker-service
     connect_timeout: 0.25s

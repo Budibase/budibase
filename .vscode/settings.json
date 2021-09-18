@@ -3,17 +3,5 @@
     "editor.codeActionsOnSave": {
         "source.fixAll": true
     },
-    "editor.defaultFormatter": "svelte.svelte-vscode",
-    "i18n-ally.enabledFrameworks": [
-        "svelte"
-    ],
-    "i18n-ally.keystyle": "nested",
-    "i18n-ally.namespace": true,
-    "i18n-ally.sortKeys": true,
-    "i18n-ally.sourceLanguage": "en-us",
-    "i18n-ally.displayLanguage": "zh-hans",
-    "i18n-ally.extract.autoDetect": true,
-    "i18n-ally.localesPaths": [
-      "packages/builder/assets/lang"
-    ]
+    "editor.defaultFormatter": "svelte.svelte-vscode"
 }

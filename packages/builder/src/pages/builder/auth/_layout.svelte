@@ -13,7 +13,7 @@
     }
 
     // redirect to account portal for authentication in the cloud
-    if ($admin.cloud && $admin.accountPortalUrl) {
+    if (!$auth.user && $admin.cloud && $admin.accountPortalUrl) {
       window.location.href = $admin.accountPortalUrl
     }
   })
