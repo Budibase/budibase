@@ -878,5 +878,6 @@
   "you-cannot-delete-the-display-column": "表示列を削除できません",
   "you-dont-have-access-to-any-apps-yet": "まだアプリにアクセスできません。",
   "your-application-must-have-a-name": "アプリケーションには名前が必要です",
-  "your-data-will-be-deleted-and-this-action-cannot-be-undone": "データは削除され、この操作は元に戻せません"
+  "your-data-will-be-deleted-and-this-action-cannot-be-undone": "データは削除され、この操作は元に戻せません",
+  "account": "アカウント"
 }

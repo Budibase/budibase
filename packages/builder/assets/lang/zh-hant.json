@@ -878,5 +878,6 @@
   "you-cannot-delete-the-display-column": "不能刪除顯示列",
   "you-dont-have-access-to-any-apps-yet": "您還沒有訪問任何應用的權限。",
   "your-application-must-have-a-name": "您的應用程序必須有一個名稱",
-  "your-data-will-be-deleted-and-this-action-cannot-be-undone": "您的數據將被刪除且此操作無法撤消"
+  "your-data-will-be-deleted-and-this-action-cannot-be-undone": "您的數據將被刪除且此操作無法撤消",
+  "account": "帳戶"
 }
