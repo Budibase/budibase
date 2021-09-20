@@ -7,9 +7,10 @@ const Queue = env.isTest()
   : require("bull")
 const { JobQueues } = require("../constants")
 const { utils } = require("@budibase/auth/redis")
-const { opts } = utils.getRedisOptions()
+const { opts, redisProtocolUrl } = utils.getRedisOptions()
 
-let automationQueue = new Queue(JobQueues.AUTOMATIONS, { redis: opts })
+const redisConfig = redisProtocolUrl || { redis: opts }
+let automationQueue = new Queue(JobQueues.AUTOMATIONS, redisConfig)
 
 exports.pathPrefix = "/bulladmin"
 
