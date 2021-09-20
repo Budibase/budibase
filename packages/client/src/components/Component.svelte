@@ -51,11 +51,11 @@
   $: children = instance._children || []
   $: id = instance._id
   $: name = instance._instanceName
-  $: empty =
-    !children.length &&
-    definition?.hasChildren &&
-    definition?.showEmptyState !== false &&
-    $builderStore.inBuilder
+  $: interactive =
+    $builderStore.inBuilder &&
+    ($builderStore.previewType === "layout" || insideScreenslot)
+  $: empty = interactive && !children.length && definition?.hasChildren
+  $: emptyState = empty && definition?.showEmptyState !== false
   $: rawProps = getRawProps(instance)
   $: instanceKey = JSON.stringify(rawProps)
   $: updateComponentProps(rawProps, instanceKey, $context)
@@ -63,9 +63,6 @@
     $builderStore.inBuilder &&
     $builderStore.selectedComponentId === instance._id
   $: inSelectedPath = $builderStore.selectedComponentPath?.includes(id)
-  $: interactive =
-    $builderStore.inBuilder &&
-    ($builderStore.previewType === "layout" || insideScreenslot)
   $: evaluateConditions(enrichedSettings?._conditions)
   $: componentSettings = { ...enrichedSettings, ...conditionalSettings }
 
@@ -73,8 +70,8 @@
   $: componentStore.set({
     id,
     children: children.length,
-    styles: { ...instance._styles, id, empty, interactive },
-    empty,
+    styles: { ...instance._styles, id, empty: emptyState, interactive },
+    empty: emptyState,
     selected,
     name,
   })
@@ -177,38 +174,44 @@
   // Drag and drop helper tags
   $: draggable = interactive && !isLayout && !isScreen
   $: droppable = interactive && !isLayout && !isScreen
-  $: dropInside = interactive && definition?.hasChildren && !children.length
 </script>
 
 {#key propsHash}
-  {#if constructor && componentSettings && (visible || inSelectedPath)}
-    <div
-      class={`component ${id}`}
-      data-type={interactive ? "component" : "readonly"}
-      data-id={id}
-      data-name={name}
-      data-draggable={draggable}
-      data-droppable={droppable}
-      data-droppable-inside={dropInside}
-    >
-      <svelte:component this={constructor} {...componentSettings}>
-        {#if children.length}
-          {#each children as child (child._id)}
-            <svelte:self instance={child} />
-          {/each}
-        {:else if empty}
-          <Placeholder />
-        {/if}
-      </svelte:component>
-    </div>
-  {/if}
+  {#key empty}
+    {#if constructor && componentSettings && (visible || inSelectedPath)}
+      <!-- The ID is used as a class because getElementsByClassName is O(1) -->
+      <!-- and the performance matters for the selection indicators -->
+      <div
+        class={`component ${id}`}
+        class:draggable
+        class:droppable
+        class:empty
+        class:interactive
+        data-id={id}
+        data-name={name}
+      >
+        <svelte:component this={constructor} {...componentSettings}>
+          {#if children.length}
+            {#each children as child (child._id)}
+              <svelte:self instance={child} />
+            {/each}
+          {:else if emptyState}
+            <Placeholder />
+          {/if}
+        </svelte:component>
+      </div>
+    {/if}
+  {/key}
 {/key}
 
 <style>
   .component {
     display: contents;
   }
-  [data-draggable="true"] :global(*:hover) {
+  .interactive :global(*:hover) {
+    cursor: pointer;
+  }
+  .draggable :global(*:hover) {
     cursor: grab;
   }
 </style>

@@ -24,8 +24,8 @@ export const styleable = (node, styles = {}) => {
   let selectComponent
 
   // Allow dragging if required
-  const parent = node.closest("[data-type='component']")
-  if (parent && parent.dataset.draggable === "true") {
+  const parent = node.closest(".component")
+  if (parent && parent.classList.contains("draggable")) {
     node.setAttribute("draggable", true)
   }
 
