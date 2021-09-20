@@ -89,10 +89,11 @@ const TYPE_TRANSFORM_MAP = {
  * @param {Object} user The user to be used for an appId as well as the createdBy and createdAt fields.
  * @param {Object} table The table which is to be used for the schema, as well as handling auto IDs incrementing.
  * @param {Object} row The row which is to be updated with information for the auto columns.
+ * @param {Object} opts specific options for function to carry out optional features.
  * @returns {{row: Object, table: Object}} The updated row and table, the table may need to be updated
  * for automatic ID purposes.
  */
-function processAutoColumn(user, table, row) {
+function processAutoColumn(user, table, row, opts = { reprocessing: false }) {
   let now = new Date().toISOString()
   // if a row doesn't have a revision then it doesn't exist yet
   const creating = !row._rev
@@ -102,7 +103,7 @@ function processAutoColumn(user, table, row) {
     }
     switch (schema.subtype) {
       case AutoFieldSubTypes.CREATED_BY:
-        if (creating) {
+        if (creating && !opts.reprocessing) {
           row[key] = [user.userId]
         }
         break
@@ -112,7 +113,9 @@ function processAutoColumn(user, table, row) {
         }
         break
       case AutoFieldSubTypes.UPDATED_BY:
-        row[key] = [user.userId]
+        if (!opts.reprocessing) {
+          row[key] = [user.userId]
+        }
         break
       case AutoFieldSubTypes.UPDATED_AT:
         row[key] = now
@@ -127,6 +130,7 @@ function processAutoColumn(user, table, row) {
   }
   return { table, row }
 }
+exports.processAutoColumn = processAutoColumn
 
 /**
  * This will coerce a value to the correct types based on the type transform map

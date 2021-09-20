@@ -1,6 +1,7 @@
 const rowController = require("../../api/controllers/row")
 const tableController = require("../../api/controllers/table")
 const { FieldTypes } = require("../../constants")
+const { buildCtx } = require("./utils")
 
 const SortOrders = {
   ASCENDING: "ascending",
@@ -70,12 +71,11 @@ exports.definition = {
 }
 
 async function getTable(appId, tableId) {
-  const ctx = {
+  const ctx = buildCtx(appId, null, {
     params: {
       id: tableId,
     },
-    appId,
-  }
+  })
   await tableController.find(ctx)
   return ctx.body
 }
@@ -89,21 +89,18 @@ exports.run = async function ({ inputs, appId }) {
     sortType =
       fieldType === FieldTypes.NUMBER ? FieldTypes.NUMBER : FieldTypes.STRING
   }
-  const ctx = {
+  const ctx = buildCtx(appId, null, {
     params: {
       tableId,
     },
-    request: {
-      body: {
-        sortOrder,
-        sortType,
-        sort: sortColumn,
-        query: filters || {},
-        limit,
-      },
+    body: {
+      sortOrder,
+      sortType,
+      sort: sortColumn,
+      query: filters || {},
+      limit,
     },
-    appId,
-  }
+  })
   try {
     await rowController.search(ctx)
     return {
