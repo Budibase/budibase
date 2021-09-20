@@ -18,6 +18,10 @@
 
   // Callback when initially starting a drag on a draggable component
   const onDragStart = e => {
+    if (!e.target?.dataset?.componentId) {
+      return
+    }
+
     // Update state
     dragTarget = e.target.dataset.componentId
     builderStore.actions.selectComponent(dragTarget)
@@ -32,63 +36,73 @@
 
   // Callback when drag stops (whether dropped or not)
   const onDragEnd = e => {
+    // Reset opacity style
+    if (dragTarget) {
+      const child = getDOMNodeForComponent(e.target)
+      if (child) {
+        child.style.opacity = ""
+      }
+    }
+
     // Reset state and styles
+    dragTarget = null
     dropTarget = null
     dropInfo = null
     builderStore.actions.setDragging(false)
-
-    // Reset opacity style
-    const child = getDOMNodeForComponent(e.target)
-    if (child) {
-      child.style.opacity = ""
-    }
   }
 
   // Callback when on top of a component
   const onDragOver = e => {
+    // Skip if we aren't validly dragging currently
+    if (!dragTarget || !dropInfo) {
+      return
+    }
+
     e.preventDefault()
+    const { droppableInside, bounds } = dropInfo
+    const { top, height } = bounds
+    const mouseY = e.clientY
+    const elTop = top
+    const elBottom = top + height
 
-    if (dropInfo) {
-      const { droppableInside, bounds } = dropInfo
-      const { top, height } = bounds
-      const mouseY = e.clientY
-      const elTop = top
-      const elBottom = top + height
+    // Determine which edge we're nearest as this is needed for potentially
+    // any drop mode
+    let nearestEdge
+    if (Math.abs(elTop - mouseY) < Math.abs(elBottom - mouseY)) {
+      nearestEdge = "above"
+    } else {
+      nearestEdge = "below"
+    }
 
-      // Determine which edge we're nearest as this is needed for potentially
-      // any drop mode
-      let nearestEdge
-      if (Math.abs(elTop - mouseY) < Math.abs(elBottom - mouseY)) {
-        nearestEdge = "above"
+    // If not available to drop inside, just check whether we are closer
+    // to the top or bottom
+    if (!droppableInside) {
+      dropMode = nearestEdge
+    }
+
+    // Otherwise determine whether the user wants to drop inside or at
+    // either edge
+    else {
+      const edgeLimit = Math.min(40, height * 0.33)
+      const insideLimit = [
+        Math.round(top + edgeLimit),
+        Math.round(top + height - edgeLimit),
+      ]
+      if (mouseY >= insideLimit[0] && mouseY <= insideLimit[1]) {
+        dropMode = "inside"
       } else {
-        nearestEdge = "below"
-      }
-
-      // If not available to drop inside, just check whether we are closer
-      // to the top or bottom
-      if (!droppableInside) {
         dropMode = nearestEdge
-      }
-
-      // Otherwise determine whether the user wants to drop inside or at
-      // either edge
-      else {
-        const edgeLimit = Math.min(40, height * 0.33)
-        const insideLimit = [
-          Math.round(top + edgeLimit),
-          Math.round(top + height - edgeLimit),
-        ]
-        if (mouseY >= insideLimit[0] && mouseY <= insideLimit[1]) {
-          dropMode = "inside"
-        } else {
-          dropMode = nearestEdge
-        }
       }
     }
   }
 
   // Callback when entering a potential drop target
   const onDragEnter = e => {
+    // Skip if we aren't validly dragging currently
+    if (!dragTarget) {
+      return
+    }
+
     const element = e.target.closest("[data-type='component']")
     if (
       element &&
