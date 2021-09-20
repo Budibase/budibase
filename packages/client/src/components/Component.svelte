@@ -65,6 +65,7 @@
   $: inSelectedPath = $builderStore.selectedComponentPath?.includes(id)
   $: evaluateConditions(enrichedSettings?._conditions)
   $: componentSettings = { ...enrichedSettings, ...conditionalSettings }
+  $: renderKey = `${propsHash}-${emptyState}`
 
   // Update component context
   $: componentStore.set({
@@ -176,32 +177,30 @@
   $: droppable = interactive && !isLayout && !isScreen
 </script>
 
-{#key propsHash}
-  {#key empty}
-    {#if constructor && componentSettings && (visible || inSelectedPath)}
-      <!-- The ID is used as a class because getElementsByClassName is O(1) -->
-      <!-- and the performance matters for the selection indicators -->
-      <div
-        class={`component ${id}`}
-        class:draggable
-        class:droppable
-        class:empty
-        class:interactive
-        data-id={id}
-        data-name={name}
-      >
-        <svelte:component this={constructor} {...componentSettings}>
-          {#if children.length}
-            {#each children as child (child._id)}
-              <svelte:self instance={child} />
-            {/each}
-          {:else if emptyState}
-            <Placeholder />
-          {/if}
-        </svelte:component>
-      </div>
-    {/if}
-  {/key}
+{#key renderKey}
+  {#if constructor && componentSettings && (visible || inSelectedPath)}
+    <!-- The ID is used as a class because getElementsByClassName is O(1) -->
+    <!-- and the performance matters for the selection indicators -->
+    <div
+      class={`component ${id}`}
+      class:draggable
+      class:droppable
+      class:empty
+      class:interactive
+      data-id={id}
+      data-name={name}
+    >
+      <svelte:component this={constructor} {...componentSettings}>
+        {#if children.length}
+          {#each children as child (child._id)}
+            <svelte:self instance={child} />
+          {/each}
+        {:else if emptyState}
+          <Placeholder />
+        {/if}
+      </svelte:component>
+    </div>
+  {/if}
 {/key}
 
 <style>
