@@ -39,6 +39,7 @@ const DocumentTypes = {
   QUERY: "query",
   DEPLOYMENTS: "deployments",
   METADATA: "metadata",
+  MEM_VIEW: "view",
 }
 
 const ViewNames = {
@@ -346,6 +347,14 @@ exports.getMetadataParams = (type, entityId = null, otherProps = {}) => {
     docId += entityId
   }
   return getDocParams(DocumentTypes.METADATA, docId, otherProps)
+}
+
+exports.generateMemoryViewID = viewName => {
+  return `${DocumentTypes.MEM_VIEW}${SEPARATOR}${viewName}`
+}
+
+exports.getMemoryViewParams = (otherProps = {}) => {
+  return getDocParams(DocumentTypes.MEM_VIEW, null, otherProps)
 }
 
 /**
