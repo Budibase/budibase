@@ -63,37 +63,21 @@
     const { droppableInside, bounds } = dropInfo
     const { top, height } = bounds
     const mouseY = e.clientY
-    const elTop = top
-    const elBottom = top + height
+    const snapFactor = droppableInside ? 0.33 : 0.5
+    const snapLimit = Math.min(40, height * snapFactor)
+    const edgeLimits = [
+      Math.round(top + snapLimit),
+      Math.round(top + height - snapLimit),
+    ]
 
-    // Determine which edge we're nearest as this is needed for potentially
-    // any drop mode
-    let nearestEdge
-    if (Math.abs(elTop - mouseY) < Math.abs(elBottom - mouseY)) {
-      nearestEdge = "above"
+    if (mouseY <= edgeLimits[0]) {
+      dropInfo.mode = "above"
+    } else if (mouseY >= edgeLimits[1]) {
+      dropInfo.mode = "below"
+    } else if (droppableInside) {
+      dropInfo.mode = "inside"
     } else {
-      nearestEdge = "below"
-    }
-
-    // If not available to drop inside, just check whether we are closer
-    // to the top or bottom
-    if (!droppableInside) {
-      dropInfo.mode = nearestEdge
-    }
-
-    // Otherwise determine whether the user wants to drop inside or at
-    // either edge
-    else {
-      const edgeLimit = Math.min(40, height * 0.33)
-      const insideLimit = [
-        Math.round(top + edgeLimit),
-        Math.round(top + height - edgeLimit),
-      ]
-      if (mouseY >= insideLimit[0] && mouseY <= insideLimit[1]) {
-        dropInfo.mode = "inside"
-      } else {
-        dropInfo.mode = nearestEdge
-      }
+      dropInfo.mode = null
     }
   }
 
@@ -147,7 +131,7 @@
   // Callback when dropping a drag on top of some component
   const onDrop = e => {
     e.preventDefault()
-    if (dropInfo) {
+    if (dropInfo?.mode) {
       builderStore.actions.moveComponent(
         dragInfo.target,
         dropInfo.target,
