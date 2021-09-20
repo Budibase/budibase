@@ -5,9 +5,7 @@
   import DNDPositionIndicator from "./DNDPositionIndicator.svelte"
   import { builderStore } from "stores"
 
-  let dragTarget
-  let dropTarget
-  let dropMode
+  let dragInfo
   let dropInfo
 
   const getDOMNodeForComponent = component => {
@@ -18,26 +16,28 @@
 
   // Callback when initially starting a drag on a draggable component
   const onDragStart = e => {
-    if (!e.target?.dataset?.componentId) {
+    const parent = e.target.closest("[data-type='component']")
+    const child = getDOMNodeForComponent(e.target)
+    if (!parent?.dataset?.id || !child) {
       return
     }
 
     // Update state
-    dragTarget = e.target.dataset.componentId
-    builderStore.actions.selectComponent(dragTarget)
+    dragInfo = {
+      target: parent.dataset.id,
+      parent: parent.dataset.parent,
+    }
+    builderStore.actions.selectComponent(dragInfo.target)
     builderStore.actions.setDragging(true)
 
     // Highlight being dragged by setting opacity
-    const child = getDOMNodeForComponent(e.target)
-    if (child) {
-      child.style.opacity = "0.5"
-    }
+    child.style.opacity = "0.5"
   }
 
   // Callback when drag stops (whether dropped or not)
   const onDragEnd = e => {
     // Reset opacity style
-    if (dragTarget) {
+    if (dragInfo) {
       const child = getDOMNodeForComponent(e.target)
       if (child) {
         child.style.opacity = ""
@@ -45,8 +45,7 @@
     }
 
     // Reset state and styles
-    dragTarget = null
-    dropTarget = null
+    dragInfo = null
     dropInfo = null
     builderStore.actions.setDragging(false)
   }
@@ -54,7 +53,7 @@
   // Callback when on top of a component
   const onDragOver = e => {
     // Skip if we aren't validly dragging currently
-    if (!dragTarget || !dropInfo) {
+    if (!dragInfo || !dropInfo) {
       return
     }
 
@@ -77,7 +76,7 @@
     // If not available to drop inside, just check whether we are closer
     // to the top or bottom
     if (!droppableInside) {
-      dropMode = nearestEdge
+      dropInfo.mode = nearestEdge
     }
 
     // Otherwise determine whether the user wants to drop inside or at
@@ -89,9 +88,9 @@
         Math.round(top + height - edgeLimit),
       ]
       if (mouseY >= insideLimit[0] && mouseY <= insideLimit[1]) {
-        dropMode = "inside"
+        dropInfo.mode = "inside"
       } else {
-        dropMode = nearestEdge
+        dropInfo.mode = nearestEdge
       }
     }
   }
@@ -99,7 +98,7 @@
   // Callback when entering a potential drop target
   const onDragEnter = e => {
     // Skip if we aren't validly dragging currently
-    if (!dragTarget) {
+    if (!dragInfo) {
       return
     }
 
@@ -107,7 +106,7 @@
     if (
       element &&
       element.dataset.droppable &&
-      element.dataset.id !== dragTarget
+      element.dataset.id !== dragInfo.target
     ) {
       // Ensure the dragging flag is always set.
       // There's a bit of a race condition between the app reinitialisation
@@ -117,20 +116,20 @@
       }
 
       // Store target ID
-      dropTarget = element.dataset.id
+      const target = element.dataset.id
 
       // Precompute and store some info to avoid recalculating everything in
       // dragOver
       const child = getDOMNodeForComponent(e.target)
       const bounds = child.getBoundingClientRect()
       dropInfo = {
+        target,
         name: element.dataset.name,
         droppableInside: element.dataset.droppableInside === "true",
         bounds,
       }
     } else {
       dropInfo = null
-      dropTarget = null
     }
   }
 
@@ -141,8 +140,12 @@
   // Callback when dropping a drag on top of some component
   const onDrop = e => {
     e.preventDefault()
-    if (dropTarget && dropMode) {
-      builderStore.actions.moveComponent(dragTarget, dropTarget, dropMode)
+    if (dropInfo) {
+      builderStore.actions.moveComponent(
+        dragInfo.target,
+        dropInfo.target,
+        dropInfo.mode
+      )
     }
   }
 
@@ -172,7 +175,7 @@
 </script>
 
 <IndicatorSet
-  componentId={dropMode === "inside" ? dropTarget : null}
+  componentId={dropInfo?.mode === "inside" ? dropInfo.target : null}
   color="var(--spectrum-global-color-static-green-500)"
   zIndex="930"
   transition
@@ -180,9 +183,7 @@
 />
 
 <DNDPositionIndicator
-  componentId={dropTarget}
   {dropInfo}
-  mode={dropMode}
   color="var(--spectrum-global-color-static-green-500)"
   zIndex="940"
   transition
