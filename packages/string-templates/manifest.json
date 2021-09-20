@@ -22,7 +22,7 @@
         "array"
       ],
       "numArgs": 1,
-      "example": "{{ avg [1,2,3,4,5] }} -> 3",
+      "example": "{{ avg 1 2 3 4 5 }} -> 3",
       "description": "<p>Returns the average of all numbers in the given array.</p>\n"
     },
     "ceil": {
