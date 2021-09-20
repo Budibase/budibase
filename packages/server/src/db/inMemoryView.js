@@ -17,9 +17,14 @@ exports.runView = async (appId, view, calculation, group, data) => {
       runner: view,
     },
   })
-  // write all the docs to the in memory Pouch
-  await db.bulkDocs(data)
-  const response = await db.query(`database/runner`, {
+  // write all the docs to the in memory Pouch (remove revs)
+  await db.bulkDocs(
+    data.map(row => ({
+      ...row,
+      _rev: undefined,
+    }))
+  )
+  const response = await db.query("database/runner", {
     include_docs: !calculation,
     group: !!group,
   })

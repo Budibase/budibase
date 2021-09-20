@@ -11,6 +11,7 @@ const userController = require("../user")
 const {
   inputProcessing,
   outputProcessing,
+  processAutoColumn,
 } = require("../../../utilities/rowProcessor")
 const { FieldTypes } = require("../../../constants")
 const { isEqual } = require("lodash")
@@ -28,11 +29,26 @@ const CALCULATION_TYPES = {
 
 async function storeResponse(ctx, db, row, oldTable, table) {
   row.type = "row"
-  const response = await db.put(row)
   // don't worry about rev, tables handle rev/lastID updates
+  // if another row has been written since processing this will
+  // handle the auto ID clash
   if (!isEqual(oldTable, table)) {
-    await db.put(table)
+    try {
+      await db.put(table)
+    } catch (err) {
+      if (err.status === 409) {
+        const updatedTable = await db.get(table._id)
+        let response = processAutoColumn(null, updatedTable, row, {
+          reprocessing: true,
+        })
+        await db.put(response.table)
+        row = response.row
+      } else {
+        throw err
+      }
+    }
   }
+  const response = await db.put(row)
   row._rev = response.rev
   // process the row before return, to include relationships
   row = await outputProcessing(ctx, table, row, { squash: false })
@@ -182,7 +198,7 @@ exports.fetchView = async ctx => {
   }
   let response
   // TODO: make sure not self hosted in Cloud
-  if (!env.SELF_HOSTED) {
+  if (env.SELF_HOSTED) {
     response = await db.query(`database/${viewName}`, {
       include_docs: !calculation,
       group: !!group,
