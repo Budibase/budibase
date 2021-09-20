@@ -49,7 +49,7 @@
     if (sortBy === "status") {
       return enrichedApps.sort((a, b) => {
         if (a.status === b.status) {
-          return a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1
+          return a.name?.toLowerCase() < b.name?.toLowerCase() ? -1 : 1
         }
         return a.status === AppStatus.DEPLOYED ? -1 : 1
       })
@@ -61,7 +61,7 @@
       })
     } else {
       return enrichedApps.sort((a, b) => {
-        return a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1
+        return a.name?.toLowerCase() < b.name?.toLowerCase() ? -1 : 1
       })
     }
   }

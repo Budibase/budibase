@@ -128,6 +128,6 @@ static_resources:
         - endpoint:
             address:
               socket_address:
-                address: couchdb-service.budibase.svc.cluster.local
+                address: budibase-prod-svc-couchdb 
                 port_value: 5984
 
