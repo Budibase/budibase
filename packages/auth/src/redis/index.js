@@ -56,7 +56,6 @@ function init() {
   if (CLIENT) {
     CLIENT.disconnect()
   }
-
   const { redisProtocolUrl, opts, host, port } = getRedisOptions(CLUSTERED)
 
   if (CLUSTERED) {
