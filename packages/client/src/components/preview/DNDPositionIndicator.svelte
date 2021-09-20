@@ -1,15 +1,13 @@
 <script>
   import Indicator from "./Indicator.svelte"
 
-  export let componentId
   export let dropInfo
-  export let mode
   export let zIndex
   export let color
   export let transition
 
-  $: dimensions = getDimensions(dropInfo?.bounds, mode)
-  $: prefix = mode === "above" ? "Above" : "Below"
+  $: dimensions = getDimensions(dropInfo?.bounds, dropInfo?.mode)
+  $: prefix = dropInfo?.mode === "above" ? "Above" : "Below"
   $: text = `${prefix} ${dropInfo?.name}`
 
   const getDimensions = (bounds, mode) => {
@@ -25,8 +23,8 @@
   }
 </script>
 
-{#key `${componentId}-${mode}`}
-  {#if dimensions && mode !== "inside"}
+{#key `${dropInfo?.target}-${dropInfo?.mode}`}
+  {#if dimensions && dropInfo?.mode !== "inside"}
     <Indicator
       left={dimensions.left}
       top={dimensions.top}

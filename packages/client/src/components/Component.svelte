@@ -171,18 +171,23 @@
     conditionalSettings = result.settingUpdates
     visible = nextVisible
   }
+
+  // Drag and drop helper tags
+  $: draggable = interactive && !isLayout && !isScreen
+  $: droppable = interactive
+  $: dropInside = interactive && definition?.hasChildren && !children.length
 </script>
 
 {#key propsHash}
   {#if constructor && componentSettings && (visible || inSelectedPath)}
     <div
       class={`component ${id}`}
-      data-type={interactive ? "component" : ""}
+      data-type={interactive ? "component" : "readonly"}
       data-id={id}
       data-name={name}
-      data-draggable={interactive && !isLayout && !isScreen ? "true" : "false"}
-      data-droppable={interactive ? "true" : "false"}
-      data-droppable-inside={definition?.hasChildren ? "true" : "false"}
+      data-draggable={draggable}
+      data-droppable={droppable}
+      data-droppable-inside={dropInside}
     >
       <svelte:component this={constructor} {...componentSettings}>
         {#if children.length}
@@ -202,6 +207,6 @@
     display: contents;
   }
   [data-draggable="true"] :global(*:hover) {
-    cursor: grab !important;
+    cursor: grab;
   }
 </style>
