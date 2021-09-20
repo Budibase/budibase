@@ -3,6 +3,11 @@ import { get } from "builderStore/api"
 import { AppStatus } from "../../constants"
 import api from "../../builderStore/api"
 
+const extractAppId = id => {
+  const split = id?.split("_") || []
+  return split.length ? split[split.length - 1] : null
+}
+
 export function createAppStore() {
   const store = writable([])
 
@@ -18,7 +23,7 @@ export function createAppStore() {
 
         // First append all dev app version
         devApps.forEach(app => {
-          const id = app.appId.substring(8)
+          const id = extractAppId(app.appId)
           appMap[id] = {
             ...app,
             devId: app.appId,
@@ -28,7 +33,13 @@ export function createAppStore() {
 
         // Then merge with all prod app versions
         deployedApps.forEach(app => {
-          const id = app.appId.substring(4)
+          const id = extractAppId(app.appId)
+
+          // Skip any deployed apps which don't have a dev counterpart
+          if (!appMap[id]) {
+            return
+          }
+
           appMap[id] = {
             ...appMap[id],
             ...app,
@@ -40,7 +51,7 @@ export function createAppStore() {
         // Transform into an array and clean up
         const apps = Object.values(appMap)
         apps.forEach(app => {
-          app.appId = app.devId.substring(8)
+          app.appId = extractAppId(app.devId)
           delete app._id
           delete app._rev
         })
