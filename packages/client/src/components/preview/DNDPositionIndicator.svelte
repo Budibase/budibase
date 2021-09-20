@@ -7,7 +7,7 @@
   export let transition
 
   $: dimensions = getDimensions(dropInfo?.bounds, dropInfo?.mode)
-  $: prefix = dropInfo?.mode === "above" ? "Above" : "Below"
+  $: prefix = dropInfo?.mode === "above" ? "Before" : "After"
   $: text = `${prefix} ${dropInfo?.name}`
 
   const getDimensions = (bounds, mode) => {
