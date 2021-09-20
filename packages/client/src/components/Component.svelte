@@ -174,7 +174,7 @@
 
   // Drag and drop helper tags
   $: draggable = interactive && !isLayout && !isScreen
-  $: droppable = interactive
+  $: droppable = interactive && !isLayout && !isScreen
   $: dropInside = interactive && definition?.hasChildren && !children.length
 </script>
 

@@ -105,9 +105,14 @@
     const element = e.target.closest("[data-type='component']")
     if (
       element &&
-      element.dataset.droppable &&
+      element.dataset.droppable === "true" &&
       element.dataset.id !== dragInfo.target
     ) {
+      // Do nothing if this is the same target
+      if (element.dataset.id === dropInfo?.target) {
+        return
+      }
+
       // Ensure the dragging flag is always set.
       // There's a bit of a race condition between the app reinitialisation
       // after selecting the DND component and setting this the first time
