@@ -63,7 +63,9 @@
     $builderStore.inBuilder &&
     $builderStore.selectedComponentId === instance._id
   $: inSelectedPath = $builderStore.selectedComponentPath?.includes(id)
-  $: interactive = $builderStore.previewType === "layout" || insideScreenslot
+  $: interactive =
+    $builderStore.inBuilder &&
+    ($builderStore.previewType === "layout" || insideScreenslot)
   $: evaluateConditions(enrichedSettings?._conditions)
   $: componentSettings = { ...enrichedSettings, ...conditionalSettings }
 
