@@ -1055,7 +1055,7 @@
     to-gfm-code-block "^0.1.1"
     year "^0.2.1"
 
-"@budibase/standard-components@^0.9.132", "@budibase/standard-components@^0.9.133":
+"@budibase/standard-components@^0.9.133":
   version "0.9.133"
   resolved "https://registry.yarnpkg.com/@budibase/standard-components/-/standard-components-0.9.133.tgz#789c02b45dc3853b003822c09e18ce7ece4dfa29"
   integrity sha512-xcuwTxsqk1J/YmM4YjThO/Fm0eJ+aZWm0kbFgfN+dNN9fuPlsPOLmlVEWeOUPmBa5XfRyDbx6lDYj0PPEK8CvA==
