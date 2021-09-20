@@ -52,7 +52,6 @@ export const styleable = (node, styles = {}) => {
     // Applies a style string to a DOM node
     const applyStyles = styleString => {
       node.style = `${baseString}${styleString}`
-      node.dataset.componentId = componentId
     }
 
     // Applies the "normal" style definition
