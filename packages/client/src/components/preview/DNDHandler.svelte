@@ -9,16 +9,15 @@
   let dropInfo
 
   const getDOMNodeForComponent = component => {
-    const parent = component.closest("[data-type='component']")
+    const parent = component.closest(".component")
     const children = Array.from(parent.childNodes)
     return children?.find(node => node?.nodeType === 1)
   }
 
   // Callback when initially starting a drag on a draggable component
   const onDragStart = e => {
-    const parent = e.target.closest("[data-type='component']")
-    const child = getDOMNodeForComponent(e.target)
-    if (!parent?.dataset?.id || !child) {
+    const parent = e.target.closest(".component")
+    if (!parent?.classList.contains("draggable")) {
       return
     }
 
@@ -31,7 +30,10 @@
     builderStore.actions.setDragging(true)
 
     // Highlight being dragged by setting opacity
-    child.style.opacity = "0.5"
+    const child = getDOMNodeForComponent(e.target)
+    if (child) {
+      child.style.opacity = "0.5"
+    }
   }
 
   // Callback when drag stops (whether dropped or not)
@@ -102,10 +104,10 @@
       return
     }
 
-    const element = e.target.closest("[data-type='component']")
+    const element = e.target.closest(".component")
     if (
       element &&
-      element.dataset.droppable === "true" &&
+      element.classList.contains("droppable") &&
       element.dataset.id !== dragInfo.target
     ) {
       // Do nothing if this is the same target
@@ -130,7 +132,7 @@
       dropInfo = {
         target,
         name: element.dataset.name,
-        droppableInside: element.dataset.droppableInside === "true",
+        droppableInside: element.classList.contains("empty"),
         bounds,
       }
     } else {
