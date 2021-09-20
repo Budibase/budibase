@@ -31,9 +31,6 @@ export const styleable = (node, styles = {}) => {
 
   // Creates event listeners and applies initial styles
   const setupStyles = (newStyles = {}) => {
-    // Use empty state styles as base styles if required, but let them, get
-    // overridden by any user specified styles
-    const baseString = node.style.cssText
     let baseStyles = {}
     if (newStyles.empty) {
       baseStyles.border = "2px dashed var(--spectrum-global-color-gray-600)"
@@ -51,7 +48,7 @@ export const styleable = (node, styles = {}) => {
 
     // Applies a style string to a DOM node
     const applyStyles = styleString => {
-      node.style = `${baseString}${styleString}`
+      node.style = styleString
     }
 
     // Applies the "normal" style definition
