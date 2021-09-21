@@ -4,6 +4,12 @@ on:
  push:
     branches:
       - master
+ workflow_dispatch:
+    inputs:
+      release_self_host:
+        description: 'Release to self hosters? (Y/N)'     
+        required: true
+        default: 'N'
 
 env:
   POSTHOG_TOKEN: ${{ secrets.POSTHOG_TOKEN }}
@@ -47,7 +53,19 @@ jobs:
         uses: "WyriHaximus/github-action-get-previous-tag@v1"
 
       - name: Build/release Docker images
-        run: |
+        if: ${{ github.event.inputs.release_self_host == 'N' }}
+        run: | 
+          docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+          yarn build
+          yarn build:docker
+        env:
+          DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
+          BUDIBASE_RELEASE_VERSION: ${{ steps.previoustag.outputs.tag }}
+
+      - name: Build/release Docker images (Self Host)
+        if: ${{ github.event.inputs.release_self_host == 'Y' }}
+        run: | 
           docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
           yarn build
           yarn build:docker
