@@ -48,7 +48,7 @@ export default class IntercomClient {
 
     return window.Intercom("boot", {
       app_id: this.token,
-      ...user
+      ...user,
     })
   }
 
@@ -61,6 +61,12 @@ export default class IntercomClient {
   captureEvent(event, props = {}) {
     if (!this.initialised) return
 
-    window.Intercom("trackEvent", event, props);
+    window.Intercom("trackEvent", event, props)
+  }
+
+  logout() {
+    if (!this.initialised) return
+
+    window.Intercom("shutdown")
   }
 }

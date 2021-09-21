@@ -15,7 +15,6 @@
   import OIDCButton from "./_components/OIDCButton.svelte"
   import Logo from "assets/bb-emblem.svg"
   import { onMount } from "svelte"
-  import analytics from "analytics"
 
   let username = ""
   let password = ""
@@ -26,18 +25,9 @@
 
   async function login() {
     try {
-      const { user } = await auth.login({
+      await auth.login({
         username,
         password,
-      })
-
-      analytics.identify(user._id, user)
-      analytics.showChat({
-        email: user.email,
-        created_at: Date.now(),
-        name: user.name,
-        user_id: user._id,
-        tenant: user.tenantId
       })
 
       if ($auth?.user?.forceResetPassword) {

@@ -19,7 +19,7 @@ import {
 import { fetchComponentLibDefinitions } from "../loadComponentLibraries"
 import api from "../api"
 import { FrontendTypes } from "constants"
-import analytics from "analytics"
+import analytics, { Events } from "analytics"
 import {
   findComponentType,
   findComponentParent,
@@ -443,7 +443,7 @@ export const getFrontendStore = () => {
         })
 
         // Log event
-        analytics.captureEvent("Added Component", {
+        analytics.captureEvent(Events.COMPONENT.CREATED, {
           name: componentInstance._component,
         })
 

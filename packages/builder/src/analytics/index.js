@@ -3,20 +3,15 @@ import PosthogClient from "./PosthogClient"
 import IntercomClient from "./IntercomClient"
 import SentryClient from "./SentryClient"
 import { Events } from "./constants"
+import { auth } from "stores/portal"
+import { get } from "svelte/store"
 
-// const posthog = new PosthogClient(
-//   process.env.POSTHOG_TOKEN,
-//   process.env.POSTHOG_URL
-// )
 const posthog = new PosthogClient(
-  "phc_yGOn4i7jWKaCTapdGR6lfA4AvmuEQ2ijn5zAVSFYPlS",
-  "https://app.posthog.com"
+  process.env.POSTHOG_TOKEN,
+  process.env.POSTHOG_URL
 )
-// const sentry = new SentryClient(process.env.SENTRY_DSN)
-const sentry = new SentryClient("https://a34ae347621946bf8acded18e5b7d4b8@o420233.ingest.sentry.io/5338131")
-// const intercom = new IntercomClient(process.env.INTERCOM_TOKEN)
-const intercom = new IntercomClient("qz2sxfuv")
-
+const sentry = new SentryClient(process.env.SENTRY_DSN)
+const intercom = new IntercomClient(process.env.INTERCOM_TOKEN)
 
 class AnalyticsHub {
   constructor() {
@@ -24,24 +19,27 @@ class AnalyticsHub {
   }
 
   async activate() {
+    // Setting the analytics env var off in the backend overrides org/tenant settings
     const analyticsStatus = await api.get("/api/analytics")
     const json = await analyticsStatus.json()
 
-    if (json.enabled) {
-      this.clients.forEach(client => client.init())
+    // Multitenancy disabled on the backend
+    if (!json.enabled) return
+
+    const tenantId = get(auth).tenantId
+
+    if (tenantId) {
+      const res = await api.get(
+        `/api/global/configs/public?tenantId=${tenantId}`
+      )
+      const orgJson = await res.json()
+
+      // analytics opted out for the tenant
+      if (orgJson.config?.analytics === false) return
     }
 
-    this.enabled = json.enabled
-  }
-
-  optIn() {
-    this.captureEvent(Events.ANALYTICS.OPT_IN)
-    this.clients.forEach(client => client.optIn())
-  }
-
-  optOut() {
-    this.captureEvent(Events.ANALYTICS.OPT_OUT)
-    this.clients.forEach(client => client.optOut())
+    this.clients.forEach(client => client.init())
+    this.enabled = true
   }
 
   identify(id, metadata) {
@@ -67,6 +65,11 @@ class AnalyticsHub {
 
   submitFeedback(values) {
     posthog.npsFeedback(values)
+  }
+
+  async logout() {
+    posthog.logout()
+    intercom.logout()
   }
 }
 

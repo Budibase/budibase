@@ -1,6 +1,7 @@
 import { derived, writable, get } from "svelte/store"
 import api from "../../builderStore/api"
 import { admin } from "stores/portal"
+import analytics from "analytics"
 
 export function createAuthStore() {
   const auth = writable({
@@ -49,6 +50,19 @@ export function createAuthStore() {
       }
       return store
     })
+
+    if (user) {
+      analytics.activate().then(() => {
+        analytics.identify(user._id, user)
+        // TODO: check if the user is a certain org size
+        // analytics.showChat({
+        //   email: user.email,
+        //   name: user.name,
+        //   user_id: user._id,
+        //   tenant: user.tenantId
+        // })
+      })
+    }
   }
 
   async function setOrganisation(tenantId) {

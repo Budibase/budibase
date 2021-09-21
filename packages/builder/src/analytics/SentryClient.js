@@ -20,20 +20,10 @@ export default class SentryClient {
   }
 
   identify(id) {
+    if (!this.initalised) return
+
     Sentry.configureScope(scope => {
       scope.setUser({ id })
     })
   }
 }
-
-// export function init() {
-//   if (process.env.SENTRY_DSN) {
-//     Sentry.init({ dsn: process.env.SENTRY_DSN })
-//   }
-// }
-
-// export function captureException(err) {
-//   // if (!analyticsEnabled) return
-//   Sentry.captureException(err)
-//   // captureEvent("Error", { error: err.message ? err.message : err })
-// }
