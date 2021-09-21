@@ -62,8 +62,14 @@
           style="display:flex;
           color: var(--spectrum-global-color-gray-400);"
         >
-          <span on:click={confirmDeleteDialog.show} class="iconPadding">
-            <div class="icon"><Icon name="DeleteOutline" /></div>
+          <span class="iconPadding">
+            <div class="icon">
+              <Icon
+                on:click={confirmDeleteDialog.show}
+                hoverable
+                name="DeleteOutline"
+              />
+            </div>
           </span>
           <ActionButton
             on:click={() => {
@@ -153,10 +159,5 @@
     cursor: pointer;
     display: flex;
     padding-right: var(--spacing-m);
-  }
-
-  .icon:hover {
-    cursor: pointer;
-    color: var(--spectrum-alias-text-color-hover);
   }
 </style>
