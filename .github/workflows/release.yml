@@ -4,6 +4,12 @@ on:
  push:
     branches:
       - master
+ workflow_dispatch:
+    inputs:
+      release_self_host:
+        description: 'Release to self hosters? (Y/N)'     
+        required: true
+        default: 'N'
 
 env:
   POSTHOG_TOKEN: ${{ secrets.POSTHOG_TOKEN }}
