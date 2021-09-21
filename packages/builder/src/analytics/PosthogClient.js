@@ -21,7 +21,7 @@ export default class PosthogClient {
   }
 
   /**
-   * Set the posthog context to the current user 
+   * Set the posthog context to the current user
    * @param {String} id - unique user id
    */
   identify(id) {
@@ -70,7 +70,7 @@ export default class PosthogClient {
   }
 
   /**
-   * Reset posthog user back to initial state on logout. 
+   * Reset posthog user back to initial state on logout.
    */
   logout() {
     if (!this.initialised) return
