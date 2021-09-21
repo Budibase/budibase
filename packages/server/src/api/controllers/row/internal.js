@@ -20,6 +20,7 @@ const { fullSearch, paginatedSearch } = require("./internalSearch")
 const { getGlobalUsersFromMetadata } = require("../../../utilities/global")
 const inMemoryViews = require("../../../db/inMemoryView")
 const env = require("../../../environment")
+const { migrateToInMemoryView } = require("../view/utils")
 
 const CALCULATION_TYPES = {
   SUM: "sum",
@@ -74,14 +75,32 @@ async function getRawTableData(ctx, db, tableId) {
 
 async function getView(db, viewName) {
   let viewInfo
-  if (env.SELF_HOSTED) {
+  async function getFromDesignDoc() {
     const designDoc = await db.get("_design/database")
     viewInfo = designDoc.views[viewName]
+    return viewInfo
+  }
+  let migrate = false
+  if (env.SELF_HOSTED) {
+    viewInfo = await getFromDesignDoc()
   } else {
-    viewInfo = await db.get(generateMemoryViewID(viewName))
-    if (viewInfo) {
-      viewInfo = viewInfo.view
+    try {
+      viewInfo = await db.get(generateMemoryViewID(viewName))
+      if (viewInfo) {
+        viewInfo = viewInfo.view
+      }
+    } catch (err) {
+      // check if it can be retrieved from design doc (needs migrated)
+      if (err.status !== 404) {
+        viewInfo = null
+      } else {
+        viewInfo = await getFromDesignDoc()
+        migrate = !!viewInfo
+      }
     }
+  }
+  if (migrate) {
+    await migrateToInMemoryView(db, viewName)
   }
   if (!viewInfo) {
     throw "View does not exist."
@@ -193,9 +212,6 @@ exports.fetchView = async ctx => {
   const db = new CouchDB(appId)
   const { calculation, group, field } = ctx.query
   const viewInfo = await getView(db, viewName)
-  if (!viewInfo) {
-    throw "View does not exist."
-  }
   let response
   if (env.SELF_HOSTED) {
     response = await db.query(`database/${viewName}`, {
