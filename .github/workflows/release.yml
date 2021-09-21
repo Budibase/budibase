@@ -53,7 +53,7 @@ jobs:
         uses: "WyriHaximus/github-action-get-previous-tag@v1"
 
       - name: Build/release Docker images
-        if: ${{ github.event.inputs.release_self_host == 'N' }}
+        if: ${{ github.event.inputs.release_self_host != 'Y' }}
         run: | 
           docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
           yarn build
