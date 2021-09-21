@@ -31,7 +31,12 @@ async function allUsers() {
   return response.rows.map(row => row.doc)
 }
 
-async function saveUser(user, tenantId, hashPassword = true) {
+async function saveUser(
+  user,
+  tenantId,
+  hashPassword = true,
+  requirePassword = true
+) {
   if (!tenantId) {
     throw "No tenancy specified."
   }
@@ -57,7 +62,7 @@ async function saveUser(user, tenantId, hashPassword = true) {
     hashedPassword = hashPassword ? await hash(password) : password
   } else if (dbUser) {
     hashedPassword = dbUser.password
-  } else {
+  } else if (requirePassword) {
     throw "Password must be specified."
   }
 
@@ -106,16 +111,21 @@ exports.save = async ctx => {
   }
 }
 
+const parseBooleanParam = param => {
+  if (param && param == "false") {
+    return false
+  } else {
+    return true
+  }
+}
+
 exports.adminUser = async ctx => {
   const { email, password, tenantId } = ctx.request.body
 
   // account portal sends a pre-hashed password - honour param to prevent double hashing
-  let hashPassword = ctx.request.query.hashPassword
-  if (hashPassword && hashPassword == "false") {
-    hashPassword = false
-  } else {
-    hashPassword = true
-  }
+  const hashPassword = parseBooleanParam(ctx.request.query.hashPassword)
+  // account portal sends no password for SSO users
+  const requirePassword = parseBooleanParam(ctx.request.query.requirePassword)
 
   if (await doesTenantExist(tenantId)) {
     ctx.throw(403, "Organisation already exists.")
@@ -148,7 +158,7 @@ exports.adminUser = async ctx => {
     tenantId,
   }
   try {
-    ctx.body = await saveUser(user, tenantId, hashPassword)
+    ctx.body = await saveUser(user, tenantId, hashPassword, requirePassword)
   } catch (err) {
     ctx.throw(err.status || 400, err)
   }
