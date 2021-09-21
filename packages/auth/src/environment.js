@@ -16,6 +16,7 @@ module.exports = {
   REDIS_PASSWORD: process.env.REDIS_PASSWORD,
   MINIO_ACCESS_KEY: process.env.MINIO_ACCESS_KEY,
   MINIO_SECRET_KEY: process.env.MINIO_SECRET_KEY,
+  AWS_REGION: process.env.AWS_REGION,
   MINIO_URL: process.env.MINIO_URL,
   INTERNAL_API_KEY: process.env.INTERNAL_API_KEY,
   MULTI_TENANCY: process.env.MULTI_TENANCY,
