@@ -1,3 +1,12 @@
+<script context="module">
+  export const Sides = {
+    Top: "Top",
+    Right: "Right",
+    Bottom: "Bottom",
+    Left: "Left",
+  }
+</script>
+
 <script>
   import { onMount } from "svelte"
   import { get } from "svelte/store"
@@ -7,6 +16,22 @@
 
   let dragInfo
   let dropInfo
+
+  const getEdges = (bounds, mousePoint) => {
+    const { width, height, top, left } = bounds
+    return {
+      [Sides.Top]: [mousePoint[0], top],
+      [Sides.Right]: [left + width, mousePoint[1]],
+      [Sides.Bottom]: [mousePoint[0], top + height],
+      [Sides.Left]: [left, mousePoint[1]],
+    }
+  }
+
+  const calculatePointDelta = (point1, point2) => {
+    const deltaX = Math.abs(point1[0] - point2[0])
+    const deltaY = Math.abs(point1[1] - point2[1])
+    return Math.sqrt(deltaX * deltaX + deltaY * deltaY)
+  }
 
   const getDOMNodeForComponent = component => {
     const parent = component.closest(".component")
@@ -61,23 +86,57 @@
 
     e.preventDefault()
     const { droppableInside, bounds } = dropInfo
-    const { top, height } = bounds
+    const { top, left, height, width } = bounds
     const mouseY = e.clientY
+    const mouseX = e.clientX
     const snapFactor = droppableInside ? 0.33 : 0.5
-    const snapLimit = Math.min(40, height * snapFactor)
-    const edgeLimits = [
-      Math.round(top + snapLimit),
-      Math.round(top + height - snapLimit),
-    ]
+    const snapLimitV = Math.min(40, height * snapFactor)
+    const snapLimitH = Math.min(40, width * snapFactor)
 
-    if (mouseY <= edgeLimits[0]) {
+    // Determine all sies we are within snap range of
+    let sides = []
+    if (mouseY <= top + snapLimitV) {
+      sides.push(Sides.Top)
+    } else if (mouseY >= top + height - snapLimitV) {
+      sides.push(Sides.Bottom)
+    }
+    if (mouseX < left + snapLimitH) {
+      sides.push(Sides.Left)
+    } else if (mouseX > left + width - snapLimitH) {
+      sides.push(Sides.Right)
+    }
+
+    // When no edges match, drop inside if possible
+    if (!sides.length) {
+      dropInfo.mode = droppableInside ? "inside" : null
+      dropInfo.side = null
+      return
+    }
+
+    // When one edge matches, use that edge
+    if (sides.length === 1) {
+      dropInfo.side = sides[0]
+      if ([Sides.Top, Sides.Left].includes(sides[0])) {
+        dropInfo.mode = "above"
+      } else {
+        dropInfo.mode = "below"
+      }
+      return
+    }
+
+    // When 2 edges match, work out which is closer
+    const mousePoint = [mouseX, mouseY]
+    const edges = getEdges(bounds, mousePoint)
+    const edge1 = edges[sides[0]]
+    const delta1 = calculatePointDelta(mousePoint, edge1)
+    const edge2 = edges[sides[1]]
+    const delta2 = calculatePointDelta(mousePoint, edge2)
+    const edge = delta1 < delta2 ? sides[0] : sides[1]
+    dropInfo.side = edge
+    if ([Sides.Top, Sides.Left].includes(edge)) {
       dropInfo.mode = "above"
-    } else if (mouseY >= edgeLimits[1]) {
-      dropInfo.mode = "below"
-    } else if (droppableInside) {
-      dropInfo.mode = "inside"
     } else {
-      dropInfo.mode = null
+      dropInfo.mode = "below"
     }
   }
 
