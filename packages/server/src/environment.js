@@ -26,7 +26,7 @@ module.exports = {
   COUCH_DB_URL: process.env.COUCH_DB_URL,
   MINIO_URL: process.env.MINIO_URL,
   WORKER_URL: process.env.WORKER_URL,
-  SELF_HOSTED: process.env.SELF_HOSTED,
+  SELF_HOSTED: !!parseInt(process.env.SELF_HOSTED),
   AWS_REGION: process.env.AWS_REGION,
   ENABLE_ANALYTICS: process.env.ENABLE_ANALYTICS,
   MINIO_ACCESS_KEY: process.env.MINIO_ACCESS_KEY,
