@@ -69,9 +69,9 @@
   const checkKeys = async () => {
     const response = await api.get(`/api/keys/`)
     const keys = await response.json()
-    if (keys.userId) {
-      analytics.identify(keys.userId)
-    }
+    // if (keys.userId) {
+    //   analytics.identify(keys.userId)
+    // }
   }
 
   const initiateAppCreation = () => {

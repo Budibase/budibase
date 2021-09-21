@@ -3,7 +3,7 @@ import { getAutomationStore } from "./store/automation"
 import { getHostingStore } from "./store/hosting"
 import { getThemeStore } from "./store/theme"
 import { derived, writable } from "svelte/store"
-import analytics from "analytics"
+import analytics, { Events } from "analytics"
 import { FrontendTypes, LAYOUT_NAMES } from "../constants"
 import { findComponent } from "./storeUtils"
 
@@ -58,7 +58,7 @@ export const selectedAccessRole = writable("BASIC")
 export const initialise = async () => {
   try {
     await analytics.activate()
-    analytics.captureEvent("Builder Started")
+    analytics.captureEvent(Events.BUILDER.STARTED)
   } catch (err) {
     console.log(err)
   }
