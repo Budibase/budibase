@@ -145,7 +145,7 @@ exports.save = async function (ctx) {
   if (updatedRows && updatedRows.length !== 0) {
     await db.bulkDocs(updatedRows)
   }
-  const result = await db.post(tableToSave)
+  const result = await db.put(tableToSave)
   tableToSave._rev = result.rev
 
   tableToSave = await tableSaveFunctions.after(tableToSave)

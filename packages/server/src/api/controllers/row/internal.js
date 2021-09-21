@@ -197,7 +197,6 @@ exports.fetchView = async ctx => {
     throw "View does not exist."
   }
   let response
-  // TODO: make sure not self hosted in Cloud
   if (env.SELF_HOSTED) {
     response = await db.query(`database/${viewName}`, {
       include_docs: !calculation,
