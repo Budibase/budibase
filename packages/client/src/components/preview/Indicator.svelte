@@ -70,18 +70,18 @@
     justify-content: flex-start;
     align-items: center;
   }
+  .text.line {
+    transform: translateY(-50%);
+    border-radius: 4px;
+  }
   .text.flipped {
     border-top-left-radius: 4px;
     border-bottom-left-radius: 4px;
     transform: translateY(0%);
     top: -2px;
   }
-  .text.line {
-    transform: translateY(-50%) !important;
-    border-radius: 4px !important;
-  }
   .text.right {
-    right: -2px !important;
-    left: auto !important;
+    right: -2px;
+    left: auto;
   }
 </style>
