@@ -10,6 +10,7 @@
   export let zIndex
   export let transition = false
   export let line = false
+  export let alignRight = false
 
   $: flipped = top < 20
 </script>
@@ -26,7 +27,7 @@
   style="top: {top}px; left: {left}px; width: {width}px; height: {height}px; --color: {color}; --zIndex: {zIndex};"
 >
   {#if text}
-    <div class="text" class:flipped class:line>
+    <div class="text" class:flipped class:line class:right={alignRight}>
       {text}
     </div>
   {/if}
@@ -34,6 +35,7 @@
 
 <style>
   .indicator {
+    right: 0;
     position: absolute;
     z-index: var(--zIndex);
     border: 2px solid var(--color);
@@ -77,5 +79,9 @@
   .text.line {
     transform: translateY(-50%) !important;
     border-radius: 4px !important;
+  }
+  .text.right {
+    right: -2px !important;
+    left: auto !important;
   }
 </style>
