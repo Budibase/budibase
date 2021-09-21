@@ -3,6 +3,9 @@ export default class IntercomClient {
     this.token = token
   }
 
+  /**
+   * Instantiate intercom using their provided script.
+   */
   init() {
     if (!this.token) return
 
@@ -43,6 +46,11 @@ export default class IntercomClient {
     }
   }
 
+  /**
+   * Show the intercom chat bubble.
+   * @param {Object} user - user to identify
+   * @returns Intercom global object
+   */
   show(user = {}) {
     if (!this.initialised) return
 
@@ -52,21 +60,35 @@ export default class IntercomClient {
     })
   }
 
+  /**
+   * Update intercom user details and messages.
+   * @returns Intercom global object
+   */
   update() {
     if (!this.initialised) return
 
     return window.Intercom("update")
   }
 
+  /**
+   * Capture analytics events and send them to intercom.
+   * @param {String} event - event identifier
+   * @param {Object} props - properties for the event
+   * @returns Intercom global object
+   */
   captureEvent(event, props = {}) {
     if (!this.initialised) return
 
-    window.Intercom("trackEvent", event, props)
+    return window.Intercom("trackEvent", event, props)
   }
 
+  /**
+   * Disassociate the user from the current session.
+   * @returns Intercom global object
+   */
   logout() {
     if (!this.initialised) return
 
-    window.Intercom("shutdown")
+    return window.Intercom("shutdown")
   }
 }
