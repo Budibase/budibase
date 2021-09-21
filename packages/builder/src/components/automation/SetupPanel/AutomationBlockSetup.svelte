@@ -20,7 +20,6 @@
   import QueryParamSelector from "./QueryParamSelector.svelte"
   import CronBuilder from "./CronBuilder.svelte"
   import Editor from "components/integration/QueryEditor.svelte"
-  import { database } from "stores/backend"
   import { debounce } from "lodash"
   import ModalBindableInput from "components/common/bindings/ModalBindableInput.svelte"
   import FilterDrawer from "components/design/PropertiesPanel/PropertyControls/FilterEditor/FilterDrawer.svelte"
@@ -35,13 +34,11 @@
   let drawer
   let tempFilters = lookForFilters(schemaProperties) || []
   let fillWidth = true
-
   $: stepId = block.stepId
   $: bindings = getAvailableBindings(
     block || $automationStore.selectedBlock,
     $automationStore.selectedAutomation?.automation?.definition
   )
-  $: instanceId = $database._id
 
   $: inputData = testData ? testData : block.inputs
   $: tableId = inputData ? inputData.tableId : null
@@ -210,7 +207,7 @@
       {:else if value.customType === "webhookUrl"}
         <WebhookDisplay value={inputData[key]} />
       {:else if value.customType === "triggerSchema"}
-        <SchemaSetup on:change={e => onChange(e, key)} value={value[key]} />
+        <SchemaSetup on:change={e => onChange(e, key)} value={inputData[key]} />
       {:else if value.customType === "code"}
         <CodeEditorModal>
           <pre>{JSON.stringify(bindings, null, 2)}</pre>
