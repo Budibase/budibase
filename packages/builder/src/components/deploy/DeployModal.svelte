@@ -25,7 +25,7 @@
         throw new Error(`status ${response.status}`)
       } else {
         analytics.captureEvent(Events.APP.PUBLISHED, {
-          appId: $store.appId
+          appId: $store.appId,
         })
         notifications.success(`Application published successfully`)
       }

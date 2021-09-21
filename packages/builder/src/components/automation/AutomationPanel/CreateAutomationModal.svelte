@@ -4,7 +4,7 @@
   import { automationStore } from "builderStore"
   import { notifications } from "@budibase/bbui"
   import { Input, ModalContent, Layout, Body, Icon } from "@budibase/bbui"
-  import analytics from "analytics"
+  import analytics, { Events } from "analytics"
 
   let name
   let selectedTrigger
@@ -36,7 +36,7 @@
     notifications.success(`Automation ${name} created.`)
 
     $goto(`./${$automationStore.selectedAutomation.automation._id}`)
-    analytics.captureEvent("Automation Created", { name })
+    analytics.captureEvent(Events.AUTOMATION.CREATED, { name })
   }
   $: triggers = Object.entries($automationStore.blockDefinitions.TRIGGER)
 
