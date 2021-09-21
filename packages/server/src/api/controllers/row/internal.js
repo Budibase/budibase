@@ -206,13 +206,7 @@ exports.fetchView = async ctx => {
   } else {
     const tableId = viewInfo.meta.tableId
     const data = await getRawTableData(ctx, db, tableId)
-    response = await inMemoryViews.runView(
-      appId,
-      viewInfo,
-      calculation,
-      group,
-      data
-    )
+    response = await inMemoryViews.runView(viewInfo, calculation, group, data)
   }
 
   let rows

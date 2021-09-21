@@ -93,7 +93,12 @@ const TYPE_TRANSFORM_MAP = {
  * @returns {{row: Object, table: Object}} The updated row and table, the table may need to be updated
  * for automatic ID purposes.
  */
-function processAutoColumn(user, table, row, opts = { reprocessing: false }) {
+function processAutoColumn(
+  user,
+  table,
+  row,
+  opts = { reprocessing: false, noAutoRelationships: false }
+) {
   let now = new Date().toISOString()
   // if a row doesn't have a revision then it doesn't exist yet
   const creating = !row._rev
@@ -103,7 +108,7 @@ function processAutoColumn(user, table, row, opts = { reprocessing: false }) {
     }
     switch (schema.subtype) {
       case AutoFieldSubTypes.CREATED_BY:
-        if (creating && !opts.reprocessing) {
+        if (creating && !opts.reprocessing && !opts.noAutoRelationships) {
           row[key] = [user.userId]
         }
         break
@@ -113,7 +118,7 @@ function processAutoColumn(user, table, row, opts = { reprocessing: false }) {
         }
         break
       case AutoFieldSubTypes.UPDATED_BY:
-        if (!opts.reprocessing) {
+        if (!opts.reprocessing && !opts.noAutoRelationships) {
           row[key] = [user.userId]
         }
         break
@@ -155,9 +160,15 @@ exports.coerce = (row, type) => {
  * @param {object} user the user which is performing the input.
  * @param {object} row the row which is being created/updated.
  * @param {object} table the table which the row is being saved to.
+ * @param {object} opts some input processing options (like disabling auto-column relationships).
  * @returns {object} the row which has been prepared to be written to the DB.
  */
-exports.inputProcessing = (user = {}, table, row) => {
+exports.inputProcessing = (
+  user = {},
+  table,
+  row,
+  opts = { noAutoRelationships: false }
+) => {
   let clonedRow = cloneDeep(row)
   // need to copy the table so it can be differenced on way out
   const copiedTable = cloneDeep(table)
@@ -180,7 +191,7 @@ exports.inputProcessing = (user = {}, table, row) => {
     }
   }
   // handle auto columns - this returns an object like {table, row}
-  return processAutoColumn(user, copiedTable, clonedRow)
+  return processAutoColumn(user, copiedTable, clonedRow, opts)
 }
 
 /**
