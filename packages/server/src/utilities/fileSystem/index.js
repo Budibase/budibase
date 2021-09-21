@@ -130,11 +130,13 @@ exports.performBackup = async (appId, backupName) => {
       ),
   })
   // write the file to the object store
-  await streamUpload(
-    ObjectStoreBuckets.BACKUPS,
-    join(appId, backupName),
-    fs.createReadStream(path)
-  )
+  if (env.SELF_HOSTED) {
+    await streamUpload(
+      ObjectStoreBuckets.BACKUPS,
+      join(appId, backupName),
+      fs.createReadStream(path)
+    )
+  }
   return fs.createReadStream(path)
 }
 
