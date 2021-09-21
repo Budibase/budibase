@@ -13,20 +13,20 @@ export default class SentryClient {
     }
   }
 
-	/**
-	 * Capture an exception and send it to sentry.
-	 * @param {Error} err - JS error object
-	 */
+  /**
+   * Capture an exception and send it to sentry.
+   * @param {Error} err - JS error object
+   */
   captureException(err) {
     if (!this.initalised) return
 
     Sentry.captureException(err)
   }
 
-	/**
-	 * Identify user in sentry.
-	 * @param {String} id - Unique user id
-	 */
+  /**
+   * Identify user in sentry.
+   * @param {String} id - Unique user id
+   */
   identify(id) {
     if (!this.initalised) return
 
