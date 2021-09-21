@@ -2,7 +2,8 @@
   import { onMount, onDestroy } from "svelte"
   import { Button, Modal, notifications, ModalContent } from "@budibase/bbui"
   import api from "builderStore/api"
-  import analytics from "analytics"
+  import analytics, { Events } from "analytics"
+  import { store } from "builderStore"
 
   const DeploymentStatus = {
     SUCCESS: "SUCCESS",
@@ -23,6 +24,9 @@
       if (response.status !== 200) {
         throw new Error(`status ${response.status}`)
       } else {
+        analytics.captureEvent(Events.APP.PUBLISHED, {
+          appId: $store.appId
+        })
         notifications.success(`Application published successfully`)
       }
     } catch (err) {

@@ -25,7 +25,7 @@
   }
 
   const values = writable({
-    analytics: !analytics.disabled(),
+    analytics: analytics.enabled,
     company: $organisation.company,
     platformUrl: $organisation.platformUrl,
     logo: $organisation.logoUrl

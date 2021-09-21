@@ -73,6 +73,7 @@ exports.ObjectStore = bucket => {
   AWS.config.update({
     accessKeyId: env.MINIO_ACCESS_KEY,
     secretAccessKey: env.MINIO_SECRET_KEY,
+    region: env.AWS_REGION
   })
   const config = {
     s3ForcePathStyle: true,

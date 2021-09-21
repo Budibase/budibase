@@ -10,6 +10,7 @@
   } from "@budibase/bbui"
   import { createValidationStore, emailValidator } from "helpers/validation"
   import { users } from "stores/portal"
+  import analytics, { Events } from "analytics"
 
   export let disabled
 
@@ -25,6 +26,7 @@
       notifications.error(res.message)
     } else {
       notifications.success(res.message)
+      analytics.captureEvent(Events.USER.INVITE)
     }
   }
 </script>
