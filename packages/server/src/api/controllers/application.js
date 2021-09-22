@@ -230,7 +230,12 @@ exports.create = async function (ctx) {
   const response = await db.put(newApplication, { force: true })
   newApplication._rev = response.rev
 
-  await createEmptyAppPackage(ctx, newApplication)
+  // Only create the default home screens and layout if we aren't importing
+  // an app
+  if (!useTemplate) {
+    await createEmptyAppPackage(ctx, newApplication)
+  }
+
   /* istanbul ignore next */
   if (!env.isTest()) {
     await createApp(appId)
