@@ -12,6 +12,7 @@ const {
   auditLog,
   tenancy,
   appTenancy,
+  authError,
 } = require("./middleware")
 const { setDB } = require("./db")
 const userCache = require("./cache/user")
@@ -60,6 +61,7 @@ module.exports = {
     buildTenancyMiddleware: tenancy,
     buildAppTenancyMiddleware: appTenancy,
     auditLog,
+    authError,
   },
   cache: {
     user: userCache,
