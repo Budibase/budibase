@@ -51,7 +51,7 @@ exports.buildSchemaFromDb = async function (ctx) {
   await connector.buildSchema(datasource._id, datasource.entities)
   datasource.entities = connector.tables
 
-  const response = await db.post(datasource)
+  const response = await db.put(datasource)
   datasource._rev = response.rev
 
   ctx.body = datasource
@@ -89,7 +89,7 @@ exports.save = async function (ctx) {
     ...ctx.request.body,
   }
 
-  const response = await db.post(datasource)
+  const response = await db.put(datasource)
   datasource._rev = response.rev
 
   // Drain connection pools when configuration is changed

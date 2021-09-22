@@ -71,7 +71,7 @@ exports.authenticateThirdParty = async function (
   dbUser = await syncUser(dbUser, thirdPartyUser)
 
   // create or sync the user
-  const response = await db.post(dbUser)
+  const response = await db.put(dbUser)
   dbUser._rev = response.rev
 
   // authenticate
