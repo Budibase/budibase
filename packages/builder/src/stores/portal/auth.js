@@ -60,7 +60,7 @@ export function createAuthStore() {
             created_at: user.createdAt || Date.now(),
             name: user.name,
             user_id: user._id,
-            tenant: user.tenantId
+            tenant: user.tenantId,
           })
         }
       })
