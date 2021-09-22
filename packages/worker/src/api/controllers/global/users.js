@@ -68,6 +68,7 @@ async function saveUser(
 
   _id = _id || generateGlobalUserID()
   user = {
+    createdAt: Date.now(),
     ...dbUser,
     ...user,
     _id,
@@ -148,6 +149,7 @@ exports.adminUser = async ctx => {
   const user = {
     email: email,
     password: password,
+    createdAt: Date.now(),
     roles: {},
     builder: {
       global: true,
