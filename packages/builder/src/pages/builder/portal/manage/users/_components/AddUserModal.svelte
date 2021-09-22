@@ -26,7 +26,7 @@
       notifications.error(res.message)
     } else {
       notifications.success(res.message)
-      analytics.captureEvent(Events.USER.INVITE)
+      analytics.captureEvent(Events.USER.INVITE, { type: selected })
     }
   }
 </script>
