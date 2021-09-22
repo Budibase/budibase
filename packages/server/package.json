@@ -13,7 +13,7 @@
     "postbuild": "copyfiles -u 1 src/**/*.svelte dist/ && copyfiles -u 1 src/**/*.hbs dist/ && copyfiles -u 1 src/**/*.json dist/",
     "test": "jest --coverage --maxWorkers=2",
     "test:watch": "jest --watch",
-    "predocker": "copyfiles -f ../client/dist/budibase-client.js ../client/manifest.json client",
+    "predocker": "copyfiles -f ../client/dist/budibase-client.js ../standard-components/manifest.json client",
     "build:docker": "yarn run predocker && docker build . -t app-service",
     "run:docker": "node dist/index.js",
     "dev:stack:up": "node scripts/dev/manage.js up",
@@ -23,10 +23,9 @@
     "format": "prettier --config ../../.prettierrc.json 'src/**/*.ts' --write",
     "lint": "eslint --fix src/",
     "lint:fix": "yarn run format && yarn run lint",
+    "initialise": "node scripts/initialise.js",
     "multi:enable": "node scripts/multiTenancy.js enable",
-    "multi:disable": "node scripts/multiTenancy.js disable",
-    "selfhost:enable": "node scripts/selfhost.js enable",
-    "selfhost:disable": "node scripts/selfhost.js disable"
+    "multi:disable": "node scripts/multiTenancy.js disable"
   },
   "jest": {
     "preset": "ts-jest",
@@ -49,8 +48,7 @@
       "!src/automations/tests/**/*",
       "!src/utilities/fileProcessor.js",
       "!src/utilities/fileSystem/**/*",
-      "!src/utilities/redis.js",
-      "!src/api/controllers/row/internalSearch.js"
+      "!src/utilities/redis.js"
     ],
     "coverageReporters": [
       "lcov",
@@ -98,7 +96,7 @@
     "lodash": "4.17.21",
     "mongodb": "3.6.3",
     "mssql": "6.2.3",
-    "mysql": "^2.18.1",
+    "mysql": "2.18.1",
     "node-fetch": "2.6.0",
     "open": "7.3.0",
     "pg": "8.5.1",

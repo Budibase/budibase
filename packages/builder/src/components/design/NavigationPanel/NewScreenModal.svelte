@@ -4,7 +4,7 @@
   import { roles } from "stores/backend"
   import { Input, Select, ModalContent, Toggle } from "@budibase/bbui"
   import getTemplates from "builderStore/store/screenTemplates"
-  import analytics from "analytics"
+  import analytics, { Events } from "analytics"
 
   const CONTAINER = "@budibase/standard-components/container"
 
@@ -66,7 +66,7 @@
 
     if (templateIndex !== undefined) {
       const template = templates[templateIndex]
-      analytics.captureEvent("Screen Created", {
+      analytics.captureEvent(Events.SCREEN.CREATED, {
         template: template.id || template.name,
       })
     }

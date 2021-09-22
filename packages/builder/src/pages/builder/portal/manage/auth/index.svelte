@@ -23,6 +23,7 @@
   import api from "builderStore/api"
   import { organisation, auth, admin } from "stores/portal"
   import { uuid } from "builderStore/uuid"
+  import analytics, { Events } from "analytics"
 
   $: tenantId = $auth.tenantId
   $: multiTenancyEnabled = $admin.multiTenancy
@@ -209,6 +210,7 @@
             providers[res.type]._id = res._id
           })
           notifications.success(`Settings saved.`)
+          analytics.captureEvent(Events.SSO.SAVED)
         })
         .catch(err => {
           notifications.error(`Failed to update auth settings. ${err}`)
