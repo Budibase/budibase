@@ -36,6 +36,18 @@ exports.IncludeDocs = IncludeDocs
 exports.getLinkDocuments = getLinkDocuments
 exports.createLinkView = createLinkView
 
+function clearRelationshipFields(table, rows) {
+  for (let [key, field] of Object.entries(table.schema)) {
+    if (field.type === FieldTypes.LINK) {
+      rows = rows.map(row => {
+        delete row[key]
+        return row
+      })
+    }
+  }
+  return rows
+}
+
 async function getLinksForRows(appId, rows) {
   const tableIds = [...new Set(rows.map(el => el.tableId))]
   // start by getting all the link values for performance reasons
@@ -127,33 +139,6 @@ exports.updateLinks = async function (args) {
 }
 
 /**
- * Update a row with information about the links that pertain to it.
- * @param {string} appId The instance in which this row has been created.
- * @param {object} rows The row(s) themselves which is to be updated with info (if applicable). This can be
- * a single row object or an array of rows - both will be handled.
- * @returns {Promise<object>} The updated row (this may be the same if no links were found). If an array was input
- * then an array will be output, object input -> object output.
- */
-exports.attachLinkIDs = async (appId, rows) => {
-  const links = await getLinksForRows(appId, rows)
-  // now iterate through the rows and all field information
-  for (let row of rows) {
-    // find anything that matches the row's ID we are searching for and join it
-    links
-      .filter(el => el.thisId === row._id)
-      .forEach(link => {
-        if (row[link.fieldName] == null) {
-          row[link.fieldName] = []
-        }
-        row[link.fieldName].push(link.id)
-      })
-  }
-  // if it was an array when it came in then handle it as an array in response
-  // otherwise return the first element as there was only one input
-  return rows
-}
-
-/**
  * Given a table and a list of rows this will retrieve all of the attached docs and enrich them into the row.
  * This is required for formula fields, this may only be utilised internally (for now).
  * @param {object} ctx The request which is looking for rows.
@@ -173,6 +158,9 @@ exports.attachFullLinkedDocs = async (ctx, table, rows) => {
   const links = (await getLinksForRows(appId, rows)).filter(link =>
     rows.some(row => row._id === link.thisId)
   )
+  // clear any existing links that could be dupe'd
+  rows = clearRelationshipFields(table, rows)
+  // now get the docs and combine into the rows
   let linked = await getFullLinkedDocs(ctx, appId, links)
   const linkedTables = []
   for (let row of rows) {
@@ -203,19 +191,17 @@ exports.attachFullLinkedDocs = async (ctx, table, rows) => {
 exports.squashLinksToPrimaryDisplay = async (appId, table, enriched) => {
   const db = new CouchDB(appId)
   // will populate this as we find them
-  const linkedTables = []
-  for (let [column, schema] of Object.entries(table.schema)) {
-    if (schema.type !== FieldTypes.LINK) {
-      continue
-    }
-    for (let row of enriched) {
-      if (!row[column] || !row[column].length) {
+  const linkedTables = [table]
+  for (let row of enriched) {
+    // this only fetches the table if its not already in array
+    const rowTable = await getLinkedTable(db, row.tableId, linkedTables)
+    for (let [column, schema] of Object.entries(rowTable.schema)) {
+      if (schema.type !== FieldTypes.LINK || !Array.isArray(row[column])) {
         continue
       }
       const newLinks = []
       for (let link of row[column]) {
         const linkTblId = link.tableId || getRelatedTableForField(table, column)
-        // this only fetches the table if its not already in array
         const linkedTable = await getLinkedTable(db, linkTblId, linkedTables)
         const obj = { _id: link._id }
         if (link[linkedTable.primaryDisplay]) {

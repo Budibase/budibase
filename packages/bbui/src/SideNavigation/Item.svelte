@@ -13,6 +13,7 @@
   class="spectrum-SideNav-item"
   class:is-selected={selected}
   class:is-disabled={disabled}
+  on:click
 >
   {#if heading}
     <h2 class="spectrum-SideNav-heading" id="nav-heading-{heading}">

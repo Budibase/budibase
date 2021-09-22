@@ -35,10 +35,6 @@ exports.APP_PREFIX = DocumentTypes.APP + SEPARATOR
 exports.APP_DEV = exports.APP_DEV_PREFIX = DocumentTypes.APP_DEV + SEPARATOR
 exports.SEPARATOR = SEPARATOR
 
-function isDevApp(app) {
-  return app.appId.startsWith(exports.APP_DEV_PREFIX)
-}
-
 /**
  * If creating DB allDocs/query params with only a single top level ID this can be used, this
  * is usually the case as most of our docs are top level e.g. tables, automations, users and so on.
@@ -60,6 +56,18 @@ function getDocParams(docType, docId = null, otherProps = {}) {
     startkey: `${docType}${SEPARATOR}${docId}`,
     endkey: `${docType}${SEPARATOR}${docId}${UNICODE_MAX}`,
   }
+}
+
+exports.isDevAppID = appId => {
+  return appId.startsWith(exports.APP_DEV_PREFIX)
+}
+
+exports.isProdAppID = appId => {
+  return appId.startsWith(exports.APP_PREFIX) && !exports.isDevAppID(appId)
+}
+
+function isDevApp(app) {
+  return exports.isDevAppID(app.appId)
 }
 
 /**

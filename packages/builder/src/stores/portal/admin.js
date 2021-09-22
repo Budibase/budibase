@@ -6,9 +6,15 @@ export function createAdminStore() {
   const DEFAULT_CONFIG = {
     loaded: false,
     multiTenancy: false,
-    sandbox: false,
+    cloud: false,
+    accountPortalUrl: "",
     onboardingProgress: 0,
-    checklist: { apps: 0, smtp: false, adminUser: false, sso: false },
+    checklist: {
+      apps: { checked: false },
+      smtp: { checked: false },
+      adminUser: { checked: false },
+      sso: { checked: false },
+    },
   }
 
   const admin = writable(DEFAULT_CONFIG)
@@ -20,20 +26,14 @@ export function createAdminStore() {
         `/api/global/configs/checklist?tenantId=${tenantId}`
       )
       const json = await response.json()
+      const totalSteps = Object.keys(json).length
+      const completedSteps = Object.values(json).filter(x => x?.checked).length
 
-      const onboardingSteps = Object.keys(json)
-
-      const stepsComplete = onboardingSteps.reduce(
-        (score, step) => score + Number(!!json[step]),
-        0
-      )
-
-      await getFlags()
+      await getEnvironment()
       admin.update(store => {
         store.loaded = true
         store.checklist = json
-        store.onboardingProgress =
-          (stepsComplete / onboardingSteps.length) * 100
+        store.onboardingProgress = (completedSteps / totalSteps) * 100
         return store
       })
     } catch (err) {
@@ -44,20 +44,23 @@ export function createAdminStore() {
     }
   }
 
-  async function getFlags() {
+  async function getEnvironment() {
     let multiTenancyEnabled = false
-    let sandbox = false
+    let cloud = false
+    let accountPortalUrl = ""
     try {
-      const response = await api.get(`/api/system/flags`)
+      const response = await api.get(`/api/system/environment`)
       const json = await response.json()
       multiTenancyEnabled = json.multiTenancy
-      sandbox = json.sandbox
+      cloud = json.cloud
+      accountPortalUrl = json.accountPortalUrl
     } catch (err) {
       // just let it stay disabled
     }
     admin.update(store => {
       store.multiTenancy = multiTenancyEnabled
-      store.sandbox = sandbox
+      store.cloud = cloud
+      store.accountPortalUrl = accountPortalUrl
       return store
     })
   }

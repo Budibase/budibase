@@ -1,5 +1,5 @@
 <script>
-  import { auth } from "stores/portal"
+  import { auth, admin } from "stores/portal"
   import { onMount } from "svelte"
   import { redirect } from "@roxi/routify"
 
@@ -9,6 +9,11 @@
   onMount(() => {
     if ($auth.user && !$auth.user.forceResetPassword) {
       $redirect("../")
+    }
+
+    // redirect to account portal for authentication in the cloud
+    if (!$auth.user && $admin.cloud && $admin.accountPortalUrl) {
+      window.location.href = $admin.accountPortalUrl
     }
   })
 </script>

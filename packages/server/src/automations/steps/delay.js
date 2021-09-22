@@ -1,11 +1,12 @@
 let { wait } = require("../../utilities")
 
-module.exports.definition = {
+exports.definition = {
   name: "Delay",
-  icon: "ri-time-line",
+  icon: "Clock",
   tagline: "Delay for {{inputs.time}} milliseconds",
   description: "Delay the automation until an amount of time has passed",
   stepId: "DELAY",
+  internal: true,
   inputs: {},
   schema: {
     inputs: {
@@ -17,10 +18,22 @@ module.exports.definition = {
       },
       required: ["time"],
     },
+    outputs: {
+      properties: {
+        success: {
+          type: "boolean",
+          description: "Whether the delay was successful",
+        },
+      },
+      required: ["success"],
+    },
   },
   type: "LOGIC",
 }
 
-module.exports.run = async function delay({ inputs }) {
+exports.run = async function delay({ inputs }) {
   await wait(inputs.time)
+  return {
+    success: true,
+  }
 }

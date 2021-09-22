@@ -41,6 +41,9 @@ const INITIAL_FRONTEND_STATE = {
     spectrumThemes: false,
     intelligentLoading: false,
     deviceAwareness: false,
+    state: false,
+    customThemes: false,
+    devicePreview: false,
   },
   currentFrontEndType: "none",
   selectedScreenId: "",
@@ -53,6 +56,8 @@ const INITIAL_FRONTEND_STATE = {
   routes: {},
   clientLibPath: "",
   theme: "",
+  customTheme: {},
+  previewDevice: "desktop",
 }
 
 export const getFrontendStore = () => {
@@ -77,6 +82,7 @@ export const getFrontendStore = () => {
         layouts,
         screens,
         theme: application.theme || "spectrum--light",
+        customTheme: application.customTheme,
         hasAppPackage: true,
         appInstance: application.instance,
         clientLibPath,
@@ -103,6 +109,22 @@ export const getFrontendStore = () => {
         if (response.status === 200) {
           store.update(state => {
             state.theme = theme
+            return state
+          })
+        } else {
+          throw new Error("Error updating theme")
+        }
+      },
+    },
+    customTheme: {
+      save: async customTheme => {
+        const appId = get(store).appId
+        const response = await api.put(`/api/applications/${appId}`, {
+          customTheme,
+        })
+        if (response.status === 200) {
+          store.update(state => {
+            state.customTheme = customTheme
             return state
           })
         } else {
@@ -209,6 +231,12 @@ export const getFrontendStore = () => {
         } else {
           await store.actions.layouts.save(selectedAsset)
         }
+      },
+      setDevice: device => {
+        store.update(state => {
+          state.previewDevice = device
+          return state
+        })
       },
     },
     layouts: {

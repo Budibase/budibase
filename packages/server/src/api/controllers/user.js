@@ -33,6 +33,7 @@ exports.fetchMetadata = async function (ctx) {
     users.push({
       ...user,
       ...info,
+      tableId: InternalTables.USER_METADATA,
       // make sure the ID is always a local ID, not a global one
       _id: generateUserMetadataID(user._id),
     })

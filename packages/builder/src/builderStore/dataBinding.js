@@ -1,6 +1,10 @@
 import { cloneDeep } from "lodash/fp"
 import { get } from "svelte/store"
-import { findComponent, findComponentPath } from "./storeUtils"
+import {
+  findComponent,
+  findComponentPath,
+  findAllMatchingComponents,
+} from "./storeUtils"
 import { store } from "builderStore"
 import { tables as tablesStore, queries as queriesStores } from "stores/backend"
 import { makePropSafe } from "@budibase/string-templates"
@@ -18,7 +22,9 @@ export const getBindableProperties = (asset, componentId) => {
   const userBindings = getUserBindings()
   const urlBindings = getUrlBindings(asset)
   const deviceBindings = getDeviceBindings()
+  const stateBindings = getStateBindings()
   return [
+    ...stateBindings,
     ...deviceBindings,
     ...urlBindings,
     ...contextBindings,
@@ -257,6 +263,22 @@ const getDeviceBindings = () => {
 }
 
 /**
+ * Gets all state bindings that are globally available.
+ */
+const getStateBindings = () => {
+  let bindings = []
+  if (get(store).clientFeatures?.state) {
+    const safeState = makePropSafe("state")
+    bindings = getAllStateVariables().map(key => ({
+      type: "context",
+      runtimeBinding: `${safeState}.${makePropSafe(key)}`,
+      readableBinding: `State.${key}`,
+    }))
+  }
+  return bindings
+}
+
+/**
  * Gets all bindable properties from URL parameters.
  */
 const getUrlBindings = asset => {
@@ -457,4 +479,50 @@ export function runtimeToReadableBinding(bindableProperties, textWithBindings) {
     textWithBindings,
     "readableBinding"
   )
+}
+
+/**
+ * Returns an array of the keys of any state variables which are set anywhere
+ * in the app.
+ */
+export const getAllStateVariables = () => {
+  let allComponents = []
+
+  // Find all onClick settings in all layouts
+  get(store).layouts.forEach(layout => {
+    const components = findAllMatchingComponents(
+      layout.props,
+      c => c.onClick != null
+    )
+    allComponents = allComponents.concat(components || [])
+  })
+
+  // Find all onClick settings in all screens
+  get(store).screens.forEach(screen => {
+    const components = findAllMatchingComponents(
+      screen.props,
+      c => c.onClick != null
+    )
+    allComponents = allComponents.concat(components || [])
+  })
+
+  // Add state bindings for all state actions
+  let bindingSet = new Set()
+  allComponents.forEach(component => {
+    if (!Array.isArray(component.onClick)) {
+      return
+    }
+    component.onClick.forEach(action => {
+      if (
+        action["##eventHandlerType"] === "Update State" &&
+        action.parameters?.type === "set" &&
+        action.parameters?.key &&
+        action.parameters?.value
+      ) {
+        bindingSet.add(action.parameters.key)
+      }
+    })
+  })
+
+  return Array.from(bindingSet)
 }

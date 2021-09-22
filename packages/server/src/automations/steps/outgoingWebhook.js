@@ -1,4 +1,5 @@
 const fetch = require("node-fetch")
+const { getFetchResponse } = require("./utils")
 
 const RequestType = {
   POST: "POST",
@@ -16,12 +17,13 @@ const BODY_REQUESTS = [RequestType.POST, RequestType.PUT, RequestType.PATCH]
  * GET/DELETE requests cannot handle body elements so they will not be sent if configured.
  */
 
-module.exports.definition = {
+exports.definition = {
   name: "Outgoing webhook",
   tagline: "Send a {{inputs.requestMethod}} request",
-  icon: "ri-send-plane-line",
+  icon: "Send",
   description: "Send a request of specified method to a URL",
   type: "ACTION",
+  internal: true,
   stepId: "OUTGOING_WEBHOOK",
   inputs: {
     requestMethod: "POST",
@@ -60,6 +62,10 @@ module.exports.definition = {
           type: "object",
           description: "The response from the webhook",
         },
+        httpStatus: {
+          type: "number",
+          description: "The HTTP status code returned",
+        },
         success: {
           type: "boolean",
           description: "Whether the action was successful",
@@ -70,7 +76,7 @@ module.exports.definition = {
   },
 }
 
-module.exports.run = async function ({ inputs }) {
+exports.run = async function ({ inputs }) {
   let { requestMethod, url, requestBody, headers } = inputs
   if (!url.startsWith("http")) {
     url = `http://${url}`
@@ -91,12 +97,16 @@ module.exports.run = async function ({ inputs }) {
       "Content-Type": "application/json",
     }
 
-    if (headers && headers.length !== 0) {
+    if (headers) {
       try {
-        const customHeaders = JSON.parse(headers)
+        const customHeaders =
+          typeof headers === "string" ? JSON.parse(headers) : headers
         request.headers = { ...request.headers, ...customHeaders }
       } catch (err) {
-        console.error(err)
+        return {
+          success: false,
+          response: "Unable to process headers, must be a JSON object.",
+        }
       }
     }
   }
@@ -107,19 +117,11 @@ module.exports.run = async function ({ inputs }) {
       JSON.parse(request.body)
     }
     const response = await fetch(url, request)
-    const contentType = response.headers.get("content-type")
-    const success = response.status === 200
-    let resp
-    if (!success) {
-      resp = response.statusText
-    } else if (contentType && contentType.indexOf("application/json") !== -1) {
-      resp = await response.json()
-    } else {
-      resp = await response.text()
-    }
+    const { status, message } = await getFetchResponse(response)
     return {
-      response: resp,
-      success: success,
+      httpStatus: status,
+      response: message,
+      success: status === 200,
     }
   } catch (err) {
     /* istanbul ignore next */

@@ -13,6 +13,10 @@ export default class Automation {
     return this.automation.definition.trigger
   }
 
+  addTestData(data) {
+    this.automation.testData = data
+  }
+
   addBlock(block) {
     // Make sure to add trigger if doesn't exist
     if (!this.hasTrigger() && block.type === "TRIGGER") {
