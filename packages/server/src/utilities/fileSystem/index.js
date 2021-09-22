@@ -14,18 +14,12 @@ const {
   downloadTarball,
 } = require("./utilities")
 const { updateClientLibrary } = require("./clientLibrary")
-const download = require("download")
 const env = require("../../environment")
-const { homedir } = require("os")
-const fetch = require("node-fetch")
 const {
   USER_METDATA_PREFIX,
   LINK_USER_METADATA_PREFIX,
 } = require("../../db/utils")
 
-const DEFAULT_AUTOMATION_BUCKET =
-  "https://prod-budi-automations.s3-eu-west-1.amazonaws.com"
-const DEFAULT_AUTOMATION_DIRECTORY = ".budibase-automations"
 const TOP_LEVEL_PATH = join(__dirname, "..", "..", "..")
 const NODE_MODULES_PATH = join(TOP_LEVEL_PATH, "node_modules")
 
@@ -180,16 +174,12 @@ exports.getComponentLibraryManifest = async (appId, library) => {
   // when testing in cypress and so on we need to get the package
   // as the environment may not be fully fleshed out for dev or prod
   if (env.isTest()) {
+    library = library.replace("standard-components", "client")
     const lib = library.split("/")[1]
     const path = require.resolve(library).split(lib)[0]
     return require(join(path, lib, filename))
   } else if (env.isDev()) {
-    const path = join(
-      NODE_MODULES_PATH,
-      "@budibase",
-      "standard-components",
-      filename
-    )
+    const path = join(NODE_MODULES_PATH, "@budibase", "client", filename)
     // always load from new so that updates are refreshed
     delete require.cache[require.resolve(path)]
     return require(path)
@@ -209,30 +199,6 @@ exports.getComponentLibraryManifest = async (appId, library) => {
     resp = resp.toString("utf8")
   }
   return JSON.parse(resp)
-}
-
-exports.automationInit = async () => {
-  const directory =
-    env.AUTOMATION_DIRECTORY || join(homedir(), DEFAULT_AUTOMATION_DIRECTORY)
-  const bucket = env.AUTOMATION_BUCKET || DEFAULT_AUTOMATION_BUCKET
-  if (!fs.existsSync(directory)) {
-    fs.mkdirSync(directory, { recursive: true })
-  }
-  // env setup to get async packages
-  let response = await fetch(`${bucket}/manifest.json`)
-  return response.json()
-}
-
-exports.getExternalAutomationStep = async (name, version, bundleName) => {
-  const directory =
-    env.AUTOMATION_DIRECTORY || join(homedir(), DEFAULT_AUTOMATION_DIRECTORY)
-  const bucket = env.AUTOMATION_BUCKET || DEFAULT_AUTOMATION_BUCKET
-  try {
-    return require(join(directory, bundleName))
-  } catch (err) {
-    await download(`${bucket}/${name}/${version}/${bundleName}`, directory)
-    return require(join(directory, bundleName))
-  }
 }
 
 /**

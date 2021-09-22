@@ -83,10 +83,11 @@
     justify-content: flex-start;
     align-items: center;
     flex-wrap: wrap;
-    margin-top: -10px;
   }
   .components :global(> *) {
-    margin-top: 10px;
+    height: 32px;
+    display: grid;
+    place-items: center;
   }
 
   .buttonContent {

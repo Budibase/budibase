@@ -6,13 +6,11 @@ const {
 } = require("@budibase/auth/db")
 const { hash, getGlobalUserByEmail } = require("@budibase/auth").utils
 const { UserStatus, EmailTemplatePurpose } = require("../../../constants")
-const { DEFAULT_TENANT_ID } = require("@budibase/auth/constants")
 const { checkInviteCode } = require("../../../utilities/redis")
 const { sendEmail } = require("../../../utilities/email")
 const { user: userCache } = require("@budibase/auth/cache")
 const { invalidateSessions } = require("@budibase/auth/sessions")
 const CouchDB = require("../../../db")
-const env = require("../../../environment")
 const {
   getGlobalDB,
   getTenantId,
@@ -33,7 +31,7 @@ async function allUsers() {
   return response.rows.map(row => row.doc)
 }
 
-async function saveUser(user, tenantId) {
+async function saveUser(user, tenantId, hashPassword = true) {
   if (!tenantId) {
     throw "No tenancy specified."
   }
@@ -56,7 +54,7 @@ async function saveUser(user, tenantId) {
   // get the password, make sure one is defined
   let hashedPassword
   if (password) {
-    hashedPassword = await hash(password)
+    hashedPassword = hashPassword ? await hash(password) : password
   } else if (dbUser) {
     hashedPassword = dbUser.password
   } else {
@@ -110,6 +108,15 @@ exports.save = async ctx => {
 
 exports.adminUser = async ctx => {
   const { email, password, tenantId } = ctx.request.body
+
+  // account portal sends a pre-hashed password - honour param to prevent double hashing
+  let hashPassword = ctx.request.query.hashPassword
+  if (hashPassword && hashPassword == "false") {
+    hashPassword = false
+  } else {
+    hashPassword = true
+  }
+
   if (await doesTenantExist(tenantId)) {
     ctx.throw(403, "Organisation already exists.")
   }
@@ -141,7 +148,7 @@ exports.adminUser = async ctx => {
     tenantId,
   }
   try {
-    ctx.body = await saveUser(user, tenantId)
+    ctx.body = await saveUser(user, tenantId, hashPassword)
   } catch (err) {
     ctx.throw(err.status || 400, err)
   }
@@ -187,6 +194,11 @@ exports.getSelf = async ctx => {
   }
   // this will set the body
   await exports.find(ctx)
+
+  // forward session information not found in db
+  ctx.body.account = ctx.user.account
+  ctx.body.budibaseAccess = ctx.user.budibaseAccess
+  ctx.body.accountPortalAccess = ctx.user.accountPortalAccess
 }
 
 exports.updateSelf = async ctx => {
@@ -237,25 +249,14 @@ exports.find = async ctx => {
   ctx.body = user
 }
 
-exports.tenantLookup = async ctx => {
+exports.tenantUserLookup = async ctx => {
   const id = ctx.params.id
   // lookup, could be email or userId, either will return a doc
   const db = new CouchDB(PLATFORM_INFO_DB)
-  let tenantId = null
   try {
-    const doc = await db.get(id)
-    if (doc && doc.tenantId) {
-      tenantId = doc.tenantId
-    }
+    ctx.body = await db.get(id)
   } catch (err) {
-    if (!env.MULTI_TENANCY) {
-      tenantId = DEFAULT_TENANT_ID
-    } else {
-      ctx.throw(400, "No tenant found.")
-    }
-  }
-  ctx.body = {
-    tenantId,
+    ctx.throw(400, "No tenant user found.")
   }
 }
 

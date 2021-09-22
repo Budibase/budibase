@@ -1,17 +1,14 @@
 <script>
   import { getContext, setContext } from "svelte"
   import { writable, get } from "svelte/store"
-  import * as ComponentLibrary from "@budibase/standard-components"
+  import * as AppComponents from "components/app"
   import Router from "./Router.svelte"
-  import { enrichProps, propsAreSame } from "../utils/componentProps"
-  import { builderStore } from "../store"
-  import { hashString } from "../utils/hash"
-  import Manifest from "@budibase/standard-components/manifest.json"
-  import { Placeholder } from "@budibase/standard-components"
-  import {
-    getActiveConditions,
-    reduceConditionActions,
-  } from "../utils/conditions"
+  import { enrichProps, propsAreSame } from "utils/componentProps"
+  import { builderStore } from "stores"
+  import { hashString } from "utils/helpers"
+  import Manifest from "manifest.json"
+  import { getActiveConditions, reduceConditionActions } from "utils/conditions"
+  import Placeholder from "components/app/Placeholder.svelte"
 
   export let instance = {}
 
@@ -95,7 +92,7 @@
     if (name === "screenslot" && $builderStore.previewType !== "layout") {
       return Router
     }
-    return ComponentLibrary[name]
+    return AppComponents[name]
   }
 
   const getComponentDefinition = component => {

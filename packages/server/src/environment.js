@@ -26,7 +26,7 @@ module.exports = {
   COUCH_DB_URL: process.env.COUCH_DB_URL,
   MINIO_URL: process.env.MINIO_URL,
   WORKER_URL: process.env.WORKER_URL,
-  SELF_HOSTED: process.env.SELF_HOSTED,
+  SELF_HOSTED: !!parseInt(process.env.SELF_HOSTED),
   AWS_REGION: process.env.AWS_REGION,
   ENABLE_ANALYTICS: process.env.ENABLE_ANALYTICS,
   MINIO_ACCESS_KEY: process.env.MINIO_ACCESS_KEY,
@@ -55,6 +55,7 @@ module.exports = {
   BUDIBASE_API_KEY: process.env.BUDIBASE_API_KEY,
   USERID_API_KEY: process.env.USERID_API_KEY,
   DEPLOYMENT_CREDENTIALS_URL: process.env.DEPLOYMENT_CREDENTIALS_URL,
+  ALLOW_DEV_AUTOMATIONS: process.env.ALLOW_DEV_AUTOMATIONS,
   _set(key, value) {
     process.env[key] = value
     module.exports[key] = value
