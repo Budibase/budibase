@@ -12,7 +12,7 @@ import { getSqlQuery } from "./utils"
 module MySQLModule {
   const mysql = require("mysql")
   const Sql = require("./base/sql")
-  const { buildExternalTableId, convertType } = require("./utils")
+  const { buildExternalTableId, convertType, copyExistingPropsOver } = require("./utils")
   const { FieldTypes } = require("../constants")
 
   interface MySQLConfig {
@@ -194,18 +194,7 @@ module MySQLModule {
           }
         }
 
-        // add the existing relationships from the entities if they exist, to prevent them from being overridden
-        if (entities && entities[tableName]) {
-          const existingTableSchema = entities[tableName].schema
-          for (let key in existingTableSchema) {
-            if (!existingTableSchema.hasOwnProperty(key)) {
-              continue
-            }
-            if (existingTableSchema[key].type === "link") {
-              tables[tableName].schema[key] = existingTableSchema[key]
-            }
-          }
-        }
+        copyExistingPropsOver(tableName, tables, entities)
       }
 
       this.client.end()
