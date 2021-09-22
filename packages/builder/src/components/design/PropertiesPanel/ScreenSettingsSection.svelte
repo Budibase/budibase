@@ -14,10 +14,7 @@
 
   function setAssetProps(name, value, parser) {
     if (parser && typeof parser === "function") {
-      console.log("before", value)
       value = parser(value)
-      console.log("after", value)
-      console.log("deepGet", deepGet($currentAsset, name))
     }
 
     const selectedAsset = get(currentAsset)
