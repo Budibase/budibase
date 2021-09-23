@@ -13,6 +13,7 @@ const DOMAIN_MAP = {
   upload: usageQuota.Properties.UPLOAD,
   views: usageQuota.Properties.VIEW,
   users: usageQuota.Properties.USER,
+  applications: usageQuota.Properties.APPS,
   // this will not be updated by endpoint calls
   // instead it will be updated by triggerInfo
   automationRuns: usageQuota.Properties.AUTOMATION,
@@ -28,9 +29,9 @@ function getProperty(url) {
 
 module.exports = async (ctx, next) => {
   // if in development or a self hosted cloud usage quotas should not be executed
-  if (env.isDev() || env.SELF_HOSTED) {
-    return next()
-  }
+  // if (env.isDev() || env.SELF_HOSTED) {
+  //   return next()
+  // }
 
   const db = new CouchDB(ctx.appId)
   let usage = METHOD_MAP[ctx.req.method]
@@ -49,17 +50,17 @@ module.exports = async (ctx, next) => {
   }
 
   // update usage for uploads to be the total size
-  if (property === usageQuota.Properties.UPLOAD) {
-    const files =
-      ctx.request.files.file.length > 1
-        ? Array.from(ctx.request.files.file)
-        : [ctx.request.files.file]
-    usage = files.map(file => file.size).reduce((total, size) => total + size)
-  }
+  // if (property === usageQuota.Properties.UPLOAD) {
+  //   const files =
+  //     ctx.request.files.file.length > 1
+  //       ? Array.from(ctx.request.files.file)
+  //       : [ctx.request.files.file]
+  //   usage = files.map(file => file.size).reduce((total, size) => total + size)
+  // }
   try {
-    await usageQuota.update(ctx.auth.apiKey, property, usage)
+    await usageQuota.update(ctx.user.tenantId, property, usage)
     return next()
   } catch (err) {
-    ctx.throw(403, err)
+    ctx.throw(400, err)
   }
 }
