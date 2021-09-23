@@ -13,7 +13,7 @@
     "postbuild": "copyfiles -u 1 src/**/*.svelte dist/ && copyfiles -u 1 src/**/*.hbs dist/ && copyfiles -u 1 src/**/*.json dist/",
     "test": "jest --coverage --maxWorkers=2",
     "test:watch": "jest --watch",
-    "predocker": "copyfiles -f ../client/dist/budibase-client.js ../standard-components/manifest.json client",
+    "predocker": "copyfiles -f ../client/dist/budibase-client.js ../client/manifest.json client",
     "build:docker": "yarn run predocker && docker build . -t app-service",
     "run:docker": "node dist/index.js",
     "dev:stack:up": "node scripts/dev/manage.js up",
