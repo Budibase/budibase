@@ -13,22 +13,24 @@
   import { fetchTableData } from "helpers/fetchTableData"
   import { Pagination } from "@budibase/bbui"
 
-  let hideAutocolumns = true
   const data = fetchTableData()
+  let hideAutocolumns = true
 
   $: isUsersTable = $tables.selected?._id === TableNames.USERS
   $: title = $tables.selected?.name
   $: schema = $tables.selected?.schema
   $: type = $tables.selected?.type
   $: isInternal = type !== "external"
+  $: fetchTable($tables.selected?._id)
 
-  // Fetch data whenever table changes
-  $: data.update({
-    tableId: $tables.selected?._id,
-    schema,
-    limit: 10,
-    paginate: true,
-  })
+  const fetchTable = tableId => {
+    data.update({
+      tableId,
+      schema,
+      limit: 10,
+      paginate: true,
+    })
+  }
 
   // Fetch data whenever sorting option changes
   const onSort = e => {
