@@ -5,7 +5,6 @@ const {
   PermissionLevels,
   PermissionTypes,
 } = require("@budibase/auth/permissions")
-const usage = require("../../middleware/usageQuota")
 
 const router = Router()
 
@@ -28,13 +27,13 @@ router
   .post(
     "/api/users/metadata/self",
     authorized(PermissionTypes.USER, PermissionLevels.WRITE),
-    usage,
+    // usage,
     controller.updateSelfMetadata
   )
   .delete(
     "/api/users/metadata/:id",
     authorized(PermissionTypes.USER, PermissionLevels.WRITE),
-    usage,
+    // usage,
     controller.destroyMetadata
   )
 

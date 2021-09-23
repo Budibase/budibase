@@ -22,6 +22,11 @@ router
     authorized(BUILDER),
     controller.revertClient
   )
-  .delete("/api/applications/:appId", authorized(BUILDER), usage, controller.delete)
+  .delete(
+    "/api/applications/:appId",
+    authorized(BUILDER),
+    usage,
+    controller.delete
+  )
 
 module.exports = router

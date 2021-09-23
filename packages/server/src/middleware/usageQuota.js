@@ -1,6 +1,6 @@
 const CouchDB = require("../db")
 const usageQuota = require("../utilities/usageQuota")
-const env = require("../environment")
+// const env = require("../environment")
 
 // currently only counting new writes and deletes
 const METHOD_MAP = {
