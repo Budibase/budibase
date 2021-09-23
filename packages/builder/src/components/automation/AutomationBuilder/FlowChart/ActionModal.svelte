@@ -38,10 +38,9 @@
       actionVal
     )
     automationStore.actions.addBlockToAutomation(newBlock)
-    await automationStore.actions.save({
-      instanceId,
-      automation: $automationStore.selectedAutomation?.automation,
-    })
+    await automationStore.actions.save(
+      $automationStore.selectedAutomation?.automation
+    )
   }
 </script>
 
@@ -124,7 +123,7 @@
     padding: var(--spectrum-alias-item-padding-s);
     background: var(--spectrum-alias-background-color-secondary);
     transition: 0.3s all;
-    border: solid #3b3d3c;
+    border: solid var(--spectrum-alias-border-color);
     border-radius: 5px;
     box-sizing: border-box;
     border-width: 2px;

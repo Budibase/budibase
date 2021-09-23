@@ -437,7 +437,11 @@ module External {
       for (let [colName, { isMany, rows, tableId }] of Object.entries(
         related
       )) {
-        const table = this.getTable(tableId)
+        const table: Table = this.getTable(tableId)
+        // if its not the foreign key skip it, nothing to do
+        if (table.primary && table.primary.indexOf(colName) !== -1) {
+          continue
+        }
         for (let row of rows) {
           const filters = buildFilters(generateIdForRow(row, table), {}, table)
           // safety check, if there are no filters on deletion bad things happen
