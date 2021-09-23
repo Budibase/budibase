@@ -10,6 +10,7 @@ const email = require("../../../utilities/email")
 const { upload, ObjectStoreBuckets } = require("@budibase/auth").objectStore
 const CouchDB = require("../../../db")
 const { getGlobalDB } = require("@budibase/auth/tenancy")
+const env = require("../../../environment")
 
 exports.save = async function (ctx) {
   const db = getGlobalDB()
@@ -174,7 +175,13 @@ exports.upload = async function (ctx) {
   const file = ctx.request.files.file
   const { type, name } = ctx.params
 
-  const bucket = ObjectStoreBuckets.GLOBAL
+  let bucket
+  if (env.SELF_HOSTED) {
+    bucket = ObjectStoreBuckets.GLOBAL
+  } else {
+    bucket = ObjectStoreBuckets.GLOBAL_CLOUD
+  }
+
   const key = `${type}/${name}`
   await upload({
     bucket,
