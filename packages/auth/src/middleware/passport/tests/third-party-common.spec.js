@@ -104,7 +104,7 @@ describe("third party common", () => {
           _id: id,
           email: email,
         }
-        const response = await db.post(dbUser)
+        const response = await db.put(dbUser)
         dbUser._rev = response.rev
       }
 

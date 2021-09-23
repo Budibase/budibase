@@ -4,7 +4,7 @@
   import { automationStore } from "builderStore"
   import { notifications } from "@budibase/bbui"
   import { Input, ModalContent, Layout, Body, Icon } from "@budibase/bbui"
-  import analytics from "analytics"
+  import analytics, { Events } from "analytics"
 
   let name
   let selectedTrigger
@@ -29,15 +29,14 @@
       webhookModal.show
     }
 
-    await automationStore.actions.save({
-      instanceId,
-      automation: $automationStore.selectedAutomation?.automation,
-    })
+    await automationStore.actions.save(
+      $automationStore.selectedAutomation?.automation
+    )
 
     notifications.success(`Automation ${name} created.`)
 
     $goto(`./${$automationStore.selectedAutomation.automation._id}`)
-    analytics.captureEvent("Automation Created", { name })
+    analytics.captureEvent(Events.AUTOMATION.CREATED, { name })
   }
   $: triggers = Object.entries($automationStore.blockDefinitions.TRIGGER)
 
@@ -103,7 +102,7 @@
     padding: var(--spectrum-alias-item-padding-s);
     background: var(--spectrum-alias-background-color-secondary);
     transition: 0.3s all;
-    border: solid #3b3d3c;
+    border: solid var(--spectrum-alias-border-color);
     border-radius: 5px;
     box-sizing: border-box;
     border-width: 2px;

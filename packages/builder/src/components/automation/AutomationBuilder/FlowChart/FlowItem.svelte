@@ -52,10 +52,9 @@
 
   async function deleteStep() {
     automationStore.actions.deleteAutomationBlock(block)
-    await automationStore.actions.save({
-      instanceId,
-      automation: $automationStore.selectedAutomation?.automation,
-    })
+    await automationStore.actions.save(
+      $automationStore.selectedAutomation?.automation
+    )
   }
 </script>
 

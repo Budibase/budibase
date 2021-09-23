@@ -10,7 +10,7 @@ function buildAdminInitValidation() {
   return joiValidator.body(
     Joi.object({
       email: Joi.string().required(),
-      password: Joi.string().required(),
+      password: Joi.string(),
       tenantId: Joi.string().required(),
     })
       .required()
@@ -94,7 +94,7 @@ router
     controller.adminUser
   )
   .get("/api/global/users/self", controller.getSelf)
-  .get("/api/global/users/tenant/:id", controller.tenantLookup)
+  .get("/api/global/users/tenant/:id", controller.tenantUserLookup)
   // global endpoint but needs to come at end (blocks other endpoints otherwise)
   .get("/api/global/users/:id", adminOnly, controller.find)
 

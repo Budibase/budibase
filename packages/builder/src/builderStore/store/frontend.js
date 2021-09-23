@@ -19,7 +19,7 @@ import {
 import { fetchComponentLibDefinitions } from "../loadComponentLibraries"
 import api from "../api"
 import { FrontendTypes } from "constants"
-import analytics from "analytics"
+import analytics, { Events } from "analytics"
 import {
   findComponentType,
   findComponentParent,
@@ -215,6 +215,13 @@ export const getFrontendStore = () => {
             if (screenToDelete._id === state.selectedScreenId) {
               state.selectedScreenId = null
             }
+            //remove the link for this screen
+            screenDeletePromises.push(
+              store.actions.components.links.delete(
+                screenToDelete.routing.route,
+                screenToDelete.props._instanceName
+              )
+            )
           }
           return state
         })
@@ -443,7 +450,7 @@ export const getFrontendStore = () => {
         })
 
         // Log event
-        analytics.captureEvent("Added Component", {
+        analytics.captureEvent(Events.COMPONENT.CREATED, {
           name: componentInstance._component,
         })
 
@@ -643,6 +650,36 @@ export const getFrontendStore = () => {
             }
           }
 
+          // Save layout
+          await store.actions.layouts.save(layout)
+        },
+        delete: async (url, title) => {
+          const layout = get(mainLayout)
+          if (!layout) {
+            return
+          }
+
+          // Add link setting to main layout
+          if (layout.props._component.endsWith("layout")) {
+            // If using a new SDK, add to the layout component settings
+            layout.props.links = layout.props.links.filter(
+              link => !(link.text === title && link.url === url)
+            )
+          } else {
+            // If using an old SDK, add to the navigation component
+            // TODO: remove this when we can assume everyone has updated
+            const nav = findComponentType(
+              layout.props,
+              "@budibase/standard-components/navigation"
+            )
+            if (!nav) {
+              return
+            }
+
+            nav._children = nav._children.filter(
+              child => !(child.url === url && child.text === title)
+            )
+          }
           // Save layout
           await store.actions.layouts.save(layout)
         },

@@ -18,10 +18,7 @@
   onMount(async () => {
     if (!automation?.definition?.trigger?.inputs.schemaUrl) {
       // save the automation initially
-      await automationStore.actions.save({
-        instanceId,
-        automation,
-      })
+      await automationStore.actions.save(automation)
     }
     interval = setInterval(async () => {
       await automationStore.actions.fetch()

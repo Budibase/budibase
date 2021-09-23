@@ -1,9 +1,8 @@
 <script>
   import { automationStore } from "builderStore"
-
+  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import FlowItem from "./FlowItem.svelte"
   import TestDataModal from "./TestDataModal.svelte"
-
   import { flip } from "svelte/animate"
   import { fade, fly } from "svelte/transition"
   import {
@@ -13,13 +12,12 @@
     notifications,
     Modal,
   } from "@budibase/bbui"
-  import { database } from "stores/backend"
 
   export let automation
   export let onSelect
   let testDataModal
   let blocks
-  $: instanceId = $database._id
+  let confirmDeleteDialog
 
   $: {
     blocks = []
@@ -32,16 +30,16 @@
   }
 
   async function deleteAutomation() {
-    await automationStore.actions.delete({
-      instanceId,
-      automation: $automationStore.selectedAutomation?.automation,
-    })
+    await automationStore.actions.delete(
+      $automationStore.selectedAutomation?.automation
+    )
+    notifications.success("Automation deleted.")
   }
 
   async function testAutomation() {
-    const result = await automationStore.actions.trigger({
-      automation: $automationStore.selectedAutomation.automation,
-    })
+    const result = await automationStore.actions.trigger(
+      $automationStore.selectedAutomation.automation
+    )
     if (result.status === 200) {
       notifications.success(
         `Automation ${$automationStore.selectedAutomation.automation.name} triggered successfully.`
@@ -64,8 +62,14 @@
           style="display:flex;
           color: var(--spectrum-global-color-gray-400);"
         >
-          <span on:click={() => deleteAutomation()} class="iconPadding">
-            <Icon name="DeleteOutline" />
+          <span class="iconPadding">
+            <div class="icon">
+              <Icon
+                on:click={confirmDeleteDialog.show}
+                hoverable
+                name="DeleteOutline"
+              />
+            </div>
           </span>
           <ActionButton
             on:click={() => {
@@ -93,6 +97,17 @@
       </div>
     {/each}
   </div>
+  <ConfirmDialog
+    bind:this={confirmDeleteDialog}
+    okText="Delete Automation"
+    onOk={deleteAutomation}
+    title="Confirm Deletion"
+  >
+    Are you sure you wish to delete the automation
+    <i>{automation.name}?</i>
+    This action cannot be undone.
+  </ConfirmDialog>
+
   <Modal bind:this={testDataModal} width="30%">
     <TestDataModal {testAutomation} />
   </Modal>
@@ -140,7 +155,7 @@
     justify-content: space-between;
   }
 
-  .iconPadding {
+  .icon {
     cursor: pointer;
     display: flex;
     padding-right: var(--spacing-m);

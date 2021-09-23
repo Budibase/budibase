@@ -1,6 +1,7 @@
 const rowController = require("../../api/controllers/row")
 const env = require("../../environment")
 const usage = require("../../utilities/usageQuota")
+const { buildCtx } = require("./utils")
 
 exports.definition = {
   description: "Delete a row from your database",
@@ -60,19 +61,16 @@ exports.run = async function ({ inputs, appId, apiKey, emitter }) {
       },
     }
   }
-  let ctx = {
+
+  let ctx = buildCtx(appId, emitter, {
+    body: {
+      _id: inputs.id,
+      _rev: inputs.revision,
+    },
     params: {
       tableId: inputs.tableId,
     },
-    request: {
-      body: {
-        _id: inputs.id,
-        _rev: inputs.revision,
-      },
-    },
-    appId,
-    eventEmitter: emitter,
-  }
+  })
 
   try {
     if (env.isProd()) {
