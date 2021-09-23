@@ -18,6 +18,7 @@ const {
   tryAddTenant,
   updateTenantId,
 } = require("@budibase/auth/tenancy")
+const env = require("../../../environment")
 
 const PLATFORM_INFO_DB = StaticDatabases.PLATFORM_INFO.name
 
@@ -138,6 +139,29 @@ exports.adminUser = async ctx => {
       include_docs: true,
     })
   )
+  
+  // write usage quotas for cloud
+  // if (!env.SELF_HOSTED) {
+    await db.post({
+      _id: "usage_quota", 
+      quotaReset: Date.now() + 2592000000,
+      usageQuota: {
+        automationRuns: 0,
+        rows: 0,
+        storage: 0,
+        apps: 0,
+        users: 0,
+        views: 0,
+      },
+      usageLimits: {
+        automationRuns: 1000,
+        rows: 4000,
+        apps: 4,
+        // storage: 1000,
+        // users: 10
+      },
+    })
+  // }
 
   if (response.rows.some(row => row.doc.admin)) {
     ctx.throw(

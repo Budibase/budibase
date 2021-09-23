@@ -60,7 +60,7 @@ exports.definition = {
   },
 }
 
-exports.run = async function ({ inputs, appId, apiKey, emitter }) {
+exports.run = async function ({ inputs, appId, tenantId, emitter }) {
   if (inputs.row == null || inputs.row.tableId == null) {
     return {
       success: false,
@@ -84,7 +84,7 @@ exports.run = async function ({ inputs, appId, apiKey, emitter }) {
       inputs.row
     )
     if (env.USE_QUOTAS) {
-      await usage.update(apiKey, usage.Properties.ROW, 1)
+      await usage.update(tenantId, usage.Properties.ROW, 1)
     }
     await rowController.save(ctx)
     return {
