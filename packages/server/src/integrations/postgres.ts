@@ -84,10 +84,13 @@ module PostgresModule {
     bigint: FieldTypes.NUMBER,
     decimal: FieldTypes.NUMBER,
     smallint: FieldTypes.NUMBER,
+    real: FieldTypes.NUMBER,
+    "double precision": FieldTypes.NUMBER,
     timestamp: FieldTypes.DATETIME,
     time: FieldTypes.DATETIME,
     boolean: FieldTypes.BOOLEAN,
     json: FieldTypes.JSON,
+    date: FieldTypes.DATETIME,
   }
 
   async function internalQuery(client: any, query: SqlQuery) {
