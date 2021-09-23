@@ -205,7 +205,7 @@ describe("/views", () => {
   })
 
   describe("exportView", () => {
-    it("should be able to delete a view", async () => {
+    it("should be able to export a view", async () => {
       await config.createTable(priceTable())
       await config.createRow()
       const view = await config.createView()

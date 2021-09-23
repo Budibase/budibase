@@ -26,7 +26,7 @@ module.exports = {
   COUCH_DB_URL: process.env.COUCH_DB_URL,
   MINIO_URL: process.env.MINIO_URL,
   WORKER_URL: process.env.WORKER_URL,
-  SELF_HOSTED: !!parseInt(process.env.SELF_HOSTED),
+  SELF_HOSTED: process.env.SELF_HOSTED,
   AWS_REGION: process.env.AWS_REGION,
   ENABLE_ANALYTICS: process.env.ENABLE_ANALYTICS,
   MINIO_ACCESS_KEY: process.env.MINIO_ACCESS_KEY,
@@ -65,4 +65,11 @@ module.exports = {
   isProd: () => {
     return !isDev()
   },
+}
+
+// convert any strings to numbers if required, like "0" would be true otherwise
+for (let [key, value] of Object.entries(module.exports)) {
+  if (typeof value === "string" && !isNaN(parseInt(value))) {
+    module.exports[key] = parseInt(value)
+  }
 }

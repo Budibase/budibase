@@ -25,7 +25,7 @@
   }
 
   const values = writable({
-    analytics: !analytics.disabled(),
+    analytics: analytics.enabled,
     company: $organisation.company,
     platformUrl: $organisation.platformUrl,
     logo: $organisation.logoUrl
@@ -48,13 +48,6 @@
   async function saveConfig() {
     loading = true
 
-    // Set analytics preference
-    if ($values.analytics) {
-      analytics.optIn()
-    } else {
-      analytics.optOut()
-    }
-
     // Upload logo if required
     if ($values.logo && !$values.logo.url) {
       await uploadLogo($values.logo)
@@ -64,6 +57,7 @@
     const config = {
       company: $values.company ?? "",
       platformUrl: $values.platformUrl ?? "",
+      analytics: $values.analytics,
     }
     // remove logo if required
     if (!$values.logo) {

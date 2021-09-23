@@ -1,7 +1,7 @@
 {
   "name": "@budibase/server",
   "email": "hi@budibase.com",
-  "version": "0.9.125-alpha.19",
+  "version": "0.9.140-alpha.5",
   "description": "Budibase Web Server",
   "main": "src/index.js",
   "repository": {
@@ -13,7 +13,7 @@
     "postbuild": "copyfiles -u 1 src/**/*.svelte dist/ && copyfiles -u 1 src/**/*.hbs dist/ && copyfiles -u 1 src/**/*.json dist/",
     "test": "jest --coverage --maxWorkers=2",
     "test:watch": "jest --watch",
-    "predocker": "copyfiles -f ../client/dist/budibase-client.js ../client/manifest.json client",
+    "predocker": "copyfiles -f ../client/dist/budibase-client.js ../standard-components/manifest.json client",
     "build:docker": "yarn run predocker && docker build . -t app-service",
     "run:docker": "node dist/index.js",
     "dev:stack:up": "node scripts/dev/manage.js up",
@@ -23,10 +23,9 @@
     "format": "prettier --config ../../.prettierrc.json 'src/**/*.ts' --write",
     "lint": "eslint --fix src/",
     "lint:fix": "yarn run format && yarn run lint",
+    "initialise": "node scripts/initialise.js",
     "multi:enable": "node scripts/multiTenancy.js enable",
-    "multi:disable": "node scripts/multiTenancy.js disable",
-    "selfhost:enable": "node scripts/selfhost.js enable",
-    "selfhost:disable": "node scripts/selfhost.js disable"
+    "multi:disable": "node scripts/multiTenancy.js disable"
   },
   "jest": {
     "preset": "ts-jest",
@@ -49,8 +48,7 @@
       "!src/automations/tests/**/*",
       "!src/utilities/fileProcessor.js",
       "!src/utilities/fileSystem/**/*",
-      "!src/utilities/redis.js",
-      "!src/api/controllers/row/internalSearch.js"
+      "!src/utilities/redis.js"
     ],
     "coverageReporters": [
       "lcov",
@@ -64,9 +62,9 @@
   "author": "Budibase",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
-    "@budibase/auth": "^0.9.125-alpha.19",
-    "@budibase/client": "^0.9.125-alpha.19",
-    "@budibase/string-templates": "^0.9.125-alpha.19",
+    "@budibase/auth": "^0.9.140-alpha.5",
+    "@budibase/client": "^0.9.140-alpha.5",
+    "@budibase/string-templates": "^0.9.140-alpha.5",
     "@elastic/elasticsearch": "7.10.0",
     "@koa/router": "8.0.0",
     "@sendgrid/mail": "7.1.1",
@@ -98,12 +96,13 @@
     "lodash": "4.17.21",
     "mongodb": "3.6.3",
     "mssql": "6.2.3",
-    "mysql": "^2.18.1",
+    "mysql": "2.18.1",
     "node-fetch": "2.6.0",
     "open": "7.3.0",
     "pg": "8.5.1",
     "pino-pretty": "4.0.0",
     "pouchdb": "7.2.1",
+    "pouchdb-adapter-memory": "^7.2.1",
     "pouchdb-all-dbs": "1.0.2",
     "pouchdb-find": "^7.2.2",
     "pouchdb-replication-stream": "1.2.9",
@@ -118,6 +117,7 @@
   "devDependencies": {
     "@babel/core": "^7.14.3",
     "@babel/preset-env": "^7.14.4",
+    "@budibase/standard-components": "^0.9.139",
     "@jest/test-sequencer": "^24.8.0",
     "@types/bull": "^3.15.1",
     "@types/jest": "^26.0.23",
@@ -132,7 +132,6 @@
     "express": "^4.17.1",
     "jest": "^27.0.5",
     "nodemon": "^2.0.4",
-    "pouchdb-adapter-memory": "^7.2.1",
     "prettier": "^2.3.1",
     "rimraf": "^3.0.2",
     "supertest": "^4.0.2",
