@@ -1,74 +1,159 @@
 <script>
-  import { goto } from "@roxi/routify"
-  import { datasources } from "stores/backend"
-  import { notifications } from "@budibase/bbui"
-  import { Input, Label, ModalContent, Modal, Context } from "@budibase/bbui"
-  import TableIntegrationMenu from "../TableIntegrationMenu/index.svelte"
+  import { ModalContent, Modal, Body, Layout, Label } from "@budibase/bbui"
+  import { onMount } from "svelte"
+  import ICONS from "../icons"
+  import api from "builderStore/api"
+  import { IntegrationNames } from "constants"
   import CreateTableModal from "components/backend/TableNavigator/modals/CreateTableModal.svelte"
-  import analytics from "analytics"
-  import { getContext } from "svelte"
+  import DatasourceDetailsModal from "components/backend/DatasourceNavigator/modals/DatasourceDetailsModal.svelte"
 
-  const modalContext = getContext(Context.Modal)
+  export let modal
+  let integrations = []
+  let integration = {}
+  let internalTableModal
+  let externalDatasourceModal
 
-  let tableModal
-  let name
-  let error = ""
-  let integration
+  const INTERNAL = "BUDIBASE"
 
-  $: checkOpenModal(integration && integration.type === "BUDIBASE")
+  onMount(() => {
+    fetchIntegrations()
+  })
 
-  function checkValid(evt) {
-    const datasourceName = evt.target.value
-    if (
-      $datasources?.list.some(datasource => datasource.name === datasourceName)
-    ) {
-      error = `Datasource with name ${datasourceName} already exists. Please choose another name.`
-      return
+  function selectIntegration(integrationType) {
+    const selected = integrations[integrationType]
+
+    // build the schema
+    const config = {}
+    for (let key of Object.keys(selected.datasource)) {
+      config[key] = selected.datasource[key].default
     }
-    error = ""
-  }
-
-  function checkOpenModal(isInternal) {
-    if (isInternal) {
-      tableModal.show()
-    }
-  }
-
-  async function saveDatasource() {
-    const { type, plus, ...config } = integration
-
-    // Create datasource
-    const response = await datasources.save({
-      name,
-      source: type,
+    integration = {
+      type: integrationType,
+      plus: selected.plus,
       config,
-      plus,
-    })
-    notifications.success(`Datasource ${name} created successfully.`)
-    analytics.captureEvent("Datasource Created", { name, type })
+      schema: selected.datasource,
+    }
+  }
 
-    // Navigate to new datasource
-    $goto(`./datasource/${response._id}`)
+  function chooseNextModal() {
+    if (integration.type === INTERNAL) {
+      externalDatasourceModal.hide()
+      internalTableModal.show()
+    } else {
+      externalDatasourceModal.show()
+    }
+  }
+
+  async function fetchIntegrations() {
+    const response = await api.get("/api/integrations")
+    const json = await response.json()
+    integrations = {
+      [INTERNAL]: { datasource: {}, name: "INTERNAL/CSV" },
+      ...json,
+    }
+    return json
   }
 </script>
 
-<Modal bind:this={tableModal} on:hide={modalContext.hide}>
-  <CreateTableModal bind:name />
+<Modal bind:this={internalTableModal}>
+  <CreateTableModal />
 </Modal>
-<ModalContent
-  title="Create Datasource"
-  size="L"
-  confirmText="Create"
-  onConfirm={saveDatasource}
-  disabled={error || !name || !integration?.type}
->
-  <Input
-    data-cy="datasource-name-input"
-    label="Datasource Name"
-    on:input={checkValid}
-    bind:value={name}
-    {error}
-  />
-  <Label>Datasource Type</Label>
-  <TableIntegrationMenu bind:integration />
-</ModalContent>
+
+<Modal bind:this={externalDatasourceModal}>
+  <DatasourceDetailsModal {integration} />
+</Modal>
+
+<Modal bind:this={modal}>
+  <ModalContent
+    disabled={!Object.keys(integration).length}
+    title="Add Data"
+    confirmText="Continue"
+    cancelText="Start from scratch"
+    size="M"
+    onConfirm={() => {
+      chooseNextModal()
+    }}
+  >
+    <Body size="XS"
+      >All apps need data. You can connect to a data source below, or add data
+      to your app using Budibase's built-in database - it's simple!
+    </Body>
+
+    <Layout noPadding>
+      <div
+        class:selected={integration.type === INTERNAL}
+        on:click={() => selectIntegration(INTERNAL)}
+        class="item hoverable"
+      >
+        <div class="item-body">
+          <svelte:component this={ICONS.BUDIBASE} height="18" width="18" />
+          <span class="icon-spacing">
+            <Body size="S">Budibase DB (no prior data required)</Body></span
+          >
+        </div>
+      </div>
+      <Label size="S">Connect to data source</Label>
+
+      <div class="item-list">
+        {#each Object.entries(integrations).filter(([key]) => key !== INTERNAL) as [integrationType, schema]}
+          <div
+            class:selected={integration.type === integrationType}
+            on:click={() => selectIntegration(integrationType)}
+            class="item hoverable"
+          >
+            <div class="item-body">
+              <svelte:component
+                this={ICONS[integrationType]}
+                height="18"
+                width="18"
+              />
+
+              <span class="icon-spacing">
+                <Body size="S"
+                  >{schema.name || IntegrationNames[integrationType]}</Body
+                ></span
+              >
+            </div>
+          </div>
+        {/each}
+      </div>
+    </Layout>
+  </ModalContent>
+</Modal>
+
+<style>
+  .icon-spacing {
+    margin-left: var(--spacing-m);
+  }
+  .item-body {
+    display: flex;
+    margin-left: var(--spacing-m);
+  }
+  .item-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-gap: var(--spectrum-alias-grid-baseline);
+  }
+
+  .item {
+    cursor: pointer;
+    display: grid;
+    grid-gap: var(--spectrum-alias-grid-margin-xsmall);
+    padding: var(--spectrum-alias-item-padding-s);
+    background: var(--spectrum-alias-background-color-secondary);
+    transition: 0.3s all;
+    border: solid var(--spectrum-alias-border-color);
+    border-radius: 5px;
+    box-sizing: border-box;
+    border-width: 2px;
+  }
+
+  .selected {
+    background: var(--spectrum-alias-background-color-tertiary);
+  }
+
+  .item:hover,
+  .selected {
+    background: var(--spectrum-alias-background-color-tertiary);
+  }
+</style>
