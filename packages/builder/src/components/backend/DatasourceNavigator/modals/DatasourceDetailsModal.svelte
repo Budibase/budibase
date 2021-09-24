@@ -1,10 +1,12 @@
 <script>
+  import { goto } from "@roxi/routify"
   import { ModalContent, notifications } from "@budibase/bbui"
   import IntegrationConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/IntegrationConfigForm.svelte"
   import { datasources, tables } from "stores/backend"
   import { IntegrationNames } from "constants"
 
   export let integration
+
   function prepareData() {
     let datasource = {}
     let existingTypeCount = $datasources.list.filter(
@@ -31,8 +33,8 @@
       if (integration.plus) {
         updateDatasourceSchema(resp)
       }
-      await datasources.select(resp["_id"])
-      console.log($datasources)
+      await datasources.select(resp._id)
+      $goto(`./datasource/${resp._id}`)
       notifications.success(`Datasource updated successfully.`)
     } catch (err) {
       notifications.error(`Error saving datasource: ${err}`)
@@ -42,7 +44,6 @@
   async function updateDatasourceSchema(datasourceJson) {
     try {
       await datasources.updateSchema(datasourceJson)
-      notifications.success(`Datasource ${name} tables updated successfully.`)
       await tables.fetch()
     } catch (err) {
       notifications.error(`Error updating datasource schema: ${err}`)
