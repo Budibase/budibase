@@ -5,7 +5,7 @@
   import api from "builderStore/api"
   import { IntegrationNames } from "constants"
   import CreateTableModal from "components/backend/TableNavigator/modals/CreateTableModal.svelte"
-  import DatasourceDetailsModal from "components/backend/DatasourceNavigator/modals/DatasourceDetailsModal.svelte"
+  import DatasourceConfigModal from "components/backend/DatasourceNavigator/modals/DatasourceConfigModal.svelte"
 
   export let modal
   let integrations = []
@@ -60,7 +60,7 @@
 </Modal>
 
 <Modal bind:this={externalDatasourceModal}>
-  <DatasourceDetailsModal {integration} />
+  <DatasourceConfigModal {integration} />
 </Modal>
 
 <Modal bind:this={modal}>

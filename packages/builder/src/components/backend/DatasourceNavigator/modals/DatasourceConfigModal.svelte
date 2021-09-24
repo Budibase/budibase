@@ -1,6 +1,7 @@
 <script>
   import { goto } from "@roxi/routify"
   import { ModalContent, notifications } from "@budibase/bbui"
+  import analytics, { Events } from "analytics"
   import IntegrationConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/IntegrationConfigForm.svelte"
   import { datasources, tables } from "stores/backend"
   import { IntegrationNames } from "constants"
@@ -36,6 +37,10 @@
       await datasources.select(resp._id)
       $goto(`./datasource/${resp._id}`)
       notifications.success(`Datasource updated successfully.`)
+      analytics.captureEvent(Events.DATASOURCE.CREATED, {
+        name: resp.name,
+        source: resp.source,
+      })
     } catch (err) {
       notifications.error(`Error saving datasource: ${err}`)
     }
