@@ -13,6 +13,9 @@ module PostgresModule {
   const Sql = require("./base/sql")
   const { FieldTypes } = require("../constants")
   const { buildExternalTableId, convertType, copyExistingPropsOver } = require("./utils")
+  const { escapeDangerousCharacters } = require("../utilities")
+
+  const JSON_REGEX = /'{.*}'::json/s
 
   interface PostgresConfig {
     host: string
@@ -94,6 +97,15 @@ module PostgresModule {
   }
 
   async function internalQuery(client: any, query: SqlQuery) {
+    // need to handle a specific issue with json data types in postgres,
+    // new lines inside the JSON data will break it
+    const matches = query.sql.match(JSON_REGEX)
+    if (matches && matches.length > 0) {
+      for (let match of matches) {
+        const escaped = escapeDangerousCharacters(match)
+        query.sql = query.sql.replace(match, escaped)
+      }
+    }
     try {
       return await client.query(query.sql, query.bindings || [])
     } catch (err) {
