@@ -1,5 +1,5 @@
 <script>
-  import { ModalContent, Modal, Body, Layout, Label } from "@budibase/bbui"
+  import { ModalContent, Modal, Body, Layout, Detail } from "@budibase/bbui"
   import { onMount } from "svelte"
   import ICONS from "../icons"
   import api from "builderStore/api"
@@ -66,7 +66,7 @@
 <Modal bind:this={modal}>
   <ModalContent
     disabled={!Object.keys(integration).length}
-    title="Add Data"
+    title="Data"
     confirmText="Continue"
     cancelText="Start from scratch"
     size="M"
@@ -74,12 +74,11 @@
       chooseNextModal()
     }}
   >
-    <Body size="XS"
-      >All apps need data. You can connect to a data source below, or add data
-      to your app using Budibase's built-in database - it's simple!
-    </Body>
-
     <Layout noPadding>
+      <Body size="XS"
+        >All apps need data. You can connect to a data source below, or add data
+        to your app using Budibase's built-in database.
+      </Body>
       <div
         class:selected={integration.type === INTERNAL}
         on:click={() => selectIntegration(INTERNAL)}
@@ -92,8 +91,12 @@
           >
         </div>
       </div>
-      <Label size="S">Connect to data source</Label>
+    </Layout>
 
+    <Layout gap="XS" noPadding>
+      <div class="title-spacing">
+        <Detail size="S">Connect to data source</Detail>
+      </div>
       <div class="item-list">
         {#each Object.entries(integrations).filter(([key]) => key !== INTERNAL) as [integrationType, schema]}
           <div
