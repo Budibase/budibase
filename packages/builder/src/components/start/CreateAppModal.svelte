@@ -12,7 +12,7 @@
   import { admin } from "stores/portal"
   import { string, mixed, object } from "yup"
   import api, { get, post } from "builderStore/api"
-  import analytics from "analytics"
+  import analytics, { Events } from "analytics"
   import { onMount } from "svelte"
   import { capitalise } from "helpers"
   import { goto } from "@roxi/routify"
@@ -98,9 +98,9 @@
         throw new Error(appJson.message)
       }
 
-      analytics.captureEvent("App Created", {
+      analytics.captureEvent(Events.APP.CREATED, {
         name: $values.name,
-        appId: appJson._id,
+        appId: appJson.instance._id,
         template,
       })
 

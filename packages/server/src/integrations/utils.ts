@@ -82,3 +82,21 @@ export function isIsoDateString(str: string) {
   let d = new Date(str)
   return d.toISOString() === str
 }
+
+// add the existing relationships from the entities if they exist, to prevent them from being overridden
+export function copyExistingPropsOver(tableName: string, tables: { [key: string]: any }, entities: { [key: string]: any }) {
+  if (entities && entities[tableName]) {
+    if (entities[tableName].primaryDisplay) {
+      tables[tableName].primaryDisplay = entities[tableName].primaryDisplay
+    }
+    const existingTableSchema = entities[tableName].schema
+    for (let key in existingTableSchema) {
+      if (!existingTableSchema.hasOwnProperty(key)) {
+        continue
+      }
+      if (existingTableSchema[key].type === "link") {
+        tables[tableName].schema[key] = existingTableSchema[key]
+      }
+    }
+  }
+}

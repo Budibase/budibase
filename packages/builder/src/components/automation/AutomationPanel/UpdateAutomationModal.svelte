@@ -2,7 +2,7 @@
   import { automationStore } from "builderStore"
   import { notifications } from "@budibase/bbui"
   import { Icon, Input, ModalContent, Modal } from "@budibase/bbui"
-  import analytics from "analytics"
+  import analytics, { Events } from "analytics"
 
   let name
   let error = ""
@@ -26,7 +26,7 @@
     }
     await automationStore.actions.save(updatedAutomation)
     notifications.success(`Automation ${name} updated successfully.`)
-    analytics.captureEvent("Automation Saved", { name })
+    analytics.captureEvent(Events.AUTOMATION.SAVED, { name })
     hide()
   }
 

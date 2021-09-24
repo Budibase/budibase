@@ -10,7 +10,7 @@ function buildAdminInitValidation() {
   return joiValidator.body(
     Joi.object({
       email: Joi.string().required(),
-      password: Joi.string().required(),
+      password: Joi.string(),
       tenantId: Joi.string().required(),
     })
       .required()

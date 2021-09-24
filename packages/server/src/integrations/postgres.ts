@@ -12,7 +12,7 @@ module PostgresModule {
   const { Pool } = require("pg")
   const Sql = require("./base/sql")
   const { FieldTypes } = require("../constants")
-  const { buildExternalTableId, convertType } = require("./utils")
+  const { buildExternalTableId, convertType, copyExistingPropsOver } = require("./utils")
 
   interface PostgresConfig {
     host: string
@@ -84,10 +84,13 @@ module PostgresModule {
     bigint: FieldTypes.NUMBER,
     decimal: FieldTypes.NUMBER,
     smallint: FieldTypes.NUMBER,
+    real: FieldTypes.NUMBER,
+    "double precision": FieldTypes.NUMBER,
     timestamp: FieldTypes.DATETIME,
     time: FieldTypes.DATETIME,
     boolean: FieldTypes.BOOLEAN,
     json: FieldTypes.JSON,
+    date: FieldTypes.DATETIME,
   }
 
   async function internalQuery(client: any, query: SqlQuery) {
@@ -173,30 +176,23 @@ module PostgresModule {
             name: tableName,
             schema: {},
           }
-
-          // add the existing relationships from the entities if they exist, to prevent them from being overridden
-          if (entities && entities[tableName]) {
-            const existingTableSchema = entities[tableName].schema
-            for (let key in existingTableSchema) {
-              if (!existingTableSchema.hasOwnProperty(key)) {
-                continue
-              }
-              if (existingTableSchema[key].type === "link") {
-                tables[tableName].schema[key] = existingTableSchema[key]
-              }
-            }
-          }
         }
 
         const type: string = convertType(column.data_type, TYPE_MAP)
-        const isAuto: boolean =
-          typeof column.column_default === "string" &&
+        const identity = !!(column.identity_generation || column.identity_start || column.identity_increment)
+        const hasDefault = typeof column.column_default === "string" &&
           column.column_default.startsWith("nextval")
+        const isGenerated = column.is_generated && column.is_generated !== "NEVER"
+        const isAuto: boolean = hasDefault || identity || isGenerated
         tables[tableName].schema[columnName] = {
           autocolumn: isAuto,
           name: columnName,
           type,
         }
+      }
+
+      for (let tableName of Object.keys(tables)) {
+        copyExistingPropsOver(tableName, tables, entities)
       }
       this.tables = tables
     }
