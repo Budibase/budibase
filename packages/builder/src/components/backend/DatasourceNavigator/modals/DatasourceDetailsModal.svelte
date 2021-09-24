@@ -8,7 +8,7 @@
   function prepareData() {
     let datasource = {}
     let existingTypeCount = $datasources.list.filter(
-      ds => ds.type == integration.type
+      ds => ds.source == integration.type
     ).length
 
     let baseName = IntegrationNames[integration.type]
@@ -31,8 +31,8 @@
       if (integration.plus) {
         updateDatasourceSchema(resp)
       }
-      await datasources.fetch()
       await datasources.select(resp["_id"])
+      console.log($datasources)
       notifications.success(`Datasource updated successfully.`)
     } catch (err) {
       notifications.error(`Error saving datasource: ${err}`)
