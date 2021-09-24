@@ -1,11 +1,10 @@
 <script>
   import { ModalContent, notifications } from "@budibase/bbui"
   import IntegrationConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/IntegrationConfigForm.svelte"
-  import { datasources } from "stores/backend"
+  import { datasources, tables } from "stores/backend"
   import { IntegrationNames } from "constants"
 
   export let integration
-
   function prepareData() {
     let datasource = {}
     let existingTypeCount = $datasources.list.filter(
@@ -20,16 +19,33 @@
     datasource.source = integration.type
     datasource.config = integration.config
     datasource.name = name
+    datasource.plus = integration.plus
 
     return datasource
   }
   async function saveDatasource() {
     try {
       // Create datasource
-      await datasources.save(prepareData())
+      const resp = await datasources.save(prepareData())
+
+      if (integration.plus) {
+        updateDatasourceSchema(resp)
+      }
+      await datasources.fetch()
+      await datasources.select(resp["_id"])
       notifications.success(`Datasource updated successfully.`)
     } catch (err) {
       notifications.error(`Error saving datasource: ${err}`)
+    }
+  }
+
+  async function updateDatasourceSchema(datasourceJson) {
+    try {
+      await datasources.updateSchema(datasourceJson)
+      notifications.success(`Datasource ${name} tables updated successfully.`)
+      await tables.fetch()
+    } catch (err) {
+      notifications.error(`Error updating datasource schema: ${err}`)
     }
   }
 </script>
@@ -37,8 +53,10 @@
 <ModalContent
   title="Add Data"
   onConfirm={() => saveDatasource()}
-  confirmText="Continue"
-  cancelText="Start from scratch"
+  confirmText={integration.plus
+    ? "Fetch tables from database"
+    : "Save and continue to query"}
+  cancelText="Back"
   size="M"
 >
   <IntegrationConfigForm
