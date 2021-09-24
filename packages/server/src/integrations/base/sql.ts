@@ -1,7 +1,5 @@
 import { Knex, knex } from "knex"
 const BASE_LIMIT = 5000
-// if requesting a single row then need to up the limit for the sake of joins
-const SINGLE_ROW_LIMIT = 100
 import {
   QueryJson,
   SearchFilters,
@@ -146,46 +144,48 @@ function buildCreate(
 function buildRead(knex: Knex, json: QueryJson, limit: number): KnexQuery {
   let { endpoint, resource, filters, sort, paginate, relationships } = json
   const tableName = endpoint.entityId
-  let query: KnexQuery = knex(tableName)
   // select all if not specified
   if (!resource) {
     resource = { fields: [] }
   }
+  let selectStatement: string|string[] = "*"
   // handle select
   if (resource.fields && resource.fields.length > 0) {
     // select the resources as the format "table.columnName" - this is what is provided
     // by the resource builder further up
-    query = query.select(resource.fields.map(field => `${field} as ${field}`))
-  } else {
-    query = query.select("*")
+    selectStatement = resource.fields.map(field => `${field} as ${field}`)
   }
-  // handle where
-  query = addFilters(tableName, query, filters)
-  // handle join
-  query = addRelationships(query, tableName, relationships)
-  // handle sorting
+  let foundLimit = limit || BASE_LIMIT
+  // handle pagination
+  let foundOffset: number | null = null
+  if (paginate && paginate.page && paginate.limit) {
+    // @ts-ignore
+    const page = paginate.page <= 1 ? 0 : paginate.page - 1
+    const offset = page * paginate.limit
+    foundLimit = paginate.limit
+    foundOffset = offset
+  } else if (paginate && paginate.limit) {
+    foundLimit = paginate.limit
+  }
+  // start building the query
+  let query: KnexQuery = knex(tableName).limit(foundLimit)
+  if (foundOffset) {
+    query = query.offset(foundOffset)
+  }
   if (sort) {
     for (let [key, value] of Object.entries(sort)) {
       const direction = value === SortDirection.ASCENDING ? "asc" : "desc"
       query = query.orderBy(key, direction)
     }
   }
-  let foundLimit = limit || BASE_LIMIT
-  // handle pagination
-  if (paginate && paginate.page && paginate.limit) {
+  query = addFilters(tableName, query, filters)
+  // @ts-ignore
+  let preQuery: KnexQuery = knex({
     // @ts-ignore
-    const page = paginate.page <= 1 ? 0 : paginate.page - 1
-    const offset = page * paginate.limit
-    foundLimit = paginate.limit
-    query = query.offset(offset)
-  } else if (paginate && paginate.limit) {
-    foundLimit = paginate.limit
-  }
-  if (foundLimit === 1) {
-    foundLimit = SINGLE_ROW_LIMIT
-  }
-  query = query.limit(foundLimit)
-  return query
+    [tableName]: query,
+  }).select(selectStatement)
+  // handle joins
+  return addRelationships(preQuery, tableName, relationships)
 }
 
 function buildUpdate(
