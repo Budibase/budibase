@@ -22,6 +22,7 @@ export const fetchTableData = opts => {
   // Local non-observable state
   let query
   let sortType
+  let lastBookmark
 
   // Local observable state
   const store = writable({
@@ -43,6 +44,7 @@ export const fetchTableData = opts => {
   })
 
   const fetchPage = async bookmark => {
+    lastBookmark = bookmark
     const { tableId, limit, sortColumn, sortOrder, paginate } = options
     store.update($store => ({ ...$store, loading: true }))
     const res = await API.post(`/api/${options.tableId}/search`, {
@@ -126,7 +128,7 @@ export const fetchTableData = opts => {
   // Fetches the next page of data
   const nextPage = async () => {
     const state = get(derivedStore)
-    if (!options.paginate || !state.hasNextPage) {
+    if (state.loading || !options.paginate || !state.hasNextPage) {
       return
     }
 
@@ -151,7 +153,7 @@ export const fetchTableData = opts => {
   // Fetches the previous page of data
   const prevPage = async () => {
     const state = get(derivedStore)
-    if (!options.paginate || !state.hasPrevPage) {
+    if (state.loading || !options.paginate || !state.hasPrevPage) {
       return
     }
 
@@ -179,6 +181,16 @@ export const fetchTableData = opts => {
     await fetchData()
   }
 
+  // Loads the same page again
+  const refresh = async () => {
+    if (get(store).loading) {
+      return
+    }
+    console.log("refresh")
+    const page = await fetchPage(lastBookmark)
+    store.update($store => ({ ...$store, rows: page.rows }))
+  }
+
   // Initially fetch data but don't bother waiting for the result
   fetchData()
 
@@ -188,5 +200,6 @@ export const fetchTableData = opts => {
     nextPage,
     prevPage,
     update,
+    refresh,
   }
 }

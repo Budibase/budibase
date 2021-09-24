@@ -21,7 +21,8 @@
   $: schema = $tables.selected?.schema
   $: type = $tables.selected?.type
   $: isInternal = type !== "external"
-  $: fetchTable($tables.selected?._id)
+  $: id = $tables.selected?._id
+  $: fetchTable(id)
 
   const fetchTable = tableId => {
     data.update({
