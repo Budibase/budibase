@@ -1,7 +1,7 @@
 {
   "name": "@budibase/server",
   "email": "hi@budibase.com",
-  "version": "0.9.140-alpha.5",
+  "version": "0.9.140-alpha.10",
   "description": "Budibase Web Server",
   "main": "src/index.js",
   "repository": {
@@ -13,7 +13,7 @@
     "postbuild": "copyfiles -u 1 src/**/*.svelte dist/ && copyfiles -u 1 src/**/*.hbs dist/ && copyfiles -u 1 src/**/*.json dist/",
     "test": "jest --coverage --maxWorkers=2",
     "test:watch": "jest --watch",
-    "predocker": "copyfiles -f ../client/dist/budibase-client.js ../standard-components/manifest.json client",
+    "predocker": "copyfiles -f ../client/dist/budibase-client.js ../client/manifest.json client",
     "build:docker": "yarn run predocker && docker build . -t app-service",
     "run:docker": "node dist/index.js",
     "dev:stack:up": "node scripts/dev/manage.js up",
@@ -62,9 +62,9 @@
   "author": "Budibase",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
-    "@budibase/auth": "^0.9.140-alpha.5",
-    "@budibase/client": "^0.9.140-alpha.5",
-    "@budibase/string-templates": "^0.9.140-alpha.5",
+    "@budibase/auth": "^0.9.140-alpha.10",
+    "@budibase/client": "^0.9.140-alpha.10",
+    "@budibase/string-templates": "^0.9.140-alpha.10",
     "@elastic/elasticsearch": "7.10.0",
     "@koa/router": "8.0.0",
     "@sendgrid/mail": "7.1.1",

@@ -83,20 +83,19 @@
 
       {#if datasource.open}
         <TableNavigator sourceId={datasource._id} />
+        {#each $queries.list.filter(query => query.datasourceId === datasource._id) as query}
+          <NavItem
+            indentLevel={1}
+            icon="SQLQuery"
+            text={query.name}
+            opened={$queries.selected === query._id}
+            selected={$queries.selected === query._id}
+            on:click={() => onClickQuery(query)}
+          >
+            <EditQueryPopover {query} />
+          </NavItem>
+        {/each}
       {/if}
-
-      {#each $queries.list.filter(query => query.datasourceId === datasource._id) as query}
-        <NavItem
-          indentLevel={1}
-          icon="SQLQuery"
-          text={query.name}
-          opened={$queries.selected === query._id}
-          selected={$queries.selected === query._id}
-          on:click={() => onClickQuery(query)}
-        >
-          <EditQueryPopover {query} />
-        </NavItem>
-      {/each}
     {/each}
   </div>
 {/if}
