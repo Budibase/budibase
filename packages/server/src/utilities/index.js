@@ -10,6 +10,14 @@ exports.wait = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 exports.isDev = env.isDev
 
+exports.removeFromArray = (array, element) => {
+  const index = array.indexOf(element)
+  if (index !== -1) {
+    array.splice(index, 1)
+  }
+  return array
+}
+
 /**
  * Makes sure that a URL has the correct number of slashes, while maintaining the
  * http(s):// double slashes.

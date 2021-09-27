@@ -1,9 +1,4 @@
-const {
-  getBuiltinPermissions,
-  PermissionLevels,
-  isPermissionLevelHigherThanRead,
-  higherPermission,
-} = require("@budibase/auth/permissions")
+const { getBuiltinPermissions } = require("@budibase/auth/permissions")
 const {
   isBuiltin,
   getDBRoleID,
@@ -16,6 +11,7 @@ const {
   CURRENTLY_SUPPORTED_LEVELS,
   getBasePermissions,
 } = require("../../utilities/security")
+const { removeFromArray } = require("../../utilities")
 
 const PermissionUpdateType = {
   REMOVE: "remove",
@@ -23,22 +19,6 @@ const PermissionUpdateType = {
 }
 
 const SUPPORTED_LEVELS = CURRENTLY_SUPPORTED_LEVELS
-
-// quick function to perform a bit of weird logic, make sure fetch calls
-// always say a write role also has read permission
-function fetchLevelPerms(permissions, level, roleId) {
-  if (!permissions) {
-    permissions = {}
-  }
-  permissions[level] = roleId
-  if (
-    isPermissionLevelHigherThanRead(level) &&
-    !permissions[PermissionLevels.READ]
-  ) {
-    permissions[PermissionLevels.READ] = roleId
-  }
-  return permissions
-}
 
 // utility function to stop this repetition - permissions always stored under roles
 async function getAllDBRoles(db) {
@@ -74,23 +54,31 @@ async function updatePermissionOnRole(
   for (let role of dbRoles) {
     let updated = false
     const rolePermissions = role.permissions ? role.permissions : {}
+    // make sure its an array, also handle migrating
+    if (
+      !rolePermissions[resourceId] ||
+      !Array.isArray(rolePermissions[resourceId])
+    ) {
+      rolePermissions[resourceId] =
+        typeof rolePermissions[resourceId] === "string"
+          ? [rolePermissions[resourceId]]
+          : []
+    }
     // handle the removal/updating the role which has this permission first
     // the updating (role._id !== dbRoleId) is required because a resource/level can
     // only be permitted in a single role (this reduces hierarchy confusion and simplifies
     // the general UI for this, rather than needing to show everywhere it is used)
     if (
       (role._id !== dbRoleId || remove) &&
-      rolePermissions[resourceId] === level
+      rolePermissions[resourceId].indexOf(level) !== -1
     ) {
-      delete rolePermissions[resourceId]
+      removeFromArray(rolePermissions[resourceId], level)
       updated = true
     }
     // handle the adding, we're on the correct role, at it to this
     if (!remove && role._id === dbRoleId) {
-      rolePermissions[resourceId] = higherPermission(
-        rolePermissions[resourceId],
-        level
-      )
+      const set = new Set(rolePermissions[resourceId])
+      rolePermissions[resourceId] = [...set.add(level)]
       updated = true
     }
     // handle the update, add it to bulk docs to perform at end
@@ -127,12 +115,11 @@ exports.fetch = async function (ctx) {
       continue
     }
     const roleId = getExternalRoleID(role._id)
-    for (let [resource, level] of Object.entries(role.permissions)) {
-      permissions[resource] = fetchLevelPerms(
-        permissions[resource],
-        level,
-        roleId
-      )
+    for (let [resource, levelArr] of Object.entries(role.permissions)) {
+      const levels = Array.isArray(levelArr) ? [levelArr] : levelArr
+      const perms = {}
+      levels.forEach(level => (perms[level] = roleId))
+      permissions[resource] = perms
     }
   }
   // apply the base permissions
@@ -157,12 +144,13 @@ exports.getResourcePerms = async function (ctx) {
   for (let level of SUPPORTED_LEVELS) {
     // update the various roleIds in the resource permissions
     for (let role of roles) {
-      if (role.permissions && role.permissions[resourceId] === level) {
-        permissions = fetchLevelPerms(
-          permissions,
-          level,
-          getExternalRoleID(role._id)
-        )
+      const rolePerms = role.permissions
+      if (
+        rolePerms &&
+        (rolePerms[resourceId] === level ||
+          rolePerms[resourceId].indexOf(level) !== -1)
+      ) {
+        permissions[level] = getExternalRoleID(role._id)
       }
     }
   }
