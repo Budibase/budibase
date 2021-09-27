@@ -99,11 +99,13 @@ module PostgresModule {
   async function internalQuery(client: any, query: SqlQuery) {
     // need to handle a specific issue with json data types in postgres,
     // new lines inside the JSON data will break it
-    const matches = query.sql.match(JSON_REGEX)
-    if (matches && matches.length > 0) {
-      for (let match of matches) {
-        const escaped = escapeDangerousCharacters(match)
-        query.sql = query.sql.replace(match, escaped)
+    if (query && query.sql) {
+      const matches = query.sql.match(JSON_REGEX)
+      if (matches && matches.length > 0) {
+        for (let match of matches) {
+          const escaped = escapeDangerousCharacters(match)
+          query.sql = query.sql.replace(match, escaped)
+        }
       }
     }
     try {
