@@ -157,7 +157,7 @@ exports.adminUser = async ctx => {
       rows: 4000,
       apps: 4,
       storage: 1000,
-      users: 10
+      users: 10,
     },
   })
   // }
