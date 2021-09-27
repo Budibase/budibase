@@ -7,13 +7,11 @@
     Divider,
     Label,
     Input,
-    Toggle,
     Dropzone,
     notifications,
   } from "@budibase/bbui"
-  import { auth, organisation } from "stores/portal"
+  import { auth, organisation, admin } from "stores/portal"
   import { post } from "builderStore/api"
-  import analytics from "analytics"
   import { writable } from "svelte/store"
   import { redirect } from "@roxi/routify"
 
@@ -25,7 +23,6 @@
   }
 
   const values = writable({
-    analytics: analytics.enabled,
     company: $organisation.company,
     platformUrl: $organisation.platformUrl,
     logo: $organisation.logoUrl
@@ -57,7 +54,6 @@
     const config = {
       company: $values.company ?? "",
       platformUrl: $values.platformUrl ?? "",
-      analytics: $values.analytics,
     }
     // remove logo if required
     if (!$values.logo) {
@@ -112,34 +108,22 @@
         </div>
       </div>
     </div>
-    <Divider size="S" />
-    <Layout gap="XS" noPadding>
-      <Heading size="S">Platform</Heading>
-      <Body size="S">Here you can set up general platform settings.</Body>
-    </Layout>
-    <div class="fields">
-      <div class="field">
-        <Label size="L">Platform URL</Label>
-        <Input thin bind:value={$values.platformUrl} />
-      </div>
-    </div>
-    <Divider size="S" />
-    <Layout gap="S" noPadding>
+    {#if !$admin.cloud}
+      <Divider size="S" />
       <Layout gap="XS" noPadding>
-        <Heading size="S">Analytics</Heading>
-        <Body size="S">
-          If you would like to send analytics that help us make Budibase better,
-          please let us know below.
-        </Body>
+        <Heading size="S">Platform</Heading>
+        <Body size="S">Here you can set up general platform settings.</Body>
       </Layout>
-      <Toggle
-        text="Send Analytics to Budibase"
-        bind:value={$values.analytics}
-      />
-      <div>
-        <Button disabled={loading} on:click={saveConfig} cta>Save</Button>
+      <div class="fields">
+        <div class="field">
+          <Label size="L">Platform URL</Label>
+          <Input thin bind:value={$values.platformUrl} />
+        </div>
       </div>
-    </Layout>
+    {/if}
+    <div>
+      <Button disabled={loading} on:click={saveConfig} cta>Save</Button>
+    </div>
   </Layout>
 {/if}
 
