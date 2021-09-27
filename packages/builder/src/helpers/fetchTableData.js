@@ -1,6 +1,6 @@
 import { writable, derived, get } from "svelte/store"
 import * as API from "builderStore/api"
-import { buildLuceneQuery } from "../../../client/src/utils/lucene"
+import { buildLuceneQuery } from "helpers/lucene"
 
 const defaultOptions = {
   tableId: null,
