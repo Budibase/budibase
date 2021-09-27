@@ -12,6 +12,7 @@ exports.Properties = {
   USER: "users",
   AUTOMATION: "automationRuns",
   APPS: "apps",
+  EMAILS: "emails",
 }
 
 /**
@@ -28,7 +29,8 @@ exports.update = async (property, usage) => {
   try {
     const db = getGlobalDB()
     const quota = await db.get("usage_quota")
-    // TODO: check if the quota needs reset
+
+    // Check if the quota needs reset
     if (Date.now() >= quota.quotaReset) {
       quota.quotaReset = getNewQuotaReset()
       for (let prop of Object.keys(quota.usageQuota)) {
