@@ -72,7 +72,7 @@ describe("/roles", () => {
         .expect(200)
       expect(res.body.length).toBeGreaterThan(0)
       const power = res.body.find(role => role._id === BUILTIN_ROLE_IDS.POWER)
-      expect(power.permissions[table._id]).toEqual("read")
+      expect(power.permissions[table._id]).toEqual(["read"])
     })
   })
 
