@@ -57,7 +57,7 @@ describe("SQL query builder", () => {
     const query = sql._query(generateReadJson())
     expect(query).toEqual({
       bindings: [limit],
-      sql: `select * from "${TABLE_NAME}" limit $1`
+      sql: `select * from (select * from "${TABLE_NAME}" limit $1) as "${TABLE_NAME}"`
     })
   })
 
@@ -68,7 +68,7 @@ describe("SQL query builder", () => {
     }))
     expect(query).toEqual({
       bindings: [limit],
-      sql: `select "${TABLE_NAME}"."name" as "${nameProp}", "${TABLE_NAME}"."age" as "${ageProp}" from "${TABLE_NAME}" limit $1`
+      sql: `select "${TABLE_NAME}"."name" as "${nameProp}", "${TABLE_NAME}"."age" as "${ageProp}" from (select * from "${TABLE_NAME}" limit $1) as "${TABLE_NAME}"`
     })
   })
 
@@ -82,7 +82,7 @@ describe("SQL query builder", () => {
     }))
     expect(query).toEqual({
       bindings: ["John%", limit],
-      sql: `select * from "${TABLE_NAME}" where "${TABLE_NAME}"."name" ilike $1 limit $2`
+      sql: `select * from (select * from "${TABLE_NAME}" where "${TABLE_NAME}"."name" ilike $1 limit $2) as "${TABLE_NAME}"`
     })
   })
 
@@ -99,7 +99,7 @@ describe("SQL query builder", () => {
     }))
     expect(query).toEqual({
       bindings: [2, 10, limit],
-      sql: `select * from "${TABLE_NAME}" where "${TABLE_NAME}"."age" between $1 and $2 limit $3`
+      sql: `select * from (select * from "${TABLE_NAME}" where "${TABLE_NAME}"."age" between $1 and $2 limit $3) as "${TABLE_NAME}"`
     })
   })
 
@@ -115,7 +115,7 @@ describe("SQL query builder", () => {
     }))
     expect(query).toEqual({
       bindings: [10, "John", limit],
-      sql: `select * from "${TABLE_NAME}" where ("${TABLE_NAME}"."age" = $1) or ("${TABLE_NAME}"."name" = $2) limit $3`
+      sql: `select * from (select * from "${TABLE_NAME}" where ("${TABLE_NAME}"."age" = $1) or ("${TABLE_NAME}"."name" = $2) limit $3) as "${TABLE_NAME}"`
     })
   })
 
@@ -160,7 +160,7 @@ describe("SQL query builder", () => {
     const query = new Sql("mssql", 10)._query(generateReadJson())
     expect(query).toEqual({
       bindings: [10],
-      sql: `select top (@p0) * from [${TABLE_NAME}]`
+      sql: `select * from (select top (@p0) * from [${TABLE_NAME}]) as [${TABLE_NAME}]`
     })
   })
 
@@ -168,7 +168,7 @@ describe("SQL query builder", () => {
     const query = new Sql("mysql", 10)._query(generateReadJson())
     expect(query).toEqual({
       bindings: [10],
-      sql: `select * from \`${TABLE_NAME}\` limit ?`
+      sql: `select * from (select * from \`${TABLE_NAME}\` limit ?) as \`${TABLE_NAME}\``
     })
   })
 })

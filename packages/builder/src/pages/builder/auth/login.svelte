@@ -29,6 +29,7 @@
         username,
         password,
       })
+
       if ($auth?.user?.forceResetPassword) {
         $goto("./reset")
       } else {
