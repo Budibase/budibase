@@ -1,5 +1,9 @@
 const env = require("../environment")
 const { getGlobalDB } = require("@budibase/auth/tenancy")
+const {
+  StaticDatabases,
+  generateNewUsageQuotaDoc,
+} = require("@budibase/auth/db")
 
 function getNewQuotaReset() {
   return Date.now() + 2592000000
@@ -13,6 +17,18 @@ exports.Properties = {
   AUTOMATION: "automationRuns",
   APPS: "apps",
   EMAILS: "emails",
+}
+
+async function getUsageQuotaDoc(db) {
+  let quota
+  try {
+    quota = await db.get(StaticDatabases.PLATFORM_INFO.docs.usageQuota)
+  } catch (err) {
+    // doc doesn't exist. Create it
+    quota = await db.post(generateNewUsageQuotaDoc())
+  }
+
+  return quota
 }
 
 /**
@@ -29,7 +45,7 @@ exports.update = async (property, usage) => {
 
   try {
     const db = getGlobalDB()
-    const quota = await db.get("usage_quota")
+    const quota = await getUsageQuotaDoc(db)
 
     // Check if the quota needs reset
     if (Date.now() >= quota.quotaReset) {

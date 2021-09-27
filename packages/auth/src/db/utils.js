@@ -368,8 +368,33 @@ async function getScopedConfig(db, params) {
   return configDoc && configDoc.config ? configDoc.config : configDoc
 }
 
+function generateNewUsageQuotaDoc() {
+  return {
+    _id: StaticDatabases.PLATFORM_INFO.docs.usageQuota,
+    quotaReset: Date.now() + 2592000000,
+    usageQuota: {
+      automationRuns: 0,
+      rows: 0,
+      storage: 0,
+      apps: 0,
+      users: 0,
+      views: 0,
+      emails: 0,
+    },
+    usageLimits: {
+      automationRuns: 1000,
+      rows: 4000,
+      apps: 4,
+      storage: 1000,
+      users: 10,
+      emails: 50,
+    },
+  }
+}
+
 exports.Replication = Replication
 exports.getScopedConfig = getScopedConfig
 exports.generateConfigID = generateConfigID
 exports.getConfigParams = getConfigParams
 exports.getScopedFullConfig = getScopedFullConfig
+exports.generateNewUsageQuotaDoc = generateNewUsageQuotaDoc
