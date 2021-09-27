@@ -19,6 +19,7 @@ const {
   USER_METDATA_PREFIX,
   LINK_USER_METADATA_PREFIX,
 } = require("../../db/utils")
+const MemoryStream = require("memorystream")
 
 const TOP_LEVEL_PATH = join(__dirname, "..", "..", "..")
 const NODE_MODULES_PATH = join(TOP_LEVEL_PATH, "node_modules")
@@ -111,26 +112,76 @@ exports.apiFileReturn = contents => {
  * to the temporary backup file (to return via API if required).
  */
 exports.performBackup = async (appId, backupName) => {
-  const path = join(budibaseTempDir(), backupName)
-  const writeStream = fs.createWriteStream(path)
-  // perform couch dump
-  const instanceDb = new CouchDB(appId)
-  await instanceDb.dump(writeStream, {
-    // filter out anything that has a user metadata structure in its ID
+  return exports.exportDB(appId, {
+    exportName: backupName,
     filter: doc =>
       !(
         doc._id.includes(USER_METDATA_PREFIX) ||
         doc.includes(LINK_USER_METADATA_PREFIX)
       ),
   })
+}
+
+/**
+ * exports a DB to either file or a variable (memory).
+ * @param {string} dbName the DB which is to be exported.
+ * @param {string} exportName optional - the file name to export to, if not in memory.
+ * @param {function} filter optional - a filter function to clear out any un-wanted docs.
+ * @return Either the file stream or the variable (if no export name provided).
+ */
+exports.exportDB = async (
+  dbName,
+  { exportName, filter } = { exportName: undefined, filter: undefined }
+) => {
+  let stream,
+    appString = "",
+    path = null
+  if (exportName) {
+    path = join(budibaseTempDir(), exportName)
+    stream = fs.createWriteStream(path)
+  } else {
+    stream = new MemoryStream()
+    stream.on("data", chunk => {
+      appString += chunk.toString()
+    })
+  }
+  // perform couch dump
+  const instanceDb = new CouchDB(dbName)
+  await instanceDb.dump(stream, {
+    filter,
+  })
+  // just in memory, return the final string
+  if (!exportName) {
+    return appString
+  }
   // write the file to the object store
   if (env.SELF_HOSTED) {
     await streamUpload(
       ObjectStoreBuckets.BACKUPS,
-      join(appId, backupName),
+      join(dbName, exportName),
       fs.createReadStream(path)
     )
   }
+  return fs.createReadStream(path)
+}
+
+/**
+ * Writes the provided contents to a temporary file, which can be used briefly.
+ * @param {string} fileContents contents which will be written to a temp file.
+ * @return {string} the path to the temp file.
+ */
+exports.storeTempFile = fileContents => {
+  const path = join(budibaseTempDir(), uuid())
+  fs.writeFileSync(path, fileContents)
+  return path
+}
+
+/**
+ * Creates a temp file and returns it from the API.
+ * @param {string} fileContents the contents to be returned in file.
+ */
+exports.sendTempFile = fileContents => {
+  const path = exports.storeTempFile(fileContents)
   return fs.createReadStream(path)
 }
 
