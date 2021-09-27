@@ -114,8 +114,13 @@ async function createInstance(template) {
 
   // replicate the template data to the instance DB
   // this is currently very hard to test, downloading and importing template files
-  /* istanbul ignore next */
-  if (template && template.useTemplate === "true") {
+  if (template && template.templateString) {
+    const { ok } = await db.load(template.templateString)
+    if (!ok) {
+      throw "Error loading database dump from memory."
+    }
+  } else if (template && template.useTemplate === "true") {
+    /* istanbul ignore next */
     const { ok } = await db.load(await getTemplateStream(template))
     if (!ok) {
       throw "Error loading database dump from template."
@@ -191,10 +196,11 @@ exports.fetchAppPackage = async function (ctx) {
 }
 
 exports.create = async function (ctx) {
-  const { useTemplate, templateKey } = ctx.request.body
+  const { useTemplate, templateKey, templateString } = ctx.request.body
   const instanceConfig = {
     useTemplate,
     key: templateKey,
+    templateString,
   }
   if (ctx.request.files && ctx.request.files.templateFile) {
     instanceConfig.file = ctx.request.files.templateFile
