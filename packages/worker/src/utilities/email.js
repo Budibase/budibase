@@ -114,10 +114,12 @@ async function getSmtpConfiguration(db, workspaceId = null) {
 
   const customConfig = getScopedConfig(db, params)
 
-  if (customConfig && !env.SMTP_FALLBACK_ENABLED) {
+  if (customConfig) {
     return customConfig
-  } else {
-    // Use an SMTP fallback configuration from env variables
+  } 
+  
+  // Use an SMTP fallback configuration from env variables
+  if (env.SMTP_FALLBACK_ENABLED) {
     return {
       port: env.SMTP_PORT,
       host: env.SMTP_HOST,
