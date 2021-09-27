@@ -27,20 +27,15 @@
     return datasource
   }
   async function saveDatasource() {
-    let success = true
     try {
       // Create datasource
       const resp = await datasources.save(prepareData())
 
       if (integration.plus) {
-        fetchedSchema = updateDatasourceSchema(resp)
+        updateDatasourceSchema(resp)
       }
-
-      if (!fetchedSchema) {
-        return false
-      }
-
       await datasources.select(resp._id)
+      $goto(`./datasource/${resp._id}`)
       notifications.success(`Datasource updated successfully.`)
       analytics.captureEvent(Events.DATASOURCE.CREATED, {
         name: resp.name,
@@ -48,7 +43,6 @@
       })
     } catch (err) {
       notifications.error(`Error saving datasource: ${err}`)
-      return false
     }
   }
 
@@ -56,10 +50,8 @@
     try {
       await datasources.updateSchema(datasourceJson)
       await tables.fetch()
-      return true
     } catch (err) {
       notifications.error(`Error updating datasource schema: ${err}`)
-      return false
     }
   }
 </script>
