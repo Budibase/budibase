@@ -1,4 +1,4 @@
-// const env = require("../environment")
+const env = require("../environment")
 const { getGlobalDB } = require("@budibase/auth/tenancy")
 
 function getNewQuotaReset() {
@@ -23,9 +23,10 @@ exports.Properties = {
  * also been reset after this call.
  */
 exports.update = async (property, usage) => {
-  // if (!env.USE_QUOTAS) {
-  //   return
-  // }
+  if (!env.USE_QUOTAS) {
+    return
+  }
+
   try {
     const db = getGlobalDB()
     const quota = await db.get("usage_quota")

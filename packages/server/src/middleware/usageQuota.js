@@ -1,6 +1,6 @@
 const CouchDB = require("../db")
 const usageQuota = require("../utilities/usageQuota")
-// const env = require("../environment")
+const env = require("../environment")
 
 // currently only counting new writes and deletes
 const METHOD_MAP = {
@@ -29,9 +29,9 @@ function getProperty(url) {
 
 module.exports = async (ctx, next) => {
   // if in development or a self hosted cloud usage quotas should not be executed
-  // if (env.isDev() || env.SELF_HOSTED) {
-  //   return next()
-  // }
+  if (env.isDev() || env.SELF_HOSTED) {
+    return next()
+  }
 
   const db = new CouchDB(ctx.appId)
   let usage = METHOD_MAP[ctx.req.method]
