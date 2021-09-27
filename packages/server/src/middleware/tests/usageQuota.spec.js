@@ -39,7 +39,7 @@ class TestConfiguration {
     if (bool) {
       env.isDev = () => false
       env.isProd = () => true
-      this.ctx.auth = { apiKey: "test" }
+      this.ctx.user = { tenantId: "test" }
     } else {
       env.isDev = () => true
       env.isProd = () => false
@@ -114,7 +114,7 @@ describe("usageQuota middleware", () => {
 
     await config.executeMiddleware()
 
-    expect(usageQuota.update).toHaveBeenCalledWith("test", "rows", 1)
+    expect(usageQuota.update).toHaveBeenCalledWith("rows", 1)
     expect(config.next).toHaveBeenCalled()
   })
 
@@ -131,7 +131,7 @@ describe("usageQuota middleware", () => {
     ])
     await config.executeMiddleware()
 
-    expect(usageQuota.update).toHaveBeenCalledWith("test", "storage", 10100)
+    expect(usageQuota.update).toHaveBeenCalledWith("storage", 10100)
     expect(config.next).toHaveBeenCalled()
   })
 })

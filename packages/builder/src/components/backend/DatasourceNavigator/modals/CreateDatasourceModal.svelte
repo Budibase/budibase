@@ -5,7 +5,7 @@
   import { Input, Label, ModalContent, Modal, Context } from "@budibase/bbui"
   import TableIntegrationMenu from "../TableIntegrationMenu/index.svelte"
   import CreateTableModal from "components/backend/TableNavigator/modals/CreateTableModal.svelte"
-  import analytics from "analytics"
+  import analytics, { Events } from "analytics"
   import { getContext } from "svelte"
 
   const modalContext = getContext(Context.Modal)
@@ -45,7 +45,7 @@
       plus,
     })
     notifications.success(`Datasource ${name} created successfully.`)
-    analytics.captureEvent("Datasource Created", { name, type })
+    analytics.captureEvent(Events.DATASOURCE.CREATED, { name, type })
 
     // Navigate to new datasource
     $goto(`./datasource/${response._id}`)

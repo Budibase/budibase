@@ -15,8 +15,7 @@
   } from "@budibase/bbui"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
   import UpdateAppModal from "components/start/UpdateAppModal.svelte"
-  import api, { del } from "builderStore/api"
-  import analytics from "analytics"
+  import { del } from "builderStore/api"
   import { onMount } from "svelte"
   import { apps, auth, admin } from "stores/portal"
   import download from "downloadjs"
@@ -63,14 +62,6 @@
       return enrichedApps.sort((a, b) => {
         return a.name?.toLowerCase() < b.name?.toLowerCase() ? -1 : 1
       })
-    }
-  }
-
-  const checkKeys = async () => {
-    const response = await api.get(`/api/keys/`)
-    const keys = await response.json()
-    if (keys.userId) {
-      analytics.identify(keys.userId)
     }
   }
 
@@ -188,7 +179,6 @@
   }
 
   onMount(async () => {
-    checkKeys()
     await apps.load()
     loaded = true
   })

@@ -37,7 +37,7 @@ describe("test the delete row action", () => {
   it("check usage quota attempts", async () => {
     await setup.runInProd(async () => {
       await setup.runStep(setup.actions.DELETE_ROW.stepId, inputs)
-      expect(usageQuota.update).toHaveBeenCalledWith(setup.apiKey, "rows", -1)
+      expect(usageQuota.update).toHaveBeenCalledWith("rows", -1)
     })
   })
 

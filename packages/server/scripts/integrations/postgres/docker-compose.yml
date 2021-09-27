@@ -15,7 +15,7 @@ services:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
 
   pgadmin:
-    container_name: pgadmin
+    container_name: pgadmin-pg
     image: dpage/pgadmin4
     restart: always
     environment:

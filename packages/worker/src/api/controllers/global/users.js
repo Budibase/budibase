@@ -1,8 +1,8 @@
 const {
   generateGlobalUserID,
   getGlobalUserParams,
-
   StaticDatabases,
+  generateNewUsageQuotaDoc,
 } = require("@budibase/auth/db")
 const { hash, getGlobalUserByEmail } = require("@budibase/auth").utils
 const { UserStatus, EmailTemplatePurpose } = require("../../../constants")
@@ -18,6 +18,7 @@ const {
   tryAddTenant,
   updateTenantId,
 } = require("@budibase/auth/tenancy")
+const env = require("../../../environment")
 
 const PLATFORM_INFO_DB = StaticDatabases.PLATFORM_INFO.name
 
@@ -68,6 +69,7 @@ async function saveUser(
 
   _id = _id || generateGlobalUserID()
   user = {
+    createdAt: Date.now(),
     ...dbUser,
     ...user,
     _id,
@@ -138,6 +140,11 @@ exports.adminUser = async ctx => {
     })
   )
 
+  // write usage quotas for cloud
+  if (!env.SELF_HOSTED) {
+    await db.post(generateNewUsageQuotaDoc())
+  }
+
   if (response.rows.some(row => row.doc.admin)) {
     ctx.throw(
       403,
@@ -148,6 +155,7 @@ exports.adminUser = async ctx => {
   const user = {
     email: email,
     password: password,
+    createdAt: Date.now(),
     roles: {},
     builder: {
       global: true,

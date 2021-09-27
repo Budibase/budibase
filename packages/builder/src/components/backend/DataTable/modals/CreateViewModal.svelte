@@ -3,7 +3,7 @@
   import { goto } from "@roxi/routify"
   import { views as viewsStore } from "stores/backend"
   import { tables } from "stores/backend"
-  import analytics from "analytics"
+  import analytics, { Events } from "analytics"
 
   let name
   let field
@@ -21,7 +21,7 @@
       field,
     })
     notifications.success(`View ${name} created`)
-    analytics.captureEvent("View Created", { name })
+    analytics.captureEvent(Events.VIEW.CREATED, { name })
     $goto(`../../view/${name}`)
   }
 </script>

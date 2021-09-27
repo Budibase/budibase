@@ -12,6 +12,7 @@ exports.StaticDatabases = {
     name: "global-info",
     docs: {
       tenants: "tenants",
+      usageQuota: "usage_quota",
     },
   },
 }

@@ -12,7 +12,7 @@
     Layout,
   } from "@budibase/bbui"
   import TableDataImport from "../TableDataImport.svelte"
-  import analytics from "analytics"
+  import analytics, { Events } from "analytics"
   import screenTemplates from "builderStore/store/screenTemplates"
   import { buildAutoColumn, getAutoColumnInformation } from "builderStore/utils"
   import { NEW_ROW_TEMPLATE } from "builderStore/store/screenTemplates/newRowScreen"
@@ -67,7 +67,7 @@
     // Create table
     const table = await tables.save(newTable)
     notifications.success(`Table ${name} created successfully.`)
-    analytics.captureEvent("Table Created", { name })
+    analytics.captureEvent(Events.TABLE.CREATED, { name })
 
     // Create auto screens
     if (createAutoscreens) {
