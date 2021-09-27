@@ -1,6 +1,8 @@
+// Do not use any aliased imports in common files, as these will be bundled
+// by multiple bundlers which may not be able to resolve them
 import { writable, derived, get } from "svelte/store"
-import * as API from "builderStore/api"
-import { buildLuceneQuery } from "helpers/lucene"
+import * as API from "../builderStore/api"
+import { buildLuceneQuery } from "./lucene"
 
 const defaultOptions = {
   tableId: null,
