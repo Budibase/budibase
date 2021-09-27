@@ -544,6 +544,9 @@ module External {
         extra: {
           idFilter: buildFilters(id || generateIdForRow(row, table), {}, table),
         },
+        meta: {
+          table,
+        }
       }
       // can't really use response right now
       const response = await makeExternalQuery(appId, json)
