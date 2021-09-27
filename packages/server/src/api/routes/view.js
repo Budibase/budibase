@@ -25,9 +25,8 @@ router
     "/api/views/:viewName",
     paramResource("viewName"),
     authorized(BUILDER),
-    usage,
     viewController.destroy
   )
-  .post("/api/views", authorized(BUILDER), usage, viewController.save)
+  .post("/api/views", authorized(BUILDER), viewController.save)
 
 module.exports = router
