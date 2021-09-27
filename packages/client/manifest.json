@@ -2389,6 +2389,7 @@
     "icon": "Data",
     "illegalChildren": ["section"],
     "hasChildren": true,
+    "actions": ["RefreshDatasource"],
     "settings": [
       {
         "type": "dataSource",
