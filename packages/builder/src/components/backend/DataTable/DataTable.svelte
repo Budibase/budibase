@@ -13,7 +13,7 @@
   import { fetchTableData } from "helpers/fetchTableData"
   import { Pagination } from "@budibase/bbui"
 
-  const data = fetchTableData()
+  const search = fetchTableData()
   let hideAutocolumns = true
 
   $: isUsersTable = $tables.selected?._id === TableNames.USERS
@@ -25,7 +25,7 @@
   $: fetchTable(id)
 
   const fetchTable = tableId => {
-    data.update({
+    search.update({
       tableId,
       schema,
       limit: 10,
@@ -35,7 +35,7 @@
 
   // Fetch data whenever sorting option changes
   const onSort = e => {
-    data.update({
+    search.update({
       sortColumn: e.detail.column,
       sortOrder: e.detail.order,
     })
@@ -48,9 +48,9 @@
     {schema}
     {type}
     tableId={$tables.selected?._id}
-    data={$data.rows}
+    data={$search.rows}
     bind:hideAutocolumns
-    loading={$data.loading}
+    loading={$search.loading}
     on:sort={onSort}
     allowEditing
     disableSorting
@@ -79,11 +79,11 @@
   </Table>
   <div class="pagination">
     <Pagination
-      page={$data.pageNumber + 1}
-      hasPrevPage={$data.hasPrevPage}
-      hasNextPage={$data.hasNextPage}
-      goToPrevPage={$data.loading ? null : data.prevPage}
-      goToNextPage={$data.loading ? null : data.nextPage}
+      page={$search.pageNumber + 1}
+      hasPrevPage={$search.hasPrevPage}
+      hasNextPage={$search.hasNextPage}
+      goToPrevPage={$search.loading ? null : search.prevPage}
+      goToNextPage={$search.loading ? null : search.nextPage}
     />
   </div>
 </div>

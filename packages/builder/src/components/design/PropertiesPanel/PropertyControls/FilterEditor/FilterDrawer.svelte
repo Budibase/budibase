@@ -13,7 +13,7 @@
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
   import BindingPanel from "components/common/bindings/BindingPanel.svelte"
   import { generate } from "shortid"
-  import { getValidOperatorsForType, OperatorOptions } from "helpers/lucene"
+  import { getValidOperatorsForType, OperatorOptions } from "constants/lucene"
 
   export let schemaFields
   export let filters = []
