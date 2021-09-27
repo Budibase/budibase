@@ -84,7 +84,11 @@ export function isIsoDateString(str: string) {
 }
 
 // add the existing relationships from the entities if they exist, to prevent them from being overridden
-export function copyExistingPropsOver(tableName: string, tables: { [key: string]: any }, entities: { [key: string]: any }) {
+export function copyExistingPropsOver(
+  tableName: string,
+  tables: { [key: string]: any },
+  entities: { [key: string]: any }
+) {
   if (entities && entities[tableName]) {
     if (entities[tableName].primaryDisplay) {
       tables[tableName].primaryDisplay = entities[tableName].primaryDisplay
