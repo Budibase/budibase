@@ -1,6 +1,6 @@
 const { getDB } = require("../db")
 const { cloneDeep } = require("lodash/fp")
-const { BUILTIN_PERMISSION_IDS, higherPermission } = require("./permissions")
+const { BUILTIN_PERMISSION_IDS } = require("./permissions")
 const {
   generateRoleID,
   getRoleParams,
@@ -193,8 +193,17 @@ exports.getUserPermissions = async (appId, userRoleId) => {
   const permissions = {}
   for (let role of rolesHierarchy) {
     if (role.permissions) {
-      for (let [resource, level] of Object.entries(role.permissions)) {
-        permissions[resource] = higherPermission(permissions[resource], level)
+      for (let [resource, levels] of Object.entries(role.permissions)) {
+        if (!permissions[resource]) {
+          permissions[resource] = []
+        }
+        const permsSet = new Set(permissions[resource])
+        if (Array.isArray(levels)) {
+          levels.forEach(level => permsSet.add(level))
+        } else {
+          permsSet.add(levels)
+        }
+        permissions[resource] = [...permsSet]
       }
     }
   }
