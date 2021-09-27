@@ -1,5 +1,5 @@
 {
-  "baseUrl": "http://localhost:10001/builder/",
+  "baseUrl": "https://test.budi.live/builder/",
   "video": true,
   "projectId": "bmbemn",
   "env": {

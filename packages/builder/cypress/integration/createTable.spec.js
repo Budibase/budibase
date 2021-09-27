@@ -38,7 +38,7 @@ context("Create a Table", () => {
     cy.wait(1000)
     cy.get(".spectrum-Modal input").type("Updated")
     cy.contains("Save").click()
-    cy.contains("RoverUpdated").should("have.text", "RoverUpdated")
+    cy.contains("Updated").should("have.text", "Updated")
   })
 
   it("deletes a row", () => {

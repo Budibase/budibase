@@ -1,3 +1,7 @@
+Cypress.on('uncaught:exception', (err, runnable) => {
+  return false;
+});
+
 context("Create a View", () => {
   before(() => {
     cy.login()
@@ -57,6 +61,7 @@ context("Create a View", () => {
   })
 
   it("creates a stats calculation view based on age", () => {
+    cy.wait(1000)
     cy.contains("Calculate").click()
     cy.get(".modal-inner-wrapper").within(() => {
       cy.get(".spectrum-Picker-label").eq(0).click()
@@ -65,7 +70,7 @@ context("Create a View", () => {
       cy.get(".spectrum-Picker-label").eq(1).click()
       cy.contains("age").click({ force: true })
 
-      cy.contains("Save").click()
+      cy.get(".spectrum-Button").contains("Save").click({ force: true })
     })
     cy.wait(1000)
 
@@ -126,7 +131,7 @@ context("Create a View", () => {
     cy.contains(".nav-item", "Test View")
       .find(".actions .icon")
       .click({ force: true })
-    cy.contains("Edit").click()
+    cy.get(".spectrum-Menu-itemLabel").contains("Edit").click()
     cy.get(".modal-inner-wrapper").within(() => {
       cy.get("input").type(" Updated")
       cy.contains("Save").click()
@@ -141,8 +146,8 @@ context("Create a View", () => {
       .click({ force: true })
     cy.contains("Delete").click()
     cy.contains("Delete View").click()
-    cy.wait(1000)
-    cy.contains("TestView Updated").should("not.be.visible")
+    cy.wait(500)
+    cy.contains("TestView Updated").should("not.exist")
   })
 })
 
