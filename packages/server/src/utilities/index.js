@@ -110,7 +110,6 @@ exports.deleteEntityMetadata = async (appId, type, entityId) => {
 exports.escapeDangerousCharacters = string => {
   return string
     .replace(/[\\]/g, "\\\\")
-    .replace(/[\/]/g, "\\/")
     .replace(/[\b]/g, "\\b")
     .replace(/[\f]/g, "\\f")
     .replace(/[\n]/g, "\\n")
