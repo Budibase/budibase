@@ -232,7 +232,7 @@ exports.create = async function (ctx) {
 
   // Only create the default home screens and layout if we aren't importing
   // an app
-  if (!useTemplate) {
+  if (useTemplate !== "true") {
     await createEmptyAppPackage(ctx, newApplication)
   }
 
