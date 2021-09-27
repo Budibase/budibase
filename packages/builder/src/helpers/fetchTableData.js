@@ -186,7 +186,6 @@ export const fetchTableData = opts => {
     if (get(store).loading) {
       return
     }
-    console.log("refresh")
     const page = await fetchPage(lastBookmark)
     store.update($store => ({ ...$store, rows: page.rows }))
   }
