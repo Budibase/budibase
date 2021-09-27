@@ -6,8 +6,8 @@
 //
 
 Cypress.Commands.add("login", () => {
-  cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
-  cy.wait(500)
+  cy.visit(`https://test.budi.live/builder`)
+  cy.wait(2000)
   cy.url().then(url => {
     if (url.includes("builder/admin")) {
       // create admin user
@@ -22,15 +22,17 @@ Cypress.Commands.add("login", () => {
         cy.get("input").first().type("test@test.com")
         cy.get('input[type="password"]').type("test")
         cy.get("button").first().click()
+        cy.wait(1000)
       })
     }
   })
 })
 
 Cypress.Commands.add("createApp", name => {
-  cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
+  cy.visit(`https://test.budi.live/builder`)
   cy.wait(500)
   cy.contains(/Create (new )?app/).click()
+  cy.wait(500)
   cy.get(".spectrum-Modal")
     .within(() => {
       cy.get("input").eq(0).type(name).should("have.value", name).blur()
@@ -43,9 +45,9 @@ Cypress.Commands.add("createApp", name => {
 })
 
 Cypress.Commands.add("deleteApp", () => {
-  cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
+  cy.visit(`https://test.budi.live/builder`)
   cy.wait(1000)
-  cy.request(`localhost:${Cypress.env("PORT")}/api/applications?status=all`)
+  cy.request(`https://test.budi.live/api/applications?status=all`)
     .its("body")
     .then(val => {
       console.log(val)
@@ -80,7 +82,7 @@ Cypress.Commands.add("createTable", tableName => {
   cy.contains(tableName).should("be.visible")
 })
 
-Cypress.Commands.add("addColumn", (tableName, columnName, type) => {
+Cypress.Commands.add("addColumn", (tableName, columnName, type, multiOptions = null) => {
   // Select Table
   cy.selectTable(tableName)
   cy.contains(".nav-item", tableName).click()
@@ -95,6 +97,11 @@ Cypress.Commands.add("addColumn", (tableName, columnName, type) => {
     cy.get(".spectrum-Picker-label").click()
     cy.contains(type).click()
 
+    // Add options for Multi-select Type
+    if(multiOptions !== null){
+      cy.get(".spectrum-Textfield-input").eq(1).type(multiOptions)
+    }
+
     cy.contains("Save Column").click()
   })
 })
@@ -105,6 +112,19 @@ Cypress.Commands.add("addRow", values => {
     for (let i = 0; i < values.length; i++) {
       cy.get("input").eq(i).type(values[i]).blur()
     }
+    cy.get(".spectrum-ButtonGroup").contains("Create").click()
+  })
+})
+
+Cypress.Commands.add("addRowMultiValue", values => {
+  cy.contains("Create row").click()
+  cy.get(".spectrum-Form-itemField").click().then(() => {
+    cy.get(".spectrum-Popover").within(() => {
+      for (let i = 0; i < values.length; i++) {
+        cy.get(".spectrum-Menu-item").eq(i).click()
+      }
+    })
+    cy.get(".spectrum-Dialog-grid").click('top')
     cy.get(".spectrum-ButtonGroup").contains("Create").click()
   })
 })
@@ -127,7 +147,9 @@ Cypress.Commands.add("addComponent", (category, component) => {
   if (category) {
     cy.get(`[data-cy="category-${category}"]`).click()
   }
-  cy.get(`[data-cy="component-${component}"]`).click()
+  if (component){
+    cy.get(`[data-cy="component-${component}"]`).click()
+  }
   cy.wait(1000)
   cy.location().then(loc => {
     const params = loc.pathname.split("/")
@@ -149,8 +171,11 @@ Cypress.Commands.add("getComponent", componentId => {
 })
 
 Cypress.Commands.add("navigateToFrontend", () => {
+  // Clicks on Design tab and then the Home nav item
   cy.wait(1000)
   cy.contains("Design").click()
+  cy.get(".spectrum-Search").type("/")
+  cy.get(".nav-item").contains("Home").click()
 })
 
 Cypress.Commands.add("createScreen", (screenName, route) => {
@@ -172,4 +197,19 @@ Cypress.Commands.add("expandBudibaseConnection", () => {
 Cypress.Commands.add("selectTable", tableName => {
   cy.expandBudibaseConnection()
   cy.contains(".nav-item", tableName).click()
+})
+
+Cypress.Commands.add("addCustomSourceOptions", totalOptions => {
+  cy.get(".spectrum-ActionButton").contains("Define Options").click().then(() => {
+    for (let i = 0; i < totalOptions; i++) {
+      // Add radio button options
+      cy.get(".spectrum-Button").contains("Add Option").click({force: true}).then(() => {
+        cy.wait(500)
+        cy.get("[placeholder='Label']").eq(i).type(i)
+        cy.get("[placeholder='Value']").eq(i).type(i)
+    })
+  }
+  // Save options
+  cy.get(".spectrum-Button").contains("Save").click({force: true})
+  })
 })
