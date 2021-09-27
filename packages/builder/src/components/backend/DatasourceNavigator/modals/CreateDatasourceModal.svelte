@@ -70,6 +70,7 @@
     confirmText="Continue"
     cancelText="Start from scratch"
     size="M"
+    onCancel={() => internalTableModal.show()}
     onConfirm={() => {
       chooseNextModal()
     }}
@@ -86,9 +87,7 @@
       >
         <div class="item-body">
           <svelte:component this={ICONS.BUDIBASE} height="18" width="18" />
-          <span class="icon-spacing">
-            <Body size="S">Budibase DB (no prior data required)</Body></span
-          >
+          <span class="icon-spacing"> <Body size="S">Budibase DB</Body></span>
         </div>
       </div>
     </Layout>
