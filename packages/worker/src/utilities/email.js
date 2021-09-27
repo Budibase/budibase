@@ -1,4 +1,5 @@
 const nodemailer = require("nodemailer")
+const env = require("../environment")
 const { getScopedConfig } = require("@budibase/auth/db")
 const { EmailTemplatePurpose, TemplateTypes, Configs } = require("../constants")
 const { getTemplateByPurpose } = require("../constants/templates")
@@ -110,7 +111,21 @@ async function getSmtpConfiguration(db, workspaceId = null) {
   if (workspaceId) {
     params.workspace = workspaceId
   }
-  return getScopedConfig(db, params)
+
+  if (!env.SMTP_FALLBACK_ENABLED) {
+    return getScopedConfig(db, params)
+  } else {
+    // Use an SMTP fallback configuration from env variables
+    return {
+      port: env.SMTP_PORT,
+      host: env.SMTP_HOST,
+      secure: false,
+      auth: {
+        user: env.SMTP_USER,
+        pass: env.SMTP_PASSWORD,
+      },
+    }
+  }
 }
 
 /**
@@ -118,8 +133,8 @@ async function getSmtpConfiguration(db, workspaceId = null) {
  * @return {Promise<boolean>} returns true if there is a configuration that can be used.
  */
 exports.isEmailConfigured = async (workspaceId = null) => {
-  // when "testing" simply return true
-  if (TEST_MODE) {
+  // when "testing" or smtp fallback is enabled simply return true
+  if (TEST_MODE || env.SMTP_FALLBACK_ENABLED) {
     return true
   }
   const db = getGlobalDB()

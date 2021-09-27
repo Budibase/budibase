@@ -108,7 +108,7 @@ module MySQLModule {
     client: any,
     query: SqlQuery,
     connect: boolean = true
-  ): Promise<any[]|any> {
+  ): Promise<any[] | any> {
     // Node MySQL is callback based, so we must wrap our call in a promise
     return new Promise((resolve, reject) => {
       if (connect) {
@@ -252,9 +252,9 @@ module MySQLModule {
       json.extra = {
         idFilter: {
           equal: {
-            [primaryKey]: results.insertId
+            [primaryKey]: results.insertId,
           },
-        }
+        },
       }
       return json
     }

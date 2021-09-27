@@ -50,15 +50,15 @@ module.exports = async (ctx, next) => {
   }
 
   // update usage for uploads to be the total size
-  // if (property === usageQuota.Properties.UPLOAD) {
-  //   const files =
-  //     ctx.request.files.file.length > 1
-  //       ? Array.from(ctx.request.files.file)
-  //       : [ctx.request.files.file]
-  //   usage = files.map(file => file.size).reduce((total, size) => total + size)
-  // }
+  if (property === usageQuota.Properties.UPLOAD) {
+    const files =
+      ctx.request.files.file.length > 1
+        ? Array.from(ctx.request.files.file)
+        : [ctx.request.files.file]
+    usage = files.map(file => file.size).reduce((total, size) => total + size)
+  }
   try {
-    await usageQuota.update(ctx.user.tenantId, property, usage)
+    await usageQuota.update(property, usage)
     return next()
   } catch (err) {
     ctx.throw(400, err)

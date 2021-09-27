@@ -151,6 +151,7 @@ exports.adminUser = async ctx => {
       apps: 0,
       users: 0,
       views: 0,
+      emails: 0,
     },
     usageLimits: {
       automationRuns: 1000,
@@ -158,6 +159,7 @@ exports.adminUser = async ctx => {
       apps: 4,
       storage: 1000,
       users: 10,
+      emails: 50,
     },
   })
   // }
