@@ -1,3 +1,4 @@
+/*
 context("Create a Table", () => {
   before(() => {
     cy.login()
@@ -69,3 +70,4 @@ context("Create a Table", () => {
     cy.contains("dog").should("not.exist")
   })
 })
+*/
