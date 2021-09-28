@@ -3,7 +3,7 @@
   import { ModalContent, notifications, Body, Layout } from "@budibase/bbui"
   import analytics, { Events } from "analytics"
   import IntegrationConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/IntegrationConfigForm.svelte"
-  import { datasources, tables } from "stores/backend"
+  import { datasources } from "stores/backend"
   import { IntegrationNames } from "constants"
 
   export let integration
@@ -27,13 +27,11 @@
     return datasource
   }
   async function saveDatasource() {
+    const datasource = prepareData()
     try {
       // Create datasource
-      const resp = await datasources.save(prepareData())
+      const resp = await datasources.save(datasource, datasource.plus)
 
-      if (integration.plus) {
-        updateDatasourceSchema(resp)
-      }
       await datasources.select(resp._id)
       $goto(`./datasource/${resp._id}`)
       notifications.success(`Datasource updated successfully.`)
@@ -41,17 +39,10 @@
         name: resp.name,
         source: resp.source,
       })
+      return true
     } catch (err) {
       notifications.error(`Error saving datasource: ${err}`)
-    }
-  }
-
-  async function updateDatasourceSchema(datasourceJson) {
-    try {
-      await datasources.updateSchema(datasourceJson)
-      await tables.fetch()
-    } catch (err) {
-      notifications.error(`Error updating datasource schema: ${err}`)
+      return false
     }
   }
 </script>

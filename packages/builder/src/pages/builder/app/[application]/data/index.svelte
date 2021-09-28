@@ -9,12 +9,6 @@
     $datasources.list.find(x => (x._id = "bb_internal")).entities.length > 1 ||
     $datasources.list.length > 1
 
-  $: console.log(
-    $datasources.list.find(x => (x._id = "bb_internal")).entities.length > 1
-  )
-  $: console.log($datasources.list.length >= 1)
-  $: console.log($datasources.list)
-
   onMount(() => {
     if (!setupComplete) {
       modal.show()
