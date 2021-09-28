@@ -62,7 +62,7 @@ context("Create a Table", () => {
 
   it("deletes a table", () => {
     cy.get(".actions > :nth-child(1) > .icon > .spectrum-Icon > use")
-      .eq(1)
+      .first()
       .click({ force: true })
     cy.get(".spectrum-Menu > :nth-child(2)").click()
     cy.contains("Delete Table").click()
