@@ -70,10 +70,12 @@ exports.basicRole = () => {
 
 exports.basicDatasource = () => {
   return {
-    type: "datasource",
-    name: "Test",
-    source: "POSTGRES",
-    config: {},
+    datasource: {
+      type: "datasource",
+      name: "Test",
+      source: "POSTGRES",
+      config: {},
+    },
   }
 }
 
