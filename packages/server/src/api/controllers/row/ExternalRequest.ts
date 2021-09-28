@@ -546,7 +546,7 @@ module External {
         },
         meta: {
           table,
-        }
+        },
       }
       // can't really use response right now
       const response = await makeExternalQuery(appId, json)

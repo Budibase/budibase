@@ -46,7 +46,7 @@ describe("test the create row action", () => {
       await setup.runStep(setup.actions.CREATE_ROW.stepId, {
         row
       })
-      expect(usageQuota.update).toHaveBeenCalledWith(setup.apiKey, "rows", 1)
+      expect(usageQuota.update).toHaveBeenCalledWith("rows", 1)
     })
   })
 
