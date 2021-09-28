@@ -31,7 +31,7 @@ const {
   getDeployedApps,
   removeAppFromUserRoles,
 } = require("../../utilities/workerRequests")
-const { clientLibraryPath } = require("../../utilities")
+const { clientLibraryPath, stringToReadStream } = require("../../utilities")
 const { getAllLocks } = require("../../utilities/redis")
 const {
   updateClientLibrary,
@@ -115,7 +115,7 @@ async function createInstance(template) {
   // replicate the template data to the instance DB
   // this is currently very hard to test, downloading and importing template files
   if (template && template.templateString) {
-    const { ok } = await db.load(template.templateString)
+    const { ok } = await db.load(stringToReadStream(template.templateString))
     if (!ok) {
       throw "Error loading database dump from memory."
     }

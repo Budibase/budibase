@@ -6,6 +6,7 @@ const {
   sendTempFile,
   readFileSync,
 } = require("../../utilities/fileSystem")
+const { stringToReadStream } = require("../../utilities")
 const { getGlobalDBName, getGlobalDB } = require("@budibase/auth/tenancy")
 const { create } = require("./application")
 
@@ -54,13 +55,15 @@ exports.importApps = async ctx => {
     )
   }
   const importFile = ctx.request.files.importFile
-  const importString = readFileSync(importFile.file.path)
+  const importString = readFileSync(importFile.path)
   const dbs = JSON.parse(importString)
   const globalDb = dbs.global
+  // remove from the list of apps
+  delete dbs.global
   const db = getGlobalDB()
   // load the global db first
-  await db.load(globalDb)
-  for (let [appName, appImport] of Object.values(dbs)) {
+  await db.load(stringToReadStream(globalDb))
+  for (let [appName, appImport] of Object.entries(dbs)) {
     await createApp(appName, appImport)
   }
   ctx.body = {
