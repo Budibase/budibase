@@ -1,4 +1,4 @@
-import {Table} from "./common";
+import { Table } from "./common"
 
 export enum Operation {
   CREATE = "CREATE",
@@ -139,7 +139,7 @@ export interface QueryJson {
   paginate?: PaginationJson
   body?: object
   meta?: {
-    table?: Table,
+    table?: Table
   }
   extra?: {
     idFilter?: SearchFilters
