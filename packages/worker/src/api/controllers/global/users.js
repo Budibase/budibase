@@ -56,6 +56,14 @@ async function saveUser(
       throw "Email address already in use."
     }
 
+    // check budibase users in other tenants
+    if (env.MULTI_TENANCY) {
+      dbUser = await getTenantUser(email)
+      if (dbUser != null) {
+        throw "Email address already in use."
+      }
+    }
+
     // check root account users in account portal
     if (!env.SELF_HOSTED) {
       const account = await accounts.getAccount(email)
@@ -277,13 +285,22 @@ exports.find = async ctx => {
   ctx.body = user
 }
 
-exports.tenantUserLookup = async ctx => {
-  const id = ctx.params.id
-  // lookup, could be email or userId, either will return a doc
+// lookup, could be email or userId, either will return a doc
+const getTenantUser = async identifier => {
   const db = new CouchDB(PLATFORM_INFO_DB)
   try {
-    ctx.body = await db.get(id)
+    return await db.get(identifier)
   } catch (err) {
+    return null
+  }
+}
+
+exports.tenantUserLookup = async ctx => {
+  const id = ctx.params.id
+  const user = await getTenantUser(id)
+  if (user) {
+    ctx.body = user
+  } else {
     ctx.throw(400, "No tenant user found.")
   }
 }
