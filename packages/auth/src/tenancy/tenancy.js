@@ -73,6 +73,54 @@ exports.tryAddTenant = async (tenantId, userId, email) => {
   await Promise.all(promises)
 }
 
+const DocumentTypes = {
+  USER: "us",
+}
+const UNICODE_MAX = "\ufff0"
+
+/**
+ * Gets parameters for retrieving users.
+ * Duplicate of "../db/utils" due to circular dependency
+ */
+const getGlobalUserParams = (globalId, otherProps = {}) => {
+  if (!globalId) {
+    globalId = ""
+  }
+  return {
+    ...otherProps,
+    startkey: `${DocumentTypes.USER}${SEPARATOR}${globalId}`,
+    endkey: `${DocumentTypes.USER}${SEPARATOR}${globalId}${UNICODE_MAX}`,
+  }
+}
+
+exports.deleteTenant = async tenantId => {
+  const globalDb = exports.getGlobalDB()
+
+  let promises = []
+  // remove the tenant entry from global info
+  const infoDb = getDB(PLATFORM_INFO_DB)
+  let tenants = await infoDb.get(TENANT_DOC)
+  tenants.tenantIds = tenants.tenantIds.filter(id => id !== tenantId)
+  promises.push(infoDb.put(tenants))
+
+  // remove the users
+  const allUsers = await globalDb.allDocs(
+    getGlobalUserParams(null, {
+      include_docs: true,
+    })
+  )
+  allUsers.rows.map(row => {
+    promises.push(infoDb.remove(row.id, row.value.rev))
+    promises.push(infoDb.remove(row.doc.email, row.value.rev))
+  })
+
+  // remove the global db
+  promises.push(globalDb.destroy())
+
+  await Promise.all(promises)
+  // TODO: Delete all apps
+}
+
 exports.getGlobalDB = (tenantId = null) => {
   // tenant ID can be set externally, for example user API where
   // new tenants are being created, this may be the case

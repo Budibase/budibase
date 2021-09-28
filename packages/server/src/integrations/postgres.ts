@@ -12,7 +12,11 @@ module PostgresModule {
   const { Pool } = require("pg")
   const Sql = require("./base/sql")
   const { FieldTypes } = require("../constants")
-  const { buildExternalTableId, convertType, copyExistingPropsOver } = require("./utils")
+  const {
+    buildExternalTableId,
+    convertType,
+    copyExistingPropsOver,
+  } = require("./utils")
   const { escapeDangerousCharacters } = require("../utilities")
 
   const JSON_REGEX = /'{.*}'::json/s
@@ -193,10 +197,16 @@ module PostgresModule {
         }
 
         const type: string = convertType(column.data_type, TYPE_MAP)
-        const identity = !!(column.identity_generation || column.identity_start || column.identity_increment)
-        const hasDefault = typeof column.column_default === "string" &&
+        const identity = !!(
+          column.identity_generation ||
+          column.identity_start ||
+          column.identity_increment
+        )
+        const hasDefault =
+          typeof column.column_default === "string" &&
           column.column_default.startsWith("nextval")
-        const isGenerated = column.is_generated && column.is_generated !== "NEVER"
+        const isGenerated =
+          column.is_generated && column.is_generated !== "NEVER"
         const isAuto: boolean = hasDefault || identity || isGenerated
         tables[tableName].schema[columnName] = {
           autocolumn: isAuto,
