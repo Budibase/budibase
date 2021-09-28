@@ -94,6 +94,8 @@ spec:
           value: {{ .Values.globals.sentryDSN }}
         - name: WORKER_URL
           value: worker-service:{{ .Values.services.worker.port }}
+        - name: COOKIE_DOMAIN
+          value: {{ .Values.globals.cookieDomain | quote }}
         image: budibase/apps
         imagePullPolicy: Always
         name: bbapps

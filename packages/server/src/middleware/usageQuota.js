@@ -13,6 +13,7 @@ const DOMAIN_MAP = {
   upload: usageQuota.Properties.UPLOAD,
   views: usageQuota.Properties.VIEW,
   users: usageQuota.Properties.USER,
+  applications: usageQuota.Properties.APPS,
   // this will not be updated by endpoint calls
   // instead it will be updated by triggerInfo
   automationRuns: usageQuota.Properties.AUTOMATION,
@@ -57,9 +58,9 @@ module.exports = async (ctx, next) => {
     usage = files.map(file => file.size).reduce((total, size) => total + size)
   }
   try {
-    await usageQuota.update(ctx.auth.apiKey, property, usage)
+    await usageQuota.update(property, usage)
     return next()
   } catch (err) {
-    ctx.throw(403, err)
+    ctx.throw(400, err)
   }
 }

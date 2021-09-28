@@ -52,7 +52,7 @@ exports.definition = {
   },
 }
 
-exports.run = async function ({ inputs, appId, apiKey, emitter }) {
+exports.run = async function ({ inputs, appId, emitter }) {
   if (inputs.id == null || inputs.revision == null) {
     return {
       success: false,
@@ -74,7 +74,7 @@ exports.run = async function ({ inputs, appId, apiKey, emitter }) {
 
   try {
     if (env.isProd()) {
-      await usage.update(apiKey, usage.Properties.ROW, -1)
+      await usage.update(usage.Properties.ROW, -1)
     }
     await rowController.destroy(ctx)
     return {
