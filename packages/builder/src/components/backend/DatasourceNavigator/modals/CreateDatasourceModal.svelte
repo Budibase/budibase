@@ -68,7 +68,7 @@
     disabled={!Object.keys(integration).length}
     title="Data"
     confirmText="Continue"
-    cancelText="Start from scratch"
+    cancelText="Create a new table with Budibase DB"
     size="M"
     onCancel={() => internalTableModal.show()}
     onConfirm={() => {
