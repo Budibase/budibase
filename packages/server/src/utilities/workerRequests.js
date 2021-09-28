@@ -34,7 +34,7 @@ function request(ctx, request) {
 exports.request = request
 
 // have to pass in the tenant ID as this could be coming from an automation
-exports.sendSmtpEmail = async (to, from, subject, contents) => {
+exports.sendSmtpEmail = async (to, from, subject, contents, automation) => {
   // tenant ID will be set in header
   const response = await fetch(
     checkSlashesInUrl(env.WORKER_URL + `/api/global/email/send`),
@@ -46,6 +46,7 @@ exports.sendSmtpEmail = async (to, from, subject, contents) => {
         contents,
         subject,
         purpose: "custom",
+        automation,
       },
     })
   )
