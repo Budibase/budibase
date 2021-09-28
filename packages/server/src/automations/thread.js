@@ -4,8 +4,10 @@ const AutomationEmitter = require("../events/AutomationEmitter")
 const { processObject } = require("@budibase/string-templates")
 const { DEFAULT_TENANT_ID } = require("@budibase/auth").constants
 const CouchDB = require("../db")
-const { DocumentTypes } = require("../db/utils")
+const { DocumentTypes, isDevAppID } = require("../db/utils")
 const { doInTenant } = require("@budibase/auth/tenancy")
+const env = require("../environment")
+const usage = require("../utilities/usageQuota")
 
 const FILTER_STEP_ID = actions.ACTION_DEFINITIONS.FILTER.stepId
 
@@ -80,7 +82,6 @@ class Orchestrator {
           return stepFn({
             inputs: step.inputs,
             appId: this._appId,
-            apiKey: automation.apiKey,
             emitter: this._emitter,
             context: this._context,
           })
@@ -94,6 +95,11 @@ class Orchestrator {
         console.error(`Automation error - ${step.stepId} - ${err}`)
         return err
       }
+    }
+
+    // Increment quota for automation runs
+    if (!env.SELF_HOSTED && !isDevAppID(this._appId)) {
+      usage.update(usage.Properties.AUTOMATION, 1)
     }
     return this.executionOutput
   }

@@ -1,3 +1,5 @@
+import { Table } from "./common"
+
 export enum Operation {
   CREATE = "CREATE",
   READ = "READ",
@@ -136,6 +138,9 @@ export interface QueryJson {
   sort?: SortJson
   paginate?: PaginationJson
   body?: object
+  meta?: {
+    table?: Table
+  }
   extra?: {
     idFilter?: SearchFilters
   }

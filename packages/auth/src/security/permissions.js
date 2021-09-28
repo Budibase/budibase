@@ -139,8 +139,7 @@ exports.doesHaveResourcePermission = (
   // set foundSub to not subResourceId, incase there is no subResource
   let foundMain = false,
     foundSub = false
-  for (let [resource, level] of Object.entries(permissions)) {
-    const levels = getAllowedLevels(level)
+  for (let [resource, levels] of Object.entries(permissions)) {
     if (resource === resourceId && levels.indexOf(permLevel) !== -1) {
       foundMain = true
     }
@@ -175,10 +174,6 @@ exports.doesHaveBasePermission = (permType, permLevel, permissionIds) => {
     }
   }
   return false
-}
-
-exports.higherPermission = (perm1, perm2) => {
-  return levelToNumber(perm1) > levelToNumber(perm2) ? perm1 : perm2
 }
 
 exports.isPermissionLevelHigherThanRead = level => {
