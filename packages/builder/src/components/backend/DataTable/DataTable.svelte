@@ -11,10 +11,13 @@
   import { TableNames } from "constants"
   import CreateEditRow from "./modals/CreateEditRow.svelte"
   import { fetchTableData } from "helpers/fetchTableData"
-  import { Pagination } from "@budibase/bbui"
+  import { Layout, Pagination, Select, Input } from "@budibase/bbui"
+  import { OperatorOptions } from "constants/lucene"
 
   const search = fetchTableData()
   let hideAutocolumns = true
+  let searchColumn
+  let searchValue
 
   $: isUsersTable = $tables.selected?._id === TableNames.USERS
   $: title = $tables.selected?.name
@@ -22,12 +25,16 @@
   $: type = $tables.selected?.type
   $: isInternal = type !== "external"
   $: id = $tables.selected?._id
-  $: fetchTable(id)
+  $: columnOptions = Object.keys($search.schema || {})
+  $: filter = buildFilter(searchColumn, searchValue)
+  $: fetchTable(id, filter)
 
-  const fetchTable = tableId => {
+  // Fetches new data whenever the table changes
+  const fetchTable = (tableId, filter) => {
     search.update({
       tableId,
       schema,
+      filter,
       limit: 10,
       paginate: true,
     })
@@ -40,6 +47,23 @@
       sortOrder: e.detail.order,
     })
   }
+
+  // Builds a filter expression to search with
+  const buildFilter = (column, value) => {
+    if (!column || !value) {
+      return null
+    }
+    return [
+      {
+        type: "string",
+        field: column,
+        operator: OperatorOptions.StartsWith.value,
+        value,
+      },
+    ]
+  }
+
+  $: console.log(filter)
 </script>
 
 <div>
@@ -55,27 +79,39 @@
     allowEditing
     disableSorting
   >
-    {#if isInternal}
-      <CreateColumnButton />
-    {/if}
-    {#if schema && Object.keys(schema).length > 0}
-      {#if !isUsersTable}
-        <CreateRowButton
-          title={"Create row"}
-          modalContentComponent={CreateEditRow}
+    <Layout noPadding gap="S">
+      <div class="buttons">
+        {#if isInternal}
+          <CreateColumnButton />
+        {/if}
+        {#if schema && Object.keys(schema).length > 0}
+          {#if !isUsersTable}
+            <CreateRowButton
+              title={"Create row"}
+              modalContentComponent={CreateEditRow}
+            />
+          {/if}
+          {#if isInternal}
+            <CreateViewButton />
+          {/if}
+          <ManageAccessButton resourceId={$tables.selected?._id} />
+          {#if isUsersTable}
+            <EditRolesButton />
+          {/if}
+          <HideAutocolumnButton bind:hideAutocolumns />
+          <!-- always have the export last -->
+          <ExportButton view={$tables.selected?._id} />
+        {/if}
+      </div>
+      <div class="search">
+        <Select bind:value={searchColumn} options={columnOptions} />
+        <Input
+          updateOnChange={false}
+          on:change={e => (searchValue = e.detail)}
+          placeholder="Search"
         />
-      {/if}
-      {#if isInternal}
-        <CreateViewButton />
-      {/if}
-      <ManageAccessButton resourceId={$tables.selected?._id} />
-      {#if isUsersTable}
-        <EditRolesButton />
-      {/if}
-      <HideAutocolumnButton bind:hideAutocolumns />
-      <!-- always have the export last -->
-      <ExportButton view={$tables.selected?._id} />
-    {/if}
+      </div>
+    </Layout>
   </Table>
   <div class="pagination">
     <Pagination
@@ -89,6 +125,19 @@
 </div>
 
 <style>
+  .buttons {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    gap: var(--spacing-s);
+  }
+  .search {
+    display: grid;
+    align-items: center;
+    grid-template-columns: 200px 200px;
+    gap: var(--spacing-s);
+  }
   .pagination {
     display: flex;
     flex-direction: row;
