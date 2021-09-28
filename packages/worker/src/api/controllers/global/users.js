@@ -11,6 +11,7 @@ const { sendEmail } = require("../../../utilities/email")
 const { user: userCache } = require("@budibase/auth/cache")
 const { invalidateSessions } = require("@budibase/auth/sessions")
 const CouchDB = require("../../../db")
+const accounts = require("@budibase/auth/accounts")
 const {
   getGlobalDB,
   getTenantId,
@@ -49,9 +50,18 @@ async function saveUser(
   // make sure another user isn't using the same email
   let dbUser
   if (email) {
+    // check budibase users inside the tenant
     dbUser = await getGlobalUserByEmail(email)
     if (dbUser != null && (dbUser._id !== _id || Array.isArray(dbUser))) {
       throw "Email address already in use."
+    }
+
+    // check root account users in account portal
+    if (!env.SELF_HOSTED) {
+      const account = await accounts.getAccount(email)
+      if (account) {
+        throw "Email address already in use."
+      }
     }
   } else {
     dbUser = await db.get(_id)
