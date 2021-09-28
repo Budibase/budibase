@@ -70,6 +70,15 @@
     creatingApp = true
   }
 
+  const initiateAppsExport = () => {
+    try {
+      download(`/api/cloud/export`)
+      notifications.success("Apps exported successfully")
+    } catch (err) {
+      notifications.error(`Error exporting apps: ${err}`)
+    }
+  }
+
   const initiateAppImport = () => {
     template = { fromFile: true }
     creationModal.show()
@@ -190,6 +199,7 @@
       <div class="title">
         <Heading>Apps</Heading>
         <ButtonGroup>
+          <Button secondary on:click={initiateAppsExport}>Export apps</Button>
           <Button secondary on:click={initiateAppImport}>Import app</Button>
           <Button cta on:click={initiateAppCreation}>Create app</Button>
         </ButtonGroup>

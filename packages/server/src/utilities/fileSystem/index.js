@@ -177,6 +177,15 @@ exports.storeTempFile = fileContents => {
 }
 
 /**
+ * Utility function for getting a file read stream - a simple in memory buffered read
+ * stream doesn't work for pouchdb.
+ */
+exports.stringToFileStream = contents => {
+  const path = exports.storeTempFile(contents)
+  return fs.createReadStream(path)
+}
+
+/**
  * Creates a temp file and returns it from the API.
  * @param {string} fileContents the contents to be returned in file.
  */
