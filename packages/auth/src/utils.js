@@ -4,6 +4,7 @@ const { options } = require("./middleware/passport/jwt")
 const { createUserEmailView } = require("./db/views")
 const { Headers } = require("./constants")
 const { getGlobalDB } = require("./tenancy")
+const environment = require("./environment")
 
 const APP_PREFIX = DocumentTypes.APP + SEPARATOR
 
@@ -70,12 +71,19 @@ exports.setCookie = (ctx, value, name = "builder") => {
     ctx.cookies.set(name)
   } else {
     value = jwt.sign(value, options.secretOrKey)
-    ctx.cookies.set(name, value, {
+
+    const config = {
       maxAge: Number.MAX_SAFE_INTEGER,
       path: "/",
       httpOnly: false,
       overwrite: true,
-    })
+    }
+
+    if (environment.COOKIE_DOMAIN) {
+      config.domain = environment.COOKIE_DOMAIN
+    }
+
+    ctx.cookies.set(name, value, config)
   }
 }
 
