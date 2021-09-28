@@ -1,7 +1,7 @@
 version: "3.8"
 services:
   db:
-    container_name: postgres
+    container_name: postgres-json
     image: postgres
     restart: always
     environment:
@@ -15,7 +15,7 @@ services:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
 
   pgadmin:
-    container_name: pgadmin-pg
+    container_name: pgadmin-json
     image: dpage/pgadmin4
     restart: always
     environment:

@@ -443,10 +443,9 @@ function bindingReplacement(bindableProperties, textWithBindings, convertTo) {
     for (let from of convertFromProps) {
       if (shouldReplaceBinding(newBoundValue, from, convertTo)) {
         const binding = bindableProperties.find(el => el[convertFrom] === from)
-        newBoundValue = newBoundValue.replace(
-          new RegExp(from, "gi"),
-          binding[convertTo]
-        )
+        while (newBoundValue.includes(from)) {
+          newBoundValue = newBoundValue.replace(from, binding[convertTo])
+        }
       }
     }
     result = result.replace(boundValue, newBoundValue)
