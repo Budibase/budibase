@@ -1,7 +1,6 @@
 <script>
   import { notifications, ModalContent, Dropzone, Body } from "@budibase/bbui"
   import { post } from "builderStore/api"
-  import { goto } from "@roxi/routify"
 
   let submitting = false
 
@@ -21,8 +20,8 @@
       if (!importResp.ok) {
         throw new Error(importJson.message)
       }
-      // now login
-      $goto("../auth")
+      // now reload to get to login
+      window.location.reload()
     } catch (error) {
       notifications.error(error)
       submitting = false

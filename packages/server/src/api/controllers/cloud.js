@@ -9,6 +9,7 @@ const {
 const { stringToReadStream } = require("../../utilities")
 const { getGlobalDBName, getGlobalDB } = require("@budibase/auth/tenancy")
 const { create } = require("./application")
+const { getDocParams, DocumentTypes } = require("../../db/utils")
 
 async function createApp(appName, appImport) {
   const ctx = {
@@ -39,6 +40,15 @@ exports.exportApps = async ctx => {
   ctx.body = sendTempFile(JSON.stringify(allDBs))
 }
 
+async function getAllDocType(db, docType) {
+  const response = await db.allDocs(
+    getDocParams(docType, null, {
+      include_docs: true,
+    })
+  )
+  return response.rows.map(row => row.doc)
+}
+
 exports.importApps = async ctx => {
   if (!env.SELF_HOSTED || env.MULTI_TENANCY) {
     ctx.throw(400, "Importing only allowed in self hosted environments.")
@@ -57,15 +67,21 @@ exports.importApps = async ctx => {
   const importFile = ctx.request.files.importFile
   const importString = readFileSync(importFile.path)
   const dbs = JSON.parse(importString)
-  const globalDb = dbs.global
+  const globalDbImport = dbs.global
   // remove from the list of apps
   delete dbs.global
-  const db = getGlobalDB()
+  const globalDb = getGlobalDB()
   // load the global db first
-  await db.load(stringToReadStream(globalDb))
+  await globalDb.load(stringToReadStream(globalDbImport))
   for (let [appName, appImport] of Object.entries(dbs)) {
     await createApp(appName, appImport)
   }
+  // once apps are created clean up the global db
+  let users = await getAllDocType(globalDb, DocumentTypes.USER)
+  for (let user of users) {
+    delete user.tenantId
+  }
+  await globalDb.bulkDocs(users)
   ctx.body = {
     message: "Apps successfully imported.",
   }
