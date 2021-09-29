@@ -53,6 +53,11 @@ exports.setTenantId = (
   // processed later in the chain
   tenantId = user.tenantId || header || tenantId
 
+  // Set the tenantId from the subdomain
+  if (!tenantId) {
+    tenantId = ctx.subdomains && ctx.subdomains[0]
+  }
+
   if (!tenantId && !allowNoTenant) {
     ctx.throw(403, "Tenant id not set")
   }
