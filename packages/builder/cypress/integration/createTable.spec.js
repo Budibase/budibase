@@ -1,4 +1,3 @@
-/*
 context("Create a Table", () => {
   before(() => {
     cy.login()
@@ -37,7 +36,7 @@ context("Create a Table", () => {
   it("edits a row", () => {
     cy.contains("button", "Edit").click({ force: true })
     cy.wait(1000)
-    cy.get(".spectrum-Modal input").type("RoverUpdated")
+    cy.get(".spectrum-Modal input").type("Updated")
     cy.contains("Save").click()
     cy.contains("RoverUpdated").should("have.text", "RoverUpdated")
   })
@@ -70,4 +69,3 @@ context("Create a Table", () => {
     cy.contains("dog").should("not.exist")
   })
 })
-*/
