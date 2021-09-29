@@ -1,4 +1,5 @@
 <script>
+  import { fade } from "svelte/transition"
   import { tables } from "stores/backend"
   import CreateRowButton from "./buttons/CreateRowButton.svelte"
   import CreateColumnButton from "./buttons/CreateColumnButton.svelte"
@@ -88,15 +89,19 @@
       {/key}
     {/if}
   </Table>
-  <div class="pagination">
-    <Pagination
-      page={$search.pageNumber + 1}
-      hasPrevPage={$search.hasPrevPage}
-      hasNextPage={$search.hasNextPage}
-      goToPrevPage={$search.loading ? null : search.prevPage}
-      goToNextPage={$search.loading ? null : search.nextPage}
-    />
-  </div>
+  {#key id}
+    <div in:fade={{ delay: 200, duration: 100 }}>
+      <div class="pagination">
+        <Pagination
+          page={$search.pageNumber + 1}
+          hasPrevPage={$search.hasPrevPage}
+          hasNextPage={$search.hasNextPage}
+          goToPrevPage={$search.loading ? null : search.prevPage}
+          goToNextPage={$search.loading ? null : search.nextPage}
+        />
+      </div>
+    </div>
+  {/key}
 </div>
 
 <style>

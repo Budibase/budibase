@@ -118,23 +118,25 @@
     </div>
   </div>
   {#key tableId}
-    <Table
-      {data}
-      {schema}
-      {loading}
-      {customRenderers}
-      {rowCount}
-      {disableSorting}
-      bind:selectedRows
-      allowSelectRows={allowEditing && !isUsersTable}
-      allowEditRows={allowEditing}
-      allowEditColumns={allowEditing && isInternal}
-      showAutoColumns={!hideAutocolumns}
-      on:editcolumn={e => editColumn(e.detail)}
-      on:editrow={e => editRow(e.detail)}
-      on:clickrelationship={e => selectRelationship(e.detail)}
-      on:sort
-    />
+    <div in:fade={{ delay: 200, duration: 100 }}>
+      <Table
+        {data}
+        {schema}
+        {loading}
+        {customRenderers}
+        {rowCount}
+        {disableSorting}
+        bind:selectedRows
+        allowSelectRows={allowEditing && !isUsersTable}
+        allowEditRows={allowEditing}
+        allowEditColumns={allowEditing && isInternal}
+        showAutoColumns={!hideAutocolumns}
+        on:editcolumn={e => editColumn(e.detail)}
+        on:editrow={e => editRow(e.detail)}
+        on:clickrelationship={e => selectRelationship(e.detail)}
+        on:sort
+      />
+    </div>
   {/key}
 </Layout>
 
