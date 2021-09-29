@@ -84,7 +84,7 @@ module MySQLModule {
         required: true,
       },
       ssl: {
-        type: DatasourceFieldTypes.OBJECT,
+        type: DatasourceFieldTypes.BOOLEAN,
         required: false,
       },
     },
