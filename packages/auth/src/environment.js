@@ -22,6 +22,7 @@ module.exports = {
   MULTI_TENANCY: process.env.MULTI_TENANCY,
   ACCOUNT_PORTAL_URL: process.env.ACCOUNT_PORTAL_URL,
   SELF_HOSTED: !!parseInt(process.env.SELF_HOSTED),
+  COOKIE_DOMAIN: process.env.COOKIE_DOMAIN,
   isTest,
   _set(key, value) {
     process.env[key] = value
