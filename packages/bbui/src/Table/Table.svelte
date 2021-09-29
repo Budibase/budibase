@@ -64,7 +64,7 @@
   )
 
   // Reset state when data changes
-  $: data.length, reset()
+  $: rows.length, reset()
   const reset = () => {
     nextScrollTop = 0
     scrollTop = 0
