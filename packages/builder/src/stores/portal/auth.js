@@ -80,6 +80,7 @@ export function createAuthStore() {
 
   return {
     subscribe: store.subscribe,
+    setOrganisation: setOrganisation,
     checkQueryString: async () => {
       const urlParams = new URLSearchParams(window.location.search)
       if (urlParams.has("tenantId")) {
