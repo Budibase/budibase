@@ -19,12 +19,14 @@
   export let filters = []
   export let bindings = []
   export let panel = BindingPanel
+  export let allowBindings = true
 
   const BannedTypes = ["link", "attachment", "formula"]
 
   $: fieldOptions = (schemaFields ?? [])
     .filter(field => !BannedTypes.includes(field.type))
     .map(field => field.name)
+  $: valueTypeOptions = allowBindings ? ["Value", "Binding"] : ["Value"]
 
   const addFilter = () => {
     filters = [
@@ -117,7 +119,7 @@
             />
             <Select
               disabled={filter.noValue || !filter.field}
-              options={["Value", "Binding"]}
+              options={valueTypeOptions}
               bind:value={filter.valueType}
               placeholder={null}
             />
