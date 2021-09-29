@@ -351,8 +351,8 @@ exports.bulkDestroy = async ctx => {
 }
 
 exports.search = async ctx => {
-  // Fetch the whole table when running tests, as search doesn't work
-  if (env.isTest()) {
+  // Fetch the whole table when running in cypress, as search doesn't work
+  if (env.isCypress()) {
     return { rows: await exports.fetch(ctx) }
   }
 
