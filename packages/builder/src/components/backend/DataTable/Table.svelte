@@ -105,7 +105,7 @@
         <Heading size="S">{title}</Heading>
       {/if}
       {#if loading}
-        <div transition:fade>
+        <div transition:fade|local>
           <Spinner size="10" />
         </div>
       {/if}
