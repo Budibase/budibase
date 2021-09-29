@@ -8,7 +8,7 @@
   $: actionProviders = getActionProviderComponents(
     $currentAsset,
     $store.selectedComponentId,
-    "RefreshDataProvider"
+    "RefreshDatasource"
   )
 </script>
 
