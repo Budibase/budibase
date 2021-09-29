@@ -5,7 +5,7 @@
   import Table from "./Table.svelte"
   import CalculateButton from "./buttons/CalculateButton.svelte"
   import GroupByButton from "./buttons/GroupByButton.svelte"
-  import FilterButton from "./buttons/FilterButton.svelte"
+  import ViewFilterButton from "./buttons/ViewFilterButton.svelte"
   import ExportButton from "./buttons/ExportButton.svelte"
   import ManageAccessButton from "./buttons/ManageAccessButton.svelte"
   import HideAutocolumnButton from "./buttons/HideAutocolumnButton.svelte"
@@ -61,7 +61,7 @@
   allowEditing={!view?.calculation}
   bind:hideAutocolumns
 >
-  <FilterButton {view} />
+  <ViewFilterButton {view} />
   <CalculateButton {view} />
   {#if view.calculation}
     <GroupByButton {view} />

@@ -164,7 +164,7 @@
     align-items: center;
     gap: var(--spacing-s);
   }
-  .popovers :global(.spectrum-ActionButton) {
+  .popovers :global(button) {
     font-weight: 600;
     margin-top: var(--spacing-l);
   }
