@@ -54,15 +54,13 @@ export function createAuthStore() {
     if (user) {
       analytics.activate().then(() => {
         analytics.identify(user._id, user)
-        if (user.size === "100+" || user.size === "10000+") {
-          analytics.showChat({
-            email: user.email,
-            created_at: user.createdAt || Date.now(),
-            name: user.name,
-            user_id: user._id,
-            tenant: user.tenantId,
-          })
-        }
+        analytics.showChat({
+          email: user.email,
+          created_at: user.createdAt || Date.now(),
+          name: user.name,
+          user_id: user._id,
+          tenant: user.tenantId,
+        })
       })
     }
   }

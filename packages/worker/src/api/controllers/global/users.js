@@ -1,8 +1,8 @@
 const {
   generateGlobalUserID,
   getGlobalUserParams,
-
   StaticDatabases,
+  generateNewUsageQuotaDoc,
 } = require("@budibase/auth/db")
 const { hash, getGlobalUserByEmail } = require("@budibase/auth").utils
 const { UserStatus, EmailTemplatePurpose } = require("../../../constants")
@@ -11,6 +11,7 @@ const { sendEmail } = require("../../../utilities/email")
 const { user: userCache } = require("@budibase/auth/cache")
 const { invalidateSessions } = require("@budibase/auth/sessions")
 const CouchDB = require("../../../db")
+const accounts = require("@budibase/auth/accounts")
 const {
   getGlobalDB,
   getTenantId,
@@ -18,6 +19,7 @@ const {
   tryAddTenant,
   updateTenantId,
 } = require("@budibase/auth/tenancy")
+const env = require("../../../environment")
 
 const PLATFORM_INFO_DB = StaticDatabases.PLATFORM_INFO.name
 
@@ -48,9 +50,26 @@ async function saveUser(
   // make sure another user isn't using the same email
   let dbUser
   if (email) {
+    // check budibase users inside the tenant
     dbUser = await getGlobalUserByEmail(email)
     if (dbUser != null && (dbUser._id !== _id || Array.isArray(dbUser))) {
       throw "Email address already in use."
+    }
+
+    // check budibase users in other tenants
+    if (env.MULTI_TENANCY) {
+      dbUser = await getTenantUser(email)
+      if (dbUser != null) {
+        throw "Email address already in use."
+      }
+    }
+
+    // check root account users in account portal
+    if (!env.SELF_HOSTED) {
+      const account = await accounts.getAccount(email)
+      if (account) {
+        throw "Email address already in use."
+      }
     }
   } else {
     dbUser = await db.get(_id)
@@ -138,6 +157,11 @@ exports.adminUser = async ctx => {
       include_docs: true,
     })
   )
+
+  // write usage quotas for cloud
+  if (!env.SELF_HOSTED) {
+    await db.post(generateNewUsageQuotaDoc())
+  }
 
   if (response.rows.some(row => row.doc.admin)) {
     ctx.throw(
@@ -261,13 +285,22 @@ exports.find = async ctx => {
   ctx.body = user
 }
 
-exports.tenantUserLookup = async ctx => {
-  const id = ctx.params.id
-  // lookup, could be email or userId, either will return a doc
+// lookup, could be email or userId, either will return a doc
+const getTenantUser = async identifier => {
   const db = new CouchDB(PLATFORM_INFO_DB)
   try {
-    ctx.body = await db.get(id)
+    return await db.get(identifier)
   } catch (err) {
+    return null
+  }
+}
+
+exports.tenantUserLookup = async ctx => {
+  const id = ctx.params.id
+  const user = await getTenantUser(id)
+  if (user) {
+    ctx.body = user
+  } else {
     ctx.throw(400, "No tenant user found.")
   }
 }

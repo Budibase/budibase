@@ -148,7 +148,7 @@ function buildRead(knex: Knex, json: QueryJson, limit: number): KnexQuery {
   if (!resource) {
     resource = { fields: [] }
   }
-  let selectStatement: string|string[] = "*"
+  let selectStatement: string | string[] = "*"
   // handle select
   if (resource.fields && resource.fields.length > 0) {
     // select the resources as the format "table.columnName" - this is what is provided
