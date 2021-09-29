@@ -67,7 +67,7 @@ async function saveUser(
     // check root account users in account portal
     if (!env.SELF_HOSTED) {
       const account = await accounts.getAccount(email)
-      if (account?.verified) {
+      if (account && account.verified) {
         throw `Email address ${email} already in use.`
       }
     }
