@@ -12,7 +12,12 @@
     }
 
     // redirect to account portal for authentication in the cloud
-    if (!$auth.user && $admin.cloud && $admin.accountPortalUrl) {
+    if (
+      !$auth.user &&
+      $admin.cloud &&
+      $admin.accountPortalUrl &&
+      !$admin?.checklist?.sso?.checked
+    ) {
       window.location.href = $admin.accountPortalUrl
     }
   })

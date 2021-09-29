@@ -3,8 +3,6 @@ import PosthogClient from "./PosthogClient"
 import IntercomClient from "./IntercomClient"
 import SentryClient from "./SentryClient"
 import { Events } from "./constants"
-import { auth } from "stores/portal"
-import { get } from "svelte/store"
 
 const posthog = new PosthogClient(
   process.env.POSTHOG_TOKEN,
@@ -19,27 +17,13 @@ class AnalyticsHub {
   }
 
   async activate() {
-    // Setting the analytics env var off in the backend overrides org/tenant settings
     const analyticsStatus = await api.get("/api/analytics")
     const json = await analyticsStatus.json()
 
-    // Multitenancy disabled on the backend
+    // Analytics disabled
     if (!json.enabled) return
 
-    const tenantId = get(auth).tenantId
-
-    if (tenantId) {
-      const res = await api.get(
-        `/api/global/configs/public?tenantId=${tenantId}`
-      )
-      const orgJson = await res.json()
-
-      // analytics opted out for the tenant
-      if (orgJson.config?.analytics === false) return
-    }
-
     this.clients.forEach(client => client.init())
-    this.enabled = true
   }
 
   identify(id, metadata) {
