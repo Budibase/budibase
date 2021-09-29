@@ -95,7 +95,7 @@
     <Layout noPadding>
       <Body size="S">
         {#if !filters?.length}
-          Add your first filter column.
+          Add your first filter expression.
         {:else}
           Results are filtered to only those which match all of the following
           constraints.

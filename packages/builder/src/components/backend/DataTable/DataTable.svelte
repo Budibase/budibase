@@ -14,25 +14,21 @@
   import { fetchTableData } from "helpers/fetchTableData"
   import { Pagination } from "@budibase/bbui"
 
-  const search = fetchTableData()
   let hideAutocolumns = true
-  let filters
 
   $: isUsersTable = $tables.selected?._id === TableNames.USERS
-  $: title = $tables.selected?.name
   $: schema = $tables.selected?.schema
   $: type = $tables.selected?.type
   $: isInternal = type !== "external"
   $: id = $tables.selected?._id
+  $: search = searchTable(id)
   $: columnOptions = Object.keys($search.schema || {})
-  $: fetchTable(id, filters)
 
   // Fetches new data whenever the table changes
-  const fetchTable = (tableId, filters) => {
-    search.update({
+  const searchTable = tableId => {
+    return fetchTableData({
       tableId,
       schema,
-      filters,
       limit: 10,
       paginate: true,
     })
@@ -45,14 +41,21 @@
       sortOrder: e.detail.order,
     })
   }
+
+  // Fetch data whenever filters change
+  const onFilter = e => {
+    search.update({
+      filters: e.detail,
+    })
+  }
 </script>
 
 <div>
   <Table
-    {title}
+    title={$tables.selected?.name}
     {schema}
     {type}
-    tableId={$tables.selected?._id}
+    tableId={id}
     data={$search.rows}
     bind:hideAutocolumns
     loading={$search.loading}
@@ -80,11 +83,9 @@
       <HideAutocolumnButton bind:hideAutocolumns />
       <!-- always have the export last -->
       <ExportButton view={$tables.selected?._id} />
-      <TableFilterButton
-        {schema}
-        {filters}
-        on:change={e => (filters = e.detail)}
-      />
+      {#key id}
+        <TableFilterButton {schema} on:change={onFilter} />
+      {/key}
     {/if}
   </Table>
   <div class="pagination">
