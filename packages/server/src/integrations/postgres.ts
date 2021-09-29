@@ -126,7 +126,7 @@ module PostgresModule {
     private readonly config: PostgresConfig
 
     COLUMNS_SQL =
-      "select * from information_schema.columns where table_schema = 'public'"
+      "select * from information_schema.columns where not table_schema = 'information_schema' and not table_schema = 'pg_catalog'"
 
     PRIMARY_KEYS_SQL = `
     select tc.table_schema, tc.table_name, kc.column_name as primary_key 
