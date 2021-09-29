@@ -53,22 +53,22 @@ async function saveUser(
     // check budibase users inside the tenant
     dbUser = await getGlobalUserByEmail(email)
     if (dbUser != null && (dbUser._id !== _id || Array.isArray(dbUser))) {
-      throw "Email address already in use."
+      throw `Email address ${email} already in use.`
     }
 
     // check budibase users in other tenants
     if (env.MULTI_TENANCY) {
       dbUser = await getTenantUser(email)
       if (dbUser != null) {
-        throw "Email address already in use."
+        throw `Email address ${email} already in use.`
       }
     }
 
     // check root account users in account portal
     if (!env.SELF_HOSTED) {
       const account = await accounts.getAccount(email)
-      if (account) {
-        throw "Email address already in use."
+      if (account && account.verified) {
+        throw `Email address ${email} already in use.`
       }
     }
   } else {
