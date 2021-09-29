@@ -1,5 +1,7 @@
 const CouchDB = require("../../../db")
 const { StaticDatabases } = require("@budibase/auth/db")
+const { getTenantId } = require("@budibase/auth/tenancy")
+const { deleteTenant } = require("@budibase/auth/deprovision")
 
 exports.exists = async ctx => {
   const tenantId = ctx.request.params
@@ -30,4 +32,20 @@ exports.fetch = async ctx => {
     // if error it doesn't exist
   }
   ctx.body = tenants
+}
+
+exports.delete = async ctx => {
+  const tenantId = getTenantId()
+
+  if (ctx.params.tenantId !== tenantId) {
+    ctx.throw(403, "Unauthorized")
+  }
+
+  try {
+    await deleteTenant(tenantId)
+    ctx.status = 204
+  } catch (err) {
+    ctx.log.error(err)
+    throw err
+  }
 }
