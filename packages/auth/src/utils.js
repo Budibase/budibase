@@ -67,24 +67,22 @@ exports.getCookie = (ctx, name) => {
  * @param {string|object} value The value of cookie which will be set.
  */
 exports.setCookie = (ctx, value, name = "builder") => {
-  if (!value) {
-    ctx.cookies.set(name)
-  } else {
+  if (value) {
     value = jwt.sign(value, options.secretOrKey)
-
-    const config = {
-      maxAge: Number.MAX_SAFE_INTEGER,
-      path: "/",
-      httpOnly: false,
-      overwrite: true,
-    }
-
-    if (environment.COOKIE_DOMAIN) {
-      config.domain = environment.COOKIE_DOMAIN
-    }
-
-    ctx.cookies.set(name, value, config)
   }
+
+  const config = {
+    maxAge: Number.MAX_SAFE_INTEGER,
+    path: "/",
+    httpOnly: false,
+    overwrite: true,
+  }
+
+  if (environment.COOKIE_DOMAIN) {
+    config.domain = environment.COOKIE_DOMAIN
+  }
+
+  ctx.cookies.set(name, value, config)
 }
 
 /**
