@@ -93,32 +93,70 @@ const getGlobalUserParams = (globalId, otherProps = {}) => {
   }
 }
 
-exports.deleteTenant = async tenantId => {
-  const globalDb = exports.getGlobalDB()
+const removeTenantFromInfoDB = async tenantId => {
+  try {
+    const infoDb = getDB(PLATFORM_INFO_DB)
+    let tenants = await infoDb.get(TENANT_DOC)
+    tenants.tenantIds = tenants.tenantIds.filter(id => id !== tenantId)
 
-  let promises = []
-  // remove the tenant entry from global info
-  const infoDb = getDB(PLATFORM_INFO_DB)
-  let tenants = await infoDb.get(TENANT_DOC)
-  tenants.tenantIds = tenants.tenantIds.filter(id => id !== tenantId)
-  promises.push(infoDb.put(tenants))
+    await infoDb.put(tenants)
+  } catch (err) {
+    console.error(`Error removing tenant ${tenantId} from info db`, err)
+    throw err
+  }
+}
 
-  // remove the users
-  const allUsers = await globalDb.allDocs(
-    getGlobalUserParams(null, {
+const removeUsersFromInfoDB = async tenantId => {
+  try {
+    const globalDb = exports.getGlobalDB(tenantId)
+    const infoDb = getDB(PLATFORM_INFO_DB)
+    const allUsers = await globalDb.allDocs(
+      getGlobalUserParams(null, {
+        include_docs: true,
+      })
+    )
+    const allEmails = allUsers.rows.map(row => row.doc.email)
+    // get the id docs
+    let keys = allUsers.rows.map(row => row.id)
+    // and the email docs
+    keys = keys.concat(allEmails)
+    // retrieve the docs and delete them
+    const userDocs = await infoDb.allDocs({
+      keys,
       include_docs: true,
     })
-  )
-  allUsers.rows.map(row => {
-    promises.push(infoDb.remove(row.id, row.value.rev))
-    promises.push(infoDb.remove(row.doc.email, row.value.rev))
-  })
+    const toDelete = userDocs.rows.map(row => {
+      return {
+        ...row.doc,
+        _deleted: true,
+      }
+    })
+    await infoDb.bulkDocs(toDelete)
+  } catch (err) {
+    console.error(`Error removing tenant ${tenantId} users from info db`, err)
+    throw err
+  }
+}
 
-  // remove the global db
-  promises.push(globalDb.destroy())
+const removeGlobalDB = async tenantId => {
+  try {
+    const globalDb = exports.getGlobalDB(tenantId)
+    await globalDb.destroy()
+  } catch (err) {
+    console.error(`Error removing tenant ${tenantId} users from info db`, err)
+    throw err
+  }
+}
 
-  await Promise.all(promises)
-  // TODO: Delete all apps
+const removeTenantApps = async () => {
+  // TODO
+}
+
+exports.deleteTenant = async tenantId => {
+  await removeTenantFromInfoDB(tenantId)
+  await removeUsersFromInfoDB(tenantId)
+  await removeGlobalDB(tenantId)
+  await removeTenantApps(tenantId)
 }
 
 exports.getGlobalDB = (tenantId = null) => {

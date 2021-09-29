@@ -40,5 +40,11 @@ exports.delete = async ctx => {
     ctx.throw(403, "Unauthorized")
   }
 
-  await deleteTenant(tenantId)
+  try {
+    await deleteTenant(tenantId)
+    ctx.status = 204
+  } catch (err) {
+    ctx.log.error(err)
+    throw err
+  }
 }
