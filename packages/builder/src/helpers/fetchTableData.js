@@ -6,7 +6,7 @@ import { buildLuceneQuery } from "./lucene"
 
 const defaultOptions = {
   tableId: null,
-  filter: null,
+  filters: null,
   limit: 10,
   sortColumn: null,
   sortOrder: "ascending",
@@ -65,7 +65,7 @@ export const fetchTableData = opts => {
 
   // Fetches a fresh set of results from the server
   const fetchData = async () => {
-    const { tableId, schema, sortColumn, filter } = options
+    const { tableId, schema, sortColumn, filters } = options
 
     // Ensure table ID exists
     if (!tableId) {
@@ -113,7 +113,7 @@ export const fetchTableData = opts => {
     sortType = type === "number" ? "number" : "string"
 
     // Build the lucene query
-    query = buildLuceneQuery(filter)
+    query = buildLuceneQuery(filters)
 
     // Actually fetch data
     const page = await fetchPage()
