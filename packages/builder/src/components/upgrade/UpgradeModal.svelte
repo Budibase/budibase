@@ -4,7 +4,7 @@
   let upgradeModal
 
   const onConfirm = () => {
-    window.open("https://accounts.budibase.com/install", "_blank")
+    window.open("https://account.budibase.app/portal/install", "_blank")
   }
 </script>
 
