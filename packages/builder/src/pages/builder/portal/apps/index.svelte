@@ -35,6 +35,7 @@
   let unpublishModal
   let creatingApp = false
   let loaded = false
+  let cloud = $admin.cloud
 
   $: enrichedApps = enrichApps($apps, $auth.user, sortBy)
 
@@ -199,7 +200,9 @@
       <div class="title">
         <Heading>Apps</Heading>
         <ButtonGroup>
-          <Button secondary on:click={initiateAppsExport}>Export apps</Button>
+          {#if cloud}
+            <Button secondary on:click={initiateAppsExport}>Export apps</Button>
+          {/if}
           <Button secondary on:click={initiateAppImport}>Import app</Button>
           <Button cta on:click={initiateAppCreation}>Create app</Button>
         </ButtonGroup>

@@ -65,7 +65,7 @@ async function saveUser(
     }
 
     // check root account users in account portal
-    if (!env.SELF_HOSTED) {
+    if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
       const account = await accounts.getAccount(email)
       if (account) {
         throw "Email address already in use."
@@ -132,7 +132,7 @@ exports.save = async ctx => {
 }
 
 const parseBooleanParam = param => {
-  if (param && param == "false") {
+  if (param && param === "false") {
     return false
   } else {
     return true
@@ -160,6 +160,17 @@ exports.adminUser = async ctx => {
 
   // write usage quotas for cloud
   if (!env.SELF_HOSTED) {
+    // could be a scenario where it exists, make sure its clean
+    try {
+      const usageQuota = await db.get(
+        StaticDatabases.PLATFORM_INFO.docs.usageQuota
+      )
+      if (usageQuota) {
+        await db.remove(usageQuota._id, usageQuota._rev)
+      }
+    } catch (err) {
+      // don't worry about errors
+    }
     await db.post(generateNewUsageQuotaDoc())
   }
 
