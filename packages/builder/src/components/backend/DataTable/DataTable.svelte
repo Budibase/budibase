@@ -49,6 +49,12 @@
       filters: e.detail,
     })
   }
+
+  const onUpdateColumns = () => {
+    search.update({
+      schema,
+    })
+  }
 </script>
 
 <div>
@@ -63,9 +69,11 @@
     on:sort={onSort}
     allowEditing
     disableSorting
+    on:updatecolumns={onUpdateColumns}
+    on:updaterows={search.refresh}
   >
     {#if isInternal}
-      <CreateColumnButton />
+      <CreateColumnButton on:updatecolumns={onUpdateColumns} />
     {/if}
     {#if schema && Object.keys(schema).length > 0}
       {#if !isUsersTable}

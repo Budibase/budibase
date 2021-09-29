@@ -113,12 +113,12 @@
     <div class="popovers">
       <slot />
       {#if !isUsersTable && selectedRows.length > 0}
-        <DeleteRowsButton {selectedRows} {deleteRows} />
+        <DeleteRowsButton on:updaterows {selectedRows} {deleteRows} />
       {/if}
     </div>
   </div>
   {#key tableId}
-    <div in:fade={{ delay: 200, duration: 100 }}>
+    <div class="table-wrapper" in:fade={{ delay: 200, duration: 100 }}>
       <Table
         {data}
         {schema}
@@ -141,10 +141,14 @@
 </Layout>
 
 <Modal bind:this={editRowModal}>
-  <svelte:component this={editRowComponent} row={editableRow} />
+  <svelte:component this={editRowComponent} on:updaterows row={editableRow} />
 </Modal>
 <Modal bind:this={editColumnModal}>
-  <CreateEditColumn field={editableColumn} onClosed={editColumnModal.hide} />
+  <CreateEditColumn
+    field={editableColumn}
+    on:updatecolumns
+    onClosed={editColumnModal.hide}
+  />
 </Modal>
 
 <style>
@@ -157,6 +161,9 @@
   }
   .table-title > div {
     margin-left: var(--spacing-xs);
+  }
+  .table-wrapper {
+    overflow: hidden;
   }
 
   .popovers {
