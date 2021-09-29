@@ -30,7 +30,11 @@
     onConfirm={() => dispatch("change", tempValue)}
   >
     <div class="wrapper">
-      <FilterDrawer bind:filters={tempValue} {schemaFields} />
+      <FilterDrawer
+        allowBindings={false}
+        bind:filters={tempValue}
+        {schemaFields}
+      />
     </div>
   </ModalContent>
 </Modal>
