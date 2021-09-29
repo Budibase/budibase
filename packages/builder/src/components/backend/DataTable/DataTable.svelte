@@ -50,6 +50,7 @@
     })
   }
 
+  // Fetch data whenever schema changes
   const onUpdateColumns = () => {
     search.update({
       schema,
@@ -78,6 +79,7 @@
     {#if schema && Object.keys(schema).length > 0}
       {#if !isUsersTable}
         <CreateRowButton
+          on:updaterows={search.refresh}
           title={"Create row"}
           modalContentComponent={CreateEditRow}
         />
