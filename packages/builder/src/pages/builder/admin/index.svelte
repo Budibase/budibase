@@ -22,6 +22,7 @@
 
   $: tenantId = $auth.tenantId
   $: multiTenancyEnabled = $admin.multiTenancy
+  $: cloud = $admin.cloud
 
   async function save() {
     try {
@@ -72,7 +73,7 @@
           >
             Change organisation
           </ActionButton>
-        {:else}
+        {:else if !cloud}
           <ActionButton
             quiet
             on:click={() => {
