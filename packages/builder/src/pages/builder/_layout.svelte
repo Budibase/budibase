@@ -17,7 +17,7 @@
 
     if (!tenantId.includes("localhost:")) {
       // user doesn't have permission to access this tenant - kick them out
-      if (user && user.tenantId && user.tenantId !== tenantId) {
+      if (user?.tenantId !== tenantId) {
         await auth.logout()
         await auth.setOrganisation(null)
       } else {
