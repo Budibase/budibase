@@ -9,5 +9,5 @@
   Create column
 </ActionButton>
 <Modal bind:this={modal}>
-  <CreateEditColumn />
+  <CreateEditColumn on:updatecolumns />
 </Modal>
