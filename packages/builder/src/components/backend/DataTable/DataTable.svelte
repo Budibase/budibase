@@ -56,6 +56,12 @@
       schema,
     })
   }
+
+  // Fetch data whenever rows are modified. Unfortunately we have to lose
+  // our pagination place, as our bookmarks will have shifted.
+  const onUpdateRows = () => {
+    search.update()
+  }
 </script>
 
 <div>
@@ -71,7 +77,7 @@
     allowEditing
     disableSorting
     on:updatecolumns={onUpdateColumns}
-    on:updaterows={search.refresh}
+    on:updaterows={onUpdateRows}
   >
     {#if isInternal}
       <CreateColumnButton on:updatecolumns={onUpdateColumns} />
@@ -79,7 +85,7 @@
     {#if schema && Object.keys(schema).length > 0}
       {#if !isUsersTable}
         <CreateRowButton
-          on:updaterows={search.refresh}
+          on:updaterows={onUpdateRows}
           title={"Create row"}
           modalContentComponent={CreateEditRow}
         />
