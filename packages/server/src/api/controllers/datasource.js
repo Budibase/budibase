@@ -75,7 +75,6 @@ exports.update = async function (ctx) {
 }
 
 exports.save = async function (ctx) {
-  console.log(ctx.request.body)
   const db = new CouchDB(ctx.appId)
   const plus = ctx.request.body.datasource.plus
   const fetchSchema = ctx.request.body.fetchSchema
