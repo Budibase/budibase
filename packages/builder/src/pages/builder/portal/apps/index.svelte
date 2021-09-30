@@ -40,7 +40,7 @@
 
   $: enrichedApps = enrichApps($apps, $auth.user, sortBy)
   $: filteredApps = enrichedApps.filter(app =>
-    new RegExp(searchTerm, "ig").test(app?.name)
+    app?.name?.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   const enrichApps = (apps, user, sortBy) => {
