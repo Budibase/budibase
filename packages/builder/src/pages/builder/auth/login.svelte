@@ -22,6 +22,7 @@
 
   $: company = $organisation.company || "Budibase"
   $: multiTenancyEnabled = $admin.multiTenancy
+  $: cloud = $admin.cloud
 
   async function login() {
     try {
@@ -84,7 +85,7 @@
         <ActionButton quiet on:click={() => $goto("./forgot")}>
           Forgot password?
         </ActionButton>
-        {#if multiTenancyEnabled}
+        {#if multiTenancyEnabled && !cloud}
           <ActionButton
             quiet
             on:click={() => {
