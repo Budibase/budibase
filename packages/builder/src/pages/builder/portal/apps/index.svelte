@@ -15,8 +15,7 @@
   } from "@budibase/bbui"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
   import UpdateAppModal from "components/start/UpdateAppModal.svelte"
-  import api, { del } from "builderStore/api"
-  import analytics from "analytics"
+  import { del } from "builderStore/api"
   import { onMount } from "svelte"
   import { apps, auth, admin } from "stores/portal"
   import download from "downloadjs"
@@ -36,6 +35,7 @@
   let unpublishModal
   let creatingApp = false
   let loaded = false
+  let cloud = $admin.cloud
 
   $: enrichedApps = enrichApps($apps, $auth.user, sortBy)
 
@@ -66,17 +66,18 @@
     }
   }
 
-  const checkKeys = async () => {
-    const response = await api.get(`/api/keys/`)
-    const keys = await response.json()
-    if (keys.userId) {
-      analytics.identify(keys.userId)
-    }
-  }
-
   const initiateAppCreation = () => {
     creationModal.show()
     creatingApp = true
+  }
+
+  const initiateAppsExport = () => {
+    try {
+      download(`/api/cloud/export`)
+      notifications.success("Apps exported successfully")
+    } catch (err) {
+      notifications.error(`Error exporting apps: ${err}`)
+    }
   }
 
   const initiateAppImport = () => {
@@ -188,7 +189,6 @@
   }
 
   onMount(async () => {
-    checkKeys()
     await apps.load()
     loaded = true
   })
@@ -200,6 +200,9 @@
       <div class="title">
         <Heading>Apps</Heading>
         <ButtonGroup>
+          {#if cloud}
+            <Button secondary on:click={initiateAppsExport}>Export apps</Button>
+          {/if}
           <Button secondary on:click={initiateAppImport}>Import app</Button>
           <Button cta on:click={initiateAppCreation}>Create app</Button>
         </ButtonGroup>

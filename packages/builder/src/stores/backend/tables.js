@@ -95,7 +95,13 @@ export function createTablesStore() {
         selected: {},
       }))
     },
-    saveField: ({ originalName, field, primaryDisplay = false, indexes }) => {
+    saveField: async ({
+      originalName,
+      field,
+      primaryDisplay = false,
+      indexes,
+    }) => {
+      let promise
       update(state => {
         // delete the original if renaming
         // need to handle if the column had no name, empty string
@@ -126,9 +132,12 @@ export function createTablesStore() {
           ...state.draft.schema,
           [field.name]: cloneDeep(field),
         }
-        save(state.draft)
+        promise = save(state.draft)
         return state
       })
+      if (promise) {
+        await promise
+      }
     },
     deleteField: field => {
       update(state => {

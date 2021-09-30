@@ -10,12 +10,21 @@ const userController = require("../user")
 const {
   inputProcessing,
   outputProcessing,
+  processAutoColumn,
 } = require("../../../utilities/rowProcessor")
 const { FieldTypes } = require("../../../constants")
 const { isEqual } = require("lodash")
 const { validate, findRow } = require("./utils")
 const { fullSearch, paginatedSearch } = require("./internalSearch")
 const { getGlobalUsersFromMetadata } = require("../../../utilities/global")
+const inMemoryViews = require("../../../db/inMemoryView")
+const env = require("../../../environment")
+const {
+  migrateToInMemoryView,
+  migrateToDesignView,
+  getFromDesignDoc,
+  getFromMemoryDoc,
+} = require("../view/utils")
 
 const CALCULATION_TYPES = {
   SUM: "sum",
@@ -25,15 +34,73 @@ const CALCULATION_TYPES = {
 
 async function storeResponse(ctx, db, row, oldTable, table) {
   row.type = "row"
-  const response = await db.put(row)
   // don't worry about rev, tables handle rev/lastID updates
+  // if another row has been written since processing this will
+  // handle the auto ID clash
   if (!isEqual(oldTable, table)) {
-    await db.put(table)
+    try {
+      await db.put(table)
+    } catch (err) {
+      if (err.status === 409) {
+        const updatedTable = await db.get(table._id)
+        let response = processAutoColumn(null, updatedTable, row, {
+          reprocessing: true,
+        })
+        await db.put(response.table)
+        row = response.row
+      } else {
+        throw err
+      }
+    }
   }
+  const response = await db.put(row)
   row._rev = response.rev
   // process the row before return, to include relationships
   row = await outputProcessing(ctx, table, row, { squash: false })
   return { row, table }
+}
+
+// doesn't do the outputProcessing
+async function getRawTableData(ctx, db, tableId) {
+  let rows
+  if (tableId === InternalTables.USER_METADATA) {
+    await userController.fetchMetadata(ctx)
+    rows = ctx.body
+  } else {
+    const response = await db.allDocs(
+      getRowParams(tableId, null, {
+        include_docs: true,
+      })
+    )
+    rows = response.rows.map(row => row.doc)
+  }
+  return rows
+}
+
+async function getView(db, viewName) {
+  let mainGetter = env.SELF_HOSTED ? getFromDesignDoc : getFromMemoryDoc
+  let secondaryGetter = env.SELF_HOSTED ? getFromMemoryDoc : getFromDesignDoc
+  let migration = env.SELF_HOSTED ? migrateToDesignView : migrateToInMemoryView
+  let viewInfo,
+    migrate = false
+  try {
+    viewInfo = await mainGetter(db, viewName)
+  } catch (err) {
+    // check if it can be retrieved from design doc (needs migrated)
+    if (err.status !== 404) {
+      viewInfo = null
+    } else {
+      viewInfo = await secondaryGetter(db, viewName)
+      migrate = !!viewInfo
+    }
+  }
+  if (migrate) {
+    await migration(db, viewName)
+  }
+  if (!viewInfo) {
+    throw "View does not exist."
+  }
+  return viewInfo
 }
 
 exports.patch = async ctx => {
@@ -139,15 +206,18 @@ exports.fetchView = async ctx => {
 
   const db = new CouchDB(appId)
   const { calculation, group, field } = ctx.query
-  const designDoc = await db.get("_design/database")
-  const viewInfo = designDoc.views[viewName]
-  if (!viewInfo) {
-    throw "View does not exist."
+  const viewInfo = await getView(db, viewName)
+  let response
+  if (env.SELF_HOSTED) {
+    response = await db.query(`database/${viewName}`, {
+      include_docs: !calculation,
+      group: !!group,
+    })
+  } else {
+    const tableId = viewInfo.meta.tableId
+    const data = await getRawTableData(ctx, db, tableId)
+    response = await inMemoryViews.runView(viewInfo, calculation, group, data)
   }
-  const response = await db.query(`database/${viewName}`, {
-    include_docs: !calculation,
-    group: !!group,
-  })
 
   let rows
   if (!calculation) {
@@ -191,19 +261,9 @@ exports.fetch = async ctx => {
   const appId = ctx.appId
   const db = new CouchDB(appId)
 
-  let rows,
-    table = await db.get(ctx.params.tableId)
-  if (ctx.params.tableId === InternalTables.USER_METADATA) {
-    await userController.fetchMetadata(ctx)
-    rows = ctx.body
-  } else {
-    const response = await db.allDocs(
-      getRowParams(ctx.params.tableId, null, {
-        include_docs: true,
-      })
-    )
-    rows = response.rows.map(row => row.doc)
-  }
+  const tableId = ctx.params.tableId
+  let table = await db.get(tableId)
+  let rows = await getRawTableData(ctx, db, tableId)
   return outputProcessing(ctx, table, rows)
 }
 
@@ -286,6 +346,11 @@ exports.bulkDestroy = async ctx => {
 }
 
 exports.search = async ctx => {
+  // Fetch the whole table when running in cypress, as search doesn't work
+  if (env.isCypress()) {
+    return { rows: await exports.fetch(ctx) }
+  }
+
   const appId = ctx.appId
   const { tableId } = ctx.params
   const db = new CouchDB(appId)

@@ -1,6 +1,7 @@
 import { derived, writable, get } from "svelte/store"
 import api from "../../builderStore/api"
 import { admin } from "stores/portal"
+import analytics from "analytics"
 
 export function createAuthStore() {
   const auth = writable({
@@ -49,6 +50,19 @@ export function createAuthStore() {
       }
       return store
     })
+
+    if (user) {
+      analytics.activate().then(() => {
+        analytics.identify(user._id, user)
+        analytics.showChat({
+          email: user.email,
+          created_at: user.createdAt || Date.now(),
+          name: user.name,
+          user_id: user._id,
+          tenant: user.tenantId,
+        })
+      })
+    }
   }
 
   async function setOrganisation(tenantId) {
@@ -66,6 +80,7 @@ export function createAuthStore() {
 
   return {
     subscribe: store.subscribe,
+    setOrganisation: setOrganisation,
     checkQueryString: async () => {
       const urlParams = new URLSearchParams(window.location.search)
       if (urlParams.has("tenantId")) {

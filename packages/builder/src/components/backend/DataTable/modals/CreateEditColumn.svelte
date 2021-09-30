@@ -10,6 +10,7 @@
     ModalContent,
     Context,
   } from "@budibase/bbui"
+  import { createEventDispatcher } from "svelte"
   import { cloneDeep } from "lodash/fp"
   import { tables } from "stores/backend"
   import { TableNames, UNEDITABLE_USER_FIELDS } from "constants"
@@ -30,8 +31,9 @@
   const AUTO_TYPE = "auto"
   const FORMULA_TYPE = FIELDS.FORMULA.type
   const LINK_TYPE = FIELDS.LINK.type
-  let fieldDefinitions = cloneDeep(FIELDS)
+  const dispatch = createEventDispatcher()
   const { hide } = getContext(Context.Modal)
+  let fieldDefinitions = cloneDeep(FIELDS)
 
   export let field = {
     type: "string",
@@ -81,12 +83,13 @@
     if (field.type === AUTO_TYPE) {
       field = buildAutoColumn($tables.draft.name, field.name, field.subtype)
     }
-    tables.saveField({
+    await tables.saveField({
       originalName,
       field,
       primaryDisplay,
       indexes,
     })
+    dispatch("updatecolumns")
   }
 
   function deleteColumn() {
@@ -99,6 +102,7 @@
       hide()
       deletion = false
     }
+    dispatch("updatecolumns")
   }
 
   function handleTypeChange(event) {

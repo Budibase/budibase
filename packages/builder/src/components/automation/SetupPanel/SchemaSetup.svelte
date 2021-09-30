@@ -5,10 +5,14 @@
   const dispatch = createEventDispatcher()
 
   export let value = {}
-  $: fieldsArray = Object.entries(value).map(([name, type]) => ({
-    name,
-    type,
-  }))
+
+  $: fieldsArray = value
+    ? Object.entries(value).map(([name, type]) => ({
+        name,
+        type,
+      }))
+    : []
+
   const typeOptions = [
     {
       label: "Text",
@@ -73,7 +77,7 @@
       <Select
         value={field.type}
         on:change={e => {
-          value[field.name] = e.target.value
+          value[field.name] = e.detail
           dispatch("change", value)
         }}
         options={typeOptions}
@@ -88,9 +92,7 @@
 
 <style>
   .root {
-    position: relative;
     max-width: 100%;
-    overflow-x: auto;
     /* so we can show the "+" button beside the "fields" label*/
     top: -26px;
   }
@@ -110,7 +112,6 @@
     /*grid-template-rows: auto auto;
     grid-template-columns: auto;*/
     position: relative;
-    overflow: hidden;
   }
 
   .field :global(select) {

@@ -1,8 +1,8 @@
 const {
   generateGlobalUserID,
   getGlobalUserParams,
-
   StaticDatabases,
+  generateNewUsageQuotaDoc,
 } = require("@budibase/auth/db")
 const { hash, getGlobalUserByEmail } = require("@budibase/auth").utils
 const { UserStatus, EmailTemplatePurpose } = require("../../../constants")
@@ -11,6 +11,7 @@ const { sendEmail } = require("../../../utilities/email")
 const { user: userCache } = require("@budibase/auth/cache")
 const { invalidateSessions } = require("@budibase/auth/sessions")
 const CouchDB = require("../../../db")
+const accounts = require("@budibase/auth/accounts")
 const {
   getGlobalDB,
   getTenantId,
@@ -18,6 +19,8 @@ const {
   tryAddTenant,
   updateTenantId,
 } = require("@budibase/auth/tenancy")
+const { removeUserFromInfoDB } = require("@budibase/auth/deprovision")
+const env = require("../../../environment")
 
 const PLATFORM_INFO_DB = StaticDatabases.PLATFORM_INFO.name
 
@@ -31,7 +34,12 @@ async function allUsers() {
   return response.rows.map(row => row.doc)
 }
 
-async function saveUser(user, tenantId, hashPassword = true) {
+async function saveUser(
+  user,
+  tenantId,
+  hashPassword = true,
+  requirePassword = true
+) {
   if (!tenantId) {
     throw "No tenancy specified."
   }
@@ -43,9 +51,26 @@ async function saveUser(user, tenantId, hashPassword = true) {
   // make sure another user isn't using the same email
   let dbUser
   if (email) {
+    // check budibase users inside the tenant
     dbUser = await getGlobalUserByEmail(email)
     if (dbUser != null && (dbUser._id !== _id || Array.isArray(dbUser))) {
-      throw "Email address already in use."
+      throw `Email address ${email} already in use.`
+    }
+
+    // check budibase users in other tenants
+    if (env.MULTI_TENANCY) {
+      dbUser = await getTenantUser(email)
+      if (dbUser != null && dbUser.tenantId !== tenantId) {
+        throw `Email address ${email} already in use.`
+      }
+    }
+
+    // check root account users in account portal
+    if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
+      const account = await accounts.getAccount(email)
+      if (account && account.verified && account.tenantId !== tenantId) {
+        throw `Email address ${email} already in use.`
+      }
     }
   } else {
     dbUser = await db.get(_id)
@@ -57,12 +82,13 @@ async function saveUser(user, tenantId, hashPassword = true) {
     hashedPassword = hashPassword ? await hash(password) : password
   } else if (dbUser) {
     hashedPassword = dbUser.password
-  } else {
+  } else if (requirePassword) {
     throw "Password must be specified."
   }
 
   _id = _id || generateGlobalUserID()
   user = {
+    createdAt: Date.now(),
     ...dbUser,
     ...user,
     _id,
@@ -106,16 +132,21 @@ exports.save = async ctx => {
   }
 }
 
+const parseBooleanParam = param => {
+  if (param && param === "false") {
+    return false
+  } else {
+    return true
+  }
+}
+
 exports.adminUser = async ctx => {
   const { email, password, tenantId } = ctx.request.body
 
   // account portal sends a pre-hashed password - honour param to prevent double hashing
-  let hashPassword = ctx.request.query.hashPassword
-  if (hashPassword && hashPassword == "false") {
-    hashPassword = false
-  } else {
-    hashPassword = true
-  }
+  const hashPassword = parseBooleanParam(ctx.request.query.hashPassword)
+  // account portal sends no password for SSO users
+  const requirePassword = parseBooleanParam(ctx.request.query.requirePassword)
 
   if (await doesTenantExist(tenantId)) {
     ctx.throw(403, "Organisation already exists.")
@@ -128,6 +159,22 @@ exports.adminUser = async ctx => {
     })
   )
 
+  // write usage quotas for cloud
+  if (!env.SELF_HOSTED) {
+    // could be a scenario where it exists, make sure its clean
+    try {
+      const usageQuota = await db.get(
+        StaticDatabases.PLATFORM_INFO.docs.usageQuota
+      )
+      if (usageQuota) {
+        await db.remove(usageQuota._id, usageQuota._rev)
+      }
+    } catch (err) {
+      // don't worry about errors
+    }
+    await db.post(generateNewUsageQuotaDoc())
+  }
+
   if (response.rows.some(row => row.doc.admin)) {
     ctx.throw(
       403,
@@ -138,6 +185,7 @@ exports.adminUser = async ctx => {
   const user = {
     email: email,
     password: password,
+    createdAt: Date.now(),
     roles: {},
     builder: {
       global: true,
@@ -148,7 +196,7 @@ exports.adminUser = async ctx => {
     tenantId,
   }
   try {
-    ctx.body = await saveUser(user, tenantId, hashPassword)
+    ctx.body = await saveUser(user, tenantId, hashPassword, requirePassword)
   } catch (err) {
     ctx.throw(err.status || 400, err)
   }
@@ -157,6 +205,7 @@ exports.adminUser = async ctx => {
 exports.destroy = async ctx => {
   const db = getGlobalDB()
   const dbUser = await db.get(ctx.params.id)
+  await removeUserFromInfoDB(dbUser)
   await db.remove(dbUser._id, dbUser._rev)
   await userCache.invalidateUser(dbUser._id)
   await invalidateSessions(dbUser._id)
@@ -249,13 +298,22 @@ exports.find = async ctx => {
   ctx.body = user
 }
 
-exports.tenantUserLookup = async ctx => {
-  const id = ctx.params.id
-  // lookup, could be email or userId, either will return a doc
+// lookup, could be email or userId, either will return a doc
+const getTenantUser = async identifier => {
   const db = new CouchDB(PLATFORM_INFO_DB)
   try {
-    ctx.body = await db.get(id)
+    return await db.get(identifier)
   } catch (err) {
+    return null
+  }
+}
+
+exports.tenantUserLookup = async ctx => {
+  const id = ctx.params.id
+  const user = await getTenantUser(id)
+  if (user) {
+    ctx.body = user
+  } else {
     ctx.throw(400, "No tenant user found.")
   }
 }
