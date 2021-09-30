@@ -2,7 +2,7 @@
   import { params } from "@roxi/routify"
   import { datasources } from "stores/backend"
 
-  if ($params.selectedDatasource) {
+  if ($params.selectedDatasource && !$params.query) {
     const datasource = $datasources.list.find(
       m => m._id === $params.selectedDatasource
     )
