@@ -24,6 +24,7 @@ const createBuilderStore = () => {
     theme: null,
     customTheme: null,
     previewDevice: "desktop",
+    isDragging: false,
   }
   const writableStore = writable(initialState)
   const derivedStore = derived(writableStore, $state => {
@@ -68,10 +69,21 @@ const createBuilderStore = () => {
       analytics.pingEndUser()
     },
     setSelectedPath: path => {
-      console.log("set to ")
-      console.log(path)
       writableStore.update(state => {
         state.selectedPath = path
+        return state
+      })
+    },
+    moveComponent: (componentId, destinationComponentId, mode) => {
+      dispatchEvent("move-component", {
+        componentId,
+        destinationComponentId,
+        mode,
+      })
+    },
+    setDragging: dragging => {
+      writableStore.update(state => {
+        state.isDragging = dragging
         return state
       })
     },

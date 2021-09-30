@@ -12,7 +12,7 @@ const populateFromDB = async (userId, tenantId) => {
   const user = await getGlobalDB(tenantId).get(userId)
   user.budibaseAccess = true
 
-  if (!env.SELF_HOSTED) {
+  if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
     const account = await accounts.getAccount(user.email)
     if (account) {
       user.account = account

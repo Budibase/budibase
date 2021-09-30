@@ -31,4 +31,7 @@
   .spectrum-Button--overBackground:hover {
     color: #555;
   }
+  .spectrum-Button::after {
+    display: none;
+  }
 </style>

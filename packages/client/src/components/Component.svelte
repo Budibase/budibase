@@ -11,6 +11,8 @@
   import Placeholder from "components/app/Placeholder.svelte"
 
   export let instance = {}
+  export let isLayout = false
+  export let isScreen = false
 
   // The enriched component settings
   let enrichedSettings
@@ -49,11 +51,11 @@
   $: children = instance._children || []
   $: id = instance._id
   $: name = instance._instanceName
-  $: empty =
-    !children.length &&
-    definition?.hasChildren &&
-    definition?.showEmptyState !== false &&
-    $builderStore.inBuilder
+  $: interactive =
+    $builderStore.inBuilder &&
+    ($builderStore.previewType === "layout" || insideScreenslot)
+  $: empty = interactive && !children.length && definition?.hasChildren
+  $: emptyState = empty && definition?.showEmptyState !== false
   $: rawProps = getRawProps(instance)
   $: instanceKey = JSON.stringify(rawProps)
   $: updateComponentProps(rawProps, instanceKey, $context)
@@ -61,16 +63,16 @@
     $builderStore.inBuilder &&
     $builderStore.selectedComponentId === instance._id
   $: inSelectedPath = $builderStore.selectedComponentPath?.includes(id)
-  $: interactive = $builderStore.previewType === "layout" || insideScreenslot
   $: evaluateConditions(enrichedSettings?._conditions)
   $: componentSettings = { ...enrichedSettings, ...conditionalSettings }
+  $: renderKey = `${propsHash}-${emptyState}`
 
   // Update component context
   $: componentStore.set({
     id,
     children: children.length,
-    styles: { ...instance._styles, id, empty, interactive },
-    empty,
+    styles: { ...instance._styles, id, empty: emptyState, interactive },
+    empty: emptyState,
     selected,
     name,
   })
@@ -169,13 +171,22 @@
     conditionalSettings = result.settingUpdates
     visible = nextVisible
   }
+
+  // Drag and drop helper tags
+  $: draggable = interactive && !isLayout && !isScreen
+  $: droppable = interactive && !isLayout && !isScreen
 </script>
 
-{#key propsHash}
+{#key renderKey}
   {#if constructor && componentSettings && (visible || inSelectedPath)}
+    <!-- The ID is used as a class because getElementsByClassName is O(1) -->
+    <!-- and the performance matters for the selection indicators -->
     <div
       class={`component ${id}`}
-      data-type={interactive ? "component" : ""}
+      class:draggable
+      class:droppable
+      class:empty
+      class:interactive
       data-id={id}
       data-name={name}
     >
@@ -184,7 +195,7 @@
           {#each children as child (child._id)}
             <svelte:self instance={child} />
           {/each}
-        {:else if empty}
+        {:else if emptyState}
           <Placeholder />
         {/if}
       </svelte:component>
@@ -195,5 +206,11 @@
 <style>
   .component {
     display: contents;
+  }
+  .interactive :global(*:hover) {
+    cursor: pointer;
+  }
+  .draggable :global(*:hover) {
+    cursor: grab;
   }
 </style>
