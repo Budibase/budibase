@@ -13,6 +13,10 @@ function isDev() {
   )
 }
 
+function isCypress() {
+  return process.env.NODE_ENV === "cypress"
+}
+
 let LOADED = false
 if (!LOADED && isDev() && !isTest()) {
   require("dotenv").config()
@@ -62,6 +66,7 @@ module.exports = {
     module.exports[key] = value
   },
   isTest,
+  isCypress,
   isDev,
   isProd: () => {
     return !isDev()

@@ -6,6 +6,9 @@ jest.mock("../../environment", () => ({
   isDev: () => true,
   _set: () => {},
 }))
+jest.mock("@budibase/auth/tenancy", () => ({
+  getTenantId: () => "testing123"
+}))
 
 const usageQuotaMiddleware = require("../usageQuota")
 const usageQuota = require("../../utilities/usageQuota")

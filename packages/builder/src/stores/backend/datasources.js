@@ -67,7 +67,7 @@ export function createDatasourcesStore() {
       })
       return json
     },
-    save: async datasource => {
+    save: async (datasource, fetchSchema = false) => {
       let response
       if (datasource._id) {
         response = await api.put(
@@ -75,7 +75,10 @@ export function createDatasourcesStore() {
           datasource
         )
       } else {
-        response = await api.post("/api/datasources", datasource)
+        response = await api.post("/api/datasources", {
+          datasource: datasource,
+          fetchSchema,
+        })
       }
 
       const json = await response.json()

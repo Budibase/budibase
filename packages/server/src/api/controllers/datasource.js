@@ -41,15 +41,10 @@ exports.fetch = async function (ctx) {
 
 exports.buildSchemaFromDb = async function (ctx) {
   const db = new CouchDB(ctx.appId)
-  const datasourceId = ctx.params.datasourceId
-  const datasource = await db.get(datasourceId)
+  const datasource = await db.get(ctx.params.datasourceId)
 
-  const Connector = integrations[datasource.source]
-
-  // Connect to the DB and build the schema
-  const connector = new Connector(datasource.config)
-  await connector.buildSchema(datasource._id, datasource.entities)
-  datasource.entities = connector.tables
+  const tables = await buildSchemaHelper(datasource)
+  datasource.entities = tables
 
   const response = await db.put(datasource)
   datasource._rev = response.rev
@@ -81,12 +76,18 @@ exports.update = async function (ctx) {
 
 exports.save = async function (ctx) {
   const db = new CouchDB(ctx.appId)
-  const plus = ctx.request.body.plus
+  const plus = ctx.request.body.datasource.plus
+  const fetchSchema = ctx.request.body.fetchSchema
 
   const datasource = {
     _id: generateDatasourceID({ plus }),
     type: plus ? DocumentTypes.DATASOURCE_PLUS : DocumentTypes.DATASOURCE,
-    ...ctx.request.body,
+    ...ctx.request.body.datasource,
+  }
+
+  if (fetchSchema) {
+    let tables = await buildSchemaHelper(datasource)
+    datasource.entities = tables
   }
 
   const response = await db.put(datasource)
@@ -132,4 +133,15 @@ exports.query = async function (ctx) {
   } catch (err) {
     ctx.throw(400, err)
   }
+}
+
+const buildSchemaHelper = async datasource => {
+  const Connector = integrations[datasource.source]
+
+  // Connect to the DB and build the schema
+  const connector = new Connector(datasource.config)
+  await connector.buildSchema(datasource._id, datasource.entities)
+  datasource.entities = connector.tables
+
+  return connector.tables
 }
