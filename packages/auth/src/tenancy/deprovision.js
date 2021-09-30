@@ -19,6 +19,22 @@ const removeTenantFromInfoDB = async tenantId => {
   }
 }
 
+exports.removeUserFromInfoDB = async dbUser => {
+  const infoDb = getDB(PLATFORM_INFO_DB)
+  const keys = [dbUser._id, dbUser.email]
+  const userDocs = await infoDb.allDocs({
+    keys,
+    include_docs: true,
+  })
+  const toDelete = userDocs.rows.map(row => {
+    return {
+      ...row.doc,
+      _deleted: true,
+    }
+  })
+  await infoDb.bulkDocs(toDelete)
+}
+
 const removeUsersFromInfoDB = async tenantId => {
   try {
     const globalDb = getGlobalDB(tenantId)
