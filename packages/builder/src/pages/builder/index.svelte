@@ -5,11 +5,9 @@
   auth.checkQueryString()
 
   $: {
-    if (!$auth.user) {
-      $redirect(`./auth`)
-    } else if ($auth.user.builder?.global) {
+    if ($auth.user?.builder?.global) {
       $redirect(`./portal`)
-    } else {
+    } else if ($auth.user) {
       $redirect(`./apps`)
     }
   }

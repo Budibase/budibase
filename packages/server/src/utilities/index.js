@@ -3,6 +3,7 @@ const { OBJ_STORE_DIRECTORY } = require("../constants")
 const { sanitizeKey } = require("@budibase/auth/src/objectStore")
 const CouchDB = require("../db")
 const { generateMetadataID } = require("../db/utils")
+const Readable = require("stream").Readable
 
 const BB_CDN = "https://cdn.budi.live"
 
@@ -123,4 +124,13 @@ exports.escapeDangerousCharacters = string => {
     .replace(/[\n]/g, "\\n")
     .replace(/[\r]/g, "\\r")
     .replace(/[\t]/g, "\\t")
+}
+
+exports.stringToReadStream = string => {
+  return new Readable({
+    read() {
+      this.push(string)
+      this.push(null)
+    },
+  })
 }
