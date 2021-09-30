@@ -4,6 +4,9 @@
   import { onMount } from "svelte"
 
   let loaded = false
+  // don't react to these
+  let cloud = $admin.cloud
+  let shouldRedirect = !cloud || $admin.disableAccountPortal
 
   $: multiTenancyEnabled = $admin.multiTenancy
   $: hasAdminUser = $admin?.checklist?.adminUser?.checked
@@ -39,30 +42,35 @@
 
   $: {
     // We should never see the org or admin user creation screens in the cloud
-    if (!cloud) {
-      const apiReady = $admin.loaded && $auth.loaded
-      // if tenant is not set go to it
-      if (loaded && apiReady && multiTenancyEnabled && !tenantSet) {
-        $redirect("./auth/org")
-      }
-      // Force creation of an admin user if one doesn't exist
-      else if (loaded && apiReady && !hasAdminUser) {
-        $redirect("./admin")
-      }
-    }
-  }
-  // Redirect to log in at any time if the user isn't authenticated
-  $: {
+    const apiReady = $admin.loaded && $auth.loaded
+    // if tenant is not set go to it
     if (
+      loaded &&
+      shouldRedirect &&
+      apiReady &&
+      multiTenancyEnabled &&
+      !tenantSet
+    ) {
+      $redirect("./auth/org")
+    }
+    // Force creation of an admin user if one doesn't exist
+    else if (loaded && shouldRedirect && apiReady && !hasAdminUser) {
+      $redirect("./admin")
+    }
+    // Redirect to log in at any time if the user isn't authenticated
+    else if (
       loaded &&
       (hasAdminUser || cloud) &&
       !$auth.user &&
       !$isActive("./auth") &&
-      !$isActive("./invite")
+      !$isActive("./invite") &&
+      !$isActive("./admin")
     ) {
       const returnUrl = encodeURIComponent(window.location.pathname)
       $redirect("./auth?", { returnUrl })
-    } else if ($auth?.user?.forceResetPassword) {
+    }
+    // check if password reset required for user
+    else if ($auth.user?.forceResetPassword) {
       $redirect("./auth/reset")
     }
   }
