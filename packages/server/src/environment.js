@@ -52,6 +52,7 @@ module.exports = {
   AUTOMATION_BUCKET: process.env.AUTOMATION_BUCKET,
   SENDGRID_API_KEY: process.env.SENDGRID_API_KEY,
   DYNAMO_ENDPOINT: process.env.DYNAMO_ENDPOINT,
+  POSTHOG_TOKEN: process.env.POSTHOG_TOKEN,
   // old - to remove
   CLIENT_ID: process.env.CLIENT_ID,
   BUDIBASE_DIR: process.env.BUDIBASE_DIR,

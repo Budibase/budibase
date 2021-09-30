@@ -40,6 +40,8 @@
     dataLoaded = true
     if ($builderStore.inBuilder) {
       builderStore.actions.notifyLoaded()
+    } else {
+      builderStore.actions.pingEndUser()
     }
   })
 
