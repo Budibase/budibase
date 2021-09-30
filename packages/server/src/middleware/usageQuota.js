@@ -39,7 +39,6 @@ module.exports = async (ctx, next) => {
     return next()
   }
 
-  const db = new CouchDB(ctx.appId)
   let usage = METHOD_MAP[ctx.req.method]
   const property = getProperty(ctx.req.url)
   if (usage == null || property == null) {
@@ -48,7 +47,10 @@ module.exports = async (ctx, next) => {
   // post request could be a save of a pre-existing entry
   if (ctx.request.body && ctx.request.body._id && ctx.request.body._rev) {
     try {
-      await db.get(ctx.request.body._id)
+      if (ctx.appId) {
+        const db = new CouchDB(ctx.appId)
+        await db.get(ctx.request.body._id)
+      }
       return next()
     } catch (err) {
       ctx.throw(404, `${ctx.request.body._id} does not exist`)
