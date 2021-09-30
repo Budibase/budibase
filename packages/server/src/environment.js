@@ -13,6 +13,10 @@ function isDev() {
   )
 }
 
+function isCypress() {
+  return process.env.NODE_ENV === "cypress"
+}
+
 let LOADED = false
 if (!LOADED && isDev() && !isTest()) {
   require("dotenv").config()
@@ -61,8 +65,16 @@ module.exports = {
     module.exports[key] = value
   },
   isTest,
+  isCypress,
   isDev,
   isProd: () => {
     return !isDev()
   },
+}
+
+// convert any strings to numbers if required, like "0" would be true otherwise
+for (let [key, value] of Object.entries(module.exports)) {
+  if (typeof value === "string" && !isNaN(parseInt(value))) {
+    module.exports[key] = parseInt(value)
+  }
 }

@@ -81,6 +81,16 @@ describe("Test that the object processing works correctly", () => {
     expect(error).not.toBeNull()
   })
 
+  it("check objects get converted to string JSON automatically", async () => {
+    const row = {a: 1}
+    const output = await processString("{{ trigger.row }}", {
+      trigger: {
+        row,
+      }
+    })
+    expect(JSON.parse(output)).toEqual(row)
+  })
+
   it("should be able to handle null objects", async () => {
     let error = null
     try {

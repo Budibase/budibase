@@ -11,7 +11,7 @@
     Icon,
   } from "@budibase/bbui"
   import { tables, views } from "stores/backend"
-  import analytics from "analytics"
+  import analytics, { Events } from "analytics"
 
   const CONDITIONS = [
     {
@@ -65,7 +65,7 @@
   function saveView() {
     views.save(view)
     notifications.success(`View ${view.name} saved.`)
-    analytics.captureEvent("Added View Filter", {
+    analytics.captureEvent(Events.VIEW.ADDED_FILTER, {
       filters: JSON.stringify(view.filters),
     })
   }

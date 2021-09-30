@@ -1,5 +1,5 @@
 import { writable, get, derived } from "svelte/store"
-import { localStorageStore } from "../../../builder/src/builderStore/store/localStorage"
+import { localStorageStore } from "builder/src/builderStore/store/localStorage"
 import { appStore } from "./app"
 
 const createStateStore = () => {

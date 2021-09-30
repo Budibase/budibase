@@ -2,6 +2,7 @@ const rowController = require("../../api/controllers/row")
 const automationUtils = require("../automationUtils")
 const env = require("../../environment")
 const usage = require("../../utilities/usageQuota")
+const { buildCtx } = require("./utils")
 
 exports.definition = {
   name: "Create Row",
@@ -59,7 +60,7 @@ exports.definition = {
   },
 }
 
-exports.run = async function ({ inputs, appId, apiKey, emitter }) {
+exports.run = async function ({ inputs, appId, emitter }) {
   if (inputs.row == null || inputs.row.tableId == null) {
     return {
       success: false,
@@ -69,16 +70,12 @@ exports.run = async function ({ inputs, appId, apiKey, emitter }) {
     }
   }
   // have to clean up the row, remove the table from it
-  const ctx = {
+  const ctx = buildCtx(appId, emitter, {
+    body: inputs.row,
     params: {
       tableId: inputs.row.tableId,
     },
-    request: {
-      body: inputs.row,
-    },
-    appId,
-    eventEmitter: emitter,
-  }
+  })
 
   try {
     inputs.row = await automationUtils.cleanUpRow(
@@ -86,8 +83,8 @@ exports.run = async function ({ inputs, appId, apiKey, emitter }) {
       inputs.row.tableId,
       inputs.row
     )
-    if (env.isProd()) {
-      await usage.update(apiKey, usage.Properties.ROW, 1)
+    if (env.USE_QUOTAS) {
+      await usage.update(usage.Properties.ROW, 1)
     }
     await rowController.save(ctx)
     return {

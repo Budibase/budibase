@@ -1,6 +1,7 @@
 // mock out postgres for this
 jest.mock("pg")
 
+const { findLastKey } = require("lodash/fp")
 const setup = require("./utilities")
 const { checkBuilderEndpoint } = require("./utilities/TestFunctions")
 const { basicQuery, basicDatasource } = setup.structures
@@ -19,10 +20,10 @@ describe("/queries", () => {
   })
 
   async function createInvalidIntegration() {
-    const datasource = await config.createDatasource({
-      ...basicDatasource(),
+    const datasource = await config.createDatasource({datasource: {
+      ...basicDatasource().datasource,
       source: "INVALID_INTEGRATION",
-    })
+    }})
     const query = await config.createQuery()
     return { datasource, query }
   }
@@ -183,11 +184,14 @@ describe("/queries", () => {
     })
 
     it("should fail with invalid integration type", async () => {
-      const { query } = await createInvalidIntegration()
+      const { query, datasource } = await createInvalidIntegration()
       await request
         .post(`/api/queries/${query._id}`)
         .send({
+          datasourceId: datasource._id,
           parameters: {},
+          fields: {},
+          queryVerb: "read",
         })
         .set(config.defaultHeaders())
         .expect(400)

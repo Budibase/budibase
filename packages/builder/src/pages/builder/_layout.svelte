@@ -9,10 +9,31 @@
   $: hasAdminUser = $admin?.checklist?.adminUser?.checked
   $: tenantSet = $auth.tenantSet
   $: cloud = $admin.cloud
+  $: user = $auth.user
+
+  const validateTenantId = async () => {
+    // set the tenant from the url in the cloud
+    const tenantId = window.location.host.split(".")[0]
+
+    if (!tenantId.includes("localhost:")) {
+      // user doesn't have permission to access this tenant - kick them out
+      if (user?.tenantId !== tenantId) {
+        await auth.logout()
+        await auth.setOrganisation(null)
+      } else {
+        await auth.setOrganisation(tenantId)
+      }
+    }
+  }
 
   onMount(async () => {
     await auth.checkAuth()
     await admin.init()
+
+    if (cloud && multiTenancyEnabled) {
+      await validateTenantId()
+    }
+
     loaded = true
   })
 

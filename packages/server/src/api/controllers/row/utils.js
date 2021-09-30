@@ -5,6 +5,7 @@ const { InternalTables } = require("../../../db/utils")
 const userController = require("../user")
 const { FieldTypes } = require("../../../constants")
 const { integrations } = require("../../../integrations")
+const { processStringSync } = require("@budibase/string-templates")
 
 validateJs.extend(validateJs.validators.datetime, {
   parse: function (value) {
@@ -73,6 +74,11 @@ exports.validate = async ({ appId, tableId, row, table }) => {
           errors[fieldName] = "Field not in list"
         }
       })
+    } else if (table.schema[fieldName].type === FieldTypes.FORMULA) {
+      res = validateJs.single(
+        processStringSync(table.schema[fieldName].formula, row),
+        constraints
+      )
     } else {
       res = validateJs.single(row[fieldName], constraints)
     }

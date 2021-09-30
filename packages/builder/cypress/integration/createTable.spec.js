@@ -6,7 +6,7 @@ context("Create a Table", () => {
 
   it("should create a new Table", () => {
     cy.createTable("dog")
-
+    cy.wait(1000)
     // Check if Table exists
     cy.get(".table-title h1").should("have.text", "dog")
   })
@@ -36,7 +36,8 @@ context("Create a Table", () => {
   it("edits a row", () => {
     cy.contains("button", "Edit").click({ force: true })
     cy.wait(1000)
-    cy.get(".spectrum-Modal input").type("Updated")
+    cy.get(".spectrum-Modal input").clear()
+    cy.get(".spectrum-Modal input").type("RoverUpdated")
     cy.contains("Save").click()
     cy.contains("Updated").should("have.text", "Updated")
   })
@@ -62,7 +63,7 @@ context("Create a Table", () => {
 
   it("deletes a table", () => {
     cy.get(".actions > :nth-child(1) > .icon > .spectrum-Icon > use")
-      .first()
+      .eq(1)
       .click({ force: true })
     cy.get(".spectrum-Menu > :nth-child(2)").click()
     cy.contains("Delete Table").click()
