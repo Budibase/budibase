@@ -1,5 +1,7 @@
 const redis = require("../redis/authRedis")
 const { getTenantId, lookupTenantId, getGlobalDB } = require("../tenancy")
+const env = require("../environment")
+const accounts = require("../cloud/accounts")
 
 const EXPIRY_SECONDS = 3600
 
@@ -9,6 +11,15 @@ const EXPIRY_SECONDS = 3600
 const populateFromDB = async (userId, tenantId) => {
   const user = await getGlobalDB(tenantId).get(userId)
   user.budibaseAccess = true
+
+  if (!env.SELF_HOSTED) {
+    const account = await accounts.getAccount(user.email)
+    if (account) {
+      user.account = account
+      user.accountPortalAccess = true
+    }
+  }
+
   return user
 }
 

@@ -12,7 +12,14 @@ module PostgresModule {
   const { Pool } = require("pg")
   const Sql = require("./base/sql")
   const { FieldTypes } = require("../constants")
-  const { buildExternalTableId, convertType } = require("./utils")
+  const {
+    buildExternalTableId,
+    convertType,
+    copyExistingPropsOver,
+  } = require("./utils")
+  const { escapeDangerousCharacters } = require("../utilities")
+
+  const JSON_REGEX = /'{.*}'::json/s
 
   interface PostgresConfig {
     host: string
@@ -84,13 +91,27 @@ module PostgresModule {
     bigint: FieldTypes.NUMBER,
     decimal: FieldTypes.NUMBER,
     smallint: FieldTypes.NUMBER,
+    real: FieldTypes.NUMBER,
+    "double precision": FieldTypes.NUMBER,
     timestamp: FieldTypes.DATETIME,
     time: FieldTypes.DATETIME,
     boolean: FieldTypes.BOOLEAN,
     json: FieldTypes.JSON,
+    date: FieldTypes.DATETIME,
   }
 
   async function internalQuery(client: any, query: SqlQuery) {
+    // need to handle a specific issue with json data types in postgres,
+    // new lines inside the JSON data will break it
+    if (query && query.sql) {
+      const matches = query.sql.match(JSON_REGEX)
+      if (matches && matches.length > 0) {
+        for (let match of matches) {
+          const escaped = escapeDangerousCharacters(match)
+          query.sql = query.sql.replace(match, escaped)
+        }
+      }
+    }
     try {
       return await client.query(query.sql, query.bindings || [])
     } catch (err) {
@@ -105,7 +126,7 @@ module PostgresModule {
     private readonly config: PostgresConfig
 
     COLUMNS_SQL =
-      "select * from information_schema.columns where table_schema = 'public'"
+      "select * from information_schema.columns where not table_schema = 'information_schema' and not table_schema = 'pg_catalog'"
 
     PRIMARY_KEYS_SQL = `
     select tc.table_schema, tc.table_name, kc.column_name as primary_key 
@@ -173,30 +194,29 @@ module PostgresModule {
             name: tableName,
             schema: {},
           }
-
-          // add the existing relationships from the entities if they exist, to prevent them from being overridden
-          if (entities && entities[tableName]) {
-            const existingTableSchema = entities[tableName].schema
-            for (let key in existingTableSchema) {
-              if (!existingTableSchema.hasOwnProperty(key)) {
-                continue
-              }
-              if (existingTableSchema[key].type === "link") {
-                tables[tableName].schema[key] = existingTableSchema[key]
-              }
-            }
-          }
         }
 
         const type: string = convertType(column.data_type, TYPE_MAP)
-        const isAuto: boolean =
+        const identity = !!(
+          column.identity_generation ||
+          column.identity_start ||
+          column.identity_increment
+        )
+        const hasDefault =
           typeof column.column_default === "string" &&
           column.column_default.startsWith("nextval")
+        const isGenerated =
+          column.is_generated && column.is_generated !== "NEVER"
+        const isAuto: boolean = hasDefault || identity || isGenerated
         tables[tableName].schema[columnName] = {
           autocolumn: isAuto,
           name: columnName,
           type,
         }
+      }
+
+      for (let tableName of Object.keys(tables)) {
+        copyExistingPropsOver(tableName, tables, entities)
       }
       this.tables = tables
     }

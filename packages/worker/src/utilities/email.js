@@ -1,4 +1,5 @@
 const nodemailer = require("nodemailer")
+const env = require("../environment")
 const { getScopedConfig } = require("@budibase/auth/db")
 const { EmailTemplatePurpose, TemplateTypes, Configs } = require("../constants")
 const { getTemplateByPurpose } = require("../constants/templates")
@@ -101,16 +102,35 @@ async function buildEmail(purpose, email, context, { user, contents } = {}) {
  * Utility function for finding most valid SMTP configuration.
  * @param {object} db The CouchDB database which is to be looked up within.
  * @param {string|null} workspaceId If using finer grain control of configs a workspace can be used.
+ * @param {boolean|null} automation Whether or not the configuration is being fetched for an email automation.
  * @return {Promise<object|null>} returns the SMTP configuration if it exists
  */
-async function getSmtpConfiguration(db, workspaceId = null) {
+async function getSmtpConfiguration(db, workspaceId = null, automation) {
   const params = {
     type: Configs.SMTP,
   }
   if (workspaceId) {
     params.workspace = workspaceId
   }
-  return getScopedConfig(db, params)
+
+  const customConfig = getScopedConfig(db, params)
+
+  if (customConfig) {
+    return customConfig
+  }
+
+  // Use an SMTP fallback configuration from env variables
+  if (!automation && env.SMTP_FALLBACK_ENABLED) {
+    return {
+      port: env.SMTP_PORT,
+      host: env.SMTP_HOST,
+      secure: false,
+      auth: {
+        user: env.SMTP_USER,
+        pass: env.SMTP_PASSWORD,
+      },
+    }
+  }
 }
 
 /**
@@ -118,8 +138,8 @@ async function getSmtpConfiguration(db, workspaceId = null) {
  * @return {Promise<boolean>} returns true if there is a configuration that can be used.
  */
 exports.isEmailConfigured = async (workspaceId = null) => {
-  // when "testing" simply return true
-  if (TEST_MODE) {
+  // when "testing" or smtp fallback is enabled simply return true
+  if (TEST_MODE || env.SMTP_FALLBACK_ENABLED) {
     return true
   }
   const db = getGlobalDB()
@@ -138,16 +158,17 @@ exports.isEmailConfigured = async (workspaceId = null) => {
  * @param {string|undefined} contents If sending a custom email then can supply contents which will be added to it.
  * @param {string|undefined} subject A custom subject can be specified if the config one is not desired.
  * @param {object|undefined} info Pass in a structure of information to be stored alongside the invitation.
+ * @param {boolean|undefined} disableFallback Prevent email being sent from SMTP fallback to avoid spam.
  * @return {Promise<object>} returns details about the attempt to send email, e.g. if it is successful; based on
  * nodemailer response.
  */
 exports.sendEmail = async (
   email,
   purpose,
-  { workspaceId, user, from, contents, subject, info } = {}
+  { workspaceId, user, from, contents, subject, info, automation } = {}
 ) => {
   const db = getGlobalDB()
-  let config = (await getSmtpConfiguration(db, workspaceId)) || {}
+  let config = (await getSmtpConfiguration(db, workspaceId, automation)) || {}
   if (Object.keys(config).length === 0 && !TEST_MODE) {
     throw "Unable to find SMTP configuration."
   }

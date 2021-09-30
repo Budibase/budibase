@@ -30,6 +30,10 @@ exports.invalidateSessions = async (userId, sessionId = null) => {
     sessions.push({ key: makeSessionID(userId, sessionId) })
   } else {
     sessions = await getSessionsForUser(userId)
+    sessions.forEach(
+      session =>
+        (session.key = makeSessionID(session.userId, session.sessionId))
+    )
   }
   const client = await redis.getSessionClient()
   const promises = []

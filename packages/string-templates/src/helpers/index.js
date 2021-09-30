@@ -19,6 +19,13 @@ const HELPERS = [
   }),
   // this help is applied to all statements
   new Helper(HelperFunctionNames.ALL, value => {
+    if (
+      value != null &&
+      typeof value === "object" &&
+      value.toString() === "[object Object]"
+    ) {
+      return new SafeString(JSON.stringify(value))
+    }
     // null/undefined values produce bad results
     if (value == null || typeof value !== "string") {
       return value || ""

@@ -97,12 +97,16 @@ exports.run = async function ({ inputs }) {
       "Content-Type": "application/json",
     }
 
-    if (headers && headers.length !== 0) {
+    if (headers) {
       try {
-        const customHeaders = JSON.parse(headers)
+        const customHeaders =
+          typeof headers === "string" ? JSON.parse(headers) : headers
         request.headers = { ...request.headers, ...customHeaders }
       } catch (err) {
-        console.error(err)
+        return {
+          success: false,
+          response: "Unable to process headers, must be a JSON object.",
+        }
       }
     }
   }

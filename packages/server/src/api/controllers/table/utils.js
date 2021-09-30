@@ -68,22 +68,16 @@ exports.handleDataImport = async (appId, user, table, dataImport) => {
     // Populate the table with rows imported from CSV in a bulk update
     const data = await csvParser.transform(dataImport)
 
+    let finalData = []
     for (let i = 0; i < data.length; i++) {
       let row = data[i]
       row._id = generateRowID(table._id)
       row.tableId = table._id
-      const processed = inputProcessing(user, table, row)
+      const processed = inputProcessing(user, table, row, {
+        noAutoRelationships: true,
+      })
       table = processed.table
       row = processed.row
-
-      // make sure link rows are up to date
-      row = await linkRows.updateLinks({
-        appId,
-        eventType: linkRows.EventType.ROW_SAVE,
-        row,
-        tableId: row.tableId,
-        table,
-      })
 
       for (let [fieldName, schema] of Object.entries(table.schema)) {
         // check whether the options need to be updated for inclusion as part of the data import
@@ -98,10 +92,20 @@ exports.handleDataImport = async (appId, user, table, dataImport) => {
           ]
         }
       }
-      data[i] = row
+
+      // make sure link rows are up to date
+      finalData.push(
+        linkRows.updateLinks({
+          appId,
+          eventType: linkRows.EventType.ROW_SAVE,
+          row,
+          tableId: row.tableId,
+          table,
+        })
+      )
     }
 
-    await db.bulkDocs(data)
+    await db.bulkDocs(await Promise.all(finalData))
     let response = await db.put(table)
     table._rev = response._rev
   }

@@ -16,6 +16,7 @@
   import { email } from "stores/portal"
   import api from "builderStore/api"
   import { cloneDeep } from "lodash/fp"
+  import analytics, { Events } from "analytics"
 
   const ConfigTypes = {
     SMTP: "smtp",
@@ -69,6 +70,7 @@
       smtpConfig._rev = json._rev
       smtpConfig._id = json._id
       notifications.success(`Settings saved.`)
+      analytics.captureEvent(Events.SMTP.SAVED)
     }
   }
 

@@ -1,4 +1,4 @@
-import { writable } from "svelte/store"
+import { writable, get } from "svelte/store"
 import { queries, tables, views } from "./"
 import api from "../../builderStore/api"
 
@@ -8,7 +8,8 @@ export const INITIAL_DATASOURCE_VALUES = {
 }
 
 export function createDatasourcesStore() {
-  const { subscribe, update, set } = writable(INITIAL_DATASOURCE_VALUES)
+  const store = writable(INITIAL_DATASOURCE_VALUES)
+  const { subscribe, update, set } = store
 
   return {
     subscribe,
@@ -21,7 +22,15 @@ export function createDatasourcesStore() {
     fetch: async () => {
       const response = await api.get(`/api/datasources`)
       const json = await response.json()
-      update(state => ({ ...state, list: json, selected: null }))
+
+      // Clear selected if it no longer exists, otherwise keep it
+      const selected = get(store).selected
+      let nextSelected = null
+      if (selected && json.find(source => source._id === selected)) {
+        nextSelected = selected
+      }
+
+      update(state => ({ ...state, list: json, selected: nextSelected }))
       return json
     },
     select: async datasourceId => {
@@ -58,7 +67,7 @@ export function createDatasourcesStore() {
       })
       return json
     },
-    save: async datasource => {
+    save: async (datasource, fetchSchema = false) => {
       let response
       if (datasource._id) {
         response = await api.put(
@@ -66,7 +75,10 @@ export function createDatasourcesStore() {
           datasource
         )
       } else {
-        response = await api.post("/api/datasources", datasource)
+        response = await api.post("/api/datasources", {
+          datasource: datasource,
+          fetchSchema,
+        })
       }
 
       const json = await response.json()

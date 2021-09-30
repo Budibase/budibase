@@ -11,7 +11,7 @@ exports.save = async function (ctx) {
   }
 
   try {
-    const response = await db.post(workspaceDoc)
+    const response = await db.put(workspaceDoc)
     ctx.body = {
       _id: response.id,
       _rev: response.rev,

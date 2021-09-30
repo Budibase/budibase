@@ -1,5 +1,6 @@
 const rowController = require("../../api/controllers/row")
 const automationUtils = require("../automationUtils")
+const { buildCtx } = require("./utils")
 
 exports.definition = {
   name: "Update Row",
@@ -72,19 +73,15 @@ exports.run = async function ({ inputs, appId, emitter }) {
   }
 
   // have to clean up the row, remove the table from it
-  const ctx = {
+  const ctx = buildCtx(appId, emitter, {
+    body: {
+      ...inputs.row,
+      _id: inputs.rowId,
+    },
     params: {
       rowId: inputs.rowId,
     },
-    request: {
-      body: {
-        ...inputs.row,
-        _id: inputs.rowId,
-      },
-    },
-    appId,
-    eventEmitter: emitter,
-  }
+  })
 
   try {
     inputs.row = await automationUtils.cleanUpRowById(
