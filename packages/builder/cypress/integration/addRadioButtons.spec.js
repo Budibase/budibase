@@ -33,7 +33,3 @@ it("should add Radio Buttons options picker on form, add data, and confirm", () 
         cy.addCustomSourceOptions(totalRadioButtons)
     }
 })
-
-
-
-

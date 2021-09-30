@@ -1,7 +1,3 @@
-Cypress.on('uncaught:exception', (err, runnable) => {
-  return false;
-});
-
 context("Create a View", () => {
   before(() => {
     cy.login()

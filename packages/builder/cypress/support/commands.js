@@ -6,7 +6,7 @@
 //
 
 Cypress.Commands.add("login", () => {
-  cy.visit(`https://test.budi.live/builder`)
+  cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
   cy.wait(2000)
   cy.url().then(url => {
     if (url.includes("builder/admin")) {
@@ -29,7 +29,7 @@ Cypress.Commands.add("login", () => {
 })
 
 Cypress.Commands.add("createApp", name => {
-  cy.visit(`https://test.budi.live/builder`)
+  cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
   cy.wait(500)
   cy.contains(/Create (new )?app/).click()
   cy.wait(500)
@@ -48,7 +48,7 @@ Cypress.Commands.add("createApp", name => {
 })
 
 Cypress.Commands.add("deleteApp", () => {
-  cy.visit(`https://test.budi.live/builder`)
+  cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
   cy.wait(1000)
   cy.request(`https://test.budi.live/api/applications?status=all`)
     .its("body")
