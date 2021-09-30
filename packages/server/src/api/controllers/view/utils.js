@@ -107,3 +107,30 @@ exports.migrateToInMemoryView = async (db, viewName) => {
   await db.put(designDoc)
   await exports.saveView(db, null, viewName, view)
 }
+
+exports.migrateToDesignView = async (db, viewName) => {
+  let view = await db.get(generateMemoryViewID(viewName))
+  const designDoc = await db.get("_design/database")
+  designDoc.views[viewName] = view.view
+  await db.put(designDoc)
+  await db.remove(view._id, view._rev)
+}
+
+exports.getFromDesignDoc = async (db, viewName) => {
+  const designDoc = await db.get("_design/database")
+  let view = designDoc.views[viewName]
+  if (view == null) {
+    throw { status: 404, message: "Unable to get view" }
+  }
+  return view
+}
+
+exports.getFromMemoryDoc = async (db, viewName) => {
+  let view = await db.get(generateMemoryViewID(viewName))
+  if (view) {
+    view = view.view
+  } else {
+    throw { status: 404, message: "Unable to get view" }
+  }
+  return view
+}
