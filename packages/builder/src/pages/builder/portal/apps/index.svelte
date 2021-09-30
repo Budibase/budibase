@@ -37,6 +37,7 @@
   let creatingApp = false
   let loaded = false
   let searchTerm = ""
+  let cloud = $admin.cloud
 
   $: enrichedApps = enrichApps($apps, $auth.user, sortBy)
   $: filteredApps = enrichedApps.filter(app =>
@@ -74,6 +75,15 @@
   const initiateAppCreation = () => {
     creationModal.show()
     creatingApp = true
+  }
+
+  const initiateAppsExport = () => {
+    try {
+      download(`/api/cloud/export`)
+      notifications.success("Apps exported successfully")
+    } catch (err) {
+      notifications.error(`Error exporting apps: ${err}`)
+    }
   }
 
   const initiateAppImport = () => {
@@ -196,6 +206,9 @@
       <div class="title">
         <Heading>Apps</Heading>
         <ButtonGroup>
+          {#if cloud}
+            <Button secondary on:click={initiateAppsExport}>Export apps</Button>
+          {/if}
           <Button secondary on:click={initiateAppImport}>Import app</Button>
           <Button cta on:click={initiateAppCreation}>Create app</Button>
         </ButtonGroup>

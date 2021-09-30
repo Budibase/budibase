@@ -24,6 +24,7 @@ const hostingRoutes = require("./hosting")
 const backupRoutes = require("./backup")
 const metadataRoutes = require("./metadata")
 const devRoutes = require("./dev")
+const cloudRoutes = require("./cloud")
 
 exports.mainRoutes = [
   authRoutes,
@@ -49,6 +50,7 @@ exports.mainRoutes = [
   backupRoutes,
   metadataRoutes,
   devRoutes,
+  cloudRoutes,
   // these need to be handled last as they still use /api/:tableId
   // this could be breaking as koa may recognise other routes as this
   tableRoutes,
