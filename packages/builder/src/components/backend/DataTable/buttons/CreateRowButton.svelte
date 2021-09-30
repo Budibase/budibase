@@ -12,5 +12,5 @@
   {title}
 </ActionButton>
 <Modal bind:this={modal}>
-  <svelte:component this={modalContentComponent} />
+  <svelte:component this={modalContentComponent} on:updaterows />
 </Modal>

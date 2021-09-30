@@ -27,6 +27,7 @@
   export let selectedRows = []
   export let editColumnTitle = "Edit"
   export let customRenderers = []
+  export let disableSorting = false
 
   const dispatch = createEventDispatcher()
 
@@ -63,7 +64,7 @@
   )
 
   // Reset state when data changes
-  $: data.length, reset()
+  $: rows.length, reset()
   const reset = () => {
     nextScrollTop = 0
     scrollTop = 0
@@ -107,7 +108,7 @@
   }
 
   const sortRows = (rows, sortColumn, sortOrder) => {
-    if (!sortColumn || !sortOrder) {
+    if (!sortColumn || !sortOrder || disableSorting) {
       return rows
     }
     return rows.slice().sort((a, b) => {
@@ -131,6 +132,7 @@
       sortColumn = fieldSchema.name
       sortOrder = "Descending"
     }
+    dispatch("sort", { column: sortColumn, order: sortOrder })
   }
 
   const getDisplayName = schema => {

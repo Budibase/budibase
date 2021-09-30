@@ -20,7 +20,6 @@
   $: dataSource = getDatasourceForProvider($currentAsset, componentInstance)
   $: schema = getSchemaForDatasource($currentAsset, dataSource)?.schema
   $: schemaFields = Object.values(schema || {})
-  $: internalTable = dataSource?.type === "table"
 
   const saveFilter = async () => {
     dispatch("change", tempValue)

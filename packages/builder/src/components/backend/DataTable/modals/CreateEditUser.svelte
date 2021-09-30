@@ -1,4 +1,5 @@
 <script>
+  import { createEventDispatcher } from "svelte"
   import { tables, rows } from "stores/backend"
   import { roles } from "stores/backend"
   import { notifications } from "@budibase/bbui"
@@ -9,6 +10,7 @@
 
   export let row = {}
 
+  const dispatch = createEventDispatcher()
   let errors = []
 
   $: creating = row?._id == null
@@ -71,6 +73,7 @@
 
     notifications.success("User saved successfully")
     rows.save(rowResponse)
+    dispatch("updaterows")
   }
 </script>
 
