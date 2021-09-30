@@ -1,6 +1,10 @@
 const CouchDB = require("../db")
 const usageQuota = require("../utilities/usageQuota")
 const env = require("../environment")
+const { getTenantId } = require("@budibase/auth/tenancy")
+
+// tenants without limits
+const EXCLUDED_TENANTS = ["bb", "default", "bbtest", "bbstaging"]
 
 // currently only counting new writes and deletes
 const METHOD_MAP = {
@@ -28,8 +32,10 @@ function getProperty(url) {
 }
 
 module.exports = async (ctx, next) => {
+  const tenantId = getTenantId()
+
   // if in development or a self hosted cloud usage quotas should not be executed
-  if (env.isDev() || env.SELF_HOSTED) {
+  if (env.isDev() || env.SELF_HOSTED || EXCLUDED_TENANTS.includes(tenantId)) {
     return next()
   }
 
