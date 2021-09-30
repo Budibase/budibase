@@ -165,7 +165,7 @@ Cypress.Commands.add("getComponent", componentId => {
     .its("body")
     .should("not.be.null")
     .then(cy.wrap)
-    .find(`[data-component-id=${componentId}]`)
+    .find(`[data-id=${componentId}]`)
 })
 
 Cypress.Commands.add("navigateToFrontend", () => {

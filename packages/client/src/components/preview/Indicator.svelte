@@ -9,6 +9,10 @@
   export let color
   export let zIndex
   export let transition = false
+  export let line = false
+  export let alignRight = false
+
+  $: flipped = top < 20
 </script>
 
 <div
@@ -18,11 +22,12 @@
   }}
   out:fade={{ duration: transition ? 130 : 0 }}
   class="indicator"
-  class:flipped={top < 20}
+  class:flipped
+  class:line
   style="top: {top}px; left: {left}px; width: {width}px; height: {height}px; --color: {color}; --zIndex: {zIndex};"
 >
   {#if text}
-    <div class="text" class:flipped={top < 20}>
+    <div class="text" class:flipped class:line class:right={alignRight}>
       {text}
     </div>
   {/if}
@@ -30,6 +35,7 @@
 
 <style>
   .indicator {
+    right: 0;
     position: absolute;
     z-index: var(--zIndex);
     border: 2px solid var(--color);
@@ -41,6 +47,9 @@
   }
   .indicator.flipped {
     border-top-left-radius: 4px;
+  }
+  .indicator.line {
+    border-radius: 4px !important;
   }
   .text {
     background-color: var(--color);
@@ -61,9 +70,18 @@
     justify-content: flex-start;
     align-items: center;
   }
+  .text.line {
+    transform: translateY(-50%);
+    border-radius: 4px;
+  }
   .text.flipped {
     border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
     transform: translateY(0%);
     top: -2px;
+  }
+  .text.right {
+    right: -2px;
+    left: auto;
   }
 </style>

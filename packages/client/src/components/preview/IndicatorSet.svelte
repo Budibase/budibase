@@ -7,6 +7,7 @@
   export let color
   export let transition
   export let zIndex
+  export let prefix = null
 
   let indicators = []
   let interval
@@ -51,6 +52,9 @@
     const parents = document.getElementsByClassName(componentId)
     if (parents.length) {
       text = parents[0].dataset.name
+      if (prefix) {
+        text = `${prefix} ${text}`
+      }
     }
 
     // Batch reads to minimize reflow

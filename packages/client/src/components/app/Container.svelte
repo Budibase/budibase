@@ -34,7 +34,7 @@
     display: flex;
     max-width: 100%;
   }
-  .valid-container :global([data-type="component"] > *) {
+  .valid-container :global(.component > *) {
     max-width: 100%;
   }
   .direction-row {
@@ -46,7 +46,7 @@
 
   /* Grow containers inside a row need 0 width 0 so that they ignore content */
   /* The nested selector for data-type is the wrapper around all components */
-  .direction-row :global(> [data-type="component"] > .size-grow) {
+  .direction-row :global(> .component > .size-grow) {
     width: 0;
   }
 
