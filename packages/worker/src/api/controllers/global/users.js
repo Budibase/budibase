@@ -19,6 +19,7 @@ const {
   tryAddTenant,
   updateTenantId,
 } = require("@budibase/auth/tenancy")
+const { removeUserFromInfoDB } = require("@budibase/auth/deprovision")
 const env = require("../../../environment")
 
 const PLATFORM_INFO_DB = StaticDatabases.PLATFORM_INFO.name
@@ -193,6 +194,7 @@ exports.adminUser = async ctx => {
 exports.destroy = async ctx => {
   const db = getGlobalDB()
   const dbUser = await db.get(ctx.params.id)
+  await removeUserFromInfoDB(dbUser)
   await db.remove(dbUser._id, dbUser._rev)
   await userCache.invalidateUser(dbUser._id)
   await invalidateSessions(dbUser._id)
