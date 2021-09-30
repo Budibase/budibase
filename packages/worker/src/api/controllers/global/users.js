@@ -19,6 +19,7 @@ const {
   tryAddTenant,
   updateTenantId,
 } = require("@budibase/auth/tenancy")
+const { removeUserFromInfoDB } = require("@budibase/auth/deprovision")
 const env = require("../../../environment")
 
 const PLATFORM_INFO_DB = StaticDatabases.PLATFORM_INFO.name
@@ -59,15 +60,15 @@ async function saveUser(
     // check budibase users in other tenants
     if (env.MULTI_TENANCY) {
       dbUser = await getTenantUser(email)
-      if (dbUser != null) {
+      if (dbUser != null && dbUser.tenantId !== tenantId) {
         throw `Email address ${email} already in use.`
       }
     }
 
     // check root account users in account portal
-    if (!env.SELF_HOSTED) {
+    if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
       const account = await accounts.getAccount(email)
-      if (account && account.verified) {
+      if (account && account.verified && account.tenantId !== tenantId) {
         throw `Email address ${email} already in use.`
       }
     }
@@ -132,7 +133,7 @@ exports.save = async ctx => {
 }
 
 const parseBooleanParam = param => {
-  if (param && param == "false") {
+  if (param && param === "false") {
     return false
   } else {
     return true
@@ -160,6 +161,17 @@ exports.adminUser = async ctx => {
 
   // write usage quotas for cloud
   if (!env.SELF_HOSTED) {
+    // could be a scenario where it exists, make sure its clean
+    try {
+      const usageQuota = await db.get(
+        StaticDatabases.PLATFORM_INFO.docs.usageQuota
+      )
+      if (usageQuota) {
+        await db.remove(usageQuota._id, usageQuota._rev)
+      }
+    } catch (err) {
+      // don't worry about errors
+    }
     await db.post(generateNewUsageQuotaDoc())
   }
 
@@ -193,6 +205,7 @@ exports.adminUser = async ctx => {
 exports.destroy = async ctx => {
   const db = getGlobalDB()
   const dbUser = await db.get(ctx.params.id)
+  await removeUserFromInfoDB(dbUser)
   await db.remove(dbUser._id, dbUser._rev)
   await userCache.invalidateUser(dbUser._id)
   await invalidateSessions(dbUser._id)

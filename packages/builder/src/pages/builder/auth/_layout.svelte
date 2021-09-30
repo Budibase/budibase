@@ -9,10 +9,10 @@
     $redirect("../")
   }
 
-  // redirect to account portal for authentication in the cloud
   if (
     !$auth.user &&
     $admin.cloud &&
+    !$admin.disableAccountPortal &&
     $admin.accountPortalUrl &&
     !$admin?.checklist?.sso?.checked
   ) {

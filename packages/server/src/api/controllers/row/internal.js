@@ -5,7 +5,6 @@ const {
   generateRowID,
   DocumentTypes,
   InternalTables,
-  generateMemoryViewID,
 } = require("../../../db/utils")
 const userController = require("../user")
 const {
@@ -20,7 +19,12 @@ const { fullSearch, paginatedSearch } = require("./internalSearch")
 const { getGlobalUsersFromMetadata } = require("../../../utilities/global")
 const inMemoryViews = require("../../../db/inMemoryView")
 const env = require("../../../environment")
-const { migrateToInMemoryView } = require("../view/utils")
+const {
+  migrateToInMemoryView,
+  migrateToDesignView,
+  getFromDesignDoc,
+  getFromMemoryDoc,
+} = require("../view/utils")
 
 const CALCULATION_TYPES = {
   SUM: "sum",
@@ -74,33 +78,24 @@ async function getRawTableData(ctx, db, tableId) {
 }
 
 async function getView(db, viewName) {
-  let viewInfo
-  async function getFromDesignDoc() {
-    const designDoc = await db.get("_design/database")
-    viewInfo = designDoc.views[viewName]
-    return viewInfo
-  }
-  let migrate = false
-  if (env.SELF_HOSTED) {
-    viewInfo = await getFromDesignDoc()
-  } else {
-    try {
-      viewInfo = await db.get(generateMemoryViewID(viewName))
-      if (viewInfo) {
-        viewInfo = viewInfo.view
-      }
-    } catch (err) {
-      // check if it can be retrieved from design doc (needs migrated)
-      if (err.status !== 404) {
-        viewInfo = null
-      } else {
-        viewInfo = await getFromDesignDoc()
-        migrate = !!viewInfo
-      }
+  let mainGetter = env.SELF_HOSTED ? getFromDesignDoc : getFromMemoryDoc
+  let secondaryGetter = env.SELF_HOSTED ? getFromMemoryDoc : getFromDesignDoc
+  let migration = env.SELF_HOSTED ? migrateToDesignView : migrateToInMemoryView
+  let viewInfo,
+    migrate = false
+  try {
+    viewInfo = await mainGetter(db, viewName)
+  } catch (err) {
+    // check if it can be retrieved from design doc (needs migrated)
+    if (err.status !== 404) {
+      viewInfo = null
+    } else {
+      viewInfo = await secondaryGetter(db, viewName)
+      migrate = !!viewInfo
     }
   }
   if (migrate) {
-    await migrateToInMemoryView(db, viewName)
+    await migration(db, viewName)
   }
   if (!viewInfo) {
     throw "View does not exist."
@@ -351,6 +346,11 @@ exports.bulkDestroy = async ctx => {
 }
 
 exports.search = async ctx => {
+  // Fetch the whole table when running in cypress, as search doesn't work
+  if (env.isCypress()) {
+    return { rows: await exports.fetch(ctx) }
+  }
+
   const appId = ctx.appId
   const { tableId } = ctx.params
   const db = new CouchDB(appId)

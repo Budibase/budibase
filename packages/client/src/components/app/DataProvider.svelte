@@ -6,7 +6,7 @@
     luceneQuery,
     luceneSort,
     luceneLimit,
-  } from "utils/lucene"
+  } from "builder/src/helpers/lucene"
   import Placeholder from "./Placeholder.svelte"
 
   export let dataSource

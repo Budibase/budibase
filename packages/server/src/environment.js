@@ -13,6 +13,10 @@ function isDev() {
   )
 }
 
+function isCypress() {
+  return process.env.NODE_ENV === "cypress"
+}
+
 let LOADED = false
 if (!LOADED && isDev() && !isTest()) {
   require("dotenv").config()
@@ -40,6 +44,7 @@ module.exports = {
   NODE_ENV: process.env.NODE_ENV,
   JEST_WORKER_ID: process.env.JEST_WORKER_ID,
   BUDIBASE_ENVIRONMENT: process.env.BUDIBASE_ENVIRONMENT,
+  DISABLE_ACCOUNT_PORTAL: process.env.DISABLE_ACCOUNT_PORTAL,
   // minor
   SALT_ROUNDS: process.env.SALT_ROUNDS,
   LOGGER: process.env.LOGGER,
@@ -61,6 +66,7 @@ module.exports = {
     module.exports[key] = value
   },
   isTest,
+  isCypress,
   isDev,
   isProd: () => {
     return !isDev()

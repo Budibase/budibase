@@ -317,7 +317,7 @@ describe("/rows", () => {
       await request
         .get(`/api/views/derp`)
         .set(config.defaultHeaders())
-        .expect(400)
+        .expect(404)
     })
 
     it("should be able to run on a view", async () => {

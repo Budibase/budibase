@@ -1,7 +1,7 @@
 {
   "name": "@budibase/server",
   "email": "hi@budibase.com",
-  "version": "0.9.146",
+  "version": "0.9.147-alpha.0",
   "description": "Budibase Web Server",
   "main": "src/index.js",
   "repository": {
@@ -64,9 +64,9 @@
   "author": "Budibase",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
-    "@budibase/auth": "^0.9.146",
-    "@budibase/client": "^0.9.146",
-    "@budibase/string-templates": "^0.9.146",
+    "@budibase/auth": "^0.9.147-alpha.0",
+    "@budibase/client": "^0.9.147-alpha.0",
+    "@budibase/string-templates": "^0.9.147-alpha.0",
     "@elastic/elasticsearch": "7.10.0",
     "@koa/router": "8.0.0",
     "@sendgrid/mail": "7.1.1",
@@ -96,6 +96,7 @@
     "koa-session": "5.12.0",
     "koa-static": "5.0.0",
     "lodash": "4.17.21",
+    "memorystream": "^0.3.1",
     "mongodb": "3.6.3",
     "mssql": "6.2.3",
     "mysql": "2.18.1",

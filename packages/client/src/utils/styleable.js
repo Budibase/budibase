@@ -23,10 +23,14 @@ export const styleable = (node, styles = {}) => {
   let applyHoverStyles
   let selectComponent
 
+  // Allow dragging if required
+  const parent = node.closest(".component")
+  if (parent && parent.classList.contains("draggable")) {
+    node.setAttribute("draggable", true)
+  }
+
   // Creates event listeners and applies initial styles
   const setupStyles = (newStyles = {}) => {
-    // Use empty state styles as base styles if required, but let them, get
-    // overridden by any user specified styles
     let baseStyles = {}
     if (newStyles.empty) {
       baseStyles.border = "2px dashed var(--spectrum-global-color-gray-600)"
@@ -45,7 +49,6 @@ export const styleable = (node, styles = {}) => {
     // Applies a style string to a DOM node
     const applyStyles = styleString => {
       node.style = styleString
-      node.dataset.componentId = componentId
     }
 
     // Applies the "normal" style definition

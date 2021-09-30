@@ -23,7 +23,8 @@
   import SelectionIndicator from "components/preview/SelectionIndicator.svelte"
   import HoverIndicator from "components/preview/HoverIndicator.svelte"
   import CustomThemeWrapper from "./CustomThemeWrapper.svelte"
-  import ErrorSVG from "../../../builder/assets/error.svg"
+  import DNDHandler from "components/preview/DNDHandler.svelte"
+  import ErrorSVG from "builder/assets/error.svg"
 
   // Provide contexts
   setContext("sdk", SDK)
@@ -104,7 +105,10 @@
               <div id="app-root">
                 <CustomThemeWrapper>
                   {#key $screenStore.activeLayout._id}
-                    <Component instance={$screenStore.activeLayout.props} />
+                    <Component
+                      isLayout
+                      instance={$screenStore.activeLayout.props}
+                    />
                   {/key}
 
                   <!-- Layers on top of app -->
@@ -122,6 +126,7 @@
               {#if $builderStore.inBuilder}
                 <SelectionIndicator />
                 <HoverIndicator />
+                <DNDHandler />
               {/if}
             </div>
           </StateBindingsProvider>
