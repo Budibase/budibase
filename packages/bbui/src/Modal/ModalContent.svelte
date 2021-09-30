@@ -14,6 +14,7 @@
   export let showConfirmButton = true
   export let showCloseIcon = true
   export let onConfirm = undefined
+  export let onCancel = undefined
   export let disabled = false
   export let showDivider = true
 
@@ -25,6 +26,14 @@
     loading = true
     if (!onConfirm || (await onConfirm()) !== false) {
       hide()
+    }
+    loading = false
+  }
+
+  async function close() {
+    loading = true
+    if (!onCancel || (await onCancel()) !== false) {
+      cancel()
     }
     loading = false
   }
@@ -65,7 +74,7 @@
       >
         <slot name="footer" />
         {#if showCancelButton}
-          <Button group secondary on:click={cancel}>{cancelText}</Button>
+          <Button group secondary on:click={close}>{cancelText}</Button>
         {/if}
         {#if showConfirmButton}
           <Button
