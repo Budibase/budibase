@@ -50,7 +50,7 @@ Cypress.Commands.add("createApp", name => {
 Cypress.Commands.add("deleteApp", () => {
   cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
   cy.wait(1000)
-  cy.request(`https://test.budi.live/api/applications?status=all`)
+  cy.request(`localhost:${Cypress.env("PORT")}/api/applications?status=all`)
     .its("body")
     .then(val => {
       console.log(val)
