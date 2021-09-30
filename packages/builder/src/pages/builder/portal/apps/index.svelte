@@ -12,6 +12,7 @@
     Page,
     notifications,
     Body,
+    Search,
   } from "@budibase/bbui"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
   import UpdateAppModal from "components/start/UpdateAppModal.svelte"
@@ -35,9 +36,13 @@
   let unpublishModal
   let creatingApp = false
   let loaded = false
+  let searchTerm = ""
   let cloud = $admin.cloud
 
   $: enrichedApps = enrichApps($apps, $auth.user, sortBy)
+  $: filteredApps = enrichedApps.filter(app =>
+    app?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+  )
 
   const enrichApps = (apps, user, sortBy) => {
     const enrichedApps = apps.map(app => ({
@@ -46,6 +51,7 @@
       lockedYou: app.lockedBy && app.lockedBy.email === user?.email,
       lockedOther: app.lockedBy && app.lockedBy.email !== user?.email,
     }))
+
     if (sortBy === "status") {
       return enrichedApps.sort((a, b) => {
         if (a.status === b.status) {
@@ -218,6 +224,7 @@
               { label: "Sort by status", value: "status" },
             ]}
           />
+          <Search placeholder="Search" bind:value={searchTerm} />
         </div>
         <ActionGroup>
           <ActionButton
@@ -238,7 +245,7 @@
         class:appGrid={layout === "grid"}
         class:appTable={layout === "table"}
       >
-        {#each enrichedApps as app (app.appId)}
+        {#each filteredApps as app (app.appId)}
           <svelte:component
             this={layout === "grid" ? AppCard : AppRow}
             {releaseLock}
@@ -314,7 +321,9 @@
   }
 
   .select {
-    width: 190px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-gap: 10px;
   }
 
   .appGrid {
