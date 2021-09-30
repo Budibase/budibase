@@ -9,7 +9,7 @@ const {
 const { stringToReadStream } = require("../../utilities")
 const { getGlobalDBName, getGlobalDB } = require("@budibase/auth/tenancy")
 const { create } = require("./application")
-const { getDocParams, DocumentTypes } = require("../../db/utils")
+const { getDocParams, DocumentTypes, isDevAppID } = require("../../db/utils")
 
 async function createApp(appName, appImport) {
   const ctx = {
@@ -33,7 +33,11 @@ exports.exportApps = async ctx => {
     global: globalDBString,
   }
   for (let app of apps) {
-    allDBs[app.name] = await exportDB(app._id)
+    // only export the dev apps as they will be the latest, the user can republish the apps
+    // in their self hosted environment
+    if (isDevAppID(app._id)) {
+      allDBs[app.name] = await exportDB(app._id)
+    }
   }
   const filename = `cloud-export-${new Date().getTime()}.txt`
   ctx.attachment(filename)
