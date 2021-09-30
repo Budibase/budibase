@@ -1,6 +1,7 @@
 import { writable, derived } from "svelte/store"
 import Manifest from "manifest.json"
 import { findComponentById, findComponentPathById } from "../utils/components"
+import analytics from "../api/analytics"
 
 const dispatchEvent = (type, data = {}) => {
   window.dispatchEvent(
@@ -62,6 +63,9 @@ const createBuilderStore = () => {
     },
     notifyLoaded: () => {
       dispatchEvent("preview-loaded")
+    },
+    pingEndUser: () => {
+      analytics.pingEndUser()
     },
     setSelectedPath: path => {
       console.log("set to ")
