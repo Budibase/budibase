@@ -28,10 +28,59 @@
     chalk "^2.0.0"
     js-tokens "^4.0.0"
 
-"@budibase/bbui@^0.9.125-alpha.17":
-  version "0.9.133"
-  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-0.9.133.tgz#91a2fb24abaaf91d2cb1e00eb51c493c1290f9ad"
-  integrity sha512-xbMmc/hee1QRNW7TrbGUBmLr1hMHXqUDA6rdl9N2PGfHFuFWbqlD8PWYanHmLevVet+CjkuKGPSbBghFK2pQyQ==
+"@budibase/bbui@^0.9.139":
+  version "0.9.142"
+  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-0.9.142.tgz#7edbda7967c9e5dfc96e5be5231656e5aab8d0e3"
+  integrity sha512-m2YlqqH87T4RwqD/oGhH6twHIgvFv4oUMEhKpkgLsbxjXVLVD0OOF7WqjpDnSa4khVQaixjdkI/Jiw2qhBUSaA==
+  dependencies:
+    "@adobe/spectrum-css-workflow-icons" "^1.2.1"
+    "@spectrum-css/actionbutton" "^1.0.1"
+    "@spectrum-css/actiongroup" "^1.0.1"
+    "@spectrum-css/avatar" "^3.0.2"
+    "@spectrum-css/button" "^3.0.1"
+    "@spectrum-css/buttongroup" "^3.0.2"
+    "@spectrum-css/checkbox" "^3.0.2"
+    "@spectrum-css/dialog" "^3.0.1"
+    "@spectrum-css/divider" "^1.0.3"
+    "@spectrum-css/dropzone" "^3.0.2"
+    "@spectrum-css/fieldgroup" "^3.0.2"
+    "@spectrum-css/fieldlabel" "^3.0.1"
+    "@spectrum-css/icon" "^3.0.1"
+    "@spectrum-css/illustratedmessage" "^3.0.2"
+    "@spectrum-css/inputgroup" "^3.0.2"
+    "@spectrum-css/label" "^2.0.10"
+    "@spectrum-css/link" "^3.1.1"
+    "@spectrum-css/menu" "^3.0.1"
+    "@spectrum-css/modal" "^3.0.1"
+    "@spectrum-css/pagination" "^3.0.3"
+    "@spectrum-css/picker" "^1.0.1"
+    "@spectrum-css/popover" "^3.0.1"
+    "@spectrum-css/progressbar" "^1.0.2"
+    "@spectrum-css/progresscircle" "^1.0.2"
+    "@spectrum-css/radio" "^3.0.2"
+    "@spectrum-css/search" "^3.0.2"
+    "@spectrum-css/sidenav" "^3.0.2"
+    "@spectrum-css/statuslight" "^3.0.2"
+    "@spectrum-css/stepper" "^3.0.3"
+    "@spectrum-css/switch" "^1.0.2"
+    "@spectrum-css/table" "^3.0.1"
+    "@spectrum-css/tabs" "^3.0.1"
+    "@spectrum-css/tags" "^3.0.2"
+    "@spectrum-css/textfield" "^3.0.1"
+    "@spectrum-css/toast" "^3.0.1"
+    "@spectrum-css/tooltip" "^3.0.3"
+    "@spectrum-css/treeview" "^3.0.2"
+    "@spectrum-css/typography" "^3.0.1"
+    "@spectrum-css/underlay" "^2.0.9"
+    "@spectrum-css/vars" "^3.0.1"
+    dayjs "^1.10.4"
+    svelte-flatpickr "^3.1.0"
+    svelte-portal "^1.0.0"
+
+"@budibase/bbui@^0.9.146-alpha.3":
+  version "0.9.146"
+  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-0.9.146.tgz#7689b2c0f148321e62969181e3f6549f03dd3e78"
+  integrity sha512-Mq0oMyaN18Dg5e0IPtPXSGmu/TS4B74gW+l2ypJDNTzSRm934DOAPghDgkb53rFNZhsovCYjixJZmesUcv2o3g==
   dependencies:
     "@adobe/spectrum-css-workflow-icons" "^1.2.1"
     "@spectrum-css/actionbutton" "^1.0.1"
@@ -105,10 +154,28 @@
     to-gfm-code-block "^0.1.1"
     year "^0.2.1"
 
-"@budibase/string-templates@^0.9.125-alpha.17":
-  version "0.9.133"
-  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-0.9.133.tgz#221d81e080dc4485dcffa989d16e2bbed39f9055"
-  integrity sha512-SMHcSPwHYdAqol9YCcMoYawp5/ETr9TqGZCUsL+hUUq+LritPwu/miQ++SVvRTQbOR7Mker0S9LO3H8mwYkW8w==
+"@budibase/standard-components@^0.9.139":
+  version "0.9.139"
+  resolved "https://registry.yarnpkg.com/@budibase/standard-components/-/standard-components-0.9.139.tgz#cf8e2b759ae863e469e50272b3ca87f2827e66e3"
+  integrity sha512-Av0u9Eq2jerjhG6Atta+c0mOQGgE5K0QI3cm+8s/3Vki6/PXkO1YL5Alo3BOn9ayQAVZ/xp4rtZPuN/rzRibHw==
+  dependencies:
+    "@budibase/bbui" "^0.9.139"
+    "@spectrum-css/button" "^3.0.3"
+    "@spectrum-css/card" "^3.0.3"
+    "@spectrum-css/divider" "^1.0.3"
+    "@spectrum-css/link" "^3.1.3"
+    "@spectrum-css/page" "^3.0.1"
+    "@spectrum-css/typography" "^3.0.2"
+    "@spectrum-css/vars" "^3.0.1"
+    apexcharts "^3.22.1"
+    dayjs "^1.10.5"
+    svelte-apexcharts "^1.0.2"
+    svelte-flatpickr "^3.1.0"
+
+"@budibase/string-templates@^0.9.146-alpha.3":
+  version "0.9.146"
+  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-0.9.146.tgz#85249c7a8777a5f0c280af6f6d0e3d3ff0bf20b5"
+  integrity sha512-4f91SVUaTKseB+j7ycWbP54XiqiFZ6bZvcKgzsg1mLF+VVJ1/ALUsLvCRaj6SlcSHrhhALiGVR1z18KOyBWoKw==
   dependencies:
     "@budibase/handlebars-helpers" "^0.11.4"
     dayjs "^1.10.4"
@@ -2169,9 +2236,9 @@ is-extglob@^2.1.1:
   integrity sha1-qIwCU1eR8C7TfHahueqXc8gz+MI=
 
 is-glob@^4.0.1:
-  version "4.0.1"
-  resolved "https://registry.yarnpkg.com/is-glob/-/is-glob-4.0.1.tgz#7567dbe9f2f5e2467bc77ab83c4a29482407a5dc"
-  integrity sha512-5G0tKtBTFImOqDnLB2hG6Bp2qcKEFduo4tZu9MT/H6NQv/ghhy30o55ufafxJ/LdH79LLs2Kfrn85TLKyA7BUg==
+  version "4.0.3"
+  resolved "https://registry.yarnpkg.com/is-glob/-/is-glob-4.0.3.tgz#64f61e42cbbb2eec2071a9dac0b28ba1e65d5084"
+  integrity sha512-xelSayHH36ZgE7ZWhli7pW34hNbNl8Ojv5KVmkJD4hBdD3th8Tfk9vYasLM+mXWOZhFkgZfxhLSnrwRr4elSSg==
   dependencies:
     is-extglob "^2.1.1"
 

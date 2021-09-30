@@ -1,6 +1,6 @@
 <script>
   import { tables } from "stores/backend"
-  import { Select } from "@budibase/bbui"
+  import { Select, Toggle, DatePicker, Multiselect } from "@budibase/bbui"
   import DrawerBindableInput from "../../common/bindings/DrawerBindableInput.svelte"
   import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
   import { createEventDispatcher } from "svelte"
@@ -44,11 +44,29 @@
   <div class="schema-fields">
     {#each schemaFields as [field, schema]}
       {#if !schema.autocolumn}
-        {#if schemaHasOptions(schema)}
+        {#if schemaHasOptions(schema) && schema.type !== "array"}
           <Select
             on:change={e => onChange(e, field)}
             label={field}
             value={value[field]}
+            options={schema.constraints.inclusion}
+          />
+        {:else if schema.type === "datetime"}
+          <DatePicker
+            label={field}
+            value={value[field]}
+            on:change={e => onChange(e, field)}
+          />
+        {:else if schema.type === "boolean"}
+          <Toggle
+            text={field}
+            value={value[field]}
+            on:change={e => onChange(e, field)}
+          />
+        {:else if schema.type === "array"}
+          <Multiselect
+            bind:value={value[field]}
+            label={field}
             options={schema.constraints.inclusion}
           />
         {:else if schema.type === "string" || schema.type === "number"}

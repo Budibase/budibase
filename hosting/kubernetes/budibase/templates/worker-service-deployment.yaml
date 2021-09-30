@@ -89,6 +89,8 @@ spec:
           value: {{ .Values.globals.selfHosted | quote }}
         - name: ACCOUNT_PORTAL_URL
           value: {{ .Values.globals.accountPortalUrl | quote }}
+        - name: COOKIE_DOMAIN
+          value: {{ .Values.globals.cookieDomain | quote }}
         image: budibase/worker
         imagePullPolicy: Always
         name: bbworker

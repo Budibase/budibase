@@ -24,7 +24,7 @@
   import HoverIndicator from "components/preview/HoverIndicator.svelte"
   import CustomThemeWrapper from "./CustomThemeWrapper.svelte"
   import DNDHandler from "components/preview/DNDHandler.svelte"
-  import ErrorSVG from "../../../builder/assets/error.svg"
+  import ErrorSVG from "builder/assets/error.svg"
 
   // Provide contexts
   setContext("sdk", SDK)

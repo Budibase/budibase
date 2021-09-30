@@ -12,7 +12,11 @@ import { getSqlQuery } from "./utils"
 module MySQLModule {
   const mysql = require("mysql")
   const Sql = require("./base/sql")
-  const { buildExternalTableId, convertType } = require("./utils")
+  const {
+    buildExternalTableId,
+    convertType,
+    copyExistingPropsOver,
+  } = require("./utils")
   const { FieldTypes } = require("../constants")
 
   interface MySQLConfig {
@@ -104,7 +108,7 @@ module MySQLModule {
     client: any,
     query: SqlQuery,
     connect: boolean = true
-  ): Promise<any[]> {
+  ): Promise<any[] | any> {
     // Node MySQL is callback based, so we must wrap our call in a promise
     return new Promise((resolve, reject) => {
       if (connect) {
@@ -194,18 +198,7 @@ module MySQLModule {
           }
         }
 
-        // add the existing relationships from the entities if they exist, to prevent them from being overridden
-        if (entities && entities[tableName]) {
-          const existingTableSchema = entities[tableName].schema
-          for (let key in existingTableSchema) {
-            if (!existingTableSchema.hasOwnProperty(key)) {
-              continue
-            }
-            if (existingTableSchema[key].type === "link") {
-              tables[tableName].schema[key] = existingTableSchema[key]
-            }
-          }
-        }
+        copyExistingPropsOver(tableName, tables, entities)
       }
 
       this.client.end()
@@ -249,6 +242,23 @@ module MySQLModule {
       return internalQuery(this.client, input, false)
     }
 
+    // when creating if an ID has been inserted need to make sure
+    // the id filter is enriched with it before trying to retrieve the row
+    checkLookupKeys(results: any, json: QueryJson) {
+      if (!results?.insertId || !json.meta?.table || !json.meta.table.primary) {
+        return json
+      }
+      const primaryKey = json.meta.table.primary?.[0]
+      json.extra = {
+        idFilter: {
+          equal: {
+            [primaryKey]: results.insertId,
+          },
+        },
+      }
+      return json
+    }
+
     async query(json: QueryJson) {
       const operation = this._operation(json)
       this.client.connect()
@@ -261,7 +271,7 @@ module MySQLModule {
       const results = await internalQuery(this.client, input, false)
       // same as delete, manage returning
       if (operation === Operation.CREATE || operation === Operation.UPDATE) {
-        row = this.getReturningRow(json)
+        row = this.getReturningRow(this.checkLookupKeys(results, json))
       }
       this.client.end()
       if (operation !== Operation.READ) {

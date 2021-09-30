@@ -39,6 +39,7 @@ const DocumentTypes = {
   QUERY: "query",
   DEPLOYMENTS: "deployments",
   METADATA: "metadata",
+  MEM_VIEW: "view",
 }
 
 const ViewNames = {
@@ -108,6 +109,8 @@ function getDocParams(docType, docId = null, otherProps = {}) {
     endkey: `${docType}${SEPARATOR}${docId}${UNICODE_MAX}`,
   }
 }
+
+exports.getDocParams = getDocParams
 
 /**
  * Gets parameters for retrieving tables, this is a utility function for the getDocParams function.
@@ -346,6 +349,14 @@ exports.getMetadataParams = (type, entityId = null, otherProps = {}) => {
     docId += entityId
   }
   return getDocParams(DocumentTypes.METADATA, docId, otherProps)
+}
+
+exports.generateMemoryViewID = viewName => {
+  return `${DocumentTypes.MEM_VIEW}${SEPARATOR}${viewName}`
+}
+
+exports.getMemoryViewParams = (otherProps = {}) => {
+  return getDocParams(DocumentTypes.MEM_VIEW, null, otherProps)
 }
 
 /**

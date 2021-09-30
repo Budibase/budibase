@@ -4,6 +4,7 @@
   export let defaults
   export let object = defaults || {}
   export let readOnly
+  export let noAddButton
 
   let fields = Object.entries(object).map(([name, value]) => ({ name, value }))
 
@@ -12,7 +13,7 @@
     {}
   )
 
-  function addEntry() {
+  export function addEntry() {
     fields = [...fields, {}]
   }
 
@@ -32,7 +33,7 @@
     {/if}
   {/each}
 </div>
-{#if !readOnly}
+{#if !readOnly && !noAddButton}
   <div>
     <Button secondary thin outline on:click={addEntry}>Add</Button>
   </div>

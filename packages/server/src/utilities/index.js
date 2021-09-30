@@ -3,12 +3,21 @@ const { OBJ_STORE_DIRECTORY } = require("../constants")
 const { sanitizeKey } = require("@budibase/auth/src/objectStore")
 const CouchDB = require("../db")
 const { generateMetadataID } = require("../db/utils")
+const Readable = require("stream").Readable
 
 const BB_CDN = "https://cdn.budi.live"
 
 exports.wait = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 exports.isDev = env.isDev
+
+exports.removeFromArray = (array, element) => {
+  const index = array.indexOf(element)
+  if (index !== -1) {
+    array.splice(index, 1)
+  }
+  return array
+}
 
 /**
  * Makes sure that a URL has the correct number of slashes, while maintaining the
@@ -105,4 +114,23 @@ exports.deleteEntityMetadata = async (appId, type, entityId) => {
   if (id && rev) {
     await db.remove(id, rev)
   }
+}
+
+exports.escapeDangerousCharacters = string => {
+  return string
+    .replace(/[\\]/g, "\\\\")
+    .replace(/[\b]/g, "\\b")
+    .replace(/[\f]/g, "\\f")
+    .replace(/[\n]/g, "\\n")
+    .replace(/[\r]/g, "\\r")
+    .replace(/[\t]/g, "\\t")
+}
+
+exports.stringToReadStream = string => {
+  return new Readable({
+    read() {
+      this.push(string)
+      this.push(null)
+    },
+  })
 }

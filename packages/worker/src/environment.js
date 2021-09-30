@@ -18,7 +18,7 @@ if (!LOADED && isDev() && !isTest()) {
 
 module.exports = {
   NODE_ENV: process.env.NODE_ENV,
-  SELF_HOSTED: process.env.SELF_HOSTED,
+  SELF_HOSTED: !!parseInt(process.env.SELF_HOSTED),
   PORT: process.env.PORT,
   CLUSTER_PORT: process.env.CLUSTER_PORT,
   MINIO_ACCESS_KEY: process.env.MINIO_ACCESS_KEY,
@@ -32,7 +32,14 @@ module.exports = {
   REDIS_PASSWORD: process.env.REDIS_PASSWORD,
   INTERNAL_API_KEY: process.env.INTERNAL_API_KEY,
   MULTI_TENANCY: process.env.MULTI_TENANCY,
+  DISABLE_ACCOUNT_PORTAL: process.env.DISABLE_ACCOUNT_PORTAL,
   ACCOUNT_PORTAL_URL: process.env.ACCOUNT_PORTAL_URL,
+  SMTP_FALLBACK_ENABLED: process.env.SMTP_FALLBACK_ENABLED,
+  SMTP_USER: process.env.SMTP_USER,
+  SMTP_PASSWORD: process.env.SMTP_PASSWORD,
+  SMTP_HOST: process.env.SMTP_HOST,
+  SMTP_PORT: process.env.SMTP_PORT,
+  SMTP_FROM_ADDRESS: process.env.SMTP_FROM_ADDRESS,
   _set(key, value) {
     process.env[key] = value
     module.exports[key] = value

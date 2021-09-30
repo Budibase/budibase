@@ -88,7 +88,7 @@ const validateFormHandler = async (action, context) => {
   )
 }
 
-const refreshDatasourceHandler = async (action, context) => {
+const refreshDataProviderHandler = async (action, context) => {
   return await executeActionHandler(
     context,
     action.parameters.componentId,
@@ -139,7 +139,7 @@ const handlerMap = {
   ["Execute Query"]: queryExecutionHandler,
   ["Trigger Automation"]: triggerAutomationHandler,
   ["Validate Form"]: validateFormHandler,
-  ["Refresh Datasource"]: refreshDatasourceHandler,
+  ["Refresh Data Provider"]: refreshDataProviderHandler,
   ["Log Out"]: logoutHandler,
   ["Clear Form"]: clearFormHandler,
   ["Close Screen Modal"]: closeScreenModalHandler,

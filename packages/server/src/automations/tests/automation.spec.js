@@ -13,8 +13,6 @@ const { makePartial } = require("../../tests/utilities")
 const { cleanInputValues } = require("../automationUtils")
 const setup = require("./utilities")
 
-usageQuota.getAPIKey.mockReturnValue({ apiKey: "test" })
-
 describe("Run through some parts of the automations system", () => {
   let config = setup.getConfig()
 

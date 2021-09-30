@@ -1,6 +1,10 @@
 const CouchDB = require("../db")
 const usageQuota = require("../utilities/usageQuota")
 const env = require("../environment")
+const { getTenantId } = require("@budibase/auth/tenancy")
+
+// tenants without limits
+const EXCLUDED_TENANTS = ["bb", "default", "bbtest", "bbstaging"]
 
 // currently only counting new writes and deletes
 const METHOD_MAP = {
@@ -13,6 +17,7 @@ const DOMAIN_MAP = {
   upload: usageQuota.Properties.UPLOAD,
   views: usageQuota.Properties.VIEW,
   users: usageQuota.Properties.USER,
+  applications: usageQuota.Properties.APPS,
   // this will not be updated by endpoint calls
   // instead it will be updated by triggerInfo
   automationRuns: usageQuota.Properties.AUTOMATION,
@@ -27,8 +32,10 @@ function getProperty(url) {
 }
 
 module.exports = async (ctx, next) => {
+  const tenantId = getTenantId()
+
   // if in development or a self hosted cloud usage quotas should not be executed
-  if (env.isDev() || env.SELF_HOSTED) {
+  if (env.isDev() || env.SELF_HOSTED || EXCLUDED_TENANTS.includes(tenantId)) {
     return next()
   }
 
@@ -57,9 +64,9 @@ module.exports = async (ctx, next) => {
     usage = files.map(file => file.size).reduce((total, size) => total + size)
   }
   try {
-    await usageQuota.update(ctx.auth.apiKey, property, usage)
+    await usageQuota.update(property, usage)
     return next()
   } catch (err) {
-    ctx.throw(403, err)
+    ctx.throw(400, err)
   }
 }

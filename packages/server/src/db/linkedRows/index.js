@@ -76,9 +76,12 @@ async function getFullLinkedDocs(ctx, appId, links) {
   // create DBs
   const db = new CouchDB(appId)
   const linkedRowIds = links.map(link => link.id)
-  let linked = (await db.allDocs(getMultiIDParams(linkedRowIds))).rows.map(
+  const uniqueRowIds = [...new Set(linkedRowIds)]
+  let dbRows = (await db.allDocs(getMultiIDParams(uniqueRowIds))).rows.map(
     row => row.doc
   )
+  // convert the unique db rows back to a full list of linked rows
+  const linked = linkedRowIds.map(id => dbRows.find(row => row._id === id))
   // need to handle users as specific cases
   let [users, other] = partition(linked, linkRow =>
     linkRow._id.startsWith(USER_METDATA_PREFIX)
@@ -112,7 +115,7 @@ exports.updateLinks = async function (args) {
   let linkController = new LinkController(args)
   try {
     if (
-      !(await linkController.doesTableHaveLinkedFields()) &&
+      !(await linkController.doesTableHaveLinkedFields(table)) &&
       (oldTable == null ||
         !(await linkController.doesTableHaveLinkedFields(oldTable)))
     ) {
