@@ -17,7 +17,7 @@ exports.endUserPing = async (ctx, next) => {
   if (!posthogClient) return next()
 
   posthogClient.capture("budibase:end_user_ping", {
-    userId: ctx.user?._id,
+    userId: ctx.user && ctx.user._id,
     appId: ctx.appId,
   })
 
