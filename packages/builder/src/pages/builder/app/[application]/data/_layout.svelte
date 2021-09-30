@@ -1,12 +1,14 @@
 <script>
   import { goto, params } from "@roxi/routify"
-  import { Icon, Modal, Tabs, Tab } from "@budibase/bbui"
+  import { Icon, Tabs, Tab } from "@budibase/bbui"
   import { BUDIBASE_INTERNAL_DB } from "constants"
   import DatasourceNavigator from "components/backend/DatasourceNavigator/DatasourceNavigator.svelte"
   import CreateDatasourceModal from "components/backend/DatasourceNavigator/modals/CreateDatasourceModal.svelte"
 
   let selected = "Sources"
+
   let modal
+
   $: isExternal =
     $params.selectedDatasource &&
     $params.selectedDatasource !== BUDIBASE_INTERNAL_DB
@@ -23,9 +25,7 @@
       <Tab title="Sources">
         <div class="tab-content-padding">
           <DatasourceNavigator />
-          <Modal bind:this={modal}>
-            <CreateDatasourceModal />
-          </Modal>
+          <CreateDatasourceModal bind:modal />
         </div>
       </Tab>
     </Tabs>

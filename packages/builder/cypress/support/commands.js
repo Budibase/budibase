@@ -35,8 +35,11 @@ Cypress.Commands.add("createApp", name => {
     .within(() => {
       cy.get("input").eq(0).type(name).should("have.value", name).blur()
       cy.get(".spectrum-ButtonGroup").contains("Create app").click()
+      cy.wait(7000)
     })
     .then(() => {
+      // Because we show the datasource modal on entry, we need to create a table to get rid of the modal in the future
+      cy.createInitialDatasource("initialTable")
       cy.expandBudibaseConnection()
       cy.get(".nav-item.selected > .content").should("be.visible")
     })
@@ -69,11 +72,28 @@ Cypress.Commands.add("createTestTableWithData", () => {
   cy.addColumn("dog", "age", "Number")
 })
 
-Cypress.Commands.add("createTable", tableName => {
+Cypress.Commands.add("createInitialDatasource", tableName => {
   // Enter table name
+  cy.get(".spectrum-Modal").within(() => {
+    cy.contains("Budibase DB").trigger("mouseover").click().click()
+    cy.wait(1000)
+    cy.contains("Continue").click()
+  })
+
+  cy.get(".spectrum-Modal").within(() => {
+    cy.wait(1000)
+    cy.get("input").first().type(tableName).blur()
+    cy.get(".spectrum-ButtonGroup").contains("Create").click()
+  })
+  cy.contains(tableName).should("be.visible")
+})
+
+Cypress.Commands.add("createTable", tableName => {
   cy.contains("Budibase DB").click()
   cy.contains("Create new table").click()
+
   cy.get(".spectrum-Modal").within(() => {
+    cy.wait(1000)
     cy.get("input").first().type(tableName).blur()
     cy.get(".spectrum-ButtonGroup").contains("Create").click()
   })
@@ -145,7 +165,7 @@ Cypress.Commands.add("getComponent", componentId => {
     .its("body")
     .should("not.be.null")
     .then(cy.wrap)
-    .find(`[data-component-id=${componentId}]`)
+    .find(`[data-id=${componentId}]`)
 })
 
 Cypress.Commands.add("navigateToFrontend", () => {

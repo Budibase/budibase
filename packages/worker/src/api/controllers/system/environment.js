@@ -5,5 +5,6 @@ exports.fetch = async ctx => {
     multiTenancy: !!env.MULTI_TENANCY,
     cloud: !env.SELF_HOSTED,
     accountPortalUrl: env.ACCOUNT_PORTAL_URL,
+    disableAccountPortal: env.DISABLE_ACCOUNT_PORTAL,
   }
 }

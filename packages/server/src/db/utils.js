@@ -110,6 +110,8 @@ function getDocParams(docType, docId = null, otherProps = {}) {
   }
 }
 
+exports.getDocParams = getDocParams
+
 /**
  * Gets parameters for retrieving tables, this is a utility function for the getDocParams function.
  */

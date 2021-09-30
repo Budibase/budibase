@@ -7,6 +7,7 @@ export function createAdminStore() {
     loaded: false,
     multiTenancy: false,
     cloud: false,
+    disableAccountPortal: false,
     accountPortalUrl: "",
     onboardingProgress: 0,
     checklist: {
@@ -47,12 +48,14 @@ export function createAdminStore() {
   async function getEnvironment() {
     let multiTenancyEnabled = false
     let cloud = false
+    let disableAccountPortal = false
     let accountPortalUrl = ""
     try {
       const response = await api.get(`/api/system/environment`)
       const json = await response.json()
       multiTenancyEnabled = json.multiTenancy
       cloud = json.cloud
+      disableAccountPortal = json.disableAccountPortal
       accountPortalUrl = json.accountPortalUrl
     } catch (err) {
       // just let it stay disabled
@@ -60,6 +63,7 @@ export function createAdminStore() {
     admin.update(store => {
       store.multiTenancy = multiTenancyEnabled
       store.cloud = cloud
+      store.disableAccountPortal = disableAccountPortal
       store.accountPortalUrl = accountPortalUrl
       return store
     })
