@@ -16,6 +16,7 @@ export function createViewsStore() {
         ...state,
         selected: view,
       }))
+      tables.unselect()
       queries.unselect()
       datasources.unselect()
     },

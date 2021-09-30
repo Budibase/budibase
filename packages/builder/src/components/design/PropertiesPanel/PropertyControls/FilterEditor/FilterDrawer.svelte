@@ -13,18 +13,20 @@
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
   import BindingPanel from "components/common/bindings/BindingPanel.svelte"
   import { generate } from "shortid"
-  import { getValidOperatorsForType, OperatorOptions } from "helpers/lucene"
+  import { getValidOperatorsForType, OperatorOptions } from "constants/lucene"
 
   export let schemaFields
   export let filters = []
   export let bindings = []
   export let panel = BindingPanel
+  export let allowBindings = true
 
   const BannedTypes = ["link", "attachment", "formula"]
 
   $: fieldOptions = (schemaFields ?? [])
     .filter(field => !BannedTypes.includes(field.type))
     .map(field => field.name)
+  $: valueTypeOptions = allowBindings ? ["Value", "Binding"] : ["Value"]
 
   const addFilter = () => {
     filters = [
@@ -93,7 +95,7 @@
     <Layout noPadding>
       <Body size="S">
         {#if !filters?.length}
-          Add your first filter column.
+          Add your first filter expression.
         {:else}
           Results are filtered to only those which match all of the following
           constraints.
@@ -117,7 +119,7 @@
             />
             <Select
               disabled={filter.noValue || !filter.field}
-              options={["Value", "Binding"]}
+              options={valueTypeOptions}
               bind:value={filter.valueType}
               placeholder={null}
             />

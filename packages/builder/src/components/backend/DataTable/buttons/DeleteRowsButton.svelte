@@ -1,15 +1,18 @@
 <script>
+  import { createEventDispatcher } from "svelte"
   import { Button } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
 
   export let selectedRows
   export let deleteRows
 
+  const dispatch = createEventDispatcher()
   let modal
 
   async function confirmDeletion() {
     await deleteRows()
     modal?.hide()
+    dispatch("updaterows")
   }
 </script>
 
