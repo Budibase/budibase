@@ -12,7 +12,7 @@
   import { dndzone } from "svelte-dnd-action"
   import { generate } from "shortid"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
-  import { OperatorOptions, getValidOperatorsForType } from "helpers/lucene"
+  import { OperatorOptions, getValidOperatorsForType } from "constants/lucene"
   import { selectedComponent, store } from "builderStore"
   import { getComponentForSettingType } from "./componentSettings"
   import PropertyControl from "./PropertyControl.svelte"

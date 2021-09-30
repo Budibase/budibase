@@ -24,7 +24,7 @@
   import ModalBindableInput from "components/common/bindings/ModalBindableInput.svelte"
   import FilterDrawer from "components/design/PropertiesPanel/PropertyControls/FilterEditor/FilterDrawer.svelte"
   // need the client lucene builder to convert to the structure API expects
-  import { buildLuceneQuery } from "../../../../../client/src/utils/lucene"
+  import { buildLuceneQuery } from "helpers/lucene"
 
   export let block
   export let webhookModal
