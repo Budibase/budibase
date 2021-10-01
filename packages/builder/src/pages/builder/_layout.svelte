@@ -4,9 +4,6 @@
   import { onMount } from "svelte"
 
   let loaded = false
-  // don't react to these
-  let cloud = $admin.cloud
-  let shouldRedirect = !cloud || $admin.disableAccountPortal
 
   $: multiTenancyEnabled = $admin.multiTenancy
   $: hasAdminUser = $admin?.checklist?.adminUser?.checked
@@ -14,17 +11,33 @@
   $: cloud = $admin.cloud
   $: user = $auth.user
 
-  const validateTenantId = async () => {
-    // set the tenant from the url in the cloud
-    const tenantId = window.location.host.split(".")[0]
+  $: useAccountPortal = cloud && !$admin.disableAccountPortal
 
-    if (!tenantId.includes("localhost:")) {
-      // user doesn't have permission to access this tenant - kick them out
-      if (user && user.tenantId !== tenantId) {
-        await auth.logout()
-        await auth.setOrganisation(null)
+  const validateTenantId = async () => {
+    const host = window.location.host
+    if (host.includes("localhost:")) {
+      // ignore local dev
+      return
+    }
+
+    if (user && user.tenantId) {
+      let urlTenantId
+      const hostParts = host.split(".")
+
+      // only run validation when we know we are in a tenant url
+      // not when we visit the root budibase.app domain
+      // e.g. ['tenant', 'budibase', 'app'] vs ['budibase', 'app']
+      if (hostParts.length > 2) {
+        urlTenantId = hostParts[0]
       } else {
-        await auth.setOrganisation(tenantId)
+        // no tenant in the url - send to account portal to fix this
+        window.location.href = $admin.accountPortalUrl
+        return
+      }
+
+      if (user.tenantId !== urlTenantId) {
+        // user should not be here - play it safe and log them out
+        await auth.logout()
       }
     }
   }
@@ -33,7 +46,7 @@
     await auth.checkAuth()
     await admin.init()
 
-    if (cloud && multiTenancyEnabled) {
+    if (useAccountPortal && multiTenancyEnabled) {
       await validateTenantId()
     }
 
@@ -41,12 +54,11 @@
   })
 
   $: {
-    // We should never see the org or admin user creation screens in the cloud
     const apiReady = $admin.loaded && $auth.loaded
     // if tenant is not set go to it
     if (
       loaded &&
-      shouldRedirect &&
+      !useAccountPortal &&
       apiReady &&
       multiTenancyEnabled &&
       !tenantSet
@@ -54,7 +66,7 @@
       $redirect("./auth/org")
     }
     // Force creation of an admin user if one doesn't exist
-    else if (loaded && shouldRedirect && apiReady && !hasAdminUser) {
+    else if (loaded && !useAccountPortal && apiReady && !hasAdminUser) {
       $redirect("./admin")
     }
     // Redirect to log in at any time if the user isn't authenticated

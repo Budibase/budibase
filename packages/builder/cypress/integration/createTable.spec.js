@@ -24,9 +24,7 @@ context("Create a Table", () => {
   it("updates a column on the table", () => {
     cy.get(".title").click()
     cy.get(".spectrum-Table-editIcon > use").click()
-    cy.get("input")
-      .eq(1)
-      .type("updated", { force: true })
+    cy.get("input").eq(1).type("updated", { force: true })
     // Unset table display column
     cy.get(".spectrum-Switch-input").eq(1).click()
     cy.contains("Save Column").click()
@@ -45,9 +43,7 @@ context("Create a Table", () => {
   it("deletes a row", () => {
     cy.get(".spectrum-Checkbox-input").check({ force: true })
     cy.contains("Delete 1 row(s)").click()
-    cy.get(".spectrum-Modal")
-      .contains("Delete")
-      .click()
+    cy.get(".spectrum-Modal").contains("Delete").click()
     cy.contains("RoverUpdated").should("not.exist")
   })
 
@@ -56,15 +52,18 @@ context("Create a Table", () => {
     cy.get(".spectrum-Table-editIcon > use").click()
     cy.contains("Delete").click()
     cy.wait(50)
-    cy.contains("Delete Column")
-      .click()
+    cy.contains("Delete Column").click()
     cy.contains("nameupdated").should("not.exist")
   })
 
   it("deletes a table", () => {
-    cy.get(".actions > :nth-child(1) > .icon > .spectrum-Icon > use")
-      .eq(1)
-      .click({ force: true })
+    cy.get(".nav-item")
+      .contains("dog")
+      .parents(".nav-item")
+      .first()
+      .within(() => {
+        cy.get(".actions .spectrum-Icon").click({ force: true })
+      })
     cy.get(".spectrum-Menu > :nth-child(2)").click()
     cy.contains("Delete Table").click()
     cy.contains("dog").should("not.exist")
