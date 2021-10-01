@@ -52,7 +52,8 @@ exports.sendSmtpEmail = async (to, from, subject, contents, automation) => {
   )
 
   if (response.status !== 200) {
-    throw "Unable to send email."
+    const error = await response.text()
+    throw `Unable to send email - ${error}`
   }
   return response.json()
 }
