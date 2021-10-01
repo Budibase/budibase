@@ -62,7 +62,7 @@
 <Modal bind:this={modal}>
   <ModalContent
     showConfirmButton={false}
-    cancelText="Close"
+    cancelText="View changes"
     showCloseIcon={false}
     title="Theme settings"
   >

@@ -1,12 +1,12 @@
 import { cloneDeep } from "lodash/fp"
 import { get } from "svelte/store"
 import {
+  findAllMatchingComponents,
   findComponent,
   findComponentPath,
-  findAllMatchingComponents,
 } from "./storeUtils"
 import { store } from "builderStore"
-import { tables as tablesStore, queries as queriesStores } from "stores/backend"
+import { queries as queriesStores, tables as tablesStore } from "stores/backend"
 import { makePropSafe } from "@budibase/string-templates"
 import { TableNames } from "../constants"
 
@@ -422,6 +422,10 @@ function shouldReplaceBinding(currentValue, from, convertTo) {
   return !invalids.find(invalid => noSpaces?.includes(invalid))
 }
 
+function replaceBetween(string, start, end, replacement) {
+  return string.substring(0, start) + replacement + string.substring(end)
+}
+
 /**
  * utility function for the readableToRuntimeBinding and runtimeToReadableBinding.
  */
@@ -431,6 +435,7 @@ function bindingReplacement(bindableProperties, textWithBindings, convertTo) {
   if (typeof textWithBindings !== "string") {
     return textWithBindings
   }
+  // work from longest to shortest
   const convertFromProps = bindableProperties
     .map(el => el[convertFrom])
     .sort((a, b) => {
@@ -440,12 +445,29 @@ function bindingReplacement(bindableProperties, textWithBindings, convertTo) {
   let result = textWithBindings
   for (let boundValue of boundValues) {
     let newBoundValue = boundValue
+    // we use a search string, where any time we replace something we blank it out
+    // in the search, working from longest to shortest so always use best match first
+    let searchString = newBoundValue
     for (let from of convertFromProps) {
       if (shouldReplaceBinding(newBoundValue, from, convertTo)) {
         const binding = bindableProperties.find(el => el[convertFrom] === from)
-        while (newBoundValue.includes(from)) {
-          newBoundValue = newBoundValue.replace(from, binding[convertTo])
-        }
+        let idx
+        do {
+          // see if any instances of this binding exist in the search string
+          idx = searchString.indexOf(from)
+          if (idx !== -1) {
+            let end = idx + from.length,
+              searchReplace = Array(binding[convertTo].length).join("*")
+            // blank out parts of the search string
+            searchString = replaceBetween(searchString, idx, end, searchReplace)
+            newBoundValue = replaceBetween(
+              newBoundValue,
+              idx,
+              end,
+              binding[convertTo]
+            )
+          }
+        } while (idx !== -1)
       }
     }
     result = result.replace(boundValue, newBoundValue)

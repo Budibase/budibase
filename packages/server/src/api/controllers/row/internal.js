@@ -403,16 +403,32 @@ exports.fetchEnrichedRow = async ctx => {
     rowId,
   })
   // look up the actual rows based on the ids
-  const response = await db.allDocs({
-    include_docs: true,
-    keys: linkVals.map(linkVal => linkVal.id),
-  })
-  // need to include the IDs in these rows for any links they may have
-  let linkedRows = await outputProcessing(
-    ctx,
-    table,
-    response.rows.map(row => row.doc)
-  )
+  let response = (
+    await db.allDocs({
+      include_docs: true,
+      keys: linkVals.map(linkVal => linkVal.id),
+    })
+  ).rows.map(row => row.doc)
+  // group responses by table
+  let groups = {},
+    tables = {}
+  for (let row of response) {
+    const linkedTableId = row.tableId
+    if (groups[linkedTableId] == null) {
+      groups[linkedTableId] = [row]
+      tables[linkedTableId] = await db.get(linkedTableId)
+    } else {
+      groups[linkedTableId].push(row)
+    }
+  }
+  let linkedRows = []
+  for (let [tableId, rows] of Object.entries(groups)) {
+    // need to include the IDs in these rows for any links they may have
+    linkedRows = linkedRows.concat(
+      await outputProcessing(ctx, tables[tableId], rows)
+    )
+  }
+
   // insert the link rows in the correct place throughout the main row
   for (let fieldName of Object.keys(table.schema)) {
     let field = table.schema[fieldName]

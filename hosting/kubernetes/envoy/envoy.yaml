@@ -50,6 +50,11 @@ static_resources:
                 route:
                   cluster: app-service
 
+              - match: { path: "/api/deploy" }
+                route:
+                  timeout: 60s
+                  cluster: app-service
+
               # special case for when API requests are made, can just forward, not to minio
               - match: { prefix: "/api/" }
                 route:

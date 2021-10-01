@@ -21,12 +21,12 @@
   <ModalContent
     size="M"
     {onConfirm}
-    title="Upgrade to self-hosted"
-    confirmText="Upgrade"
+    title="Self-host Budibase"
+    confirmText="Self-host Budibase"
   >
     <span
-      >Upgrade to Budibase self-hosting for free, and get SSO, unlimited apps,
-      and more - and it only takes a few minutes!</span
+      >Self-host budibase for free, and get SSO, unlimited apps, and more - and
+      it only takes a few minutes!</span
     >
   </ModalContent>
 </Modal>
