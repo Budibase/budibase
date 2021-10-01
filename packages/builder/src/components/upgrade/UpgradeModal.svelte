@@ -1,10 +1,11 @@
 <script>
   import { Modal, ModalContent, Button } from "@budibase/bbui"
+  import { admin } from "stores/portal"
 
   let upgradeModal
 
   const onConfirm = () => {
-    window.open("https://account.budibase.app/portal/install", "_blank")
+    window.open(`${$admin.accountPortalUrl}/portal/install`, "_blank")
   }
 </script>
 
