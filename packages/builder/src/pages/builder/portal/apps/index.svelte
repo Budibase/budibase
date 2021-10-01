@@ -216,6 +216,7 @@
       <div class="filter">
         <div class="select">
           <Select
+            autoWidth
             bind:value={sortBy}
             placeholder={null}
             options={[
@@ -224,7 +225,9 @@
               { label: "Sort by status", value: "status" },
             ]}
           />
-          <Search placeholder="Search" bind:value={searchTerm} />
+          <div class="desktop-search">
+            <Search placeholder="Search" bind:value={searchTerm} />
+          </div>
         </div>
         <ActionGroup>
           <ActionButton
@@ -240,6 +243,9 @@
             icon="ViewRow"
           />
         </ActionGroup>
+      </div>
+      <div class="mobile-search">
+        <Search placeholder="Search" bind:value={searchTerm} />
       </div>
       <div
         class:appGrid={layout === "grid"}
@@ -318,12 +324,19 @@
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
+    gap: 10px;
   }
 
   .select {
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-gap: 10px;
+  }
+  .filter :global(.spectrum-ActionGroup) {
+    flex-wrap: nowrap;
+  }
+  .mobile-search {
+    display: none;
   }
 
   .appGrid {
@@ -363,6 +376,12 @@
   @media (max-width: 640px) {
     .appTable {
       grid-template-columns: 1fr auto;
+    }
+    .desktop-search {
+      display: none;
+    }
+    .mobile-search {
+      display: block;
     }
   }
 </style>
