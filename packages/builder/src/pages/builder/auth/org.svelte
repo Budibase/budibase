@@ -9,7 +9,8 @@
   let tenantId = get(auth).tenantSet ? get(auth).tenantId : ""
   $: multiTenancyEnabled = $admin.multiTenancy
   $: cloud = $admin.cloud
-  $: disableAccountPortal = $admin.disableAccountPortal
+
+  $: useAccountPortal = cloud && !$admin.disableAccountPortal
 
   async function setOrg() {
     if (tenantId == null || tenantId === "") {
@@ -27,7 +28,7 @@
 
   onMount(async () => {
     await auth.checkQueryString()
-    if (!multiTenancyEnabled || (cloud && !disableAccountPortal)) {
+    if (!multiTenancyEnabled || useAccountPortal) {
       $goto("../")
     } else {
       admin.unload()
