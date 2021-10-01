@@ -4,15 +4,14 @@
   import { onMount } from "svelte"
 
   let loaded = false
-  // don't react to these
-  let cloud = $admin.cloud
-  let shouldRedirect = !cloud || $admin.disableAccountPortal
 
   $: multiTenancyEnabled = $admin.multiTenancy
   $: hasAdminUser = $admin?.checklist?.adminUser?.checked
   $: tenantSet = $auth.tenantSet
   $: cloud = $admin.cloud
   $: user = $auth.user
+
+  $: useAccountPortal = cloud && !$admin.disableAccountPortal
 
   const validateTenantId = async () => {
     // set the tenant from the url in the cloud
@@ -41,12 +40,11 @@
   })
 
   $: {
-    // We should never see the org or admin user creation screens in the cloud
     const apiReady = $admin.loaded && $auth.loaded
     // if tenant is not set go to it
     if (
       loaded &&
-      shouldRedirect &&
+      !useAccountPortal &&
       apiReady &&
       multiTenancyEnabled &&
       !tenantSet
@@ -54,7 +52,7 @@
       $redirect("./auth/org")
     }
     // Force creation of an admin user if one doesn't exist
-    else if (loaded && shouldRedirect && apiReady && !hasAdminUser) {
+    else if (loaded && !useAccountPortal && apiReady && !hasAdminUser) {
       $redirect("./admin")
     }
     // Redirect to log in at any time if the user isn't authenticated
