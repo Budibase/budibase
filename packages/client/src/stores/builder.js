@@ -1,6 +1,7 @@
 import { writable, derived } from "svelte/store"
 import Manifest from "manifest.json"
 import { findComponentById, findComponentPathById } from "../utils/components"
+import { pingEndUser } from "../api"
 
 const dispatchEvent = (type, data = {}) => {
   window.dispatchEvent(
@@ -63,6 +64,9 @@ const createBuilderStore = () => {
     },
     notifyLoaded: () => {
       dispatchEvent("preview-loaded")
+    },
+    pingEndUser: () => {
+      pingEndUser()
     },
     setSelectedPath: path => {
       writableStore.update(state => {

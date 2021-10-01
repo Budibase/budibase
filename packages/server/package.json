@@ -1,7 +1,7 @@
 {
   "name": "@budibase/server",
   "email": "hi@budibase.com",
-  "version": "0.9.147",
+  "version": "0.9.148-alpha.2",
   "description": "Budibase Web Server",
   "main": "src/index.js",
   "repository": {
@@ -64,9 +64,9 @@
   "author": "Budibase",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
-    "@budibase/auth": "^0.9.147",
-    "@budibase/client": "^0.9.147",
-    "@budibase/string-templates": "^0.9.147",
+    "@budibase/auth": "^0.9.148-alpha.2",
+    "@budibase/client": "^0.9.148-alpha.2",
+    "@budibase/string-templates": "^0.9.148-alpha.2",
     "@elastic/elasticsearch": "7.10.0",
     "@koa/router": "8.0.0",
     "@sendgrid/mail": "7.1.1",
@@ -104,6 +104,7 @@
     "open": "7.3.0",
     "pg": "8.5.1",
     "pino-pretty": "4.0.0",
+    "posthog-node": "^1.1.4",
     "pouchdb": "7.2.1",
     "pouchdb-adapter-memory": "^7.2.1",
     "pouchdb-all-dbs": "1.0.2",
