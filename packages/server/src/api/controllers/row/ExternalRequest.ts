@@ -205,9 +205,9 @@ module External {
         } else {
           // we're not inserting a doc, will be a bunch of update calls
           const isUpdate = !field.through
-          const thisKey: string = isUpdate ? "id" : linkTablePrimary
+          const thisKey: string = isUpdate ? "id" : (field.throughTo || linkTablePrimary)
           // @ts-ignore
-          const otherKey: string = isUpdate ? field.fieldName : tablePrimary
+          const otherKey: string = isUpdate ? field.fieldName : (field.throughFrom || tablePrimary)
           row[key].map((relationship: any) => {
             // we don't really support composite keys for relationships, this is why [0] is used
             manyRelationships.push({
@@ -328,12 +328,11 @@ module External {
         if (!table.primary || !linkTable.primary) {
           continue
         }
-        const definition = {
+        const definition: any = {
           // if no foreign key specified then use the name of the field in other table
           from: field.foreignKey || table.primary[0],
           to: field.fieldName,
           tableName: linkTableName,
-          through: undefined,
           // need to specify where to put this back into
           column: fieldName,
         }
@@ -343,8 +342,10 @@ module External {
           )
           definition.through = throughTableName
           // don't support composite keys for relationships
-          definition.from = table.primary[0]
-          definition.to = linkTable.primary[0]
+          definition.from = field.throughFrom || table.primary[0]
+          definition.to = field.throughTo || linkTable.primary[0]
+          definition.fromPrimary = table.primary[0]
+          definition.toPrimary = linkTable.primary[0]
         }
         relationships.push(definition)
       }
@@ -369,7 +370,8 @@ module External {
         }
         const isMany = field.relationshipType === RelationshipTypes.MANY_TO_MANY
         const tableId = isMany ? field.through : field.tableId
-        const fieldName = isMany ? primaryKey : field.fieldName
+        const manyKey = field.throughFrom || primaryKey
+        const fieldName = isMany ? manyKey : field.fieldName
         const response = await makeExternalQuery(this.appId, {
           endpoint: getEndpoint(tableId, DataSourceOperation.READ),
           filters: {
