@@ -92,7 +92,7 @@
         <ActionGroup />
       </div>
       <div class="toprightnav">
-        {#if $admin.cloud}
+        {#if $admin.cloud && $auth.user.account}
           <UpgradeModal />
         {/if}
         <VersionModal />
