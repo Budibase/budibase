@@ -8,6 +8,7 @@ import {
   selectedComponent,
   selectedAccessRole,
 } from "builderStore"
+import { notifications } from "@budibase/bbui"
 import {
   datasources,
   integrations,
@@ -25,6 +26,7 @@ import {
   findComponentParent,
   findClosestMatchingComponent,
   findAllMatchingComponents,
+  findComponent,
 } from "../storeUtils"
 import { uuid } from "../uuid"
 import { removeBindings } from "../dataBinding"
@@ -464,6 +466,28 @@ export const getFrontendStore = () => {
         if (!asset) {
           return
         }
+
+        // Fetch full definition
+        component = findComponent(asset.props, component._id)
+
+        // Ensure we aren't deleting the screen slot
+        if (component._component?.endsWith("/screenslot")) {
+          notifications.error("You can't delete the screen slot")
+          return
+        }
+
+        // Ensure we aren't deleting something that contains the screen slot
+        const screenslot = findComponentType(
+          component,
+          "@budibase/standard-components/screenslot"
+        )
+        if (screenslot != null) {
+          notifications.error(
+            "You can't delete a component that contains the screen slot"
+          )
+          return
+        }
+
         const parent = findComponentParent(asset.props, component._id)
         if (parent) {
           parent._children = parent._children.filter(
