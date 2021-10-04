@@ -3,7 +3,7 @@
   import { store, currentAsset } from "builderStore"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { findComponentParent } from "builderStore/storeUtils"
-  import { ActionMenu, MenuItem, Icon } from "@budibase/bbui"
+  import { ActionMenu, MenuItem, Icon, notifications } from "@budibase/bbui"
 
   export let component
 
@@ -51,7 +51,11 @@
   }
 
   const deleteComponent = async () => {
-    await store.actions.components.delete(component)
+    try {
+      await store.actions.components.delete(component)
+    } catch (error) {
+      notifications.error(error)
+    }
   }
 
   const storeComponentForCopy = (cut = false) => {

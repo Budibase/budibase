@@ -6,7 +6,13 @@
   import { Screen } from "builderStore/store/screenTemplates/utils/Screen"
   import { FrontendTypes } from "constants"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import { ProgressCircle, Layout, Heading, Body } from "@budibase/bbui"
+  import {
+    ProgressCircle,
+    Layout,
+    Heading,
+    Body,
+    notifications,
+  } from "@budibase/bbui"
   import ErrorSVG from "assets/error.svg?raw"
   import { findComponent, findComponentPath } from "builderStore/storeUtils"
 
@@ -166,10 +172,15 @@
     confirmDeleteDialog.show()
   }
 
-  const deleteComponent = () => {
-    store.actions.components.delete({ _id: idToDelete })
+  const deleteComponent = async () => {
+    try {
+      await store.actions.components.delete({ _id: idToDelete })
+    } catch (error) {
+      notifications.error(error)
+    }
     idToDelete = null
   }
+
   const cancelDeleteComponent = () => {
     idToDelete = null
   }
