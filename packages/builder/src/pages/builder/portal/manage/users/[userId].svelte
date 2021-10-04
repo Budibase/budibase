@@ -52,11 +52,11 @@
 
   async function deleteUser() {
     const res = await users.delete(userId)
-    if (res.message) {
+    if (res.status === 200) {
       notifications.success(`User ${$userFetch?.data?.email} deleted.`)
       $goto("./")
     } else {
-      notifications.error("Failed to delete user.")
+      notifications.error(res?.message ? res.message : "Failed to delete user.")
     }
   }
 

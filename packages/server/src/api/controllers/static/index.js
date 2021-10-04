@@ -40,7 +40,7 @@ async function prepareUpload({ s3Key, bucket, metadata, file }) {
 async function checkForSelfHostedURL(ctx) {
   // the "appId" component of the URL may actually be a specific self hosted URL
   let possibleAppUrl = `/${encodeURI(ctx.params.appId).toLowerCase()}`
-  const apps = await getDeployedApps(ctx)
+  const apps = await getDeployedApps()
   if (apps[possibleAppUrl] && apps[possibleAppUrl].appId) {
     return apps[possibleAppUrl].appId
   } else {
