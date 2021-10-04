@@ -112,14 +112,16 @@ function addRelationships(
       )
     } else {
       const throughTable = relationship.through
+      const fromPrimary = relationship.fromPrimary
+      const toPrimary = relationship.toPrimary
       query = query
         // @ts-ignore
         .leftJoin(
           throughTable,
-          `${fromTable}.${from}`,
+          `${fromTable}.${fromPrimary}`,
           `${throughTable}.${from}`
         )
-        .leftJoin(toTable, `${toTable}.${to}`, `${throughTable}.${to}`)
+        .leftJoin(toTable, `${toTable}.${toPrimary}`, `${throughTable}.${to}`)
     }
   }
   return query
