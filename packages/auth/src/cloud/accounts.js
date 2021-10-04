@@ -1,9 +1,8 @@
 const API = require("./api")
 const env = require("../environment")
+const { Headers } = require("../constants")
 
 const api = new API(env.ACCOUNT_PORTAL_URL)
-
-// TODO: Authorization
 
 exports.getAccount = async email => {
   const payload = {
@@ -11,6 +10,9 @@ exports.getAccount = async email => {
   }
   const response = await api.post(`/api/accounts/search`, {
     body: payload,
+    headers: {
+      [Headers.API_KEY]: env.ACCOUNT_PORTAL_API_KEY,
+    },
   })
   const json = await response.json()
 
