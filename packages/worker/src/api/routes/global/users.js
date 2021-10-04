@@ -3,6 +3,7 @@ const controller = require("../../controllers/global/users")
 const joiValidator = require("../../../middleware/joi-validator")
 const adminOnly = require("../../../middleware/adminOnly")
 const Joi = require("joi")
+const cloudRestricted = require("../../../middleware/cloudRestricted")
 
 const router = Router()
 
@@ -90,6 +91,7 @@ router
   )
   .post(
     "/api/global/users/init",
+    cloudRestricted,
     buildAdminInitValidation(),
     controller.adminUser
   )

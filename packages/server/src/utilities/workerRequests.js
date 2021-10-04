@@ -58,11 +58,11 @@ exports.sendSmtpEmail = async (to, from, subject, contents, automation) => {
   return response.json()
 }
 
-exports.getDeployedApps = async ctx => {
+exports.getDeployedApps = async () => {
   try {
     const response = await fetch(
       checkSlashesInUrl(env.WORKER_URL + `/api/apps`),
-      request(ctx, {
+      request(null, {
         method: "GET",
       })
     )

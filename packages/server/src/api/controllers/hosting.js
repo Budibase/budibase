@@ -18,5 +18,5 @@ exports.fetchUrls = async ctx => {
 }
 
 exports.getDeployedApps = async ctx => {
-  ctx.body = await getDeployedApps(ctx)
+  ctx.body = await getDeployedApps()
 }
