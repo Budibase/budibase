@@ -40,6 +40,7 @@ module.exports = {
   SMTP_HOST: process.env.SMTP_HOST,
   SMTP_PORT: process.env.SMTP_PORT,
   SMTP_FROM_ADDRESS: process.env.SMTP_FROM_ADDRESS,
+  PLATFORM_URL: process.env.PLATFORM_URL,
   _set(key, value) {
     process.env[key] = value
     module.exports[key] = value
