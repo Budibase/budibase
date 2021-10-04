@@ -1,10 +1,11 @@
 <script>
   import { Modal, ModalContent, Button } from "@budibase/bbui"
+  import { admin } from "stores/portal"
 
   let upgradeModal
 
   const onConfirm = () => {
-    window.open("https://account.budibase.app/portal/install", "_blank")
+    window.open(`${$admin.accountPortalUrl}/portal/install`, "_blank")
   }
 </script>
 
@@ -25,8 +26,8 @@
     confirmText="Self-host Budibase"
   >
     <span>
-      Self-host Budibase for free, and get SSO, unlimited apps, and more - and
-      it only takes a few minutes!
+      Self-host budibase for free to get unlimited apps and more - and it only
+      takes a few minutes!
     </span>
   </ModalContent>
 </Modal>

@@ -64,6 +64,7 @@ async function storeDeploymentHistory(deployment) {
 
 async function initDeployedApp(prodAppId) {
   const db = new CouchDB(prodAppId)
+  console.log("Reading automation docs")
   const automations = (
     await db.allDocs(
       getAutomationParams(null, {
@@ -71,12 +72,17 @@ async function initDeployedApp(prodAppId) {
       })
     )
   ).rows.map(row => row.doc)
+  console.log("You have " + automations.length + " automations")
   const promises = []
+  console.log("Disabling prod crons..")
   await disableAllCrons(prodAppId)
+  console.log("Prod Cron triggers disabled..")
+  console.log("Enabling cron triggers for deployed app..")
   for (let automation of automations) {
     promises.push(enableCronTrigger(prodAppId, automation))
   }
   await Promise.all(promises)
+  console.log("Enabled cron triggers for deployed app..")
 }
 
 async function deployApp(deployment) {
@@ -88,13 +94,18 @@ async function deployApp(deployment) {
       target: productionAppId,
     })
 
+    console.log("Replication object created")
+
     await replication.replicate()
+    console.log("replication complete.. replacing app meta doc")
     const db = new CouchDB(productionAppId)
     const appDoc = await db.get(DocumentTypes.APP_METADATA)
     appDoc.appId = productionAppId
     appDoc.instance._id = productionAppId
     await db.put(appDoc)
+    console.log("New app doc written successfully.")
 
+    console.log("Setting up live repl between dev and prod")
     // Set up live sync between the live and dev instances
     const liveReplication = new Replication({
       source: productionAppId,
@@ -105,8 +116,11 @@ async function deployApp(deployment) {
         return doc._id !== DocumentTypes.APP_METADATA
       },
     })
+    console.log("Set up live repl between dev and prod")
 
+    console.log("Initialising deployed app")
     await initDeployedApp(productionAppId)
+    console.log("Init complete, setting deployment to successful")
     deployment.setStatus(DeploymentStatus.SUCCESS)
     await storeDeploymentHistory(deployment)
   } catch (err) {
@@ -153,9 +167,13 @@ exports.deploymentProgress = async function (ctx) {
 
 exports.deployApp = async function (ctx) {
   let deployment = new Deployment(ctx.appId)
+  console.log("Deployment object created")
   deployment.setStatus(DeploymentStatus.PENDING)
+  console.log("Deployment object set to pending")
   deployment = await storeDeploymentHistory(deployment)
+  console.log("Stored deployment history")
 
+  console.log("Deploying app...")
   await deployApp(deployment)
 
   ctx.body = deployment

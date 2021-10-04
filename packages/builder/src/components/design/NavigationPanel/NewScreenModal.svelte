@@ -5,6 +5,7 @@
   import { Input, Select, ModalContent, Toggle } from "@budibase/bbui"
   import getTemplates from "builderStore/store/screenTemplates"
   import analytics, { Events } from "analytics"
+  import sanitizeUrl from "builderStore/store/screenTemplates/utils/sanitizeUrl"
 
   const CONTAINER = "@budibase/standard-components/container"
 
@@ -84,7 +85,7 @@
     if (!event.detail.startsWith("/")) {
       route = "/" + event.detail
     }
-    route = route.replace(/ +/g, "-")
+    route = sanitizeUrl(route)
   }
 </script>
 
