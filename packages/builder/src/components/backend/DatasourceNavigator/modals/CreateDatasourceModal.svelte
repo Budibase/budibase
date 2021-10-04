@@ -75,7 +75,7 @@
     }}
   >
     <Layout noPadding>
-      <Body size="XS"
+      <Body size="S"
         >All apps need data. You can connect to a data source below, or add data
         to your app using Budibase's built-in database.
       </Body>
