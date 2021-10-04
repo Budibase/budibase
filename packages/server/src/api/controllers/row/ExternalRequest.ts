@@ -205,9 +205,13 @@ module External {
         } else {
           // we're not inserting a doc, will be a bunch of update calls
           const isUpdate = !field.through
-          const thisKey: string = isUpdate ? "id" : (field.throughTo || linkTablePrimary)
+          const thisKey: string = isUpdate
+            ? "id"
+            : field.throughTo || linkTablePrimary
           // @ts-ignore
-          const otherKey: string = isUpdate ? field.fieldName : (field.throughFrom || tablePrimary)
+          const otherKey: string = isUpdate
+            ? field.fieldName
+            : field.throughFrom || tablePrimary
           row[key].map((relationship: any) => {
             // we don't really support composite keys for relationships, this is why [0] is used
             manyRelationships.push({
