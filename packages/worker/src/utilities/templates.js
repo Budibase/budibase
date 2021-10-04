@@ -8,8 +8,6 @@ const {
 const { checkSlashesInUrl } = require("./index")
 const env = require("../environment")
 const { getGlobalDB, addTenantToUrl } = require("@budibase/auth/tenancy")
-
-const LOCAL_URL = `http://localhost:${env.CLUSTER_PORT || 10000}`
 const BASE_COMPANY = "Budibase"
 
 exports.getSettingsTemplateContext = async (purpose, code = null) => {
@@ -17,7 +15,7 @@ exports.getSettingsTemplateContext = async (purpose, code = null) => {
   // TODO: use more granular settings in the future if required
   let settings = (await getScopedConfig(db, { type: Configs.SETTINGS })) || {}
   if (!settings || !settings.platformUrl) {
-    settings.platformUrl = LOCAL_URL
+    settings.platformUrl = env.PLATFORM_URL
   }
   const URL = settings.platformUrl
   const context = {

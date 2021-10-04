@@ -156,6 +156,8 @@
         ...relateTo,
         through: through._id,
         fieldName: fromTable.primary[0],
+        throughFrom: relateFrom.throughTo,
+        throughTo: relateFrom.throughFrom,
       }
     } else {
       // the relateFrom.fieldName should remain the same, as it is the foreignKey in the other
@@ -251,6 +253,22 @@
       bind:error={errors.through}
       bind:value={fromRelationship.through}
     />
+    {#if fromTable && toTable && through}
+      <Select
+        label={`Foreign Key (${fromTable?.name})`}
+        options={Object.keys(through?.schema)}
+        on:change={() => ($touched.fromForeign = true)}
+        bind:error={errors.fromForeign}
+        bind:value={fromRelationship.throughTo}
+      />
+      <Select
+        label={`Foreign Key (${toTable?.name})`}
+        options={Object.keys(through?.schema)}
+        on:change={() => ($touched.toForeign = true)}
+        bind:error={errors.toForeign}
+        bind:value={fromRelationship.throughFrom}
+      />
+    {/if}
   {:else if fromRelationship?.relationshipType && toTable}
     <Select
       label={`Foreign Key (${toTable?.name})`}

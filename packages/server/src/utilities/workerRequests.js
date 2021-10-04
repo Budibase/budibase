@@ -52,16 +52,17 @@ exports.sendSmtpEmail = async (to, from, subject, contents, automation) => {
   )
 
   if (response.status !== 200) {
-    throw "Unable to send email."
+    const error = await response.text()
+    throw `Unable to send email - ${error}`
   }
   return response.json()
 }
 
-exports.getDeployedApps = async ctx => {
+exports.getDeployedApps = async () => {
   try {
     const response = await fetch(
       checkSlashesInUrl(env.WORKER_URL + `/api/apps`),
-      request(ctx, {
+      request(null, {
         method: "GET",
       })
     )

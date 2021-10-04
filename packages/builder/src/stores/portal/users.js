@@ -55,7 +55,11 @@ export function createUsersStore() {
   async function del(id) {
     const response = await api.delete(`/api/global/users/${id}`)
     update(users => users.filter(user => user._id !== id))
-    return await response.json()
+    const json = await response.json()
+    return {
+      ...json,
+      status: response.status,
+    }
   }
 
   async function save(data) {
