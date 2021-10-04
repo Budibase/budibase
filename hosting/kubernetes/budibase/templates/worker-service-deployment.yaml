@@ -89,6 +89,8 @@ spec:
           value: {{ .Values.globals.selfHosted | quote }}
         - name: ACCOUNT_PORTAL_URL
           value: {{ .Values.globals.accountPortalUrl | quote }}
+        - name: ACCOUNT_PORTAL_API_KEY
+          value: {{ .Values.globals.accountPortalApiKey | quote }}
         - name: COOKIE_DOMAIN
           value: {{ .Values.globals.cookieDomain | quote }}
         image: budibase/worker
