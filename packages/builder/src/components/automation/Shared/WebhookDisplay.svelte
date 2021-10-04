@@ -1,22 +1,14 @@
 <script>
   import { Input, Icon, notifications } from "@budibase/bbui"
-  import { store, hostingStore } from "builderStore"
 
   export let value
-  export let production = false
-
-  $: appId = $store.appId
-  $: appUrl = $hostingStore.appUrl
 
   function fullWebhookURL(uri) {
     if (!uri) {
       return ""
     }
-    if (production) {
-      return `${appUrl}/${uri}`
-    } else {
-      return `${window.location.origin}/${uri}`
-    }
+
+    return `${window.location.origin}/${uri}`
   }
 
   function copyToClipboard() {
