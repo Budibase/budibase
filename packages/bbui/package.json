@@ -78,7 +78,7 @@
     "@spectrum-css/underlay": "^2.0.9",
     "@spectrum-css/vars": "^3.0.1",
     "dayjs": "^1.10.4",
-    "svelte-flatpickr": "^3.1.0",
+    "svelte-flatpickr": "^3.2.3",
     "svelte-portal": "^1.0.0"
   },
   "gitHead": "d1836a898cab3f8ab80ee6d8f42be1a9eed7dcdc"
