@@ -1,6 +1,6 @@
 <script>
   import { ModalContent, Body } from "@budibase/bbui"
-  import { auth } from "stores/portal"
+  // import { auth } from "stores/portal"
   import TemplateList from "./TemplateList.svelte"
   import CreateAppModal from "./CreateAppModal.svelte"
   import BudiWorldImage from "assets/budiworld.webp"
@@ -10,27 +10,32 @@
 
   function nextStep() {
     step += 1
+    return false
   }
 
   function selectTemplate(selectedTemplate) {
-    // get the template from the URL
     template = selectedTemplate
     nextStep()
   }
+
+  // TODO: mark user as onboarded if they close this?
+  // async function userOnboarded() {
+  //   try {
+  //     await auth.updateSelf({ onboarded: true })
+  //   } catch (error) {
+  //     notifications.error("An onboarding error has occurred.")
+  //   }
+  // }
 </script>
 
 {#if step === 0}
   <ModalContent
     title={`Welcome ${$auth.user?.firstName + "!" || "!"}`}
     confirmText="Next"
-    onConfirm={() => {
-      nextStep()
-      return false
-    }}
+    onConfirm={nextStep}
   >
     <Body size="S">
       <p>Welcome to Budibase!</p>
-
       <p>
         We're different from other development tools in some really special
         ways, so we'd like to take you through them.
@@ -46,10 +51,8 @@
   <ModalContent
     title={"Start from scratch or select a template"}
     confirmText="Start from Scratch"
-    onConfirm={() => {
-      nextStep()
-      return false
-    }}
+    size="L"
+    onConfirm={nextStep}
   >
     <Body size="S">
       One of the coolest things about Budibase is that you don't have to start

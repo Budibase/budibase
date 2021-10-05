@@ -76,8 +76,9 @@ exports.getTemplateStream = async template => {
   if (template.file) {
     return fs.createReadStream(template.file.path)
   } else {
-    const tmpPath = await exports.downloadTemplate(template.key)
-    return fs.createReadStream(join(tmpPath, "db", "dump.txt"))
+    const [type, name] = template.key.split("/")
+    const tmpPath = await exports.downloadTemplate(type, name)
+    return fs.createReadStream(join(tmpPath, name, "db", "dump.txt"))
   }
 }
 
@@ -218,13 +219,11 @@ exports.deleteApp = async appId => {
  * @param name
  * @return {Promise<*>}
  */
-exports.downloadTemplate = async path => {
-  const [type, name] = path.split("/")
-
+exports.downloadTemplate = async (type, name) => {
   const DEFAULT_TEMPLATES_BUCKET =
     "prod-budi-templates.s3-eu-west-1.amazonaws.com"
   const templateUrl = `https://${DEFAULT_TEMPLATES_BUCKET}/templates/${type}/${name}.tar.gz`
-  return downloadTarball(templateUrl, ObjectStoreBuckets.TEMPLATES, path)
+  return downloadTarball(templateUrl, ObjectStoreBuckets.TEMPLATES, type)
 }
 
 /**

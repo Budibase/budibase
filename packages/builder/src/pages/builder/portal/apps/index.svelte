@@ -45,6 +45,7 @@
   $: filteredApps = enrichedApps.filter(app =>
     app?.name?.toLowerCase().includes(searchTerm.toLowerCase())
   )
+  $: loaded && enrichedApps.length === 0 && onboardingModal?.show()
 
   const enrichApps = (apps, user, sortBy) => {
     const enrichedApps = apps.map(app => ({
@@ -199,9 +200,6 @@
   onMount(async () => {
     await apps.load()
     loaded = true
-    // TODO: only show when they have not onboarded yet
-    // If apps = 0 or user isn't onboarded?
-    onboardingModal.show()
   })
 </script>
 
@@ -321,7 +319,7 @@
 </ConfirmDialog>
 
 <UpdateAppModal app={selectedApp} bind:this={updatingModal} />
-<Modal width={"100px"} bind:this={onboardingModal}>
+<Modal bind:this={onboardingModal}>
   <OnboardingModal />
 </Modal>
 
