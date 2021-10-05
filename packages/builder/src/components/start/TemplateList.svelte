@@ -1,5 +1,5 @@
 <script>
-  import { Heading, Body } from "@budibase/bbui"
+  import { Heading, Body, Layout } from "@budibase/bbui"
   import Spinner from "components/common/Spinner.svelte"
   import api from "builderStore/api"
 
@@ -13,7 +13,7 @@
   let templatesPromise = fetchTemplates()
 </script>
 
-<div class="root">
+<Layout gap="XS" noPadding>
   {#await templatesPromise}
     <div class="spinner-container">
       <Spinner size="30" />
@@ -21,7 +21,7 @@
   {:then templates}
     <div class="templates">
       {#each templates as template}
-        <div class="templates-card">
+        <Layout gap="XS" noPadding>
           <img
             alt="template"
             on:click={() => onSelect(template)}
@@ -30,13 +30,13 @@
           />
           <Heading size="XS">{template.name}</Heading>
           <Body size="S" black>{template.description}</Body>
-        </div>
+        </Layout>
       {/each}
     </div>
   {:catch err}
     <h1 style="color:red">{err}</h1>
   {/await}
-</div>
+</Layout>
 
 <style>
   .templates {
@@ -45,16 +45,11 @@
     grid-template-columns: 1fr 1fr;
     grid-gap: var(--layout-m);
     justify-content: start;
-  }
-
-  .templates-card {
-    background-color: var(--background);
+    margin-top: var(--layout-s);
   }
 
   img {
-    height: 135px;
-    width: 278px;
-    margin-bottom: var(--layout-m);
+    margin-bottom: var(--layout-s);
     cursor: pointer;
   }
 </style>
