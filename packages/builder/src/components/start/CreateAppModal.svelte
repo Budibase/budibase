@@ -31,11 +31,14 @@
         APP_NAME_REGEX,
         "App name must be letters, numbers and spaces only"
       ),
-    file: template ? mixed().required("Please choose a file to import") : null,
+    file: template?.fromFile
+      ? mixed().required("Please choose a file to import")
+      : null,
   }
 
   let submitting = false
   let valid = false
+
   $: checkValidity($values, validator)
 
   onMount(async () => {
@@ -73,7 +76,7 @@
     submitting = true
 
     // Check a template exists if we are important
-    if (template && !$values.file) {
+    if (template?.fromFile && !$values.file) {
       $errors.file = "Please choose a file to import"
       valid = false
       submitting = false
@@ -134,12 +137,12 @@
 </script>
 
 <ModalContent
-  title={template ? "Import app" : "Create app"}
-  confirmText={template ? "Import app" : "Create app"}
+  title={template?.fromFile ? "Import app" : "Create app"}
+  confirmText={template?.fromFile ? "Import app" : "Create app"}
   onConfirm={createNewApp}
   disabled={!valid}
 >
-  {#if template}
+  {#if template?.fromFile}
     <Dropzone
       error={$touched.file && $errors.file}
       gallery={false}
