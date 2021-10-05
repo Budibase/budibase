@@ -16,6 +16,7 @@
   } from "@budibase/bbui"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
   import UpdateAppModal from "components/start/UpdateAppModal.svelte"
+  import OnboardingModal from "components/start/OnboardingModal.svelte"
   import { del } from "builderStore/api"
   import { onMount } from "svelte"
   import { apps, auth, admin } from "stores/portal"
@@ -34,6 +35,7 @@
   let updatingModal
   let deletionModal
   let unpublishModal
+  let onboardingModal
   let creatingApp = false
   let loaded = false
   let searchTerm = ""
@@ -197,6 +199,9 @@
   onMount(async () => {
     await apps.load()
     loaded = true
+    // TODO: only show when they have not onboarded yet
+    // If apps = 0 or user isn't onboarded?
+    onboardingModal.show()
   })
 </script>
 
@@ -316,6 +321,9 @@
 </ConfirmDialog>
 
 <UpdateAppModal app={selectedApp} bind:this={updatingModal} />
+<Modal width={"100px"} bind:this={onboardingModal}>
+  <OnboardingModal />
+</Modal>
 
 <style>
   .title,
