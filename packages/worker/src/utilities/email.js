@@ -83,10 +83,15 @@ async function buildEmail(purpose, email, context, { user, contents } = {}) {
   }
   base = base.contents
   body = body.contents
+  let name = user ? user.name : undefined
+  if (user && !name && user.firstName) {
+    name = user.lastName ? `${user.firstName} ${user.lastName}` : user.firstName
+  }
   context = {
     ...context,
     contents,
     email,
+    name,
     user: user || {},
   }
 

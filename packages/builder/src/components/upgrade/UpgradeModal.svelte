@@ -25,9 +25,9 @@
     title="Self-host Budibase"
     confirmText="Self-host Budibase"
   >
-    <span
-      >Self-host budibase for free to get unlimited apps and more - and it only
-      takes a few minutes!</span
-    >
+    <span>
+      Self-host budibase for free to get unlimited apps and more - and it only
+      takes a few minutes!
+    </span>
   </ModalContent>
 </Modal>

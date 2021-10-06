@@ -76,8 +76,9 @@ exports.getTemplateStream = async template => {
   if (template.file) {
     return fs.createReadStream(template.file.path)
   } else {
-    const tmpPath = await exports.downloadTemplate(...template.key.split("/"))
-    return fs.createReadStream(join(tmpPath, "db", "dump.txt"))
+    const [type, name] = template.key.split("/")
+    const tmpPath = await exports.downloadTemplate(type, name)
+    return fs.createReadStream(join(tmpPath, name, "db", "dump.txt"))
   }
 }
 

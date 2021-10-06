@@ -20,25 +20,29 @@
       return
     }
 
+    // e.g. ['tenant', 'budibase', 'app'] vs ['budibase', 'app']
+    let urlTenantId
+    const hostParts = host.split(".")
+    if (hostParts.length > 2) {
+      urlTenantId = hostParts[0]
+    }
+
+    // no tenant in the url - send to account portal to fix this
+    if (!urlTenantId) {
+      window.location.href = $admin.accountPortalUrl
+      return
+    }
+
     if (user && user.tenantId) {
-      let urlTenantId
-      const hostParts = host.split(".")
-
-      // only run validation when we know we are in a tenant url
-      // not when we visit the root budibase.app domain
-      // e.g. ['tenant', 'budibase', 'app'] vs ['budibase', 'app']
-      if (hostParts.length > 2) {
-        urlTenantId = hostParts[0]
-      } else {
-        // no tenant in the url - send to account portal to fix this
-        window.location.href = $admin.accountPortalUrl
-        return
-      }
-
       if (user.tenantId !== urlTenantId) {
         // user should not be here - play it safe and log them out
         await auth.logout()
+        await auth.setOrganisation(null)
+        return
       }
+    } else {
+      // no user - set the org according to the url
+      await auth.setOrganisation(urlTenantId)
     }
   }
 
