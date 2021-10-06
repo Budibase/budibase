@@ -41,13 +41,19 @@ async function authInternal(ctx, user, err = null, info = null) {
     return ctx.throw(403, info ? info : "Unauthorized")
   }
 
-  // just store the user ID
-  ctx.cookies.set(Cookies.Auth, user.token, {
+  const config = {
     expires,
     path: "/",
     httpOnly: false,
     overwrite: true,
-  })
+  }
+
+  if (env.COOKIE_DOMAIN) {
+    config.domain = env.COOKIE_DOMAIN
+  }
+
+  // just store the user ID
+  ctx.cookies.set(Cookies.Auth, user.token, config)
 }
 
 exports.authenticate = async (ctx, next) => {
