@@ -8,7 +8,7 @@
   import NPSFeedbackForm from "components/feedback/NPSFeedbackForm.svelte"
   import { get } from "builderStore/api"
   import { auth, admin } from "stores/portal"
-  import { isActive, goto, layout } from "@roxi/routify"
+  import { isActive, goto, layout, redirect } from "@roxi/routify"
   import Logo from "assets/bb-emblem.svg"
   import { capitalise } from "helpers"
   import UpgradeModal from "../../../../components/upgrade/UpgradeModal.svelte"
@@ -34,7 +34,16 @@
     const pkg = await res.json()
 
     if (res.ok) {
-      await store.actions.initialise(pkg)
+      try {
+        await store.actions.initialise(pkg)
+        // edge case, lock wasn't known to client when it re-directed, or user went directly
+      } catch (err) {
+        if (!err.ok && err.reason === "locked") {
+          $redirect("../../")
+        } else {
+          throw err
+        }
+      }
       await automationStore.actions.fetch()
       await roles.fetch()
       return pkg
