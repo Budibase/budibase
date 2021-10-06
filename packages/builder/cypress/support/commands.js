@@ -30,7 +30,7 @@ Cypress.Commands.add("login", () => {
 Cypress.Commands.add("createApp", name => {
   cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
   cy.wait(500)
-  cy.contains(/Create (new )?app/).click()
+  cy.contains(/Start from scratch/).click()
   cy.get(".spectrum-Modal")
     .within(() => {
       cy.get("input").eq(0).type(name).should("have.value", name).blur()

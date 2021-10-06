@@ -8,10 +8,8 @@
     ButtonGroup,
     Select,
     Modal,
-    ModalContent,
     Page,
     notifications,
-    Body,
     Search,
   } from "@budibase/bbui"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
@@ -270,22 +268,7 @@
   {#if !enrichedApps.length && !creatingApp && loaded}
     <div class="empty-wrapper">
       <Modal inline>
-        <ModalContent
-          title="Create your first app"
-          confirmText="Create app"
-          showCancelButton={false}
-          showCloseIcon={false}
-          onConfirm={initiateAppCreation}
-          size="M"
-        >
-          <div slot="footer">
-            <Button on:click={initiateAppImport} secondary>Import app</Button>
-          </div>
-          <Body size="S">
-            The purpose of the Budibase builder is to help you build beautiful,
-            powerful applications quickly and easily.
-          </Body>
-        </ModalContent>
+        <CreateAppModal {template} />
       </Modal>
     </div>
   {/if}
