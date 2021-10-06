@@ -178,7 +178,12 @@ module External {
         manyRelationships: ManyRelationship[] = []
       for (let [key, field] of Object.entries(table.schema)) {
         // if set already, or not set just skip it
-        if (!row[key] || newRow[key] || field.autocolumn) {
+        if ((!row[key] && row[key] !== "") || newRow[key] || field.autocolumn) {
+          continue
+        }
+        // if its an empty string then it means return the column to null (if possible)
+        if (row[key] === "") {
+          newRow[key] = null
           continue
         }
         // parse floats/numbers
