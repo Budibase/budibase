@@ -26,6 +26,7 @@
     altFormat: enableTime ? "F j Y, H:i" : "F j, Y",
     wrap: true,
     appendTo,
+    disableMobile: "true",
   }
 
   const handleChange = event => {
