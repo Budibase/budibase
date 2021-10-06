@@ -353,7 +353,7 @@
   }
 
   /* Reduce padding */
-  .mobile .main {
+  .mobile:not(.layout--none) .main {
     padding: 16px;
   }
 
