@@ -104,9 +104,12 @@ const automationActions = store => ({
       return state
     })
   },
-  addBlockToAutomation: block => {
+  addBlockToAutomation: (block, blockIdx) => {
     store.update(state => {
-      const newBlock = state.selectedAutomation.addBlock(cloneDeep(block))
+      const newBlock = state.selectedAutomation.addBlock(
+        cloneDeep(block),
+        blockIdx
+      )
       state.selectedBlock = newBlock
       return state
     })
