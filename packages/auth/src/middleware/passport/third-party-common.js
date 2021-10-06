@@ -15,7 +15,8 @@ const fetch = require("node-fetch")
 exports.authenticateThirdParty = async function (
   thirdPartyUser,
   requireLocalAccount = true,
-  done
+  done,
+  saveUserFn = saveUser
 ) {
   if (!thirdPartyUser.provider) {
     return authError(done, "third party user provider required")
@@ -74,7 +75,7 @@ exports.authenticateThirdParty = async function (
   // create or sync the user
   let response
   try {
-    response = await saveUser(dbUser, getTenantId(), false, false)
+    response = await saveUserFn(dbUser, getTenantId(), false, false)
   } catch (err) {
     return authError(done, err)
   }
