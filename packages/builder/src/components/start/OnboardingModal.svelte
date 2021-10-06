@@ -1,6 +1,6 @@
 <script>
   import { ModalContent, Body } from "@budibase/bbui"
-  // import { auth } from "stores/portal"
+  import { auth } from "stores/portal"
   import TemplateList from "./TemplateList.svelte"
   import CreateAppModal from "./CreateAppModal.svelte"
   import BudiWorldImage from "assets/budiworld.webp"
@@ -17,15 +17,6 @@
     template = selectedTemplate
     nextStep()
   }
-
-  // TODO: mark user as onboarded if they close this?
-  // async function userOnboarded() {
-  //   try {
-  //     await auth.updateSelf({ onboarded: true })
-  //   } catch (error) {
-  //     notifications.error("An onboarding error has occurred.")
-  //   }
-  // }
 </script>
 
 {#if step === 0}
@@ -33,6 +24,8 @@
     title={`Welcome ${$auth.user?.firstName + "!" || "!"}`}
     confirmText="Next"
     onConfirm={nextStep}
+    showCancelButton={false}
+    showCloseIcon={false}
   >
     <Body size="S">
       <p>Welcome to Budibase!</p>
@@ -53,6 +46,8 @@
     confirmText="Start from Scratch"
     size="L"
     onConfirm={nextStep}
+    showCancelButton={false}
+    showCloseIcon={false}
   >
     <Body size="S">
       One of the coolest things about Budibase is that you don't have to start

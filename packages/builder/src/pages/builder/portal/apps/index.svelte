@@ -8,10 +8,8 @@
     ButtonGroup,
     Select,
     Modal,
-    ModalContent,
     Page,
     notifications,
-    Body,
     Search,
   } from "@budibase/bbui"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
@@ -35,7 +33,6 @@
   let updatingModal
   let deletionModal
   let unpublishModal
-  let onboardingModal
   let creatingApp = false
   let loaded = false
   let searchTerm = ""
@@ -45,7 +42,6 @@
   $: filteredApps = enrichedApps.filter(app =>
     app?.name?.toLowerCase().includes(searchTerm.toLowerCase())
   )
-  $: loaded && enrichedApps.length === 0 && onboardingModal?.show()
 
   const enrichApps = (apps, user, sortBy) => {
     const enrichedApps = apps.map(app => ({
@@ -273,22 +269,7 @@
   {#if !enrichedApps.length && !creatingApp && loaded}
     <div class="empty-wrapper">
       <Modal inline>
-        <ModalContent
-          title="Create your first app"
-          confirmText="Create app"
-          showCancelButton={false}
-          showCloseIcon={false}
-          onConfirm={initiateAppCreation}
-          size="M"
-        >
-          <div slot="footer">
-            <Button on:click={initiateAppImport} secondary>Import app</Button>
-          </div>
-          <Body size="S">
-            The purpose of the Budibase builder is to help you build beautiful,
-            powerful applications quickly and easily.
-          </Body>
-        </ModalContent>
+        <OnboardingModal />
       </Modal>
     </div>
   {/if}
@@ -319,9 +300,6 @@
 </ConfirmDialog>
 
 <UpdateAppModal app={selectedApp} bind:this={updatingModal} />
-<Modal bind:this={onboardingModal}>
-  <OnboardingModal />
-</Modal>
 
 <style>
   .title,
