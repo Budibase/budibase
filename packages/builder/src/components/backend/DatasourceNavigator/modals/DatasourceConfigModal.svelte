@@ -5,24 +5,29 @@
   import IntegrationConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/IntegrationConfigForm.svelte"
   import { datasources } from "stores/backend"
   import { IntegrationNames } from "constants"
+  import cloneDeep from "lodash/cloneDeepWith"
 
   export let integration
+  export let modal
+
+  // kill the reference so the input isn't saved
+  let config = cloneDeep(integration)
 
   function prepareData() {
     let datasource = {}
     let existingTypeCount = $datasources.list.filter(
-      ds => ds.source == integration.type
+      ds => ds.source == config.type
     ).length
 
-    let baseName = IntegrationNames[integration.type]
+    let baseName = IntegrationNames[config.type]
     let name =
       existingTypeCount == 0 ? baseName : `${baseName}-${existingTypeCount + 1}`
 
     datasource.type = "datasource"
-    datasource.source = integration.type
-    datasource.config = integration.config
+    datasource.source = config.type
+    datasource.config = config.config
     datasource.name = name
-    datasource.plus = integration.plus
+    datasource.plus = config.plus
 
     return datasource
   }
@@ -48,9 +53,10 @@
 </script>
 
 <ModalContent
-  title={`Connect to ${IntegrationNames[integration.type]}`}
+  title={`Connect to ${IntegrationNames[config.type]}`}
   onConfirm={() => saveDatasource()}
-  confirmText={integration.plus
+  onCancel={() => modal.show()}
+  confirmText={config.plus
     ? "Fetch tables from database"
     : "Save and continue to query"}
   cancelText="Back"
@@ -62,10 +68,7 @@
     </Body>
   </Layout>
 
-  <IntegrationConfigForm
-    schema={integration.schema}
-    bind:integration={integration.config}
-  />
+  <IntegrationConfigForm schema={config.schema} integration={config.config} />
 </ModalContent>
 
 <style>
