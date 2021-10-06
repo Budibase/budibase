@@ -11,12 +11,14 @@
   function prepareData() {
     let datasource = {}
     let existingTypeCount = $datasources.list.filter(
-      ds => ds.source == integration.type
+      ds => ds.source === integration.type
     ).length
 
     let baseName = IntegrationNames[integration.type]
     let name =
-      existingTypeCount == 0 ? baseName : `${baseName}-${existingTypeCount + 1}`
+      existingTypeCount === 0
+        ? baseName
+        : `${baseName}-${existingTypeCount + 1}`
 
     datasource.type = "datasource"
     datasource.source = integration.type
