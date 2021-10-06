@@ -14,7 +14,6 @@
   } from "@budibase/bbui"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
   import UpdateAppModal from "components/start/UpdateAppModal.svelte"
-  import OnboardingModal from "components/start/OnboardingModal.svelte"
   import { del } from "builderStore/api"
   import { onMount } from "svelte"
   import { apps, auth, admin } from "stores/portal"
@@ -269,7 +268,7 @@
   {#if !enrichedApps.length && !creatingApp && loaded}
     <div class="empty-wrapper">
       <Modal inline>
-        <OnboardingModal />
+        <CreateAppModal {template} />
       </Modal>
     </div>
   {/if}

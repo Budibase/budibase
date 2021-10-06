@@ -140,8 +140,8 @@
 
 {#if showTemplateSelection}
   <ModalContent
-    title={"Start from scratch or select a template"}
-    confirmText="Start from Scratch"
+    title={"Get started quickly"}
+    showConfirmButton={false}
     size="L"
     onConfirm={() => {
       showTemplateSelection = false
@@ -150,12 +150,14 @@
     showCancelButton={false}
     showCloseIcon={false}
   >
-    <Body size="S">
-      One of the coolest things about Budibase is that you don't have to start
-      from scratch. Simply select a template below, and get to work.
-    </Body>
+    <Body size="M">Select a template below, or start from scratch.</Body>
     <TemplateList
       onSelect={selected => {
+        if (!selected) {
+          showTemplateSelection = false
+          return
+        }
+
         template = selected
       }}
     />
