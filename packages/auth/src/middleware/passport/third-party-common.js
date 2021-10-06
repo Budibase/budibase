@@ -1,6 +1,7 @@
 const env = require("../../environment")
 const jwt = require("jsonwebtoken")
 const { generateGlobalUserID } = require("../../db/utils")
+const { saveUser } = require("../../utils")
 const { authError } = require("./utils")
 const { newid } = require("../../hashing")
 const { createASession } = require("../../security/sessions")
@@ -71,7 +72,13 @@ exports.authenticateThirdParty = async function (
   dbUser = await syncUser(dbUser, thirdPartyUser)
 
   // create or sync the user
-  const response = await db.put(dbUser)
+  let response
+  try {
+    response = await saveUser(dbUser, getTenantId(), false, false)
+  } catch (err) {
+    return authError(done, err)
+  }
+
   dbUser._rev = response.rev
 
   // authenticate
