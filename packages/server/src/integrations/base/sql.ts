@@ -141,6 +141,12 @@ function buildCreate(
   const { endpoint, body } = json
   let query: KnexQuery = knex(endpoint.entityId)
   const parsedBody = parseBody(body)
+  // make sure no null values in body for creation
+  for (let [key, value] of Object.entries(parsedBody)) {
+    if (value == null) {
+      delete parsedBody[key]
+    }
+  }
   // mysql can't use returning
   if (opts.disableReturning) {
     return query.insert(parsedBody)
