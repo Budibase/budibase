@@ -2,6 +2,7 @@ const {
   DataSourceOperation,
   SortDirection,
   FieldTypes,
+  NoEmptyFilterStrings,
 } = require("../../../constants")
 const {
   breakExternalTableId,
@@ -11,6 +12,19 @@ const ExternalRequest = require("./ExternalRequest")
 const CouchDB = require("../../../db")
 
 async function handleRequest(appId, operation, tableId, opts = {}) {
+  // make sure the filters are cleaned up, no empty strings for equals, fuzzy or string
+  if (opts && opts.filters) {
+    for (let filterField of NoEmptyFilterStrings) {
+      if (!opts.filters[filterField]) {
+        continue
+      }
+      for (let [key, value] of Object.entries(opts.filters[filterField])) {
+        if (!value || value === "") {
+          delete opts.filters[filterField][key]
+        }
+      }
+    }
+  }
   return new ExternalRequest(appId, operation, tableId, opts.datasource).run(
     opts
   )

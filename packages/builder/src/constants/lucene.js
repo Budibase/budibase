@@ -44,6 +44,15 @@ export const OperatorOptions = {
   },
 }
 
+export const NoEmptyFilterStrings = [
+  OperatorOptions.StartsWith.value,
+  OperatorOptions.Like.value,
+  OperatorOptions.Equals.value,
+  OperatorOptions.NotEquals.value,
+  OperatorOptions.Contains.value,
+  OperatorOptions.NotContains.value,
+]
+
 /**
  * Returns the valid operator options for a certain data type
  * @param type the data type
