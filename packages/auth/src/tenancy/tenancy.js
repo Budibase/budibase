@@ -107,3 +107,13 @@ exports.lookupTenantId = async userId => {
   }
   return tenantId
 }
+
+// lookup, could be email or userId, either will return a doc
+exports.getTenantUser = async identifier => {
+  const db = getDB(PLATFORM_INFO_DB)
+  try {
+    return await db.get(identifier)
+  } catch (err) {
+    return null
+  }
+}
