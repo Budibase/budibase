@@ -96,6 +96,10 @@ spec:
           value: worker-service:{{ .Values.services.worker.port }}
         - name: COOKIE_DOMAIN
           value: {{ .Values.globals.cookieDomain | quote }}
+        - name: ACCOUNT_PORTAL_URL
+          value: {{ .Values.globals.accountPortalUrl | quote }}
+        - name: ACCOUNT_PORTAL_API_KEY
+          value: {{ .Values.globals.accountPortalApiKey | quote }}
         image: budibase/apps
         imagePullPolicy: Always
         name: bbapps
