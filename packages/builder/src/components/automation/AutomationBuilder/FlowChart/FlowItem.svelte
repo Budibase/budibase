@@ -14,7 +14,6 @@
   import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
   import ResultsModal from "./ResultsModal.svelte"
   import ActionModal from "./ActionModal.svelte"
-  import { database } from "stores/backend"
   import { externalActions } from "./ExternalActions"
 
   export let onSelect
@@ -29,7 +28,6 @@
   $: testResult = $automationStore.selectedAutomation.testResults?.steps.filter(
     step => step.stepId === block.stepId
   )
-  $: instanceId = $database._id
 
   $: isTrigger = block.type === "TRIGGER"
 
@@ -39,6 +37,10 @@
 
   $: blockIdx = steps.findIndex(step => step.id === block.id)
   $: lastStep = !isTrigger && blockIdx + 1 === steps.length
+
+  $: totalBlocks =
+    $automationStore.selectedAutomation?.automation?.definition?.steps.length +
+    1
 
   // Logic for hiding / showing the add button.first we check if it has a child
   // then we check to see whether its inputs have been commpleted
@@ -167,13 +169,24 @@
   </Modal>
 
   <Modal bind:this={actionModal} width="30%">
-    <ActionModal bind:blockComplete />
+    <ActionModal {blockIdx} bind:blockComplete />
   </Modal>
 
   <Modal bind:this={webhookModal} width="30%">
     <CreateWebhookModal />
   </Modal>
 </div>
+<div class="separator" />
+<Icon
+  on:click={() => actionModal.show()}
+  disabled={!hasCompletedInputs}
+  hoverable
+  name="AddCircle"
+  size="S"
+/>
+{#if isTrigger ? totalBlocks > 1 : blockIdx !== totalBlocks - 2}
+  <div class="separator" />
+{/if}
 
 <style>
   .center-items {
@@ -191,13 +204,21 @@
   .block {
     width: 360px;
     font-size: 16px;
-    background-color: var(--spectrum-alias-background-color-secondary);
-    color: var(--grey-9);
+    background-color: var(--background);
     border: 1px solid var(--spectrum-global-color-gray-300);
     border-radius: 4px 4px 4px 4px;
   }
 
   .blockSection {
     padding: var(--spacing-xl);
+  }
+
+  .separator {
+    width: 1px;
+    height: 25px;
+    border-left: 1px dashed var(--grey-4);
+    color: var(--grey-4);
+    /* center horizontally */
+    align-self: center;
   }
 </style>
