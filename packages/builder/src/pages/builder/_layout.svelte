@@ -27,13 +27,13 @@
       urlTenantId = hostParts[0]
     }
 
-    // no tenant in the url - send to account portal to fix this
-    if (!urlTenantId) {
-      window.location.href = $admin.accountPortalUrl
-      return
-    }
-
     if (user && user.tenantId) {
+      // no tenant in the url - send to account portal to fix this
+      if (!urlTenantId) {
+        window.location.href = $admin.accountPortalUrl
+        return
+      }
+
       if (user.tenantId !== urlTenantId) {
         // user should not be here - play it safe and log them out
         await auth.logout()
