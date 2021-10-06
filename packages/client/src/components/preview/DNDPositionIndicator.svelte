@@ -17,7 +17,17 @@
     if (!bounds || !side) {
       return null
     }
-    const { left, top, width, height } = bounds
+
+    // Get preview offset
+    const root = document.getElementById("clip-root")
+    const rootBounds = root.getBoundingClientRect()
+
+    // Subtract preview offset from bounds
+    let { left, top, width, height } = bounds
+    left -= rootBounds.left
+    top -= rootBounds.top
+
+    // Determine position
     if (side === Sides.Top || side === Sides.Bottom) {
       return {
         top: side === Sides.Top ? top - 4 : top + height,
