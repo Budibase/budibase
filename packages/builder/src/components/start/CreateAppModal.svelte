@@ -17,6 +17,7 @@
   import { capitalise } from "helpers"
   import { goto } from "@roxi/routify"
   import { APP_NAME_REGEX } from "constants"
+  import TemplateList from "./TemplateList.svelte"
 
   export let template
 
@@ -40,6 +41,7 @@
   let valid = false
 
   $: checkValidity($values, validator)
+  $: showTemplateSelection = !template?.fromFile && !template?.key
 
   onMount(async () => {
     await hostingStore.actions.fetchDeployedApps()
@@ -136,33 +138,57 @@
   }
 </script>
 
-<ModalContent
-  title={template?.fromFile ? "Import app" : "Create app"}
-  confirmText={template?.fromFile ? "Import app" : "Create app"}
-  onConfirm={createNewApp}
-  disabled={!valid}
->
-  {#if template?.fromFile}
-    <Dropzone
-      error={$touched.file && $errors.file}
-      gallery={false}
-      label="File to import"
-      value={[$values.file]}
-      on:change={e => {
-        $values.file = e.detail?.[0]
-        $touched.file = true
+{#if showTemplateSelection}
+  <ModalContent
+    title={"Start from scratch or select a template"}
+    confirmText="Start from Scratch"
+    size="L"
+    onConfirm={() => {
+      showTemplateSelection = false
+      return false
+    }}
+    showCancelButton={false}
+    showCloseIcon={false}
+  >
+    <Body size="S">
+      One of the coolest things about Budibase is that you don't have to start
+      from scratch. Simply select a template below, and get to work.
+    </Body>
+    <TemplateList
+      onSelect={selected => {
+        template = selected
       }}
     />
-  {/if}
-  <Body size="S">
-    Give your new app a name, and choose which groups have access (paid plans
-    only).
-  </Body>
-  <Input
-    bind:value={$values.name}
-    error={$touched.name && $errors.name}
-    on:blur={() => ($touched.name = true)}
-    label="Name"
-  />
-  <Checkbox label="Group access" disabled value={true} text="All users" />
-</ModalContent>
+  </ModalContent>
+{:else}
+  <ModalContent
+    title={template?.fromFile ? "Import app" : "Create app"}
+    confirmText={template?.fromFile ? "Import app" : "Create app"}
+    onConfirm={createNewApp}
+    disabled={!valid}
+  >
+    {#if template?.fromFile}
+      <Dropzone
+        error={$touched.file && $errors.file}
+        gallery={false}
+        label="File to import"
+        value={[$values.file]}
+        on:change={e => {
+          $values.file = e.detail?.[0]
+          $touched.file = true
+        }}
+      />
+    {/if}
+    <Body size="S">
+      Give your new app a name, and choose which groups have access (paid plans
+      only).
+    </Body>
+    <Input
+      bind:value={$values.name}
+      error={$touched.name && $errors.name}
+      on:blur={() => ($touched.name = true)}
+      label="Name"
+    />
+    <Checkbox label="Group access" disabled value={true} text="All users" />
+  </ModalContent>
+{/if}
