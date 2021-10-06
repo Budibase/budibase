@@ -20,6 +20,10 @@ const getErrorMessage = () => {
   return done.mock.calls[0][2].message
 }
 
+const saveUser = async (user) => {
+  return await db.put(user)
+}
+
 describe("third party common", () => {
   describe("authenticateThirdParty", () => { 
     let thirdPartyUser
@@ -36,7 +40,7 @@ describe("third party common", () => {
   
     describe("validation", () => {
       const testValidation = async (message) => {
-        await authenticateThirdParty(thirdPartyUser, false, done)
+        await authenticateThirdParty(thirdPartyUser, false, done, saveUser)
         expect(done.mock.calls.length).toBe(1)
         expect(getErrorMessage()).toContain(message)
       }
@@ -78,7 +82,7 @@ describe("third party common", () => {
     describe("when the user doesn't exist", () => {
       describe("when a local account is required", () => {
         it("returns an error message", async () => {
-          await authenticateThirdParty(thirdPartyUser, true, done)
+          await authenticateThirdParty(thirdPartyUser, true, done, saveUser)
           expect(done.mock.calls.length).toBe(1)
           expect(getErrorMessage()).toContain("Email does not yet exist. You must set up your local budibase account first.")
         })
@@ -86,7 +90,7 @@ describe("third party common", () => {
       
       describe("when a local account isn't required", () => {
         it("creates and authenticates the user", async () => {
-          await authenticateThirdParty(thirdPartyUser, false, done)
+          await authenticateThirdParty(thirdPartyUser, false, done, saveUser)
           const user = expectUserIsAuthenticated()
           expectUserIsSynced(user, thirdPartyUser)
           expect(user.roles).toStrictEqual({})
@@ -123,7 +127,7 @@ describe("third party common", () => {
         })
 
         it("syncs and authenticates the user", async () => {
-          await authenticateThirdParty(thirdPartyUser, true, done)
+          await authenticateThirdParty(thirdPartyUser, true, done, saveUser)
         
           const user = expectUserIsAuthenticated()
           expectUserIsSynced(user, thirdPartyUser)
@@ -139,7 +143,7 @@ describe("third party common", () => {
         })
 
         it("syncs and authenticates the user", async () => {
-          await authenticateThirdParty(thirdPartyUser, true, done)
+          await authenticateThirdParty(thirdPartyUser, true, done, saveUser)
         
           const user = expectUserIsAuthenticated()
           expectUserIsSynced(user, thirdPartyUser)

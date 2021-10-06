@@ -8,6 +8,7 @@
     Input,
     Layout,
     notifications,
+    Link,
   } from "@budibase/bbui"
   import { goto, params } from "@roxi/routify"
   import { auth, organisation, oidc, admin } from "stores/portal"
@@ -97,6 +98,16 @@
           </ActionButton>
         {/if}
       </Layout>
+      {#if cloud}
+        <Body size="xs" textAlign="center">
+          By using Budibase Cloud
+          <br />
+          you are agreeing to our
+          <Link href="https://budibase.com/eula" target="_blank"
+            >License Agreement</Link
+          >
+        </Body>
+      {/if}
     </Layout>
   </div>
 </div>
