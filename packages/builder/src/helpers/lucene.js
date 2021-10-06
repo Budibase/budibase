@@ -1,3 +1,26 @@
+import { NoEmptyFilterStrings } from "../constants/lucene"
+
+/**
+ * Removes any fields that contain empty strings that would cause inconsistent
+ * behaviour with how backend tables are filtered (no value means no filter).
+ */
+function cleanupQuery(query) {
+  if (!query) {
+    return query
+  }
+  for (let filterField of NoEmptyFilterStrings) {
+    if (!query[filterField]) {
+      continue
+    }
+    for (let [key, value] of Object.entries(query[filterField])) {
+      if (!value || value === "") {
+        delete query[filterField][key]
+      }
+    }
+  }
+  return query
+}
+
 /**
  * Builds a lucene JSON query from the filter structure generated in the builder
  * @param filter the builder filter structure
@@ -76,6 +99,8 @@ export const luceneQuery = (docs, query) => {
   if (!query) {
     return docs
   }
+  // make query consistent first
+  query = cleanupQuery(query)
 
   // Iterates over a set of filters and evaluates a fail function against a doc
   const match = (type, failFn) => doc => {

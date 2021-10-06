@@ -6,6 +6,29 @@ exports.JobQueues = {
   AUTOMATIONS: "automationQueue",
 }
 
+const FilterTypes = {
+  STRING: "string",
+  FUZZY: "fuzzy",
+  RANGE: "range",
+  EQUAL: "equal",
+  NOT_EQUAL: "notEqual",
+  EMPTY: "empty",
+  NOT_EMPTY: "notEmpty",
+  CONTAINS: "contains",
+  NOT_CONTAINS: "notContains",
+  ONE_OF: "oneOf",
+}
+
+exports.FilterTypes = FilterTypes
+exports.NoEmptyFilterStrings = [
+  FilterTypes.STRING,
+  FilterTypes.FUZZY,
+  FilterTypes.EQUAL,
+  FilterTypes.NOT_EQUAL,
+  FilterTypes.CONTAINS,
+  FilterTypes.NOT_CONTAINS,
+]
+
 exports.FieldTypes = {
   STRING: "string",
   LONGFORM: "longform",
