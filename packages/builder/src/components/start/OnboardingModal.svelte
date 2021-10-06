@@ -1,7 +1,6 @@
 <script>
   import { ModalContent, Body } from "@budibase/bbui"
   import { auth } from "stores/portal"
-  import TemplateList from "./TemplateList.svelte"
   import CreateAppModal from "./CreateAppModal.svelte"
   import BudiWorldImage from "assets/budiworld.webp"
 
@@ -11,11 +10,6 @@
   function nextStep() {
     step += 1
     return false
-  }
-
-  function selectTemplate(selectedTemplate) {
-    template = selectedTemplate
-    nextStep()
   }
 </script>
 
@@ -41,21 +35,6 @@
     />
   </ModalContent>
 {:else if step === 1}
-  <ModalContent
-    title={"Start from scratch or select a template"}
-    confirmText="Start from Scratch"
-    size="L"
-    onConfirm={nextStep}
-    showCancelButton={false}
-    showCloseIcon={false}
-  >
-    <Body size="S">
-      One of the coolest things about Budibase is that you don't have to start
-      from scratch. Simply select a template below, and get to work.
-    </Body>
-    <TemplateList onSelect={selectTemplate} />
-  </ModalContent>
-{:else if step === 2}
   <CreateAppModal {template} />
 {/if}
 
