@@ -11,16 +11,18 @@
   import ICONS from "./icons"
 
   let openDataSources = []
-  $: enrichedDataSources = $datasources.list.map(datasource => {
-    const selected = $datasources.selected === datasource._id
-    const open = openDataSources.includes(datasource._id)
-    const containsSelected = containsActiveEntity(datasource)
-    return {
-      ...datasource,
-      selected,
-      open: selected || open || containsSelected,
-    }
-  })
+  $: enrichedDataSources = Array.isArray($datasources.list)
+    ? $datasources.list.map(datasource => {
+        const selected = $datasources.selected === datasource._id
+        const open = openDataSources.includes(datasource._id)
+        const containsSelected = containsActiveEntity(datasource)
+        return {
+          ...datasource,
+          selected,
+          open: selected || open || containsSelected,
+        }
+      })
+    : []
   $: openDataSource = enrichedDataSources.find(x => x.open)
   $: {
     // Ensure the open data source is always included in the list of open
