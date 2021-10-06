@@ -67,6 +67,14 @@ export const getFrontendStore = () => {
     initialise: async pkg => {
       const { layouts, screens, application, clientLibPath } = pkg
       const components = await fetchComponentLibDefinitions(application.appId)
+      // make sure app isn't locked
+      if (
+        components &&
+        components.status === 400 &&
+        components.message?.includes("lock")
+      ) {
+        throw { ok: false, reason: "locked" }
+      }
       store.update(state => ({
         ...state,
         libraries: application.componentLibraries,
