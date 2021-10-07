@@ -2,7 +2,7 @@ const fetch = require("node-fetch")
 const env = require("../environment")
 const { checkSlashesInUrl } = require("./index")
 const { getDeployedAppID } = require("@budibase/auth/db")
-const { updateAppRole, getGlobalUser } = require("./global")
+const { updateAppRole } = require("./global")
 const { Headers } = require("@budibase/auth/constants")
 const { getTenantId, isTenantIdSet } = require("@budibase/auth/tenancy")
 
@@ -96,38 +96,6 @@ exports.getGlobalSelf = async (ctx, appId = null) => {
     json = updateAppRole(appId, json)
   }
   return json
-}
-
-exports.addAppRoleToUser = async (ctx, appId, roleId, userId = null) => {
-  let user,
-    endpoint,
-    body = {}
-  if (!userId) {
-    user = await exports.getGlobalSelf(ctx)
-    endpoint = `/api/global/users/self`
-  } else {
-    user = await getGlobalUser(appId, userId)
-    body._id = userId
-    endpoint = `/api/global/users`
-  }
-  body = {
-    ...body,
-    roles: {
-      ...user.roles,
-      [getDeployedAppID(appId)]: roleId,
-    },
-  }
-  const response = await fetch(
-    checkSlashesInUrl(env.WORKER_URL + endpoint),
-    request(ctx, {
-      method: "POST",
-      body,
-    })
-  )
-  if (response.status !== 200) {
-    ctx.throw(400, "Unable to save self globally.")
-  }
-  return response.json()
 }
 
 exports.removeAppFromUserRoles = async (ctx, appId) => {

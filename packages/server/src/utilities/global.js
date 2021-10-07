@@ -6,13 +6,20 @@ const { BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
 const { getDeployedAppID } = require("@budibase/auth/db")
 const { getGlobalUserParams } = require("@budibase/auth/db")
 const { user: userCache } = require("@budibase/auth/cache")
-const { getGlobalDB } = require("@budibase/auth/tenancy")
+const { getGlobalDB, isUserInAppTenant } = require("@budibase/auth/tenancy")
+const env = require("../environment")
 
 exports.updateAppRole = (appId, user) => {
-  if (!user.roles) {
+  if (!user || !user.roles) {
     return user
   }
-
+  // if in an multi-tenancy environment make sure roles are never updated
+  if (env.MULTI_TENANCY && !isUserInAppTenant(appId, user)) {
+    delete user.builder
+    delete user.admin
+    user.roleId = BUILTIN_ROLE_IDS.PUBLIC
+    return user
+  }
   // always use the deployed app
   user.roleId = user.roles[getDeployedAppID(appId)]
   // if a role wasn't found then either set as admin (builder) or public (everyone else)
