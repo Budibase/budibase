@@ -20,27 +20,27 @@ describe("/api/global/email", () => {
     await config.saveEtherealSmtpConfig()
     await config.saveSettingsConfig()
     const user = await config.getUser("test@test.com")
-    const res = await request
-      .post(`/api/global/email/send`)
-      .send({
-        email: "test@test.com",
-        purpose,
-        userId: user._id,
-      })
-      .set(config.defaultHeaders())
-      .expect("Content-Type", /json/)
-      .expect(200)
-    expect(res.body.message).toBeDefined()
-    const testUrl = nodemailer.getTestMessageUrl(res.body)
-    console.log(`${purpose} URL: ${testUrl}`)
-    expect(testUrl).toBeDefined()
     let response, text
     try {
+      const res = await request
+        .post(`/api/global/email/send`)
+        .send({
+          email: "test@test.com",
+          purpose,
+          userId: user._id,
+        })
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+      expect(res.body.message).toBeDefined()
+      const testUrl = nodemailer.getTestMessageUrl(res.body)
+      console.log(`${purpose} URL: ${testUrl}`)
+      expect(testUrl).toBeDefined()
       response = await fetch(testUrl)
       text = await response.text()
     } catch (err) {
       // ethereal hiccup, can't test right now
-      if (err.status > 400) {
+      if (parseInt(err.status) > 400) {
         return
       } else {
         throw err
