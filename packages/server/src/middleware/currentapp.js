@@ -45,6 +45,7 @@ module.exports = async (ctx, next) => {
     // retrieving global user gets the right role
     roleId = globalUser.roleId || BUILTIN_ROLE_IDS.BASIC
   }
+
   // nothing more to do
   if (!appId) {
     return next()
