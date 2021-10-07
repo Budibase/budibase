@@ -270,15 +270,14 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/handlebars-helpers@^0.11.6":
-  version "0.11.6"
-  resolved "https://registry.yarnpkg.com/@budibase/handlebars-helpers/-/handlebars-helpers-0.11.6.tgz#00e924a0142aac41c07e3d104607759635eec952"
-  integrity sha512-FLtCWkh0cNHC0/X6Pt5Xjmp4/r4tCpv5f5sP1JcZsaSKPyE5gpNu/+fqUxgDTzVS3PVo0KE6hdRPKVWvVqwPEw==
+"@budibase/handlebars-helpers@^0.11.7":
+  version "0.11.7"
+  resolved "https://registry.yarnpkg.com/@budibase/handlebars-helpers/-/handlebars-helpers-0.11.7.tgz#8e5f9843d7dd10503e9f608555a96ccf4d836c46"
+  integrity sha512-PvGHAv22cWSFExs1kc0WglwsmCEUEOqWvSp6JCFZwtc3qAAr5yMfLK8WGVQ63ALvyzWZiyxF+yrlzeeaohCMJw==
   dependencies:
     array-sort "^1.0.0"
     define-property "^2.0.2"
     extend-shallow "^3.0.2"
-    "falsey" "^1.0.0"
     for-in "^1.0.2"
     get-object "^0.2.0"
     get-value "^3.0.1"
@@ -1733,11 +1732,6 @@ extsprintf@^1.2.0:
   version "1.4.0"
   resolved "https://registry.yarnpkg.com/extsprintf/-/extsprintf-1.4.0.tgz#e2689f8f356fad62cca65a3a91c5df5f9551692f"
   integrity sha1-4mifjzVvrWLMplo6kcXfX5VRaS8=
-
-"falsey@^1.0.0":
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/falsey/-/falsey-1.0.0.tgz#71bdd775c24edad9f2f5c015ce8be24400bb5d7d"
-  integrity sha512-zMDNZ/Ipd8MY0+346CPvhzP1AsiVyNfTOayJza4reAIWf72xbkuFUDcJNxSAsQE1b9Bu0wijKb8Ngnh/a7fI5w==
 
 fast-deep-equal@^3.1.1:
   version "3.1.3"
