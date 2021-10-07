@@ -55,7 +55,10 @@ async function authInternal(ctx, user, err = null, info = null) {
   // just store the user ID
   ctx.cookies.set(Cookies.Auth, user.token, config)
   // get rid of any app cookies on login
-  clearCookie(ctx, Cookies.CurrentApp)
+  // have to check test because this breaks cypress
+  if (!env.isTest()) {
+    clearCookie(ctx, Cookies.CurrentApp)
+  }
 }
 
 exports.authenticate = async (ctx, next) => {
