@@ -21,9 +21,12 @@ exports.endUserPing = async ctx => {
     return
   }
 
-  posthogClient.capture("budibase:end_user_ping", {
-    userId: ctx.user && ctx.user._id,
-    appId: ctx.appId,
+  posthogClient.capture({
+    event: "budibase:end_user_ping",
+    distinctId: ctx.user && ctx.user._id,
+    properties: {
+      appId: ctx.appId,
+    },
   })
 
   ctx.body = {
