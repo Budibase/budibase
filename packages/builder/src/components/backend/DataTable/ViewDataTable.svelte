@@ -68,5 +68,5 @@
   {/if}
   <ManageAccessButton resourceId={decodeURI(name)} />
   <HideAutocolumnButton bind:hideAutocolumns />
-  <ExportButton {view} />
+  <ExportButton view={view.name} />
 </Table>

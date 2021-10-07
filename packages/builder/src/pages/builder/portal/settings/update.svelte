@@ -10,14 +10,14 @@
     Label,
   } from "@budibase/bbui"
   import api from "builderStore/api"
-  import { auth } from "stores/portal"
+  import { auth, admin } from "stores/portal"
   import { redirect } from "@roxi/routify"
 
   let version
 
   // Only admins allowed here
   $: {
-    if (!$auth.isAdmin) {
+    if (!$auth.isAdmin || $admin.cloud) {
       $redirect("../../portal")
     }
   }
