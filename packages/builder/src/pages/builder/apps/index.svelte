@@ -159,8 +159,6 @@
     cursor: pointer;
     filter: brightness(110%);
   }
-  .group {
-  }
   .app {
     display: grid;
     grid-template-columns: auto 1fr auto;

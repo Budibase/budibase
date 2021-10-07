@@ -1,12 +1,20 @@
 <script>
+  import { get } from "svelte/store"
   import { onMount, onDestroy } from "svelte"
   import { store, currentAsset } from "builderStore"
   import iframeTemplate from "./iframeTemplate"
   import { Screen } from "builderStore/store/screenTemplates/utils/Screen"
   import { FrontendTypes } from "constants"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import { ProgressCircle, Layout, Heading, Body } from "@budibase/bbui"
+  import {
+    ProgressCircle,
+    Layout,
+    Heading,
+    Body,
+    notifications,
+  } from "@budibase/bbui"
   import ErrorSVG from "assets/error.svg?raw"
+  import { findComponent, findComponentPath } from "builderStore/storeUtils"
 
   let iframe
   let layout
@@ -102,7 +110,7 @@
     iframe.contentWindow.addEventListener("keydown", handleKeydownEvent)
   })
 
-  // remove all iframe event listeners on component destroy
+  // Remove all iframe event listeners on component destroy
   onDestroy(() => {
     if (iframe.contentWindow) {
       iframe.contentWindow.removeEventListener("bb-event", handleBudibaseEvent)
@@ -122,6 +130,26 @@
       // Wait for this event to show the client library if intelligent
       // loading is supported
       loading = false
+    } else if (type === "move-component") {
+      const { componentId, destinationComponentId } = data
+      const rootComponent = get(currentAsset).props
+
+      // Get source and destination components
+      const source = findComponent(rootComponent, componentId)
+      const destination = findComponent(rootComponent, destinationComponentId)
+
+      // Stop if the target is a child of source
+      const path = findComponentPath(source, destinationComponentId)
+      const ids = path.map(component => component._id)
+      if (ids.includes(data.destinationComponentId)) {
+        return
+      }
+
+      // Cut and paste the component to the new destination
+      if (source && destination) {
+        store.actions.components.copy(source, true)
+        store.actions.components.paste(destination, data.mode)
+      }
     } else {
       console.warning(`Client sent unknown event type: ${type}`)
     }
@@ -144,10 +172,15 @@
     confirmDeleteDialog.show()
   }
 
-  const deleteComponent = () => {
-    store.actions.components.delete({ _id: idToDelete })
+  const deleteComponent = async () => {
+    try {
+      await store.actions.components.delete({ _id: idToDelete })
+    } catch (error) {
+      notifications.error(error)
+    }
     idToDelete = null
   }
+
   const cancelDeleteComponent = () => {
     idToDelete = null
   }

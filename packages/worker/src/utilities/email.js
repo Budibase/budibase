@@ -83,10 +83,15 @@ async function buildEmail(purpose, email, context, { user, contents } = {}) {
   }
   base = base.contents
   body = body.contents
+  let name = user ? user.name : undefined
+  if (user && !name && user.firstName) {
+    name = user.lastName ? `${user.firstName} ${user.lastName}` : user.firstName
+  }
   context = {
     ...context,
     contents,
     email,
+    name,
     user: user || {},
   }
 
@@ -113,7 +118,7 @@ async function getSmtpConfiguration(db, workspaceId = null, automation) {
     params.workspace = workspaceId
   }
 
-  const customConfig = getScopedConfig(db, params)
+  const customConfig = await getScopedConfig(db, params)
 
   if (customConfig) {
     return customConfig
@@ -125,6 +130,7 @@ async function getSmtpConfiguration(db, workspaceId = null, automation) {
       port: env.SMTP_PORT,
       host: env.SMTP_HOST,
       secure: false,
+      from: env.SMTP_FROM_ADDRESS,
       auth: {
         user: env.SMTP_USER,
         pass: env.SMTP_PASSWORD,

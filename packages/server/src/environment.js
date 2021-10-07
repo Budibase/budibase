@@ -44,6 +44,7 @@ module.exports = {
   NODE_ENV: process.env.NODE_ENV,
   JEST_WORKER_ID: process.env.JEST_WORKER_ID,
   BUDIBASE_ENVIRONMENT: process.env.BUDIBASE_ENVIRONMENT,
+  DISABLE_ACCOUNT_PORTAL: process.env.DISABLE_ACCOUNT_PORTAL,
   // minor
   SALT_ROUNDS: process.env.SALT_ROUNDS,
   LOGGER: process.env.LOGGER,
@@ -52,6 +53,7 @@ module.exports = {
   AUTOMATION_BUCKET: process.env.AUTOMATION_BUCKET,
   SENDGRID_API_KEY: process.env.SENDGRID_API_KEY,
   DYNAMO_ENDPOINT: process.env.DYNAMO_ENDPOINT,
+  POSTHOG_TOKEN: process.env.POSTHOG_TOKEN,
   // old - to remove
   CLIENT_ID: process.env.CLIENT_ID,
   BUDIBASE_DIR: process.env.BUDIBASE_DIR,

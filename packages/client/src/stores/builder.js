@@ -1,6 +1,7 @@
 import { writable, derived } from "svelte/store"
 import Manifest from "manifest.json"
 import { findComponentById, findComponentPathById } from "../utils/components"
+import { pingEndUser } from "../api"
 
 const dispatchEvent = (type, data = {}) => {
   window.dispatchEvent(
@@ -23,6 +24,7 @@ const createBuilderStore = () => {
     theme: null,
     customTheme: null,
     previewDevice: "desktop",
+    isDragging: false,
   }
   const writableStore = writable(initialState)
   const derivedStore = derived(writableStore, $state => {
@@ -63,11 +65,25 @@ const createBuilderStore = () => {
     notifyLoaded: () => {
       dispatchEvent("preview-loaded")
     },
+    pingEndUser: () => {
+      pingEndUser()
+    },
     setSelectedPath: path => {
-      console.log("set to ")
-      console.log(path)
       writableStore.update(state => {
         state.selectedPath = path
+        return state
+      })
+    },
+    moveComponent: (componentId, destinationComponentId, mode) => {
+      dispatchEvent("move-component", {
+        componentId,
+        destinationComponentId,
+        mode,
+      })
+    },
+    setDragging: dragging => {
+      writableStore.update(state => {
+        state.isDragging = dragging
         return state
       })
     },

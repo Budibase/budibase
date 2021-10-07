@@ -1,10 +1,9 @@
 <script>
   import { ModalContent, Layout, Detail, Body, Icon } from "@budibase/bbui"
   import { automationStore } from "builderStore"
-  import { database } from "stores/backend"
   import { externalActions } from "./ExternalActions"
-  $: instanceId = $database._id
 
+  export let blockIdx
   let selectedAction
   let actionVal
   let actions = Object.entries($automationStore.blockDefinitions.ACTION)
@@ -39,7 +38,8 @@
     )
     automationStore.actions.addBlockToAutomation(newBlock)
     await automationStore.actions.save(
-      $automationStore.selectedAutomation?.automation
+      $automationStore.selectedAutomation?.automation,
+      blockIdx
     )
   }
 </script>

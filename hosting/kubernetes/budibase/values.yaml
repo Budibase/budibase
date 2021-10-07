@@ -90,6 +90,7 @@ globals:
   logLevel: info
   selfHosted: 1
   accountPortalUrL: ""
+  accountPortalApiKey: ""
   cookieDomain: ""
   createSecrets: true # creates an internal API key, JWT secrets and redis password for you
 

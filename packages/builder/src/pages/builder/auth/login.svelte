@@ -8,6 +8,7 @@
     Input,
     Layout,
     notifications,
+    Link,
   } from "@budibase/bbui"
   import { goto, params } from "@roxi/routify"
   import { auth, organisation, oidc, admin } from "stores/portal"
@@ -22,6 +23,7 @@
 
   $: company = $organisation.company || "Budibase"
   $: multiTenancyEnabled = $admin.multiTenancy
+  $: cloud = $admin.cloud
 
   async function login() {
     try {
@@ -84,7 +86,7 @@
         <ActionButton quiet on:click={() => $goto("./forgot")}>
           Forgot password?
         </ActionButton>
-        {#if multiTenancyEnabled}
+        {#if multiTenancyEnabled && !cloud}
           <ActionButton
             quiet
             on:click={() => {
@@ -96,6 +98,16 @@
           </ActionButton>
         {/if}
       </Layout>
+      {#if cloud}
+        <Body size="xs" textAlign="center">
+          By using Budibase Cloud
+          <br />
+          you are agreeing to our
+          <Link href="https://budibase.com/eula" target="_blank"
+            >License Agreement</Link
+          >
+        </Body>
+      {/if}
     </Layout>
   </div>
 </div>

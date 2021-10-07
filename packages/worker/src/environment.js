@@ -32,6 +32,7 @@ module.exports = {
   REDIS_PASSWORD: process.env.REDIS_PASSWORD,
   INTERNAL_API_KEY: process.env.INTERNAL_API_KEY,
   MULTI_TENANCY: process.env.MULTI_TENANCY,
+  DISABLE_ACCOUNT_PORTAL: process.env.DISABLE_ACCOUNT_PORTAL,
   ACCOUNT_PORTAL_URL: process.env.ACCOUNT_PORTAL_URL,
   SMTP_FALLBACK_ENABLED: process.env.SMTP_FALLBACK_ENABLED,
   SMTP_USER: process.env.SMTP_USER,
@@ -39,6 +40,8 @@ module.exports = {
   SMTP_HOST: process.env.SMTP_HOST,
   SMTP_PORT: process.env.SMTP_PORT,
   SMTP_FROM_ADDRESS: process.env.SMTP_FROM_ADDRESS,
+  PLATFORM_URL: process.env.PLATFORM_URL,
+  COOKIE_DOMAIN: process.env.COOKIE_DOMAIN,
   _set(key, value) {
     process.env[key] = value
     module.exports[key] = value

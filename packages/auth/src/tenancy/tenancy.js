@@ -73,7 +73,7 @@ exports.tryAddTenant = async (tenantId, userId, email) => {
   await Promise.all(promises)
 }
 
-exports.getGlobalDB = (tenantId = null) => {
+exports.getGlobalDBName = (tenantId = null) => {
   // tenant ID can be set externally, for example user API where
   // new tenants are being created, this may be the case
   if (!tenantId) {
@@ -81,13 +81,16 @@ exports.getGlobalDB = (tenantId = null) => {
   }
 
   let dbName
-
   if (tenantId === DEFAULT_TENANT_ID) {
     dbName = StaticDatabases.GLOBAL.name
   } else {
     dbName = `${tenantId}${SEPARATOR}${StaticDatabases.GLOBAL.name}`
   }
+  return dbName
+}
 
+exports.getGlobalDB = (tenantId = null) => {
+  const dbName = exports.getGlobalDBName(tenantId)
   return getDB(dbName)
 }
 
@@ -103,4 +106,14 @@ exports.lookupTenantId = async userId => {
     // just return the default
   }
   return tenantId
+}
+
+// lookup, could be email or userId, either will return a doc
+exports.getTenantUser = async identifier => {
+  const db = getDB(PLATFORM_INFO_DB)
+  try {
+    return await db.get(identifier)
+  } catch (err) {
+    return null
+  }
 }

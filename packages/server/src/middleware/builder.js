@@ -33,7 +33,7 @@ async function checkDevAppLocks(ctx) {
     return
   }
   if (!(await doesUserHaveLock(appId, ctx.user))) {
-    ctx.throw(403, "User does not hold app lock.")
+    ctx.throw(400, "User does not hold app lock.")
   }
 
   // they do have lock, update it

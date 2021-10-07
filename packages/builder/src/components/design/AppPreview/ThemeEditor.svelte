@@ -62,7 +62,7 @@
 <Modal bind:this={modal}>
   <ModalContent
     showConfirmButton={false}
-    cancelText="Close"
+    cancelText="View changes"
     showCloseIcon={false}
     title="Theme settings"
   >
@@ -84,7 +84,7 @@
         </div>
       </div>
       <div class="setting">
-        <Label size="L">Primary color</Label>
+        <Label size="L">Accent color</Label>
         <ColorPicker
           spectrumTheme={$store.theme}
           value={$store.customTheme?.primaryColor || defaultTheme.primaryColor}
@@ -92,7 +92,7 @@
         />
       </div>
       <div class="setting">
-        <Label size="L">Primary color (hover)</Label>
+        <Label size="L">Accent color (hover)</Label>
         <ColorPicker
           spectrumTheme={$store.theme}
           value={$store.customTheme?.primaryColorHover ||

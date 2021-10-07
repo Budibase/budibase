@@ -121,6 +121,8 @@ export interface RelationshipsJson {
   through?: string
   from?: string
   to?: string
+  fromPrimary?: string
+  toPrimary?: string
   tableName: string
   column: string
 }

@@ -85,10 +85,10 @@ module MongoDBModule {
         // which method we want to call on the collection
         switch (query.extra.actionTypes) {
           case "insertOne": {
-            return collection.insertOne(query.json)
+            return await collection.insertOne(query.json)
           }
           case "insertMany": {
-            return collection.insertOne(query.json).toArray()
+            return await collection.insertOne(query.json).toArray()
           }
           default: {
             throw new Error(
@@ -112,19 +112,19 @@ module MongoDBModule {
 
         switch (query.extra.actionTypes) {
           case "find": {
-            return collection.find(query.json).toArray()
+            return await collection.find(query.json).toArray()
           }
           case "findOne": {
-            return collection.findOne(query.json)
+            return await collection.findOne(query.json)
           }
           case "findOneAndUpdate": {
-            return collection.findOneAndUpdate(query.json)
+            return await collection.findOneAndUpdate(query.json)
           }
           case "count": {
-            return collection.countDocuments(query.json)
+            return await collection.countDocuments(query.json)
           }
           case "distinct": {
-            return collection.distinct(query.json)
+            return await collection.distinct(query.json)
           }
           default: {
             throw new Error(
@@ -148,10 +148,10 @@ module MongoDBModule {
 
         switch (query.extra.actionTypes) {
           case "updateOne": {
-            return collection.updateOne(query.json)
+            return await collection.updateOne(query.json)
           }
           case "updateMany": {
-            return collection.updateMany(query.json).toArray()
+            return await collection.updateMany(query.json).toArray()
           }
           default: {
             throw new Error(
@@ -175,10 +175,10 @@ module MongoDBModule {
 
         switch (query.extra.actionTypes) {
           case "deleteOne": {
-            return collection.deleteOne(query.json)
+            return await collection.deleteOne(query.json)
           }
           case "deleteMany": {
-            return collection.deleteMany(query.json).toArray()
+            return await collection.deleteMany(query.json).toArray()
           }
           default: {
             throw new Error(

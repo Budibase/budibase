@@ -21,7 +21,10 @@ async function init() {
       COUCH_DB_PASSWORD: "budibase",
       // empty string is false
       MULTI_TENANCY: "",
+      DISABLE_ACCOUNT_PORTAL: "",
       ACCOUNT_PORTAL_URL: "http://localhost:10001",
+      ACCOUNT_PORTAL_API_KEY: "budibase",
+      PLATFORM_URL: "http://localhost:10000",
     }
     let envFile = ""
     Object.keys(envFileJson).forEach(key => {

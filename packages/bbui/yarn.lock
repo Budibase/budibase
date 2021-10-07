@@ -2415,10 +2415,10 @@ supports-color@^7.0.0, supports-color@^7.1.0:
   dependencies:
     has-flag "^4.0.0"
 
-svelte-flatpickr@^3.1.0:
-  version "3.1.0"
-  resolved "https://registry.yarnpkg.com/svelte-flatpickr/-/svelte-flatpickr-3.1.0.tgz#ad83588430dbd55196a1a258b8ba27e7f9c1ee37"
-  integrity sha512-zKyV+ukeVuJ8CW0Ing3T19VSekc4bPkou/5Riutt1yATrLvSsanNqcgqi7Q5IePvIoOF9GJ5OtHvn1qK9Wx9BQ==
+svelte-flatpickr@^3.2.3:
+  version "3.2.3"
+  resolved "https://registry.yarnpkg.com/svelte-flatpickr/-/svelte-flatpickr-3.2.3.tgz#db5dd7ad832ef83262b45e09737955ad3d591fc8"
+  integrity sha512-PNkqK4Napx8nTvCwkaUXdnKo8dISThaxEOK+szTUXcY6H0dQM0TSyuoMaVWY2yX7pM+PN5cpCQCcVe8YvTRFSw==
   dependencies:
     flatpickr "^4.5.2"
 
