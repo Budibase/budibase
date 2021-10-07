@@ -90,6 +90,7 @@
     on:input={onInput}
     on:keyup={updateValueOnEnter}
     {type}
+    inputmode={type === "number" ? "decimal" : "text"}
     class="spectrum-Textfield-input"
   />
 </div>

@@ -1,5 +1,5 @@
 <script>
-  import { Button, Heading, Body } from "@budibase/bbui"
+  import { Heading, Layout, Icon } from "@budibase/bbui"
   import Spinner from "components/common/Spinner.svelte"
   import api from "builderStore/api"
 
@@ -13,8 +13,7 @@
   let templatesPromise = fetchTemplates()
 </script>
 
-<div class="root">
-  <Heading size="M">Start With a Template</Heading>
+<Layout gap="XS" noPadding>
   {#await templatesPromise}
     <div class="spinner-container">
       <Spinner size="30" />
@@ -22,41 +21,69 @@
   {:then templates}
     <div class="templates">
       {#each templates as template}
-        <div class="templates-card">
-          <Heading size="S">{template.name}</Heading>
-          <Body size="M" grey>{template.category}</Body>
-          <Body size="S" black>{template.description}</Body>
-          <div><img alt="template" src={template.image} width="100%" /></div>
-          <div class="card-footer">
-            <Button secondary on:click={() => onSelect(template)}>
-              Create
-              {template.name}
-            </Button>
+        <div class="template" on:click={() => onSelect(template)}>
+          <div
+            class="background-icon"
+            style={`background: ${template.background};`}
+          >
+            <Icon name={template.icon} />
           </div>
+          <Heading size="XS">{template.name}</Heading>
+          <p class="detail">{template?.category?.toUpperCase()}</p>
         </div>
       {/each}
+      <div class="template start-from-scratch" on:click={() => onSelect(null)}>
+        <div class="background-icon" style={`background: var(--background);`}>
+          <Icon name="Add" />
+        </div>
+        <Heading size="XS">Start from scratch</Heading>
+        <p class="detail">BLANK</p>
+      </div>
     </div>
   {:catch err}
     <h1 style="color:red">{err}</h1>
   {/await}
-</div>
+</Layout>
 
 <style>
   .templates {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    grid-gap: var(--layout-m);
+    width: 100%;
+    grid-gap: var(--spacing-m);
+    grid-template-columns: 1fr;
     justify-content: start;
+    margin-top: 15px;
   }
 
-  .templates-card {
-    background-color: var(--background);
-    padding: var(--spacing-xl);
-    border-radius: var(--border-radius-m);
-    border: var(--border-dark);
+  .background-icon {
+    padding: 10px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    color: white;
   }
 
-  .card-footer {
-    margin-top: var(--spacing-m);
+  .template {
+    height: 60px;
+    display: grid;
+    grid-gap: var(--layout-m);
+    grid-template-columns: 5% 1fr 15%;
+    border: 1px solid #494949;
+    align-items: center;
+    cursor: pointer;
+    border-radius: 4px;
+    background: #1a1a1a;
+    padding: 8px 16px;
+  }
+
+  .detail {
+    text-align: right;
+  }
+
+  .start-from-scratch {
+    background: var(--spectrum-global-color-gray-50);
+    margin-top: 20px;
   }
 </style>

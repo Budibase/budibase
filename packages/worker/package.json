@@ -1,7 +1,7 @@
 {
   "name": "@budibase/worker",
   "email": "hi@budibase.com",
-  "version": "0.9.146-alpha.4",
+  "version": "0.9.154-alpha.1",
   "description": "Budibase background service",
   "main": "src/index.js",
   "repository": {
@@ -20,13 +20,15 @@
     "multi:enable": "node scripts/multiTenancy.js enable",
     "multi:disable": "node scripts/multiTenancy.js disable",
     "selfhost:enable": "node scripts/selfhost.js enable",
-    "selfhost:disable": "node scripts/selfhost.js disable"
+    "selfhost:disable": "node scripts/selfhost.js disable",
+    "localdomain:enable": "node scripts/localdomain.js enable",
+    "localdomain:disable": "node scripts/localdomain.js disable"
   },
   "author": "Budibase",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
-    "@budibase/auth": "^0.9.146-alpha.4",
-    "@budibase/string-templates": "^0.9.146-alpha.4",
+    "@budibase/auth": "^0.9.154-alpha.1",
+    "@budibase/string-templates": "^0.9.154-alpha.1",
     "@koa/router": "^8.0.0",
     "@techpass/passport-openidconnect": "^0.3.0",
     "aws-sdk": "^2.811.0",

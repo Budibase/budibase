@@ -28,11 +28,7 @@ context("Create a View", () => {
       const headers = Array.from($headers).map(header =>
         header.textContent.trim()
       )
-      expect(removeSpacing(headers)).to.deep.eq([
-        "group",
-        "age",
-        "rating",
-      ])
+      expect(removeSpacing(headers)).to.deep.eq(["group", "age", "rating"])
     })
   })
 
@@ -62,7 +58,7 @@ context("Create a View", () => {
     cy.get(".modal-inner-wrapper").within(() => {
       cy.get(".spectrum-Picker-label").eq(0).click()
       cy.contains("Statistics").click()
-      
+
       cy.get(".spectrum-Picker-label").eq(1).click()
       cy.contains("age").click({ force: true })
 
@@ -105,20 +101,20 @@ context("Create a View", () => {
     cy.get(".spectrum-Table-cell").then($values => {
       let values = Array.from($values).map(header => header.textContent.trim())
       expect(values).to.deep.eq([
-            "Students",
-            "70",
-            "20",
-            "25",
-            "3",
-            "1650",
-            "23.333333333333332",
-            "Teachers",
-            "85",
-            "36",
-            "49",
-            "2",
-            "3697",
-            "42.5",
+        "Students",
+        "70",
+        "20",
+        "25",
+        "3",
+        "1650",
+        "23.333333333333332",
+        "Teachers",
+        "85",
+        "36",
+        "49",
+        "2",
+        "3697",
+        "42.5",
       ])
     })
   })

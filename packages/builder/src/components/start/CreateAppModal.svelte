@@ -17,6 +17,7 @@
   import { capitalise } from "helpers"
   import { goto } from "@roxi/routify"
   import { APP_NAME_REGEX } from "constants"
+  import TemplateList from "./TemplateList.svelte"
 
   export let template
 
@@ -31,12 +32,16 @@
         APP_NAME_REGEX,
         "App name must be letters, numbers and spaces only"
       ),
-    file: template ? mixed().required("Please choose a file to import") : null,
+    file: template?.fromFile
+      ? mixed().required("Please choose a file to import")
+      : null,
   }
 
   let submitting = false
   let valid = false
+
   $: checkValidity($values, validator)
+  $: showTemplateSelection = !template?.fromFile && !template?.key
 
   onMount(async () => {
     await hostingStore.actions.fetchDeployedApps()
@@ -73,7 +78,7 @@
     submitting = true
 
     // Check a template exists if we are important
-    if (template && !$values.file) {
+    if (template?.fromFile && !$values.file) {
       $errors.file = "Please choose a file to import"
       valid = false
       submitting = false
@@ -133,33 +138,59 @@
   }
 </script>
 
-<ModalContent
-  title={template ? "Import app" : "Create app"}
-  confirmText={template ? "Import app" : "Create app"}
-  onConfirm={createNewApp}
-  disabled={!valid}
->
-  {#if template}
-    <Dropzone
-      error={$touched.file && $errors.file}
-      gallery={false}
-      label="File to import"
-      value={[$values.file]}
-      on:change={e => {
-        $values.file = e.detail?.[0]
-        $touched.file = true
+{#if showTemplateSelection}
+  <ModalContent
+    title={"Get started quickly"}
+    showConfirmButton={false}
+    size="L"
+    onConfirm={() => {
+      showTemplateSelection = false
+      return false
+    }}
+    showCancelButton={false}
+    showCloseIcon={false}
+  >
+    <Body size="M">Select a template below, or start from scratch.</Body>
+    <TemplateList
+      onSelect={selected => {
+        if (!selected) {
+          showTemplateSelection = false
+          return
+        }
+
+        template = selected
       }}
     />
-  {/if}
-  <Body size="S">
-    Give your new app a name, and choose which groups have access (paid plans
-    only).
-  </Body>
-  <Input
-    bind:value={$values.name}
-    error={$touched.name && $errors.name}
-    on:blur={() => ($touched.name = true)}
-    label="Name"
-  />
-  <Checkbox label="Group access" disabled value={true} text="All users" />
-</ModalContent>
+  </ModalContent>
+{:else}
+  <ModalContent
+    title={template?.fromFile ? "Import app" : "Create app"}
+    confirmText={template?.fromFile ? "Import app" : "Create app"}
+    onConfirm={createNewApp}
+    disabled={!valid}
+  >
+    {#if template?.fromFile}
+      <Dropzone
+        error={$touched.file && $errors.file}
+        gallery={false}
+        label="File to import"
+        value={[$values.file]}
+        on:change={e => {
+          $values.file = e.detail?.[0]
+          $touched.file = true
+        }}
+      />
+    {/if}
+    <Body size="S">
+      Give your new app a name, and choose which groups have access (paid plans
+      only).
+    </Body>
+    <Input
+      bind:value={$values.name}
+      error={$touched.name && $errors.name}
+      on:blur={() => ($touched.name = true)}
+      label="Name"
+    />
+    <Checkbox label="Group access" disabled value={true} text="All users" />
+  </ModalContent>
+{/if}

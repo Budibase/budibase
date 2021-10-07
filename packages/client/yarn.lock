@@ -29,9 +29,9 @@
     js-tokens "^4.0.0"
 
 "@budibase/bbui@^0.9.139":
-  version "0.9.145"
-  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-0.9.145.tgz#e65425e927e9488847aaf8209ff3eb0cf00c219c"
-  integrity sha512-vHSi+J52U24YSJPd1cfH9ePN92kCGLxKw4naYDjavYGd568GbRPJWzerzyqhm4VQtWn8FFi47jbzAsfAhiFfLA==
+  version "0.9.142"
+  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-0.9.142.tgz#7edbda7967c9e5dfc96e5be5231656e5aab8d0e3"
+  integrity sha512-m2YlqqH87T4RwqD/oGhH6twHIgvFv4oUMEhKpkgLsbxjXVLVD0OOF7WqjpDnSa4khVQaixjdkI/Jiw2qhBUSaA==
   dependencies:
     "@adobe/spectrum-css-workflow-icons" "^1.2.1"
     "@spectrum-css/actionbutton" "^1.0.1"

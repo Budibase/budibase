@@ -58,7 +58,7 @@ exports.update = async (property, usage) => {
     // increment the quota
     quota.usageQuota[property] += usage
 
-    if (quota.usageQuota[property] >= quota.usageLimits[property]) {
+    if (quota.usageQuota[property] > quota.usageLimits[property]) {
       throw new Error(
         `You have exceeded your usage quota of ${quota.usageLimits[property]} ${property}.`
       )

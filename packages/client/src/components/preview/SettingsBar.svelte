@@ -16,7 +16,7 @@
   let measured = false
 
   $: definition = $builderStore.selectedComponentDefinition
-  $: showBar = definition?.showSettingsBar
+  $: showBar = definition?.showSettingsBar && !$builderStore.isDragging
   $: settings = definition?.settings?.filter(setting => setting.showInBar) ?? []
 
   const updatePosition = () => {

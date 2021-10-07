@@ -8,10 +8,9 @@
     ButtonGroup,
     Select,
     Modal,
-    ModalContent,
     Page,
     notifications,
-    Body,
+    Search,
   } from "@budibase/bbui"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
   import UpdateAppModal from "components/start/UpdateAppModal.svelte"
@@ -35,8 +34,13 @@
   let unpublishModal
   let creatingApp = false
   let loaded = false
+  let searchTerm = ""
+  let cloud = $admin.cloud
 
   $: enrichedApps = enrichApps($apps, $auth.user, sortBy)
+  $: filteredApps = enrichedApps.filter(app =>
+    app?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+  )
 
   const enrichApps = (apps, user, sortBy) => {
     const enrichedApps = apps.map(app => ({
@@ -45,6 +49,7 @@
       lockedYou: app.lockedBy && app.lockedBy.email === user?.email,
       lockedOther: app.lockedBy && app.lockedBy.email !== user?.email,
     }))
+
     if (sortBy === "status") {
       return enrichedApps.sort((a, b) => {
         if (a.status === b.status) {
@@ -68,6 +73,15 @@
   const initiateAppCreation = () => {
     creationModal.show()
     creatingApp = true
+  }
+
+  const initiateAppsExport = () => {
+    try {
+      download(`/api/cloud/export`)
+      notifications.success("Apps exported successfully")
+    } catch (err) {
+      notifications.error(`Error exporting apps: ${err}`)
+    }
   }
 
   const initiateAppImport = () => {
@@ -190,6 +204,9 @@
       <div class="title">
         <Heading>Apps</Heading>
         <ButtonGroup>
+          {#if cloud}
+            <Button secondary on:click={initiateAppsExport}>Export apps</Button>
+          {/if}
           <Button secondary on:click={initiateAppImport}>Import app</Button>
           <Button cta on:click={initiateAppCreation}>Create app</Button>
         </ButtonGroup>
@@ -197,6 +214,7 @@
       <div class="filter">
         <div class="select">
           <Select
+            autoWidth
             bind:value={sortBy}
             placeholder={null}
             options={[
@@ -205,6 +223,9 @@
               { label: "Sort by status", value: "status" },
             ]}
           />
+          <div class="desktop-search">
+            <Search placeholder="Search" bind:value={searchTerm} />
+          </div>
         </div>
         <ActionGroup>
           <ActionButton
@@ -221,11 +242,14 @@
           />
         </ActionGroup>
       </div>
+      <div class="mobile-search">
+        <Search placeholder="Search" bind:value={searchTerm} />
+      </div>
       <div
         class:appGrid={layout === "grid"}
         class:appTable={layout === "table"}
       >
-        {#each enrichedApps as app (app.appId)}
+        {#each filteredApps as app (app.appId)}
           <svelte:component
             this={layout === "grid" ? AppCard : AppRow}
             {releaseLock}
@@ -244,22 +268,7 @@
   {#if !enrichedApps.length && !creatingApp && loaded}
     <div class="empty-wrapper">
       <Modal inline>
-        <ModalContent
-          title="Create your first app"
-          confirmText="Create app"
-          showCancelButton={false}
-          showCloseIcon={false}
-          onConfirm={initiateAppCreation}
-          size="M"
-        >
-          <div slot="footer">
-            <Button on:click={initiateAppImport} secondary>Import app</Button>
-          </div>
-          <Body size="S">
-            The purpose of the Budibase builder is to help you build beautiful,
-            powerful applications quickly and easily.
-          </Body>
-        </ModalContent>
+        <CreateAppModal {template} />
       </Modal>
     </div>
   {/if}
@@ -298,10 +307,26 @@
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
+    gap: 10px;
+  }
+
+  @media only screen and (max-width: 560px) {
+    .title {
+      flex-direction: column;
+      align-items: flex-start;
+    }
   }
 
   .select {
-    width: 190px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-gap: 10px;
+  }
+  .filter :global(.spectrum-ActionGroup) {
+    flex-wrap: nowrap;
+  }
+  .mobile-search {
+    display: none;
   }
 
   .appGrid {
@@ -341,6 +366,12 @@
   @media (max-width: 640px) {
     .appTable {
       grid-template-columns: 1fr auto;
+    }
+    .desktop-search {
+      display: none;
+    }
+    .mobile-search {
+      display: block;
     }
   }
 </style>

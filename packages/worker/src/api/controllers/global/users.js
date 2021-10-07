@@ -1,27 +1,23 @@
 const {
-  generateGlobalUserID,
   getGlobalUserParams,
   StaticDatabases,
   generateNewUsageQuotaDoc,
 } = require("@budibase/auth/db")
-const { hash, getGlobalUserByEmail } = require("@budibase/auth").utils
-const { UserStatus, EmailTemplatePurpose } = require("../../../constants")
+const { hash, getGlobalUserByEmail, saveUser } = require("@budibase/auth").utils
+const { EmailTemplatePurpose } = require("../../../constants")
 const { checkInviteCode } = require("../../../utilities/redis")
 const { sendEmail } = require("../../../utilities/email")
 const { user: userCache } = require("@budibase/auth/cache")
 const { invalidateSessions } = require("@budibase/auth/sessions")
-const CouchDB = require("../../../db")
 const accounts = require("@budibase/auth/accounts")
 const {
   getGlobalDB,
   getTenantId,
+  getTenantUser,
   doesTenantExist,
-  tryAddTenant,
-  updateTenantId,
 } = require("@budibase/auth/tenancy")
+const { removeUserFromInfoDB } = require("@budibase/auth/deprovision")
 const env = require("../../../environment")
-
-const PLATFORM_INFO_DB = StaticDatabases.PLATFORM_INFO.name
 
 async function allUsers() {
   const db = getGlobalDB()
@@ -33,96 +29,6 @@ async function allUsers() {
   return response.rows.map(row => row.doc)
 }
 
-async function saveUser(
-  user,
-  tenantId,
-  hashPassword = true,
-  requirePassword = true
-) {
-  if (!tenantId) {
-    throw "No tenancy specified."
-  }
-  // need to set the context for this request, as specified
-  updateTenantId(tenantId)
-  // specify the tenancy incase we're making a new admin user (public)
-  const db = getGlobalDB(tenantId)
-  let { email, password, _id } = user
-  // make sure another user isn't using the same email
-  let dbUser
-  if (email) {
-    // check budibase users inside the tenant
-    dbUser = await getGlobalUserByEmail(email)
-    if (dbUser != null && (dbUser._id !== _id || Array.isArray(dbUser))) {
-      throw `Email address ${email} already in use.`
-    }
-
-    // check budibase users in other tenants
-    if (env.MULTI_TENANCY) {
-      dbUser = await getTenantUser(email)
-      if (dbUser != null && dbUser.tenantId !== tenantId) {
-        throw `Email address ${email} already in use.`
-      }
-    }
-
-    // check root account users in account portal
-    if (!env.SELF_HOSTED) {
-      const account = await accounts.getAccount(email)
-      if (account && account.verified && account.tenantId !== tenantId) {
-        throw `Email address ${email} already in use.`
-      }
-    }
-  } else {
-    dbUser = await db.get(_id)
-  }
-
-  // get the password, make sure one is defined
-  let hashedPassword
-  if (password) {
-    hashedPassword = hashPassword ? await hash(password) : password
-  } else if (dbUser) {
-    hashedPassword = dbUser.password
-  } else if (requirePassword) {
-    throw "Password must be specified."
-  }
-
-  _id = _id || generateGlobalUserID()
-  user = {
-    createdAt: Date.now(),
-    ...dbUser,
-    ...user,
-    _id,
-    password: hashedPassword,
-    tenantId,
-  }
-  // make sure the roles object is always present
-  if (!user.roles) {
-    user.roles = {}
-  }
-  // add the active status to a user if its not provided
-  if (user.status == null) {
-    user.status = UserStatus.ACTIVE
-  }
-  try {
-    const response = await db.put({
-      password: hashedPassword,
-      ...user,
-    })
-    await tryAddTenant(tenantId, _id, email)
-    await userCache.invalidateUser(response.id)
-    return {
-      _id: response.id,
-      _rev: response.rev,
-      email,
-    }
-  } catch (err) {
-    if (err.status === 409) {
-      throw "User exists already"
-    } else {
-      throw err
-    }
-  }
-}
-
 exports.save = async ctx => {
   try {
     ctx.body = await saveUser(ctx.request.body, getTenantId())
@@ -132,7 +38,7 @@ exports.save = async ctx => {
 }
 
 const parseBooleanParam = param => {
-  if (param && param == "false") {
+  if (param && param === "false") {
     return false
   } else {
     return true
@@ -160,6 +66,17 @@ exports.adminUser = async ctx => {
 
   // write usage quotas for cloud
   if (!env.SELF_HOSTED) {
+    // could be a scenario where it exists, make sure its clean
+    try {
+      const usageQuota = await db.get(
+        StaticDatabases.PLATFORM_INFO.docs.usageQuota
+      )
+      if (usageQuota) {
+        await db.remove(usageQuota._id, usageQuota._rev)
+      }
+    } catch (err) {
+      // don't worry about errors
+    }
     await db.post(generateNewUsageQuotaDoc())
   }
 
@@ -193,6 +110,19 @@ exports.adminUser = async ctx => {
 exports.destroy = async ctx => {
   const db = getGlobalDB()
   const dbUser = await db.get(ctx.params.id)
+
+  // root account holder can't be deleted from inside budibase
+  const email = dbUser.email
+  const account = await accounts.getAccount(email)
+  if (account) {
+    if (email === ctx.user.email) {
+      ctx.throw(400, 'Please visit "Account" to delete this user')
+    } else {
+      ctx.throw(400, "Account holder cannot be deleted")
+    }
+  }
+
+  await removeUserFromInfoDB(dbUser)
   await db.remove(dbUser._id, dbUser._rev)
   await userCache.invalidateUser(dbUser._id)
   await invalidateSessions(dbUser._id)
@@ -283,16 +213,6 @@ exports.find = async ctx => {
     delete user.password
   }
   ctx.body = user
-}
-
-// lookup, could be email or userId, either will return a doc
-const getTenantUser = async identifier => {
-  const db = new CouchDB(PLATFORM_INFO_DB)
-  try {
-    return await db.get(identifier)
-  } catch (err) {
-    return null
-  }
 }
 
 exports.tenantUserLookup = async ctx => {

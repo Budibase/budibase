@@ -99,6 +99,7 @@ function processAutoColumn(
   row,
   opts = { reprocessing: false, noAutoRelationships: false }
 ) {
+  let noUser = !user || !user.userId
   let now = new Date().toISOString()
   // if a row doesn't have a revision then it doesn't exist yet
   const creating = !row._rev
@@ -108,7 +109,12 @@ function processAutoColumn(
     }
     switch (schema.subtype) {
       case AutoFieldSubTypes.CREATED_BY:
-        if (creating && !opts.reprocessing && !opts.noAutoRelationships) {
+        if (
+          creating &&
+          !opts.reprocessing &&
+          !opts.noAutoRelationships &&
+          !noUser
+        ) {
           row[key] = [user.userId]
         }
         break
@@ -118,7 +124,7 @@ function processAutoColumn(
         }
         break
       case AutoFieldSubTypes.UPDATED_BY:
-        if (!opts.reprocessing && !opts.noAutoRelationships) {
+        if (!opts.reprocessing && !opts.noAutoRelationships && !noUser) {
           row[key] = [user.userId]
         }
         break

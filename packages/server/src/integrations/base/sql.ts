@@ -55,6 +55,12 @@ function addFilters(
       query = query[fnc](key, "ilike", `${value}%`)
     })
   }
+  if (filters.fuzzy) {
+    iterate(filters.fuzzy, (key, value) => {
+      const fnc = allOr ? "orWhere" : "where"
+      query = query[fnc](key, "ilike", `%${value}%`)
+    })
+  }
   if (filters.range) {
     iterate(filters.range, (key, value) => {
       if (!value.high || !value.low) {
@@ -112,14 +118,16 @@ function addRelationships(
       )
     } else {
       const throughTable = relationship.through
+      const fromPrimary = relationship.fromPrimary
+      const toPrimary = relationship.toPrimary
       query = query
         // @ts-ignore
         .leftJoin(
           throughTable,
-          `${fromTable}.${from}`,
+          `${fromTable}.${fromPrimary}`,
           `${throughTable}.${from}`
         )
-        .leftJoin(toTable, `${toTable}.${to}`, `${throughTable}.${to}`)
+        .leftJoin(toTable, `${toTable}.${toPrimary}`, `${throughTable}.${to}`)
     }
   }
   return query
@@ -133,6 +141,12 @@ function buildCreate(
   const { endpoint, body } = json
   let query: KnexQuery = knex(endpoint.entityId)
   const parsedBody = parseBody(body)
+  // make sure no null values in body for creation
+  for (let [key, value] of Object.entries(parsedBody)) {
+    if (value == null) {
+      delete parsedBody[key]
+    }
+  }
   // mysql can't use returning
   if (opts.disableReturning) {
     return query.insert(parsedBody)

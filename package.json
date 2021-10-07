@@ -50,6 +50,8 @@
     "multi:disable": "lerna run multi:disable",
     "selfhost:enable": "lerna run selfhost:enable",
     "selfhost:disable": "lerna run selfhost:disable",
+    "localdomain:enable": "lerna run localdomain:enable",
+    "localdomain:disable": "lerna run localdomain:disable",
     "postinstall": "husky install"
   }
 }
