@@ -17,11 +17,11 @@ describe("/api/global/email", () => {
   afterAll(setup.afterAll)
 
   async function sendRealEmail(purpose) {
-    await config.saveEtherealSmtpConfig()
-    await config.saveSettingsConfig()
-    const user = await config.getUser("test@test.com")
     let response, text
     try {
+      await config.saveEtherealSmtpConfig()
+      await config.saveSettingsConfig()
+      const user = await config.getUser("test@test.com")
       const res = await request
         .post(`/api/global/email/send`)
         .send({
@@ -40,7 +40,7 @@ describe("/api/global/email", () => {
       text = await response.text()
     } catch (err) {
       // ethereal hiccup, can't test right now
-      if (parseInt(err.status) > 400) {
+      if (parseInt(err.status) >= 400) {
         return
       } else {
         throw err
