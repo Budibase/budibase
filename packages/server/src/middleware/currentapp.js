@@ -58,7 +58,7 @@ module.exports = async (ctx, next) => {
   // If user and app tenant Ids do not match, 403
   if (env.MULTI_TENANCY && ctx.user) {
     const userTenantId = getTenantId()
-    const tenantId = getTenantIDFromAppID(ctx.appId) || DEFAULT_TENANT_ID
+    const tenantId = getTenantIDFromAppID(appId) || DEFAULT_TENANT_ID
     if (tenantId !== userTenantId) {
       ctx.throw(403, "Cannot access application.")
     }
