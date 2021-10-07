@@ -9,7 +9,6 @@ jest.mock("../../../utilities/workerRequests", () => ({
   getGlobalSelf: jest.fn(() => {
     return {}
   }),
-  addAppRoleToUser: jest.fn(),
   deleteGlobalUser: jest.fn(),
 }))
 
