@@ -4,13 +4,9 @@ const { Cookies } = require("@budibase/auth").constants
 const { getRole } = require("@budibase/auth/roles")
 const { BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
 const { generateUserMetadataID } = require("../db/utils")
-const { dbExists, getTenantIDFromAppID } = require("@budibase/auth/db")
-const { getTenantId } = require("@budibase/auth/tenancy")
+const { dbExists } = require("@budibase/auth/db")
 const { getCachedSelf } = require("../utilities/global")
 const CouchDB = require("../db")
-const env = require("../environment")
-
-const DEFAULT_TENANT_ID = "default"
 
 module.exports = async (ctx, next) => {
   // try to get the appID from the request
@@ -53,15 +49,6 @@ module.exports = async (ctx, next) => {
   // nothing more to do
   if (!appId) {
     return next()
-  }
-
-  // If user and app tenant Ids do not match, 403
-  if (env.MULTI_TENANCY && ctx.user) {
-    const userTenantId = getTenantId()
-    const tenantId = getTenantIDFromAppID(appId) || DEFAULT_TENANT_ID
-    if (tenantId !== userTenantId) {
-      ctx.throw(403, "Cannot access application.")
-    }
   }
 
   ctx.appId = appId
