@@ -4,13 +4,11 @@ const { Cookies } = require("@budibase/auth").constants
 const { getRole } = require("@budibase/auth/roles")
 const { BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
 const { generateUserMetadataID } = require("../db/utils")
-const { dbExists, getTenantIDFromAppID } = require("@budibase/auth/db")
-const { getTenantId } = require("@budibase/auth/tenancy")
+const { dbExists } = require("@budibase/auth/db")
+const { isUserInAppTenant } = require("@budibase/auth/tenancy")
 const { getCachedSelf } = require("../utilities/global")
 const CouchDB = require("../db")
 const env = require("../environment")
-
-const DEFAULT_TENANT_ID = "default"
 
 module.exports = async (ctx, next) => {
   // try to get the appID from the request
@@ -55,13 +53,21 @@ module.exports = async (ctx, next) => {
     return next()
   }
 
-  // If user and app tenant Ids do not match, 403
-  if (env.MULTI_TENANCY && ctx.user) {
-    const userTenantId = getTenantId()
-    const tenantId = getTenantIDFromAppID(appId) || DEFAULT_TENANT_ID
-    if (tenantId !== userTenantId) {
-      ctx.throw(403, "Cannot access application.")
-    }
+  let noCookieSet = false
+  // if the user not in the right tenant then make sure they have no permissions
+  // need to judge this only based on the request app ID,
+  if (
+    env.MULTI_TENANCY &&
+    ctx.user &&
+    requestAppId &&
+    !isUserInAppTenant(requestAppId)
+  ) {
+    // don't error, simply remove the users rights (they are a public user)
+    delete ctx.user.builder
+    delete ctx.user.admin
+    delete ctx.user.roles
+    roleId = BUILTIN_ROLE_IDS.PUBLIC
+    noCookieSet = true
   }
 
   ctx.appId = appId
@@ -78,9 +84,10 @@ module.exports = async (ctx, next) => {
     }
   }
   if (
-    requestAppId !== appId ||
-    appCookie == null ||
-    appCookie.appId !== requestAppId
+    (requestAppId !== appId ||
+      appCookie == null ||
+      appCookie.appId !== requestAppId) &&
+    !noCookieSet
   ) {
     setCookie(ctx, { appId }, Cookies.CurrentApp)
   }
