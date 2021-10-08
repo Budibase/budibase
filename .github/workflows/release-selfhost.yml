@@ -1,9 +1,7 @@
 name: Budibase Release
 
 on:
- push:
-    branches:
-      - master
+ workflow_dispatch:
 
 env:
   POSTHOG_TOKEN: ${{ secrets.POSTHOG_TOKEN }}
@@ -22,9 +20,6 @@ jobs:
           node-version: 12.x
       - run: yarn
       - run: yarn bootstrap
-      - run: yarn lint
-      - run: yarn build
-      - run: yarn test
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -33,26 +28,30 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-west-1
 
-      - name: Publish budibase packages to NPM
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          # setup the username and email. I tend to use 'GitHub Actions Bot' with no email by default
-          git config user.name "Budibase Release Bot"
-          git config user.email "<>"
-          echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} >> .npmrc
-          yarn release
-
       - name: 'Get Previous tag'
         id: previoustag
         uses: "WyriHaximus/github-action-get-previous-tag@v1"
 
-      - name: Build/release Docker images
+      - name: Build/release Docker images (Self Host)
+        if: ${{ github.event.inputs.release_self_host == 'Y' }}
         run: | 
           docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
           yarn build
-          yarn build:docker
+          yarn build:docker:production
         env:
           DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
           BUDIBASE_RELEASE_VERSION: ${{ steps.previoustag.outputs.tag }}
+      
+      - uses: azure/setup-helm@v1
+        id: install
+
+      # So, we need to inject the values into this
+      - run: yarn release:helm
+
+      - name: Run chart-releaser
+        uses: helm/chart-releaser-action@v1.1.0
+        with:
+          charts_dir: docs
+        env:
+          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
