@@ -86,6 +86,7 @@ async function getAppUrlIfNotInUse(ctx) {
   if (
     url &&
     deployedApps[url] != null &&
+    ctx.params != null &&
     deployedApps[url].appId !== ctx.params.appId
   ) {
     ctx.throw(400, "App name/URL is already in use.")
