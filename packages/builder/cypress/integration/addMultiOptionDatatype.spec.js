@@ -26,7 +26,8 @@ context("Add Multi-Option Datatype", () => {
         // Add multi-select picker to form
         cy.addComponent("Form", "Multi-select Picker").then((componentId) => {
             cy.get('[data-cy="field-prop-control"]').type("Test Data").type('{enter}')
-            cy.getComponent(componentId).click()
+            cy.wait(1000)
+            cy.getComponent(componentId).contains("Choose some options").click()
             // Check picker has 5 items
             cy.getComponent(componentId).find('li').should('have.length', 5)
             // Select all items
