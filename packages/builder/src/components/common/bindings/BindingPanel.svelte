@@ -1,32 +1,45 @@
 <script>
   import groupBy from "lodash/fp/groupBy"
-  import { Search, TextArea, DrawerContent } from "@budibase/bbui"
+  import { Search, TextArea, DrawerContent, Tabs, Tab } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { isValid } from "@budibase/string-templates"
   import { readableToRuntimeBinding } from "builderStore/dataBinding"
   import { handlebarsCompletions } from "constants/completions"
-  import { addToText } from "./utils"
+  import { addHBSBinding, addJSBinding } from "./utils"
+  import CodeMirrorEditor from "components/common/CodeMirrorEditor.svelte"
 
   const dispatch = createEventDispatcher()
 
   export let bindableProperties
   export let value = ""
   export let valid
+  export let allowJS = true
 
   let helpers = handlebarsCompletions()
   let getCaretPosition
   let search = ""
+  let mode = "Handlebars"
 
+  $: usingJS = mode === "JavaScript"
   $: valid = isValid(readableToRuntimeBinding(bindableProperties, value))
   $: dispatch("change", value)
   $: ({ context } = groupBy("type", bindableProperties))
   $: searchRgx = new RegExp(search, "ig")
-  $: filteredColumns = context?.filter(context => {
+  $: filteredBindings = context?.filter(context => {
     return context.readableBinding.match(searchRgx)
   })
   $: filteredHelpers = helpers?.filter(helper => {
     return helper.label.match(searchRgx) || helper.description.match(searchRgx)
   })
+
+  const addHelper = helper => {
+    value = addHBSBinding(value, getCaretPosition(), helper.text)
+  }
+
+  const addBinding = binding => {
+    const fn = usingJS ? addJSBinding : addHBSBinding
+    value = fn(value, getCaretPosition(), binding.readableBinding)
+  }
 </script>
 
 <DrawerContent>
@@ -36,32 +49,24 @@
         <div class="heading">Search</div>
         <Search placeholder="Search" bind:value={search} />
       </section>
-      {#if filteredColumns?.length}
+      {#if filteredBindings?.length}
         <section>
           <div class="heading">Bindable Values</div>
           <ul>
-            {#each filteredColumns as { readableBinding }}
-              <li
-                on:click={() => {
-                  value = addToText(value, getCaretPosition(), readableBinding)
-                }}
-              >
-                {readableBinding}
+            {#each filteredBindings as binding}
+              <li on:click={() => addBinding(binding)}>
+                {binding.readableBinding}
               </li>
             {/each}
           </ul>
         </section>
       {/if}
-      {#if filteredHelpers?.length}
+      {#if filteredHelpers?.length && !usingJS}
         <section>
           <div class="heading">Helpers</div>
           <ul>
             {#each filteredHelpers as helper}
-              <li
-                on:click={() => {
-                  value = addToText(value, getCaretPosition(), helper.text)
-                }}
-              >
+              <li on:click={() => addHelper(helper)}>
                 <div class="helper">
                   <div class="helper__name">{helper.displayText}</div>
                   <div class="helper__description">
@@ -77,24 +82,50 @@
     </div>
   </svelte:fragment>
   <div class="main">
-    <TextArea
-      bind:getCaretPosition
-      bind:value
-      placeholder="Add text, or click the objects on the left to add them to the textbox."
-    />
-    {#if !valid}
-      <p class="syntax-error">
-        Current Handlebars syntax is invalid, please check the guide
-        <a href="https://handlebarsjs.com/guide/">here</a>
-        for more details.
-      </p>
-    {/if}
+    <Tabs selected="Handlebars" on:select={e => (mode = e.detail)}>
+      <Tab title="Handlebars">
+        <div class="main-content">
+          <TextArea
+            bind:getCaretPosition
+            {value}
+            on:change={e => (value = e.detail)}
+            placeholder="Add text, or click the objects on the left to add them to the textbox."
+          />
+          {#if !valid}
+            <p class="syntax-error">
+              Current Handlebars syntax is invalid, please check the guide
+              <a href="https://handlebarsjs.com/guide/">here</a>
+              for more details.
+            </p>
+          {/if}
+        </div>
+      </Tab>
+      {#if allowJS}
+        <Tab title="JavaScript">
+          <div class="main-content">
+            <CodeMirrorEditor
+              bind:getCaretPosition
+              height={200}
+              {value}
+              on:change={e => (value = e.detail)}
+              hints={context?.map(x => `$("${x.readableBinding}")`)}
+            />
+          </div>
+        </Tab>
+      {/if}
+    </Tabs>
   </div>
 </DrawerContent>
 
 <style>
   .main :global(textarea) {
-    min-height: 150px !important;
+    min-height: 202px !important;
+  }
+  .main {
+    margin: calc(-1 * var(--spacing-xl));
+  }
+  .main-content {
+    padding: var(--spacing-s) var(--spacing-xl);
   }
 
   .container {
