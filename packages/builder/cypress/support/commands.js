@@ -5,6 +5,10 @@
 // ***********************************************
 //
 
+Cypress.on('uncaught:exception', (err, runnable) => {
+  return false
+})
+
 Cypress.Commands.add("login", () => {
   cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
   cy.wait(2000)
