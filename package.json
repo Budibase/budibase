@@ -46,12 +46,17 @@
     "build:docker:production": "lerna run build:docker && cd hosting/scripts/linux/ && ./release-to-docker-hub.sh $BUDIBASE_RELEASE_VERSION release && cd -",
     "build:docker:develop": "node scripts/pinVersions && lerna run build:docker && cd hosting/scripts/linux/ && ./release-to-docker-hub.sh develop && cd -",
     "release:helm": "./scripts/release_helm_chart.sh",
-    "multi:enable": "lerna run multi:enable",
-    "multi:disable": "lerna run multi:disable",
-    "selfhost:enable": "lerna run selfhost:enable",
-    "selfhost:disable": "lerna run selfhost:disable",
-    "localdomain:enable": "lerna run localdomain:enable",
-    "localdomain:disable": "lerna run localdomain:disable",
+    "env:multi:enable": "lerna run env:multi:enable",
+    "env:multi:disable": "lerna run env:multi:disable",
+    "env:selfhost:enable": "lerna run env:selfhost:enable",
+    "env:selfhost:disable": "lerna run env:selfhost:disable",
+    "env:localdomain:enable": "lerna run env:localdomain:enable",
+    "env:localdomain:disable": "lerna run env:localdomain:disable",
+    "env:account:enable": "lerna run env:account:enable",
+    "env:account:disable": "lerna run env:account:disable",
+    "mode:self": "yarn env:selfhost:enable && yarn env:multi:disable && yarn env:account:disable",
+    "mode:cloud": "yarn env:selfhost:disable && yarn env:multi:enable && yarn env:account:disable",
+    "mode:account": "yarn mode:cloud && yarn env:account:enable",
     "postinstall": "husky install"
   }
 }
