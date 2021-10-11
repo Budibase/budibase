@@ -1,6 +1,7 @@
 const Helper = require("./Helper")
 const { SafeString } = require("handlebars")
 const externalHandlebars = require("./external")
+const { processJS } = require("./javascript")
 const {
   HelperFunctionNames,
   HelperFunctionBuiltin,
@@ -17,6 +18,8 @@ const HELPERS = [
   new Helper(HelperFunctionNames.OBJECT, value => {
     return new SafeString(JSON.stringify(value))
   }),
+  // javascript helper
+  new Helper(HelperFunctionNames.JS, processJS),
   // this help is applied to all statements
   new Helper(HelperFunctionNames.ALL, value => {
     if (
