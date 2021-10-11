@@ -81,16 +81,19 @@ exports.externalTrigger = async function (
   params,
   { getResponses } = {}
 ) {
-  if (automation.definition != null && automation.definition.trigger != null) {
-    if (automation.definition.trigger.stepId === "APP") {
-      // values are likely to be submitted as strings, so we shall convert to correct type
-      const coercedFields = {}
-      const fields = automation.definition.trigger.inputs.fields
-      for (let key of Object.keys(fields)) {
-        coercedFields[key] = coerce(params.fields[key], fields[key])
-      }
-      params.fields = coercedFields
+  if (
+    automation.definition != null &&
+    automation.definition.trigger != null &&
+    automation.definition.trigger.stepId === definitions.APP.stepId &&
+    !checkTestFlag(automation._id)
+  ) {
+    // values are likely to be submitted as strings, so we shall convert to correct type
+    const coercedFields = {}
+    const fields = automation.definition.trigger.inputs.fields
+    for (let key of Object.keys(fields)) {
+      coercedFields[key] = coerce(params.fields[key], fields[key])
     }
+    params.fields = coercedFields
   }
   const data = { automation, event: params }
   if (getResponses) {
