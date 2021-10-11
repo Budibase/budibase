@@ -438,6 +438,10 @@ function replaceBetween(string, start, end, replacement) {
 function bindingReplacement(bindableProperties, textWithBindings, convertTo) {
   // Decide from base64 if using JS
   const isJS = isJSBinding(textWithBindings)
+  console.log("isJS: " + isJS)
+  if (isJS) {
+    console.log(textWithBindings)
+  }
   if (isJS) {
     textWithBindings = decodeJSBinding(textWithBindings)
   }

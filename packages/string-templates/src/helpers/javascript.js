@@ -58,6 +58,12 @@ module.exports.decodeJSBinding = handlebars => {
   if (!handlebars || typeof handlebars !== "string") {
     return null
   }
+
+  // JS is only valid if it is the only HBS expression
+  if (!handlebars.trim().startsWith("{{ js ")) {
+    return null
+  }
+
   const match = handlebars.match(CAPTURE_JS)
   if (!match || match.length < 2) {
     return null

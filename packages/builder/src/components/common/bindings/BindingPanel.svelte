@@ -2,7 +2,11 @@
   import groupBy from "lodash/fp/groupBy"
   import { Search, TextArea, DrawerContent, Tabs, Tab } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
-  import { isValid } from "@budibase/string-templates"
+  import {
+    isValid,
+    decodeJSBinding,
+    encodeJSBinding,
+  } from "@budibase/string-templates"
   import { readableToRuntimeBinding } from "builderStore/dataBinding"
   import { handlebarsCompletions } from "constants/completions"
   import { addHBSBinding, addJSBinding } from "./utils"
@@ -14,6 +18,8 @@
   export let value = ""
   export let valid
   export let allowJS = true
+
+  $: console.log(value)
 
   let helpers = handlebarsCompletions()
   let getCaretPosition
@@ -82,7 +88,7 @@
     </div>
   </svelte:fragment>
   <div class="main">
-    <Tabs selected="Handlebars" on:select={e => (mode = e.detail)}>
+    <Tabs selected={mode} on:select={e => (mode = e.detail)}>
       <Tab title="Handlebars">
         <div class="main-content">
           <TextArea
@@ -106,8 +112,8 @@
             <CodeMirrorEditor
               bind:getCaretPosition
               height={200}
-              {value}
-              on:change={e => (value = e.detail)}
+              value={decodeJSBinding(value)}
+              on:change={e => (value = encodeJSBinding(e.detail))}
               hints={context?.map(x => `$("${x.readableBinding}")`)}
             />
           </div>
