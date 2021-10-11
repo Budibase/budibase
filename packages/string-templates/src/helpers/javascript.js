@@ -38,7 +38,6 @@ module.exports.processJS = (handlebars, context) => {
     vm.createContext(sandboxContext)
     return vm.runInNewContext(js, sandboxContext)
   } catch (error) {
-    console.warn(error)
     return "Error while executing JS"
   }
 }

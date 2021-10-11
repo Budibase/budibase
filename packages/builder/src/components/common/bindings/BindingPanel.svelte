@@ -19,13 +19,12 @@
   export let valid
   export let allowJS = true
 
-  $: console.log(value)
-
   let helpers = handlebarsCompletions()
   let getCaretPosition
   let search = ""
-  let mode = "Handlebars"
+  let mode = value?.startsWith("{{ js ") ? "JavaScript" : "Handlebars"
 
+  $: jsValue = value?.startsWith("{{ js ")
   $: usingJS = mode === "JavaScript"
   $: valid = isValid(readableToRuntimeBinding(bindableProperties, value))
   $: dispatch("change", value)
@@ -38,13 +37,20 @@
     return helper.label.match(searchRgx) || helper.description.match(searchRgx)
   })
 
+  // Adds a HBS helper to the expression
   const addHelper = helper => {
     value = addHBSBinding(value, getCaretPosition(), helper.text)
   }
 
+  // Adds a data binding to the expression
   const addBinding = binding => {
-    const fn = usingJS ? addJSBinding : addHBSBinding
-    value = fn(value, getCaretPosition(), binding.readableBinding)
+    if (usingJS) {
+      let js = decodeJSBinding(value)
+      js = addJSBinding(js, getCaretPosition(), binding.readableBinding)
+      value = encodeJSBinding(js)
+    } else {
+      value = addHBSBinding(value, getCaretPosition(), binding.readableBinding)
+    }
   }
 </script>
 
@@ -93,7 +99,7 @@
         <div class="main-content">
           <TextArea
             bind:getCaretPosition
-            {value}
+            value={jsValue ? null : value}
             on:change={e => (value = e.detail)}
             placeholder="Add text, or click the objects on the left to add them to the textbox."
           />
