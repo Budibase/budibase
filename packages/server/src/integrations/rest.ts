@@ -152,13 +152,17 @@ module RestModule {
       }
     }
 
+    getUrl(path: string, queryString: string): string {
+      return `${this.config.url}/${path}?${queryString}`
+    }
+
     async create({ path = "", queryString = "", headers = {}, json = {} }) {
       this.headers = {
         ...this.config.defaultHeaders,
         ...headers,
       }
 
-      const response = await fetch(this.config.url + path + queryString, {
+      const response = await fetch(this.getUrl(path, queryString), {
         method: "POST",
         headers: this.headers,
         body: JSON.stringify(json),
@@ -173,7 +177,7 @@ module RestModule {
         ...headers,
       }
 
-      const response = await fetch(this.config.url + path + queryString, {
+      const response = await fetch(this.getUrl(path, queryString), {
         headers: this.headers,
       })
 
@@ -186,7 +190,7 @@ module RestModule {
         ...headers,
       }
 
-      const response = await fetch(this.config.url + path + queryString, {
+      const response = await fetch(this.getUrl(path, queryString), {
         method: "POST",
         headers: this.headers,
         body: JSON.stringify(json),
@@ -201,7 +205,7 @@ module RestModule {
         ...headers,
       }
 
-      const response = await fetch(this.config.url + path + queryString, {
+      const response = await fetch(this.getUrl(path, queryString), {
         method: "PATCH",
         headers: this.headers,
         body: JSON.stringify(json),
@@ -216,7 +220,7 @@ module RestModule {
         ...headers,
       }
 
-      const response = await fetch(this.config.url + path + queryString, {
+      const response = await fetch(this.getUrl(path, queryString), {
         method: "DELETE",
         headers: this.headers,
       })
