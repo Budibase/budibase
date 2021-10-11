@@ -1,6 +1,7 @@
 <script>
   import { notifications, ModalContent, Dropzone, Body } from "@budibase/bbui"
   import { post } from "builderStore/api"
+  import { admin } from "stores/portal"
 
   let submitting = false
 
@@ -20,8 +21,8 @@
       if (!importResp.ok) {
         throw new Error(importJson.message)
       }
-      // now reload to get to login
-      window.location.reload()
+      await admin.checkImportComplete()
+      notifications.success("Import complete, please finish registration!")
     } catch (error) {
       notifications.error(error)
       submitting = false
