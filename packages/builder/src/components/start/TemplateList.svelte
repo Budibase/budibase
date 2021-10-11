@@ -33,7 +33,10 @@
         </div>
       {/each}
       <div class="template start-from-scratch" on:click={() => onSelect(null)}>
-        <div class="background-icon" style={`background: var(--background);`}>
+        <div
+          class="background-icon"
+          style={`background: rgb(50, 50, 50); color: white;`}
+        >
           <Icon name="Add" />
         </div>
         <Heading size="XS">Start from scratch</Heading>
@@ -74,7 +77,7 @@
     align-items: center;
     cursor: pointer;
     border-radius: 4px;
-    background: #1a1a1a;
+    background: var(--background-alt);
     padding: 8px 16px;
   }
 

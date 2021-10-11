@@ -41,6 +41,7 @@ module.exports = {
   SMTP_PORT: process.env.SMTP_PORT,
   SMTP_FROM_ADDRESS: process.env.SMTP_FROM_ADDRESS,
   PLATFORM_URL: process.env.PLATFORM_URL,
+  COOKIE_DOMAIN: process.env.COOKIE_DOMAIN,
   _set(key, value) {
     process.env[key] = value
     module.exports[key] = value

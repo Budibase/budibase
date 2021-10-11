@@ -64,7 +64,7 @@ export default `
           appId,
           theme,
           customTheme,
-          previewDevice
+          previewDevice,
         } = parsed
 
         // Set some flags so the app knows we're in the builder

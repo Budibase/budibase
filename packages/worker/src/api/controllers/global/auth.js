@@ -41,13 +41,24 @@ async function authInternal(ctx, user, err = null, info = null) {
     return ctx.throw(403, info ? info : "Unauthorized")
   }
 
-  // just store the user ID
-  ctx.cookies.set(Cookies.Auth, user.token, {
+  const config = {
     expires,
     path: "/",
     httpOnly: false,
     overwrite: true,
-  })
+  }
+
+  if (env.COOKIE_DOMAIN) {
+    config.domain = env.COOKIE_DOMAIN
+  }
+
+  // just store the user ID
+  ctx.cookies.set(Cookies.Auth, user.token, config)
+  // get rid of any app cookies on login
+  // have to check test because this breaks cypress
+  if (!env.isTest()) {
+    clearCookie(ctx, Cookies.CurrentApp)
+  }
 }
 
 exports.authenticate = async (ctx, next) => {
@@ -111,6 +122,7 @@ exports.resetUpdate = async ctx => {
 
 exports.logout = async ctx => {
   clearCookie(ctx, Cookies.Auth)
+  clearCookie(ctx, Cookies.CurrentApp)
   ctx.body = { message: "User logged out." }
 }
 

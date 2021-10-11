@@ -2,8 +2,8 @@ const { newid } = require("../hashing")
 const Replication = require("./Replication")
 const { DEFAULT_TENANT_ID } = require("../constants")
 const env = require("../environment")
-const { StaticDatabases, SEPARATOR } = require("./constants")
-const { getTenantId } = require("../tenancy")
+const { StaticDatabases, SEPARATOR, DocumentTypes } = require("./constants")
+const { getTenantId, getTenantIDFromAppID } = require("../tenancy")
 const fetch = require("node-fetch")
 const { getCouch } = require("./index")
 
@@ -15,25 +15,11 @@ exports.ViewNames = {
 
 exports.StaticDatabases = StaticDatabases
 
-const PRE_APP = "app"
-const PRE_DEV = "dev"
-
-const DocumentTypes = {
-  USER: "us",
-  WORKSPACE: "workspace",
-  CONFIG: "config",
-  TEMPLATE: "template",
-  APP: PRE_APP,
-  DEV: PRE_DEV,
-  APP_DEV: `${PRE_APP}${SEPARATOR}${PRE_DEV}`,
-  APP_METADATA: `${PRE_APP}${SEPARATOR}metadata`,
-  ROLE: "role",
-}
-
 exports.DocumentTypes = DocumentTypes
 exports.APP_PREFIX = DocumentTypes.APP + SEPARATOR
 exports.APP_DEV = exports.APP_DEV_PREFIX = DocumentTypes.APP_DEV + SEPARATOR
 exports.SEPARATOR = SEPARATOR
+exports.getTenantIDFromAppID = getTenantIDFromAppID
 
 /**
  * If creating DB allDocs/query params with only a single top level ID this can be used, this
@@ -68,26 +54,6 @@ exports.isProdAppID = appId => {
 
 function isDevApp(app) {
   return exports.isDevAppID(app.appId)
-}
-
-/**
- * Given an app ID this will attempt to retrieve the tenant ID from it.
- * @return {null|string} The tenant ID found within the app ID.
- */
-exports.getTenantIDFromAppID = appId => {
-  if (!appId) {
-    return null
-  }
-  const split = appId.split(SEPARATOR)
-  const hasDev = split[1] === DocumentTypes.DEV
-  if ((hasDev && split.length === 3) || (!hasDev && split.length === 2)) {
-    return null
-  }
-  if (hasDev) {
-    return split[2]
-  } else {
-    return split[1]
-  }
 }
 
 /**

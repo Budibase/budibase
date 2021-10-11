@@ -2,6 +2,7 @@ const CouchDB = require("../../db")
 const { outputProcessing } = require("../../utilities/rowProcessor")
 const { InternalTables } = require("../../db/utils")
 const { getFullUser } = require("../../utilities/users")
+const { BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
 
 exports.fetchSelf = async ctx => {
   const appId = ctx.appId
@@ -27,7 +28,14 @@ exports.fetchSelf = async ctx => {
         ...metadata,
       })
     } catch (err) {
-      ctx.body = user
+      // user didn't exist in app, don't pretend they do
+      if (user.roleId === BUILTIN_ROLE_IDS.PUBLIC) {
+        ctx.body = {}
+      }
+      // user has a role of some sort, return them
+      else {
+        ctx.body = user
+      }
     }
   } else {
     ctx.body = user

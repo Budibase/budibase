@@ -5,9 +5,13 @@
 // ***********************************************
 //
 
+Cypress.on('uncaught:exception', (err, runnable) => {
+  return false
+})
+
 Cypress.Commands.add("login", () => {
   cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
-  cy.wait(500)
+  cy.wait(2000)
   cy.url().then(url => {
     if (url.includes("builder/admin")) {
       // create admin user
@@ -22,6 +26,7 @@ Cypress.Commands.add("login", () => {
         cy.get("input").first().type("test@test.com")
         cy.get('input[type="password"]').type("test")
         cy.get("button").first().click()
+        cy.wait(1000)
       })
     }
   })
@@ -100,24 +105,32 @@ Cypress.Commands.add("createTable", tableName => {
   cy.contains(tableName).should("be.visible")
 })
 
-Cypress.Commands.add("addColumn", (tableName, columnName, type) => {
-  // Select Table
-  cy.selectTable(tableName)
-  cy.contains(".nav-item", tableName).click()
-  cy.contains("Create column").click()
+Cypress.Commands.add(
+  "addColumn",
+  (tableName, columnName, type, multiOptions = null) => {
+    // Select Table
+    cy.selectTable(tableName)
+    cy.contains(".nav-item", tableName).click()
+    cy.contains("Create column").click()
 
-  // Configure column
-  cy.get(".spectrum-Modal").within(() => {
-    cy.get("input").first().type(columnName).blur()
+    // Configure column
+    cy.get(".spectrum-Modal").within(() => {
+      cy.get("input").first().type(columnName).blur()
 
-    // Unset table display column
-    cy.contains("display column").click({ force: true })
-    cy.get(".spectrum-Picker-label").click()
-    cy.contains(type).click()
+      // Unset table display column
+      cy.contains("display column").click({ force: true })
+      cy.get(".spectrum-Picker-label").click()
+      cy.contains(type).click()
 
-    cy.contains("Save Column").click()
-  })
-})
+      // Add options for Multi-select Type
+      if (multiOptions !== null) {
+        cy.get(".spectrum-Textfield-input").eq(1).type(multiOptions)
+      }
+
+      cy.contains("Save Column").click()
+    })
+  }
+)
 
 Cypress.Commands.add("addRow", values => {
   cy.contains("Create row").click()
@@ -127,6 +140,21 @@ Cypress.Commands.add("addRow", values => {
     }
     cy.get(".spectrum-ButtonGroup").contains("Create").click()
   })
+})
+
+Cypress.Commands.add("addRowMultiValue", values => {
+  cy.contains("Create row").click()
+  cy.get(".spectrum-Form-itemField")
+    .click()
+    .then(() => {
+      cy.get(".spectrum-Popover").within(() => {
+        for (let i = 0; i < values.length; i++) {
+          cy.get(".spectrum-Menu-item").eq(i).click()
+        }
+      })
+      cy.get(".spectrum-Dialog-grid").click("top")
+      cy.get(".spectrum-ButtonGroup").contains("Create").click()
+    })
 })
 
 Cypress.Commands.add("createUser", email => {
@@ -147,7 +175,9 @@ Cypress.Commands.add("addComponent", (category, component) => {
   if (category) {
     cy.get(`[data-cy="category-${category}"]`).click()
   }
-  cy.get(`[data-cy="component-${component}"]`).click()
+  if (component) {
+    cy.get(`[data-cy="component-${component}"]`).click()
+  }
   cy.wait(1000)
   cy.location().then(loc => {
     const params = loc.pathname.split("/")
@@ -169,8 +199,11 @@ Cypress.Commands.add("getComponent", componentId => {
 })
 
 Cypress.Commands.add("navigateToFrontend", () => {
+  // Clicks on Design tab and then the Home nav item
   cy.wait(1000)
   cy.contains("Design").click()
+  cy.get(".spectrum-Search").type("/")
+  cy.get(".nav-item").contains("Home").click()
 })
 
 Cypress.Commands.add("createScreen", (screenName, route) => {
@@ -192,4 +225,25 @@ Cypress.Commands.add("expandBudibaseConnection", () => {
 Cypress.Commands.add("selectTable", tableName => {
   cy.expandBudibaseConnection()
   cy.contains(".nav-item", tableName).click()
+})
+
+Cypress.Commands.add("addCustomSourceOptions", totalOptions => {
+  cy.get(".spectrum-ActionButton")
+    .contains("Define Options")
+    .click()
+    .then(() => {
+      for (let i = 0; i < totalOptions; i++) {
+        // Add radio button options
+        cy.get(".spectrum-Button")
+          .contains("Add Option")
+          .click({ force: true })
+          .then(() => {
+            cy.wait(500)
+            cy.get("[placeholder='Label']").eq(i).type(i)
+            cy.get("[placeholder='Value']").eq(i).type(i)
+          })
+      }
+      // Save options
+      cy.get(".spectrum-Button").contains("Save").click({ force: true })
+    })
 })
