@@ -3,6 +3,7 @@ const { registerAll } = require("./helpers/index")
 const processors = require("./processors")
 const { removeHandlebarsStatements } = require("./utilities")
 const manifest = require("../manifest.json")
+const JS = require("./helpers/javascript")
 
 const hbsInstance = handlebars.create()
 registerAll(hbsInstance)
@@ -159,3 +160,10 @@ module.exports.isValid = string => {
 module.exports.getManifest = () => {
   return manifest
 }
+
+/**
+ * Export utilities for working with JS bindings
+ */
+module.exports.isJSBinding = JS.isJSBinding
+module.exports.decodeJSBinding = JS.decodeJSBinding
+module.exports.encodeJSBinding = JS.encodeJSBinding

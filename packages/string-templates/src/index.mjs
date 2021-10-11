@@ -6,6 +6,9 @@ import templates from "./index.cjs"
 export const isValid = templates.isValid
 export const makePropSafe = templates.makePropSafe
 export const getManifest = templates.getManifest
+export const isJSBinding = templates.isJSBinding
+export const encodeJSBinding = templates.encodeJSBinding
+export const decodeJSBinding = templates.decodeJSBinding
 export const processStringSync = templates.processStringSync
 export const processObjectSync = templates.processObjectSync
 export const processString = templates.processString
