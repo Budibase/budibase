@@ -3,7 +3,7 @@
   import { ModalContent, notifications, Body, Layout } from "@budibase/bbui"
   import analytics, { Events } from "analytics"
   import IntegrationConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/IntegrationConfigForm.svelte"
-  import { datasources } from "stores/backend"
+  import { datasources, tables } from "stores/backend"
   import { IntegrationNames } from "constants"
   import cloneDeep from "lodash/cloneDeepWith"
 
@@ -21,7 +21,9 @@
 
     let baseName = IntegrationNames[config.type]
     let name =
-      existingTypeCount == 0 ? baseName : `${baseName}-${existingTypeCount + 1}`
+      existingTypeCount === 0
+        ? baseName
+        : `${baseName}-${existingTypeCount + 1}`
 
     datasource.type = "datasource"
     datasource.source = config.type
@@ -37,6 +39,8 @@
       // Create datasource
       const resp = await datasources.save(datasource, datasource.plus)
 
+      // update the tables incase data source plus
+      await tables.fetch()
       await datasources.select(resp._id)
       $goto(`./datasource/${resp._id}`)
       notifications.success(`Datasource updated successfully.`)

@@ -38,6 +38,9 @@ class TestConfiguration {
     request.request = {
       body: config,
     }
+    request.throw = (status, err) => {
+      throw { status, message: err }
+    }
     if (params) {
       request.params = params
     }

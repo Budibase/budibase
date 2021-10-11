@@ -191,6 +191,12 @@ class RedisWrapper {
     }
   }
 
+  async getTTL(key) {
+    const db = this._db
+    const prefixedKey = addDbPrefix(db, key)
+    return CLIENT.ttl(prefixedKey)
+  }
+
   async setExpiry(key, expirySeconds) {
     const db = this._db
     const prefixedKey = addDbPrefix(db, key)

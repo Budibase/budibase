@@ -1,5 +1,5 @@
 const { getDB } = require("../db")
-const { SEPARATOR, StaticDatabases } = require("../db/constants")
+const { SEPARATOR, StaticDatabases, DocumentTypes } = require("../db/constants")
 const { getTenantId, DEFAULT_TENANT_ID, isMultiTenant } = require("./context")
 const env = require("../environment")
 
@@ -116,4 +116,35 @@ exports.getTenantUser = async identifier => {
   } catch (err) {
     return null
   }
+}
+
+/**
+ * Given an app ID this will attempt to retrieve the tenant ID from it.
+ * @return {null|string} The tenant ID found within the app ID.
+ */
+exports.getTenantIDFromAppID = appId => {
+  if (!appId) {
+    return null
+  }
+  const split = appId.split(SEPARATOR)
+  const hasDev = split[1] === DocumentTypes.DEV
+  if ((hasDev && split.length === 3) || (!hasDev && split.length === 2)) {
+    return null
+  }
+  if (hasDev) {
+    return split[2]
+  } else {
+    return split[1]
+  }
+}
+
+exports.isUserInAppTenant = (appId, user = null) => {
+  let userTenantId
+  if (user) {
+    userTenantId = user.tenantId || DEFAULT_TENANT_ID
+  } else {
+    userTenantId = getTenantId()
+  }
+  const tenantId = exports.getTenantIDFromAppID(appId) || DEFAULT_TENANT_ID
+  return tenantId === userTenantId
 }

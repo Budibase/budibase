@@ -2,6 +2,8 @@ const {
   ViewNames,
   generateMemoryViewID,
   getMemoryViewParams,
+  DocumentTypes,
+  SEPARATOR,
 } = require("../../../db/utils")
 const env = require("../../../environment")
 
@@ -10,6 +12,11 @@ exports.getView = async (db, viewName) => {
     const designDoc = await db.get("_design/database")
     return designDoc.views[viewName]
   } else {
+    // This is a table view, don't read the view from the DB
+    if (viewName.startsWith(DocumentTypes.TABLE + SEPARATOR)) {
+      return null
+    }
+
     const viewDoc = await db.get(generateMemoryViewID(viewName))
     return viewDoc.view
   }
