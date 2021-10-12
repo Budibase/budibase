@@ -5,6 +5,7 @@
   import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
   import { createEventDispatcher } from "svelte"
   import ModalBindableInput from "components/common/bindings/ModalBindableInput.svelte"
+  import LinkedRowSelector from "components/common/LinkedRowSelector.svelte"
   import { automationStore } from "builderStore"
 
   const dispatch = createEventDispatcher()
@@ -42,6 +43,8 @@
   function schemaHasOptions(schema) {
     return !!schema.constraints?.inclusion?.length
   }
+
+  $: console.log($tables.list)
 </script>
 
 <Select
@@ -81,6 +84,8 @@
             label={field}
             options={schema.constraints.inclusion}
           />
+        {:else if schema.type === "link"}
+          <LinkedRowSelector bind:linkedRows={value[field]} {schema} />
         {:else if schema.type === "string" || schema.type === "number"}
           {#if $automationStore.selectedAutomation.automation.testData}
             <ModalBindableInput
