@@ -7,7 +7,7 @@ const {
 const jwt = require("jsonwebtoken")
 const { options } = require("./middleware/passport/jwt")
 const { createUserEmailView } = require("./db/views")
-const { Headers, UserStatus } = require("./constants")
+const { Headers, UserStatus, Cookies } = require("./constants")
 const {
   getGlobalDB,
   updateTenantId,
@@ -19,6 +19,10 @@ const accounts = require("./cloud/accounts")
 const { hash } = require("./hashing")
 const userCache = require("./cache/user")
 const env = require("./environment")
+const {
+  getSessionsForUser,
+  invalidateSessions,
+} = require("./security/sessions")
 
 const APP_PREFIX = DocumentTypes.APP + SEPARATOR
 
@@ -234,4 +238,24 @@ exports.saveUser = async (
       throw err
     }
   }
+}
+
+/**
+ * Logs a user out from budibase. Re-used across account portal and builder.
+ */
+exports.logout = async ({ ctx, userId, sessionId, keepActiveSession }) => {
+  let sessions = await getSessionsForUser(userId)
+
+  if (keepActiveSession) {
+    sessions = sessions.filter(session => session.sessionId !== sessionId)
+  }
+
+  await invalidateSessions(
+    userId,
+    sessions.map(({ sessionId }) => sessionId)
+  )
+
+  // clear cookies
+  this.clearCookie(ctx, Cookies.Auth)
+  this.clearCookie(ctx, Cookies.CurrentApp)
 }
