@@ -19,7 +19,10 @@ const removeSquareBrackets = value => {
 const getContextValue = (path, context) => {
   let data = context
   path.split(".").forEach(key => {
-    data = data[removeSquareBrackets(key)] || {}
+    if (data == null || typeof data !== "object") {
+      return null
+    }
+    data = data[removeSquareBrackets(key)]
   })
   return data
 }
