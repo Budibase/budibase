@@ -36,7 +36,11 @@ module.exports.processJS = (handlebars, context) => {
 
     // Create a sandbox with out context and run the JS
     vm.createContext(sandboxContext)
-    return vm.runInNewContext(js, sandboxContext)
+    const result = vm.runInNewContext(js, sandboxContext)
+    if (result == null || result === "") {
+      return " "
+    }
+    return result
   } catch (error) {
     return "Error while executing JS"
   }
