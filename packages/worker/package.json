@@ -15,7 +15,7 @@
     "run:docker": "node src/index.js",
     "build:docker": "docker build . -t worker-service",
     "dev:stack:init": "node ./scripts/dev/manage.js init",
-    "dev:builder": "npm run dev:stack:init && nodemon src/index.js",
+    "dev:builder": "npm run dev:stack:init && nodemon",
     "test": "jest --runInBand",
     "env:multi:enable": "node scripts/multiTenancy.js enable",
     "env:multi:disable": "node scripts/multiTenancy.js disable",

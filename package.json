@@ -32,6 +32,7 @@
     "kill-port": "kill-port 4001",
     "dev": "yarn run kill-port && lerna link && lerna run --parallel dev:builder --concurrency 1",
     "dev:noserver": "lerna link && lerna run dev:stack:up && lerna run --parallel dev:builder --concurrency 1 --ignore @budibase/server --ignore @budibase/worker",
+    "dev:server": "lerna run --parallel dev:builder --concurrency 1 --scope @budibase/worker --scope @budibase/server",
     "test": "lerna run test",
     "lint:eslint": "eslint packages",
     "lint:prettier": "prettier --check \"packages/**/*.{js,svelte}\"",
