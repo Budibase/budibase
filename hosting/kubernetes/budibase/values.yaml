@@ -43,7 +43,7 @@ ingress:
   enabled: false
   aws: false
   nginx: true 
-  certificateArn: arn:aws:acm:eu-west-1:545012296077:certificate/507db6ec-ae27-475c-984a-cb590162d567
+  certificateArn: ""  
   className: ""
   annotations: 
     kubernetes.io/ingress.class: nginx
@@ -86,8 +86,8 @@ affinity: {}
 globals:
   budibaseEnv: PRODUCTION
   enableAnalytics: true
-  sentryDSN: https://a34ae347621946bf8acded18e5b7d4b8@o420233.ingest.sentry.io/5338131
-  posthogToken: "phc_yGOn4i7jWKaCTapdGR6lfA4AvmuEQ2ijn5zAVSFYPlS"
+  sentryDSN: ""
+  posthogToken: ""
   logLevel: info
   selfHosted: ""
   accountPortalUrl: "" 
