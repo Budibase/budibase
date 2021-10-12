@@ -21,6 +21,7 @@
   import ParameterBuilder from "components/integration/QueryParameterBuilder.svelte"
   import { datasources, integrations, queries } from "stores/backend"
   import { capitalise } from "../../helpers"
+  import CodeMirrorEditor from "components/common/CodeMirrorEditor.svelte"
 
   export let query
   export let fields = []
@@ -52,6 +53,11 @@
   $: readQuery = query.queryVerb === "read" || query.readable
   $: queryInvalid = !query.name || (readQuery && data.length === 0)
 
+  // seed the transformer
+  if (query && !query.transformer) {
+    query.transformer = "return data"
+  }
+
   function newField() {
     fields = [...fields, {}]
   }
@@ -74,6 +80,7 @@
       const response = await api.post(`/api/queries/preview`, {
         fields: query.fields,
         queryVerb: query.queryVerb,
+        transformer: query.transformer,
         parameters: query.parameters.reduce(
           (acc, next) => ({
             ...acc,
@@ -160,9 +167,22 @@
       <IntegrationQueryEditor
         {datasource}
         {query}
-        height={300}
+        height={200}
         schema={queryConfig[query.queryVerb]}
         bind:parameters
+      />
+      <Divider />
+    </div>
+    <div class="config">
+      <Heading size="S">Transformer</Heading>
+      <Body size="S"
+        >Add a Javascript function to transform the query result.</Body
+      >
+      <CodeMirrorEditor
+        height={200}
+        label="Transformer"
+        value={query.transformer}
+        on:change={e => (query.transformer = e.detail)}
       />
       <Divider />
     </div>
