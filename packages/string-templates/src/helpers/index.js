@@ -19,7 +19,7 @@ const HELPERS = [
     return new SafeString(JSON.stringify(value))
   }),
   // javascript helper
-  new Helper(HelperFunctionNames.JS, processJS),
+  new Helper(HelperFunctionNames.JS, processJS, false),
   // this help is applied to all statements
   new Helper(HelperFunctionNames.ALL, value => {
     if (
