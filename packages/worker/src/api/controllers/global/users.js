@@ -171,7 +171,9 @@ exports.updateSelf = async ctx => {
   const db = getGlobalDB()
   const user = await db.get(ctx.user._id)
   if (ctx.request.body.password) {
+    // changing password
     ctx.request.body.password = await hash(ctx.request.body.password)
+    await invalidateSessions(ctx.user._id)
   }
   // don't allow sending up an ID/Rev, always use the existing one
   delete ctx.request.body._id

@@ -32,6 +32,7 @@
   const FORMULA_TYPE = FIELDS.FORMULA.type
   const LINK_TYPE = FIELDS.LINK.type
   const dispatch = createEventDispatcher()
+  const PROHIBITED_COLUMN_NAMES = ["type", "_id", "_rev"]
   const { hide } = getContext(Context.Modal)
   let fieldDefinitions = cloneDeep(FIELDS)
 
@@ -66,7 +67,11 @@
     (field.type === LINK_TYPE && !field.tableId) ||
     Object.keys($tables.draft?.schema ?? {}).some(
       key => key !== originalName && key === field.name
-    )
+    ) ||
+    columnNameInvalid
+  $: columnNameInvalid = PROHIBITED_COLUMN_NAMES.some(
+    name => field.name === name
+  )
 
   // used to select what different options can be displayed for column type
   $: canBeSearched =
@@ -200,6 +205,9 @@
     label="Name"
     bind:value={field.name}
     disabled={uneditable || (linkEditDisabled && field.type === LINK_TYPE)}
+    error={columnNameInvalid
+      ? "type, _id and _rev are disallowed as column names"
+      : ""}
   />
 
   <Select
