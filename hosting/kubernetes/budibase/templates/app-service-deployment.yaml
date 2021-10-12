@@ -14,7 +14,7 @@ spec:
     matchLabels:
       io.kompose.service: app-service
   strategy:
-    type: Recreate
+    type: RollingUpdate
   template:
     metadata:
       annotations:
@@ -73,13 +73,11 @@ spec:
               name: {{ template "budibase.fullname" . }}
               key: objectStoreSecret
         - name: MINIO_URL
-          {{ if .Values.services.objectStore.url }}
           value: {{ .Values.services.objectStore.url }}
-          {{ else }}
-          value: http://minio-service:{{ .Values.services.objectStore.port }}
-          {{ end }}
         - name: PORT
           value: {{ .Values.services.apps.port | quote }}
+        - name: MULTI_TENANCY
+          value: "1"
         - name: REDIS_PASSWORD
           value: {{ .Values.services.redis.password }}
         - name: REDIS_URL
@@ -92,14 +90,20 @@ spec:
           value: {{ .Values.globals.selfHosted | quote }}
         - name: SENTRY_DSN
           value: {{ .Values.globals.sentryDSN }}
+        - name: POSTHOG_TOKEN
+          value: {{ .Values.globals.posthogToken }}
         - name: WORKER_URL
-          value: worker-service:{{ .Values.services.worker.port }}
-        - name: COOKIE_DOMAIN
-          value: {{ .Values.globals.cookieDomain | quote }}
+          value: http://worker-service:{{ .Values.services.worker.port }}
+        - name: PLATFORM_URL
+          value: {{ .Values.globals.platformUrl | quote }}
+        - name: USE_QUOTAS
+          value: "1" 
         - name: ACCOUNT_PORTAL_URL
           value: {{ .Values.globals.accountPortalUrl | quote }}
         - name: ACCOUNT_PORTAL_API_KEY
           value: {{ .Values.globals.accountPortalApiKey | quote }}
+        - name: COOKIE_DOMAIN
+          value: {{ .Values.globals.cookieDomain | quote }}
         image: budibase/apps
         imagePullPolicy: Always
         name: bbapps
