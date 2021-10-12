@@ -11,10 +11,22 @@
 
   export let value
   export let bindings
-  $: table = $tables.list.find(table => table._id === value?.tableId)
-  $: schemaFields = Object.entries(table?.schema ?? {})
+  let table
+  let schemaFields
+
+  $: {
+    table = $tables.list.find(table => table._id === value?.tableId)
+    schemaFields = Object.entries(table?.schema ?? {})
+    // surface the schema so the user can see it in the json
+    schemaFields.map(([, schema]) => {
+      if (!schema.autocolumn && !value[schema.name]) {
+        value[schema.name] = ""
+      }
+    })
+  }
+
   const onChangeTable = e => {
-    value = { tableId: e.detail }
+    value["tableId"] = e.detail
     dispatch("change", value)
   }
 
