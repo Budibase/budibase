@@ -1,4 +1,6 @@
 <script context="module">
+  import { Label } from "@budibase/bbui"
+
   export const EditorModes = {
     JS: {
       name: "javascript",
@@ -28,6 +30,7 @@
   export let height = 300
   export let readonly = false
   export let hints = []
+  export let label
 
   const dispatch = createEventDispatcher()
   let textarea
@@ -110,6 +113,11 @@
   })
 </script>
 
+{#if label}
+  <div style="margin-bottom: var(--spacing-s)">
+    <Label small>{label}</Label>
+  </div>
+{/if}
 <div style={`--code-mirror-height: ${height}px`}>
   <textarea tabindex="0" bind:this={textarea} readonly {value} />
 </div>
