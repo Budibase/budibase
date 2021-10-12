@@ -14,7 +14,7 @@ const {
   isMultiTenant,
 } = require("@budibase/auth/tenancy")
 const env = require("../../../environment")
-const { endSession } = require("../../../../../auth/sessions")
+const { platformLogout } = require("../../../../../auth/src/utils")
 
 function googleCallbackUrl(config) {
   // incase there is a callback URL from before
@@ -122,10 +122,7 @@ exports.resetUpdate = async ctx => {
 }
 
 exports.logout = async ctx => {
-  const authCookie = getCookie(ctx, Cookies.Auth)
-  clearCookie(ctx, Cookies.Auth)
-  clearCookie(ctx, Cookies.CurrentApp)
-  await endSession(authCookie.sessionId)
+  await platformLogout({ ctx, userId: ctx.user._id })
   ctx.body = { message: "User logged out." }
 }
 
