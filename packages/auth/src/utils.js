@@ -243,19 +243,26 @@ exports.saveUser = async (
 /**
  * Logs a user out from budibase. Re-used across account portal and builder.
  */
-exports.logout = async ({ ctx, userId, sessionId, keepActiveSession }) => {
+exports.platformLogout = async ({
+  ctx,
+  userId,
+  sessionId,
+  keepActiveSession,
+}) => {
   let sessions = await getSessionsForUser(userId)
 
   if (keepActiveSession) {
     sessions = sessions.filter(session => session.sessionId !== sessionId)
+  } else {
+    if (ctx) {
+      // clear cookies
+      this.clearCookie(ctx, Cookies.Auth)
+      this.clearCookie(ctx, Cookies.CurrentApp)
+    }
   }
 
   await invalidateSessions(
     userId,
     sessions.map(({ sessionId }) => sessionId)
   )
-
-  // clear cookies
-  this.clearCookie(ctx, Cookies.Auth)
-  this.clearCookie(ctx, Cookies.CurrentApp)
 }
