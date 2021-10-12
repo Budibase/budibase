@@ -17,9 +17,9 @@
 
   $: urlDisplay =
     schema.urlDisplay &&
-    `${datasource.config.url}${query.fields.path ?? ""}${
-      query.fields.queryString ?? ""
-    }`
+    `${datasource.config.url}${
+      query.fields.path ? "/" + query.fields.path : ""
+    }${query.fields.queryString ? "?" + query.fields.queryString : ""}`
 
   function updateQuery({ detail }) {
     query.fields[schema.type] = detail.value
