@@ -1,6 +1,14 @@
 <script>
   import groupBy from "lodash/fp/groupBy"
-  import { Search, TextArea, DrawerContent, Tabs, Tab } from "@budibase/bbui"
+  import {
+    Search,
+    TextArea,
+    DrawerContent,
+    Tabs,
+    Tab,
+    Body,
+    Layout,
+  } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import {
     isValid,
@@ -17,7 +25,7 @@
   export let bindableProperties
   export let value = ""
   export let valid
-  export let allowJS = true
+  export let allowJS = false
 
   let helpers = handlebarsCompletions()
   let getCaretPosition
@@ -138,13 +146,19 @@
       {#if allowJS}
         <Tab title="JavaScript">
           <div class="main-content">
-            <CodeMirrorEditor
-              bind:getCaretPosition
-              height={200}
-              value={decodeJSBinding(jsValue)}
-              on:change={onChangeJSValue}
-              hints={context?.map(x => `$("${x.readableBinding}")`)}
-            />
+            <Layout noPadding gap="XS">
+              <CodeMirrorEditor
+                bind:getCaretPosition
+                height={200}
+                value={decodeJSBinding(jsValue)}
+                on:change={onChangeJSValue}
+                hints={context?.map(x => `$("${x.readableBinding}")`)}
+              />
+              <Body size="S">
+                JavaScript expressions are executed as functions, so ensure that
+                your expression returns a value.
+              </Body>
+            </Layout>
           </div>
         </Tab>
       {/if}
