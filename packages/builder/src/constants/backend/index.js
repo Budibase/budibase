@@ -97,6 +97,8 @@ export const AUTO_COLUMN_SUB_TYPES = {
   CREATED_AT: "createdAt",
   UPDATED_BY: "updatedBy",
   UPDATED_AT: "updatedAt",
+  _id: "_id",
+  _rev: "_rev"
 }
 
 export const AUTO_COLUMN_DISPLAY_NAMES = {
@@ -105,6 +107,8 @@ export const AUTO_COLUMN_DISPLAY_NAMES = {
   CREATED_AT: "Created At",
   UPDATED_BY: "Updated By",
   UPDATED_AT: "Updated At",
+  _id: "_id",
+  _rev: "_rev"
 }
 
 export const FILE_TYPES = {

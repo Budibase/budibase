@@ -43,8 +43,6 @@
   function schemaHasOptions(schema) {
     return !!schema.constraints?.inclusion?.length
   }
-
-  $: console.log($tables.list)
 </script>
 
 <Select
