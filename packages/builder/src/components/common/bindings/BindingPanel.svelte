@@ -22,12 +22,13 @@
   let helpers = handlebarsCompletions()
   let getCaretPosition
   let search = ""
-  let mode = value?.startsWith("{{ js ") ? "JavaScript" : "Handlebars"
+  let initialValueJS = value?.startsWith("{{ js ")
+  let mode = initialValueJS ? "JavaScript" : "Handlebars"
+  let jsValue = initialValueJS ? value : null
+  let hbsValue = initialValueJS ? null : value
 
-  $: jsValue = value?.startsWith("{{ js ")
   $: usingJS = mode === "JavaScript"
   $: valid = isValid(readableToRuntimeBinding(bindableProperties, value))
-  $: dispatch("change", value)
   $: ({ context } = groupBy("type", bindableProperties))
   $: searchRgx = new RegExp(search, "ig")
   $: filteredBindings = context?.filter(context => {
@@ -39,18 +40,40 @@
 
   // Adds a HBS helper to the expression
   const addHelper = helper => {
-    value = addHBSBinding(value, getCaretPosition(), helper.text)
+    hbsValue = addHBSBinding(value, getCaretPosition(), helper.text)
+    dispatch("change", hbsValue)
   }
 
   // Adds a data binding to the expression
   const addBinding = binding => {
     if (usingJS) {
-      let js = decodeJSBinding(value)
+      let js = decodeJSBinding(jsValue)
       js = addJSBinding(js, getCaretPosition(), binding.readableBinding)
-      value = encodeJSBinding(js)
+      jsValue = encodeJSBinding(js)
+      dispatch("change", jsValue)
     } else {
-      value = addHBSBinding(value, getCaretPosition(), binding.readableBinding)
+      hbsValue = addHBSBinding(
+        hbsValue,
+        getCaretPosition(),
+        binding.readableBinding
+      )
+      dispatch("change", hbsValue)
     }
+  }
+
+  const onChangeMode = e => {
+    mode = e.detail
+    dispatch("change", mode === "JavaScript" ? jsValue : hbsValue)
+  }
+
+  const onChangeHBSValue = e => {
+    hbsValue = e.detail
+    dispatch("change", hbsValue)
+  }
+
+  const onChangeJSValue = e => {
+    jsValue = encodeJSBinding(e.detail)
+    dispatch("change", jsValue)
   }
 </script>
 
@@ -94,13 +117,13 @@
     </div>
   </svelte:fragment>
   <div class="main">
-    <Tabs selected={mode} on:select={e => (mode = e.detail)}>
+    <Tabs selected={mode} on:select={onChangeMode}>
       <Tab title="Handlebars">
         <div class="main-content">
           <TextArea
             bind:getCaretPosition
-            value={jsValue ? null : value}
-            on:change={e => (value = e.detail)}
+            value={hbsValue}
+            on:change={onChangeHBSValue}
             placeholder="Add text, or click the objects on the left to add them to the textbox."
           />
           {#if !valid}
@@ -118,8 +141,8 @@
             <CodeMirrorEditor
               bind:getCaretPosition
               height={200}
-              value={decodeJSBinding(value)}
-              on:change={e => (value = encodeJSBinding(e.detail))}
+              value={decodeJSBinding(jsValue)}
+              on:change={onChangeJSValue}
               hints={context?.map(x => `$("${x.readableBinding}")`)}
             />
           </div>
