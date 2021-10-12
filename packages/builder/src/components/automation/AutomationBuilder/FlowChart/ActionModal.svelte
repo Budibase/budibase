@@ -4,10 +4,11 @@
   import { externalActions } from "./ExternalActions"
 
   export let blockIdx
+  export let blockComplete
+
   let selectedAction
   let actionVal
   let actions = Object.entries($automationStore.blockDefinitions.ACTION)
-  export let blockComplete
 
   const external = actions.reduce((acc, elm) => {
     const [k, v] = elm
@@ -36,10 +37,9 @@
       actionVal.stepId,
       actionVal
     )
-    automationStore.actions.addBlockToAutomation(newBlock)
+    automationStore.actions.addBlockToAutomation(newBlock, blockIdx + 1)
     await automationStore.actions.save(
-      $automationStore.selectedAutomation?.automation,
-      blockIdx
+      $automationStore.selectedAutomation?.automation
     )
   }
 </script>

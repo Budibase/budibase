@@ -111,14 +111,16 @@ exports.destroy = async ctx => {
   const db = getGlobalDB()
   const dbUser = await db.get(ctx.params.id)
 
-  // root account holder can't be deleted from inside budibase
-  const email = dbUser.email
-  const account = await accounts.getAccount(email)
-  if (account) {
-    if (email === ctx.user.email) {
-      ctx.throw(400, 'Please visit "Account" to delete this user')
-    } else {
-      ctx.throw(400, "Account holder cannot be deleted")
+  if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
+    // root account holder can't be deleted from inside budibase
+    const email = dbUser.email
+    const account = await accounts.getAccount(email)
+    if (account) {
+      if (email === ctx.user.email) {
+        ctx.throw(400, 'Please visit "Account" to delete this user')
+      } else {
+        ctx.throw(400, "Account holder cannot be deleted")
+      }
     }
   }
 
