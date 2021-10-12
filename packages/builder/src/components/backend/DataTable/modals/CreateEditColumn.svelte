@@ -32,7 +32,7 @@
   const FORMULA_TYPE = FIELDS.FORMULA.type
   const LINK_TYPE = FIELDS.LINK.type
   const dispatch = createEventDispatcher()
-  const PROHIBITED_COLUMN_NAMES = ["type", "_id", "_rev"]
+  const PROHIBITED_COLUMN_NAMES = ["type", "_id", "_rev", "tableId"]
   const { hide } = getContext(Context.Modal)
   let fieldDefinitions = cloneDeep(FIELDS)
 
@@ -206,7 +206,7 @@
     bind:value={field.name}
     disabled={uneditable || (linkEditDisabled && field.type === LINK_TYPE)}
     error={columnNameInvalid
-      ? "type, _id and _rev are disallowed as column names"
+      ? `${PROHIBITED_COLUMN_NAMES.join(", ")} are not allowed as column names`
       : ""}
   />
 
