@@ -7,8 +7,8 @@ context("Custom Theming Properties", () => {
 
     // Default Values
     // Button roundness = Large
-    // Primary colour = Blue 600
-    // Primary colour (hover) = Blue 500
+    // Accent colour = Blue 600
+    // Accent colour (hover) = Blue 500
     // Navigation bar background colour = Gray 100
     // Navigation bar text colour = Gray 800
     it("should reset the color property values", () => {
@@ -26,10 +26,10 @@ context("Custom Theming Properties", () => {
     
     const changeThemeColors = () => {
       // Changes the theme colours
-      cy.get(".spectrum-FieldLabel").contains("Primary color")
+      cy.get(".spectrum-FieldLabel").contains("Accent color")
         .parent().find(".container.svelte-z3cm5a").click()
         .find('[title="Red 400"]').click()
-        cy.get(".spectrum-FieldLabel").contains("Primary color (hover)")
+        cy.get(".spectrum-FieldLabel").contains("Accent color (hover)")
         .parent().find(".container.svelte-z3cm5a").click()
         .find('[title="Orange 400"]').click()
         cy.get(".spectrum-FieldLabel").contains("Navigation bar background color")
@@ -41,11 +41,11 @@ context("Custom Theming Properties", () => {
     }
     
     const checkThemeColorDefaults = () => {
-      cy.get(".spectrum-FieldLabel").contains("Primary color")
+      cy.get(".spectrum-FieldLabel").contains("Accent color")
         .parent().find(".container.svelte-z3cm5a").click()
         .get('[title="Blue 600"]').children().find('[aria-label="Checkmark"]')
         cy.get(".spectrum-Dialog-grid").click()
-        cy.get(".spectrum-FieldLabel").contains("Primary color (hover)")
+        cy.get(".spectrum-FieldLabel").contains("Accent color (hover)")
         .parent().find(".container.svelte-z3cm5a").click()
         .get('[title="Blue 500"]').children().find('[aria-label="Checkmark"]')
         cy.get(".spectrum-Dialog-grid").click()
