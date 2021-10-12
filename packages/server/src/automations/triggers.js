@@ -85,6 +85,7 @@ exports.externalTrigger = async function (
     automation.definition != null &&
     automation.definition.trigger != null &&
     automation.definition.trigger.stepId === definitions.APP.stepId &&
+    automation.definition.trigger.stepId === "APP" &&
     !checkTestFlag(automation._id)
   ) {
     // values are likely to be submitted as strings, so we shall convert to correct type
