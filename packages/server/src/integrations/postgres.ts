@@ -156,7 +156,6 @@ module PostgresModule {
 
       let newConfig = {
         ...this.config,
-        // ssl: this.config.ssl ? { rejectUnauthorized: true } : undefined,
         ssl: this.config.ssl
           ? {
               rejectUnauthorized: this.config.rejectUnauthorized,

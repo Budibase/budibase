@@ -19,10 +19,7 @@ const accounts = require("./cloud/accounts")
 const { hash } = require("./hashing")
 const userCache = require("./cache/user")
 const env = require("./environment")
-const {
-  getSessionsForUser,
-  invalidateSessions,
-} = require("./security/sessions")
+const { getUserSessions, invalidateSessions } = require("./security/sessions")
 
 const APP_PREFIX = DocumentTypes.APP + SEPARATOR
 
@@ -249,7 +246,7 @@ exports.platformLogout = async ({
   sessionId,
   keepActiveSession,
 }) => {
-  let sessions = await getSessionsForUser(userId)
+  let sessions = await getUserSessions(userId)
 
   if (keepActiveSession) {
     sessions = sessions.filter(session => session.sessionId !== sessionId)
