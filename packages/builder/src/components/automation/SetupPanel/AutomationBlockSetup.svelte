@@ -55,6 +55,15 @@
   const onChange = debounce(
     async function (e, key) {
       if (isTestModal) {
+        // Special case for webhook, as it requires a body, but the schema already brings back the body's contents
+        if (stepId === "WEBHOOK") {
+          automationStore.actions.addTestDataToAutomation({
+            body: { [key]: e.detail },
+          })
+        }
+        automationStore.actions.addTestDataToAutomation({
+          [key]: e.detail,
+        })
         testData[key] = e.detail
       } else {
         block.inputs[key] = e.detail
