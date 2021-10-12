@@ -45,7 +45,7 @@ module.exports = async (ctx, next) => {
     const globalUser = await getCachedSelf(ctx, requestAppId)
     appId = requestAppId
     // retrieving global user gets the right role
-    roleId = globalUser.roleId
+    roleId = globalUser.roleId || roleId
   }
 
   // nothing more to do
