@@ -35,7 +35,7 @@ context("Create a Table", () => {
     cy.contains("button", "Edit").click({ force: true })
     cy.wait(1000)
     cy.get(".spectrum-Modal input").clear()
-    cy.get(".spectrum-Modal input").type("RoverUpdated")
+    cy.get(".spectrum-Modal input").type("Updated")
     cy.contains("Save").click()
     cy.contains("Updated").should("have.text", "Updated")
   })
