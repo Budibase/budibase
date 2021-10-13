@@ -33,7 +33,6 @@
   export let testData
   export let schemaProperties
   export let isTestModal = false
-
   let webhookModal
   let drawer
   let tempFilters = lookForFilters(schemaProperties) || []
@@ -58,7 +57,10 @@
         // Special case for webhook, as it requires a body, but the schema already brings back the body's contents
         if (stepId === "WEBHOOK") {
           automationStore.actions.addTestDataToAutomation({
-            body: { [key]: e.detail },
+            body: {
+              [key]: e.detail,
+              ...$automationStore.selectedAutomation.automation.testData.body,
+            },
           })
         }
         automationStore.actions.addTestDataToAutomation({
