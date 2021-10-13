@@ -3,7 +3,8 @@ const {
   StaticDatabases,
   generateNewUsageQuotaDoc,
 } = require("@budibase/auth/db")
-const { hash, getGlobalUserByEmail, saveUser } = require("@budibase/auth").utils
+const { hash, getGlobalUserByEmail, saveUser, platformLogout } =
+  require("@budibase/auth").utils
 const { EmailTemplatePurpose } = require("../../../constants")
 const { checkInviteCode } = require("../../../utilities/redis")
 const { sendEmail } = require("../../../utilities/email")
@@ -173,7 +174,14 @@ exports.updateSelf = async ctx => {
   const db = getGlobalDB()
   const user = await db.get(ctx.user._id)
   if (ctx.request.body.password) {
+    // changing password
     ctx.request.body.password = await hash(ctx.request.body.password)
+    // Log all other sessions out apart from the current one
+    await platformLogout({
+      ctx,
+      userId: ctx.user._id,
+      keepActiveSession: true,
+    })
   }
   // don't allow sending up an ID/Rev, always use the existing one
   delete ctx.request.body._id
