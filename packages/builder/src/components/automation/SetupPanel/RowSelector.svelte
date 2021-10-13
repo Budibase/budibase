@@ -5,16 +5,29 @@
   import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
   import { createEventDispatcher } from "svelte"
   import ModalBindableInput from "components/common/bindings/ModalBindableInput.svelte"
+  import LinkedRowSelector from "components/common/LinkedRowSelector.svelte"
   import { automationStore } from "builderStore"
 
   const dispatch = createEventDispatcher()
 
   export let value
   export let bindings
-  $: table = $tables.list.find(table => table._id === value?.tableId)
-  $: schemaFields = Object.entries(table?.schema ?? {})
+  let table
+  let schemaFields
+
+  $: {
+    table = $tables.list.find(table => table._id === value?.tableId)
+    schemaFields = Object.entries(table?.schema ?? {})
+    // surface the schema so the user can see it in the json
+    schemaFields.map(([, schema]) => {
+      if (!schema.autocolumn && !value[schema.name]) {
+        value[schema.name] = ""
+      }
+    })
+  }
+
   const onChangeTable = e => {
-    value = { tableId: e.detail }
+    value["tableId"] = e.detail
     dispatch("change", value)
   }
 
@@ -69,6 +82,8 @@
             label={field}
             options={schema.constraints.inclusion}
           />
+        {:else if schema.type === "link"}
+          <LinkedRowSelector bind:linkedRows={value[field]} {schema} />
         {:else if schema.type === "string" || schema.type === "number"}
           {#if $automationStore.selectedAutomation.automation.testData}
             <ModalBindableInput
