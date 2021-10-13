@@ -3,8 +3,14 @@ const { google } = require("@budibase/auth/src/middleware")
 const { oidc } = require("@budibase/auth/src/middleware")
 const { Configs, EmailTemplatePurpose } = require("../../../constants")
 const { sendEmail, isEmailConfigured } = require("../../../utilities/email")
-const { setCookie, getCookie, clearCookie, getGlobalUserByEmail, hash } =
-  authPkg.utils
+const {
+  setCookie,
+  getCookie,
+  clearCookie,
+  getGlobalUserByEmail,
+  hash,
+  platformLogout,
+} = authPkg.utils
 const { Cookies } = authPkg.constants
 const { passport } = authPkg.auth
 const { checkResetPasswordCode } = require("../../../utilities/redis")
@@ -14,7 +20,6 @@ const {
   isMultiTenant,
 } = require("@budibase/auth/tenancy")
 const env = require("../../../environment")
-const { platformLogout } = require("../../../../../auth/src/utils")
 
 function googleCallbackUrl(config) {
   // incase there is a callback URL from before
