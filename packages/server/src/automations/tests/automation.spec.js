@@ -1,5 +1,12 @@
 jest.mock("../../utilities/usageQuota")
 jest.mock("../thread")
+jest.mock("../../utilities/redis", () => ({
+  init: jest.fn(),
+  checkTestFlag: () => {
+    return false
+  },
+}))
+
 jest.spyOn(global.console, "error")
 
 require("../../environment")
