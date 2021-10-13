@@ -16,11 +16,31 @@
   import { Pagination } from "@budibase/bbui"
 
   let hideAutocolumns = true
-
+  let schema
   $: isUsersTable = $tables.selected?._id === TableNames.USERS
-  $: schema = $tables.selected?.schema
   $: type = $tables.selected?.type
   $: isInternal = type !== "external"
+  $: {
+    schema = $tables.selected?.schema
+
+    // Manually add these as we don't want them to be 'real' auto-columns
+    schema._id = {
+      type: "internal",
+      editable: false,
+      displayName: "ID",
+      name: "ID",
+      autocolumn: true,
+    }
+    if (isInternal) {
+      schema._rev = {
+        type: "internal",
+        editable: false,
+        displayName: "Revision",
+        name: "REV",
+        autocolumn: true,
+      }
+    }
+  }
   $: id = $tables.selected?._id
   $: search = searchTable(id)
   $: columnOptions = Object.keys($search.schema || {})

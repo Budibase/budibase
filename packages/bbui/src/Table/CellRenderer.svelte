@@ -25,18 +25,11 @@
     array: ArrayRenderer,
     internal: InternalRenderer,
   }
+  console.log(value)
+
   $: type = schema?.type ?? "string"
   $: customRenderer = customRenderers?.find(x => x.column === schema?.name)
-  $: {
-    // this has to be done purely in the front-end due to migration issues
-    // the schema gets overriden on every tables fetch so we can't just set
-    // these to be a new type unfortunately
-    if (schema.name === "_id" || schema.name === "_rev") {
-      renderer = typeMap.internal
-    } else {
-      renderer = customRenderer?.component ?? typeMap[type] ?? StringRenderer
-    }
-  }
+  $: renderer = customRenderer?.component ?? typeMap[type] ?? StringRenderer
 </script>
 
 {#if renderer && (customRenderer || (value != null && value !== ""))}
