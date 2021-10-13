@@ -14,7 +14,7 @@ spec:
     matchLabels:
       app.kubernetes.io/name: budibase-proxy
   strategy:
-    type: Recreate
+    type: RollingUpdate
   template:
     metadata:
       annotations:
@@ -26,7 +26,7 @@ spec:
     spec:
       containers:
       - image: budibase/proxy
-        imagePullPolicy: ""
+        imagePullPolicy: Always
         name: proxy-service
         ports:
         - containerPort: {{ .Values.services.proxy.port }}
