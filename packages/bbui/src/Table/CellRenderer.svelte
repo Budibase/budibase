@@ -6,6 +6,7 @@
   import AttachmentRenderer from "./AttachmentRenderer.svelte"
   import ArrayRenderer from "./ArrayRenderer.svelte"
   import InternalRenderer from "./InternalRenderer.svelte"
+
   export let row
   export let schema
   export let value
@@ -31,7 +32,7 @@
     // the schema gets overriden on every tables fetch so we can't just set
     // these to be a new type unfortunately
     if (schema.name === "_id" || schema.name === "_rev") {
-      renderer = customRenderer?.component ?? typeMap.internal ?? StringRenderer
+      renderer = typeMap.internal
     } else {
       renderer = customRenderer?.component ?? typeMap[type] ?? StringRenderer
     }
