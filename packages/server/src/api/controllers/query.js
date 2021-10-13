@@ -29,9 +29,6 @@ function formatResponse(resp) {
       resp = { response: resp }
     }
   }
-  if (!Array.isArray(resp)) {
-    resp = [resp]
-  }
   return resp
 }
 
@@ -49,14 +46,18 @@ async function runAndTransform(
     rows = runner.execute()
   }
 
-  // get all the potential fields in the schema
-  let keys = rows.flatMap(Object.keys)
+  // needs to an array for next step
+  if (!Array.isArray(rows)) {
+    rows = [rows]
+  }
 
   // map into JSON if just raw primitive here
-  if (keys.length === 0) {
+  if (rows.find(row => typeof row !== "object")) {
     rows = rows.map(value => ({ value }))
-    keys = ["value"]
   }
+
+  // get all the potential fields in the schema
+  let keys = rows.flatMap(Object.keys)
 
   return { rows, keys }
 }
