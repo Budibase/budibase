@@ -3,8 +3,14 @@ const { google } = require("@budibase/auth/src/middleware")
 const { oidc } = require("@budibase/auth/src/middleware")
 const { Configs, EmailTemplatePurpose } = require("../../../constants")
 const { sendEmail, isEmailConfigured } = require("../../../utilities/email")
-const { setCookie, getCookie, clearCookie, getGlobalUserByEmail, hash } =
-  authPkg.utils
+const {
+  setCookie,
+  getCookie,
+  clearCookie,
+  getGlobalUserByEmail,
+  hash,
+  platformLogout,
+} = authPkg.utils
 const { Cookies } = authPkg.constants
 const { passport } = authPkg.auth
 const { checkResetPasswordCode } = require("../../../utilities/redis")
@@ -121,8 +127,7 @@ exports.resetUpdate = async ctx => {
 }
 
 exports.logout = async ctx => {
-  clearCookie(ctx, Cookies.Auth)
-  clearCookie(ctx, Cookies.CurrentApp)
+  await platformLogout({ ctx, userId: ctx.user._id })
   ctx.body = { message: "User logged out." }
 }
 
