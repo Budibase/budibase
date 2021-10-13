@@ -5,11 +5,14 @@
   import RelationshipRenderer from "./RelationshipRenderer.svelte"
   import AttachmentRenderer from "./AttachmentRenderer.svelte"
   import ArrayRenderer from "./ArrayRenderer.svelte"
+  import InternalRenderer from "./InternalRenderer.svelte"
+
   export let row
   export let schema
   export let value
   export let customRenderers = []
 
+  let renderer
   const typeMap = {
     boolean: BooleanRenderer,
     datetime: DateTimeRenderer,
@@ -20,7 +23,9 @@
     number: StringRenderer,
     longform: StringRenderer,
     array: ArrayRenderer,
+    internal: InternalRenderer,
   }
+
   $: type = schema?.type ?? "string"
   $: customRenderer = customRenderers?.find(x => x.column === schema?.name)
   $: renderer = customRenderer?.component ?? typeMap[type] ?? StringRenderer

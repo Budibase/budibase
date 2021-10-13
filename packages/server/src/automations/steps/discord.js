@@ -77,7 +77,7 @@ exports.run = async function ({ inputs }) {
   const { status, message } = await getFetchResponse(response)
   return {
     httpStatus: status,
-    success: status === 200,
+    success: status === 200 || status === 204,
     response: message,
   }
 }

@@ -5,20 +5,24 @@
   import { cloneDeep } from "lodash/fp"
 
   let failedParse = null
+  let trigger = {}
+  let schemaProperties = {}
+
   // clone the trigger so we're not mutating the reference
-  let trigger = cloneDeep(
+  $: trigger = cloneDeep(
     $automationStore.selectedAutomation.automation.definition.trigger
   )
-  let schemaProperties = Object.entries(trigger.schema.outputs.properties || {})
+
+  // get the outputs so we can define the fields
+  $: schemaProperties = Object.entries(trigger?.schema?.outputs?.properties)
 
   if (!$automationStore.selectedAutomation.automation.testData) {
     $automationStore.selectedAutomation.automation.testData = {}
   }
 
-  // get the outputs so we can define the fields
-
   // check to see if there is existing test data in the store
-  $: testData = $automationStore.selectedAutomation.automation.testData
+  $: testData = $automationStore.selectedAutomation.automation.testData || {}
+
   // Check the schema to see if required fields have been entered
   $: isError = !trigger.schema.outputs.required.every(
     required => testData[required]
@@ -41,7 +45,6 @@
   showConfirmButton={true}
   disabled={isError}
   onConfirm={() => {
-    automationStore.actions.addTestDataToAutomation(testData)
     automationStore.actions.test(
       $automationStore.selectedAutomation?.automation,
       testData
@@ -53,7 +56,7 @@
     ><Tab icon="Form" title="Form">
       <div class="tab-content-padding">
         <AutomationBlockSetup
-          bind:testData
+          {testData}
           {schemaProperties}
           isTestModal
           block={trigger}

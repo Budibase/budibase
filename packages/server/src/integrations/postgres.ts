@@ -28,6 +28,8 @@ module PostgresModule {
     user: string
     password: string
     ssl?: boolean
+    ca?: string
+    rejectUnauthorized?: boolean
   }
 
   const SCHEMA: Integration = {
@@ -64,6 +66,16 @@ module PostgresModule {
       },
       ssl: {
         type: DatasourceFieldTypes.BOOLEAN,
+        default: false,
+        required: false,
+      },
+      rejectUnauthorized: {
+        type: DatasourceFieldTypes.BOOLEAN,
+        default: false,
+        required: false,
+      },
+      ca: {
+        type: DatasourceFieldTypes.LONGFORM,
         default: false,
         required: false,
       },
@@ -144,7 +156,12 @@ module PostgresModule {
 
       let newConfig = {
         ...this.config,
-        ssl: this.config.ssl ? { rejectUnauthorized: true } : undefined,
+        ssl: this.config.ssl
+          ? {
+              rejectUnauthorized: this.config.rejectUnauthorized,
+              ca: this.config.ca,
+            }
+          : undefined,
       }
       if (!this.pool) {
         this.pool = new Pool(newConfig)

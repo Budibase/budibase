@@ -64,7 +64,7 @@
     ? "Fetch tables from database"
     : "Save and continue to query"}
   cancelText="Back"
-  size="M"
+  size="L"
 >
   <Layout noPadding>
     <Body size="XS"
