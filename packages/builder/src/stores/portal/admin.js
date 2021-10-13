@@ -9,6 +9,7 @@ export function createAdminStore() {
     cloud: false,
     disableAccountPortal: false,
     accountPortalUrl: "",
+    importComplete: false,
     onboardingProgress: 0,
     checklist: {
       apps: { checked: false },
@@ -40,6 +41,17 @@ export function createAdminStore() {
     } catch (err) {
       admin.update(store => {
         store.checklist = null
+        return store
+      })
+    }
+  }
+
+  async function checkImportComplete() {
+    const response = await api.get(`/api/cloud/import/complete`)
+    if (response.status === 200) {
+      const json = await response.json()
+      admin.update(store => {
+        store.importComplete = json ? json.imported : false
         return store
       })
     }
@@ -79,6 +91,7 @@ export function createAdminStore() {
   return {
     subscribe: admin.subscribe,
     init,
+    checkImportComplete,
     unload,
   }
 }
