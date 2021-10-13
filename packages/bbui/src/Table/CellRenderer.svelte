@@ -25,7 +25,6 @@
     array: ArrayRenderer,
     internal: InternalRenderer,
   }
-  console.log(value)
 
   $: type = schema?.type ?? "string"
   $: customRenderer = customRenderers?.find(x => x.column === schema?.name)
