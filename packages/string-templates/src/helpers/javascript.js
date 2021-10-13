@@ -27,19 +27,39 @@ const getContextValue = (path, context) => {
   return data
 }
 
+// Node polyfill for base64 encoding
+const btoa = plainText => {
+  return Buffer.from(plainText, "utf-8").toString("base64")
+}
+
+// Node polyfill for base64 decoding
+const atob = base64 => {
+  return Buffer.from(base64, "base64").toString("utf-8")
+}
+
 // Evaluates JS code against a certain context
 module.exports.processJS = (handlebars, context) => {
+  // Do not evaluate JS in a node environment
+  if (typeof window === "undefined") {
+    return "JS bindings are not executed in a Node environment"
+  }
+
   try {
     // Wrap JS in a function and immediately invoke it.
     // This is required to allow the final `return` statement to be valid.
     const js = `function run(){${atob(handlebars)}};run();`
 
     // Our $ context function gets a value from context
-    const sandboxContext = { $: path => getContextValue(path, context) }
+    const sandboxContext = {
+      $: path => getContextValue(path, context),
+      alert: undefined,
+      setInterval: undefined,
+      setTimeout: undefined,
+    }
 
     // Create a sandbox with out context and run the JS
     vm.createContext(sandboxContext)
-    return vm.runInNewContext(js, sandboxContext)
+    return vm.runInNewContext(js, sandboxContext, { timeout: 1000 })
   } catch (error) {
     return "Error while executing JS"
   }
