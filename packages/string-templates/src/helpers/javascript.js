@@ -27,6 +27,16 @@ const getContextValue = (path, context) => {
   return data
 }
 
+// Node polyfill for base64 encoding
+const btoa = plainText => {
+  return Buffer.from(plainText, "utf-8").toString("base64")
+}
+
+// Node polyfill for base64 decoding
+const atob = base64 => {
+  return Buffer.from(base64, "base64").toString("utf-8")
+}
+
 // Evaluates JS code against a certain context
 module.exports.processJS = (handlebars, context) => {
   try {
@@ -39,7 +49,7 @@ module.exports.processJS = (handlebars, context) => {
 
     // Create a sandbox with out context and run the JS
     vm.createContext(sandboxContext)
-    return vm.runInNewContext(js, sandboxContext)
+    return vm.runInNewContext(js, sandboxContext, { timeout: 1000 })
   } catch (error) {
     return "Error while executing JS"
   }
