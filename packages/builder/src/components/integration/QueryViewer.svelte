@@ -28,6 +28,8 @@
 
   let parameters
   let data = []
+  const transformerDocs =
+    "https://docs.budibase.com/building-apps/data/transformers"
   const typeOptions = [
     { label: "Text", value: "STRING" },
     { label: "Number", value: "NUMBER" },
@@ -174,14 +176,23 @@
       <Divider />
     </div>
     <div class="config">
-      <Heading size="S">Transformer</Heading>
+      <div class="help-heading">
+        <Heading size="S">Transformer</Heading>
+        <Icon
+          on:click={() => window.open(transformerDocs)}
+          hoverable
+          name="Help"
+          size="L"
+        />
+      </div>
       <Body size="S"
-        >Add a Javascript function to transform the query result.</Body
+        >Add a JavaScript function to transform the query result.</Body
       >
       <CodeMirrorEditor
         height={200}
         label="Transformer"
         value={query.transformer}
+        resize="vertical"
         on:change={e => (query.transformer = e.detail)}
       />
       <Divider />
@@ -240,11 +251,17 @@
     display: grid;
     grid-gap: var(--spacing-s);
   }
+
   .config-field {
     display: grid;
     grid-template-columns: 20% 1fr;
     grid-gap: var(--spacing-l);
     align-items: center;
+  }
+
+  .help-heading {
+    display: flex;
+    justify-content: space-between;
   }
 
   .field {

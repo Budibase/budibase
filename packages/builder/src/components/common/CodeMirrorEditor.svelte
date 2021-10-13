@@ -28,6 +28,7 @@
   export let mode = EditorModes.JS
   export let value = ""
   export let height = 300
+  export let resize = "none"
   export let readonly = false
   export let hints = []
   export let label
@@ -118,19 +119,23 @@
     <Label small>{label}</Label>
   </div>
 {/if}
-<div style={`--code-mirror-height: ${height}px`}>
+<div
+  style={`--code-mirror-height: ${height}px; --code-mirror-resize: ${resize}`}
+>
   <textarea tabindex="0" bind:this={textarea} readonly {value} />
 </div>
 
 <style>
   div :global(.CodeMirror) {
     height: var(--code-mirror-height);
+    min-height: var(--code-mirror-height);
     font-family: monospace;
     line-height: 1.3;
     border: var(--spectrum-alias-border-size-thin) solid;
     border-color: var(--spectrum-alias-border-color);
-    overflow: hidden;
     border-radius: var(--border-radius-s);
+    resize: var(--code-mirror-resize);
+    overflow: hidden;
   }
 
   /* Override default active line highlight colour in dark theme */
