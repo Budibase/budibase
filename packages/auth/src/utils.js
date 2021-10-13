@@ -240,22 +240,20 @@ exports.saveUser = async (
 /**
  * Logs a user out from budibase. Re-used across account portal and builder.
  */
-exports.platformLogout = async ({
-  ctx,
-  userId,
-  sessionId,
-  keepActiveSession,
-}) => {
+exports.platformLogout = async ({ ctx, userId, keepActiveSession }) => {
+  if (!ctx) throw new Error("Koa context must be supplied to logout.")
+
+  const currentSession = this.getCookie(ctx, Cookies.Auth)
   let sessions = await getUserSessions(userId)
 
   if (keepActiveSession) {
-    sessions = sessions.filter(session => session.sessionId !== sessionId)
+    sessions = sessions.filter(
+      session => session.sessionId !== currentSession.sessionId
+    )
   } else {
-    if (ctx) {
-      // clear cookies
-      this.clearCookie(ctx, Cookies.Auth)
-      this.clearCookie(ctx, Cookies.CurrentApp)
-    }
+    // clear cookies
+    this.clearCookie(ctx, Cookies.Auth)
+    this.clearCookie(ctx, Cookies.CurrentApp)
   }
 
   await invalidateSessions(
