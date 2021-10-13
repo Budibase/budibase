@@ -28,7 +28,6 @@
       type: "internal",
       editable: false,
       displayName: "ID",
-      name: "ID",
       autocolumn: true,
     }
     if (isInternal) {
@@ -36,7 +35,6 @@
         type: "internal",
         editable: false,
         displayName: "Revision",
-        name: "REV",
         autocolumn: true,
       }
     }
