@@ -42,8 +42,9 @@ module.exports = (
         internal = false
       if (authCookie) {
         let error = null
-        const sessionId = authCookie.sessionId,
-          userId = authCookie.userId
+        const sessionId = authCookie.sessionId
+        const userId = authCookie.userId
+
         const session = await getSession(userId, sessionId)
         if (!session) {
           error = "No session found"

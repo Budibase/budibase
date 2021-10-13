@@ -151,7 +151,7 @@
             >
           {/if}
           <Button
-            disabled={disableAddButton ? true : !hasCompletedInputs}
+            disabled={!hasCompletedInputs}
             on:click={() => {
               setupToggled = false
               actionModal.show()
