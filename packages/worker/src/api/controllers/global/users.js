@@ -3,7 +3,8 @@ const {
   StaticDatabases,
   generateNewUsageQuotaDoc,
 } = require("@budibase/auth/db")
-const { hash, getGlobalUserByEmail, saveUser } = require("@budibase/auth").utils
+const { hash, getGlobalUserByEmail, saveUser, platformLogout } =
+  require("@budibase/auth").utils
 const { EmailTemplatePurpose } = require("../../../constants")
 const { checkInviteCode } = require("../../../utilities/redis")
 const { sendEmail } = require("../../../utilities/email")
@@ -111,14 +112,16 @@ exports.destroy = async ctx => {
   const db = getGlobalDB()
   const dbUser = await db.get(ctx.params.id)
 
-  // root account holder can't be deleted from inside budibase
-  const email = dbUser.email
-  const account = await accounts.getAccount(email)
-  if (account) {
-    if (email === ctx.user.email) {
-      ctx.throw(400, 'Please visit "Account" to delete this user')
-    } else {
-      ctx.throw(400, "Account holder cannot be deleted")
+  if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
+    // root account holder can't be deleted from inside budibase
+    const email = dbUser.email
+    const account = await accounts.getAccount(email)
+    if (account) {
+      if (email === ctx.user.email) {
+        ctx.throw(400, 'Please visit "Account" to delete this user')
+      } else {
+        ctx.throw(400, "Account holder cannot be deleted")
+      }
     }
   }
 
@@ -171,7 +174,14 @@ exports.updateSelf = async ctx => {
   const db = getGlobalDB()
   const user = await db.get(ctx.user._id)
   if (ctx.request.body.password) {
+    // changing password
     ctx.request.body.password = await hash(ctx.request.body.password)
+    // Log all other sessions out apart from the current one
+    await platformLogout({
+      ctx,
+      userId: ctx.user._id,
+      keepActiveSession: true,
+    })
   }
   // don't allow sending up an ID/Rev, always use the existing one
   delete ctx.request.body._id
