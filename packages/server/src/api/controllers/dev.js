@@ -7,11 +7,13 @@ const { clearLock } = require("../../utilities/redis")
 const { Replication } = require("@budibase/auth").db
 const { DocumentTypes } = require("../../db/utils")
 
-async function redirect(ctx, method) {
+async function redirect(ctx, method, path = "global") {
   const { devPath } = ctx.params
   const queryString = ctx.originalUrl.split("?")[1] || ""
   const response = await fetch(
-    checkSlashesInUrl(`${env.WORKER_URL}/api/global/${devPath}?${queryString}`),
+    checkSlashesInUrl(
+      `${env.WORKER_URL}/api/${path}/${devPath}?${queryString}`
+    ),
     request(
       ctx,
       {
@@ -41,16 +43,22 @@ async function redirect(ctx, method) {
   ctx.cookies
 }
 
-exports.redirectGet = async ctx => {
-  await redirect(ctx, "GET")
+exports.buildRedirectGet = path => {
+  return async ctx => {
+    await redirect(ctx, "GET", path)
+  }
 }
 
-exports.redirectPost = async ctx => {
-  await redirect(ctx, "POST")
+exports.buildRedirectPost = path => {
+  return async ctx => {
+    await redirect(ctx, "POST", path)
+  }
 }
 
-exports.redirectDelete = async ctx => {
-  await redirect(ctx, "DELETE")
+exports.buildRedirectDelete = path => {
+  return async ctx => {
+    await redirect(ctx, "DELETE", path)
+  }
 }
 
 exports.clearLock = async ctx => {

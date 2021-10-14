@@ -6,11 +6,16 @@ const { BUILDER } = require("@budibase/auth/permissions")
 
 const router = Router()
 
-if (env.isDev() || env.isTest()) {
+function redirectPath(path) {
   router
-    .get("/api/global/:devPath(.*)", controller.redirectGet)
-    .post("/api/global/:devPath(.*)", controller.redirectPost)
-    .delete("/api/global/:devPath(.*)", controller.redirectDelete)
+    .get(`/api/${path}/:devPath(.*)`, controller.buildRedirectGet(path))
+    .post(`/api/${path}/:devPath(.*)`, controller.buildRedirectPost(path))
+    .delete(`/api/${path}/:devPath(.*)`, controller.buildRedirectDelete(path))
+}
+
+if (env.isDev() || env.isTest()) {
+  redirectPath("global")
+  redirectPath("system")
 }
 
 router
