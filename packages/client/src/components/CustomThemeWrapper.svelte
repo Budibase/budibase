@@ -16,7 +16,10 @@
     /*  Buttons */
     --spectrum-semantic-cta-color-background-default: var(--primaryColor);
     --spectrum-semantic-cta-color-background-hover: var(--primaryColorHover);
+    --spectrum-button-primary-s-border-radius: var(--buttonBorderRadius);
     --spectrum-button-primary-m-border-radius: var(--buttonBorderRadius);
+    --spectrum-button-primary-l-border-radius: var(--buttonBorderRadius);
+    --spectrum-button-primary-xl-border-radius: var(--buttonBorderRadius);
 
     /* Loading spinners */
     --spectrum-progresscircle-medium-track-fill-color: var(--primaryColor);
