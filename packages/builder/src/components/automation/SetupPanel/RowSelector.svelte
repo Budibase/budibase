@@ -1,6 +1,12 @@
 <script>
   import { tables } from "stores/backend"
-  import { Select, Toggle, DatePicker, Multiselect } from "@budibase/bbui"
+  import {
+    Select,
+    Toggle,
+    DatePicker,
+    Multiselect,
+    TextArea,
+  } from "@budibase/bbui"
   import DrawerBindableInput from "../../common/bindings/DrawerBindableInput.svelte"
   import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
   import { createEventDispatcher } from "svelte"
@@ -52,7 +58,6 @@
   getOptionLabel={table => table.name}
   getOptionValue={table => table._id}
 />
-
 {#if schemaFields.length}
   <div class="schema-fields">
     {#each schemaFields as [field, schema]}
@@ -82,6 +87,8 @@
             label={field}
             options={schema.constraints.inclusion}
           />
+        {:else if schema.type === "longform"}
+          <TextArea label={field} bind:value={value[field]} />
         {:else if schema.type === "link"}
           <LinkedRowSelector bind:linkedRows={value[field]} {schema} />
         {:else if schema.type === "string" || schema.type === "number"}
