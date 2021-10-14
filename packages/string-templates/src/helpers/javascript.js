@@ -1,5 +1,9 @@
-const CAPTURE_JS = new RegExp(/{{ js "(.*)" }}/)
-const vm = require("vm")
+const { atob } = require("../utilities")
+
+// The method of executing JS scripts depends on the bundle being built.
+// This setter is used in the entrypoint (either index.cjs or index.mjs).
+let runJS
+module.exports.setJSRunner = runner => (runJS = runner)
 
 // Helper utility to strip square brackets from a value
 const removeSquareBrackets = value => {
@@ -27,23 +31,8 @@ const getContextValue = (path, context) => {
   return data
 }
 
-// Node polyfill for base64 encoding
-const btoa = plainText => {
-  return Buffer.from(plainText, "utf-8").toString("base64")
-}
-
-// Node polyfill for base64 decoding
-const atob = base64 => {
-  return Buffer.from(base64, "base64").toString("utf-8")
-}
-
 // Evaluates JS code against a certain context
 module.exports.processJS = (handlebars, context) => {
-  // Do not evaluate JS in a node environment
-  if (typeof window === "undefined") {
-    return "JS bindings are not executed in a Node environment"
-  }
-
   try {
     // Wrap JS in a function and immediately invoke it.
     // This is required to allow the final `return` statement to be valid.
@@ -58,37 +47,8 @@ module.exports.processJS = (handlebars, context) => {
     }
 
     // Create a sandbox with out context and run the JS
-    vm.createContext(sandboxContext)
-    return vm.runInNewContext(js, sandboxContext, { timeout: 1000 })
+    return runJS(js, sandboxContext)
   } catch (error) {
     return "Error while executing JS"
   }
-}
-
-// Checks if a HBS expression is a valid JS HBS expression
-module.exports.isJSBinding = handlebars => {
-  return module.exports.decodeJSBinding(handlebars) != null
-}
-
-// Encodes a raw JS string as a JS HBS expression
-module.exports.encodeJSBinding = javascript => {
-  return `{{ js "${btoa(javascript)}" }}`
-}
-
-// Decodes a JS HBS expression to the raw JS string
-module.exports.decodeJSBinding = handlebars => {
-  if (!handlebars || typeof handlebars !== "string") {
-    return null
-  }
-
-  // JS is only valid if it is the only HBS expression
-  if (!handlebars.trim().startsWith("{{ js ")) {
-    return null
-  }
-
-  const match = handlebars.match(CAPTURE_JS)
-  if (!match || match.length < 2) {
-    return null
-  }
-  return atob(match[1])
 }
