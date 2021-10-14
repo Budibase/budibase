@@ -10,6 +10,7 @@ const env = require("../environment")
 const usage = require("../utilities/usageQuota")
 
 const FILTER_STEP_ID = actions.ACTION_DEFINITIONS.FILTER.stepId
+const STOPPED_STATUS = { success: false, status: "STOPPED" }
 
 /**
  * The automation orchestrator is a class responsible for executing automations.
@@ -68,7 +69,13 @@ class Orchestrator {
   async execute() {
     let automation = this._automation
     const app = await this.getApp()
+    let stopped = false
     for (let step of automation.definition.steps) {
+      // execution stopped, record state for that
+      if (stopped) {
+        this.updateExecutionOutput(step.id, step.stepId, {}, STOPPED_STATUS)
+        continue
+      }
       let stepFn = await this.getStepFunctionality(step.stepId)
       step.inputs = await processObject(step.inputs, this._context)
       step.inputs = automationUtils.cleanInputValues(
@@ -86,10 +93,17 @@ class Orchestrator {
             context: this._context,
           })
         })
-        if (step.stepId === FILTER_STEP_ID && !outputs.success) {
-          break
-        }
         this._context.steps.push(outputs)
+        // if filter causes us to stop execution don't break the loop, set a var
+        // so that we can finish iterating through the steps and record that it stopped
+        if (step.stepId === FILTER_STEP_ID && !outputs.success) {
+          stopped = true
+          this.updateExecutionOutput(step.id, step.stepId, step.inputs, {
+            ...outputs,
+            ...STOPPED_STATUS,
+          })
+          continue
+        }
         this.updateExecutionOutput(step.id, step.stepId, step.inputs, outputs)
       } catch (err) {
         console.error(`Automation error - ${step.stepId} - ${err}`)
@@ -99,7 +113,7 @@ class Orchestrator {
 
     // Increment quota for automation runs
     if (!env.SELF_HOSTED && !isDevAppID(this._appId)) {
-      usage.update(usage.Properties.AUTOMATION, 1)
+      await usage.update(usage.Properties.AUTOMATION, 1)
     }
     return this.executionOutput
   }
