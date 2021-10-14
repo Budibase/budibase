@@ -1,5 +1,5 @@
 <script>
-  import { Heading, Layout, Icon } from "@budibase/bbui"
+  import { Heading, Layout, Icon, Body } from "@budibase/bbui"
   import Spinner from "components/common/Spinner.svelte"
   import api from "builderStore/api"
 
@@ -7,6 +7,7 @@
 
   async function fetchTemplates() {
     const response = await api.get("/api/templates?type=app")
+    console.log("Responded")
     return await response.json()
   }
 
@@ -19,6 +20,11 @@
       <Spinner size="30" />
     </div>
   {:then templates}
+    {#if templates?.length > 0}
+      <Body size="M">Select a template below, or start from scratch.</Body>
+    {:else}
+      <Body size="M">Start your app from scratch below.</Body>
+    {/if}
     <div class="templates">
       {#each templates as template}
         <div class="template" on:click={() => onSelect(template)}>
