@@ -39,12 +39,7 @@ module.exports.processJS = (handlebars, context) => {
     const js = `function run(){${atob(handlebars)}};run();`
 
     // Our $ context function gets a value from context
-    const sandboxContext = {
-      $: path => getContextValue(path, context),
-      alert: undefined,
-      setInterval: undefined,
-      setTimeout: undefined,
-    }
+    const sandboxContext = { $: path => getContextValue(path, context) }
 
     // Create a sandbox with out context and run the JS
     return runJS(js, sandboxContext)

@@ -20,6 +20,12 @@ export const processObject = templates.processObject
  * Use polyfilled vm to run JS scripts in a browser Env
  */
 setJSRunner((js, context) => {
+  context = {
+    ...context,
+    alert: undefined,
+    setInterval: undefined,
+    setTimeout: undefined,
+  }
   vm.createContext(context)
   return vm.runInNewContext(js, context, { timeout: 1000 })
 })
