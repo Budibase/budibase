@@ -9,7 +9,7 @@
     Body,
     Layout,
   } from "@budibase/bbui"
-  import { createEventDispatcher } from "svelte"
+  import { createEventDispatcher, onMount } from "svelte"
   import {
     isValid,
     decodeJSBinding,
@@ -36,7 +36,6 @@
   let hbsValue = initialValueJS ? null : value
 
   $: usingJS = mode === "JavaScript"
-  $: valid = isValid(readableToRuntimeBinding(bindableProperties, value))
   $: ({ context } = groupBy("type", bindableProperties))
   $: searchRgx = new RegExp(search, "ig")
   $: filteredBindings = context?.filter(context => {
@@ -46,10 +45,17 @@
     return helper.label.match(searchRgx) || helper.description.match(searchRgx)
   })
 
+  const updateValue = value => {
+    valid = isValid(readableToRuntimeBinding(bindableProperties, value))
+    if (valid) {
+      dispatch("change", value)
+    }
+  }
+
   // Adds a HBS helper to the expression
   const addHelper = helper => {
     hbsValue = addHBSBinding(value, getCaretPosition(), helper.text)
-    dispatch("change", hbsValue)
+    updateValue(hbsValue)
   }
 
   // Adds a data binding to the expression
@@ -58,31 +64,35 @@
       let js = decodeJSBinding(jsValue)
       js = addJSBinding(js, getCaretPosition(), binding.readableBinding)
       jsValue = encodeJSBinding(js)
-      dispatch("change", jsValue)
+      updateValue(jsValue)
     } else {
       hbsValue = addHBSBinding(
         hbsValue,
         getCaretPosition(),
         binding.readableBinding
       )
-      dispatch("change", hbsValue)
+      updateValue(hbsValue)
     }
   }
 
   const onChangeMode = e => {
     mode = e.detail
-    dispatch("change", mode === "JavaScript" ? jsValue : hbsValue)
+    updateValue(mode === "JavaScript" ? jsValue : hbsValue)
   }
 
   const onChangeHBSValue = e => {
     hbsValue = e.detail
-    dispatch("change", hbsValue)
+    updateValue(hbsValue)
   }
 
   const onChangeJSValue = e => {
     jsValue = encodeJSBinding(e.detail)
-    dispatch("change", jsValue)
+    updateValue(jsValue)
   }
+
+  onMount(() => {
+    valid = isValid(readableToRuntimeBinding(bindableProperties, value))
+  })
 </script>
 
 <DrawerContent>
