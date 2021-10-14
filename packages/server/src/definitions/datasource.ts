@@ -20,12 +20,14 @@ export enum QueryTypes {
 
 export enum DatasourceFieldTypes {
   STRING = "string",
+  LONGFORM = "longForm",
   BOOLEAN = "boolean",
   NUMBER = "number",
   PASSWORD = "password",
   LIST = "list",
   OBJECT = "object",
   JSON = "json",
+  FILE = "file",
 }
 
 export enum SourceNames {
