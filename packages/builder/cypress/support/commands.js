@@ -70,22 +70,6 @@ Cypress.Commands.add("createTestTableWithData", () => {
   cy.addColumn("dog", "age", "Number")
 })
 
-Cypress.Commands.add("createInitialDatasource", tableName => {
-  // Enter table name
-  cy.get(".spectrum-Modal").within(() => {
-    cy.contains("Budibase DB").trigger("mouseover").click().click()
-    cy.wait(1000)
-    cy.contains("Continue").click()
-  })
-
-  cy.get(".spectrum-Modal").within(() => {
-    cy.wait(1000)
-    cy.get("input").first().type(tableName).blur()
-    cy.get(".spectrum-ButtonGroup").contains("Create").click()
-  })
-  cy.contains(tableName).should("be.visible")
-})
-
 Cypress.Commands.add("createTable", tableName => {
   cy.contains("Budibase DB").click()
   cy.contains("Create new table").click()
