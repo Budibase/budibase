@@ -8,7 +8,10 @@ class Helper {
   register(handlebars) {
     // wrap the function so that no helper can cause handlebars to break
     handlebars.registerHelper(this.name, (value, info) => {
-      const context = info?.data?.root || {}
+      let context = {}
+      if (info && info.data && info.data.root) {
+        context = info.data.root
+      }
       const result = this.fn(value, context)
       if (result == null) {
         return this.useValueFallback ? value : null
