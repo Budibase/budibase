@@ -4,21 +4,7 @@ const processJS = (js, context) => {
   return processStringSync(encodeJSBinding(js), context)
 }
 
-describe("Test the JavaScript helper in Node", () => {
-  it("should not execute JS in Node", () => {
-    const output = processJS(`return 1`)
-    expect(output).toBe("JS bindings are not executed in a Node environment")
-  })
-})
-
 describe("Test the JavaScript helper", () => {
-  // JS bindings do not get evaluated on the server for safety.
-  // Since we want to run SJ for tests, we fake a window object to make
-  // it think that we're in the browser
-  beforeEach(() => {
-    window = {}
-  })
-
   it("should execute a simple expression", () => {
     const output = processJS(`return 1 + 2`)
     expect(output).toBe("3")
@@ -82,6 +68,18 @@ describe("Test the JavaScript helper", () => {
 
   it("should timeout after one second", () => {
     const output = processJS(`while (true) {}`)
+    expect(output).toBe("Error while executing JS")
+  })
+
+  it("should prevent access to the process global", () => {
+    const output = processJS(`return process`)
+    expect(output).toBe("Error while executing JS")
+  })
+
+  it("should prevent sandbox escape", () => {
+    const output = processJS(
+      `return this.constructor.constructor("return process")()`
+    )
     expect(output).toBe("Error while executing JS")
   })
 })
