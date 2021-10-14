@@ -75,6 +75,7 @@
       {#if canRenderControl(setting)}
         <PropertyControl
           type={setting.type}
+          fieldTypes={setting.fieldTypes}
           control={getComponentForSettingType(setting.type)}
           label={setting.label}
           key={setting.key}

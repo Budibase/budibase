@@ -13,6 +13,7 @@
   export let control = null
   export let key = ""
   export let type = ""
+  export let fieldTypes = []
   export let value = null
   export let props = {}
   export let onChange = () => {}
@@ -82,6 +83,7 @@
       name={key}
       text={label}
       {type}
+      {fieldTypes}
       {...props}
     />
     {#if bindable && !key.startsWith("_") && type === "text"}
