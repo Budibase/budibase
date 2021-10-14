@@ -36,18 +36,11 @@ Cypress.Commands.add("createApp", name => {
   cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
   cy.wait(500)
   cy.contains(/Start from scratch/).click()
-  cy.get(".spectrum-Modal")
-    .within(() => {
-      cy.get("input").eq(0).type(name).should("have.value", name).blur()
-      cy.get(".spectrum-ButtonGroup").contains("Create app").click()
-      cy.wait(7000)
-    })
-    .then(() => {
-      // Because we show the datasource modal on entry, we need to create a table to get rid of the modal in the future
-      cy.createInitialDatasource("initialTable")
-      cy.expandBudibaseConnection()
-      cy.get(".nav-item.selected > .content").should("be.visible")
-    })
+  cy.get(".spectrum-Modal").within(() => {
+    cy.get("input").eq(0).type(name).should("have.value", name).blur()
+    cy.get(".spectrum-ButtonGroup").contains("Create app").click()
+    cy.wait(7000)
+  })
 })
 
 Cypress.Commands.add("deleteApp", () => {
