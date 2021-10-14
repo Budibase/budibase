@@ -1,10 +1,18 @@
 <script>
-  import { Label, Input, Layout, Toggle, Button } from "@budibase/bbui"
+  import {
+    Label,
+    Input,
+    Layout,
+    Toggle,
+    Button,
+    TextArea,
+  } from "@budibase/bbui"
   import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
   import { capitalise } from "helpers"
 
   export let integration
   export let schema
+
   let addButton
 </script>
 
@@ -28,6 +36,15 @@
         <div class="form-row">
           <Label>{capitalise(configKey)}</Label>
           <Toggle text="" bind:value={integration[configKey]} />
+        </div>
+      {:else if schema[configKey].type === "longForm"}
+        <div class="form-row">
+          <Label>{capitalise(configKey)}</Label>
+          <TextArea
+            type={schema[configKey].type}
+            on:change
+            bind:value={integration[configKey]}
+          />
         </div>
       {:else}
         <div class="form-row">

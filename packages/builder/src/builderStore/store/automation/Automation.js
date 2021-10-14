@@ -14,7 +14,7 @@ export default class Automation {
   }
 
   addTestData(data) {
-    this.automation.testData = data
+    this.automation.testData = { ...this.automation.testData, ...data }
   }
 
   addBlock(block, idx) {

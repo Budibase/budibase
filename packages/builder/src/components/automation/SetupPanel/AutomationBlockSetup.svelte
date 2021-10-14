@@ -9,7 +9,10 @@
     Label,
     ActionButton,
     Drawer,
+    Modal,
   } from "@budibase/bbui"
+  import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
+
   import { automationStore } from "builderStore"
   import { tables } from "stores/backend"
   import WebhookDisplay from "../Shared/WebhookDisplay.svelte"
@@ -27,13 +30,14 @@
   import { buildLuceneQuery } from "helpers/lucene"
 
   export let block
-  export let webhookModal
   export let testData
   export let schemaProperties
   export let isTestModal = false
+  let webhookModal
   let drawer
   let tempFilters = lookForFilters(schemaProperties) || []
   let fillWidth = true
+
   $: stepId = block.stepId
   $: bindings = getAvailableBindings(
     block || $automationStore.selectedBlock,
@@ -50,6 +54,18 @@
   const onChange = debounce(
     async function (e, key) {
       if (isTestModal) {
+        // Special case for webhook, as it requires a body, but the schema already brings back the body's contents
+        if (stepId === "WEBHOOK") {
+          automationStore.actions.addTestDataToAutomation({
+            body: {
+              [key]: e.detail,
+              ...$automationStore.selectedAutomation.automation.testData.body,
+            },
+          })
+        }
+        automationStore.actions.addTestDataToAutomation({
+          [key]: e.detail,
+        })
         testData[key] = e.detail
       } else {
         block.inputs[key] = e.detail
@@ -206,7 +222,10 @@
           {bindings}
         />
       {:else if value.customType === "webhookUrl"}
-        <WebhookDisplay value={inputData[key]} />
+        <WebhookDisplay
+          on:change={e => onChange(e, key)}
+          value={inputData[key]}
+        />
       {:else if value.customType === "triggerSchema"}
         <SchemaSetup on:change={e => onChange(e, key)} value={inputData[key]} />
       {:else if value.customType === "code"}
@@ -249,6 +268,10 @@
     </div>
   {/each}
 </div>
+<Modal bind:this={webhookModal} width="30%">
+  <CreateWebhookModal />
+</Modal>
+
 {#if stepId === "WEBHOOK"}
   <Button secondary on:click={() => webhookModal.show()}>Set Up Webhook</Button>
 {/if}
