@@ -11,4 +11,5 @@
   {...$$props}
   value={isJS ? "(JavaScript function)" : value}
   readonly={isJS}
+  on:change
 />
