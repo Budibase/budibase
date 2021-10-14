@@ -49,7 +49,6 @@
   function schemaHasOptions(schema) {
     return !!schema.constraints?.inclusion?.length
   }
-  $: console.log(schemaFields)
 </script>
 
 <Select
