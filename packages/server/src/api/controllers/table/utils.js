@@ -1,5 +1,4 @@
 const CouchDB = require("../../../db")
-const linkRows = require("../../../db/linkedRows")
 const csvParser = require("../../../utilities/csvParser")
 const {
   getRowParams,
