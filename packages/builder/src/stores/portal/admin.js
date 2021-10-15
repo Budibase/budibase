@@ -7,6 +7,7 @@ export function createAdminStore() {
     loaded: false,
     multiTenancy: false,
     cloud: false,
+    isDev: false,
     disableAccountPortal: false,
     accountPortalUrl: "",
     importComplete: false,
@@ -62,6 +63,7 @@ export function createAdminStore() {
     let cloud = false
     let disableAccountPortal = false
     let accountPortalUrl = ""
+    let isDev = false
     try {
       const response = await api.get(`/api/system/environment`)
       const json = await response.json()
@@ -69,6 +71,7 @@ export function createAdminStore() {
       cloud = json.cloud
       disableAccountPortal = json.disableAccountPortal
       accountPortalUrl = json.accountPortalUrl
+      isDev = json.isDev
     } catch (err) {
       // just let it stay disabled
     }
@@ -77,6 +80,7 @@ export function createAdminStore() {
       store.cloud = cloud
       store.disableAccountPortal = disableAccountPortal
       store.accountPortalUrl = accountPortalUrl
+      store.isDev = isDev
       return store
     })
   }
