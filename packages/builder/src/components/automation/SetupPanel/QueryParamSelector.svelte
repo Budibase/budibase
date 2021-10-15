@@ -39,6 +39,7 @@
         type="string"
         {bindings}
         fillWidth={true}
+        allowJS={false}
       />
     {/each}
   </div>

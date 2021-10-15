@@ -60,7 +60,7 @@
 </Modal>
 
 <Modal bind:this={externalDatasourceModal}>
-  <DatasourceConfigModal {integration} />
+  <DatasourceConfigModal {integration} {modal} />
 </Modal>
 
 <Modal bind:this={modal}>

@@ -7,7 +7,7 @@ const {
 const jwt = require("jsonwebtoken")
 const { options } = require("./middleware/passport/jwt")
 const { createUserEmailView } = require("./db/views")
-const { Headers, UserStatus } = require("./constants")
+const { Headers, UserStatus, Cookies } = require("./constants")
 const {
   getGlobalDB,
   updateTenantId,
@@ -19,6 +19,7 @@ const accounts = require("./cloud/accounts")
 const { hash } = require("./hashing")
 const userCache = require("./cache/user")
 const env = require("./environment")
+const { getUserSessions, invalidateSessions } = require("./security/sessions")
 
 const APP_PREFIX = DocumentTypes.APP + SEPARATOR
 
@@ -234,4 +235,29 @@ exports.saveUser = async (
       throw err
     }
   }
+}
+
+/**
+ * Logs a user out from budibase. Re-used across account portal and builder.
+ */
+exports.platformLogout = async ({ ctx, userId, keepActiveSession }) => {
+  if (!ctx) throw new Error("Koa context must be supplied to logout.")
+
+  const currentSession = this.getCookie(ctx, Cookies.Auth)
+  let sessions = await getUserSessions(userId)
+
+  if (keepActiveSession) {
+    sessions = sessions.filter(
+      session => session.sessionId !== currentSession.sessionId
+    )
+  } else {
+    // clear cookies
+    this.clearCookie(ctx, Cookies.Auth)
+    this.clearCookie(ctx, Cookies.CurrentApp)
+  }
+
+  await invalidateSessions(
+    userId,
+    sessions.map(({ sessionId }) => sessionId)
+  )
 }

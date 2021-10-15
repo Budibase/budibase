@@ -22,6 +22,7 @@ exports.definition = {
         fields: {
           type: "object",
           description: "Fields submitted from the app frontend",
+          customType: "triggerSchema",
         },
       },
       required: ["fields"],
