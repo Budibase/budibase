@@ -5,7 +5,7 @@
   import { isValid } from "@budibase/string-templates"
   import { handlebarsCompletions } from "constants/completions"
   import { readableToRuntimeBinding } from "builderStore/dataBinding"
-  import { addToText } from "./utils"
+  import { addHBSBinding } from "./utils"
 
   const dispatch = createEventDispatcher()
 
@@ -47,7 +47,7 @@
               {#each bindings as binding}
                 <li
                   on:click={() => {
-                    value = addToText(value, getCaretPosition(), binding)
+                    value = addHBSBinding(value, getCaretPosition(), binding)
                   }}
                 >
                   <span class="binding__label">{binding.label}</span>
@@ -71,7 +71,7 @@
             {#each filteredHelpers as helper}
               <li
                 on:click={() => {
-                  value = addToText(value, getCaretPosition(), helper.text)
+                  value = addHBSBinding(value, getCaretPosition(), helper.text)
                 }}
               >
                 <div class="helper">
