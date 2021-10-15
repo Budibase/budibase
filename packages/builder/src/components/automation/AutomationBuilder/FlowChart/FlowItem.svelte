@@ -103,7 +103,7 @@
           <Detail size="S">{block?.name?.toUpperCase() || ""}</Detail>
         </div>
       </div>
-      {#if testResult}
+      {#if testResult && testResult[0]}
         <span on:click={() => resultsModal.show()}>
           <StatusLight
             positive={isTrigger || testResult[0].outputs?.success}

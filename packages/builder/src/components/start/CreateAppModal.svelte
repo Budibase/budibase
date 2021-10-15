@@ -150,7 +150,6 @@
     showCancelButton={false}
     showCloseIcon={false}
   >
-    <Body size="M">Select a template below, or start from scratch.</Body>
     <TemplateList
       onSelect={selected => {
         if (!selected) {

@@ -28,15 +28,18 @@ exports.exportApps = async ctx => {
     ctx.throw(400, "Exporting only allowed in multi-tenant cloud environments.")
   }
   const apps = await getAllApps(CouchDB, { all: true })
-  const globalDBString = await exportDB(getGlobalDBName())
+  const globalDBString = await exportDB(getGlobalDBName(), {
+    filter: doc => !doc._id.startsWith(DocumentTypes.USER),
+  })
   let allDBs = {
     global: globalDBString,
   }
   for (let app of apps) {
+    const appId = app.appId || app._id
     // only export the dev apps as they will be the latest, the user can republish the apps
     // in their self hosted environment
-    if (isDevAppID(app._id)) {
-      allDBs[app.name] = await exportDB(app._id)
+    if (isDevAppID(appId)) {
+      allDBs[app.name] = await exportDB(appId)
     }
   }
   const filename = `cloud-export-${new Date().getTime()}.txt`
@@ -53,16 +56,26 @@ async function getAllDocType(db, docType) {
   return response.rows.map(row => row.doc)
 }
 
+async function hasBeenImported() {
+  if (!env.SELF_HOSTED || env.MULTI_TENANCY) {
+    return true
+  }
+  const apps = await getAllApps(CouchDB, { all: true })
+  return apps.length !== 0
+}
+
+exports.hasBeenImported = async ctx => {
+  ctx.body = {
+    imported: await hasBeenImported(),
+  }
+}
+
 exports.importApps = async ctx => {
   if (!env.SELF_HOSTED || env.MULTI_TENANCY) {
     ctx.throw(400, "Importing only allowed in self hosted environments.")
   }
-  const apps = await getAllApps(CouchDB, { all: true })
-  if (
-    apps.length !== 0 ||
-    !ctx.request.files ||
-    !ctx.request.files.importFile
-  ) {
+  const beenImported = await hasBeenImported()
+  if (beenImported || !ctx.request.files || !ctx.request.files.importFile) {
     ctx.throw(
       400,
       "Import file is required and environment must be fresh to import apps."
@@ -80,11 +93,17 @@ exports.importApps = async ctx => {
   for (let [appName, appImport] of Object.entries(dbs)) {
     await createApp(appName, appImport)
   }
-  // once apps are created clean up the global db
+
+  // if there are any users make sure to remove them
   let users = await getAllDocType(globalDb, DocumentTypes.USER)
+  let userDeletionPromises = []
   for (let user of users) {
-    delete user.tenantId
+    userDeletionPromises.push(globalDb.remove(user._id, user._rev))
   }
+  if (userDeletionPromises.length > 0) {
+    await Promise.all(userDeletionPromises)
+  }
+
   await globalDb.bulkDocs(users)
   ctx.body = {
     message: "Apps successfully imported.",

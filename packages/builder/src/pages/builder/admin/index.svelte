@@ -15,6 +15,7 @@
   import PasswordRepeatInput from "components/common/users/PasswordRepeatInput.svelte"
   import ImportAppsModal from "./_components/ImportAppsModal.svelte"
   import Logo from "assets/bb-emblem.svg"
+  import { onMount } from "svelte"
 
   let adminUser = {}
   let error
@@ -23,6 +24,7 @@
   $: tenantId = $auth.tenantId
   $: multiTenancyEnabled = $admin.multiTenancy
   $: cloud = $admin.cloud
+  $: imported = $admin.importComplete
 
   async function save() {
     try {
@@ -40,6 +42,12 @@
       notifications.error(`Failed to create admin user`)
     }
   }
+
+  onMount(async () => {
+    if (!cloud) {
+      await admin.checkImportComplete()
+    }
+  })
 </script>
 
 <Modal bind:this={modal} padding={false} width="600px">
@@ -73,7 +81,7 @@
           >
             Change organisation
           </ActionButton>
-        {:else if !cloud}
+        {:else if !cloud && !imported}
           <ActionButton
             quiet
             on:click={() => {

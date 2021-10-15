@@ -2,7 +2,7 @@
 
 From opening a bug report to creating a pull request: every contribution is appreciated and welcome. If you're planning to implement a new feature or change the api please create an issue first. This way we can ensure that your precious work is not in vain.
 
-### Not Sure Where to Start?
+## Not Sure Where to Start?
 
 Budibase is a low-code web application builder that creates svelte based web applications.
 
@@ -13,6 +13,8 @@ Budibase is a monorepo managed by [lerna](https://github.com/lerna/lerna). Lerna
 - **packages/client** - A module that runs in the browser responsible for reading JSON definition and creating living, breathing web apps from it.
 
 - **packages/server** - The budibase server. This [Koa](https://koajs.com/) app is responsible for serving the JS for the builder and budibase apps, as well as providing the API for interaction with the database and file system.
+
+- **packages/worker** - This [Koa](https://koajs.com/) app is responsible for providing global apis for managing your budibase installation. Authentication, Users, Email, Org and Auth configs are all provided by the worker. 
 
 ## Contributor License Agreement (CLA)
 
@@ -62,8 +64,6 @@ A component is the basic frontend building block of a budibase app.
 
 Component libraries are collections of components as well as the definition of their props contained in a file called `components.json`. 
 
-
-
 ## Contributing to Budibase
 
 * Please maintain the existing code style. 
@@ -74,31 +74,30 @@ Component libraries are collections of components as well as the definition of t
 
 * If the project diverges from your branch, please rebase instead of merging. This makes the commit graph easier to read.
 
-* Once your work is completed, please raise a PR against the main branch with some information about what has changed and why.
+* Once your work is completed, please raise a PR against the `develop` branch with some information about what has changed and why.
 
 ### Getting Started For Contributors
-
-### 1.  Prerequisites
+#### 1.  Prerequisites
 
 *yarn -* `npm install -g yarn`
 
 *jest* - `npm install -g jest`
 
-### 2. Clone this repository
+#### 2. Clone this repository
 
 `git clone https://github.com/Budibase/budibase.git`
 
 then `cd ` into your local copy.
 
-### 3.  Install and Build
+#### 3.  Install and Build
 
 To develop the Budibase platform you'll need [Docker](https://www.docker.com/) and [Docker Compose](https://docs.docker.com/compose/) installed.
 
-#### Quick method
+##### Quick method
 
 `yarn setup` will check that all necessary components are installed and setup the repo for usage.
 
-#### Manual method
+##### Manual method
 
 The following commands can be executed to manually get Budibase up and running (assuming Docker/Docker Compose has been installed).
 
@@ -108,15 +107,7 @@ The following commands can be executed to manually get Budibase up and running (
 
 `yarn build` will build all budibase packages.
 
-### 4. Initialising Budibase and Creating a Budibase App
-
-Starting up the budibase electron app should initialise budibase for you. A Budibase apps folder will have been created in `~/.budibase`.
-
-This is a blank apps folder, so you will need to create yourself an app, you can do this by clicking "Create New App" from the budibase builder.
-
-This will create a new budibase application in the `~/.budibase/<your-app-uuid>` directory, and NPM install the component libraries for that application. Let's start building your app with the budibase builder!
-
-### 4. Running
+#### 4. Running
 
 To run the budibase server and builder in dev mode (i.e. with live reloading):
 
@@ -126,7 +117,7 @@ To run the budibase server and builder in dev mode (i.e. with live reloading):
 
 This will enable watch mode for both the builder app, server, client library and any component libraries.
 
-### 5. Debugging using VS Code
+#### 5. Debugging using VS Code
 
 To debug the budibase server and worker a VS Code launch configuration has been provided. 
 
@@ -135,75 +126,90 @@ Alternatively to start both components simultaneously select `Start Budibase`.
 
 In addition to the above, the remaining budibase components may be ran in dev mode using: `yarn dev:noserver`.
 
-### 6. Cleanup
+#### 6. Cleanup
 
 If you wish to delete all the apps created in development and reset the environment then run the following:
 
 1. `yarn nuke:docker` will wipe all the Budibase services
 2. `yarn dev` will restart all the services
 
-## Data Storage
-
-When you are running locally, budibase stores data on disk using [PouchDB](https://pouchdb.com/), as well as some JSON on local files. After setting up budibase, you can find all of this data in the `~/.budibase` directory.
-
-A client can have one or more budibase applications. Budibase applications are stored in `~/.budibase/<app-uuid>`. Files used by your budibase application when running are stored in the `public` directory. Everything else is dev files used for the development of your apps in the builder.
-
-#### Frontend
-
-To see the current individual JSON definitions for your pages and screens used by the builder, have a look at `~/.budibase/<app-uuid>/pages`.
-
-For your actual running application (not in dev), the frontend tree structure of the application (known as `clientFrontendDefinition`) is stored as JSON on disk. This is what the budibase client library reads to create your app at runtime. This can be found at `~/.budibase/<app-uuid>/public/clientFrontendDefinition.js`
-
-The HTML and CSS for your apps runtime pages, as well as the budibase client library JS is stored at:
-
-- `~/.budibase/<app-uuid>/public/main`
-- `~/.budibase/<app-uuid>/public/unauthenticated`
-
-#### Backend
+### Backend
 
 For the backend we run [Redis](https://redis.io/), [CouchDB](https://couchdb.apache.org/), [MinIO](https://min.io/) and [Envoy](https://www.envoyproxy.io/) in Docker compose. This means that to develop Budibase you will need Docker and Docker compose installed. The backend services are then ran separately as Node services with nodemon so that they can be debugged outside of Docker.
 
-### Publishing Budibase to NPM
+### Data Storage
 
-#### Testing In Electron
+When you are running locally, budibase stores data on disk using docker volumes. The volumes and the types of data associated with each are:
 
-At budibase, we pride ourselves on giving our users a fast, native and slick local development experience. As a result, we use the electron to provide a native GUI for the budibase builder. In order to release budibase out into the wild, you should test your changes in a packaged electron application. To do this, first build budibase from the root directory. 
+- `redis_data` 
+  - Sessions, email tokens
+- `couchdb3_data` 
+  - Global and app databases
+- `minio_data` 
+  - App manifest, budibase client, static assets
+
+### Devlopment Modes
+
+A combination of environment variables controls the mode that budibase runs in. 
+Yarn commands can be used to mimic the different modes that budibase can be ran in
+
+#### Self Hosted
+The default mode. A single tenant installation with no usage restrictions. 
+
+To enable this mode, use:
 ```
-yarn build
-```
-
-Now everything is built, you can package up your electron application.
-```
-cd packages/server
-yarn build:electron
-```
-
-Your new electron application will be stored in `packages/server/dist/<operating-system>`. Open up the executable and make sure everything is working smoothly.
-
-
-#### Publishing to NPM
-
-Once you are happy that your changes work in electron, you can publish all the latest versions of the monorepo packages by running:
-
-```
-yarn publishnpm
+yarn mode:self
 ```
 
-from your root directory.
+#### Cloud
+The cloud mode, with account portal turned off. 
 
-#### CI Release
+To enable this mode, use:
+```
+yarn mode:cloud
+```
+#### Cloud & Account
+The cloud mode, with account portal turned on. This is a replica of the mode that runs at https://budibase.app 
 
-After NPM has successfully published the budibase packages, a new tag will be pushed to master. This will kick off a github action (can be found at `.github/workflows/release.yml`) this will build and package the electron application for every OS (Windows, Mac, Linux). The binaries will be stored under the new tag on the [budibase releases page](https://github.com/Budibase/budibase/releases).
+
+To enable this mode, use:
+```
+yarn mode:account
+```
+### CI
+
+#### PR Job
+
+After your pr is submitted a github action (can be found at `.github/workflows/budibase_ci.yml`) will run to perform some checks against the changes such as linting, build and test. 
+
+The job will run when changes are pushed to or targetted at `master` and `develop`
+#### Release Develop
+
+To test changes before a release, a prerelease action (can be found at `.github/workflows/release-develop.yml`) will run to build and release develop versions of npm packages and docker images. On each subsequent commit to develop a new alpha version of npm packages will be created and released. 
+
+For example:
+
+- `feature1` -> `develop` = `v0.9.160-alpha.1`
+- `feature2` -> `develop` = `v0.9.160-alpha.0`
+
+The job will run when changes are pushed to `develop`
+#### Release Job
+
+To release changes a release job (can be found at `.github/workflows/release.yml`) will run to create final versions of npm packages and docker images. 
+
+Following the example above:
+
+- `develop` -> `master` = `v0.9.160`
+
+The job will run when changes are pushed to `master`
+
+#### Release Self Host Job
+
+To release the self hosted version of docker images, an additional job (can be found at `.github/workflows/release-selfhost.yml`) must be ran manually. This will releaae docker images to docker hub under the tag `latest` to be picked up by self hosted installations. 
 
 ### Troubleshooting
 
-Sometimes, things go wrong. This can be due to incompatible updates on the budibase platform. To clear down your development environment and start again: 
-
-```
-rm -rf ~/.budibase
-```
-Follow from **Step 3. Install and Build** in the setup guide above. You should have a fresh Budibase installation.
-
+Sometimes, things go wrong. This can be due to incompatible updates on the budibase platform. To clear down your development environment and start again follow **Step 6. Cleanup**, then proceed from **Step 3. Install and Build** in the setup guide above. You should have a fresh Budibase installation.
 ### Running tests
 
 #### End-to-end Tests
