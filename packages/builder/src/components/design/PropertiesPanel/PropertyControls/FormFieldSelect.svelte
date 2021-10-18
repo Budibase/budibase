@@ -21,15 +21,18 @@
   $: schema = getSchemaForDatasource($currentAsset, datasource, true).schema
   $: options = getOptions(schema, type, fieldTypes)
 
-  const getOptions = (schema, type, fieldTypes) => {
+  const getOptions = (schema, type) => {
     let entries = Object.entries(schema ?? {})
 
-    // fallback to using only field/options fields
-    if (!fieldTypes) {
-      fieldTypes = [type]
+    let types = []
+    if (type === "field/options") {
+      // allow options to be used on both options and string fields
+      types = [type, "field/string"]
+    } else {
+      types = [type]
     }
 
-    const types = fieldTypes.map(fieldType => fieldType.split("/")[1])
+    types = types.map(type => type.split("/")[1])
     entries = entries.filter(entry => types.includes(entry[1].type))
 
     return entries.map(entry => entry[0])
