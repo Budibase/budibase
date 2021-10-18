@@ -73,7 +73,7 @@ spec:
           {{ if .Values.services.objectStore.url }}
           value: {{ .Values.services.objectStore.url }}
           {{ else }}
-          value: minio-service:{{ .Values.services.objectStore.port }}
+          value: http://minio-service:{{ .Values.services.objectStore.port }}
           {{ end }}
         - name: PORT
           value: {{ .Values.services.worker.port | quote }}
