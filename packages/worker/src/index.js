@@ -11,6 +11,7 @@ const logger = require("koa-pino-logger")
 const http = require("http")
 const api = require("./api")
 const redis = require("./utilities/redis")
+const Sentry = require("@sentry/node")
 
 const app = new Koa()
 
@@ -35,6 +36,20 @@ app.use(passport.session())
 
 // api routes
 app.use(api.routes())
+
+// sentry
+if (env.isProd()) {
+  Sentry.init()
+
+  app.on("error", (err, ctx) => {
+    Sentry.withScope(function (scope) {
+      scope.addEventProcessor(function (event) {
+        return Sentry.Handlers.parseRequest(event, ctx.request)
+      })
+      Sentry.captureException(err)
+    })
+  })
+}
 
 const server = http.createServer(app.callback())
 destroyable(server)
