@@ -54,6 +54,7 @@
     "pino-pretty": "^4.0.0",
     "pouchdb": "^7.2.1",
     "pouchdb-all-dbs": "^1.0.2",
+    "@sentry/node": "^6.0.0",
     "server-destroy": "^1.0.1"
   },
   "devDependencies": {
