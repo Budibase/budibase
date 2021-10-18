@@ -10,7 +10,6 @@
   export let componentInstance
   export let value
   export let type
-  export let fieldTypes
 
   $: form = findClosestMatchingComponent(
     $currentAsset.props,
@@ -19,7 +18,7 @@
   )
   $: datasource = getDatasourceForProvider($currentAsset, form)
   $: schema = getSchemaForDatasource($currentAsset, datasource, true).schema
-  $: options = getOptions(schema, type, fieldTypes)
+  $: options = getOptions(schema, type)
 
   const getOptions = (schema, type) => {
     let entries = Object.entries(schema ?? {})
