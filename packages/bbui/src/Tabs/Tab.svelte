@@ -8,11 +8,19 @@
   const selected = getContext("tab")
   let tab
   let tabInfo
+
   const setTabInfo = () => {
-    tabInfo = tab.getBoundingClientRect()
-    if ($selected.title === title) {
-      $selected.info = tabInfo
-    }
+    // If the tabs are being rendered inside a component which uses
+    // a svelte transition to enter, then this initial getBoundingClientRect
+    // will return an incorrect position.
+    // We just need to get this off the main thread to fix this, by using
+    // a 0ms timeout.
+    setTimeout(() => {
+      tabInfo = tab.getBoundingClientRect()
+      if ($selected.title === title) {
+        $selected.info = tabInfo
+      }
+    }, 0)
   }
 
   onMount(() => {

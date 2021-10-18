@@ -1,4 +1,4 @@
-name: Budibase Release
+name: Budibase Release Selfhost
 
 on:
  workflow_dispatch:
@@ -7,7 +7,7 @@ env:
   POSTHOG_TOKEN: ${{ secrets.POSTHOG_TOKEN }}
   INTERCOM_TOKEN: ${{ secrets.INTERCOM_TOKEN }}
   POSTHOG_URL: ${{ secrets.POSTHOG_URL }}
-  SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+  SENTRY_DSN: ${{ secrets.SENTRY_DSN_SELF_HOST }}
 
 jobs:
   release:
@@ -28,12 +28,7 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-west-1
 
-      - name: 'Get Previous tag'
-        id: previoustag
-        uses: "WyriHaximus/github-action-get-previous-tag@v1"
-
       - name: Build/release Docker images (Self Host)
-        if: ${{ github.event.inputs.release_self_host == 'Y' }}
         run: | 
           docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
           yarn build
@@ -41,7 +36,7 @@ jobs:
         env:
           DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
-          BUDIBASE_RELEASE_VERSION: ${{ steps.previoustag.outputs.tag }}
+          BUDIBASE_RELEASE_VERSION: latest
       
       - uses: azure/setup-helm@v1
         id: install

@@ -34,9 +34,13 @@
     role: {},
   }
 
-  $: defaultRoleId = $userFetch?.data?.builder?.global ? "ADMIN" : "BASIC"
+  const noRoleSchema = {
+    name: { displayName: "App" },
+  }
+
+  $: defaultRoleId = $userFetch?.data?.builder?.global ? "ADMIN" : ""
   // Merge the Apps list and the roles response to get something that makes sense for the table
-  $: appList = Object.keys($apps?.data).map(id => {
+  $: allAppList = Object.keys($apps?.data).map(id => {
     const roleId = $userFetch?.data?.roles?.[id] || defaultRoleId
     const role = $apps?.data?.[id].roles.find(role => role._id === roleId)
     return {
@@ -45,6 +49,15 @@
       role: [role],
     }
   })
+
+  $: appList = allAppList.filter(app => !!app.role[0])
+  $: noRoleAppList = allAppList
+    .filter(app => !app.role[0])
+    .map(app => {
+      delete app.role
+      return app
+    })
+
   let selectedApp
 
   const userFetch = fetchData(`/api/global/users/${userId}`)
@@ -173,6 +186,7 @@
   <Divider size="S" />
   <Layout gap="S" noPadding>
     <Heading size="S">Configure roles</Heading>
+    <Body>Specify a role to grant access to an app.</Body>
     <Table
       on:click={openUpdateRolesModal}
       schema={roleSchema}
@@ -181,6 +195,21 @@
       allowEditRows={false}
       allowSelectRows={false}
       customRenderers={[{ column: "role", component: TagsRenderer }]}
+    />
+  </Layout>
+  <Layout gap="S" noPadding>
+    <Heading size="XS">No Access</Heading>
+    <Body
+      >Apps do not appear in the users portal. Public pages may still be viewed
+      if visited directly.</Body
+    >
+    <Table
+      on:click={openUpdateRolesModal}
+      schema={noRoleSchema}
+      data={noRoleAppList}
+      allowEditColumns={false}
+      allowEditRows={false}
+      allowSelectRows={false}
     />
   </Layout>
   <Divider size="S" />

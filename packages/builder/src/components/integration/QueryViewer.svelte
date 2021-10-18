@@ -21,12 +21,15 @@
   import ParameterBuilder from "components/integration/QueryParameterBuilder.svelte"
   import { datasources, integrations, queries } from "stores/backend"
   import { capitalise } from "../../helpers"
+  import CodeMirrorEditor from "components/common/CodeMirrorEditor.svelte"
 
   export let query
   export let fields = []
 
   let parameters
   let data = []
+  const transformerDocs =
+    "https://docs.budibase.com/building-apps/data/transformers"
   const typeOptions = [
     { label: "Text", value: "STRING" },
     { label: "Number", value: "NUMBER" },
@@ -52,6 +55,11 @@
   $: readQuery = query.queryVerb === "read" || query.readable
   $: queryInvalid = !query.name || (readQuery && data.length === 0)
 
+  // seed the transformer
+  if (query && !query.transformer) {
+    query.transformer = "return data"
+  }
+
   function newField() {
     fields = [...fields, {}]
   }
@@ -74,6 +82,7 @@
       const response = await api.post(`/api/queries/preview`, {
         fields: query.fields,
         queryVerb: query.queryVerb,
+        transformer: query.transformer,
         parameters: query.parameters.reduce(
           (acc, next) => ({
             ...acc,
@@ -160,9 +169,31 @@
       <IntegrationQueryEditor
         {datasource}
         {query}
-        height={300}
+        height={200}
         schema={queryConfig[query.queryVerb]}
         bind:parameters
+      />
+      <Divider />
+    </div>
+    <div class="config">
+      <div class="help-heading">
+        <Heading size="S">Transformer</Heading>
+        <Icon
+          on:click={() => window.open(transformerDocs)}
+          hoverable
+          name="Help"
+          size="L"
+        />
+      </div>
+      <Body size="S"
+        >Add a JavaScript function to transform the query result.</Body
+      >
+      <CodeMirrorEditor
+        height={200}
+        label="Transformer"
+        value={query.transformer}
+        resize="vertical"
+        on:change={e => (query.transformer = e.detail)}
       />
       <Divider />
     </div>
@@ -220,11 +251,17 @@
     display: grid;
     grid-gap: var(--spacing-s);
   }
+
   .config-field {
     display: grid;
     grid-template-columns: 20% 1fr;
     grid-gap: var(--spacing-l);
     align-items: center;
+  }
+
+  .help-heading {
+    display: flex;
+    justify-content: space-between;
   }
 
   .field {

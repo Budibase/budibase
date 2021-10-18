@@ -52,3 +52,11 @@ module.exports = {
     return !isDev()
   },
 }
+
+// clean up any environment variable edge cases
+for (let [key, value] of Object.entries(module.exports)) {
+  // handle the edge case of "0" to disable an environment variable
+  if (value === "0") {
+    module.exports[key] = 0
+  }
+}
