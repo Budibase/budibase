@@ -15,7 +15,7 @@ const apiCall =
     if (resp.status === 403) {
       removeCookie(Cookies.Auth)
       // reload after removing cookie, go to login
-      if (!url.includes("self")) {
+      if (!url.includes("self") && !url.includes("login")) {
         location.reload()
       }
     }
