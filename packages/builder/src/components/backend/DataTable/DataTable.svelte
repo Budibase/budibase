@@ -20,7 +20,6 @@
   $: type = $tables.selected?.type
   $: isInternal = type !== "external"
   $: schema = $tables.selected?.schema
-
   $: id = $tables.selected?._id
   $: search = searchTable(id)
   $: columnOptions = Object.keys($search.schema || {})
