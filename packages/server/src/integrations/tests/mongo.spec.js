@@ -27,7 +27,7 @@ describe("MongoDB Integration", () => {
     const body = {
       name: "Hello"
     }
-    const response = await config.integration.create({ 
+    await config.integration.create({
       index: indexName,
       json: body,
       extra: { collection: 'testCollection', actionTypes: 'insertOne'}
@@ -54,7 +54,7 @@ describe("MongoDB Integration", () => {
       },
       extra: { collection: 'testCollection', actionTypes: 'deleteOne'}
     }
-    const response = await config.integration.delete(query)
+    await config.integration.delete(query)
     expect(config.integration.client.deleteOne).toHaveBeenCalledWith(query.json)
   })
 
@@ -65,7 +65,7 @@ describe("MongoDB Integration", () => {
       },
       extra: { collection: 'testCollection', actionTypes: 'updateOne'}
     }
-    const response = await config.integration.update(query)
+    await config.integration.update(query)
     expect(config.integration.client.updateOne).toHaveBeenCalledWith(query.json)
   })
 
@@ -75,10 +75,14 @@ describe("MongoDB Integration", () => {
     const query = {
       extra: { collection: 'testCollection', actionTypes: 'deleteOne'}
     }
-    // Weird, need to do an IIFE for jest to recognize that it throws
-    expect(() => config.integration.read(query)()).toThrow(expect.any(Object))
 
+    let error = null
+    try {
+      await config.integration.read(query)
+    } catch (err) {
+      error = err
+    }
+    expect(error).toBeDefined()
     restore()
   })
-
 })

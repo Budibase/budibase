@@ -2386,7 +2386,7 @@
   },
   "dataprovider": {
     "name": "Data Provider",
-    "info": "Pagination is only available for data stored in internal tables.",
+    "info": "Pagination is only available for data stored in tables.",
     "icon": "Data",
     "illegalChildren": ["section"],
     "hasChildren": true,

@@ -7,11 +7,23 @@ const DEFAULT_TEMPLATES_BUCKET =
 
 exports.fetch = async function (ctx) {
   const { type = "app" } = ctx.query
-  const response = await fetch(
-    `https://${DEFAULT_TEMPLATES_BUCKET}/manifest.json`
-  )
-  const json = await response.json()
-  ctx.body = Object.values(json.templates[type])
+  let response,
+    error = false
+  try {
+    response = await fetch(`https://${DEFAULT_TEMPLATES_BUCKET}/manifest.json`)
+    if (response.status !== 200) {
+      error = true
+    }
+  } catch (err) {
+    error = true
+  }
+  // if there is an error, simply return no templates
+  if (!error && response) {
+    const json = await response.json()
+    ctx.body = Object.values(json.templates[type])
+  } else {
+    ctx.body = []
+  }
 }
 
 // can't currently test this, have to ignore from coverage

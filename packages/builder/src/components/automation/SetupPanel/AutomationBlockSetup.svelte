@@ -194,6 +194,7 @@
             value={inputData[key]}
             on:change={e => onChange(e, key)}
             {bindings}
+            allowJS={false}
           />
         {/if}
       {:else if value.customType === "query"}
@@ -259,6 +260,7 @@
               value={inputData[key]}
               on:change={e => onChange(e, key)}
               {bindings}
+              allowJS={false}
             />
           </div>
         {/if}
