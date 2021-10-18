@@ -127,8 +127,8 @@ describe("Current app middleware", () => {
       } else {
         expect(cookieFn).not.toHaveBeenCalled()
       }
-      expect(config.ctx.roleId).toEqual("BASIC")
-      expect(config.ctx.user.role._id).toEqual("BASIC")
+      expect(config.ctx.roleId).toEqual("PUBLIC")
+      expect(config.ctx.user.role._id).toEqual("PUBLIC")
       expect(config.ctx.appId).toEqual("app_test")
       expect(config.next).toHaveBeenCalled()
     }
@@ -163,7 +163,7 @@ describe("Current app middleware", () => {
             return "app_test"
           },
           setCookie: jest.fn(),
-          getCookie: () => ({appId: "app_test", roleId: "BASIC"}),
+          getCookie: () => ({appId: "app_test", roleId: "PUBLIC"}),
         },
         constants: { Cookies: {} },
       }))

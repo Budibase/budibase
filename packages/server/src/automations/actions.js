@@ -3,7 +3,6 @@ const createRow = require("./steps/createRow")
 const updateRow = require("./steps/updateRow")
 const deleteRow = require("./steps/deleteRow")
 const executeScript = require("./steps/executeScript")
-const bash = require("./steps/bash")
 const executeQuery = require("./steps/executeQuery")
 const outgoingWebhook = require("./steps/outgoingWebhook")
 const serverLog = require("./steps/serverLog")
@@ -14,6 +13,7 @@ const integromat = require("./steps/integromat")
 let filter = require("./steps/filter")
 let delay = require("./steps/delay")
 let queryRow = require("./steps/queryRows")
+const env = require("../environment")
 
 const ACTION_IMPLS = {
   SEND_EMAIL_SMTP: sendSmtpEmail.run,
@@ -22,7 +22,6 @@ const ACTION_IMPLS = {
   DELETE_ROW: deleteRow.run,
   OUTGOING_WEBHOOK: outgoingWebhook.run,
   EXECUTE_SCRIPT: executeScript.run,
-  EXECUTE_BASH: bash.run,
   EXECUTE_QUERY: executeQuery.run,
   SERVER_LOG: serverLog.run,
   DELAY: delay.run,
@@ -42,7 +41,6 @@ const ACTION_DEFINITIONS = {
   OUTGOING_WEBHOOK: outgoingWebhook.definition,
   EXECUTE_SCRIPT: executeScript.definition,
   EXECUTE_QUERY: executeQuery.definition,
-  EXECUTE_BASH: bash.definition,
   SERVER_LOG: serverLog.definition,
   DELAY: delay.definition,
   FILTER: filter.definition,
@@ -52,6 +50,15 @@ const ACTION_DEFINITIONS = {
   slack: slack.definition,
   zapier: zapier.definition,
   integromat: integromat.definition,
+}
+
+// don't add the bash script/definitions unless in self host
+// the fact this isn't included in any definitions means it cannot be
+// ran at all
+if (env.SELF_HOSTED) {
+  const bash = require("./steps/bash")
+  ACTION_IMPLS["EXECUTE_BASH"] = bash.run
+  ACTION_DEFINITIONS["EXECUTE_BASH"] = bash.definition
 }
 
 /* istanbul ignore next */

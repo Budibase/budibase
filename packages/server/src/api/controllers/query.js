@@ -4,6 +4,7 @@ const { generateQueryID, getQueryParams } = require("../../db/utils")
 const { integrations } = require("../../integrations")
 const { BaseQueryVerbs } = require("../../constants")
 const env = require("../../environment")
+const ScriptRunner = require("../../utilities/scriptRunner")
 
 // simple function to append "readable" to all read queries
 function enrichQueries(input) {
@@ -28,10 +29,37 @@ function formatResponse(resp) {
       resp = { response: resp }
     }
   }
-  if (!Array.isArray(resp)) {
-    resp = [resp]
-  }
   return resp
+}
+
+async function runAndTransform(
+  integration,
+  queryVerb,
+  enrichedQuery,
+  transformer
+) {
+  let rows = formatResponse(await integration[queryVerb](enrichedQuery))
+
+  // transform as required
+  if (transformer) {
+    const runner = new ScriptRunner(transformer, { data: rows })
+    rows = runner.execute()
+  }
+
+  // needs to an array for next step
+  if (!Array.isArray(rows)) {
+    rows = [rows]
+  }
+
+  // map into JSON if just raw primitive here
+  if (rows.find(row => typeof row !== "object")) {
+    rows = rows.map(value => ({ value }))
+  }
+
+  // get all the potential fields in the schema
+  let keys = rows.flatMap(Object.keys)
+
+  return { rows, keys }
 }
 
 exports.fetch = async function (ctx) {
@@ -122,15 +150,16 @@ exports.preview = async function (ctx) {
     ctx.throw(400, "Integration type does not exist.")
   }
 
-  const { fields, parameters, queryVerb } = ctx.request.body
-
+  const { fields, parameters, queryVerb, transformer } = ctx.request.body
   const enrichedQuery = await enrichQueryFields(fields, parameters)
-
   const integration = new Integration(datasource.config)
-  const rows = formatResponse(await integration[queryVerb](enrichedQuery))
 
-  // get all the potential fields in the schema
-  const keys = rows.flatMap(Object.keys)
+  const { rows, keys } = await runAndTransform(
+    integration,
+    queryVerb,
+    enrichedQuery,
+    transformer
+  )
 
   ctx.body = {
     rows,
@@ -158,10 +187,16 @@ exports.execute = async function (ctx) {
     query.fields,
     ctx.request.body.parameters
   )
-
   const integration = new Integration(datasource.config)
+
   // call the relevant CRUD method on the integration class
-  ctx.body = formatResponse(await integration[query.queryVerb](enrichedQuery))
+  const { rows } = await runAndTransform(
+    integration,
+    query.queryVerb,
+    enrichedQuery,
+    query.transformer
+  )
+  ctx.body = rows
   // cleanup
   if (integration.end) {
     integration.end()

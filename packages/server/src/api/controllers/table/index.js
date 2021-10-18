@@ -91,6 +91,9 @@ exports.save = async function (ctx) {
     for (let propKey of Object.keys(tableToSave.schema)) {
       let column = tableToSave.schema[propKey]
       let oldColumn = oldTable.schema[propKey]
+      if (oldColumn && oldColumn.type === "internal") {
+        oldColumn.type = "auto"
+      }
       if (oldColumn && oldColumn.type !== column.type) {
         ctx.throw(400, "Cannot change the type of a column")
       }

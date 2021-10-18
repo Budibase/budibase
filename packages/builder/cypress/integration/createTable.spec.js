@@ -31,7 +31,7 @@ context("Create a Table", () => {
     cy.contains("nameupdated ").should("contain", "nameupdated")
   })
 
-  /*
+  
   it("edits a row", () => {
     cy.contains("button", "Edit").click({ force: true })
     cy.wait(1000)
@@ -40,7 +40,7 @@ context("Create a Table", () => {
     cy.contains("Save").click()
     cy.contains("Updated").should("have.text", "Updated")
   })
-  */
+  
   it("deletes a row", () => {
     cy.get(".spectrum-Checkbox-input").check({ force: true })
     cy.contains("Delete 1 row(s)").click()

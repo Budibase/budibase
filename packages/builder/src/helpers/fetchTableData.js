@@ -48,7 +48,6 @@ export const fetchTableData = opts => {
   const fetchPage = async bookmark => {
     lastBookmark = bookmark
     const { tableId, limit, sortColumn, sortOrder, paginate } = options
-    store.update($store => ({ ...$store, loading: true }))
     const res = await API.post(`/api/${options.tableId}/search`, {
       tableId,
       query,
@@ -59,7 +58,6 @@ export const fetchTableData = opts => {
       paginate,
       bookmark,
     })
-    store.update($store => ({ ...$store, loading: false, loaded: true }))
     return await res.json()
   }
 
@@ -103,7 +101,7 @@ export const fetchTableData = opts => {
     if (!schema) {
       return
     }
-    store.update($store => ({ ...$store, schema }))
+    store.update($store => ({ ...$store, schema, loading: true }))
 
     // Work out what sort type to use
     if (!sortColumn || !schema[sortColumn]) {
@@ -135,6 +133,7 @@ export const fetchTableData = opts => {
     }
 
     // Fetch next page
+    store.update($store => ({ ...$store, loading: true }))
     const page = await fetchPage(state.bookmarks[state.pageNumber + 1])
 
     // Update state
@@ -148,6 +147,7 @@ export const fetchTableData = opts => {
         pageNumber: pageNumber + 1,
         rows: page.rows,
         bookmarks,
+        loading: false,
       }
     })
   }
@@ -160,6 +160,7 @@ export const fetchTableData = opts => {
     }
 
     // Fetch previous page
+    store.update($store => ({ ...$store, loading: true }))
     const page = await fetchPage(state.bookmarks[state.pageNumber - 1])
 
     // Update state
@@ -168,6 +169,7 @@ export const fetchTableData = opts => {
         ...$store,
         pageNumber: $store.pageNumber - 1,
         rows: page.rows,
+        loading: false,
       }
     })
   }
