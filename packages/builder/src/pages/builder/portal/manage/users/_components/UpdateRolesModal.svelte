@@ -6,22 +6,38 @@
   export let app
   export let user
 
+  const NO_ACCESS = "NO_ACCESS"
+
   const dispatch = createEventDispatcher()
 
   const roles = app.roles
-  let options = roles
-    .filter(role => role._id !== "PUBLIC")
-    .map(role => ({ value: role._id, label: role.name }))
+  let options = roles.map(role => ({ value: role._id, label: role.name }))
+  options.push({ value: NO_ACCESS, label: "No Access" })
   let selectedRole = user?.roles?.[app?._id]
 
   async function updateUserRoles() {
-    const res = await users.save({
-      ...user,
-      roles: {
-        ...user.roles,
-        [app._id]: selectedRole,
-      },
-    })
+    let res
+    if (selectedRole === NO_ACCESS) {
+      // remove the user role
+      const filteredRoles = { ...user.roles }
+      delete filteredRoles[app?._id]
+      res = await users.save({
+        ...user,
+        roles: {
+          ...filteredRoles,
+        },
+      })
+    } else {
+      // add the user role
+      res = await users.save({
+        ...user,
+        roles: {
+          ...user.roles,
+          [app._id]: selectedRole,
+        },
+      })
+    }
+
     if (res.status === 400) {
       notifications.error("Failed to update role")
     } else {

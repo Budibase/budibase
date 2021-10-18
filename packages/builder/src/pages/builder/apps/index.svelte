@@ -34,6 +34,12 @@
   const publishedAppsOnly = app => app.status === AppStatus.DEPLOYED
 
   $: publishedApps = $apps.filter(publishedAppsOnly)
+
+  $: userApps = $auth.user?.builder?.global
+    ? publishedApps
+    : publishedApps.filter(app =>
+        Object.keys($auth.user?.roles).includes(app.prodId)
+      )
 </script>
 
 {#if $auth.user && loaded}
@@ -82,11 +88,11 @@
             </Body>
           </Layout>
           <Divider />
-          {#if publishedApps.length}
+          {#if userApps.length}
             <Heading>Apps</Heading>
             <div class="group">
               <Layout gap="S" noPadding>
-                {#each publishedApps as app, idx (app.appId)}
+                {#each userApps as app, idx (app.appId)}
                   <a class="app" target="_blank" href={`/${app.prodId}`}>
                     <div class="preview" use:gradient={{ seed: app.name }} />
                     <div class="app-info">
