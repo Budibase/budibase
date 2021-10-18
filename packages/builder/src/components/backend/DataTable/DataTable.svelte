@@ -16,34 +16,34 @@
   import { Pagination } from "@budibase/bbui"
 
   let hideAutocolumns = true
-  let copiedSchema
-  let schema
   $: isUsersTable = $tables.selected?._id === TableNames.USERS
   $: type = $tables.selected?.type
   $: isInternal = type !== "external"
-  $: {
-    schema = $tables.selected?.schema
-    copiedSchema = schema
+  $: schema = $tables.selected?.schema
+  $: enrichedSchema = enrichSchema($tables.selected?.schema)
+  $: id = $tables.selected?._id
+  $: search = searchTable(id)
+  $: columnOptions = Object.keys($search.schema || {})
 
-    copiedSchema._id = {
+  const enrichSchema = schema => {
+    let tempSchema = { ...schema }
+    tempSchema._id = {
       type: "internal",
       editable: false,
       displayName: "ID",
       autocolumn: true,
     }
     if (isInternal) {
-      copiedSchema._rev = {
+      tempSchema._rev = {
         type: "internal",
         editable: false,
         displayName: "Revision",
         autocolumn: true,
       }
     }
-  }
-  $: id = $tables.selected?._id
-  $: search = searchTable(id)
-  $: columnOptions = Object.keys($search.schema || {})
 
+    return tempSchema
+  }
   // Fetches new data whenever the table changes
   const searchTable = tableId => {
     return fetchTableData({
@@ -86,7 +86,7 @@
 <div>
   <Table
     title={$tables.selected?.name}
-    schema={copiedSchema}
+    schema={enrichedSchema}
     {type}
     tableId={id}
     data={$search.rows}
