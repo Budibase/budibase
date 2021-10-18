@@ -24,17 +24,24 @@ exports.createASession = async (userId, session) => {
   await client.store(makeSessionID(userId, sessionId), session, EXPIRY_SECONDS)
 }
 
-exports.invalidateSessions = async (userId, sessionId = null) => {
+exports.invalidateSessions = async (userId, sessionIds = null) => {
   let sessions = []
-  if (sessionId) {
-    sessions.push({ key: makeSessionID(userId, sessionId) })
-  } else {
+
+  // If no sessionIds, get all the sessions for the user
+  if (!sessionIds) {
     sessions = await getSessionsForUser(userId)
     sessions.forEach(
       session =>
         (session.key = makeSessionID(session.userId, session.sessionId))
     )
+  } else {
+    // use the passed array of sessionIds
+    sessions = Array.isArray(sessionIds) ? sessionIds : [sessionIds]
+    sessions = sessions.map(sessionId => ({
+      key: makeSessionID(userId, sessionId),
+    }))
   }
+
   const client = await redis.getSessionClient()
   const promises = []
   for (let session of sessions) {

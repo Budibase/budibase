@@ -15,7 +15,7 @@ spec:
     matchLabels:
       io.kompose.service: worker-service
   strategy:
-    type: Recreate
+    type: RollingUpdate
   template:
     metadata:
       annotations:
@@ -70,13 +70,11 @@ spec:
               name: {{ template "budibase.fullname" . }}
               key: objectStoreSecret
         - name: MINIO_URL
-          {{ if .Values.services.objectStore.url }}
           value: {{ .Values.services.objectStore.url }}
-          {{ else }}
-          value: http://minio-service:{{ .Values.services.objectStore.port }}
-          {{ end }}
         - name: PORT
           value: {{ .Values.services.worker.port | quote }}
+        - name: MULTI_TENANCY
+          value: "1"
         - name: REDIS_PASSWORD
           value: {{ .Values.services.redis.password | quote }}
         - name: REDIS_URL
@@ -91,8 +89,22 @@ spec:
           value: {{ .Values.globals.accountPortalUrl | quote }}
         - name: ACCOUNT_PORTAL_API_KEY
           value: {{ .Values.globals.accountPortalApiKey | quote }}
+        - name: PLATFORM_URL
+          value: {{ .Values.globals.platformUrl | quote }}
         - name: COOKIE_DOMAIN
           value: {{ .Values.globals.cookieDomain | quote }}
+        - name: SMTP_FALLBACK_ENABLED
+          value: {{ .Values.globals.smtp.enabled | quote }}
+        - name: SMTP_USER
+          value: {{ .Values.globals.smtp.user | quote }}
+        - name: SMTP_PASSWORD
+          value: {{ .Values.globals.smtp.password | quote }}
+        - name: SMTP_HOST
+          value: {{ .Values.globals.smtp.host | quote }}
+        - name: SMTP_PORT
+          value: {{ .Values.globals.smtp.port | quote }}
+        - name: SMTP_FROM_ADDRESS
+          value: {{ .Values.globals.smtp.from | quote }}
         image: budibase/worker
         imagePullPolicy: Always
         name: bbworker

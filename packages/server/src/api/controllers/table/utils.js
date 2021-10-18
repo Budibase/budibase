@@ -1,5 +1,4 @@
 const CouchDB = require("../../../db")
-const linkRows = require("../../../db/linkedRows")
 const csvParser = require("../../../utilities/csvParser")
 const {
   getRowParams,
@@ -93,19 +92,10 @@ exports.handleDataImport = async (appId, user, table, dataImport) => {
         }
       }
 
-      // make sure link rows are up to date
-      finalData.push(
-        linkRows.updateLinks({
-          appId,
-          eventType: linkRows.EventType.ROW_SAVE,
-          row,
-          tableId: row.tableId,
-          table,
-        })
-      )
+      finalData.push(row)
     }
 
-    await db.bulkDocs(await Promise.all(finalData))
+    await db.bulkDocs(finalData)
     let response = await db.put(table)
     table._rev = response._rev
   }
