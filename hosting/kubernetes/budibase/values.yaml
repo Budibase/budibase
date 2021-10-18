@@ -89,7 +89,7 @@ globals:
   sentryDSN: ""
   posthogToken: ""
   logLevel: info
-  selfHosted: ""
+  selfHosted: 1 
   accountPortalUrl: "" 
   accountPortalApiKey: ""
   cookieDomain: "" 
