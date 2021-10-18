@@ -201,7 +201,7 @@ exports.inputProcessing = (
     }
   }
 
-  if (!clonedRow._id) {
+  if (!clonedRow._id || !clonedRow._rev) {
     clonedRow._id = row._id
     clonedRow._rev = row._rev
   }
