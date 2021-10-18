@@ -1950,7 +1950,6 @@
     "settings": [
       {
         "type": "field/options",
-        "fieldTypes": ["field/options", "field/string"],
         "label": "Field",
         "key": "field"
       },
