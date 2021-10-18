@@ -74,7 +74,7 @@ spec:
         - name: PORT
           value: {{ .Values.services.worker.port | quote }}
         - name: MULTI_TENANCY
-          value: "1"
+          value: {{ .Values.globals.multiTenancy | quote }}
         - name: REDIS_PASSWORD
           value: {{ .Values.services.redis.password | quote }}
         - name: REDIS_URL
