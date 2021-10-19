@@ -84,6 +84,12 @@
     }
   }
 
+  const initiateAppImport = () => {
+    template = { fromFile: true }
+    creationModal.show()
+    creatingApp = true
+  }
+
   const stopAppCreation = () => {
     template = null
     creatingApp = false
@@ -201,6 +207,7 @@
           {#if cloud}
             <Button secondary on:click={initiateAppsExport}>Export apps</Button>
           {/if}
+          <Button secondary on:click={initiateAppImport}>Import app</Button>
           <Button cta on:click={initiateAppCreation}>Create app</Button>
         </ButtonGroup>
       </div>
