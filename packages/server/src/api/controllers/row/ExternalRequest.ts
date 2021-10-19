@@ -15,8 +15,9 @@ import {
 import {
   breakRowIdField,
   generateRowIdField,
+  isRowId,
+  convertRowId,
 } from "../../../integrations/utils"
-import { RelationshipTypes } from "../../../constants"
 
 interface ManyRelationship {
   tableId?: string
@@ -36,7 +37,7 @@ interface RunConfig {
 
 module External {
   const { makeExternalQuery } = require("./utils")
-  const { DataSourceOperation, FieldTypes } = require("../../../constants")
+  const { DataSourceOperation, FieldTypes, RelationshipTypes } = require("../../../constants")
   const { breakExternalTableId, isSQL } = require("../../../integrations/utils")
   const { processObjectSync } = require("@budibase/string-templates")
   const { cloneDeep } = require("lodash/fp")
@@ -81,6 +82,48 @@ module External {
     return {
       equal,
     }
+  }
+
+  /**
+   * This function checks the incoming parameters to make sure all the inputs are
+   * valid based on on the table schema. The main thing this is looking for is when a
+   * user has made use of the _id field of a row for a foreign key or a search parameter.
+   * In these cases the key will be sent up as [1], rather than 1. In these cases we will
+   * simplify it down to the requirements. This function is quite complex as we try to be
+   * relatively restrictive over what types of columns we will perform this action for.
+   */
+  function cleanupConfig(config: RunConfig, table: Table): RunConfig {
+    const primaryOptions = [
+      FieldTypes.STRING,
+      FieldTypes.LONGFORM,
+      FieldTypes.OPTIONS,
+      FieldTypes.NUMBER,
+    ]
+    // filter out fields which cannot be keys
+    const fieldNames = Object.entries(table.schema)
+      .filter(schema => primaryOptions.find(val => val === schema[1].type))
+      .map(([fieldName]) => fieldName)
+    const iterateObject = (obj: { [key: string]: any }) => {
+      for (let [field, value] of Object.entries(obj)) {
+        if (fieldNames.find(name => name === field) && isRowId(value)) {
+          obj[field] = convertRowId(value)
+        }
+      }
+    }
+    // check the row and filters to make sure they aren't a key of some sort
+    if (config.filters) {
+      for (let filter of Object.values(config.filters)) {
+        if (typeof filter !== "object" || Object.keys(filter).length === 0) {
+          continue
+        }
+        iterateObject(filter)
+      }
+    }
+    if (config.row) {
+      iterateObject(config.row)
+    }
+
+    return config
   }
 
   function generateIdForRow(row: Row | undefined, table: Table): string {
@@ -509,7 +552,7 @@ module External {
       return fields
     }
 
-    async run({ id, row, filters, sort, paginate }: RunConfig) {
+    async run(config: RunConfig) {
       const { appId, operation, tableId } = this
       let { datasourceId, tableName } = breakExternalTableId(tableId)
       if (!this.datasource) {
@@ -525,9 +568,11 @@ module External {
       if (!table) {
         throw `Unable to process query, table "${tableName}" not defined.`
       }
-      // clean up row on ingress using schema
+      // look for specific components of config which may not be considered acceptable
+      let { id, row, filters, sort, paginate } = cleanupConfig(config, table)
       filters = buildFilters(id, filters || {}, table)
       const relationships = this.buildRelationships(table)
+      // clean up row on ingress using schema
       const processed = this.inputProcessing(row, table)
       row = processed.row
       if (
