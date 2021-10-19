@@ -7,7 +7,6 @@
 
   async function fetchTemplates() {
     const response = await api.get("/api/templates?type=app")
-    console.log("Responded")
     return await response.json()
   }
 
@@ -46,6 +45,19 @@
           <Icon name="Add" />
         </div>
         <Heading size="XS">Start from scratch</Heading>
+        <p class="detail">BLANK</p>
+      </div>
+      <div
+        class="template import"
+        on:click={() => onSelect(null, { useImport: true })}
+      >
+        <div
+          class="background-icon"
+          style={`background: rgb(50, 50, 50); color: white;`}
+        >
+          <Icon name="Add" />
+        </div>
+        <Heading size="XS">Import app</Heading>
         <p class="detail">BLANK</p>
       </div>
     </div>
@@ -94,5 +106,9 @@
   .start-from-scratch {
     background: var(--spectrum-global-color-gray-50);
     margin-top: 20px;
+  }
+
+  .import {
+    background: var(--spectrum-global-color-gray-50);
   }
 </style>
