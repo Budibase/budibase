@@ -20,6 +20,7 @@
   import TemplateList from "./TemplateList.svelte"
 
   export let template
+  export let inline
 
   const values = writable({ name: null })
   const errors = writable({})
@@ -39,11 +40,10 @@
 
   let submitting = false
   let valid = false
-  let wasShowingTemplates
+  let initialTemplateInfo = template?.fromFile || template?.key
 
   $: checkValidity($values, validator)
-  $: showTemplateSelection =
-    !template || (!template?.fromFile && !template?.key)
+  $: showTemplateSelection = !template && !initialTemplateInfo
 
   onMount(async () => {
     await hostingStore.actions.fetchDeployedApps()
@@ -77,10 +77,12 @@
   }
 
   async function createNewApp() {
+    const letTemplateToUse =
+      Object.keys(template).length === 0 ? null : template
     submitting = true
 
     // Check a template exists if we are important
-    if (template?.fromFile && !$values.file) {
+    if (letTemplateToUse?.fromFile && !$values.file) {
       $errors.file = "Please choose a file to import"
       valid = false
       submitting = false
@@ -91,10 +93,10 @@
       // Create form data to create app
       let data = new FormData()
       data.append("name", $values.name.trim())
-      data.append("useTemplate", template != null)
-      if (template) {
-        data.append("templateName", template.name)
-        data.append("templateKey", template.key)
+      data.append("useTemplate", letTemplateToUse != null)
+      if (letTemplateToUse) {
+        data.append("templateName", letTemplateToUse.name)
+        data.append("templateKey", letTemplateToUse.key)
         data.append("templateFile", $values.file)
       }
 
@@ -108,7 +110,7 @@
       analytics.captureEvent(Events.APP.CREATED, {
         name: $values.name,
         appId: appJson.instance._id,
-        template,
+        letTemplateToUse,
       })
 
       // Select Correct Application/DB in prep for creating user
@@ -146,8 +148,7 @@
     showConfirmButton={false}
     size="L"
     onConfirm={() => {
-      showTemplateSelection = false
-      wasShowingTemplates = true
+      template = {}
       return false
     }}
     showCancelButton={false}
@@ -156,14 +157,9 @@
     <TemplateList
       onSelect={(selected, { useImport } = {}) => {
         if (!selected) {
-          if (useImport) {
-            template = { fromFile: true }
-          }
-          showTemplateSelection = false
-          wasShowingTemplates = true
+          template = useImport ? { fromFile: true } : {}
           return
         }
-
         template = selected
       }}
     />
@@ -173,8 +169,9 @@
     title={template?.fromFile ? "Import app" : "Create app"}
     confirmText={template?.fromFile ? "Import app" : "Create app"}
     onConfirm={createNewApp}
-    onCancel={wasShowingTemplates ? () => (template = null) : null}
-    cancelText={wasShowingTemplates ? "Back" : undefined}
+    onCancel={inline ? () => (template = null) : null}
+    cancelText={inline ? "Back" : undefined}
+    showCloseIcon={!inline}
     disabled={!valid}
   >
     {#if template?.fromFile}
