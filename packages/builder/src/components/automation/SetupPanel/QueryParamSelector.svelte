@@ -3,9 +3,22 @@
   import { Select } from "@budibase/bbui"
   import DrawerBindableInput from "../../common/bindings/DrawerBindableInput.svelte"
   import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
+  import { createEventDispatcher } from "svelte"
+
+  const dispatch = createEventDispatcher()
 
   export let value
   export let bindings
+
+  const onChangeQuery = e => {
+    value.queryId = e.detail
+    dispatch("change", value)
+  }
+
+  const onChange = (e, field) => {
+    value[field.name] = e.detail
+    dispatch("change", value)
+  }
 
   $: query = $queries.list.find(query => query._id === value?.queryId)
   $: parameters = query?.parameters ?? []
@@ -18,7 +31,8 @@
 <div class="block-field">
   <Select
     label="Query"
-    bind:value={value.queryId}
+    on:change={onChangeQuery}
+    value={value.queryId}
     options={$queries.list}
     getOptionValue={query => query._id}
     getOptionLabel={query => query.name}
@@ -32,9 +46,7 @@
         panel={AutomationBindingPanel}
         extraThin
         value={value[field.name]}
-        on:change={e => {
-          value[field.name] = e.detail
-        }}
+        on:change={e => onChange(e, field)}
         label={field.name}
         type="string"
         {bindings}
