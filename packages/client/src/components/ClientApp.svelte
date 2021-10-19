@@ -113,6 +113,13 @@
                     />
                   {/key}
 
+                  <!--
+                    Flatpickr needs to be inside the theme wrapper.
+                    It also needs its own container because otherwise it hijacks
+                    key events on the whole page. It is painful to work with.
+                  -->
+                  <div id="flatpickr-root" />
+
                   <!-- Layers on top of app -->
                   <NotificationDisplay />
                   <ConfirmationDisplay />
