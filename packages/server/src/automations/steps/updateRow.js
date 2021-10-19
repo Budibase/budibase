@@ -64,6 +64,7 @@ exports.run = async function ({ inputs, appId, emitter }) {
       },
     }
   }
+  const tableId = inputs.row.tableId
 
   // clear any falsy properties so that they aren't updated
   for (let propKey of Object.keys(inputs.row)) {
@@ -80,15 +81,14 @@ exports.run = async function ({ inputs, appId, emitter }) {
     },
     params: {
       rowId: inputs.rowId,
+      tableId: tableId,
     },
   })
 
   try {
-    inputs.row = await automationUtils.cleanUpRowById(
-      appId,
-      inputs.rowId,
-      inputs.row
-    )
+    if (tableId) {
+      inputs.row = await automationUtils.cleanUpRow(appId, tableId, inputs.row)
+    }
     await rowController.patch(ctx)
     return {
       row: ctx.body,
@@ -100,7 +100,7 @@ exports.run = async function ({ inputs, appId, emitter }) {
   } catch (err) {
     return {
       success: false,
-      response: err,
+      response: automationUtils.getError(err),
     }
   }
 }

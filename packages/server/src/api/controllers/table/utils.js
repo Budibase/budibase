@@ -9,6 +9,10 @@ const { isEqual } = require("lodash/fp")
 const { AutoFieldSubTypes, FieldTypes } = require("../../../constants")
 const { inputProcessing } = require("../../../utilities/rowProcessor")
 const { USERS_TABLE_SCHEMA } = require("../../../constants")
+const {
+  isExternalTable,
+  breakExternalTableId,
+} = require("../../../integrations/utils")
 
 exports.checkForColumnUpdates = async (db, oldTable, updatedTable) => {
   let updatedRows = []
@@ -221,6 +225,16 @@ exports.getAllExternalTables = async (appId, datasourceId) => {
 exports.getExternalTable = async (appId, datasourceId, tableName) => {
   const entities = await exports.getAllExternalTables(appId, datasourceId)
   return entities[tableName]
+}
+
+exports.getTable = async (appId, tableId) => {
+  const db = new CouchDB(appId)
+  if (isExternalTable(tableId)) {
+    let { datasourceId, tableName } = breakExternalTableId(tableId)
+    return exports.getExternalTable(appId, datasourceId, tableName)
+  } else {
+    return db.get(tableId)
+  }
 }
 
 exports.TableSaveFunctions = TableSaveFunctions

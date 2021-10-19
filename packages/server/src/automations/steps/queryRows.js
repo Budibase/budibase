@@ -2,6 +2,7 @@ const rowController = require("../../api/controllers/row")
 const tableController = require("../../api/controllers/table")
 const { FieldTypes } = require("../../constants")
 const { buildCtx } = require("./utils")
+const automationUtils = require("../automationUtils")
 
 const SortOrders = {
   ASCENDING: "ascending",
@@ -110,7 +111,7 @@ exports.run = async function ({ inputs, appId }) {
   } catch (err) {
     return {
       success: false,
-      response: err,
+      response: automationUtils.getError(err),
     }
   }
 }
