@@ -67,7 +67,7 @@
         <Placeholder
           text="Add the Field setting to start using your component"
         />
-      {:else if fieldSchema?.type && fieldSchema?.type !== type}
+      {:else if fieldSchema?.type && fieldSchema?.type !== type && type !== "options"}
         <Placeholder
           text="This Field setting is the wrong data type for this component"
         />
