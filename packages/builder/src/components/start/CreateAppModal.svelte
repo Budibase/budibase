@@ -39,9 +39,11 @@
 
   let submitting = false
   let valid = false
+  let wasShowingTemplates
 
   $: checkValidity($values, validator)
-  $: showTemplateSelection = !template?.fromFile && !template?.key
+  $: showTemplateSelection =
+    !template || (!template?.fromFile && !template?.key)
 
   onMount(async () => {
     await hostingStore.actions.fetchDeployedApps()
@@ -145,15 +147,20 @@
     size="L"
     onConfirm={() => {
       showTemplateSelection = false
+      wasShowingTemplates = true
       return false
     }}
     showCancelButton={false}
     showCloseIcon={false}
   >
     <TemplateList
-      onSelect={selected => {
+      onSelect={(selected, { useImport } = {}) => {
         if (!selected) {
+          if (useImport) {
+            template = { fromFile: true }
+          }
           showTemplateSelection = false
+          wasShowingTemplates = true
           return
         }
 
@@ -166,6 +173,8 @@
     title={template?.fromFile ? "Import app" : "Create app"}
     confirmText={template?.fromFile ? "Import app" : "Create app"}
     onConfirm={createNewApp}
+    onCancel={wasShowingTemplates ? () => (template = null) : null}
+    cancelText={wasShowingTemplates ? "Back" : undefined}
     disabled={!valid}
   >
     {#if template?.fromFile}
