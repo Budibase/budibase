@@ -16,7 +16,6 @@
   }
 
   const onChange = (e, field) => {
-    console.log(field)
     value[field.name] = e.detail
     dispatch("change", value)
   }
@@ -27,7 +26,6 @@
   // Ensure any nullish queryId values get set to empty string so
   // that the select works
   $: if (value?.queryId == null) value = { queryId: "" }
-  $: console.log(value)
 </script>
 
 <div class="block-field">
