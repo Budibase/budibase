@@ -268,7 +268,7 @@
   {#if !enrichedApps.length && !creatingApp && loaded}
     <div class="empty-wrapper">
       <Modal inline>
-        <CreateAppModal {template} />
+        <CreateAppModal {template} inline={true} />
       </Modal>
     </div>
   {/if}
