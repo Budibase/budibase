@@ -57,7 +57,7 @@
         >
           <Icon name="Add" />
         </div>
-        <Heading size="XS">Import app</Heading>
+        <Heading size="XS">Import an app</Heading>
         <p class="detail">BLANK</p>
       </div>
     </div>
