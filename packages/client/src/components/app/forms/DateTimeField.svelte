@@ -56,7 +56,7 @@
       disabled={fieldState.disabled}
       error={fieldState.error}
       id={fieldState.fieldId}
-      appendTo={document.getElementById("theme-root")}
+      appendTo={document.getElementById("flatpickr-root")}
       {enableTime}
       {placeholder}
     />
