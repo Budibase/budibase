@@ -3,7 +3,7 @@ entries:
   budibase:
   - apiVersion: v2
     appVersion: 0.9.169
-    created: "2021-10-20T12:42:13.877669+01:00"
+    created: "2021-10-20T14:17:33.789477+01:00"
     dependencies:
     - condition: services.couchdb.enabled
       name: couchdb
@@ -14,7 +14,7 @@ entries:
       repository: https://github.com/kubernetes/ingress-nginx
       version: 3.35.0
     description: Budibase is an open source low-code platform, helping thousands of teams build apps for their workplace in minutes.
-    digest: 83524796e44c76e47b7dc49dcf595d3956889bf75d40092111cd5aca9ca82d2f
+    digest: 35ab9c3d5dc767aa7523fe1584768347e3c08ba0a07f7c0c77ed86ec5a1344ef
     keywords:
     - low-code
     - database
@@ -29,7 +29,7 @@ entries:
     version: 0.2.2
   - apiVersion: v2
     appVersion: 0.9.163
-    created: "2021-10-20T12:42:13.871929+01:00"
+    created: "2021-10-20T14:17:33.784393+01:00"
     dependencies:
     - condition: services.couchdb.enabled
       name: couchdb
@@ -55,7 +55,7 @@ entries:
     version: 0.2.1
   - apiVersion: v2
     appVersion: 0.9.163
-    created: "2021-10-20T12:42:13.867701+01:00"
+    created: "2021-10-20T14:17:33.7798+01:00"
     dependencies:
     - condition: services.couchdb.enabled
       name: couchdb
@@ -81,7 +81,7 @@ entries:
     version: 0.2.0
   - apiVersion: v2
     appVersion: 0.9.56
-    created: "2021-10-20T12:42:13.863488+01:00"
+    created: "2021-10-20T14:17:33.775061+01:00"
     dependencies:
     - condition: services.couchdb.enabled
       name: couchdb
@@ -106,7 +106,7 @@ entries:
     version: 0.1.1
   - apiVersion: v2
     appVersion: 0.9.56
-    created: "2021-10-20T12:42:13.857304+01:00"
+    created: "2021-10-20T14:17:33.768145+01:00"
     dependencies:
     - condition: services.couchdb.enabled
       name: couchdb
@@ -129,4 +129,4 @@ entries:
     urls:
     - https://budibase.github.io/budibase/budibase-0.1.0.tgz
     version: 0.1.0
-generated: "2021-10-20T12:42:13.851904+01:00"
+generated: "2021-10-20T14:17:33.763003+01:00"
