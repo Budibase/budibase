@@ -79,6 +79,8 @@ spec:
           value: {{ .Values.services.worker.port | quote }}
         - name: MULTI_TENANCY
           value: {{ .Values.globals.multiTenancy | quote }}
+        - name: LOG_LEVEL
+          value: {{ .Values.services.apps.logLevel | quote }}
         - name: REDIS_PASSWORD
           value: {{ .Values.services.redis.password | quote }}
         - name: REDIS_URL
