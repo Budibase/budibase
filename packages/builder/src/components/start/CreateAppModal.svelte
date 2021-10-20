@@ -151,8 +151,8 @@
       template = {}
       return false
     }}
-    showCancelButton={false}
-    showCloseIcon={false}
+    showCancelButton={!inline}
+    showCloseIcon={!inline}
   >
     <TemplateList
       onSelect={(selected, { useImport } = {}) => {
