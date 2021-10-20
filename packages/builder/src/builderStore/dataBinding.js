@@ -472,7 +472,7 @@ function bindingReplacement(bindableProperties, textWithBindings, convertTo) {
           idx = searchString.indexOf(from)
           if (idx !== -1) {
             let end = idx + from.length,
-              searchReplace = Array(binding[convertTo].length).join("*")
+              searchReplace = Array(binding[convertTo].length + 1).join("*")
             // blank out parts of the search string
             searchString = replaceBetween(searchString, idx, end, searchReplace)
             newBoundValue = replaceBetween(
