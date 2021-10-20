@@ -112,16 +112,8 @@
 
   const exportApp = app => {
     const id = app.deployed ? app.prodId : app.devId
-    try {
-      download(
-        `/api/backups/export?appId=${id}&appname=${encodeURIComponent(
-          app.name
-        )}`
-      )
-      notifications.success("App exported successfully")
-    } catch (err) {
-      notifications.error(`Error exporting app: ${err}`)
-    }
+    const appName = encodeURIComponent(app.name)
+    window.location = `/api/backups/export?appId=${id}&appname=${appName}`
   }
 
   const unpublishApp = app => {
