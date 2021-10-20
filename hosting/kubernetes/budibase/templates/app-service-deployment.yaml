@@ -73,7 +73,11 @@ spec:
               name: {{ template "budibase.fullname" . }}
               key: objectStoreSecret
         - name: MINIO_URL
+          {{ if .Values.services.objectStore.url }}
           value: {{ .Values.services.objectStore.url }}
+          {{ else }}
+          value: minio-service:{{ .Values.services.objectStore.port }}
+          {{ end }}
         - name: PORT
           value: {{ .Values.services.apps.port | quote }}
         - name: MULTI_TENANCY
