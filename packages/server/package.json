@@ -1,7 +1,7 @@
 {
   "name": "@budibase/server",
   "email": "hi@budibase.com",
-  "version": "0.9.167-alpha.2",
+  "version": "0.9.169-alpha.10",
   "description": "Budibase Web Server",
   "main": "src/index.js",
   "repository": {
@@ -68,13 +68,13 @@
   "author": "Budibase",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
-    "@budibase/auth": "^0.9.167-alpha.2",
-    "@budibase/client": "^0.9.167-alpha.2",
-    "@budibase/string-templates": "^0.9.167-alpha.2",
+    "@budibase/auth": "^0.9.169-alpha.10",
+    "@budibase/client": "^0.9.169-alpha.10",
+    "@budibase/string-templates": "^0.9.169-alpha.10",
     "@elastic/elasticsearch": "7.10.0",
     "@koa/router": "8.0.0",
     "@sendgrid/mail": "7.1.1",
-    "@sentry/node": "5.19.2",
+    "@sentry/node": "^6.0.0",
     "airtable": "0.10.1",
     "arangojs": "7.2.0",
     "aws-sdk": "^2.767.0",
@@ -119,6 +119,7 @@
     "to-json-schema": "0.2.5",
     "uuid": "3.3.2",
     "validate.js": "0.13.1",
+    "vm2": "^3.9.3",
     "yargs": "13.2.4",
     "zlib": "1.0.5"
   },

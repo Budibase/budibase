@@ -200,6 +200,12 @@ exports.inputProcessing = (
       clonedRow[key] = exports.coerce(value, field.type)
     }
   }
+
+  if (!clonedRow._id || !clonedRow._rev) {
+    clonedRow._id = row._id
+    clonedRow._rev = row._rev
+  }
+
   // handle auto columns - this returns an object like {table, row}
   return processAutoColumn(user, copiedTable, clonedRow, opts)
 }

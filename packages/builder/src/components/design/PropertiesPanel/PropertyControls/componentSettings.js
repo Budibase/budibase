@@ -1,4 +1,4 @@
-import { Checkbox, Input, Select, Stepper } from "@budibase/bbui"
+import { Checkbox, Select, Stepper } from "@budibase/bbui"
 import DataSourceSelect from "./DataSourceSelect.svelte"
 import DataProviderSelect from "./DataProviderSelect.svelte"
 import EventsEditor from "./EventsEditor"
@@ -15,6 +15,7 @@ import URLSelect from "./URLSelect.svelte"
 import OptionsEditor from "./OptionsEditor/OptionsEditor.svelte"
 import FormFieldSelect from "./FormFieldSelect.svelte"
 import ValidationEditor from "./ValidationEditor/ValidationEditor.svelte"
+import Input from "./Input.svelte"
 
 const componentMap = {
   text: Input,

@@ -12,31 +12,6 @@
 
   let fieldState
   let fieldApi
-
-  const parseDate = val => {
-    if (!val) {
-      return null
-    }
-    let date
-    if (val instanceof Date) {
-      // Use real date obj if already parsed
-      date = val
-    } else if (isNaN(val)) {
-      // Treat as date string of some sort
-      date = new Date(val)
-    } else {
-      // Treat as numerical timestamp
-      date = new Date(parseInt(val))
-    }
-    const time = date.getTime()
-    if (isNaN(time)) {
-      return null
-    }
-    // By rounding to the nearest second we avoid locking up in an endless
-    // loop in the builder, caused by potentially enriching {{ now }} to every
-    // millisecond.
-    return new Date(Math.floor(time / 1000) * 1000)
-  }
 </script>
 
 <Field
@@ -44,7 +19,7 @@
   {field}
   {disabled}
   {validation}
-  defaultValue={parseDate(defaultValue)}
+  {defaultValue}
   type="datetime"
   bind:fieldState
   bind:fieldApi
@@ -56,7 +31,7 @@
       disabled={fieldState.disabled}
       error={fieldState.error}
       id={fieldState.fieldId}
-      appendTo={document.getElementById("theme-root")}
+      appendTo={document.getElementById("flatpickr-root")}
       {enableTime}
       {placeholder}
     />

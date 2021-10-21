@@ -1,9 +1,4 @@
-const CouchDB = require("../db")
-const {
-  isExternalTable,
-  breakExternalTableId,
-} = require("../integrations/utils")
-const { getExternalTable } = require("../api/controllers/table/utils")
+const { getTable } = require("../api/controllers/table/utils")
 
 /**
  * When values are input to the system generally they will be of type string as this is required for template strings.
@@ -21,7 +16,7 @@ const { getExternalTable } = require("../api/controllers/table/utils")
  * @returns {object} The inputs object which has had all the various types supported by this function converted to their
  * primitive types.
  */
-module.exports.cleanInputValues = (inputs, schema) => {
+exports.cleanInputValues = (inputs, schema) => {
   if (schema == null) {
     return inputs
   }
@@ -63,30 +58,11 @@ module.exports.cleanInputValues = (inputs, schema) => {
  * @param {object} row The input row structure which requires clean-up after having been through template statements.
  * @returns {Promise<Object>} The cleaned up rows object, will should now have all the required primitive types.
  */
-module.exports.cleanUpRow = async (appId, tableId, row) => {
-  const db = new CouchDB(appId)
-  let table
-  if (isExternalTable(tableId)) {
-    const { datasourceId, tableName } = breakExternalTableId(tableId)
-    table = await getExternalTable(appId, datasourceId, tableName)
-  } else {
-    table = await db.get(tableId)
-  }
-
-  return module.exports.cleanInputValues(row, { properties: table.schema })
+exports.cleanUpRow = async (appId, tableId, row) => {
+  let table = await getTable(appId, tableId)
+  return exports.cleanInputValues(row, { properties: table.schema })
 }
 
-/**
- * A utility function for the cleanUpRow, which can be used if only the row ID is known (not the table ID) to clean
- * up a row after template statements have been replaced. This is specifically useful for the update row action.
- *
- * @param {string} appId The instance which the Table/Table is contained under.
- * @param {string} rowId The ID of the row from which the tableId will be extracted, to get the Table/Table schema.
- * @param {object} row The input row structure which requires clean-up after having been through template statements.
- * @returns {Promise<Object>} The cleaned up rows object, which will now have all the required primitive types.
- */
-module.exports.cleanUpRowById = async (appId, rowId, row) => {
-  const db = new CouchDB(appId)
-  const foundRow = await db.get(rowId)
-  return module.exports.cleanUpRow(appId, foundRow.tableId, row)
+exports.getError = err => {
+  return typeof err !== "string" ? err.toString() : err
 }

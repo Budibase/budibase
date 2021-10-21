@@ -26,7 +26,7 @@ exports.updateAppRole = (appId, user) => {
   if (!user.roleId && user.builder && user.builder.global) {
     user.roleId = BUILTIN_ROLE_IDS.ADMIN
   } else if (!user.roleId) {
-    user.roleId = BUILTIN_ROLE_IDS.BASIC
+    user.roleId = BUILTIN_ROLE_IDS.PUBLIC
   }
   delete user.roles
   return user

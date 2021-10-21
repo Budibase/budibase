@@ -25,7 +25,6 @@
     array: ArrayRenderer,
     internal: InternalRenderer,
   }
-
   $: type = schema?.type ?? "string"
   $: customRenderer = customRenderers?.find(x => x.column === schema?.name)
   $: renderer = customRenderer?.component ?? typeMap[type] ?? StringRenderer

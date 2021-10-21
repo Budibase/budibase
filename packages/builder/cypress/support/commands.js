@@ -35,19 +35,12 @@ Cypress.Commands.add("login", () => {
 Cypress.Commands.add("createApp", name => {
   cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
   cy.wait(500)
-  cy.contains(/Start from scratch/).click()
-  cy.get(".spectrum-Modal")
-    .within(() => {
-      cy.get("input").eq(0).type(name).should("have.value", name).blur()
-      cy.get(".spectrum-ButtonGroup").contains("Create app").click()
-      cy.wait(7000)
-    })
-    .then(() => {
-      // Because we show the datasource modal on entry, we need to create a table to get rid of the modal in the future
-      cy.createInitialDatasource("initialTable")
-      cy.expandBudibaseConnection()
-      cy.get(".nav-item.selected > .content").should("be.visible")
-    })
+  cy.contains(/Start from scratch/).dblclick()
+  cy.get(".spectrum-Modal").within(() => {
+    cy.get("input").eq(0).type(name).should("have.value", name).blur()
+    cy.get(".spectrum-ButtonGroup").contains("Create app").click()
+    cy.wait(7000)
+  })
 })
 
 Cypress.Commands.add("deleteApp", () => {
@@ -75,22 +68,6 @@ Cypress.Commands.add("createTestTableWithData", () => {
   cy.createTable("dog")
   cy.addColumn("dog", "name", "Text")
   cy.addColumn("dog", "age", "Number")
-})
-
-Cypress.Commands.add("createInitialDatasource", tableName => {
-  // Enter table name
-  cy.get(".spectrum-Modal").within(() => {
-    cy.contains("Budibase DB").trigger("mouseover").click().click()
-    cy.wait(1000)
-    cy.contains("Continue").click()
-  })
-
-  cy.get(".spectrum-Modal").within(() => {
-    cy.wait(1000)
-    cy.get("input").first().type(tableName).blur()
-    cy.get(".spectrum-ButtonGroup").contains("Create").click()
-  })
-  cy.contains(tableName).should("be.visible")
 })
 
 Cypress.Commands.add("createTable", tableName => {
@@ -246,4 +223,10 @@ Cypress.Commands.add("addCustomSourceOptions", totalOptions => {
       // Save options
       cy.get(".spectrum-Button").contains("Save").click({ force: true })
     })
+})
+
+Cypress.Commands.add("searchForApplication", appName => {
+  cy.get(".spectrum-Textfield").within(() => {
+    cy.get("input").eq(0).type(appName)
+  })
 })
