@@ -37,7 +37,11 @@ interface RunConfig {
 
 module External {
   const { makeExternalQuery } = require("./utils")
-  const { DataSourceOperation, FieldTypes, RelationshipTypes } = require("../../../constants")
+  const {
+    DataSourceOperation,
+    FieldTypes,
+    RelationshipTypes,
+  } = require("../../../constants")
   const { breakExternalTableId, isSQL } = require("../../../integrations/utils")
   const { processObjectSync } = require("@budibase/string-templates")
   const { cloneDeep } = require("lodash/fp")
