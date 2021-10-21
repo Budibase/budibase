@@ -66,6 +66,11 @@
   const checkValidity = async (values, validator) => {
     const obj = object().shape(validator)
     Object.keys(validator).forEach(key => ($errors[key] = null))
+    if (template?.fromFile && values.file == null) {
+      valid = false
+      return
+    }
+
     try {
       await obj.validate(values, { abortEarly: false })
     } catch (validationErrors) {
@@ -73,6 +78,7 @@
         $errors[error.path] = capitalise(error.message)
       })
     }
+
     valid = await obj.isValid(values)
   }
 
