@@ -92,8 +92,6 @@ The Budibase documentation [lives here](https://docs.budibase.com).
 
 If you have a question or would like to talk with other Budibase users and join our community, please hop over to [Github discussions](https://github.com/Budibase/budibase/discussions)
 
-<img src="https://d33wubrfki0l68.cloudfront.net/e9241201fd89f9abbbdaac4fe44bb16312752abe/84013/img/hero-images/community.webp" />
-
 <br /><br /><br />
 
 
