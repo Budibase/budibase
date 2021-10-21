@@ -1,24 +1,27 @@
 <script>
+  import { createEventDispatcher } from "svelte"
   import { queries } from "stores/backend"
   import { Select } from "@budibase/bbui"
   import DrawerBindableInput from "../../common/bindings/DrawerBindableInput.svelte"
   import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
+
+  const dispatch = createEventDispatcher()
 
   export let value
   export let bindings
 
   $: query = $queries.list.find(query => query._id === value?.queryId)
   $: parameters = query?.parameters ?? []
-
-  // Ensure any nullish queryId values get set to empty string so
-  // that the select works
-  $: if (value?.queryId == null) value = { queryId: "" }
 </script>
 
 <div class="block-field">
   <Select
     label="Query"
-    bind:value={value.queryId}
+    value={value.queryId}
+    on:change={e => {
+      value = { queryId: e.detail }
+      dispatch("change", value)
+    }}
     options={$queries.list}
     getOptionValue={query => query._id}
     getOptionLabel={query => query.name}
@@ -34,6 +37,7 @@
         value={value[field.name]}
         on:change={e => {
           value[field.name] = e.detail
+          dispatch("change", value)
         }}
         label={field.name}
         type="string"
