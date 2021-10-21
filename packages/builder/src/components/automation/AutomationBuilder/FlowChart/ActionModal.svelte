@@ -16,7 +16,7 @@
 
   const disabled = {
     SEND_EMAIL_SMTP: {
-      disabled: $admin.checklist.smtp.checked,
+      disabled: !$admin.checklist.smtp.checked,
       message: "Please configure SMTP",
     },
   }
@@ -101,12 +101,12 @@
 
     <div class="item-list">
       {#each Object.entries(internal) as [idx, action]}
-        {#if disabled[idx] && !disabled[idx].disabled}
+        {#if disabled[idx] && disabled[idx].disabled}
           <Tooltip text={disabled[idx].message} direction="bottom">
             <div
               class="item"
               class:selected={selectedAction === action.name}
-              class:disabled={disabled[idx]}
+              class:disabled={true}
               on:click={() => selectAction(action)}
             >
               <div class="item-body">
