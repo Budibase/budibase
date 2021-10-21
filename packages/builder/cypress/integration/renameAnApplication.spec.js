@@ -72,7 +72,6 @@ it("should validate application names", () => {
     cy.request(`localhost:${Cypress.env("PORT")}/api/applications?status=all`)
     .its("body")
     .then(val => {
-        console.log(val)
         if (val.length > 0) {
             cy.get(".title > :nth-child(3) > .spectrum-Icon").click()
             // Check for when an app is published
