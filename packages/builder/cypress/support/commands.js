@@ -224,3 +224,9 @@ Cypress.Commands.add("addCustomSourceOptions", totalOptions => {
       cy.get(".spectrum-Button").contains("Save").click({ force: true })
     })
 })
+
+Cypress.Commands.add("searchForApplication", appName => {
+  cy.get(".spectrum-Textfield").within(() => {
+    cy.get("input").eq(0).type(appName)
+  })
+})
