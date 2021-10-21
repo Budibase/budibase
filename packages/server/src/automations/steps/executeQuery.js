@@ -1,5 +1,6 @@
 const queryController = require("../../api/controllers/query")
 const { buildCtx } = require("./utils")
+const automationUtils = require("../automationUtils")
 
 exports.definition = {
   name: "External Data Connector",
@@ -74,7 +75,7 @@ exports.run = async function ({ inputs, appId, emitter }) {
   } catch (err) {
     return {
       success: false,
-      response: err,
+      response: automationUtils.getError(err),
     }
   }
 }

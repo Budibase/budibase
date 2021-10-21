@@ -1,4 +1,5 @@
 const { sendSmtpEmail } = require("../../utilities/workerRequests")
+const automationUtils = require("../automationUtils")
 
 exports.definition = {
   description: "Send an email using SMTP",
@@ -61,7 +62,7 @@ exports.run = async function ({ inputs }) {
   } catch (err) {
     return {
       success: false,
-      response: err,
+      response: automationUtils.getError(err),
     }
   }
 }
