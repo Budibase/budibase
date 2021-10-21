@@ -75,10 +75,10 @@
 Deploy Budibase self-Hosted in your existing infrastructure, using Docker, Kubernetes, and Digital Ocean.
 Or use Budibase Cloud if you don't need to self-host, and would like to get started quickly.
 
-[Get started with Budibase](https://budibase.com)
+### [Get started with Budibase](https://budibase.com)
 
 
-<br /><br /><br />
+<br /><br />
 
 ## 🎓 Learning Budibase
 
@@ -86,7 +86,7 @@ The Budibase documentation [lives here](https://docs.budibase.com).
 <br />
 
 
-<br /><br /><br />
+<br /><br />
 
 ## 💬 Community
 
@@ -101,7 +101,7 @@ Budibase is dedicated to providing a welcoming, diverse, and harrassment-free ex
 <br />
 
 
-<br /><br /><br />
+<br /><br />
 
 
 ## 🙌 Contributing to Budibase
@@ -122,14 +122,14 @@ Budibase is a monorepo managed by lerna. Lerna manages the building and publishi
 
 For more information, see [CONTRIBUTING.md](https://github.com/Budibase/budibase/blob/HEAD/.github/CONTRIBUTING.md)
 
-<br /><br /><br />
+<br /><br />
 
 
 ## 📝 License
 
 Budibase is open-source, licensed as [GPL v3](https://www.gnu.org/licenses/gpl-3.0.en.html). The client and component libraries are licensed as [MPL](https://directory.fsf.org/wiki/License:MPL-2.0) - so the apps that you build can be licensed however you like.
 
-<br /><br /><br />
+<br /><br />
 
 ## ⭐ Stargazers over time
 
@@ -137,7 +137,7 @@ Budibase is open-source, licensed as [GPL v3](https://www.gnu.org/licenses/gpl-3
 
 If you are having issues between updates of the builder, please use the guide [here](https://github.com/Budibase/budibase/blob/HEAD/.github/CONTRIBUTING.md#troubleshooting) to clear down your environment.
 
-<br /><br /><br />
+<br /><br />
 
 ## Contributors ✨
 
