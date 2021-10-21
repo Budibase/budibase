@@ -201,7 +201,13 @@ function buildRead(knex: Knex, json: QueryJson, limit: number): KnexQuery {
     [tableName]: query,
   }).select(selectStatement)
   // handle joins
-  return addRelationships(knex, preQuery, selectStatement, tableName, relationships)
+  return addRelationships(
+    knex,
+    preQuery,
+    selectStatement,
+    tableName,
+    relationships
+  )
 }
 
 function buildUpdate(
