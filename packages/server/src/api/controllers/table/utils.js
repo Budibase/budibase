@@ -13,6 +13,8 @@ const {
   isExternalTable,
   breakExternalTableId,
 } = require("../../../integrations/utils")
+const { getViews, saveView } = require("../view/utils")
+const viewTemplate = require("../view/viewBuilder")
 
 exports.checkForColumnUpdates = async (db, oldTable, updatedTable) => {
   let updatedRows = []
@@ -25,6 +27,7 @@ exports.checkForColumnUpdates = async (db, oldTable, updatedTable) => {
   }
   // check for renaming of columns or deleted columns
   if (rename || deletedColumns.length !== 0) {
+    // Update all rows
     const rows = await db.allDocs(
       getRowParams(updatedTable._id, null, {
         include_docs: true,
@@ -39,6 +42,9 @@ exports.checkForColumnUpdates = async (db, oldTable, updatedTable) => {
       }
       return doc
     })
+
+    // Update views
+    await exports.checkForViewUpdates(db, updatedTable, rename, deletedColumns)
     delete updatedTable._rename
   }
   return { rows: updatedRows, table: updatedTable }
@@ -234,6 +240,78 @@ exports.getTable = async (appId, tableId) => {
     return exports.getExternalTable(appId, datasourceId, tableName)
   } else {
     return db.get(tableId)
+  }
+}
+
+exports.checkForViewUpdates = async (db, table, rename, deletedColumns) => {
+  const views = await getViews(db)
+  const tableViews = views.filter(view => view.meta.tableId === table._id)
+
+  // Check each table view to see if impacted by this table action
+  for (let view of tableViews) {
+    let needsUpdated = false
+
+    // First check for renames, otherwise check for deletions
+    if (rename) {
+      // Update calculation field if required
+      if (view.meta.field === rename.old) {
+        view.meta.field = rename.updated
+        needsUpdated = true
+      }
+
+      // Update group by field if required
+      if (view.meta.groupBy === rename.old) {
+        view.meta.groupBy = rename.updated
+        needsUpdated = true
+      }
+
+      // Update filters if required
+      if (view.meta.filters) {
+        view.meta.filters.forEach(filter => {
+          if (filter.key === rename.old) {
+            filter.key = rename.updated
+            needsUpdated = true
+          }
+        })
+      }
+    } else if (deletedColumns) {
+      deletedColumns.forEach(column => {
+        // Remove calculation statement if required
+        if (view.meta.field === column) {
+          delete view.meta.field
+          delete view.meta.calculation
+          delete view.meta.groupBy
+          needsUpdated = true
+        }
+
+        // Remove group by field if required
+        if (view.meta.groupBy === column) {
+          delete view.meta.groupBy
+          needsUpdated = true
+        }
+
+        // Remove filters referencing deleted field if required
+        if (view.meta.filters && view.meta.filters.length) {
+          const initialLength = view.meta.filters.length
+          view.meta.filters = view.meta.filters.filter(filter => {
+            return filter.key !== column
+          })
+          if (initialLength !== view.meta.filters.length) {
+            needsUpdated = true
+          }
+        }
+      })
+    }
+
+    // Update view if required
+    if (needsUpdated) {
+      const newViewTemplate = viewTemplate(view.meta)
+      await saveView(db, null, view.name, newViewTemplate)
+      if (!newViewTemplate.meta.schema) {
+        newViewTemplate.meta.schema = table.schema
+      }
+      table.views[view.name] = newViewTemplate.meta
+    }
   }
 }
 
