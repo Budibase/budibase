@@ -90,34 +90,30 @@
 
   function isMultipleChoice(field) {
     return (
-      (viewTable.schema[field].constraints &&
-        viewTable.schema[field].constraints.inclusion &&
-        viewTable.schema[field].constraints.inclusion.length) ||
-      viewTable.schema[field].type === "boolean"
+      viewTable.schema[field]?.constraints?.inclusion?.length ||
+      viewTable.schema[field]?.type === "boolean"
     )
   }
 
   function fieldOptions(field) {
-    return viewTable.schema[field].type === "options"
-      ? viewTable.schema[field].constraints.inclusion
+    return viewTable.schema[field]?.type === "options"
+      ? viewTable.schema[field]?.constraints.inclusion
       : [true, false]
   }
 
   function isDate(field) {
-    return viewTable.schema[field].type === "datetime"
+    return viewTable.schema[field]?.type === "datetime"
   }
 
   function isNumber(field) {
-    return viewTable.schema[field].type === "number"
+    return viewTable.schema[field]?.type === "number"
   }
 
   const fieldChanged = filter => ev => {
-    // reset if type changed
-    if (
-      filter.key &&
-      ev.detail &&
-      viewTable.schema[filter.key].type !== viewTable.schema[ev.detail].type
-    ) {
+    // Reset if type changed
+    const oldType = viewTable.schema[filter.key]?.type
+    const newType = viewTable.schema[ev.detail]?.type
+    if (filter.key && ev.detail && oldType !== newType) {
       filter.value = ""
     }
   }
