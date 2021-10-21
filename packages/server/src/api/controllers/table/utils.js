@@ -266,13 +266,15 @@ exports.checkForViewUpdates = async (db, table, rename, deletedColumns) => {
       }
 
       // Update filters if required
-      view.meta.filters?.forEach(filter => {
-        if (filter.key === rename.old) {
-          filter.key = rename.updated
-          needsUpdated = true
-        }
-      })
-    } else if (deletedColumns?.length) {
+      if (view.meta.filters) {
+        view.meta.filters.forEach(filter => {
+          if (filter.key === rename.old) {
+            filter.key = rename.updated
+            needsUpdated = true
+          }
+        })
+      }
+    } else if (deletedColumns) {
       deletedColumns.forEach(column => {
         // Remove calculation statement if required
         if (view.meta.field === column) {
@@ -289,7 +291,7 @@ exports.checkForViewUpdates = async (db, table, rename, deletedColumns) => {
         }
 
         // Remove filters referencing deleted field if required
-        if (view.meta.filters?.length) {
+        if (view.meta.filters && view.meta.filters.length) {
           const initialLength = view.meta.filters.length
           view.meta.filters = view.meta.filters.filter(filter => {
             return filter.key !== column
