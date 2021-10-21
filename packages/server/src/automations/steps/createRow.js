@@ -97,7 +97,7 @@ exports.run = async function ({ inputs, appId, emitter }) {
   } catch (err) {
     return {
       success: false,
-      response: err,
+      response: automationUtils.getError(err),
     }
   }
 }

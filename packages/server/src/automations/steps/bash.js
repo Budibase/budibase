@@ -1,5 +1,6 @@
 const { execSync } = require("child_process")
 const { processStringSync } = require("@budibase/string-templates")
+const automationUtils = require("../automationUtils")
 
 exports.definition = {
   name: "Bash Scripting",
@@ -63,7 +64,7 @@ exports.run = async function ({ inputs, context }) {
   } catch (err) {
     return {
       success: false,
-      response: err,
+      response: automationUtils.getError(err),
     }
   }
 }

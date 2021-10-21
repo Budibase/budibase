@@ -1,31 +1,97 @@
 <script>
   import groupBy from "lodash/fp/groupBy"
-  import { Search, TextArea, DrawerContent } from "@budibase/bbui"
-  import { createEventDispatcher } from "svelte"
-  import { isValid } from "@budibase/string-templates"
+  import {
+    Search,
+    TextArea,
+    DrawerContent,
+    Tabs,
+    Tab,
+    Body,
+    Layout,
+  } from "@budibase/bbui"
+  import { createEventDispatcher, onMount } from "svelte"
+  import {
+    isValid,
+    decodeJSBinding,
+    encodeJSBinding,
+  } from "@budibase/string-templates"
   import { readableToRuntimeBinding } from "builderStore/dataBinding"
   import { handlebarsCompletions } from "constants/completions"
-  import { addToText } from "./utils"
+  import { addHBSBinding, addJSBinding } from "./utils"
+  import CodeMirrorEditor from "components/common/CodeMirrorEditor.svelte"
 
   const dispatch = createEventDispatcher()
 
   export let bindableProperties
   export let value = ""
   export let valid
+  export let allowJS = false
 
   let helpers = handlebarsCompletions()
   let getCaretPosition
   let search = ""
+  let initialValueJS = value?.startsWith("{{ js ")
+  let mode = initialValueJS ? "JavaScript" : "Handlebars"
+  let jsValue = initialValueJS ? value : null
+  let hbsValue = initialValueJS ? null : value
 
-  $: valid = isValid(readableToRuntimeBinding(bindableProperties, value))
-  $: dispatch("change", value)
+  $: usingJS = mode === "JavaScript"
   $: ({ context } = groupBy("type", bindableProperties))
   $: searchRgx = new RegExp(search, "ig")
-  $: filteredColumns = context?.filter(context => {
+  $: filteredBindings = context?.filter(context => {
     return context.readableBinding.match(searchRgx)
   })
   $: filteredHelpers = helpers?.filter(helper => {
     return helper.label.match(searchRgx) || helper.description.match(searchRgx)
+  })
+
+  const updateValue = value => {
+    valid = isValid(readableToRuntimeBinding(bindableProperties, value))
+    if (valid) {
+      dispatch("change", value)
+    }
+  }
+
+  // Adds a HBS helper to the expression
+  const addHelper = helper => {
+    hbsValue = addHBSBinding(value, getCaretPosition(), helper.text)
+    updateValue(hbsValue)
+  }
+
+  // Adds a data binding to the expression
+  const addBinding = binding => {
+    if (usingJS) {
+      let js = decodeJSBinding(jsValue)
+      js = addJSBinding(js, getCaretPosition(), binding.readableBinding)
+      jsValue = encodeJSBinding(js)
+      updateValue(jsValue)
+    } else {
+      hbsValue = addHBSBinding(
+        hbsValue,
+        getCaretPosition(),
+        binding.readableBinding
+      )
+      updateValue(hbsValue)
+    }
+  }
+
+  const onChangeMode = e => {
+    mode = e.detail
+    updateValue(mode === "JavaScript" ? jsValue : hbsValue)
+  }
+
+  const onChangeHBSValue = e => {
+    hbsValue = e.detail
+    updateValue(hbsValue)
+  }
+
+  const onChangeJSValue = e => {
+    jsValue = encodeJSBinding(e.detail)
+    updateValue(jsValue)
+  }
+
+  onMount(() => {
+    valid = isValid(readableToRuntimeBinding(bindableProperties, value))
   })
 </script>
 
@@ -36,32 +102,24 @@
         <div class="heading">Search</div>
         <Search placeholder="Search" bind:value={search} />
       </section>
-      {#if filteredColumns?.length}
+      {#if filteredBindings?.length}
         <section>
           <div class="heading">Bindable Values</div>
           <ul>
-            {#each filteredColumns as { readableBinding }}
-              <li
-                on:click={() => {
-                  value = addToText(value, getCaretPosition(), readableBinding)
-                }}
-              >
-                {readableBinding}
+            {#each filteredBindings as binding}
+              <li on:click={() => addBinding(binding)}>
+                {binding.readableBinding}
               </li>
             {/each}
           </ul>
         </section>
       {/if}
-      {#if filteredHelpers?.length}
+      {#if filteredHelpers?.length && !usingJS}
         <section>
           <div class="heading">Helpers</div>
           <ul>
             {#each filteredHelpers as helper}
-              <li
-                on:click={() => {
-                  value = addToText(value, getCaretPosition(), helper.text)
-                }}
-              >
+              <li on:click={() => addHelper(helper)}>
                 <div class="helper">
                   <div class="helper__name">{helper.displayText}</div>
                   <div class="helper__description">
@@ -77,24 +135,56 @@
     </div>
   </svelte:fragment>
   <div class="main">
-    <TextArea
-      bind:getCaretPosition
-      bind:value
-      placeholder="Add text, or click the objects on the left to add them to the textbox."
-    />
-    {#if !valid}
-      <p class="syntax-error">
-        Current Handlebars syntax is invalid, please check the guide
-        <a href="https://handlebarsjs.com/guide/">here</a>
-        for more details.
-      </p>
-    {/if}
+    <Tabs selected={mode} on:select={onChangeMode}>
+      <Tab title="Handlebars">
+        <div class="main-content">
+          <TextArea
+            bind:getCaretPosition
+            value={hbsValue}
+            on:change={onChangeHBSValue}
+            placeholder="Add text, or click the objects on the left to add them to the textbox."
+          />
+          {#if !valid}
+            <p class="syntax-error">
+              Current Handlebars syntax is invalid, please check the guide
+              <a href="https://handlebarsjs.com/guide/">here</a>
+              for more details.
+            </p>
+          {/if}
+        </div>
+      </Tab>
+      {#if allowJS}
+        <Tab title="JavaScript">
+          <div class="main-content">
+            <Layout noPadding gap="XS">
+              <CodeMirrorEditor
+                bind:getCaretPosition
+                height={200}
+                value={decodeJSBinding(jsValue)}
+                on:change={onChangeJSValue}
+                hints={context?.map(x => `$("${x.readableBinding}")`)}
+              />
+              <Body size="S">
+                JavaScript expressions are executed as functions, so ensure that
+                your expression returns a value.
+              </Body>
+            </Layout>
+          </div>
+        </Tab>
+      {/if}
+    </Tabs>
   </div>
 </DrawerContent>
 
 <style>
   .main :global(textarea) {
-    min-height: 150px !important;
+    min-height: 202px !important;
+  }
+  .main {
+    margin: calc(-1 * var(--spacing-xl));
+  }
+  .main-content {
+    padding: var(--spacing-s) var(--spacing-xl);
   }
 
   .container {

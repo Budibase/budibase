@@ -110,6 +110,7 @@
               type="string"
               {bindings}
               fillWidth={true}
+              allowJS={false}
             />
           {/if}
         {/if}

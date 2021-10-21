@@ -6,6 +6,7 @@
   } from "builderStore/dataBinding"
   import BindingPanel from "components/common/bindings/BindingPanel.svelte"
   import { createEventDispatcher } from "svelte"
+  import { isJSBinding } from "@budibase/string-templates"
 
   export let panel = BindingPanel
   export let value = ""
@@ -15,11 +16,14 @@
   export let label
   export let disabled = false
   export let options
+  export let allowJS = true
 
   const dispatch = createEventDispatcher()
   let bindingDrawer
+
   $: readableValue = runtimeToReadableBinding(bindings, value)
   $: tempValue = readableValue
+  $: isJS = isJSBinding(value)
 
   const handleClose = () => {
     onChange(tempValue)
@@ -35,7 +39,7 @@
   <Combobox
     {label}
     {disabled}
-    value={readableValue}
+    value={isJS ? "(JavaScript function)" : readableValue}
     on:change={event => onChange(event.detail)}
     {placeholder}
     {options}
@@ -58,6 +62,7 @@
     close={handleClose}
     on:change={event => (tempValue = event.detail)}
     bindableProperties={bindings}
+    {allowJS}
   />
 </Drawer>
 

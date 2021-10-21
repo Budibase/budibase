@@ -105,6 +105,7 @@
           value={safeValue}
           on:change={e => (tempValue = e.detail)}
           bindableProperties={bindings}
+          allowJS
         />
       </Drawer>
     {/if}

@@ -1,5 +1,6 @@
 const scriptController = require("../../api/controllers/script")
 const { buildCtx } = require("./utils")
+const automationUtils = require("../automationUtils")
 
 exports.definition = {
   name: "JS Scripting",
@@ -63,7 +64,7 @@ exports.run = async function ({ inputs, appId, context, emitter }) {
   } catch (err) {
     return {
       success: false,
-      response: err,
+      response: automationUtils.getError(err),
     }
   }
 }

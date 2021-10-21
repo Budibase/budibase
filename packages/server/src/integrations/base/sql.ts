@@ -98,7 +98,9 @@ function addFilters(
 }
 
 function addRelationships(
+  knex: Knex,
   query: KnexQuery,
+  fields: string | string[],
   fromTable: string,
   relationships: RelationshipsJson[] | undefined
 ): KnexQuery {
@@ -114,7 +116,7 @@ function addRelationships(
       query = query.leftJoin(
         toTable,
         `${fromTable}.${from}`,
-        `${relationship.tableName}.${to}`
+        `${toTable}.${to}`
       )
     } else {
       const throughTable = relationship.through
@@ -130,7 +132,7 @@ function addRelationships(
         .leftJoin(toTable, `${toTable}.${toPrimary}`, `${throughTable}.${to}`)
     }
   }
-  return query
+  return query.limit(BASE_LIMIT)
 }
 
 function buildCreate(
@@ -199,7 +201,7 @@ function buildRead(knex: Knex, json: QueryJson, limit: number): KnexQuery {
     [tableName]: query,
   }).select(selectStatement)
   // handle joins
-  return addRelationships(preQuery, tableName, relationships)
+  return addRelationships(knex, preQuery, selectStatement, tableName, relationships)
 }
 
 function buildUpdate(
