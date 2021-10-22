@@ -13,7 +13,7 @@ it("should rename an unpublished application", () => {
     cy.get(".appGrid").find(".wrapper").should("have.length", 1)
     })
     
-it("Should rename a published application", () => {
+xit("Should rename a published application", () => {
     // It is not possible to rename a published application
     const appRename = "Cypress Renamed"
     // Publish the app
@@ -40,7 +40,7 @@ it("Should try to rename an application to have no name", () => {
     cy.get(".appGrid").find(".wrapper").should("have.length", 1)
 })
 
-it("Should create two applications with the same name", () => {
+xit("Should create two applications with the same name", () => {
     // It is not possible to have applications with the same name
     const appName = "Cypress Tests"
     cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
