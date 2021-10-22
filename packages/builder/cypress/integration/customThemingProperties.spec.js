@@ -29,7 +29,7 @@ context("Custom Theming Properties", () => {
     Small = 4px
     Medium = 8px
     Large = 16px */
-    it.only("should test button roundness", () => {
+    it("should test button roundness", () => {
       const buttonRoundnessValues = ["0", "4px", "8px", "16px"]
       cy.wait(1000)
       // Add button, change roundness and confirm value
