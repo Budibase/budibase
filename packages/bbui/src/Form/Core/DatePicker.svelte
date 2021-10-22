@@ -31,7 +31,11 @@
 
   const handleChange = event => {
     const [dates] = event.detail
-    dispatch("change", dates[0])
+    let newValue = dates[0]
+    if (newValue) {
+      newValue = newValue.toISOString()
+    }
+    dispatch("change", newValue)
   }
 
   const clearDateOnBackspace = event => {
@@ -57,11 +61,38 @@
     const els = document.querySelectorAll(`#${flatpickrId} input`)
     els.forEach(el => el.blur())
   }
+
+  const parseDate = val => {
+    if (!val) {
+      return null
+    }
+    let date
+    if (val instanceof Date) {
+      // Use real date obj if already parsed
+      date = val
+    } else if (isNaN(val)) {
+      // Treat as date string of some sort
+      date = new Date(val)
+    } else {
+      // Treat as numerical timestamp
+      date = new Date(parseInt(val))
+    }
+    const time = date.getTime()
+    if (isNaN(time)) {
+      return null
+    }
+    // By rounding to the nearest second we avoid locking up in an endless
+    // loop in the builder, caused by potentially enriching {{ now }} to every
+    // millisecond.
+    return new Date(Math.floor(time / 1000) * 1000)
+  }
+
+  $: console.log(value)
 </script>
 
 <Flatpickr
   bind:flatpickr
-  {value}
+  value={parseDate(value)}
   on:open={onOpen}
   on:close={onClose}
   options={flatpickrOptions}

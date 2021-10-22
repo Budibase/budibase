@@ -5,12 +5,12 @@ context("Custom Theming Properties", () => {
       cy.navigateToFrontend()
     })
 
-    // Default Values
-    // Button roundness = Large
-    // Accent colour = Blue 600
-    // Accent colour (hover) = Blue 500
-    // Navigation bar background colour = Gray 100
-    // Navigation bar text colour = Gray 800
+    /* Default Values:
+    Button roundness = Large
+    Accent colour = Blue 600
+    Accent colour (hover) = Blue 500
+    Navigation bar background colour = Gray 100
+    Navigation bar text colour = Gray 800 */
     it("should reset the color property values", () => {
       // Open Theme modal and change colours  
       cy.get(".spectrum-ActionButton-label").contains("Theme").click()
@@ -23,6 +23,29 @@ context("Custom Theming Properties", () => {
         // Check values have reset
         checkThemeColorDefaults()
     })
+    
+    /* Button Roundness Values:
+    None = 0
+    Small = 4px
+    Medium = 8px
+    Large = 16px */
+    it("should test button roundness", () => {
+      const buttonRoundnessValues = ["0", "4px", "8px", "16px"]
+      cy.wait(1000)
+      // Add button, change roundness and confirm value
+      cy.addComponent("Button", null).then((componentId) => {
+        buttonRoundnessValues.forEach(function (item, index){
+          cy.get(".spectrum-ActionButton-label").contains("Theme").click()
+          cy.get(".setting").contains("Button roundness").parent()
+          .get(".select-wrapper").click()
+          cy.get(".spectrum-Popover").find('li').eq(index).click()
+          cy.get(".spectrum-Button").contains("View changes").click({force: true})
+          cy.reload()
+          cy.getComponent(componentId)
+        .parents(".svelte-xiqd1c").eq(0).should('have.attr', 'style').and('contains', `--buttonBorderRadius:${item}`)
+      })
+    })
+  })
     
     const changeThemeColors = () => {
       // Changes the theme colours
