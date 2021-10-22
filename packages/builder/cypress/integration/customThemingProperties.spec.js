@@ -1,4 +1,4 @@
-context("Custom Theming Properties", () => {
+xcontext("Custom Theming Properties", () => {
     before(() => {
       cy.login()
       cy.createTestApp()
