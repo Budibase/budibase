@@ -106,64 +106,86 @@ exports.apiFileReturn = contents => {
 }
 
 /**
- * Takes a copy of the database state for an app to the object store.
- * @param {string} appId The ID of the app which is to be backed up.
- * @param {string} backupName The name of the backup located in the object store.
- * @return The backup has been completed when this promise completes and returns a file stream
- * to the temporary backup file (to return via API if required).
+ * Local utility to back up the database state for an app, excluding global user
+ * data or user relationships.
+ * @param {string} appId The app to backup
+ * @param {object} config Config to send to export DB
+ * @returns {*} either a string or a stream of the backup
  */
-exports.performBackup = async (appId, backupName) => {
-  return exports.exportDB(appId, {
-    exportName: backupName,
+const backupAppData = async (appId, config) => {
+  return await exports.exportDB(appId, {
+    ...config,
     filter: doc =>
       !(
         doc._id.includes(USER_METDATA_PREFIX) ||
-        doc.includes(LINK_USER_METADATA_PREFIX)
+        doc._id.includes(LINK_USER_METADATA_PREFIX)
       ),
   })
 }
 
 /**
- * exports a DB to either file or a variable (memory).
- * @param {string} dbName the DB which is to be exported.
- * @param {string} exportName optional - the file name to export to, if not in memory.
- * @param {function} filter optional - a filter function to clear out any un-wanted docs.
- * @return Either the file stream or the variable (if no export name provided).
+ * Takes a copy of the database state for an app to the object store.
+ * @param {string} appId The ID of the app which is to be backed up.
+ * @param {string} backupName The name of the backup located in the object store.
+ * @return {*} a readable stream to the completed backup file
  */
-exports.exportDB = async (
-  dbName,
-  { exportName, filter } = { exportName: undefined, filter: undefined }
-) => {
-  let stream,
-    appString = "",
-    path = null
-  if (exportName) {
-    path = join(budibaseTempDir(), exportName)
-    stream = fs.createWriteStream(path)
-  } else {
-    stream = new MemoryStream()
-    stream.on("data", chunk => {
-      appString += chunk.toString()
-    })
-  }
-  // perform couch dump
+exports.performBackup = async (appId, backupName) => {
+  return await backupAppData(appId, { exportName: backupName })
+}
+
+/**
+ * Streams a backup of the database state for an app
+ * @param {string} appId The ID of the app which is to be backed up.
+ * @returns {*} a readable stream of the backup which is written in real time
+ */
+exports.streamBackup = async appId => {
+  return await backupAppData(appId, { stream: true })
+}
+
+/**
+ * Exports a DB to either file or a variable (memory).
+ * @param {string} dbName the DB which is to be exported.
+ * @param {string} exportName optional - provide a filename to write the backup to a file
+ * @param {boolean} stream optional - whether to perform a full backup
+ * @param {function} filter optional - a filter function to clear out any un-wanted docs.
+ * @return {*} either a readable stream or a string
+ */
+exports.exportDB = async (dbName, { stream, filter, exportName } = {}) => {
   const instanceDb = new CouchDB(dbName)
-  await instanceDb.dump(stream, {
-    filter,
+
+  // Stream the dump if required
+  if (stream) {
+    const memStream = new MemoryStream()
+    instanceDb.dump(memStream, { filter })
+    return memStream
+  }
+
+  // Write the dump to file if required
+  if (exportName) {
+    const path = join(budibaseTempDir(), exportName)
+    const writeStream = fs.createWriteStream(path)
+    await instanceDb.dump(writeStream, { filter })
+
+    // Upload the dump to the object store if self hosted
+    if (env.SELF_HOSTED) {
+      await streamUpload(
+        ObjectStoreBuckets.BACKUPS,
+        join(dbName, exportName),
+        fs.createReadStream(path)
+      )
+    }
+
+    return fs.createReadStream(path)
+  }
+
+  // Stringify the dump in memory if required
+  const memStream = new MemoryStream()
+  let appString = ""
+  memStream.on("data", chunk => {
+    appString += chunk.toString()
   })
-  // just in memory, return the final string
-  if (!exportName) {
-    return appString
-  }
-  // write the file to the object store
-  if (env.SELF_HOSTED) {
-    await streamUpload(
-      ObjectStoreBuckets.BACKUPS,
-      join(dbName, exportName),
-      fs.createReadStream(path)
-    )
-  }
-  return fs.createReadStream(path)
+  await instanceDb.dump(memStream, { filter })
+  return appString
 }
 
 /**
