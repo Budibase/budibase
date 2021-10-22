@@ -87,10 +87,10 @@
   }
 
   .template {
-    height: 60px;
+    min-height: 60px;
     display: grid;
-    grid-gap: var(--layout-m);
-    grid-template-columns: 5% 1fr 15%;
+    grid-gap: var(--layout-s);
+    grid-template-columns: auto 1fr auto;
     border: 1px solid #494949;
     align-items: center;
     cursor: pointer;

@@ -86,8 +86,6 @@
     // millisecond.
     return new Date(Math.floor(time / 1000) * 1000)
   }
-
-  $: console.log(value)
 </script>
 
 <Flatpickr
