@@ -11,7 +11,9 @@
   const dispatch = createEventDispatcher()
 
   const roles = app.roles
-  let options = roles.map(role => ({ value: role._id, label: role.name }))
+  let options = roles
+    .filter(role => role._id !== "PUBLIC")
+    .map(role => ({ value: role._id, label: role.name }))
   options.push({ value: NO_ACCESS, label: "No Access" })
   let selectedRole = user?.roles?.[app?._id]
 
