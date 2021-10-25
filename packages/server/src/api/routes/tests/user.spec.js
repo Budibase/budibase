@@ -38,7 +38,7 @@ describe("/users", () => {
     })
 
     it("should apply authorization to endpoint", async () => {
-      await config.createUser("brenda@brenda.com", "brendas_password")
+      await config.createUser()
       await checkPermissionsEndpoint({
         config,
         request,
