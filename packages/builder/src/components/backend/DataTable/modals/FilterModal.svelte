@@ -43,12 +43,12 @@
       key: "CONTAINS",
     },
     {
-      name: "Is Set",
-      key: "SET",
+      name: "Is Not Empty",
+      key: "NOT_EMPTY",
     },
     {
-      name: "Is Not Set",
-      key: "NOT_SET",
+      name: "Is Empty",
+      key: "EMPTY",
     },
   ]
 
@@ -122,7 +122,7 @@
   const getOptionValue = x => x.key
 
   const showValue = filter => {
-    return !(filter.condition === "SET" || filter.condition === "NOT_SET")
+    return !(filter.condition === "EMPTY" || filter.condition === "NOT_EMPTY")
   }
 </script>
 
