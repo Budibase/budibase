@@ -1,6 +1,6 @@
 const CouchDB = require("../../../db")
 const Deployment = require("./Deployment")
-const { Replication } = require("@budibase/auth/db")
+const { Replication, getDeployedAppID } = require("@budibase/auth/db")
 const { DocumentTypes, getAutomationParams } = require("../../../db/utils")
 const {
   disableAllCrons,
@@ -87,7 +87,7 @@ async function initDeployedApp(prodAppId) {
 
 async function deployApp(deployment) {
   try {
-    const productionAppId = deployment.appId.replace("_dev", "")
+    const productionAppId = getDeployedAppID(deployment.appId)
 
     const replication = new Replication({
       source: deployment.appId,
@@ -104,23 +104,8 @@ async function deployApp(deployment) {
     appDoc.instance._id = productionAppId
     await db.put(appDoc)
     console.log("New app doc written successfully.")
-
-    console.log("Setting up live repl between dev and prod")
-    // Set up live sync between the live and dev instances
-    const liveReplication = new Replication({
-      source: productionAppId,
-      target: deployment.appId,
-    })
-    liveReplication.subscribe({
-      filter: function (doc) {
-        return doc._id !== DocumentTypes.APP_METADATA
-      },
-    })
-    console.log("Set up live repl between dev and prod")
-
-    console.log("Initialising deployed app")
     await initDeployedApp(productionAppId)
-    console.log("Init complete, setting deployment to successful")
+    console.log("Deployed app initialised, setting deployment to successful")
     deployment.setStatus(DeploymentStatus.SUCCESS)
     await storeDeploymentHistory(deployment)
   } catch (err) {
