@@ -28,27 +28,9 @@
   $: type = schema?.type ?? "string"
   $: customRenderer = customRenderers?.find(x => x.column === schema?.name)
   $: renderer = customRenderer?.component ?? typeMap[type] ?? StringRenderer
-
-  /**
-   * Don't use falsy here as we want to:
-   * - include empty arrays
-   * - exclude 0 and booleans
-   *
-   * If updated, the corresponding view expression should be updated in 'server/viewBuilder.js'
-   */
-  const isNotSet = value => {
-    return (
-      value === undefined ||
-      value === null ||
-      value === "" ||
-      (Array.isArray(value) && value.length === 0)
-    )
-  }
 </script>
 
-{#if !customRenderer && isNotSet(value)}
-  <svelte:component this={StringRenderer} value={"Not Set"} secondary={true} />
-{:else if renderer}
+{#if renderer && (customRenderer || (value != null && value !== ""))}
   <svelte:component this={renderer} {row} {schema} {value} on:clickrelationship>
     <slot />
   </svelte:component>

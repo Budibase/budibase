@@ -10,14 +10,7 @@ const TOKEN_MAP = {
   OR: "||",
 }
 
-/**
- * Don't use falsy here as we want to:
- * - include empty arrays
- * - exclude 0 and booleans
- *
- * If updated, the corresponding rendering condition should be updated in 'bbui/CellRenderer.svelte'
- */
-const isNotSetExpression = key => {
+const isEmptyExpression = key => {
   return `(
       doc["${key}"] === undefined ||
       doc["${key}"] === null ||
@@ -88,10 +81,10 @@ function parseFilterExpression(filters) {
       expression.push(
         `doc["${filter.key}"].${TOKEN_MAP[filter.condition]}("${filter.value}")`
       )
-    } else if (filter.condition === "NOT_SET") {
-      expression.push(isNotSetExpression(filter.key))
-    } else if (filter.condition === "SET") {
-      expression.push(`!${isNotSetExpression(filter.key)}`)
+    } else if (filter.condition === "EMPTY") {
+      expression.push(isEmptyExpression(filter.key))
+    } else if (filter.condition === "NOT_EMPTY") {
+      expression.push(`!${isEmptyExpression(filter.key)}`)
     } else {
       const value =
         typeof filter.value == "string" ? `"${filter.value}"` : filter.value
