@@ -35,11 +35,20 @@ export function createUsersStore() {
     return await response.json()
   }
 
-  async function create({ email, password, admin, builder }) {
+  async function create({
+    email,
+    password,
+    admin,
+    builder,
+    forceResetPassword,
+  }) {
     const body = {
       email,
       password,
       roles: {},
+    }
+    if (forceResetPassword) {
+      body.forceResetPassword = forceResetPassword
     }
     if (builder) {
       body.builder = { global: true }
