@@ -11,6 +11,8 @@
   export let level = 0
   export let dragDropStore
 
+  let closedNodes = {}
+
   const selectComponent = component => {
     store.actions.components.select(component)
   }
@@ -51,6 +53,15 @@
       "component"
     return capitalise(type)
   }
+
+  function toggleNodeOpen(componentId) {
+    if (closedNodes[componentId]) {
+      delete closedNodes[componentId]
+    } else {
+      closedNodes[componentId] = true
+    }
+    closedNodes = closedNodes
+  }
 </script>
 
 <ul>
@@ -71,16 +82,18 @@
         on:dragend={dragDropStore.actions.reset}
         on:dragstart={dragstart(component)}
         on:dragover={dragover(component, index)}
+        on:iconClick={() => toggleNodeOpen(component._id)}
         on:drop={dragDropStore.actions.drop}
         text={getComponentText(component)}
         withArrow
         indentLevel={level + 1}
         selected={$store.selectedComponentId === component._id}
+        opened={!closedNodes[component._id] && component?._children?.length}
       >
         <ComponentDropdownMenu {component} />
       </NavItem>
 
-      {#if component._children}
+      {#if component._children && !closedNodes[component._id]}
         <svelte:self
           components={component._children}
           {currentComponent}

@@ -1,5 +1,5 @@
 const MySQLIntegration = require("../mysql")
-jest.mock("mysql")
+jest.mock("mysql2")
 
 class TestConfiguration {
   constructor(config = { ssl: {} }) {

@@ -924,7 +924,7 @@
     svelte-flatpickr "^3.2.3"
     svelte-portal "^1.0.0"
 
-"@budibase/bbui@^0.9.169-alpha.10", "@budibase/bbui@^0.9.171":
+"@budibase/bbui@^0.9.169-alpha.12", "@budibase/bbui@^0.9.171":
   version "0.9.171"
   resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-0.9.171.tgz#2785ce376a0da51a0695137a9013b59bb181b8c0"
   integrity sha512-l6ncDzU/UaM9x96htHoHZzgULd9ETZlLamezXFuo3KxASbNJKS91tC5Xl/kAeDRZNLApk9bMKzKVsahxillqWw==
@@ -973,7 +973,7 @@
     svelte-flatpickr "^3.2.3"
     svelte-portal "^1.0.0"
 
-"@budibase/client@^0.9.169-alpha.10":
+"@budibase/client@^0.9.169-alpha.12":
   version "0.9.171"
   resolved "https://registry.yarnpkg.com/@budibase/client/-/client-0.9.171.tgz#21c4f2106bd127aa7638564cd96b6bcb5fef5632"
   integrity sha512-IqOgfP/sH0rbXHz4mGVrFghtmpKcudysVwbki4koQYjpBZWeqVUtPDrYowYAqLpOiyOLYMBTCN6jt3xHu0VaUg==
@@ -1035,7 +1035,7 @@
     svelte-apexcharts "^1.0.2"
     svelte-flatpickr "^3.1.0"
 
-"@budibase/string-templates@^0.9.169-alpha.10", "@budibase/string-templates@^0.9.171":
+"@budibase/string-templates@^0.9.169-alpha.12", "@budibase/string-templates@^0.9.171":
   version "0.9.171"
   resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-0.9.171.tgz#69ca6586c3692ad63aa1dc63bcfe13f2eaee3b16"
   integrity sha512-yMuAMHjiRDSCJy2d/gHw2kToOmLFpG38PpV98XaaYX3ohEtApy/u5FDSFh70i5tPBtFRqI9GqbNaehm1mZIH7Q==

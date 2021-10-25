@@ -103,7 +103,7 @@
     "memorystream": "^0.3.1",
     "mongodb": "3.6.3",
     "mssql": "6.2.3",
-    "mysql": "2.18.1",
+    "mysql2": "^2.3.1",
     "node-fetch": "2.6.0",
     "open": "7.3.0",
     "pg": "8.5.1",

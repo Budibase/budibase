@@ -1,9 +1,9 @@
 <script>
+  import { createEventDispatcher } from "svelte"
   import { queries } from "stores/backend"
   import { Select } from "@budibase/bbui"
   import DrawerBindableInput from "../../common/bindings/DrawerBindableInput.svelte"
   import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
-  import { createEventDispatcher } from "svelte"
 
   const dispatch = createEventDispatcher()
 
@@ -22,7 +22,6 @@
 
   $: query = $queries.list.find(query => query._id === value?.queryId)
   $: parameters = query?.parameters ?? []
-
   // Ensure any nullish queryId values get set to empty string so
   // that the select works
   $: if (value?.queryId == null) value = { queryId: "" }
