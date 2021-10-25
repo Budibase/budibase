@@ -2,7 +2,7 @@
   export let value
 </script>
 
-<div>{value}</div>
+<div>{typeof value === "object" ? JSON.stringify(value) : value}</div>
 
 <style>
   div {
