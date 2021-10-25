@@ -42,6 +42,14 @@
       name: "Contains",
       key: "CONTAINS",
     },
+    {
+      name: "Is Not Empty",
+      key: "NOT_EMPTY",
+    },
+    {
+      name: "Is Empty",
+      key: "EMPTY",
+    },
   ]
 
   const CONJUNCTIONS = [
@@ -112,6 +120,10 @@
 
   const getOptionLabel = x => x.name
   const getOptionValue = x => x.key
+
+  const showValue = filter => {
+    return !(filter.condition === "EMPTY" || filter.condition === "NOT_EMPTY")
+  }
 </script>
 
 <ModalContent title="Filter" confirmText="Save" onConfirm={saveView} size="L">
@@ -140,30 +152,36 @@
           {getOptionLabel}
           {getOptionValue}
         />
-        {#if filter.key && isMultipleChoice(filter.key)}
-          <Select
-            bind:value={filter.value}
-            options={fieldOptions(filter.key)}
-            getOptionLabel={x => x.toString()}
-          />
-        {:else if filter.key && isDate(filter.key)}
-          <DatePicker
-            bind:value={filter.value}
-            placeholder={filter.key || fields[0]}
-          />
-        {:else if filter.key && isNumber(filter.key)}
-          <Input
-            bind:value={filter.value}
-            placeholder={filter.key || fields[0]}
-            type="number"
-          />
+        {#if showValue(filter)}
+          {#if filter.key && isMultipleChoice(filter.key)}
+            <Select
+              bind:value={filter.value}
+              options={fieldOptions(filter.key)}
+              getOptionLabel={x => x.toString()}
+            />
+          {:else if filter.key && isDate(filter.key)}
+            <DatePicker
+              bind:value={filter.value}
+              placeholder={filter.key || fields[0]}
+            />
+          {:else if filter.key && isNumber(filter.key)}
+            <Input
+              bind:value={filter.value}
+              placeholder={filter.key || fields[0]}
+              type="number"
+            />
+          {:else}
+            <Input
+              placeholder={filter.key || fields[0]}
+              bind:value={filter.value}
+            />
+          {/if}
+          <Icon hoverable name="Close" on:click={() => removeFilter(idx)} />
         {:else}
-          <Input
-            placeholder={filter.key || fields[0]}
-            bind:value={filter.value}
-          />
+          <Icon hoverable name="Close" on:click={() => removeFilter(idx)} />
+          <!-- empty div to preserve spacing -->
+          <div />
         {/if}
-        <Icon hoverable name="Close" on:click={() => removeFilter(idx)} />
       {/each}
     </div>
   {:else}
