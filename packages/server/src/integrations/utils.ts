@@ -34,7 +34,10 @@ export function generateRowIdField(keyProps: any[] = []) {
 }
 
 export function isRowId(field: any) {
-  return Array.isArray(field) || (typeof field === "string" && field.match(ROW_ID_REGEX) != null)
+  return (
+    Array.isArray(field) ||
+    (typeof field === "string" && field.match(ROW_ID_REGEX) != null)
+  )
 }
 
 export function convertRowId(field: any) {

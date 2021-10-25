@@ -18,6 +18,7 @@
     "jsonwebtoken": "^8.5.1",
     "koa-passport": "^4.1.4",
     "lodash": "^4.17.21",
+    "lodash.isarguments": "^3.1.0",
     "node-fetch": "^2.6.1",
     "passport-google-auth": "^1.0.2",
     "passport-google-oauth": "^2.0.0",
