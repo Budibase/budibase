@@ -126,7 +126,7 @@ function viewTemplate({ field, tableId, groupBy, filters = [], calculation }) {
     delete filters[0].conjunction
   }
   const parsedFilters = parseFilterExpression(filters)
-  const filterExpression = parsedFilters ? `&& ${parsedFilters}` : ""
+  const filterExpression = parsedFilters ? `&& (${parsedFilters})` : ""
 
   const emitExpression = parseEmitExpression(field, groupBy)
 
