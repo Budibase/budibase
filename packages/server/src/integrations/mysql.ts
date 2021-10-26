@@ -8,6 +8,7 @@ import {
 } from "../definitions/datasource"
 import { Table, TableSchema } from "../definitions/common"
 import { getSqlQuery } from "./utils"
+import { DatasourcePlus } from "./base/datasourcePlus"
 
 module MySQLModule {
   const mysql = require("mysql2")
@@ -15,7 +16,7 @@ module MySQLModule {
   const {
     buildExternalTableId,
     convertType,
-    copyExistingPropsOver,
+    finaliseExternalTables,
   } = require("./utils")
   const { FieldTypes } = require("../constants")
 
@@ -131,9 +132,11 @@ module MySQLModule {
     })
   }
 
-  class MySQLIntegration extends Sql {
+  class MySQLIntegration extends Sql implements DatasourcePlus {
     private config: MySQLConfig
     private readonly client: any
+    public tables: Record<string, Table> = {}
+    public schemaErrors: Record<string, string> = {}
 
     constructor(config: MySQLConfig) {
       super("mysql")
@@ -185,10 +188,6 @@ module MySQLModule {
             constraints,
           }
         }
-        // for now just default to first column
-        if (primaryKeys.length === 0) {
-          primaryKeys.push(descResp[0].Field)
-        }
         if (!tables[tableName]) {
           tables[tableName] = {
             _id: buildExternalTableId(datasourceId, tableName),
@@ -197,12 +196,12 @@ module MySQLModule {
             schema,
           }
         }
-
-        copyExistingPropsOver(tableName, tables, entities)
       }
 
       this.client.end()
-      this.tables = tables
+      const final = finaliseExternalTables(tables, entities)
+      this.tables = final.tables
+      this.schemaErrors = final.errors
     }
 
     async create(query: SqlQuery | string) {
