@@ -36,7 +36,10 @@ module.exports = async (ctx, next) => {
   }
 
   // deny access to application preview
-  if (isDevAppID(requestAppId) && (!ctx.user || !ctx.user.builder?.global)) {
+  if (
+    isDevAppID(requestAppId) &&
+    (!ctx.user || !ctx.user.builder || !ctx.user.builder.global)
+  ) {
     clearCookie(ctx, Cookies.CurrentApp)
     return ctx.redirect("/")
   }
