@@ -31,7 +31,7 @@ export const saveRow = async row => {
     : notificationStore.actions.success("Row saved")
 
   // Refresh related datasources
-  dataSourceStore.actions.invalidateDataSource(row.tableId)
+  await dataSourceStore.actions.invalidateDataSource(row.tableId)
 
   return res
 }
@@ -52,7 +52,7 @@ export const updateRow = async row => {
     : notificationStore.actions.success("Row updated")
 
   // Refresh related datasources
-  dataSourceStore.actions.invalidateDataSource(row.tableId)
+  await dataSourceStore.actions.invalidateDataSource(row.tableId)
 
   return res
 }
@@ -76,7 +76,7 @@ export const deleteRow = async ({ tableId, rowId, revId }) => {
     : notificationStore.actions.success("Row deleted")
 
   // Refresh related datasources
-  dataSourceStore.actions.invalidateDataSource(tableId)
+  await dataSourceStore.actions.invalidateDataSource(tableId)
 
   return res
 }
@@ -99,7 +99,7 @@ export const deleteRows = async ({ tableId, rows }) => {
     : notificationStore.actions.success(`${rows.length} row(s) deleted`)
 
   // Refresh related datasources
-  dataSourceStore.actions.invalidateDataSource(tableId)
+  await dataSourceStore.actions.invalidateDataSource(tableId)
 
   return res
 }
