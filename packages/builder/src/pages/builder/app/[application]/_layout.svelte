@@ -1,21 +1,24 @@
 <script>
   import { store, automationStore } from "builderStore"
   import { roles } from "stores/backend"
-  import { Icon, ActionGroup, Tabs, Tab } from "@budibase/bbui"
+  import { Icon, ActionGroup, Tabs, Tab, notifications } from "@budibase/bbui"
   import DeployModal from "components/deploy/DeployModal.svelte"
   import RevertModal from "components/deploy/RevertModal.svelte"
   import VersionModal from "components/deploy/VersionModal.svelte"
   import NPSFeedbackForm from "components/feedback/NPSFeedbackForm.svelte"
-  import { get } from "builderStore/api"
+  import { get, post } from "builderStore/api"
   import { auth, admin } from "stores/portal"
   import { isActive, goto, layout, redirect } from "@roxi/routify"
   import Logo from "assets/bb-emblem.svg"
   import { capitalise } from "helpers"
   import UpgradeModal from "../../../../components/upgrade/UpgradeModal.svelte"
+  import { onMount } from "svelte"
 
   // Get Package and set store
   export let application
   let promise = getPackage()
+  // sync once when you load the app
+  let hasSynced = false
   $: selected = capitalise(
     $layout.children.find(layout => $isActive(layout.path))?.title ?? "data"
   )
@@ -67,6 +70,16 @@
       return state
     })
   }
+
+  onMount(async () => {
+    if (!hasSynced && application) {
+      const res = await post(`/api/applications/${application}/sync`)
+      if (res.status !== 200) {
+        notifications.error("Failed to sync with production database")
+      }
+      hasSynced = true
+    }
+  })
 </script>
 
 {#await promise}
