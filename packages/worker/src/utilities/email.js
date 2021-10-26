@@ -35,6 +35,9 @@ function createSMTPTransport(config) {
     options.tls = {
       rejectUnauthorized: false,
     }
+    if (config.connectionTimeout) {
+      options.connectionTimeout = config.connectionTimeout
+    }
   } else {
     options = {
       port: 587,
