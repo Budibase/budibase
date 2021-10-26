@@ -22,7 +22,7 @@
 
   // Register field with form
   const formApi = formContext?.formApi
-  const labelPosition = fieldGroupContext?.labelPosition || "above"
+  const labelPos = fieldGroupContext?.labelPosition || "above"
   const formField = formApi?.registerField(
     field,
     type,
@@ -38,17 +38,23 @@
     fieldApi = value?.fieldApi
     fieldSchema = value?.fieldSchema
   })
-  onDestroy(() => unsubscribe && unsubscribe())
+  onDestroy(() => unsubscribe?.())
 
-  // Keep validation rules up to date
+  // Keep field state up to date with props which might change due to
+  // conditional UI
   $: updateValidation(validation)
+  $: updateDisabled(disabled)
+
+  // Determine label class from position
+  $: labelClass = labelPos === "above" ? "" : `spectrum-FieldLabel--${labelPos}`
+
   const updateValidation = validation => {
     fieldApi?.updateValidation(validation)
   }
 
-  // Extract label position from field group context
-  $: labelPositionClass =
-    labelPosition === "above" ? "" : `spectrum-FieldLabel--${labelPosition}`
+  const updateDisabled = disabled => {
+    fieldApi?.setDisabled(disabled)
+  }
 </script>
 
 <FieldGroupFallback>
@@ -56,7 +62,7 @@
     <label
       class:hidden={!label}
       for={fieldState?.fieldId}
-      class={`spectrum-FieldLabel spectrum-FieldLabel--sizeM spectrum-Form-itemLabel ${labelPositionClass}`}
+      class={`spectrum-FieldLabel spectrum-FieldLabel--sizeM spectrum-Form-itemLabel ${labelClass}`}
     >
       {label || ""}
     </label>
