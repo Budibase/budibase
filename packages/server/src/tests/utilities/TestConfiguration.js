@@ -144,7 +144,7 @@ class TestConfiguration {
     const headers = {
       Accept: "application/json",
     }
-    if (this.prodAppId) {
+    if (appId) {
       headers[Headers.APP_ID] = appId
     }
     return headers
