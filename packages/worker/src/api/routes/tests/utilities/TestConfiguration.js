@@ -234,6 +234,7 @@ class TestConfiguration {
             user: "don.bahringer@ethereal.email",
             pass: "yCKSH8rWyUPbnhGYk9",
           },
+          connectionTimeout: 1000, // must be less than the jest default of 5000
         },
       },
       null,
