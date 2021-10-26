@@ -15,7 +15,7 @@ const DB_LOOKUP = {
   ],
 }
 
-const getMigrationsDoc = async db => {
+exports.getMigrationsDoc = async db => {
   // get the migrations doc
   try {
     return await db.get(DocumentTypes.MIGRATIONS)
@@ -27,25 +27,21 @@ const getMigrationsDoc = async db => {
 }
 
 exports.migrateIfRequired = async (migrationDb, migrationName, migrateFn) => {
-  let db
-  if (migrationDb === exports.MIGRATION_DBS.GLOBAL_DB) {
-    db = getGlobalDB()
-  } else {
-    throw new Error(`Unrecognised migration db [${migrationDb}]`)
-  }
-
-  if (!DB_LOOKUP[migrationDb].includes(migrationName)) {
-    throw new Error(
-      `Unrecognised migration name [${migrationName}] for db [${migrationDb}]`
-    )
-  }
-  return tryMigrate(db, migrationName, migrateFn)
-}
-
-const tryMigrate = async (db, migrationName, migrateFn) => {
   try {
-    const doc = await getMigrationsDoc(db)
+    let db
+    if (migrationDb === exports.MIGRATION_DBS.GLOBAL_DB) {
+      db = getGlobalDB()
+    } else {
+      throw new Error(`Unrecognised migration db [${migrationDb}]`)
+    }
 
+    if (!DB_LOOKUP[migrationDb].includes(migrationName)) {
+      throw new Error(
+        `Unrecognised migration name [${migrationName}] for db [${migrationDb}]`
+      )
+    }
+
+    const doc = await exports.getMigrationsDoc(db)
     // exit if the migration has been performed
     if (doc[migrationName]) {
       return

@@ -1,6 +1,6 @@
 // Mock data
 
-require("./utilities/test-config")
+require("../../../tests/utilities/dbConfig")
 
 const database = require("../../../db")
 const { authenticateThirdParty } = require("../third-party-common")
