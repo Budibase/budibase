@@ -3,9 +3,6 @@ const { EmailTemplatePurpose } = require("../../../constants")
 const nodemailer = require("nodemailer")
 const fetch = require("node-fetch")
 
-// need a longer timeout for getting these
-jest.setTimeout(30000)
-
 describe("/api/global/email", () => {
   let request = setup.getRequest()
   let config = setup.getConfig()
