@@ -11,6 +11,15 @@ describe("test the custom helpers we have applied", () => {
   })
 })
 
+describe("test that it can run without helpers", () => {
+  it("should be able to run without helpers", async () => {
+    const output = await processString("{{ avg 1 1 1 }}", {}, { noHelpers: true })
+    const valid = await processString("{{ avg 1 1 1 }}", {})
+    expect(valid).toBe("1")
+    expect(output).toBe("Invalid Binding")
+  })
+})
+
 describe("test the math helpers", () => {
   it("should be able to produce an absolute", async () => {
     const output = await processString("{{abs a}}", {
@@ -267,6 +276,7 @@ describe("test the comparison helpers", () => {
     )
     expect(output).toBe("Success")
   }
+
   it("should allow use of the lt helper", async () => {
     await compare("lt", 10, 15)
   })
