@@ -18,7 +18,7 @@
   import { onMount } from "svelte"
   import { apps, auth, admin } from "stores/portal"
   import download from "downloadjs"
-  import { goto } from "@roxi/routify"
+  import { goto, params } from "@roxi/routify"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import AppCard from "components/start/AppCard.svelte"
   import AppRow from "components/start/AppRow.svelte"
@@ -184,9 +184,27 @@
     }
   }
 
+  function createAppFromTemplateUrl(templateKey) {
+    // validate the template key just to make sure
+    const templateParts = templateKey.split("/")
+    if (templateParts.length === 2 && templateParts[0] === "app") {
+      template = {
+        key: templateKey,
+      }
+      initiateAppCreation()
+    } else {
+      notifications.error("Your Template URL is invalid. Please try another.")
+    }
+  }
+
   onMount(async () => {
     await apps.load()
     loaded = true
+
+    // if the portal is loaded from an external URL
+    const templateKey = $params["?template"]
+    if (!templateKey) return
+    createAppFromTemplateUrl(templateKey)
   })
 </script>
 
