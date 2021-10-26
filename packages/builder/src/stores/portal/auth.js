@@ -60,6 +60,8 @@ export function createAuthStore() {
           name: user.name,
           user_id: user._id,
           tenant: user.tenantId,
+          "Company size": user.size,
+          "Job role": user.profession,
         })
       })
     }
