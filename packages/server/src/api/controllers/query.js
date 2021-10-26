@@ -101,7 +101,9 @@ async function enrichQueryFields(fields, parameters = {}) {
       enrichedQuery[key] = await enrichQueryFields(fields[key], parameters)
     } else if (typeof fields[key] === "string") {
       // enrich string value as normal
-      enrichedQuery[key] = await processString(fields[key], parameters)
+      enrichedQuery[key] = await processString(fields[key], parameters, {
+        noHelpers: true,
+      })
     } else {
       enrichedQuery[key] = fields[key]
     }
