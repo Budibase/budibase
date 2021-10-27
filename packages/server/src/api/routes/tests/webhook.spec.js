@@ -112,8 +112,11 @@ describe("/webhooks", () => {
 
   describe("trigger", () => {
     it("should allow triggering from public", async () => {
+      // replicate changes before checking webhook
+      await config.deploy()
+
       const res = await request
-        .post(`/api/webhooks/trigger/${config.getAppId()}/${webhook._id}`)
+        .post(`/api/webhooks/trigger/${config.prodAppId}/${webhook._id}`)
         .expect("Content-Type", /json/)
         .expect(200)
       expect(res.body.message).toBeDefined()
