@@ -38,7 +38,7 @@
         message: `${field} ${rowResponse.validationErrors[field][0]}`,
       }))
       return false
-    } else if (rowResponse.status === 500) {
+    } else if (rowResponse.status >= 400) {
       errors = [{ message: rowResponse.message }]
       return false
     }

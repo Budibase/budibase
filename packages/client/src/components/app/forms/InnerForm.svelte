@@ -248,10 +248,25 @@
       }
     }
 
+    // Updates the disabled state of a certain field
+    const setDisabled = fieldDisabled => {
+      const fieldInfo = getField(field)
+
+      // Auto columns are always disabled
+      const isAutoColumn = !!schema?.[field]?.autocolumn
+
+      // Update disabled state
+      fieldInfo.update(state => {
+        state.fieldState.disabled = disabled || fieldDisabled || isAutoColumn
+        return state
+      })
+    }
+
     return {
       setValue,
       clearValue,
       updateValidation,
+      setDisabled,
       validate: () => {
         // Validate the field by force setting the same value again
         const { fieldState } = get(getField(field))

@@ -22,3 +22,11 @@ module.exports.removeHandlebarsStatements = string => {
   }
   return string
 }
+
+module.exports.btoa = plainText => {
+  return Buffer.from(plainText, "utf-8").toString("base64")
+}
+
+module.exports.atob = base64 => {
+  return Buffer.from(base64, "base64").toString("utf-8")
+}

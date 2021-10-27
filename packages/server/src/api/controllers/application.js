@@ -25,7 +25,12 @@ const { BASE_LAYOUTS } = require("../../constants/layouts")
 const { createHomeScreen } = require("../../constants/screens")
 const { cloneDeep } = require("lodash/fp")
 const { processObject } = require("@budibase/string-templates")
-const { getAllApps } = require("@budibase/auth/db")
+const {
+  getAllApps,
+  isDevAppID,
+  getDeployedAppID,
+  Replication,
+} = require("@budibase/auth/db")
 const { USERS_TABLE_SCHEMA } = require("../../constants")
 const {
   getDeployedApps,
@@ -134,7 +139,7 @@ async function createInstance(template) {
   return { _id: appId }
 }
 
-exports.fetch = async function (ctx) {
+exports.fetch = async ctx => {
   const dev = ctx.query && ctx.query.status === AppStatus.DEV
   const all = ctx.query && ctx.query.status === AppStatus.ALL
   const apps = await getAllApps(CouchDB, { dev, all })
@@ -159,7 +164,7 @@ exports.fetch = async function (ctx) {
   ctx.body = apps
 }
 
-exports.fetchAppDefinition = async function (ctx) {
+exports.fetchAppDefinition = async ctx => {
   const db = new CouchDB(ctx.params.appId)
   const layouts = await getLayouts(db)
   const userRoleId = getUserRoleId(ctx)
@@ -175,7 +180,7 @@ exports.fetchAppDefinition = async function (ctx) {
   }
 }
 
-exports.fetchAppPackage = async function (ctx) {
+exports.fetchAppPackage = async ctx => {
   const db = new CouchDB(ctx.params.appId)
   const application = await db.get(DocumentTypes.APP_METADATA)
   const layouts = await getLayouts(db)
@@ -196,7 +201,7 @@ exports.fetchAppPackage = async function (ctx) {
   }
 }
 
-exports.create = async function (ctx) {
+exports.create = async ctx => {
   const { useTemplate, templateKey, templateString } = ctx.request.body
   const instanceConfig = {
     useTemplate,
@@ -252,13 +257,13 @@ exports.create = async function (ctx) {
   ctx.body = newApplication
 }
 
-exports.update = async function (ctx) {
+exports.update = async ctx => {
   const data = await updateAppPackage(ctx, ctx.request.body, ctx.params.appId)
   ctx.status = 200
   ctx.body = data
 }
 
-exports.updateClient = async function (ctx) {
+exports.updateClient = async ctx => {
   // Get current app version
   const db = new CouchDB(ctx.params.appId)
   const application = await db.get(DocumentTypes.APP_METADATA)
@@ -280,7 +285,7 @@ exports.updateClient = async function (ctx) {
   ctx.body = data
 }
 
-exports.revertClient = async function (ctx) {
+exports.revertClient = async ctx => {
   // Check app can be reverted
   const db = new CouchDB(ctx.params.appId)
   const application = await db.get(DocumentTypes.APP_METADATA)
@@ -303,7 +308,7 @@ exports.revertClient = async function (ctx) {
   ctx.body = data
 }
 
-exports.delete = async function (ctx) {
+exports.delete = async ctx => {
   const db = new CouchDB(ctx.params.appId)
 
   const result = await db.destroy()
@@ -316,6 +321,35 @@ exports.delete = async function (ctx) {
 
   ctx.status = 200
   ctx.body = result
+}
+
+exports.sync = async ctx => {
+  const appId = ctx.params.appId
+  if (!isDevAppID(appId)) {
+    ctx.throw(400, "This action cannot be performed for production apps")
+  }
+  const prodAppId = getDeployedAppID(appId)
+  const replication = new Replication({
+    source: prodAppId,
+    target: appId,
+  })
+  let error
+  try {
+    await replication.replicate({
+      filter: function (doc) {
+        return doc._id !== DocumentTypes.APP_METADATA
+      },
+    })
+  } catch (err) {
+    error = err
+  }
+  if (error) {
+    ctx.throw(400, error)
+  } else {
+    ctx.body = {
+      message: "App sync completed successfully.",
+    }
+  }
 }
 
 const updateAppPackage = async (ctx, appPackage, appId) => {

@@ -7,11 +7,17 @@ import {
 } from "./storeUtils"
 import { store } from "builderStore"
 import { queries as queriesStores, tables as tablesStore } from "stores/backend"
-import { makePropSafe } from "@budibase/string-templates"
+import {
+  makePropSafe,
+  isJSBinding,
+  decodeJSBinding,
+  encodeJSBinding,
+} from "@budibase/string-templates"
 import { TableNames } from "../constants"
 
 // Regex to match all instances of template strings
 const CAPTURE_VAR_INSIDE_TEMPLATE = /{{([^}]+)}}/g
+const CAPTURE_VAR_INSIDE_JS = /\$\("([^")]+)"\)/g
 const CAPTURE_HBS_TEMPLATE = /{{[\S\s]*?}}/g
 
 /**
@@ -430,6 +436,15 @@ function replaceBetween(string, start, end, replacement) {
  * utility function for the readableToRuntimeBinding and runtimeToReadableBinding.
  */
 function bindingReplacement(bindableProperties, textWithBindings, convertTo) {
+  // Decide from base64 if using JS
+  const isJS = isJSBinding(textWithBindings)
+  if (isJS) {
+    textWithBindings = decodeJSBinding(textWithBindings)
+  }
+
+  // Determine correct regex to find bindings to replace
+  const regex = isJS ? CAPTURE_VAR_INSIDE_JS : CAPTURE_VAR_INSIDE_TEMPLATE
+
   const convertFrom =
     convertTo === "runtimeBinding" ? "readableBinding" : "runtimeBinding"
   if (typeof textWithBindings !== "string") {
@@ -441,7 +456,7 @@ function bindingReplacement(bindableProperties, textWithBindings, convertTo) {
     .sort((a, b) => {
       return b.length - a.length
     })
-  const boundValues = textWithBindings.match(CAPTURE_VAR_INSIDE_TEMPLATE) || []
+  const boundValues = textWithBindings.match(regex) || []
   let result = textWithBindings
   for (let boundValue of boundValues) {
     let newBoundValue = boundValue
@@ -449,7 +464,7 @@ function bindingReplacement(bindableProperties, textWithBindings, convertTo) {
     // in the search, working from longest to shortest so always use best match first
     let searchString = newBoundValue
     for (let from of convertFromProps) {
-      if (shouldReplaceBinding(newBoundValue, from, convertTo)) {
+      if (isJS || shouldReplaceBinding(newBoundValue, from, convertTo)) {
         const binding = bindableProperties.find(el => el[convertFrom] === from)
         let idx
         do {
@@ -457,7 +472,7 @@ function bindingReplacement(bindableProperties, textWithBindings, convertTo) {
           idx = searchString.indexOf(from)
           if (idx !== -1) {
             let end = idx + from.length,
-              searchReplace = Array(binding[convertTo].length).join("*")
+              searchReplace = Array(binding[convertTo].length + 1).join("*")
             // blank out parts of the search string
             searchString = replaceBetween(searchString, idx, end, searchReplace)
             newBoundValue = replaceBetween(
@@ -472,6 +487,12 @@ function bindingReplacement(bindableProperties, textWithBindings, convertTo) {
     }
     result = result.replace(boundValue, newBoundValue)
   }
+
+  // Re-encode to base64 if using JS
+  if (isJS) {
+    result = encodeJSBinding(result)
+  }
+
   return result
 }
 

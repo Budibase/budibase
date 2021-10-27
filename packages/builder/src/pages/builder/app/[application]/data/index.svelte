@@ -1,6 +1,7 @@
 <script>
   import { goto } from "@roxi/routify"
   import { onMount } from "svelte"
+  import { admin } from "stores/portal"
   import CreateDatasourceModal from "components/backend/DatasourceNavigator/modals/CreateDatasourceModal.svelte"
   import { datasources } from "stores/backend"
 
@@ -10,7 +11,7 @@
     $datasources.list.length > 1
 
   onMount(() => {
-    if (!setupComplete) {
+    if (!setupComplete && !$admin.isDev) {
       modal.show()
     } else {
       $goto("./table")

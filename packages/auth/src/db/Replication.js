@@ -46,22 +46,6 @@ class Replication {
   }
 
   /**
-   * Set up an ongoing live sync between 2 CouchDB databases.
-   * @param {Object} opts - PouchDB replication options
-   */
-  subscribe(opts = {}) {
-    this.replication = this.source.replicate
-      .to(this.target, {
-        live: true,
-        retry: true,
-        ...opts,
-      })
-      .on("error", function (err) {
-        throw new Error(`Replication Error: ${err}`)
-      })
-  }
-
-  /**
    * Rollback the target DB back to the state of the source DB
    */
   async rollback() {

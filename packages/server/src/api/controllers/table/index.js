@@ -9,11 +9,7 @@ const {
   BudibaseInternalDB,
 } = require("../../../db/utils")
 const { FieldTypes } = require("../../../constants")
-const { TableSaveFunctions, getExternalTable } = require("./utils")
-const {
-  isExternalTable,
-  breakExternalTableId,
-} = require("../../../integrations/utils")
+const { TableSaveFunctions, getTable } = require("./utils")
 
 exports.fetch = async function (ctx) {
   const db = new CouchDB(ctx.appId)
@@ -48,14 +44,8 @@ exports.fetch = async function (ctx) {
 }
 
 exports.find = async function (ctx) {
-  const db = new CouchDB(ctx.appId)
   const tableId = ctx.params.id
-  if (isExternalTable(tableId)) {
-    let { datasourceId, tableName } = breakExternalTableId(tableId)
-    ctx.body = await getExternalTable(ctx.appId, datasourceId, tableName)
-  } else {
-    ctx.body = await db.get(ctx.params.id)
-  }
+  ctx.body = await getTable(ctx.appId, tableId)
 }
 
 exports.save = async function (ctx) {
@@ -91,6 +81,9 @@ exports.save = async function (ctx) {
     for (let propKey of Object.keys(tableToSave.schema)) {
       let column = tableToSave.schema[propKey]
       let oldColumn = oldTable.schema[propKey]
+      if (oldColumn && oldColumn.type === "internal") {
+        oldColumn.type = "auto"
+      }
       if (oldColumn && oldColumn.type !== column.type) {
         ctx.throw(400, "Cannot change the type of a column")
       }

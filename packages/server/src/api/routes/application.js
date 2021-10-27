@@ -7,6 +7,7 @@ const usage = require("../../middleware/usageQuota")
 const router = Router()
 
 router
+  .post("/api/applications/:appId/sync", authorized(BUILDER), controller.sync)
   .post("/api/applications", authorized(BUILDER), usage, controller.create)
   .get("/api/applications/:appId/definition", controller.fetchAppDefinition)
   .get("/api/applications", controller.fetch)

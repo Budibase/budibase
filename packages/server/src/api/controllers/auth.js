@@ -28,14 +28,23 @@ exports.fetchSelf = async ctx => {
         ...metadata,
       })
     } catch (err) {
+      let response
       // user didn't exist in app, don't pretend they do
       if (user.roleId === BUILTIN_ROLE_IDS.PUBLIC) {
-        ctx.body = {}
+        response = {}
       }
       // user has a role of some sort, return them
-      else {
-        ctx.body = user
+      else if (err.status === 404) {
+        const metadata = {
+          _id: userId,
+        }
+        const dbResp = await db.put(metadata)
+        user._rev = dbResp.rev
+        response = user
+      } else {
+        response = user
       }
+      ctx.body = response
     }
   } else {
     ctx.body = user

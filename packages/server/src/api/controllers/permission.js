@@ -147,6 +147,7 @@ exports.getResourcePerms = async function (ctx) {
       const rolePerms = role.permissions
       if (
         rolePerms &&
+        rolePerms[resourceId] &&
         (rolePerms[resourceId] === level ||
           rolePerms[resourceId].indexOf(level) !== -1)
       ) {

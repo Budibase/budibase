@@ -5,6 +5,7 @@ const { DocumentTypes, SEPARATOR } = require("../db/utils")
 const { FieldTypes } = require("../constants")
 
 const DOUBLE_SEPARATOR = `${SEPARATOR}${SEPARATOR}`
+const ROW_ID_REGEX = /^\[.*]$/g
 
 export function isExternalTable(tableId: string) {
   return tableId.includes(DocumentTypes.DATASOURCE)
@@ -30,6 +31,23 @@ export function generateRowIdField(keyProps: any[] = []) {
   // we have to swap the double quotes to single quotes for use in HBS statements
   // when using the literal helper the double quotes can break things
   return encodeURIComponent(JSON.stringify(keyProps).replace(/"/g, "'"))
+}
+
+export function isRowId(field: any) {
+  return (
+    Array.isArray(field) ||
+    (typeof field === "string" && field.match(ROW_ID_REGEX) != null)
+  )
+}
+
+export function convertRowId(field: any) {
+  if (Array.isArray(field)) {
+    return field[0]
+  }
+  if (typeof field === "string" && field.match(ROW_ID_REGEX) != null) {
+    return field.substring(1, field.length - 1)
+  }
+  return field
 }
 
 // should always return an array

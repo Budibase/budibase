@@ -39,7 +39,7 @@
       await admin.init()
       $goto("../portal")
     } catch (err) {
-      notifications.error(`Failed to create admin user`)
+      notifications.error(`Failed to create admin user: ${err}`)
     }
   }
 

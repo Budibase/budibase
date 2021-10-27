@@ -10,6 +10,15 @@ const TOKEN_MAP = {
   OR: "||",
 }
 
+const isEmptyExpression = key => {
+  return `(
+      doc["${key}"] === undefined ||
+      doc["${key}"] === null ||
+      doc["${key}"] === "" ||
+      (Array.isArray(doc["${key}"]) && doc["${key}"].length === 0)
+  )`
+}
+
 const GROUP_PROPERTY = {
   group: {
     type: "string",
@@ -72,6 +81,10 @@ function parseFilterExpression(filters) {
       expression.push(
         `doc["${filter.key}"].${TOKEN_MAP[filter.condition]}("${filter.value}")`
       )
+    } else if (filter.condition === "EMPTY") {
+      expression.push(isEmptyExpression(filter.key))
+    } else if (filter.condition === "NOT_EMPTY") {
+      expression.push(`!${isEmptyExpression(filter.key)}`)
     } else {
       const value =
         typeof filter.value == "string" ? `"${filter.value}"` : filter.value
@@ -113,7 +126,7 @@ function viewTemplate({ field, tableId, groupBy, filters = [], calculation }) {
     delete filters[0].conjunction
   }
   const parsedFilters = parseFilterExpression(filters)
-  const filterExpression = parsedFilters ? `&& ${parsedFilters}` : ""
+  const filterExpression = parsedFilters ? `&& (${parsedFilters})` : ""
 
   const emitExpression = parseEmitExpression(field, groupBy)
 

@@ -44,7 +44,7 @@ Object {
 exports[`viewBuilder Filter creates a view with multiple filters and conjunctions 1`] = `
 Object {
   "map": "function (doc) {
-      if (doc.tableId === \\"14f1c4e94d6a47b682ce89d35d4c78b0\\" && doc[\\"Name\\"] === \\"Test\\" || doc[\\"Yes\\"] > \\"Value\\") {
+      if (doc.tableId === \\"14f1c4e94d6a47b682ce89d35d4c78b0\\" && (doc[\\"Name\\"] === \\"Test\\" || doc[\\"Yes\\"] > \\"Value\\")) {
         emit(doc[\\"_id\\"], doc[\\"undefined\\"]);
       }
     }",

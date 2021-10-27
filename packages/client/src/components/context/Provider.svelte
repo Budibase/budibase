@@ -1,5 +1,5 @@
 <script>
-  import { getContext, setContext, onMount } from "svelte"
+  import { getContext, setContext, onDestroy } from "svelte"
   import { dataSourceStore, createContextStore } from "stores"
   import { ActionTypes } from "constants"
   import { generate } from "shortid"
@@ -56,9 +56,9 @@
     }
   }
 
-  onMount(() => {
+  onDestroy(() => {
     // Unregister all datasource instances when unmounting this provider
-    return () => dataSourceStore.actions.unregisterInstance(instanceId)
+    dataSourceStore.actions.unregisterInstance(instanceId)
   })
 </script>
 

@@ -13,10 +13,10 @@
   export let appendTo = undefined
 
   const dispatch = createEventDispatcher()
+
   const onChange = e => {
-    const isoString = e.detail.toISOString()
-    value = isoString
-    dispatch("change", isoString)
+    value = e.detail
+    dispatch("change", e.detail)
   }
 </script>
 

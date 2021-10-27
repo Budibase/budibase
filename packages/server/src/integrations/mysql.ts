@@ -10,7 +10,7 @@ import { Table, TableSchema } from "../definitions/common"
 import { getSqlQuery } from "./utils"
 
 module MySQLModule {
-  const mysql = require("mysql")
+  const mysql = require("mysql2")
   const Sql = require("./base/sql")
   const {
     buildExternalTableId,

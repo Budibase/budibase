@@ -24,7 +24,7 @@ describe("/api/global/auth", () => {
     // initially configure settings
     await config.saveSmtpConfig()
     await config.saveSettingsConfig()
-    await config.createUser("test@test.com")
+    await config.createUser()
     const res = await request
       .post(`/api/global/auth/${TENANT_ID}/reset`)
       .send({

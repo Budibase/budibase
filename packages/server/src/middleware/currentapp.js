@@ -3,7 +3,7 @@ const { getAppId, setCookie, getCookie, clearCookie } =
 const { Cookies } = require("@budibase/auth").constants
 const { getRole } = require("@budibase/auth/roles")
 const { BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
-const { generateUserMetadataID } = require("../db/utils")
+const { generateUserMetadataID, isDevAppID } = require("../db/utils")
 const { dbExists } = require("@budibase/auth/db")
 const { isUserInAppTenant } = require("@budibase/auth/tenancy")
 const { getCachedSelf } = require("../utilities/global")
@@ -35,6 +35,15 @@ module.exports = async (ctx, next) => {
     requestAppId = requestAppId || appId
   }
 
+  // deny access to application preview
+  if (
+    isDevAppID(requestAppId) &&
+    (!ctx.user || !ctx.user.builder || !ctx.user.builder.global)
+  ) {
+    clearCookie(ctx, Cookies.CurrentApp)
+    return ctx.redirect("/")
+  }
+
   let appId,
     roleId = BUILTIN_ROLE_IDS.PUBLIC
   if (!ctx.user) {
@@ -45,7 +54,7 @@ module.exports = async (ctx, next) => {
     const globalUser = await getCachedSelf(ctx, requestAppId)
     appId = requestAppId
     // retrieving global user gets the right role
-    roleId = globalUser.roleId || BUILTIN_ROLE_IDS.BASIC
+    roleId = globalUser.roleId || roleId
   }
 
   // nothing more to do
