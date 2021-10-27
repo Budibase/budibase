@@ -6,10 +6,18 @@ import {
   SqlQuery,
 } from "../definitions/datasource"
 import { getSqlQuery } from "./utils"
+import { DatasourcePlus } from "./base/datasourcePlus"
+import { Table, TableSchema } from "../definitions/common";
 
 module MSSQLModule {
   const sqlServer = require("mssql")
   const Sql = require("./base/sql")
+  const { FieldTypes } = require("../constants")
+  const {
+    buildExternalTableId,
+    convertType,
+    finaliseExternalTables,
+  } = require("./utils")
 
   interface MSSQLConfig {
     user: string
@@ -22,6 +30,7 @@ module MSSQLModule {
 
   const SCHEMA: Integration = {
     docs: "https://github.com/tediousjs/node-mssql",
+    plus: true,
     description:
       "Microsoft SQL Server is a relational database management system developed by Microsoft. ",
     friendlyName: "MS SQL Server",
@@ -69,18 +78,66 @@ module MSSQLModule {
     },
   }
 
+  // TODO: need to update this
+  const TYPE_MAP = {
+    text: FieldTypes.LONGFORM,
+    blob: FieldTypes.LONGFORM,
+    enum: FieldTypes.STRING,
+    varchar: FieldTypes.STRING,
+    float: FieldTypes.NUMBER,
+    int: FieldTypes.NUMBER,
+    numeric: FieldTypes.NUMBER,
+    bigint: FieldTypes.NUMBER,
+    mediumint: FieldTypes.NUMBER,
+    decimal: FieldTypes.NUMBER,
+    dec: FieldTypes.NUMBER,
+    double: FieldTypes.NUMBER,
+    real: FieldTypes.NUMBER,
+    fixed: FieldTypes.NUMBER,
+    smallint: FieldTypes.NUMBER,
+    timestamp: FieldTypes.DATETIME,
+    date: FieldTypes.DATETIME,
+    datetime: FieldTypes.DATETIME,
+    time: FieldTypes.DATETIME,
+    tinyint: FieldTypes.BOOLEAN,
+    json: DatasourceFieldTypes.JSON,
+  }
+
   async function internalQuery(client: any, query: SqlQuery) {
     try {
-      return await client.query(query.sql, query.bindings || {})
+      if (Array.isArray(query.bindings)) {
+        let count = 0
+        for (let binding of query.bindings) {
+          client.input(`p${count++}`, binding)
+        }
+      }
+      return await client.query(query.sql)
     } catch (err) {
       // @ts-ignore
       throw new Error(err)
     }
   }
 
-  class SqlServerIntegration extends Sql {
+  class SqlServerIntegration extends Sql implements DatasourcePlus {
     private readonly config: MSSQLConfig
     static pool: any
+    public tables: Record<string, Table> = {}
+    public schemaErrors: Record<string, string> = {}
+
+    MASTER_TABLES = [
+      "spt_fallback_db",
+      "spt_fallback_dev",
+      "spt_fallback_usg",
+      "spt_monitor",
+      "MSreplication_options"
+    ]
+    TABLES_SQL = "SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE='BASE TABLE'"
+
+    getDefinitionSQL(tableName: string) {
+      return `select *
+              from INFORMATION_SCHEMA.COLUMNS
+              where TABLE_NAME='${tableName}'`
+    }
 
     constructor(config: MSSQLConfig) {
       super("mssql")
@@ -89,6 +146,7 @@ module MSSQLModule {
         ...this.config,
         options: {
           encrypt: this.config.encrypt,
+          enableArithAbort: true,
         },
       }
       delete clientCfg.encrypt
@@ -105,6 +163,46 @@ module MSSQLModule {
         // @ts-ignore
         throw new Error(err)
       }
+    }
+
+    /**
+     * Fetches the tables from the sql server database and assigns them to the datasource.
+     * @param {*} datasourceId - datasourceId to fetch
+     * @param entities - the tables that are to be built
+     */
+    async buildSchema(datasourceId: string, entities: Record<string, Table>) {
+
+      await this.connect()
+      let tableNames = await internalQuery(this.client, getSqlQuery(this.TABLES_SQL))
+      if (tableNames == null || !Array.isArray(tableNames.recordset)) {
+        throw "Unable to get list of tables in database"
+      }
+      tableNames = tableNames.recordset.map((record: any) => record.TABLE_NAME).filter((name: string) => this.MASTER_TABLES.indexOf(name) === -1)
+      const tables: Record<string, Table> = {}
+      for (let tableName of tableNames) {
+        const definition = await internalQuery(this.client, getSqlQuery(this.getDefinitionSQL(tableName)))
+        let schema: TableSchema = {}
+        for (let def of definition.recordset) {
+          const name = def.COLUMN_NAME
+          if (typeof name !== "string") {
+            continue
+          }
+          const type: string = convertType(def.DATA_TYPE, TYPE_MAP)
+          const identity = false
+          schema[name] = {
+            autocolumn: identity,
+            name: name,
+            type,
+          }
+        }
+        tables[tableName] = {
+          _id: buildExternalTableId(datasourceId, tableName),
+          primary: ["id"],
+          name: tableName,
+          schema,
+        }
+      }
+      this.tables = tables
     }
 
     async read(query: SqlQuery | string) {
@@ -132,6 +230,7 @@ module MSSQLModule {
     }
 
     async query(json: QueryJson) {
+      await this.connect()
       const operation = this._operation(json).toLowerCase()
       const input = this._query(json)
       const response = await internalQuery(this.client, input)
