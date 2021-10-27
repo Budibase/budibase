@@ -66,11 +66,15 @@ exports.authenticateThirdParty = async function (
     // setup a blank user using the third party id
     dbUser = {
       _id: userId,
+      email: thirdPartyUser.email,
       roles: {},
     }
   }
 
   dbUser = await syncUser(dbUser, thirdPartyUser)
+
+  // never prompt for password reset
+  dbUser.forceResetPassword = false
 
   // create or sync the user
   let response
@@ -121,9 +125,6 @@ async function syncUser(user, thirdPartyUser) {
   // provider
   user.provider = thirdPartyUser.provider
   user.providerType = thirdPartyUser.providerType
-
-  // email
-  user.email = thirdPartyUser.email
 
   if (thirdPartyUser.profile) {
     const profile = thirdPartyUser.profile

@@ -81,7 +81,9 @@ async function getFullLinkedDocs(ctx, appId, links) {
     row => row.doc
   )
   // convert the unique db rows back to a full list of linked rows
-  const linked = linkedRowIds.map(id => dbRows.find(row => row._id === id))
+  const linked = linkedRowIds
+    .map(id => dbRows.find(row => row && row._id === id))
+    .filter(row => row != null)
   // need to handle users as specific cases
   let [users, other] = partition(linked, linkRow =>
     linkRow._id.startsWith(USER_METDATA_PREFIX)
@@ -172,13 +174,18 @@ exports.attachFullLinkedDocs = async (ctx, table, rows) => {
         row[link.fieldName] = []
       }
       const linkedRow = linked.find(row => row._id === link.id)
-      const linkedTableId =
-        linkedRow.tableId || getRelatedTableForField(table, link.fieldName)
-      const linkedTable = await getLinkedTable(db, linkedTableId, linkedTables)
-      if (!linkedRow || !linkedTable) {
-        continue
+      if (linkedRow) {
+        const linkedTableId =
+          linkedRow.tableId || getRelatedTableForField(table, link.fieldName)
+        const linkedTable = await getLinkedTable(
+          db,
+          linkedTableId,
+          linkedTables
+        )
+        if (linkedTable) {
+          row[link.fieldName].push(processFormulas(linkedTable, linkedRow))
+        }
       }
-      row[link.fieldName].push(processFormulas(linkedTable, linkedRow))
     }
   }
   return rows

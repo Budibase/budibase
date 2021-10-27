@@ -20,7 +20,7 @@ export const executeQuery = async ({ queryId, parameters }) => {
     notificationStore.actions.error("An error has occurred")
   } else if (!query.readable) {
     notificationStore.actions.success("Query executed successfully")
-    dataSourceStore.actions.invalidateDataSource(query.datasourceId)
+    await dataSourceStore.actions.invalidateDataSource(query.datasourceId)
   }
   return res
 }

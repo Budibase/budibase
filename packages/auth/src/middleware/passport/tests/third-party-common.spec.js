@@ -1,6 +1,6 @@
 // Mock data
 
-require("./utilities/test-config")
+require("../../../tests/utilities/dbConfig")
 
 const database = require("../../../db")
 const { authenticateThirdParty } = require("../third-party-common")
@@ -72,7 +72,6 @@ describe("third party common", () => {
 
     const expectUserIsSynced = (user, thirdPartyUser) => {
       expect(user.provider).toBe(thirdPartyUser.provider)
-      expect(user.email).toBe(thirdPartyUser.email)
       expect(user.firstName).toBe(thirdPartyUser.profile.name.givenName)
       expect(user.lastName).toBe(thirdPartyUser.profile.name.familyName)
       expect(user.thirdPartyProfile).toStrictEqual(thirdPartyUser.profile._json)
@@ -134,6 +133,24 @@ describe("third party common", () => {
           expectUserIsUpdated(user)
         })
       })
+
+      describe("exists by email with different casing", () => {
+        beforeEach(async () => {
+          id = generateGlobalUserID(newid()) // random id
+          email = thirdPartyUser.email.toUpperCase() //  matching email except for casing
+          await createUser()
+        })
+
+        it("syncs and authenticates the user", async () => {
+          await authenticateThirdParty(thirdPartyUser, true, done, saveUser)
+        
+          const user = expectUserIsAuthenticated()
+          expectUserIsSynced(user, thirdPartyUser)
+          expectUserIsUpdated(user)
+          expect(user.email).toBe(thirdPartyUser.email.toUpperCase())
+        })
+      })
+
 
       describe("exists by id", () => {
         beforeEach(async () => {

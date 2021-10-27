@@ -82,6 +82,13 @@ class InMemoryQueue {
     // TODO: implement for testing
     console.log(cronJobId)
   }
+
+  /**
+   * Implemented for tests
+   */
+  getRepeatableJobs() {
+    return []
+  }
 }
 
 module.exports = InMemoryQueue

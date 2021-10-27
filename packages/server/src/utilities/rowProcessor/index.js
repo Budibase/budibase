@@ -150,6 +150,10 @@ exports.processAutoColumn = processAutoColumn
  * @returns {object} The coerced value
  */
 exports.coerce = (row, type) => {
+  // no coercion specified for type, skip it
+  if (!TYPE_TRANSFORM_MAP[type]) {
+    return row
+  }
   // eslint-disable-next-line no-prototype-builtins
   if (TYPE_TRANSFORM_MAP[type].hasOwnProperty(row)) {
     return TYPE_TRANSFORM_MAP[type][row]
@@ -196,6 +200,12 @@ exports.inputProcessing = (
       clonedRow[key] = exports.coerce(value, field.type)
     }
   }
+
+  if (!clonedRow._id || !clonedRow._rev) {
+    clonedRow._id = row._id
+    clonedRow._rev = row._rev
+  }
+
   // handle auto columns - this returns an object like {table, row}
   return processAutoColumn(user, copiedTable, clonedRow, opts)
 }

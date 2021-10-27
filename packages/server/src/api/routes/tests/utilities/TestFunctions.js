@@ -50,9 +50,10 @@ exports.createRequest = (request, method, url, body) => {
 }
 
 exports.checkBuilderEndpoint = async ({ config, method, url, body }) => {
-  const headers = await config.login("test@test.com", "test", {
+  const headers = await config.login({
     userId: "us_fail",
     builder: false,
+    prodApp: true,
   })
   await exports
     .createRequest(config.request, method, url, body)
@@ -68,11 +69,9 @@ exports.checkPermissionsEndpoint = async ({
   passRole,
   failRole,
 }) => {
-  const password = "PASSWORD"
-  let user = await config.createUser("pass@budibase.com", password, passRole)
-  const passHeader = await config.login("pass@budibase.com", password, {
+  const passHeader = await config.login({
     roleId: passRole,
-    userId: user.globalId,
+    prodApp: true,
   })
 
   await exports
@@ -82,13 +81,12 @@ exports.checkPermissionsEndpoint = async ({
 
   let failHeader
   if (failRole === BUILTIN_ROLE_IDS.PUBLIC) {
-    failHeader = config.publicHeaders()
+    failHeader = config.publicHeaders({ prodApp: true })
   } else {
-    user = await config.createUser("fail@budibase.com", password, failRole)
-    failHeader = await config.login("fail@budibase.com", password, {
+    failHeader = await config.login({
       roleId: failRole,
-      userId: user.globalId,
       builder: false,
+      prodApp: true,
     })
   }
 

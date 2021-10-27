@@ -1,10 +1,25 @@
 <script>
-  import { ModalContent, Layout, Detail, Body, Icon } from "@budibase/bbui"
+  import {
+    ModalContent,
+    Layout,
+    Detail,
+    Body,
+    Icon,
+    Tooltip,
+  } from "@budibase/bbui"
   import { automationStore } from "builderStore"
+  import { admin } from "stores/portal"
   import { externalActions } from "./ExternalActions"
 
   export let blockIdx
   export let blockComplete
+
+  const disabled = {
+    SEND_EMAIL_SMTP: {
+      disabled: !$admin.checklist.smtp.checked,
+      message: "Please configure SMTP",
+    },
+  }
 
   let selectedAction
   let actionVal
@@ -55,6 +70,7 @@
   }}
 >
   <Body size="XS">Select an app or event.</Body>
+
   <Layout noPadding>
     <Body size="S">Apps</Body>
 
@@ -85,24 +101,46 @@
 
     <div class="item-list">
       {#each Object.entries(internal) as [idx, action]}
-        <div
-          class="item"
-          class:selected={selectedAction === action.name}
-          on:click={() => selectAction(action)}
-        >
-          <div class="item-body">
-            <Icon name={action.icon} />
-            <span class="icon-spacing">
-              <Body size="XS">{action.name}</Body></span
+        {#if disabled[idx] && disabled[idx].disabled}
+          <Tooltip text={disabled[idx].message} direction="bottom">
+            <div
+              class="item"
+              class:selected={selectedAction === action.name}
+              class:disabled={true}
+              on:click={() => selectAction(action)}
             >
+              <div class="item-body">
+                <Icon name={action.icon} />
+                <span class="icon-spacing">
+                  <Body size="XS">{action.name}</Body></span
+                >
+              </div>
+            </div>
+          </Tooltip>
+        {:else}
+          <div
+            class="item"
+            class:selected={selectedAction === action.name}
+            on:click={() => selectAction(action)}
+          >
+            <div class="item-body">
+              <Icon name={action.icon} />
+              <span class="icon-spacing">
+                <Body size="XS">{action.name}</Body></span
+              >
+            </div>
           </div>
-        </div>
+        {/if}
       {/each}
     </div>
   </Layout>
 </ModalContent>
 
 <style>
+  .disabled {
+    opacity: 0.3;
+    pointer-events: none;
+  }
   .icon-spacing {
     margin-left: var(--spacing-m);
   }
@@ -118,7 +156,6 @@
 
   .item {
     cursor: pointer;
-    display: grid;
     grid-gap: var(--spectrum-alias-grid-margin-xsmall);
     padding: var(--spectrum-alias-item-padding-s);
     background: var(--spectrum-alias-background-color-secondary);

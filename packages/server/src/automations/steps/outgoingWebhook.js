@@ -1,5 +1,6 @@
 const fetch = require("node-fetch")
 const { getFetchResponse } = require("./utils")
+const automationUtils = require("../automationUtils")
 
 const RequestType = {
   POST: "POST",
@@ -127,7 +128,7 @@ exports.run = async function ({ inputs }) {
     /* istanbul ignore next */
     return {
       success: false,
-      response: err,
+      response: automationUtils.getError(err),
     }
   }
 }

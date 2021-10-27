@@ -2,6 +2,7 @@ const rowController = require("../../api/controllers/row")
 const env = require("../../environment")
 const usage = require("../../utilities/usageQuota")
 const { buildCtx } = require("./utils")
+const automationUtils = require("../automationUtils")
 
 exports.definition = {
   description: "Delete a row from your database",
@@ -85,7 +86,7 @@ exports.run = async function ({ inputs, appId, emitter }) {
   } catch (err) {
     return {
       success: false,
-      response: err,
+      response: automationUtils.getError(err),
     }
   }
 }

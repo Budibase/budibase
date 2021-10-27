@@ -1,5 +1,5 @@
 const PouchDB = require("pouchdb")
-const env = require("../../../../environment")
+const env = require("../../environment")
 
 let POUCH_DB_DEFAULTS
 

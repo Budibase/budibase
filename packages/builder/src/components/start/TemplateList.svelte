@@ -1,5 +1,5 @@
 <script>
-  import { Heading, Layout, Icon } from "@budibase/bbui"
+  import { Heading, Layout, Icon, Body } from "@budibase/bbui"
   import Spinner from "components/common/Spinner.svelte"
   import api from "builderStore/api"
 
@@ -19,6 +19,11 @@
       <Spinner size="30" />
     </div>
   {:then templates}
+    {#if templates?.length > 0}
+      <Body size="M">Select a template below, or start from scratch.</Body>
+    {:else}
+      <Body size="M">Start your app from scratch below.</Body>
+    {/if}
     <div class="templates">
       {#each templates as template}
         <div class="template" on:click={() => onSelect(template)}>
@@ -40,6 +45,19 @@
           <Icon name="Add" />
         </div>
         <Heading size="XS">Start from scratch</Heading>
+        <p class="detail">BLANK</p>
+      </div>
+      <div
+        class="template import"
+        on:click={() => onSelect(null, { useImport: true })}
+      >
+        <div
+          class="background-icon"
+          style={`background: rgb(50, 50, 50); color: white;`}
+        >
+          <Icon name="Add" />
+        </div>
+        <Heading size="XS">Import an app</Heading>
         <p class="detail">BLANK</p>
       </div>
     </div>
@@ -69,10 +87,10 @@
   }
 
   .template {
-    height: 60px;
+    min-height: 60px;
     display: grid;
-    grid-gap: var(--layout-m);
-    grid-template-columns: 5% 1fr 15%;
+    grid-gap: var(--layout-s);
+    grid-template-columns: auto 1fr auto;
     border: 1px solid #494949;
     align-items: center;
     cursor: pointer;
@@ -88,5 +106,9 @@
   .start-from-scratch {
     background: var(--spectrum-global-color-gray-50);
     margin-top: 20px;
+  }
+
+  .import {
+    background: var(--spectrum-global-color-gray-50);
   }
 </style>
