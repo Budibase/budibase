@@ -174,7 +174,6 @@ module PostgresModule {
 
       this.client = this.pool
       this.setSchema()
-      
     }
 
     setSchema() {
