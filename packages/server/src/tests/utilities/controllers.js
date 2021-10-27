@@ -12,4 +12,5 @@ module.exports = {
   screen: require("../../api/controllers/screen"),
   webhook: require("../../api/controllers/webhook"),
   layout: require("../../api/controllers/layout"),
+  deploy: require("../../api/controllers/deploy"),
 }

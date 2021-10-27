@@ -8,3 +8,5 @@ env._set("CLIENT_ID", "test-client-id")
 env._set("BUDIBASE_DIR", tmpdir("budibase-unittests"))
 env._set("LOG_LEVEL", "silent")
 env._set("PORT", 0)
+
+global.console.log = jest.fn() // console.log are ignored in tests

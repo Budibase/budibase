@@ -20,6 +20,9 @@ const { hash } = require("./hashing")
 const userCache = require("./cache/user")
 const env = require("./environment")
 const { getUserSessions, invalidateSessions } = require("./security/sessions")
+const { migrateIfRequired } = require("./migrations")
+const { USER_EMAIL_VIEW_CASING } = require("./migrations").MIGRATIONS
+const { GLOBAL_DB } = require("./migrations").MIGRATION_DBS
 
 const APP_PREFIX = DocumentTypes.APP + SEPARATOR
 
@@ -128,10 +131,16 @@ exports.getGlobalUserByEmail = async email => {
     throw "Must supply an email address to view"
   }
   const db = getGlobalDB()
+
+  await migrateIfRequired(GLOBAL_DB, USER_EMAIL_VIEW_CASING, async () => {
+    // re-create the view with latest changes
+    await createUserEmailView(db)
+  })
+
   try {
     let users = (
       await db.query(`database/${ViewNames.USER_BY_EMAIL}`, {
-        key: email,
+        key: email.toLowerCase(),
         include_docs: true,
       })
     ).rows
