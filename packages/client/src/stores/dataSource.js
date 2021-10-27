@@ -1,5 +1,6 @@
 import { writable, get } from "svelte/store"
 import { fetchTableDefinition } from "../api"
+import { TableNames } from "../constants"
 
 export const createDataSourceStore = () => {
   const store = writable([])
@@ -72,13 +73,17 @@ export const createDataSourceStore = () => {
     const schema = definition?.schema
     if (schema) {
       Object.values(schema).forEach(fieldSchema => {
-        if (fieldSchema.type === "link" && fieldSchema.tableId) {
+        if (
+          fieldSchema.type === "link" &&
+          fieldSchema.tableId &&
+          !fieldSchema.autocolumn
+        ) {
           invalidations.push(fieldSchema.tableId)
         }
       })
     }
 
-    // Remove and dupes
+    // Remove any dupes
     invalidations = [...new Set(invalidations)]
 
     // Invalidate all sources
