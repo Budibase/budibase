@@ -1,6 +1,6 @@
 <script>
   import Provider from "./Provider.svelte"
-  import { onMount } from "svelte"
+  import { onMount, onDestroy } from "svelte"
 
   let width = window.innerWidth
   let height = window.innerHeight
@@ -21,12 +21,11 @@
   }
 
   onMount(() => {
-    const doc = document.getElementById("app-root")
-    resizeObserver.observe(doc)
+    resizeObserver.observe(document.getElementById("app-root"))
+  })
 
-    return () => {
-      resizeObserver.unobserve(doc)
-    }
+  onDestroy(() => {
+    resizeObserver.unobserve(document.getElementById("app-root"))
   })
 </script>
 

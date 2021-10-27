@@ -1,6 +1,5 @@
 import { writable, get } from "svelte/store"
 import { fetchTableDefinition } from "../api"
-import { TableNames } from "../constants"
 
 export const createDataSourceStore = () => {
   const store = writable([])
