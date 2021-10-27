@@ -1,6 +1,14 @@
 <script>
   import { goto } from "@roxi/routify"
-  import { Button, Heading, Body, Divider, Layout, Modal } from "@budibase/bbui"
+  import {
+    Button,
+    Heading,
+    Body,
+    Divider,
+    Layout,
+    Modal,
+    InlineAlert,
+  } from "@budibase/bbui"
   import { datasources, integrations, queries, tables } from "stores/backend"
   import { notifications } from "@budibase/bbui"
   import IntegrationConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/IntegrationConfigForm.svelte"
@@ -19,6 +27,7 @@
     ? Object.values(datasource.entities || {})
     : []
   $: relationships = getRelationships(plusTables)
+  $: schemaError = $datasources.schemaError
 
   function getRelationships(tables) {
     if (!tables || !Array.isArray(tables)) {
@@ -171,6 +180,14 @@
           your tables directly from the database and you can use them without
           having to write any queries at all.
         </Body>
+        {#if schemaError}
+          <InlineAlert
+            type="error"
+            header="Error fetching tables"
+            message={schemaError}
+            onConfirm={datasources.removeSchemaError}
+          />
+        {/if}
         <div class="query-list">
           {#each plusTables as table}
             <div class="query-list-item" on:click={() => onClickTable(table)}>
