@@ -21,7 +21,7 @@ exports.createUserEmailView = async db => {
     // if using variables in a map function need to inject them before use
     map: `function(doc) {
       if (doc._id.startsWith("${DocumentTypes.USER}")) {
-        emit(doc.email, doc._id)
+        emit(doc.email.toLowerCase(), doc._id)
       }
     }`,
   }
