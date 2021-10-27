@@ -27,6 +27,7 @@ module PostgresModule {
     database: string
     user: string
     password: string
+    schema: string
     ssl?: boolean
     ca?: string
     rejectUnauthorized?: boolean
@@ -62,6 +63,11 @@ module PostgresModule {
       password: {
         type: DatasourceFieldTypes.PASSWORD,
         default: "root",
+        required: true,
+      },
+      schema: {
+        type: DatasourceFieldTypes.STRING,
+        default: "public",
         required: true,
       },
       ssl: {
@@ -137,8 +143,7 @@ module PostgresModule {
     private readonly client: any
     private readonly config: PostgresConfig
 
-    COLUMNS_SQL =
-      "select * from information_schema.columns where not table_schema = 'information_schema' and not table_schema = 'pg_catalog'"
+    COLUMNS_SQL!: string 
 
     PRIMARY_KEYS_SQL = `
     select tc.table_schema, tc.table_name, kc.column_name as primary_key 
@@ -168,6 +173,18 @@ module PostgresModule {
       }
 
       this.client = this.pool
+      this.setSchema()
+      
+    }
+
+    setSchema() {
+      if (!this.config.schema) {
+        this.config.schema = 'public'
+      }
+      this.client.on('connect', (client: any) => {    
+        client.query(`SET search_path TO ${this.config.schema}`);
+      });
+      this.COLUMNS_SQL = `select * from information_schema.columns where table_schema = '${this.config.schema}'`
     }
 
     /**
