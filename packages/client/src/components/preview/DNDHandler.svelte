@@ -8,7 +8,7 @@
 </script>
 
 <script>
-  import { onMount } from "svelte"
+  import { onMount, onDestroy } from "svelte"
   import { get } from "svelte/store"
   import IndicatorSet from "./IndicatorSet.svelte"
   import DNDPositionIndicator from "./DNDPositionIndicator.svelte"
@@ -209,18 +209,18 @@
     document.addEventListener("dragenter", onDragEnter, false)
     document.addEventListener("dragleave", onDragLeave, false)
     document.addEventListener("drop", onDrop, false)
+  })
 
-    return () => {
-      // Events fired on the draggable target
-      document.removeEventListener("dragstart", onDragStart, false)
-      document.removeEventListener("dragend", onDragEnd, false)
+  onDestroy(() => {
+    // Events fired on the draggable target
+    document.removeEventListener("dragstart", onDragStart, false)
+    document.removeEventListener("dragend", onDragEnd, false)
 
-      // Events fired on the drop targets
-      document.removeEventListener("dragover", onDragOver, false)
-      document.removeEventListener("dragenter", onDragEnter, false)
-      document.removeEventListener("dragleave", onDragLeave, false)
-      document.removeEventListener("drop", onDrop, false)
-    }
+    // Events fired on the drop targets
+    document.removeEventListener("dragover", onDragOver, false)
+    document.removeEventListener("dragenter", onDragEnter, false)
+    document.removeEventListener("dragleave", onDragLeave, false)
+    document.removeEventListener("drop", onDrop, false)
   })
 </script>
 
