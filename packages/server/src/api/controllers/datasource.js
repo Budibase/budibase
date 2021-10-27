@@ -7,6 +7,7 @@ const {
   BudibaseInternalDB,
   getTableParams,
 } = require("../../db/utils")
+const { BuildSchemaErrors } = require("../../constants")
 const { integrations } = require("../../integrations")
 const { makeExternalQuery } = require("./row/utils")
 
@@ -43,13 +44,17 @@ exports.buildSchemaFromDb = async function (ctx) {
   const db = new CouchDB(ctx.appId)
   const datasource = await db.get(ctx.params.datasourceId)
 
-  const tables = await buildSchemaHelper(datasource)
+  const { tables, error } = await buildSchemaHelper(datasource)
   datasource.entities = tables
 
-  const response = await db.put(datasource)
-  datasource._rev = response.rev
+  const dbResp = await db.put(datasource)
+  datasource._rev = dbResp.rev
 
-  ctx.body = datasource
+  const response = { datasource }
+  if (error) {
+    response.error = error
+  }
+  ctx.body = response
 }
 
 exports.update = async function (ctx) {
@@ -85,13 +90,15 @@ exports.save = async function (ctx) {
     ...ctx.request.body.datasource,
   }
 
+  let schemaError = null
   if (fetchSchema) {
-    let tables = await buildSchemaHelper(datasource)
+    const { tables, error } = await buildSchemaHelper(datasource)
+    schemaError = error
     datasource.entities = tables
   }
 
-  const response = await db.put(datasource)
-  datasource._rev = response.rev
+  const dbResp = await db.put(datasource)
+  datasource._rev = dbResp.rev
 
   // Drain connection pools when configuration is changed
   if (datasource.source) {
@@ -101,9 +108,11 @@ exports.save = async function (ctx) {
     }
   }
 
-  ctx.status = 200
-  ctx.message = "Datasource saved successfully."
-  ctx.body = datasource
+  const response = { datasource }
+  if (schemaError) {
+    response.error = schemaError
+  }
+  ctx.body = response
 }
 
 exports.destroy = async function (ctx) {
@@ -143,5 +152,15 @@ const buildSchemaHelper = async datasource => {
   await connector.buildSchema(datasource._id, datasource.entities)
   datasource.entities = connector.tables
 
-  return connector.tables
+  const errors = connector.schemaErrors
+  let error = null
+  if (errors && Object.keys(errors).length > 0) {
+    const noKeyTables = Object.entries(errors)
+      .filter(entry => entry[1] === BuildSchemaErrors.NO_KEY)
+      .map(([name]) => name)
+    error = `No primary key constraint found for the following: ${noKeyTables.join(
+      ", "
+    )}`
+  }
+  return { tables: connector.tables, error }
 }

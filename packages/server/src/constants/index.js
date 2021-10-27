@@ -152,5 +152,9 @@ exports.MetadataTypes = {
   AUTOMATION_TEST_HISTORY: "automationTestHistory",
 }
 
+exports.BuildSchemaErrors = {
+  NO_KEY: "no_key",
+}
+
 // pass through the list from the auth/core lib
 exports.ObjectStoreBuckets = ObjectStoreBuckets

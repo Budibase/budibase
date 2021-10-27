@@ -53,7 +53,7 @@ describe("Datasources Store", () => {
 
     })
 
-    expect(get(store).list).toEqual(expect.arrayContaining([SAVE_DATASOURCE]))
+    expect(get(store).list).toEqual(expect.arrayContaining([SAVE_DATASOURCE.datasource]))
   })
   it("deletes a datasource, updates the store and returns status message", async () => {
     api.get.mockReturnValue({ json: () => SOME_DATASOURCE})

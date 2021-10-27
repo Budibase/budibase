@@ -1,7 +1,6 @@
 // mock out postgres for this
 jest.mock("pg")
 
-const { findLastKey } = require("lodash/fp")
 const setup = require("./utilities")
 const { checkBuilderEndpoint } = require("./utilities/TestFunctions")
 const { basicQuery, basicDatasource } = setup.structures
