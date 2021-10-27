@@ -24,13 +24,7 @@
   }
 </script>
 
-<div
-  style="--spectrum-semantic-negative-border-color: #e34850;
-    --spectrum-semantic-positive-border-color: #2d9d78;
-    --spectrum-semantic-positive-icon-color: #2d9d78;
-    --spectrum-semantic-negative-icon-color: #e34850;"
-  class="spectrum-InLineAlert spectrum-InLineAlert--{type}"
->
+<div class="spectrum-InLineAlert spectrum-InLineAlert--{type}">
   <svg
     class="spectrum-Icon spectrum-Icon--sizeM spectrum-InLineAlert-icon"
     focusable="false"
@@ -42,7 +36,16 @@
   <div class="spectrum-InLineAlert-content">{message}</div>
   {#if onConfirm}
     <div class="spectrum-InLineAlert-footer">
-      <Button on:click={onConfirm}>OK</Button>
+      <Button secondary on:click={onConfirm}>OK</Button>
     </div>
   {/if}
 </div>
+
+<style>
+  .spectrum-InLineAlert {
+    --spectrum-semantic-negative-border-color: #e34850;
+    --spectrum-semantic-positive-border-color: #2d9d78;
+    --spectrum-semantic-positive-icon-color: #2d9d78;
+    --spectrum-semantic-negative-icon-color: #e34850;
+  }
+</style>
