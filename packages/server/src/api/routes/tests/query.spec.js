@@ -94,9 +94,9 @@ describe("/queries", () => {
         const query = await config.createQuery()
         const res = await request
           .get(`/api/queries/${query._id}`)
-          .set(await config.roleHeaders({}))
-          .expect("Content-Type", /json/)
+          .set(await config.defaultHeaders())
           .expect(200)
+          .expect("Content-Type", /json/)
         expect(res.body.fields).toBeUndefined()
         expect(res.body.parameters).toBeUndefined()
         expect(res.body.schema).toBeUndefined()
