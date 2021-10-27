@@ -76,7 +76,7 @@ exports.update = async function (ctx) {
 
   ctx.status = 200
   ctx.message = "Datasource saved successfully."
-  ctx.body = datasource
+  ctx.body = { datasource }
 }
 
 exports.save = async function (ctx) {
