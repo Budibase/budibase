@@ -283,7 +283,8 @@ class TestConfiguration {
 
   async createDatasource(config = null) {
     config = config || basicDatasource()
-    this.datasource = await this._req(config, null, controllers.datasource.save)
+    const response = await this._req(config, null, controllers.datasource.save)
+    this.datasource = response.datasource
     return this.datasource
   }
 
