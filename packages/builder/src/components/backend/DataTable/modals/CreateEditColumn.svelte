@@ -56,7 +56,7 @@
   let deletion
 
   $: tableOptions = $tables.list.filter(
-    table => table._id !== $tables.draft._id && table.type !== "external"
+    opt => opt._id !== $tables.draft._id && opt.type === table.type
   )
   $: required = !!field?.constraints?.presence || primaryDisplay
   $: uneditable =
@@ -83,6 +83,7 @@
   $: canBeRequired =
     field.type !== LINK_TYPE && !uneditable && field.type !== AUTO_TYPE
   $: relationshipOptions = getRelationshipOptions(field)
+  $: external = table.type === "external"
 
   async function saveColumn() {
     if (field.type === AUTO_TYPE) {
@@ -193,6 +194,27 @@
       },
     ]
   }
+
+  function getAllowedTypes() {
+    if (!external) {
+      return [
+        ...Object.values(fieldDefinitions),
+        { name: "Auto Column", type: AUTO_TYPE },
+      ]
+    } else {
+      return [
+        FIELDS.STRING,
+        FIELDS.LONGFORM,
+        FIELDS.OPTIONS,
+        FIELDS.DATETIME,
+        FIELDS.NUMBER,
+        FIELDS.BOOLEAN,
+        FIELDS.ARRAY,
+        FIELDS.FORMULA,
+        FIELDS.LINK,
+      ]
+    }
+  }
 </script>
 
 <ModalContent
@@ -215,10 +237,7 @@
     label="Type"
     bind:value={field.type}
     on:change={handleTypeChange}
-    options={[
-      ...Object.values(fieldDefinitions),
-      { name: "Auto Column", type: AUTO_TYPE },
-    ]}
+    options={getAllowedTypes()}
     getOptionLabel={field => field.name}
     getOptionValue={field => field.type}
   />

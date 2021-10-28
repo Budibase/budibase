@@ -1,19 +1,24 @@
 import { Knex, knex } from "knex"
-const BASE_LIMIT = 5000
 import {
-  QueryJson,
-  SearchFilters,
-  QueryOptions,
-  SortDirection,
   Operation,
+  QueryJson,
+  QueryOptions,
   RelationshipsJson,
+  SearchFilters,
+  SortDirection,
 } from "../../definitions/datasource"
 import { isIsoDateString } from "../utils"
+import SqlTableQueryBuilder from "./sqlTable"
+
+const BASE_LIMIT = 5000
 
 type KnexQuery = Knex.QueryBuilder | Knex
 
 function parseBody(body: any) {
   for (let [key, value] of Object.entries(body)) {
+    if (Array.isArray(value)) {
+      body[key] = JSON.stringify(value)
+    }
     if (typeof value !== "string") {
       continue
     }
@@ -243,21 +248,12 @@ function buildDelete(
   }
 }
 
-class SqlQueryBuilder {
-  private readonly sqlClient: string
+class SqlQueryBuilder extends SqlTableQueryBuilder {
   private readonly limit: number
   // pass through client to get flavour of SQL
   constructor(client: string, limit: number = BASE_LIMIT) {
-    this.sqlClient = client
+    super(client)
     this.limit = limit
-  }
-
-  /**
-   * @param json the input JSON structure from which an SQL query will be built.
-   * @return {string} the operation that was found in the JSON.
-   */
-  _operation(json: QueryJson): Operation {
-    return json.endpoint.operation
   }
 
   /**
@@ -267,7 +263,8 @@ class SqlQueryBuilder {
    * @return {{ sql: string, bindings: object }} the query ready to be passed to the driver.
    */
   _query(json: QueryJson, opts: QueryOptions = {}) {
-    const client = knex({ client: this.sqlClient })
+    const sqlClient = this.getSqlClient()
+    const client = knex({ client: sqlClient })
     let query
     switch (this._operation(json)) {
       case Operation.CREATE:
@@ -282,6 +279,8 @@ class SqlQueryBuilder {
       case Operation.DELETE:
         query = buildDelete(client, json, opts)
         break
+      case Operation.CREATE_TABLE: case Operation.UPDATE_TABLE: case Operation.DELETE_TABLE:
+        return this._tableQuery(json)
       default:
         throw `Operation type is not supported by SQL query builder`
     }

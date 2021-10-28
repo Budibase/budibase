@@ -5,6 +5,9 @@ export enum Operation {
   READ = "READ",
   UPDATE = "UPDATE",
   DELETE = "DELETE",
+  CREATE_TABLE = "CREATE_TABLE",
+  UPDATE_TABLE = "UPDATE_TABLE",
+  DELETE_TABLE = "DELETE_TABLE",
 }
 
 export enum SortDirection {
@@ -142,8 +145,10 @@ export interface QueryJson {
   sort?: SortJson
   paginate?: PaginationJson
   body?: object
+  table?: Table
   meta?: {
     table?: Table
+    tables?: Record<string, Table>
   }
   extra?: {
     idFilter?: SearchFilters
