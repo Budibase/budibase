@@ -46,15 +46,8 @@
     }
   }
 
-  // Convert contenteditable HTML to text and save
   const updateText = e => {
-    const html = e.target.innerHTML
-    const sanitized = html
-      .replace(/<\/div><div>/gi, "\n")
-      .replace(/<div>/gi, "")
-      .replace(/<\/div>/gi, "")
-      .replace(/<br>/gi, "")
-    builderStore.actions.updateProp("text", sanitized)
+    builderStore.actions.updateProp("text", e.target.textContent)
   }
 </script>
 
@@ -106,7 +99,6 @@
   div {
     color: var(--spectrum-alias-text-color);
     transition: color 130ms ease-in-out;
-    white-space: pre-wrap;
   }
   a:not(.placeholder):hover {
     color: var(--spectrum-link-primary-m-text-color-hover) !important;

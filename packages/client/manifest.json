@@ -245,7 +245,9 @@
     "name": "Button",
     "description": "A basic html button that is ready for styling",
     "icon": "Button",
+    "editable": true,
     "illegalChildren": ["section"],
+    "showSettingsBar": true,
     "settings": [
       {
         "type": "text",
@@ -254,6 +256,7 @@
       },
       {
         "type": "select",
+        "showInBar": true,
         "label": "Variant",
         "key": "type",
         "options": [
@@ -282,6 +285,7 @@
       {
         "type": "select",
         "label": "Size",
+        "showInBar": true,
         "key": "size",
         "options": [
           {
@@ -306,11 +310,18 @@
       {
         "type": "boolean",
         "label": "Quiet",
-        "key": "quiet"
+        "key": "quiet",
+        "showInBar": true,
+        "barIcon": "VisibilityOff",
+        "barTitle": "Quiet variant",
+        "barSeparator": false
       },
       {
         "type": "boolean",
         "label": "Disabled",
+        "showInBar": true,
+        "barIcon": "NoEdit",
+        "barTitle": "Disable button",
         "key": "disabled"
       },
       {

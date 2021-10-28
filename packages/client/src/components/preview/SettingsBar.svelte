@@ -110,7 +110,7 @@
               prop={setting.key}
               value={option.value}
               icon={option.barIcon}
-              title={option.barTitle}
+              title={option.barTitle || option.label}
             />
           {/each}
         {:else}
@@ -124,7 +124,7 @@
         <SettingsButton
           prop={setting.key}
           icon={setting.barIcon}
-          title={setting.barTitle}
+          title={setting.barTitle || setting.label}
           bool
         />
       {:else if setting.type === "color"}
