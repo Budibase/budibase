@@ -14,6 +14,9 @@
   export let underline
   export let size
 
+  let node
+
+  $: $component.editing && node?.focus()
   $: externalLink = url && typeof url === "string" && !url.startsWith("/")
   $: target = openInNewTab ? "_blank" : "_self"
   $: placeholder = $builderStore.inBuilder && !text
@@ -57,6 +60,7 @@
 
 {#if $component.editing}
   <div
+    bind:this={node}
     contenteditable
     use:styleable={styles}
     class:bold
