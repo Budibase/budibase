@@ -12,6 +12,9 @@
   export let underline
   export let size
 
+  let node
+
+  $: $component.editing && node?.focus()
   $: placeholder = $builderStore.inBuilder && !text && !$component.editing
   $: componentText = getComponentText(text, $builderStore, $component)
   $: sizeClass = `spectrum-Body--size${size || "M"}`
@@ -54,6 +57,7 @@
 </script>
 
 <div
+  bind:this={node}
   contenteditable={$component.editing}
   use:styleable={styles}
   class:placeholder
