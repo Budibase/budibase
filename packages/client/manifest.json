@@ -1844,6 +1844,7 @@
     "icon": "Text",
     "illegalChildren": ["section"],
     "styles": ["size"],
+    "editable": true,
     "settings": [
       {
         "type": "field/string",
@@ -1882,6 +1883,7 @@
     "name": "Number Field",
     "icon": "123",
     "styles": ["size"],
+    "editable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -1921,6 +1923,7 @@
     "name": "Password Field",
     "icon": "LockClosed",
     "styles": ["size"],
+    "editable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -1960,6 +1963,7 @@
     "name": "Options Picker",
     "icon": "ViewList",
     "styles": ["size"],
+    "editable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -2083,6 +2087,7 @@
     "name": "Multi-select Picker",
     "icon": "ViewList",
     "styles": ["size"],
+    "editable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -2184,6 +2189,7 @@
   "booleanfield": {
     "name": "Checkbox",
     "icon": "Checkmark",
+    "editable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -2247,6 +2253,7 @@
     "name": "Rich Text",
     "icon": "TextParagraph",
     "styles": ["size"],
+    "editable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -2287,6 +2294,7 @@
     "name": "Date Picker",
     "icon": "DateInput",
     "styles": ["size"],
+    "editable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -2332,6 +2340,7 @@
     "name": "Attachment",
     "icon": "Attach",
     "styles": ["size"],
+    "editable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -2361,6 +2370,7 @@
     "name": "Relationship Picker",
     "icon": "TaskList",
     "styles": ["size"],
+    "editable": true,
     "illegalChildren": ["section"],
     "settings": [
       {

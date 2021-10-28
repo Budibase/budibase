@@ -17,7 +17,7 @@
   const formContext = getContext("form")
   const formStepContext = getContext("form-step")
   const fieldGroupContext = getContext("field-group")
-  const { styleable } = getContext("sdk")
+  const { styleable, builderStore } = getContext("sdk")
   const component = getContext("component")
 
   // Register field with form
@@ -31,6 +31,10 @@
     validation,
     formStepContext || 1
   )
+
+  // Focus label when editing
+  let labelNode
+  $: $component.editing && labelNode?.focus()
 
   // Update form properties in parent component on every store change
   const unsubscribe = formField?.subscribe(value => {
@@ -55,16 +59,23 @@
   const updateDisabled = disabled => {
     fieldApi?.setDisabled(disabled)
   }
+
+  const updateLabel = e => {
+    builderStore.actions.updateProp("label", e.target.textContent)
+  }
 </script>
 
 <FieldGroupFallback>
   <div class="spectrum-Form-item" use:styleable={$component.styles}>
     <label
+      bind:this={labelNode}
+      contenteditable={$component.editing}
+      on:blur={$component.editing ? updateLabel : null}
       class:hidden={!label}
       for={fieldState?.fieldId}
       class={`spectrum-FieldLabel spectrum-FieldLabel--sizeM spectrum-Form-itemLabel ${labelClass}`}
     >
-      {label || ""}
+      {label || " "}
     </label>
     <div class="spectrum-Form-itemField">
       {#if !formContext}
