@@ -67,7 +67,8 @@
   $: renderKey = `${propsHash}-${emptyState}`
   $: editable = definition.editable
   $: editing = editable && selected && $builderStore.editMode
-  $: draggable = interactive && !isLayout && !isScreen && !editing
+  $: draggable =
+    interactive && !isLayout && !isScreen && !$builderStore.editMode
   $: droppable = interactive && !isLayout && !isScreen
 
   // Update component context
