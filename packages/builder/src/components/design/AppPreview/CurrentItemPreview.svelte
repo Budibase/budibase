@@ -107,14 +107,12 @@
 
     // Add listener for events sent by client library in preview
     iframe.contentWindow.addEventListener("bb-event", handleBudibaseEvent)
-    iframe.contentWindow.addEventListener("keydown", handleKeydownEvent)
   })
 
   // Remove all iframe event listeners on component destroy
   onDestroy(() => {
     if (iframe.contentWindow) {
       iframe.contentWindow.removeEventListener("bb-event", handleBudibaseEvent)
-      iframe.contentWindow.removeEventListener("keydown", handleKeydownEvent)
     }
   })
 
@@ -152,18 +150,6 @@
       }
     } else {
       console.warning(`Client sent unknown event type: ${type}`)
-    }
-  }
-
-  const handleKeydownEvent = event => {
-    if (
-      (event.key === "Delete" || event.key === "Backspace") &&
-      selectedComponentId &&
-      ["input", "textarea"].indexOf(
-        iframe.contentWindow.document.activeElement?.tagName.toLowerCase()
-      ) === -1
-    ) {
-      confirmDeleteComponent(selectedComponentId)
     }
   }
 
