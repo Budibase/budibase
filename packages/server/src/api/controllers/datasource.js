@@ -9,7 +9,7 @@ const {
 } = require("../../db/utils")
 const { BuildSchemaErrors } = require("../../constants")
 const { integrations } = require("../../integrations")
-const { makeExternalQuery } = require("./row/utils")
+const { getDatasourceAndQuery } = require("./row/utils")
 
 exports.fetch = async function (ctx) {
   const database = new CouchDB(ctx.appId)
@@ -138,7 +138,7 @@ exports.find = async function (ctx) {
 exports.query = async function (ctx) {
   const queryJson = ctx.request.body
   try {
-    ctx.body = await makeExternalQuery(ctx.appId, queryJson)
+    ctx.body = await getDatasourceAndQuery(ctx.appId, queryJson)
   } catch (err) {
     ctx.throw(400, err)
   }

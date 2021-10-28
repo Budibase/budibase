@@ -36,7 +36,7 @@ export interface TableSchema {
 export interface Table extends Base {
   type?: string
   views?: {}
-  name?: string
+  name: string
   primary?: string[]
   schema: TableSchema
   primaryDisplay?: string

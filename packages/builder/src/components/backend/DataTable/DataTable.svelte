@@ -98,9 +98,7 @@
     on:updatecolumns={onUpdateColumns}
     on:updaterows={onUpdateRows}
   >
-    {#if isInternal}
-      <CreateColumnButton on:updatecolumns={onUpdateColumns} />
-    {/if}
+    <CreateColumnButton on:updatecolumns={onUpdateColumns} />
     {#if schema && Object.keys(schema).length > 0}
       {#if !isUsersTable}
         <CreateRowButton

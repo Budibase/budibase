@@ -8,17 +8,20 @@
     Layout,
     Modal,
     InlineAlert,
+    ActionButton,
   } from "@budibase/bbui"
   import { datasources, integrations, queries, tables } from "stores/backend"
   import { notifications } from "@budibase/bbui"
   import IntegrationConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/IntegrationConfigForm.svelte"
   import CreateEditRelationship from "./CreateEditRelationship/CreateEditRelationship.svelte"
+  import CreateExternalTableModal from "./modals/CreateExternalTableModal.svelte"
   import DisplayColumnModal from "./modals/EditDisplayColumnsModal.svelte"
   import ICONS from "components/backend/DatasourceNavigator/icons"
   import { capitalise } from "helpers"
 
   let relationshipModal
   let displayColumnModal
+  let createExternalTableModal
   let selectedFromRelationship, selectedToRelationship
 
   $: datasource = $datasources.list.find(ds => ds._id === $datasources.selected)
@@ -113,6 +116,10 @@
   function openDisplayColumnModal() {
     displayColumnModal.show()
   }
+
+  function createNewTable() {
+    createExternalTableModal.show()
+  }
 </script>
 
 <Modal bind:this={relationshipModal}>
@@ -128,6 +135,10 @@
 
 <Modal bind:this={displayColumnModal}>
   <DisplayColumnModal {datasource} {plusTables} save={saveDatasource} />
+</Modal>
+
+<Modal bind:this={createExternalTableModal}>
+  <CreateExternalTableModal {datasource} />
 </Modal>
 
 {#if datasource && integration}
@@ -189,6 +200,11 @@
           />
         {/if}
         <div class="query-list">
+          <div class="add-table">
+            <ActionButton quiet icon="TableAdd" on:click={createNewTable}>
+              New table
+            </ActionButton>
+          </div>
           {#each plusTables as table}
             <div class="query-list-item" on:click={() => onClickTable(table)}>
               <p class="query-name">{table.name}</p>
@@ -324,5 +340,10 @@
 
   .table-buttons div {
     grid-column-end: -1;
+  }
+
+  .add-table {
+    margin-right: 0;
+    margin-left: auto;
   }
 </style>
