@@ -4,7 +4,11 @@ const {
   breakExternalTableId,
 } = require("../../../integrations/utils")
 const { getTable } = require("./utils")
-const { DataSourceOperation, FieldTypes } = require("../../../constants")
+const {
+  DataSourceOperation,
+  FieldTypes,
+  RelationshipTypes,
+} = require("../../../constants")
 const { makeExternalQuery } = require("../../../integrations/base/utils")
 const { cloneDeep } = require("lodash/fp")
 
@@ -42,6 +46,17 @@ function getDatasourceId(table) {
   return breakExternalTableId(table._id).datasourceId
 }
 
+function generateRelatedSchema(linkColumn, table) {
+  // generate column for other table
+  const relatedSchema = cloneDeep(linkColumn)
+  relatedSchema.fieldName = linkColumn.foreignKey
+  relatedSchema.foreignKey = linkColumn.fieldName
+  relatedSchema.relationshipType = RelationshipTypes.MANY_TO_ONE
+  relatedSchema.tableId = table._id
+  delete relatedSchema.main
+  return relatedSchema
+}
+
 exports.save = async function (ctx) {
   const appId = ctx.appId
   const table = ctx.request.body
@@ -64,24 +79,28 @@ exports.save = async function (ctx) {
   const tables = datasource.entities
 
   // check if relations need setup
-  for (let [key, schema] of Object.entries(tableToSave.schema)) {
-    // TODO: this assumes all relationships are the same, need to handle cardinality and many to many
+  for (let schema of Object.values(tableToSave.schema)) {
+    // TODO: many to many handling
     if (schema.type === FieldTypes.LINK) {
       const relatedTable = Object.values(tables).find(
         table => table._id === schema.tableId
       )
+      // setup the schema in this table
       const relatedField = schema.fieldName
+      const relatedPrimary = relatedTable.primary[0]
+      // generate a foreign key
       const foreignKey = `fk_${relatedTable.name}_${schema.fieldName}`
-      // create foreign key
-      tableToSave.schema[foreignKey] = { type: FieldTypes.NUMBER }
-      // setup the relation in other table and this one
+
+      schema.relationshipType = RelationshipTypes.ONE_TO_MANY
       schema.foreignKey = foreignKey
-      schema.fieldName = foreignKey
+      schema.fieldName = relatedPrimary
       schema.main = true
-      const relatedSchema = cloneDeep(schema)
-      relatedSchema.fieldName = key
-      delete relatedSchema.main
-      relatedTable.schema[relatedField] = relatedSchema
+
+      relatedTable.schema[relatedField] = generateRelatedSchema(schema, table)
+      tableToSave.schema[foreignKey] = {
+        type: FieldTypes.NUMBER,
+        constraints: {},
+      }
     }
   }
 

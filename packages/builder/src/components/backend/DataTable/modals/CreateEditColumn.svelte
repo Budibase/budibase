@@ -89,6 +89,10 @@
     if (field.type === AUTO_TYPE) {
       field = buildAutoColumn($tables.draft.name, field.name, field.subtype)
     }
+    // for now you can't create other options, just many to many for SQL
+    if (field.type === LINK_TYPE && external) {
+      field.relationshipType = RelationshipTypes.ONE_TO_MANY
+    }
     await tables.saveField({
       originalName,
       field,
@@ -324,7 +328,7 @@
       getOptionLabel={table => table.name}
       getOptionValue={table => table._id}
     />
-    {#if relationshipOptions && relationshipOptions.length > 0}
+    {#if relationshipOptions && relationshipOptions.length > 0 && !external}
       <RadioGroup
         disabled={linkEditDisabled}
         label="Define the relationship"
