@@ -941,6 +941,7 @@
     "description": "A basic link component for internal and external links",
     "icon": "Link",
     "showSettingsBar": true,
+    "editable": true,
     "illegalChildren": ["section"],
     "settings": [
       {

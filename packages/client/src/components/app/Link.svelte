@@ -14,18 +14,21 @@
   export let underline
   export let size
 
-  $: external = url && typeof url === "string" && !url.startsWith("/")
+  $: externalLink = url && typeof url === "string" && !url.startsWith("/")
   $: target = openInNewTab ? "_blank" : "_self"
   $: placeholder = $builderStore.inBuilder && !text
-  $: componentText = $builderStore.inBuilder
-    ? text || "Placeholder link"
-    : text || ""
+  $: componentText = getComponentText(text, $builderStore, $component)
 
   // Add color styles to main styles object, otherwise the styleable helper
   // overrides the color when it's passed as inline style.
-  // Add color styles to main styles object, otherwise the styleable helper
-  // overrides the color when it's passed as inline style.
   $: styles = enrichStyles($component.styles, color)
+
+  const getComponentText = (text, builderState, componentState) => {
+    if (!builderState.inBuilder || componentState.editing) {
+      return text || ""
+    }
+    return text || componentState.name || "Placeholder text"
+  }
 
   const enrichStyles = (styles, color) => {
     if (!color) {
@@ -39,10 +42,33 @@
       },
     }
   }
+
+  // Convert contenteditable HTML to text and save
+  const updateText = e => {
+    const html = e.target.innerHTML
+    const sanitized = html
+      .replace(/<\/div><div>/gi, "\n")
+      .replace(/<div>/gi, "")
+      .replace(/<\/div>/gi, "")
+      .replace(/<br>/gi, "")
+    builderStore.actions.updateProp("text", sanitized)
+  }
 </script>
 
-{#if $builderStore.inBuilder || componentText}
-  {#if external}
+{#if $component.editing}
+  <div
+    contenteditable
+    use:styleable={styles}
+    class:bold
+    class:italic
+    class:underline
+    class="align--{align || 'left'} size--{size || 'M'}"
+    on:blur={$component.editing ? updateText : null}
+  >
+    {componentText}
+  </div>
+{:else if $builderStore.inBuilder || componentText}
+  {#if externalLink}
     <a
       {target}
       href={url || "/"}
@@ -72,12 +98,13 @@
 {/if}
 
 <style>
-  a {
+  a,
+  div {
     color: var(--spectrum-alias-text-color);
-    white-space: nowrap;
     transition: color 130ms ease-in-out;
+    white-space: pre-wrap;
   }
-  a:hover {
+  a:not(.placeholder):hover {
     color: var(--spectrum-link-primary-m-text-color-hover) !important;
   }
   .placeholder {
