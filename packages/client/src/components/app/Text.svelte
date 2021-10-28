@@ -35,21 +35,34 @@
       },
     }
   }
+
+  // Convert contenteditable HTML to text and save
+  const updateText = e => {
+    const html = e.target.innerHTML
+    const sanitized = html
+      .replace(/<\/div><div>/gi, "\n")
+      .replace(/<div>/gi, "")
+      .replace(/<\/div>/gi, "")
+      .replace(/<br>/gi, "")
+    builderStore.actions.updateProp("text", sanitized)
+  }
 </script>
 
-<p
+<div
+  contenteditable={$component.editing}
   use:styleable={styles}
   class:placeholder
   class:bold
   class:italic
   class:underline
   class="spectrum-Body {sizeClass} {alignClass}"
+  on:blur={$component.editing ? updateText : null}
 >
   {componentText}
-</p>
+</div>
 
 <style>
-  p {
+  div {
     display: inline-block;
     white-space: pre-wrap;
     margin: 0;
