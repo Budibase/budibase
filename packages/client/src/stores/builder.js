@@ -1,4 +1,4 @@
-import { writable, derived } from "svelte/store"
+import { writable, derived, get } from "svelte/store"
 import Manifest from "manifest.json"
 import { findComponentById, findComponentPathById } from "../utils/components"
 import { pingEndUser } from "../api"
@@ -18,6 +18,7 @@ const createBuilderStore = () => {
     layout: null,
     screen: null,
     selectedComponentId: null,
+    editMode: false,
     previewId: null,
     previewType: null,
     selectedPath: [],
@@ -54,6 +55,10 @@ const createBuilderStore = () => {
 
   const actions = {
     selectComponent: id => {
+      if (id === get(writableStore).selectedComponentId) {
+        return
+      }
+      writableStore.update(state => ({ ...state, editMode: false }))
       dispatchEvent("select-component", { id })
     },
     updateProp: (prop, value) => {
@@ -69,10 +74,7 @@ const createBuilderStore = () => {
       pingEndUser()
     },
     setSelectedPath: path => {
-      writableStore.update(state => {
-        state.selectedPath = path
-        return state
-      })
+      writableStore.update(state => ({ ...state, selectedPath: path }))
     },
     moveComponent: (componentId, destinationComponentId, mode) => {
       dispatchEvent("move-component", {
@@ -82,10 +84,10 @@ const createBuilderStore = () => {
       })
     },
     setDragging: dragging => {
-      writableStore.update(state => {
-        state.isDragging = dragging
-        return state
-      })
+      writableStore.update(state => ({ ...state, isDragging: dragging }))
+    },
+    setEditMode: enabled => {
+      writableStore.update(state => ({ ...state, editMode: enabled }))
     },
   }
   return {

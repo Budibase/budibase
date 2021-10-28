@@ -589,6 +589,7 @@
     "icon": "TextParagraph",
     "illegalChildren": ["section"],
     "showSettingsBar": true,
+    "editable": true,
     "settings": [
       {
         "type": "text",
@@ -695,6 +696,7 @@
     "description": "A component for displaying heading text",
     "illegalChildren": ["section"],
     "showSettingsBar": true,
+    "editable": true,
     "settings": [
       {
         "type": "text",

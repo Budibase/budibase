@@ -60,21 +60,32 @@
   $: instanceKey = JSON.stringify(rawProps)
   $: updateComponentProps(rawProps, instanceKey, $context)
   $: selected =
-    $builderStore.inBuilder &&
-    $builderStore.selectedComponentId === instance._id
+    $builderStore.inBuilder && $builderStore.selectedComponentId === id
   $: inSelectedPath = $builderStore.selectedComponentPath?.includes(id)
   $: evaluateConditions(enrichedSettings?._conditions)
   $: componentSettings = { ...enrichedSettings, ...conditionalSettings }
   $: renderKey = `${propsHash}-${emptyState}`
+  $: editable = definition.editable
+  $: editing = editable && selected && $builderStore.editMode
+  $: draggable = interactive && !isLayout && !isScreen && !editing
+  $: droppable = interactive && !isLayout && !isScreen
 
   // Update component context
   $: componentStore.set({
     id,
     children: children.length,
-    styles: { ...instance._styles, id, empty: emptyState, interactive },
+    styles: {
+      ...instance._styles,
+      id,
+      empty: emptyState,
+      interactive,
+      draggable,
+      editable,
+    },
     empty: emptyState,
     selected,
     name,
+    editing,
   })
 
   const getRawProps = instance => {
@@ -171,10 +182,6 @@
     conditionalSettings = result.settingUpdates
     visible = nextVisible
   }
-
-  // Drag and drop helper tags
-  $: draggable = interactive && !isLayout && !isScreen
-  $: droppable = interactive && !isLayout && !isScreen
 </script>
 
 {#key renderKey}
@@ -187,6 +194,7 @@
       class:droppable
       class:empty
       class:interactive
+      class:editing
       data-id={id}
       data-name={name}
     >
@@ -212,5 +220,8 @@
   }
   .draggable :global(*:hover) {
     cursor: grab;
+  }
+  .editing :global(*:hover) {
+    cursor: auto;
   }
 </style>
