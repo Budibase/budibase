@@ -8,7 +8,6 @@
     Layout,
     Modal,
     InlineAlert,
-    ActionButton,
   } from "@budibase/bbui"
   import { datasources, integrations, queries, tables } from "stores/backend"
   import { notifications } from "@budibase/bbui"
@@ -200,11 +199,6 @@
           />
         {/if}
         <div class="query-list">
-          <div class="add-table">
-            <ActionButton quiet icon="TableAdd" on:click={createNewTable}>
-              New table
-            </ActionButton>
-          </div>
           {#each plusTables as table}
             <div class="query-list-item" on:click={() => onClickTable(table)}>
               <p class="query-name">{table.name}</p>
@@ -212,6 +206,9 @@
               <p>→</p>
             </div>
           {/each}
+          <div class="add-table">
+            <Button cta on:click={createNewTable}>Create new table</Button>
+          </div>
         </div>
         {#if plusTables?.length !== 0}
           <Divider />
@@ -343,7 +340,6 @@
   }
 
   .add-table {
-    margin-right: 0;
-    margin-left: auto;
+    margin-top: var(--spacing-m);
   }
 </style>

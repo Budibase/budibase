@@ -152,6 +152,16 @@ const buildSchemaHelper = async datasource => {
   await connector.buildSchema(datasource._id, datasource.entities)
   datasource.entities = connector.tables
 
+  // make sure they all have a display name selected
+  for (let entity of Object.values(datasource.entities)) {
+    if (entity.primaryDisplay) {
+      continue
+    }
+    entity.primaryDisplay = Object.values(entity.schema).find(
+      schema => !schema.autocolumn
+    ).name
+  }
+
   const errors = connector.schemaErrors
   let error = null
   if (errors && Object.keys(errors).length > 0) {
