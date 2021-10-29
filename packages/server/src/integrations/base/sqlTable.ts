@@ -4,7 +4,7 @@ import { Operation, QueryJson } from "../../definitions/datasource"
 import { breakExternalTableId } from "../utils"
 import SchemaBuilder = Knex.SchemaBuilder
 import CreateTableBuilder = Knex.CreateTableBuilder
-const { FieldTypes } = require("../../constants")
+const { FieldTypes, RelationshipTypes } = require("../../constants")
 
 function generateSchema(schema: CreateTableBuilder, table: Table, tables: Record<string, Table>, oldTable: null | Table = null) {
   let primaryKey = table && table.primary ? table.primary[0] : null
@@ -12,6 +12,8 @@ function generateSchema(schema: CreateTableBuilder, table: Table, tables: Record
   if (primaryKey && !oldTable) {
     schema.increments(primaryKey).primary()
   }
+
+  // check if any columns need added
   const foreignKeys = Object.values(table.schema).map(col => col.foreignKey)
   for (let [key, column] of Object.entries(table.schema)) {
     // skip things that are already correct
@@ -38,6 +40,10 @@ function generateSchema(schema: CreateTableBuilder, table: Table, tables: Record
         schema.json(key)
         break
       case FieldTypes.LINK:
+        // this side of the relationship doesn't need any SQL work
+        if (column.relationshipType === RelationshipTypes.MANY_TO_ONE) {
+          break
+        }
         if (!column.foreignKey || !column.tableId) {
           throw "Invalid relationship schema"
         }
@@ -51,6 +57,17 @@ function generateSchema(schema: CreateTableBuilder, table: Table, tables: Record
         schema.foreign(column.foreignKey).references(`${tableName}.${relatedTable.primary[0]}`)
     }
   }
+
+  // need to check if any columns have been deleted
+  if (oldTable) {
+    const deletedColumns = Object.entries(oldTable.schema)
+      .filter(([key, schema]) => schema.type !== FieldTypes.LINK && table.schema[key] == null)
+      .map(([key]) => key)
+    deletedColumns.forEach(key => {
+      schema.dropColumn(key)
+    })
+  }
+
   return schema
 }
 

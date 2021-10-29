@@ -36,6 +36,35 @@ async function makeTableRequest(
   return makeExternalQuery(datasource, json)
 }
 
+function cleanupRelationships(table, tables, oldTable = null) {
+  const tableToIterate = oldTable ? oldTable : table
+  // clean up relationships in couch table schemas
+  for (let [key, schema] of Object.entries(tableToIterate.schema)) {
+    if (
+      schema.type === FieldTypes.LINK &&
+      (!oldTable || table.schema[key] == null)
+    ) {
+      const relatedTable = Object.values(tables).find(
+        table => table._id === schema.tableId
+      )
+      const foreignKey = schema.foreignKey
+      if (!relatedTable || !foreignKey) {
+        continue
+      }
+      for (let [relatedKey, relatedSchema] of Object.entries(
+        relatedTable.schema
+      )) {
+        if (
+          relatedSchema.type === FieldTypes.LINK &&
+          relatedSchema.fieldName === foreignKey
+        ) {
+          delete relatedSchema[relatedKey]
+        }
+      }
+    }
+  }
+}
+
 function getDatasourceId(table) {
   if (!table) {
     throw "No table supplied"
@@ -55,6 +84,14 @@ function generateRelatedSchema(linkColumn, table) {
   relatedSchema.tableId = table._id
   delete relatedSchema.main
   return relatedSchema
+}
+
+function oneToManyRelationshipNeedsSetup(column) {
+  return (
+    column.type === FieldTypes.LINK &&
+    column.relationshipType === RelationshipTypes.ONE_TO_MANY &&
+    !column.foreignKey
+  )
 }
 
 exports.save = async function (ctx) {
@@ -81,7 +118,7 @@ exports.save = async function (ctx) {
   // check if relations need setup
   for (let schema of Object.values(tableToSave.schema)) {
     // TODO: many to many handling
-    if (schema.type === FieldTypes.LINK) {
+    if (oneToManyRelationshipNeedsSetup(schema)) {
       const relatedTable = Object.values(tables).find(
         table => table._id === schema.tableId
       )
@@ -103,6 +140,8 @@ exports.save = async function (ctx) {
       }
     }
   }
+
+  cleanupRelationships(tableToSave, tables, oldTable)
 
   const operation = oldTable
     ? DataSourceOperation.UPDATE_TABLE
@@ -127,6 +166,8 @@ exports.destroy = async function (ctx) {
 
   const operation = DataSourceOperation.DELETE_TABLE
   await makeTableRequest(datasource, operation, tableToDelete, tables)
+
+  cleanupRelationships(tableToDelete, tables)
 
   delete datasource.entities[tableToDelete.name]
   await db.put(datasource)

@@ -31,6 +31,9 @@
   const AUTO_TYPE = "auto"
   const FORMULA_TYPE = FIELDS.FORMULA.type
   const LINK_TYPE = FIELDS.LINK.type
+  const STRING_TYPE = FIELDS.STRING.type
+  const NUMBER_TYPE = FIELDS.NUMBER.type
+
   const dispatch = createEventDispatcher()
   const PROHIBITED_COLUMN_NAMES = ["type", "_id", "_rev", "tableId"]
   const { hide } = getContext(Context.Modal)
@@ -55,6 +58,7 @@
   let confirmDeleteDialog
   let deletion
 
+  $: checkConstraints(field)
   $: tableOptions = $tables.list.filter(
     opt => opt._id !== $tables.draft._id && opt.type === table.type
   )
@@ -180,16 +184,11 @@
     }
     const thisName = truncate(table.name, { length: 14 }),
       linkName = truncate(linkTable.name, { length: 14 })
-    return [
+    const options = [
       {
         name: `Many ${thisName} rows → many ${linkName} rows`,
         alt: `Many ${table.name} rows → many ${linkTable.name} rows`,
         value: RelationshipTypes.MANY_TO_MANY,
-      },
-      {
-        name: `One ${linkName} row → many ${thisName} rows`,
-        alt: `One ${linkTable.name} rows → many ${table.name} rows`,
-        value: RelationshipTypes.ONE_TO_MANY,
       },
       {
         name: `One ${thisName} row → many ${linkName} rows`,
@@ -197,6 +196,14 @@
         value: RelationshipTypes.MANY_TO_ONE,
       },
     ]
+    if (!external) {
+      options.push({
+        name: `One ${linkName} row → many ${thisName} rows`,
+        alt: `One ${linkTable.name} rows → many ${table.name} rows`,
+        value: RelationshipTypes.ONE_TO_MANY,
+      })
+    }
+    return options
   }
 
   function getAllowedTypes() {
@@ -217,6 +224,24 @@
         FIELDS.FORMULA,
         FIELDS.LINK,
       ]
+    }
+  }
+
+  function checkConstraints(fieldToCheck) {
+    // most types need this, just make sure its always present
+    if (fieldToCheck && !fieldToCheck.constraints) {
+      fieldToCheck.constraints = {}
+    }
+    // some string types may have been built by server, may not always have constraints
+    if (fieldToCheck.type === STRING_TYPE && !fieldToCheck.constraints.length) {
+      fieldToCheck.constraints.length = {}
+    }
+    // some number types made server-side will be missing constraints
+    if (
+      fieldToCheck.type === NUMBER_TYPE &&
+      !fieldToCheck.constraints.numericality
+    ) {
+      fieldToCheck.constraints.numericality = {}
     }
   }
 </script>
@@ -268,7 +293,7 @@
     </div>
   {/if}
 
-  {#if canBeSearched}
+  {#if canBeSearched && !external}
     <div>
       <Label grey small>Search Indexes</Label>
       <Toggle
@@ -328,7 +353,7 @@
       getOptionLabel={table => table.name}
       getOptionValue={table => table._id}
     />
-    {#if relationshipOptions && relationshipOptions.length > 0 && !external}
+    {#if relationshipOptions && relationshipOptions.length > 0}
       <RadioGroup
         disabled={linkEditDisabled}
         label="Define the relationship"
