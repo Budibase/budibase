@@ -93,10 +93,6 @@
     if (field.type === AUTO_TYPE) {
       field = buildAutoColumn($tables.draft.name, field.name, field.subtype)
     }
-    // for now you can't create other options, just many to many for SQL
-    if (field.type === LINK_TYPE && external) {
-      field.relationshipType = RelationshipTypes.ONE_TO_MANY
-    }
     await tables.saveField({
       originalName,
       field,
@@ -184,11 +180,16 @@
     }
     const thisName = truncate(table.name, { length: 14 }),
       linkName = truncate(linkTable.name, { length: 14 })
-    const options = [
+    return [
       {
         name: `Many ${thisName} rows → many ${linkName} rows`,
         alt: `Many ${table.name} rows → many ${linkTable.name} rows`,
         value: RelationshipTypes.MANY_TO_MANY,
+      },
+      {
+        name: `One ${linkName} row → many ${thisName} rows`,
+        alt: `One ${linkTable.name} rows → many ${table.name} rows`,
+        value: RelationshipTypes.ONE_TO_MANY,
       },
       {
         name: `One ${thisName} row → many ${linkName} rows`,
@@ -196,14 +197,6 @@
         value: RelationshipTypes.MANY_TO_ONE,
       },
     ]
-    if (!external) {
-      options.push({
-        name: `One ${linkName} row → many ${thisName} rows`,
-        alt: `One ${linkTable.name} rows → many ${table.name} rows`,
-        value: RelationshipTypes.ONE_TO_MANY,
-      })
-    }
-    return options
   }
 
   function getAllowedTypes() {

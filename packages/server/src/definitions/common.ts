@@ -17,6 +17,11 @@ export interface FieldSchema {
   autocolumn?: boolean
   throughFrom?: string
   throughTo?: string
+  main?: boolean
+  meta?: {
+    toTable: string
+    toKey: string
+  }
   constraints?: {
     type?: string
     email?: boolean
