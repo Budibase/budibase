@@ -3,7 +3,12 @@ const {
   buildExternalTableId,
   breakExternalTableId,
 } = require("../../../integrations/utils")
-const { getTable } = require("./utils")
+const {
+  getTable,
+  generateForeignKey,
+  generateJunctionTableName,
+  foreignKeyStructure,
+} = require("./utils")
 const {
   DataSourceOperation,
   FieldTypes,
@@ -58,7 +63,7 @@ function cleanupRelationships(table, tables, oldTable = null) {
           relatedSchema.type === FieldTypes.LINK &&
           relatedSchema.fieldName === foreignKey
         ) {
-          delete relatedSchema[relatedKey]
+          delete relatedTable.schema[relatedKey]
         }
       }
     }
@@ -75,23 +80,78 @@ function getDatasourceId(table) {
   return breakExternalTableId(table._id).datasourceId
 }
 
-function generateRelatedSchema(linkColumn, table) {
-  // generate column for other table
-  const relatedSchema = cloneDeep(linkColumn)
-  relatedSchema.fieldName = linkColumn.foreignKey
-  relatedSchema.foreignKey = linkColumn.fieldName
-  relatedSchema.relationshipType = RelationshipTypes.MANY_TO_ONE
-  relatedSchema.tableId = table._id
-  delete relatedSchema.main
-  return relatedSchema
+function otherRelationshipType(type) {
+  if (type === RelationshipTypes.MANY_TO_MANY) {
+    return RelationshipTypes.MANY_TO_MANY
+  }
+  return type === RelationshipTypes.ONE_TO_MANY
+    ? RelationshipTypes.MANY_TO_ONE
+    : RelationshipTypes.ONE_TO_MANY
 }
 
-function oneToManyRelationshipNeedsSetup(column) {
-  return (
-    column.type === FieldTypes.LINK &&
-    column.relationshipType === RelationshipTypes.ONE_TO_MANY &&
-    !column.foreignKey
+function generateManyLinkSchema(datasource, column, table, relatedTable) {
+  const primary = table.name + table.primary[0]
+  const relatedPrimary = relatedTable.name + relatedTable.primary[0]
+  const jcTblName = generateJunctionTableName(column, table, relatedTable)
+  // first create the new table
+  const junctionTable = {
+    _id: buildExternalTableId(datasource._id, jcTblName),
+    name: jcTblName,
+    primary: [primary, relatedPrimary],
+    schema: {
+      [primary]: foreignKeyStructure(primary, {
+        toTable: table.name,
+        toKey: table.primary[0],
+      }),
+      [relatedPrimary]: foreignKeyStructure(relatedPrimary, {
+        toTable: relatedTable.name,
+        toKey: relatedTable.primary[0],
+      }),
+    },
+  }
+  column.through = junctionTable._id
+  column.throughFrom = primary
+  column.throughTo = relatedPrimary
+  column.fieldName = relatedPrimary
+  return junctionTable
+}
+
+function generateLinkSchema(column, table, relatedTable, type) {
+  const isOneSide = type === RelationshipTypes.ONE_TO_MANY
+  const primary = isOneSide ? relatedTable.primary[0] : table.primary[0]
+  // generate a foreign key
+  const foreignKey = generateForeignKey(column, relatedTable)
+  column.relationshipType = type
+  column.foreignKey = isOneSide ? foreignKey : primary
+  column.fieldName = isOneSide ? primary : foreignKey
+  return foreignKey
+}
+
+function generateRelatedSchema(linkColumn, table, relatedTable, columnName) {
+  // generate column for other table
+  const relatedSchema = cloneDeep(linkColumn)
+  // swap them from the main link
+  if (linkColumn.foreignKey) {
+    relatedSchema.fieldName = linkColumn.foreignKey
+    relatedSchema.foreignKey = linkColumn.fieldName
+  }
+  // is many to many
+  else {
+    // don't need to copy through, already got it
+    relatedSchema.fieldName = linkColumn.throughFrom
+    relatedSchema.throughTo = linkColumn.throughFrom
+    relatedSchema.throughFrom = linkColumn.throughTo
+  }
+  relatedSchema.relationshipType = otherRelationshipType(
+    linkColumn.relationshipType
   )
+  relatedSchema.tableId = relatedTable._id
+  relatedSchema.name = columnName
+  table.schema[columnName] = relatedSchema
+}
+
+function isRelationshipSetup(column) {
+  return column.foreignKey || column.through
 }
 
 exports.save = async function (ctx) {
@@ -113,32 +173,50 @@ exports.save = async function (ctx) {
 
   const db = new CouchDB(appId)
   const datasource = await db.get(datasourceId)
+  const oldTables = cloneDeep(datasource.entities)
   const tables = datasource.entities
+
+  const extraTablesToUpdate = []
 
   // check if relations need setup
   for (let schema of Object.values(tableToSave.schema)) {
-    // TODO: many to many handling
-    if (oneToManyRelationshipNeedsSetup(schema)) {
-      const relatedTable = Object.values(tables).find(
-        table => table._id === schema.tableId
+    if (schema.type !== FieldTypes.LINK || isRelationshipSetup(schema)) {
+      continue
+    }
+    const relatedTable = Object.values(tables).find(
+      table => table._id === schema.tableId
+    )
+    const relatedColumnName = schema.fieldName
+    const relationType = schema.relationshipType
+    if (relationType === RelationshipTypes.MANY_TO_MANY) {
+      const junctionTable = generateManyLinkSchema(
+        datasource,
+        schema,
+        table,
+        relatedTable
       )
-      // setup the schema in this table
-      const relatedField = schema.fieldName
-      const relatedPrimary = relatedTable.primary[0]
-      // generate a foreign key
-      const foreignKey = `fk_${relatedTable.name}_${schema.fieldName}`
-
-      schema.relationshipType = RelationshipTypes.ONE_TO_MANY
-      schema.foreignKey = foreignKey
-      schema.fieldName = relatedPrimary
-      schema.main = true
-
-      relatedTable.schema[relatedField] = generateRelatedSchema(schema, table)
-      tableToSave.schema[foreignKey] = {
-        type: FieldTypes.NUMBER,
-        constraints: {},
+      if (tables[junctionTable.name]) {
+        throw "Junction table already exists, cannot create another relationship."
+      }
+      tables[junctionTable.name] = junctionTable
+      extraTablesToUpdate.push(junctionTable)
+    } else {
+      const fkTable =
+        relationType === RelationshipTypes.ONE_TO_MANY ? table : relatedTable
+      const foreignKey = generateLinkSchema(
+        schema,
+        table,
+        relatedTable,
+        relationType
+      )
+      fkTable.schema[foreignKey] = foreignKeyStructure(foreignKey)
+      // foreign key is in other table, need to save it to external
+      if (fkTable._id !== table._id) {
+        extraTablesToUpdate.push(fkTable)
       }
     }
+    generateRelatedSchema(schema, relatedTable, table, relatedColumnName)
+    schema.main = true
   }
 
   cleanupRelationships(tableToSave, tables, oldTable)
@@ -147,6 +225,14 @@ exports.save = async function (ctx) {
     ? DataSourceOperation.UPDATE_TABLE
     : DataSourceOperation.CREATE_TABLE
   await makeTableRequest(datasource, operation, tableToSave, tables, oldTable)
+  // update any extra tables (like foreign keys in other tables)
+  for (let extraTable of extraTablesToUpdate) {
+    const oldExtraTable = oldTables[extraTable.name]
+    let op = oldExtraTable
+      ? DataSourceOperation.UPDATE_TABLE
+      : DataSourceOperation.CREATE_TABLE
+    await makeTableRequest(datasource, op, extraTable, tables, oldExtraTable)
+  }
 
   // store it into couch now for budibase reference
   datasource.entities[tableToSave.name] = tableToSave

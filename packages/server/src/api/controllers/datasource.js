@@ -157,9 +157,12 @@ const buildSchemaHelper = async datasource => {
     if (entity.primaryDisplay) {
       continue
     }
-    entity.primaryDisplay = Object.values(entity.schema).find(
+    const notAutoColumn = Object.values(entity.schema).find(
       schema => !schema.autocolumn
-    ).name
+    )
+    if (notAutoColumn) {
+      entity.primaryDisplay = notAutoColumn.name
+    }
   }
 
   const errors = connector.schemaErrors
