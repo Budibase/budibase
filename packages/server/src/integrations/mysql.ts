@@ -262,6 +262,13 @@ module MySQLModule {
       const operation = this._operation(json)
       this.client.connect()
       const input = this._query(json, { disableReturning: true })
+      if (Array.isArray(input)) {
+        const responses = []
+        for (let query of input) {
+          responses.push(await internalQuery(this.client, query))
+        }
+        return responses
+      }
       let row
       // need to manage returning, a feature mySQL can't do
       if (operation === operation.DELETE) {
