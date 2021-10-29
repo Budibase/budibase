@@ -210,6 +210,16 @@ To release the self hosted version of docker images, an additional job (can be f
 ### Troubleshooting
 
 Sometimes, things go wrong. This can be due to incompatible updates on the budibase platform. To clear down your development environment and start again follow **Step 6. Cleanup**, then proceed from **Step 3. Install and Build** in the setup guide above. You should have a fresh Budibase installation.
+
+
+The following specific issues can occur: 
+
+* Console error: "message": "Unauthorized - no public worker access"
+
+When this appears, the admin sign-up page and login pages come up as normal, but you cannot login. 
+
+Cause: You are visiting Budibase on port 4001 (which is listening) instead of 10000, please visit: http://localhost:10000/builder to correct the issue
+
 ### Running tests
 
 #### End-to-end Tests
