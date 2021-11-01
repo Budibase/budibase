@@ -2574,5 +2574,88 @@
         "label": "Horizontal"
       }
     ]
+  },
+  "tablewithsearch": {
+    "block": true,
+    "name": "Table with search",
+    "icon": "Table",
+    "styles": ["size"],
+    "settings": [
+      {
+        "type": "dataSource",
+        "label": "Data",
+        "key": "dataSource"
+      },
+      {
+        "type": "multifield",
+        "label": "Search Columns",
+        "key": "searchColumns",
+        "dependsOn": "dataSource",
+        "placeholder": "All columns"
+      },
+      {
+        "type": "filter",
+        "label": "Filtering",
+        "key": "filter"
+      },
+      {
+        "type": "field",
+        "label": "Sort Column",
+        "key": "sortColumn"
+      },
+      {
+        "type": "select",
+        "label": "Sort Order",
+        "key": "sortOrder",
+        "options": ["Ascending", "Descending"],
+        "defaultValue": "Descending"
+      },
+      {
+        "type": "boolean",
+        "label": "Paginate",
+        "key": "paginate",
+        "defaultValue": true
+      },
+      {
+        "type": "number",
+        "label": "Row Count",
+        "key": "rowCount",
+        "defaultValue": 8
+      },
+      {
+        "type": "multifield",
+        "label": "Table Columns",
+        "key": "tableColumns",
+        "dependsOn": "dataSource",
+        "placeholder": "All columns"
+      },
+      {
+        "type": "select",
+        "label": "Size",
+        "key": "size",
+        "defaultValue": "spectrum--medium",
+        "options": [
+          {
+            "label": "Medium",
+            "value": "spectrum--medium"
+          },
+          {
+            "label": "Large",
+            "value": "spectrum--large"
+          }
+        ]
+      },
+      {
+        "type": "boolean",
+        "label": "Quiet",
+        "key": "quiet"
+      },
+      {
+        "type": "boolean",
+        "label": "Auto Columns",
+        "key": "showAutoColumns",
+        "defaultValue": false
+      }
+    ]
   }
 }
