@@ -6,8 +6,9 @@
   export let datasource
 
   let name = ""
-
-  $: valid = name && name.length > 0
+  $: valid = name && name.length > 0 && !datasource?.entities[name]
+  $: error =
+    name && datasource?.entities[name] ? "Table name already in use." : null
 
   function buildDefaultTable(tableName, datasourceId) {
     return {
@@ -40,5 +41,5 @@
   <Body
     >Provide a name for your new table; you can add columns once it is created.</Body
   >
-  <Input label="Table Name" bind:value={name} />
+  <Input label="Table Name" bind:error bind:value={name} />
 </ModalContent>
