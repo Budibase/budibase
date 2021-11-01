@@ -15,12 +15,10 @@
   import IntegrationConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/IntegrationConfigForm.svelte"
   import CreateEditRelationship from "components/backend/Datasources/CreateEditRelationship.svelte"
   import CreateExternalTableModal from "./modals/CreateExternalTableModal.svelte"
-  import DisplayColumnModal from "./modals/EditDisplayColumnsModal.svelte"
   import ICONS from "components/backend/DatasourceNavigator/icons"
   import { capitalise } from "helpers"
 
   let relationshipModal
-  let displayColumnModal
   let createExternalTableModal
   let selectedFromRelationship, selectedToRelationship
 
@@ -113,10 +111,6 @@
     relationshipModal.show()
   }
 
-  function openDisplayColumnModal() {
-    displayColumnModal.show()
-  }
-
   function createNewTable() {
     createExternalTableModal.show()
   }
@@ -131,10 +125,6 @@
     fromRelationship={selectedFromRelationship}
     toRelationship={selectedToRelationship}
   />
-</Modal>
-
-<Modal bind:this={displayColumnModal}>
-  <DisplayColumnModal {datasource} {plusTables} save={saveDatasource} />
 </Modal>
 
 <Modal bind:this={createExternalTableModal}>
@@ -174,16 +164,6 @@
         <div class="query-header">
           <Heading size="S">Tables</Heading>
           <div class="table-buttons">
-            {#if plusTables && plusTables.length !== 0}
-              <ActionButton
-                size="S"
-                quiet
-                icon="ColumnSettings"
-                on:click={openDisplayColumnModal}
-              >
-                Update display columns
-              </ActionButton>
-            {/if}
             <div>
               <ActionButton
                 size="S"
