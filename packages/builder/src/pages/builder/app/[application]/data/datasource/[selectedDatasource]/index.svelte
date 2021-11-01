@@ -8,11 +8,12 @@
     Layout,
     Modal,
     InlineAlert,
+    ActionButton,
   } from "@budibase/bbui"
   import { datasources, integrations, queries, tables } from "stores/backend"
   import { notifications } from "@budibase/bbui"
   import IntegrationConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/IntegrationConfigForm.svelte"
-  import CreateEditRelationship from "./CreateEditRelationship/CreateEditRelationship.svelte"
+  import CreateEditRelationship from "components/backend/Datasources/CreateEditRelationship.svelte"
   import CreateExternalTableModal from "./modals/CreateExternalTableModal.svelte"
   import DisplayColumnModal from "./modals/EditDisplayColumnsModal.svelte"
   import ICONS from "components/backend/DatasourceNavigator/icons"
@@ -174,14 +175,24 @@
           <Heading size="S">Tables</Heading>
           <div class="table-buttons">
             {#if plusTables && plusTables.length !== 0}
-              <Button primary on:click={openDisplayColumnModal}>
+              <ActionButton
+                size="S"
+                quiet
+                icon="ColumnSettings"
+                on:click={openDisplayColumnModal}
+              >
                 Update display columns
-              </Button>
+              </ActionButton>
             {/if}
             <div>
-              <Button primary on:click={updateDatasourceSchema}>
+              <ActionButton
+                size="S"
+                quiet
+                icon="DataRefresh"
+                on:click={updateDatasourceSchema}
+              >
                 Fetch tables from database
-              </Button>
+              </ActionButton>
             </div>
           </div>
         </div>
@@ -214,9 +225,15 @@
           <Divider />
           <div class="query-header">
             <Heading size="S">Relationships</Heading>
-            <Button primary on:click={() => openRelationshipModal()}
-              >Create relationship</Button
+            <ActionButton
+              icon="DataCorrelated"
+              primary
+              size="S"
+              quiet
+              on:click={openRelationshipModal}
             >
+              Define existing relationship
+            </ActionButton>
           </div>
           <Body>
             Tell budibase how your tables are related to get even more smart
@@ -331,7 +348,6 @@
 
   .table-buttons {
     display: grid;
-    grid-gap: var(--spacing-l);
     grid-template-columns: 1fr 1fr;
   }
 
