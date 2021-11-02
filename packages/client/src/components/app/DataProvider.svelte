@@ -234,7 +234,7 @@
         <ProgressCircle />
       </div>
     {:else}
-      {#if !$component.children}
+      {#if $component.emptyState}
         <Placeholder />
       {:else}
         <slot />
