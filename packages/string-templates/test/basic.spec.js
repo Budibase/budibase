@@ -125,6 +125,18 @@ describe("check the utility functions", () => {
   })
 })
 
+describe("check falsy values", () => {
+  it("should get a zero out when context contains it", async () => {
+    const output = await processString("{{ number }}", { number: 0 })
+    expect(output).toEqual("0")
+  })
+
+  it("should get false out when context contains it", async () => {
+    const output = await processString("{{ bool }}", { bool: false })
+    expect(output).toEqual("false")
+  })
+})
+
 describe("check manifest", () => {
   it("should be able to retrieve the manifest", () => {
     const manifest = getManifest()
