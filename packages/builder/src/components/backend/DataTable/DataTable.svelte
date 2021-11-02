@@ -4,6 +4,7 @@
   import CreateRowButton from "./buttons/CreateRowButton.svelte"
   import CreateColumnButton from "./buttons/CreateColumnButton.svelte"
   import CreateViewButton from "./buttons/CreateViewButton.svelte"
+  import ExistingRelationshipButton from "./buttons/ExistingRelationshipButton.svelte"
   import ExportButton from "./buttons/ExportButton.svelte"
   import EditRolesButton from "./buttons/EditRolesButton.svelte"
   import ManageAccessButton from "./buttons/ManageAccessButton.svelte"
@@ -98,9 +99,7 @@
     on:updatecolumns={onUpdateColumns}
     on:updaterows={onUpdateRows}
   >
-    {#if isInternal}
-      <CreateColumnButton on:updatecolumns={onUpdateColumns} />
-    {/if}
+    <CreateColumnButton on:updatecolumns={onUpdateColumns} />
     {#if schema && Object.keys(schema).length > 0}
       {#if !isUsersTable}
         <CreateRowButton
@@ -115,6 +114,12 @@
       <ManageAccessButton resourceId={$tables.selected?._id} />
       {#if isUsersTable}
         <EditRolesButton />
+      {/if}
+      {#if !isInternal}
+        <ExistingRelationshipButton
+          table={$tables.selected}
+          on:updatecolumns={onUpdateColumns}
+        />
       {/if}
       <HideAutocolumnButton bind:hideAutocolumns />
       <!-- always have the export last -->

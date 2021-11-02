@@ -31,6 +31,9 @@
   const AUTO_TYPE = "auto"
   const FORMULA_TYPE = FIELDS.FORMULA.type
   const LINK_TYPE = FIELDS.LINK.type
+  const STRING_TYPE = FIELDS.STRING.type
+  const NUMBER_TYPE = FIELDS.NUMBER.type
+
   const dispatch = createEventDispatcher()
   const PROHIBITED_COLUMN_NAMES = ["type", "_id", "_rev", "tableId"]
   const { hide } = getContext(Context.Modal)
@@ -55,8 +58,9 @@
   let confirmDeleteDialog
   let deletion
 
+  $: checkConstraints(field)
   $: tableOptions = $tables.list.filter(
-    table => table._id !== $tables.draft._id && table.type !== "external"
+    opt => opt._id !== $tables.draft._id && opt.type === table.type
   )
   $: required = !!field?.constraints?.presence || primaryDisplay
   $: uneditable =
@@ -83,6 +87,7 @@
   $: canBeRequired =
     field.type !== LINK_TYPE && !uneditable && field.type !== AUTO_TYPE
   $: relationshipOptions = getRelationshipOptions(field)
+  $: external = table.type === "external"
 
   async function saveColumn() {
     if (field.type === AUTO_TYPE) {
@@ -193,6 +198,45 @@
       },
     ]
   }
+
+  function getAllowedTypes() {
+    if (!external) {
+      return [
+        ...Object.values(fieldDefinitions),
+        { name: "Auto Column", type: AUTO_TYPE },
+      ]
+    } else {
+      return [
+        FIELDS.STRING,
+        FIELDS.LONGFORM,
+        FIELDS.OPTIONS,
+        FIELDS.DATETIME,
+        FIELDS.NUMBER,
+        FIELDS.BOOLEAN,
+        FIELDS.ARRAY,
+        FIELDS.FORMULA,
+        FIELDS.LINK,
+      ]
+    }
+  }
+
+  function checkConstraints(fieldToCheck) {
+    // most types need this, just make sure its always present
+    if (fieldToCheck && !fieldToCheck.constraints) {
+      fieldToCheck.constraints = {}
+    }
+    // some string types may have been built by server, may not always have constraints
+    if (fieldToCheck.type === STRING_TYPE && !fieldToCheck.constraints.length) {
+      fieldToCheck.constraints.length = {}
+    }
+    // some number types made server-side will be missing constraints
+    if (
+      fieldToCheck.type === NUMBER_TYPE &&
+      !fieldToCheck.constraints.numericality
+    ) {
+      fieldToCheck.constraints.numericality = {}
+    }
+  }
 </script>
 
 <ModalContent
@@ -215,10 +259,7 @@
     label="Type"
     bind:value={field.type}
     on:change={handleTypeChange}
-    options={[
-      ...Object.values(fieldDefinitions),
-      { name: "Auto Column", type: AUTO_TYPE },
-    ]}
+    options={getAllowedTypes()}
     getOptionLabel={field => field.name}
     getOptionValue={field => field.type}
   />
@@ -245,7 +286,7 @@
     </div>
   {/if}
 
-  {#if canBeSearched}
+  {#if canBeSearched && !external}
     <div>
       <Label grey small>Search Indexes</Label>
       <Toggle
