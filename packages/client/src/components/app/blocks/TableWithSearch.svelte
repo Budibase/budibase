@@ -21,6 +21,7 @@
 
   $: enrichedFilter = enrichFilter(filter, searchColumns, formId)
 
+  // Enrich the default filter with the specified search fields
   const enrichFilter = (filter, searchColumns, formId) => {
     let enrichedFilter = [...(filter || [])]
     searchColumns?.forEach(column => {
