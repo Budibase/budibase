@@ -1,7 +1,9 @@
 <script>
-  import Block from "./Block.svelte"
-  import BlockComponent from "./BlockComponent.svelte"
+  import Block from "components/Block.svelte"
+  import BlockComponent from "components/BlockComponent.svelte"
+  import { Heading } from "@budibase/bbui"
 
+  export let title
   export let dataSource
   export let searchColumns
   export let filter
@@ -38,6 +40,11 @@
   <BlockComponent type="form" bind:id={formId} props={{ dataSource }}>
     {#if searchColumns?.length}
       <div class="search">
+        {#if title}
+          <div class="title">
+            <Heading>{title}</Heading>
+          </div>
+        {/if}
         {#each searchColumns as column}
           <BlockComponent
             type="stringfield"
@@ -85,5 +92,8 @@
     align-items: center;
     margin-bottom: 20px;
     gap: 10px;
+  }
+  .title {
+    flex: 1 1 auto;
   }
 </style>
