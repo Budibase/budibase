@@ -46,6 +46,7 @@ export interface Table extends Base {
   schema: TableSchema
   primaryDisplay?: string
   sourceId?: string
+  constrained?: string[]
 }
 
 export interface Row extends Base {
