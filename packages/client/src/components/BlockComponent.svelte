@@ -14,22 +14,18 @@
   const block = getContext("block")
   const rand = generate()
 
-  $: id = block.id + rand
-  $: instance = createInstance(type, props, id)
-
   // Create a fake component instance so that we can use the core Component
   // to render this part of the block, taking advantage of binding enrichment
-  const createInstance = (type, props, id) => {
-    return {
-      _component: `@budibase/standard-components/${type}`,
-      _id: id,
-      _styles: {
-        normal: {
-          ...styles,
-        },
+  $: id = block.id + rand
+  $: instance = {
+    _component: `@budibase/standard-components/${type}`,
+    _id: id,
+    _styles: {
+      normal: {
+        ...styles,
       },
-      ...props,
-    }
+    },
+    ...props,
   }
 </script>
 
