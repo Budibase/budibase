@@ -315,4 +315,24 @@ exports.checkForViewUpdates = async (db, table, rename, deletedColumns) => {
   }
 }
 
+exports.generateForeignKey = (column, relatedTable) => {
+  return `fk_${relatedTable.name}_${column.fieldName}`
+}
+
+exports.generateJunctionTableName = (column, table, relatedTable) => {
+  return `jt_${table.name}_${relatedTable.name}_${column.name}_${column.fieldName}`
+}
+
+exports.foreignKeyStructure = (keyName, meta = null) => {
+  const structure = {
+    type: FieldTypes.NUMBER,
+    constraints: {},
+    name: keyName,
+  }
+  if (meta) {
+    structure.meta = meta
+  }
+  return structure
+}
+
 exports.TableSaveFunctions = TableSaveFunctions
