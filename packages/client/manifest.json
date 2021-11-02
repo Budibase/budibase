@@ -2581,6 +2581,11 @@
     "styles": ["size"],
     "settings": [
       {
+        "type": "text",
+        "label": "Title",
+        "key": "title"
+      },
+      {
         "type": "dataSource",
         "label": "Data",
         "key": "dataSource"
