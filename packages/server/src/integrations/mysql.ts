@@ -265,7 +265,7 @@ module MySQLModule {
       if (Array.isArray(input)) {
         const responses = []
         for (let query of input) {
-          responses.push(await internalQuery(this.client, query))
+          responses.push(await internalQuery(this.client, query, false))
         }
         return responses
       }

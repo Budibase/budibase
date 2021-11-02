@@ -98,6 +98,7 @@ function generateManyLinkSchema(datasource, column, table, relatedTable) {
     _id: buildExternalTableId(datasource._id, jcTblName),
     name: jcTblName,
     primary: [primary, relatedPrimary],
+    constrained: [primary, relatedPrimary],
     schema: {
       [primary]: foreignKeyStructure(primary, {
         toTable: table.name,
@@ -210,6 +211,12 @@ exports.save = async function (ctx) {
         relationType
       )
       fkTable.schema[foreignKey] = foreignKeyStructure(foreignKey)
+      if (fkTable.constrained == null) {
+        fkTable.constrained = []
+      }
+      if (fkTable.constrained.indexOf(foreignKey) === -1) {
+        fkTable.constrained.push(foreignKey)
+      }
       // foreign key is in other table, need to save it to external
       if (fkTable._id !== table._id) {
         extraTablesToUpdate.push(fkTable)
@@ -232,6 +239,13 @@ exports.save = async function (ctx) {
       ? DataSourceOperation.UPDATE_TABLE
       : DataSourceOperation.CREATE_TABLE
     await makeTableRequest(datasource, op, extraTable, tables, oldExtraTable)
+  }
+
+  // make sure the constrained list, all still exist
+  if (Array.isArray(tableToSave.constrained)) {
+    tableToSave.constrained = tableToSave.constrained.filter(constraint =>
+      Object.keys(tableToSave.schema).includes(constraint)
+    )
   }
 
   // store it into couch now for budibase reference

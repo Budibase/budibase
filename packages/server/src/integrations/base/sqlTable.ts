@@ -19,6 +19,7 @@ function generateSchema(schema: CreateTableBuilder, table: Table, tables: Record
     schema.primary(metaCols.map(col => col.name))
   }
 
+
   // check if any columns need added
   const foreignKeys = Object.values(table.schema).map(col => col.foreignKey)
   for (let [key, column] of Object.entries(table.schema)) {
@@ -78,6 +79,9 @@ function generateSchema(schema: CreateTableBuilder, table: Table, tables: Record
       .filter(([key, schema]) => schema.type !== FieldTypes.LINK && table.schema[key] == null)
       .map(([key]) => key)
     deletedColumns.forEach(key => {
+      if (oldTable.constrained && oldTable.constrained.indexOf(key) !== -1) {
+        schema.dropForeign(key)
+      }
       schema.dropColumn(key)
     })
   }
