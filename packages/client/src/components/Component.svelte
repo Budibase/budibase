@@ -40,6 +40,7 @@
   // Get contexts
   const context = getContext("context")
   const insideScreenslot = !!getContext("screenslot")
+  const insideBlock = !!getContext("block")
 
   // Create component context
   const componentStore = writable({})
@@ -53,7 +54,8 @@
   $: name = instance._instanceName
   $: interactive =
     $builderStore.inBuilder &&
-    ($builderStore.previewType === "layout" || insideScreenslot)
+    ($builderStore.previewType === "layout" || insideScreenslot) &&
+    !insideBlock
   $: empty = interactive && !children.length && definition?.hasChildren
   $: emptyState = empty && definition?.showEmptyState !== false
   $: rawProps = getRawProps(instance)
@@ -197,6 +199,8 @@
           {/each}
         {:else if emptyState}
           <Placeholder />
+        {:else if insideBlock}
+          <slot />
         {/if}
       </svelte:component>
     </div>

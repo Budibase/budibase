@@ -2576,7 +2576,6 @@
     ]
   },
   "tablewithsearch": {
-    "block": true,
     "name": "Table with search",
     "icon": "Table",
     "styles": ["size"],
