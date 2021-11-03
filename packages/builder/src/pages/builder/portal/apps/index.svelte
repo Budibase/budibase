@@ -200,8 +200,6 @@
   onMount(async () => {
     await apps.load()
     loaded = true
-
-    console.log($auth)
     // if the portal is loaded from an external URL with a template param
     const templateKey = $auth.initTemplate
     if (templateKey) {
