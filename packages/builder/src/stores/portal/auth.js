@@ -112,7 +112,7 @@ export function createAuthStore() {
       if (response.status === 200) {
         setUser(json.user)
       } else {
-        throw "Invalid credentials"
+        throw new Error(json.message ? json.message : "Invalid credentials")
       }
       return json
     },
