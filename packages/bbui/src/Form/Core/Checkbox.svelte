@@ -51,11 +51,6 @@
 </label>
 
 <style>
-  .spectrum-Checkbox--sizeM .spectrum-Checkbox-checkmark {
-    transform: scale(1);
-    left: 49%;
-    top: 50%;
-  }
   .spectrum-Checkbox--sizeL .spectrum-Checkbox-checkmark {
     transform: scale(1.1);
     left: 55%;
