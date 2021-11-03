@@ -2594,8 +2594,7 @@
         "type": "multifield",
         "label": "Search Columns",
         "key": "searchColumns",
-        "dependsOn": "dataSource",
-        "placeholder": "All columns"
+        "placeholder": "Choose search columns"
       },
       {
         "type": "filter",
