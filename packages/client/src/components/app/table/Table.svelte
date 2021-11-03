@@ -11,7 +11,11 @@
   export let size
 
   const component = getContext("component")
-  const { styleable } = getContext("sdk")
+  const { styleable, getAction, ActionTypes } = getContext("sdk")
+  const setSorting = getAction(
+    dataProvider?.id,
+    ActionTypes.SetDataProviderSorting
+  )
   const customColumnKey = `custom-${Math.random()}`
   const customRenderers = [
     {
@@ -70,6 +74,13 @@
     })
     return newSchema
   }
+
+  const onSort = e => {
+    setSorting({
+      column: e.detail.column,
+      order: e.detail.order,
+    })
+  }
 </script>
 
 <div use:styleable={$component.styles} class={size}>
@@ -84,6 +95,8 @@
     allowEditRows={false}
     allowEditColumns={false}
     showAutoColumns={true}
+    disableSorting
+    on:sort={onSort}
   >
     <slot />
   </Table>
