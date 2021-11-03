@@ -150,7 +150,7 @@
     max-width: 100%;
     flex-wrap: wrap;
   }
-  .search :global(.component > *) {
+  .search:not(.mobile) :global(.spectrum-Form-itemField > .spectrum-Picker) {
     width: 200px;
   }
   .search :global(.spectrum-InputGroup .spectrum-InputGroup-input) {
