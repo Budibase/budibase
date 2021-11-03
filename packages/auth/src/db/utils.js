@@ -152,6 +152,17 @@ exports.getDeployedAppID = appId => {
   return appId
 }
 
+/**
+ * Convert a deployed app ID to a development app ID.
+ */
+exports.getDevelopmentAppID = appId => {
+  if (!appId.startsWith(exports.APP_DEV_PREFIX)) {
+    const id = appId.split(exports.APP_PREFIX)[1]
+    return `${exports.APP_DEV_PREFIX}${id}`
+  }
+  return appId
+}
+
 exports.getCouchUrl = () => {
   if (!env.COUCH_DB_URL) return
 
