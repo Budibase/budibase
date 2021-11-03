@@ -156,34 +156,24 @@
   }
 
   const getSchema = async dataSource => {
-    if (dataSource?.schema) {
-      schema = dataSource.schema
-    } else if (dataSource?.tableId) {
-      const definition = await API.fetchTableDefinition(dataSource.tableId)
-      schema = definition?.schema ?? {}
-    } else if (dataSource?.type === "provider") {
-      schema = dataSource.value?.schema ?? {}
-    } else {
-      schema = {}
-    }
+    let newSchema = (await API.fetchDatasourceSchema(dataSource)) || {}
 
     // Ensure there are "name" properties for all fields and that field schema
     // are objects
-    let fixedSchema = {}
-    Object.entries(schema || {}).forEach(([fieldName, fieldSchema]) => {
+    Object.entries(newSchema).forEach(([fieldName, fieldSchema]) => {
       if (typeof fieldSchema === "string") {
-        fixedSchema[fieldName] = {
+        newSchema[fieldName] = {
           type: fieldSchema,
           name: fieldName,
         }
       } else {
-        fixedSchema[fieldName] = {
+        newSchema[fieldName] = {
           ...fieldSchema,
           name: fieldName,
         }
       }
     })
-    schema = fixedSchema
+    schema = newSchema
     schemaLoaded = true
   }
 
