@@ -6,6 +6,7 @@ const { queue } = require("./bullboard")
 const newid = require("../db/newid")
 const { updateEntityMetadata } = require("../utilities")
 const { MetadataTypes } = require("../constants")
+const { getDeployedAppID } = require("@budibase/auth/db")
 
 const WH_STEP_ID = definitions.WEBHOOK.stepId
 const CRON_STEP_ID = definitions.CRON.stepId
@@ -150,9 +151,13 @@ exports.checkForWebhooks = async ({ appId, oldAuto, newAuto }) => {
     await webhooks.save(ctx)
     const id = ctx.body.webhook._id
     newTrigger.webhookId = id
+    // the app ID has to be development for this endpoint
+    // it can only be used when building the app
+    // but the trigger endpoint will always be used in production
+    const prodAppId = getDeployedAppID(appId)
     newTrigger.inputs = {
       schemaUrl: `api/webhooks/schema/${appId}/${id}`,
-      triggerUrl: `api/webhooks/trigger/${appId}/${id}`,
+      triggerUrl: `api/webhooks/trigger/${prodAppId}/${id}`,
     }
   }
   return newAuto
