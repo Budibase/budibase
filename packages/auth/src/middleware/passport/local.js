@@ -10,6 +10,7 @@ const { getTenantId } = require("../../tenancy")
 
 const INVALID_ERR = "Invalid Credentials"
 const SSO_NO_PASSWORD = "SSO user does not have a password set"
+const EXPIRED = "This account has expired. Please reset your password"
 
 exports.options = {
   passReqToCallback: true,
@@ -46,8 +47,8 @@ exports.authenticate = async function (ctx, email, password, done) {
       return authError(done, SSO_NO_PASSWORD)
     }
 
-    console.error("User has no password", dbUser)
-    return authError(done, INVALID_ERR)
+    console.error("Non SSO usser has no password set", dbUser)
+    return authError(done, EXPIRED)
   }
 
   // authenticate
