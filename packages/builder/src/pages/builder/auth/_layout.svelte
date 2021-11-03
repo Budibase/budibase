@@ -1,6 +1,6 @@
 <script>
   import { auth, admin } from "stores/portal"
-  import { redirect } from "@roxi/routify"
+  import { redirect, params } from "@roxi/routify"
 
   // If already authenticated, redirect away from the auth section.
   // Check this onMount rather than a reactive statement to avoid trumping
@@ -16,7 +16,12 @@
     $admin.accountPortalUrl &&
     !$admin?.checklist?.sso?.checked
   ) {
-    window.location.href = $admin.accountPortalUrl
+    const templateKey = $params["?template"]
+    let url = $admin.accountPortalUrl
+    if (templateKey) {
+      url += `?template=${templateKey}`
+    }
+    window.location.href = url
   }
 </script>
 

@@ -33,6 +33,7 @@ export function createAuthStore() {
       user: $store.user,
       tenantId: $store.tenantId,
       tenantSet: $store.tenantSet,
+      initTemplate: $store.initTemplate,
       loaded: $store.loaded,
       initials,
       isAdmin,
@@ -80,14 +81,27 @@ export function createAuthStore() {
     }
   }
 
+  function updateInitTemplate(template) {
+    auth.update(store => {
+      store.initTemplate = template
+      return store
+    })
+  }
+
   return {
     subscribe: store.subscribe,
+    resetInitTemplate: () => updateInitTemplate(null),
     setOrganisation: setOrganisation,
     checkQueryString: async () => {
       const urlParams = new URLSearchParams(window.location.search)
       if (urlParams.has("tenantId")) {
         const tenantId = urlParams.get("tenantId")
         await setOrganisation(tenantId)
+      }
+
+      // set the template to create an app from
+      if (urlParams.has("template")) {
+        updateInitTemplate(urlParams.get("template"))
       }
     },
     setOrg: async tenantId => {

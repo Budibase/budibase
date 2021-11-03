@@ -18,7 +18,7 @@
   import { onMount } from "svelte"
   import { apps, auth, admin } from "stores/portal"
   import download from "downloadjs"
-  import { goto, params } from "@roxi/routify"
+  import { goto } from "@roxi/routify"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import AppCard from "components/start/AppCard.svelte"
   import AppRow from "components/start/AppRow.svelte"
@@ -201,10 +201,12 @@
     await apps.load()
     loaded = true
 
-    // if the portal is loaded from an external URL
-    const templateKey = $params["?template"]
-    if (!templateKey) return
-    createAppFromTemplateUrl(templateKey)
+    console.log($auth)
+    // if the portal is loaded from an external URL with a template param
+    const templateKey = $auth.initTemplate
+    if (templateKey) {
+      createAppFromTemplateUrl(templateKey)
+    }
   })
 </script>
 
