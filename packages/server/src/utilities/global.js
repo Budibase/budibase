@@ -46,9 +46,13 @@ exports.getCachedSelf = async (ctx, appId) => {
   return processUser(appId, user)
 }
 
-exports.getGlobalUser = async (appId, userId) => {
+exports.getRawGlobalUser = async userId => {
   const db = getGlobalDB()
-  let user = await db.get(getGlobalIDFromUserMetadataID(userId))
+  return db.get(getGlobalIDFromUserMetadataID(userId))
+}
+
+exports.getGlobalUser = async (appId, userId) => {
+  let user = await exports.getRawGlobalUser(userId)
   return processUser(appId, user)
 }
 

@@ -4,12 +4,14 @@ const {
   getUserMetadataParams,
 } = require("../../db/utils")
 const { InternalTables } = require("../../db/utils")
-const { getGlobalUsers } = require("../../utilities/global")
+const { getGlobalUsers, getRawGlobalUser } = require("../../utilities/global")
 const { getFullUser } = require("../../utilities/users")
 const { isEqual } = require("lodash")
 const { BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
+const { getDevelopmentAppID } = require("@budibase/auth/db")
+const { doesDatabaseExist } = require("../../utilities")
 
-exports.rawMetadata = async db => {
+async function rawMetadata(db) {
   return (
     await db.allDocs(
       getUserMetadataParams(null, {
@@ -19,45 +21,80 @@ exports.rawMetadata = async db => {
   ).rows.map(row => row.doc)
 }
 
+async function combineMetadataAndUser(user, metadata) {
+  // skip users with no access
+  if (user.roleId === BUILTIN_ROLE_IDS.PUBLIC) {
+    return null
+  }
+  delete user._rev
+  const metadataId = generateUserMetadataID(user._id)
+  const newDoc = {
+    ...user,
+    _id: metadataId,
+    tableId: InternalTables.USER_METADATA,
+  }
+  const found = Array.isArray(metadata)
+    ? metadata.find(doc => doc._id === metadataId)
+    : metadata
+  // copy rev over for the purposes of equality check
+  if (found) {
+    newDoc._rev = found._rev
+  }
+  if (found == null || !isEqual(newDoc, found)) {
+    return {
+      ...found,
+      ...newDoc,
+    }
+  }
+  return null
+}
+
 exports.syncGlobalUsers = async appId => {
   // sync user metadata
   const db = new CouchDB(appId)
   const [users, metadata] = await Promise.all([
     getGlobalUsers(appId),
-    exports.rawMetadata(db),
+    rawMetadata(db),
   ])
   const toWrite = []
   for (let user of users) {
-    // skip users with no access
-    if (user.roleId === BUILTIN_ROLE_IDS.PUBLIC) {
-      continue
-    }
-    delete user._rev
-    const metadataId = generateUserMetadataID(user._id)
-    const newDoc = {
-      ...user,
-      _id: metadataId,
-      tableId: InternalTables.USER_METADATA,
-    }
-    const found = metadata.find(doc => doc._id === metadataId)
-    // copy rev over for the purposes of equality check
-    if (found) {
-      newDoc._rev = found._rev
-    }
-    if (found == null || !isEqual(newDoc, found)) {
-      toWrite.push({
-        ...found,
-        ...newDoc,
-      })
+    const combined = await combineMetadataAndUser(user, metadata)
+    if (combined) {
+      toWrite.push(combined)
     }
   }
   await db.bulkDocs(toWrite)
 }
 
+exports.syncUser = async function (ctx) {
+  const user = await getRawGlobalUser(ctx.params.id)
+  const roles = user.roles
+  delete user.roles
+  for (let [prodAppId, roleId] of Object.entries(roles)) {
+    if (roleId === BUILTIN_ROLE_IDS.PUBLIC) {
+      continue
+    }
+    const devAppId = getDevelopmentAppID(prodAppId)
+    for (let appId of [prodAppId, devAppId]) {
+      if (!(await doesDatabaseExist(appId))) {
+        continue
+      }
+      const db = new CouchDB(appId)
+      const userId = generateUserMetadataID(user._id)
+      const metadata = await db.get(userId)
+      const combined = combineMetadataAndUser(user, metadata)
+      await db.put(combined)
+    }
+  }
+  ctx.body = {
+    message: "User synced.",
+  }
+}
+
 exports.fetchMetadata = async function (ctx) {
   const database = new CouchDB(ctx.appId)
   const global = await getGlobalUsers(ctx.appId)
-  const metadata = await exports.rawMetadata(database)
+  const metadata = await rawMetadata(database)
   const users = []
   for (let user of global) {
     // find the metadata that matches up to the global ID
