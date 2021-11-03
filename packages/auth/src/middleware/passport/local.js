@@ -9,6 +9,7 @@ const { createASession } = require("../../security/sessions")
 const { getTenantId } = require("../../tenancy")
 
 const INVALID_ERR = "Invalid Credentials"
+const SSO_NO_PASSWORD = "SSO user does not have a password set"
 
 exports.options = {
   passReqToCallback: true,
@@ -33,6 +34,19 @@ exports.authenticate = async function (ctx, email, password, done) {
 
   // check that the user is currently inactive, if this is the case throw invalid
   if (dbUser.status === UserStatus.INACTIVE) {
+    return authError(done, INVALID_ERR)
+  }
+
+  // check that the user has a stored password before proceeding
+  if (!dbUser.password) {
+    if (
+      (dbUser.account && dbUser.account.authType === "sso") || // root account sso
+      dbUser.thirdPartyProfile // internal sso
+    ) {
+      return authError(done, SSO_NO_PASSWORD)
+    }
+
+    console.error("User has no password", dbUser)
     return authError(done, INVALID_ERR)
   }
 
