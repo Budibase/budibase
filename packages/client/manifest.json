@@ -2627,13 +2627,6 @@
         "defaultValue": 8
       },
       {
-        "type": "multifield",
-        "label": "Table Columns",
-        "key": "tableColumns",
-        "dependsOn": "dataSource",
-        "placeholder": "All columns"
-      },
-      {
         "type": "select",
         "label": "Size",
         "key": "size",
@@ -2650,13 +2643,20 @@
         ]
       },
       {
+        "type": "multifield",
+        "label": "Table Columns",
+        "key": "tableColumns",
+        "dependsOn": "dataSource",
+        "placeholder": "All columns"
+      },
+      {
         "type": "boolean",
-        "label": "Quiet",
+        "label": "Quiet table variant",
         "key": "quiet"
       },
       {
         "type": "boolean",
-        "label": "Auto Columns",
+        "label": "Show auto columns",
         "key": "showAutoColumns",
         "defaultValue": false
       }
