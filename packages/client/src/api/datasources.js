@@ -1,8 +1,8 @@
 import { cloneDeep } from "lodash/fp"
-import { fetchTableData } from "./tables"
+import { fetchTableData, fetchTableDefinition } from "./tables"
 import { fetchViewData } from "./views"
 import { fetchRelationshipData } from "./relationships"
-import { executeQuery } from "./queries"
+import { executeQuery, fetchQueryDefinition } from "./queries"
 
 /**
  * Fetches all rows for a particular Budibase data source.
@@ -38,4 +38,36 @@ export const fetchDatasource = async dataSource => {
 
   // Enrich the result is always an array
   return Array.isArray(rows) ? rows : []
+}
+
+/**
+ * Fetches the schema of any kind of datasource.
+ */
+export const fetchDatasourceSchema = async dataSource => {
+  if (!dataSource) {
+    return null
+  }
+  const { type } = dataSource
+
+  // Nested providers should already have exposed their own schema
+  if (type === "provider") {
+    return dataSource.value?.schema
+  }
+
+  // Tables, views and links can be fetched by table ID
+  if (
+    (type === "table" || type === "view" || type === "link") &&
+    dataSource.tableId
+  ) {
+    const table = await fetchTableDefinition(dataSource.tableId)
+    return table?.schema
+  }
+
+  // Queries can be fetched by query ID
+  if (type === "query" && dataSource._id) {
+    const definition = await fetchQueryDefinition(dataSource._id)
+    return definition?.schema
+  }
+
+  return null
 }
