@@ -6,25 +6,58 @@ const {
 const { InternalTables } = require("../../db/utils")
 const { getGlobalUsers } = require("../../utilities/global")
 const { getFullUser } = require("../../utilities/users")
+const { isEqual } = require("lodash")
+const { BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
 
-function removeGlobalProps(user) {
-  // make sure to always remove some of the global user props
-  delete user.password
-  delete user.roles
-  delete user.builder
-  return user
-}
-
-exports.fetchMetadata = async function (ctx) {
-  const database = new CouchDB(ctx.appId)
-  const global = await getGlobalUsers(ctx.appId)
-  const metadata = (
-    await database.allDocs(
+exports.rawMetadata = async db => {
+  return (
+    await db.allDocs(
       getUserMetadataParams(null, {
         include_docs: true,
       })
     )
   ).rows.map(row => row.doc)
+}
+
+exports.syncGlobalUsers = async appId => {
+  // sync user metadata
+  const db = new CouchDB(appId)
+  const [users, metadata] = await Promise.all([
+    getGlobalUsers(appId),
+    exports.rawMetadata(db),
+  ])
+  const toWrite = []
+  for (let user of users) {
+    // skip users with no access
+    if (user.roleId === BUILTIN_ROLE_IDS.PUBLIC) {
+      continue
+    }
+    delete user._rev
+    const metadataId = generateUserMetadataID(user._id)
+    const newDoc = {
+      ...user,
+      _id: metadataId,
+      tableId: InternalTables.USER_METADATA,
+    }
+    const found = metadata.find(doc => doc._id === metadataId)
+    // copy rev over for the purposes of equality check
+    if (found) {
+      newDoc._rev = found._rev
+    }
+    if (found == null || !isEqual(newDoc, found)) {
+      toWrite.push({
+        ...found,
+        ...newDoc,
+      })
+    }
+  }
+  await db.bulkDocs(toWrite)
+}
+
+exports.fetchMetadata = async function (ctx) {
+  const database = new CouchDB(ctx.appId)
+  const global = await getGlobalUsers(ctx.appId)
+  const metadata = await exports.rawMetadata(database)
   const users = []
   for (let user of global) {
     // find the metadata that matches up to the global ID
@@ -52,7 +85,9 @@ exports.updateSelfMetadata = async function (ctx) {
 exports.updateMetadata = async function (ctx) {
   const appId = ctx.appId
   const db = new CouchDB(appId)
-  const user = removeGlobalProps(ctx.request.body)
+  const user = ctx.request.body
+  // this isn't applicable to the user
+  delete user.roles
   const metadata = {
     tableId: InternalTables.USER_METADATA,
     ...user,
