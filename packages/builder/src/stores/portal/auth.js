@@ -33,7 +33,6 @@ export function createAuthStore() {
       user: $store.user,
       tenantId: $store.tenantId,
       tenantSet: $store.tenantSet,
-      initTemplate: $store.initTemplate,
       loaded: $store.loaded,
       initials,
       isAdmin,
@@ -81,27 +80,21 @@ export function createAuthStore() {
     }
   }
 
-  function updateInitTemplate(template) {
-    auth.update(store => {
-      store.initTemplate = template
-      return store
-    })
-  }
-
   return {
     subscribe: store.subscribe,
-    resetInitTemplate: () => updateInitTemplate(null),
     setOrganisation: setOrganisation,
+    getInitInfo: async () => {
+      const response = await api.get(`/api/global/auth/init`)
+      return await response.json()
+    },
+    setInitInfo: async info => {
+      await api.post(`/api/global/auth/init`, info)
+    },
     checkQueryString: async () => {
       const urlParams = new URLSearchParams(window.location.search)
       if (urlParams.has("tenantId")) {
         const tenantId = urlParams.get("tenantId")
         await setOrganisation(tenantId)
-      }
-
-      // set the template to create an app from
-      if (urlParams.has("template")) {
-        updateInitTemplate(urlParams.get("template"))
       }
     },
     setOrg: async tenantId => {

@@ -139,7 +139,7 @@
       }
       const userResp = await api.post(`/api/users/metadata/self`, user)
       await userResp.json()
-      auth.resetInitTemplate()
+      await auth.setInitInfo({})
       $goto(`/builder/app/${appJson.instance._id}`)
     } catch (error) {
       console.error(error)

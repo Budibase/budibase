@@ -6,6 +6,7 @@ exports.UserStatus = {
 exports.Cookies = {
   CurrentApp: "budibase:currentapp",
   Auth: "budibase:auth",
+  Init: "budibase:init",
   OIDC_CONFIG: "budibase:oidc:config",
 }
 

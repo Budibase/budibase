@@ -201,9 +201,10 @@
     await apps.load()
     loaded = true
     // if the portal is loaded from an external URL with a template param
-    const templateKey = $auth.initTemplate
-    if (templateKey) {
-      createAppFromTemplateUrl(templateKey)
+    const initInfo = await auth.getInitInfo()
+    console.log(initInfo)
+    if (initInfo.init_template) {
+      createAppFromTemplateUrl(initInfo.init_template)
     }
   })
 </script>

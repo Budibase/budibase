@@ -1,5 +1,5 @@
 <script>
-  import { isActive, redirect } from "@roxi/routify"
+  import { isActive, redirect, params } from "@roxi/routify"
   import { admin, auth } from "stores/portal"
   import { onMount } from "svelte"
 
@@ -47,6 +47,11 @@
   }
 
   onMount(async () => {
+    if ($params["?template"]) {
+      console.log("SETTING COOKIE", $params["?template"])
+      await auth.setInitInfo({ init_template: $params["?template"] })
+    }
+
     await auth.checkAuth()
     await admin.init()
 
