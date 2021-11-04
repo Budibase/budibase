@@ -5,6 +5,9 @@ const { checkSlashesInUrl } = require("../utilities")
 const env = require("../environment")
 
 exports.syncUserInApps = async userId => {
+  if (env.isTest()) {
+    return
+  }
   const request = { headers: {} }
   request.headers[Headers.API_KEY] = env.INTERNAL_API_KEY
   if (isTenantIdSet()) {
