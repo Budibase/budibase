@@ -48,7 +48,6 @@
 
   onMount(async () => {
     if ($params["?template"]) {
-      console.log("SETTING COOKIE", $params["?template"])
       await auth.setInitInfo({ init_template: $params["?template"] })
     }
 
