@@ -77,6 +77,17 @@ exports.authenticate = async (ctx, next) => {
   })(ctx, next)
 }
 
+exports.setInitInfo = ctx => {
+  const initInfo = ctx.request.body
+  setCookie(ctx, initInfo, Cookies.Init)
+  ctx.status = 200
+}
+
+exports.getInitInfo = ctx => {
+  const initInfo = getCookie(ctx, Cookies.Init)
+  ctx.body = initInfo
+}
+
 /**
  * Reset the user password, used as part of a forgotten password flow.
  */

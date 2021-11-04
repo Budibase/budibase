@@ -9,7 +9,7 @@
     Checkbox,
   } from "@budibase/bbui"
   import { store, automationStore, hostingStore } from "builderStore"
-  import { admin } from "stores/portal"
+  import { admin, auth } from "stores/portal"
   import { string, mixed, object } from "yup"
   import api, { get, post } from "builderStore/api"
   import analytics, { Events } from "analytics"
@@ -139,12 +139,23 @@
       }
       const userResp = await api.post(`/api/users/metadata/self`, user)
       await userResp.json()
+      await auth.setInitInfo({})
       $goto(`/builder/app/${appJson.instance._id}`)
     } catch (error) {
       console.error(error)
       notifications.error(error)
       submitting = false
     }
+  }
+
+  function getModalTitle() {
+    let title = "Create App"
+    if (template.fromFile) {
+      title = "Import App"
+    } else if (template.key) {
+      title = "Create app from template"
+    }
+    return title
   }
 </script>
 
@@ -172,7 +183,7 @@
   </ModalContent>
 {:else}
   <ModalContent
-    title={template?.fromFile ? "Import app" : "Create app"}
+    title={getModalTitle()}
     confirmText={template?.fromFile ? "Import app" : "Create app"}
     onConfirm={createNewApp}
     onCancel={inline ? () => (template = null) : null}

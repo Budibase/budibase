@@ -184,9 +184,27 @@
     }
   }
 
+  function createAppFromTemplateUrl(templateKey) {
+    // validate the template key just to make sure
+    const templateParts = templateKey.split("/")
+    if (templateParts.length === 2 && templateParts[0] === "app") {
+      template = {
+        key: templateKey,
+      }
+      initiateAppCreation()
+    } else {
+      notifications.error("Your Template URL is invalid. Please try another.")
+    }
+  }
+
   onMount(async () => {
     await apps.load()
     loaded = true
+    // if the portal is loaded from an external URL with a template param
+    const initInfo = await auth.getInitInfo()
+    if (initInfo.init_template) {
+      createAppFromTemplateUrl(initInfo.init_template)
+    }
   })
 </script>
 
