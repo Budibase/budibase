@@ -23,9 +23,6 @@ function formatResponse(resp) {
     try {
       resp = JSON.parse(resp)
     } catch (err) {
-      console.error(
-        "Error parsing JSON response. Returning string in array instead."
-      )
       resp = { response: resp }
     }
   }

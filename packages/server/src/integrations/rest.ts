@@ -142,13 +142,11 @@ module RestModule {
     }
 
     async parseResponse(response: any) {
-      switch (this.headers.Accept) {
-        case "application/json":
-          return await response.json()
-        case "text/html":
-          return await response.text()
-        default:
-          return await response.json()
+      const contentType = response.headers.get("content-type")
+      if (contentType && contentType.indexOf("application/json") !== -1) {
+        return await response.json()
+      } else {
+        return await response.text()
       }
     }
 
@@ -191,7 +189,7 @@ module RestModule {
       }
 
       const response = await fetch(this.getUrl(path, queryString), {
-        method: "POST",
+        method: "PUT",
         headers: this.headers,
         body: JSON.stringify(json),
       })
