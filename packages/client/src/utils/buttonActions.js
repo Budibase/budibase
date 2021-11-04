@@ -120,7 +120,7 @@ const changeFormStepHandler = async (action, context) => {
 const closeScreenModalHandler = () => {
   // Emit this as a window event, so parent screens which are iframing us in
   // can close the modal
-  window.dispatchEvent(new Event("close-screen-modal"))
+  window.parent.postMessage({ type: "close-screen-modal" })
 }
 
 const updateStateHandler = action => {
