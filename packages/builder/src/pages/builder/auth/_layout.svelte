@@ -16,11 +16,7 @@
     $admin.accountPortalUrl &&
     !$admin?.checklist?.sso?.checked
   ) {
-    let url = $admin.accountPortalUrl
-    if ($auth.initTemplate) {
-      url += `?template=${$auth.initTemplate}`
-    }
-    window.location.href = url
+    window.location.href = $admin.accountPortalUrl
   }
 </script>
 
