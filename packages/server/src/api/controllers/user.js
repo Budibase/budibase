@@ -8,8 +8,13 @@ const { getGlobalUsers, getRawGlobalUser } = require("../../utilities/global")
 const { getFullUser } = require("../../utilities/users")
 const { isEqual } = require("lodash")
 const { BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
-const { getDevelopmentAppID } = require("@budibase/auth/db")
+const {
+  getDevelopmentAppID,
+  getAllApps,
+  isDevAppID,
+} = require("@budibase/auth/db")
 const { doesDatabaseExist } = require("../../utilities")
+const { UserStatus } = require("@budibase/auth/constants")
 
 async function rawMetadata(db) {
   return (
@@ -21,7 +26,7 @@ async function rawMetadata(db) {
   ).rows.map(row => row.doc)
 }
 
-async function combineMetadataAndUser(user, metadata) {
+function combineMetadataAndUser(user, metadata) {
   // skip users with no access
   if (user.roleId === BUILTIN_ROLE_IDS.PUBLIC) {
     return null
@@ -67,22 +72,61 @@ exports.syncGlobalUsers = async appId => {
 }
 
 exports.syncUser = async function (ctx) {
-  const user = await getRawGlobalUser(ctx.params.id)
+  let deleting = false,
+    user
+  const userId = ctx.params.id
+  try {
+    user = await getRawGlobalUser(userId)
+  } catch (err) {
+    user = {}
+    deleting = true
+  }
   const roles = user.roles
+  // remove props which aren't useful to metadata
+  delete user.password
+  delete user.forceResetPassword
   delete user.roles
-  for (let [prodAppId, roleId] of Object.entries(roles)) {
-    if (roleId === BUILTIN_ROLE_IDS.PUBLIC) {
-      continue
-    }
+  // run through all production appIDs in the users roles
+  let prodAppIds
+  // if they are a builder then get all production app IDs
+  if ((user.builder && user.builder.global) || deleting) {
+    prodAppIds = (await getAllApps(CouchDB, { idsOnly: true })).filter(
+      id => !isDevAppID(id)
+    )
+  } else {
+    prodAppIds = Object.entries(roles)
+      .filter(entry => entry[1] !== BUILTIN_ROLE_IDS.PUBLIC)
+      .map(([appId]) => appId)
+  }
+  for (let prodAppId of prodAppIds) {
     const devAppId = getDevelopmentAppID(prodAppId)
     for (let appId of [prodAppId, devAppId]) {
       if (!(await doesDatabaseExist(appId))) {
         continue
       }
       const db = new CouchDB(appId)
-      const userId = generateUserMetadataID(user._id)
-      const metadata = await db.get(userId)
-      const combined = combineMetadataAndUser(user, metadata)
+      const metadataId = generateUserMetadataID(userId)
+      let metadata
+      try {
+        metadata = await db.get(metadataId)
+      } catch (err) {
+        if (deleting) {
+          continue
+        }
+        metadata = {
+          tableId: InternalTables.USER_METADATA,
+        }
+      }
+      let combined
+      if (deleting) {
+        combined = {
+          ...metadata,
+          status: UserStatus.INACTIVE,
+          metadata: BUILTIN_ROLE_IDS.PUBLIC,
+        }
+      } else {
+        combined = combineMetadataAndUser(user, metadata)
+      }
       await db.put(combined)
     }
   }

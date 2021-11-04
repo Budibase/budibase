@@ -136,7 +136,11 @@ exports.stringToReadStream = string => {
 }
 
 exports.doesDatabaseExist = async dbName => {
-  const db = new CouchDB(dbName, { skip_setup: true })
-  const info = await db.info()
-  return info && !info.error
+  try {
+    const db = new CouchDB(dbName, { skip_setup: true })
+    const info = await db.info()
+    return info && !info.error
+  } catch (err) {
+    return false
+  }
 }

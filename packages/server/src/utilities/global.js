@@ -77,6 +77,7 @@ exports.getGlobalUsers = async (appId = null, users = null) => {
     .filter(user => user != null)
     .map(user => {
       delete user.password
+      delete user.forceResetPassword
       return user
     })
   if (!appId) {

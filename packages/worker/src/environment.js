@@ -42,6 +42,7 @@ module.exports = {
   SMTP_FROM_ADDRESS: process.env.SMTP_FROM_ADDRESS,
   PLATFORM_URL: process.env.PLATFORM_URL,
   COOKIE_DOMAIN: process.env.COOKIE_DOMAIN,
+  APPS_URL: process.env.APPS_URL,
   _set(key, value) {
     process.env[key] = value
     module.exports[key] = value
@@ -51,6 +52,13 @@ module.exports = {
   isProd: () => {
     return !isDev()
   },
+}
+
+// if some var haven't been set, define them
+if (!module.exports.APPS_URL) {
+  module.exports.APPS_URL = isDev()
+    ? "http://localhost:4001"
+    : "http://app-service:4002"
 }
 
 // clean up any environment variable edge cases
