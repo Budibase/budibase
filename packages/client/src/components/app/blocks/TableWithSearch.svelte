@@ -16,6 +16,9 @@
   export let rowCount
   export let quiet
   export let size
+  export let showTitleButton
+  export let titleButtonText
+  export let titleButtonOnClick
 
   const { API, styleable } = getContext("sdk")
   const context = getContext("context")
@@ -63,7 +66,7 @@
         })
       }
     })
-    return enrichedColumns
+    return enrichedColumns.slice(0, 3)
   }
 
   // Load the datasource schema on mount so we can determine column types
@@ -77,26 +80,41 @@
 <Block>
   <div class={size} use:styleable={$component.styles}>
     <BlockComponent type="form" bind:id={formId} props={{ dataSource }}>
-      {#if title || enrichedSearchColumns?.length}
-        <div class="header">
+      {#if title || enrichedSearchColumns?.length || showTitleButton}
+        <div class="header" class:mobile={$context.device.mobile}>
           <div class="title">
             <Heading>{title || ""}</Heading>
           </div>
-          {#if enrichedSearchColumns?.length}
-            <div class="search" class:mobile={$context.device.mobile}>
-              {#each enrichedSearchColumns as column}
-                <BlockComponent
-                  type={column.componentType}
-                  props={{
-                    field: column.name,
-                    placeholder: column.name,
-                    text: column.name,
-                    autoWidth: true,
-                  }}
-                />
-              {/each}
-            </div>
-          {/if}
+          <div class="controls">
+            {#if enrichedSearchColumns?.length}
+              <div
+                class="search"
+                style="--cols:{enrichedSearchColumns?.length}"
+              >
+                {#each enrichedSearchColumns as column}
+                  <BlockComponent
+                    type={column.componentType}
+                    props={{
+                      field: column.name,
+                      placeholder: column.name,
+                      text: column.name,
+                      autoWidth: true,
+                    }}
+                  />
+                {/each}
+              </div>
+            {/if}
+            {#if showTitleButton}
+              <BlockComponent
+                type="button"
+                props={{
+                  onClick: titleButtonOnClick,
+                  text: titleButtonText,
+                  type: "cta",
+                }}
+              />
+            {/if}
+          </div>
         </div>
       {/if}
       <BlockComponent
@@ -134,39 +152,59 @@
     justify-content: space-between;
     align-items: center;
     gap: 20px;
-    flex-wrap: wrap;
     margin-bottom: 20px;
   }
+
   .title {
-    flex: 1 1 auto;
+    overflow: hidden;
   }
-  .search {
-    flex: 0 0 auto;
+  .title :global(.spectrum-Heading) {
+    flex: 1 1 auto;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .controls {
+    flex: 0 1 auto;
     display: flex;
     flex-direction: row;
-    justify-content: flex-start;
+    justify-content: flex-end;
     align-items: center;
+    gap: 20px;
+  }
+  .controls :global(.spectrum-InputGroup .spectrum-InputGroup-input) {
+    width: 100%;
+  }
+
+  .search {
+    flex: 0 1 auto;
     gap: 10px;
     max-width: 100%;
-    flex-wrap: wrap;
-  }
-  .search:not(.mobile) :global(.spectrum-Form-itemField > .spectrum-Picker) {
-    width: 200px;
-  }
-  .search :global(.spectrum-InputGroup .spectrum-InputGroup-input) {
-    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(var(--cols), minmax(120px, 200px));
   }
   .search :global(.spectrum-InputGroup) {
     min-width: 0;
   }
-  .search.mobile {
+
+  /* Mobile styles */
+  .mobile {
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+  }
+  .mobile .controls {
+    flex-direction: column-reverse;
+    justify-content: flex-start;
+    align-items: stretch;
+  }
+  .mobile .search {
+    display: flex;
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
     position: relative;
-    width: 100%;
-  }
-  .search.mobile :global(.component > *) {
     width: 100%;
   }
 </style>

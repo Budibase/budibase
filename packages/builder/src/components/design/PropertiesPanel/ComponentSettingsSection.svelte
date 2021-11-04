@@ -22,6 +22,8 @@
   ]
 
   $: settings = componentDefinition?.settings ?? []
+  $: generalSettings = settings.filter(setting => !setting.section)
+  $: sections = settings.filter(setting => setting.section)
   $: isLayout = assetInstance && assetInstance.favicon
   $: assetDefinition = isLayout ? layoutDefinition : screenDefinition
 
@@ -70,8 +72,8 @@
       onChange={val => updateProp("_instanceName", val)}
     />
   {/if}
-  {#if settings && settings.length > 0}
-    {#each settings as setting (setting.key)}
+  {#if generalSettings.length}
+    {#each generalSettings as setting (setting.key)}
       {#if canRenderControl(setting)}
         <PropertyControl
           type={setting.type}
@@ -99,10 +101,42 @@
   {/if}
   {#if componentDefinition?.info}
     <div class="text">
-      {@html componentDefinition?.info}
+      {@html componentDefinition.info}
     </div>
   {/if}
 </DetailSummary>
+
+{#each sections as section (section.name)}
+  <DetailSummary name={section.name} collapsible={false}>
+    {#each section.settings as setting (setting.key)}
+      {#if canRenderControl(setting)}
+        <PropertyControl
+          type={setting.type}
+          control={getComponentForSettingType(setting.type)}
+          label={setting.label}
+          key={setting.key}
+          value={componentInstance[setting.key] ??
+            componentInstance[setting.key]?.defaultValue}
+          {componentInstance}
+          onChange={val => updateProp(setting.key, val)}
+          props={{
+            options: setting.options || [],
+            placeholder: setting.placeholder || null,
+            min: setting.min || null,
+            max: setting.max || null,
+          }}
+          {bindings}
+          {componentDefinition}
+        />
+      {/if}
+    {/each}
+    {#if section?.info}
+      <div class="text">
+        {@html section.info}
+      </div>
+    {/if}
+  </DetailSummary>
+{/each}
 
 <style>
   .text {

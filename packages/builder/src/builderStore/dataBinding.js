@@ -4,6 +4,7 @@ import {
   findAllMatchingComponents,
   findComponent,
   findComponentPath,
+  getComponentSettings,
 } from "./storeUtils"
 import { store } from "builderStore"
 import { queries as queriesStores, tables as tablesStore } from "stores/backend"
@@ -82,13 +83,10 @@ export const getActionProviderComponents = (asset, componentId, actionType) => {
  * Gets a datasource object for a certain data provider component
  */
 export const getDatasourceForProvider = (asset, component) => {
-  const def = store.actions.components.getDefinition(component?._component)
-  if (!def) {
-    return null
-  }
+  const settings = getComponentSettings(component._component)
 
   // If this component has a dataProvider setting, go up the stack and use it
-  const dataProviderSetting = def.settings.find(setting => {
+  const dataProviderSetting = settings.find(setting => {
     return setting.type === "dataProvider"
   })
   if (dataProviderSetting) {
@@ -100,7 +98,7 @@ export const getDatasourceForProvider = (asset, component) => {
 
   // Extract datasource from component instance
   const validSettingTypes = ["dataSource", "table", "schema"]
-  const datasourceSetting = def.settings.find(setting => {
+  const datasourceSetting = settings.find(setting => {
     return validSettingTypes.includes(setting.type)
   })
   if (!datasourceSetting) {
@@ -374,8 +372,8 @@ const buildFormSchema = component => {
   if (!component) {
     return schema
   }
-  const def = store.actions.components.getDefinition(component._component)
-  const fieldSetting = def?.settings?.find(
+  const settings = getComponentSettings(component._component)
+  const fieldSetting = settings.find(
     setting => setting.key === "field" && setting.type.startsWith("field/")
   )
   if (fieldSetting && component.field) {
