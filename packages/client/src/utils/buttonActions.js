@@ -161,9 +161,15 @@ const confirmTextMap = {
  */
 export const enrichButtonActions = (actions, context) => {
   // Prevent button actions in the builder preview
-  if (get(builderStore).inBuilder) {
+  if (!actions || get(builderStore).inBuilder) {
     return () => {}
   }
+
+  // If this is a function then it has already been enriched
+  if (typeof actions === "function") {
+    return actions
+  }
+
   const handlers = actions.map(def => handlerMap[def["##eventHandlerType"]])
   return async () => {
     for (let i = 0; i < handlers.length; i++) {

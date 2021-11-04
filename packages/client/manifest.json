@@ -2576,9 +2576,11 @@
     ]
   },
   "tablewithsearch": {
+    "block": true,
     "name": "Table with search",
     "icon": "Table",
     "styles": ["size"],
+    "info": "Only the first 3 search columns will be used.",
     "settings": [
       {
         "type": "text",
@@ -2614,18 +2616,6 @@
         "defaultValue": "Descending"
       },
       {
-        "type": "boolean",
-        "label": "Paginate",
-        "key": "paginate",
-        "defaultValue": true
-      },
-      {
-        "type": "number",
-        "label": "Row Count",
-        "key": "rowCount",
-        "defaultValue": 8
-      },
-      {
         "type": "select",
         "label": "Size",
         "key": "size",
@@ -2642,23 +2632,66 @@
         ]
       },
       {
-        "type": "multifield",
-        "label": "Table Columns",
-        "key": "tableColumns",
-        "dependsOn": "dataSource",
-        "placeholder": "All columns"
+        "type": "boolean",
+        "label": "Paginate",
+        "key": "paginate",
+        "defaultValue": true
       },
       {
-        "type": "boolean",
-        "label": "Quiet table variant",
-        "key": "quiet"
+        "section": true,
+        "name": "Table",
+        "settings": [
+          {
+            "type": "number",
+            "label": "Row Count",
+            "key": "rowCount",
+            "defaultValue": 8
+          },
+          {
+            "type": "multifield",
+            "label": "Table Columns",
+            "key": "tableColumns",
+            "dependsOn": "dataSource",
+            "placeholder": "All columns"
+          },
+          {
+            "type": "boolean",
+            "label": "Quiet table variant",
+            "key": "quiet"
+          },
+          {
+            "type": "boolean",
+            "label": "Show auto columns",
+            "key": "showAutoColumns",
+            "defaultValue": false
+          }
+        ]
       },
       {
-        "type": "boolean",
-        "label": "Show auto columns",
-        "key": "showAutoColumns",
-        "defaultValue": false
+        "section": true,
+        "name": "Button",
+        "settings": [
+          {
+            "type": "boolean",
+            "key": "showTitleButton",
+            "label": "Show title button",
+            "defaultValue": false
+          },
+          {
+            "type": "text",
+            "key": "titleButtonText",
+            "label": "Title button text"
+          },
+          {
+            "type": "event",
+            "label": "Title Button Action",
+            "key": "titleButtonOnClick"
+          }
+        ]
       }
-    ]
+    ],
+    "context": {
+      "type": "schema"
+    }
   }
 }
