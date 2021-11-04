@@ -31,7 +31,7 @@ const HELPERS = [
     }
     // null/undefined values produce bad results
     if (value == null || typeof value !== "string") {
-      return value || ""
+      return value == null ? "" : value
     }
     if (value && value.string) {
       value = value.string
