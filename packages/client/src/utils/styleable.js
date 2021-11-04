@@ -1,4 +1,3 @@
-import { get } from "svelte/store"
 import { builderStore } from "stores"
 
 /**
