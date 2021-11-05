@@ -188,6 +188,10 @@ module MSSQLModule {
       }
     }
 
+    async runSQL(sql: string) {
+      return (await internalQuery(this.client, getSqlQuery(sql))).recordset
+    }
+
     /**
      * Fetches the tables from the sql server database and assigns them to the datasource.
      * @param {*} datasourceId - datasourceId to fetch
@@ -195,40 +199,33 @@ module MSSQLModule {
      */
     async buildSchema(datasourceId: string, entities: Record<string, Table>) {
       await this.connect()
-      let tableNames = await internalQuery(
-        this.client,
-        getSqlQuery(this.TABLES_SQL)
-      )
+      let tableNames = await this.runSQL(this.TABLES_SQL)
       if (tableNames == null || !Array.isArray(tableNames.recordset)) {
         throw "Unable to get list of tables in database"
       }
       tableNames = tableNames.recordset
         .map((record: any) => record.TABLE_NAME)
         .filter((name: string) => this.MASTER_TABLES.indexOf(name) === -1)
+
       const tables: Record<string, Table> = {}
       for (let tableName of tableNames) {
-        const definition = await internalQuery(
-          this.client,
-          getSqlQuery(this.getDefinitionSQL(tableName))
-        )
-        const constraints = await internalQuery(
-          this.client,
-          getSqlQuery(this.getConstraintsSQL(tableName))
-        )
-        const columns = await internalQuery(
-          this.client,
-          getSqlQuery(this.getAutoColumnsSQL(tableName))
-        )
-        const autoColumns = columns.recordset
-          .filter((col: any) => col.IS_COMPUTED || col.IS_IDENTITY)
-          .map((col: any) => col.COLUMN_NAME)
-        const primaryKeys = constraints.recordset
+        // get the column definition (type)
+        const definition = await this.runSQL(this.getDefinitionSQL(tableName))
+        // find primary key constraints
+        const constraints = await this.runSQL(this.getConstraintsSQL(tableName))
+        // find the computed and identity columns (auto columns)
+        const columns = await this.runSQL(this.getAutoColumnsSQL(tableName))
+        const primaryKeys = constraints
           .filter(
             (constraint: any) => constraint.CONSTRAINT_TYPE === "PRIMARY KEY"
           )
           .map((constraint: any) => constraint.COLUMN_NAME)
+        const autoColumns = columns
+          .filter((col: any) => col.IS_COMPUTED || col.IS_IDENTITY)
+          .map((col: any) => col.COLUMN_NAME)
+
         let schema: TableSchema = {}
-        for (let def of definition.recordset) {
+        for (let def of definition) {
           const name = def.COLUMN_NAME
           if (typeof name !== "string") {
             continue
