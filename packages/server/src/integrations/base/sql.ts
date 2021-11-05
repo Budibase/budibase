@@ -279,7 +279,9 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
       case Operation.DELETE:
         query = buildDelete(client, json, opts)
         break
-      case Operation.CREATE_TABLE: case Operation.UPDATE_TABLE: case Operation.DELETE_TABLE:
+      case Operation.CREATE_TABLE:
+      case Operation.UPDATE_TABLE:
+      case Operation.DELETE_TABLE:
         return this._tableQuery(json)
       default:
         throw `Operation type is not supported by SQL query builder`
