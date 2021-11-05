@@ -2457,12 +2457,12 @@
     "settings": [
       {
         "type": "dataProvider",
-        "label": "Provider",
+        "label": "Data provider",
         "key": "dataProvider"
       },
       {
         "type": "number",
-        "label": "Row Count",
+        "label": "Row count",
         "key": "rowCount",
         "defaultValue": 8
       },
@@ -2496,9 +2496,36 @@
       },
       {
         "type": "boolean",
-        "label": "Auto Columns",
+        "label": "Show auto columns",
         "key": "showAutoColumns",
         "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Link table rows",
+        "key": "linkRows"
+      },
+      {
+        "type": "boolean",
+        "label": "Open link screens in modal",
+        "key": "linkPeek"
+      },
+      {
+        "type": "url",
+        "label": "Link screen",
+        "key": "linkURL"
+      },
+      {
+        "section": true,
+        "name": "Advanced",
+        "settings": [
+          {
+            "type": "field",
+            "label": "ID column for linking (appended to URL)",
+            "key": "linkColumn",
+            "placeholder": "Default"
+          }
+        ]
       }
     ],
     "context": {
@@ -2662,8 +2689,22 @@
           {
             "type": "boolean",
             "label": "Show auto columns",
-            "key": "showAutoColumns",
-            "defaultValue": false
+            "key": "showAutoColumns"
+          },
+          {
+            "type": "boolean",
+            "label": "Link table rows",
+            "key": "linkRows"
+          },
+          {
+            "type": "boolean",
+            "label": "Open link in modal",
+            "key": "linkPeek"
+          },
+          {
+            "type": "url",
+            "label": "Link screen",
+            "key": "linkURL"
           }
         ]
       },
@@ -2684,8 +2725,20 @@
           },
           {
             "type": "event",
-            "label": "Title Button Action",
+            "label": "Title button action",
             "key": "titleButtonOnClick"
+          }
+        ]
+      },
+      {
+        "section": true,
+        "name": "Advanced",
+        "settings": [
+          {
+            "type": "field",
+            "label": "ID column for linking (appended to URL)",
+            "key": "linkColumn",
+            "placeholder": "Default"
           }
         ]
       }

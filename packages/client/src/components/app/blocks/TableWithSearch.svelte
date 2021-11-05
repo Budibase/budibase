@@ -16,6 +16,10 @@
   export let rowCount
   export let quiet
   export let size
+  export let linkRows
+  export let linkURL
+  export let linkColumn
+  export let linkPeek
   export let showTitleButton
   export let titleButtonText
   export let titleButtonOnClick
@@ -138,6 +142,10 @@
             rowCount,
             quiet,
             size,
+            linkRows,
+            linkURL,
+            linkColumn,
+            linkPeek,
           }}
         />
       </BlockComponent>

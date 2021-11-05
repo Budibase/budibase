@@ -42,20 +42,7 @@ const triggerAutomationHandler = async action => {
 
 const navigationHandler = action => {
   const { url, peek } = action.parameters
-  if (url) {
-    // If we're already peeking, don't peek again
-    const isPeeking = get(routeStore).queryParams?.peek
-    if (peek && !isPeeking) {
-      peekStore.actions.showPeek(url)
-    } else {
-      const external = !url.startsWith("/")
-      if (external) {
-        window.location.href = url
-      } else {
-        routeStore.actions.navigate(action.parameters.url)
-      }
-    }
-  }
+  routeStore.actions.navigate(url, peek)
 }
 
 const queryExecutionHandler = async action => {
