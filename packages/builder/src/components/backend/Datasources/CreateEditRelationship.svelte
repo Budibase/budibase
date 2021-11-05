@@ -18,9 +18,18 @@
   export let fromRelationship = {}
   export let toRelationship = {}
   export let close
+  export let selectedFromTable
 
   let originalFromName = fromRelationship.name,
     originalToName = toRelationship.name
+
+  if (fromRelationship && !fromRelationship.relationshipType) {
+    fromRelationship.relationshipType = RelationshipTypes.MANY_TO_ONE
+  }
+
+  if (toRelationship && selectedFromTable) {
+    toRelationship.tableId = selectedFromTable._id
+  }
 
   function inSchema(table, prop, ogName) {
     if (!table || !prop || prop === ogName) {
@@ -114,6 +123,7 @@
     },
   ]
   $: updateRelationshipType(fromRelationship?.relationshipType)
+  $: tableChanged(fromTable, toTable)
 
   function updateRelationshipType(fromType) {
     if (fromType === RelationshipTypes.MANY_TO_MANY) {
@@ -205,7 +215,6 @@
     originalToName = toRelationship.name
     originalFromName = fromRelationship.name
     await save()
-    await tables.fetch()
   }
 
   async function deleteRelationship() {
@@ -215,10 +224,26 @@
     await tables.fetch()
     close()
   }
+
+  function tableChanged(fromTbl, toTbl) {
+    fromRelationship.name = toTbl?.name || ""
+    errors.fromCol = ""
+    toRelationship.name = fromTbl?.name || ""
+    errors.toCol = ""
+    if (toTbl || fromTbl) {
+      checkForErrors(
+        fromTable,
+        toTable,
+        through,
+        fromRelationship,
+        toRelationship
+      )
+    }
+  }
 </script>
 
 <ModalContent
-  title="Create Relationship"
+  title="Define Relationship"
   confirmText="Save"
   onConfirm={saveRelationship}
   disabled={!valid}
@@ -234,6 +259,7 @@
   <Select
     label="Select from table"
     options={tableOptions}
+    disabled={!!selectedFromTable}
     on:change={() => ($touched.from = true)}
     bind:error={errors.from}
     bind:value={toRelationship.tableId}

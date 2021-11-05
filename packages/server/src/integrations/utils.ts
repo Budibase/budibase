@@ -124,7 +124,10 @@ function copyExistingPropsOver(
   return table
 }
 
-export function finaliseExternalTables(tables: { [key: string]: any }, entities: { [key: string]: any }) {
+export function finaliseExternalTables(
+  tables: { [key: string]: any },
+  entities: { [key: string]: any }
+) {
   const finalTables: { [key: string]: any } = {}
   const errors: { [key: string]: string } = {}
   for (let [name, table] of Object.entries(tables)) {

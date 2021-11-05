@@ -26,11 +26,19 @@ const createNotificationStore = () => {
 
     // If peeking, pass notifications back to parent window
     if (get(routeStore).queryParams?.peek) {
-      window.dispatchEvent(
-        new CustomEvent("notification", {
-          detail: { message, type, icon },
-        })
-      )
+      window.parent.postMessage({
+        type: "notification",
+        detail: {
+          message,
+          type,
+          icon,
+        },
+      })
+      // window.dispatchEvent(
+      //   new CustomEvent("notification", {
+      //     detail: { message, type, icon },
+      //   })
+      // )
       return
     }
 

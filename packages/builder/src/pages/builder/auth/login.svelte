@@ -44,7 +44,7 @@
       }
     } catch (err) {
       console.error(err)
-      notifications.error("Invalid credentials")
+      notifications.error(err.message ? err.message : "Invalid Credentials")
     }
   }
 
