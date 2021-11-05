@@ -7,7 +7,7 @@ import {
 } from "../definitions/datasource"
 import { getSqlQuery } from "./utils"
 import { DatasourcePlus } from "./base/datasourcePlus"
-import { Table, TableSchema } from "../definitions/common";
+import { Table, TableSchema } from "../definitions/common"
 
 module MSSQLModule {
   const sqlServer = require("mssql")
@@ -129,14 +129,37 @@ module MSSQLModule {
       "spt_fallback_dev",
       "spt_fallback_usg",
       "spt_monitor",
-      "MSreplication_options"
+      "MSreplication_options",
     ]
-    TABLES_SQL = "SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE='BASE TABLE'"
+    TABLES_SQL =
+      "SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE='BASE TABLE'"
 
     getDefinitionSQL(tableName: string) {
       return `select *
               from INFORMATION_SCHEMA.COLUMNS
               where TABLE_NAME='${tableName}'`
+    }
+
+    getConstraintsSQL(tableName: string) {
+      return `SELECT * FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS AS TC 
+              INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE AS KU
+                ON TC.CONSTRAINT_TYPE = 'PRIMARY KEY' 
+                AND TC.CONSTRAINT_NAME = KU.CONSTRAINT_NAME 
+                AND KU.table_name='${tableName}'
+              ORDER BY 
+                KU.TABLE_NAME,
+                KU.ORDINAL_POSITION;`
+    }
+
+    getAutoColumnsSQL(tableName: string) {
+      return `SELECT 
+              COLUMNPROPERTY(OBJECT_ID(TABLE_SCHEMA+'.'+TABLE_NAME),COLUMN_NAME,'IsComputed') 
+                AS IS_COMPUTED,
+              COLUMNPROPERTY(object_id(TABLE_SCHEMA+'.'+TABLE_NAME), COLUMN_NAME, 'IsIdentity')
+                AS IS_IDENTITY,
+              *
+              FROM INFORMATION_SCHEMA.COLUMNS
+              WHERE TABLE_NAME='${tableName}'`
     }
 
     constructor(config: MSSQLConfig) {
@@ -171,16 +194,39 @@ module MSSQLModule {
      * @param entities - the tables that are to be built
      */
     async buildSchema(datasourceId: string, entities: Record<string, Table>) {
-
       await this.connect()
-      let tableNames = await internalQuery(this.client, getSqlQuery(this.TABLES_SQL))
+      let tableNames = await internalQuery(
+        this.client,
+        getSqlQuery(this.TABLES_SQL)
+      )
       if (tableNames == null || !Array.isArray(tableNames.recordset)) {
         throw "Unable to get list of tables in database"
       }
-      tableNames = tableNames.recordset.map((record: any) => record.TABLE_NAME).filter((name: string) => this.MASTER_TABLES.indexOf(name) === -1)
+      tableNames = tableNames.recordset
+        .map((record: any) => record.TABLE_NAME)
+        .filter((name: string) => this.MASTER_TABLES.indexOf(name) === -1)
       const tables: Record<string, Table> = {}
       for (let tableName of tableNames) {
-        const definition = await internalQuery(this.client, getSqlQuery(this.getDefinitionSQL(tableName)))
+        const definition = await internalQuery(
+          this.client,
+          getSqlQuery(this.getDefinitionSQL(tableName))
+        )
+        const constraints = await internalQuery(
+          this.client,
+          getSqlQuery(this.getConstraintsSQL(tableName))
+        )
+        const columns = await internalQuery(
+          this.client,
+          getSqlQuery(this.getAutoColumnsSQL(tableName))
+        )
+        const autoColumns = columns.recordset
+          .filter((col: any) => col.IS_COMPUTED || col.IS_IDENTITY)
+          .map((col: any) => col.COLUMN_NAME)
+        const primaryKeys = constraints.recordset
+          .filter(
+            (constraint: any) => constraint.CONSTRAINT_TYPE === "PRIMARY KEY"
+          )
+          .map((constraint: any) => constraint.COLUMN_NAME)
         let schema: TableSchema = {}
         for (let def of definition.recordset) {
           const name = def.COLUMN_NAME
@@ -188,16 +234,16 @@ module MSSQLModule {
             continue
           }
           const type: string = convertType(def.DATA_TYPE, TYPE_MAP)
-          const identity = false
+
           schema[name] = {
-            autocolumn: identity,
+            autocolumn: !!autoColumns.find((col: string) => col === name),
             name: name,
             type,
           }
         }
         tables[tableName] = {
           _id: buildExternalTableId(datasourceId, tableName),
-          primary: ["id"],
+          primary: primaryKeys,
           name: tableName,
           schema,
         }
