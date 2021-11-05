@@ -7,6 +7,7 @@ import {
 } from "../definitions/datasource"
 import { Table } from "../definitions/common"
 import { getSqlQuery } from "./utils"
+import { DatasourcePlus } from "./base/datasourcePlus"
 
 module PostgresModule {
   const { Pool } = require("pg")
@@ -15,7 +16,7 @@ module PostgresModule {
   const {
     buildExternalTableId,
     convertType,
-    copyExistingPropsOver,
+    finaliseExternalTables,
   } = require("./utils")
   const { escapeDangerousCharacters } = require("../utilities")
 
@@ -138,10 +139,12 @@ module PostgresModule {
     }
   }
 
-  class PostgresIntegration extends Sql {
+  class PostgresIntegration extends Sql implements DatasourcePlus {
     static pool: any
     private readonly client: any
     private readonly config: PostgresConfig
+    public tables: Record<string, Table> = {}
+    public schemaErrors: Record<string, string> = {}
 
     COLUMNS_SQL!: string 
 
@@ -223,7 +226,7 @@ module PostgresModule {
         if (!tables[tableName] || !tables[tableName].schema) {
           tables[tableName] = {
             _id: buildExternalTableId(datasourceId, tableName),
-            primary: tableKeys[tableName] || ["id"],
+            primary: tableKeys[tableName] || [],
             name: tableName,
             schema: {},
           }
@@ -248,10 +251,9 @@ module PostgresModule {
         }
       }
 
-      for (let tableName of Object.keys(tables)) {
-        copyExistingPropsOver(tableName, tables, entities)
-      }
-      this.tables = tables
+      const final = finaliseExternalTables(tables, entities)
+      this.tables = final.tables
+      this.schemaErrors = final.errors
     }
 
     async create(query: SqlQuery | string) {
@@ -277,8 +279,16 @@ module PostgresModule {
     async query(json: QueryJson) {
       const operation = this._operation(json).toLowerCase()
       const input = this._query(json)
-      const response = await internalQuery(this.client, input)
-      return response.rows.length ? response.rows : [{ [operation]: true }]
+      if (Array.isArray(input)) {
+        const responses = []
+        for (let query of input) {
+          responses.push(await internalQuery(this.client, query))
+        }
+        return responses
+      } else {
+        const response = await internalQuery(this.client, input)
+        return response.rows.length ? response.rows : [{ [operation]: true }]
+      }
     }
   }
 

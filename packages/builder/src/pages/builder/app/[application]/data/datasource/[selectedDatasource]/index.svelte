@@ -1,16 +1,25 @@
 <script>
   import { goto } from "@roxi/routify"
-  import { Button, Heading, Body, Divider, Layout, Modal } from "@budibase/bbui"
+  import {
+    Button,
+    Heading,
+    Body,
+    Divider,
+    Layout,
+    Modal,
+    InlineAlert,
+    ActionButton,
+  } from "@budibase/bbui"
   import { datasources, integrations, queries, tables } from "stores/backend"
   import { notifications } from "@budibase/bbui"
   import IntegrationConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/IntegrationConfigForm.svelte"
-  import CreateEditRelationship from "./CreateEditRelationship/CreateEditRelationship.svelte"
-  import DisplayColumnModal from "./modals/EditDisplayColumnsModal.svelte"
+  import CreateEditRelationship from "components/backend/Datasources/CreateEditRelationship.svelte"
+  import CreateExternalTableModal from "./modals/CreateExternalTableModal.svelte"
   import ICONS from "components/backend/DatasourceNavigator/icons"
   import { capitalise } from "helpers"
 
   let relationshipModal
-  let displayColumnModal
+  let createExternalTableModal
   let selectedFromRelationship, selectedToRelationship
 
   $: datasource = $datasources.list.find(ds => ds._id === $datasources.selected)
@@ -19,6 +28,7 @@
     ? Object.values(datasource.entities || {})
     : []
   $: relationships = getRelationships(plusTables)
+  $: schemaError = $datasources.schemaError
 
   function getRelationships(tables) {
     if (!tables || !Array.isArray(tables)) {
@@ -101,8 +111,8 @@
     relationshipModal.show()
   }
 
-  function openDisplayColumnModal() {
-    displayColumnModal.show()
+  function createNewTable() {
+    createExternalTableModal.show()
   }
 </script>
 
@@ -117,8 +127,8 @@
   />
 </Modal>
 
-<Modal bind:this={displayColumnModal}>
-  <DisplayColumnModal {datasource} {plusTables} save={saveDatasource} />
+<Modal bind:this={createExternalTableModal}>
+  <CreateExternalTableModal {datasource} />
 </Modal>
 
 {#if datasource && integration}
@@ -154,15 +164,15 @@
         <div class="query-header">
           <Heading size="S">Tables</Heading>
           <div class="table-buttons">
-            {#if plusTables && plusTables.length !== 0}
-              <Button primary on:click={openDisplayColumnModal}>
-                Update display columns
-              </Button>
-            {/if}
             <div>
-              <Button primary on:click={updateDatasourceSchema}>
+              <ActionButton
+                size="S"
+                quiet
+                icon="DataRefresh"
+                on:click={updateDatasourceSchema}
+              >
                 Fetch tables from database
-              </Button>
+              </ActionButton>
             </div>
           </div>
         </div>
@@ -171,6 +181,14 @@
           your tables directly from the database and you can use them without
           having to write any queries at all.
         </Body>
+        {#if schemaError}
+          <InlineAlert
+            type="error"
+            header="Error fetching tables"
+            message={schemaError}
+            onConfirm={datasources.removeSchemaError}
+          />
+        {/if}
         <div class="query-list">
           {#each plusTables as table}
             <div class="query-list-item" on:click={() => onClickTable(table)}>
@@ -179,14 +197,23 @@
               <p>→</p>
             </div>
           {/each}
+          <div class="add-table">
+            <Button cta on:click={createNewTable}>Create new table</Button>
+          </div>
         </div>
         {#if plusTables?.length !== 0}
           <Divider />
           <div class="query-header">
             <Heading size="S">Relationships</Heading>
-            <Button primary on:click={() => openRelationshipModal()}
-              >Create relationship</Button
+            <ActionButton
+              icon="DataCorrelated"
+              primary
+              size="S"
+              quiet
+              on:click={openRelationshipModal}
             >
+              Define existing relationship
+            </ActionButton>
           </div>
           <Body>
             Tell budibase how your tables are related to get even more smart
@@ -301,11 +328,14 @@
 
   .table-buttons {
     display: grid;
-    grid-gap: var(--spacing-l);
     grid-template-columns: 1fr 1fr;
   }
 
   .table-buttons div {
     grid-column-end: -1;
+  }
+
+  .add-table {
+    margin-top: var(--spacing-m);
   }
 </style>

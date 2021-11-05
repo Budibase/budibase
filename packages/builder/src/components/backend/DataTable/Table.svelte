@@ -129,7 +129,7 @@
         bind:selectedRows
         allowSelectRows={allowEditing && !isUsersTable}
         allowEditRows={allowEditing}
-        allowEditColumns={allowEditing && isInternal}
+        allowEditColumns={allowEditing}
         showAutoColumns={!hideAutocolumns}
         on:editcolumn={e => editColumn(e.detail)}
         on:editrow={e => editRow(e.detail)}
