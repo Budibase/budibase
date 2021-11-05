@@ -122,7 +122,6 @@
   }
 
   .label {
-    text-transform: capitalize;
     padding-bottom: var(--spectrum-global-dimension-size-65);
   }
 
