@@ -45,6 +45,7 @@ export enum SourceNames {
   MYSQL = "MYSQL",
   ARANGODB = "ARANGODB",
   REST = "REST",
+  ORACLE = "ORACLE",
 }
 
 export enum IncludeRelationships {
