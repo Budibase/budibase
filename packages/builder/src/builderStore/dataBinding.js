@@ -83,7 +83,7 @@ export const getActionProviderComponents = (asset, componentId, actionType) => {
  * Gets a datasource object for a certain data provider component
  */
 export const getDatasourceForProvider = (asset, component) => {
-  const settings = getComponentSettings(component._component)
+  const settings = getComponentSettings(component?._component)
 
   // If this component has a dataProvider setting, go up the stack and use it
   const dataProviderSetting = settings.find(setting => {
