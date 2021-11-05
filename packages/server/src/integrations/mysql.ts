@@ -223,67 +223,12 @@ module MySQLModule {
       return results.length ? results : [{ deleted: true }]
     }
 
-    async getReturningRow(json: QueryJson) {
-      if (!json.extra || !json.extra.idFilter) {
-        return {}
-      }
-      const input = this._query({
-        endpoint: {
-          ...json.endpoint,
-          operation: Operation.READ,
-        },
-        fields: [],
-        filters: json.extra.idFilter,
-        paginate: {
-          limit: 1,
-        },
-      })
-      return internalQuery(this.client, input, false)
-    }
-
-    // when creating if an ID has been inserted need to make sure
-    // the id filter is enriched with it before trying to retrieve the row
-    checkLookupKeys(results: any, json: QueryJson) {
-      if (!results?.insertId || !json.meta?.table || !json.meta.table.primary) {
-        return json
-      }
-      const primaryKey = json.meta.table.primary?.[0]
-      json.extra = {
-        idFilter: {
-          equal: {
-            [primaryKey]: results.insertId,
-          },
-        },
-      }
-      return json
-    }
-
     async query(json: QueryJson) {
-      const operation = this._operation(json)
       this.client.connect()
-      const input = this._query(json, { disableReturning: true })
-      if (Array.isArray(input)) {
-        const responses = []
-        for (let query of input) {
-          responses.push(await internalQuery(this.client, query, false))
-        }
-        return responses
-      }
-      let row
-      // need to manage returning, a feature mySQL can't do
-      if (operation === operation.DELETE) {
-        row = this.getReturningRow(json)
-      }
-      const results = await internalQuery(this.client, input, false)
-      // same as delete, manage returning
-      if (operation === Operation.CREATE || operation === Operation.UPDATE) {
-        row = this.getReturningRow(this.checkLookupKeys(results, json))
-      }
+      const queryFn = (query: any) => internalQuery(this.client, query, false)
+      const output = await this.queryWithReturning(json, queryFn)
       this.client.end()
-      if (operation !== Operation.READ) {
-        return row
-      }
-      return results.length ? results : [{ [operation.toLowerCase()]: true }]
+      return output
     }
   }
 

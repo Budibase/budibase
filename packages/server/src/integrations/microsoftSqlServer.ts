@@ -1,8 +1,9 @@
 import {
-  Integration,
   DatasourceFieldTypes,
-  QueryTypes,
+  Integration,
+  Operation,
   QueryJson,
+  QueryTypes,
   SqlQuery,
 } from "../definitions/datasource"
 import { getSqlQuery } from "./utils"
@@ -103,15 +104,26 @@ module MSSQLModule {
     json: DatasourceFieldTypes.JSON,
   }
 
-  async function internalQuery(client: any, query: SqlQuery) {
+  async function internalQuery(
+    client: any,
+    query: SqlQuery,
+    operation: string | undefined = undefined
+  ) {
+    const request = client.request()
     try {
       if (Array.isArray(query.bindings)) {
         let count = 0
         for (let binding of query.bindings) {
-          client.input(`p${count++}`, binding)
+          request.input(`p${count++}`, binding)
         }
       }
-      return await client.query(query.sql)
+      // this is a hack to get the inserted ID back,
+      //  no way to do this with Knex nicely
+      const sql =
+        operation === Operation.CREATE
+          ? `${query.sql}; SELECT SCOPE_IDENTITY() AS id;`
+          : query.sql
+      return await request.query(sql)
     } catch (err) {
       // @ts-ignore
       throw new Error(err)
@@ -180,8 +192,7 @@ module MSSQLModule {
 
     async connect() {
       try {
-        const client = await this.pool.connect()
-        this.client = client.request()
+        this.client = await this.pool.connect()
       } catch (err) {
         // @ts-ignore
         throw new Error(err)
@@ -276,10 +287,12 @@ module MSSQLModule {
 
     async query(json: QueryJson) {
       await this.connect()
-      const operation = this._operation(json).toLowerCase()
-      const input = this._query(json)
-      const response = await internalQuery(this.client, input)
-      return response.recordset ? response.recordset : [{ [operation]: true }]
+      const operation = this._operation(json)
+      const queryFn = (query: any, op: string) =>
+        internalQuery(this.client, query, op)
+      const processFn = (result: any) =>
+        result.recordset ? result.recordset : [{ [operation]: true }]
+      return this.queryWithReturning(json, queryFn, processFn)
     }
   }
 

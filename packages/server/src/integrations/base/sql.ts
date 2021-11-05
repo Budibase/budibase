@@ -216,6 +216,10 @@ class InternalBuilder {
         query = query.orderBy(key, direction)
       }
     }
+    if (this.client === "mssql" && !sort && paginate?.limit) {
+      // @ts-ignore
+      query = query.orderBy(json.meta?.table?.primary[0])
+    }
     query = this.addFilters(tableName, query, filters)
     // @ts-ignore
     let preQuery: KnexQuery = knex({
@@ -300,6 +304,85 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
 
     // @ts-ignore
     return query.toSQL().toNative()
+  }
+
+  async getReturningRow(queryFn: Function, json: QueryJson) {
+    if (!json.extra || !json.extra.idFilter) {
+      return {}
+    }
+    const input = this._query({
+      endpoint: {
+        ...json.endpoint,
+        operation: Operation.READ,
+      },
+      resource: {
+        fields: [],
+      },
+      filters: json.extra.idFilter,
+      paginate: {
+        limit: 1,
+      },
+      meta: json.meta,
+    })
+    return queryFn(input, Operation.READ)
+  }
+
+  // when creating if an ID has been inserted need to make sure
+  // the id filter is enriched with it before trying to retrieve the row
+  checkLookupKeys(id: any, json: QueryJson) {
+    if (!id || !json.meta?.table || !json.meta.table.primary) {
+      return json
+    }
+    const primaryKey = json.meta.table.primary?.[0]
+    json.extra = {
+      idFilter: {
+        equal: {
+          [primaryKey]: id,
+        },
+      },
+    }
+    return json
+  }
+
+  // this function recreates the returning functionality of postgres
+  async queryWithReturning(
+    json: QueryJson,
+    queryFn: Function,
+    processFn: Function = (result: any) => result
+  ) {
+    const sqlClient = this.getSqlClient()
+    const operation = this._operation(json)
+    const input = this._query(json, { disableReturning: true })
+    if (Array.isArray(input)) {
+      const responses = []
+      for (let query of input) {
+        responses.push(await queryFn(query, operation))
+      }
+      return responses
+    }
+    let row
+    // need to manage returning, a feature mySQL can't do
+    if (operation === Operation.DELETE) {
+      row = processFn(await this.getReturningRow(queryFn, json))
+    }
+    const response = await queryFn(input, operation)
+    const results = processFn(response)
+    // same as delete, manage returning
+    if (operation === Operation.CREATE || operation === Operation.UPDATE) {
+      let id
+      if (sqlClient === "mssql") {
+        id = results?.[0].id
+      } else if (sqlClient === "mysql") {
+        id = results?.insertId
+      }
+      row = processFn(
+        await this.getReturningRow(queryFn, this.checkLookupKeys(id, json))
+      )
+    }
+    if (operation !== Operation.READ) {
+      return row
+    }
+    return results.length ? results : [{ [operation.toLowerCase()]: true }]
   }
 }
 
