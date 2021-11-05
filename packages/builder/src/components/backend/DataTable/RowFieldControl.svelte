@@ -16,8 +16,8 @@
   export let value = defaultValue || (meta.type === "boolean" ? false : "")
   export let readonly
 
-  $: type = meta.type
-  $: label = capitalise(meta.name)
+  $: type = meta?.type
+  $: label = meta.name ? capitalise(meta.name) : ""
 </script>
 
 {#if type === "options"}

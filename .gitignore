@@ -3,6 +3,7 @@ builder/*
 .temp/
 packages/server/runtime_apps/
 .idea/
+bb-airgapped.tar.gz
 
 # Logs
 logs

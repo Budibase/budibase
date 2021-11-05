@@ -263,8 +263,16 @@ module PostgresModule {
     async query(json: QueryJson) {
       const operation = this._operation(json).toLowerCase()
       const input = this._query(json)
-      const response = await internalQuery(this.client, input)
-      return response.rows.length ? response.rows : [{ [operation]: true }]
+      if (Array.isArray(input)) {
+        const responses = []
+        for (let query of input) {
+          responses.push(await internalQuery(this.client, query))
+        }
+        return responses
+      } else {
+        const response = await internalQuery(this.client, input)
+        return response.rows.length ? response.rows : [{ [operation]: true }]
+      }
     }
   }
 
