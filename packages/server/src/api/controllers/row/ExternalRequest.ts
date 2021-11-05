@@ -342,7 +342,7 @@ module External {
       table: Table,
       relationships: RelationshipsJson[]
     ) {
-      if (rows[0].read === true) {
+      if (!rows || rows.length === 0 || rows[0].read === true) {
         return []
       }
       let finalRows: { [key: string]: Row } = {}

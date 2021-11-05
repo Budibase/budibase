@@ -245,7 +245,9 @@ module MSSQLModule {
           schema,
         }
       }
-      this.tables = tables
+      const final = finaliseExternalTables(tables)
+      this.tables = final.tables
+      this.schemaErrors = final.errors
     }
 
     async read(query: SqlQuery | string) {
