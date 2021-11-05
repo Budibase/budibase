@@ -17,6 +17,11 @@ export interface FieldSchema {
   autocolumn?: boolean
   throughFrom?: string
   throughTo?: string
+  main?: boolean
+  meta?: {
+    toTable: string
+    toKey: string
+  }
   constraints?: {
     type?: string
     email?: boolean
@@ -36,11 +41,12 @@ export interface TableSchema {
 export interface Table extends Base {
   type?: string
   views?: {}
-  name?: string
+  name: string
   primary?: string[]
   schema: TableSchema
   primaryDisplay?: string
   sourceId?: string
+  constrained?: string[]
 }
 
 export interface Row extends Base {

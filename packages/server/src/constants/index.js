@@ -62,6 +62,9 @@ exports.DataSourceOperation = {
   READ: "READ",
   UPDATE: "UPDATE",
   DELETE: "DELETE",
+  CREATE_TABLE: "CREATE_TABLE",
+  UPDATE_TABLE: "UPDATE_TABLE",
+  DELETE_TABLE: "DELETE_TABLE",
 }
 
 exports.SortDirection = {
@@ -150,6 +153,10 @@ exports.BaseQueryVerbs = {
 exports.MetadataTypes = {
   AUTOMATION_TEST_INPUT: "automationTestInput",
   AUTOMATION_TEST_HISTORY: "automationTestHistory",
+}
+
+exports.BuildSchemaErrors = {
+  NO_KEY: "no_key",
 }
 
 // pass through the list from the auth/core lib

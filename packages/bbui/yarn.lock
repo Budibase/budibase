@@ -136,6 +136,11 @@
   resolved "https://registry.yarnpkg.com/@spectrum-css/illustratedmessage/-/illustratedmessage-3.0.2.tgz#6a480be98b027e050b086e7899e40d87adb0a8c0"
   integrity sha512-dqnE8X27bGcO0HN8+dYx8O4o0dNNIAqeivOzDHhe2El+V4dTzMrNIerF6G0NLm3GjVf6XliwmitsZK+K6FmbtA==
 
+"@spectrum-css/inlinealert@^2.0.1":
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/inlinealert/-/inlinealert-2.0.1.tgz#7521f88f6c845806403cc7d925773c7414e204a2"
+  integrity sha512-Xy5RCOwgurqUXuGQCsEDUduDd5408bmEpmFg+feynG7VFUgLFZWBeylSENB/OqjlFtO76PHXNVdHkhDscPIHTA==
+
 "@spectrum-css/inputgroup@^3.0.2":
   version "3.0.2"
   resolved "https://registry.yarnpkg.com/@spectrum-css/inputgroup/-/inputgroup-3.0.2.tgz#f1b13603832cbd22394f3d898af13203961f8691"

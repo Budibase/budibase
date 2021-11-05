@@ -5,11 +5,34 @@ import api from "../../builderStore/api"
 export const INITIAL_DATASOURCE_VALUES = {
   list: [],
   selected: null,
+  schemaError: null,
 }
 
 export function createDatasourcesStore() {
   const store = writable(INITIAL_DATASOURCE_VALUES)
   const { subscribe, update, set } = store
+
+  async function updateDatasource(response) {
+    if (response.status !== 200) {
+      throw new Error(await response.text())
+    }
+
+    const { datasource, error } = await response.json()
+    update(state => {
+      const currentIdx = state.list.findIndex(ds => ds._id === datasource._id)
+
+      const sources = state.list
+
+      if (currentIdx >= 0) {
+        sources.splice(currentIdx, 1, datasource)
+      } else {
+        sources.push(datasource)
+      }
+
+      return { list: sources, selected: datasource._id, schemaError: error }
+    })
+    return datasource
+  }
 
   return {
     subscribe,
@@ -46,61 +69,20 @@ export function createDatasourcesStore() {
       let url = `/api/datasources/${datasource._id}/schema`
 
       const response = await api.post(url)
-      const json = await response.json()
-
-      if (response.status !== 200) {
-        throw new Error(json.message)
-      }
-
-      update(state => {
-        const currentIdx = state.list.findIndex(ds => ds._id === json._id)
-
-        const sources = state.list
-
-        if (currentIdx >= 0) {
-          sources.splice(currentIdx, 1, json)
-        } else {
-          sources.push(json)
-        }
-
-        return { list: sources, selected: json._id }
-      })
-      return json
+      return updateDatasource(response)
     },
-    save: async (datasource, fetchSchema = false) => {
+    save: async (body, fetchSchema = false) => {
       let response
-      if (datasource._id) {
-        response = await api.put(
-          `/api/datasources/${datasource._id}`,
-          datasource
-        )
+      if (body._id) {
+        response = await api.put(`/api/datasources/${body._id}`, body)
       } else {
         response = await api.post("/api/datasources", {
-          datasource: datasource,
+          datasource: body,
           fetchSchema,
         })
       }
 
-      const json = await response.json()
-
-      if (response.status !== 200) {
-        throw new Error(json.message)
-      }
-
-      update(state => {
-        const currentIdx = state.list.findIndex(ds => ds._id === json._id)
-
-        const sources = state.list
-
-        if (currentIdx >= 0) {
-          sources.splice(currentIdx, 1, json)
-        } else {
-          sources.push(json)
-        }
-
-        return { list: sources, selected: json._id }
-      })
-      return json
+      return updateDatasource(response)
     },
     delete: async datasource => {
       const response = await api.delete(
@@ -114,6 +96,11 @@ export function createDatasourcesStore() {
       })
 
       return response
+    },
+    removeSchemaError: () => {
+      update(state => {
+        return { ...state, schemaError: null }
+      })
     },
   }
 }
