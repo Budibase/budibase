@@ -8,20 +8,29 @@ import {
 import { Table } from "../definitions/common"
 import { getSqlQuery } from "./utils"
 import { DatasourcePlus } from "./base/datasourcePlus"
+import oracledb, { Result } from "oracledb"
+import { Connection } from "oracledb"
+import Sql from "./base/sql"
+import { FieldTypes } from "../constants"
+import {
+  buildExternalTableId,
+  convertType,
+  finaliseExternalTables
+} from "./utils"
 
 module OracleModule {
-  // TODO: oracle js lib
-  // const connection = require("oracle") 
-  const Sql = require("./base/sql")
-  const { FieldTypes } = require("../constants")
-  const {
-    buildExternalTableId,
-    convertType,
-    finaliseExternalTables,
-  } = require("./utils")
+
+  oracledb.outFormat = oracledb.OUT_FORMAT_OBJECT;
 
   interface OracleConfig {
-    // TODO: Connection config 
+    host: string
+    port: number
+    database: string
+    user: string
+    password: string
+    // ssl?: boolean
+    // ca?: string
+    // rejectUnauthorized?: boolean
   }
 
   const SCHEMA: Integration = {
@@ -30,10 +39,57 @@ module OracleModule {
     friendlyName: "Oracle",
     description: "description",
     datasource: {
-      // TODO: datasource config
+      host: {
+        type: DatasourceFieldTypes.STRING,
+        default: "localhost",
+        required: true,
+      },
+      port: {
+        type: DatasourceFieldTypes.NUMBER,
+        required: true,
+        default: 1521,
+      },
+      database: {
+        type: DatasourceFieldTypes.STRING,
+        required: true,
+      },
+      user: {
+        type: DatasourceFieldTypes.STRING,
+        required: true,
+      },
+      password: {
+        type: DatasourceFieldTypes.PASSWORD,
+        required: true,
+      },
+      // ssl: {
+      //   type: DatasourceFieldTypes.BOOLEAN,
+      //   default: false,
+      //   required: false,
+      // },
+      // rejectUnauthorized: {
+      //   type: DatasourceFieldTypes.BOOLEAN,
+      //   default: false,
+      //   required: false,
+      // },
+      // ca: {
+      //   type: DatasourceFieldTypes.LONGFORM,
+      //   default: false,
+      //   required: false,
+      // },
     },
     query: {
-      // TODO: query config
+      create: {
+        type: QueryTypes.SQL,
+      },
+      read: {
+        type: QueryTypes.SQL,
+      },
+      update: {
+        type: QueryTypes.SQL,
+      },
+      delete: {
+        type: QueryTypes.SQL,
+      },
     },
   }
 
@@ -41,11 +97,27 @@ module OracleModule {
     // TODO: type map
   }
 
-  async function internalQuery(client: any, query: SqlQuery) {
-   // TODO: Use oracle lib to run query
-   const rows = []
-
-   return rows
+  const internalQuery = async (connection: Connection, query: SqlQuery): Promise<Result<any> | null>=> { 
+   try {
+     const result: Result<any> = await connection.execute(
+       `SELECT manager_id, department_id, department_name
+        FROM departments
+        WHERE manager_id = :id`,
+       [103],  // bind value for :id
+     );
+     return result
+   } catch (err) {
+     console.error(err);
+     return null
+   } finally {
+    if (connection) {
+      try {
+        await connection.close();
+      } catch (err) {
+        console.error(err);
+      }
+    }
+   }
   }
 
   class OracleIntegration extends Sql implements DatasourcePlus {
@@ -56,8 +128,18 @@ module OracleModule {
 
     constructor(config: OracleConfig) {
       super("oracle")
-      this.config = config    
-      //todo init client
+      this.config = config
+    }
+
+    getConnection = async (): Promise<Connection> => {
+      //connectString : "(DESCRIPTION =(ADDRESS = (PROTOCOL = TCP)(HOST = localhost)(PORT = 1521))(CONNECT_DATA =(SID= ORCL)))"
+      const connectString = `${this.config.host}:${this.config.port || 1521}/${this.config.database}`
+      const config = {
+        user: this.config.user,
+        password: this.config.user,
+        connectString
+      }
+      return oracledb.getConnection(config);
     }
 
     /**
@@ -112,8 +194,13 @@ module OracleModule {
     async query(json: QueryJson) {
       const operation = this._operation(json).toLowerCase()
       const input = this._query(json)
-      const response = await internalQuery(this.client, input)
-      return response.rows.length ? response.rows : [{ [operation]: true }]
+      const connection = await this.getConnection()
+      const result = await internalQuery(connection, input)
+      if (result && result.rows && result.rows.length) {
+        return result.rows
+      } else {
+        return [{ [operation]: true }]
+      }
     }
   }
 

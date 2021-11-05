@@ -2262,6 +2262,14 @@
   resolved "https://registry.yarnpkg.com/@types/node/-/node-8.10.66.tgz#dd035d409df322acc83dff62a602f12a5783bbb3"
   integrity sha512-tktOkFUA4kXx2hhhrB8bIFb5TbwzS4uOhKEmwiD+NoiL0qtP2OQ9mFldbgD4dV1djrlBYP6eBuQZiWjuHUpqFw==
 
+"@types/oracledb@^5.2.1":
+  version "5.2.1"
+  resolved "https://registry.yarnpkg.com/@types/oracledb/-/oracledb-5.2.1.tgz#b0c64d1ab68f1be6dc153a310ce0e840b8f333df"
+  integrity sha512-xtN24H9bpGB11ZiswZulAKYJ9xcWrF5BOAGFemcfeZkLmw8qAzVm+TAWT20VVLst6kh9VNxinY239S8EKgRBbA==
+  dependencies:
+    "@types/node" "*"
+    dotenv "^8.2.0"
+
 "@types/prettier@^2.1.5":
   version "2.3.2"
   resolved "https://registry.yarnpkg.com/@types/prettier/-/prettier-2.3.2.tgz#fc8c2825e4ed2142473b4a81064e6e081463d1b3"
@@ -4133,6 +4141,11 @@ dotenv@8.2.0:
   version "8.2.0"
   resolved "https://registry.yarnpkg.com/dotenv/-/dotenv-8.2.0.tgz#97e619259ada750eea3e4ea3e26bceea5424b16a"
   integrity sha512-8sJ78ElpbDJBHNeBzUbUVLsqKdccaa/BXF1uPTw3GrvQTBgrQrtObr2mUrE38vzYd8cEv+m/JBfDLioYcfXoaw==
+
+dotenv@^8.2.0:
+  version "8.6.0"
+  resolved "https://registry.yarnpkg.com/dotenv/-/dotenv-8.6.0.tgz#061af664d19f7f4d8fc6e4ff9b584ce237adcb8b"
+  integrity sha512-IrPdXQsk2BbzvCBGBOTmmSH5SodmqZNt4ERAZDmW4CT+tL8VtvinqywuANaFu4bOMWki16nqf0e4oC0QIaDr/g==
 
 double-ended-queue@2.1.0-0:
   version "2.1.0-0"
@@ -8260,6 +8273,11 @@ optionator@^0.8.1, optionator@^0.8.3:
     prelude-ls "~1.1.2"
     type-check "~0.3.2"
     word-wrap "~1.2.3"
+
+oracledb@^5.3.0:
+  version "5.3.0"
+  resolved "https://registry.yarnpkg.com/oracledb/-/oracledb-5.3.0.tgz#a15e6cd16757d8711a2c006a28bd7ecd3b8466f7"
+  integrity sha512-HMJzQ6lCf287ztvvehTEmjCWA21FQ3RMvM+mgoqd4i8pkREuqFWO+y3ovsGR9moJUg4T0xjcwS8rl4mggWPxmg==
 
 os-locale@^3.1.0:
   version "3.1.0"
