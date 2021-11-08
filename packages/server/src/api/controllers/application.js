@@ -337,7 +337,7 @@ exports.sync = async ctx => {
   } catch (err) {
     // the database doesn't exist. Don't replicate
     ctx.body = {
-      message: "App sync completed successfully.",
+      message: "App sync not required, app not deployed.",
     }
     return
   }
