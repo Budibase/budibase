@@ -3,7 +3,8 @@
     "name": "Blocks",
     "icon": "Article",
     "children": [
-      "tablewithsearch"
+      "tablewithsearch",
+      "cardlistwithsearch"
     ]
   },
   "section",

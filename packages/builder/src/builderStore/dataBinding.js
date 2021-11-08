@@ -40,6 +40,25 @@ export const getBindableProperties = (asset, componentId) => {
 }
 
 /**
+ * Gets the bindable properties exposed by a certain component.
+ */
+export const getComponentBindableProperties = (asset, componentId) => {
+  if (!asset || !componentId) {
+    return []
+  }
+
+  // Ensure that the component exists and exposes context
+  const component = findComponent(asset.props, componentId)
+  const def = store.actions.components.getDefinition(component?._component)
+  if (!def?.context) {
+    return []
+  }
+
+  // Get the bindings for the component
+  return getProviderContextBindings(asset, component)
+}
+
+/**
  * Gets all data provider components above a component.
  */
 export const getDataProviderComponents = (asset, componentId) => {
@@ -125,9 +144,26 @@ export const getDatasourceForProvider = (asset, component) => {
 const getContextBindings = (asset, componentId) => {
   // Extract any components which provide data contexts
   const dataProviders = getDataProviderComponents(asset, componentId)
-  let bindings = []
+
+  // Generate bindings for all matching components
+  return getProviderContextBindings(asset, dataProviders)
+}
+
+/**
+ * Gets the context bindings exposed by a set of data provider components.
+ */
+const getProviderContextBindings = (asset, dataProviders) => {
+  if (!asset || !dataProviders) {
+    return []
+  }
+
+  // Ensure providers is an array
+  if (!Array.isArray(dataProviders)) {
+    dataProviders = [dataProviders]
+  }
 
   // Create bindings for each data provider
+  let bindings = []
   dataProviders.forEach(component => {
     const def = store.actions.components.getDefinition(component._component)
     const contexts = Array.isArray(def.context) ? def.context : [def.context]
@@ -140,6 +176,7 @@ const getContextBindings = (asset, componentId) => {
 
       let schema
       let readablePrefix
+      let runtimeSuffix = context.suffix
 
       if (context.type === "form") {
         // Forms do not need table schemas
@@ -169,8 +206,14 @@ const getContextBindings = (asset, componentId) => {
 
       const keys = Object.keys(schema).sort()
 
+      // Generate safe unique runtime prefix
+      let runtimeId = component._id
+      if (runtimeSuffix) {
+        runtimeId += `-${runtimeSuffix}`
+      }
+      const safeComponentId = makePropSafe(runtimeId)
+
       // Create bindable properties for each schema field
-      const safeComponentId = makePropSafe(component._id)
       keys.forEach(key => {
         const fieldSchema = schema[key]
 
@@ -182,6 +225,7 @@ const getContextBindings = (asset, componentId) => {
         } else if (fieldSchema.type === "attachment") {
           runtimeBoundKey = `${key}_first`
         }
+
         const runtimeBinding = `${safeComponentId}.${makePropSafe(
           runtimeBoundKey
         )}`
