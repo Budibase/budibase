@@ -5,21 +5,18 @@ const {
   doesHaveBasePermission,
 } = require("@budibase/auth/permissions")
 const builderMiddleware = require("./builder")
+const { isWebhookEndpoint } = require("./utils")
 
 function hasResource(ctx) {
   return ctx.resourceId != null
 }
-
-const WEBHOOK_ENDPOINTS = new RegExp(
-  ["webhooks/trigger", "webhooks/schema"].join("|")
-)
 
 module.exports =
   (permType, permLevel = null) =>
   async (ctx, next) => {
     // webhooks don't need authentication, each webhook unique
     // also internal requests (between services) don't need authorized
-    if (WEBHOOK_ENDPOINTS.test(ctx.request.url) || ctx.internal) {
+    if (isWebhookEndpoint(ctx) || ctx.internal) {
       return next()
     }
 

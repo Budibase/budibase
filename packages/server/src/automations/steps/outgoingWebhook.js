@@ -85,6 +85,18 @@ exports.run = async function ({ inputs }) {
   const request = {
     method: requestMethod,
   }
+  if (headers) {
+    try {
+      const customHeaders =
+        typeof headers === "string" ? JSON.parse(headers) : headers
+      request.headers = { ...request.headers, ...customHeaders }
+    } catch (err) {
+      return {
+        success: false,
+        response: "Unable to process headers, must be a JSON object.",
+      }
+    }
+  }
   if (
     requestBody &&
     requestBody.length !== 0 &&
@@ -95,20 +107,8 @@ exports.run = async function ({ inputs }) {
         ? requestBody
         : JSON.stringify(requestBody)
     request.headers = {
+      ...request.headers,
       "Content-Type": "application/json",
-    }
-
-    if (headers) {
-      try {
-        const customHeaders =
-          typeof headers === "string" ? JSON.parse(headers) : headers
-        request.headers = { ...request.headers, ...customHeaders }
-      } catch (err) {
-        return {
-          success: false,
-          response: "Unable to process headers, must be a JSON object.",
-        }
-      }
     }
   }
 
@@ -122,7 +122,7 @@ exports.run = async function ({ inputs }) {
     return {
       httpStatus: status,
       response: message,
-      success: status === 200,
+      success: status >= 200 && status <= 206,
     }
   } catch (err) {
     /* istanbul ignore next */
