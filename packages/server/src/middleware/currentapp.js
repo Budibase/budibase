@@ -9,6 +9,7 @@ const { isUserInAppTenant } = require("@budibase/auth/tenancy")
 const { getCachedSelf } = require("../utilities/global")
 const CouchDB = require("../db")
 const env = require("../environment")
+const { isWebhookEndpoint } = require("./utils")
 
 module.exports = async (ctx, next) => {
   // try to get the appID from the request
@@ -38,6 +39,7 @@ module.exports = async (ctx, next) => {
   // deny access to application preview
   if (
     isDevAppID(requestAppId) &&
+    !isWebhookEndpoint(ctx) &&
     (!ctx.user || !ctx.user.builder || !ctx.user.builder.global)
   ) {
     clearCookie(ctx, Cookies.CurrentApp)

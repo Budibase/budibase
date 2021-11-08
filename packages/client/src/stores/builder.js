@@ -4,11 +4,7 @@ import { findComponentById, findComponentPathById } from "../utils/components"
 import { pingEndUser } from "../api"
 
 const dispatchEvent = (type, data = {}) => {
-  window.dispatchEvent(
-    new CustomEvent("bb-event", {
-      detail: { type, data },
-    })
-  )
+  window.parent.postMessage({ type, data })
 }
 
 const createBuilderStore = () => {
