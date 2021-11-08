@@ -181,7 +181,10 @@ module External {
 
   function fixArrayTypes(row: Row, table: Table) {
     for (let [fieldName, schema] of Object.entries(table.schema)) {
-      if (schema.type === FieldTypes.ARRAY && typeof row[fieldName] === "string") {
+      if (
+        schema.type === FieldTypes.ARRAY &&
+        typeof row[fieldName] === "string"
+      ) {
         try {
           row[fieldName] = JSON.parse(row[fieldName])
         } catch (err) {
