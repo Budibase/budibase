@@ -84,8 +84,7 @@ exports.setInitInfo = ctx => {
 }
 
 exports.getInitInfo = ctx => {
-  const initInfo = getCookie(ctx, Cookies.Init)
-  ctx.body = initInfo
+  ctx.body = getCookie(ctx, Cookies.Init)
 }
 
 /**

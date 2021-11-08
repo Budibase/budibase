@@ -211,10 +211,10 @@ module MSSQLModule {
     async buildSchema(datasourceId: string, entities: Record<string, Table>) {
       await this.connect()
       let tableNames = await this.runSQL(this.TABLES_SQL)
-      if (tableNames == null || !Array.isArray(tableNames.recordset)) {
+      if (tableNames == null || !Array.isArray(tableNames)) {
         throw "Unable to get list of tables in database"
       }
-      tableNames = tableNames.recordset
+      tableNames = tableNames
         .map((record: any) => record.TABLE_NAME)
         .filter((name: string) => this.MASTER_TABLES.indexOf(name) === -1)
 

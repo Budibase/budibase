@@ -1,6 +1,7 @@
 import { notificationStore, dataSourceStore } from "stores"
 import API from "./api"
 import { fetchTableDefinition } from "./tables"
+import { FieldTypes } from "../constants"
 
 /**
  * Fetches data about a certain row in a table.
@@ -129,7 +130,7 @@ export const enrichRows = async (rows, tableId) => {
         const keys = Object.keys(schema)
         for (let key of keys) {
           const type = schema[key].type
-          if (type === "link" && Array.isArray(row[key])) {
+          if (type === FieldTypes.LINK && Array.isArray(row[key])) {
             // Enrich row a string join of relationship fields
             row[`${key}_text`] =
               row[key]

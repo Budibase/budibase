@@ -92,7 +92,6 @@
       opt.type === table.type &&
       table.sourceId === opt.sourceId
   )
-  $: console.log(tableOptions)
 
   async function saveColumn() {
     if (field.type === AUTO_TYPE) {
