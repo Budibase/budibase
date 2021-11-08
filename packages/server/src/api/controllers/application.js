@@ -329,6 +329,19 @@ exports.sync = async ctx => {
     ctx.throw(400, "This action cannot be performed for production apps")
   }
   const prodAppId = getDeployedAppID(appId)
+
+  try {
+    const prodDb = new CouchDB(prodAppId, { skip_setup: true })
+    const info = await prodDb.info()
+    if (info.error) throw info.error
+  } catch (err) {
+    // the database doesn't exist. Don't replicate
+    ctx.body = {
+      message: "App sync completed successfully.",
+    }
+    return
+  }
+
   const replication = new Replication({
     source: prodAppId,
     target: appId,
