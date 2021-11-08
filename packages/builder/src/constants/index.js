@@ -1,5 +1,3 @@
-import { FIELDS } from "constants/backend"
-
 export const TableNames = {
   USERS: "ta_users",
 }
@@ -41,12 +39,7 @@ export const UNEDITABLE_USER_FIELDS = [
   "lastName",
 ]
 
-export const UNSORTABLE_TYPES = [
-  FIELDS.FORMULA.type,
-  FIELDS.ATTACHMENT.type,
-  FIELDS.ARRAY.type,
-  FIELDS.LINK.type,
-]
+export const UNSORTABLE_TYPES = ["formula", "attachment", "array", "link"]
 
 export const LAYOUT_NAMES = {
   MASTER: {
