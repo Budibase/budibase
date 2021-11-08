@@ -66,7 +66,7 @@
     {/if}
     {#if showButton}
       <div class="spectrum-Card-footer button-container">
-        <Button on:click={buttonOnClick} secondary>{buttonText}</Button>
+        <Button on:click={buttonOnClick} secondary>{buttonText || ""}</Button>
       </div>
     {/if}
   </div>
