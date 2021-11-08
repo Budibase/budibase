@@ -7,7 +7,7 @@ import {
   SearchFilters,
   SortDirection,
 } from "../../definitions/datasource"
-import { isIsoDateString } from "../utils"
+import { isIsoDateString, SqlClients } from "../utils"
 import SqlTableQueryBuilder from "./sqlTable"
 
 const BASE_LIMIT = 5000
@@ -65,7 +65,7 @@ class InternalBuilder {
       iterate(filters.string, (key, value) => {
         const fnc = allOr ? "orWhere" : "where"
         // postgres supports ilike, nothing else does
-        if (this.client === "pg") {
+        if (this.client === SqlClients.POSTGRES) {
           query = query[fnc](key, "ilike", `${value}%`)
         } else {
           const rawFnc = `${fnc}Raw`
@@ -78,7 +78,7 @@ class InternalBuilder {
       iterate(filters.fuzzy, (key, value) => {
         const fnc = allOr ? "orWhere" : "where"
         // postgres supports ilike, nothing else does
-        if (this.client === "pg") {
+        if (this.client === SqlClients.POSTGRES) {
           query = query[fnc](key, "ilike", `%${value}%`)
         } else {
           const rawFnc = `${fnc}Raw`
@@ -216,7 +216,7 @@ class InternalBuilder {
         query = query.orderBy(key, direction)
       }
     }
-    if (this.client === "mssql" && !sort && paginate?.limit) {
+    if (this.client === SqlClients.MS_SQL && !sort && paginate?.limit) {
       // @ts-ignore
       query = query.orderBy(json.meta?.table?.primary[0])
     }
@@ -370,9 +370,9 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
     // same as delete, manage returning
     if (operation === Operation.CREATE || operation === Operation.UPDATE) {
       let id
-      if (sqlClient === "mssql") {
+      if (sqlClient === SqlClients.MS_SQL) {
         id = results?.[0].id
-      } else if (sqlClient === "mysql") {
+      } else if (sqlClient === SqlClients.MY_SQL) {
         id = results?.insertId
       }
       row = processFn(

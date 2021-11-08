@@ -2,23 +2,22 @@ import {
   Integration,
   DatasourceFieldTypes,
   QueryTypes,
-  Operation,
   QueryJson,
   SqlQuery,
 } from "../definitions/datasource"
 import { Table, TableSchema } from "../definitions/common"
-import { getSqlQuery } from "./utils"
+import {
+  getSqlQuery,
+  SqlClients,
+  buildExternalTableId,
+  convertSqlType,
+  finaliseExternalTables,
+} from "./utils"
 import { DatasourcePlus } from "./base/datasourcePlus"
 
 module MySQLModule {
   const mysql = require("mysql2")
   const Sql = require("./base/sql")
-  const {
-    buildExternalTableId,
-    convertType,
-    finaliseExternalTables,
-  } = require("./utils")
-  const { FieldTypes } = require("../constants")
 
   interface MySQLConfig {
     host: string
@@ -27,30 +26,6 @@ module MySQLModule {
     password: string
     database: string
     ssl?: object
-  }
-
-  const TYPE_MAP = {
-    text: FieldTypes.LONGFORM,
-    blob: FieldTypes.LONGFORM,
-    enum: FieldTypes.STRING,
-    varchar: FieldTypes.STRING,
-    float: FieldTypes.NUMBER,
-    int: FieldTypes.NUMBER,
-    numeric: FieldTypes.NUMBER,
-    bigint: FieldTypes.NUMBER,
-    mediumint: FieldTypes.NUMBER,
-    decimal: FieldTypes.NUMBER,
-    dec: FieldTypes.NUMBER,
-    double: FieldTypes.NUMBER,
-    real: FieldTypes.NUMBER,
-    fixed: FieldTypes.NUMBER,
-    smallint: FieldTypes.NUMBER,
-    timestamp: FieldTypes.DATETIME,
-    date: FieldTypes.DATETIME,
-    datetime: FieldTypes.DATETIME,
-    time: FieldTypes.DATETIME,
-    tinyint: FieldTypes.BOOLEAN,
-    json: DatasourceFieldTypes.JSON,
   }
 
   const SCHEMA: Integration = {
@@ -139,7 +114,7 @@ module MySQLModule {
     public schemaErrors: Record<string, string> = {}
 
     constructor(config: MySQLConfig) {
-      super("mysql")
+      super(SqlClients.MY_SQL)
       this.config = config
       if (config.ssl && Object.keys(config.ssl).length === 0) {
         delete config.ssl
@@ -184,7 +159,7 @@ module MySQLModule {
           schema[columnName] = {
             name: columnName,
             autocolumn: isAuto,
-            type: convertType(column.Type, TYPE_MAP),
+            type: convertSqlType(column.Type),
             constraints,
           }
         }
