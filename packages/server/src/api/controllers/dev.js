@@ -82,6 +82,13 @@ exports.revert = async ctx => {
     const db = new CouchDB(productionAppId, { skip_setup: true })
     const info = await db.info()
     if (info.error) throw info.error
+    const deploymentDoc = await db.get(DocumentTypes.DEPLOYMENTS)
+    if (
+      !deploymentDoc.history ||
+      Object.keys(deploymentDoc.history).length === 0
+    ) {
+      throw new Error("No deployments for app")
+    }
   } catch (err) {
     return ctx.throw(400, "App has not yet been deployed")
   }
