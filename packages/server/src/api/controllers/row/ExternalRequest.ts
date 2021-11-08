@@ -163,8 +163,8 @@ module External {
     }
   }
 
-  function basicProcessing(row: Row, table: Table) {
-    const thisRow: { [key: string]: any } = {}
+  function basicProcessing(row: Row, table: Table): Row {
+    const thisRow: Row = {}
     // filter the row down to what is actually the row (not joined)
     for (let fieldName of Object.keys(table.schema)) {
       const value = row[`${table.name}.${fieldName}`] || row[fieldName]
@@ -177,6 +177,20 @@ module External {
     thisRow.tableId = table._id
     thisRow._rev = "rev"
     return thisRow
+  }
+
+  function fixArrayTypes(row: Row, table: Table) {
+    for (let [fieldName, schema] of Object.entries(table.schema)) {
+      if (schema.type === FieldTypes.ARRAY && typeof row[fieldName] === "string") {
+        try {
+          row[fieldName] = JSON.parse(row[fieldName])
+        } catch (err) {
+          // couldn't convert back to array, ignore
+          delete row[fieldName]
+        }
+      }
+    }
+    return row
   }
 
   function isMany(field: FieldSchema) {
@@ -358,7 +372,10 @@ module External {
           )
           continue
         }
-        const thisRow = basicProcessing(row, table)
+        const thisRow = fixArrayTypes(basicProcessing(row, table), table)
+        if (thisRow._id == null) {
+          throw "Unable to generate row ID for SQL rows"
+        }
         finalRows[thisRow._id] = thisRow
         // do this at end once its been added to the final rows
         finalRows = this.updateRelationshipColumns(
