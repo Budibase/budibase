@@ -2,26 +2,16 @@ import {
   Integration,
   DatasourceFieldTypes,
   QueryTypes,
-  QueryJson,
   SqlQuery,
 } from "../definitions/datasource"
 import { Table } from "../definitions/common"
 import { getSqlQuery } from "./utils"
-import { DatasourcePlus } from "./base/datasourcePlus"
-import oracledb, { Result } from "oracledb"
-import { Connection } from "oracledb"
+import oracledb, { ExecuteOptions, Result } from "oracledb"
+import { Connection, ConnectionAttributes } from "oracledb"
 import Sql from "./base/sql"
-import { FieldTypes } from "../constants"
-import {
-  buildExternalTableId,
-  convertType,
-  finaliseExternalTables
-} from "./utils"
-
 module OracleModule {
 
   oracledb.outFormat = oracledb.OUT_FORMAT_OBJECT;
-
   interface OracleConfig {
     host: string
     port: number
@@ -34,10 +24,9 @@ module OracleModule {
   }
 
   const SCHEMA: Integration = {
-    docs: "https://docs",
-    // plus: true,
+    docs: "https://github.com/oracle/node-oracledb",
     friendlyName: "Oracle",
-    description: "description",
+    description: "Oracle Database is an object-relational database management system developed by Oracle Corporation",
     datasource: {
       host: {
         type: DatasourceFieldTypes.STRING,
@@ -92,37 +81,8 @@ module OracleModule {
       },
     },
   }
-
-  const TYPE_MAP = {
-    // TODO: type map
-  }
-
-  const internalQuery = async (connection: Connection, query: SqlQuery): Promise<Result<any> | null>=> { 
-   try {
-     const result: Result<any> = await connection.execute(
-       `SELECT manager_id, department_id, department_name
-        FROM departments
-        WHERE manager_id = :id`,
-       [103],  // bind value for :id
-     );
-     return result
-   } catch (err) {
-     console.error(err);
-     return null
-   } finally {
-    if (connection) {
-      try {
-        await connection.close();
-      } catch (err) {
-        console.error(err);
-      }
-    }
-   }
-  }
-
-  class OracleIntegration extends Sql implements DatasourcePlus {
+  class OracleIntegration extends Sql {
     private readonly config: OracleConfig
-    private readonly client: any
     public tables: Record<string, Table> = {}
     public schemaErrors: Record<string, string> = {}
 
@@ -131,76 +91,55 @@ module OracleModule {
       this.config = config
     }
 
-    getConnection = async (): Promise<Connection> => {
+    private query = async (query: SqlQuery): Promise<Result<any>> => { 
+      let connection
+      try {
+        connection = await this.getConnection()
+
+        const options : ExecuteOptions = { autoCommit: true }
+        const result: Result<any> = await connection.execute(query.sql, [], options)
+
+        return result
+      } finally {
+       if (connection) {
+         try {
+           await connection.close();
+         } catch (err) {
+           console.error(err);
+         }
+       }
+      }
+    }
+
+    private getConnection = async (): Promise<Connection> => {
       //connectString : "(DESCRIPTION =(ADDRESS = (PROTOCOL = TCP)(HOST = localhost)(PORT = 1521))(CONNECT_DATA =(SID= ORCL)))"
       const connectString = `${this.config.host}:${this.config.port || 1521}/${this.config.database}`
-      const config = {
+      const attributes: ConnectionAttributes = {
         user: this.config.user,
         password: this.config.user,
-        connectString
+        connectString,
       }
-      return oracledb.getConnection(config);
+      return oracledb.getConnection(attributes);
     }
 
-    /**
-     * Fetches the tables from the postgres table and assigns them to the datasource.
-     * @param {*} datasourceId - datasourceId to fetch
-     * @param entities - the tables that are to be built
-     */
-    async buildSchema(datasourceId: string, entities: Record<string, Table>) {
-      // get the tables
-      const tables: { [key: string]: Table } = {}
-
-      // get the base table data
-      // {
-      //   _id: buildExternalTableId(datasourceId, tableName),
-      //   primary: tableKeys[tableName] || [],
-      //   name: tableName,
-      //   schema: {},
-      // }
-
-      // get the schema 
-      // {
-      //   autocolumn: isAuto,
-      //   name: columnName,
-      //   type,
-      // }
-
-      const final = finaliseExternalTables(tables, entities)
-      this.tables = final.tables
-      this.schemaErrors = final.errors
+    async create(query: SqlQuery | string) {
+      const response = await this.query(getSqlQuery(query))
+      return response.rows && response.rows.length ? response.rows : [{ created: true }]
     }
 
-    // async create(query: SqlQuery | string) {
-    //   const response = await internalQuery(this.client, getSqlQuery(query))
-    //   return response.rows.length ? response.rows : [{ created: true }]
-    // }
+    async read(query: SqlQuery | string) {
+      const response = await this.query(getSqlQuery(query))
+      return response.rows
+    }
 
-    // async read(query: SqlQuery | string) {
-    //   const response = await internalQuery(this.client, getSqlQuery(query))
-    //   return response.rows
-    // }
+    async update(query: SqlQuery | string) {
+      const response = await this.query(getSqlQuery(query))
+      return response.rows && response.rows.length ? response.rows : [{ updated: true }]
+    }
 
-    // async update(query: SqlQuery | string) {
-    //   const response = await internalQuery(this.client, getSqlQuery(query))
-    //   return response.rows.length ? response.rows : [{ updated: true }]
-    // }
-
-    // async delete(query: SqlQuery | string) {
-    //   const response = await internalQuery(this.client, getSqlQuery(query))
-    //   return response.rows.length ? response.rows : [{ deleted: true }]
-    // }
-
-    async query(json: QueryJson) {
-      const operation = this._operation(json).toLowerCase()
-      const input = this._query(json)
-      const connection = await this.getConnection()
-      const result = await internalQuery(connection, input)
-      if (result && result.rows && result.rows.length) {
-        return result.rows
-      } else {
-        return [{ [operation]: true }]
-      }
+    async delete(query: SqlQuery | string) {
+      const response = await this.query(getSqlQuery(query))
+      return response.rows && response.rows.length ? response.rows : [{ deleted: true }]
     }
   }
 

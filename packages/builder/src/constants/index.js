@@ -27,6 +27,7 @@ export const IntegrationNames = {
   SQL_SERVER: "SQL Server",
   AIRTABLE: "Airtable",
   ARANGODB: "ArangoDB",
+  ORACLE: "Oracle",
 }
 
 // fields on the user table that cannot be edited
