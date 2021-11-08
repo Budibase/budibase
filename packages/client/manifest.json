@@ -2599,6 +2599,21 @@
         "type": "boolean",
         "key": "horizontal",
         "label": "Horizontal"
+      },
+      {
+        "type": "boolean",
+        "label": "Show button",
+        "key": "showButton"
+      },
+      {
+        "type": "text",
+        "key": "buttonText",
+        "label": "Button text"
+      },
+      {
+        "type": "event",
+        "label": "Button action",
+        "key": "buttonOnClick"
       }
     ]
   },
@@ -2710,22 +2725,22 @@
       },
       {
         "section": true,
-        "name": "Button",
+        "name": "Title button",
         "settings": [
           {
             "type": "boolean",
             "key": "showTitleButton",
-            "label": "Show title button",
+            "label": "Show button",
             "defaultValue": false
           },
           {
             "type": "text",
             "key": "titleButtonText",
-            "label": "Title button text"
+            "label": "Button text"
           },
           {
             "type": "event",
-            "label": "Title button action",
+            "label": "Button action",
             "key": "titleButtonOnClick"
           }
         ]
@@ -2742,9 +2757,139 @@
           }
         ]
       }
+    ]
+  },
+  "cardlistwithsearch": {
+    "block": true,
+    "name": "Card list with search",
+    "icon": "Table",
+    "styles": ["size"],
+    "info": "Only the first 3 search columns will be used.",
+    "settings": [
+      {
+        "type": "text",
+        "label": "Title",
+        "key": "title"
+      },
+      {
+        "type": "dataSource",
+        "label": "Data",
+        "key": "dataSource"
+      },
+      {
+        "type": "multifield",
+        "label": "Search Columns",
+        "key": "searchColumns",
+        "placeholder": "Choose search columns"
+      },
+      {
+        "type": "filter",
+        "label": "Filtering",
+        "key": "filter"
+      },
+      {
+        "type": "field",
+        "label": "Sort Column",
+        "key": "sortColumn"
+      },
+      {
+        "type": "select",
+        "label": "Sort Order",
+        "key": "sortOrder",
+        "options": ["Ascending", "Descending"],
+        "defaultValue": "Descending"
+      },
+      {
+        "type": "number",
+        "label": "Limit",
+        "key": "limit",
+        "defaultValue": 10
+      },
+      {
+        "type": "boolean",
+        "label": "Paginate",
+        "key": "paginate"
+      },
+      {
+        "section": true,
+        "name": "Cards",
+        "settings": [
+          {
+            "type": "text",
+            "key": "cardTitle",
+            "label": "Title",
+            "nested": true
+          },
+          {
+            "type": "text",
+            "key": "cardSubtitle",
+            "label": "Subtitle",
+            "nested": true
+          },
+          {
+            "type": "text",
+            "key": "cardDescription",
+            "label": "Description",
+            "nested": true
+
+          },
+          {
+            "type": "text",
+            "key": "cardImageURL",
+            "label": "Image URL",
+            "nested": true
+
+          },
+          {
+            "type": "boolean",
+            "key": "cardHorizontal",
+            "label": "Horizontal"
+          },
+          {
+            "type": "boolean",
+            "label": "Show button",
+            "key": "showCardButton"
+          },
+          {
+            "type": "text",
+            "key": "cardButtonText",
+            "label": "Button text",
+            "nested": true
+
+          },
+          {
+            "type": "event",
+            "label": "Button action",
+            "key": "cardButtonOnClick",
+            "nested": true
+          }
+        ]
+      },
+      {
+        "section": true,
+        "name": "Title button",
+        "settings": [
+          {
+            "type": "boolean",
+            "key": "showTitleButton",
+            "label": "Show button"
+          },
+          {
+            "type": "text",
+            "key": "titleButtonText",
+            "label": "Button text"
+          },
+          {
+            "type": "event",
+            "label": "Button action",
+            "key": "titleButtonOnClick"
+          }
+        ]
+      }
     ],
     "context": {
-      "type": "schema"
+      "type": "schema",
+      "suffix": "repeater"
     }
   }
 }

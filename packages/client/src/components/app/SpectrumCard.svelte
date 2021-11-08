@@ -1,6 +1,7 @@
 <script>
   import "@spectrum-css/card/dist/index-vars.css"
   import { getContext } from "svelte"
+  import { Button } from "@budibase/bbui"
 
   export let title
   export let subtitle
@@ -8,6 +9,9 @@
   export let imageURL
   export let linkURL
   export let horizontal
+  export let showButton
+  export let buttonText
+  export let buttonOnClick
 
   const { styleable, linkable } = getContext("sdk")
   const component = getContext("component")
@@ -58,6 +62,11 @@
     {#if description}
       <div class="spectrum-Card-footer">
         {description}
+      </div>
+    {/if}
+    {#if showButton}
+      <div class="spectrum-Card-footer button-container">
+        <Button on:click={buttonOnClick} secondary>{buttonText}</Button>
       </div>
     {/if}
   </div>
@@ -115,5 +124,9 @@
     border-top: none;
     padding-top: 0;
     margin-top: -8px;
+  }
+
+  .button-container {
+    margin-top: -3px;
   }
 </style>
