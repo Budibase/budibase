@@ -41,7 +41,7 @@
 
   $: enrichedSearchColumns = enrichSearchColumns(searchColumns, schema)
   $: enrichedFilter = enrichFilter(filter, enrichedSearchColumns, formId)
-  $: cardWidth = cardHorizontal ? 420 : 240
+  $: cardWidth = cardHorizontal ? 420 : 300
 
   // Enrich the default filter with the specified search fields
   const enrichFilter = (filter, columns, formId) => {
@@ -140,9 +140,10 @@
           props={{
             dataProvider: `{{ literal [${dataProviderId}] }}`,
             direction: "row",
-            hAlign: "left",
+            hAlign: "stretch",
             vAlign: "top",
             gap: "M",
+            noRowsMessage: "No rows found",
           }}
           styles={{
             display: "grid",
@@ -172,10 +173,6 @@
 </Block>
 
 <style>
-  .card-list :global(.spectrum-Card) {
-    width: auto !important;
-  }
-
   .header {
     display: flex;
     flex-direction: row;
