@@ -6,19 +6,19 @@ import {
   QueryTypes,
   SqlQuery,
 } from "../definitions/datasource"
-import { getSqlQuery } from "./utils"
+import {
+  getSqlQuery,
+  buildExternalTableId,
+  convertSqlType,
+  finaliseExternalTables,
+  SqlClients,
+} from "./utils"
 import { DatasourcePlus } from "./base/datasourcePlus"
 import { Table, TableSchema } from "../definitions/common"
 
 module MSSQLModule {
   const sqlServer = require("mssql")
   const Sql = require("./base/sql")
-  const { FieldTypes } = require("../constants")
-  const {
-    buildExternalTableId,
-    convertType,
-    finaliseExternalTables,
-  } = require("./utils")
 
   interface MSSQLConfig {
     user: string
@@ -77,31 +77,6 @@ module MSSQLModule {
         type: QueryTypes.SQL,
       },
     },
-  }
-
-  // TODO: need to update this
-  const TYPE_MAP = {
-    text: FieldTypes.LONGFORM,
-    blob: FieldTypes.LONGFORM,
-    enum: FieldTypes.STRING,
-    varchar: FieldTypes.STRING,
-    float: FieldTypes.NUMBER,
-    int: FieldTypes.NUMBER,
-    numeric: FieldTypes.NUMBER,
-    bigint: FieldTypes.NUMBER,
-    mediumint: FieldTypes.NUMBER,
-    decimal: FieldTypes.NUMBER,
-    dec: FieldTypes.NUMBER,
-    double: FieldTypes.NUMBER,
-    real: FieldTypes.NUMBER,
-    fixed: FieldTypes.NUMBER,
-    smallint: FieldTypes.NUMBER,
-    timestamp: FieldTypes.DATETIME,
-    date: FieldTypes.DATETIME,
-    datetime: FieldTypes.DATETIME,
-    time: FieldTypes.DATETIME,
-    tinyint: FieldTypes.BOOLEAN,
-    json: DatasourceFieldTypes.JSON,
   }
 
   async function internalQuery(
@@ -175,7 +150,7 @@ module MSSQLModule {
     }
 
     constructor(config: MSSQLConfig) {
-      super("mssql")
+      super(SqlClients.MS_SQL)
       this.config = config
       const clientCfg = {
         ...this.config,
@@ -241,7 +216,7 @@ module MSSQLModule {
           if (typeof name !== "string") {
             continue
           }
-          const type: string = convertType(def.DATA_TYPE, TYPE_MAP)
+          const type: string = convertSqlType(def.DATA_TYPE)
 
           schema[name] = {
             autocolumn: !!autoColumns.find((col: string) => col === name),
@@ -256,7 +231,7 @@ module MSSQLModule {
           schema,
         }
       }
-      const final = finaliseExternalTables(tables)
+      const final = finaliseExternalTables(tables, entities)
       this.tables = final.tables
       this.schemaErrors = final.errors
     }
