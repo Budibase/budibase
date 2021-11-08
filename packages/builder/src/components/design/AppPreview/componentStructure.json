@@ -1,4 +1,12 @@
 [
+  {
+    "name": "Blocks",
+    "icon": "Article",
+    "children": [
+      "tablewithsearch",
+      "cardlistwithsearch"
+    ]
+  },
   "section",
   "container",
   "dataprovider",

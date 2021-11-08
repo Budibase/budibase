@@ -1,6 +1,8 @@
-import { writable } from "svelte/store"
+import { get, writable } from "svelte/store"
 import { push } from "svelte-spa-router"
 import * as API from "../api"
+import { peekStore } from "./peek"
+import { builderStore } from "./builder"
 
 const createRouteStore = () => {
   const initialState = {
@@ -59,7 +61,25 @@ const createRouteStore = () => {
       return state
     })
   }
-  const navigate = push
+  const navigate = (url, peek) => {
+    if (get(builderStore).inBuilder) {
+      return
+    }
+    if (url) {
+      // If we're already peeking, don't peek again
+      const isPeeking = get(store).queryParams?.peek
+      if (peek && !isPeeking) {
+        peekStore.actions.showPeek(url)
+      } else {
+        const external = !url.startsWith("/")
+        if (external) {
+          window.location.href = url
+        } else {
+          push(url)
+        }
+      }
+    }
+  }
   const setRouterLoaded = () => {
     store.update(state => ({ ...state, routerLoaded: true }))
   }

@@ -17,14 +17,24 @@
   export let props = {}
   export let onChange = () => {}
   export let bindings = []
+  export let componentBindings = []
+  export let nested = false
 
   let bindingDrawer
   let anchor
   let valid
 
-  $: safeValue = getSafeValue(value, props.defaultValue, bindings)
+  $: allBindings = getAllBindings(bindings, componentBindings, nested)
+  $: safeValue = getSafeValue(value, props.defaultValue, allBindings)
   $: tempValue = safeValue
-  $: replaceBindings = val => readableToRuntimeBinding(bindings, val)
+  $: replaceBindings = val => readableToRuntimeBinding(allBindings, val)
+
+  const getAllBindings = (bindings, componentBindings, nested) => {
+    if (!nested) {
+      return bindings
+    }
+    return [...(bindings || []), ...(componentBindings || [])]
+  }
 
   const handleClose = () => {
     handleChange(tempValue)
@@ -78,7 +88,7 @@
       updateOnChange={false}
       on:change={handleChange}
       onChange={handleChange}
-      {bindings}
+      bindings={allBindings}
       name={key}
       text={label}
       {type}
@@ -104,7 +114,7 @@
           bind:valid
           value={safeValue}
           on:change={e => (tempValue = e.detail)}
-          bindableProperties={bindings}
+          bindableProperties={allBindings}
           allowJS
         />
       </Drawer>
@@ -122,7 +132,6 @@
   }
 
   .label {
-    text-transform: capitalize;
     padding-bottom: var(--spectrum-global-dimension-size-65);
   }
 
