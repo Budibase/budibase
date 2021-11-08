@@ -3,6 +3,7 @@ import { fetchTableData } from "./tables"
 import { fetchViewData } from "./views"
 import { fetchRelationshipData } from "./relationships"
 import { executeQuery } from "./queries"
+import { FieldTypes } from "../constants"
 
 /**
  * Fetches all rows for a particular Budibase data source.
@@ -28,7 +29,7 @@ export const fetchDatasource = async dataSource => {
       }
     }
     rows = await executeQuery({ queryId: dataSource._id, parameters })
-  } else if (type === "link") {
+  } else if (type === FieldTypes.LINK) {
     rows = await fetchRelationshipData({
       rowId: dataSource.rowId,
       tableId: dataSource.rowTableId,
