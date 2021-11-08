@@ -2803,7 +2803,7 @@
         "type": "number",
         "label": "Limit",
         "key": "limit",
-        "defaultValue": 10
+        "defaultValue": 8
       },
       {
         "type": "boolean",
