@@ -59,11 +59,10 @@ export const createDataSourceStore = () => {
 
     // Emit this as a window event, so parent screens which are iframing us in
     // can also invalidate the same datasource
-    window.dispatchEvent(
-      new CustomEvent("invalidate-datasource", {
-        detail: { dataSourceId },
-      })
-    )
+    window.parent.postMessage({
+      type: "close-screen-modal",
+      detail: { dataSourceId },
+    })
 
     let invalidations = [dataSourceId]
 
