@@ -56,6 +56,8 @@ router
     authController.resetUpdate
   )
   .post("/api/global/auth/logout", authController.logout)
+  .post("/api/global/auth/init", authController.setInitInfo)
+  .get("/api/global/auth/init", authController.getInitInfo)
   .get(
     "/api/global/auth/:tenantId/google",
     updateTenant,

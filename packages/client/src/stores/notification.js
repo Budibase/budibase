@@ -34,11 +34,6 @@ const createNotificationStore = () => {
           icon,
         },
       })
-      // window.dispatchEvent(
-      //   new CustomEvent("notification", {
-      //     detail: { message, type, icon },
-      //   })
-      // )
       return
     }
 
