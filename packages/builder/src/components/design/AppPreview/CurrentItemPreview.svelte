@@ -122,10 +122,10 @@
       window.addEventListener("message", receiveMessage)
     } else {
       // Legacy - remove in later versions of BB
-       iframe.contentWindow.addEventListener("ready", () => {
+      iframe.contentWindow.addEventListener("ready", () => {
         receiveMessage({ data: { type: MessageTypes.READY }})
       }, { once: true })
-       iframe.contentWindow.addEventListener("error", event => {
+      iframe.contentWindow.addEventListener("error", event => {
         receiveMessage({ data: { type: MessageTypes.ERROR, error: event.detail }})
       }, { once: true })
       // Add listener for events sent by client library in preview
@@ -138,7 +138,7 @@
   onDestroy(() => {
     if (iframe.contentWindow) {
       if ($store.clientFeatures.messagePassing) {
-      window.removeEventListener("message", receiveMessage) //
+        window.removeEventListener("message", receiveMessage) //
       } else {
         // Legacy - remove in later versions of BB
         iframe.contentWindow.removeEventListener("bb-event", handleBudibaseEvent)
