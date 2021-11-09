@@ -26,6 +26,7 @@
   ]
 
   let modal
+  let navSelectionModal
   $: selected = tabs.find(t => t.key === $params.assetType)?.title || "Screens"
 
   const navigate = ({ detail }) => {
@@ -85,9 +86,9 @@
         <div class="nav-items-container">
           <ComponentNavigationTree />
         </div>
-        <Modal bind:this={modal}>
-          <NewScreenModal />
-        </Modal>
+        <Modal bind:this={modal}
+          ><svelte:component this={NewScreenModal} {navSelectionModal} /></Modal
+        >
       </div>
     </Tab>
     <Tab title="Layouts">

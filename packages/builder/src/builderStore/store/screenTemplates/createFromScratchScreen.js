@@ -2,6 +2,7 @@ import { Screen } from "./utils/Screen"
 
 export default {
   name: `Create from scratch`,
+  id: `createFromScratch`,
   create: () => createScreen(),
 }
 
