@@ -119,7 +119,7 @@ export interface SortJson {
 
 export interface PaginationJson {
   limit: number
-  page: string | number
+  page?: string | number
 }
 
 export interface RelationshipsJson {

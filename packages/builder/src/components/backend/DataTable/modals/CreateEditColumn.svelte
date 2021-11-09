@@ -59,9 +59,6 @@
   let deletion
 
   $: checkConstraints(field)
-  $: tableOptions = $tables.list.filter(
-    opt => opt._id !== $tables.draft._id && opt.type === table.type
-  )
   $: required = !!field?.constraints?.presence || primaryDisplay
   $: uneditable =
     $tables.selected?._id === TableNames.USERS &&
@@ -88,6 +85,13 @@
     field.type !== LINK_TYPE && !uneditable && field.type !== AUTO_TYPE
   $: relationshipOptions = getRelationshipOptions(field)
   $: external = table.type === "external"
+  // in the case of internal tables the sourceId will just be undefined
+  $: tableOptions = $tables.list.filter(
+    opt =>
+      opt._id !== $tables.draft._id &&
+      opt.type === table.type &&
+      table.sourceId === opt.sourceId
+  )
 
   async function saveColumn() {
     if (field.type === AUTO_TYPE) {
@@ -174,7 +178,7 @@
     if (!field || !field.tableId) {
       return null
     }
-    const linkTable = tableOptions.find(table => table._id === field.tableId)
+    const linkTable = tableOptions?.find(table => table._id === field.tableId)
     if (!linkTable) {
       return null
     }

@@ -2,6 +2,7 @@
   import { getContext } from "svelte"
   import { Table } from "@budibase/bbui"
   import SlotRenderer from "./SlotRenderer.svelte"
+  import { UnsortableTypes } from "../../../constants"
 
   export let dataProvider
   export let columns
@@ -73,8 +74,12 @@
         divider: true,
       }
     }
+
     fields.forEach(field => {
       newSchema[field] = schema[field]
+      if (schema[field] && UnsortableTypes.indexOf(schema[field].type) !== -1) {
+        newSchema[field].sortable = false
+      }
     })
     return newSchema
   }

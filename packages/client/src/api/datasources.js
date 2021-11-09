@@ -2,6 +2,7 @@ import { cloneDeep } from "lodash/fp"
 import { fetchTableData, fetchTableDefinition } from "./tables"
 import { fetchViewData } from "./views"
 import { fetchRelationshipData } from "./relationships"
+import { FieldTypes } from "../constants"
 import { executeQuery, fetchQueryDefinition } from "./queries"
 
 /**
@@ -28,7 +29,7 @@ export const fetchDatasource = async dataSource => {
       }
     }
     rows = await executeQuery({ queryId: dataSource._id, parameters })
-  } else if (type === "link") {
+  } else if (type === FieldTypes.LINK) {
     rows = await fetchRelationshipData({
       rowId: dataSource.rowId,
       tableId: dataSource.rowTableId,
