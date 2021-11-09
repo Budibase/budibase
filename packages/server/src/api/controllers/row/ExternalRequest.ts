@@ -163,8 +163,8 @@ module External {
     }
   }
 
-  function basicProcessing(row: Row, table: Table) {
-    const thisRow: { [key: string]: any } = {}
+  function basicProcessing(row: Row, table: Table): Row {
+    const thisRow: Row = {}
     // filter the row down to what is actually the row (not joined)
     for (let fieldName of Object.keys(table.schema)) {
       const value = row[`${table.name}.${fieldName}`] || row[fieldName]
@@ -177,6 +177,23 @@ module External {
     thisRow.tableId = table._id
     thisRow._rev = "rev"
     return thisRow
+  }
+
+  function fixArrayTypes(row: Row, table: Table) {
+    for (let [fieldName, schema] of Object.entries(table.schema)) {
+      if (
+        schema.type === FieldTypes.ARRAY &&
+        typeof row[fieldName] === "string"
+      ) {
+        try {
+          row[fieldName] = JSON.parse(row[fieldName])
+        } catch (err) {
+          // couldn't convert back to array, ignore
+          delete row[fieldName]
+        }
+      }
+    }
+    return row
   }
 
   function isMany(field: FieldSchema) {
@@ -226,7 +243,12 @@ module External {
         manyRelationships: ManyRelationship[] = []
       for (let [key, field] of Object.entries(table.schema)) {
         // if set already, or not set just skip it
-        if (row[key] == null || newRow[key] || field.autocolumn || field.type === FieldTypes.FORMULA) {
+        if (
+          row[key] == null ||
+          newRow[key] ||
+          field.autocolumn ||
+          field.type === FieldTypes.FORMULA
+        ) {
           continue
         }
         // if its an empty string then it means return the column to null (if possible)
@@ -337,7 +359,7 @@ module External {
       table: Table,
       relationships: RelationshipsJson[]
     ) {
-      if (rows[0].read === true) {
+      if (!rows || rows.length === 0 || rows[0].read === true) {
         return []
       }
       let finalRows: { [key: string]: Row } = {}
@@ -353,7 +375,10 @@ module External {
           )
           continue
         }
-        const thisRow = basicProcessing(row, table)
+        const thisRow = fixArrayTypes(basicProcessing(row, table), table)
+        if (thisRow._id == null) {
+          throw "Unable to generate row ID for SQL rows"
+        }
         finalRows[thisRow._id] = thisRow
         // do this at end once its been added to the final rows
         finalRows = this.updateRelationshipColumns(

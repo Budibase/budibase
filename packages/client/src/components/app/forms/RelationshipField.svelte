@@ -2,6 +2,7 @@
   import { CoreSelect, CoreMultiselect } from "@budibase/bbui"
   import { getContext } from "svelte"
   import Field from "./Field.svelte"
+  import { FieldTypes } from "../../../constants"
 
   const { API } = getContext("sdk")
 
@@ -68,7 +69,7 @@
   {field}
   {disabled}
   {validation}
-  type="link"
+  type={FieldTypes.LINK}
   bind:fieldState
   bind:fieldApi
   bind:fieldSchema

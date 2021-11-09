@@ -6,18 +6,18 @@ import {
   SqlQuery,
 } from "../definitions/datasource"
 import { Table } from "../definitions/common"
-import { getSqlQuery } from "./utils"
+import {
+  getSqlQuery,
+  buildExternalTableId,
+  convertSqlType,
+  finaliseExternalTables,
+  SqlClients,
+} from "./utils"
 import { DatasourcePlus } from "./base/datasourcePlus"
 
 module PostgresModule {
   const { Pool } = require("pg")
   const Sql = require("./base/sql")
-  const { FieldTypes } = require("../constants")
-  const {
-    buildExternalTableId,
-    convertType,
-    finaliseExternalTables,
-  } = require("./utils")
   const { escapeDangerousCharacters } = require("../utilities")
 
   const JSON_REGEX = /'{.*}'::json/s
@@ -97,22 +97,6 @@ module PostgresModule {
     },
   }
 
-  const TYPE_MAP = {
-    text: FieldTypes.LONGFORM,
-    varchar: FieldTypes.STRING,
-    integer: FieldTypes.NUMBER,
-    bigint: FieldTypes.NUMBER,
-    decimal: FieldTypes.NUMBER,
-    smallint: FieldTypes.NUMBER,
-    real: FieldTypes.NUMBER,
-    "double precision": FieldTypes.NUMBER,
-    timestamp: FieldTypes.DATETIME,
-    time: FieldTypes.DATETIME,
-    boolean: FieldTypes.BOOLEAN,
-    json: FieldTypes.JSON,
-    date: FieldTypes.DATETIME,
-  }
-
   async function internalQuery(client: any, query: SqlQuery) {
     // need to handle a specific issue with json data types in postgres,
     // new lines inside the JSON data will break it
@@ -154,7 +138,7 @@ module PostgresModule {
     `
 
     constructor(config: PostgresConfig) {
-      super("pg")
+      super(SqlClients.POSTGRES)
       this.config = config
 
       let newConfig = {
@@ -216,7 +200,7 @@ module PostgresModule {
           }
         }
 
-        const type: string = convertType(column.data_type, TYPE_MAP)
+        const type: string = convertSqlType(column.data_type)
         const identity = !!(
           column.identity_generation ||
           column.identity_start ||

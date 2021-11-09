@@ -4,7 +4,10 @@ import { Datasource } from "../../definitions/common"
 module DatasourceUtils {
   const { integrations } = require("../index")
 
-  export async function makeExternalQuery(datasource: Datasource, json: QueryJson) {
+  export async function makeExternalQuery(
+    datasource: Datasource,
+    json: QueryJson
+  ) {
     const Integration = integrations[datasource.source]
     // query is the opinionated function
     if (Integration.prototype.query) {
