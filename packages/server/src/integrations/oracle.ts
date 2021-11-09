@@ -18,9 +18,6 @@ module OracleModule {
     database: string
     user: string
     password: string
-    // ssl?: boolean
-    // ca?: string
-    // rejectUnauthorized?: boolean
   }
 
   const SCHEMA: Integration = {
@@ -49,22 +46,7 @@ module OracleModule {
       password: {
         type: DatasourceFieldTypes.PASSWORD,
         required: true,
-      },
-      // ssl: {
-      //   type: DatasourceFieldTypes.BOOLEAN,
-      //   default: false,
-      //   required: false,
-      // },
-      // rejectUnauthorized: {
-      //   type: DatasourceFieldTypes.BOOLEAN,
-      //   default: false,
-      //   required: false,
-      // },
-      // ca: {
-      //   type: DatasourceFieldTypes.LONGFORM,
-      //   default: false,
-      //   required: false,
-      // },
+      }
     },
     query: {
       create: {
