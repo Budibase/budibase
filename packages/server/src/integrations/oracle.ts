@@ -9,9 +9,11 @@ import { getSqlQuery } from "./utils"
 import oracledb, { ExecuteOptions, Result } from "oracledb"
 import { Connection, ConnectionAttributes } from "oracledb"
 import Sql from "./base/sql"
+
 module OracleModule {
 
   oracledb.outFormat = oracledb.OUT_FORMAT_OBJECT;
+
   interface OracleConfig {
     host: string
     port: number
@@ -64,9 +66,8 @@ module OracleModule {
     },
   }
   class OracleIntegration extends Sql {
+    
     private readonly config: OracleConfig
-    public tables: Record<string, Table> = {}
-    public schemaErrors: Record<string, string> = {}
 
     constructor(config: OracleConfig) {
       super("oracle")
