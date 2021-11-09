@@ -5,7 +5,7 @@ import API from "./api"
  * Executes a query against an external data connector.
  */
 export const executeQuery = async ({ queryId, parameters }) => {
-  const query = await API.get({ url: `/api/queries/${queryId}` })
+  const query = await fetchQueryDefinition(queryId)
   if (query?.datasourceId == null) {
     notificationStore.actions.error("That query couldn't be found")
     return
@@ -23,4 +23,11 @@ export const executeQuery = async ({ queryId, parameters }) => {
     await dataSourceStore.actions.invalidateDataSource(query.datasourceId)
   }
   return res
+}
+
+/**
+ * Fetches the definition of an external query.
+ */
+export const fetchQueryDefinition = async queryId => {
+  return await API.get({ url: `/api/queries/${queryId}`, cache: true })
 }

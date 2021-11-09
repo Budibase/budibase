@@ -1,4 +1,3 @@
-import { get } from "svelte/store"
 import { builderStore } from "stores"
 
 /**
@@ -64,9 +63,7 @@ export const styleable = (node, styles = {}) => {
     // Handler to select a component in the builder when clicking it in the
     // builder preview
     selectComponent = event => {
-      if (newStyles.interactive) {
-        builderStore.actions.selectComponent(componentId)
-      }
+      builderStore.actions.selectComponent(componentId)
       event.preventDefault()
       event.stopPropagation()
       return false
@@ -77,7 +74,7 @@ export const styleable = (node, styles = {}) => {
     node.addEventListener("mouseout", applyNormalStyles)
 
     // Add builder preview click listener
-    if (get(builderStore).inBuilder) {
+    if (newStyles.interactive) {
       node.addEventListener("click", selectComponent, false)
     }
 
@@ -89,11 +86,7 @@ export const styleable = (node, styles = {}) => {
   const removeListeners = () => {
     node.removeEventListener("mouseover", applyHoverStyles)
     node.removeEventListener("mouseout", applyNormalStyles)
-
-    // Remove builder preview click listener
-    if (get(builderStore).inBuilder) {
-      node.removeEventListener("click", selectComponent)
-    }
+    node.removeEventListener("click", selectComponent)
   }
 
   // Apply initial styles
