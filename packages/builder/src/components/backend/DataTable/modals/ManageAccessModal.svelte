@@ -23,8 +23,6 @@
     // Show updated permissions in UI: REMOVE
     permissions = await permissionsStore.forResource(resourceId)
     notifications.success("Updated permissions.")
-    // TODO: update permissions
-    // permissions[]
   }
 </script>
 
