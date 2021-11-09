@@ -107,6 +107,8 @@ export const deleteRows = async ({ tableId, rows }) => {
 /**
  * Enriches rows which contain certain field types so that they can
  * be properly displayed.
+ * The ability to create these bindings has been removed, but they will still
+ * exist in client apps to support backwards compatibility.
  */
 export const enrichRows = async (rows, tableId) => {
   if (!Array.isArray(rows)) {
