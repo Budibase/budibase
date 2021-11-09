@@ -30,11 +30,11 @@
     if (user && user.tenantId) {
       // no tenant in the url - send to account portal to fix this
       if (!urlTenantId) {
-        let redirectUrl = $admin.accountPortalUrl
         if (!window.location.host.includes("localhost")) {
-          const redirectUrl = redirectUrl.replace("://", `://${user.tenantId}.`)
+          let redirectUrl = window.location.href
+          redirectUrl = redirectUrl.replace("://", `://${user.tenantId}.`)
+          window.location.href = redirectUrl
         }
-        window.location.href = redirectUrl
         return
       }
 
