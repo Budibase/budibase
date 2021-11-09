@@ -6,6 +6,7 @@
     ActionButton,
     ActionGroup,
     ButtonGroup,
+    Input,
     Select,
     Modal,
     Page,
@@ -36,6 +37,7 @@
   let loaded = false
   let searchTerm = ""
   let cloud = $admin.cloud
+  let appName = ""
 
   $: enrichedApps = enrichApps($apps, $auth.user, sortBy)
   $: filteredApps = enrichedApps.filter(app =>
@@ -296,8 +298,12 @@
   title="Confirm deletion"
   okText="Delete app"
   onOk={confirmDeleteApp}
+  disabled={appName !== selectedApp?.name}
 >
   Are you sure you want to delete the app <b>{selectedApp?.name}</b>?
+
+  <p>Please enter the app name below to confirm.</p>
+  <Input bind:value={appName} />
 </ConfirmDialog>
 <ConfirmDialog
   bind:this={unpublishModal}
