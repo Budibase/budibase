@@ -138,7 +138,7 @@
   onDestroy(() => {
     if (iframe.contentWindow) {
       if ($store.clientFeatures.messagePassing) {
-        window.removeEventListener("message", receiveMessage) //
+        window.removeEventListener("message", receiveMessage)
       } else {
         // Legacy - remove in later versions of BB
         iframe.contentWindow.removeEventListener("bb-event", handleBudibaseEvent)
