@@ -4,10 +4,8 @@ import {
   QueryTypes,
   SqlQuery,
 } from "../definitions/datasource"
-import { Table } from "../definitions/common"
 import { getSqlQuery } from "./utils"
-import oracledb, { ExecuteOptions, Result } from "oracledb"
-import { Connection, ConnectionAttributes } from "oracledb"
+import oracledb, { ExecuteOptions, Result,  Connection, ConnectionAttributes  } from "oracledb"
 import Sql from "./base/sql"
 
 module OracleModule {
@@ -66,7 +64,7 @@ module OracleModule {
     },
   }
   class OracleIntegration extends Sql {
-    
+
     private readonly config: OracleConfig
 
     constructor(config: OracleConfig) {
