@@ -217,18 +217,8 @@ const getProviderContextBindings = (asset, dataProviders) => {
       keys.forEach(key => {
         const fieldSchema = schema[key]
 
-        // Make safe runtime binding and replace certain bindings with a
-        // new property to help display components
-        let runtimeBoundKey = key
-        if (fieldSchema.type === "link") {
-          runtimeBoundKey = `${key}_text`
-        } else if (fieldSchema.type === "attachment") {
-          runtimeBoundKey = `${key}_first`
-        }
-
-        const runtimeBinding = `${safeComponentId}.${makePropSafe(
-          runtimeBoundKey
-        )}`
+        // Make safe runtime binding
+        const runtimeBinding = `${safeComponentId}.${makePropSafe(key)}`
 
         // Optionally use a prefix with readable bindings
         let readableBinding = component._instanceName
@@ -267,17 +257,9 @@ const getUserBindings = () => {
   const safeUser = makePropSafe("user")
   keys.forEach(key => {
     const fieldSchema = schema[key]
-    // Replace certain bindings with a new property to help display components
-    let runtimeBoundKey = key
-    if (fieldSchema.type === "link") {
-      runtimeBoundKey = `${key}_text`
-    } else if (fieldSchema.type === "attachment") {
-      runtimeBoundKey = `${key}_first`
-    }
-
     bindings.push({
       type: "context",
-      runtimeBinding: `${safeUser}.${makePropSafe(runtimeBoundKey)}`,
+      runtimeBinding: `${safeUser}.${makePropSafe(key)}`,
       readableBinding: `Current User.${key}`,
       // Field schema and provider are required to construct relationship
       // datasource options, based on bindable properties
