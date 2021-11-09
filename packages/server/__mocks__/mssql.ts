@@ -15,7 +15,7 @@ module MsSqlMock {
   mssql.ConnectionPool = jest.fn(() => ({
     connect: jest.fn(() => ({
       request: jest.fn(() => ({
-        query: jest.fn(() => ({})),
+        query: jest.fn(sql => ({ recordset: [ sql ] })),
       })),
     })),
   }))
