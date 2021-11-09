@@ -81,16 +81,29 @@ export function createAuthStore() {
   }
 
   async function setInitInfo(info) {
-    await api.post(`/api/global/auth/init`, info)
+    const response = await api.post(`/api/global/auth/init`, info)
+    const json = await response.json()
+    auth.update(store => {
+      store.initInfo = json
+      return store
+    })
+    return json
+  }
+
+  async function getInitInfo() {
+    const response = await api.get(`/api/global/auth/init`)
+    const json = response.json()
+    auth.update(store => {
+      store.initInfo = json
+      return store
+    })
+    return json
   }
 
   return {
     subscribe: store.subscribe,
     setOrganisation: setOrganisation,
-    getInitInfo: async () => {
-      const response = await api.get(`/api/global/auth/init`)
-      return await response.json()
-    },
+    getInitInfo,
     setInitInfo,
     checkQueryString: async () => {
       const urlParams = new URLSearchParams(window.location.search)
