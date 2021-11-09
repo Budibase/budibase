@@ -234,7 +234,8 @@
           <Editor
             mode="javascript"
             on:change={e => {
-              onChange(e, key)
+              // need to pass without the value inside
+              onChange({ detail: e.detail.value }, key)
               inputData[key] = e.detail.value
             }}
             value={inputData[key]}
