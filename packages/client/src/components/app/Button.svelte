@@ -27,6 +27,9 @@
   button {
     width: fit-content;
     width: -moz-fit-content;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .spectrum-Button--overBackground:hover {
     color: #555;

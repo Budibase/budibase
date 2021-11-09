@@ -26,6 +26,7 @@ export const ActionTypes = {
   ValidateForm: "ValidateForm",
   RefreshDatasource: "RefreshDatasource",
   SetDataProviderQuery: "SetDataProviderQuery",
+  SetDataProviderSorting: "SetDataProviderSorting",
   ClearForm: "ClearForm",
   ChangeFormStep: "ChangeFormStep",
 }

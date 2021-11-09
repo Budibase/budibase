@@ -10,9 +10,17 @@
   export let rowCount
   export let quiet
   export let size
+  export let linkRows
+  export let linkURL
+  export let linkColumn
+  export let linkPeek
 
   const component = getContext("component")
-  const { styleable } = getContext("sdk")
+  const { styleable, getAction, ActionTypes, routeStore } = getContext("sdk")
+  const setSorting = getAction(
+    dataProvider?.id,
+    ActionTypes.SetDataProviderSorting
+  )
   const customColumnKey = `custom-${Math.random()}`
   const customRenderers = [
     {
@@ -75,6 +83,26 @@
     })
     return newSchema
   }
+
+  const onSort = e => {
+    setSorting({
+      column: e.detail.column,
+      order: e.detail.order,
+    })
+  }
+
+  const onClick = e => {
+    if (!linkRows || !linkURL) {
+      return
+    }
+    const col = linkColumn || "_id"
+    const id = e.detail?.[col]
+    if (!id) {
+      return
+    }
+    const split = linkURL.split("/:")
+    routeStore.actions.navigate(`${split[0]}/${id}`, linkPeek)
+  }
 </script>
 
 <div use:styleable={$component.styles} class={size}>
@@ -89,6 +117,9 @@
     allowEditRows={false}
     allowEditColumns={false}
     showAutoColumns={true}
+    disableSorting
+    on:sort={onSort}
+    on:click={onClick}
   >
     <slot />
   </Table>

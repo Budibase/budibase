@@ -12,6 +12,7 @@
   export let componentInstance
   export let assetInstance
   export let bindings
+  export let componentBindings
 
   const layoutDefinition = []
   const screenDefinition = [
@@ -21,9 +22,23 @@
     { key: "layoutId", label: "Layout", control: LayoutSelect },
   ]
 
-  $: settings = componentDefinition?.settings ?? []
+  $: sections = getSections(componentDefinition)
   $: isLayout = assetInstance && assetInstance.favicon
   $: assetDefinition = isLayout ? layoutDefinition : screenDefinition
+
+  const getSections = definition => {
+    const settings = definition?.settings ?? []
+    const generalSettings = settings.filter(setting => !setting.section)
+    const customSections = settings.filter(setting => setting.section)
+    return [
+      {
+        name: "General",
+        info: componentDefinition?.info,
+        settings: generalSettings,
+      },
+      ...(customSections || []),
+    ]
+  }
 
   const updateProp = store.actions.components.updateProp
 
@@ -59,19 +74,19 @@
   }
 </script>
 
-<DetailSummary name="General" collapsible={false}>
-  {#if !componentInstance._component.endsWith("/layout")}
-    <PropertyControl
-      bindable={false}
-      control={Input}
-      label="Name"
-      key="_instanceName"
-      value={componentInstance._instanceName}
-      onChange={val => updateProp("_instanceName", val)}
-    />
-  {/if}
-  {#if settings && settings.length > 0}
-    {#each settings as setting (setting.key)}
+{#each sections as section, idx (section.name)}
+  <DetailSummary name={section.name} collapsible={false}>
+    {#if idx === 0 && !componentInstance._component.endsWith("/layout")}
+      <PropertyControl
+        bindable={false}
+        control={Input}
+        label="Name"
+        key="_instanceName"
+        value={componentInstance._instanceName}
+        onChange={val => updateProp("_instanceName", val)}
+      />
+    {/if}
+    {#each section.settings as setting (setting.key)}
       {#if canRenderControl(setting)}
         <PropertyControl
           type={setting.type}
@@ -80,7 +95,7 @@
           key={setting.key}
           value={componentInstance[setting.key] ??
             componentInstance[setting.key]?.defaultValue}
-          {componentInstance}
+          nested={setting.nested}
           onChange={val => updateProp(setting.key, val)}
           props={{
             options: setting.options || [],
@@ -89,20 +104,22 @@
             max: setting.max || null,
           }}
           {bindings}
+          {componentBindings}
+          {componentInstance}
           {componentDefinition}
         />
       {/if}
     {/each}
-  {/if}
-  {#if componentDefinition?.component?.endsWith("/fieldgroup")}
-    <ResetFieldsButton {componentInstance} />
-  {/if}
-  {#if componentDefinition?.info}
-    <div class="text">
-      {@html componentDefinition?.info}
-    </div>
-  {/if}
-</DetailSummary>
+    {#if idx === 0 && componentDefinition?.component?.endsWith("/fieldgroup")}
+      <ResetFieldsButton {componentInstance} />
+    {/if}
+    {#if section?.info}
+      <div class="text">
+        {@html section.info}
+      </div>
+    {/if}
+  </DetailSummary>
+{/each}
 
 <style>
   .text {

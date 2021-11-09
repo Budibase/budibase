@@ -36,17 +36,19 @@ export const enrichProps = (props, context) => {
   let enrichedProps = enrichDataBindings(props, totalContext)
 
   // Enrich click actions if they exist
-  if (enrichedProps.onClick) {
-    enrichedProps.onClick = enrichButtonActions(
-      enrichedProps.onClick,
-      totalContext
-    )
-  }
+  Object.keys(enrichedProps).forEach(prop => {
+    if (prop?.toLowerCase().includes("onclick")) {
+      enrichedProps[prop] = enrichButtonActions(
+        enrichedProps[prop],
+        totalContext
+      )
+    }
+  })
 
   // Enrich any click actions in conditions
   if (enrichedProps._conditions) {
     enrichedProps._conditions.forEach(condition => {
-      if (condition.setting === "onClick") {
+      if (condition.setting?.toLowerCase().includes("onclick")) {
         condition.settingValue = enrichButtonActions(
           condition.settingValue,
           totalContext
