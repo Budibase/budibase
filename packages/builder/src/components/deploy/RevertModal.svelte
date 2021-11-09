@@ -1,9 +1,16 @@
 <script>
-  import { Icon, Modal, notifications, ModalContent } from "@budibase/bbui"
+  import {
+    Icon,
+    Input,
+    Modal,
+    notifications,
+    ModalContent,
+  } from "@budibase/bbui"
   import { store } from "builderStore"
   import api from "builderStore/api"
 
   let revertModal
+  let appName
 
   $: appId = $store.appId
 
@@ -33,10 +40,17 @@
 
 <Icon name="Revert" hoverable on:click={revertModal.show} />
 <Modal bind:this={revertModal}>
-  <ModalContent title="Revert Changes" confirmText="Revert" onConfirm={revert}>
+  <ModalContent
+    title="Revert Changes"
+    confirmText="Revert"
+    onConfirm={revert}
+    disabled={appName !== $store.name}
+  >
     <span
       >The changes you have made will be deleted and the application reverted
       back to its production state.</span
     >
+    <span>Please enter your app name to continue.</span>
+    <Input bind:value={appName} />
   </ModalContent>
 </Modal>

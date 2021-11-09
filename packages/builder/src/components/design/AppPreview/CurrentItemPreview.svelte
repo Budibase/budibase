@@ -69,6 +69,7 @@
     theme: $store.theme,
     customTheme: $store.customTheme,
     previewDevice: $store.previewDevice,
+    messagePassing: $store.clientFeatures.messagePassing
   }
 
   // Saving pages and screens to the DB causes them to have _revs.

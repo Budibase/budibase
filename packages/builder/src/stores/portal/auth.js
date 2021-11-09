@@ -80,6 +80,10 @@ export function createAuthStore() {
     }
   }
 
+  async function setInitInfo(info) {
+    await api.post(`/api/global/auth/init`, info)
+  }
+
   return {
     subscribe: store.subscribe,
     setOrganisation: setOrganisation,
@@ -87,9 +91,7 @@ export function createAuthStore() {
       const response = await api.get(`/api/global/auth/init`)
       return await response.json()
     },
-    setInitInfo: async info => {
-      await api.post(`/api/global/auth/init`, info)
-    },
+    setInitInfo,
     checkQueryString: async () => {
       const urlParams = new URLSearchParams(window.location.search)
       if (urlParams.has("tenantId")) {
@@ -129,6 +131,7 @@ export function createAuthStore() {
         throw "Unable to create logout"
       }
       await response.json()
+      await setInitInfo({})
       setUser(null)
     },
     updateSelf: async fields => {

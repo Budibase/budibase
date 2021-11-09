@@ -157,6 +157,11 @@
     }
     return title
   }
+
+  async function onCancel() {
+    template = null
+    await auth.setInitInfo({})
+  }
 </script>
 
 {#if showTemplateSelection}
@@ -186,7 +191,7 @@
     title={getModalTitle()}
     confirmText={template?.fromFile ? "Import app" : "Create app"}
     onConfirm={createNewApp}
-    onCancel={inline ? () => (template = null) : null}
+    onCancel={inline ? onCancel : null}
     cancelText={inline ? "Back" : undefined}
     showCloseIcon={!inline}
     disabled={!valid}
