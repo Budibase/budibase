@@ -44,6 +44,7 @@ const INITIAL_FRONTEND_STATE = {
     state: false,
     customThemes: false,
     devicePreview: false,
+    messagePassing: false,
   },
   currentFrontEndType: "none",
   selectedScreenId: "",
