@@ -44,6 +44,7 @@ const {
   revertClientLibrary,
 } = require("../../utilities/fileSystem/clientLibrary")
 const { getTenantId, isMultiTenant } = require("@budibase/auth/tenancy")
+const { syncGlobalUsers } = require("./user")
 
 const URL_REGEX_SLASH = /\/|\\/g
 
@@ -328,6 +329,8 @@ exports.sync = async ctx => {
   if (!isDevAppID(appId)) {
     ctx.throw(400, "This action cannot be performed for production apps")
   }
+
+  // replicate prod to dev
   const prodAppId = getDeployedAppID(appId)
   const replication = new Replication({
     source: prodAppId,
@@ -343,6 +346,10 @@ exports.sync = async ctx => {
   } catch (err) {
     error = err
   }
+
+  // sync the users
+  await syncGlobalUsers(appId)
+
   if (error) {
     ctx.throw(400, error)
   } else {

@@ -34,5 +34,10 @@ router
     authorized(PermissionTypes.USER, PermissionLevels.WRITE),
     controller.destroyMetadata
   )
+  .post(
+    "/api/users/sync/:id",
+    authorized(PermissionTypes.USER, PermissionLevels.WRITE),
+    controller.syncUser
+  )
 
 module.exports = router
