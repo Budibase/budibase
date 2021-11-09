@@ -323,7 +323,7 @@ exports.delete = async ctx => {
   ctx.body = result
 }
 
-exports.sync = async ctx => {
+exports.sync = async (ctx, next) => {
   const appId = ctx.params.appId
   if (!isDevAppID(appId)) {
     ctx.throw(400, "This action cannot be performed for production apps")
@@ -336,10 +336,11 @@ exports.sync = async ctx => {
     if (info.error) throw info.error
   } catch (err) {
     // the database doesn't exist. Don't replicate
+    ctx.status = 200
     ctx.body = {
       message: "App sync not required, app not deployed.",
     }
-    return
+    return next()
   }
 
   const replication = new Replication({

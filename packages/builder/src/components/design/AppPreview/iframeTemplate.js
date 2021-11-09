@@ -65,6 +65,7 @@ export default `
           theme,
           customTheme,
           previewDevice,
+          messagePassing
         } = parsed
 
         // Set some flags so the app knows we're in the builder
@@ -89,7 +90,11 @@ export default `
             throw "The client library couldn't be loaded"
           }
         } catch (error) {
-          window.parent.postMessage({ type: "error", error })
+          if (messagePassing) {
+            window.parent.postMessage({ type: "error", error })
+          } else {
+            window.dispatchEvent(new CustomEvent("error", { detail: error }))
+          }
         }
       }
 
@@ -97,7 +102,9 @@ export default `
       window.addEventListener("keydown", evt => {
         window.parent.postMessage({ type: "keydown", key: event.key })
       })
+
       window.parent.postMessage({ type: "ready" })
+      window.dispatchEvent(new Event("ready"))
     </script>
   </head>
   <body/>
