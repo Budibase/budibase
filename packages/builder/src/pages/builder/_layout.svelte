@@ -28,8 +28,8 @@
     }
 
     if (user && user.tenantId) {
-      // no tenant in the url - send to account portal to fix this
       if (!urlTenantId) {
+        // redirect to correct tenantId subdomain
         if (!window.location.host.includes("localhost")) {
           let redirectUrl = window.location.href
           redirectUrl = redirectUrl.replace("://", `://${user.tenantId}.`)
