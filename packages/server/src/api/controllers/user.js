@@ -4,27 +4,141 @@ const {
   getUserMetadataParams,
 } = require("../../db/utils")
 const { InternalTables } = require("../../db/utils")
-const { getGlobalUsers } = require("../../utilities/global")
+const { getGlobalUsers, getRawGlobalUser } = require("../../utilities/global")
 const { getFullUser } = require("../../utilities/users")
+const { isEqual } = require("lodash")
+const { BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
+const {
+  getDevelopmentAppID,
+  getAllApps,
+  isDevAppID,
+} = require("@budibase/auth/db")
+const { doesDatabaseExist } = require("../../utilities")
+const { UserStatus } = require("@budibase/auth/constants")
 
-function removeGlobalProps(user) {
-  // make sure to always remove some of the global user props
-  delete user.password
-  delete user.roles
-  delete user.builder
-  return user
-}
-
-exports.fetchMetadata = async function (ctx) {
-  const database = new CouchDB(ctx.appId)
-  const global = await getGlobalUsers(ctx.appId)
-  const metadata = (
-    await database.allDocs(
+async function rawMetadata(db) {
+  return (
+    await db.allDocs(
       getUserMetadataParams(null, {
         include_docs: true,
       })
     )
   ).rows.map(row => row.doc)
+}
+
+function combineMetadataAndUser(user, metadata) {
+  // skip users with no access
+  if (user.roleId === BUILTIN_ROLE_IDS.PUBLIC) {
+    return null
+  }
+  delete user._rev
+  const metadataId = generateUserMetadataID(user._id)
+  const newDoc = {
+    ...user,
+    _id: metadataId,
+    tableId: InternalTables.USER_METADATA,
+  }
+  const found = Array.isArray(metadata)
+    ? metadata.find(doc => doc._id === metadataId)
+    : metadata
+  // copy rev over for the purposes of equality check
+  if (found) {
+    newDoc._rev = found._rev
+  }
+  if (found == null || !isEqual(newDoc, found)) {
+    return {
+      ...found,
+      ...newDoc,
+    }
+  }
+  return null
+}
+
+exports.syncGlobalUsers = async appId => {
+  // sync user metadata
+  const db = new CouchDB(appId)
+  const [users, metadata] = await Promise.all([
+    getGlobalUsers(appId),
+    rawMetadata(db),
+  ])
+  const toWrite = []
+  for (let user of users) {
+    const combined = await combineMetadataAndUser(user, metadata)
+    if (combined) {
+      toWrite.push(combined)
+    }
+  }
+  await db.bulkDocs(toWrite)
+}
+
+exports.syncUser = async function (ctx) {
+  let deleting = false,
+    user
+  const userId = ctx.params.id
+  try {
+    user = await getRawGlobalUser(userId)
+  } catch (err) {
+    user = {}
+    deleting = true
+  }
+  const roles = user.roles
+  // remove props which aren't useful to metadata
+  delete user.password
+  delete user.forceResetPassword
+  delete user.roles
+  // run through all production appIDs in the users roles
+  let prodAppIds
+  // if they are a builder then get all production app IDs
+  if ((user.builder && user.builder.global) || deleting) {
+    prodAppIds = (await getAllApps(CouchDB, { idsOnly: true })).filter(
+      id => !isDevAppID(id)
+    )
+  } else {
+    prodAppIds = Object.entries(roles)
+      .filter(entry => entry[1] !== BUILTIN_ROLE_IDS.PUBLIC)
+      .map(([appId]) => appId)
+  }
+  for (let prodAppId of prodAppIds) {
+    const devAppId = getDevelopmentAppID(prodAppId)
+    for (let appId of [prodAppId, devAppId]) {
+      if (!(await doesDatabaseExist(appId))) {
+        continue
+      }
+      const db = new CouchDB(appId)
+      const metadataId = generateUserMetadataID(userId)
+      let metadata
+      try {
+        metadata = await db.get(metadataId)
+      } catch (err) {
+        if (deleting) {
+          continue
+        }
+        metadata = {
+          tableId: InternalTables.USER_METADATA,
+        }
+      }
+      let combined
+      if (deleting) {
+        combined = {
+          ...metadata,
+          status: UserStatus.INACTIVE,
+          metadata: BUILTIN_ROLE_IDS.PUBLIC,
+        }
+      } else {
+        combined = combineMetadataAndUser(user, metadata)
+      }
+      await db.put(combined)
+    }
+  }
+  ctx.body = {
+    message: "User synced.",
+  }
+}
+
+exports.fetchMetadata = async function (ctx) {
+  const database = new CouchDB(ctx.appId)
+  const global = await getGlobalUsers(ctx.appId)
+  const metadata = await rawMetadata(database)
   const users = []
   for (let user of global) {
     // find the metadata that matches up to the global ID
@@ -52,7 +166,9 @@ exports.updateSelfMetadata = async function (ctx) {
 exports.updateMetadata = async function (ctx) {
   const appId = ctx.appId
   const db = new CouchDB(appId)
-  const user = removeGlobalProps(ctx.request.body)
+  const user = ctx.request.body
+  // this isn't applicable to the user
+  delete user.roles
   const metadata = {
     tableId: InternalTables.USER_METADATA,
     ...user,
