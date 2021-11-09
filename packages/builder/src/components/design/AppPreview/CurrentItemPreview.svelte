@@ -96,7 +96,9 @@
         // Initialise the app when mounted
         // Display preview immediately if the intelligent loading feature
         // is not supported
-        if (!loading) return
+        if ($store.clientFeatures.messagePassing) {
+          if (!loading) return
+        }
 
         if (!$store.clientFeatures.intelligentLoading) {
           loading = false
@@ -116,18 +118,37 @@
   }
 
   onMount(() => {
-    window.addEventListener("message", receiveMessage)
+    if ($store.clientFeatures.messagePassing) {
+      window.addEventListener("message", receiveMessage)
+    } else {
+      // Legacy - remove in later versions of BB
+      iframe.contentWindow.addEventListener("ready", () => {
+        receiveMessage({ data: { type: MessageTypes.READY }})
+      }, { once: true })
+      iframe.contentWindow.addEventListener("error", event => {
+        receiveMessage({ data: { type: MessageTypes.ERROR, error: event.detail }})
+      }, { once: true })
+      // Add listener for events sent by client library in preview
+      iframe.contentWindow.addEventListener("bb-event", handleBudibaseEvent)
+      iframe.contentWindow.addEventListener("keydown", handleKeydownEvent)
+    }
   })
 
   // Remove all iframe event listeners on component destroy
   onDestroy(() => {
     if (iframe.contentWindow) {
-      window.removeEventListener("message", receiveMessage) //
+      if ($store.clientFeatures.messagePassing) {
+        window.removeEventListener("message", receiveMessage)
+      } else {
+        // Legacy - remove in later versions of BB
+        iframe.contentWindow.removeEventListener("bb-event", handleBudibaseEvent)
+        iframe.contentWindow.removeEventListener("keydown", handleKeydownEvent)
+      }
     }
   })
 
   const handleBudibaseEvent = event => {
-    const { type, data } = event.data
+    const { type, data } = event.data || event.detail
     if (type === "select-component" && data.id) {
       store.actions.components.select({ _id: data.id })
     } else if (type === "update-prop") {
@@ -164,7 +185,7 @@
   }
 
   const handleKeydownEvent = event => {
-    const { key } = event.data
+    const { key } = event.data || event
     if (
       (key === "Delete" || key === "Backspace") &&
       selectedComponentId &&
