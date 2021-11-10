@@ -80,16 +80,30 @@ export function createAuthStore() {
     }
   }
 
+  async function setInitInfo(info) {
+    await api.post(`/api/global/auth/init`, info)
+    auth.update(store => {
+      store.initInfo = info
+      return store
+    })
+    return info
+  }
+
+  async function getInitInfo() {
+    const response = await api.get(`/api/global/auth/init`)
+    const json = response.json()
+    auth.update(store => {
+      store.initInfo = json
+      return store
+    })
+    return json
+  }
+
   return {
     subscribe: store.subscribe,
-    setOrganisation: setOrganisation,
-    getInitInfo: async () => {
-      const response = await api.get(`/api/global/auth/init`)
-      return await response.json()
-    },
-    setInitInfo: async info => {
-      await api.post(`/api/global/auth/init`, info)
-    },
+    setOrganisation,
+    getInitInfo,
+    setInitInfo,
     checkQueryString: async () => {
       const urlParams = new URLSearchParams(window.location.search)
       if (urlParams.has("tenantId")) {
@@ -129,6 +143,7 @@ export function createAuthStore() {
         throw "Unable to create logout"
       }
       await response.json()
+      await setInitInfo({})
       setUser(null)
     },
     updateSelf: async fields => {
