@@ -65,7 +65,6 @@ export default `
           theme,
           customTheme,
           previewDevice,
-          messagePassing
         } = parsed
 
         // Set some flags so the app knows we're in the builder
@@ -90,11 +89,7 @@ export default `
             throw "The client library couldn't be loaded"
           }
         } catch (error) {
-          if (messagePassing) {
-            window.parent.postMessage({ type: "error", error })
-          } else {
-            window.dispatchEvent(new CustomEvent("error", { detail: error }))
-          }
+          window.parent.postMessage({ type: "error", error })
         }
       }
 
@@ -104,7 +99,6 @@ export default `
       })
 
       window.parent.postMessage({ type: "ready" })
-      window.dispatchEvent(new Event("ready"))
     </script>
   </head>
   <body/>
