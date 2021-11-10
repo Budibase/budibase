@@ -31,11 +31,11 @@ export const getBindableProperties = (asset, componentId) => {
   const deviceBindings = getDeviceBindings()
   const stateBindings = getStateBindings()
   return [
-    ...stateBindings,
-    ...deviceBindings,
-    ...urlBindings,
     ...contextBindings,
+    ...urlBindings,
+    ...stateBindings,
     ...userBindings,
+    ...deviceBindings,
   ]
 }
 
