@@ -18,6 +18,11 @@
     FIELDS,
     AUTO_COLUMN_SUB_TYPES,
     RelationshipTypes,
+    ALLOWABLE_STRING_OPTIONS,
+    ALLOWABLE_NUMBER_OPTIONS,
+    ALLOWABLE_STRING_TYPES,
+    ALLOWABLE_NUMBER_TYPES,
+    SWITCHABLE_TYPES,
   } from "constants/backend"
   import { getAutoColumnInformation, buildAutoColumn } from "builderStore/utils"
   import { notifications } from "@budibase/bbui"
@@ -92,6 +97,9 @@
       opt.type === table.type &&
       table.sourceId === opt.sourceId
   )
+  $: typeEnabled =
+    !originalName ||
+    (originalName && SWITCHABLE_TYPES.indexOf(field.type) !== -1)
 
   async function saveColumn() {
     if (field.type === AUTO_TYPE) {
@@ -204,7 +212,14 @@
   }
 
   function getAllowedTypes() {
-    if (!external) {
+    if (originalName && ALLOWABLE_STRING_TYPES.indexOf(field.type) !== -1) {
+      return ALLOWABLE_STRING_OPTIONS
+    } else if (
+      originalName &&
+      ALLOWABLE_NUMBER_TYPES.indexOf(field.type) !== -1
+    ) {
+      return ALLOWABLE_NUMBER_OPTIONS
+    } else if (!external) {
       return [
         ...Object.values(fieldDefinitions),
         { name: "Auto Column", type: AUTO_TYPE },
@@ -259,7 +274,7 @@
   />
 
   <Select
-    disabled={originalName}
+    disabled={!typeEnabled}
     label="Type"
     bind:value={field.type}
     on:change={handleTypeChange}
