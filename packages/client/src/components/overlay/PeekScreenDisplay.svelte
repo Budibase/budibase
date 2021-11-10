@@ -8,6 +8,12 @@
   import { Modal, ModalContent, ActionButton } from "@budibase/bbui"
   import { onDestroy } from "svelte"
 
+  const MessageTypes = {
+    NOTIFICATION: "notification",
+    CLOSE_SCREEN_MODAL: "close-screen-modal",
+    INVALIDATE_DATASOURCE: "invalidate-datasource",
+  }
+
   let iframe
   let listenersAttached = false
 
@@ -21,32 +27,33 @@
     notificationStore.actions.send(message, type, icon)
   }
 
+  function receiveMessage(message) {
+    const handlers = {
+      [MessageTypes.NOTIFICATION]: () => {
+        proxyNotification(message.data)
+      },
+      [MessageTypes.CLOSE_SCREEN_MODAL]: peekStore.actions.hidePeek,
+      [MessageTypes.INVALIDATE_DATASOURCE]: () => {
+        invalidateDataSource(message.data)
+      },
+    }
+
+    const messageHandler = handlers[message.data.type]
+    if (messageHandler) {
+      messageHandler(message)
+    } else {
+      console.warning("Unknown event type", message?.data?.type)
+    }
+  }
+
   const attachListeners = () => {
     // Mirror datasource invalidation to keep the parent window up to date
-    iframe.contentWindow.addEventListener(
-      "invalidate-datasource",
-      invalidateDataSource
-    )
-    // Listen for a close event to close the screen peek
-    iframe.contentWindow.addEventListener(
-      "close-screen-modal",
-      peekStore.actions.hidePeek
-    )
-    // Proxy notifications back to the parent window instead of iframe
-    iframe.contentWindow.addEventListener("notification", proxyNotification)
+    window.addEventListener("message", receiveMessage)
   }
 
   const handleCancel = () => {
     peekStore.actions.hidePeek()
-    iframe.contentWindow.removeEventListener(
-      "invalidate-datasource",
-      invalidateDataSource
-    )
-    iframe.contentWindow.removeEventListener(
-      "close-screen-modal",
-      peekStore.actions.hidePeek
-    )
-    iframe.contentWindow.removeEventListener("notification", proxyNotification)
+    window.removeEventListener("message", receiveMessage)
   }
 
   const handleFullscreen = () => {

@@ -32,6 +32,16 @@
     .component("@budibase/standard-components/screenslot")
     .instanceName("Content Placeholder")
     .json()
+  
+  // Messages that can be sent from the iframe preview to the builder
+  // Budibase events are and initalisation events
+  const MessageTypes = {
+    IFRAME_LOADED: "iframe-loaded",
+    READY: "ready",
+    ERROR: "error",
+    BUDIBASE: "type",
+    KEYDOWN: "keydown"
+  }
 
   // Construct iframe template
   $: template = iframeTemplate.replace(
@@ -80,46 +90,44 @@
   // Refresh the preview when required
   $: refreshContent(strippedJson)
 
-  onMount(() => {
-    // Initialise the app when mounted
-    iframe.contentWindow.addEventListener(
-      "ready",
-      () => {
+  function receiveMessage(message) {
+    const handlers = {
+      [MessageTypes.READY]: () => {
+        // Initialise the app when mounted
         // Display preview immediately if the intelligent loading feature
         // is not supported
+        if (!loading) return
+
         if (!$store.clientFeatures.intelligentLoading) {
           loading = false
         }
         refreshContent(strippedJson)
       },
-      { once: true }
-    )
-
-    // Catch any app errors
-    iframe.contentWindow.addEventListener(
-      "error",
-      event => {
+      [MessageTypes.ERROR]: event => {
+        // Catch any app errors
         loading = false
-        error = event.detail || "An unknown error occurred"
+        error = event.error || "An unknown error occurred"
       },
-      { once: true }
-    )
+      [MessageTypes.KEYDOWN]: handleKeydownEvent
+    }
 
-    // Add listener for events sent by client library in preview
-    iframe.contentWindow.addEventListener("bb-event", handleBudibaseEvent)
-    iframe.contentWindow.addEventListener("keydown", handleKeydownEvent)
+    const messageHandler = handlers[message.data.type] || handleBudibaseEvent
+    messageHandler(message)
+  }
+
+  onMount(() => {
+    window.addEventListener("message", receiveMessage)
   })
 
   // Remove all iframe event listeners on component destroy
   onDestroy(() => {
     if (iframe.contentWindow) {
-      iframe.contentWindow.removeEventListener("bb-event", handleBudibaseEvent)
-      iframe.contentWindow.removeEventListener("keydown", handleKeydownEvent)
+      window.removeEventListener("message", receiveMessage) //
     }
   })
 
   const handleBudibaseEvent = event => {
-    const { type, data } = event.detail
+    const { type, data } = event.data
     if (type === "select-component" && data.id) {
       store.actions.components.select({ _id: data.id })
     } else if (type === "update-prop") {
@@ -151,13 +159,14 @@
         store.actions.components.paste(destination, data.mode)
       }
     } else {
-      console.warning(`Client sent unknown event type: ${type}`)
+      console.warn(`Client sent unknown event type: ${type}`)
     }
   }
 
   const handleKeydownEvent = event => {
+    const { key } = event.data
     if (
-      (event.key === "Delete" || event.key === "Backspace") &&
+      (key === "Delete" || key === "Backspace") &&
       selectedComponentId &&
       ["input", "textarea"].indexOf(
         iframe.contentWindow.document.activeElement?.tagName.toLowerCase()

@@ -15,10 +15,10 @@ import URLSelect from "./URLSelect.svelte"
 import OptionsEditor from "./OptionsEditor/OptionsEditor.svelte"
 import FormFieldSelect from "./FormFieldSelect.svelte"
 import ValidationEditor from "./ValidationEditor/ValidationEditor.svelte"
-import Input from "./Input.svelte"
+import DrawerBindableCombobox from "components/common/bindings/DrawerBindableCombobox.svelte"
 
 const componentMap = {
-  text: Input,
+  text: DrawerBindableCombobox,
   select: Select,
   dataSource: DataSourceSelect,
   dataProvider: DataProviderSelect,

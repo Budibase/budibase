@@ -62,6 +62,9 @@ exports.DataSourceOperation = {
   READ: "READ",
   UPDATE: "UPDATE",
   DELETE: "DELETE",
+  CREATE_TABLE: "CREATE_TABLE",
+  UPDATE_TABLE: "UPDATE_TABLE",
+  DELETE_TABLE: "DELETE_TABLE",
 }
 
 exports.SortDirection = {

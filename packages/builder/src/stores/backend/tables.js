@@ -11,6 +11,7 @@ export function createTablesStore() {
     const tablesResponse = await api.get(`/api/tables`)
     const tables = await tablesResponse.json()
     update(state => ({ ...state, list: tables }))
+    return tables
   }
 
   async function select(table) {
@@ -62,6 +63,9 @@ export function createTablesStore() {
     const response = await api.post(`/api/tables`, updatedTable)
     const savedTable = await response.json()
     await fetch()
+    if (table.type === "external") {
+      await datasources.fetch()
+    }
     await select(savedTable)
     return savedTable
   }
