@@ -303,7 +303,7 @@
   Are you sure you want to delete the app <b>{selectedApp?.name}</b>?
 
   <p>Please enter the app name below to confirm.</p>
-  <Input bind:value={appName} />
+  <Input bind:value={appName} data-cy="delete-app-confirmation" />
 </ConfirmDialog>
 <ConfirmDialog
   bind:this={unpublishModal}
