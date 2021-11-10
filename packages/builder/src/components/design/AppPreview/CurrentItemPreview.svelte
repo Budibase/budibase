@@ -69,6 +69,7 @@
     theme: $store.theme,
     customTheme: $store.customTheme,
     previewDevice: $store.previewDevice,
+    messagePassing: $store.clientFeatures.messagePassing
   }
 
   // Saving pages and screens to the DB causes them to have _revs.
@@ -94,12 +95,12 @@
     const handlers = {
       [MessageTypes.READY]: () => {
         // Initialise the app when mounted
-        // Display preview immediately if the intelligent loading feature
-        // is not supported
         if ($store.clientFeatures.messagePassing) {
           if (!loading) return
         }
 
+        // Display preview immediately if the intelligent loading feature
+        // is not supported
         if (!$store.clientFeatures.intelligentLoading) {
           loading = false
         }
@@ -118,9 +119,8 @@
   }
 
   onMount(() => {
-    if ($store.clientFeatures.messagePassing) {
-      window.addEventListener("message", receiveMessage)
-    } else {
+    window.addEventListener("message", receiveMessage)
+    if (!$store.clientFeatures.messagePassing) {
       // Legacy - remove in later versions of BB
       iframe.contentWindow.addEventListener("ready", () => {
         receiveMessage({ data: { type: MessageTypes.READY }})
@@ -131,15 +131,14 @@
       // Add listener for events sent by client library in preview
       iframe.contentWindow.addEventListener("bb-event", handleBudibaseEvent)
       iframe.contentWindow.addEventListener("keydown", handleKeydownEvent)
-    }
+    }  
   })
 
   // Remove all iframe event listeners on component destroy
   onDestroy(() => {
     if (iframe.contentWindow) {
-      if ($store.clientFeatures.messagePassing) {
-        window.removeEventListener("message", receiveMessage)
-      } else {
+      window.removeEventListener("message", receiveMessage)
+      if (!$store.clientFeatures.messagePassing) {
         // Legacy - remove in later versions of BB
         iframe.contentWindow.removeEventListener("bb-event", handleBudibaseEvent)
         iframe.contentWindow.removeEventListener("keydown", handleKeydownEvent)
