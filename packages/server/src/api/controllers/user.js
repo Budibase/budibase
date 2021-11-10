@@ -8,11 +8,7 @@ const { getGlobalUsers, getRawGlobalUser } = require("../../utilities/global")
 const { getFullUser } = require("../../utilities/users")
 const { isEqual } = require("lodash")
 const { BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
-const {
-  getDevelopmentAppID,
-  getAllApps,
-  isDevAppID,
-} = require("@budibase/auth/db")
+const { getDevelopmentAppID, getDeployedAppIDs } = require("@budibase/auth/db")
 const { doesDatabaseExist } = require("../../utilities")
 const { UserStatus } = require("@budibase/auth/constants")
 
@@ -78,8 +74,12 @@ exports.syncUser = async function (ctx) {
   try {
     user = await getRawGlobalUser(userId)
   } catch (err) {
-    user = {}
-    deleting = true
+    if (err && err.status === 404) {
+      user = {}
+      deleting = true
+    } else {
+      throw err
+    }
   }
   const roles = user.roles
   // remove props which aren't useful to metadata
@@ -90,9 +90,7 @@ exports.syncUser = async function (ctx) {
   let prodAppIds
   // if they are a builder then get all production app IDs
   if ((user.builder && user.builder.global) || deleting) {
-    prodAppIds = (await getAllApps(CouchDB, { idsOnly: true })).filter(
-      id => !isDevAppID(id)
-    )
+    prodAppIds = await getDeployedAppIDs(CouchDB)
   } else {
     prodAppIds = Object.entries(roles)
       .filter(entry => entry[1] !== BUILTIN_ROLE_IDS.PUBLIC)

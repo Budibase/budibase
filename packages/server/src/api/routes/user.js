@@ -35,7 +35,7 @@ router
     controller.destroyMetadata
   )
   .post(
-    "/api/users/sync/:id",
+    "/api/users/metadata/sync/:id",
     authorized(PermissionTypes.USER, PermissionLevels.WRITE),
     controller.syncUser
   )
