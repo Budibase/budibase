@@ -15,7 +15,8 @@ module.exports =
   (permType, permLevel = null) =>
   async (ctx, next) => {
     // webhooks don't need authentication, each webhook unique
-    if (isWebhookEndpoint(ctx)) {
+    // also internal requests (between services) don't need authorized
+    if (isWebhookEndpoint(ctx) || ctx.internal) {
       return next()
     }
 
