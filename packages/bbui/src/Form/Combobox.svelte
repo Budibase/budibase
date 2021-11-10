@@ -36,5 +36,7 @@
     {getOptionLabel}
     {getOptionValue}
     on:change={onChange}
+    on:pick
+    on:type
   />
 </Field>
