@@ -27,7 +27,7 @@ exports.syncUserInApps = async userId => {
     "POST",
     {}
   )
-  if (response.status !== 200) {
+  if (response && response.status !== 200) {
     throw "Unable to sync user."
   }
 }
