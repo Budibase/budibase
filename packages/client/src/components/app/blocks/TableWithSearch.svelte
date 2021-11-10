@@ -48,7 +48,7 @@
     columns?.forEach(column => {
       enrichedFilter.push({
         field: column.name,
-        operator: "equal",
+        operator: column.type === "string" ? "string" : "equal",
         type: "string",
         valueType: "Binding",
         value: `{{ [${formId}].[${column.name}] }}`,
@@ -67,6 +67,7 @@
         enrichedColumns.push({
           name: column,
           componentType,
+          type: schemaType,
         })
       }
     })
