@@ -259,6 +259,24 @@ exports.getAllApps = async (CouchDB, { dev, all, idsOnly } = {}) => {
   }
 }
 
+/**
+ * Utility function for getAllApps but filters to production apps only.
+ */
+exports.getDeployedAppIDs = async CouchDB => {
+  return (await exports.getAllApps(CouchDB, { idsOnly: true })).filter(
+    id => !exports.isDevAppID(id)
+  )
+}
+
+/**
+ * Utility function for the inverse of above.
+ */
+exports.getDevAppIDs = async CouchDB => {
+  return (await exports.getAllApps(CouchDB, { idsOnly: true })).filter(id =>
+    exports.isDevAppID(id)
+  )
+}
+
 exports.dbExists = async (CouchDB, dbName) => {
   let exists = false
   try {

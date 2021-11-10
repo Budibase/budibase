@@ -4,7 +4,7 @@ const { getTenantId, isTenantIdSet } = require("@budibase/auth/tenancy")
 const { checkSlashesInUrl } = require("../utilities")
 const env = require("../environment")
 
-exports.syncUserInApps = async userId => {
+async function makeAppRequest(url, method, body) {
   if (env.isTest()) {
     return
   }
@@ -13,12 +13,19 @@ exports.syncUserInApps = async userId => {
   if (isTenantIdSet()) {
     request.headers[Headers.TENANT_ID] = getTenantId()
   }
-  request.headers["Content-Type"] = "application/json"
-  request.body = JSON.stringify({})
-  request.method = "POST"
-  const response = await fetch(
-    checkSlashesInUrl(env.APPS_URL + `/api/users/sync/${userId}`),
-    request
+  if (body) {
+    request.headers["Content-Type"] = "application/json"
+    request.body = JSON.stringify(body)
+  }
+  request.method = method
+  return fetch(checkSlashesInUrl(env.APPS_URL + url), request)
+}
+
+exports.syncUserInApps = async userId => {
+  const response = await makeAppRequest(
+    `/api/users/metadata/sync/${userId}`,
+    "POST",
+    {}
   )
   if (response.status !== 200) {
     throw "Unable to sync user."
