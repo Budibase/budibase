@@ -43,7 +43,7 @@ Cypress.Commands.add("createApp", name => {
   })
 })
 
-Cypress.Commands.add("deleteApp", () => {
+Cypress.Commands.add("deleteApp", appName => {
   cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
   cy.wait(1000)
   cy.request(`localhost:${Cypress.env("PORT")}/api/applications?status=all`)
@@ -51,7 +51,7 @@ Cypress.Commands.add("deleteApp", () => {
     .then(val => {
       if (val.length > 0) {
         cy.get(".title > :nth-child(3) > .spectrum-Icon").click()
-        cy.contains("Delete").click()
+        cy.get(`[data-cy="delete-app-confirmation"]`).type(appName)
         cy.get(".spectrum-Button--warning").click()
       }
     })
