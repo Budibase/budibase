@@ -2,7 +2,7 @@ const CouchDB = require("../../../db")
 const linkRows = require("../../../db/linkedRows")
 const { getRowParams, generateTableID } = require("../../../db/utils")
 const { FieldTypes } = require("../../../constants")
-const { TableSaveFunctions } = require("./utils")
+const { TableSaveFunctions, hasTypeChanged } = require("./utils")
 
 exports.save = async function (ctx) {
   const appId = ctx.appId
@@ -19,6 +19,10 @@ exports.save = async function (ctx) {
   let oldTable
   if (ctx.request.body && ctx.request.body._id) {
     oldTable = await db.get(ctx.request.body._id)
+  }
+
+  if (hasTypeChanged(tableToSave, oldTable)) {
+    ctx.throw(400, "A column type has changed.")
   }
 
   // saving a table is a complex operation, involving many different steps, this
