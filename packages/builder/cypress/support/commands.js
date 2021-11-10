@@ -51,8 +51,11 @@ Cypress.Commands.add("deleteApp", appName => {
     .then(val => {
       if (val.length > 0) {
         cy.get(".title > :nth-child(3) > .spectrum-Icon").click()
-        cy.get(`[data-cy="delete-app-confirmation"]`).type(appName)
-        cy.get(".spectrum-Button--warning").click()
+        cy.contains("Delete").click()
+        cy.get(".spectrum-Modal").within(() => {
+          cy.get("input").type(appName)
+          cy.get(".spectrum-Button--warning").click()
+        })
       }
     })
 })
