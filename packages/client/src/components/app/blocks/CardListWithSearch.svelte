@@ -14,15 +14,20 @@
   export let limit
   export let showTitleButton
   export let titleButtonText
-  export let titleButtonOnClick
+  export let titleButtonURL
+  export let titleButtonPeek
   export let cardTitle
   export let cardSubtitle
   export let cardDescription
   export let cardImageURL
+  export let linkCardTitle
+  export let cardURL
+  export let cardPeek
   export let cardHorizontal
   export let showCardButton
   export let cardButtonText
   export let cardButtonOnClick
+  export let linkColumn
 
   const { API, styleable } = getContext("sdk")
   const context = getContext("context")
@@ -37,11 +42,27 @@
 
   let formId
   let dataProviderId
+  let repeaterId
   let schema
 
   $: enrichedSearchColumns = enrichSearchColumns(searchColumns, schema)
   $: enrichedFilter = enrichFilter(filter, enrichedSearchColumns, formId)
   $: cardWidth = cardHorizontal ? 420 : 300
+  $: fullCardURL = buildFullCardUrl(
+    linkCardTitle,
+    cardURL,
+    repeaterId,
+    linkColumn
+  )
+  $: titleButtonAction = [
+    {
+      "##eventHandlerType": "Navigate To",
+      parameters: {
+        peek: titleButtonPeek,
+        url: titleButtonURL,
+      },
+    },
+  ]
 
   // Enrich the default filter with the specified search fields
   const enrichFilter = (filter, columns, formId) => {
@@ -73,6 +94,16 @@
       }
     })
     return enrichedColumns.slice(0, 3)
+  }
+
+  // Builds a full details page URL for the card title
+  const buildFullCardUrl = (link, url, repeaterId, linkColumn) => {
+    if (!link || !url || !repeaterId) {
+      return null
+    }
+    const col = linkColumn || "_id"
+    const split = url.split("/:")
+    return `${split[0]}/{{ [${repeaterId}].[${col}] }}`
   }
 
   // Load the datasource schema on mount so we can determine column types
@@ -114,7 +145,7 @@
               <BlockComponent
                 type="button"
                 props={{
-                  onClick: titleButtonOnClick,
+                  onClick: titleButtonAction,
                   text: titleButtonText,
                   type: "cta",
                 }}
@@ -137,6 +168,7 @@
       >
         <BlockComponent
           type="repeater"
+          bind:id={repeaterId}
           context="repeater"
           props={{
             dataProvider: `{{ literal [${dataProviderId}] }}`,
@@ -162,6 +194,8 @@
               showButton: showCardButton,
               buttonText: cardButtonText,
               buttonOnClick: cardButtonOnClick,
+              linkURL: fullCardURL,
+              linkPeek: cardPeek,
             }}
             styles={{
               width: "auto",

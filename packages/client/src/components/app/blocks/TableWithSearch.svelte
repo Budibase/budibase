@@ -22,7 +22,8 @@
   export let linkPeek
   export let showTitleButton
   export let titleButtonText
-  export let titleButtonOnClick
+  export let titleButtonURL
+  export let titleButtonPeek
 
   const { API, styleable } = getContext("sdk")
   const context = getContext("context")
@@ -41,6 +42,15 @@
 
   $: enrichedSearchColumns = enrichSearchColumns(searchColumns, schema)
   $: enrichedFilter = enrichFilter(filter, enrichedSearchColumns, formId)
+  $: titleButtonAction = [
+    {
+      "##eventHandlerType": "Navigate To",
+      parameters: {
+        peek: titleButtonPeek,
+        url: titleButtonURL,
+      },
+    },
+  ]
 
   // Enrich the default filter with the specified search fields
   const enrichFilter = (filter, columns, formId) => {
@@ -113,7 +123,7 @@
               <BlockComponent
                 type="button"
                 props={{
-                  onClick: titleButtonOnClick,
+                  onClick: titleButtonAction,
                   text: titleButtonText,
                   type: "cta",
                 }}
