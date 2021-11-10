@@ -184,7 +184,7 @@ module MySQLModule {
       return results.length ? results : [{ created: true }]
     }
 
-    read(query: SqlQuery | string) {
+    async read(query: SqlQuery | string) {
       return internalQuery(this.client, getSqlQuery(query))
     }
 
