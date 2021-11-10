@@ -78,7 +78,6 @@
   <DetailSummary name={section.name} collapsible={false}>
     {#if idx === 0 && !componentInstance._component.endsWith("/layout")}
       <PropertyControl
-        bindable={false}
         control={Input}
         label="Name"
         key="_instanceName"

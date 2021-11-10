@@ -9,7 +9,6 @@ export const margin = {
       label: "Top",
       key: "margin-top",
       control: Select,
-      bindable: false,
       placeholder: "None",
       options: [
         { label: "4px", value: "4px" },
@@ -30,7 +29,6 @@ export const margin = {
       label: "Right",
       key: "margin-right",
       control: Select,
-      bindable: false,
       placeholder: "None",
       options: [
         { label: "4px", value: "4px" },
@@ -51,7 +49,6 @@ export const margin = {
       label: "Bottom",
       key: "margin-bottom",
       control: Select,
-      bindable: false,
       placeholder: "None",
       options: [
         { label: "4px", value: "4px" },
@@ -72,7 +69,6 @@ export const margin = {
       label: "Left",
       key: "margin-left",
       control: Select,
-      bindable: false,
       placeholder: "None",
       options: [
         { label: "4px", value: "4px" },
@@ -100,7 +96,6 @@ export const padding = {
       label: "Top",
       key: "padding-top",
       control: Select,
-      bindable: false,
       placeholder: "None",
       options: [
         { label: "4px", value: "4px" },
@@ -121,7 +116,6 @@ export const padding = {
       label: "Right",
       key: "padding-right",
       control: Select,
-      bindable: false,
       placeholder: "None",
       options: [
         { label: "4px", value: "4px" },
@@ -142,7 +136,6 @@ export const padding = {
       label: "Bottom",
       key: "padding-bottom",
       control: Select,
-      bindable: false,
       placeholder: "None",
       options: [
         { label: "4px", value: "4px" },
@@ -163,7 +156,6 @@ export const padding = {
       label: "Left",
       key: "padding-left",
       control: Select,
-      bindable: false,
       placeholder: "None",
       options: [
         { label: "4px", value: "4px" },
