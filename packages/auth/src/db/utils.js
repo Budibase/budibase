@@ -152,6 +152,17 @@ exports.getDeployedAppID = appId => {
   return appId
 }
 
+/**
+ * Convert a deployed app ID to a development app ID.
+ */
+exports.getDevelopmentAppID = appId => {
+  if (!appId.startsWith(exports.APP_DEV_PREFIX)) {
+    const id = appId.split(exports.APP_PREFIX)[1]
+    return `${exports.APP_DEV_PREFIX}${id}`
+  }
+  return appId
+}
+
 exports.getCouchUrl = () => {
   if (!env.COUCH_DB_URL) return
 
@@ -246,6 +257,24 @@ exports.getAllApps = async (CouchDB, { dev, all, idsOnly } = {}) => {
       }))
     }
   }
+}
+
+/**
+ * Utility function for getAllApps but filters to production apps only.
+ */
+exports.getDeployedAppIDs = async CouchDB => {
+  return (await exports.getAllApps(CouchDB, { idsOnly: true })).filter(
+    id => !exports.isDevAppID(id)
+  )
+}
+
+/**
+ * Utility function for the inverse of above.
+ */
+exports.getDevAppIDs = async CouchDB => {
+  return (await exports.getAllApps(CouchDB, { idsOnly: true })).filter(id =>
+    exports.isDevAppID(id)
+  )
 }
 
 exports.dbExists = async (CouchDB, dbName) => {
