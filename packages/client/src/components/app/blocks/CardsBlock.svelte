@@ -11,18 +11,23 @@
   export let sortColumn
   export let sortOrder
   export let paginate
-  export let tableColumns
-  export let showAutoColumns
-  export let rowCount
-  export let quiet
-  export let size
-  export let linkRows
-  export let linkURL
-  export let linkColumn
-  export let linkPeek
+  export let limit
   export let showTitleButton
   export let titleButtonText
-  export let titleButtonOnClick
+  export let titleButtonURL
+  export let titleButtonPeek
+  export let cardTitle
+  export let cardSubtitle
+  export let cardDescription
+  export let cardImageURL
+  export let linkCardTitle
+  export let cardURL
+  export let cardPeek
+  export let cardHorizontal
+  export let showCardButton
+  export let cardButtonText
+  export let cardButtonOnClick
+  export let linkColumn
 
   const { API, styleable } = getContext("sdk")
   const context = getContext("context")
@@ -37,10 +42,27 @@
 
   let formId
   let dataProviderId
+  let repeaterId
   let schema
 
   $: enrichedSearchColumns = enrichSearchColumns(searchColumns, schema)
   $: enrichedFilter = enrichFilter(filter, enrichedSearchColumns, formId)
+  $: cardWidth = cardHorizontal ? 420 : 300
+  $: fullCardURL = buildFullCardUrl(
+    linkCardTitle,
+    cardURL,
+    repeaterId,
+    linkColumn
+  )
+  $: titleButtonAction = [
+    {
+      "##eventHandlerType": "Navigate To",
+      parameters: {
+        peek: titleButtonPeek,
+        url: titleButtonURL,
+      },
+    },
+  ]
 
   // Enrich the default filter with the specified search fields
   const enrichFilter = (filter, columns, formId) => {
@@ -74,6 +96,16 @@
     return enrichedColumns.slice(0, 3)
   }
 
+  // Builds a full details page URL for the card title
+  const buildFullCardUrl = (link, url, repeaterId, linkColumn) => {
+    if (!link || !url || !repeaterId) {
+      return null
+    }
+    const col = linkColumn || "_id"
+    const split = url.split("/:")
+    return `${split[0]}/{{ [${repeaterId}].[${col}] }}`
+  }
+
   // Load the datasource schema on mount so we can determine column types
   onMount(async () => {
     if (dataSource) {
@@ -83,7 +115,7 @@
 </script>
 
 <Block>
-  <div class={size} use:styleable={$component.styles}>
+  <div class="card-list" use:styleable={$component.styles}>
     <BlockComponent type="form" bind:id={formId} props={{ dataSource }}>
       {#if title || enrichedSearchColumns?.length || showTitleButton}
         <div class="header" class:mobile={$context.device.mobile}>
@@ -113,7 +145,7 @@
               <BlockComponent
                 type="button"
                 props={{
-                  onClick: titleButtonOnClick,
+                  onClick: titleButtonAction,
                   text: titleButtonText,
                   type: "cta",
                 }}
@@ -131,24 +163,45 @@
           sortColumn,
           sortOrder,
           paginate,
-          limit: rowCount,
+          limit,
         }}
       >
         <BlockComponent
-          type="table"
+          type="repeater"
+          bind:id={repeaterId}
+          context="repeater"
           props={{
             dataProvider: `{{ literal [${dataProviderId}] }}`,
-            columns: tableColumns,
-            showAutoColumns,
-            rowCount,
-            quiet,
-            size,
-            linkRows,
-            linkURL,
-            linkColumn,
-            linkPeek,
+            direction: "row",
+            hAlign: "stretch",
+            vAlign: "top",
+            gap: "M",
+            noRowsMessage: "No rows found",
           }}
-        />
+          styles={{
+            display: "grid",
+            "grid-template-columns": `repeat(auto-fill, minmax(${cardWidth}px, 1fr))`,
+          }}
+        >
+          <BlockComponent
+            type="spectrumcard"
+            props={{
+              title: cardTitle,
+              subtitle: cardSubtitle,
+              description: cardDescription,
+              imageURL: cardImageURL,
+              horizontal: cardHorizontal,
+              showButton: showCardButton,
+              buttonText: cardButtonText,
+              buttonOnClick: cardButtonOnClick,
+              linkURL: fullCardURL,
+              linkPeek: cardPeek,
+            }}
+            styles={{
+              width: "auto",
+            }}
+          />
+        </BlockComponent>
       </BlockComponent>
     </BlockComponent>
   </div>
