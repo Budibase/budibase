@@ -81,13 +81,12 @@ export function createAuthStore() {
   }
 
   async function setInitInfo(info) {
-    const response = await api.post(`/api/global/auth/init`, info)
-    const json = await response.json()
+    await api.post(`/api/global/auth/init`, info)
     auth.update(store => {
-      store.initInfo = json
+      store.initInfo = info
       return store
     })
-    return json
+    return info
   }
 
   async function getInitInfo() {
@@ -102,7 +101,7 @@ export function createAuthStore() {
 
   return {
     subscribe: store.subscribe,
-    setOrganisation: setOrganisation,
+    setOrganisation,
     getInitInfo,
     setInitInfo,
     checkQueryString: async () => {
