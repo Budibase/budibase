@@ -14,6 +14,8 @@ exports.fetchSelf = async ctx => {
   }
 
   const user = await getFullUser(ctx, userId)
+  // this shouldn't be returned by the app self
+  delete user.roles
 
   if (appId) {
     const db = new CouchDB(appId)
@@ -36,6 +38,7 @@ exports.fetchSelf = async ctx => {
       // user has a role of some sort, return them
       else if (err.status === 404) {
         const metadata = {
+          ...user,
           _id: userId,
         }
         const dbResp = await db.put(metadata)

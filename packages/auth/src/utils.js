@@ -181,8 +181,8 @@ exports.saveUser = async (
 
     // check budibase users in other tenants
     if (env.MULTI_TENANCY) {
-      dbUser = await getTenantUser(email)
-      if (dbUser != null && dbUser.tenantId !== tenantId) {
+      const tenantUser = await getTenantUser(email)
+      if (tenantUser != null && tenantUser.tenantId !== tenantId) {
         throw `Email address ${email} already in use.`
       }
     }

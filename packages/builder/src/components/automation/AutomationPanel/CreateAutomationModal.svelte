@@ -8,10 +8,13 @@
 
   let name
   let selectedTrigger
+  let nameTouched = false
   let triggerVal
   export let webhookModal
 
   $: instanceId = $database._id
+  $: nameError =
+    nameTouched && !name ? "Please specify a name for the automation." : null
 
   async function createAutomation() {
     await automationStore.actions.create({
@@ -51,13 +54,18 @@
   confirmText="Save"
   size="M"
   onConfirm={createAutomation}
-  disabled={!selectedTrigger}
+  disabled={!selectedTrigger || !name}
 >
   <Body size="XS"
     >Please name your automation, then select a trigger. Every automation must
     start with a trigger.
   </Body>
-  <Input bind:value={name} label="Name" />
+  <Input
+    bind:value={name}
+    on:change={() => (nameTouched = true)}
+    bind:error={nameError}
+    label="Name"
+  />
 
   <Layout noPadding>
     <Body size="S">Triggers</Body>

@@ -9,7 +9,7 @@ const {
 } = require("../../db/utils")
 const { BuildSchemaErrors } = require("../../constants")
 const { integrations } = require("../../integrations")
-const { makeExternalQuery } = require("./row/utils")
+const { getDatasourceAndQuery } = require("./row/utils")
 
 exports.fetch = async function (ctx) {
   const database = new CouchDB(ctx.appId)
@@ -138,7 +138,7 @@ exports.find = async function (ctx) {
 exports.query = async function (ctx) {
   const queryJson = ctx.request.body
   try {
-    ctx.body = await makeExternalQuery(ctx.appId, queryJson)
+    ctx.body = await getDatasourceAndQuery(ctx.appId, queryJson)
   } catch (err) {
     ctx.throw(400, err)
   }
@@ -151,6 +151,19 @@ const buildSchemaHelper = async datasource => {
   const connector = new Connector(datasource.config)
   await connector.buildSchema(datasource._id, datasource.entities)
   datasource.entities = connector.tables
+
+  // make sure they all have a display name selected
+  for (let entity of Object.values(datasource.entities)) {
+    if (entity.primaryDisplay) {
+      continue
+    }
+    const notAutoColumn = Object.values(entity.schema).find(
+      schema => !schema.autocolumn
+    )
+    if (notAutoColumn) {
+      entity.primaryDisplay = notAutoColumn.name
+    }
+  }
 
   const errors = connector.schemaErrors
   let error = null

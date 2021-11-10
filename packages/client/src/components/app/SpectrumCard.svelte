@@ -1,6 +1,7 @@
 <script>
   import "@spectrum-css/card/dist/index-vars.css"
   import { getContext } from "svelte"
+  import { Button } from "@budibase/bbui"
 
   export let title
   export let subtitle
@@ -8,6 +9,9 @@
   export let imageURL
   export let linkURL
   export let horizontal
+  export let showButton
+  export let buttonText
+  export let buttonOnClick
 
   const { styleable, linkable } = getContext("sdk")
   const component = getContext("component")
@@ -60,12 +64,17 @@
         {description}
       </div>
     {/if}
+    {#if showButton}
+      <div class="spectrum-Card-footer button-container">
+        <Button on:click={buttonOnClick} secondary>{buttonText || ""}</Button>
+      </div>
+    {/if}
   </div>
 </div>
 
 <style>
   .spectrum-Card {
-    width: 240px;
+    width: 300px;
     border-color: var(--spectrum-global-color-gray-300) !important;
     display: flex;
     flex-direction: column;
@@ -75,6 +84,9 @@
   .spectrum-Card.horizontal {
     flex-direction: row;
     width: 420px;
+  }
+  .spectrum-Card-container {
+    padding: var(--spectrum-global-dimension-size-50) 0;
   }
   .spectrum-Card-title :global(a) {
     text-overflow: ellipsis;
@@ -114,6 +126,19 @@
   .spectrum-Card-footer {
     border-top: none;
     padding-top: 0;
+    padding-bottom: 0;
     margin-top: -8px;
+    margin-bottom: var(
+      --spectrum-card-body-padding-bottom,
+      var(--spectrum-global-dimension-size-300)
+    );
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .button-container {
+    margin-bottom: var(--spectrum-global-dimension-size-300);
   }
 </style>
