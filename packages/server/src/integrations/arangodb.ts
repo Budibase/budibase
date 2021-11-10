@@ -3,6 +3,7 @@ import {
   DatasourceFieldTypes,
   QueryTypes,
 } from "../definitions/datasource"
+import { IntegrationBase } from "./base/IntegrationBase"
 
 module ArangoModule {
   const { Database, aql } = require("arangojs")
@@ -55,7 +56,7 @@ module ArangoModule {
     },
   }
 
-  class ArangoDBIntegration {
+  class ArangoDBIntegration implements IntegrationBase {
     private config: ArangodbConfig
     private client: any
 

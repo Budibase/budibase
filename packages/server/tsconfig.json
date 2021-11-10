@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "es6",
     "module": "commonjs",
-    "lib": ["es6"],
+    "lib": ["es2019"],
     "allowJs": true,
     "outDir": "dist",
     "strict": true,
