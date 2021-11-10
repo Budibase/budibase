@@ -13,6 +13,8 @@
   import NewScreenModal from "components/design/NavigationPanel/NewScreenModal.svelte"
   import NewLayoutModal from "components/design/NavigationPanel/NewLayoutModal.svelte"
   import { Icon, Modal, Select, Search, Tabs, Tab } from "@budibase/bbui"
+  import NavigationSelectionModal from "./NavigationSelectionModal.svelte"
+  import ScreenNameModal from "./ScreenNameModal.svelte"
 
   const tabs = [
     {
@@ -26,7 +28,10 @@
   ]
 
   let modal
-  let navSelectionModal
+  let navigationSelectionModal
+  let screenNameModal
+  let selectedScreens = []
+  let screenName
   $: selected = tabs.find(t => t.key === $params.assetType)?.title || "Screens"
 
   const navigate = ({ detail }) => {
@@ -86,9 +91,24 @@
         <div class="nav-items-container">
           <ComponentNavigationTree />
         </div>
-        <Modal bind:this={modal}
-          ><svelte:component this={NewScreenModal} {navSelectionModal} /></Modal
-        >
+        <Modal bind:this={modal}>
+          <NewScreenModal
+            {screenNameModal}
+            {navigationSelectionModal}
+            bind:selectedScreens
+          />
+        </Modal>
+
+        <Modal bind:this={screenNameModal}>
+          <ScreenNameModal bind:screenName {modal} {navigationSelectionModal} />
+        </Modal>
+        <Modal bind:this={navigationSelectionModal}>
+          <NavigationSelectionModal
+            {modal}
+            {selectedScreens}
+            {screenNameModal}
+          />
+        </Modal>
       </div>
     </Tab>
     <Tab title="Layouts">

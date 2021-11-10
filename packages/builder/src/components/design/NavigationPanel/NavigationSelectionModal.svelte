@@ -1,15 +1,56 @@
 <script>
   import { ModalContent, Body, Detail } from "@budibase/bbui"
+  import { store, selectedAccessRole, allScreens } from "builderStore"
 
+  export let screenNameModal
+  export let selectedScreens
+  export let modal
+  let roleId = $selectedAccessRole || "BASIC"
+
+  let routeError
   let selectedNav
-  export let navSelectionModal
+  let createdScreens = []
+  $: {
+    selectedScreens.forEach(screen => {
+      createdScreens = [...createdScreens, screen.create()]
+    })
+  }
+
+  $: blankSelected = selectedScreens.find(x => x.id === "createFromScratch")
+
+  const save = async draftScreen => {
+    if (!draftScreen.routing.route) {
+      routeError = "URL is required"
+    } else {
+      if (routeExists(draftScreen.routing.route, roleId)) {
+        routeError = "This URL is already taken for this access role"
+      } else {
+        routeError = ""
+      }
+    }
+    if (routeError) return false
+
+    await store.actions.screens.create(draftScreen)
+    await store.actions.routing.fetch()
+
+    const routeExists = (route, roleId) => {
+      return $allScreens.some(
+        screen =>
+          screen.routing.route.toLowerCase() === route.toLowerCase() &&
+          screen.routing.roleId === roleId
+      )
+    }
+  }
 </script>
 
 <ModalContent
   title="Select navigation"
   cancelText="Back"
-  onCancel={() => navSelectionModal.show()}
+  onCancel={() => (blankSelected ? screenNameModal.show() : modal.show())}
   size="M"
+  onConfirm={() => {
+    save(createdScreens.forEach(screen => save(screen)))
+  }}
   disabled={!selectedNav}
 >
   <Body size="S"
