@@ -57,11 +57,11 @@ export function createAuthStore() {
         analytics.showChat({
           email: user.email,
           created_at: (user.createdAt || Date.now()) / 1000,
-          name: user.name,
+          name: user.account?.name,
           user_id: user._id,
           tenant: user.tenantId,
-          "Company size": user.size,
-          "Job role": user.profession,
+          "Company size": user.account?.size,
+          "Job role": user.account?.profession,
         })
       })
     }
