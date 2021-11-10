@@ -2597,6 +2597,11 @@
       },
       {
         "type": "boolean",
+        "key": "linkPeek",
+        "label": "Open link in modal"
+      },
+      {
+        "type": "boolean",
         "key": "horizontal",
         "label": "Horizontal"
       },
@@ -2730,8 +2735,13 @@
           {
             "type": "boolean",
             "key": "showTitleButton",
-            "label": "Show button",
+            "label": "Show link button",
             "defaultValue": false
+          },
+          {
+            "type": "boolean",
+            "label": "Open link in modal",
+            "key": "titleButtonPeek"
           },
           {
             "type": "text",
@@ -2739,9 +2749,9 @@
             "label": "Button text"
           },
           {
-            "type": "event",
-            "label": "Button action",
-            "key": "titleButtonOnClick"
+            "type": "url",
+            "label": "Button link",
+            "key": "titleButtonURL"
           }
         ]
       },
@@ -2838,7 +2848,22 @@
             "key": "cardImageURL",
             "label": "Image URL",
             "nested": true
-
+          },
+          {
+            "type": "boolean",
+            "key": "linkCardTitle",
+            "label": "Link card title"
+          },
+          {
+            "type": "boolean",
+            "key": "cardPeek",
+            "label": "Open link in modal"
+          },
+          {
+            "type": "url",
+            "label": "Link screen",
+            "key": "cardURL",
+            "nested": true
           },
           {
             "type": "boolean",
@@ -2855,7 +2880,6 @@
             "key": "cardButtonText",
             "label": "Button text",
             "nested": true
-
           },
           {
             "type": "event",
@@ -2872,7 +2896,12 @@
           {
             "type": "boolean",
             "key": "showTitleButton",
-            "label": "Show button"
+            "label": "Show link button"
+          },
+          {
+            "type": "boolean",
+            "label": "Open link in modal",
+            "key": "titleButtonPeek"
           },
           {
             "type": "text",
@@ -2880,9 +2909,21 @@
             "label": "Button text"
           },
           {
-            "type": "event",
-            "label": "Button action",
-            "key": "titleButtonOnClick"
+            "type": "url",
+            "label": "Button link",
+            "key": "titleButtonURL"
+          }
+        ]
+      },
+      {
+        "section": true,
+        "name": "Advanced",
+        "settings": [
+          {
+            "type": "field",
+            "label": "ID column for linking (appended to URL)",
+            "key": "linkColumn",
+            "placeholder": "Default"
           }
         ]
       }
