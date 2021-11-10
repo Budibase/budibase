@@ -2,7 +2,7 @@ import { writable, get } from "svelte/store"
 import { views, queries, datasources } from "./"
 import { cloneDeep } from "lodash/fp"
 import api from "builderStore/api"
-import { SWITCHABLE_TYPES } from "constants/backend"
+import { SWITCHABLE_TYPES } from "../../constants/backend"
 
 export function createTablesStore() {
   const store = writable({})
