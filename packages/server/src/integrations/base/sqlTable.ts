@@ -30,7 +30,7 @@ function generateSchema(
     // skip things that are already correct
     const oldColumn = oldTable ? oldTable.schema[key] : null
     if (
-      (oldColumn && oldColumn.type === column.type) ||
+      (oldColumn && oldColumn.type) ||
       (primaryKey === key && !isJunction)
     ) {
       continue

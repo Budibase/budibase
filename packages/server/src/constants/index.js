@@ -45,6 +45,13 @@ exports.FieldTypes = {
   INTERNAL: "internal",
 }
 
+exports.SwitchableTypes = [
+  exports.FieldTypes.STRING,
+  exports.FieldTypes.OPTIONS,
+  exports.FieldTypes.NUMBER,
+  exports.FieldTypes.BOOLEAN,
+]
+
 exports.RelationshipTypes = {
   ONE_TO_MANY: "one-to-many",
   MANY_TO_ONE: "many-to-one",
