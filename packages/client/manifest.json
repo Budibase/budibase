@@ -2622,9 +2622,9 @@
       }
     ]
   },
-  "tablewithsearch": {
+  "tableblock": {
     "block": true,
-    "name": "Table with search",
+    "name": "Table block",
     "icon": "Table",
     "styles": ["size"],
     "info": "Only the first 3 search columns will be used.",
@@ -2769,9 +2769,9 @@
       }
     ]
   },
-  "cardlistwithsearch": {
+  "cardsblock": {
     "block": true,
-    "name": "Card list with search",
+    "name": "Cards block",
     "icon": "Table",
     "styles": ["size"],
     "info": "Only the first 3 search columns will be used.",
