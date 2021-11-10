@@ -27,7 +27,7 @@
     if (!nested) {
       return bindings
     }
-    return [...(bindings || []), ...(componentBindings || [])]
+    return [...(componentBindings || []), ...(bindings || [])]
   }
 
   // Handle a value change of any type
