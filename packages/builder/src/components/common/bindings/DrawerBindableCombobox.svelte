@@ -62,7 +62,11 @@
     options={allOptions}
   />
   {#if !disabled}
-    <div class="icon" on:click={bindingDrawer.show}>
+    <div
+      class="icon"
+      on:click={bindingDrawer.show}
+      data-cy="text-binding-button"
+    >
       <Icon size="S" name="FlashOn" />
     </div>
   {/if}
