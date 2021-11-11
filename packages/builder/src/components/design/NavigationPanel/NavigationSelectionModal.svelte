@@ -1,6 +1,7 @@
 <script>
   import { ModalContent, Body, Detail } from "@budibase/bbui"
   import { store, selectedAccessRole, allScreens } from "builderStore"
+  import { cloneDeep } from "lodash/fp"
 
   export let screenNameModal
   export let selectedScreens
@@ -11,6 +12,8 @@
   let routeError
   let selectedNav
   let createdScreens = []
+  let createLink = true
+
   $: {
     selectedScreens.forEach(screen => {
       createdScreens = [...createdScreens, screen.create()]
@@ -19,9 +22,20 @@
 
   $: blankSelected = selectedScreens.find(x => x.id === "createFromScratch")
 
-  const save = async draftScreen => {
+  const save = async screens => {
+    screens.forEach(screen => {
+      saveScreens(screen)
+    })
+
+    let navLayout = cloneDeep(
+      $store.layouts.find(layout => layout._id === "layout_private_master")
+    )
+    navLayout.props.navigation = selectedNav
+    await store.actions.layouts.save(navLayout)
+  }
+
+  const saveScreens = async draftScreen => {
     if (draftScreen) {
-      console.log(draftScreen)
       if (!draftScreen.routing.route) {
         routeError = "URL is required"
       } else {
@@ -31,11 +45,15 @@
           routeError = ""
         }
       }
-      console.log(routeError)
       if (routeError) return false
 
-      draftScreen.props.navigation = selectedNav
       await store.actions.screens.create(draftScreen)
+      if (createLink) {
+        await store.actions.components.links.save(
+          draftScreen.routing.route,
+          draftScreen.props._instanceName
+        )
+      }
       await store.actions.routing.fetch()
     }
   }
@@ -55,7 +73,7 @@
   onCancel={() => (blankSelected ? screenNameModal.show() : modal.show())}
   size="M"
   onConfirm={() => {
-    save(createdScreens.forEach(screen => save(screen)))
+    save(createdScreens)
   }}
   disabled={!selectedNav}
 >
@@ -65,8 +83,8 @@
 
   <div class="wrapper">
     <div
-      on:click={() => (selectedNav = "side")}
-      class:unselected={selectedNav && selectedNav !== "side"}
+      on:click={() => (selectedNav = "Left")}
+      class:unselected={selectedNav && selectedNav !== "Left"}
     >
       <div class="box">
         <div class="side-nav" />
@@ -74,8 +92,8 @@
       <div><Detail>Side Nav</Detail></div>
     </div>
     <div
-      on:click={() => (selectedNav = "top")}
-      class:unselected={selectedNav && selectedNav !== "top"}
+      on:click={() => (selectedNav = "Top")}
+      class:unselected={selectedNav && selectedNav !== "Top"}
     >
       <div class="box">
         <div class="top-nav" />
@@ -83,8 +101,8 @@
       <div><Detail>Top Nav</Detail></div>
     </div>
     <div
-      on:click={() => (selectedNav = "none")}
-      class:unselected={selectedNav && selectedNav !== "none"}
+      on:click={() => (selectedNav = "None")}
+      class:unselected={selectedNav && selectedNav !== "None"}
     >
       <div class="box" />
       <div><Detail>No Nav</Detail></div>
