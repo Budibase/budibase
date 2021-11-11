@@ -197,7 +197,7 @@ exports.fetchAppPackage = async ctx => {
     application,
     screens,
     layouts,
-    clientLibPath: clientLibraryPath(ctx.params.appId),
+    clientLibPath: clientLibraryPath(ctx.params.appId, application.version),
   }
 }
 
