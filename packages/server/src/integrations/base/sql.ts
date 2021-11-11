@@ -33,6 +33,7 @@ function parse(input: any) {
   if (isIsoDateString(input)) {
     return new Date(input)
   }
+  return input
 }
 
 function parseBody(body: any) {

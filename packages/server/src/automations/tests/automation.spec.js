@@ -1,5 +1,5 @@
 jest.mock("../../utilities/usageQuota")
-jest.mock("../thread")
+jest.mock("../../threads/automation")
 jest.mock("../../utilities/redis", () => ({
   init: jest.fn(),
   checkTestFlag: () => {
@@ -53,7 +53,7 @@ describe("Run through some parts of the automations system", () => {
       }
     })
     await wait(100)
-    expect().toHaveBeenCalledWith(makePartial({
+    expect(thread).toHaveBeenCalledWith(makePartial({
       data: {
         event: {
           fields: {
@@ -61,7 +61,7 @@ describe("Run through some parts of the automations system", () => {
           }
         }
       }
-    }))
+    }), expect.any(Function))
   })
 
   it("should be able to clean inputs with the utilities", () => {

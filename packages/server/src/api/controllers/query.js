@@ -106,16 +106,20 @@ exports.preview = async function (ctx) {
   const { fields, parameters, queryVerb, transformer } = ctx.request.body
   const enrichedQuery = await enrichQueryFields(fields, parameters)
 
-  const { rows, keys } = await Runner.run({
-    datasource,
-    queryVerb,
-    query: enrichedQuery,
-    transformer,
-  })
+  try {
+    const { rows, keys } = await Runner.run({
+      datasource,
+      queryVerb,
+      query: enrichedQuery,
+      transformer,
+    })
 
-  ctx.body = {
-    rows,
-    schemaFields: [...new Set(keys)],
+    ctx.body = {
+      rows,
+      schemaFields: [...new Set(keys)],
+    }
+  } catch (err) {
+    ctx.throw(400, err)
   }
 }
 
@@ -131,13 +135,17 @@ exports.execute = async function (ctx) {
   )
 
   // call the relevant CRUD method on the integration class
-  const { rows } = await Runner.run({
-    datasource,
-    queryVerb: query.queryVerb,
-    query: enrichedQuery,
-    transformer: query.transformer,
-  })
-  ctx.body = rows
+  try {
+    const { rows } = await Runner.run({
+      datasource,
+      queryVerb: query.queryVerb,
+      query: enrichedQuery,
+      transformer: query.transformer,
+    })
+    ctx.body = rows
+  } catch (err) {
+    ctx.throw(400, err)
+  }
 }
 
 exports.destroy = async function (ctx) {
