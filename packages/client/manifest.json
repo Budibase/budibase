@@ -5,7 +5,8 @@
     "deviceAwareness": true,
     "state": true,
     "customThemes": true,
-    "devicePreview": true
+    "devicePreview": true,
+    "messagePassing": true
   },
   "layout": {
     "name": "Layout",

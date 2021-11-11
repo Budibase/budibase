@@ -11,7 +11,8 @@ it("should rename an unpublished application", () => {
     renameApp(appRename)
     cy.searchForApplication(appRename)
     cy.get(".appGrid").find(".wrapper").should("have.length", 1)
-    })
+    cy.deleteApp(appRename)
+})
     
 xit("Should rename a published application", () => {
     // It is not possible to rename a published application
