@@ -1,4 +1,5 @@
 const workerFarm = require("worker-farm")
+const env = require("../environment")
 
 const ThreadType = {
   QUERY: "query",
@@ -22,19 +23,29 @@ function typeToFile(type) {
 
 class Thread {
   constructor(type, opts = { timeoutMs: null, count: 1 }) {
-    const workerOpts = {
-      autoStart: true,
-      maxConcurrentWorkers: opts.count ? opts.count : 1,
+    this.type = type
+    if (!env.isTest()) {
+      const workerOpts = {
+        autoStart: true,
+        maxConcurrentWorkers: opts.count ? opts.count : 1,
+      }
+      if (opts.timeoutMs) {
+        workerOpts.maxCallTime = opts.timeoutMs
+      }
+      this.workers = workerFarm(workerOpts, typeToFile(type))
     }
-    if (opts.timeoutMs) {
-      workerOpts.maxCallTime = opts.timeoutMs
-    }
-    this.workers = workerFarm(workerOpts, typeToFile(type))
   }
 
   run(data) {
     return new Promise((resolve, reject) => {
-      this.workers(data, (err, response) => {
+      let fncToCall
+      // if in test then don't use threading
+      if (env.isTest()) {
+        fncToCall = require(typeToFile(this.type))
+      } else {
+        fncToCall = this.workers
+      }
+      fncToCall(data, (err, response) => {
         if (err) {
           reject(err)
         } else {
