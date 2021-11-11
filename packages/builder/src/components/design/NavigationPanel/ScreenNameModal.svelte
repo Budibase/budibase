@@ -3,7 +3,8 @@
 
   export let modal
   export let navigationSelectionModal
-  export let name
+  export let screenName
+  $: console.log(name)
 </script>
 
 <ModalContent
@@ -13,7 +14,7 @@
   onCancel={() => modal.show()}
   onConfirm={() => navigationSelectionModal.show()}
   cancelText={"Back"}
-  disabled={!name.length}
+  disabled={!screenName}
 >
-  <Input label="Name" bind:value={name} />
+  <Input label="Name" bind:value={screenName} />
 </ModalContent>

@@ -2,11 +2,12 @@
   import { ModalContent, Body, Detail } from "@budibase/bbui"
   import { store, selectedAccessRole, allScreens } from "builderStore"
   import { cloneDeep } from "lodash/fp"
+  import sanitizeUrl from "builderStore/store/screenTemplates/utils/sanitizeUrl"
 
   export let screenNameModal
   export let selectedScreens
   export let modal
-
+  export let screenName
   let roleId = $selectedAccessRole || "BASIC"
 
   let routeError
@@ -35,18 +36,24 @@
   }
 
   const saveScreens = async draftScreen => {
+    let route = screenName
+      ? sanitizeUrl(`/${screenName}`)
+      : draftScreen.routing.route
+    console.log(sanitizeUrl(`/${screenName}`))
     if (draftScreen) {
-      if (!draftScreen.routing.route) {
+      if (!route) {
         routeError = "URL is required"
       } else {
-        if (routeExists(draftScreen.routing.route, roleId)) {
+        if (routeExists(route, roleId)) {
           routeError = "This URL is already taken for this access role"
         } else {
           routeError = ""
         }
       }
+      console.log(routeError)
       if (routeError) return false
 
+      draftScreen.routing.route = route
       await store.actions.screens.create(draftScreen)
       if (createLink) {
         await store.actions.components.links.save(

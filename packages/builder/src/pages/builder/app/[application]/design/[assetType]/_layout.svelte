@@ -32,9 +32,9 @@
   let modal
   let navigationSelectionModal
   let screenNameModal
-  let screenName
+  let screenName = ""
   let selectedScreens = []
-
+  $: console.log(screenName)
   // Hydrate state from URL params
   $: hydrateStateFromURL($params, $leftover)
 
@@ -220,7 +220,12 @@
   <ScreenNameModal bind:screenName {modal} {navigationSelectionModal} />
 </Modal>
 <Modal bind:this={navigationSelectionModal}>
-  <NavigationSelectionModal {modal} {selectedScreens} {screenNameModal} />
+  <NavigationSelectionModal
+    {screenName}
+    {modal}
+    {selectedScreens}
+    {screenNameModal}
+  />
 </Modal>
 
 <style>
