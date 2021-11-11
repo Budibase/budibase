@@ -5,6 +5,8 @@
     selectedComponent,
     allScreens,
   } from "builderStore"
+  import { Detail, Layout, Button, Modal } from "@budibase/bbui"
+
   import CurrentItemPreview from "components/design/AppPreview"
   import PropertiesPanel from "components/design/PropertiesPanel/PropertiesPanel.svelte"
   import ComponentSelectionList from "components/design/AppPreview/ComponentSelectionList.svelte"
@@ -16,12 +18,22 @@
   import AppThemeSelect from "components/design/AppPreview/AppThemeSelect.svelte"
   import ThemeEditor from "components/design/AppPreview/ThemeEditor.svelte"
   import DevicePreviewSelect from "components/design/AppPreview/DevicePreviewSelect.svelte"
+  import NavigationSelectionModal from "components/design/NavigationPanel/NavigationSelectionModal.svelte"
+  import ScreenNameModal from "components/design/NavigationPanel/ScreenNameModal.svelte"
+  import NewScreenModal from "components/design/NavigationPanel/NewScreenModal.svelte"
 
   // Cache previous values so we don't update the URL more than necessary
   let previousType
   let previousAsset
   let previousComponentId
   let hydrationComplete = false
+
+  // Manage the layout modal flow from here
+  let modal
+  let navigationSelectionModal
+  let screenNameModal
+  let screenName
+  let selectedScreens = []
 
   // Hydrate state from URL params
   $: hydrateStateFromURL($params, $leftover)
@@ -145,7 +157,7 @@
 <!-- routify:options index=1 -->
 <div class="root">
   <div class="ui-nav">
-    <FrontendNavigatePane />
+    <FrontendNavigatePane {modal} />
   </div>
 
   <div class="preview-pane">
@@ -166,6 +178,25 @@
           <CurrentItemPreview />
         {/key}
       </div>
+    {:else}
+      <div class="centered">
+        <div class="main">
+          <Layout gap="S" justifyItems="center">
+            <svg
+              width="60px"
+              height="60px"
+              class="spectrum-Icon"
+              focusable="false"
+            >
+              <use xlink:href="#spectrum-icon-18-WorkflowAdd" />
+            </svg>
+            <Detail size="M">Let's add some life to this screen</Detail>
+            <Button on:click={() => modal.show()} size="M" cta
+              >Add Screen</Button
+            >
+          </Layout>
+        </div>
+      </div>
     {/if}
   </div>
 
@@ -177,6 +208,20 @@
 </div>
 
 <slot />
+<Modal bind:this={modal}>
+  <NewScreenModal
+    {screenNameModal}
+    {navigationSelectionModal}
+    bind:selectedScreens
+  />
+</Modal>
+
+<Modal bind:this={screenNameModal}>
+  <ScreenNameModal bind:screenName {modal} {navigationSelectionModal} />
+</Modal>
+<Modal bind:this={navigationSelectionModal}>
+  <NavigationSelectionModal {modal} {selectedScreens} {screenNameModal} />
+</Modal>
 
 <style>
   .root {
@@ -236,5 +281,22 @@
     align-items: stretch;
     border-left: var(--border-light);
     overflow-x: hidden;
+  }
+
+  .centered {
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .main {
+    width: 300px;
   }
 </style>

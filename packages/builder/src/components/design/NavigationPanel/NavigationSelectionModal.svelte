@@ -5,6 +5,7 @@
   export let screenNameModal
   export let selectedScreens
   export let modal
+
   let roleId = $selectedAccessRole || "BASIC"
 
   let routeError
@@ -19,27 +20,32 @@
   $: blankSelected = selectedScreens.find(x => x.id === "createFromScratch")
 
   const save = async draftScreen => {
-    if (!draftScreen.routing.route) {
-      routeError = "URL is required"
-    } else {
-      if (routeExists(draftScreen.routing.route, roleId)) {
-        routeError = "This URL is already taken for this access role"
+    if (draftScreen) {
+      console.log(draftScreen)
+      if (!draftScreen.routing.route) {
+        routeError = "URL is required"
       } else {
-        routeError = ""
+        if (routeExists(draftScreen.routing.route, roleId)) {
+          routeError = "This URL is already taken for this access role"
+        } else {
+          routeError = ""
+        }
       }
-    }
-    if (routeError) return false
+      console.log(routeError)
+      if (routeError) return false
 
-    await store.actions.screens.create(draftScreen)
-    await store.actions.routing.fetch()
-
-    const routeExists = (route, roleId) => {
-      return $allScreens.some(
-        screen =>
-          screen.routing.route.toLowerCase() === route.toLowerCase() &&
-          screen.routing.roleId === roleId
-      )
+      draftScreen.props.navigation = selectedNav
+      await store.actions.screens.create(draftScreen)
+      await store.actions.routing.fetch()
     }
+  }
+
+  const routeExists = (route, roleId) => {
+    return $allScreens.some(
+      screen =>
+        screen.routing.route.toLowerCase() === route.toLowerCase() &&
+        screen.routing.roleId === roleId
+    )
   }
 </script>
 
@@ -59,8 +65,8 @@
 
   <div class="wrapper">
     <div
-      on:click={() => (selectedNav = "sideNav")}
-      class:unselected={selectedNav && selectedNav !== "sideNav"}
+      on:click={() => (selectedNav = "side")}
+      class:unselected={selectedNav && selectedNav !== "side"}
     >
       <div class="box">
         <div class="side-nav" />
@@ -68,8 +74,8 @@
       <div><Detail>Side Nav</Detail></div>
     </div>
     <div
-      on:click={() => (selectedNav = "topNav")}
-      class:unselected={selectedNav && selectedNav !== "topNav"}
+      on:click={() => (selectedNav = "top")}
+      class:unselected={selectedNav && selectedNav !== "top"}
     >
       <div class="box">
         <div class="top-nav" />
@@ -77,8 +83,8 @@
       <div><Detail>Top Nav</Detail></div>
     </div>
     <div
-      on:click={() => (selectedNav = "noNav")}
-      class:unselected={selectedNav && selectedNav !== "noNav"}
+      on:click={() => (selectedNav = "none")}
+      class:unselected={selectedNav && selectedNav !== "none"}
     >
       <div class="box" />
       <div><Detail>No Nav</Detail></div>
