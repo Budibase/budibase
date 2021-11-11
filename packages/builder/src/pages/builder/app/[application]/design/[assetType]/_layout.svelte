@@ -5,7 +5,7 @@
     selectedComponent,
     allScreens,
   } from "builderStore"
-  import { Detail, Layout, Button, Modal } from "@budibase/bbui"
+  import { Detail, Layout, Button, Modal, Icon } from "@budibase/bbui"
 
   import CurrentItemPreview from "components/design/AppPreview"
   import PropertiesPanel from "components/design/PropertiesPanel/PropertiesPanel.svelte"
@@ -21,6 +21,7 @@
   import NavigationSelectionModal from "components/design/NavigationPanel/NavigationSelectionModal.svelte"
   import ScreenNameModal from "components/design/NavigationPanel/ScreenNameModal.svelte"
   import NewScreenModal from "components/design/NavigationPanel/NewScreenModal.svelte"
+  import Logo from "assets/bb-space-man.svg"
 
   // Cache previous values so we don't update the URL more than necessary
   let previousType
@@ -182,17 +183,17 @@
       <div class="centered">
         <div class="main">
           <Layout gap="S" justifyItems="center">
-            <svg
-              width="60px"
-              height="60px"
-              class="spectrum-Icon"
-              focusable="false"
-            >
-              <use xlink:href="#spectrum-icon-18-WorkflowAdd" />
-            </svg>
-            <Detail size="M">Let's add some life to this screen</Detail>
-            <Button on:click={() => modal.show()} size="M" cta
-              >Add Screen</Button
+            <img class="img-size" alt="logo" src={Logo} />
+            <div class="new-screen-text">
+              <Detail size="L">Let's add some life to this screen</Detail>
+            </div>
+            <Button on:click={() => modal.show()} size="M" cta>
+              <div class="new-screen-button">
+                <div class="background-icon" style="color: white;">
+                  <Icon name="Add" />
+                </div>
+                Add Screen
+              </div></Button
             >
           </Layout>
         </div>
@@ -236,7 +237,28 @@
     flex: 1 1 auto;
     height: 0;
   }
+  .new-screen-text {
+    width: 160px;
+    text-align: center;
+  }
 
+  .new-screen-button {
+    margin-left: 5px;
+    height: 20px;
+    width: 100px;
+    display: flex;
+    align-items: center;
+  }
+
+  .background-icon {
+    margin-top: 4px;
+    margin-right: 4px;
+  }
+
+  .img-size {
+    width: 160px;
+    height: 160px;
+  }
   .ui-nav {
     grid-column: 1;
     background-color: var(--background);
@@ -291,7 +313,7 @@
   .centered {
     top: 0;
     bottom: 0;
-    left: 0;
+    left: 10%;
     right: 0;
     width: 100%;
     height: 100%;
