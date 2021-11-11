@@ -35,7 +35,7 @@
   let screenNameModal
   let screenName = ""
   let selectedScreens = []
-  $: console.log(screenName)
+
   // Hydrate state from URL params
   $: hydrateStateFromURL($params, $leftover)
 

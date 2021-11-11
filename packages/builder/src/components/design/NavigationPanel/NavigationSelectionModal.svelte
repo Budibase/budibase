@@ -39,7 +39,7 @@
     let route = screenName
       ? sanitizeUrl(`/${screenName}`)
       : draftScreen.routing.route
-    console.log(sanitizeUrl(`/${screenName}`))
+
     if (draftScreen) {
       if (!route) {
         routeError = "URL is required"
@@ -50,7 +50,7 @@
           routeError = ""
         }
       }
-      console.log(routeError)
+
       if (routeError) return false
 
       draftScreen.routing.route = route
