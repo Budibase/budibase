@@ -11,18 +11,19 @@
   export let sortColumn
   export let sortOrder
   export let paginate
-  export let limit
+  export let tableColumns
+  export let showAutoColumns
+  export let rowCount
+  export let quiet
+  export let size
+  export let linkRows
+  export let linkURL
+  export let linkColumn
+  export let linkPeek
   export let showTitleButton
   export let titleButtonText
-  export let titleButtonOnClick
-  export let cardTitle
-  export let cardSubtitle
-  export let cardDescription
-  export let cardImageURL
-  export let cardHorizontal
-  export let showCardButton
-  export let cardButtonText
-  export let cardButtonOnClick
+  export let titleButtonURL
+  export let titleButtonPeek
 
   const { API, styleable } = getContext("sdk")
   const context = getContext("context")
@@ -41,7 +42,15 @@
 
   $: enrichedSearchColumns = enrichSearchColumns(searchColumns, schema)
   $: enrichedFilter = enrichFilter(filter, enrichedSearchColumns, formId)
-  $: cardWidth = cardHorizontal ? 420 : 300
+  $: titleButtonAction = [
+    {
+      "##eventHandlerType": "Navigate To",
+      parameters: {
+        peek: titleButtonPeek,
+        url: titleButtonURL,
+      },
+    },
+  ]
 
   // Enrich the default filter with the specified search fields
   const enrichFilter = (filter, columns, formId) => {
@@ -49,7 +58,7 @@
     columns?.forEach(column => {
       enrichedFilter.push({
         field: column.name,
-        operator: "equal",
+        operator: column.type === "string" ? "string" : "equal",
         type: "string",
         valueType: "Binding",
         value: `{{ [${formId}].[${column.name}] }}`,
@@ -68,6 +77,7 @@
         enrichedColumns.push({
           name: column,
           componentType,
+          type: schemaType,
         })
       }
     })
@@ -83,7 +93,7 @@
 </script>
 
 <Block>
-  <div class="card-list" use:styleable={$component.styles}>
+  <div class={size} use:styleable={$component.styles}>
     <BlockComponent type="form" bind:id={formId} props={{ dataSource }}>
       {#if title || enrichedSearchColumns?.length || showTitleButton}
         <div class="header" class:mobile={$context.device.mobile}>
@@ -113,7 +123,7 @@
               <BlockComponent
                 type="button"
                 props={{
-                  onClick: titleButtonOnClick,
+                  onClick: titleButtonAction,
                   text: titleButtonText,
                   type: "cta",
                 }}
@@ -131,42 +141,24 @@
           sortColumn,
           sortOrder,
           paginate,
-          limit,
+          limit: rowCount,
         }}
       >
         <BlockComponent
-          type="repeater"
-          context="repeater"
+          type="table"
           props={{
             dataProvider: `{{ literal [${dataProviderId}] }}`,
-            direction: "row",
-            hAlign: "stretch",
-            vAlign: "top",
-            gap: "M",
-            noRowsMessage: "No rows found",
+            columns: tableColumns,
+            showAutoColumns,
+            rowCount,
+            quiet,
+            size,
+            linkRows,
+            linkURL,
+            linkColumn,
+            linkPeek,
           }}
-          styles={{
-            display: "grid",
-            "grid-template-columns": `repeat(auto-fill, minmax(${cardWidth}px, 1fr))`,
-          }}
-        >
-          <BlockComponent
-            type="spectrumcard"
-            props={{
-              title: cardTitle,
-              subtitle: cardSubtitle,
-              description: cardDescription,
-              imageURL: cardImageURL,
-              horizontal: cardHorizontal,
-              showButton: showCardButton,
-              buttonText: cardButtonText,
-              buttonOnClick: cardButtonOnClick,
-            }}
-            styles={{
-              width: "auto",
-            }}
-          />
-        </BlockComponent>
+        />
       </BlockComponent>
     </BlockComponent>
   </div>

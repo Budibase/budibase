@@ -8,15 +8,22 @@
   export let description
   export let imageURL
   export let linkURL
+  export let linkPeek
   export let horizontal
   export let showButton
   export let buttonText
   export let buttonOnClick
 
-  const { styleable, linkable } = getContext("sdk")
+  const { styleable, routeStore } = getContext("sdk")
   const component = getContext("component")
 
-  $: external = linkURL && !linkURL.startsWith("/")
+  const handleLink = e => {
+    if (!linkURL) {
+      return
+    }
+    e.preventDefault()
+    routeStore.actions.navigate(linkURL, linkPeek)
+  }
 </script>
 
 <div
@@ -37,16 +44,10 @@
       <div class="spectrum-Card-header">
         <div
           class="spectrum-Card-title spectrum-Heading spectrum-Heading--sizeXS"
+          on:click={handleLink}
+          class:link={linkURL}
         >
-          {#if linkURL}
-            {#if external}
-              <a href={linkURL}>{title || "Card Title"}</a>
-            {:else}
-              <a use:linkable href={linkURL}>{title || "Card Title"}</a>
-            {/if}
-          {:else}
-            {title || "Card Title"}
-          {/if}
+          {title || "Card Title"}
         </div>
       </div>
       {#if subtitle}
@@ -88,11 +89,12 @@
   .spectrum-Card-container {
     padding: var(--spectrum-global-dimension-size-50) 0;
   }
-  .spectrum-Card-title :global(a) {
-    text-overflow: ellipsis;
-    overflow: hidden;
-    white-space: nowrap;
-    width: 100%;
+  .spectrum-Card-title.link {
+    transition: color 130ms ease-in-out;
+  }
+  .spectrum-Card-title.link:hover {
+    cursor: pointer;
+    color: var(--spectrum-link-primary-m-text-color-hover);
   }
   .spectrum-Card-subtitle {
     text-overflow: ellipsis;
@@ -103,14 +105,6 @@
     word-wrap: anywhere;
     white-space: pre-wrap;
   }
-  a {
-    transition: color 130ms ease-in-out;
-    color: var(--spectrum-alias-text-color);
-  }
-  a:hover {
-    color: var(--spectrum-link-primary-m-text-color-hover);
-  }
-
   .horizontal .spectrum-Card-coverPhoto {
     flex: 0 0 160px;
     height: auto;

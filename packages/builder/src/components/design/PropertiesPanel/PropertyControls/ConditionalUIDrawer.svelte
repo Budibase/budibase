@@ -13,9 +13,10 @@
   import { generate } from "shortid"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
   import { OperatorOptions, getValidOperatorsForType } from "constants/lucene"
-  import { selectedComponent, store } from "builderStore"
+  import { selectedComponent } from "builderStore"
   import { getComponentForSettingType } from "./componentSettings"
   import PropertyControl from "./PropertyControl.svelte"
+  import { getComponentSettings } from "builderStore/storeUtils"
 
   export let conditions = []
   export let bindings = []
@@ -55,15 +56,11 @@
   ]
 
   let dragDisabled = true
-  $: definition = store.actions.components.getDefinition(
-    $selectedComponent?._component
-  )
-  $: settings = (definition?.settings ?? []).map(setting => {
-    return {
-      label: setting.label,
-      value: setting.key,
-    }
-  })
+  $: settings = getComponentSettings($selectedComponent?._component)
+  $: settingOptions = settings.map(setting => ({
+    label: setting.label,
+    value: setting.key,
+  }))
   $: conditions.forEach(link => {
     if (!link.id) {
       link.id = generate()
@@ -71,9 +68,7 @@
   })
 
   const getSettingDefinition = key => {
-    return definition?.settings?.find(setting => {
-      return setting.key === key
-    })
+    return settings.find(setting => setting.key === key)
   }
 
   const getComponentForSetting = key => {
@@ -175,7 +170,10 @@
                 bind:value={condition.action}
               />
               {#if condition.action === "update"}
-                <Select options={settings} bind:value={condition.setting} />
+                <Select
+                  options={settingOptions}
+                  bind:value={condition.setting}
+                />
                 <div>TO</div>
                 {#if getSettingDefinition(condition.setting)}
                   <PropertyControl

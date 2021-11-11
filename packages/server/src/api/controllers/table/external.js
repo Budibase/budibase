@@ -8,6 +8,7 @@ const {
   generateForeignKey,
   generateJunctionTableName,
   foreignKeyStructure,
+  hasTypeChanged,
 } = require("./utils")
 const {
   DataSourceOperation,
@@ -170,6 +171,10 @@ exports.save = async function (ctx) {
   let oldTable
   if (ctx.request.body && ctx.request.body._id) {
     oldTable = await getTable(appId, ctx.request.body._id)
+  }
+
+  if (hasTypeChanged(tableToSave, oldTable)) {
+    ctx.throw(400, "A column type has changed.")
   }
 
   const db = new CouchDB(appId)

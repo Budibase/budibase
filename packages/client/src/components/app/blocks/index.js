@@ -1,2 +1,2 @@
-export { default as tablewithsearch } from "./TableWithSearch.svelte"
-export { default as cardlistwithsearch } from "./CardListWithSearch.svelte"
+export { default as tableblock } from "./TableBlock.svelte"
+export { default as cardsblock } from "./CardsBlock.svelte"
