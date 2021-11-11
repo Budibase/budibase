@@ -2,6 +2,7 @@ import { writable, get } from "svelte/store"
 import { views, queries, datasources } from "./"
 import { cloneDeep } from "lodash/fp"
 import api from "builderStore/api"
+import { SWITCHABLE_TYPES } from "../../constants/backend"
 
 export function createTablesStore() {
   const store = writable({})
@@ -47,7 +48,11 @@ export function createTablesStore() {
       const field = updatedTable.schema[key]
       const oldField = oldTable?.schema[key]
       // if the type has changed then revert back to the old field
-      if (oldField != null && oldField?.type !== field.type) {
+      if (
+        oldField != null &&
+        oldField?.type !== field.type &&
+        SWITCHABLE_TYPES.indexOf(oldField?.type) === -1
+      ) {
         updatedTable.schema[key] = oldField
       }
       // field has been renamed
