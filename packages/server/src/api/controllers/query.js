@@ -3,7 +3,9 @@ const CouchDB = require("../../db")
 const { generateQueryID, getQueryParams } = require("../../db/utils")
 const { BaseQueryVerbs } = require("../../constants")
 const env = require("../../environment")
-const queryRunner = require("../../utilities/queryRunner")
+const { Thread, ThreadType } = require("../../threads")
+
+const Runner = new Thread(ThreadType.QUERY, { timeoutMs: 10000 })
 
 // simple function to append "readable" to all read queries
 function enrichQueries(input) {
@@ -104,12 +106,12 @@ exports.preview = async function (ctx) {
   const { fields, parameters, queryVerb, transformer } = ctx.request.body
   const enrichedQuery = await enrichQueryFields(fields, parameters)
 
-  const { rows, keys } = await queryRunner(
+  const { rows, keys } = await Runner.run({
     datasource,
     queryVerb,
-    enrichedQuery,
-    transformer
-  )
+    query: enrichedQuery,
+    transformer,
+  })
 
   ctx.body = {
     rows,
@@ -129,12 +131,12 @@ exports.execute = async function (ctx) {
   )
 
   // call the relevant CRUD method on the integration class
-  const { rows } = await queryRunner(
+  const { rows } = await Runner.run({
     datasource,
-    query.queryVerb,
-    enrichedQuery,
-    query.transformer
-  )
+    queryVerb: query.queryVerb,
+    query: enrichedQuery,
+    transformer: query.transformer,
+  })
   ctx.body = rows
 }
 

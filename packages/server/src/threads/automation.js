@@ -1,5 +1,5 @@
-const actions = require("./actions")
-const automationUtils = require("./automationUtils")
+const actions = require("../automations/actions")
+const automationUtils = require("../automations/automationUtils")
 const AutomationEmitter = require("../events/AutomationEmitter")
 const { processObject } = require("@budibase/string-templates")
 const { DEFAULT_TENANT_ID } = require("@budibase/auth").constants
@@ -119,10 +119,17 @@ class Orchestrator {
   }
 }
 
-module.exports = async job => {
+module.exports = (input, callback) => {
   const automationOrchestrator = new Orchestrator(
-    job.data.automation,
-    job.data.event
+    input.data.automation,
+    input.data.event
   )
-  return automationOrchestrator.execute()
+  automationOrchestrator
+    .execute()
+    .then(response => {
+      callback(null, response)
+    })
+    .catch(err => {
+      callback(err)
+    })
 }

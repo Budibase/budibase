@@ -157,6 +157,7 @@
 
   onMount(async () => {
     if (!query || !query._id) {
+      roleId = Roles.BASIC
       return
     }
     try {
