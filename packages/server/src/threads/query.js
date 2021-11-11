@@ -1,5 +1,5 @@
-const ScriptRunner = require("../scriptRunner")
-const { integrations } = require("../../integrations")
+const ScriptRunner = require("../utilities/scriptRunner")
+const { integrations } = require("../integrations")
 
 function formatResponse(resp) {
   if (typeof resp === "string") {

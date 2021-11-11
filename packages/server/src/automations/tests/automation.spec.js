@@ -11,8 +11,7 @@ jest.spyOn(global.console, "error")
 
 require("../../environment")
 const automation = require("../index")
-const usageQuota = require("../../utilities/usageQuota")
-const thread = require("../thread")
+const thread = require("../../threads/automation")
 const triggers = require("../triggers")
 const { basicAutomation } = require("../../tests/utilities/structures")
 const { wait } = require("../../utilities")
@@ -54,7 +53,7 @@ describe("Run through some parts of the automations system", () => {
       }
     })
     await wait(100)
-    expect(thread).toHaveBeenCalledWith(makePartial({
+    expect().toHaveBeenCalledWith(makePartial({
       data: {
         event: {
           fields: {
