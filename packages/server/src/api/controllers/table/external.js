@@ -18,7 +18,7 @@ const {
 const { makeExternalQuery } = require("../../../integrations/base/utils")
 const { cloneDeep } = require("lodash/fp")
 const csvParser = require("../../../utilities/csvParser")
-const { save: rowSave } = require("../row/external")
+const { handleRequest } = require("../row/external")
 
 async function makeTableRequest(
   datasource,
@@ -293,23 +293,8 @@ exports.bulkImport = async function (ctx) {
     ...dataImport,
     existingTable: table,
   })
-  const promises = []
-  for (let row of rows) {
-    const rowSaveCtx = {
-      appId,
-      params: {
-        tableId: table._id,
-      },
-      request: {
-        body: {
-          ...row,
-          tableId: table._id,
-        },
-      },
-    }
-    promises.push(rowSave(rowSaveCtx))
-  }
-  // don't error if some error, as some will have been imported
-  await Promise.allSettled(promises)
+  await handleRequest(appId, DataSourceOperation.BULK_CREATE, table._id, {
+    rows,
+  })
   return table
 }

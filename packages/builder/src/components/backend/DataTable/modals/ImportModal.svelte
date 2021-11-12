@@ -1,5 +1,5 @@
 <script>
-  import { ModalContent, Label, notifications } from "@budibase/bbui"
+  import { ModalContent, Label, notifications, Body } from "@budibase/bbui"
   import TableDataImport from "../../TableNavigator/TableDataImport.svelte"
   import api from "builderStore/api"
   import { createEventDispatcher } from "svelte"
@@ -31,6 +31,13 @@
   onConfirm={importData}
   disabled={!valid}
 >
+  <Body
+    >Import rows to an existing table from a CSV. Only columns from the CSV
+    which exist in the table will be imported.</Body
+  >
   <Label grey extraSmall>CSV to import</Label>
   <TableDataImport bind:dataImport bind:existingTableId={tableId} />
 </ModalContent>
+
+<style>
+</style>

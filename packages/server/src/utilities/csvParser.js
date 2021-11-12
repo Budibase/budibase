@@ -116,7 +116,7 @@ async function transform({ schema, csvString, existingTable }) {
           delete element[key]
         }
         // casing is different, fix it in row
-        if (key !== mappedKey) {
+        else if (key !== mappedKey) {
           element[mappedKey] = element[key]
           delete element[key]
         }
