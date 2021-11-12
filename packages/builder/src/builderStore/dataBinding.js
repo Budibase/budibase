@@ -333,8 +333,11 @@ const getUrlBindings = asset => {
  */
 export const getSchemaForDatasource = (asset, datasource, isForm = false) => {
   let schema, table
+
   if (datasource) {
     const { type } = datasource
+
+    // Determine the source table from the datasource type
     if (type === "provider") {
       const component = findComponent(asset.props, datasource.providerId)
       const source = getDatasourceForProvider(asset, component)
@@ -342,11 +345,31 @@ export const getSchemaForDatasource = (asset, datasource, isForm = false) => {
     } else if (type === "query") {
       const queries = get(queriesStores).list
       table = queries.find(query => query._id === datasource._id)
+    } else if (type === "field") {
+      const { fieldType } = datasource
+      if (fieldType === "attachment") {
+        schema = {
+          url: {
+            type: "string",
+          },
+          name: {
+            type: "string",
+          },
+        }
+      } else if (fieldType === "array") {
+        schema = {
+          value: {
+            type: "string",
+          },
+        }
+      }
     } else {
       const tables = get(tablesStore).list
       table = tables.find(table => table._id === datasource.tableId)
     }
-    if (table) {
+
+    // Determine the schema from the table if not already determined
+    if (table && !schema) {
       if (type === "view") {
         schema = cloneDeep(table.views?.[datasource.name]?.schema)
       } else if (type === "query" && isForm) {
@@ -525,7 +548,7 @@ function bindingReplacement(bindableProperties, textWithBindings, convertTo) {
  * {{ literal [componentId] }}
  */
 function extractLiteralHandlebarsID(value) {
-  return value?.match(/{{\s*literal[\s[]+([a-fA-F0-9]+)[\s\]]*}}/)?.[1]
+  return value?.match(/{{\s*literal\s*\[+([^\]]+)].*}}/)?.[1]
 }
 
 /**
