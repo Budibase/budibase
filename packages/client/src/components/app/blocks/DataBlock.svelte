@@ -3,6 +3,7 @@
   import Block from "components/Block.svelte"
   import Placeholder from "components/app/Placeholder.svelte"
   import { getContext } from "svelte"
+  import { makePropSafe as safe } from "@budibase/string-templates"
 
   export let dataSource
   export let filter
@@ -44,7 +45,7 @@
           type="repeater"
           context="repeater"
           props={{
-            dataProvider: `{{ literal [${providerId}] }}`,
+            dataProvider: `{{ literal ${safe(providerId)} }}`,
             noRowsMessage,
             direction,
             hAlign,
