@@ -601,7 +601,10 @@ module External {
         throw `Unable to process query, table "${tableName}" not defined.`
       }
       // look for specific components of config which may not be considered acceptable
-      let { id, row, filters, sort, paginate, rows } = cleanupConfig(config, table)
+      let { id, row, filters, sort, paginate, rows } = cleanupConfig(
+        config,
+        table
+      )
       filters = buildFilters(id, filters || {}, table)
       const relationships = this.buildRelationships(table)
       // clean up row on ingress using schema
