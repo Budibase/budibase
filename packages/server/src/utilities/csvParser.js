@@ -95,7 +95,9 @@ async function transform({ schema, csvString, existingTable }) {
   const colParser = {}
 
   // make sure the table has all the columns required for import
-  schema = updateSchema({ schema, existingTable })
+  if (existingTable) {
+    schema = updateSchema({ schema, existingTable })
+  }
 
   for (let key of Object.keys(schema)) {
     colParser[key] = PARSERS[schema[key].type] || schema[key].type
