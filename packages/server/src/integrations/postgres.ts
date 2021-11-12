@@ -130,7 +130,7 @@ module PostgresModule {
     public tables: Record<string, Table> = {}
     public schemaErrors: Record<string, string> = {}
 
-    COLUMNS_SQL!: string 
+    COLUMNS_SQL!: string
 
     PRIMARY_KEYS_SQL = `
     select tc.table_schema, tc.table_name, kc.column_name as primary_key 
@@ -165,11 +165,11 @@ module PostgresModule {
 
     setSchema() {
       if (!this.config.schema) {
-        this.config.schema = 'public'
+        this.config.schema = "public"
       }
-      this.client.on('connect', (client: any) => {    
-        client.query(`SET search_path TO ${this.config.schema}`);
-      });
+      this.client.on("connect", (client: any) => {
+        client.query(`SET search_path TO ${this.config.schema}`)
+      })
       this.COLUMNS_SQL = `select * from information_schema.columns where table_schema = '${this.config.schema}'`
     }
 

@@ -76,7 +76,7 @@ describe("/api/global/auth", () => {
     afterEach(() => {
       expect(strategyFactory).toBeCalledWith(
         chosenConfig, 
-        `http://127.0.0.1:4003/api/global/auth/${TENANT_ID}/oidc/callback` // calculated url
+        `http://localhost:10000/api/global/auth/${TENANT_ID}/oidc/callback`
       )
     })
 
