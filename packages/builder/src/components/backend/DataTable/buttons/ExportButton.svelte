@@ -7,7 +7,7 @@
   let modal
 </script>
 
-<ActionButton icon="Download" size="S" quiet on:click={modal.show}>
+<ActionButton icon="DataDownload" size="S" quiet on:click={modal.show}>
   Export
 </ActionButton>
 <Modal bind:this={modal}>

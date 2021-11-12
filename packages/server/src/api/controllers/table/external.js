@@ -279,3 +279,8 @@ exports.destroy = async function (ctx) {
 
   return tableToDelete
 }
+
+exports.bulkImport = async function (ctx) {
+  ctx.status = 200
+  ctx.body = {}
+}
