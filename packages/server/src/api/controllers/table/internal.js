@@ -151,4 +151,5 @@ exports.bulkImport = async function (ctx) {
   const table = await getTable(appId, ctx.params.tableId)
   const { dataImport } = ctx.request.body
   await handleDataImport(appId, ctx.user, table, dataImport)
+  return table
 }

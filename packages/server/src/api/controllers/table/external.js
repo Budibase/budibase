@@ -17,6 +17,8 @@ const {
 } = require("../../../constants")
 const { makeExternalQuery } = require("../../../integrations/base/utils")
 const { cloneDeep } = require("lodash/fp")
+const csvParser = require("../../../utilities/csvParser")
+const { save: rowSave } = require("../row/external")
 
 async function makeTableRequest(
   datasource,
@@ -281,6 +283,33 @@ exports.destroy = async function (ctx) {
 }
 
 exports.bulkImport = async function (ctx) {
-  ctx.status = 200
-  ctx.body = {}
+  const appId = ctx.appId
+  const table = await getTable(appId, ctx.params.tableId)
+  const { dataImport } = ctx.request.body
+  if (!dataImport || !dataImport.schema || !dataImport.csvString) {
+    ctx.throw(400, "Provided data import information is invalid.")
+  }
+  const rows = await csvParser.transform({
+    ...dataImport,
+    existingTable: table,
+  })
+  const promises = []
+  for (let row of rows) {
+    const rowSaveCtx = {
+      appId,
+      params: {
+        tableId: table._id,
+      },
+      request: {
+        body: {
+          ...row,
+          tableId: table._id,
+        },
+      },
+    }
+    promises.push(rowSave(rowSaveCtx))
+  }
+  // don't error if some error, as some will have been imported
+  await Promise.allSettled(promises)
+  return table
 }
