@@ -47,6 +47,6 @@
     --spectrum-semantic-positive-border-color: #2d9d78;
     --spectrum-semantic-positive-icon-color: #2d9d78;
     --spectrum-semantic-negative-icon-color: #e34850;
-    min-width: 150px !important;
+    min-width: 100px;
   }
 </style>
