@@ -55,7 +55,7 @@ export const fetchDatasourceSchema = async dataSource => {
     return dataSource.value?.schema
   }
 
-  // Field sources will have their schema statically defined by the builder
+  // Field sources have their schema statically defined
   if (type === "field") {
     if (dataSource.fieldType === "attachment") {
       return {
