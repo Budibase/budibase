@@ -346,6 +346,7 @@ export const getSchemaForDatasource = (asset, datasource, isForm = false) => {
       const queries = get(queriesStores).list
       table = queries.find(query => query._id === datasource._id)
     } else if (type === "field") {
+      table = { name: datasource.fieldName }
       const { fieldType } = datasource
       if (fieldType === "attachment") {
         schema = {

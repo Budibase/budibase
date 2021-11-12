@@ -17,6 +17,7 @@
   export let instance = {}
   export let isLayout = false
   export let isScreen = false
+  export let isBlock = false
 
   // The enriched component settings
   let enrichedSettings
@@ -44,7 +45,6 @@
   // Get contexts
   const context = getContext("context")
   const insideScreenslot = !!getContext("screenslot")
-  const insideBlock = !!getContext("block")
 
   // Create component context
   const componentStore = writable({})
@@ -69,7 +69,7 @@
   $: interactive =
     $builderStore.inBuilder &&
     ($builderStore.previewType === "layout" || insideScreenslot) &&
-    !insideBlock
+    !isBlock
   $: draggable = interactive && !isLayout && !isScreen
   $: droppable = interactive && !isLayout && !isScreen
 
@@ -262,6 +262,7 @@
       class:droppable
       class:empty
       class:interactive
+      class:block={isBlock}
       data-id={id}
       data-name={name}
     >
@@ -272,7 +273,7 @@
           {/each}
         {:else if emptyState}
           <Placeholder />
-        {:else if insideBlock}
+        {:else if isBlock}
           <slot />
         {/if}
       </svelte:component>

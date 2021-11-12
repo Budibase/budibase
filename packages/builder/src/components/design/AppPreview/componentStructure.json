@@ -4,7 +4,8 @@
     "icon": "Article",
     "children": [
       "tableblock",
-      "cardsblock"
+      "cardsblock",
+      "datablock"
     ]
   },
   "section",
