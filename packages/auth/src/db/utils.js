@@ -54,6 +54,9 @@ exports.isProdAppID = appId => {
 }
 
 function isDevApp(app) {
+  if (!app) {
+    return false
+  }
   return exports.isDevAppID(app.appId)
 }
 
@@ -233,16 +236,16 @@ exports.getAllApps = async (CouchDB, { dev, all, idsOnly } = {}) => {
   if (idsOnly) {
     return appDbNames
   }
-  const appPromises = appDbNames.map(db =>
+  const appPromises = appDbNames.map(app =>
     // skip setup otherwise databases could be re-created
-    getAppMetadata(db)
+    getAppMetadata(app, CouchDB)
   )
   if (appPromises.length === 0) {
     return []
   } else {
     const response = await Promise.allSettled(appPromises)
     const apps = response
-      .filter(result => result.status === "fulfilled")
+      .filter(result => result.status === "fulfilled" && result.value != null)
       .map(({ value }) => value)
     if (!all) {
       return apps.filter(app => {

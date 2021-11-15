@@ -1,5 +1,5 @@
 const redis = require("../redis/authRedis")
-const { getDB } = require("../db")
+const { getCouch } = require("../db")
 const { DocumentTypes } = require("../db/constants")
 
 const EXPIRY_SECONDS = 3600
@@ -7,8 +7,12 @@ const EXPIRY_SECONDS = 3600
 /**
  * The default populate app metadata function
  */
-const populateFromDB = async appId => {
-  return getDB(appId, { skip_setup: true }).get(DocumentTypes.APP_METADATA)
+const populateFromDB = async (appId, CouchDB = null) => {
+  if (!CouchDB) {
+    CouchDB = getCouch()
+  }
+  const db = new CouchDB(appId, { skip_setup: true })
+  return db.get(DocumentTypes.APP_METADATA)
 }
 
 /**
@@ -18,12 +22,12 @@ const populateFromDB = async appId => {
  * @param {*} appId the id of the app to get metadata from.
  * @returns {object} the app metadata.
  */
-exports.getAppMetadata = async appId => {
+exports.getAppMetadata = async (appId, CouchDB = null) => {
   const client = await redis.getAppClient()
   // try cache
   let metadata = await client.get(appId)
   if (!metadata) {
-    metadata = await populateFromDB(appId)
+    metadata = await populateFromDB(appId, CouchDB)
     client.store(appId, metadata, EXPIRY_SECONDS)
   }
   return metadata
