@@ -50,7 +50,7 @@
         toggleScreenSelection(templates.find(t => t.id === blankScreen))}
       class:disabled={autoSelected}
     >
-      <div class="content">
+      <div data-cy="blank-screen" class="content">
         <Body size="S">Blank</Body>
       </div>
       <div style="color: var(--spectrum-global-color-green-600); float: right">
