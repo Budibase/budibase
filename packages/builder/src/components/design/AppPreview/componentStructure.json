@@ -5,7 +5,7 @@
     "children": [
       "tableblock",
       "cardsblock",
-      "datablock"
+      "repeaterblock"
     ]
   },
   "section",
