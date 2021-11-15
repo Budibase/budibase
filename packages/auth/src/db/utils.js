@@ -6,6 +6,7 @@ const { StaticDatabases, SEPARATOR, DocumentTypes } = require("./constants")
 const { getTenantId, getTenantIDFromAppID } = require("../tenancy")
 const fetch = require("node-fetch")
 const { getCouch } = require("./index")
+const { getAppMetadata } = require("../cache/appMetadata")
 
 const UNICODE_MAX = "\ufff0"
 
@@ -234,7 +235,7 @@ exports.getAllApps = async (CouchDB, { dev, all, idsOnly } = {}) => {
   }
   const appPromises = appDbNames.map(db =>
     // skip setup otherwise databases could be re-created
-    new CouchDB(db, { skip_setup: true }).get(DocumentTypes.APP_METADATA)
+    getAppMetadata(db)
   )
   if (appPromises.length === 0) {
     return []
