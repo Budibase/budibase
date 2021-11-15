@@ -5,7 +5,8 @@
     "deviceAwareness": true,
     "state": true,
     "customThemes": true,
-    "devicePreview": true
+    "devicePreview": true,
+    "messagePassing": true
   },
   "layout": {
     "name": "Layout",
@@ -2457,12 +2458,12 @@
     "settings": [
       {
         "type": "dataProvider",
-        "label": "Provider",
+        "label": "Data provider",
         "key": "dataProvider"
       },
       {
         "type": "number",
-        "label": "Row Count",
+        "label": "Row count",
         "key": "rowCount",
         "defaultValue": 8
       },
@@ -2496,9 +2497,36 @@
       },
       {
         "type": "boolean",
-        "label": "Auto Columns",
+        "label": "Show auto columns",
         "key": "showAutoColumns",
         "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Link table rows",
+        "key": "linkRows"
+      },
+      {
+        "type": "boolean",
+        "label": "Open link screens in modal",
+        "key": "linkPeek"
+      },
+      {
+        "type": "url",
+        "label": "Link screen",
+        "key": "linkURL"
+      },
+      {
+        "section": true,
+        "name": "Advanced",
+        "settings": [
+          {
+            "type": "field",
+            "label": "ID column for linking (appended to URL)",
+            "key": "linkColumn",
+            "placeholder": "Default"
+          }
+        ]
       }
     ],
     "context": {
@@ -2570,9 +2598,340 @@
       },
       {
         "type": "boolean",
+        "key": "linkPeek",
+        "label": "Open link in modal"
+      },
+      {
+        "type": "boolean",
         "key": "horizontal",
         "label": "Horizontal"
+      },
+      {
+        "type": "boolean",
+        "label": "Show button",
+        "key": "showButton"
+      },
+      {
+        "type": "text",
+        "key": "buttonText",
+        "label": "Button text"
+      },
+      {
+        "type": "event",
+        "label": "Button action",
+        "key": "buttonOnClick"
       }
     ]
+  },
+  "tableblock": {
+    "block": true,
+    "name": "Table block",
+    "icon": "Table",
+    "styles": ["size"],
+    "info": "Only the first 3 search columns will be used.",
+    "settings": [
+      {
+        "type": "text",
+        "label": "Title",
+        "key": "title"
+      },
+      {
+        "type": "dataSource",
+        "label": "Data",
+        "key": "dataSource"
+      },
+      {
+        "type": "multifield",
+        "label": "Search Columns",
+        "key": "searchColumns",
+        "placeholder": "Choose search columns"
+      },
+      {
+        "type": "filter",
+        "label": "Filtering",
+        "key": "filter"
+      },
+      {
+        "type": "field",
+        "label": "Sort Column",
+        "key": "sortColumn"
+      },
+      {
+        "type": "select",
+        "label": "Sort Order",
+        "key": "sortOrder",
+        "options": ["Ascending", "Descending"],
+        "defaultValue": "Descending"
+      },
+      {
+        "type": "select",
+        "label": "Size",
+        "key": "size",
+        "defaultValue": "spectrum--medium",
+        "options": [
+          {
+            "label": "Medium",
+            "value": "spectrum--medium"
+          },
+          {
+            "label": "Large",
+            "value": "spectrum--large"
+          }
+        ]
+      },
+      {
+        "type": "boolean",
+        "label": "Paginate",
+        "key": "paginate",
+        "defaultValue": true
+      },
+      {
+        "section": true,
+        "name": "Table",
+        "settings": [
+          {
+            "type": "number",
+            "label": "Row Count",
+            "key": "rowCount",
+            "defaultValue": 8
+          },
+          {
+            "type": "multifield",
+            "label": "Table Columns",
+            "key": "tableColumns",
+            "dependsOn": "dataSource",
+            "placeholder": "All columns"
+          },
+          {
+            "type": "boolean",
+            "label": "Quiet table variant",
+            "key": "quiet"
+          },
+          {
+            "type": "boolean",
+            "label": "Show auto columns",
+            "key": "showAutoColumns"
+          },
+          {
+            "type": "boolean",
+            "label": "Link table rows",
+            "key": "linkRows"
+          },
+          {
+            "type": "boolean",
+            "label": "Open link in modal",
+            "key": "linkPeek"
+          },
+          {
+            "type": "url",
+            "label": "Link screen",
+            "key": "linkURL"
+          }
+        ]
+      },
+      {
+        "section": true,
+        "name": "Title button",
+        "settings": [
+          {
+            "type": "boolean",
+            "key": "showTitleButton",
+            "label": "Show link button",
+            "defaultValue": false
+          },
+          {
+            "type": "boolean",
+            "label": "Open link in modal",
+            "key": "titleButtonPeek"
+          },
+          {
+            "type": "text",
+            "key": "titleButtonText",
+            "label": "Button text"
+          },
+          {
+            "type": "url",
+            "label": "Button link",
+            "key": "titleButtonURL"
+          }
+        ]
+      },
+      {
+        "section": true,
+        "name": "Advanced",
+        "settings": [
+          {
+            "type": "field",
+            "label": "ID column for linking (appended to URL)",
+            "key": "linkColumn",
+            "placeholder": "Default"
+          }
+        ]
+      }
+    ]
+  },
+  "cardsblock": {
+    "block": true,
+    "name": "Cards block",
+    "icon": "Table",
+    "styles": ["size"],
+    "info": "Only the first 3 search columns will be used.",
+    "settings": [
+      {
+        "type": "text",
+        "label": "Title",
+        "key": "title"
+      },
+      {
+        "type": "dataSource",
+        "label": "Data",
+        "key": "dataSource"
+      },
+      {
+        "type": "multifield",
+        "label": "Search Columns",
+        "key": "searchColumns",
+        "placeholder": "Choose search columns"
+      },
+      {
+        "type": "filter",
+        "label": "Filtering",
+        "key": "filter"
+      },
+      {
+        "type": "field",
+        "label": "Sort Column",
+        "key": "sortColumn"
+      },
+      {
+        "type": "select",
+        "label": "Sort Order",
+        "key": "sortOrder",
+        "options": ["Ascending", "Descending"],
+        "defaultValue": "Descending"
+      },
+      {
+        "type": "number",
+        "label": "Limit",
+        "key": "limit",
+        "defaultValue": 8
+      },
+      {
+        "type": "boolean",
+        "label": "Paginate",
+        "key": "paginate"
+      },
+      {
+        "section": true,
+        "name": "Cards",
+        "settings": [
+          {
+            "type": "text",
+            "key": "cardTitle",
+            "label": "Title",
+            "nested": true
+          },
+          {
+            "type": "text",
+            "key": "cardSubtitle",
+            "label": "Subtitle",
+            "nested": true
+          },
+          {
+            "type": "text",
+            "key": "cardDescription",
+            "label": "Description",
+            "nested": true
+
+          },
+          {
+            "type": "text",
+            "key": "cardImageURL",
+            "label": "Image URL",
+            "nested": true
+          },
+          {
+            "type": "boolean",
+            "key": "linkCardTitle",
+            "label": "Link card title"
+          },
+          {
+            "type": "boolean",
+            "key": "cardPeek",
+            "label": "Open link in modal"
+          },
+          {
+            "type": "url",
+            "label": "Link screen",
+            "key": "cardURL",
+            "nested": true
+          },
+          {
+            "type": "boolean",
+            "key": "cardHorizontal",
+            "label": "Horizontal"
+          },
+          {
+            "type": "boolean",
+            "label": "Show button",
+            "key": "showCardButton"
+          },
+          {
+            "type": "text",
+            "key": "cardButtonText",
+            "label": "Button text",
+            "nested": true
+          },
+          {
+            "type": "event",
+            "label": "Button action",
+            "key": "cardButtonOnClick",
+            "nested": true
+          }
+        ]
+      },
+      {
+        "section": true,
+        "name": "Title button",
+        "settings": [
+          {
+            "type": "boolean",
+            "key": "showTitleButton",
+            "label": "Show link button"
+          },
+          {
+            "type": "boolean",
+            "label": "Open link in modal",
+            "key": "titleButtonPeek"
+          },
+          {
+            "type": "text",
+            "key": "titleButtonText",
+            "label": "Button text"
+          },
+          {
+            "type": "url",
+            "label": "Button link",
+            "key": "titleButtonURL"
+          }
+        ]
+      },
+      {
+        "section": true,
+        "name": "Advanced",
+        "settings": [
+          {
+            "type": "field",
+            "label": "ID column for linking (appended to URL)",
+            "key": "linkColumn",
+            "placeholder": "Default"
+          }
+        ]
+      }
+    ],
+    "context": {
+      "type": "schema",
+      "suffix": "repeater"
+    }
   }
 }

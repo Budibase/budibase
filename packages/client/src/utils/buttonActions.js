@@ -4,7 +4,6 @@ import {
   builderStore,
   confirmationStore,
   authStore,
-  peekStore,
   stateStore,
 } from "stores"
 import { saveRow, deleteRow, executeQuery, triggerAutomation } from "api"
@@ -42,20 +41,7 @@ const triggerAutomationHandler = async action => {
 
 const navigationHandler = action => {
   const { url, peek } = action.parameters
-  if (url) {
-    // If we're already peeking, don't peek again
-    const isPeeking = get(routeStore).queryParams?.peek
-    if (peek && !isPeeking) {
-      peekStore.actions.showPeek(url)
-    } else {
-      const external = !url.startsWith("/")
-      if (external) {
-        window.location.href = url
-      } else {
-        routeStore.actions.navigate(action.parameters.url)
-      }
-    }
-  }
+  routeStore.actions.navigate(url, peek)
 }
 
 const queryExecutionHandler = async action => {
@@ -120,7 +106,7 @@ const changeFormStepHandler = async (action, context) => {
 const closeScreenModalHandler = () => {
   // Emit this as a window event, so parent screens which are iframing us in
   // can close the modal
-  window.dispatchEvent(new Event("close-screen-modal"))
+  window.parent.postMessage({ type: "close-screen-modal" })
 }
 
 const updateStateHandler = action => {
@@ -161,9 +147,15 @@ const confirmTextMap = {
  */
 export const enrichButtonActions = (actions, context) => {
   // Prevent button actions in the builder preview
-  if (get(builderStore).inBuilder) {
+  if (!actions || get(builderStore).inBuilder) {
     return () => {}
   }
+
+  // If this is a function then it has already been enriched
+  if (typeof actions === "function") {
+    return actions
+  }
+
   const handlers = actions.map(def => handlerMap[def["##eventHandlerType"]])
   return async () => {
     for (let i = 0; i < handlers.length; i++) {

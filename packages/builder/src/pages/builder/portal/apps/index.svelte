@@ -6,6 +6,7 @@
     ActionButton,
     ActionGroup,
     ButtonGroup,
+    Input,
     Select,
     Modal,
     Page,
@@ -36,6 +37,7 @@
   let loaded = false
   let searchTerm = ""
   let cloud = $admin.cloud
+  let appName = ""
 
   $: enrichedApps = enrichApps($apps, $auth.user, sortBy)
   $: filteredApps = enrichedApps.filter(app =>
@@ -184,9 +186,27 @@
     }
   }
 
+  function createAppFromTemplateUrl(templateKey) {
+    // validate the template key just to make sure
+    const templateParts = templateKey.split("/")
+    if (templateParts.length === 2 && templateParts[0] === "app") {
+      template = {
+        key: templateKey,
+      }
+      initiateAppCreation()
+    } else {
+      notifications.error("Your Template URL is invalid. Please try another.")
+    }
+  }
+
   onMount(async () => {
     await apps.load()
     loaded = true
+    // if the portal is loaded from an external URL with a template param
+    const initInfo = await auth.getInitInfo()
+    if (initInfo.init_template) {
+      createAppFromTemplateUrl(initInfo.init_template)
+    }
   })
 </script>
 
@@ -278,8 +298,12 @@
   title="Confirm deletion"
   okText="Delete app"
   onOk={confirmDeleteApp}
+  disabled={appName !== selectedApp?.name}
 >
   Are you sure you want to delete the app <b>{selectedApp?.name}</b>?
+
+  <p>Please enter the app name below to confirm.</p>
+  <Input bind:value={appName} data-cy="delete-app-confirmation" />
 </ConfirmDialog>
 <ConfirmDialog
   bind:this={unpublishModal}

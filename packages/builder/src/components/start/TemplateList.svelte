@@ -37,33 +37,33 @@
           <p class="detail">{template?.category?.toUpperCase()}</p>
         </div>
       {/each}
-      <div class="template start-from-scratch" on:click={() => onSelect(null)}>
-        <div
-          class="background-icon"
-          style={`background: rgb(50, 50, 50); color: white;`}
-        >
-          <Icon name="Add" />
-        </div>
-        <Heading size="XS">Start from scratch</Heading>
-        <p class="detail">BLANK</p>
-      </div>
-      <div
-        class="template import"
-        on:click={() => onSelect(null, { useImport: true })}
-      >
-        <div
-          class="background-icon"
-          style={`background: rgb(50, 50, 50); color: white;`}
-        >
-          <Icon name="Add" />
-        </div>
-        <Heading size="XS">Import an app</Heading>
-        <p class="detail">BLANK</p>
-      </div>
     </div>
   {:catch err}
     <h1 style="color:red">{err}</h1>
   {/await}
+  <div class="template start-from-scratch" on:click={() => onSelect(null)}>
+    <div
+      class="background-icon"
+      style={`background: rgb(50, 50, 50); color: white;`}
+    >
+      <Icon name="Add" />
+    </div>
+    <Heading size="XS">Start from scratch</Heading>
+    <p class="detail">BLANK</p>
+  </div>
+  <div
+    class="template import"
+    on:click={() => onSelect(null, { useImport: true })}
+  >
+    <div
+      class="background-icon"
+      style={`background: rgb(50, 50, 50); color: white;`}
+    >
+      <Icon name="Add" />
+    </div>
+    <Heading size="XS">Import an app</Heading>
+    <p class="detail">BLANK</p>
+  </div>
 </Layout>
 
 <style>

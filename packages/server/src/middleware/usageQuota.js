@@ -2,6 +2,10 @@ const CouchDB = require("../db")
 const usageQuota = require("../utilities/usageQuota")
 const env = require("../environment")
 const { getTenantId } = require("@budibase/auth/tenancy")
+const {
+  isExternalTable,
+  isRowId: isExternalRowId,
+} = require("../integrations/utils")
 
 // tenants without limits
 const EXCLUDED_TENANTS = ["bb", "default", "bbtest", "bbstaging"]
@@ -46,14 +50,24 @@ module.exports = async (ctx, next) => {
   }
   // post request could be a save of a pre-existing entry
   if (ctx.request.body && ctx.request.body._id && ctx.request.body._rev) {
+    const usageId = ctx.request.body._id
     try {
       if (ctx.appId) {
         const db = new CouchDB(ctx.appId)
-        await db.get(ctx.request.body._id)
+        await db.get(usageId)
       }
       return next()
     } catch (err) {
-      ctx.throw(404, `${ctx.request.body._id} does not exist`)
+      if (
+        isExternalTable(usageId) ||
+        (ctx.request.body.tableId &&
+          isExternalTable(ctx.request.body.tableId)) ||
+        isExternalRowId(usageId)
+      ) {
+        return next()
+      } else {
+        ctx.throw(404, `${usageId} does not exist`)
+      }
     }
   }
 

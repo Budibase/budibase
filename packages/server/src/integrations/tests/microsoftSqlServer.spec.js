@@ -9,32 +9,39 @@ class TestConfiguration {
 }
 
 describe("MS SQL Server Integration", () => {
-  let config 
+  let config
 
-  beforeEach(() => {
+  beforeEach(async () => {
     config = new TestConfiguration()
   })
 
-  it("calls the create method with the correct params", async () => {
-    const sql = "insert into users (name, age) values ('Joe', 123);"
-    const response = await config.integration.create({ 
-      sql
+  describe("check sql used", () => {
+    beforeEach(async () => {
+      await config.integration.connect()
     })
-    expect(config.integration.client.query).toHaveBeenCalledWith(sql, {})
-  })
 
-  it("calls the read method with the correct params", async () => {
-    const sql = "select * from users;"
-    const response = await config.integration.read({ 
-      sql
+    it("calls the create method with the correct params", async () => {
+      const sql = "insert into users (name, age) values ('Joe', 123);"
+      const response = await config.integration.create({
+        sql
+      })
+      expect(config.integration.client.request).toHaveBeenCalledWith()
+      expect(response[0]).toEqual(sql)
     })
-    expect(config.integration.client.query).toHaveBeenCalledWith(sql, {})
+
+    it("calls the read method with the correct params", async () => {
+      const sql = "select * from users;"
+      const response = await config.integration.read({
+        sql
+      })
+      expect(config.integration.client.request).toHaveBeenCalledWith()
+      expect(response[0]).toEqual(sql)
+    })
   })
 
   describe("no rows returned", () => {
     beforeEach(async () => {
       await config.integration.connect()
-      config.integration.client.query.mockImplementation(() => ({ rows: [] }))
     })
 
     it("returns the correct response when the create response has no rows", async () => {
@@ -42,7 +49,7 @@ describe("MS SQL Server Integration", () => {
       const response = await config.integration.create({ 
         sql
       })
-      expect(response).toEqual([{ created: true }])
+      expect(response[0]).toEqual(sql)
     })
   })
 })
