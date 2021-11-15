@@ -75,7 +75,11 @@ describe("run misc tests", () => {
         },
       })
       const dataImport = {
-        csvString: "a,b,c,d\n1,2,3,4"
+        csvString: "a,b,c,d\n1,2,3,4",
+        schema: {},
+      }
+      for (let col of ["a", "b", "c", "d"]) {
+        dataImport.schema[col] = { type: "string" }
       }
       await tableUtils.handleDataImport(
         config.getAppId(),

@@ -19,6 +19,7 @@ const {
 } = require("@budibase/auth/tenancy")
 const { removeUserFromInfoDB } = require("@budibase/auth/deprovision")
 const env = require("../../../environment")
+const { syncUserInApps } = require("../../../utilities/appService")
 
 async function allUsers() {
   const db = getGlobalDB()
@@ -32,7 +33,10 @@ async function allUsers() {
 
 exports.save = async ctx => {
   try {
-    ctx.body = await saveUser(ctx.request.body, getTenantId())
+    const user = await saveUser(ctx.request.body, getTenantId())
+    // let server know to sync user
+    await syncUserInApps(user._id)
+    ctx.body = user
   } catch (err) {
     ctx.throw(err.status || 400, err)
   }
@@ -129,6 +133,8 @@ exports.destroy = async ctx => {
   await db.remove(dbUser._id, dbUser._rev)
   await userCache.invalidateUser(dbUser._id)
   await invalidateSessions(dbUser._id)
+  // let server know to sync user
+  await syncUserInApps(dbUser._id)
   ctx.body = {
     message: `User ${ctx.params.id} deleted.`,
   }

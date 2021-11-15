@@ -30,6 +30,8 @@ async function handleRequest(appId, operation, tableId, opts = {}) {
   )
 }
 
+exports.handleRequest = handleRequest
+
 exports.patch = async ctx => {
   const appId = ctx.appId
   const inputs = ctx.request.body

@@ -25,6 +25,7 @@ import {
   findClosestMatchingComponent,
   findAllMatchingComponents,
   findComponent,
+  getComponentSettings,
 } from "../storeUtils"
 import { uuid } from "../uuid"
 import { removeBindings } from "../dataBinding"
@@ -44,6 +45,7 @@ const INITIAL_FRONTEND_STATE = {
     state: false,
     customThemes: false,
     devicePreview: false,
+    messagePassing: false,
   },
   currentFrontEndType: "none",
   selectedScreenId: "",
@@ -368,14 +370,13 @@ export const getFrontendStore = () => {
         }
 
         // Generate default props
+        const settings = getComponentSettings(componentName)
         let props = { ...presetProps }
-        if (definition.settings) {
-          definition.settings.forEach(setting => {
-            if (setting.defaultValue !== undefined) {
-              props[setting.key] = setting.defaultValue
-            }
-          })
-        }
+        settings.forEach(setting => {
+          if (setting.defaultValue !== undefined) {
+            props[setting.key] = setting.defaultValue
+          }
+        })
 
         // Add any extra properties the component needs
         let extras = {}

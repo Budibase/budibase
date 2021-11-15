@@ -1,7 +1,7 @@
 <script>
   import { goto } from "@roxi/routify"
   import { allScreens, store } from "builderStore"
-  import { tables } from "stores/backend"
+  import { tables, datasources } from "stores/backend"
   import {
     ActionMenu,
     Icon,
@@ -40,7 +40,10 @@
     store.actions.screens.delete(templateScreens)
     await tables.fetch()
     notifications.success("Table deleted")
-    if (wasSelectedTable._id === table._id) {
+    if (table.type === "external") {
+      await datasources.fetch()
+    }
+    if (wasSelectedTable && wasSelectedTable._id === table._id) {
       $goto("./table")
     }
   }
@@ -64,9 +67,7 @@
     <Icon s hoverable name="MoreSmallList" />
   </div>
   <MenuItem icon="Edit" on:click={editorModal.show}>Edit</MenuItem>
-  {#if !external}
-    <MenuItem icon="Delete" on:click={showDeleteModal}>Delete</MenuItem>
-  {/if}
+  <MenuItem icon="Delete" on:click={showDeleteModal}>Delete</MenuItem>
 </ActionMenu>
 
 <Modal bind:this={editorModal}>

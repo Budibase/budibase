@@ -57,11 +57,11 @@ export function createAuthStore() {
         analytics.showChat({
           email: user.email,
           created_at: (user.createdAt || Date.now()) / 1000,
-          name: user.name,
+          name: user.account?.name,
           user_id: user._id,
           tenant: user.tenantId,
-          "Company size": user.size,
-          "Job role": user.profession,
+          "Company size": user.account?.size,
+          "Job role": user.account?.profession,
         })
       })
     }
@@ -80,9 +80,30 @@ export function createAuthStore() {
     }
   }
 
+  async function setInitInfo(info) {
+    await api.post(`/api/global/auth/init`, info)
+    auth.update(store => {
+      store.initInfo = info
+      return store
+    })
+    return info
+  }
+
+  async function getInitInfo() {
+    const response = await api.get(`/api/global/auth/init`)
+    const json = response.json()
+    auth.update(store => {
+      store.initInfo = json
+      return store
+    })
+    return json
+  }
+
   return {
     subscribe: store.subscribe,
-    setOrganisation: setOrganisation,
+    setOrganisation,
+    getInitInfo,
+    setInitInfo,
     checkQueryString: async () => {
       const urlParams = new URLSearchParams(window.location.search)
       if (urlParams.has("tenantId")) {
@@ -112,7 +133,7 @@ export function createAuthStore() {
       if (response.status === 200) {
         setUser(json.user)
       } else {
-        throw "Invalid credentials"
+        throw new Error(json.message ? json.message : "Invalid credentials")
       }
       return json
     },
@@ -122,6 +143,7 @@ export function createAuthStore() {
         throw "Unable to create logout"
       }
       await response.json()
+      await setInitInfo({})
       setUser(null)
     },
     updateSelf: async fields => {
