@@ -170,47 +170,18 @@ async function getAllUserRoles(appId, userRoleId) {
  * to determine if a user can access something that requires a specific role.
  * @param {string} appId The ID of the application from which roles should be obtained.
  * @param {string} userRoleId The user's role ID, this can be found in their access token.
+ * @param {object} opts Various options, such as whether to only retrieve the IDs (default true).
  * @returns {Promise<string[]>} returns an ordered array of the roles, with the first being their
  * highest level of access and the last being the lowest level.
  */
-exports.getUserRoleHierarchy = async (appId, userRoleId) => {
+exports.getUserRoleHierarchy = async (
+  appId,
+  userRoleId,
+  opts = { idOnly: true }
+) => {
   // special case, if they don't have a role then they are a public user
-  return (await getAllUserRoles(appId, userRoleId)).map(role => role._id)
-}
-
-/**
- * Get all of the user permissions which could be found across the role hierarchy
- * @param appId The ID of the application from which roles should be obtained.
- * @param userRoleId The user's role ID, this can be found in their access token.
- * @returns {Promise<{basePermissions: string[], permissions: Object}>} the base
- * permission IDs as well as any custom resource permissions.
- */
-exports.getUserPermissions = async (appId, userRoleId) => {
-  const rolesHierarchy = await getAllUserRoles(appId, userRoleId)
-  const basePermissions = [
-    ...new Set(rolesHierarchy.map(role => role.permissionId)),
-  ]
-  const permissions = {}
-  for (let role of rolesHierarchy) {
-    if (role.permissions) {
-      for (let [resource, levels] of Object.entries(role.permissions)) {
-        if (!permissions[resource]) {
-          permissions[resource] = []
-        }
-        const permsSet = new Set(permissions[resource])
-        if (Array.isArray(levels)) {
-          levels.forEach(level => permsSet.add(level))
-        } else {
-          permsSet.add(levels)
-        }
-        permissions[resource] = [...permsSet]
-      }
-    }
-  }
-  return {
-    basePermissions,
-    permissions,
-  }
+  const roles = await getAllUserRoles(appId, userRoleId)
+  return opts.idOnly ? roles.map(role => role._id) : roles
 }
 
 /**
@@ -244,6 +215,37 @@ exports.getAllRoles = async appId => {
     }
   }
   return roles
+}
+
+/**
+ * This retrieves the required role/
+ * @param appId
+ * @param permLevel
+ * @param resourceId
+ * @param subResourceId
+ * @return {Promise<{permissions}|Object>}
+ */
+exports.getRequiredResourceRole = async (
+  appId,
+  permLevel,
+  { resourceId, subResourceId }
+) => {
+  const roles = await exports.getAllRoles(appId)
+  let main, sub
+  for (let role of roles) {
+    // no permissions, ignore it
+    if (!role.permissions) {
+      continue
+    }
+    const mainRes = role.permissions[resourceId]
+    const subRes = role.permissions[subResourceId]
+    if (mainRes && mainRes.indexOf(permLevel) !== -1) {
+      main = role
+    } else if (subRes && subRes.indexOf(permLevel) !== -1) {
+      sub = role
+    }
+  }
+  return sub ? sub : main
 }
 
 class AccessController {
