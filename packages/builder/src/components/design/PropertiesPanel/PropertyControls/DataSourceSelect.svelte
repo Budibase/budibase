@@ -89,8 +89,8 @@
   $: fields = bindings
     .filter(x => arrayTypes.includes(x.fieldSchema?.type))
     .map(binding => {
-      const { providerId, readableBinding, fieldSchema } = binding || {}
-      const { name, type, tableId } = fieldSchema || {}
+      const { providerId, readableBinding, runtimeBinding } = binding
+      const { name, type, tableId } = binding.fieldSchema
       return {
         providerId,
         label: readableBinding,
@@ -98,7 +98,7 @@
         fieldType: type,
         tableId,
         type: "field",
-        value: `{{ literal ${safe(providerId)}.${safe(name)} }}`,
+        value: `{{ literal ${runtimeBinding} }}`,
       }
     })
 
