@@ -156,14 +156,16 @@
       </div>
     {/each}
   </div>
-  <div class="display-column">
-    <Select
-      label="Display Column"
-      bind:value={primaryDisplay}
-      options={fields}
-      sort
-    />
-  </div>
+  {#if !existingTableId}
+    <div class="display-column">
+      <Select
+        label="Display Column"
+        bind:value={primaryDisplay}
+        options={fields}
+        sort
+      />
+    </div>
+  {/if}
 {:else if hasValidated}
   <div>
     <InlineAlert
