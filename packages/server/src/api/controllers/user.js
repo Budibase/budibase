@@ -97,6 +97,7 @@ exports.syncUser = async function (ctx) {
       .map(([appId]) => appId)
   }
   for (let prodAppId of prodAppIds) {
+    const roleId = roles[prodAppId]
     const devAppId = getDevelopmentAppID(prodAppId)
     for (let appId of [prodAppId, devAppId]) {
       if (!(await doesDatabaseExist(appId))) {
@@ -114,6 +115,10 @@ exports.syncUser = async function (ctx) {
         metadata = {
           tableId: InternalTables.USER_METADATA,
         }
+      }
+      // assign the roleId for the metadata doc
+      if (roleId) {
+        metadata.roleId = roleId
       }
       let combined = !deleting
         ? combineMetadataAndUser(user, metadata)
