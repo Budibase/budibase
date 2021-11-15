@@ -17,6 +17,8 @@ const {
 } = require("../../../constants")
 const { makeExternalQuery } = require("../../../integrations/base/utils")
 const { cloneDeep } = require("lodash/fp")
+const csvParser = require("../../../utilities/csvParser")
+const { handleRequest } = require("../row/external")
 
 async function makeTableRequest(
   datasource,
@@ -278,4 +280,21 @@ exports.destroy = async function (ctx) {
   await db.put(datasource)
 
   return tableToDelete
+}
+
+exports.bulkImport = async function (ctx) {
+  const appId = ctx.appId
+  const table = await getTable(appId, ctx.params.tableId)
+  const { dataImport } = ctx.request.body
+  if (!dataImport || !dataImport.schema || !dataImport.csvString) {
+    ctx.throw(400, "Provided data import information is invalid.")
+  }
+  const rows = await csvParser.transform({
+    ...dataImport,
+    existingTable: table,
+  })
+  await handleRequest(appId, DataSourceOperation.BULK_CREATE, table._id, {
+    rows,
+  })
+  return table
 }

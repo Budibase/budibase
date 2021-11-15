@@ -29,10 +29,7 @@ function generateSchema(
   for (let [key, column] of Object.entries(table.schema)) {
     // skip things that are already correct
     const oldColumn = oldTable ? oldTable.schema[key] : null
-    if (
-      (oldColumn && oldColumn.type) ||
-      (primaryKey === key && !isJunction)
-    ) {
+    if ((oldColumn && oldColumn.type) || (primaryKey === key && !isJunction)) {
       continue
     }
     switch (column.type) {
