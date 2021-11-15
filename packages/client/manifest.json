@@ -2933,8 +2933,8 @@
       "suffix": "repeater"
     }
   },
-  "datablock": {
-    "name": "Data block",
+  "repeaterblock": {
+    "name": "Repeater block",
     "icon": "ViewList",
     "illegalChildren": ["section"],
     "hasChildren": true,
