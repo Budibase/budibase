@@ -80,5 +80,4 @@ xcontext("Custom Theming Properties", () => {
         .parent().find(".container.svelte-z3cm5a").click()
         .get('[title="Gray 800"]').children().find('[aria-label="Checkmark"]')
     }
-
 })

@@ -35,32 +35,71 @@ Cypress.Commands.add("login", () => {
 Cypress.Commands.add("createApp", name => {
   cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
   cy.wait(500)
+  cy.request(`localhost:${Cypress.env("PORT")}/api/applications?status=all`).its('body').then((body) => {
+    if( body.length > 0) {
+      cy.get(".spectrum-Button").contains("Create app").click({ force: true })
+    }
+  })
   cy.contains(/Start from scratch/).dblclick()
   cy.get(".spectrum-Modal").within(() => {
     cy.get("input").eq(0).type(name).should("have.value", name).blur()
     cy.get(".spectrum-ButtonGroup").contains("Create app").click()
-    cy.wait(7000)
+    cy.wait(5000)
   })
+  cy.createTable("Cypress Tests", true)
 })
 
-Cypress.Commands.add("deleteApp", () => {
+Cypress.Commands.add("deleteApp", name => {
   cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
-  cy.wait(1000)
+  cy.wait(2000)
   cy.request(`localhost:${Cypress.env("PORT")}/api/applications?status=all`)
-    .its("body")
-    .then(val => {
-      console.log(val)
-      if (val.length > 0) {
-        cy.get(".title > :nth-child(3) > .spectrum-Icon").click()
-        cy.contains("Delete").click()
-        cy.get(".spectrum-Button--warning").click()
-      }
-    })
+  .its("body")
+  .then(val => {
+    if (val.length > 0) {
+      cy.searchForApplication(name)
+      cy.get(".appGrid").children().within(() => {
+        cy.get(".title").children().within(() => {
+          cy.get(".spectrum-Icon").click()
+        })
+        })
+      cy.get(".spectrum-Menu").contains("Delete").click()
+      cy.get(".spectrum-Dialog-grid").within(() => {
+        cy.get("input").type(name)
+      })
+      cy.get(".spectrum-Button--warning").click()
+    }
+    else {
+      return
+    }
+  })
+  })
+
+Cypress.Commands.add("deleteAllApps", () => {
+  cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
+  cy.wait(500)
+  cy.request(`localhost:${Cypress.env("PORT")}/api/applications?status=all`)
+  .its("body")
+  .then(val => {
+    for (let i = 0; i < val.length; i++) {
+      cy.get(".spectrum-Heading").eq(1).then((app) => {
+        const name = app.text()
+        cy.get(".title").children().within(() => {
+          cy.get(".spectrum-Icon").eq(0).click()
+        })
+        cy.get(".spectrum-Menu").contains("Delete").click()
+        cy.get(".spectrum-Dialog-grid").within(() => {
+          cy.get("input").type(name)
+          cy.get(".spectrum-Button--warning").click()
+        })
+        cy.reload()
+      })
+    }
+  })
 })
 
 Cypress.Commands.add("createTestApp", () => {
   const appName = "Cypress Tests"
-  cy.deleteApp()
+  cy.deleteApp(appName)
   cy.createApp(appName, "This app is used for Cypress testing.")
 })
 
@@ -70,10 +109,14 @@ Cypress.Commands.add("createTestTableWithData", () => {
   cy.addColumn("dog", "age", "Number")
 })
 
-Cypress.Commands.add("createTable", tableName => {
-  cy.contains("Budibase DB").click()
-  cy.contains("Create new table").click()
-
+Cypress.Commands.add("createTable", (tableName, initialTable) => {
+  if (!initialTable) {
+    cy.get(".add-button").click()
+  }
+  cy.wait(7000)
+  cy.get(".spectrum-Modal").contains("Budibase DB").click().then(() => {
+    cy.get(".spectrum-Button").contains("Continue").click({ force: true })
+  })
   cy.get(".spectrum-Modal").within(() => {
     cy.wait(1000)
     cy.get("input").first().type(tableName).blur()
@@ -183,6 +226,12 @@ Cypress.Commands.add("navigateToFrontend", () => {
   cy.get(".nav-item").contains("Home").click()
 })
 
+Cypress.Commands.add("navigateToDataSection", () => {
+  // Clicks on the Data tab
+  cy.wait(500)
+  cy.contains("Data").click()
+})
+
 Cypress.Commands.add("createScreen", (screenName, route) => {
   cy.get("[aria-label=AddCircle]").click()
   cy.get(".spectrum-Modal").within(() => {
@@ -226,7 +275,102 @@ Cypress.Commands.add("addCustomSourceOptions", totalOptions => {
 })
 
 Cypress.Commands.add("searchForApplication", appName => {
-  cy.get(".spectrum-Textfield").within(() => {
-    cy.get("input").eq(0).type(appName)
+  cy.wait(1000)
+  // Searches for the app
+  cy.get(".filter").then(() => {
+    cy.get(".spectrum-Textfield").within(() => {
+      cy.get("input").eq(0).type(appName)
+  })
+  })
+  // Confirms app exists after search
+  cy.get(".appGrid").contains(appName)
+})
+
+Cypress.Commands.add("selectExternalDatasource", datasourceName => {
+  // Navigates to Data Section
+  cy.navigateToDataSection()
+  // Open Data Source modal
+  cy.get('.nav').within(() => {
+    cy.get(".add-button").click()
+  })
+  // Clicks specified datasource & continue
+  cy.get(".item-list").contains(datasourceName).click()
+  cy.get(".spectrum-Dialog-grid").within(() => {
+    cy.get(".spectrum-Button").contains("Continue").click({ force: true })
+  })
+})
+
+Cypress.Commands.add("addSqlDatasourceConfig", (sqlType, noFetch) => {
+  // addExternalDatasource should be called prior to this
+  // Adds the config for specified SQL datasource & fetches tables
+  // Host IP Address
+  cy.wait(500)
+  cy.get(".spectrum-Dialog-grid").within(() => {
+    cy.get(".form-row").contains("Host").parent().children().within(() => {
+      cy.get(".spectrum-Textfield").within(() => {
+        cy.get("input").clear().type("3.251.63.170")
+      })
+    })
+  })
+  // Database Name
+  cy.get(".spectrum-Dialog-grid").within(() => {
+    cy.get(".form-row").contains("Database").parent().children().within(() => {
+      cy.get(".spectrum-Textfield").within(() => {
+        if (sqlType == "PostgreSQL") {
+          cy.get("input").clear().type("test")
+        }
+        if (sqlType == "MySQL") {
+          cy.get("input").clear().type("mysql")
+        }
+      })
+    })
+  })
+  // User 
+  cy.get(".spectrum-Dialog-grid").within(() => {
+    cy.get(".form-row").contains("User").parent().children().within(() => {
+      cy.get(".spectrum-Textfield").within(() => {
+        if (sqlType == "PostgreSQL") {
+          cy.get("input").clear().type("admin")
+        }
+        if (sqlType == "MySQL") {
+          cy.get("input").clear().type("root")
+        }
+      })
+    })
+  })
+  // Password
+  cy.get(".spectrum-Dialog-grid").within(() => {
+    cy.get(".form-row").contains("Password").parent().children().within(() => {
+      cy.get(".spectrum-Textfield").within(() => {
+        if (sqlType == "PostgreSQL") {
+          cy.get("input").clear().type("8cb2b6f4-4b33-4e86-b790-74eee608a4e9")
+        }
+        if (sqlType == "MySQL") {
+          cy.get("input").clear().type("abdc321d-4d21-4fc7-8d20-f40ab9fe6db0")
+        }
+      })
+    })
+  })
+  // Click to fetch tables
+  if (!noFetch){
+    cy.get(".spectrum-Dialog-grid").within(() => {
+      cy.get(".spectrum-Button").contains("Fetch tables from database").click({ force: true })
+      cy.wait(1000)
+    })
+  }
+})
+
+Cypress.Commands.add("addRestDatasourceConfig", restUrl => {
+  // addExternalDatasource should be called prior to this
+  // Configures REST datasource
+  cy.get(".spectrum-Dialog-grid").within(() => {
+    cy.get(".spectrum-Textfield").within(() => {
+      cy.get("input").clear().type(restUrl)
+    })
+  })
+  // Click Save and continue to query
+  cy.get(".spectrum-Dialog-grid").within(() => {
+    cy.get(".spectrum-Button").contains("Save and continue to query").click({ force: true })
+    cy.wait(500)
   })
 })
