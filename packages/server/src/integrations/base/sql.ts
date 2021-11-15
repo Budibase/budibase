@@ -179,6 +179,16 @@ class InternalBuilder {
     }
   }
 
+  bulkCreate(knex: Knex, json: QueryJson): KnexQuery {
+    const { endpoint, body } = json
+    let query: KnexQuery = knex(endpoint.entityId)
+    if (!Array.isArray(body)) {
+      return query
+    }
+    const parsedBody = body.map(row => parseBody(row))
+    return query.insert(parsedBody)
+  }
+
   read(knex: Knex, json: QueryJson, limit: number): KnexQuery {
     let { endpoint, resource, filters, sort, paginate, relationships } = json
     const tableName = endpoint.entityId
@@ -293,6 +303,9 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
         break
       case Operation.DELETE:
         query = builder.delete(client, json, opts)
+        break
+      case Operation.BULK_CREATE:
+        query = builder.bulkCreate(client, json)
         break
       case Operation.CREATE_TABLE:
       case Operation.UPDATE_TABLE:

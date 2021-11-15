@@ -1,10 +1,11 @@
-import { Table } from "./common"
+import { Row, Table } from "./common"
 
 export enum Operation {
   CREATE = "CREATE",
   READ = "READ",
   UPDATE = "UPDATE",
   DELETE = "DELETE",
+  BULK_CREATE = "BULK_CREATE",
   CREATE_TABLE = "CREATE_TABLE",
   UPDATE_TABLE = "UPDATE_TABLE",
   DELETE_TABLE = "DELETE_TABLE",
@@ -144,7 +145,7 @@ export interface QueryJson {
   filters?: SearchFilters
   sort?: SortJson
   paginate?: PaginationJson
-  body?: object
+  body?: Row | Row[]
   table?: Table
   meta?: {
     table?: Table
