@@ -77,6 +77,9 @@ function parse(csvString, parsers) {
 }
 
 function updateSchema({ schema, existingTable }) {
+  if (!schema) {
+    return schema
+  }
   const finalSchema = {}
   const schemaKeyMap = {}
   Object.keys(schema).forEach(key => (schemaKeyMap[key.toLowerCase()] = key))
