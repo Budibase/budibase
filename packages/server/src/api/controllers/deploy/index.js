@@ -6,6 +6,7 @@ const {
   disableAllCrons,
   enableCronTrigger,
 } = require("../../../automations/utils")
+const { app: appCache } = require("@budibase/auth/cache")
 
 // the max time we can wait for an invalidation to complete before considering it failed
 const MAX_PENDING_TIME_MS = 30 * 60000
@@ -103,6 +104,7 @@ async function deployApp(deployment) {
     appDoc.appId = productionAppId
     appDoc.instance._id = productionAppId
     await db.put(appDoc)
+    await appCache.invalidateAppMetadata(productionAppId)
     console.log("New app doc written successfully.")
     await initDeployedApp(productionAppId)
     console.log("Deployed app initialised, setting deployment to successful")
