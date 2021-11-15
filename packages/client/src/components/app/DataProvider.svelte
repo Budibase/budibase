@@ -188,7 +188,7 @@
       // Field sources will be available from context.
       // Enrich non object elements into object to ensure a valid schema.
       const data = dataSource?.value || []
-      if (data[0] && typeof data[0] !== "object") {
+      if (Array.isArray(data) && data[0] && typeof data[0] !== "object") {
         allRows = data.map(value => ({ value }))
       } else {
         allRows = data
