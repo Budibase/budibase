@@ -207,11 +207,11 @@ const getProviderContextBindings = (asset, dataProviders) => {
       const keys = Object.keys(schema).sort()
 
       // Generate safe unique runtime prefix
-      let runtimeId = component._id
+      let providerId = component._id
       if (runtimeSuffix) {
-        runtimeId += `-${runtimeSuffix}`
+        providerId += `-${runtimeSuffix}`
       }
-      const safeComponentId = makePropSafe(runtimeId)
+      const safeComponentId = makePropSafe(providerId)
 
       // Create bindable properties for each schema field
       keys.forEach(key => {
@@ -235,7 +235,7 @@ const getProviderContextBindings = (asset, dataProviders) => {
           // Field schema and provider are required to construct relationship
           // datasource options, based on bindable properties
           fieldSchema,
-          providerId: component._id,
+          providerId,
         })
       })
     })
