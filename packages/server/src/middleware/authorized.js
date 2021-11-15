@@ -46,13 +46,15 @@ module.exports =
       idOnly: false,
     })
     const permError = "User does not have permission"
-    let requiredRole
+    let possibleRoleIds = []
     if (hasResource(ctx)) {
-      requiredRole = await getRequiredResourceRole(ctx.appId, permLevel, ctx)
+      possibleRoleIds = await getRequiredResourceRole(ctx.appId, permLevel, ctx)
     }
     // check if we found a role, if not fallback to base permissions
-    if (requiredRole) {
-      const found = hierarchy.find(role => role._id === requiredRole._id)
+    if (possibleRoleIds.length > 0) {
+      const found = hierarchy.find(
+        role => possibleRoleIds.indexOf(role._id) !== -1
+      )
       return found ? next() : ctx.throw(403, permError)
     } else if (!doesHaveBasePermission(permType, permLevel, hierarchy)) {
       ctx.throw(403, permError)

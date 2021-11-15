@@ -231,7 +231,8 @@ exports.getRequiredResourceRole = async (
   { resourceId, subResourceId }
 ) => {
   const roles = await exports.getAllRoles(appId)
-  let main, sub
+  let main = [],
+    sub = []
   for (let role of roles) {
     // no permissions, ignore it
     if (!role.permissions) {
@@ -240,12 +241,13 @@ exports.getRequiredResourceRole = async (
     const mainRes = role.permissions[resourceId]
     const subRes = role.permissions[subResourceId]
     if (mainRes && mainRes.indexOf(permLevel) !== -1) {
-      main = role
+      main.push(role._id)
     } else if (subRes && subRes.indexOf(permLevel) !== -1) {
-      sub = role
+      sub.push(role._id)
     }
   }
-  return sub ? sub : main
+  // for now just return the IDs
+  return main.concat(sub)
 }
 
 class AccessController {
