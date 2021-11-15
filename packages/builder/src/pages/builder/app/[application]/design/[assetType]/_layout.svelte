@@ -34,6 +34,7 @@
   let navigationSelectionModal
   let screenNameModal
   let screenName = ""
+  let url = ""
   let selectedScreens = []
 
   // Hydrate state from URL params
@@ -185,7 +186,7 @@
           <Layout gap="S" justifyItems="center">
             <img class="img-size" alt="logo" src={Logo} />
             <div class="new-screen-text">
-              <Detail size="L">Let's add some life to this screen</Detail>
+              <Detail size="M">Let's add some life to this screen</Detail>
             </div>
             <Button on:click={() => modal.show()} size="M" cta>
               <div class="new-screen-button">
@@ -218,13 +219,19 @@
 </Modal>
 
 <Modal bind:this={screenNameModal}>
-  <ScreenNameModal bind:screenName {modal} {navigationSelectionModal} />
+  <ScreenNameModal
+    bind:screenName
+    bind:url
+    {modal}
+    {navigationSelectionModal}
+  />
 </Modal>
 <Modal bind:this={navigationSelectionModal}>
   <NavigationSelectionModal
-    {screenName}
+    bind:url
+    bind:screenName
     {modal}
-    {selectedScreens}
+    bind:selectedScreens
     {screenNameModal}
   />
 </Modal>
@@ -240,6 +247,8 @@
   .new-screen-text {
     width: 160px;
     text-align: center;
+    color: #2c2c2c;
+    font-weight: 600;
   }
 
   .new-screen-button {

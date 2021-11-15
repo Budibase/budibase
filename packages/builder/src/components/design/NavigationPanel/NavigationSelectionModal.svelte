@@ -3,18 +3,19 @@
   import { store, selectedAccessRole, allScreens } from "builderStore"
   import { cloneDeep } from "lodash/fp"
   import sanitizeUrl from "builderStore/store/screenTemplates/utils/sanitizeUrl"
+  import { onDestroy } from "svelte"
 
   export let screenNameModal
   export let selectedScreens
   export let modal
   export let screenName
+  export let url
+
   let roleId = $selectedAccessRole || "BASIC"
 
   let routeError
   let selectedNav
   let createdScreens = []
-  let createLink = true
-
   $: {
     selectedScreens.forEach(screen => {
       createdScreens = [...createdScreens, screen.create()]
@@ -24,22 +25,33 @@
   $: blankSelected = selectedScreens.find(x => x.id === "createFromScratch")
 
   const save = async screens => {
-    screens.forEach(screen => {
-      saveScreens(screen)
-    })
+    for (let screen of screens) {
+      await saveScreens(screen)
+    }
 
     let navLayout = cloneDeep(
       $store.layouts.find(layout => layout._id === "layout_private_master")
     )
     navLayout.props.navigation = selectedNav
+
+    await store.actions.routing.fetch()
     await store.actions.layouts.save(navLayout)
+    selectedScreens = []
+    screenName = ""
+    url = ""
   }
-
   const saveScreens = async draftScreen => {
-    let route = screenName
-      ? sanitizeUrl(`/${screenName}`)
-      : draftScreen.routing.route
+    let existingScreenCount = $store.screens.filter(
+      s => s.props._instanceName == draftScreen.props._instanceName
+    ).length
 
+    if (existingScreenCount > 0) {
+      let oldUrlArr = draftScreen.routing.route.split("/")
+      oldUrlArr[1] = `${oldUrlArr[1]}-${existingScreenCount + 1}`
+      draftScreen.routing.route = oldUrlArr.join("/")
+    }
+
+    let route = url ? sanitizeUrl(`${url}`) : draftScreen.routing.route
     if (draftScreen) {
       if (!route) {
         routeError = "URL is required"
@@ -53,15 +65,19 @@
 
       if (routeError) return false
 
+      if (screenName) {
+        draftScreen.props._instanceName = screenName
+      }
+
       draftScreen.routing.route = route
+
       await store.actions.screens.create(draftScreen)
-      if (createLink) {
+      if (draftScreen.props._instanceName.endsWith("List")) {
         await store.actions.components.links.save(
           draftScreen.routing.route,
-          draftScreen.props._instanceName
+          draftScreen.routing.route.split("/")[1]
         )
       }
-      await store.actions.routing.fetch()
     }
   }
 
@@ -72,6 +88,12 @@
         screen.routing.roleId === roleId
     )
   }
+
+  onDestroy(() => {
+    selectedScreens = []
+    screenName = ""
+    url = ""
+  })
 </script>
 
 <ModalContent
@@ -90,6 +112,7 @@
 
   <div class="wrapper">
     <div
+      data-cy="left-nav"
       on:click={() => (selectedNav = "Left")}
       class:unselected={selectedNav && selectedNav !== "Left"}
     >
