@@ -294,7 +294,7 @@
 
   const extendQuery = (defaultQuery, extensions) => {
     const extensionValues = Object.values(extensions || {})
-    let extendedQuery = { ...query }
+    let extendedQuery = { ...defaultQuery }
     extensionValues.forEach(({ operator, field, value }) => {
       extendedQuery[operator] = {
         ...extendedQuery[operator],
