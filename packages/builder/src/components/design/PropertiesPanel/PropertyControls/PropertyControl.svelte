@@ -6,7 +6,6 @@
   } from "builderStore/dataBinding"
 
   export let label = ""
-  export let bindable = true
   export let componentInstance = {}
   export let control = null
   export let key = ""

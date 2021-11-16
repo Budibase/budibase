@@ -3,6 +3,7 @@
   import Block from "components/Block.svelte"
   import BlockComponent from "components/BlockComponent.svelte"
   import { Heading } from "@budibase/bbui"
+  import { makePropSafe as safe } from "@budibase/string-templates"
 
   export let title
   export let dataSource
@@ -103,7 +104,7 @@
     }
     const col = linkColumn || "_id"
     const split = url.split("/:")
-    return `${split[0]}/{{ [${repeaterId}].[${col}] }}`
+    return `${split[0]}/{{ ${safe(repeaterId)}.${safe(col)} }}`
   }
 
   // Load the datasource schema on mount so we can determine column types
@@ -171,7 +172,7 @@
           bind:id={repeaterId}
           context="repeater"
           props={{
-            dataProvider: `{{ literal [${dataProviderId}] }}`,
+            dataProvider: `{{ literal ${safe(dataProviderId)} }}`,
             direction: "row",
             hAlign: "stretch",
             vAlign: "top",
