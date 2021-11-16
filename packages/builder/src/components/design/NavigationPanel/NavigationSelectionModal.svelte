@@ -17,12 +17,12 @@
   let selectedNav
   let createdScreens = []
   $: {
-    selectedScreens.forEach(screen => {
+    selectedScreens?.forEach(screen => {
       createdScreens = [...createdScreens, screen.create()]
     })
   }
 
-  $: blankSelected = selectedScreens.find(x => x.id === "createFromScratch")
+  $: blankSelected = selectedScreens.length === 1
 
   const save = async screens => {
     for (let screen of screens) {

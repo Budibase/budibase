@@ -5,7 +5,7 @@
     selectedComponent,
     allScreens,
   } from "builderStore"
-  import { Detail, Layout, Button, Modal, Icon } from "@budibase/bbui"
+  import { Detail, Layout, Button, Icon } from "@budibase/bbui"
 
   import CurrentItemPreview from "components/design/AppPreview"
   import PropertiesPanel from "components/design/PropertiesPanel/PropertiesPanel.svelte"
@@ -18,10 +18,8 @@
   import AppThemeSelect from "components/design/AppPreview/AppThemeSelect.svelte"
   import ThemeEditor from "components/design/AppPreview/ThemeEditor.svelte"
   import DevicePreviewSelect from "components/design/AppPreview/DevicePreviewSelect.svelte"
-  import NavigationSelectionModal from "components/design/NavigationPanel/NavigationSelectionModal.svelte"
-  import ScreenNameModal from "components/design/NavigationPanel/ScreenNameModal.svelte"
-  import NewScreenModal from "components/design/NavigationPanel/NewScreenModal.svelte"
   import Logo from "assets/bb-space-man.svg"
+  import ScreenWizard from "components/design/NavigationPanel/ScreenWizard.svelte"
 
   // Cache previous values so we don't update the URL more than necessary
   let previousType
@@ -30,12 +28,7 @@
   let hydrationComplete = false
 
   // Manage the layout modal flow from here
-  let modal
-  let navigationSelectionModal
-  let screenNameModal
-  let screenName = ""
-  let url = ""
-  let selectedScreens = []
+  let showModal
 
   // Hydrate state from URL params
   $: hydrateStateFromURL($params, $leftover)
@@ -159,7 +152,7 @@
 <!-- routify:options index=1 -->
 <div class="root">
   <div class="ui-nav">
-    <FrontendNavigatePane {modal} />
+    <FrontendNavigatePane {showModal} />
   </div>
 
   <div class="preview-pane">
@@ -188,7 +181,7 @@
             <div class="new-screen-text">
               <Detail size="M">Let's add some life to this screen</Detail>
             </div>
-            <Button on:click={() => modal.show()} size="M" cta>
+            <Button on:click={() => showModal()} size="M" cta>
               <div class="new-screen-button">
                 <div class="background-icon" style="color: white;">
                   <Icon name="Add" />
@@ -210,31 +203,8 @@
 </div>
 
 <slot />
-<Modal bind:this={modal}>
-  <NewScreenModal
-    {screenNameModal}
-    {navigationSelectionModal}
-    bind:selectedScreens
-  />
-</Modal>
 
-<Modal bind:this={screenNameModal}>
-  <ScreenNameModal
-    bind:screenName
-    bind:url
-    {modal}
-    {navigationSelectionModal}
-  />
-</Modal>
-<Modal bind:this={navigationSelectionModal}>
-  <NavigationSelectionModal
-    bind:url
-    bind:screenName
-    {modal}
-    bind:selectedScreens
-    {screenNameModal}
-  />
-</Modal>
+<ScreenWizard bind:showModal />
 
 <style>
   .root {
