@@ -18,11 +18,16 @@ const populateFromDB = async (appId, CouchDB = null) => {
   return db.get(DocumentTypes.APP_METADATA)
 }
 
+const isInvalid = metadata => {
+  return !metadata || metadata.state === AppState.INVALID
+}
+
 /**
  * Get the requested app metadata by id.
  * Use redis cache to first read the app metadata.
  * If not present fallback to loading the app metadata directly and re-caching.
- * @param {*} appId the id of the app to get metadata from.
+ * @param {string} appId the id of the app to get metadata from.
+ * @param {object} CouchDB the database being passed
  * @returns {object} the app metadata.
  */
 exports.getAppMetadata = async (appId, CouchDB = null) => {
@@ -44,10 +49,19 @@ exports.getAppMetadata = async (appId, CouchDB = null) => {
         throw err
       }
     }
+    // needed for cypress/some scenarios where the caching happens
+    // so quickly the requests can get slightly out of sync
+    // might store its invalid just before it stores its valid
+    if (isInvalid(metadata)) {
+      const temp = await client.get(appId)
+      if (temp) {
+        metadata = temp
+      }
+    }
     await client.store(appId, metadata, expiry)
   }
   // we've stored in the cache an object to tell us that it is currently invalid
-  if (!metadata || metadata.state === AppState.INVALID) {
+  if (isInvalid(metadata)) {
     throw { status: 404, message: "No app metadata found" }
   }
   return metadata
