@@ -67,7 +67,19 @@ exports.getAppMetadata = async (appId, CouchDB = null) => {
   return metadata
 }
 
-exports.invalidateAppMetadata = async appId => {
+/**
+ * Invalidate/reset the cached metadata when a change occurs in the db.
+ * @param appId {string} the cache key to bust/update.
+ * @param newMetadata {object|undefined} optional - can simply provide the new metadata to update with.
+ * @return {Promise<void>} will respond with success when cache is updated.
+ */
+exports.invalidateAppMetadata = async (appId, newMetadata = null) => {
+  if (!appId) {
+    throw "Cannot invalidate if no app ID provided."
+  }
   const client = await redis.getAppClient()
   await client.delete(appId)
+  if (newMetadata) {
+    await client.store(appId, newMetadata, EXPIRY_SECONDS)
+  }
 }

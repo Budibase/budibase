@@ -255,6 +255,7 @@ exports.create = async ctx => {
     await createApp(appId)
   }
 
+  await appCache.invalidateAppMetadata(appId, newApplication)
   ctx.status = 200
   ctx.body = newApplication
 }

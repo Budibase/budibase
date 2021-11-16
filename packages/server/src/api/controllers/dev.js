@@ -25,7 +25,8 @@ async function redirect(ctx, method, path = "global") {
     )
   )
   if (response.status !== 200) {
-    ctx.throw(response.status, response.statusText)
+    const err = await response.text()
+    ctx.throw(400, err)
   }
   const cookie = response.headers.get("set-cookie")
   if (cookie) {
