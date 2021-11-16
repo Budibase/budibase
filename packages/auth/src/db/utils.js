@@ -8,6 +8,8 @@ const fetch = require("node-fetch")
 const { getCouch } = require("./index")
 const { getAppMetadata } = require("../cache/appMetadata")
 
+const NO_APP_ERROR = "No app provided"
+
 const UNICODE_MAX = "\ufff0"
 
 exports.ViewNames = {
@@ -46,16 +48,22 @@ function getDocParams(docType, docId = null, otherProps = {}) {
 }
 
 exports.isDevAppID = appId => {
+  if (!appId) {
+    throw NO_APP_ERROR
+  }
   return appId.startsWith(exports.APP_DEV_PREFIX)
 }
 
 exports.isProdAppID = appId => {
+  if (!appId) {
+    throw NO_APP_ERROR
+  }
   return appId.startsWith(exports.APP_PREFIX) && !exports.isDevAppID(appId)
 }
 
 function isDevApp(app) {
   if (!app) {
-    return false
+    throw NO_APP_ERROR
   }
   return exports.isDevAppID(app.appId)
 }
