@@ -51,8 +51,9 @@ async function updateAppUpdatedAt(ctx) {
   const db = new CouchDB(appId)
   const metadata = await db.get(DocumentTypes.APP_METADATA)
   metadata.updatedAt = new Date().toISOString()
-  await db.put(metadata)
-  await appCache.invalidateAppMetadata(appId)
+  const response = await db.put(metadata)
+  metadata._rev = response.rev
+  await appCache.invalidateAppMetadata(appId, metadata)
   // set a new debounce record with a short TTL
   await setDebounce(appId, DEBOUNCE_TIME_SEC)
 }
