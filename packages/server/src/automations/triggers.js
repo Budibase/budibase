@@ -47,7 +47,13 @@ async function queueRelevantRowAutomations(event, eventType) {
       automationTrigger.inputs &&
       automationTrigger.inputs.tableId === event.row.tableId
     ) {
-      await queue.add({ automation, event })
+      await queue.add(
+        { automation, event },
+        {
+          removeOnComplete: true,
+          removeOnFail: true,
+        }
+      )
     }
   }
 }
