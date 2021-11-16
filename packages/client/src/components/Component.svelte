@@ -63,6 +63,7 @@
   $: selected =
     $builderStore.inBuilder && $builderStore.selectedComponentId === id
   $: inSelectedPath = $builderStore.selectedComponentPath?.includes(id)
+  $: inDragPath = inSelectedPath && $builderStore.editMode
 
   // Interactive components can be selected, dragged and highlighted inside
   // the builder preview
@@ -72,7 +73,7 @@
     !isBlock
   $: editable = definition.editable
   $: editing = editable && selected && $builderStore.editMode
-  $: draggable = !editing && interactive && !isLayout && !isScreen
+  $: draggable = !inDragPath && interactive && !isLayout && !isScreen
   $: droppable = interactive && !isLayout && !isScreen
 
   // Empty components are those which accept children but do not have any.
