@@ -1,5 +1,11 @@
 jest.mock("node-fetch", () =>
-  jest.fn(() => ({ json: jest.fn(), text: jest.fn() }))
+  jest.fn(() => ({
+    headers: {
+      get: () => ["application/json"]
+    },
+    json: jest.fn(), 
+    text: jest.fn()
+  }))
 )
 const fetch = require("node-fetch")
 const RestIntegration = require("../rest")

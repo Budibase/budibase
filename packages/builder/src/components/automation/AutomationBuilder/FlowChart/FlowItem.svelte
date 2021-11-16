@@ -202,7 +202,7 @@
     display: inline-block;
   }
   .block {
-    width: 360px;
+    width: 480px;
     font-size: 16px;
     background-color: var(--background);
     border: 1px solid var(--spectrum-global-color-gray-300);

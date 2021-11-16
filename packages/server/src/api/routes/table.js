@@ -53,5 +53,16 @@ router
     authorized(BUILDER),
     tableController.destroy
   )
+  // this is currently builder only, but in the future
+  // it could be carried out by an end user in app,
+  // however some thought will need to be had about
+  // implications for automations (triggers)
+  // new trigger type, bulk rows created
+  .post(
+    "/api/tables/:tableId/import",
+    paramResource("tableId"),
+    authorized(BUILDER),
+    tableController.bulkImport
+  )
 
 module.exports = router

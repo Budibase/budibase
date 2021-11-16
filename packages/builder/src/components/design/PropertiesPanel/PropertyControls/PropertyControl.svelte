@@ -1,14 +1,11 @@
 <script>
-  import { Button, Icon, Drawer, Label } from "@budibase/bbui"
+  import { Label } from "@budibase/bbui"
   import {
     readableToRuntimeBinding,
     runtimeToReadableBinding,
   } from "builderStore/dataBinding"
-  import BindingPanel from "components/common/bindings/BindingPanel.svelte"
-  import { capitalise } from "helpers"
 
   export let label = ""
-  export let bindable = true
   export let componentInstance = {}
   export let control = null
   export let key = ""
@@ -17,18 +14,19 @@
   export let props = {}
   export let onChange = () => {}
   export let bindings = []
+  export let componentBindings = []
+  export let nested = false
 
-  let bindingDrawer
-  let anchor
-  let valid
-
-  $: safeValue = getSafeValue(value, props.defaultValue, bindings)
+  $: allBindings = getAllBindings(bindings, componentBindings, nested)
+  $: safeValue = getSafeValue(value, props.defaultValue, allBindings)
   $: tempValue = safeValue
-  $: replaceBindings = val => readableToRuntimeBinding(bindings, val)
+  $: replaceBindings = val => readableToRuntimeBinding(allBindings, val)
 
-  const handleClose = () => {
-    handleChange(tempValue)
-    bindingDrawer.hide()
+  const getAllBindings = (bindings, componentBindings, nested) => {
+    if (!nested) {
+      return bindings
+    }
+    return [...(componentBindings || []), ...(bindings || [])]
   }
 
   // Handle a value change of any type
@@ -64,7 +62,7 @@
   }
 </script>
 
-<div class="property-control" bind:this={anchor} data-cy={`setting-${key}`}>
+<div class="property-control" data-cy={`setting-${key}`}>
   {#if type !== "boolean" && label}
     <div class="label">
       <Label>{label}</Label>
@@ -78,37 +76,12 @@
       updateOnChange={false}
       on:change={handleChange}
       onChange={handleChange}
-      {bindings}
+      bindings={allBindings}
       name={key}
       text={label}
       {type}
       {...props}
     />
-    {#if bindable && !key.startsWith("_") && type === "text"}
-      <div
-        class="icon"
-        data-cy={`${key}-binding-button`}
-        on:click={bindingDrawer.show}
-      >
-        <Icon size="S" name="FlashOn" />
-      </div>
-      <Drawer bind:this={bindingDrawer} title={capitalise(key)}>
-        <svelte:fragment slot="description">
-          Add the objects on the left to enrich your text.
-        </svelte:fragment>
-        <Button cta slot="buttons" disabled={!valid} on:click={handleClose}>
-          Save
-        </Button>
-        <BindingPanel
-          slot="body"
-          bind:valid
-          value={safeValue}
-          on:change={e => (tempValue = e.detail)}
-          bindableProperties={bindings}
-          allowJS
-        />
-      </Drawer>
-    {/if}
   </div>
 </div>
 
@@ -120,41 +93,10 @@
     justify-content: flex-start;
     align-items: stretch;
   }
-
   .label {
-    text-transform: capitalize;
     padding-bottom: var(--spectrum-global-dimension-size-65);
   }
-
   .control {
     position: relative;
-  }
-
-  .icon {
-    right: 1px;
-    top: 1px;
-    bottom: 1px;
-    position: absolute;
-    justify-content: center;
-    align-items: center;
-    display: flex;
-    flex-direction: row;
-    box-sizing: border-box;
-    border-left: 1px solid var(--spectrum-alias-border-color);
-    border-top-right-radius: var(--spectrum-alias-border-radius-regular);
-    border-bottom-right-radius: var(--spectrum-alias-border-radius-regular);
-    width: 31px;
-    color: var(--spectrum-alias-text-color);
-    background-color: var(--spectrum-global-color-gray-75);
-    transition: background-color
-        var(--spectrum-global-animation-duration-100, 130ms),
-      box-shadow var(--spectrum-global-animation-duration-100, 130ms),
-      border-color var(--spectrum-global-animation-duration-100, 130ms);
-  }
-  .icon:hover {
-    cursor: pointer;
-    color: var(--spectrum-alias-text-color-hover);
-    background-color: var(--spectrum-global-color-gray-50);
-    border-color: var(--spectrum-alias-border-color-hover);
   }
 </style>

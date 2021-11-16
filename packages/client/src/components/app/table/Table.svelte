@@ -2,6 +2,7 @@
   import { getContext } from "svelte"
   import { Table } from "@budibase/bbui"
   import SlotRenderer from "./SlotRenderer.svelte"
+  import { UnsortableTypes } from "../../../constants"
 
   export let dataProvider
   export let columns
@@ -9,9 +10,17 @@
   export let rowCount
   export let quiet
   export let size
+  export let linkRows
+  export let linkURL
+  export let linkColumn
+  export let linkPeek
 
   const component = getContext("component")
-  const { styleable } = getContext("sdk")
+  const { styleable, getAction, ActionTypes, routeStore } = getContext("sdk")
+  const setSorting = getAction(
+    dataProvider?.id,
+    ActionTypes.SetDataProviderSorting
+  )
   const customColumnKey = `custom-${Math.random()}`
   const customRenderers = [
     {
@@ -65,10 +74,34 @@
         divider: true,
       }
     }
+
     fields.forEach(field => {
       newSchema[field] = schema[field]
+      if (schema[field] && UnsortableTypes.indexOf(schema[field].type) !== -1) {
+        newSchema[field].sortable = false
+      }
     })
     return newSchema
+  }
+
+  const onSort = e => {
+    setSorting({
+      column: e.detail.column,
+      order: e.detail.order,
+    })
+  }
+
+  const onClick = e => {
+    if (!linkRows || !linkURL) {
+      return
+    }
+    const col = linkColumn || "_id"
+    const id = e.detail?.[col]
+    if (!id) {
+      return
+    }
+    const split = linkURL.split("/:")
+    routeStore.actions.navigate(`${split[0]}/${id}`, linkPeek)
   }
 </script>
 
@@ -84,6 +117,9 @@
     allowEditRows={false}
     allowEditColumns={false}
     showAutoColumns={true}
+    disableSorting
+    on:sort={onSort}
+    on:click={onClick}
   >
     <slot />
   </Table>

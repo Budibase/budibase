@@ -33,6 +33,15 @@
     .instanceName("Content Placeholder")
     .json()
 
+  // Messages that can be sent from the iframe preview to the builder
+  // Budibase events are and initalisation events
+  const MessageTypes = {
+    IFRAME_LOADED: "iframe-loaded",
+    READY: "ready",
+    ERROR: "error",
+    BUDIBASE: "type",
+  }
+
   // Construct iframe template
   $: template = iframeTemplate.replace(
     /\{\{ CLIENT_LIB_PATH }}/,
@@ -59,6 +68,7 @@
     theme: $store.theme,
     customTheme: $store.customTheme,
     previewDevice: $store.previewDevice,
+    messagePassing: $store.clientFeatures.messagePassing,
   }
 
   // Saving pages and screens to the DB causes them to have _revs.
@@ -80,11 +90,14 @@
   // Refresh the preview when required
   $: refreshContent(strippedJson)
 
-  onMount(() => {
-    // Initialise the app when mounted
-    iframe.contentWindow.addEventListener(
-      "ready",
-      () => {
+  function receiveMessage(message) {
+    const handlers = {
+      [MessageTypes.READY]: () => {
+        // Initialise the app when mounted
+        if ($store.clientFeatures.messagePassing) {
+          if (!loading) return
+        }
+
         // Display preview immediately if the intelligent loading feature
         // is not supported
         if (!$store.clientFeatures.intelligentLoading) {
@@ -92,32 +105,58 @@
         }
         refreshContent(strippedJson)
       },
-      { once: true }
-    )
-
-    // Catch any app errors
-    iframe.contentWindow.addEventListener(
-      "error",
-      event => {
+      [MessageTypes.ERROR]: event => {
+        // Catch any app errors
         loading = false
-        error = event.detail || "An unknown error occurred"
+        error = event.error || "An unknown error occurred"
       },
-      { once: true }
-    )
+    }
 
-    // Add listener for events sent by client library in preview
-    iframe.contentWindow.addEventListener("bb-event", handleBudibaseEvent)
+    const messageHandler = handlers[message.data.type] || handleBudibaseEvent
+    messageHandler(message)
+  }
+
+  onMount(() => {
+    window.addEventListener("message", receiveMessage)
+    if (!$store.clientFeatures.messagePassing) {
+      // Legacy - remove in later versions of BB
+      iframe.contentWindow.addEventListener(
+        "ready",
+        () => {
+          receiveMessage({ data: { type: MessageTypes.READY } })
+        },
+        { once: true }
+      )
+      iframe.contentWindow.addEventListener(
+        "error",
+        event => {
+          receiveMessage({
+            data: { type: MessageTypes.ERROR, error: event.detail },
+          })
+        },
+        { once: true }
+      )
+      // Add listener for events sent by client library in preview
+      iframe.contentWindow.addEventListener("bb-event", handleBudibaseEvent)
+    }
   })
 
   // Remove all iframe event listeners on component destroy
   onDestroy(() => {
     if (iframe.contentWindow) {
-      iframe.contentWindow.removeEventListener("bb-event", handleBudibaseEvent)
+      window.removeEventListener("message", receiveMessage)
+      if (!$store.clientFeatures.messagePassing) {
+        // Legacy - remove in later versions of BB
+        iframe.contentWindow.removeEventListener(
+          "bb-event",
+          handleBudibaseEvent
+        )
+      }
     }
   })
 
   const handleBudibaseEvent = event => {
-    const { type, data } = event.detail
+    const { type, data } = event.data || event.detail
     if (type === "select-component" && data.id) {
       store.actions.components.select({ _id: data.id })
     } else if (type === "update-prop") {
@@ -149,7 +188,7 @@
         store.actions.components.paste(destination, data.mode)
       }
     } else {
-      console.warning(`Client sent unknown event type: ${type}`)
+      console.warn(`Client sent unknown event type: ${type}`)
     }
   }
 

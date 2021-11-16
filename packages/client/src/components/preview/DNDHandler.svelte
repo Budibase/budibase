@@ -147,7 +147,7 @@
       return
     }
 
-    const element = e.target.closest(".component")
+    const element = e.target.closest(".component:not(.block)")
     if (
       element &&
       element.classList.contains("droppable") &&

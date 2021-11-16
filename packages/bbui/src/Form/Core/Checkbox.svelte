@@ -21,6 +21,7 @@
 <label
   class="spectrum-Checkbox spectrum-Checkbox--emphasized {sizeClass}"
   class:is-invalid={!!error}
+  class:checked={value}
 >
   <input
     checked={value}
@@ -50,6 +51,16 @@
 </label>
 
 <style>
+  .spectrum-Checkbox--sizeL .spectrum-Checkbox-checkmark {
+    transform: scale(1.1);
+    left: 55%;
+    top: 55%;
+  }
+  .spectrum-Checkbox--sizeXL .spectrum-Checkbox-checkmark {
+    transform: scale(1.2);
+    left: 60%;
+    top: 60%;
+  }
   .spectrum-Checkbox-input {
     opacity: 0;
   }
