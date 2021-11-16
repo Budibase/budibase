@@ -94,10 +94,6 @@ export default `
       }
 
       window.addEventListener("message", receiveMessage)
-      window.addEventListener("keydown", evt => {
-        window.parent.postMessage({ type: "keydown", key: event.key })
-      })
-
       window.parent.postMessage({ type: "ready" })
     </script>
   </head>
