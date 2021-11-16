@@ -13,6 +13,8 @@
   import NewLayoutModal from "components/design/NavigationPanel/NewLayoutModal.svelte"
   import { Icon, Modal, Select, Search, Tabs, Tab } from "@budibase/bbui"
 
+  export let showModal
+
   const tabs = [
     {
       title: "Screens",
@@ -24,7 +26,7 @@
     },
   ]
 
-  export let modal
+  let modal
   $: selected = tabs.find(t => t.key === $params.assetType)?.title || "Screens"
 
   const navigate = ({ detail }) => {
@@ -98,7 +100,7 @@
     </Tab>
   </Tabs>
   <div class="add-button">
-    <Icon hoverable name="AddCircle" on:click={modal.show} />
+    <Icon hoverable name="AddCircle" on:click={showModal()} />
   </div>
 </div>
 

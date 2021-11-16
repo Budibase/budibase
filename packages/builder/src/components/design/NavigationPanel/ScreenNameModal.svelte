@@ -35,7 +35,7 @@
 
 <ModalContent
   size="M"
-  title={"Enter Details"}
+  title={"Enter details"}
   confirmText={"Continue"}
   onCancel={() => modal.show()}
   onConfirm={() => navigationSelectionModal.show()}
