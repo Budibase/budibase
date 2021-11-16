@@ -1,6 +1,7 @@
 <script>
   import { getContext, onMount } from "svelte"
   import InnerForm from "./InnerForm.svelte"
+  import { hashString } from "utils/helpers"
 
   export let dataSource
   export let theme
@@ -14,6 +15,8 @@
   let loaded = false
   let schema
   let table
+
+  $: fetchSchema(dataSource)
 
   // Returns the closes data context which isn't a built in context
   const getInitialValues = (type, dataSource, context) => {
@@ -35,7 +38,7 @@
   }
 
   // Fetches the form schema from this form's dataSource
-  const fetchSchema = async () => {
+  const fetchSchema = async dataSource => {
     if (!dataSource) {
       schema = {}
     }
@@ -62,14 +65,15 @@
       schema = dataSourceSchema || {}
     }
 
-    loaded = true
+    if (!loaded) {
+      loaded = true
+    }
   }
 
   $: initialValues = getInitialValues(actionType, dataSource, $context)
-  $: resetKey = JSON.stringify(initialValues)
-
-  // Load the form schema on mount
-  onMount(fetchSchema)
+  $: resetKey = hashString(
+    JSON.stringify(initialValues) + JSON.stringify(schema)
+  )
 </script>
 
 {#if loaded}
