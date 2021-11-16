@@ -1,6 +1,6 @@
 const { newid } = require("../hashing")
 const Replication = require("./Replication")
-const { DEFAULT_TENANT_ID } = require("../constants")
+const { DEFAULT_TENANT_ID, Configs } = require("../constants")
 const env = require("../environment")
 const { StaticDatabases, SEPARATOR, DocumentTypes } = require("./constants")
 const { getTenantId, getTenantIDFromAppID } = require("../tenancy")
@@ -363,11 +363,48 @@ const getScopedFullConfig = async function (db, { type, user, workspace }) {
   }
 
   // Find the config with the most granular scope based on context
-  const scopedConfig = response.rows.sort(
+  let scopedConfig = response.rows.sort(
     (a, b) => determineScore(a) - determineScore(b)
   )[0]
 
+  // custom logic for settings doc
+  // always provide the platform URL
+  if (type === Configs.SETTINGS) {
+    if (scopedConfig && scopedConfig.doc) {
+      scopedConfig.doc.config.platformUrl = await getPlatformUrl(
+        scopedConfig.doc.config
+      )
+    } else {
+      scopedConfig = {
+        doc: {
+          config: {
+            platformUrl: await getPlatformUrl(),
+          },
+        },
+      }
+    }
+  }
+
   return scopedConfig && scopedConfig.doc
+}
+
+const getPlatformUrl = async settings => {
+  let platformUrl = env.PLATFORM_URL
+
+  if (!env.SELF_HOSTED && env.MULTI_TENANCY) {
+    // cloud and multi tenant - add the tenant to the default platform url
+    const tenantId = getTenantId()
+    if (!platformUrl.includes("localhost:")) {
+      platformUrl = platformUrl.replace("://", `://${tenantId}.`)
+    }
+  } else {
+    // self hosted - check for platform url override
+    if (settings && settings.platformUrl) {
+      platformUrl = settings.platformUrl
+    }
+  }
+
+  return platformUrl ? platformUrl : "http://localhost:10000"
 }
 
 async function getScopedConfig(db, params) {

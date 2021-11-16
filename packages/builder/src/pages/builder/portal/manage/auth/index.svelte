@@ -21,26 +21,25 @@
   } from "@budibase/bbui"
   import { onMount } from "svelte"
   import api from "builderStore/api"
-  import { organisation, auth, admin } from "stores/portal"
+  import { organisation, admin } from "stores/portal"
   import { uuid } from "builderStore/uuid"
   import analytics, { Events } from "analytics"
-
-  $: tenantId = $auth.tenantId
-  $: multiTenancyEnabled = $admin.multiTenancy
 
   const ConfigTypes = {
     Google: "google",
     OIDC: "oidc",
   }
 
-  function callbackUrl(tenantId, end) {
-    let url = `/api/global/auth`
-    if (multiTenancyEnabled && tenantId) {
-      url += `/${tenantId}`
-    }
-    url += end
-    return url
-  }
+  // Some older google configs contain a manually specified value - retain the functionality to edit the field
+  // When there is no value or we are in the cloud - prohibit editing the field, must use platform url to change
+  $: googleCallbackUrl = undefined
+  $: googleCallbackReadonly = $admin.cloud || !googleCallbackUrl
+
+  // Indicate to user that callback is based on platform url
+  // If there is an existing value, indicate that it may be removed to return to default behaviour
+  $: googleCallbackTooltip = googleCallbackReadonly
+    ? "Vist the organisation page to update the platform URL"
+    : "Leave blank to use the default callback URL"
 
   $: GoogleConfigFields = {
     Google: [
@@ -49,8 +48,9 @@
       {
         name: "callbackURL",
         label: "Callback URL",
-        readonly: true,
-        placeholder: callbackUrl(tenantId, "/google/callback"),
+        readonly: googleCallbackReadonly,
+        tooltip: googleCallbackTooltip,
+        placeholder: $organisation.googleCallbackUrl,
       },
     ],
   }
@@ -62,9 +62,10 @@
       { name: "clientSecret", label: "Client Secret" },
       {
         name: "callbackURL",
-        label: "Callback URL",
         readonly: true,
-        placeholder: callbackUrl(tenantId, "/oidc/callback"),
+        tooltip: "Vist the organisation page to update the platform URL",
+        label: "Callback URL",
+        placeholder: $organisation.oidcCallbackUrl,
       },
     ],
   }
@@ -241,6 +242,8 @@
       providers.google = googleDoc
     }
 
+    googleCallbackUrl = providers?.google?.config?.callbackURL
+
     //Get the list of user uploaded logos and push it to the dropdown options.
     //This needs to be done before the config call so they're available when the dropdown renders
     const res = await api.get(`/api/global/configs/logos_oidc`)
@@ -308,7 +311,7 @@
     <Layout gap="XS" noPadding>
       {#each GoogleConfigFields.Google as field}
         <div class="form-row">
-          <Label size="L">{field.label}</Label>
+          <Label size="L" tooltip={field.tooltip}>{field.label}</Label>
           <Input
             bind:value={providers.google.config[field.name]}
             readonly={field.readonly}
@@ -346,7 +349,7 @@
     <Layout gap="XS" noPadding>
       {#each OIDCConfigFields.Oidc as field}
         <div class="form-row">
-          <Label size="L">{field.label}</Label>
+          <Label size="L" tooltip={field.tooltip}>{field.label}</Label>
           <Input
             bind:value={providers.oidc.config.configs[0][field.name]}
             readonly={field.readonly}
