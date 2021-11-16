@@ -3,12 +3,14 @@ import api from "builderStore/api"
 import { auth } from "stores/portal"
 
 const DEFAULT_CONFIG = {
-  platformUrl: "http://localhost:10000",
+  platformUrl: "",
   logoUrl: undefined,
   docsUrl: undefined,
   company: "Budibase",
   oidc: undefined,
   google: undefined,
+  oidcCallbackUrl: "",
+  googleCallbackUrl: "",
 }
 
 export function createOrganisationStore() {
@@ -28,6 +30,13 @@ export function createOrganisationStore() {
   }
 
   async function save(config) {
+    // delete non-persisted fields
+    const storeConfig = get(store)
+    delete storeConfig.oidc
+    delete storeConfig.google
+    delete storeConfig.oidcCallbackUrl
+    delete storeConfig.googleCallbackUrl
+
     const res = await api.post("/api/global/configs", {
       type: "settings",
       config: { ...get(store), ...config },
