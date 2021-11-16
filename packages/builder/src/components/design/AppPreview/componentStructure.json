@@ -1,4 +1,13 @@
 [
+  {
+    "name": "Blocks",
+    "icon": "Article",
+    "children": [
+      "tableblock",
+      "cardsblock",
+      "repeaterblock"
+    ]
+  },
   "section",
   "container",
   "dataprovider",

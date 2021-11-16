@@ -45,6 +45,13 @@ exports.FieldTypes = {
   INTERNAL: "internal",
 }
 
+exports.SwitchableTypes = [
+  exports.FieldTypes.STRING,
+  exports.FieldTypes.OPTIONS,
+  exports.FieldTypes.NUMBER,
+  exports.FieldTypes.BOOLEAN,
+]
+
 exports.RelationshipTypes = {
   ONE_TO_MANY: "one-to-many",
   MANY_TO_ONE: "many-to-one",
@@ -62,6 +69,10 @@ exports.DataSourceOperation = {
   READ: "READ",
   UPDATE: "UPDATE",
   DELETE: "DELETE",
+  BULK_CREATE: "BULK_CREATE",
+  CREATE_TABLE: "CREATE_TABLE",
+  UPDATE_TABLE: "UPDATE_TABLE",
+  DELETE_TABLE: "DELETE_TABLE",
 }
 
 exports.SortDirection = {

@@ -33,10 +33,11 @@ interface RunConfig {
   sort?: SortJson
   paginate?: PaginationJson
   row?: Row
+  rows?: Row[]
 }
 
 module External {
-  const { makeExternalQuery } = require("./utils")
+  const { getDatasourceAndQuery } = require("./utils")
   const {
     DataSourceOperation,
     FieldTypes,
@@ -46,6 +47,7 @@ module External {
   const { processObjectSync } = require("@budibase/string-templates")
   const { cloneDeep } = require("lodash/fp")
   const CouchDB = require("../../../db")
+  const { processFormulas } = require("../../../utilities/rowProcessor/utils")
 
   function buildFilters(
     id: string | undefined,
@@ -162,8 +164,8 @@ module External {
     }
   }
 
-  function basicProcessing(row: Row, table: Table) {
-    const thisRow: { [key: string]: any } = {}
+  function basicProcessing(row: Row, table: Table): Row {
+    const thisRow: Row = {}
     // filter the row down to what is actually the row (not joined)
     for (let fieldName of Object.keys(table.schema)) {
       const value = row[`${table.name}.${fieldName}`] || row[fieldName]
@@ -176,6 +178,23 @@ module External {
     thisRow.tableId = table._id
     thisRow._rev = "rev"
     return thisRow
+  }
+
+  function fixArrayTypes(row: Row, table: Table) {
+    for (let [fieldName, schema] of Object.entries(table.schema)) {
+      if (
+        schema.type === FieldTypes.ARRAY &&
+        typeof row[fieldName] === "string"
+      ) {
+        try {
+          row[fieldName] = JSON.parse(row[fieldName])
+        } catch (err) {
+          // couldn't convert back to array, ignore
+          delete row[fieldName]
+        }
+      }
+    }
+    return row
   }
 
   function isMany(field: FieldSchema) {
@@ -225,7 +244,12 @@ module External {
         manyRelationships: ManyRelationship[] = []
       for (let [key, field] of Object.entries(table.schema)) {
         // if set already, or not set just skip it
-        if ((!row[key] && row[key] !== "") || newRow[key] || field.autocolumn) {
+        if (
+          row[key] == null ||
+          newRow[key] ||
+          field.autocolumn ||
+          field.type === FieldTypes.FORMULA
+        ) {
           continue
         }
         // if its an empty string then it means return the column to null (if possible)
@@ -336,7 +360,7 @@ module External {
       table: Table,
       relationships: RelationshipsJson[]
     ) {
-      if (rows[0].read === true) {
+      if (!rows || rows.length === 0 || rows[0].read === true) {
         return []
       }
       let finalRows: { [key: string]: Row } = {}
@@ -352,7 +376,10 @@ module External {
           )
           continue
         }
-        const thisRow = basicProcessing(row, table)
+        const thisRow = fixArrayTypes(basicProcessing(row, table), table)
+        if (thisRow._id == null) {
+          throw "Unable to generate row ID for SQL rows"
+        }
         finalRows[thisRow._id] = thisRow
         // do this at end once its been added to the final rows
         finalRows = this.updateRelationshipColumns(
@@ -361,7 +388,7 @@ module External {
           relationships
         )
       }
-      return Object.values(finalRows)
+      return processFormulas(table, Object.values(finalRows))
     }
 
     /**
@@ -428,7 +455,7 @@ module External {
         const tableId = isMany ? field.through : field.tableId
         const manyKey = field.throughFrom || primaryKey
         const fieldName = isMany ? manyKey : field.fieldName
-        const response = await makeExternalQuery(this.appId, {
+        const response = await getDatasourceAndQuery(this.appId, {
           endpoint: getEndpoint(tableId, DataSourceOperation.READ),
           filters: {
             equal: {
@@ -479,7 +506,7 @@ module External {
           : DataSourceOperation.CREATE
         if (!found) {
           promises.push(
-            makeExternalQuery(appId, {
+            getDatasourceAndQuery(appId, {
               endpoint: getEndpoint(tableId, operation),
               // if we're doing many relationships then we're writing, only one response
               body,
@@ -509,7 +536,7 @@ module External {
               : DataSourceOperation.UPDATE
             const body = isMany ? null : { [colName]: null }
             promises.push(
-              makeExternalQuery(this.appId, {
+              getDatasourceAndQuery(this.appId, {
                 endpoint: getEndpoint(tableId, op),
                 body,
                 filters,
@@ -532,16 +559,17 @@ module External {
       table: Table,
       includeRelations: IncludeRelationships = IncludeRelationships.INCLUDE
     ) {
-      function extractNonLinkFieldNames(table: Table, existing: string[] = []) {
+      function extractRealFields(table: Table, existing: string[] = []) {
         return Object.entries(table.schema)
           .filter(
             column =>
               column[1].type !== FieldTypes.LINK &&
+              column[1].type !== FieldTypes.FORMULA &&
               !existing.find((field: string) => field === column[0])
           )
           .map(column => `${table.name}.${column[0]}`)
       }
-      let fields = extractNonLinkFieldNames(table)
+      let fields = extractRealFields(table)
       for (let field of Object.values(table.schema)) {
         if (field.type !== FieldTypes.LINK || !includeRelations) {
           continue
@@ -549,7 +577,7 @@ module External {
         const { tableName: linkTableName } = breakExternalTableId(field.tableId)
         const linkTable = this.tables[linkTableName]
         if (linkTable) {
-          const linkedFields = extractNonLinkFieldNames(linkTable, fields)
+          const linkedFields = extractRealFields(linkTable, fields)
           fields = fields.concat(linkedFields)
         }
       }
@@ -573,7 +601,10 @@ module External {
         throw `Unable to process query, table "${tableName}" not defined.`
       }
       // look for specific components of config which may not be considered acceptable
-      let { id, row, filters, sort, paginate } = cleanupConfig(config, table)
+      let { id, row, filters, sort, paginate, rows } = cleanupConfig(
+        config,
+        table
+      )
       filters = buildFilters(id, filters || {}, table)
       const relationships = this.buildRelationships(table)
       // clean up row on ingress using schema
@@ -599,7 +630,7 @@ module External {
         sort,
         paginate,
         relationships,
-        body: row,
+        body: row || rows,
         // pass an id filter into extra, purely for mysql/returning
         extra: {
           idFilter: buildFilters(id || generateIdForRow(row, table), {}, table),
@@ -609,7 +640,7 @@ module External {
         },
       }
       // can't really use response right now
-      const response = await makeExternalQuery(appId, json)
+      const response = await getDatasourceAndQuery(appId, json)
       // handle many to many relationships now if we know the ID (could be auto increment)
       if (
         operation !== DataSourceOperation.READ &&

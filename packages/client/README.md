@@ -19,7 +19,7 @@ The object key is the name of the component, as exported by `index.js`.
 - **bindable** - whether the components provides a bindable value or not
 - **settings** - array of settings displayed in the builder
 
-###Settings Definitions
+### Settings Definitions
 
 The `type` field in each setting is used by the builder to know which component to use to display
 the setting, so it's important that this field is correct. The valid options are:

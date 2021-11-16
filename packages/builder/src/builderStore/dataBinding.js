@@ -4,6 +4,7 @@ import {
   findAllMatchingComponents,
   findComponent,
   findComponentPath,
+  getComponentSettings,
 } from "./storeUtils"
 import { store } from "builderStore"
 import { queries as queriesStores, tables as tablesStore } from "stores/backend"
@@ -30,12 +31,31 @@ export const getBindableProperties = (asset, componentId) => {
   const deviceBindings = getDeviceBindings()
   const stateBindings = getStateBindings()
   return [
-    ...stateBindings,
-    ...deviceBindings,
-    ...urlBindings,
     ...contextBindings,
+    ...urlBindings,
+    ...stateBindings,
     ...userBindings,
+    ...deviceBindings,
   ]
+}
+
+/**
+ * Gets the bindable properties exposed by a certain component.
+ */
+export const getComponentBindableProperties = (asset, componentId) => {
+  if (!asset || !componentId) {
+    return []
+  }
+
+  // Ensure that the component exists and exposes context
+  const component = findComponent(asset.props, componentId)
+  const def = store.actions.components.getDefinition(component?._component)
+  if (!def?.context) {
+    return []
+  }
+
+  // Get the bindings for the component
+  return getProviderContextBindings(asset, component)
 }
 
 /**
@@ -82,13 +102,10 @@ export const getActionProviderComponents = (asset, componentId, actionType) => {
  * Gets a datasource object for a certain data provider component
  */
 export const getDatasourceForProvider = (asset, component) => {
-  const def = store.actions.components.getDefinition(component?._component)
-  if (!def) {
-    return null
-  }
+  const settings = getComponentSettings(component?._component)
 
   // If this component has a dataProvider setting, go up the stack and use it
-  const dataProviderSetting = def.settings.find(setting => {
+  const dataProviderSetting = settings.find(setting => {
     return setting.type === "dataProvider"
   })
   if (dataProviderSetting) {
@@ -100,7 +117,7 @@ export const getDatasourceForProvider = (asset, component) => {
 
   // Extract datasource from component instance
   const validSettingTypes = ["dataSource", "table", "schema"]
-  const datasourceSetting = def.settings.find(setting => {
+  const datasourceSetting = settings.find(setting => {
     return validSettingTypes.includes(setting.type)
   })
   if (!datasourceSetting) {
@@ -127,9 +144,26 @@ export const getDatasourceForProvider = (asset, component) => {
 const getContextBindings = (asset, componentId) => {
   // Extract any components which provide data contexts
   const dataProviders = getDataProviderComponents(asset, componentId)
-  let bindings = []
+
+  // Generate bindings for all matching components
+  return getProviderContextBindings(asset, dataProviders)
+}
+
+/**
+ * Gets the context bindings exposed by a set of data provider components.
+ */
+const getProviderContextBindings = (asset, dataProviders) => {
+  if (!asset || !dataProviders) {
+    return []
+  }
+
+  // Ensure providers is an array
+  if (!Array.isArray(dataProviders)) {
+    dataProviders = [dataProviders]
+  }
 
   // Create bindings for each data provider
+  let bindings = []
   dataProviders.forEach(component => {
     const def = store.actions.components.getDefinition(component._component)
     const contexts = Array.isArray(def.context) ? def.context : [def.context]
@@ -142,6 +176,7 @@ const getContextBindings = (asset, componentId) => {
 
       let schema
       let readablePrefix
+      let runtimeSuffix = context.suffix
 
       if (context.type === "form") {
         // Forms do not need table schemas
@@ -171,22 +206,19 @@ const getContextBindings = (asset, componentId) => {
 
       const keys = Object.keys(schema).sort()
 
+      // Generate safe unique runtime prefix
+      let providerId = component._id
+      if (runtimeSuffix) {
+        providerId += `-${runtimeSuffix}`
+      }
+      const safeComponentId = makePropSafe(providerId)
+
       // Create bindable properties for each schema field
-      const safeComponentId = makePropSafe(component._id)
       keys.forEach(key => {
         const fieldSchema = schema[key]
 
-        // Make safe runtime binding and replace certain bindings with a
-        // new property to help display components
-        let runtimeBoundKey = key
-        if (fieldSchema.type === "link") {
-          runtimeBoundKey = `${key}_text`
-        } else if (fieldSchema.type === "attachment") {
-          runtimeBoundKey = `${key}_first`
-        }
-        const runtimeBinding = `${safeComponentId}.${makePropSafe(
-          runtimeBoundKey
-        )}`
+        // Make safe runtime binding
+        const runtimeBinding = `${safeComponentId}.${makePropSafe(key)}`
 
         // Optionally use a prefix with readable bindings
         let readableBinding = component._instanceName
@@ -203,7 +235,7 @@ const getContextBindings = (asset, componentId) => {
           // Field schema and provider are required to construct relationship
           // datasource options, based on bindable properties
           fieldSchema,
-          providerId: component._id,
+          providerId,
         })
       })
     })
@@ -225,17 +257,9 @@ const getUserBindings = () => {
   const safeUser = makePropSafe("user")
   keys.forEach(key => {
     const fieldSchema = schema[key]
-    // Replace certain bindings with a new property to help display components
-    let runtimeBoundKey = key
-    if (fieldSchema.type === "link") {
-      runtimeBoundKey = `${key}_text`
-    } else if (fieldSchema.type === "attachment") {
-      runtimeBoundKey = `${key}_first`
-    }
-
     bindings.push({
       type: "context",
-      runtimeBinding: `${safeUser}.${makePropSafe(runtimeBoundKey)}`,
+      runtimeBinding: `${safeUser}.${makePropSafe(key)}`,
       readableBinding: `Current User.${key}`,
       // Field schema and provider are required to construct relationship
       // datasource options, based on bindable properties
@@ -309,8 +333,11 @@ const getUrlBindings = asset => {
  */
 export const getSchemaForDatasource = (asset, datasource, isForm = false) => {
   let schema, table
+
   if (datasource) {
     const { type } = datasource
+
+    // Determine the source table from the datasource type
     if (type === "provider") {
       const component = findComponent(asset.props, datasource.providerId)
       const source = getDatasourceForProvider(asset, component)
@@ -318,11 +345,32 @@ export const getSchemaForDatasource = (asset, datasource, isForm = false) => {
     } else if (type === "query") {
       const queries = get(queriesStores).list
       table = queries.find(query => query._id === datasource._id)
+    } else if (type === "field") {
+      table = { name: datasource.fieldName }
+      const { fieldType } = datasource
+      if (fieldType === "attachment") {
+        schema = {
+          url: {
+            type: "string",
+          },
+          name: {
+            type: "string",
+          },
+        }
+      } else if (fieldType === "array") {
+        schema = {
+          value: {
+            type: "string",
+          },
+        }
+      }
     } else {
       const tables = get(tablesStore).list
       table = tables.find(table => table._id === datasource.tableId)
     }
-    if (table) {
+
+    // Determine the schema from the table if not already determined
+    if (table && !schema) {
       if (type === "view") {
         schema = cloneDeep(table.views?.[datasource.name]?.schema)
       } else if (type === "query" && isForm) {
@@ -374,8 +422,8 @@ const buildFormSchema = component => {
   if (!component) {
     return schema
   }
-  const def = store.actions.components.getDefinition(component._component)
-  const fieldSetting = def?.settings?.find(
+  const settings = getComponentSettings(component._component)
+  const fieldSetting = settings.find(
     setting => setting.key === "field" && setting.type.startsWith("field/")
   )
   if (fieldSetting && component.field) {
@@ -501,7 +549,7 @@ function bindingReplacement(bindableProperties, textWithBindings, convertTo) {
  * {{ literal [componentId] }}
  */
 function extractLiteralHandlebarsID(value) {
-  return value?.match(/{{\s*literal[\s[]+([a-fA-F0-9]+)[\s\]]*}}/)?.[1]
+  return value?.match(/{{\s*literal\s*\[+([^\]]+)].*}}/)?.[1]
 }
 
 /**

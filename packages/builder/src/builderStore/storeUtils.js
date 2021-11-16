@@ -1,3 +1,5 @@
+import { store } from "./index"
+
 /**
  * Recursively searches for a specific component ID
  */
@@ -122,4 +124,21 @@ const searchComponentTree = (rootComponent, matchComponent) => {
     }
   }
   return null
+}
+
+/**
+ * Searches a component's definition for a setting matching a certin predicate.
+ */
+export const getComponentSettings = componentType => {
+  const def = store.actions.components.getDefinition(componentType)
+  if (!def) {
+    return []
+  }
+  let settings = def.settings?.filter(setting => !setting.section) ?? []
+  def.settings
+    ?.filter(setting => setting.section)
+    .forEach(section => {
+      settings = settings.concat(section.settings || [])
+    })
+  return settings
 }

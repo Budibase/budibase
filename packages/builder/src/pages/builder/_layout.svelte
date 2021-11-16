@@ -1,5 +1,5 @@
 <script>
-  import { isActive, redirect } from "@roxi/routify"
+  import { isActive, redirect, params } from "@roxi/routify"
   import { admin, auth } from "stores/portal"
   import { onMount } from "svelte"
 
@@ -28,9 +28,13 @@
     }
 
     if (user && user.tenantId) {
-      // no tenant in the url - send to account portal to fix this
       if (!urlTenantId) {
-        window.location.href = $admin.accountPortalUrl
+        // redirect to correct tenantId subdomain
+        if (!window.location.host.includes("localhost")) {
+          let redirectUrl = window.location.href
+          redirectUrl = redirectUrl.replace("://", `://${user.tenantId}.`)
+          window.location.href = redirectUrl
+        }
         return
       }
 
@@ -47,6 +51,10 @@
   }
 
   onMount(async () => {
+    if ($params["?template"]) {
+      await auth.setInitInfo({ init_template: $params["?template"] })
+    }
+
     await auth.checkAuth()
     await admin.init()
 

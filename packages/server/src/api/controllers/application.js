@@ -44,6 +44,7 @@ const {
   revertClientLibrary,
 } = require("../../utilities/fileSystem/clientLibrary")
 const { getTenantId, isMultiTenant } = require("@budibase/auth/tenancy")
+const { syncGlobalUsers } = require("./user")
 
 const URL_REGEX_SLASH = /\/|\\/g
 
@@ -197,7 +198,7 @@ exports.fetchAppPackage = async ctx => {
     application,
     screens,
     layouts,
-    clientLibPath: clientLibraryPath(ctx.params.appId),
+    clientLibPath: clientLibraryPath(ctx.params.appId, application.version),
   }
 }
 
@@ -323,12 +324,28 @@ exports.delete = async ctx => {
   ctx.body = result
 }
 
-exports.sync = async ctx => {
+exports.sync = async (ctx, next) => {
   const appId = ctx.params.appId
   if (!isDevAppID(appId)) {
     ctx.throw(400, "This action cannot be performed for production apps")
   }
+
+  // replicate prod to dev
   const prodAppId = getDeployedAppID(appId)
+
+  try {
+    const prodDb = new CouchDB(prodAppId, { skip_setup: true })
+    const info = await prodDb.info()
+    if (info.error) throw info.error
+  } catch (err) {
+    // the database doesn't exist. Don't replicate
+    ctx.status = 200
+    ctx.body = {
+      message: "App sync not required, app not deployed.",
+    }
+    return next()
+  }
+
   const replication = new Replication({
     source: prodAppId,
     target: appId,
@@ -343,6 +360,10 @@ exports.sync = async ctx => {
   } catch (err) {
     error = err
   }
+
+  // sync the users
+  await syncGlobalUsers(appId)
+
   if (error) {
     ctx.throw(400, error)
   } else {
