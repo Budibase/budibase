@@ -1,5 +1,5 @@
 <script>
-  import { getContext, onMount } from "svelte"
+  import { getContext } from "svelte"
   import InnerForm from "./InnerForm.svelte"
   import { hashString } from "utils/helpers"
 
