@@ -36,7 +36,6 @@
   // Messages that can be sent from the iframe preview to the builder
   // Budibase events are and initalisation events
   const MessageTypes = {
-    IFRAME_LOADED: "iframe-loaded",
     READY: "ready",
     ERROR: "error",
     BUDIBASE: "type",
@@ -157,6 +156,10 @@
 
   const handleBudibaseEvent = event => {
     const { type, data } = event.data || event.detail
+    if (!type) {
+      return
+    }
+
     if (type === "select-component" && data.id) {
       store.actions.components.select({ _id: data.id })
     } else if (type === "update-prop") {
