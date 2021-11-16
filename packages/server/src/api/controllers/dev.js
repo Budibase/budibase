@@ -6,6 +6,7 @@ const { request } = require("../../utilities/workerRequests")
 const { clearLock } = require("../../utilities/redis")
 const { Replication } = require("@budibase/auth").db
 const { DocumentTypes } = require("../../db/utils")
+const { app: appCache } = require("@budibase/auth/cache")
 
 async function redirect(ctx, method, path = "global") {
   const { devPath } = ctx.params
@@ -106,6 +107,7 @@ exports.revert = async ctx => {
     appDoc.appId = appId
     appDoc.instance._id = appId
     await db.put(appDoc)
+    await appCache.invalidateAppMetadata(appId)
     ctx.body = {
       message: "Reverted changes successfully.",
     }
