@@ -39,6 +39,8 @@
   // Sorting can be overridden at run time, so we can't use the prop directly
   let currentSortColumn = sortColumn
   let currentSortOrder = sortOrder
+
+  // Reset the current sort state to props if props change
   $: currentSortColumn = sortColumn
   $: currentSortOrder = sortOrder
 
@@ -172,7 +174,6 @@
       const sort = schema?.[sortColumn] ? sortColumn : undefined
 
       // For internal tables we use server-side processing
-      console.log("SEARCH!")
       const res = await API.searchTable({
         tableId: dataSource.tableId,
         query,

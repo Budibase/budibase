@@ -263,7 +263,6 @@
     } else {
       Object.keys(allSettings).forEach(key => {
         if (!propsAreSame(allSettings[key], cachedSettings[key])) {
-          console.log("new '" + key + "' setting for '" + id + "'")
           cachedSettings[key] = allSettings[key]
         }
       })
