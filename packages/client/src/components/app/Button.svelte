@@ -35,9 +35,9 @@
   {disabled}
   use:styleable={$component.styles}
   on:click={onClick}
-  class:editing={$component.editing}
   contenteditable={$component.editing}
   on:blur={$component.editing ? updateText : null}
+  bind:this={node}
 >
   {componentText}
 </button>
