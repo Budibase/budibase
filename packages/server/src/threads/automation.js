@@ -8,8 +8,10 @@ const { DocumentTypes, isDevAppID } = require("../db/utils")
 const { doInTenant } = require("@budibase/auth/tenancy")
 const env = require("../environment")
 const usage = require("../utilities/usageQuota")
+const { definitions: triggerDefs } = require("../automations/triggerInfo")
 
 const FILTER_STEP_ID = actions.ACTION_DEFINITIONS.FILTER.stepId
+const CRON_STEP_ID = triggerDefs.CRON.stepId
 const STOPPED_STATUS = { success: false, status: "STOPPED" }
 
 /**
@@ -23,6 +25,8 @@ class Orchestrator {
     this._chainCount = this._metadata ? this._metadata.automationChainCount : 0
     this._appId = triggerOutput.appId
     this._app = null
+    const triggerStepId = automation.definition.trigger.stepId
+    triggerOutput = this.cleanupTriggerOutputs(triggerStepId, triggerOutput)
     // remove from context
     delete triggerOutput.appId
     delete triggerOutput.metadata
@@ -34,9 +38,15 @@ class Orchestrator {
     this._emitter = new AutomationEmitter(this._chainCount + 1)
     this.executionOutput = { trigger: {}, steps: [] }
     // setup the execution output
-    const triggerStepId = automation.definition.trigger.stepId
     const triggerId = automation.definition.trigger.id
     this.updateExecutionOutput(triggerId, triggerStepId, null, triggerOutput)
+  }
+
+  cleanupTriggerOutputs(stepId, triggerOutput) {
+    if (stepId === CRON_STEP_ID) {
+      triggerOutput.timestamp = Date.now()
+    }
+    return triggerOutput
   }
 
   async getStepFunctionality(stepId) {
