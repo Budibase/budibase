@@ -8,6 +8,7 @@ const {
 const CouchDB = require("../db")
 const { DocumentTypes } = require("../db/utils")
 const { PermissionTypes } = require("@budibase/auth/permissions")
+const { app: appCache } = require("@budibase/auth/cache")
 
 const DEBOUNCE_TIME_SEC = 30
 
@@ -51,6 +52,7 @@ async function updateAppUpdatedAt(ctx) {
   const metadata = await db.get(DocumentTypes.APP_METADATA)
   metadata.updatedAt = new Date().toISOString()
   await db.put(metadata)
+  await appCache.invalidateAppMetadata(appId)
   // set a new debounce record with a short TTL
   await setDebounce(appId, DEBOUNCE_TIME_SEC)
 }

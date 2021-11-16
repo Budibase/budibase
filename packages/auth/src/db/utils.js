@@ -6,6 +6,9 @@ const { StaticDatabases, SEPARATOR, DocumentTypes } = require("./constants")
 const { getTenantId, getTenantIDFromAppID } = require("../tenancy")
 const fetch = require("node-fetch")
 const { getCouch } = require("./index")
+const { getAppMetadata } = require("../cache/appMetadata")
+
+const NO_APP_ERROR = "No app provided"
 
 const UNICODE_MAX = "\ufff0"
 
@@ -45,14 +48,23 @@ function getDocParams(docType, docId = null, otherProps = {}) {
 }
 
 exports.isDevAppID = appId => {
+  if (!appId) {
+    throw NO_APP_ERROR
+  }
   return appId.startsWith(exports.APP_DEV_PREFIX)
 }
 
 exports.isProdAppID = appId => {
+  if (!appId) {
+    throw NO_APP_ERROR
+  }
   return appId.startsWith(exports.APP_PREFIX) && !exports.isDevAppID(appId)
 }
 
 function isDevApp(app) {
+  if (!app) {
+    throw NO_APP_ERROR
+  }
   return exports.isDevAppID(app.appId)
 }
 
@@ -232,16 +244,16 @@ exports.getAllApps = async (CouchDB, { dev, all, idsOnly } = {}) => {
   if (idsOnly) {
     return appDbNames
   }
-  const appPromises = appDbNames.map(db =>
+  const appPromises = appDbNames.map(app =>
     // skip setup otherwise databases could be re-created
-    new CouchDB(db, { skip_setup: true }).get(DocumentTypes.APP_METADATA)
+    getAppMetadata(app, CouchDB)
   )
   if (appPromises.length === 0) {
     return []
   } else {
     const response = await Promise.allSettled(appPromises)
     const apps = response
-      .filter(result => result.status === "fulfilled")
+      .filter(result => result.status === "fulfilled" && result.value != null)
       .map(({ value }) => value)
     if (!all) {
       return apps.filter(app => {
