@@ -2,6 +2,9 @@ const redis = require("../redis/authRedis")
 const { getCouch } = require("../db")
 const { DocumentTypes } = require("../db/constants")
 
+const AppState = {
+  INVALID: "invalid",
+}
 const EXPIRY_SECONDS = 3600
 
 /**
@@ -27,8 +30,25 @@ exports.getAppMetadata = async (appId, CouchDB = null) => {
   // try cache
   let metadata = await client.get(appId)
   if (!metadata) {
-    metadata = await populateFromDB(appId, CouchDB)
-    client.store(appId, metadata, EXPIRY_SECONDS)
+    let expiry = EXPIRY_SECONDS
+    try {
+      metadata = await populateFromDB(appId, CouchDB)
+    } catch (err) {
+      // app DB left around, but no metadata, it is invalid
+      if (err && err.status === 404) {
+        metadata = { state: AppState.INVALID }
+        // don't expire the reference to an invalid app, it'll only be
+        // updated if a metadata doc actually gets stored (app is remade/reverted)
+        expiry = undefined
+      } else {
+        throw err
+      }
+    }
+    client.store(appId, metadata, expiry)
+  }
+  // we've stored in the cache an object to tell us that it is currently invalid
+  if (!metadata || metadata.state === AppState.INVALID) {
+    throw { status: 404, message: "No app metadata found" }
   }
   return metadata
 }
