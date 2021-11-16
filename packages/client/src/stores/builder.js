@@ -80,9 +80,15 @@ const createBuilderStore = () => {
       })
     },
     setDragging: dragging => {
+      if (dragging === get(writableStore).isDragging) {
+        return
+      }
       writableStore.update(state => ({ ...state, isDragging: dragging }))
     },
     setEditMode: enabled => {
+      if (enabled === get(writableStore).editMode) {
+        return
+      }
       writableStore.update(state => ({ ...state, editMode: enabled }))
     },
   }
