@@ -44,7 +44,7 @@ exports.getAppMetadata = async (appId, CouchDB = null) => {
         throw err
       }
     }
-    client.store(appId, metadata, expiry)
+    await client.store(appId, metadata, expiry)
   }
   // we've stored in the cache an object to tell us that it is currently invalid
   if (!metadata || metadata.state === AppState.INVALID) {
