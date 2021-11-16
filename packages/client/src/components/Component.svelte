@@ -70,10 +70,10 @@
     $builderStore.inBuilder &&
     ($builderStore.previewType === "layout" || insideScreenslot) &&
     !isBlock
-  $: draggable = interactive && !isLayout && !isScreen
-  $: droppable = interactive && !isLayout && !isScreen
   $: editable = definition.editable
   $: editing = editable && selected && $builderStore.editMode
+  $: draggable = !editing && interactive && !isLayout && !isScreen
+  $: droppable = interactive && !isLayout && !isScreen
 
   // Empty components are those which accept children but do not have any.
   // Empty states can be shown for these components, but can be disabled
