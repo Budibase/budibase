@@ -163,3 +163,12 @@ exports.checkForWebhooks = async ({ appId, oldAuto, newAuto }) => {
   }
   return newAuto
 }
+
+/**
+ * When removing an app/unpublishing it need to make sure automations are cleaned up (cron).
+ * @param appId {string} the app that is being removed.
+ * @return {Promise<void>} clean is complete if this succeeds.
+ */
+exports.cleanupAutomations = async appId => {
+  await exports.disableAllCrons(appId)
+}
