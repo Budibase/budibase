@@ -320,7 +320,7 @@ exports.delete = async ctx => {
   if (!env.isTest() && !ctx.query.unpublish) {
     await deleteApp(ctx.params.appId)
   }
-  if (ctx.query.unpublish) {
+  if (ctx.query && ctx.query.unpublish) {
     await cleanupAutomations(ctx.params.appId)
   }
   // make sure the app/role doesn't stick around after the app has been deleted
