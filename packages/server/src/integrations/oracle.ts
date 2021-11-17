@@ -69,28 +69,19 @@ module OracleModule {
     },
   }
 
+  const UNSUPPORTED_TYPES = [
+    "BLOB",
+    "CLOB",
+    "NCLOB"
+  ]
+
   const TYPE_MAP = {
-    text: FieldTypes.LONGFORM,
-    blob: FieldTypes.LONGFORM,
-    enum: FieldTypes.STRING,
-    varchar: FieldTypes.STRING,
-    float: FieldTypes.NUMBER,
-    int: FieldTypes.NUMBER,
-    numeric: FieldTypes.NUMBER,
-    bigint: FieldTypes.NUMBER,
-    mediumint: FieldTypes.NUMBER,
-    decimal: FieldTypes.NUMBER,
-    dec: FieldTypes.NUMBER,
-    double: FieldTypes.NUMBER,
-    real: FieldTypes.NUMBER,
-    fixed: FieldTypes.NUMBER,
-    smallint: FieldTypes.NUMBER,
+    long: FieldTypes.LONGFORM,
+    number: FieldTypes.NUMBER,
+    binary_float: FieldTypes.NUMBER,
+    binary_double: FieldTypes.NUMBER,
     timestamp: FieldTypes.DATETIME,
     date: FieldTypes.DATETIME,
-    datetime: FieldTypes.DATETIME,
-    time: FieldTypes.DATETIME,
-    tinyint: FieldTypes.BOOLEAN,
-    json: DatasourceFieldTypes.JSON,
   }
 
   /**
@@ -236,6 +227,14 @@ module OracleModule {
       return oracleTables
     }
 
+    private isSupportedColumn(column: OracleColumn) {
+      if (UNSUPPORTED_TYPES.includes(column.type)) {
+        return false
+      }
+
+      return true
+    }
+
     /**
      * Fetches the tables from the oracle table and assigns them to the datasource.
      * @param {*} datasourceId - datasourceId to fetch
@@ -262,6 +261,8 @@ module OracleModule {
 
         // iterate each column on the table
         Object.values(oracleTable.columns)
+              // remove columns that we can't read / save
+              .filter(oracleColumn => this.isSupportedColumn(oracleColumn))
               // match the order of the columns in the db
               .sort((c1, c2) => c1.id - c2.id)
               .forEach(oracleColumn => {
@@ -289,7 +290,6 @@ module OracleModule {
       this.tables = final.tables
       this.schemaErrors = final.errors
     }
-
 
     private async internalQuery<T>(query: SqlQuery): Promise<Result<T>> {
     let connection
@@ -345,7 +345,7 @@ module OracleModule {
 
     async query(json: QueryJson) {
       const operation = this._operation(json).toLowerCase()
-      const input = this._query(json)
+      const input = this._query(json, { disableReturning: true })
       if (Array.isArray(input)) {
         const responses = []
         for (let query of input) {
