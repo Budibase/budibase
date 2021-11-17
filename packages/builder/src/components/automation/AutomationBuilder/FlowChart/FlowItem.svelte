@@ -25,9 +25,10 @@
   let resultsModal
   let setupToggled
   let blockComplete
-  $: testResult = $automationStore.selectedAutomation.testResults?.steps.filter(
-    step => step.stepId === block.stepId
-  )
+  $: testResult =
+    $automationStore.selectedAutomation.automation.testResults?.steps.filter(
+      step => step.stepId === block.stepId
+    )
 
   $: isTrigger = block.type === "TRIGGER"
 
