@@ -1,4 +1,4 @@
-import svelte from "@sveltejs/vite-plugin-svelte"
+import { svelte } from "@sveltejs/vite-plugin-svelte"
 import replace from "@rollup/plugin-replace"
 
 import path from "path"

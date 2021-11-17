@@ -59,6 +59,7 @@
     "mode:self": "yarn env:selfhost:enable && yarn env:multi:disable && yarn env:account:disable",
     "mode:cloud": "yarn env:selfhost:disable && yarn env:multi:enable && yarn env:account:disable",
     "mode:account": "yarn mode:cloud && yarn env:account:enable",
+    "security:audit": "node scripts/audit.js",
     "postinstall": "husky install"
   }
 }
