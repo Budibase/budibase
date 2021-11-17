@@ -1,43 +1,48 @@
 <script>
   import NavigationSelectionModal from "components/design/NavigationPanel/NavigationSelectionModal.svelte"
-  import ScreenNameModal from "components/design/NavigationPanel/ScreenNameModal.svelte"
+  import ScreenDetailsModal from "components/design/NavigationPanel/ScreenDetailsModal.svelte"
   import NewScreenModal from "components/design/NavigationPanel/NewScreenModal.svelte"
   import { Modal } from "@budibase/bbui"
 
-  let modal
+  let newScreenModal
   let navigationSelectionModal
-  let screenNameModal
+  let screenDetailsModal
   let screenName = ""
   let url = ""
   let selectedScreens = []
 
-  export function showModal() {
-    modal.show()
+  export const showModal = () => {
+    newScreenModal.show()
+  }
+
+  const chooseModal = index => {
+    /*
+    0 = newScreenModal
+    1 = screenDetailsModal
+    2 = navigationSelectionModal
+    */
+    if (index === 0) {
+      newScreenModal.show()
+    } else if (index === 1) {
+      screenDetailsModal.show()
+    } else if (index === 2) {
+      navigationSelectionModal.show()
+    }
   }
 </script>
 
-<Modal bind:this={modal}>
-  <NewScreenModal
-    {screenNameModal}
-    {navigationSelectionModal}
-    bind:selectedScreens
-  />
+<Modal bind:this={newScreenModal}>
+  <NewScreenModal bind:selectedScreens {chooseModal} />
 </Modal>
 
-<Modal bind:this={screenNameModal}>
-  <ScreenNameModal
-    bind:screenName
-    bind:url
-    {modal}
-    {navigationSelectionModal}
-  />
+<Modal bind:this={screenDetailsModal}>
+  <ScreenDetailsModal bind:screenName bind:url {chooseModal} />
 </Modal>
 <Modal bind:this={navigationSelectionModal}>
   <NavigationSelectionModal
     bind:url
     bind:screenName
-    {modal}
     bind:selectedScreens
-    {screenNameModal}
+    {chooseModal}
   />
 </Modal>

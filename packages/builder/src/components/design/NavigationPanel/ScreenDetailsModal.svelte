@@ -3,10 +3,9 @@
   import sanitizeUrl from "builderStore/store/screenTemplates/utils/sanitizeUrl"
   import { selectedAccessRole, allScreens } from "builderStore"
 
-  export let modal
-  export let navigationSelectionModal
   export let screenName
   export let url
+  export let chooseModal
 
   let routeError
   let roleId = $selectedAccessRole || "BASIC"
@@ -37,8 +36,8 @@
   size="M"
   title={"Enter details"}
   confirmText={"Continue"}
-  onCancel={() => modal.show()}
-  onConfirm={() => navigationSelectionModal.show()}
+  onCancel={() => chooseModal(0)}
+  onConfirm={() => chooseModal(2)}
   cancelText={"Back"}
   disabled={!screenName || !url || routeError}
 >

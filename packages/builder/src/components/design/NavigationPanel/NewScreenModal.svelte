@@ -4,13 +4,13 @@
   import { ModalContent, Body, Detail, Layout, Icon } from "@budibase/bbui"
   import getTemplates from "builderStore/store/screenTemplates"
 
-  export let screenNameModal
-  export let navigationSelectionModal
   export let selectedScreens = []
+  export let chooseModal
 
   const blankScreen = "createFromScratch"
-  $: blankSelected = selectedScreens.length === 1
-  $: autoSelected = selectedScreens.length > 0 && !blankSelected
+
+  $: blankSelected = selectedScreens?.length === 1
+  $: autoSelected = selectedScreens?.length > 0 && !blankSelected
 
   $: templates = getTemplates($store, $tables.list)
   const toggleScreenSelection = table => {
@@ -19,7 +19,7 @@
         screen => !screen.name.includes(table.name)
       )
     } else {
-      const templates = templates.filter(template =>
+      templates = templates.filter(template =>
         template.name.includes(table.name)
       )
       selectedScreens = [...templates, ...selectedScreens]
@@ -31,8 +31,7 @@
   title="Add screens"
   confirmText="Add Screens"
   cancelText="Cancel"
-  onConfirm={() =>
-    autoSelected ? navigationSelectionModal.show() : screenNameModal.show()}
+  onConfirm={() => (autoSelected ? chooseModal(2) : chooseModal(1))}
   disabled={!selectedScreens.length}
   size="L"
 >

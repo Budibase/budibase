@@ -5,11 +5,10 @@
   import sanitizeUrl from "builderStore/store/screenTemplates/utils/sanitizeUrl"
   import { onDestroy } from "svelte"
 
-  export let screenNameModal
   export let selectedScreens
-  export let modal
   export let screenName
   export let url
+  export let chooseModal
 
   let roleId = $selectedAccessRole || "BASIC"
 
@@ -99,7 +98,7 @@
 <ModalContent
   title="Select navigation"
   cancelText="Back"
-  onCancel={() => (blankSelected ? screenNameModal.show() : modal.show())}
+  onCancel={() => (blankSelected ? chooseModal(1) : chooseModal(0))}
   size="M"
   onConfirm={() => {
     save(createdScreens)
