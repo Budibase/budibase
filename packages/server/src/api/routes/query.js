@@ -66,6 +66,7 @@ router
   )
   .get(
     "/api/queries/:queryId",
+    paramResource("queryId"),
     authorized(PermissionTypes.QUERY, PermissionLevels.READ),
     queryController.find
   )

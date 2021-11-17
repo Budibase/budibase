@@ -943,10 +943,10 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/auth@^0.9.169-alpha.1":
-  version "0.9.169"
-  resolved "https://registry.yarnpkg.com/@budibase/auth/-/auth-0.9.169.tgz#fd2a8fc271782ba857259ace15118a4d53b3d161"
-  integrity sha512-Q087k/54Nzx6Oeg5uL7YD/9BB+qkBWIv7h4ct+cNQJFNK/aKKN8JLQft+z3mBN5omHTkdJYFmbgXWFxtX+rR3Q==
+"@budibase/auth@^0.9.180-alpha.1":
+  version "0.9.183"
+  resolved "https://registry.yarnpkg.com/@budibase/auth/-/auth-0.9.183.tgz#da5a7e8b8ba9909d33399bbcd1b7164690ada257"
+  integrity sha512-BNlD4f7YfQejaq1wgMiIPzkNB+fu0HFpg9lyPYaD/mDWpa0F3HdMK3LxYewda9uRy9LJf6LtR3NJxVFvo0zXHA==
   dependencies:
     "@techpass/passport-openidconnect" "^0.3.0"
     aws-sdk "^2.901.0"
@@ -956,6 +956,7 @@
     jsonwebtoken "^8.5.1"
     koa-passport "^4.1.4"
     lodash "^4.17.21"
+    lodash.isarguments "^3.1.0"
     node-fetch "^2.6.1"
     passport-google-auth "^1.0.2"
     passport-google-oauth "^2.0.0"
@@ -1015,10 +1016,10 @@
     svelte-flatpickr "^3.1.0"
     svelte-portal "^1.0.0"
 
-"@budibase/bbui@^0.9.169":
-  version "0.9.169"
-  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-0.9.169.tgz#e8dac59b9792a7edf03c4301a9069760e2ebd2f4"
-  integrity sha512-2hks6GEjcXbDUzC37WgJvgloiqTP5ZS7IuRjlHU9kStDr6dAnXuy8pO6JNJmKrTXt+rgtwhHHrVWzzcmNLIYxA==
+"@budibase/bbui@^0.9.183":
+  version "0.9.183"
+  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-0.9.183.tgz#7e2ad9a34ec5ae9f32bc9d263199217b324f1b8c"
+  integrity sha512-SFTb5rxfUB1rVYMASvtwVYb5XDhSdsQ1Fkr85Mn+ME284WQqBeJKRSz87jLVXJFQAnSpPEDUShOUTTFVByqpig==
   dependencies:
     "@adobe/spectrum-css-workflow-icons" "^1.2.1"
     "@spectrum-css/actionbutton" "^1.0.1"
@@ -1064,14 +1065,14 @@
     svelte-flatpickr "^3.2.3"
     svelte-portal "^1.0.0"
 
-"@budibase/client@^0.9.169-alpha.1":
-  version "0.9.169"
-  resolved "https://registry.yarnpkg.com/@budibase/client/-/client-0.9.169.tgz#bec370b8f069b42f62483b281d6b9e2c7c8625f3"
-  integrity sha512-/bDnwv2iRysZrcrBQJEKzuxdwkwoJ2FalmQFhsfj+V/MWBN/wpQSDbJZQwf/YcI5bQk8f7xIn95O+DMH/m5izg==
+"@budibase/client@^0.9.180-alpha.1":
+  version "0.9.183"
+  resolved "https://registry.yarnpkg.com/@budibase/client/-/client-0.9.183.tgz#cf86a2e0382d7e4a0898630f10f17d7640ce256d"
+  integrity sha512-1gw8EVIwouNJtYPgByX97EyeegAm35+jSd6irjU0PQEKldtvw2vLI9hmatvUdkUqLFUCT5PeXq37xfkp2JCYLQ==
   dependencies:
-    "@budibase/bbui" "^0.9.169"
+    "@budibase/bbui" "^0.9.183"
     "@budibase/standard-components" "^0.9.139"
-    "@budibase/string-templates" "^0.9.169"
+    "@budibase/string-templates" "^0.9.183"
     regexparam "^1.3.0"
     shortid "^2.2.15"
     svelte-spa-router "^3.0.5"
@@ -1121,16 +1122,17 @@
     svelte-apexcharts "^1.0.2"
     svelte-flatpickr "^3.1.0"
 
-"@budibase/string-templates@^0.9.169", "@budibase/string-templates@^0.9.169-alpha.1":
-  version "0.9.169"
-  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-0.9.169.tgz#3c0be97718f39a92ff6b2dbb8b470aaa7851005e"
-  integrity sha512-JUyg6XuUgFqnfdDSCAplo4cTtrqdSZ9NPrU3iGudZEQjO/Wk5sezWPznl3Yw/kFHKmPLjFHIveEa2+lODEAxIA==
+"@budibase/string-templates@^0.9.180-alpha.1", "@budibase/string-templates@^0.9.183":
+  version "0.9.183"
+  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-0.9.183.tgz#c75dc298d8ec69e1717721b46c3c99448b5ee0a1"
+  integrity sha512-S3Z81c2YGtG0hUXvOrDKn8Gj4iu1adxIDeNgHJAsesID3/SrI9KBhExx1HzIP14SLZlFEao5A12cVtpFBHC7LQ==
   dependencies:
     "@budibase/handlebars-helpers" "^0.11.7"
     dayjs "^1.10.4"
     handlebars "^4.7.6"
     handlebars-utils "^1.0.6"
     lodash "^4.17.20"
+    vm2 "^3.9.4"
 
 "@cnakazawa/watch@^1.0.3":
   version "1.0.4"
@@ -4476,7 +4478,7 @@ ent@^2.2.0:
   resolved "https://registry.yarnpkg.com/ent/-/ent-2.2.0.tgz#e964219325a21d05f44466a2f686ed6ce5f5dd1d"
   integrity sha1-6WQhkyWiHQX0RGai9obtbOX13R0=
 
-errno@~0.1.1:
+errno@~0.1.1, errno@~0.1.7:
   version "0.1.8"
   resolved "https://registry.yarnpkg.com/errno/-/errno-0.1.8.tgz#8bb3e9c7d463be4976ff888f76b4809ebc2e811f"
   integrity sha512-dJ6oBr5SQ1VSd9qkk7ByRgb/1SH4JZjCHSW/mr63/QcXO9zLVxvJ6Oy13nio03rxpSnVDDjFor75SjVeZWPW/A==
@@ -11785,6 +11787,11 @@ vm2@^3.9.3:
   resolved "https://registry.yarnpkg.com/vm2/-/vm2-3.9.4.tgz#2e118290fefe7bd8ea09ebe2f5faf53730dbddaa"
   integrity sha512-sOdharrJ7KEePIpHekiWaY1DwgueuiBeX/ZBJUPgETsVlJsXuEx0K0/naATq2haFvJrvZnRiORQRubR0b7Ye6g==
 
+vm2@^3.9.4:
+  version "3.9.5"
+  resolved "https://registry.yarnpkg.com/vm2/-/vm2-3.9.5.tgz#5288044860b4bbace443101fcd3bddb2a0aa2496"
+  integrity sha512-LuCAHZN75H9tdrAiLFf030oW7nJV5xwNMuk1ymOZwopmuK3d2H4L1Kv4+GFHgarKiLfXXLFU+7LDABHnwOkWng==
+
 vuvuzela@1.0.3:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/vuvuzela/-/vuvuzela-1.0.3.tgz#3be145e58271c73ca55279dd851f12a682114b0b"
@@ -11919,6 +11926,13 @@ wordwrap@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/wordwrap/-/wordwrap-1.0.0.tgz#27584810891456a4171c8d0226441ade90cbcaeb"
   integrity sha1-J1hIEIkUVqQXHI0CJkQa3pDLyus=
+
+worker-farm@^1.7.0:
+  version "1.7.0"
+  resolved "https://registry.yarnpkg.com/worker-farm/-/worker-farm-1.7.0.tgz#26a94c5391bbca926152002f69b84a4bf772e5a8"
+  integrity sha512-rvw3QTZc8lAxyVrqcSGVm5yP/IJ2UcB3U0graE3LCFoZ0Yn2x4EoVSqJKdB/T5M+FLcRPjz4TDacRf3OCfNUzw==
+  dependencies:
+    errno "~0.1.7"
 
 wrap-ansi@^5.1.0:
   version "5.1.0"

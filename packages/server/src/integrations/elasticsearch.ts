@@ -3,6 +3,7 @@ import {
   DatasourceFieldTypes,
   QueryTypes,
 } from "../definitions/datasource"
+import { IntegrationBase } from "./base/IntegrationBase"
 
 module ElasticsearchModule {
   const { Client } = require("@elastic/elasticsearch")
@@ -74,7 +75,7 @@ module ElasticsearchModule {
     },
   }
 
-  class ElasticSearchIntegration {
+  class ElasticSearchIntegration implements IntegrationBase {
     private config: ElasticsearchConfig
     private client: any
 

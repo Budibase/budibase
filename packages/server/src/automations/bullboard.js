@@ -9,12 +9,27 @@ const { JobQueues } = require("../constants")
 const { utils } = require("@budibase/auth/redis")
 const { opts, redisProtocolUrl } = utils.getRedisOptions()
 
-const redisConfig = redisProtocolUrl || { redis: opts }
-let automationQueue = new Queue(JobQueues.AUTOMATIONS, redisConfig)
+const CLEANUP_PERIOD_MS = 60 * 1000
+const queueConfig = redisProtocolUrl || { redis: opts }
+let cleanupInternal = null
+
+let automationQueue = new Queue(JobQueues.AUTOMATIONS, queueConfig)
+
+async function cleanup() {
+  await automationQueue.clean(CLEANUP_PERIOD_MS, "completed")
+}
 
 exports.pathPrefix = "/bulladmin"
 
 exports.init = () => {
+  // cleanup the events every 5 minutes
+  if (!cleanupInternal) {
+    cleanupInternal = setInterval(cleanup, CLEANUP_PERIOD_MS)
+    // fire off an initial cleanup
+    cleanup().catch(err => {
+      console.error(`Unable to cleanup automation queue initially - ${err}`)
+    })
+  }
   const expressApp = express()
   // Set up queues for bull board admin
   const queues = [automationQueue]
