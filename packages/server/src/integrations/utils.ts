@@ -125,7 +125,7 @@ function copyExistingPropsOver(
 }
 
 export function finaliseExternalTables(tables: { [key: string]: any }, entities: { [key: string]: any }) {
-  const finalTables: { [key: string]: any } = {}
+  let finalTables: { [key: string]: any } = {}
   const errors: { [key: string]: string } = {}
   for (let [name, table] of Object.entries(tables)) {
     // make sure every table has a key
@@ -136,5 +136,9 @@ export function finaliseExternalTables(tables: { [key: string]: any }, entities:
     // make sure all previous props have been added back
     finalTables[name] = copyExistingPropsOver(name, table, entities)
   }
+  // sort the tables by name
+  finalTables = Object.entries(finalTables)
+                      .sort(([a,],[b,]) => a.localeCompare(b))
+                      .reduce((r, [k, v]) => ({ ...r, [k]: v }), {});
   return { tables: finalTables, errors }
 }
