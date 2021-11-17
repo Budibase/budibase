@@ -51,31 +51,31 @@
     : { schema: {} }
   $: schemaFields = table ? Object.values(table.schema) : []
 
-  const onChange = debounce(
-    async function (e, key) {
-      if (isTestModal) {
-        // Special case for webhook, as it requires a body, but the schema already brings back the body's contents
-        if (stepId === "WEBHOOK") {
-          automationStore.actions.addTestDataToAutomation({
-            body: {
-              [key]: e.detail,
-              ...$automationStore.selectedAutomation.automation.testData.body,
-            },
-          })
-        }
+  const onChange = debounce(async function (e, key) {
+    if (isTestModal) {
+      // Special case for webhook, as it requires a body, but the schema already brings back the body's contents
+      if (stepId === "WEBHOOK") {
         automationStore.actions.addTestDataToAutomation({
-          [key]: e.detail,
+          body: {
+            [key]: e.detail,
+            ...$automationStore.selectedAutomation.automation.testData.body,
+          },
         })
-        testData[key] = e.detail
-      } else {
-        block.inputs[key] = e.detail
-        await automationStore.actions.save(
-          $automationStore.selectedAutomation?.automation
-        )
       }
-    },
-    isTestModal ? 0 : 800
-  )
+      automationStore.actions.addTestDataToAutomation({
+        [key]: e.detail,
+      })
+      testData[key] = e.detail
+      await automationStore.actions.save(
+        $automationStore.selectedAutomation?.automation
+      )
+    } else {
+      block.inputs[key] = e.detail
+      await automationStore.actions.save(
+        $automationStore.selectedAutomation?.automation
+      )
+    }
+  }, 800)
 
   function getAvailableBindings(block, automation) {
     if (!block || !automation) {

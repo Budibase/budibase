@@ -87,7 +87,7 @@ const automationActions = store => ({
     const response = await api.post(`/api/automations/${_id}/test`, testData)
     const json = await response.json()
     store.update(state => {
-      state.selectedAutomation.testResults = json
+      state.selectedAutomation.automation.testResults = json
       return state
     })
   },
