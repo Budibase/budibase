@@ -2,6 +2,7 @@ const fs = require("fs")
 const { join } = require("path")
 const { spawnSync } =require("child_process")
 
+const DONT_RUN_PKG = ["bbui"]
 const PACKAGES_PATH = join(__dirname, "..", "packages")
 
 function getPackages() {
@@ -23,6 +24,9 @@ function removeModules(path) {
 }
 
 function executeInPackage(packageName) {
+  if (DONT_RUN_PKG.includes(packageName)) {
+    return
+  }
   const dir = join(PACKAGES_PATH, packageName)
   if (!fs.existsSync(join(dir, "package.json"))) {
     console.error(`SKIPPING ${packageName} directory, no package.json`)
