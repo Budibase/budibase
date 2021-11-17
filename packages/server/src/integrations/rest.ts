@@ -3,6 +3,7 @@ import {
   DatasourceFieldTypes,
   QueryTypes,
 } from "../definitions/datasource"
+import { IntegrationBase } from "./base/IntegrationBase"
 
 module RestModule {
   const fetch = require("node-fetch")
@@ -131,7 +132,7 @@ module RestModule {
     },
   }
 
-  class RestIntegration {
+  class RestIntegration implements IntegrationBase {
     private config: RestConfig
     private headers: {
       [key: string]: string

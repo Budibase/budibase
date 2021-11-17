@@ -13,20 +13,48 @@ import SqlTableQueryBuilder from "./sqlTable"
 const BASE_LIMIT = 5000
 
 type KnexQuery = Knex.QueryBuilder | Knex
+// these are invalid dates sent by the client, need to convert them to a real max date
+const MIN_ISO_DATE = "0000-00-00T00:00:00.000Z"
+const MAX_ISO_DATE = "9999-00-00T00:00:00.000Z"
+
+function parse(input: any) {
+  if (Array.isArray(input)) {
+    return JSON.stringify(input)
+  }
+  if (typeof input !== "string") {
+    return input
+  }
+  if (input === MAX_ISO_DATE) {
+    return new Date(8640000000000000)
+  }
+  if (input === MIN_ISO_DATE) {
+    return new Date(-8640000000000000)
+  }
+  if (isIsoDateString(input)) {
+    return new Date(input)
+  }
+  return input
+}
 
 function parseBody(body: any) {
   for (let [key, value] of Object.entries(body)) {
-    if (Array.isArray(value)) {
-      body[key] = JSON.stringify(value)
-    }
-    if (typeof value !== "string") {
-      continue
-    }
-    if (isIsoDateString(value)) {
-      body[key] = new Date(value)
-    }
+    body[key] = parse(value)
   }
   return body
+}
+
+function parseFilters(filters: SearchFilters): SearchFilters {
+  for (let [key, value] of Object.entries(filters)) {
+    let parsed
+    if (typeof value === "object") {
+      parsed = parseFilters(value)
+    } else {
+      parsed = parse(value)
+    }
+    // @ts-ignore
+    filters[key] = parsed
+  }
+  return filters
 }
 
 class InternalBuilder {
@@ -53,6 +81,7 @@ class InternalBuilder {
     if (!filters) {
       return query
     }
+    filters = parseFilters(filters)
     // if all or specified in filters, then everything is an or
     const allOr = filters.allOr
     if (filters.oneOf) {

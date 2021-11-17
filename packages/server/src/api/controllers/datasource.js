@@ -119,8 +119,16 @@ exports.destroy = async function (ctx) {
   const db = new CouchDB(ctx.appId)
 
   // Delete all queries for the datasource
-  const rows = await db.allDocs(getQueryParams(ctx.params.datasourceId, null))
-  await db.bulkDocs(rows.rows.map(row => ({ ...row.doc, _deleted: true })))
+  const queries = await db.allDocs(
+    getQueryParams(ctx.params.datasourceId, null)
+  )
+  await db.bulkDocs(
+    queries.rows.map(row => ({
+      _id: row.id,
+      _rev: row.value.rev,
+      _deleted: true,
+    }))
+  )
 
   // delete the datasource
   await db.remove(ctx.params.datasourceId, ctx.params.revId)

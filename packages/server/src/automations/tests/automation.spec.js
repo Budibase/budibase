@@ -1,5 +1,5 @@
 jest.mock("../../utilities/usageQuota")
-jest.mock("../thread")
+jest.mock("../../threads/automation")
 jest.mock("../../utilities/redis", () => ({
   init: jest.fn(),
   checkTestFlag: () => {
@@ -11,8 +11,7 @@ jest.spyOn(global.console, "error")
 
 require("../../environment")
 const automation = require("../index")
-const usageQuota = require("../../utilities/usageQuota")
-const thread = require("../thread")
+const thread = require("../../threads/automation")
 const triggers = require("../triggers")
 const { basicAutomation } = require("../../tests/utilities/structures")
 const { wait } = require("../../utilities")
@@ -62,7 +61,7 @@ describe("Run through some parts of the automations system", () => {
           }
         }
       }
-    }))
+    }), expect.any(Function))
   })
 
   it("should be able to clean inputs with the utilities", () => {

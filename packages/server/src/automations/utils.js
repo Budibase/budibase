@@ -1,4 +1,4 @@
-const runner = require("./thread")
+const { Thread, ThreadType } = require("../threads")
 const { definitions } = require("./triggerInfo")
 const webhooks = require("../api/controllers/webhook")
 const CouchDB = require("../db")
@@ -10,11 +10,12 @@ const { getDeployedAppID } = require("@budibase/auth/db")
 
 const WH_STEP_ID = definitions.WEBHOOK.stepId
 const CRON_STEP_ID = definitions.CRON.stepId
+const Runner = new Thread(ThreadType.AUTOMATION)
 
 exports.processEvent = async job => {
   try {
     // need to actually await these so that an error can be captured properly
-    return await runner(job)
+    return await Runner.run(job)
   } catch (err) {
     console.error(
       `${job.data.automation.appId} automation ${job.data.automation._id} was unable to run - ${err}`
