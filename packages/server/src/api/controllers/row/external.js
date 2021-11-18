@@ -55,7 +55,8 @@ exports.save = async ctx => {
 exports.fetchView = async ctx => {
   // there are no views in external data sources, shouldn't ever be called
   // for now just fetch
-  ctx.params.tableId = ctx.params.viewName.split("all_")[1]
+  const split = ctx.params.viewName.split("all_")
+  ctx.params.tableId = split[1] ? split[1] : split[0]
   return exports.fetch(ctx)
 }
 
