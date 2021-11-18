@@ -1,6 +1,7 @@
 import { Table } from "../../definitions/common"
+import { IntegrationBase } from "./IntegrationBase"
 
-export interface DatasourcePlus {
+export interface DatasourcePlus extends IntegrationBase {
   tables: Record<string, Table>
   schemaErrors: Record<string, string>
 

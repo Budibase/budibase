@@ -10,13 +10,11 @@ export function createPermissionStore() {
       const response = await api.post(
         `/api/permission/${role}/${resource}/${level}`
       )
-      const json = await response.json()
-      return json
+      return await response.json()
     },
     forResource: async resourceId => {
       const response = await api.get(`/api/permission/${resourceId}`)
-      const json = await response.json()
-      return json
+      return await response.json()
     },
   }
 }

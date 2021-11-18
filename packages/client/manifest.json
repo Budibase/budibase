@@ -2933,5 +2933,203 @@
       "type": "schema",
       "suffix": "repeater"
     }
+  },
+  "repeaterblock": {
+    "name": "Repeater block",
+    "icon": "ViewList",
+    "illegalChildren": ["section"],
+    "hasChildren": true,
+    "showSettingsBar": true,
+    "settings": [
+      {
+        "type": "dataSource",
+        "label": "Data",
+        "key": "dataSource"
+      },
+      {
+        "type": "filter",
+        "label": "Filtering",
+        "key": "filter"
+      },
+      {
+        "type": "field",
+        "label": "Sort Column",
+        "key": "sortColumn"
+      },
+      {
+        "type": "select",
+        "label": "Sort Order",
+        "key": "sortOrder",
+        "options": ["Ascending", "Descending"],
+        "defaultValue": "Descending"
+      },
+      {
+        "type": "number",
+        "label": "Limit",
+        "key": "limit",
+        "defaultValue": 10
+      },
+      {
+        "type": "boolean",
+        "label": "Paginate",
+        "key": "paginate"
+      },
+      {
+        "section": true,
+        "name": "Layout settings",
+        "settings": [
+          {
+            "type": "text",
+            "label": "Empty Text",
+            "key": "noRowsMessage",
+            "defaultValue": "No rows found"
+          },
+          {
+            "type": "select",
+            "label": "Direction",
+            "key": "direction",
+            "showInBar": true,
+            "barStyle": "buttons",
+            "options": [
+              {
+                "label": "Column",
+                "value": "column",
+                "barIcon": "ViewRow",
+                "barTitle": "Column layout"
+              },
+              {
+                "label": "Row",
+                "value": "row",
+                "barIcon": "ViewColumn",
+                "barTitle": "Row layout"
+              }
+            ],
+            "defaultValue": "column"
+          },
+          {
+            "type": "select",
+            "label": "Horiz. Align",
+            "key": "hAlign",
+            "showInBar": true,
+            "barStyle": "buttons",
+            "options": [
+              {
+                "label": "Left",
+                "value": "left",
+                "barIcon": "AlignLeft",
+                "barTitle": "Align left"
+              },
+              {
+                "label": "Center",
+                "value": "center",
+                "barIcon": "AlignCenter",
+                "barTitle": "Align center"
+              },
+              {
+                "label": "Right",
+                "value": "right",
+                "barIcon": "AlignRight",
+                "barTitle": "Align right"
+              },
+              {
+                "label": "Stretch",
+                "value": "stretch",
+                "barIcon": "MoveLeftRight",
+                "barTitle": "Align stretched horizontally"
+              }
+            ],
+            "defaultValue": "stretch"
+          },
+          {
+            "type": "select",
+            "label": "Vert. Align",
+            "key": "vAlign",
+            "showInBar": true,
+            "barStyle": "buttons",
+            "options": [
+              {
+                "label": "Top",
+                "value": "top",
+                "barIcon": "AlignTop",
+                "barTitle": "Align top"
+              },
+              {
+                "label": "Middle",
+                "value": "middle",
+                "barIcon": "AlignMiddle",
+                "barTitle": "Align middle"
+              },
+              {
+                "label": "Bottom",
+                "value": "bottom",
+                "barIcon": "AlignBottom",
+                "barTitle": "Align bottom"
+              },
+              {
+                "label": "Stretch",
+                "value": "stretch",
+                "barIcon": "MoveUpDown",
+                "barTitle": "Align stretched vertically"
+              }
+            ],
+            "defaultValue": "top"
+          },
+          {
+            "type": "select",
+            "label": "Gap",
+            "key": "gap",
+            "showInBar": true,
+            "barStyle": "picker",
+            "options": [
+              {
+                "label": "None",
+                "value": "N"
+              },
+              {
+                "label": "Small",
+                "value": "S"
+              },
+              {
+                "label": "Medium",
+                "value": "M"
+              },
+              {
+                "label": "Large",
+                "value": "L"
+              }
+            ],
+            "defaultValue": "M"
+          }
+        ]
+      }
+    ],
+    "context": [
+      {
+        "type": "static",
+        "suffix": "provider",
+        "values":  [
+          {
+            "label": "Rows",
+            "key": "rows"
+          },
+          {
+            "label": "Rows Length",
+            "key": "rowsLength"
+          },
+          {
+            "label": "Schema",
+            "key": "schema"
+          },
+          {
+            "label": "Page Number",
+            "key": "pageNumber"
+          }
+        ]
+      },
+      {
+        "type": "schema",
+        "suffix": "repeater"
+      }
+    ]
   }
 }

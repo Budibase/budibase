@@ -15,6 +15,7 @@ exports.Databases = {
   SESSIONS: "session",
   USER_CACHE: "users",
   FLAGS: "flags",
+  APP_METADATA: "appMetadata",
 }
 
 exports.SEPARATOR = SEPARATOR

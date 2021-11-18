@@ -3,6 +3,7 @@
   import Block from "components/Block.svelte"
   import BlockComponent from "components/BlockComponent.svelte"
   import { Heading } from "@budibase/bbui"
+  import { makePropSafe as safe } from "@budibase/string-templates"
 
   export let title
   export let dataSource
@@ -61,7 +62,7 @@
         operator: column.type === "string" ? "string" : "equal",
         type: "string",
         valueType: "Binding",
-        value: `{{ [${formId}].[${column.name}] }}`,
+        value: `{{ ${safe(formId)}.${safe(column.name)} }}`,
       })
     })
     return enrichedFilter
@@ -147,7 +148,7 @@
         <BlockComponent
           type="table"
           props={{
-            dataProvider: `{{ literal [${dataProviderId}] }}`,
+            dataProvider: `{{ literal ${safe(dataProviderId)} }}`,
             columns: tableColumns,
             showAutoColumns,
             rowCount,

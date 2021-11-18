@@ -30,6 +30,6 @@
   }
 </script>
 
-<Component {instance}>
+<Component {instance} isBlock>
   <slot />
 </Component>
