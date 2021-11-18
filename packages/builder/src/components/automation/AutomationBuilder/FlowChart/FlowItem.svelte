@@ -150,15 +150,6 @@
               >Finish and test automation</Button
             >
           {/if}
-          <Button
-            disabled={!hasCompletedInputs}
-            on:click={() => {
-              setupToggled = false
-              actionModal.show()
-            }}
-            primary={!isTrigger}
-            cta={isTrigger}>Add Action</Button
-          >
         {/if}
       </Layout>
     </div>
