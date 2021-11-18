@@ -3,18 +3,28 @@ import {
   DatasourceFieldTypes,
   QueryTypes,
   SqlQuery,
-  QueryJson
+  QueryJson,
 } from "../definitions/datasource"
-import { finaliseExternalTables, getSqlQuery, buildExternalTableId, convertType } from "./utils"
-import oracledb, { ExecuteOptions, Result,  Connection, ConnectionAttributes, BindParameters } from "oracledb"
+import {
+  finaliseExternalTables,
+  getSqlQuery,
+  buildExternalTableId,
+  convertType,
+} from "./utils"
+import oracledb, {
+  ExecuteOptions,
+  Result,
+  Connection,
+  ConnectionAttributes,
+  BindParameters,
+} from "oracledb"
 import Sql from "./base/sql"
 import { Table } from "../definitions/common"
 import { DatasourcePlus } from "./base/datasourcePlus"
 import { FieldTypes } from "../constants"
 
 module OracleModule {
-
-  oracledb.outFormat = oracledb.OUT_FORMAT_OBJECT;
+  oracledb.outFormat = oracledb.OUT_FORMAT_OBJECT
 
   interface OracleConfig {
     host: string
@@ -28,7 +38,8 @@ module OracleModule {
     docs: "https://github.com/oracle/node-oracledb",
     plus: true,
     friendlyName: "Oracle",
-    description: "Oracle Database is an object-relational database management system developed by Oracle Corporation",
+    description:
+      "Oracle Database is an object-relational database management system developed by Oracle Corporation",
     datasource: {
       host: {
         type: DatasourceFieldTypes.STRING,
@@ -51,7 +62,7 @@ module OracleModule {
       password: {
         type: DatasourceFieldTypes.PASSWORD,
         required: true,
-      }
+      },
     },
     query: {
       create: {
@@ -69,11 +80,7 @@ module OracleModule {
     },
   }
 
-  const UNSUPPORTED_TYPES = [
-    "BLOB",
-    "CLOB",
-    "NCLOB"
-  ]
+  const UNSUPPORTED_TYPES = ["BLOB", "CLOB", "NCLOB"]
 
   const TYPE_MAP = {
     long: FieldTypes.LONGFORM,
@@ -104,7 +111,7 @@ module OracleModule {
    */
   interface OracleConstraint {
     name: string
-    type: string 
+    type: string
     relatedConstraintName: string | null
     searchCondition: string | null
   }
@@ -117,7 +124,7 @@ module OracleModule {
     type: string
     default: string | null
     id: number
-    constraints: {[key: string]: OracleConstraint }
+    constraints: { [key: string]: OracleConstraint }
   }
 
   /**
@@ -125,18 +132,17 @@ module OracleModule {
    */
   interface OracleTable {
     name: string
-    columns: {[key: string]: OracleColumn }
+    columns: { [key: string]: OracleColumn }
   }
 
   const OracleContraintTypes = {
     PRIMARY: "P",
     NOT_NULL_OR_CHECK: "C",
     FOREIGN_KEY: "R",
-    UNIQUE: "U"
+    UNIQUE: "U",
   }
 
   class OracleIntegration extends Sql implements DatasourcePlus {
-
     private readonly config: OracleConfig
 
     public tables: Record<string, Table> = {}
@@ -176,9 +182,11 @@ module OracleModule {
     }
 
     /**
-     * Map the flat tabular columns and constraints data into a nested object 
+     * Map the flat tabular columns and constraints data into a nested object
      */
-    private mapColumns(result: Result<ColumnsResponse>): { [key: string]: OracleTable } {
+    private mapColumns(result: Result<ColumnsResponse>): {
+      [key: string]: OracleTable
+    } {
       const oracleTables: { [key: string]: OracleTable } = {}
 
       if (result.rows) {
@@ -197,7 +205,7 @@ module OracleModule {
           if (!table) {
             table = {
               name: tableName,
-              columns: {}
+              columns: {},
             }
             oracleTables[tableName] = table
           }
@@ -207,9 +215,9 @@ module OracleModule {
             column = {
               name: columnName,
               type: dataType,
-              default: dataDefault, 
+              default: dataDefault,
               id: columnId,
-              constraints: {}
+              constraints: {},
             }
             table.columns[columnName] = column
           }
@@ -221,7 +229,7 @@ module OracleModule {
                 name: constraintName,
                 type: constraintType,
                 relatedConstraintName: relatedConstraintName,
-                searchCondition: searchCondition
+                searchCondition: searchCondition,
               }
             }
             column.constraints[constraintName] = constraint
@@ -249,12 +257,53 @@ module OracleModule {
     }
 
     /**
+     * No native boolean in oracle. Best we can do is to check if a manual 1 or 0 number constraint has been set up
+     * This matches the default behaviour for generating DDL used in knex.
+     */
+    private isBooleanType(column: OracleColumn): boolean {
+      if (
+        column.type.toLowerCase() === "number" &&
+        Object.values(column.constraints).filter(c => {
+          if (
+            c.type === OracleContraintTypes.NOT_NULL_OR_CHECK &&
+            c.searchCondition
+          ) {
+            const condition = c.searchCondition
+              .replace(/\s/g, "") // remove spaces
+              .replace(/[']+/g, "") // remove quotes
+            if (
+              condition.includes("in(0,1)") ||
+              condition.includes("in(1,0)")
+            ) {
+              return true
+            }
+          }
+          return false
+        }).length > 0
+      ) {
+        return true
+      }
+
+      return false
+    }
+
+    private internalConvertType(column: OracleColumn): string {
+      if (this.isBooleanType(column)) {
+        return FieldTypes.BOOLEAN
+      }
+
+      return convertType(column.type, TYPE_MAP)
+    }
+
+    /**
      * Fetches the tables from the oracle table and assigns them to the datasource.
      * @param {*} datasourceId - datasourceId to fetch
      * @param entities - the tables that are to be built
-    */
+     */
     async buildSchema(datasourceId: string, entities: Record<string, Table>) {
-      const columnsResponse = await this.internalQuery<ColumnsResponse>({ sql: this.COLUMNS_SQL })
+      const columnsResponse = await this.internalQuery<ColumnsResponse>({
+        sql: this.COLUMNS_SQL,
+      })
       const oracleTables = this.mapColumns(columnsResponse)
 
       const tables: { [key: string]: Table } = {}
@@ -274,29 +323,31 @@ module OracleModule {
 
         // iterate each column on the table
         Object.values(oracleTable.columns)
-              // remove columns that we can't read / save
-              .filter(oracleColumn => this.isSupportedColumn(oracleColumn))
-              // match the order of the columns in the db
-              .sort((c1, c2) => c1.id - c2.id)
-              .forEach(oracleColumn => {
-          const columnName = oracleColumn.name
-          let fieldSchema = table.schema[columnName]
-          if (!fieldSchema) {
-            fieldSchema = {
-              autocolumn: this.isAutoColumn(oracleColumn),
-              name: columnName,
-              type: convertType(oracleColumn.type, TYPE_MAP),
+          // remove columns that we can't read / save
+          .filter(oracleColumn => this.isSupportedColumn(oracleColumn))
+          // match the order of the columns in the db
+          .sort((c1, c2) => c1.id - c2.id)
+          .forEach(oracleColumn => {
+            const columnName = oracleColumn.name
+            let fieldSchema = table.schema[columnName]
+            if (!fieldSchema) {
+              fieldSchema = {
+                autocolumn: this.isAutoColumn(oracleColumn),
+                name: columnName,
+                type: this.internalConvertType(oracleColumn),
+              }
+              table.schema[columnName] = fieldSchema
             }
-            table.schema[columnName] = fieldSchema
-          }
 
-          // iterate each constraint on the column
-          Object.values(oracleColumn.constraints).forEach(oracleConstraint => {
-            if (oracleConstraint.type === OracleContraintTypes.PRIMARY) {
-              table.primary!.push(columnName)
-            }
+            // iterate each constraint on the column
+            Object.values(oracleColumn.constraints).forEach(
+              oracleConstraint => {
+                if (oracleConstraint.type === OracleContraintTypes.PRIMARY) {
+                  table.primary!.push(columnName)
+                }
+              }
+            )
           })
-        })
       })
 
       const final = finaliseExternalTables(tables, entities)
@@ -305,40 +356,48 @@ module OracleModule {
     }
 
     private async internalQuery<T>(query: SqlQuery): Promise<Result<T>> {
-    let connection
-    try {
-      connection = await this.getConnection()
+      let connection
+      try {
+        connection = await this.getConnection()
 
         const options: ExecuteOptions = { autoCommit: true }
         const bindings: BindParameters = query.bindings || []
-        const result: Result<T> = await connection.execute<T>(query.sql, bindings, options)
+        const result: Result<T> = await connection.execute<T>(
+          query.sql,
+          bindings,
+          options
+        )
 
         return result
       } finally {
-       if (connection) {
-         try {
-           await connection.close();
-         } catch (err) {
-           console.error(err);
-         }
-       }
+        if (connection) {
+          try {
+            await connection.close()
+          } catch (err) {
+            console.error(err)
+          }
+        }
       }
     }
 
     private getConnection = async (): Promise<Connection> => {
       //connectString : "(DESCRIPTION =(ADDRESS = (PROTOCOL = TCP)(HOST = localhost)(PORT = 1521))(CONNECT_DATA =(SID= ORCL)))"
-      const connectString = `${this.config.host}:${this.config.port || 1521}/${this.config.database}`
+      const connectString = `${this.config.host}:${this.config.port || 1521}/${
+        this.config.database
+      }`
       const attributes: ConnectionAttributes = {
         user: this.config.user,
         password: this.config.user,
         connectString,
       }
-      return oracledb.getConnection(attributes);
+      return oracledb.getConnection(attributes)
     }
 
     async create(query: SqlQuery | string) {
       const response = await this.internalQuery(getSqlQuery(query))
-      return response.rows && response.rows.length ? response.rows : [{ created: true }]
+      return response.rows && response.rows.length
+        ? response.rows
+        : [{ created: true }]
     }
 
     async read(query: SqlQuery | string) {
@@ -348,12 +407,16 @@ module OracleModule {
 
     async update(query: SqlQuery | string) {
       const response = await this.internalQuery(getSqlQuery(query))
-      return response.rows && response.rows.length ? response.rows : [{ updated: true }]
+      return response.rows && response.rows.length
+        ? response.rows
+        : [{ updated: true }]
     }
 
     async delete(query: SqlQuery | string) {
       const response = await this.internalQuery(getSqlQuery(query))
-      return response.rows && response.rows.length ? response.rows : [{ deleted: true }]
+      return response.rows && response.rows.length
+        ? response.rows
+        : [{ deleted: true }]
     }
 
     async query(json: QueryJson) {
@@ -367,7 +430,9 @@ module OracleModule {
         return responses
       } else {
         const response = await this.internalQuery(input)
-        return response.rows && response.rows.length ? response.rows : [{ [operation]: true }]
+        return response.rows && response.rows.length
+          ? response.rows
+          : [{ [operation]: true }]
       }
     }
   }
