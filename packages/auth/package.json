@@ -4,7 +4,7 @@
   "description": "Authentication middlewares for budibase builder and apps",
   "main": "src/index.js",
   "author": "Budibase",
-  "license": "AGPL-3.0",
+  "license": "GPL-3.0",
   "scripts": {
     "test": "jest",
     "test:watch": "jest --watchAll"

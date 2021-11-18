@@ -27,7 +27,7 @@
     "env:account:disable": "node scripts/account.js disable"
   },
   "author": "Budibase",
-  "license": "AGPL-3.0-or-later",
+  "license": "GPL-3.0",
   "dependencies": {
     "@budibase/auth": "^0.9.187",
     "@budibase/string-templates": "^0.9.187",
