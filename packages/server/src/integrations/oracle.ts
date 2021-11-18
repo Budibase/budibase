@@ -91,6 +91,7 @@ module OracleModule {
     TABLE_NAME: string
     COLUMN_NAME: string
     DATA_TYPE: string
+    DATA_DEFAULT: string | null
     COLUMN_ID: number
     CONSTRAINT_NAME: string | null
     CONSTRAINT_TYPE: string | null
@@ -114,6 +115,7 @@ module OracleModule {
   interface OracleColumn {
     name: string
     type: string
+    default: string | null
     id: number
     constraints: {[key: string]: OracleConstraint }
   }
@@ -145,6 +147,7 @@ module OracleModule {
         tabs.table_name,
         cols.column_name,
         cols.data_type,
+        cols.data_default,
         cols.column_id,
         cons.constraint_name,
         cons.constraint_type,
@@ -183,6 +186,7 @@ module OracleModule {
           const tableName = row.TABLE_NAME
           const columnName = row.COLUMN_NAME
           const dataType = row.DATA_TYPE
+          const dataDefault = row.DATA_DEFAULT
           const columnId = row.COLUMN_ID
           const constraintName = row.CONSTRAINT_NAME
           const constraintType = row.CONSTRAINT_TYPE
@@ -203,6 +207,7 @@ module OracleModule {
             column = {
               name: columnName,
               type: dataType,
+              default: dataDefault, 
               id: columnId,
               constraints: {}
             }
@@ -233,6 +238,14 @@ module OracleModule {
       }
 
       return true
+    }
+
+    private isAutoColumn(column: OracleColumn) {
+      if (column.default && column.default.toLowerCase().includes("nextval")) {
+        return true
+      }
+
+      return false
     }
 
     /**
@@ -270,7 +283,7 @@ module OracleModule {
           let fieldSchema = table.schema[columnName]
           if (!fieldSchema) {
             fieldSchema = {
-              autocolumn: false,
+              autocolumn: this.isAutoColumn(oracleColumn),
               name: columnName,
               type: convertType(oracleColumn.type, TYPE_MAP),
             }
