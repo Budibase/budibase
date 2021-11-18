@@ -163,8 +163,15 @@ exports.MetadataTypes = {
   AUTOMATION_TEST_HISTORY: "automationTestHistory",
 }
 
+exports.InvalidColumns = {
+  ID: "_id",
+  REV: "_rev",
+  TABLE_ID: "tableId",
+}
+
 exports.BuildSchemaErrors = {
   NO_KEY: "no_key",
+  INVALID_COLUMN: "invalid_column",
 }
 
 // pass through the list from the auth/core lib
