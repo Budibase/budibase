@@ -2623,6 +2623,17 @@
       }
     ]
   },
+  "dynamicfilter": {
+    "name": "Dynamic Filter",
+    "icon": "FilterEdit",
+    "settings": [
+      {
+        "type": "dataProvider",
+        "label": "Provider",
+        "key": "dataProvider"
+      }
+    ]
+  },
   "tableblock": {
     "block": true,
     "name": "Table block",
