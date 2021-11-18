@@ -1,6 +1,6 @@
-const { createBullBoard } = require("bull-board")
-const { BullAdapter } = require("bull-board/bullAdapter")
-const express = require("express")
+const { createBullBoard } = require("@bull-board/api")
+const { BullAdapter } = require("@bull-board/api/bullAdapter")
+const { KoaAdapter } = require("@bull-board/koa")
 const env = require("../environment")
 const Queue = env.isTest()
   ? require("../utilities/queue/inMemoryQueue")
@@ -19,7 +19,7 @@ async function cleanup() {
   await automationQueue.clean(CLEANUP_PERIOD_MS, "completed")
 }
 
-exports.pathPrefix = "/bulladmin"
+const PATH_PREFIX = "/bulladmin"
 
 exports.init = () => {
   // cleanup the events every 5 minutes
@@ -30,17 +30,19 @@ exports.init = () => {
       console.error(`Unable to cleanup automation queue initially - ${err}`)
     })
   }
-  const expressApp = express()
   // Set up queues for bull board admin
   const queues = [automationQueue]
   const adapters = []
+  const serverAdapter = new KoaAdapter()
   for (let queue of queues) {
     adapters.push(new BullAdapter(queue))
   }
-  const { router } = createBullBoard(adapters)
-
-  expressApp.use(exports.pathPrefix, router)
-  return expressApp
+  createBullBoard({
+    queues: adapters,
+    serverAdapter,
+  })
+  serverAdapter.setBasePath(PATH_PREFIX)
+  return serverAdapter.registerPlugin()
 }
 
 exports.queue = automationQueue
