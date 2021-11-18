@@ -55,6 +55,26 @@ export const fetchDatasourceSchema = async dataSource => {
     return dataSource.value?.schema
   }
 
+  // Field sources have their schema statically defined
+  if (type === "field") {
+    if (dataSource.fieldType === "attachment") {
+      return {
+        url: {
+          type: "string",
+        },
+        name: {
+          type: "string",
+        },
+      }
+    } else if (dataSource.fieldType === "array") {
+      return {
+        value: {
+          type: "string",
+        },
+      }
+    }
+  }
+
   // Tables, views and links can be fetched by table ID
   if (
     (type === "table" || type === "view" || type === "link") &&

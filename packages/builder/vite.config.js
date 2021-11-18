@@ -1,4 +1,4 @@
-import svelte from "@sveltejs/vite-plugin-svelte"
+import { svelte } from "@sveltejs/vite-plugin-svelte"
 import replace from "@rollup/plugin-replace"
 
 import path from "path"
@@ -6,6 +6,11 @@ import path from "path"
 export default ({ mode }) => {
   const isProduction = mode === "production"
   return {
+    server: {
+      fs: {
+        strict: false,
+      },
+    },
     base: "/builder/",
     build: {
       minify: isProduction,

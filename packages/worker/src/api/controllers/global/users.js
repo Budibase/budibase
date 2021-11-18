@@ -43,11 +43,7 @@ exports.save = async ctx => {
 }
 
 const parseBooleanParam = param => {
-  if (param && param === "false") {
-    return false
-  } else {
-    return true
-  }
+  return !(param && param === "false")
 }
 
 exports.adminUser = async ctx => {

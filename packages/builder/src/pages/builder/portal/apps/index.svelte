@@ -165,6 +165,7 @@
       notifications.error(`Error deleting app: ${err}`)
     }
     selectedApp = null
+    appName = null
   }
 
   const updateApp = async app => {
@@ -298,6 +299,7 @@
   title="Confirm deletion"
   okText="Delete app"
   onOk={confirmDeleteApp}
+  onCancel={() => (appName = null)}
   disabled={appName !== selectedApp?.name}
 >
   Are you sure you want to delete the app <b>{selectedApp?.name}</b>?

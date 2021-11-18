@@ -97,6 +97,7 @@ exports.syncUser = async function (ctx) {
       .map(([appId]) => appId)
   }
   for (let prodAppId of prodAppIds) {
+    const roleId = roles[prodAppId]
     const devAppId = getDevelopmentAppID(prodAppId)
     for (let appId of [prodAppId, devAppId]) {
       if (!(await doesDatabaseExist(appId))) {
@@ -115,17 +116,21 @@ exports.syncUser = async function (ctx) {
           tableId: InternalTables.USER_METADATA,
         }
       }
-      let combined
-      if (deleting) {
-        combined = {
-          ...metadata,
-          status: UserStatus.INACTIVE,
-          metadata: BUILTIN_ROLE_IDS.PUBLIC,
-        }
-      } else {
-        combined = combineMetadataAndUser(user, metadata)
+      // assign the roleId for the metadata doc
+      if (roleId) {
+        metadata.roleId = roleId
       }
-      await db.put(combined)
+      let combined = !deleting
+        ? combineMetadataAndUser(user, metadata)
+        : {
+            ...metadata,
+            status: UserStatus.INACTIVE,
+            metadata: BUILTIN_ROLE_IDS.PUBLIC,
+          }
+      // if its null then there was no updates required
+      if (combined) {
+        await db.put(combined)
+      }
     }
   }
   ctx.body = {

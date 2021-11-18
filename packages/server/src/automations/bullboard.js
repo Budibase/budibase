@@ -1,6 +1,6 @@
-const { createBullBoard } = require("bull-board")
-const { BullAdapter } = require("bull-board/bullAdapter")
-const express = require("express")
+const { createBullBoard } = require("@bull-board/api")
+const { BullAdapter } = require("@bull-board/api/bullAdapter")
+const { KoaAdapter } = require("@bull-board/koa")
 const env = require("../environment")
 const Queue = env.isTest()
   ? require("../utilities/queue/inMemoryQueue")
@@ -9,23 +9,40 @@ const { JobQueues } = require("../constants")
 const { utils } = require("@budibase/auth/redis")
 const { opts, redisProtocolUrl } = utils.getRedisOptions()
 
-const redisConfig = redisProtocolUrl || { redis: opts }
-let automationQueue = new Queue(JobQueues.AUTOMATIONS, redisConfig)
+const CLEANUP_PERIOD_MS = 60 * 1000
+const queueConfig = redisProtocolUrl || { redis: opts }
+let cleanupInternal = null
 
-exports.pathPrefix = "/bulladmin"
+let automationQueue = new Queue(JobQueues.AUTOMATIONS, queueConfig)
+
+async function cleanup() {
+  await automationQueue.clean(CLEANUP_PERIOD_MS, "completed")
+}
+
+const PATH_PREFIX = "/bulladmin"
 
 exports.init = () => {
-  const expressApp = express()
+  // cleanup the events every 5 minutes
+  if (!cleanupInternal) {
+    cleanupInternal = setInterval(cleanup, CLEANUP_PERIOD_MS)
+    // fire off an initial cleanup
+    cleanup().catch(err => {
+      console.error(`Unable to cleanup automation queue initially - ${err}`)
+    })
+  }
   // Set up queues for bull board admin
   const queues = [automationQueue]
   const adapters = []
+  const serverAdapter = new KoaAdapter()
   for (let queue of queues) {
     adapters.push(new BullAdapter(queue))
   }
-  const { router } = createBullBoard(adapters)
-
-  expressApp.use(exports.pathPrefix, router)
-  return expressApp
+  createBullBoard({
+    queues: adapters,
+    serverAdapter,
+  })
+  serverAdapter.setBasePath(PATH_PREFIX)
+  return serverAdapter.registerPlugin()
 }
 
 exports.queue = automationQueue
