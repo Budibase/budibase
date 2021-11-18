@@ -83,8 +83,6 @@
     return fields.find(field => get(field).name === name)
   }
 
-  $: console.log(fields)
-
   const formApi = {
     registerField: (
       field,
