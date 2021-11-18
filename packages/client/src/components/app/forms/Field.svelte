@@ -49,7 +49,7 @@
   $: labelClass = labelPos === "above" ? "" : `spectrum-FieldLabel--${labelPos}`
 
   const updateLabel = e => {
-    builderStore.actions.updateProp("label", e.target.textContent)
+    builderStore.actions.updateProp("label", e.target.textContent.trim())
   }
 </script>
 
