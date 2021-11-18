@@ -291,7 +291,7 @@
 
   // Provide form step context so that forms without any step components
   // register their fields to step 1
-  setContext("form-step", 1)
+  setContext("form-step", writable(1))
 
   // Action context to pass to children
   const actions = [
