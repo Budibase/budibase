@@ -87,13 +87,15 @@ const automationActions = store => ({
     const response = await api.post(`/api/automations/${_id}/test`, testData)
     const json = await response.json()
     store.update(state => {
-      state.selectedAutomation.automation.testResults = json
+      state.selectedAutomation.testResults = json
       return state
     })
   },
   select: automation => {
     store.update(state => {
+      let testResults = state.selectedAutomation?.testResults
       state.selectedAutomation = new Automation(cloneDeep(automation))
+      state.selectedAutomation.testResults = testResults
       state.selectedBlock = null
       return state
     })
