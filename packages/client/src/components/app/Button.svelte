@@ -25,7 +25,7 @@
   }
 
   const updateText = e => {
-    builderStore.actions.updateProp("text", e.target.textContent)
+    builderStore.actions.updateProp("text", e.target.textContent.trim())
   }
 </script>
 
