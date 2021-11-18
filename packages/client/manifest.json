@@ -2631,6 +2631,18 @@
         "type": "dataProvider",
         "label": "Provider",
         "key": "dataProvider"
+      },
+      {
+        "type": "multifield",
+        "label": "Allowed filter fields",
+        "key": "allowedFields",
+        "placeholder": "All fields"
+      },
+      {
+        "type": "text",
+        "label": "Button text",
+        "key": "buttonText",
+        "defaultValue": "Edit filters"
       }
     ]
   },
