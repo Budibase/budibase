@@ -76,7 +76,7 @@
   // coerced to booleans
   $: editable = !!definition?.editable
   $: hasChildren = !!definition?.hasChildren
-  $: showEmptyState = !!definition?.showEmptyState
+  $: showEmptyState = definition?.showEmptyState !== false
 
   // Interactive components can be selected, dragged and highlighted inside
   // the builder preview
