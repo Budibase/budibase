@@ -10,7 +10,7 @@ Cypress.on("uncaught:exception", () => {
 })
 
 Cypress.Commands.add("login", () => {
-  cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
+  cy.visit(`${Cypress.config().baseUrl}/builder`)
   cy.wait(2000)
   cy.url().then(url => {
     if (url.includes("builder/admin")) {
@@ -33,9 +33,9 @@ Cypress.Commands.add("login", () => {
 })
 
 Cypress.Commands.add("createApp", name => {
-  cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
+  cy.visit(`${Cypress.config().baseUrl}/builder`)
   cy.wait(500)
-  cy.request(`localhost:${Cypress.env("PORT")}/api/applications?status=all`)
+  cy.request(`${Cypress.config().baseUrl}/api/applications?status=all`)
     .its("body")
     .then(body => {
       if (body.length > 0) {
@@ -52,9 +52,9 @@ Cypress.Commands.add("createApp", name => {
 })
 
 Cypress.Commands.add("deleteApp", name => {
-  cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
+  cy.visit(`${Cypress.config().baseUrl}/builder`)
   cy.wait(2000)
-  cy.request(`localhost:${Cypress.env("PORT")}/api/applications?status=all`)
+  cy.request(`${Cypress.config().baseUrl}/api/applications?status=all`)
     .its("body")
     .then(val => {
       if (val.length > 0) {
@@ -80,9 +80,9 @@ Cypress.Commands.add("deleteApp", name => {
 })
 
 Cypress.Commands.add("deleteAllApps", () => {
-  cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
+  cy.visit(`${Cypress.config().baseUrl}/builder`)
   cy.wait(500)
-  cy.request(`localhost:${Cypress.env("PORT")}/api/applications?status=all`)
+  cy.request(`${Cypress.config().baseUrl}/api/applications?status=all`)
     .its("body")
     .then(val => {
       for (let i = 0; i < val.length; i++) {
@@ -324,7 +324,7 @@ Cypress.Commands.add("addSqlDatasourceConfig", (sqlType, noFetch) => {
       .children()
       .within(() => {
         cy.get(".spectrum-Textfield").within(() => {
-          cy.get("input").clear().type("3.251.63.170")
+          cy.get("input").clear().type(Cypress.env("HOST_IP"))
         })
       })
   })

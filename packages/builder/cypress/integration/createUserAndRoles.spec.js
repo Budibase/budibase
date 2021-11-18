@@ -19,7 +19,7 @@ context("Create a User and Assign Roles", () => {
   
   it("should assign role types", () => {
     // 3 apps minimum required - to assign an app to each role type
-    cy.request(`localhost:${Cypress.env("PORT")}/api/applications?status=all`)
+    cy.request(`${Cypress.config().baseUrl}/api/applications?status=all`)
     .its("body")
     .then(val => {
       if (val.length < 3) {
@@ -31,7 +31,7 @@ context("Create a User and Assign Roles", () => {
       }
     })
     // Navigate back to the user
-    cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
+    cy.visit(`${Cypress.config().baseUrl}/builder`)
     cy.wait(1000)
     cy.get(".spectrum-SideNav").contains("Users").click()
     cy.get(".spectrum-Table").contains("bbuser").click()
@@ -54,6 +54,7 @@ context("Create a User and Assign Roles", () => {
         })
       }
       // Confirm roles exist within Configure roles table
+      cy.wait(500)
       cy.get(".spectrum-Table-body").eq(0).within((assginedRoles) => {
         expect(assginedRoles).to.contain("Admin")
         expect(assginedRoles).to.contain("Power")
@@ -83,11 +84,12 @@ context("Create a User and Assign Roles", () => {
   it("should enable Developer access", () => {
     // Enable Developer access
     cy.get(".field").eq(4).within(() => {
-      cy.get(".spectrum-Form-item").click()
+      cy.get(".spectrum-Switch-input").click({ force: true })
     })
     // No Access table should now be empty
     cy.get(".container").contains("No Access").parent().within(() => {
       cy.get(".spectrum-Table").contains("No rows found")
+    })
     
     // Each app within Configure roles should have Admin access
     cy.get(".spectrum-Table-body").eq(0).find('tr').its('length').then((len) => {
@@ -97,12 +99,11 @@ context("Create a User and Assign Roles", () => {
       }
     })
   })
-})
     
   it("should disable Developer access", () => {
     // Disable Developer access
     cy.get(".field").eq(4).within(() => {
-      cy.get(".spectrum-Form-item").click()
+      cy.get(".spectrum-Switch-input").click({ force: true })
     })
     // Configure roles table should now be empty
     cy.get(".container").contains("Configure roles").parent().within(() => {

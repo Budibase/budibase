@@ -13,7 +13,15 @@ context("Query Level Transformers", () => {
       // Add Query
       cy.get(".spectrum-Button").contains("Add Query").click({ force: true })
       cy.wait(500)
-      addTransformerQuery()
+      
+      // Get Transformer Function from file
+      cy.readFile("cypress/support/queryLevelTransformerFunction.js").then((transformerFunction) => {
+        console.log(transformerFunction[1])
+        cy.get(".CodeMirror textarea")
+        // Highlight current text and overwrite with file contents
+        .type(Cypress.platform === 'darwin' ? '{cmd}a' : '{ctrl}a', { force: true })
+        .type(transformerFunction, { parseSpecialCharSequences: false })
+      })
       // Run Query
       cy.get(".spectrum-Button").contains("Run Query").click({ force: true })
       cy.wait(500)
@@ -30,7 +38,14 @@ context("Query Level Transformers", () => {
     // Add Query
     cy.get(".spectrum-Button").contains("Add Query").click({ force: true })
     cy.wait(500)
-    addTransformerQuery(true)
+    // Get Transformer Function with Data from file
+    cy.readFile("cypress/support/queryLevelTransformerFunctionWithData.js").then((transformerFunction) => {
+      console.log(transformerFunction[1])
+      cy.get(".CodeMirror textarea")
+      // Highlight current text and overwrite with file contents
+      .type(Cypress.platform === 'darwin' ? '{cmd}a' : '{ctrl}a', { force: true })
+      .type(transformerFunction, { parseSpecialCharSequences: false })
+    })
     // Run Query
     cy.get(".spectrum-Button").contains("Run Query").click({ force: true })
     cy.wait(500)
@@ -43,7 +58,7 @@ context("Query Level Transformers", () => {
   it("should run an invalid query via POST request", () => {
     // POST request with transformer as null
     cy.request({method: 'POST',
-    url: 'https://test.budi.live/api/queries/',
+    url: `${Cypress.config().baseUrl}/api/queries/`,
     body: {fields : {"headers":{},"queryString":null,"path":null},
     parameters : [],
     schema : {},
@@ -61,7 +76,7 @@ context("Query Level Transformers", () => {
   it("should run an empty query", () => {
     // POST request with Transformer as an empty string
     cy.request({method: 'POST',
-    url: 'https://test.budi.live/api/queries/preview',
+    url: `${Cypress.config().baseUrl}/api/queries/preview`,
     body: {fields : {"headers":{},"queryString":null,"path":null},
     queryVerb : "read",
     transformer : "",
@@ -70,55 +85,6 @@ context("Query Level Transformers", () => {
     failOnStatusCode: false}).then((response) => {
       expect(response.status).to.equal(400)
       expect(response.body.message).to.include('Invalid body - "transformer" is not allowed to be empty')
+    })
   })
-})
-    
-  const addTransformerQuery = (addData = false) => {
-    // Adds query within the Transformer section of Query REST API
-    cy.get(".CodeMirror textarea")
-    // Highlight current text within CodeMirror
-    .type(Cypress.platform === 'darwin' ? '{cmd}a' : '{ctrl}a', { force: true })
-    // Overwrite current text with function
-    .type("const breweries = data\n" +
-    "const totals = {}\n" +
-    "for (let brewery of breweries) {")
-    // Delete key in place to remove extra brackets that are added
-    .type('{del}')
-    .type("\n const state = brewery.state\n" +
-    " if (totals[state] == null) {")
-    .type('{del}')
-    .type("\n   totals[state] = 1\n" +
-    "} else {")
-    .type('{del}')
-    .type("\n  totals[state]++\n" +
-    "}}\n", { parseSpecialCharSequences: false })
-    
-    if (addData) {
-      cy.get(".CodeMirror textarea")
-      .type('const stateCodes = {"texas":"tx",\n' +
-      '"colorado":"co",\n' +
-      '"florida":"fl",\n' +
-      '"iwoa":"ia",\n' +
-      '"louisiana":"la",\n' +
-      '"california":"ca",\n' +
-      '"pennsylvania":"pa",\n' +
-      '"georgia":"ga",\n' +
-      '"new hampshire":"nh",\n' +
-      '"virginia":"va",\n' +
-      '"michigan":"mi",\n' +
-      '"maryland":"md",\n' +
-      '"ohio":"oh"}\n')
-      .type('const entries = Object.entries(totals)\n' +
-      "return entries.map(([state, count]) => \n" +
-      "{ const stateCode = stateCodes[state.toLowerCase()]\n" +
-      "return {state, count, flag: 'http://flags.ox3.in/svg/us/${stateCode}.svg'",
-      { parseSpecialCharSequences: false })
-    }
-    else{
-      cy.get(".CodeMirror textarea")
-      .type("const entries = Object.entries(totals)\n" +
-      "return entries.map(([state, count]) => ({state, count}))",
-      { parseSpecialCharSequences: false })
-    }
-  }
 })
