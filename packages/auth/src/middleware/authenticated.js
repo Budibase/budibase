@@ -92,6 +92,10 @@ module.exports = (
       finalise(ctx, { authenticated, user, internal, version, publicEndpoint })
       return next()
     } catch (err) {
+      // invalid token, clear the cookie
+      if (err && err.name === "JsonWebTokenError") {
+        clearCookie(ctx, Cookies.Auth)
+      }
       // allow configuring for public access
       if ((opts && opts.publicAllowed) || publicEndpoint) {
         finalise(ctx, { authenticated: false, version, publicEndpoint })
