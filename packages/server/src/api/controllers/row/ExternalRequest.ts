@@ -226,7 +226,12 @@ module External {
         manyRelationships: ManyRelationship[] = []
       for (let [key, field] of Object.entries(table.schema)) {
         // if set already, or not set just skip it
-        if (row[key] == null || newRow[key] || field.autocolumn || field.type === FieldTypes.FORMULA) {
+        if (
+          row[key] == null ||
+          newRow[key] ||
+          field.autocolumn ||
+          field.type === FieldTypes.FORMULA
+        ) {
           continue
         }
         // if its an empty string then it means return the column to null (if possible)
