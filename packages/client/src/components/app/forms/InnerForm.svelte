@@ -83,6 +83,8 @@
     return fields.find(field => get(field).name === name)
   }
 
+  $: console.log(fields)
+
   const formApi = {
     registerField: (
       field,
@@ -136,7 +138,12 @@
       })
 
       // Add this field
-      fields = [...fields, fieldInfo]
+      if (existingField) {
+        const otherFields = fields.filter(info => get(info).name !== field)
+        fields = [...otherFields, fieldInfo]
+      } else {
+        fields = [...fields, fieldInfo]
+      }
 
       return fieldInfo
     },
