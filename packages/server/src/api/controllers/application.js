@@ -46,6 +46,7 @@ const {
 const { getTenantId, isMultiTenant } = require("@budibase/auth/tenancy")
 const { syncGlobalUsers } = require("./user")
 const { app: appCache } = require("@budibase/auth/cache")
+const { cleanupAutomations } = require("../../automations/utils")
 
 const URL_REGEX_SLASH = /\/|\\/g
 
@@ -318,6 +319,9 @@ exports.delete = async ctx => {
   /* istanbul ignore next */
   if (!env.isTest() && !ctx.query.unpublish) {
     await deleteApp(ctx.params.appId)
+  }
+  if (ctx.query && ctx.query.unpublish) {
+    await cleanupAutomations(ctx.params.appId)
   }
   // make sure the app/role doesn't stick around after the app has been deleted
   await removeAppFromUserRoles(ctx, ctx.params.appId)
