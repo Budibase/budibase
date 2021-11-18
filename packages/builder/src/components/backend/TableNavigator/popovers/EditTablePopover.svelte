@@ -22,7 +22,7 @@
   let templateScreens
   let willBeDeleted
 
-  $: external = table?.type === "external"
+  $: internal = table?.type === "internal"
 
   function showDeleteModal() {
     templateScreens = $allScreens.filter(
@@ -66,7 +66,9 @@
   <div slot="control" class="icon">
     <Icon s hoverable name="MoreSmallList" />
   </div>
-  <MenuItem icon="Edit" on:click={editorModal.show}>Edit</MenuItem>
+  {#if internal}
+    <MenuItem icon="Edit" on:click={editorModal.show}>Edit</MenuItem>
+  {/if}
   <MenuItem icon="Delete" on:click={showDeleteModal}>Delete</MenuItem>
 </ActionMenu>
 
