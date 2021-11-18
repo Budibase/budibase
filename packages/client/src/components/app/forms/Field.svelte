@@ -23,7 +23,7 @@
   // Register field with form
   const formApi = formContext?.formApi
   const labelPos = fieldGroupContext?.labelPosition || "above"
-  const formField = formApi?.registerField(
+  $: formField = formApi?.registerField(
     field,
     type,
     defaultValue,
@@ -37,28 +37,15 @@
   $: $component.editing && labelNode?.focus()
 
   // Update form properties in parent component on every store change
-  const unsubscribe = formField?.subscribe(value => {
+  $: unsubscribe = formField?.subscribe(value => {
     fieldState = value?.fieldState
     fieldApi = value?.fieldApi
     fieldSchema = value?.fieldSchema
   })
   onDestroy(() => unsubscribe?.())
 
-  // Keep field state up to date with props which might change due to
-  // conditional UI
-  $: updateValidation(validation)
-  $: updateDisabled(disabled)
-
   // Determine label class from position
   $: labelClass = labelPos === "above" ? "" : `spectrum-FieldLabel--${labelPos}`
-
-  const updateValidation = validation => {
-    fieldApi?.updateValidation(validation)
-  }
-
-  const updateDisabled = disabled => {
-    fieldApi?.setDisabled(disabled)
-  }
 
   const updateLabel = e => {
     builderStore.actions.updateProp("label", e.target.textContent)

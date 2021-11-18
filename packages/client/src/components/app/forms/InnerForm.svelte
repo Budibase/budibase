@@ -96,15 +96,14 @@
         return
       }
 
-      // If we've already registered this field then wipe any errors and
-      // return the existing field
+      // If we've already registered this field then keep some existing state
+      let initialValue = initialValues[field] ?? defaultValue
+      let fieldId = `id-${generateID()}`
       const existingField = getField(field)
       if (existingField) {
-        existingField.update(state => {
-          state.fieldState.error = null
-          return state
-        })
-        return existingField
+        const { fieldState } = get(existingField)
+        initialValue = fieldState.value ?? initialValue
+        fieldId = fieldState.fieldId
       }
 
       // Auto columns are always disabled
@@ -125,8 +124,8 @@
         type,
         step: step || 1,
         fieldState: {
-          fieldId: `id-${generateID()}`,
-          value: initialValues[field] ?? defaultValue,
+          fieldId,
+          value: initialValue,
           error: null,
           disabled: disabled || fieldDisabled || isAutoColumn,
           defaultValue,
