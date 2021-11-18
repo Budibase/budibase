@@ -13,15 +13,6 @@
 
   const component = getContext("component")
   const { styleable, ActionTypes, getAction } = getContext("sdk")
-
-  $: addExtension = getAction(
-    dataProvider?.id,
-    ActionTypes.AddDataProviderQueryExtension
-  )
-  $: removeExtension = getAction(
-    dataProvider?.id,
-    ActionTypes.RemoveDataProviderQueryExtension
-  )
   const options = [
     "Last 1 day",
     "Last 7 days",
@@ -32,10 +23,24 @@
   ]
   let value = options.includes(defaultValue) ? defaultValue : "Last 30 days"
 
-  $: queryExtension = getQueryExtension(value)
-  $: addExtension?.($component.id, "range", field, queryExtension)
+  $: dataProviderId = dataProvider?.id
+  $: addExtension = getAction(
+    dataProviderId,
+    ActionTypes.AddDataProviderQueryExtension
+  )
+  $: removeExtension = getAction(
+    dataProviderId,
+    ActionTypes.RemoveDataProviderQueryExtension
+  )
+  $: queryExtension = getQueryExtension(field, value)
+  $: addExtension?.($component.id, queryExtension)
 
-  const getQueryExtension = value => {
+  const getQueryExtension = (field, value) => {
+    if (!field || !value) {
+      return null
+    }
+    console.log("getting extension for " + value)
+
     let low = dayjs.utc().subtract(1, "year")
     let high = dayjs.utc().add(1, "day")
 
@@ -51,7 +56,14 @@
       low = dayjs.utc().subtract(6, "months")
     }
 
-    return { low: low.format(), high: high.format() }
+    return {
+      range: {
+        [field]: {
+          low: low.format(),
+          high: high.format(),
+        },
+      },
+    }
   }
 
   onDestroy(() => {
