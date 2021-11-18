@@ -78,7 +78,7 @@
     $builderStore.inBuilder &&
     ($builderStore.previewType === "layout" || insideScreenslot) &&
     !isBlock
-  $: editable = definition.editable
+  $: editable = definition?.editable
   $: editing = editable && selected && $builderStore.editMode
   $: draggable = !inDragPath && interactive && !isLayout && !isScreen
   $: droppable = interactive && !isLayout && !isScreen
