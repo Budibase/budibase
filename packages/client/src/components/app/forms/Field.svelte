@@ -23,13 +23,14 @@
   // Register field with form
   const formApi = formContext?.formApi
   const labelPos = fieldGroupContext?.labelPosition || "above"
+  $: formStep = formStepContext ? $formStepContext || 1 : 1
   $: formField = formApi?.registerField(
     field,
     type,
     defaultValue,
     disabled,
     validation,
-    formStepContext || 1
+    formStep
   )
 
   // Focus label when editing
