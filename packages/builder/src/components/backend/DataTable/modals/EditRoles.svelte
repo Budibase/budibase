@@ -4,6 +4,7 @@
   import api from "builderStore/api"
   import { notifications } from "@budibase/bbui"
   import ErrorsBox from "components/common/ErrorsBox.svelte"
+  import { createEventDispatcher } from "svelte"
   import { roles } from "stores/backend"
 
   const BASE_ROLE = { _id: "", inherits: "BASIC", permissionId: "Read/Write" }
@@ -41,6 +42,7 @@
     } else {
       selectedRole = BASE_ROLE
     }
+
     errors = []
   }
 
@@ -88,6 +90,18 @@
     }
   }
 
+  // Handling copy
+  const dispatch = createEventDispatcher()
+  const copy = () => {
+    navigator.clipboard.writeText(selectedRoleId).then(
+      () => {
+        dispatch("copy", selectedRoleId)
+        notifications.success("Role Id copied")
+      },
+      e => dispatch("fail", e)
+    )
+  }
+
   onMount(fetchBasePermissions)
 </script>
 
@@ -112,11 +126,37 @@
     getOptionLabel={role => role.name}
   />
   {#if selectedRole}
-    <Input
-      label="Name"
-      bind:value={selectedRole.name}
-      disabled={builtInRoles.includes(selectedRole.name)}
-    />
+    <div class="spectrum-Form-item">
+      <div class="labelContainer">
+        <label
+          for={"Name"}
+          class={`spectrum-FieldLabel spectrum-FieldLabel--sizeM spectrum-Form-itemLabel`}
+        >
+          Name
+        </label>
+        {#if selectedRoleId != ""}
+          <button
+            class="spectrum-ActionButton spectrum-ActionButton--sizeS spectrum-ActionButton--quiet copyButton"
+            on:click={copy}
+          >
+            <svg
+              class="spectrum-Icon spectrum-Icon--sizeS"
+              focusable="false"
+              aria-hidden="true"
+              aria-label="Edit"
+            >
+              <use xlink:href="#spectrum-icon-18-Paste" />
+            </svg>
+          </button>
+        {/if}
+      </div>
+
+      <Input
+        name="Name"
+        bind:value={selectedRole.name}
+        disabled={builtInRoles.includes(selectedRole.name)}
+      />
+    </div>
     <Select
       label="Inherits Role"
       bind:value={selectedRole.inherits}
@@ -140,3 +180,12 @@
     {/if}
   </div>
 </ModalContent>
+
+<style>
+  .labelContainer {
+    display: flex;
+  }
+  .copyButton {
+    margin-left: auto;
+  }
+</style>
