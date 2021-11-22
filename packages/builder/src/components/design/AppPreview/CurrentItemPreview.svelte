@@ -32,15 +32,13 @@
     .component("@budibase/standard-components/screenslot")
     .instanceName("Content Placeholder")
     .json()
-  
+
   // Messages that can be sent from the iframe preview to the builder
   // Budibase events are and initalisation events
   const MessageTypes = {
-    IFRAME_LOADED: "iframe-loaded",
     READY: "ready",
     ERROR: "error",
     BUDIBASE: "type",
-    KEYDOWN: "keydown"
   }
 
   // Construct iframe template
@@ -69,7 +67,7 @@
     theme: $store.theme,
     customTheme: $store.customTheme,
     previewDevice: $store.previewDevice,
-    messagePassing: $store.clientFeatures.messagePassing
+    messagePassing: $store.clientFeatures.messagePassing,
   }
 
   // Saving pages and screens to the DB causes them to have _revs.
@@ -111,7 +109,6 @@
         loading = false
         error = event.error || "An unknown error occurred"
       },
-      [MessageTypes.KEYDOWN]: handleKeydownEvent
     }
 
     const messageHandler = handlers[message.data.type] || handleBudibaseEvent
@@ -122,16 +119,25 @@
     window.addEventListener("message", receiveMessage)
     if (!$store.clientFeatures.messagePassing) {
       // Legacy - remove in later versions of BB
-      iframe.contentWindow.addEventListener("ready", () => {
-        receiveMessage({ data: { type: MessageTypes.READY }})
-      }, { once: true })
-      iframe.contentWindow.addEventListener("error", event => {
-        receiveMessage({ data: { type: MessageTypes.ERROR, error: event.detail }})
-      }, { once: true })
+      iframe.contentWindow.addEventListener(
+        "ready",
+        () => {
+          receiveMessage({ data: { type: MessageTypes.READY } })
+        },
+        { once: true }
+      )
+      iframe.contentWindow.addEventListener(
+        "error",
+        event => {
+          receiveMessage({
+            data: { type: MessageTypes.ERROR, error: event.detail },
+          })
+        },
+        { once: true }
+      )
       // Add listener for events sent by client library in preview
       iframe.contentWindow.addEventListener("bb-event", handleBudibaseEvent)
-      iframe.contentWindow.addEventListener("keydown", handleKeydownEvent)
-    }  
+    }
   })
 
   // Remove all iframe event listeners on component destroy
@@ -140,14 +146,20 @@
       window.removeEventListener("message", receiveMessage)
       if (!$store.clientFeatures.messagePassing) {
         // Legacy - remove in later versions of BB
-        iframe.contentWindow.removeEventListener("bb-event", handleBudibaseEvent)
-        iframe.contentWindow.removeEventListener("keydown", handleKeydownEvent)
+        iframe.contentWindow.removeEventListener(
+          "bb-event",
+          handleBudibaseEvent
+        )
       }
     }
   })
 
   const handleBudibaseEvent = event => {
     const { type, data } = event.data || event.detail
+    if (!type) {
+      return
+    }
+
     if (type === "select-component" && data.id) {
       store.actions.components.select({ _id: data.id })
     } else if (type === "update-prop") {
@@ -180,19 +192,6 @@
       }
     } else {
       console.warn(`Client sent unknown event type: ${type}`)
-    }
-  }
-
-  const handleKeydownEvent = event => {
-    const { key } = event.data || event
-    if (
-      (key === "Delete" || key === "Backspace") &&
-      selectedComponentId &&
-      ["input", "textarea"].indexOf(
-        iframe.contentWindow.document.activeElement?.tagName.toLowerCase()
-      ) === -1
-    ) {
-      confirmDeleteComponent(selectedComponentId)
     }
   }
 

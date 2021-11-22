@@ -240,13 +240,15 @@
     "name": "Screenslot",
     "icon": "WebPage",
     "description": "Contains your app screens",
-    "editable": false
+    "static": true
   },
   "button": {
     "name": "Button",
     "description": "A basic html button that is ready for styling",
     "icon": "Button",
+    "editable": true,
     "illegalChildren": ["section"],
+    "showSettingsBar": true,
     "settings": [
       {
         "type": "text",
@@ -255,6 +257,7 @@
       },
       {
         "type": "select",
+        "showInBar": true,
         "label": "Variant",
         "key": "type",
         "options": [
@@ -283,6 +286,7 @@
       {
         "type": "select",
         "label": "Size",
+        "showInBar": true,
         "key": "size",
         "options": [
           {
@@ -307,11 +311,18 @@
       {
         "type": "boolean",
         "label": "Quiet",
-        "key": "quiet"
+        "key": "quiet",
+        "showInBar": true,
+        "barIcon": "VisibilityOff",
+        "barTitle": "Quiet variant",
+        "barSeparator": false
       },
       {
         "type": "boolean",
         "label": "Disabled",
+        "showInBar": true,
+        "barIcon": "NoEdit",
+        "barTitle": "Disable button",
         "key": "disabled"
       },
       {
@@ -590,6 +601,7 @@
     "icon": "TextParagraph",
     "illegalChildren": ["section"],
     "showSettingsBar": true,
+    "editable": true,
     "settings": [
       {
         "type": "text",
@@ -696,6 +708,7 @@
     "description": "A component for displaying heading text",
     "illegalChildren": ["section"],
     "showSettingsBar": true,
+    "editable": true,
     "settings": [
       {
         "type": "text",
@@ -940,6 +953,7 @@
     "description": "A basic link component for internal and external links",
     "icon": "Link",
     "showSettingsBar": true,
+    "editable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -1831,6 +1845,7 @@
     "icon": "Text",
     "illegalChildren": ["section"],
     "styles": ["size"],
+    "editable": true,
     "settings": [
       {
         "type": "field/string",
@@ -1869,6 +1884,7 @@
     "name": "Number Field",
     "icon": "123",
     "styles": ["size"],
+    "editable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -1908,6 +1924,7 @@
     "name": "Password Field",
     "icon": "LockClosed",
     "styles": ["size"],
+    "editable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -1947,6 +1964,7 @@
     "name": "Options Picker",
     "icon": "ViewList",
     "styles": ["size"],
+    "editable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -2070,6 +2088,7 @@
     "name": "Multi-select Picker",
     "icon": "ViewList",
     "styles": ["size"],
+    "editable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -2171,6 +2190,7 @@
   "booleanfield": {
     "name": "Checkbox",
     "icon": "Checkmark",
+    "editable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -2234,6 +2254,7 @@
     "name": "Rich Text",
     "icon": "TextParagraph",
     "styles": ["size"],
+    "editable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -2274,6 +2295,7 @@
     "name": "Date Picker",
     "icon": "DateInput",
     "styles": ["size"],
+    "editable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -2319,6 +2341,7 @@
     "name": "Attachment",
     "icon": "Attach",
     "styles": ["size"],
+    "editable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -2348,6 +2371,7 @@
     "name": "Relationship Picker",
     "icon": "TaskList",
     "styles": ["size"],
+    "editable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
