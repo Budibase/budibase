@@ -24,10 +24,16 @@ function typeToFile(type) {
 class Thread {
   constructor(type, opts = { timeoutMs: null, count: 1 }) {
     this.type = type
-    if (!env.isTest()) {
+    this.count = opts.count ? opts.count : 1
+    this.disableThreading =
+      env.isTest() ||
+      env.DISABLE_THREADING ||
+      this.count === 0 ||
+      env.isInThread()
+    if (!this.disableThreading) {
       const workerOpts = {
         autoStart: true,
-        maxConcurrentWorkers: opts.count ? opts.count : 1,
+        maxConcurrentWorkers: this.count,
       }
       if (opts.timeoutMs) {
         workerOpts.maxCallTime = opts.timeoutMs
@@ -40,7 +46,7 @@ class Thread {
     return new Promise((resolve, reject) => {
       let fncToCall
       // if in test then don't use threading
-      if (env.isTest()) {
+      if (this.disableThreading) {
         fncToCall = require(typeToFile(this.type))
       } else {
         fncToCall = this.workers
