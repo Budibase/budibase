@@ -1,3 +1,7 @@
+<script context="module">
+  let SettingsDefinitionCache = {}
+</script>
+
 <script>
   import { getContext, setContext } from "svelte"
   import { writable, get } from "svelte/store"
@@ -13,6 +17,7 @@
   export let instance = {}
   export let isLayout = false
   export let isScreen = false
+  export let isBlock = false
 
   // The enriched component settings
   let enrichedSettings
@@ -20,13 +25,13 @@
   // Any prop overrides that need to be applied due to conditional UI
   let conditionalSettings
 
-  // Props are hashed when inside the builder preview and used as a key, so that
-  // components fully remount whenever any props change
-  let propsHash = 0
+  // Settings are hashed when inside the builder preview and used as a key,
+  // so that components fully remount whenever any settings change
+  let hash = 0
 
   // Latest timestamp that we started a props update.
   // Due to enrichment now being async, we need to avoid overwriting newer
-  // props with old ones, depending on how long enrichment takes.
+  // settings with old ones, depending on how long enrichment takes.
   let latestUpdateTime
 
   // Keep track of stringified representations of context and instance
@@ -48,24 +53,59 @@
   // Extract component instance info
   $: constructor = getComponentConstructor(instance._component)
   $: definition = getComponentDefinition(instance._component)
+  $: settingsDefinition = getSettingsDefinition(definition)
   $: children = instance._children || []
   $: id = instance._id
   $: name = instance._instanceName
+
+  // Determine if the component is selected or is part of the critical path
+  // leading to the selected component
+  $: selected =
+    $builderStore.inBuilder && $builderStore.selectedComponentId === id
+  $: inSelectedPath = $builderStore.selectedComponentPath?.includes(id)
+
+  // Interactive components can be selected, dragged and highlighted inside
+  // the builder preview
   $: interactive =
     $builderStore.inBuilder &&
-    ($builderStore.previewType === "layout" || insideScreenslot)
+    ($builderStore.previewType === "layout" || insideScreenslot) &&
+    !isBlock
+  $: draggable = interactive && !isLayout && !isScreen
+  $: droppable = interactive && !isLayout && !isScreen
+
+  // Empty components are those which accept children but do not have any.
+  // Empty states can be shown for these components, but can be disabled
+  // in the component manifest.
   $: empty = interactive && !children.length && definition?.hasChildren
   $: emptyState = empty && definition?.showEmptyState !== false
-  $: rawProps = getRawProps(instance)
-  $: instanceKey = JSON.stringify(rawProps)
-  $: updateComponentProps(rawProps, instanceKey, $context)
-  $: selected =
-    $builderStore.inBuilder &&
-    $builderStore.selectedComponentId === instance._id
-  $: inSelectedPath = $builderStore.selectedComponentPath?.includes(id)
+
+  // Raw props are all props excluding internal props and children
+  $: rawSettings = getRawSettings(instance)
+  $: instanceKey = hashString(JSON.stringify(rawSettings))
+
+  // Component settings are those which are intended for this component and
+  // which need to be enriched
+  $: componentSettings = getComponentSettings(rawSettings, settingsDefinition)
+  $: enrichComponentSettings(rawSettings, instanceKey, $context)
+
+  // Nested settings are those which are intended for child components inside
+  // blocks and which should not be enriched at this level
+  $: nestedSettings = getNestedSettings(rawSettings, settingsDefinition)
+
+  // Evaluate conditional UI settings and store any component setting changes
+  // which need to be made
   $: evaluateConditions(enrichedSettings?._conditions)
-  $: componentSettings = { ...enrichedSettings, ...conditionalSettings }
-  $: renderKey = `${propsHash}-${emptyState}`
+
+  // Build up the final settings object to be passed to the component
+  $: settings = {
+    ...enrichedSettings,
+    ...nestedSettings,
+    ...conditionalSettings,
+  }
+
+  // Render key is used when in the builder preview to fully remount
+  // components when settings are changed
+  $: renderKey = `${hash}-${emptyState}`
 
   // Update component context
   $: componentStore.set({
@@ -77,14 +117,14 @@
     name,
   })
 
-  const getRawProps = instance => {
-    let validProps = {}
+  const getRawSettings = instance => {
+    let validSettings = {}
     Object.entries(instance)
       .filter(([name]) => name === "_conditions" || !name.startsWith("_"))
       .forEach(([key, value]) => {
-        validProps[key] = value
+        validSettings[key] = value
       })
-    return validProps
+    return validSettings
   }
 
   // Gets the component constructor for the specified component
@@ -103,8 +143,47 @@
     return type ? Manifest[type] : null
   }
 
+  const getSettingsDefinition = definition => {
+    if (!definition) {
+      return []
+    }
+    if (SettingsDefinitionCache[definition.name]) {
+      return SettingsDefinitionCache[definition.name]
+    }
+    let settings = []
+    definition.settings?.forEach(setting => {
+      if (setting.section) {
+        settings = settings.concat(setting.settings || [])
+      } else {
+        settings.push(setting)
+      }
+    })
+    SettingsDefinitionCache[definition] = settings
+    return settings
+  }
+
+  const getComponentSettings = (rawSettings, settingsDefinition) => {
+    let clone = { ...rawSettings }
+    settingsDefinition?.forEach(setting => {
+      if (setting.nested) {
+        delete clone[setting.key]
+      }
+    })
+    return clone
+  }
+
+  const getNestedSettings = (rawSettings, settingsDefinition) => {
+    let clone = { ...rawSettings }
+    settingsDefinition?.forEach(setting => {
+      if (!setting.nested) {
+        delete clone[setting.key]
+      }
+    })
+    return clone
+  }
+
   // Enriches any string component props using handlebars
-  const updateComponentProps = (rawProps, instanceKey, context) => {
+  const enrichComponentSettings = (rawSettings, instanceKey, context) => {
     const instanceSame = instanceKey === lastInstanceKey
     const contextSame = context.key === lastContextKey
 
@@ -119,8 +198,8 @@
     latestUpdateTime = Date.now()
     const enrichmentTime = latestUpdateTime
 
-    // Enrich props with context
-    const enrichedProps = enrichProps(rawProps, context)
+    // Enrich settings with context
+    const newEnrichedSettings = enrichProps(rawSettings, context)
 
     // Abandon this update if a newer update has started
     if (enrichmentTime !== latestUpdateTime) {
@@ -130,7 +209,7 @@
     // Update the component props.
     // Most props are deeply compared so that svelte will only trigger reactive
     // statements on props that have actually changed.
-    if (!enrichedProps) {
+    if (!newEnrichedSettings) {
       return
     }
     let propsChanged = false
@@ -138,17 +217,17 @@
       enrichedSettings = {}
       propsChanged = true
     }
-    Object.keys(enrichedProps).forEach(key => {
-      if (!propsAreSame(enrichedProps[key], enrichedSettings[key])) {
+    Object.keys(newEnrichedSettings).forEach(key => {
+      if (!propsAreSame(newEnrichedSettings[key], enrichedSettings[key])) {
         propsChanged = true
-        enrichedSettings[key] = enrichedProps[key]
+        enrichedSettings[key] = newEnrichedSettings[key]
       }
     })
 
     // Update the hash if we're in the builder so we can fully remount this
     // component
     if (get(builderStore).inBuilder && propsChanged) {
-      propsHash = hashString(JSON.stringify(enrichedSettings))
+      hash = hashString(JSON.stringify(enrichedSettings))
     }
   }
 
@@ -171,14 +250,10 @@
     conditionalSettings = result.settingUpdates
     visible = nextVisible
   }
-
-  // Drag and drop helper tags
-  $: draggable = interactive && !isLayout && !isScreen
-  $: droppable = interactive && !isLayout && !isScreen
 </script>
 
 {#key renderKey}
-  {#if constructor && componentSettings && (visible || inSelectedPath)}
+  {#if constructor && settings && (visible || inSelectedPath)}
     <!-- The ID is used as a class because getElementsByClassName is O(1) -->
     <!-- and the performance matters for the selection indicators -->
     <div
@@ -187,16 +262,19 @@
       class:droppable
       class:empty
       class:interactive
+      class:block={isBlock}
       data-id={id}
       data-name={name}
     >
-      <svelte:component this={constructor} {...componentSettings}>
+      <svelte:component this={constructor} {...settings}>
         {#if children.length}
           {#each children as child (child._id)}
             <svelte:self instance={child} />
           {/each}
         {:else if emptyState}
           <Placeholder />
+        {:else if isBlock}
+          <slot />
         {/if}
       </svelte:component>
     </div>

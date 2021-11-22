@@ -1,5 +1,6 @@
 import { writable, get } from "svelte/store"
 import { fetchTableDefinition } from "../api"
+import { FieldTypes } from "../constants"
 
 export const createDataSourceStore = () => {
   const store = writable([])
@@ -20,7 +21,7 @@ export const createDataSourceStore = () => {
 
     // Only one side of the relationship is required as a trigger, as it will
     // automatically invalidate related table IDs
-    else if (dataSource.type === "link") {
+    else if (dataSource.type === FieldTypes.LINK) {
       dataSourceId = dataSource.tableId || dataSource.rowTableId
     }
 
@@ -59,11 +60,10 @@ export const createDataSourceStore = () => {
 
     // Emit this as a window event, so parent screens which are iframing us in
     // can also invalidate the same datasource
-    window.dispatchEvent(
-      new CustomEvent("invalidate-datasource", {
-        detail: { dataSourceId },
-      })
-    )
+    window.parent.postMessage({
+      type: "close-screen-modal",
+      detail: { dataSourceId },
+    })
 
     let invalidations = [dataSourceId]
 
@@ -73,7 +73,7 @@ export const createDataSourceStore = () => {
     if (schema) {
       Object.values(schema).forEach(fieldSchema => {
         if (
-          fieldSchema.type === "link" &&
+          fieldSchema.type === FieldTypes.LINK &&
           fieldSchema.tableId &&
           !fieldSchema.autocolumn
         ) {

@@ -24,6 +24,9 @@ const SCHEMAS = {
     Age: {
       type: "omit",
     },
+    Name: {
+      type: "string",
+    },
   },
   BROKEN: {
     Address: {

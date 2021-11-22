@@ -38,6 +38,7 @@
     padding: var(--spacing-l);
     display: grid;
     place-items: center;
+    grid-column: 1 / -1;
   }
   .noRows i {
     margin-bottom: var(--spacing-m);
