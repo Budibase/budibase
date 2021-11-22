@@ -188,8 +188,16 @@ Cypress.Commands.add("navigateToFrontend", () => {
 Cypress.Commands.add("createScreen", (screenName, route) => {
   cy.get("[aria-label=AddCircle]").click()
   cy.get(".spectrum-Modal").within(() => {
-    cy.get("input").first().type(screenName)
-    cy.get("input").eq(1).type(route)
+    cy.get(".item").first().click()
+    cy.get(".spectrum-Button--cta").click()
+  })
+  cy.get(".spectrum-Modal").within(() => {
+    cy.get("input").first().clear().type(screenName)
+    cy.get("input").eq(1).clear().type(route)
+    cy.get(".spectrum-Button--cta").click()
+  })
+  cy.get(".spectrum-Modal").within(() => {
+    cy.get(`[data-cy="left-nav"]`).click()
     cy.get(".spectrum-Button--cta").click()
   })
 })
