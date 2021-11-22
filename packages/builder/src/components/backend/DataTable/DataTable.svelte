@@ -6,6 +6,7 @@
   import CreateViewButton from "./buttons/CreateViewButton.svelte"
   import ExistingRelationshipButton from "./buttons/ExistingRelationshipButton.svelte"
   import ExportButton from "./buttons/ExportButton.svelte"
+  import ImportButton from "./buttons/ImportButton.svelte"
   import EditRolesButton from "./buttons/EditRolesButton.svelte"
   import ManageAccessButton from "./buttons/ManageAccessButton.svelte"
   import HideAutocolumnButton from "./buttons/HideAutocolumnButton.svelte"
@@ -124,6 +125,10 @@
       <HideAutocolumnButton bind:hideAutocolumns />
       <!-- always have the export last -->
       <ExportButton view={$tables.selected?._id} />
+      <ImportButton
+        tableId={$tables.selected?._id}
+        on:updaterows={onUpdateRows}
+      />
       {#key id}
         <TableFilterButton {schema} on:change={onFilter} />
       {/key}

@@ -79,6 +79,10 @@
     try {
       // Create datasource
       await datasources.save(datasource)
+      if (datasource?.plus) {
+        await tables.fetch()
+      }
+      await datasources.fetch()
       notifications.success(`Datasource ${name} updated successfully.`)
     } catch (err) {
       notifications.error(`Error saving datasource: ${err}`)

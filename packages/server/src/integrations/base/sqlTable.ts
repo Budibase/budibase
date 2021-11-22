@@ -6,7 +6,12 @@ import SchemaBuilder = Knex.SchemaBuilder
 import CreateTableBuilder = Knex.CreateTableBuilder
 const { FieldTypes, RelationshipTypes } = require("../../constants")
 
-function generateSchema(schema: CreateTableBuilder, table: Table, tables: Record<string, Table>, oldTable: null | Table = null) {
+function generateSchema(
+  schema: CreateTableBuilder,
+  table: Table,
+  tables: Record<string, Table>,
+  oldTable: null | Table = null
+) {
   let primaryKey = table && table.primary ? table.primary[0] : null
   const columns = Object.values(table.schema)
   // all columns in a junction table will be meta
@@ -19,17 +24,18 @@ function generateSchema(schema: CreateTableBuilder, table: Table, tables: Record
     schema.primary(metaCols.map(col => col.name))
   }
 
-
   // check if any columns need added
   const foreignKeys = Object.values(table.schema).map(col => col.foreignKey)
   for (let [key, column] of Object.entries(table.schema)) {
     // skip things that are already correct
     const oldColumn = oldTable ? oldTable.schema[key] : null
-    if ((oldColumn && oldColumn.type === column.type) || (primaryKey === key && !isJunction)) {
+    if ((oldColumn && oldColumn.type) || (primaryKey === key && !isJunction)) {
       continue
     }
     switch (column.type) {
-      case FieldTypes.STRING: case FieldTypes.OPTIONS: case FieldTypes.LONGFORM:
+      case FieldTypes.STRING:
+      case FieldTypes.OPTIONS:
+      case FieldTypes.LONGFORM:
         schema.string(key)
         break
       case FieldTypes.NUMBER:
@@ -67,7 +73,9 @@ function generateSchema(schema: CreateTableBuilder, table: Table, tables: Record
             throw "Referenced table doesn't exist"
           }
           schema.integer(column.foreignKey).unsigned()
-          schema.foreign(column.foreignKey).references(`${tableName}.${relatedTable.primary[0]}`)
+          schema
+            .foreign(column.foreignKey)
+            .references(`${tableName}.${relatedTable.primary[0]}`)
         }
         break
     }
@@ -76,7 +84,10 @@ function generateSchema(schema: CreateTableBuilder, table: Table, tables: Record
   // need to check if any columns have been deleted
   if (oldTable) {
     const deletedColumns = Object.entries(oldTable.schema)
-      .filter(([key, schema]) => schema.type !== FieldTypes.LINK && table.schema[key] == null)
+      .filter(
+        ([key, schema]) =>
+          schema.type !== FieldTypes.LINK && table.schema[key] == null
+      )
       .map(([key]) => key)
     deletedColumns.forEach(key => {
       if (oldTable.constrained && oldTable.constrained.indexOf(key) !== -1) {
@@ -92,7 +103,7 @@ function generateSchema(schema: CreateTableBuilder, table: Table, tables: Record
 function buildCreateTable(
   knex: Knex,
   table: Table,
-  tables: Record<string, Table>,
+  tables: Record<string, Table>
 ): SchemaBuilder {
   return knex.schema.createTable(table.name, schema => {
     generateSchema(schema, table, tables)
@@ -103,17 +114,14 @@ function buildUpdateTable(
   knex: Knex,
   table: Table,
   tables: Record<string, Table>,
-  oldTable: Table,
+  oldTable: Table
 ): SchemaBuilder {
   return knex.schema.alterTable(table.name, schema => {
     generateSchema(schema, table, tables, oldTable)
   })
 }
 
-function buildDeleteTable(
-  knex: Knex,
-  table: Table,
-): SchemaBuilder {
+function buildDeleteTable(knex: Knex, table: Table): SchemaBuilder {
   return knex.schema.dropTable(table.name)
 }
 
@@ -151,7 +159,12 @@ class SqlTableQueryBuilder {
         if (!json.meta || !json.meta.table) {
           throw "Must specify old table for update"
         }
-        query = buildUpdateTable(client, json.table, json.meta.tables, json.meta.table)
+        query = buildUpdateTable(
+          client,
+          json.table,
+          json.meta.tables,
+          json.meta.table
+        )
         break
       case Operation.DELETE_TABLE:
         query = buildDeleteTable(client, json.table)

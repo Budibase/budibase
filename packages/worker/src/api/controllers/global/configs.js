@@ -9,8 +9,11 @@ const { Configs } = require("../../../constants")
 const email = require("../../../utilities/email")
 const { upload, ObjectStoreBuckets } = require("@budibase/auth").objectStore
 const CouchDB = require("../../../db")
-const { getGlobalDB } = require("@budibase/auth/tenancy")
+const { getGlobalDB, getTenantId } = require("@budibase/auth/tenancy")
 const env = require("../../../environment")
+const { googleCallbackUrl, oidcCallbackUrl } = require("./auth")
+
+const BB_TENANT_CDN = "https://tenants.cdn.budi.live"
 
 exports.save = async function (ctx) {
   const db = getGlobalDB()
@@ -155,6 +158,10 @@ exports.publicSettings = async function (ctx) {
       config.config.google = false
     }
 
+    // callback urls
+    config.config.oidcCallbackUrl = await oidcCallbackUrl()
+    config.config.googleCallbackUrl = await googleCallbackUrl()
+
     // oidc button flag
     if (oidcConfig && oidcConfig.config) {
       config.config.oidc = oidcConfig.config.configs[0].activated
@@ -182,7 +189,13 @@ exports.upload = async function (ctx) {
     bucket = ObjectStoreBuckets.GLOBAL_CLOUD
   }
 
-  const key = `${type}/${name}`
+  let key
+  if (env.MULTI_TENANCY) {
+    key = `${getTenantId()}/${type}/${name}`
+  } else {
+    key = `${type}/${name}`
+  }
+
   await upload({
     bucket,
     filename: key,
@@ -200,7 +213,13 @@ exports.upload = async function (ctx) {
       config: {},
     }
   }
-  const url = `/${bucket}/${key}`
+  let url
+  if (env.SELF_HOSTED) {
+    url = `/${bucket}/${key}`
+  } else {
+    url = `${BB_TENANT_CDN}/${key}`
+  }
+
   cfgStructure.config[`${name}`] = url
   // write back to db with url updated
   await db.put(cfgStructure)

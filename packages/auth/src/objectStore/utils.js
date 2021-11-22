@@ -6,6 +6,7 @@ exports.ObjectStoreBuckets = {
   APPS: "prod-budi-app-assets",
   TEMPLATES: "templates",
   GLOBAL: "global",
+  GLOBAL_CLOUD: "prod-budi-tenant-uploads",
 }
 
 exports.budibaseTempDir = function () {

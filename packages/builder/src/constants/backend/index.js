@@ -138,3 +138,19 @@ export const RelationshipTypes = {
   ONE_TO_MANY: "one-to-many",
   MANY_TO_ONE: "many-to-one",
 }
+
+export const ALLOWABLE_STRING_OPTIONS = [FIELDS.STRING, FIELDS.OPTIONS]
+
+export const ALLOWABLE_STRING_TYPES = ALLOWABLE_STRING_OPTIONS.map(
+  opt => opt.type
+)
+
+export const ALLOWABLE_NUMBER_OPTIONS = [FIELDS.NUMBER, FIELDS.BOOLEAN]
+
+export const ALLOWABLE_NUMBER_TYPES = ALLOWABLE_NUMBER_OPTIONS.map(
+  opt => opt.type
+)
+
+export const SWITCHABLE_TYPES = ALLOWABLE_NUMBER_TYPES.concat(
+  ALLOWABLE_STRING_TYPES
+)

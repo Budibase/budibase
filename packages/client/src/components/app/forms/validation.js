@@ -1,4 +1,5 @@
 import flatpickr from "flatpickr"
+import { FieldTypes } from "../../../constants"
 
 /**
  * Creates a validation function from a combination of schema-level constraints
@@ -154,7 +155,7 @@ const parseType = (value, type) => {
   }
 
   // Parse as string
-  if (type === "string") {
+  if (type === FieldTypes.STRING) {
     if (typeof value === "string" || Array.isArray(value)) {
       return value
     }
@@ -165,7 +166,7 @@ const parseType = (value, type) => {
   }
 
   // Parse as number
-  if (type === "number") {
+  if (type === FieldTypes.NUMBER) {
     if (isNaN(value)) {
       return null
     }
@@ -173,7 +174,7 @@ const parseType = (value, type) => {
   }
 
   // Parse as date
-  if (type === "datetime") {
+  if (type === FieldTypes.DATETIME) {
     if (value instanceof Date) {
       return value.getTime()
     }
@@ -182,7 +183,7 @@ const parseType = (value, type) => {
   }
 
   // Parse as boolean
-  if (type === "boolean") {
+  if (type === FieldTypes.BOOLEAN) {
     if (typeof value === "string") {
       return value.toLowerCase() === "true"
     }
@@ -190,7 +191,7 @@ const parseType = (value, type) => {
   }
 
   // Parse attachments, treating no elements as null
-  if (type === "attachment") {
+  if (type === FieldTypes.ATTACHMENT) {
     if (!Array.isArray(value) || !value.length) {
       return null
     }
@@ -198,14 +199,14 @@ const parseType = (value, type) => {
   }
 
   // Parse links, treating no elements as null
-  if (type === "link") {
+  if (type === FieldTypes.LINK) {
     if (!Array.isArray(value) || !value.length) {
       return null
     }
     return value
   }
 
-  if (type === "array") {
+  if (type === FieldTypes.ARRAY) {
     if (!Array.isArray(value) || !value.length) {
       return null
     }

@@ -3,6 +3,7 @@ import {
   DatasourceFieldTypes,
   QueryTypes,
 } from "../definitions/datasource"
+import { IntegrationBase } from "./base/IntegrationBase"
 
 module CouchDBModule {
   const PouchDB = require("pouchdb")
@@ -50,7 +51,7 @@ module CouchDBModule {
     },
   }
 
-  class CouchDBIntegration {
+  class CouchDBIntegration implements IntegrationBase {
     private config: CouchDBConfig
     private client: any
 

@@ -17,7 +17,19 @@
 
   $: definition = $builderStore.selectedComponentDefinition
   $: showBar = definition?.showSettingsBar && !$builderStore.isDragging
-  $: settings = definition?.settings?.filter(setting => setting.showInBar) ?? []
+  $: settings = getBarSettings(definition)
+
+  const getBarSettings = definition => {
+    let allSettings = []
+    definition?.settings?.forEach(setting => {
+      if (setting.section) {
+        allSettings = allSettings.concat(setting.settings || [])
+      } else {
+        allSettings.push(setting)
+      }
+    })
+    return allSettings.filter(setting => setting.showInBar)
+  }
 
   const updatePosition = () => {
     if (!showBar) {

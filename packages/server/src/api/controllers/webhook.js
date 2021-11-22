@@ -3,6 +3,7 @@ const { generateWebhookID, getWebhookParams } = require("../../db/utils")
 const toJsonSchema = require("to-json-schema")
 const validate = require("jsonschema").validate
 const triggers = require("../../automations/triggers")
+const { getDeployedAppID } = require("@budibase/auth/db")
 
 const AUTOMATION_DESCRIPTION = "Generated from Webhook Schema"
 
@@ -76,24 +77,34 @@ exports.buildSchema = async ctx => {
 }
 
 exports.trigger = async ctx => {
-  const db = new CouchDB(ctx.params.instance)
-  const webhook = await db.get(ctx.params.id)
-  // validate against the schema
-  if (webhook.bodySchema) {
-    validate(ctx.request.body, webhook.bodySchema)
-  }
-  const target = await db.get(webhook.action.target)
-  if (webhook.action.type === exports.WebhookType.AUTOMATION) {
-    // trigger with both the pure request and then expand it
-    // incase the user has produced a schema to bind to
-    await triggers.externalTrigger(target, {
-      body: ctx.request.body,
-      ...ctx.request.body,
-      appId: ctx.params.instance,
-    })
-  }
-  ctx.status = 200
-  ctx.body = {
-    message: "Webhook trigger fired successfully",
+  const prodAppId = getDeployedAppID(ctx.params.instance)
+  try {
+    const db = new CouchDB(prodAppId)
+    const webhook = await db.get(ctx.params.id)
+    // validate against the schema
+    if (webhook.bodySchema) {
+      validate(ctx.request.body, webhook.bodySchema)
+    }
+    const target = await db.get(webhook.action.target)
+    if (webhook.action.type === exports.WebhookType.AUTOMATION) {
+      // trigger with both the pure request and then expand it
+      // incase the user has produced a schema to bind to
+      await triggers.externalTrigger(target, {
+        body: ctx.request.body,
+        ...ctx.request.body,
+        appId: prodAppId,
+      })
+    }
+    ctx.status = 200
+    ctx.body = {
+      message: "Webhook trigger fired successfully",
+    }
+  } catch (err) {
+    if (err.status === 404) {
+      ctx.status = 200
+      ctx.body = {
+        message: "Application not deployed yet.",
+      }
+    }
   }
 }

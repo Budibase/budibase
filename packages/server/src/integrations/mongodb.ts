@@ -3,6 +3,7 @@ import {
   DatasourceFieldTypes,
   QueryTypes,
 } from "../definitions/datasource"
+import { IntegrationBase } from "./base/IntegrationBase"
 
 module MongoDBModule {
   const { MongoClient } = require("mongodb")
@@ -62,7 +63,7 @@ module MongoDBModule {
     },
   }
 
-  class MongoIntegration {
+  class MongoIntegration implements IntegrationBase {
     private config: MongoDBConfig
     private client: any
 

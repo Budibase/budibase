@@ -43,24 +43,26 @@ Cypress.Commands.add("createApp", name => {
   })
 })
 
-Cypress.Commands.add("deleteApp", () => {
+Cypress.Commands.add("deleteApp", appName => {
   cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
   cy.wait(1000)
   cy.request(`localhost:${Cypress.env("PORT")}/api/applications?status=all`)
     .its("body")
     .then(val => {
-      console.log(val)
       if (val.length > 0) {
         cy.get(".title > :nth-child(3) > .spectrum-Icon").click()
         cy.contains("Delete").click()
-        cy.get(".spectrum-Button--warning").click()
+        cy.get(".spectrum-Modal").within(() => {
+          cy.get("input").type(appName)
+          cy.get(".spectrum-Button--warning").click()
+        })
       }
     })
 })
 
 Cypress.Commands.add("createTestApp", () => {
   const appName = "Cypress Tests"
-  cy.deleteApp()
+  cy.deleteApp(appName)
   cy.createApp(appName, "This app is used for Cypress testing.")
 })
 
@@ -186,8 +188,16 @@ Cypress.Commands.add("navigateToFrontend", () => {
 Cypress.Commands.add("createScreen", (screenName, route) => {
   cy.get("[aria-label=AddCircle]").click()
   cy.get(".spectrum-Modal").within(() => {
-    cy.get("input").first().type(screenName)
-    cy.get("input").eq(1).type(route)
+    cy.get(".item").first().click()
+    cy.get(".spectrum-Button--cta").click()
+  })
+  cy.get(".spectrum-Modal").within(() => {
+    cy.get("input").first().clear().type(screenName)
+    cy.get("input").eq(1).clear().type(route)
+    cy.get(".spectrum-Button--cta").click()
+  })
+  cy.get(".spectrum-Modal").within(() => {
+    cy.get(`[data-cy="left-nav"]`).click()
     cy.get(".spectrum-Button--cta").click()
   })
 })

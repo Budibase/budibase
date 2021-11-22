@@ -3,6 +3,7 @@ import {
   DatasourceFieldTypes,
   QueryTypes,
 } from "../definitions/datasource"
+import { IntegrationBase } from "./base/IntegrationBase"
 
 module AirtableModule {
   const Airtable = require("airtable")
@@ -73,7 +74,7 @@ module AirtableModule {
     },
   }
 
-  class AirtableIntegration {
+  class AirtableIntegration implements IntegrationBase {
     private config: AirtableConfig
     private client: any
 

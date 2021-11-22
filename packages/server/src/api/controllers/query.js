@@ -1,10 +1,11 @@
 const { processString } = require("@budibase/string-templates")
 const CouchDB = require("../../db")
 const { generateQueryID, getQueryParams } = require("../../db/utils")
-const { integrations } = require("../../integrations")
 const { BaseQueryVerbs } = require("../../constants")
 const env = require("../../environment")
-const ScriptRunner = require("../../utilities/scriptRunner")
+const { Thread, ThreadType } = require("../../threads")
+
+const Runner = new Thread(ThreadType.QUERY, { timeoutMs: 10000 })
 
 // simple function to append "readable" to all read queries
 function enrichQueries(input) {
@@ -16,50 +17,6 @@ function enrichQueries(input) {
     }
   }
   return wasArray ? queries : queries[0]
-}
-
-function formatResponse(resp) {
-  if (typeof resp === "string") {
-    try {
-      resp = JSON.parse(resp)
-    } catch (err) {
-      console.error(
-        "Error parsing JSON response. Returning string in array instead."
-      )
-      resp = { response: resp }
-    }
-  }
-  return resp
-}
-
-async function runAndTransform(
-  integration,
-  queryVerb,
-  enrichedQuery,
-  transformer
-) {
-  let rows = formatResponse(await integration[queryVerb](enrichedQuery))
-
-  // transform as required
-  if (transformer) {
-    const runner = new ScriptRunner(transformer, { data: rows })
-    rows = runner.execute()
-  }
-
-  // needs to an array for next step
-  if (!Array.isArray(rows)) {
-    rows = [rows]
-  }
-
-  // map into JSON if just raw primitive here
-  if (rows.find(row => typeof row !== "object")) {
-    rows = rows.map(value => ({ value }))
-  }
-
-  // get all the potential fields in the schema
-  let keys = rows.flatMap(Object.keys)
-
-  return { rows, keys }
 }
 
 exports.fetch = async function (ctx) {
@@ -146,30 +103,23 @@ exports.preview = async function (ctx) {
 
   const datasource = await db.get(ctx.request.body.datasourceId)
 
-  const Integration = integrations[datasource.source]
-
-  if (!Integration) {
-    ctx.throw(400, "Integration type does not exist.")
-  }
-
   const { fields, parameters, queryVerb, transformer } = ctx.request.body
   const enrichedQuery = await enrichQueryFields(fields, parameters)
-  const integration = new Integration(datasource.config)
 
-  const { rows, keys } = await runAndTransform(
-    integration,
-    queryVerb,
-    enrichedQuery,
-    transformer
-  )
+  try {
+    const { rows, keys } = await Runner.run({
+      datasource,
+      queryVerb,
+      query: enrichedQuery,
+      transformer,
+    })
 
-  ctx.body = {
-    rows,
-    schemaFields: [...new Set(keys)],
-  }
-  // cleanup
-  if (integration.end) {
-    integration.end()
+    ctx.body = {
+      rows,
+      schemaFields: [...new Set(keys)],
+    }
+  } catch (err) {
+    ctx.throw(400, err)
   }
 }
 
@@ -179,29 +129,22 @@ exports.execute = async function (ctx) {
   const query = await db.get(ctx.params.queryId)
   const datasource = await db.get(query.datasourceId)
 
-  const Integration = integrations[datasource.source]
-
-  if (!Integration) {
-    ctx.throw(400, "Integration type does not exist.")
-  }
-
   const enrichedQuery = await enrichQueryFields(
     query.fields,
     ctx.request.body.parameters
   )
-  const integration = new Integration(datasource.config)
 
   // call the relevant CRUD method on the integration class
-  const { rows } = await runAndTransform(
-    integration,
-    query.queryVerb,
-    enrichedQuery,
-    query.transformer
-  )
-  ctx.body = rows
-  // cleanup
-  if (integration.end) {
-    integration.end()
+  try {
+    const { rows } = await Runner.run({
+      datasource,
+      queryVerb: query.queryVerb,
+      query: enrichedQuery,
+      transformer: query.transformer,
+    })
+    ctx.body = rows
+  } catch (err) {
+    ctx.throw(400, err)
   }
 }
 
