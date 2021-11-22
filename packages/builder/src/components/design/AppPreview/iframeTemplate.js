@@ -54,7 +54,7 @@ export default `
         if (!parsed) {
           return
         }
-        
+
         // Extract data from message
         const {
           selectedComponentId,
@@ -84,17 +84,21 @@ export default `
           if (window.loadBudibase) {
             window.loadBudibase()
             document.documentElement.classList.add("loaded")
-            window.dispatchEvent(new Event("iframe-loaded"))
+            window.parent.postMessage({ type: "iframe-loaded" })
           } else {
             throw "The client library couldn't be loaded"
           }
         } catch (error) {
-          window.dispatchEvent(new CustomEvent("error", { detail: error }))
+          window.parent.postMessage({ type: "error", error })
         }
       }
 
       window.addEventListener("message", receiveMessage)
-      window.dispatchEvent(new Event("ready"))
+      window.addEventListener("keydown", evt => {
+        window.parent.postMessage({ type: "keydown", key: event.key })
+      })
+
+      window.parent.postMessage({ type: "ready" })
     </script>
   </head>
   <body/>

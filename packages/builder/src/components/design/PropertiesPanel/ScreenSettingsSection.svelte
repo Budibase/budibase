@@ -54,7 +54,6 @@
   <DetailSummary name="Screen" collapsible={false}>
     {#each screenSettings as def (`${componentInstance._id}-${def.key}`)}
       <PropertyControl
-        bindable={false}
         control={def.control}
         label={def.label}
         key={def.key}

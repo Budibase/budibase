@@ -20,15 +20,17 @@
   import { notifications } from "@budibase/bbui"
   import ParameterBuilder from "components/integration/QueryParameterBuilder.svelte"
   import IntegrationQueryEditor from "components/integration/index.svelte"
-
-  const dispatch = createEventDispatcher()
-  let anchorRight, dropdownRight
-  let drawer
+  import { makePropSafe as safe } from "@budibase/string-templates"
 
   export let value = {}
   export let otherSources
   export let showAllQueries
   export let bindings = []
+
+  const dispatch = createEventDispatcher()
+  const arrayTypes = ["attachment", "array"]
+  let anchorRight, dropdownRight
+  let drawer
 
   $: text = value?.label ?? "Choose an option"
   $: tables = $tablesStore.list.map(m => ({
@@ -54,8 +56,6 @@
       name: query.name,
       tableId: query._id,
       ...query,
-      schema: query.schema,
-      parameters: query.parameters,
       type: "query",
     }))
   $: dataProviders = getDataProviderComponents(
@@ -65,29 +65,40 @@
     label: provider._instanceName,
     name: provider._instanceName,
     providerId: provider._id,
-    value: `{{ literal [${provider._id}] }}`,
+    value: `{{ literal ${safe(provider._id)} }}`,
     type: "provider",
-    schema: provider.schema,
-  }))
-  $: queryBindableProperties = bindings.map(property => ({
-    ...property,
-    category: property.type === "instance" ? "Component" : "Table",
-    label: property.readableBinding,
-    path: property.readableBinding,
   }))
   $: links = bindings
     .filter(x => x.fieldSchema?.type === "link")
-    .map(property => {
+    .map(binding => {
+      const { providerId, readableBinding, fieldSchema } = binding || {}
+      const { name, tableId } = fieldSchema || {}
+      const safeProviderId = safe(providerId)
       return {
-        providerId: property.providerId,
-        label: property.readableBinding,
-        fieldName: property.fieldSchema.name,
-        tableId: property.fieldSchema.tableId,
+        providerId,
+        label: readableBinding,
+        fieldName: name,
+        tableId,
         type: "link",
         // These properties will be enriched by the client library and provide
         // details of the parent row of the relationship field, from context
-        rowId: `{{ ${property.providerId}._id }}`,
-        rowTableId: `{{ ${property.providerId}.tableId }}`,
+        rowId: `{{ ${safeProviderId}.${safe("_id")} }}`,
+        rowTableId: `{{ ${safeProviderId}.${safe("tableId")} }}`,
+      }
+    })
+  $: fields = bindings
+    .filter(x => arrayTypes.includes(x.fieldSchema?.type))
+    .map(binding => {
+      const { providerId, readableBinding, runtimeBinding } = binding
+      const { name, type, tableId } = binding.fieldSchema
+      return {
+        providerId,
+        label: readableBinding,
+        fieldName: name,
+        fieldType: type,
+        tableId,
+        type: "field",
+        value: `{{ literal ${runtimeBinding} }}`,
       }
     })
 
@@ -101,6 +112,14 @@
       ds => ds._id === query.datasourceId
     ).source
     return $integrations[source].query[query.queryVerb]
+  }
+
+  const getQueryParams = query => {
+    return $queriesStore.list.find(q => q._id === query?._id)?.parameters || []
+  }
+
+  const getQueryDatasource = query => {
+    return $datasources.list.find(ds => ds._id === query?.datasourceId)
   }
 </script>
 
@@ -127,11 +146,10 @@
       </Button>
       <DrawerContent slot="body">
         <Layout noPadding>
-          {#if value.parameters.length > 0}
+          {#if getQueryParams(value._id).length > 0}
             <ParameterBuilder
               bind:customParams={value.queryParams}
-              parameters={queries.find(query => query._id === value._id)
-                .parameters}
+              parameters={getQueryParams(value)}
               {bindings}
             />
           {/if}
@@ -139,9 +157,7 @@
             height={200}
             query={value}
             schema={fetchQueryDefinition(value)}
-            datasource={$datasources.list.find(
-              ds => ds._id === value.datasourceId
-            )}
+            datasource={getQueryDatasource(value)}
             editable={false}
           />
         </Layout>
@@ -159,52 +175,71 @@
         <li on:click={() => handleSelected(table)}>{table.label}</li>
       {/each}
     </ul>
-    <Divider size="S" />
-    <div class="title">
-      <Heading size="XS">Views</Heading>
-    </div>
-    <ul>
-      {#each views as view}
-        <li on:click={() => handleSelected(view)}>{view.label}</li>
-      {/each}
-    </ul>
-    <Divider size="S" />
-    <div class="title">
-      <Heading size="XS">Relationships</Heading>
-    </div>
-    <ul>
-      {#each links as link}
-        <li on:click={() => handleSelected(link)}>{link.label}</li>
-      {/each}
-    </ul>
-    <Divider size="S" />
-    <div class="title">
-      <Heading size="XS">Queries</Heading>
-    </div>
-    <ul>
-      {#each queries as query}
-        <li
-          class:selected={value === query}
-          on:click={() => handleSelected(query)}
-        >
-          {query.label}
-        </li>
-      {/each}
-    </ul>
-    <Divider size="S" />
-    <div class="title">
-      <Heading size="XS">Data Providers</Heading>
-    </div>
-    <ul>
-      {#each dataProviders as provider}
-        <li
-          class:selected={value === provider}
-          on:click={() => handleSelected(provider)}
-        >
-          {provider.label}
-        </li>
-      {/each}
-    </ul>
+    {#if views?.length}
+      <Divider size="S" />
+      <div class="title">
+        <Heading size="XS">Views</Heading>
+      </div>
+      <ul>
+        {#each views as view}
+          <li on:click={() => handleSelected(view)}>{view.label}</li>
+        {/each}
+      </ul>
+    {/if}
+    {#if queries?.length}
+      <Divider size="S" />
+      <div class="title">
+        <Heading size="XS">Queries</Heading>
+      </div>
+      <ul>
+        {#each queries as query}
+          <li
+            class:selected={value === query}
+            on:click={() => handleSelected(query)}
+          >
+            {query.label}
+          </li>
+        {/each}
+      </ul>
+    {/if}
+    {#if links?.length}
+      <Divider size="S" />
+      <div class="title">
+        <Heading size="XS">Relationships</Heading>
+      </div>
+      <ul>
+        {#each links as link}
+          <li on:click={() => handleSelected(link)}>{link.label}</li>
+        {/each}
+      </ul>
+    {/if}
+    {#if fields?.length}
+      <Divider size="S" />
+      <div class="title">
+        <Heading size="XS">Fields</Heading>
+      </div>
+      <ul>
+        {#each fields as field}
+          <li on:click={() => handleSelected(field)}>{field.label}</li>
+        {/each}
+      </ul>
+    {/if}
+    {#if dataProviders?.length}
+      <Divider size="S" />
+      <div class="title">
+        <Heading size="XS">Data Providers</Heading>
+      </div>
+      <ul>
+        {#each dataProviders as provider}
+          <li
+            class:selected={value === provider}
+            on:click={() => handleSelected(provider)}
+          >
+            {provider.label}
+          </li>
+        {/each}
+      </ul>
+    {/if}
     {#if otherSources?.length}
       <Divider size="S" />
       <div class="title">

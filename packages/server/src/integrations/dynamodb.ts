@@ -3,6 +3,7 @@ import {
   DatasourceFieldTypes,
   QueryTypes,
 } from "../definitions/datasource"
+import { IntegrationBase } from "./base/IntegrationBase"
 
 module DynamoModule {
   const AWS = require("aws-sdk")
@@ -113,7 +114,7 @@ module DynamoModule {
     },
   }
 
-  class DynamoDBIntegration {
+  class DynamoDBIntegration implements IntegrationBase {
     private config: DynamoDBConfig
     private client: any
 

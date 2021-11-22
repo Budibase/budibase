@@ -33,6 +33,7 @@ interface RunConfig {
   sort?: SortJson
   paginate?: PaginationJson
   row?: Row
+  rows?: Row[]
 }
 
 module External {
@@ -163,8 +164,8 @@ module External {
     }
   }
 
-  function basicProcessing(row: Row, table: Table) {
-    const thisRow: { [key: string]: any } = {}
+  function basicProcessing(row: Row, table: Table): Row {
+    const thisRow: Row = {}
     // filter the row down to what is actually the row (not joined)
     for (let fieldName of Object.keys(table.schema)) {
       const value = row[`${table.name}.${fieldName}`] || row[fieldName]
@@ -177,6 +178,23 @@ module External {
     thisRow.tableId = table._id
     thisRow._rev = "rev"
     return thisRow
+  }
+
+  function fixArrayTypes(row: Row, table: Table) {
+    for (let [fieldName, schema] of Object.entries(table.schema)) {
+      if (
+        schema.type === FieldTypes.ARRAY &&
+        typeof row[fieldName] === "string"
+      ) {
+        try {
+          row[fieldName] = JSON.parse(row[fieldName])
+        } catch (err) {
+          // couldn't convert back to array, ignore
+          delete row[fieldName]
+        }
+      }
+    }
+    return row
   }
 
   function isMany(field: FieldSchema) {
@@ -342,7 +360,7 @@ module External {
       table: Table,
       relationships: RelationshipsJson[]
     ) {
-      if (rows[0].read === true) {
+      if (!rows || rows.length === 0 || rows[0].read === true) {
         return []
       }
       let finalRows: { [key: string]: Row } = {}
@@ -358,7 +376,10 @@ module External {
           )
           continue
         }
-        const thisRow = basicProcessing(row, table)
+        const thisRow = fixArrayTypes(basicProcessing(row, table), table)
+        if (thisRow._id == null) {
+          throw "Unable to generate row ID for SQL rows"
+        }
         finalRows[thisRow._id] = thisRow
         // do this at end once its been added to the final rows
         finalRows = this.updateRelationshipColumns(
@@ -580,7 +601,10 @@ module External {
         throw `Unable to process query, table "${tableName}" not defined.`
       }
       // look for specific components of config which may not be considered acceptable
-      let { id, row, filters, sort, paginate } = cleanupConfig(config, table)
+      let { id, row, filters, sort, paginate, rows } = cleanupConfig(
+        config,
+        table
+      )
       filters = buildFilters(id, filters || {}, table)
       const relationships = this.buildRelationships(table)
       // clean up row on ingress using schema
@@ -606,7 +630,7 @@ module External {
         sort,
         paginate,
         relationships,
-        body: row,
+        body: row || rows,
         // pass an id filter into extra, purely for mysql/returning
         extra: {
           idFilter: buildFilters(id || generateIdForRow(row, table), {}, table),

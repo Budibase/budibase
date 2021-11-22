@@ -34,25 +34,34 @@
     return closestContext || {}
   }
 
-  // Fetches the form schema from this form's dataSource, if one exists
+  // Fetches the form schema from this form's dataSource
   const fetchSchema = async () => {
-    if (!dataSource?.tableId) {
+    if (!dataSource) {
       schema = {}
-      table = null
-    } else {
-      table = await API.fetchTableDefinition(dataSource?.tableId)
-      if (table) {
-        if (dataSource?.type === "query") {
-          schema = {}
-          const params = table.parameters || []
-          params.forEach(param => {
-            schema[param.name] = { ...param, type: "string" }
-          })
-        } else {
-          schema = table.schema || {}
-        }
-      }
     }
+
+    // If the datasource is a query, then we instead use a schema of the query
+    // parameters rather than the output schema
+    else if (
+      dataSource.type === "query" &&
+      dataSource._id &&
+      actionType === "Create"
+    ) {
+      const query = await API.fetchQueryDefinition(dataSource._id)
+      let paramSchema = {}
+      const params = query.parameters || []
+      params.forEach(param => {
+        paramSchema[param.name] = { ...param, type: "string" }
+      })
+      schema = paramSchema
+    }
+
+    // For all other cases, just grab the normal schema
+    else {
+      const dataSourceSchema = await API.fetchDatasourceSchema(dataSource)
+      schema = dataSourceSchema || {}
+    }
+
     loaded = true
   }
 

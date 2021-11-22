@@ -2,23 +2,22 @@ import {
   Integration,
   DatasourceFieldTypes,
   QueryTypes,
-  Operation,
   QueryJson,
   SqlQuery,
 } from "../definitions/datasource"
 import { Table, TableSchema } from "../definitions/common"
-import { getSqlQuery } from "./utils"
+import {
+  getSqlQuery,
+  SqlClients,
+  buildExternalTableId,
+  convertSqlType,
+  finaliseExternalTables,
+} from "./utils"
 import { DatasourcePlus } from "./base/datasourcePlus"
 
 module MySQLModule {
   const mysql = require("mysql2")
   const Sql = require("./base/sql")
-  const {
-    buildExternalTableId,
-    convertType,
-    finaliseExternalTables,
-  } = require("./utils")
-  const { FieldTypes } = require("../constants")
 
   interface MySQLConfig {
     host: string
@@ -27,30 +26,6 @@ module MySQLModule {
     password: string
     database: string
     ssl?: object
-  }
-
-  const TYPE_MAP = {
-    text: FieldTypes.LONGFORM,
-    blob: FieldTypes.LONGFORM,
-    enum: FieldTypes.STRING,
-    varchar: FieldTypes.STRING,
-    float: FieldTypes.NUMBER,
-    int: FieldTypes.NUMBER,
-    numeric: FieldTypes.NUMBER,
-    bigint: FieldTypes.NUMBER,
-    mediumint: FieldTypes.NUMBER,
-    decimal: FieldTypes.NUMBER,
-    dec: FieldTypes.NUMBER,
-    double: FieldTypes.NUMBER,
-    real: FieldTypes.NUMBER,
-    fixed: FieldTypes.NUMBER,
-    smallint: FieldTypes.NUMBER,
-    timestamp: FieldTypes.DATETIME,
-    date: FieldTypes.DATETIME,
-    datetime: FieldTypes.DATETIME,
-    time: FieldTypes.DATETIME,
-    tinyint: FieldTypes.BOOLEAN,
-    json: DatasourceFieldTypes.JSON,
   }
 
   const SCHEMA: Integration = {
@@ -139,7 +114,7 @@ module MySQLModule {
     public schemaErrors: Record<string, string> = {}
 
     constructor(config: MySQLConfig) {
-      super("mysql")
+      super(SqlClients.MY_SQL)
       this.config = config
       if (config.ssl && Object.keys(config.ssl).length === 0) {
         delete config.ssl
@@ -184,7 +159,7 @@ module MySQLModule {
           schema[columnName] = {
             name: columnName,
             autocolumn: isAuto,
-            type: convertType(column.Type, TYPE_MAP),
+            type: convertSqlType(column.Type),
             constraints,
           }
         }
@@ -209,7 +184,7 @@ module MySQLModule {
       return results.length ? results : [{ created: true }]
     }
 
-    read(query: SqlQuery | string) {
+    async read(query: SqlQuery | string) {
       return internalQuery(this.client, getSqlQuery(query))
     }
 
@@ -223,67 +198,12 @@ module MySQLModule {
       return results.length ? results : [{ deleted: true }]
     }
 
-    async getReturningRow(json: QueryJson) {
-      if (!json.extra || !json.extra.idFilter) {
-        return {}
-      }
-      const input = this._query({
-        endpoint: {
-          ...json.endpoint,
-          operation: Operation.READ,
-        },
-        fields: [],
-        filters: json.extra.idFilter,
-        paginate: {
-          limit: 1,
-        },
-      })
-      return internalQuery(this.client, input, false)
-    }
-
-    // when creating if an ID has been inserted need to make sure
-    // the id filter is enriched with it before trying to retrieve the row
-    checkLookupKeys(results: any, json: QueryJson) {
-      if (!results?.insertId || !json.meta?.table || !json.meta.table.primary) {
-        return json
-      }
-      const primaryKey = json.meta.table.primary?.[0]
-      json.extra = {
-        idFilter: {
-          equal: {
-            [primaryKey]: results.insertId,
-          },
-        },
-      }
-      return json
-    }
-
     async query(json: QueryJson) {
-      const operation = this._operation(json)
       this.client.connect()
-      const input = this._query(json, { disableReturning: true })
-      if (Array.isArray(input)) {
-        const responses = []
-        for (let query of input) {
-          responses.push(await internalQuery(this.client, query, false))
-        }
-        return responses
-      }
-      let row
-      // need to manage returning, a feature mySQL can't do
-      if (operation === operation.DELETE) {
-        row = this.getReturningRow(json)
-      }
-      const results = await internalQuery(this.client, input, false)
-      // same as delete, manage returning
-      if (operation === Operation.CREATE || operation === Operation.UPDATE) {
-        row = this.getReturningRow(this.checkLookupKeys(results, json))
-      }
+      const queryFn = (query: any) => internalQuery(this.client, query, false)
+      const output = await this.queryWithReturning(json, queryFn)
       this.client.end()
-      if (operation !== Operation.READ) {
-        return row
-      }
-      return results.length ? results : [{ [operation.toLowerCase()]: true }]
+      return output
     }
   }
 

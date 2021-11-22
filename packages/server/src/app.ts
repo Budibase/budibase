@@ -41,16 +41,8 @@ app.use(
 )
 
 if (!env.isTest()) {
-  const bullApp = bullboard.init()
-  app.use(async (ctx: ExtendableContext, next: () => any) => {
-    if (ctx.path.startsWith(bullboard.pathPrefix)) {
-      ctx.status = 200
-      ctx.respond = false
-      bullApp(ctx.req, ctx.res)
-    } else {
-      await next()
-    }
-  })
+  const plugin = bullboard.init()
+  app.use(plugin)
 }
 
 app.context.eventEmitter = eventEmitter

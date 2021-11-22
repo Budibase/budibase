@@ -44,6 +44,9 @@ const {
   revertClientLibrary,
 } = require("../../utilities/fileSystem/clientLibrary")
 const { getTenantId, isMultiTenant } = require("@budibase/auth/tenancy")
+const { syncGlobalUsers } = require("./user")
+const { app: appCache } = require("@budibase/auth/cache")
+const { cleanupAutomations } = require("../../automations/utils")
 
 const URL_REGEX_SLASH = /\/|\\/g
 
@@ -197,7 +200,7 @@ exports.fetchAppPackage = async ctx => {
     application,
     screens,
     layouts,
-    clientLibPath: clientLibraryPath(ctx.params.appId),
+    clientLibPath: clientLibraryPath(ctx.params.appId, application.version),
   }
 }
 
@@ -253,6 +256,7 @@ exports.create = async ctx => {
     await createApp(appId)
   }
 
+  await appCache.invalidateAppMetadata(appId, newApplication)
   ctx.status = 200
   ctx.body = newApplication
 }
@@ -316,19 +320,39 @@ exports.delete = async ctx => {
   if (!env.isTest() && !ctx.query.unpublish) {
     await deleteApp(ctx.params.appId)
   }
+  if (ctx.query && ctx.query.unpublish) {
+    await cleanupAutomations(ctx.params.appId)
+  }
   // make sure the app/role doesn't stick around after the app has been deleted
   await removeAppFromUserRoles(ctx, ctx.params.appId)
+  await appCache.invalidateAppMetadata(ctx.params.appId)
 
   ctx.status = 200
   ctx.body = result
 }
 
-exports.sync = async ctx => {
+exports.sync = async (ctx, next) => {
   const appId = ctx.params.appId
   if (!isDevAppID(appId)) {
     ctx.throw(400, "This action cannot be performed for production apps")
   }
+
+  // replicate prod to dev
   const prodAppId = getDeployedAppID(appId)
+
+  try {
+    const prodDb = new CouchDB(prodAppId, { skip_setup: true })
+    const info = await prodDb.info()
+    if (info.error) throw info.error
+  } catch (err) {
+    // the database doesn't exist. Don't replicate
+    ctx.status = 200
+    ctx.body = {
+      message: "App sync not required, app not deployed.",
+    }
+    return next()
+  }
+
   const replication = new Replication({
     source: prodAppId,
     target: appId,
@@ -343,6 +367,10 @@ exports.sync = async ctx => {
   } catch (err) {
     error = err
   }
+
+  // sync the users
+  await syncGlobalUsers(appId)
+
   if (error) {
     ctx.throw(400, error)
   } else {
@@ -366,7 +394,10 @@ const updateAppPackage = async (ctx, appPackage, appId) => {
   // Redis, shouldn't ever store it
   delete newAppPackage.lockedBy
 
-  return await db.put(newAppPackage)
+  const response = await db.put(newAppPackage)
+  // remove any cached metadata, so that it will be updated
+  await appCache.invalidateAppMetadata(appId)
+  return response
 }
 
 const createEmptyAppPackage = async (ctx, app) => {
