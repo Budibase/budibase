@@ -920,7 +920,7 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/bbui@^0.9.139", "@budibase/bbui@^0.9.185-alpha.9", "@budibase/bbui@^0.9.187":
+"@budibase/bbui@^0.9.139":
   version "0.9.187"
   resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-0.9.187.tgz#84f0a37301cfa41f50eaa335243ac08923d9e34f"
   integrity sha512-Qy24x99NloRAoG78NMdzoJuX3Gbf+eZdHeYTAeUchljB4o2W2L/Ous8qYBzqigYtVcChjzteSTAZ2jCLq458Vg==
@@ -969,14 +969,63 @@
     svelte-flatpickr "^3.2.3"
     svelte-portal "^1.0.0"
 
-"@budibase/client@^0.9.185-alpha.9":
-  version "0.9.187"
-  resolved "https://registry.yarnpkg.com/@budibase/client/-/client-0.9.187.tgz#8ab8a8edc81e65dc5bac15bcbc5058666d0a2c64"
-  integrity sha512-eSNikZWkYxqy0d0zGBY6m8lDlVMNDhr7DFlqyFZOha03Abu1lS+YGKRJUb0TSkx7y4Qmb4hmvU0wj074ToxPJQ==
+"@budibase/bbui@^0.9.185-alpha.12", "@budibase/bbui@^0.9.188":
+  version "0.9.188"
+  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-0.9.188.tgz#82c108172fbf81a84378e0ef4ca7cba61ea8d0ba"
+  integrity sha512-KevJxHdASITX9RzLvm+b2K3VMwqYFTumvrlpStAP6UIoyPkls0xaAc2KiJJ7Kkq48UkkBtAbOYaMxsFbAaTsbQ==
   dependencies:
-    "@budibase/bbui" "^0.9.187"
+    "@adobe/spectrum-css-workflow-icons" "^1.2.1"
+    "@spectrum-css/actionbutton" "^1.0.1"
+    "@spectrum-css/actiongroup" "^1.0.1"
+    "@spectrum-css/avatar" "^3.0.2"
+    "@spectrum-css/button" "^3.0.1"
+    "@spectrum-css/buttongroup" "^3.0.2"
+    "@spectrum-css/checkbox" "^3.0.2"
+    "@spectrum-css/dialog" "^3.0.1"
+    "@spectrum-css/divider" "^1.0.3"
+    "@spectrum-css/dropzone" "^3.0.2"
+    "@spectrum-css/fieldgroup" "^3.0.2"
+    "@spectrum-css/fieldlabel" "^3.0.1"
+    "@spectrum-css/icon" "^3.0.1"
+    "@spectrum-css/illustratedmessage" "^3.0.2"
+    "@spectrum-css/inputgroup" "^3.0.2"
+    "@spectrum-css/label" "^2.0.10"
+    "@spectrum-css/link" "^3.1.1"
+    "@spectrum-css/menu" "^3.0.1"
+    "@spectrum-css/modal" "^3.0.1"
+    "@spectrum-css/pagination" "^3.0.3"
+    "@spectrum-css/picker" "^1.0.1"
+    "@spectrum-css/popover" "^3.0.1"
+    "@spectrum-css/progressbar" "^1.0.2"
+    "@spectrum-css/progresscircle" "^1.0.2"
+    "@spectrum-css/radio" "^3.0.2"
+    "@spectrum-css/search" "^3.0.2"
+    "@spectrum-css/sidenav" "^3.0.2"
+    "@spectrum-css/statuslight" "^3.0.2"
+    "@spectrum-css/stepper" "^3.0.3"
+    "@spectrum-css/switch" "^1.0.2"
+    "@spectrum-css/table" "^3.0.1"
+    "@spectrum-css/tabs" "^3.0.1"
+    "@spectrum-css/tags" "^3.0.2"
+    "@spectrum-css/textfield" "^3.0.1"
+    "@spectrum-css/toast" "^3.0.1"
+    "@spectrum-css/tooltip" "^3.0.3"
+    "@spectrum-css/treeview" "^3.0.2"
+    "@spectrum-css/typography" "^3.0.1"
+    "@spectrum-css/underlay" "^2.0.9"
+    "@spectrum-css/vars" "^3.0.1"
+    dayjs "^1.10.4"
+    svelte-flatpickr "^3.2.3"
+    svelte-portal "^1.0.0"
+
+"@budibase/client@^0.9.185-alpha.12":
+  version "0.9.188"
+  resolved "https://registry.yarnpkg.com/@budibase/client/-/client-0.9.188.tgz#c5bf6f3bccdb370b236b9e69e0118334ad3eccfd"
+  integrity sha512-yP2WLWb2yQAwPBxVzpNGjSHpATMZMzcxl2gK6vw662F7YC8xGFHNfZZqEwPvrVwnx+d7LFZR/kJxJOvvk7YCVw==
+  dependencies:
+    "@budibase/bbui" "^0.9.188"
     "@budibase/standard-components" "^0.9.139"
-    "@budibase/string-templates" "^0.9.187"
+    "@budibase/string-templates" "^0.9.188"
     regexparam "^1.3.0"
     shortid "^2.2.15"
     svelte-spa-router "^3.0.5"
@@ -1031,10 +1080,10 @@
     svelte-apexcharts "^1.0.2"
     svelte-flatpickr "^3.1.0"
 
-"@budibase/string-templates@^0.9.185-alpha.9", "@budibase/string-templates@^0.9.187":
-  version "0.9.187"
-  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-0.9.187.tgz#e6c7b3b3e9c93014731b0b4e01f482fad6d2b12f"
-  integrity sha512-230yCwmKv6gG0Bi5xUteAKJN7BgYpwepJFEqmF8TrxDaV+qJO55H9br918FbTQ9W9g9Vv0HKU0xNdSfLTrlqhQ==
+"@budibase/string-templates@^0.9.185-alpha.12", "@budibase/string-templates@^0.9.188":
+  version "0.9.188"
+  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-0.9.188.tgz#f37836ed23dbd2217cb157030ada7cd59f6a2165"
+  integrity sha512-O/bL0I5OJO9W2OizIe9vBHowCLwwASPBrsGiAIB8L0x6AivYMq8j1mvNRwLXZjpHTjv86bU/LyG/3CP837oDsg==
   dependencies:
     "@budibase/handlebars-helpers" "^0.11.7"
     dayjs "^1.10.4"

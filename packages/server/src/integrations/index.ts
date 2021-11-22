@@ -9,7 +9,6 @@ const airtable = require("./airtable")
 const mysql = require("./mysql")
 const arangodb = require("./arangodb")
 const rest = require("./rest")
-const oracle = require("./oracle")
 const { SourceNames } = require("../definitions/datasource")
 
 const DEFINITIONS = {
@@ -24,7 +23,6 @@ const DEFINITIONS = {
   [SourceNames.MYSQL]: mysql.schema,
   [SourceNames.ARANGODB]: arangodb.schema,
   [SourceNames.REST]: rest.schema,
-  [SourceNames.ORACLE]: oracle.schema,
 }
 
 const INTEGRATIONS = {
@@ -39,7 +37,13 @@ const INTEGRATIONS = {
   [SourceNames.MYSQL]: mysql.integration,
   [SourceNames.ARANGODB]: arangodb.integration,
   [SourceNames.REST]: rest.integration,
-  [SourceNames.ORACLE]: oracle.integration,
+}
+
+// optionally add oracle integration if the oracle binary can be installed
+if (!(process.arch === 'arm64' && process.platform === 'darwin')) {
+  const oracle = require("./oracle")
+  DEFINITIONS[SourceNames.ORACLE] =  oracle.schema
+  INTEGRATIONS[SourceNames.ORACLE] = oracle.integration
 }
 
 module.exports = {
