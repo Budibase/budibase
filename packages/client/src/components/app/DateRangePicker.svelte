@@ -39,7 +39,6 @@
     if (!field || !value) {
       return null
     }
-    console.log("getting extension for " + value)
 
     let low = dayjs.utc().subtract(1, "year")
     let high = dayjs.utc().add(1, "day")
