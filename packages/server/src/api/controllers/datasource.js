@@ -163,7 +163,7 @@ function updateError(error, newError, tables) {
     error = ""
   }
   if (error.length > 0) {
-    error += " - "
+    error += "\n"
   }
   error += `${newError} ${tables.join(", ")}`
   return error
