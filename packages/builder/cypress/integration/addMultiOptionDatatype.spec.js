@@ -14,6 +14,7 @@ context("Add Multi-Option Datatype", () => {
     cy.navigateToFrontend()
     cy.wait(500)
     // Add data provider
+    cy.get(`[data-cy="category-Data"]`).click()
     cy.get(`[data-cy="component-Data Provider"]`).click()
     cy.get('[data-cy="dataSource-prop-control"]').click()
     cy.get(".dropdown").contains("Multi Data").click()
