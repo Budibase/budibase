@@ -2,7 +2,7 @@ import { SqlQuery } from "../definitions/datasource"
 import { Datasource, Table } from "../definitions/common"
 import { SourceNames } from "../definitions/datasource"
 const { DocumentTypes, SEPARATOR } = require("../db/utils")
-const { FieldTypes, BuildSchemaErrors } = require("../constants")
+const { FieldTypes, BuildSchemaErrors, InvalidColumns } = require("../constants")
 
 const DOUBLE_SEPARATOR = `${SEPARATOR}${SEPARATOR}`
 const ROW_ID_REGEX = /^\[.*]$/g
@@ -161,12 +161,17 @@ export function finaliseExternalTables(
   tables: { [key: string]: any },
   entities: { [key: string]: any }
 ) {
+  const invalidColumns = Object.values(InvalidColumns)
   let finalTables: { [key: string]: any } = {}
   const errors: { [key: string]: string } = {}
   for (let [name, table] of Object.entries(tables)) {
+    const schemaFields = Object.keys(table.schema)
     // make sure every table has a key
     if (table.primary == null || table.primary.length === 0) {
       errors[name] = BuildSchemaErrors.NO_KEY
+      continue
+    } else if (schemaFields.find(field => invalidColumns.includes(field))) {
+      errors[name] = BuildSchemaErrors.INVALID_COLUMN
       continue
     }
     // make sure all previous props have been added back

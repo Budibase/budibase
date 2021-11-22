@@ -2,7 +2,7 @@
   import { getContext } from "svelte"
   import "@spectrum-css/button/dist/index-vars.css"
 
-  const { styleable } = getContext("sdk")
+  const { styleable, builderStore } = getContext("sdk")
   const component = getContext("component")
 
   export let disabled = false
@@ -11,16 +11,35 @@
   export let size = "M"
   export let type = "primary"
   export let quiet = false
+
+  let node
+
+  $: $component.editing && node?.focus()
+  $: componentText = getComponentText(text, $builderStore, $component)
+
+  const getComponentText = (text, builderState, componentState) => {
+    if (!builderState.inBuilder || componentState.editing) {
+      return text || " "
+    }
+    return text || componentState.name || "Placeholder text"
+  }
+
+  const updateText = e => {
+    builderStore.actions.updateProp("text", e.target.textContent)
+  }
 </script>
 
 <button
   class={`spectrum-Button spectrum-Button--size${size} spectrum-Button--${type}`}
   class:spectrum-Button--quiet={quiet}
-  disabled={disabled || false}
+  {disabled}
   use:styleable={$component.styles}
   on:click={onClick}
+  contenteditable={$component.editing}
+  on:blur={$component.editing ? updateText : null}
+  bind:this={node}
 >
-  {text || ""}
+  {componentText}
 </button>
 
 <style>
