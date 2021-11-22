@@ -8,12 +8,24 @@
       "repeaterblock"
     ]
   },
-  "section",
-  "container",
-  "dataprovider",
-  "table",
-  "repeater",
-  "button",
+  {
+    "name": "Layout",
+    "icon": "ClassicGridView",
+    "children": [
+      "container",
+      "section"
+    ]
+  },
+  {
+    "name": "Data",
+    "icon": "Data",
+    "children": [
+      "dataprovider",
+      "repeater",
+      "table",
+      "dynamicfilter"
+    ]
+  },
   {
     "name": "Form",
     "icon": "Form",
@@ -60,6 +72,7 @@
     "children": [
       "heading",
       "text",
+      "button",
       "divider",
       "image",
       "backgroundimage",
@@ -67,7 +80,6 @@
       "icon",
       "embed"
     ]
-  },
-  "dynamicfilter"
+  }
 ]
 
