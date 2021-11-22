@@ -13,7 +13,7 @@
   ],
   "scripts": {
     "run:docker": "node src/index.js",
-    "build:docker": "docker build . -t worker-service",
+    "build:docker": "docker build . -t worker-service --label version=$BUDIBASE_RELEASE_VERSION",
     "dev:stack:init": "node ./scripts/dev/manage.js init",
     "dev:builder": "npm run dev:stack:init && nodemon",
     "test": "jest --runInBand",
