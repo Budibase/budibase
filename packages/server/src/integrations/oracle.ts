@@ -9,7 +9,7 @@ import {
   finaliseExternalTables,
   getSqlQuery,
   buildExternalTableId,
-  convertType,
+  convertSqlType,
 } from "./utils"
 import oracledb, {
   ExecuteOptions,
@@ -81,15 +81,6 @@ module OracleModule {
   }
 
   const UNSUPPORTED_TYPES = ["BLOB", "CLOB", "NCLOB"]
-
-  const TYPE_MAP = {
-    long: FieldTypes.LONGFORM,
-    number: FieldTypes.NUMBER,
-    binary_float: FieldTypes.NUMBER,
-    binary_double: FieldTypes.NUMBER,
-    timestamp: FieldTypes.DATETIME,
-    date: FieldTypes.DATETIME,
-  }
 
   /**
    * Raw query response
@@ -292,7 +283,7 @@ module OracleModule {
         return FieldTypes.BOOLEAN
       }
 
-      return convertType(column.type, TYPE_MAP)
+      return convertSqlType(column.type)
     }
 
     /**
@@ -393,26 +384,26 @@ module OracleModule {
       return oracledb.getConnection(attributes)
     }
 
-    async create(query: SqlQuery | string) {
-      const response = await this.internalQuery(getSqlQuery(query))
+    async create(query: SqlQuery | string): Promise<any[]> {
+      const response = await this.internalQuery<any>(getSqlQuery(query))
       return response.rows && response.rows.length
         ? response.rows
         : [{ created: true }]
     }
 
-    async read(query: SqlQuery | string) {
-      const response = await this.internalQuery(getSqlQuery(query))
-      return response.rows
+    async read(query: SqlQuery | string): Promise<any[]> {
+      const response = await this.internalQuery<any>(getSqlQuery(query))
+      return response.rows ? response.rows : []
     }
 
-    async update(query: SqlQuery | string) {
+    async update(query: SqlQuery | string): Promise<any[]>  {
       const response = await this.internalQuery(getSqlQuery(query))
       return response.rows && response.rows.length
         ? response.rows
         : [{ updated: true }]
     }
 
-    async delete(query: SqlQuery | string) {
+    async delete(query: SqlQuery | string): Promise<any[]>  {
       const response = await this.internalQuery(getSqlQuery(query))
       return response.rows && response.rows.length
         ? response.rows

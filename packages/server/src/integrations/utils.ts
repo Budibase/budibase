@@ -32,6 +32,10 @@ const SQL_TYPE_MAP = {
   fixed: FieldTypes.NUMBER,
   datetime: FieldTypes.DATETIME,
   tinyint: FieldTypes.BOOLEAN,
+  long: FieldTypes.LONGFORM,
+  number: FieldTypes.NUMBER,
+  binary_float: FieldTypes.NUMBER,
+  binary_double: FieldTypes.NUMBER,
 }
 
 export enum SqlClients {
