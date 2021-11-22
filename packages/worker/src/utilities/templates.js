@@ -6,7 +6,6 @@ const {
   EmailTemplatePurpose,
 } = require("../constants")
 const { checkSlashesInUrl } = require("./index")
-const env = require("../environment")
 const { getGlobalDB, addTenantToUrl } = require("@budibase/auth/tenancy")
 const BASE_COMPANY = "Budibase"
 
@@ -14,9 +13,6 @@ exports.getSettingsTemplateContext = async (purpose, code = null) => {
   const db = getGlobalDB()
   // TODO: use more granular settings in the future if required
   let settings = (await getScopedConfig(db, { type: Configs.SETTINGS })) || {}
-  if (!settings || !settings.platformUrl) {
-    settings.platformUrl = env.PLATFORM_URL
-  }
   const URL = settings.platformUrl
   const context = {
     [InternalTemplateBindings.LOGO_URL]:

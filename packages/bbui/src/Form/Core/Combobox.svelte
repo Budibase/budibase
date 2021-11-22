@@ -40,8 +40,15 @@
     open = false
   }
 
-  const onChange = e => {
-    selectOption(e.target.value)
+  const onType = e => {
+    const value = e.target.value
+    dispatch("type", value)
+    selectOption(value)
+  }
+
+  const onPick = value => {
+    dispatch("pick", value)
+    selectOption(value)
   }
 </script>
 
@@ -62,7 +69,7 @@
       type="text"
       on:focus={() => (focus = true)}
       on:blur={() => (focus = false)}
-      on:change={onChange}
+      on:change={onType}
       value={value || ""}
       placeholder={placeholder || ""}
       {disabled}
@@ -99,7 +106,7 @@
               role="option"
               aria-selected="true"
               tabindex="0"
-              on:click={() => selectOption(getOptionValue(option))}
+              on:click={() => onPick(getOptionValue(option))}
             >
               <span class="spectrum-Menu-itemLabel"
                 >{getOptionLabel(option)}</span

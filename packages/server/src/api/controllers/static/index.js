@@ -87,7 +87,7 @@ exports.serveApp = async function (ctx) {
     title: appInfo.name,
     production: env.isProd(),
     appId,
-    clientLibPath: clientLibraryPath(appId),
+    clientLibPath: clientLibraryPath(appId, appInfo.version),
   })
 
   const appHbs = loadHandlebarsFile(`${__dirname}/templates/app.hbs`)

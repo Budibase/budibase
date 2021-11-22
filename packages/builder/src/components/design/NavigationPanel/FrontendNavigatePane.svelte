@@ -10,9 +10,10 @@
   import { roles } from "stores/backend"
   import ComponentNavigationTree from "components/design/NavigationPanel/ComponentNavigationTree/index.svelte"
   import Layout from "components/design/NavigationPanel/Layout.svelte"
-  import NewScreenModal from "components/design/NavigationPanel/NewScreenModal.svelte"
   import NewLayoutModal from "components/design/NavigationPanel/NewLayoutModal.svelte"
   import { Icon, Modal, Select, Search, Tabs, Tab } from "@budibase/bbui"
+
+  export let showModal
 
   const tabs = [
     {
@@ -85,9 +86,6 @@
         <div class="nav-items-container">
           <ComponentNavigationTree />
         </div>
-        <Modal bind:this={modal}>
-          <NewScreenModal />
-        </Modal>
       </div>
     </Tab>
     <Tab title="Layouts">
@@ -102,7 +100,7 @@
     </Tab>
   </Tabs>
   <div class="add-button">
-    <Icon hoverable name="AddCircle" on:click={modal.show} />
+    <Icon hoverable name="AddCircle" on:click={showModal()} />
   </div>
 </div>
 

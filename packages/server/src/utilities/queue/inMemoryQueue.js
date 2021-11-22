@@ -89,6 +89,13 @@ class InMemoryQueue {
   getRepeatableJobs() {
     return []
   }
+
+  /**
+   * Implemented for tests
+   */
+  async clean() {
+    return []
+  }
 }
 
 module.exports = InMemoryQueue

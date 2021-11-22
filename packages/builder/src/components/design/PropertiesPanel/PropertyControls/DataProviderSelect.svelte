@@ -11,10 +11,7 @@
   const getValue = component => `{{ literal ${makePropSafe(component._id)} }}`
 
   $: path = findComponentPath($currentAsset.props, $store.selectedComponentId)
-  $: providers = path.filter(
-    component =>
-      component._component === "@budibase/standard-components/dataprovider"
-  )
+  $: providers = path.filter(c => c._component?.endsWith("/dataprovider"))
 
   // Set initial value to closest data provider
   onMount(() => {

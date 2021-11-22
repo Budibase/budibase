@@ -116,7 +116,11 @@
       </Layout>
       <div class="fields">
         <div class="field">
-          <Label size="L">Platform URL</Label>
+          <Label
+            size="L"
+            tooltip={"Update the Platform URL to match your Budibase web URL. This keeps email templates and authentication configs up to date."}
+            >Platform URL</Label
+          >
           <Input thin bind:value={$values.platformUrl} />
         </div>
       </div>
@@ -135,6 +139,7 @@
   .field {
     display: grid;
     grid-template-columns: 100px 1fr;
+    grid-gap: var(--spacing-l);
     align-items: center;
   }
   .file {

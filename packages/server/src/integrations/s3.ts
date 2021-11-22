@@ -1,4 +1,5 @@
 import { Integration, QueryTypes } from "../definitions/datasource"
+import { IntegrationBase } from "./base/IntegrationBase"
 
 module S3Module {
   const AWS = require("aws-sdk")
@@ -42,7 +43,7 @@ module S3Module {
     },
   }
 
-  class S3Integration {
+  class S3Integration implements IntegrationBase {
     private readonly config: S3Config
     private client: any
     private connectionPromise: Promise<any>

@@ -25,6 +25,7 @@ module.exports = {
   DISABLE_ACCOUNT_PORTAL: process.env.DISABLE_ACCOUNT_PORTAL,
   SELF_HOSTED: !!parseInt(process.env.SELF_HOSTED),
   COOKIE_DOMAIN: process.env.COOKIE_DOMAIN,
+  PLATFORM_URL: process.env.PLATFORM_URL,
   isTest,
   _set(key, value) {
     process.env[key] = value
