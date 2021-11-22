@@ -247,7 +247,6 @@
     "description": "A basic html button that is ready for styling",
     "icon": "Button",
     "editable": true,
-    "illegalChildren": ["section"],
     "showSettingsBar": true,
     "settings": [
       {
@@ -2650,6 +2649,8 @@
   "dynamicfilter": {
     "name": "Dynamic Filter",
     "icon": "FilterEdit",
+    "showSettingsBar": true,
+    "editable": true,
     "settings": [
       {
         "type": "dataProvider",
@@ -2665,8 +2666,69 @@
       {
         "type": "text",
         "label": "Button text",
-        "key": "buttonText",
+        "key": "text",
         "defaultValue": "Filter"
+      },
+      {
+        "type": "select",
+        "showInBar": true,
+        "label": "Button variant",
+        "key": "type",
+        "options": [
+          {
+            "label": "Primary",
+            "value": "primary"
+          }, {
+            "label": "Secondary",
+            "value": "secondary"
+          },
+          {
+            "label": "Action",
+            "value": "cta"
+          },
+          {
+            "label": "Warning",
+            "value": "warning"
+          },
+          {
+            "label": "Over Background",
+            "value": "overBackground"
+          }
+        ],
+        "defaultValue": "primary"
+      },
+      {
+        "type": "select",
+        "label": "Button size",
+        "showInBar": true,
+        "key": "size",
+        "options": [
+          {
+            "label": "Small",
+            "value": "S"
+          },
+          {
+            "label": "Medium",
+            "value": "M"
+          },
+          {
+            "label": "Large",
+            "value": "L"
+          },
+          {
+            "label": "Extra large",
+            "value": "XL"
+          }
+        ],
+        "defaultValue": "M"
+      },
+      {
+        "type": "boolean",
+        "label": "Quiet button",
+        "key": "quiet",
+        "showInBar": true,
+        "barIcon": "VisibilityOff",
+        "barTitle": "Quiet variant"
       }
     ]
   },
