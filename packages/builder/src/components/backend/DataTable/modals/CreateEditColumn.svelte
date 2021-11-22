@@ -180,6 +180,7 @@
 
   function hideDeleteDialog() {
     confirmDeleteDialog.hide()
+    deleteColName = ""
     deletion = false
   }
 

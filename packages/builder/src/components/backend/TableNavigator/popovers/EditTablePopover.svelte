@@ -54,6 +54,10 @@
     }
   }
 
+  function hideDeleteDialog() {
+    deleteTableName = ""
+  }
+
   async function save() {
     await tables.save(table)
     notifications.success("Table renamed successfully")
@@ -98,6 +102,7 @@
   bind:this={confirmDeleteDialog}
   okText="Delete Table"
   onOk={deleteTable}
+  onCancel={hideDeleteDialog}
   title="Confirm Deletion"
   disabled={deleteTableName !== table.name}
 >
