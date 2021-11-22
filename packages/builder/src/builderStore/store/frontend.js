@@ -620,6 +620,9 @@ export const getFrontendStore = () => {
         if (!name || !component) {
           return
         }
+        if (component[name] === value) {
+          return
+        }
         component[name] = value
         store.update(state => {
           state.selectedComponentId = component._id
