@@ -68,8 +68,8 @@
   </div>
   {#if internal}
     <MenuItem icon="Edit" on:click={editorModal.show}>Edit</MenuItem>
-    <MenuItem icon="Delete" on:click={showDeleteModal}>Delete</MenuItem>
   {/if}
+  <MenuItem icon="Delete" on:click={showDeleteModal}>Delete</MenuItem>
 </ActionMenu>
 
 <Modal bind:this={editorModal}>
