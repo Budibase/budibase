@@ -2666,7 +2666,7 @@
         "type": "text",
         "label": "Button text",
         "key": "buttonText",
-        "defaultValue": "Edit filters"
+        "defaultValue": "Filter"
       }
     ]
   },
