@@ -35,6 +35,8 @@
     if (filters?.length) {
       const queryExtension = buildLuceneQuery(filters)
       addExtension?.($component.id, queryExtension)
+    } else {
+      removeExtension?.($component.id)
     }
   }
 
