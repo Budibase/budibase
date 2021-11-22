@@ -8,7 +8,10 @@
 
   export let dataProvider
   export let allowedFields
-  export let buttonText
+  export let text = ""
+  export let size = "M"
+  export let type = "primary"
+  export let quiet = false
 
   const component = getContext("component")
   const { builderStore, ActionTypes, getAction } = getContext("sdk")
@@ -28,7 +31,7 @@
   )
   $: schema = dataProvider?.schema
   $: schemaFields = getSchemaFields(schema, allowedFields)
-  $: text = getText(buttonText, filters)
+  $: buttonText = getButtonText(text, filters)
 
   // Add query extension to data provider
   $: {
@@ -40,12 +43,12 @@
     }
   }
 
-  const getText = (buttonText, filters) => {
-    let text = buttonText || "Edit filters"
+  const getButtonText = (text, filters) => {
+    let buttonText = text || "Filter"
     if (filters?.length) {
-      text += ` (${filters.length})`
+      buttonText += ` (${filters.length})`
     }
-    return text
+    return buttonText
   }
 
   const getSchemaFields = (schema, allowedFields) => {
@@ -77,7 +80,7 @@
   })
 </script>
 
-<Button onClick={openEditor} {text} />
+<Button onClick={openEditor} text={buttonText} {size} {type} {quiet} />
 
 <Modal bind:this={modal}>
   <ModalContent title={text} size="XL" onConfirm={updateQuery}>
