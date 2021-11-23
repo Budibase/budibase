@@ -161,9 +161,13 @@ function isRelationshipSetup(column) {
 exports.save = async function (ctx) {
   const appId = ctx.appId
   const table = ctx.request.body
-  // can't do this
+  // can't do this right now
   delete table.dataImport
   const datasourceId = getDatasourceId(ctx.request.body)
+  // table doesn't exist already, note that it is created
+  if (!table._id) {
+    table.created = true
+  }
   let tableToSave = {
     type: "table",
     _id: buildExternalTableId(datasourceId, table.name),
@@ -265,6 +269,9 @@ exports.save = async function (ctx) {
 exports.destroy = async function (ctx) {
   const appId = ctx.appId
   const tableToDelete = await getTable(appId, ctx.params.tableId)
+  if (!tableToDelete || !tableToDelete.created) {
+    ctx.throw(400, "Cannot delete tables which weren't created in Budibase.")
+  }
   const datasourceId = getDatasourceId(tableToDelete)
 
   const db = new CouchDB(appId)

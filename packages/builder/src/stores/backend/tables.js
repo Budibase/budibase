@@ -1,5 +1,5 @@
-import { writable, get } from "svelte/store"
-import { views, queries, datasources } from "./"
+import { get, writable } from "svelte/store"
+import { datasources, queries, views } from "./"
 import { cloneDeep } from "lodash/fp"
 import api from "builderStore/api"
 import { SWITCHABLE_TYPES } from "../../constants/backend"
@@ -97,7 +97,12 @@ export function createTablesStore() {
       })
     },
     delete: async table => {
-      await api.delete(`/api/tables/${table._id}/${table._rev}`)
+      const response = await api.delete(
+        `/api/tables/${table._id}/${table._rev}`
+      )
+      if (response.status !== 200) {
+        throw (await response.json()).message
+      }
       update(state => ({
         ...state,
         list: state.list.filter(existing => existing._id !== table._id),
