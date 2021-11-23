@@ -12,6 +12,10 @@
   export let type = "primary"
   export let quiet = false
 
+  // For internal use only for now - not defined in the manifest
+  export let icon = null
+  export let active = false
+
   let node
 
   $: $component.editing && node?.focus()
@@ -35,10 +39,22 @@
   {disabled}
   use:styleable={$component.styles}
   on:click={onClick}
-  contenteditable={$component.editing}
+  contenteditable={$component.editing && !icon}
   on:blur={$component.editing ? updateText : null}
   bind:this={node}
+  class:active
 >
+  {#if icon}
+    <svg
+      class:hasText={componentText?.length > 0}
+      class="spectrum-Icon spectrum-Icon--size{size.toUpperCase()}"
+      focusable="false"
+      aria-hidden="true"
+      aria-label={icon}
+    >
+      <use xlink:href="#spectrum-icon-18-{icon}" />
+    </svg>
+  {/if}
   {componentText}
 </button>
 
@@ -55,5 +71,11 @@
   }
   .spectrum-Button::after {
     display: none;
+  }
+  .spectrum-Icon.hasText {
+    margin-right: var(--spectrum-button-primary-icon-gap);
+  }
+  .active {
+    color: var(--spectrum-global-color-blue-600);
   }
 </style>
