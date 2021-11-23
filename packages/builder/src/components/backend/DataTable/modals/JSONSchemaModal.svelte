@@ -10,7 +10,6 @@
   } from "@budibase/bbui"
   import { onMount, createEventDispatcher } from "svelte"
 
-  export let onConfirm = undefined
   export let schema = {}
 
   let dispatcher = createEventDispatcher()
