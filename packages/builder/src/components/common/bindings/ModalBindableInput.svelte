@@ -6,6 +6,7 @@
   } from "builderStore/dataBinding"
   import ServerBindingPanel from "components/common/bindings/ServerBindingPanel.svelte"
   import { createEventDispatcher } from "svelte"
+  import { isJSBinding } from "@budibase/string-templates"
 
   export let panel = ServerBindingPanel
   export let value = ""
@@ -18,8 +19,10 @@
   const dispatch = createEventDispatcher()
   let bindingModal
   let valid = true
+
   $: readableValue = runtimeToReadableBinding(bindings, value)
   $: tempValue = readableValue
+  $: isJS = isJSBinding(value)
 
   const saveBinding = () => {
     onChange(tempValue)
@@ -34,7 +37,8 @@
 <div class="control">
   <Input
     {label}
-    value={readableValue}
+    readonly={isJS}
+    value={isJS ? "(JavaScript function)" : readableValue}
     on:change={event => onChange(event.detail)}
     {placeholder}
   />

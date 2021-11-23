@@ -40,6 +40,7 @@
   <Input
     {label}
     {disabled}
+    readonly={isJS}
     value={isJS ? "(JavaScript function)" : readableValue}
     on:change={event => onChange(event.detail)}
     {placeholder}
