@@ -6,7 +6,7 @@
   export let screenName
   export let url
   export let chooseModal
-
+  export let save
   let routeError
   let roleId = $selectedAccessRole || "BASIC"
 
@@ -37,7 +37,7 @@
   title={"Enter details"}
   confirmText={"Continue"}
   onCancel={() => chooseModal(0)}
-  onConfirm={() => chooseModal(2)}
+  onConfirm={() => save()}
   cancelText={"Back"}
   disabled={!screenName || !url || routeError}
 >
