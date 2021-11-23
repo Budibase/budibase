@@ -8,12 +8,15 @@
 
   $: enrichedBindings = enrichBindings(bindings)
 
-  // Ensure bindings have the correct properties
+  // Ensure bindings have the correct categories
   const enrichBindings = bindings => {
+    if (!bindings?.length) {
+      return bindings
+    }
     return bindings?.map(binding => ({
       ...binding,
-      readableBinding: binding.readableBinding || binding.label,
-      runtimeBinding: binding.runtimeBinding || binding.path,
+      category: "Bindable Values",
+      type: null,
     }))
   }
 </script>

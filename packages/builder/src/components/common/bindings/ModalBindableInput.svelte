@@ -10,10 +10,10 @@
   export let panel = ServerBindingPanel
   export let value = ""
   export let bindings = []
-  export let thin = true
   export let title = "Bindings"
   export let placeholder
   export let label
+  export let allowJS = false
 
   const dispatch = createEventDispatcher()
   let bindingModal
@@ -34,7 +34,6 @@
 <div class="control">
   <Input
     {label}
-    {thin}
     value={readableValue}
     on:change={event => onChange(event.detail)}
     {placeholder}
@@ -55,7 +54,8 @@
         value={readableValue}
         bind:valid
         on:change={e => (tempValue = e.detail)}
-        bindableProperties={bindings}
+        {bindings}
+        {allowJS}
       />
     </div>
   </ModalContent>

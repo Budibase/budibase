@@ -4,11 +4,11 @@
     readableToRuntimeBinding,
     runtimeToReadableBinding,
   } from "builderStore/dataBinding"
-  import BindingPanel from "components/common/bindings/BindingPanel.svelte"
+  import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
   import { createEventDispatcher } from "svelte"
   import { isJSBinding } from "@budibase/string-templates"
 
-  export let panel = BindingPanel
+  export let panel = ClientBindingPanel
   export let value = ""
   export let bindings = []
   export let title = "Bindings"
@@ -63,7 +63,7 @@
     bind:valid
     value={readableValue}
     on:change={event => (tempValue = event.detail)}
-    bindableProperties={bindings}
+    {bindings}
     {allowJS}
   />
 </Drawer>
