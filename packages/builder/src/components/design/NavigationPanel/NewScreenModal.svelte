@@ -90,7 +90,6 @@
 
   .content {
     letter-spacing: 0px;
-    color: #2c2c2c;
   }
   .item {
     cursor: pointer;
