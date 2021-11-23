@@ -42,6 +42,7 @@ export enum SqlClients {
   MS_SQL = "mssql",
   POSTGRES = "pg",
   MY_SQL = "mysql",
+  ORACLE = "oracledb"
 }
 
 export function isExternalTable(tableId: string) {
