@@ -6,23 +6,24 @@
 
   export let selectedScreens = []
   export let chooseModal
+  export let save
 
   const blankScreen = "createFromScratch"
 
   $: blankSelected = selectedScreens?.length === 1
   $: autoSelected = selectedScreens?.length > 0 && !blankSelected
+  let templates = getTemplates($store, $tables.list)
 
-  $: templates = getTemplates($store, $tables.list)
   const toggleScreenSelection = table => {
     if (selectedScreens.find(s => s.name.includes(table.name))) {
       selectedScreens = selectedScreens.filter(
         screen => !screen.name.includes(table.name)
       )
     } else {
-      templates = templates.filter(template =>
-        template.name.includes(table.name)
+      let partialTemplates = getTemplates($store, $tables.list).filter(
+        template => template.name.includes(table.name)
       )
-      selectedScreens = [...templates, ...selectedScreens]
+      selectedScreens = [...partialTemplates, ...selectedScreens]
     }
   }
 </script>
@@ -31,7 +32,7 @@
   title="Add screens"
   confirmText="Add Screens"
   cancelText="Cancel"
-  onConfirm={() => (autoSelected ? chooseModal(2) : chooseModal(1))}
+  onConfirm={() => (autoSelected ? save() : chooseModal(1))}
   disabled={!selectedScreens.length}
   size="L"
 >
