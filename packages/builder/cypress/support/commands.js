@@ -195,10 +195,7 @@ Cypress.Commands.add("createScreen", (screenName, route) => {
     cy.get("input").first().clear().type(screenName)
     cy.get("input").eq(1).clear().type(route)
     cy.get(".spectrum-Button--cta").click()
-  })
-  cy.get(".spectrum-Modal").within(() => {
-    cy.get(`[data-cy="left-nav"]`).click()
-    cy.get(".spectrum-Button--cta").click()
+    cy.wait(2000)
   })
 })
 
