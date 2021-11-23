@@ -13,7 +13,6 @@
   $: blankSelected = selectedScreens?.length === 1
   $: autoSelected = selectedScreens?.length > 0 && !blankSelected
   let templates = getTemplates($store, $tables.list)
-  console.log($tables.list)
   const toggleScreenSelection = table => {
     if (selectedScreens.find(s => s.name.includes(table.name))) {
       selectedScreens = selectedScreens.filter(
