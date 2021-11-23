@@ -1,3 +1,6 @@
+// when thread starts, make sure it is recorded
+const env = require("../environment")
+env.setInThread()
 const actions = require("../automations/actions")
 const automationUtils = require("../automations/automationUtils")
 const AutomationEmitter = require("../events/AutomationEmitter")
@@ -6,7 +9,6 @@ const { DEFAULT_TENANT_ID } = require("@budibase/auth").constants
 const CouchDB = require("../db")
 const { DocumentTypes, isDevAppID } = require("../db/utils")
 const { doInTenant } = require("@budibase/auth/tenancy")
-const env = require("../environment")
 const usage = require("../utilities/usageQuota")
 const { definitions: triggerDefs } = require("../automations/triggerInfo")
 

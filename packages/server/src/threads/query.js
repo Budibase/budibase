@@ -1,3 +1,6 @@
+// when thread starts, make sure it is recorded
+const env = require("../environment")
+env.setInThread()
 const ScriptRunner = require("../utilities/scriptRunner")
 const { integrations } = require("../integrations")
 
