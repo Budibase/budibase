@@ -1,5 +1,4 @@
 <script>
-  import NavigationSelectionModal from "components/design/NavigationPanel/NavigationSelectionModal.svelte"
   import ScreenDetailsModal from "components/design/NavigationPanel/ScreenDetailsModal.svelte"
   import NewScreenModal from "components/design/NavigationPanel/NewScreenModal.svelte"
   import sanitizeUrl from "builderStore/store/screenTemplates/utils/sanitizeUrl"
@@ -115,7 +114,4 @@
 
 <Modal bind:this={screenDetailsModal}>
   <ScreenDetailsModal bind:screenName bind:url {save} {chooseModal} />
-</Modal>
-<Modal bind:this={navigationSelectionModal}>
-  <NavigationSelectionModal {chooseModal} {save} />
 </Modal>
