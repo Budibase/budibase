@@ -34,12 +34,18 @@
   let bookmarks = [null]
   let pageNumber = 0
   let query = null
+  let queryExtensions = {}
 
   // Sorting can be overridden at run time, so we can't use the prop directly
   let currentSortColumn = sortColumn
   let currentSortOrder = sortOrder
 
-  $: query = buildLuceneQuery(filter)
+  // Reset the current sort state to props if props change
+  $: currentSortColumn = sortColumn
+  $: currentSortOrder = sortOrder
+
+  $: defaultQuery = buildLuceneQuery(filter)
+  $: extendQuery(defaultQuery, queryExtensions)
   $: internalTable = dataSource?.type === "table"
   $: nestedProvider = dataSource?.type === "provider"
   $: hasNextPage = bookmarks[pageNumber + 1] != null
@@ -91,8 +97,12 @@
       metadata: { dataSource },
     },
     {
-      type: ActionTypes.SetDataProviderQuery,
-      callback: newQuery => (query = newQuery),
+      type: ActionTypes.AddDataProviderQueryExtension,
+      callback: addQueryExtension,
+    },
+    {
+      type: ActionTypes.RemoveDataProviderQueryExtension,
+      callback: removeQueryExtension,
     },
     {
       type: ActionTypes.SetDataProviderSorting,
@@ -183,7 +193,16 @@
     } else if (dataSource?.type === "provider") {
       // For providers referencing another provider, just use the rows it
       // provides
-      allRows = dataSource?.value?.rows ?? []
+      allRows = dataSource?.value?.rows || []
+    } else if (dataSource?.type === "field") {
+      // Field sources will be available from context.
+      // Enrich non object elements into object to ensure a valid schema.
+      const data = dataSource?.value || []
+      if (Array.isArray(data) && data[0] && typeof data[0] !== "object") {
+        allRows = data.map(value => ({ value }))
+      } else {
+        allRows = data
+      }
     } else {
       // For other data sources like queries or views, fetch all rows from the
       // server
@@ -254,6 +273,38 @@
     })
     pageNumber--
     allRows = res.rows
+  }
+
+  const addQueryExtension = (key, operator, field, value) => {
+    if (!key || !operator || !field) {
+      return
+    }
+    const extension = { operator, field, value }
+    queryExtensions = { ...queryExtensions, [key]: extension }
+  }
+
+  const removeQueryExtension = key => {
+    if (!key) {
+      return
+    }
+    const newQueryExtensions = { ...queryExtensions }
+    delete newQueryExtensions[key]
+    queryExtensions = newQueryExtensions
+  }
+
+  const extendQuery = (defaultQuery, extensions) => {
+    const extensionValues = Object.values(extensions || {})
+    let extendedQuery = { ...defaultQuery }
+    extensionValues.forEach(({ operator, field, value }) => {
+      extendedQuery[operator] = {
+        ...extendedQuery[operator],
+        [field]: value,
+      }
+    })
+
+    if (JSON.stringify(query) !== JSON.stringify(extendedQuery)) {
+      query = extendedQuery
+    }
   }
 </script>
 

@@ -6,6 +6,7 @@ const { request } = require("../../utilities/workerRequests")
 const { clearLock } = require("../../utilities/redis")
 const { Replication } = require("@budibase/auth").db
 const { DocumentTypes } = require("../../db/utils")
+const { app: appCache } = require("@budibase/auth/cache")
 
 async function redirect(ctx, method, path = "global") {
   const { devPath } = ctx.params
@@ -24,7 +25,8 @@ async function redirect(ctx, method, path = "global") {
     )
   )
   if (response.status !== 200) {
-    ctx.throw(response.status, response.statusText)
+    const err = await response.text()
+    ctx.throw(400, err)
   }
   const cookie = response.headers.get("set-cookie")
   if (cookie) {
@@ -106,6 +108,7 @@ exports.revert = async ctx => {
     appDoc.appId = appId
     appDoc.instance._id = appId
     await db.put(appDoc)
+    await appCache.invalidateAppMetadata(appId)
     ctx.body = {
       message: "Reverted changes successfully.",
     }

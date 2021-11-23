@@ -240,13 +240,15 @@
     "name": "Screenslot",
     "icon": "WebPage",
     "description": "Contains your app screens",
-    "editable": false
+    "static": true
   },
   "button": {
     "name": "Button",
     "description": "A basic html button that is ready for styling",
     "icon": "Button",
+    "editable": true,
     "illegalChildren": ["section"],
+    "showSettingsBar": true,
     "settings": [
       {
         "type": "text",
@@ -255,6 +257,7 @@
       },
       {
         "type": "select",
+        "showInBar": true,
         "label": "Variant",
         "key": "type",
         "options": [
@@ -283,6 +286,7 @@
       {
         "type": "select",
         "label": "Size",
+        "showInBar": true,
         "key": "size",
         "options": [
           {
@@ -307,11 +311,18 @@
       {
         "type": "boolean",
         "label": "Quiet",
-        "key": "quiet"
+        "key": "quiet",
+        "showInBar": true,
+        "barIcon": "VisibilityOff",
+        "barTitle": "Quiet variant",
+        "barSeparator": false
       },
       {
         "type": "boolean",
         "label": "Disabled",
+        "showInBar": true,
+        "barIcon": "NoEdit",
+        "barTitle": "Disable button",
         "key": "disabled"
       },
       {
@@ -590,6 +601,7 @@
     "icon": "TextParagraph",
     "illegalChildren": ["section"],
     "showSettingsBar": true,
+    "editable": true,
     "settings": [
       {
         "type": "text",
@@ -696,6 +708,7 @@
     "description": "A component for displaying heading text",
     "illegalChildren": ["section"],
     "showSettingsBar": true,
+    "editable": true,
     "settings": [
       {
         "type": "text",
@@ -940,6 +953,7 @@
     "description": "A basic link component for internal and external links",
     "icon": "Link",
     "showSettingsBar": true,
+    "editable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -1831,6 +1845,7 @@
     "icon": "Text",
     "illegalChildren": ["section"],
     "styles": ["size"],
+    "editable": true,
     "settings": [
       {
         "type": "field/string",
@@ -1869,6 +1884,7 @@
     "name": "Number Field",
     "icon": "123",
     "styles": ["size"],
+    "editable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -1908,6 +1924,7 @@
     "name": "Password Field",
     "icon": "LockClosed",
     "styles": ["size"],
+    "editable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -1947,6 +1964,7 @@
     "name": "Options Picker",
     "icon": "ViewList",
     "styles": ["size"],
+    "editable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -2070,6 +2088,7 @@
     "name": "Multi-select Picker",
     "icon": "ViewList",
     "styles": ["size"],
+    "editable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -2171,6 +2190,7 @@
   "booleanfield": {
     "name": "Checkbox",
     "icon": "Checkmark",
+    "editable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -2234,6 +2254,7 @@
     "name": "Rich Text",
     "icon": "TextParagraph",
     "styles": ["size"],
+    "editable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -2274,6 +2295,7 @@
     "name": "Date Picker",
     "icon": "DateInput",
     "styles": ["size"],
+    "editable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -2319,6 +2341,7 @@
     "name": "Attachment",
     "icon": "Attach",
     "styles": ["size"],
+    "editable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -2348,6 +2371,7 @@
     "name": "Relationship Picker",
     "icon": "TaskList",
     "styles": ["size"],
+    "editable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -2933,5 +2957,203 @@
       "type": "schema",
       "suffix": "repeater"
     }
+  },
+  "repeaterblock": {
+    "name": "Repeater block",
+    "icon": "ViewList",
+    "illegalChildren": ["section"],
+    "hasChildren": true,
+    "showSettingsBar": true,
+    "settings": [
+      {
+        "type": "dataSource",
+        "label": "Data",
+        "key": "dataSource"
+      },
+      {
+        "type": "filter",
+        "label": "Filtering",
+        "key": "filter"
+      },
+      {
+        "type": "field",
+        "label": "Sort Column",
+        "key": "sortColumn"
+      },
+      {
+        "type": "select",
+        "label": "Sort Order",
+        "key": "sortOrder",
+        "options": ["Ascending", "Descending"],
+        "defaultValue": "Descending"
+      },
+      {
+        "type": "number",
+        "label": "Limit",
+        "key": "limit",
+        "defaultValue": 10
+      },
+      {
+        "type": "boolean",
+        "label": "Paginate",
+        "key": "paginate"
+      },
+      {
+        "section": true,
+        "name": "Layout settings",
+        "settings": [
+          {
+            "type": "text",
+            "label": "Empty Text",
+            "key": "noRowsMessage",
+            "defaultValue": "No rows found"
+          },
+          {
+            "type": "select",
+            "label": "Direction",
+            "key": "direction",
+            "showInBar": true,
+            "barStyle": "buttons",
+            "options": [
+              {
+                "label": "Column",
+                "value": "column",
+                "barIcon": "ViewRow",
+                "barTitle": "Column layout"
+              },
+              {
+                "label": "Row",
+                "value": "row",
+                "barIcon": "ViewColumn",
+                "barTitle": "Row layout"
+              }
+            ],
+            "defaultValue": "column"
+          },
+          {
+            "type": "select",
+            "label": "Horiz. Align",
+            "key": "hAlign",
+            "showInBar": true,
+            "barStyle": "buttons",
+            "options": [
+              {
+                "label": "Left",
+                "value": "left",
+                "barIcon": "AlignLeft",
+                "barTitle": "Align left"
+              },
+              {
+                "label": "Center",
+                "value": "center",
+                "barIcon": "AlignCenter",
+                "barTitle": "Align center"
+              },
+              {
+                "label": "Right",
+                "value": "right",
+                "barIcon": "AlignRight",
+                "barTitle": "Align right"
+              },
+              {
+                "label": "Stretch",
+                "value": "stretch",
+                "barIcon": "MoveLeftRight",
+                "barTitle": "Align stretched horizontally"
+              }
+            ],
+            "defaultValue": "stretch"
+          },
+          {
+            "type": "select",
+            "label": "Vert. Align",
+            "key": "vAlign",
+            "showInBar": true,
+            "barStyle": "buttons",
+            "options": [
+              {
+                "label": "Top",
+                "value": "top",
+                "barIcon": "AlignTop",
+                "barTitle": "Align top"
+              },
+              {
+                "label": "Middle",
+                "value": "middle",
+                "barIcon": "AlignMiddle",
+                "barTitle": "Align middle"
+              },
+              {
+                "label": "Bottom",
+                "value": "bottom",
+                "barIcon": "AlignBottom",
+                "barTitle": "Align bottom"
+              },
+              {
+                "label": "Stretch",
+                "value": "stretch",
+                "barIcon": "MoveUpDown",
+                "barTitle": "Align stretched vertically"
+              }
+            ],
+            "defaultValue": "top"
+          },
+          {
+            "type": "select",
+            "label": "Gap",
+            "key": "gap",
+            "showInBar": true,
+            "barStyle": "picker",
+            "options": [
+              {
+                "label": "None",
+                "value": "N"
+              },
+              {
+                "label": "Small",
+                "value": "S"
+              },
+              {
+                "label": "Medium",
+                "value": "M"
+              },
+              {
+                "label": "Large",
+                "value": "L"
+              }
+            ],
+            "defaultValue": "M"
+          }
+        ]
+      }
+    ],
+    "context": [
+      {
+        "type": "static",
+        "suffix": "provider",
+        "values":  [
+          {
+            "label": "Rows",
+            "key": "rows"
+          },
+          {
+            "label": "Rows Length",
+            "key": "rowsLength"
+          },
+          {
+            "label": "Schema",
+            "key": "schema"
+          },
+          {
+            "label": "Page Number",
+            "key": "pageNumber"
+          }
+        ]
+      },
+      {
+        "type": "schema",
+        "suffix": "repeater"
+      }
+    ]
   }
 }

@@ -69,6 +69,7 @@ exports.DataSourceOperation = {
   READ: "READ",
   UPDATE: "UPDATE",
   DELETE: "DELETE",
+  BULK_CREATE: "BULK_CREATE",
   CREATE_TABLE: "CREATE_TABLE",
   UPDATE_TABLE: "UPDATE_TABLE",
   DELETE_TABLE: "DELETE_TABLE",
@@ -162,8 +163,15 @@ exports.MetadataTypes = {
   AUTOMATION_TEST_HISTORY: "automationTestHistory",
 }
 
+exports.InvalidColumns = {
+  ID: "_id",
+  REV: "_rev",
+  TABLE_ID: "tableId",
+}
+
 exports.BuildSchemaErrors = {
   NO_KEY: "no_key",
+  INVALID_COLUMN: "invalid_column",
 }
 
 // pass through the list from the auth/core lib
