@@ -32,12 +32,17 @@ const SQL_TYPE_MAP = {
   fixed: FieldTypes.NUMBER,
   datetime: FieldTypes.DATETIME,
   tinyint: FieldTypes.BOOLEAN,
+  long: FieldTypes.LONGFORM,
+  number: FieldTypes.NUMBER,
+  binary_float: FieldTypes.NUMBER,
+  binary_double: FieldTypes.NUMBER,
 }
 
 export enum SqlClients {
   MS_SQL = "mssql",
   POSTGRES = "pg",
   MY_SQL = "mysql",
+  ORACLE = "oracledb"
 }
 
 export function isExternalTable(tableId: string) {
@@ -162,7 +167,7 @@ export function finaliseExternalTables(
   entities: { [key: string]: any }
 ) {
   const invalidColumns = Object.values(InvalidColumns)
-  const finalTables: { [key: string]: any } = {}
+  let finalTables: { [key: string]: any } = {}
   const errors: { [key: string]: string } = {}
   for (let [name, table] of Object.entries(tables)) {
     const schemaFields = Object.keys(table.schema)
@@ -177,5 +182,9 @@ export function finaliseExternalTables(
     // make sure all previous props have been added back
     finalTables[name] = copyExistingPropsOver(name, table, entities)
   }
+  // sort the tables by name
+  finalTables = Object.entries(finalTables)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .reduce((r, [k, v]) => ({ ...r, [k]: v }), {})
   return { tables: finalTables, errors }
 }
