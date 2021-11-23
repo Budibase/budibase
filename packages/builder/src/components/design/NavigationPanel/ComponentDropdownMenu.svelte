@@ -13,6 +13,12 @@
   $: noChildrenAllowed = !component || !definition?.hasChildren
   $: noPaste = !$store.componentToPaste
 
+  // "editable" has been repurposed for inline text editing.
+  // It remains here for legacy compatibility.
+  // Future components should define "static": true for indicate they should
+  // not show a context menu.
+  $: showMenu = definition?.editable !== false && definition?.static !== true
+
   const moveUpComponent = () => {
     const asset = get(currentAsset)
     const parent = findComponentParent(asset.props, component._id)
@@ -69,7 +75,7 @@
   }
 </script>
 
-{#if definition?.editable !== false}
+{#if showMenu}
   <ActionMenu>
     <div slot="control" class="icon">
       <Icon size="S" hoverable name="MoreSmallList" />

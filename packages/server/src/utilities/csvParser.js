@@ -51,7 +51,7 @@ function parse(csvString, parsers) {
     })
     result.subscribe(row => {
       // For each CSV row parse all the columns that need parsed
-      for (let key in parsers) {
+      for (let key of Object.keys(parsers)) {
         if (!schema[key] || schema[key].success) {
           // get the validator for the column type
           const validator = VALIDATORS[parsers[key].type]
@@ -76,16 +76,58 @@ function parse(csvString, parsers) {
   })
 }
 
-async function transform({ schema, csvString }) {
+function updateSchema({ schema, existingTable }) {
+  if (!schema) {
+    return schema
+  }
+  const finalSchema = {}
+  const schemaKeyMap = {}
+  Object.keys(schema).forEach(key => (schemaKeyMap[key.toLowerCase()] = key))
+  for (let [key, field] of Object.entries(existingTable.schema)) {
+    const lcKey = key.toLowerCase()
+    const foundKey = schemaKeyMap[lcKey]
+    if (foundKey) {
+      finalSchema[key] = schema[foundKey]
+      finalSchema[key].type = field.type
+    }
+  }
+  return finalSchema
+}
+
+async function transform({ schema, csvString, existingTable }) {
   const colParser = {}
 
-  for (let key in schema) {
+  // make sure the table has all the columns required for import
+  if (existingTable) {
+    schema = updateSchema({ schema, existingTable })
+  }
+
+  for (let key of Object.keys(schema)) {
     colParser[key] = PARSERS[schema[key].type] || schema[key].type
   }
 
   try {
-    const json = await csv({ colParser }).fromString(csvString)
-    return json
+    const data = await csv({ colParser }).fromString(csvString)
+    const schemaKeyMap = {}
+    Object.keys(schema).forEach(key => (schemaKeyMap[key.toLowerCase()] = key))
+    for (let element of data) {
+      if (!data) {
+        continue
+      }
+      for (let key of Object.keys(element)) {
+        const mappedKey = schemaKeyMap[key.toLowerCase()]
+        // isn't a column in the table, remove it
+        if (mappedKey == null) {
+          delete element[key]
+        }
+        // casing is different, fix it in row
+        else if (key !== mappedKey) {
+          element[mappedKey] = element[key]
+          delete element[key]
+        }
+      }
+    }
+    return data
   } catch (err) {
     console.error(`Error transforming CSV to JSON for data import`, err)
     throw err
@@ -95,4 +137,5 @@ async function transform({ schema, csvString }) {
 module.exports = {
   parse,
   transform,
+  updateSchema,
 }

@@ -50,6 +50,7 @@ async function init() {
       SELF_HOSTED: 1,
       DISABLE_ACCOUNT_PORTAL: "",
       MULTI_TENANCY: "",
+      DISABLE_THREADING: 1,
     }
     let envFile = ""
     Object.keys(envFileJson).forEach(key => {

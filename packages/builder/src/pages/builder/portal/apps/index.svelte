@@ -165,6 +165,7 @@
       notifications.error(`Error deleting app: ${err}`)
     }
     selectedApp = null
+    appName = null
   }
 
   const updateApp = async app => {
@@ -298,12 +299,17 @@
   title="Confirm deletion"
   okText="Delete app"
   onOk={confirmDeleteApp}
+  onCancel={() => (appName = null)}
   disabled={appName !== selectedApp?.name}
 >
   Are you sure you want to delete the app <b>{selectedApp?.name}</b>?
 
   <p>Please enter the app name below to confirm.</p>
-  <Input bind:value={appName} data-cy="delete-app-confirmation" />
+  <Input
+    bind:value={appName}
+    data-cy="delete-app-confirmation"
+    placeholder={selectedApp?.name}
+  />
 </ConfirmDialog>
 <ConfirmDialog
   bind:this={unpublishModal}

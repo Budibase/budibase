@@ -7,7 +7,7 @@ const {
   BudibaseInternalDB,
   getTableParams,
 } = require("../../db/utils")
-const { BuildSchemaErrors } = require("../../constants")
+const { BuildSchemaErrors, InvalidColumns } = require("../../constants")
 const { integrations } = require("../../integrations")
 const { getDatasourceAndQuery } = require("./row/utils")
 
@@ -119,8 +119,16 @@ exports.destroy = async function (ctx) {
   const db = new CouchDB(ctx.appId)
 
   // Delete all queries for the datasource
-  const rows = await db.allDocs(getQueryParams(ctx.params.datasourceId, null))
-  await db.bulkDocs(rows.rows.map(row => ({ ...row.doc, _deleted: true })))
+  const queries = await db.allDocs(
+    getQueryParams(ctx.params.datasourceId, null)
+  )
+  await db.bulkDocs(
+    queries.rows.map(row => ({
+      _id: row.id,
+      _rev: row.value.rev,
+      _deleted: true,
+    }))
+  )
 
   // delete the datasource
   await db.remove(ctx.params.datasourceId, ctx.params.revId)
@@ -142,6 +150,23 @@ exports.query = async function (ctx) {
   } catch (err) {
     ctx.throw(400, err)
   }
+}
+
+function getErrorTables(errors, errorType) {
+  return Object.entries(errors)
+    .filter(entry => entry[1] === errorType)
+    .map(([name]) => name)
+}
+
+function updateError(error, newError, tables) {
+  if (!error) {
+    error = ""
+  }
+  if (error.length > 0) {
+    error += "\n"
+  }
+  error += `${newError} ${tables.join(", ")}`
+  return error
 }
 
 const buildSchemaHelper = async datasource => {
@@ -168,12 +193,23 @@ const buildSchemaHelper = async datasource => {
   const errors = connector.schemaErrors
   let error = null
   if (errors && Object.keys(errors).length > 0) {
-    const noKeyTables = Object.entries(errors)
-      .filter(entry => entry[1] === BuildSchemaErrors.NO_KEY)
-      .map(([name]) => name)
-    error = `No primary key constraint found for the following: ${noKeyTables.join(
-      ", "
-    )}`
+    const noKey = getErrorTables(errors, BuildSchemaErrors.NO_KEY)
+    const invalidCol = getErrorTables(errors, BuildSchemaErrors.INVALID_COLUMN)
+    if (noKey.length) {
+      error = updateError(
+        error,
+        "No primary key constraint found for the following:",
+        noKey
+      )
+    }
+    if (invalidCol.length) {
+      const invalidCols = Object.values(InvalidColumns).join(", ")
+      error = updateError(
+        error,
+        `Cannot use columns ${invalidCols} found in following:`,
+        invalidCol
+      )
+    }
   }
   return { tables: connector.tables, error }
 }

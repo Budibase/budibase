@@ -1,7 +1,7 @@
 {
   "name": "@budibase/server",
   "email": "hi@budibase.com",
-  "version": "0.9.185-alpha.0",
+  "version": "0.9.185-alpha.14",
   "description": "Budibase Web Server",
   "main": "src/index.js",
   "repository": {
@@ -68,9 +68,11 @@
   "author": "Budibase",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
-    "@budibase/auth": "^0.9.185-alpha.0",
-    "@budibase/client": "^0.9.185-alpha.0",
-    "@budibase/string-templates": "^0.9.185-alpha.0",
+    "@budibase/auth": "^0.9.185-alpha.14",
+    "@budibase/client": "^0.9.185-alpha.14",
+    "@budibase/string-templates": "^0.9.185-alpha.14",
+    "@bull-board/api": "^3.7.0",
+    "@bull-board/koa": "^3.7.0",
     "@elastic/elasticsearch": "7.10.0",
     "@koa/router": "8.0.0",
     "@sendgrid/mail": "7.1.1",
@@ -80,7 +82,6 @@
     "aws-sdk": "^2.767.0",
     "bcryptjs": "2.4.3",
     "bull": "^3.22.4",
-    "bull-board": "^2.0.1",
     "chmodr": "1.2.0",
     "csvtojson": "2.0.10",
     "dotenv": "8.2.0",
@@ -120,6 +121,7 @@
     "uuid": "3.3.2",
     "validate.js": "0.13.1",
     "vm2": "^3.9.3",
+    "worker-farm": "^1.7.0",
     "yargs": "13.2.4",
     "zlib": "1.0.5"
   },
@@ -138,7 +140,6 @@
     "copyfiles": "^2.4.1",
     "docker-compose": "^0.23.6",
     "eslint": "^6.8.0",
-    "express": "^4.17.1",
     "jest": "^27.0.5",
     "nodemon": "^2.0.4",
     "prettier": "^2.3.1",

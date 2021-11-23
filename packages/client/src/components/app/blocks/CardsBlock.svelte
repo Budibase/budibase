@@ -1,8 +1,9 @@
 <script>
-  import { onMount, getContext } from "svelte"
+  import { getContext } from "svelte"
   import Block from "components/Block.svelte"
   import BlockComponent from "components/BlockComponent.svelte"
   import { Heading } from "@budibase/bbui"
+  import { makePropSafe as safe } from "@budibase/string-templates"
 
   export let title
   export let dataSource
@@ -45,6 +46,7 @@
   let repeaterId
   let schema
 
+  $: fetchSchema(dataSource)
   $: enrichedSearchColumns = enrichSearchColumns(searchColumns, schema)
   $: enrichedFilter = enrichFilter(filter, enrichedSearchColumns, formId)
   $: cardWidth = cardHorizontal ? 420 : 300
@@ -103,15 +105,15 @@
     }
     const col = linkColumn || "_id"
     const split = url.split("/:")
-    return `${split[0]}/{{ [${repeaterId}].[${col}] }}`
+    return `${split[0]}/{{ ${safe(repeaterId)}.${safe(col)} }}`
   }
 
-  // Load the datasource schema on mount so we can determine column types
-  onMount(async () => {
+  // Load the datasource schema so we can determine column types
+  const fetchSchema = async dataSource => {
     if (dataSource) {
       schema = await API.fetchDatasourceSchema(dataSource)
     }
-  })
+  }
 </script>
 
 <Block>
@@ -171,7 +173,7 @@
           bind:id={repeaterId}
           context="repeater"
           props={{
-            dataProvider: `{{ literal [${dataProviderId}] }}`,
+            dataProvider: `{{ literal ${safe(dataProviderId)} }}`,
             direction: "row",
             hAlign: "stretch",
             vAlign: "top",

@@ -62,6 +62,7 @@
   let indexes = [...($tables.selected.indexes || [])]
   let confirmDeleteDialog
   let deletion
+  let deleteColName
 
   $: checkConstraints(field)
   $: required = !!field?.constraints?.presence || primaryDisplay
@@ -179,6 +180,7 @@
 
   function hideDeleteDialog() {
     confirmDeleteDialog.hide()
+    deleteColName = ""
     deletion = false
   }
 
@@ -408,9 +410,20 @@
 </ModalContent>
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
-  body={`Are you sure you wish to delete this column? Your data will be deleted and this action cannot be undone.`}
   okText="Delete Column"
   onOk={deleteColumn}
   onCancel={hideDeleteDialog}
   title="Confirm Deletion"
-/>
+  disabled={deleteColName !== field.name}
+>
+  <p>
+    Are you sure you wish to delete the column <b>{field.name}?</b>
+    Your data will be deleted and this action cannot be undone - enter the column
+    name to confirm.
+  </p>
+  <Input
+    dataCy="delete-column-confirm"
+    bind:value={deleteColName}
+    placeholder={field.name}
+  />
+</ConfirmDialog>

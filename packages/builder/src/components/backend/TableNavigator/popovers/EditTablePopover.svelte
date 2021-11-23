@@ -21,8 +21,10 @@
   let originalName = table.name
   let templateScreens
   let willBeDeleted
+  let deleteTableName
 
-  $: internal = table?.type === "internal"
+  $: external = table?.type === "external"
+  $: allowDeletion = !external || table?.created
 
   function showDeleteModal() {
     templateScreens = $allScreens.filter(
@@ -36,16 +38,24 @@
 
   async function deleteTable() {
     const wasSelectedTable = $tables.selected
-    await tables.delete(table)
-    store.actions.screens.delete(templateScreens)
-    await tables.fetch()
-    notifications.success("Table deleted")
-    if (table.type === "external") {
-      await datasources.fetch()
+    try {
+      await tables.delete(table)
+      await store.actions.screens.delete(templateScreens)
+      await tables.fetch()
+      if (table.type === "external") {
+        await datasources.fetch()
+      }
+      notifications.success("Table deleted")
+      if (wasSelectedTable && wasSelectedTable._id === table._id) {
+        $goto("./table")
+      }
+    } catch (err) {
+      notifications.error(err)
     }
-    if (wasSelectedTable && wasSelectedTable._id === table._id) {
-      $goto("./table")
-    }
+  }
+
+  function hideDeleteDialog() {
+    deleteTableName = ""
   }
 
   async function save() {
@@ -66,10 +76,12 @@
   <div slot="control" class="icon">
     <Icon s hoverable name="MoreSmallList" />
   </div>
-  {#if internal}
+  {#if external}
     <MenuItem icon="Edit" on:click={editorModal.show}>Edit</MenuItem>
   {/if}
-  <MenuItem icon="Delete" on:click={showDeleteModal}>Delete</MenuItem>
+  {#if allowDeletion}
+    <MenuItem icon="Delete" on:click={showDeleteModal}>Delete</MenuItem>
+  {/if}
 </ActionMenu>
 
 <Modal bind:this={editorModal}>
@@ -92,11 +104,15 @@
   bind:this={confirmDeleteDialog}
   okText="Delete Table"
   onOk={deleteTable}
+  onCancel={hideDeleteDialog}
   title="Confirm Deletion"
+  disabled={deleteTableName !== table.name}
 >
-  Are you sure you wish to delete the table
-  <i>{table.name}?</i>
-  The following will also be deleted:
+  <p>
+    Are you sure you wish to delete the table
+    <b>{table.name}?</b>
+    The following will also be deleted:
+  </p>
   <b>
     <div class="delete-items">
       {#each willBeDeleted as item}
@@ -104,7 +120,15 @@
       {/each}
     </div>
   </b>
-  This action cannot be undone.
+  <p>
+    This action cannot be undone - to continue please enter the table name below
+    to confirm.
+  </p>
+  <Input
+    bind:value={deleteTableName}
+    placeholder={table.name}
+    dataCy="delete-table-confirm"
+  />
 </ConfirmDialog>
 
 <style>

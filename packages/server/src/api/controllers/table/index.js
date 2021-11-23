@@ -81,8 +81,26 @@ exports.destroy = async function (ctx) {
   ctx.body = { message: `Table ${tableId} deleted.` }
 }
 
+exports.bulkImport = async function (ctx) {
+  const tableId = ctx.params.tableId
+  await pickApi({ tableId }).bulkImport(ctx)
+  // right now we don't trigger anything for bulk import because it
+  // can only be done in the builder, but in the future we may need to
+  // think about events for bulk items
+  ctx.status = 200
+  ctx.body = { message: `Bulk rows created.` }
+}
+
 exports.validateCSVSchema = async function (ctx) {
-  const { csvString, schema = {} } = ctx.request.body
-  const result = await csvParser.parse(csvString, schema)
+  // tableId being specified means its an import to an existing table
+  const { csvString, schema = {}, tableId } = ctx.request.body
+  let existingTable
+  if (tableId) {
+    existingTable = await getTable(ctx.appId, tableId)
+  }
+  let result = await csvParser.parse(csvString, schema)
+  if (existingTable) {
+    result = csvParser.updateSchema({ schema: result, existingTable })
+  }
   ctx.body = { schema: result }
 }

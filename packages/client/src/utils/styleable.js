@@ -21,12 +21,7 @@ export const styleable = (node, styles = {}) => {
   let applyNormalStyles
   let applyHoverStyles
   let selectComponent
-
-  // Allow dragging if required
-  const parent = node.closest(".component")
-  if (parent && parent.classList.contains("draggable")) {
-    node.setAttribute("draggable", true)
-  }
+  let editComponent
 
   // Creates event listeners and applies initial styles
   const setupStyles = (newStyles = {}) => {
@@ -44,6 +39,9 @@ export const styleable = (node, styles = {}) => {
       ...normalStyles,
       ...(newStyles.hover || {}),
     }
+
+    // Allow dragging if required
+    node.setAttribute("draggable", !!newStyles.draggable)
 
     // Applies a style string to a DOM node
     const applyStyles = styleString => {
@@ -69,6 +67,17 @@ export const styleable = (node, styles = {}) => {
       return false
     }
 
+    // Handler to start editing a component (if applicable) when double
+    // clicking in the builder preview
+    editComponent = event => {
+      if (newStyles.interactive && newStyles.editable) {
+        builderStore.actions.setEditMode(true)
+      }
+      event.preventDefault()
+      event.stopPropagation()
+      return false
+    }
+
     // Add listeners to toggle hover styles
     node.addEventListener("mouseover", applyHoverStyles)
     node.addEventListener("mouseout", applyNormalStyles)
@@ -76,6 +85,7 @@ export const styleable = (node, styles = {}) => {
     // Add builder preview click listener
     if (newStyles.interactive) {
       node.addEventListener("click", selectComponent, false)
+      node.addEventListener("dblclick", editComponent, false)
     }
 
     // Apply initial normal styles
@@ -87,6 +97,7 @@ export const styleable = (node, styles = {}) => {
     node.removeEventListener("mouseover", applyHoverStyles)
     node.removeEventListener("mouseout", applyNormalStyles)
     node.removeEventListener("click", selectComponent)
+    node.removeEventListener("dblclick", editComponent)
   }
 
   // Apply initial styles

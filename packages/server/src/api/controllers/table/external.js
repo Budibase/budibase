@@ -17,6 +17,8 @@ const {
 } = require("../../../constants")
 const { makeExternalQuery } = require("../../../integrations/base/utils")
 const { cloneDeep } = require("lodash/fp")
+const csvParser = require("../../../utilities/csvParser")
+const { handleRequest } = require("../row/external")
 
 async function makeTableRequest(
   datasource,
@@ -159,9 +161,13 @@ function isRelationshipSetup(column) {
 exports.save = async function (ctx) {
   const appId = ctx.appId
   const table = ctx.request.body
-  // can't do this
+  // can't do this right now
   delete table.dataImport
   const datasourceId = getDatasourceId(ctx.request.body)
+  // table doesn't exist already, note that it is created
+  if (!table._id) {
+    table.created = true
+  }
   let tableToSave = {
     type: "table",
     _id: buildExternalTableId(datasourceId, table.name),
@@ -263,6 +269,9 @@ exports.save = async function (ctx) {
 exports.destroy = async function (ctx) {
   const appId = ctx.appId
   const tableToDelete = await getTable(appId, ctx.params.tableId)
+  if (!tableToDelete || !tableToDelete.created) {
+    ctx.throw(400, "Cannot delete tables which weren't created in Budibase.")
+  }
   const datasourceId = getDatasourceId(tableToDelete)
 
   const db = new CouchDB(appId)
@@ -278,4 +287,21 @@ exports.destroy = async function (ctx) {
   await db.put(datasource)
 
   return tableToDelete
+}
+
+exports.bulkImport = async function (ctx) {
+  const appId = ctx.appId
+  const table = await getTable(appId, ctx.params.tableId)
+  const { dataImport } = ctx.request.body
+  if (!dataImport || !dataImport.schema || !dataImport.csvString) {
+    ctx.throw(400, "Provided data import information is invalid.")
+  }
+  const rows = await csvParser.transform({
+    ...dataImport,
+    existingTable: table,
+  })
+  await handleRequest(appId, DataSourceOperation.BULK_CREATE, table._id, {
+    rows,
+  })
+  return table
 }
