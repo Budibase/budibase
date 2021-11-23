@@ -49,6 +49,7 @@
   $: filteredHelpers = helpers?.filter(helper => {
     return helper.label.match(searchRgx) || helper.description.match(searchRgx)
   })
+  $: codeMirrorHints = bindings?.map(x => `$("${x.readableBinding}")`)
 
   const updateValue = value => {
     valid = isValid(readableToRuntimeBinding(bindings, value))
@@ -178,7 +179,7 @@
                 height={200}
                 value={decodeJSBinding(jsValue)}
                 on:change={onChangeJSValue}
-                hints={bindings?.map(x => `$("${x.readableBinding}")`)}
+                hints={codeMirrorHints}
               />
               <Body size="S">
                 JavaScript expressions are executed as functions, so ensure that
