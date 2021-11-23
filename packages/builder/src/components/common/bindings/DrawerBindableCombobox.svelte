@@ -55,6 +55,7 @@
   <Combobox
     {label}
     {disabled}
+    readonly={isJS}
     value={isJS ? "(JavaScript function)" : readableValue}
     on:type={e => onChange(e.detail, false)}
     on:pick={e => onChange(e.detail, true)}
