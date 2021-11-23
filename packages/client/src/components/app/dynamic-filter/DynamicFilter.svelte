@@ -10,8 +10,6 @@
   export let allowedFields
   export let text = ""
   export let size = "M"
-  export let type = "primary"
-  export let quiet = false
 
   const component = getContext("component")
   const { builderStore, ActionTypes, getAction } = getContext("sdk")
@@ -31,7 +29,7 @@
   )
   $: schema = dataProvider?.schema
   $: schemaFields = getSchemaFields(schema, allowedFields)
-  $: buttonText = getButtonText(text, filters)
+  $: buttonText = text || "Filter"
 
   // Add query extension to data provider
   $: {
@@ -41,14 +39,6 @@
     } else {
       removeExtension?.($component.id)
     }
-  }
-
-  const getButtonText = (text, filters) => {
-    let buttonText = text || "Filter"
-    if (filters?.length) {
-      buttonText += ` (${filters.length})`
-    }
-    return buttonText
   }
 
   const getSchemaFields = (schema, allowedFields) => {
@@ -80,10 +70,18 @@
   })
 </script>
 
-<Button onClick={openEditor} text={buttonText} {size} {type} {quiet} />
+<Button
+  onClick={openEditor}
+  icon="Properties"
+  text={buttonText}
+  {size}
+  type="secondary"
+  quiet
+  active={filters?.length > 0}
+/>
 
 <Modal bind:this={modal}>
-  <ModalContent title={text} size="XL" onConfirm={updateQuery}>
+  <ModalContent title={buttonText} size="XL" onConfirm={updateQuery}>
     <FilterModal bind:filters={tmpFilters} {schemaFields} />
   </ModalContent>
 </Modal>
