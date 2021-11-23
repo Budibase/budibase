@@ -22,7 +22,7 @@
 
   const dispatch = createEventDispatcher()
 
-  export let bindableProperties
+  export let bindings
   export let value = ""
   export let valid
   export let allowJS = false
@@ -36,17 +36,22 @@
   let hbsValue = initialValueJS ? null : value
 
   $: usingJS = mode === "JavaScript"
-  $: ({ context } = groupBy("type", bindableProperties))
   $: searchRgx = new RegExp(search, "ig")
-  $: filteredBindings = context?.filter(context => {
-    return context.readableBinding.match(searchRgx)
-  })
+  $: categories = Object.entries(groupBy("category", bindings))
+  $: filteredCategories = categories
+    .map(([name, categoryBindings]) => ({
+      name,
+      bindings: categoryBindings?.filter(binding => {
+        return binding.readableBinding.match(searchRgx)
+      }),
+    }))
+    .filter(category => category.bindings?.length > 0)
   $: filteredHelpers = helpers?.filter(helper => {
     return helper.label.match(searchRgx) || helper.description.match(searchRgx)
   })
 
   const updateValue = value => {
-    valid = isValid(readableToRuntimeBinding(bindableProperties, value))
+    valid = isValid(readableToRuntimeBinding(bindings, value))
     if (valid) {
       dispatch("change", value)
     }
@@ -91,7 +96,7 @@
   }
 
   onMount(() => {
-    valid = isValid(readableToRuntimeBinding(bindableProperties, value))
+    valid = isValid(readableToRuntimeBinding(bindings, value))
   })
 </script>
 
@@ -102,18 +107,29 @@
         <div class="heading">Search</div>
         <Search placeholder="Search" bind:value={search} />
       </section>
-      {#if filteredBindings?.length}
-        <section>
-          <div class="heading">Bindable Values</div>
-          <ul>
-            {#each filteredBindings as binding}
-              <li on:click={() => addBinding(binding)}>
-                {binding.readableBinding}
-              </li>
-            {/each}
-          </ul>
-        </section>
-      {/if}
+      {#each filteredCategories as category}
+        {#if category.bindings?.length}
+          <section>
+            <div class="heading">{category.name}</div>
+            <ul>
+              {#each category.bindings as binding}
+                <li on:click={() => addBinding(binding)}>
+                  <span class="binding__label">{binding.readableBinding}</span>
+                  {#if binding.type}
+                    <span class="binding__type">{binding.type}</span>
+                  {/if}
+                  {#if binding.description}
+                    <br />
+                    <div class="binding__description">
+                      {binding.description || ""}
+                    </div>
+                  {/if}
+                </li>
+              {/each}
+            </ul>
+          </section>
+        {/if}
+      {/each}
       {#if filteredHelpers?.length && !usingJS}
         <section>
           <div class="heading">Helpers</div>
@@ -162,7 +178,7 @@
                 height={200}
                 value={decodeJSBinding(jsValue)}
                 on:change={onChangeJSValue}
-                hints={context?.map(x => `$("${x.readableBinding}")`)}
+                hints={bindings?.map(x => `$("${x.readableBinding}")`)}
               />
               <Body size="S">
                 JavaScript expressions are executed as functions, so ensure that
@@ -232,6 +248,24 @@
   }
   li:hover :global(*) {
     color: var(--spectrum-global-color-gray-900) !important;
+  }
+
+  .binding__label {
+    font-weight: 600;
+    text-transform: capitalize;
+  }
+  .binding__description {
+    color: var(--spectrum-global-color-gray-700);
+    margin: 0.5rem 0 0 0;
+    white-space: normal;
+  }
+  .binding__type {
+    font-family: monospace;
+    background-color: var(--spectrum-global-color-gray-200);
+    border-radius: var(--border-radius-s);
+    padding: 2px 4px;
+    margin-left: 2px;
+    font-weight: 600;
   }
 
   .helper {
