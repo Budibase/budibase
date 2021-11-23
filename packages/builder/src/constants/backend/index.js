@@ -89,6 +89,14 @@ export const FIELDS = {
       presence: false,
     },
   },
+  JSON: {
+    name: "Key/Value",
+    type: "json",
+    constraints: {
+      type: "object",
+      presence: false,
+    },
+  },
 }
 
 export const AUTO_COLUMN_SUB_TYPES = {
