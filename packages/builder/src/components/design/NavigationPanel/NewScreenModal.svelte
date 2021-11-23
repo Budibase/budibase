@@ -25,7 +25,6 @@
       selectedScreens = [...partialTemplates, ...selectedScreens]
     }
   }
-  $: console.log($tables.list)
 </script>
 
 <ModalContent
