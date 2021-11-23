@@ -12,34 +12,39 @@
   let screenName = ""
   let url = ""
   let selectedScreens = []
-
   let roleId = $selectedAccessRole || "BASIC"
-
+  let showProgressCircle = false
   let routeError
   let createdScreens = []
-  $: {
-    selectedScreens?.forEach(screen => {
-      createdScreens = [...createdScreens, screen.create()]
-    })
+
+  const createScreens = async () => {
+    for (let screen of selectedScreens) {
+      let test = screen.create()
+      createdScreens.push(test)
+    }
   }
 
   const save = async () => {
+    showProgressCircle = true
+    await createScreens()
     for (let screen of createdScreens) {
       await saveScreens(screen)
     }
 
     await store.actions.routing.fetch()
     selectedScreens = []
+    createdScreens = []
     screenName = ""
     url = ""
+    showProgressCircle = false
   }
   const saveScreens = async draftScreen => {
     let existingScreenCount = $store.screens.filter(
       s => s.props._instanceName == draftScreen.props._instanceName
     ).length
-
     if (existingScreenCount > 0) {
       let oldUrlArr = draftScreen.routing.route.split("/")
+      console.log(oldUrlArr)
       oldUrlArr[1] = `${oldUrlArr[1]}-${existingScreenCount + 1}`
       draftScreen.routing.route = oldUrlArr.join("/")
     }
@@ -86,6 +91,7 @@
     selectedScreens = []
     screenName = ""
     url = ""
+    createdScreens = []
   })
 
   export const showModal = () => {
@@ -109,9 +115,20 @@
 </script>
 
 <Modal bind:this={newScreenModal}>
-  <NewScreenModal bind:selectedScreens {save} {chooseModal} />
+  <NewScreenModal
+    bind:selectedScreens
+    {showProgressCircle}
+    {save}
+    {chooseModal}
+  />
 </Modal>
 
 <Modal bind:this={screenDetailsModal}>
-  <ScreenDetailsModal bind:screenName bind:url {save} {chooseModal} />
+  <ScreenDetailsModal
+    bind:screenName
+    bind:url
+    {showProgressCircle}
+    {save}
+    {chooseModal}
+  />
 </Modal>
