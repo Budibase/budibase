@@ -9,6 +9,7 @@
   onMount(() => {
     automationStore.actions.fetch()
   })
+
   function selectAutomation(automation) {
     automationStore.actions.select(automation)
     $goto(`./${automation._id}`)
