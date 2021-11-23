@@ -71,6 +71,9 @@
     if ($touched.toCol && !toRelate.name) {
       errors.toCol = colNotSet
     }
+    if ($touched.primary && !fromPrimary) {
+      errors.primary = "Please pick the primary key"
+    }
     // currently don't support relationships back onto the table itself, needs to relate out
     const tableError = "From/to/through tables must be different"
     if (fromTable && (fromTable === toTable || fromTable === throughTable)) {
@@ -95,6 +98,12 @@
     return errors
   }
 
+  $: isManyToMany =
+    fromRelationship?.relationshipType === RelationshipTypes.MANY_TO_MANY
+  $: isManyToOne =
+    fromRelationship?.relationshipType === RelationshipTypes.MANY_TO_ONE
+  $: fromPrimary =
+    !fromPrimary && fromTable ? fromTable.primary[0] : fromPrimary
   $: tableOptions = plusTables.map(table => ({
     label: table.name,
     value: table._id,
@@ -179,13 +188,13 @@
       // foreignKey is what is linking out of the current table.
       relateFrom = {
         ...relateFrom,
-        foreignKey: fromTable.primary[0],
+        foreignKey: fromPrimary,
       }
       relateTo = {
         ...relateTo,
         relationshipType: RelationshipTypes.ONE_TO_MANY,
         foreignKey: relateFrom.fieldName,
-        fieldName: fromTable.primary[0],
+        fieldName: fromPrimary,
       }
     }
 
@@ -264,6 +273,15 @@
     bind:error={errors.from}
     bind:value={toRelationship.tableId}
   />
+  {#if isManyToOne && fromTable}
+    <Select
+      label={`Primary Key (${fromTable?.name})`}
+      options={Object.keys(fromTable?.schema)}
+      on:change={() => ($touched.primary = true)}
+      bind:error={errors.primary}
+      bind:value={fromPrimary}
+    />
+  {/if}
   <Select
     label={"Select to table"}
     options={tableOptions}
@@ -271,7 +289,7 @@
     bind:error={errors.to}
     bind:value={fromRelationship.tableId}
   />
-  {#if fromRelationship?.relationshipType === RelationshipTypes.MANY_TO_MANY}
+  {#if isManyToMany}
     <Select
       label={"Through"}
       options={tableOptions}
@@ -295,7 +313,7 @@
         bind:value={fromRelationship.throughFrom}
       />
     {/if}
-  {:else if fromRelationship?.relationshipType && toTable}
+  {:else if isManyToOne && toTable}
     <Select
       label={`Foreign Key (${toTable?.name})`}
       options={Object.keys(toTable?.schema).filter(
