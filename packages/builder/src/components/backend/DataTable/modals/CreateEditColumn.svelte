@@ -276,7 +276,6 @@
       const relatedTable = $tables.list.find(
         tbl => tbl._id === fieldInfo.tableId
       )
-      console.log(relatedTable)
       if (inUse(relatedTable, fieldInfo.fieldName)) {
         newError.relatedName = `Column name already in use in table ${relatedTable.name}`
       }
