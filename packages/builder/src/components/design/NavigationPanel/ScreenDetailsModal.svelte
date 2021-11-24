@@ -1,5 +1,5 @@
 <script>
-  import { ModalContent, Input } from "@budibase/bbui"
+  import { ModalContent, Input, ProgressCircle } from "@budibase/bbui"
   import sanitizeUrl from "builderStore/store/screenTemplates/utils/sanitizeUrl"
   import { selectedAccessRole, allScreens } from "builderStore"
 
@@ -7,6 +7,8 @@
   export let url
   export let chooseModal
   export let save
+  export let showProgressCircle = false
+
   let routeError
   let roleId = $selectedAccessRole || "BASIC"
 
@@ -48,4 +50,15 @@
     bind:value={url}
     on:change={routeChanged}
   />
+  <div slot="footer">
+    {#if showProgressCircle}
+      <div class="footer-progress"><ProgressCircle size="S" /></div>
+    {/if}
+  </div>
 </ModalContent>
+
+<style>
+  .footer-progress {
+    margin-top: var(--spacing-s);
+  }
+</style>
