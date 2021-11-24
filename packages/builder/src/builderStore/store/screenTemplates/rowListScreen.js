@@ -10,6 +10,7 @@ export default function (tables) {
       name: `${table.name} - List`,
       create: () => createScreen(table),
       id: ROW_LIST_TEMPLATE,
+      table: table.name
     }
   })
 }
