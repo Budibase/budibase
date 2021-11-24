@@ -98,12 +98,16 @@
     return errors
   }
 
+  let fromPrimary
+  $: {
+    if (!fromPrimary && fromTable) {
+      fromPrimary = fromTable.primary[0]
+    }
+  }
   $: isManyToMany =
     fromRelationship?.relationshipType === RelationshipTypes.MANY_TO_MANY
   $: isManyToOne =
     fromRelationship?.relationshipType === RelationshipTypes.MANY_TO_ONE
-  $: fromPrimary =
-    !fromPrimary && fromTable ? fromTable.primary[0] : fromPrimary
   $: tableOptions = plusTables.map(table => ({
     label: table.name,
     value: table._id,
