@@ -1,11 +1,11 @@
 import { Knex, knex } from "knex"
 import {
-  Operation,
+  Operation, PaginationJson,
   QueryJson,
   QueryOptions,
   RelationshipsJson,
   SearchFilters,
-  SortDirection,
+  SortDirection, SortJson,
 } from "../../definitions/datasource"
 import { isIsoDateString, SqlClients } from "../utils"
 import SqlTableQueryBuilder from "./sqlTable"
@@ -152,6 +152,25 @@ class InternalBuilder {
     return query
   }
 
+  addSorting(
+    query: KnexQuery,
+    sort: SortJson | undefined,
+    paginate: PaginationJson | undefined
+  ): KnexQuery {
+    if (!sort) {
+      return query
+    }
+    for (let [key, value] of Object.entries(sort)) {
+      const direction = value === SortDirection.ASCENDING ? "asc" : "desc"
+      query = query.orderBy(key, direction)
+    }
+    if (this.client === SqlClients.MS_SQL && !sort && paginate?.limit) {
+      // @ts-ignore
+      query = query.orderBy(json.meta?.table?.primary[0])
+    }
+    return query
+  }
+
   addRelationships(
     knex: Knex,
     query: KnexQuery,
@@ -249,22 +268,18 @@ class InternalBuilder {
     if (foundOffset) {
       query = query.offset(foundOffset)
     }
-    if (sort) {
-      for (let [key, value] of Object.entries(sort)) {
-        const direction = value === SortDirection.ASCENDING ? "asc" : "desc"
-        query = query.orderBy(key, direction)
-      }
-    }
-    if (this.client === SqlClients.MS_SQL && !sort && paginate?.limit) {
-      // @ts-ignore
-      query = query.orderBy(json.meta?.table?.primary[0])
-    }
     query = this.addFilters(tableName, query, filters)
+    // add sorting to pre-query
+    query = this.addSorting(query, sort, paginate)
     // @ts-ignore
-    let preQuery: KnexQuery = knex({
+    let preQuery : KnexQuery = knex({
       // @ts-ignore
       [tableName]: query,
     }).select(selectStatement)
+    // have to add after as well (this breaks MS-SQL)
+    if (this.client !== SqlClients.MS_SQL) {
+      preQuery = this.addSorting(preQuery, sort, paginate)
+    }
     // handle joins
     return this.addRelationships(
       knex,
