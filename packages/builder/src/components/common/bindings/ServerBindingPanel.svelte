@@ -1,6 +1,5 @@
 <script>
   import BindingPanel from "./BindingPanel.svelte"
-  import { makePropSafe } from "@budibase/string-templates"
 
   export let bindings = []
   export let valid
