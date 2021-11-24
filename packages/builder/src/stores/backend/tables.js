@@ -66,6 +66,9 @@ export function createTablesStore() {
     }
 
     const response = await api.post(`/api/tables`, updatedTable)
+    if (response.status !== 200) {
+      throw (await response.json()).message
+    }
     const savedTable = await response.json()
     await fetch()
     if (table.type === "external") {

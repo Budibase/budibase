@@ -9,6 +9,7 @@
     DatePicker,
     ModalContent,
     Context,
+    notifications,
   } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { cloneDeep } from "lodash/fp"
@@ -25,7 +26,6 @@
     SWITCHABLE_TYPES,
   } from "constants/backend"
   import { getAutoColumnInformation, buildAutoColumn } from "builderStore/utils"
-  import { notifications } from "@budibase/bbui"
   import ValuesList from "components/common/ValuesList.svelte"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { truncate } from "lodash"
@@ -72,13 +72,8 @@
   $: invalid =
     !field.name ||
     (field.type === LINK_TYPE && !field.tableId) ||
-    Object.keys($tables.draft?.schema ?? {}).some(
-      key => key !== originalName && key === field.name
-    ) ||
-    columnNameInvalid
-  $: columnNameInvalid = PROHIBITED_COLUMN_NAMES.some(
-    name => field.name === name
-  )
+    Object.keys(errors).length !== 0
+  $: errors = checkErrors(field)
 
   // used to select what different options can be displayed for column type
   $: canBeSearched =
@@ -106,13 +101,17 @@
     if (field.type === AUTO_TYPE) {
       field = buildAutoColumn($tables.draft.name, field.name, field.subtype)
     }
-    await tables.saveField({
-      originalName,
-      field,
-      primaryDisplay,
-      indexes,
-    })
-    dispatch("updatecolumns")
+    try {
+      await tables.saveField({
+        originalName,
+        field,
+        primaryDisplay,
+        indexes,
+      })
+      dispatch("updatecolumns")
+    } catch (err) {
+      notifications.error(err)
+    }
   }
 
   function deleteColumn() {
@@ -258,6 +257,31 @@
       fieldToCheck.constraints.numericality = {}
     }
   }
+
+  function checkErrors(fieldInfo) {
+    function inUse(tbl, column, ogName = null) {
+      return Object.keys(tbl?.schema || {}).some(
+        key => key !== ogName && key === column
+      )
+    }
+    const newError = {}
+    if (PROHIBITED_COLUMN_NAMES.some(name => fieldInfo.name === name)) {
+      newError.name = `${PROHIBITED_COLUMN_NAMES.join(
+        ", "
+      )} are not allowed as column names`
+    } else if (inUse($tables.draft, fieldInfo.name, originalName)) {
+      newError.name = `Column name already in use.`
+    }
+    if (fieldInfo.fieldName && fieldInfo.tableId) {
+      const relatedTable = $tables.list.find(
+        tbl => tbl._id === fieldInfo.tableId
+      )
+      if (inUse(relatedTable, fieldInfo.fieldName)) {
+        newError.relatedName = `Column name already in use in table ${relatedTable.name}`
+      }
+    }
+    return newError
+  }
 </script>
 
 <ModalContent
@@ -270,9 +294,7 @@
     label="Name"
     bind:value={field.name}
     disabled={uneditable || (linkEditDisabled && field.type === LINK_TYPE)}
-    error={columnNameInvalid
-      ? `${PROHIBITED_COLUMN_NAMES.join(", ")} are not allowed as column names`
-      : ""}
+    error={errors?.name}
   />
 
   <Select
@@ -381,6 +403,7 @@
       disabled={linkEditDisabled}
       label={`Column name in other table`}
       bind:value={field.fieldName}
+      error={errors.relatedName}
     />
   {:else if field.type === FORMULA_TYPE}
     <ModalBindableInput
