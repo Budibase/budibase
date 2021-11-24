@@ -21,13 +21,13 @@
   $: autoSelected = selectedScreens?.length > 0 && !blankSelected
   let templates = getTemplates($store, $tables.list)
   const toggleScreenSelection = table => {
-    if (selectedScreens.find(s => s.name.includes(table.name))) {
+    if (selectedScreens.find(s => s.table === table.name)) {
       selectedScreens = selectedScreens.filter(
-        screen => !screen.name.includes(table.name)
+        screen => screen.table !== table.name
       )
     } else {
       let partialTemplates = getTemplates($store, $tables.list).filter(
-        template => template.name.includes(table.name)
+        template => template.table === table.name
       )
       selectedScreens = [...partialTemplates, ...selectedScreens]
     }
@@ -75,9 +75,7 @@
       {#each $tables.list.filter(table => table._id !== "ta_users") as table}
         <div
           class:disabled={blankSelected}
-          class:selected={selectedScreens.find(x =>
-            x.name.includes(table.name)
-          )}
+          class:selected={selectedScreens.find(x => x.table === table.name)}
           on:click={() => toggleScreenSelection(table)}
           class="item"
         >
@@ -87,7 +85,7 @@
           <div
             style="color: var(--spectrum-global-color-green-600); float: right"
           >
-            {#if selectedScreens.find(x => x.name.includes(table.name))}
+            {#if selectedScreens.find(x => x.table === table.name)}
               <div class="checkmark-spacing">
                 <Icon size="S" name="CheckmarkCircleOutline" />
               </div>
