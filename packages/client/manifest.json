@@ -2663,12 +2663,6 @@
         "placeholder": "All fields"
       },
       {
-        "type": "text",
-        "label": "Button text",
-        "key": "text",
-        "defaultValue": "Filter"
-      },
-      {
         "type": "select",
         "label": "Button size",
         "showInBar": true,
