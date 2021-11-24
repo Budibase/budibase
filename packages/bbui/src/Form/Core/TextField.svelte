@@ -16,15 +16,15 @@
   const dispatch = createEventDispatcher()
   let focus = false
 
-  const updateValue = value => {
+  const updateValue = newValue => {
     if (readonly) {
       return
     }
     if (type === "number") {
-      const float = parseFloat(value)
-      value = isNaN(float) ? null : float
+      const float = parseFloat(newValue)
+      newValue = isNaN(float) ? null : float
     }
-    dispatch("change", value)
+    dispatch("change", newValue)
   }
 
   const onFocus = () => {

@@ -247,7 +247,6 @@
     "description": "A basic html button that is ready for styling",
     "icon": "Button",
     "editable": true,
-    "illegalChildren": ["section"],
     "showSettingsBar": true,
     "settings": [
       {
@@ -2644,6 +2643,49 @@
         "type": "event",
         "label": "Button action",
         "key": "buttonOnClick"
+      }
+    ]
+  },
+  "dynamicfilter": {
+    "name": "Dynamic Filter",
+    "icon": "FilterEdit",
+    "showSettingsBar": true,
+    "settings": [
+      {
+        "type": "dataProvider",
+        "label": "Provider",
+        "key": "dataProvider"
+      },
+      {
+        "type": "multifield",
+        "label": "Allowed filter fields",
+        "key": "allowedFields",
+        "placeholder": "All fields"
+      },
+      {
+        "type": "select",
+        "label": "Button size",
+        "showInBar": true,
+        "key": "size",
+        "options": [
+          {
+            "label": "Small",
+            "value": "S"
+          },
+          {
+            "label": "Medium",
+            "value": "M"
+          },
+          {
+            "label": "Large",
+            "value": "L"
+          },
+          {
+            "label": "Extra large",
+            "value": "XL"
+          }
+        ],
+        "defaultValue": "M"
       }
     ]
   },

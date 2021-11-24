@@ -1,6 +1,4 @@
 <script context="module">
-  import { Label } from "@budibase/bbui"
-
   export const EditorModes = {
     JS: {
       name: "javascript",
@@ -21,6 +19,7 @@
 </script>
 
 <script>
+  import { Label } from "@budibase/bbui"
   import CodeMirror from "components/integration/codemirror"
   import { themeStore } from "builderStore"
   import { createEventDispatcher, onMount } from "svelte"
@@ -155,5 +154,10 @@
   /* Add a spectrum themed border when focused */
   div :global(.CodeMirror-focused) {
     border-color: var(--spectrum-alias-border-color-mouse-focus);
+  }
+
+  /* Ensure hints are always on top */
+  :global(.CodeMirror-hints) {
+    z-index: 999999;
   }
 </style>

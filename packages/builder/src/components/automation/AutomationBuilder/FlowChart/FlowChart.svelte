@@ -84,7 +84,6 @@
         class="block"
         animate:flip={{ duration: 500 }}
         in:fly|local={{ x: 500, duration: 1500 }}
-        out:fly|local={{ x: 500, duration: 800 }}
       >
         <FlowItem {testDataModal} {testAutomation} {onSelect} {block} />
       </div>

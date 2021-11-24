@@ -10,7 +10,6 @@ const dispatchEvent = (type, data = {}) => {
 const createBuilderStore = () => {
   const initialState = {
     inBuilder: false,
-    appId: null,
     layout: null,
     screen: null,
     selectedComponentId: null,
@@ -94,6 +93,7 @@ const createBuilderStore = () => {
   }
   return {
     ...writableStore,
+    set: state => writableStore.set({ ...initialState, ...state }),
     subscribe: derivedStore.subscribe,
     actions,
   }
