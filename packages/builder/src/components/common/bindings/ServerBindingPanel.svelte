@@ -1,5 +1,6 @@
 <script>
   import BindingPanel from "./BindingPanel.svelte"
+  import { makePropSafe } from "@budibase/string-templates"
 
   export let bindings = []
   export let valid
@@ -12,8 +13,8 @@
   const enrichBindings = bindings => {
     return bindings?.map(binding => ({
       ...binding,
-      readableBinding: binding.readableBinding || binding.label,
-      runtimeBinding: binding.runtimeBinding || binding.path,
+      readableBinding: binding.label || binding.readableBinding,
+      runtimeBinding: binding.path || binding.runtimeBinding,
     }))
   }
 </script>
