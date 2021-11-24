@@ -11,14 +11,14 @@
     Select,
   } from "@budibase/bbui"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
-  import BindingPanel from "components/common/bindings/BindingPanel.svelte"
+  import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
   import { generate } from "shortid"
   import { getValidOperatorsForType, OperatorOptions } from "constants/lucene"
 
   export let schemaFields
   export let filters = []
   export let bindings = []
-  export let panel = BindingPanel
+  export let panel = ClientBindingPanel
   export let allowBindings = true
 
   const BannedTypes = ["link", "attachment", "formula"]
