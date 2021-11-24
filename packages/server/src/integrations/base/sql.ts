@@ -1,11 +1,11 @@
 import { Knex, knex } from "knex"
 import {
-  Operation, PaginationJson,
+  Operation,
   QueryJson,
   QueryOptions,
   RelationshipsJson,
   SearchFilters,
-  SortDirection, SortJson,
+  SortDirection,
 } from "../../definitions/datasource"
 import { isIsoDateString, SqlClients } from "../utils"
 import SqlTableQueryBuilder from "./sqlTable"
@@ -20,6 +20,9 @@ const MAX_ISO_DATE = "9999-00-00T00:00:00.000Z"
 function parse(input: any) {
   if (Array.isArray(input)) {
     return JSON.stringify(input)
+  }
+  if (input == undefined) {
+    return null
   }
   if (typeof input !== "string") {
     return input
@@ -43,7 +46,10 @@ function parseBody(body: any) {
   return body
 }
 
-function parseFilters(filters: SearchFilters): SearchFilters {
+function parseFilters(filters: SearchFilters | undefined): SearchFilters {
+  if (!filters) {
+    return {}
+  }
   for (let [key, value] of Object.entries(filters)) {
     let parsed
     if (typeof value === "object") {
@@ -152,21 +158,19 @@ class InternalBuilder {
     return query
   }
 
-  addSorting(
-    query: KnexQuery,
-    sort: SortJson | undefined,
-    paginate: PaginationJson | undefined
-  ): KnexQuery {
+  addSorting(query: KnexQuery, json: QueryJson): KnexQuery {
+    let { sort, paginate } = json
     if (!sort) {
       return query
     }
+    const table = json.meta?.table
     for (let [key, value] of Object.entries(sort)) {
       const direction = value === SortDirection.ASCENDING ? "asc" : "desc"
-      query = query.orderBy(key, direction)
+      query = query.orderBy(`${table?.name}.${key}`, direction)
     }
     if (this.client === SqlClients.MS_SQL && !sort && paginate?.limit) {
       // @ts-ignore
-      query = query.orderBy(json.meta?.table?.primary[0])
+      query = query.orderBy(`${table?.name}.${table?.primary[0]}`)
     }
     return query
   }
@@ -270,15 +274,15 @@ class InternalBuilder {
     }
     query = this.addFilters(tableName, query, filters)
     // add sorting to pre-query
-    query = this.addSorting(query, sort, paginate)
+    query = this.addSorting(query, json)
     // @ts-ignore
-    let preQuery : KnexQuery = knex({
+    let preQuery: KnexQuery = knex({
       // @ts-ignore
       [tableName]: query,
     }).select(selectStatement)
     // have to add after as well (this breaks MS-SQL)
     if (this.client !== SqlClients.MS_SQL) {
-      preQuery = this.addSorting(preQuery, sort, paginate)
+      preQuery = this.addSorting(preQuery, json)
     }
     // handle joins
     return this.addRelationships(
