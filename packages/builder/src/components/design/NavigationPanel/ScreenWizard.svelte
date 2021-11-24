@@ -44,7 +44,6 @@
     ).length
     if (existingScreenCount > 0) {
       let oldUrlArr = draftScreen.routing.route.split("/")
-      console.log(oldUrlArr)
       oldUrlArr[1] = `${oldUrlArr[1]}-${existingScreenCount + 1}`
       draftScreen.routing.route = oldUrlArr.join("/")
     }
