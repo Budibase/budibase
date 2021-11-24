@@ -72,13 +72,18 @@
   $: inSelectedPath = $builderStore.selectedComponentPath?.includes(id)
   $: inDragPath = inSelectedPath && $builderStore.editMode
 
+  // Derive definition properties which can all be optional, so need to be
+  // coerced to booleans
+  $: editable = !!definition?.editable
+  $: hasChildren = !!definition?.hasChildren
+  $: showEmptyState = definition?.showEmptyState !== false
+
   // Interactive components can be selected, dragged and highlighted inside
   // the builder preview
   $: interactive =
     $builderStore.inBuilder &&
     ($builderStore.previewType === "layout" || insideScreenslot) &&
     !isBlock
-  $: editable = definition?.editable
   $: editing = editable && selected && $builderStore.editMode
   $: draggable = !inDragPath && interactive && !isLayout && !isScreen
   $: droppable = interactive && !isLayout && !isScreen
@@ -86,8 +91,8 @@
   // Empty components are those which accept children but do not have any.
   // Empty states can be shown for these components, but can be disabled
   // in the component manifest.
-  $: empty = interactive && !children.length && definition?.hasChildren
-  $: emptyState = empty && definition?.showEmptyState !== false
+  $: empty = interactive && !children.length && hasChildren
+  $: emptyState = empty && showEmptyState
 
   // Raw settings are all settings excluding internal props and children
   $: rawSettings = getRawSettings(instance)
@@ -102,6 +107,9 @@
 
   // Build up the final settings object to be passed to the component
   $: cacheSettings(enrichedSettings, nestedSettings, conditionalSettings)
+
+  // Render key is used to determine when components need to fully remount
+  $: renderKey = getRenderKey(id, editing)
 
   // Update component context
   $: componentStore.set({
@@ -268,35 +276,43 @@
       })
     }
   }
+
+  // Generates a key used to determine when components need to fully remount.
+  // Currently only toggling editing requires remounting.
+  const getRenderKey = (id, editing) => {
+    return hashString(`${id}-${editing}`)
+  }
 </script>
 
-{#if constructor && cachedSettings && (visible || inSelectedPath)}
-  <!-- The ID is used as a class because getElementsByClassName is O(1) -->
-  <!-- and the performance matters for the selection indicators -->
-  <div
-    class={`component ${id}`}
-    class:draggable
-    class:droppable
-    class:empty
-    class:interactive
-    class:editing
-    class:block={isBlock}
-    data-id={id}
-    data-name={name}
-  >
-    <svelte:component this={constructor} {...cachedSettings}>
-      {#if children.length}
-        {#each children as child (child._id)}
-          <svelte:self instance={child} />
-        {/each}
-      {:else if emptyState}
-        <Placeholder />
-      {:else if isBlock}
-        <slot />
-      {/if}
-    </svelte:component>
-  </div>
-{/if}
+{#key renderKey}
+  {#if constructor && cachedSettings && (visible || inSelectedPath)}
+    <!-- The ID is used as a class because getElementsByClassName is O(1) -->
+    <!-- and the performance matters for the selection indicators -->
+    <div
+      class={`component ${id}`}
+      class:draggable
+      class:droppable
+      class:empty
+      class:interactive
+      class:editing
+      class:block={isBlock}
+      data-id={id}
+      data-name={name}
+    >
+      <svelte:component this={constructor} {...cachedSettings}>
+        {#if children.length}
+          {#each children as child (child._id)}
+            <svelte:self instance={child} />
+          {/each}
+        {:else if emptyState}
+          <Placeholder />
+        {:else if isBlock}
+          <slot />
+        {/if}
+      </svelte:component>
+    </div>
+  {/if}
+{/key}
 
 <style>
   .component {

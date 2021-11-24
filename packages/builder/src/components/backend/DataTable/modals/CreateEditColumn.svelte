@@ -398,7 +398,7 @@
       value={field.formula}
       on:change={e => (field.formula = e.detail)}
       bindings={getBindings({ table })}
-      serverSide="true"
+      allowJS
     />
   {:else if field.type === AUTO_TYPE}
     <Select

@@ -72,15 +72,17 @@
   }
 </script>
 
-<ActionMenu>
-  <div slot="control" class="icon">
-    <Icon s hoverable name="MoreSmallList" />
-  </div>
-  <MenuItem icon="Edit" on:click={editorModal.show}>Edit</MenuItem>
-  {#if allowDeletion}
+{#if allowDeletion}
+  <ActionMenu>
+    <div slot="control" class="icon">
+      <Icon s hoverable name="MoreSmallList" />
+    </div>
+    {#if !external}
+      <MenuItem icon="Edit" on:click={editorModal.show}>Edit</MenuItem>
+    {/if}
     <MenuItem icon="Delete" on:click={showDeleteModal}>Delete</MenuItem>
-  {/if}
-</ActionMenu>
+  </ActionMenu>
+{/if}
 
 <Modal bind:this={editorModal}>
   <ModalContent
