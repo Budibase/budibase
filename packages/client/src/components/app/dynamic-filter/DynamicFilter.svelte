@@ -8,7 +8,6 @@
 
   export let dataProvider
   export let allowedFields
-  export let text = ""
   export let size = "M"
 
   const component = getContext("component")
@@ -29,7 +28,6 @@
   )
   $: schema = dataProvider?.schema
   $: schemaFields = getSchemaFields(schema, allowedFields)
-  $: buttonText = text || "Filter"
 
   // Add query extension to data provider
   $: {
@@ -73,7 +71,7 @@
 <Button
   onClick={openEditor}
   icon="Properties"
-  text={buttonText}
+  text="Filter"
   {size}
   type="secondary"
   quiet
@@ -81,7 +79,7 @@
 />
 
 <Modal bind:this={modal}>
-  <ModalContent title={buttonText} size="XL" onConfirm={updateQuery}>
+  <ModalContent title="Edit filters" size="XL" onConfirm={updateQuery}>
     <FilterModal bind:filters={tmpFilters} {schemaFields} />
   </ModalContent>
 </Modal>
