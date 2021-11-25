@@ -5,6 +5,7 @@
   import { Modal } from "@budibase/bbui"
   import { store, selectedAccessRole, allScreens } from "builderStore"
   import { onDestroy } from "svelte"
+  import analytics, { Events } from "analytics"
 
   let newScreenModal
   let navigationSelectionModal
@@ -21,6 +22,9 @@
     for (let screen of selectedScreens) {
       let test = screen.create()
       createdScreens.push(test)
+      analytics.captureEvent(Events.SCREEN.CREATED, {
+        template: screen.id || screen.name,
+      })
     }
   }
 
