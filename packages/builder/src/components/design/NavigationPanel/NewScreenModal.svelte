@@ -132,7 +132,7 @@
     padding: var(--spectrum-alias-item-padding-s);
     background: var(--spectrum-alias-background-color-primary);
     transition: 0.3s all;
-    border: 1px solid #e7e7e7;
+    border: 1px solid var(--spectrum-global-color-gray-300);
     border-radius: 4px;
     box-sizing: border-box;
     border-width: 1px;
