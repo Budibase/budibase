@@ -38,6 +38,7 @@
   const LINK_TYPE = FIELDS.LINK.type
   const STRING_TYPE = FIELDS.STRING.type
   const NUMBER_TYPE = FIELDS.NUMBER.type
+  const DATE_TYPE = FIELDS.DATETIME.type
 
   const dispatch = createEventDispatcher()
   const PROHIBITED_COLUMN_NAMES = ["type", "_id", "_rev", "tableId"]
@@ -255,6 +256,9 @@
       !fieldToCheck.constraints.numericality
     ) {
       fieldToCheck.constraints.numericality = {}
+    }
+    if (fieldToCheck.type === DATE_TYPE && !fieldToCheck.constraints.datetime) {
+      fieldToCheck.constraints.datetime = {}
     }
   }
 

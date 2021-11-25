@@ -2,7 +2,11 @@ import { SqlQuery } from "../definitions/datasource"
 import { Datasource, Table } from "../definitions/common"
 import { SourceNames } from "../definitions/datasource"
 const { DocumentTypes, SEPARATOR } = require("../db/utils")
-const { FieldTypes, BuildSchemaErrors, InvalidColumns } = require("../constants")
+const {
+  FieldTypes,
+  BuildSchemaErrors,
+  InvalidColumns,
+} = require("../constants")
 
 const DOUBLE_SEPARATOR = `${SEPARATOR}${SEPARATOR}`
 const ROW_ID_REGEX = /^\[.*]$/g
@@ -42,7 +46,7 @@ export enum SqlClients {
   MS_SQL = "mssql",
   POSTGRES = "pg",
   MY_SQL = "mysql",
-  ORACLE = "oracledb"
+  ORACLE = "oracledb",
 }
 
 export function isExternalTable(tableId: string) {
