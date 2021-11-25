@@ -2,6 +2,7 @@ const fs = require("fs")
 const { join } = require("path")
 const { createDoc } = require("apidoc")
 const packageJson = require("../../package.json")
+const open = require("open")
 
 const config = {
   name: "Budibase API",
@@ -10,6 +11,7 @@ const config = {
   title: "Budibase app service API",
 }
 
+const shouldOpen = process.argv[2]
 const disallowed = []
 
 function filter(parsedRouteFiles) {
@@ -25,7 +27,7 @@ function filter(parsedRouteFiles) {
   }
 }
 
-function generate() {
+async function generate() {
   // start by writing a config file
   const configPath = join(__dirname, "config.json")
   fs.writeFileSync(configPath, JSON.stringify(config))
@@ -52,6 +54,9 @@ function generate() {
   }
   // delete the temporary config file
   fs.unlinkSync(configPath)
+  if (shouldOpen === "open") {
+    await open(join(assetsPath, "index.html"), { wait: false })
+  }
 }
 
 generate()
