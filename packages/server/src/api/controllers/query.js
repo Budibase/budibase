@@ -6,7 +6,6 @@ const {
   isProdAppID,
 } = require("../../db/utils")
 const { BaseQueryVerbs } = require("../../constants")
-const env = require("../../environment")
 const { Thread, ThreadType } = require("../../threads")
 
 const Runner = new Thread(ThreadType.QUERY, { timeoutMs: 10000 })
