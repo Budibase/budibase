@@ -47,6 +47,7 @@ export enum SourceNames {
   ARANGODB = "ARANGODB",
   REST = "REST",
   ORACLE = "ORACLE",
+  GOOGLE_SHEETS = "GOOGLE_SHEETS",
 }
 
 export enum IncludeRelationships {

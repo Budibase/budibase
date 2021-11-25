@@ -9,6 +9,7 @@ const airtable = require("./airtable")
 const mysql = require("./mysql")
 const arangodb = require("./arangodb")
 const rest = require("./rest")
+const googlesheets = require("./googlesheets")
 const { SourceNames } = require("../definitions/datasource")
 
 const DEFINITIONS = {
@@ -23,6 +24,7 @@ const DEFINITIONS = {
   [SourceNames.MYSQL]: mysql.schema,
   [SourceNames.ARANGODB]: arangodb.schema,
   [SourceNames.REST]: rest.schema,
+  [SourceNames.GOOGLE_SHEETS]: googlesheets.schema,
 }
 
 const INTEGRATIONS = {
@@ -37,6 +39,7 @@ const INTEGRATIONS = {
   [SourceNames.MYSQL]: mysql.integration,
   [SourceNames.ARANGODB]: arangodb.integration,
   [SourceNames.REST]: rest.integration,
+  [SourceNames.GOOGLE_SHEETS]: googlesheets.integration,
 }
 
 // optionally add oracle integration if the oracle binary can be installed

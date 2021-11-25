@@ -28,6 +28,7 @@ export const IntegrationNames = {
   AIRTABLE: "Airtable",
   ARANGODB: "ArangoDB",
   ORACLE: "Oracle",
+  GOOGLE_SHEETS: "Google Sheets",
 }
 
 // fields on the user table that cannot be edited
