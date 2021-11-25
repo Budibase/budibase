@@ -1,7 +1,7 @@
 {
   "name": "@budibase/server",
   "email": "hi@budibase.com",
-  "version": "0.9.190-alpha.0",
+  "version": "0.9.190-alpha.1",
   "description": "Budibase Web Server",
   "main": "src/index.js",
   "repository": {
@@ -68,9 +68,9 @@
   "author": "Budibase",
   "license": "GPL-3.0",
   "dependencies": {
-    "@budibase/auth": "^0.9.190-alpha.0",
-    "@budibase/client": "^0.9.190-alpha.0",
-    "@budibase/string-templates": "^0.9.190-alpha.0",
+    "@budibase/auth": "^0.9.190-alpha.1",
+    "@budibase/client": "^0.9.190-alpha.1",
+    "@budibase/string-templates": "^0.9.190-alpha.1",
     "@bull-board/api": "^3.7.0",
     "@bull-board/koa": "^3.7.0",
     "@elastic/elasticsearch": "7.10.0",
