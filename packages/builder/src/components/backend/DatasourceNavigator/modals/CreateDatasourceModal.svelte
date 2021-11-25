@@ -6,12 +6,18 @@
   import { IntegrationNames } from "constants"
   import CreateTableModal from "components/backend/TableNavigator/modals/CreateTableModal.svelte"
   import DatasourceConfigModal from "components/backend/DatasourceNavigator/modals/DatasourceConfigModal.svelte"
+  import ImportRestDatasourceModal from "./ImportRestDatasourceModal.svelte"
 
   export let modal
   let integrations = []
   let integration = {}
   let internalTableModal
   let externalDatasourceModal
+  let importModal
+
+  $: showImportButton = false
+
+  checkShowImport()
 
   const INTERNAL = "BUDIBASE"
 
@@ -33,6 +39,15 @@
       config,
       schema: selected.datasource,
     }
+    checkShowImport()
+  }
+
+  function checkShowImport() {
+    showImportButton = integration.type === "REST"
+  }
+
+  function showImportModal() {
+    importModal.show()
   }
 
   function chooseNextModal() {
@@ -63,11 +78,20 @@
   <DatasourceConfigModal {integration} {modal} />
 </Modal>
 
+<Modal bind:this={importModal}>
+  {#if integration.type === "REST"}
+    <ImportRestDatasourceModal {integration} {modal} />
+  {/if}
+</Modal>
+
 <Modal bind:this={modal}>
   <ModalContent
     disabled={!Object.keys(integration).length}
     title="Data"
     confirmText="Continue"
+    showSecondaryButton={showImportButton}
+    secondaryButtonText="Import"
+    secondaryAction={() => showImportModal()}
     showCancelButton={false}
     size="M"
     onConfirm={() => {

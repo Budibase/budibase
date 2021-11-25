@@ -84,6 +84,11 @@ export function createDatasourcesStore() {
 
       return updateDatasource(response)
     },
+    import: async body => {
+      let response
+      response = await api.post(`/api/queries/import/swagger2`, body)
+      return updateDatasource(response)
+    },
     delete: async datasource => {
       const response = await api.delete(
         `/api/datasources/${datasource._id}/${datasource._rev}`

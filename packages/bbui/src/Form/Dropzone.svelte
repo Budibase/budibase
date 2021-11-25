@@ -12,6 +12,7 @@
   export let processFiles = undefined
   export let handleFileTooLarge = undefined
   export let gallery = true
+  export let fileTags = []
 
   const dispatch = createEventDispatcher()
   const onChange = e => {
@@ -29,6 +30,7 @@
     {processFiles}
     {handleFileTooLarge}
     {gallery}
+    {fileTags}
     on:change={onChange}
   />
 </Field>

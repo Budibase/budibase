@@ -5,6 +5,10 @@ const { BaseQueryVerbs } = require("../../constants")
 const env = require("../../environment")
 const { Thread, ThreadType } = require("../../threads")
 
+const fetch = require("node-fetch")
+const Joi = require("joi")
+const { save: saveDatasource } = require("./datasource")
+
 const Runner = new Thread(ThreadType.QUERY, { timeoutMs: 10000 })
 
 // simple function to append "readable" to all read queries
@@ -28,6 +32,132 @@ exports.fetch = async function (ctx) {
     })
   )
   ctx.body = enrichQueries(body.rows.map(row => row.doc))
+}
+
+// const query = {
+//   datasourceId: "datasource_b9a474302a174d1295e4c273cd72bde9",
+//   name: "available pets (import)",
+//   parameters: [],
+//   fields: {
+//     headers: {},
+//     queryString: "status=available",
+//     path: "v2/pet/findByStatus",
+//   },
+//   queryVerb: "read",
+//   transformer: "return data",
+//   schema: {},
+//   readable: true
+// }
+
+function generateQueryValidation() {
+  // prettier-ignore
+  return Joi.object({
+    _id: Joi.string(),
+    _rev: Joi.string(),
+    name: Joi.string().required(),
+    fields: Joi.object().required(),
+    datasourceId: Joi.string().required(),
+    readable: Joi.boolean(),
+    parameters: Joi.array().items(Joi.object({
+      name: Joi.string(),
+      default: Joi.string().allow(""),
+    })),
+    queryVerb: Joi.string().allow().required(),
+    extra: Joi.object().optional(),
+    schema: Joi.object({}).required().unknown(true),
+    transformer: Joi.string().optional(),
+  })
+}
+
+const verbs = {
+  get: "read",
+  post: "create",
+  put: "update",
+  patch: "patch",
+  delete: "delete",
+}
+
+const constructQuery = (datasource, swagger, path, method, config) => {
+  const query = {
+    datasourceId: datasource._id,
+  }
+  query.name = config.operationId || path
+  query.parameters = []
+  query.fields = {
+    headers: {},
+    // queryString: "status=available",
+    path: path,
+  }
+  query.transformer = "return data"
+  query.schema = {}
+  query.readable = true
+  query.queryVerb = verbs[method]
+
+  return query
+}
+
+// {
+//   "type": "url",
+//   "data": "www.url.com/swagger.json"
+// }
+
+exports.import = async function (ctx) {
+  const importConfig = ctx.request.body
+
+  let data
+
+  if (importConfig.type === "url") {
+    data = await fetch(importConfig.data).then(res => res.json())
+  } else if (importConfig.type === "raw") {
+    data = JSON.parse(importConfig.data)
+  }
+
+  const db = new CouchDB(ctx.appId)
+  const schema = generateQueryValidation()
+
+  // create datasource
+  const scheme = data.schemes.includes("https") ? "https" : "http"
+  const url = `${scheme}://${data.host}${data.basePath}`
+  const name = data.info.title
+
+  // TODO: Refactor datasource creation into shared function
+  const datasourceCtx = {
+    ...ctx,
+  }
+  datasourceCtx.request.body.datasource = {
+    type: "datasource",
+    source: "REST",
+    config: {
+      url: url,
+      defaultHeaders: {},
+    },
+    name: name,
+  }
+  await saveDatasource(datasourceCtx)
+  const datasource = datasourceCtx.body.datasource
+
+  // create query
+
+  for (const [path, method] of Object.entries(data.paths)) {
+    for (const [methodName, config] of Object.entries(method)) {
+      const query = constructQuery(datasource, data, path, methodName, config)
+
+      // validate query
+      const { error } = schema.validate(query)
+      if (error) {
+        ctx.throw(400, `Invalid - ${error.message}`)
+        return
+      }
+
+      // persist query
+      query._id = generateQueryID(query.datasourceId)
+      await db.put(query)
+    }
+  }
+
+  // return the datasource
+  ctx.body = { datasource }
+  ctx.status = 200
 }
 
 exports.save = async function (ctx) {
