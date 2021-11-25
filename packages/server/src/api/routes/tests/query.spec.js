@@ -19,10 +19,12 @@ describe("/queries", () => {
   })
 
   async function createInvalidIntegration() {
-    const datasource = await config.createDatasource({datasource: {
-      ...basicDatasource().datasource,
-      source: "INVALID_INTEGRATION",
-    }})
+    const datasource = await config.createDatasource({
+      datasource: {
+        ...basicDatasource().datasource,
+        source: "INVALID_INTEGRATION",
+      },
+    })
     const query = await config.createQuery()
     return { datasource, query }
   }
@@ -98,7 +100,6 @@ describe("/queries", () => {
           .expect("Content-Type", /json/)
         expect(res.body.fields).toBeUndefined()
         expect(res.body.parameters).toBeUndefined()
-        expect(res.body.schema).toBeUndefined()
       })
     })
   })
