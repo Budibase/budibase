@@ -19,7 +19,10 @@
   let fields = []
   let hasValidated = false
 
-  $: valid = !schema || fields.every(column => schema[column].success)
+  $: valid =
+    !schema ||
+    (fields.every(column => schema[column].success) &&
+      Object.keys(schema).length > 0)
   $: dataImport = {
     valid,
     schema: buildTableSchema(schema),
