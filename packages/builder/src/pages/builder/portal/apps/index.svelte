@@ -98,10 +98,12 @@
 
   const autoCreateApp = async () => {
     try {
-      // TODO: Iterate App Names and append a number
-      const appName = template.key + Math.floor(Math.random() * 100)
-
-      console.log("APP NAME", appName)
+      // Auto name app if has same name
+      let appName = template.key
+      const appsWithSameName = $apps.filter(app =>
+        app.name?.startsWith(appName)
+      )
+      appName = `${appName}-${appsWithSameName.length + 1}`
 
       // Create form data to create app
       let data = new FormData()
@@ -120,6 +122,7 @@
         name: appName,
         appId: appJson.instance._id,
         template,
+        fromTemplateMarketplace: true,
       })
 
       // Select Correct Application/DB in prep for creating user
