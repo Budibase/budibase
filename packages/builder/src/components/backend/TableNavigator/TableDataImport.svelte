@@ -22,7 +22,7 @@
   $: valid =
     !schema ||
     (fields.every(column => schema[column].success) &&
-      Object.keys(schema).length > 0)
+      (!hasValidated || Object.keys(schema).length > 0))
   $: dataImport = {
     valid,
     schema: buildTableSchema(schema),
