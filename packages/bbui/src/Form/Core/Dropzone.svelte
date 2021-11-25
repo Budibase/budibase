@@ -6,6 +6,8 @@
   import { generateID } from "../../utils/helpers"
   import Icon from "../../Icon/Icon.svelte"
   import Link from "../../Link/Link.svelte"
+  import Tag from "../../Tags/Tag.svelte"
+  import Tags from "../../Tags/Tags.svelte"
 
   const BYTES_IN_KB = 1000
   const BYTES_IN_MB = 1000000
@@ -18,6 +20,7 @@
   export let handleFileTooLarge = null
   export let gallery = true
   export let error = null
+  export let fileTags = []
 
   const dispatch = createEventDispatcher()
   const imageExtensions = [
@@ -278,6 +281,19 @@
           <br />
           from your computer
         </p>
+        {#if fileTags.length}
+          <Tags>
+            <div class="tags">
+              {#each fileTags as tag}
+                <div class="tag">
+                  <Tag>
+                    {tag}
+                  </Tag>
+                </div>
+              {/each}
+            </div>
+          </Tags>
+        {/if}
       {/if}
     </div>
   </div>
@@ -389,5 +405,16 @@
   }
   .disabled .spectrum-Heading--sizeL {
     color: var(--spectrum-alias-text-color-disabled);
+  }
+
+  .tags {
+    margin-top: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .tag {
+    margin-top: 8px;
   }
 </style>

@@ -58,6 +58,11 @@ router
     queryController.save
   )
   .post(
+    "/api/queries/import/swagger2",
+    authorized(BUILDER),
+    queryController.import
+  )
+  .post(
     "/api/queries/preview",
     bodyResource("datasourceId"),
     authorized(BUILDER),
