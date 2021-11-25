@@ -16,7 +16,7 @@ const router = Router()
 router
   /**
    * @api {get} /api/:tableId/:rowId/enrich Get an enriched row
-   * @apiName /api/:tableId/:rowId/enrich
+   * @apiName Get an enriched row
    * @apiGroup rows
    * @apiPermission table read access
    * @apiDescription This API is only useful when dealing with rows that have relationships.
@@ -27,7 +27,6 @@ router
    * @apiParam {string} rowId The ID of the row which is to be retrieved and enriched.
    *
    * @apiSuccess {object} row The response body will be the enriched row.
-   * @apiError {string} message If the table or row could not be found then an error will be thrown.
    */
   .get(
     "/api/:tableId/:rowId/enrich",
@@ -37,7 +36,7 @@ router
   )
   /**
    * @api {get} /api/:tableId/rows Get all rows in a table
-   * @apiName /api/:tableId/rows
+   * @apiName Get all rows in a table
    * @apiGroup rows
    * @apiPermission table read access
    * @apiDescription This is a deprecated endpoint that should not be used anymore, instead use the search endpoint.
@@ -48,7 +47,6 @@ router
    * @apiParam {string} tableId The ID of the table to retrieve all rows within.
    *
    * @apiSuccess {object[]} rows The response body will be an array of all rows found.
-   * @apiError {string} message If the table could not be found then an error will be thrown.
    */
   .get(
     "/api/:tableId/rows",
@@ -58,7 +56,7 @@ router
   )
   /**
    * @api {get} /api/:tableId/rows/:rowId Retrieve a single row
-   * @apiName /api/:tableId/rows/:rowId
+   * @apiName Retrieve a single row
    * @apiGroup rows
    * @apiPermission table read access
    * @apiDescription This endpoint retrieves only the specified row. If you wish to retrieve
@@ -68,7 +66,6 @@ router
    * @apiParam {string} rowId The ID of the row to retrieve.
    *
    * @apiSuccess {object} row The response body will be the row that was found.
-   * @apiError {string} message If the table or row could not be found then an error will be thrown.
    */
   .get(
     "/api/:tableId/rows/:rowId",
@@ -78,15 +75,68 @@ router
   )
   /**
    * @api {post} /api/:tableId/search Search for rows in a table
-   * @apiName /api/:tableId/search
+   * @apiName Search for rows in a table
    * @apiGroup rows
    * @apiPermission table read access
    * @apiDescription This is the primary method of accessing rows in Budibase, the data provider
    * and data UI in the builder are built atop this. All filtering, sorting and pagination is
    * handled through this, for internal and external (datasource plus, e.g. SQL) tables.
    *
-   * @apiBody
+   * @apiParam {string} tableId The ID of the table to retrieve rows from.
    *
+   * @apiBody {boolean} [paginate] If pagination is required then this should be set to true,
+   * defaults to false.
+   * @apiBody {object} [query] This contains a set of filters which should be applied, if none
+   * specified then the request will be unfiltered. An example with all of the possible query
+   * options has been supplied below.
+   * @apiBody {number} [limit] This sets a limit for the number of rows that will be returned,
+   * this will be implemented at the database level if supported for performance reasons. This
+   * is useful when paginating to set exactly how many rows per page.
+   * @apiBody {string} [bookmark] If pagination is enabled then a bookmark will be returned
+   * with each successful search request, this should be supplied back to get the next page.
+   * @apiBody {object} [sort] If sort is desired this should contain the name of the column to
+   * sort on.
+   * @apiBody {string} [sortOrder] If sort is enabled then this can be either "descending" or
+   * "ascending" as required.
+   * @apiBody {string} [sortType] If sort is enabled then you must specify the type of search
+   * being used, either "string" or "number". This is only used for internal tables.
+   *
+   * @apiParamExample {json} Example:
+   * {
+   *  "tableId": "ta_70260ff0b85c467ca74364aefc46f26d",
+   *  "query": {
+   *    "string": {},
+   *    "fuzzy": {},
+   *    "range": {
+   *      "columnName": {
+   *        "high": 20,
+   *        "low": 10,
+   *      }
+   *    },
+   *    "equal": {
+   *      "columnName": "someValue"
+   *    },
+   *    "notEqual": {},
+   *    "empty": {},
+   *    "notEmpty": {},
+   *    "contains": {},
+   *    "notContains": {}
+   *    "oneOf": {
+   *      "columnName": ["value"]
+   *    }
+   *  },
+   *  "limit": 10,
+   *  "sort": "name",
+   *  "sortOrder": "descending",
+   *  "sortType": "string",
+   *  "paginate": true
+   * }
+   *
+   * @apiSuccess {object[]} rows An array of rows that was found based on the supplied parameters.
+   * @apiSuccess {boolean} hasNextPage If pagination was enabled then this specifies whether or
+   * not there is another page after this request.
+   * @apiSuccess {string} bookmark The bookmark to be sent with the next request to get the next
+   * page.
    */
   .post(
     "/api/:tableId/search",
@@ -102,6 +152,30 @@ router
     authorized(PermissionTypes.TABLE, PermissionLevels.READ),
     rowController.search
   )
+  /**
+   * @api {post} /api/:tableId/rows Creates a new row
+   * @apiName Creates a new row
+   * @apiGroup rows
+   * @apiPermission table write access
+   * @apiDescription This API will create a new row based on the supplied body. If the
+   * body includes an "_id" field then it will update an existing row if the field
+   * links to one. Please note that "_id", "_rev" and "tableId" are fields that are
+   * already used by Budibase tables and cannot be used for columns.
+   *
+   * @apiParam {string} tableId The ID of the table to save a row to.
+   *
+   * @apiBody {string} [_id] If the row exists already then an ID for the row must be provided.
+   * @apiBody {string} [_rev] If working with an existing row for an internal table its revision
+   * must also be provided.
+   * @apiBody {string} tableId The ID of the table should also be specified in the row body itself.
+   * @apiBody {any} [any] Any field supplied in the body will be assessed to see if it matches
+   * a column in the specified table. All other fields will be dropped and not stored.
+   *
+   * @apiSuccess {string} _id The ID of the row that was just saved, if it was just created this
+   * is the rows new ID.
+   * @apiSuccess {string} [_rev] If saving to an internal table a revision will also be returned.
+   * @apiSuccess {any} [any] The contents of the row that was saved will be returned as well.
+   */
   .post(
     "/api/:tableId/rows",
     paramResource("tableId"),
@@ -109,18 +183,64 @@ router
     usage,
     rowController.save
   )
+  /**
+   * @api {patch} /api/:tableId/rows Updates a row
+   * @apiName Update a row
+   * @apiGroup rows
+   * @apiPermission table write access
+   * @apiDescription This endpoint is identical to the row creation endpoint but instead it will
+   * error if an _id isn't provided, it will only function for existing rows.
+   */
   .patch(
     "/api/:tableId/rows",
     paramResource("tableId"),
     authorized(PermissionTypes.TABLE, PermissionLevels.WRITE),
     rowController.patch
   )
+  /**
+   * @api {post} /api/:tableId/rows/validate Validate inputs for a row
+   * @apiName Validate inputs for a row
+   * @apiGroup rows
+   * @apiPermission table write access
+   * @apiDescription When attempting to save a row you may want to check if the row is valid
+   * given the table schema, this will iterate through all the constraints on the table and
+   * check if the request body is valid.
+   *
+   * @apiParam {string} tableId The ID of the table the row is to be validated for.
+   *
+   * @apiBody {any} [any] Any fields provided in the request body will be tested
+   * against the table schema and constraints.
+   *
+   * @apiSuccess {boolean} valid If inputs provided are acceptable within the table schema this
+   * will be true, if it is not then then errors property will be populated.
+   * @apiSuccess {object} [errors] A key value map of information about fields on the input
+   * which do not match the table schema. The key name will be the column names that have breached
+   * the schema.
+   */
   .post(
     "/api/:tableId/rows/validate",
     paramResource("tableId"),
     authorized(PermissionTypes.TABLE, PermissionLevels.WRITE),
     rowController.validate
   )
+  /**
+   * @api {delete} /api/:tableId/rows Delete rows
+   * @apiName Delete rows
+   * @apiGroup rows
+   * @apiPermission table write access
+   * @apiDescription This endpoint can delete a single row, or delete them in a bulk
+   * fashion.
+   *
+   * @apiBody {object[]} [rows] If bulk deletion is desired then provide the rows in this
+   * key of the request body that are to be deleted.
+   * @apiBody {string} [_id] If deleting a single row then provide its ID in this field.
+   * @apiBody {string} [_rev] If deleting a single row from an internal table then provide its
+   * revision here.
+   *
+   * @apiSuccess {object[]|object} rows If deleting bulk then the response body will be an array
+   * of the deleted rows, if deleting a single row then the body will contain a "row" property which
+   * is the deleted row.
+   */
   .delete(
     "/api/:tableId/rows",
     paramResource("tableId"),
