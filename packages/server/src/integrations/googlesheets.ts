@@ -1,10 +1,15 @@
 import {
   DatasourceFieldTypes,
   Integration,
+  QueryJson,
   QueryTypes,
 } from "../definitions/datasource"
 import { IntegrationBase } from "./base/IntegrationBase"
 import { GoogleSpreadsheet } from "google-spreadsheet"
+import { DatasourcePlus } from "./base/datasourcePlus"
+import { Table } from "../definitions/common"
+import { buildExternalTableId } from "./utils"
+import { DataSourceOperation, FieldTypes } from "../constants"
 
 module GoogleSheetsModule {
   interface GoogleSheetsConfig {
@@ -14,6 +19,7 @@ module GoogleSheetsModule {
   }
 
   const SCHEMA: Integration = {
+    plus: true,
     docs: "https://developers.google.com/sheets/api/quickstart/nodejs",
     description:
       "Create and collaborate on online spreadsheets in real-time and from any device. ",
@@ -88,9 +94,11 @@ module GoogleSheetsModule {
     },
   }
 
-  class GoogleSheetsIntegration implements IntegrationBase {
+  class GoogleSheetsIntegration implements DatasourcePlus {
     private readonly config: GoogleSheetsConfig
     private client: any
+    public tables: Record<string, Table> = {}
+    public schemaErrors: Record<string, string> = {}
 
     constructor(config: GoogleSheetsConfig) {
       this.config = config
@@ -112,21 +120,86 @@ module GoogleSheetsModule {
       }
     }
 
-    buildRowObject(headers: string[], values: string[]) {
-      const rowObject = {}
+    async buildSchema(datasourceId: string, entities: Record<string, Table>) {
+      await this.connect()
+      const sheets = await this.client.sheetsByIndex
+      const tables = {}
+      // tables[tableName] = {
+      //   _id: buildExternalTableId(datasourceId, tableName),
+      //   primary: primaryKeys,
+      //   name: tableName,
+      //   schema,
+      // }
+      for (let sheet of sheets) {
+        // must fetch rows to determine schema
+        await sheet.getRows()
+        // build schema
+        const schema = {}
+
+        // build schema from headers
+        for (let header of sheet.headerValues) {
+          schema[header] = {
+            name: header,
+            type: FieldTypes.STRING,
+          }
+        }
+
+        // create tables
+        tables[sheet.title] = {
+          _id: buildExternalTableId(datasourceId, sheet.title),
+          name: sheet.title,
+          primary: ["rowNumber"],
+          schema,
+        }
+      }
+
+      this.tables = tables
+    }
+
+    async query(json: QueryJson) {
+      const sheet = json.endpoint.entityId
+
+      if (json.endpoint.operation === DataSourceOperation.CREATE) {
+        return await this.create({
+          sheet,
+          row: json.body,
+        })
+      }
+
+      if (json.endpoint.operation === DataSourceOperation.READ) {
+        return await this.read({ sheet })
+      }
+
+      if (json.endpoint.operation === DataSourceOperation.UPDATE) {
+        return await this.update({
+          sheet,
+          row: json.body,
+        })
+      }
+
+      if (json.endpoint.operation === DataSourceOperation.DELETE) {
+        return await this.delete({})
+      }
+    }
+
+    buildRowObject(headers: string[], values: string[], rowNumber: number) {
+      const rowObject = { rowNumber }
       for (let i = 0; i < headers.length; i++) {
         rowObject[headers[i]] = values[i]
       }
       return rowObject
     }
 
-    async create(query: { sheet: string; row: string }) {
+    async create(query: { sheet: string; row: string | object }) {
       try {
         await this.connect()
         const sheet = await this.client.sheetsByTitle[query.sheet]
-        const rowToInsert = JSON.parse(query.row)
+        const rowToInsert =
+          typeof query.row === "string" ? JSON.parse(query.row) : query.row
         const row = await sheet.addRow(rowToInsert)
-        return [this.buildRowObject(sheet.headerValues, row._rawData)]
+        return [
+          this.buildRowObject(sheet.headerValues, row._rawData, row._rowNumber),
+        ]
       } catch (err) {
         console.error("Error writing to google sheets", err)
         throw err
@@ -141,7 +214,9 @@ module GoogleSheetsModule {
         const headerValues = sheet.headerValues
         const response = []
         for (let row of rows) {
-          response.push(this.buildRowObject(headerValues, row._rawData))
+          response.push(
+            this.buildRowObject(headerValues, row._rawData, row._rowNumber)
+          )
         }
         return response
       } catch (err) {
@@ -162,7 +237,13 @@ module GoogleSheetsModule {
             row[key] = updateValues[key]
           }
           await row.save()
-          return [this.buildRowObject(sheet.headerValues, row._rawData)]
+          return [
+            this.buildRowObject(
+              sheet.headerValues,
+              row._rawData,
+              row._rowNumber
+            ),
+          ]
         } else {
           throw new Error("Row does not exist.")
         }
