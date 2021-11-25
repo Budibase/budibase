@@ -1,7 +1,7 @@
 {
   "name": "@budibase/server",
   "email": "hi@budibase.com",
-  "version": "0.9.185-alpha.22",
+  "version": "0.9.189",
   "description": "Budibase Web Server",
   "main": "src/index.js",
   "repository": {
@@ -14,7 +14,7 @@
     "test": "jest --coverage --maxWorkers=2",
     "test:watch": "jest --watch",
     "predocker": "copyfiles -f ../client/dist/budibase-client.js ../client/manifest.json client",
-    "build:docker": "yarn run predocker && docker build . -t app-service",
+    "build:docker": "yarn run predocker && docker build . -t app-service --label version=$BUDIBASE_RELEASE_VERSION",
     "run:docker": "node dist/index.js",
     "dev:stack:up": "node scripts/dev/manage.js up",
     "dev:stack:down": "node scripts/dev/manage.js down",
@@ -66,13 +66,13 @@
     "budibase"
   ],
   "author": "Budibase",
-  "license": "AGPL-3.0-or-later",
+  "license": "GPL-3.0",
   "dependencies": {
-    "@budibase/auth": "^0.9.185-alpha.22",
-    "@budibase/client": "^0.9.185-alpha.22",
-    "@budibase/string-templates": "^0.9.185-alpha.22",
     "@bull-board/api": "^3.7.0",
     "@bull-board/koa": "^3.7.0",
+    "@budibase/auth": "^0.9.189",
+    "@budibase/client": "^0.9.189",
+    "@budibase/string-templates": "^0.9.189",
     "@elastic/elasticsearch": "7.10.0",
     "@koa/router": "8.0.0",
     "@sendgrid/mail": "7.1.1",
