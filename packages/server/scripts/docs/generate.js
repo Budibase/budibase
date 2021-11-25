@@ -6,8 +6,7 @@ const packageJson = require("../../package.json")
 const config = {
   name: "Budibase API",
   version: packageJson.version,
-  description:
-    "Documentation for the various API endpoints of the Budibase backend.",
+  description: "Documenting the Budibase backend API",
   title: "Budibase app service API",
 }
 
@@ -37,9 +36,8 @@ function generate() {
     fs.mkdirSync(assetsPath, { recursive: true })
   }
   const doc = createDoc({
-    src: srcPath,
+    src: [srcPath],
     dest: assetsPath,
-    silent: true,
     filters: {
       main: {
         postFilter: filter,
