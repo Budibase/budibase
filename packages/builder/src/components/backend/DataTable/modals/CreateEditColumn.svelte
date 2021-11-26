@@ -452,7 +452,10 @@
   </div>
 </ModalContent>
 <Modal bind:this={jsonSchemaModal}>
-  <JSONSchemaModal on:save={({ detail }) => console.log(detail)} />
+  <JSONSchemaModal
+    schema={field.schema}
+    on:save={({ detail }) => (field.schema = detail)}
+  />
 </Modal>
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
