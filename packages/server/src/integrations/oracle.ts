@@ -414,7 +414,7 @@ module OracleModule {
     }
 
     async query(json: QueryJson) {
-      const operation = this._operation(json).toLowerCase()
+      const operation = this._operation(json)
       const input = this._query(json, { disableReturning: true })
       if (Array.isArray(input)) {
         const responses = []
@@ -423,22 +423,34 @@ module OracleModule {
         }
         return responses
       } else {
+        // read the row to be deleted up front for the return
+        let deletedRows
+        if (operation === Operation.DELETE) {
+          const queryFn = (query: any) => this.internalQuery(query)
+          deletedRows = await this.getReturningRow(queryFn, json)
+        }
+
+        // run the query
         const response = await this.internalQuery(input)
-        if (response.rows?.length) {
+
+        // get the results or return the created / updated / deleted row
+        if (deletedRows?.rows?.length) {
+          return deletedRows.rows
+        } else if (response.rows?.length) {
           return response.rows
         } else {
           // get the last row that was updated
           if (
             response.lastRowid &&
             json.endpoint?.entityId &&
-            operation.toUpperCase() !== Operation.DELETE
+            operation !== Operation.DELETE
           ) {
             const lastRow = await this.internalQuery({
               sql: `SELECT * FROM \"${json.endpoint.entityId}\" WHERE ROWID = '${response.lastRowid}'`,
             })
             return lastRow.rows
           } else {
-            return [{ [operation]: true }]
+            return [{ [ operation.toLowerCase() ]: true }]
           }
         }
       }
