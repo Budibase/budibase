@@ -25,24 +25,29 @@
 
   let lastTouched = "url"
 
-  $: {
-    console.log({ data })
-    console.log({ lastTouched })
-  }
+  const getPayload = async () => {
+    let payloadData
+    let type
 
-  const getPayload = () => {
+    // parse the file into memory and send as string
+    if (lastTouched === "file") {
+      type = "raw"
+      payloadData = await data.file[0].text()
+    } else {
+      type = lastTouched
+      payloadData = data[lastTouched]
+    }
+
     return {
-      type: lastTouched,
-      data: data[lastTouched],
+      type: type,
+      data: payloadData,
     }
   }
 
   async function importDatasource() {
     try {
-      // Create datasource
-      const resp = await datasources.import(getPayload())
+      const resp = await datasources.import(await getPayload())
 
-      // // update the tables incase data source plus
       await queries.fetch()
       await datasources.select(resp._id)
       $goto(`./datasource/${resp._id}`)
@@ -82,6 +87,7 @@
       </Tab>
       <Tab title="File">
         <Dropzone
+          gallery={false}
           bind:value={data.file}
           on:change={() => (lastTouched = "file")}
           fileTags={["OpenAPI", "Swagger 2.0"]}

@@ -110,6 +110,8 @@ exports.import = async function (ctx) {
     data = await fetch(importConfig.data).then(res => res.json())
   } else if (importConfig.type === "raw") {
     data = JSON.parse(importConfig.data)
+  } else {
+    throw new Error("Invalid data type")
   }
 
   const db = new CouchDB(ctx.appId)
