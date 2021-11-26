@@ -264,7 +264,7 @@
     await apps.load()
     // if the portal is loaded from an external URL with a template param
     const initInfo = await auth.getInitInfo()
-    if (initInfo.init_template) {
+    if (initInfo?.init_template) {
       creatingFromTemplate = true
       createAppFromTemplateUrl(initInfo.init_template)
       return
