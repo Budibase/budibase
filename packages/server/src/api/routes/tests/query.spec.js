@@ -1,5 +1,12 @@
-// mock out postgres for this
+// Mock out postgres for this
 jest.mock("pg")
+
+// Mock isProdAppID to we can later mock the implementation and pretend we are
+// using prod app IDs
+const authDb = require("@budibase/auth/db")
+const { isProdAppID } = authDb
+const mockIsProdAppID = jest.fn(isProdAppID)
+authDb.isProdAppID = mockIsProdAppID
 
 const setup = require("./utilities")
 const { checkBuilderEndpoint } = require("./utilities/TestFunctions")
@@ -19,10 +26,12 @@ describe("/queries", () => {
   })
 
   async function createInvalidIntegration() {
-    const datasource = await config.createDatasource({datasource: {
-      ...basicDatasource().datasource,
-      source: "INVALID_INTEGRATION",
-    }})
+    const datasource = await config.createDatasource({
+      datasource: {
+        ...basicDatasource().datasource,
+        source: "INVALID_INTEGRATION",
+      },
+    })
     const query = await config.createQuery()
     return { datasource, query }
   }
@@ -96,10 +105,31 @@ describe("/queries", () => {
           .set(await config.defaultHeaders())
           .expect(200)
           .expect("Content-Type", /json/)
-        expect(res.body.fields).toBeUndefined()
-        expect(res.body.parameters).toBeUndefined()
-        expect(res.body.schema).toBeUndefined()
+        expect(res.body.fields).toBeDefined()
+        expect(res.body.parameters).toBeDefined()
+        expect(res.body.schema).toBeDefined()
       })
+    })
+
+    it("should remove sensitive info for prod apps", async () => {
+      // Mock isProdAppID to pretend we are using a prod app
+      mockIsProdAppID.mockClear()
+      mockIsProdAppID.mockImplementation(() => true)
+
+      const query = await config.createQuery()
+      const res = await request
+        .get(`/api/queries/${query._id}`)
+        .set(await config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+      expect(res.body._id).toEqual(query._id)
+      expect(res.body.fields).toBeUndefined()
+      expect(res.body.parameters).toBeUndefined()
+      expect(res.body.schema).toBeDefined()
+
+      // Reset isProdAppID mock
+      expect(mockIsProdAppID).toHaveBeenCalledTimes(1)
+      mockIsProdAppID.mockImplementation(isProdAppID)
     })
   })
 
