@@ -12,6 +12,8 @@
     routeStore,
     builderStore,
     themeStore,
+    appStore,
+    devToolsStore,
   } from "stores"
   import NotificationDisplay from "components/overlay/NotificationDisplay.svelte"
   import ConfirmationDisplay from "components/overlay/ConfirmationDisplay.svelte"
@@ -26,6 +28,8 @@
   import DNDHandler from "components/preview/DNDHandler.svelte"
   import ErrorSVG from "builder/assets/error.svg"
   import KeyboardManager from "components/preview/KeyboardManager.svelte"
+  import DevToolsHeader from "components/devtools/DevToolsHeader.svelte"
+  import DevTools from "components/devtools/DevTools.svelte"
 
   // Provide contexts
   setContext("sdk", SDK)
@@ -64,10 +68,12 @@
         // The user is not logged in, redirect them to login
         const returnUrl = `${window.location.pathname}${window.location.hash}`
         const encodedUrl = encodeURIComponent(returnUrl)
-        window.location = `/builder/auth/login?returnUrl=${encodedUrl}`
+        // window.location = `/builder/auth/login?returnUrl=${encodedUrl}`
       }
     }
   }
+
+  $: isDevPreview = $appStore.isDevApp && !$builderStore.inBuilder
 </script>
 
 {#if dataLoaded}
@@ -106,29 +112,39 @@
             >
               <!-- Actual app -->
               <div id="app-root">
-                <CustomThemeWrapper>
-                  {#key $screenStore.activeLayout._id}
-                    <Component
-                      isLayout
-                      instance={$screenStore.activeLayout.props}
-                    />
-                  {/key}
+                {#if isDevPreview}
+                  <DevToolsHeader />
+                {/if}
 
-                  <!--
-                    Flatpickr needs to be inside the theme wrapper.
-                    It also needs its own container because otherwise it hijacks
-                    key events on the whole page. It is painful to work with.
-                  -->
-                  <div id="flatpickr-root" />
+                <div id="app-body">
+                  <CustomThemeWrapper>
+                    {#key $screenStore.activeLayout._id}
+                      <Component
+                        isLayout
+                        instance={$screenStore.activeLayout.props}
+                      />
+                    {/key}
 
-                  <!-- Modal container to ensure they sit on top -->
-                  <div class="modal-container" />
+                    <!--
+                      Flatpickr needs to be inside the theme wrapper.
+                      It also needs its own container because otherwise it hijacks
+                      key events on the whole page. It is painful to work with.
+                    -->
+                    <div id="flatpickr-root" />
 
-                  <!-- Layers on top of app -->
-                  <NotificationDisplay />
-                  <ConfirmationDisplay />
-                  <PeekScreenDisplay />
-                </CustomThemeWrapper>
+                    <!-- Modal container to ensure they sit on top -->
+                    <div class="modal-container" />
+
+                    <!-- Layers on top of app -->
+                    <NotificationDisplay />
+                    <ConfirmationDisplay />
+                    <PeekScreenDisplay />
+                  </CustomThemeWrapper>
+
+                  {#if $devToolsStore.visible}
+                    <DevTools />
+                  {/if}
+                </div>
               </div>
 
               <!-- Selection indicators should be bounded by device -->
@@ -136,9 +152,11 @@
                 We don't want to key these by componentID as they control their own
                 re-mounting to avoid flashes.
               -->
-              {#if $builderStore.inBuilder}
-                <SelectionIndicator />
+              <SelectionIndicator />
+              {#if $builderStore.inBuilder || $devToolsStore.allowSelection}
                 <HoverIndicator />
+              {/if}
+              {#if $builderStore.inBuilder}
                 <DNDHandler />
               {/if}
             </div>
@@ -176,6 +194,17 @@
     overflow: hidden;
     height: 100%;
     width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+  }
+  #app-body {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: stretch;
   }
 
   .error {

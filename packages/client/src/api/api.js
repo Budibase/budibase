@@ -1,5 +1,6 @@
-import { notificationStore } from "stores"
+import { notificationStore, devToolsStore } from "stores"
 import { ApiVersion } from "constants"
+import { get } from "svelte/store"
 
 /**
  * API cache for cached request responses.
@@ -21,12 +22,14 @@ const makeApiCall = async ({ method, url, body, json = true }) => {
   try {
     const requestBody = json ? JSON.stringify(body) : body
     const inBuilder = window["##BUDIBASE_IN_BUILDER##"]
+    const role = get(devToolsStore).role
     const headers = {
       Accept: "application/json",
       "x-budibase-app-id": window["##BUDIBASE_APP_ID##"],
       "x-budibase-api-version": ApiVersion,
       ...(json && { "Content-Type": "application/json" }),
       ...(!inBuilder && { "x-budibase-type": "client" }),
+      ...(role && { "x-budibase-role": role }),
     }
     const response = await fetch(url, {
       method,

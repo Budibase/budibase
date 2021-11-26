@@ -10,6 +10,7 @@ const { getCachedSelf } = require("../utilities/global")
 const CouchDB = require("../db")
 const env = require("../environment")
 const { isWebhookEndpoint } = require("./utils")
+const { Headers } = require("@budibase/auth/constants")
 
 module.exports = async (ctx, next) => {
   // try to get the appID from the request
@@ -62,6 +63,20 @@ module.exports = async (ctx, next) => {
   // nothing more to do
   if (!appId) {
     return next()
+  }
+
+  // Allow builders to specify their role via a header
+  const isBuilder = ctx.user && ctx.user.builder && ctx.user.builder.global
+  const isDevApp = appId && isDevAppID(appId)
+  const roleHeader = ctx.request.headers[Headers.PREVIEW_ROLE]
+  if (isBuilder && isDevApp && roleHeader) {
+    // Ensure the role is valid ensuring a definition exists
+    try {
+      await getRole(appId, roleHeader)
+      roleId = roleHeader
+    } catch (error) {
+      // Swallow error and do nothing
+    }
   }
 
   let noCookieSet = false
