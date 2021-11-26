@@ -7,8 +7,10 @@
     Button,
     Input,
     Select,
+    notifications,
   } from "@budibase/bbui"
   import { onMount, createEventDispatcher } from "svelte"
+  import { post } from "builderStore/api"
 
   export let schema = {}
 
@@ -19,13 +21,42 @@
   let fieldKeys = {},
     fieldTypes = {}
   let keyValueOptions = ["String", "Number", "Boolean", "Object", "Array"]
+  let invalid = false
 
-  $: invalid = false
-
-  function onJsonUpdate({ detail }) {
-    // TODO: make request
+  async function onJsonUpdate({ detail }) {
     const input = detail.value
-    console.log(input)
+    json = input
+    try {
+      // check json valid first
+      let inputJson = JSON.parse(input)
+      const response = await post("/api/tables/schema/generate", {
+        json: inputJson,
+      })
+      if (response.status !== 200) {
+        const error = (await response.text()).message
+        notifications.error(error)
+      } else {
+        schema = await response.json()
+        updateCounts()
+        invalid = false
+      }
+    } catch (err) {
+      // json not currently valid
+      invalid = true
+    }
+  }
+
+  function updateCounts() {
+    if (!schema) {
+      schema = {}
+    }
+    let i = 0
+    for (let [key, value] of Object.entries(schema)) {
+      fieldKeys[i] = key
+      fieldTypes[i] = value.type
+      i++
+    }
+    fieldCount = i
   }
 
   function saveSchema() {
@@ -39,16 +70,7 @@
   }
 
   onMount(() => {
-    if (!schema) {
-      schema = {}
-    }
-    let i = 0
-    for (let [key, value] of Object.entries(schema)) {
-      fieldKeys[i] = key
-      fieldTypes[i] = value.type
-      i++
-    }
-    fieldCount = i
+    updateCounts()
   })
 </script>
 
@@ -56,7 +78,7 @@
   title={"Key/Value Schema Editor"}
   confirmText="Save Column"
   onConfirm={saveSchema}
-  disabled={invalid}
+  bind:disabled={invalid}
   size="L"
 >
   <Tabs selected={mode} noPadding>
