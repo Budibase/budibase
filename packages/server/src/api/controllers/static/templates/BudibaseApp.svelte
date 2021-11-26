@@ -78,6 +78,9 @@
       app.
     </h2>
   </div>
+  <script type="application/javascript">
+    window.INIT_TIME = Date.now()
+  </script>
   <script type="application/javascript" src={clientLibPath}>
   </script>
   <script type="application/javascript">

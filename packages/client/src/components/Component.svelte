@@ -3,12 +3,12 @@
 </script>
 
 <script>
-  import { getContext, setContext } from "svelte"
-  import { writable } from "svelte/store"
+  import { getContext, setContext, onMount, onDestroy } from "svelte"
+  import { get, writable } from "svelte/store"
   import * as AppComponents from "components/app"
   import Router from "./Router.svelte"
   import { enrichProps, propsAreSame } from "utils/componentProps"
-  import { builderStore } from "stores"
+  import { builderStore, devToolsStore, componentStore } from "stores"
   import { hashString } from "utils/helpers"
   import Manifest from "manifest.json"
   import { getActiveConditions, reduceConditionActions } from "utils/conditions"
@@ -54,8 +54,8 @@
   const insideScreenslot = !!getContext("screenslot")
 
   // Create component context
-  const componentStore = writable({})
-  setContext("component", componentStore)
+  const store = writable({})
+  setContext("component", store)
 
   // Extract component instance info
   $: constructor = getComponentConstructor(instance._component)
@@ -69,7 +69,7 @@
   // leading to the selected component
   $: selected =
     $builderStore.inBuilder && $builderStore.selectedComponentId === id
-  $: inSelectedPath = $builderStore.selectedComponentPath?.includes(id)
+  $: inSelectedPath = $componentStore.selectedComponentPath?.includes(id)
   $: inDragPath = inSelectedPath && $builderStore.editMode
 
   // Derive definition properties which can all be optional, so need to be
@@ -80,10 +80,12 @@
 
   // Interactive components can be selected, dragged and highlighted inside
   // the builder preview
-  $: interactive =
+  $: builderInteractive =
     $builderStore.inBuilder &&
     ($builderStore.previewType === "layout" || insideScreenslot) &&
     !isBlock
+  $: devToolsInteractive = $devToolsStore.allowSelection && !isBlock
+  $: interactive = builderInteractive || devToolsInteractive
   $: editing = editable && selected && $builderStore.editMode
   $: draggable = !inDragPath && interactive && !isLayout && !isScreen
   $: droppable = interactive && !isLayout && !isScreen
@@ -112,7 +114,7 @@
   $: renderKey = getRenderKey(id, editing)
 
   // Update component context
-  $: componentStore.set({
+  $: store.set({
     id,
     children: children.length,
     styles: {
@@ -282,6 +284,18 @@
   const getRenderKey = (id, editing) => {
     return hashString(`${id}-${editing}`)
   }
+
+  onMount(() => {
+    componentStore.actions.registerInstance(id, {
+      getSettings: () => cachedSettings,
+      getRawSettings: () => rawSettings,
+      getDataContext: () => get(context),
+    })
+  })
+
+  onDestroy(() => {
+    componentStore.actions.unregisterInstance(id)
+  })
 </script>
 
 {#key renderKey}
