@@ -146,6 +146,7 @@
     "eslint": "^6.8.0",
     "jest": "^27.0.5",
     "nodemon": "^2.0.4",
+    "path-to-regexp": "^6.2.0",
     "prettier": "^2.3.1",
     "rimraf": "^3.0.2",
     "supertest": "^4.0.2",
