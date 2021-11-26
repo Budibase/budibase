@@ -93,7 +93,7 @@ class InternalBuilder {
     if (filters.oneOf) {
       iterate(filters.oneOf, (key, array) => {
         const fnc = allOr ? "orWhereIn" : "whereIn"
-        query = query[fnc](key, array)
+        query = query[fnc](key, Array.isArray(array) ? array : [array])
       })
     }
     if (filters.string) {
