@@ -3,7 +3,14 @@
   import { database } from "stores/backend"
   import { automationStore } from "builderStore"
   import { notifications } from "@budibase/bbui"
-  import { Input, ModalContent, Layout, Body, Icon } from "@budibase/bbui"
+  import {
+    Input,
+    InlineAlert,
+    ModalContent,
+    Layout,
+    Body,
+    Icon,
+  } from "@budibase/bbui"
   import analytics, { Events } from "analytics"
 
   let name
@@ -56,6 +63,10 @@
   onConfirm={createAutomation}
   disabled={!selectedTrigger || !name}
 >
+  <InlineAlert
+    header="You must publish your app to activate your automations."
+    message="To test your automation before publishing, you can use the 'Run Test' functionality on the next screen."
+  />
   <Body size="XS"
     >Please name your automation, then select a trigger. Every automation must
     start with a trigger.
