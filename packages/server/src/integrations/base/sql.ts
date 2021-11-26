@@ -435,8 +435,6 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
         id = results?.[0].id
       } else if (sqlClient === SqlClients.MY_SQL) {
         id = results?.insertId
-      } else if (sqlClient === SqlClients.ORACLE) {
-        id = response.outBinds[0][0]
       }
       row = processFn(
         await this.getReturningRow(queryFn, this.checkLookupKeys(id, json))
