@@ -12,7 +12,7 @@ context("Create a automation", () => {
     cy.get("[data-cy='new-screen'] > .spectrum-Icon").click()
     cy.get(".modal-inner-wrapper").within(() => {
       cy.get("input").type("Add Row")
-      cy.contains("Row Created").click()
+      cy.contains("Row Created").click({ force: true })
       cy.wait(500)
       cy.get(".spectrum-Button--cta").click()
     })

@@ -40,9 +40,9 @@ const INTEGRATIONS = {
 }
 
 // optionally add oracle integration if the oracle binary can be installed
-if (!(process.arch === 'arm64' && process.platform === 'darwin')) {
+if (!(process.arch === "arm64" && process.platform === "darwin")) {
   const oracle = require("./oracle")
-  DEFINITIONS[SourceNames.ORACLE] =  oracle.schema
+  DEFINITIONS[SourceNames.ORACLE] = oracle.schema
   INTEGRATIONS[SourceNames.ORACLE] = oracle.integration
 }
 

@@ -1,7 +1,7 @@
 {
   "name": "@budibase/worker",
   "email": "hi@budibase.com",
-  "version": "0.9.185-alpha.20",
+  "version": "0.9.190-alpha.8",
   "description": "Budibase background service",
   "main": "src/index.js",
   "repository": {
@@ -13,7 +13,7 @@
   ],
   "scripts": {
     "run:docker": "node src/index.js",
-    "build:docker": "docker build . -t worker-service",
+    "build:docker": "docker build . -t worker-service --label version=$BUDIBASE_RELEASE_VERSION",
     "dev:stack:init": "node ./scripts/dev/manage.js init",
     "dev:builder": "npm run dev:stack:init && nodemon",
     "test": "jest --runInBand",
@@ -27,10 +27,10 @@
     "env:account:disable": "node scripts/account.js disable"
   },
   "author": "Budibase",
-  "license": "AGPL-3.0-or-later",
+  "license": "GPL-3.0",
   "dependencies": {
-    "@budibase/auth": "^0.9.185-alpha.20",
-    "@budibase/string-templates": "^0.9.185-alpha.20",
+    "@budibase/auth": "^0.9.190-alpha.8",
+    "@budibase/string-templates": "^0.9.190-alpha.8",
     "@koa/router": "^8.0.0",
     "@sentry/node": "^6.0.0",
     "@techpass/passport-openidconnect": "^0.3.0",
