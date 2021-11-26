@@ -100,7 +100,7 @@ exports.setInitInfo = ctx => {
 }
 
 exports.getInitInfo = ctx => {
-  ctx.body = getCookie(ctx, Cookies.Init)
+  ctx.body = getCookie(ctx, Cookies.Init) || {}
 }
 
 /**
