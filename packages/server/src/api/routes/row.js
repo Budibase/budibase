@@ -65,7 +65,7 @@ router
    * @apiParam {string} tableId The ID of the table to retrieve a row from.
    * @apiParam {string} rowId The ID of the row to retrieve.
    *
-   * @apiSuccess {object} row The response body will be the row that was found.
+   * @apiSuccess {object} body The response body will be the row that was found.
    */
   .get(
     "/api/:tableId/rows/:rowId",
@@ -84,21 +84,21 @@ router
    *
    * @apiParam {string} tableId The ID of the table to retrieve rows from.
    *
-   * @apiBody {boolean} [paginate] If pagination is required then this should be set to true,
+   * @apiParam (Body) {boolean} [paginate] If pagination is required then this should be set to true,
    * defaults to false.
-   * @apiBody {object} [query] This contains a set of filters which should be applied, if none
+   * @apiParam (Body) {object} [query] This contains a set of filters which should be applied, if none
    * specified then the request will be unfiltered. An example with all of the possible query
    * options has been supplied below.
-   * @apiBody {number} [limit] This sets a limit for the number of rows that will be returned,
+   * @apiParam (Body) {number} [limit] This sets a limit for the number of rows that will be returned,
    * this will be implemented at the database level if supported for performance reasons. This
    * is useful when paginating to set exactly how many rows per page.
-   * @apiBody {string} [bookmark] If pagination is enabled then a bookmark will be returned
+   * @apiParam (Body) {string} [bookmark] If pagination is enabled then a bookmark will be returned
    * with each successful search request, this should be supplied back to get the next page.
-   * @apiBody {object} [sort] If sort is desired this should contain the name of the column to
+   * @apiParam (Body) {object} [sort] If sort is desired this should contain the name of the column to
    * sort on.
-   * @apiBody {string} [sortOrder] If sort is enabled then this can be either "descending" or
+   * @apiParam (Body) {string} [sortOrder] If sort is enabled then this can be either "descending" or
    * "ascending" as required.
-   * @apiBody {string} [sortType] If sort is enabled then you must specify the type of search
+   * @apiParam (Body) {string} [sortType] If sort is enabled then you must specify the type of search
    * being used, either "string" or "number". This is only used for internal tables.
    *
    * @apiParamExample {json} Example:
@@ -164,17 +164,17 @@ router
    *
    * @apiParam {string} tableId The ID of the table to save a row to.
    *
-   * @apiBody {string} [_id] If the row exists already then an ID for the row must be provided.
-   * @apiBody {string} [_rev] If working with an existing row for an internal table its revision
+   * @apiParam (Body) {string} [_id] If the row exists already then an ID for the row must be provided.
+   * @apiParam (Body) {string} [_rev] If working with an existing row for an internal table its revision
    * must also be provided.
-   * @apiBody {string} tableId The ID of the table should also be specified in the row body itself.
-   * @apiBody {any} [any] Any field supplied in the body will be assessed to see if it matches
+   * @apiParam (Body) {string} tableId The ID of the table should also be specified in the row body itself.
+   * @apiParam (Body) {any} [any] Any field supplied in the body will be assessed to see if it matches
    * a column in the specified table. All other fields will be dropped and not stored.
    *
    * @apiSuccess {string} _id The ID of the row that was just saved, if it was just created this
    * is the rows new ID.
    * @apiSuccess {string} [_rev] If saving to an internal table a revision will also be returned.
-   * @apiSuccess {any} [any] The contents of the row that was saved will be returned as well.
+   * @apiSuccess {object} body The contents of the row that was saved will be returned as well.
    */
   .post(
     "/api/:tableId/rows",
@@ -208,7 +208,7 @@ router
    *
    * @apiParam {string} tableId The ID of the table the row is to be validated for.
    *
-   * @apiBody {any} [any] Any fields provided in the request body will be tested
+   * @apiParam (Body) {any} [any] Any fields provided in the request body will be tested
    * against the table schema and constraints.
    *
    * @apiSuccess {boolean} valid If inputs provided are acceptable within the table schema this
@@ -231,13 +231,15 @@ router
    * @apiDescription This endpoint can delete a single row, or delete them in a bulk
    * fashion.
    *
-   * @apiBody {object[]} [rows] If bulk deletion is desired then provide the rows in this
+   * @apiParam {string} tableId The ID of the table the row is to be deleted from.
+   *
+   * @apiParam (Body) {object[]} [rows] If bulk deletion is desired then provide the rows in this
    * key of the request body that are to be deleted.
-   * @apiBody {string} [_id] If deleting a single row then provide its ID in this field.
-   * @apiBody {string} [_rev] If deleting a single row from an internal table then provide its
+   * @apiParam (Body) {string} [_id] If deleting a single row then provide its ID in this field.
+   * @apiParam (Body) {string} [_rev] If deleting a single row from an internal table then provide its
    * revision here.
    *
-   * @apiSuccess {object[]|object} rows If deleting bulk then the response body will be an array
+   * @apiSuccess {object[]|object} body If deleting bulk then the response body will be an array
    * of the deleted rows, if deleting a single row then the body will contain a "row" property which
    * is the deleted row.
    */

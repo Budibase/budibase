@@ -2,6 +2,7 @@ const fs = require("fs")
 const { join } = require("path")
 const { createDoc } = require("apidoc")
 const packageJson = require("../../package.json")
+const toSwagger = require("./toSwagger")
 const open = require("open")
 
 const config = {
@@ -37,7 +38,7 @@ async function generate() {
   if (!fs.existsSync(assetsPath)) {
     fs.mkdirSync(assetsPath, { recursive: true })
   }
-  const doc = createDoc({
+  const options = {
     src: [srcPath],
     dest: assetsPath,
     filters: {
@@ -46,17 +47,28 @@ async function generate() {
       },
     },
     config: configPath,
-  })
+  }
+  const doc = createDoc(options)
   if (typeof doc !== "boolean") {
-    console.log("Docs generated successfully.")
+    const swagger = toSwagger(JSON.parse(doc.data), JSON.parse(doc.project))
+    fs.writeFileSync(join(assetsPath, "swagger.json"), JSON.stringify(swagger))
+    fs.writeFileSync(join(assetsPath, "apidoc.json"), doc.data)
+    fs.writeFileSync(join(assetsPath, "project.json"), doc.project)
+    console.log(
+      `Docs generated successfully, find in ${assetsPath}, swagger.json, apidoc.json and project.json`
+    )
   } else {
-    console.error("Unable to generate docs.")
+    throw "Unable to generate docs."
   }
   // delete the temporary config file
   fs.unlinkSync(configPath)
-  if (shouldOpen === "open") {
-    await open(join(assetsPath, "index.html"), { wait: false })
-  }
+  setTimeout(async () => {
+    if (shouldOpen === "open") {
+      await open(join(assetsPath, "index.html"), { wait: false })
+    }
+  }, 2000)
 }
 
-generate()
+generate().catch(err => {
+  console.error(err)
+})
