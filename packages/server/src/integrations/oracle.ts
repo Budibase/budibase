@@ -352,14 +352,23 @@ module OracleModule {
      * Knex default returning behaviour does not work with oracle
      * Manually add the behaviour for the return column
      */
-    private addReturning(query: SqlQuery, bindings: BindParameters, returnColumn: string) {
+    private addReturning(
+      query: SqlQuery,
+      bindings: BindParameters,
+      returnColumn: string
+    ) {
       if (bindings instanceof Array) {
         bindings.push({ dir: oracledb.BIND_OUT })
-        query.sql = query.sql + ` returning \"${returnColumn}\" into :${bindings.length}`
+        query.sql =
+          query.sql + ` returning \"${returnColumn}\" into :${bindings.length}`
       }
     }
 
-    private async internalQuery<T>(query: SqlQuery, returnColum?: string, operation?: string): Promise<Result<T>> {
+    private async internalQuery<T>(
+      query: SqlQuery,
+      returnColum?: string,
+      operation?: string
+    ): Promise<Result<T>> {
       let connection
       try {
         connection = await this.getConnection()
@@ -367,7 +376,10 @@ module OracleModule {
         const options: ExecuteOptions = { autoCommit: true }
         const bindings: BindParameters = query.bindings || []
 
-        if (returnColum && (operation === Operation.CREATE || operation === Operation.UPDATE)) {
+        if (
+          returnColum &&
+          (operation === Operation.CREATE || operation === Operation.UPDATE)
+        ) {
           this.addReturning(query, bindings, returnColum)
         }
 
@@ -414,14 +426,14 @@ module OracleModule {
       return response.rows ? response.rows : []
     }
 
-    async update(query: SqlQuery | string): Promise<any[]>  {
+    async update(query: SqlQuery | string): Promise<any[]> {
       const response = await this.internalQuery(getSqlQuery(query))
       return response.rows && response.rows.length
         ? response.rows
         : [{ updated: true }]
     }
 
-    async delete(query: SqlQuery | string): Promise<any[]>  {
+    async delete(query: SqlQuery | string): Promise<any[]> {
       const response = await this.internalQuery(getSqlQuery(query))
       return response.rows && response.rows.length
         ? response.rows
@@ -431,8 +443,9 @@ module OracleModule {
     async query(json: QueryJson) {
       const primaryKeys = json.meta!.table!.primary
       const primaryKey = primaryKeys ? primaryKeys[0] : undefined
-      const queryFn = (query: any, operation: string) => this.internalQuery(query, primaryKey, operation)
-      const processFn = (response: any) => response.rows ? response.rows : []
+      const queryFn = (query: any, operation: string) =>
+        this.internalQuery(query, primaryKey, operation)
+      const processFn = (response: any) => (response.rows ? response.rows : [])
       const output = await this.queryWithReturning(json, queryFn, processFn)
       return output
     }

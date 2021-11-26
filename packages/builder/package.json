@@ -1,7 +1,7 @@
 {
   "name": "@budibase/builder",
-  "version": "0.9.185-alpha.20",
-  "license": "AGPL-3.0",
+  "version": "0.9.190-alpha.8",
+  "license": "GPL-3.0",
   "private": true,
   "scripts": {
     "build": "routify -b && vite build --emptyOutDir",
@@ -65,10 +65,10 @@
     }
   },
   "dependencies": {
-    "@budibase/bbui": "^0.9.185-alpha.20",
-    "@budibase/client": "^0.9.185-alpha.20",
+    "@budibase/bbui": "^0.9.190-alpha.8",
+    "@budibase/client": "^0.9.190-alpha.8",
     "@budibase/colorpicker": "1.1.2",
-    "@budibase/string-templates": "^0.9.185-alpha.20",
+    "@budibase/string-templates": "^0.9.190-alpha.8",
     "@sentry/browser": "5.19.1",
     "@spectrum-css/page": "^3.0.1",
     "@spectrum-css/vars": "^3.0.1",

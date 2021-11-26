@@ -4,6 +4,7 @@ const { apiFileReturn } = require("../../../utilities/fileSystem")
 const exporters = require("./exporters")
 const { saveView, getView, getViews, deleteView } = require("./utils")
 const { fetchView } = require("../row")
+const { getTable } = require("../table/utils")
 
 exports.fetch = async ctx => {
   const db = new CouchDB(ctx.appId)
@@ -56,7 +57,7 @@ exports.exportView = async ctx => {
   const view = await getView(db, viewName)
 
   const format = ctx.query.format
-  if (!format) {
+  if (!format || !Object.values(exporters.ExportFormats).includes(format)) {
     ctx.throw(400, "Format must be specified, either csv or json")
   }
 
@@ -80,8 +81,20 @@ exports.exportView = async ctx => {
   let schema = view && view.meta && view.meta.schema
   if (!schema) {
     const tableId = ctx.params.tableId || view.meta.tableId
-    const table = await db.get(tableId)
+    const table = await getTable(ctx.appId, tableId)
     schema = table.schema
+  }
+
+  // make sure no "undefined" entries appear in the CSV
+  if (format === exporters.ExportFormats.CSV) {
+    const schemaKeys = Object.keys(schema)
+    for (let key of schemaKeys) {
+      for (let row of ctx.body) {
+        if (row[key] == null) {
+          row[key] = ""
+        }
+      }
+    }
   }
 
   // Export part
