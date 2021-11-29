@@ -53,6 +53,10 @@ export function createQueriesStore() {
       })
       return json
     },
+    import: async body => {
+      const response = await api.post(`/api/queries/import`, body)
+      return response.json()
+    },
     select: query => {
       update(state => ({ ...state, selected: query._id }))
       views.unselect()

@@ -6,7 +6,7 @@
   import { IntegrationNames } from "constants"
   import CreateTableModal from "components/backend/TableNavigator/modals/CreateTableModal.svelte"
   import DatasourceConfigModal from "components/backend/DatasourceNavigator/modals/DatasourceConfigModal.svelte"
-  import ImportRestDatasourceModal from "./ImportRestDatasourceModal.svelte"
+  import ImportRestQueriesModal from "./ImportRestQueriesModal.svelte"
 
   export let modal
   let integrations = []
@@ -80,7 +80,7 @@
 
 <Modal bind:this={importModal}>
   {#if integration.type === "REST"}
-    <ImportRestDatasourceModal {integration} {modal} />
+    <ImportRestQueriesModal {integration} {modal} createDatasource={true} />
   {/if}
 </Modal>
 

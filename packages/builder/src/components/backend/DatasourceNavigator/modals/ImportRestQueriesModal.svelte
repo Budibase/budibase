@@ -16,6 +16,8 @@
   import { datasources, queries } from "stores/backend"
 
   export let modal
+  export let datasourceId
+  export let createDatasource = false
 
   let data = {
     url: "",
@@ -25,47 +27,60 @@
 
   let lastTouched = "url"
 
-  const getPayload = async () => {
-    let payloadData
-    let type
+  const getData = async () => {
+    let dataString
 
     // parse the file into memory and send as string
     if (lastTouched === "file") {
-      type = "raw"
-      payloadData = await data.file[0].text()
-    } else {
-      type = lastTouched
-      payloadData = data[lastTouched]
+      dataString = await data.file[0].text()
+    } else if (lastTouched === "url") {
+      const response = await fetch(data.url)
+      dataString = await response.text()
+    } else if (lastTouched === "raw") {
+      dataString = data.raw
     }
 
-    return {
-      type: type,
-      data: payloadData,
-    }
+    return dataString
   }
 
-  async function importDatasource() {
+  async function importQueries() {
     try {
-      const resp = await datasources.import(await getPayload())
+      const dataString = await getData()
 
+      if (!datasourceId && !createDatasource) {
+        throw new Error("No datasource id")
+      }
+
+      const body = {
+        data: dataString,
+        datasourceId,
+      }
+
+      const resp = await queries.import(body)
+      datasourceId = resp.datasourceId
+
+      // reload
+      await datasources.fetch()
       await queries.fetch()
-      await datasources.select(resp._id)
-      $goto(`./datasource/${resp._id}`)
-      notifications.success(`Datasource imported successfully.`)
-      analytics.captureEvent(Events.DATASOURCE.IMPORTED, {
-        name: resp.name,
-        source: resp.source,
+      await datasources.select(datasourceId)
+
+      $goto(`./datasource/${datasourceId}`)
+      notifications.success(`Imported successfully.`)
+      analytics.captureEvent(Events.QUERIES.REST.IMPORTED, {
+        importType: lastTouched,
+        newDatasource: createDatasource,
       })
+
       return true
     } catch (err) {
-      notifications.error(`Error importing datasource: ${err}`)
+      notifications.error(`Error importing: ${err}`)
       return false
     }
   }
 </script>
 
 <ModalContent
-  onConfirm={() => importDatasource()}
+  onConfirm={() => importQueries()}
   onCancel={() => modal.show()}
   confirmText={"Import"}
   cancelText="Back"
