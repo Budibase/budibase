@@ -56,8 +56,7 @@
         datasourceId,
       }
 
-      const resp = await queries.import(body)
-      datasourceId = resp.datasourceId
+      await queries.import(body)
 
       // reload
       await datasources.fetch()

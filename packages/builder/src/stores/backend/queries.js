@@ -55,6 +55,11 @@ export function createQueriesStore() {
     },
     import: async body => {
       const response = await api.post(`/api/queries/import`, body)
+
+      if (response.status !== 200) {
+        throw new Error(response.message)
+      }
+
       return response.json()
     },
     select: query => {

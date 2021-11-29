@@ -85,6 +85,7 @@
     "bull": "^3.22.4",
     "chmodr": "1.2.0",
     "csvtojson": "2.0.10",
+    "curlconverter": "^3.21.0",
     "dotenv": "8.2.0",
     "download": "8.0.0",
     "fix-path": "3.0.0",
