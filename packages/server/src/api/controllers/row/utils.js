@@ -67,6 +67,13 @@ exports.validate = async ({ appId, tableId, row, table }) => {
           errors[fieldName] = "Field not in list"
         }
       })
+    } else if (type === FieldTypes.JSON && typeof row[fieldName] === "string") {
+      // this should only happen if there is an error
+      try {
+        JSON.parse(row[fieldName])
+      } catch (err) {
+        errors[fieldName] = [`Contains invalid JSON`]
+      }
     } else if (type === FieldTypes.FORMULA) {
       res = validateJs.single(
         processStringSync(table.schema[fieldName].formula, row),
