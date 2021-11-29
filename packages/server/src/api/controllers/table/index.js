@@ -9,7 +9,6 @@ const {
   BudibaseInternalDB,
 } = require("../../../db/utils")
 const { getTable } = require("./utils")
-const { FieldTypes } = require("../../../constants")
 
 function pickApi({ tableId, table }) {
   if (table && !tableId) {
@@ -80,38 +79,6 @@ exports.destroy = async function (ctx) {
     ctx.eventEmitter.emitTable(`table:delete`, appId, deletedTable)
   ctx.status = 200
   ctx.body = { message: `Table ${tableId} deleted.` }
-}
-
-exports.schemaGenerate = function (ctx) {
-  const { json } = ctx.request.body
-  function recurse(schemaLevel, objectLevel) {
-    for (let [key, value] of Object.entries(objectLevel)) {
-      const type = typeof value
-      // check array first, since arrays are objects
-      if (Array.isArray(value)) {
-        schemaLevel[key] = {
-          type: FieldTypes.ARRAY,
-        }
-      } else if (type === "object") {
-        schemaLevel[key] = recurse(schemaLevel[key], objectLevel)
-      } else if (type === "string") {
-        schemaLevel[key] = {
-          type: FieldTypes.STRING,
-        }
-      } else if (type === "boolean") {
-        schemaLevel[key] = {
-          type: FieldTypes.BOOLEAN,
-        }
-      } else if (type === "number") {
-        schemaLevel[key] = {
-          type: FieldTypes.NUMBER,
-        }
-      }
-    }
-    return schemaLevel
-  }
-
-  ctx.body = recurse({}, json) || {}
 }
 
 exports.bulkImport = async function (ctx) {

@@ -7,20 +7,26 @@
     Button,
     Input,
     Select,
-    notifications,
   } from "@budibase/bbui"
   import { onMount, createEventDispatcher } from "svelte"
-  import { post } from "builderStore/api"
+  import { FIELDS } from "constants/backend"
+  import { generate } from "builderStore/schemaGenerator"
 
   export let schema = {}
+  export let json
 
   let dispatcher = createEventDispatcher()
   let mode = "Key/Value"
-  let json
   let fieldCount = 0
   let fieldKeys = {},
     fieldTypes = {}
-  let keyValueOptions = ["String", "Number", "Boolean", "Object", "Array"]
+  let keyValueOptions = [
+    { label: "String", value: FIELDS.STRING.type },
+    { label: "Number", value: FIELDS.NUMBER.type },
+    { label: "Boolean", value: FIELDS.BOOLEAN.type },
+    { label: "Object", value: FIELDS.JSON.type },
+    { label: "Array", value: FIELDS.ARRAY.type },
+  ]
   let invalid = false
 
   async function onJsonUpdate({ detail }) {
@@ -29,17 +35,9 @@
     try {
       // check json valid first
       let inputJson = JSON.parse(input)
-      const response = await post("/api/tables/schema/generate", {
-        json: inputJson,
-      })
-      if (response.status !== 200) {
-        const error = (await response.text()).message
-        notifications.error(error)
-      } else {
-        schema = await response.json()
-        updateCounts()
-        invalid = false
-      }
+      schema = generate(inputJson)
+      updateCounts()
+      invalid = false
     } catch (err) {
       // json not currently valid
       invalid = true
@@ -62,11 +60,14 @@
   function saveSchema() {
     for (let i of Object.keys(fieldKeys)) {
       const key = fieldKeys[i]
-      schema[key] = {
-        type: fieldTypes[i],
+      // they were added to schema, rather than generated
+      if (!schema[key]) {
+        schema[key] = {
+          type: fieldTypes[i],
+        }
       }
     }
-    dispatcher("save", schema)
+    dispatcher("save", { schema, json })
   }
 
   onMount(() => {
@@ -90,7 +91,8 @@
             label="Type"
             options={keyValueOptions}
             bind:value={fieldTypes[i]}
-            getOptionValue={field => field.toLowerCase()}
+            getOptionValue={field => field.value}
+            getOptionLabel={field => field.label}
           />
         </div>
       {/each}
