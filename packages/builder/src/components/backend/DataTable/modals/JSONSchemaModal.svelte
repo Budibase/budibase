@@ -67,6 +67,7 @@
         }
       }
     }
+
     dispatcher("save", { schema, json })
   }
 
