@@ -140,24 +140,6 @@ router
     tableController.save
   )
   /**
-   * @api {post} /api/tables/schema/generate Generate schema from JSON
-   * @apiName Generate schema from JSON
-   * @apiGroup tables
-   * @apiPermission builder
-   * @apiDescription Given a JSON structure this will generate a nested schema that can be used for a key/value data
-   * type in a table.
-   *
-   * @apiParam (Body) {object} json The JSON structure from which a nest schema should be generated.
-   *
-   * @apiSuccess {object} schema The response body will contain the schema, which can now be used for a key/value
-   * data type.
-   */
-  .post(
-    "/api/tables/schema/generate",
-    authorized(BUILDER),
-    tableController.schemaGenerate
-  )
-  /**
    * @api {post} /api/tables/csv/validate Validate a CSV for a table
    * @apiName Validate a CSV for a table
    * @apiGroup tables
