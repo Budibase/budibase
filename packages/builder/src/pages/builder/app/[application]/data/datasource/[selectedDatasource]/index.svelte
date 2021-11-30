@@ -8,18 +8,23 @@
     Layout,
     notifications,
     ActionButton,
+    Table,
   } from "@budibase/bbui"
   import { datasources, integrations, queries, tables } from "stores/backend"
   import IntegrationConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/IntegrationConfigForm.svelte"
   import RestExtraConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/RestExtraConfigForm.svelte"
   import PlusConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/PlusConfigForm.svelte"
   import ICONS from "components/backend/DatasourceNavigator/icons"
+  import VerbRenderer from "./_components/VerbRenderer.svelte"
   import { IntegrationTypes } from "constants"
-  import { capitalise } from "helpers"
   import { isEqual } from "lodash"
   import { cloneDeep } from "lodash/fp"
 
   let baseDatasource, changed
+  const querySchema = {
+    name: {},
+    queryVerb: { displayName: "Method" },
+  }
 
   $: datasource = $datasources.list.find(ds => ds._id === $datasources.selected)
   $: integration = datasource && $integrations[datasource.source]
@@ -31,12 +36,14 @@
       baseDatasource = cloneDeep(datasource)
     }
   }
+  $: queryList = $queries.list.filter(
+    query => query.datasourceId === datasource?._id
+  )
   $: hasChanged(baseDatasource, datasource)
 
   function hasChanged(base, ds) {
     if (base && ds) {
       changed = !isEqual(base, ds)
-      console.log(ds)
     }
   }
 
@@ -103,15 +110,19 @@
         query is a request for data or information from a datasource, for
         example a database table.
       </Body>
-      <div class="query-list">
-        {#each $queries.list.filter(query => query.datasourceId === datasource._id) as query}
-          <div class="query-list-item" on:click={() => onClickQuery(query)}>
-            <p class="query-name">{query.name}</p>
-            <p>{capitalise(query.queryVerb)}</p>
-            <p>→</p>
-          </div>
-        {/each}
-      </div>
+      {#if queryList && queryList.length > 0}
+        <div class="query-list">
+          <Table
+            on:click={({ detail }) => onClickQuery(detail)}
+            schema={querySchema}
+            data={queryList}
+            allowEditColumns={false}
+            allowEditRows={false}
+            allowSelectRows={false}
+            customRenderers={[{ column: "queryVerb", component: VerbRenderer }]}
+          />
+        </div>
+      {/if}
       {#if datasource?.source === IntegrationTypes.REST}
         <RestExtraConfigForm bind:datasource on:change={hasChanged} />
       {/if}
@@ -155,36 +166,5 @@
     display: flex;
     flex-direction: column;
     gap: var(--spacing-m);
-  }
-
-  .query-list-item {
-    border-radius: var(--border-radius-m);
-    background: var(--background);
-    border: var(--border-dark);
-    display: grid;
-    grid-template-columns: 2fr 0.75fr 20px;
-    align-items: center;
-    padding-left: var(--spacing-m);
-    padding-right: var(--spacing-m);
-    gap: var(--layout-xs);
-    transition: 200ms background ease;
-  }
-
-  .query-list-item:hover {
-    background: var(--grey-1);
-    cursor: pointer;
-  }
-
-  p {
-    font-size: var(--font-size-xs);
-    color: var(--grey-8);
-  }
-
-  .query-name {
-    color: var(--ink);
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    font-size: var(--font-size-s);
   }
 </style>
