@@ -12,7 +12,7 @@ context("Create a automation", () => {
     cy.get("[data-cy='new-screen'] > .spectrum-Icon").click()
     cy.get(".modal-inner-wrapper").within(() => {
       cy.get("input").type("Add Row")
-      cy.contains("Row Created").click()
+      cy.contains("Row Created").click({ force: true })
       cy.wait(500)
       cy.get(".spectrum-Button--cta").click()
     })
@@ -22,9 +22,9 @@ context("Create a automation", () => {
     cy.get(".spectrum-Picker-label").click()
     cy.wait(500)
     cy.contains("dog").click()
-
+    cy.wait(2000)
     // Create action
-    cy.contains("Add Action").click()
+    cy.get(".block > .spectrum-Icon").click()
     cy.get(".modal-inner-wrapper").within(() => {
       cy.wait(1000)
       cy.contains("Create Row").trigger('mouseover').click().click()

@@ -10,23 +10,20 @@
     Layout,
     Select,
   } from "@budibase/bbui"
-  import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
-  import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
   import { generate } from "shortid"
-  import { getValidOperatorsForType, OperatorOptions } from "constants/lucene"
+  import {
+    getValidOperatorsForType,
+    OperatorOptions,
+  } from "builder/src/constants/lucene"
 
   export let schemaFields
   export let filters = []
-  export let bindings = []
-  export let panel = ClientBindingPanel
-  export let allowBindings = true
 
   const BannedTypes = ["link", "attachment", "formula"]
 
   $: fieldOptions = (schemaFields ?? [])
     .filter(field => !BannedTypes.includes(field.type))
     .map(field => field.name)
-  $: valueTypeOptions = allowBindings ? ["Value", "Binding"] : ["Value"]
 
   const addFilter = () => {
     filters = [
@@ -117,23 +114,7 @@
               on:change={e => onOperatorChange(filter, e.detail)}
               placeholder={null}
             />
-            <Select
-              disabled={filter.noValue || !filter.field}
-              options={valueTypeOptions}
-              bind:value={filter.valueType}
-              placeholder={null}
-            />
-            {#if filter.valueType === "Binding"}
-              <DrawerBindableInput
-                disabled={filter.noValue}
-                title={`Value for "${filter.field}"`}
-                value={filter.value}
-                placeholder="Value"
-                {panel}
-                {bindings}
-                on:change={event => (filter.value = event.detail)}
-              />
-            {:else if ["string", "longform", "number"].includes(filter.type)}
+            {#if ["string", "longform", "number"].includes(filter.type)}
               <Input disabled={filter.noValue} bind:value={filter.value} />
             {:else if ["options", "array"].includes(filter.type)}
               <Combobox
@@ -153,7 +134,7 @@
             {:else if filter.type === "datetime"}
               <DatePicker disabled={filter.noValue} bind:value={filter.value} />
             {:else}
-              <DrawerBindableInput disabled />
+              <Input disabled />
             {/if}
             <Icon
               name="Duplicate"
@@ -190,6 +171,6 @@
     column-gap: var(--spacing-l);
     row-gap: var(--spacing-s);
     align-items: center;
-    grid-template-columns: 1fr 120px 120px 1fr auto auto;
+    grid-template-columns: 1fr 120px 1fr auto auto;
   }
 </style>
