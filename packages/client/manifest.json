@@ -501,9 +501,20 @@
         "defaultValue": "M"
       }
     ],
-    "context": {
-      "type": "schema"
-    }
+    "context": [
+      {
+        "type": "schema"
+      },
+      {
+        "type": "static",
+        "values":  [
+          {
+            "label": "Row Index",
+            "key": "index"
+          }
+        ]
+      }
+    ]
   },
   "stackedlist": {
     "deprecated": true,
@@ -3149,6 +3160,16 @@
             "key": "pageNumber"
           }
         ]
+      },
+      {
+        "type": "static",
+        "suffix": "repeater",
+        "values":  [
+          {
+            "label": "Row Index",
+            "key": "index"
+          }
+         ]
       },
       {
         "type": "schema",
