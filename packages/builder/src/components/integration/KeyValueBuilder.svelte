@@ -1,5 +1,8 @@
 <script>
   import { Icon, Button, Input } from "@budibase/bbui"
+  import { createEventDispatcher } from "svelte"
+
+  let dispatch = createEventDispatcher()
 
   export let defaults
   export let object = defaults || {}
@@ -15,19 +18,25 @@
 
   export function addEntry() {
     fields = [...fields, {}]
+    changed()
   }
 
   function deleteEntry(idx) {
     fields.splice(idx, 1)
+    changed()
+  }
+
+  function changed() {
     fields = fields
+    dispatch("change", fields)
   }
 </script>
 
 <!-- Builds Objects with Key Value Pairs. Useful for building things like Request Headers. -->
 <div class="container" class:readOnly>
   {#each fields as field, idx}
-    <Input placeholder="Key" bind:value={field.name} />
-    <Input placeholder="Value" bind:value={field.value} />
+    <Input placeholder="Key" bind:value={field.name} on:change={changed} />
+    <Input placeholder="Value" bind:value={field.value} on:change={changed} />
     {#if !readOnly}
       <Icon hoverable name="Close" on:click={() => deleteEntry(idx)} />
     {/if}

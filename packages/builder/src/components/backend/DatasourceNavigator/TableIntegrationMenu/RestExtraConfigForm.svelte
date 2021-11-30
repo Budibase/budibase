@@ -1,5 +1,5 @@
 <script>
-  import { Divider, Heading, Button } from "@budibase/bbui"
+  import { Divider, Heading, ActionButton, Badge } from "@budibase/bbui"
   import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
 
   export let datasource
@@ -9,13 +9,19 @@
 
 <Divider />
 <div class="query-header">
-  <Heading size="S">Headers</Heading>
-  <Button secondary on:click={() => addHeader.addEntry()}>Add Header</Button>
+  <div class="badge">
+    <Heading size="S">Headers</Heading>
+    <Badge quiet grey>Optional</Badge>
+  </div>
+  <ActionButton size="S" icon="Add" on:click={() => addHeader.addEntry()}
+    >Add Header</ActionButton
+  >
 </div>
 <KeyValueBuilder
   bind:this={addHeader}
   bind:object={datasource.config.defaultHeaders}
-  noAddButton={true}
+  on:change
+  noAddButton
 />
 
 <style>
@@ -25,5 +31,10 @@
     justify-content: space-between;
     align-items: center;
     margin: 0 0 var(--spacing-s) 0;
+  }
+
+  .badge {
+    display: flex;
+    gap: var(--spacing-m);
   }
 </style>

@@ -7,6 +7,7 @@
     Divider,
     Layout,
     notifications,
+    ActionButton,
   } from "@budibase/bbui"
   import { datasources, integrations, queries, tables } from "stores/backend"
   import IntegrationConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/IntegrationConfigForm.svelte"
@@ -15,9 +16,28 @@
   import ICONS from "components/backend/DatasourceNavigator/icons"
   import { IntegrationTypes } from "constants"
   import { capitalise } from "helpers"
+  import { isEqual } from "lodash"
+  import { cloneDeep } from "lodash/fp"
+
+  let baseDatasource, changed
 
   $: datasource = $datasources.list.find(ds => ds._id === $datasources.selected)
   $: integration = datasource && $integrations[datasource.source]
+  $: {
+    if (
+      datasource &&
+      (!baseDatasource || baseDatasource.source !== datasource.source)
+    ) {
+      baseDatasource = cloneDeep(datasource)
+    }
+  }
+  $: hasChanged(baseDatasource, datasource)
+
+  function hasChanged(base, ds) {
+    if (base) {
+      changed = !isEqual(base, ds)
+    }
+  }
 
   async function saveDatasource() {
     try {
@@ -28,6 +48,7 @@
       }
       await datasources.fetch()
       notifications.success(`Datasource ${name} updated successfully.`)
+      baseDatasource = cloneDeep(datasource)
     } catch (err) {
       notifications.error(`Error saving datasource: ${err}`)
     }
@@ -49,7 +70,7 @@
             height="26"
             width="26"
           />
-          <Heading size="M">{datasource.name}</Heading>
+          <Heading size="M">{baseDatasource.name}</Heading>
         </header>
         <Body size="M">{integration.description}</Body>
       </Layout>
@@ -57,14 +78,16 @@
       <div class="container">
         <div class="config-header">
           <Heading size="S">Configuration</Heading>
-          <Button secondary on:click={saveDatasource}>Save</Button>
+          <Button disabled={!changed} cta on:click={saveDatasource}>Save</Button
+          >
         </div>
         <Body size="S">
           Connect your data source to Budibase using the config below.
         </Body>
         <IntegrationConfigForm
+          on:change={hasChanged}
           schema={integration.datasource}
-          integration={datasource}
+          bind:datasource
         />
       </div>
       {#if datasource.plus}
@@ -73,7 +96,9 @@
       <Divider />
       <div class="query-header">
         <Heading size="S">Queries</Heading>
-        <Button secondary on:click={() => $goto("./new")}>Add Query</Button>
+        <ActionButton size="S" icon="Add" on:click={() => $goto("./new")}
+          >Add Query
+        </ActionButton>
       </div>
       <div class="query-list">
         {#each $queries.list.filter(query => query.datasourceId === datasource._id) as query}
@@ -85,7 +110,7 @@
         {/each}
       </div>
       {#if datasource?.source === IntegrationTypes.REST}
-        <RestExtraConfigForm bind:datasource />
+        <RestExtraConfigForm bind:datasource on:change={hasChanged} />
       {/if}
     </Layout>
   </section>

@@ -11,7 +11,7 @@
   import { capitalise } from "helpers"
   import { IntegrationTypes } from "constants"
 
-  export let integration
+  export let datasource
   export let schema
   export let creating
 
@@ -20,13 +20,13 @@
       return false
     }
     return !(
-      (integration.source === IntegrationTypes.REST &&
+      (datasource.source === IntegrationTypes.REST &&
         key === "defaultHeaders") ||
       value.deprecated
     )
   }
 
-  $: config = integration.config
+  $: config = datasource?.config
   $: configKeys = Object.entries(schema || {})
     .filter(el => filter(el))
     .map(([key]) => key)
@@ -39,7 +39,7 @@
     {#if !creating}
       <div class="form-row">
         <Label>{capitalise("Name")}</Label>
-        <Input on:change bind:value={integration.name} />
+        <Input on:change bind:value={datasource.name} />
       </div>
     {/if}
     {#each configKeys as configKey}
@@ -54,6 +54,7 @@
           bind:this={addButton}
           defaults={schema[configKey].default}
           bind:object={config[configKey]}
+          on:change
           noAddButton={true}
         />
       {:else if schema[configKey].type === "boolean"}

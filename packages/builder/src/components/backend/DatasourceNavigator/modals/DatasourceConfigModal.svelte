@@ -10,11 +10,11 @@
   export let modal
 
   // kill the reference so the input isn't saved
-  let config = cloneDeep(integration)
+  let datasource = cloneDeep(integration)
 
   async function saveDatasource() {
     try {
-      const resp = await save(config)
+      const resp = await save(datasource)
       $goto(`./datasource/${resp._id}`)
       notifications.success(`Datasource updated successfully.`)
     } catch (err) {
@@ -24,10 +24,10 @@
 </script>
 
 <ModalContent
-  title={`Connect to ${IntegrationNames[config.type]}`}
+  title={`Connect to ${IntegrationNames[datasource.type]}`}
   onConfirm={() => saveDatasource()}
   onCancel={() => modal.show()}
-  confirmText={config.plus
+  confirmText={datasource.plus
     ? "Fetch tables from database"
     : "Save and continue to query"}
   cancelText="Back"
@@ -40,8 +40,8 @@
   </Layout>
 
   <IntegrationConfigForm
-    schema={config.schema}
-    integration={config}
+    schema={datasource.schema}
+    bind:datasource
     creating={true}
   />
 </ModalContent>
