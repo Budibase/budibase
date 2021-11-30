@@ -3,7 +3,7 @@
   import { store, currentAsset } from "builderStore"
   import { tables } from "stores/backend"
   import {
-    getDataProviderComponents,
+    getContextProviderComponents,
     getSchemaForDatasource,
   } from "builderStore/dataBinding"
   import SaveFields from "./SaveFields.svelte"
@@ -11,7 +11,7 @@
   export let parameters
   export let bindings = []
 
-  $: dataProviderComponents = getDataProviderComponents(
+  $: dataProviderComponents = getContextProviderComponents(
     $currentAsset,
     $store.selectedComponentId
   )
