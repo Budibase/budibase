@@ -93,7 +93,7 @@ class InternalBuilder {
     if (filters.oneOf) {
       iterate(filters.oneOf, (key, array) => {
         const fnc = allOr ? "orWhereIn" : "whereIn"
-        query = query[fnc](key, array)
+        query = query[fnc](key, Array.isArray(array) ? array : [array])
       })
     }
     if (filters.string) {
@@ -435,8 +435,6 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
         id = results?.[0].id
       } else if (sqlClient === SqlClients.MY_SQL) {
         id = results?.insertId
-      } else if (sqlClient === SqlClients.ORACLE) {
-        id = response.outBinds[0][0]
       }
       row = processFn(
         await this.getReturningRow(queryFn, this.checkLookupKeys(id, json))
