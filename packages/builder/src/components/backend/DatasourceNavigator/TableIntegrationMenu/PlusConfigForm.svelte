@@ -1,6 +1,5 @@
 <script>
   import {
-    Button,
     Heading,
     Body,
     Divider,
@@ -8,14 +7,25 @@
     ActionButton,
     notifications,
     Modal,
+    Table,
   } from "@budibase/bbui"
   import { datasources, integrations, tables } from "stores/backend"
   import CreateEditRelationship from "components/backend/Datasources/CreateEditRelationship.svelte"
   import CreateExternalTableModal from "./CreateExternalTableModal.svelte"
+  import ArrayRenderer from "components/common/ArrayRenderer.svelte"
   import { goto } from "@roxi/routify"
 
   export let datasource
   export let save
+
+  let tableSchema = {
+    name: {},
+    primary: { displayName: "Primary Key" },
+  }
+  let relationshipSchema = {
+    tables: {},
+    columns: {},
+  }
 
   let relationshipModal
   let createExternalTableModal
@@ -27,6 +37,7 @@
     : []
   $: relationships = getRelationships(plusTables)
   $: schemaError = $datasources.schemaError
+  $: relationshipInfo = relationshipTableData(relationships)
 
   function getRelationships(tables) {
     if (!tables || !Array.isArray(tables)) {
@@ -97,6 +108,18 @@
   function createNewTable() {
     createExternalTableModal.show()
   }
+
+  function relationshipTableData(relations) {
+    return Object.values(relations).map(relationship => ({
+      tables: buildRelationshipDisplayString(
+        relationship.from,
+        relationship.to
+      ),
+      columns: `${relationship.from?.name} to ${relationship.to?.name}`,
+      from: relationship.from,
+      to: relationship.to,
+    }))
+  }
 </script>
 
 <Modal bind:this={relationshipModal}>
@@ -118,15 +141,17 @@
 <div class="query-header">
   <Heading size="S">Tables</Heading>
   <div class="table-buttons">
-    <div>
-      <ActionButton
-        size="S"
-        icon="DataRefresh"
-        on:click={updateDatasourceSchema}
-      >
-        Fetch tables from database
-      </ActionButton>
-    </div>
+    <ActionButton
+      size="S"
+      icon="DataRefresh"
+      quiet
+      on:click={updateDatasourceSchema}
+    >
+      Fetch tables from database
+    </ActionButton>
+    <ActionButton size="S" icon="Add" on:click={createNewTable}>
+      Create new table
+    </ActionButton>
   </div>
 </div>
 <Body>
@@ -142,18 +167,15 @@
     onConfirm={datasources.removeSchemaError}
   />
 {/if}
-<div class="query-list">
-  {#each plusTables as table}
-    <div class="query-list-item" on:click={() => onClickTable(table)}>
-      <p class="query-name">{table.name}</p>
-      <p>Primary Key: {table.primary}</p>
-      <p>→</p>
-    </div>
-  {/each}
-  <div class="add-table">
-    <Button cta on:click={createNewTable}>Create new table</Button>
-  </div>
-</div>
+<Table
+  on:click={({ detail }) => onClickTable(detail)}
+  schema={tableSchema}
+  data={Object.values(plusTables)}
+  allowEditColumns={false}
+  allowEditRows={false}
+  allowSelectRows={false}
+  customRenderers={[{ column: "primary", component: ArrayRenderer }]}
+/>
 {#if plusTables?.length !== 0}
   <Divider />
   <div class="query-header">
@@ -170,20 +192,14 @@
     Tell budibase how your tables are related to get even more smart features.
   </Body>
 {/if}
-<div class="query-list">
-  {#each Object.values(relationships) as relationship}
-    <div
-      class="query-list-item"
-      on:click={() => openRelationshipModal(relationship.from, relationship.to)}
-    >
-      <p class="query-name">
-        {buildRelationshipDisplayString(relationship.from, relationship.to)}
-      </p>
-      <p>{relationship.from?.name} to {relationship.to?.name}</p>
-      <p>→</p>
-    </div>
-  {/each}
-</div>
+<Table
+  on:click={({ detail }) => openRelationshipModal(detail.from, detail.to)}
+  schema={relationshipSchema}
+  data={relationshipInfo}
+  allowEditColumns={false}
+  allowEditRows={false}
+  allowSelectRows={false}
+/>
 
 <style>
   .query-header {
@@ -194,53 +210,8 @@
     margin: 0 0 var(--spacing-s) 0;
   }
 
-  .query-list {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-m);
-  }
-
-  .query-list-item {
-    border-radius: var(--border-radius-m);
-    background: var(--background);
-    border: var(--border-dark);
-    display: grid;
-    grid-template-columns: 2fr 0.75fr 20px;
-    align-items: center;
-    padding-left: var(--spacing-m);
-    padding-right: var(--spacing-m);
-    gap: var(--layout-xs);
-    transition: 200ms background ease;
-  }
-
-  .query-list-item:hover {
-    background: var(--grey-1);
-    cursor: pointer;
-  }
-
-  p {
-    font-size: var(--font-size-xs);
-    color: var(--grey-8);
-  }
-
-  .query-name {
-    color: var(--ink);
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    font-size: var(--font-size-s);
-  }
-
   .table-buttons {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .table-buttons div {
-    grid-column-end: -1;
-  }
-
-  .add-table {
-    margin-top: var(--spacing-m);
+    display: flex;
+    gap: var(--spacing-m);
   }
 </style>
