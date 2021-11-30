@@ -240,13 +240,14 @@
     "name": "Screenslot",
     "icon": "WebPage",
     "description": "Contains your app screens",
-    "editable": false
+    "static": true
   },
   "button": {
     "name": "Button",
     "description": "A basic html button that is ready for styling",
     "icon": "Button",
-    "illegalChildren": ["section"],
+    "editable": true,
+    "showSettingsBar": true,
     "settings": [
       {
         "type": "text",
@@ -255,6 +256,7 @@
       },
       {
         "type": "select",
+        "showInBar": true,
         "label": "Variant",
         "key": "type",
         "options": [
@@ -283,6 +285,7 @@
       {
         "type": "select",
         "label": "Size",
+        "showInBar": true,
         "key": "size",
         "options": [
           {
@@ -307,11 +310,18 @@
       {
         "type": "boolean",
         "label": "Quiet",
-        "key": "quiet"
+        "key": "quiet",
+        "showInBar": true,
+        "barIcon": "VisibilityOff",
+        "barTitle": "Quiet variant",
+        "barSeparator": false
       },
       {
         "type": "boolean",
         "label": "Disabled",
+        "showInBar": true,
+        "barIcon": "NoEdit",
+        "barTitle": "Disable button",
         "key": "disabled"
       },
       {
@@ -590,6 +600,7 @@
     "icon": "TextParagraph",
     "illegalChildren": ["section"],
     "showSettingsBar": true,
+    "editable": true,
     "settings": [
       {
         "type": "text",
@@ -696,6 +707,7 @@
     "description": "A component for displaying heading text",
     "illegalChildren": ["section"],
     "showSettingsBar": true,
+    "editable": true,
     "settings": [
       {
         "type": "text",
@@ -940,6 +952,7 @@
     "description": "A basic link component for internal and external links",
     "icon": "Link",
     "showSettingsBar": true,
+    "editable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -1831,6 +1844,7 @@
     "icon": "Text",
     "illegalChildren": ["section"],
     "styles": ["size"],
+    "editable": true,
     "settings": [
       {
         "type": "field/string",
@@ -1869,6 +1883,7 @@
     "name": "Number Field",
     "icon": "123",
     "styles": ["size"],
+    "editable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -1908,6 +1923,7 @@
     "name": "Password Field",
     "icon": "LockClosed",
     "styles": ["size"],
+    "editable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -1947,6 +1963,7 @@
     "name": "Options Picker",
     "icon": "ViewList",
     "styles": ["size"],
+    "editable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -2070,6 +2087,7 @@
     "name": "Multi-select Picker",
     "icon": "ViewList",
     "styles": ["size"],
+    "editable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -2171,6 +2189,7 @@
   "booleanfield": {
     "name": "Checkbox",
     "icon": "Checkmark",
+    "editable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -2234,6 +2253,7 @@
     "name": "Rich Text",
     "icon": "TextParagraph",
     "styles": ["size"],
+    "editable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -2274,6 +2294,7 @@
     "name": "Date Picker",
     "icon": "DateInput",
     "styles": ["size"],
+    "editable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -2319,6 +2340,7 @@
     "name": "Attachment",
     "icon": "Attach",
     "styles": ["size"],
+    "editable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -2348,6 +2370,7 @@
     "name": "Relationship Picker",
     "icon": "TaskList",
     "styles": ["size"],
+    "editable": true,
     "illegalChildren": ["section"],
     "settings": [
       {
@@ -2458,12 +2481,12 @@
     "settings": [
       {
         "type": "dataProvider",
-        "label": "Provider",
+        "label": "Data provider",
         "key": "dataProvider"
       },
       {
         "type": "number",
-        "label": "Row Count",
+        "label": "Row count",
         "key": "rowCount",
         "defaultValue": 8
       },
@@ -2497,9 +2520,36 @@
       },
       {
         "type": "boolean",
-        "label": "Auto Columns",
+        "label": "Show auto columns",
         "key": "showAutoColumns",
         "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Link table rows",
+        "key": "linkRows"
+      },
+      {
+        "type": "boolean",
+        "label": "Open link screens in modal",
+        "key": "linkPeek"
+      },
+      {
+        "type": "url",
+        "label": "Link screen",
+        "key": "linkURL"
+      },
+      {
+        "section": true,
+        "name": "Advanced",
+        "settings": [
+          {
+            "type": "field",
+            "label": "ID column for linking (appended to URL)",
+            "key": "linkColumn",
+            "placeholder": "Default"
+          }
+        ]
       }
     ],
     "context": {
@@ -2571,8 +2621,580 @@
       },
       {
         "type": "boolean",
+        "key": "linkPeek",
+        "label": "Open link in modal"
+      },
+      {
+        "type": "boolean",
         "key": "horizontal",
         "label": "Horizontal"
+      },
+      {
+        "type": "boolean",
+        "label": "Show button",
+        "key": "showButton"
+      },
+      {
+        "type": "text",
+        "key": "buttonText",
+        "label": "Button text"
+      },
+      {
+        "type": "event",
+        "label": "Button action",
+        "key": "buttonOnClick"
+      }
+    ]
+  },
+  "dynamicfilter": {
+    "name": "Dynamic Filter",
+    "icon": "FilterEdit",
+    "showSettingsBar": true,
+    "settings": [
+      {
+        "type": "dataProvider",
+        "label": "Provider",
+        "key": "dataProvider"
+      },
+      {
+        "type": "multifield",
+        "label": "Allowed filter fields",
+        "key": "allowedFields",
+        "placeholder": "All fields"
+      },
+      {
+        "type": "select",
+        "label": "Button size",
+        "showInBar": true,
+        "key": "size",
+        "options": [
+          {
+            "label": "Small",
+            "value": "S"
+          },
+          {
+            "label": "Medium",
+            "value": "M"
+          },
+          {
+            "label": "Large",
+            "value": "L"
+          },
+          {
+            "label": "Extra large",
+            "value": "XL"
+          }
+        ],
+        "defaultValue": "M"
+      }
+    ]
+  },
+  "tableblock": {
+    "block": true,
+    "name": "Table block",
+    "icon": "Table",
+    "styles": ["size"],
+    "info": "Only the first 3 search columns will be used.",
+    "settings": [
+      {
+        "type": "text",
+        "label": "Title",
+        "key": "title"
+      },
+      {
+        "type": "dataSource",
+        "label": "Data",
+        "key": "dataSource"
+      },
+      {
+        "type": "multifield",
+        "label": "Search Columns",
+        "key": "searchColumns",
+        "placeholder": "Choose search columns"
+      },
+      {
+        "type": "filter",
+        "label": "Filtering",
+        "key": "filter"
+      },
+      {
+        "type": "field",
+        "label": "Sort Column",
+        "key": "sortColumn"
+      },
+      {
+        "type": "select",
+        "label": "Sort Order",
+        "key": "sortOrder",
+        "options": ["Ascending", "Descending"],
+        "defaultValue": "Descending"
+      },
+      {
+        "type": "select",
+        "label": "Size",
+        "key": "size",
+        "defaultValue": "spectrum--medium",
+        "options": [
+          {
+            "label": "Medium",
+            "value": "spectrum--medium"
+          },
+          {
+            "label": "Large",
+            "value": "spectrum--large"
+          }
+        ]
+      },
+      {
+        "type": "boolean",
+        "label": "Paginate",
+        "key": "paginate",
+        "defaultValue": true
+      },
+      {
+        "section": true,
+        "name": "Table",
+        "settings": [
+          {
+            "type": "number",
+            "label": "Row Count",
+            "key": "rowCount",
+            "defaultValue": 8
+          },
+          {
+            "type": "multifield",
+            "label": "Table Columns",
+            "key": "tableColumns",
+            "dependsOn": "dataSource",
+            "placeholder": "All columns"
+          },
+          {
+            "type": "boolean",
+            "label": "Quiet table variant",
+            "key": "quiet"
+          },
+          {
+            "type": "boolean",
+            "label": "Show auto columns",
+            "key": "showAutoColumns"
+          },
+          {
+            "type": "boolean",
+            "label": "Link table rows",
+            "key": "linkRows"
+          },
+          {
+            "type": "boolean",
+            "label": "Open link in modal",
+            "key": "linkPeek"
+          },
+          {
+            "type": "url",
+            "label": "Link screen",
+            "key": "linkURL"
+          }
+        ]
+      },
+      {
+        "section": true,
+        "name": "Title button",
+        "settings": [
+          {
+            "type": "boolean",
+            "key": "showTitleButton",
+            "label": "Show link button",
+            "defaultValue": false
+          },
+          {
+            "type": "boolean",
+            "label": "Open link in modal",
+            "key": "titleButtonPeek"
+          },
+          {
+            "type": "text",
+            "key": "titleButtonText",
+            "label": "Button text"
+          },
+          {
+            "type": "url",
+            "label": "Button link",
+            "key": "titleButtonURL"
+          }
+        ]
+      },
+      {
+        "section": true,
+        "name": "Advanced",
+        "settings": [
+          {
+            "type": "field",
+            "label": "ID column for linking (appended to URL)",
+            "key": "linkColumn",
+            "placeholder": "Default"
+          }
+        ]
+      }
+    ]
+  },
+  "cardsblock": {
+    "block": true,
+    "name": "Cards block",
+    "icon": "Table",
+    "styles": ["size"],
+    "info": "Only the first 3 search columns will be used.",
+    "settings": [
+      {
+        "type": "text",
+        "label": "Title",
+        "key": "title"
+      },
+      {
+        "type": "dataSource",
+        "label": "Data",
+        "key": "dataSource"
+      },
+      {
+        "type": "multifield",
+        "label": "Search Columns",
+        "key": "searchColumns",
+        "placeholder": "Choose search columns"
+      },
+      {
+        "type": "filter",
+        "label": "Filtering",
+        "key": "filter"
+      },
+      {
+        "type": "field",
+        "label": "Sort Column",
+        "key": "sortColumn"
+      },
+      {
+        "type": "select",
+        "label": "Sort Order",
+        "key": "sortOrder",
+        "options": ["Ascending", "Descending"],
+        "defaultValue": "Descending"
+      },
+      {
+        "type": "number",
+        "label": "Limit",
+        "key": "limit",
+        "defaultValue": 8
+      },
+      {
+        "type": "boolean",
+        "label": "Paginate",
+        "key": "paginate"
+      },
+      {
+        "section": true,
+        "name": "Cards",
+        "settings": [
+          {
+            "type": "text",
+            "key": "cardTitle",
+            "label": "Title",
+            "nested": true
+          },
+          {
+            "type": "text",
+            "key": "cardSubtitle",
+            "label": "Subtitle",
+            "nested": true
+          },
+          {
+            "type": "text",
+            "key": "cardDescription",
+            "label": "Description",
+            "nested": true
+
+          },
+          {
+            "type": "text",
+            "key": "cardImageURL",
+            "label": "Image URL",
+            "nested": true
+          },
+          {
+            "type": "boolean",
+            "key": "linkCardTitle",
+            "label": "Link card title"
+          },
+          {
+            "type": "boolean",
+            "key": "cardPeek",
+            "label": "Open link in modal"
+          },
+          {
+            "type": "url",
+            "label": "Link screen",
+            "key": "cardURL",
+            "nested": true
+          },
+          {
+            "type": "boolean",
+            "key": "cardHorizontal",
+            "label": "Horizontal"
+          },
+          {
+            "type": "boolean",
+            "label": "Show button",
+            "key": "showCardButton"
+          },
+          {
+            "type": "text",
+            "key": "cardButtonText",
+            "label": "Button text",
+            "nested": true
+          },
+          {
+            "type": "event",
+            "label": "Button action",
+            "key": "cardButtonOnClick",
+            "nested": true
+          }
+        ]
+      },
+      {
+        "section": true,
+        "name": "Title button",
+        "settings": [
+          {
+            "type": "boolean",
+            "key": "showTitleButton",
+            "label": "Show link button"
+          },
+          {
+            "type": "boolean",
+            "label": "Open link in modal",
+            "key": "titleButtonPeek"
+          },
+          {
+            "type": "text",
+            "key": "titleButtonText",
+            "label": "Button text"
+          },
+          {
+            "type": "url",
+            "label": "Button link",
+            "key": "titleButtonURL"
+          }
+        ]
+      },
+      {
+        "section": true,
+        "name": "Advanced",
+        "settings": [
+          {
+            "type": "field",
+            "label": "ID column for linking (appended to URL)",
+            "key": "linkColumn",
+            "placeholder": "Default"
+          }
+        ]
+      }
+    ],
+    "context": {
+      "type": "schema",
+      "suffix": "repeater"
+    }
+  },
+  "repeaterblock": {
+    "name": "Repeater block",
+    "icon": "ViewList",
+    "illegalChildren": ["section"],
+    "hasChildren": true,
+    "showSettingsBar": true,
+    "settings": [
+      {
+        "type": "dataSource",
+        "label": "Data",
+        "key": "dataSource"
+      },
+      {
+        "type": "filter",
+        "label": "Filtering",
+        "key": "filter"
+      },
+      {
+        "type": "field",
+        "label": "Sort Column",
+        "key": "sortColumn"
+      },
+      {
+        "type": "select",
+        "label": "Sort Order",
+        "key": "sortOrder",
+        "options": ["Ascending", "Descending"],
+        "defaultValue": "Descending"
+      },
+      {
+        "type": "number",
+        "label": "Limit",
+        "key": "limit",
+        "defaultValue": 10
+      },
+      {
+        "type": "boolean",
+        "label": "Paginate",
+        "key": "paginate"
+      },
+      {
+        "section": true,
+        "name": "Layout settings",
+        "settings": [
+          {
+            "type": "text",
+            "label": "Empty Text",
+            "key": "noRowsMessage",
+            "defaultValue": "No rows found"
+          },
+          {
+            "type": "select",
+            "label": "Direction",
+            "key": "direction",
+            "showInBar": true,
+            "barStyle": "buttons",
+            "options": [
+              {
+                "label": "Column",
+                "value": "column",
+                "barIcon": "ViewRow",
+                "barTitle": "Column layout"
+              },
+              {
+                "label": "Row",
+                "value": "row",
+                "barIcon": "ViewColumn",
+                "barTitle": "Row layout"
+              }
+            ],
+            "defaultValue": "column"
+          },
+          {
+            "type": "select",
+            "label": "Horiz. Align",
+            "key": "hAlign",
+            "showInBar": true,
+            "barStyle": "buttons",
+            "options": [
+              {
+                "label": "Left",
+                "value": "left",
+                "barIcon": "AlignLeft",
+                "barTitle": "Align left"
+              },
+              {
+                "label": "Center",
+                "value": "center",
+                "barIcon": "AlignCenter",
+                "barTitle": "Align center"
+              },
+              {
+                "label": "Right",
+                "value": "right",
+                "barIcon": "AlignRight",
+                "barTitle": "Align right"
+              },
+              {
+                "label": "Stretch",
+                "value": "stretch",
+                "barIcon": "MoveLeftRight",
+                "barTitle": "Align stretched horizontally"
+              }
+            ],
+            "defaultValue": "stretch"
+          },
+          {
+            "type": "select",
+            "label": "Vert. Align",
+            "key": "vAlign",
+            "showInBar": true,
+            "barStyle": "buttons",
+            "options": [
+              {
+                "label": "Top",
+                "value": "top",
+                "barIcon": "AlignTop",
+                "barTitle": "Align top"
+              },
+              {
+                "label": "Middle",
+                "value": "middle",
+                "barIcon": "AlignMiddle",
+                "barTitle": "Align middle"
+              },
+              {
+                "label": "Bottom",
+                "value": "bottom",
+                "barIcon": "AlignBottom",
+                "barTitle": "Align bottom"
+              },
+              {
+                "label": "Stretch",
+                "value": "stretch",
+                "barIcon": "MoveUpDown",
+                "barTitle": "Align stretched vertically"
+              }
+            ],
+            "defaultValue": "top"
+          },
+          {
+            "type": "select",
+            "label": "Gap",
+            "key": "gap",
+            "showInBar": true,
+            "barStyle": "picker",
+            "options": [
+              {
+                "label": "None",
+                "value": "N"
+              },
+              {
+                "label": "Small",
+                "value": "S"
+              },
+              {
+                "label": "Medium",
+                "value": "M"
+              },
+              {
+                "label": "Large",
+                "value": "L"
+              }
+            ],
+            "defaultValue": "M"
+          }
+        ]
+      }
+    ],
+    "context": [
+      {
+        "type": "static",
+        "suffix": "provider",
+        "values":  [
+          {
+            "label": "Rows",
+            "key": "rows"
+          },
+          {
+            "label": "Rows Length",
+            "key": "rowsLength"
+          },
+          {
+            "label": "Schema",
+            "key": "schema"
+          },
+          {
+            "label": "Page Number",
+            "key": "pageNumber"
+          }
+        ]
+      },
+      {
+        "type": "schema",
+        "suffix": "repeater"
       }
     ]
   }

@@ -10,4 +10,10 @@
     .filter(x => x != null)
 </script>
 
-<DrawerBindableCombobox {value} {bindings} on:change options={urlOptions} />
+<DrawerBindableCombobox
+  {value}
+  {bindings}
+  on:change
+  options={urlOptions}
+  appendBindingsAsOptions={false}
+/>

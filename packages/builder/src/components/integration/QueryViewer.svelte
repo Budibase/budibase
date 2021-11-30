@@ -19,35 +19,35 @@
   import IntegrationQueryEditor from "components/integration/index.svelte"
   import ExternalDataSourceTable from "components/backend/DataTable/ExternalDataSourceTable.svelte"
   import ParameterBuilder from "components/integration/QueryParameterBuilder.svelte"
-  import { datasources, integrations, queries } from "stores/backend"
+  import {
+    datasources,
+    integrations,
+    queries,
+    roles,
+    permissions,
+  } from "stores/backend"
   import { capitalise } from "../../helpers"
   import CodeMirrorEditor from "components/common/CodeMirrorEditor.svelte"
+  import { Roles } from "constants/backend"
+  import { onMount } from "svelte"
 
   export let query
-  export let fields = []
 
+  let fields = query.schema ? schemaToFields(query.schema) : []
   let parameters
   let data = []
+  let roleId
   const transformerDocs =
     "https://docs.budibase.com/building-apps/data/transformers"
   const typeOptions = [
-    { label: "Text", value: "STRING" },
-    { label: "Number", value: "NUMBER" },
-    { label: "Boolean", value: "BOOLEAN" },
-    { label: "Datetime", value: "DATETIME" },
+    { label: "Text", value: "string" },
+    { label: "Number", value: "number" },
+    { label: "Boolean", value: "boolean" },
+    { label: "Datetime", value: "datetime" },
   ]
 
   $: datasource = $datasources.list.find(ds => ds._id === query.datasourceId)
-  $: query.schema = fields.reduce(
-    (acc, next) => ({
-      ...acc,
-      [next.name]: {
-        name: next.name,
-        type: "string",
-      },
-    }),
-    {}
-  )
+  $: query.schema = fieldsToSchema(fields)
   $: datasourceType = datasource?.source
   $: integrationInfo = $integrations[datasourceType]
   $: queryConfig = integrationInfo?.query
@@ -70,7 +70,22 @@
   }
 
   function resetDependentFields() {
-    if (query.fields.extra) query.fields.extra = {}
+    if (query.fields.extra) {
+      query.fields.extra = {}
+    }
+  }
+
+  async function updateRole(role, id = null) {
+    roleId = role
+    if (query?._id || id) {
+      for (let level of ["read", "write"]) {
+        await permissions.save({
+          level,
+          role,
+          resource: query?._id || id,
+        })
+      }
+    }
   }
 
   function populateExtraQuery(extraQueryFields) {
@@ -111,7 +126,7 @@
       // unique fields returned by the server
       fields = json.schemaFields.map(field => ({
         name: field,
-        type: "STRING",
+        type: "string",
       }))
     } catch (err) {
       notifications.error(`Query Error: ${err.message}`)
@@ -122,6 +137,7 @@
   async function saveQuery() {
     try {
       const { _id } = await queries.save(query.datasourceId, query)
+      await updateRole(roleId, _id)
       notifications.success(`Query saved successfully.`)
       $goto(`../${_id}`)
     } catch (err) {
@@ -129,6 +145,38 @@
       notifications.error(`Error creating query. ${err.message}`)
     }
   }
+
+  function schemaToFields(schema) {
+    return Object.keys(schema).map(key => ({
+      name: key,
+      type: query.schema[key].type,
+    }))
+  }
+
+  function fieldsToSchema(fieldsToConvert) {
+    return fieldsToConvert.reduce(
+      (acc, next) => ({
+        ...acc,
+        [next.name]: {
+          name: next.name,
+          type: next.type,
+        },
+      }),
+      {}
+    )
+  }
+
+  onMount(async () => {
+    if (!query || !query._id) {
+      roleId = Roles.BASIC
+      return
+    }
+    try {
+      roleId = (await permissions.forResource(query._id))["read"]
+    } catch (err) {
+      roleId = Roles.BASIC
+    }
+  })
 </script>
 
 <Layout gap="S" noPadding>
@@ -149,6 +197,16 @@
           options={Object.keys(queryConfig)}
           getOptionLabel={verb =>
             queryConfig[verb]?.displayName || capitalise(verb)}
+        />
+      </div>
+      <div class="config-field">
+        <Label>Access level</Label>
+        <Select
+          value={roleId}
+          on:change={e => updateRole(e.detail)}
+          options={$roles}
+          getOptionLabel={x => x.name}
+          getOptionValue={x => x._id}
         />
       </div>
       {#if integrationInfo?.extra && query.queryVerb}

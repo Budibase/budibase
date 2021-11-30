@@ -27,6 +27,7 @@ export const IntegrationNames = {
   SQL_SERVER: "SQL Server",
   AIRTABLE: "Airtable",
   ARANGODB: "ArangoDB",
+  ORACLE: "Oracle",
 }
 
 // fields on the user table that cannot be edited
@@ -38,6 +39,8 @@ export const UNEDITABLE_USER_FIELDS = [
   "firstName",
   "lastName",
 ]
+
+export const UNSORTABLE_TYPES = ["formula", "attachment", "array", "link"]
 
 export const LAYOUT_NAMES = {
   MASTER: {

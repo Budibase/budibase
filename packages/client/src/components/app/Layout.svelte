@@ -1,6 +1,7 @@
 <script>
   import { getContext } from "svelte"
   import { Heading, Icon } from "@budibase/bbui"
+  import { FieldTypes } from "../../constants"
   import active from "svelte-spa-router/active"
 
   const { routeStore, styleable, linkable, builderStore } = getContext("sdk")
@@ -108,7 +109,7 @@
             {#each validLinks as { text, url }}
               {#if isInternal(url)}
                 <a
-                  class="link"
+                  class={FieldTypes.LINK}
                   href={url}
                   use:linkable
                   on:click={close}
@@ -117,7 +118,11 @@
                   {text}
                 </a>
               {:else}
-                <a class="link" href={ensureExternal(url)} on:click={close}>
+                <a
+                  class={FieldTypes.LINK}
+                  href={ensureExternal(url)}
+                  on:click={close}
+                >
                   {text}
                 </a>
               {/if}
@@ -308,6 +313,9 @@
     height: 100%;
     overflow: auto;
   }
+  .desktop.layout--left .links {
+    overflow-y: auto;
+  }
 
   .desktop .nav--left {
     width: 250px;
@@ -374,6 +382,7 @@
     justify-content: flex-start;
     align-items: stretch;
     padding: var(--spacing-xl);
+    overflow-y: auto;
   }
   .mobile .link {
     width: calc(100% - 30px);

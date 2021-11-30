@@ -32,6 +32,8 @@ export { default as spectrumcard } from "./SpectrumCard.svelte"
 export * from "./charts"
 export * from "./forms"
 export * from "./table"
+export * from "./blocks"
+export * from "./dynamic-filter"
 
 // Deprecated component left for compatibility in old apps
 export { default as navigation } from "./deprecated/Navigation.svelte"

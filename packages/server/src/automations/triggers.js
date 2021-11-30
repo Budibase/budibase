@@ -11,6 +11,10 @@ const utils = require("./utils")
 const env = require("../environment")
 
 const TRIGGER_DEFINITIONS = definitions
+const JOB_OPTS = {
+  removeOnComplete: true,
+  removeOnFail: true,
+}
 
 async function queueRelevantRowAutomations(event, eventType) {
   if (event.appId == null) {
@@ -47,7 +51,7 @@ async function queueRelevantRowAutomations(event, eventType) {
       automationTrigger.inputs &&
       automationTrigger.inputs.tableId === event.row.tableId
     ) {
-      await queue.add({ automation, event })
+      await queue.add({ automation, event }, JOB_OPTS)
     }
   }
 }
@@ -86,7 +90,7 @@ exports.externalTrigger = async function (
     automation.definition.trigger != null &&
     automation.definition.trigger.stepId === definitions.APP.stepId &&
     automation.definition.trigger.stepId === "APP" &&
-    !checkTestFlag(automation._id)
+    !(await checkTestFlag(automation._id))
   ) {
     // values are likely to be submitted as strings, so we shall convert to correct type
     const coercedFields = {}
@@ -100,7 +104,7 @@ exports.externalTrigger = async function (
   if (getResponses) {
     return utils.processEvent({ data })
   } else {
-    return queue.add(data)
+    return queue.add(data, JOB_OPTS)
   }
 }
 

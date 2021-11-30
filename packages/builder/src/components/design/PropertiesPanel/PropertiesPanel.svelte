@@ -6,13 +6,20 @@
   import DesignSection from "./DesignSection.svelte"
   import CustomStylesSection from "./CustomStylesSection.svelte"
   import ConditionalUISection from "./ConditionalUISection.svelte"
-  import { getBindableProperties } from "builderStore/dataBinding"
+  import {
+    getBindableProperties,
+    getComponentBindableProperties,
+  } from "builderStore/dataBinding"
 
   $: componentInstance = $selectedComponent
   $: componentDefinition = store.actions.components.getDefinition(
     $selectedComponent?._component
   )
   $: bindings = getBindableProperties($currentAsset, $store.selectedComponentId)
+  $: componentBindings = getComponentBindableProperties(
+    $currentAsset,
+    $store.selectedComponentId
+  )
 </script>
 
 <Tabs selected="Settings" noPadding>
@@ -28,6 +35,7 @@
           {componentInstance}
           {componentDefinition}
           {bindings}
+          {componentBindings}
         />
         <DesignSection {componentInstance} {componentDefinition} {bindings} />
         <CustomStylesSection

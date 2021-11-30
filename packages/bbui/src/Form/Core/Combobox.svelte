@@ -9,6 +9,7 @@
   export let id = null
   export let placeholder = "Choose an option or type"
   export let disabled = false
+  export let readonly = false
   export let error = null
   export let options = []
   export let getOptionLabel = option => option
@@ -40,8 +41,15 @@
     open = false
   }
 
-  const onChange = e => {
-    selectOption(e.target.value)
+  const onType = e => {
+    const value = e.target.value
+    dispatch("type", value)
+    selectOption(value)
+  }
+
+  const onPick = value => {
+    dispatch("pick", value)
+    selectOption(value)
   }
 </script>
 
@@ -62,10 +70,11 @@
       type="text"
       on:focus={() => (focus = true)}
       on:blur={() => (focus = false)}
-      on:change={onChange}
+      on:change={onType}
       value={value || ""}
       placeholder={placeholder || ""}
       {disabled}
+      {readonly}
       class="spectrum-Textfield-input spectrum-InputGroup-input"
     />
   </div>
@@ -99,7 +108,7 @@
               role="option"
               aria-selected="true"
               tabindex="0"
-              on:click={() => selectOption(getOptionValue(option))}
+              on:click={() => onPick(getOptionValue(option))}
             >
               <span class="spectrum-Menu-itemLabel"
                 >{getOptionLabel(option)}</span

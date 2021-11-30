@@ -6,6 +6,7 @@ const manifest = require("../manifest.json")
 
 const hbsInstance = handlebars.create()
 registerAll(hbsInstance)
+const hbsInstanceNoHelpers = handlebars.create()
 
 /**
  * utility function to check if the object is valid
@@ -24,17 +25,30 @@ function testObject(object) {
  * @param {object|array} object The input structure which is to be recursed, it is important to note that
  * if the structure contains any cycles then this will fail.
  * @param {object} context The context that handlebars should fill data from.
+ * @param {object} opts optional - specify some options for processing.
  * @returns {Promise<object|array>} The structure input, as fully updated as possible.
  */
-module.exports.processObject = async (object, context) => {
+module.exports.processObject = async (
+  object,
+  context,
+  opts = { noHelpers: false }
+) => {
   testObject(object)
   for (let key of Object.keys(object || {})) {
     if (object[key] != null) {
       let val = object[key]
       if (typeof val === "string") {
-        object[key] = await module.exports.processString(object[key], context)
+        object[key] = await module.exports.processString(
+          object[key],
+          context,
+          opts
+        )
       } else if (typeof val === "object") {
-        object[key] = await module.exports.processObject(object[key], context)
+        object[key] = await module.exports.processObject(
+          object[key],
+          context,
+          opts
+        )
       }
     }
   }
@@ -46,11 +60,16 @@ module.exports.processObject = async (object, context) => {
  * then nothing will occur.
  * @param {string} string The template string which is the filled from the context object.
  * @param {object} context An object of information which will be used to enrich the string.
+ * @param {object} opts optional - specify some options for processing.
  * @returns {Promise<string>} The enriched string, all templates should have been replaced if they can be.
  */
-module.exports.processString = async (string, context) => {
+module.exports.processString = async (
+  string,
+  context,
+  opts = { noHelpers: false }
+) => {
   // TODO: carry out any async calls before carrying out async call
-  return module.exports.processStringSync(string, context)
+  return module.exports.processStringSync(string, context, opts)
 }
 
 /**
@@ -59,16 +78,21 @@ module.exports.processString = async (string, context) => {
  * @param {object|array} object The input structure which is to be recursed, it is important to note that
  * if the structure contains any cycles then this will fail.
  * @param {object} context The context that handlebars should fill data from.
+ * @param {object} opts optional - specify some options for processing.
  * @returns {object|array} The structure input, as fully updated as possible.
  */
-module.exports.processObjectSync = (object, context) => {
+module.exports.processObjectSync = (
+  object,
+  context,
+  opts = { noHelpers: false }
+) => {
   testObject(object)
   for (let key of Object.keys(object || {})) {
     let val = object[key]
     if (typeof val === "string") {
-      object[key] = module.exports.processStringSync(object[key], context)
+      object[key] = module.exports.processStringSync(object[key], context, opts)
     } else if (typeof val === "object") {
-      object[key] = module.exports.processObjectSync(object[key], context)
+      object[key] = module.exports.processObjectSync(object[key], context, opts)
     }
   }
   return object
@@ -79,9 +103,14 @@ module.exports.processObjectSync = (object, context) => {
  * then nothing will occur. This is a pure sync call and therefore does not have the full functionality of the async call.
  * @param {string} string The template string which is the filled from the context object.
  * @param {object} context An object of information which will be used to enrich the string.
+ * @param {object} opts optional - specify some options for processing.
  * @returns {string} The enriched string, all templates should have been replaced if they can be.
  */
-module.exports.processStringSync = (string, context) => {
+module.exports.processStringSync = (
+  string,
+  context,
+  opts = { noHelpers: false }
+) => {
   if (!exports.isValid(string)) {
     return string
   }
@@ -91,9 +120,13 @@ module.exports.processStringSync = (string, context) => {
     throw "Cannot process non-string types."
   }
   try {
-    string = processors.preprocess(string)
+    const noHelpers = opts && opts.noHelpers
+    // finalising adds a helper, can't do this with no helpers
+    const shouldFinalise = !noHelpers
+    string = processors.preprocess(string, shouldFinalise)
     // this does not throw an error when template can't be fulfilled, have to try correct beforehand
-    const template = hbsInstance.compile(string, {
+    const instance = noHelpers ? hbsInstanceNoHelpers : hbsInstance
+    const template = instance.compile(string, {
       strict: false,
     })
     return processors.postprocess(
@@ -119,9 +152,10 @@ module.exports.makePropSafe = property => {
 /**
  * Checks whether or not a template string contains totally valid syntax (simply tries running it)
  * @param string The string to test for valid syntax - this may contain no templates and will be considered valid.
+ * @param opts optional - specify some options for processing.
  * @returns {boolean} Whether or not the input string is valid.
  */
-module.exports.isValid = string => {
+module.exports.isValid = (string, opts = { noHelpers: false }) => {
   const validCases = [
     "string",
     "number",
@@ -135,7 +169,8 @@ module.exports.isValid = string => {
   // don't really need a real context to check if its valid
   const context = {}
   try {
-    hbsInstance.compile(processors.preprocess(string, false))(context)
+    const instance = opts && opts.noHelpers ? hbsInstanceNoHelpers : hbsInstance
+    instance.compile(processors.preprocess(string, false))(context)
     return true
   } catch (err) {
     const msg = err && err.message ? err.message : err

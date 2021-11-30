@@ -46,6 +46,8 @@
     "build:docker": "lerna run build:docker && cd hosting/scripts/linux/ && ./release-to-docker-hub.sh $BUDIBASE_RELEASE_VERSION && cd -",
     "build:docker:selfhost": "lerna run build:docker && cd hosting/scripts/linux/ && ./release-to-docker-hub.sh latest && cd -",
     "build:docker:develop": "node scripts/pinVersions && lerna run build:docker && cd hosting/scripts/linux/ && ./release-to-docker-hub.sh develop && cd -",
+    "build:docker:airgap": "node hosting/scripts/airgapped/airgappedDockerBuild",
+    "build:docs": "lerna run build:docs",
     "release:helm": "./scripts/release_helm_chart.sh",
     "env:multi:enable": "lerna run env:multi:enable",
     "env:multi:disable": "lerna run env:multi:disable",
@@ -58,6 +60,7 @@
     "mode:self": "yarn env:selfhost:enable && yarn env:multi:disable && yarn env:account:disable",
     "mode:cloud": "yarn env:selfhost:disable && yarn env:multi:enable && yarn env:account:disable",
     "mode:account": "yarn mode:cloud && yarn env:account:enable",
+    "security:audit": "node scripts/audit.js",
     "postinstall": "husky install"
   }
 }

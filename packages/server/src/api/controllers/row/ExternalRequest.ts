@@ -1,4 +1,5 @@
 import {
+  FilterTypes,
   IncludeRelationships,
   Operation,
   PaginationJson,
@@ -33,10 +34,11 @@ interface RunConfig {
   sort?: SortJson
   paginate?: PaginationJson
   row?: Row
+  rows?: Row[]
 }
 
 module External {
-  const { makeExternalQuery } = require("./utils")
+  const { getDatasourceAndQuery } = require("./utils")
   const {
     DataSourceOperation,
     FieldTypes,
@@ -46,6 +48,7 @@ module External {
   const { processObjectSync } = require("@budibase/string-templates")
   const { cloneDeep } = require("lodash/fp")
   const CouchDB = require("../../../db")
+  const { processFormulas } = require("../../../utilities/rowProcessor/utils")
 
   function buildFilters(
     id: string | undefined,
@@ -116,8 +119,13 @@ module External {
     }
     // check the row and filters to make sure they aren't a key of some sort
     if (config.filters) {
-      for (let filter of Object.values(config.filters)) {
-        if (typeof filter !== "object" || Object.keys(filter).length === 0) {
+      for (let [key, filter] of Object.entries(config.filters)) {
+        // oneOf is an array, don't iterate it
+        if (
+          typeof filter !== "object" ||
+          Object.keys(filter).length === 0 ||
+          key === FilterTypes.ONE_OF
+        ) {
           continue
         }
         iterateObject(filter)
@@ -162,8 +170,8 @@ module External {
     }
   }
 
-  function basicProcessing(row: Row, table: Table) {
-    const thisRow: { [key: string]: any } = {}
+  function basicProcessing(row: Row, table: Table): Row {
+    const thisRow: Row = {}
     // filter the row down to what is actually the row (not joined)
     for (let fieldName of Object.keys(table.schema)) {
       const value = row[`${table.name}.${fieldName}`] || row[fieldName]
@@ -178,9 +186,26 @@ module External {
     return thisRow
   }
 
-  function isMany(field: FieldSchema) {
+  function fixArrayTypes(row: Row, table: Table) {
+    for (let [fieldName, schema] of Object.entries(table.schema)) {
+      if (
+        schema.type === FieldTypes.ARRAY &&
+        typeof row[fieldName] === "string"
+      ) {
+        try {
+          row[fieldName] = JSON.parse(row[fieldName])
+        } catch (err) {
+          // couldn't convert back to array, ignore
+          delete row[fieldName]
+        }
+      }
+    }
+    return row
+  }
+
+  function isOneSide(field: FieldSchema) {
     return (
-      field.relationshipType && field.relationshipType.split("-")[0] === "many"
+      field.relationshipType && field.relationshipType.split("-")[0] === "one"
     )
   }
 
@@ -225,7 +250,12 @@ module External {
         manyRelationships: ManyRelationship[] = []
       for (let [key, field] of Object.entries(table.schema)) {
         // if set already, or not set just skip it
-        if ((!row[key] && row[key] !== "") || newRow[key] || field.autocolumn) {
+        if (
+          row[key] == null ||
+          newRow[key] ||
+          field.autocolumn ||
+          field.type === FieldTypes.FORMULA
+        ) {
           continue
         }
         // if its an empty string then it means return the column to null (if possible)
@@ -250,25 +280,37 @@ module External {
         const linkTable = this.tables[linkTableName]
         // @ts-ignore
         const linkTablePrimary = linkTable.primary[0]
-        if (!isMany(field)) {
+        // one to many
+        if (isOneSide(field)) {
           newRow[field.foreignKey || linkTablePrimary] = breakRowIdField(
             row[key][0]
           )[0]
-        } else {
+        }
+        // many to many
+        else if (field.through) {
           // we're not inserting a doc, will be a bunch of update calls
-          const isUpdate = !field.through
-          const thisKey: string = isUpdate
-            ? "id"
-            : field.throughTo || linkTablePrimary
-          // @ts-ignore
-          const otherKey: string = isUpdate
-            ? field.fieldName
-            : field.throughFrom || tablePrimary
+          const otherKey: string = field.throughFrom || linkTablePrimary
+          const thisKey: string = field.throughTo || tablePrimary
           row[key].map((relationship: any) => {
-            // we don't really support composite keys for relationships, this is why [0] is used
             manyRelationships.push({
               tableId: field.through || field.tableId,
-              isUpdate,
+              isUpdate: false,
+              key: otherKey,
+              [otherKey]: breakRowIdField(relationship)[0],
+              // leave the ID for enrichment later
+              [thisKey]: `{{ literal ${tablePrimary} }}`,
+            })
+          })
+        }
+        // many to one
+        else {
+          const thisKey: string = "id"
+          // @ts-ignore
+          const otherKey: string = field.fieldName
+          row[key].map((relationship: any) => {
+            manyRelationships.push({
+              tableId: field.tableId,
+              isUpdate: true,
               key: otherKey,
               [thisKey]: breakRowIdField(relationship)[0],
               // leave the ID for enrichment later
@@ -336,7 +378,7 @@ module External {
       table: Table,
       relationships: RelationshipsJson[]
     ) {
-      if (rows[0].read === true) {
+      if (!rows || rows.length === 0 || rows[0].read === true) {
         return []
       }
       let finalRows: { [key: string]: Row } = {}
@@ -352,7 +394,10 @@ module External {
           )
           continue
         }
-        const thisRow = basicProcessing(row, table)
+        const thisRow = fixArrayTypes(basicProcessing(row, table), table)
+        if (thisRow._id == null) {
+          throw "Unable to generate row ID for SQL rows"
+        }
         finalRows[thisRow._id] = thisRow
         // do this at end once its been added to the final rows
         finalRows = this.updateRelationshipColumns(
@@ -361,7 +406,7 @@ module External {
           relationships
         )
       }
-      return Object.values(finalRows)
+      return processFormulas(table, Object.values(finalRows))
     }
 
     /**
@@ -398,8 +443,8 @@ module External {
           )
           definition.through = throughTableName
           // don't support composite keys for relationships
-          definition.from = field.throughFrom || table.primary[0]
-          definition.to = field.throughTo || linkTable.primary[0]
+          definition.from = field.throughTo || table.primary[0]
+          definition.to = field.throughFrom || linkTable.primary[0]
           definition.fromPrimary = table.primary[0]
           definition.toPrimary = linkTable.primary[0]
         }
@@ -421,24 +466,36 @@ module External {
       // make a new request to get the row with all its relationships
       // we need this to work out if any relationships need removed
       for (let field of Object.values(table.schema)) {
-        if (field.type !== FieldTypes.LINK || !field.fieldName) {
+        if (
+          field.type !== FieldTypes.LINK ||
+          !field.fieldName ||
+          isOneSide(field)
+        ) {
           continue
         }
         const isMany = field.relationshipType === RelationshipTypes.MANY_TO_MANY
         const tableId = isMany ? field.through : field.tableId
-        const manyKey = field.throughFrom || primaryKey
+        const { tableName: relatedTableName } = breakExternalTableId(tableId)
+        // @ts-ignore
+        const linkPrimaryKey = this.tables[relatedTableName].primary[0]
+        const manyKey = field.throughTo || primaryKey
+        const lookupField = isMany ? primaryKey : field.foreignKey
         const fieldName = isMany ? manyKey : field.fieldName
-        const response = await makeExternalQuery(this.appId, {
+        if (!lookupField || !row[lookupField]) {
+          continue
+        }
+        const response = await getDatasourceAndQuery(this.appId, {
           endpoint: getEndpoint(tableId, DataSourceOperation.READ),
           filters: {
             equal: {
-              [fieldName]: row[primaryKey],
+              [fieldName]: row[lookupField],
             },
           },
         })
         // this is the response from knex if no rows found
         const rows = !response[0].read ? response : []
-        related[fieldName] = { rows, isMany, tableId }
+        const storeTo = isMany ? field.throughFrom || linkPrimaryKey : manyKey
+        related[storeTo] = { rows, isMany, tableId }
       }
       return related
     }
@@ -479,7 +536,7 @@ module External {
           : DataSourceOperation.CREATE
         if (!found) {
           promises.push(
-            makeExternalQuery(appId, {
+            getDatasourceAndQuery(appId, {
               endpoint: getEndpoint(tableId, operation),
               // if we're doing many relationships then we're writing, only one response
               body,
@@ -509,7 +566,7 @@ module External {
               : DataSourceOperation.UPDATE
             const body = isMany ? null : { [colName]: null }
             promises.push(
-              makeExternalQuery(this.appId, {
+              getDatasourceAndQuery(this.appId, {
                 endpoint: getEndpoint(tableId, op),
                 body,
                 filters,
@@ -532,16 +589,17 @@ module External {
       table: Table,
       includeRelations: IncludeRelationships = IncludeRelationships.INCLUDE
     ) {
-      function extractNonLinkFieldNames(table: Table, existing: string[] = []) {
+      function extractRealFields(table: Table, existing: string[] = []) {
         return Object.entries(table.schema)
           .filter(
             column =>
               column[1].type !== FieldTypes.LINK &&
+              column[1].type !== FieldTypes.FORMULA &&
               !existing.find((field: string) => field === column[0])
           )
           .map(column => `${table.name}.${column[0]}`)
       }
-      let fields = extractNonLinkFieldNames(table)
+      let fields = extractRealFields(table)
       for (let field of Object.values(table.schema)) {
         if (field.type !== FieldTypes.LINK || !includeRelations) {
           continue
@@ -549,7 +607,7 @@ module External {
         const { tableName: linkTableName } = breakExternalTableId(field.tableId)
         const linkTable = this.tables[linkTableName]
         if (linkTable) {
-          const linkedFields = extractNonLinkFieldNames(linkTable, fields)
+          const linkedFields = extractRealFields(linkTable, fields)
           fields = fields.concat(linkedFields)
         }
       }
@@ -573,7 +631,10 @@ module External {
         throw `Unable to process query, table "${tableName}" not defined.`
       }
       // look for specific components of config which may not be considered acceptable
-      let { id, row, filters, sort, paginate } = cleanupConfig(config, table)
+      let { id, row, filters, sort, paginate, rows } = cleanupConfig(
+        config,
+        table
+      )
       filters = buildFilters(id, filters || {}, table)
       const relationships = this.buildRelationships(table)
       // clean up row on ingress using schema
@@ -599,7 +660,7 @@ module External {
         sort,
         paginate,
         relationships,
-        body: row,
+        body: row || rows,
         // pass an id filter into extra, purely for mysql/returning
         extra: {
           idFilter: buildFilters(id || generateIdForRow(row, table), {}, table),
@@ -609,7 +670,7 @@ module External {
         },
       }
       // can't really use response right now
-      const response = await makeExternalQuery(appId, json)
+      const response = await getDatasourceAndQuery(appId, json)
       // handle many to many relationships now if we know the ID (could be auto increment)
       if (
         operation !== DataSourceOperation.READ &&

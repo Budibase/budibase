@@ -1,10 +1,14 @@
-import { Table } from "./common"
+import { Row, Table } from "./common"
 
 export enum Operation {
   CREATE = "CREATE",
   READ = "READ",
   UPDATE = "UPDATE",
   DELETE = "DELETE",
+  BULK_CREATE = "BULK_CREATE",
+  CREATE_TABLE = "CREATE_TABLE",
+  UPDATE_TABLE = "UPDATE_TABLE",
+  DELETE_TABLE = "DELETE_TABLE",
 }
 
 export enum SortDirection {
@@ -42,11 +46,23 @@ export enum SourceNames {
   MYSQL = "MYSQL",
   ARANGODB = "ARANGODB",
   REST = "REST",
+  ORACLE = "ORACLE",
 }
 
 export enum IncludeRelationships {
   INCLUDE = 1,
   EXCLUDE = 0,
+}
+
+export enum FilterTypes {
+  STRING = "string",
+  FUZZY = "fuzzy",
+  RANGE = "range",
+  EQUAL = "equal",
+  NOT_EQUAL = "notEqual",
+  EMPTY = "empty",
+  NOT_EMPTY = "notEmpty",
+  ONE_OF = "oneOf",
 }
 
 export interface QueryDefinition {
@@ -116,7 +132,7 @@ export interface SortJson {
 
 export interface PaginationJson {
   limit: number
-  page: string | number
+  page?: string | number
 }
 
 export interface RelationshipsJson {
@@ -141,9 +157,11 @@ export interface QueryJson {
   filters?: SearchFilters
   sort?: SortJson
   paginate?: PaginationJson
-  body?: object
+  body?: Row | Row[]
+  table?: Table
   meta?: {
     table?: Table
+    tables?: Record<string, Table>
   }
   extra?: {
     idFilter?: SearchFilters

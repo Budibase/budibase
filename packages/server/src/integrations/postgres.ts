@@ -6,17 +6,18 @@ import {
   SqlQuery,
 } from "../definitions/datasource"
 import { Table } from "../definitions/common"
-import { getSqlQuery } from "./utils"
+import {
+  getSqlQuery,
+  buildExternalTableId,
+  convertSqlType,
+  finaliseExternalTables,
+  SqlClients,
+} from "./utils"
+import { DatasourcePlus } from "./base/datasourcePlus"
 
 module PostgresModule {
   const { Pool } = require("pg")
   const Sql = require("./base/sql")
-  const { FieldTypes } = require("../constants")
-  const {
-    buildExternalTableId,
-    convertType,
-    copyExistingPropsOver,
-  } = require("./utils")
   const { escapeDangerousCharacters } = require("../utilities")
 
   const JSON_REGEX = /'{.*}'::json/s
@@ -27,6 +28,7 @@ module PostgresModule {
     database: string
     user: string
     password: string
+    schema: string
     ssl?: boolean
     ca?: string
     rejectUnauthorized?: boolean
@@ -64,6 +66,11 @@ module PostgresModule {
         default: "root",
         required: true,
       },
+      schema: {
+        type: DatasourceFieldTypes.STRING,
+        default: "public",
+        required: true,
+      },
       ssl: {
         type: DatasourceFieldTypes.BOOLEAN,
         default: false,
@@ -96,22 +103,6 @@ module PostgresModule {
     },
   }
 
-  const TYPE_MAP = {
-    text: FieldTypes.LONGFORM,
-    varchar: FieldTypes.STRING,
-    integer: FieldTypes.NUMBER,
-    bigint: FieldTypes.NUMBER,
-    decimal: FieldTypes.NUMBER,
-    smallint: FieldTypes.NUMBER,
-    real: FieldTypes.NUMBER,
-    "double precision": FieldTypes.NUMBER,
-    timestamp: FieldTypes.DATETIME,
-    time: FieldTypes.DATETIME,
-    boolean: FieldTypes.BOOLEAN,
-    json: FieldTypes.JSON,
-    date: FieldTypes.DATETIME,
-  }
-
   async function internalQuery(client: any, query: SqlQuery) {
     // need to handle a specific issue with json data types in postgres,
     // new lines inside the JSON data will break it
@@ -132,13 +123,14 @@ module PostgresModule {
     }
   }
 
-  class PostgresIntegration extends Sql {
+  class PostgresIntegration extends Sql implements DatasourcePlus {
     static pool: any
     private readonly client: any
     private readonly config: PostgresConfig
+    public tables: Record<string, Table> = {}
+    public schemaErrors: Record<string, string> = {}
 
-    COLUMNS_SQL =
-      "select * from information_schema.columns where not table_schema = 'information_schema' and not table_schema = 'pg_catalog'"
+    COLUMNS_SQL!: string
 
     PRIMARY_KEYS_SQL = `
     select tc.table_schema, tc.table_name, kc.column_name as primary_key 
@@ -151,7 +143,7 @@ module PostgresModule {
     `
 
     constructor(config: PostgresConfig) {
-      super("pg")
+      super(SqlClients.POSTGRES)
       this.config = config
 
       let newConfig = {
@@ -168,6 +160,17 @@ module PostgresModule {
       }
 
       this.client = this.pool
+      this.setSchema()
+    }
+
+    setSchema() {
+      if (!this.config.schema) {
+        this.config.schema = "public"
+      }
+      this.client.on("connect", (client: any) => {
+        client.query(`SET search_path TO ${this.config.schema}`)
+      })
+      this.COLUMNS_SQL = `select * from information_schema.columns where table_schema = '${this.config.schema}'`
     }
 
     /**
@@ -207,13 +210,13 @@ module PostgresModule {
         if (!tables[tableName] || !tables[tableName].schema) {
           tables[tableName] = {
             _id: buildExternalTableId(datasourceId, tableName),
-            primary: tableKeys[tableName] || ["id"],
+            primary: tableKeys[tableName] || [],
             name: tableName,
             schema: {},
           }
         }
 
-        const type: string = convertType(column.data_type, TYPE_MAP)
+        const type: string = convertSqlType(column.data_type)
         const identity = !!(
           column.identity_generation ||
           column.identity_start ||
@@ -232,10 +235,9 @@ module PostgresModule {
         }
       }
 
-      for (let tableName of Object.keys(tables)) {
-        copyExistingPropsOver(tableName, tables, entities)
-      }
-      this.tables = tables
+      const final = finaliseExternalTables(tables, entities)
+      this.tables = final.tables
+      this.schemaErrors = final.errors
     }
 
     async create(query: SqlQuery | string) {
@@ -261,8 +263,16 @@ module PostgresModule {
     async query(json: QueryJson) {
       const operation = this._operation(json).toLowerCase()
       const input = this._query(json)
-      const response = await internalQuery(this.client, input)
-      return response.rows.length ? response.rows : [{ [operation]: true }]
+      if (Array.isArray(input)) {
+        const responses = []
+        for (let query of input) {
+          responses.push(await internalQuery(this.client, query))
+        }
+        return responses
+      } else {
+        const response = await internalQuery(this.client, input)
+        return response.rows.length ? response.rows : [{ [operation]: true }]
+      }
     }
   }
 
