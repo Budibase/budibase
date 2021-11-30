@@ -25,8 +25,7 @@
       key: "layout",
     },
   ]
-
-  let modal
+  let newLayoutModal
   $: selected = tabs.find(t => t.key === $params.assetType)?.title || "Screens"
 
   const navigate = ({ detail }) => {
@@ -93,14 +92,18 @@
         {#each $store.layouts as layout, idx (layout._id)}
           <Layout {layout} border={idx > 0} />
         {/each}
-        <Modal bind:this={modal}>
+        <Modal bind:this={newLayoutModal}>
           <NewLayoutModal />
         </Modal>
       </div>
     </Tab>
   </Tabs>
   <div class="add-button">
-    <Icon hoverable name="AddCircle" on:click={showModal()} />
+    <Icon
+      hoverable
+      name="AddCircle"
+      on:click={selected === "Layouts" ? newLayoutModal.show() : showModal()}
+    />
   </div>
 </div>
 
