@@ -9,36 +9,42 @@
     Select,
   } from "@budibase/bbui"
   import { onMount, createEventDispatcher } from "svelte"
+  import { FIELDS } from "constants/backend"
+  import { generate } from "builderStore/schemaGenerator"
 
   export let schema = {}
+  export let json
 
   let dispatcher = createEventDispatcher()
   let mode = "Key/Value"
-  let json
   let fieldCount = 0
   let fieldKeys = {},
     fieldTypes = {}
-  let keyValueOptions = ["String", "Number", "Boolean", "Object", "Array"]
+  let keyValueOptions = [
+    { label: "String", value: FIELDS.STRING.type },
+    { label: "Number", value: FIELDS.NUMBER.type },
+    { label: "Boolean", value: FIELDS.BOOLEAN.type },
+    { label: "Object", value: FIELDS.JSON.type },
+    { label: "Array", value: FIELDS.ARRAY.type },
+  ]
+  let invalid = false
 
-  $: invalid = false
-
-  function onJsonUpdate({ detail }) {
-    // TODO: make request
+  async function onJsonUpdate({ detail }) {
     const input = detail.value
-    console.log(input)
-  }
-
-  function saveSchema() {
-    for (let i of Object.keys(fieldKeys)) {
-      const key = fieldKeys[i]
-      schema[key] = {
-        type: fieldTypes[i],
-      }
+    json = input
+    try {
+      // check json valid first
+      let inputJson = JSON.parse(input)
+      schema = generate(inputJson)
+      updateCounts()
+      invalid = false
+    } catch (err) {
+      // json not currently valid
+      invalid = true
     }
-    dispatcher("save", schema)
   }
 
-  onMount(() => {
+  function updateCounts() {
     if (!schema) {
       schema = {}
     }
@@ -49,6 +55,24 @@
       i++
     }
     fieldCount = i
+  }
+
+  function saveSchema() {
+    for (let i of Object.keys(fieldKeys)) {
+      const key = fieldKeys[i]
+      // they were added to schema, rather than generated
+      if (!schema[key]) {
+        schema[key] = {
+          type: fieldTypes[i],
+        }
+      }
+    }
+
+    dispatcher("save", { schema, json })
+  }
+
+  onMount(() => {
+    updateCounts()
   })
 </script>
 
@@ -56,7 +80,7 @@
   title={"Key/Value Schema Editor"}
   confirmText="Save Column"
   onConfirm={saveSchema}
-  disabled={invalid}
+  bind:disabled={invalid}
   size="L"
 >
   <Tabs selected={mode} noPadding>
@@ -68,7 +92,8 @@
             label="Type"
             options={keyValueOptions}
             bind:value={fieldTypes[i]}
-            getOptionValue={field => field.toLowerCase()}
+            getOptionValue={field => field.value}
+            getOptionLabel={field => field.label}
           />
         </div>
       {/each}
