@@ -17,7 +17,7 @@
     await datasources.delete(datasource)
     notifications.success("Datasource deleted")
     // navigate to first index page if the source you are deleting is selected
-    const entities = Object.values(datasource.entities)
+    const entities = Object.values(datasource?.entities || {})
     if (
       wasSelectedSource === datasource._id ||
       (entities &&

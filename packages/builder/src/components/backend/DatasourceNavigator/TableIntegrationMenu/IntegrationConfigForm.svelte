@@ -9,16 +9,40 @@
   } from "@budibase/bbui"
   import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
   import { capitalise } from "helpers"
+  import { IntegrationTypes } from "constants"
 
   export let integration
   export let schema
+  export let creating
+
+  function filter([key, value]) {
+    if (!value) {
+      return false
+    }
+    return !(
+      (integration.source === IntegrationTypes.REST &&
+        key === "defaultHeaders") ||
+      value.deprecated
+    )
+  }
+
+  $: config = integration.config
+  $: configKeys = Object.entries(schema || {})
+    .filter(el => filter(el))
+    .map(([key]) => key)
 
   let addButton
 </script>
 
 <form>
   <Layout gap="S">
-    {#each Object.keys(schema) as configKey}
+    {#if !creating}
+      <div class="form-row">
+        <Label>{capitalise("Name")}</Label>
+        <Input on:change bind:value={integration.name} />
+      </div>
+    {/if}
+    {#each configKeys as configKey}
       {#if schema[configKey].type === "object"}
         <div class="form-row ssl">
           <Label>{capitalise(configKey)}</Label>
@@ -29,13 +53,13 @@
         <KeyValueBuilder
           bind:this={addButton}
           defaults={schema[configKey].default}
-          bind:object={integration[configKey]}
+          bind:object={config[configKey]}
           noAddButton={true}
         />
       {:else if schema[configKey].type === "boolean"}
         <div class="form-row">
           <Label>{capitalise(configKey)}</Label>
-          <Toggle text="" bind:value={integration[configKey]} />
+          <Toggle text="" bind:value={config[configKey]} />
         </div>
       {:else if schema[configKey].type === "longForm"}
         <div class="form-row">
@@ -43,7 +67,7 @@
           <TextArea
             type={schema[configKey].type}
             on:change
-            bind:value={integration[configKey]}
+            bind:value={config[configKey]}
           />
         </div>
       {:else}
@@ -52,7 +76,7 @@
           <Input
             type={schema[configKey].type}
             on:change
-            bind:value={integration[configKey]}
+            bind:value={config[configKey]}
           />
         </div>
       {/if}

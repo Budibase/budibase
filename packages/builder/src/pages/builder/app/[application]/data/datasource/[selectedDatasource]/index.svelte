@@ -6,74 +6,18 @@
     Body,
     Divider,
     Layout,
-    Modal,
-    InlineAlert,
-    ActionButton,
+    notifications,
   } from "@budibase/bbui"
   import { datasources, integrations, queries, tables } from "stores/backend"
-  import { notifications } from "@budibase/bbui"
   import IntegrationConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/IntegrationConfigForm.svelte"
-  import CreateEditRelationship from "components/backend/Datasources/CreateEditRelationship.svelte"
-  import CreateExternalTableModal from "./modals/CreateExternalTableModal.svelte"
+  import RestExtraConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/RestExtraConfigForm.svelte"
+  import PlusConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/PlusConfigForm.svelte"
   import ICONS from "components/backend/DatasourceNavigator/icons"
+  import { IntegrationTypes } from "constants"
   import { capitalise } from "helpers"
-
-  let relationshipModal
-  let createExternalTableModal
-  let selectedFromRelationship, selectedToRelationship
 
   $: datasource = $datasources.list.find(ds => ds._id === $datasources.selected)
   $: integration = datasource && $integrations[datasource.source]
-  $: plusTables = datasource?.plus
-    ? Object.values(datasource.entities || {})
-    : []
-  $: relationships = getRelationships(plusTables)
-  $: schemaError = $datasources.schemaError
-
-  function getRelationships(tables) {
-    if (!tables || !Array.isArray(tables)) {
-      return {}
-    }
-    let pairs = {}
-    for (let table of tables) {
-      for (let column of Object.values(table.schema)) {
-        if (column.type !== "link") {
-          continue
-        }
-        // these relationships have an id to pair them to each other
-        // one has a main for the from side
-        const key = column.main ? "from" : "to"
-        pairs[column._id] = {
-          ...pairs[column._id],
-          [key]: column,
-        }
-      }
-    }
-    return pairs
-  }
-
-  function buildRelationshipDisplayString(fromCol, toCol) {
-    function getTableName(tableId) {
-      if (!tableId || typeof tableId !== "string") {
-        return null
-      }
-      return plusTables.find(table => table._id === tableId)?.name || "Unknown"
-    }
-    if (!toCol || !fromCol) {
-      return "Cannot build name"
-    }
-    const fromTableName = getTableName(toCol.tableId)
-    const toTableName = getTableName(fromCol.tableId)
-    const throughTableName = getTableName(fromCol.through)
-
-    let displayString
-    if (throughTableName) {
-      displayString = `${fromTableName} through ${throughTableName} → ${toTableName}`
-    } else {
-      displayString = `${fromTableName} → ${toTableName}`
-    }
-    return displayString
-  }
 
   async function saveDatasource() {
     try {
@@ -89,51 +33,11 @@
     }
   }
 
-  async function updateDatasourceSchema() {
-    try {
-      await datasources.updateSchema(datasource)
-      notifications.success(`Datasource ${name} tables updated successfully.`)
-      await tables.fetch()
-    } catch (err) {
-      notifications.error(`Error updating datasource schema: ${err}`)
-    }
-  }
-
   function onClickQuery(query) {
     queries.select(query)
     $goto(`./${query._id}`)
   }
-
-  function onClickTable(table) {
-    tables.select(table)
-    $goto(`../../table/${table._id}`)
-  }
-
-  function openRelationshipModal(fromRelationship, toRelationship) {
-    selectedFromRelationship = fromRelationship || {}
-    selectedToRelationship = toRelationship || {}
-    relationshipModal.show()
-  }
-
-  function createNewTable() {
-    createExternalTableModal.show()
-  }
 </script>
-
-<Modal bind:this={relationshipModal}>
-  <CreateEditRelationship
-    {datasource}
-    save={saveDatasource}
-    close={relationshipModal.hide}
-    {plusTables}
-    fromRelationship={selectedFromRelationship}
-    toRelationship={selectedToRelationship}
-  />
-</Modal>
-
-<Modal bind:this={createExternalTableModal}>
-  <CreateExternalTableModal {datasource} />
-</Modal>
 
 {#if datasource && integration}
   <section>
@@ -156,92 +60,15 @@
           <Button secondary on:click={saveDatasource}>Save</Button>
         </div>
         <Body size="S">
-          Connect your database to Budibase using the config below.
+          Connect your data source to Budibase using the config below.
         </Body>
         <IntegrationConfigForm
           schema={integration.datasource}
-          integration={datasource.config}
+          integration={datasource}
         />
       </div>
       {#if datasource.plus}
-        <Divider />
-        <div class="query-header">
-          <Heading size="S">Tables</Heading>
-          <div class="table-buttons">
-            <div>
-              <ActionButton
-                size="S"
-                quiet
-                icon="DataRefresh"
-                on:click={updateDatasourceSchema}
-              >
-                Fetch tables from database
-              </ActionButton>
-            </div>
-          </div>
-        </div>
-        <Body>
-          This datasource can determine tables automatically. Budibase can fetch
-          your tables directly from the database and you can use them without
-          having to write any queries at all.
-        </Body>
-        {#if schemaError}
-          <InlineAlert
-            type="error"
-            header="Error fetching tables"
-            message={schemaError}
-            onConfirm={datasources.removeSchemaError}
-          />
-        {/if}
-        <div class="query-list">
-          {#each plusTables as table}
-            <div class="query-list-item" on:click={() => onClickTable(table)}>
-              <p class="query-name">{table.name}</p>
-              <p>Primary Key: {table.primary}</p>
-              <p>→</p>
-            </div>
-          {/each}
-          <div class="add-table">
-            <Button cta on:click={createNewTable}>Create new table</Button>
-          </div>
-        </div>
-        {#if plusTables?.length !== 0}
-          <Divider />
-          <div class="query-header">
-            <Heading size="S">Relationships</Heading>
-            <ActionButton
-              icon="DataCorrelated"
-              primary
-              size="S"
-              quiet
-              on:click={openRelationshipModal}
-            >
-              Define existing relationship
-            </ActionButton>
-          </div>
-          <Body>
-            Tell budibase how your tables are related to get even more smart
-            features.
-          </Body>
-        {/if}
-        <div class="query-list">
-          {#each Object.values(relationships) as relationship}
-            <div
-              class="query-list-item"
-              on:click={() =>
-                openRelationshipModal(relationship.from, relationship.to)}
-            >
-              <p class="query-name">
-                {buildRelationshipDisplayString(
-                  relationship.from,
-                  relationship.to
-                )}
-              </p>
-              <p>{relationship.from?.name} to {relationship.to?.name}</p>
-              <p>→</p>
-            </div>
-          {/each}
-        </div>
+        <PlusConfigForm bind:datasource save={saveDatasource} />
       {/if}
       <Divider />
       <div class="query-header">
@@ -257,6 +84,9 @@
           </div>
         {/each}
       </div>
+      {#if datasource?.source === IntegrationTypes.REST}
+        <RestExtraConfigForm bind:datasource />
+      {/if}
     </Layout>
   </section>
 {/if}
@@ -328,18 +158,5 @@
     white-space: nowrap;
     text-overflow: ellipsis;
     font-size: var(--font-size-s);
-  }
-
-  .table-buttons {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .table-buttons div {
-    grid-column-end: -1;
-  }
-
-  .add-table {
-    margin-top: var(--spacing-m);
   }
 </style>
