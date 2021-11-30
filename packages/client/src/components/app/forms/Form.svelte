@@ -1,6 +1,7 @@
 <script>
-  import { getContext, onMount } from "svelte"
+  import { getContext } from "svelte"
   import InnerForm from "./InnerForm.svelte"
+  import { hashString } from "utils/helpers"
 
   export let dataSource
   export let theme
@@ -14,6 +15,8 @@
   let loaded = false
   let schema
   let table
+
+  $: fetchSchema(dataSource)
 
   // Returns the closes data context which isn't a built in context
   const getInitialValues = (type, dataSource, context) => {
@@ -34,33 +37,43 @@
     return closestContext || {}
   }
 
-  // Fetches the form schema from this form's dataSource, if one exists
-  const fetchSchema = async () => {
-    if (!dataSource?.tableId) {
+  // Fetches the form schema from this form's dataSource
+  const fetchSchema = async dataSource => {
+    if (!dataSource) {
       schema = {}
-      table = null
-    } else {
-      table = await API.fetchTableDefinition(dataSource?.tableId)
-      if (table) {
-        if (dataSource?.type === "query") {
-          schema = {}
-          const params = table.parameters || []
-          params.forEach(param => {
-            schema[param.name] = { ...param, type: "string" }
-          })
-        } else {
-          schema = table.schema || {}
-        }
-      }
     }
-    loaded = true
+
+    // If the datasource is a query, then we instead use a schema of the query
+    // parameters rather than the output schema
+    else if (
+      dataSource.type === "query" &&
+      dataSource._id &&
+      actionType === "Create"
+    ) {
+      const query = await API.fetchQueryDefinition(dataSource._id)
+      let paramSchema = {}
+      const params = query.parameters || []
+      params.forEach(param => {
+        paramSchema[param.name] = { ...param, type: "string" }
+      })
+      schema = paramSchema
+    }
+
+    // For all other cases, just grab the normal schema
+    else {
+      const dataSourceSchema = await API.fetchDatasourceSchema(dataSource)
+      schema = dataSourceSchema || {}
+    }
+
+    if (!loaded) {
+      loaded = true
+    }
   }
 
   $: initialValues = getInitialValues(actionType, dataSource, $context)
-  $: resetKey = JSON.stringify(initialValues)
-
-  // Load the form schema on mount
-  onMount(fetchSchema)
+  $: resetKey = hashString(
+    JSON.stringify(initialValues) + JSON.stringify(schema)
+  )
 </script>
 
 {#if loaded}

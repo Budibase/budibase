@@ -26,8 +26,8 @@ describe("/datasources", () => {
         .expect('Content-Type', /json/)
         .expect(200)
 
-      expect(res.res.statusMessage).toEqual("Datasource saved successfully.")
-      expect(res.body.name).toEqual("Test")
+      expect(res.body.datasource.name).toEqual("Test")
+      expect(res.body.errors).toBeUndefined()
     })
   })
 

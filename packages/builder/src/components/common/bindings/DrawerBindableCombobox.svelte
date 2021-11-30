@@ -4,11 +4,11 @@
     readableToRuntimeBinding,
     runtimeToReadableBinding,
   } from "builderStore/dataBinding"
-  import BindingPanel from "components/common/bindings/BindingPanel.svelte"
+  import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
   import { createEventDispatcher } from "svelte"
   import { isJSBinding } from "@budibase/string-templates"
 
-  export let panel = BindingPanel
+  export let panel = ClientBindingPanel
   export let value = ""
   export let bindings = []
   export let title = "Bindings"
@@ -17,6 +17,7 @@
   export let disabled = false
   export let options
   export let allowJS = true
+  export let appendBindingsAsOptions = true
 
   const dispatch = createEventDispatcher()
   let bindingDrawer
@@ -24,14 +25,29 @@
   $: readableValue = runtimeToReadableBinding(bindings, value)
   $: tempValue = readableValue
   $: isJS = isJSBinding(value)
+  $: allOptions = buildOptions(options, bindings, appendBindingsAsOptions)
 
   const handleClose = () => {
     onChange(tempValue)
     bindingDrawer.hide()
   }
 
-  const onChange = value => {
+  const onChange = (value, optionPicked) => {
+    // Add HBS braces if picking binding
+    if (optionPicked && !options?.includes(value)) {
+      value = `{{ ${value} }}`
+    }
+
     dispatch("change", readableToRuntimeBinding(bindings, value))
+  }
+
+  const buildOptions = (options, bindings, appendBindingsAsOptions) => {
+    if (!appendBindingsAsOptions) {
+      return options
+    }
+    return []
+      .concat(options || [])
+      .concat(bindings?.map(binding => binding.readableBinding) || [])
   }
 </script>
 
@@ -39,13 +55,19 @@
   <Combobox
     {label}
     {disabled}
+    readonly={isJS}
     value={isJS ? "(JavaScript function)" : readableValue}
-    on:change={event => onChange(event.detail)}
+    on:type={e => onChange(e.detail, false)}
+    on:pick={e => onChange(e.detail, true)}
     {placeholder}
-    {options}
+    options={allOptions}
   />
   {#if !disabled}
-    <div class="icon" on:click={bindingDrawer.show}>
+    <div
+      class="icon"
+      on:click={bindingDrawer.show}
+      data-cy="text-binding-button"
+    >
       <Icon size="S" name="FlashOn" />
     </div>
   {/if}
@@ -61,7 +83,7 @@
     value={readableValue}
     close={handleClose}
     on:change={event => (tempValue = event.detail)}
-    bindableProperties={bindings}
+    {bindings}
     {allowJS}
   />
 </Drawer>

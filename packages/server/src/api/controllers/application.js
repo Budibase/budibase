@@ -15,14 +15,12 @@ const {
   generateAppID,
   getLayoutParams,
   getScreenParams,
-  generateScreenID,
   generateDevAppID,
   DocumentTypes,
   AppStatus,
 } = require("../../db/utils")
 const { BUILTIN_ROLE_IDS, AccessController } = require("@budibase/auth/roles")
 const { BASE_LAYOUTS } = require("../../constants/layouts")
-const { createHomeScreen } = require("../../constants/screens")
 const { cloneDeep } = require("lodash/fp")
 const { processObject } = require("@budibase/string-templates")
 const {
@@ -44,6 +42,9 @@ const {
   revertClientLibrary,
 } = require("../../utilities/fileSystem/clientLibrary")
 const { getTenantId, isMultiTenant } = require("@budibase/auth/tenancy")
+const { syncGlobalUsers } = require("./user")
+const { app: appCache } = require("@budibase/auth/cache")
+const { cleanupAutomations } = require("../../automations/utils")
 
 const URL_REGEX_SLASH = /\/|\\/g
 
@@ -253,6 +254,7 @@ exports.create = async ctx => {
     await createApp(appId)
   }
 
+  await appCache.invalidateAppMetadata(appId, newApplication)
   ctx.status = 200
   ctx.body = newApplication
 }
@@ -316,8 +318,12 @@ exports.delete = async ctx => {
   if (!env.isTest() && !ctx.query.unpublish) {
     await deleteApp(ctx.params.appId)
   }
+  if (ctx.query && ctx.query.unpublish) {
+    await cleanupAutomations(ctx.params.appId)
+  }
   // make sure the app/role doesn't stick around after the app has been deleted
   await removeAppFromUserRoles(ctx, ctx.params.appId)
+  await appCache.invalidateAppMetadata(ctx.params.appId)
 
   ctx.status = 200
   ctx.body = result
@@ -328,6 +334,8 @@ exports.sync = async (ctx, next) => {
   if (!isDevAppID(appId)) {
     ctx.throw(400, "This action cannot be performed for production apps")
   }
+
+  // replicate prod to dev
   const prodAppId = getDeployedAppID(appId)
 
   try {
@@ -357,6 +365,10 @@ exports.sync = async (ctx, next) => {
   } catch (err) {
     error = err
   }
+
+  // sync the users
+  await syncGlobalUsers(appId)
+
   if (error) {
     ctx.throw(400, error)
   } else {
@@ -380,7 +392,10 @@ const updateAppPackage = async (ctx, appPackage, appId) => {
   // Redis, shouldn't ever store it
   delete newAppPackage.lockedBy
 
-  return await db.put(newAppPackage)
+  const response = await db.put(newAppPackage)
+  // remove any cached metadata, so that it will be updated
+  await appCache.invalidateAppMetadata(appId)
+  return response
 }
 
 const createEmptyAppPackage = async (ctx, app) => {
@@ -391,10 +406,6 @@ const createEmptyAppPackage = async (ctx, app) => {
     const cloned = cloneDeep(layout)
     screensAndLayouts.push(await processObject(cloned, app))
   }
-
-  const homeScreen = createHomeScreen(app)
-  homeScreen._id = generateScreenID()
-  screensAndLayouts.push(homeScreen)
 
   await db.bulkDocs(screensAndLayouts)
 }

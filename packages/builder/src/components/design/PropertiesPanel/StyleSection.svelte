@@ -30,7 +30,6 @@
     {#each properties as prop (`${componentInstance._id}-${prop.key}-${prop.label}`)}
       <div style="grid-column: {prop.column || 'auto'}">
         <PropertyControl
-          bindable={false}
           label={`${prop.label}${hasPropChanged(style, prop) ? " *" : ""}`}
           control={prop.control}
           key={prop.key}

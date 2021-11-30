@@ -1,4 +1,5 @@
 const authPkg = require("@budibase/auth")
+const { getScopedConfig } = require("@budibase/auth/db")
 const { google } = require("@budibase/auth/src/middleware")
 const { oidc } = require("@budibase/auth/src/middleware")
 const { Configs, EmailTemplatePurpose } = require("../../../constants")
@@ -21,17 +22,32 @@ const {
 } = require("@budibase/auth/tenancy")
 const env = require("../../../environment")
 
-function googleCallbackUrl(config) {
+const ssoCallbackUrl = async (config, type) => {
   // incase there is a callback URL from before
   if (config && config.callbackURL) {
     return config.callbackURL
   }
+
+  const db = getGlobalDB()
+  const publicConfig = await getScopedConfig(db, {
+    type: Configs.SETTINGS,
+  })
+
   let callbackUrl = `/api/global/auth`
   if (isMultiTenant()) {
     callbackUrl += `/${getTenantId()}`
   }
-  callbackUrl += `/google/callback`
-  return callbackUrl
+  callbackUrl += `/${type}/callback`
+
+  return `${publicConfig.platformUrl}${callbackUrl}`
+}
+
+exports.googleCallbackUrl = async config => {
+  return ssoCallbackUrl(config, "google")
+}
+
+exports.oidcCallbackUrl = async config => {
+  return ssoCallbackUrl(config, "oidc")
 }
 
 async function authInternal(ctx, user, err = null, info = null) {
@@ -84,8 +100,7 @@ exports.setInitInfo = ctx => {
 }
 
 exports.getInitInfo = ctx => {
-  const initInfo = getCookie(ctx, Cookies.Init)
-  ctx.body = initInfo
+  ctx.body = getCookie(ctx, Cookies.Init) || {}
 }
 
 /**
@@ -153,7 +168,7 @@ exports.googlePreAuth = async (ctx, next) => {
     type: Configs.GOOGLE,
     workspace: ctx.query.workspace,
   })
-  let callbackUrl = googleCallbackUrl(config)
+  let callbackUrl = await exports.googleCallbackUrl(config)
   const strategy = await google.strategyFactory(config, callbackUrl)
 
   return passport.authenticate(strategy, {
@@ -168,7 +183,7 @@ exports.googleAuth = async (ctx, next) => {
     type: Configs.GOOGLE,
     workspace: ctx.query.workspace,
   })
-  const callbackUrl = googleCallbackUrl(config)
+  const callbackUrl = await exports.googleCallbackUrl(config)
   const strategy = await google.strategyFactory(config, callbackUrl)
 
   return passport.authenticate(
@@ -190,13 +205,7 @@ async function oidcStrategyFactory(ctx, configId) {
   })
 
   const chosenConfig = config.configs.filter(c => c.uuid === configId)[0]
-
-  const protocol = env.NODE_ENV === "production" ? "https" : "http"
-  let callbackUrl = `${protocol}://${ctx.host}/api/global/auth`
-  if (isMultiTenant()) {
-    callbackUrl += `/${getTenantId()}`
-  }
-  callbackUrl += `/oidc/callback`
+  let callbackUrl = await exports.oidcCallbackUrl(chosenConfig)
 
   return oidc.strategyFactory(chosenConfig, callbackUrl)
 }

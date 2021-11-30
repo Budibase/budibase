@@ -1,6 +1,5 @@
 <script>
-  import { Select } from "@budibase/bbui"
-  import { notifications } from "@budibase/bbui"
+  import { Select, InlineAlert, notifications } from "@budibase/bbui"
   import { FIELDS } from "constants/backend"
   import api from "builderStore/api"
 
@@ -12,19 +11,27 @@
     valid: true,
     schema: {},
   }
+  export let existingTableId
 
-  let csvString
-  let primaryDisplay
+  let csvString = undefined
+  let primaryDisplay = undefined
   let schema = {}
   let fields = []
+  let hasValidated = false
 
-  $: valid = !schema || fields.every(column => schema[column].success)
+  $: valid =
+    !schema ||
+    (fields.every(column => schema[column].success) &&
+      (!hasValidated || Object.keys(schema).length > 0))
   $: dataImport = {
     valid,
     schema: buildTableSchema(schema),
     csvString,
     primaryDisplay,
   }
+  $: noFieldsError = existingTableId
+    ? "No columns in CSV match existing table schema"
+    : "Could not find any columns to import"
 
   function buildTableSchema(schema) {
     const tableSchema = {}
@@ -46,6 +53,7 @@
     const response = await api.post("/api/tables/csv/validate", {
       csvString,
       schema: schema || {},
+      tableId: existingTableId,
     })
 
     const parseResult = await response.json()
@@ -63,6 +71,7 @@
       notifications.error("CSV Invalid, please try another CSV file")
       return []
     }
+    hasValidated = true
   }
 
   async function handleFile(evt) {
@@ -138,6 +147,7 @@
           placeholder={null}
           getOptionLabel={option => option.label}
           getOptionValue={option => option.value}
+          disabled={!!existingTableId}
         />
         <span class="field-status" class:error={!schema[columnName].success}>
           {schema[columnName].success ? "Success" : "Failure"}
@@ -149,15 +159,22 @@
       </div>
     {/each}
   </div>
-{/if}
-
-{#if fields.length}
-  <div class="display-column">
-    <Select
-      label="Display Column"
-      bind:value={primaryDisplay}
-      options={fields}
-      sort
+  {#if !existingTableId}
+    <div class="display-column">
+      <Select
+        label="Display Column"
+        bind:value={primaryDisplay}
+        options={fields}
+        sort
+      />
+    </div>
+  {/if}
+{:else if hasValidated}
+  <div>
+    <InlineAlert
+      header="Invalid CSV"
+      bind:message={noFieldsError}
+      type="error"
     />
   </div>
 {/if}

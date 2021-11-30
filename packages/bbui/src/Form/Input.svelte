@@ -13,6 +13,7 @@
   export let error = null
   export let updateOnChange = true
   export let quiet = false
+  export let dataCy
 
   const dispatch = createEventDispatcher()
   const onChange = e => {
@@ -23,6 +24,7 @@
 
 <Field {label} {labelPosition} {error}>
   <TextField
+    {dataCy}
     {updateOnChange}
     {error}
     {disabled}

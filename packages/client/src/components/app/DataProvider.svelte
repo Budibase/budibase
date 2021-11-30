@@ -34,29 +34,43 @@
   let bookmarks = [null]
   let pageNumber = 0
   let query = null
+  let queryExtensions = {}
 
-  $: query = buildLuceneQuery(filter)
+  // Sorting can be overridden at run time, so we can't use the prop directly
+  let currentSortColumn = sortColumn
+  let currentSortOrder = sortOrder
+
+  // Reset the current sort state to props if props change
+  $: currentSortColumn = sortColumn
+  $: currentSortOrder = sortOrder
+
+  $: defaultQuery = buildLuceneQuery(filter)
+  $: extendQuery(defaultQuery, queryExtensions)
   $: internalTable = dataSource?.type === "table"
   $: nestedProvider = dataSource?.type === "provider"
   $: hasNextPage = bookmarks[pageNumber + 1] != null
   $: hasPrevPage = pageNumber > 0
   $: getSchema(dataSource)
-  $: sortType = getSortType(schema, sortColumn)
+  $: sortType = getSortType(schema, currentSortColumn)
+
+  // Wait until schema loads before loading data, so that we can determine
+  // the correct sort type first time
   $: {
-    // Wait until schema loads before loading data, so that we can determine
-    // the correct sort type first time
     if (schemaLoaded) {
       fetchData(
         dataSource,
+        schema,
         query,
         limit,
-        sortColumn,
-        sortOrder,
+        currentSortColumn,
+        currentSortOrder,
         sortType,
         paginate
       )
     }
   }
+
+  // Reactively filter and sort rows if required
   $: {
     if (internalTable) {
       // Internal tables are already processed server-side
@@ -65,10 +79,17 @@
       // For anything else we use client-side implementations to filter, sort
       // and limit
       const filtered = luceneQuery(allRows, query)
-      const sorted = luceneSort(filtered, sortColumn, sortOrder, sortType)
+      const sorted = luceneSort(
+        filtered,
+        currentSortColumn,
+        currentSortOrder,
+        sortType
+      )
       rows = luceneLimit(sorted, limit)
     }
   }
+
+  // Build our action context
   $: actions = [
     {
       type: ActionTypes.RefreshDatasource,
@@ -76,10 +97,27 @@
       metadata: { dataSource },
     },
     {
-      type: ActionTypes.SetDataProviderQuery,
-      callback: newQuery => (query = newQuery),
+      type: ActionTypes.AddDataProviderQueryExtension,
+      callback: addQueryExtension,
+    },
+    {
+      type: ActionTypes.RemoveDataProviderQueryExtension,
+      callback: removeQueryExtension,
+    },
+    {
+      type: ActionTypes.SetDataProviderSorting,
+      callback: ({ column, order }) => {
+        if (column) {
+          currentSortColumn = column
+        }
+        if (order) {
+          currentSortOrder = order
+        }
+      },
     },
   ]
+
+  // Build our data context
   $: dataContext = {
     rows,
     schema,
@@ -88,7 +126,11 @@
     // Undocumented properties. These aren't supposed to be used in builder
     // bindings, but are used internally by other components
     id: $component?.id,
-    state: { query },
+    state: {
+      query,
+      sortColumn: currentSortColumn,
+      sortOrder: currentSortOrder,
+    },
     loaded,
   }
 
@@ -104,10 +146,11 @@
     if (schemaLoaded && !nestedProvider) {
       fetchData(
         dataSource,
+        schema,
         query,
         limit,
-        sortColumn,
-        sortOrder,
+        currentSortColumn,
+        currentSortOrder,
         sortType,
         paginate
       )
@@ -116,6 +159,7 @@
 
   const fetchData = async (
     dataSource,
+    schema,
     query,
     limit,
     sortColumn,
@@ -125,12 +169,16 @@
   ) => {
     loading = true
     if (dataSource?.type === "table") {
+      // Sanity check sort column, as using a non-existant column will prevent
+      // results coming back at all
+      const sort = schema?.[sortColumn] ? sortColumn : undefined
+
       // For internal tables we use server-side processing
       const res = await API.searchTable({
         tableId: dataSource.tableId,
         query,
         limit,
-        sort: sortColumn,
+        sort,
         sortOrder: sortOrder?.toLowerCase() ?? "ascending",
         sortType,
         paginate,
@@ -145,7 +193,16 @@
     } else if (dataSource?.type === "provider") {
       // For providers referencing another provider, just use the rows it
       // provides
-      allRows = dataSource?.value?.rows ?? []
+      allRows = dataSource?.value?.rows || []
+    } else if (dataSource?.type === "field") {
+      // Field sources will be available from context.
+      // Enrich non object elements into object to ensure a valid schema.
+      const data = dataSource?.value || []
+      if (Array.isArray(data) && data[0] && typeof data[0] !== "object") {
+        allRows = data.map(value => ({ value }))
+      } else {
+        allRows = data
+      }
     } else {
       // For other data sources like queries or views, fetch all rows from the
       // server
@@ -156,34 +213,24 @@
   }
 
   const getSchema = async dataSource => {
-    if (dataSource?.schema) {
-      schema = dataSource.schema
-    } else if (dataSource?.tableId) {
-      const definition = await API.fetchTableDefinition(dataSource.tableId)
-      schema = definition?.schema ?? {}
-    } else if (dataSource?.type === "provider") {
-      schema = dataSource.value?.schema ?? {}
-    } else {
-      schema = {}
-    }
+    let newSchema = (await API.fetchDatasourceSchema(dataSource)) || {}
 
     // Ensure there are "name" properties for all fields and that field schema
     // are objects
-    let fixedSchema = {}
-    Object.entries(schema || {}).forEach(([fieldName, fieldSchema]) => {
+    Object.entries(newSchema).forEach(([fieldName, fieldSchema]) => {
       if (typeof fieldSchema === "string") {
-        fixedSchema[fieldName] = {
+        newSchema[fieldName] = {
           type: fieldSchema,
           name: fieldName,
         }
       } else {
-        fixedSchema[fieldName] = {
+        newSchema[fieldName] = {
           ...fieldSchema,
           name: fieldName,
         }
       }
     })
-    schema = fixedSchema
+    schema = newSchema
     schemaLoaded = true
   }
 
@@ -191,13 +238,14 @@
     if (!hasNextPage || !internalTable) {
       return
     }
+    const sort = schema?.[currentSortColumn] ? currentSortColumn : undefined
     const res = await API.searchTable({
       tableId: dataSource?.tableId,
       query,
       bookmark: bookmarks[pageNumber + 1],
       limit,
-      sort: sortColumn,
-      sortOrder: sortOrder?.toLowerCase() ?? "ascending",
+      sort,
+      sortOrder: currentSortOrder?.toLowerCase() ?? "ascending",
       sortType,
       paginate: true,
     })
@@ -212,18 +260,52 @@
     if (!hasPrevPage || !internalTable) {
       return
     }
+    const sort = schema?.[currentSortColumn] ? currentSortColumn : undefined
     const res = await API.searchTable({
       tableId: dataSource?.tableId,
       query,
       bookmark: bookmarks[pageNumber - 1],
       limit,
-      sort: sortColumn,
-      sortOrder: sortOrder?.toLowerCase() ?? "ascending",
+      sort,
+      sortOrder: currentSortOrder?.toLowerCase() ?? "ascending",
       sortType,
       paginate: true,
     })
     pageNumber--
     allRows = res.rows
+  }
+
+  const addQueryExtension = (key, extension) => {
+    if (!key || !extension) {
+      return
+    }
+    queryExtensions = { ...queryExtensions, [key]: extension }
+  }
+
+  const removeQueryExtension = key => {
+    if (!key) {
+      return
+    }
+    const newQueryExtensions = { ...queryExtensions }
+    delete newQueryExtensions[key]
+    queryExtensions = newQueryExtensions
+  }
+
+  const extendQuery = (defaultQuery, extensions) => {
+    const extensionValues = Object.values(extensions || {})
+    let extendedQuery = { ...defaultQuery }
+    extensionValues.forEach(extension => {
+      Object.entries(extension || {}).forEach(([operator, fields]) => {
+        extendedQuery[operator] = {
+          ...extendedQuery[operator],
+          ...fields,
+        }
+      })
+    })
+
+    if (JSON.stringify(query) !== JSON.stringify(extendedQuery)) {
+      query = extendedQuery
+    }
   }
 </script>
 
@@ -234,7 +316,7 @@
         <ProgressCircle />
       </div>
     {:else}
-      {#if !$component.children}
+      {#if $component.emptyState}
         <Placeholder />
       {:else}
         <slot />

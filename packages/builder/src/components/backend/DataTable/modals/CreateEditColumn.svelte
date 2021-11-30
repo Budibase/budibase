@@ -9,6 +9,7 @@
     DatePicker,
     ModalContent,
     Context,
+    notifications,
   } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { cloneDeep } from "lodash/fp"
@@ -18,9 +19,13 @@
     FIELDS,
     AUTO_COLUMN_SUB_TYPES,
     RelationshipTypes,
+    ALLOWABLE_STRING_OPTIONS,
+    ALLOWABLE_NUMBER_OPTIONS,
+    ALLOWABLE_STRING_TYPES,
+    ALLOWABLE_NUMBER_TYPES,
+    SWITCHABLE_TYPES,
   } from "constants/backend"
   import { getAutoColumnInformation, buildAutoColumn } from "builderStore/utils"
-  import { notifications } from "@budibase/bbui"
   import ValuesList from "components/common/ValuesList.svelte"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { truncate } from "lodash"
@@ -31,6 +36,10 @@
   const AUTO_TYPE = "auto"
   const FORMULA_TYPE = FIELDS.FORMULA.type
   const LINK_TYPE = FIELDS.LINK.type
+  const STRING_TYPE = FIELDS.STRING.type
+  const NUMBER_TYPE = FIELDS.NUMBER.type
+  const DATE_TYPE = FIELDS.DATETIME.type
+
   const dispatch = createEventDispatcher()
   const PROHIBITED_COLUMN_NAMES = ["type", "_id", "_rev", "tableId"]
   const { hide } = getContext(Context.Modal)
@@ -54,10 +63,9 @@
   let indexes = [...($tables.selected.indexes || [])]
   let confirmDeleteDialog
   let deletion
+  let deleteColName
 
-  $: tableOptions = $tables.list.filter(
-    table => table._id !== $tables.draft._id && table.type !== "external"
-  )
+  $: checkConstraints(field)
   $: required = !!field?.constraints?.presence || primaryDisplay
   $: uneditable =
     $tables.selected?._id === TableNames.USERS &&
@@ -65,13 +73,8 @@
   $: invalid =
     !field.name ||
     (field.type === LINK_TYPE && !field.tableId) ||
-    Object.keys($tables.draft?.schema ?? {}).some(
-      key => key !== originalName && key === field.name
-    ) ||
-    columnNameInvalid
-  $: columnNameInvalid = PROHIBITED_COLUMN_NAMES.some(
-    name => field.name === name
-  )
+    Object.keys(errors).length !== 0
+  $: errors = checkErrors(field)
 
   // used to select what different options can be displayed for column type
   $: canBeSearched =
@@ -83,18 +86,36 @@
   $: canBeRequired =
     field.type !== LINK_TYPE && !uneditable && field.type !== AUTO_TYPE
   $: relationshipOptions = getRelationshipOptions(field)
+  $: external = table.type === "external"
+  // in the case of internal tables the sourceId will just be undefined
+  $: tableOptions = $tables.list.filter(
+    opt =>
+      opt._id !== $tables.draft._id &&
+      opt.type === table.type &&
+      table.sourceId === opt.sourceId
+  )
+  $: typeEnabled =
+    !originalName ||
+    (originalName && SWITCHABLE_TYPES.indexOf(field.type) !== -1)
 
   async function saveColumn() {
     if (field.type === AUTO_TYPE) {
       field = buildAutoColumn($tables.draft.name, field.name, field.subtype)
     }
-    await tables.saveField({
-      originalName,
-      field,
-      primaryDisplay,
-      indexes,
-    })
-    dispatch("updatecolumns")
+    if (field.type !== LINK_TYPE) {
+      delete field.fieldName
+    }
+    try {
+      await tables.saveField({
+        originalName,
+        field,
+        primaryDisplay,
+        indexes,
+      })
+      dispatch("updatecolumns")
+    } catch (err) {
+      notifications.error(err)
+    }
   }
 
   function deleteColumn() {
@@ -162,6 +183,7 @@
 
   function hideDeleteDialog() {
     confirmDeleteDialog.hide()
+    deleteColName = ""
     deletion = false
   }
 
@@ -169,7 +191,7 @@
     if (!field || !field.tableId) {
       return null
     }
-    const linkTable = tableOptions.find(table => table._id === field.tableId)
+    const linkTable = tableOptions?.find(table => table._id === field.tableId)
     if (!linkTable) {
       return null
     }
@@ -193,6 +215,80 @@
       },
     ]
   }
+
+  function getAllowedTypes() {
+    if (originalName && ALLOWABLE_STRING_TYPES.indexOf(field.type) !== -1) {
+      return ALLOWABLE_STRING_OPTIONS
+    } else if (
+      originalName &&
+      ALLOWABLE_NUMBER_TYPES.indexOf(field.type) !== -1
+    ) {
+      return ALLOWABLE_NUMBER_OPTIONS
+    } else if (!external) {
+      return [
+        ...Object.values(fieldDefinitions),
+        { name: "Auto Column", type: AUTO_TYPE },
+      ]
+    } else {
+      return [
+        FIELDS.STRING,
+        FIELDS.LONGFORM,
+        FIELDS.OPTIONS,
+        FIELDS.DATETIME,
+        FIELDS.NUMBER,
+        FIELDS.BOOLEAN,
+        FIELDS.ARRAY,
+        FIELDS.FORMULA,
+        FIELDS.LINK,
+      ]
+    }
+  }
+
+  function checkConstraints(fieldToCheck) {
+    // most types need this, just make sure its always present
+    if (fieldToCheck && !fieldToCheck.constraints) {
+      fieldToCheck.constraints = {}
+    }
+    // some string types may have been built by server, may not always have constraints
+    if (fieldToCheck.type === STRING_TYPE && !fieldToCheck.constraints.length) {
+      fieldToCheck.constraints.length = {}
+    }
+    // some number types made server-side will be missing constraints
+    if (
+      fieldToCheck.type === NUMBER_TYPE &&
+      !fieldToCheck.constraints.numericality
+    ) {
+      fieldToCheck.constraints.numericality = {}
+    }
+    if (fieldToCheck.type === DATE_TYPE && !fieldToCheck.constraints.datetime) {
+      fieldToCheck.constraints.datetime = {}
+    }
+  }
+
+  function checkErrors(fieldInfo) {
+    function inUse(tbl, column, ogName = null) {
+      return Object.keys(tbl?.schema || {}).some(
+        key => key !== ogName && key === column
+      )
+    }
+    const newError = {}
+    if (PROHIBITED_COLUMN_NAMES.some(name => fieldInfo.name === name)) {
+      newError.name = `${PROHIBITED_COLUMN_NAMES.join(
+        ", "
+      )} are not allowed as column names`
+    } else if (inUse($tables.draft, fieldInfo.name, originalName)) {
+      newError.name = `Column name already in use.`
+    }
+    if (fieldInfo.fieldName && fieldInfo.tableId) {
+      const relatedTable = $tables.list.find(
+        tbl => tbl._id === fieldInfo.tableId
+      )
+      if (inUse(relatedTable, fieldInfo.fieldName)) {
+        newError.relatedName = `Column name already in use in table ${relatedTable.name}`
+      }
+    }
+    return newError
+  }
 </script>
 
 <ModalContent
@@ -205,20 +301,15 @@
     label="Name"
     bind:value={field.name}
     disabled={uneditable || (linkEditDisabled && field.type === LINK_TYPE)}
-    error={columnNameInvalid
-      ? `${PROHIBITED_COLUMN_NAMES.join(", ")} are not allowed as column names`
-      : ""}
+    error={errors?.name}
   />
 
   <Select
-    disabled={originalName}
+    disabled={!typeEnabled}
     label="Type"
     bind:value={field.type}
     on:change={handleTypeChange}
-    options={[
-      ...Object.values(fieldDefinitions),
-      { name: "Auto Column", type: AUTO_TYPE },
-    ]}
+    options={getAllowedTypes()}
     getOptionLabel={field => field.name}
     getOptionValue={field => field.type}
   />
@@ -245,7 +336,7 @@
     </div>
   {/if}
 
-  {#if canBeSearched}
+  {#if canBeSearched && !external}
     <div>
       <Label grey small>Search Indexes</Label>
       <Toggle
@@ -319,6 +410,7 @@
       disabled={linkEditDisabled}
       label={`Column name in other table`}
       bind:value={field.fieldName}
+      error={errors.relatedName}
     />
   {:else if field.type === FORMULA_TYPE}
     <ModalBindableInput
@@ -327,7 +419,7 @@
       value={field.formula}
       on:change={e => (field.formula = e.detail)}
       bindings={getBindings({ table })}
-      serverSide="true"
+      allowJS
     />
   {:else if field.type === AUTO_TYPE}
     <Select
@@ -348,9 +440,20 @@
 </ModalContent>
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
-  body={`Are you sure you wish to delete this column? Your data will be deleted and this action cannot be undone.`}
   okText="Delete Column"
   onOk={deleteColumn}
   onCancel={hideDeleteDialog}
   title="Confirm Deletion"
-/>
+  disabled={deleteColName !== field.name}
+>
+  <p>
+    Are you sure you wish to delete the column <b>{field.name}?</b>
+    Your data will be deleted and this action cannot be undone - enter the column
+    name to confirm.
+  </p>
+  <Input
+    dataCy="delete-column-confirm"
+    bind:value={deleteColName}
+    placeholder={field.name}
+  />
+</ConfirmDialog>

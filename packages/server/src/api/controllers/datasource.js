@@ -7,8 +7,9 @@ const {
   BudibaseInternalDB,
   getTableParams,
 } = require("../../db/utils")
+const { BuildSchemaErrors, InvalidColumns } = require("../../constants")
 const { integrations } = require("../../integrations")
-const { makeExternalQuery } = require("./row/utils")
+const { getDatasourceAndQuery } = require("./row/utils")
 
 exports.fetch = async function (ctx) {
   const database = new CouchDB(ctx.appId)
@@ -43,13 +44,17 @@ exports.buildSchemaFromDb = async function (ctx) {
   const db = new CouchDB(ctx.appId)
   const datasource = await db.get(ctx.params.datasourceId)
 
-  const tables = await buildSchemaHelper(datasource)
+  const { tables, error } = await buildSchemaHelper(datasource)
   datasource.entities = tables
 
-  const response = await db.put(datasource)
-  datasource._rev = response.rev
+  const dbResp = await db.put(datasource)
+  datasource._rev = dbResp.rev
 
-  ctx.body = datasource
+  const response = { datasource }
+  if (error) {
+    response.error = error
+  }
+  ctx.body = response
 }
 
 exports.update = async function (ctx) {
@@ -71,7 +76,7 @@ exports.update = async function (ctx) {
 
   ctx.status = 200
   ctx.message = "Datasource saved successfully."
-  ctx.body = datasource
+  ctx.body = { datasource }
 }
 
 exports.save = async function (ctx) {
@@ -85,13 +90,15 @@ exports.save = async function (ctx) {
     ...ctx.request.body.datasource,
   }
 
+  let schemaError = null
   if (fetchSchema) {
-    let tables = await buildSchemaHelper(datasource)
+    const { tables, error } = await buildSchemaHelper(datasource)
+    schemaError = error
     datasource.entities = tables
   }
 
-  const response = await db.put(datasource)
-  datasource._rev = response.rev
+  const dbResp = await db.put(datasource)
+  datasource._rev = dbResp.rev
 
   // Drain connection pools when configuration is changed
   if (datasource.source) {
@@ -101,17 +108,27 @@ exports.save = async function (ctx) {
     }
   }
 
-  ctx.status = 200
-  ctx.message = "Datasource saved successfully."
-  ctx.body = datasource
+  const response = { datasource }
+  if (schemaError) {
+    response.error = schemaError
+  }
+  ctx.body = response
 }
 
 exports.destroy = async function (ctx) {
   const db = new CouchDB(ctx.appId)
 
   // Delete all queries for the datasource
-  const rows = await db.allDocs(getQueryParams(ctx.params.datasourceId, null))
-  await db.bulkDocs(rows.rows.map(row => ({ ...row.doc, _deleted: true })))
+  const queries = await db.allDocs(
+    getQueryParams(ctx.params.datasourceId, null)
+  )
+  await db.bulkDocs(
+    queries.rows.map(row => ({
+      _id: row.id,
+      _rev: row.value.rev,
+      _deleted: true,
+    }))
+  )
 
   // delete the datasource
   await db.remove(ctx.params.datasourceId, ctx.params.revId)
@@ -129,10 +146,27 @@ exports.find = async function (ctx) {
 exports.query = async function (ctx) {
   const queryJson = ctx.request.body
   try {
-    ctx.body = await makeExternalQuery(ctx.appId, queryJson)
+    ctx.body = await getDatasourceAndQuery(ctx.appId, queryJson)
   } catch (err) {
     ctx.throw(400, err)
   }
+}
+
+function getErrorTables(errors, errorType) {
+  return Object.entries(errors)
+    .filter(entry => entry[1] === errorType)
+    .map(([name]) => name)
+}
+
+function updateError(error, newError, tables) {
+  if (!error) {
+    error = ""
+  }
+  if (error.length > 0) {
+    error += "\n"
+  }
+  error += `${newError} ${tables.join(", ")}`
+  return error
 }
 
 const buildSchemaHelper = async datasource => {
@@ -143,5 +177,39 @@ const buildSchemaHelper = async datasource => {
   await connector.buildSchema(datasource._id, datasource.entities)
   datasource.entities = connector.tables
 
-  return connector.tables
+  // make sure they all have a display name selected
+  for (let entity of Object.values(datasource.entities)) {
+    if (entity.primaryDisplay) {
+      continue
+    }
+    const notAutoColumn = Object.values(entity.schema).find(
+      schema => !schema.autocolumn
+    )
+    if (notAutoColumn) {
+      entity.primaryDisplay = notAutoColumn.name
+    }
+  }
+
+  const errors = connector.schemaErrors
+  let error = null
+  if (errors && Object.keys(errors).length > 0) {
+    const noKey = getErrorTables(errors, BuildSchemaErrors.NO_KEY)
+    const invalidCol = getErrorTables(errors, BuildSchemaErrors.INVALID_COLUMN)
+    if (noKey.length) {
+      error = updateError(
+        error,
+        "No primary key constraint found for the following:",
+        noKey
+      )
+    }
+    if (invalidCol.length) {
+      const invalidCols = Object.values(InvalidColumns).join(", ")
+      error = updateError(
+        error,
+        `Cannot use columns ${invalidCols} found in following:`,
+        invalidCol
+      )
+    }
+  }
+  return { tables: connector.tables, error }
 }

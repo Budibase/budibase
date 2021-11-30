@@ -48,6 +48,7 @@ exports.objectStoreUrl = () => {
  * via a specific endpoint (under /api/assets/client).
  * @param {string} appId In production we need the appId to look up the correct bucket, as the
  * version of the client lib may differ between apps.
+ * @param {string} version The version to retrieve.
  * @return {string} The URL to be inserted into appPackage response or server rendered
  * app index file.
  */
@@ -138,4 +139,14 @@ exports.stringToReadStream = string => {
       this.push(null)
     },
   })
+}
+
+exports.doesDatabaseExist = async dbName => {
+  try {
+    const db = new CouchDB(dbName, { skip_setup: true })
+    const info = await db.info()
+    return info && !info.error
+  } catch (err) {
+    return false
+  }
 }

@@ -46,6 +46,9 @@ const HELPERS = [
   }),
   // adds a note for post-processor
   new Helper(HelperFunctionNames.LITERAL, value => {
+    if (value === undefined) {
+      return ""
+    }
     const type = typeof value
     const outputVal = type === "object" ? JSON.stringify(value) : value
     return `{{${LITERAL_MARKER} ${type}-${outputVal}}}`
