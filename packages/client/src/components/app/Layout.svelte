@@ -313,6 +313,9 @@
     height: 100%;
     overflow: auto;
   }
+  .desktop.layout--left .links {
+    overflow-y: auto;
+  }
 
   .desktop .nav--left {
     width: 250px;
@@ -379,6 +382,7 @@
     justify-content: flex-start;
     align-items: stretch;
     padding: var(--spacing-xl);
+    overflow-y: auto;
   }
   .mobile .link {
     width: calc(100% - 30px);

@@ -87,7 +87,10 @@
     field.subtype !== AUTO_COLUMN_SUB_TYPES.CREATED_BY &&
     field.subtype !== AUTO_COLUMN_SUB_TYPES.UPDATED_BY &&
     field.type !== FORMULA_TYPE
-  $: canBeDisplay = field.type !== LINK_TYPE && field.type !== AUTO_TYPE
+  $: canBeDisplay =
+    field.type !== LINK_TYPE &&
+    field.type !== AUTO_TYPE &&
+    field.type !== JSON_TYPE
   $: canBeRequired =
     field.type !== LINK_TYPE && !uneditable && field.type !== AUTO_TYPE
   $: relationshipOptions = getRelationshipOptions(field)
@@ -452,7 +455,14 @@
   </div>
 </ModalContent>
 <Modal bind:this={jsonSchemaModal}>
-  <JSONSchemaModal on:save={({ detail }) => console.log(detail)} />
+  <JSONSchemaModal
+    schema={field.schema}
+    json={field.json}
+    on:save={({ detail }) => {
+      field.schema = detail.schema
+      field.json = detail.json
+    }}
+  />
 </Modal>
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
