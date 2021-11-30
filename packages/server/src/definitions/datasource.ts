@@ -54,6 +54,17 @@ export enum IncludeRelationships {
   EXCLUDE = 0,
 }
 
+export enum FilterTypes {
+  STRING = "string",
+  FUZZY = "fuzzy",
+  RANGE = "range",
+  EQUAL = "equal",
+  NOT_EQUAL = "notEqual",
+  EMPTY = "empty",
+  NOT_EMPTY = "notEmpty",
+  ONE_OF = "oneOf",
+}
+
 export interface QueryDefinition {
   type: QueryTypes
   displayName?: string

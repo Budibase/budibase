@@ -4,6 +4,7 @@ export default {
   name: `Create from scratch`,
   id: `createFromScratch`,
   create: () => createScreen(),
+  table: `Create from scratch`,
 }
 
 const createScreen = () => {

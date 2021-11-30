@@ -275,11 +275,10 @@
     allRows = res.rows
   }
 
-  const addQueryExtension = (key, operator, field, value) => {
-    if (!key || !operator || !field) {
+  const addQueryExtension = (key, extension) => {
+    if (!key || !extension) {
       return
     }
-    const extension = { operator, field, value }
     queryExtensions = { ...queryExtensions, [key]: extension }
   }
 
@@ -295,11 +294,13 @@
   const extendQuery = (defaultQuery, extensions) => {
     const extensionValues = Object.values(extensions || {})
     let extendedQuery = { ...defaultQuery }
-    extensionValues.forEach(({ operator, field, value }) => {
-      extendedQuery[operator] = {
-        ...extendedQuery[operator],
-        [field]: value,
-      }
+    extensionValues.forEach(extension => {
+      Object.entries(extension || {}).forEach(([operator, fields]) => {
+        extendedQuery[operator] = {
+          ...extendedQuery[operator],
+          ...fields,
+        }
+      })
     })
 
     if (JSON.stringify(query) !== JSON.stringify(extendedQuery)) {

@@ -4,7 +4,7 @@
   import sanitizeUrl from "builderStore/store/screenTemplates/utils/sanitizeUrl"
   import { Modal } from "@budibase/bbui"
   import { store, selectedAccessRole, allScreens } from "builderStore"
-  import { onDestroy } from "svelte"
+  import analytics, { Events } from "analytics"
 
   let newScreenModal
   let navigationSelectionModal
@@ -12,32 +12,39 @@
   let screenName = ""
   let url = ""
   let selectedScreens = []
-
   let roleId = $selectedAccessRole || "BASIC"
-
+  let showProgressCircle = false
   let routeError
   let createdScreens = []
-  $: {
-    selectedScreens?.forEach(screen => {
-      createdScreens = [...createdScreens, screen.create()]
-    })
+
+  const createScreens = async () => {
+    for (let screen of selectedScreens) {
+      let test = screen.create()
+      createdScreens.push(test)
+      analytics.captureEvent(Events.SCREEN.CREATED, {
+        template: screen.id || screen.name,
+      })
+    }
   }
 
   const save = async () => {
+    showProgressCircle = true
+    await createScreens()
     for (let screen of createdScreens) {
       await saveScreens(screen)
     }
-
     await store.actions.routing.fetch()
     selectedScreens = []
+    createdScreens = []
     screenName = ""
     url = ""
+    showProgressCircle = false
   }
+
   const saveScreens = async draftScreen => {
     let existingScreenCount = $store.screens.filter(
       s => s.props._instanceName == draftScreen.props._instanceName
     ).length
-
     if (existingScreenCount > 0) {
       let oldUrlArr = draftScreen.routing.route.split("/")
       oldUrlArr[1] = `${oldUrlArr[1]}-${existingScreenCount + 1}`
@@ -82,14 +89,12 @@
     )
   }
 
-  onDestroy(() => {
-    selectedScreens = []
-    screenName = ""
-    url = ""
-  })
-
   export const showModal = () => {
     newScreenModal.show()
+  }
+
+  const setScreens = evt => {
+    selectedScreens = evt.detail.screens
   }
 
   const chooseModal = index => {
@@ -109,9 +114,20 @@
 </script>
 
 <Modal bind:this={newScreenModal}>
-  <NewScreenModal bind:selectedScreens {save} {chooseModal} />
+  <NewScreenModal
+    on:save={setScreens}
+    {showProgressCircle}
+    {save}
+    {chooseModal}
+  />
 </Modal>
 
 <Modal bind:this={screenDetailsModal}>
-  <ScreenDetailsModal bind:screenName bind:url {save} {chooseModal} />
+  <ScreenDetailsModal
+    bind:screenName
+    bind:url
+    {showProgressCircle}
+    {save}
+    {chooseModal}
+  />
 </Modal>

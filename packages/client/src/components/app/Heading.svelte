@@ -47,7 +47,7 @@
 
   // Convert contenteditable HTML to text and save
   const updateText = e => {
-    const sanitized = e.target.innerHTML.replace(/<br>/gi, "\n")
+    const sanitized = e.target.innerHTML.replace(/<br>/gi, "\n").trim()
     builderStore.actions.updateProp("text", sanitized)
   }
 </script>
