@@ -1,5 +1,5 @@
 <script>
-  import { Divider, Heading, ActionButton, Badge } from "@budibase/bbui"
+  import { Divider, Heading, ActionButton, Badge, Body } from "@budibase/bbui"
   import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
 
   export let datasource
@@ -14,9 +14,13 @@
     <Badge quiet grey>Optional</Badge>
   </div>
   <ActionButton size="S" icon="Add" on:click={() => addHeader.addEntry()}
-    >Add Header</ActionButton
+    >Add header</ActionButton
   >
 </div>
+<Body size="S">
+  Headers enable you to provide additional information about the request, such
+  as format.
+</Body>
 <KeyValueBuilder
   bind:this={addHeader}
   bind:object={datasource.config.defaultHeaders}

@@ -18,7 +18,7 @@ module RestModule {
   const SCHEMA: Integration = {
     docs: "https://github.com/node-fetch/node-fetch",
     description:
-      "Representational state transfer (REST) is a de-facto standard for a software architecture for interactive applications that typically use multiple Web services. ",
+      "With the REST API datasource, you can connect, query and pull data from multiple REST APIs. You can then use the retrieved data to build apps.",
     friendlyName: "REST API",
     datasource: {
       url: {
