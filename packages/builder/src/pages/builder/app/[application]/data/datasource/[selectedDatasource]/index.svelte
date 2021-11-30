@@ -34,8 +34,9 @@
   $: hasChanged(baseDatasource, datasource)
 
   function hasChanged(base, ds) {
-    if (base) {
+    if (base && ds) {
       changed = !isEqual(base, ds)
+      console.log(ds)
     }
   }
 
@@ -81,9 +82,6 @@
           <Button disabled={!changed} cta on:click={saveDatasource}>Save</Button
           >
         </div>
-        <Body size="S">
-          Connect your data source to Budibase using the config below.
-        </Body>
         <IntegrationConfigForm
           on:change={hasChanged}
           schema={integration.datasource}
@@ -97,9 +95,14 @@
       <div class="query-header">
         <Heading size="S">Queries</Heading>
         <ActionButton size="S" icon="Add" on:click={() => $goto("./new")}
-          >Add Query
+          >Add query
         </ActionButton>
       </div>
+      <Body size="S">
+        To build an app using a datasource, you must first query the data. A
+        query is a request for data or information from a datasource, for
+        example a database table.
+      </Body>
       <div class="query-list">
         {#each $queries.list.filter(query => query.datasourceId === datasource._id) as query}
           <div class="query-list-item" on:click={() => onClickQuery(query)}>
