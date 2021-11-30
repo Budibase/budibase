@@ -23,8 +23,9 @@ module RestModule {
     datasource: {
       url: {
         type: DatasourceFieldTypes.STRING,
-        default: "localhost",
-        required: true,
+        default: "",
+        required: false,
+        deprecated: true,
       },
       defaultHeaders: {
         type: DatasourceFieldTypes.OBJECT,

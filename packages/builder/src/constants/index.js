@@ -15,19 +15,36 @@ export const AppStatus = {
   DEPLOYED: "published",
 }
 
-export const IntegrationNames = {
-  POSTGRES: "PostgreSQL",
-  MONGODB: "MongoDB",
-  COUCHDB: "CouchDB",
+export const IntegrationTypes = {
+  POSTGRES: "POSTGRES",
+  MONGODB: "MONGODB",
+  COUCHDB: "COUCHDB",
   S3: "S3",
-  MYSQL: "MySQL",
+  MYSQL: "MYSQL",
   REST: "REST",
-  DYNAMODB: "DynamoDB",
-  ELASTICSEARCH: "ElasticSearch",
-  SQL_SERVER: "SQL Server",
-  AIRTABLE: "Airtable",
-  ARANGODB: "ArangoDB",
-  ORACLE: "Oracle",
+  DYNAMODB: "DYNAMODB",
+  ELASTICSEARCH: "ELASTICSEARCH",
+  SQL_SERVER: "SQL_SERVER",
+  AIRTABLE: "AIRTABLE",
+  ARANGODB: "ARANGODB",
+  ORACLE: "ORACLE",
+  INTERNAL: "INTERNAL",
+}
+
+export const IntegrationNames = {
+  [IntegrationTypes.POSTGRES]: "PostgreSQL",
+  [IntegrationTypes.MONGODB]: "MongoDB",
+  [IntegrationTypes.COUCHDB]: "CouchDB",
+  [IntegrationTypes.S3]: "S3",
+  [IntegrationTypes.MYSQL]: "MySQL",
+  [IntegrationTypes.REST]: "REST",
+  [IntegrationTypes.DYNAMODB]: "DynamoDB",
+  [IntegrationTypes.ELASTICSEARCH]: "ElasticSearch",
+  [IntegrationTypes.SQL_SERVER]: "SQL Server",
+  [IntegrationTypes.AIRTABLE]: "Airtable",
+  [IntegrationTypes.ARANGODB]: "ArangoDB",
+  [IntegrationTypes.ORACLE]: "Oracle",
+  [IntegrationTypes.INTERNAL]: "Internal",
 }
 
 // fields on the user table that cannot be edited
