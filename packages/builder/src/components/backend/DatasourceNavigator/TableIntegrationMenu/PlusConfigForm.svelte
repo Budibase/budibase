@@ -121,7 +121,6 @@
     <div>
       <ActionButton
         size="S"
-        quiet
         icon="DataRefresh"
         on:click={updateDatasourceSchema}
       >
@@ -161,9 +160,7 @@
     <Heading size="S">Relationships</Heading>
     <ActionButton
       icon="DataCorrelated"
-      primary
       size="S"
-      quiet
       on:click={openRelationshipModal}
     >
       Define existing relationship

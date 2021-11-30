@@ -153,7 +153,12 @@ module RestModule {
     }
 
     getUrl(path: string, queryString: string): string {
-      return `${this.config.url}/${path}?${queryString}`
+      const main = `${path}?${queryString}`
+      if (!this.config.url) {
+        return main
+      } else {
+        return `${this.config.url}/${main}`
+      }
     }
 
     async create({ path = "", queryString = "", headers = {}, json = {} }) {
