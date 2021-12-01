@@ -1,6 +1,7 @@
 <script>
   import { Icon, ActionButton, Input } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
+  import { lowercase } from "helpers"
 
   let dispatch = createEventDispatcher()
 
@@ -8,6 +9,7 @@
   export let object = defaults || {}
   export let readOnly
   export let noAddButton
+  export let name
 
   let fields = Object.entries(object).map(([name, value]) => ({ name, value }))
 
@@ -47,7 +49,7 @@
 {#if !readOnly && !noAddButton}
   <div>
     <ActionButton icon="Add" secondary thin outline on:click={addEntry}
-      >Add</ActionButton
+      >Add{name ? ` ${lowercase(name)}` : ""}</ActionButton
     >
   </div>
 {/if}
