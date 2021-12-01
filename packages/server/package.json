@@ -68,6 +68,7 @@
   "author": "Budibase",
   "license": "AGPL-3.0-or-later",
   "dependencies": {
+    "@apidevtools/swagger-parser": "^10.0.3",
     "@budibase/auth": "^0.9.185-alpha.21",
     "@budibase/client": "^0.9.185-alpha.21",
     "@budibase/string-templates": "^0.9.185-alpha.21",
@@ -77,7 +78,6 @@
     "@koa/router": "8.0.0",
     "@sendgrid/mail": "7.1.1",
     "@sentry/node": "^6.0.0",
-    "@types/swagger-schema-official": "^2.0.22",
     "airtable": "0.10.1",
     "arangojs": "7.2.0",
     "aws-sdk": "^2.767.0",
@@ -109,6 +109,7 @@
     "mysql2": "^2.3.1",
     "node-fetch": "2.6.0",
     "open": "7.3.0",
+    "openapi-types": "^9.3.1",
     "pg": "8.5.1",
     "pino-pretty": "4.0.0",
     "posthog-node": "^1.1.4",
