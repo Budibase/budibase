@@ -8,6 +8,25 @@ const parseCurl = (data: string): any => {
 }
 
 /**
+ * The curl converter parses the request body into the key field of an object
+ * e.g. --d '{"key":"val"}' produces an object { "{"key":"val"}" : "" } 
+ */
+const parseBody = (curl: any) => {
+  if (curl.data) {
+    const keys = Object.keys(curl.data)
+    if (keys.length) {
+      const key = keys[0]
+      try {
+        return JSON.parse(key)
+      } catch (e) {
+        // do nothing
+      }
+    }
+  }
+  return undefined
+}
+
+/**
  * Curl
  * https://curl.se/docs/manpage.html
  */
@@ -33,12 +52,13 @@ export class Curl extends ImportSource {
   }
 
   getQueries = async (datasourceId: string): Promise<Query[]> => {
-    const url = new URL(this.curl.url)
+    const url = new URL(this.curl.raw_url)
     const name = url.pathname
     const path = url.pathname
     const method = this.curl.method
     const queryString = url.search
     const headers = this.curl.headers
+    const requestBody = parseBody(this.curl)
   
     const query = this.constructQuery(
       datasourceId,
@@ -46,7 +66,9 @@ export class Curl extends ImportSource {
       method,
       path,
       queryString,
-      headers
+      headers,
+      [],
+      requestBody
     )
 
     return [query]
