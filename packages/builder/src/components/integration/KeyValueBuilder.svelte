@@ -1,5 +1,5 @@
 <script>
-  import { Icon, Button, Input } from "@budibase/bbui"
+  import { Icon, ActionButton, Input } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
 
   let dispatch = createEventDispatcher()
@@ -46,7 +46,9 @@
 {/if}
 {#if !readOnly && !noAddButton}
   <div>
-    <Button secondary thin outline on:click={addEntry}>Add</Button>
+    <ActionButton icon="Add" secondary thin outline on:click={addEntry}
+      >Add</ActionButton
+    >
   </div>
 {/if}
 

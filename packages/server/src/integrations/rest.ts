@@ -38,10 +38,10 @@ module RestModule {
         readable: true,
         displayName: "POST",
         type: QueryTypes.FIELDS,
-        urlDisplay: true,
         fields: {
           path: {
             type: DatasourceFieldTypes.STRING,
+            display: "URL",
           },
           queryString: {
             type: DatasourceFieldTypes.STRING,
@@ -58,10 +58,10 @@ module RestModule {
         displayName: "GET",
         readable: true,
         type: QueryTypes.FIELDS,
-        urlDisplay: true,
         fields: {
           path: {
             type: DatasourceFieldTypes.STRING,
+            display: "URL",
           },
           queryString: {
             type: DatasourceFieldTypes.STRING,
@@ -75,10 +75,10 @@ module RestModule {
         displayName: "PUT",
         readable: true,
         type: QueryTypes.FIELDS,
-        urlDisplay: true,
         fields: {
           path: {
             type: DatasourceFieldTypes.STRING,
+            display: "URL",
           },
           queryString: {
             type: DatasourceFieldTypes.STRING,
@@ -95,10 +95,10 @@ module RestModule {
         displayName: "PATCH",
         readable: true,
         type: QueryTypes.FIELDS,
-        urlDisplay: true,
         fields: {
           path: {
             type: DatasourceFieldTypes.STRING,
+            display: "URL",
           },
           queryString: {
             type: DatasourceFieldTypes.STRING,
@@ -114,10 +114,10 @@ module RestModule {
       delete: {
         displayName: "DELETE",
         type: QueryTypes.FIELDS,
-        urlDisplay: true,
         fields: {
           path: {
             type: DatasourceFieldTypes.STRING,
+            display: "URL",
           },
           queryString: {
             type: DatasourceFieldTypes.STRING,
