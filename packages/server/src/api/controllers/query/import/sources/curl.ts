@@ -10,6 +10,7 @@ const parseCurl = (data: string): any => {
 /**
  * The curl converter parses the request body into the key field of an object
  * e.g. --d '{"key":"val"}' produces an object { "{"key":"val"}" : "" } 
+ * This is not what we want, so we need to parse out the key from the object
  */
 const parseBody = (curl: any) => {
   if (curl.data) {
