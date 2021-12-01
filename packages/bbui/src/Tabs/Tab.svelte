@@ -5,7 +5,7 @@
   export let icon = ""
 
   const dispatch = createEventDispatcher()
-  const selected = getContext("tab")
+  let selected = getContext("tab")
   let tab
   let tabInfo
 
@@ -16,8 +16,8 @@
     // We just need to get this off the main thread to fix this, by using
     // a 0ms timeout.
     setTimeout(() => {
-      tabInfo = tab.getBoundingClientRect()
-      if ($selected.title === title) {
+      tabInfo = tab?.getBoundingClientRect()
+      if (tabInfo && $selected.title === title) {
         $selected.info = tabInfo
       }
     }, 0)
