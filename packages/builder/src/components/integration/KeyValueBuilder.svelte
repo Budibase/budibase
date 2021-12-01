@@ -33,15 +33,17 @@
 </script>
 
 <!-- Builds Objects with Key Value Pairs. Useful for building things like Request Headers. -->
-<div class="container" class:readOnly>
-  {#each fields as field, idx}
-    <Input placeholder="Key" bind:value={field.name} on:change={changed} />
-    <Input placeholder="Value" bind:value={field.value} on:change={changed} />
-    {#if !readOnly}
-      <Icon hoverable name="Close" on:click={() => deleteEntry(idx)} />
-    {/if}
-  {/each}
-</div>
+{#if Object.keys(object || {}).length > 0}
+  <div class="container" class:readOnly>
+    {#each fields as field, idx}
+      <Input placeholder="Key" bind:value={field.name} on:change={changed} />
+      <Input placeholder="Value" bind:value={field.value} on:change={changed} />
+      {#if !readOnly}
+        <Icon hoverable name="Close" on:click={() => deleteEntry(idx)} />
+      {/if}
+    {/each}
+  </div>
+{/if}
 {#if !readOnly && !noAddButton}
   <div>
     <Button secondary thin outline on:click={addEntry}>Add</Button>

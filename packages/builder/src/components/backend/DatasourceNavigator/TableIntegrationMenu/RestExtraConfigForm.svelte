@@ -7,15 +7,12 @@
   let addHeader
 </script>
 
-<Divider />
+<Divider size="S" />
 <div class="query-header">
   <div class="badge">
     <Heading size="S">Headers</Heading>
     <Badge quiet grey>Optional</Badge>
   </div>
-  <ActionButton size="S" icon="Add" on:click={() => addHeader.addEntry()}
-    >Add header</ActionButton
-  >
 </div>
 <Body size="S">
   Headers enable you to provide additional information about the request, such
@@ -27,6 +24,11 @@
   on:change
   noAddButton
 />
+<div>
+  <ActionButton icon="Add" on:click={() => addHeader.addEntry()}>
+    Add header
+  </ActionButton>
+</div>
 
 <style>
   .query-header {
@@ -34,7 +36,6 @@
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    margin: 0 0 var(--spacing-s) 0;
   }
 
   .badge {
