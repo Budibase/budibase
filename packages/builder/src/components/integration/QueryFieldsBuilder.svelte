@@ -30,7 +30,11 @@
     {#each schemaKeys as field}
       {#if schema.fields[field]?.type === "object"}
         <Label small>{getDisplayName(field)}</Label>
-        <KeyValueBuilder readOnly={!editable} bind:object={fields[field]} />
+        <KeyValueBuilder
+          name={getDisplayName(field)}
+          readOnly={!editable}
+          bind:object={fields[field]}
+        />
       {:else if schema.fields[field]?.type === "json"}
         <div>
           <Label extraSmall grey>{getDisplayName(field)}</Label>
