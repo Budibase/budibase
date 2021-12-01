@@ -19,6 +19,7 @@
   )
 
   export function addEntry() {
+    console.log(fields)
     fields = [...fields, {}]
     changed()
   }
