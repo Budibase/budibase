@@ -54,6 +54,7 @@ export abstract class ImportSource {
     const transformer = "return data"
     const schema = {}
     path = this.processPath(path)
+    queryString = this.processQuery(queryString)
   
     const query: Query = {
       datasourceId,
@@ -88,5 +89,13 @@ export abstract class ImportSource {
     }
   
     return path
+  }
+
+  processQuery = (queryString: string): string => {
+    if (queryString?.startsWith("?")) {
+      return queryString.substring(1)
+    }
+  
+    return queryString
   }
 }
