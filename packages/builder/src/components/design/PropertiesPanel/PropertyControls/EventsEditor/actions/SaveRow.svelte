@@ -11,12 +11,53 @@
   export let parameters
   export let bindings = []
 
-  $: dataProviderComponents = getContextProviderComponents(
+  $: formComponents = getContextProviderComponents(
     $currentAsset,
-    $store.selectedComponentId
+    $store.selectedComponentId,
+    "form"
   )
+  $: schemaComponents = getContextProviderComponents(
+    $currentAsset,
+    $store.selectedComponentId,
+    "schema"
+  )
+  $: providerOptions = getProviderOptions(formComponents, schemaComponents)
   $: schemaFields = getSchemaFields($currentAsset, parameters?.tableId)
   $: tableOptions = $tables.list || []
+
+  // Gets a context definition of a certain type from a component definition
+  const extractComponentContext = (component, contextType) => {
+    const def = store.actions.components.getDefinition(component?._component)
+    if (!def) {
+      return null
+    }
+    const contexts = Array.isArray(def.context) ? def.context : [def.context]
+    return contexts.find(context => context?.type === contextType)
+  }
+
+  // Gets options for valid context keys which provide valid data to submit
+  const getProviderOptions = (formComponents, schemaComponents) => {
+    const formContexts = formComponents.map(component => ({
+      component,
+      context: extractComponentContext(component, "form"),
+    }))
+    const schemaContexts = schemaComponents.map(component => ({
+      component,
+      context: extractComponentContext(component, "schema"),
+    }))
+    const allContexts = formContexts.concat(schemaContexts)
+
+    return allContexts.map(({ component, context }) => {
+      let runtimeBinding = component._id
+      if (context.suffix) {
+        runtimeBinding += `-${context.suffix}`
+      }
+      return {
+        label: component._instanceName,
+        value: runtimeBinding,
+      }
+    })
+  }
 
   const getSchemaFields = (asset, tableId) => {
     const { schema } = getSchemaForDatasource(asset, { type: "table", tableId })
@@ -39,10 +80,8 @@
     <Label small>Data Source</Label>
     <Select
       bind:value={parameters.providerId}
-      options={dataProviderComponents}
+      options={providerOptions}
       placeholder="None"
-      getOptionLabel={option => option._instanceName}
-      getOptionValue={option => option._id}
     />
 
     <Label small>Table</Label>
