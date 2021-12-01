@@ -4,7 +4,7 @@
     Body,
     Divider,
     InlineAlert,
-    ActionButton,
+    Button,
     notifications,
     Modal,
     Table,
@@ -13,6 +13,7 @@
   import CreateEditRelationship from "components/backend/Datasources/CreateEditRelationship.svelte"
   import CreateExternalTableModal from "./CreateExternalTableModal.svelte"
   import ArrayRenderer from "components/common/ArrayRenderer.svelte"
+  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { goto } from "@roxi/routify"
 
   export let datasource
@@ -26,10 +27,10 @@
     tables: {},
     columns: {},
   }
-
   let relationshipModal
   let createExternalTableModal
   let selectedFromRelationship, selectedToRelationship
+  let confirmDialog
 
   $: integration = datasource && $integrations[datasource.source]
   $: plusTables = datasource?.plus
@@ -137,21 +138,28 @@
   <CreateExternalTableModal {datasource} />
 </Modal>
 
-<Divider />
+<ConfirmDialog
+  bind:this={confirmDialog}
+  okText="Fetch tables"
+  onOk={updateDatasourceSchema}
+  onCancel={() => confirmDialog.hide()}
+  warning={false}
+  title="Confirm table fetch"
+>
+  <Body>
+    If you have fetched tables from this database before, this action may
+    overwrite any changes you made after your initial fetch.
+  </Body>
+</ConfirmDialog>
+
+<Divider size="S" />
 <div class="query-header">
   <Heading size="S">Tables</Heading>
   <div class="table-buttons">
-    <ActionButton
-      size="S"
-      icon="DataRefresh"
-      quiet
-      on:click={updateDatasourceSchema}
-    >
-      Fetch tables from database
-    </ActionButton>
-    <ActionButton size="S" icon="Add" on:click={createNewTable}>
-      Create new table
-    </ActionButton>
+    <Button secondary on:click={() => confirmDialog.show()}>
+      Fetch tables
+    </Button>
+    <Button cta icon="Add" on:click={createNewTable}>New table</Button>
   </div>
 </div>
 <Body>
@@ -177,16 +185,12 @@
   customRenderers={[{ column: "primary", component: ArrayRenderer }]}
 />
 {#if plusTables?.length !== 0}
-  <Divider />
+  <Divider size="S" />
   <div class="query-header">
     <Heading size="S">Relationships</Heading>
-    <ActionButton
-      icon="DataCorrelated"
-      size="S"
-      on:click={openRelationshipModal}
-    >
-      Define existing relationship
-    </ActionButton>
+    <Button primary on:click={openRelationshipModal}>
+      Define relationship
+    </Button>
   </div>
   <Body>
     Tell budibase how your tables are related to get even more smart features.

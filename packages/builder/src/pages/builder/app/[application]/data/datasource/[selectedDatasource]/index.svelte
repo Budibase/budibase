@@ -7,7 +7,6 @@
     Divider,
     Layout,
     notifications,
-    ActionButton,
     Table,
   } from "@budibase/bbui"
   import { datasources, integrations, queries, tables } from "stores/backend"
@@ -82,28 +81,25 @@
         </header>
         <Body size="M">{integration.description}</Body>
       </Layout>
-      <Divider />
-      <div class="container">
-        <div class="config-header">
-          <Heading size="S">Configuration</Heading>
-          <Button disabled={!changed} cta on:click={saveDatasource}>Save</Button
-          >
-        </div>
-        <IntegrationConfigForm
-          on:change={hasChanged}
-          schema={integration.datasource}
-          bind:datasource
-        />
+      <Divider size="S" />
+      <div class="config-header">
+        <Heading size="S">Configuration</Heading>
+        <Button disabled={!changed} cta on:click={saveDatasource}>Save</Button>
       </div>
+      <IntegrationConfigForm
+        on:change={hasChanged}
+        schema={integration.datasource}
+        bind:datasource
+      />
       {#if datasource.plus}
         <PlusConfigForm bind:datasource save={saveDatasource} />
       {/if}
-      <Divider />
+      <Divider size="S" />
       <div class="query-header">
         <Heading size="S">Queries</Heading>
-        <ActionButton size="S" icon="Add" on:click={() => $goto("./new")}
+        <Button cta icon="Add" on:click={() => $goto("./new")}
           >Add query
-        </ActionButton>
+        </Button>
       </div>
       <Body size="S">
         To build an app using a datasource, you must first query the data. A
@@ -148,18 +144,11 @@
     margin: 0 0 var(--spacing-xs) 0;
   }
 
-  .container {
-    width: 100%;
-    border-radius: var(--border-radius-m);
-    margin: 0 auto;
-  }
-
   .query-header {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    margin: 0 0 var(--spacing-s) 0;
   }
 
   .query-list {

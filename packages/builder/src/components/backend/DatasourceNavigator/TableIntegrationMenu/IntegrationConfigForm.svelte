@@ -35,7 +35,7 @@
 </script>
 
 <form>
-  <Layout gap="S">
+  <Layout noPadding gap="S">
     {#if !creating}
       <div class="form-row">
         <Label>{capitalise("Name")}</Label>
