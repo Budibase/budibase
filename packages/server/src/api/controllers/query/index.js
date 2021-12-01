@@ -4,8 +4,8 @@ const { generateQueryID, getQueryParams } = require("../../../db/utils")
 const { BaseQueryVerbs } = require("../../../constants")
 const env = require("../../../environment")
 const { Thread, ThreadType } = require("../../../threads")
-const { importQueries, getDatasourceInfo } = require("./import")
 const { save: saveDatasource } = require("../datasource")
+const { RestImporter } = require("./import")
 
 const Runner = new Thread(ThreadType.QUERY, { timeoutMs: 10000 })
 
@@ -37,16 +37,19 @@ exports.import = async ctx => {
   const body = ctx.request.body
   const data = body.data
 
+  const importer = new RestImporter(data)
+  await importer.init()
+
   let datasourceId
   if (!body.datasourceId) {
     // construct new datasource
-    const info = getDatasourceInfo(data)
+    const info = await importer.getInfo()
     let datasource = {
       type: "datasource",
       source: "REST",
       config: {
         url: info.url,
-        defaultHeaders: info.defaultHeaders,
+        defaultHeaders: [],
       },
       name: info.name,
     }
@@ -60,7 +63,7 @@ exports.import = async ctx => {
     datasourceId = body.datasourceId
   }
 
-  const importResult = await importQueries(ctx.appId, datasourceId, data)
+  const importResult = await importer.importQueries(ctx.appId, datasourceId)
 
   ctx.body = {
     ...importResult,
