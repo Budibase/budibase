@@ -1,12 +1,12 @@
 const { processString } = require("@budibase/string-templates")
-const CouchDB = require("../../db")
+const CouchDB = require("../../../db")
 const {
   generateQueryID,
   getQueryParams,
   isProdAppID,
-} = require("../../db/utils")
-const { BaseQueryVerbs } = require("../../constants")
-const { Thread, ThreadType } = require("../../threads")
+} = require("../../../db/utils")
+const { BaseQueryVerbs } = require("../../../constants")
+const { Thread, ThreadType } = require("../../../threads")
 const { save: saveDatasource } = require("../datasource")
 const { RestImporter } = require("./import")
 
