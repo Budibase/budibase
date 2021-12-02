@@ -5,6 +5,36 @@ import {
 } from "../definitions/datasource"
 import { IntegrationBase } from "./base/IntegrationBase"
 
+const BodyTypes = {
+  NONE: "none",
+  FORM_DATA: "form",
+  ENCODED: "encoded",
+  JSON: "json",
+  TEXT: "text",
+}
+
+const coreFields = {
+  path: {
+    type: DatasourceFieldTypes.STRING,
+    display: "URL",
+  },
+  queryString: {
+    type: DatasourceFieldTypes.STRING,
+  },
+  headers: {
+    type: DatasourceFieldTypes.OBJECT,
+  },
+  enabledHeaders: {
+    type: DatasourceFieldTypes.OBJECT,
+  },
+  requestBody: {
+    type: DatasourceFieldTypes.JSON,
+  },
+  bodyType: {
+    type: DatasourceFieldTypes.STRING,
+  },
+}
+
 module RestModule {
   const fetch = require("node-fetch")
 
@@ -38,97 +68,30 @@ module RestModule {
         readable: true,
         displayName: "POST",
         type: QueryTypes.FIELDS,
-        fields: {
-          path: {
-            type: DatasourceFieldTypes.STRING,
-            display: "URL",
-          },
-          queryString: {
-            type: DatasourceFieldTypes.STRING,
-          },
-          headers: {
-            type: DatasourceFieldTypes.OBJECT,
-          },
-          requestBody: {
-            type: DatasourceFieldTypes.JSON,
-          },
-        },
+        fields: coreFields,
       },
       read: {
         displayName: "GET",
         readable: true,
         type: QueryTypes.FIELDS,
-        fields: {
-          path: {
-            type: DatasourceFieldTypes.STRING,
-            display: "URL",
-          },
-          queryString: {
-            type: DatasourceFieldTypes.STRING,
-          },
-          headers: {
-            type: DatasourceFieldTypes.OBJECT,
-          },
-        },
+        fields: coreFields,
       },
       update: {
         displayName: "PUT",
         readable: true,
         type: QueryTypes.FIELDS,
-        fields: {
-          path: {
-            type: DatasourceFieldTypes.STRING,
-            display: "URL",
-          },
-          queryString: {
-            type: DatasourceFieldTypes.STRING,
-          },
-          headers: {
-            type: DatasourceFieldTypes.OBJECT,
-          },
-          requestBody: {
-            type: DatasourceFieldTypes.JSON,
-          },
-        },
+        fields: coreFields,
       },
       patch: {
         displayName: "PATCH",
         readable: true,
         type: QueryTypes.FIELDS,
-        fields: {
-          path: {
-            type: DatasourceFieldTypes.STRING,
-            display: "URL",
-          },
-          queryString: {
-            type: DatasourceFieldTypes.STRING,
-          },
-          headers: {
-            type: DatasourceFieldTypes.OBJECT,
-          },
-          requestBody: {
-            type: DatasourceFieldTypes.JSON,
-          },
-        },
+        fields: coreFields,
       },
       delete: {
         displayName: "DELETE",
         type: QueryTypes.FIELDS,
-        fields: {
-          path: {
-            type: DatasourceFieldTypes.STRING,
-            display: "URL",
-          },
-          queryString: {
-            type: DatasourceFieldTypes.STRING,
-          },
-          headers: {
-            type: DatasourceFieldTypes.OBJECT,
-          },
-          requestBody: {
-            type: DatasourceFieldTypes.JSON,
-          },
-        },
+        fields: coreFields,
       },
     },
   }

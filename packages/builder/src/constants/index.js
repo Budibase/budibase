@@ -66,6 +66,22 @@ export const LAYOUT_NAMES = {
   },
 }
 
+export const RawRestBodyTypes = {
+  NONE: "none",
+  FORM: "form",
+  ENCODED: "encoded",
+  JSON: "json",
+  TEXT: "text",
+}
+
+export const RestBodyTypes = [
+  { name: "none", value: "none" },
+  { name: "form-data", value: "form" },
+  { name: "x-www-form-encoded", value: "encoded" },
+  { name: "raw (JSON)", value: "json" },
+  { name: "raw (Text)", value: "text" },
+]
+
 export const BUDIBASE_INTERNAL_DB = "bb_internal"
 
 export const APP_NAME_REGEX = /^[\w\s]+$/
