@@ -90,9 +90,9 @@ describe("Curl Import", () => {
       await testQuery("query", "q1=v1&q1=v2")
     })
 
-    const testBody = async (file, queryString) => {
+    const testBody = async (file, body) => {
       const queries = await getQueries(file)
-      expect(queries[0].fields.requestBody).toStrictEqual(queryString)
+      expect(queries[0].fields.requestBody).toStrictEqual(JSON.stringify(body, null, 2))
     }
 
     it("populates body", async () => {

@@ -3,11 +3,11 @@ import { queryValidation } from "../validation"
 import { generateQueryID } from "../../../../db/utils"
 import { Query, ImportInfo, ImportSource } from "./sources/base"
 import { OpenAPI2 } from "./sources/openapi2"
-import { OpenAPI3 } from "./sources/openapi3"
 import { Curl } from "./sources/curl"
 
 interface ImportResult {
   errorQueries: Query[]
+  queries: Query[]
 }
 
 export class RestImporter {
@@ -17,7 +17,7 @@ export class RestImporter {
 
   constructor(data: string) {
     this.data = data
-    this.sources = [new OpenAPI2(), new OpenAPI3(), new Curl()]
+    this.sources = [new OpenAPI2(), new Curl()]
   }
 
   init = async () => {
@@ -37,12 +37,11 @@ export class RestImporter {
     appId: string,
     datasourceId: string,
   ): Promise<ImportResult> => {
-  
     // constuct the queries
     let queries = await this.source.getQueries(datasourceId)
   
     // validate queries
-    const errorQueries = []
+    const errorQueries: Query[] = []
     const schema = queryValidation()
     queries = queries
       .filter(query => {
@@ -57,19 +56,30 @@ export class RestImporter {
         query._id = generateQueryID(query.datasourceId)
         return query
       })
-  
+
     // persist queries
     const db = new CouchDB(appId)
-    for (const query of queries) {
-      try {
-        await db.put(query)
-      } catch (error) {
-        errorQueries.push(query)
+    const response = await db.bulkDocs(queries) 
+
+    // create index to seperate queries and errors
+    const queryIndex = queries.reduce((acc, query) => {
+      if (query._id) {
+        acc[query._id] = query
       }
-    }
+      return acc
+    }, ({} as { [key: string]: Query; }))
+
+    // check for failed writes
+    response.forEach((query: any) => {
+      if (!query.ok) {
+        errorQueries.push(queryIndex[query.id])
+        delete queryIndex[query.id]
+      } 
+    });
   
     return {
       errorQueries,
+      queries: Object.values(queryIndex)
     }
   }
 
