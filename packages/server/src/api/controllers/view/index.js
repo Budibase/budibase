@@ -5,6 +5,7 @@ const exporters = require("./exporters")
 const { saveView, getView, getViews, deleteView } = require("./utils")
 const { fetchView } = require("../row")
 const { getTable } = require("../table/utils")
+const { FieldTypes } = require("../../../constants")
 
 exports.fetch = async ctx => {
   const db = new CouchDB(ctx.appId)
@@ -86,15 +87,15 @@ exports.exportView = async ctx => {
     schema = table.schema
   }
 
-  // remove any auto columns
-  const autocolumns = Object.entries(schema)
-    .filter(entry => entry[1].autocolumn)
+  // remove any relationships
+  const relationships = Object.entries(schema)
+    .filter(entry => entry[1].type === FieldTypes.LINK)
     .map(entry => entry[0])
   rows.forEach(row => {
-    autocolumns.forEach(column => delete row[column])
+    relationships.forEach(column => delete row[column])
   })
-  // delete auto columns from schema
-  autocolumns.forEach(column => {
+  // delete relationships from schema
+  relationships.forEach(column => {
     delete schema[column]
   })
 
