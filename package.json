@@ -47,6 +47,7 @@
     "build:docker:selfhost": "lerna run build:docker && cd hosting/scripts/linux/ && ./release-to-docker-hub.sh latest && cd -",
     "build:docker:develop": "node scripts/pinVersions && lerna run build:docker && cd hosting/scripts/linux/ && ./release-to-docker-hub.sh develop && cd -",
     "build:docker:airgap": "node hosting/scripts/airgapped/airgappedDockerBuild",
+    "build:digitalocean": "cd hosting/digitalocean && ./build.sh && cd -",
     "build:docs": "lerna run build:docs",
     "release:helm": "./scripts/release_helm_chart.sh",
     "env:multi:enable": "lerna run env:multi:enable",
