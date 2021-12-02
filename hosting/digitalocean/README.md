@@ -9,7 +9,7 @@ You must have the `DIGITALOCEAN_TOKEN` environment variable set, so that packer 
 ## Building
 Just run the following command:
 ```
-./build.sh
+yarn build:digitalocean
 ```
 
 ## Uploading to Marketplace
