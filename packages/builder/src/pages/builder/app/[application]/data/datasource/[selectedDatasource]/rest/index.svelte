@@ -11,12 +11,15 @@
     Divider,
     Button,
     Heading,
+    RadioGroup,
   } from "@budibase/bbui"
   import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
   import EditableLabel from "components/common/inputs/EditableLabel.svelte"
   import CodeMirrorEditor from "components/common/CodeMirrorEditor.svelte"
+  import RestBodyInput from "../_components/RestBodyInput.svelte"
   import { capitalise } from "helpers"
   import { onMount } from "svelte"
+  import { RestBodyTypes as bodyTypes } from "constants"
 
   let query
   let breakQs = {}
@@ -106,6 +109,9 @@
         bannerCleared: false,
       }
     }
+    if (query && !query.fields.bodyType) {
+      query.fields.bodyType = "none"
+    }
   })
 </script>
 
@@ -134,7 +140,7 @@
           </div>
           <Button cta disabled={!url} on:click={saveQuery}>Send</Button>
         </div>
-        <Tabs selected="Params">
+        <Tabs selected="Params" noPadding>
           <Tab title="Params">
             <KeyValueBuilder bind:object={breakQs} name="param" headings />
           </Tab>
@@ -146,7 +152,16 @@
               activity
             />
           </Tab>
-          <Tab title="Body" />
+          <Tab title="Body">
+            <RadioGroup
+              bind:value={query.fields.bodyType}
+              options={bodyTypes}
+              direction="horizontal"
+              getOptionLabel={option => option.name}
+              getOptionValue={option => option.value}
+            />
+            <RestBodyInput bind:bodyType={query.fields.bodyType} />
+          </Tab>
           <Tab title="Transformer">
             <Layout noPadding>
               {#if !query.flags.bannerCleared}
