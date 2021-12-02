@@ -1,5 +1,5 @@
 import { ImportSource, ImportInfo, Query } from "./base"
-import { URL } from 'url'
+import { URL } from "url"
 const curlconverter = require("curlconverter")
 
 const parseCurl = (data: string): any => {
@@ -9,7 +9,7 @@ const parseCurl = (data: string): any => {
 
 /**
  * The curl converter parses the request body into the key field of an object
- * e.g. --d '{"key":"val"}' produces an object { "{"key":"val"}" : "" } 
+ * e.g. --d '{"key":"val"}' produces an object { "{"key":"val"}" : "" }
  * This is not what we want, so we need to parse out the key from the object
  */
 const parseBody = (curl: any) => {
@@ -60,7 +60,7 @@ export class Curl extends ImportSource {
     const queryString = url.search
     const headers = this.curl.headers
     const requestBody = parseBody(this.curl)
-  
+
     const query = this.constructQuery(
       datasourceId,
       name,

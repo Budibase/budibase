@@ -1,5 +1,5 @@
 <script>
-  import { getDataProviderComponents } from "builderStore/dataBinding"
+  import { getContextProviderComponents } from "builderStore/dataBinding"
   import {
     Button,
     Popover,
@@ -58,16 +58,19 @@
       ...query,
       type: "query",
     }))
-  $: dataProviders = getDataProviderComponents(
+  $: contextProviders = getContextProviderComponents(
     $currentAsset,
     $store.selectedComponentId
-  ).map(provider => ({
-    label: provider._instanceName,
-    name: provider._instanceName,
-    providerId: provider._id,
-    value: `{{ literal ${safe(provider._id)} }}`,
-    type: "provider",
-  }))
+  )
+  $: dataProviders = contextProviders
+    .filter(component => component._component?.endsWith("/dataprovider"))
+    .map(provider => ({
+      label: provider._instanceName,
+      name: provider._instanceName,
+      providerId: provider._id,
+      value: `{{ literal ${safe(provider._id)} }}`,
+      type: "provider",
+    }))
   $: links = bindings
     .filter(x => x.fieldSchema?.type === "link")
     .map(binding => {

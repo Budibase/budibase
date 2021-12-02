@@ -13,9 +13,11 @@
     notifications,
     Search,
   } from "@budibase/bbui"
+  import Spinner from "components/common/Spinner.svelte"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
   import UpdateAppModal from "components/start/UpdateAppModal.svelte"
-  import { del } from "builderStore/api"
+  import { store, automationStore } from "builderStore"
+  import api, { del, post, get } from "builderStore/api"
   import { onMount } from "svelte"
   import { apps, auth, admin } from "stores/portal"
   import download from "downloadjs"
@@ -24,6 +26,7 @@
   import AppCard from "components/start/AppCard.svelte"
   import AppRow from "components/start/AppRow.svelte"
   import { AppStatus } from "constants"
+  import analytics, { Events } from "analytics"
 
   let layout = "grid"
   let sortBy = "name"
@@ -38,6 +41,7 @@
   let searchTerm = ""
   let cloud = $admin.cloud
   let appName = ""
+  let creatingFromTemplate = false
 
   $: enrichedApps = enrichApps($apps, $auth.user, sortBy)
   $: filteredApps = enrichedApps.filter(app =>
@@ -90,6 +94,62 @@
     template = { fromFile: true }
     creationModal.show()
     creatingApp = true
+  }
+
+  const autoCreateApp = async () => {
+    try {
+      // Auto name app if has same name
+      let appName = template.key
+      const appsWithSameName = $apps.filter(app =>
+        app.name?.startsWith(appName)
+      )
+      appName = `${appName}-${appsWithSameName.length + 1}`
+
+      // Create form data to create app
+      let data = new FormData()
+      data.append("name", appName)
+      data.append("useTemplate", true)
+      data.append("templateKey", template.key)
+
+      // Create App
+      const appResp = await post("/api/applications", data, {})
+      const appJson = await appResp.json()
+      if (!appResp.ok) {
+        throw new Error(appJson.message)
+      }
+
+      analytics.captureEvent(Events.APP.CREATED, {
+        name: appName,
+        appId: appJson.instance._id,
+        template,
+        fromTemplateMarketplace: true,
+      })
+
+      // Select Correct Application/DB in prep for creating user
+      const applicationPkg = await get(
+        `/api/applications/${appJson.instance._id}/appPackage`
+      )
+      const pkg = await applicationPkg.json()
+      if (applicationPkg.ok) {
+        await store.actions.initialise(pkg)
+        await automationStore.actions.fetch()
+        // update checklist - incase first app
+        await admin.init()
+      } else {
+        throw new Error(pkg)
+      }
+
+      // Create user
+      const userResp = await api.post(`/api/users/metadata/self`, {
+        roleId: "BASIC",
+      })
+      await userResp.json()
+      await auth.setInitInfo({})
+      $goto(`/builder/app/${appJson.instance._id}`)
+    } catch (error) {
+      console.error(error)
+      notifications.error(error)
+    }
   }
 
   const stopAppCreation = () => {
@@ -194,7 +254,7 @@
       template = {
         key: templateKey,
       }
-      initiateAppCreation()
+      autoCreateApp()
     } else {
       notifications.error("Your Template URL is invalid. Please try another.")
     }
@@ -202,12 +262,14 @@
 
   onMount(async () => {
     await apps.load()
-    loaded = true
     // if the portal is loaded from an external URL with a template param
     const initInfo = await auth.getInitInfo()
-    if (initInfo.init_template) {
+    if (initInfo?.init_template) {
+      creatingFromTemplate = true
       createAppFromTemplateUrl(initInfo.init_template)
+      return
     }
+    loaded = true
   })
 </script>
 
@@ -283,6 +345,12 @@
       <Modal inline>
         <CreateAppModal {template} inline={true} />
       </Modal>
+    </div>
+  {/if}
+  {#if creatingFromTemplate}
+    <div class="empty-wrapper">
+      <p>Creating your Budibase app from your selected template...</p>
+      <Spinner size="10" />
     </div>
   {/if}
 </Page>

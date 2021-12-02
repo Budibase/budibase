@@ -34,7 +34,6 @@ enum MethodToVerb {
 }
 
 export abstract class ImportSource {
-
   abstract isSupported(data: string): Promise<boolean>
   abstract getInfo(): Promise<ImportInfo>
   abstract getQueries(datasourceId: string): Promise<Query[]>
@@ -47,7 +46,7 @@ export abstract class ImportSource {
     queryString: string,
     headers: object = {},
     parameters: QueryParameter[] = [],
-    body: object | undefined = undefined,
+    body: object | undefined = undefined
   ): Query => {
     const readable = true
     const queryVerb = this.verbFromMethod(method)
@@ -56,7 +55,7 @@ export abstract class ImportSource {
     path = this.processPath(path)
     queryString = this.processQuery(queryString)
     const requestBody = JSON.stringify(body, null, 2)
-  
+
     const query: Query = {
       datasourceId,
       name,
@@ -65,14 +64,14 @@ export abstract class ImportSource {
         headers,
         queryString,
         path,
-        requestBody
+        requestBody,
       },
       transformer,
       schema,
       readable,
       queryVerb,
     }
-  
+
     return query
   }
 
@@ -90,9 +89,9 @@ export abstract class ImportSource {
     }
 
     // add extra braces around params for binding
-    path = path.replace(/[{]/g, "{{");
-    path = path.replace(/[}]/g, "}}");
-    
+    path = path.replace(/[{]/g, "{{")
+    path = path.replace(/[}]/g, "}}")
+
     return path
   }
 
@@ -100,7 +99,7 @@ export abstract class ImportSource {
     if (queryString?.startsWith("?")) {
       return queryString.substring(1)
     }
-  
+
     return queryString
   }
 }

@@ -38,6 +38,7 @@
   const LINK_TYPE = FIELDS.LINK.type
   const STRING_TYPE = FIELDS.STRING.type
   const NUMBER_TYPE = FIELDS.NUMBER.type
+  const DATE_TYPE = FIELDS.DATETIME.type
 
   const dispatch = createEventDispatcher()
   const PROHIBITED_COLUMN_NAMES = ["type", "_id", "_rev", "tableId"]
@@ -100,6 +101,9 @@
   async function saveColumn() {
     if (field.type === AUTO_TYPE) {
       field = buildAutoColumn($tables.draft.name, field.name, field.subtype)
+    }
+    if (field.type !== LINK_TYPE) {
+      delete field.fieldName
     }
     try {
       await tables.saveField({
@@ -255,6 +259,9 @@
       !fieldToCheck.constraints.numericality
     ) {
       fieldToCheck.constraints.numericality = {}
+    }
+    if (fieldToCheck.type === DATE_TYPE && !fieldToCheck.constraints.datetime) {
+      fieldToCheck.constraints.datetime = {}
     }
   }
 

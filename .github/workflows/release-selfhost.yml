@@ -14,6 +14,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v1
         with:
           node-version: 14.x
@@ -27,15 +29,19 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-west-1
 
+      - name: 'Get Previous tag'
+        id: previoustag
+        uses: "WyriHaximus/github-action-get-previous-tag@v1"
+
       - name: Build/release Docker images (Self Host)
         run: | 
           docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
           yarn build
-          yarn build:docker:production
+          yarn build:docker:selfhost
         env:
           DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
-          BUDIBASE_RELEASE_VERSION: latest
+          BUDIBASE_RELEASE_VERSION: ${{ steps.previoustag.outputs.tag }}
       
       - uses: azure/setup-helm@v1
         id: install
