@@ -20,11 +20,13 @@
 
   let query
   let breakQs = {}
+  let url = ""
 
   $: datasource = $datasources.list.find(ds => ds._id === query?.datasourceId)
   $: datasourceType = datasource?.source
   $: integrationInfo = $integrations[datasourceType]
   $: queryConfig = integrationInfo?.query
+  $: url = buildUrl(url, breakQs)
 
   function getSelectedQuery() {
     return (
@@ -41,6 +43,9 @@
     if (!qs) {
       return {}
     }
+    if (qs.includes("?")) {
+      qs = qs.split("?")[1]
+    }
     const params = qs.split("&")
     let paramObj = {}
     for (let param of params) {
@@ -49,22 +54,38 @@
     }
   }
 
-  // function buildQueryString(obj) {
-  //   let str = ""
-  //   for (let [key, value] of Object.entries(obj)) {
-  //     if (str !== "") {
-  //       str += "&"
-  //     }
-  //     str += `${key}=${value}`
-  //   }
-  //   return str
-  // }
+  function buildQueryString(obj) {
+    let str = ""
+    for (let [key, value] of Object.entries(obj)) {
+      if (!key || key === "") {
+        continue
+      }
+      if (str !== "") {
+        str += "&"
+      }
+      str += `${key}=${value || ""}`
+    }
+    return str
+  }
 
-  function checkQueryName(queryToCheck, url = null) {
+  function checkQueryName(queryToCheck, inputUrl = null) {
     if (queryToCheck && (!queryToCheck.name || queryToCheck.flags.urlName)) {
       queryToCheck.flags.urlName = true
-      queryToCheck.name = url || queryToCheck.fields.path
+      queryToCheck.name = url || inputUrl
     }
+  }
+
+  function buildUrl(base, qsObj) {
+    console.log(base)
+    if (!base) {
+      return base
+    }
+    const qs = buildQueryString(qsObj)
+    let newUrl = base
+    if (base.includes("?")) {
+      newUrl = base.split("?")[0]
+    }
+    return qs.length > 0 ? `${newUrl}?${qs}` : newUrl
   }
 
   function learnMoreBanner() {}
@@ -73,7 +94,9 @@
 
   onMount(() => {
     query = getSelectedQuery()
-    breakQs = breakQueryString(query?.fields.queryString)
+    const qs = query?.fields.queryString
+    breakQs = breakQueryString(qs)
+    url = buildUrl(query.fields.path, qs)
     if (query && !query.transformer) {
       query.transformer = "return data"
     }
@@ -108,13 +131,11 @@
           </div>
           <div class="url">
             <Input
-              bind:value={query.fields.path}
+              bind:value={url}
               on:change={({ detail }) => checkQueryName(query, detail)}
             />
           </div>
-          <Button cta disabled={!query.fields.path} on:click={saveQuery}
-            >Send</Button
-          >
+          <Button cta disabled={!url} on:click={saveQuery}>Send</Button>
         </div>
         <Tabs selected="Params">
           <Tab title="Params">
