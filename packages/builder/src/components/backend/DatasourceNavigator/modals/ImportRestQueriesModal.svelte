@@ -104,7 +104,7 @@
           gallery={false}
           bind:value={data.file}
           on:change={() => (lastTouched = "file")}
-          fileTags={["OpenAPI", "Swagger 2.0"]}
+          fileTags={["OpenAPI 2.0", "Swagger 2.0", "cURL", "YAML", "JSON"]}
         />
       </Tab>
       <Tab title="Raw Text">
