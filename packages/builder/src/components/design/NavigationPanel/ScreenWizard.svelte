@@ -4,7 +4,7 @@
   import sanitizeUrl from "builderStore/store/screenTemplates/utils/sanitizeUrl"
   import { Modal } from "@budibase/bbui"
   import { store, selectedAccessRole, allScreens } from "builderStore"
-  import { onDestroy } from "svelte"
+  import analytics, { Events } from "analytics"
 
   let newScreenModal
   let navigationSelectionModal
@@ -21,6 +21,9 @@
     for (let screen of selectedScreens) {
       let test = screen.create()
       createdScreens.push(test)
+      analytics.captureEvent(Events.SCREEN.CREATED, {
+        template: screen.id || screen.name,
+      })
     }
   }
 
@@ -30,7 +33,6 @@
     for (let screen of createdScreens) {
       await saveScreens(screen)
     }
-
     await store.actions.routing.fetch()
     selectedScreens = []
     createdScreens = []
@@ -38,6 +40,7 @@
     url = ""
     showProgressCircle = false
   }
+
   const saveScreens = async draftScreen => {
     let existingScreenCount = $store.screens.filter(
       s => s.props._instanceName == draftScreen.props._instanceName
@@ -86,15 +89,12 @@
     )
   }
 
-  onDestroy(() => {
-    selectedScreens = []
-    screenName = ""
-    url = ""
-    createdScreens = []
-  })
-
   export const showModal = () => {
     newScreenModal.show()
+  }
+
+  const setScreens = evt => {
+    selectedScreens = evt.detail.screens
   }
 
   const chooseModal = index => {
@@ -115,7 +115,7 @@
 
 <Modal bind:this={newScreenModal}>
   <NewScreenModal
-    bind:selectedScreens
+    on:save={setScreens}
     {showProgressCircle}
     {save}
     {chooseModal}

@@ -1,9 +1,12 @@
 const { processString } = require("@budibase/string-templates")
-const CouchDB = require("../../../db")
-const { generateQueryID, getQueryParams } = require("../../../db/utils")
-const { BaseQueryVerbs } = require("../../../constants")
-const env = require("../../../environment")
-const { Thread, ThreadType } = require("../../../threads")
+const CouchDB = require("../../db")
+const {
+  generateQueryID,
+  getQueryParams,
+  isProdAppID,
+} = require("../../db/utils")
+const { BaseQueryVerbs } = require("../../constants")
+const { Thread, ThreadType } = require("../../threads")
 const { save: saveDatasource } = require("../datasource")
 const { RestImporter } = require("./import")
 
@@ -132,10 +135,9 @@ exports.find = async function (ctx) {
   const db = new CouchDB(ctx.appId)
   const query = enrichQueries(await db.get(ctx.params.queryId))
   // remove properties that could be dangerous in real app
-  if (env.isProd()) {
+  if (isProdAppID(ctx.appId)) {
     delete query.fields
     delete query.parameters
-    delete query.schema
   }
   ctx.body = query
 }

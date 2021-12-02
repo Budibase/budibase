@@ -22,7 +22,7 @@ export class RestImporter {
 
   init = async () => {
     for (let source of this.sources) {
-      if (await source.isSupported(this.data)){
+      if (await source.isSupported(this.data)) {
         this.source = source
         break
       }
@@ -35,11 +35,11 @@ export class RestImporter {
 
   importQueries = async (
     appId: string,
-    datasourceId: string,
+    datasourceId: string
   ): Promise<ImportResult> => {
     // constuct the queries
     let queries = await this.source.getQueries(datasourceId)
-  
+
     // validate queries
     const errorQueries: Query[] = []
     const schema = queryValidation()
@@ -59,7 +59,7 @@ export class RestImporter {
 
     // persist queries
     const db = new CouchDB(appId)
-    const response = await db.bulkDocs(queries) 
+    const response = await db.bulkDocs(queries)
 
     // create index to seperate queries and errors
     const queryIndex = queries.reduce((acc, query) => {
@@ -67,22 +67,19 @@ export class RestImporter {
         acc[query._id] = query
       }
       return acc
-    }, ({} as { [key: string]: Query; }))
+    }, {} as { [key: string]: Query })
 
     // check for failed writes
     response.forEach((query: any) => {
       if (!query.ok) {
         errorQueries.push(queryIndex[query.id])
         delete queryIndex[query.id]
-      } 
-    });
-  
+      }
+    })
+
     return {
       errorQueries,
-      queries: Object.values(queryIndex)
+      queries: Object.values(queryIndex),
     }
   }
-
 }
-
-

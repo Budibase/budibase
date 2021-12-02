@@ -1,8 +1,10 @@
 import { ImportInfo, QueryParameter, Query } from "./base"
 import { OpenAPIV2 } from "openapi-types"
-import { OpenAPISource } from "./base/openapi";
+import { OpenAPISource } from "./base/openapi"
 
-const parameterNotRef = (param: OpenAPIV2.Parameter | OpenAPIV2.ReferenceObject): param is OpenAPIV2.Parameter => {
+const parameterNotRef = (
+  param: OpenAPIV2.Parameter | OpenAPIV2.ReferenceObject
+): param is OpenAPIV2.Parameter => {
   // all refs are deferenced by parser library
   return true
 }
@@ -17,11 +19,17 @@ const isOpenAPI2 = (document: any): document is OpenAPIV2.Document => {
 
 const methods: string[] = Object.values(OpenAPIV2.HttpMethods)
 
-const isOperation = (key: string, pathItem: any): pathItem is OpenAPIV2.OperationObject => {
+const isOperation = (
+  key: string,
+  pathItem: any
+): pathItem is OpenAPIV2.OperationObject => {
   return methods.includes(key)
 }
 
-const isParameter = (key: string, pathItem: any): pathItem is OpenAPIV2.Parameter => {
+const isParameter = (
+  key: string,
+  pathItem: any
+): pathItem is OpenAPIV2.Parameter => {
   return !isOperation(key, pathItem)
 }
 
@@ -31,7 +39,7 @@ const isParameter = (key: string, pathItem: any): pathItem is OpenAPIV2.Paramete
  */
 export class OpenAPI2 extends OpenAPISource {
   document!: OpenAPIV2.Document
-  
+
   isSupported = async (data: string): Promise<boolean> => {
     try {
       const document: any = await this.parseData(data)
@@ -52,7 +60,7 @@ export class OpenAPI2 extends OpenAPISource {
     const host = this.document.host || "<host>"
     const url = `${scheme}://${host}${basePath}`
     const name = this.document.info.title || "Swagger Import"
-  
+
     return {
       url: url,
       name: name,
@@ -61,7 +69,7 @@ export class OpenAPI2 extends OpenAPISource {
 
   getQueries = async (datasourceId: string): Promise<Query[]> => {
     const queries = []
-  
+
     for (let [path, pathItem] of Object.entries(this.document.paths)) {
       // parameters that apply to every operation in the path
       let pathParams: OpenAPIV2.Parameter[] = []
@@ -74,7 +82,7 @@ export class OpenAPI2 extends OpenAPISource {
         }
         // can not be a parameter, must be an operation
         const operation = opOrParams as OpenAPIV2.OperationObject
-  
+
         const methodName = key
         const name = operation.operationId || path
         let queryString = ""
@@ -112,24 +120,25 @@ export class OpenAPI2 extends OpenAPISource {
               case "body":
                 // set the request body to the example provided
                 // future enhancement: generate an example from the schema
-                let bodyParam: OpenAPIV2.InBodyParameterObject = param as OpenAPIV2.InBodyParameterObject
+                let bodyParam: OpenAPIV2.InBodyParameterObject =
+                  param as OpenAPIV2.InBodyParameterObject
                 if (param.schema.example) {
                   const schema = bodyParam.schema as OpenAPIV2.SchemaObject
                   requestBody = schema.example
                 }
-                break;
+                break
             }
 
             // add the parameter if it can be bound in our config
-            if (['query', 'header', 'path'].includes(param.in)) {
+            if (["query", "header", "path"].includes(param.in)) {
               parameters.push({
                 name: param.name,
                 default: param.default || "",
-              })  
+              })
             }
           }
         }
-  
+
         const query = this.constructQuery(
           datasourceId,
           name,
@@ -143,7 +152,7 @@ export class OpenAPI2 extends OpenAPISource {
         queries.push(query)
       }
     }
-  
+
     return queries
   }
 }

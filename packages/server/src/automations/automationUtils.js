@@ -64,5 +64,14 @@ exports.cleanUpRow = async (appId, tableId, row) => {
 }
 
 exports.getError = err => {
+  if (err == null) {
+    return "No error provided."
+  }
+  if (
+    typeof err === "object" &&
+    (err.toString == null || err.toString() === "[object Object]")
+  ) {
+    return JSON.stringify(err)
+  }
   return typeof err !== "string" ? err.toString() : err
 }
