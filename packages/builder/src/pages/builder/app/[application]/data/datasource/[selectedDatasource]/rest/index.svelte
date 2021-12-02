@@ -27,6 +27,7 @@
   $: integrationInfo = $integrations[datasourceType]
   $: queryConfig = integrationInfo?.query
   $: url = buildUrl(url, breakQs)
+  $: checkQueryName(url)
 
   function getSelectedQuery() {
     return (
@@ -68,15 +69,14 @@
     return str
   }
 
-  function checkQueryName(queryToCheck, inputUrl = null) {
-    if (queryToCheck && (!queryToCheck.name || queryToCheck.flags.urlName)) {
-      queryToCheck.flags.urlName = true
-      queryToCheck.name = url || inputUrl
+  function checkQueryName(inputUrl = null) {
+    if (query && (!query.name || query.flags.urlName)) {
+      query.flags.urlName = true
+      query.name = url || inputUrl
     }
   }
 
   function buildUrl(base, qsObj) {
-    console.log(base)
     if (!base) {
       return base
     }
@@ -130,10 +130,7 @@
             />
           </div>
           <div class="url">
-            <Input
-              bind:value={url}
-              on:change={({ detail }) => checkQueryName(query, detail)}
-            />
+            <Input bind:value={url} />
           </div>
           <Button cta disabled={!url} on:click={saveQuery}>Send</Button>
         </div>
