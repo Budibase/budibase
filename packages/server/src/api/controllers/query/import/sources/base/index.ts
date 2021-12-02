@@ -17,7 +17,7 @@ export interface Query {
     headers: object
     queryString: string | null
     path: string
-    requestBody?: object
+    requestBody: string | undefined
   }
   transformer: string | null
   schema: any
@@ -47,7 +47,7 @@ export abstract class ImportSource {
     queryString: string,
     headers: object = {},
     parameters: QueryParameter[] = [],
-    requestBody: object | undefined = undefined,
+    body: object | undefined = undefined,
   ): Query => {
     const readable = true
     const queryVerb = this.verbFromMethod(method)
@@ -55,6 +55,7 @@ export abstract class ImportSource {
     const schema = {}
     path = this.processPath(path)
     queryString = this.processQuery(queryString)
+    const requestBody = JSON.stringify(body, null, 2)
   
     const query: Query = {
       datasourceId,
@@ -85,9 +86,13 @@ export abstract class ImportSource {
 
   processPath = (path: string): string => {
     if (path?.startsWith("/")) {
-      return path.substring(1)
+      path = path.substring(1)
     }
-  
+
+    // add extra braces around params for binding
+    path = path.replace(/[{]/g, "{{");
+    path = path.replace(/[}]/g, "}}");
+    
     return path
   }
 
