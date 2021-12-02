@@ -136,9 +136,16 @@
         </div>
         <Tabs selected="Params">
           <Tab title="Params">
-            <KeyValueBuilder bind:object={breakQs} name="param" />
+            <KeyValueBuilder bind:object={breakQs} name="param" headings />
           </Tab>
-          <Tab title="Headers" />
+          <Tab title="Headers">
+            <KeyValueBuilder
+              bind:object={query.fields.headers}
+              name="header"
+              headings
+              activity
+            />
+          </Tab>
           <Tab title="Body" />
           <Tab title="Transformer">
             <Layout noPadding>
