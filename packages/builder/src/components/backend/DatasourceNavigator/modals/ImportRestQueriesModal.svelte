@@ -14,16 +14,17 @@
   } from "@budibase/bbui"
   import analytics, { Events } from "analytics"
   import { datasources, queries } from "stores/backend"
+  import { writable } from "svelte/store"
 
   export let modal
   export let datasourceId
   export let createDatasource = false
 
-  let data = {
+  const data = writable({
     url: "",
     raw: "",
-    file: "",
-  }
+    file: undefined,
+  })
 
   let lastTouched = "url"
 
@@ -32,12 +33,12 @@
 
     // parse the file into memory and send as string
     if (lastTouched === "file") {
-      dataString = await data.file[0].text()
+      dataString = await $data.file.text()
     } else if (lastTouched === "url") {
-      const response = await fetch(data.url)
+      const response = await fetch($data.url)
       dataString = await response.text()
     } else if (lastTouched === "raw") {
-      dataString = data.raw
+      dataString = $data.raw
     }
 
     return dataString
@@ -56,7 +57,10 @@
         datasourceId,
       }
 
-      await queries.import(body)
+      const importResult = await queries.import(body)
+      if (!datasourceId) {
+        datasourceId = importResult.datasourceId
+      }
 
       // reload
       await datasources.fetch()
@@ -93,7 +97,7 @@
     <Tabs selected="Link">
       <Tab title="Link">
         <Input
-          bind:value={data.url}
+          bind:value={$data.url}
           on:change={() => (lastTouched = "url")}
           label="Enter a URL"
           placeholder="e.g. https://petstore.swagger.io/v2/swagger.json"
@@ -102,14 +106,18 @@
       <Tab title="File">
         <Dropzone
           gallery={false}
-          bind:value={data.file}
-          on:change={() => (lastTouched = "file")}
+          value={$data.file ? [$data.file] : []}
+          on:change={e => {
+            $data.file = e.detail?.[0]
+            lastTouched = "file"
+          }}
           fileTags={["OpenAPI 2.0", "Swagger 2.0", "cURL", "YAML", "JSON"]}
+          maximum={1}
         />
       </Tab>
       <Tab title="Raw Text">
         <TextArea
-          bind:value={data.raw}
+          bind:value={$data.raw}
           on:change={() => (lastTouched = "raw")}
           label={"Paste raw text"}
           placeholder={'e.g. curl --location --request GET "https://example.com"'}

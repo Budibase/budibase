@@ -13,6 +13,7 @@
   export let handleFileTooLarge = undefined
   export let gallery = true
   export let fileTags = []
+  export let maximum = undefined
 
   const dispatch = createEventDispatcher()
   const onChange = e => {
@@ -31,6 +32,7 @@
     {handleFileTooLarge}
     {gallery}
     {fileTags}
+    {maximum}
     on:change={onChange}
   />
 </Field>
