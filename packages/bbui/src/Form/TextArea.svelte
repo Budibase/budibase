@@ -10,6 +10,7 @@
   export let disabled = false
   export let error = null
   export let getCaretPosition = null
+  export let height = null
 
   const dispatch = createEventDispatcher()
   const onChange = e => {
@@ -25,6 +26,7 @@
     {disabled}
     {value}
     {placeholder}
+    {height}
     on:change={onChange}
   />
 </Field>

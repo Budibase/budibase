@@ -12,10 +12,15 @@
     Button,
     Heading,
     RadioGroup,
+    Label,
+    TextArea,
+    Table,
   } from "@budibase/bbui"
   import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
   import EditableLabel from "components/common/inputs/EditableLabel.svelte"
-  import CodeMirrorEditor from "components/common/CodeMirrorEditor.svelte"
+  import CodeMirrorEditor, {
+    EditorModes,
+  } from "components/common/CodeMirrorEditor.svelte"
   import RestBodyInput from "../_components/RestBodyInput.svelte"
   import { capitalise } from "helpers"
   import { onMount } from "svelte"
@@ -24,6 +29,8 @@
   let query
   let breakQs = {}
   let url = ""
+  // test - { info: { code: 500, time: "455ms", size: "2.09KB" }}
+  let response
 
   $: datasource = $datasources.list.find(ds => ds._id === query?.datasourceId)
   $: datasourceType = datasource?.source
@@ -31,6 +38,8 @@
   $: queryConfig = integrationInfo?.query
   $: url = buildUrl(url, breakQs)
   $: checkQueryName(url)
+  $: responseSuccess =
+    response?.info?.code >= 200 && response?.info?.code <= 206
 
   function getSelectedQuery() {
     return (
@@ -95,6 +104,8 @@
 
   function saveQuery() {}
 
+  function sendQuery() {}
+
   onMount(() => {
     query = getSelectedQuery()
     const qs = query?.fields.queryString
@@ -138,9 +149,9 @@
           <div class="url">
             <Input bind:value={url} />
           </div>
-          <Button cta disabled={!url} on:click={saveQuery}>Send</Button>
+          <Button cta disabled={!url} on:click={sendQuery}>Send</Button>
         </div>
-        <Tabs selected="Params" noPadding>
+        <Tabs selected="Params" quiet noPadding noHorizPadding>
           <Tab title="Params">
             <KeyValueBuilder bind:object={breakQs} name="param" headings />
           </Tab>
@@ -160,7 +171,7 @@
               getOptionLabel={option => option.name}
               getOptionValue={option => option.value}
             />
-            <RestBodyInput bind:bodyType={query.fields.bodyType} />
+            <RestBodyInput bind:bodyType={query.fields.bodyType} bind:query />
           </Tab>
           <Tab title="Transformer">
             <Layout noPadding>
@@ -175,6 +186,7 @@
               {/if}
               <CodeMirrorEditor
                 height={200}
+                mode={EditorModes.JSON}
                 value={query.transformer}
                 resize="vertical"
                 on:change={e => (query.transformer = e.detail)}
@@ -184,16 +196,72 @@
         </Tabs>
       </Layout>
     </div>
-    <Layout paddingY="L">
+    <Layout paddingY="S" gap="S">
       <Divider size="S" />
-      <Heading size="M">Response</Heading>
+      {#if !response}
+        <Heading size="M">Response</Heading>
+      {:else}
+        <Tabs selected="JSON" quiet noPadding noHorizPadding>
+          <Tab title="JSON">
+            <CodeMirrorEditor
+              height={300}
+              value={response.text}
+              resize="vertical"
+              readonly
+              on:change={e => (query.transformer = e.detail)}
+            />
+          </Tab>
+          <Tab title="Schema">
+            <KeyValueBuilder
+              bind:object={response.schemaFields}
+              name="header"
+              headings
+              activity
+            />
+          </Tab>
+          <Tab title="Raw">
+            <TextArea disabled value={response.text} height="300" />
+          </Tab>
+          <Tab title="Preview">
+            {#if response}
+              <Table
+                schema={response?.schemaFields}
+                data={response?.rows}
+                allowEditColumns={false}
+                allowEditRows={false}
+                allowSelectRows={false}
+              />
+            {/if}
+          </Tab>
+          <div class="stats">
+            <Label size="L">
+              Status: <span class={responseSuccess ? "green" : "red"}
+                >{response?.info.code}</span
+              >
+            </Label>
+            <Label size="L">
+              Time: <span class={responseSuccess ? "green" : "red"}
+                >{response?.info.time}</span
+              >
+            </Label>
+            <Label size="L">
+              Size: <span class={responseSuccess ? "green" : "red"}
+                >{response?.info.size}</span
+              >
+            </Label>
+            <Button disabled={!responseSuccess} cta on:click={saveQuery}
+              >Save query</Button
+            >
+          </div>
+        </Tabs>
+      {/if}
     </Layout>
   </div>
 {/if}
 
 <style>
   .inner {
-    width: 840px;
+    width: 960px;
     margin: 0 auto;
     height: 100%;
   }
@@ -209,5 +277,18 @@
   }
   .top {
     min-height: 50%;
+  }
+  .stats {
+    display: flex;
+    gap: var(--spacing-xl);
+    margin-left: auto !important;
+    margin-right: 0;
+    align-items: center;
+  }
+  .green {
+    color: #53a761;
+  }
+  .red {
+    color: #ea7d82;
   }
 </style>

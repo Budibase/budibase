@@ -6,6 +6,8 @@
   export let selected
   export let vertical = false
   export let noPadding = false
+  // added as a separate option as noPadding is used for vertical padding
+  export let noHorizPadding = false
   export let quiet = false
   export let emphasized = false
 
@@ -59,6 +61,7 @@
 <div
   bind:this={container}
   class:quiet
+  class:noHorizPadding
   class="selected-border spectrum-Tabs {quiet &&
     'spectrum-Tabs--quiet'} spectrum-Tabs--{vertical
     ? 'vertical'
@@ -98,6 +101,9 @@
   }
   .spectrum-Tabs--horizontal .spectrum-Tabs-selectionIndicator {
     bottom: 0 !important;
+  }
+  .noHorizPadding {
+    padding: 0;
   }
   .noPadding {
     margin: 0;
