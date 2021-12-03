@@ -82,7 +82,7 @@ export const getFrontendStore = () => {
         libraries: application.componentLibraries,
         components,
         clientFeatures: {
-          ...state.clientFeatures,
+          ...INITIAL_FRONTEND_STATE.clientFeatures,
           ...components.features,
         },
         name: application.name,
