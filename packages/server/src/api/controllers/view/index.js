@@ -91,11 +91,11 @@ exports.exportView = async ctx => {
   const relationships = Object.entries(schema)
     .filter(entry => entry[1].type === FieldTypes.LINK)
     .map(entry => entry[0])
-  rows.forEach(row => {
-    relationships.forEach(column => delete row[column])
-  })
-  // delete relationships from schema
+  // iterate relationship columns and remove from and row and schema
   relationships.forEach(column => {
+    rows.forEach(row => {
+      delete row[column]
+    })
     delete schema[column]
   })
 
