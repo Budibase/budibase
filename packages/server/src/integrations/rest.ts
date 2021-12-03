@@ -32,6 +32,7 @@ const coreFields = {
   },
   bodyType: {
     type: DatasourceFieldTypes.STRING,
+    enum: Object.values(BodyTypes),
   },
 }
 

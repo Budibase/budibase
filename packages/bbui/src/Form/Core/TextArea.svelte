@@ -7,6 +7,7 @@
   export let disabled = false
   export let error = null
   export let id = null
+  export let height = null
   export const getCaretPosition = () => ({
     start: textarea.selectionStart,
     end: textarea.selectionEnd,
@@ -22,6 +23,7 @@
 </script>
 
 <div
+  style={height ? `height: ${height}px;` : ""}
   class="spectrum-Textfield spectrum-Textfield--multiline"
   class:is-invalid={!!error}
   class:is-disabled={disabled}
