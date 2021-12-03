@@ -34,4 +34,5 @@ exports.Configs = {
   OIDC_LOGOS: "logos_oidc",
 }
 
+exports.MAX_VALID_DATE = new Date(2147483647000)
 exports.DEFAULT_TENANT_ID = "default"
