@@ -17,6 +17,7 @@
   const flipDurationMs = 150
   let dragDisabled = true
 
+  $: links = links || []
   $: links.forEach(link => {
     if (!link.id) {
       link.id = generate()
