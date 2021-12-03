@@ -7,7 +7,7 @@ const {
 const jwt = require("jsonwebtoken")
 const { options } = require("./middleware/passport/jwt")
 const { createUserEmailView } = require("./db/views")
-const { Headers, UserStatus, Cookies } = require("./constants")
+const { Headers, UserStatus, Cookies, MAX_VALID_DATE } = require("./constants")
 const {
   getGlobalDB,
   updateTenantId,
@@ -83,14 +83,15 @@ exports.getCookie = (ctx, name) => {
  * @param {object} ctx The request which is to be manipulated.
  * @param {string} name The name of the cookie to set.
  * @param {string|object} value The value of cookie which will be set.
+ * @param {object} opts options like whether to sign.
  */
-exports.setCookie = (ctx, value, name = "builder") => {
-  if (value) {
+exports.setCookie = (ctx, value, name = "builder", opts = { sign: true }) => {
+  if (value && opts && opts.sign) {
     value = jwt.sign(value, options.secretOrKey)
   }
 
   const config = {
-    maxAge: Number.MAX_SAFE_INTEGER,
+    expires: MAX_VALID_DATE,
     path: "/",
     httpOnly: false,
     overwrite: true,
