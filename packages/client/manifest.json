@@ -2418,6 +2418,40 @@
       }
     ]
   },
+  "jsonfield": {
+    "name": "Key/Value Field",
+    "icon": "Brackets",
+    "styles": ["size"],
+    "editable": true,
+    "settings": [
+      {
+        "type": "field/json",
+        "label": "Field",
+        "key": "field"
+      },
+      {
+        "type": "text",
+        "label": "Label",
+        "key": "label"
+      },
+      {
+        "type": "text",
+        "label": "Placeholder",
+        "key": "placeholder"
+      },
+      {
+        "type": "text",
+        "label": "Default value",
+        "key": "defaultValue"
+      },
+      {
+        "type": "boolean",
+        "label": "Disabled",
+        "key": "disabled",
+        "defaultValue": false
+      }
+    ]
+  },
   "dataprovider": {
     "name": "Data Provider",
     "info": "Pagination is only available for data stored in tables.",

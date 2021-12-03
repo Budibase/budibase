@@ -13,6 +13,7 @@ export const FieldTypes = {
   ATTACHMENT: "attachment",
   LINK: "link",
   FORMULA: "formula",
+  JSON: "json",
 }
 
 export const UnsortableTypes = [
