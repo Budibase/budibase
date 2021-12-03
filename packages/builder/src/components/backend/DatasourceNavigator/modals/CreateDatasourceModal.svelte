@@ -80,7 +80,11 @@
 
 <Modal bind:this={importModal}>
   {#if integration.type === "REST"}
-    <ImportRestQueriesModal {integration} {modal} createDatasource={true} />
+    <ImportRestQueriesModal
+      navigateDatasource={true}
+      createDatasource={true}
+      onCancel={() => modal.show()}
+    />
   {/if}
 </Modal>
 

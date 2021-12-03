@@ -16,9 +16,10 @@
   import { datasources, queries } from "stores/backend"
   import { writable } from "svelte/store"
 
-  export let modal
+  export let navigateDatasource = false
   export let datasourceId
   export let createDatasource = false
+  export let onCancel
 
   const data = writable({
     url: "",
@@ -67,7 +68,10 @@
       await queries.fetch()
       await datasources.select(datasourceId)
 
-      $goto(`./datasource/${datasourceId}`)
+      if (navigateDatasource) {
+        $goto(`./datasource/${datasourceId}`)
+      }
+
       notifications.success(`Imported successfully.`)
       analytics.captureEvent(Events.QUERIES.REST.IMPORTED, {
         importType: lastTouched,
@@ -84,7 +88,7 @@
 
 <ModalContent
   onConfirm={() => importQueries()}
-  onCancel={() => modal.show()}
+  {onCancel}
   confirmText={"Import"}
   cancelText="Back"
   size="L"

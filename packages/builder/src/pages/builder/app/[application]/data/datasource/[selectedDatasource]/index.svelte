@@ -17,7 +17,9 @@
   import CreateExternalTableModal from "./modals/CreateExternalTableModal.svelte"
   import ICONS from "components/backend/DatasourceNavigator/icons"
   import { capitalise } from "helpers"
+  import ImportRestQueriesModal from "components/backend/DatasourceNavigator/modals/ImportRestQueriesModal.svelte"
 
+  let importQueriesModal
   let relationshipModal
   let createExternalTableModal
   let selectedFromRelationship, selectedToRelationship
@@ -129,6 +131,15 @@
     fromRelationship={selectedFromRelationship}
     toRelationship={selectedToRelationship}
   />
+</Modal>
+
+<Modal bind:this={importQueriesModal}>
+  {#if datasource.source === "REST"}
+    <ImportRestQueriesModal
+      createDatasource={false}
+      datasourceId={datasource._id}
+    />
+  {/if}
 </Modal>
 
 <Modal bind:this={createExternalTableModal}>
@@ -246,7 +257,14 @@
       <Divider />
       <div class="query-header">
         <Heading size="S">Queries</Heading>
-        <Button secondary on:click={() => $goto("./new")}>Add Query</Button>
+        <div class="query-buttons">
+          {#if datasource.source === "REST"}
+            <Button secondary on:click={() => importQueriesModal.show()}
+              >Import</Button
+            >
+          {/if}
+          <Button secondary on:click={() => $goto("./new")}>Add Query</Button>
+        </div>
       </div>
       <div class="query-list">
         {#each $queries.list.filter(query => query.datasourceId === datasource._id) as query}
@@ -291,6 +309,11 @@
     justify-content: space-between;
     align-items: center;
     margin: 0 0 var(--spacing-s) 0;
+  }
+
+  .query-buttons {
+    display: flex;
+    gap: var(--spacing-l);
   }
 
   .query-list {
