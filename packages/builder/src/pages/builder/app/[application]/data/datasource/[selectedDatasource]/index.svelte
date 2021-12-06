@@ -15,7 +15,7 @@
   import PlusConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/PlusConfigForm.svelte"
   import ICONS from "components/backend/DatasourceNavigator/icons"
   import VerbRenderer from "./_components/VerbRenderer.svelte"
-  import { IntegrationTypes } from "constants"
+  import { IntegrationTypes } from "constants/backend"
   import { isEqual } from "lodash"
   import { cloneDeep } from "lodash/fp"
 

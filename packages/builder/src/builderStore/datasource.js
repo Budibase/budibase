@@ -1,5 +1,5 @@
 import { datasources, tables } from "../stores/backend"
-import { IntegrationNames } from "../constants"
+import { IntegrationNames } from "../constants/backend"
 import analytics, { Events } from "../analytics"
 import { get } from "svelte/store"
 import cloneDeep from "lodash/cloneDeepWith"

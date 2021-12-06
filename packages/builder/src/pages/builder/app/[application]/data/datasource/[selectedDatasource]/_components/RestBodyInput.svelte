@@ -1,6 +1,6 @@
 <script>
   import { Body } from "@budibase/bbui"
-  import { RawRestBodyTypes } from "constants"
+  import { RawRestBodyTypes } from "constants/backend"
   import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
   import CodeMirrorEditor, {
     EditorModes,

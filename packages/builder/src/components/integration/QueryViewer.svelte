@@ -14,7 +14,6 @@
     Tab,
   } from "@budibase/bbui"
   import { notifications, Divider } from "@budibase/bbui"
-  import api from "builderStore/api"
   import ExtraQueryConfig from "./ExtraQueryConfig.svelte"
   import IntegrationQueryEditor from "components/integration/index.svelte"
   import ExternalDataSourceTable from "components/backend/DataTable/ExternalDataSourceTable.svelte"
@@ -28,23 +27,20 @@
   } from "stores/backend"
   import { capitalise } from "../../helpers"
   import CodeMirrorEditor from "components/common/CodeMirrorEditor.svelte"
-  import { Roles } from "constants/backend"
+  import JSONPreview from "./JSONPreview.svelte"
+  import { Roles, SchemaTypeOptions } from "constants/backend"
   import { onMount } from "svelte"
+  import KeyValueBuilder from "./KeyValueBuilder.svelte"
+  import { fieldsToSchema, schemaToFields } from "helpers/data/utils"
 
   export let query
 
-  let fields = query.schema ? schemaToFields(query.schema) : []
+  let fields = query?.schema ? schemaToFields(query.schema) : []
   let parameters
   let data = []
   let roleId
   const transformerDocs =
     "https://docs.budibase.com/building-apps/data/transformers"
-  const typeOptions = [
-    { label: "Text", value: "string" },
-    { label: "Number", value: "number" },
-    { label: "Boolean", value: "boolean" },
-    { label: "Datetime", value: "datetime" },
-  ]
 
   $: datasource = $datasources.list.find(ds => ds._id === query.datasourceId)
   $: query.schema = fieldsToSchema(fields)
@@ -58,15 +54,6 @@
   // seed the transformer
   if (query && !query.transformer) {
     query.transformer = "return data"
-  }
-
-  function newField() {
-    fields = [...fields, {}]
-  }
-
-  function deleteField(idx) {
-    fields.splice(idx, 1)
-    fields = fields
   }
 
   function resetDependentFields() {
@@ -94,43 +81,18 @@
 
   async function previewQuery() {
     try {
-      const response = await api.post(`/api/queries/preview`, {
-        fields: query.fields,
-        queryVerb: query.queryVerb,
-        transformer: query.transformer,
-        parameters: query.parameters.reduce(
-          (acc, next) => ({
-            ...acc,
-            [next.name]: next.default,
-          }),
-          {}
-        ),
-        datasourceId: datasource._id,
-      })
-      const json = await response.json()
-
-      if (response.status !== 200) throw new Error(json.message)
-
-      data = json.rows || []
-
-      if (data.length === 0) {
+      const response = await queries.preview(query)
+      if (response.rows.length === 0) {
         notifications.info(
           "Query results empty. Please execute a query with results to create your schema."
         )
         return
       }
-
+      data = response.rows
+      fields = response.schema
       notifications.success("Query executed successfully.")
-
-      // Assume all the fields are strings and create a basic schema from the
-      // unique fields returned by the server
-      fields = json.schemaFields.map(field => ({
-        name: field,
-        type: "string",
-      }))
     } catch (err) {
-      notifications.error(`Query Error: ${err.message}`)
-      console.error(err)
+      notifications.error(err)
     }
   }
 
@@ -144,26 +106,6 @@
       console.error(err)
       notifications.error(`Error creating query. ${err.message}`)
     }
-  }
-
-  function schemaToFields(schema) {
-    return Object.keys(schema).map(key => ({
-      name: key,
-      type: query.schema[key].type,
-    }))
-  }
-
-  function fieldsToSchema(fieldsToConvert) {
-    return fieldsToConvert.reduce(
-      (acc, next) => ({
-        ...acc,
-        [next.name]: {
-          name: next.name,
-          type: next.type,
-        },
-      }),
-      {}
-    )
   }
 
   onMount(async () => {
@@ -271,29 +213,15 @@
       {#if data}
         <Tabs selected="JSON">
           <Tab title="JSON">
-            <pre
-              class="preview">
-                <!-- prettier-ignore -->
-                {#if !data[0]}
-                  Please run your query to fetch some data.
-                {:else}
-                  {JSON.stringify(data[0], undefined, 2)}
-                {/if}
-              </pre>
+            <JSONPreview data={data[0]} minHeight="120" />
           </Tab>
           <Tab title="Schema">
-            <Layout gap="S">
-              {#each fields as field, idx}
-                <div class="field">
-                  <Input placeholder="Field Name" bind:value={field.name} />
-                  <Select bind:value={field.type} options={typeOptions} />
-                  <Icon name="bleClose" on:click={() => deleteField(idx)} />
-                </div>
-              {/each}
-              <div>
-                <Button secondary on:click={newField}>Add Field</Button>
-              </div>
-            </Layout>
+            <KeyValueBuilder
+              bind:object={fields}
+              name="field"
+              headings
+              options={SchemaTypeOptions}
+            />
           </Tab>
           <Tab title="Preview">
             <ExternalDataSourceTable {query} {data} />
@@ -322,27 +250,9 @@
     justify-content: space-between;
   }
 
-  .field {
-    display: grid;
-    grid-template-columns: 1fr 1fr 5%;
-    gap: var(--spacing-l);
-  }
-
   .viewer {
     min-height: 200px;
     width: 640px;
-  }
-
-  .preview {
-    height: 100%;
-    min-height: 120px;
-    overflow-y: auto;
-    overflow-wrap: break-word;
-    white-space: pre-wrap;
-    background-color: var(--grey-2);
-    padding: var(--spacing-m);
-    border-radius: 8px;
-    color: var(--ink);
   }
 
   .viewer-controls {
