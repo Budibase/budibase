@@ -85,7 +85,7 @@ export const fetchDatasourceSchema = async dataSource => {
     for (let i = 0; i < keysToSchema.length; i++) {
       schema = schema[keysToSchema[i]].schema
     }
-    return convertJSONSchemaToTableSchema(schema)
+    return convertJSONSchemaToTableSchema(schema, true)
   }
 
   // Tables, views and links can be fetched by table ID
