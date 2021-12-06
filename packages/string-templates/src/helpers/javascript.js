@@ -1,4 +1,5 @@
 const { atob } = require("../utilities")
+const { cloneDeep } = require("lodash/fp")
 
 // The method of executing JS scripts depends on the bundle being built.
 // This setter is used in the entrypoint (either index.cjs or index.mjs).
@@ -38,8 +39,12 @@ module.exports.processJS = (handlebars, context) => {
     // This is required to allow the final `return` statement to be valid.
     const js = `function run(){${atob(handlebars)}};run();`
 
-    // Our $ context function gets a value from context
-    const sandboxContext = { $: path => getContextValue(path, context) }
+    // Our $ context function gets a value from context.
+    // We clone the context to avoid mutation in the binding affecting real
+    // app context.
+    const sandboxContext = {
+      $: path => getContextValue(path, cloneDeep(context)),
+    }
 
     // Create a sandbox with out context and run the JS
     return runJS(js, sandboxContext)

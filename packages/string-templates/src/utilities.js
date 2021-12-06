@@ -10,7 +10,10 @@ module.exports.swapStrings = (string, start, length, swap) => {
   return string.slice(0, start) + swap + string.slice(start + length)
 }
 
-module.exports.removeHandlebarsStatements = string => {
+module.exports.removeHandlebarsStatements = (
+  string,
+  replacement = "Invalid binding"
+) => {
   let regexp = new RegExp(exports.FIND_HBS_REGEX)
   let matches = string.match(regexp)
   if (matches == null) {
@@ -18,7 +21,7 @@ module.exports.removeHandlebarsStatements = string => {
   }
   for (let match of matches) {
     const idx = string.indexOf(match)
-    string = exports.swapStrings(string, idx, match.length, "Invalid Binding")
+    string = exports.swapStrings(string, idx, match.length, replacement)
   }
   return string
 }
