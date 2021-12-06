@@ -8,6 +8,7 @@
   export let error = null
   export let id = null
   export let height = null
+  export let minHeight = null
   export const getCaretPosition = () => ({
     start: textarea.selectionStart,
     end: textarea.selectionEnd,
@@ -23,7 +24,8 @@
 </script>
 
 <div
-  style={height ? `height: ${height}px;` : ""}
+  style={(height ? `height: ${height}px;` : "") +
+    (minHeight ? `min-height: ${minHeight}px` : "")}
   class="spectrum-Textfield spectrum-Textfield--multiline"
   class:is-invalid={!!error}
   class:is-disabled={disabled}

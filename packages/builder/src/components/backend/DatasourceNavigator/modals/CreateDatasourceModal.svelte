@@ -3,7 +3,7 @@
   import { onMount } from "svelte"
   import ICONS from "../icons"
   import api from "builderStore/api"
-  import { IntegrationNames, IntegrationTypes } from "constants"
+  import { IntegrationNames, IntegrationTypes } from "constants/backend"
   import CreateTableModal from "components/backend/TableNavigator/modals/CreateTableModal.svelte"
   import DatasourceConfigModal from "components/backend/DatasourceNavigator/modals/DatasourceConfigModal.svelte"
   import { createRestDatasource } from "builderStore/datasource"

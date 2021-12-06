@@ -9,7 +9,7 @@
   } from "@budibase/bbui"
   import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
   import { capitalise } from "helpers"
-  import { IntegrationTypes } from "constants"
+  import { IntegrationTypes } from "constants/backend"
 
   export let datasource
   export let schema

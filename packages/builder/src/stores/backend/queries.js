@@ -62,6 +62,35 @@ export function createQueriesStore() {
     unselect: () => {
       update(state => ({ ...state, selected: null }))
     },
+    preview: async query => {
+      const response = await api.post("/api/queries/preview", {
+        fields: query.fields,
+        queryVerb: query.queryVerb,
+        transformer: query.transformer,
+        parameters: query.parameters.reduce(
+          (acc, next) => ({
+            ...acc,
+            [next.name]: next.default,
+          }),
+          {}
+        ),
+        datasourceId: query.datasourceId,
+      })
+
+      if (response.status !== 200) {
+        const error = await response.text()
+        throw `Query error: ${error}`
+      }
+
+      const json = await response.json()
+      // Assume all the fields are strings and create a basic schema from the
+      // unique fields returned by the server
+      const schema = {}
+      for (let field of json.schemaFields) {
+        schema[field] = "string"
+      }
+      return { ...json, schema, rows: json.rows || [] }
+    },
     delete: async query => {
       const response = await api.delete(
         `/api/queries/${query._id}/${query._rev}`

@@ -1,5 +1,12 @@
 <script>
-  import { Icon, ActionButton, Input, Label, Toggle } from "@budibase/bbui"
+  import {
+    Icon,
+    ActionButton,
+    Input,
+    Label,
+    Toggle,
+    Select,
+  } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { lowercase } from "helpers"
 
@@ -12,6 +19,7 @@
   export let name
   export let headings = false
   export let activity = false
+  export let options
 
   let fields = Object.entries(object).map(([name, value]) => ({ name, value }))
 
@@ -50,7 +58,15 @@
   <div class="container" class:container-active={activity} class:readOnly>
     {#each fields as field, idx}
       <Input placeholder="Key" bind:value={field.name} on:change={changed} />
-      <Input placeholder="Value" bind:value={field.value} on:change={changed} />
+      {#if options}
+        <Select bind:value={field.value} on:change={changed} {options} />
+      {:else}
+        <Input
+          placeholder="Value"
+          bind:value={field.value}
+          on:change={changed}
+        />
+      {/if}
       {#if activity}
         <Toggle />
       {/if}

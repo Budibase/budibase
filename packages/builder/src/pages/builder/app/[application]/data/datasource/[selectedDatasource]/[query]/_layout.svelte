@@ -1,7 +1,7 @@
 <script>
   import { params } from "@roxi/routify"
   import { queries, datasources } from "stores/backend"
-  import { IntegrationTypes } from "constants"
+  import { IntegrationTypes } from "constants/backend"
   import { goto } from "@roxi/routify"
 
   if ($params.query) {
@@ -13,7 +13,7 @@
   const datasource = $datasources.list.find(
     ds => ds._id === $datasources.selected
   )
-  if (datasource.source === IntegrationTypes.REST) {
+  if (datasource?.source === IntegrationTypes.REST) {
     $goto("../rest")
   }
 </script>

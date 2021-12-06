@@ -15,6 +15,7 @@
     Label,
     TextArea,
     Table,
+    notifications,
   } from "@budibase/bbui"
   import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
   import EditableLabel from "components/common/inputs/EditableLabel.svelte"
@@ -24,13 +25,19 @@
   import RestBodyInput from "../_components/RestBodyInput.svelte"
   import { capitalise } from "helpers"
   import { onMount } from "svelte"
-  import { RestBodyTypes as bodyTypes } from "constants"
+  import { fieldsToSchema, schemaToFields } from "helpers/data/utils"
+  import {
+    RestBodyTypes as bodyTypes,
+    SchemaTypeOptions,
+  } from "constants/backend"
+  import JSONPreview from "components/integration/JSONPreview.svelte"
 
   let query
   let breakQs = {}
   let url = ""
   // test - { info: { code: 500, time: "455ms", size: "2.09KB" }}
   let response
+  let schema
 
   $: datasource = $datasources.list.find(ds => ds._id === query?.datasourceId)
   $: datasourceType = datasource?.source
@@ -102,15 +109,38 @@
 
   function learnMoreBanner() {}
 
-  function saveQuery() {}
+  function buildQuery() {
+    const newQuery = { ...query }
+    const queryString = buildQueryString(breakQs)
+    newQuery.fields.path = url.split("?")[0]
+    newQuery.fields.queryString = queryString
+    return newQuery
+  }
 
-  function sendQuery() {}
+  function saveQuery() {
+    query.schema = fieldsToSchema(schema)
+  }
+
+  async function runQuery() {
+    try {
+      response = await queries.preview(buildQuery(query))
+      if (response.rows.length === 0) {
+        notifications.info("Request did not return any data.")
+      } else {
+        response.info = response.info || { code: 200 }
+        notifications.success("Request sent successfully.")
+      }
+    } catch (err) {
+      notifications.error(err)
+    }
+  }
 
   onMount(() => {
     query = getSelectedQuery()
     const qs = query?.fields.queryString
     breakQs = breakQueryString(qs)
     url = buildUrl(query.fields.path, qs)
+    schema = schemaToFields(query.schema)
     if (query && !query.transformer) {
       query.transformer = "return data"
     }
@@ -149,7 +179,7 @@
           <div class="url">
             <Input bind:value={url} />
           </div>
-          <Button cta disabled={!url} on:click={sendQuery}>Send</Button>
+          <Button cta disabled={!url} on:click={runQuery}>Send</Button>
         </div>
         <Tabs selected="Params" quiet noPadding noHorizPadding>
           <Tab title="Params">
@@ -203,20 +233,17 @@
       {:else}
         <Tabs selected="JSON" quiet noPadding noHorizPadding>
           <Tab title="JSON">
-            <CodeMirrorEditor
-              height={300}
-              value={response.text}
-              resize="vertical"
-              readonly
-              on:change={e => (query.transformer = e.detail)}
-            />
+            <div>
+              <JSONPreview height="300" data={response.rows[0]} />
+            </div>
           </Tab>
           <Tab title="Schema">
             <KeyValueBuilder
-              bind:object={response.schemaFields}
+              bind:object={response.schema}
               name="header"
               headings
               activity
+              options={SchemaTypeOptions}
             />
           </Tab>
           <Tab title="Raw">
@@ -225,7 +252,7 @@
           <Tab title="Preview">
             {#if response}
               <Table
-                schema={response?.schemaFields}
+                schema={response?.schema}
                 data={response?.rows}
                 allowEditColumns={false}
                 allowEditRows={false}

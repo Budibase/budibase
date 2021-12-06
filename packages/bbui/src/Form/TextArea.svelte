@@ -11,6 +11,7 @@
   export let error = null
   export let getCaretPosition = null
   export let height = null
+  export let minHeight = null
 
   const dispatch = createEventDispatcher()
   const onChange = e => {
@@ -27,6 +28,7 @@
     {value}
     {placeholder}
     {height}
+    {minHeight}
     on:change={onChange}
   />
 </Field>
