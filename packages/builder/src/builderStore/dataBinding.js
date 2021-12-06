@@ -404,11 +404,18 @@ export const getSchemaForDatasource = (asset, datasource, isForm = false) => {
     // "jsonarray" datasources are arrays inside JSON fields
     else if (type === "jsonarray") {
       table = tables.find(table => table._id === datasource.tableId)
+
+      // We parse the label of the datasource to work out where we are inside
+      // the structure. We can use this to know which part of the schema
+      // is available underneath our current position.
       const keysToSchema = datasource.label.split(".").slice(2)
       let jsonSchema = table?.schema
       for (let i = 0; i < keysToSchema.length; i++) {
         jsonSchema = jsonSchema[keysToSchema[i]].schema
       }
+
+      // We need to convert the JSON schema into a more typical looking table
+      // schema so that it works with the rest of the platform
       schema = convertJSONSchemaToTableSchema(jsonSchema, true)
     }
 
