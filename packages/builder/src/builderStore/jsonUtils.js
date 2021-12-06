@@ -1,11 +1,14 @@
-export const convertJSONSchemaToTableSchema = jsonSchema => {
+export const convertJSONSchemaToTableSchema = (
+  jsonSchema,
+  squashObjects = false
+) => {
   if (!jsonSchema) {
     return null
   }
   if (jsonSchema.schema) {
     jsonSchema = jsonSchema.schema
   }
-  const keys = extractJSONSchemaKeys(jsonSchema)
+  const keys = extractJSONSchemaKeys(jsonSchema, squashObjects)
   let schema = {}
   keys.forEach(({ key, type }) => {
     schema[key] = { type, name: key }

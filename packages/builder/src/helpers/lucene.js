@@ -99,6 +99,7 @@ export const luceneQuery = (docs, query) => {
   if (!query) {
     return docs
   }
+
   // make query consistent first
   query = cleanupQuery(query)
 
@@ -106,7 +107,9 @@ export const luceneQuery = (docs, query) => {
   const match = (type, failFn) => doc => {
     const filters = Object.entries(query[type] || {})
     for (let i = 0; i < filters.length; i++) {
-      if (failFn(filters[i][0], filters[i][1], doc)) {
+      const [key, testValue] = filters[i]
+      const docValue = deepGet(doc, key)
+      if (failFn(docValue, testValue)) {
         return false
       }
     }
@@ -114,38 +117,38 @@ export const luceneQuery = (docs, query) => {
   }
 
   // Process a string match (fails if the value does not start with the string)
-  const stringMatch = match("string", (key, value, doc) => {
-    return !doc[key] || !doc[key].startsWith(value)
+  const stringMatch = match("string", (docValue, testValue) => {
+    return !docValue || !docValue.startsWith(testValue)
   })
 
   // Process a fuzzy match (treat the same as starts with when running locally)
-  const fuzzyMatch = match("fuzzy", (key, value, doc) => {
-    return !doc[key] || !doc[key].startsWith(value)
+  const fuzzyMatch = match("fuzzy", (docValue, testValue) => {
+    return !docValue || !docValue.startsWith(testValue)
   })
 
   // Process a range match
-  const rangeMatch = match("range", (key, value, doc) => {
-    return !doc[key] || doc[key] < value.low || doc[key] > value.high
+  const rangeMatch = match("range", (docValue, testValue) => {
+    return !docValue || docValue < testValue.low || docValue > testValue.high
   })
 
   // Process an equal match (fails if the value is different)
-  const equalMatch = match("equal", (key, value, doc) => {
-    return value != null && value !== "" && doc[key] !== value
+  const equalMatch = match("equal", (docValue, testValue) => {
+    return testValue != null && testValue !== "" && docValue !== testValue
   })
 
   // Process a not-equal match (fails if the value is the same)
-  const notEqualMatch = match("notEqual", (key, value, doc) => {
-    return value != null && value !== "" && doc[key] === value
+  const notEqualMatch = match("notEqual", (docValue, testValue) => {
+    return testValue != null && testValue !== "" && docValue === testValue
   })
 
   // Process an empty match (fails if the value is not empty)
-  const emptyMatch = match("empty", (key, value, doc) => {
-    return doc[key] != null && doc[key] !== ""
+  const emptyMatch = match("empty", docValue => {
+    return docValue != null && docValue !== ""
   })
 
   // Process a not-empty match (fails is the value is empty)
-  const notEmptyMatch = match("notEmpty", (key, value, doc) => {
-    return doc[key] == null || doc[key] === ""
+  const notEmptyMatch = match("notEmpty", docValue => {
+    return docValue == null || docValue === ""
   })
 
   // Match a document against all criteria
@@ -201,4 +204,22 @@ export const luceneLimit = (docs, limit) => {
     return docs
   }
   return docs.slice(0, numLimit)
+}
+
+/**
+ * Gets a key within an object. The key supports dot syntax for retriving deep
+ * fields - e.g. "a.b.c".
+ * @param obj the object
+ * @param key the key
+ */
+const deepGet = (obj, key) => {
+  if (!obj || !key) {
+    return null
+  }
+  const split = key.split(".")
+  let value = obj
+  for (let i = 0; i < split.length; i++) {
+    value = value?.[split[i]]
+  }
+  return value
 }

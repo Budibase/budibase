@@ -19,7 +19,7 @@
   export let schemaFields
   export let filters = []
 
-  const BannedTypes = ["link", "attachment", "formula"]
+  const BannedTypes = ["link", "attachment", "formula", "json"]
 
   $: fieldOptions = (schemaFields ?? [])
     .filter(field => !BannedTypes.includes(field.type))
