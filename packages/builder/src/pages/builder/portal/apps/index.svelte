@@ -2,15 +2,15 @@
   import {
     Heading,
     Layout,
+    Detail,
     Button,
-    ActionButton,
-    ActionGroup,
     ButtonGroup,
     Input,
     Select,
     Modal,
     Page,
     notifications,
+    Body,
     Search,
   } from "@budibase/bbui"
   import Spinner from "components/common/Spinner.svelte"
@@ -23,12 +23,10 @@
   import download from "downloadjs"
   import { goto } from "@roxi/routify"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import AppCard from "components/start/AppCard.svelte"
   import AppRow from "components/start/AppRow.svelte"
   import { AppStatus } from "constants"
   import analytics, { Events } from "analytics"
 
-  let layout = "grid"
   let sortBy = "name"
   let template
   let selectedApp
@@ -42,7 +40,7 @@
   let cloud = $admin.cloud
   let appName = ""
   let creatingFromTemplate = false
-
+  let templates = []
   $: enrichedApps = enrichApps($apps, $auth.user, sortBy)
   $: filteredApps = enrichedApps.filter(app =>
     app?.name?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -260,8 +258,15 @@
     }
   }
 
+  async function fetchTemplates() {
+    const response = await api.get("/api/templates?type=app")
+    templates = await response.json()
+    console.log(templates)
+  }
+
   onMount(async () => {
     await apps.load()
+    await fetchTemplates()
     // if the portal is loaded from an external URL with a template param
     const initInfo = await auth.getInitInfo()
     if (initInfo?.init_template) {
@@ -274,17 +279,49 @@
 </script>
 
 <Page wide>
-  {#if loaded && enrichedApps.length}
-    <Layout noPadding>
+  <Layout gap="S" noPadding>
+    <div class="title">
+      <Heading size="S">Welcome to Budibase</Heading>
+
+      <ButtonGroup>
+        {#if cloud}
+          <Button secondary on:click={initiateAppsExport}>Export apps</Button>
+        {/if}
+        <Button secondary on:click={initiateAppImport}>Import app</Button>
+        <Button cta on:click={initiateAppCreation}>Create app</Button>
+      </ButtonGroup>
+    </div>
+    <Body size="XS">Manage your apps and get a head start with templates</Body>
+
+    <Detail>Quick Start Templates</Detail>
+    <div class="grid">
+      {#each templates as val}
+        <div class="template-card">
+          <div class="card-body">
+            <div style="color: {val.background}" class="iconAlign">
+              <svg
+                width="26px"
+                height="26px"
+                class="spectrum-Icon"
+                style="color:{val.background};"
+                focusable="false"
+              >
+                <use xlink:href="#spectrum-icon-18-{val.icon}" />
+              </svg>
+            </div>
+            <div class="iconAlign">
+              <Body weight="900" size="XS">{val.name}</Body>
+              <div style="font-size: 10px;">
+                <Body size="XS">{val.category.toUpperCase()}</Body>
+              </div>
+            </div>
+          </div>
+        </div>
+      {/each}
+    </div>
+    {#if loaded && enrichedApps.length}
       <div class="title">
-        <Heading>Apps</Heading>
-        <ButtonGroup>
-          {#if cloud}
-            <Button secondary on:click={initiateAppsExport}>Export apps</Button>
-          {/if}
-          <Button secondary on:click={initiateAppImport}>Import app</Button>
-          <Button cta on:click={initiateAppCreation}>Create app</Button>
-        </ButtonGroup>
+        <Detail>My Apps</Detail>
       </div>
       <div class="filter">
         <div class="select">
@@ -302,31 +339,14 @@
             <Search placeholder="Search" bind:value={searchTerm} />
           </div>
         </div>
-        <ActionGroup>
-          <ActionButton
-            on:click={() => (layout = "grid")}
-            selected={layout === "grid"}
-            quiet
-            icon="ClassicGridView"
-          />
-          <ActionButton
-            on:click={() => (layout = "table")}
-            selected={layout === "table"}
-            quiet
-            icon="ViewRow"
-          />
-        </ActionGroup>
       </div>
       <div class="mobile-search">
         <Search placeholder="Search" bind:value={searchTerm} />
       </div>
-      <div
-        class:appGrid={layout === "grid"}
-        class:appTable={layout === "table"}
-      >
+      <div class="appTable">
         {#each filteredApps as app (app.appId)}
           <svelte:component
-            this={layout === "grid" ? AppCard : AppRow}
+            this={AppRow}
             {releaseLock}
             {app}
             {unpublishApp}
@@ -338,21 +358,21 @@
           />
         {/each}
       </div>
-    </Layout>
-  {/if}
-  {#if !enrichedApps.length && !creatingApp && loaded}
-    <div class="empty-wrapper">
-      <Modal inline>
-        <CreateAppModal {template} inline={true} />
-      </Modal>
-    </div>
-  {/if}
-  {#if creatingFromTemplate}
-    <div class="empty-wrapper">
-      <p>Creating your Budibase app from your selected template...</p>
-      <Spinner size="10" />
-    </div>
-  {/if}
+    {/if}
+    {#if !enrichedApps.length && !creatingApp && loaded}
+      <div class="empty-wrapper">
+        <Modal inline>
+          <CreateAppModal {template} inline={true} />
+        </Modal>
+      </div>
+    {/if}
+    {#if creatingFromTemplate}
+      <div class="empty-wrapper">
+        <p>Creating your Budibase app from your selected template...</p>
+        <Spinner size="10" />
+      </div>
+    {/if}
+  </Layout>
 </Page>
 <Modal
   bind:this={creationModal}
@@ -405,6 +425,36 @@
       flex-direction: column;
       align-items: flex-start;
     }
+    .grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  .iconAlign {
+    padding: 0 0 0 var(--spacing-m);
+    display: inline-block;
+  }
+  .template-card {
+    height: 60px;
+    width: 255px;
+    border-radius: var(--border-radius-s);
+    margin-bottom: var(--spacing-m);
+    border: 1px solid var(--spectrum-global-color-gray-300);
+  }
+
+  .card-body {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+  }
+
+  .grid {
+    display: grid;
+    grid-gap: 5px;
+    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+  }
+
+  @media (min-width: 200px) {
   }
 
   .select {
@@ -419,11 +469,6 @@
     display: none;
   }
 
-  .appGrid {
-    display: grid;
-    grid-gap: 50px;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  }
   .appTable {
     display: grid;
     grid-template-rows: auto;
