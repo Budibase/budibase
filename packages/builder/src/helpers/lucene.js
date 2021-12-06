@@ -1,4 +1,5 @@
 import { NoEmptyFilterStrings } from "../constants/lucene"
+import { deepGet } from "@budibase/bbui"
 
 /**
  * Removes any fields that contain empty strings that would cause inconsistent
@@ -204,22 +205,4 @@ export const luceneLimit = (docs, limit) => {
     return docs
   }
   return docs.slice(0, numLimit)
-}
-
-/**
- * Gets a key within an object. The key supports dot syntax for retrieving deep
- * fields - e.g. "a.b.c".
- * @param obj the object
- * @param key the key
- */
-const deepGet = (obj, key) => {
-  if (!obj || !key) {
-    return null
-  }
-  const split = key.split(".")
-  let value = obj
-  for (let i = 0; i < split.length; i++) {
-    value = value?.[split[i]]
-  }
-  return value
 }
