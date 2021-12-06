@@ -207,7 +207,7 @@ export const luceneLimit = (docs, limit) => {
 }
 
 /**
- * Gets a key within an object. The key supports dot syntax for retriving deep
+ * Gets a key within an object. The key supports dot syntax for retrieving deep
  * fields - e.g. "a.b.c".
  * @param obj the object
  * @param key the key

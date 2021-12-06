@@ -410,7 +410,6 @@ export const getSchemaForDatasource = (asset, datasource, isForm = false) => {
         jsonSchema = jsonSchema[keysToSchema[i]].schema
       }
       schema = convertJSONSchemaToTableSchema(jsonSchema, true)
-      console.log(schema)
     }
 
     // Otherwise we assume we're targeting an internal table or a plus
