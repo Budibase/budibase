@@ -32,12 +32,11 @@
   } from "constants/backend"
   import JSONPreview from "components/integration/JSONPreview.svelte"
 
-  let query
+  let query, datasource
   let breakQs = {}
   let url = ""
-  // test - { info: { code: 500, time: "455ms", size: "2.09KB" }}
-  let response
-  let schema
+  let response, schema
+  let datasourceType, integrationInfo, queryConfig, responseSuccess
 
   $: datasource = $datasources.list.find(ds => ds._id === query?.datasourceId)
   $: datasourceType = datasource?.source
@@ -242,12 +241,11 @@
               bind:object={response.schema}
               name="header"
               headings
-              activity
               options={SchemaTypeOptions}
             />
           </Tab>
           <Tab title="Raw">
-            <TextArea disabled value={response.text} height="300" />
+            <TextArea disabled value={response.raw} height="300" />
           </Tab>
           <Tab title="Preview">
             {#if response}

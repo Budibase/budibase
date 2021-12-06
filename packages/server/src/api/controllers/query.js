@@ -109,7 +109,7 @@ exports.preview = async function (ctx) {
   const enrichedQuery = await enrichQueryFields(fields, parameters)
 
   try {
-    const { rows, keys, info } = await Runner.run({
+    const { rows, keys, info, raw } = await Runner.run({
       datasource,
       queryVerb,
       query: enrichedQuery,
@@ -120,6 +120,7 @@ exports.preview = async function (ctx) {
       rows,
       schemaFields: [...new Set(keys)],
       info,
+      raw,
     }
   } catch (err) {
     ctx.throw(400, err)
