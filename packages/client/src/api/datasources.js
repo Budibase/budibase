@@ -4,6 +4,7 @@ import { fetchViewData } from "./views"
 import { fetchRelationshipData } from "./relationships"
 import { FieldTypes } from "../constants"
 import { executeQuery, fetchQueryDefinition } from "./queries"
+import { convertJSONSchemaToTableSchema } from "builder/src/builderStore/jsonUtils"
 
 /**
  * Fetches all rows for a particular Budibase data source.
@@ -73,6 +74,18 @@ export const fetchDatasourceSchema = async dataSource => {
         },
       }
     }
+  }
+
+  // JSON arrays need their table definitions fetched.
+  // We can then extract their schema as a subset of the table schema.
+  if (type === "jsonarray") {
+    const table = await fetchTableDefinition(dataSource.tableId)
+    const keysToSchema = dataSource.label.split(".").slice(2)
+    let schema = table?.schema
+    for (let i = 0; i < keysToSchema.length; i++) {
+      schema = schema[keysToSchema[i]].schema
+    }
+    return convertJSONSchemaToTableSchema(schema)
   }
 
   // Tables, views and links can be fetched by table ID

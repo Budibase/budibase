@@ -5,7 +5,7 @@
     getSchemaForDatasource,
   } from "builderStore/dataBinding"
   import { currentAsset } from "builderStore"
-  import { findClosestMatchingComponent } from "builderStore/storeUtils"
+  import { findClosestMatchingComponent } from "builderStore/componentUtils"
 
   export let componentInstance
   export let value

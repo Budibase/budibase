@@ -5,7 +5,7 @@ import {
   findComponent,
   findComponentPath,
   getComponentSettings,
-} from "./storeUtils"
+} from "./componentUtils"
 import { store } from "builderStore"
 import { queries as queriesStores, tables as tablesStore } from "stores/backend"
 import {
@@ -15,6 +15,7 @@ import {
   encodeJSBinding,
 } from "@budibase/string-templates"
 import { TableNames } from "../constants"
+import { convertJSONSchemaToTableSchema } from "./jsonUtils"
 
 // Regex to match all instances of template strings
 const CAPTURE_VAR_INSIDE_TEMPLATE = /{{([^}]+)}}/g
@@ -186,6 +187,7 @@ const getProviderContextBindings = (asset, dataProviders) => {
       }
 
       let schema
+      let table
       let readablePrefix
       let runtimeSuffix = context.suffix
 
@@ -209,7 +211,16 @@ const getProviderContextBindings = (asset, dataProviders) => {
         }
         const info = getSchemaForDatasource(asset, datasource)
         schema = info.schema
-        readablePrefix = info.table?.name
+        table = info.table
+
+        // For JSON arrays, use the array name as the readable prefix.
+        // Otherwise use the table name
+        if (datasource.type === "jsonarray") {
+          const split = datasource.label.split(".")
+          readablePrefix = split[split.length - 1]
+        } else {
+          readablePrefix = info.table?.name
+        }
       }
       if (!schema) {
         return
@@ -229,7 +240,8 @@ const getProviderContextBindings = (asset, dataProviders) => {
         const fieldSchema = schema[key]
 
         // Make safe runtime binding
-        const runtimeBinding = `${safeComponentId}.${makePropSafe(key)}`
+        const safeKey = key.split(".").map(makePropSafe).join(".")
+        const runtimeBinding = `${safeComponentId}.${safeKey}`
 
         // Optionally use a prefix with readable bindings
         let readableBinding = component._instanceName
@@ -247,6 +259,8 @@ const getProviderContextBindings = (asset, dataProviders) => {
           // datasource options, based on bindable properties
           fieldSchema,
           providerId,
+          // Table ID is used by JSON fields to know what table the field is in
+          tableId: table?._id,
         })
       })
     })
@@ -347,16 +361,26 @@ export const getSchemaForDatasource = (asset, datasource, isForm = false) => {
 
   if (datasource) {
     const { type } = datasource
+    const tables = get(tablesStore).list
 
-    // Determine the source table from the datasource type
+    // Determine the entity which backs this datasource.
+    // "provider" datasources are those targeting another data provider
     if (type === "provider") {
       const component = findComponent(asset.props, datasource.providerId)
       const source = getDatasourceForProvider(asset, component)
       return getSchemaForDatasource(asset, source, isForm)
-    } else if (type === "query") {
+    }
+
+    // "query" datasources are those targeting non-plus datasources or
+    // custom queries
+    else if (type === "query") {
       const queries = get(queriesStores).list
       table = queries.find(query => query._id === datasource._id)
-    } else if (type === "field") {
+    }
+
+    // "field" datasources are array-like fields of rows, such as attachments
+    // or multi-select fields
+    else if (type === "field") {
       table = { name: datasource.fieldName }
       const { fieldType } = datasource
       if (fieldType === "attachment") {
@@ -375,12 +399,26 @@ export const getSchemaForDatasource = (asset, datasource, isForm = false) => {
           },
         }
       }
-    } else {
-      const tables = get(tablesStore).list
+    }
+
+    // "jsonarray" datasources are arrays inside JSON fields
+    else if (type === "jsonarray") {
+      table = tables.find(table => table._id === datasource.tableId)
+      const keysToSchema = datasource.label.split(".").slice(2)
+      let jsonSchema = table?.schema
+      for (let i = 0; i < keysToSchema.length; i++) {
+        jsonSchema = jsonSchema[keysToSchema[i]].schema
+      }
+      schema = convertJSONSchemaToTableSchema(jsonSchema, true)
+    }
+
+    // Otherwise we assume we're targeting an internal table or a plus
+    // datasource, and we can treat it as a table with a schema
+    else {
       table = tables.find(table => table._id === datasource.tableId)
     }
 
-    // Determine the schema from the table if not already determined
+    // Determine the schema from the backing entity if not already determined
     if (table && !schema) {
       if (type === "view") {
         schema = cloneDeep(table.views?.[datasource.name]?.schema)

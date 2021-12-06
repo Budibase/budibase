@@ -26,7 +26,7 @@ import {
   findAllMatchingComponents,
   findComponent,
   getComponentSettings,
-} from "../storeUtils"
+} from "../componentUtils"
 import { uuid } from "../uuid"
 import { removeBindings } from "../dataBinding"
 
