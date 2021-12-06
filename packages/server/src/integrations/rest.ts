@@ -38,12 +38,21 @@ const coreFields = {
 
 module RestModule {
   const fetch = require("node-fetch")
+  const { formatBytes } = require("../utilities")
+  const { performance } = require("perf_hooks")
 
   interface RestConfig {
     url: string
     defaultHeaders: {
       [key: string]: any
     }
+  }
+
+  interface Request {
+    path: string
+    queryString?: string
+    headers?: string
+    json?: any
   }
 
   const SCHEMA: Integration = {
@@ -102,17 +111,29 @@ module RestModule {
     private headers: {
       [key: string]: string
     } = {}
+    private startTimeMs: number = performance.now()
 
     constructor(config: RestConfig) {
       this.config = config
     }
 
     async parseResponse(response: any) {
+      let data
       const contentType = response.headers.get("content-type")
       if (contentType && contentType.indexOf("application/json") !== -1) {
-        return await response.json()
+        data = await response.json()
       } else {
-        return await response.text()
+        data = await response.text()
+      }
+      const size = formatBytes(response.headers.get("content-length") || 0)
+      const time = `${Math.round(performance.now() - this.startTimeMs)}ms`
+      return {
+        data,
+        info: {
+          code: response.status,
+          size,
+          time,
+        },
       }
     }
 
@@ -125,76 +146,40 @@ module RestModule {
       }
     }
 
-    async create({ path = "", queryString = "", headers = {}, json = {} }) {
+    async _req({ path = "", queryString = "", headers = {}, json = {}, method = "GET" }) {
       this.headers = {
         ...this.config.defaultHeaders,
         ...headers,
       }
 
-      const response = await fetch(this.getUrl(path, queryString), {
-        method: "POST",
-        headers: this.headers,
-        body: JSON.stringify(json),
-      })
+      const input: any = { method, headers: this.headers }
+      if (json && typeof json === "object" && Object.keys(json).length > 0) {
+        input.body = JSON.stringify(json)
+      }
 
+      this.startTimeMs = performance.now()
+      const response = await fetch(this.getUrl(path, queryString), input)
       return await this.parseResponse(response)
     }
 
-    async read({ path = "", queryString = "", headers = {} }) {
-      this.headers = {
-        ...this.config.defaultHeaders,
-        ...headers,
-      }
-
-      const response = await fetch(this.getUrl(path, queryString), {
-        headers: this.headers,
-      })
-
-      return await this.parseResponse(response)
+    async create(opts: Request) {
+      return this._req({ ...opts, method: "POST" })
     }
 
-    async update({ path = "", queryString = "", headers = {}, json = {} }) {
-      this.headers = {
-        ...this.config.defaultHeaders,
-        ...headers,
-      }
-
-      const response = await fetch(this.getUrl(path, queryString), {
-        method: "PUT",
-        headers: this.headers,
-        body: JSON.stringify(json),
-      })
-
-      return await this.parseResponse(response)
+    async read(opts: Request) {
+      return this._req({ ...opts, method: "GET" })
     }
 
-    async patch({ path = "", queryString = "", headers = {}, json = {} }) {
-      this.headers = {
-        ...this.config.defaultHeaders,
-        ...headers,
-      }
-
-      const response = await fetch(this.getUrl(path, queryString), {
-        method: "PATCH",
-        headers: this.headers,
-        body: JSON.stringify(json),
-      })
-
-      return await this.parseResponse(response)
+    async update(opts: Request) {
+      return this._req({ ...opts, method: "PUT" })
     }
 
-    async delete({ path = "", queryString = "", headers = {} }) {
-      this.headers = {
-        ...this.config.defaultHeaders,
-        ...headers,
-      }
+    async patch(opts: Request) {
+      return this._req({ ...opts, method: "PATCH" })
+    }
 
-      const response = await fetch(this.getUrl(path, queryString), {
-        method: "DELETE",
-        headers: this.headers,
-      })
-
-      return await this.parseResponse(response)
+    async delete(opts: Request) {
+      return this._req({ ...opts, method: "DELETE" })
     }
   }
 
