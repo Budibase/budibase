@@ -28,7 +28,10 @@ const extractJSONSchemaKeys = (jsonSchema, squashObjects = false) => {
   Object.keys(jsonSchema).forEach(key => {
     const type = jsonSchema[key].type
     if (type === "json" && squashObjects) {
-      const childKeys = extractJSONSchemaKeys(jsonSchema[key].schema)
+      const childKeys = extractJSONSchemaKeys(
+        jsonSchema[key].schema,
+        squashObjects
+      )
       keys = keys.concat(
         childKeys.map(childKey => ({
           key: `${key}.${childKey.key}`,
