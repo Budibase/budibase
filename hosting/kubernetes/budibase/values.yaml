@@ -126,12 +126,10 @@ services:
 
   couchdb:
     enabled: true
-    replicaCount: 3
     # url: "" # only change if pointing to existing couch server
     # user: "" # only change if pointing to existing couch server
     # password: "" # only change if pointing to existing couch server
     port: 5984
-    storage: 100Mi
 
   redis:
     enabled: true # disable if using external redis
@@ -151,3 +149,151 @@ services:
     region: "" # AWS_REGION if using S3 or existing minio secret
     url: "" # only change if pointing to existing minio cluster and minio: false
     storage: 100Mi
+
+# Override values in couchDB subchart
+couchdb:
+  ## clusterSize is the initial size of the CouchDB cluster.
+  clusterSize: 3
+  allowAdminParty: false
+
+  # Secret Management
+  createAdminSecret: true
+
+  # adminUsername: budibase
+  # adminPassword: budibase
+  # adminHash: -pbkdf2-this_is_not_necessarily_secure_either
+  # cookieAuthSecret: admin
+
+  ## When enabled, will deploy a networkpolicy that allows CouchDB pods to
+  ## communicate with each other for clustering and ingress on port 5984
+  networkPolicy:
+    enabled: true
+
+  # Use a service account
+  serviceAccount:
+    enabled: true
+    create: true
+  # name:
+  # imagePullSecrets:
+  # - name: myimagepullsecret
+
+  ## The storage volume used by each Pod in the StatefulSet. If a
+  ## persistentVolume is not enabled, the Pods will use `emptyDir` ephemeral
+  ## local storage. Setting the storageClass attribute to "-" disables dynamic
+  ## provisioning of Persistent Volumes; leaving it unset will invoke the default
+  ## provisioner.
+  persistentVolume:
+    enabled: false
+    accessModes:
+      - ReadWriteOnce
+    size: 10Gi
+    storageClass: ""
+
+  ## The CouchDB image
+  image:
+    repository: couchdb
+    tag: 3.1.0
+    pullPolicy: IfNotPresent
+
+  ## Experimental integration with Lucene-powered fulltext search
+  enableSearch: true
+  searchImage:
+    repository: kocolosk/couchdb-search
+    tag: 0.2.0
+    pullPolicy: IfNotPresent
+
+  initImage:
+    repository: busybox
+    tag: latest
+    pullPolicy: Always
+
+  ## CouchDB is happy to spin up cluster nodes in parallel, but if you encounter
+  ## problems you can try setting podManagementPolicy to the StatefulSet default
+  ## `OrderedReady`
+  podManagementPolicy: Parallel
+
+  ## Optional pod annotations
+  annotations: {}
+
+  ## Optional tolerations
+  tolerations: []
+
+  service:
+    # annotations:
+    enabled: true
+    type: ClusterIP
+    externalPort: 5984
+
+  ## An Ingress resource can provide name-based virtual hosting and TLS
+  ## termination among other things for CouchDB deployments which are accessed
+  ## from outside the Kubernetes cluster.
+  ## ref: https://kubernetes.io/docs/concepts/services-networking/ingress/
+  ingress:
+    enabled: false
+    hosts:
+      - chart-example.local
+    path: /
+    annotations: []
+      # kubernetes.io/ingress.class: nginx
+      # kubernetes.io/tls-acme: "true"
+    tls:
+      # Secrets must be manually created in the namespace.
+      # - secretName: chart-example-tls
+      #   hosts:
+      #     - chart-example.local
+
+  ## Optional resource requests and limits for the CouchDB container
+  ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
+  resources:
+    {}
+    # requests:
+    #  cpu: 100m
+    #  memory: 128Mi
+    # limits:
+    #  cpu: 56
+    #  memory: 256Gi
+
+  ## erlangFlags is a map that is passed to the Erlang VM as flags using the
+  ## ERL_FLAGS env. `name` and `setcookie` flags are minimally required to
+  ## establish connectivity between cluster nodes.
+  ## ref: http://erlang.org/doc/man/erl.html#init_flags
+  erlangFlags:
+    name: couchdb
+    setcookie: monster
+
+  ## couchdbConfig will override default CouchDB configuration settings.
+  ## The contents of this map are reformatted into a .ini file laid down
+  ## by a ConfigMap object.
+  ## ref: http://docs.couchdb.org/en/latest/config/index.html
+  couchdbConfig:
+    couchdb:
+      uuid: budibase-couchdb # REQUIRED: Unique identifier for this CouchDB server instance
+    # cluster:
+    #   q: 8 # Create 8 shards for each database
+    chttpd:
+      bind_address: any
+      # chttpd.require_valid_user disables all the anonymous requests to the port
+      # 5984 when is set to true.
+      require_valid_user: false
+
+  # Kubernetes local cluster domain.
+  # This is used to generate FQDNs for peers when joining the CouchDB cluster.
+  dns:
+    clusterDomainSuffix: cluster.local
+
+  ## Configure liveness and readiness probe values
+  ## Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
+  livenessProbe:
+    enabled: true
+    failureThreshold: 3
+    initialDelaySeconds: 0
+    periodSeconds: 10
+    successThreshold: 1
+    timeoutSeconds: 1
+  readinessProbe:
+    enabled: true
+    failureThreshold: 3
+    initialDelaySeconds: 0
+    periodSeconds: 10
+    successThreshold: 1
+    timeoutSeconds: 1
