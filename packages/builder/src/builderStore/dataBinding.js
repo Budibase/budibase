@@ -213,6 +213,21 @@ const getProviderContextBindings = (asset, dataProviders) => {
         schema = info.schema
         table = info.table
 
+        // Check for any JSON fields so we can add any top level properties
+        let jsonAdditions = {}
+        Object.keys(schema).forEach(fieldKey => {
+          const fieldSchema = schema[fieldKey]
+          if (fieldSchema.type === "json") {
+            const jsonSchema = convertJSONSchemaToTableSchema(fieldSchema, true)
+            Object.keys(jsonSchema).forEach(jsonKey => {
+              jsonAdditions[`${fieldKey}.${jsonKey}`] = {
+                type: jsonSchema[jsonKey].type,
+              }
+            })
+          }
+        })
+        schema = { ...schema, ...jsonAdditions }
+
         // For JSON arrays, use the array name as the readable prefix.
         // Otherwise use the table name
         if (datasource.type === "jsonarray") {
