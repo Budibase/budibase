@@ -33,10 +33,12 @@ async function runAndTransform(datasource, queryVerb, query, transformer) {
 
   let output = formatResponse(await integration[queryVerb](query))
   let rows = output,
-    info = undefined
+    info = undefined,
+    raw = undefined
   if (hasExtraData(output)) {
     rows = output.data
     info = output.info
+    raw = output.raw
   }
 
   // transform as required
@@ -62,7 +64,7 @@ async function runAndTransform(datasource, queryVerb, query, transformer) {
     integration.end()
   }
 
-  return { rows, keys, info }
+  return { rows, keys, info, raw }
 }
 
 module.exports = (input, callback) => {

@@ -118,12 +118,14 @@ module RestModule {
     }
 
     async parseResponse(response: any) {
-      let data
+      let data, raw
       const contentType = response.headers.get("content-type")
       if (contentType && contentType.indexOf("application/json") !== -1) {
         data = await response.json()
+        raw = JSON.stringify(data)
       } else {
         data = await response.text()
+        raw = data
       }
       const size = formatBytes(response.headers.get("content-length") || 0)
       const time = `${Math.round(performance.now() - this.startTimeMs)}ms`
@@ -134,6 +136,7 @@ module RestModule {
           size,
           time,
         },
+        raw,
       }
     }
 
