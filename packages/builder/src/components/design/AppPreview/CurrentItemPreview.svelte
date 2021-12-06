@@ -14,7 +14,7 @@
     notifications,
   } from "@budibase/bbui"
   import ErrorSVG from "assets/error.svg?raw"
-  import { findComponent, findComponentPath } from "builderStore/storeUtils"
+  import { findComponent, findComponentPath } from "builderStore/componentUtils"
 
   let iframe
   let layout

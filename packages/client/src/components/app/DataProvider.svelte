@@ -203,6 +203,9 @@
       } else {
         allRows = data
       }
+    } else if (dataSource?.type === "jsonarray") {
+      // JSON array sources will be available from context
+      allRows = dataSource?.value || []
     } else {
       // For other data sources like queries or views, fetch all rows from the
       // server

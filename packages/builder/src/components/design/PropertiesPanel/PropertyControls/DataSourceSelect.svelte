@@ -20,7 +20,10 @@
   import { notifications } from "@budibase/bbui"
   import ParameterBuilder from "components/integration/QueryParameterBuilder.svelte"
   import IntegrationQueryEditor from "components/integration/index.svelte"
-  import { makePropSafe as safe } from "@budibase/string-templates"
+  import {
+    makePropSafe,
+    makePropSafe as safe,
+  } from "@budibase/string-templates"
 
   export let value = {}
   export let otherSources
@@ -48,9 +51,7 @@
     return [...acc, ...viewsArr]
   }, [])
   $: queries = $queriesStore.list
-    .filter(
-      query => showAllQueries || query.queryVerb === "read" || query.readable
-    )
+    .filter(q => showAllQueries || q.queryVerb === "read" || q.readable)
     .map(query => ({
       label: query.name,
       name: query.name,
@@ -104,13 +105,60 @@
         value: `{{ literal ${runtimeBinding} }}`,
       }
     })
+  $: jsonArrays = findJSONArrays(bindings)
 
-  function handleSelected(selected) {
+  const findJSONArrays = bindings => {
+    let arrays = []
+    const jsonBindings = bindings.filter(x => x.fieldSchema?.type === "json")
+    jsonBindings.forEach(binding => {
+      const {
+        providerId,
+        readableBinding,
+        runtimeBinding,
+        fieldSchema,
+        tableId,
+      } = binding
+      const { name, type } = fieldSchema
+      const schemaArrays = findArraysInSchema(fieldSchema).map(path => {
+        const safePath = path.split(".").map(makePropSafe).join(".")
+        return {
+          providerId,
+          label: `${readableBinding}.${path}`,
+          fieldName: name,
+          fieldType: type,
+          tableId,
+          type: "jsonarray",
+          value: `{{ literal ${runtimeBinding}.${safePath} }}`,
+        }
+      })
+      arrays = arrays.concat(schemaArrays)
+    })
+
+    return arrays
+  }
+
+  const findArraysInSchema = (schema, path) => {
+    if (!schema?.schema || !Object.keys(schema.schema).length) {
+      return []
+    }
+    if (schema.type === "array") {
+      return [path]
+    }
+    let arrays = []
+    Object.keys(schema.schema).forEach(key => {
+      const newPath = `${path ? `${path}.` : ""}${key}`
+      const childArrays = findArraysInSchema(schema.schema[key], newPath)
+      arrays = arrays.concat(childArrays)
+    })
+    return arrays
+  }
+
+  const handleSelected = selected => {
     dispatch("change", selected)
     dropdownRight.hide()
   }
 
-  function fetchQueryDefinition(query) {
+  const fetchQueryDefinition = query => {
     const source = $datasources.list.find(
       ds => ds._id === query.datasourceId
     ).source
@@ -223,6 +271,17 @@
       </div>
       <ul>
         {#each fields as field}
+          <li on:click={() => handleSelected(field)}>{field.label}</li>
+        {/each}
+      </ul>
+    {/if}
+    {#if jsonArrays?.length}
+      <Divider size="S" />
+      <div class="title">
+        <Heading size="XS">Key/Value Arrays</Heading>
+      </div>
+      <ul>
+        {#each jsonArrays as field}
           <li on:click={() => handleSelected(field)}>{field.label}</li>
         {/each}
       </ul>
