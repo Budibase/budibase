@@ -49,6 +49,7 @@ export default `
         try {
           parsed = JSON.parse(event.data)
         } catch (error) {
+          console.error("Client received invalid JSON")
           // Ignore
         }
         if (!parsed) {
