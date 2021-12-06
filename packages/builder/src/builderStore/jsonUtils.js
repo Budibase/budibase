@@ -7,6 +7,10 @@ export const convertJSONSchemaToTableSchema = (
   }
   if (jsonSchema.schema) {
     jsonSchema = jsonSchema.schema
+  } else {
+    jsonSchema = {
+      value: jsonSchema,
+    }
   }
   const keys = extractJSONSchemaKeys(jsonSchema, squashObjects)
   let schema = {}
