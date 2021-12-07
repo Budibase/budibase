@@ -97,6 +97,9 @@ export const buildLuceneQuery = filter => {
  * @param query the JSON lucene query
  */
 export const luceneQuery = (docs, query) => {
+  if (!docs || !Array.isArray(docs)) {
+    return []
+  }
   if (!query) {
     return docs
   }
