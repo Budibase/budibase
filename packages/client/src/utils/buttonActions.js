@@ -11,6 +11,25 @@ import { ActionTypes } from "constants"
 
 const saveRowHandler = async (action, context) => {
   const { fields, providerId, tableId } = action.parameters
+  let payload
+  if (providerId) {
+    payload = context[providerId]
+  } else {
+    payload = {}
+  }
+  if (fields) {
+    for (let [field, value] of Object.entries(fields)) {
+      payload[field] = value
+    }
+  }
+  if (tableId) {
+    payload.tableId = tableId
+  }
+  await saveRow(payload)
+}
+
+const duplicateRowHandler = async (action, context) => {
+  const { fields, providerId, tableId } = action.parameters
   if (providerId) {
     let draft = context[providerId]
     if (fields) {
@@ -21,6 +40,8 @@ const saveRowHandler = async (action, context) => {
     if (tableId) {
       draft.tableId = tableId
     }
+    delete draft._id
+    delete draft._rev
     await saveRow(draft)
   }
 }
@@ -120,6 +141,7 @@ const updateStateHandler = action => {
 
 const handlerMap = {
   ["Save Row"]: saveRowHandler,
+  ["Duplicate Row"]: duplicateRowHandler,
   ["Delete Row"]: deleteRowHandler,
   ["Navigate To"]: navigationHandler,
   ["Execute Query"]: queryExecutionHandler,
