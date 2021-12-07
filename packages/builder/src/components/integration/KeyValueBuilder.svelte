@@ -14,32 +14,60 @@
 
   export let defaults
   export let object = defaults || {}
+  export let activity = {}
   export let readOnly
   export let noAddButton
   export let name
   export let headings = false
-  export let activity = false
   export let options
+  export let toggle
 
   let fields = Object.entries(object).map(([name, value]) => ({ name, value }))
+  let fieldActivity = []
 
   $: object = fields.reduce(
     (acc, next) => ({ ...acc, [next.name]: next.value }),
     {}
   )
+  $: fieldActivity = buildFieldActivity(activity)
+
+  function buildFieldActivity(obj) {
+    if (!obj || typeof obj !== "object") {
+      return []
+    }
+    const array = Array(fields.length)
+    for (let [key, value] of Object.entries(obj)) {
+      const field = fields.find(el => el.name === key)
+      const idx = fields.indexOf(field)
+      if (idx !== -1) {
+        array[idx] = value
+      }
+    }
+    return array
+  }
 
   export function addEntry() {
     fields = [...fields, { name: "", value: "" }]
+    fieldActivity = [...fieldActivity, true]
     changed()
   }
 
   function deleteEntry(idx) {
     fields.splice(idx, 1)
+    fieldActivity.splice(idx, 1)
     changed()
   }
 
   function changed() {
     fields = fields
+    const newActivity = {}
+    for (let idx = 0; idx < fields.length; idx++) {
+      const fieldName = fields[idx].name
+      if (fieldName) {
+        newActivity[fieldName] = fieldActivity[idx]
+      }
+    }
+    activity = newActivity
     dispatch("change", fields)
   }
 </script>
@@ -67,8 +95,12 @@
           on:change={changed}
         />
       {/if}
-      {#if activity}
-        <Toggle />
+      {#if toggle}
+        <Toggle
+          bind:value={fieldActivity[idx]}
+          on:change={changed}
+          default={true}
+        />
       {/if}
       {#if !readOnly}
         <Icon hoverable name="Close" on:click={() => deleteEntry(idx)} />

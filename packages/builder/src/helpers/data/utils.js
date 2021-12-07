@@ -17,3 +17,35 @@ export function fieldsToSchema(fields) {
   }
   return response
 }
+
+export function breakQueryString(qs) {
+  if (!qs) {
+    return {}
+  }
+  if (qs.includes("?")) {
+    qs = qs.split("?")[1]
+  }
+  const params = qs.split("&")
+  let paramObj = {}
+  for (let param of params) {
+    const [key, value] = param.split("=")
+    paramObj[key] = value
+  }
+  return paramObj
+}
+
+export function buildQueryString(obj) {
+  let str = ""
+  if (obj) {
+    for (let [key, value] of Object.entries(obj)) {
+      if (!key || key === "") {
+        continue
+      }
+      if (str !== "") {
+        str += "&"
+      }
+      str += `${key}=${value || ""}`
+    }
+  }
+  return str
+}
