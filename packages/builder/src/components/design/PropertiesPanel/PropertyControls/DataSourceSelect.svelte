@@ -105,53 +105,22 @@
         value: `{{ literal ${runtimeBinding} }}`,
       }
     })
-  $: jsonArrays = findJSONArrays(bindings)
-
-  const findJSONArrays = bindings => {
-    let arrays = []
-    const jsonBindings = bindings.filter(x => x.fieldSchema?.type === "json")
-    jsonBindings.forEach(binding => {
-      const {
+  $: jsonArrays = bindings
+    .filter(x => x.fieldSchema?.type === "jsonarray")
+    .map(binding => {
+      const { providerId, readableBinding, runtimeBinding, tableId } = binding
+      const { name, type, prefixKeys } = binding.fieldSchema
+      return {
         providerId,
-        readableBinding,
-        runtimeBinding,
-        fieldSchema,
+        label: readableBinding,
+        fieldName: name,
+        fieldType: type,
         tableId,
-      } = binding
-      const { name, type } = fieldSchema
-      const schemaArrays = findArraysInSchema(fieldSchema).map(path => {
-        const safePath = path.split(".").map(makePropSafe).join(".")
-        return {
-          providerId,
-          label: `${readableBinding}.${path}`,
-          fieldName: name,
-          fieldType: type,
-          tableId,
-          type: "jsonarray",
-          value: `{{ literal ${runtimeBinding}.${safePath} }}`,
-        }
-      })
-      arrays = arrays.concat(schemaArrays)
+        prefixKeys,
+        type: "jsonarray",
+        value: `{{ literal ${runtimeBinding} }}`,
+      }
     })
-
-    return arrays
-  }
-
-  const findArraysInSchema = (schema, path) => {
-    if (!schema?.schema || !Object.keys(schema.schema).length) {
-      return []
-    }
-    if (schema.type === "array") {
-      return [path]
-    }
-    let arrays = []
-    Object.keys(schema.schema).forEach(key => {
-      const newPath = `${path ? `${path}.` : ""}${key}`
-      const childArrays = findArraysInSchema(schema.schema[key], newPath)
-      arrays = arrays.concat(childArrays)
-    })
-    return arrays
-  }
 
   const handleSelected = selected => {
     dispatch("change", selected)
