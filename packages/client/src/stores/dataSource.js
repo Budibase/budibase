@@ -1,6 +1,7 @@
 import { writable, get } from "svelte/store"
 import { fetchTableDefinition } from "../api"
 import { FieldTypes } from "../constants"
+import { routeStore } from "./routes"
 
 export const createDataSourceStore = () => {
   const store = writable([])
@@ -60,10 +61,13 @@ export const createDataSourceStore = () => {
 
     // Emit this as a window event, so parent screens which are iframing us in
     // can also invalidate the same datasource
-    window.parent.postMessage({
-      type: "close-screen-modal",
-      detail: { dataSourceId },
-    })
+    const inModal = get(routeStore).queryParams?.peek
+    if (inModal) {
+      window.parent.postMessage({
+        type: "invalidate-datasource",
+        detail: { dataSourceId },
+      })
+    }
 
     let invalidations = [dataSourceId]
 
