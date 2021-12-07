@@ -75,15 +75,15 @@
 <!-- Builds Objects with Key Value Pairs. Useful for building things like Request Headers. -->
 {#if Object.keys(object || {}).length > 0}
   {#if headings}
-    <div class="container" class:container-active={activity}>
+    <div class="container" class:container-active={toggle}>
       <Label>Key</Label>
       <Label>Value</Label>
-      {#if activity}
+      {#if toggle}
         <Label>Active</Label>
       {/if}
     </div>
   {/if}
-  <div class="container" class:container-active={activity} class:readOnly>
+  <div class="container" class:container-active={toggle} class:readOnly>
     {#each fields as field, idx}
       <Input placeholder="Key" bind:value={field.name} on:change={changed} />
       {#if options}
