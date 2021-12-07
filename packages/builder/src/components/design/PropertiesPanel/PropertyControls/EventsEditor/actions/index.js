@@ -13,6 +13,7 @@ import CloseScreenModal from "./CloseScreenModal.svelte"
 import ChangeFormStep from "./ChangeFormStep.svelte"
 import UpdateStateStep from "./UpdateState.svelte"
 import RefreshDataProvider from "./RefreshDataProvider.svelte"
+import DuplicateRow from "./DuplicateRow.svelte"
 
 // Defines which actions are available to configure in the front end.
 // Unfortunately the "name" property is used as the identifier so please don't
@@ -26,6 +27,10 @@ export const getAvailableActions = () => {
     {
       name: "Save Row",
       component: SaveRow,
+    },
+    {
+      name: "Duplicate Row",
+      component: DuplicateRow,
     },
     {
       name: "Delete Row",
