@@ -18,17 +18,11 @@
   import IntegrationQueryEditor from "components/integration/index.svelte"
   import ExternalDataSourceTable from "components/backend/DataTable/ExternalDataSourceTable.svelte"
   import ParameterBuilder from "components/integration/QueryParameterBuilder.svelte"
-  import {
-    datasources,
-    integrations,
-    queries,
-    permissions,
-  } from "stores/backend"
+  import { datasources, integrations, queries } from "stores/backend"
   import { capitalise } from "../../helpers"
   import CodeMirrorEditor from "components/common/CodeMirrorEditor.svelte"
   import JSONPreview from "./JSONPreview.svelte"
-  import { Roles, SchemaTypeOptions } from "constants/backend"
-  import { onMount } from "svelte"
+  import { SchemaTypeOptions } from "constants/backend"
   import KeyValueBuilder from "./KeyValueBuilder.svelte"
   import { fieldsToSchema, schemaToFields } from "helpers/data/utils"
   import AccessLevelSelect from "./AccessLevelSelect.svelte"
@@ -38,7 +32,6 @@
   let fields = query?.schema ? schemaToFields(query.schema) : []
   let parameters
   let data = []
-  let roleId
   let saveId
   const transformerDocs =
     "https://docs.budibase.com/building-apps/data/transformers"
@@ -95,18 +88,6 @@
       notifications.error(`Error creating query. ${err.message}`)
     }
   }
-
-  onMount(async () => {
-    if (!query || !query._id) {
-      roleId = Roles.BASIC
-      return
-    }
-    try {
-      roleId = (await permissions.forResource(query._id))["read"]
-    } catch (err) {
-      roleId = Roles.BASIC
-    }
-  })
 </script>
 
 <Layout gap="S" noPadding>

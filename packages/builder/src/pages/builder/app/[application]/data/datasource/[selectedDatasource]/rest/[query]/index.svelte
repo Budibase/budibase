@@ -36,6 +36,7 @@
     SchemaTypeOptions,
   } from "constants/backend"
   import JSONPreview from "components/integration/JSONPreview.svelte"
+  import AccessLevelSelect from "components/integration/AccessLevelSelect.svelte"
 
   let query, datasource
   let breakQs = {}
@@ -144,12 +145,18 @@
   <div class="inner">
     <div class="top">
       <Layout gap="S">
-        <EditableLabel
-          type="heading"
-          bind:value={query.name}
-          defaultValue="Untitled"
-          on:change={() => (query.flags.urlName = false)}
-        />
+        <div class="top-bar">
+          <EditableLabel
+            type="heading"
+            bind:value={query.name}
+            defaultValue="Untitled"
+            on:change={() => (query.flags.urlName = false)}
+          />
+          <div class="access">
+            <Label>Access level</Label>
+            <AccessLevelSelect {query} {saveId} />
+          </div>
+        </div>
         <div class="url-block">
           <div class="verb">
             <Select
@@ -302,5 +309,14 @@
   }
   .red {
     color: #ea7d82;
+  }
+  .top-bar {
+    display: flex;
+    justify-content: space-between;
+  }
+  .access {
+    display: flex;
+    gap: var(--spacing-m);
+    align-items: center;
   }
 </style>
