@@ -197,7 +197,7 @@
       </Button>
       <DrawerContent slot="body">
         <Layout noPadding>
-          {#if getQueryParams(value._id).length > 0}
+          {#if getQueryParams(value).length > 0}
             <ParameterBuilder
               bind:customParams={value.queryParams}
               parameters={getQueryParams(value)}
