@@ -9,6 +9,7 @@ jest.mock("node-fetch", () =>
 )
 const fetch = require("node-fetch")
 const RestIntegration = require("../rest")
+const { AuthType } = require("../rest")
 
 class TestConfiguration {
   constructor(config = {}) {
@@ -25,6 +26,10 @@ describe("REST Integration", () => {
       url: BASE_URL,
     })
   })
+
+  // afterEach(() => {
+  //   jest.clearAllMocks()
+  // })
 
   it("calls the create method with the correct params", async () => {
     const query = {
@@ -101,6 +106,57 @@ describe("REST Integration", () => {
       headers: {
         Accept: "application/json",
       },
+    })
+  })
+
+  describe("authentication", () => {
+    const basicAuth = {
+      id: "basic-1",
+      type : AuthType.BASIC,
+      config : {
+        username: "user",
+        password: "password"
+      }
+    }
+    const bearerAuth = {
+      id: "bearer-1",
+      type : AuthType.BEARER,
+      config : {
+        "token": "mytoken"
+      }
+    }
+
+    beforeEach(() => {
+      config = new TestConfiguration({
+        url: BASE_URL,
+        authConfigs : [basicAuth, bearerAuth]
+      })
+    })
+
+    it("adds basic auth", async () => {
+      const query = {
+        authConfigId: "basic-1"
+      }
+      await config.integration.read(query)
+      expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/?`, {
+        method: "GET",
+        headers: {
+          Authorization: "Basic dXNlcjpwYXNzd29yZA=="
+        },
+      })
+    })
+
+    it("adds bearer auth", async () => {
+      const query = {
+        authConfigId: "bearer-1"
+      }
+      await config.integration.read(query)
+      expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/?`, {
+        method: "GET",
+        headers: {
+          Authorization: "Bearer mytoken"
+        },
+      })
     })
   })
 })
