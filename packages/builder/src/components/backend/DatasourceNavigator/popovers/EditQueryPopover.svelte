@@ -11,6 +11,14 @@
     await queries.delete(query)
     notifications.success("Query deleted")
   }
+
+  async function duplicateQuery() {
+    try {
+      await queries.duplicate(query, queries.save)
+    } catch (e) {
+      notifications.error(e.message)
+    }
+  }
 </script>
 
 <ActionMenu>
@@ -18,6 +26,7 @@
     <Icon size="S" hoverable name="MoreSmallList" />
   </div>
   <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}>Delete</MenuItem>
+  <MenuItem icon="Duplicate" on:click={duplicateQuery}>Duplicate</MenuItem>
 </ActionMenu>
 
 <ConfirmDialog

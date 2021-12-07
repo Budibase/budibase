@@ -1,9 +1,17 @@
 import { writable, get } from "svelte/store"
 import { datasources, integrations, tables, views } from "./"
 import api from "builderStore/api"
+import { duplicateName } from "../../helpers/duplicate"
+
+const sortQueries = queryList => {
+  queryList.sort((q1, q2) => {
+    return q1.name.localeCompare(q2.name)
+  })
+}
 
 export function createQueriesStore() {
-  const { subscribe, set, update } = writable({ list: [], selected: null })
+  const store = writable({ list: [], selected: null })
+  const { subscribe, set, update } = store
 
   return {
     subscribe,
@@ -17,6 +25,7 @@ export function createQueriesStore() {
     fetch: async () => {
       const response = await api.get(`/api/queries`)
       const json = await response.json()
+      sortQueries(json)
       update(state => ({ ...state, list: json }))
       return json
     },
@@ -49,6 +58,7 @@ export function createQueriesStore() {
         } else {
           queries.push(json)
         }
+        sortQueries(queries)
         return { list: queries, selected: json._id }
       })
       return json
@@ -75,6 +85,20 @@ export function createQueriesStore() {
         return state
       })
       return response
+    },
+    duplicate: async (query, saveFn) => {
+      let list = get(store).list
+      const newQuery = { ...query }
+      const datasourceId = query.datasourceId
+
+      delete newQuery._id
+      delete newQuery._rev
+      newQuery.name = duplicateName(
+        query.name,
+        list.map(q => q.name)
+      )
+
+      saveFn(datasourceId, newQuery)
     },
   }
 }
