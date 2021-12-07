@@ -13,6 +13,25 @@ const BodyTypes = {
   TEXT: "text",
 }
 
+enum AuthType {
+  BASIC = "basic",
+  BEARER = "bearer"
+}
+
+interface AuthConfig {
+  id: string
+  type: AuthType
+  config: BasicAuthConfig | BearerAuthConfig
+}
+interface BasicAuthConfig {
+  username: string,
+  password: string,
+}
+
+interface BearerAuthConfig {
+  token: string,
+}
+
 const coreFields = {
   path: {
     type: DatasourceFieldTypes.STRING,
@@ -46,6 +65,7 @@ module RestModule {
     defaultHeaders: {
       [key: string]: any
     }
+    authConfigs: AuthConfig[]
   }
 
   interface Request {
@@ -149,11 +169,31 @@ module RestModule {
       }
     }
 
-    async _req({ path = "", queryString = "", headers = {}, json = {}, method = "GET" }) {
+    processAuth(authConfigId: string) {
+      if (!this.config.authConfigs) {
+        return
+      }
+      const authConfig = this.config.authConfigs.filter(authConfig => authConfig.id === authConfigId)[0]
+      let config
+      switch (authConfig.type) {
+        case AuthType.BASIC:
+          config = authConfig.config as BasicAuthConfig
+          this.headers.Authorization = `Basic ${Buffer.from(`${config.username}:${config.password}`).toString("base64")}`
+          break
+        case AuthType.BEARER:
+          config = authConfig.config as BearerAuthConfig
+          this.headers.Authorization = `Bearer ${config.token}`
+          break
+      }
+    }
+
+    async _req({ path = "", queryString = "", headers = {}, json = {}, method = "GET", authConfigId = "" }) {
       this.headers = {
         ...this.config.defaultHeaders,
         ...headers,
       }
+
+      this.processAuth(authConfigId)
 
       const input: any = { method, headers: this.headers }
       if (json && typeof json === "object" && Object.keys(json).length > 0) {
@@ -189,5 +229,6 @@ module RestModule {
   module.exports = {
     schema: SCHEMA,
     integration: RestIntegration,
+    AuthType
   }
 }
