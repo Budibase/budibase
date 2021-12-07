@@ -15,7 +15,10 @@ import {
   encodeJSBinding,
 } from "@budibase/string-templates"
 import { TableNames } from "../constants"
-import { convertJSONSchemaToTableSchema } from "./jsonUtils"
+import {
+  convertJSONSchemaToTableSchema,
+  getJSONArrayDatasourceSchema,
+} from "./jsonUtils"
 
 // Regex to match all instances of template strings
 const CAPTURE_VAR_INSIDE_TEMPLATE = /{{([^}]+)}}/g
@@ -218,7 +221,9 @@ const getProviderContextBindings = (asset, dataProviders) => {
         Object.keys(schema).forEach(fieldKey => {
           const fieldSchema = schema[fieldKey]
           if (fieldSchema.type === "json") {
-            const jsonSchema = convertJSONSchemaToTableSchema(fieldSchema, true)
+            const jsonSchema = convertJSONSchemaToTableSchema(fieldSchema, {
+              squashObjects: true,
+            })
             Object.keys(jsonSchema).forEach(jsonKey => {
               jsonAdditions[`${fieldKey}.${jsonKey}`] = {
                 type: jsonSchema[jsonKey].type,
@@ -419,19 +424,8 @@ export const getSchemaForDatasource = (asset, datasource, isForm = false) => {
     // "jsonarray" datasources are arrays inside JSON fields
     else if (type === "jsonarray") {
       table = tables.find(table => table._id === datasource.tableId)
-
-      // We parse the label of the datasource to work out where we are inside
-      // the structure. We can use this to know which part of the schema
-      // is available underneath our current position.
-      const keysToSchema = datasource.label.split(".").slice(2)
-      let jsonSchema = table?.schema
-      for (let i = 0; i < keysToSchema.length; i++) {
-        jsonSchema = jsonSchema[keysToSchema[i]].schema
-      }
-
-      // We need to convert the JSON schema into a more typical looking table
-      // schema so that it works with the rest of the platform
-      schema = convertJSONSchemaToTableSchema(jsonSchema, true)
+      let tableSchema = table?.schema
+      schema = getJSONArrayDatasourceSchema(tableSchema, datasource)
     }
 
     // Otherwise we assume we're targeting an internal table or a plus
