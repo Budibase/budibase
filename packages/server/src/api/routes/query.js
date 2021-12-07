@@ -33,6 +33,7 @@ function generateQueryValidation() {
     extra: Joi.object().optional(),
     schema: Joi.object({}).required().unknown(true),
     transformer: Joi.string().optional(),
+    flags: Joi.object().optional(),
   }))
 }
 

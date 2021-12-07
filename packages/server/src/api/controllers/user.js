@@ -2,6 +2,7 @@ const CouchDB = require("../../db")
 const {
   generateUserMetadataID,
   getUserMetadataParams,
+  generateUserFlagID,
 } = require("../../db/utils")
 const { InternalTables } = require("../../db/utils")
 const { getGlobalUsers, getRawGlobalUser } = require("../../utilities/global")
@@ -194,4 +195,36 @@ exports.destroyMetadata = async function (ctx) {
 
 exports.findMetadata = async function (ctx) {
   ctx.body = await getFullUser(ctx, ctx.params.id)
+}
+
+exports.setFlag = async function (ctx) {
+  const userId = ctx.user._id
+  const { flag, value } = ctx.request.body
+  if (!flag) {
+    ctx.throw(400, "Must supply a 'flag' field in request body.")
+  }
+  const flagDocId = generateUserFlagID(userId)
+  const db = new CouchDB(ctx.appId)
+  let doc
+  try {
+    doc = await db.get(flagDocId)
+  } catch (err) {
+    doc = { _id: flagDocId }
+  }
+  doc[flag] = value || true
+  await db.put(doc)
+  ctx.body = { message: "Flag set successfully" }
+}
+
+exports.getFlags = async function (ctx) {
+  const userId = ctx.user._id
+  const docId = generateUserFlagID(userId)
+  const db = new CouchDB(ctx.appId)
+  let doc
+  try {
+    doc = await db.get(docId)
+  } catch (err) {
+    doc = { _id: docId }
+  }
+  ctx.body = doc
 }

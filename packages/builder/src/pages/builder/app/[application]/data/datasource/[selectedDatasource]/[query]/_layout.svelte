@@ -4,17 +4,19 @@
   import { IntegrationTypes } from "constants/backend"
   import { goto } from "@roxi/routify"
 
+  let datasourceId
   if ($params.query) {
     const query = $queries.list.find(q => q._id === $params.query)
     if (query) {
       queries.select(query)
+      datasourceId = query.datasourceId
     }
   }
   const datasource = $datasources.list.find(
-    ds => ds._id === $datasources.selected
+    ds => ds._id === $datasources.selected || ds._id === datasourceId
   )
   if (datasource?.source === IntegrationTypes.REST) {
-    $goto("../rest")
+    $goto(`../rest/${$params.query}`)
   }
 </script>
 

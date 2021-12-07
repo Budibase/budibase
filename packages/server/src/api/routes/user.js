@@ -39,5 +39,15 @@ router
     authorized(PermissionTypes.USER, PermissionLevels.WRITE),
     controller.syncUser
   )
+  .post(
+    "/api/users/flags",
+    authorized(PermissionTypes.USER, PermissionLevels.WRITE),
+    controller.setFlag
+  )
+  .get(
+    "/api/users/flags",
+    authorized(PermissionTypes.USER, PermissionLevels.READ),
+    controller.getFlags
+  )
 
 module.exports = router

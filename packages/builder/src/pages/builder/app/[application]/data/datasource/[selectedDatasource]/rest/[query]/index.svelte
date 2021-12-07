@@ -1,6 +1,6 @@
 <script>
   import { params } from "@roxi/routify"
-  import { datasources, integrations, queries } from "stores/backend"
+  import { datasources, integrations, queries, flags } from "stores/backend"
   import {
     Layout,
     Input,
@@ -22,10 +22,15 @@
   import CodeMirrorEditor, {
     EditorModes,
   } from "components/common/CodeMirrorEditor.svelte"
-  import RestBodyInput from "../_components/RestBodyInput.svelte"
+  import RestBodyInput from "../../_components/RestBodyInput.svelte"
   import { capitalise } from "helpers"
   import { onMount } from "svelte"
-  import { fieldsToSchema, schemaToFields } from "helpers/data/utils"
+  import {
+    fieldsToSchema,
+    schemaToFields,
+    breakQueryString,
+    buildQueryString,
+  } from "helpers/data/utils"
   import {
     RestBodyTypes as bodyTypes,
     SchemaTypeOptions,
@@ -35,7 +40,8 @@
   let query, datasource
   let breakQs = {}
   let url = ""
-  let response, schema
+  let saveId
+  let response, schema, isGet
   let datasourceType, integrationInfo, queryConfig, responseSuccess
 
   $: datasource = $datasources.list.find(ds => ds._id === query?.datasourceId)
@@ -44,6 +50,7 @@
   $: queryConfig = integrationInfo?.query
   $: url = buildUrl(url, breakQs)
   $: checkQueryName(url)
+  $: isGet = query?.queryVerb === "read"
   $: responseSuccess =
     response?.info?.code >= 200 && response?.info?.code <= 206
 
@@ -56,35 +63,6 @@
         queryVerb: "read",
       }
     )
-  }
-
-  function breakQueryString(qs) {
-    if (!qs) {
-      return {}
-    }
-    if (qs.includes("?")) {
-      qs = qs.split("?")[1]
-    }
-    const params = qs.split("&")
-    let paramObj = {}
-    for (let param of params) {
-      const [key, value] = param.split("=")
-      paramObj[key] = value
-    }
-  }
-
-  function buildQueryString(obj) {
-    let str = ""
-    for (let [key, value] of Object.entries(obj)) {
-      if (!key || key === "") {
-        continue
-      }
-      if (str !== "") {
-        str += "&"
-      }
-      str += `${key}=${value || ""}`
-    }
-    return str
   }
 
   function checkQueryName(inputUrl = null) {
@@ -113,11 +91,19 @@
     const queryString = buildQueryString(breakQs)
     newQuery.fields.path = url.split("?")[0]
     newQuery.fields.queryString = queryString
+    newQuery.schema = fieldsToSchema(schema)
     return newQuery
   }
 
-  function saveQuery() {
-    query.schema = fieldsToSchema(schema)
+  async function saveQuery() {
+    const toSave = buildQuery()
+    try {
+      const { _id } = await queries.save(toSave.datasourceId, toSave)
+      saveId = _id
+      notifications.success(`Request saved successfully.`)
+    } catch (err) {
+      notifications.error(`Error creating query. ${err.message}`)
+    }
   }
 
   async function runQuery() {
@@ -138,7 +124,7 @@
     query = getSelectedQuery()
     const qs = query?.fields.queryString
     breakQs = breakQueryString(qs)
-    url = buildUrl(query.fields.path, qs)
+    url = buildUrl(query.fields.path, breakQs)
     schema = schemaToFields(query.schema)
     if (query && !query.transformer) {
       query.transformer = "return data"
@@ -146,7 +132,6 @@
     if (query && !query.flags) {
       query.flags = {
         urlName: false,
-        bannerCleared: false,
       }
     }
     if (query && !query.fields.bodyType) {
@@ -187,15 +172,16 @@
           <Tab title="Headers">
             <KeyValueBuilder
               bind:object={query.fields.headers}
+              bind:activity={query.fields.enabledHeaders}
+              toggle
               name="header"
               headings
-              activity
             />
           </Tab>
           <Tab title="Body">
             <RadioGroup
               bind:value={query.fields.bodyType}
-              options={bodyTypes}
+              options={isGet ? [bodyTypes[0]] : bodyTypes}
               direction="horizontal"
               getOptionLabel={option => option.name}
               getOptionValue={option => option.value}
@@ -204,11 +190,12 @@
           </Tab>
           <Tab title="Transformer">
             <Layout noPadding>
-              {#if !query.flags.bannerCleared}
+              {#if !$flags.queryTransformerBanner}
                 <Banner
                   extraButtonText="Learn more"
                   extraButtonAction={learnMoreBanner}
-                  on:change={() => (query.flags.bannerCleared = true)}
+                  on:change={() =>
+                    flags.updateFlag("queryTransformerBanner", true)}
                 >
                   Add a JavaScript function to transform the query result.
                 </Banner>

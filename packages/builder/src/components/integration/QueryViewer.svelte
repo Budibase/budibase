@@ -22,7 +22,6 @@
     datasources,
     integrations,
     queries,
-    roles,
     permissions,
   } from "stores/backend"
   import { capitalise } from "../../helpers"
@@ -32,6 +31,7 @@
   import { onMount } from "svelte"
   import KeyValueBuilder from "./KeyValueBuilder.svelte"
   import { fieldsToSchema, schemaToFields } from "helpers/data/utils"
+  import AccessLevelSelect from "./AccessLevelSelect.svelte"
 
   export let query
 
@@ -39,6 +39,7 @@
   let parameters
   let data = []
   let roleId
+  let saveId
   const transformerDocs =
     "https://docs.budibase.com/building-apps/data/transformers"
 
@@ -59,19 +60,6 @@
   function resetDependentFields() {
     if (query.fields.extra) {
       query.fields.extra = {}
-    }
-  }
-
-  async function updateRole(role, id = null) {
-    roleId = role
-    if (query?._id || id) {
-      for (let level of ["read", "write"]) {
-        await permissions.save({
-          level,
-          role,
-          resource: query?._id || id,
-        })
-      }
     }
   }
 
@@ -99,7 +87,7 @@
   async function saveQuery() {
     try {
       const { _id } = await queries.save(query.datasourceId, query)
-      await updateRole(roleId, _id)
+      saveId = _id
       notifications.success(`Query saved successfully.`)
       $goto(`../${_id}`)
     } catch (err) {
@@ -142,14 +130,7 @@
         />
       </div>
       <div class="config-field">
-        <Label>Access level</Label>
-        <Select
-          value={roleId}
-          on:change={e => updateRole(e.detail)}
-          options={$roles}
-          getOptionLabel={x => x.name}
-          getOptionValue={x => x._id}
-        />
+        <AccessLevelSelect {saveId} {query} label="Access Level" />
       </div>
       {#if integrationInfo?.extra && query.queryVerb}
         <ExtraQueryConfig
