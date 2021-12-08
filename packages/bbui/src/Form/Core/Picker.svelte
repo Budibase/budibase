@@ -64,7 +64,7 @@
     if (autocomplete && term) {
       const lowerCaseTerm = term.toLowerCase()
       return options.filter(option => {
-        return `${getLabel(option)}`?.toLowerCase().includes(lowerCaseTerm)
+        return `${getLabel(option)}`.toLowerCase().includes(lowerCaseTerm)
       })
     }
     return options
