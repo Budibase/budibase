@@ -8,6 +8,7 @@
     Layout,
     notifications,
     Table,
+    Modal,
   } from "@budibase/bbui"
   import { datasources, integrations, queries, tables } from "stores/backend"
   import IntegrationConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/IntegrationConfigForm.svelte"
@@ -18,6 +19,9 @@
   import { IntegrationTypes } from "constants/backend"
   import { isEqual } from "lodash"
   import { cloneDeep } from "lodash/fp"
+
+  import ImportRestQueriesModal from "components/backend/DatasourceNavigator/modals/ImportRestQueriesModal.svelte"
+  let importQueriesModal
 
   let baseDatasource, changed
   const querySchema = {
@@ -67,6 +71,15 @@
   }
 </script>
 
+<Modal bind:this={importQueriesModal}>
+  {#if datasource.source === "REST"}
+    <ImportRestQueriesModal
+      createDatasource={false}
+      datasourceId={datasource._id}
+    />
+  {/if}
+</Modal>
+
 {#if datasource && integration}
   <section>
     <Layout>
@@ -97,9 +110,16 @@
       <Divider size="S" />
       <div class="query-header">
         <Heading size="S">Queries</Heading>
-        <Button cta icon="Add" on:click={() => $goto("./new")}
-          >Add query
-        </Button>
+        <div class="query-buttons">
+          {#if datasource?.source === IntegrationTypes.REST}
+            <Button secondary on:click={() => importQueriesModal.show()}
+              >Import</Button
+            >
+          {/if}
+          <Button cta icon="Add" on:click={() => $goto("./new")}
+            >Add query
+          </Button>
+        </div>
       </div>
       <Body size="S">
         To build an app using a datasource, you must first query the data. A
@@ -149,6 +169,11 @@
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
+  }
+
+  .query-buttons {
+    display: flex;
+    gap: var(--spacing-l);
   }
 
   .query-list {
