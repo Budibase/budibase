@@ -19,11 +19,15 @@ import {
   convertJSONSchemaToTableSchema,
   getJSONArrayDatasourceSchema,
 } from "./jsonUtils"
+import { getAvailableActions } from "components/design/PropertiesPanel/PropertyControls/EventsEditor/actions"
 
 // Regex to match all instances of template strings
 const CAPTURE_VAR_INSIDE_TEMPLATE = /{{([^}]+)}}/g
 const CAPTURE_VAR_INSIDE_JS = /\$\("([^")]+)"\)/g
 const CAPTURE_HBS_TEMPLATE = /{{[\S\s]*?}}/g
+
+// List of all available button actions
+const AllButtonActions = getAvailableActions(true)
 
 /**
  * Gets all bindable data context fields and instance fields.
@@ -374,6 +378,51 @@ const getUrlBindings = asset => {
 }
 
 /**
+ * Gets all bindable properties exposed in a button actions flow up until
+ * the specified action ID.
+ */
+export const getButtonContextBindings = (component, actionId) => {
+  // Find the setting we are working on
+  let settingValue = []
+  const settings = getComponentSettings(component._component)
+  const eventSettings = settings.filter(setting => setting.type === "event")
+  for (let i = 0; i < eventSettings.length; i++) {
+    const setting = component[eventSettings[i].key]
+    if (
+      Array.isArray(setting) &&
+      setting.find(action => action.id === actionId)
+    ) {
+      settingValue = setting
+      break
+    }
+  }
+  if (!settingValue?.length) {
+    return []
+  }
+
+  // Get the steps leading up to this value
+  const index = settingValue.findIndex(action => action.id === actionId)
+  const prevActions = settingValue.slice(0, index)
+
+  // Generate bindings for any steps which provide context
+  let bindings = []
+  prevActions.forEach((action, idx) => {
+    const def = AllButtonActions.find(
+      x => x.name === action["##eventHandlerType"]
+    )
+    if (def.context) {
+      def.context.forEach(contextValue => {
+        bindings.push({
+          readableBinding: `Action ${idx + 1}.${contextValue.label}`,
+          runtimeBinding: `actions.${idx}.${contextValue.value}`,
+        })
+      })
+    }
+  })
+  return bindings
+}
+
+/**
  * Gets a schema for a datasource object.
  */
 export const getSchemaForDatasource = (asset, datasource, isForm = false) => {
@@ -505,14 +554,57 @@ const buildFormSchema = component => {
 }
 
 /**
+ * Returns an array of the keys of any state variables which are set anywhere
+ * in the app.
+ */
+export const getAllStateVariables = () => {
+  // Get all component containing assets
+  let allAssets = []
+  allAssets = allAssets.concat(get(store).layouts || [])
+  allAssets = allAssets.concat(get(store).screens || [])
+
+  // Find all button action settings in all components
+  let eventSettings = []
+  allAssets.forEach(asset => {
+    findAllMatchingComponents(asset.props, component => {
+      const settings = getComponentSettings(component._component)
+      settings
+        .filter(setting => setting.type === "event")
+        .forEach(setting => {
+          eventSettings.push(component[setting.key])
+        })
+    })
+  })
+
+  // Extract all state keys from any "update state" actions in each setting
+  let bindingSet = new Set()
+  eventSettings.forEach(setting => {
+    if (!Array.isArray(setting)) {
+      return
+    }
+    setting.forEach(action => {
+      if (
+        action["##eventHandlerType"] === "Update State" &&
+        action.parameters?.type === "set" &&
+        action.parameters?.key &&
+        action.parameters?.value
+      ) {
+        bindingSet.add(action.parameters.key)
+      }
+    })
+  })
+  return Array.from(bindingSet)
+}
+
+/**
  * Recurses the input object to remove any instances of bindings.
  */
-export function removeBindings(obj) {
+export const removeBindings = (obj, replacement = "Invalid binding") => {
   for (let [key, value] of Object.entries(obj)) {
     if (value && typeof value === "object") {
-      obj[key] = removeBindings(value)
+      obj[key] = removeBindings(value, replacement)
     } else if (typeof value === "string") {
-      obj[key] = value.replace(CAPTURE_HBS_TEMPLATE, "Invalid binding")
+      obj[key] = value.replace(CAPTURE_HBS_TEMPLATE, replacement)
     }
   }
   return obj
@@ -522,8 +614,8 @@ export function removeBindings(obj) {
  * When converting from readable to runtime it can sometimes add too many square brackets,
  * this makes sure that doesn't happen.
  */
-function shouldReplaceBinding(currentValue, from, convertTo) {
-  if (!currentValue?.includes(from)) {
+const shouldReplaceBinding = (currentValue, convertFrom, convertTo) => {
+  if (!currentValue?.includes(convertFrom)) {
     return false
   }
   if (convertTo === "readableBinding") {
@@ -532,7 +624,7 @@ function shouldReplaceBinding(currentValue, from, convertTo) {
   // remove all the spaces, if the input is surrounded by spaces e.g. [ Auto ID ] then
   // this makes sure it is detected
   const noSpaces = currentValue.replace(/\s+/g, "")
-  const fromNoSpaces = from.replace(/\s+/g, "")
+  const fromNoSpaces = convertFrom.replace(/\s+/g, "")
   const invalids = [
     `[${fromNoSpaces}]`,
     `"${fromNoSpaces}"`,
@@ -541,14 +633,21 @@ function shouldReplaceBinding(currentValue, from, convertTo) {
   return !invalids.find(invalid => noSpaces?.includes(invalid))
 }
 
-function replaceBetween(string, start, end, replacement) {
+/**
+ * Utility function which replaces a string between given indices.
+ */
+const replaceBetween = (string, start, end, replacement) => {
   return string.substring(0, start) + replacement + string.substring(end)
 }
 
 /**
- * utility function for the readableToRuntimeBinding and runtimeToReadableBinding.
+ * Utility function for the readableToRuntimeBinding and runtimeToReadableBinding.
  */
-function bindingReplacement(bindableProperties, textWithBindings, convertTo) {
+const bindingReplacement = (
+  bindableProperties,
+  textWithBindings,
+  convertTo
+) => {
   // Decide from base64 if using JS
   const isJS = isJSBinding(textWithBindings)
   if (isJS) {
@@ -613,14 +712,17 @@ function bindingReplacement(bindableProperties, textWithBindings, convertTo) {
  * Extracts a component ID from a handlebars expression setting of
  * {{ literal [componentId] }}
  */
-function extractLiteralHandlebarsID(value) {
+const extractLiteralHandlebarsID = value => {
   return value?.match(/{{\s*literal\s*\[+([^\]]+)].*}}/)?.[1]
 }
 
 /**
  * Converts a readable data binding into a runtime data binding
  */
-export function readableToRuntimeBinding(bindableProperties, textWithBindings) {
+export const readableToRuntimeBinding = (
+  bindableProperties,
+  textWithBindings
+) => {
   return bindingReplacement(
     bindableProperties,
     textWithBindings,
@@ -631,56 +733,13 @@ export function readableToRuntimeBinding(bindableProperties, textWithBindings) {
 /**
  * Converts a runtime data binding into a readable data binding
  */
-export function runtimeToReadableBinding(bindableProperties, textWithBindings) {
+export const runtimeToReadableBinding = (
+  bindableProperties,
+  textWithBindings
+) => {
   return bindingReplacement(
     bindableProperties,
     textWithBindings,
     "readableBinding"
   )
-}
-
-/**
- * Returns an array of the keys of any state variables which are set anywhere
- * in the app.
- */
-export const getAllStateVariables = () => {
-  let allComponents = []
-
-  // Find all onClick settings in all layouts
-  get(store).layouts.forEach(layout => {
-    const components = findAllMatchingComponents(
-      layout.props,
-      c => c.onClick != null
-    )
-    allComponents = allComponents.concat(components || [])
-  })
-
-  // Find all onClick settings in all screens
-  get(store).screens.forEach(screen => {
-    const components = findAllMatchingComponents(
-      screen.props,
-      c => c.onClick != null
-    )
-    allComponents = allComponents.concat(components || [])
-  })
-
-  // Add state bindings for all state actions
-  let bindingSet = new Set()
-  allComponents.forEach(component => {
-    if (!Array.isArray(component.onClick)) {
-      return
-    }
-    component.onClick.forEach(action => {
-      if (
-        action["##eventHandlerType"] === "Update State" &&
-        action.parameters?.type === "set" &&
-        action.parameters?.key &&
-        action.parameters?.value
-      ) {
-        bindingSet.add(action.parameters.key)
-      }
-    })
-  })
-
-  return Array.from(bindingSet)
 }

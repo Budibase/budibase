@@ -22,11 +22,17 @@ import DuplicateRow from "./DuplicateRow.svelte"
 // be considered as camel case too.
 // There is technical debt here to sanitize all these and standardise them
 // across the packages but it's a breaking change to existing apps.
-export const getAvailableActions = () => {
+export const getAvailableActions = (getAllActions = false) => {
   let actions = [
     {
       name: "Save Row",
       component: SaveRow,
+      context: [
+        {
+          label: "Saved row",
+          value: "row",
+        },
+      ],
     },
     {
       name: "Duplicate Row",
@@ -74,7 +80,7 @@ export const getAvailableActions = () => {
     },
   ]
 
-  if (get(store).clientFeatures?.state) {
+  if (getAllActions || get(store).clientFeatures?.state) {
     actions.push({
       name: "Update State",
       component: UpdateStateStep,

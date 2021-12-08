@@ -127,18 +127,33 @@ const searchComponentTree = (rootComponent, matchComponent) => {
 }
 
 /**
- * Searches a component's definition for a setting matching a certin predicate.
+ * Searches a component's definition for a setting matching a certain predicate.
+ * These settings are cached because they cannot change at run time.
  */
+let componentSettingCache = {}
 export const getComponentSettings = componentType => {
-  const def = store.actions.components.getDefinition(componentType)
-  if (!def) {
-    return []
+  // Ensure whole component name is used
+  if (!componentType.startsWith("@budibase")) {
+    componentType = `@budibase/standard-components/${componentType}`
   }
-  let settings = def.settings?.filter(setting => !setting.section) ?? []
-  def.settings
-    ?.filter(setting => setting.section)
-    .forEach(section => {
-      settings = settings.concat(section.settings || [])
-    })
+
+  // Check if we have cached this type already
+  if (componentSettingCache[componentType]) {
+    return componentSettingCache[componentType]
+  }
+
+  // Otherwise get the settings and cache them
+  const def = store.actions.components.getDefinition(componentType)
+  let settings = []
+  if (def) {
+    settings = def.settings?.filter(setting => !setting.section) ?? []
+    def.settings
+      ?.filter(setting => setting.section)
+      .forEach(section => {
+        settings = settings.concat(section.settings || [])
+      })
+  }
+  componentSettingCache[componentType] = settings
+
   return settings
 }
