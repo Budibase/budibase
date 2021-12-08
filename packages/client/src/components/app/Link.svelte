@@ -79,18 +79,20 @@
       {componentText}
     </a>
   {:else}
-    <a
-      use:linkable
-      href={url || "/"}
-      use:styleable={styles}
-      class:placeholder
-      class:bold
-      class:italic
-      class:underline
-      class="align--{align || 'left'} size--{size || 'M'}"
-    >
-      {componentText}
-    </a>
+    {#key url}
+      <a
+        use:linkable
+        href={url || "/"}
+        use:styleable={styles}
+        class:placeholder
+        class:bold
+        class:italic
+        class:underline
+        class="align--{align || 'left'} size--{size || 'M'}"
+      >
+        {componentText}
+      </a>
+    {/key}
   {/if}
 {/if}
 
