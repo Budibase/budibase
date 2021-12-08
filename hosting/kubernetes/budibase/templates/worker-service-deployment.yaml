@@ -111,7 +111,7 @@ spec:
           value: {{ .Values.globals.smtp.from | quote }}
         - name: APPS_URL
           value: http://app-service:{{ .Values.services.apps.port }}
-        image: budibase/worker:{{ .Values.services.budibaseVersion }}
+        image: budibase/worker:{{ .Chart.appVersion }}
         imagePullPolicy: Always
         name: bbworker
         ports:

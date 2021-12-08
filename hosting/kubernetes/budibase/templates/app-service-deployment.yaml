@@ -106,7 +106,7 @@ spec:
           value: {{ .Values.globals.accountPortalApiKey | quote }}
         - name: COOKIE_DOMAIN
           value: {{ .Values.globals.cookieDomain | quote }}
-        image: budibase/apps:{{ .Values.services.budibaseVersion }}
+        image: budibase/apps:{{ .Chart.appVersion }}
         imagePullPolicy: Always
         name: bbapps
         ports:
