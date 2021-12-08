@@ -43,10 +43,14 @@ jobs:
           DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
           BUDIBASE_RELEASE_VERSION: ${{ steps.previoustag.outputs.tag }}
       
+      - name: Configure Git
+        run: |
+          git config user.name "Budibase Production Bot"
+          git config user.email "<>"
+      
       - uses: azure/setup-helm@v1
         id: install
 
-      # So, we need to inject the values into this
       - run: yarn release:helm
 
       - name: Run chart-releaser

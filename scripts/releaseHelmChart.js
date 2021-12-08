@@ -31,8 +31,8 @@ try {
 	const updatedChartYaml = yaml.dump(chart)
 	fs.writeFileSync(CHART_PATH, updatedChartYaml)
 
+	// package the chart and write to docs dir
 	execSync(`helm package hosting/kubernetes/budibase --destination docs`)
-	execSync(`helm repo index docs --url https://budibase.github.io/budibase`)
 } catch (err) {
 	console.error("Error releasing helm chart")
 	throw err
