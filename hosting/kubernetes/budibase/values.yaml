@@ -129,6 +129,12 @@ services:
     # user: "" # only change if pointing to existing couch server
     # password: "" # only change if pointing to existing couch server
     port: 5984
+    backup:
+      enabled: false
+      # target couchDB instance to back up to
+      target: ""
+      # backup interval in seconds
+      interval: ""
 
   redis:
     enabled: true # disable if using external redis
@@ -146,7 +152,7 @@ services:
     accessKey: "" # AWS_ACCESS_KEY if using S3 or existing minio access key
     secretKey: "" # AWS_SECRET_ACCESS_KEY if using S3 or existing minio secret
     region: "" # AWS_REGION if using S3 or existing minio secret
-    url: "" # only change if pointing to existing minio cluster and minio: false
+    url: "http://minio-service:9000" # only change if pointing to existing minio cluster or S3 and minio: false
     storage: 100Mi
 
 # Override values in couchDB subchart
