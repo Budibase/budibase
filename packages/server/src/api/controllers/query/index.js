@@ -1,12 +1,14 @@
 const { processString } = require("@budibase/string-templates")
-const CouchDB = require("../../db")
+const CouchDB = require("../../../db")
 const {
   generateQueryID,
   getQueryParams,
   isProdAppID,
-} = require("../../db/utils")
-const { BaseQueryVerbs } = require("../../constants")
-const { Thread, ThreadType } = require("../../threads")
+} = require("../../../db/utils")
+const { BaseQueryVerbs } = require("../../../constants")
+const { Thread, ThreadType } = require("../../../threads")
+const { save: saveDatasource } = require("../datasource")
+const { RestImporter } = require("./import")
 
 const Runner = new Thread(ThreadType.QUERY, { timeoutMs: 10000 })
 
@@ -30,7 +32,47 @@ exports.fetch = async function (ctx) {
       include_docs: true,
     })
   )
+
   ctx.body = enrichQueries(body.rows.map(row => row.doc))
+}
+
+exports.import = async ctx => {
+  const body = ctx.request.body
+  const data = body.data
+
+  const importer = new RestImporter(data)
+  await importer.init()
+
+  let datasourceId
+  if (!body.datasourceId) {
+    // construct new datasource
+    const info = await importer.getInfo()
+    let datasource = {
+      type: "datasource",
+      source: "REST",
+      config: {
+        url: info.url,
+        defaultHeaders: [],
+      },
+      name: info.name,
+    }
+    // save the datasource
+    const datasourceCtx = { ...ctx }
+    datasourceCtx.request.body.datasource = datasource
+    await saveDatasource(datasourceCtx)
+    datasourceId = datasourceCtx.body.datasource._id
+  } else {
+    // use existing datasource
+    datasourceId = body.datasourceId
+  }
+
+  const importResult = await importer.importQueries(ctx.appId, datasourceId)
+
+  ctx.body = {
+    ...importResult,
+    datasourceId,
+  }
+  ctx.status = 200
 }
 
 exports.save = async function (ctx) {

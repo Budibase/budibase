@@ -8,12 +8,18 @@
   import DatasourceConfigModal from "components/backend/DatasourceNavigator/modals/DatasourceConfigModal.svelte"
   import { createRestDatasource } from "builderStore/datasource"
   import { goto } from "@roxi/routify"
+  import ImportRestQueriesModal from "./ImportRestQueriesModal.svelte"
 
   export let modal
   let integrations = []
   let integration = {}
   let internalTableModal
   let externalDatasourceModal
+  let importModal
+
+  $: showImportButton = false
+
+  checkShowImport()
 
   onMount(() => {
     fetchIntegrations()
@@ -33,6 +39,15 @@
       config,
       schema: selected.datasource,
     }
+    checkShowImport()
+  }
+
+  function checkShowImport() {
+    showImportButton = integration.type === "REST"
+  }
+
+  function showImportModal() {
+    importModal.show()
   }
 
   async function chooseNextModal() {
@@ -67,11 +82,24 @@
   <DatasourceConfigModal {integration} {modal} />
 </Modal>
 
+<Modal bind:this={importModal}>
+  {#if integration.type === "REST"}
+    <ImportRestQueriesModal
+      navigateDatasource={true}
+      createDatasource={true}
+      onCancel={() => modal.show()}
+    />
+  {/if}
+</Modal>
+
 <Modal bind:this={modal}>
   <ModalContent
     disabled={!Object.keys(integration).length}
     title="Data"
     confirmText="Continue"
+    showSecondaryButton={showImportButton}
+    secondaryButtonText="Import"
+    secondaryAction={() => showImportModal()}
     showCancelButton={false}
     size="M"
     onConfirm={() => {
