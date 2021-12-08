@@ -49,3 +49,23 @@ export function buildQueryString(obj) {
   }
   return str
 }
+
+export function keyValueToQueryParameters(obj) {
+  let array = []
+  if (obj && typeof obj === "object") {
+    for (let [key, value] of Object.entries(obj)) {
+      array.push({ name: key, default: value })
+    }
+  }
+  return array
+}
+
+export function queryParametersToKeyValue(array) {
+  let obj = {}
+  if (Array.isArray(array)) {
+    for (let param of array) {
+      obj[param.name] = param.default
+    }
+  }
+  return obj
+}
