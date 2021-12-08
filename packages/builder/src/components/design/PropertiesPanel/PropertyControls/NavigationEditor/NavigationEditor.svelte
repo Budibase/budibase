@@ -6,7 +6,7 @@
 
   export let value = []
   let drawer
-  let links = cloneDeep(value)
+  let links = cloneDeep(value || [])
 
   const dispatch = createEventDispatcher()
   const save = () => {
