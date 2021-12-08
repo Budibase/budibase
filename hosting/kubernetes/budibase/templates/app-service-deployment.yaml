@@ -73,17 +73,13 @@ spec:
               name: {{ template "budibase.fullname" . }}
               key: objectStoreSecret
         - name: MINIO_URL
-          {{ if .Values.services.objectStore.url }}
           value: {{ .Values.services.objectStore.url }}
-          {{ else }}
-          value: http://minio-service:{{ .Values.services.objectStore.port }}
-          {{ end }}
         - name: PORT
           value: {{ .Values.services.apps.port | quote }}
         - name: MULTI_TENANCY
           value: {{ .Values.globals.multiTenancy | quote }}
         - name: LOG_LEVEL
-          value: {{ .Values.services.apps.logLevel | quote }}
+          value: {{ default "info" .Values.services.apps.logLevel | quote }}
         - name: REDIS_PASSWORD
           value: {{ .Values.services.redis.password }}
         - name: REDIS_URL
@@ -110,7 +106,7 @@ spec:
           value: {{ .Values.globals.accountPortalApiKey | quote }}
         - name: COOKIE_DOMAIN
           value: {{ .Values.globals.cookieDomain | quote }}
-        image: budibase/apps
+        image: budibase/apps:{{ .Chart.appVersion }}
         imagePullPolicy: Always
         name: bbapps
         ports:

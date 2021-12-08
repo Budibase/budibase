@@ -70,17 +70,13 @@ spec:
               name: {{ template "budibase.fullname" . }}
               key: objectStoreSecret
         - name: MINIO_URL
-          {{ if .Values.services.objectStore.url }}
           value: {{ .Values.services.objectStore.url }}
-          {{ else }}
-          value: http://minio-service:{{ .Values.services.objectStore.port }}
-          {{ end }}
         - name: PORT
           value: {{ .Values.services.worker.port | quote }}
         - name: MULTI_TENANCY
           value: {{ .Values.globals.multiTenancy | quote }}
         - name: LOG_LEVEL
-          value: {{ .Values.services.worker.logLevel | quote }}
+          value: {{ default "info" .Values.services.worker.logLevel | quote }}
         - name: REDIS_PASSWORD
           value: {{ .Values.services.redis.password | quote }}
         - name: REDIS_URL
@@ -115,7 +111,7 @@ spec:
           value: {{ .Values.globals.smtp.from | quote }}
         - name: APPS_URL
           value: http://app-service:{{ .Values.services.apps.port }}
-        image: budibase/worker
+        image: budibase/worker:{{ .Chart.appVersion }}
         imagePullPolicy: Always
         name: bbworker
         ports:
