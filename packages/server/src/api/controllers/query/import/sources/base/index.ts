@@ -1,28 +1,9 @@
+
+import { Query, QueryParameter } from "../../../../../../definitions/common"
+
 export interface ImportInfo {
   url: string
   name: string
-}
-
-export interface QueryParameter {
-  name: string
-  default: string
-}
-
-export interface Query {
-  _id?: string
-  datasourceId: string
-  name: string
-  parameters: QueryParameter[]
-  fields: {
-    headers: object
-    queryString: string | null
-    path: string
-    requestBody: string | undefined
-  }
-  transformer: string | null
-  schema: any
-  readable: boolean
-  queryVerb: string
 }
 
 enum MethodToVerb {
