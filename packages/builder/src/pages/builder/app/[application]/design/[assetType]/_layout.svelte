@@ -179,7 +179,7 @@
           <Layout gap="S" justifyItems="center">
             <img class="img-size" alt="logo" src={Logo} />
             <div class="new-screen-text">
-              <Detail size="M">Let's add some life to this screen</Detail>
+              <Detail size="M">LET’S BRING THIS APP TO LIFE</Detail>
             </div>
             <Button on:click={() => showModal()} size="M" cta>
               <div class="new-screen-button">
@@ -290,12 +290,9 @@
   }
 
   .centered {
-    top: 0;
-    bottom: 0;
-    left: 10%;
-    right: 0;
-    width: 100%;
-    height: 100%;
+    width: calc(100% - 350px);
+    height: calc(100% - 100px);
+    position: absolute;
     display: flex;
     flex-direction: column;
     justify-content: center;
