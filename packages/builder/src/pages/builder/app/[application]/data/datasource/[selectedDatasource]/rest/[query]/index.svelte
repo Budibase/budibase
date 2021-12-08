@@ -13,6 +13,7 @@
     Heading,
     RadioGroup,
     Label,
+    Body,
     TextArea,
     Table,
     notifications,
@@ -30,6 +31,8 @@
     schemaToFields,
     breakQueryString,
     buildQueryString,
+    keyValueToQueryParameters,
+    queryParametersToKeyValue,
   } from "helpers/data/utils"
   import {
     RestBodyTypes as bodyTypes,
@@ -37,9 +40,11 @@
   } from "constants/backend"
   import JSONPreview from "components/integration/JSONPreview.svelte"
   import AccessLevelSelect from "components/integration/AccessLevelSelect.svelte"
+  import Placeholder from "assets/bb-spaceship.svg"
 
   let query, datasource
-  let breakQs = {}
+  let breakQs = {},
+    bindings = {}
   let url = ""
   let saveId
   let response, schema, isGet
@@ -93,6 +98,7 @@
     newQuery.fields.path = url.split("?")[0]
     newQuery.fields.queryString = queryString
     newQuery.schema = fieldsToSchema(schema)
+    newQuery.parameters = keyValueToQueryParameters(bindings)
     return newQuery
   }
 
@@ -127,6 +133,7 @@
     breakQs = breakQueryString(qs)
     url = buildUrl(query.fields.path, breakQs)
     schema = schemaToFields(query.schema)
+    bindings = queryParametersToKeyValue(query.parameters)
     if (query && !query.transformer) {
       query.transformer = "return data"
     }
@@ -172,7 +179,17 @@
           </div>
           <Button cta disabled={!url} on:click={runQuery}>Send</Button>
         </div>
-        <Tabs selected="Params" quiet noPadding noHorizPadding>
+        <Tabs selected="Bindings" quiet noPadding noHorizPadding>
+          <Tab title="Bindings">
+            <KeyValueBuilder
+              bind:object={bindings}
+              tooltip="Set the name of the binding which can be used in Handlebars statements throughout your query"
+              name="binding"
+              headings
+              keyPlaceholder="Binding name"
+              valuePlaceholder="Default"
+            />
+          </Tab>
           <Tab title="Params">
             <KeyValueBuilder bind:object={breakQs} name="param" headings />
           </Tab>
@@ -223,6 +240,14 @@
       <Divider size="S" />
       {#if !response}
         <Heading size="M">Response</Heading>
+        <div class="placeholder">
+          <div class="placeholder-internal">
+            <img alt="placeholder" src={Placeholder} />
+            <Body size="XS" textAlign="center"
+              >{"enter a url in the textbox above and click send to get a response".toUpperCase()}</Body
+            >
+          </div>
+        </div>
       {:else}
         <Tabs selected="JSON" quiet noPadding noHorizPadding>
           <Tab title="JSON">
@@ -318,5 +343,16 @@
     display: flex;
     gap: var(--spacing-m);
     align-items: center;
+  }
+  .placeholder-internal {
+    display: flex;
+    flex-direction: column;
+    width: 200px;
+    gap: var(--spacing-l);
+  }
+  .placeholder {
+    display: flex;
+    margin-top: var(--spacing-xl);
+    justify-content: center;
   }
 </style>
