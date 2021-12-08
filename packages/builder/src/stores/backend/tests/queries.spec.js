@@ -6,7 +6,6 @@ jest.mock('builderStore/api');
 import { SOME_QUERY, SAVE_QUERY_RESPONSE } from './fixtures/queries'
 
 import { createQueriesStore } from "../queries"
-import { datasources } from '../datasources'
 
 describe("Queries Store", () => {
   let store = createQueriesStore()
