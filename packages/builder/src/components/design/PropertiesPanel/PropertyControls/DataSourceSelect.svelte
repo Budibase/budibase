@@ -17,7 +17,6 @@
     queries as queriesStore,
   } from "stores/backend"
   import { datasources, integrations } from "stores/backend"
-  import { notifications } from "@budibase/bbui"
   import ParameterBuilder from "components/integration/QueryParameterBuilder.svelte"
   import IntegrationQueryEditor from "components/integration/index.svelte"
   import {
@@ -34,6 +33,7 @@
   const arrayTypes = ["attachment", "array"]
   let anchorRight, dropdownRight
   let drawer
+  let tmpQueryParams
 
   $: text = value?.label ?? "Choose an option"
   $: tables = $tablesStore.list.map(m => ({
@@ -141,6 +141,19 @@
   const getQueryDatasource = query => {
     return $datasources.list.find(ds => ds._id === query?.datasourceId)
   }
+
+  const openQueryParamsDrawer = () => {
+    tmpQueryParams = value.queryParams
+    drawer.show()
+  }
+
+  const saveQueryParams = () => {
+    handleSelected({
+      ...value,
+      queryParams: tmpQueryParams,
+    })
+    drawer.hide()
+  }
 </script>
 
 <div class="container" bind:this={anchorRight}>
@@ -151,24 +164,14 @@
     on:click={dropdownRight.show}
   />
   {#if value?.type === "query"}
-    <i class="ri-settings-5-line" on:click={drawer.show} />
+    <i class="ri-settings-5-line" on:click={openQueryParamsDrawer} />
     <Drawer title={"Query Parameters"} bind:this={drawer}>
-      <Button
-        slot="buttons"
-        cta
-        on:click={() => {
-          notifications.success("Query parameters saved.")
-          handleSelected(value)
-          drawer.hide()
-        }}
-      >
-        Save
-      </Button>
+      <Button slot="buttons" cta on:click={saveQueryParams}>Save</Button>
       <DrawerContent slot="body">
         <Layout noPadding>
           {#if getQueryParams(value).length > 0}
             <ParameterBuilder
-              bind:customParams={value.queryParams}
+              bind:customParams={tmpQueryParams}
               parameters={getQueryParams(value)}
               {bindings}
             />
