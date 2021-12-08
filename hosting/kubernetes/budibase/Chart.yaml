@@ -12,7 +12,7 @@ sources:
   - https://budibase.com
 type: application
 version: 0.2.4
-appVersion: 2.0.0
+appVersion: 1.0.6
 dependencies:
   - name: couchdb
     version: 3.3.4
