@@ -9,6 +9,9 @@ export const Events = {
     CREATED: "Datasource Created",
     UPDATED: "Datasource Updated",
   },
+  QUERIES: {
+    REST: "REST Queries Imported",
+  },
   TABLE: {
     CREATED: "Table Created",
   },
