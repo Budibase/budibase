@@ -17,7 +17,6 @@
     queries as queriesStore,
   } from "stores/backend"
   import { datasources, integrations } from "stores/backend"
-  import { notifications } from "@budibase/bbui"
   import ParameterBuilder from "components/integration/QueryParameterBuilder.svelte"
   import IntegrationQueryEditor from "components/integration/index.svelte"
   import { makePropSafe as safe } from "@budibase/string-templates"
