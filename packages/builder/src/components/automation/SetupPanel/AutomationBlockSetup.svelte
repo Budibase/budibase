@@ -241,7 +241,7 @@
             value={inputData[key]}
           />
         </CodeEditorModal>
-      {:else if value.type === "string" || value.type === "number"}
+      {:else if value.type === "string" || value.type === "number" || value.type === "integer"}
         {#if isTestModal}
           <ModalBindableInput
             title={value.title}
