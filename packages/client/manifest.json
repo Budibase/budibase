@@ -819,6 +819,57 @@
       }
     ]
   },
+  "tag": {
+    "name": "Tag",
+    "icon": "TextParagraph",
+    "showSettingsBar": true,
+    "settings": [
+      {
+        "type": "text",
+        "label": "Text",
+        "key": "text"
+      },
+      {
+        "type": "select",
+        "label": "Size",
+        "key": "size",
+        "defaultValue": "M",
+        "showInBar": true,
+        "barStyle": "picker",
+        "options": [{
+          "label": "Small",
+          "value": "S"
+        }, {
+          "label": "Medium",
+          "value": "M"
+        }, {
+          "label": "Large",
+          "value": "L"
+        }]
+      },
+      {
+        "type": "color",
+        "label": "Color",
+        "key": "color",
+        "showInBar": true,
+        "barSeparator": false
+      },
+      {
+        "type": "boolean",
+        "label": "Show delete icon",
+        "key": "closable",
+        "showInBar": true,
+        "barIcon": "TagItalic",
+        "barTitle": "Show delete icon"
+      },
+      {
+        "type": "event",
+        "label": "On click delete icon",
+        "key": "onClick",
+        "dependsOn": "closable"
+      }
+    ]
+  },
   "image": {
     "name": "Image",
     "description": "A basic component for displaying images",

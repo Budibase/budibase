@@ -74,6 +74,7 @@
       "heading",
       "text",
       "button",
+      "tag",
       "divider",
       "image",
       "backgroundimage",
