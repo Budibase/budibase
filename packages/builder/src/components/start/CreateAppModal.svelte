@@ -3,7 +3,7 @@
 
   import { notifications, Input, ModalContent, Dropzone } from "@budibase/bbui"
   import { store, automationStore, hostingStore } from "builderStore"
-  import { admin, auth, users } from "stores/portal"
+  import { admin, auth } from "stores/portal"
   import { string, mixed, object } from "yup"
   import api, { get, post } from "builderStore/api"
   import analytics, { Events } from "analytics"

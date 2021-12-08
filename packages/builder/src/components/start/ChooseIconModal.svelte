@@ -1,18 +1,9 @@
 <script>
-  import {
-    Input,
-    ModalContent,
-    Body,
-    Modal,
-    Icon,
-    ColorPicker,
-    Label,
-  } from "@budibase/bbui"
+  import { ModalContent, Modal, Icon, ColorPicker, Label } from "@budibase/bbui"
   import { apps } from "stores/portal"
 
   export let app
   let modal
-  let dirty
   let selectedIcon
   let selectedColor
 
@@ -43,10 +34,6 @@
     hide()
   }
 
-  const onShow = () => {
-    dirty = false
-  }
-
   const changeColor = val => {
     selectedColor = val
   }
@@ -59,7 +46,7 @@
   }
 </script>
 
-<Modal bind:this={modal} on:hide={onCancel} on:show={onShow}>
+<Modal bind:this={modal} on:hide={onCancel}>
   <ModalContent
     title={"Edit Icon"}
     confirmText={"Save"}

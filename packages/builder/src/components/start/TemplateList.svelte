@@ -31,15 +31,6 @@
 </Layout>
 
 <style>
-  .templates {
-    display: grid;
-    width: 100%;
-    grid-gap: var(--spacing-m);
-    grid-template-columns: 1fr;
-    justify-content: start;
-    margin-top: 15px;
-  }
-
   .background-icon {
     padding: 10px;
     border-radius: 4px;
