@@ -23,6 +23,7 @@ interface AuthConfig {
   type: AuthType
   config: BasicAuthConfig | BearerAuthConfig
 }
+
 interface BasicAuthConfig {
   username: string,
   password: string,
@@ -170,7 +171,7 @@ module RestModule {
     }
 
     processAuth(authConfigId: string) {
-      if (!this.config.authConfigs) {
+      if (!this.config.authConfigs || !authConfigId) {
         return
       }
       const authConfig = this.config.authConfigs.filter(authConfig => authConfig.id === authConfigId)[0]
