@@ -13,10 +13,7 @@ export function createQueriesStore() {
   const store = writable({ list: [], selected: null })
   const { subscribe, set, update } = store
 
-  return {
-    subscribe,
-    set,
-    update,
+  const actions = {
     init: async () => {
       const response = await api.get(`/api/queries`)
       const json = await response.json()
@@ -86,7 +83,7 @@ export function createQueriesStore() {
       })
       return response
     },
-    duplicate: async (query, saveFn) => {
+    duplicate: async query => {
       let list = get(store).list
       const newQuery = { ...query }
       const datasourceId = query.datasourceId
@@ -98,8 +95,15 @@ export function createQueriesStore() {
         list.map(q => q.name)
       )
 
-      saveFn(datasourceId, newQuery)
+      actions.save(datasourceId, newQuery)
     },
+  }
+
+  return {
+    subscribe,
+    set,
+    update,
+    ...actions,
   }
 }
 

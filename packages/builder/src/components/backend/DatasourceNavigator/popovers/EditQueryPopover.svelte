@@ -14,7 +14,7 @@
 
   async function duplicateQuery() {
     try {
-      await queries.duplicate(query, queries.save)
+      await queries.duplicate(query)
     } catch (e) {
       notifications.error(e.message)
     }
