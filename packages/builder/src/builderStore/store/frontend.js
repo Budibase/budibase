@@ -537,7 +537,7 @@ export const getFrontendStore = () => {
 
           // immediately need to remove bindings, currently these aren't valid when pasted
           if (!cut && !preserveBindings) {
-            state.componentToPaste = removeBindings(state.componentToPaste)
+            state.componentToPaste = removeBindings(state.componentToPaste, "")
           }
 
           // Clone the component to paste

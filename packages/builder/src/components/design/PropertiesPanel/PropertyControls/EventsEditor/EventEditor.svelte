@@ -121,6 +121,7 @@
       <div class="selected-action-container">
         <svelte:component
           this={selectedActionComponent}
+          selectedActionId={selectedAction.id}
           parameters={selectedAction.parameters}
           {bindings}
         />
