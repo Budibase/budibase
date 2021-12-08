@@ -15,22 +15,22 @@ const BodyTypes = {
 
 enum AuthType {
   BASIC = "basic",
-  BEARER = "bearer"
+  BEARER = "bearer",
 }
 
 interface AuthConfig {
-  id: string
+  name: string
   type: AuthType
   config: BasicAuthConfig | BearerAuthConfig
 }
 
 interface BasicAuthConfig {
-  username: string,
-  password: string,
+  username: string
+  password: string
 }
 
 interface BearerAuthConfig {
-  token: string,
+  token: string
 }
 
 const coreFields = {
@@ -170,16 +170,20 @@ module RestModule {
       }
     }
 
-    processAuth(authConfigId: string) {
-      if (!this.config.authConfigs || !authConfigId) {
+    processAuth(authConfigName: string) {
+      if (!this.config.authConfigs || !authConfigName) {
         return
       }
-      const authConfig = this.config.authConfigs.filter(authConfig => authConfig.id === authConfigId)[0]
+      const authConfig = this.config.authConfigs.filter(
+        authConfig => authConfig.name === authConfigName
+      )[0]
       let config
       switch (authConfig.type) {
         case AuthType.BASIC:
           config = authConfig.config as BasicAuthConfig
-          this.headers.Authorization = `Basic ${Buffer.from(`${config.username}:${config.password}`).toString("base64")}`
+          this.headers.Authorization = `Basic ${Buffer.from(
+            `${config.username}:${config.password}`
+          ).toString("base64")}`
           break
         case AuthType.BEARER:
           config = authConfig.config as BearerAuthConfig
@@ -188,13 +192,20 @@ module RestModule {
       }
     }
 
-    async _req({ path = "", queryString = "", headers = {}, json = {}, method = "GET", authConfigId = "" }) {
+    async _req({
+      path = "",
+      queryString = "",
+      headers = {},
+      json = {},
+      method = "GET",
+      authConfigName = "",
+    }) {
       this.headers = {
         ...this.config.defaultHeaders,
         ...headers,
       }
 
-      this.processAuth(authConfigId)
+      this.processAuth(authConfigName)
 
       const input: any = { method, headers: this.headers }
       if (json && typeof json === "object" && Object.keys(json).length > 0) {
@@ -230,6 +241,6 @@ module RestModule {
   module.exports = {
     schema: SCHEMA,
     integration: RestIntegration,
-    AuthType
+    AuthType,
   }
 }

@@ -3,7 +3,7 @@ import { queryValidation } from "../validation"
 import { generateQueryID } from "../../../../db/utils"
 import { ImportInfo, ImportSource } from "./sources/base"
 import { OpenAPI2 } from "./sources/openapi2"
-import { Query } from './../../../../definitions/common';
+import { Query } from "./../../../../definitions/common"
 import { Curl } from "./sources/curl"
 interface ImportResult {
   errorQueries: Query[]
