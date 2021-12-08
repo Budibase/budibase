@@ -52,6 +52,8 @@ jobs:
         id: install
 
       - run: yarn release:helm
+        env:
+          BUDIBASE_RELEASE_VERSION: ${{ steps.previoustag.outputs.tag }}
 
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.1.0
