@@ -63,7 +63,14 @@
       // If no specific value is depended upon, check if a value exists at all
       // for the dependent setting
       if (dependantValue == null) {
-        return !isEmpty(componentInstance[dependantSetting])
+        const currentValue = componentInstance[dependantSetting]
+        if (currentValue === false) {
+          return false
+        }
+        if (currentValue === true) {
+          return true
+        }
+        return !isEmpty(currentValue)
       }
 
       // Otherwise check the value matches
