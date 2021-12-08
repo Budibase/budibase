@@ -1,4 +1,3 @@
-
 import { Query, QueryParameter } from "../../../../../../definitions/common"
 
 export interface ImportInfo {

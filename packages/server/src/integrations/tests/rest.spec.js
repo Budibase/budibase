@@ -107,15 +107,16 @@ describe("REST Integration", () => {
 
   describe("authentication", () => {
     const basicAuth = {
-      id: "basic-1",
+      name: "basic-1",
       type : AuthType.BASIC,
       config : {
         username: "user",
         password: "password"
       }
     }
+    
     const bearerAuth = {
-      id: "bearer-1",
+      name: "bearer-1",
       type : AuthType.BEARER,
       config : {
         "token": "mytoken"
@@ -131,7 +132,7 @@ describe("REST Integration", () => {
 
     it("adds basic auth", async () => {
       const query = {
-        authConfigId: "basic-1"
+        authConfigName: "basic-1"
       }
       await config.integration.read(query)
       expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/?`, {
@@ -144,7 +145,7 @@ describe("REST Integration", () => {
 
     it("adds bearer auth", async () => {
       const query = {
-        authConfigId: "bearer-1"
+        authConfigName: "bearer-1"
       }
       await config.integration.read(query)
       expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/?`, {

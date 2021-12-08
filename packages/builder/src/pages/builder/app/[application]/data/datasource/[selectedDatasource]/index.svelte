@@ -15,7 +15,7 @@
   import RestExtraConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/RestExtraConfigForm.svelte"
   import PlusConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/PlusConfigForm.svelte"
   import ICONS from "components/backend/DatasourceNavigator/icons"
-  import VerbRenderer from "./_components/VerbRenderer.svelte"
+  import CapitaliseRenderer from "components/common/renderers/CapitaliseRenderer.svelte"
   import { IntegrationTypes } from "constants/backend"
   import { isEqual } from "lodash"
   import { cloneDeep } from "lodash/fp"
@@ -135,7 +135,9 @@
             allowEditColumns={false}
             allowEditRows={false}
             allowSelectRows={false}
-            customRenderers={[{ column: "queryVerb", component: VerbRenderer }]}
+            customRenderers={[
+              { column: "queryVerb", component: CapitaliseRenderer },
+            ]}
           />
         </div>
       {/if}
