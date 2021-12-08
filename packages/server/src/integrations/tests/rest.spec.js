@@ -27,10 +27,6 @@ describe("REST Integration", () => {
     })
   })
 
-  // afterEach(() => {
-  //   jest.clearAllMocks()
-  // })
-
   it("calls the create method with the correct params", async () => {
     const query = {
       path: "api",
