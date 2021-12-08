@@ -123,7 +123,7 @@ async function enrichQueryFields(fields, parameters = {}) {
           enrichedQuery.requestBody
       )
     } catch (err) {
-      throw { message: `JSON Invalid - error: ${err}` }
+      // no json found, ignore
     }
     delete enrichedQuery.customData
   }

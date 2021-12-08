@@ -41,18 +41,22 @@ module RestModule {
   const { formatBytes } = require("../utilities")
   const { performance } = require("perf_hooks")
 
+  interface RestQuery {
+    path: string
+    queryString?: string
+    headers: { [key: string]: any }
+    enabledHeaders: { [key: string]: any }
+    requestBody: any
+    bodyType: string
+    json: object
+    method: string
+  }
+
   interface RestConfig {
     url: string
     defaultHeaders: {
       [key: string]: any
     }
-  }
-
-  interface Request {
-    path: string
-    queryString?: string
-    headers?: string
-    json?: any
   }
 
   const SCHEMA: Integration = {
@@ -149,10 +153,28 @@ module RestModule {
       }
     }
 
-    async _req({ path = "", queryString = "", headers = {}, json = {}, method = "GET" }) {
+    async _req(query: RestQuery) {
+      const { path = "", queryString = "", headers = {}, method = "GET", enabledHeaders, bodyType, requestBody } = query
       this.headers = {
         ...this.config.defaultHeaders,
         ...headers,
+      }
+
+      if (enabledHeaders) {
+        for (let headerKey of Object.keys(this.headers)) {
+          if (!enabledHeaders[headerKey]) {
+            delete this.headers[headerKey]
+          }
+        }
+      }
+
+      let json
+      if (bodyType === BodyTypes.JSON && requestBody) {
+        try {
+          json = JSON.parse(requestBody)
+        } catch (err) {
+          throw "Invalid JSON for request body"
+        }
       }
 
       const input: any = { method, headers: this.headers }
@@ -165,23 +187,23 @@ module RestModule {
       return await this.parseResponse(response)
     }
 
-    async create(opts: Request) {
+    async create(opts: RestQuery) {
       return this._req({ ...opts, method: "POST" })
     }
 
-    async read(opts: Request) {
+    async read(opts: RestQuery) {
       return this._req({ ...opts, method: "GET" })
     }
 
-    async update(opts: Request) {
+    async update(opts: RestQuery) {
       return this._req({ ...opts, method: "PUT" })
     }
 
-    async patch(opts: Request) {
+    async patch(opts: RestQuery) {
       return this._req({ ...opts, method: "PATCH" })
     }
 
-    async delete(opts: Request) {
+    async delete(opts: RestQuery) {
       return this._req({ ...opts, method: "DELETE" })
     }
   }

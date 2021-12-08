@@ -107,6 +107,7 @@
     try {
       const { _id } = await queries.save(toSave.datasourceId, toSave)
       saveId = _id
+      query = getSelectedQuery()
       notifications.success(`Request saved successfully.`)
     } catch (err) {
       notifications.error(`Error creating query. ${err.message}`)
