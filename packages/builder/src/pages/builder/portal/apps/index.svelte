@@ -16,6 +16,8 @@
   import Spinner from "components/common/Spinner.svelte"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
   import UpdateAppModal from "components/start/UpdateAppModal.svelte"
+  import ChooseIconModal from "components/start/ChooseIconModal.svelte"
+
   import { store, automationStore } from "builderStore"
   import api, { del, post, get } from "builderStore/api"
   import { onMount } from "svelte"
@@ -34,6 +36,7 @@
   let updatingModal
   let deletionModal
   let unpublishModal
+  let iconModal
   let creatingApp = false
   let loaded = false
   let searchTerm = ""
@@ -170,6 +173,11 @@
     $goto(`../../app/${app.devId}`)
   }
 
+  const editIcon = app => {
+    selectedApp = app
+    iconModal.show()
+  }
+
   const exportApp = app => {
     const id = app.deployed ? app.prodId : app.devId
     const appName = encodeURIComponent(app.name)
@@ -279,7 +287,7 @@
 </script>
 
 <Page wide>
-  <Layout gap="S" noPadding>
+  <Layout noPadding>
     <div class="title">
       <Heading size="S">Welcome to Budibase</Heading>
 
@@ -287,32 +295,45 @@
         {#if cloud}
           <Button secondary on:click={initiateAppsExport}>Export apps</Button>
         {/if}
-        <Button secondary on:click={initiateAppImport}>Import app</Button>
-        <Button cta on:click={initiateAppCreation}>Create app</Button>
+        <Button icon="Import" quiet secondary on:click={initiateAppImport}
+          >Import app</Button
+        >
+        <Button icon="Add" cta on:click={initiateAppCreation}>Create app</Button
+        >
       </ButtonGroup>
     </div>
-    <Body size="XS">Manage your apps and get a head start with templates</Body>
 
+    <div class="title-text">
+      <Body size="XS">Manage your apps and get a head start with templates</Body
+      >
+    </div>
     <Detail>Quick Start Templates</Detail>
     <div class="grid">
-      {#each templates as val}
-        <div class="template-card">
+      {#each templates as item}
+        <div
+          on:click={() => {
+            template = item
+            creationModal.show()
+            creatingApp = true
+          }}
+          class="template-card"
+        >
           <div class="card-body">
-            <div style="color: {val.background}" class="iconAlign">
+            <div style="color: {item.background}" class="iconAlign">
               <svg
                 width="26px"
                 height="26px"
                 class="spectrum-Icon"
-                style="color:{val.background};"
+                style="color:{item.background};"
                 focusable="false"
               >
-                <use xlink:href="#spectrum-icon-18-{val.icon}" />
+                <use xlink:href="#spectrum-icon-18-{item.icon}" />
               </svg>
             </div>
             <div class="iconAlign">
-              <Body weight="900" size="XS">{val.name}</Body>
+              <Body weight="900" size="XS">{item.name}</Body>
               <div style="font-size: 10px;">
-                <Body size="XS">{val.category.toUpperCase()}</Body>
+                <Body size="XS">{item.category.toUpperCase()}</Body>
               </div>
             </div>
           </div>
@@ -326,6 +347,7 @@
       <div class="filter">
         <div class="select">
           <Select
+            quiet
             autoWidth
             bind:value={sortBy}
             placeholder={null}
@@ -336,7 +358,7 @@
             ]}
           />
           <div class="desktop-search">
-            <Search placeholder="Search" bind:value={searchTerm} />
+            <Search quiet placeholder="Search" bind:value={searchTerm} />
           </div>
         </div>
       </div>
@@ -348,6 +370,7 @@
           <svelte:component
             this={AppRow}
             {releaseLock}
+            {editIcon}
             {app}
             {unpublishApp}
             {viewApp}
@@ -374,6 +397,7 @@
     {/if}
   </Layout>
 </Page>
+
 <Modal
   bind:this={creationModal}
   padding={false}
@@ -409,6 +433,7 @@
 </ConfirmDialog>
 
 <UpdateAppModal app={selectedApp} bind:this={updatingModal} />
+<ChooseIconModal app={selectedApp} bind:this={iconModal} />
 
 <style>
   .title,
@@ -440,6 +465,11 @@
     border-radius: var(--border-radius-s);
     margin-bottom: var(--spacing-m);
     border: 1px solid var(--spectrum-global-color-gray-300);
+    cursor: pointer;
+  }
+
+  .title-text {
+    margin-top: calc(var(--spacing-xl) * -1);
   }
 
   .card-body {
@@ -459,8 +489,8 @@
 
   .select {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-gap: 10px;
+    grid-template-columns: auto auto;
+    grid-gap: 50px;
   }
   .filter :global(.spectrum-ActionGroup) {
     flex-wrap: nowrap;
@@ -508,5 +538,9 @@
     .mobile-search {
       display: block;
     }
+  }
+
+  .template-card:hover {
+    background: var(--spectrum-alias-background-color-tertiary);
   }
 </style>
