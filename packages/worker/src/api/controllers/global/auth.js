@@ -56,26 +56,11 @@ async function authInternal(ctx, user, err = null, info = null) {
     return ctx.throw(403, info ? info : "Unauthorized")
   }
 
-  const expires = new Date()
-  expires.setDate(expires.getDate() + 1)
-
   if (!user) {
     return ctx.throw(403, info ? info : "Unauthorized")
   }
 
-  const config = {
-    expires,
-    path: "/",
-    httpOnly: false,
-    overwrite: true,
-  }
-
-  if (env.COOKIE_DOMAIN) {
-    config.domain = env.COOKIE_DOMAIN
-  }
-
-  // just store the user ID
-  ctx.cookies.set(Cookies.Auth, user.token, config)
+  setCookie(ctx, user.token, Cookies.Auth, { sign: false })
   // get rid of any app cookies on login
   // have to check test because this breaks cypress
   if (!env.isTest()) {

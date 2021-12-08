@@ -381,7 +381,7 @@ module OracleModule {
       }`
       const attributes: ConnectionAttributes = {
         user: this.config.user,
-        password: this.config.user,
+        password: this.config.password,
         connectString,
       }
       return oracledb.getConnection(attributes)
