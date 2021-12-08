@@ -1,10 +1,10 @@
 import CouchDB from "../../../../db"
 import { queryValidation } from "../validation"
 import { generateQueryID } from "../../../../db/utils"
-import { Query, ImportInfo, ImportSource } from "./sources/base"
+import { ImportInfo, ImportSource } from "./sources/base"
 import { OpenAPI2 } from "./sources/openapi2"
+import { Query } from './../../../../definitions/common';
 import { Curl } from "./sources/curl"
-
 interface ImportResult {
   errorQueries: Query[]
   queries: Query[]
