@@ -146,11 +146,11 @@ module RestModule {
 
     getUrl(path: string, queryString: string): string {
       const main = `${path}?${queryString}`
-      if (!this.config.url) {
-        return main
-      } else {
-        return `${this.config.url}/${main}`
+      let complete = !this.config.url ? main : `${this.config.url}/${main}`
+      if (!complete.startsWith("http")) {
+        complete = `http://${complete}`
       }
+      return complete
     }
 
     async _req(query: RestQuery) {
