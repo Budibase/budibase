@@ -30,9 +30,9 @@ spec:
         - name: SOURCE
           value: {{ .Values.services.couchdb.url }}
         - name: TARGET
-          value: {{ .Values.services.couchdb.backup.target }}
+          value: {{ .Values.services.couchdb.backup.target | quote }}
         - name: RUN_EVERY_SECS
-          value: {{ .Values.services.couchdb.backup.interval }}
+          value: {{ .Values.services.couchdb.backup.interval | quote }}
         - name: VERBOSE
           value: "true"
         image: redgeoff/replicate-couchdb-cluster
