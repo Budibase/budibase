@@ -11,6 +11,8 @@
   export let quiet = false
   export let emphasized = false
 
+  let thisSelected = undefined
+
   let _id = id()
   const tab = writable({ title: selected, id: _id, emphasized })
   setContext("tab", tab)
@@ -20,9 +22,18 @@
   const dispatch = createEventDispatcher()
 
   $: {
-    if ($tab.title !== selected) {
-      selected = $tab.title
-      dispatch("select", selected)
+    if (thisSelected !== selected) {
+      thisSelected = selected
+      dispatch("select", thisSelected)
+    } else if ($tab.title !== thisSelected) {
+      thisSelected = $tab.title
+      dispatch("select", thisSelected)
+    }
+    if ($tab.title !== thisSelected) {
+      tab.update(state => {
+        state.title = thisSelected
+        return state
+      })
     }
   }
 

@@ -124,6 +124,7 @@
         notifications.info("Request did not return any data.")
       } else {
         response.info = response.info || { code: 200 }
+        schema = response.schema
         notifications.success("Request sent successfully.")
       }
     } catch (err) {
@@ -243,7 +244,7 @@
     <div class="bottom">
       <Layout paddingY="S" gap="S">
         <Divider size="S" />
-        {#if !response}
+        {#if !response && Object.keys(schema).length === 0}
           <Heading size="M">Response</Heading>
           <div class="placeholder">
             <div class="placeholder-internal">
@@ -254,59 +255,70 @@
             </div>
           </div>
         {:else}
-          <Tabs selected="JSON" quiet noPadding noHorizPadding>
-            <Tab title="JSON">
-              <div>
-                <JSONPreview height="300" data={response.rows[0]} />
+          <Tabs
+            selected={!response ? "Schema" : "JSON"}
+            quiet
+            noPadding
+            noHorizPadding
+          >
+            {#if response}
+              <Tab title="JSON">
+                <div>
+                  <JSONPreview height="300" data={response.rows[0]} />
+                </div>
+              </Tab>
+            {/if}
+            {#if schema || response}
+              <Tab title="Schema">
+                <KeyValueBuilder
+                  bind:object={schema}
+                  name="schema"
+                  headings
+                  options={SchemaTypeOptions}
+                />
+              </Tab>
+            {/if}
+            {#if response}
+              <Tab title="Raw">
+                <TextArea disabled value={response.extra?.raw} height="300" />
+              </Tab>
+              <Tab title="Headers">
+                <KeyValueBuilder object={response.extra?.headers} readOnly />
+              </Tab>
+              <Tab title="Preview">
+                <div class="table">
+                  {#if response}
+                    <Table
+                      schema={response?.schema}
+                      data={response?.rows}
+                      allowEditColumns={false}
+                      allowEditRows={false}
+                      allowSelectRows={false}
+                    />
+                  {/if}
+                </div>
+              </Tab>
+              <div class="stats">
+                <Label size="L">
+                  Status: <span class={responseSuccess ? "green" : "red"}
+                    >{response?.info.code}</span
+                  >
+                </Label>
+                <Label size="L">
+                  Time: <span class={responseSuccess ? "green" : "red"}
+                    >{response?.info.time}</span
+                  >
+                </Label>
+                <Label size="L">
+                  Size: <span class={responseSuccess ? "green" : "red"}
+                    >{response?.info.size}</span
+                  >
+                </Label>
+                <Button disabled={!responseSuccess} cta on:click={saveQuery}
+                  >Save query</Button
+                >
               </div>
-            </Tab>
-            <Tab title="Schema">
-              <KeyValueBuilder
-                bind:object={response.schema}
-                name="schema"
-                headings
-                options={SchemaTypeOptions}
-              />
-            </Tab>
-            <Tab title="Raw">
-              <TextArea disabled value={response.extra?.raw} height="300" />
-            </Tab>
-            <Tab title="Headers">
-              <KeyValueBuilder object={response.extra?.headers} readOnly />
-            </Tab>
-            <Tab title="Preview">
-              <div class="table">
-                {#if response}
-                  <Table
-                    schema={response?.schema}
-                    data={response?.rows}
-                    allowEditColumns={false}
-                    allowEditRows={false}
-                    allowSelectRows={false}
-                  />
-                {/if}
-              </div>
-            </Tab>
-            <div class="stats">
-              <Label size="L">
-                Status: <span class={responseSuccess ? "green" : "red"}
-                  >{response?.info.code}</span
-                >
-              </Label>
-              <Label size="L">
-                Time: <span class={responseSuccess ? "green" : "red"}
-                  >{response?.info.time}</span
-                >
-              </Label>
-              <Label size="L">
-                Size: <span class={responseSuccess ? "green" : "red"}
-                  >{response?.info.size}</span
-                >
-              </Label>
-              <Button disabled={!responseSuccess} cta on:click={saveQuery}
-                >Save query</Button
-              >
-            </div>
+            {/if}
           </Tabs>
         {/if}
       </Layout>
