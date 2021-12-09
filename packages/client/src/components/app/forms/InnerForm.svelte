@@ -102,8 +102,15 @@
       const existingField = getField(field)
       if (existingField) {
         const { fieldState } = get(existingField)
-        initialValue = fieldState.value ?? initialValue
         fieldId = fieldState.fieldId
+
+        // Use new default value if default value changed,
+        // otherwise use the current value if possible
+        if (defaultValue !== fieldState.defaultValue) {
+          initialValue = defaultValue
+        } else {
+          initialValue = fieldState.value ?? initialValue
+        }
       }
 
       // Auto columns are always disabled
