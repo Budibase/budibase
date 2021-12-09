@@ -11,6 +11,7 @@
   } from "@budibase/bbui"
   import { getAvailableActions } from "./actions"
   import { generate } from "shortid"
+  import { getButtonContextBindings } from "builderStore/dataBinding"
 
   const flipDurationMs = 150
   const EVENT_TYPE_KEY = "##eventHandlerType"
@@ -19,7 +20,17 @@
   export let actions
   export let bindings = []
 
-  // dndzone needs an id on the array items, so this adds some temporary ones.
+  let selectedAction = actions?.length ? actions[0] : null
+
+  // These are ephemeral bindings which only exist while executing actions
+  $: buttonContextBindings = getButtonContextBindings(
+    actions,
+    selectedAction?.id
+  )
+  $: console.log(buttonContextBindings)
+  $: allBindings = buttonContextBindings.concat(bindings)
+
+  // Assign a unique ID to each action
   $: {
     if (actions) {
       actions.forEach(action => {
@@ -29,8 +40,6 @@
       })
     }
   }
-
-  let selectedAction = actions?.length ? actions[0] : null
 
   $: selectedActionComponent =
     selectedAction &&
@@ -121,9 +130,8 @@
       <div class="selected-action-container">
         <svelte:component
           this={selectedActionComponent}
-          selectedActionId={selectedAction.id}
           parameters={selectedAction.parameters}
-          {bindings}
+          bindings={allBindings}
         />
       </div>
     {/if}

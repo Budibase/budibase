@@ -381,28 +381,13 @@ const getUrlBindings = asset => {
  * Gets all bindable properties exposed in a button actions flow up until
  * the specified action ID.
  */
-export const getButtonContextBindings = (component, actionId) => {
-  // Find the setting we are working on
-  let settingValue = []
-  const settings = getComponentSettings(component._component)
-  const eventSettings = settings.filter(setting => setting.type === "event")
-  for (let i = 0; i < eventSettings.length; i++) {
-    const setting = component[eventSettings[i].key]
-    if (
-      Array.isArray(setting) &&
-      setting.find(action => action.id === actionId)
-    ) {
-      settingValue = setting
-      break
-    }
-  }
-  if (!settingValue?.length) {
+export const getButtonContextBindings = (actions, actionId) => {
+  // Get the steps leading up to this value
+  const index = actions?.findIndex(action => action.id === actionId)
+  if (index == null || index === -1) {
     return []
   }
-
-  // Get the steps leading up to this value
-  const index = settingValue.findIndex(action => action.id === actionId)
-  const prevActions = settingValue.slice(0, index)
+  const prevActions = actions.slice(0, index)
 
   // Generate bindings for any steps which provide context
   let bindings = []
