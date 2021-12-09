@@ -10,7 +10,7 @@ it("should rename an unpublished application", () => {
     cy.get(".home-logo").click()
     renameApp(appRename)
     cy.searchForApplication(appRename)
-    cy.get(".appGrid").find(".wrapper").should("have.length", 1)
+    cy.get(".appTable").find(".title").should("have.length", 1)
     cy.deleteApp(appRename)
 })
     
@@ -29,7 +29,7 @@ xit("Should rename a published application", () => {
     cy.get(".home-logo").click()
     renameApp(appRename, true)
     cy.searchForApplication(appRename)
-    cy.get(".appGrid").find(".wrapper").should("have.length", 1)
+    cy.get(".appTable").find(".title").should("have.length", 1)
 })
 
 it("Should try to rename an application to have no name", () => {
@@ -38,7 +38,7 @@ it("Should try to rename an application to have no name", () => {
     // Close modal and confirm name has not been changed
     cy.get(".spectrum-Dialog-grid").contains("Cancel").click()
     cy.searchForApplication("Cypress Tests")
-    cy.get(".appGrid").find(".wrapper").should("have.length", 1)
+    cy.get(".appTable").find(".title").should("have.length", 1)
 })
 
 xit("Should create two applications with the same name", () => {
@@ -64,7 +64,7 @@ it("should validate application names", () => {
     cy.get(".home-logo").click()
     renameApp(numberName)
     cy.searchForApplication(numberName)
-    cy.get(".appGrid").find(".wrapper").should("have.length", 1)
+    cy.get(".appTable").find(".title").should("have.length", 1)
     renameApp(specialCharName)
     cy.get(".error").should("have.text", "App name must be letters, numbers and spaces only")
 })
@@ -74,14 +74,14 @@ it("should validate application names", () => {
     .its("body")
     .then(val => {
         if (val.length > 0) {
-            cy.get(".title > :nth-child(3) > .spectrum-Icon").click()
+            cy.get(".appTable > :nth-child(5) > :nth-child(2) > .spectrum-Icon").click()
             // Check for when an app is published
             if (published == true){
                 // Should not have Edit as option, will unpublish app
                 cy.should("not.have.value", "Edit")
                 cy.get(".spectrum-Menu").contains("Unpublish").click()
                 cy.get(".spectrum-Dialog-grid").contains("Unpublish app").click()
-                cy.get(".title > :nth-child(3) > .spectrum-Icon").click()
+                cy.get(".appTable > :nth-child(5) > :nth-child(2) > .spectrum-Icon").click()
             }
             cy.contains("Edit").click()
             cy.get(".spectrum-Modal")
