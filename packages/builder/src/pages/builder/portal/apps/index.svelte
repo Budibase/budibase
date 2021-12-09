@@ -441,7 +441,7 @@
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    gap: 10px;
+    gap: 5px;
   }
 
   @media only screen and (max-width: 560px) {
@@ -489,7 +489,7 @@
   .select {
     display: grid;
     grid-template-columns: auto auto;
-    grid-gap: 50px;
+    grid-gap: 30px;
   }
   .filter :global(.spectrum-ActionGroup) {
     flex-wrap: nowrap;

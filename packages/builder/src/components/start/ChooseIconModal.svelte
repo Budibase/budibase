@@ -9,7 +9,7 @@
 
   let iconsList = [
     "Actions",
-    "Algorithm",
+    "ConversionFunnel",
     "App",
     "Briefcase",
     "Money",
@@ -23,6 +23,15 @@
     "Magnify",
     "Launch",
     "Actions",
+    "Car",
+    "Camera",
+    "Bug",
+    "Channel",
+    "Calculator",
+    "Calendar",
+    "GraphDonut",
+    "GraphBarHorizontal",
+    "Demographic",
   ]
   export const show = () => {
     modal.show()
@@ -86,7 +95,7 @@
 <style>
   .scrollable-icons {
     overflow-y: auto;
-    height: 150px;
+    height: 230px;
   }
 
   .grid {

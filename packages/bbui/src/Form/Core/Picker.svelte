@@ -6,7 +6,6 @@
   import { createEventDispatcher } from "svelte"
   import clickOutside from "../../Actions/click_outside"
   import Search from "./Search.svelte"
-  import Icon from "../../Icon/Icon.svelte"
 
   export let id = null
   export let disabled = false
@@ -160,21 +159,17 @@
           >
             {#if getOptionIcon(option, idx)}
               <span class="icon-Padding">
-                {#if getOptionIcon(option, idx).includes("assets")}
-                  <img
-                    src={getOptionIcon(option, idx)}
-                    alt="icon"
-                    width="20"
-                    height="15"
-                  />
-                {:else}<Icon name={getOptionIcon(option, idx)} />{/if}
+                <img
+                  src={getOptionIcon(option, idx)}
+                  alt="icon"
+                  width="20"
+                  height="15"
+                />
               </span>
             {/if}
-            {#if getOptionLabel(option, idx)}
-              <span class="spectrum-Menu-itemLabel">
-                {getOptionLabel(option, idx)}
-              </span>
-            {/if}
+            <span class="spectrum-Menu-itemLabel">
+              {getOptionLabel(option, idx)}
+            </span>
             <svg
               class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"
               focusable="false"
