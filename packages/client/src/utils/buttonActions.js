@@ -35,7 +35,7 @@ const saveRowHandler = async (action, context) => {
 const duplicateRowHandler = async (action, context) => {
   const { fields, providerId, tableId } = action.parameters
   if (providerId) {
-    let draft = context[providerId]
+    let draft = { ...context[providerId] }
     if (fields) {
       for (let [field, value] of Object.entries(fields)) {
         draft[field] = value
