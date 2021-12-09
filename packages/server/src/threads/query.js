@@ -19,8 +19,8 @@ function hasExtraData(response) {
   return (
     typeof response === "object" &&
     !Array.isArray(response) &&
-    response.data &&
-    response.info
+    response.data != null &&
+    response.info != null
   )
 }
 
@@ -34,11 +34,11 @@ async function runAndTransform(datasource, queryVerb, query, transformer) {
   let output = formatResponse(await integration[queryVerb](query))
   let rows = output,
     info = undefined,
-    raw = undefined
+    extra = undefined
   if (hasExtraData(output)) {
     rows = output.data
     info = output.info
-    raw = output.raw
+    extra = output.extra
   }
 
   // transform as required
@@ -64,7 +64,7 @@ async function runAndTransform(datasource, queryVerb, query, transformer) {
     integration.end()
   }
 
-  return { rows, keys, info, raw }
+  return { rows, keys, info, extra }
 }
 
 module.exports = (input, callback) => {

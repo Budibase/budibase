@@ -122,7 +122,7 @@ module RestModule {
     }
 
     async parseResponse(response: any) {
-      let data, raw
+      let data, raw, headers
       const contentType = response.headers.get("content-type")
       if (contentType && contentType.indexOf("application/json") !== -1) {
         data = await response.json()
@@ -133,6 +133,10 @@ module RestModule {
       }
       const size = formatBytes(response.headers.get("content-length") || 0)
       const time = `${Math.round(performance.now() - this.startTimeMs)}ms`
+      headers = response.headers.raw()
+      for (let [key, value] of Object.entries(headers)) {
+        headers[key] = Array.isArray(value) ? value[0] : value
+      }
       return {
         data,
         info: {
@@ -140,7 +144,10 @@ module RestModule {
           size,
           time,
         },
-        raw,
+        extra: {
+          raw,
+          headers,
+        },
       }
     }
 

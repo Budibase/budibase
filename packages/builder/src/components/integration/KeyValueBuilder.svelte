@@ -134,4 +134,7 @@
   .container-active {
     grid-template-columns: 1fr 1fr 50px 20px;
   }
+  .readOnly {
+    grid-template-columns: 1fr 1fr;
+  }
 </style>
