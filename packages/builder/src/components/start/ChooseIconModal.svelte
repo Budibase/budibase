@@ -8,20 +8,21 @@
   let selectedColor
 
   let iconsList = [
-    { icon: "Actions", color: "" },
-    { icon: "Algorithm", color: "" },
-    { icon: "App", color: "" },
-    { icon: "Briefcase", color: "" },
-    { icon: "Money", color: "" },
-    { icon: "ShoppingCart", color: "" },
-    { icon: "Form", color: "" },
-    { icon: "Help", color: "" },
-    { icon: "Monitoring", color: "" },
-    { icon: "Sandbox", color: "" },
-    { icon: "Project", color: "" },
-    { icon: "Organisations", color: "" },
-    { icon: "Magnify", color: "" },
-    { icon: "Launch", color: "" },
+    "Actions",
+    "Algorithm",
+    "App",
+    "Briefcase",
+    "Money",
+    "ShoppingCart",
+    "Form",
+    "Help",
+    "Monitoring",
+    "Sandbox",
+    "Project",
+    "Organisations",
+    "Magnify",
+    "Launch",
+    "Actions",
   ]
   export const show = () => {
     modal.show()
@@ -60,10 +61,10 @@
         {#each iconsList as item}
           <div
             class="icon-item"
-            style="color: {item.icon === selectedIcon ? selectedColor : ''}"
+            style="color: {item === selectedIcon ? selectedColor : ''}"
             on:click={() => (selectedIcon = item.icon)}
           >
-            <Icon name={item.icon} />
+            <Icon name={item} />
           </div>
         {/each}
       </div>
@@ -85,7 +86,7 @@
 <style>
   .scrollable-icons {
     overflow-y: auto;
-    height: 120px;
+    height: 150px;
   }
 
   .grid {
