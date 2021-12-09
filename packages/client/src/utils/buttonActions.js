@@ -14,7 +14,7 @@ const saveRowHandler = async (action, context) => {
   const { fields, providerId, tableId } = action.parameters
   let payload
   if (providerId) {
-    payload = context[providerId]
+    payload = { ...context[providerId] }
   } else {
     payload = {}
   }
@@ -202,7 +202,7 @@ export const enrichButtonActions = (actions, context) => {
         // Get and enrich this button action with the total context
         let action = actions[i]
         action = enrichDataBindings(action, totalContext)
-        const callback = async () => handlers[i](action, context)
+        const callback = async () => handlers[i](action, totalContext)
 
         // If this action is confirmable, show confirmation and await a
         // callback to execute further actions
