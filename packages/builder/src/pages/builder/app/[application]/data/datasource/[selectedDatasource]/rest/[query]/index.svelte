@@ -91,7 +91,9 @@
     return qs.length > 0 ? `${newUrl}?${qs}` : newUrl
   }
 
-  function learnMoreBanner() {}
+  function learnMoreBanner() {
+    window.open("https://docs.budibase.com/building-apps/data/transformers")
+  }
 
   function buildQuery() {
     const newQuery = { ...query }
@@ -261,7 +263,7 @@
             <Tab title="Schema">
               <KeyValueBuilder
                 bind:object={response.schema}
-                name="header"
+                name="schema"
                 headings
                 options={SchemaTypeOptions}
               />
