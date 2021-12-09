@@ -41,6 +41,7 @@
   import JSONPreview from "components/integration/JSONPreview.svelte"
   import AccessLevelSelect from "components/integration/AccessLevelSelect.svelte"
   import Placeholder from "assets/bb-spaceship.svg"
+  import { cloneDeep } from "lodash/fp"
 
   let query, datasource
   let breakQs = {},
@@ -61,7 +62,7 @@
     response?.info?.code >= 200 && response?.info?.code <= 206
 
   function getSelectedQuery() {
-    return (
+    return cloneDeep(
       $queries.list.find(q => q._id === $queries.selected) || {
         datasourceId: $params.selectedDatasource,
         parameters: [],

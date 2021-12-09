@@ -1,3 +1,5 @@
+import { IntegrationTypes } from "constants/backend"
+
 export function schemaToFields(schema) {
   const response = {}
   if (schema && typeof schema === "object") {
@@ -68,4 +70,41 @@ export function queryParametersToKeyValue(array) {
     }
   }
   return obj
+}
+
+export function customQueryIconText(datasource, query) {
+  if (datasource.source !== IntegrationTypes.REST) {
+    return
+  }
+  switch (query.queryVerb) {
+    case "create":
+      return "POST"
+    case "update":
+      return "PUT"
+    case "read":
+      return "GET"
+    case "delete":
+      return "DELETE"
+    case "patch":
+      return "PATCH"
+  }
+}
+
+export function customQueryIconColor(datasource, query) {
+  if (datasource.source !== IntegrationTypes.REST) {
+    return
+  }
+  switch (query.queryVerb) {
+    case "create":
+      return "#DCC339"
+    case "update":
+      return "#5197EC"
+    case "read":
+      return "#59B294"
+    case "delete":
+      return "#E16B71"
+    case "patch":
+    default:
+      return
+  }
 }
