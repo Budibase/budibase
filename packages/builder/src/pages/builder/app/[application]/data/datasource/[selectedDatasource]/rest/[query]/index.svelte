@@ -273,15 +273,17 @@
               <KeyValueBuilder object={response.extra?.headers} readOnly />
             </Tab>
             <Tab title="Preview">
-              {#if response}
-                <Table
-                  schema={response?.schema}
-                  data={response?.rows}
-                  allowEditColumns={false}
-                  allowEditRows={false}
-                  allowSelectRows={false}
-                />
-              {/if}
+              <div class="table">
+                {#if response}
+                  <Table
+                    schema={response?.schema}
+                    data={response?.rows}
+                    allowEditColumns={false}
+                    allowEditRows={false}
+                    allowSelectRows={false}
+                  />
+                {/if}
+              </div>
             </Tab>
             <div class="stats">
               <Label size="L">
@@ -315,6 +317,9 @@
     width: 960px;
     margin: 0 auto;
     height: 100%;
+  }
+  .table {
+    width: 960px;
   }
   .url-block {
     display: flex;
