@@ -1,5 +1,4 @@
 const yaml = require("js-yaml") 
-const { execSync } = require("child_process")
 const fs = require("fs")
 const path = require("path")
 
@@ -9,7 +8,7 @@ const UpgradeTypes = {
 	PATCH: "patch"
 }
 
-const CHART_PATH = path.join(__dirname, "../", "hosting", "kubernetes", "budibase", "Chart.yaml")
+const CHART_PATH = path.join(__dirname, "../", "charts", "budibase", "Chart.yaml")
 const UPGRADE_VERSION = process.env.BUDIBASE_RELEASE_VERSION
 const UPGRADE_TYPE = process.env.HELM_CHART_UPGRADE_TYPE || UpgradeTypes.PATCH
 
@@ -30,9 +29,6 @@ try {
 	chart.version = [major, minor, newPatch].join(".")
 	const updatedChartYaml = yaml.dump(chart)
 	fs.writeFileSync(CHART_PATH, updatedChartYaml)
-
-	// package the chart and write to docs dir
-	execSync(`helm package hosting/kubernetes/budibase --destination docs`)
 } catch (err) {
 	console.error("Error releasing helm chart")
 	throw err
