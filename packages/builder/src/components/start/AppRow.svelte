@@ -1,7 +1,14 @@
 <script>
-  import { Heading, Button, Icon, ActionMenu, MenuItem } from "@budibase/bbui"
+  import {
+    Heading,
+    Button,
+    Icon,
+    ActionMenu,
+    MenuItem,
+    StatusLight,
+  } from "@budibase/bbui"
   import { apps } from "stores/portal"
-
+  import { processStringSync } from "@budibase/string-templates"
   export let app
   export let exportApp
   export let viewApp
@@ -29,9 +36,35 @@
     </div>
   </div>
 </div>
-<div class="desktop" />
-<div class="desktop" />
-<div class="desktop" />
+<div class="desktop">
+  {#if app.updatedAt}
+    {processStringSync("Updated {{ duration time 'millisecond' }} ago", {
+      time: new Date().getTime() - new Date(app.updatedAt).getTime(),
+    })}
+  {:else}
+    Never updated
+  {/if}
+</div>
+<div class="desktop">
+  <StatusLight
+    positive={!app.lockedYou && !app.lockedOther}
+    notice={app.lockedYou}
+    negative={app.lockedOther}
+  >
+    {#if app.lockedYou}
+      Locked by you
+    {:else if app.lockedOther}
+      Locked by {app.lockedBy.email}
+    {:else}
+      Open
+    {/if}
+  </StatusLight>
+</div>
+<div class="desktop">
+  <StatusLight active={app.deployed} neutral={!app.deployed}>
+    {#if app.deployed}Published{:else}Unpublished{/if}
+  </StatusLight>
+</div>
 <div>
   <Button
     disabled={app.lockedOther}
