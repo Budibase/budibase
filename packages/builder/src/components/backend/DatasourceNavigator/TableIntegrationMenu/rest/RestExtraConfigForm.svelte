@@ -1,7 +1,7 @@
 <script>
   import { Divider, Heading, ActionButton, Badge, Body } from "@budibase/bbui"
   import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
-  import RestAuthenticationBuilder from "./RestAuthenticationBuilder.svelte"
+  import RestAuthenticationBuilder from "./auth/RestAuthenticationBuilder.svelte"
 
   export let datasource
 
@@ -42,9 +42,6 @@
   Create an authentication config that can be shared with queries.
 </Body>
 <RestAuthenticationBuilder bind:authConfigs={datasource.config.authConfigs} />
-<div>
-  <ActionButton icon="Add">Add authentication</ActionButton>
-</div>
 
 <style>
   .section-header {

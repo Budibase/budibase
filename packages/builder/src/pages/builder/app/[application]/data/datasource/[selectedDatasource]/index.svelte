@@ -12,7 +12,7 @@
   } from "@budibase/bbui"
   import { datasources, integrations, queries, tables } from "stores/backend"
   import IntegrationConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/IntegrationConfigForm.svelte"
-  import RestExtraConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/RestExtraConfigForm.svelte"
+  import RestExtraConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/rest/RestExtraConfigForm.svelte"
   import PlusConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/PlusConfigForm.svelte"
   import ICONS from "components/backend/DatasourceNavigator/icons"
   import CapitaliseRenderer from "components/common/renderers/CapitaliseRenderer.svelte"
