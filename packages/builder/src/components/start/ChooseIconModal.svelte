@@ -62,7 +62,7 @@
           <div
             class="icon-item"
             style="color: {item === selectedIcon ? selectedColor : ''}"
-            on:click={() => (selectedIcon = item.icon)}
+            on:click={() => (selectedIcon = item)}
           >
             <Icon name={item} />
           </div>
