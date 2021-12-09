@@ -131,7 +131,7 @@ module RestModule {
         data = await response.text()
         raw = data
       }
-      const size = formatBytes(response.headers.get("content-length") || 0)
+      const size = formatBytes(response.headers.get("content-length") || Buffer.byteLength(raw, "utf8"))
       const time = `${Math.round(performance.now() - this.startTimeMs)}ms`
       headers = response.headers.raw()
       for (let [key, value] of Object.entries(headers)) {
