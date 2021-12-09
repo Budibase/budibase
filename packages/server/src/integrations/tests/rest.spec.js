@@ -1,6 +1,9 @@
 jest.mock("node-fetch", () =>
   jest.fn(() => ({
     headers: {
+      raw: () => {
+        return { "content-type": ["application/json"] }
+      },
       get: () => ["application/json"]
     },
     json: jest.fn(), 
