@@ -8,6 +8,7 @@ import {
 } from "stores"
 import { saveRow, deleteRow, executeQuery, triggerAutomation } from "api"
 import { ActionTypes } from "constants"
+import { enrichDataBindings } from "./enrichDataBinding"
 
 const saveRowHandler = async (action, context) => {
   const { fields, providerId, tableId } = action.parameters
@@ -25,7 +26,10 @@ const saveRowHandler = async (action, context) => {
   if (tableId) {
     payload.tableId = tableId
   }
-  await saveRow(payload)
+  const row = await saveRow(payload)
+  return {
+    row,
+  }
 }
 
 const duplicateRowHandler = async (action, context) => {
@@ -178,11 +182,26 @@ export const enrichButtonActions = (actions, context) => {
     return actions
   }
 
+  // Button context is built up as actions are executed.
+  // Inherit any previous button context which may have come from actions
+  // before a confirmable action since this breaks the chain.
+  let buttonContext = context.actions || []
+
   const handlers = actions.map(def => handlerMap[def["##eventHandlerType"]])
   return async () => {
     for (let i = 0; i < handlers.length; i++) {
       try {
-        const action = actions[i]
+        // Skip any non-existent action definitions
+        if (!handlers[i]) {
+          continue
+        }
+
+        // Built total context for this action
+        const totalContext = { ...context, actions: buttonContext }
+
+        // Get and enrich this button action with the total context
+        let action = actions[i]
+        action = enrichDataBindings(action, totalContext)
         const callback = async () => handlers[i](action, context)
 
         // If this action is confirmable, show confirmation and await a
@@ -198,7 +217,15 @@ export const enrichButtonActions = (actions, context) => {
               // then execute the rest of the actions in the chain
               const result = await callback()
               if (result !== false) {
-                const next = enrichButtonActions(actions.slice(i + 1), context)
+                // Generate a new total context to pass into the next enrichment
+                buttonContext.push(result)
+                const newContext = { ...context, actions: buttonContext }
+
+                // Enrich and call the next button action
+                const next = enrichButtonActions(
+                  actions.slice(i + 1),
+                  newContext
+                )
                 await next()
               }
             }
@@ -214,6 +241,8 @@ export const enrichButtonActions = (actions, context) => {
           const result = await callback()
           if (result === false) {
             return
+          } else {
+            buttonContext.push(result)
           }
         }
       } catch (error) {
