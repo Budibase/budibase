@@ -27,7 +27,6 @@
     actions,
     selectedAction?.id
   )
-  $: console.log(buttonContextBindings)
   $: allBindings = buttonContextBindings.concat(bindings)
 
   // Assign a unique ID to each action
