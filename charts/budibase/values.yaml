@@ -85,6 +85,7 @@ tolerations: []
 affinity: {}
 
 globals:
+  appVersion: "latest"
   budibaseEnv: PRODUCTION
   enableAnalytics: true
   sentryDSN: ""
