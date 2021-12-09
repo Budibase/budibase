@@ -37,6 +37,12 @@ export const getAvailableActions = (getAllActions = false) => {
     {
       name: "Duplicate Row",
       component: DuplicateRow,
+      context: [
+        {
+          label: "Duplicated row",
+          value: "row",
+        },
+      ],
     },
     {
       name: "Delete Row",
