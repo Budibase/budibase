@@ -96,13 +96,13 @@ export function customQueryIconColor(datasource, query) {
   }
   switch (query.queryVerb) {
     case "create":
-      return "#DCC339"
+      return "#dcc339"
     case "update":
-      return "#5197EC"
+      return "#5197ec"
     case "read":
-      return "#59B294"
+      return "#53a761"
     case "delete":
-      return "#E16B71"
+      return "#ea7d82"
     case "patch":
     default:
       return
