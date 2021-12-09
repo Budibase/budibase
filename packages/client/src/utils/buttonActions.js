@@ -46,7 +46,10 @@ const duplicateRowHandler = async (action, context) => {
     }
     delete draft._id
     delete draft._rev
-    await saveRow(draft)
+    const row = await saveRow(draft)
+    return {
+      row,
+    }
   }
 }
 
