@@ -266,7 +266,10 @@
               />
             </Tab>
             <Tab title="Raw">
-              <TextArea disabled value={response.raw} height="300" />
+              <TextArea disabled value={response.extra?.raw} height="300" />
+            </Tab>
+            <Tab title="Headers">
+              <KeyValueBuilder object={response.extra?.headers} readOnly />
             </Tab>
             <Tab title="Preview">
               {#if response}
