@@ -74,11 +74,12 @@ const navigationHandler = action => {
 
 const queryExecutionHandler = async action => {
   const { datasourceId, queryId, queryParams } = action.parameters
-  await executeQuery({
+  const result = await executeQuery({
     datasourceId,
     queryId,
     parameters: queryParams,
   })
+  return { result }
 }
 
 const executeActionHandler = async (

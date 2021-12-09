@@ -55,6 +55,12 @@ export const getAvailableActions = (getAllActions = false) => {
     {
       name: "Execute Query",
       component: ExecuteQuery,
+      context: [
+        {
+          label: "Query result",
+          value: "result",
+        },
+      ],
     },
     {
       name: "Trigger Automation",
