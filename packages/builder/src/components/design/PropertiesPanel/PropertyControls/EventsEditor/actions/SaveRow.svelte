@@ -1,15 +1,13 @@
 <script>
   import { Select, Label, Body, Checkbox, Input } from "@budibase/bbui"
-  import { store, currentAsset, selectedComponent } from "builderStore"
+  import { store, currentAsset } from "builderStore"
   import { tables } from "stores/backend"
   import {
-    getButtonContextBindings,
     getContextProviderComponents,
     getSchemaForDatasource,
   } from "builderStore/dataBinding"
   import SaveFields from "./SaveFields.svelte"
 
-  export let selectedActionId
   export let parameters
   export let bindings = []
 
@@ -26,11 +24,6 @@
   $: providerOptions = getProviderOptions(formComponents, schemaComponents)
   $: schemaFields = getSchemaFields($currentAsset, parameters?.tableId)
   $: tableOptions = $tables.list || []
-  $: buttonContextBindings = getButtonContextBindings(
-    $selectedComponent,
-    selectedActionId
-  )
-  $: console.log(buttonContextBindings)
 
   // Gets a context definition of a certain type from a component definition
   const extractComponentContext = (component, contextType) => {

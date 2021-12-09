@@ -132,6 +132,10 @@ const searchComponentTree = (rootComponent, matchComponent) => {
  */
 let componentSettingCache = {}
 export const getComponentSettings = componentType => {
+  if (!componentType) {
+    return []
+  }
+
   // Ensure whole component name is used
   if (!componentType.startsWith("@budibase")) {
     componentType = `@budibase/standard-components/${componentType}`
