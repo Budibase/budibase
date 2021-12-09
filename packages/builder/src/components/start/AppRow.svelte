@@ -9,6 +9,7 @@
   } from "@budibase/bbui"
   import { apps } from "stores/portal"
   import { processStringSync } from "@budibase/string-templates"
+
   export let app
   export let exportApp
   export let viewApp
@@ -18,16 +19,19 @@
   export let unpublishApp
   export let releaseLock
   export let editIcon
-  $: color = $apps.filter(filtered_app => app?.appId === filtered_app.appId)[0]
-    .icon?.color
-  $: name = $apps.filter(filtered_app => app?.appId === filtered_app.appId)[0]
-    .icon?.name
+  $: console.log($apps)
+  $: color =
+    $apps.find(filtered_app => app?.appId === filtered_app.appId)?.icon
+      ?.color || ""
+  $: name =
+    $apps.find(filtered_app => app?.appId === filtered_app.appId)?.icon?.name ||
+    "Apps"
 </script>
 
 <div class="title">
   <div style="display: flex;">
-    <div style="color: {color || ''}">
-      <Icon size="XL" name={name || "Apps"} />
+    <div style="color: {color}">
+      <Icon size="XL" {name} />
     </div>
     <div class="name" on:click={() => editApp(app)}>
       <Heading size="XS">

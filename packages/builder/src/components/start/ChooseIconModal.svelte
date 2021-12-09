@@ -3,9 +3,10 @@
   import { apps } from "stores/portal"
 
   export let app
+  console.log(app)
   let modal
-  let selectedIcon
-  let selectedColor
+  $: selectedIcon = app?.icon?.name
+  $: selectedColor = app?.icon?.color
 
   let iconsList = [
     "Actions",
@@ -22,7 +23,6 @@
     "Organisations",
     "Magnify",
     "Launch",
-    "Actions",
     "Car",
     "Camera",
     "Bug",
@@ -32,6 +32,7 @@
     "GraphDonut",
     "GraphBarHorizontal",
     "Demographic",
+    "Apps",
   ]
   export const show = () => {
     modal.show()
@@ -41,6 +42,8 @@
   }
 
   const onCancel = () => {
+    selectedIcon = ""
+    selectedColor = ""
     hide()
   }
 
@@ -84,7 +87,7 @@
       </div>
       <div class="color-selection-item">
         <ColorPicker
-          value={selectedColor}
+          bind:value={selectedColor}
           on:change={e => changeColor(e.detail)}
         />
       </div>
