@@ -176,7 +176,7 @@
             />
           </div>
           <div class="url">
-            <Input bind:value={url} />
+            <Input bind:value={url} placeholder="http://www.api.com/endpoint" />
           </div>
           <Button cta disabled={!url} on:click={runQuery}>Send</Button>
         </div>
