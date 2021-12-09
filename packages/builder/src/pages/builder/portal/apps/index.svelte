@@ -269,7 +269,6 @@
   async function fetchTemplates() {
     const response = await api.get("/api/templates?type=app")
     templates = await response.json()
-    console.log(templates)
   }
 
   onMount(async () => {
