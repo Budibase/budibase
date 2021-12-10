@@ -37,6 +37,8 @@ export const deepGet = (obj, key) => {
  * Exact matches of keys with dots in them take precedence over nested keys of
  * the same path - e.g. setting "a.b" of { "a.b": "foo", a: { b: "bar" } }
  * will override the value "foo" rather than "bar".
+ * If a deep path is specified and the parent keys don't exist then these will
+ * be created.
  * @param obj the object
  * @param key the key
  * @param value the value
@@ -51,7 +53,14 @@ export const deepSet = (obj, key, value) => {
   }
   const split = key.split(".")
   for (let i = 0; i < split.length - 1; i++) {
-    obj = obj?.[split[i]]
+    const nextKey = split[i]
+    if (obj && obj[nextKey] == null) {
+      obj[nextKey] = {}
+    }
+    obj = obj?.[nextKey]
+  }
+  if (!obj) {
+    return
   }
   obj[split[split.length - 1]] = value
 }
