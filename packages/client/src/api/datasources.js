@@ -118,6 +118,7 @@ export const fetchDatasourceSchema = async dataSource => {
       Object.keys(jsonSchema).forEach(jsonKey => {
         jsonAdditions[`${fieldKey}.${jsonKey}`] = {
           type: jsonSchema[jsonKey].type,
+          nestedJSON: true,
         }
       })
     }
