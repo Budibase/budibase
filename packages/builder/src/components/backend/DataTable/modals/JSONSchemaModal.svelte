@@ -77,7 +77,7 @@
 </script>
 
 <ModalContent
-  title={"Key/Value Schema Editor"}
+  title={"JSON Schema Editor"}
   confirmText="Save Column"
   onConfirm={saveSchema}
   bind:disabled={invalid}

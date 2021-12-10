@@ -250,7 +250,7 @@
     {#if jsonArrays?.length}
       <Divider size="S" />
       <div class="title">
-        <Heading size="XS">Key/Value Arrays</Heading>
+        <Heading size="XS">JSON Arrays</Heading>
       </div>
       <ul>
         {#each jsonArrays as field}

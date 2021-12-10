@@ -90,7 +90,7 @@ export const FIELDS = {
     },
   },
   JSON: {
-    name: "Key/Value",
+    name: "JSON",
     type: "json",
     constraints: {
       type: "object",

@@ -2470,7 +2470,7 @@
     ]
   },
   "jsonfield": {
-    "name": "Key/Value Field",
+    "name": "JSON Field",
     "icon": "Brackets",
     "styles": ["size"],
     "editable": true,
