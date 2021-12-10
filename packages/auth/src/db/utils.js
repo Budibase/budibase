@@ -436,7 +436,7 @@ const getPlatformUrl = async settings => {
     }
   }
 
-  return platformUrl ? platformUrl : "http://localhost:10000"
+  return platformUrl
 }
 
 async function getScopedConfig(db, params) {
