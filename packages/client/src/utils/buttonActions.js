@@ -9,6 +9,7 @@ import {
 import { saveRow, deleteRow, executeQuery, triggerAutomation } from "api"
 import { ActionTypes } from "constants"
 import { enrichDataBindings } from "./enrichDataBinding"
+import { deepSet } from "@budibase/bbui"
 
 const saveRowHandler = async (action, context) => {
   const { fields, providerId, tableId } = action.parameters
@@ -20,7 +21,7 @@ const saveRowHandler = async (action, context) => {
   }
   if (fields) {
     for (let [field, value] of Object.entries(fields)) {
-      payload[field] = value
+      deepSet(payload, field, value)
     }
   }
   if (tableId) {
@@ -35,18 +36,18 @@ const saveRowHandler = async (action, context) => {
 const duplicateRowHandler = async (action, context) => {
   const { fields, providerId, tableId } = action.parameters
   if (providerId) {
-    let draft = { ...context[providerId] }
+    let payload = { ...context[providerId] }
     if (fields) {
       for (let [field, value] of Object.entries(fields)) {
-        draft[field] = value
+        deepSet(payload, field, value)
       }
     }
     if (tableId) {
-      draft.tableId = tableId
+      payload.tableId = tableId
     }
-    delete draft._id
-    delete draft._rev
-    const row = await saveRow(draft)
+    delete payload._id
+    delete payload._rev
+    const row = await saveRow(payload)
     return {
       row,
     }

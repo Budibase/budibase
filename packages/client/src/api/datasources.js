@@ -4,7 +4,10 @@ import { fetchViewData } from "./views"
 import { fetchRelationshipData } from "./relationships"
 import { FieldTypes } from "../constants"
 import { executeQuery, fetchQueryDefinition } from "./queries"
-import { getJSONArrayDatasourceSchema } from "builder/src/builderStore/jsonUtils"
+import {
+  convertJSONSchemaToTableSchema,
+  getJSONArrayDatasourceSchema,
+} from "builder/src/builderStore/jsonUtils"
 
 /**
  * Fetches all rows for a particular Budibase data source.
@@ -50,16 +53,17 @@ export const fetchDatasourceSchema = async dataSource => {
     return null
   }
   const { type } = dataSource
+  let schema
 
   // Nested providers should already have exposed their own schema
   if (type === "provider") {
-    return dataSource.value?.schema
+    schema = dataSource.value?.schema
   }
 
   // Field sources have their schema statically defined
   if (type === "field") {
     if (dataSource.fieldType === "attachment") {
-      return {
+      schema = {
         url: {
           type: "string",
         },
@@ -68,7 +72,7 @@ export const fetchDatasourceSchema = async dataSource => {
         },
       }
     } else if (dataSource.fieldType === "array") {
-      return {
+      schema = {
         value: {
           type: "string",
         },
@@ -80,7 +84,7 @@ export const fetchDatasourceSchema = async dataSource => {
   // We can then extract their schema as a subset of the table schema.
   if (type === "jsonarray") {
     const table = await fetchTableDefinition(dataSource.tableId)
-    return getJSONArrayDatasourceSchema(table?.schema, dataSource)
+    schema = getJSONArrayDatasourceSchema(table?.schema, dataSource)
   }
 
   // Tables, views and links can be fetched by table ID
@@ -89,14 +93,34 @@ export const fetchDatasourceSchema = async dataSource => {
     dataSource.tableId
   ) {
     const table = await fetchTableDefinition(dataSource.tableId)
-    return table?.schema
+    schema = table?.schema
   }
 
   // Queries can be fetched by query ID
   if (type === "query" && dataSource._id) {
     const definition = await fetchQueryDefinition(dataSource._id)
-    return definition?.schema
+    schema = definition?.schema
   }
 
-  return null
+  // Sanity check
+  if (!schema) {
+    return null
+  }
+
+  // Check for any JSON fields so we can add any top level properties
+  let jsonAdditions = {}
+  Object.keys(schema).forEach(fieldKey => {
+    const fieldSchema = schema[fieldKey]
+    if (fieldSchema?.type === "json") {
+      const jsonSchema = convertJSONSchemaToTableSchema(fieldSchema, {
+        squashObjects: true,
+      })
+      Object.keys(jsonSchema).forEach(jsonKey => {
+        jsonAdditions[`${fieldKey}.${jsonKey}`] = {
+          type: jsonSchema[jsonKey].type,
+        }
+      })
+    }
+  })
+  return { ...schema, ...jsonAdditions }
 }

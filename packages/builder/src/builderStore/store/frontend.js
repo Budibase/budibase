@@ -329,12 +329,12 @@ export const getFrontendStore = () => {
     },
     components: {
       select: component => {
-        if (!component) {
+        const asset = get(currentAsset)
+        if (!asset || !component) {
           return
         }
 
         // If this is the root component, select the asset instead
-        const asset = get(currentAsset)
         const parent = findComponentParent(asset.props, component._id)
         if (parent == null) {
           const state = get(store)

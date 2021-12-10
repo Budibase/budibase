@@ -15,18 +15,43 @@ export const capitalise = s => s.substring(0, 1).toUpperCase() + s.substring(1)
  * will return "foo" over "bar".
  * @param obj the object
  * @param key the key
+ * @return {*|null} the value or null if a value was not found for this key
  */
 export const deepGet = (obj, key) => {
   if (!obj || !key) {
     return null
   }
-  if (obj[key] != null) {
+  if (Object.prototype.hasOwnProperty.call(obj, key)) {
     return obj[key]
   }
   const split = key.split(".")
-  let value = obj
   for (let i = 0; i < split.length; i++) {
-    value = value?.[split[i]]
+    obj = obj?.[split[i]]
   }
-  return value
+  return obj
+}
+
+/**
+ * Sets a key within an object. The key supports dot syntax for retrieving deep
+ * fields - e.g. "a.b.c".
+ * Exact matches of keys with dots in them take precedence over nested keys of
+ * the same path - e.g. setting "a.b" of { "a.b": "foo", a: { b: "bar" } }
+ * will override the value "foo" rather than "bar".
+ * @param obj the object
+ * @param key the key
+ * @param value the value
+ */
+export const deepSet = (obj, key, value) => {
+  if (!obj || !key) {
+    return
+  }
+  if (Object.prototype.hasOwnProperty.call(obj, key)) {
+    obj[key] = value
+    return
+  }
+  const split = key.split(".")
+  for (let i = 0; i < split.length - 1; i++) {
+    obj = obj?.[split[i]]
+  }
+  obj[split[split.length - 1]] = value
 }
