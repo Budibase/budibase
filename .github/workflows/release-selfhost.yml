@@ -46,12 +46,16 @@ jobs:
       - uses: azure/setup-helm@v1
         id: install
 
-      # So, we need to inject the values into this
       - run: yarn release:helm
+        env:
+          BUDIBASE_RELEASE_VERSION: ${{ steps.previoustag.outputs.tag }}
 
+      - name: Configure Git
+        run: |
+          git config user.name "Budibase Helm Bot"
+          git config user.email "<>"
+      
       - name: Run chart-releaser
-        uses: helm/chart-releaser-action@v1.1.0
-        with:
-          charts_dir: docs
+        uses: helm/chart-releaser-action@v1.2.0
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
