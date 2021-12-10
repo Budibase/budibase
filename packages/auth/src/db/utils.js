@@ -223,7 +223,7 @@ exports.getAllDbs = async () => {
       throw "Cannot connect to CouchDB instance"
     }
   }
-  let couchUrl = `${exports.getCouchUrl()}_all_dbs`
+  let couchUrl = `${exports.getCouchUrl()}/_all_dbs`
   if (env.MULTI_TENANCY) {
     let tenantId = getTenantId()
     // get prod apps
