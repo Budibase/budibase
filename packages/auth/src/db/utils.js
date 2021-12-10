@@ -199,8 +199,9 @@ exports.getCouchUrl = () => {
   return `${protocol}://${env.COUCH_DB_USERNAME}:${env.COUCH_DB_PASSWORD}@${rest}`
 }
 
-exports.getStartEndKeyURL = (base, baseKey, tenantId = "") => {
-  return `${base}?startkey="${baseKey}${SEPARATOR}${tenantId}"&endkey="${baseKey}${SEPARATOR}${tenantId}${UNICODE_MAX}"`
+exports.getStartEndKeyURL = (base, baseKey, tenantId = null) => {
+  const tenancy = tenantId ? `${SEPARATOR}${tenantId}` : ""
+  return `${base}?startkey="${baseKey}${tenancy}"&endkey="${baseKey}${tenancy}${UNICODE_MAX}"`
 }
 
 /**
