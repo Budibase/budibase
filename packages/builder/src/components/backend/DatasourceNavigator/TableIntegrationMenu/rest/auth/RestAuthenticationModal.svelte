@@ -156,7 +156,6 @@
   confirmText={currentConfig ? "Update" : "Add"}
   disabled={hasErrors || !hasChanged}
   cancelText={"Cancel"}
-  warning={true}
   size="M"
   showSecondaryButton={!!currentConfig}
   secondaryButtonText={"Delete"}
