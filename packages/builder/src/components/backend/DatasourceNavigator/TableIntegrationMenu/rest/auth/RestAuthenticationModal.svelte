@@ -6,7 +6,7 @@
   export let configs
   export let currentConfig
   export let onConfirm
-  export let onDelete
+  export let onRemove
 
   let form = {
     basic: {},
@@ -57,6 +57,10 @@
     const newConfig = {
       name: form.name,
       type: form.type,
+    }
+
+    if (currentConfig) {
+      newConfig._id = currentConfig._id
     }
 
     if (form.type === AUTH_TYPES.BASIC) {
@@ -158,8 +162,8 @@
   cancelText={"Cancel"}
   size="M"
   showSecondaryButton={!!currentConfig}
-  secondaryButtonText={"Delete"}
-  secondaryAction={onDelete}
+  secondaryButtonText={"Remove"}
+  secondaryAction={onRemove}
   secondaryButtonWarning={true}
 >
   <Layout gap="S">

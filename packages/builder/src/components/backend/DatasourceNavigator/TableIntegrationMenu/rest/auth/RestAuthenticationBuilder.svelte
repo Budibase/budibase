@@ -34,7 +34,7 @@
     }
   }
 
-  const onDelete = () => {
+  const onRemove = () => {
     configs = configs.filter(c => {
       return c._id !== currentConfig._id
     })
@@ -42,7 +42,7 @@
 </script>
 
 <Modal bind:this={modal}>
-  <RestAuthenticationModal {configs} {currentConfig} {onConfirm} {onDelete} />
+  <RestAuthenticationModal {configs} {currentConfig} {onConfirm} {onRemove} />
 </Modal>
 
 <Layout gap="S" noPadding>
