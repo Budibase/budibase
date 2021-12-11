@@ -59,5 +59,7 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
+    overflow-y: auto;
+    height: 87vh;
   }
 </style>

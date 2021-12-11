@@ -66,8 +66,8 @@
 <div class="title">
   <Tabs {selected} on:select={navigate}>
     <Tab title="Screens">
-      <div class="tab-content-padding">
-        <div class="role-select">
+      <div class="tab-component-navigation-container">
+        <div class="role-select tab-content-padding">
           <Select
             on:change={updateAccessRole}
             value={$selectedAccessRole}
@@ -82,7 +82,7 @@
             bind:value={$screenSearchString}
           />
         </div>
-        <div class="nav-items-container">
+        <div class="nav-items-container tab-content-padding">
           <ComponentNavigationTree />
         </div>
       </div>
@@ -114,6 +114,7 @@
     justify-content: flex-start;
     align-items: stretch;
     position: relative;
+    height: 100vh;
   }
   .add-button {
     position: absolute;
@@ -128,9 +129,19 @@
     align-items: stretch;
     margin-bottom: var(--spacing-m);
     gap: var(--spacing-m);
+    border-bottom: var(--border-light);
   }
 
   .tab-content-padding {
-    padding: 0 var(--spacing-xl);
+    padding: 0 var(--spacing-xl) var(--spacing-xl) var(--spacing-xl);
+  }
+  .tab-component-navigation-container {
+    height: 85vh;
+    display: flex;
+    flex-direction: column;
+  }
+  .nav-items-container {
+    overflow-y: auto;
+    flex: 1 1 auto;
   }
 </style>

@@ -244,8 +244,7 @@
     display: flex;
     flex-direction: column;
     gap: var(--spacing-l);
-    padding: 0 0 60px 0;
-    overflow-y: auto;
+    padding: 0 0 0 0;
     border-right: var(--border-light);
   }
 
@@ -280,13 +279,11 @@
   .components-pane {
     grid-column: 3;
     background-color: var(--background);
-    overflow-y: auto;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
     border-left: var(--border-light);
-    overflow-x: hidden;
   }
 
   .centered {
