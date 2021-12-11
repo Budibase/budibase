@@ -2,6 +2,7 @@
   import { Table, Modal, Layout, ActionButton } from "@budibase/bbui"
   import AuthTypeRenderer from "./AuthTypeRenderer.svelte"
   import RestAuthenticationModal from "./RestAuthenticationModal.svelte"
+  import { uuid } from "builderStore/uuid"
 
   export let configs = []
 
@@ -20,24 +21,22 @@
 
   const onConfirm = config => {
     if (currentConfig) {
-      // TODO: Update with _id
       configs = configs.map(c => {
         // replace the current config with the new one
-        if (c.name === currentConfig.name) {
+        if (c._id === currentConfig._id) {
           return config
         }
         return c
       })
     } else {
-      configs.push(config)
-      configs = [...configs]
+      config._id = uuid()
+      configs = [...configs, config]
     }
   }
 
   const onDelete = () => {
-    // TODO: Update with _id
     configs = configs.filter(c => {
-      return c.name !== currentConfig.name
+      return c._id !== currentConfig._id
     })
   }
 </script>

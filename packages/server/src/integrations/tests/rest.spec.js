@@ -107,6 +107,7 @@ describe("REST Integration", () => {
 
   describe("authentication", () => {
     const basicAuth = {
+      _id: "c59c14bd1898a43baa08da68959b24686",
       name: "basic-1",
       type : AuthType.BASIC,
       config : {
@@ -116,6 +117,7 @@ describe("REST Integration", () => {
     }
     
     const bearerAuth = {
+      _id: "0d91d732f34e4befabeff50b392a8ff3",
       name: "bearer-1",
       type : AuthType.BEARER,
       config : {
@@ -132,7 +134,7 @@ describe("REST Integration", () => {
 
     it("adds basic auth", async () => {
       const query = {
-        authConfigName: "basic-1"
+        authConfigId: "c59c14bd1898a43baa08da68959b24686"
       }
       await config.integration.read(query)
       expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/?`, {
@@ -145,7 +147,7 @@ describe("REST Integration", () => {
 
     it("adds bearer auth", async () => {
       const query = {
-        authConfigName: "bearer-1"
+        authConfigId: "0d91d732f34e4befabeff50b392a8ff3"
       }
       await config.integration.read(query)
       expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/?`, {

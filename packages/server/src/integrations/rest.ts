@@ -19,6 +19,7 @@ enum AuthType {
 }
 
 interface AuthConfig {
+  _id: string
   name: string
   type: AuthType
   config: BasicAuthConfig | BearerAuthConfig
@@ -170,12 +171,12 @@ module RestModule {
       }
     }
 
-    processAuth(authConfigName: string) {
-      if (!this.config.authConfigs || !authConfigName) {
+    processAuth(authConfigId: string) {
+      if (!this.config.authConfigs || !authConfigId) {
         return
       }
       const authConfig = this.config.authConfigs.filter(
-        authConfig => authConfig.name === authConfigName
+        c => c._id === authConfigId
       )[0]
       let config
       switch (authConfig.type) {
@@ -198,14 +199,14 @@ module RestModule {
       headers = {},
       json = {},
       method = "GET",
-      authConfigName = "",
+      authConfigId = "",
     }) {
       this.headers = {
         ...this.config.defaultHeaders,
         ...headers,
       }
 
-      this.processAuth(authConfigName)
+      this.processAuth(authConfigId)
 
       const input: any = { method, headers: this.headers }
       if (json && typeof json === "object" && Object.keys(json).length > 0) {
