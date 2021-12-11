@@ -21,6 +21,7 @@
   export let showSecondaryButton = false
   export let secondaryButtonText = undefined
   export let secondaryAction = undefined
+  export let secondaryButtonWarning = false
 
   const { hide, cancel } = getContext(Context.Modal)
   let loading = false
@@ -88,8 +89,11 @@
 
         {#if showSecondaryButton && secondaryButtonText && secondaryAction}
           <div class="secondary-action">
-            <Button group secondary on:click={secondary}
-              >{secondaryButtonText}</Button
+            <Button
+              group
+              secondary
+              warning={secondaryButtonWarning}
+              on:click={secondary}>{secondaryButtonText}</Button
             >
           </div>
         {/if}

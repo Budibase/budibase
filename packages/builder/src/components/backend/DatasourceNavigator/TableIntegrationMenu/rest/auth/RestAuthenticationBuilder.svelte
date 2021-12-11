@@ -1,22 +1,12 @@
 <script>
-  import {
-    Table,
-    Modal,
-    ModalContent,
-    Layout,
-    ActionButton,
-    Select,
-    Body,
-    Input,
-  } from "@budibase/bbui"
+  import { Table, Modal, Layout, ActionButton } from "@budibase/bbui"
   import AuthTypeRenderer from "./AuthTypeRenderer.svelte"
-  import { AUTH_TYPE_LABELS, AUTH_TYPES } from "./authTypes"
+  import RestAuthenticationModal from "./RestAuthenticationModal.svelte"
 
-  export let authConfigs = []
+  export let configs = []
 
+  let currentConfig = null
   let modal
-  let currentConfig
-  let isNew = false
 
   const schema = {
     name: "",
@@ -24,73 +14,44 @@
   }
 
   const openConfigModal = config => {
-    if (!config) {
-      currentConfig = {
-        config: {},
-      }
-      isNew = true
-    } else {
-      currentConfig = { ...config }
-      isNew = false
-    }
+    currentConfig = config
     modal.show()
   }
 
-  const onConfirm = () => {
-    if (isNew) {
-      authConfigs.push(currentConfig)
-    } else {
-      authConfigs = authConfigs.map(c => {
+  const onConfirm = config => {
+    if (currentConfig) {
+      // TODO: Update with _id
+      configs = configs.map(c => {
+        // replace the current config with the new one
         if (c.name === currentConfig.name) {
-          return currentConfig
+          return config
         }
         return c
       })
+    } else {
+      configs.push(config)
+      configs = [...configs]
     }
   }
 
-  const onCancel = () => {
-    currentConfig = {}
+  const onDelete = () => {
+    // TODO: Update with _id
+    configs = configs.filter(c => {
+      return c.name !== currentConfig.name
+    })
   }
 </script>
 
 <Modal bind:this={modal}>
-  <ModalContent
-    title={isNew ? "Add Authentication" : "Update Authentication"}
-    {onConfirm}
-    {onCancel}
-    confirmText={isNew ? "Add" : "Update"}
-    cancelText="Cancel"
-    size="M"
-  >
-    <Layout gap="S">
-      <Body size="S">
-        The authorization header will be automatically generated when you
-        sendthe request.
-      </Body>
-      <Select
-        label="Type"
-        bind:value={currentConfig.type}
-        options={AUTH_TYPE_LABELS}
-        on:change={({ detail }) => (currentConfig.type = detail)}
-      />
-      {#if currentConfig.type === AUTH_TYPES.BASIC}
-        <Input label="Username" bind:value={currentConfig.config.username} />
-        <Input label="Password" bind:value={currentConfig.config.password} />
-      {/if}
-      {#if currentConfig.type === AUTH_TYPES.BEARER}
-        <Input label="Token" bind:value={currentConfig.config.token} />
-      {/if}
-    </Layout>
-  </ModalContent>
+  <RestAuthenticationModal {configs} {currentConfig} {onConfirm} {onDelete} />
 </Modal>
 
 <Layout gap="S" noPadding>
-  {#if authConfigs && authConfigs.length > 0}
+  {#if configs && configs.length > 0}
     <Table
       on:click={({ detail }) => openConfigModal(detail)}
       {schema}
-      data={authConfigs}
+      data={configs}
       allowEditColumns={false}
       allowEditRows={false}
       allowSelectRows={false}
@@ -103,6 +64,3 @@
     >
   </div>
 </Layout>
-
-<style>
-</style>
