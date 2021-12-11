@@ -21,6 +21,9 @@
   export let headings = false
   export let options
   export let toggle
+  export let keyPlaceholder = "Key"
+  export let valuePlaceholder = "Value"
+  export let tooltip
 
   let fields = Object.entries(object).map(([name, value]) => ({ name, value }))
   let fieldActivity = []
@@ -76,8 +79,8 @@
 {#if Object.keys(object || {}).length > 0}
   {#if headings}
     <div class="container" class:container-active={toggle}>
-      <Label>Key</Label>
-      <Label>Value</Label>
+      <Label {tooltip}>{keyPlaceholder}</Label>
+      <Label>{valuePlaceholder}</Label>
       {#if toggle}
         <Label>Active</Label>
       {/if}
@@ -85,12 +88,16 @@
   {/if}
   <div class="container" class:container-active={toggle} class:readOnly>
     {#each fields as field, idx}
-      <Input placeholder="Key" bind:value={field.name} on:change={changed} />
+      <Input
+        placeholder={keyPlaceholder}
+        bind:value={field.name}
+        on:change={changed}
+      />
       {#if options}
         <Select bind:value={field.value} on:change={changed} {options} />
       {:else}
         <Input
-          placeholder="Value"
+          placeholder={valuePlaceholder}
           bind:value={field.value}
           on:change={changed}
         />
@@ -126,5 +133,8 @@
   }
   .container-active {
     grid-template-columns: 1fr 1fr 50px 20px;
+  }
+  .readOnly {
+    grid-template-columns: 1fr 1fr;
   }
 </style>

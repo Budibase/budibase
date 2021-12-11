@@ -62,19 +62,24 @@ module RestModule {
   const { formatBytes } = require("../utilities")
   const { performance } = require("perf_hooks")
 
+  interface RestQuery {
+    path: string
+    queryString?: string
+    headers: { [key: string]: any }
+    enabledHeaders: { [key: string]: any }
+    requestBody: any
+    bodyType: string
+    json: object
+    method: string
+    authConfigId: string
+  }
+
   interface RestConfig {
     url: string
     defaultHeaders: {
       [key: string]: any
     }
     authConfigs: AuthConfig[]
-  }
-
-  interface Request {
-    path: string
-    queryString?: string
-    headers?: string
-    json?: any
   }
 
   const SCHEMA: Integration = {
@@ -140,7 +145,7 @@ module RestModule {
     }
 
     async parseResponse(response: any) {
-      let data, raw
+      let data, raw, headers
       const contentType = response.headers.get("content-type")
       if (contentType && contentType.indexOf("application/json") !== -1) {
         data = await response.json()
@@ -149,8 +154,12 @@ module RestModule {
         data = await response.text()
         raw = data
       }
-      const size = formatBytes(response.headers.get("content-length") || 0)
+      const size = formatBytes(response.headers.get("content-length") || Buffer.byteLength(raw, "utf8"))
       const time = `${Math.round(performance.now() - this.startTimeMs)}ms`
+      headers = response.headers.raw()
+      for (let [key, value] of Object.entries(headers)) {
+        headers[key] = Array.isArray(value) ? value[0] : value
+      }
       return {
         data,
         info: {
@@ -158,55 +167,74 @@ module RestModule {
           size,
           time,
         },
-        raw,
+        extra: {
+          raw,
+          headers,
+        },
       }
     }
 
     getUrl(path: string, queryString: string): string {
       const main = `${path}?${queryString}`
-      if (!this.config.url) {
-        return main
-      } else {
-        return `${this.config.url}/${main}`
+      let complete = !this.config.url ? main : `${this.config.url}/${main}`
+      if (!complete.startsWith("http")) {
+        complete = `http://${complete}`
       }
+      return complete
     }
 
-    processAuth(authConfigId: string) {
-      if (!this.config.authConfigs || !authConfigId) {
-        return
+    getAuthHeaders(authConfigId: string): { [key: string]: any }{
+      let headers: any = {}
+
+      if (this.config.authConfigs && authConfigId) {
+        const authConfig = this.config.authConfigs.filter(
+          c => c._id === authConfigId
+        )[0]
+        let config
+        switch (authConfig.type) {
+          case AuthType.BASIC:
+            config = authConfig.config as BasicAuthConfig
+            headers.Authorization = `Basic ${Buffer.from(
+              `${config.username}:${config.password}`
+            ).toString("base64")}`
+            break
+          case AuthType.BEARER:
+            config = authConfig.config as BearerAuthConfig
+            headers.Authorization = `Bearer ${config.token}`
+            break
+        }
       }
-      const authConfig = this.config.authConfigs.filter(
-        c => c._id === authConfigId
-      )[0]
-      let config
-      switch (authConfig.type) {
-        case AuthType.BASIC:
-          config = authConfig.config as BasicAuthConfig
-          this.headers.Authorization = `Basic ${Buffer.from(
-            `${config.username}:${config.password}`
-          ).toString("base64")}`
-          break
-        case AuthType.BEARER:
-          config = authConfig.config as BearerAuthConfig
-          this.headers.Authorization = `Bearer ${config.token}`
-          break
-      }
+
+      return headers
     }
 
-    async _req({
-      path = "",
-      queryString = "",
-      headers = {},
-      json = {},
-      method = "GET",
-      authConfigId = "",
-    }) {
+    async _req(query: RestQuery) {
+      const { path = "", queryString = "", headers = {}, method = "GET", enabledHeaders, bodyType, requestBody, authConfigId } = query
+
+      const authHeaders = this.getAuthHeaders(authConfigId)
+
       this.headers = {
         ...this.config.defaultHeaders,
         ...headers,
+        ...authHeaders,
       }
 
-      this.processAuth(authConfigId)
+      if (enabledHeaders) {
+        for (let headerKey of Object.keys(this.headers)) {
+          if (!enabledHeaders[headerKey]) {
+            delete this.headers[headerKey]
+          }
+        }
+      }
+
+      let json
+      if (bodyType === BodyTypes.JSON && requestBody) {
+        try {
+          json = JSON.parse(requestBody)
+        } catch (err) {
+          throw "Invalid JSON for request body"
+        }
+      }
 
       const input: any = { method, headers: this.headers }
       if (json && typeof json === "object" && Object.keys(json).length > 0) {
@@ -218,23 +246,23 @@ module RestModule {
       return await this.parseResponse(response)
     }
 
-    async create(opts: Request) {
+    async create(opts: RestQuery) {
       return this._req({ ...opts, method: "POST" })
     }
 
-    async read(opts: Request) {
+    async read(opts: RestQuery) {
       return this._req({ ...opts, method: "GET" })
     }
 
-    async update(opts: Request) {
+    async update(opts: RestQuery) {
       return this._req({ ...opts, method: "PUT" })
     }
 
-    async patch(opts: Request) {
+    async patch(opts: RestQuery) {
       return this._req({ ...opts, method: "PATCH" })
     }
 
-    async delete(opts: Request) {
+    async delete(opts: RestQuery) {
       return this._req({ ...opts, method: "DELETE" })
     }
   }

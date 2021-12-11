@@ -13,6 +13,7 @@
     Heading,
     RadioGroup,
     Label,
+    Body,
     TextArea,
     Table,
     notifications,
@@ -30,6 +31,8 @@
     schemaToFields,
     breakQueryString,
     buildQueryString,
+    keyValueToQueryParameters,
+    queryParametersToKeyValue,
   } from "helpers/data/utils"
   import {
     RestBodyTypes as bodyTypes,
@@ -37,9 +40,12 @@
   } from "constants/backend"
   import JSONPreview from "components/integration/JSONPreview.svelte"
   import AccessLevelSelect from "components/integration/AccessLevelSelect.svelte"
+  import Placeholder from "assets/bb-spaceship.svg"
+  import { cloneDeep } from "lodash/fp"
 
   let query, datasource
-  let breakQs = {}
+  let breakQs = {},
+    bindings = {}
   let url = ""
   let saveId
   let response, schema, isGet
@@ -56,7 +62,7 @@
     response?.info?.code >= 200 && response?.info?.code <= 206
 
   function getSelectedQuery() {
-    return (
+    return cloneDeep(
       $queries.list.find(q => q._id === $queries.selected) || {
         datasourceId: $params.selectedDatasource,
         parameters: [],
@@ -85,7 +91,9 @@
     return qs.length > 0 ? `${newUrl}?${qs}` : newUrl
   }
 
-  function learnMoreBanner() {}
+  function learnMoreBanner() {
+    window.open("https://docs.budibase.com/building-apps/data/transformers")
+  }
 
   function buildQuery() {
     const newQuery = { ...query }
@@ -93,6 +101,7 @@
     newQuery.fields.path = url.split("?")[0]
     newQuery.fields.queryString = queryString
     newQuery.schema = fieldsToSchema(schema)
+    newQuery.parameters = keyValueToQueryParameters(bindings)
     return newQuery
   }
 
@@ -101,6 +110,7 @@
     try {
       const { _id } = await queries.save(toSave.datasourceId, toSave)
       saveId = _id
+      query = getSelectedQuery()
       notifications.success(`Request saved successfully.`)
     } catch (err) {
       notifications.error(`Error creating query. ${err.message}`)
@@ -114,6 +124,7 @@
         notifications.info("Request did not return any data.")
       } else {
         response.info = response.info || { code: 200 }
+        schema = response.schema
         notifications.success("Request sent successfully.")
       }
     } catch (err) {
@@ -127,6 +138,7 @@
     breakQs = breakQueryString(qs)
     url = buildUrl(query.fields.path, breakQs)
     schema = schemaToFields(query.schema)
+    bindings = queryParametersToKeyValue(query.parameters)
     if (query && !query.transformer) {
       query.transformer = "return data"
     }
@@ -168,11 +180,21 @@
             />
           </div>
           <div class="url">
-            <Input bind:value={url} />
+            <Input bind:value={url} placeholder="http://www.api.com/endpoint" />
           </div>
           <Button cta disabled={!url} on:click={runQuery}>Send</Button>
         </div>
-        <Tabs selected="Params" quiet noPadding noHorizPadding>
+        <Tabs selected="Bindings" quiet noPadding noHorizPadding>
+          <Tab title="Bindings">
+            <KeyValueBuilder
+              bind:object={bindings}
+              tooltip="Set the name of the binding which can be used in Handlebars statements throughout your query"
+              name="binding"
+              headings
+              keyPlaceholder="Binding name"
+              valuePlaceholder="Default"
+            />
+          </Tab>
           <Tab title="Params">
             <KeyValueBuilder bind:object={breakQs} name="param" headings />
           </Tab>
@@ -219,62 +241,88 @@
         </Tabs>
       </Layout>
     </div>
-    <Layout paddingY="S" gap="S">
-      <Divider size="S" />
-      {#if !response}
-        <Heading size="M">Response</Heading>
-      {:else}
-        <Tabs selected="JSON" quiet noPadding noHorizPadding>
-          <Tab title="JSON">
-            <div>
-              <JSONPreview height="300" data={response.rows[0]} />
+    <div class="bottom">
+      <Layout paddingY="S" gap="S">
+        <Divider size="S" />
+        {#if !response && Object.keys(schema).length === 0}
+          <Heading size="M">Response</Heading>
+          <div class="placeholder">
+            <div class="placeholder-internal">
+              <img alt="placeholder" src={Placeholder} />
+              <Body size="XS" textAlign="center"
+                >{"enter a url in the textbox above and click send to get a response".toUpperCase()}</Body
+              >
             </div>
-          </Tab>
-          <Tab title="Schema">
-            <KeyValueBuilder
-              bind:object={response.schema}
-              name="header"
-              headings
-              options={SchemaTypeOptions}
-            />
-          </Tab>
-          <Tab title="Raw">
-            <TextArea disabled value={response.raw} height="300" />
-          </Tab>
-          <Tab title="Preview">
-            {#if response}
-              <Table
-                schema={response?.schema}
-                data={response?.rows}
-                allowEditColumns={false}
-                allowEditRows={false}
-                allowSelectRows={false}
-              />
-            {/if}
-          </Tab>
-          <div class="stats">
-            <Label size="L">
-              Status: <span class={responseSuccess ? "green" : "red"}
-                >{response?.info.code}</span
-              >
-            </Label>
-            <Label size="L">
-              Time: <span class={responseSuccess ? "green" : "red"}
-                >{response?.info.time}</span
-              >
-            </Label>
-            <Label size="L">
-              Size: <span class={responseSuccess ? "green" : "red"}
-                >{response?.info.size}</span
-              >
-            </Label>
-            <Button disabled={!responseSuccess} cta on:click={saveQuery}
-              >Save query</Button
-            >
           </div>
-        </Tabs>
-      {/if}
-    </Layout>
+        {:else}
+          <Tabs
+            selected={!response ? "Schema" : "JSON"}
+            quiet
+            noPadding
+            noHorizPadding
+          >
+            {#if response}
+              <Tab title="JSON">
+                <div>
+                  <JSONPreview height="300" data={response.rows[0]} />
+                </div>
+              </Tab>
+            {/if}
+            {#if schema || response}
+              <Tab title="Schema">
+                <KeyValueBuilder
+                  bind:object={schema}
+                  name="schema"
+                  headings
+                  options={SchemaTypeOptions}
+                />
+              </Tab>
+            {/if}
+            {#if response}
+              <Tab title="Raw">
+                <TextArea disabled value={response.extra?.raw} height="300" />
+              </Tab>
+              <Tab title="Headers">
+                <KeyValueBuilder object={response.extra?.headers} readOnly />
+              </Tab>
+              <Tab title="Preview">
+                <div class="table">
+                  {#if response}
+                    <Table
+                      schema={response?.schema}
+                      data={response?.rows}
+                      allowEditColumns={false}
+                      allowEditRows={false}
+                      allowSelectRows={false}
+                    />
+                  {/if}
+                </div>
+              </Tab>
+              <div class="stats">
+                <Label size="L">
+                  Status: <span class={responseSuccess ? "green" : "red"}
+                    >{response?.info.code}</span
+                  >
+                </Label>
+                <Label size="L">
+                  Time: <span class={responseSuccess ? "green" : "red"}
+                    >{response?.info.time}</span
+                  >
+                </Label>
+                <Label size="L">
+                  Size: <span class={responseSuccess ? "green" : "red"}
+                    >{response?.info.size}</span
+                  >
+                </Label>
+                <Button disabled={!responseSuccess} cta on:click={saveQuery}
+                  >Save query</Button
+                >
+              </div>
+            {/if}
+          </Tabs>
+        {/if}
+      </Layout>
+    </div>
   </div>
 {/if}
 
@@ -283,6 +331,9 @@
     width: 960px;
     margin: 0 auto;
     height: 100%;
+  }
+  .table {
+    width: 960px;
   }
   .url-block {
     display: flex;
@@ -296,6 +347,9 @@
   }
   .top {
     min-height: 50%;
+  }
+  .bottom {
+    padding-bottom: 50px;
   }
   .stats {
     display: flex;
@@ -318,5 +372,16 @@
     display: flex;
     gap: var(--spacing-m);
     align-items: center;
+  }
+  .placeholder-internal {
+    display: flex;
+    flex-direction: column;
+    width: 200px;
+    gap: var(--spacing-l);
+  }
+  .placeholder {
+    display: flex;
+    margin-top: var(--spacing-xl);
+    justify-content: center;
   }
 </style>

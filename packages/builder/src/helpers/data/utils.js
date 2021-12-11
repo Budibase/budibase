@@ -1,3 +1,5 @@
+import { IntegrationTypes } from "constants/backend"
+
 export function schemaToFields(schema) {
   const response = {}
   if (schema && typeof schema === "object") {
@@ -48,4 +50,61 @@ export function buildQueryString(obj) {
     }
   }
   return str
+}
+
+export function keyValueToQueryParameters(obj) {
+  let array = []
+  if (obj && typeof obj === "object") {
+    for (let [key, value] of Object.entries(obj)) {
+      array.push({ name: key, default: value })
+    }
+  }
+  return array
+}
+
+export function queryParametersToKeyValue(array) {
+  let obj = {}
+  if (Array.isArray(array)) {
+    for (let param of array) {
+      obj[param.name] = param.default
+    }
+  }
+  return obj
+}
+
+export function customQueryIconText(datasource, query) {
+  if (datasource.source !== IntegrationTypes.REST) {
+    return
+  }
+  switch (query.queryVerb) {
+    case "create":
+      return "POST"
+    case "update":
+      return "PUT"
+    case "read":
+      return "GET"
+    case "delete":
+      return "DELETE"
+    case "patch":
+      return "PATCH"
+  }
+}
+
+export function customQueryIconColor(datasource, query) {
+  if (datasource.source !== IntegrationTypes.REST) {
+    return
+  }
+  switch (query.queryVerb) {
+    case "create":
+      return "#dcc339"
+    case "update":
+      return "#5197ec"
+    case "read":
+      return "#53a761"
+    case "delete":
+      return "#ea7d82"
+    case "patch":
+    default:
+      return
+  }
 }
