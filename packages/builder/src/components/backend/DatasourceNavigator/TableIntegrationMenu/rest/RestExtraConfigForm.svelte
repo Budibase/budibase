@@ -41,7 +41,7 @@
 <Body size="S">
   Create an authentication config that can be shared with queries.
 </Body>
-<RestAuthenticationBuilder bind:authConfigs={datasource.config.authConfigs} />
+<RestAuthenticationBuilder bind:configs={datasource.config.authConfigs} />
 
 <style>
   .section-header {

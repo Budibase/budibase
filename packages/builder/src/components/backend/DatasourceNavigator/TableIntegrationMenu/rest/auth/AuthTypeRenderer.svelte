@@ -3,11 +3,11 @@
 
   export let value
 
-  const renderAuthType = () => {
+  const renderAuthType = value => {
     return AUTH_TYPE_LABELS.filter(type => type.value === value).map(
       type => type.label
     )
   }
 </script>
 
-{renderAuthType()}
+{renderAuthType(value)}
