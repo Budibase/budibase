@@ -190,18 +190,22 @@ module RestModule {
         const authConfig = this.config.authConfigs.filter(
           c => c._id === authConfigId
         )[0]
-        let config
-        switch (authConfig.type) {
-          case AuthType.BASIC:
-            config = authConfig.config as BasicAuthConfig
-            headers.Authorization = `Basic ${Buffer.from(
-              `${config.username}:${config.password}`
-            ).toString("base64")}`
-            break
-          case AuthType.BEARER:
-            config = authConfig.config as BearerAuthConfig
-            headers.Authorization = `Bearer ${config.token}`
-            break
+        // check the config still exists before proceeding
+        // if not - do nothing
+        if (authConfig) {
+          let config
+          switch (authConfig.type) {
+            case AuthType.BASIC:
+              config = authConfig.config as BasicAuthConfig
+              headers.Authorization = `Basic ${Buffer.from(
+                `${config.username}:${config.password}`
+              ).toString("base64")}`
+              break
+            case AuthType.BEARER:
+              config = authConfig.config as BearerAuthConfig
+              headers.Authorization = `Bearer ${config.token}`
+              break
+          }
         }
       }
 
@@ -242,7 +246,8 @@ module RestModule {
       }
 
       this.startTimeMs = performance.now()
-      const response = await fetch(this.getUrl(path, queryString), input)
+      const url = this.getUrl(path, queryString)
+      const response = await fetch(url, input)
       return await this.parseResponse(response)
     }
 
