@@ -1,6 +1,9 @@
 jest.mock("node-fetch", () =>
   jest.fn(() => ({
     headers: {
+      raw: () => {
+        return { "content-type": ["application/json"] }
+      },
       get: () => ["application/json"]
     },
     json: jest.fn(), 
@@ -25,6 +28,7 @@ describe("REST Integration", () => {
     config = new TestConfiguration({
       url: BASE_URL,
     })
+    jest.clearAllMocks()
   })
 
   it("calls the create method with the correct params", async () => {
@@ -34,9 +38,10 @@ describe("REST Integration", () => {
       headers: {
         Accept: "application/json",
       },
-      json: {
+      bodyType: "json",
+      requestBody: JSON.stringify({
         name: "test",
-      },
+      }),
     }
     const response = await config.integration.create(query)
     expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/api?test=1`, {
@@ -61,6 +66,7 @@ describe("REST Integration", () => {
       headers: {
         Accept: "text/html",
       },
+      method: "GET",
     })
   })
 
@@ -71,13 +77,14 @@ describe("REST Integration", () => {
       headers: {
         Accept: "application/json",
       },
-      json: {
+      bodyType: "json",
+      requestBody: JSON.stringify({
         name: "test",
-      },
+      }),
     }
     const response = await config.integration.update(query)
     expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/api?test=1`, {
-      method: "POST",
+      method: "PUT",
       body: '{"name":"test"}',
       headers: {
         Accept: "application/json",
@@ -92,9 +99,10 @@ describe("REST Integration", () => {
       headers: {
         Accept: "application/json",
       },
-      json: {
+      bodyType: "json",
+      requestBody: JSON.stringify({
         name: "test",
-      },
+      }),
     }
     const response = await config.integration.delete(query)
     expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/api?test=1`, {
@@ -102,6 +110,7 @@ describe("REST Integration", () => {
       headers: {
         Accept: "application/json",
       },
+      body: '{"name":"test"}',
     })
   })
 

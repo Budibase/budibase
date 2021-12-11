@@ -9,6 +9,7 @@
   export let size = "M"
   export let hoverable = false
   export let disabled = false
+  export let color
 
   $: rotation = getRotation(direction)
 
@@ -25,7 +26,9 @@
   focusable="false"
   aria-hidden={hidden}
   aria-label={name}
-  style={`transform: rotate(${rotation}deg)`}
+  style={`transform: rotate(${rotation}deg); ${
+    color ? `color: ${color};` : ""
+  }`}
 >
   <use xlink:href="#spectrum-icon-18-{name}" />
 </svg>

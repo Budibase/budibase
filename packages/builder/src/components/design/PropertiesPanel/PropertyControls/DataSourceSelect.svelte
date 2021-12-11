@@ -17,7 +17,7 @@
     queries as queriesStore,
   } from "stores/backend"
   import { datasources, integrations } from "stores/backend"
-  import ParameterBuilder from "components/integration/QueryParameterBuilder.svelte"
+  import BindingBuilder from "components/integration/QueryBindingBuilder.svelte"
   import IntegrationQueryEditor from "components/integration/index.svelte"
   import { makePropSafe as safe } from "@budibase/string-templates"
 
@@ -148,15 +148,15 @@
   />
   {#if value?.type === "query"}
     <i class="ri-settings-5-line" on:click={openQueryParamsDrawer} />
-    <Drawer title={"Query Parameters"} bind:this={drawer}>
+    <Drawer title={"Query Bindings"} bind:this={drawer}>
       <Button slot="buttons" cta on:click={saveQueryParams}>Save</Button>
       <DrawerContent slot="body">
-        <Layout noPadding>
+        <Layout noPadding gap="XS">
           {#if getQueryParams(value).length > 0}
-            <ParameterBuilder
+            <BindingBuilder
               bind:customParams={tmpQueryParams}
-              parameters={getQueryParams(value)}
-              {bindings}
+              bindings={getQueryParams(value)}
+              bind:bindableOptions={bindings}
             />
           {/if}
           <IntegrationQueryEditor
