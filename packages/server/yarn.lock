@@ -8251,11 +8251,6 @@ lodash.flatten@^4.4.0:
   resolved "https://registry.yarnpkg.com/lodash.flatten/-/lodash.flatten-4.4.0.tgz#f31c22225a9632d2bbf8e4addbef240aa765a61f"
   integrity sha1-8xwiIlqWMtK7+OSt2+8kCqdlph8=
 
-lodash.get@^4.4.2:
-  version "4.4.2"
-  resolved "https://registry.yarnpkg.com/lodash.get/-/lodash.get-4.4.2.tgz#2d177f652fa31e939b4438d5341499dfa3825e99"
-  integrity sha1-LRd/ZS+jHpObRDjVNBSZ36OCXpk=
-
 lodash.isarguments@^3.1.0:
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/lodash.isarguments/-/lodash.isarguments-3.1.0.tgz#2f573d85c6a24289ff00663b491c1d338ff3458a"
@@ -12479,17 +12474,6 @@ yn@3.1.1:
   version "3.1.1"
   resolved "https://registry.yarnpkg.com/yn/-/yn-3.1.1.tgz#1e87401a09d767c1d5eab26a6e4c185182d2eb50"
   integrity sha512-Ux4ygGWsu2c7isFWe8Yu1YluJmqVhxqK2cLXNQA5AcC3QfbGNpM7fu0Y8b/z16pXLnFxZYvWhd3fhBY9DLmC6Q==
-
-z-schema@^5.0.1:
-  version "5.0.2"
-  resolved "https://registry.yarnpkg.com/z-schema/-/z-schema-5.0.2.tgz#f410394b2c9fcb9edaf6a7511491c0bb4e89a504"
-  integrity sha512-40TH47ukMHq5HrzkeVE40Ad7eIDKaRV2b+Qpi2prLc9X9eFJFzV7tMe5aH12e6avaSS/u5l653EQOv+J9PirPw==
-  dependencies:
-    lodash.get "^4.4.2"
-    lodash.isequal "^4.5.0"
-    validator "^13.7.0"
-  optionalDependencies:
-    commander "^2.7.1"
 
 zlib@1.0.5:
   version "1.0.5"
