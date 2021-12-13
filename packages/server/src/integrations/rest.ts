@@ -115,7 +115,9 @@ module RestModule {
         data = await response.text()
         raw = data
       }
-      const size = formatBytes(response.headers.get("content-length") || Buffer.byteLength(raw, "utf8"))
+      const size = formatBytes(
+        response.headers.get("content-length") || Buffer.byteLength(raw, "utf8")
+      )
       const time = `${Math.round(performance.now() - this.startTimeMs)}ms`
       headers = response.headers.raw()
       for (let [key, value] of Object.entries(headers)) {
@@ -148,7 +150,15 @@ module RestModule {
     }
 
     async _req(query: RestQuery) {
-      const { path = "", queryString = "", headers = {}, method = "GET", disabledHeaders, bodyType, requestBody } = query
+      const {
+        path = "",
+        queryString = "",
+        headers = {},
+        method = "GET",
+        disabledHeaders,
+        bodyType,
+        requestBody,
+      } = query
       this.headers = {
         ...this.config.defaultHeaders,
         ...headers,
@@ -166,15 +176,25 @@ module RestModule {
       if (requestBody) {
         switch (bodyType) {
           case BodyTypes.TEXT:
-            const text = typeof requestBody !== "string" ? JSON.stringify(requestBody) : requestBody
+            const text =
+              typeof requestBody !== "string"
+                ? JSON.stringify(requestBody)
+                : requestBody
+            // content type defaults to plaintext
             input.body = text
             break
-          default: case BodyTypes.JSON:
+          default:
+          case BodyTypes.JSON:
             try {
               // confirm its json
               const json = JSON.parse(requestBody)
-              if (json && typeof json === "object" && Object.keys(json).length > 0) {
+              if (
+                json &&
+                typeof json === "object" &&
+                Object.keys(json).length > 0
+              ) {
                 input.body = requestBody
+                input.headers["Content-Type"] = "application/json"
               }
             } catch (err) {
               throw "Invalid JSON for request body"
