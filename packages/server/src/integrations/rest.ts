@@ -162,18 +162,25 @@ module RestModule {
         }
       }
 
-      let json
-      if (bodyType === BodyTypes.JSON && requestBody) {
-        try {
-          json = JSON.parse(requestBody)
-        } catch (err) {
-          throw "Invalid JSON for request body"
-        }
-      }
-
       const input: any = { method, headers: this.headers }
-      if (json && typeof json === "object" && Object.keys(json).length > 0) {
-        input.body = JSON.stringify(json)
+      if (requestBody) {
+        switch (bodyType) {
+          case BodyTypes.TEXT:
+            const text = typeof requestBody !== "string" ? JSON.stringify(requestBody) : requestBody
+            input.body = text
+            break
+          default: case BodyTypes.JSON:
+            try {
+              // confirm its json
+              const json = JSON.parse(requestBody)
+              if (json && typeof json === "object" && Object.keys(json).length > 0) {
+                input.body = requestBody
+              }
+            } catch (err) {
+              throw "Invalid JSON for request body"
+            }
+            break
+        }
       }
 
       this.startTimeMs = performance.now()
