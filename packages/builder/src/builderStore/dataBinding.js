@@ -19,15 +19,12 @@ import {
   convertJSONSchemaToTableSchema,
   getJSONArrayDatasourceSchema,
 } from "./jsonUtils"
-import { getAvailableActions } from "components/design/PropertiesPanel/PropertyControls/EventsEditor/actions"
+import ActionDefinitions from "components/design/PropertiesPanel/PropertyControls/ButtonActionEditor/manifest.json"
 
 // Regex to match all instances of template strings
 const CAPTURE_VAR_INSIDE_TEMPLATE = /{{([^}]+)}}/g
 const CAPTURE_VAR_INSIDE_JS = /\$\("([^")]+)"\)/g
 const CAPTURE_HBS_TEMPLATE = /{{[\S\s]*?}}/g
-
-// List of all available button actions
-const AllButtonActions = getAvailableActions(true)
 
 /**
  * Gets all bindable data context fields and instance fields.
@@ -375,7 +372,7 @@ export const getButtonContextBindings = (actions, actionId) => {
   // Generate bindings for any steps which provide context
   let bindings = []
   prevActions.forEach((action, idx) => {
-    const def = AllButtonActions.find(
+    const def = ActionDefinitions.actions.find(
       x => x.name === action["##eventHandlerType"]
     )
     if (def.context) {

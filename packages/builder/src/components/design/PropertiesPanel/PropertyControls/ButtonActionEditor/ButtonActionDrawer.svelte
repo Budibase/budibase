@@ -9,7 +9,7 @@
     ActionMenu,
     MenuItem,
   } from "@budibase/bbui"
-  import { getAvailableActions } from "./actions"
+  import { getAvailableActions } from "./index"
   import { generate } from "shortid"
   import { getButtonContextBindings } from "builderStore/dataBinding"
 
