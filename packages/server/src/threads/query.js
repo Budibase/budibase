@@ -15,6 +15,15 @@ function formatResponse(resp) {
   return resp
 }
 
+function hasExtraData(response) {
+  return (
+    typeof response === "object" &&
+    !Array.isArray(response) &&
+    response.data != null &&
+    response.info != null
+  )
+}
+
 async function runAndTransform(datasource, queryVerb, query, transformer) {
   const Integration = integrations[datasource.source]
   if (!Integration) {
@@ -22,7 +31,15 @@ async function runAndTransform(datasource, queryVerb, query, transformer) {
   }
   const integration = new Integration(datasource.config)
 
-  let rows = formatResponse(await integration[queryVerb](query))
+  let output = formatResponse(await integration[queryVerb](query))
+  let rows = output,
+    info = undefined,
+    extra = undefined
+  if (hasExtraData(output)) {
+    rows = output.data
+    info = output.info
+    extra = output.extra
+  }
 
   // transform as required
   if (transformer) {
@@ -47,7 +64,7 @@ async function runAndTransform(datasource, queryVerb, query, transformer) {
     integration.end()
   }
 
-  return { rows, keys }
+  return { rows, keys, info, extra }
 }
 
 module.exports = (input, callback) => {
