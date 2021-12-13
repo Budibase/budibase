@@ -59,6 +59,7 @@ export { default as Badge } from "./Badge/Badge.svelte"
 export { default as StatusLight } from "./StatusLight/StatusLight.svelte"
 export { default as ColorPicker } from "./ColorPicker/ColorPicker.svelte"
 export { default as InlineAlert } from "./InlineAlert/InlineAlert.svelte"
+export { default as Banner } from "./Banner/Banner.svelte"
 
 // Typography
 export { default as Body } from "./Typography/Body.svelte"

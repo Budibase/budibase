@@ -15,6 +15,9 @@
       name: "handlebars",
       base: "text/html",
     },
+    Text: {
+      name: "text/html",
+    },
   }
 </script>
 

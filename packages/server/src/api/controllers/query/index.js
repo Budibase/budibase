@@ -123,7 +123,7 @@ async function enrichQueryFields(fields, parameters = {}) {
           enrichedQuery.requestBody
       )
     } catch (err) {
-      throw { message: `JSON Invalid - error: ${err}` }
+      // no json found, ignore
     }
     delete enrichedQuery.customData
   }
@@ -151,7 +151,7 @@ exports.preview = async function (ctx) {
   const enrichedQuery = await enrichQueryFields(fields, parameters)
 
   try {
-    const { rows, keys } = await Runner.run({
+    const { rows, keys, info, extra } = await Runner.run({
       datasource,
       queryVerb,
       query: enrichedQuery,
@@ -161,6 +161,8 @@ exports.preview = async function (ctx) {
     ctx.body = {
       rows,
       schemaFields: [...new Set(keys)],
+      info,
+      extra,
     }
   } catch (err) {
     ctx.throw(400, err)

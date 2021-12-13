@@ -1,5 +1,5 @@
 <script>
-  import { Icon, Body, Button, Input, Heading, Layout } from "@budibase/bbui"
+  import { Body, Button, Heading, Icon, Input, Layout } from "@budibase/bbui"
   import {
     readableToRuntimeBinding,
     runtimeToReadableBinding,
@@ -7,83 +7,82 @@
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
 
   export let bindable = true
-  export let parameters = []
   export let bindings = []
+  export let bindableOptions = []
   export let customParams = {}
 
-  function newQueryParameter() {
-    parameters = [...parameters, {}]
+  function newQueryBinding() {
+    bindings = [...bindings, {}]
   }
 
-  function deleteQueryParameter(idx) {
-    parameters.splice(idx, 1)
-    parameters = parameters
+  function deleteQueryBinding(idx) {
+    bindings.splice(idx, 1)
+    bindings = bindings
   }
 
   // This is necessary due to the way readable and writable bindings are stored.
   // The readable binding in the UI gets converted to a UUID value that the client understands
   // for parsing, then converted back so we can display it the readable form in the UI
   function onBindingChange(param, valueToParse) {
-    const parsedBindingValue = readableToRuntimeBinding(bindings, valueToParse)
-    customParams[param] = parsedBindingValue
+    customParams[param] = readableToRuntimeBinding(
+      bindableOptions,
+      valueToParse
+    )
   }
 </script>
 
-<Layout paddingX="none" gap="S">
-  <div class="controls">
-    <Heading size="XS">Parameters</Heading>
+<Layout noPadding={bindable} gap="S">
+  <div class="controls" class:height={!bindable}>
+    <Heading size="XS">Bindings</Heading>
     {#if !bindable}
-      <Button secondary on:click={newQueryParameter}>Add Param</Button>
+      <Button secondary on:click={newQueryBinding}>Add Binding</Button>
     {/if}
   </div>
   <Body size="S">
     {#if !bindable}
-      Parameters come in two parts: the parameter name, and a default/fallback
-      value.
+      Bindings come in two parts: the binding name, and a default/fallback
+      value. These bindings can be used as Handlebars expressions throughout the
+      query.
     {:else}
-      Enter a value for each parameter. The default values will be used for any
+      Enter a value for each binding. The default values will be used for any
       values left blank.
     {/if}
   </Body>
-  <div class="parameters" class:bindable>
-    {#each parameters as parameter, idx}
+  <div class="bindings" class:bindable>
+    {#each bindings as binding, idx}
       <Input
-        placeholder="Parameter Name"
+        placeholder="Binding Name"
         thin
         disabled={bindable}
-        bind:value={parameter.name}
+        bind:value={binding.name}
       />
       <Input
         placeholder="Default"
         thin
         disabled={bindable}
-        bind:value={parameter.default}
+        bind:value={binding.default}
       />
       {#if bindable}
         <DrawerBindableInput
-          title={`Query parameter "${parameter.name}"`}
+          title={`Query binding "${binding.name}"`}
           placeholder="Value"
           thin
-          on:change={evt => onBindingChange(parameter.name, evt.detail)}
+          on:change={evt => onBindingChange(binding.name, evt.detail)}
           value={runtimeToReadableBinding(
-            bindings,
-            customParams?.[parameter.name]
+            bindableOptions,
+            customParams?.[binding.name]
           )}
-          {bindings}
+          {bindableOptions}
         />
       {:else}
-        <Icon
-          hoverable
-          name="Close"
-          on:click={() => deleteQueryParameter(idx)}
-        />
+        <Icon hoverable name="Close" on:click={() => deleteQueryBinding(idx)} />
       {/if}
     {/each}
   </div>
 </Layout>
 
 <style>
-  .parameters.bindable {
+  .bindings.bindable {
     grid-template-columns: 1fr 1fr 1fr;
   }
 
@@ -91,13 +90,16 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    height: 40px;
   }
 
-  .parameters {
+  .bindings {
     display: grid;
     grid-template-columns: 1fr 1fr 5%;
     grid-gap: 10px;
     align-items: center;
+  }
+
+  .height {
+    height: 40px;
   }
 </style>
