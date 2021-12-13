@@ -2,29 +2,58 @@ import {
   Integration,
   DatasourceFieldTypes,
   QueryTypes,
+  RestConfig,
+  RestQueryFields as RestQuery,
 } from "../definitions/datasource"
 import { IntegrationBase } from "./base/IntegrationBase"
 
+const BodyTypes = {
+  NONE: "none",
+  FORM_DATA: "form",
+  ENCODED: "encoded",
+  JSON: "json",
+  TEXT: "text",
+}
+
+const coreFields = {
+  path: {
+    type: DatasourceFieldTypes.STRING,
+    display: "URL",
+  },
+  queryString: {
+    type: DatasourceFieldTypes.STRING,
+  },
+  headers: {
+    type: DatasourceFieldTypes.OBJECT,
+  },
+  enabledHeaders: {
+    type: DatasourceFieldTypes.OBJECT,
+  },
+  requestBody: {
+    type: DatasourceFieldTypes.JSON,
+  },
+  bodyType: {
+    type: DatasourceFieldTypes.STRING,
+    enum: Object.values(BodyTypes),
+  },
+}
+
 module RestModule {
   const fetch = require("node-fetch")
-
-  interface RestConfig {
-    url: string
-    defaultHeaders: {
-      [key: string]: any
-    }
-  }
+  const { formatBytes } = require("../utilities")
+  const { performance } = require("perf_hooks")
 
   const SCHEMA: Integration = {
     docs: "https://github.com/node-fetch/node-fetch",
     description:
-      "Representational state transfer (REST) is a de-facto standard for a software architecture for interactive applications that typically use multiple Web services. ",
+      "With the REST API datasource, you can connect, query and pull data from multiple REST APIs. You can then use the retrieved data to build apps.",
     friendlyName: "REST API",
     datasource: {
       url: {
         type: DatasourceFieldTypes.STRING,
-        default: "localhost",
-        required: true,
+        default: "",
+        required: false,
+        deprecated: true,
       },
       defaultHeaders: {
         type: DatasourceFieldTypes.OBJECT,
@@ -37,97 +66,30 @@ module RestModule {
         readable: true,
         displayName: "POST",
         type: QueryTypes.FIELDS,
-        urlDisplay: true,
-        fields: {
-          path: {
-            type: DatasourceFieldTypes.STRING,
-          },
-          queryString: {
-            type: DatasourceFieldTypes.STRING,
-          },
-          headers: {
-            type: DatasourceFieldTypes.OBJECT,
-          },
-          requestBody: {
-            type: DatasourceFieldTypes.JSON,
-          },
-        },
+        fields: coreFields,
       },
       read: {
         displayName: "GET",
         readable: true,
         type: QueryTypes.FIELDS,
-        urlDisplay: true,
-        fields: {
-          path: {
-            type: DatasourceFieldTypes.STRING,
-          },
-          queryString: {
-            type: DatasourceFieldTypes.STRING,
-          },
-          headers: {
-            type: DatasourceFieldTypes.OBJECT,
-          },
-        },
+        fields: coreFields,
       },
       update: {
         displayName: "PUT",
         readable: true,
         type: QueryTypes.FIELDS,
-        urlDisplay: true,
-        fields: {
-          path: {
-            type: DatasourceFieldTypes.STRING,
-          },
-          queryString: {
-            type: DatasourceFieldTypes.STRING,
-          },
-          headers: {
-            type: DatasourceFieldTypes.OBJECT,
-          },
-          requestBody: {
-            type: DatasourceFieldTypes.JSON,
-          },
-        },
+        fields: coreFields,
       },
       patch: {
         displayName: "PATCH",
         readable: true,
         type: QueryTypes.FIELDS,
-        urlDisplay: true,
-        fields: {
-          path: {
-            type: DatasourceFieldTypes.STRING,
-          },
-          queryString: {
-            type: DatasourceFieldTypes.STRING,
-          },
-          headers: {
-            type: DatasourceFieldTypes.OBJECT,
-          },
-          requestBody: {
-            type: DatasourceFieldTypes.JSON,
-          },
-        },
+        fields: coreFields,
       },
       delete: {
         displayName: "DELETE",
         type: QueryTypes.FIELDS,
-        urlDisplay: true,
-        fields: {
-          path: {
-            type: DatasourceFieldTypes.STRING,
-          },
-          queryString: {
-            type: DatasourceFieldTypes.STRING,
-          },
-          headers: {
-            type: DatasourceFieldTypes.OBJECT,
-          },
-          requestBody: {
-            type: DatasourceFieldTypes.JSON,
-          },
-        },
+        fields: coreFields,
       },
     },
   }
@@ -137,94 +99,106 @@ module RestModule {
     private headers: {
       [key: string]: string
     } = {}
+    private startTimeMs: number = performance.now()
 
     constructor(config: RestConfig) {
       this.config = config
     }
 
     async parseResponse(response: any) {
+      let data, raw, headers
       const contentType = response.headers.get("content-type")
       if (contentType && contentType.indexOf("application/json") !== -1) {
-        return await response.json()
+        data = await response.json()
+        raw = JSON.stringify(data)
       } else {
-        return await response.text()
+        data = await response.text()
+        raw = data
+      }
+      const size = formatBytes(response.headers.get("content-length") || Buffer.byteLength(raw, "utf8"))
+      const time = `${Math.round(performance.now() - this.startTimeMs)}ms`
+      headers = response.headers.raw()
+      for (let [key, value] of Object.entries(headers)) {
+        headers[key] = Array.isArray(value) ? value[0] : value
+      }
+      return {
+        data,
+        info: {
+          code: response.status,
+          size,
+          time,
+        },
+        extra: {
+          raw,
+          headers,
+        },
       }
     }
 
     getUrl(path: string, queryString: string): string {
-      return `${this.config.url}/${path}?${queryString}`
+      const main = `${path}?${queryString}`
+      let complete = main
+      if (this.config.url && !main.startsWith(this.config.url)) {
+        complete = !this.config.url ? main : `${this.config.url}/${main}`
+      }
+      if (!complete.startsWith("http")) {
+        complete = `http://${complete}`
+      }
+      return complete
     }
 
-    async create({ path = "", queryString = "", headers = {}, json = {} }) {
+    async _req(query: RestQuery) {
+      const { path = "", queryString = "", headers = {}, method = "GET", disabledHeaders, bodyType, requestBody } = query
       this.headers = {
         ...this.config.defaultHeaders,
         ...headers,
       }
 
-      const response = await fetch(this.getUrl(path, queryString), {
-        method: "POST",
-        headers: this.headers,
-        body: JSON.stringify(json),
-      })
+      if (disabledHeaders) {
+        for (let headerKey of Object.keys(this.headers)) {
+          if (disabledHeaders[headerKey]) {
+            delete this.headers[headerKey]
+          }
+        }
+      }
 
+      let json
+      if (bodyType === BodyTypes.JSON && requestBody) {
+        try {
+          json = JSON.parse(requestBody)
+        } catch (err) {
+          throw "Invalid JSON for request body"
+        }
+      }
+
+      const input: any = { method, headers: this.headers }
+      if (json && typeof json === "object" && Object.keys(json).length > 0) {
+        input.body = JSON.stringify(json)
+      }
+
+      this.startTimeMs = performance.now()
+      const response = await fetch(this.getUrl(path, queryString), input)
       return await this.parseResponse(response)
     }
 
-    async read({ path = "", queryString = "", headers = {} }) {
-      this.headers = {
-        ...this.config.defaultHeaders,
-        ...headers,
-      }
-
-      const response = await fetch(this.getUrl(path, queryString), {
-        headers: this.headers,
-      })
-
-      return await this.parseResponse(response)
+    async create(opts: RestQuery) {
+      return this._req({ ...opts, method: "POST" })
     }
 
-    async update({ path = "", queryString = "", headers = {}, json = {} }) {
-      this.headers = {
-        ...this.config.defaultHeaders,
-        ...headers,
-      }
-
-      const response = await fetch(this.getUrl(path, queryString), {
-        method: "PUT",
-        headers: this.headers,
-        body: JSON.stringify(json),
-      })
-
-      return await this.parseResponse(response)
+    async read(opts: RestQuery) {
+      return this._req({ ...opts, method: "GET" })
     }
 
-    async patch({ path = "", queryString = "", headers = {}, json = {} }) {
-      this.headers = {
-        ...this.config.defaultHeaders,
-        ...headers,
-      }
-
-      const response = await fetch(this.getUrl(path, queryString), {
-        method: "PATCH",
-        headers: this.headers,
-        body: JSON.stringify(json),
-      })
-
-      return await this.parseResponse(response)
+    async update(opts: RestQuery) {
+      return this._req({ ...opts, method: "PUT" })
     }
 
-    async delete({ path = "", queryString = "", headers = {} }) {
-      this.headers = {
-        ...this.config.defaultHeaders,
-        ...headers,
-      }
+    async patch(opts: RestQuery) {
+      return this._req({ ...opts, method: "PATCH" })
+    }
 
-      const response = await fetch(this.getUrl(path, queryString), {
-        method: "DELETE",
-        headers: this.headers,
-      })
-
-      return await this.parseResponse(response)
+    async delete(opts: RestQuery) {
+      return this._req({ ...opts, method: "DELETE" })
     }
   }
 

@@ -1,5 +1,4 @@
-
-import { Query, QueryParameter } from "../../../../../../definitions/common"
+import { Query, QueryParameter } from "../../../../../../definitions/datasource"
 
 export interface ImportInfo {
   url: string

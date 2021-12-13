@@ -1,6 +1,6 @@
-import { SourceNames } from "./datasource"
+export { Query, Datasource } from "./datasource"
 
-interface Base {
+export interface Base {
   _id?: string
   _rev?: string
 }
@@ -92,40 +92,4 @@ export interface Automation extends Base {
     steps: AutomationStep[]
     trigger?: AutomationStep
   }
-}
-
-export interface Datasource extends Base {
-  type: string
-  name: string
-  source: SourceNames
-  // the config is defined by the schema
-  config: {
-    [key: string]: string | number | boolean
-  }
-  plus: boolean
-  entities?: {
-    [key: string]: Table
-  }
-}
-
-export interface QueryParameter {
-  name: string
-  default: string
-}
-
-export interface Query {
-  _id?: string
-  datasourceId: string
-  name: string
-  parameters: QueryParameter[]
-  fields: {
-    headers: object
-    queryString: string | null
-    path: string
-    requestBody: string | undefined
-  }
-  transformer: string | null
-  schema: any
-  readable: boolean
-  queryVerb: string
 }

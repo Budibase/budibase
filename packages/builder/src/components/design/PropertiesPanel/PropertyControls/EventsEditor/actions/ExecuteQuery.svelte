@@ -1,7 +1,7 @@
 <script>
   import { Select, Layout, Input, Checkbox } from "@budibase/bbui"
   import { datasources, integrations, queries } from "stores/backend"
-  import ParameterBuilder from "components/integration/QueryParameterBuilder.svelte"
+  import BindingBuilder from "components/integration/QueryBindingBuilder.svelte"
   import IntegrationQueryEditor from "components/integration/index.svelte"
 
   export let parameters
@@ -53,10 +53,10 @@
 
       {#if query?.parameters?.length > 0}
         <div>
-          <ParameterBuilder
+          <BindingBuilder
             bind:customParams={parameters.queryParams}
-            parameters={query.parameters}
-            {bindings}
+            bindings={query.parameters}
+            bind:bindableOptions={bindings}
           />
           <IntegrationQueryEditor
             height={200}

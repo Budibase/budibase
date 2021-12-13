@@ -6,6 +6,9 @@ module FetchMock {
       return {
         status,
         headers: {
+          raw: () => {
+            return { "content-type": ["application/json"] }
+          },
           get: () => {
             return ["application/json"]
           },
