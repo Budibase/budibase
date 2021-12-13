@@ -21,9 +21,9 @@ jobs:
         with:
           version: v3.4.0
 
-      - run: yarn release:helm
-        env:
-          BUDIBASE_RELEASE_VERSION: ${{ steps.previoustag.outputs.tag }}
+      # - run: yarn release:helm
+      #   env:
+      #     BUDIBASE_RELEASE_VERSION: ${{ steps.previoustag.outputs.tag }}
 
       - name: Configure Git
         run: |
