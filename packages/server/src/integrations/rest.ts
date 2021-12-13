@@ -2,6 +2,8 @@ import {
   Integration,
   DatasourceFieldTypes,
   QueryTypes,
+  RestConfig,
+  RestQueryFields as RestQuery,
 } from "../definitions/datasource"
 import { IntegrationBase } from "./base/IntegrationBase"
 
@@ -40,24 +42,6 @@ module RestModule {
   const fetch = require("node-fetch")
   const { formatBytes } = require("../utilities")
   const { performance } = require("perf_hooks")
-
-  interface RestQuery {
-    path: string
-    queryString?: string
-    headers: { [key: string]: any }
-    disabledHeaders: { [key: string]: any }
-    requestBody: any
-    bodyType: string
-    json: object
-    method: string
-  }
-
-  interface RestConfig {
-    url: string
-    defaultHeaders: {
-      [key: string]: any
-    }
-  }
 
   const SCHEMA: Integration = {
     docs: "https://github.com/node-fetch/node-fetch",

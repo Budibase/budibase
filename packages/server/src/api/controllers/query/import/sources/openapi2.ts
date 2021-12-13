@@ -1,5 +1,5 @@
 import { ImportInfo } from "./base"
-import { Query, QueryParameter } from "../../../../../definitions/common"
+import { Query, QueryParameter } from "../../../../../definitions/datasource"
 import { OpenAPIV2 } from "openapi-types"
 import { OpenAPISource } from "./base/openapi"
 
