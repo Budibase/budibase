@@ -12,6 +12,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 14.x
+      - run: yarn
+      - run: yarn bootstrap
+
       - name: 'Get Previous tag'
         id: previoustag
         uses: "WyriHaximus/github-action-get-previous-tag@v1"
@@ -21,9 +27,9 @@ jobs:
         with:
           version: v3.4.0
 
-      # - run: yarn release:helm
-      #   env:
-      #     BUDIBASE_RELEASE_VERSION: ${{ steps.previoustag.outputs.tag }}
+      - run: yarn release:helm
+        env:
+          BUDIBASE_RELEASE_VERSION: ${{ steps.previoustag.outputs.tag }}
 
       - name: Configure Git
         run: |
