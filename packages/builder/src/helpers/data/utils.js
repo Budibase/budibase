@@ -108,3 +108,14 @@ export function customQueryIconColor(datasource, query) {
       return
   }
 }
+
+export function flipHeaderState(headersActivity) {
+  if (!headersActivity) {
+    return {}
+  }
+  const enabled = {}
+  Object.entries(headersActivity).forEach(([key, value]) => {
+    enabled[key] = !value
+  })
+  return enabled
+}
