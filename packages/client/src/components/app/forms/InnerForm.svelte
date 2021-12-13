@@ -59,6 +59,7 @@
     ...formValue,
 
     // These static values are prefixed to avoid clashes with actual columns
+    __value: formValue,
     __valid: valid,
     __currentStep: $currentStep,
     __currentStepValid: $currentStepValid,

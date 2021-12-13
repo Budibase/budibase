@@ -1838,6 +1838,10 @@
         "type": "static",
         "values":  [
           {
+            "label": "Value",
+            "key": "__value"
+          },
+          {
             "label": "Valid",
             "key": "__valid"
           },
