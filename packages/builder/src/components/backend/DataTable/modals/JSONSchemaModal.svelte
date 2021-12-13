@@ -1,5 +1,5 @@
 <script>
-  import Editor from "../../../integration/QueryEditor.svelte"
+  import Editor from "components/integration/QueryEditor.svelte"
   import {
     ModalContent,
     Tabs,
@@ -7,6 +7,8 @@
     Button,
     Input,
     Select,
+    Body,
+    Layout,
   } from "@budibase/bbui"
   import { onMount, createEventDispatcher } from "svelte"
   import { FIELDS } from "constants/backend"
@@ -16,7 +18,7 @@
   export let json
 
   let dispatcher = createEventDispatcher()
-  let mode = "Key/Value"
+  let mode = "Form"
   let fieldCount = 0
   let fieldKeys = {},
     fieldTypes = {}
@@ -84,7 +86,7 @@
   size="L"
 >
   <Tabs selected={mode} noPadding>
-    <Tab title="Key/Value">
+    <Tab title="Form">
       {#each Array(fieldCount) as _, i}
         <div class="horizontal">
           <Input outline label="Key" bind:value={fieldKeys[i]} />
@@ -102,7 +104,13 @@
       </div>
     </Tab>
     <Tab title="JSON">
-      <Editor mode="json" on:change={onJsonUpdate} value={json} />
+      <Layout noPadding gap="XS">
+        <Body size="S">
+          Provide a sample JSON blob here to automatically determine your
+          schema.
+        </Body>
+        <Editor mode="json" on:change={onJsonUpdate} value={json} />
+      </Layout>
     </Tab>
   </Tabs>
 </ModalContent>
