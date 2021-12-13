@@ -16,7 +16,6 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
-
       - uses: actions/setup-node@v1
         with:
           node-version: 14.x
@@ -44,14 +43,19 @@ jobs:
           DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
           BUDIBASE_RELEASE_VERSION: ${{ steps.previoustag.outputs.tag }}
       
+      - uses: azure/setup-helm@v1
+        id: install
+
       - run: yarn release:helm
         env:
           BUDIBASE_RELEASE_VERSION: ${{ steps.previoustag.outputs.tag }}
 
-      - name: Configure Git
+      - name: Configure Git and Helm
         run: |
           git config user.name "Budibase Helm Bot"
           git config user.email "<>"
+          helm repo add budibase https://budibase.github.io/budibase
+          helm repo update
       
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.2.0
