@@ -145,6 +145,15 @@
     url = buildUrl(query.fields.path, breakQs)
     schema = schemaToFields(query.schema)
     bindings = queryParametersToKeyValue(query.parameters)
+    if (!query.fields.disabledHeaders) {
+      query.fields.disabledHeaders = {}
+    }
+    // make sure the disabled headers are set (migration)
+    for (let header of Object.keys(query.fields.headers)) {
+      if (!query.fields.disabledHeaders[header]) {
+        query.fields.disabledHeaders[header] = false
+      }
+    }
     enabledHeaders = flipHeaderState(query.fields.disabledHeaders)
     if (query && !query.transformer) {
       query.transformer = "return data"

@@ -41,9 +41,7 @@
     for (let [key, value] of Object.entries(obj)) {
       const field = fields.find(el => el.name === key)
       const idx = fields.indexOf(field)
-      if (idx !== -1) {
-        array[idx] = value
-      }
+      array[idx] = idx !== -1 ? value : true
     }
     return array
   }
