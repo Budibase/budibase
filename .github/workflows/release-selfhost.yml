@@ -1,4 +1,4 @@
-name: Budibase Release Selfhost
+name: Budibase Release Docker Selfhost
 
 on:
  workflow_dispatch:
@@ -42,22 +42,4 @@ jobs:
           DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
           BUDIBASE_RELEASE_VERSION: ${{ steps.previoustag.outputs.tag }}
-      
-      - uses: azure/setup-helm@v1
-        id: install
-
-      - run: yarn release:helm
-        env:
-          BUDIBASE_RELEASE_VERSION: ${{ steps.previoustag.outputs.tag }}
-
-      - name: Configure Git and Helm
-        run: |
-          git config user.name "Budibase Helm Bot"
-          git config user.email "<>"
-          helm repo add budibase https://budibase.github.io/budibase
-          helm repo update
-      
-      - name: Run chart-releaser
-        uses: helm/chart-releaser-action@v1.2.0
-        env:
-          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          
