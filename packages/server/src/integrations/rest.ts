@@ -153,7 +153,10 @@ module RestModule {
 
     getUrl(path: string, queryString: string): string {
       const main = `${path}?${queryString}`
-      let complete = !this.config.url ? main : `${this.config.url}/${main}`
+      let complete = main
+      if (this.config.url && !main.startsWith(this.config.url)) {
+        complete = !this.config.url ? main : `${this.config.url}/${main}`
+      }
       if (!complete.startsWith("http")) {
         complete = `http://${complete}`
       }
