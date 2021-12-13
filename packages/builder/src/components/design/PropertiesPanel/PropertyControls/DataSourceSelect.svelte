@@ -19,10 +19,7 @@
   import { datasources, integrations } from "stores/backend"
   import ParameterBuilder from "components/integration/QueryParameterBuilder.svelte"
   import IntegrationQueryEditor from "components/integration/index.svelte"
-  import {
-    makePropSafe,
-    makePropSafe as safe,
-  } from "@budibase/string-templates"
+  import { makePropSafe as safe } from "@budibase/string-templates"
 
   export let value = {}
   export let otherSources
