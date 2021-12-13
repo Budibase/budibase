@@ -154,3 +154,58 @@ export const ALLOWABLE_NUMBER_TYPES = ALLOWABLE_NUMBER_OPTIONS.map(
 export const SWITCHABLE_TYPES = ALLOWABLE_NUMBER_TYPES.concat(
   ALLOWABLE_STRING_TYPES
 )
+
+export const IntegrationTypes = {
+  POSTGRES: "POSTGRES",
+  MONGODB: "MONGODB",
+  COUCHDB: "COUCHDB",
+  S3: "S3",
+  MYSQL: "MYSQL",
+  REST: "REST",
+  DYNAMODB: "DYNAMODB",
+  ELASTICSEARCH: "ELASTICSEARCH",
+  SQL_SERVER: "SQL_SERVER",
+  AIRTABLE: "AIRTABLE",
+  ARANGODB: "ARANGODB",
+  ORACLE: "ORACLE",
+  INTERNAL: "INTERNAL",
+}
+
+export const IntegrationNames = {
+  [IntegrationTypes.POSTGRES]: "PostgreSQL",
+  [IntegrationTypes.MONGODB]: "MongoDB",
+  [IntegrationTypes.COUCHDB]: "CouchDB",
+  [IntegrationTypes.S3]: "S3",
+  [IntegrationTypes.MYSQL]: "MySQL",
+  [IntegrationTypes.REST]: "REST",
+  [IntegrationTypes.DYNAMODB]: "DynamoDB",
+  [IntegrationTypes.ELASTICSEARCH]: "ElasticSearch",
+  [IntegrationTypes.SQL_SERVER]: "SQL Server",
+  [IntegrationTypes.AIRTABLE]: "Airtable",
+  [IntegrationTypes.ARANGODB]: "ArangoDB",
+  [IntegrationTypes.ORACLE]: "Oracle",
+  [IntegrationTypes.INTERNAL]: "Internal",
+}
+
+export const SchemaTypeOptions = [
+  { label: "Text", value: "string" },
+  { label: "Number", value: "number" },
+  { label: "Boolean", value: "boolean" },
+  { label: "Datetime", value: "datetime" },
+]
+
+export const RawRestBodyTypes = {
+  NONE: "none",
+  FORM: "form",
+  ENCODED: "encoded",
+  JSON: "json",
+  TEXT: "text",
+}
+
+export const RestBodyTypes = [
+  { name: "none", value: "none" },
+  { name: "form-data", value: "form" },
+  { name: "x-www-form-encoded", value: "encoded" },
+  { name: "raw (JSON)", value: "json" },
+  { name: "raw (Text)", value: "text" },
+]

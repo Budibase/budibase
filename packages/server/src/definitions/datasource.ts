@@ -1,4 +1,4 @@
-import { Row, Table } from "./common"
+import { Row, Table, Base } from "./common"
 
 export enum Operation {
   CREATE = "CREATE",
@@ -180,4 +180,53 @@ export interface SqlQuery {
 
 export interface QueryOptions {
   disableReturning?: boolean
+}
+
+export interface Datasource extends Base {
+  type: string
+  name: string
+  source: SourceNames
+  // the config is defined by the schema
+  config: {
+    [key: string]: string | number | boolean
+  }
+  plus: boolean
+  entities?: {
+    [key: string]: Table
+  }
+}
+
+export interface QueryParameter {
+  name: string
+  default: string
+}
+
+export interface RestQueryFields {
+  path: string
+  queryString?: string
+  headers: { [key: string]: any }
+  disabledHeaders: { [key: string]: any }
+  requestBody: any
+  bodyType: string
+  json: object
+  method: string
+}
+
+export interface RestConfig {
+  url: string
+  defaultHeaders: {
+    [key: string]: any
+  }
+}
+
+export interface Query {
+  _id?: string
+  datasourceId: string
+  name: string
+  parameters: QueryParameter[]
+  fields: RestQueryFields | any
+  transformer: string | null
+  schema: any
+  readable: boolean
+  queryVerb: string
 }
