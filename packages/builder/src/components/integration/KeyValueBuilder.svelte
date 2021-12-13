@@ -26,13 +26,12 @@
   export let tooltip
 
   let fields = Object.entries(object).map(([name, value]) => ({ name, value }))
-  let fieldActivity = []
+  let fieldActivity = buildFieldActivity(activity)
 
   $: object = fields.reduce(
     (acc, next) => ({ ...acc, [next.name]: next.value }),
     {}
   )
-  $: fieldActivity = buildFieldActivity(activity)
 
   function buildFieldActivity(obj) {
     if (!obj || typeof obj !== "object") {
@@ -103,11 +102,7 @@
         />
       {/if}
       {#if toggle}
-        <Toggle
-          bind:value={fieldActivity[idx]}
-          on:change={changed}
-          default={true}
-        />
+        <Toggle bind:value={fieldActivity[idx]} on:change={changed} />
       {/if}
       {#if !readOnly}
         <Icon hoverable name="Close" on:click={() => deleteEntry(idx)} />

@@ -33,6 +33,7 @@
     buildQueryString,
     keyValueToQueryParameters,
     queryParametersToKeyValue,
+    flipHeaderState,
   } from "helpers/data/utils"
   import {
     RestBodyTypes as bodyTypes,
@@ -48,7 +49,7 @@
     bindings = {}
   let url = ""
   let saveId
-  let response, schema, isGet
+  let response, schema, enabledHeaders
   let datasourceType, integrationInfo, queryConfig, responseSuccess
 
   $: datasource = $datasources.list.find(ds => ds._id === query?.datasourceId)
@@ -57,7 +58,6 @@
   $: queryConfig = integrationInfo?.query
   $: url = buildUrl(url, breakQs)
   $: checkQueryName(url)
-  $: isGet = query?.queryVerb === "read"
   $: responseSuccess =
     response?.info?.code >= 200 && response?.info?.code <= 206
 
@@ -100,6 +100,7 @@
     const queryString = buildQueryString(breakQs)
     newQuery.fields.path = url.split("?")[0]
     newQuery.fields.queryString = queryString
+    newQuery.fields.disabledHeaders = flipHeaderState(enabledHeaders)
     newQuery.schema = fieldsToSchema(schema)
     newQuery.parameters = keyValueToQueryParameters(bindings)
     return newQuery
@@ -139,6 +140,7 @@
     url = buildUrl(query.fields.path, breakQs)
     schema = schemaToFields(query.schema)
     bindings = queryParametersToKeyValue(query.parameters)
+    enabledHeaders = flipHeaderState(query.fields.disabledHeaders)
     if (query && !query.transformer) {
       query.transformer = "return data"
     }
@@ -153,7 +155,7 @@
   })
 </script>
 
-{#if query}
+{#if query && queryConfig}
   <div class="inner">
     <div class="top">
       <Layout gap="S">
@@ -201,7 +203,7 @@
           <Tab title="Headers">
             <KeyValueBuilder
               bind:object={query.fields.headers}
-              bind:activity={query.fields.enabledHeaders}
+              bind:activity={enabledHeaders}
               toggle
               name="header"
               headings
@@ -210,7 +212,7 @@
           <Tab title="Body">
             <RadioGroup
               bind:value={query.fields.bodyType}
-              options={isGet ? [bodyTypes[0]] : bodyTypes}
+              options={bodyTypes}
               direction="horizontal"
               getOptionLabel={option => option.name}
               getOptionValue={option => option.value}

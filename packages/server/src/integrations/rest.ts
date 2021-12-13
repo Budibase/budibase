@@ -45,7 +45,7 @@ module RestModule {
     path: string
     queryString?: string
     headers: { [key: string]: any }
-    enabledHeaders: { [key: string]: any }
+    disabledHeaders: { [key: string]: any }
     requestBody: any
     bodyType: string
     json: object
@@ -161,15 +161,15 @@ module RestModule {
     }
 
     async _req(query: RestQuery) {
-      const { path = "", queryString = "", headers = {}, method = "GET", enabledHeaders, bodyType, requestBody } = query
+      const { path = "", queryString = "", headers = {}, method = "GET", disabledHeaders, bodyType, requestBody } = query
       this.headers = {
         ...this.config.defaultHeaders,
         ...headers,
       }
 
-      if (enabledHeaders) {
+      if (disabledHeaders) {
         for (let headerKey of Object.keys(this.headers)) {
-          if (!enabledHeaders[headerKey]) {
+          if (disabledHeaders[headerKey]) {
             delete this.headers[headerKey]
           }
         }
