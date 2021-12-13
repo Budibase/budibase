@@ -52,7 +52,6 @@
   let response, schema, enabledHeaders
   let datasourceType, integrationInfo, queryConfig, responseSuccess
 
-  $: datasource = $datasources.list.find(ds => ds._id === query?.datasourceId)
   $: datasourceType = datasource?.source
   $: integrationInfo = $integrations[datasourceType]
   $: queryConfig = integrationInfo?.query
@@ -135,8 +134,14 @@
 
   onMount(() => {
     query = getSelectedQuery()
+    datasource = $datasources.list.find(ds => ds._id === query?.datasourceId)
+    const datasourceUrl = datasource?.config.url
     const qs = query?.fields.queryString
     breakQs = breakQueryString(qs)
+    if (datasourceUrl && !query.fields.path?.startsWith(datasourceUrl)) {
+      const path = query.fields.path
+      query.fields.path = `${datasource.config.url}/${path ? path : ""}`
+    }
     url = buildUrl(query.fields.path, breakQs)
     schema = schemaToFields(query.schema)
     bindings = queryParametersToKeyValue(query.parameters)
