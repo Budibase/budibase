@@ -21,6 +21,7 @@
   import { cloneDeep } from "lodash/fp"
 
   import ImportRestQueriesModal from "components/backend/DatasourceNavigator/modals/ImportRestQueriesModal.svelte"
+  import { onMount } from "svelte"
   let importQueriesModal
 
   let changed
@@ -34,14 +35,6 @@
     ds => ds._id === $datasources.selected
   )
   $: integration = datasource && $integrations[datasource.source]
-  $: {
-    if (
-      baseDatasource &&
-      (!datasource || datasource.source !== baseDatasource.source)
-    ) {
-      datasource = cloneDeep(baseDatasource)
-    }
-  }
   $: queryList = $queries.list.filter(
     query => query.datasourceId === datasource?._id
   )
@@ -72,6 +65,10 @@
     queries.select(query)
     $goto(`./${query._id}`)
   }
+
+  onMount(() => {
+    datasource = cloneDeep(baseDatasource)
+  })
 </script>
 
 <Modal bind:this={importQueriesModal}>
