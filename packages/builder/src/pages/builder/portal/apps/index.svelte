@@ -366,8 +366,7 @@
       </div>
       <div class="appTable">
         {#each filteredApps as app (app.appId)}
-          <svelte:component
-            this={AppRow}
+          <AppRow
             {releaseLock}
             {editIcon}
             {app}

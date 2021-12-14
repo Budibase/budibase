@@ -51,9 +51,11 @@
   }
 
   const save = async () => {
-    await apps.updateIcon(app.instance._id, {
-      name: selectedIcon,
-      color: selectedColor,
+    await apps.update(app.instance._id, {
+      icon: {
+        name: selectedIcon,
+        color: selectedColor,
+      },
     })
   }
 </script>
@@ -66,7 +68,7 @@
   >
     <div class="scrollable-icons">
       <div class="title-spacing">
-        <Label>Select an Icon:</Label>
+        <Label>Select an Icon</Label>
       </div>
       <div class="grid">
         {#each iconsList as item}
@@ -82,7 +84,7 @@
     </div>
     <div class="color-selection">
       <div>
-        <Label>Select a Color:</Label>
+        <Label>Select a Color</Label>
       </div>
       <div class="color-selection-item">
         <ColorPicker

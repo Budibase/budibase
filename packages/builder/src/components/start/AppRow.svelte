@@ -7,7 +7,6 @@
     MenuItem,
     StatusLight,
   } from "@budibase/bbui"
-  import { apps } from "stores/portal"
   import { processStringSync } from "@budibase/string-templates"
 
   export let app
@@ -19,19 +18,12 @@
   export let unpublishApp
   export let releaseLock
   export let editIcon
-
-  $: color =
-    $apps.find(filtered_app => app?.appId === filtered_app.appId)?.icon
-      ?.color || ""
-  $: name =
-    $apps.find(filtered_app => app?.appId === filtered_app.appId)?.icon?.name ||
-    "Apps"
 </script>
 
 <div class="title">
   <div style="display: flex;">
-    <div style="color: {color}">
-      <Icon size="XL" {name} />
+    <div style="color: {app.icon?.color || ''}">
+      <Icon size="XL" name={app.icon?.name || "Apps"} />
     </div>
     <div class="name" on:click={() => editApp(app)}>
       <Heading size="XS">
@@ -99,7 +91,7 @@
       <MenuItem on:click={() => updateApp(app)} icon="Edit">Edit</MenuItem>
       <MenuItem on:click={() => deleteApp(app)} icon="Delete">Delete</MenuItem>
     {/if}
-    <MenuItem on:click={() => editIcon(app)} icon="Edit">Edit Icon</MenuItem>
+    <MenuItem on:click={() => editIcon(app)} icon="Brush">Edit Icon</MenuItem>
   </ActionMenu>
 </div>
 

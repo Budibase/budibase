@@ -65,37 +65,17 @@ export function createAppStore() {
     }
   }
 
-  async function updateIcon(appId, icon) {
-    const response = await api.put(`/api/applications/${appId}`, { icon })
-    if (response.status === 200) {
-      store.update(state => {
-        const updatedAppIndex = state.findIndex(
-          app => app.instance._id === appId
-        )
-
-        if (updatedAppIndex !== -1) {
-          const updatedApp = state[updatedAppIndex]
-          updatedApp.icon = icon
-          state.apps = state.splice(updatedAppIndex, 1, updatedApp)
-        }
-
-        return state
-      })
-    } else {
-      throw new Error("Error updating icon")
-    }
-  }
-
-  async function update(appId, name) {
-    const response = await api.put(`/api/applications/${appId}`, { name })
+  async function update(appId, value) {
+    console.log({ value })
+    const response = await api.put(`/api/applications/${appId}`, { ...value })
     if (response.status === 200) {
       store.update(state => {
         const updatedAppIndex = state.findIndex(
           app => app.instance._id === appId
         )
         if (updatedAppIndex !== -1) {
-          const updatedApp = state[updatedAppIndex]
-          updatedApp.name = name
+          let updatedApp = state[updatedAppIndex]
+          updatedApp = { ...updatedApp, ...value }
           state.apps = state.splice(updatedAppIndex, 1, updatedApp)
         }
         return state
@@ -109,7 +89,6 @@ export function createAppStore() {
     subscribe: store.subscribe,
     load,
     update,
-    updateIcon,
   }
 }
 
