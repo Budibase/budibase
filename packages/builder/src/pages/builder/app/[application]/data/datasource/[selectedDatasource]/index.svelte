@@ -24,6 +24,7 @@
   let importQueriesModal
 
   let changed
+  let datasource
   const querySchema = {
     name: {},
     queryVerb: { displayName: "Method" },
@@ -32,7 +33,6 @@
   $: baseDatasource = $datasources.list.find(
     ds => ds._id === $datasources.selected
   )
-  $: datasource = cloneDeep(datasource)
   $: integration = datasource && $integrations[datasource.source]
   $: {
     if (
