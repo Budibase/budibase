@@ -26,13 +26,12 @@
   export let tooltip
 
   let fields = Object.entries(object).map(([name, value]) => ({ name, value }))
-  let fieldActivity = []
+  let fieldActivity = buildFieldActivity(activity)
 
   $: object = fields.reduce(
     (acc, next) => ({ ...acc, [next.name]: next.value }),
     {}
   )
-  $: fieldActivity = buildFieldActivity(activity)
 
   function buildFieldActivity(obj) {
     if (!obj || typeof obj !== "object") {
@@ -42,9 +41,7 @@
     for (let [key, value] of Object.entries(obj)) {
       const field = fields.find(el => el.name === key)
       const idx = fields.indexOf(field)
-      if (idx !== -1) {
-        array[idx] = value
-      }
+      array[idx] = idx !== -1 ? value : true
     }
     return array
   }
@@ -103,11 +100,7 @@
         />
       {/if}
       {#if toggle}
-        <Toggle
-          bind:value={fieldActivity[idx]}
-          on:change={changed}
-          default={true}
-        />
+        <Toggle bind:value={fieldActivity[idx]} on:change={changed} />
       {/if}
       {#if !readOnly}
         <Icon hoverable name="Close" on:click={() => deleteEntry(idx)} />

@@ -2,6 +2,11 @@ import {
   Integration,
   DatasourceFieldTypes,
   QueryTypes,
+  RestConfig,
+  RestQueryFields as RestQuery,
+  AuthType,
+  BasicAuthConfig,
+  BearerAuthConfig
 } from "../definitions/datasource"
 import { IntegrationBase } from "./base/IntegrationBase"
 
@@ -11,27 +16,6 @@ const BodyTypes = {
   ENCODED: "encoded",
   JSON: "json",
   TEXT: "text",
-}
-
-enum AuthType {
-  BASIC = "basic",
-  BEARER = "bearer",
-}
-
-interface AuthConfig {
-  _id: string
-  name: string
-  type: AuthType
-  config: BasicAuthConfig | BearerAuthConfig
-}
-
-interface BasicAuthConfig {
-  username: string
-  password: string
-}
-
-interface BearerAuthConfig {
-  token: string
 }
 
 const coreFields = {
@@ -61,26 +45,6 @@ module RestModule {
   const fetch = require("node-fetch")
   const { formatBytes } = require("../utilities")
   const { performance } = require("perf_hooks")
-
-  interface RestQuery {
-    path: string
-    queryString?: string
-    headers: { [key: string]: any }
-    enabledHeaders: { [key: string]: any }
-    requestBody: any
-    bodyType: string
-    json: object
-    method: string
-    authConfigId: string
-  }
-
-  interface RestConfig {
-    url: string
-    defaultHeaders: {
-      [key: string]: any
-    }
-    authConfigs: AuthConfig[]
-  }
 
   const SCHEMA: Integration = {
     docs: "https://github.com/node-fetch/node-fetch",
@@ -176,7 +140,10 @@ module RestModule {
 
     getUrl(path: string, queryString: string): string {
       const main = `${path}?${queryString}`
-      let complete = !this.config.url ? main : `${this.config.url}/${main}`
+      let complete = main
+      if (this.config.url && !main.startsWith(this.config.url)) {
+        complete = !this.config.url ? main : `${this.config.url}/${main}`
+      }
       if (!complete.startsWith("http")) {
         complete = `http://${complete}`
       }
@@ -213,8 +180,7 @@ module RestModule {
     }
 
     async _req(query: RestQuery) {
-      const { path = "", queryString = "", headers = {}, method = "GET", enabledHeaders, bodyType, requestBody, authConfigId } = query
-
+      const { path = "", queryString = "", headers = {}, method = "GET", disabledHeaders, bodyType, requestBody, authConfigId } = query
       const authHeaders = this.getAuthHeaders(authConfigId)
 
       this.headers = {
@@ -223,9 +189,9 @@ module RestModule {
         ...authHeaders,
       }
 
-      if (enabledHeaders) {
+      if (disabledHeaders) {
         for (let headerKey of Object.keys(this.headers)) {
-          if (!enabledHeaders[headerKey]) {
+          if (disabledHeaders[headerKey]) {
             delete this.headers[headerKey]
           }
         }
