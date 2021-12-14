@@ -4,6 +4,9 @@ import {
   QueryTypes,
   RestConfig,
   RestQueryFields as RestQuery,
+  AuthType,
+  BasicAuthConfig,
+  BearerAuthConfig,
 } from "../definitions/datasource"
 import { IntegrationBase } from "./base/IntegrationBase"
 
@@ -116,9 +119,17 @@ module RestModule {
         if (contentType.includes("application/json")) {
           data = await response.json()
           raw = JSON.stringify(data)
-        } else if (contentType.includes("text/xml") || contentType.includes("application/xml")) {
+        } else if (
+          contentType.includes("text/xml") ||
+          contentType.includes("application/xml")
+        ) {
           const rawXml = await response.text()
-          data = await xmlParser(rawXml, { explicitArray: false, trim: true, explicitRoot: false }) || {}
+          data =
+            (await xmlParser(rawXml, {
+              explicitArray: false,
+              trim: true,
+              explicitRoot: false,
+            })) || {}
           // there is only one structure, its an array, return the array so it appears as rows
           const keys = Object.keys(data)
           if (keys.length === 1 && Array.isArray(data[keys[0]])) {
@@ -210,6 +221,35 @@ module RestModule {
       return input
     }
 
+    getAuthHeaders(authConfigId: string): { [key: string]: any } {
+      let headers: any = {}
+
+      if (this.config.authConfigs && authConfigId) {
+        const authConfig = this.config.authConfigs.filter(
+          c => c._id === authConfigId
+        )[0]
+        // check the config still exists before proceeding
+        // if not - do nothing
+        if (authConfig) {
+          let config
+          switch (authConfig.type) {
+            case AuthType.BASIC:
+              config = authConfig.config as BasicAuthConfig
+              headers.Authorization = `Basic ${Buffer.from(
+                `${config.username}:${config.password}`
+              ).toString("base64")}`
+              break
+            case AuthType.BEARER:
+              config = authConfig.config as BearerAuthConfig
+              headers.Authorization = `Bearer ${config.token}`
+              break
+          }
+        }
+      }
+
+      return headers
+    }
+
     async _req(query: RestQuery) {
       const {
         path = "",
@@ -219,10 +259,14 @@ module RestModule {
         disabledHeaders,
         bodyType,
         requestBody,
+        authConfigId,
       } = query
+      const authHeaders = this.getAuthHeaders(authConfigId)
+
       this.headers = {
         ...this.config.defaultHeaders,
         ...headers,
+        ...authHeaders,
       }
 
       if (disabledHeaders) {
@@ -239,7 +283,8 @@ module RestModule {
       }
 
       this.startTimeMs = performance.now()
-      const response = await fetch(this.getUrl(path, queryString), input)
+      const url = this.getUrl(path, queryString)
+      const response = await fetch(url, input)
       return await this.parseResponse(response)
     }
 
@@ -267,5 +312,6 @@ module RestModule {
   module.exports = {
     schema: SCHEMA,
     integration: RestIntegration,
+    AuthType,
   }
 }

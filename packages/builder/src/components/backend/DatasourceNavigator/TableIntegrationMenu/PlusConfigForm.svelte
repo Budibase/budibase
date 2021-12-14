@@ -12,7 +12,7 @@
   import { datasources, integrations, tables } from "stores/backend"
   import CreateEditRelationship from "components/backend/Datasources/CreateEditRelationship.svelte"
   import CreateExternalTableModal from "./CreateExternalTableModal.svelte"
-  import ArrayRenderer from "components/common/ArrayRenderer.svelte"
+  import ArrayRenderer from "components/common/renderers/ArrayRenderer.svelte"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { goto } from "@roxi/routify"
 
