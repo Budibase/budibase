@@ -150,7 +150,7 @@
     if (id) {
       // find the matching config on the datasource
       const matchedConfig = datasource?.config?.authConfigs?.filter(
-        c => c._id === authConfigId
+        c => c._id === id
       )[0]
       // clear the id if the config is not found (deleted)
       // i.e. just show 'None' in the dropdown
@@ -161,8 +161,10 @@
     return id
   }
 
-  onMount(() => {
+  onMount(async () => {
     query = getSelectedQuery()
+    // clear any unsaved changes to the datasource
+    await datasources.init()
     datasource = $datasources.list.find(ds => ds._id === query?.datasourceId)
     const datasourceUrl = datasource?.config.url
     const qs = query?.fields.queryString
