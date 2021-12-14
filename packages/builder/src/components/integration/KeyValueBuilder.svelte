@@ -6,6 +6,8 @@
     Label,
     Toggle,
     Select,
+    ActionMenu,
+    MenuItem,
   } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { lowercase } from "helpers"
@@ -23,7 +25,9 @@
   export let toggle
   export let keyPlaceholder = "Key"
   export let valuePlaceholder = "Value"
+  export let valueHeading
   export let tooltip
+  export let menuItems
 
   let fields = Object.entries(object).map(([name, value]) => ({ name, value }))
   let fieldActivity = []
@@ -80,13 +84,18 @@
   {#if headings}
     <div class="container" class:container-active={toggle}>
       <Label {tooltip}>{keyPlaceholder}</Label>
-      <Label>{valuePlaceholder}</Label>
+      <Label>{valueHeading || valuePlaceholder}</Label>
       {#if toggle}
         <Label>Active</Label>
       {/if}
     </div>
   {/if}
-  <div class="container" class:container-active={toggle} class:readOnly>
+  <div
+    class="container"
+    class:container-active={toggle}
+    class:container-menu={menuItems}
+    class:readOnly
+  >
     {#each fields as field, idx}
       <Input
         placeholder={keyPlaceholder}
@@ -112,6 +121,18 @@
       {#if !readOnly}
         <Icon hoverable name="Close" on:click={() => deleteEntry(idx)} />
       {/if}
+      {#if menuItems?.length > 0}
+        <ActionMenu>
+          <div slot="control" class="icon">
+            <Icon size="S" hoverable name="MoreSmallList" />
+          </div>
+          {#each menuItems as item}
+            <MenuItem on:click={item.onClick}>
+              {item.text}
+            </MenuItem>
+          {/each}
+        </ActionMenu>
+      {/if}
     {/each}
   </div>
 {/if}
@@ -133,6 +154,9 @@
   }
   .container-active {
     grid-template-columns: 1fr 1fr 50px 20px;
+  }
+  .container-menu {
+    grid-template-columns: 1fr 1fr 20px 20px;
   }
   .readOnly {
     grid-template-columns: 1fr 1fr;

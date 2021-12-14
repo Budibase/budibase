@@ -51,6 +51,7 @@
   let response, schema, isGet
   let datasourceType, integrationInfo, queryConfig, responseSuccess
   let authConfigId
+  let dynamicVariables
 
   $: datasource = $datasources.list.find(ds => ds._id === query?.datasourceId)
   $: datasourceType = datasource?.source
@@ -62,6 +63,7 @@
   $: responseSuccess =
     response?.info?.code >= 200 && response?.info?.code <= 206
   $: authConfigs = buildAuthConfigs(datasource)
+  $: dynamicVariables = buildDynamicVariables(datasource)
 
   function getSelectedQuery() {
     return cloneDeep(
@@ -125,8 +127,14 @@
       saveId = _id
       query = getSelectedQuery()
       notifications.success(`Request saved successfully.`)
+
+      if (dynamicVariables) {
+        const dynamicVars = mapDynamicVariables(saveId)
+        datasource.config.dynamicVariables = dynamicVars
+        await datasources.save(datasource)
+      }
     } catch (err) {
-      notifications.error(`Error creating query. ${err.message}`)
+      notifications.error(`Error saving query. ${err.message}`)
     }
   }
 
@@ -181,6 +189,45 @@
       query.fields.bodyType = "none"
     }
   })
+
+  /**
+   * Convert the dynamic variables list to a simple name / value object
+   */
+  const buildDynamicVariables = datasource => {
+    const variablesList = datasource?.config?.dynamicVariables
+    let variables = {}
+    if (variablesList) {
+      variables = variablesList.reduce(
+        (acc, next) => ({ ...acc, [next.name]: next.value }),
+        {}
+      )
+    }
+    return variables
+  }
+
+  /**
+   * Convert the dynamic variables object back to a list
+   */
+  const mapDynamicVariables = queryId => {
+    let variables = []
+    if (dynamicVariables) {
+      variables = Object.values(dynamicVariables).map((name, value) => ({
+        name,
+        value,
+        queryId,
+      }))
+    }
+    return variables
+  }
+
+  const schemaMenuItems = [
+    {
+      text: "Create dynamic variable",
+      onClick: () => {
+        console.log("create variable")
+      },
+    },
+  ]
 </script>
 
 {#if query}
@@ -318,6 +365,7 @@
                   name="schema"
                   headings
                   options={SchemaTypeOptions}
+                  menuItems={schemaMenuItems}
                 />
               </Tab>
             {/if}
@@ -341,6 +389,25 @@
                   {/if}
                 </div>
               </Tab>
+            {/if}
+            {#if dynamicVariables || response}
+              <Tab title="Dynamic Variables">
+                <Layout noPadding gap="S">
+                  <Body size="S"
+                    >{"Create dynamic variables to use body and headers results in other queries"}</Body
+                  >
+                  <KeyValueBuilder
+                    bind:object={dynamicVariables}
+                    name="Variable"
+                    headings
+                    keyPlaceholder="Name"
+                    valuePlaceholder={`e.g. {{ headers.cookie }}`}
+                    valueHeading={`Value`}
+                  />
+                </Layout>
+              </Tab>
+            {/if}
+            {#if response}
               <div class="stats">
                 <Label size="L">
                   Status: <span class={responseSuccess ? "green" : "red"}
