@@ -19,7 +19,7 @@
   export let unpublishApp
   export let releaseLock
   export let editIcon
-  $: console.log($apps)
+
   $: color =
     $apps.find(filtered_app => app?.appId === filtered_app.appId)?.icon
       ?.color || ""

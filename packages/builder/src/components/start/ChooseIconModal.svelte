@@ -3,7 +3,6 @@
   import { apps } from "stores/portal"
 
   export let app
-  console.log(app)
   let modal
   $: selectedIcon = app?.icon?.name
   $: selectedColor = app?.icon?.color
