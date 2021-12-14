@@ -51,6 +51,7 @@
   let saveId, isGet
   let response, schema, enabledHeaders
   let datasourceType, integrationInfo, queryConfig, responseSuccess
+  let authConfigId
 
   $: datasourceType = datasource?.source
   $: integrationInfo = $integrations[datasourceType]
@@ -60,6 +61,7 @@
   $: isGet = query?.queryVerb === "read"
   $: responseSuccess =
     response?.info?.code >= 200 && response?.info?.code <= 206
+  $: authConfigs = buildAuthConfigs(datasource)
 
   function getSelectedQuery() {
     return cloneDeep(
@@ -95,6 +97,16 @@
     return qs.length > 0 ? `${newUrl}?${qs}` : newUrl
   }
 
+  const buildAuthConfigs = datasource => {
+    if (datasource?.config?.authConfigs) {
+      return datasource.config.authConfigs.map(c => ({
+        label: c.name,
+        value: c._id,
+      }))
+    }
+    return []
+  }
+
   function learnMoreBanner() {
     window.open("https://docs.budibase.com/building-apps/data/transformers")
   }
@@ -104,6 +116,7 @@
     const queryString = buildQueryString(breakQs)
     newQuery.fields.path = url.split("?")[0]
     newQuery.fields.queryString = queryString
+    newQuery.fields.authConfigId = authConfigId
     newQuery.fields.disabledHeaders = flipHeaderState(enabledHeaders)
     newQuery.schema = fieldsToSchema(schema)
     newQuery.parameters = keyValueToQueryParameters(bindings)
@@ -137,8 +150,26 @@
     }
   }
 
-  onMount(() => {
+  const getAuthConfigId = () => {
+    let id = query.fields.authConfigId
+    if (id) {
+      // find the matching config on the datasource
+      const matchedConfig = datasource?.config?.authConfigs?.filter(
+        c => c._id === id
+      )[0]
+      // clear the id if the config is not found (deleted)
+      // i.e. just show 'None' in the dropdown
+      if (!matchedConfig) {
+        id = undefined
+      }
+    }
+    return id
+  }
+
+  onMount(async () => {
     query = getSelectedQuery()
+    // clear any unsaved changes to the datasource
+    await datasources.init()
     datasource = $datasources.list.find(ds => ds._id === query?.datasourceId)
     const datasourceUrl = datasource?.config.url
     const qs = query?.fields.queryString
@@ -150,6 +181,7 @@
     url = buildUrl(query.fields.path, breakQs)
     schema = schemaToFields(query.schema)
     bindings = queryParametersToKeyValue(query.parameters)
+    authConfigId = getAuthConfigId()
     if (!query.fields.disabledHeaders) {
       query.fields.disabledHeaders = {}
     }
@@ -259,6 +291,19 @@
               />
             </Layout>
           </Tab>
+          <div class="auth-container">
+            <div />
+            <!-- spacer -->
+            <div class="auth-select">
+              <Select
+                label="Auth"
+                labelPosition="left"
+                placeholder="None"
+                bind:value={authConfigId}
+                options={authConfigs}
+              />
+            </div>
+          </div>
         </Tabs>
       </Layout>
     </div>
@@ -404,5 +449,13 @@
     display: flex;
     margin-top: var(--spacing-xl);
     justify-content: center;
+  }
+  .auth-container {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+  }
+  .auth-select {
+    width: 200px;
   }
 </style>
