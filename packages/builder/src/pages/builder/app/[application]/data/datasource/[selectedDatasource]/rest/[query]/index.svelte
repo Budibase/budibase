@@ -66,7 +66,11 @@
       $queries.list.find(q => q._id === $queries.selected) || {
         datasourceId: $params.selectedDatasource,
         parameters: [],
-        fields: {},
+        fields: {
+          // only init the objects, everything else is optional strings
+          disabledHeaders: {},
+          headers: {},
+        },
         queryVerb: "read",
       }
     )
