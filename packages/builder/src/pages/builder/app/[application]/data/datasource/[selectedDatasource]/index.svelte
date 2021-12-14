@@ -142,7 +142,11 @@
         </div>
       {/if}
       {#if datasource?.source === IntegrationTypes.REST}
-        <RestExtraConfigForm bind:datasource on:change={hasChanged} />
+        <RestExtraConfigForm
+          queries={queryList}
+          bind:datasource
+          on:change={hasChanged}
+        />
       {/if}
     </Layout>
   </section>
