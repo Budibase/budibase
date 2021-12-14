@@ -4,6 +4,7 @@
     dataSourceStore,
     notificationStore,
     routeStore,
+    stateStore,
   } from "stores"
   import { Modal, ModalContent, ActionButton } from "@budibase/bbui"
   import { onDestroy } from "svelte"
@@ -12,12 +13,13 @@
     NOTIFICATION: "notification",
     CLOSE_SCREEN_MODAL: "close-screen-modal",
     INVALIDATE_DATASOURCE: "invalidate-datasource",
+    UPDATE_STATE: "update-state",
   }
 
   let iframe
   let listenersAttached = false
 
-  const invalidateDataSource = event => {
+  const proxyInvalidation = event => {
     const { dataSourceId } = event.detail
     dataSourceStore.actions.invalidateDataSource(dataSourceId)
   }
@@ -27,14 +29,28 @@
     notificationStore.actions.send(message, type, icon)
   }
 
+  const proxyStateUpdate = event => {
+    const { type, key, value, persist } = event.detail
+    if (type === "set") {
+      stateStore.actions.setValue(key, value, persist)
+    } else if (type === "delete") {
+      stateStore.actions.deleteValue(key)
+    }
+  }
+
   function receiveMessage(message) {
     const handlers = {
       [MessageTypes.NOTIFICATION]: () => {
         proxyNotification(message.data)
       },
-      [MessageTypes.CLOSE_SCREEN_MODAL]: peekStore.actions.hidePeek,
+      [MessageTypes.CLOSE_SCREEN_MODAL]: () => {
+        peekStore.actions.hidePeek()
+      },
       [MessageTypes.INVALIDATE_DATASOURCE]: () => {
-        invalidateDataSource(message.data)
+        proxyInvalidation(message.data)
+      },
+      [MessageTypes.UPDATE_STATE]: () => {
+        proxyStateUpdate(message.data)
       },
     }
 
