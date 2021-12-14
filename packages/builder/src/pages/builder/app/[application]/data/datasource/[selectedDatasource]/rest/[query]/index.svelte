@@ -59,10 +59,11 @@
   $: queryConfig = integrationInfo?.query
   $: url = buildUrl(url, breakQs)
   $: checkQueryName(url)
-  $: responseSuccess =
-    response?.info?.code >= 200 && response?.info?.code <= 206
+  $: responseSuccess = response?.info?.code >= 200 && response?.info?.code < 400
   $: authConfigs = buildAuthConfigs(datasource)
-  $: dynamicVariables = buildDynamicVariables(datasource)
+  $: schemaReadOnly = !responseSuccess
+  $: variablesReadOnly = !responseSuccess
+  $: showVariablesTab = shouldShowVariables(dynamicVariables, variablesReadOnly)
 
   function getSelectedQuery() {
     return cloneDeep(
@@ -133,7 +134,7 @@
       notifications.success(`Request saved successfully.`)
 
       if (dynamicVariables) {
-        const dynamicVars = mapDynamicVariables(saveId)
+        const dynamicVars = rebuildVariables(saveId)
         datasource.config.dynamicVariables = dynamicVars
         await datasources.save(datasource)
       }
@@ -173,6 +174,53 @@
     return id
   }
 
+  // convert dynamic variables list to simple key/val object
+  const variablesToObject = datasource => {
+    const variablesList = datasource?.config?.dynamicVariables
+    if (variablesList && variablesList.length > 0) {
+      return variablesList.reduce(
+        (acc, next) => ({ ...acc, [next.name]: next.value }),
+        {}
+      )
+    }
+    return {}
+  }
+
+  // convert dynamic variables object back to a list, enrich with query id
+  const rebuildVariables = queryId => {
+    let variables = []
+    if (dynamicVariables) {
+      variables = Object.entries(dynamicVariables).map(entry => {
+        return {
+          name: entry[0],
+          value: entry[1],
+          queryId,
+        }
+      })
+    }
+    return variables
+  }
+
+  const shouldShowVariables = (dynamicVariables, variablesReadOnly) => {
+    if (
+      dynamicVariables &&
+      // show when editable or when read only and not empty
+      (!variablesReadOnly || Object.keys(dynamicVariables).length > 0)
+    ) {
+      return true
+    }
+    return false
+  }
+
+  const schemaMenuItems = [
+    {
+      text: "Create dynamic variable",
+      onClick: () => {
+        console.log("create variable")
+      },
+    },
+  ]
+
   onMount(async () => {
     query = getSelectedQuery()
     // clear any unsaved changes to the datasource
@@ -210,46 +258,8 @@
     if (query && !query.fields.bodyType) {
       query.fields.bodyType = "none"
     }
+    dynamicVariables = variablesToObject(datasource)
   })
-
-  /**
-   * Convert the dynamic variables list to a simple name / value object
-   */
-  const buildDynamicVariables = datasource => {
-    const variablesList = datasource?.config?.dynamicVariables
-    let variables = {}
-    if (variablesList) {
-      variables = variablesList.reduce(
-        (acc, next) => ({ ...acc, [next.name]: next.value }),
-        {}
-      )
-    }
-    return variables
-  }
-
-  /**
-   * Convert the dynamic variables object back to a list
-   */
-  const mapDynamicVariables = queryId => {
-    let variables = []
-    if (dynamicVariables) {
-      variables = Object.values(dynamicVariables).map((name, value) => ({
-        name,
-        value,
-        queryId,
-      }))
-    }
-    return variables
-  }
-
-  const schemaMenuItems = [
-    {
-      text: "Create dynamic variable",
-      onClick: () => {
-        console.log("create variable")
-      },
-    },
-  ]
 </script>
 
 {#if query && queryConfig}
@@ -388,6 +398,7 @@
                   headings
                   options={SchemaTypeOptions}
                   menuItems={schemaMenuItems}
+                  readOnly={schemaReadOnly}
                 />
               </Tab>
             {/if}
@@ -412,7 +423,7 @@
                 </div>
               </Tab>
             {/if}
-            {#if dynamicVariables || response}
+            {#if showVariablesTab}
               <Tab title="Dynamic Variables">
                 <Layout noPadding gap="S">
                   <Body size="S"
@@ -425,6 +436,7 @@
                     keyPlaceholder="Name"
                     valuePlaceholder={`e.g. {{ headers.cookie }}`}
                     valueHeading={`Value`}
+                    readOnly={variablesReadOnly}
                   />
                 </Layout>
               </Tab>

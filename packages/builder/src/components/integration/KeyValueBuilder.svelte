@@ -96,6 +96,7 @@
     {#each fields as field, idx}
       <Input
         placeholder={keyPlaceholder}
+        readonly={readOnly}
         bind:value={field.name}
         on:change={changed}
       />
@@ -104,6 +105,7 @@
       {:else}
         <Input
           placeholder={valuePlaceholder}
+          readonly={readOnly}
           bind:value={field.value}
           on:change={changed}
         />
@@ -114,7 +116,7 @@
       {#if !readOnly}
         <Icon hoverable name="Close" on:click={() => deleteEntry(idx)} />
       {/if}
-      {#if menuItems?.length > 0}
+      {#if menuItems?.length > 0 && !readOnly}
         <ActionMenu>
           <div slot="control" class="icon">
             <Icon size="S" hoverable name="MoreSmallList" />
