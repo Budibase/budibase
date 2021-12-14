@@ -15,6 +15,7 @@
 
   export let template
   export let inline
+
   const values = writable({ name: null })
   const errors = writable({})
   const touched = writable({})
@@ -195,7 +196,9 @@
       error={$touched.name && $errors.name}
       on:blur={() => ($touched.name = true)}
       label="Name"
-      placeholder={`${$auth.user.firstName}'s first app`}
+      placeholder={$auth.user.firstName
+        ? `${$auth.user.firstName}'s app`
+        : "My app"}
     />
   </ModalContent>
 {/if}
