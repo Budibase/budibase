@@ -8,6 +8,9 @@
       name: "javascript",
       json: true,
     },
+    XML: {
+      name: "xml",
+    },
     SQL: {
       name: "sql",
     },
@@ -17,7 +20,6 @@
     },
     Text: {
       name: "text/html",
-      json: false,
     },
   }
 </script>

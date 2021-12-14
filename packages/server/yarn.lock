@@ -983,10 +983,10 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/auth@^1.0.18":
-  version "1.0.19"
-  resolved "https://registry.yarnpkg.com/@budibase/auth/-/auth-1.0.19.tgz#b5a8ad51170443d2136d244f51cfe7dbcc0db116"
-  integrity sha512-6H1K80KX8RUseLXD307tKRc+b0B7/b2SZmAYYGq5qrUSdUotydZaZ90pt5pXVdE754duxyc8DlrwmRfri5xu+A==
+"@budibase/auth@^1.0.19-alpha.1":
+  version "1.0.22"
+  resolved "https://registry.yarnpkg.com/@budibase/auth/-/auth-1.0.22.tgz#a93ea2fea46e00138ad3fa129c9ea19b056654e2"
+  integrity sha512-eHCNEzGl6HxYlMpfRTXBokq2ALTK5f+CDSgJmGaL/jfPc2NlzCI5NoigZUkSrdwDiYZnnWLfDDR4dArYyLlFuA==
   dependencies:
     "@techpass/passport-openidconnect" "^0.3.0"
     aws-sdk "^2.901.0"
@@ -1056,10 +1056,10 @@
     svelte-flatpickr "^3.2.3"
     svelte-portal "^1.0.0"
 
-"@budibase/bbui@^1.0.19":
-  version "1.0.19"
-  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-1.0.19.tgz#d79c99e8c0adcf24d9b83f00a15eb262ad73a7e2"
-  integrity sha512-GhsyqkDjHMvU1MCr7oXKIZi6NOhmkunJ6eAoob8obCLDm+LXC/1Q8ymSuJicctQpDpraaFS7zqQ6vYY9v7kpiQ==
+"@budibase/bbui@^1.0.22":
+  version "1.0.22"
+  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-1.0.22.tgz#ac3bd3a8699bd0be84aac3c5dff9d093e5b08462"
+  integrity sha512-8/5rXEOwkr0OcQD1fn5GpmI3d5dS1cIJBAODjTVtlZrTdacwlz5W2j3zIh+CBG0X7zhVxEze3zs2b1vDNTvK6A==
   dependencies:
     "@adobe/spectrum-css-workflow-icons" "^1.2.1"
     "@spectrum-css/actionbutton" "^1.0.1"
@@ -1106,14 +1106,14 @@
     svelte-flatpickr "^3.2.3"
     svelte-portal "^1.0.0"
 
-"@budibase/client@^1.0.18":
-  version "1.0.19"
-  resolved "https://registry.yarnpkg.com/@budibase/client/-/client-1.0.19.tgz#50ba2ad91ac2fd57c51306b80fbab24a26ba1403"
-  integrity sha512-8vAsD7VkLfq9ZrD+QPXGUcj/2D3vGO++IPr0zIKGNVG5FlOLFceQ9b7itExSFWutyVAjK/e/yq56tugnf0S+Fg==
+"@budibase/client@^1.0.19-alpha.1":
+  version "1.0.22"
+  resolved "https://registry.yarnpkg.com/@budibase/client/-/client-1.0.22.tgz#80d6c3fb2b57a050199dde4a4b3e82b221601c25"
+  integrity sha512-Cpao7l2lIWyJZJs8+zq1wFnQGaWRTDiRG+HkkjvqQZDkZexlo89zWPkY56NBbMT1qAXd6K3zAdRNNKVCBCtOaA==
   dependencies:
-    "@budibase/bbui" "^1.0.19"
+    "@budibase/bbui" "^1.0.22"
     "@budibase/standard-components" "^0.9.139"
-    "@budibase/string-templates" "^1.0.19"
+    "@budibase/string-templates" "^1.0.22"
     regexparam "^1.3.0"
     shortid "^2.2.15"
     svelte-spa-router "^3.0.5"
@@ -1163,10 +1163,10 @@
     svelte-apexcharts "^1.0.2"
     svelte-flatpickr "^3.1.0"
 
-"@budibase/string-templates@^1.0.18", "@budibase/string-templates@^1.0.19":
-  version "1.0.19"
-  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-1.0.19.tgz#4b476dfc5d317e56d84a24dffd34715cc74c7b37"
-  integrity sha512-MmSHF2HK3JS3goyNr3mUQi3azt5vSWlmSGlYFyw473jplRVYkmI8wXrP8gVy9mNJ4vksn3bkgFPI8Hi9RoNSbA==
+"@budibase/string-templates@^1.0.19-alpha.1", "@budibase/string-templates@^1.0.22":
+  version "1.0.22"
+  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-1.0.22.tgz#b795c61e53d541c0aa346a90d04b50dcca6ae117"
+  integrity sha512-1ZhxzL75kVhP44fJlCWwqmGIPjZol1eB/xi3O11xJPYQ7lfzeJcGUpksvlgbLgBlw+MKkgppK7gEoMP247E0Qw==
   dependencies:
     "@budibase/handlebars-helpers" "^0.11.7"
     dayjs "^1.10.4"
@@ -5824,6 +5824,15 @@ form-data@^3.0.0:
   version "3.0.1"
   resolved "https://registry.yarnpkg.com/form-data/-/form-data-3.0.1.tgz#ebd53791b78356a99af9a300d4282c4d5eb9755f"
   integrity sha512-RHkBKtLWUVwd7SqRIvCZMEvAMoGUp0XU+seQiZejj0COz3RI3hWP4sCv3gZWWLjJTd7rGwcsF5eKZGii0r/hbg==
+  dependencies:
+    asynckit "^0.4.0"
+    combined-stream "^1.0.8"
+    mime-types "^2.1.12"
+
+form-data@^4.0.0:
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/form-data/-/form-data-4.0.0.tgz#93919daeaf361ee529584b9b31664dc12c9fa452"
+  integrity sha512-ETEklSGi5t0QMZuiXoA/Q6vcnxcLQP5vdugSpuAyi6SVGi2clPPp+xgEhuMaHC+zGgn31Kd235W35f7Hykkaww==
   dependencies:
     asynckit "^0.4.0"
     combined-stream "^1.0.8"
@@ -13081,7 +13090,7 @@ xml2js@0.4.19:
     sax ">=0.6.0"
     xmlbuilder "~9.0.1"
 
-xml2js@^0.4.19, xml2js@^0.4.5:
+xml2js@^0.4.19, xml2js@^0.4.23, xml2js@^0.4.5:
   version "0.4.23"
   resolved "https://registry.yarnpkg.com/xml2js/-/xml2js-0.4.23.tgz#a0c69516752421eb2ac758ee4d4ccf58843eac66"
   integrity sha512-ySPiMjM0+pLDftHgXY4By0uswI3SPKLDw/i3UXbnO8M/p28zqexCUoPmQFrYD+/1BzhGJSs2i1ERWKJAtiLrug==

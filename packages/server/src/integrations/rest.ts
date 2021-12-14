@@ -10,6 +10,7 @@ import { IntegrationBase } from "./base/IntegrationBase"
 const BodyTypes = {
   NONE: "none",
   FORM_DATA: "form",
+  XML: "xml",
   ENCODED: "encoded",
   JSON: "json",
   TEXT: "text",
@@ -42,6 +43,9 @@ module RestModule {
   const fetch = require("node-fetch")
   const { formatBytes } = require("../utilities")
   const { performance } = require("perf_hooks")
+  const FormData = require("form-data")
+  const { URLSearchParams } = require("url")
+  const xmlParser = require("xml2js").parseStringPromise
 
   const SCHEMA: Integration = {
     docs: "https://github.com/node-fetch/node-fetch",
@@ -107,13 +111,26 @@ module RestModule {
 
     async parseResponse(response: any) {
       let data, raw, headers
-      const contentType = response.headers.get("content-type")
-      if (contentType && contentType.indexOf("application/json") !== -1) {
-        data = await response.json()
-        raw = JSON.stringify(data)
-      } else {
-        data = await response.text()
-        raw = data
+      const contentType = response.headers.get("content-type") || ""
+      try {
+        if (contentType.includes("application/json")) {
+          data = await response.json()
+          raw = JSON.stringify(data)
+        } else if (contentType.includes("text/xml") || contentType.includes("application/xml")) {
+          const rawXml = await response.text()
+          data = await xmlParser(rawXml, { explicitArray: false, trim: true, explicitRoot: false }) || {}
+          // there is only one structure, its an array, return the array so it appears as rows
+          const keys = Object.keys(data)
+          if (keys.length === 1 && Array.isArray(data[keys[0]])) {
+            data = data[keys[0]]
+          }
+          raw = rawXml
+        } else {
+          data = await response.text()
+          raw = data
+        }
+      } catch (err) {
+        throw "Failed to parse response body."
       }
       const size = formatBytes(
         response.headers.get("content-length") || Buffer.byteLength(raw, "utf8")
@@ -149,6 +166,50 @@ module RestModule {
       return complete
     }
 
+    addBody(bodyType: string, body: string | any, input: any) {
+      let error, object, string
+      try {
+        string = typeof body !== "string" ? JSON.stringify(body) : body
+        object = typeof body === "object" ? body : JSON.parse(body)
+      } catch (err) {
+        error = err
+      }
+      switch (bodyType) {
+        case BodyTypes.TEXT:
+          // content type defaults to plaintext
+          input.body = string
+          break
+        case BodyTypes.ENCODED:
+          const params = new URLSearchParams()
+          for (let [key, value] of Object.entries(object)) {
+            params.append(key, value)
+          }
+          input.body = params
+          break
+        case BodyTypes.FORM_DATA:
+          const form = new FormData()
+          for (let [key, value] of Object.entries(object)) {
+            form.append(key, value)
+          }
+          input.body = form
+          break
+        case BodyTypes.XML:
+          input.body = string
+          input.headers["Content-Type"] = "text/xml"
+          break
+        default:
+        case BodyTypes.JSON:
+          // if JSON error, throw it
+          if (error) {
+            throw "Invalid JSON for request body"
+          }
+          input.body = object
+          input.headers["Content-Type"] = "application/json"
+          break
+      }
+      return input
+    }
+
     async _req(query: RestQuery) {
       const {
         path = "",
@@ -172,35 +233,9 @@ module RestModule {
         }
       }
 
-      const input: any = { method, headers: this.headers }
+      let input: any = { method, headers: this.headers }
       if (requestBody) {
-        switch (bodyType) {
-          case BodyTypes.TEXT:
-            const text =
-              typeof requestBody !== "string"
-                ? JSON.stringify(requestBody)
-                : requestBody
-            // content type defaults to plaintext
-            input.body = text
-            break
-          default:
-          case BodyTypes.JSON:
-            try {
-              // confirm its json
-              const json = JSON.parse(requestBody)
-              if (
-                json &&
-                typeof json === "object" &&
-                Object.keys(json).length > 0
-              ) {
-                input.body = requestBody
-                input.headers["Content-Type"] = "application/json"
-              }
-            } catch (err) {
-              throw "Invalid JSON for request body"
-            }
-            break
-        }
+        input = this.addBody(bodyType, requestBody, input)
       }
 
       this.startTimeMs = performance.now()
