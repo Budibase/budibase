@@ -28,6 +28,7 @@
   export let valueHeading
   export let tooltip
   export let menuItems
+  export let showMenu = false
 
   let fields = Object.entries(object).map(([name, value]) => ({ name, value }))
   let fieldActivity = buildFieldActivity(activity)
@@ -90,8 +91,9 @@
   <div
     class="container"
     class:container-active={toggle}
-    class:container-menu={menuItems}
+    class:container-menu={showMenu}
     class:readOnly
+    class:readOnly-menu={readOnly && showMenu}
   >
     {#each fields as field, idx}
       <Input
@@ -116,7 +118,7 @@
       {#if !readOnly}
         <Icon hoverable name="Close" on:click={() => deleteEntry(idx)} />
       {/if}
-      {#if menuItems?.length > 0 && !readOnly}
+      {#if menuItems?.length > 0 && showMenu}
         <ActionMenu>
           <div slot="control" class="icon">
             <Icon size="S" hoverable name="MoreSmallList" />
@@ -155,5 +157,8 @@
   }
   .readOnly {
     grid-template-columns: 1fr 1fr;
+  }
+  .readOnly-menu {
+    grid-template-columns: 1fr 1fr 20px;
   }
 </style>

@@ -220,6 +220,14 @@
       },
     },
   ]
+  const responseHeadersMenuItems = [
+    {
+      text: "Create dynamic variable",
+      onClick: () => {
+        console.log("create variable")
+      },
+    },
+  ]
 
   onMount(async () => {
     query = getSelectedQuery()
@@ -398,6 +406,7 @@
                   headings
                   options={SchemaTypeOptions}
                   menuItems={schemaMenuItems}
+                  showMenu={!schemaReadOnly}
                   readOnly={schemaReadOnly}
                 />
               </Tab>
@@ -407,7 +416,12 @@
                 <TextArea disabled value={response.extra?.raw} height="300" />
               </Tab>
               <Tab title="Headers">
-                <KeyValueBuilder object={response.extra?.headers} readOnly />
+                <KeyValueBuilder
+                  object={response.extra?.headers}
+                  readOnly
+                  menuItems={responseHeadersMenuItems}
+                  showMenu={true}
+                />
               </Tab>
               <Tab title="Preview">
                 <div class="table">
