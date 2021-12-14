@@ -17,6 +17,7 @@
     },
     Text: {
       name: "text/html",
+      json: false,
     },
   }
 </script>
@@ -40,11 +41,12 @@
   let editor
 
   // Keep editor up to date with value
+  $: editor?.setOption("mode", mode)
   $: editor?.setValue(value || "")
 
   // Creates an instance of a code mirror editor
   async function createEditor(mode, value) {
-    if (!CodeMirror || !textarea || editor) {
+    if (!CodeMirror || !textarea) {
       return
     }
 
