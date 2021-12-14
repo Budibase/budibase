@@ -33,6 +33,7 @@
     buildQueryString,
     keyValueToQueryParameters,
     queryParametersToKeyValue,
+    flipHeaderState,
   } from "helpers/data/utils"
   import {
     RestBodyTypes as bodyTypes,
@@ -48,18 +49,16 @@
     bindings = {}
   let url = ""
   let saveId
-  let response, schema, isGet
+  let response, schema, enabledHeaders
   let datasourceType, integrationInfo, queryConfig, responseSuccess
   let authConfigId
   let dynamicVariables
 
-  $: datasource = $datasources.list.find(ds => ds._id === query?.datasourceId)
   $: datasourceType = datasource?.source
   $: integrationInfo = $integrations[datasourceType]
   $: queryConfig = integrationInfo?.query
   $: url = buildUrl(url, breakQs)
   $: checkQueryName(url)
-  $: isGet = query?.queryVerb === "read"
   $: responseSuccess =
     response?.info?.code >= 200 && response?.info?.code <= 206
   $: authConfigs = buildAuthConfigs(datasource)
@@ -70,7 +69,11 @@
       $queries.list.find(q => q._id === $queries.selected) || {
         datasourceId: $params.selectedDatasource,
         parameters: [],
-        fields: {},
+        fields: {
+          // only init the objects, everything else is optional strings
+          disabledHeaders: {},
+          headers: {},
+        },
         queryVerb: "read",
       }
     )
@@ -115,6 +118,7 @@
     newQuery.fields.path = url.split("?")[0]
     newQuery.fields.queryString = queryString
     newQuery.fields.authConfigId = authConfigId
+    newQuery.fields.disabledHeaders = flipHeaderState(enabledHeaders)
     newQuery.schema = fieldsToSchema(schema)
     newQuery.parameters = keyValueToQueryParameters(bindings)
     return newQuery
@@ -158,7 +162,7 @@
     if (id) {
       // find the matching config on the datasource
       const matchedConfig = datasource?.config?.authConfigs?.filter(
-        c => c._id === authConfigId
+        c => c._id === id
       )[0]
       // clear the id if the config is not found (deleted)
       // i.e. just show 'None' in the dropdown
@@ -169,14 +173,32 @@
     return id
   }
 
-  onMount(() => {
+  onMount(async () => {
     query = getSelectedQuery()
+    // clear any unsaved changes to the datasource
+    await datasources.init()
+    datasource = $datasources.list.find(ds => ds._id === query?.datasourceId)
+    const datasourceUrl = datasource?.config.url
     const qs = query?.fields.queryString
     breakQs = breakQueryString(qs)
+    if (datasourceUrl && !query.fields.path?.startsWith(datasourceUrl)) {
+      const path = query.fields.path
+      query.fields.path = `${datasource.config.url}/${path ? path : ""}`
+    }
     url = buildUrl(query.fields.path, breakQs)
     schema = schemaToFields(query.schema)
     bindings = queryParametersToKeyValue(query.parameters)
     authConfigId = getAuthConfigId()
+    if (!query.fields.disabledHeaders) {
+      query.fields.disabledHeaders = {}
+    }
+    // make sure the disabled headers are set (migration)
+    for (let header of Object.keys(query.fields.headers)) {
+      if (!query.fields.disabledHeaders[header]) {
+        query.fields.disabledHeaders[header] = false
+      }
+    }
+    enabledHeaders = flipHeaderState(query.fields.disabledHeaders)
     if (query && !query.transformer) {
       query.transformer = "return data"
     }
@@ -230,7 +252,7 @@
   ]
 </script>
 
-{#if query}
+{#if query && queryConfig}
   <div class="inner">
     <div class="top">
       <Layout gap="S">
@@ -278,7 +300,7 @@
           <Tab title="Headers">
             <KeyValueBuilder
               bind:object={query.fields.headers}
-              bind:activity={query.fields.enabledHeaders}
+              bind:activity={enabledHeaders}
               toggle
               name="header"
               headings
@@ -287,7 +309,7 @@
           <Tab title="Body">
             <RadioGroup
               bind:value={query.fields.bodyType}
-              options={isGet ? [bodyTypes[0]] : bodyTypes}
+              options={bodyTypes}
               direction="horizontal"
               getOptionLabel={option => option.name}
               getOptionValue={option => option.value}
