@@ -21,7 +21,7 @@
   import { store, automationStore } from "builderStore"
   import api, { del, post, get } from "builderStore/api"
   import { onMount } from "svelte"
-  import { apps, auth, admin } from "stores/portal"
+  import { apps, auth, admin, templates } from "stores/portal"
   import download from "downloadjs"
   import { goto } from "@roxi/routify"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
@@ -43,7 +43,6 @@
   let cloud = $admin.cloud
   let appName = ""
   let creatingFromTemplate = false
-  let templates = []
   $: enrichedApps = enrichApps($apps, $auth.user, sortBy)
   $: filteredApps = enrichedApps.filter(app =>
     app?.name?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -266,14 +265,9 @@
     }
   }
 
-  async function fetchTemplates() {
-    const response = await api.get("/api/templates?type=app")
-    templates = await response.json()
-  }
-
   onMount(async () => {
     await apps.load()
-    await fetchTemplates()
+    await templates.load()
     // if the portal is loaded from an external URL with a template param
     const initInfo = await auth.getInitInfo()
     if (initInfo?.init_template) {
@@ -303,12 +297,11 @@
     </div>
 
     <div class="title-text">
-      <Body size="XS">Manage your apps and get a head start with templates</Body
-      >
+      <Body size="S">Manage your apps and get a head start with templates</Body>
     </div>
     <Detail>Quick Start Templates</Detail>
     <div class="grid">
-      {#each templates as item}
+      {#each $templates as item}
         <div
           on:click={() => {
             template = item
@@ -330,9 +323,9 @@
               </svg>
             </div>
             <div class="iconAlign">
-              <Body weight="900" size="XS">{item.name}</Body>
+              <Body weight="900" size="S">{item.name}</Body>
               <div style="font-size: 10px;">
-                <Body size="XS">{item.category.toUpperCase()}</Body>
+                <Body size="S">{item.category.toUpperCase()}</Body>
               </div>
             </div>
           </div>
@@ -458,12 +451,13 @@
     display: inline-block;
   }
   .template-card {
-    height: 60px;
-    width: 255px;
+    height: 80px;
+    width: 270px;
     border-radius: var(--border-radius-s);
     margin-bottom: var(--spacing-m);
     border: 1px solid var(--spectrum-global-color-gray-300);
     cursor: pointer;
+    display: flex;
   }
 
   .title-text {
