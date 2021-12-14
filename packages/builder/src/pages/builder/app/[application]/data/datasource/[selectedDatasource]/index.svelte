@@ -23,20 +23,23 @@
   import ImportRestQueriesModal from "components/backend/DatasourceNavigator/modals/ImportRestQueriesModal.svelte"
   let importQueriesModal
 
-  let baseDatasource, changed
+  let changed
   const querySchema = {
     name: {},
     queryVerb: { displayName: "Method" },
   }
 
-  $: datasource = $datasources.list.find(ds => ds._id === $datasources.selected)
+  $: baseDatasource = $datasources.list.find(
+    ds => ds._id === $datasources.selected
+  )
+  $: datasource = cloneDeep(datasource)
   $: integration = datasource && $integrations[datasource.source]
   $: {
     if (
-      datasource &&
-      (!baseDatasource || baseDatasource.source !== datasource.source)
+      baseDatasource &&
+      (!datasource || datasource.source !== baseDatasource.source)
     ) {
-      baseDatasource = cloneDeep(datasource)
+      datasource = cloneDeep(baseDatasource)
     }
   }
   $: queryList = $queries.list.filter(
@@ -90,7 +93,7 @@
             height="26"
             width="26"
           />
-          <Heading size="M">{baseDatasource.name}</Heading>
+          <Heading size="M">{datasource.name}</Heading>
         </header>
         <Body size="M">{integration.description}</Body>
       </Layout>
