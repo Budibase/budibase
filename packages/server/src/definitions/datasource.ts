@@ -196,6 +196,27 @@ export interface Datasource extends Base {
   }
 }
 
+export enum AuthType {
+  BASIC = "basic",
+  BEARER = "bearer",
+}
+
+interface AuthConfig {
+  _id: string
+  name: string
+  type: AuthType
+  config: BasicAuthConfig | BearerAuthConfig
+}
+
+export interface BasicAuthConfig {
+  username: string
+  password: string
+}
+
+export interface BearerAuthConfig {
+  token: string
+}
+
 export interface QueryParameter {
   name: string
   default: string
@@ -210,6 +231,7 @@ export interface RestQueryFields {
   bodyType: string
   json: object
   method: string
+  authConfigId: string
 }
 
 export interface RestConfig {
@@ -217,6 +239,7 @@ export interface RestConfig {
   defaultHeaders: {
     [key: string]: any
   }
+  authConfigs: AuthConfig[]
 }
 
 export interface Query {
