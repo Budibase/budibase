@@ -143,7 +143,7 @@ module MySQLModule {
         const schema: TableSchema = {}
         const descResp = await internalQuery(
           this.client,
-          { sql: `DESCRIBE ${tableName};` },
+          { sql: `DESCRIBE \`${tableName}\`;` },
           false
         )
         for (let column of descResp) {

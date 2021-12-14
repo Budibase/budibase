@@ -21,24 +21,20 @@
   import { cloneDeep } from "lodash/fp"
 
   import ImportRestQueriesModal from "components/backend/DatasourceNavigator/modals/ImportRestQueriesModal.svelte"
+  import { onMount } from "svelte"
   let importQueriesModal
 
-  let baseDatasource, changed
+  let changed
+  let datasource
   const querySchema = {
     name: {},
     queryVerb: { displayName: "Method" },
   }
 
-  $: datasource = $datasources.list.find(ds => ds._id === $datasources.selected)
+  $: baseDatasource = $datasources.list.find(
+    ds => ds._id === $datasources.selected
+  )
   $: integration = datasource && $integrations[datasource.source]
-  $: {
-    if (
-      datasource &&
-      (!baseDatasource || baseDatasource.source !== datasource.source)
-    ) {
-      baseDatasource = cloneDeep(datasource)
-    }
-  }
   $: queryList = $queries.list.filter(
     query => query.datasourceId === datasource?._id
   )
@@ -69,6 +65,10 @@
     queries.select(query)
     $goto(`./${query._id}`)
   }
+
+  onMount(() => {
+    datasource = cloneDeep(baseDatasource)
+  })
 </script>
 
 <Modal bind:this={importQueriesModal}>
@@ -90,7 +90,7 @@
             height="26"
             width="26"
           />
-          <Heading size="M">{baseDatasource.name}</Heading>
+          <Heading size="M">{datasource.name}</Heading>
         </header>
         <Body size="M">{integration.description}</Body>
       </Layout>

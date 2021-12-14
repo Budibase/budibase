@@ -6,13 +6,14 @@ metadata:
     kompose.version: 1.21.0 (992df58d8)
   creationTimestamp: null
   labels:
-    io.kompose.service: app-service
-  name: app-service
+    io.kompose.service: worker-service
+  name: worker-service
 spec:
-  replicas: {{ .Values.services.apps.replicaCount }}
+  replicas: {{ .Values.services.worker.replicaCount }}
+
   selector:
     matchLabels:
-      io.kompose.service: app-service
+      io.kompose.service: worker-service
   strategy:
     type: RollingUpdate
   template:
@@ -22,18 +23,12 @@ spec:
         kompose.version: 1.21.0 (992df58d8)
       creationTimestamp: null
       labels:
-        io.kompose.service: app-service
+        io.kompose.service: worker-service
     spec:
       containers:
       - env:
-        - name: BUDIBASE_ENVIRONMENT
-          value: {{ .Values.globals.budibaseEnv }}
-        - name: COUCH_DB_URL
-          {{ if .Values.services.couchdb.url }}
-          value: {{ .Values.services.couchdb.url }}
-          {{ else }}
-          value: http://{{ .Release.Name }}-svc-couchdb:{{ .Values.services.couchdb.port }}
-          {{ end }}
+        - name: CLUSTER_PORT
+          value: {{ .Values.services.worker.port | quote }}
         - name: COUCH_DB_USER
           valueFrom:
             secretKeyRef:
@@ -44,8 +39,12 @@ spec:
             secretKeyRef:
               name: {{ template "couchdb.fullname" . }}
               key: adminPassword
-        - name: ENABLE_ANALYTICS
-          value: {{ .Values.globals.enableAnalytics | quote }}
+        - name: COUCH_DB_URL
+          {{ if .Values.services.couchdb.url }}
+          value: {{ .Values.services.couchdb.url }}
+          {{ else }}
+          value: http://{{ .Release.Name }}-svc-couchdb:{{ .Values.services.couchdb.port }}
+          {{ end }}
         - name: INTERNAL_API_KEY
           valueFrom:
             secretKeyRef:
@@ -56,8 +55,6 @@ spec:
             secretKeyRef:
               name: {{ template "budibase.fullname" . }}
               key: jwtSecret
-        - name: LOG_LEVEL
-          value: {{ .Values.services.apps.logLevel | default "info" | quote }}
         {{ if .Values.services.objectStore.region }}
         - name: AWS_REGION
           value: {{ .Values.services.objectStore.region }}
@@ -73,19 +70,15 @@ spec:
               name: {{ template "budibase.fullname" . }}
               key: objectStoreSecret
         - name: MINIO_URL
-          {{ if .Values.services.objectStore.url }}
           value: {{ .Values.services.objectStore.url }}
-          {{ else }}
-          value: http://minio-service:{{ .Values.services.objectStore.port }}
-          {{ end }}
         - name: PORT
-          value: {{ .Values.services.apps.port | quote }}
+          value: {{ .Values.services.worker.port | quote }}
         - name: MULTI_TENANCY
           value: {{ .Values.globals.multiTenancy | quote }}
         - name: LOG_LEVEL
-          value: {{ .Values.services.apps.logLevel | quote }}
+          value: {{ default "info" .Values.services.worker.logLevel | quote }}
         - name: REDIS_PASSWORD
-          value: {{ .Values.services.redis.password }}
+          value: {{ .Values.services.redis.password | quote }}
         - name: REDIS_URL
           {{ if .Values.services.redis.url }}
           value: {{ .Values.services.redis.url }}
@@ -96,25 +89,33 @@ spec:
           value: {{ .Values.globals.selfHosted | quote }}
         - name: SENTRY_DSN
           value: {{ .Values.globals.sentryDSN }}
-        - name: POSTHOG_TOKEN
-          value: {{ .Values.globals.posthogToken }}
-        - name: WORKER_URL
-          value: http://worker-service:{{ .Values.services.worker.port }}
-        - name: PLATFORM_URL
-          value: {{ .Values.globals.platformUrl | quote }}
-        - name: USE_QUOTAS
-          value: "1" 
         - name: ACCOUNT_PORTAL_URL
           value: {{ .Values.globals.accountPortalUrl | quote }}
         - name: ACCOUNT_PORTAL_API_KEY
           value: {{ .Values.globals.accountPortalApiKey | quote }}
+        - name: PLATFORM_URL
+          value: {{ .Values.globals.platformUrl | quote }}
         - name: COOKIE_DOMAIN
           value: {{ .Values.globals.cookieDomain | quote }}
-        image: budibase/apps
+        - name: SMTP_FALLBACK_ENABLED
+          value: {{ .Values.globals.smtp.enabled | quote }}
+        - name: SMTP_USER
+          value: {{ .Values.globals.smtp.user | quote }}
+        - name: SMTP_PASSWORD
+          value: {{ .Values.globals.smtp.password | quote }}
+        - name: SMTP_HOST
+          value: {{ .Values.globals.smtp.host | quote }}
+        - name: SMTP_PORT
+          value: {{ .Values.globals.smtp.port | quote }}
+        - name: SMTP_FROM_ADDRESS
+          value: {{ .Values.globals.smtp.from | quote }}
+        - name: APPS_URL
+          value: http://app-service:{{ .Values.services.apps.port }}
+        image: budibase/worker:{{ .Values.globals.appVersion }}
         imagePullPolicy: Always
-        name: bbapps
+        name: bbworker
         ports:
-        - containerPort: {{ .Values.services.apps.port }}
+        - containerPort: {{ .Values.services.worker.port }}
         resources: {}
       restartPolicy: Always
       serviceAccountName: ""
