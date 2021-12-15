@@ -34,6 +34,9 @@ const createStateStore = () => {
     })
   }
 
+  // Initialises the temporary state store with a certain value
+  const initialise = tempStore.set
+
   // Derive the combination of both persisted and non persisted stores
   const store = derived(
     [tempStore, persistentStore],
@@ -47,7 +50,7 @@ const createStateStore = () => {
 
   return {
     subscribe: store.subscribe,
-    actions: { setValue, deleteValue },
+    actions: { setValue, deleteValue, initialise },
   }
 }
 
