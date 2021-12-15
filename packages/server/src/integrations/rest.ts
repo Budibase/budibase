@@ -48,7 +48,7 @@ module RestModule {
   const { performance } = require("perf_hooks")
   const FormData = require("form-data")
   const { URLSearchParams } = require("url")
-  const xmlParser = require("xml2js").parseStringPromise
+  const { parseStringPromise: xmlParser, Builder: XmlBuilder } = require("xml2js")
 
   const SCHEMA: Integration = {
     docs: "https://github.com/node-fetch/node-fetch",
@@ -185,7 +185,12 @@ module RestModule {
       } catch (err) {
         error = err
       }
+      if (!input.headers) {
+        input.headers = {}
+      }
       switch (bodyType) {
+        case BodyTypes.NONE:
+          break
         case BodyTypes.TEXT:
           // content type defaults to plaintext
           input.body = string
@@ -205,8 +210,11 @@ module RestModule {
           input.body = form
           break
         case BodyTypes.XML:
+          if (object != null) {
+            string = (new XmlBuilder()).buildObject(object)
+          }
           input.body = string
-          input.headers["Content-Type"] = "text/xml"
+          input.headers["Content-Type"] = "application/xml"
           break
         default:
         case BodyTypes.JSON:
