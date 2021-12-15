@@ -291,11 +291,11 @@
       </Layout>
 
       <div class="buttons">
-        <!--{#if cloud}-->
-        <Button icon="Export" quiet secondary on:click={initiateAppsExport}>
-          Export apps
-        </Button>
-        <!--{/if}-->
+        {#if cloud}
+          <Button icon="Export" quiet secondary on:click={initiateAppsExport}>
+            Export apps
+          </Button>
+        {/if}
         <Button icon="Import" quiet secondary on:click={initiateAppImport}>
           Import app
         </Button>
