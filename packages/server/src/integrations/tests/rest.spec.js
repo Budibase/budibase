@@ -14,6 +14,11 @@ const fetch = require("node-fetch")
 const RestIntegration = require("../rest")
 const { AuthType } = require("../rest")
 
+const HEADERS = {
+  "Accept": "application/json",
+  "Content-Type": "application/json"
+}
+
 class TestConfiguration {
   constructor(config = {}) {
     this.integration = new RestIntegration.integration(config)
@@ -35,9 +40,7 @@ describe("REST Integration", () => {
     const query = {
       path: "api",
       queryString: "test=1",
-      headers: {
-        Accept: "application/json",
-      },
+      headers: HEADERS,
       bodyType: "json",
       requestBody: JSON.stringify({
         name: "test",
@@ -47,9 +50,7 @@ describe("REST Integration", () => {
     expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/api?test=1`, {
       method: "POST",
       body: '{"name":"test"}',
-      headers: {
-        Accept: "application/json",
-      },
+      headers: HEADERS,
     })
   })
 
@@ -86,9 +87,7 @@ describe("REST Integration", () => {
     expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/api?test=1`, {
       method: "PUT",
       body: '{"name":"test"}',
-      headers: {
-        Accept: "application/json",
-      },
+      headers: HEADERS,
     })
   })
 
@@ -107,9 +106,7 @@ describe("REST Integration", () => {
     const response = await config.integration.delete(query)
     expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/api?test=1`, {
       method: "DELETE",
-      headers: {
-        Accept: "application/json",
-      },
+      headers: HEADERS,
       body: '{"name":"test"}',
     })
   })

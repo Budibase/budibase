@@ -214,7 +214,7 @@ module RestModule {
           if (error) {
             throw "Invalid JSON for request body"
           }
-          input.body = object
+          input.body = string
           input.headers["Content-Type"] = "application/json"
           break
       }
