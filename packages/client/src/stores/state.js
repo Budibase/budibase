@@ -1,9 +1,9 @@
 import { writable, get, derived } from "svelte/store"
 import { localStorageStore } from "builder/src/builderStore/store/localStorage"
-import { appStore } from "./app"
 
 const createStateStore = () => {
-  const localStorageKey = `${get(appStore).appId}.state`
+  const appId = window["##BUDIBASE_APP_ID##"] || "app"
+  const localStorageKey = `${appId}.state`
   const persistentStore = localStorageStore(localStorageKey, {})
 
   // Initialise the temp store to mirror the persistent store
