@@ -43,6 +43,7 @@
   let cloud = $admin.cloud
   let appName = ""
   let creatingFromTemplate = false
+
   $: enrichedApps = enrichApps($apps, $auth.user, sortBy)
   $: filteredApps = enrichedApps.filter(app =>
     app?.name?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -280,99 +281,104 @@
 </script>
 
 <Page wide>
-  <Layout noPadding>
+  <Layout noPadding gap="XL">
     <div class="title">
-      <Heading size="S">Welcome to Budibase</Heading>
+      <Layout noPadding gap="XS">
+        <Heading size="M">Welcome to Budibase</Heading>
+        <Body size="S">
+          Manage your apps and get a head start with templates
+        </Body>
+      </Layout>
 
-      <ButtonGroup>
-        {#if cloud}
-          <Button secondary on:click={initiateAppsExport}>Export apps</Button>
-        {/if}
-        <Button icon="Import" quiet secondary on:click={initiateAppImport}
-          >Import app</Button
-        >
-        <Button icon="Add" cta on:click={initiateAppCreation}>Create app</Button
-        >
-      </ButtonGroup>
+      <div class="buttons">
+        <!--{#if cloud}-->
+        <Button icon="Export" quiet secondary on:click={initiateAppsExport}>
+          Export apps
+        </Button>
+        <!--{/if}-->
+        <Button icon="Import" quiet secondary on:click={initiateAppImport}>
+          Import app
+        </Button>
+        <Button icon="Add" cta on:click={initiateAppCreation}>
+          Create app
+        </Button>
+      </div>
     </div>
 
-    <div class="title-text">
-      <Body size="S">Manage your apps and get a head start with templates</Body>
-    </div>
-    <Detail>Quick Start Templates</Detail>
-    <div class="grid">
-      {#each $templates as item}
-        <div
-          on:click={() => {
-            template = item
-            creationModal.show()
-            creatingApp = true
-          }}
-          class="template-card"
-        >
-          <div class="card-body">
-            <div style="color: {item.background}" class="iconAlign">
-              <svg
-                width="26px"
-                height="26px"
-                class="spectrum-Icon"
-                style="color:{item.background};"
-                focusable="false"
-              >
-                <use xlink:href="#spectrum-icon-18-{item.icon}" />
-              </svg>
-            </div>
-            <div class="iconAlign">
-              <Body weight="900" size="S">{item.name}</Body>
-              <div style="font-size: 10px;">
-                <Body size="S">{item.category.toUpperCase()}</Body>
+    <Layout noPadding gap="S">
+      <Detail size="L">Quick start templates</Detail>
+      <div class="grid">
+        {#each $templates as item}
+          <div
+            on:click={() => {
+              template = item
+              creationModal.show()
+              creatingApp = true
+            }}
+            class="template-card"
+          >
+            <div class="card-body">
+              <div style="color: {item.background}" class="iconAlign">
+                <svg
+                  width="26px"
+                  height="26px"
+                  class="spectrum-Icon"
+                  style="color:{item.background};"
+                  focusable="false"
+                >
+                  <use xlink:href="#spectrum-icon-18-{item.icon}" />
+                </svg>
+              </div>
+              <div class="iconAlign">
+                <Body weight="900" size="S">{item.name}</Body>
+                <div style="font-size: 10px;">
+                  <Body size="S">{item.category.toUpperCase()}</Body>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      {/each}
-    </div>
-    {#if loaded && enrichedApps.length}
-      <div class="title">
-        <Detail>My Apps</Detail>
-      </div>
-      <div class="filter">
-        <div class="select">
-          <Select
-            quiet
-            autoWidth
-            bind:value={sortBy}
-            placeholder={null}
-            options={[
-              { label: "Sort by name", value: "name" },
-              { label: "Sort by recently updated", value: "updated" },
-              { label: "Sort by status", value: "status" },
-            ]}
-          />
-          <div class="desktop-search">
-            <Search quiet placeholder="Search" bind:value={searchTerm} />
-          </div>
-        </div>
-      </div>
-      <div class="mobile-search">
-        <Search placeholder="Search" bind:value={searchTerm} />
-      </div>
-      <div class="appTable">
-        {#each filteredApps as app (app.appId)}
-          <AppRow
-            {releaseLock}
-            {editIcon}
-            {app}
-            {unpublishApp}
-            {viewApp}
-            {editApp}
-            {exportApp}
-            {deleteApp}
-            {updateApp}
-          />
         {/each}
       </div>
+    </Layout>
+
+    {#if loaded && enrichedApps.length}
+      <Layout noPadding gap="S">
+        <div class="title">
+          <Detail size="L">My apps</Detail>
+          <div class="filter">
+            <Select
+              quiet
+              autoWidth
+              bind:value={sortBy}
+              placeholder={null}
+              options={[
+                { label: "Sort by name", value: "name" },
+                { label: "Sort by recently updated", value: "updated" },
+                { label: "Sort by status", value: "status" },
+              ]}
+            />
+            <Search placeholder="Search" bind:value={searchTerm} />
+          </div>
+        </div>
+
+        <div class="appTable">
+          {#each filteredApps as app (app.appId)}
+            <AppRow
+              {releaseLock}
+              {editIcon}
+              {app}
+              {unpublishApp}
+              {viewApp}
+              {editApp}
+              {exportApp}
+              {deleteApp}
+              {updateApp}
+            />
+          {/each}
+        </div>
+      </Layout>
     {/if}
+
     {#if !enrichedApps.length && !creatingApp && loaded}
       <div class="empty-wrapper">
         <Modal inline>
@@ -380,6 +386,7 @@
         </Modal>
       </div>
     {/if}
+
     {#if creatingFromTemplate}
       <div class="empty-wrapper">
         <p>Creating your Budibase app from your selected template...</p>
@@ -427,68 +434,61 @@
 <ChooseIconModal app={selectedApp} bind:this={iconModal} />
 
 <style>
-  .title,
-  .filter {
+  .title {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    gap: 5px;
+    gap: var(--spacing-xl);
+    flex-wrap: wrap;
+  }
+  .buttons {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    gap: var(--spacing-xl);
+    flex-wrap: wrap;
+  }
+  @media (max-width: 640px) {
+    .buttons {
+      flex-direction: row-reverse;
+      justify-content: flex-end;
+    }
   }
 
-  @media only screen and (max-width: 560px) {
-    .title {
-      flex-direction: column;
-      align-items: flex-start;
-    }
-    .grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
+  .filter {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    gap: var(--spacing-xl);
   }
 
-  .iconAlign {
-    padding: 0 0 0 var(--spacing-m);
-    display: inline-block;
+  .grid {
+    display: grid;
+    grid-gap: var(--spacing-xl);
+    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
   }
   .template-card {
     height: 80px;
-    width: 270px;
     border-radius: var(--border-radius-s);
-    margin-bottom: var(--spacing-m);
     border: 1px solid var(--spectrum-global-color-gray-300);
     cursor: pointer;
     display: flex;
   }
 
-  .title-text {
-    margin-top: calc(var(--spacing-xl) * -1);
+  .template-card:hover {
+    background: var(--spectrum-alias-background-color-tertiary);
   }
-
   .card-body {
     display: flex;
     align-items: center;
     padding: 12px;
   }
-
-  .grid {
-    display: grid;
-    grid-gap: 5px;
-    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
-  }
-
-  @media (min-width: 200px) {
-  }
-
-  .select {
-    display: grid;
-    grid-template-columns: auto auto;
-    grid-gap: 30px;
-  }
-  .filter :global(.spectrum-ActionGroup) {
-    flex-wrap: nowrap;
-  }
-  .mobile-search {
-    display: none;
+  .iconAlign {
+    padding: 0 0 0 var(--spacing-m);
+    display: inline-block;
   }
 
   .appTable {
@@ -511,6 +511,12 @@
   .appTable :global(> div) {
     border-bottom: var(--border-light);
   }
+  @media (max-width: 640px) {
+    .appTable {
+      grid-template-columns: 1fr auto;
+    }
+  }
+
   .empty-wrapper {
     flex: 1 1 auto;
     height: 100%;
@@ -518,21 +524,5 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-  }
-
-  @media (max-width: 640px) {
-    .appTable {
-      grid-template-columns: 1fr auto;
-    }
-    .desktop-search {
-      display: none;
-    }
-    .mobile-search {
-      display: block;
-    }
-  }
-
-  .template-card:hover {
-    background: var(--spectrum-alias-background-color-tertiary);
   }
 </style>

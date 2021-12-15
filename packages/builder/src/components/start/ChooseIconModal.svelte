@@ -4,10 +4,11 @@
 
   export let app
   let modal
-  $: selectedIcon = app?.icon?.name
+  $: selectedIcon = app?.icon?.name || "Apps"
   $: selectedColor = app?.icon?.color
 
   let iconsList = [
+    "Apps",
     "Actions",
     "ConversionFunnel",
     "App",
@@ -31,7 +32,6 @@
     "GraphDonut",
     "GraphBarHorizontal",
     "Demographic",
-    "Apps",
   ]
   export const show = () => {
     modal.show()
@@ -68,13 +68,13 @@
   >
     <div class="scrollable-icons">
       <div class="title-spacing">
-        <Label>Select an Icon</Label>
+        <Label>Select an icon</Label>
       </div>
       <div class="grid">
         {#each iconsList as item}
           <div
             class="icon-item"
-            style="color: {item === selectedIcon ? selectedColor : ''}"
+            class:selected={item === selectedIcon}
             on:click={() => (selectedIcon = item)}
           >
             <Icon name={item} />
@@ -84,7 +84,7 @@
     </div>
     <div class="color-selection">
       <div>
-        <Label>Select a Color</Label>
+        <Label>Select a color</Label>
       </div>
       <div class="color-selection-item">
         <ColorPicker
@@ -123,5 +123,8 @@
 
   .icon-item {
     cursor: pointer;
+  }
+  .icon-item.selected {
+    color: var(--spectrum-global-color-blue-600);
   }
 </style>
