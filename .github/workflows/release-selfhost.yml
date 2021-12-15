@@ -35,6 +35,10 @@ jobs:
           DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
           SELF_HOST_TAG: latest
+      
+      - name: Setup Helm 
+        uses: azure/setup-helm@v1
+        id: helm-install
         
       # - name: Build and release helm chart
       #   run: | 
