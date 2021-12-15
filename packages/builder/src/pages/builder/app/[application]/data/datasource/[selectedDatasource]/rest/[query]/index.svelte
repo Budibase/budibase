@@ -48,7 +48,7 @@
   let breakQs = {},
     bindings = {}
   let url = ""
-  let saveId
+  let saveId, isGet
   let response, schema, enabledHeaders
   let datasourceType, integrationInfo, queryConfig, responseSuccess
   let authConfigId
@@ -60,6 +60,7 @@
   $: url = buildUrl(url, breakQs)
   $: checkQueryName(url)
   $: responseSuccess = response?.info?.code >= 200 && response?.info?.code < 400
+  $: isGet = query?.queryVerb === "read"
   $: authConfigs = buildAuthConfigs(datasource)
   $: schemaReadOnly = !responseSuccess
   $: variablesReadOnly = !responseSuccess
@@ -327,7 +328,7 @@
           <Tab title="Body">
             <RadioGroup
               bind:value={query.fields.bodyType}
-              options={bodyTypes}
+              options={isGet ? [bodyTypes[0]] : bodyTypes}
               direction="horizontal"
               getOptionLabel={option => option.name}
               getOptionValue={option => option.value}

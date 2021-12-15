@@ -1,6 +1,5 @@
-// when thread starts, make sure it is recorded
+require("./utils").threadSetup()
 const env = require("../environment")
-env.setInThread()
 const actions = require("../automations/actions")
 const automationUtils = require("../automations/automationUtils")
 const AutomationEmitter = require("../events/AutomationEmitter")
