@@ -125,7 +125,7 @@
             <Icon size="S" hoverable name="MoreSmallList" />
           </div>
           {#each menuItems as item}
-            <MenuItem on:click={item.onClick}>
+            <MenuItem on:click={() => item.onClick(field)}>
               {item.text}
             </MenuItem>
           {/each}
@@ -161,5 +161,8 @@
   }
   .readOnly-menu {
     grid-template-columns: 1fr 1fr 20px;
+  }
+  .control {
+    margin-top: 4px;
   }
 </style>

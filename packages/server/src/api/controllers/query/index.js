@@ -182,13 +182,13 @@ exports.execute = async function (ctx) {
 
   // call the relevant CRUD method on the integration class
   try {
-    const { rows } = await Runner.run({
+    const { rows, extra } = await Runner.run({
       datasource,
       queryVerb: query.queryVerb,
       query: enrichedQuery,
       transformer: query.transformer,
     })
-    ctx.body = rows
+    ctx.body = { data: rows, ...extra }
   } catch (err) {
     ctx.throw(400, err)
   }

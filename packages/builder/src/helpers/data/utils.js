@@ -119,3 +119,62 @@ export function flipHeaderState(headersActivity) {
   })
   return enabled
 }
+
+// convert dynamic variables list to simple key/val object
+export function variablesToObject(datasource) {
+  const variablesList = datasource?.config?.dynamicVariables
+  if (variablesList && variablesList.length > 0) {
+    return variablesList.reduce(
+      (acc, next) => ({ ...acc, [next.name]: next.value }),
+      {}
+    )
+  }
+  return {}
+}
+
+// convert dynamic variables object back to a list, enrich with query id
+export function rebuildVariables(queryId, variables) {
+  let vars = []
+  if (variables) {
+    vars = Object.entries(variables).map(entry => {
+      return {
+        name: entry[0],
+        value: entry[1],
+        queryId,
+      }
+    })
+  }
+  return vars
+}
+
+export function shouldShowVariables(dynamicVariables, variablesReadOnly) {
+  return !!(
+    dynamicVariables &&
+    // show when editable or when read only and not empty
+    (!variablesReadOnly || Object.keys(dynamicVariables).length > 0)
+  )
+}
+
+export function buildAuthConfigs(datasource) {
+  if (datasource?.config?.authConfigs) {
+    return datasource.config.authConfigs.map(c => ({
+      label: c.name,
+      value: c._id,
+    }))
+  }
+  return []
+}
+
+export default {
+  breakQueryString,
+  buildQueryString,
+  fieldsToSchema,
+  flipHeaderState,
+  keyValueToQueryParameters,
+  queryParametersToKeyValue,
+  schemaToFields,
+  variablesToObject,
+  rebuildVariables,
+  shouldShowVariables,
+  buildAuthConfigs,
+}
