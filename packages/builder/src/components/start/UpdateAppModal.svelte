@@ -77,7 +77,7 @@
   async function updateApp() {
     try {
       // Update App
-      await apps.update(app.instance._id, $values.name.trim())
+      await apps.update(app.instance._id, { name: $values.name.trim() })
       hide()
     } catch (error) {
       console.error(error)
