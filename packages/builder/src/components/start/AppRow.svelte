@@ -62,9 +62,14 @@
   </StatusLight>
 </div>
 <div>
-  <Button disabled={app.lockedOther} on:click={() => editApp(app)} secondary
-    >Open</Button
+  <Button
+    size="S"
+    disabled={app.lockedOther}
+    on:click={() => editApp(app)}
+    secondary
   >
+    Open
+  </Button>
   <ActionMenu align="right">
     <Icon hoverable slot="control" name="More" />
     {#if app.deployed}
