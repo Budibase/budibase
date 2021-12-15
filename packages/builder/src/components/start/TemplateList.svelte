@@ -1,46 +1,10 @@
 <script>
-  import { Heading, Layout, Icon, Body } from "@budibase/bbui"
-  import Spinner from "components/common/Spinner.svelte"
-  import api from "builderStore/api"
+  import { Heading, Layout, Icon } from "@budibase/bbui"
 
   export let onSelect
-
-  async function fetchTemplates() {
-    const response = await api.get("/api/templates?type=app")
-    return await response.json()
-  }
-
-  let templatesPromise = fetchTemplates()
 </script>
 
 <Layout gap="XS" noPadding>
-  {#await templatesPromise}
-    <div class="spinner-container">
-      <Spinner size="30" />
-    </div>
-  {:then templates}
-    {#if templates?.length > 0}
-      <Body size="M">Select a template below, or start from scratch.</Body>
-    {:else}
-      <Body size="M">Start your app from scratch below.</Body>
-    {/if}
-    <div class="templates">
-      {#each templates as template}
-        <div class="template" on:click={() => onSelect(template)}>
-          <div
-            class="background-icon"
-            style={`background: ${template.background};`}
-          >
-            <Icon name={template.icon} />
-          </div>
-          <Heading size="XS">{template.name}</Heading>
-          <p class="detail">{template?.category?.toUpperCase()}</p>
-        </div>
-      {/each}
-    </div>
-  {:catch err}
-    <h1 style="color:red">{err}</h1>
-  {/await}
   <div class="template start-from-scratch" on:click={() => onSelect(null)}>
     <div
       class="background-icon"
@@ -67,15 +31,6 @@
 </Layout>
 
 <style>
-  .templates {
-    display: grid;
-    width: 100%;
-    grid-gap: var(--spacing-m);
-    grid-template-columns: 1fr;
-    justify-content: start;
-    margin-top: 15px;
-  }
-
   .background-icon {
     padding: 10px;
     border-radius: 4px;
