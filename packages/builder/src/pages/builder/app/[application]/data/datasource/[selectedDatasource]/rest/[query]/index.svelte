@@ -447,9 +447,10 @@
                     bind:object={dynamicVariables}
                     name="Variable"
                     headings
-                    keyPlaceholder="Name"
-                    valuePlaceholder={`e.g. {{ headers.cookie }}`}
+                    keyHeading="Name"
+                    keyPlaceholder="e.g. cookie"
                     valueHeading={`Value`}
+                    valuePlaceholder={`e.g. {{ headers.set-cookie }}`}
                     readOnly={variablesReadOnly}
                   />
                 </Layout>
