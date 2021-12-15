@@ -26,6 +26,7 @@
   export let keyPlaceholder = "Key"
   export let valuePlaceholder = "Value"
   export let valueHeading
+  export let keyHeading
   export let tooltip
   export let menuItems
   export let showMenu = false
@@ -81,7 +82,7 @@
 {#if Object.keys(object || {}).length > 0}
   {#if headings}
     <div class="container" class:container-active={toggle}>
-      <Label {tooltip}>{keyPlaceholder}</Label>
+      <Label {tooltip}>{keyHeading || keyPlaceholder}</Label>
       <Label>{valueHeading || valuePlaceholder}</Label>
       {#if toggle}
         <Label>Active</Label>

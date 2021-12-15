@@ -76,6 +76,10 @@
 </Layout>
 <div />
 <Heading size="XS">Dynamic</Heading>
+<Body size="S">
+  Dynamic variables are evaluated when a dependant query is executed. The value
+  is cached for 24 hours and will re-evaluate if the dependendent query fails.
+</Body>
 <ViewDynamicVariables {queries} {datasource} />
 
 <style>
