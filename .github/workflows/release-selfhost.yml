@@ -29,8 +29,8 @@ jobs:
           docker tag budibase/worker:$release_tag latest
           
           # Push images
-          docker push budibase/apps:latest
-          docker push budibase/worker:latest
+          docker push --all-tags budibase/apps
+          docker push --all-tags budibase/apps
         env:
           DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
