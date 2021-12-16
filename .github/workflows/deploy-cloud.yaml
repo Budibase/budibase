@@ -48,5 +48,5 @@ jobs:
           config-files: values.production.yaml
           chart-path: charts/budibase
           namespace: budibase
-          values: appVersion=v${{ github.steps.version.outputs.release_version }}
+          values: globals.appVersion=v${{ github.event.inputs.version }}
           name: budibase-prod
