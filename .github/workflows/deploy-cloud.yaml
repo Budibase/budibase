@@ -20,6 +20,7 @@ jobs:
           -H 'Accept: application/vnd.github.v3.raw' \
           -o values.production.yaml \
           -L https://api.github.com/repos/budibase/budibase-infra/contents/kubernetes/values.yaml
+          wc -l values.production.yaml
       
       - name: Get the latest budibase release version
         id: version
