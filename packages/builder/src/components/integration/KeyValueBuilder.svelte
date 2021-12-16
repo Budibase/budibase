@@ -121,7 +121,7 @@
       {/if}
       {#if menuItems?.length > 0 && showMenu}
         <ActionMenu>
-          <div slot="control" class="icon">
+          <div slot="control" class="control icon">
             <Icon size="S" hoverable name="MoreSmallList" />
           </div>
           {#each menuItems as item}

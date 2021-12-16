@@ -1,11 +1,10 @@
 <script>
   import { Input, ModalContent, Modal } from "@budibase/bbui"
 
-  export let datasource
   export let dynamicVariables
   export let binding
 
-  let name, modal
+  let name, modal, valid
 
   export const show = () => {
     modal.show()
