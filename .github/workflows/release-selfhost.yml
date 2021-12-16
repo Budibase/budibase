@@ -9,6 +9,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch_depth: 0
 
       - name: Tag and release Docker images (Self Host)
         run: | 
@@ -39,12 +41,6 @@ jobs:
       - name: Setup Helm 
         uses: azure/setup-helm@v1
         id: helm-install
-        
-      # - run: helm package charts/budibase
-
-      # - uses: actions/checkout@v2
-      #   with:
-      #     ref: gh-pages
 
       # - name: Build and release helm chart
       #   run: | 
@@ -52,11 +48,19 @@ jobs:
       #     git config user.email "<>"
       #     mv budibase-${{ env.RELEASE_VERSION }}.tgz docs
       #     helm repo index docs
+      #     git checkout gh-pages
       #     git add -A
       #     git commit -m "Helm Release: ${{ env.RELEASE_VERSION }}"
       #     git push
       #   env:
       #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # - name: Deploy
+      #   uses: peaceiris/actions-gh-pages@v3
+      #   with:
+      #     github_token: ${{ secrets.GITHUB_TOKEN }}
+      #     publish_dir: ./public
+      #     full_commit_message: "Helm Release: ${{ env.RELEASE_VERSION }}"
 
       - name: Perform Github Release
         uses: softprops/action-gh-release@v1

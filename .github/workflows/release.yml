@@ -3,7 +3,7 @@ name: Budibase Release
 on:
  push:
     branches:
-      - test
+      - master
 
 env:
   POSTHOG_TOKEN: ${{ secrets.POSTHOG_TOKEN }}
@@ -59,7 +59,7 @@ jobs:
       
       # - name: Pull values.yaml from budibase-infra
       #   run: | 
-      #     curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \                                                                                [c3a7a9d12]
+      #     curl -H "Authorization: token ${{ secrets.GH_PERSONAL_TOKEN }}" \                                                                                [c3a7a9d12]
       #     -H 'Accept: application/vnd.github.v3.raw' \
       #     -o values.preprod.yaml \
       #     -L https://api.github.com/repos/budibase/budibase-infra/contents/kubernetes/values.preprod.yaml
