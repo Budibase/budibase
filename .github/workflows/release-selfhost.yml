@@ -25,16 +25,15 @@ jobs:
           docker pull budibase/worker:$release_tag
 
           # Tag apps and worker images
-          docker tag budibase/apps:$release_tag $SELF_HOST_TAG
-          docker tag budibase/worker:$release_tag $SELF_HOST_TAG
+          docker tag budibase/apps:$release_tag latest
+          docker tag budibase/worker:$release_tag latest
           
           # Push images
-          docker push --all-tags budibase/apps
-          docker push --all-tags budibase/worker
+          docker push budibase/apps:latest
+          docker push budibase/worker:latest
         env:
           DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
-          SELF_HOST_TAG: latest
       
       - name: Setup Helm 
         uses: azure/setup-helm@v1

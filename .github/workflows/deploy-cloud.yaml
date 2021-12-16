@@ -29,7 +29,8 @@ jobs:
            release_version=$(cat lerna.json | jq -r '.version')
            echo "::set-output name=release_version::$release_version"
 
-      - uses: peymanmortazavi/eks-helm-deploy@v1
+      - name: Deploy to EKS
+        uses: peymanmortazavi/eks-helm-deploy@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
