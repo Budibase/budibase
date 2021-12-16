@@ -169,7 +169,7 @@ exports.preview = async function (ctx) {
   }
 }
 
-exports.execute = async function (ctx) {
+async function execute(ctx, opts = { rowsOnly: false }) {
   const db = new CouchDB(ctx.appId)
 
   const query = await db.get(ctx.params.queryId)
@@ -188,10 +188,22 @@ exports.execute = async function (ctx) {
       query: enrichedQuery,
       transformer: query.transformer,
     })
-    ctx.body = { data: rows, ...extra }
+    if (opts && opts.rowsOnly) {
+      ctx.body = rows
+    } else {
+      ctx.body = { data: rows, ...extra }
+    }
   } catch (err) {
     ctx.throw(400, err)
   }
+}
+
+exports.executeV1 = async function (ctx) {
+  return execute(ctx, { rowsOnly: true })
+}
+
+exports.executeV2 = async function (ctx) {
+  return execute(ctx, { rowsOnly: false })
 }
 
 exports.destroy = async function (ctx) {
