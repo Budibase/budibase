@@ -21,12 +21,15 @@ jobs:
           -o values.production.yaml \
           -L https://api.github.com/repos/budibase/budibase-infra/contents/kubernetes/values.yaml
       
-      - name: Get the latest budibase release version if not specifically set
-        if: ${{ !github.event.inputs.version }}
+      - name: Get the latest budibase release version
         id: version
         run: | 
-           release_version=$(cat lerna.json | jq -r '.version')
-           echo "::set-output name=release_version::$release_version"
+          if [ ${{ github.event.inputs.version }} == '' ]; then
+            release_version=$(cat lerna.json | jq -r '.version')
+          else
+            release_version=${{ github.event.inputs.version }}
+          fi
+          echo "::set-output name=release_version::$release_version"
       
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -45,5 +48,5 @@ jobs:
           config-files: values.production.yaml
           chart-path: charts/budibase
           namespace: budibase
-          values: appVersion=v${{ github.event.inputs.version || github.steps.version.outputs.release_version }}
+          values: appVersion=v${{ github.steps.version.outputs.release_version }}
           name: budibase-prod
