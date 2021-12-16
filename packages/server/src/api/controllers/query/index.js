@@ -109,6 +109,7 @@ exports.preview = async function (ctx) {
 
   try {
     const { rows, keys, info, extra } = await Runner.run({
+      appId: ctx.appId,
       datasource,
       queryVerb,
       fields,
@@ -136,6 +137,7 @@ async function execute(ctx, opts = { rowsOnly: false }) {
   // call the relevant CRUD method on the integration class
   try {
     const { rows, extra } = await Runner.run({
+      appId: ctx.appId,
       datasource,
       queryVerb: query.queryVerb,
       fields: query.fields,
