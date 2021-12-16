@@ -24,7 +24,7 @@ jobs:
       - name: Get the latest budibase release version
         id: version
         run: | 
-          if [ ${{ github.event.inputs.version }} == '' ]; then
+          if [ -z "${{ github.event.inputs.version }}" ]; then
             release_version=$(cat lerna.json | jq -r '.version')
           else
             release_version=${{ github.event.inputs.version }}
