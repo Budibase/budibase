@@ -55,6 +55,6 @@ jobs:
 
       - name: Perform Github Release
         uses: softprops/action-gh-release@v1
-        name: v${{ github.steps.version.outputs.release_version }}
         with:
+          name: v${{ github.steps.version.outputs.release_version }}
           generate_release_notes: true
