@@ -16,7 +16,7 @@ jobs:
 
       - name: Pull values.yaml from budibase-infra
         run: | 
-          curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          curl -H "Authorization: token ${{ secrets.GH_PERSONAL_TOKEN }}" \
           -H 'Accept: application/vnd.github.v3.raw' \
           -o values.production.yaml \
           -L https://api.github.com/repos/budibase/budibase-infra/contents/kubernetes/values.yaml
