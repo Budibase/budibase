@@ -47,6 +47,7 @@ jobs:
           helm package charts/budibase
           git checkout gh-pages
           mv budibase-${{ github.steps.version.outputs.release_version }}.tgz docs
+          helm repo index docs
           git add -A
           git commit -m "Helm Release: ${{ github.steps.version.outputs.release_version }}"
           git push
