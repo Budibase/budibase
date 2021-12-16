@@ -260,16 +260,18 @@
               headings
             />
           </Tab>
-          <Tab title="Body">
-            <RadioGroup
-              bind:value={query.fields.bodyType}
-              options={isGet ? [bodyTypes[0]] : bodyTypes}
-              direction="horizontal"
-              getOptionLabel={option => option.name}
-              getOptionValue={option => option.value}
-            />
-            <RestBodyInput bind:bodyType={query.fields.bodyType} bind:query />
-          </Tab>
+          {#if query?.queryVerb !== "read"}
+            <Tab title="Body">
+              <RadioGroup
+                bind:value={query.fields.bodyType}
+                options={isGet ? [bodyTypes[0]] : bodyTypes}
+                direction="horizontal"
+                getOptionLabel={option => option.name}
+                getOptionValue={option => option.value}
+              />
+              <RestBodyInput bind:bodyType={query.fields.bodyType} bind:query />
+            </Tab>
+          {/if}
           <Tab title="Transformer">
             <Layout noPadding>
               {#if !$flags.queryTransformerBanner}
