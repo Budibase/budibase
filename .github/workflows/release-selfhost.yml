@@ -39,13 +39,16 @@ jobs:
       - name: Setup Helm 
         uses: azure/setup-helm@v1
         id: helm-install
+        run: helm package charts/budibase
         
+      - uses: actions/checkout@v2
+        with:
+          ref: gh-pages
+
       - name: Build and release helm chart
         run: | 
           git config user.name "Budibase Helm Bot"
           git config user.email "<>"
-          helm package charts/budibase
-          git checkout gh-pages
           mv budibase-${{ github.steps.version.outputs.release_version }}.tgz docs
           helm repo index docs
           git add -A
