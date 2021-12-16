@@ -1,6 +1,66 @@
 require("./utils").threadSetup()
 const ScriptRunner = require("../utilities/scriptRunner")
 const { integrations } = require("../integrations")
+const { processStringSync } = require("@budibase/string-templates")
+
+async function addDatasourceVariables(datasource, parameters) {
+  if (!datasource || !datasource.config) {
+    return parameters
+  }
+  const staticVars = datasource.config.staticVariables || {}
+  const dynamicVars = datasource.config.dynamicVariables || []
+  for (let [key, value] of Object.entries(staticVars)) {
+    if (!parameters[key]) {
+      parameters[key] = value
+    }
+  }
+  for (let variable of dynamicVars) {
+    console.log(variable)
+    // TODO: get the variable from query
+  }
+  return parameters
+}
+
+function enrichQueryFields(fields, parameters = {}) {
+  const enrichedQuery = {}
+
+  // enrich the fields with dynamic parameters
+  for (let key of Object.keys(fields)) {
+    if (fields[key] == null) {
+      continue
+    }
+    if (typeof fields[key] === "object") {
+      // enrich nested fields object
+      enrichedQuery[key] = enrichQueryFields(fields[key], parameters)
+    } else if (typeof fields[key] === "string") {
+      // enrich string value as normal
+      enrichedQuery[key] = processStringSync(fields[key], parameters, {
+        noHelpers: true,
+      })
+    } else {
+      enrichedQuery[key] = fields[key]
+    }
+  }
+
+  if (
+    enrichedQuery.json ||
+    enrichedQuery.customData ||
+    enrichedQuery.requestBody
+  ) {
+    try {
+      enrichedQuery.json = JSON.parse(
+        enrichedQuery.json ||
+          enrichedQuery.customData ||
+          enrichedQuery.requestBody
+      )
+    } catch (err) {
+      // no json found, ignore
+    }
+    delete enrichedQuery.customData
+  }
+
+  return enrichedQuery
+}
 
 function formatResponse(resp) {
   if (typeof resp === "string") {
@@ -22,7 +82,16 @@ function hasExtraData(response) {
   )
 }
 
-async function runAndTransform(datasource, queryVerb, query, transformer) {
+async function runAndTransform(
+  datasource,
+  queryVerb,
+  fields,
+  parameters,
+  transformer
+) {
+  // pre-query, make sure datasource variables are added to parameters
+  parameters = await addDatasourceVariables(datasource, parameters)
+  const query = enrichQueryFields(fields, parameters)
   const Integration = integrations[datasource.source]
   if (!Integration) {
     throw "Integration type does not exist."
@@ -69,7 +138,8 @@ module.exports = (input, callback) => {
   runAndTransform(
     input.datasource,
     input.queryVerb,
-    input.query,
+    input.fields,
+    input.parameters,
     input.transformer
   )
     .then(response => {
