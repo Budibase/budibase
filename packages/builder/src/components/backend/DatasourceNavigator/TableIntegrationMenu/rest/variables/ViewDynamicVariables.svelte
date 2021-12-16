@@ -1,6 +1,5 @@
 <script>
   import { Body, Table } from "@budibase/bbui"
-  import { onMount } from "svelte"
   import { queries as queriesStore } from "stores/backend"
   import { goto } from "@roxi/routify"
 
@@ -8,6 +7,8 @@
   export let queries
 
   let dynamicVariables = []
+
+  $: enrichDynamicVariables(datasource, queries)
 
   const dynamicVariableSchema = {
     name: "",
@@ -24,18 +25,15 @@
   /**
    * Add the query name to the dynamic variables
    */
-  const enrichDynamicVariables = () => {
-    datasource.config.dynamicVariables?.forEach(dv => {
-      const query = queries.find(query => query._id === dv.queryId)
+  function enrichDynamicVariables(ds, possibleQueries) {
+    dynamicVariables = []
+    ds.config.dynamicVariables?.forEach(dv => {
+      const query = possibleQueries.find(query => query._id === dv.queryId)
       if (query) {
         dynamicVariables.push({ ...dv, query: query.name })
       }
     })
   }
-
-  onMount(() => {
-    enrichDynamicVariables()
-  })
 </script>
 
 <Table

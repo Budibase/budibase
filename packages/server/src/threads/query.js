@@ -3,6 +3,8 @@ const ScriptRunner = require("../utilities/scriptRunner")
 const { integrations } = require("../integrations")
 const { processStringSync } = require("@budibase/string-templates")
 
+async function getDynamicVariable() {}
+
 async function addDatasourceVariables(datasource, parameters) {
   if (!datasource || !datasource.config) {
     return parameters
@@ -14,9 +16,12 @@ async function addDatasourceVariables(datasource, parameters) {
       parameters[key] = value
     }
   }
-  for (let variable of dynamicVars) {
-    console.log(variable)
-    // TODO: get the variable from query
+  const dynamics = dynamicVars.map(dynVar =>
+    getDynamicVariable(datasource, dynVar, parameters)
+  )
+  for (let i = 0; i < dynamicVars.length; i++) {
+    const variable = dynamicVars[i]
+    parameters[variable.name] = dynamics[i]
   }
   return parameters
 }

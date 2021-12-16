@@ -119,7 +119,7 @@
           saveId,
           dynamicVariables
         )
-        await datasources.save(datasource)
+        datasource = await datasources.save(datasource)
       }
     } catch (err) {
       notifications.error(`Error saving query. ${err.message}`)
