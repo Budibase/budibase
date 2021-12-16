@@ -39,11 +39,13 @@ jobs:
       - name: Setup Helm 
         uses: azure/setup-helm@v1
         id: helm-install
-        run: helm package charts/budibase
         
+      - run: helm package charts/budibase
+
       - uses: actions/checkout@v2
         with:
           ref: gh-pages
+    
 
       - name: Build and release helm chart
         run: | 
