@@ -1,4 +1,4 @@
-name: Budibase Release Docker Selfhost
+name: Budibase Release Selfhost
 
 on:
  workflow_dispatch:
@@ -16,7 +16,7 @@ jobs:
 
           # Get latest release version
           sudo apt-get install -y jq 
-          release_version=v$(cat lerna.json | jq -r '.version')
+          release_version=$(cat lerna.json | jq -r '.version')
           echo "::set-output name=release_version::$release_version"
           release_tag=v$release_version
 
