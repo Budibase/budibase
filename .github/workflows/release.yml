@@ -3,7 +3,7 @@ name: Budibase Release
 on:
  push:
     branches:
-      - master
+      - test
 
 env:
   POSTHOG_TOKEN: ${{ secrets.POSTHOG_TOKEN }}
