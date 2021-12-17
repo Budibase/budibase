@@ -13,9 +13,10 @@ import { fetchTableDefinition } from "api"
  * For other types of datasource, this class is overridden and extended.
  */
 export default class TableFetch {
-  SupportsSearch = false
-  SupportsSort = false
-  SupportsPagination = false
+  // Feature flags
+  supportsSearch = false
+  supportsSort = false
+  supportsPagination = false
 
   // Config
   options = {
@@ -51,12 +52,19 @@ export default class TableFetch {
   /**
    * Constructs a new DataFetch instance.
    * @param opts the fetch options
+   * @param flags the datasource feature flags
    */
-  constructor(opts) {
+  constructor(opts, flags) {
+    // Merge options with their default values
     this.options = {
       ...this.options,
       ...opts,
     }
+
+    // Update feature flags
+    this.supportsSearch = flags?.supportsSearch || false
+    this.supportsSort = flags?.supportsSort || false
+    this.supportsPagination = flags?.supportsPagination || false
 
     // Bind all functions to properly scope "this"
     this.getData = this.getData.bind(this)
@@ -158,17 +166,17 @@ export default class TableFetch {
     let { rows, hasNextPage, cursor } = await this.getData()
 
     // If we don't support searching, do a client search
-    if (!this.SupportsSearch) {
+    if (!this.supportsSearch) {
       rows = luceneQuery(rows, query)
     }
 
     // If we don't support sorting, do a client-side sort
-    if (!this.SupportsSort) {
+    if (!this.supportsSort) {
       rows = luceneSort(rows, sortColumn, sortOrder, sortType)
     }
 
     // If we don't support pagination, do a client-side limit
-    if (!this.SupportsPagination) {
+    if (!this.supportsPagination) {
       rows = luceneLimit(rows, limit)
     }
 

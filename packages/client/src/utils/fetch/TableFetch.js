@@ -3,9 +3,13 @@ import DataFetch from "./DataFetch.js"
 import { searchTable } from "api"
 
 export default class TableFetch extends DataFetch {
-  SupportsSearch = true
-  SupportsSort = true
-  SupportsPagination = true
+  constructor(opts) {
+    super(opts, {
+      supportsSearch: true,
+      supportsSort: true,
+      supportsPagination: true,
+    })
+  }
 
   async getData() {
     const { datasource, limit, sortColumn, sortOrder, sortType, paginate } =
