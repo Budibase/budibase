@@ -60,9 +60,9 @@
   </div>
 </div>
 <Body size="S"
-  >Variables enabled you to store and reuse values in queries. Static variables
-  use constant values while dynamic values can be bound to the response headers
-  or body of a query</Body
+  >Variables enable you to store and re-use values in queries, with the choice
+  of a static value such as a token using static variables, or a value from a
+  query response using dynamic variables.</Body
 >
 <Heading size="XS">Static</Heading>
 <Layout noPadding gap="XS">
@@ -78,7 +78,7 @@
 <Heading size="XS">Dynamic</Heading>
 <Body size="S">
   Dynamic variables are evaluated when a dependant query is executed. The value
-  is cached for 24 hours and will re-evaluate if the dependendent query fails.
+  is cached for a period of time and will be refreshed if a query fails.
 </Body>
 <ViewDynamicVariables {queries} {datasource} />
 

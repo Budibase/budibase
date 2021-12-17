@@ -16,6 +16,7 @@ exports.Headers = {
   APP_ID: "x-budibase-app-id",
   TYPE: "x-budibase-type",
   TENANT_ID: "x-budibase-tenant-id",
+  TOKEN: "x-budibase-token",
 }
 
 exports.GlobalRoles = {

@@ -121,10 +121,13 @@ export function flipHeaderState(headersActivity) {
 }
 
 // convert dynamic variables list to simple key/val object
-export function variablesToObject(datasource) {
+export function getDynamicVariables(datasource, queryId) {
   const variablesList = datasource?.config?.dynamicVariables
   if (variablesList && variablesList.length > 0) {
-    return variablesList.reduce(
+    const filtered = queryId
+      ? variablesList.filter(variable => variable.queryId === queryId)
+      : variablesList
+    return filtered.reduce(
       (acc, next) => ({ ...acc, [next.name]: next.value }),
       {}
     )
@@ -133,10 +136,10 @@ export function variablesToObject(datasource) {
 }
 
 // convert dynamic variables object back to a list, enrich with query id
-export function rebuildVariables(queryId, variables) {
-  let vars = []
+export function rebuildVariables(datasource, queryId, variables) {
+  let newVariables = []
   if (variables) {
-    vars = Object.entries(variables).map(entry => {
+    newVariables = Object.entries(variables).map(entry => {
       return {
         name: entry[0],
         value: entry[1],
@@ -144,7 +147,15 @@ export function rebuildVariables(queryId, variables) {
       }
     })
   }
-  return vars
+  let existing = datasource?.config?.dynamicVariables || []
+  // filter out any by same name
+  existing = existing.filter(
+    variable =>
+      !newVariables.find(
+        newVar => newVar.name.toLowerCase() === variable.name.toLowerCase()
+      )
+  )
+  return [...existing, ...newVariables]
 }
 
 export function shouldShowVariables(dynamicVariables, variablesReadOnly) {
@@ -173,7 +184,7 @@ export default {
   keyValueToQueryParameters,
   queryParametersToKeyValue,
   schemaToFields,
-  variablesToObject,
+  getDynamicVariables,
   rebuildVariables,
   shouldShowVariables,
   buildAuthConfigs,

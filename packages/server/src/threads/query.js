@@ -13,7 +13,14 @@ class QueryRunner {
     this.fields = input.fields
     this.parameters = input.parameters
     this.transformer = input.transformer
+    this.queryId = input.queryId
     this.noRecursiveQuery = flags.noRecursiveQuery
+    this.cachedVariables = []
+    // allows the response from a query to be stored throughout this
+    // execution so that if it needs to be re-used for another variable
+    // it can be
+    this.queryResponse = {}
+    this.hasRerun = false
   }
 
   async execute() {
@@ -41,6 +48,19 @@ class QueryRunner {
     if (transformer) {
       const runner = new ScriptRunner(transformer, { data: rows })
       rows = runner.execute()
+    }
+
+    // if the request fails we retry once, invalidating the cached value
+    if (
+      info &&
+      info.code >= 400 &&
+      this.cachedVariables.length > 0 &&
+      !this.hasRerun
+    ) {
+      this.hasRerun = true
+      // invalidate the cache value
+      await threadUtils.invalidateDynamicVariables(this.cachedVariables)
+      return this.execute()
     }
 
     // needs to an array for next step
@@ -86,8 +106,14 @@ class QueryRunner {
       name = variable.name
     let value = await threadUtils.checkCacheForDynamicVariable(queryId, name)
     if (!value) {
-      value = await this.runAnotherQuery(queryId, parameters)
+      value = this.queryResponse[queryId]
+        ? this.queryResponse[queryId]
+        : await this.runAnotherQuery(queryId, parameters)
+      // store incase this query is to be called again
+      this.queryResponse[queryId] = value
       await threadUtils.storeDynamicVariable(queryId, name, value)
+    } else {
+      this.cachedVariables.push({ queryId, name })
     }
     return value
   }
@@ -108,6 +134,10 @@ class QueryRunner {
       // need to see if this uses any variables
       const stringFields = JSON.stringify(fields)
       const foundVars = dynamicVars.filter(variable => {
+        // don't allow a query to use its own dynamic variable (loop)
+        if (variable.queryId === this.queryId) {
+          return false
+        }
         // look for {{ variable }} but allow spaces between handlebars
         const regex = new RegExp(`{{[ ]*${variable.name}[ ]*}}`)
         return regex.test(stringFields)
@@ -120,6 +150,8 @@ class QueryRunner {
           data: responses[i].rows,
           info: responses[i].extra,
         })
+        // make sure its known that this uses dynamic variables in case it fails
+        this.hasDynamicVariables = true
       }
     }
     return parameters
