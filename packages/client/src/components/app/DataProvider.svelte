@@ -1,15 +1,8 @@
 <script>
   import { getContext } from "svelte"
   import { ProgressCircle, Pagination } from "@budibase/bbui"
-  import {
-    buildLuceneQuery,
-    luceneQuery,
-    luceneSort,
-    luceneLimit,
-  } from "builder/src/helpers/lucene"
   import Placeholder from "./Placeholder.svelte"
   import { fetchData } from "utils/fetch/fetchData.js"
-  import { cloneDeep } from "lodash/fp"
 
   export let dataSource
   export let filter
@@ -21,24 +14,7 @@
   const { styleable, Provider, ActionTypes } = getContext("sdk")
   const component = getContext("component")
 
-  const createFetch = datasource => {
-    return fetchData(datasource, {
-      filter,
-      sortColumn,
-      sortOrder,
-      limit,
-      paginate,
-    })
-  }
-
-  let fetch = fetchData()
-
-  $: id = $component.id
-  $: {
-    console.log("new datasource", id, dataSource)
-    fetch = createFetch(dataSource)
-  }
-
+  $: fetch = createFetch(dataSource)
   $: fetch.update({
     filter,
     sortColumn,
@@ -94,6 +70,16 @@
       sortOrder: $fetch.sortOrder,
     },
     loaded: $fetch.loaded,
+  }
+
+  const createFetch = datasource => {
+    return fetchData(datasource, {
+      filter,
+      sortColumn,
+      sortOrder,
+      limit,
+      paginate,
+    })
   }
 </script>
 

@@ -1,14 +1,7 @@
-import TableFetch from "./TableFetch.js"
+import DataFetch from "./DataFetch.js"
 import { fetchRelationshipData } from "api"
 
-export default class ViewFetch extends TableFetch {
-  SupportsSearch = false
-  SupportsSort = false
-  SupportsPagination = false
-
-  /**
-   * Fetches a single page of data from the remote resource
-   */
+export default class ViewFetch extends DataFetch {
   async getData() {
     const { datasource } = this.options
     const res = await fetchRelationshipData({

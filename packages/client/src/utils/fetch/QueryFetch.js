@@ -1,17 +1,8 @@
-import TableFetch from "./TableFetch.js"
+import DataFetch from "./DataFetch.js"
 import { executeQuery, fetchQueryDefinition } from "api"
-import { cloneDeep } from "lodash/fp.js"
+import { cloneDeep } from "lodash/fp"
 
-export default class ViewFetch extends TableFetch {
-  SupportsSearch = false
-  SupportsSort = false
-  SupportsPagination = false
-
-  /**
-   * Fetches the schema for a view
-   * @param datasource the view datasource config
-   * @return {object} the view schema
-   */
+export default class ViewFetch extends DataFetch {
   static async getSchema(datasource) {
     if (!datasource?._id) {
       return null
@@ -20,9 +11,6 @@ export default class ViewFetch extends TableFetch {
     return this.enrichSchema(definition?.schema)
   }
 
-  /**
-   * Fetches a single page of data from the remote resource
-   */
   async getData() {
     const { datasource } = this.options
 
