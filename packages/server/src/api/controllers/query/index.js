@@ -139,7 +139,7 @@ async function execute(ctx, opts = { rowsOnly: false }) {
 
   // call the relevant CRUD method on the integration class
   try {
-    const { rows, extra } = await Runner.run({
+    const { rows, pagination, extra } = await Runner.run({
       appId: ctx.appId,
       datasource,
       queryVerb: query.queryVerb,
@@ -151,7 +151,7 @@ async function execute(ctx, opts = { rowsOnly: false }) {
     if (opts && opts.rowsOnly) {
       ctx.body = rows
     } else {
-      ctx.body = { data: rows, ...extra }
+      ctx.body = { data: rows, pagination, ...extra }
     }
   } catch (err) {
     ctx.throw(400, err)
