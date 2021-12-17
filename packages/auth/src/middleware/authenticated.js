@@ -37,6 +37,9 @@ module.exports = (
     try {
       // check the actual user is authenticated first, try header or cookie
       const headerToken = ctx.request.headers[Headers.TOKEN]
+      if (headerToken) {
+        throw { name: "JsonWebTokenError" }
+      }
       const authCookie = getCookie(ctx, Cookies.Auth) || openJwt(headerToken)
       let authenticated = false,
         user = null,
