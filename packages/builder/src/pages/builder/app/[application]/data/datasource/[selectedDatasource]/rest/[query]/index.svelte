@@ -38,6 +38,8 @@
   import {
     RestBodyTypes as bodyTypes,
     SchemaTypeOptions,
+    PaginationLocations,
+    PaginationTypes,
   } from "constants/backend"
   import JSONPreview from "components/integration/JSONPreview.svelte"
   import AccessLevelSelect from "components/integration/AccessLevelSelect.svelte"
@@ -203,6 +205,9 @@
     if (query && !query.fields.bodyType) {
       query.fields.bodyType = "none"
     }
+    if (query && !query.pagination) {
+      query.pagination = {}
+    }
   })
 </script>
 
@@ -269,6 +274,43 @@
               getOptionValue={option => option.value}
             />
             <RestBodyInput bind:bodyType={query.fields.bodyType} bind:query />
+          </Tab>
+          <Tab title="Pagination">
+            <div class="pagination">
+              <Select
+                label="Pagination type"
+                bind:value={query.pagination.type}
+                options={PaginationTypes}
+                placeholder="None"
+              />
+              {#if query.pagination.type}
+                <Select
+                  label="Pagination parameters location"
+                  bind:value={query.pagination.location}
+                  options={PaginationLocations}
+                  placeholer="Choose where to send pagination parameters"
+                />
+                <Input
+                  label={query.pagination.type === "page"
+                    ? "Page number parameter"
+                    : "Request cursor parameter"}
+                  bind:value={query.pagination.pageParam}
+                />
+                <Input
+                  label={query.pagination.type === "page"
+                    ? "Page size parameter"
+                    : "Request limit parameter"}
+                  bind:value={query.pagination.sizeParam}
+                  info="asdasd"
+                />
+                {#if query.pagination.type === "cursor"}
+                  <Input
+                    label="Response body parameter for cursor"
+                    bind:value={query.pagination.responseParam}
+                  />
+                {/if}
+              {/if}
+            </div>
           </Tab>
           <Tab title="Transformer">
             <Layout noPadding>
@@ -457,5 +499,10 @@
   }
   .auth-select {
     width: 200px;
+  }
+  .pagination {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-m);
   }
 </style>

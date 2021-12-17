@@ -211,3 +211,13 @@ export const RestBodyTypes = [
   { name: "raw (XML)", value: "xml" },
   { name: "raw (Text)", value: "text" },
 ]
+
+export const PaginationTypes = [
+  { label: "Page number based", value: "page" },
+  { label: "Cursor based", value: "cursor" },
+]
+
+export const PaginationLocations = [
+  { label: "Query parameters", value: "query" },
+  { label: "Request body", value: "body" },
+]
