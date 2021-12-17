@@ -57,4 +57,25 @@ jobs:
           DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
           BUDIBASE_RELEASE_VERSION: ${{ steps.previoustag.outputs.tag }}
       
-      # Release to pre-prod environment
+      # - name: Pull values.yaml from budibase-infra
+      #   run: | 
+      #     curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \                                                                                [c3a7a9d12]
+      #     -H 'Accept: application/vnd.github.v3.raw' \
+      #     -o values.preprod.yaml \
+      #     -L https://api.github.com/repos/budibase/budibase-infra/contents/kubernetes/values.preprod.yaml
+
+      # - name: Deploy to Preprod Environment
+      #   uses: deliverybot/helm@v1
+      #   with:
+      #     release: budibase-preprod
+      #     namespace: budibase
+      #     chart: charts/budibase
+      #     token: ${{ github.token }}
+      #     values: |
+      #       appVersion: ${{ steps.previoustag.outputs.tag }}
+      #     value-files: >-
+      #     [
+      #       "values.preprod.yaml"
+      #     ]
+      #   env:
+      #     KUBECONFIG_FILE: '${{ secrets.PREPROD_KUBECONFIG }}'
