@@ -30,7 +30,7 @@
   export let cardButtonOnClick
   export let linkColumn
 
-  const { API, styleable } = getContext("sdk")
+  const { fetchDatasourceSchema, styleable } = getContext("sdk")
   const context = getContext("context")
   const component = getContext("component")
   const schemaComponentMap = {
@@ -111,7 +111,7 @@
   // Load the datasource schema so we can determine column types
   const fetchSchema = async dataSource => {
     if (dataSource) {
-      schema = await API.fetchDatasourceSchema(dataSource)
+      schema = await fetchDatasourceSchema(dataSource)
     }
   }
 </script>
