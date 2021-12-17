@@ -3,7 +3,7 @@
 </script>
 
 <script>
-  import { getContext, setContext } from "svelte"
+  import { getContext, setContext, beforeUpdate } from "svelte"
   import { writable } from "svelte/store"
   import * as AppComponents from "components/app"
   import Router from "./Router.svelte"
@@ -21,6 +21,13 @@
 
   // Ref to the svelte component
   let ref
+
+  // Initial settings are passed in on first render of the component.
+  // When the first instance of cachedSettings are set, this object is set to
+  // reference cachedSettings, so that mutations to cachedSettings also affect
+  // initialSettings, but it does not get caught by svelte invalidation - which
+  // would happen if we spread cachedSettings directly to the component.
+  let initialSettings
 
   // Component settings are the un-enriched settings for this component that
   // need to be enriched at this level.
@@ -131,11 +138,6 @@
     name,
     editing,
   })
-
-  // Set initial props when the component mounts
-  $: if (ref?.$set) {
-    assignAllSettings()
-  }
 
   // Extracts all settings from the component instance
   const getRawSettings = instance => {
@@ -276,6 +278,7 @@
     const allSettings = { ...enriched, ...nested, ...conditional }
     if (!cachedSettings) {
       cachedSettings = { ...allSettings }
+      initialSettings = cachedSettings
     } else {
       Object.keys(allSettings).forEach(key => {
         const same = propsAreSame(allSettings[key], cachedSettings[key])
@@ -285,11 +288,6 @@
         }
       })
     }
-  }
-
-  // Assigns the full set of settings to this component
-  const assignAllSettings = () => {
-    ref?.$set?.({ ...cachedSettings })
   }
 
   // Assigns a certain setting to this component.
@@ -321,7 +319,7 @@
       data-id={id}
       data-name={name}
     >
-      <svelte:component this={constructor} bind:this={ref}>
+      <svelte:component this={constructor} bind:this={ref} {...initialSettings}>
         {#if children.length}
           {#each children as child (child._id)}
             <svelte:self instance={child} />
