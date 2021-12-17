@@ -3,7 +3,7 @@ name: Budibase Release
 on:
  push:
     branches:
-      - master
+      - test
 
 env:
   POSTHOG_TOKEN: ${{ secrets.POSTHOG_TOKEN }}
@@ -64,18 +64,18 @@ jobs:
       #     -o values.preprod.yaml \
       #     -L https://api.github.com/repos/budibase/budibase-infra/contents/kubernetes/values.preprod.yaml
 
-      # - name: Deploy to Preprod Environment
-      #   uses: deliverybot/helm@v1
-      #   with:
-      #     release: budibase-preprod
-      #     namespace: budibase
-      #     chart: charts/budibase
-      #     token: ${{ github.token }}
-      #     values: |
-      #       globals.appVersion: ${{ steps.previoustag.outputs.tag }}
-      #     value-files: >-
-      #     [
-      #       "charts/budibase/values.yaml"
-      #     ]
-      #   env:
-      #     KUBECONFIG_FILE: '${{ secrets.PREPROD_KUBECONFIG }}'
+      - name: Deploy to Preprod Environment
+        uses: deliverybot/helm@v1
+        with:
+          release: budibase-preprod
+          namespace: budibase
+          chart: charts/budibase
+          token: ${{ github.token }}
+          values: |
+            globals.appVersion: ${{ steps.previoustag.outputs.tag }}
+          value-files: >-
+          [
+            "charts/budibase/values.yaml"
+          ]
+        env:
+          KUBECONFIG_FILE: '${{ secrets.PREPROD_KUBECONFIG }}'

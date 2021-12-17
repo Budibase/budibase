@@ -51,3 +51,11 @@ jobs:
           namespace: budibase
           values: globals.appVersion=v${{ env.RELEASE_VERSION }}
           name: budibase-prod
+
+      - name: Discord Webhook Action
+        uses: tsickert/discord-webhook@v4.0.0
+        with:
+          webhook-url: ${{ secrets.PROD_DEPLOY_WEBHOOK_URL }}
+          content: "Production Deployment Complete: ${{ env.RELEASE_VERSION }} deployed to budibase cloud."
+          embed-title: ${{ env.RELEASE_VERSION }}
+

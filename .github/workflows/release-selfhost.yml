@@ -17,7 +17,6 @@ jobs:
           docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
 
           # Get latest release version
-          sudo apt-get install -y jq 
           release_version=$(cat lerna.json | jq -r '.version')
           echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
           release_tag=v$release_version
@@ -66,4 +65,5 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           name: v${{ env.RELEASE_VERSION }}
+          tag_name: v${{ env.RELEASE_VERSION }}
           generate_release_notes: true
