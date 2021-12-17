@@ -166,7 +166,7 @@ export default class DataFetch {
    */
   async getPage() {
     const { sortColumn, sortOrder, sortType, limit } = this.options
-    const { query, pageNumber } = get(this.store)
+    const { query } = get(this.store)
 
     // Get the actual data
     let { rows, info, hasNextPage, cursor } = await this.getData()
@@ -183,8 +183,7 @@ export default class DataFetch {
 
     // If we don't support pagination, do a client-side limit
     if (!this.supportsPagination) {
-      rows = rows.slice(pageNumber * limit, (pageNumber + 1) * limit)
-      // rows = luceneLimit(rows, limit)
+      rows = luceneLimit(rows, limit)
     }
 
     return {
