@@ -3,7 +3,7 @@ name: Budibase Release
 on:
  push:
     branches:
-      - test
+      - master
 
 env:
   POSTHOG_TOKEN: ${{ secrets.POSTHOG_TOKEN }}
@@ -80,3 +80,10 @@ jobs:
           ]
         env:
           KUBECONFIG_FILE: '${{ secrets.PREPROD_KUBECONFIG }}'
+
+      - name: Discord Webhook Action
+        uses: tsickert/discord-webhook@v4.0.0
+        with:
+          webhook-url: ${{ secrets.PROD_DEPLOY_WEBHOOK_URL }}
+          content: "Preprod Deployment Complete: ${{ env.RELEASE_VERSION }} deployed to Budibase Pre-prod."
+          embed-title: ${{ env.RELEASE_VERSION }}
