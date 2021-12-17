@@ -20,7 +20,6 @@ exports.queryValidation = () => {
     schema: Joi.object({}).required().unknown(true),
     transformer: Joi.string().optional(),
     flags: Joi.object().optional(),
-    pagination: Joi.object().optional(),
   })
 }
 
