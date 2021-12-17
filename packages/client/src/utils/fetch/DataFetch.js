@@ -12,7 +12,7 @@ import { fetchTableDefinition } from "api"
  * internal table or datasource plus.
  * For other types of datasource, this class is overridden and extended.
  */
-export default class TableFetch {
+export default class DataFetch {
   // Feature flags
   supportsSearch = false
   supportsSort = false
@@ -21,7 +21,6 @@ export default class TableFetch {
   // Config
   options = {
     datasource: null,
-    schema: null,
     limit: 10,
 
     // Search config
@@ -53,23 +52,20 @@ export default class TableFetch {
   /**
    * Constructs a new DataFetch instance.
    * @param opts the fetch options
-   * @param flags the datasource feature flags
    */
-  constructor(opts, flags) {
+  constructor(opts) {
     // Merge options with their default values
     this.options = {
       ...this.options,
       ...opts,
     }
 
-    // Update feature flags
-    this.supportsSearch = flags?.supportsSearch || false
-    this.supportsSort = flags?.supportsSort || false
-    this.supportsPagination = flags?.supportsPagination || false
-
     // Bind all functions to properly scope "this"
     this.getData = this.getData.bind(this)
+    this.getPage = this.getPage.bind(this)
     this.getInitialData = this.getInitialData.bind(this)
+    this.determineFeatureFlags = this.determineFeatureFlags.bind(this)
+    this.enrichSchema = this.enrichSchema.bind(this)
     this.refresh = this.refresh.bind(this)
     this.update = this.update.bind(this)
     this.hasNextPage = this.hasNextPage.bind(this)
@@ -116,11 +112,13 @@ export default class TableFetch {
       return
     }
 
-    // Ensure schema exists and enrich it
-    let schema = this.options.schema
-    if (!schema) {
-      schema = await this.constructor.getSchema(datasource)
-    }
+    // Fetch datasource definition and determine feature flags
+    const definition = await this.constructor.getDefinition(datasource)
+    this.determineFeatureFlags(definition)
+
+    // Fetch and enrich schema
+    let schema = this.constructor.getSchema(datasource, definition)
+    schema = this.enrichSchema(schema)
     if (!schema) {
       return
     }
@@ -142,13 +140,16 @@ export default class TableFetch {
     }
 
     // Update store
-    this.store.update($store => ({ ...$store, schema, query, loading: true }))
+    this.store.update($store => ({
+      ...$store,
+      definition,
+      schema,
+      query,
+      loading: true,
+    }))
 
     // Actually fetch data
     const page = await this.getPage()
-    if (page.info) {
-      console.log("new info", page.info)
-    }
     this.store.update($store => ({
       ...$store,
       loading: false,
@@ -165,7 +166,7 @@ export default class TableFetch {
    */
   async getPage() {
     const { sortColumn, sortOrder, sortType, limit } = this.options
-    const { query } = get(this.store)
+    const { query, pageNumber } = get(this.store)
 
     // Get the actual data
     let { rows, info, hasNextPage, cursor } = await this.getData()
@@ -182,7 +183,8 @@ export default class TableFetch {
 
     // If we don't support pagination, do a client-side limit
     if (!this.supportsPagination) {
-      rows = luceneLimit(rows, limit)
+      rows = rows.slice(pageNumber * limit, (pageNumber + 1) * limit)
+      // rows = luceneLimit(rows, limit)
     }
 
     return {
@@ -207,17 +209,27 @@ export default class TableFetch {
   }
 
   /**
-   * Gets the schema definition for a datasource.
+   * Gets the definition for this datasource.
    * Defaults to fetching a table definition.
-   * @param datasource the datasource definition
-   * @return {object} the schema
+   * @param datasource
+   * @return {object} the definition
    */
-  static async getSchema(datasource) {
+  static async getDefinition(datasource) {
     if (!datasource?.tableId) {
       return null
     }
-    const table = await fetchTableDefinition(datasource.tableId)
-    return this.enrichSchema(table?.schema)
+    return await fetchTableDefinition(datasource.tableId)
+  }
+
+  /**
+   * Gets the schema definition for a datasource.
+   * Defaults to getting the "schema" property of the definition.
+   * @param datasource the datasource
+   * @param definition the datasource definition
+   * @return {object} the schema
+   */
+  static getSchema(datasource, definition) {
+    return definition?.schema
   }
 
   /**
@@ -225,7 +237,7 @@ export default class TableFetch {
    * @param schema the datasource schema
    * @return {object} the enriched datasource schema
    */
-  static enrichSchema(schema) {
+  enrichSchema(schema) {
     if (schema == null) {
       return null
     }
@@ -244,6 +256,17 @@ export default class TableFetch {
       }
     })
     return enrichedSchema
+  }
+
+  /**
+   * Determine the feature flag for this datasource definition
+   * @param definition
+   */
+  // eslint-disable-next-line no-unused-vars
+  determineFeatureFlags(definition) {
+    this.supportsSearch = false
+    this.supportsSort = false
+    this.supportsPagination = false
   }
 
   /**
@@ -319,6 +342,7 @@ export default class TableFetch {
       ...$store,
       loading: true,
       cursor: nextCursor,
+      pageNumber: $store.pageNumber + 1,
     }))
     const { rows, info, hasNextPage, cursor } = await this.getPage()
 
@@ -326,11 +350,10 @@ export default class TableFetch {
     this.store.update($store => {
       let { cursors, pageNumber } = $store
       if (hasNextPage) {
-        cursors[pageNumber + 2] = cursor
+        cursors[pageNumber + 1] = cursor
       }
       return {
         ...$store,
-        pageNumber: pageNumber + 1,
         rows,
         info,
         cursors,
@@ -354,6 +377,7 @@ export default class TableFetch {
       ...$store,
       loading: true,
       cursor: prevCursor,
+      pageNumber: $store.pageNumber - 1,
     }))
     const { rows, info } = await this.getPage()
 
@@ -361,7 +385,6 @@ export default class TableFetch {
     this.store.update($store => {
       return {
         ...$store,
-        pageNumber: $store.pageNumber - 1,
         rows,
         info,
         loading: false,

@@ -35,14 +35,15 @@ export const fetchDatasourceSchema = async datasource => {
 
   // All normal datasource schema can use their corresponsing implementations
   // in the data fetch classes
-  if (type === "table" || type === "link") {
-    return TableFetch.getSchema(datasource)
-  }
-  if (type === "view") {
-    return ViewFetch.getSchema(datasource)
-  }
-  if (type === "query") {
-    return QueryFetch.getSchema(datasource)
+  const handler = {
+    table: TableFetch,
+    link: TableFetch,
+    view: ViewFetch,
+    query: QueryFetch,
+  }[type]
+  if (handler) {
+    const definition = await handler.getDefinition(datasource)
+    return handler.getSchema(datasource, definition)
   }
 
   return null
