@@ -1,5 +1,5 @@
 const { Cookies, Headers } = require("../constants")
-const { getCookie, clearCookie } = require("../utils")
+const { getCookie, clearCookie, openJwt } = require("../utils")
 const { getUser } = require("../cache/user")
 const { getSession, updateSessionTTL } = require("../security/sessions")
 const { buildMatcherRegex, matches } = require("./matchers")
@@ -35,8 +35,9 @@ module.exports = (
       publicEndpoint = true
     }
     try {
-      // check the actual user is authenticated first
-      const authCookie = getCookie(ctx, Cookies.Auth)
+      // check the actual user is authenticated first, try header or cookie
+      const headerToken = ctx.request.headers[Headers.TOKEN]
+      const authCookie = getCookie(ctx, Cookies.Auth) || openJwt(headerToken)
       let authenticated = false,
         user = null,
         internal = false
