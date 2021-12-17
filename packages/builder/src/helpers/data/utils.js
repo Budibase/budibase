@@ -137,9 +137,9 @@ export function getDynamicVariables(datasource, queryId) {
 
 // convert dynamic variables object back to a list, enrich with query id
 export function rebuildVariables(datasource, queryId, variables) {
-  let finalVars = []
+  let newVariables = []
   if (variables) {
-    finalVars = Object.entries(variables).map(entry => {
+    newVariables = Object.entries(variables).map(entry => {
       return {
         name: entry[0],
         value: entry[1],
@@ -147,7 +147,15 @@ export function rebuildVariables(datasource, queryId, variables) {
       }
     })
   }
-  return [...(datasource?.config?.dynamicVariables || []), ...finalVars]
+  let existing = datasource?.config?.dynamicVariables || []
+  // filter out any by same name
+  existing = existing.filter(
+    variable =>
+      !newVariables.find(
+        newVar => newVar.name.toLowerCase() === variable.name.toLowerCase()
+      )
+  )
+  return [...existing, ...newVariables]
 }
 
 export function shouldShowVariables(dynamicVariables, variablesReadOnly) {

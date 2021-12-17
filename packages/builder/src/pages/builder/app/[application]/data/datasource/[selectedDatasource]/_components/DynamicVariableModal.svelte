@@ -1,5 +1,5 @@
 <script>
-  import { Input, ModalContent, Modal } from "@budibase/bbui"
+  import { Input, ModalContent, Modal, Body } from "@budibase/bbui"
 
   export let dynamicVariables
   export let datasource
@@ -45,6 +45,10 @@
     onConfirm={saveVariable}
     disabled={!valid}
   >
+    <Body size="S"
+      >Specify a name for your new dynamic variable, this must be unique across
+      your datasource.</Body
+    >
     <Input label="Variable name" bind:value={name} on:input {error} />
   </ModalContent>
 </Modal>
