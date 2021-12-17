@@ -11,7 +11,7 @@ export const executeQuery = async ({ queryId, parameters }) => {
     return
   }
   const res = await API.post({
-    url: `/api/queries/${queryId}`,
+    url: `/api/v2/queries/${queryId}`,
     body: {
       parameters,
     },

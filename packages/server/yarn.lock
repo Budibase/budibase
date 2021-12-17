@@ -27,7 +27,7 @@
   resolved "https://registry.yarnpkg.com/@apidevtools/swagger-methods/-/swagger-methods-3.0.2.tgz#b789a362e055b0340d04712eafe7027ddc1ac267"
   integrity sha512-QAkD5kK2b1WfjDS/UQn/qQkbwF31uqRjPTrsCs5ZG9BQGAkjwvqGFjjPqAuzac/IYzpPtRzjCP1WrTuAIjMrXg==
 
-"@apidevtools/swagger-parser@^10.0.3":
+"@apidevtools/swagger-parser@10.0.3":
   version "10.0.3"
   resolved "https://registry.yarnpkg.com/@apidevtools/swagger-parser/-/swagger-parser-10.0.3.tgz#32057ae99487872c4dd96b314a1ab4b95d89eaf5"
   integrity sha512-sNiLY51vZOmSPFZA5TF35KZ2HbgYklQnTSDnkghamzLb3EkNtcQnrBQEj5AOCxHpTtXpqMCRM1CrmV2rG6nw4g==
@@ -983,10 +983,10 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/auth@^1.0.19-alpha.1":
-  version "1.0.22"
-  resolved "https://registry.yarnpkg.com/@budibase/auth/-/auth-1.0.22.tgz#a93ea2fea46e00138ad3fa129c9ea19b056654e2"
-  integrity sha512-eHCNEzGl6HxYlMpfRTXBokq2ALTK5f+CDSgJmGaL/jfPc2NlzCI5NoigZUkSrdwDiYZnnWLfDDR4dArYyLlFuA==
+"@budibase/auth@^1.0.23":
+  version "1.0.24"
+  resolved "https://registry.yarnpkg.com/@budibase/auth/-/auth-1.0.24.tgz#69a015a7fe9dcc9ea9e471a7d76d2c0544de0b16"
+  integrity sha512-pX+x+ib5X8s9ek4TZVmddRXlCE3kFmK5EH7Qk0Wmcn9tZwbaZy1XXd4qlJ7aFGSmvy1VNbz5AXIyRtliescaEQ==
   dependencies:
     "@techpass/passport-openidconnect" "^0.3.0"
     aws-sdk "^2.901.0"
@@ -1056,10 +1056,10 @@
     svelte-flatpickr "^3.2.3"
     svelte-portal "^1.0.0"
 
-"@budibase/bbui@^1.0.22":
-  version "1.0.22"
-  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-1.0.22.tgz#ac3bd3a8699bd0be84aac3c5dff9d093e5b08462"
-  integrity sha512-8/5rXEOwkr0OcQD1fn5GpmI3d5dS1cIJBAODjTVtlZrTdacwlz5W2j3zIh+CBG0X7zhVxEze3zs2b1vDNTvK6A==
+"@budibase/bbui@^1.0.24":
+  version "1.0.24"
+  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-1.0.24.tgz#15a976b500c4103bc3e94ed665c6c557bb6271bf"
+  integrity sha512-4zr+fSChOelHDqNNM2OiWWbWOL57JGBVBx333GiMr2P7N0MoepjwHEp9MlITWl5mUfS8rxgWTC9mSSMpRdpSUQ==
   dependencies:
     "@adobe/spectrum-css-workflow-icons" "^1.2.1"
     "@spectrum-css/actionbutton" "^1.0.1"
@@ -1106,14 +1106,14 @@
     svelte-flatpickr "^3.2.3"
     svelte-portal "^1.0.0"
 
-"@budibase/client@^1.0.19-alpha.1":
-  version "1.0.22"
-  resolved "https://registry.yarnpkg.com/@budibase/client/-/client-1.0.22.tgz#80d6c3fb2b57a050199dde4a4b3e82b221601c25"
-  integrity sha512-Cpao7l2lIWyJZJs8+zq1wFnQGaWRTDiRG+HkkjvqQZDkZexlo89zWPkY56NBbMT1qAXd6K3zAdRNNKVCBCtOaA==
+"@budibase/client@^1.0.23":
+  version "1.0.24"
+  resolved "https://registry.yarnpkg.com/@budibase/client/-/client-1.0.24.tgz#69be5b66cc701c6018c816728975a076230c052a"
+  integrity sha512-ppb+exifHCfuDGqs1cQ0kzc3wWaOGkVgq/8Rdb7R7BLIOKYkB67L3FvkqTl+39wrc32CpmzOXXQ73keE4l6P8Q==
   dependencies:
-    "@budibase/bbui" "^1.0.22"
+    "@budibase/bbui" "^1.0.24"
     "@budibase/standard-components" "^0.9.139"
-    "@budibase/string-templates" "^1.0.22"
+    "@budibase/string-templates" "^1.0.24"
     regexparam "^1.3.0"
     shortid "^2.2.15"
     svelte-spa-router "^3.0.5"
@@ -1163,10 +1163,10 @@
     svelte-apexcharts "^1.0.2"
     svelte-flatpickr "^3.1.0"
 
-"@budibase/string-templates@^1.0.19-alpha.1", "@budibase/string-templates@^1.0.22":
-  version "1.0.22"
-  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-1.0.22.tgz#b795c61e53d541c0aa346a90d04b50dcca6ae117"
-  integrity sha512-1ZhxzL75kVhP44fJlCWwqmGIPjZol1eB/xi3O11xJPYQ7lfzeJcGUpksvlgbLgBlw+MKkgppK7gEoMP247E0Qw==
+"@budibase/string-templates@^1.0.23", "@budibase/string-templates@^1.0.24":
+  version "1.0.24"
+  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-1.0.24.tgz#8f317ff18159d8f8e36179de33252e019c85c267"
+  integrity sha512-KAwyYxtm3Mrsm44MhchSxOtB8ucZ2JI93VPBQn0hjdzHtMuAkadtFNPZFeD3pKpCjDmI13XuW+BmJqCF3B0tYg==
   dependencies:
     "@budibase/handlebars-helpers" "^0.11.7"
     dayjs "^1.10.4"
@@ -11926,6 +11926,13 @@ svg.select.js@^3.0.1:
   integrity sha512-h5IS/hKkuVCbKSieR9uQCj9w+zLHoPh+ce19bBYyqF53g6mnPB8sAtIbe1s9dh2S2fCmYX2xel1Ln3PJBbK4kw==
   dependencies:
     svg.js "^2.6.5"
+
+swagger-parser@^10.0.3:
+  version "10.0.3"
+  resolved "https://registry.yarnpkg.com/swagger-parser/-/swagger-parser-10.0.3.tgz#04cb01c18c3ac192b41161c77f81e79309135d03"
+  integrity sha512-nF7oMeL4KypldrQhac8RyHerJeGPD1p2xDh900GPvc+Nk7nWP6jX2FcC7WmkinMoAmoO774+AFXcWsW8gMWEIg==
+  dependencies:
+    "@apidevtools/swagger-parser" "10.0.3"
 
 symbol-tree@^3.2.2, symbol-tree@^3.2.4:
   version "3.2.4"

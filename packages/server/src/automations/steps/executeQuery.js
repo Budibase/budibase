@@ -35,6 +35,11 @@ exports.definition = {
           type: "object",
           description: "The response from the datasource execution",
         },
+        info: {
+          type: "object",
+          description:
+            "Some query types may return extra data, like headers from a REST query",
+        },
         success: {
           type: "boolean",
           description: "Whether the action was successful",
@@ -68,13 +73,16 @@ exports.run = async function ({ inputs, appId, emitter }) {
 
   try {
     await queryController.execute(ctx)
+    const { data, ...rest } = ctx.body
     return {
-      response: ctx.body,
+      response: data,
+      info: rest,
       success: true,
     }
   } catch (err) {
     return {
       success: false,
+      info: {},
       response: automationUtils.getError(err),
     }
   }

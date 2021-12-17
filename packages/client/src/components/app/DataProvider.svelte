@@ -66,6 +66,7 @@
   // Build our data context
   $: dataContext = {
     rows: $fetch.rows,
+    info: $fetch.info,
     schema: $fetch.schema,
     rowsLength: $fetch.rows.length,
 
