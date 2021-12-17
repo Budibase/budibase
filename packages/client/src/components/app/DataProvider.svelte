@@ -3,6 +3,7 @@
   import { ProgressCircle, Pagination } from "@budibase/bbui"
   import Placeholder from "./Placeholder.svelte"
   import { fetchData } from "utils/fetch/fetchData.js"
+  import { buildLuceneQuery } from "builder/src/helpers/lucene"
 
   export let dataSource
   export let filter
@@ -14,9 +15,16 @@
   const { styleable, Provider, ActionTypes } = getContext("sdk")
   const component = getContext("component")
 
+  // We need to manage our lucene query manually as we want to allow components
+  // to extend it
+  let queryExtensions = {}
+  $: defaultQuery = buildLuceneQuery(filter)
+  $: query = extendQuery(defaultQuery, queryExtensions)
+
+  // Keep our data fetch instance up to date
   $: fetch = createFetch(dataSource)
   $: fetch.update({
-    filter,
+    query,
     sortColumn,
     sortOrder,
     limit,
@@ -30,14 +38,14 @@
       callback: () => fetch.refresh(),
       metadata: { dataSource },
     },
-    // {
-    //   type: ActionTypes.AddDataProviderQueryExtension,
-    //   callback: addQueryExtension,
-    // },
-    // {
-    //   type: ActionTypes.RemoveDataProviderQueryExtension,
-    //   callback: removeQueryExtension,
-    // },
+    {
+      type: ActionTypes.AddDataProviderQueryExtension,
+      callback: addQueryExtension,
+    },
+    {
+      type: ActionTypes.RemoveDataProviderQueryExtension,
+      callback: removeQueryExtension,
+    },
     {
       type: ActionTypes.SetDataProviderSorting,
       callback: ({ column, order }) => {
@@ -74,12 +82,42 @@
 
   const createFetch = datasource => {
     return fetchData(datasource, {
-      filter,
+      query,
       sortColumn,
       sortOrder,
       limit,
       paginate,
     })
+  }
+
+  const addQueryExtension = (key, extension) => {
+    if (!key || !extension) {
+      return
+    }
+    queryExtensions = { ...queryExtensions, [key]: extension }
+  }
+
+  const removeQueryExtension = key => {
+    if (!key) {
+      return
+    }
+    const newQueryExtensions = { ...queryExtensions }
+    delete newQueryExtensions[key]
+    queryExtensions = newQueryExtensions
+  }
+
+  const extendQuery = (defaultQuery, extensions) => {
+    const extensionValues = Object.values(extensions || {})
+    let extendedQuery = { ...defaultQuery }
+    extensionValues.forEach(extension => {
+      Object.entries(extension || {}).forEach(([operator, fields]) => {
+        extendedQuery[operator] = {
+          ...extendedQuery[operator],
+          ...fields,
+        }
+      })
+    })
+    return extendedQuery
   }
 </script>
 
