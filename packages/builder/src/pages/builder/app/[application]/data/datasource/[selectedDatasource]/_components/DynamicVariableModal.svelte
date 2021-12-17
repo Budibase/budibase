@@ -2,9 +2,10 @@
   import { Input, ModalContent, Modal } from "@budibase/bbui"
 
   export let dynamicVariables
+  export let datasource
   export let binding
 
-  let name, modal, valid
+  let name, modal, valid, allVariableNames
 
   export const show = () => {
     modal.show()
@@ -17,11 +18,15 @@
     if (!name) {
       return false
     }
-    const varKeys = Object.keys(vars || {})
-    return varKeys.find(key => key.toLowerCase() === name.toLowerCase()) == null
+    return !allVariableNames.find(
+      varName => varName.toLowerCase() === name.toLowerCase()
+    )
   }
 
   $: valid = checkValid(dynamicVariables, name)
+  $: allVariableNames = (datasource?.config?.dynamicVariables || []).map(
+    variable => variable.name
+  )
   $: error = name && !valid ? "Variable name is already in use." : null
 
   async function saveVariable() {
