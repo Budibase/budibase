@@ -72,7 +72,8 @@ jobs:
           chart: charts/budibase
           token: ${{ github.token }}
           values: |
-            globals.appVersion: ${{ steps.previoustag.outputs.tag }}
+            globals: 
+              appVersion: ${{ steps.previoustag.outputs.tag }}
           value-files: >-
           [
             "charts/budibase/values.yaml"
