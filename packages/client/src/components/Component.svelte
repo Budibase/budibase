@@ -3,7 +3,7 @@
 </script>
 
 <script>
-  import { getContext, setContext, beforeUpdate } from "svelte"
+  import { getContext, setContext } from "svelte"
   import { writable } from "svelte/store"
   import * as AppComponents from "components/app"
   import Router from "./Router.svelte"
