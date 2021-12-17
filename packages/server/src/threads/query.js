@@ -16,6 +16,10 @@ class QueryRunner {
     this.queryId = input.queryId
     this.noRecursiveQuery = flags.noRecursiveQuery
     this.cachedVariables = []
+    // allows the response from a query to be stored throughout this
+    // execution so that if it needs to be re-used for another variable
+    // it can be
+    this.queryResponse = {}
     this.hasRerun = false
   }
 
@@ -102,7 +106,11 @@ class QueryRunner {
       name = variable.name
     let value = await threadUtils.checkCacheForDynamicVariable(queryId, name)
     if (!value) {
-      value = await this.runAnotherQuery(queryId, parameters)
+      value = this.queryResponse[queryId]
+        ? this.queryResponse[queryId]
+        : await this.runAnotherQuery(queryId, parameters)
+      // store incase this query is to be called again
+      this.queryResponse[queryId] = value
       await threadUtils.storeDynamicVariable(queryId, name, value)
     } else {
       this.cachedVariables.push({ queryId, name })
