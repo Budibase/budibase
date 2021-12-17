@@ -232,6 +232,7 @@ export interface RestQueryFields {
   json: object
   method: string
   authConfigId: string
+  pagination: PaginationConfig | null
 }
 
 export interface RestConfig {
@@ -240,6 +241,13 @@ export interface RestConfig {
     [key: string]: any
   }
   authConfigs: AuthConfig[]
+}
+
+export interface PaginationConfig {
+  type: string
+  pageParam: string
+  sizeParam: string | null
+  responseParam: string | null
 }
 
 export interface Query {
