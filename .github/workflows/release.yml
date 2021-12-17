@@ -74,10 +74,10 @@ jobs:
           values: |
             globals: 
               appVersion: ${{ steps.previoustag.outputs.tag }}
-          value-files: >-
-          [
-            "charts/budibase/values.yaml"
-          ]
+          # value-files: >-
+          #   [
+          #     "charts/budibase/values.yaml"
+          #   ]
         env:
           KUBECONFIG_FILE: '${{ secrets.PREPROD_KUBECONFIG }}'
 
