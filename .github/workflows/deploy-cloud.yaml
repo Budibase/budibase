@@ -56,6 +56,6 @@ jobs:
         uses: tsickert/discord-webhook@v4.0.0
         with:
           webhook-url: ${{ secrets.PROD_DEPLOY_WEBHOOK_URL }}
-          content: "Production Deployment Complete: ${{ env.RELEASE_VERSION }} deployed to budibase cloud."
+          content: "Production Deployment Complete: ${{ env.RELEASE_VERSION }} deployed to Budibase Cloud."
           embed-title: ${{ env.RELEASE_VERSION }}
 
