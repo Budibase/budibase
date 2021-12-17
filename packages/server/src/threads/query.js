@@ -13,6 +13,7 @@ class QueryRunner {
     this.fields = input.fields
     this.parameters = input.parameters
     this.transformer = input.transformer
+    this.queryId = input.queryId
     this.noRecursiveQuery = flags.noRecursiveQuery
   }
 
@@ -108,6 +109,10 @@ class QueryRunner {
       // need to see if this uses any variables
       const stringFields = JSON.stringify(fields)
       const foundVars = dynamicVars.filter(variable => {
+        // don't allow a query to use its own dynamic variable (loop)
+        if (variable.queryId === this.queryId) {
+          return false
+        }
         // look for {{ variable }} but allow spaces between handlebars
         const regex = new RegExp(`{{[ ]*${variable.name}[ ]*}}`)
         return regex.test(stringFields)

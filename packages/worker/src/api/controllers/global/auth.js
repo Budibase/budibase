@@ -12,7 +12,7 @@ const {
   hash,
   platformLogout,
 } = authPkg.utils
-const { Cookies } = authPkg.constants
+const { Cookies, Headers } = authPkg.constants
 const { passport } = authPkg.auth
 const { checkResetPasswordCode } = require("../../../utilities/redis")
 const {
@@ -60,7 +60,10 @@ async function authInternal(ctx, user, err = null, info = null) {
     return ctx.throw(403, info ? info : "Unauthorized")
   }
 
+  // set a cookie for browser access
   setCookie(ctx, user.token, Cookies.Auth, { sign: false })
+  // set the token in a header as well for APIs
+  ctx.set(Headers.TOKEN, user.token)
   // get rid of any app cookies on login
   // have to check test because this breaks cypress
   if (!env.isTest()) {
