@@ -1,77 +1,134 @@
-require("./utils").threadSetup()
+const threadUtils = require("./utils")
+threadUtils.threadSetup()
 const ScriptRunner = require("../utilities/scriptRunner")
 const { integrations } = require("../integrations")
+const { processStringSync } = require("@budibase/string-templates")
+const CouchDB = require("../db")
 
-function formatResponse(resp) {
-  if (typeof resp === "string") {
-    try {
-      resp = JSON.parse(resp)
-    } catch (err) {
-      resp = { response: resp }
+class QueryRunner {
+  constructor(input, flags = { noRecursiveQuery: false }) {
+    this.appId = input.appId
+    this.datasource = input.datasource
+    this.queryVerb = input.queryVerb
+    this.fields = input.fields
+    this.parameters = input.parameters
+    this.transformer = input.transformer
+    this.noRecursiveQuery = flags.noRecursiveQuery
+  }
+
+  async execute() {
+    let { datasource, fields, queryVerb, transformer } = this
+    // pre-query, make sure datasource variables are added to parameters
+    const parameters = await this.addDatasourceVariables()
+    const query = threadUtils.enrichQueryFields(fields, parameters)
+    const Integration = integrations[datasource.source]
+    if (!Integration) {
+      throw "Integration type does not exist."
     }
-  }
-  return resp
-}
+    const integration = new Integration(datasource.config)
 
-function hasExtraData(response) {
-  return (
-    typeof response === "object" &&
-    !Array.isArray(response) &&
-    response.data != null &&
-    response.info != null
-  )
-}
+    let output = threadUtils.formatResponse(await integration[queryVerb](query))
+    let rows = output,
+      info = undefined,
+      extra = undefined
+    if (threadUtils.hasExtraData(output)) {
+      rows = output.data
+      info = output.info
+      extra = output.extra
+    }
 
-async function runAndTransform(datasource, queryVerb, query, transformer) {
-  const Integration = integrations[datasource.source]
-  if (!Integration) {
-    throw "Integration type does not exist."
-  }
-  const integration = new Integration(datasource.config)
+    // transform as required
+    if (transformer) {
+      const runner = new ScriptRunner(transformer, { data: rows })
+      rows = runner.execute()
+    }
 
-  let output = formatResponse(await integration[queryVerb](query))
-  let rows = output,
-    info = undefined,
-    extra = undefined
-  if (hasExtraData(output)) {
-    rows = output.data
-    info = output.info
-    extra = output.extra
-  }
+    // needs to an array for next step
+    if (!Array.isArray(rows)) {
+      rows = [rows]
+    }
 
-  // transform as required
-  if (transformer) {
-    const runner = new ScriptRunner(transformer, { data: rows })
-    rows = runner.execute()
-  }
+    // map into JSON if just raw primitive here
+    if (rows.find(row => typeof row !== "object")) {
+      rows = rows.map(value => ({ value }))
+    }
 
-  // needs to an array for next step
-  if (!Array.isArray(rows)) {
-    rows = [rows]
+    // get all the potential fields in the schema
+    let keys = rows.flatMap(Object.keys)
+
+    if (integration.end) {
+      integration.end()
+    }
+
+    return { rows, keys, info, extra }
   }
 
-  // map into JSON if just raw primitive here
-  if (rows.find(row => typeof row !== "object")) {
-    rows = rows.map(value => ({ value }))
+  async runAnotherQuery(queryId, parameters) {
+    const db = new CouchDB(this.appId)
+    const query = await db.get(queryId)
+    const datasource = await db.get(query.datasourceId)
+    return new QueryRunner(
+      {
+        appId: this.appId,
+        datasource,
+        queryVerb: query.queryVerb,
+        fields: query.fields,
+        parameters,
+        transformer: query.transformer,
+      },
+      { noRecursiveQuery: true }
+    ).execute()
   }
 
-  // get all the potential fields in the schema
-  let keys = rows.flatMap(Object.keys)
-
-  if (integration.end) {
-    integration.end()
+  async getDynamicVariable(variable) {
+    let { parameters } = this
+    const queryId = variable.queryId,
+      name = variable.name
+    let value = await threadUtils.checkCacheForDynamicVariable(queryId, name)
+    if (!value) {
+      value = await this.runAnotherQuery(queryId, parameters)
+      await threadUtils.storeDynamicVariable(queryId, name, value)
+    }
+    return value
   }
 
-  return { rows, keys, info, extra }
+  async addDatasourceVariables() {
+    let { datasource, parameters, fields } = this
+    if (!datasource || !datasource.config) {
+      return parameters
+    }
+    const staticVars = datasource.config.staticVariables || {}
+    const dynamicVars = datasource.config.dynamicVariables || []
+    for (let [key, value] of Object.entries(staticVars)) {
+      if (!parameters[key]) {
+        parameters[key] = value
+      }
+    }
+    if (!this.noRecursiveQuery) {
+      // need to see if this uses any variables
+      const stringFields = JSON.stringify(fields)
+      const foundVars = dynamicVars.filter(variable => {
+        // look for {{ variable }} but allow spaces between handlebars
+        const regex = new RegExp(`{{[ ]*${variable.name}[ ]*}}`)
+        return regex.test(stringFields)
+      })
+      const dynamics = foundVars.map(dynVar => this.getDynamicVariable(dynVar))
+      const responses = await Promise.all(dynamics)
+      for (let i = 0; i < foundVars.length; i++) {
+        const variable = foundVars[i]
+        parameters[variable.name] = processStringSync(variable.value, {
+          data: responses[i].rows,
+          info: responses[i].extra,
+        })
+      }
+    }
+    return parameters
+  }
 }
 
 module.exports = (input, callback) => {
-  runAndTransform(
-    input.datasource,
-    input.queryVerb,
-    input.query,
-    input.transformer
-  )
+  const Runner = new QueryRunner(input)
+  Runner.execute()
     .then(response => {
       callback(null, response)
     })

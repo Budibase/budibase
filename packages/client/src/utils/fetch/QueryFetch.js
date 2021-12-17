@@ -22,9 +22,13 @@ export default class ViewFetch extends DataFetch {
       }
     }
 
-    const res = await executeQuery({ queryId: datasource?._id, parameters })
+    const { data, ...rest } = await executeQuery({
+      queryId: datasource?._id,
+      parameters,
+    })
     return {
-      rows: res || [],
+      rows: data || [],
+      info: rest,
     }
   }
 }

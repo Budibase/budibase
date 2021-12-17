@@ -1,4 +1,3 @@
-const { processString } = require("@budibase/string-templates")
 const CouchDB = require("../../../db")
 const {
   generateQueryID,
@@ -90,47 +89,6 @@ exports.save = async function (ctx) {
   ctx.message = `Query ${query.name} saved successfully.`
 }
 
-async function enrichQueryFields(fields, parameters = {}) {
-  const enrichedQuery = {}
-
-  // enrich the fields with dynamic parameters
-  for (let key of Object.keys(fields)) {
-    if (fields[key] == null) {
-      continue
-    }
-    if (typeof fields[key] === "object") {
-      // enrich nested fields object
-      enrichedQuery[key] = await enrichQueryFields(fields[key], parameters)
-    } else if (typeof fields[key] === "string") {
-      // enrich string value as normal
-      enrichedQuery[key] = await processString(fields[key], parameters, {
-        noHelpers: true,
-      })
-    } else {
-      enrichedQuery[key] = fields[key]
-    }
-  }
-
-  if (
-    enrichedQuery.json ||
-    enrichedQuery.customData ||
-    enrichedQuery.requestBody
-  ) {
-    try {
-      enrichedQuery.json = JSON.parse(
-        enrichedQuery.json ||
-          enrichedQuery.customData ||
-          enrichedQuery.requestBody
-      )
-    } catch (err) {
-      // no json found, ignore
-    }
-    delete enrichedQuery.customData
-  }
-
-  return enrichedQuery
-}
-
 exports.find = async function (ctx) {
   const db = new CouchDB(ctx.appId)
   const query = enrichQueries(await db.get(ctx.params.queryId))
@@ -148,13 +106,14 @@ exports.preview = async function (ctx) {
   const datasource = await db.get(ctx.request.body.datasourceId)
 
   const { fields, parameters, queryVerb, transformer } = ctx.request.body
-  const enrichedQuery = await enrichQueryFields(fields, parameters)
 
   try {
     const { rows, keys, info, extra } = await Runner.run({
+      appId: ctx.appId,
       datasource,
       queryVerb,
-      query: enrichedQuery,
+      fields,
+      parameters,
       transformer,
     })
 
@@ -169,29 +128,38 @@ exports.preview = async function (ctx) {
   }
 }
 
-exports.execute = async function (ctx) {
+async function execute(ctx, opts = { rowsOnly: false }) {
   const db = new CouchDB(ctx.appId)
 
   const query = await db.get(ctx.params.queryId)
   const datasource = await db.get(query.datasourceId)
 
-  const enrichedQuery = await enrichQueryFields(
-    query.fields,
-    ctx.request.body.parameters
-  )
-
   // call the relevant CRUD method on the integration class
   try {
-    const { rows } = await Runner.run({
+    const { rows, extra } = await Runner.run({
+      appId: ctx.appId,
       datasource,
       queryVerb: query.queryVerb,
-      query: enrichedQuery,
+      fields: query.fields,
+      parameters: ctx.request.body.parameter,
       transformer: query.transformer,
     })
-    ctx.body = rows
+    if (opts && opts.rowsOnly) {
+      ctx.body = rows
+    } else {
+      ctx.body = { data: rows, ...extra }
+    }
   } catch (err) {
     ctx.throw(400, err)
   }
+}
+
+exports.executeV1 = async function (ctx) {
+  return execute(ctx, { rowsOnly: true })
+}
+
+exports.executeV2 = async function (ctx) {
+  return execute(ctx, { rowsOnly: false })
 }
 
 exports.destroy = async function (ctx) {

@@ -2457,6 +2457,10 @@
           "label": "Rows",
           "key": "rows"
         },
+	{
+	  "label": "Extra Info",
+	  "key": "info"
+	},
         {
           "label": "Rows Length",
           "key": "rowsLength"
@@ -3177,6 +3181,10 @@
           {
             "label": "Rows",
             "key": "rows"
+          },
+	  {
+            "label": "Extra Info",
+            "key": "info"
           },
           {
             "label": "Rows Length",

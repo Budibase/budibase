@@ -40,6 +40,7 @@ export default class TableFetch {
   // State of the fetch
   store = writable({
     rows: [],
+    info: null,
     schema: null,
     loading: false,
     loaded: false,
@@ -145,12 +146,16 @@ export default class TableFetch {
 
     // Actually fetch data
     const page = await this.getPage()
+    if (page.info) {
+      console.log("new info", page.info)
+    }
     this.store.update($store => ({
       ...$store,
       loading: false,
       loaded: true,
       pageNumber: 0,
       rows: page.rows,
+      info: page.info,
       cursors: page.hasNextPage ? [null, page.cursor] : [null],
     }))
   }
@@ -163,7 +168,7 @@ export default class TableFetch {
     const { query } = get(this.store)
 
     // Get the actual data
-    let { rows, hasNextPage, cursor } = await this.getData()
+    let { rows, info, hasNextPage, cursor } = await this.getData()
 
     // If we don't support searching, do a client search
     if (!this.supportsSearch) {
@@ -182,6 +187,7 @@ export default class TableFetch {
 
     return {
       rows,
+      info,
       hasNextPage,
       cursor,
     }
@@ -194,6 +200,7 @@ export default class TableFetch {
   async getData() {
     return {
       rows: [],
+      info: null,
       hasNextPage: false,
       cursor: null,
     }
@@ -272,9 +279,9 @@ export default class TableFetch {
     if (get(this.store).loading) {
       return
     }
-    const { rows } = await this.getPage()
     this.store.update($store => ({ ...$store, loading: true }))
-    this.store.update($store => ({ ...$store, rows, loading: false }))
+    const { rows, info } = await this.getPage()
+    this.store.update($store => ({ ...$store, rows, info, loading: false }))
   }
 
   /**
@@ -313,7 +320,7 @@ export default class TableFetch {
       loading: true,
       cursor: nextCursor,
     }))
-    const { rows, hasNextPage, cursor } = await this.getPage()
+    const { rows, info, hasNextPage, cursor } = await this.getPage()
 
     // Update state
     this.store.update($store => {
@@ -325,6 +332,7 @@ export default class TableFetch {
         ...$store,
         pageNumber: pageNumber + 1,
         rows,
+        info,
         cursors,
         loading: false,
       }
@@ -347,7 +355,7 @@ export default class TableFetch {
       loading: true,
       cursor: prevCursor,
     }))
-    const { rows } = await this.getPage()
+    const { rows, info } = await this.getPage()
 
     // Update state
     this.store.update($store => {
@@ -355,6 +363,7 @@ export default class TableFetch {
         ...$store,
         pageNumber: $store.pageNumber - 1,
         rows,
+        info,
         loading: false,
       }
     })
