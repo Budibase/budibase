@@ -1,7 +1,7 @@
 import DataFetch from "./DataFetch.js"
 import { fetchRelationshipData } from "api"
 
-export default class ViewFetch extends DataFetch {
+export default class RelationshipFetch extends DataFetch {
   async getData() {
     const { datasource } = this.options
     const res = await fetchRelationshipData({

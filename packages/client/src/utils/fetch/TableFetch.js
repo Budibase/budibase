@@ -3,12 +3,10 @@ import DataFetch from "./DataFetch.js"
 import { searchTable } from "api"
 
 export default class TableFetch extends DataFetch {
-  constructor(opts) {
-    super(opts, {
-      supportsSearch: true,
-      supportsSort: true,
-      supportsPagination: true,
-    })
+  determineFeatureFlags() {
+    this.supportsSearch = true
+    this.supportsSort = true
+    this.supportsPagination = true
   }
 
   async getData() {
