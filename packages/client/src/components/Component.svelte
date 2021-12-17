@@ -19,6 +19,9 @@
   export let isScreen = false
   export let isBlock = false
 
+  // Ref to the svelte component
+  let ref
+
   // Component settings are the un-enriched settings for this component that
   // need to be enriched at this level.
   // Nested settings are the un-enriched block settings that are to be passed on
@@ -128,6 +131,11 @@
     name,
     editing,
   })
+
+  // Set initial props when the component mounts
+  $: if (ref?.$set) {
+    assignAllSettings()
+  }
 
   // Extracts all settings from the component instance
   const getRawSettings = instance => {
@@ -267,14 +275,28 @@
   const cacheSettings = (enriched, nested, conditional) => {
     const allSettings = { ...enriched, ...nested, ...conditional }
     if (!cachedSettings) {
-      cachedSettings = allSettings
+      cachedSettings = { ...allSettings }
     } else {
       Object.keys(allSettings).forEach(key => {
-        if (!propsAreSame(allSettings[key], cachedSettings[key])) {
+        const same = propsAreSame(allSettings[key], cachedSettings[key])
+        if (!same) {
           cachedSettings[key] = allSettings[key]
+          assignSetting(key, allSettings[key])
         }
       })
     }
+  }
+
+  // Assigns the full set of settings to this component
+  const assignAllSettings = () => {
+    ref?.$set?.({ ...cachedSettings })
+  }
+
+  // Assigns a certain setting to this component.
+  // We manually use the svelte $set function to avoid triggering additional
+  // reactive statements.
+  const assignSetting = (key, value) => {
+    ref?.$$set?.({ [key]: value })
   }
 
   // Generates a key used to determine when components need to fully remount.
@@ -299,7 +321,7 @@
       data-id={id}
       data-name={name}
     >
-      <svelte:component this={constructor} {...cachedSettings}>
+      <svelte:component this={constructor} bind:this={ref}>
         {#if children.length}
           {#each children as child (child._id)}
             <svelte:self instance={child} />
