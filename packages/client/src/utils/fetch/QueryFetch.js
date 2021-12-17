@@ -5,7 +5,7 @@ import { get } from "svelte/store"
 
 export default class QueryFetch extends DataFetch {
   determineFeatureFlags(definition) {
-    console.log("pagination config", definition?.pagination)
+    console.log("pagination config", definition?.fields?.pagination)
     this.supportsPagination =
       definition?.fields?.pagination?.type != null &&
       definition?.fields?.pagination?.pageParam != null
@@ -33,7 +33,7 @@ export default class QueryFetch extends DataFetch {
     let queryPayload = { queryId: datasource?._id, parameters }
     if (this.supportsPagination) {
       const { cursor, definition, pageNumber } = get(this.store)
-      const { type } = definition.fields.pagination.type
+      const { type } = definition.fields.pagination
       const page = type === "page" ? pageNumber : cursor
       queryPayload.pagination = { page, limit }
     }
