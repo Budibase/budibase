@@ -26,7 +26,7 @@
   export let titleButtonURL
   export let titleButtonPeek
 
-  const { API, styleable } = getContext("sdk")
+  const { fetchDatasourceSchema, styleable } = getContext("sdk")
   const context = getContext("context")
   const component = getContext("component")
   const schemaComponentMap = {
@@ -40,6 +40,7 @@
   let formId
   let dataProviderId
   let schema
+  let schemaLoaded = false
 
   $: fetchSchema(dataSource)
   $: enrichedSearchColumns = enrichSearchColumns(searchColumns, schema)
@@ -89,8 +90,9 @@
   // Load the datasource schema so we can determine column types
   const fetchSchema = async dataSource => {
     if (dataSource) {
-      schema = await API.fetchDatasourceSchema(dataSource)
+      schema = await fetchDatasourceSchema(dataSource)
     }
+    schemaLoaded = true
   }
 </script>
 
@@ -134,34 +136,36 @@
           </div>
         </div>
       {/if}
-      <BlockComponent
-        type="dataprovider"
-        bind:id={dataProviderId}
-        props={{
-          dataSource,
-          filter: enrichedFilter,
-          sortColumn,
-          sortOrder,
-          paginate,
-          limit: rowCount,
-        }}
-      >
+      {#if schema}
         <BlockComponent
-          type="table"
+          type="dataprovider"
+          bind:id={dataProviderId}
           props={{
-            dataProvider: `{{ literal ${safe(dataProviderId)} }}`,
-            columns: tableColumns,
-            showAutoColumns,
-            rowCount,
-            quiet,
-            size,
-            linkRows,
-            linkURL,
-            linkColumn,
-            linkPeek,
+            dataSource,
+            filter: enrichedFilter,
+            sortColumn,
+            sortOrder,
+            paginate,
+            limit: rowCount,
           }}
-        />
-      </BlockComponent>
+        >
+          <BlockComponent
+            type="table"
+            props={{
+              dataProvider: `{{ literal ${safe(dataProviderId)} }}`,
+              columns: tableColumns,
+              showAutoColumns,
+              rowCount,
+              quiet,
+              size,
+              linkRows,
+              linkURL,
+              linkColumn,
+              linkPeek,
+            }}
+          />
+        </BlockComponent>
+      {/if}
     </BlockComponent>
   </div>
 </Block>
