@@ -115,7 +115,7 @@ export const luceneQuery = (docs, query) => {
 
   // Process a string match (fails if the value does not start with the string)
   const stringMatch = match("string", (key, value, doc) => {
-    return !doc[key] || !doc[key].startsWith(value)
+    return !doc[key] || !doc[key].toLowerCase().startsWith(value?.toLowerCase())
   })
 
   // Process a fuzzy match (treat the same as starts with when running locally)
