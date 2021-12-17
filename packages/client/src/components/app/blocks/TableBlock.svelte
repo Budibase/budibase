@@ -96,47 +96,47 @@
   }
 </script>
 
-<Block>
-  <div class={size} use:styleable={$component.styles}>
-    <BlockComponent type="form" bind:id={formId} props={{ dataSource }}>
-      {#if title || enrichedSearchColumns?.length || showTitleButton}
-        <div class="header" class:mobile={$context.device.mobile}>
-          <div class="title">
-            <Heading>{title || ""}</Heading>
+{#if schemaLoaded}
+  <Block>
+    <div class={size} use:styleable={$component.styles}>
+      <BlockComponent type="form" bind:id={formId} props={{ dataSource }}>
+        {#if title || enrichedSearchColumns?.length || showTitleButton}
+          <div class="header" class:mobile={$context.device.mobile}>
+            <div class="title">
+              <Heading>{title || ""}</Heading>
+            </div>
+            <div class="controls">
+              {#if enrichedSearchColumns?.length}
+                <div
+                  class="search"
+                  style="--cols:{enrichedSearchColumns?.length}"
+                >
+                  {#each enrichedSearchColumns as column}
+                    <BlockComponent
+                      type={column.componentType}
+                      props={{
+                        field: column.name,
+                        placeholder: column.name,
+                        text: column.name,
+                        autoWidth: true,
+                      }}
+                    />
+                  {/each}
+                </div>
+              {/if}
+              {#if showTitleButton}
+                <BlockComponent
+                  type="button"
+                  props={{
+                    onClick: titleButtonAction,
+                    text: titleButtonText,
+                    type: "cta",
+                  }}
+                />
+              {/if}
+            </div>
           </div>
-          <div class="controls">
-            {#if enrichedSearchColumns?.length}
-              <div
-                class="search"
-                style="--cols:{enrichedSearchColumns?.length}"
-              >
-                {#each enrichedSearchColumns as column}
-                  <BlockComponent
-                    type={column.componentType}
-                    props={{
-                      field: column.name,
-                      placeholder: column.name,
-                      text: column.name,
-                      autoWidth: true,
-                    }}
-                  />
-                {/each}
-              </div>
-            {/if}
-            {#if showTitleButton}
-              <BlockComponent
-                type="button"
-                props={{
-                  onClick: titleButtonAction,
-                  text: titleButtonText,
-                  type: "cta",
-                }}
-              />
-            {/if}
-          </div>
-        </div>
-      {/if}
-      {#if schema}
+        {/if}
         <BlockComponent
           type="dataprovider"
           bind:id={dataProviderId}
@@ -165,10 +165,10 @@
             }}
           />
         </BlockComponent>
-      {/if}
-    </BlockComponent>
-  </div>
-</Block>
+      </BlockComponent>
+    </div>
+  </Block>
+{/if}
 
 <style>
   .header {
