@@ -15,6 +15,8 @@ class QueryRunner {
     this.transformer = input.transformer
     this.queryId = input.queryId
     this.noRecursiveQuery = flags.noRecursiveQuery
+    this.cachedVariables = []
+    this.hasRerun = false
   }
 
   async execute() {
@@ -42,6 +44,19 @@ class QueryRunner {
     if (transformer) {
       const runner = new ScriptRunner(transformer, { data: rows })
       rows = runner.execute()
+    }
+
+    // if the request fails we retry once, invalidating the cached value
+    if (
+      info &&
+      info.code >= 400 &&
+      this.cachedVariables.length > 0 &&
+      !this.hasRerun
+    ) {
+      this.hasRerun = true
+      // invalidate the cache value
+      await threadUtils.invalidateDynamicVariables(this.cachedVariables)
+      return this.execute()
     }
 
     // needs to an array for next step
@@ -89,6 +104,8 @@ class QueryRunner {
     if (!value) {
       value = await this.runAnotherQuery(queryId, parameters)
       await threadUtils.storeDynamicVariable(queryId, name, value)
+    } else {
+      this.cachedVariables.push({ queryId, name })
     }
     return value
   }
@@ -125,6 +142,8 @@ class QueryRunner {
           data: responses[i].rows,
           info: responses[i].extra,
         })
+        // make sure its known that this uses dynamic variables in case it fails
+        this.hasDynamicVariables = true
       }
     }
     return parameters
