@@ -38,6 +38,16 @@ exports.checkCacheForDynamicVariable = async (queryId, variable) => {
   return cache.get(makeVariableKey(queryId, variable))
 }
 
+exports.invalidateDynamicVariables = async cachedVars => {
+  let promises = []
+  for (let variable of cachedVars) {
+    promises.push(
+      client.delete(makeVariableKey(variable.queryId, variable.name))
+    )
+  }
+  await Promise.all(promises)
+}
+
 exports.storeDynamicVariable = async (queryId, variable, value) => {
   const cache = await getClient()
   await cache.store(

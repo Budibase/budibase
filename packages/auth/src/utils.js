@@ -64,6 +64,17 @@ exports.getAppId = ctx => {
 }
 
 /**
+ * opens the contents of the specified encrypted JWT.
+ * @return {object} the contents of the token.
+ */
+exports.openJwt = token => {
+  if (!token) {
+    return token
+  }
+  return jwt.verify(token, options.secretOrKey)
+}
+
+/**
  * Get a cookie from context, and decrypt if necessary.
  * @param {object} ctx The request which is to be manipulated.
  * @param {string} name The name of the cookie to get.
@@ -75,7 +86,7 @@ exports.getCookie = (ctx, name) => {
     return cookie
   }
 
-  return jwt.verify(cookie, options.secretOrKey)
+  return exports.openJwt(cookie)
 }
 
 /**

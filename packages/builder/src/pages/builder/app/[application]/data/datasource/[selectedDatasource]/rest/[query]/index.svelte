@@ -118,6 +118,7 @@
 
       if (dynamicVariables) {
         datasource.config.dynamicVariables = restUtils.rebuildVariables(
+          datasource,
           saveId,
           dynamicVariables
         )
@@ -218,7 +219,7 @@
     if (query && !query.fields.pagination) {
       query.fields.pagination = {}
     }
-    dynamicVariables = restUtils.variablesToObject(datasource)
+    dynamicVariables = restUtils.getDynamicVariables(datasource, query._id)
   })
 </script>
 
@@ -438,9 +439,10 @@
             {#if showVariablesTab}
               <Tab title="Dynamic Variables">
                 <Layout noPadding gap="S">
-                  <Body size="S"
-                    >{"Create dynamic variables to use body and headers results in other queries"}</Body
-                  >
+                  <Body size="S">
+                    Create dynamic variables based on response body or headers
+                    from other queries.
+                  </Body>
                   <KeyValueBuilder
                     bind:object={dynamicVariables}
                     name="Variable"

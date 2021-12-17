@@ -104,8 +104,10 @@ exports.preview = async function (ctx) {
   const db = new CouchDB(ctx.appId)
 
   const datasource = await db.get(ctx.request.body.datasourceId)
-
-  const { fields, parameters, queryVerb, transformer } = ctx.request.body
+  // preview may not have a queryId as it hasn't been saved, but if it does
+  // this stops dynamic variables from calling the same query
+  const { fields, parameters, queryVerb, transformer, queryId } =
+    ctx.request.body
 
   try {
     const { rows, keys, info, extra } = await Runner.run({
@@ -115,6 +117,7 @@ exports.preview = async function (ctx) {
       fields,
       parameters,
       transformer,
+      queryId,
     })
 
     ctx.body = {
@@ -143,6 +146,7 @@ async function execute(ctx, opts = { rowsOnly: false }) {
       fields: query.fields,
       parameters: ctx.request.body.parameter,
       transformer: query.transformer,
+      queryId: ctx.params.queryId,
     })
     if (opts && opts.rowsOnly) {
       ctx.body = rows

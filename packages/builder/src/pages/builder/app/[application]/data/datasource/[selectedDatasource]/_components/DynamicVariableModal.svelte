@@ -1,10 +1,11 @@
 <script>
-  import { Input, ModalContent, Modal } from "@budibase/bbui"
+  import { Input, ModalContent, Modal, Body } from "@budibase/bbui"
 
   export let dynamicVariables
+  export let datasource
   export let binding
 
-  let name, modal, valid
+  let name, modal, valid, allVariableNames
 
   export const show = () => {
     modal.show()
@@ -17,11 +18,15 @@
     if (!name) {
       return false
     }
-    const varKeys = Object.keys(vars || {})
-    return varKeys.find(key => key.toLowerCase() === name.toLowerCase()) == null
+    return !allVariableNames.find(
+      varName => varName.toLowerCase() === name.toLowerCase()
+    )
   }
 
   $: valid = checkValid(dynamicVariables, name)
+  $: allVariableNames = (datasource?.config?.dynamicVariables || []).map(
+    variable => variable.name
+  )
   $: error = name && !valid ? "Variable name is already in use." : null
 
   async function saveVariable() {
@@ -40,6 +45,10 @@
     onConfirm={saveVariable}
     disabled={!valid}
   >
+    <Body size="S"
+      >Specify a name for your new dynamic variable, this must be unique across
+      your datasource.</Body
+    >
     <Input label="Variable name" bind:value={name} on:input {error} />
   </ModalContent>
 </Modal>

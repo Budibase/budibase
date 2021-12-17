@@ -37,6 +37,7 @@ exports.generateQueryPreviewValidation = () => {
     extra: Joi.object().optional(),
     datasourceId: Joi.string().required(),
     transformer: Joi.string().optional(),
-    parameters: Joi.object({}).required().unknown(true)
+    parameters: Joi.object({}).required().unknown(true),
+    queryId: Joi.string().optional(),
   }))
 }
