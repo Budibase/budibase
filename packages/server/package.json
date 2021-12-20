@@ -69,6 +69,7 @@
   "author": "Budibase",
   "license": "GPL-3.0",
   "dependencies": {
+    "@apidevtools/swagger-parser": "^10.0.3",
     "@budibase/auth": "^1.0.26",
     "@budibase/client": "^1.0.26",
     "@budibase/string-templates": "^1.0.26",
