@@ -52,13 +52,10 @@
   $: checkQueryName(url)
   $: responseSuccess = response?.info?.code >= 200 && response?.info?.code < 400
   $: isGet = query?.queryVerb === "read"
-  $: authConfigs = restUtils.buildAuthConfigs(datasource)
+  $: authConfigs = buildAuthConfigs(datasource)
   $: schemaReadOnly = !responseSuccess
   $: variablesReadOnly = !responseSuccess
-  $: showVariablesTab = restUtils.shouldShowVariables(
-    dynamicVariables,
-    variablesReadOnly
-  )
+  $: showVariablesTab = shouldShowVariables(dynamicVariables, variablesReadOnly)
 
   function getSelectedQuery() {
     return cloneDeep(
@@ -115,11 +112,7 @@
       notifications.success(`Request saved successfully.`)
 
       if (dynamicVariables) {
-        datasource.config.dynamicVariables = restUtils.rebuildVariables(
-          datasource,
-          saveId,
-          dynamicVariables
-        )
+        datasource.config.dynamicVariables = rebuildVariables(saveId)
         datasource = await datasources.save(datasource)
       }
     } catch (err) {
@@ -158,6 +151,16 @@
     return id
   }
 
+  const buildAuthConfigs = datasource => {
+    if (datasource?.config?.authConfigs) {
+      return datasource.config.authConfigs.map(c => ({
+        label: c.name,
+        value: c._id,
+      }))
+    }
+    return []
+  }
+
   const schemaMenuItems = [
     {
       text: "Create dynamic variable",
@@ -176,6 +179,44 @@
       },
     },
   ]
+
+  // convert dynamic variables list to simple key/val object
+  const getDynamicVariables = (datasource, queryId) => {
+    const variablesList = datasource?.config?.dynamicVariables
+    if (variablesList && variablesList.length > 0) {
+      const filtered = queryId
+        ? variablesList.filter(variable => variable.queryId === queryId)
+        : variablesList
+      return filtered.reduce(
+        (acc, next) => ({ ...acc, [next.name]: next.value }),
+        {}
+      )
+    }
+    return {}
+  }
+
+  // convert dynamic variables object back to a list, enrich with query id
+  const rebuildVariables = queryId => {
+    let variables = []
+    if (dynamicVariables) {
+      variables = Object.entries(dynamicVariables).map(entry => {
+        return {
+          name: entry[0],
+          value: entry[1],
+          queryId,
+        }
+      })
+    }
+    return variables
+  }
+
+  const shouldShowVariables = (dynamicVariables, variablesReadOnly) => {
+    return !!(
+      dynamicVariables &&
+      // show when editable or when read only and not empty
+      (!variablesReadOnly || Object.keys(dynamicVariables).length > 0)
+    )
+  }
 
   onMount(async () => {
     query = getSelectedQuery()
@@ -214,7 +255,7 @@
     if (query && !query.fields.bodyType) {
       query.fields.bodyType = "none"
     }
-    dynamicVariables = restUtils.getDynamicVariables(datasource, query._id)
+    dynamicVariables = getDynamicVariables(datasource, query._id)
   })
 </script>
 
