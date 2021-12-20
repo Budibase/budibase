@@ -36,6 +36,7 @@
   import DynamicVariableModal from "../../_components/DynamicVariableModal.svelte"
   import Placeholder from "assets/bb-spaceship.svg"
   import { cloneDeep } from "lodash/fp"
+  import { RawRestBodyTypes } from "constants/backend"
 
   let query, datasource
   let breakQs = {},
@@ -253,7 +254,11 @@
       }
     }
     if (query && !query.fields.bodyType) {
-      query.fields.bodyType = "none"
+      if (query.fields.requestBody) {
+        query.fields.bodyType = RawRestBodyTypes.JSON
+      } else {
+        query.fields.bodyType = RawRestBodyTypes.NONE
+      }
     }
     dynamicVariables = getDynamicVariables(datasource, query._id)
   })
