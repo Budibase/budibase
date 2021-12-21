@@ -41,18 +41,19 @@ jobs:
         uses: azure/setup-helm@v1
         id: helm-install
 
-      # - name: Build and release helm chart
-      #   run: | 
-      #     git config user.name "Budibase Helm Bot"
-      #     git config user.email "<>"
-      #     mv budibase-${{ env.RELEASE_VERSION }}.tgz docs
-      #     helm repo index docs
-      #     git checkout gh-pages
-      #     git add -A
-      #     git commit -m "Helm Release: ${{ env.RELEASE_VERSION }}"
-      #     git push
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and release helm chart
+        run: | 
+          git config user.name "Budibase Helm Bot"
+          git config user.email "<>"
+          git pull
+          mv budibase-${{ env.RELEASE_VERSION }}.tgz docs
+          helm repo index docs
+          git checkout gh-pages
+          git add -A
+          git commit -m "Helm Release: ${{ env.RELEASE_VERSION }}"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # - name: Deploy
       #   uses: peaceiris/actions-gh-pages@v3
