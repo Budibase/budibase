@@ -47,9 +47,9 @@ jobs:
           git config user.email "<>"
           git pull
           helm package charts/budibase
+          git checkout gh-pages
           mv *.tgz docs
           helm repo index docs
-          git checkout gh-pages
           git add -A
           git commit -m "Helm Release: ${{ env.RELEASE_VERSION }}"
           git push
