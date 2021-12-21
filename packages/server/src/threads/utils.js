@@ -8,6 +8,9 @@ const { processStringSync } = require("@budibase/string-templates")
 const VARIABLE_TTL_SECONDS = 3600
 let client
 
+const IS_TRIPLE_BRACE = new RegExp(/^{{3}.*}{3}$/)
+const IS_HANDLEBARS = new RegExp(/^{{2}.*}{2}$/)
+
 async function getClient() {
   if (!client) {
     client = await new redis.Client(redis.utils.Databases.QUERY_VARS).init()
@@ -90,7 +93,12 @@ exports.enrichQueryFields = (fields, parameters = {}) => {
       enrichedQuery[key] = this.enrichQueryFields(fields[key], parameters)
     } else if (typeof fields[key] === "string") {
       // enrich string value as normal
-      enrichedQuery[key] = processStringSync(fields[key], parameters, {
+      let value = fields[key]
+      // add triple brace to avoid escaping e.g. '=' in cookie header
+      if (IS_HANDLEBARS.test(value) && !IS_TRIPLE_BRACE.test(value)) {
+        value = `{${value}}`
+      }
+      enrichedQuery[key] = processStringSync(value, parameters, {
         noHelpers: true,
       })
     } else {
