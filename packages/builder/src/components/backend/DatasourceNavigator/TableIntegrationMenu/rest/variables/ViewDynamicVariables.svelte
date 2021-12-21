@@ -1,5 +1,5 @@
 <script>
-  import { Body, Table } from "@budibase/bbui"
+  import { Body, Table, BoldRenderer, CodeRenderer } from "@budibase/bbui"
   import { queries as queriesStore } from "stores/backend"
   import { goto } from "@roxi/routify"
 
@@ -12,8 +12,8 @@
 
   const dynamicVariableSchema = {
     name: "",
-    value: "",
     query: "",
+    value: "",
   }
 
   const onClick = dynamicVariable => {
@@ -43,5 +43,9 @@
   allowEditColumns={false}
   allowEditRows={false}
   allowSelectRows={false}
+  customRenderers={[
+    { column: "name", component: BoldRenderer },
+    { column: "value", component: CodeRenderer },
+  ]}
 />
 <Body size="S" />
