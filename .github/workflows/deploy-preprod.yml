@@ -36,10 +36,6 @@ jobs:
       #     -o values.preprod.yaml \
       #     -L https://api.github.com/repos/budibase/budibase-infra/contents/kubernetes/values.preprod.yaml
 
-      - name: Setup Helm 
-        uses: azure/setup-helm@v1
-        id: helm-install
-
       - name: Deploy to Preprod Environment
         uses: deliverybot/helm@v1
         with:
@@ -47,6 +43,7 @@ jobs:
           namespace: budibase
           chart: charts/budibase
           token: ${{ github.token }}
+          helm: helm3
           values: |
             globals: 
               appVersion: v${{ env.RELEASE_VERSION }}
