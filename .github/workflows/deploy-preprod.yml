@@ -47,6 +47,8 @@ jobs:
           values: |
             globals: 
               appVersion: v${{ env.RELEASE_VERSION }}
+            ingress:
+              nginx: false
           # value-files: >-
           #   [
           #     "charts/budibase/values.yaml"
