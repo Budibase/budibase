@@ -41,4 +41,6 @@ jobs:
         files: ./packages/server/coverage/clover.xml
         name: codecov-umbrella
         verbose: true 
+
+    # TODO: parallelise this
     - run: yarn test:e2e:ci
