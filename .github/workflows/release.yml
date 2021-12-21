@@ -71,9 +71,12 @@ jobs:
       #     namespace: budibase
       #     chart: charts/budibase
       #     token: ${{ github.token }}
+      #     helm: helm3
       #     values: |
       #       globals: 
       #         appVersion: ${{ steps.previoustag.outputs.tag }}
+      #       ingress:
+      #         nginx: true
       #     # value-files: >-
       #     #   [
       #     #     "charts/budibase/values.yaml"
@@ -85,5 +88,6 @@ jobs:
       #   uses: tsickert/discord-webhook@v4.0.0
       #   with:
       #     webhook-url: ${{ secrets.PROD_DEPLOY_WEBHOOK_URL }}
-      #     content: "Preprod Deployment Complete: ${{ env.RELEASE_VERSION }} deployed to Budibase Pre-prod."
-      #     embed-title: ${{ env.RELEASE_VERSION }}
+      #     content: "Preprod Deployment Complete: ${{ steps.previoustag.outputs.tag }} deployed to Budibase Pre-prod."
+      #     embed-title: ${{ steps.previoustag.outputs.tag }}
+
