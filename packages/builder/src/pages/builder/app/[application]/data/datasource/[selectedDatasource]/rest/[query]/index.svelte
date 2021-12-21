@@ -208,7 +208,12 @@
         }
       })
     }
-    return variables
+
+    let existing = datasource?.config?.dynamicVariables || []
+    // remove existing query variables (for changes and deletions)
+    existing = existing.filter(variable => variable.queryId !== queryId)
+    // re-add the new query variables
+    return [...existing, ...variables]
   }
 
   const shouldShowVariables = (dynamicVariables, variablesReadOnly) => {
