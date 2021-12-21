@@ -56,13 +56,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # - name: Deploy
-      #   uses: peaceiris/actions-gh-pages@v3
-      #   with:
-      #     github_token: ${{ secrets.GITHUB_TOKEN }}
-      #     publish_dir: ./public
-      #     full_commit_message: "Helm Release: ${{ env.RELEASE_VERSION }}"
-
       - name: Perform Github Release
         uses: softprops/action-gh-release@v1
         with:

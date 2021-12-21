@@ -35,6 +35,7 @@ jobs:
           -H 'Accept: application/vnd.github.v3.raw' \
           -o values.preprod.yaml \
           -L https://api.github.com/repos/budibase/budibase-infra/contents/kubernetes/budibase-preprod/values.yaml
+          wc -l values.production.yaml
 
       - name: Deploy to Preprod Environment
         uses: deliverybot/helm@v1
