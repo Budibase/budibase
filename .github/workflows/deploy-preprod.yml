@@ -29,12 +29,12 @@ jobs:
           release_version=$(cat lerna.json | jq -r '.version')
           echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
 
-      # - name: Pull values.yaml from budibase-infra
-      #   run: | 
-      #     curl -H "Authorization: token ${{ secrets.GH_PERSONAL_TOKEN }}" \                                                                                [c3a7a9d12]
-      #     -H 'Accept: application/vnd.github.v3.raw' \
-      #     -o values.preprod.yaml \
-      #     -L https://api.github.com/repos/budibase/budibase-infra/contents/kubernetes/values.preprod.yaml
+      - name: Pull values.yaml from budibase-infra
+        run: | 
+          curl -H "Authorization: token ${{ secrets.GH_PERSONAL_TOKEN }}" \
+          -H 'Accept: application/vnd.github.v3.raw' \
+          -o values.preprod.yaml \
+          -L https://api.github.com/repos/budibase/budibase-infra/contents/kubernetes/budibase-preprod/values.yaml
 
       - name: Deploy to Preprod Environment
         uses: deliverybot/helm@v1
@@ -50,10 +50,10 @@ jobs:
             ingress:
               enabled: true
               nginx: true
-          # value-files: >-
-          #   [
-          #     "charts/budibase/values.yaml"
-          #   ]
+          value-files: >-
+            [
+              "values.preprod.yaml"
+            ]
         env:
           KUBECONFIG_FILE: '${{ secrets.PREPROD_KUBECONFIG }}'
 
