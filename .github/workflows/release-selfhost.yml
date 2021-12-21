@@ -9,7 +9,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-        with:
+        with: 
           fetch_depth: 0
 
       - name: Tag and release Docker images (Self Host)
@@ -46,6 +46,7 @@ jobs:
           git config user.name "Budibase Helm Bot"
           git config user.email "<>"
           git pull
+          helm package charts/budibase
           mv budibase-${{ env.RELEASE_VERSION }}.tgz docs
           helm repo index docs
           git checkout gh-pages

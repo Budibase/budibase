@@ -11,8 +11,8 @@ sources:
   - https://github.com/Budibase/budibase
   - https://budibase.com
 type: application
-version: 1.0.0
-appVersion: 1.0.20
+version: 0.2.5
+appVersion: 1.0.25
 dependencies:
   - name: couchdb
     version: 3.3.4
