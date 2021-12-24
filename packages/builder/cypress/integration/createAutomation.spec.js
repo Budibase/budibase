@@ -24,7 +24,8 @@ context("Create a automation", () => {
     cy.contains("dog").click()
 
     // Create action
-    cy.contains("Add Action").click()
+    cy.get('[aria-label="AddCircle"]').eq(1).click()
+    //cy.contains("Add Action").click()
     cy.get(".modal-inner-wrapper").within(() => {
       cy.wait(1000)
       cy.contains("Create Row").trigger('mouseover').click().click()

@@ -6,9 +6,9 @@ context("Datasource Wizard", () => {
 
   it("should navigate in and out of a datasource via wizard", () => {
     // Select PostgreSQL and add config (without fetch)
-    const datasource = "PostgreSQL"
+    const datasource = "Oracle"
     cy.selectExternalDatasource(datasource)
-    cy.addSqlDatasourceConfig(datasource, true)
+    cy.addDatasourceConfig(datasource, true)
     
     // Navigate back within datasource wizard
     cy.get(".spectrum-Dialog-grid").within(() => {
@@ -22,18 +22,16 @@ context("Datasource Wizard", () => {
       cy.get(".spectrum-Button").contains("Continue").click({ force: true })
     })
     
-    // Immediately fetch tables after selection
+    // Fetch tables after selection
     // Previously entered config should not have been saved
-    // Config is back to default values - Modal will not close (incorrect config)
+    // Config is back to default values
+    // Modal will close and provide 500 error
+    cy.intercept('**/datasources').as('datasourceConnection')
     cy.get(".spectrum-Dialog-grid").within(() => {
       cy.get(".spectrum-Button").contains("Fetch tables from database").click({ force: true })
     })
-    cy.wait(2000)
-    cy.get(".spectrum-Dialog-grid").should('be.visible')
-    
-    // Close the modal
-    cy.get(".spectrum-Dialog-grid").within(() => {
-      cy.get(".close-icon").click()
-    })
+    cy.wait("@datasourceConnection")
+    cy.get("@datasourceConnection").its('response.body')
+        .should('have.property', 'status', 500)
   })
 })
