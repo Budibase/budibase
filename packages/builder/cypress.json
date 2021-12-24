@@ -5,7 +5,7 @@
   "env": {
     "PORT": "10001",
     "JWT_SECRET": "test",
-    "HOST_IP": "",
-    "TEST_ENV" : true
+    "HOST_IP": "52.49.184.138",
+    "TEST_ENV" : false
   }
 }

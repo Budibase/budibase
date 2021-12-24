@@ -78,10 +78,11 @@ context("Create a Table", () => {
   })
 
   it("deletes a column", () => {
+    const columnName = "nameupdated"
     cy.get(".title").click()
     cy.get(".spectrum-Table-editIcon > use").click()
     cy.contains("Delete").click()
-    cy.wait(50)
+    cy.get('[data-cy="delete-column-confirm"]').type(columnName)
     cy.contains("Delete Column").click()
     cy.contains("nameupdated").should("not.exist")
   })
@@ -95,6 +96,7 @@ context("Create a Table", () => {
         cy.get(".actions .spectrum-Icon").click({ force: true })
       })
     cy.get(".spectrum-Menu > :nth-child(2)").click()
+    cy.get('[data-cy="delete-table-confirm"]').type("dog")
     cy.contains("Delete Table").click()
     cy.contains("dog").should("not.exist")
   })

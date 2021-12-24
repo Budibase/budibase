@@ -13,7 +13,7 @@ it("should rename an unpublished application", () => {
     cy.reload()
     cy.wait(1000)
     cy.searchForApplication(appRename)
-    cy.get(".appGrid").find(".wrapper").should("have.length", 1)
+    cy.get(".appTable").find(".title").should("have.length", 1)
     // Set app name back to Cypress Tests
     cy.reload()
     cy.wait(1000)
@@ -36,7 +36,7 @@ xit("Should rename a published application", () => {
     cy.get(".home-logo").click()
     renameApp(appName, appRename, true)
     cy.searchForApplication(appRename)
-    cy.get(".appGrid").find(".wrapper").should("have.length", 1)
+    cy.get(".appTable").find(".wrapper").should("have.length", 1)
 })
 
 it("Should try to rename an application to have no name", () => {
@@ -46,10 +46,10 @@ it("Should try to rename an application to have no name", () => {
     cy.wait(500)
     // Close modal and confirm name has not been changed
     cy.get(".spectrum-Dialog-grid").contains("Cancel").click()
-    cy.reload()
+    cy.reload() 
     cy.wait(1000)
     cy.searchForApplication(appName)
-    cy.get(".appGrid").find(".wrapper").should("have.length", 1)
+    cy.get(".appTable").find(".title").should("have.length", 1)
 })
 
 xit("Should create two applications with the same name", () => {
@@ -78,7 +78,7 @@ it("should validate application names", () => {
     cy.reload()
     cy.wait(1000)
     cy.searchForApplication(numberName)
-    cy.get(".appGrid").find(".wrapper").should("have.length", 1)
+    cy.get(".appTable").find(".title").should("have.length", 1)
     cy.reload()
     cy.wait(1000)
     renameApp(numberName, specialCharName)
@@ -95,7 +95,10 @@ it("should validate application names", () => {
     .its("body")
     .then(val => {
         if (val.length > 0) {
-            cy.get(".title > :nth-child(3) > .spectrum-Icon").click()
+            cy.get(".appTable")
+            .within(() => {
+                cy.get(".spectrum-Icon").eq(1).click()
+                })
             // Check for when an app is published
             if (published == true){
                 // Should not have Edit as option, will unpublish app

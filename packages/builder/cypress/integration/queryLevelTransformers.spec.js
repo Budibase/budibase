@@ -9,24 +9,24 @@ context("Query Level Transformers", () => {
       const datasource = "REST"
       const restUrl = "https://api.openbrewerydb.org/breweries"
       cy.selectExternalDatasource(datasource)
-      cy.addRestDatasourceConfig(restUrl)
-      // Add Query
-      cy.get(".spectrum-Button").contains("Add Query").click({ force: true })
-      cy.wait(500)
-      
+      cy.createRestQuery("GET", restUrl)
+      cy.get(".spectrum-Tabs-itemLabel").contains("Transformer").click()
       // Get Transformer Function from file
       cy.readFile("cypress/support/queryLevelTransformerFunction.js").then((transformerFunction) => {
-        console.log(transformerFunction[1])
         cy.get(".CodeMirror textarea")
         // Highlight current text and overwrite with file contents
         .type(Cypress.platform === 'darwin' ? '{cmd}a' : '{ctrl}a', { force: true })
         .type(transformerFunction, { parseSpecialCharSequences: false })
       })
-      // Run Query
-      cy.get(".spectrum-Button").contains("Run Query").click({ force: true })
-      cy.wait(500)
-      // Confirm JSON results
-      cy.get(".preview").should('have.text', '{\n  "state": "Indiana",\n  "count": 1\n}')
+      // Send Query
+      cy.intercept('**/queries/preview').as('query')
+      cy.get(".spectrum-Button").contains("Send").click({ force: true })
+      cy.wait("@query")
+      // Assert against Status Code, body, & body rows
+      cy.get("@query").its('response.statusCode')
+      .should('eq', 200)
+      cy.get("@query").its('response.body').should('not.be.empty')
+      cy.get("@query").its('response.body.rows').should('not.be.empty')
     })
       
   it("should add data to the previous query", () => {
@@ -34,25 +34,46 @@ context("Query Level Transformers", () => {
     const datasource = "REST"
     const restUrl = "https://api.openbrewerydb.org/breweries"
     cy.selectExternalDatasource(datasource)
-    cy.addRestDatasourceConfig(restUrl)
-    // Add Query
-    cy.get(".spectrum-Button").contains("Add Query").click({ force: true })
-    cy.wait(500)
+    cy.createRestQuery("GET", restUrl)
+    cy.get(".spectrum-Tabs-itemLabel").contains("Transformer").click()
     // Get Transformer Function with Data from file
     cy.readFile("cypress/support/queryLevelTransformerFunctionWithData.js").then((transformerFunction) => {
-      console.log(transformerFunction[1])
+      //console.log(transformerFunction[1])
       cy.get(".CodeMirror textarea")
       // Highlight current text and overwrite with file contents
       .type(Cypress.platform === 'darwin' ? '{cmd}a' : '{ctrl}a', { force: true })
       .type(transformerFunction, { parseSpecialCharSequences: false })
     })
-    // Run Query
-    cy.get(".spectrum-Button").contains("Run Query").click({ force: true })
+    // Send Query
+    cy.intercept('**/queries/preview').as('query')
+    cy.get(".spectrum-Button").contains("Send").click({ force: true })
+    cy.wait("@query")
+    // Assert against Status Code, body, & body rows
+    cy.get("@query").its('response.statusCode')
+    .should('eq', 200)
+    cy.get("@query").its('response.body').should('not.be.empty')
+    cy.get("@query").its('response.body.rows').should('not.be.empty')
+  })
+  
+  it("should run an invalid query within the transformer section", () => {
+    // Add REST datasource - contains API for breweries
+    const datasource = "REST"
+    const restUrl = "https://api.openbrewerydb.org/breweries"
+    cy.selectExternalDatasource(datasource)
+    cy.createRestQuery("GET", restUrl)
+    cy.get(".spectrum-Tabs-itemLabel").contains("Transformer").click()
+    // Clear the code box and add "test"
+    cy.get(".CodeMirror textarea")
+    .type(Cypress.platform === 'darwin' ? '{cmd}a' : '{ctrl}a', { force: true })
+    .type("test")
+    // Run Query and intercept
+    cy.intercept('**/preview').as('queryError')
+    cy.get(".spectrum-Button").contains("Send").click({ force: true })
+    cy.wait("@queryError")
     cy.wait(500)
-    // Confirm JSON results
-    cy.get(".preview").should(
-      'have.text',
-      '{\n  "state": "Indiana",\n  "count": 1,\n  "flag": "http://flags.ox3.in/svg/us/${stateCode}.svg"\n}')
+    // Assert against message and status for the query error
+    cy.get("@queryError").its('response.body').should('have.property', 'message', "test is not defined")
+    cy.get("@queryError").its('response.body').should('have.property', 'status', 400)
   })
   
   it("should run an invalid query via POST request", () => {
