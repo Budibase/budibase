@@ -282,6 +282,12 @@ Cypress.Commands.add("addRow", values => {
     }
     cy.get(".spectrum-ButtonGroup").contains("Create").click()
   })
+  cy.get(".spectrum-Modal").within(() => {
+    cy.get("input").first().clear().type(screenName)
+    cy.get("input").eq(1).clear().type(route)
+    cy.get(".spectrum-Button--cta").click()
+    cy.wait(2000)
+  })
 })
 
 Cypress.Commands.add("expandBudibaseConnection", () => {

@@ -14,18 +14,38 @@
   export let underline
   export let size
 
-  $: external = url && typeof url === "string" && !url.startsWith("/")
+  let node
+
+  $: $component.editing && node?.focus()
+  $: externalLink = url && typeof url === "string" && !url.startsWith("/")
   $: target = openInNewTab ? "_blank" : "_self"
   $: placeholder = $builderStore.inBuilder && !text
-  $: componentText = $builderStore.inBuilder
-    ? text || "Placeholder link"
-    : text || ""
+  $: componentText = getComponentText(text, $builderStore, $component)
+  $: sanitizedUrl = getSanitizedUrl(url, externalLink, openInNewTab)
 
   // Add color styles to main styles object, otherwise the styleable helper
   // overrides the color when it's passed as inline style.
-  // Add color styles to main styles object, otherwise the styleable helper
-  // overrides the color when it's passed as inline style.
   $: styles = enrichStyles($component.styles, color)
+
+  const getSanitizedUrl = (url, externalLink, newTab) => {
+    if (!url) {
+      return externalLink || newTab ? "#/" : "/"
+    }
+    if (externalLink) {
+      return url
+    }
+    if (openInNewTab) {
+      return `#${url}`
+    }
+    return url
+  }
+
+  const getComponentText = (text, builderState, componentState) => {
+    if (!builderState.inBuilder || componentState.editing) {
+      return text || ""
+    }
+    return text || componentState.name || "Placeholder text"
+  }
 
   const enrichStyles = (styles, color) => {
     if (!color) {
@@ -39,13 +59,30 @@
       },
     }
   }
+
+  const updateText = e => {
+    builderStore.actions.updateProp("text", e.target.textContent.trim())
+  }
 </script>
 
-{#if $builderStore.inBuilder || componentText}
-  {#if external}
+{#if $component.editing}
+  <div
+    bind:this={node}
+    contenteditable
+    use:styleable={styles}
+    class:bold
+    class:italic
+    class:underline
+    class="align--{align || 'left'} size--{size || 'M'}"
+    on:blur={$component.editing ? updateText : null}
+  >
+    {componentText}
+  </div>
+{:else if $builderStore.inBuilder || componentText}
+  {#if externalLink || openInNewTab}
     <a
       {target}
-      href={url || "/"}
+      href={sanitizedUrl}
       use:styleable={styles}
       class:placeholder
       class:bold
@@ -56,28 +93,30 @@
       {componentText}
     </a>
   {:else}
-    <a
-      use:linkable
-      href={url || "/"}
-      use:styleable={styles}
-      class:placeholder
-      class:bold
-      class:italic
-      class:underline
-      class="align--{align || 'left'} size--{size || 'M'}"
-    >
-      {componentText}
-    </a>
+    {#key sanitizedUrl}
+      <a
+        use:linkable
+        href={sanitizedUrl}
+        use:styleable={styles}
+        class:placeholder
+        class:bold
+        class:italic
+        class:underline
+        class="align--{align || 'left'} size--{size || 'M'}"
+      >
+        {componentText}
+      </a>
+    {/key}
   {/if}
 {/if}
 
 <style>
-  a {
+  a,
+  div {
     color: var(--spectrum-alias-text-color);
-    white-space: nowrap;
     transition: color 130ms ease-in-out;
   }
-  a:hover {
+  a:not(.placeholder):hover {
     color: var(--spectrum-link-primary-m-text-color-hover) !important;
   }
   .placeholder {

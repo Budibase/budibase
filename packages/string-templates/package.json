@@ -1,10 +1,10 @@
 {
   "name": "@budibase/string-templates",
-  "version": "0.9.185-alpha.10",
+  "version": "1.0.27-alpha.0",
   "description": "Handlebars wrapper for Budibase templating.",
   "main": "src/index.cjs",
   "module": "dist/bundle.mjs",
-  "license": "AGPL-3.0",
+  "license": "MPL-2.0",
   "types": "dist/index.d.ts",
   "exports": {
     ".": {

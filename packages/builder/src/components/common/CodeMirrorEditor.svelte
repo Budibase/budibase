@@ -1,6 +1,4 @@
 <script context="module">
-  import { Label } from "@budibase/bbui"
-
   export const EditorModes = {
     JS: {
       name: "javascript",
@@ -10,6 +8,9 @@
       name: "javascript",
       json: true,
     },
+    XML: {
+      name: "xml",
+    },
     SQL: {
       name: "sql",
     },
@@ -17,10 +18,14 @@
       name: "handlebars",
       base: "text/html",
     },
+    Text: {
+      name: "text/html",
+    },
   }
 </script>
 
 <script>
+  import { Label } from "@budibase/bbui"
   import CodeMirror from "components/integration/codemirror"
   import { themeStore } from "builderStore"
   import { createEventDispatcher, onMount } from "svelte"
@@ -38,11 +43,12 @@
   let editor
 
   // Keep editor up to date with value
+  $: editor?.setOption("mode", mode)
   $: editor?.setValue(value || "")
 
   // Creates an instance of a code mirror editor
   async function createEditor(mode, value) {
-    if (!CodeMirror || !textarea || editor) {
+    if (!CodeMirror || !textarea) {
       return
     }
 
@@ -155,5 +161,10 @@
   /* Add a spectrum themed border when focused */
   div :global(.CodeMirror-focused) {
     border-color: var(--spectrum-alias-border-color-mouse-focus);
+  }
+
+  /* Ensure hints are always on top */
+  :global(.CodeMirror-hints) {
+    z-index: 999999;
   }
 </style>

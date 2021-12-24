@@ -1,6 +1,6 @@
 <script>
   import { store, automationStore } from "builderStore"
-  import { roles } from "stores/backend"
+  import { roles, flags } from "stores/backend"
   import { Icon, ActionGroup, Tabs, Tab, notifications } from "@budibase/bbui"
   import DeployModal from "components/deploy/DeployModal.svelte"
   import RevertModal from "components/deploy/RevertModal.svelte"
@@ -49,6 +49,7 @@
       }
       await automationStore.actions.fetch()
       await roles.fetch()
+      await flags.fetch()
       return pkg
     } else {
       throw new Error(pkg)

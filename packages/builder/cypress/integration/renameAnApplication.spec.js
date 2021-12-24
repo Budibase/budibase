@@ -105,7 +105,7 @@ it("should validate application names", () => {
                 cy.should("not.have.value", "Edit")
                 cy.get(".spectrum-Menu").contains("Unpublish").click()
                 cy.get(".spectrum-Dialog-grid").contains("Unpublish app").click()
-                cy.get(".title > :nth-child(3) > .spectrum-Icon").click()
+                cy.get(".appTable > :nth-child(5) > :nth-child(2) > .spectrum-Icon").click()
             }
             cy.contains("Edit").click()
             cy.get(".spectrum-Modal")

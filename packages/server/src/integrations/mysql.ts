@@ -134,14 +134,16 @@ module MySQLModule {
         false
       )
       const tableNames = tablesResp.map(
-        (obj: any) => obj[`Tables_in_${database.toLowerCase()}`]
+        (obj: any) =>
+          obj[`Tables_in_${database}`] ||
+          obj[`Tables_in_${database.toLowerCase()}`]
       )
       for (let tableName of tableNames) {
         const primaryKeys = []
         const schema: TableSchema = {}
         const descResp = await internalQuery(
           this.client,
-          { sql: `DESCRIBE ${tableName};` },
+          { sql: `DESCRIBE \`${tableName}\`;` },
           false
         )
         for (let column of descResp) {

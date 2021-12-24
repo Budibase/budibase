@@ -1,14 +1,14 @@
 context("Add Multi-Option Datatype", () => {
-    before(() => {
-      cy.login()
-      cy.createTestApp()
-    })
+  before(() => {
+    cy.login()
+    cy.createTestApp()
+  })
 
-    it("should create a new table, with data", () => {
-        cy.createTable("Multi Data")
-        cy.addColumn("Multi Data", "Test Data", "Multi-select", "1\n2\n3\n4\n5")
-        cy.addRowMultiValue(["1", "2", "3", "4", "5"])
-    })
+  it("should create a new table, with data", () => {
+    cy.createTable("Multi Data")
+    cy.addColumn("Multi Data", "Test Data", "Multi-select", "1\n2\n3\n4\n5")
+    cy.addRowMultiValue(["1", "2", "3", "4", "5"])
+  })
 
     it ("should add form with multi select picker, containing 5 options", () => {
         cy.navigateToFrontend()
@@ -38,4 +38,5 @@ context("Add Multi-Option Datatype", () => {
             cy.getComponent(componentId).find('.spectrum-Picker-label').contains("(5)")
         })
     })
+  })
 })

@@ -84,7 +84,6 @@ export default `
           if (window.loadBudibase) {
             window.loadBudibase()
             document.documentElement.classList.add("loaded")
-            window.parent.postMessage({ type: "iframe-loaded" })
           } else {
             throw "The client library couldn't be loaded"
           }
@@ -94,10 +93,6 @@ export default `
       }
 
       window.addEventListener("message", receiveMessage)
-      window.addEventListener("keydown", evt => {
-        window.parent.postMessage({ type: "keydown", key: event.key })
-      })
-
       window.parent.postMessage({ type: "ready" })
     </script>
   </head>

@@ -131,38 +131,14 @@ exports.getBuiltinPermissionByID = id => {
   return perms.find(perm => perm._id === id)
 }
 
-exports.doesHaveResourcePermission = (
-  permissions,
-  permLevel,
-  { resourceId, subResourceId }
-) => {
-  // set foundSub to not subResourceId, incase there is no subResource
-  let foundMain = false,
-    foundSub = false
-  for (let [resource, levels] of Object.entries(permissions)) {
-    if (resource === resourceId && levels.indexOf(permLevel) !== -1) {
-      foundMain = true
-    }
-    if (
-      subResourceId &&
-      resource === subResourceId &&
-      levels.indexOf(permLevel) !== -1
-    ) {
-      foundSub = true
-    }
-    // this will escape if foundMain only when no sub resource
-    if (foundMain && foundSub) {
-      break
-    }
-  }
-  return foundMain || foundSub
-}
-
-exports.doesHaveBasePermission = (permType, permLevel, permissionIds) => {
+exports.doesHaveBasePermission = (permType, permLevel, rolesHierarchy) => {
+  const basePermissions = [
+    ...new Set(rolesHierarchy.map(role => role.permissionId)),
+  ]
   const builtins = Object.values(BUILTIN_PERMISSIONS)
   let permissions = flatten(
     builtins
-      .filter(builtin => permissionIds.indexOf(builtin._id) !== -1)
+      .filter(builtin => basePermissions.indexOf(builtin._id) !== -1)
       .map(builtin => builtin.permissions)
   )
   for (let permission of permissions) {

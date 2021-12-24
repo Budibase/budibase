@@ -1,6 +1,7 @@
 <script>
-  import { Select, ModalContent } from "@budibase/bbui"
+  import { Select, ModalContent, notifications } from "@budibase/bbui"
   import download from "downloadjs"
+  import { get } from "builderStore/api"
 
   const FORMATS = [
     {
@@ -18,11 +19,18 @@
   let exportFormat = FORMATS[0].key
 
   async function exportView() {
-    download(
-      `/api/views/export?view=${encodeURIComponent(
-        view
-      )}&format=${exportFormat}`
+    const uri = encodeURIComponent(view)
+    const response = await get(
+      `/api/views/export?view=${uri}&format=${exportFormat}`
     )
+    if (response.status === 200) {
+      const data = await response.text()
+      download(data, `export.${exportFormat}`)
+    } else {
+      notifications.error(
+        `Unable to export ${exportFormat.toUpperCase()} data.`
+      )
+    }
   }
 </script>
 
