@@ -11,7 +11,7 @@ context("Create a automation", () => {
     cy.get("[data-cy='new-screen'] > .spectrum-Icon").click()
     cy.get(".modal-inner-wrapper").within(() => {
       cy.get("input").type("Add Row")
-      cy.contains("Row Created").click()
+      cy.contains("Row Created").click({ force: true })
       cy.wait(500)
       cy.get(".spectrum-Button--cta").click()
     })
@@ -21,7 +21,7 @@ context("Create a automation", () => {
     cy.get(".spectrum-Picker-label").click()
     cy.wait(500)
     cy.contains("dog").click()
-
+    cy.wait(2000)
     // Create action
     cy.get('[aria-label="AddCircle"]').eq(1).click()
     cy.get(".modal-inner-wrapper").within(() => {
@@ -34,19 +34,20 @@ context("Create a automation", () => {
     cy.contains("dog").click()
     cy.get(".spectrum-Textfield-input")
     .first()
-    .type("goodboy")
+    .type("{{ trigger.row.name }}", { parseSpecialCharSequences: false })
     cy.get(".spectrum-Textfield-input")
       .eq(1)
       .type("11")
+    cy.contains("Finish and test automation").click()
 
-    cy.contains("Run test").click()
     cy.get(".modal-inner-wrapper").within(() => {
       cy.wait(1000)
       cy.get(".spectrum-Picker-label").click()
       cy.contains("dog").click()
+      cy.wait(1000)
       cy.get(".spectrum-Textfield-input")
         .first()
-        .type("goodboy")
+        .type("automationGoodboy")
       cy.get(".spectrum-Textfield-input")
         .eq(1)
         .type("11")
@@ -56,6 +57,9 @@ context("Create a automation", () => {
       cy.get(".spectrum-Textfield-input")
         .eq(3)
         .type("123456")
+      cy.contains("Test").click()
     })
+    cy.contains("Data").click()
+    cy.contains("automationGoodboy")
   })
 })

@@ -13,3 +13,9 @@
 >
   <slot />
 </p>
+
+<style>
+  p {
+    font-weight: 600;
+  }
+</style>

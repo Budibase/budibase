@@ -3,7 +3,7 @@
   import { getContext } from "svelte"
   import dayjs from "dayjs"
   import utc from "dayjs/plugin/utc"
-  import { onMount } from "svelte"
+  import { onDestroy } from "svelte"
 
   dayjs.extend(utc)
 
@@ -13,8 +13,6 @@
 
   const component = getContext("component")
   const { styleable, ActionTypes, getAction } = getContext("sdk")
-
-  const setQuery = getAction(dataProvider?.id, ActionTypes.SetDataProviderQuery)
   const options = [
     "Last 1 day",
     "Last 7 days",
@@ -25,44 +23,50 @@
   ]
   let value = options.includes(defaultValue) ? defaultValue : "Last 30 days"
 
-  const updateDateRange = option => {
-    const query = dataProvider?.state?.query
-    if (!query || !setQuery) {
-      return
+  $: dataProviderId = dataProvider?.id
+  $: addExtension = getAction(
+    dataProviderId,
+    ActionTypes.AddDataProviderQueryExtension
+  )
+  $: removeExtension = getAction(
+    dataProviderId,
+    ActionTypes.RemoveDataProviderQueryExtension
+  )
+  $: queryExtension = getQueryExtension(field, value)
+  $: addExtension?.($component.id, queryExtension)
+
+  const getQueryExtension = (field, value) => {
+    if (!field || !value) {
+      return null
     }
 
-    value = option
     let low = dayjs.utc().subtract(1, "year")
     let high = dayjs.utc().add(1, "day")
 
-    if (option === "Last 1 day") {
+    if (value === "Last 1 day") {
       low = dayjs.utc().subtract(1, "day")
-    } else if (option === "Last 7 days") {
+    } else if (value === "Last 7 days") {
       low = dayjs.utc().subtract(7, "days")
-    } else if (option === "Last 30 days") {
+    } else if (value === "Last 30 days") {
       low = dayjs.utc().subtract(30, "days")
-    } else if (option === "Last 3 months") {
+    } else if (value === "Last 3 months") {
       low = dayjs.utc().subtract(3, "months")
-    } else if (option === "Last 6 months") {
+    } else if (value === "Last 6 months") {
       low = dayjs.utc().subtract(6, "months")
     }
 
-    // Update data provider query with the new filter
-    setQuery({
-      ...query,
+    return {
       range: {
-        ...query.range,
         [field]: {
-          high: high.format(),
           low: low.format(),
+          high: high.format(),
         },
       },
-    })
+    }
   }
 
-  // Update the range on mount to the initial value
-  onMount(() => {
-    updateDateRange(value)
+  onDestroy(() => {
+    removeExtension?.($component.id)
   })
 </script>
 
@@ -71,6 +75,6 @@
     placeholder={null}
     {options}
     {value}
-    on:change={e => updateDateRange(e.detail)}
+    on:change={e => (value = e.detail)}
   />
 </div>

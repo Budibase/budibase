@@ -51,31 +51,31 @@
     : { schema: {} }
   $: schemaFields = table ? Object.values(table.schema) : []
 
-  const onChange = debounce(
-    async function (e, key) {
-      if (isTestModal) {
-        // Special case for webhook, as it requires a body, but the schema already brings back the body's contents
-        if (stepId === "WEBHOOK") {
-          automationStore.actions.addTestDataToAutomation({
-            body: {
-              [key]: e.detail,
-              ...$automationStore.selectedAutomation.automation.testData.body,
-            },
-          })
-        }
+  const onChange = debounce(async function (e, key) {
+    if (isTestModal) {
+      // Special case for webhook, as it requires a body, but the schema already brings back the body's contents
+      if (stepId === "WEBHOOK") {
         automationStore.actions.addTestDataToAutomation({
-          [key]: e.detail,
+          body: {
+            [key]: e.detail,
+            ...$automationStore.selectedAutomation.automation.testData.body,
+          },
         })
-        testData[key] = e.detail
-      } else {
-        block.inputs[key] = e.detail
-        await automationStore.actions.save(
-          $automationStore.selectedAutomation?.automation
-        )
       }
-    },
-    isTestModal ? 0 : 800
-  )
+      automationStore.actions.addTestDataToAutomation({
+        [key]: e.detail,
+      })
+      testData[key] = e.detail
+      await automationStore.actions.save(
+        $automationStore.selectedAutomation?.automation
+      )
+    } else {
+      block.inputs[key] = e.detail
+      await automationStore.actions.save(
+        $automationStore.selectedAutomation?.automation
+      )
+    }
+  }, 800)
 
   function getAvailableBindings(block, automation) {
     if (!block || !automation) {
@@ -96,13 +96,16 @@
         allSteps[idx].schema?.outputs?.properties ?? {}
       )
       bindings = bindings.concat(
-        outputs.map(([name, value]) => ({
-          label: name,
-          type: value.type,
-          description: value.description,
-          category: idx === 0 ? "Trigger outputs" : `Step ${idx} outputs`,
-          path: idx === 0 ? `trigger.${name}` : `steps.${idx}.${name}`,
-        }))
+        outputs.map(([name, value]) => {
+          const runtime = idx === 0 ? `trigger.${name}` : `steps.${idx}.${name}`
+          return {
+            label: runtime,
+            type: value.type,
+            description: value.description,
+            category: idx === 0 ? "Trigger outputs" : `Step ${idx} outputs`,
+            path: runtime,
+          }
+        })
       )
     }
     return bindings
@@ -241,7 +244,7 @@
             value={inputData[key]}
           />
         </CodeEditorModal>
-      {:else if value.type === "string" || value.type === "number"}
+      {:else if value.type === "string" || value.type === "number" || value.type === "integer"}
         {#if isTestModal}
           <ModalBindableInput
             title={value.title}
@@ -261,7 +264,6 @@
               value={inputData[key]}
               on:change={e => onChange(e, key)}
               {bindings}
-              allowJS={false}
             />
           </div>
         {/if}

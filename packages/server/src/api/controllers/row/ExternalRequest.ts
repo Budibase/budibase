@@ -1,4 +1,5 @@
 import {
+  FilterTypes,
   IncludeRelationships,
   Operation,
   PaginationJson,
@@ -118,8 +119,13 @@ module External {
     }
     // check the row and filters to make sure they aren't a key of some sort
     if (config.filters) {
-      for (let filter of Object.values(config.filters)) {
-        if (typeof filter !== "object" || Object.keys(filter).length === 0) {
+      for (let [key, filter] of Object.entries(config.filters)) {
+        // oneOf is an array, don't iterate it
+        if (
+          typeof filter !== "object" ||
+          Object.keys(filter).length === 0 ||
+          key === FilterTypes.ONE_OF
+        ) {
           continue
         }
         iterateObject(filter)
@@ -197,9 +203,9 @@ module External {
     return row
   }
 
-  function isMany(field: FieldSchema) {
+  function isOneSide(field: FieldSchema) {
     return (
-      field.relationshipType && field.relationshipType.split("-")[0] === "many"
+      field.relationshipType && field.relationshipType.split("-")[0] === "one"
     )
   }
 
@@ -274,25 +280,37 @@ module External {
         const linkTable = this.tables[linkTableName]
         // @ts-ignore
         const linkTablePrimary = linkTable.primary[0]
-        if (!isMany(field)) {
+        // one to many
+        if (isOneSide(field)) {
           newRow[field.foreignKey || linkTablePrimary] = breakRowIdField(
             row[key][0]
           )[0]
-        } else {
+        }
+        // many to many
+        else if (field.through) {
           // we're not inserting a doc, will be a bunch of update calls
-          const isUpdate = !field.through
-          const thisKey: string = isUpdate
-            ? "id"
-            : field.throughTo || linkTablePrimary
-          // @ts-ignore
-          const otherKey: string = isUpdate
-            ? field.fieldName
-            : field.throughFrom || tablePrimary
+          const otherKey: string = field.throughFrom || linkTablePrimary
+          const thisKey: string = field.throughTo || tablePrimary
           row[key].map((relationship: any) => {
-            // we don't really support composite keys for relationships, this is why [0] is used
             manyRelationships.push({
               tableId: field.through || field.tableId,
-              isUpdate,
+              isUpdate: false,
+              key: otherKey,
+              [otherKey]: breakRowIdField(relationship)[0],
+              // leave the ID for enrichment later
+              [thisKey]: `{{ literal ${tablePrimary} }}`,
+            })
+          })
+        }
+        // many to one
+        else {
+          const thisKey: string = "id"
+          // @ts-ignore
+          const otherKey: string = field.fieldName
+          row[key].map((relationship: any) => {
+            manyRelationships.push({
+              tableId: field.tableId,
+              isUpdate: true,
               key: otherKey,
               [thisKey]: breakRowIdField(relationship)[0],
               // leave the ID for enrichment later
@@ -425,8 +443,8 @@ module External {
           )
           definition.through = throughTableName
           // don't support composite keys for relationships
-          definition.from = field.throughFrom || table.primary[0]
-          definition.to = field.throughTo || linkTable.primary[0]
+          definition.from = field.throughTo || table.primary[0]
+          definition.to = field.throughFrom || linkTable.primary[0]
           definition.fromPrimary = table.primary[0]
           definition.toPrimary = linkTable.primary[0]
         }
@@ -448,24 +466,36 @@ module External {
       // make a new request to get the row with all its relationships
       // we need this to work out if any relationships need removed
       for (let field of Object.values(table.schema)) {
-        if (field.type !== FieldTypes.LINK || !field.fieldName) {
+        if (
+          field.type !== FieldTypes.LINK ||
+          !field.fieldName ||
+          isOneSide(field)
+        ) {
           continue
         }
         const isMany = field.relationshipType === RelationshipTypes.MANY_TO_MANY
         const tableId = isMany ? field.through : field.tableId
-        const manyKey = field.throughFrom || primaryKey
+        const { tableName: relatedTableName } = breakExternalTableId(tableId)
+        // @ts-ignore
+        const linkPrimaryKey = this.tables[relatedTableName].primary[0]
+        const manyKey = field.throughTo || primaryKey
+        const lookupField = isMany ? primaryKey : field.foreignKey
         const fieldName = isMany ? manyKey : field.fieldName
+        if (!lookupField || !row[lookupField]) {
+          continue
+        }
         const response = await getDatasourceAndQuery(this.appId, {
           endpoint: getEndpoint(tableId, DataSourceOperation.READ),
           filters: {
             equal: {
-              [fieldName]: row[primaryKey],
+              [fieldName]: row[lookupField],
             },
           },
         })
         // this is the response from knex if no rows found
         const rows = !response[0].read ? response : []
-        related[fieldName] = { rows, isMany, tableId }
+        const storeTo = isMany ? field.throughFrom || linkPrimaryKey : manyKey
+        related[storeTo] = { rows, isMany, tableId }
       }
       return related
     }

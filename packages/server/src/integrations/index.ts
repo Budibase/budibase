@@ -39,6 +39,13 @@ const INTEGRATIONS = {
   [SourceNames.REST]: rest.integration,
 }
 
+// optionally add oracle integration if the oracle binary can be installed
+if (!(process.arch === "arm64" && process.platform === "darwin")) {
+  const oracle = require("./oracle")
+  DEFINITIONS[SourceNames.ORACLE] = oracle.schema
+  INTEGRATIONS[SourceNames.ORACLE] = oracle.integration
+}
+
 module.exports = {
   definitions: DEFINITIONS,
   integrations: INTEGRATIONS,

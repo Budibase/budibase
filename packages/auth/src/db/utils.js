@@ -3,10 +3,15 @@ const Replication = require("./Replication")
 const { DEFAULT_TENANT_ID, Configs } = require("../constants")
 const env = require("../environment")
 const { StaticDatabases, SEPARATOR, DocumentTypes } = require("./constants")
-const { getTenantId, getTenantIDFromAppID } = require("../tenancy")
+const {
+  getTenantId,
+  getTenantIDFromAppID,
+  getGlobalDBName,
+} = require("../tenancy")
 const fetch = require("node-fetch")
 const { getCouch } = require("./index")
 const { getAppMetadata } = require("../cache/appMetadata")
+const { checkSlashesInUrl } = require("../helpers")
 
 const NO_APP_ERROR = "No app provided"
 
@@ -194,6 +199,11 @@ exports.getCouchUrl = () => {
   return `${protocol}://${env.COUCH_DB_USERNAME}:${env.COUCH_DB_PASSWORD}@${rest}`
 }
 
+exports.getStartEndKeyURL = (base, baseKey, tenantId = null) => {
+  const tenancy = tenantId ? `${SEPARATOR}${tenantId}` : ""
+  return `${base}?startkey="${baseKey}${tenancy}"&endkey="${baseKey}${tenancy}${UNICODE_MAX}"`
+}
+
 /**
  * if in production this will use the CouchDB _all_dbs call to retrieve a list of databases. If testing
  * when using Pouch it will use the pouchdb-all-dbs package.
@@ -203,12 +213,34 @@ exports.getAllDbs = async () => {
   if (env.isTest()) {
     return getCouch().allDbs()
   }
-  const response = await fetch(`${exports.getCouchUrl()}/_all_dbs`)
-  if (response.status === 200) {
-    return response.json()
-  } else {
-    throw "Cannot connect to CouchDB instance"
+  let dbs = []
+  async function addDbs(url) {
+    const response = await fetch(checkSlashesInUrl(encodeURI(url)))
+    if (response.status === 200) {
+      let json = await response.json()
+      dbs = dbs.concat(json)
+    } else {
+      throw "Cannot connect to CouchDB instance"
+    }
   }
+  let couchUrl = `${exports.getCouchUrl()}/_all_dbs`
+  if (env.MULTI_TENANCY) {
+    let tenantId = getTenantId()
+    // get prod apps
+    await addDbs(
+      exports.getStartEndKeyURL(couchUrl, DocumentTypes.APP, tenantId)
+    )
+    // get dev apps
+    await addDbs(
+      exports.getStartEndKeyURL(couchUrl, DocumentTypes.APP_DEV, tenantId)
+    )
+    // add global db name
+    dbs.push(getGlobalDBName(tenantId))
+  } else {
+    // just get all DBs in self host
+    await addDbs(couchUrl)
+  }
+  return dbs
 }
 
 /**
@@ -389,7 +421,7 @@ const getScopedFullConfig = async function (db, { type, user, workspace }) {
 }
 
 const getPlatformUrl = async settings => {
-  let platformUrl = env.PLATFORM_URL
+  let platformUrl = env.PLATFORM_URL || "http://localhost:10000"
 
   if (!env.SELF_HOSTED && env.MULTI_TENANCY) {
     // cloud and multi tenant - add the tenant to the default platform url
@@ -404,7 +436,7 @@ const getPlatformUrl = async settings => {
     }
   }
 
-  return platformUrl ? platformUrl : "http://localhost:10000"
+  return platformUrl
 }
 
 async function getScopedConfig(db, params) {

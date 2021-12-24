@@ -23,6 +23,8 @@ if (!LOADED && isDev() && !isTest()) {
   LOADED = true
 }
 
+let inThread = false
+
 module.exports = {
   // important
   PORT: process.env.PORT,
@@ -62,6 +64,7 @@ module.exports = {
   USERID_API_KEY: process.env.USERID_API_KEY,
   DEPLOYMENT_CREDENTIALS_URL: process.env.DEPLOYMENT_CREDENTIALS_URL,
   ALLOW_DEV_AUTOMATIONS: process.env.ALLOW_DEV_AUTOMATIONS,
+  DISABLE_THREADING: process.env.DISABLE_THREADING,
   _set(key, value) {
     process.env[key] = value
     module.exports[key] = value
@@ -72,6 +75,18 @@ module.exports = {
   isProd: () => {
     return !isDev()
   },
+  // used to check if already in a thread, don't thread further
+  setInThread: () => {
+    inThread = true
+  },
+  isInThread: () => {
+    return inThread
+  },
+}
+
+// threading can cause memory issues with node-ts in development
+if (isDev() && module.exports.DISABLE_THREADING == null) {
+  module.exports._set("DISABLE_THREADING", "1")
 }
 
 // clean up any environment variable edge cases

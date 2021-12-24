@@ -2,15 +2,26 @@
   import { Label, Layout, Input } from "@budibase/bbui"
   import Editor from "./QueryEditor.svelte"
   import KeyValueBuilder from "./KeyValueBuilder.svelte"
+  import { capitalise } from "helpers"
 
   export let fields = {}
   export let schema
   export let editable
 
-  $: schemaKeys = Object.keys(schema.fields)
+  $: schemaKeys = Object.keys(schema?.fields || {})
 
   function updateCustomFields({ detail }) {
     fields.customData = detail.value
+  }
+
+  function getDisplayName(field) {
+    let name
+    if (schema.fields[field]?.display) {
+      name = schema.fields[field]?.display
+    } else {
+      name = field
+    }
+    return capitalise(name)
   }
 </script>
 
@@ -18,13 +29,15 @@
   <Layout noPadding gap="S">
     {#each schemaKeys as field}
       {#if schema.fields[field]?.type === "object"}
-        <div>
-          <Label small>{field}</Label>
-          <KeyValueBuilder readOnly={!editable} bind:object={fields[field]} />
-        </div>
+        <Label small>{getDisplayName(field)}</Label>
+        <KeyValueBuilder
+          name={getDisplayName(field)}
+          readOnly={!editable}
+          bind:object={fields[field]}
+        />
       {:else if schema.fields[field]?.type === "json"}
         <div>
-          <Label extraSmall grey>{field}</Label>
+          <Label extraSmall grey>{getDisplayName(field)}</Label>
           <Editor
             mode="json"
             on:change={({ detail }) => (fields[field] = detail.value)}
@@ -34,9 +47,9 @@
         </div>
       {:else}
         <div class="horizontal">
-          <Label small>{field}</Label>
+          <Label small>{getDisplayName(field)}</Label>
           <Input
-            placeholder="Enter {field}"
+            placeholder="Enter {getDisplayName(field)}"
             outline
             disabled={!editable}
             type={schema.fields[field]?.type}

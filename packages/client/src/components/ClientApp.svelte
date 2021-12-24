@@ -1,5 +1,5 @@
 <script>
-  import { writable } from "svelte/store"
+  import { writable, get } from "svelte/store"
   import { setContext, onMount } from "svelte"
   import { Layout, Heading, Body } from "@budibase/bbui"
   import Component from "./Component.svelte"
@@ -25,6 +25,7 @@
   import CustomThemeWrapper from "./CustomThemeWrapper.svelte"
   import DNDHandler from "components/preview/DNDHandler.svelte"
   import ErrorSVG from "builder/assets/error.svg"
+  import KeyboardManager from "components/preview/KeyboardManager.svelte"
 
   // Provide contexts
   setContext("sdk", SDK)
@@ -39,7 +40,7 @@
     await initialise()
     await authStore.actions.fetchUser()
     dataLoaded = true
-    if ($builderStore.inBuilder) {
+    if (get(builderStore).inBuilder) {
       builderStore.actions.notifyLoaded()
     } else {
       builderStore.actions.pingEndUser()
@@ -120,6 +121,9 @@
                   -->
                   <div id="flatpickr-root" />
 
+                  <!-- Modal container to ensure they sit on top -->
+                  <div class="modal-container" />
+
                   <!-- Layers on top of app -->
                   <NotificationDisplay />
                   <ConfirmationDisplay />
@@ -143,6 +147,7 @@
       </UserBindingsProvider>
     {/if}
   </div>
+  <KeyboardManager />
 {/if}
 
 <style>

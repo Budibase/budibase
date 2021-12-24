@@ -11,7 +11,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      #- pg_data:/var/lib/postgresql/data/
+      - pg_data:/var/lib/postgresql/data/
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
 
   pgadmin:
@@ -24,5 +24,5 @@ services:
     ports:
       - "5050:80"
 
-#volumes:
-#  pg_data:
+volumes:
+ pg_data:

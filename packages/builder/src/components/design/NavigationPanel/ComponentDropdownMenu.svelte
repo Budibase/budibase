@@ -13,6 +13,12 @@
   $: noChildrenAllowed = !component || !definition?.hasChildren
   $: noPaste = !$store.componentToPaste
 
+  // "editable" has been repurposed for inline text editing.
+  // It remains here for legacy compatibility.
+  // Future components should define "static": true for indicate they should
+  // not show a context menu.
+  $: showMenu = definition?.editable !== false && definition?.static !== true
+
   const moveUpComponent = () => {
     const asset = get(currentAsset)
     const parent = findComponentParent(asset.props, component._id)
@@ -47,7 +53,7 @@
 
   const duplicateComponent = () => {
     storeComponentForCopy(false)
-    pasteComponent("below")
+    pasteComponent("below", true)
   }
 
   const deleteComponent = async () => {
@@ -63,13 +69,13 @@
     store.actions.components.copy(component, cut)
   }
 
-  const pasteComponent = mode => {
+  const pasteComponent = (mode, preserveBindings = false) => {
     // lives in store - also used by drag drop
-    store.actions.components.paste(component, mode)
+    store.actions.components.paste(component, mode, preserveBindings)
   }
 </script>
 
-{#if definition?.editable !== false}
+{#if showMenu}
   <ActionMenu>
     <div slot="control" class="icon">
       <Icon size="S" hoverable name="MoreSmallList" />

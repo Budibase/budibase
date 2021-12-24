@@ -16,3 +16,8 @@ exports.csv = function (headers, rows) {
 exports.json = function (headers, rows) {
   return JSON.stringify(rows, undefined, 2)
 }
+
+exports.ExportFormats = {
+  CSV: "csv",
+  JSON: "json",
+}

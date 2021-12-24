@@ -42,7 +42,7 @@ describe("Tables Store", () => {
   })
 
   it("saving a table also selects it", async () => {
-    api.post.mockReturnValue({ json: () => SAVE_TABLES_RESPONSE})    
+    api.post.mockReturnValue({ status: 200, json: () => SAVE_TABLES_RESPONSE})
 
     await store.save(A_TABLE)
 
@@ -50,7 +50,7 @@ describe("Tables Store", () => {
   })
 
   it("saving the table returns a response", async () => {
-    api.post.mockReturnValue({ json: () => SAVE_TABLES_RESPONSE})    
+    api.post.mockReturnValue({ status: 200, json: () => SAVE_TABLES_RESPONSE})
 
     const response = await store.save(A_TABLE)
 

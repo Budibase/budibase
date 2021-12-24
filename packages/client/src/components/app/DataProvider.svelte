@@ -34,12 +34,18 @@
   let bookmarks = [null]
   let pageNumber = 0
   let query = null
+  let queryExtensions = {}
 
   // Sorting can be overridden at run time, so we can't use the prop directly
   let currentSortColumn = sortColumn
   let currentSortOrder = sortOrder
 
-  $: query = buildLuceneQuery(filter)
+  // Reset the current sort state to props if props change
+  $: currentSortColumn = sortColumn
+  $: currentSortOrder = sortOrder
+
+  $: defaultQuery = buildLuceneQuery(filter)
+  $: extendQuery(defaultQuery, queryExtensions)
   $: internalTable = dataSource?.type === "table"
   $: nestedProvider = dataSource?.type === "provider"
   $: hasNextPage = bookmarks[pageNumber + 1] != null
@@ -91,8 +97,12 @@
       metadata: { dataSource },
     },
     {
-      type: ActionTypes.SetDataProviderQuery,
-      callback: newQuery => (query = newQuery),
+      type: ActionTypes.AddDataProviderQueryExtension,
+      callback: addQueryExtension,
+    },
+    {
+      type: ActionTypes.RemoveDataProviderQueryExtension,
+      callback: removeQueryExtension,
     },
     {
       type: ActionTypes.SetDataProviderSorting,
@@ -263,6 +273,39 @@
     })
     pageNumber--
     allRows = res.rows
+  }
+
+  const addQueryExtension = (key, extension) => {
+    if (!key || !extension) {
+      return
+    }
+    queryExtensions = { ...queryExtensions, [key]: extension }
+  }
+
+  const removeQueryExtension = key => {
+    if (!key) {
+      return
+    }
+    const newQueryExtensions = { ...queryExtensions }
+    delete newQueryExtensions[key]
+    queryExtensions = newQueryExtensions
+  }
+
+  const extendQuery = (defaultQuery, extensions) => {
+    const extensionValues = Object.values(extensions || {})
+    let extendedQuery = { ...defaultQuery }
+    extensionValues.forEach(extension => {
+      Object.entries(extension || {}).forEach(([operator, fields]) => {
+        extendedQuery[operator] = {
+          ...extendedQuery[operator],
+          ...fields,
+        }
+      })
+    })
+
+    if (JSON.stringify(query) !== JSON.stringify(extendedQuery)) {
+      query = extendedQuery
+    }
   }
 </script>
 

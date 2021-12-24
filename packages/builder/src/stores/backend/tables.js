@@ -1,5 +1,5 @@
-import { writable, get } from "svelte/store"
-import { views, queries, datasources } from "./"
+import { get, writable } from "svelte/store"
+import { datasources, queries, views } from "./"
 import { cloneDeep } from "lodash/fp"
 import api from "builderStore/api"
 import { SWITCHABLE_TYPES } from "../../constants/backend"
@@ -66,6 +66,9 @@ export function createTablesStore() {
     }
 
     const response = await api.post(`/api/tables`, updatedTable)
+    if (response.status !== 200) {
+      throw (await response.json()).message
+    }
     const savedTable = await response.json()
     await fetch()
     if (table.type === "external") {
@@ -97,7 +100,12 @@ export function createTablesStore() {
       })
     },
     delete: async table => {
-      await api.delete(`/api/tables/${table._id}/${table._rev}`)
+      const response = await api.delete(
+        `/api/tables/${table._id}/${table._rev}`
+      )
+      if (response.status !== 200) {
+        throw (await response.json()).message
+      }
       update(state => ({
         ...state,
         list: state.list.filter(existing => existing._id !== table._id),
@@ -114,7 +122,7 @@ export function createTablesStore() {
       update(state => {
         // delete the original if renaming
         // need to handle if the column had no name, empty string
-        if (originalName || originalName === "") {
+        if (originalName != null && originalName !== field.name) {
           delete state.draft.schema[originalName]
           state.draft._rename = {
             old: originalName,

@@ -75,6 +75,7 @@ exports.handleDataImport = async (appId, user, table, dataImport) => {
   if (!dataImport || !dataImport.csvString) {
     return table
   }
+
   const db = new CouchDB(appId)
   // Populate the table with rows imported from CSV in a bulk update
   const data = await csvParser.transform({

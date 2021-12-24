@@ -11,19 +11,20 @@
   export let readonly = false
   export let updateOnChange = true
   export let quiet = false
+  export let dataCy
 
   const dispatch = createEventDispatcher()
   let focus = false
 
-  const updateValue = value => {
+  const updateValue = newValue => {
     if (readonly) {
       return
     }
     if (type === "number") {
-      const float = parseFloat(value)
-      value = isNaN(float) ? null : float
+      const float = parseFloat(newValue)
+      newValue = isNaN(float) ? null : float
     }
-    dispatch("change", value)
+    dispatch("change", newValue)
   }
 
   const onFocus = () => {
@@ -78,6 +79,7 @@
     {disabled}
     {readonly}
     {id}
+    data-cy={dataCy}
     value={value || ""}
     placeholder={placeholder || ""}
     on:click

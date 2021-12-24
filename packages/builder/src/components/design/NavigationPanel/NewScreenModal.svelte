@@ -1,117 +1,178 @@
 <script>
-  import { store, allScreens, selectedAccessRole } from "builderStore"
+  import { store } from "builderStore"
   import { tables } from "stores/backend"
-  import { roles } from "stores/backend"
-  import { Input, Select, ModalContent, Toggle } from "@budibase/bbui"
+  import {
+    ModalContent,
+    Body,
+    Detail,
+    Layout,
+    Icon,
+    ProgressCircle,
+  } from "@budibase/bbui"
   import getTemplates from "builderStore/store/screenTemplates"
-  import analytics, { Events } from "analytics"
-  import sanitizeUrl from "builderStore/store/screenTemplates/utils/sanitizeUrl"
+  import { onDestroy } from "svelte"
 
-  const CONTAINER = "@budibase/standard-components/container"
+  import { createEventDispatcher } from "svelte"
 
-  let name = ""
-  let routeError
-  let baseComponent = CONTAINER
-  let templateIndex
-  let draftScreen
-  let createLink = true
-  let roleId = $selectedAccessRole || "BASIC"
+  export let chooseModal
+  export let save
+  export let showProgressCircle = false
 
-  $: templates = getTemplates($store, $tables.list)
-  $: route = !route && $allScreens.length === 0 ? "*" : route
-  $: {
-    if (templates && templateIndex === undefined) {
-      templateIndex = 0
-      templateChanged(0)
-    }
+  let selectedScreens = []
+
+  const blankScreen = "createFromScratch"
+  const dispatch = createEventDispatcher()
+
+  function setScreens() {
+    dispatch("save", {
+      screens: selectedScreens,
+    })
   }
 
-  const templateChanged = newTemplateIndex => {
-    if (newTemplateIndex === undefined) return
-    draftScreen = templates[newTemplateIndex].create()
-    if (draftScreen.props._instanceName) {
-      name = draftScreen.props._instanceName
-    }
+  $: blankSelected = selectedScreens?.length === 1
+  $: autoSelected = selectedScreens?.length > 0 && !blankSelected
 
-    if (draftScreen.props._component) {
-      baseComponent = draftScreen.props._component
-    }
+  let templates = getTemplates($store, $tables.list)
 
-    if (draftScreen.routing) {
-      route = draftScreen.routing.route
-    }
-  }
-
-  const save = async () => {
-    if (!route) {
-      routeError = "URL is required"
+  const confirm = async () => {
+    if (autoSelected) {
+      setScreens()
+      await save()
     } else {
-      if (routeExists(route, roleId)) {
-        routeError = "This URL is already taken for this access role"
-      } else {
-        routeError = ""
-      }
+      setScreens()
+      chooseModal(1)
     }
-
-    if (routeError) return false
-
-    draftScreen.props._instanceName = name
-    draftScreen.props._component = baseComponent
-    draftScreen.routing = { route, roleId }
-
-    await store.actions.screens.create(draftScreen)
-    if (createLink) {
-      await store.actions.components.links.save(route, name)
-    }
-    await store.actions.routing.fetch()
-
-    if (templateIndex !== undefined) {
-      const template = templates[templateIndex]
-      analytics.captureEvent(Events.SCREEN.CREATED, {
-        template: template.id || template.name,
-      })
+  }
+  const toggleScreenSelection = table => {
+    if (selectedScreens.find(s => s.table === table.name)) {
+      selectedScreens = selectedScreens.filter(
+        screen => screen.table !== table.name
+      )
+    } else {
+      let partialTemplates = getTemplates($store, $tables.list).filter(
+        template => template.table === table.name
+      )
+      selectedScreens = [...partialTemplates, ...selectedScreens]
     }
   }
 
-  const routeExists = (route, roleId) => {
-    return $allScreens.some(
-      screen =>
-        screen.routing.route.toLowerCase() === route.toLowerCase() &&
-        screen.routing.roleId === roleId
-    )
-  }
-
-  const routeChanged = event => {
-    if (!event.detail.startsWith("/")) {
-      route = "/" + event.detail
-    }
-    route = sanitizeUrl(route)
-  }
+  onDestroy(() => {
+    selectedScreens = []
+  })
 </script>
 
-<ModalContent title="New Screen" confirmText="Create Screen" onConfirm={save}>
-  <Select
-    label="Choose a Template"
-    bind:value={templateIndex}
-    on:change={ev => templateChanged(ev.detail)}
-    options={templates}
-    placeholder={null}
-    getOptionLabel={x => x.name}
-    getOptionValue={(x, idx) => idx}
-  />
-  <Input label="Name" bind:value={name} />
-  <Input
-    label="Url"
-    error={routeError}
-    bind:value={route}
-    on:change={routeChanged}
-  />
-  <Select
-    label="Access"
-    bind:value={roleId}
-    options={$roles}
-    getOptionLabel={x => x.name}
-    getOptionValue={x => x._id}
-  />
-  <Toggle text="Create link in navigation bar" bind:value={createLink} />
-</ModalContent>
+<div>
+  <ModalContent
+    title="Add screens"
+    confirmText="Add Screens"
+    cancelText="Cancel"
+    onConfirm={() => confirm()}
+    disabled={!selectedScreens.length}
+    size="L"
+  >
+    <Body size="S"
+      >Please select the screens you would like to add to your application.
+      Autogenerated screens come with CRUD functionality.</Body
+    >
+
+    <Layout noPadding gap="S">
+      <Detail size="S">Blank screen</Detail>
+      <div
+        class="item"
+        class:selected={selectedScreens.find(x => x.id.includes(blankScreen))}
+        on:click={() =>
+          toggleScreenSelection(templates.find(t => t.id === blankScreen))}
+        class:disabled={autoSelected}
+      >
+        <div data-cy="blank-screen" class="content">
+          <div class="text">Blank</div>
+        </div>
+        <div
+          style="color: var(--spectrum-global-color-green-600); float: right"
+        >
+          {#if selectedScreens.find(x => x.id === blankScreen)}
+            <div class="checkmark-spacing">
+              <Icon size="S" name="CheckmarkCircleOutline" />
+            </div>
+          {/if}
+        </div>
+      </div>
+      {#if $tables.list.filter(table => table._id !== "ta_users").length > 0}
+        <Detail size="S">Autogenerated Screens</Detail>
+
+        {#each $tables.list.filter(table => table._id !== "ta_users") as table}
+          <div
+            class:disabled={blankSelected}
+            class:selected={selectedScreens.find(x => x.table === table.name)}
+            on:click={() => toggleScreenSelection(table)}
+            class="item"
+          >
+            <div class="content">
+              <div class="text">{table.name}</div>
+            </div>
+            <div
+              style="color: var(--spectrum-global-color-green-600); float: right"
+            >
+              {#if selectedScreens.find(x => x.table === table.name)}
+                <div class="checkmark-spacing">
+                  <Icon size="S" name="CheckmarkCircleOutline" />
+                </div>
+              {/if}
+            </div>
+          </div>
+        {/each}
+      {/if}
+    </Layout>
+    <div slot="footer">
+      {#if showProgressCircle}
+        <div class="footer-progress"><ProgressCircle size="S" /></div>
+      {/if}
+    </div>
+  </ModalContent>
+</div>
+
+<style>
+  .disabled {
+    opacity: 0.3;
+    pointer-events: none;
+  }
+  .checkmark-spacing {
+    margin-right: var(--spacing-m);
+  }
+
+  .content {
+    letter-spacing: 0px;
+  }
+
+  .footer-progress {
+    margin-top: var(--spacing-s);
+  }
+
+  .text {
+    font-weight: 600;
+    margin-left: var(--spacing-m);
+    font-size: 14px;
+    text-transform: capitalize;
+  }
+
+  .item {
+    cursor: pointer;
+    grid-gap: var(--spectrum-alias-grid-margin-xsmall);
+    padding: var(--spectrum-alias-item-padding-s);
+    background: var(--spectrum-alias-background-color-primary);
+    transition: 0.3s all;
+    border: 1px solid var(--spectrum-global-color-gray-300);
+    border-radius: 4px;
+    box-sizing: border-box;
+    border-width: 1px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 60px;
+  }
+
+  .item:hover,
+  .selected {
+    background: var(--spectrum-alias-background-color-tertiary);
+  }
+</style>
