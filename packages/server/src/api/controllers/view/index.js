@@ -5,6 +5,7 @@ const exporters = require("./exporters")
 const { saveView, getView, getViews, deleteView } = require("./utils")
 const { fetchView } = require("../row")
 const { getTable } = require("../table/utils")
+const { FieldTypes } = require("../../../constants")
 
 exports.fetch = async ctx => {
   const db = new CouchDB(ctx.appId)
@@ -77,6 +78,7 @@ exports.exportView = async ctx => {
   }
 
   await fetchView(ctx)
+  let rows = ctx.body
 
   let schema = view && view.meta && view.meta.schema
   if (!schema) {
@@ -85,11 +87,23 @@ exports.exportView = async ctx => {
     schema = table.schema
   }
 
+  // remove any relationships
+  const relationships = Object.entries(schema)
+    .filter(entry => entry[1].type === FieldTypes.LINK)
+    .map(entry => entry[0])
+  // iterate relationship columns and remove from and row and schema
+  relationships.forEach(column => {
+    rows.forEach(row => {
+      delete row[column]
+    })
+    delete schema[column]
+  })
+
   // make sure no "undefined" entries appear in the CSV
   if (format === exporters.ExportFormats.CSV) {
     const schemaKeys = Object.keys(schema)
     for (let key of schemaKeys) {
-      for (let row of ctx.body) {
+      for (let row of rows) {
         if (row[key] == null) {
           row[key] = ""
         }
@@ -103,5 +117,5 @@ exports.exportView = async ctx => {
   const filename = `${viewName}.${format}`
   // send down the file
   ctx.attachment(filename)
-  ctx.body = apiFileReturn(exporter(headers, ctx.body))
+  ctx.body = apiFileReturn(exporter(headers, rows))
 }

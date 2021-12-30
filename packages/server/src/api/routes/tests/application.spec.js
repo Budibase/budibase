@@ -75,7 +75,6 @@ describe("/applications", () => {
         .expect("Content-Type", /json/)
         .expect(200)
       // should have empty packages
-      expect(res.body.screens.length).toEqual(1)
       expect(res.body.layouts.length).toEqual(2)
     })
   })
@@ -88,7 +87,6 @@ describe("/applications", () => {
         .expect("Content-Type", /json/)
         .expect(200)
       expect(res.body.application).toBeDefined()
-      expect(res.body.screens.length).toEqual(1)
       expect(res.body.layouts.length).toEqual(2)
     })
   })

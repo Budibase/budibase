@@ -83,12 +83,11 @@
   }
 
   async function createNewApp() {
-    const letTemplateToUse =
-      Object.keys(template).length === 0 ? null : template
+    const templateToUse = Object.keys(template).length === 0 ? null : template
     submitting = true
 
     // Check a template exists if we are important
-    if (letTemplateToUse?.fromFile && !$values.file) {
+    if (templateToUse?.fromFile && !$values.file) {
       $errors.file = "Please choose a file to import"
       valid = false
       submitting = false
@@ -99,10 +98,10 @@
       // Create form data to create app
       let data = new FormData()
       data.append("name", $values.name.trim())
-      data.append("useTemplate", letTemplateToUse != null)
-      if (letTemplateToUse) {
-        data.append("templateName", letTemplateToUse.name)
-        data.append("templateKey", letTemplateToUse.key)
+      data.append("useTemplate", templateToUse != null)
+      if (templateToUse) {
+        data.append("templateName", templateToUse.name)
+        data.append("templateKey", templateToUse.key)
         data.append("templateFile", $values.file)
       }
 
@@ -116,7 +115,7 @@
       analytics.captureEvent(Events.APP.CREATED, {
         name: $values.name,
         appId: appJson.instance._id,
-        letTemplateToUse,
+        templateToUse,
       })
 
       // Select Correct Application/DB in prep for creating user

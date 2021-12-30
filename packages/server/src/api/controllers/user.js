@@ -81,7 +81,7 @@ exports.syncUser = async function (ctx) {
       throw err
     }
   }
-  const roles = user.roles
+  const roles = deleting ? {} : user.roles
   // remove props which aren't useful to metadata
   delete user.password
   delete user.forceResetPassword

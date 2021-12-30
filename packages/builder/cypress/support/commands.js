@@ -182,7 +182,9 @@ Cypress.Commands.add("navigateToFrontend", () => {
   cy.wait(1000)
   cy.contains("Design").click()
   cy.get(".spectrum-Search").type("/")
-  cy.get(".nav-item").contains("Home").click()
+  cy.createScreen("home", "home")
+  cy.addComponent("Elements", "Headline")
+  cy.get(".nav-item").contains("home").click()
 })
 
 Cypress.Commands.add("createScreen", (screenName, route) => {

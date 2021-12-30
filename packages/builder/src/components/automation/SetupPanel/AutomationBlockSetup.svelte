@@ -96,13 +96,16 @@
         allSteps[idx].schema?.outputs?.properties ?? {}
       )
       bindings = bindings.concat(
-        outputs.map(([name, value]) => ({
-          label: name,
-          type: value.type,
-          description: value.description,
-          category: idx === 0 ? "Trigger outputs" : `Step ${idx} outputs`,
-          path: idx === 0 ? `trigger.${name}` : `steps.${idx}.${name}`,
-        }))
+        outputs.map(([name, value]) => {
+          const runtime = idx === 0 ? `trigger.${name}` : `steps.${idx}.${name}`
+          return {
+            label: runtime,
+            type: value.type,
+            description: value.description,
+            category: idx === 0 ? "Trigger outputs" : `Step ${idx} outputs`,
+            path: runtime,
+          }
+        })
       )
     }
     return bindings
@@ -261,7 +264,6 @@
               value={inputData[key]}
               on:change={e => onChange(e, key)}
               {bindings}
-              allowJS={false}
             />
           </div>
         {/if}

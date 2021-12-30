@@ -102,6 +102,9 @@
     if (field.type === AUTO_TYPE) {
       field = buildAutoColumn($tables.draft.name, field.name, field.subtype)
     }
+    if (field.type !== LINK_TYPE) {
+      delete field.fieldName
+    }
     try {
       await tables.saveField({
         originalName,

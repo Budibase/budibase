@@ -61,7 +61,7 @@ export const getComponentBindableProperties = (asset, componentId) => {
 /**
  * Gets all data provider components above a component.
  */
-export const getDataProviderComponents = (asset, componentId) => {
+export const getContextProviderComponents = (asset, componentId, type) => {
   if (!asset || !componentId) {
     return []
   }
@@ -74,7 +74,18 @@ export const getDataProviderComponents = (asset, componentId) => {
   // Filter by only data provider components
   return path.filter(component => {
     const def = store.actions.components.getDefinition(component._component)
-    return def?.context != null
+    if (!def?.context) {
+      return false
+    }
+
+    // If no type specified, return anything that exposes context
+    if (!type) {
+      return true
+    }
+
+    // Otherwise only match components with the specific context type
+    const contexts = Array.isArray(def.context) ? def.context : [def.context]
+    return contexts.find(context => context.type === type) != null
   })
 }
 
@@ -143,7 +154,7 @@ export const getDatasourceForProvider = (asset, component) => {
  */
 const getContextBindings = (asset, componentId) => {
   // Extract any components which provide data contexts
-  const dataProviders = getDataProviderComponents(asset, componentId)
+  const dataProviders = getContextProviderComponents(asset, componentId)
 
   // Generate bindings for all matching components
   return getProviderContextBindings(asset, dataProviders)

@@ -122,7 +122,7 @@ export function createTablesStore() {
       update(state => {
         // delete the original if renaming
         // need to handle if the column had no name, empty string
-        if (originalName || originalName === "") {
+        if (originalName != null && originalName !== field.name) {
           delete state.draft.schema[originalName]
           state.draft._rename = {
             old: originalName,

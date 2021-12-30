@@ -53,7 +53,7 @@
 
   const duplicateComponent = () => {
     storeComponentForCopy(false)
-    pasteComponent("below")
+    pasteComponent("below", true)
   }
 
   const deleteComponent = async () => {
@@ -69,9 +69,9 @@
     store.actions.components.copy(component, cut)
   }
 
-  const pasteComponent = mode => {
+  const pasteComponent = (mode, preserveBindings = false) => {
     // lives in store - also used by drag drop
-    store.actions.components.paste(component, mode)
+    store.actions.components.paste(component, mode, preserveBindings)
   }
 </script>
 

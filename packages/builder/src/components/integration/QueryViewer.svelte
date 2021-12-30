@@ -32,31 +32,22 @@
   import { onMount } from "svelte"
 
   export let query
-  export let fields = []
 
+  let fields = query.schema ? schemaToFields(query.schema) : []
   let parameters
   let data = []
   let roleId
   const transformerDocs =
     "https://docs.budibase.com/building-apps/data/transformers"
   const typeOptions = [
-    { label: "Text", value: "STRING" },
-    { label: "Number", value: "NUMBER" },
-    { label: "Boolean", value: "BOOLEAN" },
-    { label: "Datetime", value: "DATETIME" },
+    { label: "Text", value: "string" },
+    { label: "Number", value: "number" },
+    { label: "Boolean", value: "boolean" },
+    { label: "Datetime", value: "datetime" },
   ]
 
   $: datasource = $datasources.list.find(ds => ds._id === query.datasourceId)
-  $: query.schema = fields.reduce(
-    (acc, next) => ({
-      ...acc,
-      [next.name]: {
-        name: next.name,
-        type: "string",
-      },
-    }),
-    {}
-  )
+  $: query.schema = fieldsToSchema(fields)
   $: datasourceType = datasource?.source
   $: integrationInfo = $integrations[datasourceType]
   $: queryConfig = integrationInfo?.query
@@ -135,7 +126,7 @@
       // unique fields returned by the server
       fields = json.schemaFields.map(field => ({
         name: field,
-        type: "STRING",
+        type: "string",
       }))
     } catch (err) {
       notifications.error(`Query Error: ${err.message}`)
@@ -153,6 +144,26 @@
       console.error(err)
       notifications.error(`Error creating query. ${err.message}`)
     }
+  }
+
+  function schemaToFields(schema) {
+    return Object.keys(schema).map(key => ({
+      name: key,
+      type: query.schema[key].type,
+    }))
+  }
+
+  function fieldsToSchema(fieldsToConvert) {
+    return fieldsToConvert.reduce(
+      (acc, next) => ({
+        ...acc,
+        [next.name]: {
+          name: next.name,
+          type: next.type,
+        },
+      }),
+      {}
+    )
   }
 
   onMount(async () => {

@@ -2,6 +2,7 @@
   import { ModalContent, Input, ProgressCircle } from "@budibase/bbui"
   import sanitizeUrl from "builderStore/store/screenTemplates/utils/sanitizeUrl"
   import { selectedAccessRole, allScreens } from "builderStore"
+  import { onDestroy } from "svelte"
 
   export let screenName
   export let url
@@ -32,6 +33,11 @@
         screen.routing.roleId === roleId
     )
   }
+
+  onDestroy(() => {
+    screenName = ""
+    url = ""
+  })
 </script>
 
 <ModalContent
