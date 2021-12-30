@@ -450,7 +450,7 @@ module OracleModule {
             })
             return lastRow.rows
           } else {
-            return [{ [ operation.toLowerCase() ]: true }]
+            return [{ [operation.toLowerCase()]: true }]
           }
         }
       }

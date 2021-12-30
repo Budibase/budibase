@@ -191,7 +191,7 @@ module DynamoModule {
       return response
     }
 
-    async describe(query: { table: string; }) {
+    async describe(query: { table: string }) {
       const params = {
         TableName: query.table,
       }

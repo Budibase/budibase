@@ -29,6 +29,18 @@ module S3Module {
         type: "password",
         required: true,
       },
+      endpoint: {
+        type: "string",
+        required: false,
+      },
+      s3ForcePathStyle: {
+        type: "boolean",
+        required: false,
+      },
+      signatureVersion: {
+        type: "string",
+        required: false,
+      },
     },
     query: {
       read: {
