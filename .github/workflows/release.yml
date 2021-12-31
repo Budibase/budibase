@@ -4,6 +4,16 @@ on:
  push:
     branches:
       - master
+    paths:
+      - '.aws/**'
+      - '.github/**'
+      - 'charts/**'
+      - 'packages/**'
+      - 'scripts/**'
+      - 'package.json'
+      - 'yarn.lock'
+      - 'package.json'
+      - 'yarn.lock'
 
 env:
   POSTHOG_TOKEN: ${{ secrets.POSTHOG_TOKEN }}
