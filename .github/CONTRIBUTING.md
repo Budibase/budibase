@@ -79,6 +79,8 @@ Component libraries are collections of components as well as the definition of t
 ### Getting Started For Contributors
 #### 1.  Prerequisites
 
+NodeJS Version `14.x.x`
+
 *yarn -* `npm install -g yarn`
 
 *jest* - `npm install -g jest`
