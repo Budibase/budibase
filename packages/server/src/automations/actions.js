@@ -10,6 +10,8 @@ const discord = require("./steps/discord")
 const slack = require("./steps/slack")
 const zapier = require("./steps/zapier")
 const integromat = require("./steps/integromat")
+const dingtalk = require("./steps/dingtalk")
+const wechat = require("./steps/wechat")
 let filter = require("./steps/filter")
 let delay = require("./steps/delay")
 let queryRow = require("./steps/queryRows")
@@ -32,6 +34,8 @@ const ACTION_IMPLS = {
   slack: slack.run,
   zapier: zapier.run,
   integromat: integromat.run,
+  dingtalk: dingtalk.run,
+  wechat: wechat.run,
 }
 const ACTION_DEFINITIONS = {
   SEND_EMAIL_SMTP: sendSmtpEmail.definition,
@@ -50,6 +54,8 @@ const ACTION_DEFINITIONS = {
   slack: slack.definition,
   zapier: zapier.definition,
   integromat: integromat.definition,
+  dingtalk: dingtalk.definition,
+  wechat: wechat.definition,
 }
 
 // don't add the bash script/definitions unless in self host
