@@ -1,0 +1,304 @@
+# Default values for budibase.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+# fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 10000
+
+ingress:
+  enabled: true
+  aws: false
+  nginx: true 
+  className: ""
+  annotations: 
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: "letsencrypt-preprod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+  tls:
+  - hosts:
+    - "budipreprod.live"
+    - "*.budipreprod.live"
+    secretName: budipreprod-tls
+  hosts:
+    - host: "budipreprod.live"
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: proxy-service
+            port:
+              number: 10000 
+    - host: "*.budipreprod.live"
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: proxy-service
+            port:
+              number: 10000 
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+globals:
+  appVersion: "v1.0.32"
+  multiTenancy: "1"
+  budibaseEnv: PRODUCTION
+  enableAnalytics: false
+  sentryDSN: "" 
+  posthogToken: ""
+  logLevel: info
+  selfHosted: ""
+  createSecrets: true # creates an internal API key, JWT secrets and redis password for you
+  accountPortalUrl: https://account.budipreprod.live
+  accountPortalApiKey: "ADDF66E8-BB85-40AC-A092-8BCEA70B0616" 
+  cookieDomain: .budipreprod.live
+  platformUrl: https://budipreprod.live
+
+  # if createSecrets is set to false, you can hard-code your secrets here
+  internalApiKey: "A0AB741F-B56D-447C-86D1-4A7BC7F1428B"
+  jwtSecret: "afjJH8qUvTYaQlTz76ic"
+
+  smtp:
+    enabled: true
+    host: email-smtp.eu-west-1.amazonaws.com 
+    port: 587
+    user: AKIAX5ZKDVGG2PHT2M7Z
+    password: BKmK0jzCeZ0Y9ymtw0pf8ZOVUy+Kv5nktaRpK4HkkAKV
+    from: noreply@budibase.com
+
+services:
+  dns: cluster.local
+
+  proxy:
+    port: 10000
+    replicaCount: 1
+
+  apps:
+    port: 4002
+    replicaCount: 2
+    logLevel: info
+
+  worker:
+    port: 4001
+    replicaCount: 1
+
+  couchdb:
+    enabled: true
+    replicaCount: 3
+    user: budibase
+    password: F31DC3F0-17CA-4F21-B1D5-68CDA5545A7F
+    url: http://budibase:F31DC3F0-17CA-4F21-B1D5-68CDA5545A7F@budibase-preprod-svc-couchdb:5984
+    host: budibase-preprod-svc-couchdb
+    # url: "" # only change if pointing to existing couch server
+    # user: "" # only change if pointing to existing couch server
+    # password: "" # only change if pointing to existing couch server
+    port: 5984
+    storage: 100Mi
+    backup:
+      enabled: false
+      # target couchDB instance to back up to
+      target: http://budibase:3391ecff-cd40-4877-a015-c872d919775d@10.0.0.200
+      # backup interval in seconds
+      interval: "3600"
+  
+  redis:
+    enabled: false # disable if using external redis
+    port: 6379
+    replicaCount: 1
+    url: "redis://default:0f15e851-b4f7-4966-a9f0-2b7c43db5105@10.0.0.141:6379"
+    password: "0f15e851-b4f7-4966-a9f0-2b7c43db5105" # recommended to override if using built-in redis
+    storage: 100Mi
+
+  objectStore:
+    minio: true
+    browser: true
+    port: 9000
+    replicaCount: 1
+    accessKey: "8B6BD43F-32A9-4943-88AA-E0FF592EB178" # AWS_ACCESS_KEY if using S3 or existing minio access key
+    secretKey: "40E70E59-E68B-436D-BEB9-FAD4BD0E1B10" # AWS_SECRET_ACCESS_KEY if using S3 or existing minio secret
+    region: "" # AWS_REGION if using S3 or existing minio secret
+    url: "http://minio-service:9000" # only change if pointing to existing minio cluster or S3 and minio: false
+    storage: 100Mi
+
+couchdb:
+  ## clusterSize is the initial size of the CouchDB cluster.
+  clusterSize: 3
+  allowAdminParty: false
+
+  ## If createAdminSecret is enabled a Secret called <ReleaseName>-couchdb will
+  ## be created containing auto-generated credentials. Users who prefer to set
+  ## these values themselves have a couple of options:
+  ##
+  ## 1) The `adminUsername`, `adminPassword`, `adminHash`, and `cookieAuthSecret`
+  ##    can be defined directly in the chart's values. Note that all of a chart's
+  ##    values are currently stored in plaintext in a ConfigMap in the tiller
+  ##    namespace.
+  ##
+  ## 2) This flag can be disabled and a Secret with the required keys can be
+  ##    created ahead of time.
+  createAdminSecret: true
+  adminUsername: budibase
+  adminPassword: F31DC3F0-17CA-4F21-B1D5-68CDA5545A7F
+  cookieAuthSecret: C2717CBD-C286-49DB-A91E-0AA2371DE7C7
+  # adminHash: -pbkdf2-E6B06EED-FD2F-4228-845B-34E49A4E19D4
+  ## When enabled, will deploy a networkpolicy that allows CouchDB pods to
+  ## communicate with each other for clustering and ingress on port 5984
+  networkPolicy:
+    enabled: true
+  # Use a service account
+  serviceAccount:
+    enabled: true
+    create: true
+  # name:
+  # imagePullSecrets:
+  # - name: myimagepullsecret
+  persistentVolume:
+    enabled: true
+    accessModes:
+      - ReadWriteOnce
+    size: 10Gi
+    storageClass: local-path
+
+  ## The CouchDB image
+  image:
+    repository: couchdb
+    tag: 3.1.0
+    pullPolicy: IfNotPresent
+
+  ## Experimental integration with Lucene-powered fulltext search
+  searchImage:
+    repository: kocolosk/couchdb-search
+    tag: 0.2.0
+    pullPolicy: IfNotPresent
+
+  ## Flip this to flag to include the Search container in each Pod
+  enableSearch: true
+
+  initImage:
+    repository: busybox
+    tag: latest
+    pullPolicy: Always
+
+  ## CouchDB is happy to spin up cluster nodes in parallel, but if you encounter
+  ## problems you can try setting podManagementPolicy to the StatefulSet default
+  ## `OrderedReady`
+  podManagementPolicy: Parallel
+
+  ## To better tolerate Node failures, we can prevent Kubernetes scheduler from
+  ## assigning more than one Pod of CouchDB StatefulSet per Node using podAntiAffinity.
+  affinity: {}
+
+  ## Optional pod annotations
+  annotations: {}
+
+  ## Optional tolerations
+  tolerations: []
+
+  ## A StatefulSet requires a headless Service to establish the stable network
+  ## identities of the Pods, and that Service is created automatically by this
+  ## chart without any additional configuration. The Service block below refers
+  ## to a second Service that governs how clients connect to the CouchDB cluster.
+  service:
+    # annotations:
+    enabled: true
+    type: ClusterIP
+    externalPort: 5984
+
+  ## An Ingress resource can provide name-based virtual hosting and TLS
+  ## termination among other things for CouchDB deployments which are accessed
+  ## from outside the Kubernetes cluster.
+  ## ref: https://kubernetes.io/docs/concepts/services-networking/ingress/
+  ingress:
+    enabled: false
+    hosts:
+      - chart-example.local
+    path: /
+    annotations: []
+      # kubernetes.io/ingress.class: nginx
+      # kubernetes.io/tls-acme: "true"
+    tls:
+      # Secrets must be manually created in the namespace.
+      # - secretName: chart-example-tls
+      #   hosts:
+      #     - chart-example.local
+
+  ## Optional resource requests and limits for the CouchDB container
+  ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
+  resources:
+    {}
+  erlangFlags:
+    name: couchdb
+    setcookie: monster
+
+  couchdbConfig:
+    couchdb:
+      uuid: budibase-couchdb # REQUIRED: Unique identifier for this CouchDB server instance
+    # cluster:
+    #   q: 8 # Create 8 shards for each database
+    chttpd:
+      bind_address: any
+      # chttpd.require_valid_user disables all the anonymous requests to the port
+      # 5984 when is set to true.
+      require_valid_user: false
+  dns:
+    clusterDomainSuffix: cluster.local
