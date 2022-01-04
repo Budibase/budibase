@@ -1,6 +1,6 @@
 import { writable, get } from "svelte/store"
 import { store as frontendStore } from "builderStore"
-import { findComponentPath } from "builderStore/storeUtils"
+import { findComponentPath } from "builderStore/componentUtils"
 
 export const DropEffect = {
   MOVE: "move",

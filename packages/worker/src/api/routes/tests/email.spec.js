@@ -8,7 +8,7 @@ jest.mock("nodemailer")
 const nodemailer = require("nodemailer")
 nodemailer.createTransport.mockReturnValue({
   sendMail: sendMailMock,
-  verify: jest.fn()
+  verify: jest.fn(),
 })
 
 describe("/api/global/email", () => {
@@ -39,6 +39,6 @@ describe("/api/global/email", () => {
     expect(sendMailMock).toHaveBeenCalled()
     const emailCall = sendMailMock.mock.calls[0][0]
     expect(emailCall.subject).toBe("Hello!")
-    expect(emailCall.html).not.toContain("Invalid Binding")
+    expect(emailCall.html).not.toContain("Invalid binding")
   })
 })

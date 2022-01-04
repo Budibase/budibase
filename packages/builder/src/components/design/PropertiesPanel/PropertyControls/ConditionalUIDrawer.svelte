@@ -16,7 +16,7 @@
   import { selectedComponent } from "builderStore"
   import { getComponentForSettingType } from "./componentSettings"
   import PropertyControl from "./PropertyControl.svelte"
-  import { getComponentSettings } from "builderStore/storeUtils"
+  import { getComponentSettings } from "builderStore/componentUtils"
 
   export let conditions = []
   export let bindings = []

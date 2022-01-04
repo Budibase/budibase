@@ -3,6 +3,8 @@
   import { derived, get, writable } from "svelte/store"
   import { createValidatorFromConstraints } from "./validation"
   import { generateID } from "utils/helpers"
+  import { deepGet, deepSet } from "@budibase/bbui"
+  import { cloneDeep } from "lodash/fp"
 
   export let dataSource
   export let disabled = false
@@ -49,6 +51,20 @@
     })
   }
 
+  // Derive value of whole form
+  $: formValue = deriveFormValue(initialValues, $values, $enrichments)
+
+  // Create data context to provide
+  $: dataContext = {
+    ...formValue,
+
+    // These static values are prefixed to avoid clashes with actual columns
+    __value: formValue,
+    __valid: valid,
+    __currentStep: $currentStep,
+    __currentStepValid: $currentStepValid,
+  }
+
   // Generates a derived store from an array of fields, comprised of a map of
   // extracted values from the field array
   const deriveFieldProperty = (fieldStores, getProp) => {
@@ -78,6 +94,35 @@
     })
   }
 
+  // Derive the overall form value and deeply set all field paths so that we
+  // can support things like JSON fields.
+  const deriveFormValue = (initialValues, values, enrichments) => {
+    let formValue = cloneDeep(initialValues || {})
+
+    // We need to sort the keys to avoid a JSON field overwriting a nested field
+    const sortedFields = Object.entries(values || {})
+      .map(([key, value]) => {
+        const field = getField(key)
+        return {
+          key,
+          value,
+          lastUpdate: get(field).fieldState?.lastUpdate || 0,
+        }
+      })
+      .sort((a, b) => {
+        return a.lastUpdate > b.lastUpdate
+      })
+
+    // Merge all values and enrichments into a single value
+    sortedFields.forEach(({ key, value }) => {
+      deepSet(formValue, key, value)
+    })
+    Object.entries(enrichments || {}).forEach(([key, value]) => {
+      deepSet(formValue, key, value)
+    })
+    return formValue
+  }
+
   // Searches the field array for a certain field
   const getField = name => {
     return fields.find(field => get(field).name === name)
@@ -97,13 +142,20 @@
       }
 
       // If we've already registered this field then keep some existing state
-      let initialValue = initialValues[field] ?? defaultValue
+      let initialValue = deepGet(initialValues, field) ?? defaultValue
       let fieldId = `id-${generateID()}`
       const existingField = getField(field)
       if (existingField) {
         const { fieldState } = get(existingField)
-        initialValue = fieldState.value ?? initialValue
         fieldId = fieldState.fieldId
+
+        // Use new default value if default value changed,
+        // otherwise use the current value if possible
+        if (defaultValue !== fieldState.defaultValue) {
+          initialValue = defaultValue
+        } else {
+          initialValue = fieldState.value ?? initialValue
+        }
       }
 
       // Auto columns are always disabled
@@ -130,6 +182,7 @@
           disabled: disabled || fieldDisabled || isAutoColumn,
           defaultValue,
           validator,
+          lastUpdate: Date.now(),
         },
         fieldApi: makeFieldApi(field, defaultValue),
         fieldSchema: schema?.[field] ?? {},
@@ -204,6 +257,7 @@
       fieldInfo.update(state => {
         state.fieldState.value = value
         state.fieldState.error = error
+        state.fieldState.lastUpdate = Date.now()
         return state
       })
 
@@ -220,6 +274,7 @@
       fieldInfo.update(state => {
         state.fieldState.value = newValue
         state.fieldState.error = null
+        state.fieldState.lastUpdate = Date.now()
         return state
       })
     }
@@ -299,18 +354,6 @@
     { type: ActionTypes.ClearForm, callback: formApi.clear },
     { type: ActionTypes.ChangeFormStep, callback: formApi.changeStep },
   ]
-
-  // Create data context to provide
-  $: dataContext = {
-    ...initialValues,
-    ...$values,
-    ...$enrichments,
-
-    // These static values are prefixed to avoid clashes with actual columns
-    __valid: valid,
-    __currentStep: $currentStep,
-    __currentStepValid: $currentStepValid,
-  }
 </script>
 
 <Provider {actions} data={dataContext}>
