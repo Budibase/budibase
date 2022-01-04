@@ -57,6 +57,12 @@ module FetchMock {
         ],
         bookmark: "test",
       })
+    } else if (url.includes("google.com")) {
+      return json({
+        url,
+        opts,
+        value: "<!doctype html><html itemscope=\"\" itemtype=\"http://schema.org/WebPage\" lang=\"en-GB\"></html>",
+      })
     }
     return fetch(url, opts)
   }
