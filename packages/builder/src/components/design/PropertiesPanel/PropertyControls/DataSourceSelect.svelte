@@ -48,9 +48,7 @@
     return [...acc, ...viewsArr]
   }, [])
   $: queries = $queriesStore.list
-    .filter(
-      query => showAllQueries || query.queryVerb === "read" || query.readable
-    )
+    .filter(q => showAllQueries || q.queryVerb === "read" || q.readable)
     .map(query => ({
       label: query.name,
       name: query.name,
@@ -101,6 +99,22 @@
         fieldType: type,
         tableId,
         type: "field",
+        value: `{{ literal ${runtimeBinding} }}`,
+      }
+    })
+  $: jsonArrays = bindings
+    .filter(x => x.fieldSchema?.type === "jsonarray")
+    .map(binding => {
+      const { providerId, readableBinding, runtimeBinding, tableId } = binding
+      const { name, type, prefixKeys } = binding.fieldSchema
+      return {
+        providerId,
+        label: readableBinding,
+        fieldName: name,
+        fieldType: type,
+        tableId,
+        prefixKeys,
+        type: "jsonarray",
         value: `{{ literal ${runtimeBinding} }}`,
       }
     })
@@ -226,6 +240,17 @@
       </div>
       <ul>
         {#each fields as field}
+          <li on:click={() => handleSelected(field)}>{field.label}</li>
+        {/each}
+      </ul>
+    {/if}
+    {#if jsonArrays?.length}
+      <Divider size="S" />
+      <div class="title">
+        <Heading size="XS">JSON Arrays</Heading>
+      </div>
+      <ul>
+        {#each jsonArrays as field}
           <li on:click={() => handleSelected(field)}>{field.label}</li>
         {/each}
       </ul>

@@ -137,6 +137,7 @@ const fieldTypeToComponentMap = {
   datetime: "datetimefield",
   attachment: "attachmentfield",
   link: "relationshipfield",
+  json: "jsonfield",
 }
 
 export function makeDatasourceFormComponents(datasource) {
@@ -146,7 +147,7 @@ export function makeDatasourceFormComponents(datasource) {
   fields.forEach(field => {
     const fieldSchema = schema[field]
     // skip autocolumns
-    if (fieldSchema.autocolumn) {
+    if (fieldSchema.autocolumn || fieldSchema.nestedJSON) {
       return
     }
     const fieldType =

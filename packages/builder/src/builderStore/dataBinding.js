@@ -5,7 +5,7 @@ import {
   findComponent,
   findComponentPath,
   getComponentSettings,
-} from "./storeUtils"
+} from "./componentUtils"
 import { store } from "builderStore"
 import { queries as queriesStores, tables as tablesStore } from "stores/backend"
 import {
@@ -15,6 +15,11 @@ import {
   encodeJSBinding,
 } from "@budibase/string-templates"
 import { TableNames } from "../constants"
+import {
+  convertJSONSchemaToTableSchema,
+  getJSONArrayDatasourceSchema,
+} from "./jsonUtils"
+import ActionDefinitions from "components/design/PropertiesPanel/PropertyControls/ButtonActionEditor/manifest.json"
 
 // Regex to match all instances of template strings
 const CAPTURE_VAR_INSIDE_TEMPLATE = /{{([^}]+)}}/g
@@ -186,6 +191,7 @@ const getProviderContextBindings = (asset, dataProviders) => {
       }
 
       let schema
+      let table
       let readablePrefix
       let runtimeSuffix = context.suffix
 
@@ -209,7 +215,16 @@ const getProviderContextBindings = (asset, dataProviders) => {
         }
         const info = getSchemaForDatasource(asset, datasource)
         schema = info.schema
-        readablePrefix = info.table?.name
+        table = info.table
+
+        // For JSON arrays, use the array name as the readable prefix.
+        // Otherwise use the table name
+        if (datasource.type === "jsonarray") {
+          const split = datasource.label.split(".")
+          readablePrefix = split[split.length - 1]
+        } else {
+          readablePrefix = info.table?.name
+        }
       }
       if (!schema) {
         return
@@ -229,7 +244,8 @@ const getProviderContextBindings = (asset, dataProviders) => {
         const fieldSchema = schema[key]
 
         // Make safe runtime binding
-        const runtimeBinding = `${safeComponentId}.${makePropSafe(key)}`
+        const safeKey = key.split(".").map(makePropSafe).join(".")
+        const runtimeBinding = `${safeComponentId}.${safeKey}`
 
         // Optionally use a prefix with readable bindings
         let readableBinding = component._instanceName
@@ -247,6 +263,8 @@ const getProviderContextBindings = (asset, dataProviders) => {
           // datasource options, based on bindable properties
           fieldSchema,
           providerId,
+          // Table ID is used by JSON fields to know what table the field is in
+          tableId: table?._id,
         })
       })
     })
@@ -340,6 +358,36 @@ const getUrlBindings = asset => {
 }
 
 /**
+ * Gets all bindable properties exposed in a button actions flow up until
+ * the specified action ID.
+ */
+export const getButtonContextBindings = (actions, actionId) => {
+  // Get the steps leading up to this value
+  const index = actions?.findIndex(action => action.id === actionId)
+  if (index == null || index === -1) {
+    return []
+  }
+  const prevActions = actions.slice(0, index)
+
+  // Generate bindings for any steps which provide context
+  let bindings = []
+  prevActions.forEach((action, idx) => {
+    const def = ActionDefinitions.actions.find(
+      x => x.name === action["##eventHandlerType"]
+    )
+    if (def.context) {
+      def.context.forEach(contextValue => {
+        bindings.push({
+          readableBinding: `Action ${idx + 1}.${contextValue.label}`,
+          runtimeBinding: `actions.${idx}.${contextValue.value}`,
+        })
+      })
+    }
+  })
+  return bindings
+}
+
+/**
  * Gets a schema for a datasource object.
  */
 export const getSchemaForDatasource = (asset, datasource, isForm = false) => {
@@ -347,16 +395,26 @@ export const getSchemaForDatasource = (asset, datasource, isForm = false) => {
 
   if (datasource) {
     const { type } = datasource
+    const tables = get(tablesStore).list
 
-    // Determine the source table from the datasource type
+    // Determine the entity which backs this datasource.
+    // "provider" datasources are those targeting another data provider
     if (type === "provider") {
       const component = findComponent(asset.props, datasource.providerId)
       const source = getDatasourceForProvider(asset, component)
       return getSchemaForDatasource(asset, source, isForm)
-    } else if (type === "query") {
+    }
+
+    // "query" datasources are those targeting non-plus datasources or
+    // custom queries
+    else if (type === "query") {
       const queries = get(queriesStores).list
       table = queries.find(query => query._id === datasource._id)
-    } else if (type === "field") {
+    }
+
+    // "field" datasources are array-like fields of rows, such as attachments
+    // or multi-select fields
+    else if (type === "field") {
       table = { name: datasource.fieldName }
       const { fieldType } = datasource
       if (fieldType === "attachment") {
@@ -375,12 +433,22 @@ export const getSchemaForDatasource = (asset, datasource, isForm = false) => {
           },
         }
       }
-    } else {
-      const tables = get(tablesStore).list
+    }
+
+    // "jsonarray" datasources are arrays inside JSON fields
+    else if (type === "jsonarray") {
+      table = tables.find(table => table._id === datasource.tableId)
+      let tableSchema = table?.schema
+      schema = getJSONArrayDatasourceSchema(tableSchema, datasource)
+    }
+
+    // Otherwise we assume we're targeting an internal table or a plus
+    // datasource, and we can treat it as a table with a schema
+    else {
       table = tables.find(table => table._id === datasource.tableId)
     }
 
-    // Determine the schema from the table if not already determined
+    // Determine the schema from the backing entity if not already determined
     if (table && !schema) {
       if (type === "view") {
         schema = cloneDeep(table.views?.[datasource.name]?.schema)
@@ -395,6 +463,26 @@ export const getSchemaForDatasource = (asset, datasource, isForm = false) => {
       } else {
         schema = cloneDeep(table.schema)
       }
+    }
+
+    // Check for any JSON fields so we can add any top level properties
+    if (schema) {
+      let jsonAdditions = {}
+      Object.keys(schema).forEach(fieldKey => {
+        const fieldSchema = schema[fieldKey]
+        if (fieldSchema?.type === "json") {
+          const jsonSchema = convertJSONSchemaToTableSchema(fieldSchema, {
+            squashObjects: true,
+          })
+          Object.keys(jsonSchema).forEach(jsonKey => {
+            jsonAdditions[`${fieldKey}.${jsonKey}`] = {
+              type: jsonSchema[jsonKey].type,
+              nestedJSON: true,
+            }
+          })
+        }
+      })
+      schema = { ...schema, ...jsonAdditions }
     }
 
     // Add _id and _rev fields for certain types
@@ -451,14 +539,57 @@ const buildFormSchema = component => {
 }
 
 /**
+ * Returns an array of the keys of any state variables which are set anywhere
+ * in the app.
+ */
+export const getAllStateVariables = () => {
+  // Get all component containing assets
+  let allAssets = []
+  allAssets = allAssets.concat(get(store).layouts || [])
+  allAssets = allAssets.concat(get(store).screens || [])
+
+  // Find all button action settings in all components
+  let eventSettings = []
+  allAssets.forEach(asset => {
+    findAllMatchingComponents(asset.props, component => {
+      const settings = getComponentSettings(component._component)
+      settings
+        .filter(setting => setting.type === "event")
+        .forEach(setting => {
+          eventSettings.push(component[setting.key])
+        })
+    })
+  })
+
+  // Extract all state keys from any "update state" actions in each setting
+  let bindingSet = new Set()
+  eventSettings.forEach(setting => {
+    if (!Array.isArray(setting)) {
+      return
+    }
+    setting.forEach(action => {
+      if (
+        action["##eventHandlerType"] === "Update State" &&
+        action.parameters?.type === "set" &&
+        action.parameters?.key &&
+        action.parameters?.value
+      ) {
+        bindingSet.add(action.parameters.key)
+      }
+    })
+  })
+  return Array.from(bindingSet)
+}
+
+/**
  * Recurses the input object to remove any instances of bindings.
  */
-export function removeBindings(obj) {
+export const removeBindings = (obj, replacement = "Invalid binding") => {
   for (let [key, value] of Object.entries(obj)) {
     if (value && typeof value === "object") {
-      obj[key] = removeBindings(value)
+      obj[key] = removeBindings(value, replacement)
     } else if (typeof value === "string") {
-      obj[key] = value.replace(CAPTURE_HBS_TEMPLATE, "Invalid binding")
+      obj[key] = value.replace(CAPTURE_HBS_TEMPLATE, replacement)
     }
   }
   return obj
@@ -468,8 +599,8 @@ export function removeBindings(obj) {
  * When converting from readable to runtime it can sometimes add too many square brackets,
  * this makes sure that doesn't happen.
  */
-function shouldReplaceBinding(currentValue, from, convertTo) {
-  if (!currentValue?.includes(from)) {
+const shouldReplaceBinding = (currentValue, convertFrom, convertTo) => {
+  if (!currentValue?.includes(convertFrom)) {
     return false
   }
   if (convertTo === "readableBinding") {
@@ -478,7 +609,7 @@ function shouldReplaceBinding(currentValue, from, convertTo) {
   // remove all the spaces, if the input is surrounded by spaces e.g. [ Auto ID ] then
   // this makes sure it is detected
   const noSpaces = currentValue.replace(/\s+/g, "")
-  const fromNoSpaces = from.replace(/\s+/g, "")
+  const fromNoSpaces = convertFrom.replace(/\s+/g, "")
   const invalids = [
     `[${fromNoSpaces}]`,
     `"${fromNoSpaces}"`,
@@ -487,14 +618,21 @@ function shouldReplaceBinding(currentValue, from, convertTo) {
   return !invalids.find(invalid => noSpaces?.includes(invalid))
 }
 
-function replaceBetween(string, start, end, replacement) {
+/**
+ * Utility function which replaces a string between given indices.
+ */
+const replaceBetween = (string, start, end, replacement) => {
   return string.substring(0, start) + replacement + string.substring(end)
 }
 
 /**
- * utility function for the readableToRuntimeBinding and runtimeToReadableBinding.
+ * Utility function for the readableToRuntimeBinding and runtimeToReadableBinding.
  */
-function bindingReplacement(bindableProperties, textWithBindings, convertTo) {
+const bindingReplacement = (
+  bindableProperties,
+  textWithBindings,
+  convertTo
+) => {
   // Decide from base64 if using JS
   const isJS = isJSBinding(textWithBindings)
   if (isJS) {
@@ -559,14 +697,17 @@ function bindingReplacement(bindableProperties, textWithBindings, convertTo) {
  * Extracts a component ID from a handlebars expression setting of
  * {{ literal [componentId] }}
  */
-function extractLiteralHandlebarsID(value) {
+const extractLiteralHandlebarsID = value => {
   return value?.match(/{{\s*literal\s*\[+([^\]]+)].*}}/)?.[1]
 }
 
 /**
  * Converts a readable data binding into a runtime data binding
  */
-export function readableToRuntimeBinding(bindableProperties, textWithBindings) {
+export const readableToRuntimeBinding = (
+  bindableProperties,
+  textWithBindings
+) => {
   return bindingReplacement(
     bindableProperties,
     textWithBindings,
@@ -577,56 +718,13 @@ export function readableToRuntimeBinding(bindableProperties, textWithBindings) {
 /**
  * Converts a runtime data binding into a readable data binding
  */
-export function runtimeToReadableBinding(bindableProperties, textWithBindings) {
+export const runtimeToReadableBinding = (
+  bindableProperties,
+  textWithBindings
+) => {
   return bindingReplacement(
     bindableProperties,
     textWithBindings,
     "readableBinding"
   )
-}
-
-/**
- * Returns an array of the keys of any state variables which are set anywhere
- * in the app.
- */
-export const getAllStateVariables = () => {
-  let allComponents = []
-
-  // Find all onClick settings in all layouts
-  get(store).layouts.forEach(layout => {
-    const components = findAllMatchingComponents(
-      layout.props,
-      c => c.onClick != null
-    )
-    allComponents = allComponents.concat(components || [])
-  })
-
-  // Find all onClick settings in all screens
-  get(store).screens.forEach(screen => {
-    const components = findAllMatchingComponents(
-      screen.props,
-      c => c.onClick != null
-    )
-    allComponents = allComponents.concat(components || [])
-  })
-
-  // Add state bindings for all state actions
-  let bindingSet = new Set()
-  allComponents.forEach(component => {
-    if (!Array.isArray(component.onClick)) {
-      return
-    }
-    component.onClick.forEach(action => {
-      if (
-        action["##eventHandlerType"] === "Update State" &&
-        action.parameters?.type === "set" &&
-        action.parameters?.key &&
-        action.parameters?.value
-      ) {
-        bindingSet.add(action.parameters.key)
-      }
-    })
-  })
-
-  return Array.from(bindingSet)
 }

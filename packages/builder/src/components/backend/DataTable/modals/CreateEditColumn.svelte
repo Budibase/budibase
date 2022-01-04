@@ -9,6 +9,7 @@
     DatePicker,
     ModalContent,
     Context,
+    Modal,
     notifications,
   } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
@@ -32,12 +33,14 @@
   import ModalBindableInput from "components/common/bindings/ModalBindableInput.svelte"
   import { getBindings } from "components/backend/DataTable/formula"
   import { getContext } from "svelte"
+  import JSONSchemaModal from "./JSONSchemaModal.svelte"
 
   const AUTO_TYPE = "auto"
   const FORMULA_TYPE = FIELDS.FORMULA.type
   const LINK_TYPE = FIELDS.LINK.type
   const STRING_TYPE = FIELDS.STRING.type
   const NUMBER_TYPE = FIELDS.NUMBER.type
+  const JSON_TYPE = FIELDS.JSON.type
   const DATE_TYPE = FIELDS.DATETIME.type
 
   const dispatch = createEventDispatcher()
@@ -64,6 +67,7 @@
   let confirmDeleteDialog
   let deletion
   let deleteColName
+  let jsonSchemaModal
 
   $: checkConstraints(field)
   $: required = !!field?.constraints?.presence || primaryDisplay
@@ -79,10 +83,14 @@
   // used to select what different options can be displayed for column type
   $: canBeSearched =
     field.type !== LINK_TYPE &&
+    field.type !== JSON_TYPE &&
     field.subtype !== AUTO_COLUMN_SUB_TYPES.CREATED_BY &&
     field.subtype !== AUTO_COLUMN_SUB_TYPES.UPDATED_BY &&
     field.type !== FORMULA_TYPE
-  $: canBeDisplay = field.type !== LINK_TYPE && field.type !== AUTO_TYPE
+  $: canBeDisplay =
+    field.type !== LINK_TYPE &&
+    field.type !== AUTO_TYPE &&
+    field.type !== JSON_TYPE
   $: canBeRequired =
     field.type !== LINK_TYPE && !uneditable && field.type !== AUTO_TYPE
   $: relationshipOptions = getRelationshipOptions(field)
@@ -174,6 +182,10 @@
     } else {
       indexes = indexes.slice(0, 1)
     }
+  }
+
+  function openJsonSchemaEditor() {
+    jsonSchemaModal.show()
   }
 
   function confirmDelete() {
@@ -430,6 +442,10 @@
       getOptionLabel={option => option[1].name}
       getOptionValue={option => option[0]}
     />
+  {:else if field.type === JSON_TYPE}
+    <Button primary text on:click={openJsonSchemaEditor}
+      >Open schema editor</Button
+    >
   {/if}
 
   <div slot="footer">
@@ -438,6 +454,16 @@
     {/if}
   </div>
 </ModalContent>
+<Modal bind:this={jsonSchemaModal}>
+  <JSONSchemaModal
+    schema={field.schema}
+    json={field.json}
+    on:save={({ detail }) => {
+      field.schema = detail.schema
+      field.json = detail.json
+    }}
+  />
+</Modal>
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
   okText="Delete Column"
