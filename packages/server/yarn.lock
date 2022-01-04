@@ -27,7 +27,7 @@
   resolved "https://registry.yarnpkg.com/@apidevtools/swagger-methods/-/swagger-methods-3.0.2.tgz#b789a362e055b0340d04712eafe7027ddc1ac267"
   integrity sha512-QAkD5kK2b1WfjDS/UQn/qQkbwF31uqRjPTrsCs5ZG9BQGAkjwvqGFjjPqAuzac/IYzpPtRzjCP1WrTuAIjMrXg==
 
-"@apidevtools/swagger-parser@10.0.3":
+"@apidevtools/swagger-parser@10.0.3", "@apidevtools/swagger-parser@^10.0.3":
   version "10.0.3"
   resolved "https://registry.yarnpkg.com/@apidevtools/swagger-parser/-/swagger-parser-10.0.3.tgz#32057ae99487872c4dd96b314a1ab4b95d89eaf5"
   integrity sha512-sNiLY51vZOmSPFZA5TF35KZ2HbgYklQnTSDnkghamzLb3EkNtcQnrBQEj5AOCxHpTtXpqMCRM1CrmV2rG6nw4g==
@@ -983,10 +983,10 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/auth@^1.0.23":
-  version "1.0.24"
-  resolved "https://registry.yarnpkg.com/@budibase/auth/-/auth-1.0.24.tgz#69a015a7fe9dcc9ea9e471a7d76d2c0544de0b16"
-  integrity sha512-pX+x+ib5X8s9ek4TZVmddRXlCE3kFmK5EH7Qk0Wmcn9tZwbaZy1XXd4qlJ7aFGSmvy1VNbz5AXIyRtliescaEQ==
+"@budibase/auth@^1.0.27-alpha.1":
+  version "1.0.33"
+  resolved "https://registry.yarnpkg.com/@budibase/auth/-/auth-1.0.33.tgz#bb0c527ebca852c001c7e163a9cdfce49984adab"
+  integrity sha512-CJcBspSB6B4UwXenGfzCiBh4wWPq9ZrRZm+Dqo774Yw7dfa/hHisfFiRAuz0vHxZl6AStLUsTBNynrzt7bs7Mg==
   dependencies:
     "@techpass/passport-openidconnect" "^0.3.0"
     aws-sdk "^2.901.0"
@@ -1056,10 +1056,10 @@
     svelte-flatpickr "^3.2.3"
     svelte-portal "^1.0.0"
 
-"@budibase/bbui@^1.0.24":
-  version "1.0.24"
-  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-1.0.24.tgz#15a976b500c4103bc3e94ed665c6c557bb6271bf"
-  integrity sha512-4zr+fSChOelHDqNNM2OiWWbWOL57JGBVBx333GiMr2P7N0MoepjwHEp9MlITWl5mUfS8rxgWTC9mSSMpRdpSUQ==
+"@budibase/bbui@^1.0.33":
+  version "1.0.33"
+  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-1.0.33.tgz#e815c4883dbc9d28d31900160fc74aafc81d02c1"
+  integrity sha512-2W3Ub8J8brSuhwtXhznszTa54cTyUdDNMFDCnRrHseaDV05XrSykdndXYyWi4XC+FveV82AdvSICxgd6alRGzg==
   dependencies:
     "@adobe/spectrum-css-workflow-icons" "^1.2.1"
     "@spectrum-css/actionbutton" "^1.0.1"
@@ -1106,14 +1106,14 @@
     svelte-flatpickr "^3.2.3"
     svelte-portal "^1.0.0"
 
-"@budibase/client@^1.0.23":
-  version "1.0.24"
-  resolved "https://registry.yarnpkg.com/@budibase/client/-/client-1.0.24.tgz#69be5b66cc701c6018c816728975a076230c052a"
-  integrity sha512-ppb+exifHCfuDGqs1cQ0kzc3wWaOGkVgq/8Rdb7R7BLIOKYkB67L3FvkqTl+39wrc32CpmzOXXQ73keE4l6P8Q==
+"@budibase/client@^1.0.27-alpha.1":
+  version "1.0.33"
+  resolved "https://registry.yarnpkg.com/@budibase/client/-/client-1.0.33.tgz#715aaaf15f13d9e40960fffea44002e817d8a569"
+  integrity sha512-4+xM/ZTI247JbJc1noQS58VFh8AqfuQK1ZUSZIowuol1TtDu5dLGN7BysUFUe0mJZoDB/L+cB1I//43XqaSWDw==
   dependencies:
-    "@budibase/bbui" "^1.0.24"
+    "@budibase/bbui" "^1.0.33"
     "@budibase/standard-components" "^0.9.139"
-    "@budibase/string-templates" "^1.0.24"
+    "@budibase/string-templates" "^1.0.33"
     regexparam "^1.3.0"
     shortid "^2.2.15"
     svelte-spa-router "^3.0.5"
@@ -1163,10 +1163,10 @@
     svelte-apexcharts "^1.0.2"
     svelte-flatpickr "^3.1.0"
 
-"@budibase/string-templates@^1.0.23", "@budibase/string-templates@^1.0.24":
-  version "1.0.24"
-  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-1.0.24.tgz#8f317ff18159d8f8e36179de33252e019c85c267"
-  integrity sha512-KAwyYxtm3Mrsm44MhchSxOtB8ucZ2JI93VPBQn0hjdzHtMuAkadtFNPZFeD3pKpCjDmI13XuW+BmJqCF3B0tYg==
+"@budibase/string-templates@^1.0.27-alpha.1", "@budibase/string-templates@^1.0.33":
+  version "1.0.33"
+  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-1.0.33.tgz#7c39f0821d86ca1b26e8d5e7eca4256f24b09de0"
+  integrity sha512-uvDJvVtAaBcMKnVylWlzGk+CzPXH+TIKojGAfgjCqfcBsc9GlyCCBLtANe8osi9Bdr1SsKOW9Fi5u9FTToNMJw==
   dependencies:
     "@budibase/handlebars-helpers" "^0.11.7"
     dayjs "^1.10.4"
@@ -3304,9 +3304,9 @@ aws-sdk@^2.767.0:
     xml2js "0.4.19"
 
 aws-sdk@^2.901.0:
-  version "2.1046.0"
-  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.1046.0.tgz#9147b0fa1c86acbebd1a061e951ab5012f4499d7"
-  integrity sha512-ocwHclMXdIA+NWocUyvp9Ild3/zy2vr5mHp3mTyodf0WU5lzBE8PocCVLSWhMAXLxyia83xv2y5f5AzAcetbqA==
+  version "2.1049.0"
+  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.1049.0.tgz#8146dcdf3a1ab603e50ff961169ee8abc537d48e"
+  integrity sha512-+wls9iNlotMeoZepwgR0yPzXsjXzr2ijoi5ERmsPWfMTFMHkm6INndBtSkm6fpu/NZnl+7EaPPES2yhaqnhoJg==
   dependencies:
     buffer "4.9.2"
     events "1.1.1"

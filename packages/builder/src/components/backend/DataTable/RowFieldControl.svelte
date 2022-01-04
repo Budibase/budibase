@@ -6,16 +6,20 @@
     Toggle,
     TextArea,
     Multiselect,
+    Label,
   } from "@budibase/bbui"
   import Dropzone from "components/common/Dropzone.svelte"
   import { capitalise } from "helpers"
   import LinkedRowSelector from "components/common/LinkedRowSelector.svelte"
+  import Editor from "../../integration/QueryEditor.svelte"
 
   export let defaultValue
   export let meta
   export let value = defaultValue || (meta.type === "boolean" ? false : "")
   export let readonly
 
+  $: stringVal =
+    typeof value === "object" ? JSON.stringify(value, null, 2) : value
   $: type = meta?.type
   $: label = meta.name ? capitalise(meta.name) : ""
 </script>
@@ -40,6 +44,14 @@
   <LinkedRowSelector bind:linkedRows={value} schema={meta} />
 {:else if type === "longform"}
   <TextArea {label} bind:value />
+{:else if type === "json"}
+  <Label>{label}</Label>
+  <Editor
+    editorHeight="250"
+    mode="json"
+    on:change={({ detail }) => (value = detail.value)}
+    value={stringVal}
+  />
 {:else}
   <Input
     {label}
