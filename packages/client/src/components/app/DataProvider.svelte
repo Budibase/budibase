@@ -123,7 +123,7 @@
     rows,
     info,
     schema,
-    rowsLength: rows.length,
+    rowsLength: rows?.length,
 
     // Undocumented properties. These aren't supposed to be used in builder
     // bindings, but are used internally by other components
