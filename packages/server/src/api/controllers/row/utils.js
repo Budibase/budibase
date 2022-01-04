@@ -50,10 +50,10 @@ exports.validate = async ({ appId, tableId, row, table }) => {
   const errors = {}
   for (let fieldName of Object.keys(table.schema)) {
     const constraints = cloneDeep(table.schema[fieldName].constraints)
+    const type = table.schema[fieldName].type
     // special case for options, need to always allow unselected (null)
     if (
-      table.schema[fieldName].type ===
-        (FieldTypes.OPTIONS || FieldTypes.ARRAY) &&
+      (type === FieldTypes.OPTIONS || type === FieldTypes.ARRAY) &&
       constraints.inclusion
     ) {
       constraints.inclusion.push(null)
@@ -61,17 +61,20 @@ exports.validate = async ({ appId, tableId, row, table }) => {
     let res
 
     // Validate.js doesn't seem to handle array
-    if (
-      table.schema[fieldName].type === FieldTypes.ARRAY &&
-      row[fieldName] &&
-      row[fieldName].length
-    ) {
+    if (type === FieldTypes.ARRAY && row[fieldName] && row[fieldName].length) {
       row[fieldName].map(val => {
         if (!constraints.inclusion.includes(val)) {
           errors[fieldName] = "Field not in list"
         }
       })
-    } else if (table.schema[fieldName].type === FieldTypes.FORMULA) {
+    } else if (type === FieldTypes.JSON && typeof row[fieldName] === "string") {
+      // this should only happen if there is an error
+      try {
+        JSON.parse(row[fieldName])
+      } catch (err) {
+        errors[fieldName] = [`Contains invalid JSON`]
+      }
+    } else if (type === FieldTypes.FORMULA) {
       res = validateJs.single(
         processStringSync(table.schema[fieldName].formula, row),
         constraints

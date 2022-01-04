@@ -7,14 +7,32 @@
   export let label
   export let placeholder
   export let disabled = false
-  export let validation
   export let defaultValue = ""
 
+  const component = getContext("component")
+  const validation = [
+    {
+      constraint: "json",
+      type: "json",
+      error: "JSON syntax is invalid",
+    },
+  ]
   let fieldState
   let fieldApi
 
-  const component = getContext("component")
   $: height = $component.styles?.normal?.height || "124px"
+
+  const serialiseValue = value => {
+    return JSON.stringify(value || undefined, null, 4) || ""
+  }
+
+  const parseValue = value => {
+    try {
+      return JSON.parse(value)
+    } catch (error) {
+      return value
+    }
+  }
 </script>
 
 <Field
@@ -23,15 +41,15 @@
   {disabled}
   {validation}
   {defaultValue}
-  type="longform"
+  type="json"
   bind:fieldState
   bind:fieldApi
 >
   {#if fieldState}
     <div style="--height: {height};">
       <CoreTextArea
-        value={fieldState.value}
-        on:change={e => fieldApi.setValue(e.detail)}
+        value={serialiseValue(fieldState.value)}
+        on:change={e => fieldApi.setValue(parseValue(e.detail))}
         disabled={fieldState.disabled}
         error={fieldState.error}
         id={fieldState.fieldId}

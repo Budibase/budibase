@@ -194,9 +194,12 @@
       // For providers referencing another provider, just use the rows it
       // provides
       allRows = dataSource?.value?.rows || []
-    } else if (dataSource?.type === "field") {
-      // Field sources will be available from context.
-      // Enrich non object elements into object to ensure a valid schema.
+    } else if (
+      dataSource?.type === "field" ||
+      dataSource?.type === "jsonarray"
+    ) {
+      // These sources will be available directly from context.
+      // Enrich non object elements into objects to ensure a valid schema.
       const data = dataSource?.value || []
       if (Array.isArray(data) && data[0] && typeof data[0] !== "object") {
         allRows = data.map(value => ({ value }))

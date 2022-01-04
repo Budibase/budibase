@@ -81,6 +81,18 @@ const TYPE_TRANSFORM_MAP = {
   [FieldTypes.AUTO]: {
     parse: () => undefined,
   },
+  [FieldTypes.JSON]: {
+    parse: input => {
+      try {
+        if (input === "") {
+          return undefined
+        }
+        return JSON.parse(input)
+      } catch (err) {
+        return input
+      }
+    },
+  },
 }
 
 /**
