@@ -319,7 +319,6 @@
                     ? "Page size parameter"
                     : "Request limit parameter"}
                   bind:value={query.fields.pagination.sizeParam}
-                  info="asdasd"
                 />
                 {#if query.fields.pagination.type === "cursor"}
                   <Input
