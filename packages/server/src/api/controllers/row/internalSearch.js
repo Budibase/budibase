@@ -191,7 +191,8 @@ class QueryBuilder {
     }
     if (this.query.equal) {
       build(this.query.equal, (key, value) => {
-        if (!value) {
+        // 0 evaluates to false, which means we would return all rows if we don't check it
+        if (!value && value !== 0) {
           return null
         }
         return `${key}:${builder.preprocess(value, allPreProcessingOpts)}`
