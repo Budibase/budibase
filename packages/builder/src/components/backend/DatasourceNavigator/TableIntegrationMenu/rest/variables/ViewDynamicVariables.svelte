@@ -36,16 +36,19 @@
   }
 </script>
 
-<Table
-  on:click={({ detail }) => onClick(detail)}
-  schema={dynamicVariableSchema}
-  data={dynamicVariables}
-  allowEditColumns={false}
-  allowEditRows={false}
-  allowSelectRows={false}
-  customRenderers={[
-    { column: "name", component: BoldRenderer },
-    { column: "value", component: CodeRenderer },
-  ]}
-/>
-<Body size="S" />
+{#if dynamicVariables.length > 0}
+  <Table
+    on:click={({ detail }) => onClick(detail)}
+    schema={dynamicVariableSchema}
+    data={dynamicVariables}
+    allowEditColumns={false}
+    allowEditRows={false}
+    allowSelectRows={false}
+    customRenderers={[
+      { column: "name", component: BoldRenderer },
+      { column: "value", component: CodeRenderer },
+    ]}
+  />
+{:else}
+  <Body size="S"><i>No dynamic variables specified.</i></Body>
+{/if}
