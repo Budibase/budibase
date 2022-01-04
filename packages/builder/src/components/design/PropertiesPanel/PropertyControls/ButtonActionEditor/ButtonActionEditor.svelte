@@ -2,7 +2,7 @@
   import { ActionButton, Button, Drawer } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { notifications } from "@budibase/bbui"
-  import EventEditor from "./EventEditor.svelte"
+  import ButtonActionDrawer from "./ButtonActionDrawer.svelte"
   import { automationStore } from "builderStore"
   import { cloneDeep } from "lodash/fp"
 
@@ -67,7 +67,7 @@
     Define what actions to run.
   </svelte:fragment>
   <Button cta slot="buttons" on:click={saveEventData}>Save</Button>
-  <EventEditor
+  <ButtonActionDrawer
     slot="body"
     bind:actions={tmpValue}
     eventType={name}

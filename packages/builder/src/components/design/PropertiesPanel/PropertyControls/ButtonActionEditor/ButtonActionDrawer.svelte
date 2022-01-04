@@ -9,8 +9,9 @@
     ActionMenu,
     MenuItem,
   } from "@budibase/bbui"
-  import { getAvailableActions } from "./actions"
+  import { getAvailableActions } from "./index"
   import { generate } from "shortid"
+  import { getButtonContextBindings } from "builderStore/dataBinding"
 
   const flipDurationMs = 150
   const EVENT_TYPE_KEY = "##eventHandlerType"
@@ -19,7 +20,16 @@
   export let actions
   export let bindings = []
 
-  // dndzone needs an id on the array items, so this adds some temporary ones.
+  let selectedAction = actions?.length ? actions[0] : null
+
+  // These are ephemeral bindings which only exist while executing actions
+  $: buttonContextBindings = getButtonContextBindings(
+    actions,
+    selectedAction?.id
+  )
+  $: allBindings = buttonContextBindings.concat(bindings)
+
+  // Assign a unique ID to each action
   $: {
     if (actions) {
       actions.forEach(action => {
@@ -29,8 +39,6 @@
       })
     }
   }
-
-  let selectedAction = actions?.length ? actions[0] : null
 
   $: selectedActionComponent =
     selectedAction &&
@@ -122,7 +130,7 @@
         <svelte:component
           this={selectedActionComponent}
           parameters={selectedAction.parameters}
-          {bindings}
+          bindings={allBindings}
         />
       </div>
     {/if}
