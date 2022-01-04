@@ -36,7 +36,7 @@
   }
 </script>
 
-{#if dynamicVariables.length > 0}
+{#if dynamicVariables && dynamicVariables.length > 0}
   <Table
     on:click={({ detail }) => onClick(detail)}
     schema={dynamicVariableSchema}
