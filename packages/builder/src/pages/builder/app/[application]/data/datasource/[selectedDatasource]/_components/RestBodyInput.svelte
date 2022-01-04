@@ -7,7 +7,11 @@
   } from "components/common/CodeMirrorEditor.svelte"
 
   const objectTypes = [RawRestBodyTypes.FORM, RawRestBodyTypes.ENCODED]
-  const textTypes = [RawRestBodyTypes.JSON, RawRestBodyTypes.TEXT]
+  const textTypes = [
+    RawRestBodyTypes.JSON,
+    RawRestBodyTypes.XML,
+    RawRestBodyTypes.TEXT,
+  ]
 
   export let query
   export let bodyType
@@ -23,6 +27,18 @@
       query.fields.requestBody = {}
     } else if (textTypes.includes(type) && currentType !== "string") {
       query.fields.requestBody = ""
+    }
+  }
+
+  function editorMode(type) {
+    switch (type) {
+      case RawRestBodyTypes.JSON:
+        return EditorModes.JSON
+      case RawRestBodyTypes.XML:
+        return EditorModes.XML
+      default:
+      case RawRestBodyTypes.TEXT:
+        return EditorModes.Text
     }
   }
 </script>
@@ -41,9 +57,7 @@
   {:else if textTypes.includes(bodyType)}
     <CodeMirrorEditor
       height={200}
-      mode={bodyType === RawRestBodyTypes.JSON
-        ? EditorModes.JSON
-        : EditorModes.Text}
+      mode={editorMode(bodyType)}
       value={query.fields.requestBody}
       resize="vertical"
       on:change={e => (query.fields.requestBody = e.detail)}

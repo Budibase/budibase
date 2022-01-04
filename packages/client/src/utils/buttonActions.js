@@ -146,6 +146,15 @@ const updateStateHandler = action => {
   } else if (type === "delete") {
     stateStore.actions.deleteValue(key)
   }
+
+  // Emit this as an event so that parent windows which are iframing us in
+  // can also update their state
+  if (get(routeStore).queryParams?.peek) {
+    window.parent.postMessage({
+      type: "update-state",
+      detail: { type, key, value, persist },
+    })
+  }
 }
 
 const handlerMap = {

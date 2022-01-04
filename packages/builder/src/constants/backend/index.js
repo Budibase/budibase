@@ -208,6 +208,7 @@ export const RawRestBodyTypes = {
   ENCODED: "encoded",
   JSON: "json",
   TEXT: "text",
+  XML: "xml",
 }
 
 export const RestBodyTypes = [
@@ -215,5 +216,6 @@ export const RestBodyTypes = [
   { name: "form-data", value: "form" },
   { name: "x-www-form-encoded", value: "encoded" },
   { name: "raw (JSON)", value: "json" },
+  { name: "raw (XML)", value: "xml" },
   { name: "raw (Text)", value: "text" },
 ]

@@ -1,4 +1,5 @@
-import { writable } from "svelte/store"
+import { writable, get } from "svelte/store"
+import { stateStore } from "./state.js"
 
 const initialState = {
   showPeek: false,
@@ -14,7 +15,10 @@ const createPeekStore = () => {
     let href = url
     let external = !url.startsWith("/")
     if (!external) {
-      href = `${window.location.href.split("#")[0]}#${url}?peek=true`
+      const state = get(stateStore)
+      const serialised = encodeURIComponent(btoa(JSON.stringify(state)))
+      const query = `peek=true&state=${serialised}`
+      href = `${window.location.href.split("#")[0]}#${url}?${query}`
     }
     store.set({
       showPeek: true,

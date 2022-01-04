@@ -63,12 +63,13 @@
 </div>
 <div>
   <Button
+    size="S"
     disabled={app.lockedOther}
     on:click={() => editApp(app)}
-    size="S"
-    quiet
-    secondary>Open</Button
+    secondary
   >
+    Open
+  </Button>
   <ActionMenu align="right">
     <Icon hoverable slot="control" name="More" />
     {#if app.deployed}
@@ -91,7 +92,7 @@
       <MenuItem on:click={() => updateApp(app)} icon="Edit">Edit</MenuItem>
       <MenuItem on:click={() => deleteApp(app)} icon="Delete">Delete</MenuItem>
     {/if}
-    <MenuItem on:click={() => editIcon(app)} icon="Brush">Edit Icon</MenuItem>
+    <MenuItem on:click={() => editIcon(app)} icon="Brush">Edit icon</MenuItem>
   </ActionMenu>
 </div>
 
