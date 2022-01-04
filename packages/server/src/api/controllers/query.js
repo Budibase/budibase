@@ -7,8 +7,11 @@ const {
 } = require("../../db/utils")
 const { BaseQueryVerbs } = require("../../constants")
 const { Thread, ThreadType } = require("../../threads")
+const env = require("../../environment")
 
-const Runner = new Thread(ThreadType.QUERY, { timeoutMs: 10000 })
+const Runner = new Thread(ThreadType.QUERY, {
+  timeoutMs: env.QUERY_THREAD_TIMEOUT || 10000,
+})
 
 // simple function to append "readable" to all read queries
 function enrichQueries(input) {
