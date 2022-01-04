@@ -1,3 +1,8 @@
+import {
+  convertJSONSchemaToTableSchema,
+  getJSONArrayDatasourceSchema,
+} from "builder/src/builderStore/jsonUtils"
+import { fetchTableDefinition } from "api"
 import TableFetch from "./fetch/TableFetch.js"
 import ViewFetch from "./fetch/ViewFetch.js"
 import QueryFetch from "./fetch/QueryFetch.js"
@@ -7,16 +12,17 @@ import QueryFetch from "./fetch/QueryFetch.js"
  */
 export const fetchDatasourceSchema = async datasource => {
   const type = datasource?.type
+  let schema
 
   // Nested providers should already have exposed their own schema
   if (type === "provider") {
-    return datasource.value?.schema
+    schema = datasource.value?.schema
   }
 
   // Field sources have their schema statically defined
   if (type === "field") {
     if (datasource.fieldType === "attachment") {
-      return {
+      schema = {
         url: {
           type: "string",
         },
@@ -25,7 +31,7 @@ export const fetchDatasourceSchema = async datasource => {
         },
       }
     } else if (datasource.fieldType === "array") {
-      return {
+      schema = {
         value: {
           type: "string",
         },
@@ -33,7 +39,14 @@ export const fetchDatasourceSchema = async datasource => {
     }
   }
 
-  // All normal datasource schema can use their corresponsing implementations
+  // JSON arrays need their table definitions fetched.
+  // We can then extract their schema as a subset of the table schema.
+  if (type === "jsonarray") {
+    const table = await fetchTableDefinition(datasource.tableId)
+    schema = getJSONArrayDatasourceSchema(table?.schema, datasource)
+  }
+
+  // All normal datasource schema can use their corresponding implementations
   // in the data fetch classes
   const handler = {
     table: TableFetch,
@@ -43,7 +56,27 @@ export const fetchDatasourceSchema = async datasource => {
   }[type]
   if (handler) {
     const definition = await handler.getDefinition(datasource)
-    return handler.getSchema(datasource, definition)
+    schema = handler.getSchema(datasource, definition)
+  }
+
+  // Check for any JSON fields so we can add any top level properties
+  if (schema) {
+    let jsonAdditions = {}
+    Object.keys(schema).forEach(fieldKey => {
+      const fieldSchema = schema[fieldKey]
+      if (fieldSchema?.type === "json") {
+        const jsonSchema = convertJSONSchemaToTableSchema(fieldSchema, {
+          squashObjects: true,
+        })
+        Object.keys(jsonSchema).forEach(jsonKey => {
+          jsonAdditions[`${fieldKey}.${jsonKey}`] = {
+            type: jsonSchema[jsonKey].type,
+            nestedJSON: true,
+          }
+        })
+      }
+    })
+    return { ...schema, ...jsonAdditions }
   }
 
   return null

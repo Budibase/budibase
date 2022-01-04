@@ -50,6 +50,14 @@ static_resources:
                 route:
                   cluster: app-service
 
+              - match: 
+                  safe_regex: 
+                    google_re2: {}
+                    regex: "/api/.*/export"
+                route:
+                  timeout: 0s
+                  cluster: app-service
+
               - match: { path: "/api/deploy" }
                 route:
                   timeout: 60s

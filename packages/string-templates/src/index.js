@@ -1,12 +1,13 @@
 const handlebars = require("handlebars")
 const { registerAll } = require("./helpers/index")
 const processors = require("./processors")
-const { removeHandlebarsStatements, atob, btoa } = require("./utilities")
+const { atob, btoa } = require("./utilities")
 const manifest = require("../manifest.json")
 
 const hbsInstance = handlebars.create()
 registerAll(hbsInstance)
 const hbsInstanceNoHelpers = handlebars.create()
+const defaultOpts = { noHelpers: false }
 
 /**
  * utility function to check if the object is valid
@@ -28,11 +29,7 @@ function testObject(object) {
  * @param {object} opts optional - specify some options for processing.
  * @returns {Promise<object|array>} The structure input, as fully updated as possible.
  */
-module.exports.processObject = async (
-  object,
-  context,
-  opts = { noHelpers: false }
-) => {
+module.exports.processObject = async (object, context, opts) => {
   testObject(object)
   for (let key of Object.keys(object || {})) {
     if (object[key] != null) {
@@ -63,11 +60,7 @@ module.exports.processObject = async (
  * @param {object} opts optional - specify some options for processing.
  * @returns {Promise<string>} The enriched string, all templates should have been replaced if they can be.
  */
-module.exports.processString = async (
-  string,
-  context,
-  opts = { noHelpers: false }
-) => {
+module.exports.processString = async (string, context, opts) => {
   // TODO: carry out any async calls before carrying out async call
   return module.exports.processStringSync(string, context, opts)
 }
@@ -81,11 +74,7 @@ module.exports.processString = async (
  * @param {object} opts optional - specify some options for processing.
  * @returns {object|array} The structure input, as fully updated as possible.
  */
-module.exports.processObjectSync = (
-  object,
-  context,
-  opts = { noHelpers: false }
-) => {
+module.exports.processObjectSync = (object, context, opts) => {
   testObject(object)
   for (let key of Object.keys(object || {})) {
     let val = object[key]
@@ -106,26 +95,20 @@ module.exports.processObjectSync = (
  * @param {object} opts optional - specify some options for processing.
  * @returns {string} The enriched string, all templates should have been replaced if they can be.
  */
-module.exports.processStringSync = (
-  string,
-  context,
-  opts = { noHelpers: false }
-) => {
-  if (!exports.isValid(string)) {
-    return string
-  }
-  // take a copy of input incase error
+module.exports.processStringSync = (string, context, opts) => {
+  opts = { ...defaultOpts, ...opts }
+
+  // take a copy of input in case of error
   const input = string
   if (typeof string !== "string") {
     throw "Cannot process non-string types."
   }
   try {
-    const noHelpers = opts && opts.noHelpers
     // finalising adds a helper, can't do this with no helpers
-    const shouldFinalise = !noHelpers
+    const shouldFinalise = !opts.noHelpers
     string = processors.preprocess(string, shouldFinalise)
     // this does not throw an error when template can't be fulfilled, have to try correct beforehand
-    const instance = noHelpers ? hbsInstanceNoHelpers : hbsInstance
+    const instance = opts.noHelpers ? hbsInstanceNoHelpers : hbsInstance
     const template = instance.compile(string, {
       strict: false,
     })
@@ -136,7 +119,7 @@ module.exports.processStringSync = (
       })
     )
   } catch (err) {
-    return removeHandlebarsStatements(input)
+    return input
   }
 }
 
@@ -155,7 +138,8 @@ module.exports.makePropSafe = property => {
  * @param opts optional - specify some options for processing.
  * @returns {boolean} Whether or not the input string is valid.
  */
-module.exports.isValid = (string, opts = { noHelpers: false }) => {
+module.exports.isValid = (string, opts) => {
+  opts = { ...defaultOpts, ...opts }
   const validCases = [
     "string",
     "number",
@@ -169,7 +153,7 @@ module.exports.isValid = (string, opts = { noHelpers: false }) => {
   // don't really need a real context to check if its valid
   const context = {}
   try {
-    const instance = opts && opts.noHelpers ? hbsInstanceNoHelpers : hbsInstance
+    const instance = opts.noHelpers ? hbsInstanceNoHelpers : hbsInstance
     instance.compile(processors.preprocess(string, false))(context)
     return true
   } catch (err) {
