@@ -134,7 +134,7 @@
       {:else}
         <slot />
       {/if}
-      {#if paginate && dataSource?.type === "table"}
+      {#if paginate && $fetch.supportsPagination}
         <div class="pagination">
           <Pagination
             page={$fetch.pageNumber + 1}

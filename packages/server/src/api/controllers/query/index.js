@@ -145,6 +145,7 @@ async function execute(ctx, opts = { rowsOnly: false }) {
       queryVerb: query.queryVerb,
       fields: query.fields,
       parameters: ctx.request.body.parameter,
+      pagination: ctx.request.body.pagination,
       transformer: query.transformer,
       queryId: ctx.params.queryId,
     })

@@ -14,9 +14,11 @@ import { fetchTableDefinition } from "api"
  */
 export default class DataFetch {
   // Feature flags
-  supportsSearch = false
-  supportsSort = false
-  supportsPagination = false
+  featureStore = writable({
+    supportsSearch: false,
+    supportsSort: false,
+    supportsPagination: false,
+  })
 
   // Config
   options = {
@@ -74,13 +76,17 @@ export default class DataFetch {
     this.prevPage = this.prevPage.bind(this)
 
     // Derive certain properties to return
-    this.derivedStore = derived(this.store, $store => {
-      return {
-        ...$store,
-        hasNextPage: this.hasNextPage($store),
-        hasPrevPage: this.hasPrevPage($store),
+    this.derivedStore = derived(
+      [this.store, this.featureStore],
+      ([$store, $featureStore]) => {
+        return {
+          ...$store,
+          ...$featureStore,
+          hasNextPage: this.hasNextPage($store),
+          hasPrevPage: this.hasPrevPage($store),
+        }
       }
-    })
+    )
 
     // Mark as loaded if we have no datasource
     if (!this.options.datasource) {
@@ -114,7 +120,12 @@ export default class DataFetch {
 
     // Fetch datasource definition and determine feature flags
     const definition = await this.constructor.getDefinition(datasource)
-    this.determineFeatureFlags(definition)
+    const features = this.determineFeatureFlags(definition)
+    this.featureStore.set({
+      supportsSearch: !!features?.supportsSearch,
+      supportsSort: !!features?.supportsSort,
+      supportsPagination: !!features?.supportsPagination,
+    })
 
     // Fetch and enrich schema
     let schema = this.constructor.getSchema(datasource, definition)
@@ -167,22 +178,23 @@ export default class DataFetch {
   async getPage() {
     const { sortColumn, sortOrder, sortType, limit } = this.options
     const { query } = get(this.store)
+    const features = get(this.featureStore)
 
     // Get the actual data
     let { rows, info, hasNextPage, cursor } = await this.getData()
 
     // If we don't support searching, do a client search
-    if (!this.supportsSearch) {
+    if (!features.supportsSearch) {
       rows = luceneQuery(rows, query)
     }
 
     // If we don't support sorting, do a client-side sort
-    if (!this.supportsSort) {
+    if (!features.supportsSort) {
       rows = luceneSort(rows, sortColumn, sortOrder, sortType)
     }
 
     // If we don't support pagination, do a client-side limit
-    if (!this.supportsPagination) {
+    if (!features.supportsPagination) {
       rows = luceneLimit(rows, limit)
     }
 
@@ -263,9 +275,11 @@ export default class DataFetch {
    */
   // eslint-disable-next-line no-unused-vars
   determineFeatureFlags(definition) {
-    this.supportsSearch = false
-    this.supportsSort = false
-    this.supportsPagination = false
+    return {
+      supportsSearch: false,
+      supportsSort: false,
+      supportsPagination: false,
+    }
   }
 
   /**

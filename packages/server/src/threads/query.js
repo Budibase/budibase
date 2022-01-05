@@ -12,6 +12,7 @@ class QueryRunner {
     this.queryVerb = input.queryVerb
     this.fields = input.fields
     this.parameters = input.parameters
+    this.pagination = input.pagination
     this.transformer = input.transformer
     this.queryId = input.queryId
     this.noRecursiveQuery = flags.noRecursiveQuery
@@ -27,7 +28,7 @@ class QueryRunner {
     let { datasource, fields, queryVerb, transformer } = this
     // pre-query, make sure datasource variables are added to parameters
     const parameters = await this.addDatasourceVariables()
-    const query = threadUtils.enrichQueryFields(fields, parameters)
+    let query = this.enrichQueryFields(fields, parameters)
     const Integration = integrations[datasource.source]
     if (!Integration) {
       throw "Integration type does not exist."
@@ -155,6 +156,52 @@ class QueryRunner {
       }
     }
     return parameters
+  }
+
+  enrichQueryFields(fields, parameters = {}) {
+    const enrichedQuery = {}
+
+    // enrich the fields with dynamic parameters
+    for (let key of Object.keys(fields)) {
+      if (fields[key] == null) {
+        continue
+      }
+      if (typeof fields[key] === "object") {
+        // enrich nested fields object
+        enrichedQuery[key] = this.enrichQueryFields(fields[key], parameters)
+      } else if (typeof fields[key] === "string") {
+        // enrich string value as normal
+        enrichedQuery[key] = processStringSync(fields[key], parameters, {
+          noHelpers: true,
+        })
+      } else {
+        enrichedQuery[key] = fields[key]
+      }
+    }
+
+    if (
+      enrichedQuery.json ||
+      enrichedQuery.customData ||
+      enrichedQuery.requestBody
+    ) {
+      try {
+        enrichedQuery.json = JSON.parse(
+          enrichedQuery.json ||
+            enrichedQuery.customData ||
+            enrichedQuery.requestBody
+        )
+      } catch (err) {
+        // no json found, ignore
+      }
+      delete enrichedQuery.customData
+    }
+
+    // Just for REST queries
+    if (this.pagination) {
+      enrichedQuery.paginationValues = this.pagination
+    }
+
+    return enrichedQuery
   }
 }
 
