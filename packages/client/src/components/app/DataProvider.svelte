@@ -30,6 +30,7 @@
   // Provider state
   let rows = []
   let allRows = []
+  let info = {}
   let schema = {}
   let bookmarks = [null]
   let pageNumber = 0
@@ -120,8 +121,9 @@
   // Build our data context
   $: dataContext = {
     rows,
+    info,
     schema,
-    rowsLength: rows.length,
+    rowsLength: rows?.length,
 
     // Undocumented properties. These aren't supposed to be used in builder
     // bindings, but are used internally by other components
@@ -209,7 +211,9 @@
     } else {
       // For other data sources like queries or views, fetch all rows from the
       // server
-      allRows = await API.fetchDatasource(dataSource)
+      const data = await API.fetchDatasource(dataSource)
+      allRows = data.rows
+      info = data.info
     }
     loading = false
     loaded = true

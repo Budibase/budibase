@@ -91,6 +91,7 @@ export function createQueriesStore() {
           {}
         ),
         datasourceId: query.datasourceId,
+        queryId: query._id || undefined,
       })
 
       if (response.status !== 200) {

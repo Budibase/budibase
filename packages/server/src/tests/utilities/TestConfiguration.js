@@ -316,6 +316,16 @@ class TestConfiguration {
     return this.datasource
   }
 
+  async updateDatasource(datasource) {
+    const response = await this._req(
+      datasource,
+      { datasourceId: datasource._id },
+      controllers.datasource.update
+    )
+    this.datasource = response.datasource
+    return this.datasource
+  }
+
   async createQuery(config = null) {
     if (!this.datasource && !config) {
       throw "No data source created for query."

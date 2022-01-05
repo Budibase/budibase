@@ -119,3 +119,13 @@ export function flipHeaderState(headersActivity) {
   })
   return enabled
 }
+
+export default {
+  breakQueryString,
+  buildQueryString,
+  fieldsToSchema,
+  flipHeaderState,
+  keyValueToQueryParameters,
+  queryParametersToKeyValue,
+  schemaToFields,
+}

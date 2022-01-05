@@ -19,7 +19,8 @@ export const fetchDatasource = async dataSource => {
 
   // Fetch all rows in data source
   const { type, tableId, fieldName } = dataSource
-  let rows = []
+  let rows = [],
+    info = {}
   if (type === "table") {
     rows = await fetchTableData(tableId)
   } else if (type === "view") {
@@ -32,7 +33,12 @@ export const fetchDatasource = async dataSource => {
         parameters[param.name] = param.default
       }
     }
-    rows = await executeQuery({ queryId: dataSource._id, parameters })
+    const { data, ...rest } = await executeQuery({
+      queryId: dataSource._id,
+      parameters,
+    })
+    info = rest
+    rows = data
   } else if (type === FieldTypes.LINK) {
     rows = await fetchRelationshipData({
       rowId: dataSource.rowId,
@@ -42,7 +48,7 @@ export const fetchDatasource = async dataSource => {
   }
 
   // Enrich the result is always an array
-  return Array.isArray(rows) ? rows : []
+  return { rows: Array.isArray(rows) ? rows : [], info }
 }
 
 /**
