@@ -173,16 +173,16 @@ const removeDynamicVariables = async (db, queryId) => {
   const dynamicVariables = datasource.config.dynamicVariables
 
   if (dynamicVariables) {
+    // delete dynamic variables from the datasource
+    const newVariables = dynamicVariables.filter(dv => dv.queryId !== queryId)
+    datasource.config.dynamicVariables = newVariables
+    await db.put(datasource)
+
     // invalidate the deleted variables
     const variablesToDelete = dynamicVariables.filter(
       dv => dv.queryId === queryId
     )
     await invalidateDynamicVariables(variablesToDelete)
-
-    // delete dynamic variables from the datasource
-    const newVariables = dynamicVariables.filter(dv => dv.queryId !== queryId)
-    datasource.config.dynamicVariables = newVariables
-    await db.put(datasource)
   }
 }
 
