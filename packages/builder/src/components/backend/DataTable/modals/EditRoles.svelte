@@ -6,7 +6,7 @@
   import ErrorsBox from "components/common/ErrorsBox.svelte"
   import { roles } from "stores/backend"
 
-  const BASE_ROLE = { _id: "", inherits: "BASIC", permissionId: "Read/Write" }
+  const BASE_ROLE = { _id: "", inherits: "BASIC", permissionId: "write" }
 
   let basePermissions = []
   let selectedRole = BASE_ROLE

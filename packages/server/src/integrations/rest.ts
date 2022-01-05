@@ -53,7 +53,10 @@ module RestModule {
   const { performance } = require("perf_hooks")
   const FormData = require("form-data")
   const { URLSearchParams } = require("url")
-  const { parseStringPromise: xmlParser, Builder: XmlBuilder } = require("xml2js")
+  const {
+    parseStringPromise: xmlParser,
+    Builder: XmlBuilder,
+  } = require("xml2js")
 
   const SCHEMA: Integration = {
     docs: "https://github.com/node-fetch/node-fetch",
@@ -238,7 +241,7 @@ module RestModule {
           break
         case BodyTypes.XML:
           if (object != null) {
-            string = (new XmlBuilder()).buildObject(object)
+            string = new XmlBuilder().buildObject(object)
           }
           input.body = string
           input.headers["Content-Type"] = "application/xml"

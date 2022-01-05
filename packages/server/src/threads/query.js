@@ -5,6 +5,9 @@ const { integrations } = require("../integrations")
 const { processStringSync } = require("@budibase/string-templates")
 const CouchDB = require("../db")
 
+const IS_TRIPLE_BRACE = new RegExp(/^{{3}.*}{3}$/)
+const IS_HANDLEBARS = new RegExp(/^{{2}.*}{2}$/)
+
 class QueryRunner {
   constructor(input, flags = { noRecursiveQuery: false }) {
     this.appId = input.appId
@@ -171,7 +174,12 @@ class QueryRunner {
         enrichedQuery[key] = this.enrichQueryFields(fields[key], parameters)
       } else if (typeof fields[key] === "string") {
         // enrich string value as normal
-        enrichedQuery[key] = processStringSync(fields[key], parameters, {
+        let value = fields[key]
+        // add triple brace to avoid escaping e.g. '=' in cookie header
+        if (IS_HANDLEBARS.test(value) && !IS_TRIPLE_BRACE.test(value)) {
+          value = `{${value}}`
+        }
+        enrichedQuery[key] = processStringSync(value, parameters, {
           noHelpers: true,
         })
       } else {

@@ -16,17 +16,33 @@
   export let query
   export let bodyType
 
+  let text = ""
+  let json = ""
+
   $: checkRequestBody(bodyType)
+  $: updateRequestBody(bodyType, text, json)
 
   function checkRequestBody(type) {
     if (!bodyType || !query) {
       return
     }
     const currentType = typeof query?.fields.requestBody
-    if (objectTypes.includes(type) && currentType !== "object") {
-      query.fields.requestBody = {}
-    } else if (textTypes.includes(type) && currentType !== "string") {
-      query.fields.requestBody = ""
+    const isObject = objectTypes.includes(type)
+    const isText = textTypes.includes(type)
+    if (isText && currentType === "string") {
+      text = query.fields.requestBody
+    } else if (isObject && currentType === "object") {
+      json = query.fields.requestBody
+    }
+  }
+
+  function updateRequestBody(type, text, json) {
+    if (type === RawRestBodyTypes.NONE) {
+      query.fields.requestBody = null
+    } else if (objectTypes.includes(type)) {
+      query.fields.requestBody = json
+    } else {
+      query.fields.requestBody = text
     }
   }
 
@@ -49,16 +65,12 @@
       <Body size="S" weight="800">THE REQUEST DOES NOT HAVE A BODY</Body>
     </div>
   {:else if objectTypes.includes(bodyType)}
-    <KeyValueBuilder
-      bind:object={query.fields.requestBody}
-      name="param"
-      headings
-    />
+    <KeyValueBuilder bind:object={json} name="param" headings />
   {:else if textTypes.includes(bodyType)}
     <CodeMirrorEditor
       height={200}
       mode={editorMode(bodyType)}
-      value={query.fields.requestBody}
+      value={text}
       resize="vertical"
       on:change={e => (query.fields.requestBody = e.detail)}
     />
