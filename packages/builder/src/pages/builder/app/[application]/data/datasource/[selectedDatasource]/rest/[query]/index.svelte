@@ -306,7 +306,7 @@
           </div>
           <Button cta disabled={!url} on:click={runQuery}>Send</Button>
         </div>
-        <Tabs selected="Bindings" quiet noPadding noHorizPadding>
+        <Tabs selected="Bindings" quiet noPadding noHorizPadding onTop>
           <Tab title="Bindings">
             <KeyValueBuilder
               bind:object={bindings}
@@ -450,7 +450,7 @@
                 <Layout noPadding gap="S">
                   <Body size="S">
                     Create dynamic variables based on response body or headers
-                    from other queries.
+                    from this query.
                   </Body>
                   <KeyValueBuilder
                     bind:object={dynamicVariables}
