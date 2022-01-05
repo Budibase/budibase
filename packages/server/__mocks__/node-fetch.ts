@@ -1,5 +1,6 @@
 module FetchMock {
   const fetch = jest.requireActual("node-fetch")
+  let failCount = 0
 
   module.exports = async (url: any, opts: any) => {
     function json(body: any, status = 200) {
@@ -63,6 +64,17 @@ module FetchMock {
         opts,
         value: "<!doctype html><html itemscope=\"\" itemtype=\"http://schema.org/WebPage\" lang=\"en-GB\"></html>",
       })
+    } else if (url.includes("failonce.com")) {
+      failCount++
+      if (failCount === 1) {
+        return json({ message: "error" }, 500)
+      } else {
+        return json({
+          fails: failCount - 1,
+          url,
+          opts,
+        })
+      }
     }
     return fetch(url, opts)
   }

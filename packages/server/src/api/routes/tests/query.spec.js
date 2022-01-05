@@ -11,6 +11,7 @@ authDb.isProdAppID = mockIsProdAppID
 
 const setup = require("./utilities")
 const { checkBuilderEndpoint } = require("./utilities/TestFunctions")
+const { checkCacheForDynamicVariable } = require("../../../threads/utils")
 const { basicQuery, basicDatasource } = setup.structures
 
 describe("/queries", () => {
@@ -239,33 +240,7 @@ describe("/queries", () => {
       })
     }
 
-    it("should work with static variables", async () => {
-      const datasource = await restDatasource({
-        staticVariables: {
-          variable: "google",
-          variable2: "1",
-        },
-      })
-      const res = await request
-        .post(`/api/queries/preview`)
-        .send({
-          datasourceId: datasource._id,
-          parameters: {},
-          fields: {
-            path: "www.{{ variable }}.com",
-            queryString: "test={{ variable2 }}",
-          },
-          queryVerb: "read",
-        })
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
-      // these responses come from the mock
-      expect(res.body.schemaFields).toEqual(["url", "opts", "value"])
-      expect(res.body.rows[0].url).toEqual("http://www.google.com?test=1")
-    })
-
-    it("should work with dynamic variables", async () => {
+    async function dynamicVariableDatasource() {
       const datasource = await restDatasource()
       const basedOnQuery = await config.createQuery({
         ...basicQuery(datasource._id),
@@ -281,22 +256,62 @@ describe("/queries", () => {
           ]
         }
       })
-      const res = await request
+      return { datasource, query: basedOnQuery }
+    }
+
+    async function preview(datasource, fields) {
+      return await request
         .post(`/api/queries/preview`)
         .send({
           datasourceId: datasource._id,
           parameters: {},
-          fields: {
-            path: "www.google.com",
-            queryString: "test={{ variable3 }}",
-          },
+          fields,
           queryVerb: "read",
         })
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
+    }
+
+    it("should work with static variables", async () => {
+      const datasource = await restDatasource({
+        staticVariables: {
+          variable: "google",
+          variable2: "1",
+        },
+      })
+      const res = await preview(datasource, {
+        path: "www.{{ variable }}.com",
+        queryString: "test={{ variable2 }}",
+      })
+      // these responses come from the mock
+      expect(res.body.schemaFields).toEqual(["url", "opts", "value"])
+      expect(res.body.rows[0].url).toEqual("http://www.google.com?test=1")
+    })
+
+    it("should work with dynamic variables", async () => {
+      const { datasource } = await dynamicVariableDatasource()
+      const res = await preview(datasource, {
+        path: "www.google.com",
+        queryString: "test={{ variable3 }}",
+      })
       expect(res.body.schemaFields).toEqual(["url", "opts", "value"])
       expect(res.body.rows[0].url).toContain("doctype html")
+    })
+
+    it("check that it automatically retries on fail with cached dynamics", async () => {
+      const { datasource, query: base } = await dynamicVariableDatasource()
+      // preview once to cache
+      await preview(datasource, { path: "www.google.com", queryString: "test={{ variable3 }}" })
+      // check its in cache
+      const contents = await checkCacheForDynamicVariable(base._id, "variable3")
+      expect(contents.rows.length).toEqual(1)
+      const res = await preview(datasource, {
+        path: "www.failonce.com",
+        queryString: "test={{ variable3 }}",
+      })
+      expect(res.body.schemaFields).toEqual(["fails", "url", "opts"])
+      expect(res.body.rows[0].fails).toEqual(1)
     })
   })
 })
