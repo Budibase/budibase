@@ -120,7 +120,7 @@ module RestModule {
       this.config = config
     }
 
-    async parseResponse(response: any) {
+    async parseResponse(response: any, pagination: PaginationConfig | null) {
       let data, raw, headers
       const contentType = response.headers.get("content-type") || ""
       try {
@@ -159,6 +159,13 @@ module RestModule {
       for (let [key, value] of Object.entries(headers)) {
         headers[key] = Array.isArray(value) ? value[0] : value
       }
+
+      // Check if a pagination cursor exists in the response
+      let nextCursor = null
+      if (pagination?.responseParam) {
+        nextCursor = data?.[pagination.responseParam]
+      }
+
       return {
         data,
         info: {
@@ -170,6 +177,9 @@ module RestModule {
           raw,
           headers,
         },
+        pagination: {
+          cursor: nextCursor
+        }
       }
     }
 
@@ -325,7 +335,7 @@ module RestModule {
       this.startTimeMs = performance.now()
       const url = this.getUrl(path, queryString, pagination, paginationValues)
       const response = await fetch(url, input)
-      return await this.parseResponse(response)
+      return await this.parseResponse(response, pagination)
     }
 
     async create(opts: RestQuery) {

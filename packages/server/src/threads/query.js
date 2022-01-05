@@ -47,11 +47,13 @@ class QueryRunner {
     let output = threadUtils.formatResponse(await integration[queryVerb](query))
     let rows = output,
       info = undefined,
-      extra = undefined
+      extra = undefined,
+      pagination = undefined
     if (threadUtils.hasExtraData(output)) {
       rows = output.data
       info = output.info
       extra = output.extra
+      pagination = output.pagination
     }
 
     // transform as required
@@ -90,7 +92,7 @@ class QueryRunner {
       integration.end()
     }
 
-    return { rows, keys, info, extra }
+    return { rows, keys, info, extra, pagination }
   }
 
   async runAnotherQuery(queryId, parameters) {
