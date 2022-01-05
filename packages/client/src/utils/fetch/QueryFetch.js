@@ -35,7 +35,7 @@ export default class QueryFetch extends DataFetch {
     // Add pagination to query if supported
     let queryPayload = { queryId: datasource?._id, parameters }
     if (supportsPagination) {
-      const requestCursor = type === "page" ? parseInt(cursor || 0) : cursor
+      const requestCursor = type === "page" ? parseInt(cursor || 1) : cursor
       queryPayload.pagination = { page: requestCursor, limit }
     }
 
@@ -49,11 +49,12 @@ export default class QueryFetch extends DataFetch {
       if (type === "page") {
         // For "page number" pagination, increment the existing page number
         nextCursor = queryPayload.pagination.page + 1
+        hasNextPage = data?.length === limit && limit > 0
       } else {
         // For "cursor" pagination, the cursor should be in the response
-        nextCursor = pagination.cursor
+        nextCursor = pagination?.cursor
+        hasNextPage = nextCursor != null
       }
-      hasNextPage = data?.length === limit && limit > 0
     }
 
     return {
