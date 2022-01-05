@@ -9,11 +9,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
         with:
-          fetch_depth: 0
+          node-version: 14.x
 
       - name: Tag and release Docker images (Self Host)
-        run: | 
+        run: |
           docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
 
           # Get latest release version
@@ -28,7 +29,7 @@ jobs:
           # Tag apps and worker images
           docker tag budibase/apps:$release_tag budibase/apps:$SELFHOST_TAG
           docker tag budibase/worker:$release_tag budibase/worker:$SELFHOST_TAG
-          
+
           # Push images
           docker push budibase/apps:$SELFHOST_TAG
           docker push budibase/worker:$SELFHOST_TAG
@@ -36,13 +37,20 @@ jobs:
           DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
           SELFHOST_TAG: latest
-      
-      - name: Setup Helm 
+
+      - name: Setup Helm
         uses: azure/setup-helm@v1
         id: helm-install
 
+      - name: Build CLI executables
+        run: |
+          pushd packages/cli
+          yarn
+          yarn build
+          popd
+
       # - name: Build and release helm chart
-      #   run: | 
+      #   run: |
       #     git config user.name "Budibase Helm Bot"
       #     git config user.email "<>"
       #     mv budibase-${{ env.RELEASE_VERSION }}.tgz docs
@@ -67,3 +75,7 @@ jobs:
           name: v${{ env.RELEASE_VERSION }}
           tag_name: v${{ env.RELEASE_VERSION }}
           generate_release_notes: true
+          files: |
+            packages/cli/build/cli-win.exe
+            packages/cli/build/cli-linux
+            packages/cli/build/cli-macos
