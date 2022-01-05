@@ -17,8 +17,12 @@ const parseBody = (curl: any) => {
   if (curl.data) {
     const keys = Object.keys(curl.data)
     if (keys.length) {
-      const key = keys[0]
+      let key = keys[0]
       try {
+        // filter out the dollar syntax used by curl for shell support
+        if (key.startsWith("$")) {
+          key = key.substring(1)
+        }
         return JSON.parse(key)
       } catch (e) {
         // do nothing

@@ -242,6 +242,16 @@ export interface RestConfig {
     [key: string]: any
   }
   authConfigs: AuthConfig[]
+  staticVariables: {
+    [key: string]: string
+  }
+  dynamicVariables: [
+    {
+      name: string
+      queryId: string
+      value: string
+    }
+  ]
 }
 
 export interface PaginationConfig {

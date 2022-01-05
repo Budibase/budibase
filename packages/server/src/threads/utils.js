@@ -3,7 +3,6 @@ const CouchDB = require("../db")
 const { init } = require("@budibase/auth")
 const redis = require("@budibase/auth/redis")
 const { SEPARATOR } = require("@budibase/auth/db")
-const { processStringSync } = require("@budibase/string-templates")
 
 const VARIABLE_TTL_SECONDS = 3600
 let client
