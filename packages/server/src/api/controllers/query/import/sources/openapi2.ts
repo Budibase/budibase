@@ -66,7 +66,7 @@ export class OpenAPI2 extends OpenAPISource {
   getInfo = async (): Promise<ImportInfo> => {
     const name = this.document.info.title || "Swagger Import"
     return {
-      name
+      name,
     }
   }
 
