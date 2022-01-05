@@ -32,6 +32,12 @@ class QueryRunner {
     // pre-query, make sure datasource variables are added to parameters
     const parameters = await this.addDatasourceVariables()
     let query = this.enrichQueryFields(fields, parameters)
+
+    // Add pagination values for REST queries
+    if (this.pagination) {
+      query.paginationValues = this.pagination
+    }
+
     const Integration = integrations[datasource.source]
     if (!Integration) {
       throw "Integration type does not exist."
@@ -186,7 +192,6 @@ class QueryRunner {
         enrichedQuery[key] = fields[key]
       }
     }
-
     if (
       enrichedQuery.json ||
       enrichedQuery.customData ||
@@ -203,12 +208,6 @@ class QueryRunner {
       }
       delete enrichedQuery.customData
     }
-
-    // Just for REST queries
-    if (this.pagination) {
-      enrichedQuery.paginationValues = this.pagination
-    }
-
     return enrichedQuery
   }
 }
