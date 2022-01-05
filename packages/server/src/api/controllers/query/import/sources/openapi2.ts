@@ -2,6 +2,7 @@ import { ImportInfo } from "./base"
 import { Query, QueryParameter } from "../../../../../definitions/datasource"
 import { OpenAPIV2 } from "openapi-types"
 import { OpenAPISource } from "./base/openapi"
+import { URL } from "url"
 
 const parameterNotRef = (
   param: OpenAPIV2.Parameter | OpenAPIV2.ReferenceObject
@@ -55,20 +56,22 @@ export class OpenAPI2 extends OpenAPISource {
     }
   }
 
-  getInfo = async (): Promise<ImportInfo> => {
+  getUrl = (): URL => {
     const scheme = this.document.schemes?.includes("https") ? "https" : "http"
     const basePath = this.document.basePath || ""
     const host = this.document.host || "<host>"
-    const url = `${scheme}://${host}${basePath}`
-    const name = this.document.info.title || "Swagger Import"
+    return new URL(`${scheme}://${host}${basePath}`)
+  }
 
+  getInfo = async (): Promise<ImportInfo> => {
+    const name = this.document.info.title || "Swagger Import"
     return {
-      url: url,
-      name: name,
+      name
     }
   }
 
   getQueries = async (datasourceId: string): Promise<Query[]> => {
+    const url = this.getUrl()
     const queries = []
 
     for (let [path, pathItem] of Object.entries(this.document.paths)) {
@@ -145,6 +148,7 @@ export class OpenAPI2 extends OpenAPISource {
           name,
           methodName,
           path,
+          url,
           queryString,
           headers,
           parameters,
