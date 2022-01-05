@@ -175,15 +175,19 @@
     onConfirm={datasources.removeSchemaError}
   />
 {/if}
-<Table
-  on:click={({ detail }) => onClickTable(detail)}
-  schema={tableSchema}
-  data={Object.values(plusTables)}
-  allowEditColumns={false}
-  allowEditRows={false}
-  allowSelectRows={false}
-  customRenderers={[{ column: "primary", component: ArrayRenderer }]}
-/>
+{#if plusTables && Object.values(plusTables).length > 0}
+  <Table
+    on:click={({ detail }) => onClickTable(detail)}
+    schema={tableSchema}
+    data={Object.values(plusTables)}
+    allowEditColumns={false}
+    allowEditRows={false}
+    allowSelectRows={false}
+    customRenderers={[{ column: "primary", component: ArrayRenderer }]}
+  />
+{:else}
+  <Body size="S"><i>No tables found.</i></Body>
+{/if}
 {#if plusTables?.length !== 0}
   <Divider size="S" />
   <div class="query-header">
@@ -196,14 +200,18 @@
     Tell budibase how your tables are related to get even more smart features.
   </Body>
 {/if}
-<Table
-  on:click={({ detail }) => openRelationshipModal(detail.from, detail.to)}
-  schema={relationshipSchema}
-  data={relationshipInfo}
-  allowEditColumns={false}
-  allowEditRows={false}
-  allowSelectRows={false}
-/>
+{#if relationshipInfo && relationshipInfo.length > 0}
+  <Table
+    on:click={({ detail }) => openRelationshipModal(detail.from, detail.to)}
+    schema={relationshipSchema}
+    data={relationshipInfo}
+    allowEditColumns={false}
+    allowEditRows={false}
+    allowSelectRows={false}
+  />
+{:else}
+  <Body size="S"><i>No relationships configured.</i></Body>
+{/if}
 
 <style>
   .query-header {
