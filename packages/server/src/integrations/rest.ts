@@ -4,9 +4,11 @@ import {
   QueryTypes,
   RestConfig,
   RestQueryFields as RestQuery,
+  PaginationConfig,
   AuthType,
   BasicAuthConfig,
   BearerAuthConfig,
+  PaginationValues,
 } from "../definitions/datasource"
 import { IntegrationBase } from "./base/IntegrationBase"
 
@@ -40,6 +42,9 @@ const coreFields = {
     type: DatasourceFieldTypes.STRING,
     enum: Object.values(BodyTypes),
   },
+  pagination: {
+    type: DatasourceFieldTypes.OBJECT
+  }
 }
 
 module RestModule {
@@ -165,7 +170,29 @@ module RestModule {
       }
     }
 
-    getUrl(path: string, queryString: string): string {
+    getUrl(path: string, queryString: string, pagination: PaginationConfig | null, paginationValues: PaginationValues | null): string {
+      // Add pagination params to query string if required
+      if (pagination?.location === "query" && paginationValues) {
+        const { pageParam, sizeParam } = pagination
+        const params = new URLSearchParams()
+
+        // Append page number or cursor param if configured
+        if (pageParam && paginationValues.page != null) {
+          params.append(pageParam, paginationValues.page)
+        }
+
+        // Append page size param if configured
+        if (sizeParam && paginationValues.limit != null) {
+          params.append(sizeParam, paginationValues.limit)
+        }
+
+        // Prepend query string with pagination params
+        let paginationString = params.toString()
+        if (paginationString) {
+          queryString = `${paginationString}&${queryString}`
+        }
+      }
+
       const main = `${path}?${queryString}`
       let complete = main
       if (this.config.url && !main.startsWith(this.config.url)) {
@@ -268,6 +295,8 @@ module RestModule {
         bodyType,
         requestBody,
         authConfigId,
+        pagination,
+        paginationValues
       } = query
       const authHeaders = this.getAuthHeaders(authConfigId)
 
@@ -291,7 +320,7 @@ module RestModule {
       }
 
       this.startTimeMs = performance.now()
-      const url = this.getUrl(path, queryString)
+      const url = this.getUrl(path, queryString, pagination, paginationValues)
       const response = await fetch(url, input)
       return await this.parseResponse(response)
     }

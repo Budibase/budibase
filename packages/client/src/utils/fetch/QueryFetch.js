@@ -5,10 +5,10 @@ import { get } from "svelte/store"
 
 export default class QueryFetch extends DataFetch {
   determineFeatureFlags(definition) {
-    console.log("pagination config", definition?.fields?.pagination)
-    this.supportsPagination =
+    const supportsPagination =
       definition?.fields?.pagination?.type != null &&
       definition?.fields?.pagination?.pageParam != null
+    return { supportsPagination }
   }
 
   static async getDefinition(datasource) {
@@ -20,6 +20,9 @@ export default class QueryFetch extends DataFetch {
 
   async getData() {
     const { datasource, limit } = this.options
+    const { supportsPagination } = get(this.featureStore)
+    const { cursor, definition } = get(this.store)
+    const { type } = definition.fields.pagination
 
     // Set the default query params
     let parameters = cloneDeep(datasource?.queryParams || {})
@@ -31,19 +34,33 @@ export default class QueryFetch extends DataFetch {
 
     // Add pagination to query if supported
     let queryPayload = { queryId: datasource?._id, parameters }
-    if (this.supportsPagination) {
-      const { cursor, definition, pageNumber } = get(this.store)
-      const { type } = definition.fields.pagination
-      const page = type === "page" ? pageNumber : cursor
-      queryPayload.pagination = { page, limit }
+    if (supportsPagination) {
+      const requestCursor = type === "page" ? parseInt(cursor || 0) : cursor
+      queryPayload.pagination = { page: requestCursor, limit }
     }
 
+    // Execute query
     const { data, pagination, ...rest } = await executeQuery(queryPayload)
+
+    // Derive pagination info from response
+    let nextCursor = null
+    let hasNextPage = false
+    if (supportsPagination) {
+      if (type === "page") {
+        // For "page number" pagination, increment the existing page number
+        nextCursor = queryPayload.pagination.page + 1
+      } else {
+        // For "cursor" pagination, the cursor should be in the response
+        nextCursor = pagination.cursor
+      }
+      hasNextPage = data?.length === limit && limit > 0
+    }
+
     return {
       rows: data || [],
       info: rest,
-      cursor: pagination?.page,
-      hasNextPage: data?.length === limit && limit > 0,
+      cursor: nextCursor,
+      hasNextPage,
     }
   }
 }

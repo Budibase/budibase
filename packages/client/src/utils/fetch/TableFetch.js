@@ -4,9 +4,11 @@ import { searchTable } from "api"
 
 export default class TableFetch extends DataFetch {
   determineFeatureFlags() {
-    this.supportsSearch = true
-    this.supportsSort = true
-    this.supportsPagination = true
+    return {
+      supportsSearch: true,
+      supportsSort: true,
+      supportsPagination: true,
+    }
   }
 
   async getData() {
