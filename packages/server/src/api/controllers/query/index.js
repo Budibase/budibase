@@ -8,6 +8,7 @@ const { BaseQueryVerbs } = require("../../../constants")
 const { Thread, ThreadType } = require("../../../threads")
 const { save: saveDatasource } = require("../datasource")
 const { RestImporter } = require("./import")
+const { invalidateDynamicVariables } = require("../../../threads/utils")
 
 const Runner = new Thread(ThreadType.QUERY, { timeoutMs: 10000 })
 
@@ -166,8 +167,28 @@ exports.executeV2 = async function (ctx) {
   return execute(ctx, { rowsOnly: false })
 }
 
+const removeDynamicVariables = async (db, queryId) => {
+  const query = await db.get(queryId)
+  const datasource = await db.get(query.datasourceId)
+  const dynamicVariables = datasource.config.dynamicVariables
+
+  if (dynamicVariables) {
+    // invalidate the deleted variables
+    const variablesToDelete = dynamicVariables.filter(
+      dv => dv.queryId === queryId
+    )
+    await invalidateDynamicVariables(variablesToDelete)
+
+    // delete dynamic variables from the datasource
+    const newVariables = dynamicVariables.filter(dv => dv.queryId !== queryId)
+    datasource.config.dynamicVariables = newVariables
+    await db.put(datasource)
+  }
+}
+
 exports.destroy = async function (ctx) {
   const db = new CouchDB(ctx.appId)
+  await removeDynamicVariables(db, ctx.params.queryId)
   await db.remove(ctx.params.queryId, ctx.params.revId)
   ctx.message = `Query deleted.`
   ctx.status = 200
