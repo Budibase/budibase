@@ -217,20 +217,36 @@ module RestModule {
       return complete
     }
 
-    addBody(bodyType: string, body: string | any, input: any) {
-      let error, object, string
-      try {
-        string = typeof body !== "string" ? JSON.stringify(body) : body
-        object = typeof body === "object" ? body : JSON.parse(body)
-      } catch (err) {
-        error = err
+    addBody(bodyType: string, body: string | any, input: any, pagination: PaginationConfig | null, paginationValues: PaginationValues | null) {
+      if (bodyType === BodyTypes.NONE) {
+        return input
       }
       if (!input.headers) {
         input.headers = {}
       }
+      let error, object = {}, string = ""
+      try {
+        if (body) {
+          string = typeof body !== "string" ? JSON.stringify(body) : body
+          object = typeof body === "object" ? body : JSON.parse(body)
+        }
+      } catch (err) {
+        error = err
+      }
+
+      // Util to add pagination values to a certain body type
+      const addPaginationToBody = (insertFn: Function) => {
+        if (pagination?.location === "body") {
+          if (pagination?.pageParam && paginationValues?.page != null) {
+            insertFn(pagination.pageParam, paginationValues.page)
+          }
+          if (pagination?.sizeParam && paginationValues?.limit != null) {
+            insertFn(pagination.sizeParam, paginationValues.limit)
+          }
+        }
+      }
+
       switch (bodyType) {
-        case BodyTypes.NONE:
-          break
         case BodyTypes.TEXT:
           // content type defaults to plaintext
           input.body = string
@@ -240,6 +256,9 @@ module RestModule {
           for (let [key, value] of Object.entries(object)) {
             params.append(key, value)
           }
+          addPaginationToBody((key: string, value: any) => {
+            params.append(key, value)
+          })
           input.body = params
           break
         case BodyTypes.FORM_DATA:
@@ -247,6 +266,9 @@ module RestModule {
           for (let [key, value] of Object.entries(object)) {
             form.append(key, value)
           }
+          addPaginationToBody((key: string, value: any) => {
+            form.append(key, value)
+          })
           input.body = form
           break
         case BodyTypes.XML:
@@ -262,7 +284,13 @@ module RestModule {
           if (error) {
             throw "Invalid JSON for request body"
           }
-          input.body = string
+          if (!body) {
+            body = {}
+          }
+          addPaginationToBody((key: string, value: any) => {
+            body[key] = value
+          })
+          input.body = JSON.stringify(body)
           input.headers["Content-Type"] = "application/json"
           break
       }
@@ -328,9 +356,7 @@ module RestModule {
       }
 
       let input: any = { method, headers: this.headers }
-      if (requestBody) {
-        input = this.addBody(bodyType, requestBody, input)
-      }
+      input = this.addBody(bodyType, requestBody, input, pagination, paginationValues)
 
       this.startTimeMs = performance.now()
       const url = this.getUrl(path, queryString, pagination, paginationValues)
