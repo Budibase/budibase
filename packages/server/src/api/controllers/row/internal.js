@@ -11,6 +11,7 @@ const {
   inputProcessing,
   outputProcessing,
   processAutoColumn,
+  cleanupAttachments,
 } = require("../../../utilities/rowProcessor")
 const { FieldTypes } = require("../../../constants")
 const { isEqual } = require("lodash")
@@ -295,6 +296,8 @@ exports.destroy = async function (ctx) {
     row,
     tableId: row.tableId,
   })
+  // remove any attachments that were on the row from object storage
+  await cleanupAttachments(appId, table, { row })
 
   let response
   if (ctx.params.tableId === InternalTables.USER_METADATA) {
@@ -341,6 +344,8 @@ exports.bulkDestroy = async ctx => {
   } else {
     await db.bulkDocs(rows.map(row => ({ ...row, _deleted: true })))
   }
+  // remove any attachments that were on the rows from object storage
+  await cleanupAttachments(appId, table, { rows })
   await Promise.all(updates)
   return { response: { ok: true }, rows }
 }

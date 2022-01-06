@@ -3,6 +3,8 @@ const { cloneDeep } = require("lodash/fp")
 const { FieldTypes, AutoFieldSubTypes } = require("../../constants")
 const { attachmentsRelativeURL } = require("../index")
 const { processFormulas } = require("./utils")
+const { deleteFiles } = require("../../utilities/fileSystem/utilities")
+const { ObjectStoreBuckets } = require("../../constants")
 
 const BASE_AUTO_ID = 1
 
@@ -271,4 +273,33 @@ exports.outputProcessing = async (
     )
   }
   return wasArray ? enriched : enriched[0]
+}
+
+/**
+ * Clean up any attachments that were attached to a row.
+ * @param {string} appId The ID of the app from which a row is being deleted.
+ * @param {object} table The table from which a row is being removed.
+ * @param {any} row optional - the row being removed.
+ * @param {any} rows optional - if multiple rows being deleted can do this in bulk.
+ * @return {Promise<void>} When all attachments have been removed this will return.
+ */
+exports.cleanupAttachments = async (appId, table, {row, rows}) => {
+  // TODO: check app ID version
+  let files = []
+  function addFiles(row, key) {
+    if (row[key]) {
+      files = files.concat(row[key].map(attachment => attachment.key))
+    }
+  }
+  for (let [key, schema] of Object.entries(table.schema)) {
+    if (schema.type !== FieldTypes.ATTACHMENT) {
+      continue
+    }
+    if (row) {
+      addFiles(row, key)
+    } else if (rows) {
+      rows.forEach(row => addFiles(row, key))
+    }
+  }
+  return deleteFiles(ObjectStoreBuckets.APPS, files)
 }
