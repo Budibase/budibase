@@ -87,6 +87,8 @@ export interface ExtraQueryConfig {
 export interface Integration {
   docs: string
   plus?: boolean
+  // TODO: use a proper type here
+  auth: { type: "google" }
   description: string
   friendlyName: string
   datasource: {}

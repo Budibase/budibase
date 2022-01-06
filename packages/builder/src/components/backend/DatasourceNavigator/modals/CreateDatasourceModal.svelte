@@ -32,6 +32,7 @@
       plus: selected.plus,
       config,
       schema: selected.datasource,
+      auth: selected.auth,
     }
   }
 

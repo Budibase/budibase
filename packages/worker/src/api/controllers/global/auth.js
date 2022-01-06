@@ -21,6 +21,7 @@ const {
   isMultiTenant,
 } = require("@budibase/auth/tenancy")
 const env = require("../../../environment")
+const CouchDB = require("../../../db")
 
 const ssoCallbackUrl = async (config, type) => {
   // incase there is a callback URL from before
@@ -140,6 +141,80 @@ exports.resetUpdate = async ctx => {
 exports.logout = async ctx => {
   await platformLogout({ ctx, userId: ctx.user._id })
   ctx.body = { message: "User logged out." }
+}
+
+/**
+ * The initial call that google authentication makes to take you to the google login screen.
+ * On a successful login, you will be redirected to the googleAuth callback route.
+ */
+exports.googlePreAuth2 = async (ctx, next) => {
+  const db = getGlobalDB()
+
+  const config = await authPkg.db.getScopedConfig(db, {
+    type: Configs.GOOGLE,
+    workspace: ctx.query.workspace,
+  })
+  // let callbackUrl = await exports.googleCallbackUrl(config)
+  // TODO: Hardcoded - fix
+  let callbackUrl = "http://localhost:10000/api/global/auth/google2/callback"
+  const strategy = await google.strategyFactory(config, callbackUrl)
+
+  // TODO: fix
+  setCookie(
+    ctx,
+    {
+      appId: ctx.query.appId,
+      datasourceId: ctx.query.datasourceId,
+    },
+    "AuthCallback"
+  )
+
+  // TODO: prob update - shouldn't include the google sheets scopes here
+  return passport.authenticate(strategy, {
+    scope: ["profile", "email", "https://www.googleapis.com/auth/spreadsheets"],
+  })(ctx, next)
+}
+
+exports.googleAuth2 = async (ctx, next) => {
+  const db = getGlobalDB()
+
+  const config = await authPkg.db.getScopedConfig(db, {
+    type: Configs.GOOGLE,
+    workspace: ctx.query.workspace,
+  })
+  // const callbackUrl = await exports.googleCallbackUrl(config)
+  const authStateCookie = getCookie(ctx, "AuthCallback")
+
+  // TODO: correct callback URL
+  let callbackUrl = "http://localhost:10000/api/global/auth/google2/callback"
+  const strategy = await google.strategyFactory(
+    config,
+    callbackUrl,
+    (accessToken, refreshToken, profile, done) => {
+      clearCookie(ctx, "AuthCallback")
+      done(null, { accessToken, refreshToken })
+    }
+  )
+
+  return passport.authenticate(
+    strategy,
+    { successRedirect: "/", failureRedirect: "/error" },
+    async (err, tokens) => {
+      // update the DB for the datasource with all the user info
+      const db = new CouchDB(authStateCookie.appId)
+      const datasource = await db.get(authStateCookie.datasourceId)
+      datasource.config = {
+        auth: {
+          type: "google",
+          ...tokens,
+        },
+      }
+      await db.put(datasource)
+      ctx.redirect(
+        `/builder/app/${authStateCookie.appId}/data/datasource/${authStateCookie.datasourceId}`
+      )
+    }
+  )(ctx, next)
 }
 
 /**

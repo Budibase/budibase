@@ -6,6 +6,7 @@
   import { datasources, tables } from "stores/backend"
   import { IntegrationNames } from "constants"
   import cloneDeep from "lodash/cloneDeepWith"
+  import GoogleButton from "../_components/GoogleButton.svelte"
 
   export let integration
   export let modal
@@ -33,11 +34,14 @@
 
     return datasource
   }
-  async function saveDatasource() {
+  async function saveDatasource(fetchSchema) {
     const datasource = prepareData()
     try {
       // Create datasource
-      const resp = await datasources.save(datasource, datasource.plus)
+      const resp = await datasources.save(
+        datasource,
+        fetchSchema ?? datasource.plus
+      )
 
       // update the tables incase data source plus
       await tables.fetch()
@@ -48,7 +52,7 @@
         name: resp.name,
         source: resp.source,
       })
-      return true
+      return resp._id
     } catch (err) {
       notifications.error(`Error saving datasource: ${err}`)
       return false
@@ -71,8 +75,11 @@
       >Connect your database to Budibase using the config below.
     </Body>
   </Layout>
-
-  <IntegrationConfigForm schema={config.schema} integration={config.config} />
+  {#if config.auth?.type === "google"}
+    <GoogleButton preAuthStep={() => saveDatasource(false)} />
+  {:else}
+    <IntegrationConfigForm schema={config.schema} integration={config.config} />
+  {/if}
 </ModalContent>
 
 <style>

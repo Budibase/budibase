@@ -46,6 +46,7 @@ exports.strategyFactory = async function (
         clientID: config.clientID,
         clientSecret: config.clientSecret,
         callbackURL: callbackUrl,
+        store: true,
       },
       verify
     )

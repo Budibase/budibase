@@ -42,6 +42,8 @@ module.exports = {
   REDIS_PASSWORD: process.env.REDIS_PASSWORD,
   INTERNAL_API_KEY: process.env.INTERNAL_API_KEY,
   MULTI_TENANCY: process.env.MULTI_TENANCY,
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
   // environment
   NODE_ENV: process.env.NODE_ENV,
   JEST_WORKER_ID: process.env.JEST_WORKER_ID,
