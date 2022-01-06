@@ -13,7 +13,9 @@
   },
   "pkg": {
     "targets": [
-      "node14"
+      "node14-linux",
+      "node14-win",
+      "node14-macos"
     ],
     "outputPath": "build"
   },
