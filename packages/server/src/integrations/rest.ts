@@ -218,13 +218,13 @@ module RestModule {
     }
 
     addBody(bodyType: string, body: string | any, input: any, pagination: PaginationConfig | null, paginationValues: PaginationValues | null) {
-      if (bodyType === BodyTypes.NONE) {
-        return input
-      }
       if (!input.headers) {
         input.headers = {}
       }
-      let error, object = {}, string = ""
+      if (bodyType === BodyTypes.NONE) {
+        return input
+      }
+      let error, object: any = {}, string = ""
       try {
         if (body) {
           string = typeof body !== "string" ? JSON.stringify(body) : body
@@ -278,19 +278,15 @@ module RestModule {
           input.body = string
           input.headers["Content-Type"] = "application/xml"
           break
-        default:
         case BodyTypes.JSON:
           // if JSON error, throw it
           if (error) {
             throw "Invalid JSON for request body"
           }
-          if (!body) {
-            body = {}
-          }
           addPaginationToBody((key: string, value: any) => {
-            body[key] = value
+            object[key] = value
           })
-          input.body = JSON.stringify(body)
+          input.body = JSON.stringify(object)
           input.headers["Content-Type"] = "application/json"
           break
       }
