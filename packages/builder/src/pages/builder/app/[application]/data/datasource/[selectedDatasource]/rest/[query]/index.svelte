@@ -361,19 +361,19 @@
                 />
                 <Input
                   label={query.fields.pagination.type === "page"
-                    ? "Page number parameter"
-                    : "Request cursor parameter"}
+                    ? "Page number parameter name "
+                    : "Request cursor parameter name"}
                   bind:value={query.fields.pagination.pageParam}
                 />
                 <Input
                   label={query.fields.pagination.type === "page"
-                    ? "Page size parameter"
-                    : "Request limit parameter"}
+                    ? "Page size parameter name"
+                    : "Request limit parameter name"}
                   bind:value={query.fields.pagination.sizeParam}
                 />
                 {#if query.fields.pagination.type === "cursor"}
                   <Input
-                    label="Response body parameter for cursor"
+                    label="Response body parameter name for cursor"
                     bind:value={query.fields.pagination.responseParam}
                   />
                 {/if}
