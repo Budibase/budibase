@@ -110,7 +110,7 @@ export default class DataFetch {
    * Fetches a fresh set of data from the server, resetting pagination
    */
   async getInitialData() {
-    const { datasource, filter, sortColumn } = this.options
+    const { datasource, filter, sortColumn, paginate } = this.options
     const tableId = datasource?.tableId
 
     // Ensure table ID exists
@@ -124,7 +124,7 @@ export default class DataFetch {
     this.featureStore.set({
       supportsSearch: !!features?.supportsSearch,
       supportsSort: !!features?.supportsSort,
-      supportsPagination: !!features?.supportsPagination,
+      supportsPagination: paginate && !!features?.supportsPagination,
     })
 
     // Fetch and enrich schema
@@ -168,7 +168,7 @@ export default class DataFetch {
       pageNumber: 0,
       rows: page.rows,
       info: page.info,
-      cursors: page.hasNextPage ? [null, page.cursor] : [null],
+      cursors: paginate && page.hasNextPage ? [null, page.cursor] : [null],
     }))
   }
 
