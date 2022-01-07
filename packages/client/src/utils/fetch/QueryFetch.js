@@ -6,8 +6,9 @@ import { get } from "svelte/store"
 export default class QueryFetch extends DataFetch {
   determineFeatureFlags(definition) {
     const supportsPagination =
-      definition?.fields?.pagination?.type != null &&
-      definition?.fields?.pagination?.pageParam != null
+      !!definition?.fields?.pagination?.type &&
+      !!definition?.fields?.pagination?.location &&
+      !!definition?.fields?.pagination?.pageParam
     return { supportsPagination }
   }
 
