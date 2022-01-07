@@ -47,6 +47,7 @@
   $: filteredApps = enrichedApps.filter(app =>
     app?.name?.toLowerCase().includes(searchTerm.toLowerCase())
   )
+  $: isCloud = $admin.cloud
 
   const enrichApps = (apps, user, sortBy) => {
     const enrichedApps = apps.map(app => ({
@@ -158,8 +159,13 @@
   }
 
   const viewApp = app => {
-    const id = app.deployed ? app.prodId : app.devId
-    window.open(`/${id}`, "_blank")
+    if (!isCloud && app.deployed) {
+      // special case to use the short form name if self hosted
+      window.open(`/app/${encodeURIComponent(app.name)}`)
+    } else {
+      const id = app.deployed ? app.prodId : app.devId
+      window.open(`/${id}`, "_blank")
+    }
   }
 
   const editApp = app => {
