@@ -1,5 +1,5 @@
 {
-  "name": "@budibase/auth",
+  "name": "@budibase/backend-core",
   "version": "1.0.27-alpha.7",
   "description": "Authentication middlewares for budibase builder and apps",
   "main": "src/index.js",
