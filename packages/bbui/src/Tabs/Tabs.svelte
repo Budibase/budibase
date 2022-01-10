@@ -102,7 +102,7 @@
     border-bottom: none !important;
   }
   .onTop {
-    z-index: 1;
+    z-index: 20;
   }
   .spectrum-Tabs {
     padding-left: var(--spacing-xl);
