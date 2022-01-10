@@ -1,7 +1,7 @@
-const authPkg = require("@budibase/auth")
-const { getScopedConfig } = require("@budibase/auth/db")
-const { google } = require("@budibase/auth/src/middleware")
-const { oidc } = require("@budibase/auth/src/middleware")
+const authPkg = require("@budibase/backend-core")
+const { getScopedConfig } = require("@budibase/backend-core/db")
+const { google } = require("@budibase/backend-core/src/middleware")
+const { oidc } = require("@budibase/backend-core/src/middleware")
 const { Configs, EmailTemplatePurpose } = require("../../../constants")
 const { sendEmail, isEmailConfigured } = require("../../../utilities/email")
 const {
@@ -19,7 +19,7 @@ const {
   getGlobalDB,
   getTenantId,
   isMultiTenant,
-} = require("@budibase/auth/tenancy")
+} = require("@budibase/backend-core/tenancy")
 const env = require("../../../environment")
 
 const ssoCallbackUrl = async (config, type) => {

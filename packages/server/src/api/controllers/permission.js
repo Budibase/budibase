@@ -1,10 +1,10 @@
-const { getBuiltinPermissions } = require("@budibase/auth/permissions")
+const { getBuiltinPermissions } = require("@budibase/backend-core/permissions")
 const {
   isBuiltin,
   getDBRoleID,
   getExternalRoleID,
   getBuiltinRoles,
-} = require("@budibase/auth/roles")
+} = require("@budibase/backend-core/roles")
 const { getRoleParams } = require("../../db/utils")
 const CouchDB = require("../../db")
 const {
