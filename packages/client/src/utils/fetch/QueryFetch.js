@@ -23,7 +23,7 @@ export default class QueryFetch extends DataFetch {
     const { datasource, limit, paginate } = this.options
     const { supportsPagination } = get(this.featureStore)
     const { cursor, definition } = get(this.store)
-    const { type } = definition.fields.pagination
+    const type = definition?.fields?.pagination?.type
 
     // Set the default query params
     let parameters = cloneDeep(datasource?.queryParams || {})
