@@ -42,10 +42,11 @@ exports.checkCacheForDynamicVariable = async (queryId, variable) => {
 }
 
 exports.invalidateDynamicVariables = async cachedVars => {
+  const cache = await getClient()
   let promises = []
   for (let variable of cachedVars) {
     promises.push(
-      client.delete(makeVariableKey(variable.queryId, variable.name))
+      cache.delete(makeVariableKey(variable.queryId, variable.name))
     )
   }
   await Promise.all(promises)

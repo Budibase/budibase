@@ -5,22 +5,29 @@
   import { datasources, queries } from "stores/backend"
 
   export let query
+  export let onClickQuery
 
   let confirmDeleteDialog
 
   async function deleteQuery() {
     const wasSelectedQuery = $queries.selected
-    const selectedDatasource = $datasources.selected
+    // need to calculate this before the query is deleted
+    const navigateToDatasource = wasSelectedQuery === query._id
+
     await queries.delete(query)
-    if (wasSelectedQuery === query._id) {
-      $goto(`./datasource/${selectedDatasource}`)
+    await datasources.fetch()
+
+    if (navigateToDatasource) {
+      await datasources.select(query.datasourceId)
+      $goto(`./datasource/${query.datasourceId}`)
     }
     notifications.success("Query deleted")
   }
 
   async function duplicateQuery() {
     try {
-      await queries.duplicate(query)
+      const newQuery = await queries.duplicate(query)
+      onClickQuery(newQuery)
     } catch (e) {
       notifications.error(e.message)
     }
