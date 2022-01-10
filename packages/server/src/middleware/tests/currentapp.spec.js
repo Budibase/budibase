@@ -23,7 +23,7 @@ function mockReset() {
 function mockAuthWithNoCookie() {
   jest.resetModules()
   mockWorker()
-  jest.mock("@budibase/auth/cache", () => ({
+  jest.mock("@budibase/backend-core/cache", () => ({
     user: {
       getUser: () => {
         return {
@@ -32,7 +32,7 @@ function mockAuthWithNoCookie() {
       },
     },
   }))
-  jest.mock("@budibase/auth", () => ({
+  jest.mock("@budibase/backend-core", () => ({
     utils: {
       getAppId: jest.fn(),
       setCookie: jest.fn(),
@@ -47,7 +47,7 @@ function mockAuthWithNoCookie() {
 function mockAuthWithCookie() {
   jest.resetModules()
   mockWorker()
-  jest.mock("@budibase/auth", () => ({
+  jest.mock("@budibase/backend-core", () => ({
     utils: {
       getAppId: () => {
         return "app_test"
@@ -121,7 +121,7 @@ describe("Current app middleware", () => {
     async function checkExpected(setCookie) {
       config.setUser()
       await config.executeMiddleware()
-      const cookieFn = require("@budibase/auth").utils.setCookie
+      const cookieFn = require("@budibase/backend-core").utils.setCookie
       if (setCookie) {
         expect(cookieFn).toHaveBeenCalled()
       } else {
@@ -140,7 +140,7 @@ describe("Current app middleware", () => {
 
     it("should perform correct when no cookie exists", async () => {
       mockReset()
-      jest.mock("@budibase/auth", () => ({
+      jest.mock("@budibase/backend-core", () => ({
         utils: {
           getAppId: () => {
             return "app_test"
@@ -157,7 +157,7 @@ describe("Current app middleware", () => {
 
     it("lastly check what occurs when cookie doesn't need updated", async () => {
       mockReset()
-      jest.mock("@budibase/auth", () => ({
+      jest.mock("@budibase/backend-core", () => ({
         utils: {
           getAppId: () => {
             return "app_test"

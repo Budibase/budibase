@@ -1,4 +1,4 @@
-const { getScopedConfig } = require("@budibase/auth/db")
+const { getScopedConfig } = require("@budibase/backend-core/db")
 const {
   Configs,
   InternalTemplateBindings,
@@ -6,7 +6,10 @@ const {
   EmailTemplatePurpose,
 } = require("../constants")
 const { checkSlashesInUrl } = require("./index")
-const { getGlobalDB, addTenantToUrl } = require("@budibase/auth/tenancy")
+const {
+  getGlobalDB,
+  addTenantToUrl,
+} = require("@budibase/backend-core/tenancy")
 const BASE_COMPANY = "Budibase"
 
 exports.getSettingsTemplateContext = async (purpose, code = null) => {

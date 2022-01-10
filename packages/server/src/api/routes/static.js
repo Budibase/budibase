@@ -6,7 +6,7 @@ const {
   BUILDER,
   PermissionTypes,
   PermissionLevels,
-} = require("@budibase/auth/permissions")
+} = require("@budibase/backend-core/permissions")
 const env = require("../../environment")
 const { paramResource } = require("../../middleware/resourceId")
 

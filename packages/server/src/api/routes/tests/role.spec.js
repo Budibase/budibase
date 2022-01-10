@@ -1,7 +1,7 @@
-const { BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
+const { BUILTIN_ROLE_IDS } = require("@budibase/backend-core/roles")
 const {
   BUILTIN_PERMISSION_IDS,
-} = require("@budibase/auth/permissions")
+} = require("@budibase/backend-core/permissions")
 const setup = require("./utilities")
 const { basicRole } = setup.structures
 
