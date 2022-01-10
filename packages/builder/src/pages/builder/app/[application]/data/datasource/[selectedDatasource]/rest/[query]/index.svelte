@@ -232,8 +232,12 @@
     const datasourceUrl = datasource?.config.url
     const qs = query?.fields.queryString
     breakQs = restUtils.breakQueryString(qs)
-    if (datasourceUrl && !query.fields.path?.startsWith(datasourceUrl)) {
-      const path = query.fields.path
+    const path = query.fields.path
+    if (
+      datasourceUrl &&
+      !path?.startsWith("http") &&
+      !path?.startsWith("{{") // don't substitute the datasource url when query starts with a variable e.g. the upgrade path
+    ) {
       query.fields.path = `${datasource.config.url}/${path ? path : ""}`
     }
     url = buildUrl(query.fields.path, breakQs)
@@ -306,7 +310,7 @@
           </div>
           <Button cta disabled={!url} on:click={runQuery}>Send</Button>
         </div>
-        <Tabs selected="Bindings" quiet noPadding noHorizPadding>
+        <Tabs selected="Bindings" quiet noPadding noHorizPadding onTop>
           <Tab title="Bindings">
             <KeyValueBuilder
               bind:object={bindings}
@@ -450,7 +454,7 @@
                 <Layout noPadding gap="S">
                   <Body size="S">
                     Create dynamic variables based on response body or headers
-                    from other queries.
+                    from this query.
                   </Body>
                   <KeyValueBuilder
                     bind:object={dynamicVariables}
