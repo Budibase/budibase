@@ -224,8 +224,15 @@ exports.getAllDbs = async () => {
     }
   }
   let couchUrl = `${exports.getCouchUrl()}/_all_dbs`
-  if (env.MULTI_TENANCY) {
-    let tenantId = getTenantId()
+  let tenantId = getTenantId()
+  if (!env.MULTI_TENANCY || tenantId == DEFAULT_TENANT_ID) {
+    // just get all DBs when:
+    // - single tenancy
+    // - default tenant
+    //    - apps dbs don't contain tenant id
+    //    - non-default tenant dbs are filtered out application side in getAllApps
+    await addDbs(couchUrl)
+  } else {
     // get prod apps
     await addDbs(
       exports.getStartEndKeyURL(couchUrl, DocumentTypes.APP, tenantId)
@@ -236,9 +243,6 @@ exports.getAllDbs = async () => {
     )
     // add global db name
     dbs.push(getGlobalDBName(tenantId))
-  } else {
-    // just get all DBs in self host
-    await addDbs(couchUrl)
   }
   return dbs
 }
