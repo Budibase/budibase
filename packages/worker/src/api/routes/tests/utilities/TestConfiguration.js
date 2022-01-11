@@ -6,12 +6,12 @@ const { Cookies } = require("@budibase/backend-core").constants
 const { Configs, LOGO_URL } = require("../../../../constants")
 const { getGlobalUserByEmail } = require("@budibase/backend-core").utils
 const { createASession } = require("@budibase/backend-core/sessions")
-const { newid } = require("../../../../../../auth/src/hashing")
+const { newid } = require("@budibase/backend-core/src/hashing")
 const { TENANT_ID } = require("./structures")
-const auth = require("@budibase/backend-core")
+const core = require("@budibase/backend-core")
 const CouchDB = require("../../../../db")
 const { doInTenant } = require("@budibase/backend-core/tenancy")
-auth.init(CouchDB)
+core.init(CouchDB)
 
 class TestConfiguration {
   constructor(openServer = true) {

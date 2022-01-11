@@ -17,12 +17,12 @@ const supertest = require("supertest")
 const { cleanup } = require("../../utilities/fileSystem")
 const { Cookies, Headers } = require("@budibase/backend-core").constants
 const { jwt } = require("@budibase/backend-core").auth
-const auth = require("@budibase/backend-core")
+const core = require("@budibase/backend-core")
 const { getGlobalDB } = require("@budibase/backend-core/tenancy")
 const { createASession } = require("@budibase/backend-core/sessions")
 const { user: userCache } = require("@budibase/backend-core/cache")
 const CouchDB = require("../../db")
-auth.init(CouchDB)
+core.init(CouchDB)
 
 const GLOBAL_USER_ID = "us_uuid1"
 const EMAIL = "babs@babs.com"

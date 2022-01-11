@@ -1,4 +1,4 @@
-const authPkg = require("@budibase/backend-core")
+const core = require("@budibase/backend-core")
 const { getScopedConfig } = require("@budibase/backend-core/db")
 const { google } = require("@budibase/backend-core/src/middleware")
 const { oidc } = require("@budibase/backend-core/src/middleware")
@@ -11,9 +11,9 @@ const {
   getGlobalUserByEmail,
   hash,
   platformLogout,
-} = authPkg.utils
-const { Cookies, Headers } = authPkg.constants
-const { passport } = authPkg.auth
+} = core.utils
+const { Cookies, Headers } = core.constants
+const { passport } = core.auth
 const { checkResetPasswordCode } = require("../../../utilities/redis")
 const {
   getGlobalDB,
@@ -152,7 +152,7 @@ exports.logout = async ctx => {
 exports.googlePreAuth = async (ctx, next) => {
   const db = getGlobalDB()
 
-  const config = await authPkg.db.getScopedConfig(db, {
+  const config = await core.db.getScopedConfig(db, {
     type: Configs.GOOGLE,
     workspace: ctx.query.workspace,
   })
@@ -167,7 +167,7 @@ exports.googlePreAuth = async (ctx, next) => {
 exports.googleAuth = async (ctx, next) => {
   const db = getGlobalDB()
 
-  const config = await authPkg.db.getScopedConfig(db, {
+  const config = await core.db.getScopedConfig(db, {
     type: Configs.GOOGLE,
     workspace: ctx.query.workspace,
   })
@@ -187,7 +187,7 @@ exports.googleAuth = async (ctx, next) => {
 
 async function oidcStrategyFactory(ctx, configId) {
   const db = getGlobalDB()
-  const config = await authPkg.db.getScopedConfig(db, {
+  const config = await core.db.getScopedConfig(db, {
     type: Configs.OIDC,
     group: ctx.query.group,
   })
