@@ -11,6 +11,7 @@ const {
   inputProcessing,
   outputProcessing,
   processAutoColumn,
+  cleanupAttachments,
 } = require("../../../utilities/rowProcessor")
 const { FieldTypes } = require("../../../constants")
 const { isEqual } = require("lodash")
@@ -25,6 +26,7 @@ const {
   getFromDesignDoc,
   getFromMemoryDoc,
 } = require("../view/utils")
+const { cloneDeep } = require("lodash/fp")
 
 const CALCULATION_TYPES = {
   SUM: "sum",
@@ -109,14 +111,14 @@ exports.patch = async ctx => {
   const inputs = ctx.request.body
   const tableId = inputs.tableId
   const isUserTable = tableId === InternalTables.USER_METADATA
-  let dbRow
+  let oldRow
   try {
-    dbRow = await db.get(inputs._id)
+    oldRow = await db.get(inputs._id)
   } catch (err) {
     if (isUserTable) {
       // don't include the rev, it'll be the global rev
       // this time
-      dbRow = {
+      oldRow = {
         _id: inputs._id,
       }
     } else {
@@ -125,13 +127,14 @@ exports.patch = async ctx => {
   }
   let dbTable = await db.get(tableId)
   // need to build up full patch fields before coerce
+  let combinedRow = cloneDeep(oldRow)
   for (let key of Object.keys(inputs)) {
     if (!dbTable.schema[key]) continue
-    dbRow[key] = inputs[key]
+    combinedRow[key] = inputs[key]
   }
 
   // this returns the table and row incase they have been updated
-  let { table, row } = inputProcessing(ctx.user, dbTable, dbRow)
+  let { table, row } = inputProcessing(ctx.user, dbTable, combinedRow)
   const validateResult = await validate({
     row,
     table,
@@ -149,6 +152,8 @@ exports.patch = async ctx => {
     tableId: row.tableId,
     table,
   })
+  // check if any attachments removed
+  await cleanupAttachments(appId, table, { oldRow, row })
 
   if (isUserTable) {
     // the row has been updated, need to put it into the ctx
@@ -295,6 +300,8 @@ exports.destroy = async function (ctx) {
     row,
     tableId: row.tableId,
   })
+  // remove any attachments that were on the row from object storage
+  await cleanupAttachments(appId, table, { row })
 
   let response
   if (ctx.params.tableId === InternalTables.USER_METADATA) {
@@ -341,6 +348,8 @@ exports.bulkDestroy = async ctx => {
   } else {
     await db.bulkDocs(rows.map(row => ({ ...row, _deleted: true })))
   }
+  // remove any attachments that were on the rows from object storage
+  await cleanupAttachments(appId, table, { rows })
   await Promise.all(updates)
   return { response: { ok: true }, rows }
 }
