@@ -8,6 +8,8 @@ const {
 } = require("../integrations/utils")
 const quotaMigration = require("../migrations/sync_app_and_reset_rows_quotas")
 
+const testing = false
+
 // tenants without limits
 const EXCLUDED_TENANTS = ["bb", "default", "bbtest", "bbstaging"]
 
@@ -40,7 +42,10 @@ module.exports = async (ctx, next) => {
   const tenantId = getTenantId()
 
   // if in development or a self hosted cloud usage quotas should not be executed
-  if (env.isDev() || env.SELF_HOSTED || EXCLUDED_TENANTS.includes(tenantId)) {
+  if (
+    (env.isDev() || env.SELF_HOSTED || EXCLUDED_TENANTS.includes(tenantId)) &&
+    !testing
+  ) {
     return next()
   }
 
