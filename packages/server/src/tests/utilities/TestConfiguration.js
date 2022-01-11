@@ -326,6 +326,53 @@ class TestConfiguration {
     return this.datasource
   }
 
+  async restDatasource(cfg) {
+    return this.createDatasource({
+      datasource: {
+        ...basicDatasource().datasource,
+        source: "REST",
+        config: cfg || {},
+      },
+    })
+  }
+
+  async dynamicVariableDatasource() {
+    let datasource = await this.restDatasource()
+    const basedOnQuery = await this.createQuery({
+      ...basicQuery(datasource._id),
+      fields: {
+        path: "www.google.com",
+      },
+    })
+    datasource = await this.updateDatasource({
+      ...datasource,
+      config: {
+        dynamicVariables: [
+          {
+            queryId: basedOnQuery._id,
+            name: "variable3",
+            value: "{{ data.0.[value] }}",
+          },
+        ],
+      },
+    })
+    return { datasource, query: basedOnQuery }
+  }
+
+  async previewQuery(request, config, datasource, fields) {
+    return request
+      .post(`/api/queries/preview`)
+      .send({
+        datasourceId: datasource._id,
+        parameters: {},
+        fields,
+        queryVerb: "read",
+      })
+      .set(config.defaultHeaders())
+      .expect("Content-Type", /json/)
+      .expect(200)
+  }
+
   async createQuery(config = null) {
     if (!this.datasource && !config) {
       throw "No data source created for query."

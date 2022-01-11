@@ -199,18 +199,18 @@
   <Body>
     Tell budibase how your tables are related to get even more smart features.
   </Body>
-{/if}
-{#if relationshipInfo && relationshipInfo.length > 0}
-  <Table
-    on:click={({ detail }) => openRelationshipModal(detail.from, detail.to)}
-    schema={relationshipSchema}
-    data={relationshipInfo}
-    allowEditColumns={false}
-    allowEditRows={false}
-    allowSelectRows={false}
-  />
-{:else}
-  <Body size="S"><i>No relationships configured.</i></Body>
+  {#if relationshipInfo && relationshipInfo.length > 0}
+    <Table
+      on:click={({ detail }) => openRelationshipModal(detail.from, detail.to)}
+      schema={relationshipSchema}
+      data={relationshipInfo}
+      allowEditColumns={false}
+      allowEditRows={false}
+      allowSelectRows={false}
+    />
+  {:else}
+    <Body size="S"><i>No relationships configured.</i></Body>
+  {/if}
 {/if}
 
 <style>

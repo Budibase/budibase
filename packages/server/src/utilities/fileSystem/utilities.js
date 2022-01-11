@@ -2,6 +2,7 @@ const {
   ObjectStore,
   makeSureBucketExists,
   upload,
+  deleteFiles,
   streamUpload,
   retrieve,
   retrieveToTmp,
@@ -28,3 +29,4 @@ exports.retrieveToTmp = retrieveToTmp
 exports.deleteFolder = deleteFolder
 exports.uploadDirectory = uploadDirectory
 exports.downloadTarball = downloadTarball
+exports.deleteFiles = deleteFiles
