@@ -70,6 +70,10 @@
       "name": "Update State",
       "component": "UpdateState",
       "dependsOnFeature": "state"
+    },
+    {
+      "name": "Upload File to S3",
+      "component": "S3Upload"
     }
   ]
 }

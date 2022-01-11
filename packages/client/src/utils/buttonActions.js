@@ -5,6 +5,7 @@ import {
   confirmationStore,
   authStore,
   stateStore,
+  uploadStore,
 } from "stores"
 import { saveRow, deleteRow, executeQuery, triggerAutomation } from "api"
 import { ActionTypes } from "constants"
@@ -157,6 +158,14 @@ const updateStateHandler = action => {
   }
 }
 
+const s3UploadHandler = async action => {
+  const { componentId } = action.parameters
+  if (!componentId) {
+    return
+  }
+  await uploadStore.actions.processFileUpload(componentId)
+}
+
 const handlerMap = {
   ["Save Row"]: saveRowHandler,
   ["Duplicate Row"]: duplicateRowHandler,
@@ -171,6 +180,7 @@ const handlerMap = {
   ["Close Screen Modal"]: closeScreenModalHandler,
   ["Change Form Step"]: changeFormStepHandler,
   ["Update State"]: updateStateHandler,
+  ["Upload File to S3"]: s3UploadHandler,
 }
 
 const confirmTextMap = {
