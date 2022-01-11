@@ -1,7 +1,7 @@
-const authPkg = require("@budibase/auth")
-const { getScopedConfig } = require("@budibase/auth/db")
-const { google } = require("@budibase/auth/src/middleware")
-const { oidc } = require("@budibase/auth/src/middleware")
+const core = require("@budibase/backend-core")
+const { getScopedConfig } = require("@budibase/backend-core/db")
+const { google } = require("@budibase/backend-core/src/middleware")
+const { oidc } = require("@budibase/backend-core/src/middleware")
 const { Configs, EmailTemplatePurpose } = require("../../../constants")
 const { sendEmail, isEmailConfigured } = require("../../../utilities/email")
 const {
@@ -11,15 +11,15 @@ const {
   getGlobalUserByEmail,
   hash,
   platformLogout,
-} = authPkg.utils
-const { Cookies, Headers } = authPkg.constants
-const { passport } = authPkg.auth
+} = core.utils
+const { Cookies, Headers } = core.constants
+const { passport } = core.auth
 const { checkResetPasswordCode } = require("../../../utilities/redis")
 const {
   getGlobalDB,
   getTenantId,
   isMultiTenant,
-} = require("@budibase/auth/tenancy")
+} = require("@budibase/backend-core/tenancy")
 const env = require("../../../environment")
 
 const ssoCallbackUrl = async (config, type) => {
@@ -152,7 +152,7 @@ exports.logout = async ctx => {
 exports.googlePreAuth = async (ctx, next) => {
   const db = getGlobalDB()
 
-  const config = await authPkg.db.getScopedConfig(db, {
+  const config = await core.db.getScopedConfig(db, {
     type: Configs.GOOGLE,
     workspace: ctx.query.workspace,
   })
@@ -167,7 +167,7 @@ exports.googlePreAuth = async (ctx, next) => {
 exports.googleAuth = async (ctx, next) => {
   const db = getGlobalDB()
 
-  const config = await authPkg.db.getScopedConfig(db, {
+  const config = await core.db.getScopedConfig(db, {
     type: Configs.GOOGLE,
     workspace: ctx.query.workspace,
   })
@@ -187,7 +187,7 @@ exports.googleAuth = async (ctx, next) => {
 
 async function oidcStrategyFactory(ctx, configId) {
   const db = getGlobalDB()
-  const config = await authPkg.db.getScopedConfig(db, {
+  const config = await core.db.getScopedConfig(db, {
     type: Configs.OIDC,
     group: ctx.query.group,
   })

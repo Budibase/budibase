@@ -4,7 +4,7 @@ const {
   getRole,
   isBuiltin,
   getAllRoles,
-} = require("@budibase/auth/roles")
+} = require("@budibase/backend-core/roles")
 const {
   generateRoleID,
   getUserMetadataParams,
