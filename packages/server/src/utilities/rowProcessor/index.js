@@ -5,7 +5,11 @@ const { attachmentsRelativeURL } = require("../index")
 const { processFormulas } = require("./utils")
 const { deleteFiles } = require("../../utilities/fileSystem/utilities")
 const { ObjectStoreBuckets } = require("../../constants")
-const { isProdAppID, getDeployedAppID, dbExists } = require("@budibase/auth/db")
+const {
+  isProdAppID,
+  getDeployedAppID,
+  dbExists,
+} = require("@budibase/backend-core/db")
 const CouchDB = require("../../db")
 
 const BASE_AUTO_ID = 1
