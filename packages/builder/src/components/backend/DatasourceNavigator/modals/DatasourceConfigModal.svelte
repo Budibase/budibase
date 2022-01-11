@@ -5,22 +5,28 @@
   import { IntegrationNames } from "constants/backend"
   import cloneDeep from "lodash/cloneDeepWith"
   import { saveDatasource as save } from "builderStore/datasource"
+  import { onMount } from "svelte"
 
   export let integration
   export let modal
 
   // kill the reference so the input isn't saved
   let datasource = cloneDeep(integration)
+  let skipFetch = false
 
   async function saveDatasource() {
     try {
-      const resp = await save(datasource)
+      const resp = await save(datasource, skipFetch)
       $goto(`./datasource/${resp._id}`)
       notifications.success(`Datasource updated successfully.`)
     } catch (err) {
       notifications.error(`Error saving datasource: ${err}`)
     }
   }
+
+  onMount(() => {
+    skipFetch = false
+  })
 </script>
 
 <ModalContent
@@ -28,9 +34,16 @@
   onConfirm={() => saveDatasource()}
   onCancel={() => modal.show()}
   confirmText={datasource.plus
-    ? "Fetch tables from database"
+    ? "Save and fetch tables"
     : "Save and continue to query"}
   cancelText="Back"
+  showSecondaryButton={datasource.plus}
+  secondaryButtonText={datasource.plus ? "Skip table fetch" : undefined}
+  secondaryAction={() => {
+    skipFetch = true
+    saveDatasource()
+    return true
+  }}
   size="L"
 >
   <Layout noPadding>

@@ -206,6 +206,34 @@ exports.retrieveToTmp = async (bucketName, filepath) => {
   return outputPath
 }
 
+/**
+ * Delete a single file.
+ */
+exports.deleteFile = async (bucketName, filepath) => {
+  const objectStore = exports.ObjectStore(bucketName)
+  await exports.makeSureBucketExists(objectStore, bucketName)
+  const params = {
+    Bucket: bucketName,
+    Key: filepath,
+  }
+  return objectStore.deleteObject(params)
+}
+
+exports.deleteFiles = async (bucketName, filepaths) => {
+  const objectStore = exports.ObjectStore(bucketName)
+  await exports.makeSureBucketExists(objectStore, bucketName)
+  const params = {
+    Bucket: bucketName,
+    Delete: {
+      Objects: filepaths.map(path => ({ Key: path })),
+    },
+  }
+  return objectStore.deleteObjects(params).promise()
+}
+
+/**
+ * Delete a path, including everything within.
+ */
 exports.deleteFolder = async (bucketName, folder) => {
   bucketName = sanitizeBucket(bucketName)
   folder = sanitizeKey(folder)
