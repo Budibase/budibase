@@ -1,5 +1,6 @@
 import { Checkbox, Select, Stepper } from "@budibase/bbui"
 import DataSourceSelect from "./DataSourceSelect.svelte"
+import S3DataSourceSelect from "./S3DataSourceSelect.svelte"
 import DataProviderSelect from "./DataProviderSelect.svelte"
 import ButtonActionEditor from "./ButtonActionEditor/ButtonActionEditor.svelte"
 import TableSelect from "./TableSelect.svelte"
@@ -21,6 +22,7 @@ const componentMap = {
   text: DrawerBindableCombobox,
   select: Select,
   dataSource: DataSourceSelect,
+  "dataSource/s3": S3DataSourceSelect,
   dataProvider: DataProviderSelect,
   boolean: Checkbox,
   number: Stepper,
