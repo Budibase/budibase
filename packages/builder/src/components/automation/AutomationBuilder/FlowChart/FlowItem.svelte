@@ -28,7 +28,7 @@
   let blockComplete
 
   $: testResult = $automationStore.selectedAutomation.testResults?.steps.filter(
-    step => step.stepId === block.stepId
+    step => (block.id ? step.id === block.id : step.stepId === block.stepId)
   )
   $: isTrigger = block.type === "TRIGGER"
 
