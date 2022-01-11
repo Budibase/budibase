@@ -68,4 +68,5 @@ module.exports = {
   },
   StaticDatabases,
   constants: require("./constants"),
+  migrations: require("./migrations"),
 }

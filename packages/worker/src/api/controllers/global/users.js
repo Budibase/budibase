@@ -69,9 +69,7 @@ exports.adminUser = async ctx => {
   if (!env.SELF_HOSTED) {
     // could be a scenario where it exists, make sure its clean
     try {
-      const usageQuota = await db.get(
-        StaticDatabases.PLATFORM_INFO.docs.usageQuota
-      )
+      const usageQuota = await db.get(StaticDatabases.GLOBAL.docs.usageQuota)
       if (usageQuota) {
         await db.remove(usageQuota._id, usageQuota._rev)
       }

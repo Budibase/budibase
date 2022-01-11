@@ -17,14 +17,14 @@ const METHOD_MAP = {
 }
 
 const DOMAIN_MAP = {
-  rows: usageQuota.Properties.ROW,
-  upload: usageQuota.Properties.UPLOAD,
-  views: usageQuota.Properties.VIEW,
-  users: usageQuota.Properties.USER,
+  // rows: usageQuota.Properties.ROW,                 // works - disabled
+  // upload: usageQuota.Properties.UPLOAD,            // doesn't work yet
+  // views: usageQuota.Properties.VIEW,               // doesn't work yet
+  // users: usageQuota.Properties.USER,               // doesn't work yet
   applications: usageQuota.Properties.APPS,
   // this will not be updated by endpoint calls
   // instead it will be updated by triggerInfo
-  automationRuns: usageQuota.Properties.AUTOMATION,
+  // automationRuns: usageQuota.Properties.AUTOMATION, // doesn't work yet
 }
 
 function getProperty(url) {

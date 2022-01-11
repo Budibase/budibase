@@ -7,11 +7,13 @@ exports.MIGRATION_DBS = {
 
 exports.MIGRATIONS = {
   USER_EMAIL_VIEW_CASING: "user_email_view_casing",
+  SYNC_APP_AND_RESET_ROWS_QUOTAS: "sync_app_and_reset_rows_quotas",
 }
 
 const DB_LOOKUP = {
   [exports.MIGRATION_DBS.GLOBAL_DB]: [
     exports.MIGRATIONS.USER_EMAIL_VIEW_CASING,
+    exports.MIGRATIONS.SYNC_APP_AND_RESET_ROWS_QUOTAS,
   ],
 }
 
