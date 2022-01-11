@@ -72,7 +72,7 @@ exports.run = async function ({ inputs, appId, emitter }) {
   })
 
   try {
-    await queryController.execute(ctx)
+    await queryController.executeV1(ctx)
     const { data, ...rest } = ctx.body
     return {
       response: data,
