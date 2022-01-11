@@ -1,7 +1,7 @@
 const { getGlobalDB } = require("@budibase/auth/tenancy")
 const TestConfig = require("../../tests/utilities/TestConfiguration")
 const { getUsageQuotaDoc, update, Properties } = require("../../utilities/usageQuota")
-const { migrate } = require("../sync_app_and_reset_rows_quotas")
+const { runIfRequired } = require("../sync_app_and_reset_rows_quotas")
 const env = require("../../environment")
 
 describe("Sync App And Reset Rows Quotas Migration", () => {
@@ -29,7 +29,7 @@ describe("Sync App And Reset Rows Quotas Migration", () => {
     await config.createApp("quota-test")
 
     // migrate
-    await migrate()
+    await runIfRequired()
 
     // assert the migration worked 
     usageDoc = await getUsageQuotaDoc(db)

@@ -29,7 +29,7 @@ class TestConfiguration {
       },
       req: {
         method: "POST",
-        url: "/rows"
+        url: "/applications"
       }
     }
   }
@@ -117,24 +117,25 @@ describe("usageQuota middleware", () => {
 
     await config.executeMiddleware()
 
-    expect(usageQuota.update).toHaveBeenCalledWith("rows", 1)
+    // expect(usageQuota.update).toHaveBeenCalledWith("rows", 1)
+    expect(usageQuota.update).not.toHaveBeenCalledWith("rows", 1)
     expect(config.next).toHaveBeenCalled()
   })
 
-  it("calculates the correct file size from a file upload call and adds it to quota", async () => {
-    config.setUrl("/upload")
-    config.setProd(true)
-    config.setFiles([
-      {
-        size: 100
-      },
-      {
-        size: 10000
-      },
-    ])
-    await config.executeMiddleware()
+  // it("calculates the correct file size from a file upload call and adds it to quota", async () => {
+  //   config.setUrl("/upload")
+  //   config.setProd(true)
+  //   config.setFiles([
+  //     {
+  //       size: 100
+  //     },
+  //     {
+  //       size: 10000
+  //     },
+  //   ])
+  //   await config.executeMiddleware()
 
-    expect(usageQuota.update).toHaveBeenCalledWith("storage", 10100)
-    expect(config.next).toHaveBeenCalled()
-  })
+  //   expect(usageQuota.update).toHaveBeenCalledWith("storage", 10100)
+  //   expect(config.next).toHaveBeenCalled()
+  // })
 })

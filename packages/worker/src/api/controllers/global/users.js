@@ -76,7 +76,7 @@ exports.adminUser = async ctx => {
     } catch (err) {
       // don't worry about errors
     }
-    await db.post(generateNewUsageQuotaDoc())
+    await db.put(generateNewUsageQuotaDoc())
   }
 
   if (response.rows.some(row => row.doc.admin)) {

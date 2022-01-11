@@ -6,6 +6,7 @@ const {
   isExternalTable,
   isRowId: isExternalRowId,
 } = require("../integrations/utils")
+const quotaMigration = require("../migrations/sync_app_and_reset_rows_quotas")
 
 // tenants without limits
 const EXCLUDED_TENANTS = ["bb", "default", "bbtest", "bbstaging"]
@@ -80,6 +81,7 @@ module.exports = async (ctx, next) => {
     usage = files.map(file => file.size).reduce((total, size) => total + size)
   }
   try {
+    await quotaMigration.runIfRequired()
     await usageQuota.update(property, usage)
     return next()
   } catch (err) {

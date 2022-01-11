@@ -1,17 +1,17 @@
 const { MIGRATIONS, MIGRATION_DBS, migrateIfRequired } =
   require("@budibase/auth").migrations
 const { getGlobalDB } = require("@budibase/auth/tenancy")
-const { getUsageQuotaDoc } = require("../utilities/usageQuota")
 const { getAllApps } = require("@budibase/auth/db")
 const CouchDB = require("../db")
+const { getUsageQuotaDoc } = require("../utilities/usageQuota")
 
-exports.migrate = async () => {
+exports.runIfRequired = async () => {
   await migrateIfRequired(
     MIGRATION_DBS.GLOBAL_DB,
     MIGRATIONS.SYNC_APP_AND_RESET_ROWS_QUOTAS,
     async () => {
-      const globalDb = getGlobalDB()
-      const usageDoc = await getUsageQuotaDoc(globalDb)
+      const db = getGlobalDB()
+      const usageDoc = await getUsageQuotaDoc(db)
 
       // reset the rows
       usageDoc.usageQuota.rows = 0
@@ -21,7 +21,7 @@ exports.migrate = async () => {
       const appCount = apps ? apps.length : 0
       usageDoc.usageQuota.apps = appCount
 
-      await globalDb.put(usageDoc)
+      await db.put(usageDoc)
     }
   )
 }
