@@ -21,7 +21,9 @@ exports.getUsageQuotaDoc = async db => {
     quota = await db.get(StaticDatabases.GLOBAL.docs.usageQuota)
   } catch (err) {
     // doc doesn't exist. Create it
-    quota = await db.post(generateNewUsageQuotaDoc())
+    quota = generateNewUsageQuotaDoc()
+    const response = await db.put(quota)
+    quota._rev = response.rev
   }
 
   return quota
