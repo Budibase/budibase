@@ -1,7 +1,7 @@
 {
   "name": "@budibase/backend-core",
   "version": "1.0.27-alpha.7",
-  "description": "Authentication middlewares for budibase builder and apps",
+  "description": "Budibase backend core libraries used in server and worker",
   "main": "src/index.js",
   "author": "Budibase",
   "license": "GPL-3.0",
