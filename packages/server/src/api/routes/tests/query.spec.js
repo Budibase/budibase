@@ -4,7 +4,7 @@ jest.mock("node-fetch")
 
 // Mock isProdAppID to we can later mock the implementation and pretend we are
 // using prod app IDs
-const authDb = require("@budibase/auth/db")
+const authDb = require("@budibase/backend-core/db")
 const { isProdAppID } = authDb
 const mockIsProdAppID = jest.fn(isProdAppID)
 authDb.isProdAppID = mockIsProdAppID

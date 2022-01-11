@@ -6,7 +6,7 @@ const {
   BUILDER,
   PermissionLevels,
   PermissionTypes,
-} = require("@budibase/auth/permissions")
+} = require("@budibase/backend-core/permissions")
 const Joi = require("joi")
 const { DataSourceOperation } = require("../../constants")
 

@@ -8,10 +8,13 @@ const { InternalTables } = require("../../db/utils")
 const { getGlobalUsers, getRawGlobalUser } = require("../../utilities/global")
 const { getFullUser } = require("../../utilities/users")
 const { isEqual } = require("lodash")
-const { BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
-const { getDevelopmentAppID, getDeployedAppIDs } = require("@budibase/auth/db")
+const { BUILTIN_ROLE_IDS } = require("@budibase/backend-core/roles")
+const {
+  getDevelopmentAppID,
+  getDeployedAppIDs,
+} = require("@budibase/backend-core/db")
 const { doesDatabaseExist } = require("../../utilities")
-const { UserStatus } = require("@budibase/auth/constants")
+const { UserStatus } = require("@budibase/backend-core/constants")
 
 async function rawMetadata(db) {
   return (

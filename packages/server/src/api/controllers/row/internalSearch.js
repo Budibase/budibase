@@ -1,6 +1,6 @@
 const { SearchIndexes } = require("../../../db/utils")
 const fetch = require("node-fetch")
-const { getCouchUrl } = require("@budibase/auth/db")
+const { getCouchUrl } = require("@budibase/backend-core/db")
 
 /**
  * Class to build lucene query URLs.

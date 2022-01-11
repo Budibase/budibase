@@ -1,4 +1,4 @@
-const { BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
+const { BUILTIN_ROLE_IDS } = require("@budibase/backend-core/roles")
 const env = require("../../environment")
 const {
   basicTable,
@@ -15,14 +15,14 @@ const {
 const controllers = require("./controllers")
 const supertest = require("supertest")
 const { cleanup } = require("../../utilities/fileSystem")
-const { Cookies, Headers } = require("@budibase/auth").constants
-const { jwt } = require("@budibase/auth").auth
-const auth = require("@budibase/auth")
-const { getGlobalDB } = require("@budibase/auth/tenancy")
-const { createASession } = require("@budibase/auth/sessions")
-const { user: userCache } = require("@budibase/auth/cache")
+const { Cookies, Headers } = require("@budibase/backend-core").constants
+const { jwt } = require("@budibase/backend-core").auth
+const core = require("@budibase/backend-core")
+const { getGlobalDB } = require("@budibase/backend-core/tenancy")
+const { createASession } = require("@budibase/backend-core/sessions")
+const { user: userCache } = require("@budibase/backend-core/cache")
 const CouchDB = require("../../db")
-auth.init(CouchDB)
+core.init(CouchDB)
 
 const GLOBAL_USER_ID = "us_uuid1"
 const EMAIL = "babs@babs.com"

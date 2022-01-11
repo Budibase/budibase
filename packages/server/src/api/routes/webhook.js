@@ -2,7 +2,7 @@ const Router = require("@koa/router")
 const controller = require("../controllers/webhook")
 const authorized = require("../../middleware/authorized")
 const joiValidator = require("../../middleware/joi-validator")
-const { BUILDER } = require("@budibase/auth/permissions")
+const { BUILDER } = require("@budibase/backend-core/permissions")
 const Joi = require("joi")
 
 const router = Router()

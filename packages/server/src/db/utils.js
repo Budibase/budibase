@@ -9,7 +9,7 @@ const {
   StaticDatabases,
   isDevAppID,
   isProdAppID,
-} = require("@budibase/auth/db")
+} = require("@budibase/backend-core/db")
 
 const UNICODE_MAX = "\ufff0"
 

@@ -1,8 +1,8 @@
 const env = require("../environment")
 const CouchDB = require("../db")
-const { init } = require("@budibase/auth")
-const redis = require("@budibase/auth/redis")
-const { SEPARATOR } = require("@budibase/auth/db")
+const { init } = require("@budibase/backend-core")
+const redis = require("@budibase/backend-core/redis")
+const { SEPARATOR } = require("@budibase/backend-core/db")
 const { processStringSync } = require("@budibase/string-templates")
 
 const VARIABLE_TTL_SECONDS = 3600
