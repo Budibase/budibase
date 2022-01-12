@@ -121,7 +121,7 @@ describe("Current app middleware", () => {
     async function checkExpected(setCookie) {
       config.setUser()
       await config.executeMiddleware()
-      const cookieFn = require("@budibase/backend-core").utils.setCookie
+      let { setCookie: cookieFn } = require("@budibase/backend-core/utils")
       if (setCookie) {
         expect(cookieFn).toHaveBeenCalled()
       } else {

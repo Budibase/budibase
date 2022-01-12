@@ -9,7 +9,7 @@ const {
   deleteFolder,
   uploadDirectory,
   downloadTarball,
-} = require("@budibase/backend-core").objectStore
+} = require("@budibase/backend-core/objectStore")
 
 /***********************************
  *              NOTE               *
