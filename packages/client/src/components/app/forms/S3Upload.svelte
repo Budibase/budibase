@@ -2,9 +2,11 @@
   import Field from "./Field.svelte"
   import { CoreDropzone } from "@budibase/bbui"
   import { getContext, onMount, onDestroy } from "svelte"
+  import { getSignedS3URL } from "../../../api/index.js"
 
-  export let dataSource
+  export let datasourceId
   export let bucket
+  export let key
   export let field
   export let label
   export let disabled = false
@@ -40,7 +42,8 @@
   }
 
   const upload = async () => {
-    console.log("UPLOADING!!!")
+    const url = await API.getSignedS3URL(datasourceId, bucket, key)
+    await API.uploadToS3(url, file)
   }
 
   onMount(() => {
