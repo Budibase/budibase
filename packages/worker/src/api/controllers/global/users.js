@@ -3,8 +3,12 @@ const {
   StaticDatabases,
   generateNewUsageQuotaDoc,
 } = require("@budibase/backend-core/db")
-const { hash, getGlobalUserByEmail, saveUser, platformLogout } =
-  require("@budibase/backend-core").utils
+const {
+  hash,
+  getGlobalUserByEmail,
+  saveUser,
+  platformLogout,
+} = require("@budibase/backend-core/utils")
 const { EmailTemplatePurpose } = require("../../../constants")
 const { checkInviteCode } = require("../../../utilities/redis")
 const { sendEmail } = require("../../../utilities/email")

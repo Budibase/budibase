@@ -1,6 +1,10 @@
-const { getAppId, setCookie, getCookie, clearCookie } =
-  require("@budibase/backend-core").utils
-const { Cookies } = require("@budibase/backend-core").constants
+const {
+  getAppId,
+  setCookie,
+  getCookie,
+  clearCookie,
+} = require("@budibase/backend-core/utils")
+const { Cookies } = require("@budibase/backend-core/constants")
 const { getRole } = require("@budibase/backend-core/roles")
 const { BUILTIN_ROLE_IDS } = require("@budibase/backend-core/roles")
 const { generateUserMetadataID, isDevAppID } = require("../db/utils")
