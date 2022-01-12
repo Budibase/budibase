@@ -1,7 +1,7 @@
 const core = require("@budibase/backend-core")
 const { getScopedConfig } = require("@budibase/backend-core/db")
-const { google } = require("@budibase/backend-core/src/middleware")
-const { oidc } = require("@budibase/backend-core/src/middleware")
+const { google } = require("@budibase/backend-core/middleware")
+const { oidc } = require("@budibase/backend-core/middleware")
 const { Configs, EmailTemplatePurpose } = require("../../../constants")
 const { sendEmail, isEmailConfigured } = require("../../../utilities/email")
 const {
