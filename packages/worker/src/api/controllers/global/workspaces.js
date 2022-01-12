@@ -1,5 +1,8 @@
-const { getWorkspaceParams, generateWorkspaceID } = require("@budibase/auth/db")
-const { getGlobalDB } = require("@budibase/auth/tenancy")
+const {
+  getWorkspaceParams,
+  generateWorkspaceID,
+} = require("@budibase/backend-core/db")
+const { getGlobalDB } = require("@budibase/backend-core/tenancy")
 
 exports.save = async function (ctx) {
   const db = getGlobalDB()

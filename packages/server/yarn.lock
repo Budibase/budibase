@@ -983,9 +983,9 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/auth@^1.0.27-alpha.0":
+"@budibase/backend-core@^1.0.27-alpha.0":
   version "1.0.27-alpha.0"
-  resolved "https://registry.yarnpkg.com/@budibase/auth/-/auth-1.0.27-alpha.0.tgz#8020c205d20d722983906426cb5a1aaf5cc6aba4"
+  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/auth-1.0.27-alpha.0.tgz#8020c205d20d722983906426cb5a1aaf5cc6aba4"
   integrity sha512-sfXJjQJsFWfgElsHGHn7beERcsrUA5cotN2p9XEp15SrMeEmy4s9a6K58b779QB/d28GXKXtSJwmM/DrptJetQ==
   dependencies:
     "@techpass/passport-openidconnect" "^0.3.0"
