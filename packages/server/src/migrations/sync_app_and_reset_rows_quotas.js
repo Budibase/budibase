@@ -1,7 +1,7 @@
 const { MIGRATIONS, MIGRATION_DBS, migrateIfRequired } =
-  require("@budibase/auth").migrations
-const { getGlobalDB } = require("@budibase/auth/tenancy")
-const { getAllApps } = require("@budibase/auth/db")
+  require("@budibase/backend-core").migrations
+const { getGlobalDB } = require("@budibase/backend-core/tenancy")
+const { getAllApps } = require("@budibase/backend-core/db")
 const CouchDB = require("../db")
 const { getUsageQuotaDoc } = require("../utilities/usageQuota")
 

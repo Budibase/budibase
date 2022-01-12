@@ -1,4 +1,4 @@
-const { getGlobalDB } = require("@budibase/auth/tenancy")
+const { getGlobalDB } = require("@budibase/backend-core/tenancy")
 const TestConfig = require("../../tests/utilities/TestConfiguration")
 const { getUsageQuotaDoc, update, Properties } = require("../../utilities/usageQuota")
 const { runIfRequired } = require("../sync_app_and_reset_rows_quotas")
