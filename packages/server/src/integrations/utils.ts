@@ -1,6 +1,6 @@
-import { SqlQuery } from "../definitions/datasource"
+import { SourceNames, SqlQuery } from "../definitions/datasource"
 import { Datasource, Table } from "../definitions/common"
-import { SourceNames } from "../definitions/datasource"
+
 const { DocumentTypes, SEPARATOR } = require("../db/utils")
 const {
   FieldTypes,
@@ -131,7 +131,12 @@ export function isSQL(datasource: Datasource): boolean {
   if (!datasource || !datasource.source) {
     return false
   }
-  const SQL = [SourceNames.POSTGRES, SourceNames.SQL_SERVER, SourceNames.MYSQL]
+  const SQL = [
+    SourceNames.POSTGRES,
+    SourceNames.SQL_SERVER,
+    SourceNames.MYSQL,
+    SourceNames.ORACLE,
+  ]
   return SQL.indexOf(datasource.source) !== -1
 }
 
