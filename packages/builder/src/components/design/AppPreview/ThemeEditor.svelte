@@ -19,7 +19,7 @@
     primaryColor: "var(--spectrum-global-color-blue-600)",
     primaryColorHover: "var(--spectrum-global-color-blue-500)",
     buttonBorderRadius: "16px",
-    navBackground: "var(--spectrum-global-color-gray-100)",
+    navBackground: "var(--spectrum-global-color-gray-50)",
     navTextColor: "var(--spectrum-global-color-gray-800)",
   }
 
