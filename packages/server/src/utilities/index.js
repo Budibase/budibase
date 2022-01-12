@@ -1,6 +1,6 @@
 const env = require("../environment")
 const { OBJ_STORE_DIRECTORY } = require("../constants")
-const { sanitizeKey } = require("@budibase/backend-core/src/objectStore")
+const { sanitizeKey } = require("@budibase/backend-core/objectStore")
 const CouchDB = require("../db")
 const { generateMetadataID } = require("../db/utils")
 const Readable = require("stream").Readable

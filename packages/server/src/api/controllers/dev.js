@@ -4,7 +4,7 @@ const env = require("../../environment")
 const { checkSlashesInUrl } = require("../../utilities")
 const { request } = require("../../utilities/workerRequests")
 const { clearLock } = require("../../utilities/redis")
-const { Replication } = require("@budibase/backend-core").db
+const { Replication } = require("@budibase/backend-core/db")
 const { DocumentTypes } = require("../../db/utils")
 const { app: appCache } = require("@budibase/backend-core/cache")
 
