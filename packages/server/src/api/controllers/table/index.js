@@ -2,7 +2,7 @@ const CouchDB = require("../../../db")
 const internal = require("./internal")
 const external = require("./external")
 const csvParser = require("../../../utilities/csvParser")
-const { isExternalTable } = require("../../../integrations/utils")
+const { isExternalTable, isSQL } = require("../../../integrations/utils")
 const {
   getTableParams,
   getDatasourceParams,
@@ -49,6 +49,7 @@ exports.fetch = async function (ctx) {
       ...entity,
       type: "external",
       sourceId: row.doc._id,
+      sql: isSQL(row.doc),
     }))
   })
 
