@@ -10,3 +10,12 @@ export const uploadAttachment = async (data, tableId = "") => {
     json: false,
   })
 }
+
+export const uploadToS3 = async (signedUrl, data) => {
+  await API.put({
+    url: signedUrl,
+    body: data,
+    json: false,
+    external: true,
+  })
+}

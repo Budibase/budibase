@@ -8,6 +8,7 @@ import {
   convertJSONSchemaToTableSchema,
   getJSONArrayDatasourceSchema,
 } from "builder/src/builderStore/jsonUtils"
+import API from "./api.js"
 
 /**
  * Fetches all rows for a particular Budibase data source.
@@ -130,4 +131,15 @@ export const fetchDatasourceSchema = async dataSource => {
     }
   })
   return { ...schema, ...jsonAdditions }
+}
+
+export const getSignedS3URL = async (datasourceId, bucket, key) => {
+  if (!datasourceId) {
+    return null
+  }
+  const res = await API.post({
+    url: `/api/datasources/s3/getSignedS3URL`,
+    body: { datasourceId, bucket, key },
+  })
+  return res?.signedUrl
 }

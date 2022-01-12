@@ -6,6 +6,7 @@ import {
   authStore,
   stateStore,
   uploadStore,
+  notificationStore,
 } from "stores"
 import { saveRow, deleteRow, executeQuery, triggerAutomation } from "api"
 import { ActionTypes } from "constants"
@@ -164,6 +165,7 @@ const s3UploadHandler = async action => {
     return
   }
   await uploadStore.actions.processFileUpload(componentId)
+  notificationStore.actions.success("File uploaded successfully")
 }
 
 const handlerMap = {
