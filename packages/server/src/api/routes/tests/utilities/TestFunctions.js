@@ -2,7 +2,7 @@ const rowController = require("../../../controllers/row")
 const appController = require("../../../controllers/application")
 const CouchDB = require("../../../../db")
 const { AppStatus } = require("../../../../db/utils")
-const { BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
+const { BUILTIN_ROLE_IDS } = require("@budibase/backend-core/roles")
 const { TENANT_ID } = require("../../../../tests/utilities/structures")
 
 function Request(appId, params) {

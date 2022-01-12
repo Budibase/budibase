@@ -3,7 +3,7 @@ const compress = require("koa-compress")
 const zlib = require("zlib")
 const { routes } = require("./routes")
 const { buildAuthMiddleware, auditLog, buildTenancyMiddleware } =
-  require("@budibase/auth").auth
+  require("@budibase/backend-core").auth
 
 const PUBLIC_ENDPOINTS = [
   // old deprecated endpoints kept for backwards compat

@@ -1,9 +1,9 @@
 const env = require("../environment")
-const { getGlobalDB } = require("@budibase/auth/tenancy")
+const { getGlobalDB } = require("@budibase/backend-core/tenancy")
 const {
   StaticDatabases,
   generateNewUsageQuotaDoc,
-} = require("@budibase/auth/db")
+} = require("@budibase/backend-core/db")
 
 exports.Properties = {
   ROW: "rows", // mostly works - disabled - app / table deletion not yet accounted for

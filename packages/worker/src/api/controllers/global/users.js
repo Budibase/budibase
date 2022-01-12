@@ -2,22 +2,22 @@ const {
   getGlobalUserParams,
   StaticDatabases,
   generateNewUsageQuotaDoc,
-} = require("@budibase/auth/db")
+} = require("@budibase/backend-core/db")
 const { hash, getGlobalUserByEmail, saveUser, platformLogout } =
-  require("@budibase/auth").utils
+  require("@budibase/backend-core").utils
 const { EmailTemplatePurpose } = require("../../../constants")
 const { checkInviteCode } = require("../../../utilities/redis")
 const { sendEmail } = require("../../../utilities/email")
-const { user: userCache } = require("@budibase/auth/cache")
-const { invalidateSessions } = require("@budibase/auth/sessions")
-const accounts = require("@budibase/auth/accounts")
+const { user: userCache } = require("@budibase/backend-core/cache")
+const { invalidateSessions } = require("@budibase/backend-core/sessions")
+const accounts = require("@budibase/backend-core/accounts")
 const {
   getGlobalDB,
   getTenantId,
   getTenantUser,
   doesTenantExist,
-} = require("@budibase/auth/tenancy")
-const { removeUserFromInfoDB } = require("@budibase/auth/deprovision")
+} = require("@budibase/backend-core/tenancy")
+const { removeUserFromInfoDB } = require("@budibase/backend-core/deprovision")
 const env = require("../../../environment")
 const { syncUserInApps } = require("../../../utilities/appService")
 

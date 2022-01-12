@@ -1,11 +1,11 @@
 const { getAppId, setCookie, getCookie, clearCookie } =
-  require("@budibase/auth").utils
-const { Cookies } = require("@budibase/auth").constants
-const { getRole } = require("@budibase/auth/roles")
-const { BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
+  require("@budibase/backend-core").utils
+const { Cookies } = require("@budibase/backend-core").constants
+const { getRole } = require("@budibase/backend-core/roles")
+const { BUILTIN_ROLE_IDS } = require("@budibase/backend-core/roles")
 const { generateUserMetadataID, isDevAppID } = require("../db/utils")
-const { dbExists } = require("@budibase/auth/db")
-const { isUserInAppTenant } = require("@budibase/auth/tenancy")
+const { dbExists } = require("@budibase/backend-core/db")
+const { isUserInAppTenant } = require("@budibase/backend-core/tenancy")
 const { getCachedSelf } = require("../utilities/global")
 const CouchDB = require("../db")
 const env = require("../environment")

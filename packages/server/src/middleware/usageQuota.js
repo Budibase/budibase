@@ -1,7 +1,7 @@
 const CouchDB = require("../db")
 const usageQuota = require("../utilities/usageQuota")
 const env = require("../environment")
-const { getTenantId } = require("@budibase/auth/tenancy")
+const { getTenantId } = require("@budibase/backend-core/tenancy")
 const {
   isExternalTable,
   isRowId: isExternalRowId,
