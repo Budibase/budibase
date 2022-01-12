@@ -18,8 +18,8 @@ const createRouteStore = () => {
   const fetchRoutes = async () => {
     const routeConfig = await API.fetchRoutes()
     let routes = []
-    Object.values(routeConfig.routes).forEach(route => {
-      Object.entries(route.subpaths).forEach(([path, config]) => {
+    Object.values(routeConfig.routes || {}).forEach(route => {
+      Object.entries(route.subpaths || {}).forEach(([path, config]) => {
         routes.push({
           path,
           screenId: config.screenId,
