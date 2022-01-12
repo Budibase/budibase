@@ -7,8 +7,10 @@ const {
 } = require("@budibase/backend-core/db")
 const { Configs } = require("../../../constants")
 const email = require("../../../utilities/email")
-const { upload, ObjectStoreBuckets } =
-  require("@budibase/backend-core").objectStore
+const {
+  upload,
+  ObjectStoreBuckets,
+} = require("@budibase/backend-core/objectStore")
 const CouchDB = require("../../../db")
 const { getGlobalDB, getTenantId } = require("@budibase/backend-core/tenancy")
 const env = require("../../../environment")
