@@ -1,7 +1,6 @@
 import { store } from "./index"
 import { get as svelteGet } from "svelte/store"
 import { removeCookie, Cookies } from "./cookies"
-import { notifications } from "@budibase/bbui"
 
 const apiCall =
   method =>
@@ -15,9 +14,6 @@ const apiCall =
     })
     if (resp.status === 403) {
       if (url.includes("/api/templates")) {
-        notifications.error(
-          "There was a problem loading quick start templates."
-        )
         return { json: () => [] }
       }
       removeCookie(Cookies.Auth)
