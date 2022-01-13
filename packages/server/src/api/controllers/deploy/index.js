@@ -1,12 +1,12 @@
 const CouchDB = require("../../../db")
 const Deployment = require("./Deployment")
-const { Replication, getDeployedAppID } = require("@budibase/auth/db")
+const { Replication, getDeployedAppID } = require("@budibase/backend-core/db")
 const { DocumentTypes, getAutomationParams } = require("../../../db/utils")
 const {
   disableAllCrons,
   enableCronTrigger,
 } = require("../../../automations/utils")
-const { app: appCache } = require("@budibase/auth/cache")
+const { app: appCache } = require("@budibase/backend-core/cache")
 
 // the max time we can wait for an invalidation to complete before considering it failed
 const MAX_PENDING_TIME_MS = 30 * 60000

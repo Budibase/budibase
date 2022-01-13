@@ -10,6 +10,7 @@
     ActionButton,
     Drawer,
     Modal,
+    Detail,
   } from "@budibase/bbui"
   import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
 
@@ -37,6 +38,7 @@
   let drawer
   let tempFilters = lookForFilters(schemaProperties) || []
   let fillWidth = true
+  let codeBindingOpen = false
 
   $: stepId = block.stepId
   $: bindings = getAvailableBindings(
@@ -233,7 +235,16 @@
         <SchemaSetup on:change={e => onChange(e, key)} value={inputData[key]} />
       {:else if value.customType === "code"}
         <CodeEditorModal>
-          <pre>{JSON.stringify(bindings, null, 2)}</pre>
+          <ActionButton
+            on:click={() => (codeBindingOpen = !codeBindingOpen)}
+            quiet
+            icon={codeBindingOpen ? "ChevronDown" : "ChevronRight"}
+          >
+            <Detail size="S">Bindings</Detail>
+          </ActionButton>
+          {#if codeBindingOpen}
+            <pre>{JSON.stringify(bindings, null, 2)}</pre>
+          {/if}
           <Editor
             mode="javascript"
             on:change={e => {
@@ -244,7 +255,7 @@
             value={inputData[key]}
           />
         </CodeEditorModal>
-      {:else if value.type === "string" || value.type === "number"}
+      {:else if value.type === "string" || value.type === "number" || value.type === "integer"}
         {#if isTestModal}
           <ModalBindableInput
             title={value.title}

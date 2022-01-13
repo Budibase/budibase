@@ -1,5 +1,7 @@
 // Do not use any aliased imports in common files, as these will be bundled
-// by multiple bundlers which may not be able to resolve them
+// by multiple bundlers which may not be able to resolve them.
+// This will eventually be replaced by the new client implementation when we
+// add a core package.
 import { writable, derived, get } from "svelte/store"
 import * as API from "../builderStore/api"
 import { buildLuceneQuery } from "./lucene"

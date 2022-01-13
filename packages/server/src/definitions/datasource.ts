@@ -1,4 +1,4 @@
-import { Row, Table } from "./common"
+import { Row, Table, Base } from "./common"
 
 export enum Operation {
   CREATE = "CREATE",
@@ -180,4 +180,101 @@ export interface SqlQuery {
 
 export interface QueryOptions {
   disableReturning?: boolean
+}
+
+export interface Datasource extends Base {
+  type: string
+  name: string
+  source: SourceNames
+  // the config is defined by the schema
+  config: {
+    [key: string]: string | number | boolean
+  }
+  plus: boolean
+  entities?: {
+    [key: string]: Table
+  }
+}
+
+export enum AuthType {
+  BASIC = "basic",
+  BEARER = "bearer",
+}
+
+interface AuthConfig {
+  _id: string
+  name: string
+  type: AuthType
+  config: BasicAuthConfig | BearerAuthConfig
+}
+
+export interface BasicAuthConfig {
+  username: string
+  password: string
+}
+
+export interface BearerAuthConfig {
+  token: string
+}
+
+export interface QueryParameter {
+  name: string
+  default: string
+}
+
+export interface RestQueryFields {
+  path: string
+  queryString?: string
+  headers: { [key: string]: any }
+  disabledHeaders: { [key: string]: any }
+  requestBody: any
+  bodyType: string
+  json: object
+  method: string
+  authConfigId: string
+  pagination: PaginationConfig | null
+  paginationValues: PaginationValues | null
+}
+
+export interface RestConfig {
+  url: string
+  defaultHeaders: {
+    [key: string]: any
+  }
+  authConfigs: AuthConfig[]
+  staticVariables: {
+    [key: string]: string
+  }
+  dynamicVariables: [
+    {
+      name: string
+      queryId: string
+      value: string
+    }
+  ]
+}
+
+export interface PaginationConfig {
+  type: string
+  location: string
+  pageParam: string
+  sizeParam: string | null
+  responseParam: string | null
+}
+
+export interface PaginationValues {
+  page: string | number | null
+  limit: number | null
+}
+
+export interface Query {
+  _id?: string
+  datasourceId: string
+  name: string
+  parameters: QueryParameter[]
+  fields: RestQueryFields | any
+  transformer: string | null
+  schema: any
+  readable: boolean
+  queryVerb: string
 }

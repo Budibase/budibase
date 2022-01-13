@@ -11,6 +11,8 @@
   export let selected = false
   export let opened = false
   export let draggable = false
+  export let iconText
+  export let iconColor
 
   const dispatch = createEventDispatcher()
 
@@ -42,9 +44,13 @@
     {/if}
 
     <slot name="icon" />
-    {#if icon}
+    {#if iconText}
+      <div class="iconText" style={iconColor ? `color: ${iconColor};` : ""}>
+        {iconText}
+      </div>
+    {:else if icon}
       <div class="icon">
-        <Icon size="S" name={icon} />
+        <Icon color={iconColor} size="S" name={icon} />
       </div>
     {/if}
     <div class="text">{text}</div>
@@ -122,5 +128,11 @@
     flex-direction: row;
     justify-content: center;
     align-items: center;
+  }
+
+  .iconText {
+    margin-top: 1px;
+    font-size: var(--spectrum-global-dimension-font-size-50);
+    flex: 0 0 34px;
   }
 </style>

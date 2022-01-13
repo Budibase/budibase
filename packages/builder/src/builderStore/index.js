@@ -4,7 +4,7 @@ import { getHostingStore } from "./store/hosting"
 import { getThemeStore } from "./store/theme"
 import { derived, writable } from "svelte/store"
 import { FrontendTypes, LAYOUT_NAMES } from "../constants"
-import { findComponent } from "./storeUtils"
+import { findComponent } from "./componentUtils"
 
 export const store = getFrontendStore()
 export const automationStore = getAutomationStore()

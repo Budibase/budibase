@@ -1,7 +1,10 @@
 const Router = require("@koa/router")
 const controller = require("../controllers/permission")
 const authorized = require("../../middleware/authorized")
-const { BUILDER, PermissionLevels } = require("@budibase/auth/permissions")
+const {
+  BUILDER,
+  PermissionLevels,
+} = require("@budibase/backend-core/permissions")
 const Joi = require("joi")
 const joiValidator = require("../../middleware/joi-validator")
 

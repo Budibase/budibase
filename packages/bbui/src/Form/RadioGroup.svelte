@@ -9,6 +9,7 @@
   export let labelPosition = "above"
   export let error = null
   export let options = []
+  export let direction = "vertical"
   export let getOptionLabel = option => extractProperty(option, "label")
   export let getOptionValue = option => extractProperty(option, "value")
 
@@ -31,6 +32,7 @@
     {disabled}
     {value}
     {options}
+    {direction}
     {getOptionLabel}
     {getOptionValue}
     on:change={onChange}

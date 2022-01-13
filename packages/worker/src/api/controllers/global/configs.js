@@ -4,12 +4,15 @@ const {
   getGlobalUserParams,
   getScopedFullConfig,
   getAllApps,
-} = require("@budibase/auth/db")
+} = require("@budibase/backend-core/db")
 const { Configs } = require("../../../constants")
 const email = require("../../../utilities/email")
-const { upload, ObjectStoreBuckets } = require("@budibase/auth").objectStore
+const {
+  upload,
+  ObjectStoreBuckets,
+} = require("@budibase/backend-core/objectStore")
 const CouchDB = require("../../../db")
-const { getGlobalDB, getTenantId } = require("@budibase/auth/tenancy")
+const { getGlobalDB, getTenantId } = require("@budibase/backend-core/tenancy")
 const env = require("../../../environment")
 const { googleCallbackUrl, oidcCallbackUrl } = require("./auth")
 

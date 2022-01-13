@@ -23,7 +23,7 @@ function mockReset() {
 function mockAuthWithNoCookie() {
   jest.resetModules()
   mockWorker()
-  jest.mock("@budibase/auth/cache", () => ({
+  jest.mock("@budibase/backend-core/cache", () => ({
     user: {
       getUser: () => {
         return {
@@ -32,34 +32,30 @@ function mockAuthWithNoCookie() {
       },
     },
   }))
-  jest.mock("@budibase/auth", () => ({
-    utils: {
-      getAppId: jest.fn(),
-      setCookie: jest.fn(),
-      getCookie: jest.fn(),
-    },
-    constants: {
-      Cookies: {},
-    },
+  jest.mock("@budibase/backend-core/utils", () => ({
+    getAppId: jest.fn(),
+    setCookie: jest.fn(),
+    getCookie: jest.fn(),
+  }))
+  jest.mock("@budibase/backend-core/constants", () => ({
+    Cookies: {},
   }))
 }
 
 function mockAuthWithCookie() {
   jest.resetModules()
   mockWorker()
-  jest.mock("@budibase/auth", () => ({
-    utils: {
-      getAppId: () => {
-        return "app_test"
-      },
-      setCookie: jest.fn(),
-      getCookie: () => ({appId: "app_different", roleId: "PUBLIC"}),
+  jest.mock("@budibase/backend-core/utils", () => ({
+    getAppId: () => {
+      return "app_test"
     },
-    constants: {
-      Cookies: {
-        Auth: "auth",
-        CurrentApp: "currentapp",
-      },
+    setCookie: jest.fn(),
+    getCookie: () => ({appId: "app_different", roleId: "PUBLIC"}),
+  }))
+  jest.mock("@budibase/backend-core/constants", () => ({
+    Cookies: {
+      Auth: "auth",
+      CurrentApp: "currentapp",
     },
   }))
 }
@@ -121,7 +117,7 @@ describe("Current app middleware", () => {
     async function checkExpected(setCookie) {
       config.setUser()
       await config.executeMiddleware()
-      const cookieFn = require("@budibase/auth").utils.setCookie
+      let { setCookie: cookieFn } = require("@budibase/backend-core/utils")
       if (setCookie) {
         expect(cookieFn).toHaveBeenCalled()
       } else {
@@ -140,32 +136,30 @@ describe("Current app middleware", () => {
 
     it("should perform correct when no cookie exists", async () => {
       mockReset()
-      jest.mock("@budibase/auth", () => ({
-        utils: {
-          getAppId: () => {
-            return "app_test"
-          },
-          setCookie: jest.fn(),
-          getCookie: jest.fn(),
+      jest.mock("@budibase/backend-core/utils", () => ({
+        getAppId: () => {
+          return "app_test"
         },
-        constants: {
-          Cookies: {},
-        },
+        setCookie: jest.fn(),
+        getCookie: jest.fn(),
+      }))
+      jest.mock("@budibase/backend-core/constants", () => ({
+        Cookies: {},
       }))
       await checkExpected(true)
     })
 
     it("lastly check what occurs when cookie doesn't need updated", async () => {
       mockReset()
-      jest.mock("@budibase/auth", () => ({
-        utils: {
-          getAppId: () => {
-            return "app_test"
-          },
-          setCookie: jest.fn(),
-          getCookie: () => ({appId: "app_test", roleId: "PUBLIC"}),
+      jest.mock("@budibase/backend-core/utils", () => ({
+        getAppId: () => {
+          return "app_test"
         },
-        constants: { Cookies: {} },
+        setCookie: jest.fn(),
+        getCookie: () => ({appId: "app_test", roleId: "PUBLIC"}),
+      }))
+      jest.mock("@budibase/backend-core/constants", () => ({
+        Cookies: {},
       }))
       await checkExpected(false)
     })
