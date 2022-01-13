@@ -58,7 +58,10 @@ class QueryRunner {
 
     // transform as required
     if (transformer) {
-      const runner = new ScriptRunner(transformer, { data: rows })
+      const runner = new ScriptRunner(transformer, {
+        data: rows,
+        params: parameters,
+      })
       rows = runner.execute()
     }
 

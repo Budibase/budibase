@@ -51,30 +51,24 @@ describe("Rest Importer", () => {
     await init(data)
     const info = await restImporter.getInfo()
     expect(info.name).toBe(assertions[key].name)
-    expect(info.url).toBe(assertions[key].url)
   }
 
   it("gets info", async () => {
     const assertions = {
       "oapi2CrudJson" : {
         name: "CRUD",
-        url: "http://example.com"
       },
       "oapi2CrudYaml" : {
         name: "CRUD",
-        url: "http://example.com"
       },
       "oapi2PetstoreJson" : {
         name: "Swagger Petstore",
-        url: "https://petstore.swagger.io/v2"
       },
       "oapi2PetstoreYaml" :{
         name: "Swagger Petstore",
-        url: "https://petstore.swagger.io/v2"
       },
       "curl": {
         name: "example.com",
-        url: "http://example.com"
       }
     }
     await runTest(testGetInfo, assertions)

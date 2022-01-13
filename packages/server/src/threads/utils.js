@@ -1,8 +1,8 @@
 const env = require("../environment")
 const CouchDB = require("../db")
-const { init } = require("@budibase/auth")
-const redis = require("@budibase/auth/redis")
-const { SEPARATOR } = require("@budibase/auth/db")
+const { init } = require("@budibase/backend-core")
+const redis = require("@budibase/backend-core/redis")
+const { SEPARATOR } = require("@budibase/backend-core/db")
 
 const VARIABLE_TTL_SECONDS = 3600
 let client
@@ -38,10 +38,11 @@ exports.checkCacheForDynamicVariable = async (queryId, variable) => {
 }
 
 exports.invalidateDynamicVariables = async cachedVars => {
+  const cache = await getClient()
   let promises = []
   for (let variable of cachedVars) {
     promises.push(
-      client.delete(makeVariableKey(variable.queryId, variable.name))
+      cache.delete(makeVariableKey(variable.queryId, variable.name))
     )
   }
   await Promise.all(promises)

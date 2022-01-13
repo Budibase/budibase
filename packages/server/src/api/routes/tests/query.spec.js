@@ -4,7 +4,7 @@ jest.mock("node-fetch")
 
 // Mock isProdAppID to we can later mock the implementation and pretend we are
 // using prod app IDs
-const authDb = require("@budibase/auth/db")
+const authDb = require("@budibase/backend-core/db")
 const { isProdAppID } = authDb
 const mockIsProdAppID = jest.fn(isProdAppID)
 authDb.isProdAppID = mockIsProdAppID
@@ -229,52 +229,14 @@ describe("/queries", () => {
     })
   })
 
-  describe("test variables", () => {
-    async function restDatasource(cfg) {
-      return await config.createDatasource({
-        datasource: {
-          ...basicDatasource().datasource,
-          source: "REST",
-          config: cfg || {},
-        },
-      })
-    }
-
-    async function dynamicVariableDatasource() {
-      const datasource = await restDatasource()
-      const basedOnQuery = await config.createQuery({
-        ...basicQuery(datasource._id),
-        fields: {
-          path: "www.google.com",
-        },
-      })
-      await config.updateDatasource({
-        ...datasource,
-        config: {
-          dynamicVariables: [
-            { queryId: basedOnQuery._id, name: "variable3", value: "{{ data.0.[value] }}" }
-          ]
-        }
-      })
-      return { datasource, query: basedOnQuery }
-    }
+  describe("variables", () => {
 
     async function preview(datasource, fields) {
-      return await request
-        .post(`/api/queries/preview`)
-        .send({
-          datasourceId: datasource._id,
-          parameters: {},
-          fields,
-          queryVerb: "read",
-        })
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+      return config.previewQuery(request, config, datasource, fields)
     }
 
     it("should work with static variables", async () => {
-      const datasource = await restDatasource({
+      const datasource = await config.restDatasource({
         staticVariables: {
           variable: "google",
           variable2: "1",
@@ -290,7 +252,7 @@ describe("/queries", () => {
     })
 
     it("should work with dynamic variables", async () => {
-      const { datasource } = await dynamicVariableDatasource()
+      const { datasource } = await config.dynamicVariableDatasource()
       const res = await preview(datasource, {
         path: "www.google.com",
         queryString: "test={{ variable3 }}",
@@ -300,7 +262,7 @@ describe("/queries", () => {
     })
 
     it("check that it automatically retries on fail with cached dynamics", async () => {
-      const { datasource, query: base } = await dynamicVariableDatasource()
+      const { datasource, query: base } = await config.dynamicVariableDatasource()
       // preview once to cache
       await preview(datasource, { path: "www.google.com", queryString: "test={{ variable3 }}" })
       // check its in cache
@@ -312,6 +274,25 @@ describe("/queries", () => {
       })
       expect(res.body.schemaFields).toEqual(["fails", "url", "opts"])
       expect(res.body.rows[0].fails).toEqual(1)
+    })
+
+    it("deletes variables when linked query is deleted", async () => {
+      const { datasource, query: base } = await config.dynamicVariableDatasource()
+      // preview once to cache
+      await preview(datasource, { path: "www.google.com", queryString: "test={{ variable3 }}" })
+      // check its in cache
+      let contents = await checkCacheForDynamicVariable(base._id, "variable3")
+      expect(contents.rows.length).toEqual(1)
+
+      // delete the query
+      await request
+        .delete(`/api/queries/${base._id}/${base._rev}`)
+        .set(config.defaultHeaders())
+        .expect(200)
+
+      // check variables no longer in cache
+      contents = await checkCacheForDynamicVariable(base._id, "variable3")
+      expect(contents).toBe(null)
     })
   })
 })
