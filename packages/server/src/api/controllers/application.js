@@ -19,7 +19,10 @@ const {
   DocumentTypes,
   AppStatus,
 } = require("../../db/utils")
-const { BUILTIN_ROLE_IDS, AccessController } = require("@budibase/auth/roles")
+const {
+  BUILTIN_ROLE_IDS,
+  AccessController,
+} = require("@budibase/backend-core/roles")
 const { BASE_LAYOUTS } = require("../../constants/layouts")
 const { cloneDeep } = require("lodash/fp")
 const { processObject } = require("@budibase/string-templates")
@@ -28,7 +31,7 @@ const {
   isDevAppID,
   getDeployedAppID,
   Replication,
-} = require("@budibase/auth/db")
+} = require("@budibase/backend-core/db")
 const { USERS_TABLE_SCHEMA } = require("../../constants")
 const {
   getDeployedApps,
@@ -41,9 +44,9 @@ const {
   backupClientLibrary,
   revertClientLibrary,
 } = require("../../utilities/fileSystem/clientLibrary")
-const { getTenantId, isMultiTenant } = require("@budibase/auth/tenancy")
+const { getTenantId, isMultiTenant } = require("@budibase/backend-core/tenancy")
 const { syncGlobalUsers } = require("./user")
-const { app: appCache } = require("@budibase/auth/cache")
+const { app: appCache } = require("@budibase/backend-core/cache")
 const { cleanupAutomations } = require("../../automations/utils")
 
 const URL_REGEX_SLASH = /\/|\\/g

@@ -1,7 +1,7 @@
 const CouchDB = require("../../../db")
-const { StaticDatabases } = require("@budibase/auth/db")
-const { getTenantId } = require("@budibase/auth/tenancy")
-const { deleteTenant } = require("@budibase/auth/deprovision")
+const { StaticDatabases } = require("@budibase/backend-core/db")
+const { getTenantId } = require("@budibase/backend-core/tenancy")
+const { deleteTenant } = require("@budibase/backend-core/deprovision")
 
 exports.exists = async ctx => {
   const tenantId = ctx.request.params

@@ -17,7 +17,7 @@
     queries as queriesStore,
   } from "stores/backend"
   import { datasources, integrations } from "stores/backend"
-  import ParameterBuilder from "components/integration/QueryParameterBuilder.svelte"
+  import BindingBuilder from "components/integration/QueryBindingBuilder.svelte"
   import IntegrationQueryEditor from "components/integration/index.svelte"
   import { makePropSafe as safe } from "@budibase/string-templates"
 
@@ -48,9 +48,7 @@
     return [...acc, ...viewsArr]
   }, [])
   $: queries = $queriesStore.list
-    .filter(
-      query => showAllQueries || query.queryVerb === "read" || query.readable
-    )
+    .filter(q => showAllQueries || q.queryVerb === "read" || q.readable)
     .map(query => ({
       label: query.name,
       name: query.name,
@@ -104,6 +102,22 @@
         value: `{{ literal ${runtimeBinding} }}`,
       }
     })
+  $: jsonArrays = bindings
+    .filter(x => x.fieldSchema?.type === "jsonarray")
+    .map(binding => {
+      const { providerId, readableBinding, runtimeBinding, tableId } = binding
+      const { name, type, prefixKeys } = binding.fieldSchema
+      return {
+        providerId,
+        label: readableBinding,
+        fieldName: name,
+        fieldType: type,
+        tableId,
+        prefixKeys,
+        type: "jsonarray",
+        value: `{{ literal ${runtimeBinding} }}`,
+      }
+    })
 
   const handleSelected = selected => {
     dispatch("change", selected)
@@ -148,15 +162,15 @@
   />
   {#if value?.type === "query"}
     <i class="ri-settings-5-line" on:click={openQueryParamsDrawer} />
-    <Drawer title={"Query Parameters"} bind:this={drawer}>
+    <Drawer title={"Query Bindings"} bind:this={drawer}>
       <Button slot="buttons" cta on:click={saveQueryParams}>Save</Button>
       <DrawerContent slot="body">
-        <Layout noPadding>
+        <Layout noPadding gap="XS">
           {#if getQueryParams(value).length > 0}
-            <ParameterBuilder
+            <BindingBuilder
               bind:customParams={tmpQueryParams}
-              parameters={getQueryParams(value)}
-              {bindings}
+              bindings={getQueryParams(value)}
+              bind:bindableOptions={bindings}
             />
           {/if}
           <IntegrationQueryEditor
@@ -226,6 +240,17 @@
       </div>
       <ul>
         {#each fields as field}
+          <li on:click={() => handleSelected(field)}>{field.label}</li>
+        {/each}
+      </ul>
+    {/if}
+    {#if jsonArrays?.length}
+      <Divider size="S" />
+      <div class="title">
+        <Heading size="XS">JSON Arrays</Heading>
+      </div>
+      <ul>
+        {#each jsonArrays as field}
           <li on:click={() => handleSelected(field)}>{field.label}</li>
         {/each}
       </ul>

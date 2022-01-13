@@ -9,7 +9,7 @@ const {
   StaticDatabases,
   isDevAppID,
   isProdAppID,
-} = require("@budibase/auth/db")
+} = require("@budibase/backend-core/db")
 
 const UNICODE_MAX = "\ufff0"
 
@@ -40,6 +40,7 @@ const DocumentTypes = {
   DEPLOYMENTS: "deployments",
   METADATA: "metadata",
   MEM_VIEW: "view",
+  USER_FLAG: "flag",
 }
 
 const ViewNames = {
@@ -337,6 +338,14 @@ exports.getQueryParams = (datasourceId = null, otherProps = {}) => {
     `${datasourceId}${SEPARATOR}`,
     otherProps
   )
+}
+
+/**
+ * Generates a new flag document ID.
+ * @returns {string} The ID of the flag document that was generated.
+ */
+exports.generateUserFlagID = userId => {
+  return `${DocumentTypes.USER_FLAG}${SEPARATOR}${userId}`
 }
 
 exports.generateMetadataID = (type, entityId) => {

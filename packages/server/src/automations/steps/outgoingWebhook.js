@@ -13,12 +13,11 @@ const RequestType = {
 const BODY_REQUESTS = [RequestType.POST, RequestType.PUT, RequestType.PATCH]
 
 /**
- * Note, there is some functionality in this that is not currently exposed as it
- * is complex and maybe better to be opinionated here.
- * GET/DELETE requests cannot handle body elements so they will not be sent if configured.
+ * NOTE: this functionality is deprecated - it no longer should be used.
  */
 
 exports.definition = {
+  deprecated: true,
   name: "Outgoing webhook",
   tagline: "Send a {{inputs.requestMethod}} request",
   icon: "Send",

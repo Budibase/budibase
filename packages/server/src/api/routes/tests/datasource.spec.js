@@ -4,6 +4,7 @@ let setup = require("./utilities")
 let { basicDatasource } = setup.structures
 let { checkBuilderEndpoint } = require("./utilities/TestFunctions")
 const pg = require("pg")
+const { checkCacheForDynamicVariable } = require("../../../threads/utils")
 
 describe("/datasources", () => {
   let request = setup.getRequest()
@@ -28,6 +29,50 @@ describe("/datasources", () => {
 
       expect(res.body.datasource.name).toEqual("Test")
       expect(res.body.errors).toBeUndefined()
+    })
+  })
+
+  describe("update", () => {
+    it("should update an existing datasource", async () => {
+      datasource.name = "Updated Test"
+      const res = await request
+        .put(`/api/datasources/${datasource._id}`)
+        .send(datasource)
+        .set(config.defaultHeaders())
+        .expect('Content-Type', /json/)
+        .expect(200)
+
+      expect(res.body.datasource.name).toEqual("Updated Test")
+      expect(res.body.errors).toBeUndefined()
+    })
+
+    describe("dynamic variables", () => {
+      async function preview(datasource, fields) {
+        return config.previewQuery(request, config, datasource, fields)
+      }
+
+      it("should invalidate changed or removed variables", async () => {
+        const { datasource, query } = await config.dynamicVariableDatasource()
+        // preview once to cache variables
+        await preview(datasource, { path: "www.test.com", queryString: "test={{ variable3 }}" })
+        // check variables in cache
+        let contents = await checkCacheForDynamicVariable(query._id, "variable3")
+        expect(contents.rows.length).toEqual(1)
+        
+        // update the datasource to remove the variables
+        datasource.config.dynamicVariables = []
+        const res = await request
+          .put(`/api/datasources/${datasource._id}`)
+          .send(datasource)
+          .set(config.defaultHeaders())
+          .expect('Content-Type', /json/)
+          .expect(200)
+        expect(res.body.errors).toBeUndefined()
+
+        // check variables no longer in cache
+        contents = await checkCacheForDynamicVariable(query._id, "variable3")
+        expect(contents).toBe(null)
+      })
     })
   })
 
