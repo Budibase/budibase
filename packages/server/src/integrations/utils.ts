@@ -1,6 +1,5 @@
 import { SourceNames, SqlQuery } from "../definitions/datasource"
 import { Datasource, Table } from "../definitions/common"
-import { SourceNames } from "../definitions/datasource"
 import { DocumentTypes, SEPARATOR } from "../db/utils"
 import { FieldTypes, BuildSchemaErrors, InvalidColumns } from "../constants"
 
