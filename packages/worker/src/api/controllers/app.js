@@ -2,7 +2,7 @@ const {
   getAllApps,
   getDeployedAppID,
   isProdAppID,
-} = require("@budibase/auth/db")
+} = require("@budibase/backend-core/db")
 const CouchDB = require("../../db")
 
 const URL_REGEX_SLASH = /\/|\\/g

@@ -80,6 +80,17 @@ module DynamoModule {
           },
         },
       },
+      describe: {
+        type: QueryTypes.FIELDS,
+        customisable: true,
+        readable: true,
+        fields: {
+          table: {
+            type: DatasourceFieldTypes.STRING,
+            required: true,
+          },
+        },
+      },
       get: {
         type: QueryTypes.FIELDS,
         customisable: true,
@@ -178,6 +189,13 @@ module DynamoModule {
         return response.Items
       }
       return response
+    }
+
+    async describe(query: { table: string }) {
+      const params = {
+        TableName: query.table,
+      }
+      return new AWS.DynamoDB().describeTable(params).promise()
     }
 
     async get(query: { table: string; json: object }) {

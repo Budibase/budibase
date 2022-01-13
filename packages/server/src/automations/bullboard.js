@@ -6,7 +6,7 @@ const Queue = env.isTest()
   ? require("../utilities/queue/inMemoryQueue")
   : require("bull")
 const { JobQueues } = require("../constants")
-const { utils } = require("@budibase/auth/redis")
+const { utils } = require("@budibase/backend-core/redis")
 const { opts, redisProtocolUrl } = utils.getRedisOptions()
 
 const CLEANUP_PERIOD_MS = 60 * 1000

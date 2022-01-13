@@ -30,6 +30,8 @@
   import {
     RestBodyTypes as bodyTypes,
     SchemaTypeOptions,
+    PaginationLocations,
+    PaginationTypes,
   } from "constants/backend"
   import JSONPreview from "components/integration/JSONPreview.svelte"
   import AccessLevelSelect from "components/integration/AccessLevelSelect.svelte"
@@ -232,8 +234,12 @@
     const datasourceUrl = datasource?.config.url
     const qs = query?.fields.queryString
     breakQs = restUtils.breakQueryString(qs)
-    if (datasourceUrl && !query.fields.path?.startsWith(datasourceUrl)) {
-      const path = query.fields.path
+    const path = query.fields.path
+    if (
+      datasourceUrl &&
+      !path?.startsWith("http") &&
+      !path?.startsWith("{{") // don't substitute the datasource url when query starts with a variable e.g. the upgrade path
+    ) {
       query.fields.path = `${datasource.config.url}/${path ? path : ""}`
     }
     url = buildUrl(query.fields.path, breakQs)
@@ -264,6 +270,9 @@
       } else {
         query.fields.bodyType = RawRestBodyTypes.NONE
       }
+    }
+    if (query && !query.fields.pagination) {
+      query.fields.pagination = {}
     }
     dynamicVariables = getDynamicVariables(datasource, query._id)
   })
@@ -306,7 +315,7 @@
           </div>
           <Button cta disabled={!url} on:click={runQuery}>Send</Button>
         </div>
-        <Tabs selected="Bindings" quiet noPadding noHorizPadding>
+        <Tabs selected="Bindings" quiet noPadding noHorizPadding onTop>
           <Tab title="Bindings">
             <KeyValueBuilder
               bind:object={bindings}
@@ -338,6 +347,42 @@
               getOptionValue={option => option.value}
             />
             <RestBodyInput bind:bodyType={query.fields.bodyType} bind:query />
+          </Tab>
+          <Tab title="Pagination">
+            <div class="pagination">
+              <Select
+                label="Pagination type"
+                bind:value={query.fields.pagination.type}
+                options={PaginationTypes}
+                placeholder="None"
+              />
+              {#if query.fields.pagination.type}
+                <Select
+                  label="Pagination parameters location"
+                  bind:value={query.fields.pagination.location}
+                  options={PaginationLocations}
+                  placeholer="Choose where to send pagination parameters"
+                />
+                <Input
+                  label={query.fields.pagination.type === "page"
+                    ? "Page number parameter name "
+                    : "Request cursor parameter name"}
+                  bind:value={query.fields.pagination.pageParam}
+                />
+                <Input
+                  label={query.fields.pagination.type === "page"
+                    ? "Page size parameter name"
+                    : "Request limit parameter name"}
+                  bind:value={query.fields.pagination.sizeParam}
+                />
+                {#if query.fields.pagination.type === "cursor"}
+                  <Input
+                    label="Response body parameter name for cursor"
+                    bind:value={query.fields.pagination.responseParam}
+                  />
+                {/if}
+              {/if}
+            </div>
           </Tab>
           <Tab title="Transformer">
             <Layout noPadding>
@@ -450,7 +495,7 @@
                 <Layout noPadding gap="S">
                   <Body size="S">
                     Create dynamic variables based on response body or headers
-                    from other queries.
+                    from this query.
                   </Body>
                   <KeyValueBuilder
                     bind:object={dynamicVariables}
@@ -559,5 +604,10 @@
   }
   .auth-select {
     width: 200px;
+  }
+  .pagination {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-m);
   }
 </style>

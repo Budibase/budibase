@@ -35,7 +35,6 @@ describe("Curl Import", () => {
   it("returns import info", async () => {
     await init("get")
     const info = await curl.getInfo()
-    expect(info.url).toBe("http://example.com")
     expect(info.name).toBe("example.com")
   })
   
@@ -67,8 +66,8 @@ describe("Curl Import", () => {
     }
 
     it("populates path", async () => {
-        await testPath("get", "")
-        await testPath("path", "paths/abc")
+        await testPath("get", "http://example.com/")
+        await testPath("path", "http://example.com/paths/abc")
     })
 
     const testHeaders = async (file, headers) => {

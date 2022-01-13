@@ -41,7 +41,6 @@ describe("OpenAPI2 Import", () => {
   const testImportInfo = async (file, extension) => {
     await init(file, extension)
     const info = await openapi2.getInfo()
-    expect(info.url).toBe("https://petstore.swagger.io/v2")
     expect(info.name).toBe("Swagger Petstore")
   }
 
@@ -92,12 +91,12 @@ describe("OpenAPI2 Import", () => {
 
     it("populates path", async () => {
       const assertions = {
-        "createEntity" : "entities",
-        "getEntities" : "entities",
-        "getEntity" : "entities/{{entityId}}",
-        "updateEntity" : "entities/{{entityId}}",
-        "patchEntity" : "entities/{{entityId}}",
-        "deleteEntity" : "entities/{{entityId}}"
+        "createEntity" : "http://example.com/entities",
+        "getEntities" : "http://example.com/entities",
+        "getEntity" : "http://example.com/entities/{{entityId}}",
+        "updateEntity" : "http://example.com/entities/{{entityId}}",
+        "patchEntity" : "http://example.com/entities/{{entityId}}",
+        "deleteEntity" : "http://example.com/entities/{{entityId}}"
       }
       await runTests("crud", testPath, assertions)
     })

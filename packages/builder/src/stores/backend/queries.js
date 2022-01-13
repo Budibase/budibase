@@ -134,7 +134,7 @@ export function createQueriesStore() {
         list.map(q => q.name)
       )
 
-      actions.save(datasourceId, newQuery)
+      return actions.save(datasourceId, newQuery)
     },
   }
 
