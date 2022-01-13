@@ -12,6 +12,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Fail if branch is not master
+        if: github.ref != 'refs/heads/master' 
+        run: | 
+          echo "Ref is not master, you must run this job from master."
+          exit 1
+
       - uses: actions/checkout@v2
 
       - name: Pull values.yaml from budibase-infra
