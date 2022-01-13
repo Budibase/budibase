@@ -17,6 +17,8 @@ const { clientLibraryPath } = require("../../../utilities")
 const { upload } = require("../../../utilities/fileSystem")
 const { attachmentsRelativeURL } = require("../../../utilities")
 const { DocumentTypes } = require("../../../db/utils")
+const AWS = require("aws-sdk")
+const AWS_REGION = env.AWS_REGION ? env.AWS_REGION : "eu-west-1"
 
 async function prepareUpload({ s3Key, bucket, metadata, file }) {
   const response = await upload({
@@ -103,4 +105,40 @@ exports.serveClientLibrary = async function (ctx) {
   return send(ctx, "budibase-client.js", {
     root: join(NODE_MODULES_PATH, "@budibase", "client", "dist"),
   })
+}
+
+exports.getSignedUploadURL = async function (ctx) {
+  // Ensure datasource is valid
+  const { datasourceId } = ctx.params
+  const database = new CouchDB(ctx.appId)
+  const datasource = await database.get(datasourceId)
+  if (!datasource) {
+    ctx.throw(400, "The specified datasource could not be found")
+    return
+  }
+
+  // Determine type of datasource and generate signed URL
+  let signedUrl
+  if (datasource.source === "S3") {
+    const { bucket, key } = ctx.request.body || {}
+    if (!bucket || !key) {
+      ctx.throw(400, "datasourceId, bucket and key must be specified")
+      return
+    }
+    try {
+      const s3 = new AWS.S3({
+        region: AWS_REGION,
+        accessKeyId: datasource?.config?.accessKeyId,
+        secretAccessKey: datasource?.config?.secretAccessKey,
+        apiVersion: "2006-03-01",
+        signatureVersion: "v4",
+      })
+      const params = { Bucket: bucket, Key: key }
+      signedUrl = s3.getSignedUrl("putObject", params)
+    } catch (error) {
+      ctx.throw(400, error)
+    }
+  }
+
+  ctx.body = { signedUrl }
 }

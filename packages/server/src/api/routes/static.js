@@ -9,6 +9,7 @@ const {
 } = require("@budibase/backend-core/permissions")
 const env = require("../../environment")
 const { paramResource } = require("../../middleware/resourceId")
+const datasourceController = require("../controllers/datasource")
 
 const router = Router()
 
@@ -46,5 +47,10 @@ router
   )
   // TODO: this likely needs to be secured in some way
   .get("/:appId/:path*", controller.serveApp)
+  .post(
+    "/api/attachments/:datasourceId/url",
+    authorized(PermissionTypes.TABLE, PermissionLevels.READ),
+    controller.getSignedUploadURL
+  )
 
 module.exports = router

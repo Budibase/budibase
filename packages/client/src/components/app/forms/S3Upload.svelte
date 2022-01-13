@@ -1,8 +1,7 @@
 <script>
   import Field from "./Field.svelte"
-  import { CoreDropzone } from "@budibase/bbui"
+  import { CoreDropzone, ProgressCircle } from "@budibase/bbui"
   import { getContext, onMount, onDestroy } from "svelte"
-  import { getSignedS3URL } from "../../../api/index.js"
 
   export let datasourceId
   export let bucket
@@ -17,12 +16,13 @@
 
   const { API, notificationStore, uploadStore } = getContext("sdk")
   const component = getContext("component")
-  const formContext = getContext("form")
 
   // 5GB cap per item sent via S3 REST API
   const MaxFileSize = 1000000000 * 5
 
-  let file
+  // Actual file data to upload
+  let data
+  let loading = false
 
   const handleFileTooLarge = () => {
     notificationStore.actions.warning(
@@ -30,20 +30,48 @@
     )
   }
 
+  // Process the file input and return a serializable structure expected by
+  // the dropzone component to display the file
   const processFiles = async fileList => {
-    // let data = new FormData()
-    // for (let i = 0; i < fileList.length; i++) {
-    //   data.append("file", fileList[i])
-    // }
-    // return await API.uploadAttachment(data, formContext?.dataSource?.tableId)
-    file = fileList[0]
-    console.log("processing", fileList)
-    return []
+    return await new Promise(resolve => {
+      if (!fileList?.length) {
+        return []
+      }
+
+      // Don't read in non-image files
+      data = fileList[0]
+      if (!data.type?.startsWith("image")) {
+        resolve([
+          {
+            name: data.name,
+            type: data.type,
+          },
+        ])
+      }
+
+      // Read image files and display as preview
+      const reader = new FileReader()
+      reader.addEventListener(
+        "load",
+        () => {
+          resolve([
+            {
+              url: reader.result,
+              name: data.name,
+              type: data.type,
+            },
+          ])
+        },
+        false
+      )
+      reader.readAsDataURL(fileList[0])
+    })
   }
 
   const upload = async () => {
-    const url = await API.getSignedS3URL(datasourceId, bucket, key)
-    await API.uploadToS3(url, file)
+    loading = true
+    await API.externalUpload(datasourceId, bucket, key, data)
+    loading = false
   }
 
   onMount(() => {
@@ -68,7 +96,7 @@
   {#if fieldState}
     <CoreDropzone
       value={fieldState.value}
-      disabled={fieldState.disabled}
+      disabled={loading || fieldState.disabled}
       error={fieldState.error}
       on:change={e => {
         fieldApi.setValue(e.detail)
@@ -79,4 +107,26 @@
       fileSizeLimit={MaxFileSize}
     />
   {/if}
+  {#if loading}
+    <div class="overlay" />
+    <div class="loading">
+      <ProgressCircle />
+    </div>
+  {/if}
 </Field>
+
+<style>
+  .overlay,
+  .loading {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    width: 100%;
+    display: grid;
+    place-items: center;
+  }
+  .overlay {
+    background-color: var(--spectrum-global-color-gray-50);
+    opacity: 0.5;
+  }
+</style>

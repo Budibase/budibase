@@ -93,10 +93,5 @@ router
     authorized(BUILDER),
     datasourceController.destroy
   )
-  .post(
-    "/api/datasources/s3/getSignedS3URL",
-    authorized(PermissionTypes.TABLE, PermissionLevels.READ),
-    datasourceController.getSignedS3URL
-  )
 
 module.exports = router

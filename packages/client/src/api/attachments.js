@@ -11,7 +11,25 @@ export const uploadAttachment = async (data, tableId = "") => {
   })
 }
 
-export const uploadToS3 = async (signedUrl, data) => {
+/**
+ * Generates a signed URL to upload a file to an external datasource.
+ */
+export const getSignedDatasourceURL = async (datasourceId, bucket, key) => {
+  if (!datasourceId) {
+    return null
+  }
+  const res = await API.post({
+    url: `/api/attachments/${datasourceId}/url`,
+    body: { bucket, key },
+  })
+  return res?.signedUrl
+}
+
+/**
+ * Uploads a file to an external datasource.
+ */
+export const externalUpload = async (datasourceId, bucket, key, data) => {
+  const signedUrl = await getSignedDatasourceURL(datasourceId, bucket, key)
   await API.put({
     url: signedUrl,
     body: data,
