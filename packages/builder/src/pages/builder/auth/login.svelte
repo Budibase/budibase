@@ -10,7 +10,7 @@
     notifications,
     Link,
   } from "@budibase/bbui"
-  import { goto, params } from "@roxi/routify"
+  import { goto } from "@roxi/routify"
   import { auth, organisation, oidc, admin } from "stores/portal"
   import GoogleButton from "./_components/GoogleButton.svelte"
   import OIDCButton from "./_components/OIDCButton.svelte"
@@ -35,12 +35,8 @@
       if ($auth?.user?.forceResetPassword) {
         $goto("./reset")
       } else {
-        if ($params["?returnUrl"]) {
-          window.location = decodeURIComponent($params["?returnUrl"])
-        } else {
-          notifications.success("Logged in successfully")
-          $goto("../portal")
-        }
+        notifications.success("Logged in successfully")
+        $goto("../portal")
       }
     } catch (err) {
       console.error(err)
