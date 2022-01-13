@@ -7,7 +7,7 @@
 
 const CouchDB = require("../src/db")
 const { DocumentTypes } = require("../src/db/utils")
-const { getAllDbs } = require("@budibase/auth/db")
+const { getAllDbs } = require("@budibase/backend-core/db")
 
 const appName = process.argv[2].toLowerCase()
 const remoteUrl = process.argv[3]

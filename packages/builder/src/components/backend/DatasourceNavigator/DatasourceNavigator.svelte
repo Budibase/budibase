@@ -137,7 +137,7 @@
             selected={$queries.selected === query._id}
             on:click={() => onClickQuery(query)}
           >
-            <EditQueryPopover {query} />
+            <EditQueryPopover {query} {onClickQuery} />
           </NavItem>
         {/each}
       {/if}

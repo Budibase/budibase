@@ -10,6 +10,8 @@
   export let noHorizPadding = false
   export let quiet = false
   export let emphasized = false
+  // overlay content from the tab bar onto tabs e.g. for a dropdown
+  export let onTop = false
 
   let thisSelected = undefined
 
@@ -78,6 +80,7 @@
     'spectrum-Tabs--quiet'} spectrum-Tabs--{vertical
     ? 'vertical'
     : 'horizontal'}"
+  class:onTop
 >
   <slot />
   {#if $tab.info}
@@ -98,7 +101,9 @@
   .quiet {
     border-bottom: none !important;
   }
-
+  .onTop {
+    z-index: 20;
+  }
   .spectrum-Tabs {
     padding-left: var(--spacing-xl);
     padding-right: var(--spacing-xl);

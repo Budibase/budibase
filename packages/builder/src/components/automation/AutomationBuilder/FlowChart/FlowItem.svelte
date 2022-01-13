@@ -9,6 +9,7 @@
     Modal,
     Button,
     StatusLight,
+    ActionButton,
   } from "@budibase/bbui"
   import AutomationBlockSetup from "../../SetupPanel/AutomationBlockSetup.svelte"
   import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
@@ -27,7 +28,7 @@
   let blockComplete
 
   $: testResult = $automationStore.selectedAutomation.testResults?.steps.filter(
-    step => step.stepId === block.stepId
+    step => (block.id ? step.id === block.id : step.stepId === block.stepId)
   )
   $: isTrigger = block.type === "TRIGGER"
 
@@ -119,19 +120,13 @@
     <div class="blockSection">
       <Layout noPadding gap="S">
         <div class="splitHeader">
-          <div
-            on:click|stopPropagation={() => {
-              setupToggled = !setupToggled
-            }}
-            class="center-items"
+          <ActionButton
+            on:click={() => (setupToggled = !setupToggled)}
+            quiet
+            icon={setupToggled ? "ChevronDown" : "ChevronRight"}
           >
-            {#if setupToggled}
-              <Icon size="M" name="ChevronDown" />
-            {:else}
-              <Icon size="M" name="ChevronRight" />
-            {/if}
             <Detail size="S">Setup</Detail>
-          </div>
+          </ActionButton>
           {#if !isTrigger}
             <div on:click={() => deleteStep()}>
               <Icon name="DeleteOutline" />
@@ -187,6 +182,7 @@
   .splitHeader {
     display: flex;
     justify-content: space-between;
+    align-items: center;
   }
   .iconAlign {
     padding: 0 0 0 var(--spacing-m);

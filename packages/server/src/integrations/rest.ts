@@ -208,7 +208,7 @@ module RestModule {
 
       const main = `${path}?${queryString}`
       let complete = main
-      if (this.config.url && !main.startsWith(this.config.url)) {
+      if (this.config.url && !main.startsWith("http")) {
         complete = !this.config.url ? main : `${this.config.url}/${main}`
       }
       if (!complete.startsWith("http")) {

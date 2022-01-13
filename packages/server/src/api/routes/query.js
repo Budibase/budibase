@@ -5,7 +5,7 @@ const {
   PermissionLevels,
   PermissionTypes,
   BUILDER,
-} = require("@budibase/auth/permissions")
+} = require("@budibase/backend-core/permissions")
 const {
   bodyResource,
   bodySubResource,

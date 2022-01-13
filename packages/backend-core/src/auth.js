@@ -1,7 +1,6 @@
 const passport = require("koa-passport")
 const LocalStrategy = require("passport-local").Strategy
 const JwtStrategy = require("passport-jwt").Strategy
-const { StaticDatabases } = require("./db/utils")
 const { getGlobalDB } = require("./tenancy")
 const {
   jwt,
@@ -14,8 +13,6 @@ const {
   appTenancy,
   authError,
 } = require("./middleware")
-const { setDB } = require("./db")
-const userCache = require("./cache/user")
 
 // Strategies
 passport.use(new LocalStrategy(local.options, local.authenticate))
@@ -36,36 +33,13 @@ passport.deserializeUser(async (user, done) => {
 })
 
 module.exports = {
-  init(pouch) {
-    setDB(pouch)
-  },
-  db: require("./db/utils"),
-  redis: {
-    Client: require("./redis"),
-    utils: require("./redis/utils"),
-  },
-  objectStore: {
-    ...require("./objectStore"),
-    ...require("./objectStore/utils"),
-  },
-  utils: {
-    ...require("./utils"),
-    ...require("./hashing"),
-  },
-  auth: {
-    buildAuthMiddleware: authenticated,
-    passport,
-    google,
-    oidc,
-    jwt: require("jsonwebtoken"),
-    buildTenancyMiddleware: tenancy,
-    buildAppTenancyMiddleware: appTenancy,
-    auditLog,
-    authError,
-  },
-  cache: {
-    user: userCache,
-  },
-  StaticDatabases,
-  constants: require("./constants"),
+  buildAuthMiddleware: authenticated,
+  passport,
+  google,
+  oidc,
+  jwt: require("jsonwebtoken"),
+  buildTenancyMiddleware: tenancy,
+  buildAppTenancyMiddleware: appTenancy,
+  auditLog,
+  authError,
 }

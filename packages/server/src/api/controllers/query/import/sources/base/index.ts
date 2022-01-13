@@ -1,7 +1,7 @@
 import { Query, QueryParameter } from "../../../../../../definitions/datasource"
+import { URL } from "url"
 
 export interface ImportInfo {
-  url: string
   name: string
 }
 
@@ -23,6 +23,7 @@ export abstract class ImportSource {
     name: string,
     method: string,
     path: string,
+    url: URL,
     queryString: string,
     headers: object = {},
     parameters: QueryParameter[] = [],
@@ -33,6 +34,7 @@ export abstract class ImportSource {
     const transformer = "return data"
     const schema = {}
     path = this.processPath(path)
+    path = `${url.origin}/${path}`
     queryString = this.processQuery(queryString)
     const requestBody = JSON.stringify(body, null, 2)
 

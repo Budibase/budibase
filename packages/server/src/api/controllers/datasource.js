@@ -10,6 +10,7 @@ const {
 const { BuildSchemaErrors, InvalidColumns } = require("../../constants")
 const { integrations } = require("../../integrations")
 const { getDatasourceAndQuery } = require("./row/utils")
+const { invalidateDynamicVariables } = require("../../threads/utils")
 
 exports.fetch = async function (ctx) {
   const database = new CouchDB(ctx.appId)
@@ -57,10 +58,43 @@ exports.buildSchemaFromDb = async function (ctx) {
   ctx.body = response
 }
 
+/**
+ * Check for variables that have been updated or removed and invalidate them.
+ */
+const invalidateVariables = async (existingDatasource, updatedDatasource) => {
+  const existingVariables = existingDatasource.config.dynamicVariables
+  const updatedVariables = updatedDatasource.config.dynamicVariables
+  const toInvalidate = []
+
+  if (!existingVariables) {
+    return
+  }
+
+  if (!updatedVariables) {
+    // invalidate all
+    toInvalidate.push(...existingVariables)
+  } else {
+    // invaldate changed / removed
+    existingVariables.forEach(existing => {
+      const unchanged = updatedVariables.find(
+        updated =>
+          existing.name === updated.name &&
+          existing.queryId === updated.queryId &&
+          existing.value === updated.value
+      )
+      if (!unchanged) {
+        toInvalidate.push(existing)
+      }
+    })
+  }
+  await invalidateDynamicVariables(toInvalidate)
+}
+
 exports.update = async function (ctx) {
   const db = new CouchDB(ctx.appId)
   const datasourceId = ctx.params.datasourceId
   let datasource = await db.get(datasourceId)
+  await invalidateVariables(datasource, ctx.request.body)
   datasource = { ...datasource, ...ctx.request.body }
 
   const response = await db.put(datasource)
