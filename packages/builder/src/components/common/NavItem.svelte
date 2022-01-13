@@ -133,5 +133,6 @@
   .iconText {
     margin-top: 1px;
     font-size: var(--spectrum-global-dimension-font-size-50);
+    flex: 0 0 34px;
   }
 </style>
