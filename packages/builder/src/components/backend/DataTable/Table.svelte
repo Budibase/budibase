@@ -39,7 +39,7 @@
   $: editRowComponent = isUsersTable ? CreateEditUser : CreateEditRow
   $: {
     UNSORTABLE_TYPES.forEach(type => {
-      Object.values(schema).forEach(col => {
+      Object.values(schema || {}).forEach(col => {
         if (col.type === type) {
           col.sortable = false
         }
@@ -113,16 +113,16 @@
 
 <Layout noPadding gap="S">
   <div>
-    <div class="table-title">
-      {#if title}
+    {#if title}
+      <div class="table-title">
         <Heading size="S">{title}</Heading>
-      {/if}
-      {#if loading}
-        <div transition:fade|local>
-          <Spinner size="10" />
-        </div>
-      {/if}
-    </div>
+        {#if loading}
+          <div transition:fade|local>
+            <Spinner size="10" />
+          </div>
+        {/if}
+      </div>
+    {/if}
     <div class="popovers">
       <slot />
       {#if !isUsersTable && selectedRows.length > 0}

@@ -6,7 +6,8 @@ const { queue } = require("./bullboard")
 const newid = require("../db/newid")
 const { updateEntityMetadata } = require("../utilities")
 const { MetadataTypes } = require("../constants")
-const { getDeployedAppID } = require("@budibase/auth/db")
+const { getDeployedAppID } = require("@budibase/backend-core/db")
+const { cloneDeep } = require("lodash/fp")
 
 const WH_STEP_ID = definitions.WEBHOOK.stepId
 const CRON_STEP_ID = definitions.CRON.stepId
@@ -40,6 +41,16 @@ exports.updateTestHistory = async (appId, automation, history) => {
       return metadata
     }
   )
+}
+
+exports.removeDeprecated = definitions => {
+  const base = cloneDeep(definitions)
+  for (let key of Object.keys(base)) {
+    if (base[key].deprecated) {
+      delete base[key]
+    }
+  }
+  return base
 }
 
 // end the repetition and the job itself

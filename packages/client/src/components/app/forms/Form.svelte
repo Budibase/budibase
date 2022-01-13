@@ -10,7 +10,7 @@
   export let actionType = "Create"
 
   const context = getContext("context")
-  const { API } = getContext("sdk")
+  const { API, fetchDatasourceSchema } = getContext("sdk")
 
   let loaded = false
   let schema
@@ -61,7 +61,7 @@
 
     // For all other cases, just grab the normal schema
     else {
-      const dataSourceSchema = await API.fetchDatasourceSchema(dataSource)
+      const dataSourceSchema = await fetchDatasourceSchema(dataSource)
       schema = dataSourceSchema || {}
     }
 

@@ -2,13 +2,14 @@ const {
   ObjectStore,
   makeSureBucketExists,
   upload,
+  deleteFiles,
   streamUpload,
   retrieve,
   retrieveToTmp,
   deleteFolder,
   uploadDirectory,
   downloadTarball,
-} = require("@budibase/auth").objectStore
+} = require("@budibase/backend-core/objectStore")
 
 /***********************************
  *              NOTE               *
@@ -28,3 +29,4 @@ exports.retrieveToTmp = retrieveToTmp
 exports.deleteFolder = deleteFolder
 exports.uploadDirectory = uploadDirectory
 exports.downloadTarball = downloadTarball
+exports.deleteFiles = deleteFiles

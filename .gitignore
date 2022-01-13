@@ -93,3 +93,5 @@ hosting/.generated-envoy.dev.yaml
 # Sublime text
 *.sublime-project
 *.sublime-workspace
+
+bin/

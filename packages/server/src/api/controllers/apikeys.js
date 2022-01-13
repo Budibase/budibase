@@ -1,5 +1,5 @@
-const { StaticDatabases } = require("@budibase/auth/db")
-const { getGlobalDB } = require("@budibase/auth/tenancy")
+const { StaticDatabases } = require("@budibase/backend-core/db")
+const { getGlobalDB } = require("@budibase/backend-core/tenancy")
 
 const KEYS_DOC = StaticDatabases.GLOBAL.docs.apiKeys
 

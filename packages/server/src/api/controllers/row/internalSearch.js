@@ -1,6 +1,6 @@
 const { SearchIndexes } = require("../../../db/utils")
 const fetch = require("node-fetch")
-const { getCouchUrl } = require("@budibase/auth/db")
+const { getCouchUrl } = require("@budibase/backend-core/db")
 
 /**
  * Class to build lucene query URLs.
@@ -191,7 +191,8 @@ class QueryBuilder {
     }
     if (this.query.equal) {
       build(this.query.equal, (key, value) => {
-        if (!value) {
+        // 0 evaluates to false, which means we would return all rows if we don't check it
+        if (!value && value !== 0) {
           return null
         }
         return `${key}:${builder.preprocess(value, allPreProcessingOpts)}`

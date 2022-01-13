@@ -3,6 +3,14 @@ const { cloneDeep } = require("lodash/fp")
 const { FieldTypes, AutoFieldSubTypes } = require("../../constants")
 const { attachmentsRelativeURL } = require("../index")
 const { processFormulas } = require("./utils")
+const { deleteFiles } = require("../../utilities/fileSystem/utilities")
+const { ObjectStoreBuckets } = require("../../constants")
+const {
+  isProdAppID,
+  getDeployedAppID,
+  dbExists,
+} = require("@budibase/backend-core/db")
+const CouchDB = require("../../db")
 
 const BASE_AUTO_ID = 1
 
@@ -81,6 +89,35 @@ const TYPE_TRANSFORM_MAP = {
   [FieldTypes.AUTO]: {
     parse: () => undefined,
   },
+  [FieldTypes.JSON]: {
+    parse: input => {
+      try {
+        if (input === "") {
+          return undefined
+        }
+        return JSON.parse(input)
+      } catch (err) {
+        return input
+      }
+    },
+  },
+}
+
+/**
+ * Given the old state of the row and the new one after an update, this will
+ * find the keys that have been removed in the updated row.
+ */
+function getRemovedAttachmentKeys(oldRow, row, attachmentKey) {
+  if (!oldRow[attachmentKey]) {
+    return []
+  }
+  const oldKeys = oldRow[attachmentKey].map(attachment => attachment.key)
+  // no attachments in new row, all removed
+  if (!row[attachmentKey]) {
+    return oldKeys
+  }
+  const newKeys = row[attachmentKey].map(attachment => attachment.key)
+  return oldKeys.filter(key => newKeys.indexOf(key) === -1)
 }
 
 /**
@@ -259,4 +296,46 @@ exports.outputProcessing = async (
     )
   }
   return wasArray ? enriched : enriched[0]
+}
+
+/**
+ * Clean up any attachments that were attached to a row.
+ * @param {string} appId The ID of the app from which a row is being deleted.
+ * @param {object} table The table from which a row is being removed.
+ * @param {any} row optional - the row being removed.
+ * @param {any} rows optional - if multiple rows being deleted can do this in bulk.
+ * @param {any} oldRow optional - if updating a row this will determine the difference.
+ * @return {Promise<void>} When all attachments have been removed this will return.
+ */
+exports.cleanupAttachments = async (appId, table, { row, rows, oldRow }) => {
+  if (!isProdAppID(appId)) {
+    const prodAppId = getDeployedAppID(appId)
+    // if prod exists, then don't allow deleting
+    const exists = await dbExists(CouchDB, prodAppId)
+    if (exists) {
+      return
+    }
+  }
+  let files = []
+  function addFiles(row, key) {
+    if (row[key]) {
+      files = files.concat(row[key].map(attachment => attachment.key))
+    }
+  }
+  for (let [key, schema] of Object.entries(table.schema)) {
+    if (schema.type !== FieldTypes.ATTACHMENT) {
+      continue
+    }
+    // if updating, need to manage the differences
+    if (oldRow && row) {
+      files = files.concat(getRemovedAttachmentKeys(oldRow, row, key))
+    } else if (row) {
+      addFiles(row, key)
+    } else if (rows) {
+      rows.forEach(row => addFiles(row, key))
+    }
+  }
+  if (files.length > 0) {
+    return deleteFiles(ObjectStoreBuckets.APPS, files)
+  }
 }

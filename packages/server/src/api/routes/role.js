@@ -7,7 +7,7 @@ const {
   BUILTIN_PERMISSION_IDS,
   BUILDER,
   PermissionLevels,
-} = require("@budibase/auth/permissions")
+} = require("@budibase/backend-core/permissions")
 
 const router = Router()
 

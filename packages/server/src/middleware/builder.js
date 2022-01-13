@@ -7,8 +7,8 @@ const {
 } = require("../utilities/redis")
 const CouchDB = require("../db")
 const { DocumentTypes } = require("../db/utils")
-const { PermissionTypes } = require("@budibase/auth/permissions")
-const { app: appCache } = require("@budibase/auth/cache")
+const { PermissionTypes } = require("@budibase/backend-core/permissions")
+const { app: appCache } = require("@budibase/backend-core/cache")
 
 const DEBOUNCE_TIME_SEC = 30
 

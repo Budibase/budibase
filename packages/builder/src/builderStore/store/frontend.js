@@ -26,7 +26,7 @@ import {
   findAllMatchingComponents,
   findComponent,
   getComponentSettings,
-} from "../storeUtils"
+} from "../componentUtils"
 import { uuid } from "../uuid"
 import { removeBindings } from "../dataBinding"
 
@@ -329,12 +329,12 @@ export const getFrontendStore = () => {
     },
     components: {
       select: component => {
-        if (!component) {
+        const asset = get(currentAsset)
+        if (!asset || !component) {
           return
         }
 
         // If this is the root component, select the asset instead
-        const asset = get(currentAsset)
         const parent = findComponentParent(asset.props, component._id)
         if (parent == null) {
           const state = get(store)
@@ -537,7 +537,7 @@ export const getFrontendStore = () => {
 
           // immediately need to remove bindings, currently these aren't valid when pasted
           if (!cut && !preserveBindings) {
-            state.componentToPaste = removeBindings(state.componentToPaste)
+            state.componentToPaste = removeBindings(state.componentToPaste, "")
           }
 
           // Clone the component to paste

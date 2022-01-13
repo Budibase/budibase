@@ -3,7 +3,7 @@ const { generateWebhookID, getWebhookParams } = require("../../db/utils")
 const toJsonSchema = require("to-json-schema")
 const validate = require("jsonschema").validate
 const triggers = require("../../automations/triggers")
-const { getDeployedAppID } = require("@budibase/auth/db")
+const { getDeployedAppID } = require("@budibase/backend-core/db")
 
 const AUTOMATION_DESCRIPTION = "Generated from Webhook Schema"
 
@@ -65,6 +65,10 @@ exports.buildSchema = async ctx => {
     let automation = await db.get(webhook.action.target)
     const autoOutputs = automation.definition.trigger.schema.outputs
     let properties = webhook.bodySchema.properties
+    // reset webhook outputs
+    autoOutputs.properties = {
+      body: autoOutputs.properties.body,
+    }
     for (let prop of Object.keys(properties)) {
       autoOutputs.properties[prop] = {
         type: properties[prop].type,
