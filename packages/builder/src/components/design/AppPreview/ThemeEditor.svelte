@@ -52,7 +52,14 @@
   }
 
   const resetTheme = () => {
-    store.actions.customTheme.save(null)
+    const theme = get(store).theme
+    store.actions.customTheme.save({
+      ...defaultTheme,
+      navBackground:
+        theme === "spectrum--light"
+          ? "var(--spectrum-global-color-gray-50)"
+          : "var(--spectrum-global-color-gray-100)",
+    })
   }
 </script>
 
