@@ -5,6 +5,9 @@ const { integrations } = require("../integrations")
 const { processStringSync } = require("@budibase/string-templates")
 const CouchDB = require("../db")
 
+const IS_TRIPLE_BRACE = new RegExp(/^{{3}.*}{3}$/)
+const IS_HANDLEBARS = new RegExp(/^{{2}.*}{2}$/)
+
 class QueryRunner {
   constructor(input, flags = { noRecursiveQuery: false }) {
     this.appId = input.appId
@@ -12,6 +15,7 @@ class QueryRunner {
     this.queryVerb = input.queryVerb
     this.fields = input.fields
     this.parameters = input.parameters
+    this.pagination = input.pagination
     this.transformer = input.transformer
     this.queryId = input.queryId
     this.noRecursiveQuery = flags.noRecursiveQuery
@@ -27,7 +31,13 @@ class QueryRunner {
     let { datasource, fields, queryVerb, transformer } = this
     // pre-query, make sure datasource variables are added to parameters
     const parameters = await this.addDatasourceVariables()
-    const query = threadUtils.enrichQueryFields(fields, parameters)
+    let query = this.enrichQueryFields(fields, parameters)
+
+    // Add pagination values for REST queries
+    if (this.pagination) {
+      query.paginationValues = this.pagination
+    }
+
     const Integration = integrations[datasource.source]
     if (!Integration) {
       throw "Integration type does not exist."
@@ -37,11 +47,13 @@ class QueryRunner {
     let output = threadUtils.formatResponse(await integration[queryVerb](query))
     let rows = output,
       info = undefined,
-      extra = undefined
+      extra = undefined,
+      pagination = undefined
     if (threadUtils.hasExtraData(output)) {
       rows = output.data
       info = output.info
       extra = output.extra
+      pagination = output.pagination
     }
 
     // transform as required
@@ -83,7 +95,7 @@ class QueryRunner {
       integration.end()
     }
 
-    return { rows, keys, info, extra }
+    return { rows, keys, info, extra, pagination }
   }
 
   async runAnotherQuery(queryId, parameters) {
@@ -158,6 +170,50 @@ class QueryRunner {
       }
     }
     return parameters
+  }
+
+  enrichQueryFields(fields, parameters = {}) {
+    const enrichedQuery = {}
+
+    // enrich the fields with dynamic parameters
+    for (let key of Object.keys(fields)) {
+      if (fields[key] == null) {
+        continue
+      }
+      if (typeof fields[key] === "object") {
+        // enrich nested fields object
+        enrichedQuery[key] = this.enrichQueryFields(fields[key], parameters)
+      } else if (typeof fields[key] === "string") {
+        // enrich string value as normal
+        let value = fields[key]
+        // add triple brace to avoid escaping e.g. '=' in cookie header
+        if (IS_HANDLEBARS.test(value) && !IS_TRIPLE_BRACE.test(value)) {
+          value = `{${value}}`
+        }
+        enrichedQuery[key] = processStringSync(value, parameters, {
+          noHelpers: true,
+        })
+      } else {
+        enrichedQuery[key] = fields[key]
+      }
+    }
+    if (
+      enrichedQuery.json ||
+      enrichedQuery.customData ||
+      enrichedQuery.requestBody
+    ) {
+      try {
+        enrichedQuery.json = JSON.parse(
+          enrichedQuery.json ||
+            enrichedQuery.customData ||
+            enrichedQuery.requestBody
+        )
+      } catch (err) {
+        // no json found, ignore
+      }
+      delete enrichedQuery.customData
+    }
+    return enrichedQuery
   }
 }
 

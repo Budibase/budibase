@@ -122,12 +122,16 @@ export const luceneQuery = (docs, query) => {
 
   // Process a string match (fails if the value does not start with the string)
   const stringMatch = match("string", (docValue, testValue) => {
-    return !docValue || !docValue.startsWith(testValue)
+    return (
+      !docValue || !docValue?.toLowerCase().startsWith(testValue?.toLowerCase())
+    )
   })
 
   // Process a fuzzy match (treat the same as starts with when running locally)
   const fuzzyMatch = match("fuzzy", (docValue, testValue) => {
-    return !docValue || !docValue.startsWith(testValue)
+    return (
+      !docValue || !docValue?.toLowerCase().startsWith(testValue?.toLowerCase())
+    )
   })
 
   // Process a range match
