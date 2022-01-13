@@ -8,6 +8,7 @@ const { BaseQueryVerbs } = require("../../../constants")
 const { Thread, ThreadType } = require("../../../threads")
 const { save: saveDatasource } = require("../datasource")
 const { RestImporter } = require("./import")
+const { invalidateDynamicVariables } = require("../../../threads/utils")
 
 const Runner = new Thread(ThreadType.QUERY, { timeoutMs: 10000 })
 
@@ -139,11 +140,12 @@ async function execute(ctx, opts = { rowsOnly: false }) {
 
   // call the relevant CRUD method on the integration class
   try {
-    const { rows, extra } = await Runner.run({
+    const { rows, pagination, extra } = await Runner.run({
       appId: ctx.appId,
       datasource,
       queryVerb: query.queryVerb,
       fields: query.fields,
+      pagination: ctx.request.body.pagination,
       parameters: ctx.request.body.parameters,
       transformer: query.transformer,
       queryId: ctx.params.queryId,
@@ -151,7 +153,7 @@ async function execute(ctx, opts = { rowsOnly: false }) {
     if (opts && opts.rowsOnly) {
       ctx.body = rows
     } else {
-      ctx.body = { data: rows, ...extra }
+      ctx.body = { data: rows, pagination, ...extra }
     }
   } catch (err) {
     ctx.throw(400, err)
@@ -166,8 +168,28 @@ exports.executeV2 = async function (ctx) {
   return execute(ctx, { rowsOnly: false })
 }
 
+const removeDynamicVariables = async (db, queryId) => {
+  const query = await db.get(queryId)
+  const datasource = await db.get(query.datasourceId)
+  const dynamicVariables = datasource.config.dynamicVariables
+
+  if (dynamicVariables) {
+    // delete dynamic variables from the datasource
+    const newVariables = dynamicVariables.filter(dv => dv.queryId !== queryId)
+    datasource.config.dynamicVariables = newVariables
+    await db.put(datasource)
+
+    // invalidate the deleted variables
+    const variablesToDelete = dynamicVariables.filter(
+      dv => dv.queryId === queryId
+    )
+    await invalidateDynamicVariables(variablesToDelete)
+  }
+}
+
 exports.destroy = async function (ctx) {
   const db = new CouchDB(ctx.appId)
+  await removeDynamicVariables(db, ctx.params.queryId)
   await db.remove(ctx.params.queryId, ctx.params.revId)
   ctx.message = `Query deleted.`
   ctx.status = 200

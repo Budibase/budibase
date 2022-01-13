@@ -1,11 +1,11 @@
-const { generateTemplateID } = require("@budibase/auth/db")
+const { generateTemplateID } = require("@budibase/backend-core/db")
 const {
   TemplateMetadata,
   TemplateBindings,
   GLOBAL_OWNER,
 } = require("../../../constants")
 const { getTemplates } = require("../../../constants/templates")
-const { getGlobalDB } = require("@budibase/auth/tenancy")
+const { getGlobalDB } = require("@budibase/backend-core/tenancy")
 
 exports.save = async ctx => {
   const db = getGlobalDB()

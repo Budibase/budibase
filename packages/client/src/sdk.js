@@ -10,6 +10,7 @@ import {
 import { styleable } from "utils/styleable"
 import { linkable } from "utils/linkable"
 import { getAction } from "utils/getAction"
+import { fetchDatasourceSchema } from "utils/schema.js"
 import Provider from "components/context/Provider.svelte"
 import { ActionTypes } from "constants"
 
@@ -24,6 +25,7 @@ export default {
   styleable,
   linkable,
   getAction,
+  fetchDatasourceSchema,
   Provider,
   ActionTypes,
 }

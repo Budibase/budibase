@@ -4,7 +4,7 @@ const authorized = require("../../middleware/authorized")
 const {
   PermissionLevels,
   PermissionTypes,
-} = require("@budibase/auth/permissions")
+} = require("@budibase/backend-core/permissions")
 
 const router = Router()
 

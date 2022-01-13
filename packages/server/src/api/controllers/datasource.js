@@ -10,9 +10,7 @@ const {
 const { BuildSchemaErrors, InvalidColumns } = require("../../constants")
 const { integrations } = require("../../integrations")
 const { getDatasourceAndQuery } = require("./row/utils")
-const AWS = require("aws-sdk")
-const env = require("../../environment")
-const AWS_REGION = env.AWS_REGION ? env.AWS_REGION : "eu-west-1"
+const { invalidateDynamicVariables } = require("../../threads/utils")
 
 exports.fetch = async function (ctx) {
   const database = new CouchDB(ctx.appId)
@@ -60,10 +58,43 @@ exports.buildSchemaFromDb = async function (ctx) {
   ctx.body = response
 }
 
+/**
+ * Check for variables that have been updated or removed and invalidate them.
+ */
+const invalidateVariables = async (existingDatasource, updatedDatasource) => {
+  const existingVariables = existingDatasource.config.dynamicVariables
+  const updatedVariables = updatedDatasource.config.dynamicVariables
+  const toInvalidate = []
+
+  if (!existingVariables) {
+    return
+  }
+
+  if (!updatedVariables) {
+    // invalidate all
+    toInvalidate.push(...existingVariables)
+  } else {
+    // invaldate changed / removed
+    existingVariables.forEach(existing => {
+      const unchanged = updatedVariables.find(
+        updated =>
+          existing.name === updated.name &&
+          existing.queryId === updated.queryId &&
+          existing.value === updated.value
+      )
+      if (!unchanged) {
+        toInvalidate.push(existing)
+      }
+    })
+  }
+  await invalidateDynamicVariables(toInvalidate)
+}
+
 exports.update = async function (ctx) {
   const db = new CouchDB(ctx.appId)
   const datasourceId = ctx.params.datasourceId
   let datasource = await db.get(datasourceId)
+  await invalidateVariables(datasource, ctx.request.body)
   datasource = { ...datasource, ...ctx.request.body }
 
   const response = await db.put(datasource)
@@ -153,35 +184,6 @@ exports.query = async function (ctx) {
   } catch (err) {
     ctx.throw(400, err)
   }
-}
-
-exports.getSignedS3URL = async function (ctx) {
-  const { datasourceId, bucket, key } = ctx.request.body || {}
-  if (!datasourceId || !bucket || !key) {
-    ctx.throw(400, "datasourceId, bucket and key must be specified")
-    return
-  }
-  const database = new CouchDB(ctx.appId)
-  const datasource = await database.get(datasourceId)
-  if (!datasource) {
-    ctx.throw(400, "The specified datasource could not be found")
-    return
-  }
-  let signedUrl
-  try {
-    const s3 = new AWS.S3({
-      region: AWS_REGION,
-      accessKeyId: datasource?.config?.accessKeyId,
-      secretAccessKey: datasource?.config?.secretAccessKey,
-      apiVersion: "2006-03-01",
-      signatureVersion: "v4",
-    })
-    const params = { Bucket: bucket, Key: key }
-    signedUrl = s3.getSignedUrl("putObject", params)
-  } catch (error) {
-    ctx.throw(400, error)
-  }
-  ctx.body = { signedUrl }
 }
 
 function getErrorTables(errors, errorType) {

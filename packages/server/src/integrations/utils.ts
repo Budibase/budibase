@@ -1,12 +1,8 @@
 import { SqlQuery } from "../definitions/datasource"
 import { Datasource, Table } from "../definitions/common"
 import { SourceNames } from "../definitions/datasource"
-const { DocumentTypes, SEPARATOR } = require("../db/utils")
-const {
-  FieldTypes,
-  BuildSchemaErrors,
-  InvalidColumns,
-} = require("../constants")
+import { DocumentTypes, SEPARATOR } from "../db/utils"
+import { FieldTypes, BuildSchemaErrors, InvalidColumns } from "../constants"
 
 const DOUBLE_SEPARATOR = `${SEPARATOR}${SEPARATOR}`
 const ROW_ID_REGEX = /^\[.*]$/g
@@ -158,7 +154,12 @@ function copyExistingPropsOver(
       if (!existingTableSchema.hasOwnProperty(key)) {
         continue
       }
-      if (existingTableSchema[key].type === "link") {
+      if (
+        existingTableSchema[key].type === FieldTypes.LINK ||
+        existingTableSchema[key].type === FieldTypes.OPTIONS ||
+        ((!table.schema[key] || table.schema[key].type === FieldTypes.NUMBER) &&
+          existingTableSchema[key].type === FieldTypes.BOOLEAN)
+      ) {
         table.schema[key] = existingTableSchema[key]
       }
     }
