@@ -274,6 +274,9 @@
   onMount(async () => {
     await apps.load()
     await templates.load()
+    if ($templates?.length === 0) {
+      notifications.error("There was a problem loading quick start templates.")
+    }
     // if the portal is loaded from an external URL with a template param
     const initInfo = await auth.getInitInfo()
     if (initInfo?.init_template) {
