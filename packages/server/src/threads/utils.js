@@ -3,13 +3,9 @@ const CouchDB = require("../db")
 const { init } = require("@budibase/backend-core")
 const redis = require("@budibase/backend-core/redis")
 const { SEPARATOR } = require("@budibase/backend-core/db")
-const { processStringSync } = require("@budibase/string-templates")
 
 const VARIABLE_TTL_SECONDS = 3600
 let client
-
-const IS_TRIPLE_BRACE = new RegExp(/^{{3}.*}{3}$/)
-const IS_HANDLEBARS = new RegExp(/^{{2}.*}{2}$/)
 
 async function getClient() {
   if (!client) {
@@ -79,50 +75,4 @@ exports.hasExtraData = response => {
     response.data != null &&
     response.info != null
   )
-}
-
-exports.enrichQueryFields = (fields, parameters = {}) => {
-  const enrichedQuery = {}
-
-  // enrich the fields with dynamic parameters
-  for (let key of Object.keys(fields)) {
-    if (fields[key] == null) {
-      continue
-    }
-    if (typeof fields[key] === "object") {
-      // enrich nested fields object
-      enrichedQuery[key] = this.enrichQueryFields(fields[key], parameters)
-    } else if (typeof fields[key] === "string") {
-      // enrich string value as normal
-      let value = fields[key]
-      // add triple brace to avoid escaping e.g. '=' in cookie header
-      if (IS_HANDLEBARS.test(value) && !IS_TRIPLE_BRACE.test(value)) {
-        value = `{${value}}`
-      }
-      enrichedQuery[key] = processStringSync(value, parameters, {
-        noHelpers: true,
-      })
-    } else {
-      enrichedQuery[key] = fields[key]
-    }
-  }
-
-  if (
-    enrichedQuery.json ||
-    enrichedQuery.customData ||
-    enrichedQuery.requestBody
-  ) {
-    try {
-      enrichedQuery.json = JSON.parse(
-        enrichedQuery.json ||
-          enrichedQuery.customData ||
-          enrichedQuery.requestBody
-      )
-    } catch (err) {
-      // no json found, ignore
-    }
-    delete enrichedQuery.customData
-  }
-
-  return enrichedQuery
 }

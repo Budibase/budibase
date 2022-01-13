@@ -4,9 +4,11 @@ import {
   QueryTypes,
   RestConfig,
   RestQueryFields as RestQuery,
+  PaginationConfig,
   AuthType,
   BasicAuthConfig,
   BearerAuthConfig,
+  PaginationValues,
 } from "../definitions/datasource"
 import { IntegrationBase } from "./base/IntegrationBase"
 
@@ -40,6 +42,9 @@ const coreFields = {
     type: DatasourceFieldTypes.STRING,
     enum: Object.values(BodyTypes),
   },
+  pagination: {
+    type: DatasourceFieldTypes.OBJECT
+  }
 }
 
 module RestModule {
@@ -115,7 +120,7 @@ module RestModule {
       this.config = config
     }
 
-    async parseResponse(response: any) {
+    async parseResponse(response: any, pagination: PaginationConfig | null) {
       let data, raw, headers
       const contentType = response.headers.get("content-type") || ""
       try {
@@ -154,6 +159,13 @@ module RestModule {
       for (let [key, value] of Object.entries(headers)) {
         headers[key] = Array.isArray(value) ? value[0] : value
       }
+
+      // Check if a pagination cursor exists in the response
+      let nextCursor = null
+      if (pagination?.responseParam) {
+        nextCursor = data?.[pagination.responseParam]
+      }
+
       return {
         data,
         info: {
@@ -165,10 +177,35 @@ module RestModule {
           raw,
           headers,
         },
+        pagination: {
+          cursor: nextCursor
+        }
       }
     }
 
-    getUrl(path: string, queryString: string): string {
+    getUrl(path: string, queryString: string, pagination: PaginationConfig | null, paginationValues: PaginationValues | null): string {
+      // Add pagination params to query string if required
+      if (pagination?.location === "query" && paginationValues) {
+        const { pageParam, sizeParam } = pagination
+        const params = new URLSearchParams()
+
+        // Append page number or cursor param if configured
+        if (pageParam && paginationValues.page != null) {
+          params.append(pageParam, paginationValues.page)
+        }
+
+        // Append page size param if configured
+        if (sizeParam && paginationValues.limit != null) {
+          params.append(sizeParam, paginationValues.limit)
+        }
+
+        // Prepend query string with pagination params
+        let paginationString = params.toString()
+        if (paginationString) {
+          queryString = `${paginationString}&${queryString}`
+        }
+      }
+
       const main = `${path}?${queryString}`
       let complete = main
       if (this.config.url && !main.startsWith("http")) {
@@ -180,20 +217,36 @@ module RestModule {
       return complete
     }
 
-    addBody(bodyType: string, body: string | any, input: any) {
-      let error, object, string
-      try {
-        string = typeof body !== "string" ? JSON.stringify(body) : body
-        object = typeof body === "object" ? body : JSON.parse(body)
-      } catch (err) {
-        error = err
-      }
+    addBody(bodyType: string, body: string | any, input: any, pagination: PaginationConfig | null, paginationValues: PaginationValues | null) {
       if (!input.headers) {
         input.headers = {}
       }
+      if (bodyType === BodyTypes.NONE) {
+        return input
+      }
+      let error, object: any = {}, string = ""
+      try {
+        if (body) {
+          string = typeof body !== "string" ? JSON.stringify(body) : body
+          object = typeof body === "object" ? body : JSON.parse(body)
+        }
+      } catch (err) {
+        error = err
+      }
+
+      // Util to add pagination values to a certain body type
+      const addPaginationToBody = (insertFn: Function) => {
+        if (pagination?.location === "body") {
+          if (pagination?.pageParam && paginationValues?.page != null) {
+            insertFn(pagination.pageParam, paginationValues.page)
+          }
+          if (pagination?.sizeParam && paginationValues?.limit != null) {
+            insertFn(pagination.sizeParam, paginationValues.limit)
+          }
+        }
+      }
+
       switch (bodyType) {
-        case BodyTypes.NONE:
-          break
         case BodyTypes.TEXT:
           // content type defaults to plaintext
           input.body = string
@@ -203,6 +256,9 @@ module RestModule {
           for (let [key, value] of Object.entries(object)) {
             params.append(key, value)
           }
+          addPaginationToBody((key: string, value: any) => {
+            params.append(key, value)
+          })
           input.body = params
           break
         case BodyTypes.FORM_DATA:
@@ -210,6 +266,9 @@ module RestModule {
           for (let [key, value] of Object.entries(object)) {
             form.append(key, value)
           }
+          addPaginationToBody((key: string, value: any) => {
+            form.append(key, value)
+          })
           input.body = form
           break
         case BodyTypes.XML:
@@ -219,13 +278,15 @@ module RestModule {
           input.body = string
           input.headers["Content-Type"] = "application/xml"
           break
-        default:
         case BodyTypes.JSON:
           // if JSON error, throw it
           if (error) {
             throw "Invalid JSON for request body"
           }
-          input.body = string
+          addPaginationToBody((key: string, value: any) => {
+            object[key] = value
+          })
+          input.body = JSON.stringify(object)
           input.headers["Content-Type"] = "application/json"
           break
       }
@@ -271,6 +332,8 @@ module RestModule {
         bodyType,
         requestBody,
         authConfigId,
+        pagination,
+        paginationValues
       } = query
       const authHeaders = this.getAuthHeaders(authConfigId)
 
@@ -289,14 +352,12 @@ module RestModule {
       }
 
       let input: any = { method, headers: this.headers }
-      if (requestBody) {
-        input = this.addBody(bodyType, requestBody, input)
-      }
+      input = this.addBody(bodyType, requestBody, input, pagination, paginationValues)
 
       this.startTimeMs = performance.now()
-      const url = this.getUrl(path, queryString)
+      const url = this.getUrl(path, queryString, pagination, paginationValues)
       const response = await fetch(url, input)
-      return await this.parseResponse(response)
+      return await this.parseResponse(response, pagination)
     }
 
     async create(opts: RestQuery) {

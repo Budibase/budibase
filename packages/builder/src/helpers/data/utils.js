@@ -84,7 +84,7 @@ export function customQueryIconText(datasource, query) {
     case "read":
       return "GET"
     case "delete":
-      return "DELETE"
+      return "DEL"
     case "patch":
       return "PATCH"
   }
