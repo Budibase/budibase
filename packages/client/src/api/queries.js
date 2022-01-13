@@ -4,7 +4,7 @@ import API from "./api"
 /**
  * Executes a query against an external data connector.
  */
-export const executeQuery = async ({ queryId, parameters }) => {
+export const executeQuery = async ({ queryId, pagination, parameters }) => {
   const query = await fetchQueryDefinition(queryId)
   if (query?.datasourceId == null) {
     notificationStore.actions.error("That query couldn't be found")
@@ -14,6 +14,7 @@ export const executeQuery = async ({ queryId, parameters }) => {
     url: `/api/v2/queries/${queryId}`,
     body: {
       parameters,
+      pagination,
     },
   })
   if (res.error) {

@@ -31,7 +31,10 @@
   export let menuItems
   export let showMenu = false
 
-  let fields = Object.entries(object).map(([name, value]) => ({ name, value }))
+  let fields = Object.entries(object || {}).map(([name, value]) => ({
+    name,
+    value,
+  }))
   let fieldActivity = buildFieldActivity(activity)
 
   $: object = fields.reduce(
