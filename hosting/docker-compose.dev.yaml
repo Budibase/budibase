@@ -26,7 +26,7 @@ services:
     restart: always
     image: nginx:latest
     volumes:
-      - ./.generated-nginx.dev.conf:/etc/nginx/nginx.conf:ro
+      - ./.generated-nginx.dev.conf:/etc/nginx/nginx.conf
     ports:
       - "${MAIN_PORT}:10000"
     depends_on:
@@ -36,6 +36,7 @@ services:
       - "host.docker.internal:host-gateway"
 
   couchdb-service:
+    # platform: linux/amd64
     container_name: budi-couchdb-dev
     restart: always
     image: ibmcom/couchdb3
