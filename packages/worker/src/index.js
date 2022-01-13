@@ -1,12 +1,12 @@
 // need to load environment first
 const env = require("./environment")
 const CouchDB = require("./db")
-require("@budibase/auth").init(CouchDB)
+require("@budibase/backend-core").init(CouchDB)
 const Koa = require("koa")
 const destroyable = require("server-destroy")
 const koaBody = require("koa-body")
 const koaSession = require("koa-session")
-const { passport } = require("@budibase/auth").auth
+const { passport } = require("@budibase/backend-core/auth")
 const logger = require("koa-pino-logger")
 const http = require("http")
 const api = require("./api")

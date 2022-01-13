@@ -21,7 +21,7 @@
   export let panel = ClientBindingPanel
   export let allowBindings = true
 
-  const BannedTypes = ["link", "attachment", "formula"]
+  const BannedTypes = ["link", "attachment", "formula", "json", "jsonarray"]
 
   $: fieldOptions = (schemaFields ?? [])
     .filter(field => !BannedTypes.includes(field.type))

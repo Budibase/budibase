@@ -1,7 +1,7 @@
 const PouchDB = require("pouchdb")
 const allDbs = require("pouchdb-all-dbs")
 const env = require("../environment")
-const { getCouchUrl } = require("@budibase/auth/db")
+const { getCouchUrl } = require("@budibase/backend-core/db")
 
 // level option is purely for testing (development)
 const COUCH_DB_URL = getCouchUrl() || "http://localhost:10000/db/"

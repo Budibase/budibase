@@ -21,15 +21,7 @@
     }
     visible = false
   }
-
-  function handleKey(e) {
-    if (visible && e.key === "Escape") {
-      hide()
-    }
-  }
 </script>
-
-<svelte:window on:keydown={handleKey} />
 
 {#if visible}
   <Portal>

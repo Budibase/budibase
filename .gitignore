@@ -93,3 +93,5 @@ hosting/.generated-nginx.dev.conf
 # Sublime text
 *.sublime-project
 *.sublime-workspace
+
+bin/
