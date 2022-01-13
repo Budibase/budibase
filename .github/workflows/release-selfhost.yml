@@ -9,6 +9,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+
       - uses: actions/setup-node@v1
         with:
           node-version: 14.x
@@ -42,6 +43,7 @@ jobs:
         uses: azure/setup-helm@v1
         id: helm-install
 
+<<<<<<< HEAD
       - name: Build CLI executables
         run: |
           pushd packages/cli
@@ -68,6 +70,22 @@ jobs:
       #     github_token: ${{ secrets.GITHUB_TOKEN }}
       #     publish_dir: ./public
       #     full_commit_message: "Helm Release: ${{ env.RELEASE_VERSION }}"
+=======
+      - name: Build and release helm chart
+        run: | 
+          git config user.name "Budibase Helm Bot"
+          git config user.email "<>"
+          git pull
+          helm package charts/budibase
+          git checkout gh-pages
+          mv *.tgz docs
+          helm repo index docs
+          git add -A
+          git commit -m "Helm Release: ${{ env.RELEASE_VERSION }}"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+>>>>>>> 157877a60444104d17efedf937bc7d48fc3006c5
 
       - name: Perform Github Release
         uses: softprops/action-gh-release@v1

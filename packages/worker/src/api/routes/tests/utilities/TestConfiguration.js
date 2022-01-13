@@ -1,10 +1,10 @@
 const env = require("../../../../environment")
 const controllers = require("./controllers")
 const supertest = require("supertest")
-const { jwt } = require("@budibase/backend-core").auth
-const { Cookies } = require("@budibase/backend-core").constants
+const { jwt } = require("@budibase/backend-core/auth")
+const { Cookies } = require("@budibase/backend-core/constants")
 const { Configs, LOGO_URL } = require("../../../../constants")
-const { getGlobalUserByEmail } = require("@budibase/backend-core").utils
+const { getGlobalUserByEmail } = require("@budibase/backend-core/utils")
 const { createASession } = require("@budibase/backend-core/sessions")
 const { newid } = require("@budibase/backend-core/src/hashing")
 const { TENANT_ID } = require("./structures")
