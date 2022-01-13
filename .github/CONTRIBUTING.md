@@ -79,6 +79,8 @@ Component libraries are collections of components as well as the definition of t
 ### Getting Started For Contributors
 #### 1.  Prerequisites
 
+NodeJS Version `14.x.x`
+
 *yarn -* `npm install -g yarn`
 
 *jest* - `npm install -g jest`
@@ -177,36 +179,7 @@ To enable this mode, use:
 yarn mode:account
 ```
 ### CI
-
-#### PR Job
-
-After your pr is submitted a github action (can be found at `.github/workflows/budibase_ci.yml`) will run to perform some checks against the changes such as linting, build and test. 
-
-The job will run when changes are pushed to or targetted at `master` and `develop`
-#### Release Develop
-
-To test changes before a release, a prerelease action (can be found at `.github/workflows/release-develop.yml`) will run to build and release develop versions of npm packages and docker images. On each subsequent commit to develop a new alpha version of npm packages will be created and released. 
-
-For example:
-
-- `feature1` -> `develop` = `v0.9.160-alpha.1`
-- `feature2` -> `develop` = `v0.9.160-alpha.0`
-
-The job will run when changes are pushed to `develop`
-#### Release Job
-
-To release changes a release job (can be found at `.github/workflows/release.yml`) will run to create final versions of npm packages and docker images. 
-
-Following the example above:
-
-- `develop` -> `master` = `v0.9.160`
-
-The job will run when changes are pushed to `master`
-
-#### Release Self Host Job
-
-To release the self hosted version of docker images, an additional job (can be found at `.github/workflows/release-selfhost.yml`) must be ran manually. This will releaae docker images to docker hub under the tag `latest` to be picked up by self hosted installations. 
-
+ An overview of the CI pipelines can be found [here](./workflows/README.md)
 ### Troubleshooting
 
 Sometimes, things go wrong. This can be due to incompatible updates on the budibase platform. To clear down your development environment and start again follow **Step 6. Cleanup**, then proceed from **Step 3. Install and Build** in the setup guide above. You should have a fresh Budibase installation.
