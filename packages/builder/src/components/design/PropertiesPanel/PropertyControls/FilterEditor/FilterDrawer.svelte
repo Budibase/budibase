@@ -26,7 +26,7 @@
 
   function getTableFields(linkField) {
     const table = $tables.list.find(table => table._id === linkField.tableId)
-    if (!table) {
+    if (!table || !table.sql) {
       return []
     }
     const linkFields = getFields(Object.values(table.schema), {
