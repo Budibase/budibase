@@ -70,7 +70,12 @@
 
   const upload = async () => {
     loading = true
-    await API.externalUpload(datasourceId, bucket, key, data)
+    try {
+      await API.externalUpload(datasourceId, bucket, key, data)
+      notificationStore.actions.success("File uploaded successfully")
+    } catch (error) {
+      notificationStore.actions.error(`Error uploading file: ${error}`)
+    }
     loading = false
   }
 

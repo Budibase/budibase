@@ -1,4 +1,5 @@
 import API from "./api"
+import { notificationStore } from "../stores/index.js"
 
 /**
  * Uploads an attachment to the server.
@@ -22,6 +23,9 @@ export const getSignedDatasourceURL = async (datasourceId, bucket, key) => {
     url: `/api/attachments/${datasourceId}/url`,
     body: { bucket, key },
   })
+  if (res.error) {
+    throw "Could not generate signed upload URL"
+  }
   return res?.signedUrl
 }
 
@@ -30,10 +34,13 @@ export const getSignedDatasourceURL = async (datasourceId, bucket, key) => {
  */
 export const externalUpload = async (datasourceId, bucket, key, data) => {
   const signedUrl = await getSignedDatasourceURL(datasourceId, bucket, key)
-  await API.put({
+  const res = await API.put({
     url: signedUrl,
     body: data,
     json: false,
     external: true,
   })
+  if (res.error) {
+    throw "Could not upload file to signed URL"
+  }
 }
