@@ -261,7 +261,6 @@
 
       // Update field state
       const error = validator ? validator(value) : null
-      console.log("value changed to", value, "new error is", error)
       fieldInfo.update(state => {
         state.fieldState.value = value
         state.fieldState.error = error
