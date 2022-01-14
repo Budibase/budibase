@@ -14,41 +14,13 @@
   import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
   import { generate } from "shortid"
   import { getValidOperatorsForType, OperatorOptions } from "constants/lucene"
-  import { tables } from "stores/backend"
+  import { getFields } from "helpers/searchFields"
 
   export let schemaFields
   export let filters = []
   export let bindings = []
   export let panel = ClientBindingPanel
   export let allowBindings = true
-
-  const BannedTypes = ["link", "attachment", "formula", "json", "jsonarray"]
-
-  function getTableFields(linkField) {
-    const table = $tables.list.find(table => table._id === linkField.tableId)
-    if (!table || !table.sql) {
-      return []
-    }
-    const linkFields = getFields(Object.values(table.schema), {
-      allowLinks: false,
-    })
-    return linkFields.map(field => ({
-      ...field,
-      name: `${linkField.name}.${field.name}`,
-    }))
-  }
-
-  function getFields(fields, { allowLinks } = { allowLinks: true }) {
-    let fieldNames = fields.filter(field => !BannedTypes.includes(field.type))
-    if (allowLinks) {
-      const linkFields = fields.filter(field => field.type === "link")
-      for (let linkField of linkFields) {
-        // only allow one depth of SQL relationship filtering
-        fieldNames = fieldNames.concat(getTableFields(linkField))
-      }
-    }
-    return fieldNames
-  }
 
   $: enrichedSchemaFields = getFields(schemaFields || [])
   $: fieldOptions = enrichedSchemaFields.map(field => field.name) || []
