@@ -22,7 +22,7 @@ jobs:
           -H 'Accept: application/vnd.github.v3.raw' \
           -o packages/builder/cypress.env.json \
           -L https://api.github.com/repos/budibase/budibase-infra/contents/test/cypress.env.json
-          wc -l cypress.env.json
+          wc -l packages/builder/cypress.env.json
       - run: yarn test:e2e:ci
         env:
           CI: true
