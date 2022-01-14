@@ -108,13 +108,18 @@ exports.serveClientLibrary = async function (ctx) {
 }
 
 exports.getSignedUploadURL = async function (ctx) {
-  // Ensure datasource is valid
-  const { datasourceId } = ctx.params
   const database = new CouchDB(ctx.appId)
-  const datasource = await database.get(datasourceId)
-  if (!datasource) {
+
+  // Ensure datasource is valid
+  let datasource
+  try {
+    const { datasourceId } = ctx.params
+    datasource = await database.get(datasourceId)
+    if (!datasource) {
+      ctx.throw(400, "The specified datasource could not be found")
+    }
+  } catch (error) {
     ctx.throw(400, "The specified datasource could not be found")
-    return
   }
 
   // Determine type of datasource and generate signed URL
@@ -122,7 +127,7 @@ exports.getSignedUploadURL = async function (ctx) {
   if (datasource.source === "S3") {
     const { bucket, key } = ctx.request.body || {}
     if (!bucket || !key) {
-      ctx.throw(400, "datasourceId, bucket and key must be specified")
+      ctx.throw(400, "bucket and key values are required")
       return
     }
     try {

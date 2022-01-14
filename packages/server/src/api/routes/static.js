@@ -9,7 +9,6 @@ const {
 } = require("@budibase/backend-core/permissions")
 const env = require("../../environment")
 const { paramResource } = require("../../middleware/resourceId")
-const datasourceController = require("../controllers/datasource")
 
 const router = Router()
 
