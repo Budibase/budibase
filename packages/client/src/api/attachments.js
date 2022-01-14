@@ -1,5 +1,4 @@
 import API from "./api"
-import { notificationStore } from "../stores/index.js"
 
 /**
  * Uploads an attachment to the server.
@@ -40,7 +39,7 @@ export const externalUpload = async (datasourceId, bucket, key, data) => {
     json: false,
     external: true,
   })
-  if (res.error) {
+  if (res?.error) {
     throw "Could not upload file to signed URL"
   }
 }
