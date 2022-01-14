@@ -80,9 +80,9 @@ services:
 
   proxy-service:
     restart: always
-    image: envoyproxy/envoy:v1.16-latest
+    image: nginx:latest
     volumes:
-      - ./envoy.yaml:/etc/envoy/envoy.yaml
+      - ./proxy/nginx.conf:/etc/envoy/envoy.yaml
     ports:
       - "${MAIN_PORT}:10000"
     depends_on:
