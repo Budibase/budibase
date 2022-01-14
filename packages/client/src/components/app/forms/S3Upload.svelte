@@ -98,29 +98,34 @@
   bind:fieldApi
   defaultValue={[]}
 >
-  {#if fieldState}
-    <CoreDropzone
-      value={fieldState.value}
-      disabled={loading || fieldState.disabled}
-      error={fieldState.error}
-      on:change={e => {
-        fieldApi.setValue(e.detail)
-      }}
-      {processFiles}
-      {handleFileTooLarge}
-      maximum={1}
-      fileSizeLimit={MaxFileSize}
-    />
-  {/if}
-  {#if loading}
-    <div class="overlay" />
-    <div class="loading">
-      <ProgressCircle />
-    </div>
-  {/if}
+  <div class="content">
+    {#if fieldState}
+      <CoreDropzone
+        value={fieldState.value}
+        disabled={loading || fieldState.disabled}
+        error={fieldState.error}
+        on:change={e => {
+          fieldApi.setValue(e.detail)
+        }}
+        {processFiles}
+        {handleFileTooLarge}
+        maximum={1}
+        fileSizeLimit={MaxFileSize}
+      />
+    {/if}
+    {#if loading}
+      <div class="overlay" />
+      <div class="loading">
+        <ProgressCircle />
+      </div>
+    {/if}
+  </div>
 </Field>
 
 <style>
+  .content {
+    position: relative;
+  }
   .overlay,
   .loading {
     position: absolute;
