@@ -165,7 +165,6 @@ const s3UploadHandler = async action => {
     return
   }
   await uploadStore.actions.processFileUpload(componentId)
-  notificationStore.actions.success("File uploaded successfully")
 }
 
 const handlerMap = {
