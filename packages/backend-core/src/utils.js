@@ -23,6 +23,7 @@ const { getUserSessions, invalidateSessions } = require("./security/sessions")
 const { migrateIfRequired } = require("./migrations")
 const { USER_EMAIL_VIEW_CASING } = require("./migrations").MIGRATIONS
 const { GLOBAL_DB } = require("./migrations").MIGRATION_DBS
+const { isDev, isTest } = require("./environment")
 
 const APP_PREFIX = DocumentTypes.APP + SEPARATOR
 
@@ -106,6 +107,11 @@ exports.setCookie = (ctx, value, name = "builder", opts = { sign: true }) => {
     path: "/",
     httpOnly: false,
     overwrite: true,
+  }
+
+  if (!isDev() && !isTest()) {
+    config.sameSite = "none"
+    config.secure = true
   }
 
   if (environment.COOKIE_DOMAIN) {

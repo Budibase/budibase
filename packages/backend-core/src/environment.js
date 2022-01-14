@@ -6,6 +6,13 @@ function isTest() {
   )
 }
 
+function isDev() {
+  return (
+    process.env.NODE_ENV !== "production" &&
+    process.env.BUDIBASE_ENVIRONMENT !== "production"
+  )
+}
+
 module.exports = {
   JWT_SECRET: process.env.JWT_SECRET,
   COUCH_DB_URL: process.env.COUCH_DB_URL,
@@ -27,6 +34,7 @@ module.exports = {
   COOKIE_DOMAIN: process.env.COOKIE_DOMAIN,
   PLATFORM_URL: process.env.PLATFORM_URL,
   isTest,
+  isDev,
   _set(key, value) {
     process.env[key] = value
     module.exports[key] = value
