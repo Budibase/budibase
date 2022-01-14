@@ -1,9 +1,8 @@
 user                    nginx;
-error_log               /var/log/nginx/error.log warn;
+error_log               /var/log/nginx/error.log debug;
 pid                     /var/run/nginx.pid;
 worker_processes        auto;
-# worker_rlimit_nofile    33282;
-# sendfile_max_chunk 512k;
+worker_rlimit_nofile    33282;
 
 events {
   worker_connections  1024;
@@ -25,32 +24,9 @@ http {
     listen       10000 default_server;
     server_name  _;
 
-    # security headers
-    add_header X-Frame-Options SAMEORIGIN always;
-
-    # proxy headers
-    proxy_set_header   Host               $host;
-    proxy_set_header   X-Real-IP          $remote_addr;
-    proxy_set_header   X-Forwarded-Proto  $scheme;
-    proxy_set_header   X-Forwarded-For    $proxy_add_x_forwarded_for;
-
-    # budibase services
-    # set $app_service http://{{ address }}:4001;
-    # set $worker_service http://{{ address }}:4002;
-    # set $builder http://{{ address }}:3000;
-    # set $minio   http://minio-service:9000;
-    # set $couchdb   http://couchdb-service:5984;
-
-    # config options
-    client_header_timeout 60;
-    client_body_timeout   60;
-    keepalive_timeout     60;
-    gzip                  off;
-    gzip_comp_level       4;
-
-
     location = / {
-      return 301 /builder/;
+      absolute_redirect off;
+      return 301 /builder;
     }
 
     location /db/ {
@@ -75,7 +51,7 @@ http {
 
     location /app/ {
       proxy_pass      http://{{ address }}:4001;
-      rewrite ^/app/(.*)$ $1 break;
+      rewrite ^/app/(.*)$ /$1 break;
     }
 
     location /builder {
@@ -85,10 +61,23 @@ http {
 
     location /builder/ {
       proxy_pass      http://{{ address }}:3000;
+
+      proxy_http_version  1.1;
+      proxy_set_header    Connection          $connection_upgrade;
+      proxy_set_header    Upgrade             $http_upgrade;
+      proxy_set_header    Host                $host;
+      proxy_set_header    X-Real-IP           $remote_addr;
+      proxy_set_header    X-Forwarded-For     $proxy_add_x_forwarded_for;
     }
 
     location / {
       proxy_pass      http://minio-service:9000;
     }
+
+    client_header_timeout 60;
+    client_body_timeout   60;
+    keepalive_timeout     60;
+    gzip                  off;
+    gzip_comp_level       4;
   }
 }
