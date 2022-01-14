@@ -30,7 +30,7 @@ export const createUploadStore = () => {
     }
 
     const component = get(store).find(c => c.componentId === componentId)
-    await component?.callback()
+    return await component?.callback()
   }
 
   return {

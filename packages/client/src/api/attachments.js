@@ -25,14 +25,18 @@ export const getSignedDatasourceURL = async (datasourceId, bucket, key) => {
   if (res.error) {
     throw "Could not generate signed upload URL"
   }
-  return res?.signedUrl
+  return res
 }
 
 /**
  * Uploads a file to an external datasource.
  */
 export const externalUpload = async (datasourceId, bucket, key, data) => {
-  const signedUrl = await getSignedDatasourceURL(datasourceId, bucket, key)
+  const { signedUrl, publicUrl } = await getSignedDatasourceURL(
+    datasourceId,
+    bucket,
+    key
+  )
   const res = await API.put({
     url: signedUrl,
     body: data,
@@ -42,4 +46,5 @@ export const externalUpload = async (datasourceId, bucket, key, data) => {
   if (res?.error) {
     throw "Could not upload file to signed URL"
   }
+  return { publicUrl }
 }

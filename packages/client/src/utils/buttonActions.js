@@ -163,7 +163,10 @@ const s3UploadHandler = async action => {
   if (!componentId) {
     return
   }
-  await uploadStore.actions.processFileUpload(componentId)
+  const res = await uploadStore.actions.processFileUpload(componentId)
+  return {
+    publicUrl: res?.publicUrl,
+  }
 }
 
 const handlerMap = {

@@ -73,7 +73,13 @@
     },
     {
       "name": "Upload File to S3",
-      "component": "S3Upload"
+      "component": "S3Upload",
+      "context": [
+        {
+          "label": "File URL",
+          "value": "publicUrl"
+        }
+      ]
     }
   ]
 }
