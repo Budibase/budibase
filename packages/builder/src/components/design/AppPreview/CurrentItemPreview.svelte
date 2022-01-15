@@ -14,7 +14,7 @@
     notifications,
   } from "@budibase/bbui"
   import ErrorSVG from "assets/error.svg?raw"
-  import { findComponent, findComponentPath } from "builderStore/storeUtils"
+  import { findComponent, findComponentPath } from "builderStore/componentUtils"
 
   let iframe
   let layout
@@ -69,15 +69,7 @@
     previewDevice: $store.previewDevice,
     messagePassing: $store.clientFeatures.messagePassing,
   }
-
-  // Saving pages and screens to the DB causes them to have _revs.
-  // These revisions change every time a save happens and causes
-  // these reactive statements to fire, even though the actual
-  // definition hasn't changed.
-  // By deleting all _rev properties we can avoid this and increase
-  // performance.
   $: json = JSON.stringify(previewData)
-  $: strippedJson = json.replace(/"_rev":\s*"[^"]+"/g, `"_rev":""`)
 
   // Update the iframe with the builder info to render the correct preview
   const refreshContent = message => {
@@ -87,7 +79,7 @@
   }
 
   // Refresh the preview when required
-  $: refreshContent(strippedJson)
+  $: refreshContent(json)
 
   function receiveMessage(message) {
     const handlers = {
@@ -102,7 +94,7 @@
         if (!$store.clientFeatures.intelligentLoading) {
           loading = false
         }
-        refreshContent(strippedJson)
+        refreshContent(json)
       },
       [MessageTypes.ERROR]: event => {
         // Catch any app errors

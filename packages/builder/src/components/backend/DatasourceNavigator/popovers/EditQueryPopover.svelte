@@ -1,15 +1,36 @@
 <script>
+  import { goto } from "@roxi/routify"
   import { ActionMenu, MenuItem, Icon, notifications } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import { queries } from "stores/backend"
+  import { datasources, queries } from "stores/backend"
 
   export let query
+  export let onClickQuery
 
   let confirmDeleteDialog
 
   async function deleteQuery() {
+    const wasSelectedQuery = $queries.selected
+    // need to calculate this before the query is deleted
+    const navigateToDatasource = wasSelectedQuery === query._id
+
     await queries.delete(query)
+    await datasources.fetch()
+
+    if (navigateToDatasource) {
+      await datasources.select(query.datasourceId)
+      $goto(`./datasource/${query.datasourceId}`)
+    }
     notifications.success("Query deleted")
+  }
+
+  async function duplicateQuery() {
+    try {
+      const newQuery = await queries.duplicate(query)
+      onClickQuery(newQuery)
+    } catch (e) {
+      notifications.error(e.message)
+    }
   }
 </script>
 
@@ -18,6 +39,7 @@
     <Icon size="S" hoverable name="MoreSmallList" />
   </div>
   <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}>Delete</MenuItem>
+  <MenuItem icon="Duplicate" on:click={duplicateQuery}>Duplicate</MenuItem>
 </ActionMenu>
 
 <ConfirmDialog

@@ -2,7 +2,7 @@ const CouchDB = require("../../db")
 const { outputProcessing } = require("../../utilities/rowProcessor")
 const { InternalTables } = require("../../db/utils")
 const { getFullUser } = require("../../utilities/users")
-const { BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
+const { BUILTIN_ROLE_IDS } = require("@budibase/backend-core/roles")
 
 exports.fetchSelf = async ctx => {
   const appId = ctx.appId

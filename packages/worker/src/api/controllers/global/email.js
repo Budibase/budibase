@@ -1,5 +1,5 @@
 const { sendEmail } = require("../../../utilities/email")
-const { getGlobalDB } = require("@budibase/auth/tenancy")
+const { getGlobalDB } = require("@budibase/backend-core/tenancy")
 
 exports.sendEmail = async ctx => {
   let {

@@ -1,5 +1,5 @@
 const env = require("../../environment")
-const { getAllApps } = require("@budibase/auth/db")
+const { getAllApps } = require("@budibase/backend-core/db")
 const CouchDB = require("../../db")
 const {
   exportDB,
@@ -7,7 +7,10 @@ const {
   readFileSync,
 } = require("../../utilities/fileSystem")
 const { stringToReadStream } = require("../../utilities")
-const { getGlobalDBName, getGlobalDB } = require("@budibase/auth/tenancy")
+const {
+  getGlobalDBName,
+  getGlobalDB,
+} = require("@budibase/backend-core/tenancy")
 const { create } = require("./application")
 const { getDocParams, DocumentTypes, isDevAppID } = require("../../db/utils")
 

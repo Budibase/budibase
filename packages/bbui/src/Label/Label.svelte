@@ -19,6 +19,7 @@
     <div class="icon-container">
       <div
         class="icon"
+        class:icon-small={size === "M" || size === "S"}
         on:mouseover={() => (showTooltip = true)}
         on:mouseleave={() => (showTooltip = false)}
       >
@@ -44,6 +45,7 @@
   }
   .container {
     display: flex;
+    align-items: center;
   }
   .icon-container {
     position: relative;
@@ -63,5 +65,9 @@
   }
   .icon {
     transform: scale(0.75);
+  }
+  .icon-small {
+    margin-top: -2px;
+    margin-bottom: -5px;
   }
 </style>

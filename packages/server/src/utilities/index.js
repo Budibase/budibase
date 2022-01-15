@@ -1,6 +1,6 @@
 const env = require("../environment")
 const { OBJ_STORE_DIRECTORY } = require("../constants")
-const { sanitizeKey } = require("@budibase/auth/src/objectStore")
+const { sanitizeKey } = require("@budibase/backend-core/objectStore")
 const CouchDB = require("../db")
 const { generateMetadataID } = require("../db/utils")
 const Readable = require("stream").Readable
@@ -34,7 +34,7 @@ exports.checkSlashesInUrl = url => {
  * @return {string} The base URL of the object store (MinIO or S3).
  */
 exports.objectStoreUrl = () => {
-  if (env.SELF_HOSTED) {
+  if (env.SELF_HOSTED || env.MINIO_URL) {
     // can use a relative url for this as all goes through the proxy (this is hosted in minio)
     return OBJ_STORE_DIRECTORY
   } else {
@@ -149,4 +149,15 @@ exports.doesDatabaseExist = async dbName => {
   } catch (err) {
     return false
   }
+}
+
+exports.formatBytes = bytes => {
+  const units = ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"]
+  const byteIncrements = 1024
+  let unit = 0
+  let size = parseInt(bytes, 10) || 0
+  while (size >= byteIncrements && ++unit) {
+    size /= byteIncrements
+  }
+  return `${size.toFixed(size < 10 && unit > 0 ? 1 : 0)}${units[unit]}`
 }

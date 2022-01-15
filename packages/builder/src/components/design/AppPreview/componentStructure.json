@@ -43,7 +43,8 @@
       "attachmentfield",
       "relationshipfield",
       "daterangepicker",
-      "multifieldselect"
+      "multifieldselect",
+      "jsonfield"
     ]
   },
   {
@@ -73,6 +74,7 @@
       "heading",
       "text",
       "button",
+      "tag",
       "divider",
       "image",
       "backgroundimage",
