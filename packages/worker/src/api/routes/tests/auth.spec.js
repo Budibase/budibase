@@ -54,7 +54,7 @@ describe("/api/global/auth", () => {
   })
 
   describe("oidc", () => {
-    const auth = require("@budibase/auth").auth
+    const auth = require("@budibase/backend-core/auth")
 
     // mock the oidc strategy implementation and return value
     strategyFactory = jest.fn()

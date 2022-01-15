@@ -1,14 +1,19 @@
 import { writable, get } from "svelte/store"
 import { datasources, integrations, tables, views } from "./"
 import api from "builderStore/api"
+import { duplicateName } from "../../helpers/duplicate"
+
+const sortQueries = queryList => {
+  queryList.sort((q1, q2) => {
+    return q1.name.localeCompare(q2.name)
+  })
+}
 
 export function createQueriesStore() {
-  const { subscribe, set, update } = writable({ list: [], selected: null })
+  const store = writable({ list: [], selected: null })
+  const { subscribe, set, update } = store
 
-  return {
-    subscribe,
-    set,
-    update,
+  const actions = {
     init: async () => {
       const response = await api.get(`/api/queries`)
       const json = await response.json()
@@ -17,6 +22,7 @@ export function createQueriesStore() {
     fetch: async () => {
       const response = await api.get(`/api/queries`)
       const json = await response.json()
+      sortQueries(json)
       update(state => ({ ...state, list: json }))
       return json
     },
@@ -49,9 +55,19 @@ export function createQueriesStore() {
         } else {
           queries.push(json)
         }
+        sortQueries(queries)
         return { list: queries, selected: json._id }
       })
       return json
+    },
+    import: async body => {
+      const response = await api.post(`/api/queries/import`, body)
+
+      if (response.status !== 200) {
+        throw new Error(response.message)
+      }
+
+      return response.json()
     },
     select: query => {
       update(state => ({ ...state, selected: query._id }))
@@ -61,6 +77,36 @@ export function createQueriesStore() {
     },
     unselect: () => {
       update(state => ({ ...state, selected: null }))
+    },
+    preview: async query => {
+      const response = await api.post("/api/queries/preview", {
+        fields: query.fields,
+        queryVerb: query.queryVerb,
+        transformer: query.transformer,
+        parameters: query.parameters.reduce(
+          (acc, next) => ({
+            ...acc,
+            [next.name]: next.default,
+          }),
+          {}
+        ),
+        datasourceId: query.datasourceId,
+        queryId: query._id || undefined,
+      })
+
+      if (response.status !== 200) {
+        const error = await response.text()
+        throw `Query error: ${error}`
+      }
+
+      const json = await response.json()
+      // Assume all the fields are strings and create a basic schema from the
+      // unique fields returned by the server
+      const schema = {}
+      for (let field of json.schemaFields) {
+        schema[field] = "string"
+      }
+      return { ...json, schema, rows: json.rows || [] }
     },
     delete: async query => {
       const response = await api.delete(
@@ -76,6 +122,27 @@ export function createQueriesStore() {
       })
       return response
     },
+    duplicate: async query => {
+      let list = get(store).list
+      const newQuery = { ...query }
+      const datasourceId = query.datasourceId
+
+      delete newQuery._id
+      delete newQuery._rev
+      newQuery.name = duplicateName(
+        query.name,
+        list.map(q => q.name)
+      )
+
+      return actions.save(datasourceId, newQuery)
+    },
+  }
+
+  return {
+    subscribe,
+    set,
+    update,
+    ...actions,
   }
 }
 

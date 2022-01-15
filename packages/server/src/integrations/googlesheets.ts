@@ -4,22 +4,18 @@ import {
   QueryJson,
   QueryTypes,
 } from "../definitions/datasource"
-import { IntegrationBase } from "./base/IntegrationBase"
 import { OAuth2Client } from "google-auth-library"
-import { GoogleSpreadsheet } from "google-spreadsheet"
 import { DatasourcePlus } from "./base/datasourcePlus"
-import { Table } from "../definitions/common"
+import { Row, Table, TableSchema } from "../definitions/common"
 import { buildExternalTableId } from "./utils"
-import {
-  DataSourceOperation,
-  FieldTypes,
-  DatasourceAuthTypes,
-} from "../constants"
-import env from "../environment"
-import CouchDB from "../db"
-import { timeStamp } from "console"
+import { DataSourceOperation, FieldTypes } from "../constants"
+import { GoogleSpreadsheet } from "google-spreadsheet"
 
 module GoogleSheetsModule {
+  const { getGlobalDB } = require("@budibase/backend-core/tenancy")
+  const { getScopedConfig } = require("@budibase/backend-core/db")
+  const { Configs } = require("@budibase/backend-core/constants")
+
   interface GoogleSheetsConfig {
     spreadsheetId: string
     auth: OAuthClientConfig
@@ -110,16 +106,30 @@ module GoogleSheetsModule {
 
     constructor(config: GoogleSheetsConfig) {
       this.config = config
-      this.client = new GoogleSpreadsheet(this.config.spreadsheetId)
+      const spreadsheetId = this.cleanSpreadsheetUrl(this.config.spreadsheetId)
+      this.client = new GoogleSpreadsheet(spreadsheetId)
+    }
+
+    /**
+     * Pull the spreadsheet ID out from a valid google sheets URL
+     * @param spreadsheetId - the URL or standard spreadsheetId of the google sheet
+     * @returns spreadsheet Id of the google sheet
+     */
+    cleanSpreadsheetUrl(spreadsheetId: string) {
+      const parts = spreadsheetId.split("/")
+      return parts.length > 5 ? parts[5] : spreadsheetId
     }
 
     async connect() {
       try {
         // Initialise oAuth client
-        // TODO: Move this to auth lib
+        const db = getGlobalDB()
+        const googleConfig = await getScopedConfig(db, {
+          type: Configs.GOOGLE,
+        })
         const oauthClient = new OAuth2Client({
-          clientId: env.GOOGLE_CLIENT_ID,
-          clientSecret: env.GOOGLE_CLIENT_SECRET,
+          clientId: googleConfig.clientID,
+          clientSecret: googleConfig.clientSecret,
         })
         oauthClient.credentials.access_token = this.config.auth.accessToken
         oauthClient.credentials.refresh_token = this.config.auth.refreshToken
@@ -131,21 +141,15 @@ module GoogleSheetsModule {
       }
     }
 
-    async buildSchema(datasourceId: string, entities: Record<string, Table>) {
+    async buildSchema(datasourceId: string) {
       await this.connect()
       const sheets = await this.client.sheetsByIndex
-      const tables = {}
-      // tables[tableName] = {
-      //   _id: buildExternalTableId(datasourceId, tableName),
-      //   primary: primaryKeys,
-      //   name: tableName,
-      //   schema,
-      // }
+      const tables: Record<string, Table> = {}
       for (let sheet of sheets) {
         // must fetch rows to determine schema
         await sheet.getRows()
         // build schema
-        const schema = {}
+        const schema: TableSchema = {}
 
         // build schema from headers
         for (let header of sheet.headerValues) {
@@ -183,6 +187,8 @@ module GoogleSheetsModule {
 
       if (json.endpoint.operation === DataSourceOperation.UPDATE) {
         return await this.update({
+          // exclude the header row and zero index
+          rowIndex: json.extra?.idFilter?.equal?.rowNumber - 2,
           sheet,
           row: json.body,
         })
@@ -190,20 +196,23 @@ module GoogleSheetsModule {
 
       if (json.endpoint.operation === DataSourceOperation.DELETE) {
         return await this.delete({
-          // TODO: complete
+          // exclude the header row and zero index
+          rowIndex: json.extra?.idFilter?.equal?.rowNumber - 2,
+          sheet,
         })
       }
     }
 
     buildRowObject(headers: string[], values: string[], rowNumber: number) {
-      const rowObject = { rowNumber }
+      const rowObject: { rowNumber: number; [key: string]: any } = { rowNumber }
       for (let i = 0; i < headers.length; i++) {
+        rowObject._id = rowNumber
         rowObject[headers[i]] = values[i]
       }
       return rowObject
     }
 
-    async create(query: { sheet: string; row: string | object }) {
+    async create(query: { sheet: string; row: any }) {
       try {
         await this.connect()
         const sheet = await this.client.sheetsByTitle[query.sheet]
@@ -238,14 +247,14 @@ module GoogleSheetsModule {
       }
     }
 
-    async update(query: { sheet: string; rowIndex: number; row: string }) {
+    async update(query: { sheet: string; rowIndex: number; row: any }) {
       try {
         await this.connect()
         const sheet = await this.client.sheetsByTitle[query.sheet]
         const rows = await sheet.getRows()
         const row = rows[query.rowIndex]
         if (row) {
-          const updateValues = JSON.parse(query.row)
+          const updateValues = query.row
           for (let key in updateValues) {
             row[key] = updateValues[key]
           }

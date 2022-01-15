@@ -2,33 +2,32 @@
   import {
     Heading,
     Layout,
+    Detail,
     Button,
-    ActionButton,
-    ActionGroup,
-    ButtonGroup,
     Input,
     Select,
     Modal,
     Page,
     notifications,
+    Body,
     Search,
   } from "@budibase/bbui"
   import Spinner from "components/common/Spinner.svelte"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
   import UpdateAppModal from "components/start/UpdateAppModal.svelte"
+  import ChooseIconModal from "components/start/ChooseIconModal.svelte"
+
   import { store, automationStore } from "builderStore"
   import api, { del, post, get } from "builderStore/api"
   import { onMount } from "svelte"
-  import { apps, auth, admin } from "stores/portal"
+  import { apps, auth, admin, templates } from "stores/portal"
   import download from "downloadjs"
   import { goto } from "@roxi/routify"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import AppCard from "components/start/AppCard.svelte"
   import AppRow from "components/start/AppRow.svelte"
   import { AppStatus } from "constants"
   import analytics, { Events } from "analytics"
 
-  let layout = "grid"
   let sortBy = "name"
   let template
   let selectedApp
@@ -36,6 +35,7 @@
   let updatingModal
   let deletionModal
   let unpublishModal
+  let iconModal
   let creatingApp = false
   let loaded = false
   let searchTerm = ""
@@ -47,6 +47,7 @@
   $: filteredApps = enrichedApps.filter(app =>
     app?.name?.toLowerCase().includes(searchTerm.toLowerCase())
   )
+  $: isCloud = $admin.cloud
 
   const enrichApps = (apps, user, sortBy) => {
     const enrichedApps = apps.map(app => ({
@@ -158,8 +159,13 @@
   }
 
   const viewApp = app => {
-    const id = app.deployed ? app.prodId : app.devId
-    window.open(`/${id}`, "_blank")
+    if (!isCloud && app.deployed) {
+      // special case to use the short form name if self hosted
+      window.open(`/app/${encodeURIComponent(app.name)}`)
+    } else {
+      const id = app.deployed ? app.prodId : app.devId
+      window.open(`/${id}`, "_blank")
+    }
   }
 
   const editApp = app => {
@@ -170,6 +176,11 @@
       return
     }
     $goto(`../../app/${app.devId}`)
+  }
+
+  const editIcon = app => {
+    selectedApp = app
+    iconModal.show()
   }
 
   const exportApp = app => {
@@ -262,6 +273,10 @@
 
   onMount(async () => {
     await apps.load()
+    await templates.load()
+    if ($templates?.length === 0) {
+      notifications.error("There was a problem loading quick start templates.")
+    }
     // if the portal is loaded from an external URL with a template param
     const initInfo = await auth.getInitInfo()
     if (initInfo?.init_template) {
@@ -274,86 +289,121 @@
 </script>
 
 <Page wide>
-  {#if loaded && enrichedApps.length}
-    <Layout noPadding>
-      <div class="title">
-        <Heading>Apps</Heading>
-        <ButtonGroup>
-          {#if cloud}
-            <Button secondary on:click={initiateAppsExport}>Export apps</Button>
-          {/if}
-          <Button secondary on:click={initiateAppImport}>Import app</Button>
-          <Button cta on:click={initiateAppCreation}>Create app</Button>
-        </ButtonGroup>
+  <Layout noPadding gap="XL">
+    <div class="title">
+      <Layout noPadding gap="XS">
+        <Heading size="M">Welcome to Budibase</Heading>
+        <Body size="S">
+          Manage your apps and get a head start with templates
+        </Body>
+      </Layout>
+
+      <div class="buttons">
+        {#if cloud}
+          <Button icon="Export" quiet secondary on:click={initiateAppsExport}>
+            Export apps
+          </Button>
+        {/if}
+        <Button icon="Import" quiet secondary on:click={initiateAppImport}>
+          Import app
+        </Button>
+        <Button icon="Add" cta on:click={initiateAppCreation}>
+          Create app
+        </Button>
       </div>
-      <div class="filter">
-        <div class="select">
-          <Select
-            autoWidth
-            bind:value={sortBy}
-            placeholder={null}
-            options={[
-              { label: "Sort by name", value: "name" },
-              { label: "Sort by recently updated", value: "updated" },
-              { label: "Sort by status", value: "status" },
-            ]}
-          />
-          <div class="desktop-search">
-            <Search placeholder="Search" bind:value={searchTerm} />
+    </div>
+
+    <Layout noPadding gap="S">
+      <Detail size="L">Quick start templates</Detail>
+      <div class="grid">
+        {#each $templates as item}
+          <div
+            on:click={() => {
+              template = item
+              creationModal.show()
+              creatingApp = true
+            }}
+            class="template-card"
+          >
+            <div class="card-body">
+              <div style="color: {item.background}" class="iconAlign">
+                <svg
+                  width="26px"
+                  height="26px"
+                  class="spectrum-Icon"
+                  style="color:{item.background};"
+                  focusable="false"
+                >
+                  <use xlink:href="#spectrum-icon-18-{item.icon}" />
+                </svg>
+              </div>
+              <div class="iconAlign">
+                <Body weight="900" size="S">{item.name}</Body>
+                <div style="font-size: 10px;">
+                  <Body size="S">{item.category.toUpperCase()}</Body>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-        <ActionGroup>
-          <ActionButton
-            on:click={() => (layout = "grid")}
-            selected={layout === "grid"}
-            quiet
-            icon="ClassicGridView"
-          />
-          <ActionButton
-            on:click={() => (layout = "table")}
-            selected={layout === "table"}
-            quiet
-            icon="ViewRow"
-          />
-        </ActionGroup>
-      </div>
-      <div class="mobile-search">
-        <Search placeholder="Search" bind:value={searchTerm} />
-      </div>
-      <div
-        class:appGrid={layout === "grid"}
-        class:appTable={layout === "table"}
-      >
-        {#each filteredApps as app (app.appId)}
-          <svelte:component
-            this={layout === "grid" ? AppCard : AppRow}
-            {releaseLock}
-            {app}
-            {unpublishApp}
-            {viewApp}
-            {editApp}
-            {exportApp}
-            {deleteApp}
-            {updateApp}
-          />
         {/each}
       </div>
     </Layout>
-  {/if}
-  {#if !enrichedApps.length && !creatingApp && loaded}
-    <div class="empty-wrapper">
-      <Modal inline>
-        <CreateAppModal {template} inline={true} />
-      </Modal>
-    </div>
-  {/if}
-  {#if creatingFromTemplate}
-    <div class="empty-wrapper">
-      <p>Creating your Budibase app from your selected template...</p>
-      <Spinner size="10" />
-    </div>
-  {/if}
+
+    {#if loaded && enrichedApps.length}
+      <Layout noPadding gap="S">
+        <div class="title">
+          <Detail size="L">My apps</Detail>
+          <div class="filter">
+            <Select
+              quiet
+              autoWidth
+              bind:value={sortBy}
+              placeholder={null}
+              options={[
+                { label: "Sort by name", value: "name" },
+                { label: "Sort by recently updated", value: "updated" },
+                { label: "Sort by status", value: "status" },
+              ]}
+            />
+            <Search placeholder="Search" bind:value={searchTerm} />
+          </div>
+        </div>
+
+        <div class="appTable">
+          {#each filteredApps as app (app.appId)}
+            <AppRow
+              {releaseLock}
+              {editIcon}
+              {app}
+              {unpublishApp}
+              {viewApp}
+              {editApp}
+              {exportApp}
+              {deleteApp}
+              {updateApp}
+            />
+          {/each}
+        </div>
+      </Layout>
+    {/if}
+
+    {#if !enrichedApps.length && !creatingApp && loaded}
+      <div class="empty-wrapper">
+        <Modal inline>
+          <CreateAppModal {template} inline={true} />
+        </Modal>
+      </div>
+    {/if}
+
+    {#if creatingFromTemplate}
+      <div class="empty-wrapper">
+        <p>Creating your Budibase app from your selected template...</p>
+        <Spinner size="10" />
+      </div>
+    {/if}
+  </Layout>
 </Page>
+
 <Modal
   bind:this={creationModal}
   padding={false}
@@ -389,41 +439,66 @@
 </ConfirmDialog>
 
 <UpdateAppModal app={selectedApp} bind:this={updatingModal} />
+<ChooseIconModal app={selectedApp} bind:this={iconModal} />
 
 <style>
-  .title,
-  .filter {
+  .title {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    gap: 10px;
+    gap: var(--spacing-xl);
+    flex-wrap: wrap;
   }
-
-  @media only screen and (max-width: 560px) {
-    .title {
-      flex-direction: column;
-      align-items: flex-start;
+  .buttons {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    gap: var(--spacing-xl);
+    flex-wrap: wrap;
+  }
+  @media (max-width: 640px) {
+    .buttons {
+      flex-direction: row-reverse;
+      justify-content: flex-end;
     }
   }
 
-  .select {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-gap: 10px;
-  }
-  .filter :global(.spectrum-ActionGroup) {
-    flex-wrap: nowrap;
-  }
-  .mobile-search {
-    display: none;
+  .filter {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    gap: var(--spacing-xl);
   }
 
-  .appGrid {
+  .grid {
     display: grid;
-    grid-gap: 50px;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-gap: var(--spacing-xl);
+    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
   }
+  .template-card {
+    height: 80px;
+    border-radius: var(--border-radius-s);
+    border: 1px solid var(--spectrum-global-color-gray-300);
+    cursor: pointer;
+    display: flex;
+  }
+
+  .template-card:hover {
+    background: var(--spectrum-alias-background-color-tertiary);
+  }
+  .card-body {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+  }
+  .iconAlign {
+    padding: 0 0 0 var(--spacing-m);
+    display: inline-block;
+  }
+
   .appTable {
     display: grid;
     grid-template-rows: auto;
@@ -444,6 +519,12 @@
   .appTable :global(> div) {
     border-bottom: var(--border-light);
   }
+  @media (max-width: 640px) {
+    .appTable {
+      grid-template-columns: 1fr auto;
+    }
+  }
+
   .empty-wrapper {
     flex: 1 1 auto;
     height: 100%;
@@ -451,17 +532,5 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-  }
-
-  @media (max-width: 640px) {
-    .appTable {
-      grid-template-columns: 1fr auto;
-    }
-    .desktop-search {
-      display: none;
-    }
-    .mobile-search {
-      display: block;
-    }
   }
 </style>

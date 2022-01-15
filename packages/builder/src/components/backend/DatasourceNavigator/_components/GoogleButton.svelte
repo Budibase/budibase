@@ -11,10 +11,10 @@
 
 <ActionButton
   on:click={async () => {
-    // TODO: can probably remove
-    const datasourceId = await preAuthStep()
+    const datasource = await preAuthStep()
+    console.log(datasource)
     window.open(
-      `/api/global/auth/${tenantId}/google2?datasourceId=${datasourceId}&appId=${$store.appId}`,
+      `/api/global/auth/${tenantId}/google2?datasourceId=${datasource._id}&appId=${$store.appId}`,
       "_blank"
     )
   }}

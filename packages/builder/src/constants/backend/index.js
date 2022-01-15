@@ -89,6 +89,14 @@ export const FIELDS = {
       presence: false,
     },
   },
+  JSON: {
+    name: "JSON",
+    type: "json",
+    constraints: {
+      type: "object",
+      presence: false,
+    },
+  },
 }
 
 export const AUTO_COLUMN_SUB_TYPES = {
@@ -154,3 +162,72 @@ export const ALLOWABLE_NUMBER_TYPES = ALLOWABLE_NUMBER_OPTIONS.map(
 export const SWITCHABLE_TYPES = ALLOWABLE_NUMBER_TYPES.concat(
   ALLOWABLE_STRING_TYPES
 )
+
+export const IntegrationTypes = {
+  POSTGRES: "POSTGRES",
+  MONGODB: "MONGODB",
+  COUCHDB: "COUCHDB",
+  S3: "S3",
+  MYSQL: "MYSQL",
+  REST: "REST",
+  DYNAMODB: "DYNAMODB",
+  ELASTICSEARCH: "ELASTICSEARCH",
+  SQL_SERVER: "SQL_SERVER",
+  AIRTABLE: "AIRTABLE",
+  ARANGODB: "ARANGODB",
+  ORACLE: "ORACLE",
+  INTERNAL: "INTERNAL",
+  GOOGLE_SHEETS: "GOOGLE_SHEETS",
+}
+
+export const IntegrationNames = {
+  [IntegrationTypes.POSTGRES]: "PostgreSQL",
+  [IntegrationTypes.MONGODB]: "MongoDB",
+  [IntegrationTypes.COUCHDB]: "CouchDB",
+  [IntegrationTypes.S3]: "S3",
+  [IntegrationTypes.MYSQL]: "MySQL",
+  [IntegrationTypes.REST]: "REST",
+  [IntegrationTypes.DYNAMODB]: "DynamoDB",
+  [IntegrationTypes.ELASTICSEARCH]: "ElasticSearch",
+  [IntegrationTypes.SQL_SERVER]: "SQL Server",
+  [IntegrationTypes.AIRTABLE]: "Airtable",
+  [IntegrationTypes.ARANGODB]: "ArangoDB",
+  [IntegrationTypes.ORACLE]: "Oracle",
+  [IntegrationTypes.INTERNAL]: "Internal",
+  [IntegrationTypes.GOOGLE_SHEETS]: "Google Sheets",
+}
+
+export const SchemaTypeOptions = [
+  { label: "Text", value: "string" },
+  { label: "Number", value: "number" },
+  { label: "Boolean", value: "boolean" },
+  { label: "Datetime", value: "datetime" },
+]
+
+export const RawRestBodyTypes = {
+  NONE: "none",
+  FORM: "form",
+  ENCODED: "encoded",
+  JSON: "json",
+  TEXT: "text",
+  XML: "xml",
+}
+
+export const RestBodyTypes = [
+  { name: "none", value: "none" },
+  { name: "form-data", value: "form" },
+  { name: "x-www-form-encoded", value: "encoded" },
+  { name: "raw (JSON)", value: "json" },
+  { name: "raw (XML)", value: "xml" },
+  { name: "raw (Text)", value: "text" },
+]
+
+export const PaginationTypes = [
+  { label: "Page number based", value: "page" },
+  { label: "Cursor based", value: "cursor" },
+]
+
+export const PaginationLocations = [
+  { label: "Query parameters", value: "query" },
+  { label: "Request body", value: "body" },
+]

@@ -12,7 +12,7 @@
     Modal,
   } from "@budibase/bbui"
   import { onMount } from "svelte"
-  import { apps, organisation, auth } from "stores/portal"
+  import { apps, organisation, auth, admin } from "stores/portal"
   import { goto } from "@roxi/routify"
   import { AppStatus } from "constants"
   import { gradient } from "actions"
@@ -34,12 +34,16 @@
   const publishedAppsOnly = app => app.status === AppStatus.DEPLOYED
 
   $: publishedApps = $apps.filter(publishedAppsOnly)
-
+  $: isCloud = $admin.cloud
   $: userApps = $auth.user?.builder?.global
     ? publishedApps
     : publishedApps.filter(app =>
         Object.keys($auth.user?.roles).includes(app.prodId)
       )
+
+  function getUrl(app) {
+    return !isCloud ? `/app/${encodeURIComponent(app.name)}` : `/${app.prodId}`
+  }
 </script>
 
 {#if $auth.user && loaded}
@@ -93,7 +97,7 @@
             <div class="group">
               <Layout gap="S" noPadding>
                 {#each userApps as app, idx (app.appId)}
-                  <a class="app" target="_blank" href={`/${app.prodId}`}>
+                  <a class="app" target="_blank" href={getUrl(app)}>
                     <div class="preview" use:gradient={{ seed: app.name }} />
                     <div class="app-info">
                       <Heading size="XS">{app.name}</Heading>

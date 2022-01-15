@@ -5,10 +5,14 @@ const { getAutomationParams, generateAutomationID } = require("../../db/utils")
 const {
   checkForWebhooks,
   updateTestHistory,
+  removeDeprecated,
 } = require("../../automations/utils")
 const { deleteEntityMetadata } = require("../../utilities")
 const { MetadataTypes } = require("../../constants")
 const { setTestFlag, clearTestFlag } = require("../../utilities/redis")
+
+const ACTION_DEFS = removeDeprecated(actions.ACTION_DEFINITIONS)
+const TRIGGER_DEFS = removeDeprecated(triggers.TRIGGER_DEFINITIONS)
 
 /*************************
  *                       *
@@ -155,17 +159,17 @@ exports.destroy = async function (ctx) {
 }
 
 exports.getActionList = async function (ctx) {
-  ctx.body = actions.ACTION_DEFINITIONS
+  ctx.body = ACTION_DEFS
 }
 
 exports.getTriggerList = async function (ctx) {
-  ctx.body = triggers.TRIGGER_DEFINITIONS
+  ctx.body = TRIGGER_DEFS
 }
 
 module.exports.getDefinitionList = async function (ctx) {
   ctx.body = {
-    trigger: triggers.TRIGGER_DEFINITIONS,
-    action: actions.ACTION_DEFINITIONS,
+    trigger: TRIGGER_DEFS,
+    action: ACTION_DEFS,
   }
 }
 

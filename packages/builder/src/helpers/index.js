@@ -6,4 +6,5 @@ export {
   capitalise,
   get_name,
   get_capitalised_name,
+  lowercase,
 } from "./helpers"
