@@ -1,12 +1,31 @@
 const env = require("../environment")
-const { getGlobalDB } = require("@budibase/backend-core/tenancy")
+const { getGlobalDB, getTenantId } = require("@budibase/backend-core/tenancy")
 const {
   StaticDatabases,
   generateNewUsageQuotaDoc,
 } = require("@budibase/backend-core/db")
 
+exports.useQuotas = () => {
+  // check if quotas are enabled
+  if (env.USE_QUOTAS) {
+    // check if there are any tenants without limits
+    if (env.EXCLUDE_QUOTAS_TENANTS) {
+      const excludedTenants = env.EXCLUDE_QUOTAS_TENANTS.replace(
+        /\s/g,
+        ""
+      ).split(",")
+      const tenantId = getTenantId()
+      if (excludedTenants.includes(tenantId)) {
+        return false
+      }
+    }
+    return true
+  }
+  return false
+}
+
 exports.Properties = {
-  ROW: "rows", // mostly works - disabled - app / table deletion not yet accounted for
+  ROW: "rows", // mostly works - app / table deletion not yet accounted for
   UPLOAD: "storage", // doesn't work yet
   VIEW: "views", // doesn't work yet
   USER: "users", // doesn't work yet
@@ -37,7 +56,7 @@ exports.getUsageQuotaDoc = async db => {
  * also been reset after this call.
  */
 exports.update = async (property, usage) => {
-  if (!env.USE_QUOTAS) {
+  if (!exports.useQuotas()) {
     return
   }
 

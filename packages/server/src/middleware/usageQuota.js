@@ -1,17 +1,10 @@
 const CouchDB = require("../db")
 const usageQuota = require("../utilities/usageQuota")
-const env = require("../environment")
-const { getTenantId } = require("@budibase/backend-core/tenancy")
 const {
   isExternalTable,
   isRowId: isExternalRowId,
 } = require("../integrations/utils")
 const quotaMigration = require("../migrations/sync_app_and_reset_rows_quotas")
-
-const testing = false
-
-// tenants without limits
-const EXCLUDED_TENANTS = ["bb", "default", "bbtest", "bbstaging"]
 
 // currently only counting new writes and deletes
 const METHOD_MAP = {
@@ -20,7 +13,7 @@ const METHOD_MAP = {
 }
 
 const DOMAIN_MAP = {
-  // rows: usageQuota.Properties.ROW,                 // works - disabled
+  rows: usageQuota.Properties.ROW,
   // upload: usageQuota.Properties.UPLOAD,            // doesn't work yet
   // views: usageQuota.Properties.VIEW,               // doesn't work yet
   // users: usageQuota.Properties.USER,               // doesn't work yet
@@ -39,13 +32,7 @@ function getProperty(url) {
 }
 
 module.exports = async (ctx, next) => {
-  const tenantId = getTenantId()
-
-  // if in development or a self hosted cloud usage quotas should not be executed
-  if (
-    (env.isDev() || env.SELF_HOSTED || EXCLUDED_TENANTS.includes(tenantId)) &&
-    !testing
-  ) {
+  if (!usageQuota.useQuotas()) {
     return next()
   }
 
