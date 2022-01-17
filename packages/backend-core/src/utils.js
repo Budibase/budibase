@@ -96,7 +96,12 @@ exports.getCookie = (ctx, name) => {
  * @param {string|object} value The value of cookie which will be set.
  * @param {object} opts options like whether to sign.
  */
-exports.setCookie = (ctx, value, name = "builder", opts = { sign: true }) => {
+exports.setCookie = (
+  ctx,
+  value,
+  name = "builder",
+  opts = { sign: true, requestDomain: false }
+) => {
   if (value && opts && opts.sign) {
     value = jwt.sign(value, options.secretOrKey)
   }
@@ -108,7 +113,7 @@ exports.setCookie = (ctx, value, name = "builder", opts = { sign: true }) => {
     overwrite: true,
   }
 
-  if (environment.COOKIE_DOMAIN) {
+  if (environment.COOKIE_DOMAIN && !opts.requestDomain) {
     config.domain = environment.COOKIE_DOMAIN
   }
 

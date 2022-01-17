@@ -47,6 +47,15 @@ module.exports = async (ctx, next) => {
     (!ctx.user || !ctx.user.builder || !ctx.user.builder.global)
   ) {
     clearCookie(ctx, Cookies.CurrentApp)
+    // have to set the return url on the server side as client side is not available
+    setCookie(ctx, ctx.url, Cookies.RETURN_URL, {
+      // don't sign so the browser can easily read
+      sign: false,
+      // use the request domain to match how ui handles the return url cookie.
+      // it's important we don't use the shared domain here as the builder
+      // can't delete from it without awareness of the domain.
+      requestDomain: true,
+    })
     return ctx.redirect("/")
   }
 
