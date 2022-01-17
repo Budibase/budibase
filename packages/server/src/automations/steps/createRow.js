@@ -1,6 +1,5 @@
 const rowController = require("../../api/controllers/row")
 const automationUtils = require("../automationUtils")
-const env = require("../../environment")
 const usage = require("../../utilities/usageQuota")
 const { buildCtx } = require("./utils")
 
@@ -83,9 +82,7 @@ exports.run = async function ({ inputs, appId, emitter }) {
       inputs.row.tableId,
       inputs.row
     )
-    if (env.USE_QUOTAS) {
-      await usage.update(usage.Properties.ROW, 1)
-    }
+    await usage.update(usage.Properties.ROW, 1)
     await rowController.save(ctx)
     return {
       row: inputs.row,
