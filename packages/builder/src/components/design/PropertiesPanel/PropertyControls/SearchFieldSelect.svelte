@@ -7,7 +7,7 @@
   import { currentAsset } from "builderStore"
   import { tables } from "stores/backend"
   import { createEventDispatcher } from "svelte"
-  import { getTableFields } from "helpers/searchFields"
+  import { getFields } from "helpers/searchFields"
 
   export let componentInstance = {}
   export let value = ""
@@ -20,19 +20,14 @@
   $: boundValue = getSelectedOption(value, options)
 
   function getOptions(ds, dsSchema) {
-    let base = Object.keys(dsSchema)
+    let base = Object.values(dsSchema)
     if (!ds?.tableId) {
       return base
     }
     const currentTable = $tables.list.find(table => table._id === ds.tableId)
-    if (currentTable && currentTable.sql) {
-      for (let column of Object.values(currentTable.schema)) {
-        if (column.type === "link") {
-          base = base.concat(getTableFields(column).map(field => field.name))
-        }
-      }
-    }
-    return base
+    return getFields(base, { allowLinks: currentTable.sql }).map(
+      field => field.name
+    )
   }
 
   function getSelectedOption(selectedOptions, allOptions) {

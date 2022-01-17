@@ -17,15 +17,15 @@ export function getTableFields(linkField) {
 }
 
 export function getFields(fields, { allowLinks } = { allowLinks: true }) {
-  let fieldNames = fields.filter(
+  let filteredFields = fields.filter(
     field => !BannedSearchTypes.includes(field.type)
   )
   if (allowLinks) {
     const linkFields = fields.filter(field => field.type === "link")
     for (let linkField of linkFields) {
       // only allow one depth of SQL relationship filtering
-      fieldNames = fieldNames.concat(getTableFields(linkField))
+      filteredFields = filteredFields.concat(getTableFields(linkField))
     }
   }
-  return fieldNames
+  return filteredFields
 }
