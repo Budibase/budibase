@@ -41,11 +41,9 @@
   let dataProviderId
   let schema
   let schemaLoaded = false
-  let enrichedSearchColumns
-  let enrichedSearchColumnsLoaded = false
 
   $: fetchSchema(dataSource)
-  $: enrichSearchColumns(searchColumns, schema)
+  $: enrichedSearchColumns = enrichSearchColumns(searchColumns, schema)
   $: enrichedFilter = enrichFilter(filter, enrichedSearchColumns, formId)
   $: titleButtonAction = [
     {
@@ -61,21 +59,22 @@
   const enrichFilter = (filter, columns, formId) => {
     let enrichedFilter = [...(filter || [])]
     columns?.forEach(column => {
+      const safePath = column.name.split(".").map(safe).join(".")
       enrichedFilter.push({
         field: column.name,
         operator: column.type === "string" ? "string" : "equal",
         type: column.type === "string" ? "string" : "number",
         valueType: "Binding",
-        value: `{{ ${safe(formId)}.${safe(column.name)} }}`,
+        value: `{{ ${safe(formId)}.${safePath} }}`,
       })
     })
     return enrichedFilter
   }
 
   // Determine data types for search fields and only use those that are valid
-  const enrichSearchColumns = async (searchColumns, schema) => {
+  const enrichSearchColumns = (searchColumns, schema) => {
     let enrichedColumns = []
-    const addType = column => {
+    searchColumns?.forEach(column => {
       const schemaType = schema?.[column]?.type
       const componentType = schemaComponentMap[schemaType]
       if (componentType) {
@@ -84,51 +83,23 @@
           componentType,
           type: schemaType,
         })
-        return true
       }
-      return false
-    }
-    for (let column of searchColumns || []) {
-      // if addType returns false, it didn't find one, look for SQL relationships
-      if (!addType(column) && column.includes(".")) {
-        const [tableName, linkColumn] = column.split(".")
-        for (let colSchema of Object.values(schema || {})) {
-          // found the related table
-          if (
-            colSchema.type === "link" &&
-            colSchema.tableId &&
-            colSchema.tableId.endsWith(tableName)
-          ) {
-            try {
-              const linkSchema = await fetchDatasourceSchema({
-                ...dataSource,
-                tableId: colSchema.tableId,
-              })
-              if (linkSchema) {
-                schema[column] = linkSchema[linkColumn]
-                addType(column)
-              }
-            } catch (err) {
-              // ignore the error, couldn't get table
-            }
-          }
-        }
-      }
-    }
-    enrichedSearchColumns = enrichedColumns.slice(0, 3)
-    enrichedSearchColumnsLoaded = true
+    })
+    return enrichedColumns.slice(0, 3)
   }
 
   // Load the datasource schema so we can determine column types
   const fetchSchema = async dataSource => {
     if (dataSource) {
-      schema = await fetchDatasourceSchema(dataSource)
+      schema = await fetchDatasourceSchema(dataSource, {
+        enrichRelationships: true,
+      })
     }
     schemaLoaded = true
   }
 </script>
 
-{#if schemaLoaded && enrichedSearchColumnsLoaded}
+{#if schemaLoaded}
   <Block>
     <div class={size} use:styleable={$component.styles}>
       <BlockComponent type="form" bind:id={formId} props={{ dataSource }}>
