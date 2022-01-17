@@ -25,7 +25,6 @@
   let previousType
   let previousAsset
   let previousComponentId
-  let hydrationComplete = false
 
   // Manage the layout modal flow from here
   let showModal
@@ -41,12 +40,6 @@
   )
 
   const hydrateStateFromURL = (params, leftover) => {
-    if (hydrationComplete) {
-      return
-    } else {
-      hydrationComplete = true
-    }
-
     // Do nothing if no asset type, as that means we've left the page
     if (!params.assetType) {
       return
