@@ -64,14 +64,16 @@ router
     authController.googlePreAuth
   )
   .get(
-    "/api/global/auth/:tenantId/google2",
+    "/api/global/auth/:tenantId/datasource/:provider",
     updateTenant,
-    authController.googlePreAuth2
+    authController.datasourcePreAuth
   )
   // single tenancy endpoint
   .get("/api/global/auth/google/callback", authController.googleAuth)
-  // TODO: Remove
-  .get("/api/global/auth/google2/callback", authController.googleAuth2)
+  .get(
+    "/api/global/auth/datasource/:provider/callback",
+    authController.datasourceAuth
+  )
   // multi-tenancy endpoint
   .get(
     "/api/global/auth/:tenantId/google/callback",
