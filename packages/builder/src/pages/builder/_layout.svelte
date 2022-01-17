@@ -88,7 +88,6 @@
       !$isActive("./admin")
     ) {
       const url = window.location.pathname
-      console.log("setting return url:" + url)
       setCookie(Cookies.ReturnUrl, url)
     }
 
@@ -126,7 +125,6 @@
       const returnUrl = getCookie(Cookies.ReturnUrl)
       if (returnUrl) {
         removeCookie(Cookies.ReturnUrl)
-        console.log("redirecting to return url:" + returnUrl)
         window.location.href = returnUrl
       }
     }
