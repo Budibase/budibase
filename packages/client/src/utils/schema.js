@@ -58,7 +58,7 @@ export const fetchDatasourceSchema = async (
   schema = { ...schema, ...jsonAdditions }
 
   // Check for any relationship fields if required
-  if (options?.enrichRelationships) {
+  if (options?.enrichRelationships && definition.sql) {
     let relationshipAdditions = {}
     for (let fieldKey of Object.keys(schema)) {
       const fieldSchema = schema[fieldKey]
