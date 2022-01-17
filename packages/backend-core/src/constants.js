@@ -8,6 +8,7 @@ exports.Cookies = {
   Auth: "budibase:auth",
   Init: "budibase:init",
   OIDC_CONFIG: "budibase:oidc:config",
+  RETURN_URL: "budibase:returnurl",
 }
 
 exports.Headers = {
