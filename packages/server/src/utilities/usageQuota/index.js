@@ -1,4 +1,4 @@
-const env = require("../environment")
+const env = require("../../environment")
 const { getGlobalDB, getTenantId } = require("@budibase/backend-core/tenancy")
 const {
   StaticDatabases,
@@ -55,7 +55,7 @@ exports.getUsageQuotaDoc = async db => {
  * @returns {Promise<void>} When this completes the API key will now be up to date - the quota period may have
  * also been reset after this call.
  */
-exports.update = async (property, usage) => {
+exports.update = async (property, usage, opts = { dryRun: false }) => {
   if (!exports.useQuotas()) {
     return
   }
@@ -67,14 +67,24 @@ exports.update = async (property, usage) => {
     // increment the quota
     quota.usageQuota[property] += usage
 
-    if (quota.usageQuota[property] > quota.usageLimits[property]) {
+    if (
+      quota.usageQuota[property] > quota.usageLimits[property] &&
+      usage > 0 // allow for decrementing usage when the quota is already exceeded
+    ) {
       throw new Error(
         `You have exceeded your usage quota of ${quota.usageLimits[property]} ${property}.`
       )
     }
 
+    if (quota.usageQuota[property] < 0) {
+      // never go negative if the quota has previously been exceeded
+      quota.usageQuota[property] = 0
+    }
+
     // update the usage quotas
-    await db.put(quota)
+    if (!opts.dryRun) {
+      await db.put(quota)
+    }
   } catch (err) {
     console.error(`Error updating usage quotas for ${property}`, err)
     throw err

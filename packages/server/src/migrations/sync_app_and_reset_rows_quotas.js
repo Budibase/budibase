@@ -7,44 +7,7 @@ const { getGlobalDB } = require("@budibase/backend-core/tenancy")
 const { getAllApps } = require("@budibase/backend-core/db")
 const CouchDB = require("../db")
 const { getUsageQuotaDoc, useQuotas } = require("../utilities/usageQuota")
-const { getRowParams } = require("../db/utils")
-
-/**
- * Get all rows in the given app ids.
- *
- * The returned rows may contan duplicates if there
- * is a production and dev app.
- */
-const getAllRows = async appIds => {
-  const allRows = []
-  let appDb
-  for (let appId of appIds) {
-    try {
-      appDb = new CouchDB(appId)
-      const response = await appDb.allDocs(
-        getRowParams(null, null, {
-          include_docs: false,
-        })
-      )
-      allRows.push(...response.rows.map(r => r.id))
-    } catch (e) {
-      // don't error out if we can't count the app rows, just continue
-    }
-  }
-
-  return allRows
-}
-
-/**
- * Get all rows in the given app ids.
- *
- * The returned rows will be unique, duplicated rows across
- * production and dev apps will be removed.
- */
-const getUniqueRows = async appIds => {
-  const allRows = await getAllRows(appIds)
-  return new Set(allRows)
-}
+const { getUniqueRows } = require("../utilities/usageQuota/rows")
 
 const syncRowsQuota = async db => {
   // get all rows in all apps

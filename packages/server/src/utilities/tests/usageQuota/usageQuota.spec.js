@@ -3,7 +3,7 @@ jest.mock("@budibase/backend-core/tenancy", () => ({
   getTenantId
 }))
 const usageQuota = require("../usageQuota")
-const env = require("../../environment")
+const env = require("../../../environment")
 
 class TestConfiguration {
   constructor() {

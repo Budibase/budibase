@@ -1,5 +1,6 @@
 const CouchDB = require("../db")
 const usageQuota = require("../utilities/usageQuota")
+const { getUniqueRows } = require("../utilities/usageQuota/rows")
 const {
   isExternalTable,
   isRowId: isExternalRowId,
@@ -74,9 +75,81 @@ module.exports = async (ctx, next) => {
   }
   try {
     await quotaMigration.runIfRequired()
-    await usageQuota.update(property, usage)
-    return next()
+    await performRequest(ctx, next, property, usage)
   } catch (err) {
     ctx.throw(400, err)
   }
 }
+
+const performRequest = async (ctx, next, property, usage) => {
+  const usageContext = {
+    skipNext: false,
+    skipUsage: false,
+    [usageQuota.Properties.APPS]: {},
+  }
+
+  if (usage === -1) {
+    if (PRE_DELETE[property]) {
+      await PRE_DELETE[property](ctx, usageContext)
+    }
+  } else {
+    if (PRE_CREATE[property]) {
+      await PRE_CREATE[property](ctx, usageContext)
+    }
+  }
+
+  // run the request
+  if (!usageContext.skipNext) {
+    await usageQuota.update(property, usage, { dryRun: true })
+    await next()
+  }
+
+  if (usage === -1) {
+    if (POST_DELETE[property]) {
+      await POST_DELETE[property](ctx, usageContext)
+    }
+  } else {
+    if (POST_CREATE[property]) {
+      await POST_CREATE[property](ctx, usageContext)
+    }
+  }
+
+  // update the usage
+  if (!usageContext.skipUsage) {
+    await usageQuota.update(property, usage)
+  }
+}
+
+const appPreDelete = async (ctx, usageContext) => {
+  if (ctx.query.unpublish) {
+    // don't run usage decrement for unpublish
+    usageContext.skipUsage = true
+    return
+  }
+
+  // store the row count to delete
+  const rows = await getUniqueRows([ctx.appId])
+  if (rows.size) {
+    usageContext[usageQuota.Properties.APPS] = { rowCount: rows.size }
+  }
+}
+
+const appPostDelete = async (ctx, usageContext) => {
+  // delete the app rows from usage
+  const rowCount = usageContext[usageQuota.Properties.APPS].rowCount
+  if (rowCount) {
+    await usageQuota.update(usageQuota.Properties.ROW, -rowCount)
+  }
+}
+
+const PRE_DELETE = {
+  [usageQuota.Properties.APPS]: appPreDelete,
+}
+
+const POST_DELETE = {
+  [usageQuota.Properties.APPS]: appPostDelete,
+}
+
+const PRE_CREATE = {}
+
+const POST_CREATE = {}
