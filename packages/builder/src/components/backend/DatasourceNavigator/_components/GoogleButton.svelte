@@ -12,9 +12,8 @@
 <ActionButton
   on:click={async () => {
     const datasource = await preAuthStep()
-    console.log(datasource)
     window.open(
-      `/api/global/auth/${tenantId}/google2?datasourceId=${datasource._id}&appId=${$store.appId}`,
+      `/api/global/auth/${tenantId}/datasource/google?datasourceId=${datasource._id}&appId=${$store.appId}`,
       "_blank"
     )
   }}

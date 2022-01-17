@@ -9,8 +9,11 @@ const { Thread, ThreadType } = require("../../../threads")
 const { save: saveDatasource } = require("../datasource")
 const { RestImporter } = require("./import")
 const { invalidateDynamicVariables } = require("../../../threads/utils")
+const environment = require("../../../environment")
 
-const Runner = new Thread(ThreadType.QUERY, { timeoutMs: 10000 })
+const Runner = new Thread(ThreadType.QUERY, {
+  timeoutMs: 10000 || environment.QUERY_THREAD_TIMEOUT,
+})
 
 // simple function to append "readable" to all read queries
 function enrichQueries(input) {
