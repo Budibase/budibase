@@ -13,6 +13,9 @@ const apiCall =
       headers,
     })
     if (resp.status === 403) {
+      if (url.includes("/api/templates")) {
+        return { json: () => [] }
+      }
       removeCookie(Cookies.Auth)
       // reload after removing cookie, go to login
       if (!url.includes("self") && !url.includes("login")) {

@@ -2811,7 +2811,7 @@
         "key": "dataSource"
       },
       {
-        "type": "multifield",
+        "type": "searchfield",
         "label": "Search Columns",
         "key": "searchColumns",
         "placeholder": "Choose search columns"
@@ -2958,7 +2958,7 @@
         "key": "dataSource"
       },
       {
-        "type": "multifield",
+        "type": "searchfield",
         "label": "Search Columns",
         "key": "searchColumns",
         "placeholder": "Choose search columns"
