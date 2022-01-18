@@ -4,7 +4,6 @@
   import IntegrationConfigForm from "components/backend/DatasourceNavigator/TableIntegrationMenu/IntegrationConfigForm.svelte"
   import { IntegrationNames } from "constants/backend"
   import cloneDeep from "lodash/cloneDeepWith"
-  import GoogleButton from "../_components/GoogleButton.svelte"
   import { saveDatasource as save } from "builderStore/datasource"
   import { onMount } from "svelte"
 
@@ -52,16 +51,9 @@
       >Connect your database to Budibase using the config below.
     </Body>
   </Layout>
-  {#if datasource.auth?.type === "google"}
-    <GoogleButton preAuthStep={() => save(datasource, true)} />
-  {:else}
-    <IntegrationConfigForm
-      schema={datasource.schema}
-      bind:datasource
-      creating={true}
-    />
-  {/if}
+  <IntegrationConfigForm
+    schema={datasource.schema}
+    bind:datasource
+    creating={true}
+  />
 </ModalContent>
-
-<style>
-</style>
