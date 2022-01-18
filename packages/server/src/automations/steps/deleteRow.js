@@ -1,5 +1,4 @@
 const rowController = require("../../api/controllers/row")
-const env = require("../../environment")
 const usage = require("../../utilities/usageQuota")
 const { buildCtx } = require("./utils")
 const automationUtils = require("../automationUtils")
@@ -74,9 +73,7 @@ exports.run = async function ({ inputs, appId, emitter }) {
   })
 
   try {
-    if (env.isProd()) {
-      await usage.update(usage.Properties.ROW, -1)
-    }
+    await usage.update(usage.Properties.ROW, -1)
     await rowController.destroy(ctx)
     return {
       response: ctx.body,

@@ -25,12 +25,12 @@ exports.useQuotas = () => {
 }
 
 exports.Properties = {
-  ROW: "rows", // mostly works - app / table deletion not yet accounted for
+  ROW: "rows",
   UPLOAD: "storage", // doesn't work yet
   VIEW: "views", // doesn't work yet
   USER: "users", // doesn't work yet
   AUTOMATION: "automationRuns", // doesn't work yet
-  APPS: "apps", // works
+  APPS: "apps",
   EMAILS: "emails", // doesn't work yet
 }
 
