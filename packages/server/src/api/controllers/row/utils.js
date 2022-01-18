@@ -52,21 +52,29 @@ exports.validate = async ({ appId, tableId, row, table }) => {
     const constraints = cloneDeep(table.schema[fieldName].constraints)
     const type = table.schema[fieldName].type
     // special case for options, need to always allow unselected (null)
-    if (
-      (type === FieldTypes.OPTIONS || type === FieldTypes.ARRAY) &&
-      constraints.inclusion
-    ) {
+    if (type === FieldTypes.OPTIONS && constraints.inclusion) {
       constraints.inclusion.push(null)
     }
     let res
 
     // Validate.js doesn't seem to handle array
-    if (type === FieldTypes.ARRAY && row[fieldName] && row[fieldName].length) {
-      row[fieldName].map(val => {
-        if (!constraints.inclusion.includes(val)) {
-          errors[fieldName] = "Field not in list"
-        }
-      })
+    if (type === FieldTypes.ARRAY) {
+      const hasValues =
+        Array.isArray(row[fieldName]) && row[fieldName].length > 0
+
+      // Check values are valid if values are specified
+      if (hasValues) {
+        row[fieldName].map(val => {
+          if (!constraints.inclusion.includes(val)) {
+            errors[fieldName] = "Value not in list"
+          }
+        })
+      }
+
+      // Check for required constraint
+      if (constraints.presence === true && !hasValues) {
+        errors[fieldName] = "Required field"
+      }
     } else if (type === FieldTypes.JSON && typeof row[fieldName] === "string") {
       // this should only happen if there is an error
       try {
