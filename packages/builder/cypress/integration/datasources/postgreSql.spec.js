@@ -15,7 +15,7 @@ context("PostgreSQL Datasource Testing", () => {
             // Attempt to fetch tables without applying configuration
             cy.intercept('**/datasources').as('datasource')
             cy.get(".spectrum-Button")
-            .contains("Fetch tables from database")
+            .contains("Save and fetch tables")
             .click({ force: true })
             // Intercept Request after button click & apply assertions
             cy.wait("@datasource")
@@ -96,6 +96,23 @@ context("PostgreSQL Datasource Testing", () => {
             .should('contain', "LOCATIONS through COUNTRIES → REGIONS")
         })
         
+        it("should delete a relationship", () => {
+            cy.get(".hierarchy-items-container").contains(datasource).click()
+            cy.reload()
+            // Delete one relationship
+            cy.get(".spectrum-Table-body").eq(1).within(() => {
+                cy.get(".spectrum-Table-row").eq(0).click()
+                cy.wait(500)
+                })
+            cy.get(".spectrum-Dialog-grid").within(() => {
+                cy.get(".spectrum-Button").contains("Delete").click({ force: true })
+                })
+            cy.reload()
+            // Confirm relationship was deleted
+            cy.get(".spectrum-Table-body")
+            .eq(1).find('tr').its('length').should('eq', 1)
+        })
+        
         it("should add a query", () => {
             // Add query
             cy.get(".spectrum-Button").contains("Add query").click({ force: true })
@@ -125,39 +142,38 @@ context("PostgreSQL Datasource Testing", () => {
             cy.get(".hierarchy-items-container").contains(datasource).click()
             switchSchema("randomText")
             
-            // No tables displayed - No rows found message received
-            cy.get(".spectrum-Table-body").eq(1).should('contain', 'No rows found')
+            // No tables displayed
+            cy.get(".spectrum-Body").eq(2).should('contain', 'No tables found')
             
-            // Define relationship button should not be visible
-            cy.get(".spectrum-Button").should('not.contain', 'Define relationship')
-            // Relationship table should be empty
-            cy.get(".spectrum-Table-body").eq(2).should('contain', 'No rows found')
-            
-            // Query table should not exist
-            cy.get(".container").find(".spectrum-Table").should('have.length', 2)
+            // Previously created query should be visible
+            cy.get(".spectrum-Table-body").should('contain', queryName)
         })
         
         it("should switch schemas", () => {
             // Switch schema - To one with tables
             switchSchema("1")
             
-            // Confirm tables exist
-            cy.get(".spectrum-Table-body").eq(0).should('not.contain', 'No rows found')
-            cy.get(".spectrum-Table-body").eq(0).find('tr').its('length').should('be.gt', 0)
+            // Confirm tables exist - Check for specific one
+            cy.get(".spectrum-Table-body").eq(0).should('contain', 'test')
+            cy.get(".spectrum-Table-body").eq(0).find('tr').its('length').should('eq', 1)
             
-            // Relationship table should be empty & query table should not exist
-            cy.get(".spectrum-Table-body").eq(2).should('contain', 'No rows found')
-            cy.get(".container").find(".spectrum-Table").should('have.length', 2)
+            // Confirm specific table visible within left nav bar
+            cy.get(".hierarchy-items-container").should('contain', 'test')
             
             // Switch back to public schema
             switchSchema("public")
             
             // Confirm tables exist - again
-            cy.get(".spectrum-Table-body").eq(1).should('not.contain', 'No rows found')
-            cy.get(".spectrum-Table-body").eq(1).find('tr').should('be.gt', 0)
+            cy.get(".spectrum-Table-body").eq(0).should('contain', 'REGIONS')
+            cy.get(".spectrum-Table-body").eq(0)
+            .find('tr').its('length').should('be.gt', 1)
             
             // Confirm specific table visible within left nav bar
             cy.get(".hierarchy-items-container").should('contain', 'REGIONS')
+            
+            // No relationships and one query
+            cy.get(".spectrum-Body").eq(3).should('contain', 'No relationships configured.')
+            cy.get(".spectrum-Table-body").eq(1).should('contain', queryName)
         })
         
         it("should duplicate a query", () => {
@@ -171,9 +187,6 @@ context("PostgreSQL Datasource Testing", () => {
         })
         
         it("should edit a query name", () => {
-            // Ensure correct schema is selected
-            switchSchema("public")
-            
             // Access query
             cy.get(".hierarchy-items-container").contains(queryName + ' (1)').click()
             
@@ -205,31 +218,6 @@ context("PostgreSQL Datasource Testing", () => {
             cy.get(".nav-item").should('not.contain', queryRename)
         })
         
-        it("should delete relationships", () => {
-            cy.get(".hierarchy-items-container").contains(datasource).click()
-            cy.reload()
-            // Delete both relationships
-            cy.get(".spectrum-Table-body")
-            .eq(1).find('tr').its('length')
-            .then((len) => {
-                for (let i = 0; i < len; i++) {
-                    cy.get(".spectrum-Table-body").eq(1).within(() => {
-                        cy.get(".spectrum-Table-row").eq(0).click()
-                        cy.wait(500)
-                    })
-                    cy.get(".spectrum-Dialog-grid").within(() => {
-                        cy.get(".spectrum-Button").contains("Delete").click({ force: true })
-                    })
-                    cy.reload()
-                }
-                // Table has placeholder tr when empty
-                cy.get(".spectrum-Table-body")
-                .eq(1)
-                .find('tr')
-                .should('have.length', 1)
-            })
-        })
-        
         const switchSchema = (schema) => {
             // Edit configuration - Change Schema
             cy.get(".spectrum-Textfield").eq(6).within(() => {
@@ -243,6 +231,7 @@ context("PostgreSQL Datasource Testing", () => {
                 cy.get(".spectrum-Button").contains("Fetch tables").click({ force: true })
             })
             cy.reload()
+            cy.wait(5000)
         }
     }
 })

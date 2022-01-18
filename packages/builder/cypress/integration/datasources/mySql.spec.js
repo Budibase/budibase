@@ -15,7 +15,7 @@ context("MySQL Datasource Testing", () => {
             // Attempt to fetch tables without applying configuration
             cy.intercept('**/datasources').as('datasource')
             cy.get(".spectrum-Button")
-            .contains("Fetch tables from database")
+            .contains("Save and fetch tables")
             .click({ force: true })
             // Intercept Request after button click & apply assertions
             cy.wait("@datasource")
@@ -119,11 +119,8 @@ context("MySQL Datasource Testing", () => {
                     })
                     cy.reload()
                 }
-                // Table has placeholder tr when empty
-                cy.get(".spectrum-Table-body")
-                .eq(1)
-                .find('tr')
-                .should('have.length', 1)
+                // Confirm relationships no longer exist
+                cy.get(".spectrum-Body").should('contain', 'No relationships configured')
             })
         })
         

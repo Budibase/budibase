@@ -1,7 +1,8 @@
 context("Query Level Transformers", () => {
   before(() => {
     cy.login()
-    cy.createTestApp()
+    cy.deleteApp("Cypress Tests")
+    cy.createApp("Cypress Tests")
   })
     
   it("should write a transformer function", () => {

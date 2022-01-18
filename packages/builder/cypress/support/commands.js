@@ -343,8 +343,8 @@ Cypress.Commands.add("selectExternalDatasource", datasourceName => {
   })
 })
 
-Cypress.Commands.add("addDatasourceConfig", (datasource, noFetch) => {
-  // addExternalDatasource should be called prior to this
+Cypress.Commands.add("addDatasourceConfig", (datasource, skipFetch) => {
+  // selectExternalDatasource should be called prior to this
   // Adds the config for specified datasource & fetches tables
   // Currently supports MySQL, PostgreSQL, Oracle
   // Host IP Address
@@ -369,14 +369,14 @@ Cypress.Commands.add("addDatasourceConfig", (datasource, noFetch) => {
       cy.get(".form-row")
         .eq(4)
         .within(() => {
-          cy.get("input").clear().type("mysql")
+          cy.get("input").clear().type(Cypress.env("mysql").DATABASE)
         })
     } else {
       cy.get(".form-row")
         .eq(2)
         .within(() => {
           if (datasource == "PostgreSQL") {
-            cy.get("input").clear().type("test")
+            cy.get("input").clear().type(Cypress.env("postgresql").DATABASE)
           }
           if (datasource == "Oracle") {
             cy.get("input").clear().type(Cypress.env("oracle").DATABASE)
@@ -390,14 +390,14 @@ Cypress.Commands.add("addDatasourceConfig", (datasource, noFetch) => {
       cy.get(".form-row")
         .eq(2)
         .within(() => {
-          cy.get("input").clear().type("root")
+          cy.get("input").clear().type(Cypress.env("mysql").USER)
         })
     } else {
       cy.get(".form-row")
         .eq(3)
         .within(() => {
           if (datasource == "PostgreSQL") {
-            cy.get("input").clear().type("admin")
+            cy.get("input").clear().type(Cypress.env("postgresql").USER)
           }
           if (datasource == "Oracle") {
             cy.get("input").clear().type(Cypress.env("oracle").USER)
@@ -411,14 +411,14 @@ Cypress.Commands.add("addDatasourceConfig", (datasource, noFetch) => {
       cy.get(".form-row")
         .eq(3)
         .within(() => {
-          cy.get("input").clear().type("abdc321d-4d21-4fc7-8d20-f40ab9fe6db0")
+          cy.get("input").clear().type(Cypress.env("mysql").PASSWORD)
         })
     } else {
       cy.get(".form-row")
         .eq(4)
         .within(() => {
           if (datasource == "PostgreSQL") {
-            cy.get("input").clear().type("8cb2b6f4-4b33-4e86-b790-74eee608a4e9")
+            cy.get("input").clear().type(Cypress.env("postgresql").PASSWORD)
           }
           if (datasource == "Oracle") {
             cy.get("input").clear().type(Cypress.env("oracle").PASSWORD)
@@ -427,10 +427,15 @@ Cypress.Commands.add("addDatasourceConfig", (datasource, noFetch) => {
     }
   })
   // Click to fetch tables
-  if (!noFetch) {
+  if (skipFetch) {
     cy.get(".spectrum-Dialog-grid").within(() => {
-      cy.get(".spectrum-Button")
-        .contains("Fetch tables from database")
+      cy.get(".spectrum-Button").contains("Skip table fetch")
+        .click({ force: true })
+    })
+  }
+  else {
+    cy.get(".spectrum-Dialog-grid").within(() => {
+      cy.get(".spectrum-Button").contains("Save and fetch tables")
         .click({ force: true })
       cy.wait(1000)
     })
