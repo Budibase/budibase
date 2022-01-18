@@ -20,6 +20,7 @@
   let fieldSchema
 
   $: flatOptions = optionsSource == null || optionsSource === "schema"
+  $: expandedDefaultValue = expand(fieldState?.defaultValue)
   $: expandedValue = expand(fieldState?.value)
   $: options = getOptions(
     optionsSource,
@@ -39,7 +40,7 @@
       return values
     }
 
-    return values.split(",")
+    return values.split(",").map(value => value.trim())
   }
 </script>
 
@@ -57,6 +58,7 @@
   {#if fieldState}
     <CoreMultiselect
       value={expandedValue}
+      defaultValue={expandedDefaultValue}
       error={fieldState.error}
       getOptionLabel={flatOptions ? x => x : x => x.label}
       getOptionValue={flatOptions ? x => x : x => x.value}
