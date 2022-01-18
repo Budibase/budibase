@@ -17,8 +17,12 @@ const parseBody = (curl: any) => {
   if (curl.data) {
     const keys = Object.keys(curl.data)
     if (keys.length) {
-      const key = keys[0]
+      let key = keys[0]
       try {
+        // filter out the dollar syntax used by curl for shell support
+        if (key.startsWith("$")) {
+          key = key.substring(1)
+        }
         return JSON.parse(key)
       } catch (e) {
         // do nothing
@@ -56,16 +60,19 @@ export class Curl extends ImportSource {
     return true
   }
 
+  getUrl = (): URL => {
+    return new URL(this.curl.raw_url)
+  }
+
   getInfo = async (): Promise<ImportInfo> => {
-    const url = new URL(this.curl.url)
+    const url = this.getUrl()
     return {
-      url: url.origin,
       name: url.hostname,
     }
   }
 
   getQueries = async (datasourceId: string): Promise<Query[]> => {
-    const url = new URL(this.curl.raw_url)
+    const url = this.getUrl()
     const name = url.pathname
     const path = url.pathname
     const method = this.curl.method
@@ -83,6 +90,7 @@ export class Curl extends ImportSource {
       name,
       method,
       path,
+      url,
       queryString,
       headers,
       [],

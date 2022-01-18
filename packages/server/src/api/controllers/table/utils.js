@@ -12,6 +12,7 @@ const { USERS_TABLE_SCHEMA, SwitchableTypes } = require("../../../constants")
 const {
   isExternalTable,
   breakExternalTableId,
+  isSQL,
 } = require("../../../integrations/utils")
 const { getViews, saveView } = require("../view/utils")
 const viewTemplate = require("../view/viewBuilder")
@@ -242,7 +243,9 @@ exports.getTable = async (appId, tableId) => {
   const db = new CouchDB(appId)
   if (isExternalTable(tableId)) {
     let { datasourceId, tableName } = breakExternalTableId(tableId)
-    return exports.getExternalTable(appId, datasourceId, tableName)
+    const datasource = await db.get(datasourceId)
+    const table = await exports.getExternalTable(appId, datasourceId, tableName)
+    return { ...table, sql: isSQL(datasource) }
   } else {
     return db.get(tableId)
   }

@@ -1,11 +1,15 @@
-const { getAppId, setCookie, getCookie, clearCookie } =
-  require("@budibase/auth").utils
-const { Cookies } = require("@budibase/auth").constants
-const { getRole } = require("@budibase/auth/roles")
-const { BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
+const {
+  getAppId,
+  setCookie,
+  getCookie,
+  clearCookie,
+} = require("@budibase/backend-core/utils")
+const { Cookies } = require("@budibase/backend-core/constants")
+const { getRole } = require("@budibase/backend-core/roles")
+const { BUILTIN_ROLE_IDS } = require("@budibase/backend-core/roles")
 const { generateUserMetadataID, isDevAppID } = require("../db/utils")
-const { dbExists } = require("@budibase/auth/db")
-const { isUserInAppTenant } = require("@budibase/auth/tenancy")
+const { dbExists } = require("@budibase/backend-core/db")
+const { isUserInAppTenant } = require("@budibase/backend-core/tenancy")
 const { getCachedSelf } = require("../utilities/global")
 const CouchDB = require("../db")
 const env = require("../environment")
@@ -43,6 +47,15 @@ module.exports = async (ctx, next) => {
     (!ctx.user || !ctx.user.builder || !ctx.user.builder.global)
   ) {
     clearCookie(ctx, Cookies.CurrentApp)
+    // have to set the return url on the server side as client side is not available
+    setCookie(ctx, ctx.url, Cookies.RETURN_URL, {
+      // don't sign so the browser can easily read
+      sign: false,
+      // use the request domain to match how ui handles the return url cookie.
+      // it's important we don't use the shared domain here as the builder
+      // can't delete from it without awareness of the domain.
+      requestDomain: true,
+    })
     return ctx.redirect("/")
   }
 

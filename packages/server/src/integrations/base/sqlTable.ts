@@ -36,7 +36,7 @@ function generateSchema(
       case FieldTypes.STRING:
       case FieldTypes.OPTIONS:
       case FieldTypes.LONGFORM:
-        schema.string(key)
+        schema.text(key)
         break
       case FieldTypes.NUMBER:
         // if meta is specified then this is a junction table entry

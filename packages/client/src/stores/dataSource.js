@@ -61,7 +61,8 @@ export const createDataSourceStore = () => {
 
     // Emit this as a window event, so parent screens which are iframing us in
     // can also invalidate the same datasource
-    if (get(routeStore).queryParams?.peek) {
+    const inModal = get(routeStore).queryParams?.peek
+    if (inModal) {
       window.parent.postMessage({
         type: "invalidate-datasource",
         detail: { dataSourceId },

@@ -8,6 +8,8 @@ module S3Module {
     region: string
     accessKeyId: string
     secretAccessKey: string
+    s3ForcePathStyle: boolean
+    endpoint?: string
   }
 
   const SCHEMA: Integration = {
@@ -18,7 +20,7 @@ module S3Module {
     datasource: {
       region: {
         type: "string",
-        required: true,
+        required: false,
         default: "us-east-1",
       },
       accessKeyId: {
@@ -28,6 +30,15 @@ module S3Module {
       secretAccessKey: {
         type: "password",
         required: true,
+      },
+      endpoint: {
+        type: "string",
+        required: false,
+      },
+      signatureVersion: {
+        type: "string",
+        required: false,
+        default: "v4",
       },
     },
     query: {
@@ -46,16 +57,16 @@ module S3Module {
   class S3Integration implements IntegrationBase {
     private readonly config: S3Config
     private client: any
-    private connectionPromise: Promise<any>
 
     constructor(config: S3Config) {
       this.config = config
-      this.connectionPromise = this.connect()
-      this.client = new AWS.S3()
-    }
+      if (this.config.endpoint) {
+        this.config.s3ForcePathStyle = true
+      } else {
+        delete this.config.endpoint
+      }
 
-    async connect() {
-      AWS.config.update(this.config)
+      this.client = new AWS.S3(this.config)
     }
 
     async read(query: { bucket: string }) {

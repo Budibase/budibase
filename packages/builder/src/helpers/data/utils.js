@@ -84,7 +84,7 @@ export function customQueryIconText(datasource, query) {
     case "read":
       return "GET"
     case "delete":
-      return "DELETE"
+      return "DEL"
     case "patch":
       return "PATCH"
   }
@@ -118,4 +118,14 @@ export function flipHeaderState(headersActivity) {
     enabled[key] = !value
   })
   return enabled
+}
+
+export default {
+  breakQueryString,
+  buildQueryString,
+  fieldsToSchema,
+  flipHeaderState,
+  keyValueToQueryParameters,
+  queryParametersToKeyValue,
+  schemaToFields,
 }

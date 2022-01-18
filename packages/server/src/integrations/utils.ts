@@ -1,12 +1,7 @@
-import { SqlQuery } from "../definitions/datasource"
+import { SourceNames, SqlQuery } from "../definitions/datasource"
 import { Datasource, Table } from "../definitions/common"
-import { SourceNames } from "../definitions/datasource"
-const { DocumentTypes, SEPARATOR } = require("../db/utils")
-const {
-  FieldTypes,
-  BuildSchemaErrors,
-  InvalidColumns,
-} = require("../constants")
+import { DocumentTypes, SEPARATOR } from "../db/utils"
+import { FieldTypes, BuildSchemaErrors, InvalidColumns } from "../constants"
 
 const DOUBLE_SEPARATOR = `${SEPARATOR}${SEPARATOR}`
 const ROW_ID_REGEX = /^\[.*]$/g
@@ -131,7 +126,12 @@ export function isSQL(datasource: Datasource): boolean {
   if (!datasource || !datasource.source) {
     return false
   }
-  const SQL = [SourceNames.POSTGRES, SourceNames.SQL_SERVER, SourceNames.MYSQL]
+  const SQL = [
+    SourceNames.POSTGRES,
+    SourceNames.SQL_SERVER,
+    SourceNames.MYSQL,
+    SourceNames.ORACLE,
+  ]
   return SQL.indexOf(datasource.source) !== -1
 }
 
@@ -158,7 +158,12 @@ function copyExistingPropsOver(
       if (!existingTableSchema.hasOwnProperty(key)) {
         continue
       }
-      if (existingTableSchema[key].type === "link") {
+      if (
+        existingTableSchema[key].type === FieldTypes.LINK ||
+        existingTableSchema[key].type === FieldTypes.OPTIONS ||
+        ((!table.schema[key] || table.schema[key].type === FieldTypes.NUMBER) &&
+          existingTableSchema[key].type === FieldTypes.BOOLEAN)
+      ) {
         table.schema[key] = existingTableSchema[key]
       }
     }

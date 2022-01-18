@@ -2,7 +2,7 @@
   import { Select } from "@budibase/bbui"
   import { makePropSafe } from "@budibase/string-templates"
   import { currentAsset, store } from "builderStore"
-  import { findComponentPath } from "builderStore/storeUtils"
+  import { findComponentPath } from "builderStore/componentUtils"
   import { createEventDispatcher, onMount } from "svelte"
 
   export let value

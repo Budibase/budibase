@@ -1,5 +1,5 @@
 const env = require("../environment")
-const { Headers } = require("@budibase/auth").constants
+const { Headers } = require("@budibase/backend-core/constants")
 
 /**
  * This is a restricted endpoint in the cloud.

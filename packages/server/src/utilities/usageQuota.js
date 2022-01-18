@@ -1,9 +1,9 @@
 const env = require("../environment")
-const { getGlobalDB } = require("@budibase/auth/tenancy")
+const { getGlobalDB } = require("@budibase/backend-core/tenancy")
 const {
   StaticDatabases,
   generateNewUsageQuotaDoc,
-} = require("@budibase/auth/db")
+} = require("@budibase/backend-core/db")
 
 function getNewQuotaReset() {
   return Date.now() + 2592000000
