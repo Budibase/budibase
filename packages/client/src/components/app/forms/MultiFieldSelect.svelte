@@ -19,6 +19,7 @@
   let fieldApi
   let fieldSchema
 
+  $: safeDefaultValue = getSafeDefaultValue(defaultValue)
   $: flatOptions = optionsSource == null || optionsSource === "schema"
   $: options = getOptions(
     optionsSource,
@@ -28,6 +29,16 @@
     valueColumn,
     customOptions
   )
+
+  const getSafeDefaultValue = value => {
+    if (value == null || value === "") {
+      return []
+    }
+    if (!Array.isArray(value)) {
+      return [value]
+    }
+    return value
+  }
 </script>
 
 <Field
@@ -35,7 +46,7 @@
   {label}
   {disabled}
   {validation}
-  {defaultValue}
+  defaultValue={safeDefaultValue}
   type="array"
   bind:fieldState
   bind:fieldApi
