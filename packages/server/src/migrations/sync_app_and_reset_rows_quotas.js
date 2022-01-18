@@ -17,7 +17,7 @@ const syncRowsQuota = async db => {
 
   // sync row count
   const usageDoc = await getUsageQuotaDoc(db)
-  usageDoc.usageQuota.rows = rows.size
+  usageDoc.usageQuota.rows = rows.length
   await db.put(usageDoc)
 }
 

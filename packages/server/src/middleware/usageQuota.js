@@ -129,8 +129,8 @@ const appPreDelete = async (ctx, usageContext) => {
 
   // store the row count to delete
   const rows = await getUniqueRows([ctx.appId])
-  if (rows.size) {
-    usageContext[usageQuota.Properties.APPS] = { rowCount: rows.size }
+  if (rows.length) {
+    usageContext[usageQuota.Properties.APPS] = { rowCount: rows.length }
   }
 }
 

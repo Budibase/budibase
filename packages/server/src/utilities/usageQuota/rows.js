@@ -1,52 +1,73 @@
 const { getRowParams, USER_METDATA_PREFIX } = require("../../db/utils")
 const CouchDB = require("../../db")
+const { isDevAppID, getDevelopmentAppID } = require("@budibase/backend-core/db")
 
 const ROW_EXCLUSIONS = [USER_METDATA_PREFIX]
 
-/**
- * Get all rows in the given app ids.
- *
- * The returned rows may contan duplicates if there
- * is a production and dev app.
- */
-const getAllRows = async appIds => {
-  const allRows = []
-  let appDb
+const getAppPairs = appIds => {
+  // collect the app ids into dev / prod pairs
+  // keyed by the dev app id
+  const pairs = {}
   for (let appId of appIds) {
-    try {
-      appDb = new CouchDB(appId)
-      const response = await appDb.allDocs(
-        getRowParams(null, null, {
-          include_docs: false,
-        })
-      )
-      allRows.push(
-        ...response.rows
-          .map(r => r.id)
-          .filter(id => {
-            for (let exclusion of ROW_EXCLUSIONS) {
-              if (id.startsWith(exclusion)) {
-                return false
-              }
-            }
-            return true
-          })
-      )
-    } catch (e) {
-      // don't error out if we can't count the app rows, just continue
+    const devId = getDevelopmentAppID(appId)
+    if (!pairs[devId]) {
+      pairs[devId] = {}
+    }
+    if (isDevAppID(appId)) {
+      pairs[devId].devId = appId
+    } else {
+      pairs[devId].prodId = appId
     }
   }
+  return pairs
+}
 
-  return allRows
+const getAppRows = async appId => {
+  const appDb = new CouchDB(appId)
+  const response = await appDb.allDocs(
+    getRowParams(null, null, {
+      include_docs: false,
+    })
+  )
+  return response.rows
+    .map(r => r.id)
+    .filter(id => {
+      for (let exclusion of ROW_EXCLUSIONS) {
+        if (id.startsWith(exclusion)) {
+          return false
+        }
+      }
+      return true
+    })
 }
 
 /**
- * Get all rows in the given app ids.
- *
- * The returned rows will be unique, duplicated rows across
- * production and dev apps will be removed.
+ * Return a set of all rows in the given app ids.
+ * The returned rows will be unique on a per dev/prod app basis.
+ * Rows duplicates may exist across apps due to data import so they are not filtered out.
  */
 exports.getUniqueRows = async appIds => {
-  const allRows = await getAllRows(appIds)
-  return new Set(allRows)
+  let uniqueRows = []
+  const pairs = getAppPairs(appIds)
+
+  for (let pair of Object.values(pairs)) {
+    let appRows = []
+    for (let appId of [pair.devId, pair.prodId]) {
+      if (!appId) {
+        continue
+      }
+      try {
+        appRows.push(await getAppRows(appId))
+      } catch (e) {
+        // don't error out if we can't count the app rows, just continue
+      }
+    }
+
+    // ensure uniqueness on a per app pair basis
+    // this can't be done on all rows because app import results in
+    // duplicate row ids across apps
+    uniqueRows = uniqueRows.concat(...new Set(appRows))
+  }
+
+  return uniqueRows
 }
