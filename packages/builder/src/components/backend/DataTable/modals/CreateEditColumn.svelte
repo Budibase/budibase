@@ -127,6 +127,7 @@
   }
 
   function deleteColumn() {
+    field.name = deleteColName
     if (field.name === $tables.selected.primaryDisplay) {
       notifications.error("You cannot delete the display column")
     } else {
@@ -470,16 +471,16 @@
   onOk={deleteColumn}
   onCancel={hideDeleteDialog}
   title="Confirm Deletion"
-  disabled={deleteColName !== field.name}
+  disabled={deleteColName !== originalName}
 >
   <p>
-    Are you sure you wish to delete the column <b>{field.name}?</b>
+    Are you sure you wish to delete the column <b>{originalName}?</b>
     Your data will be deleted and this action cannot be undone - enter the column
     name to confirm.
   </p>
   <Input
     dataCy="delete-column-confirm"
     bind:value={deleteColName}
-    placeholder={field.name}
+    placeholder={originalName}
   />
 </ConfirmDialog>
