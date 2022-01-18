@@ -7,13 +7,13 @@ exports.MIGRATION_DBS = {
 
 exports.MIGRATIONS = {
   USER_EMAIL_VIEW_CASING: "user_email_view_casing",
-  SYNC_APP_AND_RESET_ROWS_QUOTAS: "sync_app_and_reset_rows_quotas",
+  QUOTAS_1: "quotas_1",
 }
 
 const DB_LOOKUP = {
   [exports.MIGRATION_DBS.GLOBAL_DB]: [
     exports.MIGRATIONS.USER_EMAIL_VIEW_CASING,
-    exports.MIGRATIONS.SYNC_APP_AND_RESET_ROWS_QUOTAS,
+    exports.MIGRATIONS.QUOTAS_1,
   ],
 }
 

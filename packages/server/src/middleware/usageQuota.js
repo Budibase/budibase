@@ -5,7 +5,7 @@ const {
   isExternalTable,
   isRowId: isExternalRowId,
 } = require("../integrations/utils")
-const quotaMigration = require("../migrations/sync_app_and_reset_rows_quotas")
+const migration = require("../migrations/usageQuotas")
 
 // currently only counting new writes and deletes
 const METHOD_MAP = {
@@ -74,7 +74,7 @@ module.exports = async (ctx, next) => {
     usage = files.map(file => file.size).reduce((total, size) => total + size)
   }
   try {
-    await quotaMigration.runIfRequired()
+    await migration.run()
     await performRequest(ctx, next, property, usage)
   } catch (err) {
     ctx.throw(400, err)
@@ -142,6 +142,13 @@ const appPostDelete = async (ctx, usageContext) => {
   }
 }
 
+// const appPostCreate = async (ctx, usageContext) => {
+// if (ctx.request) {
+//   const rowCount = await getUniqueRows([ctx.appId]).length
+//   await usageQuota.update(usageQuota.Properties.ROW, -rowCount)
+// }
+// }
+
 const PRE_DELETE = {
   [usageQuota.Properties.APPS]: appPreDelete,
 }
@@ -152,4 +159,6 @@ const POST_DELETE = {
 
 const PRE_CREATE = {}
 
-const POST_CREATE = {}
+const POST_CREATE = {
+  // [usageQuota.Properties.APPS]: appPostCreate,
+}
