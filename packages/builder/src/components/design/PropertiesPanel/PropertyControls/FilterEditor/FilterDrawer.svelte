@@ -14,6 +14,7 @@
   import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
   import { generate } from "shortid"
   import { getValidOperatorsForType, OperatorOptions } from "constants/lucene"
+  import { getFields } from "helpers/searchFields"
 
   export let schemaFields
   export let filters = []
@@ -21,11 +22,8 @@
   export let panel = ClientBindingPanel
   export let allowBindings = true
 
-  const BannedTypes = ["link", "attachment", "formula"]
-
-  $: fieldOptions = (schemaFields ?? [])
-    .filter(field => !BannedTypes.includes(field.type))
-    .map(field => field.name)
+  $: enrichedSchemaFields = getFields(schemaFields || [])
+  $: fieldOptions = enrichedSchemaFields.map(field => field.name) || []
   $: valueTypeOptions = allowBindings ? ["Value", "Binding"] : ["Value"]
 
   const addFilter = () => {
@@ -53,7 +51,7 @@
 
   const onFieldChange = (expression, field) => {
     // Update the field type
-    expression.type = schemaFields.find(x => x.name === field)?.type
+    expression.type = enrichedSchemaFields.find(x => x.name === field)?.type
 
     // Ensure a valid operator is set
     const validOperators = getValidOperatorsForType(expression.type).map(
@@ -85,7 +83,7 @@
   }
 
   const getFieldOptions = field => {
-    const schema = schemaFields.find(x => x.name === field)
+    const schema = enrichedSchemaFields.find(x => x.name === field)
     return schema?.constraints?.inclusion || []
   }
 </script>

@@ -30,7 +30,7 @@
   export let cardButtonOnClick
   export let linkColumn
 
-  const { API, styleable } = getContext("sdk")
+  const { fetchDatasourceSchema, styleable } = getContext("sdk")
   const context = getContext("context")
   const component = getContext("component")
   const schemaComponentMap = {
@@ -45,6 +45,7 @@
   let dataProviderId
   let repeaterId
   let schema
+  let schemaLoaded = false
 
   $: fetchSchema(dataSource)
   $: enrichedSearchColumns = enrichSearchColumns(searchColumns, schema)
@@ -70,12 +71,13 @@
   const enrichFilter = (filter, columns, formId) => {
     let enrichedFilter = [...(filter || [])]
     columns?.forEach(column => {
+      const safePath = column.name.split(".").map(safe).join(".")
       enrichedFilter.push({
         field: column.name,
         operator: column.type === "string" ? "string" : "equal",
-        type: "string",
+        type: column.type === "string" ? "string" : "number",
         valueType: "Binding",
-        value: `{{ [${formId}].[${column.name}] }}`,
+        value: `{{ ${safe(formId)}.${safePath} }}`,
       })
     })
     return enrichedFilter
@@ -111,103 +113,108 @@
   // Load the datasource schema so we can determine column types
   const fetchSchema = async dataSource => {
     if (dataSource) {
-      schema = await API.fetchDatasourceSchema(dataSource)
+      schema = await fetchDatasourceSchema(dataSource, {
+        enrichRelationships: true,
+      })
     }
+    schemaLoaded = true
   }
 </script>
 
-<Block>
-  <div class="card-list" use:styleable={$component.styles}>
-    <BlockComponent type="form" bind:id={formId} props={{ dataSource }}>
-      {#if title || enrichedSearchColumns?.length || showTitleButton}
-        <div class="header" class:mobile={$context.device.mobile}>
-          <div class="title">
-            <Heading>{title || ""}</Heading>
+{#if schemaLoaded}
+  <Block>
+    <div class="card-list" use:styleable={$component.styles}>
+      <BlockComponent type="form" bind:id={formId} props={{ dataSource }}>
+        {#if title || enrichedSearchColumns?.length || showTitleButton}
+          <div class="header" class:mobile={$context.device.mobile}>
+            <div class="title">
+              <Heading>{title || ""}</Heading>
+            </div>
+            <div class="controls">
+              {#if enrichedSearchColumns?.length}
+                <div
+                  class="search"
+                  style="--cols:{enrichedSearchColumns?.length}"
+                >
+                  {#each enrichedSearchColumns as column}
+                    <BlockComponent
+                      type={column.componentType}
+                      props={{
+                        field: column.name,
+                        placeholder: column.name,
+                        text: column.name,
+                        autoWidth: true,
+                      }}
+                    />
+                  {/each}
+                </div>
+              {/if}
+              {#if showTitleButton}
+                <BlockComponent
+                  type="button"
+                  props={{
+                    onClick: titleButtonAction,
+                    text: titleButtonText,
+                    type: "cta",
+                  }}
+                />
+              {/if}
+            </div>
           </div>
-          <div class="controls">
-            {#if enrichedSearchColumns?.length}
-              <div
-                class="search"
-                style="--cols:{enrichedSearchColumns?.length}"
-              >
-                {#each enrichedSearchColumns as column}
-                  <BlockComponent
-                    type={column.componentType}
-                    props={{
-                      field: column.name,
-                      placeholder: column.name,
-                      text: column.name,
-                      autoWidth: true,
-                    }}
-                  />
-                {/each}
-              </div>
-            {/if}
-            {#if showTitleButton}
-              <BlockComponent
-                type="button"
-                props={{
-                  onClick: titleButtonAction,
-                  text: titleButtonText,
-                  type: "cta",
-                }}
-              />
-            {/if}
-          </div>
-        </div>
-      {/if}
-      <BlockComponent
-        type="dataprovider"
-        bind:id={dataProviderId}
-        props={{
-          dataSource,
-          filter: enrichedFilter,
-          sortColumn,
-          sortOrder,
-          paginate,
-          limit,
-        }}
-      >
+        {/if}
         <BlockComponent
-          type="repeater"
-          bind:id={repeaterId}
-          context="repeater"
+          type="dataprovider"
+          bind:id={dataProviderId}
           props={{
-            dataProvider: `{{ literal ${safe(dataProviderId)} }}`,
-            direction: "row",
-            hAlign: "stretch",
-            vAlign: "top",
-            gap: "M",
-            noRowsMessage: "No rows found",
-          }}
-          styles={{
-            display: "grid",
-            "grid-template-columns": `repeat(auto-fill, minmax(min(${cardWidth}px, 100%), 1fr))`,
+            dataSource,
+            filter: enrichedFilter,
+            sortColumn,
+            sortOrder,
+            paginate,
+            limit,
           }}
         >
           <BlockComponent
-            type="spectrumcard"
+            type="repeater"
+            bind:id={repeaterId}
+            context="repeater"
             props={{
-              title: cardTitle,
-              subtitle: cardSubtitle,
-              description: cardDescription,
-              imageURL: cardImageURL,
-              horizontal: cardHorizontal,
-              showButton: showCardButton,
-              buttonText: cardButtonText,
-              buttonOnClick: cardButtonOnClick,
-              linkURL: fullCardURL,
-              linkPeek: cardPeek,
+              dataProvider: `{{ literal ${safe(dataProviderId)} }}`,
+              direction: "row",
+              hAlign: "stretch",
+              vAlign: "top",
+              gap: "M",
+              noRowsMessage: "No rows found",
             }}
             styles={{
-              width: "auto",
+              display: "grid",
+              "grid-template-columns": `repeat(auto-fill, minmax(min(${cardWidth}px, 100%), 1fr))`,
             }}
-          />
+          >
+            <BlockComponent
+              type="spectrumcard"
+              props={{
+                title: cardTitle,
+                subtitle: cardSubtitle,
+                description: cardDescription,
+                imageURL: cardImageURL,
+                horizontal: cardHorizontal,
+                showButton: showCardButton,
+                buttonText: cardButtonText,
+                buttonOnClick: cardButtonOnClick,
+                linkURL: fullCardURL,
+                linkPeek: cardPeek,
+              }}
+              styles={{
+                width: "auto",
+              }}
+            />
+          </BlockComponent>
         </BlockComponent>
       </BlockComponent>
-    </BlockComponent>
-  </div>
-</Block>
+    </div>
+  </Block>
+{/if}
 
 <style>
   .header {

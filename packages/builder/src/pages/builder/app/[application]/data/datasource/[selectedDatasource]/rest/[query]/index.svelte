@@ -1,22 +1,22 @@
 <script>
   import { params } from "@roxi/routify"
-  import { datasources, integrations, queries, flags } from "stores/backend"
+  import { datasources, flags, integrations, queries } from "stores/backend"
   import {
-    Layout,
-    Input,
-    Select,
-    Tabs,
-    Tab,
     Banner,
-    Divider,
-    Button,
-    Heading,
-    RadioGroup,
-    Label,
     Body,
-    TextArea,
-    Table,
+    Button,
+    Divider,
+    Heading,
+    Input,
+    Label,
+    Layout,
     notifications,
+    RadioGroup,
+    Select,
+    Tab,
+    Table,
+    Tabs,
+    TextArea,
   } from "@budibase/bbui"
   import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
   import EditableLabel from "components/common/inputs/EditableLabel.svelte"
@@ -26,42 +26,39 @@
   import RestBodyInput from "../../_components/RestBodyInput.svelte"
   import { capitalise } from "helpers"
   import { onMount } from "svelte"
-  import {
-    fieldsToSchema,
-    schemaToFields,
-    breakQueryString,
-    buildQueryString,
-    keyValueToQueryParameters,
-    queryParametersToKeyValue,
-    flipHeaderState,
-  } from "helpers/data/utils"
+  import restUtils from "helpers/data/utils"
   import {
     RestBodyTypes as bodyTypes,
     SchemaTypeOptions,
+    PaginationLocations,
+    PaginationTypes,
   } from "constants/backend"
   import JSONPreview from "components/integration/JSONPreview.svelte"
   import AccessLevelSelect from "components/integration/AccessLevelSelect.svelte"
+  import DynamicVariableModal from "../../_components/DynamicVariableModal.svelte"
   import Placeholder from "assets/bb-spaceship.svg"
   import { cloneDeep } from "lodash/fp"
+  import { RawRestBodyTypes } from "constants/backend"
 
   let query, datasource
   let breakQs = {},
     bindings = {}
-  let url = ""
-  let saveId, isGet
+  let saveId, url
   let response, schema, enabledHeaders
-  let datasourceType, integrationInfo, queryConfig, responseSuccess
   let authConfigId
+  let dynamicVariables, addVariableModal, varBinding
 
   $: datasourceType = datasource?.source
   $: integrationInfo = $integrations[datasourceType]
   $: queryConfig = integrationInfo?.query
   $: url = buildUrl(url, breakQs)
   $: checkQueryName(url)
+  $: responseSuccess = response?.info?.code >= 200 && response?.info?.code < 400
   $: isGet = query?.queryVerb === "read"
-  $: responseSuccess =
-    response?.info?.code >= 200 && response?.info?.code <= 206
   $: authConfigs = buildAuthConfigs(datasource)
+  $: schemaReadOnly = !responseSuccess
+  $: variablesReadOnly = !responseSuccess
+  $: showVariablesTab = shouldShowVariables(dynamicVariables, variablesReadOnly)
 
   function getSelectedQuery() {
     return cloneDeep(
@@ -89,7 +86,7 @@
     if (!base) {
       return base
     }
-    const qs = buildQueryString(qsObj)
+    const qs = restUtils.buildQueryString(qsObj)
     let newUrl = base
     if (base.includes("?")) {
       newUrl = base.split("?")[0]
@@ -97,29 +94,15 @@
     return qs.length > 0 ? `${newUrl}?${qs}` : newUrl
   }
 
-  const buildAuthConfigs = datasource => {
-    if (datasource?.config?.authConfigs) {
-      return datasource.config.authConfigs.map(c => ({
-        label: c.name,
-        value: c._id,
-      }))
-    }
-    return []
-  }
-
-  function learnMoreBanner() {
-    window.open("https://docs.budibase.com/building-apps/data/transformers")
-  }
-
   function buildQuery() {
     const newQuery = { ...query }
-    const queryString = buildQueryString(breakQs)
+    const queryString = restUtils.buildQueryString(breakQs)
     newQuery.fields.path = url.split("?")[0]
     newQuery.fields.queryString = queryString
     newQuery.fields.authConfigId = authConfigId
-    newQuery.fields.disabledHeaders = flipHeaderState(enabledHeaders)
-    newQuery.schema = fieldsToSchema(schema)
-    newQuery.parameters = keyValueToQueryParameters(bindings)
+    newQuery.fields.disabledHeaders = restUtils.flipHeaderState(enabledHeaders)
+    newQuery.schema = restUtils.fieldsToSchema(schema)
+    newQuery.parameters = restUtils.keyValueToQueryParameters(bindings)
     return newQuery
   }
 
@@ -130,8 +113,13 @@
       saveId = _id
       query = getSelectedQuery()
       notifications.success(`Request saved successfully.`)
+
+      if (dynamicVariables) {
+        datasource.config.dynamicVariables = rebuildVariables(saveId)
+        datasource = await datasources.save(datasource)
+      }
     } catch (err) {
-      notifications.error(`Error creating query. ${err.message}`)
+      notifications.error(`Error saving query. ${err.message}`)
     }
   }
 
@@ -166,6 +154,78 @@
     return id
   }
 
+  const buildAuthConfigs = datasource => {
+    if (datasource?.config?.authConfigs) {
+      return datasource.config.authConfigs.map(c => ({
+        label: c.name,
+        value: c._id,
+      }))
+    }
+    return []
+  }
+
+  const schemaMenuItems = [
+    {
+      text: "Create dynamic variable",
+      onClick: input => {
+        varBinding = `{{ data.0.[${input.name}] }}`
+        addVariableModal.show()
+      },
+    },
+  ]
+  const responseHeadersMenuItems = [
+    {
+      text: "Create dynamic variable",
+      onClick: input => {
+        varBinding = `{{ info.headers.[${input.name}] }}`
+        addVariableModal.show()
+      },
+    },
+  ]
+
+  // convert dynamic variables list to simple key/val object
+  const getDynamicVariables = (datasource, queryId) => {
+    const variablesList = datasource?.config?.dynamicVariables
+    if (variablesList && variablesList.length > 0) {
+      const filtered = queryId
+        ? variablesList.filter(variable => variable.queryId === queryId)
+        : variablesList
+      return filtered.reduce(
+        (acc, next) => ({ ...acc, [next.name]: next.value }),
+        {}
+      )
+    }
+    return {}
+  }
+
+  // convert dynamic variables object back to a list, enrich with query id
+  const rebuildVariables = queryId => {
+    let variables = []
+    if (dynamicVariables) {
+      variables = Object.entries(dynamicVariables).map(entry => {
+        return {
+          name: entry[0],
+          value: entry[1],
+          queryId,
+        }
+      })
+    }
+
+    let existing = datasource?.config?.dynamicVariables || []
+    // remove existing query variables (for changes and deletions)
+    existing = existing.filter(variable => variable.queryId !== queryId)
+    // re-add the new query variables
+    return [...existing, ...variables]
+  }
+
+  const shouldShowVariables = (dynamicVariables, variablesReadOnly) => {
+    return !!(
+      dynamicVariables &&
+      // show when editable or when read only and not empty
+      (!variablesReadOnly || Object.keys(dynamicVariables).length > 0)
+    )
+  }
+
   onMount(async () => {
     query = getSelectedQuery()
     // clear any unsaved changes to the datasource
@@ -173,14 +233,18 @@
     datasource = $datasources.list.find(ds => ds._id === query?.datasourceId)
     const datasourceUrl = datasource?.config.url
     const qs = query?.fields.queryString
-    breakQs = breakQueryString(qs)
-    if (datasourceUrl && !query.fields.path?.startsWith(datasourceUrl)) {
-      const path = query.fields.path
+    breakQs = restUtils.breakQueryString(qs)
+    const path = query.fields.path
+    if (
+      datasourceUrl &&
+      !path?.startsWith("http") &&
+      !path?.startsWith("{{") // don't substitute the datasource url when query starts with a variable e.g. the upgrade path
+    ) {
       query.fields.path = `${datasource.config.url}/${path ? path : ""}`
     }
     url = buildUrl(query.fields.path, breakQs)
-    schema = schemaToFields(query.schema)
-    bindings = queryParametersToKeyValue(query.parameters)
+    schema = restUtils.schemaToFields(query.schema)
+    bindings = restUtils.queryParametersToKeyValue(query.parameters)
     authConfigId = getAuthConfigId()
     if (!query.fields.disabledHeaders) {
       query.fields.disabledHeaders = {}
@@ -191,7 +255,7 @@
         query.fields.disabledHeaders[header] = false
       }
     }
-    enabledHeaders = flipHeaderState(query.fields.disabledHeaders)
+    enabledHeaders = restUtils.flipHeaderState(query.fields.disabledHeaders)
     if (query && !query.transformer) {
       query.transformer = "return data"
     }
@@ -201,11 +265,25 @@
       }
     }
     if (query && !query.fields.bodyType) {
-      query.fields.bodyType = "none"
+      if (query.fields.requestBody) {
+        query.fields.bodyType = RawRestBodyTypes.JSON
+      } else {
+        query.fields.bodyType = RawRestBodyTypes.NONE
+      }
     }
+    if (query && !query.fields.pagination) {
+      query.fields.pagination = {}
+    }
+    dynamicVariables = getDynamicVariables(datasource, query._id)
   })
 </script>
 
+<DynamicVariableModal
+  {datasource}
+  {dynamicVariables}
+  bind:binding={varBinding}
+  bind:this={addVariableModal}
+/>
 {#if query && queryConfig}
   <div class="inner">
     <div class="top">
@@ -237,7 +315,7 @@
           </div>
           <Button cta disabled={!url} on:click={runQuery}>Send</Button>
         </div>
-        <Tabs selected="Bindings" quiet noPadding noHorizPadding>
+        <Tabs selected="Bindings" quiet noPadding noHorizPadding onTop>
           <Tab title="Bindings">
             <KeyValueBuilder
               bind:object={bindings}
@@ -270,12 +348,51 @@
             />
             <RestBodyInput bind:bodyType={query.fields.bodyType} bind:query />
           </Tab>
+          <Tab title="Pagination">
+            <div class="pagination">
+              <Select
+                label="Pagination type"
+                bind:value={query.fields.pagination.type}
+                options={PaginationTypes}
+                placeholder="None"
+              />
+              {#if query.fields.pagination.type}
+                <Select
+                  label="Pagination parameters location"
+                  bind:value={query.fields.pagination.location}
+                  options={PaginationLocations}
+                  placeholer="Choose where to send pagination parameters"
+                />
+                <Input
+                  label={query.fields.pagination.type === "page"
+                    ? "Page number parameter name "
+                    : "Request cursor parameter name"}
+                  bind:value={query.fields.pagination.pageParam}
+                />
+                <Input
+                  label={query.fields.pagination.type === "page"
+                    ? "Page size parameter name"
+                    : "Request limit parameter name"}
+                  bind:value={query.fields.pagination.sizeParam}
+                />
+                {#if query.fields.pagination.type === "cursor"}
+                  <Input
+                    label="Response body parameter name for cursor"
+                    bind:value={query.fields.pagination.responseParam}
+                  />
+                {/if}
+              {/if}
+            </div>
+          </Tab>
           <Tab title="Transformer">
             <Layout noPadding>
               {#if !$flags.queryTransformerBanner}
                 <Banner
                   extraButtonText="Learn more"
-                  extraButtonAction={learnMoreBanner}
+                  extraButtonAction={() =>
+                    window.open(
+                      "https://docs.budibase.com/building-apps/data/transformers"
+                    )}
                   on:change={() =>
                     flags.updateFlag("queryTransformerBanner", true)}
                 >
@@ -341,6 +458,9 @@
                   name="schema"
                   headings
                   options={SchemaTypeOptions}
+                  menuItems={schemaMenuItems}
+                  showMenu={!schemaReadOnly}
+                  readOnly={schemaReadOnly}
                 />
               </Tab>
             {/if}
@@ -349,7 +469,12 @@
                 <TextArea disabled value={response.extra?.raw} height="300" />
               </Tab>
               <Tab title="Headers">
-                <KeyValueBuilder object={response.extra?.headers} readOnly />
+                <KeyValueBuilder
+                  object={response.extra?.headers}
+                  readOnly
+                  menuItems={responseHeadersMenuItems}
+                  showMenu={true}
+                />
               </Tab>
               <Tab title="Preview">
                 <div class="table">
@@ -364,6 +489,28 @@
                   {/if}
                 </div>
               </Tab>
+            {/if}
+            {#if showVariablesTab}
+              <Tab title="Dynamic Variables">
+                <Layout noPadding gap="S">
+                  <Body size="S">
+                    Create dynamic variables based on response body or headers
+                    from this query.
+                  </Body>
+                  <KeyValueBuilder
+                    bind:object={dynamicVariables}
+                    name="Variable"
+                    headings
+                    keyHeading="Name"
+                    keyPlaceholder="Variable name"
+                    valueHeading={`Value`}
+                    valuePlaceholder={`{{ value }}`}
+                    readOnly={variablesReadOnly}
+                  />
+                </Layout>
+              </Tab>
+            {/if}
+            {#if response}
               <div class="stats">
                 <Label size="L">
                   Status: <span class={responseSuccess ? "green" : "red"}
@@ -457,5 +604,10 @@
   }
   .auth-select {
     width: 200px;
+  }
+  .pagination {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-m);
   }
 </style>

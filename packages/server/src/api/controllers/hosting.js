@@ -1,7 +1,7 @@
 const CouchDB = require("../../db")
 const { getDeployedApps } = require("../../utilities/workerRequests")
-const { getScopedConfig } = require("@budibase/auth/db")
-const { Configs } = require("@budibase/auth").constants
+const { getScopedConfig } = require("@budibase/backend-core/db")
+const { Configs } = require("@budibase/backend-core/constants")
 const { checkSlashesInUrl } = require("../../utilities")
 
 exports.fetchUrls = async ctx => {

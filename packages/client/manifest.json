@@ -500,9 +500,20 @@
         "defaultValue": "M"
       }
     ],
-    "context": {
-      "type": "schema"
-    }
+    "context": [
+      {
+        "type": "schema"
+      },
+      {
+        "type": "static",
+        "values":  [
+          {
+            "label": "Row Index",
+            "key": "index"
+          }
+        ]
+      }
+    ]
   },
   "stackedlist": {
     "deprecated": true,
@@ -805,6 +816,57 @@
           "barIcon": "TextAlignJustify",
           "barTitle": "Justify text"
         }]
+      }
+    ]
+  },
+  "tag": {
+    "name": "Tag",
+    "icon": "TextParagraph",
+    "showSettingsBar": true,
+    "settings": [
+      {
+        "type": "text",
+        "label": "Text",
+        "key": "text"
+      },
+      {
+        "type": "select",
+        "label": "Size",
+        "key": "size",
+        "defaultValue": "M",
+        "showInBar": true,
+        "barStyle": "picker",
+        "options": [{
+          "label": "Small",
+          "value": "S"
+        }, {
+          "label": "Medium",
+          "value": "M"
+        }, {
+          "label": "Large",
+          "value": "L"
+        }]
+      },
+      {
+        "type": "color",
+        "label": "Color",
+        "key": "color",
+        "showInBar": true,
+        "barSeparator": false
+      },
+      {
+        "type": "boolean",
+        "label": "Show delete icon",
+        "key": "closable",
+        "showInBar": true,
+        "barIcon": "TagItalic",
+        "barTitle": "Show delete icon"
+      },
+      {
+        "type": "event",
+        "label": "On click delete icon",
+        "key": "onClick",
+        "dependsOn": "closable"
       }
     ]
   },
@@ -1776,6 +1838,10 @@
         "type": "static",
         "values":  [
           {
+            "label": "Value",
+            "key": "__value"
+          },
+          {
             "label": "Valid",
             "key": "__valid"
           },
@@ -2407,6 +2473,40 @@
       }
     ]
   },
+  "jsonfield": {
+    "name": "JSON Field",
+    "icon": "Brackets",
+    "styles": ["size"],
+    "editable": true,
+    "settings": [
+      {
+        "type": "field/json",
+        "label": "Field",
+        "key": "field"
+      },
+      {
+        "type": "text",
+        "label": "Label",
+        "key": "label"
+      },
+      {
+        "type": "text",
+        "label": "Placeholder",
+        "key": "placeholder"
+      },
+      {
+        "type": "text",
+        "label": "Default value",
+        "key": "defaultValue"
+      },
+      {
+        "type": "boolean",
+        "label": "Disabled",
+        "key": "disabled",
+        "defaultValue": false
+      }
+    ]
+  },
   "dataprovider": {
     "name": "Data Provider",
     "info": "Pagination is only available for data stored in tables.",
@@ -2457,6 +2557,10 @@
           "label": "Rows",
           "key": "rows"
         },
+	{
+	  "label": "Extra Info",
+	  "key": "info"
+	},
         {
           "label": "Rows Length",
           "key": "rowsLength"
@@ -2707,7 +2811,7 @@
         "key": "dataSource"
       },
       {
-        "type": "multifield",
+        "type": "searchfield",
         "label": "Search Columns",
         "key": "searchColumns",
         "placeholder": "Choose search columns"
@@ -2854,7 +2958,7 @@
         "key": "dataSource"
       },
       {
-        "type": "multifield",
+        "type": "searchfield",
         "label": "Search Columns",
         "key": "searchColumns",
         "placeholder": "Choose search columns"
@@ -3178,6 +3282,10 @@
             "label": "Rows",
             "key": "rows"
           },
+	  {
+            "label": "Extra Info",
+            "key": "info"
+          },
           {
             "label": "Rows Length",
             "key": "rowsLength"
@@ -3191,6 +3299,16 @@
             "key": "pageNumber"
           }
         ]
+      },
+      {
+        "type": "static",
+        "suffix": "repeater",
+        "values":  [
+          {
+            "label": "Row Index",
+            "key": "index"
+          }
+         ]
       },
       {
         "type": "schema",

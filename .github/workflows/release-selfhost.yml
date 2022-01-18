@@ -9,7 +9,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-        with:
+        with: 
+          node-version: 14.x
           fetch_depth: 0
 
       - name: Tag and release Docker images (Self Host)
@@ -37,29 +38,31 @@ jobs:
           DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
           SELFHOST_TAG: latest
       
+      - name: Build CLI executables
+        run: |
+          pushd packages/cli
+          yarn
+          yarn build
+          popd
+      
       - name: Setup Helm 
         uses: azure/setup-helm@v1
         id: helm-install
 
-      # - name: Build and release helm chart
-      #   run: | 
-      #     git config user.name "Budibase Helm Bot"
-      #     git config user.email "<>"
-      #     mv budibase-${{ env.RELEASE_VERSION }}.tgz docs
-      #     helm repo index docs
-      #     git checkout gh-pages
-      #     git add -A
-      #     git commit -m "Helm Release: ${{ env.RELEASE_VERSION }}"
-      #     git push
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      # - name: Deploy
-      #   uses: peaceiris/actions-gh-pages@v3
-      #   with:
-      #     github_token: ${{ secrets.GITHUB_TOKEN }}
-      #     publish_dir: ./public
-      #     full_commit_message: "Helm Release: ${{ env.RELEASE_VERSION }}"
+      - name: Build and release helm chart
+        run: | 
+          git config user.name "Budibase Helm Bot"
+          git config user.email "<>"
+          git pull
+          helm package charts/budibase
+          git checkout gh-pages
+          mv *.tgz docs
+          helm repo index docs
+          git add -A
+          git commit -m "Helm Release: ${{ env.RELEASE_VERSION }}"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Perform Github Release
         uses: softprops/action-gh-release@v1
@@ -67,3 +70,7 @@ jobs:
           name: v${{ env.RELEASE_VERSION }}
           tag_name: v${{ env.RELEASE_VERSION }}
           generate_release_notes: true
+          files: |
+            packages/cli/build/cli-win.exe
+            packages/cli/build/cli-linux
+            packages/cli/build/cli-macos 

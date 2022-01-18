@@ -6,7 +6,7 @@ jest.mock("../../environment", () => ({
   isDev: () => true,
   _set: () => {},
 }))
-jest.mock("@budibase/auth/tenancy", () => ({
+jest.mock("@budibase/backend-core/tenancy", () => ({
   getTenantId: () => "testing123"
 }))
 

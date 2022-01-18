@@ -2,11 +2,14 @@ const {
   getMultiIDParams,
   getGlobalIDFromUserMetadataID,
 } = require("../db/utils")
-const { BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
-const { getDeployedAppID } = require("@budibase/auth/db")
-const { getGlobalUserParams } = require("@budibase/auth/db")
-const { user: userCache } = require("@budibase/auth/cache")
-const { getGlobalDB, isUserInAppTenant } = require("@budibase/auth/tenancy")
+const { BUILTIN_ROLE_IDS } = require("@budibase/backend-core/roles")
+const { getDeployedAppID } = require("@budibase/backend-core/db")
+const { getGlobalUserParams } = require("@budibase/backend-core/db")
+const { user: userCache } = require("@budibase/backend-core/cache")
+const {
+  getGlobalDB,
+  isUserInAppTenant,
+} = require("@budibase/backend-core/tenancy")
 const env = require("../environment")
 
 exports.updateAppRole = (appId, user) => {
