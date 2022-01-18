@@ -126,6 +126,10 @@
     }
   }
 
+  function cancelEdit() {
+    field.name = originalName
+  }
+
   function deleteColumn() {
     if (field.name === $tables.selected.primaryDisplay) {
       notifications.error("You cannot delete the display column")
@@ -307,6 +311,7 @@
   title={originalName ? "Edit Column" : "Create Column"}
   confirmText="Save Column"
   onConfirm={saveColumn}
+  onCancel={cancelEdit}
   disabled={invalid}
 >
   <Input
