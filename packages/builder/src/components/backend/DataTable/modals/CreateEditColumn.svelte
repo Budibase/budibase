@@ -126,6 +126,10 @@
     }
   }
 
+  function cancelEdit() {
+    field.name = originalName
+  }
+
   function deleteColumn() {
     field.name = deleteColName
     if (field.name === $tables.selected.primaryDisplay) {
@@ -308,6 +312,7 @@
   title={originalName ? "Edit Column" : "Create Column"}
   confirmText="Save Column"
   onConfirm={saveColumn}
+  onCancel={cancelEdit}
   disabled={invalid}
 >
   <Input
