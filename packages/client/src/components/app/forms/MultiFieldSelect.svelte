@@ -20,6 +20,7 @@
   let fieldSchema
 
   $: flatOptions = optionsSource == null || optionsSource === "schema"
+  $: expandedValue = expand(fieldState?.value)
   $: options = getOptions(
     optionsSource,
     fieldSchema,
@@ -28,6 +29,18 @@
     valueColumn,
     customOptions
   )
+
+  const expand = values => {
+    if (!values) {
+      return []
+    }
+
+    if (Array.isArray(values)) {
+      return values
+    }
+
+    return values.split(",")
+  }
 </script>
 
 <Field
@@ -43,7 +56,7 @@
 >
   {#if fieldState}
     <CoreMultiselect
-      value={fieldState.value || []}
+      value={expandedValue}
       error={fieldState.error}
       getOptionLabel={flatOptions ? x => x : x => x.label}
       getOptionValue={flatOptions ? x => x : x => x.value}
