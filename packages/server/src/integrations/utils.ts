@@ -2,7 +2,11 @@ import { SqlQuery } from "../definitions/datasource"
 import { Datasource, Table } from "../definitions/common"
 import { SourceNames } from "../definitions/datasource"
 const { DocumentTypes, SEPARATOR } = require("../db/utils")
-const { FieldTypes, BuildSchemaErrors } = require("../constants")
+const {
+  FieldTypes,
+  BuildSchemaErrors,
+  InvalidColumns,
+} = require("../constants")
 
 const DOUBLE_SEPARATOR = `${SEPARATOR}${SEPARATOR}`
 const ROW_ID_REGEX = /^\[.*]$/g
@@ -32,12 +36,17 @@ const SQL_TYPE_MAP = {
   fixed: FieldTypes.NUMBER,
   datetime: FieldTypes.DATETIME,
   tinyint: FieldTypes.BOOLEAN,
+  long: FieldTypes.LONGFORM,
+  number: FieldTypes.NUMBER,
+  binary_float: FieldTypes.NUMBER,
+  binary_double: FieldTypes.NUMBER,
 }
 
 export enum SqlClients {
   MS_SQL = "mssql",
   POSTGRES = "pg",
   MY_SQL = "mysql",
+  ORACLE = "oracledb",
 }
 
 export function isExternalTable(tableId: string) {
@@ -161,16 +170,25 @@ export function finaliseExternalTables(
   tables: { [key: string]: any },
   entities: { [key: string]: any }
 ) {
-  const finalTables: { [key: string]: any } = {}
+  const invalidColumns = Object.values(InvalidColumns)
+  let finalTables: { [key: string]: any } = {}
   const errors: { [key: string]: string } = {}
   for (let [name, table] of Object.entries(tables)) {
+    const schemaFields = Object.keys(table.schema)
     // make sure every table has a key
     if (table.primary == null || table.primary.length === 0) {
       errors[name] = BuildSchemaErrors.NO_KEY
+      continue
+    } else if (schemaFields.find(field => invalidColumns.includes(field))) {
+      errors[name] = BuildSchemaErrors.INVALID_COLUMN
       continue
     }
     // make sure all previous props have been added back
     finalTables[name] = copyExistingPropsOver(name, table, entities)
   }
+  // sort the tables by name
+  finalTables = Object.entries(finalTables)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .reduce((r, [k, v]) => ({ ...r, [k]: v }), {})
   return { tables: finalTables, errors }
 }

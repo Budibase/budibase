@@ -21,6 +21,9 @@ function parse(input: any) {
   if (Array.isArray(input)) {
     return JSON.stringify(input)
   }
+  if (input == undefined) {
+    return null
+  }
   if (typeof input !== "string") {
     return input
   }
@@ -43,7 +46,10 @@ function parseBody(body: any) {
   return body
 }
 
-function parseFilters(filters: SearchFilters): SearchFilters {
+function parseFilters(filters: SearchFilters | undefined): SearchFilters {
+  if (!filters) {
+    return {}
+  }
   for (let [key, value] of Object.entries(filters)) {
     let parsed
     if (typeof value === "object") {
@@ -87,7 +93,7 @@ class InternalBuilder {
     if (filters.oneOf) {
       iterate(filters.oneOf, (key, array) => {
         const fnc = allOr ? "orWhereIn" : "whereIn"
-        query = query[fnc](key, array)
+        query = query[fnc](key, Array.isArray(array) ? array : [array])
       })
     }
     if (filters.string) {
@@ -148,6 +154,23 @@ class InternalBuilder {
         const fnc = allOr ? "orWhereNotNull" : "whereNotNull"
         query = query[fnc](key)
       })
+    }
+    return query
+  }
+
+  addSorting(query: KnexQuery, json: QueryJson): KnexQuery {
+    let { sort, paginate } = json
+    if (!sort) {
+      return query
+    }
+    const table = json.meta?.table
+    for (let [key, value] of Object.entries(sort)) {
+      const direction = value === SortDirection.ASCENDING ? "asc" : "desc"
+      query = query.orderBy(`${table?.name}.${key}`, direction)
+    }
+    if (this.client === SqlClients.MS_SQL && !sort && paginate?.limit) {
+      // @ts-ignore
+      query = query.orderBy(`${table?.name}.${table?.primary[0]}`)
     }
     return query
   }
@@ -249,22 +272,18 @@ class InternalBuilder {
     if (foundOffset) {
       query = query.offset(foundOffset)
     }
-    if (sort) {
-      for (let [key, value] of Object.entries(sort)) {
-        const direction = value === SortDirection.ASCENDING ? "asc" : "desc"
-        query = query.orderBy(key, direction)
-      }
-    }
-    if (this.client === SqlClients.MS_SQL && !sort && paginate?.limit) {
-      // @ts-ignore
-      query = query.orderBy(json.meta?.table?.primary[0])
-    }
     query = this.addFilters(tableName, query, filters)
+    // add sorting to pre-query
+    query = this.addSorting(query, json)
     // @ts-ignore
     let preQuery: KnexQuery = knex({
       // @ts-ignore
       [tableName]: query,
     }).select(selectStatement)
+    // have to add after as well (this breaks MS-SQL)
+    if (this.client !== SqlClients.MS_SQL) {
+      preQuery = this.addSorting(preQuery, json)
+    }
     // handle joins
     return this.addRelationships(
       knex,
@@ -428,4 +447,5 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
   }
 }
 
+export default SqlQueryBuilder
 module.exports = SqlQueryBuilder

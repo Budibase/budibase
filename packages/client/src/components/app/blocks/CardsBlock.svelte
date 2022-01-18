@@ -1,5 +1,5 @@
 <script>
-  import { onMount, getContext } from "svelte"
+  import { getContext } from "svelte"
   import Block from "components/Block.svelte"
   import BlockComponent from "components/BlockComponent.svelte"
   import { Heading } from "@budibase/bbui"
@@ -46,6 +46,7 @@
   let repeaterId
   let schema
 
+  $: fetchSchema(dataSource)
   $: enrichedSearchColumns = enrichSearchColumns(searchColumns, schema)
   $: enrichedFilter = enrichFilter(filter, enrichedSearchColumns, formId)
   $: cardWidth = cardHorizontal ? 420 : 300
@@ -107,12 +108,12 @@
     return `${split[0]}/{{ ${safe(repeaterId)}.${safe(col)} }}`
   }
 
-  // Load the datasource schema on mount so we can determine column types
-  onMount(async () => {
+  // Load the datasource schema so we can determine column types
+  const fetchSchema = async dataSource => {
     if (dataSource) {
       schema = await API.fetchDatasourceSchema(dataSource)
     }
-  })
+  }
 </script>
 
 <Block>
@@ -181,7 +182,7 @@
           }}
           styles={{
             display: "grid",
-            "grid-template-columns": `repeat(auto-fill, minmax(${cardWidth}px, 1fr))`,
+            "grid-template-columns": `repeat(auto-fill, minmax(min(${cardWidth}px, 100%), 1fr))`,
           }}
         >
           <BlockComponent

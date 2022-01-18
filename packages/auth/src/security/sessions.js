@@ -1,6 +1,7 @@
 const redis = require("../redis/authRedis")
 
-const EXPIRY_SECONDS = 86400
+// a week in seconds
+const EXPIRY_SECONDS = 86400 * 7
 
 async function getSessionsForUser(userId) {
   const client = await redis.getSessionClient()

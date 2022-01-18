@@ -25,7 +25,9 @@
     class="spectrum-Switch-input"
   />
   <span class="spectrum-Switch-switch" />
-  <label class="spectrum-Switch-label" for={id}>{text}</label>
+  {#if text}
+    <label class="spectrum-Switch-label" for={id}>{text}</label>
+  {/if}
 </div>
 
 <style>

@@ -65,6 +65,10 @@ exports.buildSchema = async ctx => {
     let automation = await db.get(webhook.action.target)
     const autoOutputs = automation.definition.trigger.schema.outputs
     let properties = webhook.bodySchema.properties
+    // reset webhook outputs
+    autoOutputs.properties = {
+      body: autoOutputs.properties.body,
+    }
     for (let prop of Object.keys(properties)) {
       autoOutputs.properties[prop] = {
         type: properties[prop].type,

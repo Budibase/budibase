@@ -1,4 +1,6 @@
-FROM node:14-alpine
+FROM node:14-slim
+
+RUN apt-get update
 
 LABEL com.centurylinklabs.watchtower.lifecycle.pre-check="scripts/watchtower-hooks/pre-check.sh"
 LABEL com.centurylinklabs.watchtower.lifecycle.pre-update="scripts/watchtower-hooks/pre-update.sh"
@@ -15,6 +17,10 @@ ENV BUDIBASE_ENVIRONMENT=PRODUCTION
 COPY . ./
 RUN yarn
 RUN yarn build
+
+# Install client for oracle datasource
+RUN apt-get install unzip libaio1
+RUN /bin/bash -e scripts/integrations/oracle/instantclient/linux/x86-64/install.sh 
 
 EXPOSE 4001
 

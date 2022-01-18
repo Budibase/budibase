@@ -82,7 +82,7 @@ export const getFrontendStore = () => {
         libraries: application.componentLibraries,
         components,
         clientFeatures: {
-          ...state.clientFeatures,
+          ...INITIAL_FRONTEND_STATE.clientFeatures,
           ...components.features,
         },
         name: application.name,
@@ -524,7 +524,7 @@ export const getFrontendStore = () => {
           }
         }
       },
-      paste: async (targetComponent, mode) => {
+      paste: async (targetComponent, mode, preserveBindings = false) => {
         let promises = []
         store.update(state => {
           // Stop if we have nothing to paste
@@ -536,7 +536,7 @@ export const getFrontendStore = () => {
           const cut = state.componentToPaste.isCut
 
           // immediately need to remove bindings, currently these aren't valid when pasted
-          if (!cut) {
+          if (!cut && !preserveBindings) {
             state.componentToPaste = removeBindings(state.componentToPaste)
           }
 
@@ -618,6 +618,9 @@ export const getFrontendStore = () => {
       updateProp: async (name, value) => {
         let component = get(selectedComponent)
         if (!name || !component) {
+          return
+        }
+        if (component[name] === value) {
           return
         }
         component[name] = value
