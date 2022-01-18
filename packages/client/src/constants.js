@@ -32,11 +32,3 @@ export const ActionTypes = {
   ClearForm: "ClearForm",
   ChangeFormStep: "ChangeFormStep",
 }
-
-export const ApiVersion = "1"
-
-/**
- * API Version Changelog
- * v1:
- *   - Coerce types for search endpoint
- */

@@ -81,6 +81,3 @@ export { default as clickOutside } from "./Actions/click_outside"
 
 // Stores
 export { notifications, createNotificationStore } from "./Stores/notifications"
-
-// Utils
-export * from "./utils/helpers"
