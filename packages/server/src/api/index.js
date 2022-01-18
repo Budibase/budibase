@@ -4,7 +4,7 @@ const {
   auditLog,
   buildTenancyMiddleware,
   buildAppTenancyMiddleware,
-} = require("@budibase/auth").auth
+} = require("@budibase/backend-core/auth")
 const currentApp = require("../middleware/currentapp")
 const compress = require("koa-compress")
 const zlib = require("zlib")

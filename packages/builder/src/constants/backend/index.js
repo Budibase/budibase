@@ -89,6 +89,14 @@ export const FIELDS = {
       presence: false,
     },
   },
+  JSON: {
+    name: "JSON",
+    type: "json",
+    constraints: {
+      type: "object",
+      presence: false,
+    },
+  },
 }
 
 export const AUTO_COLUMN_SUB_TYPES = {
@@ -210,4 +218,22 @@ export const RestBodyTypes = [
   { name: "raw (JSON)", value: "json" },
   { name: "raw (XML)", value: "xml" },
   { name: "raw (Text)", value: "text" },
+]
+
+export const PaginationTypes = [
+  { label: "Page number based", value: "page" },
+  { label: "Cursor based", value: "cursor" },
+]
+
+export const PaginationLocations = [
+  { label: "Query parameters", value: "query" },
+  { label: "Request body", value: "body" },
+]
+
+export const BannedSearchTypes = [
+  "link",
+  "attachment",
+  "formula",
+  "json",
+  "jsonarray",
 ]

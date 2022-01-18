@@ -2,7 +2,7 @@ const {
   getAllSessions,
   getUserSessions,
   invalidateSessions,
-} = require("@budibase/auth/sessions")
+} = require("@budibase/backend-core/sessions")
 
 exports.fetch = async ctx => {
   ctx.body = await getAllSessions()

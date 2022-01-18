@@ -63,8 +63,9 @@
       } else {
         // The user is not logged in, redirect them to login
         const returnUrl = `${window.location.pathname}${window.location.hash}`
-        const encodedUrl = encodeURIComponent(returnUrl)
-        window.location = `/builder/auth/login?returnUrl=${encodedUrl}`
+        // TODO: reuse `Cookies` from builder when frontend-core is added
+        window.document.cookie = `budibase:returnurl=${returnUrl}; Path=/`
+        window.location = `/builder/auth/login`
       }
     }
   }

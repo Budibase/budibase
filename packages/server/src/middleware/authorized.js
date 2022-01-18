@@ -2,11 +2,11 @@ const {
   getUserRoleHierarchy,
   getRequiredResourceRole,
   BUILTIN_ROLE_IDS,
-} = require("@budibase/auth/roles")
+} = require("@budibase/backend-core/roles")
 const {
   PermissionTypes,
   doesHaveBasePermission,
-} = require("@budibase/auth/permissions")
+} = require("@budibase/backend-core/permissions")
 const builderMiddleware = require("./builder")
 const { isWebhookEndpoint } = require("./utils")
 

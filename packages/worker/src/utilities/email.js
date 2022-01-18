@@ -1,12 +1,12 @@
 const nodemailer = require("nodemailer")
 const env = require("../environment")
-const { getScopedConfig } = require("@budibase/auth/db")
+const { getScopedConfig } = require("@budibase/backend-core/db")
 const { EmailTemplatePurpose, TemplateTypes, Configs } = require("../constants")
 const { getTemplateByPurpose } = require("../constants/templates")
 const { getSettingsTemplateContext } = require("./templates")
 const { processString } = require("@budibase/string-templates")
 const { getResetPasswordCode, getInviteCode } = require("../utilities/redis")
-const { getGlobalDB } = require("@budibase/auth/tenancy")
+const { getGlobalDB } = require("@budibase/backend-core/tenancy")
 
 const TEST_MODE = false
 const TYPE = TemplateTypes.EMAIL

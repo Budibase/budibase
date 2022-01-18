@@ -32,35 +32,56 @@ export const enrichProps = (props, context) => {
     data: context[context.closestComponentId],
   }
 
-  // Enrich all data bindings in top level props
-  let enrichedProps = enrichDataBindings(props, totalContext)
-
-  // Enrich click actions if they exist
-  Object.keys(enrichedProps).forEach(prop => {
+  // We want to exclude any button actions from enrichment at this stage.
+  // Extract top level button action settings.
+  let normalProps = { ...props }
+  let actionProps = {}
+  Object.keys(normalProps).forEach(prop => {
     if (prop?.toLowerCase().includes("onclick")) {
-      enrichedProps[prop] = enrichButtonActions(
-        enrichedProps[prop],
-        totalContext
-      )
+      actionProps[prop] = normalProps[prop]
+      delete normalProps[prop]
     }
   })
 
-  // Enrich any click actions in conditions
-  if (enrichedProps._conditions) {
-    enrichedProps._conditions.forEach(condition => {
-      if (condition.setting?.toLowerCase().includes("onclick")) {
-        condition.settingValue = enrichButtonActions(
-          condition.settingValue,
-          totalContext
-        )
+  // Handle conditional UI separately after normal settings
+  let conditions = normalProps._conditions
+  delete normalProps._conditions
 
-        // If there is an onclick function in here then it won't be serialised
-        // properly, and therefore will not be updated properly.
-        // The solution to this is add a rand which will ensure diffs happen
-        // every time.
-        condition.rand = Math.random()
+  // Enrich all props except button actions
+  let enrichedProps = enrichDataBindings(normalProps, totalContext)
+
+  // Enrich button actions.
+  // Actions are enriched into a function at this stage, but actual data
+  // binding enrichment is done dynamically at runtime.
+  Object.keys(actionProps).forEach(prop => {
+    enrichedProps[prop] = enrichButtonActions(actionProps[prop], totalContext)
+  })
+
+  // Conditions
+  if (conditions?.length) {
+    let enrichedConditions = []
+    conditions.forEach(condition => {
+      if (condition.setting?.toLowerCase().includes("onclick")) {
+        // Copy and remove the setting value from the condition as it needs
+        // enriched separately
+        let toEnrich = { ...condition }
+        delete toEnrich.settingValue
+
+        // Join the condition back together
+        enrichedConditions.push({
+          ...enrichDataBindings(toEnrich, totalContext),
+          settingValue: enrichButtonActions(
+            condition.settingValue,
+            totalContext
+          ),
+          rand: Math.random(),
+        })
+      } else {
+        // Normal condition
+        enrichedConditions.push(enrichDataBindings(condition, totalContext))
       }
     })
+    enrichedProps._conditions = enrichedConditions
   }
 
   return enrichedProps
