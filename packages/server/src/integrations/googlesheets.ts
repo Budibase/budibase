@@ -10,6 +10,7 @@ import { Row, Table, TableSchema } from "../definitions/common"
 import { buildExternalTableId } from "./utils"
 import { DataSourceOperation, FieldTypes } from "../constants"
 import { GoogleSpreadsheet } from "google-spreadsheet"
+import { table } from "console"
 
 module GoogleSheetsModule {
   const { getGlobalDB } = require("@budibase/backend-core/tenancy")
@@ -116,6 +117,9 @@ module GoogleSheetsModule {
      * @returns spreadsheet Id of the google sheet
      */
     cleanSpreadsheetUrl(spreadsheetId: string) {
+      if (!spreadsheetId) {
+        throw new Error("You must set a spreadsheet ID in your configuration to fetch tables.")
+      }
       const parts = spreadsheetId.split("/")
       return parts.length > 5 ? parts[5] : spreadsheetId
     }
@@ -174,33 +178,28 @@ module GoogleSheetsModule {
     async query(json: QueryJson) {
       const sheet = json.endpoint.entityId
 
-      if (json.endpoint.operation === DataSourceOperation.CREATE) {
-        return await this.create({
-          sheet,
-          row: json.body,
-        })
-      }
-
-      if (json.endpoint.operation === DataSourceOperation.READ) {
-        return await this.read({ sheet })
-      }
-
-      if (json.endpoint.operation === DataSourceOperation.UPDATE) {
-        return await this.update({
+      const handlers = {
+        [DataSourceOperation.CREATE]: () => this.create({ sheet, row: json.body }),
+        [DataSourceOperation.READ]: () => this.read({ sheet }),
+        [DataSourceOperation.UPDATE]: () => this.update({ 
           // exclude the header row and zero index
           rowIndex: json.extra?.idFilter?.equal?.rowNumber - 2,
           sheet,
           row: json.body,
-        })
-      }
-
-      if (json.endpoint.operation === DataSourceOperation.DELETE) {
-        return await this.delete({
+        }),
+        [DataSourceOperation.DELETE]: () => this.delete({
           // exclude the header row and zero index
           rowIndex: json.extra?.idFilter?.equal?.rowNumber - 2,
           sheet,
-        })
+        }),
+        [DataSourceOperation.CREATE_TABLE]: () => this.createTable(json?.table?.name),
+        [DataSourceOperation.UPDATE_TABLE]: () => this.updateTable(json.table),
+        [DataSourceOperation.DELETE_TABLE]: () => this.deleteTable(json?.table?.name),
       }
+
+      const internalQueryMethod = handlers[json.endpoint.operation]
+
+      return await internalQueryMethod()
     }
 
     buildRowObject(headers: string[], values: string[], rowNumber: number) {
@@ -210,6 +209,54 @@ module GoogleSheetsModule {
         rowObject[headers[i]] = values[i]
       }
       return rowObject
+    }
+
+    async createTable(name?: string) {
+      try {
+        await this.connect()
+        const sheet = await this.client.addSheet({ title: name });
+        return sheet
+      } catch (err) {
+        console.error("Error creating new table in google sheets", err)
+        throw err
+      }
+    }
+
+    async updateTable(table?: any) {
+      try {
+        await this.connect()
+        const sheet = await this.client.sheetsByTitle[table.name]
+        await sheet.loadHeaderRow()
+
+        if (table._rename) {
+          const headers = []
+          for (let header of sheet.headerValues) {
+            if (header === table._rename.old) {
+              headers.push(table._rename.updated)
+            } else {
+              headers.push(header)
+            }
+          }
+          await sheet.setHeaderRow(headers)
+        } else {
+          let newField = Object.keys(table.schema).find(key => !sheet.headerValues.includes(key))
+          await sheet.setHeaderRow([...sheet.headerValues, newField])
+        }
+      } catch (err) {
+        console.error("Error updating table in google sheets", err)
+        throw err
+      }
+    }
+
+    async deleteTable(query: any) {
+      try {
+        await this.connect()
+        const sheet = await this.client.sheetsByTitle[query.sheet]
+        return await sheet.delete()
+      } catch (err) {
+        console.error("Error deleting table in google sheets", err)
+        throw err
+      }
     }
 
     async create(query: { sheet: string; row: any }) {
