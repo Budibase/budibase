@@ -25,6 +25,6 @@ const stateCodes =
 }
 const entries = Object.entries(totals)
 return entries.map(([state, count]) => 
-  {const stateCode = stateCodes[state.toLowerCase()]
+  {stateCodes[state.toLowerCase()]
   return { state, count, flag: "http://flags.ox3.in/svg/us/${stateCode}.svg" }
 })
