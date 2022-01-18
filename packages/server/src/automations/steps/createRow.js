@@ -82,8 +82,9 @@ exports.run = async function ({ inputs, appId, emitter }) {
       inputs.row.tableId,
       inputs.row
     )
-    await usage.update(usage.Properties.ROW, 1)
+    await usage.update(usage.Properties.ROW, 1, { dryRun: true })
     await rowController.save(ctx)
+    await usage.update(usage.Properties.ROW, 1)
     return {
       row: inputs.row,
       response: ctx.body,
