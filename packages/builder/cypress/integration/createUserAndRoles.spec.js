@@ -5,12 +5,13 @@ context("Create a User and Assign Roles", () => {
 
   it("should create a user", () => {
     cy.createUser("bbuser@test.com")
-    cy.contains("bbuser").should("be.visible")
+    cy.get(".spectrum-Table-body").should('contain', 'bbuser')
   })
   
   it("should confirm there is No Access for a New User", () => {
     // Click into the user
     cy.contains("bbuser").click()
+    cy.wait(500)
     // Get No Access table - Confirm it has apps in it
     cy.get(".spectrum-Table").eq(1).should('not.contain', 'No rows found')
     // Get Configure Roles table - Confirm it has no apps
@@ -38,6 +39,7 @@ context("Create a User and Assign Roles", () => {
     cy.wait(500)
     for (let i = 0; i < 3; i++) {
       cy.get(".spectrum-Table-body").eq(1).find('tr').eq(0).click()
+      cy.wait(500)
       cy.get(".spectrum-Dialog-grid").contains("Choose an option").click().then(() => {
         cy.wait(500)
         if (i == 0) {

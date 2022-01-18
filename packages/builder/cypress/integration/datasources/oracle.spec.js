@@ -7,13 +7,29 @@ context("Oracle Datasource Testing", () => {
     const queryName = "Cypress Test Query"
     const queryRename = "CT Query Rename"
     
-    it("Should add Oracle data source without configuration", () => {
+    it("Should add Oracle data source and skip table fetch", () => {
+        // Select Oracle data source
+        cy.selectExternalDatasource(datasource)
+        // Skip table fetch - no config added
+        cy.get(".spectrum-Button").contains("Skip table fetch").click({ force: true })
+        cy.wait(500)
+        // Confirm config contains localhost
+        cy.get(".spectrum-Textfield-input").eq(1).should('have.value', 'localhost')
+        // Add another Oracle data source, configure & skip table fetch
+        cy.selectExternalDatasource(datasource)
+        cy.addDatasourceConfig(datasource, true)
+        // Confirm config and no tables
+        cy.get(".spectrum-Textfield-input").eq(1).should('have.value', Cypress.env("oracle").HOST)
+        cy.get(".spectrum-Body").eq(2).should('contain', 'No tables found.')
+    })
+    
+    it("Should add Oracle data source and fetch tables without configuration", () => {
         // Select Oracle data source
         cy.selectExternalDatasource(datasource)
         // Attempt to fetch tables without applying configuration
         cy.intercept('**/datasources').as('datasource')
         cy.get(".spectrum-Button")
-        .contains("Fetch tables from database")
+        .contains("Save and fetch tables")
         .click({ force: true })
         // Intercept Request after button click & apply assertions
         cy.wait("@datasource")
@@ -109,11 +125,8 @@ context("Oracle Datasource Testing", () => {
                 })
                 cy.reload()
             }
-            // Table has placeholder tr when empty
-            cy.get(".spectrum-Table-body")
-            .eq(1)
-            .find('tr')
-            .should('have.length', 1)
+            // Confirm relationships no longer exist
+            cy.get(".spectrum-Body").should('contain', 'No relationships configured')
         })
     })
     
@@ -142,10 +155,10 @@ context("Oracle Datasource Testing", () => {
     })
     
     it("should duplicate a query", () => {
-        // Get last nav item - The query
-        cy.get(".nav-item").last().within(() => {
-                cy.get(".icon").eq(1).click({ force: true })
-            })
+        // Get query nav item
+        cy.get(".nav-item").contains(queryName).parent().within(() => {
+            cy.get(".spectrum-Icon").eq(1).click({ force: true })  
+        })
         // Select and confirm duplication
         cy.get(".spectrum-Menu").contains("Duplicate").click()
         cy.get(".nav-item").should('contain', queryName + ' (1)')
@@ -162,18 +175,17 @@ context("Oracle Datasource Testing", () => {
     })
     
     it("should delete a query", () => {
-        // Get last nav item - The query
-        for (let i = 0; i < 2; i++) {
-            cy.get(".nav-item").last().within(() => {
-                cy.get(".icon").eq(1).click({ force: true })
-            })
-            // Select Delete
-            cy.get(".spectrum-Menu").contains("Delete").click()
-            cy.get(".spectrum-Button").contains("Delete Query").click({ force: true })
-            cy.wait(1000)
-        }
+        // Get query nav item - QueryName
+        cy.get(".nav-item").contains(queryName).parent().within(() => {
+            cy.get(".spectrum-Icon").eq(1).click({ force: true })  
+        })
+        
+        // Select Delete
+        cy.get(".spectrum-Menu").contains("Delete").click()
+        cy.get(".spectrum-Button").contains("Delete Query").click({ force: true })
+        cy.wait(1000)
+        
         // Confirm deletion
         cy.get(".nav-item").should('not.contain', queryName)
-        cy.get(".nav-item").should('not.contain', queryRename)
     })
 })

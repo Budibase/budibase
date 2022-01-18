@@ -28,7 +28,7 @@ context("Datasource Wizard", () => {
     // Modal will close and provide 500 error
     cy.intercept('**/datasources').as('datasourceConnection')
     cy.get(".spectrum-Dialog-grid").within(() => {
-      cy.get(".spectrum-Button").contains("Fetch tables from database").click({ force: true })
+      cy.get(".spectrum-Button").contains("Save and fetch tables").click({ force: true })
     })
     cy.wait("@datasourceConnection")
     cy.get("@datasourceConnection").its('response.body')
