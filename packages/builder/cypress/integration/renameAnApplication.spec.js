@@ -5,17 +5,24 @@ context("Rename an App", () => {
     })
 
 it("should rename an unpublished application", () => {
+    const appName = "Cypress Tests"
     const appRename = "Cypress Renamed"
     // Rename app, Search for app, Confirm name was changed
     cy.get(".home-logo").click()
-    renameApp(appRename)
+    renameApp(appName, appRename)
+    cy.reload()
+    cy.wait(1000)
     cy.searchForApplication(appRename)
     cy.get(".appTable").find(".title").should("have.length", 1)
-    cy.deleteApp(appRename)
+    // Set app name back to Cypress Tests
+    cy.reload()
+    cy.wait(1000)
+    renameApp(appRename, appName)
 })
     
 xit("Should rename a published application", () => {
     // It is not possible to rename a published application
+    const appName = "Cypress Tests"
     const appRename = "Cypress Renamed"
     // Publish the app
     cy.get(".toprightnav")
@@ -27,24 +34,28 @@ xit("Should rename a published application", () => {
         })
     // Rename app, Search for app, Confirm name was changed
     cy.get(".home-logo").click()
-    renameApp(appRename, true)
+    renameApp(appName, appRename, true)
     cy.searchForApplication(appRename)
-    cy.get(".appTable").find(".title").should("have.length", 1)
+    cy.get(".appTable").find(".wrapper").should("have.length", 1)
 })
 
 it("Should try to rename an application to have no name", () => {
+    const appName = "Cypress Tests"
     cy.get(".home-logo").click()
-    renameApp(" ", false, true)
+    renameApp(appName, " ", false, true)
+    cy.wait(500)
     // Close modal and confirm name has not been changed
     cy.get(".spectrum-Dialog-grid").contains("Cancel").click()
-    cy.searchForApplication("Cypress Tests")
+    cy.reload() 
+    cy.wait(1000)
+    cy.searchForApplication(appName)
     cy.get(".appTable").find(".title").should("have.length", 1)
 })
 
 xit("Should create two applications with the same name", () => {
     // It is not possible to have applications with the same name
     const appName = "Cypress Tests"
-    cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
+    cy.visit(`${Cypress.config().baseUrl}/builder`)
     cy.wait(500)
     cy.get(".spectrum-Button").contains("Create app").click({force: true})
     cy.contains(/Start from scratch/).click()
@@ -59,22 +70,35 @@ xit("Should create two applications with the same name", () => {
 it("should validate application names", () => {
     // App name must be letters, numbers and spaces only
     // This test checks numbers and special characters specifically
+    const appName = "Cypress Tests"
     const numberName = 12345
     const specialCharName = "£$%^"
     cy.get(".home-logo").click()
-    renameApp(numberName)
+    renameApp(appName, numberName)
+    cy.reload()
+    cy.wait(1000)
     cy.searchForApplication(numberName)
     cy.get(".appTable").find(".title").should("have.length", 1)
-    renameApp(specialCharName)
+    cy.reload()
+    cy.wait(1000)
+    renameApp(numberName, specialCharName)
     cy.get(".error").should("have.text", "App name must be letters, numbers and spaces only")
+    // Set app name back to Cypress Tests
+    cy.reload()
+    cy.wait(1000)
+    renameApp(numberName, appName)
 })
     
-    const renameApp = (appName, published, noName) => {
-    cy.request(`localhost:${Cypress.env("PORT")}/api/applications?status=all`)
+    const renameApp = (originalName, changedName, published, noName) => {
+        cy.searchForApplication(originalName)
+        cy.request(`${Cypress.config().baseUrl}/api/applications?status=all`)
     .its("body")
     .then(val => {
         if (val.length > 0) {
-            cy.get(".appTable > :nth-child(5) > :nth-child(2) > .spectrum-Icon").click()
+            cy.get(".appTable")
+            .within(() => {
+                cy.get(".spectrum-Icon").eq(1).click()
+                })
             // Check for when an app is published
             if (published == true){
                 // Should not have Edit as option, will unpublish app
@@ -93,7 +117,7 @@ it("should validate application names", () => {
                     return cy
                 }
                 cy.get("input").clear()
-                cy.get("input").eq(0).type(appName).should("have.value", appName).blur()
+                cy.get("input").eq(0).type(changedName).should("have.value", changedName).blur()
                 cy.get(".spectrum-ButtonGroup").contains("Save").click({force: true})
                 cy.wait(500)
       })
