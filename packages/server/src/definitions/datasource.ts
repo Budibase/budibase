@@ -1,4 +1,4 @@
-import { Row, Table } from "./common"
+import { Row, Table, Base } from "./common"
 
 export enum Operation {
   CREATE = "CREATE",
@@ -46,11 +46,23 @@ export enum SourceNames {
   MYSQL = "MYSQL",
   ARANGODB = "ARANGODB",
   REST = "REST",
+  ORACLE = "ORACLE",
 }
 
 export enum IncludeRelationships {
   INCLUDE = 1,
   EXCLUDE = 0,
+}
+
+export enum FilterTypes {
+  STRING = "string",
+  FUZZY = "fuzzy",
+  RANGE = "range",
+  EQUAL = "equal",
+  NOT_EQUAL = "notEqual",
+  EMPTY = "empty",
+  NOT_EMPTY = "notEmpty",
+  ONE_OF = "oneOf",
 }
 
 export interface QueryDefinition {
@@ -168,4 +180,76 @@ export interface SqlQuery {
 
 export interface QueryOptions {
   disableReturning?: boolean
+}
+
+export interface Datasource extends Base {
+  type: string
+  name: string
+  source: SourceNames
+  // the config is defined by the schema
+  config: {
+    [key: string]: string | number | boolean
+  }
+  plus: boolean
+  entities?: {
+    [key: string]: Table
+  }
+}
+
+export enum AuthType {
+  BASIC = "basic",
+  BEARER = "bearer",
+}
+
+interface AuthConfig {
+  _id: string
+  name: string
+  type: AuthType
+  config: BasicAuthConfig | BearerAuthConfig
+}
+
+export interface BasicAuthConfig {
+  username: string
+  password: string
+}
+
+export interface BearerAuthConfig {
+  token: string
+}
+
+export interface QueryParameter {
+  name: string
+  default: string
+}
+
+export interface RestQueryFields {
+  path: string
+  queryString?: string
+  headers: { [key: string]: any }
+  disabledHeaders: { [key: string]: any }
+  requestBody: any
+  bodyType: string
+  json: object
+  method: string
+  authConfigId: string
+}
+
+export interface RestConfig {
+  url: string
+  defaultHeaders: {
+    [key: string]: any
+  }
+  authConfigs: AuthConfig[]
+}
+
+export interface Query {
+  _id?: string
+  datasourceId: string
+  name: string
+  parameters: QueryParameter[]
+  fields: RestQueryFields | any
+  transformer: string | null
+  schema: any
+  readable: boolean
+  queryVerb: string
 }

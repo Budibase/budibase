@@ -1,6 +1,6 @@
 <script>
   import { goto } from "@roxi/routify"
-  import { datasources } from "stores/backend"
+  import { datasources, queries, tables } from "stores/backend"
   import { notifications } from "@budibase/bbui"
   import { ActionMenu, MenuItem, Icon } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
@@ -12,11 +12,23 @@
   let updateDatasourceDialog
 
   async function deleteDatasource() {
-    const wasSelectedSource = $datasources.selected
+    let wasSelectedSource = $datasources.selected
+    if (!wasSelectedSource && $queries.selected) {
+      const queryId = $queries.selected
+      wasSelectedSource = $datasources.list.find(ds =>
+        queryId.includes(ds._id)
+      )?._id
+    }
+    const wasSelectedTable = $tables.selected
     await datasources.delete(datasource)
     notifications.success("Datasource deleted")
     // navigate to first index page if the source you are deleting is selected
-    if (wasSelectedSource === datasource._id) {
+    const entities = Object.values(datasource?.entities || {})
+    if (
+      wasSelectedSource === datasource._id ||
+      (entities &&
+        entities.find(entity => entity._id === wasSelectedTable?._id))
+    ) {
       $goto("./datasource")
     }
   }

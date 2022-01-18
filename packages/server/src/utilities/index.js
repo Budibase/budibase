@@ -150,3 +150,14 @@ exports.doesDatabaseExist = async dbName => {
     return false
   }
 }
+
+exports.formatBytes = bytes => {
+  const units = ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"]
+  const byteIncrements = 1024
+  let unit = 0
+  let size = parseInt(bytes, 10) || 0
+  while (size >= byteIncrements && ++unit) {
+    size /= byteIncrements
+  }
+  return `${size.toFixed(size < 10 && unit > 0 ? 1 : 0)}${units[unit]}`
+}

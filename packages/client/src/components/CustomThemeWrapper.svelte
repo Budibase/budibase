@@ -79,4 +79,9 @@
     scrollbar-color: var(--spectrum-global-color-gray-400)
       var(--spectrum-alias-background-color-default);
   }
+
+  /* Remove border when editing contenteditable components */
+  :global(*[contenteditable="true"]:focus) {
+    outline: none;
+  }
 </style>

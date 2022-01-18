@@ -1,13 +1,7 @@
 <script>
   import { writable, get as svelteGet } from "svelte/store"
-  import {
-    notifications,
-    Input,
-    ModalContent,
-    Dropzone,
-    Body,
-    Checkbox,
-  } from "@budibase/bbui"
+
+  import { notifications, Input, ModalContent, Dropzone } from "@budibase/bbui"
   import { store, automationStore, hostingStore } from "builderStore"
   import { admin, auth } from "stores/portal"
   import { string, mixed, object } from "yup"
@@ -83,12 +77,11 @@
   }
 
   async function createNewApp() {
-    const letTemplateToUse =
-      Object.keys(template).length === 0 ? null : template
+    const templateToUse = Object.keys(template).length === 0 ? null : template
     submitting = true
 
     // Check a template exists if we are important
-    if (letTemplateToUse?.fromFile && !$values.file) {
+    if (templateToUse?.fromFile && !$values.file) {
       $errors.file = "Please choose a file to import"
       valid = false
       submitting = false
@@ -99,10 +92,10 @@
       // Create form data to create app
       let data = new FormData()
       data.append("name", $values.name.trim())
-      data.append("useTemplate", letTemplateToUse != null)
-      if (letTemplateToUse) {
-        data.append("templateName", letTemplateToUse.name)
-        data.append("templateKey", letTemplateToUse.key)
+      data.append("useTemplate", templateToUse != null)
+      if (templateToUse) {
+        data.append("templateName", templateToUse.name)
+        data.append("templateKey", templateToUse.key)
         data.append("templateFile", $values.file)
       }
 
@@ -116,7 +109,7 @@
       analytics.captureEvent(Events.APP.CREATED, {
         name: $values.name,
         appId: appJson.instance._id,
-        letTemplateToUse,
+        templateToUse,
       })
 
       // Select Correct Application/DB in prep for creating user
@@ -146,16 +139,6 @@
       notifications.error(error)
       submitting = false
     }
-  }
-
-  function getModalTitle() {
-    let title = "Create App"
-    if (template.fromFile) {
-      title = "Import App"
-    } else if (template.key) {
-      title = "Create app from template"
-    }
-    return title
   }
 
   async function onCancel() {
@@ -188,7 +171,7 @@
   </ModalContent>
 {:else}
   <ModalContent
-    title={getModalTitle()}
+    title={"Name your app"}
     confirmText={template?.fromFile ? "Import app" : "Create app"}
     onConfirm={createNewApp}
     onCancel={inline ? onCancel : null}
@@ -208,16 +191,14 @@
         }}
       />
     {/if}
-    <Body size="S">
-      Give your new app a name, and choose which groups have access (paid plans
-      only).
-    </Body>
     <Input
       bind:value={$values.name}
       error={$touched.name && $errors.name}
       on:blur={() => ($touched.name = true)}
       label="Name"
+      placeholder={$auth.user.firstName
+        ? `${$auth.user.firstName}'s app`
+        : "My app"}
     />
-    <Checkbox label="Group access" disabled value={true} text="All users" />
   </ModalContent>
 {/if}

@@ -18,9 +18,22 @@
   export let disabled = false
   export let showDivider = true
 
+  export let showSecondaryButton = false
+  export let secondaryButtonText = undefined
+  export let secondaryAction = undefined
+  export let secondaryButtonWarning = false
+
   const { hide, cancel } = getContext(Context.Modal)
   let loading = false
   $: confirmDisabled = disabled || loading
+
+  async function secondary() {
+    loading = true
+    if (!secondaryAction || (await secondaryAction()) !== false) {
+      hide()
+    }
+    loading = false
+  }
 
   async function confirm() {
     loading = true
@@ -73,6 +86,18 @@
         class="spectrum-ButtonGroup spectrum-Dialog-buttonGroup spectrum-Dialog-buttonGroup--noFooter"
       >
         <slot name="footer" />
+
+        {#if showSecondaryButton && secondaryButtonText && secondaryAction}
+          <div class="secondary-action">
+            <Button
+              group
+              secondary
+              warning={secondaryButtonWarning}
+              on:click={secondary}>{secondaryButtonText}</Button
+            >
+          </div>
+        {/if}
+
         {#if showCancelButton}
           <Button group secondary on:click={close}>{cancelText}</Button>
         {/if}
@@ -135,5 +160,9 @@
   .header-spacing {
     display: flex;
     justify-content: space-between;
+  }
+
+  .secondary-action {
+    margin-right: auto;
   }
 </style>

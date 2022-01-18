@@ -4,6 +4,7 @@
   import { notifications } from "@budibase/bbui"
   import EventEditor from "./EventEditor.svelte"
   import { automationStore } from "builderStore"
+  import { cloneDeep } from "lodash/fp"
 
   const dispatch = createEventDispatcher()
 
@@ -12,17 +13,23 @@
   export let bindings
 
   let drawer
+  let tmpValue
+
+  const openDrawer = () => {
+    tmpValue = cloneDeep(value)
+    drawer.show()
+  }
 
   const saveEventData = async () => {
     // any automations that need created from event triggers
-    const automationsToCreate = value.filter(
+    const automationsToCreate = tmpValue.filter(
       action => action["##eventHandlerType"] === "Trigger Automation"
     )
     for (let action of automationsToCreate) {
       await createAutomation(action.parameters)
     }
 
-    dispatch("change", value)
+    dispatch("change", tmpValue)
     notifications.success("Component actions saved.")
     drawer.hide()
   }
@@ -54,11 +61,16 @@
   }
 </script>
 
-<ActionButton on:click={drawer.show}>Define actions</ActionButton>
+<ActionButton on:click={openDrawer}>Define actions</ActionButton>
 <Drawer bind:this={drawer} title={"Actions"}>
   <svelte:fragment slot="description">
     Define what actions to run.
   </svelte:fragment>
   <Button cta slot="buttons" on:click={saveEventData}>Save</Button>
-  <EventEditor slot="body" bind:actions={value} eventType={name} {bindings} />
+  <EventEditor
+    slot="body"
+    bind:actions={tmpValue}
+    eventType={name}
+    {bindings}
+  />
 </Drawer>

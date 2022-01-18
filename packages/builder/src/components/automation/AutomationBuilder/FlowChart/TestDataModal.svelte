@@ -25,7 +25,7 @@
 
   // Check the schema to see if required fields have been entered
   $: isError = !trigger.schema.outputs.required.every(
-    required => testData[required]
+    required => testData[required] || required !== "row"
   )
 
   function parseTestJSON(e) {

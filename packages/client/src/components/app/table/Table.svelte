@@ -17,10 +17,6 @@
 
   const component = getContext("component")
   const { styleable, getAction, ActionTypes, routeStore } = getContext("sdk")
-  const setSorting = getAction(
-    dataProvider?.id,
-    ActionTypes.SetDataProviderSorting
-  )
   const customColumnKey = `custom-${Math.random()}`
   const customRenderers = [
     {
@@ -29,13 +25,16 @@
     },
   ]
 
-  // Table state
   $: hasChildren = $component.children
   $: loading = dataProvider?.loading ?? false
   $: data = dataProvider?.rows || []
   $: fullSchema = dataProvider?.schema ?? {}
   $: fields = getFields(fullSchema, columns, showAutoColumns)
   $: schema = getFilteredSchema(fullSchema, fields, hasChildren)
+  $: setSorting = getAction(
+    dataProvider?.id,
+    ActionTypes.SetDataProviderSorting
+  )
 
   const getFields = (schema, customColumns, showAutoColumns) => {
     // Check for an invalid column selection

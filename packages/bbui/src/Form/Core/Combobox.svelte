@@ -9,6 +9,7 @@
   export let id = null
   export let placeholder = "Choose an option or type"
   export let disabled = false
+  export let readonly = false
   export let error = null
   export let options = []
   export let getOptionLabel = option => option
@@ -73,6 +74,7 @@
       value={value || ""}
       placeholder={placeholder || ""}
       {disabled}
+      {readonly}
       class="spectrum-Textfield-input spectrum-InputGroup-input"
     />
   </div>

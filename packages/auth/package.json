@@ -1,10 +1,10 @@
 {
   "name": "@budibase/auth",
-  "version": "0.9.185-alpha.10",
+  "version": "1.0.27-alpha.0",
   "description": "Authentication middlewares for budibase builder and apps",
   "main": "src/index.js",
   "author": "Budibase",
-  "license": "AGPL-3.0",
+  "license": "GPL-3.0",
   "scripts": {
     "test": "jest",
     "test:watch": "jest --watchAll"

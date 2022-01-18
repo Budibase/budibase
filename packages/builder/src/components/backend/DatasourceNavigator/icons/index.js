@@ -10,6 +10,7 @@ import MySQL from "./MySQL.svelte"
 import ArangoDB from "./ArangoDB.svelte"
 import Rest from "./Rest.svelte"
 import Budibase from "./Budibase.svelte"
+import Oracle from "./Oracle.svelte"
 
 export default {
   BUDIBASE: Budibase,
@@ -24,4 +25,5 @@ export default {
   MYSQL: MySQL,
   ARANGODB: ArangoDB,
   REST: Rest,
+  ORACLE: Oracle,
 }
