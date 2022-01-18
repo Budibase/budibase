@@ -38,6 +38,13 @@ exports.fetch = async function (ctx) {
     )
   ).rows.map(row => row.doc)
 
+  for (let datasource of datasources) {
+    if (datasource.config && datasource.config.auth) {
+      // strip secrets from response so they don't show in the network request
+      delete datasource.config.auth
+    }
+  }
+
   ctx.body = [bbInternalDb, ...datasources]
 }
 
