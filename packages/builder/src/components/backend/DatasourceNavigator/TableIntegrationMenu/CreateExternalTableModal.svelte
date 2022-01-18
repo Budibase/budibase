@@ -6,9 +6,12 @@
   export let datasource
 
   let name = ""
+  let submitted = false
   $: valid = name && name.length > 0 && !datasource?.entities[name]
   $: error =
-    name && datasource?.entities[name] ? "Table name already in use." : null
+    !submitted && name && datasource?.entities[name]
+      ? "Table name already in use."
+      : null
 
   function buildDefaultTable(tableName, datasourceId) {
     return {
@@ -26,6 +29,7 @@
   }
 
   async function saveTable() {
+    submitted = true
     const table = await tables.save(buildDefaultTable(name, datasource._id))
     await datasources.fetch()
     $goto(`../../table/${table._id}`)

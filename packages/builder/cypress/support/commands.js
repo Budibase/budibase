@@ -429,13 +429,14 @@ Cypress.Commands.add("addDatasourceConfig", (datasource, skipFetch) => {
   // Click to fetch tables
   if (skipFetch) {
     cy.get(".spectrum-Dialog-grid").within(() => {
-      cy.get(".spectrum-Button").contains("Skip table fetch")
+      cy.get(".spectrum-Button")
+        .contains("Skip table fetch")
         .click({ force: true })
     })
-  }
-  else {
+  } else {
     cy.get(".spectrum-Dialog-grid").within(() => {
-      cy.get(".spectrum-Button").contains("Save and fetch tables")
+      cy.get(".spectrum-Button")
+        .contains("Save and fetch tables")
         .click({ force: true })
       cy.wait(1000)
     })
