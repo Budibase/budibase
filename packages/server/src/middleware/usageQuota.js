@@ -142,12 +142,14 @@ const appPostDelete = async (ctx, usageContext) => {
   }
 }
 
-// const appPostCreate = async (ctx, usageContext) => {
-// if (ctx.request) {
-//   const rowCount = await getUniqueRows([ctx.appId]).length
-//   await usageQuota.update(usageQuota.Properties.ROW, -rowCount)
-// }
-// }
+const appPostCreate = async ctx => {
+  // app import & template creation
+  if (ctx.request.body.useTemplate === "true") {
+    const rows = await getUniqueRows([ctx.response.body.appId])
+    const rowCount = rows ? rows.length : 0
+    await usageQuota.update(usageQuota.Properties.ROW, rowCount)
+  }
+}
 
 const PRE_DELETE = {
   [usageQuota.Properties.APPS]: appPreDelete,
@@ -160,5 +162,5 @@ const POST_DELETE = {
 const PRE_CREATE = {}
 
 const POST_CREATE = {
-  // [usageQuota.Properties.APPS]: appPostCreate,
+  [usageQuota.Properties.APPS]: appPostCreate,
 }
