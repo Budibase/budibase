@@ -11,14 +11,12 @@
     Select,
   } from "@budibase/bbui"
   import { generate } from "shortid"
-  import {
-    getValidOperatorsForType,
-    OperatorOptions,
-  } from "builder/src/constants/lucene"
+  import { LuceneUtils } from "@budibase/frontend-core"
 
   export let schemaFields
   export let filters = []
 
+  const operatorOptions = LuceneUtils.OperatorOptions
   const BannedTypes = ["link", "attachment", "formula", "json"]
 
   $: fieldOptions = (schemaFields ?? [])
@@ -31,7 +29,7 @@
       {
         id: generate(),
         field: null,
-        operator: OperatorOptions.Equals.value,
+        operator: operatorOptions.Equals.value,
         value: null,
         valueType: "Value",
       },
@@ -53,11 +51,11 @@
     expression.type = schemaFields.find(x => x.name === field)?.type
 
     // Ensure a valid operator is set
-    const validOperators = getValidOperatorsForType(expression.type).map(
-      x => x.value
-    )
+    const validOperators = LuceneUtils.getValidOperatorsForType(
+      expression.type
+    ).map(x => x.value)
     if (!validOperators.includes(expression.operator)) {
-      expression.operator = validOperators[0] ?? OperatorOptions.Equals.value
+      expression.operator = validOperators[0] ?? operatorOptions.Equals.value
       onOperatorChange(expression, expression.operator)
     }
 
@@ -72,8 +70,8 @@
 
   const onOperatorChange = (expression, operator) => {
     const noValueOptions = [
-      OperatorOptions.Empty.value,
-      OperatorOptions.NotEmpty.value,
+      operatorOptions.Empty.value,
+      operatorOptions.NotEmpty.value,
     ]
     expression.noValue = noValueOptions.includes(operator)
     if (expression.noValue) {
@@ -109,7 +107,7 @@
             />
             <Select
               disabled={!filter.field}
-              options={getValidOperatorsForType(filter.type)}
+              options={LuceneUtils.getValidOperatorsForType(filter.type)}
               bind:value={filter.operator}
               on:change={e => onOperatorChange(filter, e.detail)}
               placeholder={null}
