@@ -22,7 +22,6 @@ async function preAuth(passport, ctx, next) {
     ctx.throw(400, "appId and datasourceId query params not present.")
   }
 
-  // TODO: prob update - shouldn't include the google sheets scopes here
   return passport.authenticate(strategy, {
     scope: ["profile", "email", "https://www.googleapis.com/auth/spreadsheets"],
   })(ctx, next)
