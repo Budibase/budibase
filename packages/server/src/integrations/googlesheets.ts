@@ -248,11 +248,11 @@ module GoogleSheetsModule {
       }
     }
 
-    async deleteTable(query: any) {
+    async deleteTable(sheet: any) {
       try {
         await this.connect()
-        const sheet = await this.client.sheetsByTitle[query.sheet]
-        return await sheet.delete()
+        const sheetToDelete = await this.client.sheetsByTitle[sheet]
+        return await sheetToDelete.delete()
       } catch (err) {
         console.error("Error deleting table in google sheets", err)
         throw err
