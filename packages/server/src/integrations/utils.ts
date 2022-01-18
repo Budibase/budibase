@@ -143,11 +143,21 @@ export function isIsoDateString(str: string) {
   return d.toISOString() === str
 }
 
+function shouldCopyRelationship(column: { type: string, tableId?: string }, tableIds: [string]) {
+  return column.type === FieldTypes.LINK && column.tableId && tableIds.includes(column.tableId)
+}
+
+function shouldCopySpecialColumn(column: { type: string }, fetchedColumn: { type: string } | undefined) {
+  return column.type === FieldTypes.OPTIONS ||
+    ((!fetchedColumn || fetchedColumn.type === FieldTypes.NUMBER) && column.type === FieldTypes.BOOLEAN)
+}
+
 // add the existing relationships from the entities if they exist, to prevent them from being overridden
 function copyExistingPropsOver(
   tableName: string,
   table: Table,
-  entities: { [key: string]: any }
+  entities: { [key: string]: any },
+  tableIds: [string]
 ) {
   if (entities && entities[tableName]) {
     if (entities[tableName].primaryDisplay) {
@@ -158,11 +168,10 @@ function copyExistingPropsOver(
       if (!existingTableSchema.hasOwnProperty(key)) {
         continue
       }
+      const column = existingTableSchema[key]
       if (
-        existingTableSchema[key].type === FieldTypes.LINK ||
-        existingTableSchema[key].type === FieldTypes.OPTIONS ||
-        ((!table.schema[key] || table.schema[key].type === FieldTypes.NUMBER) &&
-          existingTableSchema[key].type === FieldTypes.BOOLEAN)
+        shouldCopyRelationship(column, tableIds) ||
+        shouldCopySpecialColumn(column, table.schema[key])
       ) {
         table.schema[key] = existingTableSchema[key]
       }
@@ -178,6 +187,8 @@ export function finaliseExternalTables(
   const invalidColumns = Object.values(InvalidColumns)
   let finalTables: { [key: string]: any } = {}
   const errors: { [key: string]: string } = {}
+  // @ts-ignore
+  const tableIds: [string] = Object.values(tables).map(table => table._id)
   for (let [name, table] of Object.entries(tables)) {
     const schemaFields = Object.keys(table.schema)
     // make sure every table has a key
@@ -189,7 +200,7 @@ export function finaliseExternalTables(
       continue
     }
     // make sure all previous props have been added back
-    finalTables[name] = copyExistingPropsOver(name, table, entities)
+    finalTables[name] = copyExistingPropsOver(name, table, entities, tableIds)
   }
   // sort the tables by name
   finalTables = Object.entries(finalTables)
