@@ -5,7 +5,7 @@ const {
   PermissionLevels,
   PermissionTypes,
   BUILDER,
-} = require("@budibase/auth/permissions")
+} = require("@budibase/backend-core/permissions")
 const {
   bodyResource,
   bodySubResource,
@@ -41,11 +41,18 @@ router
     authorized(PermissionTypes.QUERY, PermissionLevels.READ),
     queryController.find
   )
+  // DEPRECATED - use new query endpoint for future work
   .post(
     "/api/queries/:queryId",
     paramResource("queryId"),
     authorized(PermissionTypes.QUERY, PermissionLevels.WRITE),
-    queryController.execute
+    queryController.executeV1
+  )
+  .post(
+    "/api/v2/queries/:queryId",
+    paramResource("queryId"),
+    authorized(PermissionTypes.QUERY, PermissionLevels.WRITE),
+    queryController.executeV2
   )
   .delete(
     "/api/queries/:queryId/:revId",

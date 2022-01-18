@@ -13,7 +13,7 @@
   import FrontendNavigatePane from "components/design/NavigationPanel/FrontendNavigatePane.svelte"
   import { goto, leftover, params } from "@roxi/routify"
   import { FrontendTypes } from "constants"
-  import { findComponent, findComponentPath } from "builderStore/storeUtils"
+  import { findComponent, findComponentPath } from "builderStore/componentUtils"
   import { get } from "svelte/store"
   import AppThemeSelect from "components/design/AppPreview/AppThemeSelect.svelte"
   import ThemeEditor from "components/design/AppPreview/ThemeEditor.svelte"

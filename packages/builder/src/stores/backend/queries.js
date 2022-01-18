@@ -91,6 +91,7 @@ export function createQueriesStore() {
           {}
         ),
         datasourceId: query.datasourceId,
+        queryId: query._id || undefined,
       })
 
       if (response.status !== 200) {
@@ -133,7 +134,7 @@ export function createQueriesStore() {
         list.map(q => q.name)
       )
 
-      actions.save(datasourceId, newQuery)
+      return actions.save(datasourceId, newQuery)
     },
   }
 

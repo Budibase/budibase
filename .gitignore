@@ -94,3 +94,4 @@ hosting/.generated-envoy.dev.yaml
 *.sublime-project
 *.sublime-workspace
 packages/builder/cypress.env.json
+bin/

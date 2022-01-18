@@ -146,3 +146,14 @@ describe("check manifest", () => {
     )
   })
 })
+
+describe("check full stops that are safe", () => {
+  it("should allow using an escaped full stop", async () => {
+    const data = {
+      "c53a4a604fa754d33baaafd5bca4d3658-YXuUBqt5vI": { "persons.firstname": "1" }
+    }
+    const template = "{{ [c53a4a604fa754d33baaafd5bca4d3658-YXuUBqt5vI].[persons.firstname] }}"
+    const output = await processString(template, data)
+    expect(output).toEqual("1")
+  })
+})

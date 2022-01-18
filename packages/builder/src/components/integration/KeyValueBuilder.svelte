@@ -6,6 +6,8 @@
     Label,
     Toggle,
     Select,
+    ActionMenu,
+    MenuItem,
   } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { lowercase } from "helpers"
@@ -23,9 +25,16 @@
   export let toggle
   export let keyPlaceholder = "Key"
   export let valuePlaceholder = "Value"
+  export let valueHeading
+  export let keyHeading
   export let tooltip
+  export let menuItems
+  export let showMenu = false
 
-  let fields = Object.entries(object).map(([name, value]) => ({ name, value }))
+  let fields = Object.entries(object || {}).map(([name, value]) => ({
+    name,
+    value,
+  }))
   let fieldActivity = buildFieldActivity(activity)
 
   $: object = fields.reduce(
@@ -76,17 +85,24 @@
 {#if Object.keys(object || {}).length > 0}
   {#if headings}
     <div class="container" class:container-active={toggle}>
-      <Label {tooltip}>{keyPlaceholder}</Label>
-      <Label>{valuePlaceholder}</Label>
+      <Label {tooltip}>{keyHeading || keyPlaceholder}</Label>
+      <Label>{valueHeading || valuePlaceholder}</Label>
       {#if toggle}
         <Label>Active</Label>
       {/if}
     </div>
   {/if}
-  <div class="container" class:container-active={toggle} class:readOnly>
+  <div
+    class="container"
+    class:container-active={toggle}
+    class:container-menu={showMenu}
+    class:readOnly
+    class:readOnly-menu={readOnly && showMenu}
+  >
     {#each fields as field, idx}
       <Input
         placeholder={keyPlaceholder}
+        readonly={readOnly}
         bind:value={field.name}
         on:change={changed}
       />
@@ -95,6 +111,7 @@
       {:else}
         <Input
           placeholder={valuePlaceholder}
+          readonly={readOnly}
           bind:value={field.value}
           on:change={changed}
         />
@@ -104,6 +121,18 @@
       {/if}
       {#if !readOnly}
         <Icon hoverable name="Close" on:click={() => deleteEntry(idx)} />
+      {/if}
+      {#if menuItems?.length > 0 && showMenu}
+        <ActionMenu>
+          <div slot="control" class="control icon">
+            <Icon size="S" hoverable name="MoreSmallList" />
+          </div>
+          {#each menuItems as item}
+            <MenuItem on:click={() => item.onClick(field)}>
+              {item.text}
+            </MenuItem>
+          {/each}
+        </ActionMenu>
       {/if}
     {/each}
   </div>
@@ -127,7 +156,16 @@
   .container-active {
     grid-template-columns: 1fr 1fr 50px 20px;
   }
+  .container-menu {
+    grid-template-columns: 1fr 1fr 20px 20px;
+  }
   .readOnly {
     grid-template-columns: 1fr 1fr;
+  }
+  .readOnly-menu {
+    grid-template-columns: 1fr 1fr 20px;
+  }
+  .control {
+    margin-top: 4px;
   }
 </style>

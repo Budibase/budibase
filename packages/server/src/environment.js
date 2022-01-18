@@ -65,6 +65,7 @@ module.exports = {
   DEPLOYMENT_CREDENTIALS_URL: process.env.DEPLOYMENT_CREDENTIALS_URL,
   ALLOW_DEV_AUTOMATIONS: process.env.ALLOW_DEV_AUTOMATIONS,
   DISABLE_THREADING: process.env.DISABLE_THREADING,
+  QUERY_THREAD_TIMEOUT: process.env.QUERY_THREAD_TIMEOUT,
   _set(key, value) {
     process.env[key] = value
     module.exports[key] = value

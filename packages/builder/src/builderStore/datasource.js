@@ -23,10 +23,10 @@ function prepareData(config) {
   return datasource
 }
 
-export async function saveDatasource(config) {
+export async function saveDatasource(config, skipFetch = false) {
   const datasource = prepareData(config)
   // Create datasource
-  const resp = await datasources.save(datasource, datasource.plus)
+  const resp = await datasources.save(datasource, !skipFetch && datasource.plus)
 
   // update the tables incase data source plus
   await tables.fetch()

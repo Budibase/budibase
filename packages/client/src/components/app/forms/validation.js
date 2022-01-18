@@ -37,7 +37,7 @@ export const createValidatorFromConstraints = (
       const length = schemaConstraints.length.maximum
       rules.push({
         type: "string",
-        constraint: "length",
+        constraint: "maxLength",
         value: length,
         error: `Maximum length is ${length}`,
       })
@@ -206,10 +206,17 @@ const parseType = (value, type) => {
     return value
   }
 
+  // Parse array, treating no elements as null
   if (type === FieldTypes.ARRAY) {
     if (!Array.isArray(value) || !value.length) {
       return null
     }
+    return value
+  }
+
+  // For JSON we don't touch the value at all as we want to verify it in its
+  // raw form
+  if (type === FieldTypes.JSON) {
     return value
   }
 
@@ -290,6 +297,19 @@ const notContainsHandler = (value, rule) => {
   return !containsHandler(value, rule)
 }
 
+// Evaluates a constraint that the value must be a valid json object
+const jsonHandler = value => {
+  if (typeof value !== "object" || Array.isArray(value)) {
+    return false
+  }
+  try {
+    JSON.parse(JSON.stringify(value))
+    return true
+  } catch (error) {
+    return false
+  }
+}
+
 /**
  * Map of constraint types to handlers.
  */
@@ -306,6 +326,7 @@ const handlerMap = {
   notRegex: notRegexHandler,
   contains: containsHandler,
   notContains: notContainsHandler,
+  json: jsonHandler,
 }
 
 /**
