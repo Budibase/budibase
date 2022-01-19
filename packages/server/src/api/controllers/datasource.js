@@ -101,8 +101,13 @@ exports.update = async function (ctx) {
   const db = new CouchDB(ctx.appId)
   const datasourceId = ctx.params.datasourceId
   let datasource = await db.get(datasourceId)
+  const auth = datasource.config.auth
   await invalidateVariables(datasource, ctx.request.body)
   datasource = { ...datasource, ...ctx.request.body }
+  if (auth && !ctx.request.body.auth) {
+    // don't strip auth config from DB
+    datasource.config.auth = auth
+  }
 
   const response = await db.put(datasource)
   datasource._rev = response.rev
