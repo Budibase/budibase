@@ -11,6 +11,7 @@
     notifications,
     Body,
     Search,
+    Icon,
   } from "@budibase/bbui"
   import Spinner from "components/common/Spinner.svelte"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
@@ -27,6 +28,7 @@
   import AppRow from "components/start/AppRow.svelte"
   import { AppStatus } from "constants"
   import analytics, { Events } from "analytics"
+  import Logo from "assets/bb-space-man.svg"
 
   let sortBy = "name"
   let template
@@ -394,11 +396,26 @@
       </Layout>
     {/if}
 
-    {#if !enrichedApps.length && !creatingApp && loaded}
+    {#if !enrichedApps.length}
       <div class="empty-wrapper">
-        <Modal inline>
-          <CreateAppModal {template} inline={true} />
-        </Modal>
+        <div class="centered">
+          <div class="main">
+            <Layout gap="S" justifyItems="center">
+              <img class="img-size" alt="logo" src={Logo} />
+              <div class="new-screen-text">
+                <Detail size="M">LET’S GET STARTED!</Detail>
+              </div>
+              <Button on:click={() => initiateAppCreation()} size="M" cta>
+                <div class="new-screen-button">
+                  <div class="background-icon" style="color: white;">
+                    <Icon name="Add" />
+                  </div>
+                  Create App
+                </div></Button
+              >
+            </Layout>
+          </div>
+        </div>
       </div>
     {/if}
 
@@ -486,10 +503,10 @@
     overflow: hidden;
     grid-gap: var(--spacing-xl);
     grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
-    grid-template-rows: minmax(100px, 1fr) minmax(100px, 1fr) minmax(0px, 0);
+    grid-template-rows: minmax(70px, 1fr) minmax(100px, 1fr) minmax(0px, 0);
   }
   .template-card {
-    height: 80px;
+    height: 70px;
     border-radius: var(--border-radius-s);
     border: 1px solid var(--spectrum-global-color-gray-300);
     cursor: pointer;
@@ -542,5 +559,43 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
+  }
+
+  .centered {
+    width: calc(100% - 350px);
+    height: calc(100% - 100px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .main {
+    width: 300px;
+  }
+
+  .new-screen-text {
+    width: 160px;
+    text-align: center;
+    color: #2c2c2c;
+    font-weight: 600;
+  }
+
+  .new-screen-button {
+    margin-left: 5px;
+    height: 20px;
+    width: 100px;
+    display: flex;
+    align-items: center;
+  }
+
+  .img-size {
+    width: 160px;
+    height: 160px;
+  }
+
+  .background-icon {
+    margin-top: 4px;
+    margin-right: 4px;
   }
 </style>
