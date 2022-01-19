@@ -13,11 +13,11 @@
       If you don't enter a value, you'll be redirected to the login screen.
     </Body>
     <div class="content">
-      <Label small>Return URL</Label>
+      <Label small>Redirect URL</Label>
       <DrawerBindableInput
         title="Return URL"
-        value={parameters.returnUrl}
-        on:change={value => (parameters.returnUrl = value.detail)}
+        value={parameters.redirectUrl}
+        on:change={value => (parameters.redirectUrl = value.detail)}
         {bindings}
       />
     </div>
