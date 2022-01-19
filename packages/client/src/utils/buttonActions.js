@@ -114,13 +114,15 @@ const refreshDataProviderHandler = async (action, context) => {
 
 const logoutHandler = async action => {
   await authStore.actions.logOut()
-  let returnUrl = "/builder/auth/login"
+  let redirectUrl = "/builder/auth/login"
   let internal = false
-  if (action.parameters.returnUrl) {
-    internal = action.parameters.returnUrl?.startsWith("/")
-    returnUrl = routeStore.actions.createFullURL(action.parameters.returnUrl)
+  if (action.parameters.redirectUrl) {
+    internal = action.parameters.redirectUrl?.startsWith("/")
+    redirectUrl = routeStore.actions.createFullURL(
+      action.parameters.redirectUrl
+    )
   }
-  window.location.href = returnUrl
+  window.location.href = redirectUrl
   if (internal) {
     window.location.reload()
   }
