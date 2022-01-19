@@ -22,6 +22,7 @@
   export let error = null
   export let fileTags = []
   export let maximum = null
+  export let extensions = "*"
 
   const dispatch = createEventDispatcher()
   const imageExtensions = [
@@ -207,6 +208,7 @@
           {disabled}
           type="file"
           multiple
+          accept={extensions}
           on:change={handleFile}
         />
         <svg
