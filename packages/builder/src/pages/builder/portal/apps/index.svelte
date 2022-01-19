@@ -303,7 +303,13 @@
 
       <div class="buttons">
         {#if cloud}
-          <Button icon="Export" quiet secondary on:click={initiateAppsExport}>
+          <Button
+            size="L"
+            icon="Export"
+            quiet
+            secondary
+            on:click={initiateAppsExport}
+          >
             Export apps
           </Button>
         {/if}
@@ -403,7 +409,7 @@
             <Layout gap="S" justifyItems="center">
               <img class="img-size" alt="logo" src={Logo} />
               <div class="new-screen-text">
-                <Detail size="M">LET’S GET STARTED!</Detail>
+                <Detail size="M">Create a business app in minutes!</Detail>
               </div>
               <Button on:click={() => initiateAppCreation()} size="M" cta>
                 <div class="new-screen-button">
