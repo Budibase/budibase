@@ -7,6 +7,7 @@ import ColorPicker from "./ColorPicker.svelte"
 import { IconSelect } from "./IconSelect"
 import FieldSelect from "./FieldSelect.svelte"
 import MultiFieldSelect from "./MultiFieldSelect.svelte"
+import SearchFieldSelect from "./SearchFieldSelect.svelte"
 import SchemaSelect from "./SchemaSelect.svelte"
 import SectionSelect from "./SectionSelect.svelte"
 import NavigationEditor from "./NavigationEditor/NavigationEditor.svelte"
@@ -30,6 +31,7 @@ const componentMap = {
   icon: IconSelect,
   field: FieldSelect,
   multifield: MultiFieldSelect,
+  searchfield: SearchFieldSelect,
   options: OptionsEditor,
   schema: SchemaSelect,
   section: SectionSelect,

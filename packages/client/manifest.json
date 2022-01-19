@@ -2066,6 +2066,26 @@
         ]
       },
       {
+        "type": "select",
+        "label": "Direction",
+        "key": "direction",
+        "defaultValue": "vertical",
+        "options": [
+          {
+            "label": "Horizontal",
+            "value": "horizontal"
+          },
+          {
+            "label": "Vertical",
+            "value": "vertical"
+          }
+        ],
+        "dependsOn": {
+          "setting": "optionsType",
+          "value": "radio"
+        }
+      },
+      {
         "type": "text",
         "label": "Default value",
         "key": "defaultValue"
@@ -2236,7 +2256,7 @@
           "setting": "optionsSource",
           "value": "provider"
         }
-      }, 
+      },
       {
         "type": "options",
         "key": "customOptions",
@@ -2418,6 +2438,11 @@
         "type": "text",
         "label": "Label",
         "key": "label"
+      },
+      {
+        "type": "text",
+        "label": "Extensions",
+        "key": "extensions"
       },
       {
         "type": "boolean",
@@ -2811,7 +2836,7 @@
         "key": "dataSource"
       },
       {
-        "type": "multifield",
+        "type": "searchfield",
         "label": "Search Columns",
         "key": "searchColumns",
         "placeholder": "Choose search columns"
@@ -2958,7 +2983,7 @@
         "key": "dataSource"
       },
       {
-        "type": "multifield",
+        "type": "searchfield",
         "label": "Search Columns",
         "key": "searchColumns",
         "placeholder": "Choose search columns"
