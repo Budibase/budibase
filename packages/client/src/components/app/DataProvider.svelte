@@ -66,6 +66,7 @@
   $: dataContext = {
     rows: $fetch.rows,
     info: $fetch.info,
+    datasource: dataSource || {},
     schema: $fetch.schema,
     rowsLength: $fetch.rows.length,
 

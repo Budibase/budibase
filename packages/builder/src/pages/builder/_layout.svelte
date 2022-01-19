@@ -2,6 +2,12 @@
   import { isActive, redirect, params } from "@roxi/routify"
   import { admin, auth } from "stores/portal"
   import { onMount } from "svelte"
+  import {
+    Cookies,
+    getCookie,
+    removeCookie,
+    setCookie,
+  } from "builderStore/cookies"
 
   let loaded = false
 
@@ -67,6 +73,24 @@
 
   $: {
     const apiReady = $admin.loaded && $auth.loaded
+
+    // firstly, set the return url
+    if (
+      loaded &&
+      apiReady &&
+      !$auth.user &&
+      !getCookie(Cookies.ReturnUrl) &&
+      // logout triggers a page refresh, so we don't want to set the return url
+      !$auth.postLogout &&
+      // don't set the return url on pre-login pages
+      !$isActive("./auth") &&
+      !$isActive("./invite") &&
+      !$isActive("./admin")
+    ) {
+      const url = window.location.pathname
+      setCookie(Cookies.ReturnUrl, url)
+    }
+
     // if tenant is not set go to it
     if (
       loaded &&
@@ -90,12 +114,19 @@
       !$isActive("./invite") &&
       !$isActive("./admin")
     ) {
-      const returnUrl = encodeURIComponent(window.location.pathname)
-      $redirect("./auth?", { returnUrl })
+      $redirect("./auth")
     }
     // check if password reset required for user
     else if ($auth.user?.forceResetPassword) {
       $redirect("./auth/reset")
+    }
+    // lastly, redirect to the return url if it has been set
+    else if (loaded && apiReady && $auth.user) {
+      const returnUrl = getCookie(Cookies.ReturnUrl)
+      if (returnUrl) {
+        removeCookie(Cookies.ReturnUrl)
+        window.location.href = returnUrl
+      }
     }
   }
 </script>
