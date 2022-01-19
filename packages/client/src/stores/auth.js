@@ -1,6 +1,5 @@
 import * as API from "../api"
 import { writable } from "svelte/store"
-import { initialise } from "./initialise.js"
 
 const createAuthStore = () => {
   const store = writable(null)
