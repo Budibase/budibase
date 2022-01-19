@@ -2066,6 +2066,26 @@
         ]
       },
       {
+        "type": "select",
+        "label": "Direction",
+        "key": "direction",
+        "defaultValue": "vertical",
+        "options": [
+          {
+            "label": "Horizontal",
+            "value": "horizontal"
+          },
+          {
+            "label": "Vertical",
+            "value": "vertical"
+          }
+        ],
+        "dependsOn": {
+          "setting": "optionsType",
+          "value": "radio"
+        }
+      },
+      {
         "type": "text",
         "label": "Default value",
         "key": "defaultValue"
