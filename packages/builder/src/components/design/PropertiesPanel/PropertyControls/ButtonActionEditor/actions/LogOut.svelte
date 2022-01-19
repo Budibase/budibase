@@ -9,8 +9,8 @@
 <div class="root">
   <Layout noPadding gap="M">
     <Body size="S">
-      Please enter what URL you would like to be redirected to after logging
-      out. If you dont' enter a value, you'll be redirected to the login screen.
+      Please enter the URL you would like to be redirected to after logging out.
+      If you don't enter a value, you'll be redirected to the login screen.
     </Body>
     <div class="content">
       <Label small>Return URL</Label>
