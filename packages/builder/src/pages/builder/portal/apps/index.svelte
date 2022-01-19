@@ -78,6 +78,7 @@
   }
 
   const initiateAppCreation = () => {
+    template = {}
     creationModal.show()
     creatingApp = true
   }
@@ -304,10 +305,16 @@
             Export apps
           </Button>
         {/if}
-        <Button icon="Import" quiet secondary on:click={initiateAppImport}>
+        <Button
+          icon="Import"
+          size="L"
+          quiet
+          secondary
+          on:click={initiateAppImport}
+        >
           Import app
         </Button>
-        <Button icon="Add" cta on:click={initiateAppCreation}>
+        <Button size="L" icon="Add" cta on:click={initiateAppCreation}>
           Create app
         </Button>
       </div>
