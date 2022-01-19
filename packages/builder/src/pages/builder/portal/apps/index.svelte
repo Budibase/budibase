@@ -474,9 +474,12 @@
   }
 
   .grid {
+    height: 200px;
     display: grid;
+    overflow: hidden;
     grid-gap: var(--spacing-xl);
     grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+    grid-template-rows: minmax(100px, 1fr) minmax(100px, 1fr) minmax(0px, 0);
   }
   .template-card {
     height: 80px;
