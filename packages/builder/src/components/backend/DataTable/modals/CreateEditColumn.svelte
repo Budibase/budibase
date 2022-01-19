@@ -150,6 +150,7 @@
     delete field.subtype
     delete field.tableId
     delete field.relationshipType
+    delete field.formulaType
 
     // Add in defaults and initial definition
     const definition = fieldDefinitions[event.detail?.toUpperCase()]
@@ -160,6 +161,9 @@
     // Default relationships many to many
     if (field.type === LINK_TYPE) {
       field.relationshipType = RelationshipTypes.MANY_TO_MANY
+    }
+    if (field.type === FORMULA_TYPE) {
+      field.formulaType = "dynamic"
     }
   }
 
@@ -431,8 +435,20 @@
       error={errors.relatedName}
     />
   {:else if field.type === FORMULA_TYPE}
+    <Select
+      label="Formula type"
+      value={field.formulaType}
+      options={[
+        { label: "Dynamic", value: "dynamic" },
+        { label: "Static", value: "static" },
+      ]}
+      getOptionLabel={option => option.label}
+      getOptionValue={option => option.value}
+      tooltip="Dynamic formula are calculated when retrieved, but cannot be filtered,
+       while static formula are calculated when the row is saved."
+    />
     <ModalBindableInput
-      title="Handlebars Formula"
+      title="Formula"
       label="Formula"
       value={field.formula}
       on:change={e => (field.formula = e.detail)}
@@ -441,7 +457,7 @@
     />
   {:else if field.type === AUTO_TYPE}
     <Select
-      label="Auto Column Type"
+      label="Auto column type"
       value={field.subtype}
       on:change={e => (field.subtype = e.detail)}
       options={Object.entries(getAutoColumnInformation())}
