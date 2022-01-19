@@ -61,12 +61,17 @@ exports.validate = async ({ appId, tableId, row, table }) => {
     let res
 
     // Validate.js doesn't seem to handle array
-    if (type === FieldTypes.ARRAY && row[fieldName] && row[fieldName].length) {
-      row[fieldName].map(val => {
-        if (!constraints.inclusion.includes(val)) {
-          errors[fieldName] = "Field not in list"
-        }
-      })
+    if (type === FieldTypes.ARRAY && row[fieldName]) {
+      if (row[fieldName].length) {
+        row[fieldName].map(val => {
+          if (!constraints.inclusion.includes(val)) {
+            errors[fieldName] = "Field not in list"
+          }
+        })
+      } else if (constraints.presence && row[fieldName].length === 0) {
+        // non required MultiSelect creates an empty array, which should not throw errors
+        errors[fieldName] = [`${fieldName} is required`]
+      }
     } else if (type === FieldTypes.JSON && typeof row[fieldName] === "string") {
       // this should only happen if there is an error
       try {

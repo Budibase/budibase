@@ -9,6 +9,7 @@ export function createAuthStore() {
     tenantId: "default",
     tenantSet: false,
     loaded: false,
+    postLogout: false,
   })
   const store = derived(auth, $store => {
     let initials = null
@@ -34,6 +35,7 @@ export function createAuthStore() {
       tenantId: $store.tenantId,
       tenantSet: $store.tenantSet,
       loaded: $store.loaded,
+      postLogout: $store.postLogout,
       initials,
       isAdmin,
       isBuilder,
@@ -87,6 +89,13 @@ export function createAuthStore() {
       return store
     })
     return info
+  }
+
+  async function setPostLogout() {
+    auth.update(store => {
+      store.postLogout = true
+      return store
+    })
   }
 
   async function getInitInfo() {
@@ -145,6 +154,7 @@ export function createAuthStore() {
       await response.json()
       await setInitInfo({})
       setUser(null)
+      setPostLogout()
     },
     updateSelf: async fields => {
       const newUser = { ...get(auth).user, ...fields }
