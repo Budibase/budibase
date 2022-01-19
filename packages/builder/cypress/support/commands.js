@@ -36,7 +36,6 @@ Cypress.Commands.add("createApp", name => {
   cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
   cy.wait(500)
   cy.contains(/Start from scratch/).dblclick()
-  cy.wait(2000)
   cy.get(".spectrum-Modal").within(() => {
     cy.get("input").eq(0).type(name).should("have.value", name).blur()
     cy.get(".spectrum-ButtonGroup").contains("Create app").click()
