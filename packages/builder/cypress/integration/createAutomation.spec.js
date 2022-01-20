@@ -4,6 +4,7 @@ context("Create a automation", () => {
     cy.createTestApp()
   })
 
+  // https://on.cypress.io/interacting-with-elements
   it("should create a automation", () => {
     cy.createTestTableWithData()
     cy.wait(2000)
@@ -23,7 +24,7 @@ context("Create a automation", () => {
     cy.contains("dog").click()
     cy.wait(2000)
     // Create action
-    cy.get('[aria-label="AddCircle"]').eq(1).click()
+    cy.get(".block > .spectrum-Icon").click()
     cy.get(".modal-inner-wrapper").within(() => {
       cy.wait(1000)
       cy.contains("Create Row").trigger('mouseover').click().click()

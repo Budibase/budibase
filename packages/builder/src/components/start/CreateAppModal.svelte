@@ -87,11 +87,6 @@
     }
   }
 
-  async function onCancel() {
-    template = null
-    await auth.setInitInfo({})
-  }
-
   // auto add slash to url
   $: {
     if ($values.url && !$values.url.startsWith("/")) {
@@ -104,7 +99,6 @@
   title={"Create your app"}
   confirmText={template?.fromFile ? "Import app" : "Create app"}
   onConfirm={createNewApp}
-  {onCancel}
   disabled={!$validation.valid}
 >
   {#if template?.fromFile}

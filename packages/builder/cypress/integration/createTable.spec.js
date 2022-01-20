@@ -30,6 +30,7 @@ context("Create a Table", () => {
     cy.contains("Save Column").click()
     cy.contains("nameupdated ").should("contain", "nameupdated")
   })
+
   
   it("edits a row", () => {
     cy.contains("button", "Edit").click({ force: true })
@@ -46,43 +47,13 @@ context("Create a Table", () => {
     cy.get(".spectrum-Modal").contains("Delete").click()
     cy.contains("RoverUpdated").should("not.exist")
   })
-  
-  it("Adds 15 rows and checks pagination", () => {
-    // 10 rows per page, 15 rows should create 2 pages within table
-    const totalRows = 16
-    for (let i = 1; i < totalRows; i++){
-      cy.addRow([i])
-    }
-    cy.wait(1000)
-    cy.get(".spectrum-Pagination").within(() => {
-      cy.get(".spectrum-ActionButton").eq(1).click()
-    })
-    cy.get(".spectrum-Pagination").within(() => {
-      cy.get(".spectrum-Body--secondary").contains("Page 2")
-    })
-  })
-  
-  it("Deletes rows and checks pagination", () => {
-    // Delete rows, removing second page of rows from table
-    const deleteRows = 5
-    cy.get(".spectrum-Checkbox-input").check({ force: true })
-    cy.get(".spectrum-Table-body")
-    cy.contains("Delete 5 row(s)").click()
-    cy.get(".spectrum-Modal").contains("Delete").click()
-    cy.wait(1000)
-    
-    // Confirm table only has one page
-    cy.get(".spectrum-Pagination").within(() => {
-      cy.get(".spectrum-ActionButton").eq(1).should('not.be.enabled')
-    })
-  })
 
   it("deletes a column", () => {
-    const columnName = "nameupdated"
     cy.get(".title").click()
     cy.get(".spectrum-Table-editIcon > use").click()
     cy.contains("Delete").click()
-    cy.get('[data-cy="delete-column-confirm"]').type(columnName)
+    cy.wait(50)
+    cy.get(`[data-cy="delete-column-confirm"]`).type("nameupdated")
     cy.contains("Delete Column").click()
     cy.contains("nameupdated").should("not.exist")
   })
@@ -96,7 +67,7 @@ context("Create a Table", () => {
         cy.get(".actions .spectrum-Icon").click({ force: true })
       })
     cy.get(".spectrum-Menu > :nth-child(2)").click()
-    cy.get('[data-cy="delete-table-confirm"]').type("dog")
+    cy.get(`[data-cy="delete-table-confirm"]`).type("dog")
     cy.contains("Delete Table").click()
     cy.contains("dog").should("not.exist")
   })
