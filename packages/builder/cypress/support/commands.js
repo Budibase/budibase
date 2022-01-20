@@ -35,7 +35,13 @@ Cypress.Commands.add("login", () => {
 Cypress.Commands.add("createApp", name => {
   cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
   cy.wait(500)
-  cy.contains(/Start from scratch/).dblclick()
+  cy.request(`${Cypress.config().baseUrl}api/applications?status=all`)
+    .its("body")
+    .then(body => {
+      if (body.length > 0) {
+        cy.get(".spectrum-Button").contains("Create app").click({ force: true })
+      }
+    })
   cy.get(".spectrum-Modal").within(() => {
     cy.get("input").eq(0).type(name).should("have.value", name).blur()
     cy.get(".spectrum-ButtonGroup").contains("Create app").click()
