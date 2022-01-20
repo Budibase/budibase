@@ -1,9 +1,3 @@
-export const Cookies = {
-  Auth: "budibase:auth",
-  CurrentApp: "budibase:currentapp",
-  ReturnUrl: "budibase:returnurl",
-}
-
 export function setCookie(name, value) {
   if (getCookie(name)) {
     removeCookie(name)

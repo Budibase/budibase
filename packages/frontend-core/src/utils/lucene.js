@@ -1,50 +1,5 @@
 import { Helpers } from "@budibase/bbui"
-
-/**
- * Operator options for lucene queries
- */
-export const OperatorOptions = {
-  Equals: {
-    value: "equal",
-    label: "Equals",
-  },
-  NotEquals: {
-    value: "notEqual",
-    label: "Not equals",
-  },
-  Empty: {
-    value: "empty",
-    label: "Is empty",
-  },
-  NotEmpty: {
-    value: "notEmpty",
-    label: "Is not empty",
-  },
-  StartsWith: {
-    value: "string",
-    label: "Starts with",
-  },
-  Like: {
-    value: "fuzzy",
-    label: "Like",
-  },
-  MoreThan: {
-    value: "rangeLow",
-    label: "More than",
-  },
-  LessThan: {
-    value: "rangeHigh",
-    label: "Less than",
-  },
-  Contains: {
-    value: "equal",
-    label: "Contains",
-  },
-  NotContains: {
-    value: "notEqual",
-    label: "Does Not Contain",
-  },
-}
+import { OperatorOptions } from "../constants"
 
 /**
  * Returns the valid operator options for a certain data type

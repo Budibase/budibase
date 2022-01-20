@@ -28,7 +28,7 @@
   import ModalBindableInput from "components/common/bindings/ModalBindableInput.svelte"
   import FilterDrawer from "components/design/PropertiesPanel/PropertyControls/FilterEditor/FilterDrawer.svelte"
   // need the client lucene builder to convert to the structure API expects
-  import { buildLuceneQuery } from "helpers/lucene"
+  import { LuceneUtils } from "@budibase/frontend-core"
 
   export let block
   export let testData
@@ -131,7 +131,7 @@
   }
 
   function saveFilters(key) {
-    const filters = buildLuceneQuery(tempFilters)
+    const filters = LuceneUtils.buildLuceneQuery(tempFilters)
     const defKey = `${key}-def`
     inputData[key] = filters
     inputData[defKey] = tempFilters
