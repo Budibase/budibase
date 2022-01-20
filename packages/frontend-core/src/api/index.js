@@ -45,6 +45,7 @@ export const createAPIClient = config => {
     return {
       message,
       status: response.status,
+      url: response.url,
     }
   }
 
@@ -53,6 +54,7 @@ export const createAPIClient = config => {
     return {
       message,
       status: 400,
+      url: "",
     }
   }
 
@@ -147,6 +149,7 @@ export const createAPIClient = config => {
     get: requestApiCall("GET"),
     patch: requestApiCall("PATCH"),
     delete: requestApiCall("DELETE"),
+    put: requestApiCall("PUT"),
     error: message => {
       throw makeError(message)
     },
