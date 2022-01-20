@@ -88,9 +88,6 @@ async function getAppUrlIfNotInUse(ctx) {
   if (url) {
     url = `/${url.replace(URL_REGEX_SLASH, "")}`.toLowerCase()
   }
-  if (!env.SELF_HOSTED) {
-    return url
-  }
   const deployedApps = await getDeployedApps()
   if (
     url &&
