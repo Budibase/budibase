@@ -5,8 +5,10 @@ import {
   confirmationStore,
   authStore,
   stateStore,
+  notificationStore,
+  dataSourceStore,
 } from "stores"
-import { saveRow, deleteRow, executeQuery, triggerAutomation } from "api"
+import { API } from "api"
 import { ActionTypes } from "constants"
 import { enrichDataBindings } from "./enrichDataBinding"
 import { deepSet } from "@budibase/bbui"
@@ -27,9 +29,17 @@ const saveRowHandler = async (action, context) => {
   if (tableId) {
     payload.tableId = tableId
   }
-  const row = await saveRow(payload)
-  return {
-    row,
+  try {
+    const row = await API.saveRow(payload)
+    notificationStore.actions.success("Row saved")
+
+    // Refresh related datasources
+    await dataSourceStore.actions.invalidateDataSource(row.tableId)
+
+    return { row }
+  } catch (error) {
+    // Abort next actions
+    return false
   }
 }
 
@@ -47,9 +57,17 @@ const duplicateRowHandler = async (action, context) => {
     }
     delete payload._id
     delete payload._rev
-    const row = await saveRow(payload)
-    return {
-      row,
+    try {
+      const row = await API.saveRow(payload)
+      notificationStore.actions.success("Row saved")
+
+      // Refresh related datasources
+      await dataSourceStore.actions.invalidateDataSource(row.tableId)
+
+      return { row }
+    } catch (error) {
+      // Abort next actions
+      return false
     }
   }
 }
@@ -57,14 +75,32 @@ const duplicateRowHandler = async (action, context) => {
 const deleteRowHandler = async action => {
   const { tableId, revId, rowId } = action.parameters
   if (tableId && revId && rowId) {
-    await deleteRow({ tableId, rowId, revId })
+    try {
+      await API.deleteRow({ tableId, rowId, revId })
+      notificationStore.actions.success("Row deleted")
+
+      // Refresh related datasources
+      await dataSourceStore.actions.invalidateDataSource(tableId)
+    } catch (error) {
+      // Abort next actions
+      return false
+    }
   }
 }
 
 const triggerAutomationHandler = async action => {
   const { fields } = action.parameters
   if (fields) {
-    await triggerAutomation(action.parameters.automationId, fields)
+    try {
+      await API.triggerAutomation({
+        automationId: action.parameters.automationId,
+        fields,
+      })
+      notificationStore.actions.success("Automation triggered")
+    } catch (error) {
+      // Abort next actions
+      return false
+    }
   }
 }
 
@@ -75,12 +111,30 @@ const navigationHandler = action => {
 
 const queryExecutionHandler = async action => {
   const { datasourceId, queryId, queryParams } = action.parameters
-  const result = await executeQuery({
-    datasourceId,
-    queryId,
-    parameters: queryParams,
-  })
-  return { result }
+  try {
+    const query = await API.fetchQueryDefinition(queryId)
+    if (query?.datasourceId == null) {
+      notificationStore.actions.error("That query couldn't be found")
+      return false
+    }
+    const result = await API.executeQuery({
+      datasourceId,
+      queryId,
+      parameters: queryParams,
+    })
+
+    // Trigger a notification and invalidate the datasource as long as this
+    // was not a readable query
+    if (!query.readable) {
+      API.notifications.error.success("Query executed successfully")
+      await dataSourceStore.actions.invalidateDataSource(query.datasourceId)
+    }
+
+    return { result }
+  } catch (error) {
+    // Abort next actions
+    return false
+  }
 }
 
 const executeActionHandler = async (

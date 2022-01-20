@@ -2,6 +2,7 @@
   import { writable, get } from "svelte/store"
   import { setContext, onMount } from "svelte"
   import { Layout, Heading, Body } from "@budibase/bbui"
+  import ErrorSVG from "@budibase/frontend-core/assets/error.svg"
   import Component from "./Component.svelte"
   import SDK from "sdk"
   import {
@@ -24,7 +25,6 @@
   import HoverIndicator from "components/preview/HoverIndicator.svelte"
   import CustomThemeWrapper from "./CustomThemeWrapper.svelte"
   import DNDHandler from "components/preview/DNDHandler.svelte"
-  import ErrorSVG from "builder/assets/error.svg"
   import KeyboardManager from "components/preview/KeyboardManager.svelte"
 
   // Provide contexts

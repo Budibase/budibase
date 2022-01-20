@@ -1,7 +1,3 @@
-export const TableNames = {
-  USERS: "ta_users",
-}
-
 export const FieldTypes = {
   STRING: "string",
   LONGFORM: "longform",

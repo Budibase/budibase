@@ -18,7 +18,7 @@ const DataFetchMap = {
   jsonarray: JSONArrayFetch,
 }
 
-export const fetchData = (datasource, options) => {
+export const fetchData = ({ API, datasource, options }) => {
   const Fetch = DataFetchMap[datasource?.type] || TableFetch
-  return new Fetch({ datasource, ...options })
+  return new Fetch({ API, datasource, ...options })
 }

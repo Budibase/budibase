@@ -29,7 +29,10 @@
     for (let i = 0; i < fileList.length; i++) {
       data.append("file", fileList[i])
     }
-    return await API.uploadAttachment(data, formContext?.dataSource?.tableId)
+    return await API.uploadAttachment({
+      data,
+      tableId: formContext?.dataSource?.tableId,
+    })
   }
 </script>
 
