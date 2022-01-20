@@ -35,7 +35,7 @@ Cypress.Commands.add("login", () => {
 Cypress.Commands.add("createApp", name => {
   cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
   cy.wait(500)
-  cy.request(`${Cypress.config().baseUrl}/api/applications?status=all`)
+  cy.request(`${Cypress.config().baseUrl}api/applications?status=all`)
     .its("body")
     .then(body => {
       if (body.length > 0) {
