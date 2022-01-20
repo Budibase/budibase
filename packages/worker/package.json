@@ -3,7 +3,7 @@
   "email": "hi@budibase.com",
   "version": "1.0.44-alpha.6",
   "description": "Budibase background service",
-  "main": "src/index.js",
+  "main": "src/index.ts",
   "repository": {
     "type": "git",
     "url": "https://github.com/Budibase/budibase.git"
@@ -12,10 +12,15 @@
     "budibase"
   ],
   "scripts": {
-    "run:docker": "node src/index.js",
+    "build": "rimraf dist/ && tsc",
+    "postbuild": "copyfiles -u 1 src/**/*.hbs dist/",
+    "run:docker": "node dist/index.js",
     "build:docker": "docker build . -t worker-service --label version=$BUDIBASE_RELEASE_VERSION",
     "dev:stack:init": "node ./scripts/dev/manage.js init",
     "dev:builder": "npm run dev:stack:init && nodemon",
+    "format": "prettier --config ../../.prettierrc.json 'src/**/*.ts' --write",
+    "lint": "eslint --fix src/",
+    "lint:fix": "yarn run format && yarn run lint",
     "test": "jest --runInBand",
     "env:multi:enable": "node scripts/multiTenancy.js enable",
     "env:multi:disable": "node scripts/multiTenancy.js disable",
@@ -58,14 +63,26 @@
     "server-destroy": "^1.0.1"
   },
   "devDependencies": {
-    "jest": "^26.6.3",
+    "@types/jest": "^26.0.23",
+    "@types/koa": "^2.13.3",
+    "@types/koa-router": "^7.4.2",
+    "@types/node": "^15.12.4",
+    "@typescript-eslint/parser": "4.28.0",
+    "copyfiles": "^2.4.1",
+    "eslint": "^6.8.0",
+    "jest": "^27.0.5",
     "nodemon": "^2.0.7",
     "pouchdb-adapter-memory": "^7.2.2",
+    "prettier": "2.3.1",
+    "rimraf": "^3.0.2",
     "supertest": "^6.1.3",
-    "typescript": "^4.5.4",
+    "ts-jest": "^27.0.3",
+    "ts-node": "^10.0.0",
+    "typescript": "4.3.5",
     "update-dotenv": "^1.1.1"
   },
   "jest": {
+    "preset": "ts-jest",
     "testEnvironment": "node",
     "setupFiles": [
       "./scripts/jestSetup.js"
