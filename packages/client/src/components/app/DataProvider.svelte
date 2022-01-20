@@ -11,7 +11,7 @@
   export let limit
   export let paginate
 
-  const { styleable, Provider, ActionTypes } = getContext("sdk")
+  const { styleable, Provider, ActionTypes, API } = getContext("sdk")
   const component = getContext("component")
 
   // We need to manage our lucene query manually as we want to allow components
@@ -82,12 +82,16 @@
   }
 
   const createFetch = datasource => {
-    return fetchData(datasource, {
-      query,
-      sortColumn,
-      sortOrder,
-      limit,
-      paginate,
+    return fetchData({
+      API,
+      datasource,
+      options: {
+        query,
+        sortColumn,
+        sortOrder,
+        limit,
+        paginate,
+      },
     })
   }
 
