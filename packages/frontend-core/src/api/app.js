@@ -30,4 +30,14 @@ export const buildAppEndpoints = API => ({
       url: "/api/deploy",
     })
   },
+
+  /**
+   * Reverts an app to a previous version.
+   * @param appId the app ID to revert
+   */
+  revertApp: async appId => {
+    return await API.post({
+      url: `/api/dev/${appId}/revert`,
+    })
+  },
 })
