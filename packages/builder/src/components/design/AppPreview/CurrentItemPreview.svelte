@@ -13,7 +13,7 @@
     Body,
     notifications,
   } from "@budibase/bbui"
-  import ErrorSVG from "assets/error.svg?raw"
+  import ErrorSVG from "@budibase/frontend-core/assets/error.svg?raw"
   import { findComponent, findComponentPath } from "builderStore/componentUtils"
 
   let iframe
