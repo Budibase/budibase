@@ -1,7 +1,7 @@
 <script>
   import { getContext } from "svelte"
   import InnerForm from "./InnerForm.svelte"
-  import { Helpers } from "@budibase/frontend-core"
+  import { Helpers } from "@budibase/bbui"
 
   export let dataSource
   export let theme

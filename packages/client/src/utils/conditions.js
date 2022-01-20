@@ -34,7 +34,7 @@ export const getActiveConditions = conditions => {
     }
 
     const query = LuceneUtils.buildLuceneQuery([luceneCondition])
-    const result = LuceneUtils.luceneQuery([luceneCondition], query)
+    const result = LuceneUtils.runLuceneQuery([luceneCondition], query)
     return result.length > 0
   })
 }
