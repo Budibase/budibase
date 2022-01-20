@@ -7,4 +7,13 @@ export const buildAnalyticsEndpoints = API => ({
       url: `/api/analytics/ping`,
     })
   },
+
+  /**
+   * Gets the current status of analytics for this environment
+   */
+  getAnalyticsStatus: async () => {
+    return await API.get({
+      url: "/api/analytics",
+    })
+  },
 })

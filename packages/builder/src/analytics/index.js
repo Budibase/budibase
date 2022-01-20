@@ -1,8 +1,9 @@
-import api from "builderStore/api"
+import { API } from "api"
 import PosthogClient from "./PosthogClient"
 import IntercomClient from "./IntercomClient"
 import SentryClient from "./SentryClient"
 import { Events } from "./constants"
+import { notifications } from "@budibase/bbui"
 
 const posthog = new PosthogClient(
   process.env.POSTHOG_TOKEN,
@@ -17,13 +18,15 @@ class AnalyticsHub {
   }
 
   async activate() {
-    const analyticsStatus = await api.get("/api/analytics")
-    const json = await analyticsStatus.json()
-
-    // Analytics disabled
-    if (!json.enabled) return
-
-    this.clients.forEach(client => client.init())
+    try {
+      // Check analytics are enabled
+      const analyticsStatus = await API.getAnalyticsStatus()
+      if (analyticsStatus.enabled) {
+        this.clients.forEach(client => client.init())
+      }
+    } catch (error) {
+      notifications.error("Error checking analytics status")
+    }
   }
 
   identify(id, metadata) {

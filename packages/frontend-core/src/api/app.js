@@ -7,4 +7,27 @@ export const buildAppEndpoints = API => ({
       url: `/api/applications/${appId}/appPackage`,
     })
   },
+
+  /**
+   * Saves and patches metadata about an app
+   * @param metadata the app metadata to save
+   */
+  saveAppMetadata: async metadata => {
+    if (!metadata?.appId) {
+      throw API.error("App metadata must have an appId set")
+    }
+    return await API.put({
+      url: `/api/applications/${metadata.appId}`,
+      body: metadata,
+    })
+  },
+
+  /**
+   * Deploys the current app.
+   */
+  deployApp: async () => {
+    return await API.post({
+      url: "/api/deploy",
+    })
+  },
 })

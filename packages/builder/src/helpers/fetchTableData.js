@@ -3,7 +3,7 @@
 // This will eventually be replaced by the new client implementation when we
 // add a core package.
 import { writable, derived, get } from "svelte/store"
-import * as API from "../builderStore/api"
+import { API } from "api"
 import { LuceneUtils } from "@budibase/frontend-core"
 
 const defaultOptions = {
@@ -50,7 +50,7 @@ export const fetchTableData = opts => {
   const fetchPage = async bookmark => {
     lastBookmark = bookmark
     const { tableId, limit, sortColumn, sortOrder, paginate } = options
-    const res = await API.post(`/api/${options.tableId}/search`, {
+    return await API.searchTable({
       tableId,
       query,
       limit,
@@ -60,7 +60,6 @@ export const fetchTableData = opts => {
       paginate,
       bookmark,
     })
-    return await res.json()
   }
 
   // Fetches a fresh set of results from the server
@@ -77,7 +76,7 @@ export const fetchTableData = opts => {
     // are objects
     let enrichedSchema = schema
     if (!enrichedSchema) {
-      const definition = await API.get(`/api/tables/${tableId}`)
+      const definition = await API.fetchTableDefinition(tableId)
       enrichedSchema = definition?.schema ?? null
     }
     if (enrichedSchema) {

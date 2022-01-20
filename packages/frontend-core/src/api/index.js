@@ -8,6 +8,7 @@ import { buildQueryEndpoints } from "./queries"
 import { buildRelationshipEndpoints } from "./relationships"
 import { buildRouteEndpoints } from "./routes"
 import { buildRowEndpoints } from "./rows"
+import { buildScreenEndpoints } from "./screens"
 import { buildTableEndpoints } from "./tables"
 import { buildViewEndpoints } from "./views"
 
@@ -167,6 +168,7 @@ export const createAPIClient = config => {
     ...buildRelationshipEndpoints(API),
     ...buildRouteEndpoints(API),
     ...buildRowEndpoints(API),
+    ...buildScreenEndpoints(API),
     ...buildTableEndpoints(API),
     ...buildViewEndpoints(API),
   }
