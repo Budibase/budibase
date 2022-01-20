@@ -63,7 +63,14 @@ export const url = (validation, { apps, currentApp } = { apps: {} }) => {
         if (!value) {
           return true
         }
-        return value.startsWith("/") && value.length > 1
+        // make it clear that this is a url path and cannot be a full url
+        return (
+          value.startsWith("/") &&
+          !value.includes("http") &&
+          !value.includes("www") &&
+          !value.includes(".") &&
+          value.length > 1 // just '/' is not valid
+        )
       })
   )
 }
