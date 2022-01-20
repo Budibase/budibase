@@ -15,8 +15,7 @@ import {
   database,
   tables,
 } from "stores/backend"
-import { fetchComponentLibDefinitions } from "../loadComponentLibraries"
-import api from "../api"
+import { API } from "api"
 import { FrontendTypes } from "constants"
 import analytics, { Events } from "analytics"
 import {
@@ -29,6 +28,7 @@ import {
 } from "../componentUtils"
 import { Helpers } from "@budibase/bbui"
 import { removeBindings } from "../dataBinding"
+import { notifications } from "@budibase/bbui"
 
 const INITIAL_FRONTEND_STATE = {
   apps: [],
@@ -68,15 +68,12 @@ export const getFrontendStore = () => {
   store.actions = {
     initialise: async pkg => {
       const { layouts, screens, application, clientLibPath } = pkg
-      const components = await fetchComponentLibDefinitions(application.appId)
-      // make sure app isn't locked
-      if (
-        components &&
-        components.status === 400 &&
-        components.message?.includes("lock")
-      ) {
-        throw { ok: false, reason: "locked" }
-      }
+
+      // Fetch component definitions.
+      // Allow errors to propagate.
+      let components = await API.fetchComponentLibDefinitions(application.appId)
+
+      // Reset store state
       store.update(state => ({
         ...state,
         libraries: application.componentLibraries,
@@ -100,56 +97,57 @@ export const getFrontendStore = () => {
         version: application.version,
         revertableVersion: application.revertableVersion,
       }))
-      await hostingStore.actions.fetch()
 
       // Initialise backend stores
-      const [_integrations] = await Promise.all([
-        api.get("/api/integrations").then(r => r.json()),
-      ])
-      datasources.init()
-      integrations.set(_integrations)
-      queries.init()
       database.set(application.instance)
-      tables.init()
+      await hostingStore.actions.fetch()
+      await datasources.init()
+      await integrations.init()
+      await queries.init()
+      await tables.init()
     },
     theme: {
       save: async theme => {
         const appId = get(store).appId
-        const response = await api.put(`/api/applications/${appId}`, { theme })
-        if (response.status === 200) {
+        const metadata = { appId, theme }
+        try {
+          await API.saveAppMetadata(metadata)
           store.update(state => {
             state.theme = theme
             return state
           })
-        } else {
-          throw new Error("Error updating theme")
+        } catch (error) {
+          notifications.error("Error updating theme")
         }
       },
     },
     customTheme: {
       save: async customTheme => {
         const appId = get(store).appId
-        const response = await api.put(`/api/applications/${appId}`, {
-          customTheme,
-        })
-        if (response.status === 200) {
+        const metadata = { appId, customTheme }
+        try {
+          await API.saveAppMetadata(metadata)
           store.update(state => {
             state.customTheme = customTheme
             return state
           })
-        } else {
-          throw new Error("Error updating theme")
+        } catch (error) {
+          notifications.error("Error updating custom theme")
         }
       },
     },
     routing: {
       fetch: async () => {
-        const response = await api.get("/api/routing")
-        const json = await response.json()
-        store.update(state => {
-          state.routes = json.routes
-          return state
-        })
+        try {
+          const routes = await API.getAppRoutes()
+          console.log(routes)
+          store.update(state => {
+            state.routes = routes.routes
+            return state
+          })
+        } catch (error) {
+          notifications.error("Error fetching app routes")
+        }
       },
     },
     screens: {
@@ -172,81 +170,100 @@ export const getFrontendStore = () => {
         })
       },
       create: async screen => {
-        screen = await store.actions.screens.save(screen)
-        store.update(state => {
-          state.selectedScreenId = screen._id
-          state.selectedComponentId = screen.props._id
-          state.currentFrontEndType = FrontendTypes.SCREEN
-          selectedAccessRole.set(screen.routing.roleId)
-          return state
-        })
-        return screen
+        try {
+          const savedScreen = await API.saveScreen(screen)
+          store.update(state => {
+            state.selectedScreenId = savedScreen._id
+            state.selectedComponentId = savedScreen.props._id
+            state.currentFrontEndType = FrontendTypes.SCREEN
+            selectedAccessRole.set(savedScreen.routing.roleId)
+            return savedScreen
+          })
+
+          // Refresh routes
+          await store.actions.routing.fetch()
+          return savedScreen
+        } catch (error) {
+          notifications.error("Error creating screen")
+          return null
+        }
       },
       save: async screen => {
-        const creatingNewScreen = screen._id === undefined
-        const response = await api.post(`/api/screens`, screen)
-        if (response.status !== 200) {
-          return
-        }
-        screen = await response.json()
-        await store.actions.routing.fetch()
+        try {
+          const creatingNewScreen = screen._id === undefined
+          const savedScreen = await API.saveScreen(screen)
+          store.update(state => {
+            const idx = state.screens.findIndex(x => x._id === savedScreen._id)
+            if (idx !== -1) {
+              state.screens.splice(idx, 1, savedScreen)
+            } else {
+              state.screens.push(savedScreen)
+            }
+            return state
+          })
 
-        store.update(state => {
-          const foundScreen = state.screens.findIndex(
-            el => el._id === screen._id
-          )
-          if (foundScreen !== -1) {
-            state.screens.splice(foundScreen, 1)
+          // Refresh routes
+          await store.actions.routing.fetch()
+
+          // Select the new screen if creating a new one
+          if (creatingNewScreen) {
+            store.actions.screens.select(savedScreen._id)
           }
-          state.screens.push(screen)
-          return state
-        })
-
-        if (creatingNewScreen) {
-          store.actions.screens.select(screen._id)
+          return savedScreen
+        } catch (error) {
+          notifications.error("Error saving screen")
+          return null
         }
-
-        return screen
       },
       delete: async screens => {
         const screensToDelete = Array.isArray(screens) ? screens : [screens]
 
-        const screenDeletePromises = []
-        store.update(state => {
-          for (let screenToDelete of screensToDelete) {
-            state.screens = state.screens.filter(
-              screen => screen._id !== screenToDelete._id
+        // Build array of promises to speed up bulk deletions
+        const promises = []
+        screensToDelete.forEach(screen => {
+          // Delete the screen
+          promises.push(
+            API.deleteScreen({
+              screenId: screen._id,
+              screenRev: screen._rev,
+            })
+          )
+          // Remove links to this screen
+          promises.push(
+            store.actions.components.links.delete(
+              screen.routing.route,
+              screen.props._instanceName
             )
-            screenDeletePromises.push(
-              api.delete(
-                `/api/screens/${screenToDelete._id}/${screenToDelete._rev}`
-              )
-            )
-            if (screenToDelete._id === state.selectedScreenId) {
+          )
+        })
+
+        try {
+          await Promise.all(promises)
+          const deletedIds = screensToDelete.map(screen => screen._id)
+          store.update(state => {
+            // Remove deleted screens from state
+            state.screens = state.screens.filter(screen => {
+              return !deletedIds.includes(screen._id)
+            })
+            // Deselect the current screen if it was deleted
+            if (deletedIds.includes(state.selectedScreenId)) {
               state.selectedScreenId = null
             }
-            //remove the link for this screen
-            screenDeletePromises.push(
-              store.actions.components.links.delete(
-                screenToDelete.routing.route,
-                screenToDelete.props._instanceName
-              )
-            )
-          }
-          return state
-        })
-        await Promise.all(screenDeletePromises)
+            return state
+          })
+        } catch (error) {
+          notifications.error("Error deleting screens")
+        }
       },
     },
     preview: {
       saveSelected: async () => {
         const state = get(store)
         const selectedAsset = get(currentAsset)
-
         if (state.currentFrontEndType !== FrontendTypes.LAYOUT) {
-          await store.actions.screens.save(selectedAsset)
+          return await store.actions.screens.save(selectedAsset)
         } else {
-          await store.actions.layouts.save(selectedAsset)
+          return await store.actions.layouts.save(selectedAsset)
         }
       },
       setDevice: device => {
@@ -270,36 +287,28 @@ export const getFrontendStore = () => {
         })
       },
       save: async layout => {
-        const layoutToSave = cloneDeep(layout)
-        const creatingNewLayout = layoutToSave._id === undefined
-        const response = await api.post(`/api/layouts`, layoutToSave)
-        const savedLayout = await response.json()
+        try {
+          const creatingNewLayout = layout._id === undefined
+          const savedLayout = await API.saveLayout(layout)
+          store.update(state => {
+            const idx = state.layouts.findIndex(x => x._id === savedLayout._id)
+            if (idx !== -1) {
+              state.layouts.splice(idx, 1, savedLayout)
+            } else {
+              state.layouts.push(savedLayout)
+            }
+            return state
+          })
 
-        // Abort if saving failed
-        if (response.status !== 200) {
-          return
-        }
-
-        store.update(state => {
-          const layoutIdx = state.layouts.findIndex(
-            stateLayout => stateLayout._id === savedLayout._id
-          )
-          if (layoutIdx >= 0) {
-            // update existing layout
-            state.layouts.splice(layoutIdx, 1, savedLayout)
-          } else {
-            // save new layout
-            state.layouts.push(savedLayout)
+          // Select layout if creating a new one
+          if (creatingNewLayout) {
+            store.actions.layouts.select(savedLayout._id)
           }
-          return state
-        })
-
-        // Select layout if creating a new one
-        if (creatingNewLayout) {
-          store.actions.layouts.select(savedLayout._id)
+          return savedLayout
+        } catch (error) {
+          notifications.error("Error saving layout")
+          return null
         }
-
-        return savedLayout
       },
       find: layoutId => {
         if (!layoutId) {
@@ -308,23 +317,26 @@ export const getFrontendStore = () => {
         const storeContents = get(store)
         return storeContents.layouts.find(layout => layout._id === layoutId)
       },
-      delete: async layoutToDelete => {
-        const response = await api.delete(
-          `/api/layouts/${layoutToDelete._id}/${layoutToDelete._rev}`
-        )
-        if (response.status !== 200) {
-          const json = await response.json()
-          throw new Error(json.message)
+      delete: async layout => {
+        if (!layout?._id) {
+          return
         }
-        store.update(state => {
-          state.layouts = state.layouts.filter(
-            layout => layout._id !== layoutToDelete._id
-          )
-          if (layoutToDelete._id === state.selectedLayoutId) {
-            state.selectedLayoutId = get(mainLayout)._id
-          }
-          return state
-        })
+        try {
+          await API.deleteLayout({
+            layoutId: layout._id,
+            layoutRev: layout._rev,
+          })
+          store.update(state => {
+            // Select main layout if we deleted the selected layout
+            if (layout._id === state.selectedLayoutId) {
+              state.selectedLayoutId = get(mainLayout)._id
+            }
+            state.layouts = state.layouts.filter(x => x._id !== layout._id)
+            return state
+          })
+        } catch (error) {
+          notifications.error("Failed to delete layout")
+        }
       },
     },
     components: {
@@ -414,16 +426,12 @@ export const getFrontendStore = () => {
           componentName,
           presetProps
         )
-        if (!componentInstance) {
+        if (!componentInstance || !asset) {
           return
         }
 
         // Find parent node to attach this component to
         let parentComponent
-
-        if (!asset) {
-          return
-        }
         if (selected) {
           // Use current screen or layout as parent if no component is selected
           const definition = store.actions.components.getDefinition(
@@ -451,19 +459,24 @@ export const getFrontendStore = () => {
         parentComponent._children.push(componentInstance)
 
         // Save components and update UI
-        await store.actions.preview.saveSelected()
-        store.update(state => {
-          state.currentView = "component"
-          state.selectedComponentId = componentInstance._id
-          return state
-        })
+        const savedAsset = await store.actions.preview.saveSelected()
+        if (savedAsset) {
+          store.update(state => {
+            state.currentView = "component"
+            state.selectedComponentId = componentInstance._id
+            return state
+          })
 
-        // Log event
-        analytics.captureEvent(Events.COMPONENT.CREATED, {
-          name: componentInstance._component,
-        })
+          // Log event
+          analytics.captureEvent(Events.COMPONENT.CREATED, {
+            name: componentInstance._component,
+          })
 
-        return componentInstance
+          return componentInstance
+        } else {
+          notifications.error("Failed to create component")
+          return null
+        }
       },
       delete: async component => {
         if (!component) {

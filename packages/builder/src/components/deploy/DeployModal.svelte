@@ -1,6 +1,6 @@
 <script>
   import { Button, Modal, notifications, ModalContent } from "@budibase/bbui"
-  import api from "builderStore/api"
+  import { API } from "api"
   import analytics, { Events } from "analytics"
   import { store } from "builderStore"
 
@@ -9,18 +9,14 @@
 
   async function deployApp() {
     try {
-      const response = await api.post("/api/deploy")
-      if (response.status !== 200) {
-        throw new Error(`status ${response.status}`)
-      } else {
-        analytics.captureEvent(Events.APP.PUBLISHED, {
-          appId: $store.appId,
-        })
-        notifications.success(`Application published successfully`)
-      }
-    } catch (err) {
-      analytics.captureException(err)
-      notifications.error(`Error publishing app: ${err}`)
+      await API.deployApp()
+      analytics.captureEvent(Events.APP.PUBLISHED, {
+        appId: $store.appId,
+      })
+      notifications.success("Application published successfully")
+    } catch (error) {
+      analytics.captureException(error)
+      notifications.error("Error publishing app")
     }
   }
 </script>

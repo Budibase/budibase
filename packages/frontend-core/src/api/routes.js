@@ -7,4 +7,10 @@ export const buildRouteEndpoints = API => ({
       url: `/api/routing/client`,
     })
   },
+
+  fetchAppRoutes: async () => {
+    return await API.get({
+      url: "/api/routing",
+    })
+  },
 })

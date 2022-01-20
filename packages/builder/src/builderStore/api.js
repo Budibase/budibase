@@ -1,40 +1,44 @@
+import {
+  createAPIClient,
+  CookieUtils,
+  Constants,
+} from "@budibase/frontend-core"
 import { store } from "./index"
-import { get as svelteGet } from "svelte/store"
-import { CookieUtils, Constants } from "@budibase/frontend-core"
+import { get } from "svelte/store"
+import { notifications } from "@budibase/bbui"
 
-const apiCall =
-  method =>
-  async (url, body, headers = { "Content-Type": "application/json" }) => {
-    headers["x-budibase-app-id"] = svelteGet(store).appId
-    const json = headers["Content-Type"] === "application/json"
-    const resp = await fetch(url, {
-      method: method,
-      body: json ? JSON.stringify(body) : body,
-      headers,
-    })
-    if (resp.status === 403) {
+export const API = createAPIClient({
+  attachHeaders: headers => {
+    // Attach app ID header from store
+    headers["x-budibase-app-id"] = get(store).appId
+  },
+
+  onError: error => {
+    const { url, message, status } = error
+
+    // Log all API errors to Sentry
+    // analytics.captureException(error)
+
+    // Show a notification for any errors
+    if (message) {
+      notifications.error(`Error fetching ${url}: ${message}`)
+    }
+
+    // Logout on 403's
+    if (status === 403) {
+      // Don't do anything if fetching templates.
+      // TODO: clarify why this is here
       if (url.includes("/api/templates")) {
-        return { json: () => [] }
+        return
       }
+
+      // Remove the auth cookie
       CookieUtils.removeCookie(Constants.Cookies.Auth)
-      // reload after removing cookie, go to login
+
+      // Reload after removing cookie, go to login
       if (!url.includes("self") && !url.includes("login")) {
         location.reload()
       }
     }
-    return resp
-  }
-
-export const post = apiCall("POST")
-export const get = apiCall("GET")
-export const patch = apiCall("PATCH")
-export const del = apiCall("DELETE")
-export const put = apiCall("PUT")
-
-export default {
-  post: apiCall("POST"),
-  get: apiCall("GET"),
-  patch: apiCall("PATCH"),
-  delete: apiCall("DELETE"),
-  put: apiCall("PUT"),
-}
+  },
+})
