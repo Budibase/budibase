@@ -396,7 +396,7 @@
       </Layout>
     {/if}
 
-    {#if !enrichedApps.length}
+    {#if !enrichedApps.length && !creatingApp && loaded}
       <div class="empty-wrapper">
         <div class="centered">
           <div class="main">
