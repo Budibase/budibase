@@ -141,7 +141,9 @@ exports.resetUpdate = async ctx => {
 }
 
 exports.logout = async ctx => {
-  await platformLogout({ ctx, userId: ctx.user._id })
+  if (ctx.user && ctx.user._id) {
+    await platformLogout({ ctx, userId: ctx.user._id })
+  }
   ctx.body = { message: "User logged out." }
 }
 
