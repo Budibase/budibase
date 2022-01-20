@@ -18,7 +18,7 @@ const createRouteStore = () => {
   const fetchRoutes = async () => {
     let routeConfig
     try {
-      routeConfig = await API.fetchRoutes()
+      routeConfig = await API.fetchClientAppRoutes()
     } catch (error) {
       routeConfig = null
     }
