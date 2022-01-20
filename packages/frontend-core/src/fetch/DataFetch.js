@@ -2,10 +2,9 @@ import { writable, derived, get } from "svelte/store"
 import {
   buildLuceneQuery,
   luceneLimit,
-  luceneQuery,
+  runLuceneQuery,
   luceneSort,
 } from "../utils/lucene"
-import { fetchTableDefinition } from "../api"
 
 /**
  * Parent class which handles the implementation of fetching data from an
@@ -13,6 +12,9 @@ import { fetchTableDefinition } from "../api"
  * For other types of datasource, this class is overridden and extended.
  */
 export default class DataFetch {
+  // API client
+  API = null
+
   // Feature flags
   featureStore = writable({
     supportsSearch: false,
@@ -57,9 +59,13 @@ export default class DataFetch {
    */
   constructor(opts) {
     // Merge options with their default values
+    this.API = opts?.API
     this.options = {
       ...this.options,
       ...opts,
+    }
+    if (!this.API) {
+      throw "An API client is required for fetching data"
     }
 
     // Bind all functions to properly scope "this"
@@ -110,12 +116,6 @@ export default class DataFetch {
    */
   async getInitialData() {
     const { datasource, filter, sortColumn, paginate } = this.options
-    const tableId = datasource?.tableId
-
-    // Ensure table ID exists
-    if (!tableId) {
-      return
-    }
 
     // Fetch datasource definition and determine feature flags
     const definition = await this.constructor.getDefinition(datasource)
@@ -184,7 +184,7 @@ export default class DataFetch {
 
     // If we don't support searching, do a client search
     if (!features.supportsSearch) {
-      rows = luceneQuery(rows, query)
+      rows = runLuceneQuery(rows, query)
     }
 
     // If we don't support sorting, do a client-side sort
@@ -228,7 +228,11 @@ export default class DataFetch {
     if (!datasource?.tableId) {
       return null
     }
-    return await fetchTableDefinition(datasource.tableId)
+    try {
+      return await this.API.fetchTableDefinition(datasource.tableId)
+    } catch (error) {
+      return null
+    }
   }
 
   /**

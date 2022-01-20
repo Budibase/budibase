@@ -28,7 +28,7 @@ export default class FieldFetch extends DataFetch {
 
     // These sources will be available directly from context
     const data = datasource?.value || []
-    let rows = []
+    let rows
     if (Array.isArray(data) && data[0] && typeof data[0] !== "object") {
       rows = data.map(value => ({ value }))
     } else {

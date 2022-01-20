@@ -1,6 +1,5 @@
 import { get } from "svelte/store"
 import DataFetch from "./DataFetch.js"
-import { searchTable } from "../api"
 
 export default class TableFetch extends DataFetch {
   determineFeatureFlags() {
@@ -18,20 +17,27 @@ export default class TableFetch extends DataFetch {
     const { cursor, query } = get(this.store)
 
     // Search table
-    const res = await searchTable({
-      tableId,
-      query,
-      limit,
-      sort: sortColumn,
-      sortOrder: sortOrder?.toLowerCase() ?? "ascending",
-      sortType,
-      paginate,
-      bookmark: cursor,
-    })
-    return {
-      rows: res?.rows || [],
-      hasNextPage: res?.hasNextPage || false,
-      cursor: res?.bookmark || null,
+    try {
+      const res = await this.API.searchTable({
+        tableId,
+        query,
+        limit,
+        sort: sortColumn,
+        sortOrder: sortOrder?.toLowerCase() ?? "ascending",
+        sortType,
+        paginate,
+        bookmark: cursor,
+      })
+      return {
+        rows: res?.rows || [],
+        hasNextPage: res?.hasNextPage || false,
+        cursor: res?.bookmark || null,
+      }
+    } catch (error) {
+      return {
+        rows: [],
+        hasNextPage: false,
+      }
     }
   }
 }

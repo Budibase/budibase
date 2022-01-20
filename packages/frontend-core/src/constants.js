@@ -1,5 +1,8 @@
-export const ApiVersion = "1"
+export const TableNames = {
+  USERS: "ta_users",
+}
 
+export const ApiVersion = "1"
 /**
  * API Version Changelog
  * v1:

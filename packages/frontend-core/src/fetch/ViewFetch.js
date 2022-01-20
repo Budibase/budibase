@@ -1,5 +1,4 @@
 import DataFetch from "./DataFetch.js"
-import { fetchViewData } from "../api"
 
 export default class ViewFetch extends DataFetch {
   static getSchema(datasource, definition) {
@@ -8,9 +7,11 @@ export default class ViewFetch extends DataFetch {
 
   async getData() {
     const { datasource } = this.options
-    const res = await fetchViewData(datasource)
-    return {
-      rows: res || [],
+    try {
+      const res = await this.API.fetchViewData(datasource)
+      return { rows: res || [] }
+    } catch (error) {
+      return { rows: [] }
     }
   }
 }

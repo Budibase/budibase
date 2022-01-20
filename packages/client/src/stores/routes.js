@@ -1,6 +1,6 @@
 import { get, writable } from "svelte/store"
 import { push } from "svelte-spa-router"
-import * as API from "../api"
+import { API } from "../api"
 import { peekStore } from "./peek"
 import { builderStore } from "./builder"
 
@@ -16,10 +16,15 @@ const createRouteStore = () => {
   const store = writable(initialState)
 
   const fetchRoutes = async () => {
-    const routeConfig = await API.fetchRoutes()
+    let routeConfig
+    try {
+      routeConfig = await API.fetchRoutes()
+    } catch (error) {
+      routeConfig = null
+    }
     let routes = []
-    Object.values(routeConfig.routes).forEach(route => {
-      Object.entries(route.subpaths).forEach(([path, config]) => {
+    Object.values(routeConfig?.routes || {}).forEach(route => {
+      Object.entries(route.subpaths || {}).forEach(([path, config]) => {
         routes.push({
           path,
           screenId: config.screenId,
