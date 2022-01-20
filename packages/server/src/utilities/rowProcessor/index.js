@@ -229,11 +229,12 @@ exports.inputProcessing = (
       }
       continue
     }
-    // specific case to delete formula values if they get saved
-    // type coercion cannot completely remove the field, so have to do it here
+    // remove any formula values, they are to be generated
     if (field.type === FieldTypes.FORMULA) {
       delete clonedRow[key]
-    } else {
+    }
+    // otherwise coerce what is there to correct types
+    else {
       clonedRow[key] = exports.coerce(value, field.type)
     }
   }
@@ -242,6 +243,9 @@ exports.inputProcessing = (
     clonedRow._id = row._id
     clonedRow._rev = row._rev
   }
+
+  // now process the static formulas
+  clonedRow = processFormulas(table, clonedRow, { dynamic: false })
 
   // handle auto columns - this returns an object like {table, row}
   return processAutoColumn(user, copiedTable, clonedRow, opts)
@@ -273,7 +277,7 @@ exports.outputProcessing = async (
   let enriched = await linkRows.attachFullLinkedDocs(ctx, table, rows)
 
   // process formulas
-  enriched = processFormulas(table, enriched)
+  enriched = processFormulas(table, enriched, { dynamic: true })
 
   // update the attachments URL depending on hosting
   for (let [property, column] of Object.entries(table.schema)) {

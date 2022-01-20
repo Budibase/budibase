@@ -58,6 +58,11 @@ exports.RelationshipTypes = {
   MANY_TO_MANY: "many-to-many",
 }
 
+exports.FormulaTypes = {
+  STATIC: "static",
+  DYNAMIC: "dynamic",
+}
+
 exports.AuthTypes = {
   APP: "app",
   BUILDER: "builder",
