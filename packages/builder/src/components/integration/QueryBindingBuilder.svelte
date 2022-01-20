@@ -7,27 +7,26 @@
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
 
   export let bindable = true
+  export let queryBindings = []
   export let bindings = []
-  export let bindableOptions = []
   export let customParams = {}
 
   function newQueryBinding() {
-    bindings = [...bindings, {}]
+    queryBindings = [...queryBindings, {}]
   }
 
+  $: console.log(bindings)
+
   function deleteQueryBinding(idx) {
-    bindings.splice(idx, 1)
-    bindings = bindings
+    queryBindings.splice(idx, 1)
+    queryBindings = queryBindings
   }
 
   // This is necessary due to the way readable and writable bindings are stored.
   // The readable binding in the UI gets converted to a UUID value that the client understands
   // for parsing, then converted back so we can display it the readable form in the UI
   function onBindingChange(param, valueToParse) {
-    customParams[param] = readableToRuntimeBinding(
-      bindableOptions,
-      valueToParse
-    )
+    customParams[param] = readableToRuntimeBinding(bindings, valueToParse)
   }
 </script>
 
@@ -49,7 +48,7 @@
     {/if}
   </Body>
   <div class="bindings" class:bindable>
-    {#each bindings as binding, idx}
+    {#each queryBindings as binding, idx}
       <Input
         placeholder="Binding Name"
         thin
@@ -69,10 +68,10 @@
           thin
           on:change={evt => onBindingChange(binding.name, evt.detail)}
           value={runtimeToReadableBinding(
-            bindableOptions,
+            bindings,
             customParams?.[binding.name]
           )}
-          bind:bindings={bindableOptions}
+          {bindings}
         />
       {:else}
         <Icon hoverable name="Close" on:click={() => deleteQueryBinding(idx)} />
