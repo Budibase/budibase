@@ -88,12 +88,23 @@ const createRouteStore = () => {
   const setRouterLoaded = () => {
     store.update(state => ({ ...state, routerLoaded: true }))
   }
+  const createFullURL = relativeURL => {
+    if (!relativeURL?.startsWith("/")) {
+      return relativeURL
+    }
+    if (!window.location.href.includes("#")) {
+      return `${window.location.href}#${relativeURL}`
+    }
+    const base = window.location.href.split("#")[0]
+    return `${base}#${relativeURL}`
+  }
 
   return {
     subscribe: store.subscribe,
     actions: {
       fetchRoutes,
       navigate,
+      createFullURL,
       setRouteParams,
       setQueryParams,
       setActiveRoute,
