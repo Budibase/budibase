@@ -33,16 +33,17 @@ export const createAPIClient = config => {
    */
   const makeErrorFromResponse = async response => {
     // Try to read a message from the error
-    let message
+    let message = response.statusText
     try {
       const json = await response.json()
-      if (json?.error) {
+      if (json?.message) {
+        message = json.message
+      } else if (json?.error) {
         message = json.error
       }
     } catch (error) {
       // Do nothing
     }
-    console.log("building error from", response)
     return {
       message,
       status: response.status,
