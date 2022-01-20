@@ -412,6 +412,11 @@
 >
   <CreateAppModal {template} />
 </Modal>
+
+<Modal bind:this={updatingModal} padding={false} width="600px">
+  <UpdateAppModal app={selectedApp} />
+</Modal>
+
 <ConfirmDialog
   bind:this={deletionModal}
   title="Confirm deletion"
@@ -438,7 +443,6 @@
   Are you sure you want to unpublish the app <b>{selectedApp?.name}</b>?
 </ConfirmDialog>
 
-<UpdateAppModal app={selectedApp} bind:this={updatingModal} />
 <ChooseIconModal app={selectedApp} bind:this={iconModal} />
 
 <style>
