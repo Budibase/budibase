@@ -80,7 +80,7 @@
   }
 
   const initiateAppCreation = () => {
-    template = {}
+    template = null
     creationModal.show()
     creatingApp = true
   }
@@ -164,7 +164,7 @@
   const viewApp = app => {
     if (!isCloud && app.deployed) {
       // special case to use the short form name if self hosted
-      window.open(`/app/${encodeURIComponent(app.name)}`)
+      window.open(`/app${app.url}`)
     } else {
       const id = app.deployed ? app.prodId : app.devId
       window.open(`/${id}`, "_blank")
