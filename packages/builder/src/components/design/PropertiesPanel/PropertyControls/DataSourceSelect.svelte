@@ -169,8 +169,8 @@
           {#if getQueryParams(value).length > 0}
             <BindingBuilder
               bind:customParams={tmpQueryParams}
-              bindings={getQueryParams(value)}
-              bind:bindableOptions={bindings}
+              queryBindings={getQueryParams(value)}
+              bind:bindings
             />
           {/if}
           <IntegrationQueryEditor
