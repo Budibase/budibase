@@ -9,7 +9,7 @@
   import Router from "./Router.svelte"
   import { enrichProps, propsAreSame } from "utils/componentProps"
   import { builderStore } from "stores"
-  import { Helpers } from "@budibase/frontend-core"
+  import { Helpers } from "@budibase/bbui"
   import Manifest from "manifest.json"
   import { getActiveConditions, reduceConditionActions } from "utils/conditions"
   import Placeholder from "components/app/Placeholder.svelte"

@@ -1,4 +1,4 @@
-import { deepGet } from "./helpers"
+import { Helpers } from "@budibase/bbui"
 
 /**
  * Operator options for lucene queries
@@ -44,6 +44,58 @@ export const OperatorOptions = {
     value: "notEqual",
     label: "Does Not Contain",
   },
+}
+
+/**
+ * Returns the valid operator options for a certain data type
+ * @param type the data type
+ */
+export const getValidOperatorsForType = type => {
+  const Op = OperatorOptions
+  if (type === "string") {
+    return [
+      Op.Equals,
+      Op.NotEquals,
+      Op.StartsWith,
+      Op.Like,
+      Op.Empty,
+      Op.NotEmpty,
+    ]
+  } else if (type === "number") {
+    return [
+      Op.Equals,
+      Op.NotEquals,
+      Op.MoreThan,
+      Op.LessThan,
+      Op.Empty,
+      Op.NotEmpty,
+    ]
+  } else if (type === "options") {
+    return [Op.Equals, Op.NotEquals, Op.Empty, Op.NotEmpty]
+  } else if (type === "array") {
+    return [Op.Contains, Op.NotContains, Op.Empty, Op.NotEmpty]
+  } else if (type === "boolean") {
+    return [Op.Equals, Op.NotEquals, Op.Empty, Op.NotEmpty]
+  } else if (type === "longform") {
+    return [
+      Op.Equals,
+      Op.NotEquals,
+      Op.StartsWith,
+      Op.Like,
+      Op.Empty,
+      Op.NotEmpty,
+    ]
+  } else if (type === "datetime") {
+    return [
+      Op.Equals,
+      Op.NotEquals,
+      Op.MoreThan,
+      Op.LessThan,
+      Op.Empty,
+      Op.NotEmpty,
+    ]
+  }
+  return []
 }
 
 /**
@@ -169,7 +221,7 @@ export const runLuceneQuery = (docs, query) => {
     const filters = Object.entries(query[type] || {})
     for (let i = 0; i < filters.length; i++) {
       const [key, testValue] = filters[i]
-      const docValue = deepGet(doc, key)
+      const docValue = Helpers.deepGet(doc, key)
       if (failFn(docValue, testValue)) {
         return false
       }

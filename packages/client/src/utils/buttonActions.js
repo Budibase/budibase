@@ -11,7 +11,7 @@ import {
 import { API } from "api"
 import { ActionTypes } from "constants"
 import { enrichDataBindings } from "./enrichDataBinding"
-import { deepSet } from "@budibase/bbui"
+import { Helpers } from "@budibase/bbui"
 
 const saveRowHandler = async (action, context) => {
   const { fields, providerId, tableId } = action.parameters
@@ -23,7 +23,7 @@ const saveRowHandler = async (action, context) => {
   }
   if (fields) {
     for (let [field, value] of Object.entries(fields)) {
-      deepSet(payload, field, value)
+      Helpers.deepSet(payload, field, value)
     }
   }
   if (tableId) {
@@ -49,7 +49,7 @@ const duplicateRowHandler = async (action, context) => {
     let payload = { ...context[providerId] }
     if (fields) {
       for (let [field, value] of Object.entries(fields)) {
-        deepSet(payload, field, value)
+        Helpers.deepSet(payload, field, value)
       }
     }
     if (tableId) {

@@ -154,7 +154,9 @@ export const createAPIClient = config => {
     get: requestApiCall("GET"),
     patch: requestApiCall("PATCH"),
     delete: requestApiCall("DELETE"),
-    error: message => throw makeError(message),
+    error: message => {
+      throw makeError(message)
+    },
   }
 
   // Attach all other endpoints

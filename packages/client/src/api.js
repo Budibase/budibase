@@ -1,7 +1,6 @@
-import { createAPIClient } from "@budibase/frontend-core"
+import { createAPIClient, Constants } from "@budibase/frontend-core"
 import { notificationStore } from "./stores"
 import { FieldTypes } from "./constants"
-import { TableNames } from "@budibase/frontend-core/src/constants.js"
 
 export const API = createAPIClient({
   // Attach client specific headers
@@ -32,7 +31,7 @@ export const API = createAPIClient({
           // Don't try to enrich a public user as it will 403
           return user
         } else {
-          return (await enrichRows([user], TableNames.USERS))[0]
+          return (await enrichRows([user], Constants.TableNames.USERS))[0]
         }
       } else {
         return null
