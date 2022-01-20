@@ -3,7 +3,7 @@
   import Spinner from "components/common/Spinner.svelte"
   import { slide } from "svelte/transition"
   import { Heading, Button, Modal, ModalContent } from "@budibase/bbui"
-  import api from "builderStore/api"
+  import { API } from "api"
   import { notifications } from "@budibase/bbui"
   import CreateWebhookDeploymentModal from "./CreateWebhookDeploymentModal.svelte"
   import { store, hostingStore } from "builderStore"
@@ -63,20 +63,14 @@
 
   async function fetchDeployments() {
     try {
-      const response = await api.get(`/api/deployments`)
-      const json = await response.json()
-
+      const newDeployments = await API.getAppDeployments()
       if (deployments.length > 0) {
-        checkIncomingDeploymentStatus(deployments, json)
+        checkIncomingDeploymentStatus(deployments, newDeployments)
       }
-
-      deployments = json
+      deployments = newDeployments
     } catch (err) {
-      console.error(err)
       clearInterval(poll)
-      notifications.error(
-        "Error fetching deployment history. Please try again."
-      )
+      notifications.error("Error fetching deployment history")
     }
   }
 
