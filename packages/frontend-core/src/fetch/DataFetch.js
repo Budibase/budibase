@@ -118,7 +118,7 @@ export default class DataFetch {
     const { datasource, filter, sortColumn, paginate } = this.options
 
     // Fetch datasource definition and determine feature flags
-    const definition = await this.constructor.getDefinition(datasource)
+    const definition = await this.getDefinition(datasource)
     const features = this.determineFeatureFlags(definition)
     this.featureStore.set({
       supportsSearch: !!features?.supportsSearch,
@@ -127,8 +127,8 @@ export default class DataFetch {
     })
 
     // Fetch and enrich schema
-    let schema = this.constructor.getSchema(datasource, definition)
-    schema = DataFetch.enrichSchema(schema)
+    let schema = this.getSchema(datasource, definition)
+    schema = this.enrichSchema(schema)
     if (!schema) {
       return
     }
@@ -224,7 +224,7 @@ export default class DataFetch {
    * @param datasource
    * @return {object} the definition
    */
-  static async getDefinition(datasource) {
+  async getDefinition(datasource) {
     if (!datasource?.tableId) {
       return null
     }
@@ -242,7 +242,7 @@ export default class DataFetch {
    * @param definition the datasource definition
    * @return {object} the schema
    */
-  static getSchema(datasource, definition) {
+  getSchema(datasource, definition) {
     return definition?.schema
   }
 
@@ -251,7 +251,7 @@ export default class DataFetch {
    * @param schema the datasource schema
    * @return {object} the enriched datasource schema
    */
-  static enrichSchema(schema) {
+  enrichSchema(schema) {
     if (schema == null) {
       return null
     }

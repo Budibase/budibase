@@ -1,7 +1,7 @@
 import DataFetch from "./DataFetch.js"
 
 export default class FieldFetch extends DataFetch {
-  static async getDefinition(datasource) {
+  async getDefinition(datasource) {
     // Field sources have their schema statically defined
     let schema
     if (datasource.fieldType === "attachment") {
