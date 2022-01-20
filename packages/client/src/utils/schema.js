@@ -1,12 +1,13 @@
-import { convertJSONSchemaToTableSchema } from "./json"
-import DataFetch from "../fetch/DataFetch.js"
-import TableFetch from "../fetch/TableFetch.js"
-import ViewFetch from "../fetch/ViewFetch.js"
-import QueryFetch from "../fetch/QueryFetch.js"
-import RelationshipFetch from "../fetch/RelationshipFetch.js"
-import NestedProviderFetch from "../fetch/NestedProviderFetch.js"
-import FieldFetch from "../fetch/FieldFetch.js"
-import JSONArrayFetch from "../fetch/JSONArrayFetch.js"
+import { API } from "../api.js"
+import { JSONUtils } from "@budibase/frontend-core"
+import DataFetch from "@budibase/frontend-core/src/fetch/DataFetch.js"
+import TableFetch from "@budibase/frontend-core/src/fetch/TableFetch.js"
+import ViewFetch from "@budibase/frontend-core/src/fetch/ViewFetch.js"
+import QueryFetch from "@budibase/frontend-core/src/fetch/QueryFetch.js"
+import RelationshipFetch from "@budibase/frontend-core/src/fetch/RelationshipFetch.js"
+import NestedProviderFetch from "@budibase/frontend-core/src/fetch/NestedProviderFetch.js"
+import FieldFetch from "@budibase/frontend-core/src/fetch/FieldFetch.js"
+import JSONArrayFetch from "@budibase/frontend-core/src/fetch/JSONArrayFetch.js"
 
 /**
  * Fetches the schema of any kind of datasource.
@@ -31,10 +32,11 @@ export const fetchDatasourceSchema = async (
   if (!handler) {
     return null
   }
+  const instance = new handler({ API })
 
   // Get the datasource definition and then schema
-  const definition = await handler.getDefinition(datasource)
-  let schema = handler.getSchema(datasource, definition)
+  const definition = await instance.getDefinition(datasource)
+  let schema = instance.getSchema(datasource, definition)
   if (!schema) {
     return null
   }
@@ -44,7 +46,7 @@ export const fetchDatasourceSchema = async (
   Object.keys(schema).forEach(fieldKey => {
     const fieldSchema = schema[fieldKey]
     if (fieldSchema?.type === "json") {
-      const jsonSchema = convertJSONSchemaToTableSchema(fieldSchema, {
+      const jsonSchema = JSONUtils.convertJSONSchemaToTableSchema(fieldSchema, {
         squashObjects: true,
       })
       Object.keys(jsonSchema).forEach(jsonKey => {
@@ -78,5 +80,5 @@ export const fetchDatasourceSchema = async (
   }
 
   // Ensure schema structure is correct
-  return DataFetch.enrichSchema(schema)
+  return instance.enrichSchema(schema)
 }

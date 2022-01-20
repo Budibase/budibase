@@ -11,7 +11,7 @@ export default class QueryFetch extends DataFetch {
     return { supportsPagination }
   }
 
-  static async getDefinition(datasource) {
+  async getDefinition(datasource) {
     if (!datasource?._id) {
       return null
     }

@@ -1,7 +1,7 @@
 import DataFetch from "./DataFetch.js"
 
 export default class ViewFetch extends DataFetch {
-  static getSchema(datasource, definition) {
+  getSchema(datasource, definition) {
     return definition?.views?.[datasource.name]?.schema
   }
 
