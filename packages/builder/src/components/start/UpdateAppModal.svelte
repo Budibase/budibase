@@ -31,7 +31,13 @@
   async function updateApp() {
     try {
       // Update App
-      await apps.update(app.instance._id, { name: $values.name.trim() })
+      const body = {
+        name: $values.name.trim(),
+      }
+      if ($values.url) {
+        body.url = $values.url.trim()
+      }
+      await apps.update(app.instance._id, body)
     } catch (error) {
       console.error(error)
       notifications.error(error)
