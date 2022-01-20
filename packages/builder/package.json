@@ -67,6 +67,7 @@
   "dependencies": {
     "@budibase/bbui": "^1.0.44-alpha.7",
     "@budibase/client": "^1.0.44-alpha.7",
+    "@budibase/frontend-core": "^1.0.44-alpha.7",
     "@budibase/colorpicker": "1.1.2",
     "@budibase/string-templates": "^1.0.44-alpha.7",
     "@sentry/browser": "5.19.1",

@@ -27,7 +27,7 @@ import {
   findComponent,
   getComponentSettings,
 } from "../componentUtils"
-import { uuid } from "../uuid"
+import { Helpers } from "@budibase/bbui"
 import { removeBindings } from "../dataBinding"
 
 const INITIAL_FRONTEND_STATE = {
@@ -397,7 +397,7 @@ export const getFrontendStore = () => {
         }
 
         return {
-          _id: uuid(),
+          _id: Helpers.uuid(),
           _component: definition.component,
           _styles: { normal: {}, hover: {}, active: {} },
           _instanceName: `New ${definition.name}`,
@@ -551,7 +551,7 @@ export const getFrontendStore = () => {
               if (!component) {
                 return
               }
-              component._id = uuid()
+              component._id = Helpers.uuid()
               component._children?.forEach(randomizeIds)
             }
             randomizeIds(componentToPaste)
@@ -664,7 +664,7 @@ export const getFrontendStore = () => {
               newLink = cloneDeep(nav._children[0])
 
               // Set our new props
-              newLink._id = uuid()
+              newLink._id = Helpers.uuid()
               newLink._instanceName = `${title} Link`
               newLink.url = url
               newLink.text = title

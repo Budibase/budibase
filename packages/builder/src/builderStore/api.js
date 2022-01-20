@@ -1,6 +1,6 @@
 import { store } from "./index"
 import { get as svelteGet } from "svelte/store"
-import { removeCookie, Cookies } from "./cookies"
+import { CookieUtils, Constants } from "@budibase/frontend-core"
 
 const apiCall =
   method =>
@@ -16,7 +16,7 @@ const apiCall =
       if (url.includes("/api/templates")) {
         return { json: () => [] }
       }
-      removeCookie(Cookies.Auth)
+      CookieUtils.removeCookie(Constants.Cookies.Auth)
       // reload after removing cookie, go to login
       if (!url.includes("self") && !url.includes("login")) {
         location.reload()

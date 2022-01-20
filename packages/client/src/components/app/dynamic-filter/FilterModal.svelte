@@ -11,12 +11,11 @@
     Select,
   } from "@budibase/bbui"
   import { generate } from "shortid"
-  import { LuceneUtils } from "@budibase/frontend-core"
+  import { LuceneUtils, Constants } from "@budibase/frontend-core"
 
   export let schemaFields
   export let filters = []
 
-  const operatorOptions = LuceneUtils.OperatorOptions
   const BannedTypes = ["link", "attachment", "formula", "json"]
 
   $: fieldOptions = (schemaFields ?? [])
@@ -29,7 +28,7 @@
       {
         id: generate(),
         field: null,
-        operator: operatorOptions.Equals.value,
+        operator: Constants.OperatorOptions.Equals.value,
         value: null,
         valueType: "Value",
       },
@@ -55,7 +54,8 @@
       expression.type
     ).map(x => x.value)
     if (!validOperators.includes(expression.operator)) {
-      expression.operator = validOperators[0] ?? operatorOptions.Equals.value
+      expression.operator =
+        validOperators[0] ?? Constants.OperatorOptions.Equals.value
       onOperatorChange(expression, expression.operator)
     }
 
@@ -70,8 +70,8 @@
 
   const onOperatorChange = (expression, operator) => {
     const noValueOptions = [
-      operatorOptions.Empty.value,
-      operatorOptions.NotEmpty.value,
+      Constants.OperatorOptions.Empty.value,
+      Constants.OperatorOptions.NotEmpty.value,
     ]
     expression.noValue = noValueOptions.includes(operator)
     if (expression.noValue) {

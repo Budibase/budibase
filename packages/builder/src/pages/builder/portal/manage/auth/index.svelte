@@ -22,7 +22,7 @@
   import { onMount } from "svelte"
   import api from "builderStore/api"
   import { organisation, admin } from "stores/portal"
-  import { uuid } from "builderStore/uuid"
+  import { Helpers } from "@budibase/bbui"
   import analytics, { Events } from "analytics"
 
   const ConfigTypes = {
@@ -164,7 +164,7 @@
         //Add a UUID here so each config is distinguishable when it arrives at the login page
         for (let config of element.config.configs) {
           if (!config.uuid) {
-            config.uuid = uuid()
+            config.uuid = Helpers.uuid()
           }
           // callback urls shouldn't be included
           delete config.callbackURL

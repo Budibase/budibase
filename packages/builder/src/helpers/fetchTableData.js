@@ -4,7 +4,7 @@
 // add a core package.
 import { writable, derived, get } from "svelte/store"
 import * as API from "../builderStore/api"
-import { buildLuceneQuery } from "./lucene"
+import { LuceneUtils } from "@budibase/frontend-core"
 
 const defaultOptions = {
   tableId: null,
@@ -113,7 +113,7 @@ export const fetchTableData = opts => {
     sortType = type === "number" ? "number" : "string"
 
     // Build the lucene query
-    query = buildLuceneQuery(filters)
+    query = LuceneUtils.buildLuceneQuery(filters)
 
     // Actually fetch data
     const page = await fetchPage()

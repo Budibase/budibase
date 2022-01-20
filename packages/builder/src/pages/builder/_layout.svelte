@@ -2,12 +2,7 @@
   import { isActive, redirect, params } from "@roxi/routify"
   import { admin, auth } from "stores/portal"
   import { onMount } from "svelte"
-  import {
-    Cookies,
-    getCookie,
-    removeCookie,
-    setCookie,
-  } from "builderStore/cookies"
+  import { CookieUtils, Constants } from "@budibase/frontend-core"
 
   let loaded = false
 
@@ -79,7 +74,7 @@
       loaded &&
       apiReady &&
       !$auth.user &&
-      !getCookie(Cookies.ReturnUrl) &&
+      !CookieUtils.getCookie(Constants.Cookies.ReturnUrl) &&
       // logout triggers a page refresh, so we don't want to set the return url
       !$auth.postLogout &&
       // don't set the return url on pre-login pages
@@ -88,7 +83,7 @@
       !$isActive("./admin")
     ) {
       const url = window.location.pathname
-      setCookie(Cookies.ReturnUrl, url)
+      CookieUtils.setCookie(Constants.Cookies.ReturnUrl, url)
     }
 
     // if tenant is not set go to it
@@ -122,9 +117,9 @@
     }
     // lastly, redirect to the return url if it has been set
     else if (loaded && apiReady && $auth.user) {
-      const returnUrl = getCookie(Cookies.ReturnUrl)
+      const returnUrl = CookieUtils.getCookie(Constants.Cookies.ReturnUrl)
       if (returnUrl) {
-        removeCookie(Cookies.ReturnUrl)
+        CookieUtils.removeCookie(Constants.Cookies.ReturnUrl)
         window.location.href = returnUrl
       }
     }
