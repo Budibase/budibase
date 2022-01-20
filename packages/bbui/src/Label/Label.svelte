@@ -21,6 +21,7 @@
         class="icon"
         class:icon-small={size === "M" || size === "S"}
         on:mouseover={() => (showTooltip = true)}
+        on:focus={() => (showTooltip = true)}
         on:mouseleave={() => (showTooltip = false)}
       >
         <Icon name="InfoOutline" size="S" disabled={true} />

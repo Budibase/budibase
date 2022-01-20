@@ -5,7 +5,7 @@
   import "@spectrum-css/textfield/dist/index-vars.css"
   import "@spectrum-css/picker/dist/index-vars.css"
   import { createEventDispatcher } from "svelte"
-  import { generateID } from "../../utils/helpers"
+  import { uuid } from "../../helpers"
 
   export let id = null
   export let disabled = false
@@ -16,7 +16,7 @@
   export let appendTo = undefined
 
   const dispatch = createEventDispatcher()
-  const flatpickrId = `${generateID()}-wrapper`
+  const flatpickrId = `${uuid()}-wrapper`
   let open = false
   let flatpickr
   $: flatpickrOptions = {

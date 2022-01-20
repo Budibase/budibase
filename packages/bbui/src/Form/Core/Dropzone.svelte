@@ -3,7 +3,7 @@
   import "@spectrum-css/typography/dist/index-vars.css"
   import "@spectrum-css/illustratedmessage/dist/index-vars.css"
   import { createEventDispatcher } from "svelte"
-  import { generateID } from "../../utils/helpers"
+  import { uuid } from "../../helpers"
   import Icon from "../../Icon/Icon.svelte"
   import Link from "../../Link/Link.svelte"
   import Tag from "../../Tags/Tag.svelte"
@@ -37,7 +37,7 @@
     "jfif",
   ]
 
-  const fieldId = id || generateID()
+  const fieldId = id || uuid()
   let selectedImageIdx = 0
   let fileDragged = false
   let selectedUrl
