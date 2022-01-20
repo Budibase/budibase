@@ -11,7 +11,6 @@
   import { capitalise } from "helpers"
   import { goto } from "@roxi/routify"
   import { APP_NAME_REGEX } from "constants"
-  import TemplateList from "./TemplateList.svelte"
 
   export let template
   export let inline
@@ -147,58 +146,34 @@
   }
 </script>
 
-{#if showTemplateSelection}
-  <ModalContent
-    title={"Get started quickly"}
-    showConfirmButton={false}
-    size="L"
-    onConfirm={() => {
-      template = {}
-      return false
-    }}
-    showCancelButton={!inline}
-    showCloseIcon={!inline}
-  >
-    <TemplateList
-      onSelect={(selected, { useImport } = {}) => {
-        if (!selected) {
-          template = useImport ? { fromFile: true } : {}
-          return
-        }
-        template = selected
+<ModalContent
+  title={"Name your app"}
+  confirmText={template?.fromFile ? "Import app" : "Create app"}
+  onConfirm={createNewApp}
+  onCancel={inline ? onCancel : null}
+  cancelText={inline ? "Back" : undefined}
+  showCloseIcon={!inline}
+  disabled={!valid}
+>
+  {#if template?.fromFile}
+    <Dropzone
+      error={$touched.file && $errors.file}
+      gallery={false}
+      label="File to import"
+      value={[$values.file]}
+      on:change={e => {
+        $values.file = e.detail?.[0]
+        $touched.file = true
       }}
     />
-  </ModalContent>
-{:else}
-  <ModalContent
-    title={"Name your app"}
-    confirmText={template?.fromFile ? "Import app" : "Create app"}
-    onConfirm={createNewApp}
-    onCancel={inline ? onCancel : null}
-    cancelText={inline ? "Back" : undefined}
-    showCloseIcon={!inline}
-    disabled={!valid}
-  >
-    {#if template?.fromFile}
-      <Dropzone
-        error={$touched.file && $errors.file}
-        gallery={false}
-        label="File to import"
-        value={[$values.file]}
-        on:change={e => {
-          $values.file = e.detail?.[0]
-          $touched.file = true
-        }}
-      />
-    {/if}
-    <Input
-      bind:value={$values.name}
-      error={$touched.name && $errors.name}
-      on:blur={() => ($touched.name = true)}
-      label="Name"
-      placeholder={$auth.user.firstName
-        ? `${$auth.user.firstName}'s app`
-        : "My app"}
-    />
-  </ModalContent>
-{/if}
+  {/if}
+  <Input
+    bind:value={$values.name}
+    error={$touched.name && $errors.name}
+    on:blur={() => ($touched.name = true)}
+    label="Name"
+    placeholder={$auth.user.firstName
+      ? `${$auth.user.firstName}'s app`
+      : "My app"}
+  />
+</ModalContent>
