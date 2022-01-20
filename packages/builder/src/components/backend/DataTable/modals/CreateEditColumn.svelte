@@ -437,7 +437,7 @@
   {:else if field.type === FORMULA_TYPE}
     <Select
       label="Formula type"
-      value={field.formulaType}
+      bind:value={field.formulaType}
       options={[
         { label: "Dynamic", value: "dynamic" },
         { label: "Static", value: "static" },
