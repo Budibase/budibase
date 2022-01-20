@@ -435,18 +435,20 @@
       error={errors.relatedName}
     />
   {:else if field.type === FORMULA_TYPE}
-    <Select
-      label="Formula type"
-      bind:value={field.formulaType}
-      options={[
-        { label: "Dynamic", value: "dynamic" },
-        { label: "Static", value: "static" },
-      ]}
-      getOptionLabel={option => option.label}
-      getOptionValue={option => option.value}
-      tooltip="Dynamic formula are calculated when retrieved, but cannot be filtered,
-       while static formula are calculated when the row is saved."
-    />
+    {#if !table.sql}
+      <Select
+        label="Formula type"
+        bind:value={field.formulaType}
+        options={[
+          { label: "Dynamic", value: "dynamic" },
+          { label: "Static", value: "static" },
+        ]}
+        getOptionLabel={option => option.label}
+        getOptionValue={option => option.value}
+        tooltip="Dynamic formula are calculated when retrieved, but cannot be filtered,
+         while static formula are calculated when the row is saved."
+      />
+    {/if}
     <ModalBindableInput
       title="Formula"
       label="Formula"
