@@ -28,9 +28,7 @@ export const createAPIClient = config => {
     ...config,
   }
 
-  /**
-   * Handler for API errors.
-   */
+  // Generates an error object from an API response
   const makeErrorFromResponse = async response => {
     // Try to read a message from the error
     let message = response.statusText
@@ -50,6 +48,7 @@ export const createAPIClient = config => {
     }
   }
 
+  // Generates an error object from a string
   const makeError = message => {
     return {
       message,
@@ -57,10 +56,7 @@ export const createAPIClient = config => {
     }
   }
 
-  /**
-   * Performs an API call to the server.
-   * App ID header is always correctly set.
-   */
+  // Performs an API call to the server.
   const makeApiCall = async ({
     method,
     url,
@@ -119,11 +115,9 @@ export const createAPIClient = config => {
     }
   }
 
-  /**
-   * Performs an API call to the server and caches the response.
-   * Future invocation for this URL will return the cached result instead of
-   * hitting the server again.
-   */
+  // Performs an API call to the server and caches the response.
+  // Future invocation for this URL will return the cached result instead of
+  // hitting the server again.
   let cache = {}
   const makeCachedApiCall = async params => {
     const identifier = params.url
@@ -137,9 +131,7 @@ export const createAPIClient = config => {
     return await cache[identifier]
   }
 
-  /**
-   * Constructs an API call function for a particular HTTP method.
-   */
+  // Constructs an API call function for a particular HTTP method.
   const requestApiCall = method => async params => {
     let { url, cache = false, external = false } = params
     if (!external) {
@@ -160,7 +152,7 @@ export const createAPIClient = config => {
     },
   }
 
-  // Attach all other endpoints
+  // Attach all endpoints
   API = {
     ...API,
     ...buildAnalyticsEndpoints(API),
