@@ -9,7 +9,7 @@
   import Router from "./Router.svelte"
   import { enrichProps, propsAreSame } from "utils/componentProps"
   import { builderStore } from "stores"
-  import { hashString } from "utils/helpers"
+  import { Helpers } from "@budibase/frontend-core"
   import Manifest from "manifest.json"
   import { getActiveConditions, reduceConditionActions } from "utils/conditions"
   import Placeholder from "components/app/Placeholder.svelte"
@@ -106,7 +106,7 @@
 
   // Raw settings are all settings excluding internal props and children
   $: rawSettings = getRawSettings(instance)
-  $: instanceKey = hashString(JSON.stringify(rawSettings))
+  $: instanceKey = Helpers.hashString(JSON.stringify(rawSettings))
 
   // Update and enrich component settings
   $: updateSettings(rawSettings, instanceKey, settingsDefinition, $context)
@@ -300,7 +300,7 @@
   // Generates a key used to determine when components need to fully remount.
   // Currently only toggling editing requires remounting.
   const getRenderKey = (id, editing) => {
-    return hashString(`${id}-${editing}`)
+    return Helpers.hashString(`${id}-${editing}`)
   }
 </script>
 
