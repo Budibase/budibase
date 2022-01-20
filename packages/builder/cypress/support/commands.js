@@ -42,7 +42,7 @@ Cypress.Commands.add("createApp", name => {
         cy.get(".spectrum-Button").contains("Create app").click({ force: true })
       }
     })
-  cy.contains(/Start from scratch/).dblclick()
+  cy.contains(/Create App/).click()
   cy.get(".spectrum-Modal").within(() => {
     cy.get("input").eq(0).type(name).should("have.value", name).blur()
     cy.get(".spectrum-ButtonGroup").contains("Create app").click()
