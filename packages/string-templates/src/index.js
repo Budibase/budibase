@@ -112,9 +112,10 @@ module.exports.processStringSync = (string, context, opts) => {
     const template = instance.compile(string, {
       strict: false,
     })
+    const now = Math.floor(Date.now() / 1000) * 1000
     return processors.postprocess(
       template({
-        now: new Date().toISOString(),
+        now: new Date(now).toISOString(),
         ...context,
       })
     )
