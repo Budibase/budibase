@@ -179,8 +179,9 @@ export const createAPIClient = config => {
   const patches = Object.entries(config.patches || {})
   if (patches.length) {
     patches.forEach(([method, fn]) => {
+      const baseFn = API[method]
       API[method] = async (...params) => {
-        const output = await API[method](...params)
+        const output = await baseFn(...params)
         return await fn({ params, output })
       }
     })
