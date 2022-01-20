@@ -9,7 +9,7 @@ export const buildAppEndpoints = API => ({
   },
 
   /**
-   * Saves and patches metadata about an app
+   * Saves and patches metadata about an app.
    * @param metadata the app metadata to save
    */
   saveAppMetadata: async metadata => {
@@ -38,6 +38,15 @@ export const buildAppEndpoints = API => ({
   revertApp: async appId => {
     return await API.post({
       url: `/api/dev/${appId}/revert`,
+    })
+  },
+
+  /**
+   * Gets a list of app deployments.
+   */
+  getAppDeployments: async () => {
+    return await API.get({
+      url: "/api/deployments",
     })
   },
 })
