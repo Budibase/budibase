@@ -72,7 +72,7 @@
             bindableOptions,
             customParams?.[binding.name]
           )}
-          {bindableOptions}
+          bind:bindings={bindableOptions}
         />
       {:else}
         <Icon hoverable name="Close" on:click={() => deleteQueryBinding(idx)} />
