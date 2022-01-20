@@ -19,6 +19,15 @@ export const buildAuthEndpoints = API => ({
   },
 
   /**
+   * Logs the user out and invalidates their session.
+   */
+  logOut: async () => {
+    return await API.post({
+      url: "/api/global/auth/logout",
+    })
+  },
+
+  /**
    * Fetches the currently logged in user object
    */
   fetchSelf: async () => {

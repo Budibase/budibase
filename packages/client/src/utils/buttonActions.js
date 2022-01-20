@@ -166,8 +166,20 @@ const refreshDataProviderHandler = async (action, context) => {
   )
 }
 
-const logoutHandler = async () => {
+const logoutHandler = async action => {
   await authStore.actions.logOut()
+  let redirectUrl = "/builder/auth/login"
+  let internal = false
+  if (action.parameters.redirectUrl) {
+    internal = action.parameters.redirectUrl?.startsWith("/")
+    redirectUrl = routeStore.actions.createFullURL(
+      action.parameters.redirectUrl
+    )
+  }
+  window.location.href = redirectUrl
+  if (internal) {
+    window.location.reload()
+  }
 }
 
 const clearFormHandler = async (action, context) => {
