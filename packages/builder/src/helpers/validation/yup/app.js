@@ -13,6 +13,7 @@ export const name = (validation, { apps, currentApp } = { apps: [] }) => {
         "Another app with the same name already exists",
         value => {
           if (!value) {
+            // exit early, above validator will fail
             return true
           }
           if (currentApp) {
@@ -57,12 +58,12 @@ export const url = (validation, { apps, currentApp } = { apps: {} }) => {
             .some(appUrl => appUrl.toLowerCase() === value.toLowerCase())
         }
       )
-      .test("start-with-slash", "Not a valid URL", value => {
+      .test("valid-url", "Not a valid URL", value => {
         // url is nullable
         if (!value) {
           return true
         }
-        return value.length > 1
+        return value.startsWith("/") && value.length > 1
       })
   )
 }
