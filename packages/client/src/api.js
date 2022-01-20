@@ -18,7 +18,9 @@ export const API = createAPIClient({
   // We could also log these to sentry.
   // Or we could check error.status and redirect to login on a 403 etc.
   onError: error => {
-    notificationStore.actions.error(error.message)
+    if (error.message) {
+      notificationStore.actions.error(error.message)
+    }
   },
 
   // Patch certain endpoints with functionality specific to client apps
