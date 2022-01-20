@@ -12,7 +12,7 @@
     Modal,
   } from "@budibase/bbui"
   import { onMount } from "svelte"
-  import { apps, organisation, auth, admin } from "stores/portal"
+  import { apps, organisation, auth } from "stores/portal"
   import { goto } from "@roxi/routify"
   import { AppStatus } from "constants"
   import { gradient } from "actions"
@@ -34,7 +34,6 @@
   const publishedAppsOnly = app => app.status === AppStatus.DEPLOYED
 
   $: publishedApps = $apps.filter(publishedAppsOnly)
-  $: isCloud = $admin.cloud
   $: userApps = $auth.user?.builder?.global
     ? publishedApps
     : publishedApps.filter(app =>
@@ -42,7 +41,7 @@
       )
 
   function getUrl(app) {
-    return !isCloud ? `/app/${encodeURIComponent(app.name)}` : `/${app.prodId}`
+    return `/app${app.url}`
   }
 </script>
 
