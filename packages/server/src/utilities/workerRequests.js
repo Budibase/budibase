@@ -58,29 +58,6 @@ exports.sendSmtpEmail = async (to, from, subject, contents, automation) => {
   return response.json()
 }
 
-exports.getDeployedApps = async () => {
-  try {
-    const response = await fetch(
-      checkSlashesInUrl(env.WORKER_URL + `/api/apps`),
-      request(null, {
-        method: "GET",
-      })
-    )
-    const json = await response.json()
-    const apps = {}
-    for (let [key, value] of Object.entries(json)) {
-      if (value.url) {
-        value.url = value.url.toLowerCase()
-        apps[key] = value
-      }
-    }
-    return apps
-  } catch (err) {
-    // error, cannot determine deployed apps, don't stop app creation - sort this later
-    return {}
-  }
-}
-
 exports.getGlobalSelf = async (ctx, appId = null) => {
   const endpoint = `/api/global/users/self`
   const response = await fetch(
