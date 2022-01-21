@@ -14,4 +14,5 @@ module.exports = {
   cache: require("../cache"),
   auth: require("../auth"),
   constants: require("../constants"),
+  migrations: require("../migrations"),
 }

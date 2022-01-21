@@ -99,7 +99,9 @@ spec:
         - name: PLATFORM_URL
           value: {{ .Values.globals.platformUrl | quote }}
         - name: USE_QUOTAS
-          value: "1" 
+          value: {{ .Values.globals.useQuotas | quote }}
+        - name: EXCLUDE_QUOTAS_TENANTS
+          value: {{ .Values.globals.excludeQuotasTenants | quote }}
         - name: ACCOUNT_PORTAL_URL
           value: {{ .Values.globals.accountPortalUrl | quote }}
         - name: ACCOUNT_PORTAL_API_KEY
