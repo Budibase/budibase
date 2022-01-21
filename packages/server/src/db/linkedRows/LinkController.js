@@ -156,8 +156,6 @@ class LinkController {
     return true
   }
 
-  updateRelatedFormula() {}
-
   /**
    * Given the link field of this table, and the link field of the linked table, this makes sure
    * the state of relationship type is accurate on both.

@@ -253,7 +253,7 @@ exports.inputProcessing = (
 /**
  * This function enriches the input rows with anything they are supposed to contain, for example
  * link records or attachment links.
- * @param {object} ctx the request which is looking for enriched rows.
+ * @param {string} appId the app in which the request is looking for enriched rows.
  * @param {object} table the table from which these rows came from originally, this is used to determine
  * the schema of the rows and then enrich.
  * @param {object[]|object} rows the rows which are to be enriched.
@@ -261,19 +261,18 @@ exports.inputProcessing = (
  * @returns {object[]|object} the enriched rows will be returned.
  */
 exports.outputProcessing = async (
-  ctx,
+  { appId },
   table,
   rows,
   opts = { squash: true }
 ) => {
-  const appId = ctx.appId
   let wasArray = true
   if (!(rows instanceof Array)) {
     rows = [rows]
     wasArray = false
   }
   // attach any linked row information
-  let enriched = await linkRows.attachFullLinkedDocs(ctx, table, rows)
+  let enriched = await linkRows.attachFullLinkedDocs(appId, table, rows)
 
   // process formulas
   enriched = processFormulas(table, enriched, { dynamic: true })
