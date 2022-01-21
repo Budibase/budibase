@@ -33,10 +33,7 @@ const {
   Replication,
 } = require("@budibase/backend-core/db")
 const { USERS_TABLE_SCHEMA } = require("../../constants")
-const {
-  getDeployedApps,
-  removeAppFromUserRoles,
-} = require("../../utilities/workerRequests")
+const { removeAppFromUserRoles } = require("../../utilities/workerRequests")
 const { clientLibraryPath, stringToReadStream } = require("../../utilities")
 const { getAllLocks } = require("../../utilities/redis")
 const {
@@ -78,26 +75,41 @@ function getUserRoleId(ctx) {
     : ctx.user.role._id
 }
 
-async function getAppUrlIfNotInUse(ctx) {
+async function getAppUrl(ctx) {
+  // construct the url
   let url
   if (ctx.request.body.url) {
+    // if the url is provided, use that
     url = encodeURI(ctx.request.body.url)
-  } else if (ctx.request.body.name) {
+  } else {
+    // otherwise use the name
     url = encodeURI(`${ctx.request.body.name}`)
   }
-  if (url) {
-    url = `/${url.replace(URL_REGEX_SLASH, "")}`.toLowerCase()
-  }
-  const deployedApps = await getDeployedApps()
-  if (
-    url &&
-    deployedApps[url] != null &&
-    ctx.params != null &&
-    deployedApps[url].appId !== ctx.params.appId
-  ) {
-    ctx.throw(400, "App name/URL is already in use.")
-  }
+  url = `/${url.replace(URL_REGEX_SLASH, "")}`.toLowerCase()
+
   return url
+}
+
+const checkAppUrl = (ctx, apps, url, currentAppId) => {
+  if (currentAppId) {
+    apps = apps.filter(app => app.appId !== currentAppId)
+  }
+  if (apps.some(app => app.url === url)) {
+    ctx.throw(400, "App URL is already in use.")
+  }
+}
+
+const checkAppName = (ctx, apps, name, currentAppId) => {
+  // TODO: Replace with Joi
+  if (!name) {
+    ctx.throw(400, "Name is required")
+  }
+  if (currentAppId) {
+    apps = apps.filter(app => app.appId !== currentAppId)
+  }
+  if (apps.some(app => app.name === name)) {
+    ctx.throw(400, "App name is already in use.")
+  }
 }
 
 async function createInstance(template) {
@@ -203,6 +215,12 @@ exports.fetchAppPackage = async ctx => {
 }
 
 exports.create = async ctx => {
+  const apps = await getAllApps(CouchDB, { dev: true })
+  const name = ctx.request.body.name
+  checkAppName(ctx, apps, name)
+  const url = await getAppUrl(ctx)
+  checkAppUrl(ctx, apps, url)
+
   const { useTemplate, templateKey, templateString } = ctx.request.body
   const instanceConfig = {
     useTemplate,
@@ -215,7 +233,6 @@ exports.create = async ctx => {
   const instance = await createInstance(instanceConfig)
   const appId = instance._id
 
-  const url = await getAppUrlIfNotInUse(ctx)
   const db = new CouchDB(appId)
   let _rev
   try {
@@ -232,7 +249,7 @@ exports.create = async ctx => {
     type: "app",
     version: packageJson.version,
     componentLibraries: ["@budibase/standard-components"],
-    name: ctx.request.body.name,
+    name: name,
     url: url,
     template: ctx.request.body.template,
     instance: instance,
@@ -260,7 +277,15 @@ exports.create = async ctx => {
 }
 
 exports.update = async ctx => {
-  const data = await updateAppPackage(ctx, ctx.request.body, ctx.params.appId)
+  const apps = await getAllApps(CouchDB, { dev: true })
+  // validation
+  const name = ctx.request.body.name
+  checkAppName(ctx, apps, name, ctx.params.appId)
+  const url = await getAppUrl(ctx)
+  checkAppUrl(ctx, apps, url, ctx.params.appId)
+
+  const appPackageUpdates = { name, url }
+  const data = await updateAppPackage(appPackageUpdates, ctx.params.appId)
   ctx.status = 200
   ctx.body = data
 }
@@ -282,7 +307,7 @@ exports.updateClient = async ctx => {
     version: packageJson.version,
     revertableVersion: currentVersion,
   }
-  const data = await updateAppPackage(ctx, appPackageUpdates, ctx.params.appId)
+  const data = await updateAppPackage(appPackageUpdates, ctx.params.appId)
   ctx.status = 200
   ctx.body = data
 }
@@ -305,7 +330,7 @@ exports.revertClient = async ctx => {
     version: application.revertableVersion,
     revertableVersion: null,
   }
-  const data = await updateAppPackage(ctx, appPackageUpdates, ctx.params.appId)
+  const data = await updateAppPackage(appPackageUpdates, ctx.params.appId)
   ctx.status = 200
   ctx.body = data
 }
@@ -378,12 +403,11 @@ exports.sync = async (ctx, next) => {
   }
 }
 
-const updateAppPackage = async (ctx, appPackage, appId) => {
-  const url = await getAppUrlIfNotInUse(ctx)
+const updateAppPackage = async (appPackage, appId) => {
   const db = new CouchDB(appId)
   const application = await db.get(DocumentTypes.APP_METADATA)
 
-  const newAppPackage = { ...application, ...appPackage, url }
+  const newAppPackage = { ...application, ...appPackage }
   if (appPackage._rev !== application._rev) {
     newAppPackage._rev = application._rev
   }

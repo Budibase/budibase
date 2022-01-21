@@ -2,7 +2,6 @@ import { get, writable } from "svelte/store"
 import { cloneDeep } from "lodash/fp"
 import {
   allScreens,
-  hostingStore,
   currentAsset,
   mainLayout,
   selectedComponent,
@@ -100,7 +99,6 @@ export const getFrontendStore = () => {
         version: application.version,
         revertableVersion: application.revertableVersion,
       }))
-      await hostingStore.actions.fetch()
 
       // Initialise backend stores
       const [_integrations] = await Promise.all([

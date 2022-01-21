@@ -1,7 +1,6 @@
 <script>
   import { writable, get as svelteGet } from "svelte/store"
   import { notifications, Input, ModalContent, Body } from "@budibase/bbui"
-  import { hostingStore } from "builderStore"
   import { apps } from "stores/portal"
   import { onMount } from "svelte"
   import { createValidationStore } from "helpers/validation/yup"
@@ -20,10 +19,9 @@
   })
 
   const setupValidation = async () => {
-    await hostingStore.actions.fetchDeployedApps()
-    const apps = svelteGet(hostingStore).deployedApps
-    appValidation.name(validation, { apps, currentApp: app })
-    appValidation.url(validation, { apps, currentApp: app })
+    const applications = svelteGet(apps)
+    appValidation.name(validation, { apps: applications, currentApp: app })
+    appValidation.url(validation, { apps: applications, currentApp: app })
     // init validation
     validation.check($values)
   }
