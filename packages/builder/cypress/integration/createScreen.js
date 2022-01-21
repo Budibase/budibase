@@ -1,6 +1,6 @@
 import filterTests from "../support/filterTests"
 
-filterTests(['smoke', 'all'], () => {
+filterTests(["smoke", "all"], () => {
   context("Screen Tests", () => {
     before(() => {
       cy.login()
@@ -21,5 +21,5 @@ filterTests(['smoke', 'all'], () => {
         cy.contains("/test-with-spaces").should("exist")
       })
     })
-  })  
+  })
 })
