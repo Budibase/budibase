@@ -42,6 +42,7 @@ filterTests(['all'], () => {
       cy.getComponent(componentId)
         .find(".spectrum-Picker-label")
         .contains("(5)")
+      })
     })
   })
 })
