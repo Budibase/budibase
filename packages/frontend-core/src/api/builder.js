@@ -5,13 +5,26 @@ export const buildBuilderEndpoints = API => ({
    * @param {string} appId - ID of the currently running app
    */
   fetchComponentLibDefinitions: async appId => {
-    return await API.get({ url: `/api/${appId}/components/definitions` })
+    return await API.get({
+      url: `/api/${appId}/components/definitions`,
+    })
   },
 
   /**
    * Gets the list of available integrations.
    */
   getIntegrations: async () => {
-    return await API.get({ url: "/api/integrations" })
+    return await API.get({
+      url: "/api/integrations",
+    })
+  },
+
+  /**
+   * Gets the version of the installed Budibase environment.
+   */
+  getBudibaseVersion: async () => {
+    return await API.get({
+      url: "/api/dev/version",
+    })
   },
 })
