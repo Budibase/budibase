@@ -1,11 +1,5 @@
 jest.mock("../../db")
 jest.mock("../../utilities/usageQuota")
-jest.mock("../../environment", () => ({
-  isTest: () => true,
-  isProd: () => false,
-  isDev: () => true,
-  _set: () => {},
-}))
 jest.mock("@budibase/backend-core/tenancy", () => ({
   getTenantId: () => "testing123"
 }))
@@ -32,6 +26,7 @@ class TestConfiguration {
         url: "/applications"
       }
     }
+    usageQuota.useQuotas = () => true
   }
 
   executeMiddleware() {
@@ -113,12 +108,10 @@ describe("usageQuota middleware", () => {
 
   it("calculates and persists the correct usage quota for the relevant action", async () => {
     config.setUrl("/rows")
-    config.setProd(true)
 
     await config.executeMiddleware()
 
-    // expect(usageQuota.update).toHaveBeenCalledWith("rows", 1)
-    expect(usageQuota.update).not.toHaveBeenCalledWith("rows", 1)
+    expect(usageQuota.update).toHaveBeenCalledWith("rows", 1)
     expect(config.next).toHaveBeenCalled()
   })
 

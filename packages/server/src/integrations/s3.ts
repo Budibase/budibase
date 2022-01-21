@@ -38,7 +38,7 @@ module S3Module {
       signatureVersion: {
         type: "string",
         required: false,
-        default: "v4"
+        default: "v4",
       },
     },
     query: {

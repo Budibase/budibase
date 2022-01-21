@@ -1,17 +1,11 @@
 const CouchDB = require("../db")
 const usageQuota = require("../utilities/usageQuota")
-const env = require("../environment")
-const { getTenantId } = require("@budibase/backend-core/tenancy")
+const { getUniqueRows } = require("../utilities/usageQuota/rows")
 const {
   isExternalTable,
   isRowId: isExternalRowId,
 } = require("../integrations/utils")
-const quotaMigration = require("../migrations/sync_app_and_reset_rows_quotas")
-
-const testing = false
-
-// tenants without limits
-const EXCLUDED_TENANTS = ["bb", "default", "bbtest", "bbstaging"]
+const migration = require("../migrations/usageQuotas")
 
 // currently only counting new writes and deletes
 const METHOD_MAP = {
@@ -20,7 +14,7 @@ const METHOD_MAP = {
 }
 
 const DOMAIN_MAP = {
-  // rows: usageQuota.Properties.ROW,                 // works - disabled
+  rows: usageQuota.Properties.ROW,
   // upload: usageQuota.Properties.UPLOAD,            // doesn't work yet
   // views: usageQuota.Properties.VIEW,               // doesn't work yet
   // users: usageQuota.Properties.USER,               // doesn't work yet
@@ -39,13 +33,7 @@ function getProperty(url) {
 }
 
 module.exports = async (ctx, next) => {
-  const tenantId = getTenantId()
-
-  // if in development or a self hosted cloud usage quotas should not be executed
-  if (
-    (env.isDev() || env.SELF_HOSTED || EXCLUDED_TENANTS.includes(tenantId)) &&
-    !testing
-  ) {
+  if (!usageQuota.useQuotas()) {
     return next()
   }
 
@@ -86,10 +74,93 @@ module.exports = async (ctx, next) => {
     usage = files.map(file => file.size).reduce((total, size) => total + size)
   }
   try {
-    await quotaMigration.runIfRequired()
-    await usageQuota.update(property, usage)
-    return next()
+    await migration.run()
+    await performRequest(ctx, next, property, usage)
   } catch (err) {
     ctx.throw(400, err)
   }
+}
+
+const performRequest = async (ctx, next, property, usage) => {
+  const usageContext = {
+    skipNext: false,
+    skipUsage: false,
+    [usageQuota.Properties.APPS]: {},
+  }
+
+  if (usage === -1) {
+    if (PRE_DELETE[property]) {
+      await PRE_DELETE[property](ctx, usageContext)
+    }
+  } else {
+    if (PRE_CREATE[property]) {
+      await PRE_CREATE[property](ctx, usageContext)
+    }
+  }
+
+  // run the request
+  if (!usageContext.skipNext) {
+    await usageQuota.update(property, usage, { dryRun: true })
+    await next()
+  }
+
+  if (usage === -1) {
+    if (POST_DELETE[property]) {
+      await POST_DELETE[property](ctx, usageContext)
+    }
+  } else {
+    if (POST_CREATE[property]) {
+      await POST_CREATE[property](ctx, usageContext)
+    }
+  }
+
+  // update the usage
+  if (!usageContext.skipUsage) {
+    await usageQuota.update(property, usage)
+  }
+}
+
+const appPreDelete = async (ctx, usageContext) => {
+  if (ctx.query.unpublish) {
+    // don't run usage decrement for unpublish
+    usageContext.skipUsage = true
+    return
+  }
+
+  // store the row count to delete
+  const rows = await getUniqueRows([ctx.appId])
+  if (rows.length) {
+    usageContext[usageQuota.Properties.APPS] = { rowCount: rows.length }
+  }
+}
+
+const appPostDelete = async (ctx, usageContext) => {
+  // delete the app rows from usage
+  const rowCount = usageContext[usageQuota.Properties.APPS].rowCount
+  if (rowCount) {
+    await usageQuota.update(usageQuota.Properties.ROW, -rowCount)
+  }
+}
+
+const appPostCreate = async ctx => {
+  // app import & template creation
+  if (ctx.request.body.useTemplate === "true") {
+    const rows = await getUniqueRows([ctx.response.body.appId])
+    const rowCount = rows ? rows.length : 0
+    await usageQuota.update(usageQuota.Properties.ROW, rowCount)
+  }
+}
+
+const PRE_DELETE = {
+  [usageQuota.Properties.APPS]: appPreDelete,
+}
+
+const POST_DELETE = {
+  [usageQuota.Properties.APPS]: appPostDelete,
+}
+
+const PRE_CREATE = {}
+
+const POST_CREATE = {
+  [usageQuota.Properties.APPS]: appPostCreate,
 }
