@@ -50,35 +50,38 @@ filterTests(['smoke', 'all'], () => {
       cy.contains("RoverUpdated").should("not.exist")
     })
     
-    it("Adds 15 rows and checks pagination", () => {
-      // 10 rows per page, 15 rows should create 2 pages within table
-      const totalRows = 16
-      for (let i = 1; i < totalRows; i++){
-        cy.addRow([i])
-      }
-      cy.wait(1000)
-      cy.get(".spectrum-Pagination").within(() => {
-        cy.get(".spectrum-ActionButton").eq(1).click()
+    if (Cypress.env("TEST_ENV")) {
+      // No Pagination in CI - Test env only for the next two tests
+      it("Adds 15 rows and checks pagination", () => {
+        // 10 rows per page, 15 rows should create 2 pages within table
+        const totalRows = 16
+        for (let i = 1; i < totalRows; i++){
+          cy.addRow([i])
+        }
+        cy.wait(1000)
+        cy.get(".spectrum-Pagination").within(() => {
+          cy.get(".spectrum-ActionButton").eq(1).click()
+        })
+        cy.get(".spectrum-Pagination").within(() => {
+          cy.get(".spectrum-Body--secondary").contains("Page 2")
+        })
       })
-      cy.get(".spectrum-Pagination").within(() => {
-        cy.get(".spectrum-Body--secondary").contains("Page 2")
-      })
-    })
-    
-    it("Deletes rows and checks pagination", () => {
-      // Delete rows, removing second page of rows from table
-      const deleteRows = 5
-      cy.get(".spectrum-Checkbox-input").check({ force: true })
-      cy.get(".spectrum-Table-body")
-      cy.contains("Delete 5 row(s)").click()
-      cy.get(".spectrum-Modal").contains("Delete").click()
-      cy.wait(1000)
       
-      // Confirm table only has one page
-      cy.get(".spectrum-Pagination").within(() => {
-        cy.get(".spectrum-ActionButton").eq(1).should('not.be.enabled')
+      it("Deletes rows and checks pagination", () => {
+        // Delete rows, removing second page of rows from table
+        const deleteRows = 5
+        cy.get(".spectrum-Checkbox-input").check({ force: true })
+        cy.get(".spectrum-Table-body")
+        cy.contains("Delete 5 row(s)").click()
+        cy.get(".spectrum-Modal").contains("Delete").click()
+        cy.wait(1000)
+        
+        // Confirm table only has one page
+        cy.get(".spectrum-Pagination").within(() => {
+          cy.get(".spectrum-ActionButton").eq(1).should('not.be.enabled')
+        })
       })
-    })
+    }
 
     it("deletes a column", () => {
       const columnName = "nameupdated"
