@@ -20,7 +20,11 @@ const { isEqual } = require("lodash")
  * can manage hydrating related rows formula fields. This is
  * specifically only for static formula.
  */
-async function updateRelatedTablesForFormula(db, table) {
+async function updateRelatedTablesForFormula(
+  db,
+  table,
+  { deletion } = { deletion: false }
+) {
   // start by retrieving all tables, remove the current table from the list
   const tables = (await getAllInternalTables({ db })).filter(
     tbl => tbl._id !== table._id
@@ -41,31 +45,34 @@ async function updateRelatedTablesForFormula(db, table) {
       otherTable.relatedFormula.splice(index, 1)
     }
   }
-  for (let column of Object.values(table.schema)) {
-    // not a static formula, or doesn't contain a relationship
-    if (
-      column.type !== FieldTypes.FORMULA ||
-      column.formulaType !== FormulaTypes.STATIC
-    ) {
-      continue
-    }
-    // check to see if any relationship columns are used in formula
-    for (let relatedCol of relatedColumns) {
-      if (!doesContainString(column.formula, relatedCol.name)) {
+  // if deleting, just remove the table IDs, don't try add
+  if (!deletion) {
+    for (let column of Object.values(table.schema)) {
+      // not a static formula, or doesn't contain a relationship
+      if (
+        column.type !== FieldTypes.FORMULA ||
+        column.formulaType !== FormulaTypes.STATIC
+      ) {
         continue
       }
-      const relatedTable = tables.find(
-        related => related._id === relatedCol.tableId
-      )
-      // check if the table is already in the list of related formula, if it isn't, then add it
-      if (
-        relatedTable &&
-        (!relatedTable.relatedFormula ||
-          relatedTable.relatedFormula.indexOf(table._id) === -1)
-      ) {
-        relatedTable.relatedFormula = relatedTable.relatedFormula
-          ? [...relatedTable.relatedFormula, table._id]
-          : [table._id]
+      // check to see if any relationship columns are used in formula
+      for (let relatedCol of relatedColumns) {
+        if (!doesContainString(column.formula, relatedCol.name)) {
+          continue
+        }
+        const relatedTable = tables.find(
+          related => related._id === relatedCol.tableId
+        )
+        // check if the table is already in the list of related formula, if it isn't, then add it
+        if (
+          relatedTable &&
+          (!relatedTable.relatedFormula ||
+            relatedTable.relatedFormula.includes(table._id))
+        ) {
+          relatedTable.relatedFormula = relatedTable.relatedFormula
+            ? [...relatedTable.relatedFormula, table._id]
+            : [table._id]
+        }
       }
     }
   }
@@ -211,6 +218,8 @@ exports.destroy = async function (ctx) {
     await db.deleteIndex(existingIndex)
   }
 
+  // has to run after, make sure it has _id
+  await updateRelatedTablesForFormula(db, tableToDelete, { deletion: true })
   return tableToDelete
 }
 
