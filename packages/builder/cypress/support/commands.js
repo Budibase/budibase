@@ -35,14 +35,7 @@ Cypress.Commands.add("login", () => {
 Cypress.Commands.add("createApp", name => {
   cy.visit(`${Cypress.config().baseUrl}/builder`)
   cy.wait(500)
-  cy.request(`${Cypress.config().baseUrl}/api/applications?status=all`)
-    .its("body")
-    .then(body => {
-      if (body.length > 0) {
-        cy.get(".spectrum-Button").contains("Create app").click({ force: true })
-      }
-    })
-  cy.contains(/Start from scratch/).dblclick()
+  cy.get(".spectrum-Button").contains("Create app").click({ force: true })
   cy.get(".spectrum-Modal").within(() => {
     cy.get("input").eq(0).type(name).should("have.value", name).blur()
     cy.get(".spectrum-ButtonGroup").contains("Create app").click()
@@ -445,7 +438,7 @@ Cypress.Commands.add("addDatasourceConfig", (datasource, skipFetch) => {
 Cypress.Commands.add("createRestQuery", (method, restUrl) => {
   // addExternalDatasource should be called prior to this
   // Configures REST datasource & sends query
-  cy.wait(500)
+  cy.wait(1000)
   cy.get(".spectrum-Button").contains("Add query").click({ force: true })
   // Select Method & add Rest URL
   cy.get(".spectrum-Picker-label").eq(1).click()
