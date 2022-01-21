@@ -53,6 +53,7 @@ filterTests(['all'], () => {
         cy.wait(1000)
         cy.searchForApplication(appName)
         cy.get(".appTable").find(".title").should("have.length", 1)
+
     })
 
     xit("Should create two applications with the same name", () => {
@@ -126,6 +127,7 @@ filterTests(['all'], () => {
         })
         }
         })
+
     }
     })
 })

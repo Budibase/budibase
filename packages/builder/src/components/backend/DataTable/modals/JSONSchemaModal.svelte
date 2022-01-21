@@ -9,6 +9,7 @@
     Select,
     Body,
     Layout,
+    ActionButton,
   } from "@budibase/bbui"
   import { onMount, createEventDispatcher } from "svelte"
   import { FIELDS } from "constants/backend"
@@ -20,8 +21,8 @@
   let dispatcher = createEventDispatcher()
   let mode = "Form"
   let fieldCount = 0
-  let fieldKeys = {},
-    fieldTypes = {}
+  let fieldKeys = [],
+    fieldTypes = []
   let keyValueOptions = [
     { label: "String", value: FIELDS.STRING.type },
     { label: "Number", value: FIELDS.NUMBER.type },
@@ -50,27 +51,48 @@
     if (!schema) {
       schema = {}
     }
-    let i = 0
-    for (let [key, value] of Object.entries(schema)) {
-      fieldKeys[i] = key
-      fieldTypes[i] = value.type
-      i++
+    // find the entries which aren't in the list
+    const schemaEntries = Object.entries(schema).filter(
+      ([key]) => !fieldKeys.includes(key)
+    )
+    for (let [key, value] of schemaEntries) {
+      fieldKeys.push(key)
+      fieldTypes.push(value.type)
     }
-    fieldCount = i
+    fieldCount = fieldKeys.length
   }
 
   function saveSchema() {
-    for (let i of Object.keys(fieldKeys)) {
-      const key = fieldKeys[i]
+    const newSchema = {}
+    for (let [index, key] of fieldKeys.entries()) {
       // they were added to schema, rather than generated
-      if (!schema[key]) {
-        schema[key] = {
-          type: fieldTypes[i],
-        }
+      newSchema[key] = {
+        ...schema[key],
+        type: fieldTypes[index],
       }
     }
+    dispatcher("save", { schema: newSchema, json })
+    schema = newSchema
+  }
 
-    dispatcher("save", { schema, json })
+  function removeKey(index) {
+    const keyToRemove = fieldKeys[index]
+    if (fieldKeys[index + 1] != null) {
+      fieldKeys[index] = fieldKeys[index + 1]
+      fieldTypes[index] = fieldTypes[index + 1]
+    }
+    fieldKeys.splice(index, 1)
+    fieldTypes.splice(index, 1)
+    fieldCount--
+    if (json) {
+      try {
+        const parsed = JSON.parse(json)
+        delete parsed[keyToRemove]
+        json = JSON.stringify(parsed, null, 2)
+      } catch (err) {
+        // json not valid, ignore
+      }
+    }
   }
 
   onMount(() => {
@@ -97,6 +119,7 @@
             getOptionValue={field => field.value}
             getOptionLabel={field => field.label}
           />
+          <ActionButton icon="Close" quiet on:click={() => removeKey(i)} />
         </div>
       {/each}
       <div class:add-field-btn={fieldCount !== 0}>
@@ -118,9 +141,9 @@
 <style>
   .horizontal {
     display: grid;
-    grid-template-columns: 30% 1fr;
+    grid-template-columns: 30% 1fr 40px;
     grid-gap: var(--spacing-s);
-    align-items: center;
+    align-items: end;
   }
 
   .add-field-btn {

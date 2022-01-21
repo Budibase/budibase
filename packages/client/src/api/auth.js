@@ -19,6 +19,15 @@ export const logIn = async ({ email, password }) => {
 }
 
 /**
+ * Logs the user out and invaidates their session.
+ */
+export const logOut = async () => {
+  return await API.post({
+    url: "/api/global/auth/logout",
+  })
+}
+
+/**
  * Fetches the currently logged in user object
  */
 export const fetchSelf = async () => {

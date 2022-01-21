@@ -1,6 +1,6 @@
 {
   "name": "@budibase/builder",
-  "version": "1.0.44-alpha.1",
+  "version": "1.0.44-alpha.7",
   "license": "GPL-3.0",
   "private": true,
   "scripts": {
@@ -65,10 +65,10 @@
     }
   },
   "dependencies": {
-    "@budibase/bbui": "^1.0.44-alpha.1",
-    "@budibase/client": "^1.0.44-alpha.1",
+    "@budibase/bbui": "^1.0.44-alpha.7",
+    "@budibase/client": "^1.0.44-alpha.7",
     "@budibase/colorpicker": "1.1.2",
-    "@budibase/string-templates": "^1.0.44-alpha.1",
+    "@budibase/string-templates": "^1.0.44-alpha.7",
     "@sentry/browser": "5.19.1",
     "@spectrum-css/page": "^3.0.1",
     "@spectrum-css/vars": "^3.0.1",
@@ -95,7 +95,7 @@
     "@testing-library/jest-dom": "^5.11.10",
     "@testing-library/svelte": "^3.0.0",
     "babel-jest": "^26.6.3",
-    "cypress": "9.2.1",
+    "cypress": "^5.1.0",
     "cypress-terminal-report": "^1.4.1",
     "identity-obj-proxy": "^3.0.0",
     "jest": "^26.6.3",

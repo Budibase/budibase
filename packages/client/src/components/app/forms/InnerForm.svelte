@@ -141,8 +141,18 @@
         return
       }
 
+      // Create validation function based on field schema
+      const schemaConstraints = schema?.[field]?.constraints
+      const validator = createValidatorFromConstraints(
+        schemaConstraints,
+        validationRules,
+        field,
+        table
+      )
+
       // If we've already registered this field then keep some existing state
       let initialValue = deepGet(initialValues, field) ?? defaultValue
+      let initialError = null
       let fieldId = `id-${generateID()}`
       const existingField = getField(field)
       if (existingField) {
@@ -156,19 +166,16 @@
         } else {
           initialValue = fieldState.value ?? initialValue
         }
+
+        // If this field has already been registered and we previously had an
+        // error set, then re-run the validator to see if we can unset it
+        if (fieldState.error) {
+          initialError = validator(initialValue)
+        }
       }
 
       // Auto columns are always disabled
       const isAutoColumn = !!schema?.[field]?.autocolumn
-
-      // Create validation function based on field schema
-      const schemaConstraints = schema?.[field]?.constraints
-      const validator = createValidatorFromConstraints(
-        schemaConstraints,
-        validationRules,
-        field,
-        table
-      )
 
       // Construct field info
       const fieldInfo = writable({
@@ -178,7 +185,7 @@
         fieldState: {
           fieldId,
           value: initialValue,
-          error: null,
+          error: initialError,
           disabled: disabled || fieldDisabled || isAutoColumn,
           defaultValue,
           validator,
