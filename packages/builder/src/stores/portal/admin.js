@@ -1,5 +1,5 @@
 import { writable, get } from "svelte/store"
-import api from "builderStore/api"
+import { API } from "api"
 import { auth } from "stores/portal"
 
 export function createAdminStore() {
@@ -25,21 +25,19 @@ export function createAdminStore() {
   async function init() {
     try {
       const tenantId = get(auth).tenantId
-      const response = await api.get(
-        `/api/global/configs/checklist?tenantId=${tenantId}`
-      )
-      const json = await response.json()
-      const totalSteps = Object.keys(json).length
-      const completedSteps = Object.values(json).filter(x => x?.checked).length
-
+      const checklist = await API.getChecklist(tenantId)
+      const totalSteps = Object.keys(checklist).length
+      const completedSteps = Object.values(checklist).filter(
+        x => x?.checked
+      ).length
       await getEnvironment()
       admin.update(store => {
         store.loaded = true
-        store.checklist = json
+        store.checklist = checklist
         store.onboardingProgress = (completedSteps / totalSteps) * 100
         return store
       })
-    } catch (err) {
+    } catch (error) {
       admin.update(store => {
         store.checklist = null
         return store
@@ -48,11 +46,15 @@ export function createAdminStore() {
   }
 
   async function checkImportComplete() {
-    const response = await api.get(`/api/cloud/import/complete`)
-    if (response.status === 200) {
-      const json = await response.json()
+    try {
+      const result = await API.checkImportComplete()
       admin.update(store => {
-        store.importComplete = json ? json.imported : false
+        store.importComplete = result ? result.imported : false
+        return store
+      })
+    } catch (error) {
+      admin.update(store => {
+        store.importComplete = false
         return store
       })
     }
@@ -65,15 +67,14 @@ export function createAdminStore() {
     let accountPortalUrl = ""
     let isDev = false
     try {
-      const response = await api.get(`/api/system/environment`)
-      const json = await response.json()
-      multiTenancyEnabled = json.multiTenancy
-      cloud = json.cloud
-      disableAccountPortal = json.disableAccountPortal
-      accountPortalUrl = json.accountPortalUrl
-      isDev = json.isDev
+      const environment = await API.getEnvironment()
+      multiTenancyEnabled = environment.multiTenancy
+      cloud = environment.cloud
+      disableAccountPortal = environment.disableAccountPortal
+      accountPortalUrl = environment.accountPortalUrl
+      isDev = environment.isDev
     } catch (err) {
-      // just let it stay disabled
+      // Just let it stay disabled
     }
     admin.update(store => {
       store.multiTenancy = multiTenancyEnabled

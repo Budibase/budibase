@@ -30,7 +30,9 @@ export const createAPIClient = config => {
   }
 
   // Generates an error object from an API response
-  const makeErrorFromResponse = async response => {
+  const makeErrorFromResponse = async (response, method) => {
+    console.log("making error from", response)
+
     // Try to read a message from the error
     let message = response.statusText
     try {
@@ -47,6 +49,8 @@ export const createAPIClient = config => {
       message,
       status: response.status,
       url: response.url,
+      method,
+      handled: true,
     }
   }
 
@@ -56,6 +60,8 @@ export const createAPIClient = config => {
       message,
       status: 400,
       url: "",
+      method: "",
+      handled: true,
     }
   }
 
@@ -110,11 +116,7 @@ export const createAPIClient = config => {
         return null
       }
     } else {
-      const error = await makeErrorFromResponse(response)
-      if (config?.onError) {
-        config.onError(error)
-      }
-      throw error
+      throw await makeErrorFromResponse(response, method)
     }
   }
 
@@ -134,14 +136,21 @@ export const createAPIClient = config => {
     return await cache[identifier]
   }
 
-  // Constructs an API call function for a particular HTTP method.
+  // Constructs an API call function for a particular HTTP method
   const requestApiCall = method => async params => {
-    let { url, cache = false, external = false } = params
-    if (!external) {
-      url = `/${url}`.replace("//", "/")
+    try {
+      let { url, cache = false, external = false } = params
+      if (!external) {
+        url = `/${url}`.replace("//", "/")
+      }
+      const enrichedParams = { ...params, method, url }
+      return await (cache ? makeCachedApiCall : makeApiCall)(enrichedParams)
+    } catch (error) {
+      if (config?.onError) {
+        config.onError(error)
+      }
+      throw error
     }
-    const enrichedParams = { ...params, method, url }
-    return await (cache ? makeCachedApiCall : makeApiCall)(enrichedParams)
   }
 
   // Build the underlying core API methods

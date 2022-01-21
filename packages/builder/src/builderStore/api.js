@@ -14,15 +14,24 @@ export const API = createAPIClient({
   },
 
   onError: error => {
-    const { url, message, status } = error
+    const { url, message, status, method, handled } = error || {}
 
     // Log all API errors to Sentry
     // analytics.captureException(error)
+
+    // Log any errors that we haven't manually handled
+    if (!handled) {
+      console.error("Unhandled error from API client", error)
+      return
+    }
 
     // Show a notification for any errors
     if (message) {
       notifications.error(`Error fetching ${url}: ${message}`)
     }
+
+    // Log all errors to console
+    console.error(`HTTP ${status} on ${method}:${url}:\n\t${message}`)
 
     // Logout on 403's
     if (status === 403) {
