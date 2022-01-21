@@ -12,6 +12,7 @@ const {
   outputProcessing,
   processAutoColumn,
   cleanupAttachments,
+  processFormulas,
 } = require("../../../utilities/rowProcessor")
 const { FieldTypes } = require("../../../constants")
 const { isEqual } = require("lodash")
@@ -36,6 +37,17 @@ const CALCULATION_TYPES = {
 
 async function storeResponse(ctx, db, row, oldTable, table) {
   row.type = "row"
+  let rowToSave = cloneDeep(row)
+  // process the row before return, to include relationships
+  let enrichedRow = await outputProcessing(ctx, table, cloneDeep(row), {
+    squash: false,
+  })
+  // use enriched row to generate formulas for saving, specifically only use as context
+  row = processFormulas(table, row, {
+    dynamic: false,
+    contextRows: enrichedRow,
+  })
+
   // don't worry about rev, tables handle rev/lastID updates
   // if another row has been written since processing this will
   // handle the auto ID clash
@@ -45,7 +57,7 @@ async function storeResponse(ctx, db, row, oldTable, table) {
     } catch (err) {
       if (err.status === 409) {
         const updatedTable = await db.get(table._id)
-        let response = processAutoColumn(null, updatedTable, row, {
+        let response = processAutoColumn(null, updatedTable, rowToSave, {
           reprocessing: true,
         })
         await db.put(response.table)
@@ -56,10 +68,10 @@ async function storeResponse(ctx, db, row, oldTable, table) {
     }
   }
   const response = await db.put(row)
-  row._rev = response.rev
-  // process the row before return, to include relationships
-  row = await outputProcessing(ctx, table, row, { squash: false })
-  return { row, table }
+  // for response, calculate the formulas for the enriched row
+  enrichedRow._rev = response.rev
+  enrichedRow = await processFormulas(table, enrichedRow, { dynamic: false })
+  return { row: enrichedRow, table }
 }
 
 // doesn't do the outputProcessing
