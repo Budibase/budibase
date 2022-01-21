@@ -1,5 +1,6 @@
 import { writable } from "svelte/store"
-import api, { get } from "../api"
+import { API } from "api"
+import { notifications } from "@budibase/bbui"
 
 const INITIAL_HOSTING_UI_STATE = {
   appUrl: "",
@@ -12,22 +13,40 @@ export const getHostingStore = () => {
   const store = writable({ ...INITIAL_HOSTING_UI_STATE })
   store.actions = {
     fetch: async () => {
-      const response = await api.get("/api/hosting/urls")
-      const urls = await response.json()
-      store.update(state => {
-        state.appUrl = urls.app
-        return state
-      })
+      try {
+        const urls = await API.getHostingURLs()
+        store.update(state => {
+          state.appUrl = urls.app
+          return state
+        })
+      } catch (error) {
+        store.update(state => {
+          state.appUrl = ""
+          return state
+        })
+        notifications.error("Error fetching hosting URLs")
+      }
     },
     fetchDeployedApps: async () => {
-      let deployments = await (await get("/api/hosting/apps")).json()
-      store.update(state => {
-        state.deployedApps = deployments
-        state.deployedAppNames = Object.values(deployments).map(app => app.name)
-        state.deployedAppUrls = Object.values(deployments).map(app => app.url)
-        return state
-      })
-      return deployments
+      try {
+        const deployments = await API.getDeployedApps()
+        store.update(state => {
+          state.deployedApps = deployments
+          state.deployedAppNames = Object.values(deployments).map(
+            app => app.name
+          )
+          state.deployedAppUrls = Object.values(deployments).map(app => app.url)
+          return state
+        })
+      } catch (error) {
+        store.update(state => {
+          state.deployedApps = {}
+          state.deployedAppNames = []
+          state.deployedAppUrls = []
+          return state
+        })
+        notifications.error("Failed detching deployed apps")
+      }
     },
   }
   return store

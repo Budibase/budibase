@@ -33,23 +33,6 @@
     await automationStore.actions.delete(
       $automationStore.selectedAutomation?.automation
     )
-    notifications.success("Automation deleted.")
-  }
-
-  async function testAutomation() {
-    const result = await automationStore.actions.trigger(
-      $automationStore.selectedAutomation.automation
-    )
-    if (result.status === 200) {
-      notifications.success(
-        `Automation ${$automationStore.selectedAutomation.automation.name} triggered successfully.`
-      )
-    } else {
-      notifications.error(
-        `Failed to trigger automation ${$automationStore.selectedAutomation.automation.name}.`
-      )
-    }
-    return result
   }
 </script>
 
@@ -85,7 +68,7 @@
         animate:flip={{ duration: 500 }}
         in:fly|local={{ x: 500, duration: 1500 }}
       >
-        <FlowItem {testDataModal} {testAutomation} {onSelect} {block} />
+        <FlowItem {testDataModal} {onSelect} {block} />
       </div>
     {/each}
   </div>
@@ -101,7 +84,7 @@
   </ConfirmDialog>
 
   <Modal bind:this={testDataModal} width="30%">
-    <TestDataModal {testAutomation} />
+    <TestDataModal />
   </Modal>
 </div>
 

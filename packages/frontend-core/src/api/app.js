@@ -122,4 +122,14 @@ export const buildAppEndpoints = API => ({
       url: `/api/dev/${appId}/lock`,
     })
   },
+
+  /**
+   * Syncs an app with the production database.
+   * @param appId the ID of the app to sync
+   */
+  syncApp: async appId => {
+    return await API.post({
+      url: `/api/applications/${appId}/sync`,
+    })
+  },
 })

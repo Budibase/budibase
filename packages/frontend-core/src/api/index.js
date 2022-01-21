@@ -4,6 +4,7 @@ import { buildAppEndpoints } from "./app"
 import { buildAttachmentEndpoints } from "./attachments"
 import { buildAuthEndpoints } from "./auth"
 import { buildAutomationEndpoints } from "./automations"
+import { buildHostingEndpoints } from "./hosting"
 import { buildQueryEndpoints } from "./queries"
 import { buildRelationshipEndpoints } from "./relationships"
 import { buildRouteEndpoints } from "./routes"
@@ -35,6 +36,7 @@ export const createAPIClient = config => {
 
     // Try to read a message from the error
     let message = response.statusText
+    let json = null
     try {
       const json = await response.json()
       if (json?.message) {
@@ -47,6 +49,7 @@ export const createAPIClient = config => {
     }
     return {
       message,
+      json,
       status: response.status,
       url: response.url,
       method,
@@ -58,6 +61,7 @@ export const createAPIClient = config => {
   const makeError = message => {
     return {
       message,
+      json: null,
       status: 400,
       url: "",
       method: "",
@@ -173,6 +177,7 @@ export const createAPIClient = config => {
     ...buildAttachmentEndpoints(API),
     ...buildAuthEndpoints(API),
     ...buildAutomationEndpoints(API),
+    ...buildHostingEndpoints(API),
     ...buildQueryEndpoints(API),
     ...buildRelationshipEndpoints(API),
     ...buildRouteEndpoints(API),
