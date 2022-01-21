@@ -16,7 +16,7 @@
 
   const revert = async () => {
     try {
-      await API.revertApp(appId)
+      await API.revertAppChanges(appId)
 
       // Reset frontend state after revert
       const applicationPkg = await API.fetchAppPackage(appId)

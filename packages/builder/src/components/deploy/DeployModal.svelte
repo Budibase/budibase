@@ -9,7 +9,7 @@
 
   async function deployApp() {
     try {
-      await API.deployApp()
+      await API.deployAppChanges()
       analytics.captureEvent(Events.APP.PUBLISHED, {
         appId: $store.appId,
       })

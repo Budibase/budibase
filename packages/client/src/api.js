@@ -18,9 +18,21 @@ export const API = createAPIClient({
   // We could also log these to sentry.
   // Or we could check error.status and redirect to login on a 403 etc.
   onError: error => {
-    if (error.message) {
-      notificationStore.actions.error(error.message)
+    const { status, method, url, message, handled } = error || {}
+
+    // Log any errors that we haven't manually handled
+    if (!handled) {
+      console.error("Unhandled error from API client", error)
+      return
     }
+
+    // Notify all errors
+    if (message) {
+      notificationStore.actions.error(message)
+    }
+
+    // Log all errors to console
+    console.error(`HTTP ${status} on ${method}:${url}:\n\t${message}`)
   },
 
   // Patch certain endpoints with functionality specific to client apps

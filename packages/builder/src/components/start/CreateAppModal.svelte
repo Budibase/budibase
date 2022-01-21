@@ -5,7 +5,7 @@
   import { store, automationStore, hostingStore } from "builderStore"
   import { admin, auth } from "stores/portal"
   import { string, mixed, object } from "yup"
-  import api, { get, post } from "builderStore/api"
+  import { API } from "api"
   import analytics, { Events } from "analytics"
   import { onMount } from "svelte"
   import { capitalise } from "helpers"
@@ -99,40 +99,24 @@
       }
 
       // Create App
-      const appResp = await post("/api/applications", data, {})
-      const appJson = await appResp.json()
-      if (!appResp.ok) {
-        throw new Error(appJson.message)
-      }
-
+      const createdApp = await API.createApp(data)
       analytics.captureEvent(Events.APP.CREATED, {
         name: $values.name,
-        appId: appJson.instance._id,
+        appId: createdApp.instance._id,
         templateToUse,
       })
 
       // Select Correct Application/DB in prep for creating user
-      const applicationPkg = await get(
-        `/api/applications/${appJson.instance._id}/appPackage`
-      )
-      const pkg = await applicationPkg.json()
-      if (applicationPkg.ok) {
-        await store.actions.initialise(pkg)
-        await automationStore.actions.fetch()
-        // update checklist - incase first app
-        await admin.init()
-      } else {
-        throw new Error(pkg)
-      }
+      const pkg = await API.fetchAppPackage(createdApp.instance._id)
+      await store.actions.initialise(pkg)
+      await automationStore.actions.fetch()
+      // Update checklist - in case first app
+      await admin.init()
 
       // Create user
-      const user = {
-        roleId: $values.roleId,
-      }
-      const userResp = await api.post(`/api/users/metadata/self`, user)
-      await userResp.json()
+      await API.updateOwnMetadata({ roleId: $values.roleId })
       await auth.setInitInfo({})
-      $goto(`/builder/app/${appJson.instance._id}`)
+      $goto(`/builder/app/${createdApp.instance._id}`)
     } catch (error) {
       console.error(error)
       notifications.error(error)
