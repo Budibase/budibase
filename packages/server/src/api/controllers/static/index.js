@@ -43,7 +43,7 @@ async function getAppIdFromUrl(ctx) {
 
   // search prod apps for a url that matches, exclude dev where id is always used
   const apps = await getAllApps(CouchDB, { dev: false })
-  const app = apps.filter(a => a.url === possibleAppUrl)[0]
+  const app = apps.filter(a => a.url.toLowerCase() === possibleAppUrl)[0]
 
   if (app && app.appId) {
     return app.appId
