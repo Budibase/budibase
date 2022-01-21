@@ -8,6 +8,7 @@ const {
   getTable,
   handleDataImport,
 } = require("./utils")
+const usageQuota = require("../../../utilities/usageQuota")
 
 exports.save = async function (ctx) {
   const appId = ctx.appId
@@ -119,6 +120,7 @@ exports.destroy = async function (ctx) {
     })
   )
   await db.bulkDocs(rows.rows.map(row => ({ ...row.doc, _deleted: true })))
+  await usageQuota.update(usageQuota.Properties.ROW, -rows.rows.length)
 
   // update linked rows
   await linkRows.updateLinks({

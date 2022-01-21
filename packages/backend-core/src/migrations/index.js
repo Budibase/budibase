@@ -1,5 +1,5 @@
 const { DocumentTypes } = require("../db/constants")
-const { getGlobalDB } = require("../tenancy")
+const { getGlobalDB, getTenantId } = require("../tenancy")
 
 exports.MIGRATION_DBS = {
   GLOBAL_DB: "GLOBAL_DB",
@@ -7,11 +7,13 @@ exports.MIGRATION_DBS = {
 
 exports.MIGRATIONS = {
   USER_EMAIL_VIEW_CASING: "user_email_view_casing",
+  QUOTAS_1: "quotas_1",
 }
 
 const DB_LOOKUP = {
   [exports.MIGRATION_DBS.GLOBAL_DB]: [
     exports.MIGRATIONS.USER_EMAIL_VIEW_CASING,
+    exports.MIGRATIONS.QUOTAS_1,
   ],
 }
 
@@ -27,6 +29,7 @@ exports.getMigrationsDoc = async db => {
 }
 
 exports.migrateIfRequired = async (migrationDb, migrationName, migrateFn) => {
+  const tenantId = getTenantId()
   try {
     let db
     if (migrationDb === exports.MIGRATION_DBS.GLOBAL_DB) {
@@ -47,15 +50,18 @@ exports.migrateIfRequired = async (migrationDb, migrationName, migrateFn) => {
       return
     }
 
-    console.log(`Performing migration: ${migrationName}`)
+    console.log(`[Tenant: ${tenantId}] Performing migration: ${migrationName}`)
     await migrateFn()
-    console.log(`Migration complete: ${migrationName}`)
+    console.log(`[Tenant: ${tenantId}] Migration complete: ${migrationName}`)
 
     // mark as complete
     doc[migrationName] = Date.now()
     await db.put(doc)
   } catch (err) {
-    console.error(`Error performing migration: ${migrationName}: `, err)
+    console.error(
+      `[Tenant: ${tenantId}] Error performing migration: ${migrationName}: `,
+      err
+    )
     throw err
   }
 }

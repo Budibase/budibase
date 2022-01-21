@@ -110,12 +110,6 @@ export default class DataFetch {
    */
   async getInitialData() {
     const { datasource, filter, sortColumn, paginate } = this.options
-    const tableId = datasource?.tableId
-
-    // Ensure table ID exists
-    if (!tableId) {
-      return
-    }
 
     // Fetch datasource definition and determine feature flags
     const definition = await this.constructor.getDefinition(datasource)
