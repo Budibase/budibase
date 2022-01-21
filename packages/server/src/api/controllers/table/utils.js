@@ -4,6 +4,8 @@ const {
   getRowParams,
   generateRowID,
   InternalTables,
+  getTableParams,
+  BudibaseInternalDB,
 } = require("../../../db/utils")
 const { isEqual } = require("lodash/fp")
 const { AutoFieldSubTypes, FieldTypes } = require("../../../constants")
@@ -230,8 +232,26 @@ class TableSaveFunctions {
   }
 }
 
-exports.getAllExternalTables = async (appId, datasourceId) => {
-  const db = new CouchDB(appId)
+exports.getAllInternalTables = async ({ db, appId }) => {
+  if (appId && !db) {
+    db = new CouchDB(appId)
+  }
+  const internalTables = await db.allDocs(
+    getTableParams(null, {
+      include_docs: true,
+    })
+  )
+  return internalTables.rows.map(tableDoc => ({
+    ...tableDoc.doc,
+    type: "internal",
+    sourceId: BudibaseInternalDB._id,
+  }))
+}
+
+exports.getAllExternalTables = async ({ db, appId }, datasourceId) => {
+  if (appId && !db) {
+    db = new CouchDB(appId)
+  }
   const datasource = await db.get(datasourceId)
   if (!datasource || !datasource.entities) {
     throw "Datasource is not configured fully."
@@ -240,7 +260,7 @@ exports.getAllExternalTables = async (appId, datasourceId) => {
 }
 
 exports.getExternalTable = async (appId, datasourceId, tableName) => {
-  const entities = await exports.getAllExternalTables(appId, datasourceId)
+  const entities = await exports.getAllExternalTables({ appId }, datasourceId)
   return entities[tableName]
 }
 

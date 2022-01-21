@@ -3,12 +3,8 @@ const internal = require("./internal")
 const external = require("./external")
 const csvParser = require("../../../utilities/csvParser")
 const { isExternalTable, isSQL } = require("../../../integrations/utils")
-const {
-  getTableParams,
-  getDatasourceParams,
-  BudibaseInternalDB,
-} = require("../../../db/utils")
-const { getTable } = require("./utils")
+const { getDatasourceParams } = require("../../../db/utils")
+const { getTable, getAllInternalTables } = require("./utils")
 
 function pickApi({ tableId, table }) {
   if (table && !tableId) {
@@ -26,17 +22,7 @@ function pickApi({ tableId, table }) {
 exports.fetch = async function (ctx) {
   const db = new CouchDB(ctx.appId)
 
-  const internalTables = await db.allDocs(
-    getTableParams(null, {
-      include_docs: true,
-    })
-  )
-
-  const internal = internalTables.rows.map(tableDoc => ({
-    ...tableDoc.doc,
-    type: "internal",
-    sourceId: BudibaseInternalDB._id,
-  }))
+  const internal = await getAllInternalTables({ db })
 
   const externalTables = await db.allDocs(
     getDatasourceParams("plus", {

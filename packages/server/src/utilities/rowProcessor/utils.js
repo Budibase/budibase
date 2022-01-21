@@ -4,10 +4,15 @@ const { processStringSync } = require("@budibase/string-templates")
 /**
  * Looks through the rows provided and finds formulas - which it then processes.
  */
-exports.processFormulas = (table, rows, { dynamic } = { dynamic: true }) => {
+exports.processFormulas = (
+  table,
+  rows,
+  { dynamic, contextRows } = { dynamic: true }
+) => {
   const single = !Array.isArray(rows)
   if (single) {
     rows = [rows]
+    contextRows = contextRows ? [contextRows] : contextRows
   }
   for (let [column, schema] of Object.entries(table.schema)) {
     const isStatic = schema.formulaType === FormulaTypes.STATIC
@@ -19,10 +24,14 @@ exports.processFormulas = (table, rows, { dynamic } = { dynamic: true }) => {
       continue
     }
     // iterate through rows and process formula
-    rows = rows.map(row => ({
-      ...row,
-      [column]: processStringSync(schema.formula, row),
-    }))
+    for (let i = 0; i < rows.length; i++) {
+      let row = rows[i]
+      let context = contextRows ? contextRows[i] : row
+      rows[i] = {
+        ...row,
+        [column]: processStringSync(schema.formula, context),
+      }
+    }
   }
   return single ? rows[0] : rows
 }

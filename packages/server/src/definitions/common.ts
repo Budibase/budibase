@@ -17,6 +17,8 @@ export interface FieldSchema {
   autocolumn?: boolean
   throughFrom?: string
   throughTo?: string
+  formula?: string
+  formulaType?: string
   main?: boolean
   meta?: {
     toTable: string
@@ -46,6 +48,7 @@ export interface Table extends Base {
   schema: TableSchema
   primaryDisplay?: string
   sourceId?: string
+  relatedFormula?: string[]
   constrained?: string[]
 }
 

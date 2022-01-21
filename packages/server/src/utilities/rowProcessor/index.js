@@ -180,6 +180,8 @@ function processAutoColumn(
 }
 exports.processAutoColumn = processAutoColumn
 
+exports.processFormulas = processFormulas
+
 /**
  * This will coerce a value to the correct types based on the type transform map
  * @param {object} row The value to coerce
@@ -243,9 +245,6 @@ exports.inputProcessing = (
     clonedRow._id = row._id
     clonedRow._rev = row._rev
   }
-
-  // now process the static formulas
-  clonedRow = processFormulas(table, clonedRow, { dynamic: false })
 
   // handle auto columns - this returns an object like {table, row}
   return processAutoColumn(user, copiedTable, clonedRow, opts)
