@@ -1,3 +1,4 @@
+// eslint-disable-next-line
 const breweries = data
 const totals = {}
 
