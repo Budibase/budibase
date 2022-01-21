@@ -153,8 +153,15 @@ export function isIsoDateString(str: string) {
  * @param column The column to check, to see if it is a valid relationship.
  * @param tableIds The IDs of the tables which currently exist.
  */
-function shouldCopyRelationship(column: { type: string, tableId?: string }, tableIds: [string]) {
-  return column.type === FieldTypes.LINK && column.tableId && tableIds.includes(column.tableId)
+function shouldCopyRelationship(
+  column: { type: string; tableId?: string },
+  tableIds: [string]
+) {
+  return (
+    column.type === FieldTypes.LINK &&
+    column.tableId &&
+    tableIds.includes(column.tableId)
+  )
 }
 
 /**
@@ -165,9 +172,15 @@ function shouldCopyRelationship(column: { type: string, tableId?: string }, tabl
  * @param column The column to check for options or boolean type.
  * @param fetchedColumn The fetched column to check for the type in the external database.
  */
-function shouldCopySpecialColumn(column: { type: string }, fetchedColumn: { type: string } | undefined) {
-  return column.type === FieldTypes.OPTIONS ||
-    ((!fetchedColumn || fetchedColumn.type === FieldTypes.NUMBER) && column.type === FieldTypes.BOOLEAN)
+function shouldCopySpecialColumn(
+  column: { type: string },
+  fetchedColumn: { type: string } | undefined
+) {
+  return (
+    column.type === FieldTypes.OPTIONS ||
+    ((!fetchedColumn || fetchedColumn.type === FieldTypes.NUMBER) &&
+      column.type === FieldTypes.BOOLEAN)
+  )
 }
 
 /**
