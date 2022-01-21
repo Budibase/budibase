@@ -1,7 +1,7 @@
 {
   "name": "@budibase/worker",
   "email": "hi@budibase.com",
-  "version": "1.0.44-alpha.1",
+  "version": "1.0.23-alpha.2",
   "description": "Budibase background service",
   "main": "src/index.js",
   "repository": {
