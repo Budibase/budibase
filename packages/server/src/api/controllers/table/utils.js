@@ -16,6 +16,7 @@ const {
 } = require("../../../integrations/utils")
 const { getViews, saveView } = require("../view/utils")
 const viewTemplate = require("../view/viewBuilder")
+const usageQuota = require("../../../utilities/usageQuota")
 
 exports.checkForColumnUpdates = async (db, oldTable, updatedTable) => {
   let updatedRows = []
@@ -112,7 +113,11 @@ exports.handleDataImport = async (appId, user, table, dataImport) => {
     finalData.push(row)
   }
 
+  await usageQuota.update(usageQuota.Properties.ROW, finalData.length, {
+    dryRun: true,
+  })
   await db.bulkDocs(finalData)
+  await usageQuota.update(usageQuota.Properties.ROW, finalData.length)
   let response = await db.put(table)
   table._rev = response._rev
   return table
