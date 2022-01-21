@@ -450,7 +450,7 @@ async function getScopedConfig(db, params) {
 
 function generateNewUsageQuotaDoc() {
   return {
-    _id: StaticDatabases.PLATFORM_INFO.docs.usageQuota,
+    _id: StaticDatabases.GLOBAL.docs.usageQuota,
     quotaReset: Date.now() + 2592000000,
     usageQuota: {
       automationRuns: 0,

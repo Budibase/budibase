@@ -7,7 +7,7 @@ const processJS = (js, context) => {
 describe("Test the JavaScript helper", () => {
   it("should execute a simple expression", () => {
     const output = processJS(`return 1 + 2`)
-    expect(output).toBe("3")
+    expect(output).toBe(3)
   })
 
   it("should be able to use primitive bindings", () => {
@@ -48,6 +48,52 @@ describe("Test the JavaScript helper", () => {
       },
     })
     expect(output).toBe("shazbat")
+  })
+
+  it("should be able to return an object", () => {
+    const output = processJS(`return $("foo")`, {
+      foo: {
+        bar: {
+          baz: "shazbat",
+        },
+      },
+    })
+    expect(output.bar.baz).toBe("shazbat")
+  })
+
+  it("should be able to return an array", () => {
+    const output = processJS(`return $("foo")`, {
+      foo: ["a", "b", "c"],
+    })
+    expect(output[2]).toBe("c")
+  })
+
+  it("should be able to return null", () => {
+    const output = processJS(`return $("foo")`, {
+      foo: null,
+    })
+    expect(output).toBe(null)
+  })
+
+  it("should be able to return undefined", () => {
+    const output = processJS(`return $("foo")`, {
+      foo: undefined,
+    })
+    expect(output).toBe(undefined)
+  })
+
+  it("should be able to return 0", () => {
+    const output = processJS(`return $("foo")`, {
+      foo: 0,
+    })
+    expect(output).toBe(0)
+  })
+
+  it("should be able to return an empty string", () => {
+    const output = processJS(`return $("foo")`, {
+      foo: "",
+    })
+    expect(output).toBe("")
   })
 
   it("should be able to use a deep array binding", () => {
