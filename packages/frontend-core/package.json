@@ -1,6 +1,6 @@
 {
   "name": "@budibase/frontend-core",
-  "version": "1.0.46-alpha.0",
+  "version": "1.0.46-alpha.3",
   "description": "Budibase frontend core libraries used in builder and client",
   "author": "Budibase",
   "license": "GPL-3.0",
