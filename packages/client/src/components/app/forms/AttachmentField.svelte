@@ -7,6 +7,7 @@
   export let label
   export let disabled = false
   export let validation
+  export let extensions
 
   let fieldState
   let fieldApi
@@ -52,6 +53,7 @@
       }}
       {processFiles}
       {handleFileTooLarge}
+      {extensions}
     />
   {/if}
 </Field>
