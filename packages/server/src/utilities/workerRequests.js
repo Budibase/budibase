@@ -71,7 +71,7 @@ exports.getDeployedApps = async () => {
     for (let [key, value] of Object.entries(json)) {
       if (value.url) {
         value.url = value.url.toLowerCase()
-        apps[key] = value
+        apps[key.toLowerCase()] = value
       }
     }
     return apps

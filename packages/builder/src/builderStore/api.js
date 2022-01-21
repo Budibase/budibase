@@ -6,6 +6,7 @@ const apiCall =
   method =>
   async (url, body, headers = { "Content-Type": "application/json" }) => {
     headers["x-budibase-app-id"] = svelteGet(store).appId
+    headers["x-budibase-api-version"] = "1"
     const json = headers["Content-Type"] === "application/json"
     const resp = await fetch(url, {
       method: method,
