@@ -53,16 +53,23 @@
     }
 
     // Create table
-    const table = await tables.save(newTable)
-    notifications.success(`Table ${name} created successfully.`)
-    analytics.captureEvent(Events.TABLE.CREATED, { name })
+    let table
+    try {
+      table = await tables.save(newTable)
+      notifications.success(`Table ${name} created successfully.`)
+      analytics.captureEvent(Events.TABLE.CREATED, { name })
 
-    // Navigate to new table
-    const currentUrl = $url()
-    const path = currentUrl.endsWith("data")
-      ? `./table/${table._id}`
-      : `../../table/${table._id}`
-    $goto(path)
+      // Navigate to new table
+      const currentUrl = $url()
+      const path = currentUrl.endsWith("data")
+        ? `./table/${table._id}`
+        : `../../table/${table._id}`
+      $goto(path)
+    } catch (e) {
+      notifications.error(e)
+      // reload in case the table was created
+      await tables.fetch()
+    }
   }
 </script>
 
