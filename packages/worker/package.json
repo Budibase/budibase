@@ -47,7 +47,7 @@
     "koa-send": "^5.0.0",
     "koa-session": "^5.12.0",
     "koa-static": "^5.0.0",
-    "node-fetch": "^2.6.1",
+    "node-fetch": "^3.1.1",
     "nodemailer": "^6.5.0",
     "passport-google-oauth": "^2.0.0",
     "passport-jwt": "^4.0.0",
