@@ -75,7 +75,7 @@
 
       draftScreen.routing.route = route
 
-      await store.actions.screens.create(draftScreen)
+      await store.actions.screens.save(draftScreen)
       if (draftScreen.props._instanceName.endsWith("List")) {
         try {
           await store.actions.components.links.save(
