@@ -66,7 +66,8 @@
         await validateTenantId()
       }
     } catch (error) {
-      notifications.error("Error initialising builder")
+      // Don't show a notification here, as we might 403 initially due to not
+      // being logged in
     }
     loaded = true
   })
