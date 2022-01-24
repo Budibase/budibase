@@ -28,7 +28,6 @@ import {
 } from "../componentUtils"
 import { Helpers } from "@budibase/bbui"
 import { removeBindings } from "../dataBinding"
-import { notifications } from "@budibase/bbui"
 
 const INITIAL_FRONTEND_STATE = {
   apps: [],
@@ -159,21 +158,6 @@ export const getFrontendStore = () => {
           state.selectedComponentId = screen.props?._id
           return state
         })
-      },
-      create: async screen => {
-        const savedScreen = await API.saveScreen(screen)
-        store.update(state => {
-          state.screens.push(savedScreen)
-          state.selectedScreenId = savedScreen._id
-          state.selectedComponentId = savedScreen.props._id
-          state.currentFrontEndType = FrontendTypes.SCREEN
-          selectedAccessRole.set(savedScreen.routing.roleId)
-          return state
-        })
-
-        // Refresh routes
-        await store.actions.routing.fetch()
-        return savedScreen
       },
       save: async screen => {
         const creatingNewScreen = screen._id === undefined
@@ -431,24 +415,19 @@ export const getFrontendStore = () => {
         parentComponent._children.push(componentInstance)
 
         // Save components and update UI
-        const savedAsset = await store.actions.preview.saveSelected()
-        if (savedAsset) {
-          store.update(state => {
-            state.currentView = "component"
-            state.selectedComponentId = componentInstance._id
-            return state
-          })
+        await store.actions.preview.saveSelected()
+        store.update(state => {
+          state.currentView = "component"
+          state.selectedComponentId = componentInstance._id
+          return state
+        })
 
-          // Log event
-          analytics.captureEvent(Events.COMPONENT.CREATED, {
-            name: componentInstance._component,
-          })
+        // Log event
+        analytics.captureEvent(Events.COMPONENT.CREATED, {
+          name: componentInstance._component,
+        })
 
-          return componentInstance
-        } else {
-          notifications.error("Failed to create component")
-          return null
-        }
+        return componentInstance
       },
       delete: async component => {
         if (!component) {
