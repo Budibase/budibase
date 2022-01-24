@@ -76,6 +76,7 @@ export const buildAppEndpoints = API => ({
     return await API.post({
       url: "/api/applications",
       body: app,
+      json: false,
     })
   },
 
