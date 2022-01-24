@@ -40,4 +40,18 @@ export const buildRowEndpoints = API => ({
       },
     })
   },
+
+  /**
+   * Deletes multiple rows from a table.
+   * @param tableId the table ID to delete the rows from
+   * @param rows the array of rows to delete
+   */
+  deleteRows: async ({ tableId, rows }) => {
+    return await API.delete({
+      url: `/api/${tableId}/rows`,
+      body: {
+        rows,
+      },
+    })
+  },
 })

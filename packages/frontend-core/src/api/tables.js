@@ -48,4 +48,35 @@ export const buildTableEndpoints = API => ({
       },
     })
   },
+
+  /**
+   * Imports data into an existing table
+   * @param tableId the table ID to import to
+   * @param data the data import object
+   */
+  importTableData: async ({ tableId, data }) => {
+    return await API.post({
+      url: `/api/tables/${tableId}/import`,
+      body: {
+        dataImport: data,
+      },
+    })
+  },
+
+  /**
+   * Validates a candidate CSV to be imported for a certain table.
+   * @param tableId the table ID to import to
+   * @param csvString the CSV contents as a string
+   * @param schema the proposed schema
+   */
+  validateTableCSV: async ({ tableId, csvString, schema }) => {
+    return await API.post({
+      url: "/api/tables/csv/validate",
+      body: {
+        csvString,
+        schema,
+        tableId,
+      },
+    })
+  },
 })

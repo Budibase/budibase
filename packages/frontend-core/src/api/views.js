@@ -16,4 +16,19 @@ export const buildViewEndpoints = API => ({
       : `/api/views/${name}`
     return await API.get({ url: QUERY_VIEW_URL })
   },
+
+  /**
+   * Exports a view for download
+   * @param viewName the view to export
+   * @param format the format to download
+   */
+  exportView: async ({ viewName, format }) => {
+    const safeViewName = encodeURIComponent(viewName)
+    return await API.get({
+      url: `/api/views/export?view=${safeViewName}&format=${format}`,
+      parseResponse: async response => {
+        return await response.text()
+      },
+    })
+  },
 })

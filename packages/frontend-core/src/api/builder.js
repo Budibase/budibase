@@ -27,4 +27,13 @@ export const buildBuilderEndpoints = API => ({
       url: "/api/dev/version",
     })
   },
+
+  /**
+   * Gets the base permissions for roles.
+   */
+  getBasePermissions: async () => {
+    return await API.get({
+      url: "/api/permission/builtin",
+    })
+  },
 })

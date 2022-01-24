@@ -2,7 +2,7 @@
   import { fade } from "svelte/transition"
   import { goto, params } from "@roxi/routify"
   import { Table, Modal, Heading, notifications, Layout } from "@budibase/bbui"
-  import api from "builderStore/api"
+  import { API } "api"
   import Spinner from "components/common/Spinner.svelte"
   import DeleteRowsButton from "./buttons/DeleteRowsButton.svelte"
   import CreateEditRow from "./modals/CreateEditRow.svelte"
@@ -88,12 +88,17 @@
   }
 
   const deleteRows = async () => {
-    await api.delete(`/api/${tableId}/rows`, {
-      rows: selectedRows,
-    })
-    data = data.filter(row => !selectedRows.includes(row))
-    notifications.success(`Successfully deleted ${selectedRows.length} rows`)
-    selectedRows = []
+    try {
+      await API.deleteRows({
+        tableId,
+        rows: selectedRows
+      })
+      data = data.filter(row => !selectedRows.includes(row))
+      notifications.success(`Successfully deleted ${selectedRows.length} rows`)
+      selectedRows = []
+    } catch (error) {
+      notifications.error("Error deleting rows")
+    }
   }
 
   const editRow = row => {
