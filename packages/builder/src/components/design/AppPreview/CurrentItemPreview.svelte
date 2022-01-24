@@ -146,44 +146,49 @@
     }
   })
 
-  const handleBudibaseEvent = event => {
+  const handleBudibaseEvent = async event => {
     const { type, data } = event.data || event.detail
     if (!type) {
       return
     }
 
-    if (type === "select-component" && data.id) {
-      store.actions.components.select({ _id: data.id })
-    } else if (type === "update-prop") {
-      store.actions.components.updateProp(data.prop, data.value)
-    } else if (type === "delete-component" && data.id) {
-      confirmDeleteComponent(data.id)
-    } else if (type === "preview-loaded") {
-      // Wait for this event to show the client library if intelligent
-      // loading is supported
-      loading = false
-    } else if (type === "move-component") {
-      const { componentId, destinationComponentId } = data
-      const rootComponent = get(currentAsset).props
+    try {
+      if (type === "select-component" && data.id) {
+        store.actions.components.select({ _id: data.id })
+      } else if (type === "update-prop") {
+        await store.actions.components.updateProp(data.prop, data.value)
+      } else if (type === "delete-component" && data.id) {
+        confirmDeleteComponent(data.id)
+      } else if (type === "preview-loaded") {
+        // Wait for this event to show the client library if intelligent
+        // loading is supported
+        loading = false
+      } else if (type === "move-component") {
+        const { componentId, destinationComponentId } = data
+        const rootComponent = get(currentAsset).props
 
-      // Get source and destination components
-      const source = findComponent(rootComponent, componentId)
-      const destination = findComponent(rootComponent, destinationComponentId)
+        // Get source and destination components
+        const source = findComponent(rootComponent, componentId)
+        const destination = findComponent(rootComponent, destinationComponentId)
 
-      // Stop if the target is a child of source
-      const path = findComponentPath(source, destinationComponentId)
-      const ids = path.map(component => component._id)
-      if (ids.includes(data.destinationComponentId)) {
-        return
+        // Stop if the target is a child of source
+        const path = findComponentPath(source, destinationComponentId)
+        const ids = path.map(component => component._id)
+        if (ids.includes(data.destinationComponentId)) {
+          return
+        }
+
+        // Cut and paste the component to the new destination
+        if (source && destination) {
+          store.actions.components.copy(source, true)
+          await store.actions.components.paste(destination, data.mode)
+        }
+      } else {
+        console.warn(`Client sent unknown event type: ${type}`)
       }
-
-      // Cut and paste the component to the new destination
-      if (source && destination) {
-        store.actions.components.copy(source, true)
-        store.actions.components.paste(destination, data.mode)
-      }
-    } else {
-      console.warn(`Client sent unknown event type: ${type}`)
+    } catch (error) {
+      console.warn(error)
+      notifications.error("Error handling event from app preview")
     }
   }
 
@@ -196,7 +201,7 @@
     try {
       await store.actions.components.delete({ _id: idToDelete })
     } catch (error) {
-      notifications.error(error)
+      notifications.error("Error deleting component")
     }
     idToDelete = null
   }
