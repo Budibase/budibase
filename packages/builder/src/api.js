@@ -3,7 +3,7 @@ import {
   CookieUtils,
   Constants,
 } from "@budibase/frontend-core"
-import { store } from "./index"
+import { store } from "./builderStore"
 import { get } from "svelte/store"
 
 export const API = createAPIClient({
@@ -25,7 +25,7 @@ export const API = createAPIClient({
     }
 
     // Log all errors to console
-    console.error(`HTTP ${status} on ${method}:${url}:\n\t${message}`)
+    console.error(`HTTP ${status} on ${method}:${url}\n\t${message}`)
 
     // Logout on 403's
     if (status === 403) {

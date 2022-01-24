@@ -50,7 +50,7 @@
         "Another app with the same name already exists",
         value => {
           return !existingAppNames.some(
-            appName => appName.toLowerCase() === value.toLowerCase()
+            appName => appName?.toLowerCase() === value.toLowerCase()
           )
         }
       )
@@ -67,7 +67,7 @@
     try {
       await obj.validate(values, { abortEarly: false })
     } catch (validationErrors) {
-      validationErrors.inner.forEach(error => {
+      validationErrors.inner?.forEach(error => {
         $errors[error.path] = capitalise(error.message)
       })
     }

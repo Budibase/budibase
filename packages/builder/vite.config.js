@@ -58,7 +58,7 @@ export default ({ mode }) => {
         },
         {
           find: "api",
-          replacement: path.resolve("./src/builderStore/api.js"),
+          replacement: path.resolve("./src/api.js"),
         },
         {
           find: "constants",

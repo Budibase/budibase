@@ -66,13 +66,13 @@ export const createAPIClient = config => {
   }
 
   // Generates an error object from a string
-  const makeError = message => {
+  const makeError = (message, request) => {
     return {
       message,
       json: null,
       status: 400,
-      url: "",
-      method: "",
+      url: request?.url,
+      method: request?.method,
       handled: true,
     }
   }
@@ -106,7 +106,7 @@ export const createAPIClient = config => {
       try {
         requestBody = JSON.stringify(body)
       } catch (error) {
-        throw makeError("Invalid JSON body")
+        throw makeError("Invalid JSON body", { url, method })
       }
     }
 
@@ -120,7 +120,7 @@ export const createAPIClient = config => {
         credentials: "same-origin",
       })
     } catch (error) {
-      throw makeError("Failed to send request")
+      throw makeError("Failed to send request", { url, method })
     }
 
     // Handle response
