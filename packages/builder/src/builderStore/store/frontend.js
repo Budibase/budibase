@@ -109,9 +109,11 @@ export const getFrontendStore = () => {
     theme: {
       save: async theme => {
         const appId = get(store).appId
-        const metadata = { appId, theme }
         try {
-          await API.saveAppMetadata(metadata)
+          await API.saveAppMetadata({
+            appId,
+            metadata: { theme },
+          })
           store.update(state => {
             state.theme = theme
             return state
@@ -124,9 +126,11 @@ export const getFrontendStore = () => {
     customTheme: {
       save: async customTheme => {
         const appId = get(store).appId
-        const metadata = { appId, customTheme }
         try {
-          await API.saveAppMetadata(metadata)
+          await API.saveAppMetadata({
+            appId,
+            metadata: { customTheme },
+          })
           store.update(state => {
             state.customTheme = customTheme
             return state

@@ -139,7 +139,6 @@
       $goto(`/builder/app/${createdApp.instance._id}`)
     } catch (error) {
       notifications.error("Error creating app")
-      console.error(error)
     }
   }
 
@@ -248,17 +247,23 @@
   }
 
   onMount(async () => {
-    await apps.load()
-    await templates.load()
-    if ($templates?.length === 0) {
-      notifications.error("There was a problem loading quick start templates.")
-    }
-    // if the portal is loaded from an external URL with a template param
-    const initInfo = await auth.getInitInfo()
-    if (initInfo?.init_template) {
-      creatingFromTemplate = true
-      createAppFromTemplateUrl(initInfo.init_template)
-      return
+    try {
+      await apps.load()
+      await templates.load()
+      if ($templates?.length === 0) {
+        notifications.error(
+          "There was a problem loading quick start templates."
+        )
+      }
+      // If the portal is loaded from an external URL with a template param
+      const initInfo = await auth.getInitInfo()
+      if (initInfo?.init_template) {
+        creatingFromTemplate = true
+        createAppFromTemplateUrl(initInfo.init_template)
+        return
+      }
+    } catch (error) {
+      notifications.error("Error loading apps and templates")
     }
     loaded = true
   })

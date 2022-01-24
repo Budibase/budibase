@@ -23,65 +23,37 @@ export function createAdminStore() {
   const admin = writable(DEFAULT_CONFIG)
 
   async function init() {
-    try {
-      const tenantId = get(auth).tenantId
-      const checklist = await API.getChecklist(tenantId)
-      const totalSteps = Object.keys(checklist).length
-      const completedSteps = Object.values(checklist).filter(
-        x => x?.checked
-      ).length
-      await getEnvironment()
-      admin.update(store => {
-        store.loaded = true
-        store.checklist = checklist
-        store.onboardingProgress = (completedSteps / totalSteps) * 100
-        return store
-      })
-    } catch (error) {
-      admin.update(store => {
-        store.checklist = null
-        return store
-      })
-    }
+    const tenantId = get(auth).tenantId
+    const checklist = await API.getChecklist(tenantId)
+    const totalSteps = Object.keys(checklist).length
+    const completedSteps = Object.values(checklist).filter(
+      x => x?.checked
+    ).length
+    await getEnvironment()
+    admin.update(store => {
+      store.loaded = true
+      store.checklist = checklist
+      store.onboardingProgress = (completedSteps / totalSteps) * 100
+      return store
+    })
   }
 
   async function checkImportComplete() {
-    try {
-      const result = await API.checkImportComplete()
-      admin.update(store => {
-        store.importComplete = result ? result.imported : false
-        return store
-      })
-    } catch (error) {
-      admin.update(store => {
-        store.importComplete = false
-        return store
-      })
-    }
+    const result = await API.checkImportComplete()
+    admin.update(store => {
+      store.importComplete = result ? result.imported : false
+      return store
+    })
   }
 
   async function getEnvironment() {
-    let multiTenancyEnabled = false
-    let cloud = false
-    let disableAccountPortal = false
-    let accountPortalUrl = ""
-    let isDev = false
-    try {
-      const environment = await API.getEnvironment()
-      multiTenancyEnabled = environment.multiTenancy
-      cloud = environment.cloud
-      disableAccountPortal = environment.disableAccountPortal
-      accountPortalUrl = environment.accountPortalUrl
-      isDev = environment.isDev
-    } catch (err) {
-      // Just let it stay disabled
-    }
+    const environment = await API.getEnvironment()
     admin.update(store => {
-      store.multiTenancy = multiTenancyEnabled
-      store.cloud = cloud
-      store.disableAccountPortal = disableAccountPortal
-      store.accountPortalUrl = accountPortalUrl
-      store.isDev = isDev
+      store.multiTenancy = environment.multiTenancy
+      store.cloud = environment.cloud
+      store.disableAccountPortal = environment.disableAccountPortal
+      store.accountPortalUrl = environment.accountPortalUrl
+      store.isDev = environment.isDev
       return store
     })
   }

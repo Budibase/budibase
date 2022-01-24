@@ -3,6 +3,7 @@
   import { admin, auth } from "stores/portal"
   import { onMount } from "svelte"
   import { CookieUtils, Constants } from "@budibase/frontend-core"
+  import { notifications } from "@budibase/bbui"
 
   let loaded = false
 
@@ -41,9 +42,12 @@
 
       if (user.tenantId !== urlTenantId) {
         // user should not be here - play it safe and log them out
-        await auth.logout()
-        await auth.setOrganisation(null)
-        return
+        try {
+          await auth.logout()
+          await auth.setOrganisation(null)
+        } catch (error) {
+          // Swallow error and do nothing
+        }
       }
     } else {
       // no user - set the org according to the url
@@ -52,17 +56,18 @@
   }
 
   onMount(async () => {
-    if ($params["?template"]) {
-      await auth.setInitInfo({ init_template: $params["?template"] })
+    try {
+      if ($params["?template"]) {
+        await auth.setInitInfo({ init_template: $params["?template"] })
+      }
+      await auth.checkAuth()
+      await admin.init()
+      if (useAccountPortal && multiTenancyEnabled) {
+        await validateTenantId()
+      }
+    } catch (error) {
+      notifications.error("Error initialising builder")
     }
-
-    await auth.checkAuth()
-    await admin.init()
-
-    if (useAccountPortal && multiTenancyEnabled) {
-      await validateTenantId()
-    }
-
     loaded = true
   })
 

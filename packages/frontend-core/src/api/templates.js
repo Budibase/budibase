@@ -25,4 +25,13 @@ export const buildTemplateEndpoints = API => ({
       },
     })
   },
+
+  /**
+   * Gets a list of app templates.
+   */
+  getAppTemplates: async () => {
+    return await API.get({
+      url: "/api/templates?type=app",
+    })
+  },
 })

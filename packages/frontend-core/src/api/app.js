@@ -10,14 +10,12 @@ export const buildAppEndpoints = API => ({
 
   /**
    * Saves and patches metadata about an app.
+   * @param appId the ID of the app to update
    * @param metadata the app metadata to save
    */
-  saveAppMetadata: async metadata => {
-    if (!metadata?.appId) {
-      throw API.error("App metadata must have an appId set")
-    }
+  saveAppMetadata: async ({ appId, metadata }) => {
     return await API.put({
-      url: `/api/applications/${metadata.appId}`,
+      url: `/api/applications/${appId}`,
       body: metadata,
     })
   },
@@ -130,6 +128,15 @@ export const buildAppEndpoints = API => ({
   syncApp: async appId => {
     return await API.post({
       url: `/api/applications/${appId}/sync`,
+    })
+  },
+
+  /**
+   * Gets a list of apps.
+   */
+  getApps: async () => {
+    return await API.get({
+      url: "/api/applications?status=all",
     })
   },
 })

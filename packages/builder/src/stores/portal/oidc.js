@@ -11,10 +11,11 @@ const OIDC_CONFIG = {
 export function createOidcStore() {
   const store = writable(OIDC_CONFIG)
   const { set, subscribe } = store
-
-  async function init() {
-    const tenantId = get(auth).tenantId
-    try {
+  return {
+    subscribe,
+    set,
+    init: async () => {
+      const tenantId = get(auth).tenantId
       const config = await API.getOIDCConfig(tenantId)
       if (Object.keys(config || {}).length) {
         // Just use the first config for now.
@@ -23,15 +24,7 @@ export function createOidcStore() {
       } else {
         set(OIDC_CONFIG)
       }
-    } catch (error) {
-      set(OIDC_CONFIG)
-    }
-  }
-
-  return {
-    subscribe,
-    set,
-    init,
+    },
   }
 }
 

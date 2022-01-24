@@ -80,8 +80,7 @@
       await apps.update(app.instance._id, { name: $values.name.trim() })
       hide()
     } catch (error) {
-      console.error(error)
-      notifications.error(error)
+      notifications.error("Error updating app")
     }
   }
 

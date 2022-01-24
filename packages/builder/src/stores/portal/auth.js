@@ -1,5 +1,5 @@
 import { derived, writable, get } from "svelte/store"
-import api from "../../builderStore/api"
+import { API } from "api"
 import { admin } from "stores/portal"
 import analytics from "analytics"
 
@@ -83,7 +83,7 @@ export function createAuthStore() {
   }
 
   async function setInitInfo(info) {
-    await api.post(`/api/global/auth/init`, info)
+    await API.setInitInfo(info)
     auth.update(store => {
       store.initInfo = info
       return store
@@ -99,13 +99,12 @@ export function createAuthStore() {
   }
 
   async function getInitInfo() {
-    const response = await api.get(`/api/global/auth/init`)
-    const json = response.json()
+    const info = await API.getInitInfo()
     auth.update(store => {
-      store.initInfo = json
+      store.initInfo = info
       return store
     })
-    return json
+    return info
   }
 
   return {
@@ -124,77 +123,43 @@ export function createAuthStore() {
       await setOrganisation(tenantId)
     },
     checkAuth: async () => {
-      const response = await api.get("/api/global/users/self")
-      if (response.status !== 200) {
-        setUser(null)
-      } else {
-        const json = await response.json()
-        setUser(json)
-      }
+      const user = await API.fetchBuilderSelf()
+      setUser(user)
     },
     login: async creds => {
       const tenantId = get(store).tenantId
-      const response = await api.post(
-        `/api/global/auth/${tenantId}/login`,
-        creds
-      )
-      const json = await response.json()
-      if (response.status === 200) {
-        setUser(json.user)
-      } else {
-        throw new Error(json.message ? json.message : "Invalid credentials")
-      }
-      return json
+      const response = await API.logIn({
+        username: creds.username,
+        password: creds.password,
+        tenantId,
+      })
+      setUser(response.user)
     },
     logout: async () => {
-      const response = await api.post(`/api/global/auth/logout`)
-      if (response.status !== 200) {
-        throw "Unable to create logout"
-      }
-      await response.json()
+      await API.logOut()
       await setInitInfo({})
       setUser(null)
       setPostLogout()
     },
     updateSelf: async fields => {
       const newUser = { ...get(auth).user, ...fields }
-      const response = await api.post("/api/global/users/self", newUser)
-      if (response.status === 200) {
-        setUser(newUser)
-      } else {
-        throw "Unable to update user details"
-      }
+      await API.updateSelf(newUser)
+      setUser(newUser)
     },
     forgotPassword: async email => {
       const tenantId = get(store).tenantId
-      const response = await api.post(`/api/global/auth/${tenantId}/reset`, {
+      await API.requestForgotPassword({
+        tenantId,
         email,
       })
-      if (response.status !== 200) {
-        throw "Unable to send email with reset link"
-      }
-      await response.json()
     },
-    resetPassword: async (password, code) => {
+    resetPassword: async (password, resetCode) => {
       const tenantId = get(store).tenantId
-      const response = await api.post(
-        `/api/global/auth/${tenantId}/reset/update`,
-        {
-          password,
-          resetCode: code,
-        }
-      )
-      if (response.status !== 200) {
-        throw "Unable to reset password"
-      }
-      await response.json()
-    },
-    createUser: async user => {
-      const response = await api.post(`/api/global/users`, user)
-      if (response.status !== 200) {
-        throw "Unable to create user"
-      }
-      await response.json()
+      await API.resetPassword({
+        tenantId,
+        password,
+        resetCode,
+      })
     },
   }
 }

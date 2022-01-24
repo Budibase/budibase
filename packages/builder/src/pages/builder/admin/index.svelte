@@ -31,17 +31,21 @@
       adminUser.tenantId = tenantId
       // Save the admin user
       await API.createAdminUser(adminUser)
-      notifications.success(`Admin user created`)
+      notifications.success("Admin user created")
       await admin.init()
       $goto("../portal")
-    } catch (err) {
-      notifications.error(`Failed to create admin user: ${err}`)
+    } catch (error) {
+      notifications.error("Failed to create admin user")
     }
   }
 
   onMount(async () => {
     if (!cloud) {
-      await admin.checkImportComplete()
+      try {
+        await admin.checkImportComplete()
+      } catch (error) {
+        notifications.error("Error checking import status")
+      }
     }
   })
 </script>

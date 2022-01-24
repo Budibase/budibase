@@ -31,7 +31,11 @@
   }
 
   onMount(async () => {
-    await organisation.init()
+    try {
+      await organisation.init()
+    } catch (error) {
+      notifications.error("Error getting org config")
+    }
   })
 </script>
 

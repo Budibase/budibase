@@ -207,15 +207,18 @@
           notifications.success(`Settings saved`)
           analytics.captureEvent(Events.SSO.SAVED)
         })
-        .catch(error => {
-          notifications.error(`Failed to update auth settings`)
-          console.error(error.message)
+        .catch(() => {
+          notifications.error("Failed to update auth settings")
         })
     }
   }
 
   onMount(async () => {
-    await organisation.init()
+    try {
+      await organisation.init()
+    } catch (error) {
+      notifications.error("Error getting org config")
+    }
 
     // Fetch Google config
     let googleDoc
