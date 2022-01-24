@@ -224,15 +224,13 @@ module.exports.decodeJSBinding = handlebars => {
 }
 
 /**
- * This function looks in the supplied template for handlebars instances, if they contain
- * JS the JS will be decoded and then the supplied string will be looked for. For example
- * if the template "Hello, your name is {{ related }}" this function would return that true
- * for the string "related" but not for "name" as it is not within the handlebars statement.
- * @param {string} template A template string to search for handlebars instances.
- * @param {string} string The word or sentence to search for.
- * @returns {boolean} The this return true if the string is found, false if not.
+ * Same as the doesContainString function, but will check for all the strings
+ * before confirming it contains.
+ * @param {string} template The template string to search.
+ * @param {string[]} strings The strings to look for.
+ * @returns {boolean} Will return true if all strings found in HBS statement.
  */
-module.exports.doesContainString = (template, string) => {
+module.exports.doesContainStrings = (template, strings) => {
   let regexp = new RegExp(FIND_HBS_REGEX)
   let matches = template.match(regexp)
   if (matches == null) {
@@ -243,9 +241,28 @@ module.exports.doesContainString = (template, string) => {
     if (exports.isJSBinding(match)) {
       hbs = exports.decodeJSBinding(match)
     }
-    if (hbs.includes(string)) {
+    let allFound = true
+    for (let string of strings) {
+      if (!hbs.includes(string)) {
+        allFound = false
+      }
+    }
+    if (allFound) {
       return true
     }
   }
   return false
+}
+
+/**
+ * This function looks in the supplied template for handlebars instances, if they contain
+ * JS the JS will be decoded and then the supplied string will be looked for. For example
+ * if the template "Hello, your name is {{ related }}" this function would return that true
+ * for the string "related" but not for "name" as it is not within the handlebars statement.
+ * @param {string} template A template string to search for handlebars instances.
+ * @param {string} string The word or sentence to search for.
+ * @returns {boolean} The this return true if the string is found, false if not.
+ */
+module.exports.doesContainString = (template, string) => {
+  return exports.doesContainStrings(template, [string])
 }

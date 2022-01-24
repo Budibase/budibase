@@ -15,6 +15,7 @@ module.exports.processStringSync = templates.processStringSync
 module.exports.processObjectSync = templates.processObjectSync
 module.exports.processString = templates.processString
 module.exports.processObject = templates.processObject
+module.exports.doesContainStrings = templates.doesContainStrings
 module.exports.doesContainString = templates.doesContainString
 
 /**

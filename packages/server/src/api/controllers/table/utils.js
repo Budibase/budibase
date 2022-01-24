@@ -24,8 +24,8 @@ const viewTemplate = require("../view/viewBuilder")
 const usageQuota = require("../../../utilities/usageQuota")
 const { cloneDeep } = require("lodash/fp")
 
-exports.deleteColumn = async (db, table, columns) => {
-  columns.forEach(colName => delete table.schema[colName])
+exports.deleteColumns = async (db, table, columnNames) => {
+  columnNames.forEach(colName => delete table.schema[colName])
   const rows = await db.allDocs(
     getRowParams(table._id, null, {
       include_docs: true,
@@ -34,7 +34,7 @@ exports.deleteColumn = async (db, table, columns) => {
   await db.put(table)
   return db.bulkDocs(
     rows.rows.map(({ doc }) => {
-      columns.forEach(colName => delete doc[colName])
+      columnNames.forEach(colName => delete doc[colName])
       return doc
     })
   )
