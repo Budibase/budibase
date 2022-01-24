@@ -13,6 +13,7 @@ const usageQuota = require("../../../utilities/usageQuota")
 const { doesContainString } = require("@budibase/string-templates")
 const { cloneDeep } = require("lodash/fp")
 const { isEqual } = require("lodash")
+const { cleanupAttachments } = require("../../../utilities/rowProcessor")
 
 /**
  * This function adds a note to related tables that they are
@@ -220,6 +221,7 @@ exports.destroy = async function (ctx) {
 
   // has to run after, make sure it has _id
   await updateRelatedTablesForFormula(db, tableToDelete, { deletion: true })
+  await cleanupAttachments(appId, tableToDelete, { rows })
   return tableToDelete
 }
 
