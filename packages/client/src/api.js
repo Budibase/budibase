@@ -28,7 +28,11 @@ export const API = createAPIClient({
 
     // Notify all errors
     if (message) {
-      notificationStore.actions.error(message)
+      // Don't notify if the URL contains the word analytics as it may be
+      // blocked by browser extensions
+      if (!url?.includes("analytics")) {
+        notificationStore.actions.error(message)
+      }
     }
 
     // Log all errors to console
