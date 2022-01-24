@@ -5,7 +5,6 @@ const {
   isExternalTable,
   isRowId: isExternalRowId,
 } = require("../integrations/utils")
-const migration = require("../migrations/usageQuotas")
 
 // currently only counting new writes and deletes
 const METHOD_MAP = {
@@ -74,7 +73,6 @@ module.exports = async (ctx, next) => {
     usage = files.map(file => file.size).reduce((total, size) => total + size)
   }
   try {
-    await migration.run()
     await performRequest(ctx, next, property, usage)
   } catch (err) {
     ctx.throw(400, err)
