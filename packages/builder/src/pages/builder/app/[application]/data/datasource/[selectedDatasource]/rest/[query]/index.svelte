@@ -112,14 +112,13 @@
       const { _id } = await queries.save(toSave.datasourceId, toSave)
       saveId = _id
       query = getSelectedQuery()
-      notifications.success(`Request saved successfully.`)
-
+      notifications.success(`Request saved successfully`)
       if (dynamicVariables) {
         datasource.config.dynamicVariables = rebuildVariables(saveId)
         datasource = await datasources.save(datasource)
       }
     } catch (err) {
-      notifications.error(`Error saving query. ${err.message}`)
+      notifications.error(`Error saving query`)
     }
   }
 
@@ -127,14 +126,14 @@
     try {
       response = await queries.preview(buildQuery(query))
       if (response.rows.length === 0) {
-        notifications.info("Request did not return any data.")
+        notifications.info("Request did not return any data")
       } else {
         response.info = response.info || { code: 200 }
         schema = response.schema
-        notifications.success("Request sent successfully.")
+        notifications.success("Request sent successfully")
       }
-    } catch (err) {
-      notifications.error(err)
+    } catch (error) {
+      notifications.error("Error running query")
     }
   }
 
@@ -226,10 +225,24 @@
     )
   }
 
+  const updateFlag = async (flag, value) => {
+    try {
+      await flags.updateFlag(flag, value)
+    } catch (error) {
+      notifications.error("Error updating flag")
+    }
+  }
+
   onMount(async () => {
     query = getSelectedQuery()
-    // clear any unsaved changes to the datasource
-    await datasources.init()
+
+    try {
+      // Clear any unsaved changes to the datasource
+      await datasources.init()
+    } catch (error) {
+      notifications.error("Error getting datasources")
+    }
+
     datasource = $datasources.list.find(ds => ds._id === query?.datasourceId)
     const datasourceUrl = datasource?.config.url
     const qs = query?.fields.queryString
@@ -393,8 +406,7 @@
                     window.open(
                       "https://docs.budibase.com/building-apps/data/transformers"
                     )}
-                  on:change={() =>
-                    flags.updateFlag("queryTransformerBanner", true)}
+                  on:change={() => updateFlag("queryTransformerBanner", true)}
                 >
                   Add a JavaScript function to transform the query result.
                 </Banner>
