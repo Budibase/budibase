@@ -122,7 +122,7 @@
       })
       dispatch("updatecolumns")
     } catch (err) {
-      notifications.error(err)
+      notifications.error("Error saving column")
     }
   }
 
@@ -131,17 +131,21 @@
   }
 
   function deleteColumn() {
-    field.name = deleteColName
-    if (field.name === $tables.selected.primaryDisplay) {
-      notifications.error("You cannot delete the display column")
-    } else {
-      tables.deleteField(field)
-      notifications.success(`Column ${field.name} deleted.`)
-      confirmDeleteDialog.hide()
-      hide()
-      deletion = false
+    try {
+      field.name = deleteColName
+      if (field.name === $tables.selected.primaryDisplay) {
+        notifications.error("You cannot delete the display column")
+      } else {
+        tables.deleteField(field)
+        notifications.success(`Column ${field.name} deleted.`)
+        confirmDeleteDialog.hide()
+        hide()
+        deletion = false
+        dispatch("updatecolumns")
+      }
+    } catch (error) {
+      notifications.error("Error deleting column")
     }
-    dispatch("updatecolumns")
   }
 
   function handleTypeChange(event) {

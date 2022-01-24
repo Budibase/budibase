@@ -7,12 +7,8 @@ const createIntegrationsStore = () => {
   return {
     ...store,
     init: async () => {
-      try {
-        const integrations = await API.getIntegrations()
-        store.set(integrations)
-      } catch (error) {
-        store.set(null)
-      }
+      const integrations = await API.getIntegrations()
+      store.set(integrations)
     },
   }
 }

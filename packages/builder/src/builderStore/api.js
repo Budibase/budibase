@@ -5,7 +5,6 @@ import {
 } from "@budibase/frontend-core"
 import { store } from "./index"
 import { get } from "svelte/store"
-import { notifications } from "@budibase/bbui"
 
 export const API = createAPIClient({
   attachHeaders: headers => {
@@ -23,11 +22,6 @@ export const API = createAPIClient({
     if (!handled) {
       console.error("Unhandled error from API client", error)
       return
-    }
-
-    // Show a notification for any errors
-    if (message) {
-      notifications.error(`Error fetching ${url}: ${message}`)
     }
 
     // Log all errors to console

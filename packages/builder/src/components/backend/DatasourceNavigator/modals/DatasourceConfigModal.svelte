@@ -20,7 +20,7 @@
       $goto(`./datasource/${resp._id}`)
       notifications.success(`Datasource updated successfully.`)
     } catch (err) {
-      notifications.error(`Error saving datasource: ${err}`)
+      notifications.error("Error saving datasource")
     }
   }
 

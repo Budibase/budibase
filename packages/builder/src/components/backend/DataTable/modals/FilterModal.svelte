@@ -72,11 +72,15 @@
   $: schema = viewTable && viewTable.schema ? viewTable.schema : {}
 
   function saveView() {
-    views.save(view)
-    notifications.success(`View ${view.name} saved.`)
-    analytics.captureEvent(Events.VIEW.ADDED_FILTER, {
-      filters: JSON.stringify(view.filters),
-    })
+    try {
+      views.save(view)
+      notifications.success(`View ${view.name} saved`)
+      analytics.captureEvent(Events.VIEW.ADDED_FILTER, {
+        filters: JSON.stringify(view.filters),
+      })
+    } catch (error) {
+      notifcations.error("Error saving view")
+    }
   }
 
   function removeFilter(idx) {

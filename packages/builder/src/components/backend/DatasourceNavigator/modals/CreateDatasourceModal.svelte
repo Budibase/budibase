@@ -62,9 +62,13 @@
       externalDatasourceModal.hide()
       internalTableModal.show()
     } else if (integration.type === IntegrationTypes.REST) {
-      // skip modal for rest, create straight away
-      const resp = await createRestDatasource(integration)
-      $goto(`./datasource/${resp._id}`)
+      try {
+        // Skip modal for rest, create straight away
+        const resp = await createRestDatasource(integration)
+        $goto(`./datasource/${resp._id}`)
+      } catch (error) {
+        notifications.error("Error creating datasource")
+      }
     } else {
       externalDatasourceModal.show()
     }

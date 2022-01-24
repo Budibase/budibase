@@ -4,13 +4,18 @@ import { buildAppEndpoints } from "./app"
 import { buildAttachmentEndpoints } from "./attachments"
 import { buildAuthEndpoints } from "./auth"
 import { buildAutomationEndpoints } from "./automations"
+import { buildDatasourceEndpoints } from "./datasources"
+import { buildFlagEndpoints } from "./flags"
 import { buildHostingEndpoints } from "./hosting"
+import { buildPermissionsEndpoints } from "./permissions"
 import { buildQueryEndpoints } from "./queries"
 import { buildRelationshipEndpoints } from "./relationships"
+import { buildRoleEndpoints } from "./roles"
 import { buildRouteEndpoints } from "./routes"
 import { buildRowEndpoints } from "./rows"
 import { buildScreenEndpoints } from "./screens"
 import { buildTableEndpoints } from "./tables"
+import { buildTemplateEndpoints } from "./templates"
 import { buildViewEndpoints } from "./views"
 
 const defaultAPIClientConfig = {
@@ -184,13 +189,18 @@ export const createAPIClient = config => {
     ...buildAttachmentEndpoints(API),
     ...buildAuthEndpoints(API),
     ...buildAutomationEndpoints(API),
+    ...buildDatasourceEndpoints(API),
+    ...buildFlagEndpoints(API),
     ...buildHostingEndpoints(API),
+    ...buildPermissionsEndpoints(API),
     ...buildQueryEndpoints(API),
     ...buildRelationshipEndpoints(API),
+    ...buildRoleEndpoints(API),
     ...buildRouteEndpoints(API),
     ...buildRowEndpoints(API),
     ...buildScreenEndpoints(API),
     ...buildTableEndpoints(API),
+    ...buildTemplateEndpoints(API),
     ...buildViewEndpoints(API),
   }
 

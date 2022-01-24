@@ -79,4 +79,35 @@ export const buildTableEndpoints = API => ({
       },
     })
   },
+
+  /**
+   * Gets a list o tables.
+   */
+  getTables: async () => {
+    return await API.get({
+      url: "/api/tables",
+    })
+  },
+
+  /**
+   * Saves a table.
+   * @param table the table to save
+   */
+  saveTable: async table => {
+    return await API.post({
+      url: "/api/tables",
+      body: table,
+    })
+  },
+
+  /**
+   * Deletes a table.
+   * @param tableId the ID of the table to delete
+   * @param tableRev the rev of the table to delete
+   */
+  deleteTable: async ({ tableId, tableRev }) => {
+    return await API.delete({
+      url: `/api/tables/${tableId}/${tableRev}`,
+    })
+  },
 })

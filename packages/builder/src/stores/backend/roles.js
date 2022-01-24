@@ -1,30 +1,32 @@
 import { writable } from "svelte/store"
-import api from "builderStore/api"
+import { API } from "api"
 
 export function createRolesStore() {
   const { subscribe, update, set } = writable([])
 
-  return {
-    subscribe,
+  const actions = {
     fetch: async () => {
-      set(await getRoles())
+      const roles = await API.getRoles()
+      set(roles)
     },
     delete: async role => {
-      const response = await api.delete(`/api/roles/${role._id}/${role._rev}`)
+      await API.deleteRole({
+        roleId: role?._id,
+        roleRev: role?._rev,
+      })
       update(state => state.filter(existing => existing._id !== role._id))
-      return response
     },
     save: async role => {
-      const response = await api.post("/api/roles", role)
-      set(await getRoles())
-      return response
+      const savedRole = await API.saveRole(role)
+      await actions.fetch()
+      return savedRole
     },
   }
-}
 
-async function getRoles() {
-  const response = await api.get("/api/roles")
-  return await response.json()
+  return {
+    subscribe,
+    ...actions,
+  }
 }
 
 export const roles = createRolesStore()

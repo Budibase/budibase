@@ -1,6 +1,10 @@
 export const buildViewEndpoints = API => ({
   /**
-   * Fetches all rows in a view.
+   * Fetches all rows in a view
+   * @param name the name of the view
+   * @param field the field to perform the calculation on
+   * @param groupBy the field to group by
+   * @param calculation the calculation to perform
    */
   fetchViewData: async ({ name, field, groupBy, calculation }) => {
     const params = new URLSearchParams()
@@ -9,7 +13,7 @@ export const buildViewEndpoints = API => ({
       params.set("calculation", calculation)
     }
     if (groupBy) {
-      params.set("group", groupBy ? "true" : "false")
+      params.set("group", groupBy)
     }
     const QUERY_VIEW_URL = field
       ? `/api/views/${name}?${params}`
@@ -29,6 +33,27 @@ export const buildViewEndpoints = API => ({
       parseResponse: async response => {
         return await response.text()
       },
+    })
+  },
+
+  /**
+   * Saves a view.
+   * @param view the view to save
+   */
+  saveView: async view => {
+    return await API.post({
+      url: "/api/views",
+      body: view,
+    })
+  },
+
+  /**
+   * Deletes a view.
+   * @param viewName the name of the view to delete
+   */
+  deleteView: async viewName => {
+    return await API.delete({
+      url: `/api/views/${viewName}`,
     })
   },
 })
