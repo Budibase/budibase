@@ -7,9 +7,12 @@ const {
   getTableParams,
   BudibaseInternalDB,
 } = require("../../../db/utils")
-const { isEqual } = require("lodash/fp")
+const { isEqual } = require("lodash")
 const { AutoFieldSubTypes, FieldTypes } = require("../../../constants")
-const { inputProcessing } = require("../../../utilities/rowProcessor")
+const {
+  inputProcessing,
+  cleanupAttachments,
+} = require("../../../utilities/rowProcessor")
 const { USERS_TABLE_SCHEMA, SwitchableTypes } = require("../../../constants")
 const {
   isExternalTable,
@@ -19,8 +22,25 @@ const {
 const { getViews, saveView } = require("../view/utils")
 const viewTemplate = require("../view/viewBuilder")
 const usageQuota = require("../../../utilities/usageQuota")
+const { cloneDeep } = require("lodash/fp")
 
-exports.checkForColumnUpdates = async (db, oldTable, updatedTable) => {
+exports.deleteColumn = async (db, table, columns) => {
+  columns.forEach(colName => delete table.schema[colName])
+  const rows = await db.allDocs(
+    getRowParams(table._id, null, {
+      include_docs: true,
+    })
+  )
+  await db.put(table)
+  return db.bulkDocs(
+    rows.rows.map(({ doc }) => {
+      columns.forEach(colName => delete doc[colName])
+      return doc
+    })
+  )
+}
+
+exports.checkForColumnUpdates = async (appId, db, oldTable, updatedTable) => {
   let updatedRows = []
   const rename = updatedTable._rename
   let deletedColumns = []
@@ -29,7 +49,7 @@ exports.checkForColumnUpdates = async (db, oldTable, updatedTable) => {
       colName => updatedTable.schema[colName] == null
     )
   }
-  // check for renaming of columns, deleted columns or static formula update
+  // check for renaming of columns or deleted columns
   if (rename || deletedColumns.length !== 0) {
     // Update all rows
     const rows = await db.allDocs(
@@ -37,16 +57,20 @@ exports.checkForColumnUpdates = async (db, oldTable, updatedTable) => {
         include_docs: true,
       })
     )
-    updatedRows = rows.rows.map(({ doc }) => {
+    const rawRows = rows.rows.map(({ doc }) => doc)
+    updatedRows = rawRows.map(row => {
+      row = cloneDeep(row)
       if (rename) {
-        doc[rename.updated] = doc[rename.old]
-        delete doc[rename.old]
+        row[rename.updated] = row[rename.old]
+        delete row[rename.old]
       } else if (deletedColumns.length !== 0) {
-        deletedColumns.forEach(colName => delete doc[colName])
+        deletedColumns.forEach(colName => delete row[colName])
       }
-      return doc
+      return row
     })
 
+    // cleanup any attachments from object storage for deleted attachment columns
+    await cleanupAttachments(appId, updatedTable, { oldTable, rows: rawRows })
     // Update views
     await exports.checkForViewUpdates(db, updatedTable, rename, deletedColumns)
     delete updatedTable._rename
@@ -207,6 +231,7 @@ class TableSaveFunctions {
   // when confirmed valid
   async mid(table) {
     let response = await exports.checkForColumnUpdates(
+      this.appId,
       this.db,
       this.oldTable,
       table

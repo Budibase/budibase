@@ -307,9 +307,15 @@ exports.outputProcessing = async (
  * @param {any} row optional - the row being removed.
  * @param {any} rows optional - if multiple rows being deleted can do this in bulk.
  * @param {any} oldRow optional - if updating a row this will determine the difference.
+ * @param {any} oldTable optional - if updating a table, can supply the old table to look for
+ * deleted attachment columns.
  * @return {Promise<void>} When all attachments have been removed this will return.
  */
-exports.cleanupAttachments = async (appId, table, { row, rows, oldRow }) => {
+exports.cleanupAttachments = async (
+  appId,
+  table,
+  { row, rows, oldRow, oldTable }
+) => {
   if (!isProdAppID(appId)) {
     const prodAppId = getDeployedAppID(appId)
     // if prod exists, then don't allow deleting
@@ -324,12 +330,16 @@ exports.cleanupAttachments = async (appId, table, { row, rows, oldRow }) => {
       files = files.concat(row[key].map(attachment => attachment.key))
     }
   }
-  for (let [key, schema] of Object.entries(table.schema)) {
+  const schemaToUse = oldTable ? oldTable.schema : table.schema
+  for (let [key, schema] of Object.entries(schemaToUse)) {
     if (schema.type !== FieldTypes.ATTACHMENT) {
       continue
     }
-    // if updating, need to manage the differences
-    if (oldRow && row) {
+    // old table had this column, new table doesn't - delete it
+    if (oldTable && !table.schema[key]) {
+      rows.forEach(row => addFiles(row, key))
+    } else if (oldRow && row) {
+      // if updating, need to manage the differences
       files = files.concat(getRemovedAttachmentKeys(oldRow, row, key))
     } else if (row) {
       addFiles(row, key)
