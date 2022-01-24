@@ -122,6 +122,11 @@ exports.getSignedUploadURL = async function (ctx) {
     ctx.throw(400, "The specified datasource could not be found")
   }
 
+  // Ensure we aren't using a custom endpoint
+  if (datasource?.config?.endpoint) {
+    ctx.throw(400, "S3 datasources with custom endpoints are not supported")
+  }
+
   // Determine type of datasource and generate signed URL
   let signedUrl
   let publicUrl
