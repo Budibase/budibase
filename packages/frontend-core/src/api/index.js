@@ -77,6 +77,9 @@ export const createAPIClient = config => {
     json = true,
     external = false,
   }) => {
+    // Ensure we don't do JSON processing if sending a GET request
+    json = json && method !== "GET"
+
     // Build headers
     let headers = { Accept: "application/json" }
     if (!external) {
@@ -115,7 +118,11 @@ export const createAPIClient = config => {
     // Handle response
     if (response.status >= 200 && response.status < 400) {
       try {
-        return await response.json()
+        if (config?.parseResponse) {
+          return await config.parseResponse(response)
+        } else {
+          return await response.json()
+        }
       } catch (error) {
         return null
       }

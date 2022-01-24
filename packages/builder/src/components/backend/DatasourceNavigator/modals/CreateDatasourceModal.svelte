@@ -1,8 +1,15 @@
 <script>
-  import { ModalContent, Modal, Body, Layout, Detail } from "@budibase/bbui"
+  import {
+    ModalContent,
+    Modal,
+    Body,
+    Layout,
+    Detail,
+    notifications,
+  } from "@budibase/bbui"
   import { onMount } from "svelte"
   import ICONS from "../icons"
-  import api from "builderStore/api"
+  import { API } from "api"
   import { IntegrationNames, IntegrationTypes } from "constants/backend"
   import CreateTableModal from "components/backend/TableNavigator/modals/CreateTableModal.svelte"
   import DatasourceConfigModal from "components/backend/DatasourceNavigator/modals/DatasourceConfigModal.svelte"
@@ -11,7 +18,7 @@
   import ImportRestQueriesModal from "./ImportRestQueriesModal.svelte"
 
   export let modal
-  let integrations = []
+  let integrations = {}
   let integration = {}
   let internalTableModal
   let externalDatasourceModal
@@ -64,13 +71,20 @@
   }
 
   async function fetchIntegrations() {
-    const response = await api.get("/api/integrations")
-    const json = await response.json()
-    integrations = {
+    let newIntegrations = {
       [IntegrationTypes.INTERNAL]: { datasource: {}, name: "INTERNAL/CSV" },
-      ...json,
     }
-    return json
+    try {
+      const integrationList = await API.getIntegrations()
+      newIntegrations = {
+        ...newIntegrations,
+        ...integrationList,
+      }
+      return newIntegrations
+    } catch (error) {
+      notifications.error("Error fetching integrations")
+    }
+    integrations = newIntegrations
   }
 </script>
 
