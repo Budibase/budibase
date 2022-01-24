@@ -29,7 +29,7 @@ exports.checkForColumnUpdates = async (db, oldTable, updatedTable) => {
       colName => updatedTable.schema[colName] == null
     )
   }
-  // check for renaming of columns or deleted columns
+  // check for renaming of columns, deleted columns or static formula update
   if (rename || deletedColumns.length !== 0) {
     // Update all rows
     const rows = await db.allDocs(

@@ -36,53 +36,58 @@ const CALCULATION_TYPES = {
 }
 
 /**
- * This function runs through the enriched row, looks at the rows which
+ * This function runs through a list of enriched rows, looks at the rows which
  * are related and then checks if they need the state of their formulas
  * updated.
+ * NOTE: this will only for affect static formulas.
  */
-async function updateRelatedFormula(appId, db, table, enrichedRow) {
+async function updateRelatedFormula(appId, db, table, enrichedRows) {
   // no formula to update, we're done
   if (!table.relatedFormula) {
     return
   }
-  // the related rows by tableId
-  let relatedRows = {}
-  for (let [key, field] of Object.entries(enrichedRow)) {
-    const columnDefinition = table.schema[key]
-    if (columnDefinition && columnDefinition.type === FieldTypes.LINK) {
-      const relatedTableId = columnDefinition.tableId
-      if (!relatedRows[relatedTableId]) {
-        relatedRows[relatedTableId] = []
-      }
-      relatedRows[relatedTableId] = relatedRows[relatedTableId].concat(field)
-    }
-  }
   let promises = []
-  for (let tableId of table.relatedFormula) {
-    try {
-      // no rows to update, skip
-      if (!relatedRows[tableId] || relatedRows[tableId].length === 0) {
-        continue
-      }
-      const relatedTable = await db.get(tableId)
-      for (let column of Object.values(relatedTable.schema)) {
-        // needs updated in related rows
-        if (
-          column.type === FieldTypes.FORMULA &&
-          column.formulaType === FormulaTypes.STATIC
-        ) {
-          // re-enrich rows for all the related, don't update the related formula for them
-          promises = promises.concat(
-            relatedRows[tableId].map(related =>
-              storeResponse(appId, db, relatedTable, related, {
-                updateFormula: false,
-              })
-            )
-          )
+  for (let enrichedRow of Array.isArray(enrichedRows)
+    ? enrichedRows
+    : [enrichedRows]) {
+    // the related rows by tableId
+    let relatedRows = {}
+    for (let [key, field] of Object.entries(enrichedRow)) {
+      const columnDefinition = table.schema[key]
+      if (columnDefinition && columnDefinition.type === FieldTypes.LINK) {
+        const relatedTableId = columnDefinition.tableId
+        if (!relatedRows[relatedTableId]) {
+          relatedRows[relatedTableId] = []
         }
+        relatedRows[relatedTableId] = relatedRows[relatedTableId].concat(field)
       }
-    } catch (err) {
-      // no error scenario, table doesn't seem to exist anymore, ignore
+    }
+    for (let tableId of table.relatedFormula) {
+      try {
+        // no rows to update, skip
+        if (!relatedRows[tableId] || relatedRows[tableId].length === 0) {
+          continue
+        }
+        const relatedTable = await db.get(tableId)
+        for (let column of Object.values(relatedTable.schema)) {
+          // needs updated in related rows
+          if (
+            column.type === FieldTypes.FORMULA &&
+            column.formulaType === FormulaTypes.STATIC
+          ) {
+            // re-enrich rows for all the related, don't update the related formula for them
+            promises = promises.concat(
+              relatedRows[tableId].map(related =>
+                storeResponse(appId, db, relatedTable, related, {
+                  updateFormula: false,
+                })
+              )
+            )
+          }
+        }
+      } catch (err) {
+        // no error scenario, table doesn't seem to exist anymore, ignore
+      }
     }
   }
   await Promise.all(promises)
@@ -388,6 +393,8 @@ exports.destroy = async function (ctx) {
   })
   // remove any attachments that were on the row from object storage
   await cleanupAttachments(appId, table, { row })
+  // remove any static formula
+  await updateRelatedFormula(appId, db, table, row)
 
   let response
   if (ctx.params.tableId === InternalTables.USER_METADATA) {
@@ -436,6 +443,7 @@ exports.bulkDestroy = async ctx => {
   }
   // remove any attachments that were on the rows from object storage
   await cleanupAttachments(appId, table, { rows })
+  await updateRelatedFormula(appId, db, table, rows)
   await Promise.all(updates)
   return { response: { ok: true }, rows }
 }
