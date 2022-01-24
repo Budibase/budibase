@@ -86,8 +86,8 @@ export const getFrontendStore = () => {
         description: application.description,
         appId: application.appId,
         url: application.url,
-        layouts,
-        screens,
+        layouts: layouts || [],
+        screens: screens || [],
         theme: application.theme || "spectrum--light",
         customTheme: application.customTheme,
         hasAppPackage: true,
@@ -109,49 +109,36 @@ export const getFrontendStore = () => {
     theme: {
       save: async theme => {
         const appId = get(store).appId
-        try {
-          await API.saveAppMetadata({
-            appId,
-            metadata: { theme },
-          })
-          store.update(state => {
-            state.theme = theme
-            return state
-          })
-        } catch (error) {
-          notifications.error("Error updating theme")
-        }
+        await API.saveAppMetadata({
+          appId,
+          metadata: { theme },
+        })
+        store.update(state => {
+          state.theme = theme
+          return state
+        })
       },
     },
     customTheme: {
       save: async customTheme => {
         const appId = get(store).appId
-        try {
-          await API.saveAppMetadata({
-            appId,
-            metadata: { customTheme },
-          })
-          store.update(state => {
-            state.customTheme = customTheme
-            return state
-          })
-        } catch (error) {
-          notifications.error("Error updating custom theme")
-        }
+        await API.saveAppMetadata({
+          appId,
+          metadata: { customTheme },
+        })
+        store.update(state => {
+          state.customTheme = customTheme
+          return state
+        })
       },
     },
     routing: {
       fetch: async () => {
-        try {
-          const routes = await API.getAppRoutes()
-          console.log(routes)
-          store.update(state => {
-            state.routes = routes.routes
-            return state
-          })
-        } catch (error) {
-          notifications.error("Error fetching app routes")
-        }
+        const response = await API.fetchAppRoutes()
+        store.update(state => {
+          state.routes = response.routes
+          return state
+        })
       },
     },
     screens: {
@@ -174,50 +161,41 @@ export const getFrontendStore = () => {
         })
       },
       create: async screen => {
-        try {
-          const savedScreen = await API.saveScreen(screen)
-          store.update(state => {
-            state.selectedScreenId = savedScreen._id
-            state.selectedComponentId = savedScreen.props._id
-            state.currentFrontEndType = FrontendTypes.SCREEN
-            selectedAccessRole.set(savedScreen.routing.roleId)
-            return savedScreen
-          })
+        const savedScreen = await API.saveScreen(screen)
+        store.update(state => {
+          state.screens.push(savedScreen)
+          state.selectedScreenId = savedScreen._id
+          state.selectedComponentId = savedScreen.props._id
+          state.currentFrontEndType = FrontendTypes.SCREEN
+          selectedAccessRole.set(savedScreen.routing.roleId)
+          return state
+        })
 
-          // Refresh routes
-          await store.actions.routing.fetch()
-          return savedScreen
-        } catch (error) {
-          notifications.error("Error creating screen")
-          return null
-        }
+        // Refresh routes
+        await store.actions.routing.fetch()
+        return savedScreen
       },
       save: async screen => {
-        try {
-          const creatingNewScreen = screen._id === undefined
-          const savedScreen = await API.saveScreen(screen)
-          store.update(state => {
-            const idx = state.screens.findIndex(x => x._id === savedScreen._id)
-            if (idx !== -1) {
-              state.screens.splice(idx, 1, savedScreen)
-            } else {
-              state.screens.push(savedScreen)
-            }
-            return state
-          })
-
-          // Refresh routes
-          await store.actions.routing.fetch()
-
-          // Select the new screen if creating a new one
-          if (creatingNewScreen) {
-            store.actions.screens.select(savedScreen._id)
+        const creatingNewScreen = screen._id === undefined
+        const savedScreen = await API.saveScreen(screen)
+        store.update(state => {
+          const idx = state.screens.findIndex(x => x._id === savedScreen._id)
+          if (idx !== -1) {
+            state.screens.splice(idx, 1, savedScreen)
+          } else {
+            state.screens.push(savedScreen)
           }
-          return savedScreen
-        } catch (error) {
-          notifications.error("Error saving screen")
-          return null
+          return state
+        })
+
+        // Refresh routes
+        await store.actions.routing.fetch()
+
+        // Select the new screen if creating a new one
+        if (creatingNewScreen) {
+          store.actions.screens.select(savedScreen._id)
         }
+        return savedScreen
       },
       delete: async screens => {
         const screensToDelete = Array.isArray(screens) ? screens : [screens]
@@ -241,23 +219,22 @@ export const getFrontendStore = () => {
           )
         })
 
-        try {
-          await Promise.all(promises)
-          const deletedIds = screensToDelete.map(screen => screen._id)
-          store.update(state => {
-            // Remove deleted screens from state
-            state.screens = state.screens.filter(screen => {
-              return !deletedIds.includes(screen._id)
-            })
-            // Deselect the current screen if it was deleted
-            if (deletedIds.includes(state.selectedScreenId)) {
-              state.selectedScreenId = null
-            }
-            return state
+        await Promise.all(promises)
+        const deletedIds = screensToDelete.map(screen => screen._id)
+        store.update(state => {
+          // Remove deleted screens from state
+          state.screens = state.screens.filter(screen => {
+            return !deletedIds.includes(screen._id)
           })
-        } catch (error) {
-          notifications.error("Error deleting screens")
-        }
+          // Deselect the current screen if it was deleted
+          if (deletedIds.includes(state.selectedScreenId)) {
+            state.selectedScreenId = null
+          }
+          return state
+        })
+
+        // Refresh routes
+        await store.actions.routing.fetch()
       },
     },
     preview: {
@@ -291,28 +268,23 @@ export const getFrontendStore = () => {
         })
       },
       save: async layout => {
-        try {
-          const creatingNewLayout = layout._id === undefined
-          const savedLayout = await API.saveLayout(layout)
-          store.update(state => {
-            const idx = state.layouts.findIndex(x => x._id === savedLayout._id)
-            if (idx !== -1) {
-              state.layouts.splice(idx, 1, savedLayout)
-            } else {
-              state.layouts.push(savedLayout)
-            }
-            return state
-          })
-
-          // Select layout if creating a new one
-          if (creatingNewLayout) {
-            store.actions.layouts.select(savedLayout._id)
+        const creatingNewLayout = layout._id === undefined
+        const savedLayout = await API.saveLayout(layout)
+        store.update(state => {
+          const idx = state.layouts.findIndex(x => x._id === savedLayout._id)
+          if (idx !== -1) {
+            state.layouts.splice(idx, 1, savedLayout)
+          } else {
+            state.layouts.push(savedLayout)
           }
-          return savedLayout
-        } catch (error) {
-          notifications.error("Error saving layout")
-          return null
+          return state
+        })
+
+        // Select layout if creating a new one
+        if (creatingNewLayout) {
+          store.actions.layouts.select(savedLayout._id)
         }
+        return savedLayout
       },
       find: layoutId => {
         if (!layoutId) {
@@ -325,22 +297,18 @@ export const getFrontendStore = () => {
         if (!layout?._id) {
           return
         }
-        try {
-          await API.deleteLayout({
-            layoutId: layout._id,
-            layoutRev: layout._rev,
-          })
-          store.update(state => {
-            // Select main layout if we deleted the selected layout
-            if (layout._id === state.selectedLayoutId) {
-              state.selectedLayoutId = get(mainLayout)._id
-            }
-            state.layouts = state.layouts.filter(x => x._id !== layout._id)
-            return state
-          })
-        } catch (error) {
-          notifications.error("Failed to delete layout")
-        }
+        await API.deleteLayout({
+          layoutId: layout._id,
+          layoutRev: layout._rev,
+        })
+        store.update(state => {
+          // Select main layout if we deleted the selected layout
+          if (layout._id === state.selectedLayoutId) {
+            state.selectedLayoutId = get(mainLayout)._id
+          }
+          state.layouts = state.layouts.filter(x => x._id !== layout._id)
+          return state
+        })
       },
     },
     components: {
@@ -620,11 +588,6 @@ export const getFrontendStore = () => {
       updateCustomStyle: async style => {
         const selected = get(selectedComponent)
         selected._styles.custom = style
-        await store.actions.preview.saveSelected()
-      },
-      resetStyles: async () => {
-        const selected = get(selectedComponent)
-        selected._styles = { normal: {}, hover: {}, active: {} }
         await store.actions.preview.saveSelected()
       },
       updateConditions: async conditions => {

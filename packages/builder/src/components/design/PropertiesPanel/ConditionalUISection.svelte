@@ -1,5 +1,11 @@
 <script>
-  import { DetailSummary, ActionButton, Drawer, Button } from "@budibase/bbui"
+  import {
+    DetailSummary,
+    ActionButton,
+    Drawer,
+    Button,
+    notifications,
+  } from "@budibase/bbui"
   import { store } from "builderStore"
   import ConditionalUIDrawer from "./PropertyControls/ConditionalUIDrawer.svelte"
 
@@ -14,8 +20,12 @@
     drawer.show()
   }
 
-  const save = () => {
-    store.actions.components.updateConditions(tempValue)
+  const save = async () => {
+    try {
+      await store.actions.components.updateConditions(tempValue)
+    } catch (error) {
+      notifications.error("Error updating conditions")
+    }
     drawer.hide()
   }
 </script>
