@@ -41,8 +41,6 @@ export const createAPIClient = config => {
 
   // Generates an error object from an API response
   const makeErrorFromResponse = async (response, method) => {
-    console.log("making error from", response)
-
     // Try to read a message from the error
     let message = response.statusText
     let json = null
