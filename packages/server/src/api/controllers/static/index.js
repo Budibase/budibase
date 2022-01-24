@@ -17,6 +17,8 @@ const { clientLibraryPath } = require("../../../utilities")
 const { upload } = require("../../../utilities/fileSystem")
 const { attachmentsRelativeURL } = require("../../../utilities")
 const { DocumentTypes } = require("../../../db/utils")
+const AWS = require("aws-sdk")
+const AWS_REGION = env.AWS_REGION ? env.AWS_REGION : "eu-west-1"
 
 async function prepareUpload({ s3Key, bucket, metadata, file }) {
   const response = await upload({
@@ -103,4 +105,52 @@ exports.serveClientLibrary = async function (ctx) {
   return send(ctx, "budibase-client.js", {
     root: join(NODE_MODULES_PATH, "@budibase", "client", "dist"),
   })
+}
+
+exports.getSignedUploadURL = async function (ctx) {
+  const database = new CouchDB(ctx.appId)
+
+  // Ensure datasource is valid
+  let datasource
+  try {
+    const { datasourceId } = ctx.params
+    datasource = await database.get(datasourceId)
+    if (!datasource) {
+      ctx.throw(400, "The specified datasource could not be found")
+    }
+  } catch (error) {
+    ctx.throw(400, "The specified datasource could not be found")
+  }
+
+  // Ensure we aren't using a custom endpoint
+  if (datasource?.config?.endpoint) {
+    ctx.throw(400, "S3 datasources with custom endpoints are not supported")
+  }
+
+  // Determine type of datasource and generate signed URL
+  let signedUrl
+  let publicUrl
+  if (datasource.source === "S3") {
+    const { bucket, key } = ctx.request.body || {}
+    if (!bucket || !key) {
+      ctx.throw(400, "bucket and key values are required")
+      return
+    }
+    try {
+      const s3 = new AWS.S3({
+        region: AWS_REGION,
+        accessKeyId: datasource?.config?.accessKeyId,
+        secretAccessKey: datasource?.config?.secretAccessKey,
+        apiVersion: "2006-03-01",
+        signatureVersion: "v4",
+      })
+      const params = { Bucket: bucket, Key: key }
+      signedUrl = s3.getSignedUrl("putObject", params)
+      publicUrl = `https://${bucket}.s3.${AWS_REGION}.amazonaws.com/${key}`
+    } catch (error) {
+      ctx.throw(400, error)
+    }
+  }
+
+  ctx.body = { signedUrl, publicUrl }
 }

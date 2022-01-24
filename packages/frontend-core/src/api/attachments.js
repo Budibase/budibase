@@ -23,4 +23,32 @@ export const buildAttachmentEndpoints = API => ({
       json: false,
     })
   },
+
+  /**
+   * Generates a signed URL to upload a file to an external datasource.
+   */
+  getSignedDatasourceURL: async (datasourceId, bucket, key) => {
+    return await API.post({
+      url: `/api/attachments/${datasourceId}/url`,
+      body: { bucket, key },
+    })
+  },
+
+  /**
+   * Uploads a file to an external datasource.
+   */
+  externalUpload: async (datasourceId, bucket, key, data) => {
+    const { signedUrl, publicUrl } = await API.getSignedDatasourceURL(
+      datasourceId,
+      bucket,
+      key
+    )
+    await API.put({
+      url: signedUrl,
+      body: data,
+      json: false,
+      external: true,
+    })
+    return { publicUrl }
+  },
 })
