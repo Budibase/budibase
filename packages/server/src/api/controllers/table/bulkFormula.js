@@ -1,5 +1,5 @@
 const { FieldTypes, FormulaTypes } = require("../../../constants")
-const { getAllInternalTables, deleteColumns } = require("./utils")
+const { getAllInternalTables, clearColumns } = require("./utils")
 const { doesContainStrings } = require("@budibase/string-templates")
 const { cloneDeep } = require("lodash/fp")
 const { isEqual, uniq } = require("lodash")
@@ -53,7 +53,7 @@ async function checkRequiredFormulaUpdates(db, table, { oldTable, deletion }) {
     }
     const columnsToDelete = getFormulaThatUseColumn(tableToUse, removed.name)
     if (columnsToDelete.length > 0) {
-      await deleteColumns(db, table, columnsToDelete)
+      await clearColumns(db, table, columnsToDelete)
     }
     // need a special case, where a column has been removed from this table, but was used
     // in a different, related tables formula
@@ -80,7 +80,7 @@ async function checkRequiredFormulaUpdates(db, table, { oldTable, deletion }) {
             )
           }
           if (relatedFormulaToRemove.length > 0) {
-            await deleteColumns(db, relatedTable, uniq(relatedFormulaToRemove))
+            await clearColumns(db, relatedTable, uniq(relatedFormulaToRemove))
           }
         }
       }
@@ -133,7 +133,7 @@ async function updateRelatedFormulaLinksOnTables(
       if (
         relatedTable &&
         (!relatedTable.relatedFormula ||
-          relatedTable.relatedFormula.includes(table._id))
+          !relatedTable.relatedFormula.includes(table._id))
       ) {
         relatedTable.relatedFormula = relatedTable.relatedFormula
           ? [...relatedTable.relatedFormula, table._id]
