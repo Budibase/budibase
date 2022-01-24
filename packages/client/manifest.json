@@ -3318,6 +3318,7 @@
   },
   "s3upload": {
     "name": "S3 File Upload",
+    "info": "This component can't be used with S3 datasources that use custom endpoints.",
     "icon": "UploadToCloud",
     "styles": ["size"],
     "editable": true,
