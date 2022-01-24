@@ -18,14 +18,10 @@ class AnalyticsHub {
   }
 
   async activate() {
-    try {
-      // Check analytics are enabled
-      const analyticsStatus = await API.getAnalyticsStatus()
-      if (analyticsStatus.enabled) {
-        this.clients.forEach(client => client.init())
-      }
-    } catch (error) {
-      notifications.error("Error checking analytics status")
+    // Check analytics are enabled
+    const analyticsStatus = await API.getAnalyticsStatus()
+    if (analyticsStatus.enabled) {
+      this.clients.forEach(client => client.init())
     }
   }
 
