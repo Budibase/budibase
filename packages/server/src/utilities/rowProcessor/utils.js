@@ -25,11 +25,13 @@ exports.processFormulas = (
     }
     // iterate through rows and process formula
     for (let i = 0; i < rows.length; i++) {
-      let row = rows[i]
-      let context = contextRows ? contextRows[i] : row
-      rows[i] = {
-        ...row,
-        [column]: processStringSync(schema.formula, context),
+      if (schema.formula) {
+        let row = rows[i]
+        let context = contextRows ? contextRows[i] : row
+        rows[i] = {
+          ...row,
+          [column]: processStringSync(schema.formula, context),
+        }
       }
     }
   }

@@ -10,7 +10,7 @@ const {
 } = require("./utils")
 const usageQuota = require("../../../utilities/usageQuota")
 const { cleanupAttachments } = require("../../../utilities/rowProcessor")
-const { updateRelatedFormulaLinksOnTables } = require("./bulkFormula")
+const { runStaticFormulaChecks } = require("./bulkFormula")
 
 exports.save = async function (ctx) {
   const appId = ctx.appId
@@ -107,8 +107,7 @@ exports.save = async function (ctx) {
 
   tableToSave = await tableSaveFunctions.after(tableToSave)
   // has to run after, make sure it has _id
-  await updateRelatedFormulaLinksOnTables(db, tableToSave)
-
+  await runStaticFormulaChecks(db, tableToSave, { oldTable })
   return tableToSave
 }
 
@@ -146,7 +145,7 @@ exports.destroy = async function (ctx) {
   }
 
   // has to run after, make sure it has _id
-  await updateRelatedFormulaLinksOnTables(db, tableToDelete, { deletion: true })
+  await runStaticFormulaChecks(db, tableToDelete, { deletion: true })
   await cleanupAttachments(appId, tableToDelete, { rows })
   return tableToDelete
 }
