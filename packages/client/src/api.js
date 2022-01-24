@@ -32,7 +32,7 @@ export const API = createAPIClient({
     }
 
     // Log all errors to console
-    console.error(`HTTP ${status} on ${method}:${url}:\n\t${message}`)
+    console.warn(`[Client] HTTP ${status} on ${method}:${url}\n\t${message}`)
   },
 
   // Patch certain endpoints with functionality specific to client apps
