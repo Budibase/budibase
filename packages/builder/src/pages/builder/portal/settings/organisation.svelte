@@ -44,24 +44,28 @@
   async function saveConfig() {
     loading = true
 
-    // Upload logo if required
-    if ($values.logo && !$values.logo.url) {
-      await uploadLogo($values.logo)
-      await organisation.init()
-    }
+    try {
+      // Upload logo if required
+      if ($values.logo && !$values.logo.url) {
+        await uploadLogo($values.logo)
+        await organisation.init()
+      }
 
-    const config = {
-      company: $values.company ?? "",
-      platformUrl: $values.platformUrl ?? "",
-    }
+      const config = {
+        company: $values.company ?? "",
+        platformUrl: $values.platformUrl ?? "",
+      }
 
-    // Remove logo if required
-    if (!$values.logo) {
-      config.logoUrl = ""
-    }
+      // Remove logo if required
+      if (!$values.logo) {
+        config.logoUrl = ""
+      }
 
-    // Update settings
-    await organisation.save(config)
+      // Update settings
+      await organisation.save(config)
+    } catch (error) {
+      notifications.error("Error saving org config")
+    }
     loading = false
   }
 </script>

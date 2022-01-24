@@ -118,15 +118,18 @@
       await auth.setInitInfo({})
       $goto(`/builder/app/${createdApp.instance._id}`)
     } catch (error) {
-      console.error(error)
-      notifications.error(error)
+      notifications.error("Error creating app")
       submitting = false
     }
   }
 
   async function onCancel() {
     template = null
-    await auth.setInitInfo({})
+    try {
+      await auth.setInitInfo({})
+    } catch (error) {
+      notifications.error("Error setting init info")
+    }
   }
 </script>
 

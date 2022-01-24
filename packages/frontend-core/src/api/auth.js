@@ -1,18 +1,15 @@
 export const buildAuthEndpoints = API => ({
   /**
-   * Performs a log in request.
+   * Performs a login request.
+   * @param tenantId the ID of the tenant to log in to
+   * @param username the username (email)
+   * @param password the password
    */
-  logIn: async ({ email, password }) => {
-    if (!email) {
-      return API.error("Please enter your email")
-    }
-    if (!password) {
-      return API.error("Please enter your password")
-    }
+  logIn: async ({ tenantId, username, password }) => {
     return await API.post({
-      url: "/api/global/auth",
+      url: `/api/global/auth/${tenantId}/login`,
       body: {
-        username: email,
+        username,
         password,
       },
     })
@@ -28,137 +25,52 @@ export const buildAuthEndpoints = API => ({
   },
 
   /**
-   * Fetches the currently logged in user object
+   * Sets initialisation info.
+   * @param info the info to set
    */
-  fetchSelf: async () => {
-    return await API.get({
-      url: "/api/self",
-    })
-  },
-
-  /**
-   * Creates a user for an app.
-   * @param user the user to create
-   */
-  createAppUser: async user => {
+  setInitInfo: async info => {
     return await API.post({
-      url: "/api/users/metadata",
-      body: user,
+      url: "/api/global/auth/init",
+      body: info,
     })
   },
 
   /**
-   * Updates the current user metadata.
-   * @param metadata the metadata to save
+   * Gets the initialisation info.
    */
-  updateOwnMetadata: async metadata => {
+  getInitInfo: async () => {
+    return await API.get({
+      url: "/api/global/auth/init",
+    })
+  },
+
+  /**
+   * Sends a password reset email.
+   * @param tenantId the ID of the tenant the user is in
+   * @param email the email address of the user
+   */
+  requestForgotPassword: async ({ tenantId, email }) => {
     return await API.post({
-      url: "/api/users/metadata/self",
-      body: metadata,
+      url: `/api/global/auth/${tenantId}/reset`,
+      body: {
+        email,
+      },
     })
   },
 
   /**
-   * Creates an admin user.
-   * @param adminUser the admin user to create
+   * Resets a user's password.
+   * @param tenantId the ID of the tenant the user is in
+   * @param password the new password to set
+   * @param resetCode the reset code to authenticate the request
    */
-  createAdminUser: async adminUser => {
+  resetPassword: async ({ tenantId, password, resetCode }) => {
     return await API.post({
-      url: "/api/global/users/init",
-      body: adminUser,
-    })
-  },
-
-  /**
-   * Saves a global config.
-   * @param config the config to save
-   */
-  saveConfig: async config => {
-    return await API.post({
-      url: "/api/global/configs",
-      body: config,
-    })
-  },
-
-  /**
-   * Gets a global config of a certain type.
-   * @param type the type to fetch
-   */
-  getConfig: async type => {
-    return await API.get({
-      url: `/api/global/configs/${type}`,
-    })
-  },
-
-  /**
-   * Gets the OIDC config for a certain tenant.
-   * @param tenantId the tenant ID to get the config for
-   */
-  getOIDCConfig: async tenantId => {
-    return await API.get({
-      url: `/api/global/configs/public/oidc?tenantId=${tenantId}`,
-    })
-  },
-
-  /**
-   * Gets the checklist for a specific tenant.
-   * @param tenantId the tenant ID to get the checklist for
-   */
-  getChecklist: async tenantId => {
-    return await API.get({
-      url: `/api/global/configs/checklist?tenantId=${tenantId}`,
-    })
-  },
-
-  /**
-   * TODO: find out what this is
-   */
-  checkImportComplete: async () => {
-    return await API.get({
-      url: "/api/cloud/import/complete",
-    })
-  },
-
-  /**
-   * Gets the current environment details.
-   */
-  getEnvironment: async () => {
-    return await API.get({
-      url: "/api/system/environment",
-    })
-  },
-
-  /**
-   * Updates the company logo for the environment.
-   * @param data the logo form data
-   */
-  uploadLogo: async data => {
-    return await API.post({
-      url: "/api/global/configs/upload/settings/logoUrl",
-      body: data,
-      json: false,
-    })
-  },
-
-  /**
-   * Uploads a logo for an OIDC provider.
-   * @param name the name of the OIDC provider
-   * @param data the logo form data to upload
-   */
-  uploadOIDCLogo: async ({ name, data }) => {
-    return await API.post({
-      url: `/api/global/configs/upload/logos_oidc/${name}`,
-      body: data,
-      json: false,
-    })
-  },
-
-  /**
-   * Gets the list of OIDC logos.
-   */
-  getOIDCLogos: async () => {
-    return await API.get({
-      url: "/api/global/configs/logos_oidc",
+      url: `/api/global/auth/${tenantId}/reset/update`,
+      body: {
+        password,
+        resetCode,
+      },
     })
   },
 })

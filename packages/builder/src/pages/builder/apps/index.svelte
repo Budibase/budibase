@@ -10,6 +10,7 @@
     Icon,
     Body,
     Modal,
+    notifications,
   } from "@budibase/bbui"
   import { onMount } from "svelte"
   import { apps, organisation, auth, admin } from "stores/portal"
@@ -26,8 +27,12 @@
   let changePasswordModal
 
   onMount(async () => {
-    await organisation.init()
-    await apps.load()
+    try {
+      await organisation.init()
+      await apps.load()
+    } catch (error) {
+      notifications.error("Error loading apps")
+    }
     loaded = true
   })
 
@@ -43,6 +48,14 @@
 
   function getUrl(app) {
     return !isCloud ? `/app/${encodeURIComponent(app.name)}` : `/${app.prodId}`
+  }
+
+  const logout = async () => {
+    try {
+      await auth.logout()
+    } catch (error) {
+      // Swallow error and do nothing
+    }
   }
 </script>
 
@@ -79,7 +92,7 @@
                   Open developer mode
                 </MenuItem>
               {/if}
-              <MenuItem icon="LogOut" on:click={auth.logout}>Log out</MenuItem>
+              <MenuItem icon="LogOut" on:click={logout}>Log out</MenuItem>
             </ActionMenu>
           </div>
           <Layout noPadding gap="XS">
