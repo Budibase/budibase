@@ -1,5 +1,5 @@
-const env = require("../../../environment")
-const TestConfig = require("../../../tests/utilities/TestConfiguration")
+const env = require("../../../../environment")
+const TestConfig = require("../../../../tests/utilities/TestConfiguration")
 
 const syncApps = jest.fn()
 const syncRows = jest.fn()
@@ -7,7 +7,7 @@ const syncRows = jest.fn()
 jest.mock("../../usageQuotas/syncApps", () => ({ run: syncApps }) )
 jest.mock("../../usageQuotas/syncRows", () => ({ run: syncRows }) )
 
-const migrations = require("../../usageQuotas")
+const migrations = require("..")
 
 describe("run", () => {
   let config = new TestConfig(false)
