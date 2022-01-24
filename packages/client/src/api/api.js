@@ -36,7 +36,11 @@ const makeApiCall = async ({ method, url, body, json = true }) => {
     })
     switch (response.status) {
       case 200:
-        return response.json()
+        try {
+          return await response.json()
+        } catch (error) {
+          return null
+        }
       case 401:
         notificationStore.actions.error("Invalid credentials")
         return handleError(`Invalid credentials`)
@@ -82,14 +86,15 @@ const makeCachedApiCall = async params => {
  * Constructs an API call function for a particular HTTP method.
  */
 const requestApiCall = method => async params => {
-  const { url, cache = false } = params
-  const fixedUrl = `/${url}`.replace("//", "/")
+  const { external = false, url, cache = false } = params
+  const fixedUrl = external ? url : `/${url}`.replace("//", "/")
   const enrichedParams = { ...params, method, url: fixedUrl }
   return await (cache ? makeCachedApiCall : makeApiCall)(enrichedParams)
 }
 
 export default {
   post: requestApiCall("POST"),
+  put: requestApiCall("PUT"),
   get: requestApiCall("GET"),
   patch: requestApiCall("PATCH"),
   del: requestApiCall("DELETE"),
