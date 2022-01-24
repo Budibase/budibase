@@ -25,7 +25,7 @@ export const API = createAPIClient({
     }
 
     // Log all errors to console
-    console.error(`HTTP ${status} on ${method}:${url}\n\t${message}`)
+    console.warn(`[Builder] HTTP ${status} on ${method}:${url}\n\t${message}`)
 
     // Logout on 403's
     if (status === 403) {
