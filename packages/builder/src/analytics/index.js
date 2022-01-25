@@ -3,7 +3,6 @@ import PosthogClient from "./PosthogClient"
 import IntercomClient from "./IntercomClient"
 import SentryClient from "./SentryClient"
 import { Events } from "./constants"
-import { notifications } from "@budibase/bbui"
 
 const posthog = new PosthogClient(
   process.env.POSTHOG_TOKEN,

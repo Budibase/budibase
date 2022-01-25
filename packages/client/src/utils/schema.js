@@ -1,6 +1,5 @@
 import { API } from "../api.js"
 import { JSONUtils } from "@budibase/frontend-core"
-import DataFetch from "@budibase/frontend-core/src/fetch/DataFetch.js"
 import TableFetch from "@budibase/frontend-core/src/fetch/TableFetch.js"
 import ViewFetch from "@budibase/frontend-core/src/fetch/ViewFetch.js"
 import QueryFetch from "@budibase/frontend-core/src/fetch/QueryFetch.js"

@@ -79,7 +79,7 @@
         filters: JSON.stringify(view.filters),
       })
     } catch (error) {
-      notifcations.error("Error saving view")
+      notifications.error("Error saving view")
     }
   }
 
