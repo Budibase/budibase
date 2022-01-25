@@ -2,6 +2,7 @@ export const buildTableEndpoints = API => ({
   /**
    * Fetches a table definition.
    * Since definitions cannot change at runtime, the result is cached.
+   * @param tableId the ID of the table to fetch
    */
   fetchTableDefinition: async tableId => {
     return await API.get({
@@ -12,6 +13,7 @@ export const buildTableEndpoints = API => ({
 
   /**
    * Fetches all rows from a table.
+   * @param tableId the ID of the table for fetch
    */
   fetchTableData: async tableId => {
     return await API.get({ url: `/api/${tableId}/rows` })
@@ -19,6 +21,14 @@ export const buildTableEndpoints = API => ({
 
   /**
    * Searches a table using Lucene.
+   * @param tableId the ID of the table to search
+   * @param query the lucene search query
+   * @param bookmark the current pagination bookmark
+   * @param limit the number of rows to retrieve
+   * @param sort the field to sort by
+   * @param sortOrder the order to sort by
+   * @param sortType the type to sort by, either numerically or alphabetically
+   * @param paginate whether to paginate the data
    */
   searchTable: async ({
     tableId,
