@@ -1,4 +1,4 @@
-import { API } from "../api"
+import { API } from "api"
 import { get, writable } from "svelte/store"
 
 const createAppStore = () => {

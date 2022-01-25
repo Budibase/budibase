@@ -25,7 +25,6 @@ import { buildViewEndpoints } from "./views"
 const defaultAPIClientConfig = {
   attachHeaders: null,
   onError: null,
-  patches: null,
 }
 
 /**
@@ -185,7 +184,7 @@ export const createAPIClient = config => {
   }
 
   // Attach all endpoints
-  API = {
+  return {
     ...API,
     ...buildAnalyticsEndpoints(API),
     ...buildAppEndpoints(API),
@@ -210,18 +209,4 @@ export const createAPIClient = config => {
     ...buildUserEndpoints(API),
     ...buildViewEndpoints(API),
   }
-
-  // Assign any patches
-  const patches = Object.entries(config.patches || {})
-  if (patches.length) {
-    patches.forEach(([method, fn]) => {
-      const baseFn = API[method]
-      API[method] = async (...params) => {
-        const output = await baseFn(...params)
-        return await fn({ params, output })
-      }
-    })
-  }
-
-  return API
 }

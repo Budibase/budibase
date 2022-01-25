@@ -1,4 +1,4 @@
-import { API } from "../api.js"
+import { API } from "api"
 import { JSONUtils } from "@budibase/frontend-core"
 import TableFetch from "@budibase/frontend-core/src/fetch/TableFetch.js"
 import ViewFetch from "@budibase/frontend-core/src/fetch/ViewFetch.js"

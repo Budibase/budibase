@@ -1,6 +1,6 @@
 import { get, writable } from "svelte/store"
 import { push } from "svelte-spa-router"
-import { API } from "../api"
+import { API } from "api"
 import { peekStore } from "./peek"
 import { builderStore } from "./builder"
 
