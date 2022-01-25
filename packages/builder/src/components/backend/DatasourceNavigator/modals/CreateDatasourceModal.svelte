@@ -84,7 +84,6 @@
         ...newIntegrations,
         ...integrationList,
       }
-      return newIntegrations
     } catch (error) {
       notifications.error("Error fetching integrations")
     }
