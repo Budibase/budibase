@@ -8,6 +8,9 @@ export const buildRouteEndpoints = API => ({
     })
   },
 
+  /**
+   * Fetches all routes for the current app.
+   */
   fetchAppRoutes: async () => {
     return await API.get({
       url: "/api/routing",

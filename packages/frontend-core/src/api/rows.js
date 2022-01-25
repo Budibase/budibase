@@ -1,6 +1,8 @@
 export const buildRowEndpoints = API => ({
   /**
    * Fetches data about a certain row in a table.
+   * @param tableId the ID of the table to fetch from
+   * @param rowId the ID of the row to fetch
    */
   fetchRow: async ({ tableId, rowId }) => {
     if (!tableId || !rowId) {
@@ -13,7 +15,8 @@ export const buildRowEndpoints = API => ({
   },
 
   /**
-   * Creates a row in a table.
+   * Creates or updates a row in a table.
+   * @param row the row to save
    */
   saveRow: async row => {
     if (!row?.tableId) {
@@ -27,6 +30,9 @@ export const buildRowEndpoints = API => ({
 
   /**
    * Deletes a row from a table.
+   * @param tableId the ID of the table to delete from
+   * @param rowId the ID of the row to delete
+   * @param revId the rev of the row to delete
    */
   deleteRow: async ({ tableId, rowId, revId }) => {
     if (!tableId || !rowId || !revId) {

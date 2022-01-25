@@ -1,6 +1,7 @@
 export const buildAppEndpoints = API => ({
   /**
    * Fetches screen definition for an app.
+   * @param appId the ID of the app to fetch from
    */
   fetchAppPackage: async appId => {
     return await API.get({
