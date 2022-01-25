@@ -162,7 +162,7 @@
             <Select
               bind:value={filter.value}
               options={fieldOptions(filter.key)}
-              getOptionLabel={x => x.toString()}
+              getOptionLabel={x => x?.toString() || ""}
             />
           {:else if filter.key && isDate(filter.key)}
             <DatePicker
