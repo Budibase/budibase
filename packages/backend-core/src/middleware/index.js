@@ -7,6 +7,7 @@ const authenticated = require("./authenticated")
 const auditLog = require("./auditLog")
 const tenancy = require("./tenancy")
 const appTenancy = require("./appTenancy")
+const csrf = require("./csrf")
 
 module.exports = {
   google,
@@ -18,4 +19,5 @@ module.exports = {
   tenancy,
   appTenancy,
   authError,
+  csrf,
 }

@@ -27,6 +27,7 @@ core.init(CouchDB)
 
 const GLOBAL_USER_ID = "us_uuid1"
 const EMAIL = "babs@babs.com"
+const CSRF_TOKEN = "e3727778-7af0-4226-b5eb-f43cbe60a306"
 
 class TestConfiguration {
   constructor(openServer = true) {
@@ -86,7 +87,11 @@ class TestConfiguration {
       roles: roles || {},
       tenantId: TENANT_ID,
     }
-    await createASession(id, { sessionId: "sessionid", tenantId: TENANT_ID })
+    await createASession(id, {
+      sessionId: "sessionid",
+      tenantId: TENANT_ID,
+      csrfToken: CSRF_TOKEN,
+    })
     if (builder) {
       user.builder = { global: true }
     } else {
@@ -133,6 +138,7 @@ class TestConfiguration {
         `${Cookies.Auth}=${authToken}`,
         `${Cookies.CurrentApp}=${appToken}`,
       ],
+      [Headers.CSRF_TOKEN]: CSRF_TOKEN,
     }
     if (this.appId) {
       headers[Headers.APP_ID] = this.appId
@@ -426,10 +432,6 @@ class TestConfiguration {
         roles: { [this.prodAppId]: roleId },
       })
     }
-    await createASession(userId, {
-      sessionId: "sessionid",
-      tenantId: TENANT_ID,
-    })
     // have to fake this
     const auth = {
       userId,
