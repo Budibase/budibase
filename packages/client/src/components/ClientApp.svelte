@@ -3,6 +3,7 @@
   import { setContext, onMount } from "svelte"
   import { Layout, Heading, Body } from "@budibase/bbui"
   import ErrorSVG from "@budibase/frontend-core/assets/error.svg"
+  import { Constants, CookieUtils } from "@budibase/frontend-core"
   import Component from "./Component.svelte"
   import SDK from "sdk"
   import {
@@ -63,9 +64,8 @@
       } else {
         // The user is not logged in, redirect them to login
         const returnUrl = `${window.location.pathname}${window.location.hash}`
-        // TODO: reuse `Cookies` from builder when frontend-core is added
-        window.document.cookie = `budibase:returnurl=${returnUrl}; Path=/`
-        window.location = `/builder/auth/login`
+        CookieUtils.setCookie(Constants.Cookies.ReturnUrl, returnUrl)
+        window.location = "/builder/auth/login"
       }
     }
   }
