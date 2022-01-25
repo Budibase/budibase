@@ -24,7 +24,8 @@ const viewTemplate = require("../view/viewBuilder")
 const usageQuota = require("../../../utilities/usageQuota")
 const { cloneDeep } = require("lodash/fp")
 
-exports.clearColumns = async (db, table, columnNames) => {
+exports.clearColumns = async (appId, table, columnNames) => {
+  const db = new CouchDB(appId)
   const rows = await db.allDocs(
     getRowParams(table._id, null, {
       include_docs: true,
@@ -255,10 +256,8 @@ class TableSaveFunctions {
   }
 }
 
-exports.getAllInternalTables = async ({ db, appId }) => {
-  if (appId && !db) {
-    db = new CouchDB(appId)
-  }
+exports.getAllInternalTables = async appId => {
+  const db = new CouchDB(appId)
   const internalTables = await db.allDocs(
     getTableParams(null, {
       include_docs: true,
@@ -271,10 +270,8 @@ exports.getAllInternalTables = async ({ db, appId }) => {
   }))
 }
 
-exports.getAllExternalTables = async ({ db, appId }, datasourceId) => {
-  if (appId && !db) {
-    db = new CouchDB(appId)
-  }
+exports.getAllExternalTables = async (appId, datasourceId) => {
+  const db = new CouchDB(appId)
   const datasource = await db.get(datasourceId)
   if (!datasource || !datasource.entities) {
     throw "Datasource is not configured fully."
@@ -283,7 +280,7 @@ exports.getAllExternalTables = async ({ db, appId }, datasourceId) => {
 }
 
 exports.getExternalTable = async (appId, datasourceId, tableName) => {
-  const entities = await exports.getAllExternalTables({ appId }, datasourceId)
+  const entities = await exports.getAllExternalTables(appId, datasourceId)
   return entities[tableName]
 }
 

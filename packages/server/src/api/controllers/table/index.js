@@ -22,7 +22,7 @@ function pickApi({ tableId, table }) {
 exports.fetch = async function (ctx) {
   const db = new CouchDB(ctx.appId)
 
-  const internal = await getAllInternalTables({ db })
+  const internal = await getAllInternalTables(ctx.appId)
 
   const externalTables = await db.allDocs(
     getDatasourceParams("plus", {
