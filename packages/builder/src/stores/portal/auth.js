@@ -98,7 +98,7 @@ export function createAuthStore() {
     return info
   }
 
-  async function setPostLogout() {
+  function setPostLogout() {
     auth.update(store => {
       store.postLogout = true
       return store
@@ -130,8 +130,16 @@ export function createAuthStore() {
       await setOrganisation(tenantId)
     },
     checkAuth: async () => {
-      const user = await API.fetchBuilderSelf()
-      setUser(user)
+      // We need to catch this locally as we never want this to fail, even
+      // though normally we never want to swallow API errors at the store level.
+      // We're either logged in or we aren't.
+      // We also need to always update the loaded flag.
+      try {
+        const user = await API.fetchBuilderSelf()
+        setUser(user)
+      } catch (error) {
+        setUser(null)
+      }
     },
     login: async creds => {
       const tenantId = get(store).tenantId
@@ -143,10 +151,10 @@ export function createAuthStore() {
       setUser(response.user)
     },
     logout: async () => {
-      await API.logOut()
-      await setInitInfo({})
       setUser(null)
       setPostLogout()
+      await API.logOut()
+      await setInitInfo({})
     },
     updateSelf: async fields => {
       const newUser = { ...get(auth).user, ...fields }

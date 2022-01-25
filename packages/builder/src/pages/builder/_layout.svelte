@@ -3,7 +3,6 @@
   import { admin, auth } from "stores/portal"
   import { onMount } from "svelte"
   import { CookieUtils, Constants } from "@budibase/frontend-core"
-  import { notifications } from "@budibase/bbui"
 
   let loaded = false
 
@@ -57,11 +56,15 @@
 
   onMount(async () => {
     try {
+      await auth.checkAuth()
+      await admin.init()
+
+      // Set init info if present
       if ($params["?template"]) {
         await auth.setInitInfo({ init_template: $params["?template"] })
       }
-      await auth.checkAuth()
-      await admin.init()
+
+      // Validate tenant if in a multi-tenant env
       if (useAccountPortal && multiTenancyEnabled) {
         await validateTenantId()
       }
