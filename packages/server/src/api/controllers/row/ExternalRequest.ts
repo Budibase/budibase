@@ -525,7 +525,7 @@ module External {
         const linkTable = this.getTable(tableId)
         // @ts-ignore
         const linkPrimary = linkTable.primary[0]
-        const rows = related[key].rows || []
+        const rows = related[key]?.rows || []
         const found = rows.find(
           (row: { [key: string]: any }) =>
             row[linkPrimary] === relationship.id ||
