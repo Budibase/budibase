@@ -1,7 +1,7 @@
 import { writable, derived, get } from "svelte/store"
 import Manifest from "manifest.json"
 import { findComponentById, findComponentPathById } from "../utils/components"
-import { API } from "../api"
+import { API } from "api"
 
 const dispatchEvent = (type, data = {}) => {
   window.parent.postMessage({ type, data })
