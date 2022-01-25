@@ -20,9 +20,7 @@ export const buildTemplateEndpoints = API => ({
   saveEmailTemplate: async template => {
     return await API.post({
       url: "/api/global/template",
-      body: {
-        template,
-      },
+      body: template,
     })
   },
 
