@@ -22,109 +22,86 @@ export const getAutomationStore = () => {
 
 const automationActions = store => ({
   fetch: async () => {
-    try {
-      const responses = await Promise.all([
-        API.getAutomations(),
-        API.getAutomationDefinitions(),
-      ])
-      store.update(state => {
-        let selected = state.selectedAutomation?.automation
-        state.automations = responses[0]
-        state.blockDefinitions = {
-          TRIGGER: responses[1].trigger,
-          ACTION: responses[1].action,
-        }
-        // If previously selected find the new obj and select it
-        if (selected) {
-          selected = responses[0].filter(
-            automation => automation._id === selected._id
-          )
-          state.selectedAutomation = new Automation(selected[0])
-        }
-        return state
-      })
-    } catch (error) {
-      notifications.error("Error fetching automations")
-      store.set(initialAutomationState)
-    }
+    const responses = await Promise.all([
+      API.getAutomations(),
+      API.getAutomationDefinitions(),
+    ])
+    store.update(state => {
+      let selected = state.selectedAutomation?.automation
+      state.automations = responses[0]
+      state.blockDefinitions = {
+        TRIGGER: responses[1].trigger,
+        ACTION: responses[1].action,
+      }
+      // If previously selected find the new obj and select it
+      if (selected) {
+        selected = responses[0].filter(
+          automation => automation._id === selected._id
+        )
+        state.selectedAutomation = new Automation(selected[0])
+      }
+      return state
+    })
   },
   create: async ({ name }) => {
-    try {
-      const automation = {
-        name,
-        type: "automation",
-        definition: {
-          steps: [],
-        },
-      }
-      const response = await API.createAutomation(automation)
-      store.update(state => {
-        state.automations = [...state.automations, response.automation]
-        store.actions.select(response.automation)
-        return state
-      })
-    } catch (error) {
-      notifications.error("Error creating automation")
+    const automation = {
+      name,
+      type: "automation",
+      definition: {
+        steps: [],
+      },
     }
+    const response = await API.createAutomation(automation)
+    store.update(state => {
+      state.automations = [...state.automations, response.automation]
+      store.actions.select(response.automation)
+      return state
+    })
   },
   save: async automation => {
-    try {
-      const response = await API.updateAutomation(automation)
-      store.update(state => {
-        const updatedAutomation = response.automation
-        const existingIdx = state.automations.findIndex(
-          existing => existing._id === automation._id
-        )
-        if (existingIdx !== -1) {
-          state.automations.splice(existingIdx, 1, updatedAutomation)
-          state.automations = [...state.automations]
-          store.actions.select(updatedAutomation)
-          return state
-        }
-      })
-      notifications.success("Automation saved successfully")
-    } catch (error) {
-      notifications.error("Error saving automation")
-    }
+    const response = await API.updateAutomation(automation)
+    store.update(state => {
+      const updatedAutomation = response.automation
+      const existingIdx = state.automations.findIndex(
+        existing => existing._id === automation._id
+      )
+      if (existingIdx !== -1) {
+        state.automations.splice(existingIdx, 1, updatedAutomation)
+        state.automations = [...state.automations]
+        store.actions.select(updatedAutomation)
+        return state
+      }
+    })
   },
   delete: async automation => {
-    try {
-      await API.deleteAutomation({
-        automationId: automation?._id,
-        automationRev: automation?._rev,
-      })
-      store.update(state => {
-        const existingIdx = state.automations.findIndex(
-          existing => existing._id === automation?._id
-        )
-        state.automations.splice(existingIdx, 1)
-        state.automations = [...state.automations]
-        state.selectedAutomation = null
-        state.selectedBlock = null
-        return state
-      })
-      notifications.success("Automation deleted successfully")
-    } catch (error) {
-      notifications.error("Error deleting automation")
-    }
+    await API.deleteAutomation({
+      automationId: automation?._id,
+      automationRev: automation?._rev,
+    })
+    store.update(state => {
+      const existingIdx = state.automations.findIndex(
+        existing => existing._id === automation?._id
+      )
+      state.automations.splice(existingIdx, 1)
+      state.automations = [...state.automations]
+      state.selectedAutomation = null
+      state.selectedBlock = null
+      return state
+    })
   },
   test: async (automation, testData) => {
-    try {
-      const result = await API.testAutomation({
-        automationId: automation?._id,
-        testData,
-      })
-      store.update(state => {
-        state.selectedAutomation.testResults = result
-        return state
-      })
-    } catch (error) {
-      notifications.error("Error testing automation")
-      store.update(state => {
-        state.selectedAutomation.testResults = null
-        return state
-      })
-    }
+    store.update(state => {
+      state.selectedAutomation.testResults = null
+      return state
+    })
+    const result = await API.testAutomation({
+      automationId: automation?._id,
+      testData,
+    })
+    store.update(state => {
+      state.selectedAutomation.testResults = result
+      return state
+    })
   },
   select: automation => {
     store.update(state => {

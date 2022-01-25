@@ -11,6 +11,7 @@
     Drawer,
     Modal,
     Detail,
+    notifications,
   } from "@budibase/bbui"
   import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
 
@@ -54,28 +55,32 @@
   $: schemaFields = table ? Object.values(table.schema) : []
 
   const onChange = debounce(async function (e, key) {
-    if (isTestModal) {
-      // Special case for webhook, as it requires a body, but the schema already brings back the body's contents
-      if (stepId === "WEBHOOK") {
+    try {
+      if (isTestModal) {
+        // Special case for webhook, as it requires a body, but the schema already brings back the body's contents
+        if (stepId === "WEBHOOK") {
+          automationStore.actions.addTestDataToAutomation({
+            body: {
+              [key]: e.detail,
+              ...$automationStore.selectedAutomation.automation.testData.body,
+            },
+          })
+        }
         automationStore.actions.addTestDataToAutomation({
-          body: {
-            [key]: e.detail,
-            ...$automationStore.selectedAutomation.automation.testData.body,
-          },
+          [key]: e.detail,
         })
+        testData[key] = e.detail
+        await automationStore.actions.save(
+          $automationStore.selectedAutomation?.automation
+        )
+      } else {
+        block.inputs[key] = e.detail
+        await automationStore.actions.save(
+          $automationStore.selectedAutomation?.automation
+        )
       }
-      automationStore.actions.addTestDataToAutomation({
-        [key]: e.detail,
-      })
-      testData[key] = e.detail
-      await automationStore.actions.save(
-        $automationStore.selectedAutomation?.automation
-      )
-    } else {
-      block.inputs[key] = e.detail
-      await automationStore.actions.save(
-        $automationStore.selectedAutomation?.automation
-      )
+    } catch (error) {
+      notifications.error("Error saving automation")
     }
   }, 800)
 
