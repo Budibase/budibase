@@ -45,7 +45,7 @@ export const createAPIClient = config => {
     let message = response.statusText
     let json = null
     try {
-      const json = await response.json()
+      json = await response.json()
       if (json?.message) {
         message = json.message
       } else if (json?.error) {
