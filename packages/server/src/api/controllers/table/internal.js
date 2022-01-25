@@ -107,7 +107,7 @@ exports.save = async function (ctx) {
 
   tableToSave = await tableSaveFunctions.after(tableToSave)
   // has to run after, make sure it has _id
-  await runStaticFormulaChecks(db, tableToSave, { oldTable })
+  await runStaticFormulaChecks(appId, tableToSave, { oldTable })
   return tableToSave
 }
 
@@ -145,7 +145,7 @@ exports.destroy = async function (ctx) {
   }
 
   // has to run after, make sure it has _id
-  await runStaticFormulaChecks(db, tableToDelete, { deletion: true })
+  await runStaticFormulaChecks(appId, tableToDelete, { deletion: true })
   await cleanupAttachments(appId, tableToDelete, { rows })
   return tableToDelete
 }

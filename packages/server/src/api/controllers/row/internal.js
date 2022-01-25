@@ -1,8 +1,8 @@
 const CouchDB = require("../../../db")
 const linkRows = require("../../../db/linkedRows")
 const {
-  getRowParams,
   generateRowID,
+  getRowParams,
   DocumentTypes,
   InternalTables,
 } = require("../../../db/utils")
@@ -10,12 +10,9 @@ const userController = require("../user")
 const {
   inputProcessing,
   outputProcessing,
-  processAutoColumn,
   cleanupAttachments,
-  processFormulas,
 } = require("../../../utilities/rowProcessor")
-const { FieldTypes, FormulaTypes } = require("../../../constants")
-const { isEqual } = require("lodash")
+const { FieldTypes } = require("../../../constants")
 const { validate, findRow } = require("./utils")
 const { fullSearch, paginatedSearch } = require("./internalSearch")
 const { getGlobalUsersFromMetadata } = require("../../../utilities/global")
@@ -28,140 +25,12 @@ const {
   getFromMemoryDoc,
 } = require("../view/utils")
 const { cloneDeep } = require("lodash/fp")
+const { finaliseRow, updateRelatedFormula } = require("./staticFormula")
 
 const CALCULATION_TYPES = {
   SUM: "sum",
   COUNT: "count",
   STATS: "stats",
-}
-
-/**
- * This function runs through a list of enriched rows, looks at the rows which
- * are related and then checks if they need the state of their formulas
- * updated.
- * NOTE: this will only for affect static formulas.
- */
-async function updateRelatedFormula(appId, db, table, enrichedRows) {
-  // no formula to update, we're done
-  if (!table.relatedFormula) {
-    return
-  }
-  let promises = []
-  for (let enrichedRow of Array.isArray(enrichedRows)
-    ? enrichedRows
-    : [enrichedRows]) {
-    // the related rows by tableId
-    let relatedRows = {}
-    for (let [key, field] of Object.entries(enrichedRow)) {
-      const columnDefinition = table.schema[key]
-      if (columnDefinition && columnDefinition.type === FieldTypes.LINK) {
-        const relatedTableId = columnDefinition.tableId
-        if (!relatedRows[relatedTableId]) {
-          relatedRows[relatedTableId] = []
-        }
-        relatedRows[relatedTableId] = relatedRows[relatedTableId].concat(field)
-      }
-    }
-    for (let tableId of table.relatedFormula) {
-      try {
-        // no rows to update, skip
-        if (!relatedRows[tableId] || relatedRows[tableId].length === 0) {
-          continue
-        }
-        const relatedTable = await db.get(tableId)
-        for (let column of Object.values(relatedTable.schema)) {
-          // needs updated in related rows
-          if (
-            column.type === FieldTypes.FORMULA &&
-            column.formulaType === FormulaTypes.STATIC
-          ) {
-            // re-enrich rows for all the related, don't update the related formula for them
-            promises = promises.concat(
-              relatedRows[tableId].map(related =>
-                storeResponse(appId, db, relatedTable, related, {
-                  updateFormula: false,
-                })
-              )
-            )
-          }
-        }
-      } catch (err) {
-        // no error scenario, table doesn't seem to exist anymore, ignore
-      }
-    }
-  }
-  await Promise.all(promises)
-}
-
-/**
- * This function runs at the end of the save/patch functions of the row controller, all this
- * really does is enrich the row, handle any static formula processing, then return the enriched
- * row. The reason we need to return the enriched row is that the automation row created trigger
- * expects the row to be totally enriched/contain all relationships.
- */
-async function storeResponse(
-  appId,
-  db,
-  table,
-  row,
-  { oldTable, updateFormula } = { updateFormula: true }
-) {
-  row.type = "row"
-  // process the row before return, to include relationships
-  let enrichedRow = await outputProcessing({ appId }, table, cloneDeep(row), {
-    squash: false,
-  })
-  // use enriched row to generate formulas for saving, specifically only use as context
-  row = processFormulas(table, row, {
-    dynamic: false,
-    contextRows: enrichedRow,
-  })
-
-  // don't worry about rev, tables handle rev/lastID updates
-  // if another row has been written since processing this will
-  // handle the auto ID clash
-  if (oldTable && !isEqual(oldTable, table)) {
-    try {
-      await db.put(table)
-    } catch (err) {
-      if (err.status === 409) {
-        const updatedTable = await db.get(table._id)
-        let response = processAutoColumn(null, updatedTable, row, {
-          reprocessing: true,
-        })
-        await db.put(response.table)
-        row = response.row
-      } else {
-        throw err
-      }
-    }
-  }
-  const response = await db.put(row)
-  // for response, calculate the formulas for the enriched row
-  enrichedRow._rev = response.rev
-  enrichedRow = await processFormulas(table, enrichedRow, { dynamic: false })
-  // this updates the related formulas in other rows based on the relations to this row
-  if (updateFormula) {
-    await updateRelatedFormula(appId, db, table, enrichedRow)
-  }
-  return { row: enrichedRow, table }
-}
-
-// doesn't do the outputProcessing
-async function getRawTableData(ctx, db, tableId) {
-  let rows
-  if (tableId === InternalTables.USER_METADATA) {
-    await userController.fetchMetadata(ctx)
-    rows = ctx.body
-  } else {
-    const response = await db.allDocs(
-      getRowParams(tableId, null, {
-        include_docs: true,
-      })
-    )
-    rows = response.rows.map(row => row.doc)
-  }
-  return rows
 }
 
 async function getView(db, viewName) {
@@ -188,6 +57,22 @@ async function getView(db, viewName) {
     throw "View does not exist."
   }
   return viewInfo
+}
+
+async function getRawTableData(ctx, db, tableId) {
+  let rows
+  if (tableId === InternalTables.USER_METADATA) {
+    await userController.fetchMetadata(ctx)
+    rows = ctx.body
+  } else {
+    const response = await db.allDocs(
+      getRowParams(tableId, null, {
+        include_docs: true,
+      })
+    )
+    rows = response.rows.map(row => row.doc)
+  }
+  return rows
 }
 
 exports.patch = async ctx => {
@@ -247,7 +132,7 @@ exports.patch = async ctx => {
     return { row: ctx.body, table }
   }
 
-  return storeResponse(ctx.appId, db, table, row, {
+  return finaliseRow(ctx.appId, table, row, {
     oldTable: dbTable,
     updateFormula: true,
   })
@@ -284,7 +169,7 @@ exports.save = async function (ctx) {
     table,
   })
 
-  return storeResponse(ctx.appId, db, table, row, {
+  return finaliseRow(ctx.appId, table, row, {
     oldTable: dbTable,
     updateFormula: true,
   })
@@ -394,7 +279,7 @@ exports.destroy = async function (ctx) {
   // remove any attachments that were on the row from object storage
   await cleanupAttachments(appId, table, { row })
   // remove any static formula
-  await updateRelatedFormula(appId, db, table, row)
+  await updateRelatedFormula(appId, table, row)
 
   let response
   if (ctx.params.tableId === InternalTables.USER_METADATA) {
@@ -443,7 +328,7 @@ exports.bulkDestroy = async ctx => {
   }
   // remove any attachments that were on the rows from object storage
   await cleanupAttachments(appId, table, { rows })
-  await updateRelatedFormula(appId, db, table, rows)
+  await updateRelatedFormula(appId, table, rows)
   await Promise.all(updates)
   return { response: { ok: true }, rows }
 }

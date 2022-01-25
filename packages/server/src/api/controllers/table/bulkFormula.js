@@ -1,8 +1,17 @@
+const CouchDB = require("../../../db")
 const { FieldTypes, FormulaTypes } = require("../../../constants")
 const { getAllInternalTables, clearColumns } = require("./utils")
 const { doesContainStrings } = require("@budibase/string-templates")
 const { cloneDeep } = require("lodash/fp")
 const { isEqual, uniq } = require("lodash")
+const { updateAllFormulasInTable } = require("../row/staticFormula")
+
+function isStaticFormula(column) {
+  return (
+    column.type === FieldTypes.FORMULA &&
+    column.formulaType === FormulaTypes.STATIC
+  )
+}
 
 /**
  * This retrieves the formula columns from a table schema that use a specified column name
@@ -13,10 +22,7 @@ function getFormulaThatUseColumn(table, columnNames) {
   columnNames = Array.isArray(columnNames) ? columnNames : [columnNames]
   for (let column of Object.values(table.schema)) {
     // not a static formula, or doesn't contain a relationship
-    if (
-      column.type !== FieldTypes.FORMULA ||
-      column.formulaType !== FormulaTypes.STATIC
-    ) {
+    if (!isStaticFormula(column)) {
       continue
     }
     if (!doesContainStrings(column.formula, columnNames)) {
@@ -28,16 +34,18 @@ function getFormulaThatUseColumn(table, columnNames) {
 }
 
 /**
- * This functions checks two things:
- * 1. when a related table, column or related column is deleted, if any
+ * This functions checks for when a related table, column or related column is deleted, if any
  * tables need to have the formula column removed.
- * 2. If a formula has been added, or updated bulk update all the rows
- * in the table as per the new formula.
  */
 
-async function checkRequiredFormulaUpdates(db, table, { oldTable, deletion }) {
+async function checkIfFormulaNeedsCleared(
+  appId,
+  table,
+  { oldTable, deletion }
+) {
+  const db = new CouchDB(appId)
   // start by retrieving all tables, remove the current table from the list
-  const tables = (await getAllInternalTables({ db })).filter(
+  const tables = (await getAllInternalTables(appId)).filter(
     tbl => tbl._id !== table._id
   )
   const schemaToUse = oldTable ? oldTable.schema : table.schema
@@ -57,31 +65,28 @@ async function checkRequiredFormulaUpdates(db, table, { oldTable, deletion }) {
     }
     // need a special case, where a column has been removed from this table, but was used
     // in a different, related tables formula
-    if (table.relatedFormula) {
-      for (let relatedTableId of table.relatedFormula) {
-        const relatedColumns = Object.values(table.schema).filter(
-          column => column.tableId === relatedTableId
-        )
-        const relatedTable = tables.find(table => table._id === relatedTableId)
-        // look to see if the column was used in a relationship formula,
-        // relationships won't be used for this
-        if (
-          relatedTable &&
-          relatedColumns &&
-          removed.type !== FieldTypes.LINK
-        ) {
-          let relatedFormulaToRemove = []
-          for (let column of relatedColumns) {
-            relatedFormulaToRemove = relatedFormulaToRemove.concat(
-              getFormulaThatUseColumn(relatedTable, [
-                column.fieldName,
-                removed.name,
-              ])
-            )
-          }
-          if (relatedFormulaToRemove.length > 0) {
-            await clearColumns(db, relatedTable, uniq(relatedFormulaToRemove))
-          }
+    if (!table.relatedFormula) {
+      continue
+    }
+    for (let relatedTableId of table.relatedFormula) {
+      const relatedColumns = Object.values(table.schema).filter(
+        column => column.tableId === relatedTableId
+      )
+      const relatedTable = tables.find(table => table._id === relatedTableId)
+      // look to see if the column was used in a relationship formula,
+      // relationships won't be used for this
+      if (relatedTable && relatedColumns && removed.type !== FieldTypes.LINK) {
+        let relatedFormulaToRemove = []
+        for (let column of relatedColumns) {
+          relatedFormulaToRemove = relatedFormulaToRemove.concat(
+            getFormulaThatUseColumn(relatedTable, [
+              column.fieldName,
+              removed.name,
+            ])
+          )
+        }
+        if (relatedFormulaToRemove.length > 0) {
+          await clearColumns(db, relatedTable, uniq(relatedFormulaToRemove))
         }
       }
     }
@@ -95,12 +100,13 @@ async function checkRequiredFormulaUpdates(db, table, { oldTable, deletion }) {
  * specifically only for static formula.
  */
 async function updateRelatedFormulaLinksOnTables(
-  db,
+  appId,
   table,
   { deletion } = { deletion: false }
 ) {
+  const db = new CouchDB(appId)
   // start by retrieving all tables, remove the current table from the list
-  const tables = (await getAllInternalTables({ db })).filter(
+  const tables = (await getAllInternalTables(appId)).filter(
     tbl => tbl._id !== table._id
   )
   // clone the tables, so we can compare at end
@@ -150,7 +156,29 @@ async function updateRelatedFormulaLinksOnTables(
   }
 }
 
-exports.runStaticFormulaChecks = async (db, table, { oldTable, deletion }) => {
-  await updateRelatedFormulaLinksOnTables(db, table, { deletion })
-  await checkRequiredFormulaUpdates(db, table, { oldTable, deletion })
+async function checkIfFormulaUpdated(appId, table, { oldTable }) {
+  // look to see if any formula values have changed
+  const shouldUpdate = Object.values(table.schema).find(
+    column =>
+      isStaticFormula(column) &&
+      (!oldTable ||
+        !oldTable.schema[column.name] ||
+        !isEqual(oldTable.schema[column.name], column))
+  )
+  // if a static formula column has updated, then need to run the update
+  if (shouldUpdate != null) {
+    await updateAllFormulasInTable(appId, table)
+  }
+}
+
+exports.runStaticFormulaChecks = async (
+  appId,
+  table,
+  { oldTable, deletion }
+) => {
+  await updateRelatedFormulaLinksOnTables(appId, table, { deletion })
+  await checkIfFormulaNeedsCleared(appId, table, { oldTable, deletion })
+  if (!deletion) {
+    await checkIfFormulaUpdated(appId, table, { oldTable })
+  }
 }
