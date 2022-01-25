@@ -1,4 +1,5 @@
-import { notificationStore } from "stores"
+import { notificationStore, authStore } from "stores"
+import { get } from "svelte/store"
 import { ApiVersion } from "constants"
 
 /**
@@ -28,6 +29,13 @@ const makeApiCall = async ({ method, url, body, json = true }) => {
       ...(json && { "Content-Type": "application/json" }),
       ...(!inBuilder && { "x-budibase-type": "client" }),
     }
+
+    // add csrf token if authenticated
+    const auth = get(authStore)
+    if (auth && auth.csrfToken) {
+      headers["x-csrf-token"] = auth.csrfToken
+    }
+
     const response = await fetch(url, {
       method,
       headers,

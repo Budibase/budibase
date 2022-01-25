@@ -1,4 +1,5 @@
 const redis = require("../redis/authRedis")
+const { v4: uuidv4 } = require("uuid")
 
 // a week in seconds
 const EXPIRY_SECONDS = 86400 * 7
@@ -16,6 +17,9 @@ function makeSessionID(userId, sessionId) {
 exports.createASession = async (userId, session) => {
   const client = await redis.getSessionClient()
   const sessionId = session.sessionId
+  if (!session.csrfToken) {
+    session.csrfToken = uuidv4()
+  }
   session = {
     createdAt: new Date().toISOString(),
     lastAccessedAt: new Date().toISOString(),
