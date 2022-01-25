@@ -3,7 +3,6 @@ import { API } from "api"
 import Automation from "./Automation"
 import { cloneDeep } from "lodash/fp"
 import analytics, { Events } from "analytics"
-import { notifications } from "@budibase/bbui"
 
 const initialAutomationState = {
   automations: [],
