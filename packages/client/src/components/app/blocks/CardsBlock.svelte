@@ -39,6 +39,7 @@
     number: "numberfield",
     datetime: "datetimefield",
     boolean: "booleanfield",
+    formula: "stringfield",
   }
 
   let formId
