@@ -1,6 +1,7 @@
 import { capitalise } from "helpers"
 import { object } from "yup"
 import { writable, get } from "svelte/store"
+import { notifications } from "@budibase/bbui"
 
 export const createValidationStore = () => {
   const DEFAULT = {
@@ -24,19 +25,26 @@ export const createValidationStore = () => {
     // clear the previous errors
     const properties = Object.keys(validator)
     properties.forEach(property => (get(validation).errors[property] = null))
+
+    let validationError = false
     try {
       await obj.validate(values, { abortEarly: false })
     } catch (error) {
-      error.inner.forEach(err => {
-        validation.update(store => {
-          store.errors[err.path] = capitalise(err.message)
-          return store
+      if (!error.inner) {
+        notifications.error("Unexpected validation error", error)
+        validationError = true
+      } else {
+        error.inner.forEach(err => {
+          validation.update(store => {
+            store.errors[err.path] = capitalise(err.message)
+            return store
+          })
         })
-      })
+      }
     }
 
     let valid
-    if (properties.length) {
+    if (properties.length && !validationError) {
       valid = await obj.isValid(values)
     } else {
       // don't say valid until validators have been loaded
