@@ -29,13 +29,7 @@ export const API = createAPIClient({
 
     // Logout on 403's
     if (status === 403) {
-      // Don't do anything if fetching templates.
-      // TODO: clarify why this is here
-      if (url.includes("/api/templates")) {
-        return
-      }
-
-      // Remove the auth cookie
+      // Remove cookies
       CookieUtils.removeCookie(Constants.Cookies.Auth)
 
       // Reload after removing cookie, go to login

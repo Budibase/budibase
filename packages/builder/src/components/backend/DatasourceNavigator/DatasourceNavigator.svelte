@@ -64,10 +64,10 @@
     }
   }
 
-  onMount(() => {
+  onMount(async () => {
     try {
-      datasources.fetch()
-      queries.fetch()
+      await datasources.fetch()
+      await queries.fetch()
     } catch (error) {
       notifications.error("Error fetching datasources and queries")
     }
