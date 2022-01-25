@@ -30,9 +30,13 @@
   }
 
   async function deleteAutomation() {
-    await automationStore.actions.delete(
-      $automationStore.selectedAutomation?.automation
-    )
+    try {
+      await automationStore.actions.delete(
+        $automationStore.selectedAutomation?.automation
+      )
+    } catch (error) {
+      notifications.error("Error deleting automation")
+    }
   }
 </script>
 
