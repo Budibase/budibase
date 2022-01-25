@@ -7,7 +7,10 @@ export const name = (validation, { apps, currentApp } = { apps: [] }) => {
     string()
       .trim()
       .required("Your application must have a name")
-      .matches(APP_NAME_REGEX, "App name must be letters and numbers only")
+      .matches(
+        APP_NAME_REGEX,
+        "App name must be letters, numbers and spaces only"
+      )
       .test(
         "non-existing-app-name",
         "Another app with the same name already exists",
