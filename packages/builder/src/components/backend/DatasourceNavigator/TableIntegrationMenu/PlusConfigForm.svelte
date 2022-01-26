@@ -188,7 +188,7 @@
 {:else}
   <Body size="S"><i>No tables found.</i></Body>
 {/if}
-{#if plusTables?.length !== 0}
+{#if plusTables?.length !== 0 && integration.relationships}
   <Divider size="S" />
   <div class="query-header">
     <Heading size="S">Relationships</Heading>
