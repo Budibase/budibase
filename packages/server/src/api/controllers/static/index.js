@@ -5,7 +5,7 @@ const { resolve, join } = require("../../../utilities/centralPath")
 const uuid = require("uuid")
 const { ObjectStoreBuckets } = require("../../../constants")
 const { processString } = require("@budibase/string-templates")
-const { getDeployedApps } = require("../../../utilities/workerRequests")
+const { getAllApps } = require("@budibase/backend-core/db")
 const CouchDB = require("../../../db")
 const {
   loadHandlebarsFile,
@@ -39,12 +39,18 @@ async function prepareUpload({ s3Key, bucket, metadata, file }) {
   }
 }
 
-async function checkForSelfHostedURL(ctx) {
-  // the "appId" component of the URL may actually be a specific self hosted URL
+async function getAppIdFromUrl(ctx) {
+  // the "appId" component of the URL can be the id or the custom url
   let possibleAppUrl = `/${encodeURI(ctx.params.appId).toLowerCase()}`
-  const apps = await getDeployedApps()
-  if (apps[possibleAppUrl] && apps[possibleAppUrl].appId) {
-    return apps[possibleAppUrl].appId
+
+  // search prod apps for a url that matches, exclude dev where id is always used
+  const apps = await getAllApps(CouchDB, { dev: false })
+  const app = apps.filter(
+    a => a.url && a.url.toLowerCase() === possibleAppUrl
+  )[0]
+
+  if (app && app.appId) {
+    return app.appId
   } else {
     return ctx.params.appId
   }
@@ -77,10 +83,7 @@ exports.uploadFile = async function (ctx) {
 }
 
 exports.serveApp = async function (ctx) {
-  let appId = ctx.params.appId
-  if (env.SELF_HOSTED) {
-    appId = await checkForSelfHostedURL(ctx)
-  }
+  let appId = await getAppIdFromUrl(ctx)
   const App = require("./templates/BudibaseApp.svelte").default
   const db = new CouchDB(appId, { skip_setup: true })
   const appInfo = await db.get(DocumentTypes.APP_METADATA)

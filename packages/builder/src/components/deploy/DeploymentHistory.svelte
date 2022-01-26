@@ -6,7 +6,7 @@
   import { API } from "api"
   import { notifications } from "@budibase/bbui"
   import CreateWebhookDeploymentModal from "./CreateWebhookDeploymentModal.svelte"
-  import { store, hostingStore } from "builderStore"
+  import { store } from "builderStore"
 
   const DeploymentStatus = {
     SUCCESS: "SUCCESS",
@@ -37,7 +37,7 @@
   let poll
   let deployments = []
   let urlComponent = $store.url || `/${appId}`
-  let deploymentUrl = `${$hostingStore.appUrl}${urlComponent}`
+  let deploymentUrl = `${urlComponent}`
 
   const formatDate = (date, format) =>
     Intl.DateTimeFormat("en-GB", DATE_OPTIONS[format]).format(date)

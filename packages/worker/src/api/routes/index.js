@@ -8,14 +8,12 @@ const roleRoutes = require("./global/roles")
 const sessionRoutes = require("./global/sessions")
 const environmentRoutes = require("./system/environment")
 const tenantsRoutes = require("./system/tenants")
-const appRoutes = require("./app")
 
 exports.routes = [
   configRoutes,
   userRoutes,
   workspaceRoutes,
   authRoutes,
-  appRoutes,
   templateRoutes,
   tenantsRoutes,
   emailRoutes,

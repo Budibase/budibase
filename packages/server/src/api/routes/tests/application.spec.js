@@ -53,8 +53,8 @@ describe("/applications", () => {
 
   describe("fetch", () => {
     it("lists all applications", async () => {
-      await config.createApp(request, "app1")
-      await config.createApp(request, "app2")
+      await config.createApp("app1")
+      await config.createApp("app2")
 
       const res = await request
         .get(`/api/applications?status=${AppStatus.DEV}`)
