@@ -27,7 +27,7 @@ describe("syncRows", () => {
     await config.createTable()
     await config.createRow()
     // app 2
-    await config.createApp()
+    await config.createApp("second-app")
     await config.createTable()
     await config.createRow()
     await config.createRow()
