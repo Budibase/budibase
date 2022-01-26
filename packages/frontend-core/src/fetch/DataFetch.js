@@ -1,4 +1,5 @@
 import { writable, derived, get } from "svelte/store"
+import { cloneDeep } from "lodash/fp"
 import {
   buildLuceneQuery,
   luceneLimit,
@@ -303,10 +304,12 @@ export default class DataFetch {
       return
     }
 
-    // Assign new options and reload data
+    // Assign new options and reload data.
+    // Clone the new options to ensure that some external source doesn't end up
+    // mutating the real values in the config.
     this.options = {
       ...this.options,
-      ...newOptions,
+      ...cloneDeep(newOptions),
     }
     await this.getInitialData()
   }
