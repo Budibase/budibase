@@ -177,6 +177,7 @@ export const IntegrationTypes = {
   ARANGODB: "ARANGODB",
   ORACLE: "ORACLE",
   INTERNAL: "INTERNAL",
+  GOOGLE_SHEETS: "GOOGLE_SHEETS",
 }
 
 export const IntegrationNames = {
@@ -193,6 +194,7 @@ export const IntegrationNames = {
   [IntegrationTypes.ARANGODB]: "ArangoDB",
   [IntegrationTypes.ORACLE]: "Oracle",
   [IntegrationTypes.INTERNAL]: "Internal",
+  [IntegrationTypes.GOOGLE_SHEETS]: "Google Sheets",
 }
 
 export const SchemaTypeOptions = [
