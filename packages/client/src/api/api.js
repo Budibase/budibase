@@ -2,6 +2,9 @@ import { createAPIClient } from "@budibase/frontend-core"
 import { notificationStore } from "../stores"
 
 export const API = createAPIClient({
+  // Enable caching of cacheable endpoints to speed things up,
+  enableCaching: true,
+
   // Attach client specific headers
   attachHeaders: headers => {
     // Attach app ID header
