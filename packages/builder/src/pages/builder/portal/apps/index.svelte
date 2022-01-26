@@ -49,7 +49,6 @@
   $: filteredApps = enrichedApps.filter(app =>
     app?.name?.toLowerCase().includes(searchTerm.toLowerCase())
   )
-  $: isCloud = $admin.cloud
 
   const enrichApps = (apps, user, sortBy) => {
     const enrichedApps = apps.map(app => ({
@@ -80,7 +79,7 @@
   }
 
   const initiateAppCreation = () => {
-    template = {}
+    template = null
     creationModal.show()
     creatingApp = true
   }
@@ -148,12 +147,10 @@
   }
 
   const viewApp = app => {
-    if (!isCloud && app.deployed) {
-      // special case to use the short form name if self hosted
-      window.open(`/app/${encodeURIComponent(app.name)}`)
+    if (app.url) {
+      window.open(`/app${app.url}`)
     } else {
-      const id = app.deployed ? app.prodId : app.devId
-      window.open(`/${id}`, "_blank")
+      window.open(`/${app.prodId}`)
     }
   }
 
@@ -420,6 +417,11 @@
 >
   <CreateAppModal {template} />
 </Modal>
+
+<Modal bind:this={updatingModal} padding={false} width="600px">
+  <UpdateAppModal app={selectedApp} />
+</Modal>
+
 <ConfirmDialog
   bind:this={deletionModal}
   title="Confirm deletion"
@@ -446,7 +448,6 @@
   Are you sure you want to unpublish the app <b>{selectedApp?.name}</b>?
 </ConfirmDialog>
 
-<UpdateAppModal app={selectedApp} bind:this={updatingModal} />
 <ChooseIconModal app={selectedApp} bind:this={iconModal} />
 
 <style>

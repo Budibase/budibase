@@ -1,119 +1,75 @@
 <script>
   import { writable, get as svelteGet } from "svelte/store"
-  import {
-    notifications,
-    Input,
-    Modal,
-    ModalContent,
-    Body,
-  } from "@budibase/bbui"
-  import { hostingStore } from "builderStore"
+  import { notifications, Input, ModalContent, Body } from "@budibase/bbui"
   import { apps } from "stores/portal"
-  import { string, object } from "yup"
   import { onMount } from "svelte"
-  import { capitalise } from "helpers"
-  import { APP_NAME_REGEX } from "constants"
-
-  const values = writable({ name: null })
-  const errors = writable({})
-  const touched = writable({})
-  const validator = {
-    name: string()
-      .trim()
-      .required("Your application must have a name")
-      .matches(
-        APP_NAME_REGEX,
-        "App name must be letters, numbers and spaces only"
-      ),
-  }
+  import { createValidationStore } from "helpers/validation/yup"
+  import * as appValidation from "helpers/validation/yup/app"
 
   export let app
 
-  let modal
-  let valid = false
-  let dirty = false
-  $: checkValidity($values, validator)
-  $: {
-    // prevent validation by setting name to undefined without an app
-    if (app) {
-      $values.name = app?.name
-    }
-  }
+  const values = writable({ name: "", url: null })
+  const validation = createValidationStore()
+  $: validation.check($values)
 
   onMount(async () => {
-    await hostingStore.actions.fetchDeployedApps()
-    const existingAppNames = svelteGet(hostingStore).deployedAppNames
-    validator.name = string()
-      .trim()
-      .required("Your application must have a name")
-      .matches(
-        APP_NAME_REGEX,
-        "App name must be letters, numbers and spaces only"
-      )
-      .test(
-        "non-existing-app-name",
-        "Another app with the same name already exists",
-        value => {
-          return !existingAppNames.some(
-            appName => dirty && appName?.toLowerCase() === value.toLowerCase()
-          )
-        }
-      )
+    $values.name = app.name
+    $values.url = app.url
+    setupValidation()
   })
 
-  const checkValidity = async (values, validator) => {
-    const obj = object().shape(validator)
-    Object.keys(validator).forEach(key => ($errors[key] = null))
-    try {
-      await obj.validate(values, { abortEarly: false })
-    } catch (validationErrors) {
-      validationErrors.inner?.forEach(error => {
-        $errors[error.path] = capitalise(error.message)
-      })
-    }
-    valid = await obj.isValid(values)
+  const setupValidation = async () => {
+    const applications = svelteGet(apps)
+    appValidation.name(validation, { apps: applications, currentApp: app })
+    appValidation.url(validation, { apps: applications, currentApp: app })
+    // init validation
+    validation.check($values)
   }
 
   async function updateApp() {
     try {
       // Update App
-      await apps.update(app.instance._id, { name: $values.name.trim() })
-      hide()
+      const body = {
+        name: $values.name.trim(),
+      }
+      if ($values.url) {
+        body.url = $values.url.trim()
+      }
+      await apps.update(app.instance._id, body)
     } catch (error) {
+      console.error(error)
       notifications.error("Error updating app")
     }
   }
 
-  export const show = () => {
-    modal.show()
-  }
-  export const hide = () => {
-    modal.hide()
-  }
-
-  const onCancel = () => {
-    hide()
-  }
-
-  const onShow = () => {
-    dirty = false
+  // auto add slash to url
+  $: {
+    if ($values.url && !$values.url.startsWith("/")) {
+      $values.url = `/${$values.url}`
+    }
   }
 </script>
 
-<Modal bind:this={modal} on:hide={onCancel} on:show={onShow}>
-  <ModalContent
-    title={"Edit app"}
-    confirmText={"Save"}
-    onConfirm={updateApp}
-    disabled={!(valid && dirty)}
-  >
-    <Body size="S">Update the name of your app.</Body>
-    <Input
-      bind:value={$values.name}
-      error={$touched.name && $errors.name}
-      on:blur={() => ($touched.name = true)}
-      on:change={() => (dirty = true)}
-      label="Name"
-    />
-  </ModalContent>
-</Modal>
+<ModalContent
+  title={"Edit app"}
+  confirmText={"Save"}
+  onConfirm={updateApp}
+  disabled={!$validation.valid}
+>
+  <Body size="S">Update the name of your app.</Body>
+  <Input
+    bind:value={$values.name}
+    error={$validation.touched.name && $validation.errors.name}
+    on:blur={() => ($validation.touched.name = true)}
+    label="Name"
+  />
+  <Input
+    bind:value={$values.url}
+    error={$validation.touched.url && $validation.errors.url}
+    on:blur={() => ($validation.touched.url = true)}
+    label="URL"
+    placeholder={$values.name
+      ? "/" + encodeURIComponent($values.name).toLowerCase()
+      : "/"}
+  />
+</ModalContent>
