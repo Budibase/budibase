@@ -45,12 +45,15 @@ exports.FieldTypes = {
   INTERNAL: "internal",
 }
 
-exports.SwitchableTypes = [
-  exports.FieldTypes.STRING,
-  exports.FieldTypes.OPTIONS,
-  exports.FieldTypes.NUMBER,
-  exports.FieldTypes.BOOLEAN,
+exports.CanSwitchTypes = [
+  [exports.FieldTypes.JSON, exports.FieldTypes.ARRAY],
+  [exports.FieldTypes.STRING, exports.FieldTypes.OPTIONS],
+  [exports.FieldTypes.BOOLEAN, exports.FieldTypes.NUMBER],
 ]
+
+exports.SwitchableTypes = exports.CanSwitchTypes.reduce((prev, current) =>
+  prev ? prev.concat(current) : current
+)
 
 exports.RelationshipTypes = {
   ONE_TO_MANY: "one-to-many",
