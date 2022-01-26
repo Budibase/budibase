@@ -13,6 +13,7 @@
   import { IntegrationNames, IntegrationTypes } from "constants/backend"
   import CreateTableModal from "components/backend/TableNavigator/modals/CreateTableModal.svelte"
   import DatasourceConfigModal from "components/backend/DatasourceNavigator/modals/DatasourceConfigModal.svelte"
+  import GoogleDatasourceConfigModal from "components/backend/DatasourceNavigator/modals/GoogleDatasourceConfigModal.svelte"
   import { createRestDatasource } from "builderStore/datasource"
   import { goto } from "@roxi/routify"
   import ImportRestQueriesModal from "./ImportRestQueriesModal.svelte"
@@ -45,6 +46,7 @@
       plus: selected.plus,
       config,
       schema: selected.datasource,
+      auth: selected.auth,
     }
     checkShowImport()
   }
@@ -96,7 +98,11 @@
 </Modal>
 
 <Modal bind:this={externalDatasourceModal}>
-  <DatasourceConfigModal {integration} {modal} />
+  {#if integration?.auth?.type === "google"}
+    <GoogleDatasourceConfigModal {integration} {modal} />
+  {:else}
+    <DatasourceConfigModal {integration} {modal} />
+  {/if}
 </Modal>
 
 <Modal bind:this={importModal}>
