@@ -15,6 +15,22 @@ export const AppStatus = {
   DEPLOYED: "published",
 }
 
+export const IntegrationNames = {
+  POSTGRES: "PostgreSQL",
+  MONGODB: "MongoDB",
+  COUCHDB: "CouchDB",
+  S3: "S3",
+  MYSQL: "MySQL",
+  REST: "REST",
+  DYNAMODB: "DynamoDB",
+  ELASTICSEARCH: "ElasticSearch",
+  SQL_SERVER: "SQL Server",
+  AIRTABLE: "Airtable",
+  ARANGODB: "ArangoDB",
+  ORACLE: "Oracle",
+  GOOGLE_SHEETS: "Google Sheets",
+}
+
 // fields on the user table that cannot be edited
 export const UNEDITABLE_USER_FIELDS = [
   "email",
