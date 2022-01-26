@@ -23,7 +23,25 @@ import { buildUserEndpoints } from "./user"
 import { buildViewEndpoints } from "./views"
 
 const defaultAPIClientConfig = {
+  /**
+   * Certain definitions can't change at runtime for client apps, such as the
+   * schema of tables. The endpoints that are cacheable can be cached by passing
+   * in this flag. It's disabled by default to avoid bugs with stale data.
+   */
+  enableCaching: false,
+
+  /**
+   * A function can be passed in to attach headers to all outgoing requests.
+   * This function is passed in the headers object, which should be directly
+   * mutated. No return value is required.
+   */
   attachHeaders: null,
+
+  /**
+   * A function can be passed in which will be invoked any time an API error
+   * occurs. An error is defined as a status code >= 400. This function is
+   * invoked before the actual JS error is thrown up the stack.
+   */
   onError: null,
 }
 
@@ -161,8 +179,13 @@ export const createAPIClient = config => {
       if (!external) {
         url = `/${url}`.replace("//", "/")
       }
+
+      // Cache the request if possible and desired
+      const cacheRequest = cache && config?.enableCaching
+      const handler = cacheRequest ? makeCachedApiCall : makeApiCall
+
       const enrichedParams = { ...params, method, url }
-      return await (cache ? makeCachedApiCall : makeApiCall)(enrichedParams)
+      return await handler(enrichedParams)
     } catch (error) {
       if (config?.onError) {
         config.onError(error)
