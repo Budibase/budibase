@@ -43,8 +43,8 @@ const coreFields = {
     enum: Object.values(BodyTypes),
   },
   pagination: {
-    type: DatasourceFieldTypes.OBJECT,
-  },
+    type: DatasourceFieldTypes.OBJECT
+  }
 }
 
 module RestModule {
@@ -178,17 +178,12 @@ module RestModule {
           headers,
         },
         pagination: {
-          cursor: nextCursor,
-        },
+          cursor: nextCursor
+        }
       }
     }
 
-    getUrl(
-      path: string,
-      queryString: string,
-      pagination: PaginationConfig | null,
-      paginationValues: PaginationValues | null
-    ): string {
+    getUrl(path: string, queryString: string, pagination: PaginationConfig | null, paginationValues: PaginationValues | null): string {
       // Add pagination params to query string if required
       if (pagination?.location === "query" && paginationValues) {
         const { pageParam, sizeParam } = pagination
@@ -222,22 +217,14 @@ module RestModule {
       return complete
     }
 
-    addBody(
-      bodyType: string,
-      body: string | any,
-      input: any,
-      pagination: PaginationConfig | null,
-      paginationValues: PaginationValues | null
-    ) {
+    addBody(bodyType: string, body: string | any, input: any, pagination: PaginationConfig | null, paginationValues: PaginationValues | null) {
       if (!input.headers) {
         input.headers = {}
       }
       if (bodyType === BodyTypes.NONE) {
         return input
       }
-      let error,
-        object: any = {},
-        string = ""
+      let error, object: any = {}, string = ""
       try {
         if (body) {
           string = typeof body !== "string" ? JSON.stringify(body) : body
@@ -346,7 +333,7 @@ module RestModule {
         requestBody,
         authConfigId,
         pagination,
-        paginationValues,
+        paginationValues
       } = query
       const authHeaders = this.getAuthHeaders(authConfigId)
 
@@ -365,13 +352,7 @@ module RestModule {
       }
 
       let input: any = { method, headers: this.headers }
-      input = this.addBody(
-        bodyType,
-        requestBody,
-        input,
-        pagination,
-        paginationValues
-      )
+      input = this.addBody(bodyType, requestBody, input, pagination, paginationValues)
 
       this.startTimeMs = performance.now()
       const url = this.getUrl(path, queryString, pagination, paginationValues)
