@@ -169,13 +169,11 @@ module DynamoModule {
         IndexName: query.index ? query.index : undefined,
         ...query.json,
       }
-      if (query.index) {
-        const response = await this.client.query(params).promise()
-        if (response.Items) {
-          return response.Items
-        }
-        return response
+      const response = await this.client.query(params).promise()
+      if (response.Items) {
+        return response.Items
       }
+      return response
     }
 
     async scan(query: { table: string; json: object; index: null | string }) {
