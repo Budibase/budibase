@@ -10,6 +10,17 @@ const { buildMatcherRegex, matches } = require("./matchers")
 const EXCLUDED_METHODS = ["GET", "HEAD", "OPTIONS"]
 
 /**
+ * There are only three content type values that can be used in cross domain requests.
+ * If any other value is used, e.g. application/json, the browser will first make a OPTIONS
+ * request which will be protected by CORS.
+ */
+const INCLUDED_CONTENT_TYPES = [
+  "application/x-www-form-urlencoded",
+  "multipart/form-data",
+  "text/plain",
+]
+
+/**
  * Validate the CSRF token generated aganst the user session.
  * Compare the token with the x-csrf-token header.
  *
@@ -34,15 +45,26 @@ module.exports = (opts = { noCsrfPatterns: [] }) => {
       return next()
     }
 
+    // don't apply when the content type isn't supported
+    let contentType = ctx.get("content-type")
+      ? ctx.get("content-type").toLowerCase()
+      : ""
+    if (
+      !INCLUDED_CONTENT_TYPES.filter(type => contentType.includes(type)).length
+    ) {
+      return next()
+    }
+
     // don't apply csrf when the internal api key has been used
     if (ctx.internal) {
       return next()
     }
 
-    // reject if no token in session
+    // apply csrf when there is a token in the session (new logins)
+    // in future there should be a hard requirement that the token is present
     const userToken = ctx.user.csrfToken
     if (!userToken) {
-      ctx.throw(403, "No CSRF token found")
+      return next()
     }
 
     // reject if no token in request or mismatch
