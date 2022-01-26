@@ -118,7 +118,9 @@ module GoogleSheetsModule {
      */
     cleanSpreadsheetUrl(spreadsheetId: string) {
       if (!spreadsheetId) {
-        throw new Error("You must set a spreadsheet ID in your configuration to fetch tables.")
+        throw new Error(
+          "You must set a spreadsheet ID in your configuration to fetch tables."
+        )
       }
       const parts = spreadsheetId.split("/")
       return parts.length > 5 ? parts[5] : spreadsheetId
@@ -179,22 +181,27 @@ module GoogleSheetsModule {
       const sheet = json.endpoint.entityId
 
       const handlers = {
-        [DataSourceOperation.CREATE]: () => this.create({ sheet, row: json.body }),
+        [DataSourceOperation.CREATE]: () =>
+          this.create({ sheet, row: json.body }),
         [DataSourceOperation.READ]: () => this.read({ sheet }),
-        [DataSourceOperation.UPDATE]: () => this.update({ 
-          // exclude the header row and zero index
-          rowIndex: json.extra?.idFilter?.equal?.rowNumber - 2,
-          sheet,
-          row: json.body,
-        }),
-        [DataSourceOperation.DELETE]: () => this.delete({
-          // exclude the header row and zero index
-          rowIndex: json.extra?.idFilter?.equal?.rowNumber - 2,
-          sheet,
-        }),
-        [DataSourceOperation.CREATE_TABLE]: () => this.createTable(json?.table?.name),
+        [DataSourceOperation.UPDATE]: () =>
+          this.update({
+            // exclude the header row and zero index
+            rowIndex: json.extra?.idFilter?.equal?.rowNumber - 2,
+            sheet,
+            row: json.body,
+          }),
+        [DataSourceOperation.DELETE]: () =>
+          this.delete({
+            // exclude the header row and zero index
+            rowIndex: json.extra?.idFilter?.equal?.rowNumber - 2,
+            sheet,
+          }),
+        [DataSourceOperation.CREATE_TABLE]: () =>
+          this.createTable(json?.table?.name),
         [DataSourceOperation.UPDATE_TABLE]: () => this.updateTable(json.table),
-        [DataSourceOperation.DELETE_TABLE]: () => this.deleteTable(json?.table?.name),
+        [DataSourceOperation.DELETE_TABLE]: () =>
+          this.deleteTable(json?.table?.name),
       }
 
       const internalQueryMethod = handlers[json.endpoint.operation]
@@ -214,7 +221,7 @@ module GoogleSheetsModule {
     async createTable(name?: string) {
       try {
         await this.connect()
-        const sheet = await this.client.addSheet({ title: name });
+        const sheet = await this.client.addSheet({ title: name })
         return sheet
       } catch (err) {
         console.error("Error creating new table in google sheets", err)
@@ -239,7 +246,9 @@ module GoogleSheetsModule {
           }
           await sheet.setHeaderRow(headers)
         } else {
-          let newField = Object.keys(table.schema).find(key => !sheet.headerValues.includes(key))
+          let newField = Object.keys(table.schema).find(
+            key => !sheet.headerValues.includes(key)
+          )
           await sheet.setHeaderRow([...sheet.headerValues, newField])
         }
       } catch (err) {

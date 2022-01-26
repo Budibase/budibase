@@ -24,6 +24,8 @@ async function preAuth(passport, ctx, next) {
 
   return passport.authenticate(strategy, {
     scope: ["profile", "email", "https://www.googleapis.com/auth/spreadsheets"],
+    accessType: "offline",
+    prompt: "consent",
   })(ctx, next)
 }
 
@@ -58,12 +60,10 @@ async function postAuth(passport, ctx, next) {
       // update the DB for the datasource with all the user info
       const db = getDB(authStateCookie.appId)
       const datasource = await db.get(authStateCookie.datasourceId)
-      datasource.config = {
-        auth: {
-          type: "google",
-          ...tokens,
-        },
+      if (!datasource.config) {
+        datasource.config = {}
       }
+      datasource.config.auth = { type: "google", ...tokens }
       await db.put(datasource)
       ctx.redirect(
         `/builder/app/${authStateCookie.appId}/data/datasource/${authStateCookie.datasourceId}`
