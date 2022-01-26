@@ -15,6 +15,7 @@
   export let valueColumn
   export let customOptions
   export let autocomplete = false
+  export let direction = "vertical"
 
   let fieldState
   let fieldApi
@@ -64,6 +65,7 @@
         disabled={fieldState.disabled}
         error={fieldState.error}
         {options}
+        {direction}
         on:change={e => fieldApi.setValue(e.detail)}
         getOptionLabel={flatOptions ? x => x : x => x.label}
         getOptionValue={flatOptions ? x => x : x => x.value}

@@ -11,6 +11,7 @@
     notifications,
     Body,
     Search,
+    Icon,
   } from "@budibase/bbui"
   import Spinner from "components/common/Spinner.svelte"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
@@ -27,6 +28,7 @@
   import AppRow from "components/start/AppRow.svelte"
   import { AppStatus } from "constants"
   import analytics, { Events } from "analytics"
+  import Logo from "assets/bb-space-man.svg"
 
   let sortBy = "name"
   let template
@@ -47,7 +49,6 @@
   $: filteredApps = enrichedApps.filter(app =>
     app?.name?.toLowerCase().includes(searchTerm.toLowerCase())
   )
-  $: isCloud = $admin.cloud
 
   const enrichApps = (apps, user, sortBy) => {
     const enrichedApps = apps.map(app => ({
@@ -78,6 +79,7 @@
   }
 
   const initiateAppCreation = () => {
+    template = null
     creationModal.show()
     creatingApp = true
   }
@@ -159,12 +161,10 @@
   }
 
   const viewApp = app => {
-    if (!isCloud && app.deployed) {
-      // special case to use the short form name if self hosted
-      window.open(`/app/${encodeURIComponent(app.name)}`)
+    if (app.url) {
+      window.open(`/app${app.url}`)
     } else {
-      const id = app.deployed ? app.prodId : app.devId
-      window.open(`/${id}`, "_blank")
+      window.open(`/${app.prodId}`)
     }
   }
 
@@ -300,14 +300,26 @@
 
       <div class="buttons">
         {#if cloud}
-          <Button icon="Export" quiet secondary on:click={initiateAppsExport}>
+          <Button
+            size="L"
+            icon="Export"
+            quiet
+            secondary
+            on:click={initiateAppsExport}
+          >
             Export apps
           </Button>
         {/if}
-        <Button icon="Import" quiet secondary on:click={initiateAppImport}>
+        <Button
+          icon="Import"
+          size="L"
+          quiet
+          secondary
+          on:click={initiateAppImport}
+        >
           Import app
         </Button>
-        <Button icon="Add" cta on:click={initiateAppCreation}>
+        <Button size="L" icon="Add" cta on:click={initiateAppCreation}>
           Create app
         </Button>
       </div>
@@ -389,9 +401,24 @@
 
     {#if !enrichedApps.length && !creatingApp && loaded}
       <div class="empty-wrapper">
-        <Modal inline>
-          <CreateAppModal {template} inline={true} />
-        </Modal>
+        <div class="centered">
+          <div class="main">
+            <Layout gap="S" justifyItems="center">
+              <img class="img-size" alt="logo" src={Logo} />
+              <div class="new-screen-text">
+                <Detail size="M">Create a business app in minutes!</Detail>
+              </div>
+              <Button on:click={() => initiateAppCreation()} size="M" cta>
+                <div class="new-screen-button">
+                  <div class="background-icon" style="color: white;">
+                    <Icon name="Add" />
+                  </div>
+                  Create App
+                </div></Button
+              >
+            </Layout>
+          </div>
+        </div>
       </div>
     {/if}
 
@@ -412,6 +439,11 @@
 >
   <CreateAppModal {template} />
 </Modal>
+
+<Modal bind:this={updatingModal} padding={false} width="600px">
+  <UpdateAppModal app={selectedApp} />
+</Modal>
+
 <ConfirmDialog
   bind:this={deletionModal}
   title="Confirm deletion"
@@ -438,7 +470,6 @@
   Are you sure you want to unpublish the app <b>{selectedApp?.name}</b>?
 </ConfirmDialog>
 
-<UpdateAppModal app={selectedApp} bind:this={updatingModal} />
 <ChooseIconModal app={selectedApp} bind:this={iconModal} />
 
 <style>
@@ -474,12 +505,15 @@
   }
 
   .grid {
+    height: 200px;
     display: grid;
+    overflow: hidden;
     grid-gap: var(--spacing-xl);
     grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+    grid-template-rows: minmax(70px, 1fr) minmax(100px, 1fr) minmax(0px, 0);
   }
   .template-card {
-    height: 80px;
+    height: 70px;
     border-radius: var(--border-radius-s);
     border: 1px solid var(--spectrum-global-color-gray-300);
     cursor: pointer;
@@ -532,5 +566,43 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
+  }
+
+  .centered {
+    width: calc(100% - 350px);
+    height: calc(100% - 100px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .main {
+    width: 300px;
+  }
+
+  .new-screen-text {
+    width: 160px;
+    text-align: center;
+    color: #2c2c2c;
+    font-weight: 600;
+  }
+
+  .new-screen-button {
+    margin-left: 5px;
+    height: 20px;
+    width: 100px;
+    display: flex;
+    align-items: center;
+  }
+
+  .img-size {
+    width: 160px;
+    height: 160px;
+  }
+
+  .background-icon {
+    margin-top: 4px;
+    margin-right: 4px;
   }
 </style>

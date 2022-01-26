@@ -5,13 +5,17 @@
   import { auth } from "stores/portal"
 
   export let preAuthStep
+  export let datasource
 
   $: tenantId = $auth.tenantId
 </script>
 
 <ActionButton
   on:click={async () => {
-    const datasource = await preAuthStep()
+    let ds = datasource
+    if (!ds) {
+      ds = await preAuthStep()
+    }
     window.open(
       `/api/global/auth/${tenantId}/datasource/google?datasourceId=${datasource._id}&appId=${$store.appId}`,
       "_blank"

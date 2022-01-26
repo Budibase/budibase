@@ -22,6 +22,7 @@ const { getGlobalDB } = require("@budibase/backend-core/tenancy")
 const { createASession } = require("@budibase/backend-core/sessions")
 const { user: userCache } = require("@budibase/backend-core/cache")
 const CouchDB = require("../../db")
+const newid = require("../../db/newid")
 core.init(CouchDB)
 
 const GLOBAL_USER_ID = "us_uuid1"
@@ -98,7 +99,8 @@ class TestConfiguration {
     }
   }
 
-  async init(appName = "test_application") {
+  // use a new id as the name to avoid name collisions
+  async init(appName = newid()) {
     await this.globalUser()
     return this.createApp(appName)
   }

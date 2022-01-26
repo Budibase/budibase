@@ -88,6 +88,7 @@ export interface Integration {
   docs: string
   plus?: boolean
   auth?: { type: string }
+  relationships?: boolean
   description: string
   friendlyName: string
   datasource: {}
