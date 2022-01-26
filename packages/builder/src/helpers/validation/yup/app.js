@@ -51,7 +51,7 @@ export const url = (validation, { apps, currentApp } = { apps: [] }) => {
           }
           return !apps
             .map(app => app.url)
-            .some(appUrl => appUrl.toLowerCase() === value.toLowerCase())
+            .some(appUrl => appUrl?.toLowerCase() === value.toLowerCase())
         }
       )
       .test("valid-url", "Not a valid URL", value => {
