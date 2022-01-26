@@ -1,6 +1,5 @@
-import { SqlQuery } from "../definitions/datasource"
+import { SourceNames, SqlQuery } from "../definitions/datasource"
 import { Datasource, Table } from "../definitions/common"
-import { SourceNames } from "../definitions/datasource"
 import { DocumentTypes, SEPARATOR } from "../db/utils"
 import { FieldTypes, BuildSchemaErrors, InvalidColumns } from "../constants"
 
@@ -127,7 +126,12 @@ export function isSQL(datasource: Datasource): boolean {
   if (!datasource || !datasource.source) {
     return false
   }
-  const SQL = [SourceNames.POSTGRES, SourceNames.SQL_SERVER, SourceNames.MYSQL]
+  const SQL = [
+    SourceNames.POSTGRES,
+    SourceNames.SQL_SERVER,
+    SourceNames.MYSQL,
+    SourceNames.ORACLE,
+  ]
   return SQL.indexOf(datasource.source) !== -1
 }
 
@@ -139,11 +143,59 @@ export function isIsoDateString(str: string) {
   return d.toISOString() === str
 }
 
-// add the existing relationships from the entities if they exist, to prevent them from being overridden
+/**
+ * This function will determine whether a column is a relationship and whether it
+ * is currently valid. The reason for the validity check is that tables can be deleted
+ * outside of Budibase control and if this is the case it will break Budibase relationships.
+ * The tableIds is a list passed down from the main finalise tables function, which is
+ * based on the tables that have just been fetched. This will only really be used on subsequent
+ * fetches to the first one - if the user is periodically refreshing Budibase knowledge of tables.
+ * @param column The column to check, to see if it is a valid relationship.
+ * @param tableIds The IDs of the tables which currently exist.
+ */
+function shouldCopyRelationship(
+  column: { type: string; tableId?: string },
+  tableIds: [string]
+) {
+  return (
+    column.type === FieldTypes.LINK &&
+    column.tableId &&
+    tableIds.includes(column.tableId)
+  )
+}
+
+/**
+ * Similar function to the shouldCopyRelationship function, but instead this looks for options and boolean
+ * types. It is possible to switch a string -> options and a number -> boolean (and vice versus) need to make
+ * sure that these get copied over when tables are fetched. Also checks whether they are still valid, if a
+ * column has changed type in the external database then copying it over may not be possible.
+ * @param column The column to check for options or boolean type.
+ * @param fetchedColumn The fetched column to check for the type in the external database.
+ */
+function shouldCopySpecialColumn(
+  column: { type: string },
+  fetchedColumn: { type: string } | undefined
+) {
+  return (
+    column.type === FieldTypes.OPTIONS ||
+    ((!fetchedColumn || fetchedColumn.type === FieldTypes.NUMBER) &&
+      column.type === FieldTypes.BOOLEAN)
+  )
+}
+
+/**
+ * Looks for columns which need to be copied over into the new table definitions, like relationships
+ * and options types.
+ * @param tableName The name of the table which is being checked.
+ * @param table The specific table which is being checked.
+ * @param entities All the tables that existed before - the old table definitions.
+ * @param tableIds The IDs of the tables which exist now, to check if anything has been removed.
+ */
 function copyExistingPropsOver(
   tableName: string,
   table: Table,
-  entities: { [key: string]: any }
+  entities: { [key: string]: any },
+  tableIds: [string]
 ) {
   if (entities && entities[tableName]) {
     if (entities[tableName].primaryDisplay) {
@@ -154,11 +206,10 @@ function copyExistingPropsOver(
       if (!existingTableSchema.hasOwnProperty(key)) {
         continue
       }
+      const column = existingTableSchema[key]
       if (
-        existingTableSchema[key].type === FieldTypes.LINK ||
-        existingTableSchema[key].type === FieldTypes.OPTIONS ||
-        ((!table.schema[key] || table.schema[key].type === FieldTypes.NUMBER) &&
-          existingTableSchema[key].type === FieldTypes.BOOLEAN)
+        shouldCopyRelationship(column, tableIds) ||
+        shouldCopySpecialColumn(column, table.schema[key])
       ) {
         table.schema[key] = existingTableSchema[key]
       }
@@ -167,6 +218,13 @@ function copyExistingPropsOver(
   return table
 }
 
+/**
+ * Look through the final table definitions to see if anything needs to be
+ * copied over from the old and if any errors have occurred mark them so
+ * that the user can be made aware.
+ * @param tables The list of tables that have been retrieved from the external database.
+ * @param entities The old list of tables, if there was any to look for definitions in.
+ */
 export function finaliseExternalTables(
   tables: { [key: string]: any },
   entities: { [key: string]: any }
@@ -174,6 +232,8 @@ export function finaliseExternalTables(
   const invalidColumns = Object.values(InvalidColumns)
   let finalTables: { [key: string]: any } = {}
   const errors: { [key: string]: string } = {}
+  // @ts-ignore
+  const tableIds: [string] = Object.values(tables).map(table => table._id)
   for (let [name, table] of Object.entries(tables)) {
     const schemaFields = Object.keys(table.schema)
     // make sure every table has a key
@@ -185,7 +245,7 @@ export function finaliseExternalTables(
       continue
     }
     // make sure all previous props have been added back
-    finalTables[name] = copyExistingPropsOver(name, table, entities)
+    finalTables[name] = copyExistingPropsOver(name, table, entities, tableIds)
   }
   // sort the tables by name
   finalTables = Object.entries(finalTables)

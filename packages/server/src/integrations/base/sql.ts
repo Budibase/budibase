@@ -72,16 +72,22 @@ class InternalBuilder {
 
   // right now we only do filters on the specific table being queried
   addFilters(
-    tableName: string,
     query: KnexQuery,
-    filters: SearchFilters | undefined
+    filters: SearchFilters | undefined,
+    opts: { relationship?: boolean; tableName?: string }
   ): KnexQuery {
     function iterate(
       structure: { [key: string]: any },
       fn: (key: string, value: any) => void
     ) {
       for (let [key, value] of Object.entries(structure)) {
-        fn(`${tableName}.${key}`, value)
+        const isRelationshipField = key.includes(".")
+        if (!opts.relationship && !isRelationshipField) {
+          fn(`${opts.tableName}.${key}`, value)
+        }
+        if (opts.relationship && isRelationshipField) {
+          fn(key, value)
+        }
       }
     }
     if (!filters) {
@@ -272,7 +278,7 @@ class InternalBuilder {
     if (foundOffset) {
       query = query.offset(foundOffset)
     }
-    query = this.addFilters(tableName, query, filters)
+    query = this.addFilters(query, filters, { tableName })
     // add sorting to pre-query
     query = this.addSorting(query, json)
     // @ts-ignore
@@ -285,20 +291,21 @@ class InternalBuilder {
       preQuery = this.addSorting(preQuery, json)
     }
     // handle joins
-    return this.addRelationships(
+    query = this.addRelationships(
       knex,
       preQuery,
       selectStatement,
       tableName,
       relationships
     )
+    return this.addFilters(query, filters, { relationship: true })
   }
 
   update(knex: Knex, json: QueryJson, opts: QueryOptions): KnexQuery {
     const { endpoint, body, filters } = json
     let query: KnexQuery = knex(endpoint.entityId)
     const parsedBody = parseBody(body)
-    query = this.addFilters(endpoint.entityId, query, filters)
+    query = this.addFilters(query, filters, { tableName: endpoint.entityId })
     // mysql can't use returning
     if (opts.disableReturning) {
       return query.update(parsedBody)
@@ -310,7 +317,7 @@ class InternalBuilder {
   delete(knex: Knex, json: QueryJson, opts: QueryOptions): KnexQuery {
     const { endpoint, filters } = json
     let query: KnexQuery = knex(endpoint.entityId)
-    query = this.addFilters(endpoint.entityId, query, filters)
+    query = this.addFilters(query, filters, { tableName: endpoint.entityId })
     // mysql can't use returning
     if (opts.disableReturning) {
       return query.delete()

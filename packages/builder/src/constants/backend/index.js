@@ -231,3 +231,11 @@ export const PaginationLocations = [
   { label: "Query parameters", value: "query" },
   { label: "Request body", value: "body" },
 ]
+
+export const BannedSearchTypes = [
+  "link",
+  "attachment",
+  "formula",
+  "json",
+  "jsonarray",
+]

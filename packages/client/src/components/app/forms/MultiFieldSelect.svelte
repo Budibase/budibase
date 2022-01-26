@@ -20,6 +20,7 @@
   let fieldSchema
 
   $: flatOptions = optionsSource == null || optionsSource === "schema"
+  $: expandedDefaultValue = expand(defaultValue)
   $: options = getOptions(
     optionsSource,
     fieldSchema,
@@ -28,6 +29,18 @@
     valueColumn,
     customOptions
   )
+
+  const expand = values => {
+    if (!values) {
+      return []
+    }
+
+    if (Array.isArray(values)) {
+      return values
+    }
+
+    return values.split(",").map(value => value.trim())
+  }
 </script>
 
 <Field
@@ -35,7 +48,7 @@
   {label}
   {disabled}
   {validation}
-  {defaultValue}
+  defaultValue={expandedDefaultValue}
   type="array"
   bind:fieldState
   bind:fieldApi

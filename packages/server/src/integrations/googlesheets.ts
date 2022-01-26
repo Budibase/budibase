@@ -33,6 +33,7 @@ module GoogleSheetsModule {
     auth: {
       type: "google",
     },
+    relationships: false,
     docs: "https://developers.google.com/sheets/api/quickstart/nodejs",
     description:
       "Create and collaborate on online spreadsheets in real-time and from any device. ",
