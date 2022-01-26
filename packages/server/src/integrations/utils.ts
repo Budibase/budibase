@@ -157,6 +157,7 @@ function copyExistingPropsOver(
       if (
         existingTableSchema[key].type === FieldTypes.LINK ||
         existingTableSchema[key].type === FieldTypes.OPTIONS ||
+        existingTableSchema[key].type === FieldTypes.ARRAY ||
         ((!table.schema[key] || table.schema[key].type === FieldTypes.NUMBER) &&
           existingTableSchema[key].type === FieldTypes.BOOLEAN)
       ) {
