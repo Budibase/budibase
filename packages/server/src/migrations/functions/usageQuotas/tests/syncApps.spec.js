@@ -1,8 +1,8 @@
 const { getGlobalDB } = require("@budibase/backend-core/tenancy")
-const TestConfig = require("../../../tests/utilities/TestConfiguration")
-const { getUsageQuotaDoc, update, Properties } = require("../../../utilities/usageQuota")
+const TestConfig = require("../../../../tests/utilities/TestConfiguration")
+const { getUsageQuotaDoc, update, Properties } = require("../../../../utilities/usageQuota")
 const syncApps = require("../syncApps")
-const env = require("../../../environment")
+const env = require("../../../../environment")
 
 describe("syncApps", () => {
   let config = new TestConfig(false)

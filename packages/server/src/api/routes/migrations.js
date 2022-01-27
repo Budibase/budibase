@@ -3,6 +3,12 @@ const migrationsController = require("../controllers/migrations")
 const router = Router()
 const { internalApi } = require("@budibase/backend-core/auth")
 
-router.post("/api/migrations/run", internalApi, migrationsController.migrate)
+router
+  .post("/api/migrations/run", internalApi, migrationsController.migrate)
+  .get(
+    "/api/migrations/definitions",
+    internalApi,
+    migrationsController.fetchDefinitions
+  )
 
 module.exports = router
