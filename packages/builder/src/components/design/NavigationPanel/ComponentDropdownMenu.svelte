@@ -3,11 +3,19 @@
   import { store, currentAsset } from "builderStore"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { findComponentParent } from "builderStore/componentUtils"
-  import { ActionMenu, MenuItem, Icon, notifications } from "@budibase/bbui"
+  import {
+    ActionMenu,
+    MenuItem,
+    Icon,
+    notifications,
+    Modal,
+  } from "@budibase/bbui"
+  import CustomBlockModal from "./CustomBlockModal.svelte"
 
   export let component
 
   let confirmDeleteDialog
+  let customBlockModal
 
   $: definition = store.actions.components.getDefinition(component?._component)
   $: noChildrenAllowed = !component || !definition?.hasChildren
@@ -131,6 +139,9 @@
     >
       Paste inside
     </MenuItem>
+    <MenuItem icon="Article" on:click={customBlockModal.show}>
+      Save custom block
+    </MenuItem>
   </ActionMenu>
   <ConfirmDialog
     bind:this={confirmDeleteDialog}
@@ -139,4 +150,7 @@
     okText="Delete Component"
     onOk={deleteComponent}
   />
+  <Modal bind:this={customBlockModal}>
+    <CustomBlockModal />
+  </Modal>
 {/if}

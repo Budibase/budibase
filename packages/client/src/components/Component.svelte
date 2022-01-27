@@ -324,7 +324,7 @@
     <svelte:component this={constructor} bind:this={ref} {...initialSettings}>
       {#if children.length}
         {#each children as child (child._id)}
-          <svelte:self instance={child} />
+          <svelte:self instance={child} {isBlock} />
         {/each}
       {:else if emptyState}
         <Placeholder />

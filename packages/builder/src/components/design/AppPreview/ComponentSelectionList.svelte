@@ -8,6 +8,8 @@
   } from "@budibase/bbui"
   import { store, currentAssetName, selectedComponent } from "builderStore"
   import structure from "./componentStructure.json"
+  import { randomizeIds } from "../../../builderStore/componentUtils"
+  import { cloneDeep } from "lodash/fp"
 
   $: enrichedStructure = enrichStructure(structure, $store.components)
 
@@ -49,6 +51,20 @@
       }
     }
   }
+
+  const onCustomBlockChosen = async customBlock => {
+    try {
+      // Randomize all ID's inside the block definition
+      const definition = cloneDeep(customBlock.definition)
+      randomizeIds(definition)
+      await store.actions.components.create("customblock", {
+        ...customBlock,
+        definition,
+      })
+    } catch (error) {
+      notifications.error("Error creating component")
+    }
+  }
 </script>
 
 <div class="components">
@@ -84,6 +100,31 @@
       {/each}
     </ActionMenu>
   {/each}
+  {#if $store.customBlocks?.length}
+    <ActionMenu>
+      <ActionButton
+        icon="Article"
+        quiet
+        size="S"
+        slot="control"
+        dataCy="category-custom"
+      >
+        <div class="buttonContent">
+          Custom blocks
+          <Icon size="S" name="ChevronDown" />
+        </div>
+      </ActionButton>
+      {#each $store.customBlocks as block}
+        <MenuItem
+          dataCy={`component-custom-${block.name}`}
+          icon="Article"
+          on:click={() => onCustomBlockChosen(block)}
+        >
+          {block.name}
+        </MenuItem>
+      {/each}
+    </ActionMenu>
+  {/if}
 </div>
 
 <style>

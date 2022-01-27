@@ -24,6 +24,7 @@ import {
   findAllMatchingComponents,
   findComponent,
   getComponentSettings,
+  randomizeIds,
 } from "../componentUtils"
 import { Helpers } from "@budibase/bbui"
 import { removeBindings } from "../dataBinding"
@@ -57,6 +58,7 @@ const INITIAL_FRONTEND_STATE = {
   clientLibPath: "",
   theme: "",
   customTheme: {},
+  customBlocks: [],
   previewDevice: "desktop",
 }
 
@@ -88,6 +90,7 @@ export const getFrontendStore = () => {
         screens: screens || [],
         theme: application.theme || "spectrum--light",
         customTheme: application.customTheme,
+        customBlocks: application.customBlocks || [],
         hasAppPackage: true,
         appInstance: application.instance,
         clientLibPath,
@@ -102,6 +105,22 @@ export const getFrontendStore = () => {
       await integrations.init()
       await queries.init()
       await tables.init()
+    },
+    blocks: {
+      create: async customBlock => {
+        const { appId, customBlocks } = get(store)
+        const newCustomBlocks = [...customBlocks, customBlock]
+        await API.saveAppMetadata({
+          appId,
+          metadata: {
+            customBlocks: newCustomBlocks,
+          },
+        })
+        store.update(state => {
+          state.customBlocks = newCustomBlocks
+          return state
+        })
+      },
     },
     theme: {
       save: async theme => {
@@ -362,11 +381,17 @@ export const getFrontendStore = () => {
           extras._instanceName = `Step ${formSteps.length + 1}`
         }
 
+        // Generate name
+        let name = `New ${definition.name}`
+        if (componentName.endsWith("customblock")) {
+          name = `New ${presetProps.name}`
+        }
+
         return {
           _id: Helpers.uuid(),
           _component: definition.component,
           _styles: { normal: {}, hover: {}, active: {} },
-          _instanceName: `New ${definition.name}`,
+          _instanceName: name,
           ...cloneDeep(props),
           ...extras,
         }
@@ -509,13 +534,6 @@ export const getFrontendStore = () => {
           if (cut) {
             state.componentToPaste = null
           } else {
-            const randomizeIds = component => {
-              if (!component) {
-                return
-              }
-              component._id = Helpers.uuid()
-              component._children?.forEach(randomizeIds)
-            }
             randomizeIds(componentToPaste)
           }
 

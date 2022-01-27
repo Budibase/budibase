@@ -3385,5 +3385,21 @@
         "key": "validation"
       }
     ]
+  },
+  "customblock": {
+    "name": "Custom Block",
+    "settings": [
+      {
+        "type": "text",
+        "label": "Definition",
+        "key": "definition",
+        "hidden": true,
+        "nested": true
+      },
+      {
+        "type": "customblocksettings",
+        "key": "settingsContext"
+      }
+    ]
   }
 }

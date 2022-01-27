@@ -16,10 +16,11 @@ import FilterEditor from "./FilterEditor/FilterEditor.svelte"
 import URLSelect from "./URLSelect.svelte"
 import OptionsEditor from "./OptionsEditor/OptionsEditor.svelte"
 import FormFieldSelect from "./FormFieldSelect.svelte"
+import CustomBlockSettings from "./CustomBlockSettings.svelte"
 import ValidationEditor from "./ValidationEditor/ValidationEditor.svelte"
 import DrawerBindableCombobox from "components/common/bindings/DrawerBindableCombobox.svelte"
 
-const componentMap = {
+export const componentMap = {
   text: DrawerBindableCombobox,
   select: Select,
   dataSource: DataSourceSelect,
@@ -40,6 +41,7 @@ const componentMap = {
   navigation: NavigationEditor,
   filter: FilterEditor,
   url: URLSelect,
+  customblocksettings: CustomBlockSettings,
   "field/string": FormFieldSelect,
   "field/number": FormFieldSelect,
   "field/options": FormFieldSelect,

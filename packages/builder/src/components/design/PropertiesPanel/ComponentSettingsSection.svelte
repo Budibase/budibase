@@ -50,7 +50,7 @@
 
   const canRenderControl = setting => {
     const control = getComponentForSettingType(setting?.type)
-    if (!control) {
+    if (!control || setting.hidden) {
       return false
     }
 

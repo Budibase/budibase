@@ -1,4 +1,5 @@
 import { store } from "./index"
+import { Helpers } from "@budibase/bbui"
 
 /**
  * Recursively searches for a specific component ID
@@ -160,4 +161,16 @@ export const getComponentSettings = componentType => {
   componentSettingCache[componentType] = settings
 
   return settings
+}
+
+/**
+ * Randomizes all ID's of a component tree.
+ * @param component the root component of the tree to randomize
+ */
+export const randomizeIds = component => {
+  if (!component) {
+    return
+  }
+  component._id = Helpers.uuid()
+  component._children?.forEach(randomizeIds)
 }

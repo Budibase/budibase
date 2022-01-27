@@ -1,5 +1,6 @@
 import { enrichDataBindings } from "./enrichDataBinding"
 import { enrichButtonActions } from "./buttonActions"
+import { processStringSync } from "@budibase/string-templates"
 
 /**
  * Deeply compares 2 props using JSON.stringify.
@@ -38,7 +39,25 @@ export const enrichProps = (props, context) => {
   let actionProps = {}
   Object.keys(normalProps).forEach(prop => {
     if (prop?.toLowerCase().includes("onclick")) {
-      actionProps[prop] = normalProps[prop]
+      // Check for custom blocks
+      if (
+        typeof normalProps[prop] === "string" &&
+        normalProps[prop].includes("{{ [block]")
+      ) {
+        let stringActions = processStringSync(normalProps[prop], totalContext)
+        let json = []
+        try {
+          json = JSON.parse(stringActions)
+        } catch (error) {
+          // Swallow
+        }
+        actionProps[prop] = json
+      }
+
+      // Otherwise this is a normal action array
+      else {
+        actionProps[prop] = normalProps[prop]
+      }
       delete normalProps[prop]
     }
   })

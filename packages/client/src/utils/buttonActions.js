@@ -275,6 +275,11 @@ export const enrichButtonActions = (actions, context) => {
     return actions
   }
 
+  // Sanity check that we have an array of actions
+  if (!Array.isArray(actions)) {
+    return () => {}
+  }
+
   // Button context is built up as actions are executed.
   // Inherit any previous button context which may have come from actions
   // before a confirmable action since this breaks the chain.

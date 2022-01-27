@@ -278,13 +278,22 @@ exports.create = async ctx => {
 
 exports.update = async ctx => {
   const apps = await getAllApps(CouchDB, { dev: true })
-  // validation
-  const name = ctx.request.body.name
-  checkAppName(ctx, apps, name, ctx.params.appId)
-  const url = await getAppUrl(ctx)
-  checkAppUrl(ctx, apps, url, ctx.params.appId)
 
-  const appPackageUpdates = { name, url }
+  let appPackageUpdates
+
+  const customBlocks = ctx.request.body.customBlocks
+  console.log(customBlocks)
+  if (customBlocks) {
+    appPackageUpdates = { customBlocks }
+  } else {
+    // validation
+    const name = ctx.request.body.name
+    checkAppName(ctx, apps, name, ctx.params.appId)
+    const url = await getAppUrl(ctx)
+    checkAppUrl(ctx, apps, url, ctx.params.appId)
+    appPackageUpdates = { name, url }
+  }
+
   const data = await updateAppPackage(appPackageUpdates, ctx.params.appId)
   ctx.status = 200
   ctx.body = data
