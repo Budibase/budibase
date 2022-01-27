@@ -8,6 +8,7 @@ const auditLog = require("./auditLog")
 const tenancy = require("./tenancy")
 const appTenancy = require("./appTenancy")
 const internalApi = require("./internalApi")
+const datasourceGoogle = require("./passport/datasource/google")
 
 module.exports = {
   google,
@@ -20,4 +21,7 @@ module.exports = {
   appTenancy,
   authError,
   internalApi,
+  datasource: {
+    google: datasourceGoogle,
+  },
 }
