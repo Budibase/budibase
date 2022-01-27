@@ -10,7 +10,7 @@ const {
   getDeployedAppID,
   dbExists,
 } = require("@budibase/backend-core/db")
-const CouchDB = require("../../db")
+const { getAppId } = require("@budibase/backend-core/context")
 
 const BASE_AUTO_ID = 1
 
@@ -263,14 +263,13 @@ exports.outputProcessing = async (
   rows,
   opts = { squash: true }
 ) => {
-  const appId = ctx.appId
   let wasArray = true
   if (!(rows instanceof Array)) {
     rows = [rows]
     wasArray = false
   }
   // attach any linked row information
-  let enriched = await linkRows.attachFullLinkedDocs(ctx, table, rows)
+  let enriched = await linkRows.attachFullLinkedDocs(table, rows)
 
   // process formulas
   enriched = processFormulas(table, enriched)
@@ -289,29 +288,25 @@ exports.outputProcessing = async (
     }
   }
   if (opts.squash) {
-    enriched = await linkRows.squashLinksToPrimaryDisplay(
-      appId,
-      table,
-      enriched
-    )
+    enriched = await linkRows.squashLinksToPrimaryDisplay(table, enriched)
   }
   return wasArray ? enriched : enriched[0]
 }
 
 /**
  * Clean up any attachments that were attached to a row.
- * @param {string} appId The ID of the app from which a row is being deleted.
  * @param {object} table The table from which a row is being removed.
  * @param {any} row optional - the row being removed.
  * @param {any} rows optional - if multiple rows being deleted can do this in bulk.
  * @param {any} oldRow optional - if updating a row this will determine the difference.
  * @return {Promise<void>} When all attachments have been removed this will return.
  */
-exports.cleanupAttachments = async (appId, table, { row, rows, oldRow }) => {
+exports.cleanupAttachments = async (table, { row, rows, oldRow }) => {
+  const appId = getAppId()
   if (!isProdAppID(appId)) {
     const prodAppId = getDeployedAppID(appId)
     // if prod exists, then don't allow deleting
-    const exists = await dbExists(CouchDB, prodAppId)
+    const exists = await dbExists(prodAppId)
     if (exists) {
       return
     }

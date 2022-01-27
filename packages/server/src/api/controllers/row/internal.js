@@ -1,4 +1,3 @@
-const CouchDB = require("../../../db")
 const linkRows = require("../../../db/linkedRows")
 const {
   getRowParams,
@@ -27,6 +26,7 @@ const {
   getFromMemoryDoc,
 } = require("../view/utils")
 const { cloneDeep } = require("lodash/fp")
+const { getAppDB } = require("@budibase/backend-core/context")
 
 const CALCULATION_TYPES = {
   SUM: "sum",
@@ -106,8 +106,7 @@ async function getView(db, viewName) {
 }
 
 exports.patch = async ctx => {
-  const appId = ctx.appId
-  const db = new CouchDB(appId)
+  const db = getAppDB()
   const inputs = ctx.request.body
   const tableId = inputs.tableId
   const isUserTable = tableId === InternalTables.USER_METADATA
@@ -146,14 +145,13 @@ exports.patch = async ctx => {
 
   // returned row is cleaned and prepared for writing to DB
   row = await linkRows.updateLinks({
-    appId,
     eventType: linkRows.EventType.ROW_UPDATE,
     row,
     tableId: row.tableId,
     table,
   })
   // check if any attachments removed
-  await cleanupAttachments(appId, table, { oldRow, row })
+  await cleanupAttachments(table, { oldRow, row })
 
   if (isUserTable) {
     // the row has been updated, need to put it into the ctx
@@ -166,8 +164,7 @@ exports.patch = async ctx => {
 }
 
 exports.save = async function (ctx) {
-  const appId = ctx.appId
-  const db = new CouchDB(appId)
+  const db = getAppDB()
   let inputs = ctx.request.body
   inputs.tableId = ctx.params.tableId
 
@@ -189,7 +186,6 @@ exports.save = async function (ctx) {
 
   // make sure link rows are up to date
   row = await linkRows.updateLinks({
-    appId,
     eventType: linkRows.EventType.ROW_SAVE,
     row,
     tableId: row.tableId,
@@ -200,7 +196,6 @@ exports.save = async function (ctx) {
 }
 
 exports.fetchView = async ctx => {
-  const appId = ctx.appId
   const viewName = ctx.params.viewName
 
   // if this is a table view being looked for just transfer to that
@@ -209,7 +204,7 @@ exports.fetchView = async ctx => {
     return exports.fetch(ctx)
   }
 
-  const db = new CouchDB(appId)
+  const db = getAppDB()
   const { calculation, group, field } = ctx.query
   const viewInfo = await getView(db, viewName)
   let response
@@ -263,8 +258,7 @@ exports.fetchView = async ctx => {
 }
 
 exports.fetch = async ctx => {
-  const appId = ctx.appId
-  const db = new CouchDB(appId)
+  const db = getAppDB()
 
   const tableId = ctx.params.tableId
   let table = await db.get(tableId)
@@ -273,17 +267,15 @@ exports.fetch = async ctx => {
 }
 
 exports.find = async ctx => {
-  const appId = ctx.appId
-  const db = new CouchDB(appId)
+  const db = getAppDB()
   const table = await db.get(ctx.params.tableId)
-  let row = await findRow(ctx, db, ctx.params.tableId, ctx.params.rowId)
+  let row = await findRow(ctx, ctx.params.tableId, ctx.params.rowId)
   row = await outputProcessing(ctx, table, row)
   return row
 }
 
 exports.destroy = async function (ctx) {
-  const appId = ctx.appId
-  const db = new CouchDB(appId)
+  const db = getAppDB()
   const { _id, _rev } = ctx.request.body
   let row = await db.get(_id)
 
@@ -295,13 +287,12 @@ exports.destroy = async function (ctx) {
   row = await outputProcessing(ctx, table, row, { squash: false })
   // now remove the relationships
   await linkRows.updateLinks({
-    appId,
     eventType: linkRows.EventType.ROW_DELETE,
     row,
     tableId: row.tableId,
   })
   // remove any attachments that were on the row from object storage
-  await cleanupAttachments(appId, table, { row })
+  await cleanupAttachments(table, { row })
 
   let response
   if (ctx.params.tableId === InternalTables.USER_METADATA) {
@@ -317,8 +308,7 @@ exports.destroy = async function (ctx) {
 }
 
 exports.bulkDestroy = async ctx => {
-  const appId = ctx.appId
-  const db = new CouchDB(appId)
+  const db = getAppDB()
   const tableId = ctx.params.tableId
   const table = await db.get(tableId)
   let { rows } = ctx.request.body
@@ -330,7 +320,6 @@ exports.bulkDestroy = async ctx => {
   // remove the relationships first
   let updates = rows.map(row =>
     linkRows.updateLinks({
-      appId,
       eventType: linkRows.EventType.ROW_DELETE,
       row,
       tableId: row.tableId,
@@ -349,7 +338,7 @@ exports.bulkDestroy = async ctx => {
     await db.bulkDocs(rows.map(row => ({ ...row, _deleted: true })))
   }
   // remove any attachments that were on the rows from object storage
-  await cleanupAttachments(appId, table, { rows })
+  await cleanupAttachments(table, { rows })
   await Promise.all(updates)
   return { response: { ok: true }, rows }
 }
@@ -360,25 +349,24 @@ exports.search = async ctx => {
     return { rows: await exports.fetch(ctx) }
   }
 
-  const appId = ctx.appId
   const { tableId } = ctx.params
-  const db = new CouchDB(appId)
+  const db = getAppDB()
   const { paginate, query, ...params } = ctx.request.body
   params.version = ctx.version
   params.tableId = tableId
 
   let response
   if (paginate) {
-    response = await paginatedSearch(appId, query, params)
+    response = await paginatedSearch(query, params)
   } else {
-    response = await fullSearch(appId, query, params)
+    response = await fullSearch(query, params)
   }
 
   // Enrich search results with relationships
   if (response.rows && response.rows.length) {
     // enrich with global users if from users table
     if (tableId === InternalTables.USER_METADATA) {
-      response.rows = await getGlobalUsersFromMetadata(appId, response.rows)
+      response.rows = await getGlobalUsersFromMetadata(response.rows)
     }
     const table = await db.get(tableId)
     response.rows = await outputProcessing(ctx, table, response.rows)
@@ -389,25 +377,22 @@ exports.search = async ctx => {
 
 exports.validate = async ctx => {
   return validate({
-    appId: ctx.appId,
     tableId: ctx.params.tableId,
     row: ctx.request.body,
   })
 }
 
 exports.fetchEnrichedRow = async ctx => {
-  const appId = ctx.appId
-  const db = new CouchDB(appId)
+  const db = getAppDB()
   const tableId = ctx.params.tableId
   const rowId = ctx.params.rowId
   // need table to work out where links go in row
   let [table, row] = await Promise.all([
     db.get(tableId),
-    findRow(ctx, db, tableId, rowId),
+    findRow(ctx, tableId, rowId),
   ])
   // get the link docs
   const linkVals = await linkRows.getLinkDocuments({
-    appId,
     tableId,
     rowId,
   })

@@ -11,7 +11,6 @@ const { generateUserMetadataID, isDevAppID } = require("../db/utils")
 const { dbExists } = require("@budibase/backend-core/db")
 const { isUserInAppTenant } = require("@budibase/backend-core/tenancy")
 const { getCachedSelf } = require("../utilities/global")
-const CouchDB = require("../db")
 const env = require("../environment")
 const { isWebhookEndpoint } = require("./utils")
 
@@ -31,7 +30,7 @@ module.exports = async (ctx, next) => {
   // check the app exists referenced in cookie
   if (appCookie) {
     const appId = appCookie.appId
-    const exists = await dbExists(CouchDB, appId)
+    const exists = await dbExists(appId)
     if (!exists) {
       clearCookie(ctx, Cookies.CurrentApp)
       return next()

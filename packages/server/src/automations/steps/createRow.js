@@ -78,7 +78,6 @@ exports.run = async function ({ inputs, appId, emitter }) {
 
   try {
     inputs.row = await automationUtils.cleanUpRow(
-      appId,
       inputs.row.tableId,
       inputs.row
     )

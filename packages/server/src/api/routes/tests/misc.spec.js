@@ -82,7 +82,6 @@ describe("run misc tests", () => {
         dataImport.schema[col] = { type: "string" }
       }
       await tableUtils.handleDataImport(
-        config.getAppId(),
         { userId: "test" },
         table,
         dataImport

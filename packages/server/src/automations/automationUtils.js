@@ -53,13 +53,12 @@ exports.cleanInputValues = (inputs, schema) => {
  * the automation but is instead part of the Table/Table. This function will get the table schema and use it to instead
  * perform the cleanInputValues function on the input row.
  *
- * @param {string} appId The instance which the Table/Table is contained under.
  * @param {string} tableId The ID of the Table/Table which the schema is to be retrieved for.
  * @param {object} row The input row structure which requires clean-up after having been through template statements.
  * @returns {Promise<Object>} The cleaned up rows object, will should now have all the required primitive types.
  */
-exports.cleanUpRow = async (appId, tableId, row) => {
-  let table = await getTable(appId, tableId)
+exports.cleanUpRow = async (tableId, row) => {
+  let table = await getTable(tableId)
   return exports.cleanInputValues(row, { properties: table.schema })
 }
 

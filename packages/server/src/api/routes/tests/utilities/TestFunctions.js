@@ -1,9 +1,9 @@
 const rowController = require("../../../controllers/row")
 const appController = require("../../../controllers/application")
-const CouchDB = require("../../../../db")
 const { AppStatus } = require("../../../../db/utils")
 const { BUILTIN_ROLE_IDS } = require("@budibase/backend-core/roles")
 const { TENANT_ID } = require("../../../../tests/utilities/structures")
+const { getAppDB } = require("@budibase/backend-core/context")
 
 function Request(appId, params) {
   this.appId = appId
@@ -96,8 +96,8 @@ exports.checkPermissionsEndpoint = async ({
     .expect(403)
 }
 
-exports.getDB = config => {
-  return new CouchDB(config.getAppId())
+exports.getDB = () => {
+  return getAppDB()
 }
 
 exports.testAutomation = async (config, automation) => {

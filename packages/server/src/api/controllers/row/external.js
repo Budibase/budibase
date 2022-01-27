@@ -11,7 +11,7 @@ const {
 const ExternalRequest = require("./ExternalRequest")
 const CouchDB = require("../../../db")
 
-async function handleRequest(appId, operation, tableId, opts = {}) {
+async function handleRequest(operation, tableId, opts = {}) {
   // make sure the filters are cleaned up, no empty strings for equals, fuzzy or string
   if (opts && opts.filters) {
     for (let filterField of NoEmptyFilterStrings) {
@@ -25,9 +25,7 @@ async function handleRequest(appId, operation, tableId, opts = {}) {
       }
     }
   }
-  return new ExternalRequest(appId, operation, tableId, opts.datasource).run(
-    opts
-  )
+  return new ExternalRequest(operation, tableId, opts.datasource).run(opts)
 }
 
 exports.handleRequest = handleRequest
