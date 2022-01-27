@@ -108,6 +108,8 @@ spec:
           value: {{ .Values.globals.accountPortalApiKey | quote }}
         - name: COOKIE_DOMAIN
           value: {{ .Values.globals.cookieDomain | quote }}
+        - name: HTTP_MIGRATIONS
+          value: {{ .Values.globals.httpMigrations | quote }}
         image: budibase/apps:{{ .Values.globals.appVersion }}
         imagePullPolicy: Always
         name: bbapps
