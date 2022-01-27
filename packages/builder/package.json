@@ -6,8 +6,6 @@
   "scripts": {
     "build": "routify -b && vite build --emptyOutDir",
     "start": "routify -c rollup",
-    "test": "jest",
-    "test:watch": "jest --watchAll",
     "dev:builder": "routify -c dev:vite",
     "dev:vite": "vite --host 0.0.0.0",
     "rollup": "rollup -c -w",
