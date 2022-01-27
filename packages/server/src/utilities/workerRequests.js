@@ -70,7 +70,7 @@ exports.getGlobalSelf = async (ctx, appId = null) => {
   }
   let json = await response.json()
   if (appId) {
-    json = updateAppRole(appId, json)
+    json = updateAppRole(json)
   }
   return json
 }

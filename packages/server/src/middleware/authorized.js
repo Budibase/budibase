@@ -43,13 +43,13 @@ module.exports =
 
     // need to check this first, in-case public access, don't check authed until last
     const roleId = ctx.roleId || BUILTIN_ROLE_IDS.PUBLIC
-    const hierarchy = await getUserRoleHierarchy(ctx.appId, roleId, {
+    const hierarchy = await getUserRoleHierarchy(roleId, {
       idOnly: false,
     })
     const permError = "User does not have permission"
     let possibleRoleIds = []
     if (hasResource(ctx)) {
-      possibleRoleIds = await getRequiredResourceRole(ctx.appId, permLevel, ctx)
+      possibleRoleIds = await getRequiredResourceRole(permLevel, ctx)
     }
     // check if we found a role, if not fallback to base permissions
     if (possibleRoleIds.length > 0) {

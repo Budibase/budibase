@@ -250,11 +250,10 @@ exports.getAllDbs = async () => {
 /**
  * Lots of different points in the system need to find the full list of apps, this will
  * enumerate the entire CouchDB cluster and get the list of databases (every app).
- * NOTE: this operation is fine in self hosting, but cannot be used when hosting many
- * different users/companies apps as there is no security around it - all apps are returned.
  * @return {Promise<object[]>} returns the app information document stored in each app database.
  */
-exports.getAllApps = async (CouchDB, { dev, all, idsOnly } = {}) => {
+exports.getAllApps = async ({ dev, all, idsOnly } = {}) => {
+  const CouchDB = getCouch()
   let tenantId = getTenantId()
   if (!env.MULTI_TENANCY && !tenantId) {
     tenantId = DEFAULT_TENANT_ID
@@ -310,8 +309,8 @@ exports.getAllApps = async (CouchDB, { dev, all, idsOnly } = {}) => {
 /**
  * Utility function for getAllApps but filters to production apps only.
  */
-exports.getDeployedAppIDs = async CouchDB => {
-  return (await exports.getAllApps(CouchDB, { idsOnly: true })).filter(
+exports.getDeployedAppIDs = async () => {
+  return (await exports.getAllApps({ idsOnly: true })).filter(
     id => !exports.isDevAppID(id)
   )
 }
@@ -319,13 +318,14 @@ exports.getDeployedAppIDs = async CouchDB => {
 /**
  * Utility function for the inverse of above.
  */
-exports.getDevAppIDs = async CouchDB => {
-  return (await exports.getAllApps(CouchDB, { idsOnly: true })).filter(id =>
+exports.getDevAppIDs = async () => {
+  return (await exports.getAllApps({ idsOnly: true })).filter(id =>
     exports.isDevAppID(id)
   )
 }
 
-exports.dbExists = async (CouchDB, dbName) => {
+exports.dbExists = async dbName => {
+  const CouchDB = getCouch()
   let exists = false
   try {
     const db = CouchDB(dbName, { skip_setup: true })

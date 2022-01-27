@@ -1,6 +1,25 @@
 const env = require("../environment")
 const { Headers } = require("../../constants")
 const cls = require("./FunctionContext")
+const { getCouch } = require("../db")
+const { getDeployedAppID, getDevelopmentAppID } = require("../db/utils")
+const { isEqual } = require("lodash")
+
+// some test cases call functions directly, need to
+// store an app ID to pretend there is a context
+let TEST_APP_ID = null
+
+const ContextKeys = {
+  TENANT_ID: "tenantId",
+  APP_ID: "appId",
+  // whatever the request app DB was
+  CURRENT_DB: "currentDb",
+  // get the prod app DB from the request
+  PROD_DB: "prodDb",
+  // get the dev app DB from the request
+  DEV_DB: "devDb",
+  DB_OPTS: "dbOpts",
+}
 
 exports.DEFAULT_TENANT_ID = "default"
 
@@ -12,13 +31,11 @@ exports.isMultiTenant = () => {
   return env.MULTI_TENANCY
 }
 
-const TENANT_ID = "tenantId"
-
 // used for automations, API endpoints should always be in context already
 exports.doInTenant = (tenantId, task) => {
   return cls.run(() => {
     // set the tenant id
-    cls.setOnContext(TENANT_ID, tenantId)
+    cls.setOnContext(ContextKeys.TENANT_ID, tenantId)
 
     // invoke the task
     return task()
@@ -26,7 +43,19 @@ exports.doInTenant = (tenantId, task) => {
 }
 
 exports.updateTenantId = tenantId => {
-  cls.setOnContext(TENANT_ID, tenantId)
+  cls.setOnContext(ContextKeys.TENANT_ID, tenantId)
+}
+
+exports.updateAppId = appId => {
+  try {
+    cls.setOnContext(ContextKeys.APP_ID, appId)
+  } catch (err) {
+    if (env.isTest()) {
+      TEST_APP_ID = appId
+    } else {
+      throw err
+    }
+  }
 }
 
 exports.setTenantId = (
@@ -36,7 +65,7 @@ exports.setTenantId = (
   let tenantId
   // exit early if not multi-tenant
   if (!exports.isMultiTenant()) {
-    cls.setOnContext(TENANT_ID, this.DEFAULT_TENANT_ID)
+    cls.setOnContext(ContextKeys.TENANT_ID, this.DEFAULT_TENANT_ID)
     return
   }
 
@@ -63,12 +92,12 @@ exports.setTenantId = (
   }
   // check tenant ID just incase no tenant was allowed
   if (tenantId) {
-    cls.setOnContext(TENANT_ID, tenantId)
+    cls.setOnContext(ContextKeys.TENANT_ID, tenantId)
   }
 }
 
 exports.isTenantIdSet = () => {
-  const tenantId = cls.getFromContext(TENANT_ID)
+  const tenantId = cls.getFromContext(ContextKeys.TENANT_ID)
   return !!tenantId
 }
 
@@ -76,9 +105,77 @@ exports.getTenantId = () => {
   if (!exports.isMultiTenant()) {
     return exports.DEFAULT_TENANT_ID
   }
-  const tenantId = cls.getFromContext(TENANT_ID)
+  const tenantId = cls.getFromContext(ContextKeys.TENANT_ID)
   if (!tenantId) {
     throw Error("Tenant id not found")
   }
   return tenantId
+}
+
+exports.getAppId = () => {
+  const foundId = cls.getFromContext(ContextKeys.APP_ID)
+  if (!foundId && env.isTest() && TEST_APP_ID) {
+    return TEST_APP_ID
+  } else {
+    return foundId
+  }
+}
+
+function getDB(key, opts) {
+  const dbOptsKey = `${key}${ContextKeys.DB_OPTS}`
+  let storedOpts = cls.getFromContext(dbOptsKey)
+  let db = cls.getFromContext(key)
+  if (db && isEqual(opts, storedOpts)) {
+    return db
+  }
+  const appId = exports.getAppId()
+  const CouchDB = getCouch()
+  let toUseAppId
+  switch (key) {
+    case ContextKeys.CURRENT_DB:
+      toUseAppId = appId
+      break
+    case ContextKeys.PROD_DB:
+      toUseAppId = getDeployedAppID(appId)
+      break
+    case ContextKeys.DEV_DB:
+      toUseAppId = getDevelopmentAppID(appId)
+      break
+  }
+  db = new CouchDB(toUseAppId, opts)
+  try {
+    cls.setOnContext(key, db)
+    if (opts) {
+      cls.setOnContext(dbOptsKey, opts)
+    }
+  } catch (err) {
+    if (!env.isTest()) {
+      throw err
+    }
+  }
+  return db
+}
+
+/**
+ * Opens the app database based on whatever the request
+ * contained, dev or prod.
+ */
+exports.getAppDB = opts => {
+  return getDB(ContextKeys.CURRENT_DB, opts)
+}
+
+/**
+ * This specifically gets the prod app ID, if the request
+ * contained a development app ID, this will open the prod one.
+ */
+exports.getProdAppDB = opts => {
+  return getDB(ContextKeys.PROD_DB, opts)
+}
+
+/**
+ * This specifically gets the dev app ID, if the request
+ * contained a prod app ID, this will open the dev one.
+ */
+exports.getDevAppDB = opts => {
+  return getDB(ContextKeys.DEV_DB, opts)
 }

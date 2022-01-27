@@ -23,6 +23,7 @@ const { createASession } = require("@budibase/backend-core/sessions")
 const { user: userCache } = require("@budibase/backend-core/cache")
 const CouchDB = require("../../db")
 const newid = require("../../db/newid")
+const context = require("@budibase/backend-core/context")
 core.init(CouchDB)
 
 const GLOBAL_USER_ID = "us_uuid1"
@@ -50,6 +51,7 @@ class TestConfiguration {
   }
 
   async _req(config, params, controlFunc) {
+    context.updateAppId(this.appId)
     const request = {}
     // fake cookies, we don't need them
     request.cookies = { set: () => {}, get: () => {} }
@@ -165,6 +167,7 @@ class TestConfiguration {
     // create dev app
     this.app = await this._req({ name: appName }, null, controllers.app.create)
     this.appId = this.app.appId
+    context.updateAppId(this.appId)
 
     // create production app
     this.prodApp = await this.deploy()

@@ -2,11 +2,11 @@ const {
   EMPTY_LAYOUT,
   BASE_LAYOUT_PROP_IDS,
 } = require("../../constants/layouts")
-const CouchDB = require("../../db")
 const { generateLayoutID, getScreenParams } = require("../../db/utils")
+const { getAppDB } = require("@budibase/backend-core/context")
 
 exports.save = async function (ctx) {
-  const db = new CouchDB(ctx.appId)
+  const db = getAppDB()
   let layout = ctx.request.body
 
   if (!layout.props) {
@@ -26,7 +26,7 @@ exports.save = async function (ctx) {
 }
 
 exports.destroy = async function (ctx) {
-  const db = new CouchDB(ctx.appId)
+  const db = getAppDB()
   const layoutId = ctx.params.layoutId,
     layoutRev = ctx.params.layoutRev
 

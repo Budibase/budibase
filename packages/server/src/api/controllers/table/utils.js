@@ -1,4 +1,3 @@
-const CouchDB = require("../../../db")
 const csvParser = require("../../../utilities/csvParser")
 const {
   getRowParams,
@@ -17,8 +16,10 @@ const {
 const { getViews, saveView } = require("../view/utils")
 const viewTemplate = require("../view/viewBuilder")
 const usageQuota = require("../../../utilities/usageQuota")
+const { getAppDB } = require("@budibase/backend-core/context")
 
-exports.checkForColumnUpdates = async (db, oldTable, updatedTable) => {
+exports.checkForColumnUpdates = async (oldTable, updatedTable) => {
+  const db = getAppDB()
   let updatedRows = []
   const rename = updatedTable._rename
   let deletedColumns = []
@@ -46,7 +47,7 @@ exports.checkForColumnUpdates = async (db, oldTable, updatedTable) => {
     })
 
     // Update views
-    await exports.checkForViewUpdates(db, updatedTable, rename, deletedColumns)
+    await exports.checkForViewUpdates(updatedTable, rename, deletedColumns)
     delete updatedTable._rename
   }
   return { rows: updatedRows, table: updatedTable }
@@ -73,12 +74,12 @@ exports.makeSureTableUpToDate = (table, tableToSave) => {
   return tableToSave
 }
 
-exports.handleDataImport = async (appId, user, table, dataImport) => {
+exports.handleDataImport = async (user, table, dataImport) => {
   if (!dataImport || !dataImport.csvString) {
     return table
   }
 
-  const db = new CouchDB(appId)
+  const db = getAppDB()
   // Populate the table with rows imported from CSV in a bulk update
   const data = await csvParser.transform({
     ...dataImport,
@@ -123,8 +124,8 @@ exports.handleDataImport = async (appId, user, table, dataImport) => {
   return table
 }
 
-exports.handleSearchIndexes = async (appId, table) => {
-  const db = new CouchDB(appId)
+exports.handleSearchIndexes = async table => {
+  const db = getAppDB()
   // create relevant search indexes
   if (table.indexes && table.indexes.length > 0) {
     const currentIndexes = await db.getIndexes()
@@ -181,12 +182,9 @@ exports.checkStaticTables = table => {
 }
 
 class TableSaveFunctions {
-  constructor({ db, ctx, oldTable, dataImport }) {
-    this.db = db
-    this.ctx = ctx
-    if (this.ctx && this.ctx.user) {
-      this.appId = this.ctx.appId
-    }
+  constructor({ user, oldTable, dataImport }) {
+    this.db = getAppDB()
+    this.user = user
     this.oldTable = oldTable
     this.dataImport = dataImport
     // any rows that need updated
@@ -204,24 +202,15 @@ class TableSaveFunctions {
 
   // when confirmed valid
   async mid(table) {
-    let response = await exports.checkForColumnUpdates(
-      this.db,
-      this.oldTable,
-      table
-    )
+    let response = await exports.checkForColumnUpdates(this.oldTable, table)
     this.rows = this.rows.concat(response.rows)
     return table
   }
 
   // after saving
   async after(table) {
-    table = await exports.handleSearchIndexes(this.appId, table)
-    table = await exports.handleDataImport(
-      this.appId,
-      this.ctx.user,
-      table,
-      this.dataImport
-    )
+    table = await exports.handleSearchIndexes(table)
+    table = await exports.handleDataImport(this.user, table, this.dataImport)
     return table
   }
 
@@ -230,8 +219,8 @@ class TableSaveFunctions {
   }
 }
 
-exports.getAllExternalTables = async (appId, datasourceId) => {
-  const db = new CouchDB(appId)
+exports.getAllExternalTables = async datasourceId => {
+  const db = getAppDB()
   const datasource = await db.get(datasourceId)
   if (!datasource || !datasource.entities) {
     throw "Datasource is not configured fully."
@@ -239,25 +228,25 @@ exports.getAllExternalTables = async (appId, datasourceId) => {
   return datasource.entities
 }
 
-exports.getExternalTable = async (appId, datasourceId, tableName) => {
-  const entities = await exports.getAllExternalTables(appId, datasourceId)
+exports.getExternalTable = async (datasourceId, tableName) => {
+  const entities = await exports.getAllExternalTables(datasourceId)
   return entities[tableName]
 }
 
-exports.getTable = async (appId, tableId) => {
-  const db = new CouchDB(appId)
+exports.getTable = async tableId => {
+  const db = getAppDB()
   if (isExternalTable(tableId)) {
     let { datasourceId, tableName } = breakExternalTableId(tableId)
     const datasource = await db.get(datasourceId)
-    const table = await exports.getExternalTable(appId, datasourceId, tableName)
+    const table = await exports.getExternalTable(datasourceId, tableName)
     return { ...table, sql: isSQL(datasource) }
   } else {
     return db.get(tableId)
   }
 }
 
-exports.checkForViewUpdates = async (db, table, rename, deletedColumns) => {
-  const views = await getViews(db)
+exports.checkForViewUpdates = async (table, rename, deletedColumns) => {
+  const views = await getViews()
   const tableViews = views.filter(view => view.meta.tableId === table._id)
 
   // Check each table view to see if impacted by this table action
@@ -319,7 +308,7 @@ exports.checkForViewUpdates = async (db, table, rename, deletedColumns) => {
     // Update view if required
     if (needsUpdated) {
       const newViewTemplate = viewTemplate(view.meta)
-      await saveView(db, null, view.name, newViewTemplate)
+      await saveView(null, view.name, newViewTemplate)
       if (!newViewTemplate.meta.schema) {
         newViewTemplate.meta.schema = table.schema
       }

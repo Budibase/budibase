@@ -34,8 +34,7 @@ exports.save = async function (ctx) {
   // saving a table is a complex operation, involving many different steps, this
   // has been broken out into a utility to make it more obvious/easier to manipulate
   const tableSaveFunctions = new TableSaveFunctions({
-    db,
-    ctx,
+    user: ctx.user,
     oldTable,
     dataImport,
   })
@@ -145,9 +144,8 @@ exports.destroy = async function (ctx) {
 }
 
 exports.bulkImport = async function (ctx) {
-  const appId = ctx.appId
-  const table = await getTable(appId, ctx.params.tableId)
+  const table = await getTable(ctx.params.tableId)
   const { dataImport } = ctx.request.body
-  await handleDataImport(appId, ctx.user, table, dataImport)
+  await handleDataImport(ctx.user, table, dataImport)
   return table
 }

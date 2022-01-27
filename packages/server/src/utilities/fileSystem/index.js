@@ -20,6 +20,7 @@ const {
   LINK_USER_METADATA_PREFIX,
 } = require("../../db/utils")
 const MemoryStream = require("memorystream")
+const { getAppId } = require("@budibase/backend-core/context")
 
 const TOP_LEVEL_PATH = join(__dirname, "..", "..", "..")
 const NODE_MODULES_PATH = join(TOP_LEVEL_PATH, "node_modules")
@@ -251,7 +252,8 @@ exports.downloadTemplate = async (type, name) => {
 /**
  * Retrieves component libraries from object store (or tmp symlink if in local)
  */
-exports.getComponentLibraryManifest = async (appId, library) => {
+exports.getComponentLibraryManifest = async library => {
+  const appId = getAppId()
   const filename = "manifest.json"
   /* istanbul ignore next */
   // when testing in cypress and so on we need to get the package

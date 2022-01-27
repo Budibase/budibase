@@ -11,8 +11,10 @@ const {
   isUserInAppTenant,
 } = require("@budibase/backend-core/tenancy")
 const env = require("../environment")
+const { getAppId } = require("@budibase/backend-core/context")
 
-exports.updateAppRole = (appId, user) => {
+exports.updateAppRole = (user, { appId } = {}) => {
+  appId = appId || getAppId()
   if (!user || !user.roles) {
     return user
   }
@@ -35,18 +37,18 @@ exports.updateAppRole = (appId, user) => {
   return user
 }
 
-function processUser(appId, user) {
+function processUser(user, { appId } = {}) {
   if (user) {
     delete user.password
   }
-  return exports.updateAppRole(appId, user)
+  return exports.updateAppRole(user, { appId })
 }
 
 exports.getCachedSelf = async (ctx, appId) => {
   // this has to be tenant aware, can't depend on the context to find it out
   // running some middlewares before the tenancy causes context to break
   const user = await userCache.getUser(ctx.user._id)
-  return processUser(appId, user)
+  return processUser(user, appId)
 }
 
 exports.getRawGlobalUser = async userId => {
@@ -54,12 +56,13 @@ exports.getRawGlobalUser = async userId => {
   return db.get(getGlobalIDFromUserMetadataID(userId))
 }
 
-exports.getGlobalUser = async (appId, userId) => {
+exports.getGlobalUser = async userId => {
   let user = await exports.getRawGlobalUser(userId)
-  return processUser(appId, user)
+  return processUser(user)
 }
 
-exports.getGlobalUsers = async (appId = null, users = null) => {
+exports.getGlobalUsers = async (users = null) => {
+  const appId = getAppId()
   const db = getGlobalDB()
   let globalUsers
   if (users) {
@@ -86,11 +89,11 @@ exports.getGlobalUsers = async (appId = null, users = null) => {
   if (!appId) {
     return globalUsers
   }
-  return globalUsers.map(user => exports.updateAppRole(appId, user))
+  return globalUsers.map(user => exports.updateAppRole(user))
 }
 
-exports.getGlobalUsersFromMetadata = async (appId, users) => {
-  const globalUsers = await exports.getGlobalUsers(appId, users)
+exports.getGlobalUsersFromMetadata = async users => {
+  const globalUsers = await exports.getGlobalUsers(users)
   return users.map(user => {
     const globalUser = globalUsers.find(
       globalUser => globalUser && user._id.includes(globalUser._id)
