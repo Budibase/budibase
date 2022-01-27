@@ -27,7 +27,7 @@
     </div>
     <div class="name" on:click={() => editApp(app)}>
       <Heading size="XS">
-        {app.name}
+        {app.name || ""}
       </Heading>
     </div>
   </div>

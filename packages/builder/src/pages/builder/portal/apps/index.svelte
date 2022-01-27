@@ -46,8 +46,9 @@
   let creatingFromTemplate = false
 
   $: enrichedApps = enrichApps($apps, $auth.user, sortBy)
-  $: filteredApps = enrichedApps.filter(app =>
-    app?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+  $: filteredApps = enrichedApps.filter(
+    app =>
+      !searchTerm || app?.name?.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   const enrichApps = (apps, user, sortBy) => {
@@ -428,7 +429,7 @@
   okText="Delete app"
   onOk={confirmDeleteApp}
   onCancel={() => (appName = null)}
-  disabled={appName !== selectedApp?.name}
+  disabled={selectedApp?.name && appName !== selectedApp?.name}
 >
   Are you sure you want to delete the app <b>{selectedApp?.name}</b>?
 
