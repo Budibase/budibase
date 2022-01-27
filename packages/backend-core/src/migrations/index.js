@@ -2,7 +2,12 @@ const { DEFAULT_TENANT_ID } = require("../constants")
 const { DocumentTypes } = require("../db/constants")
 const { getAllApps } = require("../db/utils")
 const environment = require("../environment")
-const { doInTenant, getTenantIds, getGlobalDBName } = require("../tenancy")
+const {
+  doInTenant,
+  getTenantIds,
+  getGlobalDBName,
+  getTenantId,
+} = require("../tenancy")
 
 exports.MIGRATION_TYPES = {
   GLOBAL: "global", // run once, recorded in global db, global db is provided as an argument
@@ -20,16 +25,18 @@ exports.getMigrationsDoc = async db => {
   }
 }
 
-const runMigration = async (tenantId, CouchDB, migration, options = {}) => {
+const runMigration = async (CouchDB, migration, options = {}) => {
+  const tenantId = getTenantId()
   const migrationType = migration.type
   const migrationName = migration.name
 
   // get the db to store the migration in
   let dbNames
   if (migrationType === exports.MIGRATION_TYPES.GLOBAL) {
-    dbNames = [getGlobalDBName(tenantId)]
+    dbNames = [getGlobalDBName()]
   } else if (migrationType === exports.MIGRATION_TYPES.APP) {
-    dbNames = await getAllApps(CouchDB, { all: true })
+    const apps = await getAllApps(CouchDB, migration.opts)
+    dbNames = apps.map(app => app.appId)
   } else {
     throw new Error(
       `[Tenant: ${tenantId}] Unrecognised migration type [${migrationType}]`
@@ -50,7 +57,7 @@ const runMigration = async (tenantId, CouchDB, migration, options = {}) => {
           options.force[migrationType].includes(migrationName)
         ) {
           console.log(
-            `[Tenant: ${tenantId}] Forcing migration [${migrationName}]`
+            `[Tenant: ${tenantId}] [Migration: ${migrationName}] [DB: ${dbName}] Forcing`
           )
         } else {
           // the migration has already been performed
@@ -59,18 +66,20 @@ const runMigration = async (tenantId, CouchDB, migration, options = {}) => {
       }
 
       console.log(
-        `[Tenant: ${tenantId}] Performing migration: ${migrationName}`
+        `[Tenant: ${tenantId}] [Migration: ${migrationName}] [DB: ${dbName}] Running`
       )
       // run the migration with tenant context
-      await doInTenant(tenantId, () => migration.fn(db))
-      console.log(`[Tenant: ${tenantId}] Migration complete: ${migrationName}`)
+      await migration.fn(db)
+      console.log(
+        `[Tenant: ${tenantId}] [Migration: ${migrationName}] [DB: ${dbName}] Complete`
+      )
 
       // mark as complete
       doc[migrationName] = Date.now()
       await db.put(doc)
     } catch (err) {
       console.error(
-        `[Tenant: ${tenantId}] Error performing migration: ${migrationName} on db: ${db.name}: `,
+        `[Tenant: ${tenantId}] [Migration: ${migrationName}] [DB: ${dbName}] Error: `,
         err
       )
       throw err
@@ -96,7 +105,9 @@ exports.runMigrations = async (CouchDB, migrations, options = {}) => {
     // for all migrations
     for (const migration of migrations) {
       // run the migration
-      await runMigration(tenantId, CouchDB, migration, options)
+      await doInTenant(tenantId, () =>
+        runMigration(CouchDB, migration, options)
+      )
     }
   }
   console.log("Migrations complete")

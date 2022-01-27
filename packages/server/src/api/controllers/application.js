@@ -75,7 +75,7 @@ function getUserRoleId(ctx) {
     : ctx.user.role._id
 }
 
-async function getAppUrl(ctx) {
+exports.getAppUrl = ctx => {
   // construct the url
   let url
   if (ctx.request.body.url) {
@@ -218,7 +218,7 @@ exports.create = async ctx => {
   const apps = await getAllApps(CouchDB, { dev: true })
   const name = ctx.request.body.name
   checkAppName(ctx, apps, name)
-  const url = await getAppUrl(ctx)
+  const url = exports.getAppUrl(ctx)
   checkAppUrl(ctx, apps, url)
 
   const { useTemplate, templateKey, templateString } = ctx.request.body
@@ -281,7 +281,7 @@ exports.update = async ctx => {
   // validation
   const name = ctx.request.body.name
   checkAppName(ctx, apps, name, ctx.params.appId)
-  const url = await getAppUrl(ctx)
+  const url = exports.getAppUrl(ctx)
   checkAppUrl(ctx, apps, url, ctx.params.appId)
 
   const appPackageUpdates = { name, url }

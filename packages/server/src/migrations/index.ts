@@ -7,10 +7,12 @@ const {
 // migration functions
 import * as userEmailViewCasing from "./functions/userEmailViewCasing"
 import * as quota1 from "./functions/quotas1"
+import * as appUrls from "./functions/appUrls"
 
 export interface Migration {
   type: string
   name: string
+  opts?: object
   fn: Function
 }
 
@@ -30,7 +32,7 @@ export interface MigrationOptions {
   }
 }
 
-const MIGRATIONS: Migration[] = [
+export const MIGRATIONS: Migration[] = [
   {
     type: MIGRATION_TYPES.GLOBAL,
     name: "user_email_view_casing",
@@ -40,6 +42,12 @@ const MIGRATIONS: Migration[] = [
     type: MIGRATION_TYPES.GLOBAL,
     name: "quotas_1",
     fn: quota1.run,
+  },
+  {
+    type: MIGRATION_TYPES.APP,
+    name: "app_urls",
+    opts: { all: true },
+    fn: appUrls.run,
   },
 ]
 
