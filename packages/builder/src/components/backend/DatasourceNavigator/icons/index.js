@@ -11,6 +11,7 @@ import ArangoDB from "./ArangoDB.svelte"
 import Rest from "./Rest.svelte"
 import Budibase from "./Budibase.svelte"
 import Oracle from "./Oracle.svelte"
+import GoogleSheets from "./GoogleSheets.svelte"
 
 export default {
   BUDIBASE: Budibase,
@@ -26,4 +27,5 @@ export default {
   ARANGODB: ArangoDB,
   REST: Rest,
   ORACLE: Oracle,
+  GOOGLE_SHEETS: GoogleSheets,
 }
