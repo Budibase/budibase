@@ -8,7 +8,7 @@
   import NPSFeedbackForm from "components/feedback/NPSFeedbackForm.svelte"
   import { API } from "api"
   import { auth, admin } from "stores/portal"
-  import { isActive, goto, layout } from "@roxi/routify"
+  import { isActive, goto, layout, redirect } from "@roxi/routify"
   import Logo from "assets/bb-emblem.svg"
   import { capitalise } from "helpers"
   import UpgradeModal from "components/upgrade/UpgradeModal.svelte"
@@ -42,9 +42,8 @@
       await flags.fetch()
       return pkg
     } catch (error) {
-      // TODO: some stuff about redirecting if locked
-      // $redirect("../../")
-      notifications.error("Error initialising app")
+      notifications.error(`Error initialising app: ${error?.message}`)
+      $redirect("../../")
     }
   }
 
