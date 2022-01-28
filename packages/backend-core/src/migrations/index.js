@@ -61,7 +61,7 @@ const runMigration = async (CouchDB, migration, options = {}) => {
           )
         } else {
           // the migration has already been performed
-          return
+          continue
         }
       }
 
