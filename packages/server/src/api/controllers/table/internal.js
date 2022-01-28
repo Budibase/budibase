@@ -9,6 +9,7 @@ const {
 } = require("./utils")
 const usageQuota = require("../../../utilities/usageQuota")
 const { getAppDB } = require("@budibase/backend-core/context")
+const env = require("../../../environment")
 
 exports.save = async function (ctx) {
   const db = getAppDB()
@@ -128,12 +129,14 @@ exports.destroy = async function (ctx) {
   await db.remove(tableToDelete)
 
   // remove table search index
-  const currentIndexes = await db.getIndexes()
-  const existingIndex = currentIndexes.indexes.find(
-    existing => existing.name === `search:${ctx.params.tableId}`
-  )
-  if (existingIndex) {
-    await db.deleteIndex(existingIndex)
+  if (!env.isTest()) {
+    const currentIndexes = await db.getIndexes()
+    const existingIndex = currentIndexes.indexes.find(
+      existing => existing.name === `search:${ctx.params.tableId}`
+    )
+    if (existingIndex) {
+      await db.deleteIndex(existingIndex)
+    }
   }
 
   return tableToDelete

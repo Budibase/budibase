@@ -7,6 +7,7 @@ const {
   SEPARATOR,
 } = require("../db/utils")
 const { getAppDB } = require("../tenancy/context")
+const { getDB } = require("../db")
 
 const BUILTIN_IDS = {
   ADMIN: "ADMIN",
@@ -182,8 +183,8 @@ exports.getUserRoleHierarchy = async (userRoleId, opts = { idOnly: true }) => {
  * Given an app ID this will retrieve all of the roles that are currently within that app.
  * @return {Promise<object[]>} An array of the role objects that were found.
  */
-exports.getAllRoles = async () => {
-  const db = getAppDB()
+exports.getAllRoles = async appId => {
+  const db = appId ? getDB(appId) : getAppDB()
   const body = await db.allDocs(
     getRoleParams(null, {
       include_docs: true,
