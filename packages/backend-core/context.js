@@ -4,6 +4,7 @@ const {
   getProdAppDB,
   getAppId,
   updateAppId,
+  doInAppContext,
 } = require("./src/tenancy/context")
 
 module.exports = {
@@ -12,4 +13,5 @@ module.exports = {
   getProdAppDB,
   getAppId,
   updateAppId,
+  doInAppContext,
 }

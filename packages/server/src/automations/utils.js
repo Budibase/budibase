@@ -8,6 +8,7 @@ const { updateEntityMetadata } = require("../utilities")
 const { MetadataTypes } = require("../constants")
 const { getDeployedAppID } = require("@budibase/backend-core/db")
 const { cloneDeep } = require("lodash/fp")
+const { getAppDB, getAppId } = require("@budibase/backend-core/context")
 
 const WH_STEP_ID = definitions.WEBHOOK.stepId
 const CRON_STEP_ID = definitions.CRON.stepId
@@ -27,7 +28,6 @@ exports.processEvent = async job => {
 
 exports.updateTestHistory = async (appId, automation, history) => {
   return updateEntityMetadata(
-    appId,
     MetadataTypes.AUTOMATION_TEST_HISTORY,
     automation._id,
     metadata => {
@@ -109,7 +109,8 @@ exports.enableCronTrigger = async (appId, automation) => {
  * @returns {Promise<object|undefined>} After this is complete the new automation object may have been updated and should be
  * written to DB (this does not write to DB as it would be wasteful to repeat).
  */
-exports.checkForWebhooks = async ({ appId, oldAuto, newAuto }) => {
+exports.checkForWebhooks = async ({ oldAuto, newAuto }) => {
+  const appId = getAppId()
   const oldTrigger = oldAuto ? oldAuto.definition.trigger : null
   const newTrigger = newAuto ? newAuto.definition.trigger : null
   const triggerChanged =
@@ -128,7 +129,7 @@ exports.checkForWebhooks = async ({ appId, oldAuto, newAuto }) => {
     oldTrigger.webhookId
   ) {
     try {
-      let db = new CouchDB(appId)
+      let db = getAppDB()
       // need to get the webhook to get the rev
       const webhook = await db.get(oldTrigger.webhookId)
       const ctx = {

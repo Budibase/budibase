@@ -1,12 +1,12 @@
 const fetch = require("node-fetch")
-const CouchDB = require("../../db")
 const env = require("../../environment")
 const { checkSlashesInUrl } = require("../../utilities")
 const { request } = require("../../utilities/workerRequests")
 const { clearLock } = require("../../utilities/redis")
-const { Replication } = require("@budibase/backend-core/db")
+const { Replication, getDeployedAppID } = require("@budibase/backend-core/db")
 const { DocumentTypes } = require("../../db/utils")
 const { app: appCache } = require("@budibase/backend-core/cache")
+const { getProdAppDB, getAppDB } = require("@budibase/backend-core/context")
 
 async function redirect(ctx, method, path = "global") {
   const { devPath } = ctx.params
@@ -77,11 +77,11 @@ exports.clearLock = async ctx => {
 
 exports.revert = async ctx => {
   const { appId } = ctx.params
-  const productionAppId = appId.replace("_dev", "")
+  const productionAppId = getDeployedAppID(appId)
 
   // App must have been deployed first
   try {
-    const db = new CouchDB(productionAppId, { skip_setup: true })
+    const db = getProdAppDB({ skip_setup: true })
     const info = await db.info()
     if (info.error) throw info.error
     const deploymentDoc = await db.get(DocumentTypes.DEPLOYMENTS)
@@ -103,7 +103,7 @@ exports.revert = async ctx => {
 
     await replication.rollback()
     // update appID in reverted app to be dev version again
-    const db = new CouchDB(appId)
+    const db = getAppDB()
     const appDoc = await db.get(DocumentTypes.APP_METADATA)
     appDoc.appId = appId
     appDoc.instance._id = appId

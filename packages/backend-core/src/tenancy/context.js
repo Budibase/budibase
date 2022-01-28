@@ -2,7 +2,7 @@ const env = require("../environment")
 const { Headers } = require("../../constants")
 const cls = require("./FunctionContext")
 const { getCouch } = require("../db")
-const { getDeployedAppID, getDevelopmentAppID } = require("../db/utils")
+const { getDeployedAppID, getDevelopmentAppID } = require("../db/conversions")
 const { isEqual } = require("lodash")
 
 // some test cases call functions directly, need to
@@ -36,6 +36,16 @@ exports.doInTenant = (tenantId, task) => {
   return cls.run(() => {
     // set the tenant id
     cls.setOnContext(ContextKeys.TENANT_ID, tenantId)
+
+    // invoke the task
+    return task()
+  })
+}
+
+exports.doInAppContext = (appId, task) => {
+  return cls.run(() => {
+    // set the app ID
+    cls.setOnContext(ContextKeys.APP_ID, appId)
 
     // invoke the task
     return task()
