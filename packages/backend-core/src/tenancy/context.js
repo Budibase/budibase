@@ -59,6 +59,10 @@ exports.updateTenantId = tenantId => {
 exports.updateAppId = appId => {
   try {
     cls.setOnContext(ContextKeys.APP_ID, appId)
+    cls.setOnContext(ContextKeys.PROD_DB, null)
+    cls.setOnContext(ContextKeys.DEV_DB, null)
+    cls.setOnContext(ContextKeys.CURRENT_DB, null)
+    cls.setOnContext(ContextKeys.DB_OPTS, null)
   } catch (err) {
     if (env.isTest()) {
       TEST_APP_ID = appId

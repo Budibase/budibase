@@ -11,6 +11,9 @@ const authorizedMiddleware = require("../authorized")
 const env = require("../../environment")
 const { PermissionTypes, PermissionLevels } = require("@budibase/backend-core/permissions")
 require("@budibase/backend-core").init(require("../../db"))
+const { doInAppContext } = require("@budibase/backend-core/context")
+
+const APP_ID = ""
 
 class TestConfiguration {
   constructor(role) {
@@ -22,7 +25,7 @@ class TestConfiguration {
       request: {
         url: ""
       },
-      appId: "",
+      appId: APP_ID,
       auth: {},
       next: this.next,
       throw: this.throw
@@ -30,7 +33,9 @@ class TestConfiguration {
   }
 
   executeMiddleware() {
-    return this.middleware(this.ctx, this.next)
+    return doInAppContext(APP_ID, () => {
+      return this.middleware(this.ctx, this.next)
+    })
   }
 
   setUser(user) {

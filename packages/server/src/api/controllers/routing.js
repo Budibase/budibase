@@ -60,7 +60,7 @@ exports.fetch = async ctx => {
 }
 
 exports.clientFetch = async ctx => {
-  const routing = await getRoutingStructure(ctx.appId)
+  const routing = await getRoutingStructure()
   let roleId = ctx.user.role._id
   const roleIds = await getUserRoleHierarchy(roleId)
   for (let topLevel of Object.values(routing.routes)) {

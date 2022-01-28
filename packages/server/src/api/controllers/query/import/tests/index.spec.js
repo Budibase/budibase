@@ -6,6 +6,7 @@ const db = jest.fn(() => {
   }
 })
 jest.mock("../../../../../db", () => db)
+require("@budibase/backend-core").init(require("../../../../../db"))
 
 const { RestImporter } = require("../index")
 
