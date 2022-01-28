@@ -180,8 +180,8 @@ class TestConfiguration {
   }
 
   async deploy() {
-    const deployment = await this._req(null, null, controllers.deploy.deployApp)
-    const prodAppId = deployment.appId.replace("_dev", "")
+    await this._req(null, null, controllers.deploy.deployApp)
+    const prodAppId = this.getAppId().replace("_dev", "")
     const appPackage = await this._req(
       null,
       { appId: prodAppId },

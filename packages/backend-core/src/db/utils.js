@@ -2,7 +2,13 @@ const { newid } = require("../hashing")
 const Replication = require("./Replication")
 const { DEFAULT_TENANT_ID, Configs } = require("../constants")
 const env = require("../environment")
-const { StaticDatabases, SEPARATOR, DocumentTypes } = require("./constants")
+const {
+  StaticDatabases,
+  SEPARATOR,
+  DocumentTypes,
+  APP_PREFIX,
+  APP_DEV,
+} = require("./constants")
 const {
   getTenantId,
   getTenantIDFromAppID,
@@ -12,8 +18,13 @@ const fetch = require("node-fetch")
 const { getCouch } = require("./index")
 const { getAppMetadata } = require("../cache/appMetadata")
 const { checkSlashesInUrl } = require("../helpers")
-
-const NO_APP_ERROR = "No app provided"
+const {
+  isDevApp,
+  isProdAppID,
+  isDevAppID,
+  getDevelopmentAppID,
+  getDeployedAppID,
+} = require("./conversions")
 
 const UNICODE_MAX = "\ufff0"
 
@@ -24,10 +35,15 @@ exports.ViewNames = {
 exports.StaticDatabases = StaticDatabases
 
 exports.DocumentTypes = DocumentTypes
-exports.APP_PREFIX = DocumentTypes.APP + SEPARATOR
-exports.APP_DEV = exports.APP_DEV_PREFIX = DocumentTypes.APP_DEV + SEPARATOR
+exports.APP_PREFIX = APP_PREFIX
+exports.APP_DEV = exports.APP_DEV_PREFIX = APP_DEV
 exports.SEPARATOR = SEPARATOR
 exports.getTenantIDFromAppID = getTenantIDFromAppID
+exports.isDevApp = isDevApp
+exports.isProdAppID = isProdAppID
+exports.isDevAppID = isDevAppID
+exports.getDevelopmentAppID = getDevelopmentAppID
+exports.getDeployedAppID = getDeployedAppID
 
 /**
  * If creating DB allDocs/query params with only a single top level ID this can be used, this
@@ -50,27 +66,6 @@ function getDocParams(docType, docId = null, otherProps = {}) {
     startkey: `${docType}${SEPARATOR}${docId}`,
     endkey: `${docType}${SEPARATOR}${docId}${UNICODE_MAX}`,
   }
-}
-
-exports.isDevAppID = appId => {
-  if (!appId) {
-    throw NO_APP_ERROR
-  }
-  return appId.startsWith(exports.APP_DEV_PREFIX)
-}
-
-exports.isProdAppID = appId => {
-  if (!appId) {
-    throw NO_APP_ERROR
-  }
-  return appId.startsWith(exports.APP_PREFIX) && !exports.isDevAppID(appId)
-}
-
-function isDevApp(app) {
-  if (!app) {
-    throw NO_APP_ERROR
-  }
-  return exports.isDevAppID(app.appId)
 }
 
 /**
@@ -155,29 +150,6 @@ exports.generateRoleID = id => {
  */
 exports.getRoleParams = (roleId = null, otherProps = {}) => {
   return getDocParams(DocumentTypes.ROLE, roleId, otherProps)
-}
-
-/**
- * Convert a development app ID to a deployed app ID.
- */
-exports.getDeployedAppID = appId => {
-  // if dev, convert it
-  if (appId.startsWith(exports.APP_DEV_PREFIX)) {
-    const id = appId.split(exports.APP_DEV_PREFIX)[1]
-    return `${exports.APP_PREFIX}${id}`
-  }
-  return appId
-}
-
-/**
- * Convert a deployed app ID to a development app ID.
- */
-exports.getDevelopmentAppID = appId => {
-  if (!appId.startsWith(exports.APP_DEV_PREFIX)) {
-    const id = appId.split(exports.APP_PREFIX)[1]
-    return `${exports.APP_DEV_PREFIX}${id}`
-  }
-  return appId
 }
 
 exports.getCouchUrl = () => {

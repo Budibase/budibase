@@ -1,10 +1,11 @@
-import CouchDB from "../../../../db"
 import { queryValidation } from "../validation"
 import { generateQueryID } from "../../../../db/utils"
 import { ImportInfo, ImportSource } from "./sources/base"
 import { OpenAPI2 } from "./sources/openapi2"
 import { Query } from "./../../../../definitions/common"
 import { Curl } from "./sources/curl"
+// @ts-ignore
+import { getAppDB } from "@budibase/backend-core/context"
 interface ImportResult {
   errorQueries: Query[]
   queries: Query[]
@@ -34,7 +35,6 @@ export class RestImporter {
   }
 
   importQueries = async (
-    appId: string,
     datasourceId: string
   ): Promise<ImportResult> => {
     // constuct the queries
@@ -58,7 +58,7 @@ export class RestImporter {
       })
 
     // persist queries
-    const db = new CouchDB(appId)
+    const db = getAppDB()
     const response = await db.bulkDocs(queries)
 
     // create index to seperate queries and errors

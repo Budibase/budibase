@@ -1,4 +1,3 @@
-const CouchDB = require("../../../db")
 const linkRows = require("../../../db/linkedRows")
 const { getRowParams, generateTableID } = require("../../../db/utils")
 const { FieldTypes } = require("../../../constants")
@@ -9,10 +8,10 @@ const {
   handleDataImport,
 } = require("./utils")
 const usageQuota = require("../../../utilities/usageQuota")
+const { getAppDB } = require("@budibase/backend-core/context")
 
 exports.save = async function (ctx) {
-  const appId = ctx.appId
-  const db = new CouchDB(appId)
+  const db = getAppDB()
   const { dataImport, ...rest } = ctx.request.body
   let tableToSave = {
     type: "table",
@@ -79,7 +78,6 @@ exports.save = async function (ctx) {
   // update linked rows
   try {
     const linkResp = await linkRows.updateLinks({
-      appId,
       eventType: oldTable
         ? linkRows.EventType.TABLE_UPDATED
         : linkRows.EventType.TABLE_SAVE,
@@ -108,8 +106,7 @@ exports.save = async function (ctx) {
 }
 
 exports.destroy = async function (ctx) {
-  const appId = ctx.appId
-  const db = new CouchDB(appId)
+  const db = getAppDB()
   const tableToDelete = await db.get(ctx.params.tableId)
 
   // Delete all rows for that table
@@ -123,7 +120,6 @@ exports.destroy = async function (ctx) {
 
   // update linked rows
   await linkRows.updateLinks({
-    appId,
     eventType: linkRows.EventType.TABLE_DELETE,
     table: tableToDelete,
   })

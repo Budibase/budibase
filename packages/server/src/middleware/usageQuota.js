@@ -1,4 +1,3 @@
-const CouchDB = require("../db")
 const usageQuota = require("../utilities/usageQuota")
 const { getUniqueRows } = require("../utilities/usageQuota/rows")
 const {
@@ -6,6 +5,7 @@ const {
   isRowId: isExternalRowId,
 } = require("../integrations/utils")
 const migration = require("../migrations/usageQuotas")
+const { getAppDB } = require("@budibase/backend-core/context")
 
 // currently only counting new writes and deletes
 const METHOD_MAP = {
@@ -47,7 +47,7 @@ module.exports = async (ctx, next) => {
     const usageId = ctx.request.body._id
     try {
       if (ctx.appId) {
-        const db = new CouchDB(ctx.appId)
+        const db = getAppDB()
         await db.get(usageId)
       }
       return next()

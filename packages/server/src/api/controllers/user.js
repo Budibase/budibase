@@ -11,8 +11,8 @@ const { BUILTIN_ROLE_IDS } = require("@budibase/backend-core/roles")
 const {
   getDevelopmentAppID,
   getDeployedAppIDs,
+  dbExists,
 } = require("@budibase/backend-core/db")
-const { doesDatabaseExist } = require("../../utilities")
 const { UserStatus } = require("@budibase/backend-core/constants")
 const { getAppDB } = require("@budibase/backend-core/context")
 
@@ -102,7 +102,7 @@ exports.syncUser = async function (ctx) {
     const roleId = roles[prodAppId]
     const devAppId = getDevelopmentAppID(prodAppId)
     for (let appId of [prodAppId, devAppId]) {
-      if (!(await doesDatabaseExist(appId))) {
+      if (!(await dbExists(appId))) {
         continue
       }
       const db = getAppDB()

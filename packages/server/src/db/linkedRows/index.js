@@ -96,9 +96,9 @@ async function getFullLinkedDocs(links) {
  * @param {string} args.eventType states what type of change which is occurring, means this can be expanded upon in the
  * future quite easily (all updates go through one function).
  * @param {string} args.tableId The ID of the of the table which is being changed.
- * @param {object|null} args.row The row which is changing, e.g. created, updated or deleted.
- * @param {object|null} args.table If the table has already been retrieved this can be used to reduce database gets.
- * @param {object|null} args.oldTable If the table is being updated then the old table can be provided for differencing.
+ * @param {object|undefined} args.row The row which is changing, e.g. created, updated or deleted.
+ * @param {object|undefined} args.table If the table has already been retrieved this can be used to reduce database gets.
+ * @param {object|undefined} args.oldTable If the table is being updated then the old table can be provided for differencing.
  * @returns {Promise<object>} When the update is complete this will respond successfully. Returns the row for
  * row operations and the table for table operations.
  */
