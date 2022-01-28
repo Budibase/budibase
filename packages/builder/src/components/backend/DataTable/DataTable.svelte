@@ -86,7 +86,7 @@
   // Fetch data whenever rows are modified. Unfortunately we have to lose
   // our pagination place, as our bookmarks will have shifted.
   const onUpdateRows = () => {
-    fetch.update()
+    fetch.refresh()
   }
 </script>
 
