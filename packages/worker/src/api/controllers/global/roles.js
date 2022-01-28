@@ -4,7 +4,7 @@ const {
   getDeployedAppID,
   DocumentTypes,
 } = require("@budibase/backend-core/db")
-const CouchDB = require("../../../db")
+const { doInAppContext, getAppDB } = require("@budibase/backend-core/context")
 
 exports.fetch = async ctx => {
   const tenantId = ctx.user.tenantId
@@ -31,12 +31,14 @@ exports.fetch = async ctx => {
 
 exports.find = async ctx => {
   const appId = ctx.params.appId
-  const db = new CouchDB(appId)
-  const app = await db.get(DocumentTypes.APP_METADATA)
-  ctx.body = {
-    roles: await getAllRoles(appId),
-    name: app.name,
-    version: app.version,
-    url: app.url,
-  }
+  await doInAppContext(appId, async () => {
+    const db = getAppDB()
+    const app = await db.get(DocumentTypes.APP_METADATA)
+    ctx.body = {
+      roles: await getAllRoles(),
+      name: app.name,
+      version: app.version,
+      url: app.url,
+    }
+  })
 }

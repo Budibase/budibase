@@ -1,5 +1,4 @@
 const { budibaseTempDir } = require("../budibaseDir")
-const { isDev } = require("../index")
 const fs = require("fs")
 const { join } = require("path")
 const uuid = require("uuid/v4")
@@ -52,7 +51,7 @@ exports.init = () => {
  * everything required to function is ready.
  */
 exports.checkDevelopmentEnvironment = () => {
-  if (!isDev()) {
+  if (!env.isDev() || env.isTest()) {
     return
   }
   if (!fs.existsSync(budibaseTempDir())) {
