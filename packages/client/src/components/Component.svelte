@@ -33,8 +33,11 @@
   // need to be enriched at this level.
   // Nested settings are the un-enriched block settings that are to be passed on
   // and enriched at a deeper level.
-  let componentSettings
+  let dynamicSettings
+  let staticSettings
   let nestedSettings
+
+  // The context keys that
 
   // The enriched component settings
   let enrichedSettings
@@ -108,15 +111,23 @@
   $: rawSettings = getRawSettings(instance)
   $: instanceKey = Helpers.hashString(JSON.stringify(rawSettings))
 
-  // Update and enrich component settings
-  $: updateSettings(rawSettings, instanceKey, settingsDefinition, $context)
+  // Parse and split component settings into categories
+  $: updateSettings(rawSettings, instanceKey, settingsDefinition)
+
+  // Enrich component settings
+  $: enrichComponentSettings(dynamicSettings, $context)
 
   // Evaluate conditional UI settings and store any component setting changes
   // which need to be made
   $: evaluateConditions(enrichedSettings?._conditions)
 
   // Build up the final settings object to be passed to the component
-  $: cacheSettings(enrichedSettings, nestedSettings, conditionalSettings)
+  $: cacheSettings(
+    staticSettings,
+    enrichedSettings,
+    nestedSettings,
+    conditionalSettings
+  )
 
   // Update component context
   $: componentStore.set({
@@ -185,48 +196,55 @@
   }
 
   // Updates and enriches component settings when raw settings change
-  const updateSettings = (settings, key, settingsDefinition, context) => {
+  const updateSettings = (settings, key, settingsDefinition) => {
     const instanceChanged = key !== lastInstanceKey
-
-    // Derive component and nested settings if the instance changed
-    if (instanceChanged) {
-      splitRawSettings(settings, settingsDefinition)
-    }
-
-    // Enrich component settings
-    enrichComponentSettings(componentSettings, context, instanceChanged)
-
-    // Update instance key
-    if (instanceChanged) {
+    if (!instanceChanged) {
+      return
+    } else {
       lastInstanceKey = key
     }
-  }
 
-  // Splits the raw settings into those destined for the component itself
-  // and nexted settings for child components inside blocks
-  const splitRawSettings = (rawSettings, settingsDefinition) => {
-    let newComponentSettings = { ...rawSettings }
-    let newNestedSettings = { ...rawSettings }
+    // Derive static, dynamic and nested settings if the instance changed
+    let newStaticSettings = { ...settings }
+    let newDynamicSettings = { ...settings }
+    let newNestedSettings = { ...settings }
     settingsDefinition?.forEach(setting => {
       if (setting.nested) {
-        delete newComponentSettings[setting.key]
+        delete newStaticSettings[setting.key]
+        delete newDynamicSettings[setting.key]
       } else {
         delete newNestedSettings[setting.key]
+
+        // This is a non-nested setting, but we need to find out if it is
+        // static or dynamic
+        const value = rawSettings[setting.key]
+        if (value == null) {
+          delete newDynamicSettings[setting.key]
+        } else if (typeof value === "string" && value.includes("{{")) {
+          delete newStaticSettings[setting.key]
+        } else if (typeof value === "object") {
+          const stringified = JSON.stringify(value)
+          if (stringified.includes("{{")) {
+            delete newStaticSettings[setting.key]
+          } else {
+            delete newDynamicSettings[setting.key]
+          }
+        } else {
+          delete newDynamicSettings[setting.key]
+        }
       }
     })
-    componentSettings = newComponentSettings
+
+    staticSettings = newStaticSettings
+    dynamicSettings = newDynamicSettings
     nestedSettings = newNestedSettings
   }
 
   // Enriches any string component props using handlebars
-  const enrichComponentSettings = (rawSettings, context, instanceChanged) => {
+  const enrichComponentSettings = (settings, context) => {
     const contextChanged = context.key !== lastContextKey
-
-    // Skip enrichment if the context and instance are unchanged
     if (!contextChanged) {
-      if (!instanceChanged) {
-        return
-      }
+      return
     } else {
       lastContextKey = context.key
     }
@@ -236,7 +254,7 @@
     const enrichmentTime = latestUpdateTime
 
     // Enrich settings with context
-    const newEnrichedSettings = enrichProps(rawSettings, context)
+    const newEnrichedSettings = enrichProps(settings, context)
 
     // Abandon this update if a newer update has started
     if (enrichmentTime !== latestUpdateTime) {
@@ -271,8 +289,13 @@
   // Combines and caches all settings which will be passed to the component
   // instance. Settings are aggressively memoized to avoid triggering svelte
   // reactive statements as much as possible.
-  const cacheSettings = (enriched, nested, conditional) => {
-    const allSettings = { ...enriched, ...nested, ...conditional }
+  const cacheSettings = (staticSettings, enriched, nested, conditional) => {
+    const allSettings = {
+      ...staticSettings,
+      ...enriched,
+      ...nested,
+      ...conditional,
+    }
     if (!cachedSettings) {
       cachedSettings = { ...allSettings }
       initialSettings = cachedSettings

@@ -7,10 +7,10 @@ const manifest = require("../manifest.json")
 const hbsInstance = handlebars.create()
 registerAll(hbsInstance)
 const hbsInstanceNoHelpers = handlebars.create()
-const defaultOpts = { noHelpers: false }
+const defaultOpts = { noHelpers: false, cacheTemplates: false }
 
 /**
- * utility function to check if the object is valid
+ * Utility function to check if the object is valid.
  */
 function testObject(object) {
   // JSON stringify will fail if there are any cycles, stops infinite recursion
@@ -19,6 +19,32 @@ function testObject(object) {
   } catch (err) {
     throw "Unable to process inputs to JSON, cannot recurse"
   }
+}
+
+/**
+ * Creates a HBS template function for a given string, and optionally caches it.
+ */
+let templateCache = {}
+function createTemplate(string, noHelpers, cache) {
+  // Finalising adds a helper, can't do this with no helpers
+  const shouldFinalise = !noHelpers
+  const key = `${string}${shouldFinalise}`
+
+  // Reuse the cached template is possible
+  if (cache && templateCache[key]) {
+    return templateCache[key]
+  }
+
+  string = processors.preprocess(string, shouldFinalise)
+
+  // This does not throw an error when template can't be fulfilled,
+  // have to try correct beforehand
+  const instance = noHelpers ? hbsInstanceNoHelpers : hbsInstance
+  const template = instance.compile(string, {
+    strict: false,
+  })
+  templateCache[key] = template
+  return template
 }
 
 /**
@@ -104,14 +130,7 @@ module.exports.processStringSync = (string, context, opts) => {
     throw "Cannot process non-string types."
   }
   try {
-    // finalising adds a helper, can't do this with no helpers
-    const shouldFinalise = !opts.noHelpers
-    string = processors.preprocess(string, shouldFinalise)
-    // this does not throw an error when template can't be fulfilled, have to try correct beforehand
-    const instance = opts.noHelpers ? hbsInstanceNoHelpers : hbsInstance
-    const template = instance.compile(string, {
-      strict: false,
-    })
+    const template = createTemplate(string, opts.noHelpers, opts.cacheTemplates)
     const now = Math.floor(Date.now() / 1000) * 1000
     return processors.postprocess(
       template({
@@ -154,8 +173,8 @@ module.exports.isValid = (string, opts) => {
   // don't really need a real context to check if its valid
   const context = {}
   try {
-    const instance = opts.noHelpers ? hbsInstanceNoHelpers : hbsInstance
-    instance.compile(processors.preprocess(string, false))(context)
+    const template = createTemplate(string, opts.noHelpers, opts.cache)
+    template(context)
     return true
   } catch (err) {
     const msg = err && err.message ? err.message : err
