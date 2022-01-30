@@ -51,13 +51,9 @@
       >Connect your database to Budibase using the config below.
     </Body>
   </Layout>
-
   <IntegrationConfigForm
     schema={datasource.schema}
     bind:datasource
     creating={true}
   />
 </ModalContent>
-
-<style>
-</style>

@@ -161,7 +161,11 @@
   }
 
   const viewApp = app => {
-    window.open(`/app${app.url}`)
+    if (app.url) {
+      window.open(`/app${app.url}`)
+    } else {
+      window.open(`/${app.prodId}`)
+    }
   }
 
   const editApp = app => {

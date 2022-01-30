@@ -75,6 +75,10 @@ exports.DataSourceOperation = {
   DELETE_TABLE: "DELETE_TABLE",
 }
 
+exports.DatasourceAuthTypes = {
+  GOOGLE: "google",
+}
+
 exports.SortDirection = {
   ASCENDING: "ASCENDING",
   DESCENDING: "DESCENDING",
