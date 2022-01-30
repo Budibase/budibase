@@ -82,7 +82,7 @@ services:
     restart: always
     image: nginx:latest
     volumes:
-      - ./proxy/nginx.conf:/etc/envoy/envoy.yaml
+      - ./proxy/nginx.conf:/etc/nginx/nginx.conf
     ports:
       - "${MAIN_PORT}:10000"
     depends_on:

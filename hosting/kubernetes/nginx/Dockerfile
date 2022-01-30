@@ -1,3 +1,2 @@
-# FROM envoyproxy/envoy:v1.16-latest
-# COPY envoy.yaml /etc/envoy/envoy.yaml
-# RUN chmod go+r /etc/envoy/envoy.yaml
+FROM nginx:latest
+COPY nginx.conf /etc/nginx/nginx.conf
