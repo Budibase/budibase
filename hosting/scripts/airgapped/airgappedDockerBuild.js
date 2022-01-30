@@ -15,8 +15,7 @@ const IMAGES = {
 
 const FILES = {
 	COMPOSE: "docker-compose.yaml",
-	ENVOY: "envoy.yaml",
-	PROPERTIES: "hosting.properties"
+	NGINX: "nginx.conf"
 }
 
 const OUTPUT_DIR = path.join(__dirname, "../", "bb-airgapped")
