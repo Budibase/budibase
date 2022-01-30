@@ -36,7 +36,7 @@ async function init() {
   if (!fs.existsSync(envFilePath)) {
     const envFileJson = {
       PORT: 4001,
-      MINIO_URL: "http://localhost:10000/",
+      MINIO_URL: "http://localhost:4004",
       COUCH_DB_URL: "http://budibase:budibase@localhost:10000/db/",
       REDIS_URL: "localhost:6379",
       WORKER_URL: "http://localhost:4002",
