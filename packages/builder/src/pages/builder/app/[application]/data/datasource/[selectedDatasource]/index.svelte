@@ -19,8 +19,8 @@
   import { IntegrationTypes } from "constants/backend"
   import { isEqual } from "lodash"
   import { cloneDeep } from "lodash/fp"
-
   import ImportRestQueriesModal from "components/backend/DatasourceNavigator/modals/ImportRestQueriesModal.svelte"
+
   let importQueriesModal
 
   let changed

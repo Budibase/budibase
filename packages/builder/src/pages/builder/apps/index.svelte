@@ -41,7 +41,11 @@
       )
 
   function getUrl(app) {
-    return `/app${app.url}`
+    if (app.url) {
+      return `/app${app.url}`
+    } else {
+      return `/${app.prodId}`
+    }
   }
 </script>
 

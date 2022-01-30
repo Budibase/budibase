@@ -7,6 +7,7 @@ const authenticated = require("./authenticated")
 const auditLog = require("./auditLog")
 const tenancy = require("./tenancy")
 const appTenancy = require("./appTenancy")
+const datasourceGoogle = require("./passport/datasource/google")
 const csrf = require("./csrf")
 
 module.exports = {
@@ -19,5 +20,8 @@ module.exports = {
   tenancy,
   appTenancy,
   authError,
+  datasource: {
+    google: datasourceGoogle,
+  },
   csrf,
 }
