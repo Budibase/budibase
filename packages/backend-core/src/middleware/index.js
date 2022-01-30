@@ -9,6 +9,7 @@ const tenancy = require("./tenancy")
 const appTenancy = require("./appTenancy")
 const internalApi = require("./internalApi")
 const datasourceGoogle = require("./passport/datasource/google")
+const csrf = require("./csrf")
 
 module.exports = {
   google,
@@ -24,4 +25,5 @@ module.exports = {
   datasource: {
     google: datasourceGoogle,
   },
+  csrf,
 }
