@@ -165,6 +165,8 @@ exports.updateSelfMetadata = async function (ctx) {
   ctx.request.body._id = ctx.user._id
   // make sure no stale rev
   delete ctx.request.body._rev
+  // make sure no csrf token
+  delete ctx.request.body.csrfToken
   await exports.updateMetadata(ctx)
 }
 

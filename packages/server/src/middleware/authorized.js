@@ -9,9 +9,58 @@ const {
 } = require("@budibase/backend-core/permissions")
 const builderMiddleware = require("./builder")
 const { isWebhookEndpoint } = require("./utils")
+const { buildCsrfMiddleware } = require("@budibase/backend-core/auth")
+const { getAppId } = require("@budibase/backend-core/context")
 
 function hasResource(ctx) {
   return ctx.resourceId != null
+}
+
+const csrf = buildCsrfMiddleware()
+
+/**
+ * Apply authorization to the requested resource:
+ * - If this is a builder resource the user must be a builder.
+ * - Builders can access all resources.
+ * - Otherwise the user must have the required role.
+ */
+const checkAuthorized = async (ctx, resourceRoles, permType, permLevel) => {
+  // check if this is a builder api and the user is not a builder
+  const isBuilder = ctx.user && ctx.user.builder && ctx.user.builder.global
+  const isBuilderApi = permType === PermissionTypes.BUILDER
+  if (isBuilderApi && !isBuilder) {
+    return ctx.throw(403, "Not Authorized")
+  }
+
+  // check for resource authorization
+  if (!isBuilder) {
+    await checkAuthorizedResource(ctx, resourceRoles, permType, permLevel)
+  }
+}
+
+const checkAuthorizedResource = async (
+  ctx,
+  resourceRoles,
+  permType,
+  permLevel
+) => {
+  // get the user's roles
+  const roleId = ctx.roleId || BUILTIN_ROLE_IDS.PUBLIC
+  const userRoles = await getUserRoleHierarchy(roleId, {
+    idOnly: false,
+  })
+  const permError = "User does not have permission"
+  // check if the user has the required role
+  if (resourceRoles.length > 0) {
+    // deny access if the user doesn't have the required resource role
+    const found = userRoles.find(role => resourceRoles.indexOf(role._id) !== -1)
+    if (!found) {
+      ctx.throw(403, permError)
+    }
+    // fallback to the base permissions when no resource roles are found
+  } else if (!doesHaveBasePermission(permType, permLevel, userRoles)) {
+    ctx.throw(403, permError)
+  }
 }
 
 module.exports =
@@ -31,40 +80,27 @@ module.exports =
     // to find API endpoints which are builder focused
     await builderMiddleware(ctx, permType)
 
-    const isAuthed = ctx.isAuthenticated
-    // builders for now have permission to do anything
-    let isBuilder = ctx.user && ctx.user.builder && ctx.user.builder.global
-    const isBuilderApi = permType === PermissionTypes.BUILDER
-    if (isBuilder) {
+    // get the resource roles
+    let resourceRoles = []
+    const appId = getAppId()
+    if (appId && hasResource(ctx)) {
+      resourceRoles = await getRequiredResourceRole(permLevel, ctx)
+    }
+
+    // if the resource is public, proceed
+    const isPublicResource = resourceRoles.includes(BUILTIN_ROLE_IDS.PUBLIC)
+    if (isPublicResource) {
       return next()
-    } else if (isBuilderApi && !isBuilder) {
-      return ctx.throw(403, "Not Authorized")
     }
 
-    // need to check this first, in-case public access, don't check authed until last
-    const roleId = ctx.roleId || BUILTIN_ROLE_IDS.PUBLIC
-    const hierarchy = await getUserRoleHierarchy(roleId, {
-      idOnly: false,
-    })
-    const permError = "User does not have permission"
-    let possibleRoleIds = []
-    if (hasResource(ctx)) {
-      possibleRoleIds = await getRequiredResourceRole(permLevel, ctx)
-    }
-    // check if we found a role, if not fallback to base permissions
-    if (possibleRoleIds.length > 0) {
-      const found = hierarchy.find(
-        role => possibleRoleIds.indexOf(role._id) !== -1
-      )
-      return found ? next() : ctx.throw(403, permError)
-    } else if (!doesHaveBasePermission(permType, permLevel, hierarchy)) {
-      ctx.throw(403, permError)
+    // check authenticated
+    if (!ctx.isAuthenticated) {
+      return ctx.throw(403, "Session not authenticated")
     }
 
-    // if they are not authed, then anything using the authorized middleware will fail
-    if (!isAuthed) {
-      ctx.throw(403, "Session not authenticated")
-    }
+    // check authorized
+    await checkAuthorized(ctx, resourceRoles, permType, permLevel)
 
-    return next()
+    // csrf protection
+    return csrf(ctx, next)
   }
