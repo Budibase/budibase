@@ -1,8 +1,10 @@
-const { getGlobalDB, getTenantId } = require("@budibase/backend-core/tenancy")
-const { getAllApps } = require("@budibase/backend-core/db")
-const { getUsageQuotaDoc } = require("../../utilities/usageQuota")
+// @ts-ignore
+import { getGlobalDB, getTenantId } from "@budibase/backend-core/tenancy"
+// @ts-ignore
+import { getAllApps } from "@budibase/backend-core/db"
+import { getUsageQuotaDoc } from "../../../utilities/usageQuota"
 
-exports.run = async () => {
+export const run = async () => {
   const db = getGlobalDB()
   // get app count
   const devApps = await getAllApps({ dev: true })

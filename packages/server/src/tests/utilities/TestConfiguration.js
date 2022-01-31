@@ -51,6 +51,10 @@ class TestConfiguration {
     return this.appId
   }
 
+  getCouch() {
+    return CouchDB
+  }
+
   async _req(config, params, controlFunc) {
     const request = {}
     // fake cookies, we don't need them

@@ -44,6 +44,7 @@ module.exports = {
   REDIS_PASSWORD: process.env.REDIS_PASSWORD,
   INTERNAL_API_KEY: process.env.INTERNAL_API_KEY,
   MULTI_TENANCY: process.env.MULTI_TENANCY,
+  HTTP_MIGRATIONS: process.env.HTTP_MIGRATIONS,
   // environment
   NODE_ENV: process.env.NODE_ENV,
   JEST_WORKER_ID: process.env.JEST_WORKER_ID,

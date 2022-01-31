@@ -74,10 +74,7 @@ async function authInternal(ctx, user, err = null, info = null) {
 exports.authenticate = async (ctx, next) => {
   return passport.authenticate("local", async (err, user, info) => {
     await authInternal(ctx, user, err, info)
-
-    delete user.token
-
-    ctx.body = { user }
+    ctx.status = 200
   })(ctx, next)
 }
 
