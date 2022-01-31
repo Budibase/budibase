@@ -80,9 +80,7 @@ services:
 
   proxy-service:
     restart: always
-    image: nginx:latest
-    volumes:
-      - ./proxy/nginx.conf:/etc/nginx/nginx.conf
+    image: budibase/proxy
     ports:
       - "${MAIN_PORT}:10000"
     depends_on:
