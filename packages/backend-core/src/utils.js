@@ -20,9 +20,6 @@ const { hash } = require("./hashing")
 const userCache = require("./cache/user")
 const env = require("./environment")
 const { getUserSessions, invalidateSessions } = require("./security/sessions")
-const { migrateIfRequired } = require("./migrations")
-const { USER_EMAIL_VIEW_CASING } = require("./migrations").MIGRATIONS
-const { GLOBAL_DB } = require("./migrations").MIGRATION_DBS
 
 const APP_PREFIX = DocumentTypes.APP + SEPARATOR
 
@@ -96,12 +93,7 @@ exports.getCookie = (ctx, name) => {
  * @param {string|object} value The value of cookie which will be set.
  * @param {object} opts options like whether to sign.
  */
-exports.setCookie = (
-  ctx,
-  value,
-  name = "builder",
-  opts = { sign: true, requestDomain: false }
-) => {
+exports.setCookie = (ctx, value, name = "builder", opts = { sign: true }) => {
   if (value && opts && opts.sign) {
     value = jwt.sign(value, options.secretOrKey)
   }
@@ -113,7 +105,7 @@ exports.setCookie = (
     overwrite: true,
   }
 
-  if (environment.COOKIE_DOMAIN && !opts.requestDomain) {
+  if (environment.COOKIE_DOMAIN) {
     config.domain = environment.COOKIE_DOMAIN
   }
 
@@ -148,11 +140,6 @@ exports.getGlobalUserByEmail = async email => {
     throw "Must supply an email address to view"
   }
   const db = getGlobalDB()
-
-  await migrateIfRequired(GLOBAL_DB, USER_EMAIL_VIEW_CASING, async () => {
-    // re-create the view with latest changes
-    await createUserEmailView(db)
-  })
 
   try {
     let users = (

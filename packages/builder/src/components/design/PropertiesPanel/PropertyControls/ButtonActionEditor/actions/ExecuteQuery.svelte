@@ -55,8 +55,8 @@
         <div>
           <BindingBuilder
             bind:customParams={parameters.queryParams}
-            bindings={query.parameters}
-            bind:bindableOptions={bindings}
+            queryBindings={query.parameters}
+            bind:bindings
           />
           <IntegrationQueryEditor
             height={200}

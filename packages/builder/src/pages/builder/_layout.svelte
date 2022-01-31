@@ -61,7 +61,7 @@
       await auth.setInitInfo({ init_template: $params["?template"] })
     }
 
-    await auth.checkAuth()
+    await auth.getSelf()
     await admin.init()
 
     if (useAccountPortal && multiTenancyEnabled) {
