@@ -20,6 +20,7 @@ class TestConfiguration {
     this.middleware = authorizedMiddleware(role)
     this.next = jest.fn()
     this.throw = jest.fn()
+    this.headers = {}
     this.ctx = {
       headers: {},
       request: {
@@ -28,7 +29,8 @@ class TestConfiguration {
       appId: APP_ID,
       auth: {},
       next: this.next,
-      throw: this.throw
+      throw: this.throw,
+      get: (name) => this.headers[name],
     }
   }
 
@@ -51,7 +53,7 @@ class TestConfiguration {
   }
 
   setAuthenticated(isAuthed) {
-    this.ctx.auth = { authenticated: isAuthed }
+    this.ctx.isAuthenticated = isAuthed
   }
 
   setRequestUrl(url) {
@@ -112,7 +114,7 @@ describe("Authorization middleware", () => {
       expect(config.next).toHaveBeenCalled()
     })
     
-    it("throws if the user has only builder permissions", async () => {
+    it("throws if the user does not have builder permissions", async () => {
       config.setEnvironment(false)
       config.setMiddlewareRequiredPermission(PermissionTypes.BUILDER)
       config.setUser({
@@ -138,7 +140,7 @@ describe("Authorization middleware", () => {
       expect(config.next).toHaveBeenCalled()
     })
 
-    it("throws if the user session is not authenticated after permission checks", async () => {
+    it("throws if the user session is not authenticated", async () => {
       config.setUser({
         role: {
           _id: ""
