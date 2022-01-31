@@ -20,7 +20,6 @@ const integrationRoutes = require("./integration")
 const permissionRoutes = require("./permission")
 const datasourceRoutes = require("./datasource")
 const queryRoutes = require("./query")
-const hostingRoutes = require("./hosting")
 const backupRoutes = require("./backup")
 const metadataRoutes = require("./metadata")
 const devRoutes = require("./dev")
@@ -46,7 +45,6 @@ exports.mainRoutes = [
   permissionRoutes,
   datasourceRoutes,
   queryRoutes,
-  hostingRoutes,
   backupRoutes,
   metadataRoutes,
   devRoutes,

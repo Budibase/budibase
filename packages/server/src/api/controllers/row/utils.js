@@ -52,10 +52,7 @@ exports.validate = async ({ appId, tableId, row, table }) => {
     const constraints = cloneDeep(table.schema[fieldName].constraints)
     const type = table.schema[fieldName].type
     // special case for options, need to always allow unselected (null)
-    if (
-      (type === FieldTypes.OPTIONS || type === FieldTypes.ARRAY) &&
-      constraints.inclusion
-    ) {
+    if (type === FieldTypes.OPTIONS && constraints.inclusion) {
       constraints.inclusion.push(null)
     }
     let res
