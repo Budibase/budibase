@@ -2,8 +2,7 @@
   import { setContext, getContext } from "svelte"
   import { derived, get, writable } from "svelte/store"
   import { createValidatorFromConstraints } from "./validation"
-  import { Helpers } from "@budibase/bbui"
-  import { cloneDeep } from "lodash/fp"
+  import { Helpers, cloneDeep } from "@budibase/bbui"
 
   export let dataSource
   export let disabled = false
