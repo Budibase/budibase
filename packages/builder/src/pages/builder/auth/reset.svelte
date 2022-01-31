@@ -32,6 +32,7 @@
 
   onMount(async () => {
     try {
+      await auth.checkAuth()
       await organisation.init()
     } catch (error) {
       notifications.error("Error getting org config")

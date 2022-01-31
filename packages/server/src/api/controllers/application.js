@@ -81,12 +81,13 @@ async function getAppUrl(ctx) {
   if (ctx.request.body.url) {
     // if the url is provided, use that
     url = encodeURI(ctx.request.body.url)
-  } else {
+  } else if (ctx.request.body.name) {
     // otherwise use the name
     url = encodeURI(`${ctx.request.body.name}`)
   }
-  url = `/${url.replace(URL_REGEX_SLASH, "")}`.toLowerCase()
-
+  if (url) {
+    url = `/${url.replace(URL_REGEX_SLASH, "")}`.toLowerCase()
+  }
   return url
 }
 
@@ -276,16 +277,22 @@ exports.create = async ctx => {
   ctx.body = newApplication
 }
 
+// This endpoint currently operates as a PATCH rather than a PUT
+// Thus name and url fields are handled only if present
 exports.update = async ctx => {
   const apps = await getAllApps(CouchDB, { dev: true })
   // validation
   const name = ctx.request.body.name
-  checkAppName(ctx, apps, name, ctx.params.appId)
+  if (name) {
+    checkAppName(ctx, apps, name, ctx.params.appId)
+  }
   const url = await getAppUrl(ctx)
-  checkAppUrl(ctx, apps, url, ctx.params.appId)
+  if (url) {
+    checkAppUrl(ctx, apps, url, ctx.params.appId)
+    ctx.request.body.url = url
+  }
 
-  const appPackageUpdates = { name, url }
-  const data = await updateAppPackage(appPackageUpdates, ctx.params.appId)
+  const data = await updateAppPackage(ctx.request.body, ctx.params.appId)
   ctx.status = 200
   ctx.body = data
 }
