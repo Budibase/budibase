@@ -64,3 +64,7 @@ export const deepSet = (obj, key, value) => {
   }
   obj[split[split.length - 1]] = value
 }
+
+export const cloneDeep = obj => {
+  return JSON.parse(JSON.stringify(obj))
+}
