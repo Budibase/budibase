@@ -93,6 +93,9 @@ exports.enableCronTrigger = async (appId, automation) => {
     )
     // Assign cron job ID from bull so we can remove it later if the cron trigger is removed
     trigger.cronJobId = job.id
+    // can't use getAppDB here as this is likely to be called from dev app,
+    // but this call could be for dev app or prod app, need to just use what
+    // was passed in
     const db = new CouchDB(appId)
     const response = await db.put(automation)
     automation._id = response.id
