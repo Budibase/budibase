@@ -9,7 +9,16 @@ import { getAppUrl } from "../../api/controllers/application"
  * Add the url to the app metadata if it doesn't exist
  */
 export const run = async (appDb: any) => {
-  const metadata = await appDb.get(DocumentTypes.APP_METADATA)
+  let metadata
+  try {
+    metadata = await appDb.get(DocumentTypes.APP_METADATA)
+  } catch (e) {
+    // sometimes the metadata document doesn't exist
+    // exit early instead of failing the migration
+    console.error("Error retrieving app metadata. Skipping", e)
+    return
+  }
+
   if (!metadata.url) {
     const context = {
       request: {
@@ -20,6 +29,6 @@ export const run = async (appDb: any) => {
     }
     metadata.url = getAppUrl(context)
     console.log(`Adding url to app: ${metadata.url}`)
+    await appDb.put(metadata)
   }
-  await appDb.put(metadata)
 }
