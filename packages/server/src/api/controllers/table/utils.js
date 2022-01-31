@@ -8,7 +8,11 @@ const {
 const { isEqual } = require("lodash/fp")
 const { AutoFieldSubTypes, FieldTypes } = require("../../../constants")
 const { inputProcessing } = require("../../../utilities/rowProcessor")
-const { USERS_TABLE_SCHEMA, SwitchableTypes } = require("../../../constants")
+const {
+  USERS_TABLE_SCHEMA,
+  SwitchableTypes,
+  CanSwitchTypes,
+} = require("../../../constants")
 const {
   isExternalTable,
   breakExternalTableId,
@@ -340,6 +344,23 @@ exports.foreignKeyStructure = (keyName, meta = null) => {
   return structure
 }
 
+exports.areSwitchableTypes = (type1, type2) => {
+  if (
+    SwitchableTypes.indexOf(type1) === -1 &&
+    SwitchableTypes.indexOf(type2) === -1
+  ) {
+    return false
+  }
+  for (let option of CanSwitchTypes) {
+    const index1 = option.indexOf(type1),
+      index2 = option.indexOf(type2)
+    if (index1 !== -1 && index2 !== -1 && index1 !== index2) {
+      return true
+    }
+  }
+  return false
+}
+
 exports.hasTypeChanged = (table, oldTable) => {
   if (!oldTable) {
     return false
@@ -350,7 +371,7 @@ exports.hasTypeChanged = (table, oldTable) => {
       continue
     }
     const newType = table.schema[key].type
-    if (oldType !== newType && SwitchableTypes.indexOf(oldType) === -1) {
+    if (oldType !== newType && !exports.areSwitchableTypes(oldType, newType)) {
       return true
     }
   }
