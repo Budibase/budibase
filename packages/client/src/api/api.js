@@ -1,5 +1,6 @@
 import { createAPIClient } from "@budibase/frontend-core"
-import { notificationStore } from "../stores"
+import { notificationStore, authStore } from "../stores"
+import { get } from "svelte/store"
 
 export const API = createAPIClient({
   // Enable caching of cacheable endpoints to speed things up,
@@ -13,6 +14,12 @@ export const API = createAPIClient({
     // Attach client header if not inside the builder preview
     if (!window["##BUDIBASE_IN_BUILDER##"]) {
       headers["x-budibase-type"] = "client"
+    }
+
+    // Add csrf token if authenticated
+    const auth = get(authStore)
+    if (auth?.csrfToken) {
+      headers["x-csrf-token"] = auth.csrfToken
     }
   },
 
