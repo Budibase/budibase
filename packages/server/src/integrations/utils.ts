@@ -178,6 +178,7 @@ function shouldCopySpecialColumn(
 ) {
   return (
     column.type === FieldTypes.OPTIONS ||
+    column.type === FieldTypes.ARRAY ||
     ((!fetchedColumn || fetchedColumn.type === FieldTypes.NUMBER) &&
       column.type === FieldTypes.BOOLEAN)
   )
