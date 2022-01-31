@@ -1,11 +1,20 @@
 import { store } from "./index"
 import { get as svelteGet } from "svelte/store"
 import { removeCookie, Cookies } from "./cookies"
+import { auth } from "stores/portal"
 
 const apiCall =
   method =>
   async (url, body, headers = { "Content-Type": "application/json" }) => {
     headers["x-budibase-app-id"] = svelteGet(store).appId
+    headers["x-budibase-api-version"] = "1"
+
+    // add csrf token if authenticated
+    const user = svelteGet(auth).user
+    if (user && user.csrfToken) {
+      headers["x-csrf-token"] = user.csrfToken
+    }
+
     const json = headers["Content-Type"] === "application/json"
     const resp = await fetch(url, {
       method: method,

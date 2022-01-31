@@ -46,5 +46,10 @@ router
   )
   // TODO: this likely needs to be secured in some way
   .get("/:appId/:path*", controller.serveApp)
+  .post(
+    "/api/attachments/:datasourceId/url",
+    authorized(PermissionTypes.TABLE, PermissionLevels.READ),
+    controller.getSignedUploadURL
+  )
 
 module.exports = router

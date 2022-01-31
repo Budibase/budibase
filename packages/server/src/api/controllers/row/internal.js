@@ -1,8 +1,8 @@
 const CouchDB = require("../../../db")
 const linkRows = require("../../../db/linkedRows")
 const {
-  getRowParams,
   generateRowID,
+  getRowParams,
   DocumentTypes,
   InternalTables,
 } = require("../../../db/utils")
@@ -10,11 +10,9 @@ const userController = require("../user")
 const {
   inputProcessing,
   outputProcessing,
-  processAutoColumn,
   cleanupAttachments,
 } = require("../../../utilities/rowProcessor")
 const { FieldTypes } = require("../../../constants")
-const { isEqual } = require("lodash")
 const { validate, findRow } = require("./utils")
 const { fullSearch, paginatedSearch } = require("./internalSearch")
 const { getGlobalUsersFromMetadata } = require("../../../utilities/global")
@@ -27,56 +25,12 @@ const {
   getFromMemoryDoc,
 } = require("../view/utils")
 const { cloneDeep } = require("lodash/fp")
+const { finaliseRow, updateRelatedFormula } = require("./staticFormula")
 
 const CALCULATION_TYPES = {
   SUM: "sum",
   COUNT: "count",
   STATS: "stats",
-}
-
-async function storeResponse(ctx, db, row, oldTable, table) {
-  row.type = "row"
-  // don't worry about rev, tables handle rev/lastID updates
-  // if another row has been written since processing this will
-  // handle the auto ID clash
-  if (!isEqual(oldTable, table)) {
-    try {
-      await db.put(table)
-    } catch (err) {
-      if (err.status === 409) {
-        const updatedTable = await db.get(table._id)
-        let response = processAutoColumn(null, updatedTable, row, {
-          reprocessing: true,
-        })
-        await db.put(response.table)
-        row = response.row
-      } else {
-        throw err
-      }
-    }
-  }
-  const response = await db.put(row)
-  row._rev = response.rev
-  // process the row before return, to include relationships
-  row = await outputProcessing(ctx, table, row, { squash: false })
-  return { row, table }
-}
-
-// doesn't do the outputProcessing
-async function getRawTableData(ctx, db, tableId) {
-  let rows
-  if (tableId === InternalTables.USER_METADATA) {
-    await userController.fetchMetadata(ctx)
-    rows = ctx.body
-  } else {
-    const response = await db.allDocs(
-      getRowParams(tableId, null, {
-        include_docs: true,
-      })
-    )
-    rows = response.rows.map(row => row.doc)
-  }
-  return rows
 }
 
 async function getView(db, viewName) {
@@ -103,6 +57,22 @@ async function getView(db, viewName) {
     throw "View does not exist."
   }
   return viewInfo
+}
+
+async function getRawTableData(ctx, db, tableId) {
+  let rows
+  if (tableId === InternalTables.USER_METADATA) {
+    await userController.fetchMetadata(ctx)
+    rows = ctx.body
+  } else {
+    const response = await db.allDocs(
+      getRowParams(tableId, null, {
+        include_docs: true,
+      })
+    )
+    rows = response.rows.map(row => row.doc)
+  }
+  return rows
 }
 
 exports.patch = async ctx => {
@@ -162,7 +132,10 @@ exports.patch = async ctx => {
     return { row: ctx.body, table }
   }
 
-  return storeResponse(ctx, db, row, dbTable, table)
+  return finaliseRow(ctx.appId, table, row, {
+    oldTable: dbTable,
+    updateFormula: true,
+  })
 }
 
 exports.save = async function (ctx) {
@@ -196,7 +169,10 @@ exports.save = async function (ctx) {
     table,
   })
 
-  return storeResponse(ctx, db, row, dbTable, table)
+  return finaliseRow(ctx.appId, table, row, {
+    oldTable: dbTable,
+    updateFormula: true,
+  })
 }
 
 exports.fetchView = async ctx => {
@@ -302,6 +278,8 @@ exports.destroy = async function (ctx) {
   })
   // remove any attachments that were on the row from object storage
   await cleanupAttachments(appId, table, { row })
+  // remove any static formula
+  await updateRelatedFormula(appId, table, row)
 
   let response
   if (ctx.params.tableId === InternalTables.USER_METADATA) {
@@ -350,6 +328,7 @@ exports.bulkDestroy = async ctx => {
   }
   // remove any attachments that were on the rows from object storage
   await cleanupAttachments(appId, table, { rows })
+  await updateRelatedFormula(appId, table, rows)
   await Promise.all(updates)
   return { response: { ok: true }, rows }
 }
