@@ -78,6 +78,11 @@ class QueryRunner {
       return this.execute()
     }
 
+    // check for undefined response
+    if (!rows) {
+      rows = []
+    }
+
     // needs to an array for next step
     if (!Array.isArray(rows)) {
       rows = [rows]

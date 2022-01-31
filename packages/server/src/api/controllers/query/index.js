@@ -141,6 +141,16 @@ async function execute(ctx, opts = { rowsOnly: false }) {
   const query = await db.get(ctx.params.queryId)
   const datasource = await db.get(query.datasourceId)
 
+  const enrichedParameters = ctx.request.body.parameters || {}
+  // make sure parameters are fully enriched with defaults
+  if (query && query.parameters) {
+    for (let parameter of query.parameters) {
+      if (!enrichedParameters[parameter.name]) {
+        enrichedParameters[parameter.name] = parameter.default
+      }
+    }
+  }
+
   // call the relevant CRUD method on the integration class
   try {
     const { rows, pagination, extra } = await Runner.run({
@@ -149,7 +159,7 @@ async function execute(ctx, opts = { rowsOnly: false }) {
       queryVerb: query.queryVerb,
       fields: query.fields,
       pagination: ctx.request.body.pagination,
-      parameters: ctx.request.body.parameters,
+      parameters: enrichedParameters,
       transformer: query.transformer,
       queryId: ctx.params.queryId,
     })
@@ -178,8 +188,9 @@ const removeDynamicVariables = async (db, queryId) => {
 
   if (dynamicVariables) {
     // delete dynamic variables from the datasource
-    const newVariables = dynamicVariables.filter(dv => dv.queryId !== queryId)
-    datasource.config.dynamicVariables = newVariables
+    datasource.config.dynamicVariables = dynamicVariables.filter(
+      dv => dv.queryId !== queryId
+    )
     await db.put(datasource)
 
     // invalidate the deleted variables

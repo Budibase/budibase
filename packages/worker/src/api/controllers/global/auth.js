@@ -147,6 +147,32 @@ exports.logout = async ctx => {
   ctx.body = { message: "User logged out." }
 }
 
+exports.datasourcePreAuth = async (ctx, next) => {
+  const provider = ctx.params.provider
+  const middleware = require(`@budibase/backend-core/middleware`)
+  const handler = middleware.datasource[provider]
+
+  setCookie(
+    ctx,
+    {
+      provider,
+      appId: ctx.query.appId,
+      datasourceId: ctx.query.datasourceId,
+    },
+    Cookies.DatasourceAuth
+  )
+
+  return handler.preAuth(passport, ctx, next)
+}
+
+exports.datasourceAuth = async (ctx, next) => {
+  const authStateCookie = getCookie(ctx, Cookies.DatasourceAuth)
+  const provider = authStateCookie.provider
+  const middleware = require(`@budibase/backend-core/middleware`)
+  const handler = middleware.datasource[provider]
+  return handler.postAuth(passport, ctx, next)
+}
+
 /**
  * The initial call that google authentication makes to take you to the google login screen.
  * On a successful login, you will be redirected to the googleAuth callback route.
