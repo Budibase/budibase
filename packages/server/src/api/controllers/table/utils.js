@@ -4,10 +4,15 @@ const {
   getRowParams,
   generateRowID,
   InternalTables,
+  getTableParams,
+  BudibaseInternalDB,
 } = require("../../../db/utils")
-const { isEqual } = require("lodash/fp")
+const { isEqual } = require("lodash")
 const { AutoFieldSubTypes, FieldTypes } = require("../../../constants")
-const { inputProcessing } = require("../../../utilities/rowProcessor")
+const {
+  inputProcessing,
+  cleanupAttachments,
+} = require("../../../utilities/rowProcessor")
 const {
   USERS_TABLE_SCHEMA,
   SwitchableTypes,
@@ -21,8 +26,24 @@ const {
 const { getViews, saveView } = require("../view/utils")
 const viewTemplate = require("../view/viewBuilder")
 const usageQuota = require("../../../utilities/usageQuota")
+const { cloneDeep } = require("lodash/fp")
 
-exports.checkForColumnUpdates = async (db, oldTable, updatedTable) => {
+exports.clearColumns = async (appId, table, columnNames) => {
+  const db = new CouchDB(appId)
+  const rows = await db.allDocs(
+    getRowParams(table._id, null, {
+      include_docs: true,
+    })
+  )
+  return db.bulkDocs(
+    rows.rows.map(({ doc }) => {
+      columnNames.forEach(colName => delete doc[colName])
+      return doc
+    })
+  )
+}
+
+exports.checkForColumnUpdates = async (appId, db, oldTable, updatedTable) => {
   let updatedRows = []
   const rename = updatedTable._rename
   let deletedColumns = []
@@ -39,16 +60,20 @@ exports.checkForColumnUpdates = async (db, oldTable, updatedTable) => {
         include_docs: true,
       })
     )
-    updatedRows = rows.rows.map(({ doc }) => {
+    const rawRows = rows.rows.map(({ doc }) => doc)
+    updatedRows = rawRows.map(row => {
+      row = cloneDeep(row)
       if (rename) {
-        doc[rename.updated] = doc[rename.old]
-        delete doc[rename.old]
+        row[rename.updated] = row[rename.old]
+        delete row[rename.old]
       } else if (deletedColumns.length !== 0) {
-        deletedColumns.forEach(colName => delete doc[colName])
+        deletedColumns.forEach(colName => delete row[colName])
       }
-      return doc
+      return row
     })
 
+    // cleanup any attachments from object storage for deleted attachment columns
+    await cleanupAttachments(appId, updatedTable, { oldTable, rows: rawRows })
     // Update views
     await exports.checkForViewUpdates(db, updatedTable, rename, deletedColumns)
     delete updatedTable._rename
@@ -209,6 +234,7 @@ class TableSaveFunctions {
   // when confirmed valid
   async mid(table) {
     let response = await exports.checkForColumnUpdates(
+      this.appId,
       this.db,
       this.oldTable,
       table
@@ -232,6 +258,20 @@ class TableSaveFunctions {
   getUpdatedRows() {
     return this.rows
   }
+}
+
+exports.getAllInternalTables = async appId => {
+  const db = new CouchDB(appId)
+  const internalTables = await db.allDocs(
+    getTableParams(null, {
+      include_docs: true,
+    })
+  )
+  return internalTables.rows.map(tableDoc => ({
+    ...tableDoc.doc,
+    type: "internal",
+    sourceId: BudibaseInternalDB._id,
+  }))
 }
 
 exports.getAllExternalTables = async (appId, datasourceId) => {

@@ -72,7 +72,7 @@ async function getLinksForRows(appId, rows) {
   )
 }
 
-async function getFullLinkedDocs(ctx, appId, links) {
+async function getFullLinkedDocs(appId, links) {
   // create DBs
   const db = new CouchDB(appId)
   const linkedRowIds = links.map(link => link.id)
@@ -146,13 +146,12 @@ exports.updateLinks = async function (args) {
 /**
  * Given a table and a list of rows this will retrieve all of the attached docs and enrich them into the row.
  * This is required for formula fields, this may only be utilised internally (for now).
- * @param {object} ctx The request which is looking for rows.
+ * @param {string} appId The ID of the app which this request is in the context of.
  * @param {object} table The table from which the rows originated.
  * @param {array<object>} rows The rows which are to be enriched.
  * @return {Promise<*>} returns the rows with all of the enriched relationships on it.
  */
-exports.attachFullLinkedDocs = async (ctx, table, rows) => {
-  const appId = ctx.appId
+exports.attachFullLinkedDocs = async (appId, table, rows) => {
   const linkedTableIds = getLinkedTableIDs(table)
   if (linkedTableIds.length === 0) {
     return rows
@@ -166,7 +165,7 @@ exports.attachFullLinkedDocs = async (ctx, table, rows) => {
   // clear any existing links that could be dupe'd
   rows = clearRelationshipFields(table, rows)
   // now get the docs and combine into the rows
-  let linked = await getFullLinkedDocs(ctx, appId, links)
+  let linked = await getFullLinkedDocs(appId, links)
   const linkedTables = []
   for (let row of rows) {
     for (let link of links.filter(link => link.thisId === row._id)) {
