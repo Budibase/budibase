@@ -11,12 +11,13 @@
     "dev:builder": "routify -c dev:vite",
     "dev:vite": "vite --host 0.0.0.0",
     "rollup": "rollup -c -w",
-    "cy:setup": "node ./cypress/setup.js",
+    "cy:setup": "ts-node ./cypress/ts/setup.ts",
+    "cy:setup:ci": "node ./cypress/setup.js",
     "cy:run": "cypress run",
     "cy:open": "cypress open",
     "cy:run:ci": "cypress run --record",
     "cy:test": "start-server-and-test cy:setup http://localhost:10001/builder cy:run",
-    "cy:ci": "start-server-and-test cy:setup http://localhost:10001/builder cy:run",
+    "cy:ci": "start-server-and-test cy:setup:ci http://localhost:10001/builder cy:run",
     "cy:debug": "start-server-and-test cy:setup http://localhost:10001/builder cy:open"
   },
   "jest": {
