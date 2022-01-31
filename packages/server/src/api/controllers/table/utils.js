@@ -3,10 +3,15 @@ const {
   getRowParams,
   generateRowID,
   InternalTables,
+  getTableParams,
+  BudibaseInternalDB,
 } = require("../../../db/utils")
-const { isEqual } = require("lodash/fp")
+const { isEqual } = require("lodash")
 const { AutoFieldSubTypes, FieldTypes } = require("../../../constants")
-const { inputProcessing } = require("../../../utilities/rowProcessor")
+const {
+  inputProcessing,
+  cleanupAttachments,
+} = require("../../../utilities/rowProcessor")
 const {
   USERS_TABLE_SCHEMA,
   SwitchableTypes,
@@ -21,6 +26,22 @@ const { getViews, saveView } = require("../view/utils")
 const viewTemplate = require("../view/viewBuilder")
 const usageQuota = require("../../../utilities/usageQuota")
 const { getAppDB } = require("@budibase/backend-core/context")
+const { cloneDeep } = require("lodash/fp")
+
+exports.clearColumns = async (table, columnNames) => {
+  const db = getAppDB()
+  const rows = await db.allDocs(
+    getRowParams(table._id, null, {
+      include_docs: true,
+    })
+  )
+  return db.bulkDocs(
+    rows.rows.map(({ doc }) => {
+      columnNames.forEach(colName => delete doc[colName])
+      return doc
+    })
+  )
+}
 
 exports.checkForColumnUpdates = async (oldTable, updatedTable) => {
   const db = getAppDB()
@@ -40,16 +61,20 @@ exports.checkForColumnUpdates = async (oldTable, updatedTable) => {
         include_docs: true,
       })
     )
-    updatedRows = rows.rows.map(({ doc }) => {
+    const rawRows = rows.rows.map(({ doc }) => doc)
+    updatedRows = rawRows.map(row => {
+      row = cloneDeep(row)
       if (rename) {
-        doc[rename.updated] = doc[rename.old]
-        delete doc[rename.old]
+        row[rename.updated] = row[rename.old]
+        delete row[rename.old]
       } else if (deletedColumns.length !== 0) {
-        deletedColumns.forEach(colName => delete doc[colName])
+        deletedColumns.forEach(colName => delete row[colName])
       }
-      return doc
+      return row
     })
 
+    // cleanup any attachments from object storage for deleted attachment columns
+    await cleanupAttachments(updatedTable, { oldTable, rows: rawRows })
     // Update views
     await exports.checkForViewUpdates(updatedTable, rename, deletedColumns)
     delete updatedTable._rename
@@ -221,6 +246,20 @@ class TableSaveFunctions {
   getUpdatedRows() {
     return this.rows
   }
+}
+
+exports.getAllInternalTables = async () => {
+  const db = getAppDB()
+  const internalTables = await db.allDocs(
+    getTableParams(null, {
+      include_docs: true,
+    })
+  )
+  return internalTables.rows.map(tableDoc => ({
+    ...tableDoc.doc,
+    type: "internal",
+    sourceId: BudibaseInternalDB._id,
+  }))
 }
 
 exports.getAllExternalTables = async datasourceId => {

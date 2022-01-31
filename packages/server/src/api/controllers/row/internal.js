@@ -1,7 +1,7 @@
 const linkRows = require("../../../db/linkedRows")
 const {
-  getRowParams,
   generateRowID,
+  getRowParams,
   DocumentTypes,
   InternalTables,
 } = require("../../../db/utils")
@@ -9,11 +9,9 @@ const userController = require("../user")
 const {
   inputProcessing,
   outputProcessing,
-  processAutoColumn,
   cleanupAttachments,
 } = require("../../../utilities/rowProcessor")
 const { FieldTypes } = require("../../../constants")
-const { isEqual } = require("lodash")
 const { validate, findRow } = require("./utils")
 const { fullSearch, paginatedSearch } = require("./internalSearch")
 const { getGlobalUsersFromMetadata } = require("../../../utilities/global")
@@ -27,56 +25,12 @@ const {
 } = require("../view/utils")
 const { cloneDeep } = require("lodash/fp")
 const { getAppDB } = require("@budibase/backend-core/context")
+const { finaliseRow, updateRelatedFormula } = require("./staticFormula")
 
 const CALCULATION_TYPES = {
   SUM: "sum",
   COUNT: "count",
   STATS: "stats",
-}
-
-async function storeResponse(ctx, db, row, oldTable, table) {
-  row.type = "row"
-  // don't worry about rev, tables handle rev/lastID updates
-  // if another row has been written since processing this will
-  // handle the auto ID clash
-  if (!isEqual(oldTable, table)) {
-    try {
-      await db.put(table)
-    } catch (err) {
-      if (err.status === 409) {
-        const updatedTable = await db.get(table._id)
-        let response = processAutoColumn(null, updatedTable, row, {
-          reprocessing: true,
-        })
-        await db.put(response.table)
-        row = response.row
-      } else {
-        throw err
-      }
-    }
-  }
-  const response = await db.put(row)
-  row._rev = response.rev
-  // process the row before return, to include relationships
-  row = await outputProcessing(ctx, table, row, { squash: false })
-  return { row, table }
-}
-
-// doesn't do the outputProcessing
-async function getRawTableData(ctx, db, tableId) {
-  let rows
-  if (tableId === InternalTables.USER_METADATA) {
-    await userController.fetchMetadata(ctx)
-    rows = ctx.body
-  } else {
-    const response = await db.allDocs(
-      getRowParams(tableId, null, {
-        include_docs: true,
-      })
-    )
-    rows = response.rows.map(row => row.doc)
-  }
-  return rows
 }
 
 async function getView(db, viewName) {
@@ -103,6 +57,22 @@ async function getView(db, viewName) {
     throw "View does not exist."
   }
   return viewInfo
+}
+
+async function getRawTableData(ctx, db, tableId) {
+  let rows
+  if (tableId === InternalTables.USER_METADATA) {
+    await userController.fetchMetadata(ctx)
+    rows = ctx.body
+  } else {
+    const response = await db.allDocs(
+      getRowParams(tableId, null, {
+        include_docs: true,
+      })
+    )
+    rows = response.rows.map(row => row.doc)
+  }
+  return rows
 }
 
 exports.patch = async ctx => {
@@ -160,7 +130,10 @@ exports.patch = async ctx => {
     return { row: ctx.body, table }
   }
 
-  return storeResponse(ctx, db, row, dbTable, table)
+  return finaliseRow(table, row, {
+    oldTable: dbTable,
+    updateFormula: true,
+  })
 }
 
 exports.save = async function (ctx) {
@@ -192,7 +165,10 @@ exports.save = async function (ctx) {
     table,
   })
 
-  return storeResponse(ctx, db, row, dbTable, table)
+  return finaliseRow(table, row, {
+    oldTable: dbTable,
+    updateFormula: true,
+  })
 }
 
 exports.fetchView = async ctx => {
@@ -231,7 +207,7 @@ exports.fetchView = async ctx => {
         schema: {},
       }
     }
-    rows = await outputProcessing(ctx, table, response.rows)
+    rows = await outputProcessing(table, response.rows)
   }
 
   if (calculation === CALCULATION_TYPES.STATS) {
@@ -263,14 +239,14 @@ exports.fetch = async ctx => {
   const tableId = ctx.params.tableId
   let table = await db.get(tableId)
   let rows = await getRawTableData(ctx, db, tableId)
-  return outputProcessing(ctx, table, rows)
+  return outputProcessing(table, rows)
 }
 
 exports.find = async ctx => {
   const db = getAppDB()
   const table = await db.get(ctx.params.tableId)
   let row = await findRow(ctx, ctx.params.tableId, ctx.params.rowId)
-  row = await outputProcessing(ctx, table, row)
+  row = await outputProcessing(table, row)
   return row
 }
 
@@ -284,7 +260,7 @@ exports.destroy = async function (ctx) {
   }
   const table = await db.get(row.tableId)
   // update the row to include full relationships before deleting them
-  row = await outputProcessing(ctx, table, row, { squash: false })
+  row = await outputProcessing(table, row, { squash: false })
   // now remove the relationships
   await linkRows.updateLinks({
     eventType: linkRows.EventType.ROW_DELETE,
@@ -293,6 +269,8 @@ exports.destroy = async function (ctx) {
   })
   // remove any attachments that were on the row from object storage
   await cleanupAttachments(table, { row })
+  // remove any static formula
+  await updateRelatedFormula(table, row)
 
   let response
   if (ctx.params.tableId === InternalTables.USER_METADATA) {
@@ -315,7 +293,7 @@ exports.bulkDestroy = async ctx => {
 
   // before carrying out any updates, make sure the rows are ready to be returned
   // they need to be the full rows (including previous relationships) for automations
-  rows = await outputProcessing(ctx, table, rows, { squash: false })
+  rows = await outputProcessing(table, rows, { squash: false })
 
   // remove the relationships first
   let updates = rows.map(row =>
@@ -339,6 +317,7 @@ exports.bulkDestroy = async ctx => {
   }
   // remove any attachments that were on the rows from object storage
   await cleanupAttachments(table, { rows })
+  await updateRelatedFormula(table, rows)
   await Promise.all(updates)
   return { response: { ok: true }, rows }
 }
@@ -369,7 +348,7 @@ exports.search = async ctx => {
       response.rows = await getGlobalUsersFromMetadata(response.rows)
     }
     const table = await db.get(tableId)
-    response.rows = await outputProcessing(ctx, table, response.rows)
+    response.rows = await outputProcessing(table, response.rows)
   }
 
   return response
@@ -419,7 +398,7 @@ exports.fetchEnrichedRow = async ctx => {
   for (let [tableId, rows] of Object.entries(groups)) {
     // need to include the IDs in these rows for any links they may have
     linkedRows = linkedRows.concat(
-      await outputProcessing(ctx, tables[tableId], rows)
+      await outputProcessing(tables[tableId], rows)
     )
   }
 

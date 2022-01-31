@@ -37,22 +37,30 @@ class QueryBuilder {
   }
 
   setLimit(limit) {
-    this.limit = limit
+    if (limit != null) {
+      this.limit = limit
+    }
     return this
   }
 
   setSort(sort) {
-    this.sort = sort
+    if (sort != null) {
+      this.sort = sort
+    }
     return this
   }
 
   setSortOrder(sortOrder) {
-    this.sortOrder = sortOrder
+    if (sortOrder != null) {
+      this.sortOrder = sortOrder
+    }
     return this
   }
 
   setSortType(sortType) {
-    this.sortType = sortType
+    if (sortType != null) {
+      this.sortType = sortType
+    }
     return this
   }
 
