@@ -1,7 +1,7 @@
 const Deployment = require("./Deployment")
 const {
   Replication,
-  getDeployedAppID,
+  getProdAppID,
   getDevelopmentAppID,
 } = require("@budibase/backend-core/db")
 const { DocumentTypes, getAutomationParams } = require("../../../db/utils")
@@ -97,7 +97,7 @@ async function deployApp(deployment) {
   try {
     const appId = getAppId()
     const devAppId = getDevelopmentAppID(appId)
-    const productionAppId = getDeployedAppID(appId)
+    const productionAppId = getProdAppID(appId)
 
     const replication = new Replication({
       source: devAppId,

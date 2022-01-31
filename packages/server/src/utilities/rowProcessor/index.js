@@ -7,7 +7,7 @@ const { deleteFiles } = require("../../utilities/fileSystem/utilities")
 const { ObjectStoreBuckets } = require("../../constants")
 const {
   isProdAppID,
-  getDeployedAppID,
+  getProdAppID,
   dbExists,
 } = require("@budibase/backend-core/db")
 const { getAppId } = require("@budibase/backend-core/context")
@@ -303,7 +303,7 @@ exports.outputProcessing = async (table, rows, opts = { squash: true }) => {
 exports.cleanupAttachments = async (table, { row, rows, oldRow, oldTable }) => {
   const appId = getAppId()
   if (!isProdAppID(appId)) {
-    const prodAppId = getDeployedAppID(appId)
+    const prodAppId = getProdAppID(appId)
     // if prod exists, then don't allow deleting
     const exists = await dbExists(prodAppId)
     if (exists) {

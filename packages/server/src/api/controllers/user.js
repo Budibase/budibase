@@ -10,7 +10,7 @@ const { isEqual } = require("lodash")
 const { BUILTIN_ROLE_IDS } = require("@budibase/backend-core/roles")
 const {
   getDevelopmentAppID,
-  getDeployedAppIDs,
+  getProdAppIDs,
   dbExists,
 } = require("@budibase/backend-core/db")
 const { UserStatus } = require("@budibase/backend-core/constants")
@@ -92,7 +92,7 @@ exports.syncUser = async function (ctx) {
   let prodAppIds
   // if they are a builder then get all production app IDs
   if ((user.builder && user.builder.global) || deleting) {
-    prodAppIds = await getDeployedAppIDs()
+    prodAppIds = await getProdAppIDs()
   } else {
     prodAppIds = Object.entries(roles)
       .filter(entry => entry[1] !== BUILTIN_ROLE_IDS.PUBLIC)
