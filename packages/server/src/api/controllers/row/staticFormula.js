@@ -38,30 +38,31 @@ exports.updateRelatedFormula = async (appId, table, enrichedRows) => {
       }
     }
     for (let tableId of table.relatedFormula) {
+      let relatedTable
       try {
         // no rows to update, skip
         if (!relatedRows[tableId] || relatedRows[tableId].length === 0) {
           continue
         }
-        const relatedTable = await db.get(tableId)
-        for (let column of Object.values(relatedTable.schema)) {
-          // needs updated in related rows
-          if (
-            column.type === FieldTypes.FORMULA &&
-            column.formulaType === FormulaTypes.STATIC
-          ) {
-            // re-enrich rows for all the related, don't update the related formula for them
-            promises = promises.concat(
-              relatedRows[tableId].map(related =>
-                exports.finaliseRow(appId, relatedTable, related, {
-                  updateFormula: false,
-                })
-              )
-            )
-          }
-        }
+        relatedTable = await db.get(tableId)
       } catch (err) {
         // no error scenario, table doesn't seem to exist anymore, ignore
+      }
+      for (let column of Object.values(relatedTable.schema)) {
+        // needs updated in related rows
+        if (
+          column.type === FieldTypes.FORMULA &&
+          column.formulaType === FormulaTypes.STATIC
+        ) {
+          // re-enrich rows for all the related, don't update the related formula for them
+          promises = promises.concat(
+            relatedRows[tableId].map(related =>
+              exports.finaliseRow(appId, relatedTable, related, {
+                updateFormula: false,
+              })
+            )
+          )
+        }
       }
     }
   }

@@ -37,7 +37,6 @@ function getFormulaThatUseColumn(table, columnNames) {
  * This functions checks for when a related table, column or related column is deleted, if any
  * tables need to have the formula column removed.
  */
-
 async function checkIfFormulaNeedsCleared(
   appId,
   table,
