@@ -6,7 +6,7 @@ const {
   DocumentTypes,
   SEPARATOR,
 } = require("../db/utils")
-const { getAppDB } = require("../tenancy/context")
+const { getAppDB } = require("../context")
 const { getDB } = require("../db")
 
 const BUILTIN_IDS = {

@@ -5,7 +5,7 @@ const {
   DEFAULT_TENANT_ID,
   updateAppId,
 } = require("../tenancy")
-const ContextFactory = require("../tenancy/FunctionContext")
+const ContextFactory = require("../context/FunctionContext")
 const { getTenantIDFromAppID } = require("../db/utils")
 
 module.exports = () => {
