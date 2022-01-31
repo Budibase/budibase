@@ -25,7 +25,7 @@ exports.isDevApp = app => {
 /**
  * Convert a development app ID to a deployed app ID.
  */
-exports.getDeployedAppID = appId => {
+exports.getProdAppID = appId => {
   // if dev, convert it
   if (appId.startsWith(APP_DEV_PREFIX)) {
     const id = appId.split(APP_DEV_PREFIX)[1]

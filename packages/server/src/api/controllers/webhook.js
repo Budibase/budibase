@@ -2,7 +2,7 @@ const { generateWebhookID, getWebhookParams } = require("../../db/utils")
 const toJsonSchema = require("to-json-schema")
 const validate = require("jsonschema").validate
 const triggers = require("../../automations/triggers")
-const { getDeployedAppID } = require("@budibase/backend-core/db")
+const { getProdAppID } = require("@budibase/backend-core/db")
 const { getAppDB, updateAppId } = require("@budibase/backend-core/context")
 
 const AUTOMATION_DESCRIPTION = "Generated from Webhook Schema"
@@ -82,8 +82,8 @@ exports.buildSchema = async ctx => {
 }
 
 exports.trigger = async ctx => {
-  const deployedAppId = getDeployedAppID(ctx.params.instance)
-  updateAppId(deployedAppId)
+  const prodAppId = getProdAppID(ctx.params.instance)
+  updateAppId(prodAppId)
   try {
     const db = getAppDB()
     const webhook = await db.get(ctx.params.id)
@@ -98,7 +98,7 @@ exports.trigger = async ctx => {
       await triggers.externalTrigger(target, {
         body: ctx.request.body,
         ...ctx.request.body,
-        appId: deployedAppId,
+        appId: prodAppId,
       })
     }
     ctx.status = 200

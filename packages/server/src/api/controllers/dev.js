@@ -3,7 +3,7 @@ const env = require("../../environment")
 const { checkSlashesInUrl } = require("../../utilities")
 const { request } = require("../../utilities/workerRequests")
 const { clearLock } = require("../../utilities/redis")
-const { Replication, getDeployedAppID } = require("@budibase/backend-core/db")
+const { Replication, getProdAppID } = require("@budibase/backend-core/db")
 const { DocumentTypes } = require("../../db/utils")
 const { app: appCache } = require("@budibase/backend-core/cache")
 const { getProdAppDB, getAppDB } = require("@budibase/backend-core/context")
@@ -77,7 +77,7 @@ exports.clearLock = async ctx => {
 
 exports.revert = async ctx => {
   const { appId } = ctx.params
-  const productionAppId = getDeployedAppID(appId)
+  const productionAppId = getProdAppID(appId)
 
   // App must have been deployed first
   try {

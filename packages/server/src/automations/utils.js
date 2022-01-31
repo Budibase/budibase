@@ -6,7 +6,7 @@ const { queue } = require("./bullboard")
 const newid = require("../db/newid")
 const { updateEntityMetadata } = require("../utilities")
 const { MetadataTypes } = require("../constants")
-const { getDeployedAppID } = require("@budibase/backend-core/db")
+const { getProdAppID } = require("@budibase/backend-core/db")
 const { cloneDeep } = require("lodash/fp")
 const { getAppDB, getAppId } = require("@budibase/backend-core/context")
 
@@ -170,7 +170,7 @@ exports.checkForWebhooks = async ({ oldAuto, newAuto }) => {
     // the app ID has to be development for this endpoint
     // it can only be used when building the app
     // but the trigger endpoint will always be used in production
-    const prodAppId = getDeployedAppID(appId)
+    const prodAppId = getProdAppID(appId)
     newTrigger.inputs = {
       schemaUrl: `api/webhooks/schema/${appId}/${id}`,
       triggerUrl: `api/webhooks/trigger/${prodAppId}/${id}`,

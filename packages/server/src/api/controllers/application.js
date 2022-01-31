@@ -28,7 +28,7 @@ const { processObject } = require("@budibase/string-templates")
 const {
   getAllApps,
   isDevAppID,
-  getDeployedAppID,
+  getProdAppID,
   Replication,
 } = require("@budibase/backend-core/db")
 const { USERS_TABLE_SCHEMA } = require("../../constants")
@@ -44,13 +44,17 @@ const { getTenantId, isMultiTenant } = require("@budibase/backend-core/tenancy")
 const { syncGlobalUsers } = require("./user")
 const { app: appCache } = require("@budibase/backend-core/cache")
 const { cleanupAutomations } = require("../../automations/utils")
-const context = require("@budibase/backend-core/context")
+const {
+  getAppDB,
+  getProdAppDB,
+  updateAppId,
+} = require("@budibase/backend-core/context")
 
 const URL_REGEX_SLASH = /\/|\\/g
 
 // utility function, need to do away with this
 async function getLayouts() {
-  const db = context.getAppDB()
+  const db = getAppDB()
   return (
     await db.allDocs(
       getLayoutParams(null, {
@@ -61,7 +65,7 @@ async function getLayouts() {
 }
 
 async function getScreens() {
-  const db = context.getAppDB()
+  const db = getAppDB()
   return (
     await db.allDocs(
       getScreenParams(null, {
@@ -119,9 +123,9 @@ async function createInstance(template) {
   const tenantId = isMultiTenant() ? getTenantId() : null
   const baseAppId = generateAppID(tenantId)
   const appId = generateDevAppID(baseAppId)
-  context.updateAppId(appId)
+  updateAppId(appId)
 
-  const db = context.getAppDB()
+  const db = getAppDB()
   await db.put({
     _id: "_design/database",
     // view collation information, read before writing any complex views:
@@ -197,7 +201,7 @@ exports.fetchAppDefinition = async ctx => {
 }
 
 exports.fetchAppPackage = async ctx => {
-  const db = context.getAppDB()
+  const db = getAppDB()
   const application = await db.get(DocumentTypes.APP_METADATA)
   const layouts = await getLayouts()
   let screens = await getScreens()
@@ -236,7 +240,7 @@ exports.create = async ctx => {
   const instance = await createInstance(instanceConfig)
   const appId = instance._id
 
-  const db = context.getAppDB()
+  const db = getAppDB()
   let _rev
   try {
     // if template there will be an existing doc
@@ -301,7 +305,7 @@ exports.update = async ctx => {
 
 exports.updateClient = async ctx => {
   // Get current app version
-  const db = context.getAppDB()
+  const db = getAppDB()
   const application = await db.get(DocumentTypes.APP_METADATA)
   const currentVersion = application.version
 
@@ -323,7 +327,7 @@ exports.updateClient = async ctx => {
 
 exports.revertClient = async ctx => {
   // Check app can be reverted
-  const db = context.getAppDB()
+  const db = getAppDB()
   const application = await db.get(DocumentTypes.APP_METADATA)
   if (!application.revertableVersion) {
     ctx.throw(400, "There is no version to revert to")
@@ -345,7 +349,7 @@ exports.revertClient = async ctx => {
 }
 
 exports.delete = async ctx => {
-  const db = context.getAppDB()
+  const db = getAppDB()
 
   const result = await db.destroy()
   /* istanbul ignore next */
@@ -370,11 +374,11 @@ exports.sync = async (ctx, next) => {
   }
 
   // replicate prod to dev
-  const prodAppId = getDeployedAppID(appId)
+  const prodAppId = getProdAppID(appId)
 
   try {
     // specific case, want to make sure setup is skipped
-    const prodDb = context.getProdAppDB({ skip_setup: true })
+    const prodDb = getProdAppDB({ skip_setup: true })
     const info = await prodDb.info()
     if (info.error) throw info.error
   } catch (err) {
@@ -414,7 +418,7 @@ exports.sync = async (ctx, next) => {
 }
 
 const updateAppPackage = async (appPackage, appId) => {
-  const db = context.getAppDB()
+  const db = getAppDB()
   const application = await db.get(DocumentTypes.APP_METADATA)
 
   const newAppPackage = { ...application, ...appPackage }
@@ -433,7 +437,7 @@ const updateAppPackage = async (appPackage, appId) => {
 }
 
 const createEmptyAppPackage = async (ctx, app) => {
-  const db = context.getAppDB()
+  const db = getAppDB()
 
   let screensAndLayouts = []
   for (let layout of BASE_LAYOUTS) {

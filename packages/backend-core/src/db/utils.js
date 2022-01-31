@@ -23,7 +23,7 @@ const {
   isProdAppID,
   isDevAppID,
   getDevelopmentAppID,
-  getDeployedAppID,
+  getProdAppID,
 } = require("./conversions")
 
 const UNICODE_MAX = "\ufff0"
@@ -43,7 +43,7 @@ exports.isDevApp = isDevApp
 exports.isProdAppID = isProdAppID
 exports.isDevAppID = isDevAppID
 exports.getDevelopmentAppID = getDevelopmentAppID
-exports.getDeployedAppID = getDeployedAppID
+exports.getProdAppID = getProdAppID
 
 /**
  * If creating DB allDocs/query params with only a single top level ID this can be used, this
@@ -197,7 +197,7 @@ exports.getAllDbs = async () => {
   }
   let couchUrl = `${exports.getCouchUrl()}/_all_dbs`
   let tenantId = getTenantId()
-  if (!env.MULTI_TENANCY || tenantId == DEFAULT_TENANT_ID) {
+  if (!env.MULTI_TENANCY || tenantId === DEFAULT_TENANT_ID) {
     // just get all DBs when:
     // - single tenancy
     // - default tenant
@@ -281,7 +281,7 @@ exports.getAllApps = async ({ dev, all, idsOnly } = {}) => {
 /**
  * Utility function for getAllApps but filters to production apps only.
  */
-exports.getDeployedAppIDs = async () => {
+exports.getProdAppIDs = async () => {
   return (await exports.getAllApps({ idsOnly: true })).filter(
     id => !exports.isDevAppID(id)
   )

@@ -2,7 +2,7 @@ const env = require("../environment")
 const { Headers } = require("../../constants")
 const cls = require("./FunctionContext")
 const { getCouch } = require("../db")
-const { getDeployedAppID, getDevelopmentAppID } = require("../db/conversions")
+const { getProdAppID, getDevelopmentAppID } = require("../db/conversions")
 const { isEqual } = require("lodash")
 
 // some test cases call functions directly, need to
@@ -150,7 +150,7 @@ function getDB(key, opts) {
       toUseAppId = appId
       break
     case ContextKeys.PROD_DB:
-      toUseAppId = getDeployedAppID(appId)
+      toUseAppId = getProdAppID(appId)
       break
     case ContextKeys.DEV_DB:
       toUseAppId = getDevelopmentAppID(appId)

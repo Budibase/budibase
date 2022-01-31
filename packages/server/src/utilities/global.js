@@ -3,7 +3,7 @@ const {
   getGlobalIDFromUserMetadataID,
 } = require("../db/utils")
 const { BUILTIN_ROLE_IDS } = require("@budibase/backend-core/roles")
-const { getDeployedAppID } = require("@budibase/backend-core/db")
+const { getProdAppID } = require("@budibase/backend-core/db")
 const { getGlobalUserParams } = require("@budibase/backend-core/db")
 const { user: userCache } = require("@budibase/backend-core/cache")
 const {
@@ -26,7 +26,7 @@ exports.updateAppRole = (user, { appId } = {}) => {
     return user
   }
   // always use the deployed app
-  user.roleId = user.roles[getDeployedAppID(appId)]
+  user.roleId = user.roles[getProdAppID(appId)]
   // if a role wasn't found then either set as admin (builder) or public (everyone else)
   if (!user.roleId && user.builder && user.builder.global) {
     user.roleId = BUILTIN_ROLE_IDS.ADMIN

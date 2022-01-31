@@ -1,7 +1,7 @@
 const { getAllRoles } = require("@budibase/backend-core/roles")
 const {
   getAllApps,
-  getDeployedAppID,
+  getProdAppID,
   DocumentTypes,
 } = require("@budibase/backend-core/db")
 const { doInAppContext, getAppDB } = require("@budibase/backend-core/context")
@@ -18,7 +18,7 @@ exports.fetch = async ctx => {
   const roles = await Promise.all(promises)
   const response = {}
   for (let app of apps) {
-    const deployedAppId = getDeployedAppID(app.appId)
+    const deployedAppId = getProdAppID(app.appId)
     response[deployedAppId] = {
       roles: roles.shift(),
       name: app.name,
