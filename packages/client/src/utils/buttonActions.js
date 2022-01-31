@@ -283,6 +283,7 @@ export const enrichButtonActions = (actions, context) => {
   const handlers = actions.map(def => handlerMap[def["##eventHandlerType"]])
   return async () => {
     for (let i = 0; i < handlers.length; i++) {
+      let start = Date.now()
       try {
         // Skip any non-existent action definitions
         if (!handlers[i]) {
@@ -344,6 +345,7 @@ export const enrichButtonActions = (actions, context) => {
         // Stop executing further actions on error
         return
       }
+      console.log("action", i, "took", Date.now() - start, "ms")
     }
   }
 }

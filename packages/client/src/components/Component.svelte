@@ -1,10 +1,15 @@
 <script context="module">
+  // Cache the definition of settings for each component type
   let SettingsDefinitionCache = {}
+
+  // Cache the settings of each component ID.
+  // This speeds up remounting as well as repeaters.
+  let InstanceSettingsCache = {}
 </script>
 
 <script>
   import { getContext, setContext } from "svelte"
-  import { writable } from "svelte/store"
+  import { writable, get } from "svelte/store"
   import * as AppComponents from "components/app"
   import Router from "./Router.svelte"
   import { enrichProps, propsAreSame } from "utils/componentProps"
@@ -37,8 +42,6 @@
   let staticSettings
   let nestedSettings
 
-  // The context keys that
-
   // The enriched component settings
   let enrichedSettings
 
@@ -70,10 +73,12 @@
   const componentStore = writable({})
   setContext("component", componentStore)
 
+  //
+  let constructor
+  let definition
+  $: initialise(instance)
+
   // Extract component instance info
-  $: constructor = getComponentConstructor(instance._component)
-  $: definition = getComponentDefinition(instance._component)
-  $: settingsDefinition = getSettingsDefinition(definition)
   $: children = instance._children || []
   $: id = instance._id
   $: name = instance._instanceName
@@ -106,13 +111,6 @@
   // in the component manifest.
   $: empty = interactive && !children.length && hasChildren
   $: emptyState = empty && showEmptyState
-
-  // Raw settings are all settings excluding internal props and children
-  $: rawSettings = getRawSettings(instance)
-  $: instanceKey = Helpers.hashString(JSON.stringify(rawSettings))
-
-  // Parse and split component settings into categories
-  $: updateSettings(rawSettings, instanceKey, settingsDefinition)
 
   // Enrich component settings
   $: enrichComponentSettings(dynamicSettings, $context)
@@ -147,15 +145,48 @@
     editing,
   })
 
-  // Extracts all settings from the component instance
-  const getRawSettings = instance => {
-    let validSettings = {}
-    Object.entries(instance)
-      .filter(([name]) => name === "_conditions" || !name.startsWith("_"))
-      .forEach(([key, value]) => {
-        validSettings[key] = value
-      })
-    return validSettings
+  const initialise = instance => {
+    if (instance == null) {
+      return
+    }
+
+    // Ensure we're processing a new instance
+    const instanceKey = Helpers.hashString(JSON.stringify(instance))
+    if (instanceKey === lastInstanceKey) {
+      return
+    } else {
+      lastInstanceKey = instanceKey
+    }
+
+    // Pull definition and constructor
+    constructor = getComponentConstructor(instance._component)
+    definition = getComponentDefinition(instance._component)
+    if (!definition) {
+      return
+    }
+
+    // Get the settings definition for this component, and cache it
+    let settingsDefinition
+    if (SettingsDefinitionCache[definition.name]) {
+      settingsDefinition = SettingsDefinitionCache[definition.name]
+    } else {
+      settingsDefinition = getSettingsDefinition(definition)
+      SettingsDefinitionCache[definition.name] = settingsDefinition
+    }
+
+    // Parse the instance settings, and cache them
+    let instanceSettings
+    if (InstanceSettingsCache[instanceKey]) {
+      instanceSettings = InstanceSettingsCache[instanceKey]
+    } else {
+      instanceSettings = getInstanceSettings(instance, settingsDefinition)
+      InstanceSettingsCache[instanceKey] = instanceSettings
+    }
+
+    // Update the settings type in the component
+    staticSettings = instanceSettings.staticSettings
+    dynamicSettings = instanceSettings.dynamicSettings
+    nestedSettings = instanceSettings.nestedSettings
   }
 
   // Gets the component constructor for the specified component
@@ -180,9 +211,6 @@
     if (!definition) {
       return []
     }
-    if (SettingsDefinitionCache[definition.name]) {
-      return SettingsDefinitionCache[definition.name]
-    }
     let settings = []
     definition.settings?.forEach(setting => {
       if (setting.section) {
@@ -191,18 +219,17 @@
         settings.push(setting)
       }
     })
-    SettingsDefinitionCache[definition] = settings
     return settings
   }
 
-  // Updates and enriches component settings when raw settings change
-  const updateSettings = (settings, key, settingsDefinition) => {
-    const instanceChanged = key !== lastInstanceKey
-    if (!instanceChanged) {
-      return
-    } else {
-      lastInstanceKey = key
-    }
+  const getInstanceSettings = (instance, settingsDefinition) => {
+    // Get raw settings
+    let settings = {}
+    Object.entries(instance)
+      .filter(([name]) => name === "_conditions" || !name.startsWith("_"))
+      .forEach(([key, value]) => {
+        settings[key] = value
+      })
 
     // Derive static, dynamic and nested settings if the instance changed
     let newStaticSettings = { ...settings }
@@ -217,10 +244,14 @@
 
         // This is a non-nested setting, but we need to find out if it is
         // static or dynamic
-        const value = rawSettings[setting.key]
+        const value = settings[setting.key]
         if (value == null) {
           delete newDynamicSettings[setting.key]
         } else if (typeof value === "string" && value.includes("{{")) {
+          delete newStaticSettings[setting.key]
+        } else if (value[0]?.["##eventHandlerType"] != null) {
+          console.log(value)
+          // Always treat button actions as dynamic
           delete newStaticSettings[setting.key]
         } else if (typeof value === "object") {
           const stringified = JSON.stringify(value)
@@ -235,9 +266,11 @@
       }
     })
 
-    staticSettings = newStaticSettings
-    dynamicSettings = newDynamicSettings
-    nestedSettings = newNestedSettings
+    return {
+      staticSettings: newStaticSettings,
+      dynamicSettings: newDynamicSettings,
+      nestedSettings: newNestedSettings,
+    }
   }
 
   // Enriches any string component props using handlebars
