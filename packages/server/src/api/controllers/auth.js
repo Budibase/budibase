@@ -28,7 +28,7 @@ exports.fetchSelf = async ctx => {
       // make sure there is never a stale csrf token
       delete metadata.csrfToken
       // specifically needs to make sure is enriched
-      ctx.body = await outputProcessing(ctx, userTable, {
+      ctx.body = await outputProcessing(userTable, {
         ...user,
         ...metadata,
       })

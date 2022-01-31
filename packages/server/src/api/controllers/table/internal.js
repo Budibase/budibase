@@ -10,6 +10,8 @@ const {
 const usageQuota = require("../../../utilities/usageQuota")
 const { getAppDB } = require("@budibase/backend-core/context")
 const env = require("../../../environment")
+const { cleanupAttachments } = require("../../../utilities/rowProcessor")
+const { runStaticFormulaChecks } = require("./bulkFormula")
 
 exports.save = async function (ctx) {
   const db = getAppDB()
@@ -102,7 +104,8 @@ exports.save = async function (ctx) {
   tableToSave._rev = result.rev
 
   tableToSave = await tableSaveFunctions.after(tableToSave)
-
+  // has to run after, make sure it has _id
+  await runStaticFormulaChecks(tableToSave, { oldTable })
   return tableToSave
 }
 
@@ -139,6 +142,9 @@ exports.destroy = async function (ctx) {
     }
   }
 
+  // has to run after, make sure it has _id
+  await runStaticFormulaChecks(tableToDelete, { deletion: true })
+  await cleanupAttachments(tableToDelete, { rows })
   return tableToDelete
 }
 
