@@ -31,7 +31,7 @@
   }
 
   onMount(async () => {
-    await auth.checkAuth()
+    await auth.getSelf()
     await organisation.init()
   })
 </script>

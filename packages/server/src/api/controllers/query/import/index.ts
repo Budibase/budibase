@@ -34,9 +34,7 @@ export class RestImporter {
     return this.source.getInfo()
   }
 
-  importQueries = async (
-    datasourceId: string
-  ): Promise<ImportResult> => {
+  importQueries = async (datasourceId: string): Promise<ImportResult> => {
     // constuct the queries
     let queries = await this.source.getQueries(datasourceId)
 

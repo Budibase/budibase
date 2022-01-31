@@ -26,7 +26,7 @@ import {
   RelationshipTypes,
 } from "../../../constants"
 import { breakExternalTableId, isSQL } from "../../../integrations/utils"
-import { processObjectSync }  from "@budibase/string-templates"
+import { processObjectSync } from "@budibase/string-templates"
 // @ts-ignore
 import { cloneDeep } from "lodash/fp"
 import { processFormulas } from "../../../utilities/rowProcessor/utils"
@@ -216,11 +216,7 @@ module External {
     private datasource: Datasource
     private tables: { [key: string]: Table } = {}
 
-    constructor(
-      operation: Operation,
-      tableId: string,
-      datasource: Datasource
-    ) {
+    constructor(operation: Operation, tableId: string, datasource: Datasource) {
       this.operation = operation
       this.tableId = tableId
       this.datasource = datasource
@@ -272,7 +268,9 @@ module External {
           newRow[key] = row[key]
           continue
         }
-        const { tableName: linkTableName } = breakExternalTableId(field?.tableId)
+        const { tableName: linkTableName } = breakExternalTableId(
+          field?.tableId
+        )
         // table has to exist for many to many
         if (!linkTableName || !this.tables[linkTableName]) {
           continue
@@ -559,7 +557,10 @@ module External {
       )) {
         const table: Table | undefined = this.getTable(tableId)
         // if its not the foreign key skip it, nothing to do
-        if (!table || (table.primary && table.primary.indexOf(colName) !== -1)) {
+        if (
+          !table ||
+          (table.primary && table.primary.indexOf(colName) !== -1)
+        ) {
           continue
         }
         for (let row of rows) {

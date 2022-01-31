@@ -108,11 +108,7 @@ export function createAuthStore() {
     return json
   }
 
-  return {
-    subscribe: store.subscribe,
-    setOrganisation,
-    getInitInfo,
-    setInitInfo,
+  const actions = {
     checkQueryString: async () => {
       const urlParams = new URLSearchParams(window.location.search)
       if (urlParams.has("tenantId")) {
@@ -123,7 +119,7 @@ export function createAuthStore() {
     setOrg: async tenantId => {
       await setOrganisation(tenantId)
     },
-    checkAuth: async () => {
+    getSelf: async () => {
       const response = await api.get("/api/global/users/self")
       if (response.status !== 200) {
         setUser(null)
@@ -138,13 +134,12 @@ export function createAuthStore() {
         `/api/global/auth/${tenantId}/login`,
         creds
       )
-      const json = await response.json()
       if (response.status === 200) {
-        setUser(json.user)
+        await actions.getSelf()
       } else {
+        const json = await response.json()
         throw new Error(json.message ? json.message : "Invalid credentials")
       }
-      return json
     },
     logout: async () => {
       const response = await api.post(`/api/global/auth/logout`)
@@ -196,6 +191,14 @@ export function createAuthStore() {
       }
       await response.json()
     },
+  }
+
+  return {
+    subscribe: store.subscribe,
+    setOrganisation,
+    getInitInfo,
+    setInitInfo,
+    ...actions,
   }
 }
 
