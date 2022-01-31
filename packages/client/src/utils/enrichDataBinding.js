@@ -1,4 +1,4 @@
-import { cloneDeep } from "lodash/fp"
+import { cloneDeep } from "@budibase/bbui"
 import { processString, processObjectSync } from "@budibase/string-templates"
 
 // Regex to test inputs with to see if they are likely candidates for template strings

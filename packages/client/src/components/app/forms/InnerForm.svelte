@@ -3,8 +3,7 @@
   import { derived, get, writable } from "svelte/store"
   import { createValidatorFromConstraints } from "./validation"
   import { generateID } from "utils/helpers"
-  import { deepGet, deepSet } from "@budibase/bbui"
-  import { cloneDeep } from "lodash/fp"
+  import { cloneDeep, deepGet, deepSet } from "@budibase/bbui"
 
   export let dataSource
   export let disabled = false

@@ -1,6 +1,6 @@
 import DataFetch from "./DataFetch.js"
 import { executeQuery, fetchQueryDefinition } from "api"
-import { cloneDeep } from "lodash/fp"
+import { cloneDeep } from "@budibase/bbui"
 import { get } from "svelte/store"
 
 export default class QueryFetch extends DataFetch {
