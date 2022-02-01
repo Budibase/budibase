@@ -9,7 +9,7 @@
 
 <script>
   import { getContext, setContext } from "svelte"
-  import { writable, get } from "svelte/store"
+  import { writable } from "svelte/store"
   import * as AppComponents from "components/app"
   import Router from "./Router.svelte"
   import { enrichProps, propsAreSame } from "utils/componentProps"
@@ -250,7 +250,6 @@
         } else if (typeof value === "string" && value.includes("{{")) {
           delete newStaticSettings[setting.key]
         } else if (value[0]?.["##eventHandlerType"] != null) {
-          console.log(value)
           // Always treat button actions as dynamic
           delete newStaticSettings[setting.key]
         } else if (typeof value === "object") {
