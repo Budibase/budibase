@@ -23,6 +23,7 @@ const getAppPairs = appIds => {
 }
 
 const getAppRows = async appId => {
+  // need to specify the app ID, as this is used for different apps in one call
   const appDb = new CouchDB(appId)
   const response = await appDb.allDocs(
     getRowParams(null, null, {

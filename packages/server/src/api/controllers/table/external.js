@@ -1,4 +1,3 @@
-const CouchDB = require("../../../db")
 const {
   buildExternalTableId,
   breakExternalTableId,
@@ -19,6 +18,7 @@ const { makeExternalQuery } = require("../../../integrations/base/utils")
 const { cloneDeep } = require("lodash/fp")
 const csvParser = require("../../../utilities/csvParser")
 const { handleRequest } = require("../row/external")
+const { getAppDB } = require("@budibase/backend-core/context")
 
 async function makeTableRequest(
   datasource,
@@ -159,7 +159,6 @@ function isRelationshipSetup(column) {
 }
 
 exports.save = async function (ctx) {
-  const appId = ctx.appId
   const table = ctx.request.body
   // can't do this right now
   delete table.dataImport
@@ -176,14 +175,14 @@ exports.save = async function (ctx) {
 
   let oldTable
   if (ctx.request.body && ctx.request.body._id) {
-    oldTable = await getTable(appId, ctx.request.body._id)
+    oldTable = await getTable(ctx.request.body._id)
   }
 
   if (hasTypeChanged(tableToSave, oldTable)) {
     ctx.throw(400, "A column type has changed.")
   }
 
-  const db = new CouchDB(appId)
+  const db = getAppDB()
   const datasource = await db.get(datasourceId)
   const oldTables = cloneDeep(datasource.entities)
   const tables = datasource.entities
@@ -267,14 +266,13 @@ exports.save = async function (ctx) {
 }
 
 exports.destroy = async function (ctx) {
-  const appId = ctx.appId
-  const tableToDelete = await getTable(appId, ctx.params.tableId)
+  const tableToDelete = await getTable(ctx.params.tableId)
   if (!tableToDelete || !tableToDelete.created) {
     ctx.throw(400, "Cannot delete tables which weren't created in Budibase.")
   }
   const datasourceId = getDatasourceId(tableToDelete)
 
-  const db = new CouchDB(appId)
+  const db = getAppDB()
   const datasource = await db.get(datasourceId)
   const tables = datasource.entities
 
@@ -290,8 +288,7 @@ exports.destroy = async function (ctx) {
 }
 
 exports.bulkImport = async function (ctx) {
-  const appId = ctx.appId
-  const table = await getTable(appId, ctx.params.tableId)
+  const table = await getTable(ctx.params.tableId)
   const { dataImport } = ctx.request.body
   if (!dataImport || !dataImport.schema || !dataImport.csvString) {
     ctx.throw(400, "Provided data import information is invalid.")
@@ -300,7 +297,7 @@ exports.bulkImport = async function (ctx) {
     ...dataImport,
     existingTable: table,
   })
-  await handleRequest(appId, DataSourceOperation.BULK_CREATE, table._id, {
+  await handleRequest(DataSourceOperation.BULK_CREATE, table._id, {
     rows,
   })
   return table

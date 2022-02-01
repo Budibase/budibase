@@ -1,9 +1,9 @@
 const env = require("../environment")
 const { OBJ_STORE_DIRECTORY } = require("../constants")
 const { sanitizeKey } = require("@budibase/backend-core/objectStore")
-const CouchDB = require("../db")
 const { generateMetadataID } = require("../db/utils")
 const Readable = require("stream").Readable
+const { getAppDB } = require("@budibase/backend-core/context")
 
 const BB_CDN = "https://cdn.budi.live"
 
@@ -73,8 +73,8 @@ exports.attachmentsRelativeURL = attachmentKey => {
   )
 }
 
-exports.updateEntityMetadata = async (appId, type, entityId, updateFn) => {
-  const db = new CouchDB(appId)
+exports.updateEntityMetadata = async (type, entityId, updateFn) => {
+  const db = getAppDB()
   const id = generateMetadataID(type, entityId)
   // read it to see if it exists, we'll overwrite it no matter what
   let rev,
@@ -99,14 +99,14 @@ exports.updateEntityMetadata = async (appId, type, entityId, updateFn) => {
   }
 }
 
-exports.saveEntityMetadata = async (appId, type, entityId, metadata) => {
-  return exports.updateEntityMetadata(appId, type, entityId, () => {
+exports.saveEntityMetadata = async (type, entityId, metadata) => {
+  return exports.updateEntityMetadata(type, entityId, () => {
     return metadata
   })
 }
 
-exports.deleteEntityMetadata = async (appId, type, entityId) => {
-  const db = new CouchDB(appId)
+exports.deleteEntityMetadata = async (type, entityId) => {
+  const db = getAppDB()
   const id = generateMetadataID(type, entityId)
   let rev
   try {
@@ -139,16 +139,6 @@ exports.stringToReadStream = string => {
       this.push(null)
     },
   })
-}
-
-exports.doesDatabaseExist = async dbName => {
-  try {
-    const db = new CouchDB(dbName, { skip_setup: true })
-    const info = await db.info()
-    return info && !info.error
-  } catch (err) {
-    return false
-  }
 }
 
 exports.formatBytes = bytes => {

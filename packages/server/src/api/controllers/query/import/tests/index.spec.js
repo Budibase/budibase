@@ -6,6 +6,7 @@ const db = jest.fn(() => {
   }
 })
 jest.mock("../../../../../db", () => db)
+require("@budibase/backend-core").init(require("../../../../../db"))
 
 const { RestImporter } = require("../index")
 
@@ -77,7 +78,7 @@ describe("Rest Importer", () => {
   const testImportQueries = async (key, data, assertions) => {
     await init(data)
     bulkDocs.mockReturnValue([])
-    const importResult = await restImporter.importQueries("appId", "datasourceId")
+    const importResult = await restImporter.importQueries("datasourceId")
     expect(importResult.errorQueries.length).toBe(0)
     expect(importResult.queries.length).toBe(assertions[key].count)
     expect(bulkDocs).toHaveBeenCalledTimes(1)
