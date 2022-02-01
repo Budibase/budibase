@@ -145,6 +145,7 @@ describe("/automations", () => {
       let table = await config.createTable()
       automation.definition.trigger.inputs.tableId = table._id
       automation.definition.steps[0].inputs.row.tableId = table._id
+      automation.appId = config.appId
       automation = await config.createAutomation(automation)
       await setup.delay(500)
       const res = await testAutomation(config, automation)

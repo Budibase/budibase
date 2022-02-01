@@ -1,9 +1,10 @@
 const rowController = require("../../../controllers/row")
 const appController = require("../../../controllers/application")
-const CouchDB = require("../../../../db")
 const { AppStatus } = require("../../../../db/utils")
 const { BUILTIN_ROLE_IDS } = require("@budibase/backend-core/roles")
 const { TENANT_ID } = require("../../../../tests/utilities/structures")
+const { getAppDB, doInAppContext } = require("@budibase/backend-core/context")
+const env = require("../../../../environment")
 
 function Request(appId, params) {
   this.appId = appId
@@ -11,9 +12,15 @@ function Request(appId, params) {
   this.request = {}
 }
 
+function runRequest(appId, controlFunc, request) {
+  return doInAppContext(appId, async () => {
+    return controlFunc(request)
+  })
+}
+
 exports.getAllTableRows = async config => {
   const req = new Request(config.appId, { tableId: config.table._id })
-  await rowController.fetch(req)
+  await runRequest(config.appId, rowController.fetch, req)
   return req.body
 }
 
@@ -26,14 +33,17 @@ exports.clearAllApps = async (tenantId = TENANT_ID) => {
   }
   for (let app of apps) {
     const { appId } = app
-    await appController.delete(new Request(null, { appId }))
+    const req = new Request(null, { appId })
+    await runRequest(appId, appController.delete, req)
   }
 }
 
 exports.clearAllAutomations = async config => {
   const automations = await config.getAllAutomations()
   for (let auto of automations) {
-    await config.deleteAutomation(auto)
+    await doInAppContext(config.appId, async () => {
+      await config.deleteAutomation(auto)
+    })
   }
 }
 
@@ -96,20 +106,32 @@ exports.checkPermissionsEndpoint = async ({
     .expect(403)
 }
 
-exports.getDB = config => {
-  return new CouchDB(config.getAppId())
+exports.getDB = () => {
+  return getAppDB()
 }
 
 exports.testAutomation = async (config, automation) => {
-  return await config.request
-    .post(`/api/automations/${automation._id}/test`)
-    .send({
-      row: {
-        name: "Test",
-        description: "TEST",
-      },
-    })
-    .set(config.defaultHeaders())
-    .expect("Content-Type", /json/)
-    .expect(200)
+  return runRequest(automation.appId, async () => {
+    return await config.request
+      .post(`/api/automations/${automation._id}/test`)
+      .send({
+        row: {
+          name: "Test",
+          description: "TEST",
+        },
+      })
+      .set(config.defaultHeaders())
+      .expect("Content-Type", /json/)
+      .expect(200)
+  })
+}
+
+exports.runInProd = async func => {
+  const nodeEnv = env.NODE_ENV
+  const workerId = env.JEST_WORKER_ID
+  env._set("NODE_ENV", "PRODUCTION")
+  env._set("JEST_WORKER_ID", null)
+  await func()
+  env._set("NODE_ENV", nodeEnv)
+  env._set("JEST_WORKER_ID", workerId)
 }

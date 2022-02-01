@@ -7,24 +7,26 @@ import { OperatorOptions } from "../constants"
  */
 export const getValidOperatorsForType = type => {
   const Op = OperatorOptions
+  const stringOps = [
+    Op.Equals,
+    Op.NotEquals,
+    Op.StartsWith,
+    Op.Like,
+    Op.Empty,
+    Op.NotEmpty,
+  ]
+  const numOps = [
+    Op.Equals,
+    Op.NotEquals,
+    Op.MoreThan,
+    Op.LessThan,
+    Op.Empty,
+    Op.NotEmpty,
+  ]
   if (type === "string") {
-    return [
-      Op.Equals,
-      Op.NotEquals,
-      Op.StartsWith,
-      Op.Like,
-      Op.Empty,
-      Op.NotEmpty,
-    ]
+    return stringOps
   } else if (type === "number") {
-    return [
-      Op.Equals,
-      Op.NotEquals,
-      Op.MoreThan,
-      Op.LessThan,
-      Op.Empty,
-      Op.NotEmpty,
-    ]
+    return numOps
   } else if (type === "options") {
     return [Op.Equals, Op.NotEquals, Op.Empty, Op.NotEmpty]
   } else if (type === "array") {
@@ -32,23 +34,11 @@ export const getValidOperatorsForType = type => {
   } else if (type === "boolean") {
     return [Op.Equals, Op.NotEquals, Op.Empty, Op.NotEmpty]
   } else if (type === "longform") {
-    return [
-      Op.Equals,
-      Op.NotEquals,
-      Op.StartsWith,
-      Op.Like,
-      Op.Empty,
-      Op.NotEmpty,
-    ]
+    return stringOps
   } else if (type === "datetime") {
-    return [
-      Op.Equals,
-      Op.NotEquals,
-      Op.MoreThan,
-      Op.LessThan,
-      Op.Empty,
-      Op.NotEmpty,
-    ]
+    return numOps
+  } else if (type === "formula") {
+    return stringOps.concat([Op.MoreThan, Op.LessThan])
   }
   return []
 }

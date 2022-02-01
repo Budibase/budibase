@@ -27,5 +27,8 @@ export function getFields(fields, { allowLinks } = { allowLinks: true }) {
       filteredFields = filteredFields.concat(getTableFields(linkField))
     }
   }
-  return filteredFields
+  const staticFormulaFields = fields.filter(
+    field => field.type === "formula" && field.formulaType === "static"
+  )
+  return filteredFields.concat(staticFormulaFields)
 }

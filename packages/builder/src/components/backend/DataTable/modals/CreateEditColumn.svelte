@@ -22,8 +22,10 @@
     RelationshipTypes,
     ALLOWABLE_STRING_OPTIONS,
     ALLOWABLE_NUMBER_OPTIONS,
+    ALLOWABLE_JSON_OPTIONS,
     ALLOWABLE_STRING_TYPES,
     ALLOWABLE_NUMBER_TYPES,
+    ALLOWABLE_JSON_TYPES,
     SWITCHABLE_TYPES,
   } from "constants/backend"
   import { getAutoColumnInformation, buildAutoColumn } from "builderStore/utils"
@@ -154,6 +156,7 @@
     delete field.subtype
     delete field.tableId
     delete field.relationshipType
+    delete field.formulaType
 
     // Add in defaults and initial definition
     const definition = fieldDefinitions[event.detail?.toUpperCase()]
@@ -164,6 +167,9 @@
     // Default relationships many to many
     if (field.type === LINK_TYPE) {
       field.relationshipType = RelationshipTypes.MANY_TO_MANY
+    }
+    if (field.type === FORMULA_TYPE) {
+      field.formulaType = "dynamic"
     }
   }
 
@@ -245,6 +251,11 @@
       ALLOWABLE_NUMBER_TYPES.indexOf(field.type) !== -1
     ) {
       return ALLOWABLE_NUMBER_OPTIONS
+    } else if (
+      originalName &&
+      ALLOWABLE_JSON_TYPES.indexOf(field.type) !== -1
+    ) {
+      return ALLOWABLE_JSON_OPTIONS
     } else if (!external) {
       return [
         ...Object.values(fieldDefinitions),
@@ -435,8 +446,22 @@
       error={errors.relatedName}
     />
   {:else if field.type === FORMULA_TYPE}
+    {#if !table.sql}
+      <Select
+        label="Formula type"
+        bind:value={field.formulaType}
+        options={[
+          { label: "Dynamic", value: "dynamic" },
+          { label: "Static", value: "static" },
+        ]}
+        getOptionLabel={option => option.label}
+        getOptionValue={option => option.value}
+        tooltip="Dynamic formula are calculated when retrieved, but cannot be filtered,
+         while static formula are calculated when the row is saved."
+      />
+    {/if}
     <ModalBindableInput
-      title="Handlebars Formula"
+      title="Formula"
       label="Formula"
       value={field.formula}
       on:change={e => (field.formula = e.detail)}
@@ -445,7 +470,7 @@
     />
   {:else if field.type === AUTO_TYPE}
     <Select
-      label="Auto Column Type"
+      label="Auto column type"
       value={field.subtype}
       on:change={e => (field.subtype = e.detail)}
       options={Object.entries(getAutoColumnInformation())}

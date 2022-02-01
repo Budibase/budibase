@@ -16,7 +16,14 @@ export default class QueryFetch extends DataFetch {
       return null
     }
     try {
-      return await this.API.fetchQueryDefinition(datasource._id)
+      const definition = await this.API.fetchQueryDefinition(datasource._id)
+      // After getting the definition of query, it loses "fields" attribute
+      // because of security reason from the server. However, this attribute
+      // needs to be inside the definition for pagination.
+      if (!definition.fields) {
+        definition.fields = datasource.fields
+      }
+      return definition
     } catch (error) {
       return null
     }

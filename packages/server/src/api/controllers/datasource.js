@@ -1,4 +1,3 @@
-const CouchDB = require("../../db")
 const {
   generateDatasourceID,
   getDatasourceParams,
@@ -11,12 +10,11 @@ const { BuildSchemaErrors, InvalidColumns } = require("../../constants")
 const { integrations } = require("../../integrations")
 const { getDatasourceAndQuery } = require("./row/utils")
 const { invalidateDynamicVariables } = require("../../threads/utils")
+const { getAppDB } = require("@budibase/backend-core/context")
 
 exports.fetch = async function (ctx) {
-  const database = new CouchDB(ctx.appId)
-
   // Get internal tables
-  const db = new CouchDB(ctx.appId)
+  const db = getAppDB()
   const internalTables = await db.allDocs(
     getTableParams(null, {
       include_docs: true,
@@ -31,7 +29,7 @@ exports.fetch = async function (ctx) {
 
   // Get external datasources
   const datasources = (
-    await database.allDocs(
+    await db.allDocs(
       getDatasourceParams(null, {
         include_docs: true,
       })
@@ -49,7 +47,7 @@ exports.fetch = async function (ctx) {
 }
 
 exports.buildSchemaFromDb = async function (ctx) {
-  const db = new CouchDB(ctx.appId)
+  const db = getAppDB()
   const datasource = await db.get(ctx.params.datasourceId)
 
   const { tables, error } = await buildSchemaHelper(datasource)
@@ -98,7 +96,7 @@ const invalidateVariables = async (existingDatasource, updatedDatasource) => {
 }
 
 exports.update = async function (ctx) {
-  const db = new CouchDB(ctx.appId)
+  const db = getAppDB()
   const datasourceId = ctx.params.datasourceId
   let datasource = await db.get(datasourceId)
   const auth = datasource.config.auth
@@ -126,7 +124,7 @@ exports.update = async function (ctx) {
 }
 
 exports.save = async function (ctx) {
-  const db = new CouchDB(ctx.appId)
+  const db = getAppDB()
   const plus = ctx.request.body.datasource.plus
   const fetchSchema = ctx.request.body.fetchSchema
 
@@ -162,7 +160,7 @@ exports.save = async function (ctx) {
 }
 
 exports.destroy = async function (ctx) {
-  const db = new CouchDB(ctx.appId)
+  const db = getAppDB()
 
   // Delete all queries for the datasource
   const queries = await db.allDocs(
@@ -184,7 +182,7 @@ exports.destroy = async function (ctx) {
 }
 
 exports.find = async function (ctx) {
-  const database = new CouchDB(ctx.appId)
+  const database = getAppDB()
   ctx.body = await database.get(ctx.params.datasourceId)
 }
 
@@ -192,7 +190,7 @@ exports.find = async function (ctx) {
 exports.query = async function (ctx) {
   const queryJson = ctx.request.body
   try {
-    ctx.body = await getDatasourceAndQuery(ctx.appId, queryJson)
+    ctx.body = await getDatasourceAndQuery(queryJson)
   } catch (err) {
     ctx.throw(400, err)
   }

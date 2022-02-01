@@ -1,16 +1,14 @@
 <script>
   import { Label, notifications, Select } from "@budibase/bbui"
   import { permissions, roles } from "stores/backend"
-  import { onMount } from "svelte"
   import { Roles } from "constants/backend"
 
   export let query
-  export let saveId
   export let label
 
-  $: updateRole(roleId, saveId)
+  $: getPermissions(query)
 
-  let roleId, loaded
+  let roleId, loaded, fetched
 
   async function updateRole(role, id) {
     try {
@@ -30,19 +28,23 @@
     }
   }
 
-  onMount(async () => {
-    if (!query || !query._id) {
+  async function getPermissions(queryToFetch) {
+    if (fetched?._id === queryToFetch?._id) {
+      return
+    }
+    fetched = queryToFetch
+    if (!queryToFetch || !queryToFetch._id) {
       roleId = Roles.BASIC
       loaded = true
       return
     }
     try {
-      roleId = (await permissions.forResource(query._id))["read"]
+      roleId = (await permissions.forResource(queryToFetch._id))["read"]
     } catch (err) {
       roleId = Roles.BASIC
     }
     loaded = true
-  })
+  }
 </script>
 
 {#if loaded}
