@@ -17,7 +17,6 @@
     "cy:run:ci": "cypress run --record",
     "cy:test": "start-server-and-test cy:setup http://localhost:10001/builder cy:run",
     "cy:ci": "start-server-and-test cy:setup http://localhost:10001/builder cy:run",
-    "precy:ci": "yarn run build",
     "cy:debug": "start-server-and-test cy:setup http://localhost:10001/builder cy:open"
   },
   "jest": {
