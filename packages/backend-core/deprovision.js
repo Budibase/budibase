@@ -1,1 +1,1 @@
-module.exports = require("./src/tenancy/deprovision")
+module.exports = require("./src/context/deprovision")

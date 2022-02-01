@@ -1,4 +1,3 @@
-const CouchDB = require("../db")
 const emitter = require("../events/index")
 const { getAutomationParams } = require("../db/utils")
 const { coerce } = require("../utilities/rowProcessor")
@@ -9,6 +8,7 @@ const { queue } = require("./bullboard")
 const { checkTestFlag } = require("../utilities/redis")
 const utils = require("./utils")
 const env = require("../environment")
+const { doInAppContext, getAppDB } = require("@budibase/backend-core/context")
 
 const TRIGGER_DEFINITIONS = definitions
 const JOB_OPTS = {
@@ -21,39 +21,41 @@ async function queueRelevantRowAutomations(event, eventType) {
     throw `No appId specified for ${eventType} - check event emitters.`
   }
 
-  const db = new CouchDB(event.appId)
-  let automations = await db.allDocs(
-    getAutomationParams(null, { include_docs: true })
-  )
+  doInAppContext(event.appId, async () => {
+    const db = getAppDB()
+    let automations = await db.allDocs(
+      getAutomationParams(null, { include_docs: true })
+    )
 
-  // filter down to the correct event type
-  automations = automations.rows
-    .map(automation => automation.doc)
-    .filter(automation => {
-      const trigger = automation.definition.trigger
-      return trigger && trigger.event === eventType
-    })
+    // filter down to the correct event type
+    automations = automations.rows
+      .map(automation => automation.doc)
+      .filter(automation => {
+        const trigger = automation.definition.trigger
+        return trigger && trigger.event === eventType
+      })
 
-  for (let automation of automations) {
-    let automationDef = automation.definition
-    let automationTrigger = automationDef ? automationDef.trigger : {}
-    // don't queue events which are for dev apps, only way to test automations is
-    // running tests on them, in production the test flag will never
-    // be checked due to lazy evaluation (first always false)
-    if (
-      !env.ALLOW_DEV_AUTOMATIONS &&
-      isDevAppID(event.appId) &&
-      !(await checkTestFlag(automation._id))
-    ) {
-      continue
+    for (let automation of automations) {
+      let automationDef = automation.definition
+      let automationTrigger = automationDef ? automationDef.trigger : {}
+      // don't queue events which are for dev apps, only way to test automations is
+      // running tests on them, in production the test flag will never
+      // be checked due to lazy evaluation (first always false)
+      if (
+        !env.ALLOW_DEV_AUTOMATIONS &&
+        isDevAppID(event.appId) &&
+        !(await checkTestFlag(automation._id))
+      ) {
+        continue
+      }
+      if (
+        automationTrigger.inputs &&
+        automationTrigger.inputs.tableId === event.row.tableId
+      ) {
+        await queue.add({ automation, event }, JOB_OPTS)
+      }
     }
-    if (
-      automationTrigger.inputs &&
-      automationTrigger.inputs.tableId === event.row.tableId
-    ) {
-      await queue.add({ automation, event }, JOB_OPTS)
-    }
-  }
+  })
 }
 
 emitter.on("row:save", async function (event) {

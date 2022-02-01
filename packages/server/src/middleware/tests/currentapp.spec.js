@@ -1,6 +1,11 @@
 mockAuthWithNoCookie()
 mockWorker()
 
+jest.mock("@budibase/backend-core/db", () => ({
+  ...jest.requireActual("@budibase/backend-core/db"),
+  dbExists: () => true,
+}))
+
 function mockWorker() {
   jest.mock("../../utilities/workerRequests", () => ({
     getGlobalSelf: () => {
@@ -50,6 +55,7 @@ function mockAuthWithCookie() {
       return "app_test"
     },
     setCookie: jest.fn(),
+    clearCookie: jest.fn(),
     getCookie: () => ({appId: "app_different", roleId: "PUBLIC"}),
   }))
   jest.mock("@budibase/backend-core/constants", () => ({

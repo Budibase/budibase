@@ -1,4 +1,3 @@
-const CouchDB = require("../index")
 const { IncludeDocs, getLinkDocuments } = require("./linkUtils")
 const {
   generateLinkID,
@@ -7,6 +6,7 @@ const {
 } = require("../utils")
 const Sentry = require("@sentry/node")
 const { FieldTypes, RelationshipTypes } = require("../../constants")
+const { getAppDB } = require("@budibase/backend-core/context")
 
 /**
  * Creates a new link document structure which can be put to the database. It is important to
@@ -52,9 +52,8 @@ function LinkDocument(
 }
 
 class LinkController {
-  constructor({ appId, tableId, row, table, oldTable }) {
-    this._appId = appId
-    this._db = new CouchDB(appId)
+  constructor({ tableId, row, table, oldTable }) {
+    this._db = getAppDB()
     this._tableId = tableId
     this._row = row
     this._table = table
@@ -99,7 +98,6 @@ class LinkController {
    */
   getRowLinkDocs(rowId) {
     return getLinkDocuments({
-      appId: this._appId,
       tableId: this._tableId,
       rowId,
       includeDocs: IncludeDocs.INCLUDE,
@@ -111,7 +109,6 @@ class LinkController {
    */
   getTableLinkDocs() {
     return getLinkDocuments({
-      appId: this._appId,
       tableId: this._tableId,
       includeDocs: IncludeDocs.INCLUDE,
     })
@@ -230,7 +227,6 @@ class LinkController {
           if (linkedSchema.relationshipType === RelationshipTypes.ONE_TO_MANY) {
             let links = (
               await getLinkDocuments({
-                appId: this._appId,
                 tableId: field.tableId,
                 rowId: linkId,
                 includeDocs: IncludeDocs.EXCLUDE,

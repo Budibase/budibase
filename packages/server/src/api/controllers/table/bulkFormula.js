@@ -1,10 +1,10 @@
-const CouchDB = require("../../../db")
 const { FieldTypes, FormulaTypes } = require("../../../constants")
 const { getAllInternalTables, clearColumns } = require("./utils")
 const { doesContainStrings } = require("@budibase/string-templates")
 const { cloneDeep } = require("lodash/fp")
 const { isEqual, uniq } = require("lodash")
 const { updateAllFormulasInTable } = require("../row/staticFormula")
+const { getAppDB } = require("@budibase/backend-core/context")
 
 function isStaticFormula(column) {
   return (
@@ -37,14 +37,9 @@ function getFormulaThatUseColumn(table, columnNames) {
  * This functions checks for when a related table, column or related column is deleted, if any
  * tables need to have the formula column removed.
  */
-async function checkIfFormulaNeedsCleared(
-  appId,
-  table,
-  { oldTable, deletion }
-) {
-  const db = new CouchDB(appId)
+async function checkIfFormulaNeedsCleared(table, { oldTable, deletion }) {
   // start by retrieving all tables, remove the current table from the list
-  const tables = (await getAllInternalTables(appId)).filter(
+  const tables = (await getAllInternalTables()).filter(
     tbl => tbl._id !== table._id
   )
   const schemaToUse = oldTable ? oldTable.schema : table.schema
@@ -60,7 +55,7 @@ async function checkIfFormulaNeedsCleared(
     }
     const columnsToDelete = getFormulaThatUseColumn(tableToUse, removed.name)
     if (columnsToDelete.length > 0) {
-      await clearColumns(db, table, columnsToDelete)
+      await clearColumns(table, columnsToDelete)
     }
     // need a special case, where a column has been removed from this table, but was used
     // in a different, related tables formula
@@ -85,7 +80,7 @@ async function checkIfFormulaNeedsCleared(
           )
         }
         if (relatedFormulaToRemove.length > 0) {
-          await clearColumns(db, relatedTable, uniq(relatedFormulaToRemove))
+          await clearColumns(relatedTable, uniq(relatedFormulaToRemove))
         }
       }
     }
@@ -99,13 +94,12 @@ async function checkIfFormulaNeedsCleared(
  * specifically only for static formula.
  */
 async function updateRelatedFormulaLinksOnTables(
-  appId,
   table,
   { deletion } = { deletion: false }
 ) {
-  const db = new CouchDB(appId)
+  const db = getAppDB()
   // start by retrieving all tables, remove the current table from the list
-  const tables = (await getAllInternalTables(appId)).filter(
+  const tables = (await getAllInternalTables()).filter(
     tbl => tbl._id !== table._id
   )
   // clone the tables, so we can compare at end
@@ -155,7 +149,7 @@ async function updateRelatedFormulaLinksOnTables(
   }
 }
 
-async function checkIfFormulaUpdated(appId, table, { oldTable }) {
+async function checkIfFormulaUpdated(table, { oldTable }) {
   // look to see if any formula values have changed
   const shouldUpdate = Object.values(table.schema).find(
     column =>
@@ -166,18 +160,14 @@ async function checkIfFormulaUpdated(appId, table, { oldTable }) {
   )
   // if a static formula column has updated, then need to run the update
   if (shouldUpdate != null) {
-    await updateAllFormulasInTable(appId, table)
+    await updateAllFormulasInTable(table)
   }
 }
 
-exports.runStaticFormulaChecks = async (
-  appId,
-  table,
-  { oldTable, deletion }
-) => {
-  await updateRelatedFormulaLinksOnTables(appId, table, { deletion })
-  await checkIfFormulaNeedsCleared(appId, table, { oldTable, deletion })
+exports.runStaticFormulaChecks = async (table, { oldTable, deletion }) => {
+  await updateRelatedFormulaLinksOnTables(table, { deletion })
+  await checkIfFormulaNeedsCleared(table, { oldTable, deletion })
   if (!deletion) {
-    await checkIfFormulaUpdated(appId, table, { oldTable })
+    await checkIfFormulaUpdated(table, { oldTable })
   }
 }

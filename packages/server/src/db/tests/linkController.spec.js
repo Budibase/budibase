@@ -20,7 +20,6 @@ describe("test the link controller", () => {
 
   function createLinkController(table, row = null, oldTable = null) {
     const linkConfig = {
-      appId: config.getAppId(),
       tableId: table._id,
       table,
     }
