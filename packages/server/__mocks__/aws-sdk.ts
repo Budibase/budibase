@@ -1,7 +1,7 @@
 module AwsMock {
   const aws: any = {}
 
-  const response = (body: any) => () => ({promise: () => body})
+  const response = (body: any) => () => ({ promise: () => body })
 
   function DocumentClient() {
     // @ts-ignore
@@ -39,9 +39,9 @@ module AwsMock {
     )
   }
 
-  aws.DynamoDB = {DocumentClient}
+  aws.DynamoDB = { DocumentClient }
   aws.S3 = S3
-  aws.config = {update: jest.fn()}
+  aws.config = { update: jest.fn() }
 
   module.exports = aws
 }

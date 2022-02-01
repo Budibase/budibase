@@ -1,4 +1,8 @@
 // need to load environment first
+import { Scope } from "@sentry/node"
+import { Event } from "@sentry/types/dist/event"
+import Application from "koa"
+
 const env = require("./environment")
 const CouchDB = require("./db")
 require("@budibase/backend-core").init(CouchDB)
@@ -13,7 +17,7 @@ const api = require("./api")
 const redis = require("./utilities/redis")
 const Sentry = require("@sentry/node")
 
-const app = new Koa()
+const app: Application = new Koa()
 
 app.keys = ["secret", "key"]
 
@@ -42,8 +46,8 @@ if (env.isProd()) {
   Sentry.init()
 
   app.on("error", (err, ctx) => {
-    Sentry.withScope(function (scope) {
-      scope.addEventProcessor(function (event) {
+    Sentry.withScope(function (scope: Scope) {
+      scope.addEventProcessor(function (event: Event) {
         return Sentry.Handlers.parseRequest(event, ctx.request)
       })
       Sentry.captureException(err)
