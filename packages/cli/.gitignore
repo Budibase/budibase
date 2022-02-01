@@ -1,5 +1,5 @@
 node_modules/
 docker-compose.yaml
-envoy.yaml
+nginx.conf
 build/
 docker-error.log
