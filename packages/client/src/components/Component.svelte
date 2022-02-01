@@ -9,7 +9,7 @@
 
 <script>
   import { getContext, setContext } from "svelte"
-  import { writable } from "svelte/store"
+  import { writable, get } from "svelte/store"
   import * as AppComponents from "components/app"
   import Router from "./Router.svelte"
   import { enrichProps, propsAreSame } from "utils/componentProps"
@@ -24,6 +24,14 @@
   export let isScreen = false
   export let isBlock = false
 
+  // Get parent contexts
+  const context = getContext("context")
+  const insideScreenslot = !!getContext("screenslot")
+
+  // Create component context
+  const componentStore = writable({})
+  setContext("component", componentStore)
+
   // Ref to the svelte component
   let ref
 
@@ -34,13 +42,11 @@
   // would happen if we spread cachedSettings directly to the component.
   let initialSettings
 
-  // Component settings are the un-enriched settings for this component that
-  // need to be enriched at this level.
-  // Nested settings are the un-enriched block settings that are to be passed on
-  // and enriched at a deeper level.
+  // Dynamic settings contain bindings and need enriched
   let dynamicSettings
+
+  // Static settings do not contain any bindings and can be passed on down
   let staticSettings
-  let nestedSettings
 
   // The enriched component settings
   let enrichedSettings
@@ -65,17 +71,11 @@
   // Visibility flag used by conditional UI
   let visible = true
 
-  // Get contexts
-  const context = getContext("context")
-  const insideScreenslot = !!getContext("screenslot")
-
-  // Create component context
-  const componentStore = writable({})
-  setContext("component", componentStore)
-
-  //
+  // Component information derived during initialisation
   let constructor
   let definition
+
+  // Set up initial state for each new component instance
   $: initialise(instance)
 
   // Extract component instance info
@@ -113,19 +113,16 @@
   $: emptyState = empty && showEmptyState
 
   // Enrich component settings
-  $: enrichComponentSettings(dynamicSettings, $context)
+  $: enrichComponentSettings($context)
 
   // Evaluate conditional UI settings and store any component setting changes
-  // which need to be made
-  $: evaluateConditions(enrichedSettings?._conditions)
+  // which need to be made. This is broken into 2 lines to avoid svelte
+  // reactivity re-evaluating conditions more often than necessary.
+  $: conditions = enrichedSettings?._conditions
+  $: evaluateConditions(conditions)
 
-  // Build up the final settings object to be passed to the component
-  $: cacheSettings(
-    staticSettings,
-    enrichedSettings,
-    nestedSettings,
-    conditionalSettings
-  )
+  // Determine and apply settings to the component
+  $: applySettings(staticSettings, enrichedSettings, conditionalSettings)
 
   // Update component context
   $: componentStore.set({
@@ -183,10 +180,12 @@
       InstanceSettingsCache[instanceKey] = instanceSettings
     }
 
-    // Update the settings type in the component
+    // Update the settings types
     staticSettings = instanceSettings.staticSettings
     dynamicSettings = instanceSettings.dynamicSettings
-    nestedSettings = instanceSettings.nestedSettings
+
+    // Force an initial enrichment of the new settings
+    enrichComponentSettings(get(context), { force: true })
   }
 
   // Gets the component constructor for the specified component
@@ -234,25 +233,21 @@
     // Derive static, dynamic and nested settings if the instance changed
     let newStaticSettings = { ...settings }
     let newDynamicSettings = { ...settings }
-    let newNestedSettings = { ...settings }
     settingsDefinition?.forEach(setting => {
       if (setting.nested) {
-        delete newStaticSettings[setting.key]
         delete newDynamicSettings[setting.key]
       } else {
-        delete newNestedSettings[setting.key]
-
-        // This is a non-nested setting, but we need to find out if it is
-        // static or dynamic
         const value = settings[setting.key]
         if (value == null) {
           delete newDynamicSettings[setting.key]
         } else if (typeof value === "string" && value.includes("{{")) {
+          // Strings can be trivially checked
           delete newStaticSettings[setting.key]
         } else if (value[0]?.["##eventHandlerType"] != null) {
           // Always treat button actions as dynamic
           delete newStaticSettings[setting.key]
         } else if (typeof value === "object") {
+          // Stringify and check objects
           const stringified = JSON.stringify(value)
           if (stringified.includes("{{")) {
             delete newStaticSettings[setting.key]
@@ -260,6 +255,7 @@
             delete newDynamicSettings[setting.key]
           }
         } else {
+          // For other types, we can safely assume they are static
           delete newDynamicSettings[setting.key]
         }
       }
@@ -268,25 +264,23 @@
     return {
       staticSettings: newStaticSettings,
       dynamicSettings: newDynamicSettings,
-      nestedSettings: newNestedSettings,
     }
   }
 
   // Enriches any string component props using handlebars
-  const enrichComponentSettings = (settings, context) => {
+  const enrichComponentSettings = (context, options = { force: false }) => {
     const contextChanged = context.key !== lastContextKey
-    if (!contextChanged) {
+    if (!contextChanged && !options?.force) {
       return
-    } else {
-      lastContextKey = context.key
     }
+    lastContextKey = context.key
 
     // Record the timestamp so we can reference it after enrichment
     latestUpdateTime = Date.now()
     const enrichmentTime = latestUpdateTime
 
     // Enrich settings with context
-    const newEnrichedSettings = enrichProps(settings, context)
+    const newEnrichedSettings = enrichProps(dynamicSettings, context)
 
     // Abandon this update if a newer update has started
     if (enrichmentTime !== latestUpdateTime) {
@@ -321,12 +315,15 @@
   // Combines and caches all settings which will be passed to the component
   // instance. Settings are aggressively memoized to avoid triggering svelte
   // reactive statements as much as possible.
-  const cacheSettings = (staticSettings, enriched, nested, conditional) => {
+  const applySettings = (
+    staticSettings,
+    enrichedSettings,
+    conditionalSettings
+  ) => {
     const allSettings = {
       ...staticSettings,
-      ...enriched,
-      ...nested,
-      ...conditional,
+      ...enrichedSettings,
+      ...conditionalSettings,
     }
     if (!cachedSettings) {
       cachedSettings = { ...allSettings }
