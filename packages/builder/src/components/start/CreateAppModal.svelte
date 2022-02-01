@@ -1,101 +1,46 @@
 <script>
   import { writable, get as svelteGet } from "svelte/store"
-
   import { notifications, Input, ModalContent, Dropzone } from "@budibase/bbui"
-  import { store, automationStore, hostingStore } from "builderStore"
-  import { admin, auth } from "stores/portal"
-  import { string, mixed, object } from "yup"
+  import { store, automationStore } from "builderStore"
+  import { apps, admin, auth } from "stores/portal"
   import api, { get, post } from "builderStore/api"
   import analytics, { Events } from "analytics"
   import { onMount } from "svelte"
-  import { capitalise } from "helpers"
   import { goto } from "@roxi/routify"
-  import { APP_NAME_REGEX } from "constants"
-  import TemplateList from "./TemplateList.svelte"
+  import { createValidationStore } from "helpers/validation/yup"
+  import * as appValidation from "helpers/validation/yup/app"
 
   export let template
-  export let inline
 
-  const values = writable({ name: null })
-  const errors = writable({})
-  const touched = writable({})
-  const validator = {
-    name: string()
-      .trim()
-      .required("Your application must have a name")
-      .matches(
-        APP_NAME_REGEX,
-        "App name must be letters, numbers and spaces only"
-      ),
-    file: template?.fromFile
-      ? mixed().required("Please choose a file to import")
-      : null,
-  }
-
-  let submitting = false
-  let valid = false
-  let initialTemplateInfo = template?.fromFile || template?.key
-
-  $: checkValidity($values, validator)
-  $: showTemplateSelection = !template && !initialTemplateInfo
+  const values = writable({ name: "", url: null })
+  const validation = createValidationStore()
+  $: validation.check($values)
 
   onMount(async () => {
-    await hostingStore.actions.fetchDeployedApps()
-    const existingAppNames = svelteGet(hostingStore).deployedAppNames
-    validator.name = string()
-      .trim()
-      .required("Your application must have a name")
-      .matches(APP_NAME_REGEX, "App name must be letters and numbers only")
-      .test(
-        "non-existing-app-name",
-        "Another app with the same name already exists",
-        value => {
-          return !existingAppNames.some(
-            appName => appName.toLowerCase() === value.toLowerCase()
-          )
-        }
-      )
+    await setupValidation()
   })
 
-  const checkValidity = async (values, validator) => {
-    const obj = object().shape(validator)
-    Object.keys(validator).forEach(key => ($errors[key] = null))
-    if (template?.fromFile && values.file == null) {
-      valid = false
-      return
-    }
-
-    try {
-      await obj.validate(values, { abortEarly: false })
-    } catch (validationErrors) {
-      validationErrors.inner.forEach(error => {
-        $errors[error.path] = capitalise(error.message)
-      })
-    }
-
-    valid = await obj.isValid(values)
+  const setupValidation = async () => {
+    const applications = svelteGet(apps)
+    appValidation.name(validation, { apps: applications })
+    appValidation.url(validation, { apps: applications })
+    appValidation.file(validation, { template })
+    // init validation
+    validation.check($values)
   }
 
   async function createNewApp() {
-    const templateToUse = Object.keys(template).length === 0 ? null : template
-    submitting = true
-
-    // Check a template exists if we are important
-    if (templateToUse?.fromFile && !$values.file) {
-      $errors.file = "Please choose a file to import"
-      valid = false
-      submitting = false
-      return false
-    }
-
     try {
       // Create form data to create app
       let data = new FormData()
       data.append("name", $values.name.trim())
-      data.append("useTemplate", templateToUse != null)
-      if (templateToUse) {
-        data.append("templateName", templateToUse.name)
-        data.append("templateKey", templateToUse.key)
+      if ($values.url) {
+        data.append("url", $values.url.trim())
+      }
+      data.append("useTemplate", template != null)
+      if (template) {
+        data.append("templateName", template.name)
+        data.append("templateKey", template.key)
         data.append("templateFile", $values.file)
       }
 
@@ -109,7 +54,7 @@
       analytics.captureEvent(Events.APP.CREATED, {
         name: $values.name,
         appId: appJson.instance._id,
-        templateToUse,
+        templateToUse: template,
       })
 
       // Select Correct Application/DB in prep for creating user
@@ -137,68 +82,51 @@
     } catch (error) {
       console.error(error)
       notifications.error(error)
-      submitting = false
     }
   }
 
-  async function onCancel() {
-    template = null
-    await auth.setInitInfo({})
+  // auto add slash to url
+  $: {
+    if ($values.url && !$values.url.startsWith("/")) {
+      $values.url = `/${$values.url}`
+    }
   }
 </script>
 
-{#if showTemplateSelection}
-  <ModalContent
-    title={"Get started quickly"}
-    showConfirmButton={false}
-    size="L"
-    onConfirm={() => {
-      template = {}
-      return false
-    }}
-    showCancelButton={!inline}
-    showCloseIcon={!inline}
-  >
-    <TemplateList
-      onSelect={(selected, { useImport } = {}) => {
-        if (!selected) {
-          template = useImport ? { fromFile: true } : {}
-          return
-        }
-        template = selected
+<ModalContent
+  title={"Create your app"}
+  confirmText={template?.fromFile ? "Import app" : "Create app"}
+  onConfirm={createNewApp}
+  disabled={!$validation.valid}
+>
+  {#if template?.fromFile}
+    <Dropzone
+      error={$validation.touched.file && $validation.errors.file}
+      gallery={false}
+      label="File to import"
+      value={[$values.file]}
+      on:change={e => {
+        $values.file = e.detail?.[0]
+        $validation.touched.file = true
       }}
     />
-  </ModalContent>
-{:else}
-  <ModalContent
-    title={"Name your app"}
-    confirmText={template?.fromFile ? "Import app" : "Create app"}
-    onConfirm={createNewApp}
-    onCancel={inline ? onCancel : null}
-    cancelText={inline ? "Back" : undefined}
-    showCloseIcon={!inline}
-    disabled={!valid}
-  >
-    {#if template?.fromFile}
-      <Dropzone
-        error={$touched.file && $errors.file}
-        gallery={false}
-        label="File to import"
-        value={[$values.file]}
-        on:change={e => {
-          $values.file = e.detail?.[0]
-          $touched.file = true
-        }}
-      />
-    {/if}
-    <Input
-      bind:value={$values.name}
-      error={$touched.name && $errors.name}
-      on:blur={() => ($touched.name = true)}
-      label="Name"
-      placeholder={$auth.user.firstName
-        ? `${$auth.user.firstName}'s app`
-        : "My app"}
-    />
-  </ModalContent>
-{/if}
+  {/if}
+  <Input
+    bind:value={$values.name}
+    error={$validation.touched.name && $validation.errors.name}
+    on:blur={() => ($validation.touched.name = true)}
+    label="Name"
+    placeholder={$auth.user.firstName
+      ? `${$auth.user.firstName}s app`
+      : "My app"}
+  />
+  <Input
+    bind:value={$values.url}
+    error={$validation.touched.url && $validation.errors.url}
+    on:blur={() => ($validation.touched.url = true)}
+    label="URL"
+    placeholder={$values.name
+      ? "/" + encodeURIComponent($values.name).toLowerCase()
+      : "/"}
+  />
+</ModalContent>

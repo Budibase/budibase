@@ -31,6 +31,7 @@
   }
 
   onMount(async () => {
+    await auth.getSelf()
     await organisation.init()
   })
 </script>

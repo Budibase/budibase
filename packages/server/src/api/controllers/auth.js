@@ -16,6 +16,8 @@ exports.fetchSelf = async ctx => {
   const user = await getFullUser(ctx, userId)
   // this shouldn't be returned by the app self
   delete user.roles
+  // forward the csrf token from the session
+  user.csrfToken = ctx.user.csrfToken
 
   if (appId) {
     const db = new CouchDB(appId)
@@ -24,6 +26,8 @@ exports.fetchSelf = async ctx => {
     try {
       const userTable = await db.get(InternalTables.USER_METADATA)
       const metadata = await db.get(userId)
+      // make sure there is never a stale csrf token
+      delete metadata.csrfToken
       // specifically needs to make sure is enriched
       ctx.body = await outputProcessing(ctx, userTable, {
         ...user,

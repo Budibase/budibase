@@ -6,8 +6,7 @@ import { terser } from "rollup-plugin-terser"
 import postcss from "rollup-plugin-postcss"
 import svg from "rollup-plugin-svg"
 import json from "rollup-plugin-json"
-import builtins from "rollup-plugin-node-builtins"
-import globals from "rollup-plugin-node-globals"
+import nodePolyfills from "rollup-plugin-polyfill-node"
 import path from "path"
 
 const production = !process.env.ROLLUP_WATCH
@@ -75,8 +74,7 @@ export default {
     }),
     postcss(),
     commonjs(),
-    globals(),
-    builtins(),
+    nodePolyfills(),
     resolve({
       preferBuiltins: true,
       browser: true,

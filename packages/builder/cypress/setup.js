@@ -40,7 +40,7 @@ async function run() {
   // it will cause environment module to be loaded prematurely
   const server = require("../../server/dist/app")
   process.env.PORT = WORKER_PORT
-  const worker = require("../../worker/src/index")
+  const worker = require("../../worker/dist/index")
   // reload main port for rest of system
   process.env.PORT = MAIN_PORT
   server.on("close", () => console.log("Server Closed"))

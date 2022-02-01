@@ -1,7 +1,7 @@
 require("../../tests/utilities/dbConfig")
 
-const { migrateIfRequired, MIGRATION_DBS, MIGRATIONS, getMigrationsDoc } = require("../index")
-const database = require("../../db")
+const { runMigrations, getMigrationsDoc } = require("../index")
+const CouchDB = require("../../db").getCouch()
 const {
   StaticDatabases,
 } = require("../../db/utils")
@@ -13,8 +13,14 @@ describe("migrations", () => {
 
   const migrationFunction = jest.fn()
 
+  const MIGRATIONS = [{
+    type: "global",
+    name: "test",
+    fn: migrationFunction
+  }]
+
   beforeEach(() => {
-    db = database.getDB(StaticDatabases.GLOBAL.name)
+    db = new CouchDB(StaticDatabases.GLOBAL.name)
   })
 
   afterEach(async () => {
@@ -22,39 +28,29 @@ describe("migrations", () => {
     await db.destroy()
   })
 
-  const validMigration = () => {
-    return migrateIfRequired(MIGRATION_DBS.GLOBAL_DB, MIGRATIONS.USER_EMAIL_VIEW_CASING, migrationFunction)
+  const migrate = () => {
+    return runMigrations(CouchDB, MIGRATIONS)
   }
 
   it("should run a new migration", async () => {
-    await validMigration()
+    await migrate()
     expect(migrationFunction).toHaveBeenCalled()
+    const doc = await getMigrationsDoc(db)
+    expect(doc.test).toBeDefined()
   })
 
   it("should match snapshot", async () => {
-    await validMigration()
+    await migrate()
     const doc = await getMigrationsDoc(db)
     expect(doc).toMatchSnapshot()
   })
 
   it("should skip a previously run migration", async () => {
-    await validMigration()
-    await validMigration()
+    await migrate()
+    const previousMigrationTime = await getMigrationsDoc(db).test
+    await migrate()
+    const currentMigrationTime = await getMigrationsDoc(db).test
     expect(migrationFunction).toHaveBeenCalledTimes(1)
+    expect(currentMigrationTime).toBe(previousMigrationTime)
   })
-
-  it("should reject an unknown migration name", async () => {
-    expect(async () => { 
-      await migrateIfRequired(MIGRATION_DBS.GLOBAL_DB, "bogus_name", migrationFunction)
-    }).rejects.toThrow()
-    expect(migrationFunction).not.toHaveBeenCalled()
-  })
-
-  it("should reject an unknown database name", async () => {
-    expect(async () => { 
-      await migrateIfRequired("bogus_db", MIGRATIONS.USER_EMAIL_VIEW_CASING, migrationFunction)
-    }).rejects.toThrow()
-    expect(migrationFunction).not.toHaveBeenCalled()
-  })
-
 })

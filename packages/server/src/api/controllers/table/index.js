@@ -2,13 +2,9 @@ const CouchDB = require("../../../db")
 const internal = require("./internal")
 const external = require("./external")
 const csvParser = require("../../../utilities/csvParser")
-const { isExternalTable } = require("../../../integrations/utils")
-const {
-  getTableParams,
-  getDatasourceParams,
-  BudibaseInternalDB,
-} = require("../../../db/utils")
-const { getTable } = require("./utils")
+const { isExternalTable, isSQL } = require("../../../integrations/utils")
+const { getDatasourceParams } = require("../../../db/utils")
+const { getTable, getAllInternalTables } = require("./utils")
 
 function pickApi({ tableId, table }) {
   if (table && !tableId) {
@@ -26,17 +22,7 @@ function pickApi({ tableId, table }) {
 exports.fetch = async function (ctx) {
   const db = new CouchDB(ctx.appId)
 
-  const internalTables = await db.allDocs(
-    getTableParams(null, {
-      include_docs: true,
-    })
-  )
-
-  const internal = internalTables.rows.map(row => ({
-    ...row.doc,
-    type: "internal",
-    sourceId: BudibaseInternalDB._id,
-  }))
+  const internal = await getAllInternalTables(ctx.appId)
 
   const externalTables = await db.allDocs(
     getDatasourceParams("plus", {
@@ -44,12 +30,18 @@ exports.fetch = async function (ctx) {
     })
   )
 
-  const external = externalTables.rows.flatMap(row => {
-    return Object.values(row.doc.entities || {}).map(entity => ({
-      ...entity,
-      type: "external",
-      sourceId: row.doc._id,
-    }))
+  const external = externalTables.rows.flatMap(tableDoc => {
+    let entities = tableDoc.doc.entities
+    if (entities) {
+      return Object.values(entities).map(entity => ({
+        ...entity,
+        type: "external",
+        sourceId: tableDoc.doc._id,
+        sql: isSQL(tableDoc.doc),
+      }))
+    } else {
+      return []
+    }
   })
 
   ctx.body = [...internal, ...external]
