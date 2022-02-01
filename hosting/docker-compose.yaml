@@ -80,6 +80,7 @@ services:
 
   proxy-service:
     restart: always
+    container_name: bbproxy
     image: budibase/proxy
     ports:
       - "${MAIN_PORT}:10000"
@@ -123,7 +124,7 @@ services:
       - "${WATCHTOWER_PORT}:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-    command: --debug --http-api-update bbapps bbworker
+    command: --debug --http-api-update bbapps bbworker bbproxy
     environment:
       - WATCHTOWER_HTTP_API=true
       - WATCHTOWER_HTTP_API_TOKEN=budibase
