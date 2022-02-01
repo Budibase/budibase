@@ -22,15 +22,15 @@ const Commands = {
 }
 
 async function init() {
-  // generate envoy file, always do this incase it has changed
+  // generate nginx file, always do this incase it has changed
   const hostingPath = path.join(process.cwd(), "..", "..", "hosting")
-  const envoyHbsPath = path.join(hostingPath, "nginx.dev.conf.hbs")
-  const envoyOutputPath = path.join(hostingPath, ".generated-nginx.dev.conf")
-  const contents = fs.readFileSync(envoyHbsPath, "utf8")
+  const nginxHbsPath = path.join(hostingPath, "nginx.dev.conf.hbs")
+  const nginxOutputPath = path.join(hostingPath, ".generated-nginx.dev.conf")
+  const contents = fs.readFileSync(nginxHbsPath, "utf8")
   const config = {
     address: isLinux() ? "172.17.0.1" : "host.docker.internal",
   }
-  fs.writeFileSync(envoyOutputPath, processStringSync(contents, config))
+  fs.writeFileSync(nginxOutputPath, processStringSync(contents, config))
 
   const envFilePath = path.join(process.cwd(), ".env")
   if (!fs.existsSync(envFilePath)) {

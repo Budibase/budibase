@@ -5,7 +5,6 @@ cd /root
 
 # fetch nginx and docker-compose files
 wget https://raw.githubusercontent.com/Budibase/budibase/master/hosting/docker-compose.yaml
-wget https://raw.githubusercontent.com/Budibase/budibase/master/hosting/envoy.yaml
 wget https://raw.githubusercontent.com/Budibase/budibase/master/hosting/hosting.properties
 
 # Create .env file from hosting.properties using bash and then remove it

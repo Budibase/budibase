@@ -5,7 +5,7 @@ const path = require("path")
 const IMAGES = {
 	worker: "budibase/worker",
 	apps: "budibase/apps",
-	proxy: "envoyproxy/envoy:v1.16-latest",
+	proxy: "budibase/proxy",
 	minio: "minio/minio",
 	couch: "ibmcom/couchdb3",
 	curl: "curlimages/curl",
