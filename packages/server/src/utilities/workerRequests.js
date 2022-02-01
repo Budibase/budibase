@@ -1,7 +1,7 @@
 const fetch = require("node-fetch")
 const env = require("../environment")
 const { checkSlashesInUrl } = require("./index")
-const { getDeployedAppID } = require("@budibase/backend-core/db")
+const { getProdAppID } = require("@budibase/backend-core/db")
 const { updateAppRole } = require("./global")
 const { Headers } = require("@budibase/backend-core/constants")
 const { getTenantId, isTenantIdSet } = require("@budibase/backend-core/tenancy")
@@ -70,15 +70,15 @@ exports.getGlobalSelf = async (ctx, appId = null) => {
   }
   let json = await response.json()
   if (appId) {
-    json = updateAppRole(appId, json)
+    json = updateAppRole(json)
   }
   return json
 }
 
 exports.removeAppFromUserRoles = async (ctx, appId) => {
-  const deployedAppId = getDeployedAppID(appId)
+  const prodAppId = getProdAppID(appId)
   const response = await fetch(
-    checkSlashesInUrl(env.WORKER_URL + `/api/global/roles/${deployedAppId}`),
+    checkSlashesInUrl(env.WORKER_URL + `/api/global/roles/${prodAppId}`),
     request(ctx, {
       method: "DELETE",
     })

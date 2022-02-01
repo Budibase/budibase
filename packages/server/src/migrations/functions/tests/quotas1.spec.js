@@ -4,10 +4,10 @@ const TestConfig = require("../../../tests/utilities/TestConfiguration")
 const syncApps = jest.fn()
 const syncRows = jest.fn()
 
-jest.mock("../../usageQuotas/syncApps", () => ({ run: syncApps }) )
-jest.mock("../../usageQuotas/syncRows", () => ({ run: syncRows }) )
+jest.mock("../usageQuotas/syncApps", () => ({ run: syncApps }) )
+jest.mock("../usageQuotas/syncRows", () => ({ run: syncRows }) )
 
-const migrations = require("../../usageQuotas")
+const migration = require("../quotas1")
 
 describe("run", () => {
   let config = new TestConfig(false)
@@ -19,8 +19,8 @@ describe("run", () => {
 
   afterAll(config.end)  
 
-  it("runs the required migrations", async () => {
-    await migrations.run()
+  it("runs ", async () => {
+    await migration.run()
     expect(syncApps).toHaveBeenCalledTimes(1)
     expect(syncRows).toHaveBeenCalledTimes(1)
   })

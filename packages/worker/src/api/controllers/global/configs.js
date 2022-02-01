@@ -11,7 +11,6 @@ const {
   upload,
   ObjectStoreBuckets,
 } = require("@budibase/backend-core/objectStore")
-const CouchDB = require("../../../db")
 const { getGlobalDB, getTenantId } = require("@budibase/backend-core/tenancy")
 const env = require("../../../environment")
 const { googleCallbackUrl, oidcCallbackUrl } = require("./auth")
@@ -252,7 +251,7 @@ exports.configChecklist = async function (ctx) {
     // TODO: Watch get started video
 
     // Apps exist
-    const apps = await getAllApps(CouchDB, { idsOnly: true })
+    const apps = await getAllApps({ idsOnly: true })
 
     // They have set up SMTP
     const smtpConfig = await getScopedFullConfig(db, {

@@ -24,6 +24,7 @@ const backupRoutes = require("./backup")
 const metadataRoutes = require("./metadata")
 const devRoutes = require("./dev")
 const cloudRoutes = require("./cloud")
+const migrationRoutes = require("./migrations")
 
 exports.mainRoutes = [
   authRoutes,
@@ -53,6 +54,7 @@ exports.mainRoutes = [
   // this could be breaking as koa may recognise other routes as this
   tableRoutes,
   rowRoutes,
+  migrationRoutes,
 ]
 
 exports.staticRoutes = staticRoutes

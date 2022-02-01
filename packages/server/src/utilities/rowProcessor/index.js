@@ -7,10 +7,10 @@ const { deleteFiles } = require("../../utilities/fileSystem/utilities")
 const { ObjectStoreBuckets } = require("../../constants")
 const {
   isProdAppID,
-  getDeployedAppID,
+  getProdAppID,
   dbExists,
 } = require("@budibase/backend-core/db")
-const CouchDB = require("../../db")
+const { getAppId } = require("@budibase/backend-core/context")
 
 const BASE_AUTO_ID = 1
 
@@ -180,6 +180,8 @@ function processAutoColumn(
 }
 exports.processAutoColumn = processAutoColumn
 
+exports.processFormulas = processFormulas
+
 /**
  * This will coerce a value to the correct types based on the type transform map
  * @param {object} row The value to coerce
@@ -229,11 +231,12 @@ exports.inputProcessing = (
       }
       continue
     }
-    // specific case to delete formula values if they get saved
-    // type coercion cannot completely remove the field, so have to do it here
+    // remove any formula values, they are to be generated
     if (field.type === FieldTypes.FORMULA) {
       delete clonedRow[key]
-    } else {
+    }
+    // otherwise coerce what is there to correct types
+    else {
       clonedRow[key] = exports.coerce(value, field.type)
     }
   }
@@ -250,30 +253,23 @@ exports.inputProcessing = (
 /**
  * This function enriches the input rows with anything they are supposed to contain, for example
  * link records or attachment links.
- * @param {object} ctx the request which is looking for enriched rows.
  * @param {object} table the table from which these rows came from originally, this is used to determine
  * the schema of the rows and then enrich.
  * @param {object[]|object} rows the rows which are to be enriched.
  * @param {object} opts used to set some options for the output, such as disabling relationship squashing.
  * @returns {object[]|object} the enriched rows will be returned.
  */
-exports.outputProcessing = async (
-  ctx,
-  table,
-  rows,
-  opts = { squash: true }
-) => {
-  const appId = ctx.appId
+exports.outputProcessing = async (table, rows, opts = { squash: true }) => {
   let wasArray = true
   if (!(rows instanceof Array)) {
     rows = [rows]
     wasArray = false
   }
   // attach any linked row information
-  let enriched = await linkRows.attachFullLinkedDocs(ctx, table, rows)
+  let enriched = await linkRows.attachFullLinkedDocs(table, rows)
 
   // process formulas
-  enriched = processFormulas(table, enriched)
+  enriched = processFormulas(table, enriched, { dynamic: true })
 
   // update the attachments URL depending on hosting
   for (let [property, column] of Object.entries(table.schema)) {
@@ -289,29 +285,27 @@ exports.outputProcessing = async (
     }
   }
   if (opts.squash) {
-    enriched = await linkRows.squashLinksToPrimaryDisplay(
-      appId,
-      table,
-      enriched
-    )
+    enriched = await linkRows.squashLinksToPrimaryDisplay(table, enriched)
   }
   return wasArray ? enriched : enriched[0]
 }
 
 /**
  * Clean up any attachments that were attached to a row.
- * @param {string} appId The ID of the app from which a row is being deleted.
  * @param {object} table The table from which a row is being removed.
  * @param {any} row optional - the row being removed.
  * @param {any} rows optional - if multiple rows being deleted can do this in bulk.
  * @param {any} oldRow optional - if updating a row this will determine the difference.
+ * @param {any} oldTable optional - if updating a table, can supply the old table to look for
+ * deleted attachment columns.
  * @return {Promise<void>} When all attachments have been removed this will return.
  */
-exports.cleanupAttachments = async (appId, table, { row, rows, oldRow }) => {
+exports.cleanupAttachments = async (table, { row, rows, oldRow, oldTable }) => {
+  const appId = getAppId()
   if (!isProdAppID(appId)) {
-    const prodAppId = getDeployedAppID(appId)
+    const prodAppId = getProdAppID(appId)
     // if prod exists, then don't allow deleting
-    const exists = await dbExists(CouchDB, prodAppId)
+    const exists = await dbExists(prodAppId)
     if (exists) {
       return
     }
@@ -322,12 +316,16 @@ exports.cleanupAttachments = async (appId, table, { row, rows, oldRow }) => {
       files = files.concat(row[key].map(attachment => attachment.key))
     }
   }
-  for (let [key, schema] of Object.entries(table.schema)) {
+  const schemaToUse = oldTable ? oldTable.schema : table.schema
+  for (let [key, schema] of Object.entries(schemaToUse)) {
     if (schema.type !== FieldTypes.ATTACHMENT) {
       continue
     }
-    // if updating, need to manage the differences
-    if (oldRow && row) {
+    // old table had this column, new table doesn't - delete it
+    if (oldTable && !table.schema[key]) {
+      rows.forEach(row => addFiles(row, key))
+    } else if (oldRow && row) {
+      // if updating, need to manage the differences
       files = files.concat(getRemovedAttachmentKeys(oldRow, row, key))
     } else if (row) {
       addFiles(row, key)

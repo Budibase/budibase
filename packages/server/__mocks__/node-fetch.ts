@@ -62,7 +62,8 @@ module FetchMock {
       return json({
         url,
         opts,
-        value: "<!doctype html><html itemscope=\"\" itemtype=\"http://schema.org/WebPage\" lang=\"en-GB\"></html>",
+        value:
+          '<!doctype html><html itemscope="" itemtype="http://schema.org/WebPage" lang="en-GB"></html>',
       })
     } else if (url.includes("failonce.com")) {
       failCount++

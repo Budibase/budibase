@@ -114,11 +114,7 @@ export function createAuthStore() {
     return info
   }
 
-  return {
-    subscribe: store.subscribe,
-    setOrganisation,
-    getInitInfo,
-    setInitInfo,
+  const actions = {
     checkQueryString: async () => {
       const urlParams = new URLSearchParams(window.location.search)
       if (urlParams.has("tenantId")) {
@@ -129,7 +125,7 @@ export function createAuthStore() {
     setOrg: async tenantId => {
       await setOrganisation(tenantId)
     },
-    checkAuth: async () => {
+    getSelf: async () => {
       // We need to catch this locally as we never want this to fail, even
       // though normally we never want to swallow API errors at the store level.
       // We're either logged in or we aren't.
@@ -143,12 +139,12 @@ export function createAuthStore() {
     },
     login: async creds => {
       const tenantId = get(store).tenantId
-      const response = await API.logIn({
+      await API.logIn({
         username: creds.username,
         password: creds.password,
         tenantId,
       })
-      setUser(response.user)
+      await actions.getSelf()
     },
     logout: async () => {
       setUser(null)
@@ -176,6 +172,14 @@ export function createAuthStore() {
         resetCode,
       })
     },
+  }
+
+  return {
+    subscribe: store.subscribe,
+    setOrganisation,
+    getInitInfo,
+    setInitInfo,
+    ...actions,
   }
 }
 

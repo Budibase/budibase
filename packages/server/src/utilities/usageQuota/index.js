@@ -52,6 +52,7 @@ exports.getUsageQuotaDoc = async db => {
  * Given a specified tenantId this will add to the usage object for the specified property.
  * @param {string} property The property which is to be added to (within the nested usageQuota object).
  * @param {number} usage The amount (this can be negative) to adjust the number by.
+ * @param {object} opts optional - options such as dryRun, to check what update will do.
  * @returns {Promise<void>} When this completes the API key will now be up to date - the quota period may have
  * also been reset after this call.
  */
