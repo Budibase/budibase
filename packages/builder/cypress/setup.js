@@ -28,7 +28,7 @@ process.env.LOG_LEVEL = "error"
 
 exports.run = (
   serverLoc = "../../server/dist",
-  workerLoc = "../../worker/src/index"
+  workerLoc = "../../worker/dist"
 ) => {
   // require("dotenv").config({ path: resolve(dir, ".env") })
   // don't make this a variable or top level require
