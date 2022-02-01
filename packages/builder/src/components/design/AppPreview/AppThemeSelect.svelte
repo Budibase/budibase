@@ -1,6 +1,7 @@
 <script>
   import { Select } from "@budibase/bbui"
   import { store } from "builderStore"
+  import { get } from "svelte/store"
 
   const themeOptions = [
     {
@@ -20,6 +21,17 @@
       value: "spectrum--darkest",
     },
   ]
+
+  const onChangeTheme = async theme => {
+    await store.actions.theme.save(theme)
+    await store.actions.customTheme.save({
+      ...get(store).customTheme,
+      navBackground:
+        theme === "spectrum--light"
+          ? "var(--spectrum-global-color-gray-50)"
+          : "var(--spectrum-global-color-gray-100)",
+    })
+  }
 </script>
 
 <div>
@@ -27,7 +39,7 @@
     value={$store.theme}
     options={themeOptions}
     placeholder={null}
-    on:change={e => store.actions.theme.save(e.detail)}
+    on:change={e => onChangeTheme(e.detail)}
   />
 </div>
 

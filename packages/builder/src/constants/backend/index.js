@@ -148,20 +148,23 @@ export const RelationshipTypes = {
 }
 
 export const ALLOWABLE_STRING_OPTIONS = [FIELDS.STRING, FIELDS.OPTIONS]
-
 export const ALLOWABLE_STRING_TYPES = ALLOWABLE_STRING_OPTIONS.map(
   opt => opt.type
 )
 
 export const ALLOWABLE_NUMBER_OPTIONS = [FIELDS.NUMBER, FIELDS.BOOLEAN]
-
 export const ALLOWABLE_NUMBER_TYPES = ALLOWABLE_NUMBER_OPTIONS.map(
   opt => opt.type
 )
 
-export const SWITCHABLE_TYPES = ALLOWABLE_NUMBER_TYPES.concat(
-  ALLOWABLE_STRING_TYPES
-)
+export const ALLOWABLE_JSON_OPTIONS = [FIELDS.JSON, FIELDS.ARRAY]
+export const ALLOWABLE_JSON_TYPES = ALLOWABLE_JSON_OPTIONS.map(opt => opt.type)
+
+export const SWITCHABLE_TYPES = [
+  ...ALLOWABLE_STRING_TYPES,
+  ...ALLOWABLE_NUMBER_TYPES,
+  ...ALLOWABLE_JSON_TYPES,
+]
 
 export const IntegrationTypes = {
   POSTGRES: "POSTGRES",
@@ -177,6 +180,7 @@ export const IntegrationTypes = {
   ARANGODB: "ARANGODB",
   ORACLE: "ORACLE",
   INTERNAL: "INTERNAL",
+  GOOGLE_SHEETS: "GOOGLE_SHEETS",
 }
 
 export const IntegrationNames = {
@@ -193,6 +197,7 @@ export const IntegrationNames = {
   [IntegrationTypes.ARANGODB]: "ArangoDB",
   [IntegrationTypes.ORACLE]: "Oracle",
   [IntegrationTypes.INTERNAL]: "Internal",
+  [IntegrationTypes.GOOGLE_SHEETS]: "Google Sheets",
 }
 
 export const SchemaTypeOptions = [
@@ -228,4 +233,12 @@ export const PaginationTypes = [
 export const PaginationLocations = [
   { label: "Query parameters", value: "query" },
   { label: "Request body", value: "body" },
+]
+
+export const BannedSearchTypes = [
+  "link",
+  "attachment",
+  "formula",
+  "json",
+  "jsonarray",
 ]

@@ -119,6 +119,22 @@ describe("SQL query builder", () => {
     })
   })
 
+  it("should allow filtering on a related field", () => {
+    const query = sql._query(generateReadJson({
+      filters: {
+        equal: {
+          age: 10,
+          "task.name": "task 1",
+        },
+      },
+    }))
+    // order of bindings changes because relationship filters occur outside inner query
+    expect(query).toEqual({
+      bindings: [10, limit, "task 1"],
+      sql: `select * from (select * from "${TABLE_NAME}" where "${TABLE_NAME}"."age" = $1 limit $2) as "${TABLE_NAME}" where "task"."name" = $3`
+    })
+  })
+
   it("should test an create statement", () => {
     const query = sql._query(generateCreateJson(TABLE_NAME, {
       name: "Michael",

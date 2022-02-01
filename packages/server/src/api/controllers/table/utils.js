@@ -4,19 +4,46 @@ const {
   getRowParams,
   generateRowID,
   InternalTables,
+  getTableParams,
+  BudibaseInternalDB,
 } = require("../../../db/utils")
-const { isEqual } = require("lodash/fp")
+const { isEqual } = require("lodash")
 const { AutoFieldSubTypes, FieldTypes } = require("../../../constants")
-const { inputProcessing } = require("../../../utilities/rowProcessor")
-const { USERS_TABLE_SCHEMA, SwitchableTypes } = require("../../../constants")
+const {
+  inputProcessing,
+  cleanupAttachments,
+} = require("../../../utilities/rowProcessor")
+const {
+  USERS_TABLE_SCHEMA,
+  SwitchableTypes,
+  CanSwitchTypes,
+} = require("../../../constants")
 const {
   isExternalTable,
   breakExternalTableId,
+  isSQL,
 } = require("../../../integrations/utils")
 const { getViews, saveView } = require("../view/utils")
 const viewTemplate = require("../view/viewBuilder")
+const usageQuota = require("../../../utilities/usageQuota")
+const { cloneDeep } = require("lodash/fp")
 
-exports.checkForColumnUpdates = async (db, oldTable, updatedTable) => {
+exports.clearColumns = async (appId, table, columnNames) => {
+  const db = new CouchDB(appId)
+  const rows = await db.allDocs(
+    getRowParams(table._id, null, {
+      include_docs: true,
+    })
+  )
+  return db.bulkDocs(
+    rows.rows.map(({ doc }) => {
+      columnNames.forEach(colName => delete doc[colName])
+      return doc
+    })
+  )
+}
+
+exports.checkForColumnUpdates = async (appId, db, oldTable, updatedTable) => {
   let updatedRows = []
   const rename = updatedTable._rename
   let deletedColumns = []
@@ -33,16 +60,20 @@ exports.checkForColumnUpdates = async (db, oldTable, updatedTable) => {
         include_docs: true,
       })
     )
-    updatedRows = rows.rows.map(({ doc }) => {
+    const rawRows = rows.rows.map(({ doc }) => doc)
+    updatedRows = rawRows.map(row => {
+      row = cloneDeep(row)
       if (rename) {
-        doc[rename.updated] = doc[rename.old]
-        delete doc[rename.old]
+        row[rename.updated] = row[rename.old]
+        delete row[rename.old]
       } else if (deletedColumns.length !== 0) {
-        deletedColumns.forEach(colName => delete doc[colName])
+        deletedColumns.forEach(colName => delete row[colName])
       }
-      return doc
+      return row
     })
 
+    // cleanup any attachments from object storage for deleted attachment columns
+    await cleanupAttachments(appId, updatedTable, { oldTable, rows: rawRows })
     // Update views
     await exports.checkForViewUpdates(db, updatedTable, rename, deletedColumns)
     delete updatedTable._rename
@@ -111,7 +142,11 @@ exports.handleDataImport = async (appId, user, table, dataImport) => {
     finalData.push(row)
   }
 
+  await usageQuota.update(usageQuota.Properties.ROW, finalData.length, {
+    dryRun: true,
+  })
   await db.bulkDocs(finalData)
+  await usageQuota.update(usageQuota.Properties.ROW, finalData.length)
   let response = await db.put(table)
   table._rev = response._rev
   return table
@@ -199,6 +234,7 @@ class TableSaveFunctions {
   // when confirmed valid
   async mid(table) {
     let response = await exports.checkForColumnUpdates(
+      this.appId,
       this.db,
       this.oldTable,
       table
@@ -224,6 +260,20 @@ class TableSaveFunctions {
   }
 }
 
+exports.getAllInternalTables = async appId => {
+  const db = new CouchDB(appId)
+  const internalTables = await db.allDocs(
+    getTableParams(null, {
+      include_docs: true,
+    })
+  )
+  return internalTables.rows.map(tableDoc => ({
+    ...tableDoc.doc,
+    type: "internal",
+    sourceId: BudibaseInternalDB._id,
+  }))
+}
+
 exports.getAllExternalTables = async (appId, datasourceId) => {
   const db = new CouchDB(appId)
   const datasource = await db.get(datasourceId)
@@ -242,7 +292,9 @@ exports.getTable = async (appId, tableId) => {
   const db = new CouchDB(appId)
   if (isExternalTable(tableId)) {
     let { datasourceId, tableName } = breakExternalTableId(tableId)
-    return exports.getExternalTable(appId, datasourceId, tableName)
+    const datasource = await db.get(datasourceId)
+    const table = await exports.getExternalTable(appId, datasourceId, tableName)
+    return { ...table, sql: isSQL(datasource) }
   } else {
     return db.get(tableId)
   }
@@ -340,6 +392,23 @@ exports.foreignKeyStructure = (keyName, meta = null) => {
   return structure
 }
 
+exports.areSwitchableTypes = (type1, type2) => {
+  if (
+    SwitchableTypes.indexOf(type1) === -1 &&
+    SwitchableTypes.indexOf(type2) === -1
+  ) {
+    return false
+  }
+  for (let option of CanSwitchTypes) {
+    const index1 = option.indexOf(type1),
+      index2 = option.indexOf(type2)
+    if (index1 !== -1 && index2 !== -1 && index1 !== index2) {
+      return true
+    }
+  }
+  return false
+}
+
 exports.hasTypeChanged = (table, oldTable) => {
   if (!oldTable) {
     return false
@@ -350,7 +419,7 @@ exports.hasTypeChanged = (table, oldTable) => {
       continue
     }
     const newType = table.schema[key].type
-    if (oldType !== newType && SwitchableTypes.indexOf(oldType) === -1) {
+    if (oldType !== newType && !exports.areSwitchableTypes(oldType, newType)) {
       return true
     }
   }

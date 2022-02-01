@@ -1,15 +1,9 @@
+jest.mock("nodemailer")
 const setup = require("./utilities")
+const sendMailMock = setup.emailMock()
+
 const { EmailTemplatePurpose } = require("../../../constants")
 const { TENANT_ID } = require("./utilities/structures")
-
-// mock the email system
-const sendMailMock = jest.fn()
-jest.mock("nodemailer")
-const nodemailer = require("nodemailer")
-nodemailer.createTransport.mockReturnValue({
-  sendMail: sendMailMock,
-  verify: jest.fn(),
-})
 
 describe("/api/global/email", () => {
   let request = setup.getRequest()
