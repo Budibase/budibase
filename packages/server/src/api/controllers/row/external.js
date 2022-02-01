@@ -9,9 +9,9 @@ const {
   breakRowIdField,
 } = require("../../../integrations/utils")
 const ExternalRequest = require("./ExternalRequest")
-const CouchDB = require("../../../db")
+const { getAppDB } = require("@budibase/backend-core/context")
 
-async function handleRequest(appId, operation, tableId, opts = {}) {
+async function handleRequest(operation, tableId, opts = {}) {
   // make sure the filters are cleaned up, no empty strings for equals, fuzzy or string
   if (opts && opts.filters) {
     for (let filterField of NoEmptyFilterStrings) {
@@ -25,9 +25,7 @@ async function handleRequest(appId, operation, tableId, opts = {}) {
       }
     }
   }
-  return new ExternalRequest(appId, operation, tableId, opts.datasource).run(
-    opts
-  )
+  return new ExternalRequest(operation, tableId, opts.datasource).run(opts)
 }
 
 exports.handleRequest = handleRequest
@@ -181,7 +179,7 @@ exports.fetchEnrichedRow = async ctx => {
   const id = ctx.params.rowId
   const tableId = ctx.params.tableId
   const { datasourceId, tableName } = breakExternalTableId(tableId)
-  const db = new CouchDB(appId)
+  const db = getAppDB()
   const datasource = await db.get(datasourceId)
   if (!datasource || !datasource.entities) {
     ctx.throw(400, "Datasource has not been configured for plus API.")

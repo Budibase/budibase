@@ -1,15 +1,14 @@
-const CouchDB = require("../../db")
 const { DocumentTypes } = require("../../db/utils")
 const { getComponentLibraryManifest } = require("../../utilities/fileSystem")
+const { getAppDB } = require("@budibase/backend-core/context")
 
 exports.fetchAppComponentDefinitions = async function (ctx) {
-  const appId = ctx.params.appId || ctx.appId
-  const db = new CouchDB(appId)
+  const db = getAppDB()
   const app = await db.get(DocumentTypes.APP_METADATA)
 
   let componentManifests = await Promise.all(
     app.componentLibraries.map(async library => {
-      let manifest = await getComponentLibraryManifest(appId, library)
+      let manifest = await getComponentLibraryManifest(library)
 
       return {
         manifest,

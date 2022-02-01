@@ -1,6 +1,6 @@
 const { getDB } = require("../db")
 const { SEPARATOR, StaticDatabases, DocumentTypes } = require("../db/constants")
-const { getTenantId, DEFAULT_TENANT_ID, isMultiTenant } = require("./context")
+const { getTenantId, DEFAULT_TENANT_ID, isMultiTenant } = require("../context")
 const env = require("../environment")
 
 const TENANT_DOC = StaticDatabases.PLATFORM_INFO.docs.tenants
@@ -147,4 +147,16 @@ exports.isUserInAppTenant = (appId, user = null) => {
   }
   const tenantId = exports.getTenantIDFromAppID(appId) || DEFAULT_TENANT_ID
   return tenantId === userTenantId
+}
+
+exports.getTenantIds = async () => {
+  const db = getDB(PLATFORM_INFO_DB)
+  let tenants
+  try {
+    tenants = await db.get(TENANT_DOC)
+  } catch (err) {
+    // if theres an error the doc doesn't exist, no tenants exist
+    return []
+  }
+  return (tenants && tenants.tenantIds) || []
 }

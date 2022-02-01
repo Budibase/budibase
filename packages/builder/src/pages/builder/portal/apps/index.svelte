@@ -315,6 +315,14 @@
             }}
             class="template-card"
           >
+            <a
+              href={item.url}
+              target="_blank"
+              class="external-link"
+              on:click|stopPropagation
+            >
+              <Icon name="LinkOut" size="S" />
+            </a>
             <div class="card-body">
               <div style="color: {item.background}" class="iconAlign">
                 <svg
@@ -496,6 +504,7 @@
     border: 1px solid var(--spectrum-global-color-gray-300);
     cursor: pointer;
     display: flex;
+    position: relative;
   }
 
   .template-card:hover {
@@ -506,6 +515,18 @@
     align-items: center;
     padding: 12px;
   }
+
+  .external-link {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    color: var(--spectrum-global-color-gray-300);
+    z-index: 99;
+  }
+  .external-link:hover {
+    color: var(--spectrum-global-color-gray-500);
+  }
+
   .iconAlign {
     padding: 0 0 0 var(--spacing-m);
     display: inline-block;

@@ -3,14 +3,13 @@ threadUtils.threadSetup()
 const ScriptRunner = require("../utilities/scriptRunner")
 const { integrations } = require("../integrations")
 const { processStringSync } = require("@budibase/string-templates")
-const CouchDB = require("../db")
+const { doInAppContext, getAppDB } = require("@budibase/backend-core/context")
 
 const IS_TRIPLE_BRACE = new RegExp(/^{{3}.*}{3}$/)
 const IS_HANDLEBARS = new RegExp(/^{{2}.*}{2}$/)
 
 class QueryRunner {
   constructor(input, flags = { noRecursiveQuery: false }) {
-    this.appId = input.appId
     this.datasource = input.datasource
     this.queryVerb = input.queryVerb
     this.fields = input.fields
@@ -104,12 +103,11 @@ class QueryRunner {
   }
 
   async runAnotherQuery(queryId, parameters) {
-    const db = new CouchDB(this.appId)
+    const db = getAppDB()
     const query = await db.get(queryId)
     const datasource = await db.get(query.datasourceId)
     return new QueryRunner(
       {
-        appId: this.appId,
         datasource,
         queryVerb: query.queryVerb,
         fields: query.fields,
@@ -223,12 +221,14 @@ class QueryRunner {
 }
 
 module.exports = (input, callback) => {
-  const Runner = new QueryRunner(input)
-  Runner.execute()
-    .then(response => {
-      callback(null, response)
-    })
-    .catch(err => {
-      callback(err)
-    })
+  doInAppContext(input.appId, () => {
+    const Runner = new QueryRunner(input)
+    Runner.execute()
+      .then(response => {
+        callback(null, response)
+      })
+      .catch(err => {
+        callback(err)
+      })
+  })
 }

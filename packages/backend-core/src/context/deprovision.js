@@ -1,6 +1,6 @@
 const { getGlobalUserParams, getAllApps } = require("../db/utils")
 const { getDB, getCouch } = require("../db")
-const { getGlobalDB } = require("./tenancy")
+const { getGlobalDB } = require("../tenancy")
 const { StaticDatabases } = require("../db/constants")
 
 const TENANT_DOC = StaticDatabases.PLATFORM_INFO.docs.tenants

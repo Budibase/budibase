@@ -17,6 +17,7 @@
   export let quiet = false
   export let autoWidth = false
   export let sort = false
+  export let tooltip = ""
 
   const dispatch = createEventDispatcher()
   const onChange = e => {
@@ -32,7 +33,7 @@
   }
 </script>
 
-<Field {label} {labelPosition} {error}>
+<Field {label} {labelPosition} {error} {tooltip}>
   <Select
     {quiet}
     {error}
