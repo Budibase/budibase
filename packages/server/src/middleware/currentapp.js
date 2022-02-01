@@ -11,9 +11,9 @@ const { generateUserMetadataID, isDevAppID } = require("../db/utils")
 const { dbExists } = require("@budibase/backend-core/db")
 const { isUserInAppTenant } = require("@budibase/backend-core/tenancy")
 const { getCachedSelf } = require("../utilities/global")
-const CouchDB = require("../db")
 const env = require("../environment")
 const { isWebhookEndpoint } = require("./utils")
+const { doInAppContext } = require("@budibase/backend-core/context")
 
 module.exports = async (ctx, next) => {
   // try to get the appID from the request
@@ -31,7 +31,7 @@ module.exports = async (ctx, next) => {
   // check the app exists referenced in cookie
   if (appCookie) {
     const appId = appCookie.appId
-    const exists = await dbExists(CouchDB, appId)
+    const exists = await dbExists(appId)
     if (!exists) {
       clearCookie(ctx, Cookies.CurrentApp)
       return next()
@@ -41,13 +41,15 @@ module.exports = async (ctx, next) => {
   }
 
   // deny access to application preview
-  if (
-    isDevAppID(requestAppId) &&
-    !isWebhookEndpoint(ctx) &&
-    (!ctx.user || !ctx.user.builder || !ctx.user.builder.global)
-  ) {
-    clearCookie(ctx, Cookies.CurrentApp)
-    return ctx.redirect("/")
+  if (!env.isTest()) {
+    if (
+      isDevAppID(requestAppId) &&
+      !isWebhookEndpoint(ctx) &&
+      (!ctx.user || !ctx.user.builder || !ctx.user.builder.global)
+    ) {
+      clearCookie(ctx, Cookies.CurrentApp)
+      return ctx.redirect("/")
+    }
   }
 
   let appId,
@@ -68,44 +70,46 @@ module.exports = async (ctx, next) => {
     return next()
   }
 
-  let noCookieSet = false
-  // if the user not in the right tenant then make sure they have no permissions
-  // need to judge this only based on the request app ID,
-  if (
-    env.MULTI_TENANCY &&
-    ctx.user &&
-    requestAppId &&
-    !isUserInAppTenant(requestAppId)
-  ) {
-    // don't error, simply remove the users rights (they are a public user)
-    delete ctx.user.builder
-    delete ctx.user.admin
-    delete ctx.user.roles
-    roleId = BUILTIN_ROLE_IDS.PUBLIC
-    noCookieSet = true
-  }
-
-  ctx.appId = appId
-  if (roleId) {
-    ctx.roleId = roleId
-    const userId = ctx.user ? generateUserMetadataID(ctx.user._id) : null
-    ctx.user = {
-      ...ctx.user,
-      // override userID with metadata one
-      _id: userId,
-      userId,
-      roleId,
-      role: await getRole(appId, roleId),
+  return doInAppContext(appId, async () => {
+    let noCookieSet = false
+    // if the user not in the right tenant then make sure they have no permissions
+    // need to judge this only based on the request app ID,
+    if (
+      env.MULTI_TENANCY &&
+      ctx.user &&
+      requestAppId &&
+      !isUserInAppTenant(requestAppId)
+    ) {
+      // don't error, simply remove the users rights (they are a public user)
+      delete ctx.user.builder
+      delete ctx.user.admin
+      delete ctx.user.roles
+      roleId = BUILTIN_ROLE_IDS.PUBLIC
+      noCookieSet = true
     }
-  }
-  if (
-    (requestAppId !== appId ||
-      appCookie == null ||
-      appCookie.appId !== requestAppId) &&
-    !noCookieSet
-  ) {
-    setCookie(ctx, { appId }, Cookies.CurrentApp)
-  }
 
-  return next()
+    ctx.appId = appId
+    if (roleId) {
+      ctx.roleId = roleId
+      const userId = ctx.user ? generateUserMetadataID(ctx.user._id) : null
+      ctx.user = {
+        ...ctx.user,
+        // override userID with metadata one
+        _id: userId,
+        userId,
+        roleId,
+        role: await getRole(roleId),
+      }
+    }
+    if (
+      (requestAppId !== appId ||
+        appCookie == null ||
+        appCookie.appId !== requestAppId) &&
+      !noCookieSet
+    ) {
+      setCookie(ctx, { appId }, Cookies.CurrentApp)
+    }
+
+    return next()
+  })
 }

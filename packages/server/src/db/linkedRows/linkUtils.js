@@ -1,8 +1,8 @@
-const CouchDB = require("../index")
 const Sentry = require("@sentry/node")
 const { ViewNames, getQueryIndex } = require("../utils")
 const { FieldTypes } = require("../../constants")
 const { createLinkView } = require("../views/staticViews")
+const { getAppDB } = require("@budibase/backend-core/context")
 
 /**
  * Only needed so that boolean parameters are being used for includeDocs
@@ -17,7 +17,6 @@ exports.createLinkView = createLinkView
 
 /**
  * Gets the linking documents, not the linked documents themselves.
- * @param {string} args.appId The instance in which we are searching for linked rows.
  * @param {string} args.tableId The table which we are searching for linked rows against.
  * @param {string|null} args.fieldName The name of column/field which is being altered, only looking for
  * linking documents that are related to it. If this is not specified then the table level will be assumed.
@@ -30,8 +29,8 @@ exports.createLinkView = createLinkView
  * (if any).
  */
 exports.getLinkDocuments = async function (args) {
-  const { appId, tableId, rowId, includeDocs } = args
-  const db = new CouchDB(appId)
+  const { tableId, rowId, includeDocs } = args
+  const db = getAppDB()
   let params
   if (rowId != null) {
     params = { key: [tableId, rowId] }
@@ -68,7 +67,7 @@ exports.getLinkDocuments = async function (args) {
   } catch (err) {
     // check if the view doesn't exist, it should for all new instances
     if (err != null && err.name === "not_found") {
-      await exports.createLinkView(appId)
+      await exports.createLinkView()
       return exports.getLinkDocuments(arguments[0])
     } else {
       /* istanbul ignore next */
@@ -89,7 +88,8 @@ exports.getLinkedTableIDs = table => {
     .map(column => column.tableId)
 }
 
-exports.getLinkedTable = async (db, id, tables) => {
+exports.getLinkedTable = async (id, tables) => {
+  const db = getAppDB()
   let linkedTable = tables.find(table => table._id === id)
   if (linkedTable) {
     return linkedTable

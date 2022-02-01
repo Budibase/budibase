@@ -56,7 +56,7 @@
 
   onMount(async () => {
     try {
-      await auth.checkAuth()
+      await auth.getSelf()
       await admin.init()
 
       // Set init info if present

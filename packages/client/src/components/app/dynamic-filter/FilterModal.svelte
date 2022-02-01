@@ -16,10 +16,14 @@
   export let schemaFields
   export let filters = []
 
-  const BannedTypes = ["link", "attachment", "formula", "json"]
+  const BannedTypes = ["link", "attachment", "json"]
 
   $: fieldOptions = (schemaFields ?? [])
-    .filter(field => !BannedTypes.includes(field.type))
+    .filter(
+      field =>
+        !BannedTypes.includes(field.type) ||
+        (field.type === "formula" && field.formulaType === "static")
+    )
     .map(field => field.name)
 
   const addFilter = () => {
@@ -112,7 +116,7 @@
               on:change={e => onOperatorChange(filter, e.detail)}
               placeholder={null}
             />
-            {#if ["string", "longform", "number"].includes(filter.type)}
+            {#if ["string", "longform", "number", "formula"].includes(filter.type)}
               <Input disabled={filter.noValue} bind:value={filter.value} />
             {:else if ["options", "array"].includes(filter.type)}
               <Combobox
