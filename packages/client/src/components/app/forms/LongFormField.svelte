@@ -1,7 +1,6 @@
 <script>
-  import { CoreTextArea } from "@budibase/bbui"
+  import { CoreRichTextField } from "@budibase/bbui"
   import Field from "./Field.svelte"
-  import { getContext } from "svelte"
 
   export let field
   export let label
@@ -12,9 +11,6 @@
 
   let fieldState
   let fieldApi
-
-  const component = getContext("component")
-  $: height = $component.styles?.normal?.height || "124px"
 </script>
 
 <Field
@@ -28,26 +24,13 @@
   bind:fieldApi
 >
   {#if fieldState}
-    <div style="--height: {height};">
-      <CoreTextArea
-        value={fieldState.value}
-        on:change={e => fieldApi.setValue(e.detail)}
-        disabled={fieldState.disabled}
-        error={fieldState.error}
-        id={fieldState.fieldId}
-        {placeholder}
-      />
-    </div>
+    <CoreRichTextField
+      value={fieldState.value}
+      on:change={e => fieldApi.setValue(e.detail)}
+      disabled={fieldState.disabled}
+      error={fieldState.error}
+      id={fieldState.fieldId}
+      {placeholder}
+    />
   {/if}
 </Field>
-
-<style>
-  :global(.spectrum-Form-itemField .spectrum-Textfield--multiline) {
-    min-height: calc(var(--height) - 24px);
-  }
-  :global(.spectrum-Form--labelsAbove
-      .spectrum-Form-itemField
-      .spectrum-Textfield--multiline) {
-    min-height: calc(var(--height) - 24px);
-  }
-</style>

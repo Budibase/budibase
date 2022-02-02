@@ -2340,7 +2340,6 @@
     "icon": "TextParagraph",
     "styles": ["size"],
     "editable": true,
-    "illegalChildren": ["section"],
     "settings": [
       {
         "type": "field/longform",
@@ -3383,6 +3382,19 @@
         "type": "validation/attachment",
         "label": "Validation",
         "key": "validation"
+      }
+    ]
+  },
+  "markdownviewer": {
+    "name": "Markdown Viewer",
+    "icon": "TaskList",
+    "styles": ["size"],
+    "editable": true,
+    "settings": [
+      {
+        "type": "text",
+        "label": "Value",
+        "key": "value"
       }
     ]
   }
