@@ -225,8 +225,8 @@ class InternalBuilder {
           "left"
         )
       } else {
-        // @ts-ignore
         query = query
+          // @ts-ignore
           .join(
             throughTable,
             function () {
