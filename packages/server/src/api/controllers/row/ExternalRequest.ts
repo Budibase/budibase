@@ -184,7 +184,7 @@ module External {
     thisRow._id = generateIdForRow(row, table)
     thisRow.tableId = table._id
     thisRow._rev = "rev"
-    return thisRow
+    return processFormulas(table, thisRow)
   }
 
   function fixArrayTypes(row: Row, table: Table) {
