@@ -3,6 +3,7 @@
   import { onMount } from "svelte"
 
   export let value
+  export let height
 
   let mde
 
@@ -15,7 +16,7 @@
   })
 </script>
 
-<div class="markdown-viewer">
+<div class="markdown-viewer" style="height:{height};">
   <SpectrumMDE
     bind:mde
     scroll={false}
@@ -27,6 +28,9 @@
 </div>
 
 <style>
+  .markdown-viewer {
+    overflow: auto;
+  }
   /* Remove padding, borders and background colors */
   .markdown-viewer :global(.editor-preview) {
     padding: 0;

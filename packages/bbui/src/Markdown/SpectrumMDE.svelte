@@ -4,9 +4,10 @@
   import { onMount } from "svelte"
 
   export let height = "300px"
-  export let scroll = false
+  export let scroll = true
   export let easyMDEOptions = null
-  export let mde
+  export let mde = null
+  export let id = null
 
   let element
 
@@ -19,6 +20,7 @@
       unorderedListStyle: "-",
       maxHeight: scroll ? height : undefined,
       minHeight: scroll ? undefined : height,
+      hideIcons: ["fullscreen", "side-by-side"],
       ...easyMDEOptions,
     })
 
@@ -29,21 +31,21 @@
   })
 </script>
 
-<textarea bind:this={element} />
+<textarea {id} bind:this={element} />
 
 <style>
   /* Toolbar container */
   :global(.EasyMDEContainer .editor-toolbar) {
-    background: var(--background);
-    border-top: var(--border-light);
-    border-left: var(--border-light);
-    border-right: var(--border-light);
+    background: var(--spectrum-global-color-gray-50);
+    border-top: 1px solid var(--spectrum-alias-border-color);
+    border-left: 1px solid var(--spectrum-alias-border-color);
+    border-right: 1px solid var(--spectrum-alias-border-color);
   }
   /* Main code mirror instance and default color */
   :global(.EasyMDEContainer .CodeMirror) {
-    border: var(--border-light);
-    background: var(--background);
-    color: var(--ink);
+    border: 1px solid var(--spectrum-alias-border-color);
+    background: var(--spectrum-global-color-gray-50);
+    color: var(--spectrum-alias-text-color);
   }
   /* Toolbar button active state */
   :global(.EasyMDEContainer .editor-toolbar button.active) {
@@ -65,7 +67,7 @@
   }
   /* Cursor */
   :global(.EasyMDEContainer .CodeMirror-cursor) {
-    border-color: var(--ink);
+    border-color: var(--spectrum-alias-text-color);
   }
   /* Text selections */
   :global(.EasyMDEContainer .CodeMirror-selectedtext) {
@@ -85,10 +87,10 @@
   }
   /* Full preview window */
   :global(.EasyMDEContainer .editor-preview) {
-    background: var(--background);
+    background: var(--spectrum-global-color-gray-50);
   }
   /* Side by side preview window */
   :global(.EasyMDEContainer .editor-preview) {
-    border: var(--border-light);
+    border: 1px solid var(--spectrum-alias-border-color);
   }
 </style>

@@ -6,6 +6,7 @@
   export let disabled = false
   export let error = null
   export let height = null
+  export let id = null
 </script>
 
-<MarkdownEditor {value} {placeholder} {height} on:change />
+<MarkdownEditor {value} {placeholder} {height} {id} on:change />
