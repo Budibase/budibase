@@ -10,6 +10,7 @@
   export let disabled = false
   export let error = null
   export let height = null
+  export let id = null
 
   const dispatch = createEventDispatcher()
   const onChange = e => {
@@ -25,6 +26,7 @@
     {value}
     {placeholder}
     {height}
+    {id}
     on:change={onChange}
   />
 </Field>
