@@ -327,8 +327,12 @@ module External {
      * This iterates through the returned rows and works out what elements of the rows
      * actually match up to another row (based on primary keys) - this is pretty specific
      * to SQL and the way that SQL relationships are returned based on joins.
+     * This is complicated, but the idea is that when a SQL query returns all the relations
+     * will be separate rows, with all of the data in each row. We have to decipher what comes
+     * from where (which tables) and how to convert that into budibase columns.
      */
     updateRelationshipColumns(
+      table: Table,
       row: Row,
       rows: { [key: string]: Row },
       relationships: RelationshipsJson[]
@@ -337,6 +341,13 @@ module External {
       for (let relationship of relationships) {
         const linkedTable = this.tables[relationship.tableName]
         if (!linkedTable) {
+          continue
+        }
+        const fromColumn = `${table.name}.${relationship.from}`
+        const toColumn = `${linkedTable.name}.${relationship.to}`
+        // this is important when working with multiple relationships
+        // between the same tables, don't want to overlap/multiply the relations
+        if (!relationship.through && row[fromColumn] !== row[toColumn]) {
           continue
         }
         let linked = basicProcessing(row, linkedTable)
@@ -386,6 +397,7 @@ module External {
         // this is a relationship of some sort
         if (finalRows[rowId]) {
           finalRows = this.updateRelationshipColumns(
+            table,
             row,
             finalRows,
             relationships
@@ -399,6 +411,7 @@ module External {
         finalRows[thisRow._id] = thisRow
         // do this at end once its been added to the final rows
         finalRows = this.updateRelationshipColumns(
+          table,
           row,
           finalRows,
           relationships
