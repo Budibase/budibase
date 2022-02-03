@@ -7,6 +7,7 @@
   export let placeholder = null
   export let id = null
   export let fullScreenOffset = 0
+  export let disabled = false
 
   const dispatch = createEventDispatcher()
 
@@ -48,6 +49,7 @@
     {height}
     {id}
     {fullScreenOffset}
+    {disabled}
     easyMDEOptions={{
       initialValue: value,
       placeholder,
