@@ -10,11 +10,30 @@
   export let fullScreenOffset = 0
 </script>
 
-<MarkdownEditor
-  {value}
-  {placeholder}
-  {height}
-  {id}
-  {fullScreenOffset}
-  on:change
-/>
+<div class:error>
+  <MarkdownEditor
+    {value}
+    {placeholder}
+    {height}
+    {id}
+    {fullScreenOffset}
+    on:change
+  />
+</div>
+
+<style>
+  .error :global(.EasyMDEContainer .editor-toolbar) {
+    border-top-color: var(--spectrum-semantic-negative-color-default);
+    border-left-color: var(--spectrum-semantic-negative-color-default);
+    border-right-color: var(--spectrum-semantic-negative-color-default);
+  }
+  .error :global(.EasyMDEContainer .CodeMirror) {
+    border-bottom-color: var(--spectrum-semantic-negative-color-default);
+    border-left-color: var(--spectrum-semantic-negative-color-default);
+    border-right-color: var(--spectrum-semantic-negative-color-default);
+  }
+  .error :global(.EasyMDEContainer .editor-preview-side) {
+    border-bottom-color: var(--spectrum-semantic-negative-color-default);
+    border-right-color: var(--spectrum-semantic-negative-color-default);
+  }
+</style>
