@@ -13,6 +13,7 @@
     start: textarea.selectionStart,
     end: textarea.selectionEnd,
   })
+  export let align = null
 
   let focus = false
   let textarea
@@ -46,6 +47,7 @@
     bind:this={textarea}
     placeholder={placeholder || ""}
     class="spectrum-Textfield-input"
+    style={align ? `text-align: ${align}` : ""}
     {disabled}
     {id}
     on:focus={() => (focus = true)}
