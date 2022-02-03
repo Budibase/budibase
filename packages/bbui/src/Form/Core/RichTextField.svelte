@@ -7,6 +7,14 @@
   export let error = null
   export let height = null
   export let id = null
+  export let fullScreenOffset = 0
 </script>
 
-<MarkdownEditor {value} {placeholder} {height} {id} on:change />
+<MarkdownEditor
+  {value}
+  {placeholder}
+  {height}
+  {id}
+  {fullScreenOffset}
+  on:change
+/>

@@ -14,9 +14,13 @@
   let fieldState
   let fieldApi
 
+  const context = getContext("context")
   const component = getContext("component")
   const newContext = writable($component)
   setContext("component", newContext)
+
+  // Determine the offset needed for full screen mode
+  $: offset = $context.device.mobile ? "61px" : "137px"
 
   // Extract the settings height so we can pass it on to the rich text field.
   // We then wipe the height style so that the field will automatically size
@@ -56,6 +60,7 @@
       id={fieldState.fieldId}
       {placeholder}
       {height}
+      fullScreenOffset={offset}
     />
   {/if}
 </Field>

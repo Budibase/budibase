@@ -6,6 +6,7 @@
   export let height = "300px"
   export let placeholder = null
   export let id = null
+  export let fullScreenOffset = 0
 
   const dispatch = createEventDispatcher()
 
@@ -46,6 +47,7 @@
     scroll={true}
     {height}
     {id}
+    {fullScreenOffset}
     easyMDEOptions={{
       initialValue: value,
       placeholder,

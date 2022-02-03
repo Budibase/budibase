@@ -8,6 +8,7 @@
   export let easyMDEOptions = null
   export let mde = null
   export let id = null
+  export let fullScreenOffset = 0
 
   let element
 
@@ -20,7 +21,7 @@
       unorderedListStyle: "-",
       maxHeight: scroll ? height : undefined,
       minHeight: scroll ? undefined : height,
-      hideIcons: ["fullscreen", "side-by-side"],
+      // hideIcons: ["fullscreen", "side-by-side"],
       ...easyMDEOptions,
     })
 
@@ -31,7 +32,9 @@
   })
 </script>
 
-<textarea {id} bind:this={element} />
+<div style={`--fullscreen-offset:${fullScreenOffset || "0px"}`}>
+  <textarea {id} bind:this={element} />
+</div>
 
 <style>
   /* Toolbar container */
@@ -132,5 +135,15 @@
   }
   :global(.EasyMDEContainer a:hover) {
     color: var(--primaryColorHover);
+  }
+  /* Allow full screen offset */
+  :global(.EasyMDEContainer .editor-toolbar.fullscreen) {
+    top: var(--fullscreen-offset);
+  }
+  :global(.EasyMDEContainer .CodeMirror-fullscreen) {
+    top: calc(50px + var(--fullscreen-offset));
+  }
+  :global(.EasyMDEContainer .editor-preview-side) {
+    top: calc(50px + var(--fullscreen-offset));
   }
 </style>
