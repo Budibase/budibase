@@ -4,12 +4,9 @@ const {
   isValid,
   makePropSafe,
   getManifest,
-<<<<<<< HEAD
   encodeJSBinding,
   doesContainString,
-=======
   disableEscaping,
->>>>>>> e12767fd8... Fix for #4308 - triple brace conversion was not working correctly, wrote this into the string templates instead - also fixing an issue with the RBAC for Rest.
 } = require("../src/index.cjs")
 
 describe("Test that the string processing works correctly", () => {
