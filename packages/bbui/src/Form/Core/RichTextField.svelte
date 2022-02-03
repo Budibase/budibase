@@ -17,6 +17,7 @@
     {height}
     {id}
     {fullScreenOffset}
+    {disabled}
     on:change
   />
 </div>

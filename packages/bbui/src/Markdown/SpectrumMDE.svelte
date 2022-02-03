@@ -9,6 +9,7 @@
   export let mde = null
   export let id = null
   export let fullScreenOffset = 0
+  export let disabled = false
 
   let element
 
@@ -32,11 +33,28 @@
   })
 </script>
 
-<div style={`--fullscreen-offset:${fullScreenOffset || "0px"}`}>
-  <textarea {id} bind:this={element} />
+<div class:disabled style={`--fullscreen-offset:${fullScreenOffset || "0px"}`}>
+  <textarea disabled {id} bind:this={element} />
 </div>
 
 <style>
+  /* Disabled styles */
+  .disabled :global(textarea) {
+    display: none;
+  }
+  .disabled :global(.CodeMirror-cursor) {
+    display: none;
+  }
+  .disabled :global(.EasyMDEContainer) {
+    pointer-events: none;
+  }
+  .disabled :global(.editor-toolbar button i) {
+    color: var(--spectrum-global-color-gray-400);
+  }
+  .disabled :global(.CodeMirror) {
+    color: var(--spectrum-global-color-gray-600);
+  }
+
   /* Toolbar container */
   :global(.EasyMDEContainer .editor-toolbar) {
     background: var(--spectrum-global-color-gray-50);
