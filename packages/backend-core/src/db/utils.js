@@ -222,6 +222,7 @@ exports.getAllDbs = async () => {
 /**
  * Lots of different points in the system need to find the full list of apps, this will
  * enumerate the entire CouchDB cluster and get the list of databases (every app).
+ *
  * @return {Promise<object[]>} returns the app information document stored in each app database.
  */
 exports.getAllApps = async ({ dev, all, idsOnly } = {}) => {
