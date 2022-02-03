@@ -4,8 +4,12 @@ const {
   isValid,
   makePropSafe,
   getManifest,
+<<<<<<< HEAD
   encodeJSBinding,
   doesContainString,
+=======
+  disableEscaping,
+>>>>>>> e12767fd8... Fix for #4308 - triple brace conversion was not working correctly, wrote this into the string templates instead - also fixing an issue with the RBAC for Rest.
 } = require("../src/index.cjs")
 
 describe("Test that the string processing works correctly", () => {
@@ -176,3 +180,22 @@ describe("check does contain string function", () => {
     expect(doesContainString(js, "foo")).toEqual(true)
   })
 })
+
+describe("check that disabling escaping function works", () => {
+  it("should work for a single statement", () => {
+    expect(disableEscaping("{{ name }}")).toEqual("{{{ name }}}")
+  })
+
+  it("should work for two statements", () => {
+    expect(disableEscaping("{{ name }} welcome to {{ platform }}")).toEqual("{{{ name }}} welcome to {{{ platform }}}")
+  })
+
+  it("shouldn't convert triple braces", () => {
+    expect(disableEscaping("{{{ name }}}")).toEqual("{{{ name }}}")
+  })
+
+  it("should work with a combination", () => {
+    expect(disableEscaping("{{ name }} welcome to {{{ platform }}}")).toEqual("{{{ name }}} welcome to {{{ platform }}}")
+  })
+})
+
