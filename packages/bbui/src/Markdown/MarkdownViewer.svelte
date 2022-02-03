@@ -57,7 +57,10 @@
   .markdown-viewer :global(.editor-preview-full) {
     position: relative;
   }
-  /* Remove margin on the final component to fully trim the preview */
+  /* Remove margin on the first and last components to fully trim the preview */
+  .markdown-viewer :global(.editor-preview-full > :first-child) {
+    margin-top: 0;
+  }
   .markdown-viewer :global(.editor-preview-full > :last-child) {
     margin-bottom: 0;
   }
