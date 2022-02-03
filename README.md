@@ -104,12 +104,14 @@ Budibase is made to scale. With Budibase, you can self-host on your own infrastr
 
 ## 🏁 Get started
 
-<img src="https://res.cloudinary.com/daog6scxm/image/upload/v1634808888/logo/deploy_npl9za.png" />
+<a href="https://docs.budibase.com/self-hosting/self-host"><img src="https://res.cloudinary.com/daog6scxm/image/upload/v1634808888/logo/deploy_npl9za.png" /></a>
 
-Deploy Budibase self-Hosted in your existing infrastructure, using Docker, Kubernetes, and Digital Ocean.
+Deploy Budibase self-hosted in your existing infrastructure, using Docker, Kubernetes, and Digital Ocean.
 Or use Budibase Cloud if you don't need to self-host, and would like to get started quickly.
 
-### [Get started with Budibase](https://budibase.com)
+### [Get started with self-hosting Budibase](https://docs.budibase.com/self-hosting/self-host)
+
+### [Get started with Budibase Cloud](https://budibase.com)
 
 
 <br /><br />
