@@ -3393,7 +3393,7 @@
     "settings": [
       {
         "type": "text",
-        "label": "Value",
+        "label": "Markdown",
         "key": "value"
       }
     ]
