@@ -12,6 +12,7 @@
   export let updateOnChange = true
   export let quiet = false
   export let dataCy
+  export let align
 
   const dispatch = createEventDispatcher()
   let focus = false
@@ -92,8 +93,9 @@
     on:input={onInput}
     on:keyup={updateValueOnEnter}
     {type}
-    inputmode={type === "number" ? "decimal" : "text"}
     class="spectrum-Textfield-input"
+    style={align ? `text-align: ${align};` : ""}
+    inputmode={type === "number" ? "decimal" : "text"}
   />
 </div>
 
