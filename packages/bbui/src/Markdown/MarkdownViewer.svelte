@@ -64,4 +64,8 @@
   .markdown-viewer :global(.editor-preview-full > :last-child) {
     margin-bottom: 0;
   }
+  /* Code blocks in preview */
+  .markdown-viewer :global(.editor-preview-full pre) {
+    background: var(--spectrum-global-color-gray-200);
+  }
 </style>
