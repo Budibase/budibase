@@ -1,6 +1,6 @@
 <script>
   import SpectrumMDE from "./SpectrumMDE.svelte"
-  import { createEventDispatcher, onMount } from "svelte"
+  import { createEventDispatcher } from "svelte"
 
   export let value = null
   export let height = "300px"
@@ -15,6 +15,7 @@
   // Ensure the value is updated if the value prop changes outside the editor's
   // control
   $: checkValue(value)
+  $: mde?.codemirror.on("change", debouncedUpdate)
 
   const checkValue = val => {
     if (mde && val !== latestValue) {
@@ -37,19 +38,17 @@
 
   // Debounce the update function to avoid spamming it constantly
   const debouncedUpdate = debounce(update, 250)
-
-  onMount(() => {
-    mde.codemirror.on("change", debouncedUpdate)
-  })
 </script>
 
-<SpectrumMDE
-  bind:mde
-  scroll={true}
-  {height}
-  {id}
-  easyMDEOptions={{
-    initialValue: value,
-    placeholder,
-  }}
-/>
+{#key height}
+  <SpectrumMDE
+    bind:mde
+    scroll={true}
+    {height}
+    {id}
+    easyMDEOptions={{
+      initialValue: value,
+      placeholder,
+    }}
+  />
+{/key}

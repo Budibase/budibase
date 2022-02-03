@@ -1,4 +1,6 @@
 <script>
+  import { getContext, setContext } from "svelte"
+  import { writable } from "svelte/store"
   import { CoreRichTextField } from "@budibase/bbui"
   import Field from "./Field.svelte"
 
@@ -11,6 +13,28 @@
 
   let fieldState
   let fieldApi
+
+  const component = getContext("component")
+  const newContext = writable($component)
+  setContext("component", newContext)
+
+  // Extract the settings height so we can pass it on to the rich text field.
+  // We then wipe the height style so that the field will automatically size
+  // itself based on the height of the rich text field.
+  let height
+  $: {
+    height = $component.styles?.normal?.height
+    newContext.set({
+      ...$component,
+      styles: {
+        ...$component.styles,
+        normal: {
+          ...$component.styles.normal,
+          height: undefined,
+        },
+      },
+    })
+  }
 </script>
 
 <Field
@@ -31,6 +55,7 @@
       error={fieldState.error}
       id={fieldState.fieldId}
       {placeholder}
+      {height}
     />
   {/if}
 </Field>

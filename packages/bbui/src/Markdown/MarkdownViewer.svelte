@@ -1,6 +1,5 @@
 <script>
   import SpectrumMDE from "./SpectrumMDE.svelte"
-  import { onMount } from "svelte"
 
   export let value
   export let height
@@ -9,11 +8,11 @@
 
   // Keep the value up to date
   $: mde && mde.value(value || "")
-
-  onMount(() => {
-    // Turn on preview mode
-    mde.togglePreview()
-  })
+  $: {
+    if (mde && !mde.isPreviewActive()) {
+      mde.togglePreview()
+    }
+  }
 </script>
 
 <div class="markdown-viewer" style="height:{height};">
