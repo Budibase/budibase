@@ -98,22 +98,39 @@
     background: var(--spectrum-global-color-gray-100);
   }
   /* Code blocks in preview */
-  :global(.EasyMDEContainer .editor-preview pre) {
+  :global(.EasyMDEContainer pre) {
     background: var(--spectrum-global-color-gray-100);
     padding: 4px;
     border-radius: 4px;
   }
-  :global(.EasyMDEContainer .editor-preview code) {
+  :global(.EasyMDEContainer code) {
     color: #e83e8c;
   }
-  :global(.EasyMDEContainer .editor-preview pre code) {
+  :global(.EasyMDEContainer pre code) {
     color: var(--spectrum-alias-text-color);
   }
   /* Block quotes */
-  :global(.EasyMDEContainer .editor-preview blockquote) {
+  :global(.EasyMDEContainer blockquote) {
     border-left: 4px solid var(--spectrum-global-color-gray-400);
     color: var(--spectrum-global-color-gray-700);
     margin-left: 0;
     padding-left: 20px;
+  }
+  /* HR's */
+  :global(.EasyMDEContainer hr) {
+    background-color: var(--spectrum-global-color-gray-300);
+    border: none;
+    height: 2px;
+  }
+  /*  Tables */
+  :global(.EasyMDEContainer td, .EasyMDEContainer th) {
+    border-color: var(--spectrum-alias-border-color) !important;
+  }
+  /*  Links */
+  :global(.EasyMDEContainer a) {
+    color: var(--primaryColor);
+  }
+  :global(.EasyMDEContainer a:hover) {
+    color: var(--primaryColorHover);
   }
 </style>
