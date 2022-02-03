@@ -71,7 +71,7 @@
   }
   /* Text selections */
   :global(.EasyMDEContainer .CodeMirror-selectedtext) {
-    background: var(--spectrum-global-color-gray-400);
+    background: var(--spectrum-global-color-gray-400) !important;
   }
   /* Background of lines containing selected text */
   :global(.EasyMDEContainer .CodeMirror-selected) {
@@ -92,5 +92,28 @@
   /* Side by side preview window */
   :global(.EasyMDEContainer .editor-preview) {
     border: 1px solid var(--spectrum-alias-border-color);
+  }
+  /* Code blocks in editor */
+  :global(.EasyMDEContainer .cm-s-easymde .cm-comment) {
+    background: var(--spectrum-global-color-gray-100);
+  }
+  /* Code blocks in preview */
+  :global(.EasyMDEContainer .editor-preview pre) {
+    background: var(--spectrum-global-color-gray-100);
+    padding: 4px;
+    border-radius: 4px;
+  }
+  :global(.EasyMDEContainer .editor-preview code) {
+    color: #e83e8c;
+  }
+  :global(.EasyMDEContainer .editor-preview pre code) {
+    color: var(--spectrum-alias-text-color);
+  }
+  /* Block quotes */
+  :global(.EasyMDEContainer .editor-preview blockquote) {
+    border-left: 4px solid var(--spectrum-global-color-gray-400);
+    color: var(--spectrum-global-color-gray-700);
+    margin-left: 0;
+    padding-left: 20px;
   }
 </style>
