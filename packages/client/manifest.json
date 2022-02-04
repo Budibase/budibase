@@ -2538,6 +2538,11 @@
         "key": "placeholder"
       },
       {
+        "type": "text",
+        "label": "Default value",
+        "key": "defaultValue"
+      },
+      {
         "type": "boolean",
         "label": "Autocomplete",
         "key": "autocomplete",
