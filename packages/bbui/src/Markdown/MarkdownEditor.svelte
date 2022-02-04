@@ -8,6 +8,7 @@
   export let id = null
   export let fullScreenOffset = 0
   export let disabled = false
+  export let easyMDEOptions
 
   const dispatch = createEventDispatcher()
 
@@ -53,6 +54,7 @@
     easyMDEOptions={{
       initialValue: value,
       placeholder,
+      ...easyMDEOptions,
     }}
   />
 {/key}
