@@ -30,6 +30,7 @@
 
   async function getPermissions(queryToFetch) {
     if (fetched?._id === queryToFetch?._id) {
+      loaded = true
       return
     }
     fetched = queryToFetch

@@ -22,6 +22,10 @@
 
   let originalFromName = fromRelationship.name,
     originalToName = toRelationship.name
+  let fromTable, toTable, through, linkTable, tableOptions
+  let isManyToMany, isManyToOne, relationshipTypes
+  let errors, valid
+  let currentTables = {}
 
   if (fromRelationship && !fromRelationship.relationshipType) {
     fromRelationship.relationshipType = RelationshipTypes.MANY_TO_ONE
@@ -41,61 +45,52 @@
 
   const touched = writable({})
 
-  function checkForErrors(
-    fromTable,
-    toTable,
-    throughTable,
-    fromRelate,
-    toRelate
-  ) {
+  function checkForErrors(fromRelate, toRelate) {
     const isMany =
       fromRelate.relationshipType === RelationshipTypes.MANY_TO_MANY
     const tableNotSet = "Please specify a table"
-    const errors = {}
+    const errObj = {}
     if ($touched.from && !fromTable) {
-      errors.from = tableNotSet
+      errObj.from = tableNotSet
     }
     if ($touched.to && !toTable) {
-      errors.to = tableNotSet
+      errObj.to = tableNotSet
     }
     if ($touched.through && isMany && !fromRelate.through) {
-      errors.through = tableNotSet
+      errObj.through = tableNotSet
     }
     if ($touched.foreign && !isMany && !fromRelate.fieldName) {
-      errors.foreign = "Please pick the foreign key"
+      errObj.foreign = "Please pick the foreign key"
     }
     const colNotSet = "Please specify a column name"
     if ($touched.fromCol && !fromRelate.name) {
-      errors.fromCol = colNotSet
+      errObj.fromCol = colNotSet
     }
     if ($touched.toCol && !toRelate.name) {
-      errors.toCol = colNotSet
+      errObj.toCol = colNotSet
     }
     if ($touched.primary && !fromPrimary) {
-      errors.primary = "Please pick the primary key"
+      errObj.primary = "Please pick the primary key"
     }
     // currently don't support relationships back onto the table itself, needs to relate out
     const tableError = "From/to/through tables must be different"
-    if (fromTable && (fromTable === toTable || fromTable === throughTable)) {
-      errors.from = tableError
+    if (fromTable && (fromTable === toTable || fromTable === through)) {
+      errObj.from = tableError
     }
-    if (toTable && (toTable === fromTable || toTable === throughTable)) {
-      errors.to = tableError
+    if (toTable && (toTable === fromTable || toTable === through)) {
+      errObj.to = tableError
     }
-    if (
-      throughTable &&
-      (throughTable === fromTable || throughTable === toTable)
-    ) {
-      errors.through = tableError
+    if (through && (through === fromTable || through === toTable)) {
+      errObj.through = tableError
     }
     const colError = "Column name cannot be an existing column"
     if (inSchema(fromTable, fromRelate.name, originalFromName)) {
-      errors.fromCol = colError
+      errObj.fromCol = colError
     }
     if (inSchema(toTable, toRelate.name, originalToName)) {
-      errors.toCol = colError
+      errObj.toCol = colError
     }
-    return errors
+    errors = errObj
   }
 
   let fromPrimary
@@ -115,13 +110,7 @@
   $: fromTable = plusTables.find(table => table._id === toRelationship?.tableId)
   $: toTable = plusTables.find(table => table._id === fromRelationship?.tableId)
   $: through = plusTables.find(table => table._id === fromRelationship?.through)
-  $: errors = checkForErrors(
-    fromTable,
-    toTable,
-    through,
-    fromRelationship,
-    toRelationship
-  )
+  $: checkForErrors(fromRelationship, toRelationship)
   $: valid =
     Object.keys(errors).length === 0 && Object.keys($touched).length !== 0
   $: linkTable = through || toTable
@@ -239,19 +228,19 @@
   }
 
   function tableChanged(fromTbl, toTbl) {
+    if (
+      (currentTables?.from?._id === fromTbl?._id &&
+        currentTables?.to?._id === toTbl?._id) ||
+      originalFromName ||
+      originalToName
+    ) {
+      return
+    }
     fromRelationship.name = toTbl?.name || ""
     errors.fromCol = ""
     toRelationship.name = fromTbl?.name || ""
     errors.toCol = ""
-    if (toTbl || fromTbl) {
-      checkForErrors(
-        fromTable,
-        toTable,
-        through,
-        fromRelationship,
-        toRelationship
-      )
-    }
+    currentTables = { from: fromTbl, to: toTbl }
   }
 </script>
 
