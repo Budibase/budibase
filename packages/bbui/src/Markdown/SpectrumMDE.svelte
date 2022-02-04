@@ -22,7 +22,6 @@
       unorderedListStyle: "-",
       maxHeight: scroll ? height : undefined,
       minHeight: scroll ? undefined : height,
-      // hideIcons: ["fullscreen", "side-by-side"],
       ...easyMDEOptions,
     })
 

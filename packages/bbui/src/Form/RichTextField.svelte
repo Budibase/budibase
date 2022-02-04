@@ -12,6 +12,7 @@
   export let height = null
   export let id = null
   export let fullScreenOffset = 0
+  export let easyMDEOptions = null
 
   const dispatch = createEventDispatcher()
   const onChange = e => {
@@ -29,6 +30,7 @@
     {height}
     {id}
     {fullScreenOffset}
+    {easyMDEOptions}
     on:change={onChange}
   />
 </Field>

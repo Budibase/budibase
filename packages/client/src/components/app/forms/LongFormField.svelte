@@ -61,6 +61,9 @@
       {placeholder}
       {height}
       fullScreenOffset={offset}
+      easyMDEOptions={{
+        hideIcons: $context.device.mobile ? ["side-by-side", "guide"] : [],
+      }}
     />
   {/if}
 </Field>

@@ -8,6 +8,7 @@
   export let height = null
   export let id = null
   export let fullScreenOffset = 0
+  export let easyMDEOptions = null
 </script>
 
 <div class:error>
@@ -18,6 +19,7 @@
     {id}
     {fullScreenOffset}
     {disabled}
+    {easyMDEOptions}
     on:change
   />
 </div>
