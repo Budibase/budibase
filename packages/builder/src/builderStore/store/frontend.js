@@ -65,6 +65,9 @@ export const getFrontendStore = () => {
   const store = writable({ ...INITIAL_FRONTEND_STATE })
 
   store.actions = {
+    reset: () => {
+      store.set({ ...INITIAL_FRONTEND_STATE })
+    },
     initialise: async pkg => {
       const { layouts, screens, application, clientLibPath } = pkg
       const components = await fetchComponentLibDefinitions(application.appId)
