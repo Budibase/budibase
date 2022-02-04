@@ -166,15 +166,13 @@ class InternalBuilder {
 
   addSorting(query: KnexQuery, json: QueryJson): KnexQuery {
     let { sort, paginate } = json
-    if (!sort) {
-      return query
-    }
     const table = json.meta?.table
-    for (let [key, value] of Object.entries(sort)) {
-      const direction = value === SortDirection.ASCENDING ? "asc" : "desc"
-      query = query.orderBy(`${table?.name}.${key}`, direction)
-    }
-    if (this.client === SqlClients.MS_SQL && !sort && paginate?.limit) {
+    if (sort) {
+      for (let [key, value] of Object.entries(sort)) {
+        const direction = value === SortDirection.ASCENDING ? "asc" : "desc"
+        query = query.orderBy(`${table?.name}.${key}`, direction)
+      }
+    } else if (this.client === SqlClients.MS_SQL && paginate?.limit) {
       // @ts-ignore
       query = query.orderBy(`${table?.name}.${table?.primary[0]}`)
     }
