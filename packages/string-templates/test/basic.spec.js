@@ -4,6 +4,7 @@ const {
   isValid,
   makePropSafe,
   getManifest,
+  disableEscaping,
 } = require("../src/index.cjs")
 
 describe("Test that the string processing works correctly", () => {
@@ -146,3 +147,22 @@ describe("check manifest", () => {
     )
   })
 })
+
+describe("check that disabling escaping function works", () => {
+  it("should work for a single statement", () => {
+    expect(disableEscaping("{{ name }}")).toEqual("{{{ name }}}")
+  })
+
+  it("should work for two statements", () => {
+    expect(disableEscaping("{{ name }} welcome to {{ platform }}")).toEqual("{{{ name }}} welcome to {{{ platform }}}")
+  })
+
+  it("shouldn't convert triple braces", () => {
+    expect(disableEscaping("{{{ name }}}")).toEqual("{{{ name }}}")
+  })
+
+  it("should work with a combination", () => {
+    expect(disableEscaping("{{ name }} welcome to {{{ platform }}}")).toEqual("{{{ name }}} welcome to {{{ platform }}}")
+  })
+})
+
