@@ -16,10 +16,19 @@ ENV BUDIBASE_ENVIRONMENT=PRODUCTION
 # copy files and install dependencies
 COPY . ./
 RUN yarn
+
+RUN apt-get install unzip
+
+# add the pro package if PRO is set
+ARG PRO
+ENV PRO=$PRO
+RUN yarn install:pro
+
+# build
 RUN yarn build
 
 # Install client for oracle datasource
-RUN apt-get install unzip libaio1
+RUN apt-get install libaio1
 RUN /bin/bash -e scripts/integrations/oracle/instantclient/linux/x86-64/install.sh 
 
 EXPOSE 4001

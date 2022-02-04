@@ -1,9 +1,11 @@
-name: Budibase Release
+name: Budibase Release (Pro)
+
+#  Temporary pipeline - eventualy this will be merged with the regular one
 
 on:
   push:
     branches:
-      - master
+      - pro-master
     paths:
       - ".aws/**"
       - ".github/**"
@@ -36,23 +38,6 @@ jobs:
       - run: yarn build
       - run: yarn test
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: eu-west-1
-
-      - name: Publish budibase packages to NPM
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          # setup the username and email. I tend to use 'GitHub Actions Bot' with no email by default
-          git config user.name "Budibase Release Bot"
-          git config user.email "<>"
-          echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} >> .npmrc
-          yarn release
-
       - name: "Get Previous tag"
         id: previoustag
         uses: "WyriHaximus/github-action-get-previous-tag@v1"
@@ -60,8 +45,8 @@ jobs:
       - name: Build/release Docker images
         run: |
           docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
-          yarn build:docker
-          yarn release:docker ${BUDIBASE_RELEASE_VERSION}
+          yarn build:docker:pro
+          yarn release:docker:pro ${BUDIBASE_RELEASE_VERSION}
         env:
           DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
