@@ -1,5 +1,5 @@
 const handlebars = require("handlebars")
-const { registerAll } = require("./helpers/index")
+const { registerAll, registerMinimum } = require("./helpers/index")
 const processors = require("./processors")
 const { atob, btoa } = require("./utilities")
 const manifest = require("../manifest.json")
@@ -8,6 +8,7 @@ const { FIND_HBS_REGEX, FIND_DOUBLE_HBS_REGEX } = require("./utilities")
 const hbsInstance = handlebars.create()
 registerAll(hbsInstance)
 const hbsInstanceNoHelpers = handlebars.create()
+registerMinimum(hbsInstanceNoHelpers)
 const defaultOpts = { noHelpers: false, noEscaping: false }
 
 /**
@@ -105,9 +106,7 @@ module.exports.processStringSync = (string, context, opts) => {
     throw "Cannot process non-string types."
   }
   try {
-    // finalising adds a helper, can't do this with no helpers
-    const shouldFinalise = !opts.noHelpers
-    string = processors.preprocess(string, shouldFinalise)
+    string = processors.preprocess(string, opts)
     // this does not throw an error when template can't be fulfilled, have to try correct beforehand
     const instance = opts.noHelpers ? hbsInstanceNoHelpers : hbsInstance
     const templateString =
@@ -119,8 +118,10 @@ module.exports.processStringSync = (string, context, opts) => {
     return processors.postprocess(
       template({
         now: new Date(now).toISOString(),
+        __opts: opts,
         ...context,
-      })
+      }),
+      { escapeNewlines: opts ? opts.escapeNewlines : false }
     )
   } catch (err) {
     return input

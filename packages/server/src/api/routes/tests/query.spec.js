@@ -230,7 +230,6 @@ describe("/queries", () => {
   })
 
   describe("variables", () => {
-
     async function preview(datasource, fields) {
       return config.previewQuery(request, config, datasource, fields)
     }

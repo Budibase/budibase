@@ -59,3 +59,33 @@ describe("attempt some complex problems", () => {
     expect(output).toBe("nulltest")
   })
 })
+
+describe("check behaviour with newlines", () => {
+  const context = {
+    binding: `Hello
+      there`
+  }
+  it("should escape new line to \\n with double brace", async () => {
+    const hbs = JSON.stringify({
+      body: "{{ binding }}"
+    })
+    const output = await processString(hbs, context, { escapeNewlines: true })
+    expect(JSON.parse(output).body).toBe(context.binding)
+  })
+
+  it("should work the same with triple brace", async () => {
+    const hbs = JSON.stringify({
+      body: "{{{ binding }}}"
+    })
+    const output = await processString(hbs, context, { escapeNewlines: true })
+    expect(JSON.parse(output).body).toBe(context.binding)
+  })
+
+  it("should still work with helpers disabled", async () => {
+    const hbs = JSON.stringify({
+      body: "{{ binding }}"
+    })
+    const output = await processString(hbs, context, { escapeNewlines: true, noHelpers: true })
+    expect(JSON.parse(output).body).toBe(context.binding)
+  })
+})
