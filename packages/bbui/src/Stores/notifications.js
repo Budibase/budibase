@@ -20,15 +20,18 @@ export const createNotificationStore = () => {
     setTimeout(() => (block = false), timeout)
   }
 
-  const send = (message, type = "default", icon = "", timeout = true) => {
+  const send = (message, type = "default", icon = "", autoDismiss = true) => {
     if (block) {
       return
     }
     let _id = id()
     _notifications.update(state => {
-      return [...state, { id: _id, type, message, icon, dismissable: !timeout }]
+      return [
+        ...state,
+        { id: _id, type, message, icon, dismissable: !autoDismiss },
+      ]
     })
-    if (timeout) {
+    if (autoDismiss) {
       const timeoutId = setTimeout(() => {
         dismissNotification(_id)
       }, NOTIFICATION_TIMEOUT)
