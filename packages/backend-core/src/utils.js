@@ -256,7 +256,7 @@ exports.saveUser = async (
 exports.platformLogout = async ({ ctx, userId, keepActiveSession }) => {
   if (!ctx) throw new Error("Koa context must be supplied to logout.")
 
-  const currentSession = this.getCookie(ctx, Cookies.Auth)
+  const currentSession = exports.getCookie(ctx, Cookies.Auth)
   let sessions = await getUserSessions(userId)
 
   if (keepActiveSession) {
@@ -265,8 +265,8 @@ exports.platformLogout = async ({ ctx, userId, keepActiveSession }) => {
     )
   } else {
     // clear cookies
-    this.clearCookie(ctx, Cookies.Auth)
-    this.clearCookie(ctx, Cookies.CurrentApp)
+    exports.clearCookie(ctx, Cookies.Auth)
+    exports.clearCookie(ctx, Cookies.CurrentApp)
   }
 
   await invalidateSessions(
