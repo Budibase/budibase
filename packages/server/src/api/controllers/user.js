@@ -14,7 +14,7 @@ const {
   dbExists,
 } = require("@budibase/backend-core/db")
 const { UserStatus } = require("@budibase/backend-core/constants")
-const { getAppDB } = require("@budibase/backend-core/context")
+const { getAppDB, doInAppContext } = require("@budibase/backend-core/context")
 
 async function rawMetadata() {
   const db = getAppDB()
@@ -105,34 +105,36 @@ exports.syncUser = async function (ctx) {
       if (!(await dbExists(appId))) {
         continue
       }
-      const db = getAppDB()
-      const metadataId = generateUserMetadataID(userId)
-      let metadata
-      try {
-        metadata = await db.get(metadataId)
-      } catch (err) {
-        if (deleting) {
-          continue
-        }
-        metadata = {
-          tableId: InternalTables.USER_METADATA,
-        }
-      }
-      // assign the roleId for the metadata doc
-      if (roleId) {
-        metadata.roleId = roleId
-      }
-      let combined = !deleting
-        ? combineMetadataAndUser(user, metadata)
-        : {
-            ...metadata,
-            status: UserStatus.INACTIVE,
-            metadata: BUILTIN_ROLE_IDS.PUBLIC,
+      await doInAppContext(appId, async () => {
+        const db = getAppDB()
+        const metadataId = generateUserMetadataID(userId)
+        let metadata
+        try {
+          metadata = await db.get(metadataId)
+        } catch (err) {
+          if (deleting) {
+            return
           }
-      // if its null then there was no updates required
-      if (combined) {
-        await db.put(combined)
-      }
+          metadata = {
+            tableId: InternalTables.USER_METADATA,
+          }
+        }
+        // assign the roleId for the metadata doc
+        if (roleId) {
+          metadata.roleId = roleId
+        }
+        let combined = !deleting
+          ? combineMetadataAndUser(user, metadata)
+          : {
+              ...metadata,
+              status: UserStatus.INACTIVE,
+              metadata: BUILTIN_ROLE_IDS.PUBLIC,
+            }
+        // if its null then there was no updates required
+        if (combined) {
+          await db.put(combined)
+        }
+      })
     }
   }
   ctx.body = {
