@@ -3,12 +3,16 @@ const { registerAll } = require("./helpers/index")
 const processors = require("./processors")
 const { atob, btoa } = require("./utilities")
 const manifest = require("../manifest.json")
-const { FIND_HBS_REGEX } = require("./utilities")
+const { FIND_HBS_REGEX, FIND_DOUBLE_HBS_REGEX } = require("./utilities")
 
 const hbsInstance = handlebars.create()
 registerAll(hbsInstance)
 const hbsInstanceNoHelpers = handlebars.create()
-const defaultOpts = { noHelpers: false, cacheTemplates: false }
+const defaultOpts = {
+  noHelpers: false,
+  cacheTemplates: false,
+  noEscaping: false,
+}
 
 /**
  * Utility function to check if the object is valid.
@@ -26,21 +30,28 @@ function testObject(object) {
  * Creates a HBS template function for a given string, and optionally caches it.
  */
 let templateCache = {}
-function createTemplate(string, noHelpers, cache) {
+function createTemplate(string, opts) {
+  opts = { ...defaultOpts, ...opts }
+
   // Finalising adds a helper, can't do this with no helpers
-  const shouldFinalise = !noHelpers
-  const key = `${string}${shouldFinalise}`
+  const shouldFinalise = !opts.noHelpers
+  const key = `${string}${shouldFinalise}${opts.noEscaping}`
 
   // Reuse the cached template is possible
-  if (cache && templateCache[key]) {
+  if (opts.cacheTemplates && templateCache[key]) {
     return templateCache[key]
   }
 
   string = processors.preprocess(string, shouldFinalise)
 
+  // Optionally disable built in HBS escaping
+  if (opts.noEscaping) {
+    string = exports.disableEscaping(string)
+  }
+
   // This does not throw an error when template can't be fulfilled,
   // have to try correct beforehand
-  const instance = noHelpers ? hbsInstanceNoHelpers : hbsInstance
+  const instance = opts.noHelpers ? hbsInstanceNoHelpers : hbsInstance
   const template = instance.compile(string, {
     strict: false,
   })
@@ -53,7 +64,7 @@ function createTemplate(string, noHelpers, cache) {
  * @param {object|array} object The input structure which is to be recursed, it is important to note that
  * if the structure contains any cycles then this will fail.
  * @param {object} context The context that handlebars should fill data from.
- * @param {object|null} opts optional - specify some options for processing.
+ * @param {object|undefined} opts optional - specify some options for processing.
  * @returns {Promise<object|array>} The structure input, as fully updated as possible.
  */
 module.exports.processObject = async (object, context, opts) => {
@@ -84,7 +95,7 @@ module.exports.processObject = async (object, context, opts) => {
  * then nothing will occur.
  * @param {string} string The template string which is the filled from the context object.
  * @param {object} context An object of information which will be used to enrich the string.
- * @param {object|null} opts optional - specify some options for processing.
+ * @param {object|undefined} opts optional - specify some options for processing.
  * @returns {Promise<string>} The enriched string, all templates should have been replaced if they can be.
  */
 module.exports.processString = async (string, context, opts) => {
@@ -98,7 +109,7 @@ module.exports.processString = async (string, context, opts) => {
  * @param {object|array} object The input structure which is to be recursed, it is important to note that
  * if the structure contains any cycles then this will fail.
  * @param {object} context The context that handlebars should fill data from.
- * @param {object|null} opts optional - specify some options for processing.
+ * @param {object|undefined} opts optional - specify some options for processing.
  * @returns {object|array} The structure input, as fully updated as possible.
  */
 module.exports.processObjectSync = (object, context, opts) => {
@@ -119,19 +130,17 @@ module.exports.processObjectSync = (object, context, opts) => {
  * then nothing will occur. This is a pure sync call and therefore does not have the full functionality of the async call.
  * @param {string} string The template string which is the filled from the context object.
  * @param {object} context An object of information which will be used to enrich the string.
- * @param {object|null} opts optional - specify some options for processing.
+ * @param {object|undefined} opts optional - specify some options for processing.
  * @returns {string} The enriched string, all templates should have been replaced if they can be.
  */
 module.exports.processStringSync = (string, context, opts) => {
-  opts = { ...defaultOpts, ...opts }
-
-  // take a copy of input in case of error
+  // Take a copy of input in case of error
   const input = string
   if (typeof string !== "string") {
     throw "Cannot process non-string types."
   }
   try {
-    const template = createTemplate(string, opts.noHelpers, opts.cacheTemplates)
+    const template = createTemplate(string, opts)
     const now = Math.floor(Date.now() / 1000) * 1000
     return processors.postprocess(
       template({
@@ -142,6 +151,24 @@ module.exports.processStringSync = (string, context, opts) => {
   } catch (err) {
     return input
   }
+}
+
+/**
+ * By default with expressions like {{ name }} handlebars will escape various
+ * characters, which can be problematic. To fix this we use the syntax {{{ name }}},
+ * this function will find any double braces and switch to triple.
+ * @param string the string to have double HBS statements converted to triple.
+ */
+module.exports.disableEscaping = string => {
+  let regexp = new RegExp(FIND_DOUBLE_HBS_REGEX)
+  const matches = string.match(regexp)
+  if (matches == null) {
+    return string
+  }
+  for (let match of matches) {
+    string = string.replace(match, `{${match}}`)
+  }
+  return string
 }
 
 /**
@@ -160,7 +187,6 @@ module.exports.makePropSafe = property => {
  * @returns {boolean} Whether or not the input string is valid.
  */
 module.exports.isValid = (string, opts) => {
-  opts = { ...defaultOpts, ...opts }
   const validCases = [
     "string",
     "number",
@@ -174,7 +200,7 @@ module.exports.isValid = (string, opts) => {
   // don't really need a real context to check if its valid
   const context = {}
   try {
-    const template = createTemplate(string, opts.noHelpers, opts.cache)
+    const template = createTemplate(string, opts)
     template(context)
     return true
   } catch (err) {

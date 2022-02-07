@@ -5,9 +5,6 @@ const { integrations } = require("../integrations")
 const { processStringSync } = require("@budibase/string-templates")
 const { doInAppContext, getAppDB } = require("@budibase/backend-core/context")
 
-const IS_TRIPLE_BRACE = new RegExp(/^{{3}.*}{3}$/)
-const IS_HANDLEBARS = new RegExp(/^{{2}.*}{2}$/)
-
 class QueryRunner {
   constructor(input, flags = { noRecursiveQuery: false }) {
     this.datasource = input.datasource
@@ -188,12 +185,8 @@ class QueryRunner {
         enrichedQuery[key] = this.enrichQueryFields(fields[key], parameters)
       } else if (typeof fields[key] === "string") {
         // enrich string value as normal
-        let value = fields[key]
-        // add triple brace to avoid escaping e.g. '=' in cookie header
-        if (IS_HANDLEBARS.test(value) && !IS_TRIPLE_BRACE.test(value)) {
-          value = `{${value}}`
-        }
-        enrichedQuery[key] = processStringSync(value, parameters, {
+        enrichedQuery[key] = processStringSync(fields[key], parameters, {
+          noEscaping: true,
           noHelpers: true,
         })
       } else {
