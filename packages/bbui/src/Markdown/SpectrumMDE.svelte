@@ -3,7 +3,7 @@
   import "easymde/dist/easymde.min.css"
   import { onMount } from "svelte"
 
-  export let height = "300px"
+  export let height = null
   export let scroll = true
   export let easyMDEOptions = null
   export let mde = null
@@ -14,7 +14,7 @@
   let element
 
   onMount(() => {
-    height = height || "300px"
+    height = height || "200px"
     mde = new EasyMDE({
       element,
       spellChecker: false,
