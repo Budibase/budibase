@@ -7,6 +7,7 @@
     Multiselect,
     Label,
     RichTextField,
+    TextArea,
   } from "@budibase/bbui"
   import Dropzone from "components/common/Dropzone.svelte"
   import { capitalise } from "helpers"
@@ -43,7 +44,11 @@
 {:else if type === "link"}
   <LinkedRowSelector bind:linkedRows={value} schema={meta} />
 {:else if type === "longform"}
-  <RichTextField {label} height="200px" bind:value />
+  {#if meta.useRichText}
+    <RichTextField {label} height="150px" bind:value />
+  {:else}
+    <TextArea {label} height="150px" bind:value />
+  {/if}
 {:else if type === "json"}
   <Label>{label}</Label>
   <Editor
