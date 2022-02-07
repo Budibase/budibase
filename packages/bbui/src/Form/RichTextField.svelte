@@ -11,7 +11,7 @@
   export let error = null
   export let height = null
   export let id = null
-  export let fullScreenOffset = 0
+  export let fullScreenOffset = null
   export let easyMDEOptions = null
 
   const dispatch = createEventDispatcher()

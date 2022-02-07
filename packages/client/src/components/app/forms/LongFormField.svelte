@@ -18,6 +18,7 @@
 
   const context = getContext("context")
   const component = getContext("component")
+  const layout = getContext("layout")
   const newContext = writable($component)
   setContext("component", newContext)
 
@@ -25,9 +26,6 @@
   // We treat undefined as "auto".
   $: useRichText =
     format === "rich" || (format !== "plain" && fieldSchema?.useRichText)
-
-  // Determine the offset needed for full screen mode
-  $: offset = $context.device.mobile ? "61px" : "137px"
 
   // Extract the settings height so we can pass it on to the rich text field.
   // We then wipe the height style so that the field will automatically size
@@ -69,7 +67,10 @@
         id={fieldState.fieldId}
         {placeholder}
         {height}
-        fullScreenOffset={offset}
+        fullScreenOffset={{
+          x: $layout.screenXOffset,
+          y: $layout.screenYOffset,
+        }}
         easyMDEOptions={{
           hideIcons: $context.device.mobile ? ["side-by-side", "guide"] : [],
         }}
