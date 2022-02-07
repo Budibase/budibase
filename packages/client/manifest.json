@@ -2365,7 +2365,7 @@
     ]
   },
   "longformfield": {
-    "name": "Rich Text",
+    "name": "Long Form Field",
     "icon": "TextParagraph",
     "styles": ["size"],
     "editable": true,
