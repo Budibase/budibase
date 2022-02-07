@@ -16,7 +16,7 @@ const { clientLibraryPath } = require("../../../utilities")
 const { upload } = require("../../../utilities/fileSystem")
 const { attachmentsRelativeURL } = require("../../../utilities")
 const { DocumentTypes } = require("../../../db/utils")
-const { getAppDB } = require("@budibase/backend-core/context")
+const { getAppDB, updateAppId } = require("@budibase/backend-core/context")
 const AWS = require("aws-sdk")
 const AWS_REGION = env.AWS_REGION ? env.AWS_REGION : "eu-west-1"
 
@@ -49,11 +49,9 @@ async function getAppIdFromUrl(ctx) {
     a => a.url && a.url.toLowerCase() === possibleAppUrl
   )[0]
 
-  if (app && app.appId) {
-    return app.appId
-  } else {
-    return ctx.params.appId
-  }
+  const appId = app && app.appId ? app.appId : ctx.params.appId
+  updateAppId(appId)
+  return appId
 }
 
 exports.serveBuilder = async function (ctx) {
