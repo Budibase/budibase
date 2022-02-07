@@ -2392,6 +2392,27 @@
         "key": "defaultValue"
       },
       {
+        "type": "select",
+        "label": "Formatting",
+        "key": "format",
+        "placeholder": null,
+        "options": [
+          {
+            "label": "Auto",
+            "value": "auto"
+          },
+          {
+            "label": "Plain text",
+            "value": "plain"
+          },
+          {
+            "label": "Rich text (markdown)",
+            "value": "rich"
+          }
+        ],
+        "defaultValue": "auto"
+      },
+      {
         "type": "boolean",
         "label": "Disabled",
         "key": "disabled",
