@@ -169,6 +169,11 @@ export function makeDatasourceFormComponents(datasource) {
           optionsSource: "schema",
         })
       }
+      if (fieldType === "longform") {
+        component.customProps({
+          format: "auto",
+        })
+      }
       if (fieldType === "array") {
         component.customProps({
           placeholder: "Choose an option",
