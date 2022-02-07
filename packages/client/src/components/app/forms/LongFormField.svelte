@@ -1,7 +1,7 @@
 <script>
   import { getContext, setContext } from "svelte"
   import { writable } from "svelte/store"
-  import { CoreRichTextField } from "@budibase/bbui"
+  import { CoreRichTextField, CoreTextArea } from "@budibase/bbui"
   import Field from "./Field.svelte"
 
   export let field
@@ -10,14 +10,21 @@
   export let disabled = false
   export let validation
   export let defaultValue = ""
+  export let format = "auto"
 
   let fieldState
   let fieldApi
+  let fieldSchema
 
   const context = getContext("context")
   const component = getContext("component")
   const newContext = writable($component)
   setContext("component", newContext)
+
+  // Determine whether we should use a rich or plain text component.
+  // We treat undefined as "auto".
+  $: useRichText =
+    format === "rich" || (format !== "plain" && fieldSchema?.useRichText)
 
   // Determine the offset needed for full screen mode
   $: offset = $context.device.mobile ? "61px" : "137px"
@@ -27,7 +34,7 @@
   // itself based on the height of the rich text field.
   let height
   $: {
-    height = $component.styles?.normal?.height
+    height = $component.styles?.normal?.height || "150px"
     newContext.set({
       ...$component,
       styles: {
@@ -50,20 +57,33 @@
   type="longform"
   bind:fieldState
   bind:fieldApi
+  bind:fieldSchema
 >
   {#if fieldState}
-    <CoreRichTextField
-      value={fieldState.value}
-      on:change={e => fieldApi.setValue(e.detail)}
-      disabled={fieldState.disabled}
-      error={fieldState.error}
-      id={fieldState.fieldId}
-      {placeholder}
-      {height}
-      fullScreenOffset={offset}
-      easyMDEOptions={{
-        hideIcons: $context.device.mobile ? ["side-by-side", "guide"] : [],
-      }}
-    />
+    {#if useRichText}
+      <CoreRichTextField
+        value={fieldState.value}
+        on:change={e => fieldApi.setValue(e.detail)}
+        disabled={fieldState.disabled}
+        error={fieldState.error}
+        id={fieldState.fieldId}
+        {placeholder}
+        {height}
+        fullScreenOffset={offset}
+        easyMDEOptions={{
+          hideIcons: $context.device.mobile ? ["side-by-side", "guide"] : [],
+        }}
+      />
+    {:else}
+      <CoreTextArea
+        value={fieldState.value}
+        on:change={e => fieldApi.setValue(e.detail)}
+        disabled={fieldState.disabled}
+        error={fieldState.error}
+        id={fieldState.fieldId}
+        {placeholder}
+        minHeight={height}
+      />
+    {/if}
   {/if}
 </Field>
