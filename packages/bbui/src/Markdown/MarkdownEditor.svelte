@@ -3,7 +3,7 @@
   import { createEventDispatcher } from "svelte"
 
   export let value = null
-  export let height = "300px"
+  export let height = null
   export let placeholder = null
   export let id = null
   export let fullScreenOffset = 0
