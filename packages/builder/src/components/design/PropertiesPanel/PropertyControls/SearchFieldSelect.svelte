@@ -25,7 +25,7 @@
       return base
     }
     const currentTable = $tables.list.find(table => table._id === ds.tableId)
-    return getFields(base, { allowLinks: currentTable.sql }).map(
+    return getFields(base, { allowLinks: currentTable?.sql }).map(
       field => field.name
     )
   }
