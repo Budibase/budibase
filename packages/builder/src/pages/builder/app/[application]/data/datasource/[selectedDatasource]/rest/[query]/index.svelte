@@ -326,7 +326,6 @@
               ? "Saving a query before sending will mean no schema is generated"
               : null}>Save</Button
           >
-          {#if !query.schema}{/if}
         </div>
         <Tabs selected="Bindings" quiet noPadding noHorizPadding onTop>
           <Tab title="Bindings">
