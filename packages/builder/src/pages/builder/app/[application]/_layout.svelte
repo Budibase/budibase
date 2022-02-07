@@ -12,7 +12,7 @@
   import Logo from "assets/bb-emblem.svg"
   import { capitalise } from "helpers"
   import UpgradeModal from "components/upgrade/UpgradeModal.svelte"
-  import { onMount } from "svelte"
+  import { onMount, onDestroy } from "svelte"
 
   export let application
 
@@ -72,6 +72,10 @@
       }
       hasSynced = true
     }
+  })
+
+  onDestroy(() => {
+    store.actions.reset()
   })
 </script>
 

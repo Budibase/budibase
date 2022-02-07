@@ -12,6 +12,7 @@
   export let disabled = false
   export let validation
   export let autocomplete = false
+  export let defaultValue
 
   let fieldState
   let fieldApi
@@ -27,6 +28,7 @@
   $: singleValue = flatten(fieldState?.value)?.[0]
   $: multiValue = flatten(fieldState?.value) ?? []
   $: component = multiselect ? CoreMultiselect : CoreSelect
+  $: expandedDefaultValue = expand(defaultValue)
 
   const fetchTable = async id => {
     if (id) {
@@ -66,6 +68,16 @@
   const multiHandler = e => {
     fieldApi.setValue(e.detail)
   }
+
+  const expand = values => {
+    if (!values) {
+      return []
+    }
+    if (Array.isArray(values)) {
+      return values
+    }
+    return values.split(",").map(value => value.trim())
+  }
 </script>
 
 <Field
@@ -73,11 +85,11 @@
   {field}
   {disabled}
   {validation}
+  defaultValue={expandedDefaultValue}
   type={FieldTypes.LINK}
   bind:fieldState
   bind:fieldApi
   bind:fieldSchema
-  defaultValue={[]}
 >
   {#if fieldState}
     <svelte:component

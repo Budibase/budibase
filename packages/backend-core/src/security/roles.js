@@ -146,8 +146,9 @@ exports.getRole = async roleId => {
  * Simple function to get all the roles based on the top level user role ID.
  */
 async function getAllUserRoles(userRoleId) {
-  if (!userRoleId) {
-    return [BUILTIN_IDS.BASIC]
+  // admins have access to all roles
+  if (userRoleId === BUILTIN_IDS.ADMIN) {
+    return exports.getAllRoles()
   }
   let currentRole = await exports.getRole(userRoleId)
   let roles = currentRole ? [currentRole] : []
