@@ -20,20 +20,26 @@ export const createNotificationStore = () => {
     setTimeout(() => (block = false), timeout)
   }
 
-  const send = (message, type = "default", icon = "") => {
+  const send = (message, type = "default", icon = "", timeout = true) => {
     if (block) {
       return
     }
     let _id = id()
     _notifications.update(state => {
-      return [...state, { id: _id, type, message, icon }]
+      return [...state, { id: _id, type, message, icon, dismissable: !timeout }]
     })
-    const timeoutId = setTimeout(() => {
-      _notifications.update(state => {
-        return state.filter(({ id }) => id !== _id)
-      })
-    }, NOTIFICATION_TIMEOUT)
-    timeoutIds.add(timeoutId)
+    if (timeout) {
+      const timeoutId = setTimeout(() => {
+        dismissNotification(_id)
+      }, NOTIFICATION_TIMEOUT)
+      timeoutIds.add(timeoutId)
+    }
+  }
+
+  const dismissNotification = id => {
+    _notifications.update(state => {
+      return state.filter(n => n.id !== id)
+    })
   }
 
   const { subscribe } = _notifications
@@ -42,10 +48,11 @@ export const createNotificationStore = () => {
     subscribe,
     send,
     info: msg => send(msg, "info", "Info"),
-    error: msg => send(msg, "error", "Alert"),
+    error: msg => send(msg, "error", "Alert", false),
     warning: msg => send(msg, "warning", "Alert"),
     success: msg => send(msg, "success", "CheckmarkCircle"),
     blockNotifications,
+    dismiss: dismissNotification,
   }
 }
 
