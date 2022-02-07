@@ -8,7 +8,7 @@
   export let easyMDEOptions = null
   export let mde = null
   export let id = null
-  export let fullScreenOffset = 0
+  export let fullScreenOffset = null
   export let disabled = false
 
   let element
@@ -30,9 +30,18 @@
       mde.toTextArea()
     }
   })
+
+  $: styleString = getStyleString(fullScreenOffset)
+
+  const getStyleString = offset => {
+    let string = ""
+    string += `--fullscreen-offset-x:${offset?.x || "0px"};`
+    string += `--fullscreen-offset-y:${offset?.y || "0px"};`
+    return string
+  }
 </script>
 
-<div class:disabled style={`--fullscreen-offset:${fullScreenOffset || "0px"}`}>
+<div class:disabled style={styleString}>
   <textarea disabled {id} bind:this={element} />
 </div>
 
@@ -155,12 +164,21 @@
   }
   /* Allow full screen offset */
   :global(.EasyMDEContainer .editor-toolbar.fullscreen) {
-    top: var(--fullscreen-offset);
+    left: var(--fullscreen-offset-x);
+    top: var(--fullscreen-offset-y);
   }
   :global(.EasyMDEContainer .CodeMirror-fullscreen) {
-    top: calc(50px + var(--fullscreen-offset));
+    left: var(--fullscreen-offset-x);
+    top: calc(50px + var(--fullscreen-offset-y));
   }
+
+  :global(.EasyMDEContainer .CodeMirror-fullscreen.CodeMirror-sided) {
+    width: calc((100% - var(--fullscreen-offset-x)) / 2) !important;
+  }
+
   :global(.EasyMDEContainer .editor-preview-side) {
-    top: calc(50px + var(--fullscreen-offset));
+    left: calc(50% + (var(--fullscreen-offset-x) / 2));
+    top: calc(50px + var(--fullscreen-offset-y));
+    width: calc((100% - var(--fullscreen-offset-x)) / 2) !important;
   }
 </style>
