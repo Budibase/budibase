@@ -367,7 +367,7 @@
 
   {#if canBeSearched && !external}
     <div>
-      <Label grey small>Search Indexes</Label>
+      <Label>Search Indexes</Label>
       <Toggle
         value={indexes[0] === field.name}
         disabled={indexes[1] === field.name}
@@ -394,6 +394,19 @@
       label="Options (one per line)"
       bind:values={field.constraints.inclusion}
     />
+  {:else if field.type === "longform"}
+    <div>
+      <Label
+        size="M"
+        tooltip="Rich text includes support for images, links, tables, lists and more"
+      >
+        Formatting
+      </Label>
+      <Toggle
+        bind:value={field.useRichText}
+        text="Enable rich text support (markdown)"
+      />
+    </div>
   {:else if field.type === "array"}
     <ValuesList
       label="Options (one per line)"

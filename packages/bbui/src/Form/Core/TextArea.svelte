@@ -22,11 +22,23 @@
     dispatch("change", event.target.value)
     focus = false
   }
+
+  const getStyleString = (attribute, value) => {
+    if (!attribute || value == null) {
+      return ""
+    }
+    if (isNaN(value)) {
+      return `${attribute}:${value};`
+    }
+    return `${attribute}:${value}px;`
+  }
+
+  $: heightString = getStyleString("height", height)
+  $: minHeightString = getStyleString("min-height", minHeight)
 </script>
 
 <div
-  style={(height ? `height: ${height}px;` : "") +
-    (minHeight ? `min-height: ${minHeight}px` : "")}
+  style={`${heightString}${minHeightString}`}
   class="spectrum-Textfield spectrum-Textfield--multiline"
   class:is-invalid={!!error}
   class:is-disabled={disabled}

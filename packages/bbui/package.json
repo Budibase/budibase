@@ -79,6 +79,7 @@
     "@spectrum-css/underlay": "^2.0.9",
     "@spectrum-css/vars": "^3.0.1",
     "dayjs": "^1.10.4",
+    "easymde": "^2.16.1",
     "svelte-flatpickr": "^3.2.3",
     "svelte-portal": "^1.0.0"
   },
