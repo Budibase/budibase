@@ -2454,6 +2454,12 @@
         "defaultValue": true
       },
       {
+        "type": "boolean",
+        "label": "Time Only",
+        "key": "timeOnly",
+        "defaultValue": false
+      },
+      {
         "type": "text",
         "label": "Default value",
         "key": "defaultValue"
