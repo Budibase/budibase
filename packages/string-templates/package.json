@@ -15,7 +15,8 @@
   },
   "files": [
     "dist",
-    "src"
+    "src",
+    "manifest.json"
   ],
   "scripts": {
     "build": "tsc && rollup -c",
