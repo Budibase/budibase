@@ -51,11 +51,15 @@
     if (type === "number") {
       return Number(value)
     }
-    if (type === "options" || type === "link") {
+    if (type === "options") {
       return [value]
     }
     if (type === "array") {
       return value.split(",")
+    }
+
+    if (type === "link") {
+      return [value]
     }
 
     return value
@@ -84,7 +88,7 @@
       {#if !schema.autocolumn}
         {#if schema.type !== "attachment"}
           {#if $automationStore.selectedAutomation.automation.testData}
-            {#if $automationStore.selectedAutomation.automation.rowFieldControl}
+            {#if $automationStore.selectedAutomation.automation.rowControl}
               <RowSelectorTypes
                 {field}
                 {schema}
@@ -103,7 +107,7 @@
                 {bindings}
               />
             {/if}
-          {:else if $automationStore.selectedAutomation.automation.rowFieldControl}
+          {:else if $automationStore.selectedAutomation.automation.rowControl}
             <RowSelectorTypes {field} {schema} {bindings} {value} {onChange} />
           {:else}
             <DrawerBindableInput

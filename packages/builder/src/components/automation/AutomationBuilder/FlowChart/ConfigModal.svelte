@@ -3,7 +3,7 @@
 
   import { ModalContent, Toggle } from "@budibase/bbui"
 
-  $: rowControl = $automationStore.selectedAutomation.automation.rowFieldControl
+  $: rowControl = $automationStore.selectedAutomation.automation.rowControl
   async function toggleFieldControl(evt) {
     await automationStore.actions.toggleFieldControl(evt.detail)
     await automationStore.actions.save(
