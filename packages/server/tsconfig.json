@@ -9,7 +9,8 @@
     "noImplicitAny": true,
     "esModuleInterop": true,
     "resolveJsonModule": true,
-    "incremental": true
+    "incremental": true,
+    "types": [ "node" ],
   },
   "include": [
     "./src/**/*",
