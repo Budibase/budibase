@@ -59,7 +59,9 @@
   $: schemaReadOnly = !responseSuccess
   $: variablesReadOnly = !responseSuccess
   $: showVariablesTab = shouldShowVariables(dynamicVariables, variablesReadOnly)
-  $: hasSchema = !!query?.schema
+  $: hasSchema =
+    Object.keys(schema || {}).length !== 0 ||
+    Object.keys(query?.schema || {}).length !== 0
 
   function getSelectedQuery() {
     return cloneDeep(
@@ -318,10 +320,8 @@
           <Button primary disabled={!url} on:click={runQuery}>Send</Button>
           <Button
             disabled={!query.name}
-            cta={hasSchema}
-            warning={!hasSchema}
+            cta
             on:click={saveQuery}
-            icon={!hasSchema && query.name ? "Alert" : null}
             tooltip={!hasSchema
               ? "Saving a query before sending will mean no schema is generated"
               : null}>Save</Button

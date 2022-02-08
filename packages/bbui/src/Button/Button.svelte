@@ -45,6 +45,18 @@
     {#if $$slots}
       <span class="spectrum-Button-label"><slot /></span>
     {/if}
+    {#if !disabled && tooltip}
+      <div class="tooltip-icon">
+        <svg
+          class="spectrum-Icon spectrum-Icon--size{size.toUpperCase()}"
+          focusable="false"
+          aria-hidden="true"
+          aria-label="Info"
+        >
+          <use xlink:href="#spectrum-icon-18-InfoOutline" />
+        </svg>
+      </div>
+    {/if}
   </button>
   {#if showTooltip && tooltip}
     <div class="position">
@@ -83,5 +95,9 @@
     position: relative;
     width: 0;
     height: 0;
+  }
+  .tooltip-icon {
+    padding-left: var(--spacing-m);
+    line-height: 0;
   }
 </style>
