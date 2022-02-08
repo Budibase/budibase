@@ -20,6 +20,6 @@
   <Toggle
     bind:value={rowControl}
     on:change={toggleFieldControl}
-    text="Fine Grained Row Control"
+    text="Row Control"
   />
 </ModalContent>
