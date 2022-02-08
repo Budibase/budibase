@@ -73,16 +73,14 @@ exports.adminUser = async ctx => {
   if (!env.SELF_HOSTED) {
     // could be a scenario where it exists, make sure its clean
     try {
-      const usageQuota = await db.get(
-        StaticDatabases.PLATFORM_INFO.docs.usageQuota
-      )
+      const usageQuota = await db.get(StaticDatabases.GLOBAL.docs.usageQuota)
       if (usageQuota) {
         await db.remove(usageQuota._id, usageQuota._rev)
       }
     } catch (err) {
       // don't worry about errors
     }
-    await db.post(generateNewUsageQuotaDoc())
+    await db.put(generateNewUsageQuotaDoc())
   }
 
   if (response.rows.some(row => row.doc.admin)) {
@@ -174,6 +172,7 @@ exports.getSelf = async ctx => {
   ctx.body.account = ctx.user.account
   ctx.body.budibaseAccess = ctx.user.budibaseAccess
   ctx.body.accountPortalAccess = ctx.user.accountPortalAccess
+  ctx.body.csrfToken = ctx.user.csrfToken
 }
 
 exports.updateSelf = async ctx => {
@@ -192,6 +191,8 @@ exports.updateSelf = async ctx => {
   // don't allow sending up an ID/Rev, always use the existing one
   delete ctx.request.body._id
   delete ctx.request.body._rev
+  // don't allow setting the csrf token
+  delete ctx.request.body.csrfToken
   const response = await db.put({
     ...user,
     ...ctx.request.body,

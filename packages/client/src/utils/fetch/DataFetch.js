@@ -67,7 +67,6 @@ export default class DataFetch {
     this.getPage = this.getPage.bind(this)
     this.getInitialData = this.getInitialData.bind(this)
     this.determineFeatureFlags = this.determineFeatureFlags.bind(this)
-    this.enrichSchema = this.enrichSchema.bind(this)
     this.refresh = this.refresh.bind(this)
     this.update = this.update.bind(this)
     this.hasNextPage = this.hasNextPage.bind(this)
@@ -123,7 +122,7 @@ export default class DataFetch {
 
     // Fetch and enrich schema
     let schema = this.constructor.getSchema(datasource, definition)
-    schema = this.enrichSchema(schema)
+    schema = DataFetch.enrichSchema(schema)
     if (!schema) {
       return
     }
@@ -242,7 +241,7 @@ export default class DataFetch {
    * @param schema the datasource schema
    * @return {object} the enriched datasource schema
    */
-  enrichSchema(schema) {
+  static enrichSchema(schema) {
     if (schema == null) {
       return null
     }

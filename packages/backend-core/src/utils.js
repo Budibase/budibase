@@ -20,9 +20,6 @@ const { hash } = require("./hashing")
 const userCache = require("./cache/user")
 const env = require("./environment")
 const { getUserSessions, invalidateSessions } = require("./security/sessions")
-const { migrateIfRequired } = require("./migrations")
-const { USER_EMAIL_VIEW_CASING } = require("./migrations").MIGRATIONS
-const { GLOBAL_DB } = require("./migrations").MIGRATION_DBS
 
 const APP_PREFIX = DocumentTypes.APP + SEPARATOR
 
@@ -144,11 +141,6 @@ exports.getGlobalUserByEmail = async email => {
   }
   const db = getGlobalDB()
 
-  await migrateIfRequired(GLOBAL_DB, USER_EMAIL_VIEW_CASING, async () => {
-    // re-create the view with latest changes
-    await createUserEmailView(db)
-  })
-
   try {
     let users = (
       await db.query(`database/${ViewNames.USER_BY_EMAIL}`, {
@@ -264,7 +256,7 @@ exports.saveUser = async (
 exports.platformLogout = async ({ ctx, userId, keepActiveSession }) => {
   if (!ctx) throw new Error("Koa context must be supplied to logout.")
 
-  const currentSession = this.getCookie(ctx, Cookies.Auth)
+  const currentSession = exports.getCookie(ctx, Cookies.Auth)
   let sessions = await getUserSessions(userId)
 
   if (keepActiveSession) {
@@ -273,8 +265,8 @@ exports.platformLogout = async ({ ctx, userId, keepActiveSession }) => {
     )
   } else {
     // clear cookies
-    this.clearCookie(ctx, Cookies.Auth)
-    this.clearCookie(ctx, Cookies.CurrentApp)
+    exports.clearCookie(ctx, Cookies.Auth)
+    exports.clearCookie(ctx, Cookies.CurrentApp)
   }
 
   await invalidateSessions(

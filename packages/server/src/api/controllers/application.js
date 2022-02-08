@@ -1,4 +1,3 @@
-const CouchDB = require("../../db")
 const env = require("../../environment")
 const packageJson = require("../../../package.json")
 const {
@@ -29,14 +28,11 @@ const { processObject } = require("@budibase/string-templates")
 const {
   getAllApps,
   isDevAppID,
-  getDeployedAppID,
+  getProdAppID,
   Replication,
 } = require("@budibase/backend-core/db")
 const { USERS_TABLE_SCHEMA } = require("../../constants")
-const {
-  getDeployedApps,
-  removeAppFromUserRoles,
-} = require("../../utilities/workerRequests")
+const { removeAppFromUserRoles } = require("../../utilities/workerRequests")
 const { clientLibraryPath, stringToReadStream } = require("../../utilities")
 const { getAllLocks } = require("../../utilities/redis")
 const {
@@ -48,11 +44,17 @@ const { getTenantId, isMultiTenant } = require("@budibase/backend-core/tenancy")
 const { syncGlobalUsers } = require("./user")
 const { app: appCache } = require("@budibase/backend-core/cache")
 const { cleanupAutomations } = require("../../automations/utils")
+const {
+  getAppDB,
+  getProdAppDB,
+  updateAppId,
+} = require("@budibase/backend-core/context")
 
 const URL_REGEX_SLASH = /\/|\\/g
 
 // utility function, need to do away with this
-async function getLayouts(db) {
+async function getLayouts() {
+  const db = getAppDB()
   return (
     await db.allDocs(
       getLayoutParams(null, {
@@ -62,7 +64,8 @@ async function getLayouts(db) {
   ).rows.map(row => row.doc)
 }
 
-async function getScreens(db) {
+async function getScreens() {
+  const db = getAppDB()
   return (
     await db.allDocs(
       getScreenParams(null, {
@@ -78,37 +81,51 @@ function getUserRoleId(ctx) {
     : ctx.user.role._id
 }
 
-async function getAppUrlIfNotInUse(ctx) {
+exports.getAppUrl = ctx => {
+  // construct the url
   let url
   if (ctx.request.body.url) {
+    // if the url is provided, use that
     url = encodeURI(ctx.request.body.url)
   } else if (ctx.request.body.name) {
+    // otherwise use the name
     url = encodeURI(`${ctx.request.body.name}`)
   }
   if (url) {
     url = `/${url.replace(URL_REGEX_SLASH, "")}`.toLowerCase()
   }
-  if (!env.SELF_HOSTED) {
-    return url
-  }
-  const deployedApps = await getDeployedApps()
-  if (
-    url &&
-    deployedApps[url] != null &&
-    ctx.params != null &&
-    deployedApps[url].appId !== ctx.params.appId
-  ) {
-    ctx.throw(400, "App name/URL is already in use.")
-  }
   return url
+}
+
+const checkAppUrl = (ctx, apps, url, currentAppId) => {
+  if (currentAppId) {
+    apps = apps.filter(app => app.appId !== currentAppId)
+  }
+  if (apps.some(app => app.url === url)) {
+    ctx.throw(400, "App URL is already in use.")
+  }
+}
+
+const checkAppName = (ctx, apps, name, currentAppId) => {
+  // TODO: Replace with Joi
+  if (!name) {
+    ctx.throw(400, "Name is required")
+  }
+  if (currentAppId) {
+    apps = apps.filter(app => app.appId !== currentAppId)
+  }
+  if (apps.some(app => app.name === name)) {
+    ctx.throw(400, "App name is already in use.")
+  }
 }
 
 async function createInstance(template) {
   const tenantId = isMultiTenant() ? getTenantId() : null
   const baseAppId = generateAppID(tenantId)
   const appId = generateDevAppID(baseAppId)
+  updateAppId(appId)
 
-  const db = new CouchDB(appId)
+  const db = getAppDB()
   await db.put({
     _id: "_design/database",
     // view collation information, read before writing any complex views:
@@ -118,9 +135,9 @@ async function createInstance(template) {
 
   // NOTE: indexes need to be created before any tables/templates
   // add view for linked rows
-  await createLinkView(appId)
-  await createRoutingView(appId)
-  await createAllSearchIndex(appId)
+  await createLinkView()
+  await createRoutingView()
+  await createAllSearchIndex()
 
   // replicate the template data to the instance DB
   // this is currently very hard to test, downloading and importing template files
@@ -146,7 +163,7 @@ async function createInstance(template) {
 exports.fetch = async ctx => {
   const dev = ctx.query && ctx.query.status === AppStatus.DEV
   const all = ctx.query && ctx.query.status === AppStatus.ALL
-  const apps = await getAllApps(CouchDB, { dev, all })
+  const apps = await getAllApps({ dev, all })
 
   // get the locks for all the dev apps
   if (dev || all) {
@@ -169,12 +186,11 @@ exports.fetch = async ctx => {
 }
 
 exports.fetchAppDefinition = async ctx => {
-  const db = new CouchDB(ctx.params.appId)
-  const layouts = await getLayouts(db)
+  const layouts = await getLayouts()
   const userRoleId = getUserRoleId(ctx)
-  const accessController = new AccessController(ctx.params.appId)
+  const accessController = new AccessController()
   const screens = await accessController.checkScreensAccess(
-    await getScreens(db),
+    await getScreens(),
     userRoleId
   )
   ctx.body = {
@@ -185,15 +201,15 @@ exports.fetchAppDefinition = async ctx => {
 }
 
 exports.fetchAppPackage = async ctx => {
-  const db = new CouchDB(ctx.params.appId)
+  const db = getAppDB()
   const application = await db.get(DocumentTypes.APP_METADATA)
-  const layouts = await getLayouts(db)
-  let screens = await getScreens(db)
+  const layouts = await getLayouts()
+  let screens = await getScreens()
 
   // Only filter screens if the user is not a builder
   if (!(ctx.user.builder && ctx.user.builder.global)) {
     const userRoleId = getUserRoleId(ctx)
-    const accessController = new AccessController(ctx.params.appId)
+    const accessController = new AccessController()
     screens = await accessController.checkScreensAccess(screens, userRoleId)
   }
 
@@ -206,6 +222,12 @@ exports.fetchAppPackage = async ctx => {
 }
 
 exports.create = async ctx => {
+  const apps = await getAllApps({ dev: true })
+  const name = ctx.request.body.name
+  checkAppName(ctx, apps, name)
+  const url = exports.getAppUrl(ctx)
+  checkAppUrl(ctx, apps, url)
+
   const { useTemplate, templateKey, templateString } = ctx.request.body
   const instanceConfig = {
     useTemplate,
@@ -218,8 +240,7 @@ exports.create = async ctx => {
   const instance = await createInstance(instanceConfig)
   const appId = instance._id
 
-  const url = await getAppUrlIfNotInUse(ctx)
-  const db = new CouchDB(appId)
+  const db = getAppDB()
   let _rev
   try {
     // if template there will be an existing doc
@@ -235,7 +256,7 @@ exports.create = async ctx => {
     type: "app",
     version: packageJson.version,
     componentLibraries: ["@budibase/standard-components"],
-    name: ctx.request.body.name,
+    name: name,
     url: url,
     template: ctx.request.body.template,
     instance: instance,
@@ -262,15 +283,29 @@ exports.create = async ctx => {
   ctx.body = newApplication
 }
 
+// This endpoint currently operates as a PATCH rather than a PUT
+// Thus name and url fields are handled only if present
 exports.update = async ctx => {
-  const data = await updateAppPackage(ctx, ctx.request.body, ctx.params.appId)
+  const apps = await getAllApps({ dev: true })
+  // validation
+  const name = ctx.request.body.name
+  if (name) {
+    checkAppName(ctx, apps, name, ctx.params.appId)
+  }
+  const url = await exports.getAppUrl(ctx)
+  if (url) {
+    checkAppUrl(ctx, apps, url, ctx.params.appId)
+    ctx.request.body.url = url
+  }
+
+  const data = await updateAppPackage(ctx.request.body, ctx.params.appId)
   ctx.status = 200
   ctx.body = data
 }
 
 exports.updateClient = async ctx => {
   // Get current app version
-  const db = new CouchDB(ctx.params.appId)
+  const db = getAppDB()
   const application = await db.get(DocumentTypes.APP_METADATA)
   const currentVersion = application.version
 
@@ -285,14 +320,14 @@ exports.updateClient = async ctx => {
     version: packageJson.version,
     revertableVersion: currentVersion,
   }
-  const data = await updateAppPackage(ctx, appPackageUpdates, ctx.params.appId)
+  const data = await updateAppPackage(appPackageUpdates, ctx.params.appId)
   ctx.status = 200
   ctx.body = data
 }
 
 exports.revertClient = async ctx => {
   // Check app can be reverted
-  const db = new CouchDB(ctx.params.appId)
+  const db = getAppDB()
   const application = await db.get(DocumentTypes.APP_METADATA)
   if (!application.revertableVersion) {
     ctx.throw(400, "There is no version to revert to")
@@ -308,13 +343,13 @@ exports.revertClient = async ctx => {
     version: application.revertableVersion,
     revertableVersion: null,
   }
-  const data = await updateAppPackage(ctx, appPackageUpdates, ctx.params.appId)
+  const data = await updateAppPackage(appPackageUpdates, ctx.params.appId)
   ctx.status = 200
   ctx.body = data
 }
 
 exports.delete = async ctx => {
-  const db = new CouchDB(ctx.params.appId)
+  const db = getAppDB()
 
   const result = await db.destroy()
   /* istanbul ignore next */
@@ -339,10 +374,11 @@ exports.sync = async (ctx, next) => {
   }
 
   // replicate prod to dev
-  const prodAppId = getDeployedAppID(appId)
+  const prodAppId = getProdAppID(appId)
 
   try {
-    const prodDb = new CouchDB(prodAppId, { skip_setup: true })
+    // specific case, want to make sure setup is skipped
+    const prodDb = getProdAppDB({ skip_setup: true })
     const info = await prodDb.info()
     if (info.error) throw info.error
   } catch (err) {
@@ -370,7 +406,7 @@ exports.sync = async (ctx, next) => {
   }
 
   // sync the users
-  await syncGlobalUsers(appId)
+  await syncGlobalUsers()
 
   if (error) {
     ctx.throw(400, error)
@@ -381,12 +417,11 @@ exports.sync = async (ctx, next) => {
   }
 }
 
-const updateAppPackage = async (ctx, appPackage, appId) => {
-  const url = await getAppUrlIfNotInUse(ctx)
-  const db = new CouchDB(appId)
+const updateAppPackage = async (appPackage, appId) => {
+  const db = getAppDB()
   const application = await db.get(DocumentTypes.APP_METADATA)
 
-  const newAppPackage = { ...application, ...appPackage, url }
+  const newAppPackage = { ...application, ...appPackage }
   if (appPackage._rev !== application._rev) {
     newAppPackage._rev = application._rev
   }
@@ -402,7 +437,7 @@ const updateAppPackage = async (ctx, appPackage, appId) => {
 }
 
 const createEmptyAppPackage = async (ctx, app) => {
-  const db = new CouchDB(app.appId)
+  const db = getAppDB()
 
   let screensAndLayouts = []
   for (let layout of BASE_LAYOUTS) {

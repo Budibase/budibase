@@ -37,7 +37,7 @@ export const createValidatorFromConstraints = (
       const length = schemaConstraints.length.maximum
       rules.push({
         type: "string",
-        constraint: "length",
+        constraint: "maxLength",
         value: length,
         error: `Maximum length is ${length}`,
       })

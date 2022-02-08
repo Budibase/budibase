@@ -18,8 +18,8 @@ const createRouteStore = () => {
   const fetchRoutes = async () => {
     const routeConfig = await API.fetchRoutes()
     let routes = []
-    Object.values(routeConfig.routes).forEach(route => {
-      Object.entries(route.subpaths).forEach(([path, config]) => {
+    Object.values(routeConfig.routes || {}).forEach(route => {
+      Object.entries(route.subpaths || {}).forEach(([path, config]) => {
         routes.push({
           path,
           screenId: config.screenId,
@@ -83,12 +83,23 @@ const createRouteStore = () => {
   const setRouterLoaded = () => {
     store.update(state => ({ ...state, routerLoaded: true }))
   }
+  const createFullURL = relativeURL => {
+    if (!relativeURL?.startsWith("/")) {
+      return relativeURL
+    }
+    if (!window.location.href.includes("#")) {
+      return `${window.location.href}#${relativeURL}`
+    }
+    const base = window.location.href.split("#")[0]
+    return `${base}#${relativeURL}`
+  }
 
   return {
     subscribe: store.subscribe,
     actions: {
       fetchRoutes,
       navigate,
+      createFullURL,
       setRouteParams,
       setQueryParams,
       setActiveRoute,

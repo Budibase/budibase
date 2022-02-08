@@ -180,6 +180,7 @@ export const IntegrationTypes = {
   ARANGODB: "ARANGODB",
   ORACLE: "ORACLE",
   INTERNAL: "INTERNAL",
+  GOOGLE_SHEETS: "GOOGLE_SHEETS",
 }
 
 export const IntegrationNames = {
@@ -196,6 +197,7 @@ export const IntegrationNames = {
   [IntegrationTypes.ARANGODB]: "ArangoDB",
   [IntegrationTypes.ORACLE]: "Oracle",
   [IntegrationTypes.INTERNAL]: "Internal",
+  [IntegrationTypes.GOOGLE_SHEETS]: "Google Sheets",
 }
 
 export const SchemaTypeOptions = [
@@ -231,4 +233,12 @@ export const PaginationTypes = [
 export const PaginationLocations = [
   { label: "Query parameters", value: "query" },
   { label: "Request body", value: "body" },
+]
+
+export const BannedSearchTypes = [
+  "link",
+  "attachment",
+  "formula",
+  "json",
+  "jsonarray",
 ]

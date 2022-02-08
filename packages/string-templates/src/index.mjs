@@ -15,6 +15,8 @@ export const processStringSync = templates.processStringSync
 export const processObjectSync = templates.processObjectSync
 export const processString = templates.processString
 export const processObject = templates.processObject
+export const doesContainStrings = templates.doesContainStrings
+export const doesContainString = templates.doesContainString
 export const disableEscaping = templates.disableEscaping
 
 /**

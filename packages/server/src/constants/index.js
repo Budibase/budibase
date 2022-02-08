@@ -61,6 +61,11 @@ exports.RelationshipTypes = {
   MANY_TO_MANY: "many-to-many",
 }
 
+exports.FormulaTypes = {
+  STATIC: "static",
+  DYNAMIC: "dynamic",
+}
+
 exports.AuthTypes = {
   APP: "app",
   BUILDER: "builder",
@@ -76,6 +81,10 @@ exports.DataSourceOperation = {
   CREATE_TABLE: "CREATE_TABLE",
   UPDATE_TABLE: "UPDATE_TABLE",
   DELETE_TABLE: "DELETE_TABLE",
+}
+
+exports.DatasourceAuthTypes = {
+  GOOGLE: "google",
 }
 
 exports.SortDirection = {

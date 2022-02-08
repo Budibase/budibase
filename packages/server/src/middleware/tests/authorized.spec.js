@@ -11,26 +11,33 @@ const authorizedMiddleware = require("../authorized")
 const env = require("../../environment")
 const { PermissionTypes, PermissionLevels } = require("@budibase/backend-core/permissions")
 require("@budibase/backend-core").init(require("../../db"))
+const { doInAppContext } = require("@budibase/backend-core/context")
+
+const APP_ID = ""
 
 class TestConfiguration {
   constructor(role) {
     this.middleware = authorizedMiddleware(role)
     this.next = jest.fn()
     this.throw = jest.fn()
+    this.headers = {}
     this.ctx = {
       headers: {},
       request: {
         url: ""
       },
-      appId: "",
+      appId: APP_ID,
       auth: {},
       next: this.next,
-      throw: this.throw
+      throw: this.throw,
+      get: (name) => this.headers[name],
     }
   }
 
   executeMiddleware() {
-    return this.middleware(this.ctx, this.next)
+    return doInAppContext(APP_ID, () => {
+      return this.middleware(this.ctx, this.next)
+    })
   }
 
   setUser(user) {
@@ -46,7 +53,7 @@ class TestConfiguration {
   }
 
   setAuthenticated(isAuthed) {
-    this.ctx.auth = { authenticated: isAuthed }
+    this.ctx.isAuthenticated = isAuthed
   }
 
   setRequestUrl(url) {
@@ -107,7 +114,7 @@ describe("Authorization middleware", () => {
       expect(config.next).toHaveBeenCalled()
     })
     
-    it("throws if the user has only builder permissions", async () => {
+    it("throws if the user does not have builder permissions", async () => {
       config.setEnvironment(false)
       config.setMiddlewareRequiredPermission(PermissionTypes.BUILDER)
       config.setUser({
@@ -133,7 +140,7 @@ describe("Authorization middleware", () => {
       expect(config.next).toHaveBeenCalled()
     })
 
-    it("throws if the user session is not authenticated after permission checks", async () => {
+    it("throws if the user session is not authenticated", async () => {
       config.setUser({
         role: {
           _id: ""

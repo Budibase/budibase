@@ -21,6 +21,7 @@ exports.StaticDatabases = {
     name: "global-db",
     docs: {
       apiKeys: "apikeys",
+      usageQuota: "usage_quota",
     },
   },
   // contains information about tenancy and so on
@@ -28,7 +29,10 @@ exports.StaticDatabases = {
     name: "global-info",
     docs: {
       tenants: "tenants",
-      usageQuota: "usage_quota",
     },
   },
 }
+
+exports.APP_PREFIX = exports.DocumentTypes.APP + exports.SEPARATOR
+exports.APP_DEV = exports.APP_DEV_PREFIX =
+  exports.DocumentTypes.APP_DEV + exports.SEPARATOR
