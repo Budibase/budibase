@@ -36,15 +36,12 @@
     })
   }
 
-  $: currentAutomation = $automationStore.selectedAutomation.automation
-  $: console.log(currentAutomation)
   const onChangeTable = e => {
     value["tableId"] = e.detail
     dispatch("change", value)
   }
 
   const coerce = (value, type) => {
-    console.log(type)
     if (type === "boolean") {
       return value === "true"
     }
