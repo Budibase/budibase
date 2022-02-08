@@ -177,7 +177,9 @@ module.exports.isValid = (string, opts) => {
   const context = {}
   try {
     const instance = opts.noHelpers ? hbsInstanceNoHelpers : hbsInstance
-    instance.compile(processors.preprocess(string, false))(context)
+    instance.compile(processors.preprocess(string, { noFinalise: true }))(
+      context
+    )
     return true
   } catch (err) {
     const msg = err && err.message ? err.message : err

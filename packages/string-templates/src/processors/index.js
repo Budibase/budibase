@@ -23,9 +23,13 @@ function process(output, processors, opts) {
 
 module.exports.preprocess = (string, opts) => {
   let processors = preprocessor.processors
+  if (opts.noFinalise) {
+    processors = processors.filter(
+      processor => processor.name !== preprocessor.PreprocessorNames.FINALISE
+    )
+  }
   return process(string, processors, opts)
 }
-
 module.exports.postprocess = string => {
   let processors = postprocessor.processors
   return process(string, processors)
