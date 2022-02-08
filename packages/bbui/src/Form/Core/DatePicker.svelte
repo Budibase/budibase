@@ -14,16 +14,20 @@
   export let value = null
   export let placeholder = null
   export let appendTo = undefined
+  export let timeOnly = false
 
   const dispatch = createEventDispatcher()
   const flatpickrId = `${generateID()}-wrapper`
   let open = false
-  let flatpickr
+  let flatpickr, flatpickrOptions, isTimeOnly
+
+  $: isTimeOnly = !timeOnly && value ? !isNaN(new Date(`0-${value}`)) : timeOnly
   $: flatpickrOptions = {
     element: `#${flatpickrId}`,
-    enableTime: enableTime || false,
+    enableTime: isTimeOnly || enableTime || false,
+    noCalendar: isTimeOnly || false,
     altInput: true,
-    altFormat: enableTime ? "F j Y, H:i" : "F j, Y",
+    altFormat: isTimeOnly ? "H:i" : enableTime ? "F j Y, H:i" : "F j, Y",
     wrap: true,
     appendTo,
     disableMobile: "true",
@@ -34,6 +38,11 @@
     let newValue = dates[0]
     if (newValue) {
       newValue = newValue.toISOString()
+    }
+    // if time only set date component to today
+    if (timeOnly) {
+      const todayDate = new Date().toISOString().split("T")[0]
+      newValue = `${todayDate}T${newValue.split("T")[1]}`
     }
     dispatch("change", newValue)
   }
@@ -67,7 +76,11 @@
       return null
     }
     let date
-    if (val instanceof Date) {
+    let time = new Date(`0-${val}`)
+    // it is a string like 00:00:00, just time
+    if (timeOnly || (typeof val === "string" && !isNaN(time))) {
+      date = time
+    } else if (val instanceof Date) {
       // Use real date obj if already parsed
       date = val
     } else if (isNaN(val)) {
@@ -77,7 +90,7 @@
       // Treat as numerical timestamp
       date = new Date(parseInt(val))
     }
-    const time = date.getTime()
+    time = date.getTime()
     if (isNaN(time)) {
       return null
     }
@@ -88,69 +101,71 @@
   }
 </script>
 
-<Flatpickr
-  bind:flatpickr
-  value={parseDate(value)}
-  on:open={onOpen}
-  on:close={onClose}
-  options={flatpickrOptions}
-  on:change={handleChange}
-  element={`#${flatpickrId}`}
->
-  <div
-    id={flatpickrId}
-    class:is-disabled={disabled}
-    class:is-invalid={!!error}
-    class="flatpickr spectrum-InputGroup spectrum-Datepicker"
-    class:is-focused={open}
-    aria-readonly="false"
-    aria-required="false"
-    aria-haspopup="true"
+{#key isTimeOnly}
+  <Flatpickr
+    bind:flatpickr
+    value={parseDate(value)}
+    on:open={onOpen}
+    on:close={onClose}
+    options={flatpickrOptions}
+    on:change={handleChange}
+    element={`#${flatpickrId}`}
   >
     <div
-      on:click={flatpickr?.open}
-      class="spectrum-Textfield spectrum-InputGroup-textfield"
+      id={flatpickrId}
       class:is-disabled={disabled}
       class:is-invalid={!!error}
+      class="flatpickr spectrum-InputGroup spectrum-Datepicker"
+      class:is-focused={open}
+      aria-readonly="false"
+      aria-required="false"
+      aria-haspopup="true"
     >
-      {#if !!error}
+      <div
+        on:click={flatpickr?.open}
+        class="spectrum-Textfield spectrum-InputGroup-textfield"
+        class:is-disabled={disabled}
+        class:is-invalid={!!error}
+      >
+        {#if !!error}
+          <svg
+            class="spectrum-Icon spectrum-Icon--sizeM spectrum-Textfield-validationIcon"
+            focusable="false"
+            aria-hidden="true"
+          >
+            <use xlink:href="#spectrum-icon-18-Alert" />
+          </svg>
+        {/if}
+        <input
+          data-input
+          type="text"
+          {disabled}
+          class="spectrum-Textfield-input spectrum-InputGroup-input"
+          {placeholder}
+          {id}
+          {value}
+        />
+      </div>
+      <button
+        type="button"
+        class="spectrum-Picker spectrum-Picker--sizeM spectrum-InputGroup-button"
+        tabindex="-1"
+        {disabled}
+        class:is-invalid={!!error}
+        on:click={flatpickr?.open}
+      >
         <svg
-          class="spectrum-Icon spectrum-Icon--sizeM spectrum-Textfield-validationIcon"
+          class="spectrum-Icon spectrum-Icon--sizeM"
           focusable="false"
           aria-hidden="true"
+          aria-label="Calendar"
         >
-          <use xlink:href="#spectrum-icon-18-Alert" />
+          <use xlink:href="#spectrum-icon-18-Calendar" />
         </svg>
-      {/if}
-      <input
-        data-input
-        type="text"
-        {disabled}
-        class="spectrum-Textfield-input spectrum-InputGroup-input"
-        {placeholder}
-        {id}
-        {value}
-      />
+      </button>
     </div>
-    <button
-      type="button"
-      class="spectrum-Picker spectrum-Picker--sizeM spectrum-InputGroup-button"
-      tabindex="-1"
-      {disabled}
-      class:is-invalid={!!error}
-      on:click={flatpickr?.open}
-    >
-      <svg
-        class="spectrum-Icon spectrum-Icon--sizeM"
-        focusable="false"
-        aria-hidden="true"
-        aria-label="Calendar"
-      >
-        <use xlink:href="#spectrum-icon-18-Calendar" />
-      </svg>
-    </button>
-  </div>
-</Flatpickr>
+  </Flatpickr>
+{/key}
 {#if open}
   <div class="overlay" on:mousedown|self={flatpickr?.close} />
 {/if}
