@@ -26,7 +26,6 @@
   let resultsModal
   let setupToggled
   let blockComplete
-
   $: testResult = $automationStore.selectedAutomation.testResults?.steps.filter(
     step => (block.id ? step.id === block.id : step.stepId === block.stepId)
   )

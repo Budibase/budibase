@@ -12,9 +12,12 @@
     notifications,
     Modal,
   } from "@budibase/bbui"
+  import ConfigModal from "./ConfigModal.svelte"
 
   export let automation
   export let onSelect
+
+  let configModal
   let testDataModal
   let blocks
   let confirmDeleteDialog
@@ -62,6 +65,16 @@
           <div class="iconPadding">
             <div class="icon">
               <Icon
+                hoverable
+                size="M"
+                on:click={configModal.show}
+                name="Settings"
+              />
+            </div>
+          </div>
+          <div class="iconPadding">
+            <div class="icon">
+              <Icon
                 on:click={confirmDeleteDialog.show}
                 hoverable
                 size="M"
@@ -102,6 +115,10 @@
 
   <Modal bind:this={testDataModal} width="30%">
     <TestDataModal {testAutomation} />
+  </Modal>
+
+  <Modal bind:this={configModal}>
+    <ConfigModal />
   </Modal>
 </div>
 
