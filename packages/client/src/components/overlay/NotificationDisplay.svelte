@@ -19,6 +19,8 @@
           type={$notificationStore.type}
           message={$notificationStore.message}
           icon={$notificationStore.icon}
+          dismissable={$notificationStore.dismissable}
+          on:dismiss={notificationStore.actions.dismiss}
         />
       </div>
     {/key}

@@ -1,5 +1,6 @@
 <script>
-  import { getContext } from "svelte"
+  import { getContext, setContext } from "svelte"
+  import { writable } from "svelte/store"
   import { Heading, Icon } from "@budibase/bbui"
   import { FieldTypes } from "../../constants"
   import active from "svelte-spa-router/active"
@@ -28,6 +29,16 @@
     Medium: "m",
     Small: "s",
   }
+
+  // Set some layout context. This isn't used in bindings but can be used
+  // determine things about the current app layout.
+  $: mobile = $context.device.mobile
+  const store = writable({ headerHeight: 0 })
+  $: store.set({
+    screenXOffset: getScreenXOffset(navigation, mobile),
+    screenYOffset: getScreenYOffset(navigation, mobile),
+  })
+  setContext("layout", store)
 
   // Permanently go into peek mode if we ever get the peek flag
   let isPeeking = false
@@ -58,13 +69,27 @@
     if ($builderStore.inBuilder) return
     window.location.href = "/builder/apps"
   }
+
+  const getScreenXOffset = (navigation, mobile) => {
+    if (navigation !== "Left") {
+      return 0
+    }
+    return mobile ? "0px" : "250px"
+  }
+  const getScreenYOffset = (navigation, mobile) => {
+    if (mobile) {
+      return !navigation || navigation === "None" ? 0 : "61px"
+    } else {
+      return navigation === "Top" ? "137px" : "0px"
+    }
+  }
 </script>
 
 <div
   class="layout layout--{typeClass}"
   use:styleable={$component.styles}
-  class:desktop={!$context.device.mobile}
-  class:mobile={!!$context.device.mobile}
+  class:desktop={!mobile}
+  class:mobile={!!mobile}
 >
   {#if typeClass !== "none"}
     <div
