@@ -14,8 +14,8 @@
 
 <ModalContent
   title="Automation Configuration"
-  confirmText="Test"
   showConfirmButton={false}
+  showCancelButton={false}
 >
   <Toggle
     bind:value={rowControl}
