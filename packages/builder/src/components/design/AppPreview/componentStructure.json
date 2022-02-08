@@ -81,7 +81,8 @@
       "backgroundimage",
       "link",
       "icon",
-      "embed"
+      "embed",
+      "markdownviewer"
     ]
   }
 ]
