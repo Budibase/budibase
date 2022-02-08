@@ -1,5 +1,5 @@
 const { setTenantId } = require("../tenancy")
-const ContextFactory = require("../tenancy/FunctionContext")
+const ContextFactory = require("../context/FunctionContext")
 const { buildMatcherRegex, matches } = require("./matchers")
 
 module.exports = (

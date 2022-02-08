@@ -4,8 +4,8 @@ const { newid } = require("../hashing")
 const REQUEST_ID_KEY = "requestId"
 
 class FunctionContext {
-  static getMiddleware(updateCtxFn = null) {
-    const namespace = this.createNamespace()
+  static getMiddleware(updateCtxFn = null, contextName = "session") {
+    const namespace = this.createNamespace(contextName)
 
     return async function (ctx, next) {
       await new Promise(
@@ -24,14 +24,14 @@ class FunctionContext {
     }
   }
 
-  static run(callback) {
-    const namespace = this.createNamespace()
+  static run(callback, contextName = "session") {
+    const namespace = this.createNamespace(contextName)
 
     return namespace.runAndReturn(callback)
   }
 
-  static setOnContext(key, value) {
-    const namespace = this.createNamespace()
+  static setOnContext(key, value, contextName = "session") {
+    const namespace = this.createNamespace(contextName)
     namespace.set(key, value)
   }
 
@@ -55,16 +55,16 @@ class FunctionContext {
     }
   }
 
-  static destroyNamespace() {
+  static destroyNamespace(name = "session") {
     if (this._namespace) {
-      cls.destroyNamespace("session")
+      cls.destroyNamespace(name)
       this._namespace = null
     }
   }
 
-  static createNamespace() {
+  static createNamespace(name = "session") {
     if (!this._namespace) {
-      this._namespace = cls.createNamespace("session")
+      this._namespace = cls.createNamespace(name)
     }
     return this._namespace
   }

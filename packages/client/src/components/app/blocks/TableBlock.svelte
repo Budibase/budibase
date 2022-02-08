@@ -35,6 +35,7 @@
     number: "numberfield",
     datetime: "datetimefield",
     boolean: "booleanfield",
+    formula: "stringfield",
   }
 
   let formId
@@ -59,12 +60,14 @@
   const enrichFilter = (filter, columns, formId) => {
     let enrichedFilter = [...(filter || [])]
     columns?.forEach(column => {
+      const safePath = column.name.split(".").map(safe).join(".")
+      const stringType = column.type === "string" || column.type === "formula"
       enrichedFilter.push({
         field: column.name,
-        operator: column.type === "string" ? "string" : "equal",
-        type: column.type === "string" ? "string" : "number",
+        operator: stringType ? "string" : "equal",
+        type: stringType ? "string" : "number",
         valueType: "Binding",
-        value: `{{ ${safe(formId)}.${safe(column.name)} }}`,
+        value: `{{ ${safe(formId)}.${safePath} }}`,
       })
     })
     return enrichedFilter
@@ -90,7 +93,9 @@
   // Load the datasource schema so we can determine column types
   const fetchSchema = async dataSource => {
     if (dataSource) {
-      schema = await fetchDatasourceSchema(dataSource)
+      schema = await fetchDatasourceSchema(dataSource, {
+        enrichRelationships: true,
+      })
     }
     schemaLoaded = true
   }

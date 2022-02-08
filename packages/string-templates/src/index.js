@@ -3,7 +3,7 @@ const { registerAll } = require("./helpers/index")
 const processors = require("./processors")
 const { atob, btoa } = require("./utilities")
 const manifest = require("../manifest.json")
-const { FIND_DOUBLE_HBS_REGEX } = require("./utilities")
+const { FIND_HBS_REGEX, FIND_DOUBLE_HBS_REGEX } = require("./utilities")
 
 const hbsInstance = handlebars.create()
 registerAll(hbsInstance)
@@ -27,7 +27,7 @@ function testObject(object) {
  * @param {object|array} object The input structure which is to be recursed, it is important to note that
  * if the structure contains any cycles then this will fail.
  * @param {object} context The context that handlebars should fill data from.
- * @param {object} opts optional - specify some options for processing.
+ * @param {object|undefined} opts optional - specify some options for processing.
  * @returns {Promise<object|array>} The structure input, as fully updated as possible.
  */
 module.exports.processObject = async (object, context, opts) => {
@@ -242,4 +242,48 @@ module.exports.decodeJSBinding = handlebars => {
     return null
   }
   return atob(match[1])
+}
+
+/**
+ * Same as the doesContainString function, but will check for all the strings
+ * before confirming it contains.
+ * @param {string} template The template string to search.
+ * @param {string[]} strings The strings to look for.
+ * @returns {boolean} Will return true if all strings found in HBS statement.
+ */
+module.exports.doesContainStrings = (template, strings) => {
+  let regexp = new RegExp(FIND_HBS_REGEX)
+  let matches = template.match(regexp)
+  if (matches == null) {
+    return false
+  }
+  for (let match of matches) {
+    let hbs = match
+    if (exports.isJSBinding(match)) {
+      hbs = exports.decodeJSBinding(match)
+    }
+    let allFound = true
+    for (let string of strings) {
+      if (!hbs.includes(string)) {
+        allFound = false
+      }
+    }
+    if (allFound) {
+      return true
+    }
+  }
+  return false
+}
+
+/**
+ * This function looks in the supplied template for handlebars instances, if they contain
+ * JS the JS will be decoded and then the supplied string will be looked for. For example
+ * if the template "Hello, your name is {{ related }}" this function would return that true
+ * for the string "related" but not for "name" as it is not within the handlebars statement.
+ * @param {string} template A template string to search for handlebars instances.
+ * @param {string} string The word or sentence to search for.
+ * @returns {boolean} The this return true if the string is found, false if not.
+ */
+module.exports.doesContainString = (template, string) => {
+  return exports.doesContainStrings(template, [string])
 }

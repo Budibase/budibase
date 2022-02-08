@@ -74,10 +74,7 @@ async function authInternal(ctx, user, err = null, info = null) {
 exports.authenticate = async (ctx, next) => {
   return passport.authenticate("local", async (err, user, info) => {
     await authInternal(ctx, user, err, info)
-
-    delete user.token
-
-    ctx.body = { user }
+    ctx.status = 200
   })(ctx, next)
 }
 
@@ -141,8 +138,36 @@ exports.resetUpdate = async ctx => {
 }
 
 exports.logout = async ctx => {
-  await platformLogout({ ctx, userId: ctx.user._id })
+  if (ctx.user && ctx.user._id) {
+    await platformLogout({ ctx, userId: ctx.user._id })
+  }
   ctx.body = { message: "User logged out." }
+}
+
+exports.datasourcePreAuth = async (ctx, next) => {
+  const provider = ctx.params.provider
+  const middleware = require(`@budibase/backend-core/middleware`)
+  const handler = middleware.datasource[provider]
+
+  setCookie(
+    ctx,
+    {
+      provider,
+      appId: ctx.query.appId,
+      datasourceId: ctx.query.datasourceId,
+    },
+    Cookies.DatasourceAuth
+  )
+
+  return handler.preAuth(passport, ctx, next)
+}
+
+exports.datasourceAuth = async (ctx, next) => {
+  const authStateCookie = getCookie(ctx, Cookies.DatasourceAuth)
+  const provider = authStateCookie.provider
+  const middleware = require(`@budibase/backend-core/middleware`)
+  const handler = middleware.datasource[provider]
+  return handler.postAuth(passport, ctx, next)
 }
 
 /**

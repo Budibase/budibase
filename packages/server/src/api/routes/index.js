@@ -20,11 +20,11 @@ const integrationRoutes = require("./integration")
 const permissionRoutes = require("./permission")
 const datasourceRoutes = require("./datasource")
 const queryRoutes = require("./query")
-const hostingRoutes = require("./hosting")
 const backupRoutes = require("./backup")
 const metadataRoutes = require("./metadata")
 const devRoutes = require("./dev")
 const cloudRoutes = require("./cloud")
+const migrationRoutes = require("./migrations")
 
 exports.mainRoutes = [
   authRoutes,
@@ -46,7 +46,6 @@ exports.mainRoutes = [
   permissionRoutes,
   datasourceRoutes,
   queryRoutes,
-  hostingRoutes,
   backupRoutes,
   metadataRoutes,
   devRoutes,
@@ -55,6 +54,7 @@ exports.mainRoutes = [
   // this could be breaking as koa may recognise other routes as this
   tableRoutes,
   rowRoutes,
+  migrationRoutes,
 ]
 
 exports.staticRoutes = staticRoutes

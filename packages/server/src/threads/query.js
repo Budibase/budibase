@@ -3,11 +3,10 @@ threadUtils.threadSetup()
 const ScriptRunner = require("../utilities/scriptRunner")
 const { integrations } = require("../integrations")
 const { processStringSync } = require("@budibase/string-templates")
-const CouchDB = require("../db")
+const { doInAppContext, getAppDB } = require("@budibase/backend-core/context")
 
 class QueryRunner {
   constructor(input, flags = { noRecursiveQuery: false }) {
-    this.appId = input.appId
     this.datasource = input.datasource
     this.queryVerb = input.queryVerb
     this.fields = input.fields
@@ -75,6 +74,11 @@ class QueryRunner {
       return this.execute()
     }
 
+    // check for undefined response
+    if (!rows) {
+      rows = []
+    }
+
     // needs to an array for next step
     if (!Array.isArray(rows)) {
       rows = [rows]
@@ -96,12 +100,11 @@ class QueryRunner {
   }
 
   async runAnotherQuery(queryId, parameters) {
-    const db = new CouchDB(this.appId)
+    const db = getAppDB()
     const query = await db.get(queryId)
     const datasource = await db.get(query.datasourceId)
     return new QueryRunner(
       {
-        appId: this.appId,
         datasource,
         queryVerb: query.queryVerb,
         fields: query.fields,
@@ -211,12 +214,14 @@ class QueryRunner {
 }
 
 module.exports = (input, callback) => {
-  const Runner = new QueryRunner(input)
-  Runner.execute()
-    .then(response => {
-      callback(null, response)
-    })
-    .catch(err => {
-      callback(err)
-    })
+  doInAppContext(input.appId, () => {
+    const Runner = new QueryRunner(input)
+    Runner.execute()
+      .then(response => {
+        callback(null, response)
+      })
+      .catch(err => {
+        callback(err)
+      })
+  })
 }

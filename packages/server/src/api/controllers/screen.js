@@ -1,10 +1,9 @@
-const CouchDB = require("../../db")
 const { getScreenParams, generateScreenID } = require("../../db/utils")
 const { AccessController } = require("@budibase/backend-core/roles")
+const { getAppDB } = require("@budibase/backend-core/context")
 
 exports.fetch = async ctx => {
-  const appId = ctx.appId
-  const db = new CouchDB(appId)
+  const db = getAppDB()
 
   const screens = (
     await db.allDocs(
@@ -14,15 +13,14 @@ exports.fetch = async ctx => {
     )
   ).rows.map(element => element.doc)
 
-  ctx.body = await new AccessController(appId).checkScreensAccess(
+  ctx.body = await new AccessController().checkScreensAccess(
     screens,
     ctx.user.role._id
   )
 }
 
 exports.save = async ctx => {
-  const appId = ctx.appId
-  const db = new CouchDB(appId)
+  const db = getAppDB()
   let screen = ctx.request.body
 
   if (!screen._id) {
@@ -39,7 +37,7 @@ exports.save = async ctx => {
 }
 
 exports.destroy = async ctx => {
-  const db = new CouchDB(ctx.appId)
+  const db = getAppDB()
   await db.remove(ctx.params.screenId, ctx.params.screenRev)
   ctx.body = {
     message: "Screen deleted successfully",

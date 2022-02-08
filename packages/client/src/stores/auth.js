@@ -11,8 +11,14 @@ const createAuthStore = () => {
   }
 
   const logOut = async () => {
+    try {
+      await API.logOut()
+    } catch (error) {
+      // Do nothing
+    }
+
+    // Manually destroy cookie to be sure
     window.document.cookie = `budibase:auth=; budibase:currentapp=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;`
-    window.location = "/builder/auth/login"
   }
 
   return {

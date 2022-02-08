@@ -72,16 +72,22 @@ class InternalBuilder {
 
   // right now we only do filters on the specific table being queried
   addFilters(
-    tableName: string,
     query: KnexQuery,
-    filters: SearchFilters | undefined
+    filters: SearchFilters | undefined,
+    opts: { relationship?: boolean; tableName?: string }
   ): KnexQuery {
     function iterate(
       structure: { [key: string]: any },
       fn: (key: string, value: any) => void
     ) {
       for (let [key, value] of Object.entries(structure)) {
-        fn(`${tableName}.${key}`, value)
+        const isRelationshipField = key.includes(".")
+        if (!opts.relationship && !isRelationshipField) {
+          fn(`${opts.tableName}.${key}`, value)
+        }
+        if (opts.relationship && isRelationshipField) {
+          fn(key, value)
+        }
       }
     }
     if (!filters) {
@@ -160,15 +166,13 @@ class InternalBuilder {
 
   addSorting(query: KnexQuery, json: QueryJson): KnexQuery {
     let { sort, paginate } = json
-    if (!sort) {
-      return query
-    }
     const table = json.meta?.table
-    for (let [key, value] of Object.entries(sort)) {
-      const direction = value === SortDirection.ASCENDING ? "asc" : "desc"
-      query = query.orderBy(`${table?.name}.${key}`, direction)
-    }
-    if (this.client === SqlClients.MS_SQL && !sort && paginate?.limit) {
+    if (sort) {
+      for (let [key, value] of Object.entries(sort)) {
+        const direction = value === SortDirection.ASCENDING ? "asc" : "desc"
+        query = query.orderBy(`${table?.name}.${key}`, direction)
+      }
+    } else if (this.client === SqlClients.MS_SQL && paginate?.limit) {
       // @ts-ignore
       query = query.orderBy(`${table?.name}.${table?.primary[0]}`)
     }
@@ -185,29 +189,70 @@ class InternalBuilder {
     if (!relationships) {
       return query
     }
+    const tableSets: Record<string, [any]> = {}
+    // aggregate into table sets (all the same to tables)
     for (let relationship of relationships) {
-      const from = relationship.from,
-        to = relationship.to,
-        toTable = relationship.tableName
-      if (!relationship.through) {
+      const keyObj: { toTable: string; throughTable: string | undefined } = {
+        toTable: relationship.tableName,
+        throughTable: undefined,
+      }
+      if (relationship.through) {
+        keyObj.throughTable = relationship.through
+      }
+      const key = JSON.stringify(keyObj)
+      if (tableSets[key]) {
+        tableSets[key].push(relationship)
+      } else {
+        tableSets[key] = [relationship]
+      }
+    }
+    for (let [key, relationships] of Object.entries(tableSets)) {
+      const { toTable, throughTable } = JSON.parse(key)
+      if (!throughTable) {
         // @ts-ignore
-        query = query.leftJoin(
+        query = query.join(
           toTable,
-          `${fromTable}.${from}`,
-          `${toTable}.${to}`
+          function () {
+            for (let relationship of relationships) {
+              const from = relationship.from,
+                to = relationship.to
+              // @ts-ignore
+              this.orOn(`${fromTable}.${from}`, "=", `${toTable}.${to}`)
+            }
+          },
+          "left"
         )
       } else {
-        const throughTable = relationship.through
-        const fromPrimary = relationship.fromPrimary
-        const toPrimary = relationship.toPrimary
         query = query
           // @ts-ignore
-          .leftJoin(
+          .join(
             throughTable,
-            `${fromTable}.${fromPrimary}`,
-            `${throughTable}.${from}`
+            function () {
+              for (let relationship of relationships) {
+                const fromPrimary = relationship.fromPrimary
+                const from = relationship.from
+                // @ts-ignore
+                this.orOn(
+                  `${fromTable}.${fromPrimary}`,
+                  "=",
+                  `${throughTable}.${from}`
+                )
+              }
+            },
+            "left"
           )
-          .leftJoin(toTable, `${toTable}.${toPrimary}`, `${throughTable}.${to}`)
+          .join(
+            toTable,
+            function () {
+              for (let relationship of relationships) {
+                const toPrimary = relationship.toPrimary
+                const to = relationship.to
+                // @ts-ignore
+                this.orOn(`${toTable}.${toPrimary}`, `${throughTable}.${to}`)
+              }
+            },
+            "left"
+          )
       }
     }
     return query.limit(BASE_LIMIT)
@@ -272,7 +317,7 @@ class InternalBuilder {
     if (foundOffset) {
       query = query.offset(foundOffset)
     }
-    query = this.addFilters(tableName, query, filters)
+    query = this.addFilters(query, filters, { tableName })
     // add sorting to pre-query
     query = this.addSorting(query, json)
     // @ts-ignore
@@ -285,20 +330,21 @@ class InternalBuilder {
       preQuery = this.addSorting(preQuery, json)
     }
     // handle joins
-    return this.addRelationships(
+    query = this.addRelationships(
       knex,
       preQuery,
       selectStatement,
       tableName,
       relationships
     )
+    return this.addFilters(query, filters, { relationship: true })
   }
 
   update(knex: Knex, json: QueryJson, opts: QueryOptions): KnexQuery {
     const { endpoint, body, filters } = json
     let query: KnexQuery = knex(endpoint.entityId)
     const parsedBody = parseBody(body)
-    query = this.addFilters(endpoint.entityId, query, filters)
+    query = this.addFilters(query, filters, { tableName: endpoint.entityId })
     // mysql can't use returning
     if (opts.disableReturning) {
       return query.update(parsedBody)
@@ -310,7 +356,7 @@ class InternalBuilder {
   delete(knex: Knex, json: QueryJson, opts: QueryOptions): KnexQuery {
     const { endpoint, filters } = json
     let query: KnexQuery = knex(endpoint.entityId)
-    query = this.addFilters(endpoint.entityId, query, filters)
+    query = this.addFilters(query, filters, { tableName: endpoint.entityId })
     // mysql can't use returning
     if (opts.disableReturning) {
       return query.delete()

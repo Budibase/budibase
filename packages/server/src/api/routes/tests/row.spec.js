@@ -1,6 +1,7 @@
 const { outputProcessing } = require("../../../utilities/rowProcessor")
 const setup = require("./utilities")
 const { basicRow } = setup.structures
+const { doInAppContext } = require("@budibase/backend-core/context")
 
 // mock the fetch for the search system
 jest.mock("node-fetch")
@@ -387,10 +388,12 @@ describe("/rows", () => {
       })
       // the environment needs configured for this
       await setup.switchToSelfHosted(async () => {
-        const enriched = await outputProcessing({ appId: config.getAppId() }, table, [row])
-        expect(enriched[0].attachment[0].url).toBe(
-          `/prod-budi-app-assets/${config.getAppId()}/attachments/test/thing.csv`
-        )
+        doInAppContext(config.getAppId(), async () => {
+          const enriched = await outputProcessing(table, [row])
+          expect(enriched[0].attachment[0].url).toBe(
+            `/prod-budi-app-assets/${config.getAppId()}/attachments/test/thing.csv`
+          )
+        })
       })
     })
   })

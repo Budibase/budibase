@@ -4,6 +4,8 @@ const {
   isValid,
   makePropSafe,
   getManifest,
+  encodeJSBinding,
+  doesContainString,
   disableEscaping,
 } = require("../src/index.cjs")
 
@@ -145,6 +147,34 @@ describe("check manifest", () => {
     expect(manifest.math.abs.description).toBe(
       "<p>Return the magnitude of <code>a</code>.</p>\n"
     )
+  })
+})
+
+describe("check full stops that are safe", () => {
+  it("should allow using an escaped full stop", async () => {
+    const data = {
+      "c53a4a604fa754d33baaafd5bca4d3658-YXuUBqt5vI": { "persons.firstname": "1" }
+    }
+    const template = "{{ [c53a4a604fa754d33baaafd5bca4d3658-YXuUBqt5vI].[persons.firstname] }}"
+    const output = await processString(template, data)
+    expect(output).toEqual("1")
+  })
+})
+
+describe("check does contain string function", () => {
+  it("should work for a simple case", () => {
+    const hbs = "hello {{ name }}"
+    expect(doesContainString(hbs, "name")).toEqual(true)
+  })
+
+  it("should reject a case where its in the string, but not the handlebars", () => {
+    const hbs = "hello {{ name }}"
+    expect(doesContainString(hbs, "hello")).toEqual(false)
+  })
+
+  it("should handle if its in javascript", () => {
+    const js = encodeJSBinding(`return $("foo")`)
+    expect(doesContainString(js, "foo")).toEqual(true)
   })
 })
 

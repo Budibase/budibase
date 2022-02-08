@@ -7,6 +7,7 @@ exports.Cookies = {
   CurrentApp: "budibase:currentapp",
   Auth: "budibase:auth",
   Init: "budibase:init",
+  DatasourceAuth: "budibase:datasourceauth",
   OIDC_CONFIG: "budibase:oidc:config",
 }
 
@@ -17,6 +18,7 @@ exports.Headers = {
   TYPE: "x-budibase-type",
   TENANT_ID: "x-budibase-tenant-id",
   TOKEN: "x-budibase-token",
+  CSRF_TOKEN: "x-csrf-token",
 }
 
 exports.GlobalRoles = {

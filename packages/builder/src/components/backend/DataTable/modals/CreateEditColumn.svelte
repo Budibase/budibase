@@ -128,7 +128,12 @@
     }
   }
 
+  function cancelEdit() {
+    field.name = originalName
+  }
+
   function deleteColumn() {
+    field.name = deleteColName
     if (field.name === $tables.selected.primaryDisplay) {
       notifications.error("You cannot delete the display column")
     } else {
@@ -147,6 +152,7 @@
     delete field.subtype
     delete field.tableId
     delete field.relationshipType
+    delete field.formulaType
 
     // Add in defaults and initial definition
     const definition = fieldDefinitions[event.detail?.toUpperCase()]
@@ -157,6 +163,9 @@
     // Default relationships many to many
     if (field.type === LINK_TYPE) {
       field.relationshipType = RelationshipTypes.MANY_TO_MANY
+    }
+    if (field.type === FORMULA_TYPE) {
+      field.formulaType = "dynamic"
     }
   }
 
@@ -314,6 +323,7 @@
   title={originalName ? "Edit Column" : "Create Column"}
   confirmText="Save Column"
   onConfirm={saveColumn}
+  onCancel={cancelEdit}
   disabled={invalid}
 >
   <Input
@@ -357,7 +367,7 @@
 
   {#if canBeSearched && !external}
     <div>
-      <Label grey small>Search Indexes</Label>
+      <Label>Search Indexes</Label>
       <Toggle
         value={indexes[0] === field.name}
         disabled={indexes[1] === field.name}
@@ -384,6 +394,19 @@
       label="Options (one per line)"
       bind:values={field.constraints.inclusion}
     />
+  {:else if field.type === "longform"}
+    <div>
+      <Label
+        size="M"
+        tooltip="Rich text includes support for images, links, tables, lists and more"
+      >
+        Formatting
+      </Label>
+      <Toggle
+        bind:value={field.useRichText}
+        text="Enable rich text support (markdown)"
+      />
+    </div>
   {:else if field.type === "array"}
     <ValuesList
       label="Options (one per line)"
@@ -432,8 +455,22 @@
       error={errors.relatedName}
     />
   {:else if field.type === FORMULA_TYPE}
+    {#if !table.sql}
+      <Select
+        label="Formula type"
+        bind:value={field.formulaType}
+        options={[
+          { label: "Dynamic", value: "dynamic" },
+          { label: "Static", value: "static" },
+        ]}
+        getOptionLabel={option => option.label}
+        getOptionValue={option => option.value}
+        tooltip="Dynamic formula are calculated when retrieved, but cannot be filtered,
+         while static formula are calculated when the row is saved."
+      />
+    {/if}
     <ModalBindableInput
-      title="Handlebars Formula"
+      title="Formula"
       label="Formula"
       value={field.formula}
       on:change={e => (field.formula = e.detail)}
@@ -442,7 +479,7 @@
     />
   {:else if field.type === AUTO_TYPE}
     <Select
-      label="Auto Column Type"
+      label="Auto column type"
       value={field.subtype}
       on:change={e => (field.subtype = e.detail)}
       options={Object.entries(getAutoColumnInformation())}
@@ -477,16 +514,16 @@
   onOk={deleteColumn}
   onCancel={hideDeleteDialog}
   title="Confirm Deletion"
-  disabled={deleteColName !== field.name}
+  disabled={deleteColName !== originalName}
 >
   <p>
-    Are you sure you wish to delete the column <b>{field.name}?</b>
+    Are you sure you wish to delete the column <b>{originalName}?</b>
     Your data will be deleted and this action cannot be undone - enter the column
     name to confirm.
   </p>
   <Input
     dataCy="delete-column-confirm"
     bind:value={deleteColName}
-    placeholder={field.name}
+    placeholder={originalName}
   />
 </ConfirmDialog>

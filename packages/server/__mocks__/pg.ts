@@ -10,16 +10,14 @@ module PgMock {
     ],
   }))
 
-// constructor
-  function Client() {
-  }
+  // constructor
+  function Client() {}
 
   Client.prototype.query = query
   Client.prototype.connect = jest.fn()
   Client.prototype.release = jest.fn()
 
-  function Pool() {
-  }
+  function Pool() {}
 
   const on = jest.fn()
   Pool.prototype.query = query
