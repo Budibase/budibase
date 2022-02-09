@@ -9,9 +9,9 @@ const {
   breakRowIdField,
 } = require("../../../integrations/utils")
 const ExternalRequest = require("./ExternalRequest")
-const CouchDB = require("../../../db")
+const { getAppDB } = require("@budibase/backend-core/context")
 
-async function handleRequest(appId, operation, tableId, opts = {}) {
+async function handleRequest(operation, tableId, opts = {}) {
   // make sure the filters are cleaned up, no empty strings for equals, fuzzy or string
   if (opts && opts.filters) {
     for (let filterField of NoEmptyFilterStrings) {
@@ -25,31 +25,27 @@ async function handleRequest(appId, operation, tableId, opts = {}) {
       }
     }
   }
-  return new ExternalRequest(appId, operation, tableId, opts.datasource).run(
-    opts
-  )
+  return new ExternalRequest(operation, tableId, opts.datasource).run(opts)
 }
 
 exports.handleRequest = handleRequest
 
 exports.patch = async ctx => {
-  const appId = ctx.appId
   const inputs = ctx.request.body
   const tableId = ctx.params.tableId
   const id = breakRowIdField(inputs._id)
   // don't save the ID to db
   delete inputs._id
-  return handleRequest(appId, DataSourceOperation.UPDATE, tableId, {
+  return handleRequest(DataSourceOperation.UPDATE, tableId, {
     id,
     row: inputs,
   })
 }
 
 exports.save = async ctx => {
-  const appId = ctx.appId
   const inputs = ctx.request.body
   const tableId = ctx.params.tableId
-  return handleRequest(appId, DataSourceOperation.CREATE, tableId, {
+  return handleRequest(DataSourceOperation.CREATE, tableId, {
     row: inputs,
   })
 }
@@ -63,49 +59,35 @@ exports.fetchView = async ctx => {
 }
 
 exports.fetch = async ctx => {
-  const appId = ctx.appId
   const tableId = ctx.params.tableId
-  return handleRequest(appId, DataSourceOperation.READ, tableId)
+  return handleRequest(DataSourceOperation.READ, tableId)
 }
 
 exports.find = async ctx => {
-  const appId = ctx.appId
   const id = ctx.params.rowId
   const tableId = ctx.params.tableId
-  const response = await handleRequest(
-    appId,
-    DataSourceOperation.READ,
-    tableId,
-    {
-      id,
-    }
-  )
+  const response = await handleRequest(DataSourceOperation.READ, tableId, {
+    id,
+  })
   return response ? response[0] : response
 }
 
 exports.destroy = async ctx => {
-  const appId = ctx.appId
   const tableId = ctx.params.tableId
   const id = ctx.request.body._id
-  const { row } = await handleRequest(
-    appId,
-    DataSourceOperation.DELETE,
-    tableId,
-    {
-      id,
-    }
-  )
+  const { row } = await handleRequest(DataSourceOperation.DELETE, tableId, {
+    id,
+  })
   return { response: { ok: true }, row }
 }
 
 exports.bulkDestroy = async ctx => {
-  const appId = ctx.appId
   const { rows } = ctx.request.body
   const tableId = ctx.params.tableId
   let promises = []
   for (let row of rows) {
     promises.push(
-      handleRequest(appId, DataSourceOperation.DELETE, tableId, {
+      handleRequest(DataSourceOperation.DELETE, tableId, {
         id: breakRowIdField(row._id),
       })
     )
@@ -115,7 +97,6 @@ exports.bulkDestroy = async ctx => {
 }
 
 exports.search = async ctx => {
-  const appId = ctx.appId
   const tableId = ctx.params.tableId
   const { paginate, query, ...params } = ctx.request.body
   let { bookmark, limit } = params
@@ -145,26 +126,21 @@ exports.search = async ctx => {
       [params.sort]: direction,
     }
   }
-  const rows = await handleRequest(appId, DataSourceOperation.READ, tableId, {
+  const rows = await handleRequest(DataSourceOperation.READ, tableId, {
     filters: query,
     sort,
     paginate: paginateObj,
   })
   let hasNextPage = false
   if (paginate && rows.length === limit) {
-    const nextRows = await handleRequest(
-      appId,
-      DataSourceOperation.READ,
-      tableId,
-      {
-        filters: query,
-        sort,
-        paginate: {
-          limit: 1,
-          page: bookmark * limit + 1,
-        },
-      }
-    )
+    const nextRows = await handleRequest(DataSourceOperation.READ, tableId, {
+      filters: query,
+      sort,
+      paginate: {
+        limit: 1,
+        page: bookmark * limit + 1,
+      },
+    })
     hasNextPage = nextRows.length > 0
   }
   // need wrapper object for bookmarks etc when paginating
@@ -177,25 +153,19 @@ exports.validate = async () => {
 }
 
 exports.fetchEnrichedRow = async ctx => {
-  const appId = ctx.appId
   const id = ctx.params.rowId
   const tableId = ctx.params.tableId
   const { datasourceId, tableName } = breakExternalTableId(tableId)
-  const db = new CouchDB(appId)
+  const db = getAppDB()
   const datasource = await db.get(datasourceId)
   if (!datasource || !datasource.entities) {
     ctx.throw(400, "Datasource has not been configured for plus API.")
   }
   const tables = datasource.entities
-  const response = await handleRequest(
-    appId,
-    DataSourceOperation.READ,
-    tableId,
-    {
-      id,
-      datasource,
-    }
-  )
+  const response = await handleRequest(DataSourceOperation.READ, tableId, {
+    id,
+    datasource,
+  })
   const table = tables[tableName]
   const row = response[0]
   // this seems like a lot of work, but basically we need to dig deeper for the enrich
@@ -214,7 +184,6 @@ exports.fetchEnrichedRow = async ctx => {
     // don't support composite keys right now
     const linkedIds = links.map(link => breakRowIdField(link._id)[0])
     row[fieldName] = await handleRequest(
-      appId,
       DataSourceOperation.READ,
       linkedTableId,
       {

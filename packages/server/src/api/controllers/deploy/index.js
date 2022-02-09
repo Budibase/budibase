@@ -1,12 +1,20 @@
-const CouchDB = require("../../../db")
 const Deployment = require("./Deployment")
-const { Replication, getDeployedAppID } = require("@budibase/backend-core/db")
+const {
+  Replication,
+  getProdAppID,
+  getDevelopmentAppID,
+} = require("@budibase/backend-core/db")
 const { DocumentTypes, getAutomationParams } = require("../../../db/utils")
 const {
   disableAllCrons,
   enableCronTrigger,
 } = require("../../../automations/utils")
 const { app: appCache } = require("@budibase/backend-core/cache")
+const {
+  getAppId,
+  getAppDB,
+  getProdAppDB,
+} = require("@budibase/backend-core/context")
 
 // the max time we can wait for an invalidation to complete before considering it failed
 const MAX_PENDING_TIME_MS = 30 * 60000
@@ -34,9 +42,8 @@ async function checkAllDeployments(deployments) {
 }
 
 async function storeDeploymentHistory(deployment) {
-  const appId = deployment.getAppId()
   const deploymentJSON = deployment.getJSON()
-  const db = new CouchDB(appId)
+  const db = getAppDB()
 
   let deploymentDoc
   try {
@@ -64,7 +71,7 @@ async function storeDeploymentHistory(deployment) {
 }
 
 async function initDeployedApp(prodAppId) {
-  const db = new CouchDB(prodAppId)
+  const db = getProdAppDB()
   console.log("Reading automation docs")
   const automations = (
     await db.allDocs(
@@ -88,10 +95,12 @@ async function initDeployedApp(prodAppId) {
 
 async function deployApp(deployment) {
   try {
-    const productionAppId = getDeployedAppID(deployment.appId)
+    const appId = getAppId()
+    const devAppId = getDevelopmentAppID(appId)
+    const productionAppId = getProdAppID(appId)
 
     const replication = new Replication({
-      source: deployment.appId,
+      source: devAppId,
       target: productionAppId,
     })
 
@@ -99,7 +108,7 @@ async function deployApp(deployment) {
 
     await replication.replicate()
     console.log("replication complete.. replacing app meta doc")
-    const db = new CouchDB(productionAppId)
+    const db = getProdAppDB()
     const appDoc = await db.get(DocumentTypes.APP_METADATA)
     appDoc.appId = productionAppId
     appDoc.instance._id = productionAppId
@@ -122,8 +131,7 @@ async function deployApp(deployment) {
 
 exports.fetchDeployments = async function (ctx) {
   try {
-    const appId = ctx.appId
-    const db = new CouchDB(appId)
+    const db = getAppDB()
     const deploymentDoc = await db.get(DocumentTypes.DEPLOYMENTS)
     const { updated, deployments } = await checkAllDeployments(
       deploymentDoc,
@@ -140,8 +148,7 @@ exports.fetchDeployments = async function (ctx) {
 
 exports.deploymentProgress = async function (ctx) {
   try {
-    const appId = ctx.appId
-    const db = new CouchDB(appId)
+    const db = getAppDB()
     const deploymentDoc = await db.get(DocumentTypes.DEPLOYMENTS)
     ctx.body = deploymentDoc[ctx.params.deploymentId]
   } catch (err) {
@@ -153,7 +160,7 @@ exports.deploymentProgress = async function (ctx) {
 }
 
 exports.deployApp = async function (ctx) {
-  let deployment = new Deployment(ctx.appId)
+  let deployment = new Deployment()
   console.log("Deployment object created")
   deployment.setStatus(DeploymentStatus.PENDING)
   console.log("Deployment object set to pending")

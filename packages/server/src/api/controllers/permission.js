@@ -6,12 +6,12 @@ const {
   getBuiltinRoles,
 } = require("@budibase/backend-core/roles")
 const { getRoleParams } = require("../../db/utils")
-const CouchDB = require("../../db")
 const {
   CURRENTLY_SUPPORTED_LEVELS,
   getBasePermissions,
 } = require("../../utilities/security")
 const { removeFromArray } = require("../../utilities")
+const { getAppDB } = require("@budibase/backend-core/context")
 
 const PermissionUpdateType = {
   REMOVE: "remove",
@@ -35,7 +35,7 @@ async function updatePermissionOnRole(
   { roleId, resourceId, level },
   updateType
 ) {
-  const db = new CouchDB(appId)
+  const db = getAppDB()
   const remove = updateType === PermissionUpdateType.REMOVE
   const isABuiltin = isBuiltin(roleId)
   const dbRoleId = getDBRoleID(roleId)
@@ -106,7 +106,7 @@ exports.fetchLevels = function (ctx) {
 }
 
 exports.fetch = async function (ctx) {
-  const db = new CouchDB(ctx.appId)
+  const db = getAppDB()
   const roles = await getAllDBRoles(db)
   let permissions = {}
   // create an object with structure role ID -> resource ID -> level
@@ -133,7 +133,7 @@ exports.fetch = async function (ctx) {
 
 exports.getResourcePerms = async function (ctx) {
   const resourceId = ctx.params.resourceId
-  const db = new CouchDB(ctx.appId)
+  const db = getAppDB()
   const body = await db.allDocs(
     getRoleParams(null, {
       include_docs: true,

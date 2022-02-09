@@ -49,7 +49,6 @@
   $: filteredApps = enrichedApps.filter(app =>
     app?.name?.toLowerCase().includes(searchTerm.toLowerCase())
   )
-  $: isCloud = $admin.cloud
 
   const enrichApps = (apps, user, sortBy) => {
     const enrichedApps = apps.map(app => ({
@@ -80,7 +79,7 @@
   }
 
   const initiateAppCreation = () => {
-    template = {}
+    template = null
     creationModal.show()
     creatingApp = true
   }
@@ -162,12 +161,10 @@
   }
 
   const viewApp = app => {
-    if (!isCloud && app.deployed) {
-      // special case to use the short form name if self hosted
-      window.open(`/app/${encodeURIComponent(app.name)}`)
+    if (app.url) {
+      window.open(`/app${app.url}`)
     } else {
-      const id = app.deployed ? app.prodId : app.devId
-      window.open(`/${id}`, "_blank")
+      window.open(`/${app.prodId}`)
     }
   }
 
@@ -340,6 +337,14 @@
             }}
             class="template-card"
           >
+            <a
+              href={item.url}
+              target="_blank"
+              class="external-link"
+              on:click|stopPropagation
+            >
+              <Icon name="LinkOut" size="S" />
+            </a>
             <div class="card-body">
               <div style="color: {item.background}" class="iconAlign">
                 <svg
@@ -442,6 +447,11 @@
 >
   <CreateAppModal {template} />
 </Modal>
+
+<Modal bind:this={updatingModal} padding={false} width="600px">
+  <UpdateAppModal app={selectedApp} />
+</Modal>
+
 <ConfirmDialog
   bind:this={deletionModal}
   title="Confirm deletion"
@@ -468,7 +478,6 @@
   Are you sure you want to unpublish the app <b>{selectedApp?.name}</b>?
 </ConfirmDialog>
 
-<UpdateAppModal app={selectedApp} bind:this={updatingModal} />
 <ChooseIconModal app={selectedApp} bind:this={iconModal} />
 
 <style>
@@ -517,6 +526,7 @@
     border: 1px solid var(--spectrum-global-color-gray-300);
     cursor: pointer;
     display: flex;
+    position: relative;
   }
 
   .template-card:hover {
@@ -527,6 +537,18 @@
     align-items: center;
     padding: 12px;
   }
+
+  .external-link {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    color: var(--spectrum-global-color-gray-300);
+    z-index: 99;
+  }
+  .external-link:hover {
+    color: var(--spectrum-global-color-gray-500);
+  }
+
   .iconAlign {
     padding: 0 0 0 var(--spacing-m);
     display: inline-block;

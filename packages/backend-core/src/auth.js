@@ -12,6 +12,8 @@ const {
   tenancy,
   appTenancy,
   authError,
+  csrf,
+  internalApi,
 } = require("./middleware")
 
 // Strategies
@@ -42,4 +44,6 @@ module.exports = {
   buildAppTenancyMiddleware: appTenancy,
   auditLog,
   authError,
+  buildCsrfMiddleware: csrf,
+  internalApi,
 }

@@ -1,4 +1,3 @@
-const CouchDB = require("../../../db")
 const viewTemplate = require("./viewBuilder")
 const { apiFileReturn } = require("../../../utilities/fileSystem")
 const exporters = require("./exporters")
@@ -6,14 +5,14 @@ const { saveView, getView, getViews, deleteView } = require("./utils")
 const { fetchView } = require("../row")
 const { getTable } = require("../table/utils")
 const { FieldTypes } = require("../../../constants")
+const { getAppDB } = require("@budibase/backend-core/context")
 
 exports.fetch = async ctx => {
-  const db = new CouchDB(ctx.appId)
-  ctx.body = await getViews(db)
+  ctx.body = await getViews()
 }
 
 exports.save = async ctx => {
-  const db = new CouchDB(ctx.appId)
+  const db = getAppDB()
   const { originalName, ...viewToSave } = ctx.request.body
   const view = viewTemplate(viewToSave)
 
@@ -21,7 +20,7 @@ exports.save = async ctx => {
     ctx.throw(400, "Cannot create view without a name")
   }
 
-  await saveView(db, originalName, viewToSave.name, view)
+  await saveView(originalName, viewToSave.name, view)
 
   // add views to table document
   const table = await db.get(ctx.request.body.tableId)
@@ -42,9 +41,9 @@ exports.save = async ctx => {
 }
 
 exports.destroy = async ctx => {
-  const db = new CouchDB(ctx.appId)
+  const db = getAppDB()
   const viewName = decodeURI(ctx.params.viewName)
-  const view = await deleteView(db, viewName)
+  const view = await deleteView(viewName)
   const table = await db.get(view.meta.tableId)
   delete table.views[viewName]
   await db.put(table)
@@ -53,9 +52,8 @@ exports.destroy = async ctx => {
 }
 
 exports.exportView = async ctx => {
-  const db = new CouchDB(ctx.appId)
   const viewName = decodeURI(ctx.query.view)
-  const view = await getView(db, viewName)
+  const view = await getView(viewName)
 
   const format = ctx.query.format
   if (!format || !Object.values(exporters.ExportFormats).includes(format)) {
@@ -83,7 +81,7 @@ exports.exportView = async ctx => {
   let schema = view && view.meta && view.meta.schema
   if (!schema) {
     const tableId = ctx.params.tableId || view.meta.tableId
-    const table = await getTable(ctx.appId, tableId)
+    const table = await getTable(tableId)
     schema = table.schema
   }
 
