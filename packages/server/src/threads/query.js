@@ -161,10 +161,16 @@ class QueryRunner {
       const responses = await Promise.all(dynamics)
       for (let i = 0; i < foundVars.length; i++) {
         const variable = foundVars[i]
-        parameters[variable.name] = processStringSync(variable.value, {
-          data: responses[i].rows,
-          info: responses[i].extra,
-        })
+        parameters[variable.name] = processStringSync(
+          variable.value,
+          {
+            data: responses[i].rows,
+            info: responses[i].extra,
+          },
+          {
+            escapeNewlines: true,
+          }
+        )
         // make sure its known that this uses dynamic variables in case it fails
         this.hasDynamicVariables = true
       }
@@ -188,6 +194,7 @@ class QueryRunner {
         enrichedQuery[key] = processStringSync(fields[key], parameters, {
           noEscaping: true,
           noHelpers: true,
+          escapeNewlines: true,
         })
       } else {
         enrichedQuery[key] = fields[key]

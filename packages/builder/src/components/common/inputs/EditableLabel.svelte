@@ -17,6 +17,10 @@
       dispatch("change")
     }
   }
+
+  function save() {
+    dispatch("save", value)
+  }
 </script>
 
 <div class="parent">
@@ -39,7 +43,10 @@
       name="SaveFloppy"
       hoverable
       size="S"
-      on:click={() => setEditing(false)}
+      on:click={() => {
+        setEditing(false)
+        save()
+      }}
     />
   {/if}
 </div>
