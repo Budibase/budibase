@@ -1,4 +1,4 @@
-context("Create a User", () => {
+xcontext("Create a User", () => {
   before(() => {
     cy.login()
   })
