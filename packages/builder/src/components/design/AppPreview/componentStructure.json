@@ -44,7 +44,8 @@
       "relationshipfield",
       "daterangepicker",
       "multifieldselect",
-      "jsonfield"
+      "jsonfield",
+      "s3upload"
     ]
   },
   {
@@ -80,7 +81,8 @@
       "backgroundimage",
       "link",
       "icon",
-      "embed"
+      "embed",
+      "markdownviewer"
     ]
   }
 ]

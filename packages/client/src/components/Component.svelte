@@ -276,25 +276,27 @@
   // reactive statements as much as possible.
   const cacheSettings = (enriched, nested, conditional) => {
     const allSettings = { ...enriched, ...nested, ...conditional }
-    if (!cachedSettings) {
+    const mounted = ref?.$$set != null
+    if (!cachedSettings || !mounted) {
       cachedSettings = { ...allSettings }
       initialSettings = cachedSettings
     } else {
       Object.keys(allSettings).forEach(key => {
         const same = propsAreSame(allSettings[key], cachedSettings[key])
         if (!same) {
+          // Updated cachedSettings (which is assigned by reference to
+          // initialSettings) so that if we remount the component then the
+          // initial props are up to date. By setting it this way rather than
+          // setting it on initialSettings directly, we avoid a double render.
           cachedSettings[key] = allSettings[key]
-          assignSetting(key, allSettings[key])
+
+          // Programmatically set the prop to avoid svelte reactive statements
+          // firing inside components. This circumvents the problems caused by
+          // spreading a props object.
+          ref.$$set({ [key]: allSettings[key] })
         }
       })
     }
-  }
-
-  // Assigns a certain setting to this component.
-  // We manually use the svelte $set function to avoid triggering additional
-  // reactive statements.
-  const assignSetting = (key, value) => {
-    ref?.$$set?.({ [key]: value })
   }
 
   // Generates a key used to determine when components need to fully remount.
@@ -305,7 +307,7 @@
 </script>
 
 {#key renderKey}
-  {#if constructor && cachedSettings && (visible || inSelectedPath)}
+  {#if constructor && initialSettings && (visible || inSelectedPath)}
     <!-- The ID is used as a class because getElementsByClassName is O(1) -->
     <!-- and the performance matters for the selection indicators -->
     <div

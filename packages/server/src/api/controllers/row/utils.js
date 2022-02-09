@@ -1,11 +1,11 @@
 const validateJs = require("validate.js")
 const { cloneDeep } = require("lodash/fp")
-const CouchDB = require("../../../db")
 const { InternalTables } = require("../../../db/utils")
 const userController = require("../user")
 const { FieldTypes } = require("../../../constants")
 const { processStringSync } = require("@budibase/string-templates")
 const { makeExternalQuery } = require("../../../integrations/base/utils")
+const { getAppDB } = require("@budibase/backend-core/context")
 
 validateJs.extend(validateJs.validators.datetime, {
   parse: function (value) {
@@ -17,14 +17,15 @@ validateJs.extend(validateJs.validators.datetime, {
   },
 })
 
-exports.getDatasourceAndQuery = async (appId, json) => {
+exports.getDatasourceAndQuery = async json => {
   const datasourceId = json.endpoint.datasourceId
-  const db = new CouchDB(appId)
+  const db = getAppDB()
   const datasource = await db.get(datasourceId)
   return makeExternalQuery(datasource, json)
 }
 
-exports.findRow = async (ctx, db, tableId, rowId) => {
+exports.findRow = async (ctx, tableId, rowId) => {
+  const db = getAppDB()
   let row
   // TODO remove special user case in future
   if (tableId === InternalTables.USER_METADATA) {
@@ -42,9 +43,9 @@ exports.findRow = async (ctx, db, tableId, rowId) => {
   return row
 }
 
-exports.validate = async ({ appId, tableId, row, table }) => {
+exports.validate = async ({ tableId, row, table }) => {
   if (!table) {
-    const db = new CouchDB(appId)
+    const db = getAppDB()
     table = await db.get(tableId)
   }
   const errors = {}
@@ -52,10 +53,7 @@ exports.validate = async ({ appId, tableId, row, table }) => {
     const constraints = cloneDeep(table.schema[fieldName].constraints)
     const type = table.schema[fieldName].type
     // special case for options, need to always allow unselected (null)
-    if (
-      (type === FieldTypes.OPTIONS || type === FieldTypes.ARRAY) &&
-      constraints.inclusion
-    ) {
+    if (type === FieldTypes.OPTIONS && constraints.inclusion) {
       constraints.inclusion.push(null)
     }
     let res

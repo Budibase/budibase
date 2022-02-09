@@ -1,4 +1,3 @@
-const CouchDB = require("../../db")
 const {
   Role,
   getRole,
@@ -10,6 +9,7 @@ const {
   getUserMetadataParams,
   InternalTables,
 } = require("../../db/utils")
+const { getAppDB } = require("@budibase/backend-core/context")
 
 const UpdateRolesOptions = {
   CREATED: "created",
@@ -40,15 +40,15 @@ async function updateRolesOnUserTable(db, roleId, updateOption) {
 }
 
 exports.fetch = async function (ctx) {
-  ctx.body = await getAllRoles(ctx.appId)
+  ctx.body = await getAllRoles()
 }
 
 exports.find = async function (ctx) {
-  ctx.body = await getRole(ctx.appId, ctx.params.roleId)
+  ctx.body = await getRole(ctx.params.roleId)
 }
 
 exports.save = async function (ctx) {
-  const db = new CouchDB(ctx.appId)
+  const db = getAppDB()
   let { _id, name, inherits, permissionId } = ctx.request.body
   if (!_id) {
     _id = generateRoleID()
@@ -69,7 +69,7 @@ exports.save = async function (ctx) {
 }
 
 exports.destroy = async function (ctx) {
-  const db = new CouchDB(ctx.appId)
+  const db = getAppDB()
   const roleId = ctx.params.roleId
   if (isBuiltin(roleId)) {
     ctx.throw(400, "Cannot delete builtin role.")

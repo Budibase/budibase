@@ -39,12 +39,11 @@ Routing.prototype.addScreenId = function (fullpath, roleId, screenId) {
 
 /**
  * Gets the full routing structure by querying the routing view and processing the result into the tree.
- * @param {string} appId The application to produce the routing structure for.
  * @returns {Promise<object>} The routing structure, this is the full structure designed for use in the builder,
  * if the client routing is required then the updateRoutingStructureForUserRole should be used.
  */
-async function getRoutingStructure(appId) {
-  const screenRoutes = await getRoutingInfo(appId)
+async function getRoutingStructure() {
+  const screenRoutes = await getRoutingInfo()
   const routing = new Routing()
 
   for (let screenRoute of screenRoutes) {
@@ -57,13 +56,13 @@ async function getRoutingStructure(appId) {
 }
 
 exports.fetch = async ctx => {
-  ctx.body = await getRoutingStructure(ctx.appId)
+  ctx.body = await getRoutingStructure()
 }
 
 exports.clientFetch = async ctx => {
-  const routing = await getRoutingStructure(ctx.appId)
+  const routing = await getRoutingStructure()
   let roleId = ctx.user.role._id
-  const roleIds = await getUserRoleHierarchy(ctx.appId, roleId)
+  const roleIds = await getUserRoleHierarchy(roleId)
   for (let topLevel of Object.values(routing.routes)) {
     for (let subpathKey of Object.keys(topLevel.subpaths)) {
       let found = false

@@ -4,6 +4,9 @@ const {
   isValid,
   makePropSafe,
   getManifest,
+  encodeJSBinding,
+  doesContainString,
+  disableEscaping,
 } = require("../src/index.cjs")
 
 describe("Test that the string processing works correctly", () => {
@@ -157,3 +160,39 @@ describe("check full stops that are safe", () => {
     expect(output).toEqual("1")
   })
 })
+
+describe("check does contain string function", () => {
+  it("should work for a simple case", () => {
+    const hbs = "hello {{ name }}"
+    expect(doesContainString(hbs, "name")).toEqual(true)
+  })
+
+  it("should reject a case where its in the string, but not the handlebars", () => {
+    const hbs = "hello {{ name }}"
+    expect(doesContainString(hbs, "hello")).toEqual(false)
+  })
+
+  it("should handle if its in javascript", () => {
+    const js = encodeJSBinding(`return $("foo")`)
+    expect(doesContainString(js, "foo")).toEqual(true)
+  })
+})
+
+describe("check that disabling escaping function works", () => {
+  it("should work for a single statement", () => {
+    expect(disableEscaping("{{ name }}")).toEqual("{{{ name }}}")
+  })
+
+  it("should work for two statements", () => {
+    expect(disableEscaping("{{ name }} welcome to {{ platform }}")).toEqual("{{{ name }}} welcome to {{{ platform }}}")
+  })
+
+  it("shouldn't convert triple braces", () => {
+    expect(disableEscaping("{{{ name }}}")).toEqual("{{{ name }}}")
+  })
+
+  it("should work with a combination", () => {
+    expect(disableEscaping("{{ name }} welcome to {{{ platform }}}")).toEqual("{{{ name }}} welcome to {{{ platform }}}")
+  })
+})
+

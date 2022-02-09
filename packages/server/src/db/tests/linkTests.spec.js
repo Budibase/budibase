@@ -1,8 +1,8 @@
 const TestConfig = require("../../tests/utilities/TestConfiguration")
-const { basicTable, basicLinkedRow } = require("../../tests/utilities/structures")
+const { basicTable } = require("../../tests/utilities/structures")
 const linkUtils = require("../linkedRows/linkUtils")
-const links = require("../linkedRows")
 const CouchDB = require("../index")
+const { getAppDB } = require("@budibase/backend-core/context")
 
 describe("test link functionality", () => {
   const config = new TestConfig(false)
@@ -11,18 +11,18 @@ describe("test link functionality", () => {
     let db, table
     beforeEach(async () => {
       await config.init()
-      db = new CouchDB(config.getAppId())
+      db = getAppDB()
       table = await config.createTable()
     })
 
     it("should be able to retrieve a linked table from a list", async () => {
-      const retrieved = await linkUtils.getLinkedTable(db, table._id, [table])
+      const retrieved = await linkUtils.getLinkedTable(table._id, [table])
       expect(retrieved._id).toBe(table._id)
     })
 
     it("should be able to retrieve a table from DB and update list", async () => {
       const tables = []
-      const retrieved = await linkUtils.getLinkedTable(db, table._id, tables)
+      const retrieved = await linkUtils.getLinkedTable(table._id, tables)
       expect(retrieved._id).toBe(table._id)
       expect(tables[0]).toBeDefined()
     })
@@ -51,7 +51,6 @@ describe("test link functionality", () => {
       const db = new CouchDB("test")
       await db.put({ _id: "_design/database", views: {} })
       const output = await linkUtils.getLinkDocuments({
-        appId: "test",
         tableId: "test",
         rowId: "test",
         includeDocs: false,

@@ -172,6 +172,7 @@ exports.getSelf = async ctx => {
   ctx.body.account = ctx.user.account
   ctx.body.budibaseAccess = ctx.user.budibaseAccess
   ctx.body.accountPortalAccess = ctx.user.accountPortalAccess
+  ctx.body.csrfToken = ctx.user.csrfToken
 }
 
 exports.updateSelf = async ctx => {
@@ -190,6 +191,8 @@ exports.updateSelf = async ctx => {
   // don't allow sending up an ID/Rev, always use the existing one
   delete ctx.request.body._id
   delete ctx.request.body._rev
+  // don't allow setting the csrf token
+  delete ctx.request.body.csrfToken
   const response = await db.put({
     ...user,
     ...ctx.request.body,

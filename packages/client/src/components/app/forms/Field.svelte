@@ -32,6 +32,7 @@
     validation,
     formStep
   )
+  $: schemaType = fieldSchema?.type !== "formula" ? fieldSchema?.type : "string"
 
   // Focus label when editing
   let labelNode
@@ -72,7 +73,7 @@
         <Placeholder
           text="Add the Field setting to start using your component"
         />
-      {:else if fieldSchema?.type && fieldSchema?.type !== type && type !== "options"}
+      {:else if schemaType && schemaType !== type && type !== "options"}
         <Placeholder
           text="This Field setting is the wrong data type for this component"
         />
