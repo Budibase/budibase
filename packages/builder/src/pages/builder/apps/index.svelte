@@ -19,14 +19,12 @@
   import { gradient } from "actions"
   import UpdateUserInfoModal from "components/settings/UpdateUserInfoModal.svelte"
   import ChangePasswordModal from "components/settings/ChangePasswordModal.svelte"
-  import UpdateAPIKeyModal from "components/settings/UpdateAPIKeyModal.svelte"
   import { processStringSync } from "@budibase/string-templates"
   import Logo from "assets/bb-emblem.svg"
 
   let loaded = false
   let userInfoModal
   let changePasswordModal
-  let apiKeyModal
 
   onMount(async () => {
     try {
@@ -82,12 +80,6 @@
               </div>
               <MenuItem icon="UserEdit" on:click={() => userInfoModal.show()}>
                 Update user information
-              </MenuItem>
-              <MenuItem
-                icon="UserDeveloper"
-                on:click={() => apiKeyModal.show()}
-              >
-                View developer information
               </MenuItem>
               <MenuItem
                 icon="LockClosed"
@@ -162,9 +154,6 @@
   </Modal>
   <Modal bind:this={changePasswordModal}>
     <ChangePasswordModal />
-  </Modal>
-  <Modal bind:this={apiKeyModal}>
-    <UpdateAPIKeyModal />
   </Modal>
 {/if}
 

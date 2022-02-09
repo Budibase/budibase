@@ -280,3 +280,15 @@ exports.inviteAccept = async ctx => {
     ctx.throw(400, "Unable to create new user, invitation invalid.")
   }
 }
+
+exports.generateAPIKey = async ctx => {
+  ctx.body = {
+    apiKey: "a175402a-89fc-11ec-a8a3-0242ac120002",
+  }
+}
+
+exports.fetchAPIKey = async ctx => {
+  ctx.body = {
+    apiKey: "a175402a-89fc-11ec-a8a3-0242ac120002",
+  }
+}

@@ -4,7 +4,6 @@
   import { onMount } from "svelte"
 
   let apiKey = null
-  let loaded = false
 
   async function generateAPIKey() {
     try {
@@ -16,21 +15,20 @@
   }
 
   onMount(async () => {
-    apiKey = auth.fetchAPIKey()
+    apiKey = await auth.fetchAPIKey()
   })
 </script>
 
-{#if loaded}
-  <ModalContent
-    title="Developer information"
-    showSecondaryButton
-    secondaryButtonText="Re-generate key"
-    secondaryButtonAction={generateAPIKey}
-  >
-    <Body size="S">
-      You can find information about your developer account here, such as the
-      API key used to access the Budibase API.
-    </Body>
-    <Input disabled bind:value={apiKey} label="API key" />
-  </ModalContent>
-{/if}
+<ModalContent
+  title="Developer information"
+  showConfirmButton={false}
+  showSecondaryButton={true}
+  secondaryButtonText="Re-generate key"
+  secondaryAction={generateAPIKey}
+>
+  <Body size="S">
+    You can find information about your developer account here, such as the API
+    key used to access the Budibase API.
+  </Body>
+  <Input disabled bind:value={apiKey} label="API key" />
+</ModalContent>
