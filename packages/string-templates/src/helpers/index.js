@@ -21,7 +21,7 @@ const HELPERS = [
   // javascript helper
   new Helper(HelperFunctionNames.JS, processJS, false),
   // this help is applied to all statements
-  new Helper(HelperFunctionNames.ALL, value => {
+  new Helper(HelperFunctionNames.ALL, (value, { __opts }) => {
     if (
       value != null &&
       typeof value === "object" &&
@@ -36,7 +36,11 @@ const HELPERS = [
     if (value && value.string) {
       value = value.string
     }
-    let text = new SafeString(value.replace(/&amp;/g, "&"))
+    let text = value
+    if (__opts && __opts.escapeNewlines) {
+      text = value.replace(/\n/g, "\\n")
+    }
+    text = new SafeString(text.replace(/&amp;/g, "&"))
     if (text == null || typeof text !== "string") {
       return text
     }
@@ -62,10 +66,14 @@ module.exports.HelperNames = () => {
   )
 }
 
-module.exports.registerAll = handlebars => {
+module.exports.registerMinimum = handlebars => {
   for (let helper of HELPERS) {
     helper.register(handlebars)
   }
+}
+
+module.exports.registerAll = handlebars => {
+  module.exports.registerMinimum(handlebars)
   // register imported helpers
   externalHandlebars.registerAll(handlebars)
 }
