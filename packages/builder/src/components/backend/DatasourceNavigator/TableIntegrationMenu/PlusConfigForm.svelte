@@ -90,8 +90,8 @@
       await datasources.updateSchema(datasource)
       notifications.success(`Datasource ${name} tables updated successfully.`)
       await tables.fetch()
-    } catch (err) {
-      notifications.error(`Error updating datasource schema: ${err}`)
+    } catch (error) {
+      notifications.error("Error updating datasource schema")
     }
   }
 

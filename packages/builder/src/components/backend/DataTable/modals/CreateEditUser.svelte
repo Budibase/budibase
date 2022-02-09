@@ -4,7 +4,7 @@
   import { roles } from "stores/backend"
   import { notifications } from "@budibase/bbui"
   import RowFieldControl from "../RowFieldControl.svelte"
-  import * as backendApi from "../api"
+  import { API } from "api"
   import { ModalContent, Select } from "@budibase/bbui"
   import ErrorsBox from "components/common/ErrorsBox.svelte"
 
@@ -53,27 +53,31 @@
       return false
     }
 
-    const rowResponse = await backendApi.saveRow(
-      { ...row, tableId: table._id },
-      table._id
-    )
-    if (rowResponse.errors) {
-      if (Array.isArray(rowResponse.errors)) {
-        errors = rowResponse.errors.map(error => ({ message: error }))
+    try {
+      await API.saveRow({ ...row, tableId: table._id })
+      notifications.success("User saved successfully")
+      rows.save()
+      dispatch("updaterows")
+    } catch (error) {
+      if (error.handled) {
+        const response = error.json
+        if (response?.errors) {
+          if (Array.isArray(response.errors)) {
+            errors = response.errors.map(error => ({ message: error }))
+          } else {
+            errors = Object.entries(response.errors)
+              .map(([key, error]) => ({ dataPath: key, message: error }))
+              .flat()
+          }
+        } else if (error.status === 400) {
+          errors = [{ message: response?.message || "Unknown error" }]
+        }
       } else {
-        errors = Object.entries(rowResponse.errors)
-          .map(([key, error]) => ({ dataPath: key, message: error }))
-          .flat()
+        notifications.error("Error saving user")
       }
-      return false
-    } else if (rowResponse.status === 400 || rowResponse.status === 500) {
-      errors = [{ message: rowResponse.message }]
+      // Prevent closing the modal on errors
       return false
     }
-
-    notifications.success("User saved successfully")
-    rows.save(rowResponse)
-    dispatch("updaterows")
   }
 </script>
 

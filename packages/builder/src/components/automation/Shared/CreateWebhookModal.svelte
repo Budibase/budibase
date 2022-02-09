@@ -1,5 +1,5 @@
 <script>
-  import { Icon } from "@budibase/bbui"
+  import { Icon, notifications } from "@budibase/bbui"
   import { automationStore } from "builderStore"
   import WebhookDisplay from "./WebhookDisplay.svelte"
   import { ModalContent } from "@budibase/bbui"
@@ -16,15 +16,24 @@
   onMount(async () => {
     if (!automation?.definition?.trigger?.inputs.schemaUrl) {
       // save the automation initially
-      await automationStore.actions.save(automation)
+      try {
+        await automationStore.actions.save(automation)
+      } catch (error) {
+        notifications.error("Error saving automation")
+      }
     }
     interval = setInterval(async () => {
-      await automationStore.actions.fetch()
-      const outputs = automation?.definition?.trigger.schema.outputs?.properties
-      // always one prop for the "body"
-      if (Object.keys(outputs).length > 1) {
-        propCount = Object.keys(outputs).length - 1
-        finished = true
+      try {
+        await automationStore.actions.fetch()
+        const outputs =
+          automation?.definition?.trigger.schema.outputs?.properties
+        // always one prop for the "body"
+        if (Object.keys(outputs).length > 1) {
+          propCount = Object.keys(outputs).length - 1
+          finished = true
+        }
+      } catch (error) {
+        notifications.error("Error getting automations list")
       }
     }, POLL_RATE_MS)
     schemaURL = automation?.definition?.trigger?.inputs.schemaUrl

@@ -19,7 +19,7 @@
   import ChooseIconModal from "components/start/ChooseIconModal.svelte"
 
   import { store, automationStore } from "builderStore"
-  import api, { del, post, get } from "builderStore/api"
+  import { API } from "api"
   import { onMount } from "svelte"
   import { apps, auth, admin, templates } from "stores/portal"
   import download from "downloadjs"
@@ -115,43 +115,29 @@
       data.append("templateKey", template.key)
 
       // Create App
-      const appResp = await post("/api/applications", data, {})
-      const appJson = await appResp.json()
-      if (!appResp.ok) {
-        throw new Error(appJson.message)
-      }
-
+      const createdApp = await API.createApp(data)
       analytics.captureEvent(Events.APP.CREATED, {
         name: appName,
-        appId: appJson.instance._id,
+        appId: createdApp.instance._id,
         template,
         fromTemplateMarketplace: true,
       })
 
       // Select Correct Application/DB in prep for creating user
-      const applicationPkg = await get(
-        `/api/applications/${appJson.instance._id}/appPackage`
-      )
-      const pkg = await applicationPkg.json()
-      if (applicationPkg.ok) {
-        await store.actions.initialise(pkg)
-        await automationStore.actions.fetch()
-        // update checklist - incase first app
-        await admin.init()
-      } else {
-        throw new Error(pkg)
-      }
+      const pkg = await API.fetchAppPackage(createdApp.instance._id)
+      await store.actions.initialise(pkg)
+      await automationStore.actions.fetch()
+      // Update checklist - in case first app
+      await admin.init()
 
       // Create user
-      const userResp = await api.post(`/api/users/metadata/self`, {
+      await API.updateOwnMetadata({
         roleId: "BASIC",
       })
-      await userResp.json()
       await auth.setInitInfo({})
-      $goto(`/builder/app/${appJson.instance._id}`)
+      $goto(`/builder/app/${createdApp.instance._id}`)
     } catch (error) {
-      console.error(error)
-      notifications.error(error)
+      notifications.error("Error creating app")
     }
   }
 
@@ -199,17 +185,11 @@
       return
     }
     try {
-      const response = await del(
-        `/api/applications/${selectedApp.prodId}?unpublish=1`
-      )
-      if (response.status !== 200) {
-        const json = await response.json()
-        throw json.message
-      }
+      await API.unpublishApp(selectedApp.prodId)
       await apps.load()
       notifications.success("App unpublished successfully")
     } catch (err) {
-      notifications.error(`Error unpublishing app: ${err}`)
+      notifications.error("Error unpublishing app")
     }
   }
 
@@ -223,17 +203,13 @@
       return
     }
     try {
-      const response = await del(`/api/applications/${selectedApp?.devId}`)
-      if (response.status !== 200) {
-        const json = await response.json()
-        throw json.message
-      }
+      await API.deleteApp(selectedApp?.devId)
       await apps.load()
-      // get checklist, just in case that was the last app
+      // Get checklist, just in case that was the last app
       await admin.init()
       notifications.success("App deleted successfully")
     } catch (err) {
-      notifications.error(`Error deleting app: ${err}`)
+      notifications.error("Error deleting app")
     }
     selectedApp = null
     appName = null
@@ -246,15 +222,11 @@
 
   const releaseLock = async app => {
     try {
-      const response = await del(`/api/dev/${app.devId}/lock`)
-      if (response.status !== 200) {
-        const json = await response.json()
-        throw json.message
-      }
+      await API.releaseAppLock(app.devId)
       await apps.load()
       notifications.success("Lock released successfully")
     } catch (err) {
-      notifications.error(`Error releasing lock: ${err}`)
+      notifications.error("Error releasing lock")
     }
   }
 
@@ -272,17 +244,23 @@
   }
 
   onMount(async () => {
-    await apps.load()
-    await templates.load()
-    if ($templates?.length === 0) {
-      notifications.error("There was a problem loading quick start templates.")
-    }
-    // if the portal is loaded from an external URL with a template param
-    const initInfo = await auth.getInitInfo()
-    if (initInfo?.init_template) {
-      creatingFromTemplate = true
-      createAppFromTemplateUrl(initInfo.init_template)
-      return
+    try {
+      await apps.load()
+      await templates.load()
+      if ($templates?.length === 0) {
+        notifications.error(
+          "There was a problem loading quick start templates."
+        )
+      }
+      // If the portal is loaded from an external URL with a template param
+      const initInfo = await auth.getInitInfo()
+      if (initInfo?.init_template) {
+        creatingFromTemplate = true
+        createAppFromTemplateUrl(initInfo.init_template)
+        return
+      }
+    } catch (error) {
+      notifications.error("Error loading apps and templates")
     }
     loaded = true
   })

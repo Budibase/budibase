@@ -1,7 +1,13 @@
 <script>
-  import { ModalContent, Label, notifications, Body } from "@budibase/bbui"
+  import {
+    ModalContent,
+    Label,
+    notifications,
+    Body,
+    Layout,
+  } from "@budibase/bbui"
   import TableDataImport from "../../TableNavigator/TableDataImport.svelte"
-  import api from "builderStore/api"
+  import { API } from "api"
   import { createEventDispatcher } from "svelte"
 
   const dispatch = createEventDispatcher()
@@ -12,15 +18,17 @@
   $: valid = dataImport?.csvString != null && dataImport?.valid
 
   async function importData() {
-    const response = await api.post(`/api/tables/${tableId}/import`, {
-      dataImport,
-    })
-    if (response.status !== 200) {
-      const error = await response.text()
-      notifications.error(`Unable to import data - ${error}`)
-    } else {
-      notifications.success("Rows successfully imported.")
+    try {
+      await API.importTableData({
+        tableId,
+        data: dataImport,
+      })
+      notifications.success("Rows successfully imported")
+    } catch (error) {
+      notifications.error("Unable to import data")
     }
+
+    // Always refresh rows just to be sure
     dispatch("updaterows")
   }
 </script>
@@ -31,12 +39,14 @@
   onConfirm={importData}
   disabled={!valid}
 >
-  <Body
-    >Import rows to an existing table from a CSV. Only columns from the CSV
-    which exist in the table will be imported.</Body
-  >
-  <Label grey extraSmall>CSV to import</Label>
-  <TableDataImport bind:dataImport bind:existingTableId={tableId} />
+  <Body size="S">
+    Import rows to an existing table from a CSV. Only columns from the CSV which
+    exist in the table will be imported.
+  </Body>
+  <Layout gap="XS" noPadding>
+    <Label grey extraSmall>CSV to import</Label>
+    <TableDataImport bind:dataImport bind:existingTableId={tableId} />
+  </Layout>
 </ModalContent>
 
 <style>
