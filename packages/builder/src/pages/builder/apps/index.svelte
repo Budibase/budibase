@@ -17,7 +17,7 @@
   import { goto } from "@roxi/routify"
   import { AppStatus } from "constants"
   import { gradient } from "actions"
-  import UpdateUserInfoModal from "components/settings/UpdateUserInfoModal.svelte"
+  import UserInfoModal from "components/settings/UserInfoModal.svelte"
   import ChangePasswordModal from "components/settings/ChangePasswordModal.svelte"
   import { processStringSync } from "@budibase/string-templates"
   import Logo from "assets/bb-emblem.svg"
@@ -79,7 +79,7 @@
                 <Icon size="XL" name="ChevronDown" />
               </div>
               <MenuItem icon="UserEdit" on:click={() => userInfoModal.show()}>
-                Update user information
+                View user information
               </MenuItem>
               <MenuItem
                 icon="LockClosed"
@@ -150,7 +150,7 @@
     </Page>
   </div>
   <Modal bind:this={userInfoModal}>
-    <UpdateUserInfoModal />
+    <UserInfoModal />
   </Modal>
   <Modal bind:this={changePasswordModal}>
     <ChangePasswordModal />
