@@ -1,9 +1,9 @@
-const CouchDB = require("../../db")
 const { generateWebhookID, getWebhookParams } = require("../../db/utils")
 const toJsonSchema = require("to-json-schema")
 const validate = require("jsonschema").validate
 const triggers = require("../../automations/triggers")
-const { getDeployedAppID } = require("@budibase/backend-core/db")
+const { getProdAppID } = require("@budibase/backend-core/db")
+const { getAppDB, updateAppId } = require("@budibase/backend-core/context")
 
 const AUTOMATION_DESCRIPTION = "Generated from Webhook Schema"
 
@@ -23,7 +23,7 @@ exports.WebhookType = {
 }
 
 exports.fetch = async ctx => {
-  const db = new CouchDB(ctx.appId)
+  const db = getAppDB()
   const response = await db.allDocs(
     getWebhookParams(null, {
       include_docs: true,
@@ -33,7 +33,7 @@ exports.fetch = async ctx => {
 }
 
 exports.save = async ctx => {
-  const db = new CouchDB(ctx.appId)
+  const db = getAppDB()
   const webhook = ctx.request.body
   webhook.appId = ctx.appId
 
@@ -52,12 +52,13 @@ exports.save = async ctx => {
 }
 
 exports.destroy = async ctx => {
-  const db = new CouchDB(ctx.appId)
+  const db = getAppDB()
   ctx.body = await db.remove(ctx.params.id, ctx.params.rev)
 }
 
 exports.buildSchema = async ctx => {
-  const db = new CouchDB(ctx.params.instance)
+  updateAppId(ctx.params.instance)
+  const db = getAppDB()
   const webhook = await db.get(ctx.params.id)
   webhook.bodySchema = toJsonSchema(ctx.request.body)
   // update the automation outputs
@@ -81,9 +82,10 @@ exports.buildSchema = async ctx => {
 }
 
 exports.trigger = async ctx => {
-  const prodAppId = getDeployedAppID(ctx.params.instance)
+  const prodAppId = getProdAppID(ctx.params.instance)
+  updateAppId(prodAppId)
   try {
-    const db = new CouchDB(prodAppId)
+    const db = getAppDB()
     const webhook = await db.get(ctx.params.id)
     // validate against the schema
     if (webhook.bodySchema) {

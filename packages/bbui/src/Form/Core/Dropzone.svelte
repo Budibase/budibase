@@ -147,7 +147,9 @@
           <img alt="preview" src={selectedUrl} />
         {:else}
           <div class="placeholder">
-            <div class="extension">{selectedImage.extension}</div>
+            <div class="extension">
+              {selectedImage.name || "Unknown file"}
+            </div>
             <div>Preview not supported</div>
           </div>
         {/if}
@@ -359,18 +361,21 @@
     white-space: nowrap;
     width: 0;
     margin-right: 10px;
+    user-select: all;
   }
   .placeholder {
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    text-align: center;
   }
   .extension {
     color: var(--spectrum-global-color-gray-600);
     text-transform: uppercase;
     font-weight: 600;
     margin-bottom: 5px;
+    user-select: all;
   }
 
   .nav {

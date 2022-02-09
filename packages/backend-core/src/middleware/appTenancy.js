@@ -3,8 +3,9 @@ const {
   updateTenantId,
   isTenantIdSet,
   DEFAULT_TENANT_ID,
+  updateAppId,
 } = require("../tenancy")
-const ContextFactory = require("../tenancy/FunctionContext")
+const ContextFactory = require("../context/FunctionContext")
 const { getTenantIDFromAppID } = require("../db/utils")
 
 module.exports = () => {
@@ -21,5 +22,6 @@ module.exports = () => {
     const appId = ctx.appId ? ctx.appId : ctx.user ? ctx.user.appId : null
     const tenantId = getTenantIDFromAppID(appId) || DEFAULT_TENANT_ID
     updateTenantId(tenantId)
+    updateAppId(appId)
   })
 }

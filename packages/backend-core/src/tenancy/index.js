@@ -1,4 +1,4 @@
 module.exports = {
-  ...require("./context"),
+  ...require("../context"),
   ...require("./tenancy"),
 }

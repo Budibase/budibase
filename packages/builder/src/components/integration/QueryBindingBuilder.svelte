@@ -15,8 +15,6 @@
     queryBindings = [...queryBindings, {}]
   }
 
-  $: console.log(bindings)
-
   function deleteQueryBinding(idx) {
     queryBindings.splice(idx, 1)
     queryBindings = queryBindings
