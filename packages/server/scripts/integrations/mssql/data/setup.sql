@@ -36,13 +36,9 @@ CREATE TABLE people
 INSERT products
   (name, description)  
 VALUES  
-  ('Bananas', 'Fruit thing');  
-  
-INSERT products
-  (name, description)  
-VALUES  
+  ('Bananas', 'Fruit thing'),
   ('Meat', 'Animal thing');
-
+  
 INSERT tasks
   (taskname, productid)
 VALUES
