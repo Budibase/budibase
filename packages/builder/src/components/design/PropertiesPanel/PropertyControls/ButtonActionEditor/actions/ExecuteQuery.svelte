@@ -52,7 +52,7 @@
       {/if}
 
       {#if query?.parameters?.length > 0}
-        <div>
+        <div class="params">
           <BindingBuilder
             bind:customParams={parameters.queryParams}
             queryBindings={query.parameters}
@@ -70,3 +70,11 @@
     {/if}
   {/if}
 </Layout>
+
+<style>
+  .params {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-l);
+  }
+</style>

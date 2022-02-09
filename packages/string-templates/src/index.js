@@ -1,5 +1,5 @@
 const handlebars = require("handlebars")
-const { registerAll } = require("./helpers/index")
+const { registerAll, registerMinimum } = require("./helpers/index")
 const processors = require("./processors")
 const { atob, btoa } = require("./utilities")
 const manifest = require("../manifest.json")
@@ -8,10 +8,13 @@ const { FIND_HBS_REGEX, FIND_DOUBLE_HBS_REGEX } = require("./utilities")
 const hbsInstance = handlebars.create()
 registerAll(hbsInstance)
 const hbsInstanceNoHelpers = handlebars.create()
+registerMinimum(hbsInstanceNoHelpers)
 const defaultOpts = {
   noHelpers: false,
   cacheTemplates: false,
   noEscaping: false,
+  escapeNewlines: false,
+  noFinalise: false,
 }
 
 /**
@@ -34,15 +37,14 @@ function createTemplate(string, opts) {
   opts = { ...defaultOpts, ...opts }
 
   // Finalising adds a helper, can't do this with no helpers
-  const shouldFinalise = !opts.noHelpers
-  const key = `${string}${shouldFinalise}${opts.noEscaping}`
+  const key = `${string}-${JSON.stringify(opts)}`
 
   // Reuse the cached template is possible
   if (opts.cacheTemplates && templateCache[key]) {
     return templateCache[key]
   }
 
-  string = processors.preprocess(string, shouldFinalise)
+  string = processors.preprocess(string, opts)
 
   // Optionally disable built in HBS escaping
   if (opts.noEscaping) {
@@ -145,6 +147,7 @@ module.exports.processStringSync = (string, context, opts) => {
     return processors.postprocess(
       template({
         now: new Date(now).toISOString(),
+        __opts: opts,
         ...context,
       })
     )
@@ -200,7 +203,10 @@ module.exports.isValid = (string, opts) => {
   // don't really need a real context to check if its valid
   const context = {}
   try {
-    const template = createTemplate(string, opts)
+    const template = createTemplate(string, {
+      ...opts,
+      noFinalise: true,
+    })
     template(context)
     return true
   } catch (err) {

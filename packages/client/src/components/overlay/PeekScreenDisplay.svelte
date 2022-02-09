@@ -25,8 +25,8 @@
   }
 
   const proxyNotification = event => {
-    const { message, type, icon } = event.detail
-    notificationStore.actions.send(message, type, icon)
+    const { message, type, icon, autoDismiss } = event.detail
+    notificationStore.actions.send(message, type, icon, autoDismiss)
   }
 
   const proxyStateUpdate = event => {
