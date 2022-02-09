@@ -1,7 +1,7 @@
 import filterTests from "../../support/filterTests"
 
 filterTests(['all'], () => {
-  context("Datasource Wizard", () => {
+  xcontext("Datasource Wizard", () => {
       before(() => {
         cy.login()
         cy.createTestApp()
