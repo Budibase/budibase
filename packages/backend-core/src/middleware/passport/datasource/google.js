@@ -4,6 +4,7 @@ const google = require("../google")
 const { Configs, Cookies } = require("../../../constants")
 const { clearCookie, getCookie } = require("../../../utils")
 const { getDB } = require("../../../db")
+const environment = require("../../../environment")
 
 async function preAuth(passport, ctx, next) {
   const db = getGlobalDB()
@@ -12,10 +13,7 @@ async function preAuth(passport, ctx, next) {
     type: Configs.GOOGLE,
     workspace: ctx.query.workspace,
   })
-  const publicConfig = await getScopedConfig(db, {
-    type: Configs.SETTINGS,
-  })
-  let callbackUrl = `${publicConfig.platformUrl}/api/global/auth/datasource/google/callback`
+  let callbackUrl = `${environment.PLATFORM_URL}/api/global/auth/datasource/google/callback`
   const strategy = await google.strategyFactory(config, callbackUrl)
 
   if (!ctx.query.appId || !ctx.query.datasourceId) {
@@ -37,11 +35,7 @@ async function postAuth(passport, ctx, next) {
     workspace: ctx.query.workspace,
   })
 
-  const publicConfig = await getScopedConfig(db, {
-    type: Configs.SETTINGS,
-  })
-
-  let callbackUrl = `${publicConfig.platformUrl}/api/global/auth/datasource/google/callback`
+  let callbackUrl = `${environment.PLATFORM_URL}/api/global/auth/datasource/google/callback`
   const strategy = await google.strategyFactory(
     config,
     callbackUrl,
