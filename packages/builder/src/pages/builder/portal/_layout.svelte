@@ -16,7 +16,7 @@
   import { organisation, auth } from "stores/portal"
   import { admin as adminStore } from "stores/portal"
   import { onMount } from "svelte"
-  import UserInfoModal from "components/settings/UserInfoModal.svelte"
+  import UpdateUserInfoModal from "components/settings/UpdateUserInfoModal.svelte"
   import ChangePasswordModal from "components/settings/ChangePasswordModal.svelte"
   import Logo from "assets/bb-emblem.svg"
 
@@ -160,7 +160,7 @@
               <Icon size="XL" name="ChevronDown" />
             </div>
             <MenuItem icon="UserEdit" on:click={() => userInfoModal.show()}>
-              View user information
+              Update user information
             </MenuItem>
             <MenuItem
               icon="LockClosed"
@@ -181,7 +181,7 @@
     </div>
   </div>
   <Modal bind:this={userInfoModal}>
-    <UserInfoModal />
+    <UpdateUserInfoModal />
   </Modal>
   <Modal bind:this={changePasswordModal}>
     <ChangePasswordModal />
