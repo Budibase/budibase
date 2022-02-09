@@ -11,13 +11,13 @@
     Label,
     Layout,
     Modal,
+    notifications,
   } from "@budibase/bbui"
   import TagsRenderer from "./_components/TagsTableRenderer.svelte"
   import AddUserModal from "./_components/AddUserModal.svelte"
   import BasicOnboardingModal from "./_components/BasicOnboardingModal.svelte"
   import { users } from "stores/portal"
-
-  users.init()
+  import { onMount } from "svelte"
 
   const schema = {
     email: {},
@@ -47,6 +47,14 @@
     createUserModal.hide()
     basicOnboardingModal.show()
   }
+
+  onMount(async () => {
+    try {
+      await users.init()
+    } catch (error) {
+      notifications.error("Error getting user list")
+    }
+  })
 </script>
 
 <Layout noPadding>

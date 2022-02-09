@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@budibase/bbui": "^1.0.50-alpha.5",
-    "@budibase/standard-components": "^0.9.139",
+    "@budibase/frontend-core": "^1.0.50-alpha.5",
     "@budibase/string-templates": "^1.0.50-alpha.5",
     "regexparam": "^1.3.0",
     "rollup-plugin-polyfill-node": "^0.8.0",

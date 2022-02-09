@@ -143,7 +143,7 @@
   // Callback when entering a potential drop target
   const onDragEnter = e => {
     // Skip if we aren't validly dragging currently
-    if (!dragInfo) {
+    if (!dragInfo || !e.target.closest) {
       return
     }
 

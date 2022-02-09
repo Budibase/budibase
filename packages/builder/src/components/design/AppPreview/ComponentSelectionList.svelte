@@ -1,5 +1,11 @@
 <script>
-  import { ActionMenu, ActionButton, MenuItem, Icon } from "@budibase/bbui"
+  import {
+    ActionMenu,
+    ActionButton,
+    MenuItem,
+    Icon,
+    notifications,
+  } from "@budibase/bbui"
   import { store, currentAssetName, selectedComponent } from "builderStore"
   import structure from "./componentStructure.json"
 
@@ -36,7 +42,11 @@
 
   const onItemChosen = async item => {
     if (!item.isCategory) {
-      await store.actions.components.create(item.component)
+      try {
+        await store.actions.components.create(item.component)
+      } catch (error) {
+        notifications.error("Error creating component")
+      }
     }
   }
 </script>

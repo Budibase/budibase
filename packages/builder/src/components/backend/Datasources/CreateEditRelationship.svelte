@@ -9,7 +9,7 @@
     Body,
   } from "@budibase/bbui"
   import { tables } from "stores/backend"
-  import { uuid } from "builderStore/uuid"
+  import { Helpers } from "@budibase/bbui"
   import { writable } from "svelte/store"
 
   export let save
@@ -140,7 +140,7 @@
     const manyToMany =
       fromRelationship.relationshipType === RelationshipTypes.MANY_TO_MANY
     // main is simply used to know this is the side the user configured it from
-    const id = uuid()
+    const id = Helpers.uuid()
     if (!manyToMany) {
       delete fromRelationship.through
       delete toRelationship.through
