@@ -4,6 +4,7 @@ const joiValidator = require("../../../middleware/joi-validator")
 const adminOnly = require("../../../middleware/adminOnly")
 const Joi = require("joi")
 const cloudRestricted = require("../../../middleware/cloudRestricted")
+const builderOnly = require("../../../middleware/builderOnly")
 
 const router = Router()
 
@@ -95,6 +96,8 @@ router
     buildAdminInitValidation(),
     controller.adminUser
   )
+  .post("/api/global/users/api/key", builderOnly, controller.generateAPIKey)
+  .get("/api/global/users/api/key", builderOnly, controller.fetchAPIKey)
   .get("/api/global/users/self", controller.getSelf)
   .get("/api/global/users/tenant/:id", controller.tenantUserLookup)
   // global endpoint but needs to come at end (blocks other endpoints otherwise)
