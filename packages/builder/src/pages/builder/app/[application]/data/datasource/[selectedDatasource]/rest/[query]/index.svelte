@@ -59,6 +59,9 @@
   $: schemaReadOnly = !responseSuccess
   $: variablesReadOnly = !responseSuccess
   $: showVariablesTab = shouldShowVariables(dynamicVariables, variablesReadOnly)
+  $: hasSchema =
+    Object.keys(schema || {}).length !== 0 ||
+    Object.keys(query?.schema || {}).length !== 0
 
   function getSelectedQuery() {
     return cloneDeep(
@@ -294,6 +297,7 @@
             bind:value={query.name}
             defaultValue="Untitled"
             on:change={() => (query.flags.urlName = false)}
+            on:save={saveQuery}
           />
           <div class="access">
             <Label>Access level</Label>
@@ -313,7 +317,15 @@
           <div class="url">
             <Input bind:value={url} placeholder="http://www.api.com/endpoint" />
           </div>
-          <Button cta disabled={!url} on:click={runQuery}>Send</Button>
+          <Button primary disabled={!url} on:click={runQuery}>Send</Button>
+          <Button
+            disabled={!query.name}
+            cta
+            on:click={saveQuery}
+            tooltip={!hasSchema
+              ? "Saving a query before sending will mean no schema is generated"
+              : null}>Save</Button
+          >
         </div>
         <Tabs selected="Bindings" quiet noPadding noHorizPadding onTop>
           <Tab title="Bindings">
@@ -527,9 +539,6 @@
                     >{response?.info.size}</span
                   >
                 </Label>
-                <Button disabled={!responseSuccess} cta on:click={saveQuery}
-                  >Save query</Button
-                >
               </div>
             {/if}
           </Tabs>

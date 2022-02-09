@@ -1163,19 +1163,7 @@
     svelte-apexcharts "^1.0.2"
     svelte-flatpickr "^3.1.0"
 
-"@budibase/string-templates@1.0.50-alpha.1":
-  version "1.0.50-alpha.1"
-  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-1.0.50-alpha.1.tgz#ea05a74a3031850652812be21f44d40249e21d43"
-  integrity sha512-TM6WNzGBlwV0FhR8luejg8CQGa9IaMrMLrW+gfkl4fqEafoWIeKueVhT/lVuPtUK2NzGxmKfNRoasZu6wM6grA==
-  dependencies:
-    "@budibase/handlebars-helpers" "^0.11.7"
-    dayjs "^1.10.4"
-    handlebars "^4.7.6"
-    handlebars-utils "^1.0.6"
-    lodash "^4.17.20"
-    vm2 "^3.9.4"
-
-"@budibase/string-templates@^1.0.50":
+"@budibase/string-templates@^1.0.50", "@budibase/string-templates@^1.0.50-alpha.1":
   version "1.0.50"
   resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-1.0.50.tgz#53386f3c09891ef21bd47870d25cf7e12f6fac86"
   integrity sha512-jmqmikU3Xt0I0hY1S1QI8x5770Z+Tu6zGxb9iQsk3PUCkKCpHz70Rl3Q7x5nYsDfOlhT4YHaHKgYYQYJ6hRafw==
