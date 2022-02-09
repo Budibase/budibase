@@ -20,7 +20,7 @@ describe("test that it can run without helpers", () => {
     )
     const valid = await processString("{{ avg 1 1 1 }}", {})
     expect(valid).toBe("1")
-    expect(output).toBe("{{ avg 1 1 1 }}")
+    expect(output).toBe("")
   })
 })
 
