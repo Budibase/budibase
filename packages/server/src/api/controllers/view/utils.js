@@ -6,8 +6,10 @@ const {
   SEPARATOR,
 } = require("../../../db/utils")
 const env = require("../../../environment")
+const { getAppDB } = require("@budibase/backend-core/context")
 
-exports.getView = async (db, viewName) => {
+exports.getView = async viewName => {
+  const db = getAppDB()
   if (env.SELF_HOSTED) {
     const designDoc = await db.get("_design/database")
     return designDoc.views[viewName]
@@ -22,7 +24,8 @@ exports.getView = async (db, viewName) => {
   }
 }
 
-exports.getViews = async db => {
+exports.getViews = async () => {
+  const db = getAppDB()
   const response = []
   if (env.SELF_HOSTED) {
     const designDoc = await db.get("_design/database")
@@ -54,7 +57,8 @@ exports.getViews = async db => {
   return response
 }
 
-exports.saveView = async (db, originalName, viewName, viewTemplate) => {
+exports.saveView = async (originalName, viewName, viewTemplate) => {
+  const db = getAppDB()
   if (env.SELF_HOSTED) {
     const designDoc = await db.get("_design/database")
     designDoc.views = {
@@ -91,7 +95,8 @@ exports.saveView = async (db, originalName, viewName, viewTemplate) => {
   }
 }
 
-exports.deleteView = async (db, viewName) => {
+exports.deleteView = async viewName => {
+  const db = getAppDB()
   if (env.SELF_HOSTED) {
     const designDoc = await db.get("_design/database")
     const view = designDoc.views[viewName]

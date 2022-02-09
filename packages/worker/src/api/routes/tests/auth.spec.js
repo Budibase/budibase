@@ -1,9 +1,8 @@
+jest.mock("nodemailer")
 const setup = require("./utilities")
+const sendMailMock = setup.emailMock()
 
 const TENANT_ID = "default"
-
-jest.mock("nodemailer")
-const sendMailMock = setup.emailMock()
 
 describe("/api/global/auth", () => {
   let request = setup.getRequest()

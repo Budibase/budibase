@@ -104,12 +104,14 @@ Budibase is made to scale. With Budibase, you can self-host on your own infrastr
 
 ## 🏁 Get started
 
-<img src="https://res.cloudinary.com/daog6scxm/image/upload/v1634808888/logo/deploy_npl9za.png" />
+<a href="https://docs.budibase.com/self-hosting/self-host"><img src="https://res.cloudinary.com/daog6scxm/image/upload/v1634808888/logo/deploy_npl9za.png" /></a>
 
-Deploy Budibase self-Hosted in your existing infrastructure, using Docker, Kubernetes, and Digital Ocean.
+Deploy Budibase self-hosted in your existing infrastructure, using Docker, Kubernetes, and Digital Ocean.
 Or use Budibase Cloud if you don't need to self-host, and would like to get started quickly.
 
-### [Get started with Budibase](https://budibase.com)
+### [Get started with self-hosting Budibase](https://docs.budibase.com/self-hosting/self-host)
+
+### [Get started with Budibase Cloud](https://budibase.com)
 
 
 <br /><br />
@@ -200,9 +202,6 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://github.com/SOVLOOKUP"><img src="https://avatars.githubusercontent.com/u/53158137?v=4?s=100" width="100px;" alt=""/><br /><sub><b>SOVLOOKUP</b></sub></a><br /><a href="https://github.com/Budibase/budibase/commits?author=SOVLOOKUP" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/seoulaja"><img src="https://avatars.githubusercontent.com/u/15101654?v=4?s=100" width="100px;" alt=""/><br /><sub><b>seoulaja</b></sub></a><br /><a href="#translation-seoulaja" title="Translation">🌍</a></td>
     <td align="center"><a href="https://github.com/mslourens"><img src="https://avatars.githubusercontent.com/u/1907152?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Maurits Lourens</b></sub></a><br /><a href="https://github.com/Budibase/budibase/commits?author=mslourens" title="Tests">⚠️</a> <a href="https://github.com/Budibase/budibase/commits?author=mslourens" title="Code">💻</a></td>
-  </tr>
-  <tr>
-    <td align="center"><a href="https://github.com/Rory-Powell"><img src="https://avatars.githubusercontent.com/u/8755148?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Rory Powell</b></sub></a><br /><a href="#infra-Rory-Powell" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a> <a href="https://github.com/Budibase/budibase/commits?author=Rory-Powell" title="Tests">⚠️</a> <a href="https://github.com/Budibase/budibase/commits?author=Rory-Powell" title="Code">💻</a></td>
   </tr>
 </table>
 

@@ -99,6 +99,7 @@ globals:
   accountPortalApiKey: ""
   cookieDomain: ""
   platformUrl: ""
+  httpMigrations: "0"
 
   createSecrets: true # creates an internal API key, JWT secrets and redis password for you
 

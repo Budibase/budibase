@@ -1,4 +1,3 @@
-const { getDB } = require("../db")
 const { cloneDeep } = require("lodash/fp")
 const { BUILTIN_PERMISSION_IDS } = require("./permissions")
 const {
@@ -7,6 +6,8 @@ const {
   DocumentTypes,
   SEPARATOR,
 } = require("../db/utils")
+const { getAppDB } = require("../context")
+const { getDB } = require("../db")
 
 const BUILTIN_IDS = {
   ADMIN: "ADMIN",
@@ -111,11 +112,10 @@ exports.lowerBuiltinRoleID = (roleId1, roleId2) => {
 /**
  * Gets the role object, this is mainly useful for two purposes, to check if the level exists and
  * to check if the role inherits any others.
- * @param {string} appId The app in which to look for the role.
  * @param {string|null} roleId The level ID to lookup.
  * @returns {Promise<Role|object|null>} The role object, which may contain an "inherits" property.
  */
-exports.getRole = async (appId, roleId) => {
+exports.getRole = async roleId => {
   if (!roleId) {
     return null
   }
@@ -128,7 +128,7 @@ exports.getRole = async (appId, roleId) => {
     )
   }
   try {
-    const db = getDB(appId)
+    const db = getAppDB()
     const dbRole = await db.get(exports.getDBRoleID(roleId))
     role = Object.assign(role, dbRole)
     // finalise the ID
@@ -145,11 +145,12 @@ exports.getRole = async (appId, roleId) => {
 /**
  * Simple function to get all the roles based on the top level user role ID.
  */
-async function getAllUserRoles(appId, userRoleId) {
-  if (!userRoleId) {
-    return [BUILTIN_IDS.BASIC]
+async function getAllUserRoles(userRoleId) {
+  // admins have access to all roles
+  if (userRoleId === BUILTIN_IDS.ADMIN) {
+    return exports.getAllRoles()
   }
-  let currentRole = await exports.getRole(appId, userRoleId)
+  let currentRole = await exports.getRole(userRoleId)
   let roles = currentRole ? [currentRole] : []
   let roleIds = [userRoleId]
   // get all the inherited roles
@@ -159,7 +160,7 @@ async function getAllUserRoles(appId, userRoleId) {
     roleIds.indexOf(currentRole.inherits) === -1
   ) {
     roleIds.push(currentRole.inherits)
-    currentRole = await exports.getRole(appId, currentRole.inherits)
+    currentRole = await exports.getRole(currentRole.inherits)
     roles.push(currentRole)
   }
   return roles
@@ -168,29 +169,23 @@ async function getAllUserRoles(appId, userRoleId) {
 /**
  * Returns an ordered array of the user's inherited role IDs, this can be used
  * to determine if a user can access something that requires a specific role.
- * @param {string} appId The ID of the application from which roles should be obtained.
  * @param {string} userRoleId The user's role ID, this can be found in their access token.
  * @param {object} opts Various options, such as whether to only retrieve the IDs (default true).
  * @returns {Promise<string[]>} returns an ordered array of the roles, with the first being their
  * highest level of access and the last being the lowest level.
  */
-exports.getUserRoleHierarchy = async (
-  appId,
-  userRoleId,
-  opts = { idOnly: true }
-) => {
+exports.getUserRoleHierarchy = async (userRoleId, opts = { idOnly: true }) => {
   // special case, if they don't have a role then they are a public user
-  const roles = await getAllUserRoles(appId, userRoleId)
+  const roles = await getAllUserRoles(userRoleId)
   return opts.idOnly ? roles.map(role => role._id) : roles
 }
 
 /**
  * Given an app ID this will retrieve all of the roles that are currently within that app.
- * @param {string} appId The ID of the app to retrieve the roles from.
  * @return {Promise<object[]>} An array of the role objects that were found.
  */
 exports.getAllRoles = async appId => {
-  const db = getDB(appId)
+  const db = appId ? getDB(appId) : getAppDB()
   const body = await db.allDocs(
     getRoleParams(null, {
       include_docs: true,
@@ -218,19 +213,17 @@ exports.getAllRoles = async appId => {
 }
 
 /**
- * This retrieves the required role/
- * @param appId
+ * This retrieves the required role
  * @param permLevel
  * @param resourceId
  * @param subResourceId
  * @return {Promise<{permissions}|Object>}
  */
 exports.getRequiredResourceRole = async (
-  appId,
   permLevel,
   { resourceId, subResourceId }
 ) => {
-  const roles = await exports.getAllRoles(appId)
+  const roles = await exports.getAllRoles()
   let main = [],
     sub = []
   for (let role of roles) {
@@ -251,8 +244,7 @@ exports.getRequiredResourceRole = async (
 }
 
 class AccessController {
-  constructor(appId) {
-    this.appId = appId
+  constructor() {
     this.userHierarchies = {}
   }
 
@@ -270,7 +262,7 @@ class AccessController {
     }
     let roleIds = this.userHierarchies[userRoleId]
     if (!roleIds) {
-      roleIds = await exports.getUserRoleHierarchy(this.appId, userRoleId)
+      roleIds = await exports.getUserRoleHierarchy(userRoleId)
       this.userHierarchies[userRoleId] = roleIds
     }
 

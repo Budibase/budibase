@@ -5,7 +5,7 @@ const {
   checkDebounce,
   setDebounce,
 } = require("../utilities/redis")
-const CouchDB = require("../db")
+const { getDB } = require("@budibase/backend-core/db")
 const { DocumentTypes } = require("../db/utils")
 const { PermissionTypes } = require("@budibase/backend-core/permissions")
 const { app: appCache } = require("@budibase/backend-core/cache")
@@ -48,7 +48,7 @@ async function updateAppUpdatedAt(ctx) {
   if (ctx.method === "GET" || (await checkDebounce(appId))) {
     return
   }
-  const db = new CouchDB(appId)
+  const db = getDB(appId)
   const metadata = await db.get(DocumentTypes.APP_METADATA)
   metadata.updatedAt = new Date().toISOString()
   const response = await db.put(metadata)
