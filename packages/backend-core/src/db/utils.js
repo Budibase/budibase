@@ -337,6 +337,14 @@ const getConfigParams = ({ type, workspace, user }, otherProps = {}) => {
 }
 
 /**
+ * Generates a new dev info document ID - this is scoped to a user.
+ * @returns {string} The new dev info ID which info for dev (like api key) can be stored under.
+ */
+const generateDevInfoID = userId => {
+  return `${DocumentTypes.DEV_INFO}${SEPARATOR}${userId}`
+}
+
+/**
  * Returns the most granular configuration document from the DB based on the type, workspace and userID passed.
  * @param {Object} db - db instance to query
  * @param {Object} scopes - the type, workspace and userID scopes of the configuration.
@@ -451,3 +459,4 @@ exports.generateConfigID = generateConfigID
 exports.getConfigParams = getConfigParams
 exports.getScopedFullConfig = getScopedFullConfig
 exports.generateNewUsageQuotaDoc = generateNewUsageQuotaDoc
+exports.generateDevInfoID = generateDevInfoID
