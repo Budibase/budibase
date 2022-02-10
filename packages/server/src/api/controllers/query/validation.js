@@ -31,6 +31,9 @@ exports.generateQueryValidation = () => {
 exports.generateQueryPreviewValidation = () => {
   // prettier-ignore
   return joiValidator.body(Joi.object({
+    _id: Joi.string().optional(),
+    _rev: Joi.string().optional(),
+    readable: Joi.boolean().optional(),
     fields: Joi.object().required(),
     queryVerb: Joi.string().allow().required(),
     name: Joi.string().required(),
