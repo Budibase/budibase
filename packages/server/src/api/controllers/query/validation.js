@@ -33,6 +33,9 @@ exports.generateQueryPreviewValidation = () => {
   return joiValidator.body(Joi.object({
     fields: Joi.object().required(),
     queryVerb: Joi.string().allow().required(),
+    name: Joi.string().required(),
+    flags: Joi.object().optional(),
+    schema: Joi.object().optional(),
     extra: Joi.object().optional(),
     datasourceId: Joi.string().required(),
     transformer: Joi.string().optional(),
