@@ -20,6 +20,7 @@ import { buildScreenEndpoints } from "./screens"
 import { buildTableEndpoints } from "./tables"
 import { buildTemplateEndpoints } from "./templates"
 import { buildUserEndpoints } from "./user"
+import { buildSelfEndpoints } from "./self"
 import { buildViewEndpoints } from "./views"
 
 const defaultAPIClientConfig = {
@@ -231,5 +232,6 @@ export const createAPIClient = config => {
     ...buildTemplateEndpoints(API),
     ...buildUserEndpoints(API),
     ...buildViewEndpoints(API),
+    ...buildSelfEndpoints(API),
   }
 }
