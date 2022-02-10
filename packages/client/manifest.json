@@ -2946,7 +2946,7 @@
         "settings": [
           {
             "type": "number",
-            "label": "Row Count",
+            "label": "Scroll Limit",
             "key": "rowCount",
             "defaultValue": 8
           },
