@@ -111,6 +111,10 @@ spec:
           value: {{ .Values.globals.smtp.from | quote }}
         - name: APPS_URL
           value: http://app-service:{{ .Values.services.apps.port }}
+        - name: GOOGLE_CLIENT_ID
+          value: {{ .Values.globals.google.clientId | quote }}
+        - name: GOOGLE_CLIENT_SECRET
+          value: {{ .Values.globals.google.secret | quote }}
         image: budibase/worker:{{ .Values.globals.appVersion }}
         imagePullPolicy: Always
         name: bbworker

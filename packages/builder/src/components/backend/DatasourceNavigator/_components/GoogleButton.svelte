@@ -17,7 +17,7 @@
       ds = await preAuthStep()
     }
     window.open(
-      `/api/global/auth/${tenantId}/datasource/google?datasourceId=${datasource._id}&appId=${$store.appId}`,
+      `/api/global/auth/${tenantId}/datasource/google?datasourceId=${ds._id}&appId=${$store.appId}`,
       "_blank"
     )
   }}
