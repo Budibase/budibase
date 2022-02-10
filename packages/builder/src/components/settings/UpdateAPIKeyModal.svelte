@@ -7,11 +7,13 @@
 
   async function generateAPIKey() {
     try {
-      await auth.generateAPIKey()
+      apiKey = await auth.generateAPIKey()
       notifications.success("New API key generated.")
     } catch (err) {
       notifications.error("Unable to generate new API key")
     }
+    // need to return false to keep modal open
+    return false
   }
 
   onMount(async () => {
