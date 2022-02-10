@@ -9,7 +9,7 @@
   import Router from "./Router.svelte"
   import { enrichProps, propsAreSame } from "utils/componentProps"
   import { builderStore } from "stores"
-  import { hashString } from "utils/helpers"
+  import { Helpers } from "@budibase/bbui"
   import Manifest from "manifest.json"
   import { getActiveConditions, reduceConditionActions } from "utils/conditions"
   import Placeholder from "components/app/Placeholder.svelte"
@@ -106,7 +106,7 @@
 
   // Raw settings are all settings excluding internal props and children
   $: rawSettings = getRawSettings(instance)
-  $: instanceKey = hashString(JSON.stringify(rawSettings))
+  $: instanceKey = Helpers.hashString(JSON.stringify(rawSettings))
 
   // Update and enrich component settings
   $: updateSettings(rawSettings, instanceKey, settingsDefinition, $context)
@@ -117,9 +117,6 @@
 
   // Build up the final settings object to be passed to the component
   $: cacheSettings(enrichedSettings, nestedSettings, conditionalSettings)
-
-  // Render key is used to determine when components need to fully remount
-  $: renderKey = getRenderKey(id, editing)
 
   // Update component context
   $: componentStore.set({
@@ -276,8 +273,7 @@
   // reactive statements as much as possible.
   const cacheSettings = (enriched, nested, conditional) => {
     const allSettings = { ...enriched, ...nested, ...conditional }
-    const mounted = ref?.$$set != null
-    if (!cachedSettings || !mounted) {
+    if (!cachedSettings) {
       cachedSettings = { ...allSettings }
       initialSettings = cachedSettings
     } else {
@@ -290,51 +286,54 @@
           // setting it on initialSettings directly, we avoid a double render.
           cachedSettings[key] = allSettings[key]
 
-          // Programmatically set the prop to avoid svelte reactive statements
-          // firing inside components. This circumvents the problems caused by
-          // spreading a props object.
-          ref.$$set({ [key]: allSettings[key] })
+          if (ref?.$$set) {
+            // Programmatically set the prop to avoid svelte reactive statements
+            // firing inside components. This circumvents the problems caused by
+            // spreading a props object.
+            ref.$$set({ [key]: allSettings[key] })
+          } else {
+            // Sometimes enrichment can occur multiple times before the
+            // component has mounted and been assigned a ref.
+            // In these cases, for some reason we need to update the
+            // initial settings object, even though it is equivalent by
+            // reference to cached settings. This solves the problem of multiple
+            // initial enrichments, while also not causing wasted renders for
+            // any components not affected by this issue.
+            initialSettings[key] = allSettings[key]
+          }
         }
       })
     }
   }
-
-  // Generates a key used to determine when components need to fully remount.
-  // Currently only toggling editing requires remounting.
-  const getRenderKey = (id, editing) => {
-    return hashString(`${id}-${editing}`)
-  }
 </script>
 
-{#key renderKey}
-  {#if constructor && initialSettings && (visible || inSelectedPath)}
-    <!-- The ID is used as a class because getElementsByClassName is O(1) -->
-    <!-- and the performance matters for the selection indicators -->
-    <div
-      class={`component ${id}`}
-      class:draggable
-      class:droppable
-      class:empty
-      class:interactive
-      class:editing
-      class:block={isBlock}
-      data-id={id}
-      data-name={name}
-    >
-      <svelte:component this={constructor} bind:this={ref} {...initialSettings}>
-        {#if children.length}
-          {#each children as child (child._id)}
-            <svelte:self instance={child} />
-          {/each}
-        {:else if emptyState}
-          <Placeholder />
-        {:else if isBlock}
-          <slot />
-        {/if}
-      </svelte:component>
-    </div>
-  {/if}
-{/key}
+{#if constructor && initialSettings && (visible || inSelectedPath)}
+  <!-- The ID is used as a class because getElementsByClassName is O(1) -->
+  <!-- and the performance matters for the selection indicators -->
+  <div
+    class={`component ${id}`}
+    class:draggable
+    class:droppable
+    class:empty
+    class:interactive
+    class:editing
+    class:block={isBlock}
+    data-id={id}
+    data-name={name}
+  >
+    <svelte:component this={constructor} bind:this={ref} {...initialSettings}>
+      {#if children.length}
+        {#each children as child (child._id)}
+          <svelte:self instance={child} />
+        {/each}
+      {:else if emptyState}
+        <Placeholder />
+      {:else if isBlock}
+        <slot />
+      {/if}
+    </svelte:component>
+  </div>
+{/if}
 
 <style>
   .component {

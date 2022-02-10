@@ -1,4 +1,4 @@
-const CouchDB = require("../index")
+const { getAppDB } = require("@budibase/backend-core/context")
 const {
   DocumentTypes,
   SEPARATOR,
@@ -21,12 +21,11 @@ const SCREEN_PREFIX = DocumentTypes.SCREEN + SEPARATOR
 /**
  * Creates the link view for the instance, this will overwrite the existing one, but this should only
  * be called if it is found that the view does not exist.
- * @param {string} appId The instance to which the view should be added.
  * @returns {Promise<void>} The view now exists, please note that the next view of this query will actually build it,
  * so it may be slow.
  */
-exports.createLinkView = async appId => {
-  const db = new CouchDB(appId)
+exports.createLinkView = async () => {
+  const db = getAppDB()
   const designDoc = await db.get("_design/database")
   const view = {
     map: function (doc) {
@@ -57,8 +56,8 @@ exports.createLinkView = async appId => {
   await db.put(designDoc)
 }
 
-exports.createRoutingView = async appId => {
-  const db = new CouchDB(appId)
+exports.createRoutingView = async () => {
+  const db = getAppDB()
   const designDoc = await db.get("_design/database")
   const view = {
     // if using variables in a map function need to inject them before use
@@ -78,8 +77,8 @@ exports.createRoutingView = async appId => {
   await db.put(designDoc)
 }
 
-async function searchIndex(appId, indexName, fnString) {
-  const db = new CouchDB(appId)
+async function searchIndex(indexName, fnString) {
+  const db = getAppDB()
   const designDoc = await db.get("_design/database")
   designDoc.indexes = {
     [indexName]: {
@@ -90,9 +89,8 @@ async function searchIndex(appId, indexName, fnString) {
   await db.put(designDoc)
 }
 
-exports.createAllSearchIndex = async appId => {
+exports.createAllSearchIndex = async () => {
   await searchIndex(
-    appId,
     SearchIndexes.ROWS,
     function (doc) {
       function idx(input, prev) {

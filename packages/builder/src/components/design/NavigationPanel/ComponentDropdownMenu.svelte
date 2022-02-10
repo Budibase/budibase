@@ -29,10 +29,14 @@
     if (currentIndex === 0) {
       return
     }
-    const newChildren = parent._children.filter(c => c !== component)
-    newChildren.splice(currentIndex - 1, 0, component)
-    parent._children = newChildren
-    store.actions.preview.saveSelected()
+    try {
+      const newChildren = parent._children.filter(c => c !== component)
+      newChildren.splice(currentIndex - 1, 0, component)
+      parent._children = newChildren
+      store.actions.preview.saveSelected()
+    } catch (error) {
+      notifications.error("Error saving screen")
+    }
   }
 
   const moveDownComponent = () => {
@@ -45,10 +49,14 @@
     if (currentIndex === parent._children.length - 1) {
       return
     }
-    const newChildren = parent._children.filter(c => c !== component)
-    newChildren.splice(currentIndex + 1, 0, component)
-    parent._children = newChildren
-    store.actions.preview.saveSelected()
+    try {
+      const newChildren = parent._children.filter(c => c !== component)
+      newChildren.splice(currentIndex + 1, 0, component)
+      parent._children = newChildren
+      store.actions.preview.saveSelected()
+    } catch (error) {
+      notifications.error("Error saving screen")
+    }
   }
 
   const duplicateComponent = () => {
@@ -60,7 +68,7 @@
     try {
       await store.actions.components.delete(component)
     } catch (error) {
-      notifications.error(error)
+      notifications.error("Error deleting component")
     }
   }
 
@@ -70,8 +78,12 @@
   }
 
   const pasteComponent = (mode, preserveBindings = false) => {
-    // lives in store - also used by drag drop
-    store.actions.components.paste(component, mode, preserveBindings)
+    try {
+      // lives in store - also used by drag drop
+      store.actions.components.paste(component, mode, preserveBindings)
+    } catch (error) {
+      notifications.error("Error saving component")
+    }
   }
 </script>
 

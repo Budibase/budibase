@@ -1,110 +1,50 @@
-import { notificationStore, authStore } from "stores"
+import { createAPIClient } from "@budibase/frontend-core"
+import { notificationStore, authStore } from "../stores"
 import { get } from "svelte/store"
-import { ApiVersion } from "constants"
 
-/**
- * API cache for cached request responses.
- */
-let cache = {}
+export const API = createAPIClient({
+  // Enable caching of cacheable endpoints to speed things up,
+  enableCaching: true,
 
-/**
- * Handler for API errors.
- */
-const handleError = error => {
-  return { error }
-}
+  // Attach client specific headers
+  attachHeaders: headers => {
+    // Attach app ID header
+    headers["x-budibase-app-id"] = window["##BUDIBASE_APP_ID##"]
 
-/**
- * Performs an API call to the server.
- * App ID header is always correctly set.
- */
-const makeApiCall = async ({ method, url, body, json = true }) => {
-  try {
-    const requestBody = json ? JSON.stringify(body) : body
-    const inBuilder = window["##BUDIBASE_IN_BUILDER##"]
-    const headers = {
-      Accept: "application/json",
-      "x-budibase-app-id": window["##BUDIBASE_APP_ID##"],
-      "x-budibase-api-version": ApiVersion,
-      ...(json && { "Content-Type": "application/json" }),
-      ...(!inBuilder && { "x-budibase-type": "client" }),
+    // Attach client header if not inside the builder preview
+    if (!window["##BUDIBASE_IN_BUILDER##"]) {
+      headers["x-budibase-type"] = "client"
     }
 
-    // add csrf token if authenticated
+    // Add csrf token if authenticated
     const auth = get(authStore)
-    if (auth && auth.csrfToken) {
+    if (auth?.csrfToken) {
       headers["x-csrf-token"] = auth.csrfToken
     }
+  },
 
-    const response = await fetch(url, {
-      method,
-      headers,
-      body: requestBody,
-      credentials: "same-origin",
-    })
-    switch (response.status) {
-      case 200:
-        try {
-          return await response.json()
-        } catch (error) {
-          return null
-        }
-      case 401:
-        notificationStore.actions.error("Invalid credentials")
-        return handleError(`Invalid credentials`)
-      case 404:
-        notificationStore.actions.warning("Not found")
-        return handleError(`${url}: Not Found`)
-      case 400:
-        return handleError(`${url}: Bad Request`)
-      case 403:
-        notificationStore.actions.error(
-          "Your session has expired, or you don't have permission to access that data"
-        )
-        return handleError(`${url}: Forbidden`)
-      default:
-        if (response.status >= 200 && response.status < 400) {
-          return response.json()
-        }
-        return handleError(`${url} - ${response.statusText}`)
+  // Show an error notification for all API failures.
+  // We could also log these to sentry.
+  // Or we could check error.status and redirect to login on a 403 etc.
+  onError: error => {
+    const { status, method, url, message, handled } = error || {}
+
+    // Log any errors that we haven't manually handled
+    if (!handled) {
+      console.error("Unhandled error from API client", error)
+      return
     }
-  } catch (error) {
-    return handleError(error)
-  }
-}
 
-/**
- * Performs an API call to the server and caches the response.
- * Future invocation for this URL will return the cached result instead of
- * hitting the server again.
- */
-const makeCachedApiCall = async params => {
-  const identifier = params.url
-  if (!identifier) {
-    return null
-  }
-  if (!cache[identifier]) {
-    cache[identifier] = makeApiCall(params)
-    cache[identifier] = await cache[identifier]
-  }
-  return await cache[identifier]
-}
+    // Notify all errors
+    if (message) {
+      // Don't notify if the URL contains the word analytics as it may be
+      // blocked by browser extensions
+      if (!url?.includes("analytics")) {
+        notificationStore.actions.error(message)
+      }
+    }
 
-/**
- * Constructs an API call function for a particular HTTP method.
- */
-const requestApiCall = method => async params => {
-  const { external = false, url, cache = false } = params
-  const fixedUrl = external ? url : `/${url}`.replace("//", "/")
-  const enrichedParams = { ...params, method, url: fixedUrl }
-  return await (cache ? makeCachedApiCall : makeApiCall)(enrichedParams)
-}
-
-export default {
-  post: requestApiCall("POST"),
-  put: requestApiCall("PUT"),
-  get: requestApiCall("GET"),
-  patch: requestApiCall("PATCH"),
-  del: requestApiCall("DELETE"),
-  error: handleError,
-}
+    // Log all errors to console
+    console.warn(`[Client] HTTP ${status} on ${method}:${url}\n\t${message}`)
+  },
+})

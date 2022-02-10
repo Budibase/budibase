@@ -15,10 +15,7 @@ import {
   encodeJSBinding,
 } from "@budibase/string-templates"
 import { TableNames } from "../constants"
-import {
-  convertJSONSchemaToTableSchema,
-  getJSONArrayDatasourceSchema,
-} from "./jsonUtils"
+import { JSONUtils } from "@budibase/frontend-core"
 import ActionDefinitions from "components/design/PropertiesPanel/PropertyControls/ButtonActionEditor/manifest.json"
 
 // Regex to match all instances of template strings
@@ -439,7 +436,7 @@ export const getSchemaForDatasource = (asset, datasource, isForm = false) => {
     else if (type === "jsonarray") {
       table = tables.find(table => table._id === datasource.tableId)
       let tableSchema = table?.schema
-      schema = getJSONArrayDatasourceSchema(tableSchema, datasource)
+      schema = JSONUtils.getJSONArrayDatasourceSchema(tableSchema, datasource)
     }
 
     // Otherwise we assume we're targeting an internal table or a plus
@@ -471,9 +468,12 @@ export const getSchemaForDatasource = (asset, datasource, isForm = false) => {
       Object.keys(schema).forEach(fieldKey => {
         const fieldSchema = schema[fieldKey]
         if (fieldSchema?.type === "json") {
-          const jsonSchema = convertJSONSchemaToTableSchema(fieldSchema, {
-            squashObjects: true,
-          })
+          const jsonSchema = JSONUtils.convertJSONSchemaToTableSchema(
+            fieldSchema,
+            {
+              squashObjects: true,
+            }
+          )
           Object.keys(jsonSchema).forEach(jsonKey => {
             jsonAdditions[`${fieldKey}.${jsonKey}`] = {
               type: jsonSchema[jsonKey].type,

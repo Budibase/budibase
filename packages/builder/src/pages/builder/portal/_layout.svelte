@@ -10,6 +10,7 @@
     MenuItem,
     Modal,
     clickOutside,
+    notifications,
   } from "@budibase/bbui"
   import ConfigChecklist from "components/common/ConfigChecklist.svelte"
   import { organisation, auth } from "stores/portal"
@@ -78,6 +79,14 @@
     return menu
   }
 
+  const logout = async () => {
+    try {
+      await auth.logout()
+    } catch (error) {
+      // Swallow error and do nothing
+    }
+  }
+
   const showMobileMenu = () => (mobileMenuVisible = true)
   const hideMobileMenu = () => (mobileMenuVisible = false)
 
@@ -87,7 +96,11 @@
       if (!$auth.user?.builder?.global) {
         $redirect("../")
       } else {
-        await organisation.init()
+        try {
+          await organisation.init()
+        } catch (error) {
+          notifications.error("Error getting org config")
+        }
         loaded = true
       }
     }
@@ -158,7 +171,7 @@
             <MenuItem icon="UserDeveloper" on:click={() => $goto("../apps")}>
               Close developer mode
             </MenuItem>
-            <MenuItem icon="LogOut" on:click={auth.logout}>Log out</MenuItem>
+            <MenuItem icon="LogOut" on:click={logout}>Log out</MenuItem>
           </ActionMenu>
         </div>
       </div>

@@ -1,16 +1,12 @@
 const newid = require("../../../db/newid")
+const { getAppId } = require("@budibase/backend-core/context")
 
 /**
  * This is used to pass around information about the deployment that is occurring
  */
 class Deployment {
-  constructor(appId, id = null) {
-    this.appId = appId
+  constructor(id = null) {
     this._id = id || newid()
-  }
-
-  getAppId() {
-    return this.appId
   }
 
   setVerification(verification) {
@@ -43,7 +39,7 @@ class Deployment {
   getJSON() {
     const obj = {
       _id: this._id,
-      appId: this.appId,
+      appId: getAppId(),
       status: this.status,
     }
     if (this.err) {

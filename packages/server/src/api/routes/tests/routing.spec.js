@@ -1,9 +1,14 @@
 const setup = require("./utilities")
 const { basicScreen } = setup.structures
-const { checkBuilderEndpoint } = require("./utilities/TestFunctions")
+const { checkBuilderEndpoint, runInProd } = require("./utilities/TestFunctions")
 const { BUILTIN_ROLE_IDS } = require("@budibase/backend-core/roles")
+const { doInAppContext } = require("@budibase/backend-core/context")
 
 const route = "/test"
+
+// there are checks which are disabled in test env,
+// these checks need to be enabled for this test
+
 
 describe("/routing", () => {
   let request = setup.getRequest()
@@ -26,20 +31,24 @@ describe("/routing", () => {
 
   describe("fetch", () => {
     it("prevents a public user from accessing development app", async () => {
-      await request
-        .get(`/api/routing/client`)
-        .set(config.publicHeaders({ prodApp: false }))
-        .expect(302)
+      await runInProd(() => {
+        return request
+          .get(`/api/routing/client`)
+          .set(config.publicHeaders({ prodApp: false }))
+          .expect(302)
+      })
     })
 
     it("prevents a non builder from accessing development app", async () => {
-      await request
-        .get(`/api/routing/client`)
-        .set(await config.roleHeaders({
-          roleId: BUILTIN_ROLE_IDS.BASIC,
-          prodApp: false
-        }))
-        .expect(302)
+      await runInProd(async () => {
+        return request
+          .get(`/api/routing/client`)
+          .set(await config.roleHeaders({
+            roleId: BUILTIN_ROLE_IDS.BASIC,
+            prodApp: false
+          }))
+          .expect(302)
+      })
     })
     it("returns the correct routing for basic user", async () => {
       const res = await request

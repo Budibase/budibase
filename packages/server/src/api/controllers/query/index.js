@@ -1,4 +1,3 @@
-const CouchDB = require("../../../db")
 const {
   generateQueryID,
   getQueryParams,
@@ -10,6 +9,7 @@ const { save: saveDatasource } = require("../datasource")
 const { RestImporter } = require("./import")
 const { invalidateDynamicVariables } = require("../../../threads/utils")
 const environment = require("../../../environment")
+const { getAppDB } = require("@budibase/backend-core/context")
 
 const Runner = new Thread(ThreadType.QUERY, {
   timeoutMs: environment.QUERY_THREAD_TIMEOUT || 10000,
@@ -28,7 +28,7 @@ function enrichQueries(input) {
 }
 
 exports.fetch = async function (ctx) {
-  const db = new CouchDB(ctx.appId)
+  const db = getAppDB()
 
   const body = await db.allDocs(
     getQueryParams(null, {
@@ -69,7 +69,7 @@ exports.import = async ctx => {
     datasourceId = body.datasourceId
   }
 
-  const importResult = await importer.importQueries(ctx.appId, datasourceId)
+  const importResult = await importer.importQueries(datasourceId)
 
   ctx.body = {
     ...importResult,
@@ -79,7 +79,7 @@ exports.import = async ctx => {
 }
 
 exports.save = async function (ctx) {
-  const db = new CouchDB(ctx.appId)
+  const db = getAppDB()
   const query = ctx.request.body
 
   if (!query._id) {
@@ -94,7 +94,7 @@ exports.save = async function (ctx) {
 }
 
 exports.find = async function (ctx) {
-  const db = new CouchDB(ctx.appId)
+  const db = getAppDB()
   const query = enrichQueries(await db.get(ctx.params.queryId))
   // remove properties that could be dangerous in real app
   if (isProdAppID(ctx.appId)) {
@@ -105,7 +105,7 @@ exports.find = async function (ctx) {
 }
 
 exports.preview = async function (ctx) {
-  const db = new CouchDB(ctx.appId)
+  const db = getAppDB()
 
   const datasource = await db.get(ctx.request.body.datasourceId)
   // preview may not have a queryId as it hasn't been saved, but if it does
@@ -136,7 +136,7 @@ exports.preview = async function (ctx) {
 }
 
 async function execute(ctx, opts = { rowsOnly: false }) {
-  const db = new CouchDB(ctx.appId)
+  const db = getAppDB()
 
   const query = await db.get(ctx.params.queryId)
   const datasource = await db.get(query.datasourceId)
@@ -181,7 +181,8 @@ exports.executeV2 = async function (ctx) {
   return execute(ctx, { rowsOnly: false })
 }
 
-const removeDynamicVariables = async (db, queryId) => {
+const removeDynamicVariables = async queryId => {
+  const db = getAppDB()
   const query = await db.get(queryId)
   const datasource = await db.get(query.datasourceId)
   const dynamicVariables = datasource.config.dynamicVariables
@@ -202,8 +203,8 @@ const removeDynamicVariables = async (db, queryId) => {
 }
 
 exports.destroy = async function (ctx) {
-  const db = new CouchDB(ctx.appId)
-  await removeDynamicVariables(db, ctx.params.queryId)
+  const db = getAppDB()
+  await removeDynamicVariables(ctx.params.queryId)
   await db.remove(ctx.params.queryId, ctx.params.revId)
   ctx.message = `Query deleted.`
   ctx.status = 200

@@ -9,12 +9,16 @@ CREATE TABLE Persons (
 );
 CREATE TABLE Tasks (
     TaskID SERIAL PRIMARY KEY,
-    PersonID INT,
+    ExecutorID INT,
+    QaID INT,
     Completed BOOLEAN,
     TaskName varchar(255),
-    CONSTRAINT fkPersons
-        FOREIGN KEY(PersonID)
-            REFERENCES Persons(PersonID)
+    CONSTRAINT fkexecutor
+        FOREIGN KEY(ExecutorID)
+            REFERENCES Persons(PersonID),
+    CONSTRAINT fkqa
+        FOREIGN KEY(QaID)
+	    REFERENCES Persons(PersonID)
 );
 CREATE TABLE Products (
     ProductID SERIAL PRIMARY KEY,
@@ -32,8 +36,9 @@ CREATE TABLE Products_Tasks (
     PRIMARY KEY (ProductID, TaskID)
 );
 INSERT INTO Persons (FirstName, LastName, Address, City) VALUES ('Mike', 'Hughes', '123 Fake Street', 'Belfast');
-INSERT INTO Tasks (PersonID, TaskName, Completed) VALUES (1, 'assembling', TRUE);
-INSERT INTO Tasks (PersonID, TaskName, Completed) VALUES (1, 'processing', FALSE);
+INSERT INTO Persons (FirstName, LastName, Address, City) Values ('John', 'Smith', '64 Updown Road', 'Dublin');
+INSERT INTO Tasks (ExecutorID, QaID, TaskName, Completed) VALUES (1, 2, 'assembling', TRUE);
+INSERT INTO Tasks (ExecutorID, QaID, TaskName, Completed) VALUES (2, 1, 'processing', FALSE);
 INSERT INTO Products (ProductName) VALUES ('Computers');
 INSERT INTO Products (ProductName) VALUES ('Laptops');
 INSERT INTO Products (ProductName) VALUES ('Chairs');

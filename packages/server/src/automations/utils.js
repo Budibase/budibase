@@ -6,8 +6,9 @@ const { queue } = require("./bullboard")
 const newid = require("../db/newid")
 const { updateEntityMetadata } = require("../utilities")
 const { MetadataTypes } = require("../constants")
-const { getDeployedAppID } = require("@budibase/backend-core/db")
+const { getProdAppID } = require("@budibase/backend-core/db")
 const { cloneDeep } = require("lodash/fp")
+const { getAppDB, getAppId } = require("@budibase/backend-core/context")
 
 const WH_STEP_ID = definitions.WEBHOOK.stepId
 const CRON_STEP_ID = definitions.CRON.stepId
@@ -27,7 +28,6 @@ exports.processEvent = async job => {
 
 exports.updateTestHistory = async (appId, automation, history) => {
   return updateEntityMetadata(
-    appId,
     MetadataTypes.AUTOMATION_TEST_HISTORY,
     automation._id,
     metadata => {
@@ -93,6 +93,9 @@ exports.enableCronTrigger = async (appId, automation) => {
     )
     // Assign cron job ID from bull so we can remove it later if the cron trigger is removed
     trigger.cronJobId = job.id
+    // can't use getAppDB here as this is likely to be called from dev app,
+    // but this call could be for dev app or prod app, need to just use what
+    // was passed in
     const db = new CouchDB(appId)
     const response = await db.put(automation)
     automation._id = response.id
@@ -109,7 +112,8 @@ exports.enableCronTrigger = async (appId, automation) => {
  * @returns {Promise<object|undefined>} After this is complete the new automation object may have been updated and should be
  * written to DB (this does not write to DB as it would be wasteful to repeat).
  */
-exports.checkForWebhooks = async ({ appId, oldAuto, newAuto }) => {
+exports.checkForWebhooks = async ({ oldAuto, newAuto }) => {
+  const appId = getAppId()
   const oldTrigger = oldAuto ? oldAuto.definition.trigger : null
   const newTrigger = newAuto ? newAuto.definition.trigger : null
   const triggerChanged =
@@ -128,7 +132,7 @@ exports.checkForWebhooks = async ({ appId, oldAuto, newAuto }) => {
     oldTrigger.webhookId
   ) {
     try {
-      let db = new CouchDB(appId)
+      let db = getAppDB()
       // need to get the webhook to get the rev
       const webhook = await db.get(oldTrigger.webhookId)
       const ctx = {
@@ -166,7 +170,7 @@ exports.checkForWebhooks = async ({ appId, oldAuto, newAuto }) => {
     // the app ID has to be development for this endpoint
     // it can only be used when building the app
     // but the trigger endpoint will always be used in production
-    const prodAppId = getDeployedAppID(appId)
+    const prodAppId = getProdAppID(appId)
     newTrigger.inputs = {
       schemaUrl: `api/webhooks/schema/${appId}/${id}`,
       triggerUrl: `api/webhooks/trigger/${prodAppId}/${id}`,

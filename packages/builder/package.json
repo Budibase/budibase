@@ -1,22 +1,21 @@
 {
   "name": "@budibase/builder",
-  "version": "1.0.49-alpha.5",
+  "version": "1.0.50-alpha.6",
   "license": "GPL-3.0",
   "private": true,
   "scripts": {
     "build": "routify -b && vite build --emptyOutDir",
     "start": "routify -c rollup",
-    "test": "jest",
-    "test:watch": "jest --watchAll",
     "dev:builder": "routify -c dev:vite",
     "dev:vite": "vite --host 0.0.0.0",
     "rollup": "rollup -c -w",
-    "cy:setup": "node ./cypress/setup.js",
+    "cy:setup": "ts-node ./cypress/ts/setup.ts",
+    "cy:setup:ci": "node ./cypress/setup.js",
     "cy:run": "cypress run",
     "cy:open": "cypress open",
     "cy:run:ci": "cypress run --record",
     "cy:test": "start-server-and-test cy:setup http://localhost:10001/builder cy:run",
-    "cy:ci": "start-server-and-test cy:setup http://localhost:10001/builder cy:run",
+    "cy:ci": "start-server-and-test cy:setup:ci http://localhost:10001/builder cy:run",
     "cy:debug": "start-server-and-test cy:setup http://localhost:10001/builder cy:open"
   },
   "jest": {
@@ -65,10 +64,10 @@
     }
   },
   "dependencies": {
-    "@budibase/bbui": "^1.0.49-alpha.5",
-    "@budibase/client": "^1.0.49-alpha.5",
-    "@budibase/colorpicker": "1.1.2",
-    "@budibase/string-templates": "^1.0.49-alpha.5",
+    "@budibase/bbui": "^1.0.50-alpha.6",
+    "@budibase/client": "^1.0.50-alpha.6",
+    "@budibase/frontend-core": "^1.0.50-alpha.6",
+    "@budibase/string-templates": "^1.0.50-alpha.6",
     "@sentry/browser": "5.19.1",
     "@spectrum-css/page": "^3.0.1",
     "@spectrum-css/vars": "^3.0.1",
@@ -106,6 +105,8 @@
     "start-server-and-test": "^1.12.1",
     "svelte": "^3.38.2",
     "svelte-jester": "^1.3.2",
+    "ts-node": "^10.4.0",
+    "typescript": "^4.5.5",
     "vite": "^2.1.5"
   },
   "gitHead": "115189f72a850bfb52b65ec61d932531bf327072"

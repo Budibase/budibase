@@ -24,29 +24,33 @@
     nameTouched && !name ? "Please specify a name for the automation." : null
 
   async function createAutomation() {
-    await automationStore.actions.create({
-      name,
-      instanceId,
-    })
-    const newBlock = $automationStore.selectedAutomation.constructBlock(
-      "TRIGGER",
-      triggerVal.stepId,
-      triggerVal
-    )
+    try {
+      await automationStore.actions.create({
+        name,
+        instanceId,
+      })
+      const newBlock = $automationStore.selectedAutomation.constructBlock(
+        "TRIGGER",
+        triggerVal.stepId,
+        triggerVal
+      )
 
-    automationStore.actions.addBlockToAutomation(newBlock)
-    if (triggerVal.stepId === "WEBHOOK") {
-      webhookModal.show
+      automationStore.actions.addBlockToAutomation(newBlock)
+      if (triggerVal.stepId === "WEBHOOK") {
+        webhookModal.show
+      }
+
+      await automationStore.actions.save(
+        $automationStore.selectedAutomation?.automation
+      )
+
+      notifications.success(`Automation ${name} created`)
+
+      $goto(`./${$automationStore.selectedAutomation.automation._id}`)
+      analytics.captureEvent(Events.AUTOMATION.CREATED, { name })
+    } catch (error) {
+      notifications.error("Error creating automation")
     }
-
-    await automationStore.actions.save(
-      $automationStore.selectedAutomation?.automation
-    )
-
-    notifications.success(`Automation ${name} created.`)
-
-    $goto(`./${$automationStore.selectedAutomation.automation._id}`)
-    analytics.captureEvent(Events.AUTOMATION.CREATED, { name })
   }
   $: triggers = Object.entries($automationStore.blockDefinitions.TRIGGER)
 

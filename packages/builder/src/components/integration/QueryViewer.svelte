@@ -71,9 +71,9 @@
       }
       data = response.rows
       fields = response.schema
-      notifications.success("Query executed successfully.")
-    } catch (err) {
-      notifications.error(err)
+      notifications.success("Query executed successfully")
+    } catch (error) {
+      notifications.error("Error previewing query")
     }
   }
 
@@ -83,9 +83,8 @@
       saveId = _id
       notifications.success(`Query saved successfully.`)
       $goto(`../${_id}`)
-    } catch (err) {
-      console.error(err)
-      notifications.error(`Error creating query. ${err.message}`)
+    } catch (error) {
+      notifications.error("Error creating query")
     }
   }
 </script>

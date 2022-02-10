@@ -32,3 +32,7 @@ exports.StaticDatabases = {
     },
   },
 }
+
+exports.APP_PREFIX = exports.DocumentTypes.APP + exports.SEPARATOR
+exports.APP_DEV = exports.APP_DEV_PREFIX =
+  exports.DocumentTypes.APP_DEV + exports.SEPARATOR

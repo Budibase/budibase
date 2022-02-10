@@ -9,6 +9,7 @@
   export let disabled = false
   export let validation
   export let defaultValue = ""
+  export let align
 
   let fieldState
   let fieldApi
@@ -34,6 +35,7 @@
       id={fieldState.fieldId}
       {placeholder}
       {type}
+      {align}
     />
   {/if}
 </Field>

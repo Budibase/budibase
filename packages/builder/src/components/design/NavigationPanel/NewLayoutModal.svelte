@@ -9,8 +9,8 @@
     try {
       await store.actions.layouts.save({ name })
       notifications.success(`Layout ${name} created successfully`)
-    } catch (err) {
-      notifications.error(`Error creating layout ${name}.`)
+    } catch (error) {
+      notifications.error("Error creating layout")
     }
   }
 </script>

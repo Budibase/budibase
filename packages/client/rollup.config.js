@@ -57,10 +57,6 @@ export default {
           find: "sdk",
           replacement: path.resolve("./src/sdk"),
         },
-        {
-          find: "builder",
-          replacement: path.resolve("../builder"),
-        },
       ],
     }),
     svelte({

@@ -20,8 +20,10 @@
 </script>
 
 <!-- Ensure to fully remount when screen changes -->
-{#key screenDefinition?._id}
-  <Provider key="url" data={params}>
-    <Component isScreen instance={screenDefinition} />
-  </Provider>
-{/key}
+{#if $routeStore.routerLoaded}
+  {#key screenDefinition?._id}
+    <Provider key="url" data={params}>
+      <Component isScreen instance={screenDefinition} />
+    </Provider>
+  {/key}
+{/if}
