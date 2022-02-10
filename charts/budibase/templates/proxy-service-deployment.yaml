@@ -25,7 +25,7 @@ spec:
         app.kubernetes.io/name: budibase-proxy
     spec:
       containers:
-      - image: budibase/proxy
+      - image: budibase/proxy:k8s
         imagePullPolicy: Always
         name: proxy-service
         ports:
