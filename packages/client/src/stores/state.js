@@ -1,10 +1,10 @@
 import { writable, get, derived } from "svelte/store"
-import { localStorageStore } from "builder/src/builderStore/store/localStorage"
+import { createLocalStorageStore } from "@budibase/frontend-core"
 
 const createStateStore = () => {
   const appId = window["##BUDIBASE_APP_ID##"] || "app"
   const localStorageKey = `${appId}.state`
-  const persistentStore = localStorageStore(localStorageKey, {})
+  const persistentStore = createLocalStorageStore(localStorageKey, {})
 
   // Initialise the temp store to mirror the persistent store
   const tempStore = writable(get(persistentStore))

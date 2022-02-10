@@ -38,7 +38,7 @@
       await apps.update(app.instance._id, body)
     } catch (error) {
       console.error(error)
-      notifications.error(error)
+      notifications.error("Error updating app")
     }
   }
 

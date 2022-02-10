@@ -19,8 +19,12 @@
       .map(([key]) => key)
 
   function saveView() {
-    views.save(view)
-    notifications.success(`View ${view.name} saved.`)
+    try {
+      views.save(view)
+      notifications.success(`View ${view.name} saved`)
+    } catch (error) {
+      notifications.error("Error saving view")
+    }
   }
 </script>
 
