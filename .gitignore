@@ -95,3 +95,4 @@ hosting/.generated-nginx.dev.conf
 *.sublime-workspace
 
 bin/
+hosting/.generated*

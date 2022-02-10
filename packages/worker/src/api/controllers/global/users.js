@@ -24,16 +24,7 @@ const {
 const { removeUserFromInfoDB } = require("@budibase/backend-core/deprovision")
 const env = require("../../../environment")
 const { syncUserInApps } = require("../../../utilities/appService")
-
-async function allUsers() {
-  const db = getGlobalDB()
-  const response = await db.allDocs(
-    getGlobalUserParams(null, {
-      include_docs: true,
-    })
-  )
-  return response.rows.map(row => row.doc)
-}
+const { allUsers } = require("../../utilities")
 
 exports.save = async ctx => {
   try {
@@ -135,26 +126,6 @@ exports.destroy = async ctx => {
   await syncUserInApps(dbUser._id)
   ctx.body = {
     message: `User ${ctx.params.id} deleted.`,
-  }
-}
-
-exports.removeAppRole = async ctx => {
-  const { appId } = ctx.params
-  const db = getGlobalDB()
-  const users = await allUsers(ctx)
-  const bulk = []
-  const cacheInvalidations = []
-  for (let user of users) {
-    if (user.roles[appId]) {
-      cacheInvalidations.push(userCache.invalidateUser(user._id))
-      delete user.roles[appId]
-      bulk.push(user)
-    }
-  }
-  await db.bulkDocs(bulk)
-  await Promise.all(cacheInvalidations)
-  ctx.body = {
-    message: "App role removed from all users",
   }
 }
 
@@ -278,17 +249,5 @@ exports.inviteAccept = async ctx => {
     )
   } catch (err) {
     ctx.throw(400, "Unable to create new user, invitation invalid.")
-  }
-}
-
-exports.generateAPIKey = async ctx => {
-  ctx.body = {
-    apiKey: "a175402a-89fc-11ec-a8a3-0242ac120002",
-  }
-}
-
-exports.fetchAPIKey = async ctx => {
-  ctx.body = {
-    apiKey: "a175402a-89fc-11ec-a8a3-0242ac120002",
   }
 }
