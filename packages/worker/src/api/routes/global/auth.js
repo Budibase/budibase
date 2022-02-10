@@ -81,6 +81,11 @@ router
     authController.googleAuth
   )
   .get(
+    "/api/global/auth/:tenantId/datasource/:provider/callback",
+    updateTenant,
+    authController.datasourceAuth
+  )
+  .get(
     "/api/global/auth/:tenantId/oidc/configs/:configId",
     updateTenant,
     authController.oidcPreAuth
