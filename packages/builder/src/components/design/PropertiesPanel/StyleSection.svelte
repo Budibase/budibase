@@ -1,6 +1,6 @@
 <script>
   import PropertyControl from "./PropertyControls/PropertyControl.svelte"
-  import { DetailSummary } from "@budibase/bbui"
+  import { DetailSummary, notifications } from "@budibase/bbui"
   import { store } from "builderStore"
 
   export let name
@@ -23,6 +23,14 @@
     delete controlProps.control
     return controlProps
   }
+
+  const updateStyle = async (key, val) => {
+    try {
+      await store.actions.components.updateStyle(key, val)
+    } catch (error) {
+      notifications.error("Error updating style")
+    }
+  }
 </script>
 
 <DetailSummary collapsible={false} name={`${name}${changed ? " *" : ""}`}>
@@ -34,7 +42,7 @@
           control={prop.control}
           key={prop.key}
           value={style[prop.key]}
-          onChange={val => store.actions.components.updateStyle(prop.key, val)}
+          onChange={val => updateStyle(prop.key, val)}
           props={getControlProps(prop)}
           {bindings}
         />

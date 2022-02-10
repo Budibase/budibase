@@ -10,6 +10,7 @@ const {
 const builderMiddleware = require("./builder")
 const { isWebhookEndpoint } = require("./utils")
 const { buildCsrfMiddleware } = require("@budibase/backend-core/auth")
+const { getAppId } = require("@budibase/backend-core/context")
 
 function hasResource(ctx) {
   return ctx.resourceId != null
@@ -45,7 +46,7 @@ const checkAuthorizedResource = async (
 ) => {
   // get the user's roles
   const roleId = ctx.roleId || BUILTIN_ROLE_IDS.PUBLIC
-  const userRoles = await getUserRoleHierarchy(ctx.appId, roleId, {
+  const userRoles = await getUserRoleHierarchy(roleId, {
     idOnly: false,
   })
   const permError = "User does not have permission"
@@ -81,8 +82,9 @@ module.exports =
 
     // get the resource roles
     let resourceRoles = []
-    if (ctx.appId && hasResource(ctx)) {
-      resourceRoles = await getRequiredResourceRole(ctx.appId, permLevel, ctx)
+    const appId = getAppId()
+    if (appId && hasResource(ctx)) {
+      resourceRoles = await getRequiredResourceRole(permLevel, ctx)
     }
 
     // if the resource is public, proceed

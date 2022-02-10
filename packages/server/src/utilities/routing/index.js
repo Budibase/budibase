@@ -1,9 +1,9 @@
-const CouchDB = require("../../db")
 const { createRoutingView } = require("../../db/views/staticViews")
 const { ViewNames, getQueryIndex, UNICODE_MAX } = require("../../db/utils")
+const { getAppDB } = require("@budibase/backend-core/context")
 
-exports.getRoutingInfo = async appId => {
-  const db = new CouchDB(appId)
+exports.getRoutingInfo = async () => {
+  const db = getAppDB()
   try {
     const allRouting = await db.query(getQueryIndex(ViewNames.ROUTING), {
       startKey: "",
@@ -14,8 +14,8 @@ exports.getRoutingInfo = async appId => {
     // check if the view doesn't exist, it should for all new instances
     /* istanbul ignore next */
     if (err != null && err.name === "not_found") {
-      await createRoutingView(appId)
-      return exports.getRoutingInfo(appId)
+      await createRoutingView()
+      return exports.getRoutingInfo()
     } else {
       throw err
     }

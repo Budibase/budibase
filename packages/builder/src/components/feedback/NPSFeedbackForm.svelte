@@ -13,6 +13,7 @@
     Detail,
     Divider,
     Layout,
+    notifications,
   } from "@budibase/bbui"
   import { auth } from "stores/portal"
 
@@ -45,20 +46,28 @@
       improvements,
       comment,
     })
-    auth.updateSelf({
-      flags: {
-        feedbackSubmitted: true,
-      },
-    })
+    try {
+      auth.updateSelf({
+        flags: {
+          feedbackSubmitted: true,
+        },
+      })
+    } catch (error) {
+      notifications.error("Error updating user")
+    }
     dispatch("complete")
   }
 
   function cancelFeedback() {
-    auth.updateSelf({
-      flags: {
-        feedbackSubmitted: true,
-      },
-    })
+    try {
+      auth.updateSelf({
+        flags: {
+          feedbackSubmitted: true,
+        },
+      })
+    } catch (error) {
+      notifications.error("Error updating user")
+    }
     dispatch("complete")
   }
 </script>

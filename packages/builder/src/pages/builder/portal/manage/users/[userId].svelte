@@ -64,31 +64,43 @@
   const apps = fetchData(`/api/global/roles`)
 
   async function deleteUser() {
-    const res = await users.delete(userId)
-    if (res.status === 200) {
+    try {
+      await users.delete(userId)
       notifications.success(`User ${$userFetch?.data?.email} deleted.`)
       $goto("./")
-    } else {
-      notifications.error(res?.message ? res.message : "Failed to delete user.")
+    } catch (error) {
+      notifications.error("Error deleting user")
     }
   }
 
   let toggleDisabled = false
 
   async function updateUserFirstName(evt) {
-    await users.save({ ...$userFetch?.data, firstName: evt.target.value })
-    await userFetch.refresh()
+    try {
+      await users.save({ ...$userFetch?.data, firstName: evt.target.value })
+      await userFetch.refresh()
+    } catch (error) {
+      notifications.error("Error updating user")
+    }
   }
 
   async function updateUserLastName(evt) {
-    await users.save({ ...$userFetch?.data, lastName: evt.target.value })
-    await userFetch.refresh()
+    try {
+      await users.save({ ...$userFetch?.data, lastName: evt.target.value })
+      await userFetch.refresh()
+    } catch (error) {
+      notifications.error("Error updating user")
+    }
   }
 
   async function toggleFlag(flagName, detail) {
     toggleDisabled = true
-    await users.save({ ...$userFetch?.data, [flagName]: { global: detail } })
-    await userFetch.refresh()
+    try {
+      await users.save({ ...$userFetch?.data, [flagName]: { global: detail } })
+      await userFetch.refresh()
+    } catch (error) {
+      notifications.error("Error updating user")
+    }
     toggleDisabled = false
   }
 

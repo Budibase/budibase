@@ -5,7 +5,7 @@
   import { fly } from "svelte/transition"
   import Icon from "../Icon/Icon.svelte"
   import Input from "../Form/Input.svelte"
-  import { capitalise } from "../utils/helpers"
+  import { capitalise } from "../helpers"
 
   export let value
   export let size = "M"

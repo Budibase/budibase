@@ -9,6 +9,7 @@
     Label,
     Select,
     Button,
+    notifications,
   } from "@budibase/bbui"
   import { store } from "builderStore"
   import AppThemeSelect from "./AppThemeSelect.svelte"
@@ -43,23 +44,31 @@
   ]
 
   const updateProperty = property => {
-    return e => {
-      store.actions.customTheme.save({
-        ...get(store).customTheme,
-        [property]: e.detail,
-      })
+    return async e => {
+      try {
+        store.actions.customTheme.save({
+          ...get(store).customTheme,
+          [property]: e.detail,
+        })
+      } catch (error) {
+        notifications.error("Error updating custom theme")
+      }
     }
   }
 
   const resetTheme = () => {
-    const theme = get(store).theme
-    store.actions.customTheme.save({
-      ...defaultTheme,
-      navBackground:
-        theme === "spectrum--light"
-          ? "var(--spectrum-global-color-gray-50)"
-          : "var(--spectrum-global-color-gray-100)",
-    })
+    try {
+      const theme = get(store).theme
+      store.actions.customTheme.save({
+        ...defaultTheme,
+        navBackground:
+          theme === "spectrum--light"
+            ? "var(--spectrum-global-color-gray-50)"
+            : "var(--spectrum-global-color-gray-100)",
+      })
+    } catch (error) {
+      notifications.error("Error saving custom theme")
+    }
   }
 </script>
 

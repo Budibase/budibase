@@ -31,8 +31,12 @@
   }
 
   onMount(async () => {
-    await auth.getSelf()
-    await organisation.init()
+    try {
+      await auth.getSelf()
+      await organisation.init()
+    } catch (error) {
+      notifications.error("Error getting org config")
+    }
   })
 </script>
 

@@ -9,7 +9,7 @@
     notifications,
     Label,
   } from "@budibase/bbui"
-  import api from "builderStore/api"
+  import { API } from "api"
   import { auth, admin } from "stores/portal"
   import { redirect } from "@roxi/routify"
 
@@ -38,8 +38,12 @@
   }
 
   async function getVersion() {
-    const response = await api.get("/api/dev/version")
-    version = await response.text()
+    try {
+      version = await API.getBudibaseVersion()
+    } catch (error) {
+      notifications.error("Error getting Budibase version")
+      version = null
+    }
   }
 
   onMount(() => {

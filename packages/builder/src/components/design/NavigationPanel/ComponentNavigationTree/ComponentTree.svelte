@@ -4,6 +4,7 @@
   import ComponentDropdownMenu from "../ComponentDropdownMenu.svelte"
   import NavItem from "components/common/NavItem.svelte"
   import { capitalise } from "helpers"
+  import { notifications } from "@budibase/bbui"
 
   export let components = []
   export let currentComponent
@@ -62,6 +63,14 @@
     }
     closedNodes = closedNodes
   }
+
+  const onDrop = async () => {
+    try {
+      await dragDropStore.actions.drop()
+    } catch (error) {
+      notifications.error("Error saving component")
+    }
+  }
 </script>
 
 <ul>
@@ -69,7 +78,7 @@
     <li on:click|stopPropagation={() => selectComponent(component)}>
       {#if $dragDropStore?.targetComponent === component && $dragDropStore.dropPosition === DropPosition.ABOVE}
         <div
-          on:drop={dragDropStore.actions.drop}
+          on:drop={onDrop}
           ondragover="return false"
           ondragenter="return false"
           class="drop-item"
@@ -83,7 +92,7 @@
         on:dragstart={dragstart(component)}
         on:dragover={dragover(component, index)}
         on:iconClick={() => toggleNodeOpen(component._id)}
-        on:drop={dragDropStore.actions.drop}
+        on:drop={onDrop}
         text={getComponentText(component)}
         withArrow
         indentLevel={level + 1}
@@ -105,7 +114,7 @@
 
       {#if $dragDropStore?.targetComponent === component && ($dragDropStore.dropPosition === DropPosition.INSIDE || $dragDropStore.dropPosition === DropPosition.BELOW)}
         <div
-          on:drop={dragDropStore.actions.drop}
+          on:drop={onDrop}
           ondragover="return false"
           ondragenter="return false"
           class="drop-item"

@@ -6,7 +6,6 @@ const uuid = require("uuid")
 const { ObjectStoreBuckets } = require("../../../constants")
 const { processString } = require("@budibase/string-templates")
 const { getAllApps } = require("@budibase/backend-core/db")
-const CouchDB = require("../../../db")
 const {
   loadHandlebarsFile,
   NODE_MODULES_PATH,
@@ -17,6 +16,7 @@ const { clientLibraryPath } = require("../../../utilities")
 const { upload } = require("../../../utilities/fileSystem")
 const { attachmentsRelativeURL } = require("../../../utilities")
 const { DocumentTypes } = require("../../../db/utils")
+const { getAppDB, updateAppId } = require("@budibase/backend-core/context")
 const AWS = require("aws-sdk")
 const AWS_REGION = env.AWS_REGION ? env.AWS_REGION : "eu-west-1"
 
@@ -44,16 +44,14 @@ async function getAppIdFromUrl(ctx) {
   let possibleAppUrl = `/${encodeURI(ctx.params.appId).toLowerCase()}`
 
   // search prod apps for a url that matches, exclude dev where id is always used
-  const apps = await getAllApps(CouchDB, { dev: false })
+  const apps = await getAllApps({ dev: false })
   const app = apps.filter(
     a => a.url && a.url.toLowerCase() === possibleAppUrl
   )[0]
 
-  if (app && app.appId) {
-    return app.appId
-  } else {
-    return ctx.params.appId
-  }
+  const appId = app && app.appId ? app.appId : ctx.params.appId
+  updateAppId(appId)
+  return appId
 }
 
 exports.serveBuilder = async function (ctx) {
@@ -85,7 +83,7 @@ exports.uploadFile = async function (ctx) {
 exports.serveApp = async function (ctx) {
   let appId = await getAppIdFromUrl(ctx)
   const App = require("./templates/BudibaseApp.svelte").default
-  const db = new CouchDB(appId, { skip_setup: true })
+  const db = getAppDB({ skip_setup: true })
   const appInfo = await db.get(DocumentTypes.APP_METADATA)
 
   const { head, html, css } = App.render({
@@ -111,7 +109,7 @@ exports.serveClientLibrary = async function (ctx) {
 }
 
 exports.getSignedUploadURL = async function (ctx) {
-  const database = new CouchDB(ctx.appId)
+  const database = getAppDB()
 
   // Ensure datasource is valid
   let datasource

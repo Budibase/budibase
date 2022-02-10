@@ -1,5 +1,5 @@
 import { writable, get } from "svelte/store"
-import api from "builderStore/api"
+import { API } from "api"
 import { auth } from "stores/portal"
 
 export function createAdminStore() {
@@ -23,64 +23,37 @@ export function createAdminStore() {
   const admin = writable(DEFAULT_CONFIG)
 
   async function init() {
-    try {
-      const tenantId = get(auth).tenantId
-      const response = await api.get(
-        `/api/global/configs/checklist?tenantId=${tenantId}`
-      )
-      const json = await response.json()
-      const totalSteps = Object.keys(json).length
-      const completedSteps = Object.values(json).filter(x => x?.checked).length
-
-      await getEnvironment()
-      admin.update(store => {
-        store.loaded = true
-        store.checklist = json
-        store.onboardingProgress = (completedSteps / totalSteps) * 100
-        return store
-      })
-    } catch (err) {
-      admin.update(store => {
-        store.checklist = null
-        return store
-      })
-    }
+    const tenantId = get(auth).tenantId
+    const checklist = await API.getChecklist(tenantId)
+    const totalSteps = Object.keys(checklist).length
+    const completedSteps = Object.values(checklist).filter(
+      x => x?.checked
+    ).length
+    await getEnvironment()
+    admin.update(store => {
+      store.loaded = true
+      store.checklist = checklist
+      store.onboardingProgress = (completedSteps / totalSteps) * 100
+      return store
+    })
   }
 
   async function checkImportComplete() {
-    const response = await api.get(`/api/cloud/import/complete`)
-    if (response.status === 200) {
-      const json = await response.json()
-      admin.update(store => {
-        store.importComplete = json ? json.imported : false
-        return store
-      })
-    }
+    const result = await API.checkImportComplete()
+    admin.update(store => {
+      store.importComplete = result ? result.imported : false
+      return store
+    })
   }
 
   async function getEnvironment() {
-    let multiTenancyEnabled = false
-    let cloud = false
-    let disableAccountPortal = false
-    let accountPortalUrl = ""
-    let isDev = false
-    try {
-      const response = await api.get(`/api/system/environment`)
-      const json = await response.json()
-      multiTenancyEnabled = json.multiTenancy
-      cloud = json.cloud
-      disableAccountPortal = json.disableAccountPortal
-      accountPortalUrl = json.accountPortalUrl
-      isDev = json.isDev
-    } catch (err) {
-      // just let it stay disabled
-    }
+    const environment = await API.getEnvironment()
     admin.update(store => {
-      store.multiTenancy = multiTenancyEnabled
-      store.cloud = cloud
-      store.disableAccountPortal = disableAccountPortal
-      store.accountPortalUrl = accountPortalUrl
-      store.isDev = isDev
+      store.multiTenancy = environment.multiTenancy
+      store.cloud = environment.cloud
+      store.disableAccountPortal = environment.disableAccountPortal
+      store.accountPortalUrl = environment.accountPortalUrl
+      store.isDev = environment.isDev
       return store
     })
   }

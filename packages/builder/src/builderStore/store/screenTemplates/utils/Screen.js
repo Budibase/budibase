@@ -1,5 +1,5 @@
 import { BaseStructure } from "./BaseStructure"
-import { uuid } from "builderStore/uuid"
+import { Helpers } from "@budibase/bbui"
 
 export class Screen extends BaseStructure {
   constructor() {
@@ -7,7 +7,7 @@ export class Screen extends BaseStructure {
     this._json = {
       layoutId: "layout_private_master",
       props: {
-        _id: uuid(),
+        _id: Helpers.uuid(),
         _component: "@budibase/standard-components/container",
         _styles: {
           normal: {},
