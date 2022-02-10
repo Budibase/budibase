@@ -11,7 +11,15 @@
   import ComponentNavigationTree from "components/design/NavigationPanel/ComponentNavigationTree/index.svelte"
   import Layout from "components/design/NavigationPanel/Layout.svelte"
   import NewLayoutModal from "components/design/NavigationPanel/NewLayoutModal.svelte"
-  import { Icon, Modal, Select, Search, Tabs, Tab } from "@budibase/bbui"
+  import {
+    Icon,
+    Modal,
+    Select,
+    Search,
+    Tabs,
+    Tab,
+    notifications,
+  } from "@budibase/bbui"
 
   export let showModal
 
@@ -58,8 +66,12 @@
     selectedAccessRole.set(role)
   }
 
-  onMount(() => {
-    store.actions.routing.fetch()
+  onMount(async () => {
+    try {
+      await store.actions.routing.fetch()
+    } catch (error) {
+      notifications.error("Error fetching routes")
+    }
   })
 </script>
 

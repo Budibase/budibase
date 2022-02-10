@@ -16,17 +16,17 @@
     admin = false
 
   async function createUser() {
-    const res = await users.create({
-      email: $email,
-      password,
-      builder,
-      admin,
-      forceResetPassword: true,
-    })
-    if (res.status) {
-      notifications.error(res.message)
-    } else {
+    try {
+      await users.create({
+        email: $email,
+        password,
+        builder,
+        admin,
+        forceResetPassword: true,
+      })
       notifications.success("Successfully created user")
+    } catch (error) {
+      notifications.error("Error creating user")
     }
   }
 </script>

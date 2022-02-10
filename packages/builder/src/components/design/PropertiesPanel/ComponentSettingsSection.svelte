@@ -1,6 +1,6 @@
 <script>
   import { isEmpty } from "lodash/fp"
-  import { Input, DetailSummary } from "@budibase/bbui"
+  import { Input, DetailSummary, notifications } from "@budibase/bbui"
   import { store } from "builderStore"
   import PropertyControl from "./PropertyControls/PropertyControl.svelte"
   import LayoutSelect from "./PropertyControls/LayoutSelect.svelte"
@@ -40,7 +40,13 @@
     ]
   }
 
-  const updateProp = store.actions.components.updateProp
+  const updateProp = async (key, value) => {
+    try {
+      await store.actions.components.updateProp(key, value)
+    } catch (error) {
+      notifications.error("Error updating component prop")
+    }
+  }
 
   const canRenderControl = setting => {
     const control = getComponentForSettingType(setting?.type)

@@ -49,8 +49,8 @@
       if (wasSelectedTable && wasSelectedTable._id === table._id) {
         $goto("./table")
       }
-    } catch (err) {
-      notifications.error(err)
+    } catch (error) {
+      notifications.error("Error deleting table")
     }
   }
 

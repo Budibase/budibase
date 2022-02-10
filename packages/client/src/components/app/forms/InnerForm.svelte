@@ -2,8 +2,7 @@
   import { setContext, getContext } from "svelte"
   import { derived, get, writable } from "svelte/store"
   import { createValidatorFromConstraints } from "./validation"
-  import { generateID } from "utils/helpers"
-  import { deepGet, deepSet } from "@budibase/bbui"
+  import { Helpers } from "@budibase/bbui"
   import { cloneDeep } from "lodash/fp"
 
   export let dataSource
@@ -115,10 +114,10 @@
 
     // Merge all values and enrichments into a single value
     sortedFields.forEach(({ key, value }) => {
-      deepSet(formValue, key, value)
+      Helpers.deepSet(formValue, key, value)
     })
     Object.entries(enrichments || {}).forEach(([key, value]) => {
-      deepSet(formValue, key, value)
+      Helpers.deepSet(formValue, key, value)
     })
     return formValue
   }
@@ -151,9 +150,9 @@
       )
 
       // If we've already registered this field then keep some existing state
-      let initialValue = deepGet(initialValues, field) ?? defaultValue
+      let initialValue = Helpers.deepGet(initialValues, field) ?? defaultValue
       let initialError = null
-      let fieldId = `id-${generateID()}`
+      let fieldId = `id-${Helpers.uuid()}`
       const existingField = getField(field)
       if (existingField) {
         const { fieldState } = get(existingField)
