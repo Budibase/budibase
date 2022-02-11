@@ -541,7 +541,7 @@ module External {
         if (!linkTable || !linkPrimary) {
           return
         }
-        const rows = related[key].rows || []
+        const rows = related[key]?.rows || []
         const found = rows.find(
           (row: { [key: string]: any }) =>
             row[linkPrimary] === relationship.id ||
