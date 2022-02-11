@@ -30,10 +30,10 @@
   let helpers = handlebarsCompletions()
   let getCaretPosition
   let search = ""
-  let initialValueJS = value?.startsWith("{{ js ")
-  let mode = initialValueJS ? "JavaScript" : "Handlebars"
-  let jsValue = initialValueJS ? value : null
-  let hbsValue = initialValueJS ? null : value
+  //let initialValueJS = value?.startsWith("{{ js ")
+  let mode = "Handlebars"
+  let jsValue = null
+  let hbsValue = value
 
   $: usingJS = mode === "JavaScript"
   $: searchRgx = new RegExp(search, "ig")
