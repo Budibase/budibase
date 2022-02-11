@@ -14,12 +14,10 @@
     Toggle,
     Tooltip,
   } from "@budibase/bbui"
-  import ConfigModal from "./ConfigModal.svelte"
 
   export let automation
   export let onSelect
 
-  let configModal
   let testDataModal
   let blocks
   let confirmDeleteDialog
@@ -120,10 +118,6 @@
 
   <Modal bind:this={testDataModal} width="30%">
     <TestDataModal {testAutomation} />
-  </Modal>
-
-  <Modal bind:this={configModal}>
-    <ConfigModal />
   </Modal>
 </div>
 

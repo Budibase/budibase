@@ -26,7 +26,7 @@
   export let value = ""
   export let valid
   export let allowJS = false
-
+  $: console.log(value)
   let helpers = handlebarsCompletions()
   let getCaretPosition
   let search = ""
