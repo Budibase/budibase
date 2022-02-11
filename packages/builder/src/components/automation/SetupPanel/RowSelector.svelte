@@ -98,7 +98,7 @@
       {#if !schema.autocolumn}
         {#if schema.type !== "attachment"}
           {#if $automationStore.selectedAutomation.automation.testData}
-            {#if $automationStore.selectedAutomation.automation.rowControl}
+            {#if !$automationStore.selectedAutomation.automation.rowControl}
               <RowSelectorTypes
                 {field}
                 {schema}
@@ -115,10 +115,10 @@
                 type={value.customType}
                 on:change={e => onChange(e, field, schema.type)}
                 {bindings}
-                allowJS={true}
+                allowJS={false}
               />
             {/if}
-          {:else if $automationStore.selectedAutomation.automation.rowControl}
+          {:else if !$automationStore.selectedAutomation.automation.rowControl}
             <RowSelectorTypes {field} {schema} {bindings} {value} {onChange} />
           {:else}
             <DrawerBindableInput
@@ -130,7 +130,7 @@
               type="string"
               {bindings}
               fillWidth={true}
-              allowJS={true}
+              allowJS={false}
             />
           {/if}
         {/if}
