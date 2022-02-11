@@ -6,7 +6,7 @@ const {
 } = require("./db/utils")
 const jwt = require("jsonwebtoken")
 const { options } = require("./middleware/passport/jwt")
-const { createUserEmailView } = require("./db/views")
+const { queryGlobalView } = require("./db/views")
 const { Headers, UserStatus, Cookies, MAX_VALID_DATE } = require("./constants")
 const {
   getGlobalDB,
@@ -139,25 +139,11 @@ exports.getGlobalUserByEmail = async email => {
   if (email == null) {
     throw "Must supply an email address to view"
   }
-  const db = getGlobalDB()
 
-  try {
-    let users = (
-      await db.query(`database/${ViewNames.USER_BY_EMAIL}`, {
-        key: email.toLowerCase(),
-        include_docs: true,
-      })
-    ).rows
-    users = users.map(user => user.doc)
-    return users.length <= 1 ? users[0] : users
-  } catch (err) {
-    if (err != null && err.name === "not_found") {
-      await createUserEmailView(db)
-      return exports.getGlobalUserByEmail(email)
-    } else {
-      throw err
-    }
-  }
+  return queryGlobalView(ViewNames.USER_BY_EMAIL, {
+    key: email.toLowerCase(),
+    include_docs: true,
+  })
 }
 
 exports.saveUser = async (
