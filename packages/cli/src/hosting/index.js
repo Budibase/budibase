@@ -15,7 +15,7 @@ const makeEnv = require("./makeEnv")
 const axios = require("axios")
 const AnalyticsClient = require("../analytics/Client")
 
-const BUDIBASE_SERVICES = ["app-service", "worker-service"]
+const BUDIBASE_SERVICES = ["app-service", "worker-service", "proxy-service"]
 const ERROR_FILE = "docker-error.log"
 const FILE_URLS = [
   "https://raw.githubusercontent.com/Budibase/budibase/master/hosting/docker-compose.yaml",
