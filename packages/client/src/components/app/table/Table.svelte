@@ -14,9 +14,11 @@
   export let linkURL
   export let linkColumn
   export let linkPeek
+  export let allowSelectRows
 
   const component = getContext("component")
-  const { styleable, getAction, ActionTypes, routeStore } = getContext("sdk")
+  const { styleable, getAction, ActionTypes, routeStore, rowSelectionStore } =
+    getContext("sdk")
   const customColumnKey = `custom-${Math.random()}`
   const customRenderers = [
     {
@@ -24,7 +26,7 @@
       component: SlotRenderer,
     },
   ]
-
+  let selectedRows = []
   $: hasChildren = $component.children
   $: loading = dataProvider?.loading ?? false
   $: data = dataProvider?.rows || []
@@ -36,6 +38,9 @@
     ActionTypes.SetDataProviderSorting
   )
 
+  $: {
+    rowSelectionStore.actions.update(selectedRows)
+  }
   const getFields = (schema, customColumns, showAutoColumns) => {
     // Check for an invalid column selection
     let invalid = false
@@ -112,7 +117,9 @@
     {rowCount}
     {quiet}
     {customRenderers}
-    allowSelectRows={false}
+    {allowSelectRows}
+    bind:selectedRows
+    allowSelectAllRows={true}
     allowEditRows={false}
     allowEditColumns={false}
     showAutoColumns={true}

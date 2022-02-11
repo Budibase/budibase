@@ -66,7 +66,6 @@ export function createAppStore() {
   }
 
   async function update(appId, value) {
-    console.log({ value })
     const response = await api.put(`/api/applications/${appId}`, { ...value })
     if (response.status === 200) {
       store.update(state => {
