@@ -35,12 +35,14 @@ export const getBindableProperties = (asset, componentId) => {
   const urlBindings = getUrlBindings(asset)
   const deviceBindings = getDeviceBindings()
   const stateBindings = getStateBindings()
+  const rowBindings = getRowBindings()
   return [
     ...contextBindings,
     ...urlBindings,
     ...stateBindings,
     ...userBindings,
     ...deviceBindings,
+    ...rowBindings,
   ]
 }
 
@@ -322,12 +324,32 @@ const getDeviceBindings = () => {
 }
 
 /**
+ * Gets all row bindings that are globally available.
+ */
+const getRowBindings = () => {
+  let bindings = []
+  if (get(store).clientFeatures?.rowSelection) {
+    const safeState = makePropSafe("rowSelection")
+    bindings = [
+      {
+        type: "context",
+        runtimeBinding: `${safeState}.${makePropSafe("row")}`,
+        readableBinding: "Rows",
+      },
+    ]
+
+    return bindings
+  }
+  return bindings
+}
+
+/**
  * Gets all state bindings that are globally available.
  */
 const getStateBindings = () => {
   let bindings = []
-  if (get(store).clientFeatures?.state) {
-    const safeState = makePropSafe("state")
+  if (get(store).clientFeatures?.rowSelection) {
+    const safeState = makePropSafe("rowSelection")
     bindings = getAllStateVariables().map(key => ({
       type: "context",
       runtimeBinding: `${safeState}.${makePropSafe(key)}`,

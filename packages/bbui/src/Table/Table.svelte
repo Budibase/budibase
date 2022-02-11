@@ -3,6 +3,7 @@
   import "@spectrum-css/table/dist/index-vars.css"
   import CellRenderer from "./CellRenderer.svelte"
   import SelectEditRenderer from "./SelectEditRenderer.svelte"
+  import Checkbox from "../Form/Checkbox.svelte"
   import { cloneDeep } from "lodash"
   import { deepGet } from "../utils/helpers"
 
@@ -29,7 +30,7 @@
   export let editColumnTitle = "Edit"
   export let customRenderers = []
   export let disableSorting = false
-
+  export let allowSelectAllRows = false
   const dispatch = createEventDispatcher()
 
   // Config
@@ -204,12 +205,27 @@
     dispatch("editrow", cloneDeep(row))
   }
 
+  const toggleSelectAll = e => {
+    if (!allowSelectAllRows) {
+      return
+    }
+    if (e.detail) {
+      selectedRows = rows
+    } else {
+      selectedRows = []
+    }
+  }
+
   const toggleSelectRow = row => {
     if (!allowSelectRows) {
       return
     }
-    if (selectedRows.includes(row)) {
-      selectedRows = selectedRows.filter(selectedRow => selectedRow !== row)
+    if (
+      selectedRows.findIndex(selectedRow => selectedRow._id === row._id) === 0
+    ) {
+      selectedRows = selectedRows.filter(
+        selectedRow => selectedRow._id !== row._id
+      )
     } else {
       selectedRows = [...selectedRows, row]
     }
@@ -234,7 +250,11 @@
                 {#if showEditColumn}
                   <th class="spectrum-Table-headCell">
                     <div class="spectrum-Table-headCell-content">
-                      {editColumnTitle || ""}
+                      {#if allowSelectAllRows}
+                        <Checkbox on:change={toggleSelectAll} />
+                      {:else}
+                        {editColumnTitle || ""}
+                      {/if}
                     </div>
                   </th>
                 {/if}
@@ -299,7 +319,9 @@
                         <div class="spectrum-Table-cell-content">
                           <SelectEditRenderer
                             data={row}
-                            selected={selectedRows.includes(row)}
+                            selected={selectedRows.findIndex(
+                              selectedRow => selectedRow._id === row._id
+                            ) !== -1}
                             onToggleSelection={() => toggleSelectRow(row)}
                             onEdit={e => editRow(e, row)}
                             {allowSelectRows}
@@ -364,6 +386,7 @@
     overflow: hidden;
     position: relative;
     z-index: 0;
+    cursor: pointer;
   }
 
   .container {
