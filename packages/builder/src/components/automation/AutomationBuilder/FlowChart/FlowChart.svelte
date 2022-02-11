@@ -11,6 +11,8 @@
     ActionButton,
     notifications,
     Modal,
+    Toggle,
+    Tooltip,
   } from "@budibase/bbui"
   import ConfigModal from "./ConfigModal.svelte"
 
@@ -22,6 +24,7 @@
   let blocks
   let confirmDeleteDialog
 
+  $: rowControl = $automationStore.selectedAutomation.automation.rowControl
   $: {
     blocks = []
     if (automation) {
@@ -30,6 +33,13 @@
       }
       blocks = blocks.concat(automation.definition.steps || [])
     }
+  }
+
+  function toggleFieldControl(evt) {
+    automationStore.actions.toggleFieldControl(evt.detail)
+    automationStore.actions.save(
+      $automationStore.selectedAutomation?.automation
+    )
   }
 
   async function deleteAutomation() {
@@ -61,16 +71,11 @@
     <div class="title">
       <div class="subtitle">
         <Heading size="S">{automation.name}</Heading>
-        <div style="display:flex;">
+        <div style="display:flex; align-items: center;">
           <div class="iconPadding">
-            <div class="icon">
-              <Icon
-                hoverable
-                size="M"
-                on:click={configModal.show}
-                name="Settings"
-              />
-            </div>
+            <Tooltip direction="left" text="Allow binding to all inputs">
+              <Toggle bind:value={rowControl} on:change={toggleFieldControl} />
+            </Tooltip>
           </div>
           <div class="iconPadding">
             <div class="icon">
