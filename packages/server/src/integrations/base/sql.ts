@@ -210,49 +210,37 @@ class InternalBuilder {
       const { toTable, throughTable } = JSON.parse(key)
       if (!throughTable) {
         // @ts-ignore
-        query = query.join(
-          toTable,
-          function () {
-            for (let relationship of relationships) {
-              const from = relationship.from,
-                to = relationship.to
-              // @ts-ignore
-              this.orOn(`${fromTable}.${from}`, "=", `${toTable}.${to}`)
-            }
-          },
-          "left"
-        )
+        query = query.leftJoin(toTable, function () {
+          for (let relationship of relationships) {
+            const from = relationship.from,
+              to = relationship.to
+            // @ts-ignore
+            this.orOn(`${fromTable}.${from}`, "=", `${toTable}.${to}`)
+          }
+        })
       } else {
         query = query
           // @ts-ignore
-          .join(
-            throughTable,
-            function () {
-              for (let relationship of relationships) {
-                const fromPrimary = relationship.fromPrimary
-                const from = relationship.from
-                // @ts-ignore
-                this.orOn(
-                  `${fromTable}.${fromPrimary}`,
-                  "=",
-                  `${throughTable}.${from}`
-                )
-              }
-            },
-            "left"
-          )
-          .join(
-            toTable,
-            function () {
-              for (let relationship of relationships) {
-                const toPrimary = relationship.toPrimary
-                const to = relationship.to
-                // @ts-ignore
-                this.orOn(`${toTable}.${toPrimary}`, `${throughTable}.${to}`)
-              }
-            },
-            "left"
-          )
+          .leftJoin(throughTable, function () {
+            for (let relationship of relationships) {
+              const fromPrimary = relationship.fromPrimary
+              const from = relationship.from
+              // @ts-ignore
+              this.orOn(
+                `${fromTable}.${fromPrimary}`,
+                "=",
+                `${throughTable}.${from}`
+              )
+            }
+          })
+          .leftJoin(toTable, function () {
+            for (let relationship of relationships) {
+              const toPrimary = relationship.toPrimary
+              const to = relationship.to
+              // @ts-ignore
+              this.orOn(`${toTable}.${toPrimary}`, `${throughTable}.${to}`)
+            }
+          })
       }
     }
     return query.limit(BASE_LIMIT)
