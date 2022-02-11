@@ -24,5 +24,8 @@ export const enrichDataBinding = async (input, context) => {
  * Props are deeply cloned so that no mutation is done to the source object.
  */
 export const enrichDataBindings = (props, context) => {
+  console.log(props)
+  console.log(context)
+
   return processObjectSync(cloneDeep(props), context)
 }
