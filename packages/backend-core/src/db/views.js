@@ -1,4 +1,5 @@
 const { DocumentTypes, ViewNames } = require("./utils")
+const { getGlobalDB } = require("../tenancy")
 
 function DesignDoc() {
   return {
@@ -9,7 +10,8 @@ function DesignDoc() {
   }
 }
 
-exports.createUserEmailView = async db => {
+exports.createUserEmailView = async () => {
+  const db = getGlobalDB()
   let designDoc
   try {
     designDoc = await db.get("_design/database")
@@ -30,4 +32,52 @@ exports.createUserEmailView = async db => {
     [ViewNames.USER_BY_EMAIL]: view,
   }
   await db.put(designDoc)
+}
+
+exports.createApiKeyView = async () => {
+  const db = getGlobalDB()
+  let designDoc
+  try {
+    designDoc = await db.get("_design/database")
+  } catch (err) {
+    designDoc = DesignDoc()
+  }
+  const view = {
+    map: `function(doc) {
+      if (doc._id.startsWith("${DocumentTypes.DEV_INFO}") && doc.apiKey) {
+        emit(doc.apiKey, doc.userId)
+      }
+    }`,
+  }
+  designDoc.views = {
+    ...designDoc.views,
+    [ViewNames.BY_API_KEY]: view,
+  }
+  await db.put(designDoc)
+}
+
+exports.queryGlobalView = async (viewName, params, db = null) => {
+  const CreateFuncByName = {
+    [ViewNames.USER_BY_EMAIL]: exports.createUserEmailView,
+    [ViewNames.BY_API_KEY]: exports.createApiKeyView,
+  }
+  // can pass DB in if working with something specific
+  if (!db) {
+    db = getGlobalDB()
+  }
+  try {
+    let response = (await db.query(`database/${viewName}`, params)).rows
+    response = response.map(resp =>
+      params.include_docs ? resp.doc : resp.value
+    )
+    return response.length <= 1 ? response[0] : response
+  } catch (err) {
+    if (err != null && err.name === "not_found") {
+      const createFunc = CreateFuncByName[viewName]
+      await createFunc()
+      return exports.queryGlobalView(viewName, params)
+    } else {
+      throw err
+    }
+  }
 }
