@@ -4,7 +4,6 @@
   import DrawerBindableInput from "../../common/bindings/DrawerBindableInput.svelte"
   import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
   import { createEventDispatcher } from "svelte"
-  import ModalBindableInput from "components/common/bindings/ModalBindableInput.svelte"
   import { automationStore } from "builderStore"
   import RowSelectorTypes from "./RowSelectorTypes.svelte"
 
@@ -107,14 +106,15 @@
                 {onChange}
               />
             {:else}
-              <ModalBindableInput
+              <DrawerBindableInput
                 placeholder={placeholders[schema.type]}
-                value={value[field]}
                 panel={AutomationBindingPanel}
-                label={field}
-                type={value.customType}
+                value={value[field]}
                 on:change={e => onChange(e, field, schema.type)}
+                label={field}
+                type="string"
                 {bindings}
+                fillWidth={true}
                 allowJS={false}
               />
             {/if}
