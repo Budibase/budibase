@@ -59,6 +59,6 @@
     type="string"
     {bindings}
     fillWidth={true}
-    allowJS={false}
+    allowJS={true}
   />
 {/if}

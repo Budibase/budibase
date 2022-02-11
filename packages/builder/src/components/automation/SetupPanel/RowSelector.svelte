@@ -20,7 +20,7 @@
     boolean: "true",
     datetime: "2022-02-16T12:00:00.000Z ",
     options: "1",
-    array: "1,2,3,4",
+    array: "1 2 3 4",
     link: "ro_ta_123_456",
     longform: "long form text",
   }
@@ -43,19 +43,32 @@
 
   const coerce = (value, type) => {
     if (type === "boolean") {
+      if (typeof value === "boolean") {
+        return value
+      }
       return value === "true"
     }
     if (type === "number") {
+      if (typeof value === "number") {
+        return value
+      }
       return Number(value)
     }
     if (type === "options") {
       return [value]
     }
     if (type === "array") {
-      return value.split(",")
+      if (Array.isArray(value)) {
+        return value
+      }
+      return value.split(",").map(x => x.trim())
     }
 
     if (type === "link") {
+      if (Array.isArray(value)) {
+        return value
+      }
+
       return [value]
     }
 
@@ -102,6 +115,7 @@
                 type={value.customType}
                 on:change={e => onChange(e, field, schema.type)}
                 {bindings}
+                allowJS={true}
               />
             {/if}
           {:else if $automationStore.selectedAutomation.automation.rowControl}
@@ -116,7 +130,7 @@
               type="string"
               {bindings}
               fillWidth={true}
-              allowJS={false}
+              allowJS={true}
             />
           {/if}
         {/if}
