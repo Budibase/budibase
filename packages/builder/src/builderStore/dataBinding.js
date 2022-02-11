@@ -333,12 +333,10 @@ const getRowBindings = () => {
     bindings = [
       {
         type: "context",
-        runtimeBinding: `${safeState}.${makePropSafe("row")}`,
-        readableBinding: "Rows",
+        runtimeBinding: `${safeState}`,
+        readableBinding: "Row Selection.Rows",
       },
     ]
-
-    return bindings
   }
   return bindings
 }
