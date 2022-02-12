@@ -25,6 +25,7 @@ jobs:
           # Pull apps and worker images
           docker pull budibase/apps:$release_tag
           docker pull budibase/worker:$release_tag
+          docker pull budibase/proxy:$release_tag
 
           # Tag apps and worker images
           docker tag budibase/apps:$release_tag budibase/apps:$SELFHOST_TAG
