@@ -39,7 +39,7 @@
   $: datasource = $datasources.list.find(ds => ds._id === query.datasourceId)
   $: query.schema = fieldsToSchema(fields)
   $: datasourceType = datasource?.source
-  $: integrationInfo = $integrations[datasourceType]
+  $: integrationInfo = datasourceType ? $integrations[datasourceType] : null
   $: queryConfig = integrationInfo?.query
   $: shouldShowQueryConfig = queryConfig && query.queryVerb
   $: readQuery = query.queryVerb === "read" || query.readable
@@ -160,7 +160,7 @@
     </div>
     <div class="viewer-controls">
       <Heading size="S">Results</Heading>
-      <ButtonGroup>
+      <ButtonGroup gap="M">
         <Button cta disabled={queryInvalid} on:click={saveQuery}>
           Save Query
         </Button>
