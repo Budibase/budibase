@@ -393,6 +393,7 @@ class TestConfiguration {
         parameters: {},
         fields,
         queryVerb: "read",
+        name: datasource.name,
       })
       .set(config.defaultHeaders())
       .expect("Content-Type", /json/)
