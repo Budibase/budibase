@@ -2950,7 +2950,7 @@
             "defaultValue": 8
           },
           {
-            "type": "multifield",
+            "type": "columns",
             "label": "Table Columns",
             "key": "tableColumns",
             "dependsOn": "dataSource",
