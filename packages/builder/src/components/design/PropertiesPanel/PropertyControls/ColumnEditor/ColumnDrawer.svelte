@@ -7,6 +7,7 @@
     Input,
     Select,
     Label,
+    Body,
   } from "@budibase/bbui"
   import { flip } from "svelte/animate"
   import { dndzone } from "svelte-dnd-action"
@@ -59,59 +60,81 @@
     updateColumnOrder(e)
     dragDisabled = true
   }
+
+  const reset = () => {
+    columns = options.map(col => ({
+      name: col,
+      displayName: col,
+    }))
+  }
 </script>
 
 <DrawerContent>
   <div class="container">
     <Layout noPadding gap="S">
       {#if columns?.length}
-        <div
-          class="columns"
-          use:dndzone={{
-            items: columns,
-            flipDurationMs,
-            dropTargetStyle: { outline: "none" },
-            dragDisabled,
-          }}
-          on:finalize={handleFinalize}
-          on:consider={updateColumnOrder}
-        >
+        <Layout noPadding gap="XS">
           <div class="column">
             <div />
             <Label size="L">Column</Label>
             <Label size="L">Label</Label>
             <div />
           </div>
-          {#each columns as column (column.id)}
-            <div class="column" animate:flip={{ duration: flipDurationMs }}>
-              <div
-                class="handle"
-                aria-label="drag-handle"
-                style={dragDisabled ? "cursor: grab" : "cursor: grabbing"}
-                on:mousedown={() => (dragDisabled = false)}
-              >
-                <Icon name="DragHandle" size="XL" />
+          <div
+            class="columns"
+            use:dndzone={{
+              items: columns,
+              flipDurationMs,
+              dropTargetStyle: { outline: "none" },
+              dragDisabled,
+            }}
+            on:finalize={handleFinalize}
+            on:consider={updateColumnOrder}
+          >
+            {#each columns as column (column.id)}
+              <div class="column" animate:flip={{ duration: flipDurationMs }}>
+                <div
+                  class="handle"
+                  aria-label="drag-handle"
+                  style={dragDisabled ? "cursor: grab" : "cursor: grabbing"}
+                  on:mousedown={() => (dragDisabled = false)}
+                >
+                  <Icon name="DragHandle" size="XL" />
+                </div>
+                <Select
+                  bind:value={column.name}
+                  placeholder="Column"
+                  options={getRemainingColumnOptions(column.name)}
+                  on:change={e => (column.displayName = e.detail)}
+                />
+                <Input bind:value={column.displayName} placeholder="Label" />
+                <Icon
+                  name="Close"
+                  hoverable
+                  size="S"
+                  on:click={() => removeColumn(column.id)}
+                  disabled={columns.length === 1}
+                />
               </div>
-              <Select
-                bind:value={column.name}
-                placeholder="Column"
-                options={getRemainingColumnOptions(column.name)}
-                on:change={e => (column.displayName = e.detail)}
-              />
-              <Input bind:value={column.displayName} placeholder="Label" />
-              <Icon
-                name="Close"
-                hoverable
-                size="S"
-                on:click={() => removeColumn(column.id)}
-              />
-            </div>
-          {/each}
+            {/each}
+          </div>
+        </Layout>
+      {:else}
+        <div class="column">
+          <div />
+          <Body size="S">Add the first column to your table.</Body>
         </div>
       {/if}
-      <div class="column">
-        <div />
-        <Button secondary icon="Add" on:click={addColumn}>Add Column</Button>
+      <div class="columns">
+        <div class="column">
+          <div />
+          <div class="buttons">
+            <Button secondary icon="Add" on:click={addColumn}>
+              Add column
+            </Button>
+            <Button secondary quiet on:click={reset}>Reset columns</Button>
+          </div>
+        </div>
       </div>
     </Layout>
   </div>
@@ -144,5 +167,12 @@
   .handle {
     display: grid;
     place-items: center;
+  }
+  .buttons {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    gap: var(--spacing-m);
   }
 </style>
