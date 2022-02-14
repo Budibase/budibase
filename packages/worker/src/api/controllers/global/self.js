@@ -2,11 +2,12 @@ const { getGlobalDB, getTenantId } = require("@budibase/backend-core/tenancy")
 const { generateDevInfoID, SEPARATOR } = require("@budibase/backend-core/db")
 const { user: userCache } = require("@budibase/backend-core/cache")
 const { hash, platformLogout } = require("@budibase/backend-core/utils")
+const { encrypt } = require("@budibase/backend-core/encryption")
 const { newid } = require("@budibase/backend-core/utils")
 const { getUser } = require("../../utilities")
 
 function newApiKey() {
-  return hash(`${getTenantId()}${SEPARATOR}${newid()}`)
+  return encrypt(`${getTenantId()}${SEPARATOR}${newid()}`)
 }
 
 function cleanupDevInfo(info) {
@@ -25,7 +26,7 @@ exports.generateAPIKey = async ctx => {
   } catch (err) {
     devInfo = { _id: id, userId: ctx.user._id }
   }
-  devInfo.apiKey = newApiKey()
+  devInfo.apiKey = await newApiKey()
   await db.put(devInfo)
   ctx.body = cleanupDevInfo(devInfo)
 }
@@ -40,7 +41,7 @@ exports.fetchAPIKey = async ctx => {
     devInfo = {
       _id: id,
       userId: ctx.user._id,
-      apiKey: newApiKey(),
+      apiKey: await newApiKey(),
     }
     await db.put(devInfo)
   }
