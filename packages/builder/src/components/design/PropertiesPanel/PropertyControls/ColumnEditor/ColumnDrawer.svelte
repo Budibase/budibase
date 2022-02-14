@@ -6,6 +6,7 @@
     Layout,
     Input,
     Select,
+    Label,
   } from "@budibase/bbui"
   import { flip } from "svelte/animate"
   import { dndzone } from "svelte-dnd-action"
@@ -75,6 +76,12 @@
           on:finalize={handleFinalize}
           on:consider={updateColumnOrder}
         >
+          <div class="column">
+            <div />
+            <Label size="L">Column</Label>
+            <Label size="L">Label</Label>
+            <div />
+          </div>
           {#each columns as column (column.id)}
             <div class="column" animate:flip={{ duration: flipDurationMs }}>
               <div
@@ -102,7 +109,8 @@
           {/each}
         </div>
       {/if}
-      <div>
+      <div class="column">
+        <div />
         <Button secondary icon="Add" on:click={addColumn}>Add Column</Button>
       </div>
     </Layout>
@@ -124,19 +132,14 @@
   }
   .column {
     gap: var(--spacing-l);
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: 20px 1fr 1fr 20px;
     align-items: center;
     border-radius: var(--border-radius-s);
     transition: background-color ease-in-out 130ms;
   }
   .column:hover {
     background-color: var(--spectrum-global-color-gray-100);
-  }
-  .column > :global(.spectrum-Form-item) {
-    flex: 1 1 auto;
-    width: 0;
   }
   .handle {
     display: grid;
