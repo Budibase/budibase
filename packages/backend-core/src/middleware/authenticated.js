@@ -6,6 +6,7 @@ const { buildMatcherRegex, matches } = require("./matchers")
 const env = require("../environment")
 const { SEPARATOR, ViewNames, queryGlobalView } = require("../../db")
 const { getGlobalDB } = require("../tenancy")
+const { decrypt } = require("../security/encryption")
 
 function finalise(
   ctx,
@@ -22,6 +23,7 @@ async function checkApiKey(apiKey, populateUser) {
   if (apiKey === env.INTERNAL_API_KEY) {
     return { valid: true }
   }
+  apiKey = decrypt(apiKey)
   const tenantId = apiKey.split(SEPARATOR)[0]
   const db = getGlobalDB(tenantId)
   const userId = await queryGlobalView(
