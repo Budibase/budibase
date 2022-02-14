@@ -68,6 +68,10 @@
 </div>
 
 <style>
+  button {
+    width: 100%;
+  }
+
   .container {
     display: flex;
     align-items: center;
