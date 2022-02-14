@@ -235,7 +235,7 @@ class QueryBuilder {
     if (this.sort) {
       const order = this.sortOrder === "descending" ? "-" : ""
       const type = `<${this.sortType}>`
-      body.sort = `${order}${this.sort.replace(/ /, "_")}${type}`
+      body.sort = `${order}${this.sort.replace(/ /g, "_")}${type}`
     }
     return body
   }
