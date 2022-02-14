@@ -59,7 +59,7 @@ exports.sendSmtpEmail = async (to, from, subject, contents, automation) => {
 }
 
 exports.getGlobalSelf = async (ctx, appId = null) => {
-  const endpoint = `/api/global/users/self`
+  const endpoint = `/api/global/self`
   const response = await fetch(
     checkSlashesInUrl(env.WORKER_URL + endpoint),
     // we don't want to use API key when getting self

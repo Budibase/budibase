@@ -15,7 +15,7 @@ export const buildUserEndpoints = API => ({
    */
   fetchBuilderSelf: async () => {
     return await API.get({
-      url: "/api/global/users/self",
+      url: "/api/global/self",
     })
   },
 
@@ -67,7 +67,7 @@ export const buildUserEndpoints = API => ({
    */
   updateSelf: async user => {
     return await API.post({
-      url: "/api/global/users/self",
+      url: "/api/global/self",
       body: user,
     })
   },
