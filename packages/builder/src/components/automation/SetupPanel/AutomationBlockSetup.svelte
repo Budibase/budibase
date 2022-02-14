@@ -46,7 +46,6 @@
     block || $automationStore.selectedBlock,
     $automationStore.selectedAutomation?.automation?.definition
   )
-
   $: inputData = testData ? testData : block.inputs
   $: tableId = inputData ? inputData.tableId : null
   $: table = tableId
@@ -174,7 +173,7 @@
             slot="body"
             bind:filters={tempFilters}
             {bindings}
-            {schemaFields}
+            {table}
             panel={AutomationBindingPanel}
           />
         </Drawer>

@@ -16,17 +16,23 @@
   import { LuceneUtils, Constants } from "@budibase/frontend-core"
   import { getFields } from "helpers/searchFields"
 
+  // can pass in either the table, or the fields (if working in design,
+  // fields is easier to pass in from the dataBinding:getSchemaForDatasource fn
+  export let table
   export let schemaFields
   export let filters = []
   export let bindings = []
   export let panel = ClientBindingPanel
   export let allowBindings = true
 
-  $: enrichedSchemaFields = getFields(schemaFields || [])
+  let fields, enrichedSchemaFields
+  let fieldOptions, valueTypeOptions
+  $: fields = schemaFields ? schemaFields : getSchemaFields(table)
+  $: enrichedSchemaFields = getFields(fields || [], { allowLinks: table?.sql })
   $: fieldOptions = enrichedSchemaFields.map(field => field.name) || []
   $: valueTypeOptions = allowBindings ? ["Value", "Binding"] : ["Value"]
 
-  const addFilter = () => {
+  function addFilter() {
     filters = [
       ...filters,
       {
@@ -39,17 +45,30 @@
     ]
   }
 
-  const removeFilter = id => {
+  function getSchemaFields(table) {
+    const base = table ? Object.values(table.schema) : []
+    // if internal table, can use the _id field as well
+    const isInternal = table && !table.sql
+    if (isInternal && !base.find(field => field.name === "_id")) {
+      base.push({ name: "_id", type: "string" })
+    }
+    if (isInternal && !base.find(field => field.name === "_rev")) {
+      base.push({ name: "_rev", type: "string" })
+    }
+    return base
+  }
+
+  function removeFilter(id) {
     filters = filters.filter(field => field.id !== id)
   }
 
-  const duplicateFilter = id => {
+  function duplicateFilter(id) {
     const existingFilter = filters.find(filter => filter.id === id)
     const duplicate = { ...existingFilter, id: generate() }
     filters = [...filters, duplicate]
   }
 
-  const onFieldChange = (expression, field) => {
+  function onFieldChange(expression, field) {
     // Update the field type
     expression.type = enrichedSchemaFields.find(x => x.name === field)?.type
 
@@ -72,7 +91,7 @@
     }
   }
 
-  const onOperatorChange = (expression, operator) => {
+  function onOperatorChange(expression, operator) {
     const noValueOptions = [
       Constants.OperatorOptions.Empty.value,
       Constants.OperatorOptions.NotEmpty.value,
@@ -83,7 +102,7 @@
     }
   }
 
-  const getFieldOptions = field => {
+  function getFieldOptions(field) {
     const schema = enrichedSchemaFields.find(x => x.name === field)
     return schema?.constraints?.inclusion || []
   }
