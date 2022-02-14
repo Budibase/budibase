@@ -80,7 +80,7 @@ export default {
     svg(),
     json(),
     production && terser(),
-    visualizer(),
+    !production && visualizer(),
   ],
   watch: {
     clearScreen: false,
