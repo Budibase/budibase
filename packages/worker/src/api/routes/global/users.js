@@ -4,6 +4,8 @@ const joiValidator = require("../../../middleware/joi-validator")
 const adminOnly = require("../../../middleware/adminOnly")
 const Joi = require("joi")
 const cloudRestricted = require("../../../middleware/cloudRestricted")
+const { buildUserSaveValidation } = require("../../utilities/validation")
+const selfController = require("../../controllers/global/self")
 
 const router = Router()
 
@@ -17,32 +19,6 @@ function buildAdminInitValidation() {
       .required()
       .unknown(false)
   )
-}
-
-function buildUserSaveValidation(isSelf = false) {
-  let schema = {
-    email: Joi.string().allow(null, ""),
-    password: Joi.string().allow(null, ""),
-    forceResetPassword: Joi.boolean().optional(),
-    firstName: Joi.string().allow(null, ""),
-    lastName: Joi.string().allow(null, ""),
-    builder: Joi.object({
-      global: Joi.boolean().optional(),
-      apps: Joi.array().optional(),
-    })
-      .unknown(true)
-      .optional(),
-    // maps appId -> roleId for the user
-    roles: Joi.object().pattern(/.*/, Joi.string()).required().unknown(true),
-  }
-  if (!isSelf) {
-    schema = {
-      ...schema,
-      _id: Joi.string(),
-      _rev: Joi.string(),
-    }
-  }
-  return joiValidator.body(Joi.object(schema).required().unknown(true))
 }
 
 function buildInviteValidation() {
@@ -79,11 +55,6 @@ router
   )
   // non-global endpoints
   .post(
-    "/api/global/users/self",
-    buildUserSaveValidation(true),
-    controller.updateSelf
-  )
-  .post(
     "/api/global/users/invite/accept",
     buildInviteAcceptValidation(),
     controller.inviteAccept
@@ -94,10 +65,15 @@ router
     buildAdminInitValidation(),
     controller.adminUser
   )
-
-  .get("/api/global/users/self", controller.getSelf)
   .get("/api/global/users/tenant/:id", controller.tenantUserLookup)
   // global endpoint but needs to come at end (blocks other endpoints otherwise)
   .get("/api/global/users/:id", adminOnly, controller.find)
+  // DEPRECATED - use new versions with self API
+  .get("/api/global/users/self", selfController.getSelf)
+  .post(
+    "/api/global/users/self",
+    buildUserSaveValidation(true),
+    selfController.updateSelf
+  )
 
 module.exports = router
