@@ -2680,11 +2680,10 @@
         "defaultValue": 8
       },
       {
-        "type": "multifield",
+        "type": "columns",
         "label": "Columns",
         "key": "columns",
-        "dependsOn": "dataProvider",
-        "placeholder": "All columns"
+        "dependsOn": "dataProvider"
       },
       {
         "type": "select",
@@ -2951,7 +2950,7 @@
             "defaultValue": 8
           },
           {
-            "type": "multifield",
+            "type": "columns",
             "label": "Table Columns",
             "key": "tableColumns",
             "dependsOn": "dataSource",
