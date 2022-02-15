@@ -23,6 +23,10 @@
   const dispatch = createEventDispatcher()
 
   export let bindings
+  // jsValue/hbsValue are the state of the value that is being built
+  // within this binding panel - the value should not be updated until
+  // the binding panel is saved. This is the default value of the
+  // expression when the binding panel is opened, but shouldn't be updated.
   export let value = ""
   export let valid
   export let allowJS = false
@@ -51,8 +55,8 @@
   })
   $: codeMirrorHints = bindings?.map(x => `$("${x.readableBinding}")`)
 
-  const updateValue = value => {
-    valid = isValid(readableToRuntimeBinding(bindings, value))
+  const updateValue = val => {
+    valid = isValid(readableToRuntimeBinding(bindings, val))
     if (valid) {
       dispatch("change", value)
     }
@@ -60,7 +64,7 @@
 
   // Adds a HBS helper to the expression
   const addHelper = helper => {
-    hbsValue = addHBSBinding(value, getCaretPosition(), helper.text)
+    hbsValue = addHBSBinding(hbsValue, getCaretPosition(), helper.text)
     updateValue(hbsValue)
   }
 
