@@ -3,7 +3,7 @@ const { registerAll, registerMinimum } = require("./helpers/index")
 const processors = require("./processors")
 const { atob, btoa } = require("./utilities")
 const manifest = require("../manifest.json")
-const { FIND_HBS_REGEX, FIND_DOUBLE_HBS_REGEX } = require("./utilities")
+const { FIND_HBS_REGEX, findDoubleHbsInstances } = require("./utilities")
 
 const hbsInstance = handlebars.create()
 registerAll(hbsInstance)
@@ -135,8 +135,7 @@ module.exports.processStringSync = (string, context, opts) => {
  * @param string the string to have double HBS statements converted to triple.
  */
 module.exports.disableEscaping = string => {
-  let regexp = new RegExp(FIND_DOUBLE_HBS_REGEX)
-  const matches = string.match(regexp)
+  const matches = findDoubleHbsInstances(string)
   if (matches == null) {
     return string
   }

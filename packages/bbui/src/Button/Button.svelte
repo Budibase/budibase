@@ -17,61 +17,55 @@
   let showTooltip = false
 </script>
 
-<div class:container={!!tooltip}>
-  <button
-    class:spectrum-Button--cta={cta}
-    class:spectrum-Button--primary={primary}
-    class:spectrum-Button--secondary={secondary}
-    class:spectrum-Button--warning={warning}
-    class:spectrum-Button--overBackground={overBackground}
-    class:spectrum-Button--quiet={quiet}
-    class:active
-    class="spectrum-Button spectrum-Button--size{size.toUpperCase()}"
-    {disabled}
-    on:click|preventDefault
-    on:mouseover={() => (showTooltip = true)}
-    on:mouseleave={() => (showTooltip = false)}
-  >
-    {#if icon}
+<button
+  class:spectrum-Button--cta={cta}
+  class:spectrum-Button--primary={primary}
+  class:spectrum-Button--secondary={secondary}
+  class:spectrum-Button--warning={warning}
+  class:spectrum-Button--overBackground={overBackground}
+  class:spectrum-Button--quiet={quiet}
+  class:active
+  class="spectrum-Button spectrum-Button--size{size.toUpperCase()}"
+  {disabled}
+  on:click|preventDefault
+  on:mouseover={() => (showTooltip = true)}
+  on:mouseleave={() => (showTooltip = false)}
+>
+  {#if icon}
+    <svg
+      class="spectrum-Icon spectrum-Icon--size{size.toUpperCase()}"
+      focusable="false"
+      aria-hidden="true"
+      aria-label={icon}
+    >
+      <use xlink:href="#spectrum-icon-18-{icon}" />
+    </svg>
+  {/if}
+  {#if $$slots}
+    <span class="spectrum-Button-label"><slot /></span>
+  {/if}
+  {#if !disabled && tooltip}
+    <div class="tooltip-icon">
       <svg
         class="spectrum-Icon spectrum-Icon--size{size.toUpperCase()}"
         focusable="false"
         aria-hidden="true"
-        aria-label={icon}
+        aria-label="Info"
       >
-        <use xlink:href="#spectrum-icon-18-{icon}" />
+        <use xlink:href="#spectrum-icon-18-InfoOutline" />
       </svg>
-    {/if}
-    {#if $$slots}
-      <span class="spectrum-Button-label"><slot /></span>
-    {/if}
-    {#if !disabled && tooltip}
-      <div class="tooltip-icon">
-        <svg
-          class="spectrum-Icon spectrum-Icon--size{size.toUpperCase()}"
-          focusable="false"
-          aria-hidden="true"
-          aria-label="Info"
-        >
-          <use xlink:href="#spectrum-icon-18-InfoOutline" />
-        </svg>
-      </div>
-    {/if}
-  </button>
-  {#if showTooltip && tooltip}
-    <div class="position">
-      <div class="tooltip">
-        <Tooltip textWrapping={true} direction={"bottom"} text={tooltip} />
-      </div>
     </div>
   {/if}
-</div>
+  {#if showTooltip && tooltip}
+    <div class="tooltip">
+      <Tooltip textWrapping={true} direction={"bottom"} text={tooltip} />
+    </div>
+  {/if}
+</button>
 
 <style>
-  .container {
-    display: flex;
-    align-items: center;
-    flex-direction: column;
+  button {
+    position: relative;
   }
   .spectrum-Button-label {
     white-space: nowrap;
@@ -89,12 +83,8 @@
     width: 160px;
     text-align: center;
     transform: translateX(-50%);
-    top: -5px;
-  }
-  .position {
-    position: relative;
-    width: 0;
-    height: 0;
+    left: 50%;
+    top: calc(100% - 3px);
   }
   .tooltip-icon {
     padding-left: var(--spacing-m);

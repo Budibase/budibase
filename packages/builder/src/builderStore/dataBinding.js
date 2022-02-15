@@ -275,10 +275,7 @@ const getProviderContextBindings = (asset, dataProviders) => {
  */
 const getUserBindings = () => {
   let bindings = []
-  const { schema } = getSchemaForDatasource(null, {
-    type: "table",
-    tableId: TableNames.USERS,
-  })
+  const { schema } = getSchemaForTable(TableNames.USERS)
   const keys = Object.keys(schema).sort()
   const safeUser = makePropSafe("user")
   keys.forEach(key => {
@@ -385,9 +382,33 @@ export const getButtonContextBindings = (actions, actionId) => {
 }
 
 /**
- * Gets a schema for a datasource object.
+ * Gets the schema for a certain table ID.
+ * The options which can be passed in are:
+ *   formSchema: whether the schema is for a form
+ *   searchableSchema: whether to generate a searchable schema, which may have
+ *     fewer fields than a readable schema
+ * @param tableId the table ID to get the schema for
+ * @param options options for generating the schema
+ * @return {{schema: Object, table: Object}}
  */
-export const getSchemaForDatasource = (asset, datasource, isForm = false) => {
+export const getSchemaForTable = (tableId, options) => {
+  return getSchemaForDatasource(null, { type: "table", tableId }, options)
+}
+
+/**
+ * Gets a schema for a datasource object.
+ * The options which can be passed in are:
+ *   formSchema: whether the schema is for a form
+ *   searchableSchema: whether to generate a searchable schema, which may have
+ *     fewer fields than a readable schema
+ * @param asset the current root client app asset (layout or screen). This is
+ *   optional and only needed for "provider" datasource types.
+ * @param datasource the datasource definition
+ * @param options options for generating the schema
+ * @return {{schema: Object, table: Object}}
+ */
+export const getSchemaForDatasource = (asset, datasource, options) => {
+  options = options || {}
   let schema, table
 
   if (datasource) {
@@ -399,7 +420,7 @@ export const getSchemaForDatasource = (asset, datasource, isForm = false) => {
     if (type === "provider") {
       const component = findComponent(asset.props, datasource.providerId)
       const source = getDatasourceForProvider(asset, component)
-      return getSchemaForDatasource(asset, source, isForm)
+      return getSchemaForDatasource(asset, source, options)
     }
 
     // "query" datasources are those targeting non-plus datasources or
@@ -448,8 +469,16 @@ export const getSchemaForDatasource = (asset, datasource, isForm = false) => {
     // Determine the schema from the backing entity if not already determined
     if (table && !schema) {
       if (type === "view") {
+        // For views, the schema is pulled from the `views` property of the
+        // table
         schema = cloneDeep(table.views?.[datasource.name]?.schema)
-      } else if (type === "query" && isForm) {
+      } else if (
+        type === "query" &&
+        (options.formSchema || options.searchableSchema)
+      ) {
+        // For queries, if we are generating a schema for a form or a searchable
+        // schema then we want to use the query parameters rather than the
+        // query schema
         schema = {}
         const params = table.parameters || []
         params.forEach(param => {
@@ -458,6 +487,7 @@ export const getSchemaForDatasource = (asset, datasource, isForm = false) => {
           }
         })
       } else {
+        // Otherwise we just want the schema of the table
         schema = cloneDeep(table.schema)
       }
     }
@@ -485,9 +515,31 @@ export const getSchemaForDatasource = (asset, datasource, isForm = false) => {
       schema = { ...schema, ...jsonAdditions }
     }
 
-    // Add _id and _rev fields for certain types
-    if (schema && !isForm && ["table", "link"].includes(datasource.type)) {
+    // Determine if we should add ID and rev to the schema
+    const isInternal = table && !table.sql
+    const isTable = ["table", "link"].includes(datasource.type)
+
+    // ID is part of the readable schema for all tables
+    // Rev is part of the readable schema for internal tables only
+    let addId = isTable
+    let addRev = isTable && isInternal
+
+    // Don't add ID or rev for form schemas
+    if (options.formSchema) {
+      addId = false
+      addRev = false
+    }
+
+    // ID is only searchable for internal tables
+    else if (options.searchableSchema) {
+      addId = isTable && isInternal
+    }
+
+    // Add schema properties if required
+    if (addId) {
       schema["_id"] = { type: "string" }
+    }
+    if (addRev) {
       schema["_rev"] = { type: "string" }
     }
 
