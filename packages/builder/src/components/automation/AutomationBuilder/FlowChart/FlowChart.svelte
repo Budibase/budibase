@@ -16,13 +16,11 @@
   } from "@budibase/bbui"
 
   export let automation
-  export let onSelect
 
   let testDataModal
   let blocks
   let confirmDeleteDialog
 
-  $: rowControl = $automationStore.selectedAutomation.automation.rowControl
   $: {
     blocks = []
     if (automation) {
@@ -31,13 +29,6 @@
       }
       blocks = blocks.concat(automation.definition.steps || [])
     }
-  }
-
-  function toggleFieldControl(evt) {
-    automationStore.actions.toggleFieldControl(evt.detail)
-    automationStore.actions.save(
-      $automationStore.selectedAutomation?.automation
-    )
   }
 
   async function deleteAutomation() {
@@ -71,11 +62,6 @@
         <Heading size="S">{automation.name}</Heading>
         <div style="display:flex; align-items: center;">
           <div class="iconPadding">
-            <Tooltip direction="left" text="Allow binding to all inputs">
-              <Toggle bind:value={rowControl} on:change={toggleFieldControl} />
-            </Tooltip>
-          </div>
-          <div class="iconPadding">
             <div class="icon">
               <Icon
                 on:click={confirmDeleteDialog.show}
@@ -101,7 +87,7 @@
         animate:flip={{ duration: 500 }}
         in:fly|local={{ x: 500, duration: 1500 }}
       >
-        <FlowItem {testDataModal} {testAutomation} {onSelect} {block} />
+        <FlowItem {testDataModal} {testAutomation} {block} />
       </div>
     {/each}
   </div>
