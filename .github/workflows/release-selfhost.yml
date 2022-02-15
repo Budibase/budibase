@@ -25,14 +25,17 @@ jobs:
           # Pull apps and worker images
           docker pull budibase/apps:$release_tag
           docker pull budibase/worker:$release_tag
+          docker pull budibase/proxy:$release_tag
 
           # Tag apps and worker images
           docker tag budibase/apps:$release_tag budibase/apps:$SELFHOST_TAG
           docker tag budibase/worker:$release_tag budibase/worker:$SELFHOST_TAG
+          docker tag budibase/proxy:$release_tag budibase/proxy:$SELFHOST_TAG
           
           # Push images
           docker push budibase/apps:$SELFHOST_TAG
           docker push budibase/worker:$SELFHOST_TAG
+          docker push budibase/proxy:$SELFHOST_TAG
         env:
           DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
