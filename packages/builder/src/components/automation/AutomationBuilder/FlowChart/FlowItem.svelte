@@ -29,7 +29,9 @@
   let blockComplete
 
   $: rowControl = $automationStore.selectedAutomation.automation.rowControl
-
+  $: showBindingPicker =
+    block.stepId === "CREATE_ROW" || block.stepId === "UPDATE_ROW"
+  $: console.log(showBindingPicker)
   $: testResult = $automationStore.selectedAutomation.testResults?.steps.filter(
     step => (block.id ? step.id === block.id : step.stepId === block.stepId)
   )
@@ -153,17 +155,19 @@
           </ActionButton>
           {#if !isTrigger}
             <div class="block-options">
-              <div>
-                <Select
-                  on:change={toggleFieldControl}
-                  quiet
-                  defaultValue="Use values"
-                  autoWidth
-                  value={rowControl ? "Use bindings" : "Use values"}
-                  options={["Use values", "Use bindings"]}
-                  placeholder={null}
-                />
-              </div>
+              {#if showBindingPicker}
+                <div>
+                  <Select
+                    on:change={toggleFieldControl}
+                    quiet
+                    defaultValue="Use values"
+                    autoWidth
+                    value={rowControl ? "Use bindings" : "Use values"}
+                    options={["Use values", "Use bindings"]}
+                    placeholder={null}
+                  />
+                </div>
+              {/if}
               <div class="delete-padding" on:click={() => deleteStep()}>
                 <Icon name="DeleteOutline" />
               </div>
