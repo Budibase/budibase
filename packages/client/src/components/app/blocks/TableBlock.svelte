@@ -64,8 +64,8 @@
       const stringType = column.type === "string" || column.type === "formula"
       enrichedFilter.push({
         field: column.name,
+        type: column.type,
         operator: stringType ? "string" : "equal",
-        type: stringType ? "string" : "number",
         valueType: "Binding",
         value: `{{ ${safe(formId)}.${safePath} }}`,
       })

@@ -52,7 +52,10 @@ export function buildExternalTableId(datasourceId: string, tableName: string) {
   return `${datasourceId}${DOUBLE_SEPARATOR}${tableName}`
 }
 
-export function breakExternalTableId(tableId: string) {
+export function breakExternalTableId(tableId: string | undefined) {
+  if (!tableId) {
+    return {}
+  }
   const parts = tableId.split(DOUBLE_SEPARATOR)
   let tableName = parts.pop()
   // if they need joined

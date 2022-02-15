@@ -166,15 +166,13 @@ class InternalBuilder {
 
   addSorting(query: KnexQuery, json: QueryJson): KnexQuery {
     let { sort, paginate } = json
-    if (!sort) {
-      return query
-    }
     const table = json.meta?.table
-    for (let [key, value] of Object.entries(sort)) {
-      const direction = value === SortDirection.ASCENDING ? "asc" : "desc"
-      query = query.orderBy(`${table?.name}.${key}`, direction)
-    }
-    if (this.client === SqlClients.MS_SQL && !sort && paginate?.limit) {
+    if (sort) {
+      for (let [key, value] of Object.entries(sort)) {
+        const direction = value === SortDirection.ASCENDING ? "asc" : "desc"
+        query = query.orderBy(`${table?.name}.${key}`, direction)
+      }
+    } else if (this.client === SqlClients.MS_SQL && paginate?.limit) {
       // @ts-ignore
       query = query.orderBy(`${table?.name}.${table?.primary[0]}`)
     }
@@ -191,29 +189,58 @@ class InternalBuilder {
     if (!relationships) {
       return query
     }
+    const tableSets: Record<string, [any]> = {}
+    // aggregate into table sets (all the same to tables)
     for (let relationship of relationships) {
-      const from = relationship.from,
-        to = relationship.to,
-        toTable = relationship.tableName
-      if (!relationship.through) {
-        // @ts-ignore
-        query = query.leftJoin(
-          toTable,
-          `${fromTable}.${from}`,
-          `${toTable}.${to}`
-        )
+      const keyObj: { toTable: string; throughTable: string | undefined } = {
+        toTable: relationship.tableName,
+        throughTable: undefined,
+      }
+      if (relationship.through) {
+        keyObj.throughTable = relationship.through
+      }
+      const key = JSON.stringify(keyObj)
+      if (tableSets[key]) {
+        tableSets[key].push(relationship)
       } else {
-        const throughTable = relationship.through
-        const fromPrimary = relationship.fromPrimary
-        const toPrimary = relationship.toPrimary
+        tableSets[key] = [relationship]
+      }
+    }
+    for (let [key, relationships] of Object.entries(tableSets)) {
+      const { toTable, throughTable } = JSON.parse(key)
+      if (!throughTable) {
+        // @ts-ignore
+        query = query.leftJoin(toTable, function () {
+          for (let relationship of relationships) {
+            const from = relationship.from,
+              to = relationship.to
+            // @ts-ignore
+            this.orOn(`${fromTable}.${from}`, "=", `${toTable}.${to}`)
+          }
+        })
+      } else {
         query = query
           // @ts-ignore
-          .leftJoin(
-            throughTable,
-            `${fromTable}.${fromPrimary}`,
-            `${throughTable}.${from}`
-          )
-          .leftJoin(toTable, `${toTable}.${toPrimary}`, `${throughTable}.${to}`)
+          .leftJoin(throughTable, function () {
+            for (let relationship of relationships) {
+              const fromPrimary = relationship.fromPrimary
+              const from = relationship.from
+              // @ts-ignore
+              this.orOn(
+                `${fromTable}.${fromPrimary}`,
+                "=",
+                `${throughTable}.${from}`
+              )
+            }
+          })
+          .leftJoin(toTable, function () {
+            for (let relationship of relationships) {
+              const toPrimary = relationship.toPrimary
+              const to = relationship.to
+              // @ts-ignore
+              this.orOn(`${toTable}.${toPrimary}`, `${throughTable}.${to}`)
+            }
+          })
       }
     }
     return query.limit(BASE_LIMIT)

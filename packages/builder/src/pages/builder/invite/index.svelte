@@ -10,14 +10,11 @@
 
   async function acceptInvite() {
     try {
-      const res = await users.acceptInvite(inviteCode, password)
-      if (!res) {
-        throw new Error(res.message)
-      }
-      notifications.success(`User created.`)
+      await users.acceptInvite(inviteCode, password)
+      notifications.success("Invitation accepted successfully")
       $goto("../auth/login")
-    } catch (err) {
-      notifications.error(err)
+    } catch (error) {
+      notifications.error("Error accepting invitation")
     }
   }
 </script>

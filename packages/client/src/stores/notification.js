@@ -19,7 +19,7 @@ const createNotificationStore = () => {
     setTimeout(() => (block = false), timeout)
   }
 
-  const send = (message, type = "info", icon) => {
+  const send = (message, type = "info", icon, autoDismiss = true) => {
     if (block) {
       return
     }
@@ -32,6 +32,7 @@ const createNotificationStore = () => {
           message,
           type,
           icon,
+          autoDismiss,
         },
       })
       return
@@ -42,12 +43,20 @@ const createNotificationStore = () => {
       type,
       message,
       icon,
+      dismissable: !autoDismiss,
       delay: get(store) != null,
     })
     clearTimeout(timeout)
-    timeout = setTimeout(() => {
-      store.set(null)
-    }, NOTIFICATION_TIMEOUT)
+    if (autoDismiss) {
+      timeout = setTimeout(() => {
+        store.set(null)
+      }, NOTIFICATION_TIMEOUT)
+    }
+  }
+
+  const dismiss = () => {
+    clearTimeout(timeout)
+    store.set(null)
   }
 
   return {
@@ -57,8 +66,9 @@ const createNotificationStore = () => {
       info: msg => send(msg, "info", "Info"),
       success: msg => send(msg, "success", "CheckmarkCircle"),
       warning: msg => send(msg, "warning", "Alert"),
-      error: msg => send(msg, "error", "Alert"),
+      error: msg => send(msg, "error", "Alert", false),
       blockNotifications,
+      dismiss,
     },
   }
 }

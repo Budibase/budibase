@@ -38,9 +38,13 @@
     })
 
   function saveView() {
-    views.save(view)
-    notifications.success(`View ${view.name} saved.`)
-    analytics.captureEvent(Events.VIEW.ADDED_CALCULATE, { field: view.field })
+    try {
+      views.save(view)
+      notifications.success(`View ${view.name} saved`)
+      analytics.captureEvent(Events.VIEW.ADDED_CALCULATE, { field: view.field })
+    } catch (error) {
+      notifications.error("Error saving view")
+    }
   }
 </script>
 

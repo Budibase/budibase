@@ -87,7 +87,7 @@ exports.run = async function ({ inputs, appId, emitter }) {
 
   try {
     if (tableId) {
-      inputs.row = await automationUtils.cleanUpRow(appId, tableId, inputs.row)
+      inputs.row = await automationUtils.cleanUpRow(tableId, inputs.row)
     }
     await rowController.patch(ctx)
     return {

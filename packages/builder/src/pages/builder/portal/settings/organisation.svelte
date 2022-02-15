@@ -11,7 +11,7 @@
     notifications,
   } from "@budibase/bbui"
   import { auth, organisation, admin } from "stores/portal"
-  import { post } from "builderStore/api"
+  import { API } from "api"
   import { writable } from "svelte/store"
   import { redirect } from "@roxi/routify"
 
@@ -32,42 +32,40 @@
   let loading = false
 
   async function uploadLogo(file) {
-    let data = new FormData()
-    data.append("file", file)
-    const res = await post(
-      "/api/global/configs/upload/settings/logoUrl",
-      data,
-      {}
-    )
-    return await res.json()
+    try {
+      let data = new FormData()
+      data.append("file", file)
+      await API.uploadLogo(data)
+    } catch (error) {
+      notifications.error("Error uploading logo")
+    }
   }
 
   async function saveConfig() {
     loading = true
 
-    // Upload logo if required
-    if ($values.logo && !$values.logo.url) {
-      await uploadLogo($values.logo)
-      await organisation.init()
-    }
+    try {
+      // Upload logo if required
+      if ($values.logo && !$values.logo.url) {
+        await uploadLogo($values.logo)
+        await organisation.init()
+      }
 
-    const config = {
-      company: $values.company ?? "",
-      platformUrl: $values.platformUrl ?? "",
-    }
-    // remove logo if required
-    if (!$values.logo) {
-      config.logoUrl = ""
-    }
+      const config = {
+        company: $values.company ?? "",
+        platformUrl: $values.platformUrl ?? "",
+      }
 
-    // Update settings
-    const res = await organisation.save(config)
-    if (res.status === 200) {
-      notifications.success("Settings saved successfully")
-    } else {
-      notifications.error(res.message)
-    }
+      // Remove logo if required
+      if (!$values.logo) {
+        config.logoUrl = ""
+      }
 
+      // Update settings
+      await organisation.save(config)
+    } catch (error) {
+      notifications.error("Error saving org config")
+    }
     loading = false
   }
 </script>

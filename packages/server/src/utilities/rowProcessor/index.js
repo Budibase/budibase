@@ -7,10 +7,10 @@ const { deleteFiles } = require("../../utilities/fileSystem/utilities")
 const { ObjectStoreBuckets } = require("../../constants")
 const {
   isProdAppID,
-  getDeployedAppID,
+  getProdAppID,
   dbExists,
 } = require("@budibase/backend-core/db")
-const CouchDB = require("../../db")
+const { getAppId } = require("@budibase/backend-core/context")
 
 const BASE_AUTO_ID = 1
 
@@ -253,26 +253,20 @@ exports.inputProcessing = (
 /**
  * This function enriches the input rows with anything they are supposed to contain, for example
  * link records or attachment links.
- * @param {string} appId the app in which the request is looking for enriched rows.
  * @param {object} table the table from which these rows came from originally, this is used to determine
  * the schema of the rows and then enrich.
  * @param {object[]|object} rows the rows which are to be enriched.
  * @param {object} opts used to set some options for the output, such as disabling relationship squashing.
  * @returns {object[]|object} the enriched rows will be returned.
  */
-exports.outputProcessing = async (
-  { appId },
-  table,
-  rows,
-  opts = { squash: true }
-) => {
+exports.outputProcessing = async (table, rows, opts = { squash: true }) => {
   let wasArray = true
   if (!(rows instanceof Array)) {
     rows = [rows]
     wasArray = false
   }
   // attach any linked row information
-  let enriched = await linkRows.attachFullLinkedDocs(appId, table, rows)
+  let enriched = await linkRows.attachFullLinkedDocs(table, rows)
 
   // process formulas
   enriched = processFormulas(table, enriched, { dynamic: true })
@@ -291,18 +285,13 @@ exports.outputProcessing = async (
     }
   }
   if (opts.squash) {
-    enriched = await linkRows.squashLinksToPrimaryDisplay(
-      appId,
-      table,
-      enriched
-    )
+    enriched = await linkRows.squashLinksToPrimaryDisplay(table, enriched)
   }
   return wasArray ? enriched : enriched[0]
 }
 
 /**
  * Clean up any attachments that were attached to a row.
- * @param {string} appId The ID of the app from which a row is being deleted.
  * @param {object} table The table from which a row is being removed.
  * @param {any} row optional - the row being removed.
  * @param {any} rows optional - if multiple rows being deleted can do this in bulk.
@@ -311,15 +300,12 @@ exports.outputProcessing = async (
  * deleted attachment columns.
  * @return {Promise<void>} When all attachments have been removed this will return.
  */
-exports.cleanupAttachments = async (
-  appId,
-  table,
-  { row, rows, oldRow, oldTable }
-) => {
+exports.cleanupAttachments = async (table, { row, rows, oldRow, oldTable }) => {
+  const appId = getAppId()
   if (!isProdAppID(appId)) {
-    const prodAppId = getDeployedAppID(appId)
+    const prodAppId = getProdAppID(appId)
     // if prod exists, then don't allow deleting
-    const exists = await dbExists(CouchDB, prodAppId)
+    const exists = await dbExists(prodAppId)
     if (exists) {
       return
     }

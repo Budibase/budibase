@@ -12,24 +12,28 @@
   let updateDatasourceDialog
 
   async function deleteDatasource() {
-    let wasSelectedSource = $datasources.selected
-    if (!wasSelectedSource && $queries.selected) {
-      const queryId = $queries.selected
-      wasSelectedSource = $datasources.list.find(ds =>
-        queryId.includes(ds._id)
-      )?._id
-    }
-    const wasSelectedTable = $tables.selected
-    await datasources.delete(datasource)
-    notifications.success("Datasource deleted")
-    // navigate to first index page if the source you are deleting is selected
-    const entities = Object.values(datasource?.entities || {})
-    if (
-      wasSelectedSource === datasource._id ||
-      (entities &&
-        entities.find(entity => entity._id === wasSelectedTable?._id))
-    ) {
-      $goto("./datasource")
+    try {
+      let wasSelectedSource = $datasources.selected
+      if (!wasSelectedSource && $queries.selected) {
+        const queryId = $queries.selected
+        wasSelectedSource = $datasources.list.find(ds =>
+          queryId.includes(ds._id)
+        )?._id
+      }
+      const wasSelectedTable = $tables.selected
+      await datasources.delete(datasource)
+      notifications.success("Datasource deleted")
+      // Navigate to first index page if the source you are deleting is selected
+      const entities = Object.values(datasource?.entities || {})
+      if (
+        wasSelectedSource === datasource._id ||
+        (entities &&
+          entities.find(entity => entity._id === wasSelectedTable?._id))
+      ) {
+        $goto("./datasource")
+      }
+    } catch (error) {
+      notifications.error("Error deleting datasource")
     }
   }
 </script>

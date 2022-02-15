@@ -1,7 +1,8 @@
 <script>
-  import { CoreTextArea } from "@budibase/bbui"
+  import { getContext, setContext } from "svelte"
+  import { writable } from "svelte/store"
+  import { CoreRichTextField, CoreTextArea } from "@budibase/bbui"
   import Field from "./Field.svelte"
-  import { getContext } from "svelte"
 
   export let field
   export let label
@@ -9,12 +10,40 @@
   export let disabled = false
   export let validation
   export let defaultValue = ""
+  export let format = "auto"
 
   let fieldState
   let fieldApi
+  let fieldSchema
 
+  const context = getContext("context")
   const component = getContext("component")
-  $: height = $component.styles?.normal?.height || "124px"
+  const layout = getContext("layout")
+  const newContext = writable($component)
+  setContext("component", newContext)
+
+  // Determine whether we should use a rich or plain text component.
+  // We treat undefined as "auto".
+  $: useRichText =
+    format === "rich" || (format !== "plain" && fieldSchema?.useRichText)
+
+  // Extract the settings height so we can pass it on to the rich text field.
+  // We then wipe the height style so that the field will automatically size
+  // itself based on the height of the rich text field.
+  let height
+  $: {
+    height = $component.styles?.normal?.height || "150px"
+    newContext.set({
+      ...$component,
+      styles: {
+        ...$component.styles,
+        normal: {
+          ...$component.styles.normal,
+          height: undefined,
+        },
+      },
+    })
+  }
 </script>
 
 <Field
@@ -26,9 +55,27 @@
   type="longform"
   bind:fieldState
   bind:fieldApi
+  bind:fieldSchema
 >
   {#if fieldState}
-    <div style="--height: {height};">
+    {#if useRichText}
+      <CoreRichTextField
+        value={fieldState.value}
+        on:change={e => fieldApi.setValue(e.detail)}
+        disabled={fieldState.disabled}
+        error={fieldState.error}
+        id={fieldState.fieldId}
+        {placeholder}
+        {height}
+        fullScreenOffset={{
+          x: $layout.screenXOffset,
+          y: $layout.screenYOffset,
+        }}
+        easyMDEOptions={{
+          hideIcons: $context.device.mobile ? ["side-by-side", "guide"] : [],
+        }}
+      />
+    {:else}
       <CoreTextArea
         value={fieldState.value}
         on:change={e => fieldApi.setValue(e.detail)}
@@ -36,18 +83,8 @@
         error={fieldState.error}
         id={fieldState.fieldId}
         {placeholder}
+        minHeight={height}
       />
-    </div>
+    {/if}
   {/if}
 </Field>
-
-<style>
-  :global(.spectrum-Form-itemField .spectrum-Textfield--multiline) {
-    min-height: calc(var(--height) - 24px);
-  }
-  :global(.spectrum-Form--labelsAbove
-      .spectrum-Form-itemField
-      .spectrum-Textfield--multiline) {
-    min-height: calc(var(--height) - 24px);
-  }
-</style>

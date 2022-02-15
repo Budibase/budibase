@@ -1,4 +1,3 @@
-const CouchDB = require("../../../db")
 const { getRowParams } = require("../../../db/utils")
 const {
   outputProcessing,
@@ -8,6 +7,7 @@ const {
 const { FieldTypes, FormulaTypes } = require("../../../constants")
 const { isEqual } = require("lodash")
 const { cloneDeep } = require("lodash/fp")
+const { getAppDB } = require("@budibase/backend-core/context")
 
 /**
  * This function runs through a list of enriched rows, looks at the rows which
@@ -15,8 +15,8 @@ const { cloneDeep } = require("lodash/fp")
  * updated.
  * NOTE: this will only for affect static formulas.
  */
-exports.updateRelatedFormula = async (appId, table, enrichedRows) => {
-  const db = new CouchDB(appId)
+exports.updateRelatedFormula = async (table, enrichedRows) => {
+  const db = getAppDB()
   // no formula to update, we're done
   if (!table.relatedFormula) {
     return
@@ -57,7 +57,7 @@ exports.updateRelatedFormula = async (appId, table, enrichedRows) => {
           // re-enrich rows for all the related, don't update the related formula for them
           promises = promises.concat(
             relatedRows[tableId].map(related =>
-              exports.finaliseRow(appId, relatedTable, related, {
+              exports.finaliseRow(relatedTable, related, {
                 updateFormula: false,
               })
             )
@@ -69,8 +69,8 @@ exports.updateRelatedFormula = async (appId, table, enrichedRows) => {
   await Promise.all(promises)
 }
 
-exports.updateAllFormulasInTable = async (appId, table) => {
-  const db = new CouchDB(appId)
+exports.updateAllFormulasInTable = async table => {
+  const db = getAppDB()
   // start by getting the raw rows (which will be written back to DB after update)
   let rows = (
     await db.allDocs(
@@ -81,7 +81,7 @@ exports.updateAllFormulasInTable = async (appId, table) => {
   ).rows.map(row => row.doc)
   // now enrich the rows, note the clone so that we have the base state of the
   // rows so that we don't write any of the enriched information back
-  let enrichedRows = await outputProcessing({ appId }, table, cloneDeep(rows), {
+  let enrichedRows = await outputProcessing(table, cloneDeep(rows), {
     squash: false,
   })
   const updatedRows = []
@@ -109,15 +109,14 @@ exports.updateAllFormulasInTable = async (appId, table) => {
  * expects the row to be totally enriched/contain all relationships.
  */
 exports.finaliseRow = async (
-  appId,
   table,
   row,
   { oldTable, updateFormula } = { updateFormula: true }
 ) => {
-  const db = new CouchDB(appId)
+  const db = getAppDB()
   row.type = "row"
   // process the row before return, to include relationships
-  let enrichedRow = await outputProcessing({ appId }, table, cloneDeep(row), {
+  let enrichedRow = await outputProcessing(table, cloneDeep(row), {
     squash: false,
   })
   // use enriched row to generate formulas for saving, specifically only use as context
@@ -151,7 +150,7 @@ exports.finaliseRow = async (
   enrichedRow = await processFormulas(table, enrichedRow, { dynamic: false })
   // this updates the related formulas in other rows based on the relations to this row
   if (updateFormula) {
-    await exports.updateRelatedFormula(appId, table, enrichedRow)
+    await exports.updateRelatedFormula(table, enrichedRow)
   }
   return { row: enrichedRow, table }
 }

@@ -17,6 +17,7 @@ export const processString = templates.processString
 export const processObject = templates.processObject
 export const doesContainStrings = templates.doesContainStrings
 export const doesContainString = templates.doesContainString
+export const disableEscaping = templates.disableEscaping
 
 /**
  * Use polyfilled vm to run JS scripts in a browser Env

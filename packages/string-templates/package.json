@@ -1,6 +1,6 @@
 {
   "name": "@budibase/string-templates",
-  "version": "1.0.49-alpha.4",
+  "version": "1.0.58-alpha.7",
   "description": "Handlebars wrapper for Budibase templating.",
   "main": "src/index.cjs",
   "module": "dist/bundle.mjs",
@@ -13,6 +13,11 @@
     },
     "./package.json": "./package.json"
   },
+  "files": [
+    "dist",
+    "src",
+    "manifest.json"
+  ],
   "scripts": {
     "build": "tsc && rollup -c",
     "dev:builder": "tsc && rollup -cw",
@@ -20,7 +25,7 @@
     "manifest": "node ./scripts/gen-collection-info.js"
   },
   "dependencies": {
-    "@budibase/handlebars-helpers": "^0.11.7",
+    "@budibase/handlebars-helpers": "^0.11.8",
     "dayjs": "^1.10.4",
     "handlebars": "^4.7.6",
     "handlebars-utils": "^1.0.6",
