@@ -16,7 +16,6 @@ ENV BUDIBASE_ENVIRONMENT=PRODUCTION
 # copy files and install dependencies
 COPY . ./
 RUN yarn
-
 RUN yarn build
 
 # Install client for oracle datasource
