@@ -40,7 +40,8 @@
     // Check for an invalid column selection
     let invalid = false
     customColumns?.forEach(column => {
-      if (schema[column] == null) {
+      const columnName = typeof column === "string" ? column : column.name
+      if (schema[columnName] == null) {
         invalid = true
       }
     })
@@ -75,9 +76,16 @@
     }
 
     fields.forEach(field => {
-      newSchema[field] = schema[field]
-      if (schema[field] && UnsortableTypes.indexOf(schema[field].type) !== -1) {
-        newSchema[field].sortable = false
+      const columnName = typeof field === "string" ? field : field.name
+      if (!schema[columnName]) {
+        return
+      }
+      newSchema[columnName] = schema[columnName]
+      if (UnsortableTypes.includes(schema[columnName].type)) {
+        newSchema[columnName].sortable = false
+      }
+      if (field?.displayName) {
+        newSchema[columnName].displayName = field?.displayName
       }
     })
     return newSchema

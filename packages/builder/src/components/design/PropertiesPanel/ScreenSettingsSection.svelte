@@ -1,7 +1,7 @@
 <script>
   import { get } from "svelte/store"
   import { get as deepGet, setWith } from "lodash"
-  import { Input, DetailSummary } from "@budibase/bbui"
+  import { Input, DetailSummary, notifications } from "@budibase/bbui"
   import PropertyControl from "./PropertyControls/PropertyControl.svelte"
   import LayoutSelect from "./PropertyControls/LayoutSelect.svelte"
   import RoleSelect from "./PropertyControls/RoleSelect.svelte"
@@ -29,7 +29,12 @@
       }
       return state
     })
-    store.actions.preview.saveSelected()
+
+    try {
+      store.actions.preview.saveSelected()
+    } catch (error) {
+      notifications.error("Error saving settings")
+    }
   }
 
   const screenSettings = [

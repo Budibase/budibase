@@ -1,7 +1,8 @@
 <script>
-  import api from "builderStore/api"
+  import { API } from "api"
   import Table from "./Table.svelte"
   import { tables } from "stores/backend"
+  import { notifications } from "@budibase/bbui"
 
   export let tableId
   export let rowId
@@ -27,9 +28,15 @@
   }
 
   async function fetchData(tableId, rowId) {
-    const QUERY_VIEW_URL = `/api/${tableId}/${rowId}/enrich`
-    const response = await api.get(QUERY_VIEW_URL)
-    row = await response.json()
+    try {
+      row = await API.fetchRelationshipData({
+        tableId,
+        rowId,
+      })
+    } catch (error) {
+      row = null
+      notifications.error("Error fetching relationship data")
+    }
   }
 </script>
 

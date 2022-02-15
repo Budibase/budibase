@@ -11,6 +11,7 @@
     StatusLight,
     ActionButton,
     Select,
+    notifications,
   } from "@budibase/bbui"
   import AutomationBlockSetup from "../../SetupPanel/AutomationBlockSetup.svelte"
   import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
@@ -50,10 +51,14 @@
   ).every(x => block?.inputs[x])
 
   async function deleteStep() {
-    automationStore.actions.deleteAutomationBlock(block)
-    await automationStore.actions.save(
-      $automationStore.selectedAutomation?.automation
-    )
+    try {
+      automationStore.actions.deleteAutomationBlock(block)
+      await automationStore.actions.save(
+        $automationStore.selectedAutomation?.automation
+      )
+    } catch (error) {
+      notifications.error("Error saving notification")
+    }
   }
   function toggleFieldControl(evt) {
     onSelect(block)

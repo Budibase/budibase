@@ -11,10 +11,7 @@
     Select,
   } from "@budibase/bbui"
   import { generate } from "shortid"
-  import {
-    getValidOperatorsForType,
-    OperatorOptions,
-  } from "builder/src/constants/lucene"
+  import { LuceneUtils, Constants } from "@budibase/frontend-core"
 
   export let schemaFields
   export let filters = []
@@ -35,7 +32,7 @@
       {
         id: generate(),
         field: null,
-        operator: OperatorOptions.Equals.value,
+        operator: Constants.OperatorOptions.Equals.value,
         value: null,
         valueType: "Value",
       },
@@ -57,11 +54,12 @@
     expression.type = schemaFields.find(x => x.name === field)?.type
 
     // Ensure a valid operator is set
-    const validOperators = getValidOperatorsForType(expression.type).map(
-      x => x.value
-    )
+    const validOperators = LuceneUtils.getValidOperatorsForType(
+      expression.type
+    ).map(x => x.value)
     if (!validOperators.includes(expression.operator)) {
-      expression.operator = validOperators[0] ?? OperatorOptions.Equals.value
+      expression.operator =
+        validOperators[0] ?? Constants.OperatorOptions.Equals.value
       onOperatorChange(expression, expression.operator)
     }
 
@@ -76,8 +74,8 @@
 
   const onOperatorChange = (expression, operator) => {
     const noValueOptions = [
-      OperatorOptions.Empty.value,
-      OperatorOptions.NotEmpty.value,
+      Constants.OperatorOptions.Empty.value,
+      Constants.OperatorOptions.NotEmpty.value,
     ]
     expression.noValue = noValueOptions.includes(operator)
     if (expression.noValue) {
@@ -113,7 +111,7 @@
             />
             <Select
               disabled={!filter.field}
-              options={getValidOperatorsForType(filter.type)}
+              options={LuceneUtils.getValidOperatorsForType(filter.type)}
               bind:value={filter.operator}
               on:change={e => onOperatorChange(filter, e.detail)}
               placeholder={null}
