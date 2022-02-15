@@ -15,6 +15,7 @@ export default ({ mode }) => {
     build: {
       minify: isProduction,
       outDir: "../server/builder",
+      sourcemap: !isProduction,
     },
     plugins: [
       svelte({
