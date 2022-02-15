@@ -51,8 +51,9 @@
   })
   $: codeMirrorHints = bindings?.map(x => `$("${x.readableBinding}")`)
 
-  const updateValue = value => {
-    valid = isValid(readableToRuntimeBinding(bindings, value))
+  const updateValue = val => {
+    valid = isValid(readableToRuntimeBinding(bindings, val))
+    value = val
     if (valid) {
       dispatch("change", value)
     }
