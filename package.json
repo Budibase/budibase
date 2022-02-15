@@ -19,7 +19,6 @@
   },
   "scripts": {
     "setup": "node ./hosting/scripts/setup.js && yarn && yarn bootstrap && yarn build && yarn dev",
-    "install:pro": "lerna run install:pro --",
     "bootstrap": "lerna link && lerna bootstrap",
     "build": "lerna run build",
     "publishnpm": "yarn build && lerna publish --force-publish",

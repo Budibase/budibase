@@ -1,38 +1,38 @@
 name: Budibase Release Staging
 
-on:
-  push:
+on: 
+ push:
     branches:
       - develop
     paths:
-      - ".aws/**"
-      - ".github/**"
-      - "charts/**"
-      - "packages/**"
-      - "scripts/**"
-      - "package.json"
-      - "yarn.lock"
-      - "package.json"
-      - "yarn.lock"
+      - '.aws/**'
+      - '.github/**'
+      - 'charts/**'
+      - 'packages/**'
+      - 'scripts/**'
+      - 'package.json'
+      - 'yarn.lock'
+      - 'package.json'
+      - 'yarn.lock'
 
 env:
   POSTHOG_TOKEN: ${{ secrets.POSTHOG_TOKEN }}
   INTERCOM_TOKEN: ${{ secrets.INTERCOM_TOKEN }}
   POSTHOG_URL: ${{ secrets.POSTHOG_URL }}
-
+      
 jobs:
   release:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest 
 
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
         with:
           node-version: 14.x
-      - run: yarn
-      - run: yarn bootstrap
-      - run: yarn lint
-      - run: yarn build
+      - run: yarn 
+      - run: yarn bootstrap 
+      - run: yarn lint 
+      - run: yarn build 
       - run: yarn test
 
       - name: Configure AWS Credentials
@@ -45,7 +45,7 @@ jobs:
       - name: Publish budibase packages to NPM
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
+        run: | 
           # setup the username and email. I tend to use 'GitHub Actions Bot' with no email by default
           git config user.name "Budibase Staging Release Bot"
           git config user.email "<>"
@@ -53,10 +53,10 @@ jobs:
           yarn release:develop
 
       - name: Build/release Docker images
-        run: |
+        run: | 
           docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+          yarn build
           yarn build:docker:develop
-          yarn release:docker develop
         env:
           DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}

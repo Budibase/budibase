@@ -1,19 +1,19 @@
 name: Budibase Release
 
 on:
-  push:
+ push:
     branches:
       - master
     paths:
-      - ".aws/**"
-      - ".github/**"
-      - "charts/**"
-      - "packages/**"
-      - "scripts/**"
-      - "package.json"
-      - "yarn.lock"
-      - "package.json"
-      - "yarn.lock"
+      - '.aws/**'
+      - '.github/**'
+      - 'charts/**'
+      - 'packages/**'
+      - 'scripts/**'
+      - 'package.json'
+      - 'yarn.lock'
+      - 'package.json'
+      - 'yarn.lock'
 
 env:
   POSTHOG_TOKEN: ${{ secrets.POSTHOG_TOKEN }}
@@ -53,15 +53,15 @@ jobs:
           echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} >> .npmrc
           yarn release
 
-      - name: "Get Previous tag"
+      - name: 'Get Previous tag'
         id: previoustag
         uses: "WyriHaximus/github-action-get-previous-tag@v1"
 
       - name: Build/release Docker images
-        run: |
+        run: | 
           docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+          yarn build
           yarn build:docker
-          yarn release:docker ${BUDIBASE_RELEASE_VERSION}
         env:
           DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
