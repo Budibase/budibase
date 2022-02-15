@@ -73,7 +73,7 @@
     "@budibase/backend-core": "^1.0.65",
     "@budibase/client": "^1.0.65",
     "@budibase/string-templates": "^1.0.65",
-    "@budibase/pro": "0.0.2-alpha.27",
+    "@budibase/pro": "^1.0.0",
     "@bull-board/api": "^3.7.0",
     "@bull-board/koa": "^3.7.0",
     "@elastic/elasticsearch": "7.10.0",
