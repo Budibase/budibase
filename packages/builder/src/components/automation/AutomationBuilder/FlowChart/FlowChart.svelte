@@ -11,8 +11,6 @@
     ActionButton,
     notifications,
     Modal,
-    Toggle,
-    Tooltip,
   } from "@budibase/bbui"
 
   export let automation
