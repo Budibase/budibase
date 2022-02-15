@@ -122,7 +122,7 @@ const automationActions = store => ({
   },
   toggleFieldControl: value => {
     store.update(state => {
-      state.selectedAutomation.automation.rowControl = value
+      state.selectedBlock.rowControl = value
       return state
     })
   },

@@ -11,6 +11,8 @@
 
   export let value
   export let bindings
+  export let block
+
   let table
   let schemaFields
 
@@ -23,7 +25,7 @@
     link: "ro_ta_123_456",
     longform: "long form text",
   }
-
+  $: rowControl = block.rowControl
   $: {
     table = $tables.list.find(table => table._id === value?.tableId)
     schemaFields = Object.entries(table?.schema ?? {})
@@ -97,7 +99,7 @@
       {#if !schema.autocolumn}
         {#if schema.type !== "attachment"}
           {#if $automationStore.selectedAutomation.automation.testData}
-            {#if !$automationStore.selectedAutomation.automation.rowControl}
+            {#if !rowControl}
               <RowSelectorTypes
                 {field}
                 {schema}
@@ -109,28 +111,32 @@
               <DrawerBindableInput
                 placeholder={placeholders[schema.type]}
                 panel={AutomationBindingPanel}
-                value={value[field]}
+                value={Array.isArray(value[field])
+                  ? value[field].join(" ")
+                  : value[field]}
                 on:change={e => onChange(e, field, schema.type)}
                 label={field}
                 type="string"
                 {bindings}
                 fillWidth={true}
-                allowJS={false}
+                allowJS={true}
               />
             {/if}
-          {:else if !$automationStore.selectedAutomation.automation.rowControl}
+          {:else if !rowControl}
             <RowSelectorTypes {field} {schema} {bindings} {value} {onChange} />
           {:else}
             <DrawerBindableInput
               placeholder={placeholders[schema.type]}
               panel={AutomationBindingPanel}
-              value={value[field]}
+              value={Array.isArray(value[field])
+                ? value[field].join(" ")
+                : value[field]}
               on:change={e => onChange(e, field, schema.type)}
               label={field}
               type="string"
               {bindings}
               fillWidth={true}
-              allowJS={false}
+              allowJS={true}
             />
           {/if}
         {/if}

@@ -26,14 +26,14 @@
   export let value = ""
   export let valid
   export let allowJS = false
-  $: console.log(value)
+
   let helpers = handlebarsCompletions()
   let getCaretPosition
   let search = ""
-  //let initialValueJS = value?.startsWith("{{ js ")
-  let mode = "Handlebars"
-  let jsValue = null
-  let hbsValue = value
+  let initialValueJS = value?.startsWith("{{ js ")
+  let mode = initialValueJS ? "JavaScript" : "Handlebars"
+  let jsValue = initialValueJS ? value : null
+  let hbsValue = initialValueJS ? null : value
 
   $: usingJS = mode === "JavaScript"
   $: searchRgx = new RegExp(search, "ig")
