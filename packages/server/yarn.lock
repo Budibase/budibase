@@ -983,31 +983,7 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/backend-core@1.0.48":
-  version "1.0.48"
-  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.0.48.tgz#bfe2ee899951dedbc9e5a9546e1854f7b0eaa28a"
-  integrity sha512-FH47Mrf77BHP5d03DpycVJ6/+Yab/7aXqe7reew+lDXYSuJ5WcX0uzFANswaBuei9R/NZfSq/9QRYCjLrW3ccg==
-  dependencies:
-    "@techpass/passport-openidconnect" "^0.3.0"
-    aws-sdk "^2.901.0"
-    bcryptjs "^2.4.3"
-    cls-hooked "^4.2.2"
-    ioredis "^4.27.1"
-    jsonwebtoken "^8.5.1"
-    koa-passport "^4.1.4"
-    lodash "^4.17.21"
-    lodash.isarguments "^3.1.0"
-    node-fetch "^2.6.1"
-    passport-google-auth "^1.0.2"
-    passport-google-oauth "^2.0.0"
-    passport-jwt "^4.0.0"
-    passport-local "^1.0.0"
-    sanitize-s3-objectkey "^0.0.1"
-    tar-fs "^2.1.1"
-    uuid "^8.3.2"
-    zlib "^1.0.5"
-
-"@budibase/backend-core@^1.0.58-alpha.7":
+"@budibase/backend-core@^1.0.48", "@budibase/backend-core@^1.0.58-alpha.7":
   version "1.0.64"
   resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.0.64.tgz#6ca36a495711f052ec454fa2552b101c4ee84c74"
   integrity sha512-5n+AKxq6iJOV47y2uPZQjjVH0eWQlUoxktkcQ5EFb7KKTOwJ3GZcYCFKFAPIpn879wpeN9JLLqniaLTSxwpfnw==
@@ -1178,12 +1154,12 @@
     to-gfm-code-block "^0.1.1"
     year "^0.2.1"
 
-"@budibase/pro@^0.0.2":
-  version "0.0.2"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-0.0.2.tgz#e9635cf22a3fddf22bd91f266d2836ac59710de1"
-  integrity sha512-rbKwwaQoTDAOQwpzFhyBTlq3Wx2XykLnK1WWEfC1igjI43vNVvsZq2ORBiHLhSlPB1HZQYLdQtMJdD8835H2/g==
+"@budibase/pro@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-1.0.0.tgz#9f38a43b39a886a5c54afae13f20d13104da648e"
+  integrity sha512-W4sGodU7cr8AugIJtsMxgaVoHChv7Lmax6bVoIkz9WVWwa0vuigAZXZuESg7hHdXI/+IvuKDS9dCSw1nuP/LhQ==
   dependencies:
-    "@budibase/backend-core" "1.0.48"
+    "@budibase/backend-core" "^1.0.48"
 
 "@budibase/standard-components@^0.9.139":
   version "0.9.139"
