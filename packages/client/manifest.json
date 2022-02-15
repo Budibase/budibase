@@ -2454,6 +2454,12 @@
         "defaultValue": true
       },
       {
+        "type": "boolean",
+        "label": "Time Only",
+        "key": "timeOnly",
+        "defaultValue": false
+      },
+      {
         "type": "text",
         "label": "Default value",
         "key": "defaultValue"
@@ -2674,11 +2680,10 @@
         "defaultValue": 8
       },
       {
-        "type": "multifield",
+        "type": "columns",
         "label": "Columns",
         "key": "columns",
-        "dependsOn": "dataProvider",
-        "placeholder": "All columns"
+        "dependsOn": "dataProvider"
       },
       {
         "type": "select",
@@ -2940,12 +2945,12 @@
         "settings": [
           {
             "type": "number",
-            "label": "Row Count",
+            "label": "Scroll Limit",
             "key": "rowCount",
             "defaultValue": 8
           },
           {
-            "type": "multifield",
+            "type": "columns",
             "label": "Table Columns",
             "key": "tableColumns",
             "dependsOn": "dataSource",

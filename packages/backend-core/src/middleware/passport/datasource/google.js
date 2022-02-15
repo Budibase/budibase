@@ -1,22 +1,17 @@
-const { getScopedConfig } = require("../../../db/utils")
-const { getGlobalDB } = require("../../../tenancy")
 const google = require("../google")
-const { Configs, Cookies } = require("../../../constants")
+const { Cookies } = require("../../../constants")
 const { clearCookie, getCookie } = require("../../../utils")
 const { getDB } = require("../../../db")
+const environment = require("../../../environment")
 
 async function preAuth(passport, ctx, next) {
-  const db = getGlobalDB()
   // get the relevant config
-  const config = await getScopedConfig(db, {
-    type: Configs.GOOGLE,
-    workspace: ctx.query.workspace,
-  })
-  const publicConfig = await getScopedConfig(db, {
-    type: Configs.SETTINGS,
-  })
-  let callbackUrl = `${publicConfig.platformUrl}/api/global/auth/datasource/google/callback`
-  const strategy = await google.strategyFactory(config, callbackUrl)
+  const googleConfig = {
+    clientID: environment.GOOGLE_CLIENT_ID,
+    clientSecret: environment.GOOGLE_CLIENT_SECRET,
+  }
+  let callbackUrl = `${environment.PLATFORM_URL}/api/global/auth/datasource/google/callback`
+  const strategy = await google.strategyFactory(googleConfig, callbackUrl)
 
   if (!ctx.query.appId || !ctx.query.datasourceId) {
     ctx.throw(400, "appId and datasourceId query params not present.")
@@ -30,18 +25,13 @@ async function preAuth(passport, ctx, next) {
 }
 
 async function postAuth(passport, ctx, next) {
-  const db = getGlobalDB()
+  // get the relevant config
+  const config = {
+    clientID: environment.GOOGLE_CLIENT_ID,
+    clientSecret: environment.GOOGLE_CLIENT_SECRET,
+  }
 
-  const config = await getScopedConfig(db, {
-    type: Configs.GOOGLE,
-    workspace: ctx.query.workspace,
-  })
-
-  const publicConfig = await getScopedConfig(db, {
-    type: Configs.SETTINGS,
-  })
-
-  let callbackUrl = `${publicConfig.platformUrl}/api/global/auth/datasource/google/callback`
+  let callbackUrl = `${environment.PLATFORM_URL}/api/global/auth/datasource/google/callback`
   const strategy = await google.strategyFactory(
     config,
     callbackUrl,

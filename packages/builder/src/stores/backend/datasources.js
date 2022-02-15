@@ -1,6 +1,6 @@
 import { writable, get } from "svelte/store"
 import { queries, tables, views } from "./"
-import api from "../../builderStore/api"
+import { API } from "api"
 
 export const INITIAL_DATASOURCE_VALUES = {
   list: [],
@@ -13,23 +13,20 @@ export function createDatasourcesStore() {
   const { subscribe, update, set } = store
 
   async function updateDatasource(response) {
-    if (response.status !== 200) {
-      throw new Error(await response.text())
-    }
-
-    const { datasource, error } = await response.json()
+    const { datasource, error } = response
     update(state => {
       const currentIdx = state.list.findIndex(ds => ds._id === datasource._id)
-
       const sources = state.list
-
       if (currentIdx >= 0) {
         sources.splice(currentIdx, 1, datasource)
       } else {
         sources.push(datasource)
       }
-
-      return { list: sources, selected: datasource._id, schemaError: error }
+      return {
+        list: sources,
+        selected: datasource._id,
+        schemaError: error,
+      }
     })
     return datasource
   }
@@ -38,25 +35,25 @@ export function createDatasourcesStore() {
     subscribe,
     update,
     init: async () => {
-      const response = await api.get(`/api/datasources`)
-      const json = await response.json()
-      set({ list: json, selected: null })
+      const datasources = await API.getDatasources()
+      set({
+        list: datasources,
+        selected: null,
+      })
     },
     fetch: async () => {
-      const response = await api.get(`/api/datasources`)
-      const json = await response.json()
+      const datasources = await API.getDatasources()
 
       // Clear selected if it no longer exists, otherwise keep it
       const selected = get(store).selected
       let nextSelected = null
-      if (selected && json.find(source => source._id === selected)) {
+      if (selected && datasources.find(source => source._id === selected)) {
         nextSelected = selected
       }
 
-      update(state => ({ ...state, list: json, selected: nextSelected }))
-      return json
+      update(state => ({ ...state, list: datasources, selected: nextSelected }))
     },
-    select: async datasourceId => {
+    select: datasourceId => {
       update(state => ({ ...state, selected: datasourceId }))
       queries.unselect()
       tables.unselect()
@@ -66,37 +63,33 @@ export function createDatasourcesStore() {
       update(state => ({ ...state, selected: null }))
     },
     updateSchema: async datasource => {
-      let url = `/api/datasources/${datasource._id}/schema`
-
-      const response = await api.post(url)
-      return updateDatasource(response)
+      const response = await API.buildDatasourceSchema(datasource?._id)
+      return await updateDatasource(response)
     },
     save: async (body, fetchSchema = false) => {
       let response
       if (body._id) {
-        response = await api.put(`/api/datasources/${body._id}`, body)
+        response = await API.updateDatasource(body)
       } else {
-        response = await api.post("/api/datasources", {
+        response = await API.createDatasource({
           datasource: body,
           fetchSchema,
         })
       }
-
       return updateDatasource(response)
     },
     delete: async datasource => {
-      const response = await api.delete(
-        `/api/datasources/${datasource._id}/${datasource._rev}`
-      )
+      await API.deleteDatasource({
+        datasourceId: datasource?._id,
+        datasourceRev: datasource?._rev,
+      })
       update(state => {
         const sources = state.list.filter(
           existing => existing._id !== datasource._id
         )
         return { list: sources, selected: null }
       })
-
       await queries.fetch()
-      return response
     },
     removeSchemaError: () => {
       update(state => {

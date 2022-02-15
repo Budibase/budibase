@@ -2,9 +2,7 @@
   import { setContext, getContext } from "svelte"
   import { derived, get, writable } from "svelte/store"
   import { createValidatorFromConstraints } from "./validation"
-  import { generateID } from "utils/helpers"
-  import { deepGet, deepSet } from "@budibase/bbui"
-  import { cloneDeep } from "lodash/fp"
+  import { Helpers } from "@budibase/bbui"
 
   export let dataSource
   export let disabled = false
@@ -97,7 +95,7 @@
   // Derive the overall form value and deeply set all field paths so that we
   // can support things like JSON fields.
   const deriveFormValue = (initialValues, values, enrichments) => {
-    let formValue = cloneDeep(initialValues || {})
+    let formValue = Helpers.cloneDeep(initialValues || {})
 
     // We need to sort the keys to avoid a JSON field overwriting a nested field
     const sortedFields = Object.entries(values || {})
@@ -115,10 +113,10 @@
 
     // Merge all values and enrichments into a single value
     sortedFields.forEach(({ key, value }) => {
-      deepSet(formValue, key, value)
+      Helpers.deepSet(formValue, key, value)
     })
     Object.entries(enrichments || {}).forEach(([key, value]) => {
-      deepSet(formValue, key, value)
+      Helpers.deepSet(formValue, key, value)
     })
     return formValue
   }
@@ -151,9 +149,9 @@
       )
 
       // If we've already registered this field then keep some existing state
-      let initialValue = deepGet(initialValues, field) ?? defaultValue
+      let initialValue = Helpers.deepGet(initialValues, field) ?? defaultValue
       let initialError = null
-      let fieldId = `id-${generateID()}`
+      let fieldId = `id-${Helpers.uuid()}`
       const existingField = getField(field)
       if (existingField) {
         const { fieldState } = get(existingField)
