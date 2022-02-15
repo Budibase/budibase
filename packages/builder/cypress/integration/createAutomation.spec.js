@@ -19,19 +19,19 @@ context("Create a automation", () => {
 
     // Setup trigger
     cy.contains("Setup").click()
-    cy.get(".spectrum-Picker-label").click()
+    cy.get(".spectrum-Picker-label").first().click()
     cy.wait(500)
     cy.contains("dog").click()
     cy.wait(2000)
     // Create action
-    cy.get(".block > .spectrum-Icon").click()
+    cy.get(".block > .spectrum-Icon").first().click()
     cy.get(".modal-inner-wrapper").within(() => {
       cy.wait(1000)
       cy.contains("Create Row").trigger('mouseover').click().click()
       cy.get(".spectrum-Button--cta").click()
     })
     cy.contains("Setup").click()
-    cy.get(".spectrum-Picker-label").click()
+    cy.get(".spectrum-Picker-label").first().click()
     cy.contains("dog").click()
     cy.get(".spectrum-Textfield-input")
     .first()
@@ -43,7 +43,7 @@ context("Create a automation", () => {
 
     cy.get(".modal-inner-wrapper").within(() => {
       cy.wait(1000)
-      cy.get(".spectrum-Picker-label").click()
+      cy.get(".spectrum-Picker-label").first().click()
       cy.contains("dog").click()
       cy.wait(1000)
       cy.get(".spectrum-Textfield-input")
