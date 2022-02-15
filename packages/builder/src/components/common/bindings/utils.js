@@ -1,7 +1,10 @@
 export function addHBSBinding(value, caretPos, binding) {
   binding = typeof binding === "string" ? binding : binding.path
   value = value == null ? "" : value
-  if (!value.includes("{{") && !value.includes("}}")) {
+
+  const left = caretPos?.start ? value.substring(0, caretPos.start) : ""
+  const right = caretPos?.end ? value.substring(caretPos.end) : ""
+  if (!left.includes("{{") || !right.includes("}}")) {
     binding = `{{ ${binding} }}`
   }
   if (caretPos.start) {

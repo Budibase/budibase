@@ -44,6 +44,11 @@
 {/if}
 
 <style>
+  .buttons {
+    display: flex;
+    gap: var(--spacing-m);
+  }
+
   .drawer {
     position: absolute;
     bottom: 0;
