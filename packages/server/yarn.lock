@@ -983,10 +983,10 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/backend-core@^1.0.58-alpha.1":
-  version "1.0.62"
-  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.0.62.tgz#ca7f5b81fdf671157a237956fc903da48d7093a1"
-  integrity sha512-cHPH44zSnhxXqdTn2FQjdZyhB/gOPDUJX1W6BHALsBf4aWdcCVA8EpDmYQD08z6wvQpYdXD85gJ8R2eXE8PBGA==
+"@budibase/backend-core@^1.0.58-alpha.5":
+  version "1.0.63"
+  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.0.63.tgz#85808b55130e3812724ba362083c69c90c0a680c"
+  integrity sha512-9u7mOqHXKHD8Me6aeBzJTc2uT69g0LHnqnokMt/3hWYO9DBvyr/NeS41K9sGIXS91MbsYIvTM/oCQhefHN+PTg==
   dependencies:
     "@techpass/passport-openidconnect" "^0.3.0"
     aws-sdk "^2.901.0"
@@ -1056,10 +1056,10 @@
     svelte-flatpickr "^3.2.3"
     svelte-portal "^1.0.0"
 
-"@budibase/bbui@^1.0.62":
-  version "1.0.62"
-  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-1.0.62.tgz#985e64f428ff4fa66e936f803abb2368bc2813e0"
-  integrity sha512-nvzo5li6/UQaIl5MMkinu4gUAZkv7HqWHXrFKWbzTt4xBRO0D8C+QgH62X5ZRBTFd34jIEsNJP1isJl38LvESQ==
+"@budibase/bbui@^1.0.63":
+  version "1.0.63"
+  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-1.0.63.tgz#4293c2e8baf6921ecf9fb119218bcbf315219641"
+  integrity sha512-h8IZHyNFyddHvp3J6toWNdYqnfnj3fyDPnczvQAHcX3xojC4Kk8uNruAA5UQLAuBQd8U44ZZ86lUZEPo720t6A==
   dependencies:
     "@adobe/spectrum-css-workflow-icons" "^1.2.1"
     "@spectrum-css/actionbutton" "^1.0.1"
@@ -1107,25 +1107,25 @@
     svelte-flatpickr "^3.2.3"
     svelte-portal "^1.0.0"
 
-"@budibase/client@^1.0.58-alpha.1":
-  version "1.0.62"
-  resolved "https://registry.yarnpkg.com/@budibase/client/-/client-1.0.62.tgz#a737a94390149da57bb27b2b49bff94053e7660c"
-  integrity sha512-sX3VmOf9bpGmfkxqKfEvVrpD5X9BEsqoJ9jyjvy3IMHfIQ0Y+Yr0ZAJL25nrh33JL16Ir4CtDSCihdE7qtbA7Q==
+"@budibase/client@^1.0.58-alpha.5":
+  version "1.0.63"
+  resolved "https://registry.yarnpkg.com/@budibase/client/-/client-1.0.63.tgz#dfc710350ccd18c74169af15700df1e3c7bfd55b"
+  integrity sha512-x6xqsgx++hMy5H/XOZtwZiKXQ4Y2SvxueHUWQe9mK0QCxHDDvBVtzSFWcoLgR7Sna8ATWI6MSWhJVvWq5P2dkw==
   dependencies:
-    "@budibase/bbui" "^1.0.62"
-    "@budibase/frontend-core" "^1.0.62"
-    "@budibase/string-templates" "^1.0.62"
+    "@budibase/bbui" "^1.0.63"
+    "@budibase/frontend-core" "^1.0.63"
+    "@budibase/string-templates" "^1.0.63"
     regexparam "^1.3.0"
     rollup-plugin-polyfill-node "^0.8.0"
     shortid "^2.2.15"
     svelte-spa-router "^3.0.5"
 
-"@budibase/frontend-core@^1.0.62":
-  version "1.0.62"
-  resolved "https://registry.yarnpkg.com/@budibase/frontend-core/-/frontend-core-1.0.62.tgz#8d7436bb22a327ba0f1343805323c33c87d44d84"
-  integrity sha512-LF028SoFAXaHajNr3UYiKuBl+h3h4kDNdu2NfGQjkU96kZq4Aqq2Ey174jj2wT6k97kEV7ht2pBTR4jU7s4aWQ==
+"@budibase/frontend-core@^1.0.63":
+  version "1.0.63"
+  resolved "https://registry.yarnpkg.com/@budibase/frontend-core/-/frontend-core-1.0.63.tgz#9c3a8a4967c00863ab0fde1a754ebb170bd3103d"
+  integrity sha512-4ArPq8aFnsfWf81n4sqZyaTNPVzld859HfLvyXD/hf568ut7ETGc5DskpjcfeyNnpLzgTek5g+D1bzCSm4RBbA==
   dependencies:
-    "@budibase/bbui" "^1.0.62"
+    "@budibase/bbui" "^1.0.63"
     lodash "^4.17.21"
     svelte "^3.46.2"
 
@@ -1172,10 +1172,10 @@
     svelte-apexcharts "^1.0.2"
     svelte-flatpickr "^3.1.0"
 
-"@budibase/string-templates@^1.0.58-alpha.1", "@budibase/string-templates@^1.0.62":
-  version "1.0.62"
-  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-1.0.62.tgz#f78ddde139a3f67e538c58b7e866244d1dbedfe8"
-  integrity sha512-0ujwPgJ6y54Wxyx6PH6qvg7ufioo+YtWtncrSDZ1bXdFX2uFHxrrHDYIQEG8c4e61ub/tvNESNAB/4Gb3IN4uA==
+"@budibase/string-templates@^1.0.58-alpha.5", "@budibase/string-templates@^1.0.63":
+  version "1.0.63"
+  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-1.0.63.tgz#4a64ffd595fac412df5bacbba4555ad0a0dd4c96"
+  integrity sha512-oBY8wA7oylQobVwnT5wdTc2xdpPpuJ4kJ4pO75EfGo8lNGNnwqpic6e3icthx6fb+/DoNFGpEsUByOmAlVKtHg==
   dependencies:
     "@budibase/handlebars-helpers" "^0.11.7"
     dayjs "^1.10.4"
@@ -2964,7 +2964,7 @@ acorn-walk@^7.1.1:
   resolved "https://registry.yarnpkg.com/acorn-walk/-/acorn-walk-7.2.0.tgz#0de889a601203909b0fbe07b8938dc21d2e967bc"
   integrity sha512-OPdCF6GsMIP+Az+aWfAAOEt2/+iVDKE7oy6lJ098aoe59oAmK76qV6Gw60SbZ8jHuG2wH058GF4pLFbYamYrVA==
 
-acorn-walk@^8.1.1:
+acorn-walk@^8.1.1, acorn-walk@^8.2.0:
   version "8.2.0"
   resolved "https://registry.yarnpkg.com/acorn-walk/-/acorn-walk-8.2.0.tgz#741210f2e2426454508853a2f44d0ab83b7f69c1"
   integrity sha512-k+iyHEuPgSw6SbuDpGQM+06HQUa04DZ3o+F6CSzXMvvI5KMvnaEqXe+YVe555R9nn6GPt404fos4wcgpw12SDA==
@@ -2989,10 +2989,10 @@ acorn@^7.1.1:
   resolved "https://registry.yarnpkg.com/acorn/-/acorn-7.4.1.tgz#feaed255973d2e77555b83dbc08851a6c63520fa"
   integrity sha512-nQyp0o1/mNdbTO1PO6kHkwSrmgZ0MT/jCCpNiwbUjGoRN4dlBhqJtoQuCnEOKzgTVwg0ZWiCoQy6SxMebQVh8A==
 
-acorn@^8.2.4, acorn@^8.4.1:
-  version "8.5.0"
-  resolved "https://registry.yarnpkg.com/acorn/-/acorn-8.5.0.tgz#4512ccb99b3698c752591e9bb4472e38ad43cee2"
-  integrity sha512-yXbYeFy+jUuYd3/CDcg2NkIYE991XYX/bje7LmjJigUciaeO1JR4XxXgCIV1/Zc/dRuFEyw1L0pbA+qynJkW5Q==
+acorn@^8.2.4, acorn@^8.4.1, acorn@^8.7.0:
+  version "8.7.0"
+  resolved "https://registry.yarnpkg.com/acorn/-/acorn-8.7.0.tgz#90951fde0f8f09df93549481e5fc141445b791cf"
+  integrity sha512-V/LGr1APy+PXIwKebEWrkZPwoeoF+w1jiOBUmuxuiUIaOHtob8Qc9BTrYo7VuI5fR8tqsy+buA2WFooR5olqvQ==
 
 adal-node@^0.2.2:
   version "0.2.3"
@@ -12941,9 +12941,12 @@ verror@1.3.6:
     extsprintf "1.0.2"
 
 vm2@^3.9.3, vm2@^3.9.4:
-  version "3.9.5"
-  resolved "https://registry.yarnpkg.com/vm2/-/vm2-3.9.5.tgz#5288044860b4bbace443101fcd3bddb2a0aa2496"
-  integrity sha512-LuCAHZN75H9tdrAiLFf030oW7nJV5xwNMuk1ymOZwopmuK3d2H4L1Kv4+GFHgarKiLfXXLFU+7LDABHnwOkWng==
+  version "3.9.6"
+  resolved "https://registry.yarnpkg.com/vm2/-/vm2-3.9.6.tgz#2f9b2fd0d82802dcd872e1011869ba8ae6b74778"
+  integrity sha512-BF7euUjgO+ezsz2UKex9kO9M/PtDNOf+KEpiqNepZsgf1MT7JYfJEIvG8BoYhZMLAVjqevFJ0UmXNuETe8m5dQ==
+  dependencies:
+    acorn "^8.7.0"
+    acorn-walk "^8.2.0"
 
 vuvuzela@1.0.3:
   version "1.0.3"
