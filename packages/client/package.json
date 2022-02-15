@@ -41,8 +41,6 @@
     "@spectrum-css/vars": "^3.0.1",
     "apexcharts": "^3.22.1",
     "dayjs": "^1.10.5",
-    "fs-extra": "^8.1.0",
-    "jsdom": "^16.0.1",
     "postcss": "^8.2.10",
     "rollup": "^2.44.0",
     "rollup-plugin-json": "^4.0.0",
