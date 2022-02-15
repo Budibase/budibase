@@ -49,7 +49,6 @@ module.exports = {
   JEST_WORKER_ID: process.env.JEST_WORKER_ID,
   BUDIBASE_ENVIRONMENT: process.env.BUDIBASE_ENVIRONMENT,
   DISABLE_ACCOUNT_PORTAL: process.env.DISABLE_ACCOUNT_PORTAL,
-  PRO: process.env.PRO,
   // minor
   SALT_ROUNDS: process.env.SALT_ROUNDS,
   LOGGER: process.env.LOGGER,
