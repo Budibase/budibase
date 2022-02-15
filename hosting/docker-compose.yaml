@@ -7,8 +7,6 @@ services:
     restart: always
     image: budibase.docker.scarf.sh/budibase/apps
     container_name: bbapps
-    ports:
-      - "${APP_PORT}:4002"
     environment:
       SELF_HOSTED: 1
       COUCH_DB_URL: http://${COUCH_DB_USER}:${COUCH_DB_PASSWORD}@couchdb-service:5984
@@ -33,8 +31,6 @@ services:
     restart: always
     image: budibase.docker.scarf.sh/budibase/worker
     container_name: bbworker
-    ports:
-      - "${WORKER_PORT}:4003"
     environment:
       SELF_HOSTED: 1
       PORT: 4003
@@ -61,8 +57,6 @@ services:
     image: minio/minio
     volumes:
       - minio_data:/data
-    ports:
-      - "${MINIO_PORT}:9000"
     environment:
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
@@ -78,8 +72,6 @@ services:
     restart: always
     container_name: bbproxy
     image: budibase/proxy
-    ports:
-      - "${MAIN_PORT}:10000"
     depends_on:
       - minio-service
       - worker-service
@@ -92,8 +84,6 @@ services:
     environment:
       - COUCHDB_PASSWORD=${COUCH_DB_PASSWORD}
       - COUCHDB_USER=${COUCH_DB_USER}
-    ports:
-      - "${COUCH_DB_PORT}:5984"
     volumes:
       - couchdb3_data:/opt/couchdb/data
 
@@ -109,15 +99,11 @@ services:
     restart: always
     image: redis
     command: redis-server --requirepass ${REDIS_PASSWORD}
-    ports:
-      - "${REDIS_PORT}:6379"
     volumes:
       - redis_data:/data
 
   watchtower-service:
     image: containrrr/watchtower
-    ports:
-      - "${WATCHTOWER_PORT}:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     command: --debug --http-api-update bbapps bbworker bbproxy
