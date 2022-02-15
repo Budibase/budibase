@@ -213,6 +213,3 @@
     {/if}
   </Layout>
 </ModalContent>
-
-<style>
-</style>

@@ -130,6 +130,3 @@
     </Tabs>
   </Layout>
 </ModalContent>
-
-<style>
-</style>
