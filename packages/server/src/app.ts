@@ -3,24 +3,9 @@ import { ExtendableContext } from "koa"
 
 import * as env from "./environment"
 
-// check we can import pro types no matter the installation method (budibase-pro or budibase)
-import * as pro from "@budibase/pro"
-import { poc, License } from "@budibase/pro"
-
-// check we can use pro types no matter the installation
-const license: License = { id: "123" }
-console.log(license)
-
-// log the difference between how pro is imported
-// in budibase these will be undefined
-// in budibase-pro these will be defined
-console.log(poc)
-console.log(pro)
-
-if (env.PRO) {
-  // check only pro logic runs in pro
-  console.log("PRO")
-}
+// temp for testing
+import * as poc from "./pro-poc"
+poc.run()
 
 const CouchDB = require("./db")
 require("@budibase/backend-core").init(CouchDB)
