@@ -116,6 +116,7 @@
   $: schemaRules = parseRulesFromSchema(field, dataSourceSchema || {})
   $: fieldType = type?.split("/")[1] || "string"
   $: constraintOptions = getConstraintsForType(fieldType)
+
   const getConstraintsForType = type => {
     return ConstraintMap[type]
   }

@@ -169,6 +169,7 @@ describe("/queries", () => {
           parameters: {},
           fields: {},
           queryVerb: "read",
+          name: datasource.name,
         })
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
@@ -230,7 +231,6 @@ describe("/queries", () => {
   })
 
   describe("variables", () => {
-
     async function preview(datasource, fields) {
       return config.previewQuery(request, config, datasource, fields)
     }
@@ -262,9 +262,13 @@ describe("/queries", () => {
     })
 
     it("check that it automatically retries on fail with cached dynamics", async () => {
-      const { datasource, query: base } = await config.dynamicVariableDatasource()
+      const { datasource, query: base } =
+        await config.dynamicVariableDatasource()
       // preview once to cache
-      await preview(datasource, { path: "www.google.com", queryString: "test={{ variable3 }}" })
+      await preview(datasource, {
+        path: "www.google.com",
+        queryString: "test={{ variable3 }}",
+      })
       // check its in cache
       const contents = await checkCacheForDynamicVariable(base._id, "variable3")
       expect(contents.rows.length).toEqual(1)
@@ -277,9 +281,13 @@ describe("/queries", () => {
     })
 
     it("deletes variables when linked query is deleted", async () => {
-      const { datasource, query: base } = await config.dynamicVariableDatasource()
+      const { datasource, query: base } =
+        await config.dynamicVariableDatasource()
       // preview once to cache
-      await preview(datasource, { path: "www.google.com", queryString: "test={{ variable3 }}" })
+      await preview(datasource, {
+        path: "www.google.com",
+        queryString: "test={{ variable3 }}",
+      })
       // check its in cache
       let contents = await checkCacheForDynamicVariable(base._id, "variable3")
       expect(contents.rows.length).toEqual(1)

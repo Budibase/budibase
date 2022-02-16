@@ -4,8 +4,7 @@
   import CellRenderer from "./CellRenderer.svelte"
   import SelectEditRenderer from "./SelectEditRenderer.svelte"
   import Checkbox from "../Form/Checkbox.svelte"
-  import { cloneDeep } from "lodash"
-  import { deepGet } from "../utils/helpers"
+  import { cloneDeep, deepGet } from "../helpers"
 
   /**
    * The expected schema is our normal couch schemas for our tables.

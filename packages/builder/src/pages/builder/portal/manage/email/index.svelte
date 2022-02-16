@@ -14,7 +14,7 @@
     Checkbox,
   } from "@budibase/bbui"
   import { email } from "stores/portal"
-  import api from "builderStore/api"
+  import { API } from "api"
   import { cloneDeep } from "lodash/fp"
   import analytics, { Events } from "analytics"
 
@@ -54,55 +54,48 @@
       delete smtp.config.auth
     }
     // Save your SMTP config
-    const response = await api.post(`/api/global/configs`, smtp)
-
-    if (response.status !== 200) {
-      const error = await response.text()
-      let message
-      try {
-        message = JSON.parse(error).message
-      } catch (err) {
-        message = error
-      }
-      notifications.error(`Failed to save email settings, reason: ${message}`)
-    } else {
-      const json = await response.json()
-      smtpConfig._rev = json._rev
-      smtpConfig._id = json._id
-      notifications.success(`Settings saved.`)
+    try {
+      const savedConfig = await API.saveConfig(smtp)
+      smtpConfig._rev = savedConfig._rev
+      smtpConfig._id = savedConfig._id
+      notifications.success(`Settings saved`)
       analytics.captureEvent(Events.SMTP.SAVED)
+    } catch (error) {
+      notifications.error(
+        `Failed to save email settings, reason: ${error?.message || "Unknown"}`
+      )
     }
   }
 
   async function fetchSmtp() {
     loading = true
-    // fetch the configs for smtp
-    const smtpResponse = await api.get(
-      `/api/global/configs/${ConfigTypes.SMTP}`
-    )
-    const smtpDoc = await smtpResponse.json()
-
-    if (!smtpDoc._id) {
-      smtpConfig = {
-        type: ConfigTypes.SMTP,
-        config: {
-          secure: true,
-        },
+    try {
+      // Fetch the configs for smtp
+      const smtpDoc = await API.getConfig(ConfigTypes.SMTP)
+      if (!smtpDoc._id) {
+        smtpConfig = {
+          type: ConfigTypes.SMTP,
+          config: {
+            secure: true,
+          },
+        }
+      } else {
+        smtpConfig = smtpDoc
       }
-    } else {
-      smtpConfig = smtpDoc
-    }
-    loading = false
-    requireAuth = smtpConfig.config.auth != null
-    // always attach the auth for the forms purpose -
-    // this will be removed later if required
-    if (!smtpDoc.config) {
-      smtpDoc.config = {}
-    }
-    if (!smtpDoc.config.auth) {
-      smtpConfig.config.auth = {
-        type: "login",
+      loading = false
+      requireAuth = smtpConfig.config.auth != null
+      // Always attach the auth for the forms purpose -
+      // this will be removed later if required
+      if (!smtpDoc.config) {
+        smtpDoc.config = {}
       }
+      if (!smtpDoc.config.auth) {
+        smtpConfig.config.auth = {
+          type: "login",
+        }
+      }
+    } catch (error) {
+      notifications.error("Error fetching SMTP config")
     }
   }
 

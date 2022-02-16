@@ -76,7 +76,7 @@
       enrichedFilter.push({
         field: column.name,
         operator: column.type === "string" ? "string" : "equal",
-        type: column.type === "string" ? "string" : "number",
+        type: column.type,
         valueType: "Binding",
         value: `{{ ${safe(formId)}.${safePath} }}`,
       })

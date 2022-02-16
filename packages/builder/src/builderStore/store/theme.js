@@ -1,4 +1,4 @@
-import { localStorageStore } from "./localStorage"
+import { createLocalStorageStore } from "@budibase/frontend-core"
 
 export const getThemeStore = () => {
   const themeElement = document.documentElement
@@ -6,7 +6,7 @@ export const getThemeStore = () => {
     theme: "darkest",
     options: ["lightest", "light", "dark", "darkest"],
   }
-  const store = localStorageStore("bb-theme", initialValue)
+  const store = createLocalStorageStore("bb-theme", initialValue)
 
   // Update theme class when store changes
   store.subscribe(state => {

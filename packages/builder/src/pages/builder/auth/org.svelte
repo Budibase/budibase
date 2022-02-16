@@ -1,5 +1,13 @@
 <script>
-  import { Body, Button, Divider, Heading, Input, Layout } from "@budibase/bbui"
+  import {
+    Body,
+    Button,
+    Divider,
+    Heading,
+    Input,
+    Layout,
+    notifications,
+  } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
   import { auth, admin } from "stores/portal"
   import Logo from "assets/bb-emblem.svg"
@@ -13,13 +21,17 @@
   $: useAccountPortal = cloud && !$admin.disableAccountPortal
 
   async function setOrg() {
-    if (tenantId == null || tenantId === "") {
-      tenantId = "default"
+    try {
+      if (tenantId == null || tenantId === "") {
+        tenantId = "default"
+      }
+      await auth.setOrg(tenantId)
+      // re-init now org selected
+      await admin.init()
+      $goto("../")
+    } catch (error) {
+      notifications.error("Error setting organisation")
     }
-    await auth.setOrg(tenantId)
-    // re-init now org selected
-    await admin.init()
-    $goto("../")
   }
 
   function handleKeydown(evt) {

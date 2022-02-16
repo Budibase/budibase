@@ -1,5 +1,12 @@
 <script>
-  import { ModalContent, Modal, Icon, ColorPicker, Label } from "@budibase/bbui"
+  import {
+    ModalContent,
+    Modal,
+    Icon,
+    ColorPicker,
+    Label,
+    notifications,
+  } from "@budibase/bbui"
   import { apps } from "stores/portal"
 
   export let app
@@ -51,12 +58,16 @@
   }
 
   const save = async () => {
-    await apps.update(app.instance._id, {
-      icon: {
-        name: selectedIcon,
-        color: selectedColor,
-      },
-    })
+    try {
+      await apps.update(app.instance._id, {
+        icon: {
+          name: selectedIcon,
+          color: selectedColor,
+        },
+      })
+    } catch (error) {
+      notifications.error("Error updating app")
+    }
   }
 </script>
 

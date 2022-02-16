@@ -16,6 +16,8 @@ class Postprocessor {
   }
 }
 
+module.exports.PostProcessorNames = PostProcessorNames
+
 module.exports.processors = [
   new Postprocessor(PostProcessorNames.CONVERT_LITERALS, statement => {
     if (typeof statement !== "string" || !statement.includes(LITERAL_MARKER)) {

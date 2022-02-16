@@ -1,18 +1,15 @@
 import { writable } from "svelte/store"
-import api from "builderStore/api"
+import { API } from "api"
 
 export function templatesStore() {
   const { subscribe, set } = writable([])
 
-  async function load() {
-    const response = await api.get("/api/templates?type=app")
-    const json = await response.json()
-    set(json)
-  }
-
   return {
     subscribe,
-    load,
+    load: async () => {
+      const templates = await API.getAppTemplates()
+      set(templates)
+    },
   }
 }
 

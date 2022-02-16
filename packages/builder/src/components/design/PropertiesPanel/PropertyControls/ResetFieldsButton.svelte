@@ -1,5 +1,5 @@
 <script>
-  import { ActionButton } from "@budibase/bbui"
+  import { ActionButton, notifications } from "@budibase/bbui"
   import { currentAsset, store } from "builderStore"
   import { findClosestMatchingComponent } from "builderStore/componentUtils"
   import { makeDatasourceFormComponents } from "builderStore/store/screenTemplates/utils/commonComponents"
@@ -9,7 +9,7 @@
 
   let confirmResetFieldsDialog
 
-  const resetFormFields = () => {
+  const resetFormFields = async () => {
     const form = findClosestMatchingComponent(
       $currentAsset.props,
       componentInstance._id,
@@ -17,10 +17,14 @@
     )
     const dataSource = form?.dataSource
     const fields = makeDatasourceFormComponents(dataSource)
-    store.actions.components.updateProp(
-      "_children",
-      fields.map(field => field.json())
-    )
+    try {
+      await store.actions.components.updateProp(
+        "_children",
+        fields.map(field => field.json())
+      )
+    } catch (error) {
+      notifications.error("Error resetting form fields")
+    }
   }
 </script>
 

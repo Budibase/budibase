@@ -8,7 +8,7 @@ const { newid } = require("../../hashing")
 const { createASession } = require("../../security/sessions")
 const { getTenantId } = require("../../tenancy")
 
-const INVALID_ERR = "Invalid Credentials"
+const INVALID_ERR = "Invalid credentials"
 const SSO_NO_PASSWORD = "SSO user does not have a password set"
 const EXPIRED = "This account has expired. Please reset your password"
 
