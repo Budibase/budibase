@@ -163,7 +163,7 @@
     "supertest": "^4.0.2",
     "ts-jest": "^27.0.3",
     "ts-node": "^10.0.0",
-    "typescript": "^4.3.5",
+    "typescript": "^4.5.5",
     "update-dotenv": "^1.1.1"
   },
   "optionalDependencies": {
