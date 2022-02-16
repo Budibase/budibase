@@ -65,7 +65,7 @@ typings/
 .env
 !hosting/.env
 hosting/.generated-nginx.dev.conf
-hosting/.generated-nginx.prod.conf
+hosting/proxy/.generated-nginx.prod.conf
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache
