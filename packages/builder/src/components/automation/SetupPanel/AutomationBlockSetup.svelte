@@ -11,6 +11,7 @@
     Drawer,
     Modal,
     Detail,
+    notifications,
   } from "@budibase/bbui"
   import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
 
@@ -27,8 +28,8 @@
   import { debounce } from "lodash"
   import ModalBindableInput from "components/common/bindings/ModalBindableInput.svelte"
   import FilterDrawer from "components/design/PropertiesPanel/PropertyControls/FilterEditor/FilterDrawer.svelte"
-  // need the client lucene builder to convert to the structure API expects
-  import { buildLuceneQuery } from "helpers/lucene"
+  import { LuceneUtils } from "@budibase/frontend-core"
+  import { getSchemaForTable } from "builderStore/dataBinding"
 
   export let block
   export let testData
@@ -45,37 +46,41 @@
     block || $automationStore.selectedBlock,
     $automationStore.selectedAutomation?.automation?.definition
   )
-
   $: inputData = testData ? testData : block.inputs
   $: tableId = inputData ? inputData.tableId : null
   $: table = tableId
     ? $tables.list.find(table => table._id === inputData.tableId)
     : { schema: {} }
-  $: schemaFields = table ? Object.values(table.schema) : []
+  $: schema = getSchemaForTable(tableId, { searchableSchema: true }).schema
+  $: schemaFields = Object.values(schema || {})
 
   const onChange = debounce(async function (e, key) {
-    if (isTestModal) {
-      // Special case for webhook, as it requires a body, but the schema already brings back the body's contents
-      if (stepId === "WEBHOOK") {
+    try {
+      if (isTestModal) {
+        // Special case for webhook, as it requires a body, but the schema already brings back the body's contents
+        if (stepId === "WEBHOOK") {
+          automationStore.actions.addTestDataToAutomation({
+            body: {
+              [key]: e.detail,
+              ...$automationStore.selectedAutomation.automation.testData.body,
+            },
+          })
+        }
         automationStore.actions.addTestDataToAutomation({
-          body: {
-            [key]: e.detail,
-            ...$automationStore.selectedAutomation.automation.testData.body,
-          },
+          [key]: e.detail,
         })
+        testData[key] = e.detail
+        await automationStore.actions.save(
+          $automationStore.selectedAutomation?.automation
+        )
+      } else {
+        block.inputs[key] = e.detail
+        await automationStore.actions.save(
+          $automationStore.selectedAutomation?.automation
+        )
       }
-      automationStore.actions.addTestDataToAutomation({
-        [key]: e.detail,
-      })
-      testData[key] = e.detail
-      await automationStore.actions.save(
-        $automationStore.selectedAutomation?.automation
-      )
-    } else {
-      block.inputs[key] = e.detail
-      await automationStore.actions.save(
-        $automationStore.selectedAutomation?.automation
-      )
+    } catch (error) {
+      notifications.error("Error saving automation")
     }
   }, 800)
 
@@ -131,7 +136,7 @@
   }
 
   function saveFilters(key) {
-    const filters = buildLuceneQuery(tempFilters)
+    const filters = LuceneUtils.buildLuceneQuery(tempFilters)
     const defKey = `${key}-def`
     inputData[key] = filters
     inputData[defKey] = tempFilters

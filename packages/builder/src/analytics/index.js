@@ -1,4 +1,4 @@
-import api from "builderStore/api"
+import { API } from "api"
 import PosthogClient from "./PosthogClient"
 import IntercomClient from "./IntercomClient"
 import SentryClient from "./SentryClient"
@@ -17,13 +17,11 @@ class AnalyticsHub {
   }
 
   async activate() {
-    const analyticsStatus = await api.get("/api/analytics")
-    const json = await analyticsStatus.json()
-
-    // Analytics disabled
-    if (!json.enabled) return
-
-    this.clients.forEach(client => client.init())
+    // Check analytics are enabled
+    const analyticsStatus = await API.getAnalyticsStatus()
+    if (analyticsStatus.enabled) {
+      this.clients.forEach(client => client.init())
+    }
   }
 
   identify(id, metadata) {

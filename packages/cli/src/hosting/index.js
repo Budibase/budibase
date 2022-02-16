@@ -15,11 +15,10 @@ const makeEnv = require("./makeEnv")
 const axios = require("axios")
 const AnalyticsClient = require("../analytics/Client")
 
-const BUDIBASE_SERVICES = ["app-service", "worker-service"]
+const BUDIBASE_SERVICES = ["app-service", "worker-service", "proxy-service"]
 const ERROR_FILE = "docker-error.log"
 const FILE_URLS = [
   "https://raw.githubusercontent.com/Budibase/budibase/master/hosting/docker-compose.yaml",
-  "https://raw.githubusercontent.com/Budibase/budibase/master/hosting/envoy.yaml",
 ]
 const DO_USER_DATA_URL = "http://169.254.169.254/metadata/v1/user-data"
 
@@ -141,11 +140,7 @@ async function stop() {
 async function update() {
   await checkDockerConfigured()
   checkInitComplete()
-  if (
-    await confirmation(
-      "Do you wish to update you docker-compose.yaml and envoy.yaml?"
-    )
-  ) {
+  if (await confirmation("Do you wish to update you docker-compose.yaml?")) {
     await downloadFiles()
   }
   await handleError(async () => {

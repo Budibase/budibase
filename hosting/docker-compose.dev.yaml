@@ -22,18 +22,21 @@ services:
       retries: 3
 
   proxy-service:
-    container_name: budi-envoy-dev
+    container_name: budi-nginx-dev
     restart: always
-    image: envoyproxy/envoy:v1.16-latest
+    image: nginx:latest
     volumes:
-      - ./.generated-envoy.dev.yaml:/etc/envoy/envoy.yaml
+      - ./.generated-nginx.dev.conf:/etc/nginx/nginx.conf
     ports:
       - "${MAIN_PORT}:10000"
     depends_on:
       - minio-service
       - couchdb-service
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   couchdb-service:
+    # platform: linux/amd64
     container_name: budi-couchdb-dev
     restart: always
     image: ibmcom/couchdb3

@@ -1,7 +1,7 @@
 <script>
   import { ModalContent, Select, Input, Button } from "@budibase/bbui"
   import { onMount } from "svelte"
-  import api from "builderStore/api"
+  import { API } from "api"
   import { notifications } from "@budibase/bbui"
   import ErrorsBox from "components/common/ErrorsBox.svelte"
   import { roles } from "stores/backend"
@@ -24,8 +24,12 @@
     !builtInRoles.includes(selectedRole.name)
 
   const fetchBasePermissions = async () => {
-    const permissionsResponse = await api.get("/api/permission/builtin")
-    basePermissions = await permissionsResponse.json()
+    try {
+      basePermissions = await API.getBasePermissions()
+    } catch (error) {
+      notifications.error("Error fetching base permission options")
+      basePermissions = []
+    }
   }
 
   // Changes the selected role
@@ -68,23 +72,23 @@
     }
 
     // Save/create the role
-    const response = await roles.save(selectedRole)
-    if (response.status === 200) {
-      notifications.success("Role saved successfully.")
-    } else {
-      notifications.error("Error saving role.")
+    try {
+      await roles.save(selectedRole)
+      notifications.success("Role saved successfully")
+    } catch (error) {
+      notifications.error("Error saving role")
       return false
     }
   }
 
   // Deletes the selected role
   const deleteRole = async () => {
-    const response = await roles.delete(selectedRole)
-    if (response.status === 200) {
+    try {
+      await roles.delete(selectedRole)
       changeRole()
-      notifications.success("Role deleted successfully.")
-    } else {
-      notifications.error("Error deleting role.")
+      notifications.success("Role deleted successfully")
+    } catch (error) {
+      notifications.error("Error deleting role")
     }
   }
 

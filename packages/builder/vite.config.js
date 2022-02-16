@@ -15,6 +15,7 @@ export default ({ mode }) => {
     build: {
       minify: isProduction,
       outDir: "../server/builder",
+      sourcemap: !isProduction,
     },
     plugins: [
       svelte({
@@ -55,6 +56,10 @@ export default ({ mode }) => {
         {
           find: "stores",
           replacement: path.resolve("./src/stores"),
+        },
+        {
+          find: "api",
+          replacement: path.resolve("./src/api.js"),
         },
         {
           find: "constants",
