@@ -3,8 +3,7 @@
   import "@spectrum-css/table/dist/index-vars.css"
   import CellRenderer from "./CellRenderer.svelte"
   import SelectEditRenderer from "./SelectEditRenderer.svelte"
-  import { cloneDeep } from "lodash"
-  import { deepGet } from "../helpers"
+  import { cloneDeep, deepGet } from "../helpers"
 
   /**
    * The expected schema is our normal couch schemas for our tables.

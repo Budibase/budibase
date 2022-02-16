@@ -1,6 +1,8 @@
 const joiValidator = require("../../../middleware/joi-validator")
 const Joi = require("joi")
 
+const OPTIONAL_STRING = Joi.string().optional().allow(null).allow("")
+
 exports.queryValidation = () => {
   return Joi.object({
     _id: Joi.string(),
@@ -18,7 +20,7 @@ exports.queryValidation = () => {
     queryVerb: Joi.string().allow().required(),
     extra: Joi.object().optional(),
     schema: Joi.object({}).required().unknown(true),
-    transformer: Joi.string().optional(),
+    transformer: OPTIONAL_STRING,
     flags: Joi.object().optional(),
   })
 }
@@ -31,18 +33,18 @@ exports.generateQueryValidation = () => {
 exports.generateQueryPreviewValidation = () => {
   // prettier-ignore
   return joiValidator.body(Joi.object({
-    _id: Joi.string().optional(),
-    _rev: Joi.string().optional(),
+    _id: OPTIONAL_STRING,
+    _rev: OPTIONAL_STRING,
     readable: Joi.boolean().optional(),
     fields: Joi.object().required(),
-    queryVerb: Joi.string().allow().required(),
-    name: Joi.string().required(),
+    queryVerb: Joi.string().required(),
+    name: OPTIONAL_STRING,
     flags: Joi.object().optional(),
     schema: Joi.object().optional(),
     extra: Joi.object().optional(),
     datasourceId: Joi.string().required(),
-    transformer: Joi.string().optional(),
+    transformer: OPTIONAL_STRING,
     parameters: Joi.object({}).required().unknown(true),
-    queryId: Joi.string().optional(),
+    queryId: OPTIONAL_STRING,
   }))
 }

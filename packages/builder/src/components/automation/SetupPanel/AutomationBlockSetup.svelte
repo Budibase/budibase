@@ -28,8 +28,8 @@
   import { debounce } from "lodash"
   import ModalBindableInput from "components/common/bindings/ModalBindableInput.svelte"
   import FilterDrawer from "components/design/PropertiesPanel/PropertyControls/FilterEditor/FilterDrawer.svelte"
-  // need the client lucene builder to convert to the structure API expects
   import { LuceneUtils } from "@budibase/frontend-core"
+  import { getSchemaForTable } from "builderStore/dataBinding"
 
   export let block
   export let testData
@@ -46,13 +46,13 @@
     block || $automationStore.selectedBlock,
     $automationStore.selectedAutomation?.automation?.definition
   )
-
   $: inputData = testData ? testData : block.inputs
   $: tableId = inputData ? inputData.tableId : null
   $: table = tableId
     ? $tables.list.find(table => table._id === inputData.tableId)
     : { schema: {} }
-  $: schemaFields = table ? Object.values(table.schema) : []
+  $: schema = getSchemaForTable(tableId, { searchableSchema: true }).schema
+  $: schemaFields = Object.values(schema || {})
 
   const onChange = debounce(async function (e, key) {
     try {

@@ -15,7 +15,9 @@
 
   const dispatch = createEventDispatcher()
   $: datasource = getDatasourceForProvider($currentAsset, componentInstance)
-  $: schema = getSchemaForDatasource($currentAsset, datasource).schema
+  $: schema = getSchemaForDatasource($currentAsset, datasource, {
+    searchableSchema: true,
+  }).schema
   $: options = getOptions(datasource, schema || {})
   $: boundValue = getSelectedOption(value, options)
 

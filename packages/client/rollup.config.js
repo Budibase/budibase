@@ -8,6 +8,7 @@ import svg from "rollup-plugin-svg"
 import json from "rollup-plugin-json"
 import nodePolyfills from "rollup-plugin-polyfill-node"
 import path from "path"
+import { visualizer } from "rollup-plugin-visualizer"
 
 const production = !process.env.ROLLUP_WATCH
 const ignoredWarnings = [
@@ -79,6 +80,7 @@ export default {
     svg(),
     json(),
     production && terser(),
+    !production && visualizer(),
   ],
   watch: {
     clearScreen: false,
