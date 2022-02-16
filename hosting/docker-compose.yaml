@@ -70,8 +70,10 @@ services:
 
   proxy-service:
     restart: always
+    ports:
+      - "${MAIN_PORT}:10000"
     container_name: bbproxy
-    image: budibase/proxy
+    image: proxy-service
     depends_on:
       - minio-service
       - worker-service

@@ -13,18 +13,22 @@ http {
   include       /etc/nginx/mime.types;
   default_type  application/octet-stream;
   charset utf-8;
-	sendfile on;
-	tcp_nopush on;
-	tcp_nodelay on;
-	server_tokens off;
+  sendfile on;
+  tcp_nopush on;
+  tcp_nodelay on;
+  server_tokens off;
   types_hash_max_size 2048;
+  {{#if compose}}
+  resolver 127.0.0.11 ipv6=off;
+  {{/if}}
 
-  # buffering 
+
+  # buffering
   client_body_buffer_size 1K;
   client_header_buffer_size 1k;
-  client_max_body_size 1k;
+  client_max_body_size 10M;
   ignore_invalid_headers off;
-
+  proxy_buffering off;
 
   log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
                     '$status $body_bytes_sent "$http_referer" '
@@ -34,63 +38,60 @@ http {
     default     "upgrade";
   }
 
-  server { 
+  server {
     listen       10000 default_server;
     listen  [::]:10000 default_server;
     server_name  _;
     client_max_body_size 1000m;
     ignore_invalid_headers off;
     proxy_buffering off;
-    port_in_redirect off;
+    # port_in_redirect off;
 
     # Security Headers
     add_header X-Frame-Options SAMEORIGIN always;
     add_header X-Content-Type-Options nosniff always;
     add_header X-XSS-Protection "1; mode=block" always;
-    add_header Content-Security-Policy  "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.budi.live https://js.intercomcdn.com https://widget.intercom.io; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com https://rsms.me; object-src 'none'; base-uri 'self'; connect-src 'self' https://api-iam.intercom.io https://app.posthog.com wss://nexus-websocket-a.intercom.io; font-src 'self' data: https://cdn.jsdelivr.net https://fonts.gstatic.com https://rsms.me; frame-src 'self'; img-src http: https: data:; manifest-src 'self'; media-src 'self'; worker-src 'none';" always;
+    add_header Content-Security-Policy  "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.budi.live https://js.intercomcdn.com https://widget.intercom.io; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com https://rsms.me; object-src 'none'; base-uri 'self'; connect-src 'self' https://api-iam.intercom.io https://app.posthog.com wss://nexus-websocket-a.intercom.io; font-src 'self' data https://cdn.jsdelivr.net https://fonts.gstatic.com https://rsms.me; frame-src 'self'; img-src http: https: data; manifest-src 'self'; media-src 'self'; worker-src 'none';" always;
+
+    # upstreams
+    set $apps {{ apps }};
+    set $worker {{ worker }};
+    set $minio {{ minio }};
+    set $couchdb {{ couchdb }};
+    {{#if watchtower}}
+    set $watchtower {{ watchtower }};
+    {{/if}}
 
     location /app {
-      proxy_pass      http://app-service:4002;
+      proxy_pass      http://$apps:4002;
       rewrite ^/app/(.*)$ /$1 break;
     }
 
     location = / {
-      port_in_redirect off;
-      proxy_pass      http://app-service:4002;
+      proxy_pass      http://$apps:4002;
     }
 
+    {{#if watchtower}}
     location = /v1/update {
       proxy_pass      http://watchtower-service:8080;
     }
-
-    location /builder/ {
-      port_in_redirect off;
-      proxy_http_version  1.1;
-      proxy_set_header    Connection          $connection_upgrade;
-      proxy_set_header    Upgrade             $http_upgrade;
-      proxy_set_header    Host                $host;
-      proxy_set_header    X-Real-IP           $remote_addr;
-      proxy_set_header    X-Forwarded-For     $proxy_add_x_forwarded_for;
-      proxy_pass      http://app-service:4002;
-    }
-
+    {{/if}}
     location ~ ^/(builder|app_) {
-      port_in_redirect off;
       proxy_http_version  1.1;
       proxy_set_header    Connection          $connection_upgrade;
       proxy_set_header    Upgrade             $http_upgrade;
       proxy_set_header    Host                $host;
       proxy_set_header    X-Real-IP           $remote_addr;
       proxy_set_header    X-Forwarded-For     $proxy_add_x_forwarded_for;
-      proxy_pass      http://app-service:4002;
+      proxy_pass      http://$apps:4002;
     }
 
     location ~ ^/api/(system|admin|global)/ {
-      proxy_pass      http://worker-service:4003;
+      proxy_pass      http://$worker:4003;
     }
 
     location /worker/ {
-      proxy_pass      http://worker-service:4003;
+      proxy_pass      http://$worker:4003;
       rewrite ^/worker/(.*)$ /$1 break;
     }
 
@@ -101,7 +102,7 @@ http {
       # 120s timeout on API requests
       proxy_read_timeout 120s;
       proxy_connect_timeout 120s;
-      proxy_send_timeout 120s; 
+      proxy_send_timeout 120s;
 
       proxy_http_version  1.1;
       proxy_set_header    Connection          $connection_upgrade;
@@ -110,11 +111,11 @@ http {
       proxy_set_header    X-Real-IP           $remote_addr;
       proxy_set_header    X-Forwarded-For     $proxy_add_x_forwarded_for;
 
-      proxy_pass      http://app-service:4002;
+      proxy_pass      http://$apps:4002;
     }
 
     location /db/ {
-      proxy_pass      http://couchdb-service:5984;
+      proxy_pass      http://$couchdb:5984;
       rewrite ^/db/(.*)$ /$1 break;
     }
 
@@ -128,7 +129,7 @@ http {
       proxy_http_version 1.1;
       proxy_set_header Connection "";
       chunked_transfer_encoding off;
-      proxy_pass      http://minio-service:9000;
+      proxy_pass      http://$minio:9000;
     }
 
     client_header_timeout 60;

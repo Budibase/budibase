@@ -124,7 +124,7 @@ services:
     logLevel: info
 
   worker:
-    port: 4001
+    port: 4003
     replicaCount: 1
 
   couchdb:
