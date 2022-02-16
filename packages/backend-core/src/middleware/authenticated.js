@@ -23,9 +23,10 @@ async function checkApiKey(apiKey, populateUser) {
   if (apiKey === env.INTERNAL_API_KEY) {
     return { valid: true }
   }
-  apiKey = decrypt(apiKey)
-  const tenantId = apiKey.split(SEPARATOR)[0]
+  const decrypted = decrypt(apiKey)
+  const tenantId = decrypted.split(SEPARATOR)[0]
   const db = getGlobalDB(tenantId)
+  // api key is encrypted in the database
   const userId = await queryGlobalView(
     ViewNames.BY_API_KEY,
     {
