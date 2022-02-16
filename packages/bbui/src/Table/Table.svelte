@@ -31,7 +31,6 @@
   export let disableSorting = false
   export let allowSelectAllRows = false
   const dispatch = createEventDispatcher()
-
   // Config
   const rowHeight = 55
   const headerHeight = 36
@@ -219,9 +218,10 @@
     if (!allowSelectRows) {
       return
     }
-    if (
-      selectedRows.findIndex(selectedRow => selectedRow._id === row._id) === 0
-    ) {
+    if (selectedRows.some(selectedRow => selectedRow._id === row._id)) {
+      console.log("hello")
+      console.log(row)
+
       selectedRows = selectedRows.filter(
         selectedRow => selectedRow._id !== row._id
       )
