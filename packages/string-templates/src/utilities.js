@@ -1,7 +1,25 @@
 const ALPHA_NUMERIC_REGEX = /^[A-Za-z0-9]+$/g
 
 module.exports.FIND_HBS_REGEX = /{{([^{].*?)}}/g
-module.exports.FIND_DOUBLE_HBS_REGEX = /(?<!{){{[^{}]+}}(?!})/g
+module.exports.FIND_TRIPLE_HBS_REGEX = /{{{([^{].*?)}}}/g
+
+// originally this could be done with a single regex using look behinds
+// but safari does not support this feature
+// original regex: /(?<!{){{[^{}]+}}(?!})/g
+module.exports.findDoubleHbsInstances = string => {
+  let copied = string
+  const doubleRegex = new RegExp(exports.FIND_HBS_REGEX)
+  const regex = new RegExp(exports.FIND_TRIPLE_HBS_REGEX)
+  const tripleMatches = copied.match(regex)
+  // remove triple braces
+  if (tripleMatches) {
+    tripleMatches.forEach(match => {
+      copied = copied.replace(match, "")
+    })
+  }
+  const doubleMatches = copied.match(doubleRegex)
+  return doubleMatches ? doubleMatches : []
+}
 
 module.exports.isAlphaNumeric = char => {
   return char.match(ALPHA_NUMERIC_REGEX)

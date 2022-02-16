@@ -48,6 +48,3 @@
     <TableDataImport bind:dataImport bind:existingTableId={tableId} />
   </Layout>
 </ModalContent>
-
-<style>
-</style>

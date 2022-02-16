@@ -90,7 +90,7 @@
 </script>
 
 <DrawerContent>
-  <div class="container">
+  <div className="container">
     <Layout noPadding>
       <Body size="S">
         {#if !filters?.length}
@@ -184,6 +184,7 @@
     max-width: 1000px;
     margin: 0 auto;
   }
+
   .fields {
     display: grid;
     column-gap: var(--spacing-l);

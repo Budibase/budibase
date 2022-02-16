@@ -44,6 +44,11 @@
 {/if}
 
 <style>
+  .buttons {
+    display: flex;
+    gap: var(--spacing-m);
+  }
+
   .drawer {
     position: absolute;
     bottom: 0;
@@ -73,5 +78,13 @@
     justify-content: center;
     align-items: flex-start;
     gap: var(--spacing-xs);
+  }
+
+  .buttons {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    gap: var(--spacing-m);
   }
 </style>

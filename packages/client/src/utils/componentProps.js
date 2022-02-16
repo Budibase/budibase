@@ -1,5 +1,6 @@
 import { enrichDataBindings } from "./enrichDataBinding"
 import { enrichButtonActions } from "./buttonActions"
+import { decodeJSBinding } from "@budibase/string-templates"
 
 /**
  * Deeply compares 2 props using JSON.stringify.
@@ -43,9 +44,9 @@ export const enrichProps = (props, context) => {
     }
   })
 
-  // Handle conditional UI separately after normal settings
-  let conditions = normalProps._conditions
-  delete normalProps._conditions
+  // Store the original conditions so that we can restore parts of them after
+  // enrichment
+  let rawConditions = normalProps._conditions
 
   // Enrich all props except button actions
   let enrichedProps = enrichDataBindings(normalProps, totalContext)
@@ -58,31 +59,51 @@ export const enrichProps = (props, context) => {
   })
 
   // Conditions
-  if (conditions?.length) {
-    let enrichedConditions = []
-    conditions.forEach(condition => {
+  if (enrichedProps._conditions?.length) {
+    enrichedProps._conditions.forEach((condition, idx) => {
       if (condition.setting?.toLowerCase().includes("onclick")) {
-        // Copy and remove the setting value from the condition as it needs
-        // enriched separately
-        let toEnrich = { ...condition }
-        delete toEnrich.settingValue
+        // Use the original condition action value to enrich it to a button
+        // action
+        condition.settingValue = enrichButtonActions(
+          rawConditions[idx].settingValue,
+          totalContext
+        )
 
-        // Join the condition back together
-        enrichedConditions.push({
-          ...enrichDataBindings(toEnrich, totalContext),
-          settingValue: enrichButtonActions(
-            condition.settingValue,
-            totalContext
-          ),
-          rand: Math.random(),
-        })
-      } else {
-        // Normal condition
-        enrichedConditions.push(enrichDataBindings(condition, totalContext))
+        // Since we can't compare functions, we need to assume that conditions
+        // change after every enrichment
+        condition.rand = Math.random()
       }
     })
-    enrichedProps._conditions = enrichedConditions
   }
 
   return enrichedProps
+}
+
+/**
+ * Checks if a props object references a particular context binding.
+ * e.g. if props are { foo: "My name is {{ person.name }}" }, and we search for" +
+ * "person", then this function wil return true - the props do a context key
+ * called "person".
+ * @param props the props object to search
+ * @param bindingKey the key to search for
+ */
+export const propsUseBinding = (props, bindingKey) => {
+  if (!Object.keys(props || {}).length) {
+    return false
+  }
+  const string = JSON.stringify(props)
+  const usedInHBS = string.includes(`[${bindingKey}]`)
+  if (usedInHBS) {
+    return true
+  }
+  const jsBindingRegex = new RegExp("{{ js [^}]+ }}", "g")
+  const jsBindings = [...string.matchAll(jsBindingRegex)]
+  for (let jsBinding of jsBindings) {
+    const encoded = jsBinding[0]
+    const js = decodeJSBinding(encoded)
+    if (js?.includes(`$("[${bindingKey}]`)) {
+      return true
+    }
+  }
+  return false
 }
