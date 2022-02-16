@@ -148,7 +148,7 @@
     "@types/koa-router": "^7.4.2",
     "@types/node": "^15.12.4",
     "@types/oracledb": "^5.2.1",
-    "@typescript-eslint/parser": "4.28.0",
+    "@typescript-eslint/parser": "5.12.0",
     "apidoc": "^0.50.2",
     "babel-jest": "^27.0.2",
     "copyfiles": "^2.4.1",
