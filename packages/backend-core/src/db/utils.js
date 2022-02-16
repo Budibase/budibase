@@ -179,8 +179,11 @@ exports.getStartEndKeyURL = (base, baseKey, tenantId = null) => {
 /**
  * if in production this will use the CouchDB _all_dbs call to retrieve a list of databases. If testing
  * when using Pouch it will use the pouchdb-all-dbs package.
+ * opts.efficient can be provided to make sure this call is always quick in a multi-tenant environment,
+ * but it may not be 100% accurate in full efficiency mode (some tenantless apps may be missed).
  */
-exports.getAllDbs = async () => {
+exports.getAllDbs = async (opts = { efficient: false }) => {
+  const efficient = opts && opts.efficient
   // specifically for testing we use the pouch package for this
   if (env.isTest()) {
     return getCouch().allDbs()
@@ -197,7 +200,7 @@ exports.getAllDbs = async () => {
   }
   let couchUrl = `${exports.getCouchUrl()}/_all_dbs`
   let tenantId = getTenantId()
-  if (!env.MULTI_TENANCY || tenantId === DEFAULT_TENANT_ID) {
+  if (!env.MULTI_TENANCY || (!efficient && tenantId === DEFAULT_TENANT_ID)) {
     // just get all DBs when:
     // - single tenancy
     // - default tenant
@@ -225,13 +228,13 @@ exports.getAllDbs = async () => {
  *
  * @return {Promise<object[]>} returns the app information document stored in each app database.
  */
-exports.getAllApps = async ({ dev, all, idsOnly } = {}) => {
+exports.getAllApps = async ({ dev, all, idsOnly, efficient } = {}) => {
   const CouchDB = getCouch()
   let tenantId = getTenantId()
   if (!env.MULTI_TENANCY && !tenantId) {
     tenantId = DEFAULT_TENANT_ID
   }
-  let dbs = await exports.getAllDbs()
+  let dbs = await exports.getAllDbs({ efficient })
   const appDbNames = dbs.filter(dbName => {
     const split = dbName.split(SEPARATOR)
     // it is an app, check the tenantId
