@@ -5,12 +5,14 @@ const { processStringSync } = require("@budibase/string-templates")
 
 const Configs = {
   prod: {
+    k8s: true,
     apps: "app-service.budibase.svc.cluster.local",
     worker: "worker-service.budibase.svc.cluster.local",
     minio: "minio-service.budibase.svc.cluster.local",
     couchdb: "budibase-prod-svc-couchdb",
   },
   preprod: {
+    k8s: true,
     apps: "app-service.budibase.svc.cluster.local",
     worker: "worker-service.budibase.svc.cluster.local",
     minio: "minio-service.budibase.svc.cluster.local",
