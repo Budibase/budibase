@@ -119,8 +119,6 @@ router
    *    "notEqual": {},
    *    "empty": {},
    *    "notEmpty": {},
-   *    "contains": {},
-   *    "notContains": {}
    *    "oneOf": {
    *      "columnName": ["value"]
    *    }

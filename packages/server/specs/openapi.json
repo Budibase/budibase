@@ -12,9 +12,62 @@
     }
   ],
   "paths": {
-    "/api/public/v1/row/search": {
+    "/api/public/v1/row/{tableId}/search": {
       "post": {
-        "description": "Search for rows.",
+        "summary": "Allows searching for rows within a table.",
+        "parameters": {
+          "name": "tableId",
+          "in": "path",
+          "required": true,
+          "description": "The ID of the table which contains the rows which are being searched for.",
+          "schema": {
+            "type": "string"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "string": {
+                    "type": "object",
+                    "description": "A map of field name to the string to search for, this will look for rows that have a value starting with the string value. The format of this must be columnName -> \"string\"."
+                  },
+                  "fuzzy": {
+                    "type": "object",
+                    "description": "A fuzzy search, only supported by internal tables."
+                  },
+                  "range": {
+                    "type": "object",
+                    "description": "Searches within a range, the format of this must be columnName -> [low, high]."
+                  },
+                  "equal": {
+                    "type": "object",
+                    "description": "Searches for rows that have a column value that is exactly the value set."
+                  },
+                  "notEqual": {
+                    "type": "object",
+                    "description": "Searches for any row which does not contain the specified column value."
+                  },
+                  "empty": {
+                    "type": "object",
+                    "description": "Searches for rows which do not contain the specified column. The object should simply contain keys of the column names, these can map to any value."
+                  },
+                  "notEmpty": {
+                    "type": "object",
+                    "description": "Searches for rows which have the specified column."
+                  },
+                  "oneOf": {
+                    "type": "object",
+                    "description": "Searches for rows which have a column value that is any of the specified values. The format of this must be columnName -> [value1, value2]."
+                  }
+                }
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Returns the rows."
