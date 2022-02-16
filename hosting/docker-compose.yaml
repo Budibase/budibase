@@ -73,7 +73,7 @@ services:
     ports:
       - "${MAIN_PORT}:10000"
     container_name: bbproxy
-    image: proxy-service
+    image: budibase/proxy
     depends_on:
       - minio-service
       - worker-service
