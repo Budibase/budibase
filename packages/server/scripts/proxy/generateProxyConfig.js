@@ -22,6 +22,7 @@ const Configs = {
     worker: "worker-service",
     minio: "minio-service",
     couchdb: "couchdb-service",
+    watchtower: "watchtower-service",
   },
 }
 
