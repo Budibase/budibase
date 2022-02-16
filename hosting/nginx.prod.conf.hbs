@@ -21,6 +21,9 @@ http {
   {{#if compose}}
   resolver 127.0.0.11 ipv6=off;
   {{/if}}
+  {{#if k8s}}
+  resolver kube-dns.kube-system.svc.cluster.local valid=10s;
+  {{/if}}
 
 
   # buffering
@@ -73,7 +76,7 @@ http {
 
     {{#if watchtower}}
     location = /v1/update {
-      proxy_pass      http://watchtower-service:8080;
+      proxy_pass      http://$watchtower:8080;
     }
     {{/if}}
     location ~ ^/(builder|app_) {
