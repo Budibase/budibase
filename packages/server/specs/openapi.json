@@ -1,0 +1,17 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Budibase API",
+    "description": "The public API for Budibase apps and its services.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://budibase.app/api",
+      "description": "Budibase Cloud API"
+    }
+  ],
+  "paths": {},
+  "components": {},
+  "tags": []
+}

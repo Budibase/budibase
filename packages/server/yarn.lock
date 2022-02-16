@@ -27,6 +27,18 @@
   resolved "https://registry.yarnpkg.com/@apidevtools/swagger-methods/-/swagger-methods-3.0.2.tgz#b789a362e055b0340d04712eafe7027ddc1ac267"
   integrity sha512-QAkD5kK2b1WfjDS/UQn/qQkbwF31uqRjPTrsCs5ZG9BQGAkjwvqGFjjPqAuzac/IYzpPtRzjCP1WrTuAIjMrXg==
 
+"@apidevtools/swagger-parser@10.0.2":
+  version "10.0.2"
+  resolved "https://registry.yarnpkg.com/@apidevtools/swagger-parser/-/swagger-parser-10.0.2.tgz#f4145afb7c3a3bafe0376f003b5c3bdeae17a952"
+  integrity sha512-JFxcEyp8RlNHgBCE98nwuTkZT6eNFPc1aosWV6wPcQph72TSEEu1k3baJD4/x1qznU+JiDdz8F5pTwabZh+Dhg==
+  dependencies:
+    "@apidevtools/json-schema-ref-parser" "^9.0.6"
+    "@apidevtools/openapi-schemas" "^2.0.4"
+    "@apidevtools/swagger-methods" "^3.0.2"
+    "@jsdevtools/ono" "^7.1.3"
+    call-me-maybe "^1.0.1"
+    z-schema "^4.2.3"
+
 "@apidevtools/swagger-parser@10.0.3", "@apidevtools/swagger-parser@^10.0.3":
   version "10.0.3"
   resolved "https://registry.yarnpkg.com/@apidevtools/swagger-parser/-/swagger-parser-10.0.3.tgz#32057ae99487872c4dd96b314a1ab4b95d89eaf5"
@@ -983,10 +995,10 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/backend-core@^1.0.58-alpha.5":
-  version "1.0.63"
-  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.0.63.tgz#85808b55130e3812724ba362083c69c90c0a680c"
-  integrity sha512-9u7mOqHXKHD8Me6aeBzJTc2uT69g0LHnqnokMt/3hWYO9DBvyr/NeS41K9sGIXS91MbsYIvTM/oCQhefHN+PTg==
+"@budibase/backend-core@^1.0.66-alpha.0":
+  version "1.0.67"
+  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.0.67.tgz#28b429a6324be379cf69fc74f4ceaecb8804edcb"
+  integrity sha512-nGOq1QtmnL/vt20gtXWTFuUVKsQPIdXesOOBVZ1TWzrScRlOe8+wCqlgIqo8YmTrwK/KLZwyDArdiFqCY0695Q==
   dependencies:
     "@techpass/passport-openidconnect" "^0.3.0"
     aws-sdk "^2.901.0"
@@ -1056,10 +1068,10 @@
     svelte-flatpickr "^3.2.3"
     svelte-portal "^1.0.0"
 
-"@budibase/bbui@^1.0.63":
-  version "1.0.63"
-  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-1.0.63.tgz#4293c2e8baf6921ecf9fb119218bcbf315219641"
-  integrity sha512-h8IZHyNFyddHvp3J6toWNdYqnfnj3fyDPnczvQAHcX3xojC4Kk8uNruAA5UQLAuBQd8U44ZZ86lUZEPo720t6A==
+"@budibase/bbui@^1.0.67":
+  version "1.0.67"
+  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-1.0.67.tgz#4db3f2bdd92254d00621577c316d766adf9a040f"
+  integrity sha512-JqByukJe7eL38ol47/9QO6MBeANUnv5W+S9BPYCGuSkMB9Ie6JWOAeXf//E76+DLvaCXUKDqNB3jPD2TOicvYw==
   dependencies:
     "@adobe/spectrum-css-workflow-icons" "^1.2.1"
     "@spectrum-css/actionbutton" "^1.0.1"
@@ -1107,25 +1119,25 @@
     svelte-flatpickr "^3.2.3"
     svelte-portal "^1.0.0"
 
-"@budibase/client@^1.0.58-alpha.5":
-  version "1.0.63"
-  resolved "https://registry.yarnpkg.com/@budibase/client/-/client-1.0.63.tgz#dfc710350ccd18c74169af15700df1e3c7bfd55b"
-  integrity sha512-x6xqsgx++hMy5H/XOZtwZiKXQ4Y2SvxueHUWQe9mK0QCxHDDvBVtzSFWcoLgR7Sna8ATWI6MSWhJVvWq5P2dkw==
+"@budibase/client@^1.0.66-alpha.0":
+  version "1.0.67"
+  resolved "https://registry.yarnpkg.com/@budibase/client/-/client-1.0.67.tgz#a5e6c3ba8e1f4a4abe76a930501c3a2a6169e634"
+  integrity sha512-W3p7tiVKk+BojgjSWIevPF/8XXgqD/y7ttkyNvFpjQ6OikliN/Nw13ZqoMLdT91GBowUblN7HfCZWdcWTIEA+g==
   dependencies:
-    "@budibase/bbui" "^1.0.63"
-    "@budibase/frontend-core" "^1.0.63"
-    "@budibase/string-templates" "^1.0.63"
+    "@budibase/bbui" "^1.0.67"
+    "@budibase/frontend-core" "^1.0.67"
+    "@budibase/string-templates" "^1.0.67"
     regexparam "^1.3.0"
     rollup-plugin-polyfill-node "^0.8.0"
     shortid "^2.2.15"
     svelte-spa-router "^3.0.5"
 
-"@budibase/frontend-core@^1.0.63":
-  version "1.0.63"
-  resolved "https://registry.yarnpkg.com/@budibase/frontend-core/-/frontend-core-1.0.63.tgz#9c3a8a4967c00863ab0fde1a754ebb170bd3103d"
-  integrity sha512-4ArPq8aFnsfWf81n4sqZyaTNPVzld859HfLvyXD/hf568ut7ETGc5DskpjcfeyNnpLzgTek5g+D1bzCSm4RBbA==
+"@budibase/frontend-core@^1.0.67":
+  version "1.0.67"
+  resolved "https://registry.yarnpkg.com/@budibase/frontend-core/-/frontend-core-1.0.67.tgz#50edfa57c34b8fda012c49842e91ff6604e7cce8"
+  integrity sha512-s1RDUsYoQrcRDaFNwQhr+OS8ibo8uCGbqVvbZpZHnPeMvCI2z64izgeei+yrhONv7tifqv/3H0Q3/wHU0A8bUg==
   dependencies:
-    "@budibase/bbui" "^1.0.63"
+    "@budibase/bbui" "^1.0.67"
     lodash "^4.17.21"
     svelte "^3.46.2"
 
@@ -1172,10 +1184,10 @@
     svelte-apexcharts "^1.0.2"
     svelte-flatpickr "^3.1.0"
 
-"@budibase/string-templates@^1.0.58-alpha.5", "@budibase/string-templates@^1.0.63":
-  version "1.0.63"
-  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-1.0.63.tgz#4a64ffd595fac412df5bacbba4555ad0a0dd4c96"
-  integrity sha512-oBY8wA7oylQobVwnT5wdTc2xdpPpuJ4kJ4pO75EfGo8lNGNnwqpic6e3icthx6fb+/DoNFGpEsUByOmAlVKtHg==
+"@budibase/string-templates@^1.0.66-alpha.0", "@budibase/string-templates@^1.0.67":
+  version "1.0.67"
+  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-1.0.67.tgz#f49bd26a4d2baec74a9b8885a7ee63619430ba65"
+  integrity sha512-Juz5TJo1gZ4o/IY0RCc+An22RTzjZ5FOv0WiLXI5W6V+Enw3e4AEG0aVFxVgZQSIrIhxTMnsBndrzkcuu6n1fw==
   dependencies:
     "@budibase/handlebars-helpers" "^0.11.7"
     dayjs "^1.10.4"
@@ -4202,6 +4214,11 @@ combined-stream@^1.0.6, combined-stream@^1.0.8, combined-stream@~1.0.6:
   dependencies:
     delayed-stream "~1.0.0"
 
+commander@6.2.0:
+  version "6.2.0"
+  resolved "https://registry.yarnpkg.com/commander/-/commander-6.2.0.tgz#b990bfb8ac030aedc6d11bc04d1488ffef56db75"
+  integrity sha512-zP4jEKbe8SHzKJYQmq8Y9gYjtO/POJLgIdKgV7B9qNmABVFVc+ctqSX6iXh4mCpJfRBOabiZ2YKPg8ciDw6C+Q==
+
 commander@^2.19.0, commander@^2.20.0, commander@^2.5.0, commander@^2.7.1, commander@^2.8.1:
   version "2.20.3"
   resolved "https://registry.yarnpkg.com/commander/-/commander-2.20.3.tgz#fd485e84c03eb4881c20722ba48035e8531aeb33"
@@ -4819,7 +4836,7 @@ docker-compose@^0.23.6:
   dependencies:
     yaml "^1.10.2"
 
-doctrine@^3.0.0:
+doctrine@3.0.0, doctrine@^3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/doctrine/-/doctrine-3.0.0.tgz#addebead72a6574db783639dc87a121773973961"
   integrity sha512-yS+Q5i3hBf7GBkd4KG8a7eBNNWNGLTaEwwYWUijIYM7zrlYDM0BFXHjjPWlWZ1Rg7UaddZeIDmi9jF3HmqiQ2w==
@@ -6169,6 +6186,18 @@ glob-to-regexp@^0.4.1:
   version "0.4.1"
   resolved "https://registry.yarnpkg.com/glob-to-regexp/-/glob-to-regexp-0.4.1.tgz#c75297087c851b9a578bd217dd59a92f59fe546e"
   integrity sha512-lkX1HJXwyMcprw/5YUZc2s7DrpAiHB21/V+E1rHUrVNokkvB6bqMzT0VfV6/86ZNabt1k14YOIaT7nDvOX3Iiw==
+
+glob@7.1.6:
+  version "7.1.6"
+  resolved "https://registry.yarnpkg.com/glob/-/glob-7.1.6.tgz#141f33b81a7c2492e125594307480c46679278a6"
+  integrity sha512-LwaxwyZ72Lk7vZINtNNrywX0ZuLyStrdDtabefZKAY5ZGJhVtgdznluResxNmPitE0SAO+O26sWTHeKSI2wMBA==
+  dependencies:
+    fs.realpath "^1.0.0"
+    inflight "^1.0.4"
+    inherits "2"
+    minimatch "^3.0.4"
+    once "^1.3.0"
+    path-is-absolute "^1.0.0"
 
 glob@^5.0.15:
   version "5.0.15"
@@ -8950,6 +8979,11 @@ lodash.merge@^4.6.2:
   version "4.6.2"
   resolved "https://registry.yarnpkg.com/lodash.merge/-/lodash.merge-4.6.2.tgz#558aa53b43b661e1925a0afdfa36a9a1085fe57a"
   integrity sha512-0KpjqXRVvrYyCsX1swR/XTK0va6VQkQM6MNo7PqW77ByjAhoARA8EfrP1N4+KlKj8YS0ZUCtRT/YUuhyYDujIQ==
+
+lodash.mergewith@^4.6.2:
+  version "4.6.2"
+  resolved "https://registry.yarnpkg.com/lodash.mergewith/-/lodash.mergewith-4.6.2.tgz#617121f89ac55f59047c7aec1ccd6654c6590f55"
+  integrity sha512-GK3g5RPZWTRSeLSpgP8Xhra+pnjBC56q9FZYe1d5RN3TJ35dbkGy3YqBSMbyCrlbi+CM9Z3Jk5yTL7RCsqboyQ==
 
 lodash.noop@^3.0.1:
   version "3.0.1"
@@ -12143,6 +12177,25 @@ svg.select.js@^3.0.1:
   dependencies:
     svg.js "^2.6.5"
 
+swagger-jsdoc@^6.1.0:
+  version "6.1.0"
+  resolved "https://registry.yarnpkg.com/swagger-jsdoc/-/swagger-jsdoc-6.1.0.tgz#c2b86321f2c4dde8947b418fe8a4bc94431d5522"
+  integrity sha512-xgep5M8Gq31MxpCbQLvJZpNqHfGPfI+sILCzujZbEXIQp2COtkZgoGASs0gacRs4xHmLDH+GuMGdorPITSG4tA==
+  dependencies:
+    commander "6.2.0"
+    doctrine "3.0.0"
+    glob "7.1.6"
+    lodash.mergewith "^4.6.2"
+    swagger-parser "10.0.2"
+    yaml "2.0.0-1"
+
+swagger-parser@10.0.2:
+  version "10.0.2"
+  resolved "https://registry.yarnpkg.com/swagger-parser/-/swagger-parser-10.0.2.tgz#d7f18faa09c9c145e938977c9bd6c3435998b667"
+  integrity sha512-9jHkHM+QXyLGFLk1DkXBwV+4HyNm0Za3b8/zk/+mjr8jgOSiqm3FOTHBSDsBjtn9scdL+8eWcHdupp2NLM8tDw==
+  dependencies:
+    "@apidevtools/swagger-parser" "10.0.2"
+
 swagger-parser@^10.0.3:
   version "10.0.3"
   resolved "https://registry.yarnpkg.com/swagger-parser/-/swagger-parser-10.0.3.tgz#04cb01c18c3ac192b41161c77f81e79309135d03"
@@ -12923,7 +12976,7 @@ validate.js@0.13.1:
   resolved "https://registry.yarnpkg.com/validate.js/-/validate.js-0.13.1.tgz#b58bfac04a0f600a340f62e5227e70d95971e92a"
   integrity sha512-PnFM3xiZ+kYmLyTiMgTYmU7ZHkjBZz2/+F0DaALc/uUtVzdCt1wAosvYJ5hFQi/hz8O4zb52FQhHZRC+uVkJ+g==
 
-validator@^13.7.0:
+validator@^13.6.0, validator@^13.7.0:
   version "13.7.0"
   resolved "https://registry.yarnpkg.com/validator/-/validator-13.7.0.tgz#4f9658ba13ba8f3d82ee881d3516489ea85c0857"
   integrity sha512-nYXQLCBkpJ8X6ltALua9dRrZDHVYxjJ1wgskNt1lH9fzGjs3tgojGSCBjmEPwkWS1y29+DrizMTW19Pr9uB2nw==
@@ -13374,6 +13427,11 @@ yallist@^4.0.0:
   resolved "https://registry.yarnpkg.com/yallist/-/yallist-4.0.0.tgz#9bb92790d9c0effec63be73519e11a35019a3a72"
   integrity sha512-3wdGidZyq5PB084XLES5TpOSRA3wjXAlIWMhum2kRcv/41Sn2emQ0dycQW4uZXLejwKvg6EsvbdlVL+FYEct7A==
 
+yaml@2.0.0-1:
+  version "2.0.0-1"
+  resolved "https://registry.yarnpkg.com/yaml/-/yaml-2.0.0-1.tgz#8c3029b3ee2028306d5bcf396980623115ff8d18"
+  integrity sha512-W7h5dEhywMKenDJh2iX/LABkbFnBxasD27oyXWDS/feDsxiw0dD5ncXdYXgkvAsXIY2MpW/ZKkr9IU30DBdMNQ==
+
 yaml@^1.10.2:
   version "1.10.2"
   resolved "https://registry.yarnpkg.com/yaml/-/yaml-1.10.2.tgz#2301c5ffbf12b467de8da2333a459e29e7920e4b"
@@ -13468,6 +13526,17 @@ yn@3.1.1:
   version "3.1.1"
   resolved "https://registry.yarnpkg.com/yn/-/yn-3.1.1.tgz#1e87401a09d767c1d5eab26a6e4c185182d2eb50"
   integrity sha512-Ux4ygGWsu2c7isFWe8Yu1YluJmqVhxqK2cLXNQA5AcC3QfbGNpM7fu0Y8b/z16pXLnFxZYvWhd3fhBY9DLmC6Q==
+
+z-schema@^4.2.3:
+  version "4.2.4"
+  resolved "https://registry.yarnpkg.com/z-schema/-/z-schema-4.2.4.tgz#73102a49512179b12a8ec50b1daa676b984da6e4"
+  integrity sha512-YvBeW5RGNeNzKOUJs3rTL4+9rpcvHXt5I051FJbOcitV8bl40pEfcG0Q+dWSwS0/BIYrMZ/9HHoqLllMkFhD0w==
+  dependencies:
+    lodash.get "^4.4.2"
+    lodash.isequal "^4.5.0"
+    validator "^13.6.0"
+  optionalDependencies:
+    commander "^2.7.1"
 
 z-schema@^5.0.1:
   version "5.0.2"
