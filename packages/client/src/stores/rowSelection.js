@@ -4,9 +4,8 @@ const createRowSelectionStore = () => {
   const store = writable([])
 
   function update(rows) {
-    console.log(rows)
     store.update(state => {
-      state = rows
+      state = [...rows]
       return state
     })
   }
