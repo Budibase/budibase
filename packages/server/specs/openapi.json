@@ -11,7 +11,18 @@
       "description": "Budibase Cloud API"
     }
   ],
-  "paths": {},
+  "paths": {
+    "/api/public/v1/row/search": {
+      "post": {
+        "description": "Search for rows.",
+        "responses": {
+          "200": {
+            "description": "Returns the rows."
+          }
+        }
+      }
+    }
+  },
   "components": {},
   "tags": []
 }
