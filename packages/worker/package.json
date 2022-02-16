@@ -37,7 +37,7 @@
     "@budibase/backend-core": "^1.0.65",
     "@budibase/string-templates": "^1.0.65",
     "@koa/router": "^8.0.0",
-    "@sentry/node": "^6.0.0",
+    "@sentry/node": "6.17.7",
     "@techpass/passport-openidconnect": "^0.3.0",
     "aws-sdk": "^2.811.0",
     "bcryptjs": "^2.4.3",
