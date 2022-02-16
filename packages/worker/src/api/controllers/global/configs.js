@@ -246,12 +246,16 @@ exports.destroy = async function (ctx) {
 
 exports.configChecklist = async function (ctx) {
   const db = getGlobalDB()
+  const tenantId = getTenantId()
 
   try {
     // TODO: Watch get started video
 
-    // Apps exist
-    const apps = await getAllApps({ idsOnly: true, efficient: true })
+    let apps = []
+    if (!env.MULTI_TENANCY || tenantId) {
+      // Apps exist
+      apps = await getAllApps({ idsOnly: true, efficient: true })
+    }
 
     // They have set up SMTP
     const smtpConfig = await getScopedFullConfig(db, {
