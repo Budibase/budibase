@@ -251,7 +251,7 @@ exports.configChecklist = async function (ctx) {
     // TODO: Watch get started video
 
     // Apps exist
-    const apps = await getAllApps({ idsOnly: true })
+    const apps = await getAllApps({ idsOnly: true, efficient: true })
 
     // They have set up SMTP
     const smtpConfig = await getScopedFullConfig(db, {
