@@ -7,14 +7,13 @@
   export let icon = ""
   export let selected = false
   export let disabled = false
-  export let onClick = undefined
 </script>
 
 <li
   class="spectrum-SideNav-item"
   class:is-selected={selected}
   class:is-disabled={disabled}
-  on:click={onClick}
+  on:click
 >
   {#if heading}
     <h2 class="spectrum-SideNav-heading" id="nav-heading-{heading}">
