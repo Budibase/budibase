@@ -5,17 +5,11 @@ const router = Router()
 
 /**
  * @openapi
- * /row/{tableId}/search:
+ * /tables/{tableId}/rows/search:
  *   post:
  *     summary: Allows searching for rows within a table.
  *     parameters:
- *       - in: path
- *         name: tableId
- *         required: true
- *         description: The ID of the table which contains the rows
- *           which are being searched for.
- *         schema:
- *           type: string
+ *       - $ref: '#/components/parameters/tableId'
  *     requestBody:
  *       required: true
  *       content:
@@ -119,6 +113,21 @@ const router = Router()
  */
 router.post("/tables/:tableId/rows/search", controller.search)
 
+/**
+ * @openapi
+ * /tables/{tableId}/rows:
+ *   post:
+ *     summary: Allows creating a row within a specified table.
+ *     parameters:
+ *       - $ref: '#/components/parameters/tableId'
+ *     responses:
+ *       200:
+ *         description: Returns the created row, including the ID which has been generated for it.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ */
 router.post("/tables/:tableId/rows", controller.create)
 
 router.put("/tables/:tableId/rows/:rowId", controller.update)

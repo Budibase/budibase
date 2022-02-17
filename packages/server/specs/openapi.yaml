@@ -9,6 +9,14 @@ servers:
   - url: "{protocol}://{hostname}:10000/api/public/v1"
     description: Budibase self hosted API
 components:
+  parameters:
+    tableId:
+      in: path
+      name: tableId
+      required: true
+      description: The ID of the table which contains the rows which are being searched for.
+      schema:
+        type: string
   examples:
     row:
       value:
@@ -38,17 +46,11 @@ components:
             fieldName: relatedColumn
             relationshipType: many-to-many
 paths:
-  "/row/{tableId}/search":
+  "/tables/{tableId}/rows/search":
     post:
       summary: Allows searching for rows within a table.
       parameters:
-        - in: path
-          name: tableId
-          required: true
-          description: The ID of the table which contains the rows which are being
-            searched for.
-          schema:
-            type: string
+        - $ref: "#/components/parameters/tableId"
       requestBody:
         required: true
         content:
@@ -157,4 +159,17 @@ paths:
                     description: If pagination in use, this will determine if there is another page
                       to fetch.
                     type: boolean
+  "/tables/{tableId}/rows":
+    post:
+      summary: Allows creating a row within a specified table.
+      parameters:
+        - $ref: "#/components/parameters/tableId"
+      responses:
+        "200":
+          description: Returns the created row, including the ID which has been generated
+            for it.
+          content:
+            application/json:
+              schema:
+                type: object
 tags: []
