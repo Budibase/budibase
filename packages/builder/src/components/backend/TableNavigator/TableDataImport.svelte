@@ -1,7 +1,7 @@
 <script>
   import { Select, InlineAlert, notifications } from "@budibase/bbui"
   import { FIELDS } from "constants/backend"
-  import api from "builderStore/api"
+  import { API } from "api"
 
   const BYTES_IN_MB = 1000000
   const FILE_SIZE_LIMIT = BYTES_IN_MB * 5
@@ -50,28 +50,26 @@
   }
 
   async function validateCSV() {
-    const response = await api.post("/api/tables/csv/validate", {
-      csvString,
-      schema: schema || {},
-      tableId: existingTableId,
-    })
+    try {
+      const parseResult = await API.validateTableCSV({
+        csvString,
+        schema: schema || {},
+        tableId: existingTableId,
+      })
+      schema = parseResult?.schema
+      fields = Object.keys(schema || {}).filter(
+        key => schema[key].type !== "omit"
+      )
 
-    const parseResult = await response.json()
-    schema = parseResult && parseResult.schema
-    fields = Object.keys(schema || {}).filter(
-      key => schema[key].type !== "omit"
-    )
+      // Check primary display is valid
+      if (!primaryDisplay || fields.indexOf(primaryDisplay) === -1) {
+        primaryDisplay = fields[0]
+      }
 
-    // Check primary display is valid
-    if (!primaryDisplay || fields.indexOf(primaryDisplay) === -1) {
-      primaryDisplay = fields[0]
-    }
-
-    if (response.status !== 200) {
+      hasValidated = true
+    } catch (error) {
       notifications.error("CSV Invalid, please try another CSV file")
-      return []
     }
-    hasValidated = true
   }
 
   async function handleFile(evt) {

@@ -18,7 +18,9 @@
   let tempValue = value || []
 
   $: dataSource = getDatasourceForProvider($currentAsset, componentInstance)
-  $: schema = getSchemaForDatasource($currentAsset, dataSource)?.schema
+  $: schema = getSchemaForDatasource($currentAsset, dataSource, {
+    searchableSchema: true,
+  })?.schema
   $: schemaFields = Object.values(schema || {})
 
   const saveFilter = async () => {

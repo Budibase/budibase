@@ -1,4 +1,4 @@
-import { cloneDeep } from "lodash/fp"
+import { Helpers } from "@budibase/bbui"
 import { processString, processObjectSync } from "@budibase/string-templates"
 
 // Regex to test inputs with to see if they are likely candidates for template strings
@@ -24,5 +24,5 @@ export const enrichDataBinding = async (input, context) => {
  * Props are deeply cloned so that no mutation is done to the source object.
  */
 export const enrichDataBindings = (props, context) => {
-  return processObjectSync(cloneDeep(props), context)
+  return processObjectSync(Helpers.cloneDeep(props), context, { cache: true })
 }

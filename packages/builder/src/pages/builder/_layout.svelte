@@ -2,12 +2,7 @@
   import { isActive, redirect, params } from "@roxi/routify"
   import { admin, auth } from "stores/portal"
   import { onMount } from "svelte"
-  import {
-    Cookies,
-    getCookie,
-    removeCookie,
-    setCookie,
-  } from "builderStore/cookies"
+  import { CookieUtils, Constants } from "@budibase/frontend-core"
 
   let loaded = false
 
@@ -46,9 +41,12 @@
 
       if (user.tenantId !== urlTenantId) {
         // user should not be here - play it safe and log them out
-        await auth.logout()
-        await auth.setOrganisation(null)
-        return
+        try {
+          await auth.logout()
+          await auth.setOrganisation(null)
+        } catch (error) {
+          // Swallow error and do nothing
+        }
       }
     } else {
       // no user - set the org according to the url
@@ -57,17 +55,23 @@
   }
 
   onMount(async () => {
-    if ($params["?template"]) {
-      await auth.setInitInfo({ init_template: $params["?template"] })
+    try {
+      await auth.getSelf()
+      await admin.init()
+
+      // Set init info if present
+      if ($params["?template"]) {
+        await auth.setInitInfo({ init_template: $params["?template"] })
+      }
+
+      // Validate tenant if in a multi-tenant env
+      if (useAccountPortal && multiTenancyEnabled) {
+        await validateTenantId()
+      }
+    } catch (error) {
+      // Don't show a notification here, as we might 403 initially due to not
+      // being logged in
     }
-
-    await auth.getSelf()
-    await admin.init()
-
-    if (useAccountPortal && multiTenancyEnabled) {
-      await validateTenantId()
-    }
-
     loaded = true
   })
 
@@ -79,7 +83,7 @@
       loaded &&
       apiReady &&
       !$auth.user &&
-      !getCookie(Cookies.ReturnUrl) &&
+      !CookieUtils.getCookie(Constants.Cookies.ReturnUrl) &&
       // logout triggers a page refresh, so we don't want to set the return url
       !$auth.postLogout &&
       // don't set the return url on pre-login pages
@@ -88,7 +92,7 @@
       !$isActive("./admin")
     ) {
       const url = window.location.pathname
-      setCookie(Cookies.ReturnUrl, url)
+      CookieUtils.setCookie(Constants.Cookies.ReturnUrl, url)
     }
 
     // if tenant is not set go to it
@@ -122,9 +126,9 @@
     }
     // lastly, redirect to the return url if it has been set
     else if (loaded && apiReady && $auth.user) {
-      const returnUrl = getCookie(Cookies.ReturnUrl)
+      const returnUrl = CookieUtils.getCookie(Constants.Cookies.ReturnUrl)
       if (returnUrl) {
-        removeCookie(Cookies.ReturnUrl)
+        CookieUtils.removeCookie(Constants.Cookies.ReturnUrl)
         window.location.href = returnUrl
       }
     }

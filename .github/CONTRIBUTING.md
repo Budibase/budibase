@@ -137,7 +137,7 @@ If you wish to delete all the apps created in development and reset the environm
 
 ### Backend
 
-For the backend we run [Redis](https://redis.io/), [CouchDB](https://couchdb.apache.org/), [MinIO](https://min.io/) and [Envoy](https://www.envoyproxy.io/) in Docker compose. This means that to develop Budibase you will need Docker and Docker compose installed. The backend services are then ran separately as Node services with nodemon so that they can be debugged outside of Docker.
+For the backend we run [Redis](https://redis.io/), [CouchDB](https://couchdb.apache.org/), [MinIO](https://min.io/) and [NGINX](https://www.nginx.com/) in Docker compose. This means that to develop Budibase you will need Docker and Docker compose installed. The backend services are then ran separately as Node services with nodemon so that they can be debugged outside of Docker.
 
 ### Data Storage
 

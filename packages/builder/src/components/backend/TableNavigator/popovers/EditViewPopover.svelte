@@ -27,11 +27,15 @@
   }
 
   async function deleteView() {
-    const name = view.name
-    const id = view.tableId
-    await views.delete(name)
-    notifications.success("View deleted")
-    $goto(`./table/${id}`)
+    try {
+      const name = view.name
+      const id = view.tableId
+      await views.delete(name)
+      notifications.success("View deleted")
+      $goto(`./table/${id}`)
+    } catch (error) {
+      notifications.error("Error deleting view")
+    }
   }
 </script>
 

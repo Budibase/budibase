@@ -4,7 +4,7 @@
   import { tables } from "stores/backend"
   import {
     getContextProviderComponents,
-    getSchemaForDatasource,
+    getSchemaForTable,
   } from "builderStore/dataBinding"
   import SaveFields from "./SaveFields.svelte"
 
@@ -60,7 +60,7 @@
   }
 
   const getSchemaFields = (asset, tableId) => {
-    const { schema } = getSchemaForDatasource(asset, { type: "table", tableId })
+    const { schema } = getSchemaForTable(tableId)
     delete schema._id
     delete schema._rev
     return Object.values(schema || {})
