@@ -118,5 +118,7 @@ exports.revert = async ctx => {
 }
 
 exports.getBudibaseVersion = async ctx => {
-  ctx.body = require("../../../package.json").version
+  ctx.body = {
+    version: require("../../../package.json").version,
+  }
 }
