@@ -2,10 +2,7 @@ const swaggerJsdoc = require("swagger-jsdoc")
 const { join } = require("path")
 const { writeFileSync } = require("fs")
 
-const FILE_NAME = "openapi.json"
-const VARIABLES = {
-  prefixV1: "api/public/v1",
-}
+const VARIABLES = {}
 
 const options = {
   definition: {
@@ -17,8 +14,12 @@ const options = {
     },
     servers: [
       {
-        url: "http://budibase.app/api",
+        url: "http://budibase.app/api/public/v1",
         description: "Budibase Cloud API",
+      },
+      {
+        url: "http://localhost:10000/api/public/v1",
+        description: "Budibase self hosted API",
       },
     ],
   },
@@ -26,16 +27,28 @@ const options = {
   apis: [join(__dirname, "..", "src", "api", "routes", "public", "*.js")],
 }
 
-const output = swaggerJsdoc(options)
-try {
-  const path = join(__dirname, FILE_NAME)
-  let spec = JSON.stringify(output, null, 2)
-  for (let [key, replacement] of Object.entries(VARIABLES)) {
-    spec = spec.replace(new RegExp(`{${key}}`, "g"), replacement)
+function writeFile(output, { isJson } = {}) {
+  try {
+    const filename = isJson ? "openapi.json" : "openapi.yaml"
+    const path = join(__dirname, filename)
+    let spec = output
+    if (isJson) {
+      spec = JSON.stringify(output, null, 2)
+    }
+    // input the static variables
+    for (let [key, replacement] of Object.entries(VARIABLES)) {
+      spec = spec.replace(new RegExp(`{${key}}`, "g"), replacement)
+    }
+    writeFileSync(path, spec)
+    console.log(`Wrote spec to ${path}`)
+  } catch (err) {
+    console.error(err)
   }
-  // input the static variables
-  writeFileSync(path, spec)
-  console.log(`Wrote spec to ${path}`)
-} catch (err) {
-  console.error(err)
 }
+
+const outputJSON = swaggerJsdoc(options)
+options.format = "yaml"
+const outputYAML = swaggerJsdoc(options)
+console.log(outputYAML)
+writeFile(outputJSON)
+writeFile(outputYAML)
