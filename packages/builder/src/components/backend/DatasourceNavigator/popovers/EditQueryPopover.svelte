@@ -10,26 +10,30 @@
   let confirmDeleteDialog
 
   async function deleteQuery() {
-    const wasSelectedQuery = $queries.selected
-    // need to calculate this before the query is deleted
-    const navigateToDatasource = wasSelectedQuery === query._id
+    try {
+      const wasSelectedQuery = $queries.selected
+      // need to calculate this before the query is deleted
+      const navigateToDatasource = wasSelectedQuery === query._id
 
-    await queries.delete(query)
-    await datasources.fetch()
+      await queries.delete(query)
+      await datasources.fetch()
 
-    if (navigateToDatasource) {
-      await datasources.select(query.datasourceId)
-      $goto(`./datasource/${query.datasourceId}`)
+      if (navigateToDatasource) {
+        await datasources.select(query.datasourceId)
+        $goto(`./datasource/${query.datasourceId}`)
+      }
+      notifications.success("Query deleted")
+    } catch (error) {
+      notifications.error("Error deleting query")
     }
-    notifications.success("Query deleted")
   }
 
   async function duplicateQuery() {
     try {
       const newQuery = await queries.duplicate(query)
       onClickQuery(newQuery)
-    } catch (e) {
-      notifications.error(e.message)
+    } catch (error) {
+      notifications.error("Error duplicating query")
     }
   }
 </script>

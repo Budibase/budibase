@@ -32,17 +32,21 @@
 
   const fetchTable = async id => {
     if (id) {
-      const result = await API.fetchTableDefinition(id)
-      if (!result.error) {
-        tableDefinition = result
+      try {
+        tableDefinition = await API.fetchTableDefinition(id)
+      } catch (error) {
+        tableDefinition = null
       }
     }
   }
 
   const fetchRows = async id => {
     if (id) {
-      const rows = await API.fetchTableData(id)
-      options = rows && !rows.error ? rows : []
+      try {
+        options = await API.fetchTableData(id)
+      } catch (error) {
+        options = []
+      }
     }
   }
 

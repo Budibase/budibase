@@ -17,6 +17,7 @@
         class:icon-small={size === "M" || size === "S"}
         on:mouseover={() => (showTooltip = true)}
         on:mouseleave={() => (showTooltip = false)}
+        on:focus
       >
         <Icon name="InfoOutline" size="S" disabled={true} />
       </div>
@@ -47,7 +48,7 @@
     display: flex;
     justify-content: center;
     top: 15px;
-    z-index: 1;
+    z-index: 100;
     width: 160px;
   }
   .icon {

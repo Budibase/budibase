@@ -36,28 +36,37 @@
 
   // called by the parent modal when actions are saved
   const createAutomation = async parameters => {
-    if (parameters.automationId || !parameters.newAutomationName) return
-    await automationStore.actions.create({ name: parameters.newAutomationName })
-    const appActionDefinition = $automationStore.blockDefinitions.TRIGGER.APP
-    const newBlock = $automationStore.selectedAutomation.constructBlock(
-      "TRIGGER",
-      "APP",
-      appActionDefinition
-    )
-
-    newBlock.inputs = {
-      fields: Object.keys(parameters.fields).reduce((fields, key) => {
-        fields[key] = "string"
-        return fields
-      }, {}),
+    if (parameters.automationId || !parameters.newAutomationName) {
+      return
     }
+    try {
+      await automationStore.actions.create({
+        name: parameters.newAutomationName,
+      })
+      const appActionDefinition = $automationStore.blockDefinitions.TRIGGER.APP
+      const newBlock = $automationStore.selectedAutomation.constructBlock(
+        "TRIGGER",
+        "APP",
+        appActionDefinition
+      )
 
-    automationStore.actions.addBlockToAutomation(newBlock)
-    await automationStore.actions.save(
-      $automationStore.selectedAutomation?.automation
-    )
-    parameters.automationId = $automationStore.selectedAutomation.automation._id
-    delete parameters.newAutomationName
+      newBlock.inputs = {
+        fields: Object.keys(parameters.fields).reduce((fields, key) => {
+          fields[key] = "string"
+          return fields
+        }, {}),
+      }
+
+      automationStore.actions.addBlockToAutomation(newBlock)
+      await automationStore.actions.save(
+        $automationStore.selectedAutomation?.automation
+      )
+      parameters.automationId =
+        $automationStore.selectedAutomation.automation._id
+      delete parameters.newAutomationName
+    } catch (error) {
+      notifications.error("Error creating automation")
+    }
   }
 </script>
 

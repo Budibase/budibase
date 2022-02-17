@@ -11,9 +11,13 @@
   let updateAutomationDialog
 
   async function deleteAutomation() {
-    await automationStore.actions.delete(automation)
-    notifications.success("Automation deleted.")
-    $goto("../automate")
+    try {
+      await automationStore.actions.delete(automation)
+      notifications.success("Automation deleted successfully")
+      $goto("../automate")
+    } catch (error) {
+      notifications.error("Error deleting automation")
+    }
   }
 </script>
 
