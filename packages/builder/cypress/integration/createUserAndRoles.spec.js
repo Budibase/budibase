@@ -2,7 +2,7 @@ import filterTests from "../support/filterTests"
 
 
 filterTests(['smoke', 'all'], () => {
-  xcontext("Create a User and Assign Roles", () => {
+  context("Create a User and Assign Roles", () => {
     before(() => {
       cy.login()
     })

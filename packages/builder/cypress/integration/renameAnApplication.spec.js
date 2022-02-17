@@ -1,7 +1,7 @@
 import filterTests from "../support/filterTests"
 
 filterTests(['all'], () => {
-    xcontext("Rename an App", () => {
+    context("Rename an App", () => {
         beforeEach(() => {
         cy.login()
         cy.createTestApp()

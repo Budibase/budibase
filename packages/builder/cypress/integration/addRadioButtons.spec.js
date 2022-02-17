@@ -1,7 +1,7 @@
 import filterTests from "../support/filterTests"
 
 filterTests(['all'], () => {
-    xcontext("Add Radio Buttons", () => {
+    context("Add Radio Buttons", () => {
         before(() => {
         cy.login()
         cy.createTestApp()

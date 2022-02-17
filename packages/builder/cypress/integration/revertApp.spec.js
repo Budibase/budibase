@@ -1,7 +1,7 @@
 import filterTests from "../support/filterTests"
 
 filterTests(['smoke', 'all'], () => {
-    xcontext("Revert apps", () => {
+    context("Revert apps", () => {
         before(() => {
         cy.login()
         cy.createTestApp()

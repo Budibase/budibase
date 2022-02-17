@@ -1,7 +1,7 @@
 import filterTests from "../support/filterTests"
 
 filterTests(['smoke', 'all'], () => {
-  xcontext("Create a Table", () => {
+  context("Create a Table", () => {
     before(() => {
       cy.login()
       cy.createTestApp()
