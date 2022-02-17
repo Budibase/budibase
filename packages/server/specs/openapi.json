@@ -7,23 +7,29 @@
   },
   "servers": [
     {
-      "url": "http://budibase.app/api",
+      "url": "https://budibase.app/api/public/v1",
       "description": "Budibase Cloud API"
+    },
+    {
+      "url": "http://localhost:10000/api/public/v1",
+      "description": "Budibase self hosted API"
     }
   ],
   "paths": {
-    "/api/public/v1/row/{tableId}/search": {
+    "/row/{tableId}/search": {
       "post": {
         "summary": "Allows searching for rows within a table.",
-        "parameters": {
-          "name": "tableId",
-          "in": "path",
-          "required": true,
-          "description": "The ID of the table which contains the rows which are being searched for.",
-          "schema": {
-            "type": "string"
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tableId",
+            "required": true,
+            "description": "The ID of the table which contains the rows which are being searched for.",
+            "schema": {
+              "type": "string"
+            }
           }
-        },
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -33,7 +39,15 @@
                 "properties": {
                   "string": {
                     "type": "object",
-                    "description": "A map of field name to the string to search for, this will look for rows that have a value starting with the string value. The format of this must be columnName -> \"string\"."
+                    "example": {
+                      "columnName1": "value",
+                      "columnName2": "value"
+                    },
+                    "description": "A map of field name to the string to search for, this will look for rows that have a value starting with the string value.",
+                    "additionalProperties": {
+                      "type": "string",
+                      "description": "The value to search for in the column."
+                    }
                   },
                   "fuzzy": {
                     "type": "object",
