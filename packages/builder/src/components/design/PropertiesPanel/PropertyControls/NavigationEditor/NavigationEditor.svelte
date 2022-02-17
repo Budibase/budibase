@@ -15,7 +15,7 @@
   }
 </script>
 
-<ActionButton on:click={drawer.show}>Configure Links</ActionButton>
+<ActionButton on:click={drawer.show}>Configure links</ActionButton>
 <Drawer bind:this={drawer} title={"Navigation Links"}>
   <svelte:fragment slot="description">
     Configure the links in your navigation bar.

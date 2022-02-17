@@ -11,6 +11,7 @@ const arangodb = require("./arangodb")
 const rest = require("./rest")
 const googlesheets = require("./googlesheets")
 const { SourceNames } = require("../definitions/datasource")
+const environment = require("../environment")
 
 const DEFINITIONS = {
   [SourceNames.POSTGRES]: postgres.schema,
@@ -24,7 +25,6 @@ const DEFINITIONS = {
   [SourceNames.MYSQL]: mysql.schema,
   [SourceNames.ARANGODB]: arangodb.schema,
   [SourceNames.REST]: rest.schema,
-  [SourceNames.GOOGLE_SHEETS]: googlesheets.schema,
 }
 
 const INTEGRATIONS = {
@@ -39,7 +39,6 @@ const INTEGRATIONS = {
   [SourceNames.MYSQL]: mysql.integration,
   [SourceNames.ARANGODB]: arangodb.integration,
   [SourceNames.REST]: rest.integration,
-  [SourceNames.GOOGLE_SHEETS]: googlesheets.integration,
 }
 
 // optionally add oracle integration if the oracle binary can be installed
@@ -47,6 +46,11 @@ if (!(process.arch === "arm64" && process.platform === "darwin")) {
   const oracle = require("./oracle")
   DEFINITIONS[SourceNames.ORACLE] = oracle.schema
   INTEGRATIONS[SourceNames.ORACLE] = oracle.integration
+}
+
+if (environment.SELF_HOSTED) {
+  DEFINITIONS[SourceNames.GOOGLE_SHEETS] = googlesheets.schema
+  INTEGRATIONS[SourceNames.GOOGLE_SHEETS] = googlesheets.integration
 }
 
 module.exports = {

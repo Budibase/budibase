@@ -21,12 +21,12 @@
   const [email, error, touched] = createValidationStore("", emailValidator)
 
   async function createUserFlow() {
-    const res = await users.invite({ email: $email, builder, admin })
-    if (res.status) {
-      notifications.error(res.message)
-    } else {
+    try {
+      const res = await users.invite({ email: $email, builder, admin })
       notifications.success(res.message)
       analytics.captureEvent(Events.USER.INVITE, { type: selected })
+    } catch (error) {
+      notifications.error("Error inviting user")
     }
   }
 </script>

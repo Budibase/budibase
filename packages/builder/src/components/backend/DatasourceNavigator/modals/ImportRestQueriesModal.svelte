@@ -79,8 +79,8 @@
       })
 
       return true
-    } catch (err) {
-      notifications.error(`Error importing: ${err}`)
+    } catch (error) {
+      notifications.error("Error importing queries")
       return false
     }
   }
@@ -130,6 +130,3 @@
     </Tabs>
   </Layout>
 </ModalContent>
-
-<style>
-</style>

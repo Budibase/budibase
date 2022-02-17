@@ -1,5 +1,5 @@
 import { writable, get } from "svelte/store"
-import { fetchTableDefinition } from "../api"
+import { API } from "api"
 import { FieldTypes } from "../constants"
 import { routeStore } from "./routes"
 
@@ -72,8 +72,14 @@ export const createDataSourceStore = () => {
     let invalidations = [dataSourceId]
 
     // Fetch related table IDs from table schema
-    const definition = await fetchTableDefinition(dataSourceId)
-    const schema = definition?.schema
+    let schema
+    try {
+      const definition = await API.fetchTableDefinition(dataSourceId)
+      schema = definition?.schema
+    } catch (error) {
+      schema = null
+    }
+
     if (schema) {
       Object.values(schema).forEach(fieldSchema => {
         if (

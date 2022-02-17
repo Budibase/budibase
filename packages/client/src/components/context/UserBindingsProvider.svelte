@@ -1,7 +1,8 @@
 <script>
   import Provider from "./Provider.svelte"
   import { authStore } from "stores"
-  import { ActionTypes, TableNames } from "constants"
+  import { ActionTypes } from "constants"
+  import { Constants } from "@budibase/frontend-core"
 
   // Register this as a refreshable datasource so that user changes cause
   // the user object to be refreshed
@@ -9,7 +10,9 @@
     {
       type: ActionTypes.RefreshDatasource,
       callback: () => authStore.actions.fetchUser(),
-      metadata: { dataSource: { type: "table", tableId: TableNames.USERS } },
+      metadata: {
+        dataSource: { type: "table", tableId: Constants.TableNames.USERS },
+      },
     },
   ]
 </script>

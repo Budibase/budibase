@@ -20,9 +20,9 @@
     Toggle,
   } from "@budibase/bbui"
   import { onMount } from "svelte"
-  import api from "builderStore/api"
+  import { API } from "api"
   import { organisation, admin } from "stores/portal"
-  import { uuid } from "builderStore/uuid"
+  import { Helpers } from "@budibase/bbui"
   import analytics, { Events } from "analytics"
 
   const ConfigTypes = {
@@ -137,17 +137,6 @@
     providers.oidc?.config?.configs[0].clientID &&
     providers.oidc?.config?.configs[0].clientSecret
 
-  async function uploadLogo(file) {
-    let data = new FormData()
-    data.append("file", file)
-    const res = await api.post(
-      `/api/global/configs/upload/logos_oidc/${file.name}`,
-      data,
-      {}
-    )
-    return await res.json()
-  }
-
   const onFileSelected = e => {
     let fileName = e.target.files[0].name
     image = e.target.files[0]
@@ -156,17 +145,28 @@
   }
 
   async function save(docs) {
-    // only if the user has provided an image, upload it.
-    image && uploadLogo(image)
     let calls = []
+
+    // Only if the user has provided an image, upload it
+    if (image) {
+      let data = new FormData()
+      data.append("file", image)
+      calls.push(
+        API.uploadOIDCLogo({
+          name: image.name,
+          data,
+        })
+      )
+    }
+
     docs.forEach(element => {
       if (element.type === ConfigTypes.OIDC) {
-        //Add a UUID here so each config is distinguishable when it arrives at the login page
+        // Add a UUID here so each config is distinguishable when it arrives at the login page
         for (let config of element.config.configs) {
           if (!config.uuid) {
-            config.uuid = uuid()
+            config.uuid = Helpers.uuid()
           }
-          // callback urls shouldn't be included
+          // Callback urls shouldn't be included
           delete config.callbackURL
         }
         if (partialOidc) {
@@ -175,8 +175,8 @@
               `Please fill in all required ${ConfigTypes.OIDC} fields`
             )
           } else {
-            calls.push(api.post(`/api/global/configs`, element))
-            // turn the save button grey when clicked
+            calls.push(API.saveConfig(element))
+            // Turn the save button grey when clicked
             oidcSaveButtonDisabled = true
             originalOidcDoc = cloneDeep(providers.oidc)
           }
@@ -189,71 +189,73 @@
               `Please fill in all required ${ConfigTypes.Google} fields`
             )
           } else {
-            calls.push(api.post(`/api/global/configs`, element))
+            calls.push(API.saveConfig(element))
             googleSaveButtonDisabled = true
             originalGoogleDoc = cloneDeep(providers.google)
           }
         }
       }
     })
-    calls.length &&
+
+    if (calls.length) {
       Promise.all(calls)
-        .then(responses => {
-          return Promise.all(
-            responses.map(response => {
-              return response.json()
-            })
-          )
-        })
         .then(data => {
           data.forEach(res => {
             providers[res.type]._rev = res._rev
             providers[res.type]._id = res._id
           })
-          notifications.success(`Settings saved.`)
+          notifications.success(`Settings saved`)
           analytics.captureEvent(Events.SSO.SAVED)
         })
-        .catch(err => {
-          notifications.error(`Failed to update auth settings. ${err}`)
-          throw new Error(err.message)
+        .catch(() => {
+          notifications.error("Failed to update auth settings")
         })
+    }
   }
 
   onMount(async () => {
-    await organisation.init()
-    // fetch the configs for oauth
-    const googleResponse = await api.get(
-      `/api/global/configs/${ConfigTypes.Google}`
-    )
-    const googleDoc = await googleResponse.json()
+    try {
+      await organisation.init()
+    } catch (error) {
+      notifications.error("Error getting org config")
+    }
 
-    if (!googleDoc._id) {
+    // Fetch Google config
+    let googleDoc
+    try {
+      googleDoc = await API.getConfig(ConfigTypes.Google)
+    } catch (error) {
+      notifications.error("Error fetching Google OAuth config")
+    }
+    if (!googleDoc?._id) {
       providers.google = {
         type: ConfigTypes.Google,
         config: { activated: true },
       }
       originalGoogleDoc = cloneDeep(googleDoc)
     } else {
-      // default activated to true for older configs
+      // Default activated to true for older configs
       if (googleDoc.config.activated === undefined) {
         googleDoc.config.activated = true
       }
       originalGoogleDoc = cloneDeep(googleDoc)
       providers.google = googleDoc
     }
-
     googleCallbackUrl = providers?.google?.config?.callbackURL
 
-    //Get the list of user uploaded logos and push it to the dropdown options.
-    //This needs to be done before the config call so they're available when the dropdown renders
-    const res = await api.get(`/api/global/configs/logos_oidc`)
-    const configSettings = await res.json()
-
-    if (configSettings.config) {
-      const logoKeys = Object.keys(configSettings.config)
-
+    // Get the list of user uploaded logos and push it to the dropdown options.
+    // This needs to be done before the config call so they're available when
+    // the dropdown renders.
+    let oidcLogos
+    try {
+      oidcLogos = await API.getOIDCLogos()
+    } catch (error) {
+      notifications.error("Error fetching OIDC logos")
+    }
+    if (oidcLogos?.config) {
+      const logoKeys = Object.keys(oidcLogos.config)
       logoKeys.map(logoKey => {
-        const logoUrl = configSettings.config[logoKey]
+        const logoUrl = oidcLogos.config[logoKey]
         iconDropdownOptions.unshift({
           label: logoKey,
           value: logoKey,
@@ -261,11 +263,15 @@
         })
       })
     }
-    const oidcResponse = await api.get(
-      `/api/global/configs/${ConfigTypes.OIDC}`
-    )
-    const oidcDoc = await oidcResponse.json()
-    if (!oidcDoc._id) {
+
+    // Fetch OIDC config
+    let oidcDoc
+    try {
+      oidcDoc = await API.getConfig(ConfigTypes.OIDC)
+    } catch (error) {
+      notifications.error("Error fetching OIDC config")
+    }
+    if (!oidcDoc?._id) {
       providers.oidc = {
         type: ConfigTypes.OIDC,
         config: { configs: [{ activated: true }] },

@@ -2,7 +2,7 @@
   import { Table, Modal, Layout, ActionButton } from "@budibase/bbui"
   import AuthTypeRenderer from "./AuthTypeRenderer.svelte"
   import RestAuthenticationModal from "./RestAuthenticationModal.svelte"
-  import { uuid } from "builderStore/uuid"
+  import { Helpers } from "@budibase/bbui"
 
   export let configs = []
 
@@ -29,7 +29,7 @@
         return c
       })
     } else {
-      config._id = uuid()
+      config._id = Helpers.uuid()
       configs = [...configs, config]
     }
   }

@@ -31,7 +31,6 @@
         username,
         password,
       })
-
       if ($auth?.user?.forceResetPassword) {
         $goto("./reset")
       } else {
@@ -39,8 +38,7 @@
         $goto("../portal")
       }
     } catch (err) {
-      console.error(err)
-      notifications.error(err.message ? err.message : "Invalid Credentials")
+      notifications.error(err.message ? err.message : "Invalid credentials")
     }
   }
 
@@ -49,7 +47,11 @@
   }
 
   onMount(async () => {
-    await organisation.init()
+    try {
+      await organisation.init()
+    } catch (error) {
+      notifications.error("Error getting org config")
+    }
     loaded = true
   })
 </script>

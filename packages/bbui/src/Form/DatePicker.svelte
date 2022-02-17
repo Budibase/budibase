@@ -9,6 +9,7 @@
   export let disabled = false
   export let error = null
   export let enableTime = true
+  export let timeOnly = false
   export let placeholder = null
   export let appendTo = undefined
 
@@ -27,6 +28,7 @@
     {value}
     {placeholder}
     {enableTime}
+    {timeOnly}
     {appendTo}
     on:change={onChange}
   />

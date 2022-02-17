@@ -3,7 +3,7 @@
   import { tables, rows } from "stores/backend"
   import { notifications } from "@budibase/bbui"
   import RowFieldControl from "../RowFieldControl.svelte"
-  import * as api from "../api"
+  import { API } from "api"
   import { ModalContent } from "@budibase/bbui"
   import ErrorsBox from "components/common/ErrorsBox.svelte"
   import { FIELDS } from "constants/backend"
@@ -22,30 +22,30 @@
   $: tableSchema = Object.entries(table?.schema ?? {})
 
   async function saveRow() {
-    const rowResponse = await api.saveRow(
-      { ...row, tableId: table._id },
-      table._id
-    )
-
-    if (rowResponse.errors) {
-      errors = Object.entries(rowResponse.errors)
-        .map(([key, error]) => ({ dataPath: key, message: error }))
-        .flat()
+    errors = []
+    try {
+      await API.saveRow({ ...row, tableId: table._id })
+      notifications.success("Row saved successfully")
+      rows.save()
+      dispatch("updaterows")
+    } catch (error) {
+      if (error.handled) {
+        const response = error.json
+        if (response?.errors) {
+          errors = Object.entries(response.errors)
+            .map(([key, error]) => ({ dataPath: key, message: error }))
+            .flat()
+        } else if (error.status === 400 && response?.validationErrors) {
+          errors = Object.keys(response.validationErrors).map(field => ({
+            message: `${field} ${response.validationErrors[field][0]}`,
+          }))
+        }
+      } else {
+        notifications.error("Failed to save row")
+      }
       // Prevent modal closing if there were errors
       return false
-    } else if (rowResponse.status === 400 && rowResponse.validationErrors) {
-      errors = Object.keys(rowResponse.validationErrors).map(field => ({
-        message: `${field} ${rowResponse.validationErrors[field][0]}`,
-      }))
-      return false
-    } else if (rowResponse.status >= 400) {
-      errors = [{ message: rowResponse.message }]
-      return false
     }
-
-    notifications.success("Row saved successfully.")
-    rows.save(rowResponse)
-    dispatch("updaterows")
   }
 </script>
 

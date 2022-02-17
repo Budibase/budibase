@@ -8,6 +8,7 @@
     Layout,
     Body,
     Button,
+    notifications,
   } from "@budibase/bbui"
   import { store } from "builderStore"
 
@@ -21,8 +22,12 @@
     drawer.show()
   }
 
-  const save = () => {
-    store.actions.components.updateCustomStyle(tempValue)
+  const save = async () => {
+    try {
+      await store.actions.components.updateCustomStyle(tempValue)
+    } catch (error) {
+      notifications.error("Error updating custom style")
+    }
     drawer.hide()
   }
 </script>

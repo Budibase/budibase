@@ -1,5 +1,12 @@
 <script>
-  import { ModalContent, Tabs, Tab, TextArea, Label } from "@budibase/bbui"
+  import {
+    ModalContent,
+    Tabs,
+    Tab,
+    TextArea,
+    Label,
+    notifications,
+  } from "@budibase/bbui"
   import { automationStore } from "builderStore"
   import AutomationBlockSetup from "../../SetupPanel/AutomationBlockSetup.svelte"
   import { cloneDeep } from "lodash/fp"
@@ -37,6 +44,17 @@
       failedParse = "Invalid JSON"
     }
   }
+
+  const testAutomation = async () => {
+    try {
+      await automationStore.actions.test(
+        $automationStore.selectedAutomation?.automation,
+        testData
+      )
+    } catch (error) {
+      notifications.error("Error testing notification")
+    }
+  }
 </script>
 
 <ModalContent
@@ -44,12 +62,7 @@
   confirmText="Test"
   showConfirmButton={true}
   disabled={isError}
-  onConfirm={() => {
-    automationStore.actions.test(
-      $automationStore.selectedAutomation?.automation,
-      testData
-    )
-  }}
+  onConfirm={testAutomation}
   cancelText="Cancel"
 >
   <Tabs selected="Form" quiet
