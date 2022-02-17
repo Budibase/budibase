@@ -1,7 +1,7 @@
 import filterTests from "../support/filterTests"
 
 filterTests(['smoke', 'all'], () => {
-  xcontext("Query Level Transformers", () => {
+  context("Query Level Transformers", () => {
     before(() => {
       cy.login()
       cy.deleteApp("Cypress Tests")

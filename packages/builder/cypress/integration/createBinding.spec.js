@@ -1,7 +1,7 @@
 import filterTests from "../support/filterTests"
 
 filterTests(['smoke', 'all'], () => {
-  xcontext("Create Bindings", () => {
+  context("Create Bindings", () => {
     before(() => {
       cy.login()
       cy.createTestApp()

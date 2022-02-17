@@ -1,7 +1,7 @@
 import filterTests from "../../support/filterTests"
 
 filterTests(['all'], () => {
-    xcontext("MySQL Datasource Testing", () => {
+    context("MySQL Datasource Testing", () => {
         if (Cypress.env("TEST_ENV")) {
         
             before(() => {

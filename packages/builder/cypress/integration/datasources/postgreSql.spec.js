@@ -1,7 +1,7 @@
 import filterTests from "../../support/filterTests"
 
 filterTests(['all'], () => {
-    xcontext("PostgreSQL Datasource Testing", () => {
+    context("PostgreSQL Datasource Testing", () => {
         if (Cypress.env("TEST_ENV")) {
         
             before(() => {

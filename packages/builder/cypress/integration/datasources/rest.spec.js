@@ -1,7 +1,7 @@
 import filterTests from "../../support/filterTests"
 
 filterTests(['smoke', 'all'], () => {
-    xcontext("REST Datasource Testing", () => {
+    context("REST Datasource Testing", () => {
         before(() => {
           cy.login()
           cy.createTestApp()
