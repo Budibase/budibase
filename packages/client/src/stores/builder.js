@@ -1,7 +1,7 @@
 import { writable, derived, get } from "svelte/store"
 import Manifest from "manifest.json"
 import { findComponentById, findComponentPathById } from "../utils/components"
-import { pingEndUser } from "../api"
+import { API } from "api"
 
 const dispatchEvent = (type, data = {}) => {
   window.parent.postMessage({ type, data })
@@ -65,8 +65,12 @@ const createBuilderStore = () => {
     notifyLoaded: () => {
       dispatchEvent("preview-loaded")
     },
-    pingEndUser: () => {
-      pingEndUser()
+    pingEndUser: async () => {
+      try {
+        await API.pingEndUser()
+      } catch (error) {
+        // Do nothing
+      }
     },
     setSelectedPath: path => {
       writableStore.update(state => ({ ...state, selectedPath: path }))

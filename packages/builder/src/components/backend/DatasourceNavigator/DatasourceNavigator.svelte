@@ -10,6 +10,7 @@
   import TableNavigator from "components/backend/TableNavigator/TableNavigator.svelte"
   import { customQueryIconText, customQueryIconColor } from "helpers/data/utils"
   import ICONS from "./icons"
+  import { notifications } from "@budibase/bbui"
 
   let openDataSources = []
   $: enrichedDataSources = Array.isArray($datasources.list)
@@ -63,9 +64,13 @@
     }
   }
 
-  onMount(() => {
-    datasources.fetch()
-    queries.fetch()
+  onMount(async () => {
+    try {
+      await datasources.fetch()
+      await queries.fetch()
+    } catch (error) {
+      notifications.error("Error fetching datasources and queries")
+    }
   })
 
   const containsActiveEntity = datasource => {

@@ -1,5 +1,5 @@
 <script>
-  import { ModalContent, Body, Input } from "@budibase/bbui"
+  import { ModalContent, Body, Input, notifications } from "@budibase/bbui"
   import { tables, datasources } from "stores/backend"
   import { goto } from "@roxi/routify"
 
@@ -29,10 +29,14 @@
   }
 
   async function saveTable() {
-    submitted = true
-    const table = await tables.save(buildDefaultTable(name, datasource._id))
-    await datasources.fetch()
-    $goto(`../../table/${table._id}`)
+    try {
+      submitted = true
+      const table = await tables.save(buildDefaultTable(name, datasource._id))
+      await datasources.fetch()
+      $goto(`../../table/${table._id}`)
+    } catch (error) {
+      notifications.error("Error saving table")
+    }
   }
 </script>
 

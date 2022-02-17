@@ -2,8 +2,7 @@
   import { getContext } from "svelte"
   import { ProgressCircle, Pagination } from "@budibase/bbui"
   import Placeholder from "./Placeholder.svelte"
-  import { fetchData } from "utils/fetch/fetchData.js"
-  import { buildLuceneQuery } from "builder/src/helpers/lucene"
+  import { fetchData, LuceneUtils } from "@budibase/frontend-core"
 
   export let dataSource
   export let filter
@@ -12,13 +11,13 @@
   export let limit
   export let paginate
 
-  const { styleable, Provider, ActionTypes } = getContext("sdk")
+  const { styleable, Provider, ActionTypes, API } = getContext("sdk")
   const component = getContext("component")
 
   // We need to manage our lucene query manually as we want to allow components
   // to extend it
   let queryExtensions = {}
-  $: defaultQuery = buildLuceneQuery(filter)
+  $: defaultQuery = LuceneUtils.buildLuceneQuery(filter)
   $: query = extendQuery(defaultQuery, queryExtensions)
 
   // Keep our data fetch instance up to date
@@ -83,12 +82,16 @@
   }
 
   const createFetch = datasource => {
-    return fetchData(datasource, {
-      query,
-      sortColumn,
-      sortOrder,
-      limit,
-      paginate,
+    return fetchData({
+      API,
+      datasource,
+      options: {
+        query,
+        sortColumn,
+        sortOrder,
+        limit,
+        paginate,
+      },
     })
   }
 

@@ -126,13 +126,15 @@
   </Layout>
   <Layout noPadding>
     {#if selectedActionComponent}
-      <div class="selected-action-container">
-        <svelte:component
-          this={selectedActionComponent}
-          parameters={selectedAction.parameters}
-          bindings={allBindings}
-        />
-      </div>
+      {#key selectedAction.id}
+        <div class="selected-action-container">
+          <svelte:component
+            this={selectedActionComponent}
+            parameters={selectedAction.parameters}
+            bindings={allBindings}
+          />
+        </div>
+      {/key}
     {/if}
   </Layout>
 </DrawerContent>

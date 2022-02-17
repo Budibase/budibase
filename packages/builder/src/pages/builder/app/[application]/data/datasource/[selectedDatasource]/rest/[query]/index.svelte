@@ -59,6 +59,9 @@
   $: schemaReadOnly = !responseSuccess
   $: variablesReadOnly = !responseSuccess
   $: showVariablesTab = shouldShowVariables(dynamicVariables, variablesReadOnly)
+  $: hasSchema =
+    Object.keys(schema || {}).length !== 0 ||
+    Object.keys(query?.schema || {}).length !== 0
 
   function getSelectedQuery() {
     return cloneDeep(
@@ -112,14 +115,13 @@
       const { _id } = await queries.save(toSave.datasourceId, toSave)
       saveId = _id
       query = getSelectedQuery()
-      notifications.success(`Request saved successfully.`)
-
+      notifications.success(`Request saved successfully`)
       if (dynamicVariables) {
         datasource.config.dynamicVariables = rebuildVariables(saveId)
         datasource = await datasources.save(datasource)
       }
     } catch (err) {
-      notifications.error(`Error saving query. ${err.message}`)
+      notifications.error(`Error saving query`)
     }
   }
 
@@ -127,14 +129,14 @@
     try {
       response = await queries.preview(buildQuery(query))
       if (response.rows.length === 0) {
-        notifications.info("Request did not return any data.")
+        notifications.info("Request did not return any data")
       } else {
         response.info = response.info || { code: 200 }
         schema = response.schema
-        notifications.success("Request sent successfully.")
+        notifications.success("Request sent successfully")
       }
-    } catch (err) {
-      notifications.error(err)
+    } catch (error) {
+      notifications.error("Error running query")
     }
   }
 
@@ -226,10 +228,24 @@
     )
   }
 
+  const updateFlag = async (flag, value) => {
+    try {
+      await flags.updateFlag(flag, value)
+    } catch (error) {
+      notifications.error("Error updating flag")
+    }
+  }
+
   onMount(async () => {
     query = getSelectedQuery()
-    // clear any unsaved changes to the datasource
-    await datasources.init()
+
+    try {
+      // Clear any unsaved changes to the datasource
+      await datasources.init()
+    } catch (error) {
+      notifications.error("Error getting datasources")
+    }
+
     datasource = $datasources.list.find(ds => ds._id === query?.datasourceId)
     const datasourceUrl = datasource?.config.url
     const qs = query?.fields.queryString
@@ -294,6 +310,7 @@
             bind:value={query.name}
             defaultValue="Untitled"
             on:change={() => (query.flags.urlName = false)}
+            on:save={saveQuery}
           />
           <div class="access">
             <Label>Access level</Label>
@@ -313,7 +330,15 @@
           <div class="url">
             <Input bind:value={url} placeholder="http://www.api.com/endpoint" />
           </div>
-          <Button cta disabled={!url} on:click={runQuery}>Send</Button>
+          <Button primary disabled={!url} on:click={runQuery}>Send</Button>
+          <Button
+            disabled={!query.name}
+            cta
+            on:click={saveQuery}
+            tooltip={!hasSchema
+              ? "Saving a query before sending will mean no schema is generated"
+              : null}>Save</Button
+          >
         </div>
         <Tabs selected="Bindings" quiet noPadding noHorizPadding onTop>
           <Tab title="Bindings">
@@ -393,8 +418,7 @@
                     window.open(
                       "https://docs.budibase.com/building-apps/data/transformers"
                     )}
-                  on:change={() =>
-                    flags.updateFlag("queryTransformerBanner", true)}
+                  on:change={() => updateFlag("queryTransformerBanner", true)}
                 >
                   Add a JavaScript function to transform the query result.
                 </Banner>
@@ -527,9 +551,6 @@
                     >{response?.info.size}</span
                   >
                 </Label>
-                <Button disabled={!responseSuccess} cta on:click={saveQuery}
-                  >Save query</Button
-                >
               </div>
             {/if}
           </Tabs>
