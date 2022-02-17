@@ -11,7 +11,7 @@
     "rollup": "rollup -c -w",
     "cy:setup": "ts-node ./cypress/ts/setup.ts",
     "cy:setup:ci": "node ./cypress/setup.js",
-    "cy:run": "cypress run --headed --browser chrome",
+    "cy:run": "xvfb-run cypress run --headed --browser chrome",
     "cy:open": "cypress open",
     "cy:run:ci": "cypress run --record",
     "cy:test": "start-server-and-test cy:setup http://localhost:10001/builder cy:run",
