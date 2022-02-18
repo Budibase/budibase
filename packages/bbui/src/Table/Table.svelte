@@ -107,7 +107,7 @@
     if (!rowCount || !visibleRows) {
       return ""
     }
-    return `height: ${headerHeight + visibleRows * (rowHeight + 1)}px;`
+    return `height: ${headerHeight + visibleRows * rowHeight}px;`
   }
 
   const getGridStyle = (fields, schema, showEditColumn) => {
@@ -458,6 +458,7 @@
   }
   .spectrum-Table-row > :last-child {
     border-right: var(--table-border);
+    padding-right: var(--cell-padding);
   }
 
   /* Table cells */
