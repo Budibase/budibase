@@ -86,11 +86,13 @@
       if (UnsortableTypes.includes(schema[columnName].type)) {
         newSchema[columnName].sortable = false
       }
-      if (field?.displayName) {
-        newSchema[columnName].displayName = field?.displayName
-      }
-      if (field?.width) {
-        newSchema[columnName].width = field?.width
+
+      // Add additional settings like width etc
+      if (typeof field === "object") {
+        newSchema[columnName] = {
+          ...newSchema[columnName],
+          ...field,
+        }
       }
     })
     return newSchema
