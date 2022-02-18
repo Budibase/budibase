@@ -20,7 +20,7 @@ exports.rowId = {
 
 exports.appId = {
   in: "header",
-  name: "appId",
+  name: "x-budibase-app-id",
   required: true,
   description: "The ID of the app which this request is targeting.",
   schema: {
