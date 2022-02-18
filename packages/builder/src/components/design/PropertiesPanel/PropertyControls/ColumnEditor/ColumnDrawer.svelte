@@ -15,6 +15,7 @@
 
   export let columns = []
   export let options = []
+  export let schema = {}
 
   const flipDurationMs = 150
   let dragDisabled = true
@@ -61,11 +62,22 @@
     dragDisabled = true
   }
 
+  const addAllColumns = () => {
+    let newColumns = []
+    options.forEach(field => {
+      const fieldSchema = schema[field]
+      if (!fieldSchema?.autocolumn) {
+        newColumns.push({
+          name: field,
+          displayName: field,
+        })
+      }
+    })
+    columns = newColumns
+  }
+
   const reset = () => {
-    columns = options.map(col => ({
-      name: col,
-      displayName: col,
-    }))
+    columns = []
   }
 </script>
 
@@ -78,6 +90,7 @@
             <div />
             <Label size="L">Column</Label>
             <Label size="L">Label</Label>
+            <Label size="L">Width</Label>
             <div />
           </div>
           <div
@@ -108,6 +121,7 @@
                   on:change={e => (column.displayName = e.detail)}
                 />
                 <Input bind:value={column.displayName} placeholder="Label" />
+                <Input bind:value={column.width} placeholder="Auto" />
                 <Icon
                   name="Close"
                   hoverable
@@ -121,19 +135,25 @@
         </Layout>
       {:else}
         <div class="column">
-          <div />
-          <Body size="S">Add the first column to your table.</Body>
+          <div class="wide">
+            <Body size="S">
+              By default, all table columns will automatically be shown.
+              <br />
+              You can manually control which columns are included in your table,
+              and their widths, by adding them below.
+            </Body>
+          </div>
         </div>
       {/if}
-      <div class="columns">
-        <div class="column">
-          <div />
-          <div class="buttons">
-            <Button secondary icon="Add" on:click={addColumn}>
-              Add column
-            </Button>
+      <div class="column">
+        <div class="buttons wide">
+          <Button secondary icon="Add" on:click={addColumn}>Add column</Button>
+          <Button secondary quiet on:click={addAllColumns}>
+            Add all columns
+          </Button>
+          {#if columns?.length}
             <Button secondary quiet on:click={reset}>Reset columns</Button>
-          </div>
+          {/if}
         </div>
       </div>
     </Layout>
@@ -143,7 +163,7 @@
 <style>
   .container {
     width: 100%;
-    max-width: 600px;
+    max-width: 800px;
     margin: 0 auto;
   }
   .columns {
@@ -156,7 +176,7 @@
   .column {
     gap: var(--spacing-l);
     display: grid;
-    grid-template-columns: 20px 1fr 1fr 20px;
+    grid-template-columns: 20px 1fr 1fr 1fr 20px;
     align-items: center;
     border-radius: var(--border-radius-s);
     transition: background-color ease-in-out 130ms;
@@ -167,6 +187,9 @@
   .handle {
     display: grid;
     place-items: center;
+  }
+  .wide {
+    grid-column: 2 / -1;
   }
   .buttons {
     display: flex;
