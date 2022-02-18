@@ -2,8 +2,17 @@ exports.tableId = {
   in: "path",
   name: "tableId",
   required: true,
-  description:
-    "The ID of the table which contains the rows which are being searched for.",
+  description: "The ID of the table which this request is targeting.",
+  schema: {
+    type: "string",
+  },
+}
+
+exports.rowId = {
+  in: "path",
+  name: "rowId",
+  required: true,
+  description: "The ID of the row which this request is targeting.",
   schema: {
     type: "string",
   },

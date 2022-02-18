@@ -14,20 +14,17 @@ components:
       in: path
       name: tableId
       required: true
-      description: The ID of the table which contains the rows which are being searched for.
+      description: The ID of the table which this request is targeting.
+      schema:
+        type: string
+    rowId:
+      in: path
+      name: rowId
+      required: true
+      description: The ID of the row which this request is targeting.
       schema:
         type: string
   examples:
-    row:
-      value:
-        _id: ro_ta_5b1649e42a5b41dea4ef7742a36a7a70_e6dc7e38cf1343b2b56760265201cda4
-        type: row
-        tableId: ta_5b1649e42a5b41dea4ef7742a36a7a70
-        name: Mike
-        age: 30
-        relationship:
-          - primaryDisplay: Joe
-            _id: ro_ta_...
     table:
       value:
         _id: ta_5b1649e42a5b41dea4ef7742a36a7a70
@@ -45,10 +42,44 @@ components:
             tableId: ta_...
             fieldName: relatedColumn
             relationshipType: many-to-many
+    row:
+      value:
+        _id: ro_ta_5b1649e42a5b41dea4ef7742a36a7a70_e6dc7e38cf1343b2b56760265201cda4
+        type: row
+        tableId: ta_5b1649e42a5b41dea4ef7742a36a7a70
+        name: Mike
+        age: 30
+        relationship:
+          - primaryDisplay: Joe
+            _id: ro_ta_...
+    search:
+      value:
+        rows:
+          - _id: ro_ta_5b1649e42a5b41dea4ef7742a36a7a70_e6dc7e38cf1343b2b56760265201cda4
+            type: row
+            tableId: ta_5b1649e42a5b41dea4ef7742a36a7a70
+            name: Mike
+            age: 30
+            relationship:
+              - primaryDisplay: Joe
+                _id: ro_ta_...
+        hasNextPage: true
+        bookmark: 10
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-budibase-api-key
+      description: Your individual API key, this will provide access based on the
+        configured RBAC settings of your user.
+security:
+  - ApiKeyAuth: []
 paths:
   "/tables/{tableId}/rows/search":
     post:
-      summary: Allows searching for rows within a table.
+      summary: Used to search for rows within a table.
+      tags:
+        - rows
       parameters:
         - $ref: "#/components/parameters/tableId"
       requestBody:
@@ -148,22 +179,61 @@ paths:
                     type: array
                     items:
                       type: object
-                      example:
-                        $ref: "#/components/examples/row"
                   bookmark:
                     oneOf:
                       - type: string
                       - type: integer
-                    description: If pagination in use, this should be provided
+                    description: If pagination in use, this should be provided.
                   hasNextPage:
                     description: If pagination in use, this will determine if there is another page
                       to fetch.
                     type: boolean
+                examples:
+                  search:
+                    - "#/components/examples/search"
   "/tables/{tableId}/rows":
     post:
-      summary: Allows creating a row within a specified table.
+      summary: Creates a new row within a specified table.
+      tags:
+        - rows
       parameters:
         - $ref: "#/components/parameters/tableId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              description: The contents of the row which is to be created, the keys of
+              type: object
+              example:
+                $ref: "#/components/examples/row"
+              additionalProperties:
+                oneOf:
+                  - type: string
+                  - type: object
+                  - type: integer
+                  - type: array
+                  - type: boolean
+      responses:
+        "200":
+          description: Returns the created row, including the ID which has been generated
+            for it. This can be found in the Budibase portal, viewed under the
+            developer information.
+          content:
+            application/json:
+              schema:
+                type: object
+              examples:
+                row:
+                  $ref: "#/components/examples/row"
+  "/tables/{tableId}/rows/{rowId}":
+    put:
+      summary: Update a single row within a specified table.
+      tags:
+        - rows
+      parameters:
+        - $ref: "#/components/parameters/tableId"
+        - $ref: "#/components/parameters/rowId"
       responses:
         "200":
           description: Returns the created row, including the ID which has been generated
@@ -172,4 +242,58 @@ paths:
             application/json:
               schema:
                 type: object
+              examples:
+                row:
+                  $ref: "#/components/examples/row"
+    delete:
+      summary: Delete a single row from the specified table.
+      tags:
+        - rows
+      parameters:
+        - $ref: "#/components/parameters/tableId"
+        - $ref: "#/components/parameters/rowId"
+      responses:
+        "200":
+          description: Returns the deleted row, including the ID which has been generated
+            for it.
+          content:
+            application/json:
+              schema:
+                type: object
+              examples:
+                row:
+                  $ref: "#/components/examples/row"
+    get:
+      summary: Get a single row from the specified table.
+      tags:
+        - rows
+      parameters:
+        - $ref: "#/components/parameters/tableId"
+        - $ref: "#/components/parameters/rowId"
+      responses:
+        "200":
+          description: Returns the retrieved row.
+          content:
+            application/json:
+              schema:
+                type: object
+              examples:
+                row:
+                  $ref: "#/components/examples/row"
+  /tables:
+    post:
+      summary: Create a new table
+      tags:
+        - tables
+      responses:
+        "200":
+          description: Returns the created table, including the ID which has been
+            generated for it.
+          content:
+            application/json:
+              schema:
+                type: object
+              examples:
+                row:
+                  $ref: "#/components/examples/table"
 tags: []

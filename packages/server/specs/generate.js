@@ -1,8 +1,9 @@
 const swaggerJsdoc = require("swagger-jsdoc")
 const { join } = require("path")
 const { writeFileSync } = require("fs")
-const { row, table } = require("./examples")
-const { tableId } = require("./parameters")
+const examples = require("./examples")
+const parameters = require("./parameters")
+const security = require("./security")
 
 const VARIABLES = {}
 
@@ -26,13 +27,20 @@ const options = {
     ],
     components: {
       parameters: {
-        tableId: tableId,
+        ...parameters,
       },
       examples: {
-        row: row,
-        table: table,
+        ...examples,
+      },
+      securitySchemes: {
+        ...security,
       },
     },
+    security: [
+      {
+        ApiKeyAuth: [],
+      },
+    ],
   },
   format: ".json",
   apis: [join(__dirname, "..", "src", "api", "routes", "public", "*.js")],

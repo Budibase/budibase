@@ -1,3 +1,17 @@
+const row = {
+  _id: "ro_ta_5b1649e42a5b41dea4ef7742a36a7a70_e6dc7e38cf1343b2b56760265201cda4",
+  type: "row",
+  tableId: "ta_5b1649e42a5b41dea4ef7742a36a7a70",
+  name: "Mike",
+  age: 30,
+  relationship: [
+    {
+      primaryDisplay: "Joe",
+      _id: "ro_ta_...",
+    },
+  ],
+}
+
 exports.table = {
   value: {
     _id: "ta_5b1649e42a5b41dea4ef7742a36a7a70",
@@ -23,17 +37,13 @@ exports.table = {
 }
 
 exports.row = {
+  value: row,
+}
+
+exports.search = {
   value: {
-    _id: "ro_ta_5b1649e42a5b41dea4ef7742a36a7a70_e6dc7e38cf1343b2b56760265201cda4",
-    type: "row",
-    tableId: "ta_5b1649e42a5b41dea4ef7742a36a7a70",
-    name: "Mike",
-    age: 30,
-    relationship: [
-      {
-        primaryDisplay: "Joe",
-        _id: "ro_ta_...",
-      },
-    ],
+    rows: [row],
+    hasNextPage: true,
+    bookmark: 10,
   },
 }

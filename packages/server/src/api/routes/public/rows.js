@@ -1,5 +1,5 @@
 const Router = require("@koa/router")
-const controller = require("../../controllers/public")
+const controller = require("../../controllers/public/rows")
 
 const router = Router()
 
@@ -7,7 +7,9 @@ const router = Router()
  * @openapi
  * /tables/{tableId}/rows/search:
  *   post:
- *     summary: Allows searching for rows within a table.
+ *     summary: Used to search for rows within a table.
+ *     tags:
+ *       - rows
  *     parameters:
  *       - $ref: '#/components/parameters/tableId'
  *     requestBody:
@@ -100,16 +102,17 @@ const router = Router()
  *                   type: array
  *                   items:
  *                     type: object
- *                     example:
- *                       $ref: '#/components/examples/row'
  *                 bookmark:
  *                   oneOf:
  *                     - type: string
  *                     - type: integer
- *                   description: If pagination in use, this should be provided
+ *                   description: If pagination in use, this should be provided.
  *                 hasNextPage:
  *                   description: If pagination in use, this will determine if there is another page to fetch.
  *                   type: boolean
+ *               examples:
+ *                 search:
+ *                   - '#/components/examples/search'
  */
 router.post("/tables/:tableId/rows/search", controller.search)
 
@@ -117,9 +120,51 @@ router.post("/tables/:tableId/rows/search", controller.search)
  * @openapi
  * /tables/{tableId}/rows:
  *   post:
- *     summary: Allows creating a row within a specified table.
+ *     summary: Creates a new row within a specified table.
+ *     tags:
+ *       - rows
  *     parameters:
  *       - $ref: '#/components/parameters/tableId'
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             description: The contents of the row which is to be created, the keys of
+ *             type: object
+ *             example:
+ *               $ref: '#/components/examples/row'
+ *             additionalProperties:
+ *               oneOf:
+ *                 - type: string
+ *                 - type: object
+ *                 - type: integer
+ *                 - type: array
+ *                 - type: boolean
+ *     responses:
+ *       200:
+ *         description: Returns the created row, including the ID which has been generated for it.
+ *           This can be found in the Budibase portal, viewed under the developer information.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *             examples:
+ *               row:
+ *                 $ref: '#/components/examples/row'
+ */
+router.post("/tables/:tableId/rows", controller.create)
+
+/**
+ * @openapi
+ * /tables/{tableId}/rows/{rowId}:
+ *   put:
+ *     summary: Update a single row within a specified table.
+ *     tags:
+ *       - rows
+ *     parameters:
+ *       - $ref: '#/components/parameters/tableId'
+ *       - $ref: '#/components/parameters/rowId'
  *     responses:
  *       200:
  *         description: Returns the created row, including the ID which has been generated for it.
@@ -127,13 +172,56 @@ router.post("/tables/:tableId/rows/search", controller.search)
  *           application/json:
  *             schema:
  *               type: object
+ *             examples:
+ *               row:
+ *                 $ref: '#/components/examples/row'
  */
-router.post("/tables/:tableId/rows", controller.create)
-
 router.put("/tables/:tableId/rows/:rowId", controller.update)
 
+/**
+ * @openapi
+ * /tables/{tableId}/rows/{rowId}:
+ *   delete:
+ *     summary: Delete a single row from the specified table.
+ *     tags:
+ *       - rows
+ *     parameters:
+ *       - $ref: '#/components/parameters/tableId'
+ *       - $ref: '#/components/parameters/rowId'
+ *     responses:
+ *       200:
+ *         description: Returns the deleted row, including the ID which has been generated for it.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *             examples:
+ *               row:
+ *                 $ref: '#/components/examples/row'
+ */
 router.delete("/tables/:tableId/rows/:rowId", controller.delete)
 
+/**
+ * @openapi
+ * /tables/{tableId}/rows/{rowId}:
+ *   get:
+ *     summary: Get a single row from the specified table.
+ *     tags:
+ *       - rows
+ *     parameters:
+ *       - $ref: '#/components/parameters/tableId'
+ *       - $ref: '#/components/parameters/rowId'
+ *     responses:
+ *       200:
+ *         description: Returns the retrieved row.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *             examples:
+ *               row:
+ *                 $ref: '#/components/examples/row'
+ */
 router.get("/tables/:tableId/rows/:rowId", controller.singleRead)
 
 module.exports = router
