@@ -87,6 +87,9 @@
       if (field?.displayName) {
         newSchema[columnName].displayName = field?.displayName
       }
+      if (field?.width) {
+        newSchema[columnName].width = field?.width
+      }
     })
     return newSchema
   }
@@ -125,6 +128,7 @@
     allowEditColumns={false}
     showAutoColumns={true}
     disableSorting
+    autoSortColumns={!columns.length}
     on:sort={onSort}
     on:click={onClick}
   >
