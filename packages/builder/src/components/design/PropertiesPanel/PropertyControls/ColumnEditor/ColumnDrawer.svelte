@@ -8,10 +8,12 @@
     Select,
     Label,
     Body,
+    ColorPicker,
   } from "@budibase/bbui"
   import { flip } from "svelte/animate"
   import { dndzone } from "svelte-dnd-action"
   import { generate } from "shortid"
+  import { store } from "builderStore"
 
   export let columns = []
   export let options = []
@@ -91,6 +93,14 @@
             <Label size="L">Column</Label>
             <Label size="L">Label</Label>
             <Label size="L">Width</Label>
+            <Label size="L">Alignment</Label>
+            <Label size="L">Format</Label>
+            <div class="center">
+              <Label size="L">Background</Label>
+            </div>
+            <div class="center">
+              <Label size="L">Text color</Label>
+            </div>
             <div />
           </div>
           <div
@@ -122,6 +132,32 @@
                 />
                 <Input bind:value={column.displayName} placeholder="Label" />
                 <Input bind:value={column.width} placeholder="Auto" />
+                <Select
+                  bind:value={column.align}
+                  options={["Left", "Center", "Right"]}
+                  placeholder="Default"
+                />
+                <Select
+                  bind:value={column.format}
+                  options={["Left"]}
+                  placeholder="Default"
+                />
+                <div class="center">
+                  <ColorPicker
+                    value={column.background}
+                    on:change={e => (column.background = e.detail)}
+                    alignRight
+                    spectrumTheme={$store.theme}
+                  />
+                </div>
+                <div class="center">
+                  <ColorPicker
+                    value={column.color}
+                    on:change={e => (column.color = e.detail)}
+                    alignRight
+                    spectrumTheme={$store.theme}
+                  />
+                </div>
                 <Icon
                   name="Close"
                   hoverable
@@ -140,7 +176,7 @@
               By default, all table columns will automatically be shown.
               <br />
               You can manually control which columns are included in your table,
-              and their widths, by adding them below.
+              and their appearance, by adding them below.
             </Body>
           </div>
         </div>
@@ -163,7 +199,7 @@
 <style>
   .container {
     width: 100%;
-    max-width: 800px;
+    max-width: 1200px;
     margin: 0 auto;
   }
   .columns {
@@ -176,7 +212,7 @@
   .column {
     gap: var(--spacing-l);
     display: grid;
-    grid-template-columns: 20px 1fr 1fr 1fr 20px;
+    grid-template-columns: 20px 1fr 1fr 1fr 1fr 1fr 72px 72px 20px;
     align-items: center;
     border-radius: var(--border-radius-s);
     transition: background-color ease-in-out 130ms;
@@ -190,6 +226,10 @@
   }
   .wide {
     grid-column: 2 / -1;
+  }
+  .center {
+    display: grid;
+    place-items: center;
   }
   .buttons {
     display: flex;
