@@ -73,6 +73,7 @@
         order: 0,
         sortable: false,
         divider: true,
+        width: "auto",
       }
     }
 
