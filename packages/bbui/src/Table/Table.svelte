@@ -31,6 +31,8 @@
   export let autoSortColumns = true
   export let compact = false
 
+  rowCount = 5
+
   const dispatch = createEventDispatcher()
 
   // Config
@@ -356,10 +358,10 @@
 <style>
   /* Wrapper */
   .wrapper {
-    background-color: var(--spectrum-alias-background-color-secondary);
-    overflow: hidden;
     position: relative;
     z-index: 0;
+    overflow: auto;
+    background-color: var(--table-bg);
     --table-bg: var(--spectrum-global-color-gray-50);
     --table-border: 1px solid var(--spectrum-alias-border-color-mid);
     --cell-padding: 20px;
@@ -376,9 +378,7 @@
   /* Table */
   .spectrum-Table {
     width: 100%;
-    overflow: auto;
     border-radius: 0;
-    background-color: var(--table-bg);
     display: grid;
   }
 
