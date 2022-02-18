@@ -2,22 +2,52 @@ const Router = require("@koa/router")
 const controller = require("../../controllers/public/tables")
 
 const router = Router()
+
+/**
+ * @openapi
+ * /tables/search:
+ *   post:
+ *     summary: Search internal and external tables based on their name.
+ *     parameters:
+ *       - $ref: '#/components/parameters/appId'
+ *     tags:
+ *       - tables
+ *     requestBody:
+ *
+ *     responses:
+ *       200:
+ *         description: Returns the found tables, based on the search parameters.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *             examples:
+ *               tables:
+ *                 $ref: '#/components/examples/tables'
+ */
+router.post("/tables/search", controller.search)
+
 /**
  * @openapi
  * /tables:
  *   post:
- *     summary: Create a new table
+ *     summary: Create a new table.
+ *     parameters:
+ *       - $ref: '#/components/parameters/appId'
  *     tags:
  *       - tables
  *     responses:
  *       200:
- *         description: Returns the created table, including the ID which has been generated for it.
+ *         description: Returns the created table, including the ID which has been generated for it. This can be
+ *           internal or external data sources.
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *             examples:
- *               row:
+ *               table:
  *                 $ref: '#/components/examples/table'
  */
 router.post("/tables", controller.create)
@@ -26,21 +56,21 @@ router.post("/tables", controller.create)
  * @openapi
  * /tables/:tableId:
  *   put:
- *     summary: Update a single row within a specified table.
+ *     summary: Update the specified table. This can be for internal or external tables.
  *     tags:
  *       - tables
  *     parameters:
  *       - $ref: '#/components/parameters/tableId'
- *       - $ref: '#/components/parameters/rowId'
+ *       - $ref: '#/components/parameters/appId'
  *     responses:
  *       200:
- *         description: Returns the created row, including the ID which has been generated for it.
+ *         description: Returns the updated table.
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *             examples:
- *               row:
+ *               table:
  *                 $ref: '#/components/examples/row'
  */
 router.put("/tables/:tableId", controller.update)
@@ -49,68 +79,45 @@ router.put("/tables/:tableId", controller.update)
  * @openapi
  * /tables:
  *   get:
- *     summary: Update a single row within a specified table.
+ *     summary: Get all the tables, internal and external within an app.
  *     tags:
  *       - tables
  *     parameters:
  *       - $ref: '#/components/parameters/tableId'
- *       - $ref: '#/components/parameters/rowId'
+ *       - $ref: '#/components/parameters/appId'
  *     responses:
  *       200:
- *         description: Returns the created row, including the ID which has been generated for it.
+ *         description: Returns all of the tables which were found.
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *             examples:
- *               row:
+ *               table:
  *                 $ref: '#/components/examples/row'
  */
-router.get("/tables", controller.getAllTables)
+router.get("/tables", controller.singleRead)
 
 /**
  * @openapi
- * /tables/{tableId}/rows/{rowId}:
- *   put:
- *     summary: Update a single row within a specified table.
+ * /tables/{tableId}:
+ *   delete:
+ *     summary: Delete a single table and all of its data.
  *     tags:
- *       - rows
+ *       - tables
  *     parameters:
  *       - $ref: '#/components/parameters/tableId'
- *       - $ref: '#/components/parameters/rowId'
+ *       - $ref: '#/components/parameters/appId'
  *     responses:
  *       200:
- *         description: Returns the created row, including the ID which has been generated for it.
+ *         description: Returns the deleted table.
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *             examples:
- *               row:
- *                 $ref: '#/components/examples/row'
- */
-router.get("/tables/:tableId", controller.getSingleTable)
-
-/**
- * @openapi
- * /tables/{tableId}/rows/{rowId}:
- *   put:
- *     summary: Update a single row within a specified table.
- *     tags:
- *       - rows
- *     parameters:
- *       - $ref: '#/components/parameters/tableId'
- *       - $ref: '#/components/parameters/rowId'
- *     responses:
- *       200:
- *         description: Returns the created row, including the ID which has been generated for it.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *             examples:
- *               row:
- *                 $ref: '#/components/examples/row'
+ *               table:
+ *                 $ref: '#/components/examples/table'
  */
 router.delete("/tables/:tableId", controller.delete)
 

@@ -17,3 +17,13 @@ exports.rowId = {
     type: "string",
   },
 }
+
+exports.appId = {
+  in: "header",
+  name: "appId",
+  required: true,
+  description: "The ID of the app which this request is targeting.",
+  schema: {
+    type: "string",
+  },
+}

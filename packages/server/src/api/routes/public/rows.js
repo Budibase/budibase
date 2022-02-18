@@ -12,6 +12,7 @@ const router = Router()
  *       - rows
  *     parameters:
  *       - $ref: '#/components/parameters/tableId'
+ *       - $ref: '#/components/parameters/appId'
  *     requestBody:
  *       required: true
  *       content:
@@ -40,6 +41,8 @@ const router = Router()
  *                     type: object
  *                     description: Searches within a range, the format of this must be
  *                       columnName -> [low, high].
+ *                     example:
+ *                       columnName1: [10, 20]
  *                   equal:
  *                     type: object
  *                     description: Searches for rows that have a column value that is
@@ -53,6 +56,8 @@ const router = Router()
  *                     description: Searches for rows which do not contain the specified column.
  *                       The object should simply contain keys of the column names, these
  *                       can map to any value.
+ *                     example:
+ *                       columnName1: ""
  *                   notEmpty:
  *                     type: object
  *                     description: Searches for rows which have the specified column.
@@ -110,9 +115,9 @@ const router = Router()
  *                 hasNextPage:
  *                   description: If pagination in use, this will determine if there is another page to fetch.
  *                   type: boolean
- *               examples:
- *                 search:
- *                   - '#/components/examples/search'
+ *             examples:
+ *               search:
+ *                 $ref: '#/components/examples/search'
  */
 router.post("/tables/:tableId/rows/search", controller.search)
 
@@ -125,22 +130,16 @@ router.post("/tables/:tableId/rows/search", controller.search)
  *       - rows
  *     parameters:
  *       - $ref: '#/components/parameters/tableId'
+ *       - $ref: '#/components/parameters/appId'
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             description: The contents of the row which is to be created, the keys of
- *             type: object
- *             example:
- *               $ref: '#/components/examples/row'
- *             additionalProperties:
- *               oneOf:
- *                 - type: string
- *                 - type: object
- *                 - type: integer
- *                 - type: array
- *                 - type: boolean
+ *             $ref: '#/components/schemas/row'
+ *           examples:
+ *             row:
+ *               $ref: '#/components/examples/inputRow'
  *     responses:
  *       200:
  *         description: Returns the created row, including the ID which has been generated for it.
@@ -165,6 +164,16 @@ router.post("/tables/:tableId/rows", controller.create)
  *     parameters:
  *       - $ref: '#/components/parameters/tableId'
  *       - $ref: '#/components/parameters/rowId'
+ *       - $ref: '#/components/parameters/appId'
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/row'
+ *           examples:
+ *             row:
+ *               $ref: '#/components/examples/inputRow'
  *     responses:
  *       200:
  *         description: Returns the created row, including the ID which has been generated for it.
@@ -188,6 +197,7 @@ router.put("/tables/:tableId/rows/:rowId", controller.update)
  *     parameters:
  *       - $ref: '#/components/parameters/tableId'
  *       - $ref: '#/components/parameters/rowId'
+ *       - $ref: '#/components/parameters/appId'
  *     responses:
  *       200:
  *         description: Returns the deleted row, including the ID which has been generated for it.
@@ -211,6 +221,7 @@ router.delete("/tables/:tableId/rows/:rowId", controller.delete)
  *     parameters:
  *       - $ref: '#/components/parameters/tableId'
  *       - $ref: '#/components/parameters/rowId'
+ *       - $ref: '#/components/parameters/appId'
  *     responses:
  *       200:
  *         description: Returns the retrieved row.
