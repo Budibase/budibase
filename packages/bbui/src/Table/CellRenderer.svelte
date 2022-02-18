@@ -28,6 +28,7 @@
   $: type = schema?.type ?? "string"
   $: customRenderer = customRenderers?.find(x => x.column === schema?.name)
   $: renderer = customRenderer?.component ?? typeMap[type] ?? StringRenderer
+  $: width = schema?.width || "150px"
 </script>
 
 {#if renderer && (customRenderer || (value != null && value !== ""))}
