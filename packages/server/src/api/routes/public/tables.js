@@ -8,12 +8,19 @@ const router = Router()
  * /tables/search:
  *   post:
  *     summary: Search internal and external tables based on their name.
- *     parameters:
- *       - $ref: '#/components/parameters/appId'
  *     tags:
  *       - tables
+ *     parameters:
+ *       - $ref: '#/components/parameters/appId'
  *     requestBody:
- *
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: The name of the table, this should be an exact match (ignoring case).
  *     responses:
  *       200:
  *         description: Returns the found tables, based on the search parameters.
@@ -34,10 +41,18 @@ router.post("/tables/search", controller.search)
  * /tables:
  *   post:
  *     summary: Create a new table.
- *     parameters:
- *       - $ref: '#/components/parameters/appId'
  *     tags:
  *       - tables
+ *     parameters:
+ *       - $ref: '#/components/parameters/appId'
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/table'
+ *           examples:
+ *             table:
+ *               $ref: '#/components/examples/table'
  *     responses:
  *       200:
  *         description: Returns the created table, including the ID which has been generated for it. This can be
@@ -62,6 +77,14 @@ router.post("/tables", controller.create)
  *     parameters:
  *       - $ref: '#/components/parameters/tableId'
  *       - $ref: '#/components/parameters/appId'
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/table'
+ *           examples:
+ *             table:
+ *               $ref: '#/components/examples/table'
  *     responses:
  *       200:
  *         description: Returns the updated table.
