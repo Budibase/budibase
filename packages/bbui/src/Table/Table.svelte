@@ -36,8 +36,8 @@
   const dispatch = createEventDispatcher()
 
   // Config
-  $: rowHeight = compact ? 46 : 55
   const headerHeight = 36
+  $: rowHeight = compact ? 46 : 55
 
   // Sorting state
   let sortColumn
@@ -50,11 +50,18 @@
   $: if (!loading) loaded = true
   $: fields = getFields(schema, showAutoColumns, autoSortColumns)
   $: rows = fields?.length ? data || [] : []
-  $: visibleRowCount = getVisibleRowCount(loaded, height, rows.length, rowCount)
-  $: contentStyle = getContentStyle(visibleRowCount, rowCount)
+  $: visibleRowCount = getVisibleRowCount(
+    loaded,
+    height,
+    rows.length,
+    rowCount,
+    rowHeight
+  )
+  $: contentStyle = getContentStyle(visibleRowCount, rowCount, rowHeight)
   $: sortedRows = sortRows(rows, sortColumn, sortOrder)
   $: gridStyle = getGridStyle(fields, schema, showEditColumn)
   $: showEditColumn = allowEditRows || allowSelectRows
+  $: cellStyles = computeCellStyles(schema)
 
   const fixSchema = schema => {
     let fixedSchema = {}
@@ -74,7 +81,7 @@
     return fixedSchema
   }
 
-  const getVisibleRowCount = (loaded, height, allRows, rowCount) => {
+  const getVisibleRowCount = (loaded, height, allRows, rowCount, rowHeight) => {
     if (!loaded) {
       return rowCount || 0
     }
@@ -84,7 +91,7 @@
     return Math.min(allRows, Math.ceil(height / rowHeight))
   }
 
-  const getContentStyle = (visibleRows, rowCount) => {
+  const getContentStyle = (visibleRows, rowCount, rowHeight) => {
     if (!rowCount || !visibleRows) {
       return ""
     }
@@ -192,6 +199,26 @@
       selectedRows = [...selectedRows, row]
     }
   }
+
+  const computeCellStyles = schema => {
+    let styles = {}
+    Object.keys(schema || {}).forEach(field => {
+      styles[field] = ""
+      if (schema[field].color) {
+        styles[field] += `color: ${schema[field].color};`
+      }
+      if (schema[field].background) {
+        styles[field] += `background-color: ${schema[field].background};`
+      }
+      if (schema[field].align === "Center") {
+        styles[field] += "justify-content: center; text-align: center;"
+      }
+      if (schema[field].align === "Right") {
+        styles[field] += "justify-content: flex-end; text-align: right;"
+      }
+    })
+    return styles
+  }
 </script>
 
 <div
@@ -208,24 +235,28 @@
   {:else}
     <div class="spectrum-Table" style={`${contentStyle}${gridStyle}`}>
       {#if fields.length}
-        {#if showEditColumn}
-          <div
-            class="spectrum-Table-headCell spectrum-Table-headCell--divider spectrum-Table-headCell--edit"
-          >
-            {editColumnTitle || ""}
-          </div>
-        {/if}
-        {#each fields as field}
-          <div
-            class="spectrum-Table-headCell"
-            class:is-sortable={schema[field].sortable !== false}
-            class:is-sorted-desc={sortColumn === field &&
-              sortOrder === "Descending"}
-            class:is-sorted-asc={sortColumn === field &&
-              sortOrder === "Ascending"}
-            on:click={() => sortBy(schema[field])}
-          >
-            <div class="spectrum-Table-headCell-content">
+        <div class="spectrum-Table-head">
+          {#if showEditColumn}
+            <div
+              class="spectrum-Table-headCell spectrum-Table-headCell--divider spectrum-Table-headCell--edit"
+            >
+              {editColumnTitle || ""}
+            </div>
+          {/if}
+          {#each fields as field}
+            <div
+              class="spectrum-Table-headCell"
+              class:spectrum-Table-headCell--alignCenter={schema[field]
+                .align === "Center"}
+              class:spectrum-Table-headCell--alignRight={schema[field].align ===
+                "Right"}
+              class:is-sortable={schema[field].sortable !== false}
+              class:is-sorted-desc={sortColumn === field &&
+                sortOrder === "Descending"}
+              class:is-sorted-asc={sortColumn === field &&
+                sortOrder === "Ascending"}
+              on:click={() => sortBy(schema[field])}
+            >
               <div class="title">{getDisplayName(schema[field])}</div>
               {#if schema[field]?.autocolumn}
                 <svg
@@ -254,8 +285,8 @@
                 </svg>
               {/if}
             </div>
-          </div>
-        {/each}
+          {/each}
+        </div>
       {/if}
       {#if sortedRows?.length}
         {#each sortedRows as row, idx}
@@ -282,6 +313,7 @@
               <div
                 class="spectrum-Table-cell"
                 class:spectrum-Table-cell--divider={!!schema[field].divider}
+                style={cellStyles[field]}
               >
                 <CellRenderer
                   {customRenderers}
@@ -317,17 +349,15 @@
     z-index: 0;
     --table-bg: var(--spectrum-global-color-gray-50);
     --table-border: 1px solid var(--spectrum-alias-border-color-mid);
-    --cell-padding: 20px;
     --hover-bg: var(--spectrum-global-color-gray-100);
+    --cell-padding: var(--spectrum-global-dimension-size-250);
   }
   .wrapper--quiet {
     --table-bg: var(--spectrum-alias-background-color-transparent);
     --hover-bg: var(--spectrum-global-color-gray-200);
   }
   .wrapper--compact {
-    /*--spectrum-table-header-padding-x: 5px;*/
-    /*--spectrum-table-cell-padding-x: 5px;*/
-    --cell-padding: 12px;
+    --cell-padding: var(--spectrum-global-dimension-size-150);
   }
 
   /* Loading */
@@ -346,6 +376,17 @@
   }
 
   /* Header */
+  .spectrum-Table-head {
+    display: contents;
+  }
+  .spectrum-Table-head > :first-child {
+    border-left: 1px solid transparent;
+    padding-left: var(--cell-padding);
+  }
+  .spectrum-Table-head > :last-child {
+    border-right: 1px solid transparent;
+    padding-right: var(--cell-padding);
+  }
   .spectrum-Table-headCell {
     height: var(--header-height);
     position: sticky;
@@ -355,28 +396,31 @@
     background-color: var(--spectrum-alias-background-color-secondary);
     z-index: 2;
     border-bottom: var(--table-border);
-    padding-left: var(--cell-padding);
-    padding-right: 0;
-  }
-  .spectrum-Table-headCell--divider {
-    padding-right: var(--cell-padding);
-  }
-  .spectrum-Table-headCell--edit {
-    position: sticky;
-    left: 0;
-    z-index: 3;
-  }
-  .spectrum-Table-headCell-content {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    padding: 0 calc(var(--cell-padding) / 1.33);
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
     user-select: none;
   }
-  .spectrum-Table-headCell-content .title {
+  .spectrum-Table-headCell--alignCenter {
+    justify-content: center;
+  }
+  .spectrum-Table-headCell--alignRight {
+    justify-content: flex-end;
+  }
+  .spectrum-Table-headCell--divider {
+    padding-right: var(--cell-padding);
+  }
+  .spectrum-Table-headCell--divider + .spectrum-Table-headCell {
+    padding-left: var(--cell-padding);
+  }
+  .spectrum-Table-headCell--edit {
+    position: sticky;
+    left: 0;
+    z-index: 3;
+  }
+  .spectrum-Table-headCell .title {
     overflow: hidden;
     text-overflow: ellipsis;
   }
@@ -405,7 +449,7 @@
     display: contents;
   }
   .spectrum-Table-row:hover .spectrum-Table-cell {
-    background-color: var(--hover-bg);
+    background-color: var(--hover-bg) !important;
   }
   .wrapper--quiet .spectrum-Table-row {
     border-left: none;
@@ -413,6 +457,7 @@
   }
   .spectrum-Table-row > :first-child {
     border-left: var(--table-border);
+    padding-left: var(--cell-padding);
   }
   .spectrum-Table-row > :last-child {
     border-right: var(--table-border);
@@ -422,8 +467,7 @@
   /* Table cells */
   .spectrum-Table-cell {
     flex: 1 1 auto;
-    padding-top: 0;
-    padding-bottom: 0;
+    padding: 0 calc(var(--cell-padding) / 1.33);
     border-top: none;
     border-bottom: none;
     border-radius: 0;
@@ -438,13 +482,14 @@
     transition: background-color
       var(--spectrum-global-animation-duration-100, 0.13s) ease-in-out;
     border-bottom: 1px solid var(--spectrum-alias-border-color-mid);
-    padding-left: var(--cell-padding);
-    padding-right: 0;
     background-color: var(--table-bg);
     z-index: 1;
   }
   .spectrum-Table-cell--divider {
     padding-right: var(--cell-padding);
+  }
+  .spectrum-Table-cell--divider + .spectrum-Table-cell {
+    padding-left: var(--cell-padding);
   }
   .spectrum-Table-cell--edit {
     position: sticky;
