@@ -80,7 +80,7 @@ filterTests(['smoke', 'all'], () => {
       cy.get("@queryError").its('response.body').should('have.property', 'status', 400)
     })
     
-    it("should run an invalid query via POST request", () => {
+    xit("should run an invalid query via POST request", () => {
       // POST request with transformer as null
       cy.request({method: 'POST',
       url: `${Cypress.config().baseUrl}/api/queries/`,
@@ -98,7 +98,7 @@ filterTests(['smoke', 'all'], () => {
       })
     })
     
-    it("should run an empty query", () => {
+    xit("should run an empty query", () => {
       // POST request with Transformer as an empty string
       cy.request({method: 'POST',
       url: `${Cypress.config().baseUrl}/api/queries/preview`,

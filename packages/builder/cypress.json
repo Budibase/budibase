@@ -4,6 +4,7 @@
   "projectId": "bmbemn",
   "env": {
     "PORT": "10001",
-    "JWT_SECRET": "test"
+    "JWT_SECRET": "test",
+    "HOST_IP": ""
   }
 }

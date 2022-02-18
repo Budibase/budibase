@@ -347,7 +347,6 @@ Cypress.Commands.add("addDatasourceConfig", (datasource, skipFetch) => {
       .eq(0)
       .within(() => {
         cy.get(".spectrum-Textfield").within(() => {
-          cy.log(datasource)
           if (datasource == "Oracle") {
             cy.get("input").clear().type(Cypress.env("oracle").HOST)
           } else {
@@ -448,7 +447,7 @@ Cypress.Commands.add("createRestQuery", (method, restUrl) => {
   // Send query
   cy.get(".spectrum-Button").contains("Send").click({ force: true })
   cy.wait(500)
-  cy.get(".spectrum-Button").contains("Save query").click({ force: true })
+  cy.get(".spectrum-Button").contains("Save").click({ force: true })
   cy.get(".hierarchy-items-container")
     .should("contain", method)
     .and("contain", restUrl)
