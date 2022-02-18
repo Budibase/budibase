@@ -4,6 +4,7 @@
   import CellRenderer from "./CellRenderer.svelte"
   import SelectEditRenderer from "./SelectEditRenderer.svelte"
   import { cloneDeep, deepGet } from "../helpers"
+  import ProgressCircle from "../ProgressCircle/ProgressCircle.svelte"
 
   /**
    * The expected schema is our normal couch schemas for our tables.
@@ -14,6 +15,7 @@
    * sortable: Set to false to disable sorting data by a certain column
    * editable: Set to false to disable editing a certain column if the
    *  allowEditColumns prop is true
+   * width: the width of the column
    */
   export let data = []
   export let schema = {}
@@ -31,14 +33,11 @@
   export let autoSortColumns = true
   export let compact = false
 
-  rowCount = 5
-
   const dispatch = createEventDispatcher()
 
   // Config
   $: rowHeight = compact ? 46 : 55
   const headerHeight = 36
-  const rowPreload = 5
 
   // Sorting state
   let sortColumn
@@ -56,26 +55,6 @@
   $: sortedRows = sortRows(rows, sortColumn, sortOrder)
   $: gridStyle = getGridStyle(fields, schema, showEditColumn)
   $: showEditColumn = allowEditRows || allowSelectRows
-
-  // Scrolling state
-  let timeout
-  let nextScrollTop = 0
-  let scrollTop = 0
-  $: firstVisibleRow = calculateFirstVisibleRow(scrollTop)
-  $: lastVisibleRow = calculateLastVisibleRow(
-    firstVisibleRow,
-    visibleRowCount,
-    rows.length
-  )
-
-  // Reset state when data changes
-  $: rows.length, reset()
-  const reset = () => {
-    nextScrollTop = 0
-    scrollTop = 0
-    clearTimeout(timeout)
-    timeout = null
-  }
 
   const fixSchema = schema => {
     let fixedSchema = {}
@@ -193,28 +172,6 @@
       .map(column => column.name)
   }
 
-  const onScroll = event => {
-    nextScrollTop = event.target.scrollTop
-    if (timeout) {
-      return
-    }
-    timeout = setTimeout(() => {
-      scrollTop = nextScrollTop
-      timeout = null
-    }, 50)
-  }
-
-  const calculateFirstVisibleRow = scrollTop => {
-    return Math.max(Math.floor(scrollTop / (rowHeight + 1)) - rowPreload, 0)
-  }
-
-  const calculateLastVisibleRow = (firstRow, visibleRowCount, allRowCount) => {
-    if (visibleRowCount === 0) {
-      return -1
-    }
-    return Math.min(firstRow + visibleRowCount + 2 * rowPreload, allRowCount)
-  }
-
   const editColumn = (e, field) => {
     e.stopPropagation()
     dispatch("editcolumn", field)
@@ -245,16 +202,16 @@
   style={`--row-height: ${rowHeight}px; --header-height: ${headerHeight}px;`}
 >
   {#if !loaded}
-    <div class="loading" style={contentStyle} />
+    <div class="loading" style={contentStyle}>
+      <ProgressCircle />
+    </div>
   {:else}
-    <div
-      on:scroll={onScroll}
-      class="spectrum-Table"
-      style={`${contentStyle}${gridStyle}`}
-    >
+    <div class="spectrum-Table" style={`${contentStyle}${gridStyle}`}>
       {#if fields.length}
         {#if showEditColumn}
-          <div class="spectrum-Table-headCell spectrum-Table-headCell--divider">
+          <div
+            class="spectrum-Table-headCell spectrum-Table-headCell--divider spectrum-Table-headCell--edit"
+          >
             {editColumnTitle || ""}
           </div>
         {/if}
@@ -307,38 +264,36 @@
             on:click={() => dispatch("click", row)}
             on:click={() => toggleSelectRow(row)}
           >
-            {#if idx >= firstVisibleRow && idx <= lastVisibleRow}
-              {#if showEditColumn}
-                <div class="spectrum-Table-cell spectrum-Table-cell--divider">
-                  <SelectEditRenderer
-                    data={row}
-                    selected={selectedRows.includes(row)}
-                    onToggleSelection={() => toggleSelectRow(row)}
-                    onEdit={e => editRow(e, row)}
-                    {allowSelectRows}
-                    {allowEditRows}
-                  />
-                </div>
-              {/if}
-              {#each fields as field}
-                <div
-                  class="spectrum-Table-cell"
-                  class:spectrum-Table-cell--divider={!!schema[field].divider}
-                >
-                  <CellRenderer
-                    {customRenderers}
-                    {row}
-                    schema={schema[field]}
-                    value={deepGet(row, field)}
-                    on:clickrelationship
-                  >
-                    <slot />
-                  </CellRenderer>
-                </div>
-              {/each}
-            {:else}
-              <div class="spectrum-Table-cell spectrum-Table-cell--empty" />
+            {#if showEditColumn}
+              <div
+                class="spectrum-Table-cell spectrum-Table-cell--divider spectrum-Table-cell--edit"
+              >
+                <SelectEditRenderer
+                  data={row}
+                  selected={selectedRows.includes(row)}
+                  onToggleSelection={() => toggleSelectRow(row)}
+                  onEdit={e => editRow(e, row)}
+                  {allowSelectRows}
+                  {allowEditRows}
+                />
+              </div>
             {/if}
+            {#each fields as field}
+              <div
+                class="spectrum-Table-cell"
+                class:spectrum-Table-cell--divider={!!schema[field].divider}
+              >
+                <CellRenderer
+                  {customRenderers}
+                  {row}
+                  schema={schema[field]}
+                  value={deepGet(row, field)}
+                  on:clickrelationship
+                >
+                  <slot />
+                </CellRenderer>
+              </div>
+            {/each}
           </div>
         {/each}
       {:else}
@@ -361,18 +316,26 @@
     position: relative;
     z-index: 0;
     overflow: auto;
-    background-color: var(--table-bg);
     --table-bg: var(--spectrum-global-color-gray-50);
     --table-border: 1px solid var(--spectrum-alias-border-color-mid);
     --cell-padding: 20px;
+    --hover-bg: var(--spectrum-global-color-gray-100);
   }
   .wrapper--quiet {
     --table-bg: var(--spectrum-alias-background-color-transparent);
+    --hover-bg: var(--spectrum-global-color-gray-200);
   }
   .wrapper--compact {
     /*--spectrum-table-header-padding-x: 5px;*/
     /*--spectrum-table-cell-padding-x: 5px;*/
     --cell-padding: 12px;
+  }
+
+  /* Loading */
+  .loading {
+    display: grid;
+    place-items: center;
+    min-height: 100px;
   }
 
   /* Table */
@@ -383,15 +346,6 @@
   }
 
   /* Header */
-  .spectrum-Table-head {
-    display: flex;
-    position: sticky;
-    top: 0;
-    width: fit-content;
-    border-bottom: var(--table-border);
-    border-right: 2px solid transparent;
-    min-width: calc(100% - 2px);
-  }
   .spectrum-Table-headCell {
     vertical-align: middle;
     height: var(--header-height);
@@ -407,6 +361,11 @@
   }
   .spectrum-Table-headCell--divider {
     padding-right: var(--cell-padding);
+  }
+  .spectrum-Table-headCell--edit {
+    position: sticky;
+    left: 0;
+    z-index: 3;
   }
   .spectrum-Table-headCell-content {
     overflow: hidden;
@@ -447,7 +406,7 @@
     display: contents;
   }
   .spectrum-Table-row:hover .spectrum-Table-cell {
-    background-color: var(--spectrum-alias-highlight-hover);
+    background-color: var(--hover-bg);
   }
   .wrapper--quiet .spectrum-Table-row {
     border-left: none;
@@ -482,12 +441,16 @@
     border-bottom: 1px solid var(--spectrum-alias-border-color-mid);
     padding-left: var(--cell-padding);
     padding-right: 0;
+    background-color: var(--table-bg);
+    z-index: 1;
   }
   .spectrum-Table-cell--divider {
     padding-right: var(--cell-padding);
   }
-  .spectrum-Table-cell--empty {
-    grid-column: 1 / -1;
+  .spectrum-Table-cell--edit {
+    position: sticky;
+    left: 0;
+    z-index: 2;
   }
 
   /* Placeholder  */
@@ -499,6 +462,7 @@
     border: var(--table-border);
     border-top: none;
     grid-column: 1 / -1;
+    background-color: var(--table-bg);
   }
   .placeholder--no-fields {
     border-top: var(--table-border);
