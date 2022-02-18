@@ -29,12 +29,12 @@
   export let customRenderers = []
   export let disableSorting = false
   export let autoSortColumns = true
+  export let compact = false
 
   const dispatch = createEventDispatcher()
-  rowCount = 8
 
   // Config
-  const rowHeight = 55
+  $: rowHeight = compact ? 46 : 55
   const headerHeight = 36
   const rowPreload = 5
 
@@ -238,6 +238,7 @@
 <div
   class="wrapper"
   class:wrapper--quiet={quiet}
+  class:wrapper--compact={compact}
   bind:offsetHeight={height}
   style={`--row-height: ${rowHeight}px; --header-height: ${headerHeight}px;`}
 >
@@ -251,7 +252,7 @@
     >
       {#if fields.length}
         {#if showEditColumn}
-          <div class="spectrum-Table-headCell">
+          <div class="spectrum-Table-headCell spectrum-Table-headCell--divider">
             {editColumnTitle || ""}
           </div>
         {/if}
@@ -306,9 +307,7 @@
           >
             {#if idx >= firstVisibleRow && idx <= lastVisibleRow}
               {#if showEditColumn}
-                <div
-                  class="spectrum-Table-cell spectrum-Table-cell--divider spectrum-Table-cell--edit"
-                >
+                <div class="spectrum-Table-cell spectrum-Table-cell--divider">
                   <SelectEditRenderer
                     data={row}
                     selected={selectedRows.includes(row)}
@@ -363,9 +362,15 @@
     z-index: 0;
     --table-bg: var(--spectrum-global-color-gray-50);
     --table-border: 1px solid var(--spectrum-alias-border-color-mid);
+    --cell-padding: 20px;
   }
   .wrapper--quiet {
     --table-bg: var(--spectrum-alias-background-color-transparent);
+  }
+  .wrapper--compact {
+    /*--spectrum-table-header-padding-x: 5px;*/
+    /*--spectrum-table-cell-padding-x: 5px;*/
+    --cell-padding: 12px;
   }
 
   /* Table */
@@ -397,6 +402,11 @@
     background-color: var(--spectrum-alias-background-color-secondary);
     z-index: 2;
     border-bottom: var(--table-border);
+    padding-left: var(--cell-padding);
+    padding-right: 0;
+  }
+  .spectrum-Table-headCell--divider {
+    padding-right: var(--cell-padding);
   }
   .spectrum-Table-headCell-content {
     overflow: hidden;
@@ -469,6 +479,11 @@
     transition: background-color
       var(--spectrum-global-animation-duration-100, 0.13s) ease-in-out;
     border-bottom: 1px solid var(--spectrum-alias-border-color-mid);
+    padding-left: var(--cell-padding);
+    padding-right: 0;
+  }
+  .spectrum-Table-cell--divider {
+    padding-right: var(--cell-padding);
   }
   .spectrum-Table-cell--empty {
     grid-column: 1 / -1;

@@ -14,6 +14,7 @@
   export let linkURL
   export let linkColumn
   export let linkPeek
+  export let compact
 
   const component = getContext("component")
   const { styleable, getAction, ActionTypes, routeStore } = getContext("sdk")
@@ -122,6 +123,7 @@
     {loading}
     {rowCount}
     {quiet}
+    {compact}
     {customRenderers}
     allowSelectRows={false}
     allowEditRows={false}
