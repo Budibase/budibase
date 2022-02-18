@@ -315,7 +315,6 @@
   .wrapper {
     position: relative;
     z-index: 0;
-    overflow: auto;
     --table-bg: var(--spectrum-global-color-gray-50);
     --table-border: 1px solid var(--spectrum-alias-border-color-mid);
     --cell-padding: 20px;
@@ -343,11 +342,11 @@
     width: 100%;
     border-radius: 0;
     display: grid;
+    overflow: auto;
   }
 
   /* Header */
   .spectrum-Table-headCell {
-    vertical-align: middle;
     height: var(--header-height);
     position: sticky;
     top: 0;
