@@ -43,6 +43,10 @@ http {
       proxy_pass      http://{{ address }}:4001;
     }
 
+    location = / {
+      proxy_pass      http://{{ address }}:4001;
+    }
+
     location /app_ {
       proxy_pass      http://{{ address }}:4001;
     }
