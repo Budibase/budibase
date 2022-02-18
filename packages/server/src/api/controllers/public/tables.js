@@ -1,12 +1,12 @@
+exports.search = () => {
+
+}
+
 exports.create = () => {
 
 }
 
-exports.getAllTables = () => {
-
-}
-
-exports.getSingleTable = () => {
+exports.singleRead = () => {
 
 }
 

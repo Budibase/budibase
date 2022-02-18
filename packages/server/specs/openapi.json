@@ -34,6 +34,15 @@
         "schema": {
           "type": "string"
         }
+      },
+      "appId": {
+        "in": "header",
+        "name": "appId",
+        "required": true,
+        "description": "The ID of the app which this request is targeting.",
+        "schema": {
+          "type": "string"
+        }
       }
     },
     "examples": {
@@ -58,6 +67,43 @@
               "relationshipType": "many-to-many"
             }
           }
+        }
+      },
+      "tables": {
+        "value": [
+          {
+            "_id": "ta_5b1649e42a5b41dea4ef7742a36a7a70",
+            "name": "People",
+            "schema": {
+              "name": {
+                "type": "string",
+                "name": "name"
+              },
+              "age": {
+                "type": "number",
+                "name": "age"
+              },
+              "relationship": {
+                "type": "link",
+                "name": "relationship",
+                "tableId": "ta_...",
+                "fieldName": "relatedColumn",
+                "relationshipType": "many-to-many"
+              }
+            }
+          }
+        ]
+      },
+      "inputRow": {
+        "value": {
+          "_id": "ro_ta_5b1649e42a5b41dea4ef7742a36a7a70_e6dc7e38cf1343b2b56760265201cda4",
+          "type": "row",
+          "tableId": "ta_5b1649e42a5b41dea4ef7742a36a7a70",
+          "name": "Mike",
+          "age": 30,
+          "relationship": [
+            "ro_ta_..."
+          ]
         }
       },
       "row": {
@@ -104,6 +150,31 @@
         "name": "x-budibase-api-key",
         "description": "Your individual API key, this will provide access based on the configured RBAC settings of your user."
       }
+    },
+    "schemas": {
+      "row": {
+        "description": "The row to be created/updated, based on the table schema.",
+        "type": "object",
+        "additionalProperties": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "array"
+            },
+            {
+              "type": "boolean"
+            }
+          ]
+        }
+      }
     }
   },
   "security": [
@@ -121,6 +192,9 @@
         "parameters": [
           {
             "$ref": "#/components/parameters/tableId"
+          },
+          {
+            "$ref": "#/components/parameters/appId"
           }
         ],
         "requestBody": {
@@ -151,7 +225,13 @@
                       },
                       "range": {
                         "type": "object",
-                        "description": "Searches within a range, the format of this must be columnName -> [low, high]."
+                        "description": "Searches within a range, the format of this must be columnName -> [low, high].",
+                        "example": {
+                          "columnName1": [
+                            10,
+                            20
+                          ]
+                        }
                       },
                       "equal": {
                         "type": "object",
@@ -163,7 +243,10 @@
                       },
                       "empty": {
                         "type": "object",
-                        "description": "Searches for rows which do not contain the specified column. The object should simply contain keys of the column names, these can map to any value."
+                        "description": "Searches for rows which do not contain the specified column. The object should simply contain keys of the column names, these can map to any value.",
+                        "example": {
+                          "columnName1": ""
+                        }
                       },
                       "notEmpty": {
                         "type": "object",
@@ -255,11 +338,11 @@
                       "description": "If pagination in use, this will determine if there is another page to fetch.",
                       "type": "boolean"
                     }
-                  },
-                  "examples": {
-                    "search": [
-                      "#/components/examples/search"
-                    ]
+                  }
+                },
+                "examples": {
+                  "search": {
+                    "$ref": "#/components/examples/search"
                   }
                 }
               }
@@ -277,6 +360,9 @@
         "parameters": [
           {
             "$ref": "#/components/parameters/tableId"
+          },
+          {
+            "$ref": "#/components/parameters/appId"
           }
         ],
         "requestBody": {
@@ -284,29 +370,11 @@
           "content": {
             "application/json": {
               "schema": {
-                "description": "The contents of the row which is to be created, the keys of",
-                "type": "object",
-                "example": {
-                  "$ref": "#/components/examples/row"
-                },
-                "additionalProperties": {
-                  "oneOf": [
-                    {
-                      "type": "string"
-                    },
-                    {
-                      "type": "object"
-                    },
-                    {
-                      "type": "integer"
-                    },
-                    {
-                      "type": "array"
-                    },
-                    {
-                      "type": "boolean"
-                    }
-                  ]
+                "$ref": "#/components/schemas/row"
+              },
+              "examples": {
+                "row": {
+                  "$ref": "#/components/examples/inputRow"
                 }
               }
             }
@@ -343,8 +411,26 @@
           },
           {
             "$ref": "#/components/parameters/rowId"
+          },
+          {
+            "$ref": "#/components/parameters/appId"
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/row"
+              },
+              "examples": {
+                "row": {
+                  "$ref": "#/components/examples/inputRow"
+                }
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Returns the created row, including the ID which has been generated for it.",
@@ -374,6 +460,9 @@
           },
           {
             "$ref": "#/components/parameters/rowId"
+          },
+          {
+            "$ref": "#/components/parameters/appId"
           }
         ],
         "responses": {
@@ -405,6 +494,9 @@
           },
           {
             "$ref": "#/components/parameters/rowId"
+          },
+          {
+            "$ref": "#/components/parameters/appId"
           }
         ],
         "responses": {
@@ -426,22 +518,158 @@
         }
       }
     },
+    "/tables/search": {
+      "post": {
+        "summary": "Search internal and external tables based on their name.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/appId"
+          }
+        ],
+        "tags": [
+          "tables"
+        ],
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "description": "Returns the found tables, based on the search parameters.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                },
+                "examples": {
+                  "tables": {
+                    "$ref": "#/components/examples/tables"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/tables": {
       "post": {
-        "summary": "Create a new table",
+        "summary": "Create a new table.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/appId"
+          }
+        ],
         "tags": [
           "tables"
         ],
         "responses": {
           "200": {
-            "description": "Returns the created table, including the ID which has been generated for it.",
+            "description": "Returns the created table, including the ID which has been generated for it. This can be internal or external data sources.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object"
                 },
                 "examples": {
-                  "row": {
+                  "table": {
+                    "$ref": "#/components/examples/table"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Get all the tables, internal and external within an app.",
+        "tags": [
+          "tables"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/tableId"
+          },
+          {
+            "$ref": "#/components/parameters/appId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns all of the tables which were found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                },
+                "examples": {
+                  "table": {
+                    "$ref": "#/components/examples/row"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tables/:tableId": {
+      "put": {
+        "summary": "Update the specified table. This can be for internal or external tables.",
+        "tags": [
+          "tables"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/tableId"
+          },
+          {
+            "$ref": "#/components/parameters/appId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the updated table.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                },
+                "examples": {
+                  "table": {
+                    "$ref": "#/components/examples/row"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tables/{tableId}": {
+      "delete": {
+        "summary": "Delete a single table and all of its data.",
+        "tags": [
+          "tables"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/tableId"
+          },
+          {
+            "$ref": "#/components/parameters/appId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the deleted table.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                },
+                "examples": {
+                  "table": {
                     "$ref": "#/components/examples/table"
                   }
                 }

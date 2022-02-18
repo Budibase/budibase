@@ -4,6 +4,7 @@ const { writeFileSync } = require("fs")
 const examples = require("./examples")
 const parameters = require("./parameters")
 const security = require("./security")
+const schemas = require("./schemas")
 
 const VARIABLES = {}
 
@@ -34,6 +35,9 @@ const options = {
       },
       securitySchemes: {
         ...security,
+      },
+      schemas: {
+        ...schemas,
       },
     },
     security: [
