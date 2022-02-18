@@ -349,12 +349,10 @@
     z-index: 0;
     --table-bg: var(--spectrum-global-color-gray-50);
     --table-border: 1px solid var(--spectrum-alias-border-color-mid);
-    --hover-bg: var(--spectrum-global-color-gray-100);
     --cell-padding: var(--spectrum-global-dimension-size-250);
   }
   .wrapper--quiet {
     --table-bg: var(--spectrum-alias-background-color-transparent);
-    --hover-bg: var(--spectrum-global-color-gray-200);
   }
   .wrapper--compact {
     --cell-padding: var(--spectrum-global-dimension-size-150);
@@ -449,7 +447,10 @@
     display: contents;
   }
   .spectrum-Table-row:hover .spectrum-Table-cell {
-    background-color: var(--hover-bg) !important;
+    /*background-color: var(--hover-bg) !important;*/
+  }
+  .spectrum-Table-row:hover .spectrum-Table-cell:after {
+    background-color: var(--spectrum-alias-highlight-hover);
   }
   .wrapper--quiet .spectrum-Table-row {
     border-left: none;
@@ -479,8 +480,6 @@
     justify-content: flex-start;
     align-items: center;
     gap: 4px;
-    transition: background-color
-      var(--spectrum-global-animation-duration-100, 0.13s) ease-in-out;
     border-bottom: 1px solid var(--spectrum-alias-border-color-mid);
     background-color: var(--table-bg);
     z-index: 1;
@@ -495,6 +494,18 @@
     position: sticky;
     left: 0;
     z-index: 2;
+  }
+  .spectrum-Table-cell:after {
+    content: "";
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: transparent;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    transition: background-color
+      var(--spectrum-global-animation-duration-100, 0.13s) ease-in-out;
   }
 
   /* Placeholder  */
