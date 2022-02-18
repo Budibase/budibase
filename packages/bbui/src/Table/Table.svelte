@@ -28,6 +28,7 @@
   export let editColumnTitle = "Edit"
   export let customRenderers = []
   export let disableSorting = false
+  export let autoSortColumns = true
 
   const dispatch = createEventDispatcher()
   rowCount = 8
@@ -46,7 +47,7 @@
   let loaded = false
   $: schema = fixSchema(schema)
   $: if (!loading) loaded = true
-  $: fields = getFields(schema, showAutoColumns)
+  $: fields = getFields(schema, showAutoColumns, autoSortColumns)
   $: rows = fields?.length ? data || [] : []
   $: visibleRowCount = getVisibleRowCount(loaded, height, rows.length, rowCount)
   $: contentStyle = getContentStyle(visibleRowCount, rowCount)
@@ -162,14 +163,14 @@
     return name || ""
   }
 
-  const getFields = (schema, showAutoColumns) => {
+  const getFields = (schema, showAutoColumns, autoSortColumns) => {
     let columns = []
     let autoColumns = []
     Object.entries(schema || {}).forEach(([field, fieldSchema]) => {
       if (!field || !fieldSchema) {
         return
       }
-      if (!fieldSchema?.autocolumn) {
+      if (!autoSortColumns || !fieldSchema?.autocolumn) {
         columns.push(fieldSchema)
       } else if (showAutoColumns) {
         autoColumns.push(fieldSchema)
