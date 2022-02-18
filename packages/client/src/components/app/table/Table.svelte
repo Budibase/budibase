@@ -130,7 +130,7 @@
     allowEditColumns={false}
     showAutoColumns={true}
     disableSorting
-    autoSortColumns={!columns.length}
+    autoSortColumns={!columns?.length}
     on:sort={onSort}
     on:click={onClick}
   >
