@@ -48,6 +48,7 @@ filterTests(['smoke', 'all'], () => {
             cy.get(".root").contains("New Paragraph")
             // Confirm Button component is not visible
             cy.get(".root").should("not.have.text", "New Button")
+            cy.wait(500)
         })
         
         it("should enter incorrect app name when reverting", () => {

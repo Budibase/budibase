@@ -22,7 +22,7 @@ filterTests(['smoke', 'all'], () => {
             // Intercept Request after button click & apply assertions
             cy.wait("@queryError")
             cy.get("@queryError").its('response.body')
-            .should('have.property', 'message', 'request to http://random/%20text? failed, reason: getaddrinfo ENOTFOUND random')
+            .should('have.property', 'message', 'Invalid URL: http://random text?')
             cy.get("@queryError").its('response.body')
             .should('have.property', 'status', 400)
         })

@@ -37,10 +37,11 @@ filterTests(['smoke', 'all'], () => {
       })
       // Navigate back to the user
       cy.visit(`${Cypress.config().baseUrl}/builder`)
-      cy.wait(1000)
-      cy.get(".spectrum-SideNav").contains("Users").click()
-      cy.get(".spectrum-Table").contains("bbuser").click()
       cy.wait(500)
+      cy.get(".spectrum-SideNav").contains("Users").click()
+      cy.wait(500)
+      cy.get(".spectrum-Table").contains("bbuser").click()
+      cy.wait(1000)
       for (let i = 0; i < 3; i++) {
         cy.get(".spectrum-Table-body").eq(1).find('tr').eq(0).click()
         cy.wait(500)
@@ -73,14 +74,12 @@ filterTests(['smoke', 'all'], () => {
       cy.get(".spectrum-Table-body").eq(0).find('tr').its('length').then((len) => {
         for (let i = 0; i < len; i ++){
           cy.get(".spectrum-Table-body").eq(0).find('tr').eq(0).click().then(() => {
-            cy.get(".spectrum-Form-item").contains("Role").parent().within(() => {
-              cy.get(".spectrum-Picker").click({ force: true })
+              cy.get(".spectrum-Picker").eq(1).click({ force: true })
               cy.wait(500)
               cy.get(".spectrum-Popover").contains("No Access").click()
             })
             cy.get(".spectrum-Button").contains("Update role").click({ force: true })
             cy.wait(1000)
-          })
         }
       })
       // Confirm Configure roles table no longer has any apps in it
