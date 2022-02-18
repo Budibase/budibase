@@ -2,6 +2,7 @@ import filterTests from "../../support/filterTests"
 
 filterTests(['all'], () => {
   context("Datasource Wizard", () => {
+    if (Cypress.env("TEST_ENV")) {
       before(() => {
         cy.login()
         cy.createTestApp()
@@ -36,6 +37,7 @@ filterTests(['all'], () => {
       cy.wait("@datasourceConnection")
       cy.get("@datasourceConnection").its('response.body')
           .should('have.property', 'status', 500)
-    })
+      })
+    }
   })
 })

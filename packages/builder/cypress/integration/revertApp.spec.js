@@ -54,7 +54,7 @@ filterTests(['smoke', 'all'], () => {
         it("should enter incorrect app name when reverting", () => {
             // Click Revert
             cy.get(".toprightnav").within(() => {
-                cy.get(".spectrum-Icon").eq(1).click()
+                cy.get(".spectrum-Icon").eq(1).click({ force: true })
             })
             // Enter incorrect app name
             cy.get(".spectrum-Dialog-grid").within(() => {
