@@ -18,22 +18,30 @@
   let boundValue
 
   $: datasource = getDatasourceForProvider($currentAsset, componentInstance)
-  $: schema = getSchemaForDatasource($currentAsset, datasource).schema
+  $: schema = getSchema($currentAsset, datasource)
   $: options = Object.keys(schema || {})
   $: sanitisedValue = getValidColumns(value, options)
   $: updateBoundValue(sanitisedValue)
+
+  const getSchema = (asset, datasource) => {
+    const schema = getSchemaForDatasource(asset, datasource).schema
+
+    // Don't show ID and rev in tables
+    if (schema) {
+      delete schema._id
+      delete schema._rev
+    }
+
+    return schema
+  }
 
   const updateBoundValue = value => {
     boundValue = cloneDeep(value)
   }
 
   const getValidColumns = (columns, options) => {
-    // If no columns then default to all columns
     if (!Array.isArray(columns) || !columns.length) {
-      return options.map(col => ({
-        name: col,
-        displayName: col,
-      }))
+      return []
     }
     // We need to account for legacy configs which would just be an array
     // of strings
@@ -60,5 +68,5 @@
     Configure the columns in your table.
   </svelte:fragment>
   <Button cta slot="buttons" on:click={save}>Save</Button>
-  <ColumnDrawer slot="body" bind:columns={boundValue} {options} />
+  <ColumnDrawer slot="body" bind:columns={boundValue} {options} {schema} />
 </Drawer>
