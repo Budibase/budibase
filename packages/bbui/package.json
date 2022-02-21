@@ -38,7 +38,7 @@
   ],
   "dependencies": {
     "@adobe/spectrum-css-workflow-icons": "^1.2.1",
-    "@budibase/string-templates": "^1.0.66-alpha.0",
+    "@budibase/string-templates": "^1.0.72-alpha.0",
     "@spectrum-css/actionbutton": "^1.0.1",
     "@spectrum-css/actiongroup": "^1.0.1",
     "@spectrum-css/avatar": "^3.0.2",
