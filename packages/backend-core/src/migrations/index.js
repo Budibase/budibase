@@ -95,6 +95,8 @@ exports.runMigrations = async (CouchDB, migrations, options = {}) => {
     if (!options.tenantIds || !options.tenantIds.length) {
       // run for all tenants
       tenantIds = await getTenantIds()
+    } else {
+      tenantIds = options.tenantIds
     }
   } else {
     // single tenancy
