@@ -10,6 +10,6 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    max-width: 200px;
+    max-width: var(--max-cell-width);
   }
 </style>
