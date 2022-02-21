@@ -31,6 +31,27 @@ components:
       description: The ID of the app which this request is targeting.
       schema:
         type: string
+    appIdUrl:
+      in: path
+      name: appId
+      required: true
+      description: The ID of the app which this request is targeting.
+      schema:
+        type: string
+    queryId:
+      in: path
+      name: queryId
+      required: true
+      description: The ID of the query which this request is targeting.
+      schema:
+        type: string
+    userId:
+      in: path
+      name: userId
+      required: true
+      description: The ID of the user which this request is targeting.
+      schema:
+        type: string
   examples:
     table:
       value:
@@ -267,19 +288,109 @@ components:
                 autocolumn:
                   type: boolean
                   description: Defines whether the column is automatically generated.
+    query:
+      type: object
+      properties: {}
+    user:
+      type: object
+      properties: {}
+    application:
+      type: object
+      properties: {}
 security:
   - ApiKeyAuth: []
 paths:
+  /applications/search:
+    post:
+      summary: Search for an application based on its app name.
+      tags:
+        - applications
+      parameters:
+        - $ref: "#/components/parameters/appId"
+      responses:
+        "200":
+          description: Returns the applications that were found based on the search
+            parameters.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/application"
+  /applications:
+    post:
+      summary: Create a new application.
+      tags:
+        - applications
+      parameters:
+        - $ref: "#/components/parameters/appId"
+      responses:
+        "200":
+          description: Returns the created application.
+          content:
+            application/json:
+              schema:
+                type: object
+  "/applications/{appId}":
+    put:
+      summary: Update an existing application by its ID.
+      tags:
+        - applications
+      parameters:
+        - $ref: "#/components/parameters/appIdUrl"
+      responses:
+        "200":
+          description: Returns the updated application.
+          content:
+            application/json:
+              schema:
+                type: object
+    delete:
+      summary: Delete an existing application by its ID.
+      tags:
+        - applications
+      parameters:
+        - $ref: "#/components/parameters/appIdUrl"
+      responses:
+        "200":
+          description: Returns the deleted application.
+          content:
+            application/json:
+              schema:
+                type: object
   /queries/search:
     post:
       summary: Search for a query based on its name.
       tags:
         - queries
+      parameters:
+        - $ref: "#/components/parameters/appId"
+      responses:
+        "200":
+          description: Returns the queries found based on the search parameters.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/query"
   "/queries/{queryId}":
     post:
       summary: Execute a query and retrieve its response.
       tags:
         - queries
+      parameters:
+        - $ref: "#/components/parameters/queryId"
+        - $ref: "#/components/parameters/appId"
+      responses:
+        "200":
+          description: Returns the result of the query execution.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
   "/tables/{tableId}/rows/search":
     post:
       summary: Used to search for rows within a table.
@@ -580,23 +691,6 @@ paths:
                 table:
                   $ref: "#/components/examples/row"
   "/tables/{tableId}":
-    get:
-      summary: Get a single table by its ID, internal and external within an app.
-      tags:
-        - tables
-      parameters:
-        - $ref: "#/components/parameters/tableId"
-        - $ref: "#/components/parameters/appId"
-      responses:
-        "200":
-          description: Returns the table that was found.
-          content:
-            application/json:
-              schema:
-                type: object
-              examples:
-                table:
-                  $ref: "#/components/examples/row"
     delete:
       summary: Delete a single table and all of its data.
       tags:
@@ -614,4 +708,63 @@ paths:
               examples:
                 table:
                   $ref: "#/components/examples/table"
+  /users/search:
+    post:
+      summary: Search for a user based on their email/username.
+      tags:
+        - users
+      parameters:
+        - $ref: "#/components/parameters/appId"
+      responses:
+        "200":
+          description: Returns the found users based on search parameters.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/user"
+  /users:
+    post:
+      summary: Create a new user in the Budibase portal.
+      tags:
+        - users
+      parameters:
+        - $ref: "#/components/parameters/appId"
+      responses:
+        "200":
+          description: Returns the created user.
+          content:
+            application/json:
+              schema:
+                type: object
+  "/users/{userId}":
+    put:
+      summary: Update an existing user by their ID.
+      tags:
+        - users
+      parameters:
+        - $ref: "#/components/parameters/userId"
+        - $ref: "#/components/parameters/appId"
+      responses:
+        "200":
+          description: Returns the updated user.
+          content:
+            application/json:
+              schema:
+                type: object
+    delete:
+      summary: Delete an existing user by their ID.
+      tags:
+        - users
+      parameters:
+        - $ref: "#/components/parameters/userId"
+        - $ref: "#/components/parameters/appId"
+      responses:
+        "200":
+          description: Returns the deleted user.
+          content:
+            application/json:
+              schema:
+                type: object
 tags: []

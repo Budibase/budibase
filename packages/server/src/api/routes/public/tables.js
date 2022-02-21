@@ -102,29 +102,6 @@ router.put("/tables/:tableId", controller.update)
 /**
  * @openapi
  * /tables/{tableId}:
- *   get:
- *     summary: Get a single table by its ID, internal and external within an app.
- *     tags:
- *       - tables
- *     parameters:
- *       - $ref: '#/components/parameters/tableId'
- *       - $ref: '#/components/parameters/appId'
- *     responses:
- *       200:
- *         description: Returns the table that was found.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *             examples:
- *               table:
- *                 $ref: '#/components/examples/row'
- */
-router.get("/tables/:tableId", controller.singleRead)
-
-/**
- * @openapi
- * /tables/{tableId}:
  *   delete:
  *     summary: Delete a single table and all of its data.
  *     tags:
