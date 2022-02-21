@@ -84,10 +84,7 @@ export const FIELDS = {
   FORMULA: {
     name: "Formula",
     type: "formula",
-    constraints: {
-      type: "string",
-      presence: false,
-    },
+    constraints: {},
   },
   JSON: {
     name: "JSON",
