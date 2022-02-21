@@ -34,6 +34,7 @@ http {
 
     location ~ ^/api/(system|admin|global)/ {
       proxy_pass      http://{{ address }}:4002;
+      proxy_set_header Host $host;
     }
 
     location /api/ {
@@ -41,24 +42,29 @@ http {
       proxy_connect_timeout 120s;
       proxy_send_timeout 120s; 
       proxy_pass      http://{{ address }}:4001;
+      proxy_set_header Host $host;
     }
 
     location = / {
       proxy_pass      http://{{ address }}:4001;
+      proxy_set_header Host $host;
     }
 
     location /app_ {
       proxy_pass      http://{{ address }}:4001;
+      proxy_set_header Host $host;
     }
 
     location /app/ {
       proxy_pass      http://{{ address }}:4001;
       rewrite ^/app/(.*)$ /$1 break;
+      proxy_set_header Host $host;
     }
 
     location /builder {
       proxy_pass      http://{{ address }}:3000;
       rewrite ^/builder(.*)$ /builder/$1 break;
+      proxy_set_header Host $host;
     }
 
     location /builder/ {
