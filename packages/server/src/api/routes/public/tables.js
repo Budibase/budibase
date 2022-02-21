@@ -20,7 +20,8 @@ const router = Router()
  *             properties:
  *               name:
  *                 type: string
- *                 description: The name of the table, this should be an exact match (ignoring case).
+ *                 description: The name of the table, this is a case insensitive search using the provided
+ *                   name as a starts with search.
  *     responses:
  *       200:
  *         description: Returns the found tables, based on the search parameters.
@@ -100,9 +101,9 @@ router.put("/tables/:tableId", controller.update)
 
 /**
  * @openapi
- * /tables:
+ * /tables/{tableId}:
  *   get:
- *     summary: Get all the tables, internal and external within an app.
+ *     summary: Get a single table by its ID, internal and external within an app.
  *     tags:
  *       - tables
  *     parameters:
@@ -110,7 +111,7 @@ router.put("/tables/:tableId", controller.update)
  *       - $ref: '#/components/parameters/appId'
  *     responses:
  *       200:
- *         description: Returns all of the tables which were found.
+ *         description: Returns the table that was found.
  *         content:
  *           application/json:
  *             schema:
@@ -119,7 +120,7 @@ router.put("/tables/:tableId", controller.update)
  *               table:
  *                 $ref: '#/components/examples/row'
  */
-router.get("/tables", controller.singleRead)
+router.get("/tables/:tableId", controller.singleRead)
 
 /**
  * @openapi

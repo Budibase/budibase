@@ -123,30 +123,163 @@ components:
         name:
           description: The name of the table
           type: string
+        primaryDisplay:
+          type: string
+          description: The name of the column which should be used in relationship tags
+            when relating to this table.
         schema:
-          type: object
-          additionalProperties:
-            type: object
-            properties:
-              type:
-                type: string
-                enum:
-                  - string
-                  - longform
-                  - options
-                  - number
-                  - boolean
-                  - array
-                  - datetime
-                  - attachment
-                  - link
-                  - formula
-                  - auto
-                  - json
-                  - internal
+          oneOf:
+            - type: object
+              properties:
+                type:
+                  type: string
+                  enum:
+                    - link
+                  description: A relationship column.
+                constraints:
+                  type: object
+                  description: A constraint can be applied to the column which will be validated
+                    against when a row is saved.
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                        - string
+                        - number
+                        - object
+                        - boolean
+                    presence:
+                      type: boolean
+                      description: Defines whether the column is required or not.
+                name:
+                  type: string
+                  description: The name of the column.
+                autocolumn:
+                  type: boolean
+                  description: Defines whether the column is automatically generated.
+                fieldName:
+                  type: string
+                  description: The name of the column which a relationship column is related to in
+                    another table.
+                tableId:
+                  type: string
+                  description: The ID of the table which a relationship column is related to.
+                relationshipType:
+                  type: string
+                  enum:
+                    - one-to-many
+                    - many-to-one
+                    - many-to-many
+                  description: Defines the type of relationship that this column will be used for.
+                through:
+                  type: string
+                  description: When using a SQL table that contains many to many relationships
+                    this defines the table the relationships are linked through.
+                foreignKey:
+                  type: string
+                  description: When using a SQL table that contains a one to many relationship
+                    this defines the foreign key.
+                throughFrom:
+                  type: string
+                  description: When using a SQL table that utilises a through table, this defines
+                    the primary key in the through table for this table.
+                throughTo:
+                  type: string
+                  description: When using a SQL table that utilises a through table, this defines
+                    the primary key in the through table for the related table.
+            - type: object
+              properties:
+                type:
+                  type: string
+                  enum:
+                    - formula
+                  description: A formula column.
+                constraints:
+                  type: object
+                  description: A constraint can be applied to the column which will be validated
+                    against when a row is saved.
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                        - string
+                        - number
+                        - object
+                        - boolean
+                    presence:
+                      type: boolean
+                      description: Defines whether the column is required or not.
+                name:
+                  type: string
+                  description: The name of the column.
+                autocolumn:
+                  type: boolean
+                  description: Defines whether the column is automatically generated.
+                formula:
+                  type: string
+                  description: Defines a Handlebars or JavaScript formula to use, note that
+                    Javascript formulas are expected to be provided in the
+                    base64 format.
+                formulaType:
+                  type: string
+                  enum:
+                    - static
+                    - dynamic
+                  description: Defines whether this is a static or dynamic formula.
+            - type: object
+              properties:
+                type:
+                  type: string
+                  enum:
+                    - string
+                    - longform
+                    - options
+                    - number
+                    - boolean
+                    - array
+                    - datetime
+                    - attachment
+                    - link
+                    - formula
+                    - auto
+                    - json
+                    - internal
+                  description: Defines the type of the column, most explain themselves, a link
+                    column is a relationship.
+                constraints:
+                  type: object
+                  description: A constraint can be applied to the column which will be validated
+                    against when a row is saved.
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                        - string
+                        - number
+                        - object
+                        - boolean
+                    presence:
+                      type: boolean
+                      description: Defines whether the column is required or not.
+                name:
+                  type: string
+                  description: The name of the column.
+                autocolumn:
+                  type: boolean
+                  description: Defines whether the column is automatically generated.
 security:
   - ApiKeyAuth: []
 paths:
+  /queries/search:
+    post:
+      summary: Search for a query based on its name.
+      tags:
+        - queries
+  "/queries/{queryId}":
+    post:
+      summary: Execute a query and retrieve its response.
+      tags:
+        - queries
   "/tables/{tableId}/rows/search":
     post:
       summary: Used to search for rows within a table.
@@ -380,8 +513,8 @@ paths:
               properties:
                 name:
                   type: string
-                  description: The name of the table, this should be an exact match (ignoring
-                    case).
+                  description: The name of the table, this is a case insensitive search using the
+                    provided name as a starts with search.
       responses:
         "200":
           description: Returns the found tables, based on the search parameters.
@@ -420,23 +553,6 @@ paths:
               examples:
                 table:
                   $ref: "#/components/examples/table"
-    get:
-      summary: Get all the tables, internal and external within an app.
-      tags:
-        - tables
-      parameters:
-        - $ref: "#/components/parameters/tableId"
-        - $ref: "#/components/parameters/appId"
-      responses:
-        "200":
-          description: Returns all of the tables which were found.
-          content:
-            application/json:
-              schema:
-                type: object
-              examples:
-                table:
-                  $ref: "#/components/examples/row"
   /tables/:tableId:
     put:
       summary: Update the specified table. This can be for internal or external tables.
@@ -464,6 +580,23 @@ paths:
                 table:
                   $ref: "#/components/examples/row"
   "/tables/{tableId}":
+    get:
+      summary: Get a single table by its ID, internal and external within an app.
+      tags:
+        - tables
+      parameters:
+        - $ref: "#/components/parameters/tableId"
+        - $ref: "#/components/parameters/appId"
+      responses:
+        "200":
+          description: Returns the table that was found.
+          content:
+            application/json:
+              schema:
+                type: object
+              examples:
+                table:
+                  $ref: "#/components/examples/row"
     delete:
       summary: Delete a single table and all of its data.
       tags:
