@@ -193,10 +193,6 @@
   .wide {
     grid-column: 2 / -1;
   }
-  .center {
-    display: grid;
-    place-items: center;
-  }
   .buttons {
     display: flex;
     flex-direction: row;
