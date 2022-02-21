@@ -2965,6 +2965,11 @@
           },
           {
             "type": "boolean",
+            "label": "Compact",
+            "key": "compact"
+          },
+          {
+            "type": "boolean",
             "label": "Show auto columns",
             "key": "showAutoColumns"
           },
