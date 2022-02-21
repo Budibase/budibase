@@ -41,13 +41,21 @@
 </script>
 
 {#if renderer && (customRenderer || (cellValue != null && cellValue !== ""))}
-  <svelte:component
-    this={renderer}
-    {row}
-    {schema}
-    value={cellValue}
-    on:clickrelationship
-  >
-    <slot />
-  </svelte:component>
+  <div style="--max-cell-width: {schema.width ? 'none' : '200px'};">
+    <svelte:component
+      this={renderer}
+      {row}
+      {schema}
+      value={cellValue}
+      on:clickrelationship
+    >
+      <slot />
+    </svelte:component>
+  </div>
 {/if}
+
+<style>
+  div {
+    display: contents;
+  }
+</style>
