@@ -6,6 +6,7 @@
   import AttachmentRenderer from "./AttachmentRenderer.svelte"
   import ArrayRenderer from "./ArrayRenderer.svelte"
   import InternalRenderer from "./InternalRenderer.svelte"
+  import { processStringSync } from "@budibase/string-templates"
 
   export let row
   export let schema
@@ -29,10 +30,24 @@
   $: customRenderer = customRenderers?.find(x => x.column === schema?.name)
   $: renderer = customRenderer?.component ?? typeMap[type] ?? StringRenderer
   $: width = schema?.width || "150px"
+  $: cellValue = getCellValue(value, schema.template)
+
+  const getCellValue = (value, template) => {
+    if (!template) {
+      return value
+    }
+    return processStringSync(template, { value })
+  }
 </script>
 
-{#if renderer && (customRenderer || (value != null && value !== ""))}
-  <svelte:component this={renderer} {row} {schema} {value} on:clickrelationship>
+{#if renderer && (customRenderer || (cellValue != null && cellValue !== ""))}
+  <svelte:component
+    this={renderer}
+    {row}
+    {schema}
+    value={cellValue}
+    on:clickrelationship
+  >
     <slot />
   </svelte:component>
 {/if}

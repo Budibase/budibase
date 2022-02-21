@@ -2679,7 +2679,8 @@
         "type": "columns",
         "label": "Columns",
         "key": "columns",
-        "dependsOn": "dataProvider"
+        "dependsOn": "dataProvider",
+        "nested": true
       },
       {
         "type": "select",

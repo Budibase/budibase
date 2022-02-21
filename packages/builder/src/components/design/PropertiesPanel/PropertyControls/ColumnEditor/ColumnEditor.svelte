@@ -56,13 +56,18 @@
     })
   }
 
+  const open = () => {
+    updateBoundValue(sanitisedValue)
+    drawer.show()
+  }
+
   const save = () => {
     dispatch("change", getValidColumns(boundValue, options))
     drawer.hide()
   }
 </script>
 
-<ActionButton on:click={drawer.show}>Configure columns</ActionButton>
+<ActionButton on:click={open}>Configure columns</ActionButton>
 <Drawer bind:this={drawer} title="Table Columns">
   <svelte:fragment slot="description">
     Configure the columns in your table.
