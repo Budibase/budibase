@@ -113,11 +113,11 @@ export const buildUserEndpoints = API => ({
   },
 
   /**
-   * Accepts an invitation to join the platform and creates a user.
+   * Accepts an invite to join the platform and creates a user.
    * @param inviteCode the invite code sent in the email
    * @param password the password for the newly created user
    */
-  acceptInvitation: async ({ inviteCode, password }) => {
+  acceptInvite: async ({ inviteCode, password }) => {
     return await API.post({
       url: "/api/global/users/invite/accept",
       body: {

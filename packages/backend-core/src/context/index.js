@@ -121,7 +121,7 @@ exports.getTenantId = () => {
   }
   const tenantId = cls.getFromContext(ContextKeys.TENANT_ID)
   if (!tenantId) {
-    throw Error("Tenant id not found")
+    throw new Error("Tenant id not found")
   }
   return tenantId
 }

@@ -15,7 +15,7 @@ const IMAGES = {
 
 const FILES = {
 	COMPOSE: "docker-compose.yaml",
-	NGINX: "nginx.conf"
+	ENV: ".env"
 }
 
 const OUTPUT_DIR = path.join(__dirname, "../", "bb-airgapped")
@@ -40,8 +40,7 @@ for (let image in IMAGES) {
 
 // copy config files
 copyFile(FILES.COMPOSE)
-copyFile(FILES.ENVOY)
-copyFile(FILES.PROPERTIES)
+copyFile(FILES.ENV)
 
 // compress
 execSync(`tar -czf bb-airgapped.tar.gz hosting/scripts/bb-airgapped`)
