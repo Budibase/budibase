@@ -22,6 +22,7 @@ exports.getMigrationsDoc = async db => {
     if (err.status && err.status === 404) {
       return { _id: DocumentTypes.MIGRATIONS }
     }
+    console.error(err)
   }
 }
 
@@ -94,6 +95,8 @@ exports.runMigrations = async (CouchDB, migrations, options = {}) => {
     if (!options.tenantIds || !options.tenantIds.length) {
       // run for all tenants
       tenantIds = await getTenantIds()
+    } else {
+      tenantIds = options.tenantIds
     }
   } else {
     // single tenancy
