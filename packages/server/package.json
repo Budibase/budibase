@@ -1,7 +1,7 @@
 {
   "name": "@budibase/server",
   "email": "hi@budibase.com",
-  "version": "1.0.66-alpha.0",
+  "version": "1.0.71",
   "description": "Budibase Web Server",
   "main": "src/index.ts",
   "repository": {
@@ -21,6 +21,9 @@
     "dev:stack:down": "node scripts/dev/manage.js down",
     "dev:stack:nuke": "node scripts/dev/manage.js nuke",
     "dev:builder": "yarn run dev:stack:up && nodemon",
+    "generate:proxy:compose": "node scripts/proxy/generateProxyConfig compose",
+    "generate:proxy:preprod": "node scripts/proxy/generateProxyConfig preprod",
+    "generate:proxy:prod": "node scripts/proxy/generateProxyConfig prod",
     "format": "prettier --config ../../.prettierrc.json 'src/**/*.ts' --write",
     "lint": "eslint --fix src/",
     "lint:fix": "yarn run format && yarn run lint",
@@ -70,9 +73,9 @@
   "license": "GPL-3.0",
   "dependencies": {
     "@apidevtools/swagger-parser": "^10.0.3",
-    "@budibase/backend-core": "^1.0.66-alpha.0",
-    "@budibase/client": "^1.0.66-alpha.0",
-    "@budibase/string-templates": "^1.0.66-alpha.0",
+    "@budibase/backend-core": "^1.0.71",
+    "@budibase/client": "^1.0.71",
+    "@budibase/string-templates": "^1.0.71",
     "@bull-board/api": "^3.7.0",
     "@bull-board/koa": "^3.7.0",
     "@elastic/elasticsearch": "7.10.0",

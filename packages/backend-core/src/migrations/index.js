@@ -22,6 +22,7 @@ exports.getMigrationsDoc = async db => {
     if (err.status && err.status === 404) {
       return { _id: DocumentTypes.MIGRATIONS }
     }
+    console.error(err)
   }
 }
 

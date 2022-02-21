@@ -32,7 +32,7 @@ export const buildOtherEndpoints = API => ({
   getBudibaseVersion: async () => {
     return await API.get({
       url: "/api/dev/version",
-    })
+    }).version
   },
 
   /**
