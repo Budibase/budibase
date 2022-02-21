@@ -58,7 +58,7 @@
   const updateValue = val => {
     valid = isValid(readableToRuntimeBinding(bindings, val))
     if (valid) {
-      dispatch("change", value)
+      dispatch("change", val)
     }
   }
 
@@ -146,7 +146,7 @@
                   <div class="helper__description">
                     {@html helper.description}
                   </div>
-                  <pre class="helper__example">{helper.example || ''}</pre>
+                  <pre class="helper__example">{helper.example || ""}</pre>
                 </div>
               </li>
             {/each}
