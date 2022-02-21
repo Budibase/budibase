@@ -17,7 +17,7 @@ exports.getAccount = async email => {
   const json = await response.json()
 
   if (response.status !== 200) {
-    throw Error(`Error getting account by email ${email}`, json)
+    throw new Error(`Error getting account by email ${email}`, json)
   }
 
   return json[0]

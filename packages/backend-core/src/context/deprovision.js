@@ -1,5 +1,5 @@
 const { getGlobalUserParams, getAllApps } = require("../db/utils")
-const { getDB, getCouch } = require("../db")
+const { getDB } = require("../db")
 const { getGlobalDB } = require("../tenancy")
 const { StaticDatabases } = require("../db/constants")
 
@@ -79,7 +79,7 @@ const removeGlobalDB = async tenantId => {
 
 const removeTenantApps = async tenantId => {
   try {
-    const apps = await getAllApps(getCouch(), { all: true })
+    const apps = await getAllApps({ all: true })
     const destroyPromises = apps.map(app => getDB(app.appId).destroy())
     await Promise.allSettled(destroyPromises)
   } catch (err) {
