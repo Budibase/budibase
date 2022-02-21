@@ -37,7 +37,7 @@ async function init() {
     const envFileJson = {
       PORT: 4001,
       MINIO_URL: "http://localhost:4004",
-      COUCH_DB_URL: "http://budibase:budibase@localhost:10000/db/",
+      COUCH_DB_URL: "http://budibase:budibase@localhost:4005",
       REDIS_URL: "localhost:6379",
       WORKER_URL: "http://localhost:4002",
       INTERNAL_API_KEY: "budibase",
