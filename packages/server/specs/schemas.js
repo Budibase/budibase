@@ -143,3 +143,18 @@ exports.table = {
     },
   },
 }
+
+exports.query = {
+  type: "object",
+  properties: {},
+}
+
+exports.user = {
+  type: "object",
+  properties: {},
+}
+
+exports.application = {
+  type: "object",
+  properties: {},
+}

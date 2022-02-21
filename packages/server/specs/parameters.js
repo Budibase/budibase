@@ -27,3 +27,33 @@ exports.appId = {
     type: "string",
   },
 }
+
+exports.appIdUrl = {
+  in: "path",
+  name: "appId",
+  required: true,
+  description: "The ID of the app which this request is targeting.",
+  schema: {
+    type: "string",
+  },
+}
+
+exports.queryId = {
+  in: "path",
+  name: "queryId",
+  required: true,
+  description: "The ID of the query which this request is targeting.",
+  schema: {
+    type: "string",
+  },
+}
+
+exports.userId = {
+  in: "path",
+  name: "userId",
+  required: true,
+  description: "The ID of the user which this request is targeting.",
+  schema: {
+    type: "string",
+  },
+}
