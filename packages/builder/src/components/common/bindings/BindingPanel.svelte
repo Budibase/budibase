@@ -58,7 +58,7 @@
   const updateValue = val => {
     valid = isValid(readableToRuntimeBinding(bindings, val))
     if (valid) {
-      dispatch("change", value)
+      dispatch("change", val)
     }
   }
 

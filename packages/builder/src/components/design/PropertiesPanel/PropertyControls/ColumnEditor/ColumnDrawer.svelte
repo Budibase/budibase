@@ -4,16 +4,15 @@
     Icon,
     DrawerContent,
     Layout,
-    Input,
     Select,
     Label,
     Body,
-    ColorPicker,
+    Input,
   } from "@budibase/bbui"
   import { flip } from "svelte/animate"
   import { dndzone } from "svelte-dnd-action"
   import { generate } from "shortid"
-  import { store } from "builderStore"
+  import CellEditor from "./CellEditor.svelte"
 
   export let columns = []
   export let options = []
@@ -65,10 +64,11 @@
   }
 
   const addAllColumns = () => {
-    let newColumns = []
+    let newColumns = columns || []
     options.forEach(field => {
       const fieldSchema = schema[field]
-      if (!fieldSchema?.autocolumn) {
+      const hasCol = columns && columns.findIndex(x => x.name === field) !== -1
+      if (!fieldSchema?.autocolumn && !hasCol) {
         newColumns.push({
           name: field,
           displayName: field,
@@ -92,15 +92,7 @@
             <div />
             <Label size="L">Column</Label>
             <Label size="L">Label</Label>
-            <Label size="L">Width</Label>
-            <Label size="L">Alignment</Label>
-            <Label size="L">Format</Label>
-            <div class="center">
-              <Label size="L">Background</Label>
-            </div>
-            <div class="center">
-              <Label size="L">Text color</Label>
-            </div>
+            <div />
             <div />
           </div>
           <div
@@ -131,33 +123,7 @@
                   on:change={e => (column.displayName = e.detail)}
                 />
                 <Input bind:value={column.displayName} placeholder="Label" />
-                <Input bind:value={column.width} placeholder="Auto" />
-                <Select
-                  bind:value={column.align}
-                  options={["Left", "Center", "Right"]}
-                  placeholder="Default"
-                />
-                <Select
-                  bind:value={column.format}
-                  options={["Left"]}
-                  placeholder="Default"
-                />
-                <div class="center">
-                  <ColorPicker
-                    value={column.background}
-                    on:change={e => (column.background = e.detail)}
-                    alignRight
-                    spectrumTheme={$store.theme}
-                  />
-                </div>
-                <div class="center">
-                  <ColorPicker
-                    value={column.color}
-                    on:change={e => (column.color = e.detail)}
-                    alignRight
-                    spectrumTheme={$store.theme}
-                  />
-                </div>
+                <CellEditor bind:column />
                 <Icon
                   name="Close"
                   hoverable
@@ -199,7 +165,7 @@
 <style>
   .container {
     width: 100%;
-    max-width: 1200px;
+    max-width: 600px;
     margin: 0 auto;
   }
   .columns {
@@ -212,7 +178,7 @@
   .column {
     gap: var(--spacing-l);
     display: grid;
-    grid-template-columns: 20px 1fr 1fr 1fr 1fr 1fr 72px 72px 20px;
+    grid-template-columns: 20px 1fr 1fr auto auto;
     align-items: center;
     border-radius: var(--border-radius-s);
     transition: background-color ease-in-out 130ms;
