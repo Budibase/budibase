@@ -1,2 +1,2 @@
 FROM nginx:latest
-COPY nginx.conf /etc/nginx/nginx.conf
+COPY .generated-nginx.prod.conf /etc/nginx/nginx.conf
