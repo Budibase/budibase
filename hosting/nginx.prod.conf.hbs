@@ -68,10 +68,12 @@ http {
     location /app {
       proxy_pass      http://$apps:4002;
       rewrite ^/app/(.*)$ /$1 break;
+      proxy_set_header Host $host;
     }
 
     location = / {
       proxy_pass      http://$apps:4002;
+      proxy_set_header Host $host;
     }
 
     {{#if watchtower}}
@@ -87,15 +89,18 @@ http {
       proxy_set_header    X-Real-IP           $remote_addr;
       proxy_set_header    X-Forwarded-For     $proxy_add_x_forwarded_for;
       proxy_pass      http://$apps:4002;
+      proxy_set_header Host $host;
     }
 
     location ~ ^/api/(system|admin|global)/ {
       proxy_pass      http://$worker:4003;
+      proxy_set_header Host $host;
     }
 
     location /worker/ {
       proxy_pass      http://$worker:4003;
       rewrite ^/worker/(.*)$ /$1 break;
+      proxy_set_header Host $host;
     }
 
     location /api/ {
