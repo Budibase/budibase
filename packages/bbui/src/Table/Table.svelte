@@ -16,6 +16,10 @@
    * editable: Set to false to disable editing a certain column if the
    *  allowEditColumns prop is true
    * width: the width of the column
+   * align: the alignment of the column
+   * template: a HBS or JS binding to use as the value
+   * background: the background color
+   * color: the text color
    */
   export let data = []
   export let schema = {}
