@@ -20,7 +20,6 @@ function fixRow(row, params) {
 
 exports.search = async ctx => {
   await rowController.search(ctx)
-  console.log(ctx.body)
 }
 
 exports.create = ctx => {

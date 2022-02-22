@@ -1,15 +1,8 @@
-const Router = require("@koa/router")
 const controller = require("../../controllers/public/rows")
-const authorized = require("../../../middleware/authorized")
-const { paramSubResource } = require("../../../middleware/resourceId")
-const {
-  PermissionLevels,
-  PermissionTypes,
-} = require("@budibase/backend-core/permissions")
+const Endpoint = require("./utils/Endpoint")
 
-const router = Router()
-
-router.use(paramSubResource("tableId", "rowId"))
+const read = [],
+  write = []
 
 /**
  * @openapi
@@ -127,10 +120,8 @@ router.use(paramSubResource("tableId", "rowId"))
  *               search:
  *                 $ref: '#/components/examples/rows'
  */
-router.post(
-  "/tables/:tableId/rows/search",
-  authorized(PermissionTypes.TABLE, PermissionLevels.READ),
-  controller.search
+read.push(
+  new Endpoint("post", "/tables/:tableId/rows/search", controller.search)
 )
 
 /**
@@ -164,11 +155,7 @@ router.post(
  *               row:
  *                 $ref: '#/components/examples/row'
  */
-router.post(
-  "/tables/:tableId/rows",
-  authorized(PermissionTypes.TABLE, PermissionLevels.WRITE),
-  controller.create
-)
+write.push(new Endpoint("post", "/tables/:tableId/rows", controller.create))
 
 /**
  * @openapi
@@ -201,10 +188,8 @@ router.post(
  *               row:
  *                 $ref: '#/components/examples/row'
  */
-router.put(
-  "/tables/:tableId/rows/:rowId",
-  authorized(PermissionTypes.TABLE, PermissionLevels.WRITE),
-  controller.update
+write.push(
+  new Endpoint("put", "/tables/:tableId/rows/:rowId", controller.update)
 )
 
 /**
@@ -229,10 +214,8 @@ router.put(
  *               row:
  *                 $ref: '#/components/examples/row'
  */
-router.delete(
-  "/tables/:tableId/rows/:rowId",
-  authorized(PermissionTypes.TABLE, PermissionLevels.WRITE),
-  controller.delete
+write.push(
+  new Endpoint("delete", "/tables/:tableId/rows/:rowId", controller.delete)
 )
 
 /**
@@ -257,10 +240,6 @@ router.delete(
  *               row:
  *                 $ref: '#/components/examples/row'
  */
-router.get(
-  "/tables/:tableId/rows/:rowId",
-  authorized(PermissionTypes.TABLE, PermissionLevels.READ),
-  controller.read
-)
+read.push(new Endpoint("get", "/tables/:tableId/rows/:rowId", controller.read))
 
-module.exports = router
+module.exports = { read, write }

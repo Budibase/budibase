@@ -1,7 +1,8 @@
-const Router = require("@koa/router")
 const controller = require("../../controllers/public/applications")
+const Endpoint = require("./utils/Endpoint")
 
-const router = Router()
+const read = [],
+  write = []
 
 /**
  * @openapi
@@ -34,7 +35,7 @@ const router = Router()
  *               applications:
  *                 $ref: '#/components/examples/applications'
  */
-router.post("/applications/search", controller.search)
+read.push(new Endpoint("post", "/applications/search", controller.search))
 
 /**
  * @openapi
@@ -62,7 +63,7 @@ router.post("/applications/search", controller.search)
  *               application:
  *                 $ref: '#/components/examples/application'
  */
-router.post("/applications", controller.create)
+write.push(new Endpoint("post", "/applications", controller.create))
 
 /**
  * @openapi
@@ -90,7 +91,7 @@ router.post("/applications", controller.create)
  *               application:
  *                 $ref: '#/components/examples/application'
  */
-router.put("/applications/:appId", controller.update)
+write.push(new Endpoint("put", "/applications/:appId", controller.update))
 
 /**
  * @openapi
@@ -112,7 +113,7 @@ router.put("/applications/:appId", controller.update)
  *               application:
  *                 $ref: '#/components/examples/application'
  */
-router.delete("/applications/:appId", controller.delete)
+write.push(new Endpoint("delete", "/applications/:appId", controller.delete))
 
 /**
  * @openapi
@@ -134,6 +135,6 @@ router.delete("/applications/:appId", controller.delete)
  *               application:
  *                 $ref: '#/components/examples/application'
  */
-router.get("/applications/:appId", controller.read)
+read.push(new Endpoint("get", "/applications/:appId", controller.read))
 
-module.exports = router
+module.exports = { read, write }

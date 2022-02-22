@@ -1,7 +1,8 @@
-const Router = require("@koa/router")
 const controller = require("../../controllers/public/tables")
+const Endpoint = require("./utils/Endpoint")
 
-const router = Router()
+const read = [],
+  write = []
 
 /**
  * @openapi
@@ -34,7 +35,7 @@ const router = Router()
  *               tables:
  *                 $ref: '#/components/examples/tables'
  */
-router.post("/tables/search", controller.search)
+read.push(new Endpoint("post", "/tables/search", controller.search))
 
 /**
  * @openapi
@@ -65,7 +66,7 @@ router.post("/tables/search", controller.search)
  *               table:
  *                 $ref: '#/components/examples/table'
  */
-router.post("/tables", controller.create)
+write.push(new Endpoint("post", "/tables", controller.create))
 
 /**
  * @openapi
@@ -96,7 +97,7 @@ router.post("/tables", controller.create)
  *               table:
  *                 $ref: '#/components/examples/table'
  */
-router.put("/tables/:tableId", controller.update)
+write.push(new Endpoint("put", "/tables/:tableId", controller.update))
 
 /**
  * @openapi
@@ -119,7 +120,7 @@ router.put("/tables/:tableId", controller.update)
  *               table:
  *                 $ref: '#/components/examples/table'
  */
-router.delete("/tables/:tableId", controller.delete)
+write.push(new Endpoint("delete", "/tables/:tableId", controller.delete))
 
 /**
  * @openapi
@@ -142,6 +143,6 @@ router.delete("/tables/:tableId", controller.delete)
  *               table:
  *                 $ref: '#/components/examples/table'
  */
-router.get("/tables/:tableId", controller.read)
+read.push(new Endpoint("get", "/tables/:tableId", controller.read))
 
-module.exports = router
+module.exports = { read, write }
