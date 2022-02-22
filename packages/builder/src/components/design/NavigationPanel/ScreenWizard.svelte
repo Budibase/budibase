@@ -74,6 +74,7 @@
       }
 
       draftScreen.routing.route = route
+      draftScreen.routing.roleId = roleId
 
       await store.actions.screens.save(draftScreen)
       if (draftScreen.props._instanceName.endsWith("List")) {
