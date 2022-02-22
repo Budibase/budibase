@@ -1,3 +1,5 @@
+const rowController = require("../row")
+
 // makes sure that the user doesn't need to pass in the type, tableId or _id params for
 // the call to be correct
 function fixRow(row, params) {
@@ -16,22 +18,19 @@ function fixRow(row, params) {
   return row
 }
 
-exports.search = () => {
-
+exports.search = async ctx => {
+  await rowController.search(ctx)
+  console.log(ctx.body)
 }
 
-exports.create = () => {
+exports.create = ctx => {
   ctx.request.body = fixRow(ctx.request.body, ctx.params)
 }
 
-exports.read = () => {
-
-}
+exports.read = () => {}
 
 exports.update = async ctx => {
   ctx.request.body = fixRow(ctx.request.body, ctx.params)
 }
 
-exports.delete = () => {
-
-}
+exports.delete = () => {}

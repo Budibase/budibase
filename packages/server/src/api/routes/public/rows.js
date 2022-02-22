@@ -1,7 +1,15 @@
 const Router = require("@koa/router")
 const controller = require("../../controllers/public/rows")
+const authorized = require("../../../middleware/authorized")
+const { paramSubResource } = require("../../../middleware/resourceId")
+const {
+  PermissionLevels,
+  PermissionTypes,
+} = require("@budibase/backend-core/permissions")
 
 const router = Router()
+
+router.use(paramSubResource("tableId", "rowId"))
 
 /**
  * @openapi
@@ -119,7 +127,11 @@ const router = Router()
  *               search:
  *                 $ref: '#/components/examples/rows'
  */
-router.post("/tables/:tableId/rows/search", controller.search)
+router.post(
+  "/tables/:tableId/rows/search",
+  authorized(PermissionTypes.TABLE, PermissionLevels.READ),
+  controller.search
+)
 
 /**
  * @openapi
@@ -152,7 +164,11 @@ router.post("/tables/:tableId/rows/search", controller.search)
  *               row:
  *                 $ref: '#/components/examples/row'
  */
-router.post("/tables/:tableId/rows", controller.create)
+router.post(
+  "/tables/:tableId/rows",
+  authorized(PermissionTypes.TABLE, PermissionLevels.WRITE),
+  controller.create
+)
 
 /**
  * @openapi
@@ -185,7 +201,11 @@ router.post("/tables/:tableId/rows", controller.create)
  *               row:
  *                 $ref: '#/components/examples/row'
  */
-router.put("/tables/:tableId/rows/:rowId", controller.update)
+router.put(
+  "/tables/:tableId/rows/:rowId",
+  authorized(PermissionTypes.TABLE, PermissionLevels.WRITE),
+  controller.update
+)
 
 /**
  * @openapi
@@ -209,7 +229,11 @@ router.put("/tables/:tableId/rows/:rowId", controller.update)
  *               row:
  *                 $ref: '#/components/examples/row'
  */
-router.delete("/tables/:tableId/rows/:rowId", controller.delete)
+router.delete(
+  "/tables/:tableId/rows/:rowId",
+  authorized(PermissionTypes.TABLE, PermissionLevels.WRITE),
+  controller.delete
+)
 
 /**
  * @openapi
@@ -233,6 +257,10 @@ router.delete("/tables/:tableId/rows/:rowId", controller.delete)
  *               row:
  *                 $ref: '#/components/examples/row'
  */
-router.get("/tables/:tableId/rows/:rowId", controller.read)
+router.get(
+  "/tables/:tableId/rows/:rowId",
+  authorized(PermissionTypes.TABLE, PermissionLevels.READ),
+  controller.read
+)
 
 module.exports = router

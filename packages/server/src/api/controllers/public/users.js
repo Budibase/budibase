@@ -1,19 +1,9 @@
-exports.search = () => {
+exports.search = () => {}
 
-}
+exports.create = () => {}
 
-exports.create = () => {
+exports.read = () => {}
 
-}
+exports.update = () => {}
 
-exports.read = () => {
-
-}
-
-exports.update = () => {
-
-}
-
-exports.delete = () => {
-
-}
+exports.delete = () => {}

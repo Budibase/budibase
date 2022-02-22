@@ -193,6 +193,7 @@ router
     "/api/:tableId/rows",
     paramResource("tableId"),
     authorized(PermissionTypes.TABLE, PermissionLevels.WRITE),
+    usage,
     rowController.patch
   )
   /**
