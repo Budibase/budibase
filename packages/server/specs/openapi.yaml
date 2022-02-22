@@ -633,6 +633,7 @@ components:
           type: object
           properties: {}
     rowOutput:
+      type: object
       properties:
         row:
           description: The row to be created/updated, based on the table schema.
@@ -644,6 +645,13 @@ components:
               - type: integer
               - type: array
               - type: boolean
+    nameSearch:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name to be used when searching - this will be used in a case
+            insensitive starts with match.
 security:
   - ApiKeyAuth: []
 paths:
@@ -654,6 +662,12 @@ paths:
         - applications
       parameters:
         - $ref: "#/components/parameters/appId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/nameSearch"
       responses:
         "200":
           description: Returns the applications that were found based on the search
@@ -677,6 +691,12 @@ paths:
         - applications
       parameters:
         - $ref: "#/components/parameters/appId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/application"
       responses:
         "200":
           description: Returns the created application.
@@ -694,6 +714,12 @@ paths:
         - applications
       parameters:
         - $ref: "#/components/parameters/appIdUrl"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/application"
       responses:
         "200":
           description: Returns the updated application.
@@ -743,6 +769,12 @@ paths:
         - queries
       parameters:
         - $ref: "#/components/parameters/appId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/nameSearch"
       responses:
         "200":
           description: Returns the queries found based on the search parameters.
@@ -1004,15 +1036,11 @@ paths:
       parameters:
         - $ref: "#/components/parameters/appId"
       requestBody:
+        required: true
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                  description: The name of the table, this is a case insensitive search using the
-                    provided name as a starts with search.
+              $ref: "#/components/schemas/nameSearch"
       responses:
         "200":
           description: Returns the found tables, based on the search parameters.
@@ -1054,9 +1082,9 @@ paths:
               examples:
                 table:
                   $ref: "#/components/examples/table"
-  /tables/:tableId:
+  "/tables/{tableId}":
     put:
-      summary: Update the specified table. This can be for internal or external tables.
+      summary: Update the specified table.
       tags:
         - tables
       parameters:
@@ -1080,7 +1108,6 @@ paths:
               examples:
                 table:
                   $ref: "#/components/examples/table"
-  "/tables/{tableId}":
     delete:
       summary: Delete a single table and all of its data.
       tags:
@@ -1122,6 +1149,12 @@ paths:
         - users
       parameters:
         - $ref: "#/components/parameters/appId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/nameSearch"
       responses:
         "200":
           description: Returns the found users based on search parameters.

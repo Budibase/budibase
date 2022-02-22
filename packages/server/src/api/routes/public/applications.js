@@ -12,6 +12,12 @@ const router = Router()
  *       - applications
  *     parameters:
  *       - $ref: '#/components/parameters/appId'
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/nameSearch'
  *     responses:
  *       200:
  *         description: Returns the applications that were found based on the search parameters.
@@ -39,6 +45,12 @@ router.post("/applications/search", controller.search)
  *       - applications
  *     parameters:
  *       - $ref: '#/components/parameters/appId'
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/application'
  *     responses:
  *       200:
  *         description: Returns the created application.
@@ -61,6 +73,12 @@ router.post("/applications", controller.create)
  *       - applications
  *     parameters:
  *       - $ref: '#/components/parameters/appIdUrl'
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/application'
  *     responses:
  *       200:
  *         description: Returns the updated application.

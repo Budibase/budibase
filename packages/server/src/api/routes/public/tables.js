@@ -13,15 +13,11 @@ const router = Router()
  *     parameters:
  *       - $ref: '#/components/parameters/appId'
  *     requestBody:
+ *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *                 description: The name of the table, this is a case insensitive search using the provided
- *                   name as a starts with search.
+ *             $ref: '#/components/schemas/nameSearch'
  *     responses:
  *       200:
  *         description: Returns the found tables, based on the search parameters.
@@ -73,9 +69,9 @@ router.post("/tables", controller.create)
 
 /**
  * @openapi
- * /tables/:tableId:
+ * /tables/{tableId}:
  *   put:
- *     summary: Update the specified table. This can be for internal or external tables.
+ *     summary: Update the specified table.
  *     tags:
  *       - tables
  *     parameters:
