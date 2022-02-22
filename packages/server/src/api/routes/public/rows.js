@@ -117,7 +117,7 @@ const router = Router()
  *                   type: boolean
  *             examples:
  *               search:
- *                 $ref: '#/components/examples/search'
+ *                 $ref: '#/components/examples/rows'
  */
 router.post("/tables/:tableId/rows/search", controller.search)
 
@@ -147,7 +147,7 @@ router.post("/tables/:tableId/rows/search", controller.search)
  *         content:
  *           application/json:
  *             schema:
- *               type: object
+ *               $ref: '#/components/schemas/rowOutput'
  *             examples:
  *               row:
  *                 $ref: '#/components/examples/row'
@@ -180,7 +180,7 @@ router.post("/tables/:tableId/rows", controller.create)
  *         content:
  *           application/json:
  *             schema:
- *               type: object
+ *               $ref: '#/components/schemas/rowOutput'
  *             examples:
  *               row:
  *                 $ref: '#/components/examples/row'
@@ -204,7 +204,7 @@ router.put("/tables/:tableId/rows/:rowId", controller.update)
  *         content:
  *           application/json:
  *             schema:
- *               type: object
+ *               $ref: '#/components/schemas/rowOutput'
  *             examples:
  *               row:
  *                 $ref: '#/components/examples/row'
@@ -228,11 +228,11 @@ router.delete("/tables/:tableId/rows/:rowId", controller.delete)
  *         content:
  *           application/json:
  *             schema:
- *               type: object
+ *               $ref: '#/components/schemas/rowOutput'
  *             examples:
  *               row:
  *                 $ref: '#/components/examples/row'
  */
-router.get("/tables/:tableId/rows/:rowId", controller.singleRead)
+router.get("/tables/:tableId/rows/:rowId", controller.read)
 
 module.exports = router

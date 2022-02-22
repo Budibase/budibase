@@ -21,6 +21,9 @@ const router = Router()
  *               type: array
  *               items:
  *                 $ref: '#/components/schemas/user'
+ *             examples:
+ *               users:
+ *                 $ref: '#/components/examples/users'
  */
 router.post("/users/search", controller.search)
 
@@ -39,7 +42,10 @@ router.post("/users/search", controller.search)
  *         content:
  *           application/json:
  *             schema:
- *               type: object
+ *               $ref: '#/components/schemas/userOutput'
+ *             examples:
+ *               user:
+ *                 $ref: '#/components/examples/user'
  */
 router.post("/users", controller.create)
 
@@ -59,7 +65,10 @@ router.post("/users", controller.create)
  *         content:
  *           application/json:
  *             schema:
- *               type: object
+ *               $ref: '#/components/schemas/userOutput'
+ *             examples:
+ *               user:
+ *                 $ref: '#/components/examples/user'
  */
 router.put("/users/:userId", controller.update)
 
@@ -79,8 +88,34 @@ router.put("/users/:userId", controller.update)
  *         content:
  *           application/json:
  *             schema:
- *               type: object
+ *               $ref: '#/components/schemas/userOutput'
+ *             examples:
+ *               user:
+ *                 $ref: '#/components/examples/user'
  */
 router.delete("/users/:userId", controller.delete)
+
+/**
+ * @openapi
+ * /users/{userId}:
+ *   get:
+ *     summary: Retrieve a single user by their ID.
+ *     tags:
+ *       - users
+ *     parameters:
+ *       - $ref: '#/components/parameters/userId'
+ *       - $ref: '#/components/parameters/appId'
+ *     responses:
+ *       200:
+ *         description: Returns the retrieved user.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/userOutput'
+ *             examples:
+ *               user:
+ *                 $ref: '#/components/examples/user'
+ */
+router.get("/users/:userId", controller.read)
 
 module.exports = router

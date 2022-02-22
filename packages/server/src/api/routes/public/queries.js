@@ -18,9 +18,15 @@ const router = Router()
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/query'
+ *               type: object
+ *               properties:
+ *                 queries:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/query'
+ *             examples:
+ *               queries:
+ *                 $ref: '#/components/examples/queries'
  */
 router.post("/queries/search", controller.search)
 
@@ -43,6 +49,9 @@ router.post("/queries/search", controller.search)
  *               type: array
  *               items:
  *                 type: object
+ *             examples:
+ *               query:
+ *                 $ref: '#/components/examples/query'
  */
 router.post("/queries/:queryId", controller.execute)
 

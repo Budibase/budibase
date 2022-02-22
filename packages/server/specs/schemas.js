@@ -158,3 +158,30 @@ exports.application = {
   type: "object",
   properties: {},
 }
+
+exports.applicationOutput = {
+  type: "object",
+  properties: {
+    application: exports.application,
+  },
+}
+
+exports.tableOutput = {
+  type: "object",
+  properties: {
+    table: exports.table,
+  },
+}
+
+exports.userOutput = {
+  type: "object",
+  properties: {
+    user: exports.user,
+  },
+}
+
+exports.rowOutput = {
+  properties: {
+    row: exports.row,
+  },
+}

@@ -24,7 +24,7 @@ exports.create = () => {
   ctx.request.body = fixRow(ctx.request.body, ctx.params)
 }
 
-exports.singleRead = () => {
+exports.read = () => {
 
 }
 
