@@ -1,7 +1,8 @@
-const Router = require("@koa/router")
 const controller = require("../../controllers/public/users")
+const Endpoint = require("./utils/Endpoint")
 
-const router = Router()
+const read = [],
+  write = []
 
 /**
  * @openapi
@@ -31,7 +32,7 @@ const router = Router()
  *               users:
  *                 $ref: '#/components/examples/users'
  */
-router.post("/users/search", controller.search)
+read.push(new Endpoint("post", "/users/search", controller.search))
 
 /**
  * @openapi
@@ -59,7 +60,7 @@ router.post("/users/search", controller.search)
  *               user:
  *                 $ref: '#/components/examples/user'
  */
-router.post("/users", controller.create)
+write.push(new Endpoint("post", "/users", controller.create))
 
 /**
  * @openapi
@@ -88,7 +89,7 @@ router.post("/users", controller.create)
  *               user:
  *                 $ref: '#/components/examples/user'
  */
-router.put("/users/:userId", controller.update)
+write.push(new Endpoint("put", "/users/:userId", controller.update))
 
 /**
  * @openapi
@@ -111,7 +112,7 @@ router.put("/users/:userId", controller.update)
  *               user:
  *                 $ref: '#/components/examples/user'
  */
-router.delete("/users/:userId", controller.delete)
+write.push(new Endpoint("delete", "/users/:userId", controller.delete))
 
 /**
  * @openapi
@@ -134,6 +135,6 @@ router.delete("/users/:userId", controller.delete)
  *               user:
  *                 $ref: '#/components/examples/user'
  */
-router.get("/users/:userId", controller.read)
+read.push(new Endpoint("get", "/users/:userId", controller.read))
 
-module.exports = router
+module.exports = { read, write }

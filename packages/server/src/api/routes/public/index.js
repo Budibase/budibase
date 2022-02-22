@@ -1,22 +1,55 @@
-const appRoute = require("./applications")
-const queryRoute = require("./queries")
-const tableRoute = require("./tables")
-const rowRoute = require("./rows")
-const userRoute = require("./users")
+const appEndpoints = require("./applications")
+const queryEndpoints = require("./queries")
+const tableEndpoints = require("./tables")
+const rowEndpoints = require("./rows")
+const userEndpoints = require("./users")
 const Router = require("@koa/router")
 const usage = require("../../../middleware/usageQuota")
+const authorized = require("../../../middleware/authorized")
+const {
+  paramResource,
+  paramSubResource,
+} = require("../../../middleware/resourceId")
+const {
+  PermissionLevels,
+  PermissionTypes,
+} = require("@budibase/backend-core/permissions")
 
 const PREFIX = "/api/public/v1"
-const ROUTES = [appRoute, queryRoute, tableRoute, rowRoute, userRoute]
 
-const router = new Router({
+const publicRouter = new Router({
   prefix: PREFIX,
 })
-for (let route of ROUTES) {
-  // apply usage to everything, middleware will work out whats needs it
-  route.use(usage)
-  router.use(route.routes())
-  router.use(route.allowedMethods())
+
+function addMiddleware(endpoints, middleware) {
+  for (let endpoint of endpoints) {
+    endpoint.addMiddleware(middleware)
+  }
 }
 
-module.exports = router
+function addToRouter(endpoints) {
+  for (let endpoint of endpoints) {
+    endpoint.apply(publicRouter)
+  }
+}
+
+function applyRoutes(endpoints, permType, resource, subResource = null) {
+  const paramMiddleware = subResource
+    ? paramSubResource(resource, subResource)
+    : paramResource(resource)
+  addMiddleware(endpoints.read, paramMiddleware)
+  addMiddleware(endpoints.write, paramMiddleware)
+  addMiddleware(endpoints.read, authorized(permType, PermissionLevels.READ))
+  addMiddleware(endpoints.write, authorized(permType, PermissionLevels.WRITE))
+  addMiddleware(endpoints.write, usage)
+  addToRouter(endpoints.read)
+  addToRouter(endpoints.write)
+}
+
+applyRoutes(rowEndpoints, PermissionTypes.TABLE, "tableId", "rowId")
+applyRoutes(appEndpoints, PermissionTypes.APP, "appId")
+applyRoutes(tableEndpoints, PermissionTypes.TABLE, "tableId")
+applyRoutes(userEndpoints, PermissionTypes.USER, "userId")
+applyRoutes(queryEndpoints, PermissionTypes.QUERY, "queryId")
+
+module.exports = publicRouter

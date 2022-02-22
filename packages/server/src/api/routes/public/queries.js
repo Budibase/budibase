@@ -1,7 +1,8 @@
-const Router = require("@koa/router")
 const controller = require("../../controllers/public/queries")
+const Endpoint = require("./utils/Endpoint")
 
-const router = Router()
+const read = [],
+  write = []
 
 /**
  * @openapi
@@ -34,7 +35,7 @@ const router = Router()
  *               queries:
  *                 $ref: '#/components/examples/queries'
  */
-router.post("/queries/search", controller.search)
+read.push(new Endpoint("post", "/queries/search", controller.search))
 
 /**
  * @openapi
@@ -59,6 +60,6 @@ router.post("/queries/search", controller.search)
  *               query:
  *                 $ref: '#/components/examples/query'
  */
-router.post("/queries/:queryId", controller.execute)
+write.push(new Endpoint("post", "/queries/:queryId", controller.execute))
 
-module.exports = router
+module.exports = { read, write }
