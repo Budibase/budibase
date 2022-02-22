@@ -31,7 +31,7 @@
   $: rowControl = $automationStore.selectedAutomation.automation.rowControl
   $: showBindingPicker =
     block.stepId === "CREATE_ROW" || block.stepId === "UPDATE_ROW"
-  $: console.log(showBindingPicker)
+
   $: testResult = $automationStore.selectedAutomation.testResults?.steps.filter(
     step => (block.id ? step.id === block.id : step.stepId === block.stepId)
   )
