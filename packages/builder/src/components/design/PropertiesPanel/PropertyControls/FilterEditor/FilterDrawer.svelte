@@ -90,7 +90,7 @@
 </script>
 
 <DrawerContent>
-  <div className="container">
+  <div class="container">
     <Layout noPadding>
       <Body size="S">
         {#if !filters?.length}
