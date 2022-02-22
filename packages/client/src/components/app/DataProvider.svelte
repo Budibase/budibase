@@ -11,8 +11,7 @@
   export let limit
   export let paginate
 
-  const { styleable, Provider, ActionTypes, API, rowSelectionStore } =
-    getContext("sdk")
+  const { styleable, Provider, ActionTypes, API } = getContext("sdk")
   const component = getContext("component")
 
   // We need to manage our lucene query manually as we want to allow components
@@ -140,19 +139,14 @@
         <slot />
       {/if}
       {#if paginate && $fetch.supportsPagination}
-        <div class="footer">
-          <div class="rowSelection">
-            {$rowSelectionStore.length} record(s) selected
-          </div>
-          <div>
-            <Pagination
-              page={$fetch.pageNumber + 1}
-              hasPrevPage={$fetch.hasPrevPage}
-              hasNextPage={$fetch.hasNextPage}
-              goToPrevPage={fetch.prevPage}
-              goToNextPage={fetch.nextPage}
-            />
-          </div>
+        <div class="pagination">
+          <Pagination
+            page={$fetch.pageNumber + 1}
+            hasPrevPage={$fetch.hasPrevPage}
+            hasNextPage={$fetch.hasNextPage}
+            goToPrevPage={fetch.prevPage}
+            goToNextPage={fetch.nextPage}
+          />
         </div>
       {/if}
     {/if}
@@ -173,10 +167,10 @@
     align-items: center;
     height: 100px;
   }
-  .footer {
+  .pagination {
     display: flex;
     flex-direction: row;
-    justify-content: space-between;
+    justify-content: flex-end;
     align-items: center;
     margin-top: var(--spacing-xl);
   }

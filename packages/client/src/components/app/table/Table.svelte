@@ -39,7 +39,10 @@
   )
 
   $: {
-    rowSelectionStore.actions.update(selectedRows)
+    rowSelectionStore.actions.updateSelection(
+      $component.id,
+      selectedRows.map(row => row._id)
+    )
   }
   const getFields = (schema, customColumns, showAutoColumns) => {
     // Check for an invalid column selection
@@ -137,10 +140,18 @@
   >
     <slot />
   </Table>
+  {#if allowSelectRows}
+    <div class="row-count">{selectedRows.length} record(s) selected</div>
+  {/if}
 </div>
 
 <style>
   div {
     background-color: var(--spectrum-alias-background-color-secondary);
+  }
+
+  .row-count {
+    margin-top: calc(1.4 * var(--spacing-xl));
+    position: absolute;
   }
 </style>

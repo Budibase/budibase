@@ -1,18 +1,20 @@
 import { writable } from "svelte/store"
 
 const createRowSelectionStore = () => {
-  const store = writable([])
+  const store = writable({})
 
-  function update(rows) {
+  function updateSelection(componentId, selectedRows) {
     store.update(state => {
-      state = [...rows]
+      state[componentId] = [...selectedRows]
       return state
     })
   }
+
   return {
     subscribe: store.subscribe,
+    set: store.set,
     actions: {
-      update,
+      updateSelection,
     },
   }
 }
