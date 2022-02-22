@@ -42,6 +42,12 @@ router.post("/users/search", controller.search)
  *       - users
  *     parameters:
  *       - $ref: '#/components/parameters/appId'
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/user'
  *     responses:
  *       200:
  *         description: Returns the created user.
@@ -65,6 +71,12 @@ router.post("/users", controller.create)
  *     parameters:
  *       - $ref: '#/components/parameters/userId'
  *       - $ref: '#/components/parameters/appId'
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/user'
  *     responses:
  *       200:
  *         description: Returns the updated user.

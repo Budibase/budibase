@@ -1,10 +1,9 @@
 const swaggerJsdoc = require("swagger-jsdoc")
 const { join } = require("path")
 const { writeFileSync } = require("fs")
-const examples = require("./examples")
+const { examples, schemas } = require("./resources")
 const parameters = require("./parameters")
 const security = require("./security")
-const schemas = require("./schemas")
 
 const VARIABLES = {}
 
