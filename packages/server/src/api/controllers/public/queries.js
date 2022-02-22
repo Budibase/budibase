@@ -1,7 +1,3 @@
-exports.search = () => {
+exports.search = () => {}
 
-}
-
-exports.execute = () => {
-
-}
+exports.execute = () => {}
