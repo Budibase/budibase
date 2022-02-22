@@ -53,175 +53,6 @@ components:
       schema:
         type: string
   examples:
-    table:
-      value:
-        table:
-          _id: ta_5b1649e42a5b41dea4ef7742a36a7a70
-          name: People
-          schema:
-            name:
-              type: string
-              name: name
-            age:
-              type: number
-              name: age
-            relationship:
-              type: link
-              name: relationship
-              tableId: ta_...
-              fieldName: relatedColumn
-              relationshipType: many-to-many
-    tables:
-      value:
-        tables:
-          - _id: ta_5b1649e42a5b41dea4ef7742a36a7a70
-            name: People
-            schema:
-              name:
-                type: string
-                name: name
-              age:
-                type: number
-                name: age
-              relationship:
-                type: link
-                name: relationship
-                tableId: ta_...
-                fieldName: relatedColumn
-                relationshipType: many-to-many
-    inputRow:
-      value:
-        _id: ro_ta_5b1649e42a5b41dea4ef7742a36a7a70_e6dc7e38cf1343b2b56760265201cda4
-        type: row
-        tableId: ta_5b1649e42a5b41dea4ef7742a36a7a70
-        name: Mike
-        age: 30
-        relationship:
-          - ro_ta_...
-    row:
-      value:
-        row:
-          _id: ro_ta_5b1649e42a5b41dea4ef7742a36a7a70_e6dc7e38cf1343b2b56760265201cda4
-          type: row
-          tableId: ta_5b1649e42a5b41dea4ef7742a36a7a70
-          name: Mike
-          age: 30
-          relationship:
-            - primaryDisplay: Joe
-              _id: ro_ta_...
-    rows:
-      value:
-        rows:
-          - _id: ro_ta_5b1649e42a5b41dea4ef7742a36a7a70_e6dc7e38cf1343b2b56760265201cda4
-            type: row
-            tableId: ta_5b1649e42a5b41dea4ef7742a36a7a70
-            name: Mike
-            age: 30
-            relationship:
-              - primaryDisplay: Joe
-                _id: ro_ta_...
-        hasNextPage: true
-        bookmark: 10
-    user:
-      value:
-        user:
-          _id: us_693a73206518477283a8d5ae31103252
-          email: test@test.com
-          roles:
-            app_957b12f943d348faa61db7e18e088d0f: BASIC
-          builder:
-            global: false
-          admin:
-            global: true
-          tenantId: default
-          status: active
-          budibaseAccess: true
-          csrfToken: 9c70291d-7137-48f9-9166-99ab5473a3d4
-          userId: us_693a73206518477283a8d5ae31103252
-          roleId: ADMIN
-          role:
-            _id: ADMIN
-            name: Admin
-            permissionId: admin
-            inherits: POWER
-    users:
-      value:
-        users:
-          - _id: us_693a73206518477283a8d5ae31103252
-            email: test@test.com
-            roles:
-              app_957b12f943d348faa61db7e18e088d0f: BASIC
-            builder:
-              global: false
-            admin:
-              global: true
-            tenantId: default
-            status: active
-            budibaseAccess: true
-            csrfToken: 9c70291d-7137-48f9-9166-99ab5473a3d4
-            userId: us_693a73206518477283a8d5ae31103252
-            roleId: ADMIN
-            role:
-              _id: ADMIN
-              name: Admin
-              permissionId: admin
-              inherits: POWER
-    query:
-      value:
-        query:
-          _id: query_datasource_plus_4d8be0c506b9465daf4bf84d890fdab6_454854487c574d45bc4029b1e153219e
-          datasourceId: datasource_plus_4d8be0c506b9465daf4bf84d890fdab6
-          parameters: []
-          fields:
-            sql: select * from persons
-          queryVerb: read
-          name: Help
-          schema:
-            personid:
-              name: personid
-              type: string
-            lastname:
-              name: lastname
-              type: string
-            firstname:
-              name: firstname
-              type: string
-            address:
-              name: address
-              type: string
-            city:
-              name: city
-              type: string
-          transformer: return data
-          readable: true
-    queries:
-      value:
-        queries:
-          - _id: query_datasource_plus_4d8be0c506b9465daf4bf84d890fdab6_454854487c574d45bc4029b1e153219e
-            datasourceId: datasource_plus_4d8be0c506b9465daf4bf84d890fdab6
-            parameters: []
-            fields:
-              sql: select * from persons
-            queryVerb: read
-            name: Help
-            schema:
-              personid:
-                name: personid
-                type: string
-              lastname:
-                name: lastname
-                type: string
-              firstname:
-                name: firstname
-                type: string
-              address:
-                name: address
-                type: string
-              city:
-                name: city
-                type: string
-            transformer: return data
-            readable: true
     application:
       value:
         application:
@@ -286,6 +117,175 @@ components:
                 name: Admin
                 permissionId: admin
                 inherits: POWER
+    inputRow:
+      value:
+        _id: ro_ta_5b1649e42a5b41dea4ef7742a36a7a70_e6dc7e38cf1343b2b56760265201cda4
+        type: row
+        tableId: ta_5b1649e42a5b41dea4ef7742a36a7a70
+        name: Mike
+        age: 30
+        relationship:
+          - ro_ta_...
+    row:
+      value:
+        row:
+          _id: ro_ta_5b1649e42a5b41dea4ef7742a36a7a70_e6dc7e38cf1343b2b56760265201cda4
+          type: row
+          tableId: ta_5b1649e42a5b41dea4ef7742a36a7a70
+          name: Mike
+          age: 30
+          relationship:
+            - primaryDisplay: Joe
+              _id: ro_ta_...
+    rows:
+      value:
+        rows:
+          - _id: ro_ta_5b1649e42a5b41dea4ef7742a36a7a70_e6dc7e38cf1343b2b56760265201cda4
+            type: row
+            tableId: ta_5b1649e42a5b41dea4ef7742a36a7a70
+            name: Mike
+            age: 30
+            relationship:
+              - primaryDisplay: Joe
+                _id: ro_ta_...
+        hasNextPage: true
+        bookmark: 10
+    table:
+      value:
+        table:
+          _id: ta_5b1649e42a5b41dea4ef7742a36a7a70
+          name: People
+          schema:
+            name:
+              type: string
+              name: name
+            age:
+              type: number
+              name: age
+            relationship:
+              type: link
+              name: relationship
+              tableId: ta_...
+              fieldName: relatedColumn
+              relationshipType: many-to-many
+    tables:
+      value:
+        tables:
+          - _id: ta_5b1649e42a5b41dea4ef7742a36a7a70
+            name: People
+            schema:
+              name:
+                type: string
+                name: name
+              age:
+                type: number
+                name: age
+              relationship:
+                type: link
+                name: relationship
+                tableId: ta_...
+                fieldName: relatedColumn
+                relationshipType: many-to-many
+    query:
+      value:
+        query:
+          _id: query_datasource_plus_4d8be0c506b9465daf4bf84d890fdab6_454854487c574d45bc4029b1e153219e
+          datasourceId: datasource_plus_4d8be0c506b9465daf4bf84d890fdab6
+          parameters: []
+          fields:
+            sql: select * from persons
+          queryVerb: read
+          name: Help
+          schema:
+            personid:
+              name: personid
+              type: string
+            lastname:
+              name: lastname
+              type: string
+            firstname:
+              name: firstname
+              type: string
+            address:
+              name: address
+              type: string
+            city:
+              name: city
+              type: string
+          transformer: return data
+          readable: true
+    queries:
+      value:
+        queries:
+          - _id: query_datasource_plus_4d8be0c506b9465daf4bf84d890fdab6_454854487c574d45bc4029b1e153219e
+            datasourceId: datasource_plus_4d8be0c506b9465daf4bf84d890fdab6
+            parameters: []
+            fields:
+              sql: select * from persons
+            queryVerb: read
+            name: Help
+            schema:
+              personid:
+                name: personid
+                type: string
+              lastname:
+                name: lastname
+                type: string
+              firstname:
+                name: firstname
+                type: string
+              address:
+                name: address
+                type: string
+              city:
+                name: city
+                type: string
+            transformer: return data
+            readable: true
+    user:
+      value:
+        user:
+          _id: us_693a73206518477283a8d5ae31103252
+          email: test@test.com
+          roles:
+            app_957b12f943d348faa61db7e18e088d0f: BASIC
+          builder:
+            global: false
+          admin:
+            global: true
+          tenantId: default
+          status: active
+          budibaseAccess: true
+          csrfToken: 9c70291d-7137-48f9-9166-99ab5473a3d4
+          userId: us_693a73206518477283a8d5ae31103252
+          roleId: ADMIN
+          role:
+            _id: ADMIN
+            name: Admin
+            permissionId: admin
+            inherits: POWER
+    users:
+      value:
+        users:
+          - _id: us_693a73206518477283a8d5ae31103252
+            email: test@test.com
+            roles:
+              app_957b12f943d348faa61db7e18e088d0f: BASIC
+            builder:
+              global: false
+            admin:
+              global: true
+            tenantId: default
+            status: active
+            budibaseAccess: true
+            csrfToken: 9c70291d-7137-48f9-9166-99ab5473a3d4
+            userId: us_693a73206518477283a8d5ae31103252
+            roleId: ADMIN
+            role:
+              _id: ADMIN
+              name: Admin
+              permissionId: admin
+              inherits: POWER
   securitySchemes:
     ApiKeyAuth:
       type: apiKey
@@ -294,6 +294,15 @@ components:
       description: Your individual API key, this will provide access based on the
         configured RBAC settings of your user.
   schemas:
+    application:
+      type: object
+      properties: {}
+    applicationOutput:
+      type: object
+      properties:
+        application:
+          type: object
+          properties: {}
     row:
       description: The row to be created/updated, based on the table schema.
       type: object
@@ -304,6 +313,19 @@ components:
           - type: integer
           - type: array
           - type: boolean
+    rowOutput:
+      type: object
+      properties:
+        row:
+          description: The row to be created/updated, based on the table schema.
+          type: object
+          additionalProperties:
+            oneOf:
+              - type: string
+              - type: object
+              - type: integer
+              - type: array
+              - type: boolean
     table:
       description: The table to be created/updated.
       type: object
@@ -455,21 +477,6 @@ components:
                 autocolumn:
                   type: boolean
                   description: Defines whether the column is automatically generated.
-    query:
-      type: object
-      properties: {}
-    user:
-      type: object
-      properties: {}
-    application:
-      type: object
-      properties: {}
-    applicationOutput:
-      type: object
-      properties:
-        application:
-          type: object
-          properties: {}
     tableOutput:
       type: object
       properties:
@@ -626,25 +633,18 @@ components:
                     autocolumn:
                       type: boolean
                       description: Defines whether the column is automatically generated.
+    query:
+      type: object
+      properties: {}
+    user:
+      type: object
+      properties: {}
     userOutput:
       type: object
       properties:
         user:
           type: object
           properties: {}
-    rowOutput:
-      type: object
-      properties:
-        row:
-          description: The row to be created/updated, based on the table schema.
-          type: object
-          additionalProperties:
-            oneOf:
-              - type: string
-              - type: object
-              - type: integer
-              - type: array
-              - type: boolean
     nameSearch:
       type: object
       properties:
@@ -1174,6 +1174,12 @@ paths:
         - users
       parameters:
         - $ref: "#/components/parameters/appId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/user"
       responses:
         "200":
           description: Returns the created user.
@@ -1192,6 +1198,12 @@ paths:
       parameters:
         - $ref: "#/components/parameters/userId"
         - $ref: "#/components/parameters/appId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/user"
       responses:
         "200":
           description: Returns the updated user.

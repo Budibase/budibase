@@ -2,19 +2,29 @@ const {
   FieldTypes,
   RelationshipTypes,
   FormulaTypes,
-} = require("../src/constants")
+} = require("../../src/constants")
+const { object } = require("./utils")
+const Resource = require("./utils/Resource")
 
-exports.row = {
-  description: "The row to be created/updated, based on the table schema.",
-  type: "object",
-  additionalProperties: {
-    oneOf: [
-      { type: "string" },
-      { type: "object" },
-      { type: "integer" },
-      { type: "array" },
-      { type: "boolean" },
-    ],
+const table = {
+  _id: "ta_5b1649e42a5b41dea4ef7742a36a7a70",
+  name: "People",
+  schema: {
+    name: {
+      type: "string",
+      name: "name",
+    },
+    age: {
+      type: "number",
+      name: "age",
+    },
+    relationship: {
+      type: "link",
+      name: "relationship",
+      tableId: "ta_...",
+      fieldName: "relatedColumn",
+      relationshipType: "many-to-many",
+    },
   },
 }
 
@@ -50,7 +60,7 @@ const baseColumnDef = {
   },
 }
 
-exports.table = {
+const tableSchema = {
   description: "The table to be created/updated.",
   type: "object",
   properties: {
@@ -144,39 +154,22 @@ exports.table = {
   },
 }
 
-function object(props) {
-  return {
-    type: "object",
-    properties: props,
-  }
-}
-
-exports.query = object({})
-
-exports.user = object({})
-
-exports.application = object({})
-
-exports.applicationOutput = object({
-  application: exports.application,
-})
-
-exports.tableOutput = object({
-  table: exports.table,
-})
-
-exports.userOutput = object({
-  user: exports.user,
-})
-
-exports.rowOutput = object({
-  row: exports.row,
-})
-
-exports.nameSearch = object({
-  name: {
-    type: "string",
-    description:
-      "The name to be used when searching - this will be used in a case insensitive starts with match.",
-  },
-})
+module.exports = new Resource()
+  .setExamples({
+    table: {
+      value: {
+        table: table,
+      },
+    },
+    tables: {
+      value: {
+        tables: [table],
+      },
+    },
+  })
+  .setSchemas({
+    table: tableSchema,
+    tableOutput: object({
+      table: tableSchema,
+    }),
+  })

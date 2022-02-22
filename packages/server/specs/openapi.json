@@ -73,52 +73,82 @@
       }
     },
     "examples": {
-      "table": {
+      "application": {
         "value": {
-          "table": {
-            "_id": "ta_5b1649e42a5b41dea4ef7742a36a7a70",
-            "name": "People",
-            "schema": {
-              "name": {
-                "type": "string",
-                "name": "name"
+          "application": {
+            "_id": "app_metadata",
+            "appId": "app_dev_957b12f943d348faa61db7e18e088d0f",
+            "version": "1.0.58-alpha.0",
+            "name": "App name",
+            "url": "/app-url",
+            "tenantId": "default",
+            "updatedAt": "2022-02-22T13:00:54.035Z",
+            "createdAt": "2022-02-11T18:02:26.961Z",
+            "status": "development",
+            "lockedBy": {
+              "_id": "us_693a73206518477283a8d5ae31103252",
+              "email": "test@test.com",
+              "roles": {
+                "app_957b12f943d348faa61db7e18e088d0f": "BASIC"
               },
-              "age": {
-                "type": "number",
-                "name": "age"
+              "builder": {
+                "global": false
               },
-              "relationship": {
-                "type": "link",
-                "name": "relationship",
-                "tableId": "ta_...",
-                "fieldName": "relatedColumn",
-                "relationshipType": "many-to-many"
+              "admin": {
+                "global": true
+              },
+              "tenantId": "default",
+              "status": "active",
+              "budibaseAccess": true,
+              "csrfToken": "9c70291d-7137-48f9-9166-99ab5473a3d4",
+              "userId": "us_693a73206518477283a8d5ae31103252",
+              "roleId": "ADMIN",
+              "role": {
+                "_id": "ADMIN",
+                "name": "Admin",
+                "permissionId": "admin",
+                "inherits": "POWER"
               }
             }
           }
         }
       },
-      "tables": {
+      "applications": {
         "value": {
-          "tables": [
+          "applications": [
             {
-              "_id": "ta_5b1649e42a5b41dea4ef7742a36a7a70",
-              "name": "People",
-              "schema": {
-                "name": {
-                  "type": "string",
-                  "name": "name"
+              "_id": "app_metadata",
+              "appId": "app_dev_957b12f943d348faa61db7e18e088d0f",
+              "version": "1.0.58-alpha.0",
+              "name": "App name",
+              "url": "/app-url",
+              "tenantId": "default",
+              "updatedAt": "2022-02-22T13:00:54.035Z",
+              "createdAt": "2022-02-11T18:02:26.961Z",
+              "status": "development",
+              "lockedBy": {
+                "_id": "us_693a73206518477283a8d5ae31103252",
+                "email": "test@test.com",
+                "roles": {
+                  "app_957b12f943d348faa61db7e18e088d0f": "BASIC"
                 },
-                "age": {
-                  "type": "number",
-                  "name": "age"
+                "builder": {
+                  "global": false
                 },
-                "relationship": {
-                  "type": "link",
-                  "name": "relationship",
-                  "tableId": "ta_...",
-                  "fieldName": "relatedColumn",
-                  "relationshipType": "many-to-many"
+                "admin": {
+                  "global": true
+                },
+                "tenantId": "default",
+                "status": "active",
+                "budibaseAccess": true,
+                "csrfToken": "9c70291d-7137-48f9-9166-99ab5473a3d4",
+                "userId": "us_693a73206518477283a8d5ae31103252",
+                "roleId": "ADMIN",
+                "role": {
+                  "_id": "ADMIN",
+                  "name": "Admin",
+                  "permissionId": "admin",
+                  "inherits": "POWER"
                 }
               }
             }
@@ -175,61 +205,53 @@
           "bookmark": 10
         }
       },
-      "user": {
+      "table": {
         "value": {
-          "user": {
-            "_id": "us_693a73206518477283a8d5ae31103252",
-            "email": "test@test.com",
-            "roles": {
-              "app_957b12f943d348faa61db7e18e088d0f": "BASIC"
-            },
-            "builder": {
-              "global": false
-            },
-            "admin": {
-              "global": true
-            },
-            "tenantId": "default",
-            "status": "active",
-            "budibaseAccess": true,
-            "csrfToken": "9c70291d-7137-48f9-9166-99ab5473a3d4",
-            "userId": "us_693a73206518477283a8d5ae31103252",
-            "roleId": "ADMIN",
-            "role": {
-              "_id": "ADMIN",
-              "name": "Admin",
-              "permissionId": "admin",
-              "inherits": "POWER"
+          "table": {
+            "_id": "ta_5b1649e42a5b41dea4ef7742a36a7a70",
+            "name": "People",
+            "schema": {
+              "name": {
+                "type": "string",
+                "name": "name"
+              },
+              "age": {
+                "type": "number",
+                "name": "age"
+              },
+              "relationship": {
+                "type": "link",
+                "name": "relationship",
+                "tableId": "ta_...",
+                "fieldName": "relatedColumn",
+                "relationshipType": "many-to-many"
+              }
             }
           }
         }
       },
-      "users": {
+      "tables": {
         "value": {
-          "users": [
+          "tables": [
             {
-              "_id": "us_693a73206518477283a8d5ae31103252",
-              "email": "test@test.com",
-              "roles": {
-                "app_957b12f943d348faa61db7e18e088d0f": "BASIC"
-              },
-              "builder": {
-                "global": false
-              },
-              "admin": {
-                "global": true
-              },
-              "tenantId": "default",
-              "status": "active",
-              "budibaseAccess": true,
-              "csrfToken": "9c70291d-7137-48f9-9166-99ab5473a3d4",
-              "userId": "us_693a73206518477283a8d5ae31103252",
-              "roleId": "ADMIN",
-              "role": {
-                "_id": "ADMIN",
-                "name": "Admin",
-                "permissionId": "admin",
-                "inherits": "POWER"
+              "_id": "ta_5b1649e42a5b41dea4ef7742a36a7a70",
+              "name": "People",
+              "schema": {
+                "name": {
+                  "type": "string",
+                  "name": "name"
+                },
+                "age": {
+                  "type": "number",
+                  "name": "age"
+                },
+                "relationship": {
+                  "type": "link",
+                  "name": "relationship",
+                  "tableId": "ta_...",
+                  "fieldName": "relatedColumn",
+                  "relationshipType": "many-to-many"
+                }
               }
             }
           ]
@@ -313,19 +335,39 @@
           ]
         }
       },
-      "application": {
+      "user": {
         "value": {
-          "application": {
-            "_id": "app_metadata",
-            "appId": "app_dev_957b12f943d348faa61db7e18e088d0f",
-            "version": "1.0.58-alpha.0",
-            "name": "App name",
-            "url": "/app-url",
+          "user": {
+            "_id": "us_693a73206518477283a8d5ae31103252",
+            "email": "test@test.com",
+            "roles": {
+              "app_957b12f943d348faa61db7e18e088d0f": "BASIC"
+            },
+            "builder": {
+              "global": false
+            },
+            "admin": {
+              "global": true
+            },
             "tenantId": "default",
-            "updatedAt": "2022-02-22T13:00:54.035Z",
-            "createdAt": "2022-02-11T18:02:26.961Z",
-            "status": "development",
-            "lockedBy": {
+            "status": "active",
+            "budibaseAccess": true,
+            "csrfToken": "9c70291d-7137-48f9-9166-99ab5473a3d4",
+            "userId": "us_693a73206518477283a8d5ae31103252",
+            "roleId": "ADMIN",
+            "role": {
+              "_id": "ADMIN",
+              "name": "Admin",
+              "permissionId": "admin",
+              "inherits": "POWER"
+            }
+          }
+        }
+      },
+      "users": {
+        "value": {
+          "users": [
+            {
               "_id": "us_693a73206518477283a8d5ae31103252",
               "email": "test@test.com",
               "roles": {
@@ -350,48 +392,6 @@
                 "inherits": "POWER"
               }
             }
-          }
-        }
-      },
-      "applications": {
-        "value": {
-          "applications": [
-            {
-              "_id": "app_metadata",
-              "appId": "app_dev_957b12f943d348faa61db7e18e088d0f",
-              "version": "1.0.58-alpha.0",
-              "name": "App name",
-              "url": "/app-url",
-              "tenantId": "default",
-              "updatedAt": "2022-02-22T13:00:54.035Z",
-              "createdAt": "2022-02-11T18:02:26.961Z",
-              "status": "development",
-              "lockedBy": {
-                "_id": "us_693a73206518477283a8d5ae31103252",
-                "email": "test@test.com",
-                "roles": {
-                  "app_957b12f943d348faa61db7e18e088d0f": "BASIC"
-                },
-                "builder": {
-                  "global": false
-                },
-                "admin": {
-                  "global": true
-                },
-                "tenantId": "default",
-                "status": "active",
-                "budibaseAccess": true,
-                "csrfToken": "9c70291d-7137-48f9-9166-99ab5473a3d4",
-                "userId": "us_693a73206518477283a8d5ae31103252",
-                "roleId": "ADMIN",
-                "role": {
-                  "_id": "ADMIN",
-                  "name": "Admin",
-                  "permissionId": "admin",
-                  "inherits": "POWER"
-                }
-              }
-            }
           ]
         }
       }
@@ -405,6 +405,19 @@
       }
     },
     "schemas": {
+      "application": {
+        "type": "object",
+        "properties": {}
+      },
+      "applicationOutput": {
+        "type": "object",
+        "properties": {
+          "application": {
+            "type": "object",
+            "properties": {}
+          }
+        }
+      },
       "row": {
         "description": "The row to be created/updated, based on the table schema.",
         "type": "object",
@@ -426,6 +439,34 @@
               "type": "boolean"
             }
           ]
+        }
+      },
+      "rowOutput": {
+        "type": "object",
+        "properties": {
+          "row": {
+            "description": "The row to be created/updated, based on the table schema.",
+            "type": "object",
+            "additionalProperties": {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "object"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "array"
+                },
+                {
+                  "type": "boolean"
+                }
+              ]
+            }
+          }
         }
       },
       "table": {
@@ -617,27 +658,6 @@
                 }
               }
             ]
-          }
-        }
-      },
-      "query": {
-        "type": "object",
-        "properties": {}
-      },
-      "user": {
-        "type": "object",
-        "properties": {}
-      },
-      "application": {
-        "type": "object",
-        "properties": {}
-      },
-      "applicationOutput": {
-        "type": "object",
-        "properties": {
-          "application": {
-            "type": "object",
-            "properties": {}
           }
         }
       },
@@ -838,40 +858,20 @@
           }
         }
       },
+      "query": {
+        "type": "object",
+        "properties": {}
+      },
+      "user": {
+        "type": "object",
+        "properties": {}
+      },
       "userOutput": {
         "type": "object",
         "properties": {
           "user": {
             "type": "object",
             "properties": {}
-          }
-        }
-      },
-      "rowOutput": {
-        "type": "object",
-        "properties": {
-          "row": {
-            "description": "The row to be created/updated, based on the table schema.",
-            "type": "object",
-            "additionalProperties": {
-              "oneOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "object"
-                },
-                {
-                  "type": "integer"
-                },
-                {
-                  "type": "array"
-                },
-                {
-                  "type": "boolean"
-                }
-              ]
-            }
           }
         }
       },
@@ -1750,6 +1750,16 @@
             "$ref": "#/components/parameters/appId"
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/user"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Returns the created user.",
@@ -1783,6 +1793,16 @@
             "$ref": "#/components/parameters/appId"
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/user"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Returns the updated user.",
