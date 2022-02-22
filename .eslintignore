@@ -5,3 +5,5 @@ packages/server/builder
 packages/server/coverage
 packages/server/client
 packages/builder/.routify
+packages/builder/cypress/support/queryLevelTransformerFunction.js
+packages/builder/cypress/support/queryLevelTransformerFunctionWithData.js
