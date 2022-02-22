@@ -12,6 +12,12 @@ const router = Router()
  *       - queries
  *     parameters:
  *       - $ref: '#/components/parameters/appId'
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/nameSearch'
  *     responses:
  *       200:
  *         description: Returns the queries found based on the search parameters.

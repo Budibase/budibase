@@ -12,6 +12,12 @@ const router = Router()
  *       - users
  *     parameters:
  *       - $ref: '#/components/parameters/appId'
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/nameSearch'
  *     responses:
  *       200:
  *         description: Returns the found users based on search parameters.

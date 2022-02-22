@@ -144,44 +144,39 @@ exports.table = {
   },
 }
 
-exports.query = {
-  type: "object",
-  properties: {},
+function object(props) {
+  return {
+    type: "object",
+    properties: props,
+  }
 }
 
-exports.user = {
-  type: "object",
-  properties: {},
-}
+exports.query = object({})
 
-exports.application = {
-  type: "object",
-  properties: {},
-}
+exports.user = object({})
 
-exports.applicationOutput = {
-  type: "object",
-  properties: {
-    application: exports.application,
+exports.application = object({})
+
+exports.applicationOutput = object({
+  application: exports.application,
+})
+
+exports.tableOutput = object({
+  table: exports.table,
+})
+
+exports.userOutput = object({
+  user: exports.user,
+})
+
+exports.rowOutput = object({
+  row: exports.row,
+})
+
+exports.nameSearch = object({
+  name: {
+    type: "string",
+    description:
+      "The name to be used when searching - this will be used in a case insensitive starts with match.",
   },
-}
-
-exports.tableOutput = {
-  type: "object",
-  properties: {
-    table: exports.table,
-  },
-}
-
-exports.userOutput = {
-  type: "object",
-  properties: {
-    user: exports.user,
-  },
-}
-
-exports.rowOutput = {
-  properties: {
-    row: exports.row,
-  },
-}
+})
