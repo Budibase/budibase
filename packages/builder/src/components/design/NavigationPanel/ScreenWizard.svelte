@@ -6,13 +6,14 @@
   import { store, selectedAccessRole, allScreens } from "builderStore"
   import analytics, { Events } from "analytics"
 
+  $: roleId = $selectedAccessRole || "BASIC"
+
   let newScreenModal
   let navigationSelectionModal
   let screenDetailsModal
   let screenName = ""
   let url = ""
   let selectedScreens = []
-  let roleId = $selectedAccessRole || "BASIC"
   let showProgressCircle = false
   let routeError
   let createdScreens = []
