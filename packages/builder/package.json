@@ -14,9 +14,10 @@
     "cy:run": "cypress run",
     "cy:open": "cypress open",
     "cy:run:ci": "cypress run --record",
-    "cy:test": "start-server-and-test cy:setup http://localhost:10001/builder cy:run",
-    "cy:ci": "start-server-and-test cy:setup:ci http://localhost:10001/builder cy:run",
-    "cy:debug": "start-server-and-test cy:setup http://localhost:10001/builder cy:open"
+    "cy:test": "start-server-and-test cy:setup http://localhost:41000/builder cy:run",
+    "cy:ci": "start-server-and-test cy:setup:ci http://localhost:41000/builder cy:run",
+    "cy:debug": "start-server-and-test cy:setup http://localhost:41000/builder cy:open",
+    "cy:debug:ci": "start-server-and-test cy:setup:ci http://localhost:41000/builder cy:open"
   },
   "jest": {
     "globals": {
