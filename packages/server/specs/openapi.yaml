@@ -55,24 +55,8 @@ components:
   examples:
     table:
       value:
-        _id: ta_5b1649e42a5b41dea4ef7742a36a7a70
-        name: People
-        schema:
-          name:
-            type: string
-            name: name
-          age:
-            type: number
-            name: age
-          relationship:
-            type: link
-            name: relationship
-            tableId: ta_...
-            fieldName: relatedColumn
-            relationshipType: many-to-many
-    tables:
-      value:
-        - _id: ta_5b1649e42a5b41dea4ef7742a36a7a70
+        table:
+          _id: ta_5b1649e42a5b41dea4ef7742a36a7a70
           name: People
           schema:
             name:
@@ -87,6 +71,24 @@ components:
               tableId: ta_...
               fieldName: relatedColumn
               relationshipType: many-to-many
+    tables:
+      value:
+        tables:
+          - _id: ta_5b1649e42a5b41dea4ef7742a36a7a70
+            name: People
+            schema:
+              name:
+                type: string
+                name: name
+              age:
+                type: number
+                name: age
+              relationship:
+                type: link
+                name: relationship
+                tableId: ta_...
+                fieldName: relatedColumn
+                relationshipType: many-to-many
     inputRow:
       value:
         _id: ro_ta_5b1649e42a5b41dea4ef7742a36a7a70_e6dc7e38cf1343b2b56760265201cda4
@@ -98,15 +100,16 @@ components:
           - ro_ta_...
     row:
       value:
-        _id: ro_ta_5b1649e42a5b41dea4ef7742a36a7a70_e6dc7e38cf1343b2b56760265201cda4
-        type: row
-        tableId: ta_5b1649e42a5b41dea4ef7742a36a7a70
-        name: Mike
-        age: 30
-        relationship:
-          - primaryDisplay: Joe
-            _id: ro_ta_...
-    search:
+        row:
+          _id: ro_ta_5b1649e42a5b41dea4ef7742a36a7a70_e6dc7e38cf1343b2b56760265201cda4
+          type: row
+          tableId: ta_5b1649e42a5b41dea4ef7742a36a7a70
+          name: Mike
+          age: 30
+          relationship:
+            - primaryDisplay: Joe
+              _id: ro_ta_...
+    rows:
       value:
         rows:
           - _id: ro_ta_5b1649e42a5b41dea4ef7742a36a7a70_e6dc7e38cf1343b2b56760265201cda4
@@ -119,6 +122,170 @@ components:
                 _id: ro_ta_...
         hasNextPage: true
         bookmark: 10
+    user:
+      value:
+        user:
+          _id: us_693a73206518477283a8d5ae31103252
+          email: test@test.com
+          roles:
+            app_957b12f943d348faa61db7e18e088d0f: BASIC
+          builder:
+            global: false
+          admin:
+            global: true
+          tenantId: default
+          status: active
+          budibaseAccess: true
+          csrfToken: 9c70291d-7137-48f9-9166-99ab5473a3d4
+          userId: us_693a73206518477283a8d5ae31103252
+          roleId: ADMIN
+          role:
+            _id: ADMIN
+            name: Admin
+            permissionId: admin
+            inherits: POWER
+    users:
+      value:
+        users:
+          - _id: us_693a73206518477283a8d5ae31103252
+            email: test@test.com
+            roles:
+              app_957b12f943d348faa61db7e18e088d0f: BASIC
+            builder:
+              global: false
+            admin:
+              global: true
+            tenantId: default
+            status: active
+            budibaseAccess: true
+            csrfToken: 9c70291d-7137-48f9-9166-99ab5473a3d4
+            userId: us_693a73206518477283a8d5ae31103252
+            roleId: ADMIN
+            role:
+              _id: ADMIN
+              name: Admin
+              permissionId: admin
+              inherits: POWER
+    query:
+      value:
+        query:
+          _id: query_datasource_plus_4d8be0c506b9465daf4bf84d890fdab6_454854487c574d45bc4029b1e153219e
+          datasourceId: datasource_plus_4d8be0c506b9465daf4bf84d890fdab6
+          parameters: []
+          fields:
+            sql: select * from persons
+          queryVerb: read
+          name: Help
+          schema:
+            personid:
+              name: personid
+              type: string
+            lastname:
+              name: lastname
+              type: string
+            firstname:
+              name: firstname
+              type: string
+            address:
+              name: address
+              type: string
+            city:
+              name: city
+              type: string
+          transformer: return data
+          readable: true
+    queries:
+      value:
+        queries:
+          - _id: query_datasource_plus_4d8be0c506b9465daf4bf84d890fdab6_454854487c574d45bc4029b1e153219e
+            datasourceId: datasource_plus_4d8be0c506b9465daf4bf84d890fdab6
+            parameters: []
+            fields:
+              sql: select * from persons
+            queryVerb: read
+            name: Help
+            schema:
+              personid:
+                name: personid
+                type: string
+              lastname:
+                name: lastname
+                type: string
+              firstname:
+                name: firstname
+                type: string
+              address:
+                name: address
+                type: string
+              city:
+                name: city
+                type: string
+            transformer: return data
+            readable: true
+    application:
+      value:
+        application:
+          _id: app_metadata
+          appId: app_dev_957b12f943d348faa61db7e18e088d0f
+          version: 1.0.58-alpha.0
+          name: App name
+          url: /app-url
+          tenantId: default
+          updatedAt: 2022-02-22T13:00:54.035Z
+          createdAt: 2022-02-11T18:02:26.961Z
+          status: development
+          lockedBy:
+            _id: us_693a73206518477283a8d5ae31103252
+            email: test@test.com
+            roles:
+              app_957b12f943d348faa61db7e18e088d0f: BASIC
+            builder:
+              global: false
+            admin:
+              global: true
+            tenantId: default
+            status: active
+            budibaseAccess: true
+            csrfToken: 9c70291d-7137-48f9-9166-99ab5473a3d4
+            userId: us_693a73206518477283a8d5ae31103252
+            roleId: ADMIN
+            role:
+              _id: ADMIN
+              name: Admin
+              permissionId: admin
+              inherits: POWER
+    applications:
+      value:
+        applications:
+          - _id: app_metadata
+            appId: app_dev_957b12f943d348faa61db7e18e088d0f
+            version: 1.0.58-alpha.0
+            name: App name
+            url: /app-url
+            tenantId: default
+            updatedAt: 2022-02-22T13:00:54.035Z
+            createdAt: 2022-02-11T18:02:26.961Z
+            status: development
+            lockedBy:
+              _id: us_693a73206518477283a8d5ae31103252
+              email: test@test.com
+              roles:
+                app_957b12f943d348faa61db7e18e088d0f: BASIC
+              builder:
+                global: false
+              admin:
+                global: true
+              tenantId: default
+              status: active
+              budibaseAccess: true
+              csrfToken: 9c70291d-7137-48f9-9166-99ab5473a3d4
+              userId: us_693a73206518477283a8d5ae31103252
+              roleId: ADMIN
+              role:
+                _id: ADMIN
+                name: Admin
+                permissionId: admin
+                inherits: POWER
   securitySchemes:
     ApiKeyAuth:
       type: apiKey
@@ -297,6 +464,186 @@ components:
     application:
       type: object
       properties: {}
+    applicationOutput:
+      type: object
+      properties:
+        application:
+          type: object
+          properties: {}
+    tableOutput:
+      type: object
+      properties:
+        table:
+          description: The table to be created/updated.
+          type: object
+          properties:
+            name:
+              description: The name of the table
+              type: string
+            primaryDisplay:
+              type: string
+              description: The name of the column which should be used in relationship tags
+                when relating to this table.
+            schema:
+              oneOf:
+                - type: object
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                        - link
+                      description: A relationship column.
+                    constraints:
+                      type: object
+                      description: A constraint can be applied to the column which will be validated
+                        against when a row is saved.
+                      properties:
+                        type:
+                          type: string
+                          enum:
+                            - string
+                            - number
+                            - object
+                            - boolean
+                        presence:
+                          type: boolean
+                          description: Defines whether the column is required or not.
+                    name:
+                      type: string
+                      description: The name of the column.
+                    autocolumn:
+                      type: boolean
+                      description: Defines whether the column is automatically generated.
+                    fieldName:
+                      type: string
+                      description: The name of the column which a relationship column is related to in
+                        another table.
+                    tableId:
+                      type: string
+                      description: The ID of the table which a relationship column is related to.
+                    relationshipType:
+                      type: string
+                      enum:
+                        - one-to-many
+                        - many-to-one
+                        - many-to-many
+                      description: Defines the type of relationship that this column will be used for.
+                    through:
+                      type: string
+                      description: When using a SQL table that contains many to many relationships
+                        this defines the table the relationships are linked
+                        through.
+                    foreignKey:
+                      type: string
+                      description: When using a SQL table that contains a one to many relationship
+                        this defines the foreign key.
+                    throughFrom:
+                      type: string
+                      description: When using a SQL table that utilises a through table, this defines
+                        the primary key in the through table for this table.
+                    throughTo:
+                      type: string
+                      description: When using a SQL table that utilises a through table, this defines
+                        the primary key in the through table for the related
+                        table.
+                - type: object
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                        - formula
+                      description: A formula column.
+                    constraints:
+                      type: object
+                      description: A constraint can be applied to the column which will be validated
+                        against when a row is saved.
+                      properties:
+                        type:
+                          type: string
+                          enum:
+                            - string
+                            - number
+                            - object
+                            - boolean
+                        presence:
+                          type: boolean
+                          description: Defines whether the column is required or not.
+                    name:
+                      type: string
+                      description: The name of the column.
+                    autocolumn:
+                      type: boolean
+                      description: Defines whether the column is automatically generated.
+                    formula:
+                      type: string
+                      description: Defines a Handlebars or JavaScript formula to use, note that
+                        Javascript formulas are expected to be provided in the
+                        base64 format.
+                    formulaType:
+                      type: string
+                      enum:
+                        - static
+                        - dynamic
+                      description: Defines whether this is a static or dynamic formula.
+                - type: object
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                        - string
+                        - longform
+                        - options
+                        - number
+                        - boolean
+                        - array
+                        - datetime
+                        - attachment
+                        - link
+                        - formula
+                        - auto
+                        - json
+                        - internal
+                      description: Defines the type of the column, most explain themselves, a link
+                        column is a relationship.
+                    constraints:
+                      type: object
+                      description: A constraint can be applied to the column which will be validated
+                        against when a row is saved.
+                      properties:
+                        type:
+                          type: string
+                          enum:
+                            - string
+                            - number
+                            - object
+                            - boolean
+                        presence:
+                          type: boolean
+                          description: Defines whether the column is required or not.
+                    name:
+                      type: string
+                      description: The name of the column.
+                    autocolumn:
+                      type: boolean
+                      description: Defines whether the column is automatically generated.
+    userOutput:
+      type: object
+      properties:
+        user:
+          type: object
+          properties: {}
+    rowOutput:
+      properties:
+        row:
+          description: The row to be created/updated, based on the table schema.
+          type: object
+          additionalProperties:
+            oneOf:
+              - type: string
+              - type: object
+              - type: integer
+              - type: array
+              - type: boolean
 security:
   - ApiKeyAuth: []
 paths:
@@ -314,9 +661,15 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/application"
+                type: object
+                properties:
+                  applications:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/application"
+              examples:
+                applications:
+                  $ref: "#/components/examples/applications"
   /applications:
     post:
       summary: Create a new application.
@@ -330,7 +683,10 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: "#/components/schemas/applicationOutput"
+              examples:
+                application:
+                  $ref: "#/components/examples/application"
   "/applications/{appId}":
     put:
       summary: Update an existing application by its ID.
@@ -344,7 +700,10 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: "#/components/schemas/applicationOutput"
+              examples:
+                application:
+                  $ref: "#/components/examples/application"
     delete:
       summary: Delete an existing application by its ID.
       tags:
@@ -357,7 +716,26 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: "#/components/schemas/applicationOutput"
+              examples:
+                application:
+                  $ref: "#/components/examples/application"
+    get:
+      summary: Retrieve a single application by its ID.
+      tags:
+        - applications
+      parameters:
+        - $ref: "#/components/parameters/appIdUrl"
+      responses:
+        "200":
+          description: Returns the retrieved application.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/applicationOutput"
+              examples:
+                application:
+                  $ref: "#/components/examples/application"
   /queries/search:
     post:
       summary: Search for a query based on its name.
@@ -371,9 +749,15 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/query"
+                type: object
+                properties:
+                  queries:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/query"
+              examples:
+                queries:
+                  $ref: "#/components/examples/queries"
   "/queries/{queryId}":
     post:
       summary: Execute a query and retrieve its response.
@@ -391,6 +775,9 @@ paths:
                 type: array
                 items:
                   type: object
+              examples:
+                query:
+                  $ref: "#/components/examples/query"
   "/tables/{tableId}/rows/search":
     post:
       summary: Used to search for rows within a table.
@@ -513,7 +900,7 @@ paths:
                     type: boolean
               examples:
                 search:
-                  $ref: "#/components/examples/search"
+                  $ref: "#/components/examples/rows"
   "/tables/{tableId}/rows":
     post:
       summary: Creates a new row within a specified table.
@@ -539,7 +926,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: "#/components/schemas/rowOutput"
               examples:
                 row:
                   $ref: "#/components/examples/row"
@@ -568,7 +955,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: "#/components/schemas/rowOutput"
               examples:
                 row:
                   $ref: "#/components/examples/row"
@@ -587,7 +974,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: "#/components/schemas/rowOutput"
               examples:
                 row:
                   $ref: "#/components/examples/row"
@@ -605,7 +992,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: "#/components/schemas/rowOutput"
               examples:
                 row:
                   $ref: "#/components/examples/row"
@@ -632,9 +1019,12 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  type: object
+                type: object
+                properties:
+                  applications:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/table"
               examples:
                 tables:
                   $ref: "#/components/examples/tables"
@@ -660,7 +1050,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: "#/components/schemas/tableOutput"
               examples:
                 table:
                   $ref: "#/components/examples/table"
@@ -686,10 +1076,10 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: "#/components/schemas/tableOutput"
               examples:
                 table:
-                  $ref: "#/components/examples/row"
+                  $ref: "#/components/examples/table"
   "/tables/{tableId}":
     delete:
       summary: Delete a single table and all of its data.
@@ -704,7 +1094,24 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: "#/components/schemas/tableOutput"
+              examples:
+                table:
+                  $ref: "#/components/examples/table"
+    get:
+      summary: Gets a single table by its ID.
+      tags:
+        - tables
+      parameters:
+        - $ref: "#/components/parameters/tableId"
+        - $ref: "#/components/parameters/appId"
+      responses:
+        "200":
+          description: Returns the retrieved table.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/tableOutput"
               examples:
                 table:
                   $ref: "#/components/examples/table"
@@ -724,6 +1131,9 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/user"
+              examples:
+                users:
+                  $ref: "#/components/examples/users"
   /users:
     post:
       summary: Create a new user in the Budibase portal.
@@ -737,7 +1147,10 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: "#/components/schemas/userOutput"
+              examples:
+                user:
+                  $ref: "#/components/examples/user"
   "/users/{userId}":
     put:
       summary: Update an existing user by their ID.
@@ -752,7 +1165,10 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: "#/components/schemas/userOutput"
+              examples:
+                user:
+                  $ref: "#/components/examples/user"
     delete:
       summary: Delete an existing user by their ID.
       tags:
@@ -766,5 +1182,25 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: "#/components/schemas/userOutput"
+              examples:
+                user:
+                  $ref: "#/components/examples/user"
+    get:
+      summary: Retrieve a single user by their ID.
+      tags:
+        - users
+      parameters:
+        - $ref: "#/components/parameters/userId"
+        - $ref: "#/components/parameters/appId"
+      responses:
+        "200":
+          description: Returns the retrieved user.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/userOutput"
+              examples:
+                user:
+                  $ref: "#/components/examples/user"
 tags: []

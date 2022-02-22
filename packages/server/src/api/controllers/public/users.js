@@ -6,6 +6,10 @@ exports.create = () => {
 
 }
 
+exports.read = () => {
+
+}
+
 exports.update = () => {
 
 }

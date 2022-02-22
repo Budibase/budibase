@@ -28,9 +28,12 @@ const router = Router()
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 type: object
+ *               type: object
+ *               properties:
+ *                 applications:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/table'
  *             examples:
  *               tables:
  *                 $ref: '#/components/examples/tables'
@@ -61,7 +64,7 @@ router.post("/tables/search", controller.search)
  *         content:
  *           application/json:
  *             schema:
- *               type: object
+ *               $ref: '#/components/schemas/tableOutput'
  *             examples:
  *               table:
  *                 $ref: '#/components/examples/table'
@@ -92,10 +95,10 @@ router.post("/tables", controller.create)
  *         content:
  *           application/json:
  *             schema:
- *               type: object
+ *               $ref: '#/components/schemas/tableOutput'
  *             examples:
  *               table:
- *                 $ref: '#/components/examples/row'
+ *                 $ref: '#/components/examples/table'
  */
 router.put("/tables/:tableId", controller.update)
 
@@ -115,11 +118,34 @@ router.put("/tables/:tableId", controller.update)
  *         content:
  *           application/json:
  *             schema:
- *               type: object
+ *               $ref: '#/components/schemas/tableOutput'
  *             examples:
  *               table:
  *                 $ref: '#/components/examples/table'
  */
 router.delete("/tables/:tableId", controller.delete)
+
+/**
+ * @openapi
+ * /tables/{tableId}:
+ *   get:
+ *     summary: Gets a single table by its ID.
+ *     tags:
+ *       - tables
+ *     parameters:
+ *       - $ref: '#/components/parameters/tableId'
+ *       - $ref: '#/components/parameters/appId'
+ *     responses:
+ *       200:
+ *         description: Returns the retrieved table.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/tableOutput'
+ *             examples:
+ *               table:
+ *                 $ref: '#/components/examples/table'
+ */
+router.get("/tables/:tableId", controller.read)
 
 module.exports = router

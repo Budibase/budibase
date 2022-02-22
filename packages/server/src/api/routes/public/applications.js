@@ -18,9 +18,15 @@ const router = Router()
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/application'
+ *               type: object
+ *               properties:
+ *                 applications:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/application'
+ *             examples:
+ *               applications:
+ *                 $ref: '#/components/examples/applications'
  */
 router.post("/applications/search", controller.search)
 
@@ -39,7 +45,10 @@ router.post("/applications/search", controller.search)
  *         content:
  *           application/json:
  *             schema:
- *               type: object
+ *               $ref: '#/components/schemas/applicationOutput'
+ *             examples:
+ *               application:
+ *                 $ref: '#/components/examples/application'
  */
 router.post("/applications", controller.create)
 
@@ -58,7 +67,10 @@ router.post("/applications", controller.create)
  *         content:
  *           application/json:
  *             schema:
- *               type: object
+ *               $ref: '#/components/schemas/applicationOutput'
+ *             examples:
+ *               application:
+ *                 $ref: '#/components/examples/application'
  */
 router.put("/applications/:appId", controller.update)
 
@@ -77,8 +89,33 @@ router.put("/applications/:appId", controller.update)
  *         content:
  *           application/json:
  *             schema:
- *               type: object
+ *               $ref: '#/components/schemas/applicationOutput'
+ *             examples:
+ *               application:
+ *                 $ref: '#/components/examples/application'
  */
 router.delete("/applications/:appId", controller.delete)
+
+/**
+ * @openapi
+ * /applications/{appId}:
+ *   get:
+ *     summary: Retrieve a single application by its ID.
+ *     tags:
+ *       - applications
+ *     parameters:
+ *       - $ref: '#/components/parameters/appIdUrl'
+ *     responses:
+ *       200:
+ *         description: Returns the retrieved application.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/applicationOutput'
+ *             examples:
+ *               application:
+ *                 $ref: '#/components/examples/application'
+ */
+router.get("/applications/:appId", controller.read)
 
 module.exports = router
