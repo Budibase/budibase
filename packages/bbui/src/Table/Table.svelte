@@ -30,6 +30,7 @@
   export let customRenderers = []
   export let disableSorting = false
   export let allowSelectAllRows = false
+
   const dispatch = createEventDispatcher()
   // Config
   const rowHeight = 55
@@ -43,6 +44,8 @@
   // Table state
   let height = 0
   let loaded = false
+  let checkboxStatus = false
+
   $: schema = fixSchema(schema)
   $: if (!loading) loaded = true
   $: rows = data ?? []
@@ -51,6 +54,16 @@
   $: sortedRows = sortRows(rows, sortColumn, sortOrder)
   $: fields = getFields(schema, showAutoColumns)
   $: showEditColumn = allowEditRows || allowSelectRows
+
+  // Deselect the "select all" checkbox whern the user navigates to a new page
+  $: {
+    let checkRowCount = rows.filter(o1 =>
+      selectedRows.some(o2 => o1._id === o2._id)
+    )
+    if (checkRowCount.length === 0) {
+      checkboxStatus = false
+    }
+  }
 
   // Scrolling state
   let timeout
@@ -207,10 +220,23 @@
     if (!allowSelectAllRows) {
       return
     }
+
     if (e.detail) {
-      selectedRows = rows
+      let rowsToAdd = []
+      rows.map(x =>
+        selectedRows
+          .map(y => rows.map(x => x._id).indexOf(y._id))
+          .includes(true)
+          ? null
+          : rowsToAdd.push(x)
+      )
+      selectedRows = [...selectedRows, ...rowsToAdd]
     } else {
-      selectedRows = []
+      //remove every object from selectedRows that is not in rows
+      let filtered = selectedRows.filter(el =>
+        rows.every(f => f._id !== el._id)
+      )
+      selectedRows = filtered
     }
   }
 
@@ -219,9 +245,6 @@
       return
     }
     if (selectedRows.some(selectedRow => selectedRow._id === row._id)) {
-      console.log("hello")
-      console.log(row)
-
       selectedRows = selectedRows.filter(
         selectedRow => selectedRow._id !== row._id
       )
@@ -250,7 +273,10 @@
                   <th class="spectrum-Table-headCell">
                     <div class="spectrum-Table-headCell-content">
                       {#if allowSelectAllRows}
-                        <Checkbox on:change={toggleSelectAll} />
+                        <Checkbox
+                          bind:value={checkboxStatus}
+                          on:change={toggleSelectAll}
+                        />
                       {:else}
                         {editColumnTitle || ""}
                       {/if}
