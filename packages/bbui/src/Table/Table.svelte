@@ -222,15 +222,7 @@
     }
 
     if (e.detail) {
-      let rowsToAdd = []
-      rows.map(x =>
-        selectedRows
-          .map(y => rows.map(x => x._id).indexOf(y._id))
-          .includes(true)
-          ? null
-          : rowsToAdd.push(x)
-      )
-      selectedRows = [...selectedRows, ...rowsToAdd]
+      selectedRows = [...selectedRows, ...rows]
     } else {
       //remove every object from selectedRows that is not in rows
       let filtered = selectedRows.filter(el =>
