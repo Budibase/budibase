@@ -15,6 +15,7 @@
   export let linkColumn
   export let linkPeek
   export let allowSelectRows
+  export let compact
 
   const component = getContext("component")
   const { styleable, getAction, ActionTypes, routeStore, rowSelectionStore } =
@@ -80,6 +81,7 @@
         order: 0,
         sortable: false,
         divider: true,
+        width: "auto",
       }
     }
 
@@ -92,8 +94,13 @@
       if (UnsortableTypes.includes(schema[columnName].type)) {
         newSchema[columnName].sortable = false
       }
-      if (field?.displayName) {
-        newSchema[columnName].displayName = field?.displayName
+
+      // Add additional settings like width etc
+      if (typeof field === "object") {
+        newSchema[columnName] = {
+          ...newSchema[columnName],
+          ...field,
+        }
       }
     })
     return newSchema
@@ -127,14 +134,15 @@
     {loading}
     {rowCount}
     {quiet}
+    {compact}
     {customRenderers}
     {allowSelectRows}
     bind:selectedRows
-    allowSelectAllRows={true}
     allowEditRows={false}
     allowEditColumns={false}
     showAutoColumns={true}
     disableSorting
+    autoSortColumns={!columns?.length}
     on:sort={onSort}
     on:click={onClick}
   >
