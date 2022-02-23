@@ -1,10 +1,10 @@
 {
-  "baseUrl": "http://localhost:41000",
+  "baseUrl": "http://localhost:4100",
   "video": true,
   "projectId": "bmbemn",
   "env": {
-    "PORT": "41000",
-    "WORKER_PORT": "42000",
+    "PORT": "4100",
+    "WORKER_PORT": "4200",
     "JWT_SECRET": "test",
     "HOST_IP": ""
   }
