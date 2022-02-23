@@ -35,13 +35,13 @@ exports.read = async ctx => {
 }
 
 exports.update = async ctx => {
-  ctx.request.body = await addRev(fixRow(ctx.request.body, ctx.params))
+  ctx.request.body = await addRev(fixRow(ctx.request.body, ctx.params.tableId))
   ctx.body = { row: ctx.body }
 }
 
 exports.delete = async ctx => {
   // set the body as expected, with the _id and _rev fields
-  ctx.request.body = await addRev({ _id: ctx.params.rowId })
+  ctx.request.body = await addRev(fixRow({}, ctx.params.tableId))
   await rowController.destroy(ctx)
   // destroy controller doesn't currently return the row as the body, need to adjust this
   // in the public API to be correct

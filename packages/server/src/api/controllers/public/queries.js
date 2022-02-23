@@ -1,11 +1,11 @@
-const { searchDocs } = require("./utils")
-const { DocumentTypes } = require("../../../db/utils")
+const { search } = require("./utils")
 const queryController = require("../query")
 
 exports.search = async ctx => {
+  await queryController.fetch(ctx)
   const { name } = ctx.request.body
   ctx.body = {
-    queries: await searchDocs(DocumentTypes.QUERY, "name", name),
+    queries: search(ctx.body, name),
   }
 }
 
