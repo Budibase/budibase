@@ -167,8 +167,13 @@ module.exports.disableEscaping = string => {
   if (matches == null) {
     return string
   }
-  for (let match of matches) {
-    string = string.replace(match, `{${match}}`)
+
+  // find the unique set
+  const unique = [...new Set(matches)]
+  for (let match of unique) {
+    // add a negative lookahead to exclude any already
+    const regex = new RegExp(`${match}(?!})`, "g")
+    string = string.replace(regex, `{${match}}`)
   }
   return string
 }

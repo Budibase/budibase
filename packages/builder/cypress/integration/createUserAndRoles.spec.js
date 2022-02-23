@@ -52,7 +52,7 @@ filterTests(["smoke", "all"], () => {
           .contains("Choose an option")
           .click()
           .then(() => {
-            cy.wait(500)
+            cy.wait(1000)
             if (i == 0) {
               cy.get(".spectrum-Popover").contains("Admin").click()
             }
@@ -62,14 +62,14 @@ filterTests(["smoke", "all"], () => {
             if (i == 2) {
               cy.get(".spectrum-Popover").contains("Basic").click()
             }
-            cy.wait(500)
+            cy.wait(1000)
             cy.get(".spectrum-Button")
               .contains("Update role")
               .click({ force: true })
           })
       }
       // Confirm roles exist within Configure roles table
-      cy.wait(500)
+      cy.wait(2000)
       cy.get(".spectrum-Table")
         .eq(0)
         .within(assginedRoles => {
