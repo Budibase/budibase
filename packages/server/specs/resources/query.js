@@ -36,6 +36,44 @@ const query = {
   readable: true,
 }
 
+const restResponse = {
+  value: {
+    data: [
+      {
+        value: "<html lang='en-GB'></html>",
+      },
+    ],
+    pagination: {
+      cursor: "2",
+    },
+    raw: "<html lang='en-GB'></html>",
+    headers: {
+      "content-type": "text/html; charset=ISO-8859-1",
+    },
+  },
+}
+
+const sqlResponse = {
+  value: {
+    data: [
+      {
+        personid: 1,
+        lastname: "Hughes",
+        firstname: "Mike",
+        address: "123 Fake Street",
+        city: "Belfast",
+      },
+      {
+        personid: 2,
+        lastname: "Smith",
+        firstname: "John",
+        address: "64 Updown Road",
+        city: "Dublin",
+      },
+    ],
+  },
+}
+
 const querySchema = object({})
 
 module.exports = new Resource()
@@ -50,6 +88,8 @@ module.exports = new Resource()
         queries: [query],
       },
     },
+    restResponse,
+    sqlResponse,
   })
   .setSchemas({
     query: querySchema,

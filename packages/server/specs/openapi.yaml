@@ -242,6 +242,28 @@ components:
                 type: string
             transformer: return data
             readable: true
+    restResponse:
+      value:
+        data:
+          - value: <html lang='en-GB'></html>
+        pagination:
+          cursor: "2"
+        raw: <html lang='en-GB'></html>
+        headers:
+          content-type: text/html; charset=ISO-8859-1
+    sqlResponse:
+      value:
+        data:
+          - personid: 1
+            lastname: Hughes
+            firstname: Mike
+            address: 123 Fake Street
+            city: Belfast
+          - personid: 2
+            lastname: Smith
+            firstname: John
+            address: 64 Updown Road
+            city: Dublin
     user:
       value:
         user:
@@ -804,12 +826,33 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  type: object
+                type: object
+                properties:
+                  data:
+                    type: array
+                    description: The data retrieved from the query.
+                    items:
+                      type: object
+                      description: The structure of the returned data will be an object, if it is just
+                        a string then this will be an object containing "value".
+                  pagination:
+                    type: object
+                    description: For supported query types this returns pagination information.
+                    properties:
+                      cursor:
+                        type: string
+                        description: The pagination cursor location.
+                  raw:
+                    type: string
+                    description: The raw query response.
+                  headers:
+                    type: object
+                    description: For REST queries the headers in the response will be returned here.
               examples:
-                query:
-                  $ref: "#/components/examples/query"
+                REST:
+                  $ref: "#/components/examples/restResponse"
+                SQL:
+                  $ref: "#/components/examples/sqlResponse"
   "/tables/{tableId}/rows/search":
     post:
       summary: Used to search for rows within a table.

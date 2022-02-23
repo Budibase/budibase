@@ -53,12 +53,34 @@ read.push(new Endpoint("post", "/queries/search", controller.search))
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 type: object
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   description: The data retrieved from the query.
+ *                   items:
+ *                     type: object
+ *                     description: The structure of the returned data will be an object,
+ *                       if it is just a string then this will be an object containing "value".
+ *                 pagination:
+ *                   type: object
+ *                   description: For supported query types this returns pagination information.
+ *                   properties:
+ *                     cursor:
+ *                       type: string
+ *                       description: The pagination cursor location.
+ *                 raw:
+ *                   type: string
+ *                   description: The raw query response.
+ *                 headers:
+ *                   type: object
+ *                   description: For REST queries the headers in the response will be returned here.
  *             examples:
- *               query:
- *                 $ref: '#/components/examples/query'
+ *               REST:
+ *                 $ref: '#/components/examples/restResponse'
+ *               SQL:
+ *                 $ref: '#/components/examples/sqlResponse'
+ *
  */
 write.push(new Endpoint("post", "/queries/:queryId", controller.execute))
 

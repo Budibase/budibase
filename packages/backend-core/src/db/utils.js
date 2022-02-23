@@ -68,6 +68,7 @@ function getDocParams(docType, docId = null, otherProps = {}) {
     endkey: `${docType}${SEPARATOR}${docId}${UNICODE_MAX}`,
   }
 }
+exports.getDocParams = getDocParams
 
 /**
  * Generates a new workspace ID.

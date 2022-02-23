@@ -46,10 +46,10 @@ function applyRoutes(endpoints, permType, resource, subResource = null) {
   addToRouter(endpoints.write)
 }
 
-applyRoutes(rowEndpoints, PermissionTypes.TABLE, "tableId", "rowId")
 applyRoutes(appEndpoints, PermissionTypes.APP, "appId")
 applyRoutes(tableEndpoints, PermissionTypes.TABLE, "tableId")
 applyRoutes(userEndpoints, PermissionTypes.USER, "userId")
 applyRoutes(queryEndpoints, PermissionTypes.QUERY, "queryId")
+//applyRoutes(rowEndpoints, PermissionTypes.TABLE, "tableId", "rowId")
 
 module.exports = publicRouter
