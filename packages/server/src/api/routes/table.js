@@ -53,8 +53,8 @@ router
    * @apiSuccess {object[]} body The response body will be the table that was found.
    */
   .get(
-    "/api/tables/:id",
-    paramResource("id"),
+    "/api/tables/:tableId",
+    paramResource("tableId"),
     authorized(PermissionTypes.TABLE, PermissionLevels.READ),
     tableController.find
   )

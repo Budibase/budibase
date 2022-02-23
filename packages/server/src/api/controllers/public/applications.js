@@ -14,7 +14,7 @@ exports.search = async ctx => {
   const { name } = ctx.request.body
   const apps = await getAllApps({ all: true })
   ctx.body = {
-    applications: search(apps, "name", name),
+    applications: search(apps, name),
   }
 }
 
