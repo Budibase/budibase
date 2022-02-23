@@ -26,7 +26,7 @@ function request(ctx, request) {
     delete request.body
   }
   if (ctx && ctx.headers) {
-    request.headers.cookie = ctx.headers.cookie
+    request.headers = ctx.headers
   }
   return request
 }
