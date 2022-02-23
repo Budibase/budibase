@@ -1,6 +1,6 @@
 {
   "baseUrl": "http://localhost:10001",
-  "video": true,
+  "video": false,
   "projectId": "bmbemn",
   "env": {
     "PORT": "10001",
