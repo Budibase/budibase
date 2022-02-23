@@ -19,7 +19,8 @@ exports.definition = {
   name: "Condition",
   tagline: "{{inputs.field}} {{inputs.condition}} {{inputs.value}}",
   icon: "Branch2",
-  description: "Conditionally halt automations which do not meet certain conditions",
+  description:
+    "Conditionally halt automations which do not meet certain conditions",
   type: "LOGIC",
   internal: true,
   stepId: "FILTER",
