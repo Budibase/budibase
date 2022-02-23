@@ -46,6 +46,8 @@ filterTests(["smoke", "all"], () => {
           .eq(1)
           .find(".spectrum-Table-row")
           .eq(0)
+          .find(".spectrum-Table-cell")
+          .eq(0)
           .click()
         cy.wait(500)
         cy.get(".spectrum-Dialog-grid")
@@ -90,6 +92,8 @@ filterTests(["smoke", "all"], () => {
             cy.get(".spectrum-Table")
               .eq(0)
               .find(".spectrum-Table-row")
+              .eq(0)
+              .find(".spectrum-Table-cell")
               .eq(0)
               .click()
               .then(() => {
