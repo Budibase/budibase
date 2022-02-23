@@ -36,7 +36,7 @@ const runMigration = async (CouchDB, migration, options = {}) => {
   if (migrationType === exports.MIGRATION_TYPES.GLOBAL) {
     dbNames = [getGlobalDBName()]
   } else if (migrationType === exports.MIGRATION_TYPES.APP) {
-    const apps = await getAllApps(CouchDB, migration.opts)
+    const apps = await getAllApps(migration.opts)
     dbNames = apps.map(app => app.appId)
   } else {
     throw new Error(
