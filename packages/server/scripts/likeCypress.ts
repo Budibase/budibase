@@ -5,8 +5,8 @@
 import path from "path"
 const tmpdir = path.join(require("os").tmpdir(), ".budibase")
 
-const SERVER_PORT = "41000"
-const WORKER_PORT = "42000"
+const SERVER_PORT = "4100"
+const WORKER_PORT = "4200"
 
 // @ts-ignore
 process.env.BUDIBASE_API_KEY = "6BE826CB-6B30-4AEC-8777-2E90464633DE"
