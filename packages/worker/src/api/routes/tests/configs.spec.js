@@ -1,11 +1,7 @@
-const setup = require("./utilities")
-
 // mock the email system
 jest.mock("nodemailer")
-const nodemailer = require("nodemailer")
-nodemailer.createTransport.mockReturnValue({
-  verify: jest.fn(),
-})
+const setup = require("./utilities")
+setup.emailMock()
 
 describe("/api/global/configs/checklist", () => {
   let request = setup.getRequest()

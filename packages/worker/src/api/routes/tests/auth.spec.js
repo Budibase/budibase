@@ -1,9 +1,8 @@
+jest.mock("nodemailer")
 const setup = require("./utilities")
+const sendMailMock = setup.emailMock()
 
 const TENANT_ID = "default"
-
-jest.mock("nodemailer")
-const sendMailMock = setup.emailMock()
 
 describe("/api/global/auth", () => {
   let request = setup.getRequest()
@@ -54,7 +53,7 @@ describe("/api/global/auth", () => {
   })
 
   describe("oidc", () => {
-    const auth = require("@budibase/auth").auth
+    const auth = require("@budibase/backend-core/auth")
 
     // mock the oidc strategy implementation and return value
     strategyFactory = jest.fn()

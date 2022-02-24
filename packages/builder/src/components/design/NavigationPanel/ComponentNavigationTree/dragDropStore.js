@@ -1,6 +1,6 @@
 import { writable, get } from "svelte/store"
 import { store as frontendStore } from "builderStore"
-import { findComponentPath } from "builderStore/storeUtils"
+import { findComponentPath } from "builderStore/componentUtils"
 
 export const DropEffect = {
   MOVE: "move",
@@ -72,7 +72,7 @@ export default function () {
         return state
       })
     },
-    drop: () => {
+    drop: async () => {
       const state = get(store)
 
       // Stop if the target and source are the same
@@ -92,7 +92,7 @@ export default function () {
 
       // Cut and paste the component
       frontendStore.actions.components.copy(state.dragged, true)
-      frontendStore.actions.components.paste(
+      await frontendStore.actions.components.paste(
         state.targetComponent,
         state.dropPosition
       )

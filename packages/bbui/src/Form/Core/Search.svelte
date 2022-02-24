@@ -7,7 +7,7 @@
   export let disabled = false
   export let id = null
   export let updateOnChange = true
-
+  export let quiet = false
   const dispatch = createEventDispatcher()
   let focus = false
 
@@ -41,6 +41,7 @@
 <div class="spectrum-Search" class:is-disabled={disabled}>
   <div
     class="spectrum-Textfield"
+    class:spectrum-Textfield--quiet={quiet}
     class:is-focused={focus}
     class:is-disabled={disabled}
   >

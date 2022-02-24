@@ -4,12 +4,14 @@ const {
   getGlobalUserParams,
   getScopedFullConfig,
   getAllApps,
-} = require("@budibase/auth/db")
+} = require("@budibase/backend-core/db")
 const { Configs } = require("../../../constants")
 const email = require("../../../utilities/email")
-const { upload, ObjectStoreBuckets } = require("@budibase/auth").objectStore
-const CouchDB = require("../../../db")
-const { getGlobalDB, getTenantId } = require("@budibase/auth/tenancy")
+const {
+  upload,
+  ObjectStoreBuckets,
+} = require("@budibase/backend-core/objectStore")
+const { getGlobalDB, getTenantId } = require("@budibase/backend-core/tenancy")
 const env = require("../../../environment")
 const { googleCallbackUrl, oidcCallbackUrl } = require("./auth")
 
@@ -244,12 +246,16 @@ exports.destroy = async function (ctx) {
 
 exports.configChecklist = async function (ctx) {
   const db = getGlobalDB()
+  const tenantId = getTenantId()
 
   try {
     // TODO: Watch get started video
 
-    // Apps exist
-    const apps = await getAllApps(CouchDB, { idsOnly: true })
+    let apps = []
+    if (!env.MULTI_TENANCY || tenantId) {
+      // Apps exist
+      apps = await getAllApps({ idsOnly: true, efficient: true })
+    }
 
     // They have set up SMTP
     const smtpConfig = await getScopedFullConfig(db, {

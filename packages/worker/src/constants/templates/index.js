@@ -6,8 +6,8 @@ const {
   GLOBAL_OWNER,
 } = require("../index")
 const { join } = require("path")
-const { getTemplateParams } = require("@budibase/auth/db")
-const { getGlobalDB } = require("@budibase/auth/tenancy")
+const { getTemplateParams } = require("@budibase/backend-core/db")
+const { getGlobalDB } = require("@budibase/backend-core/tenancy")
 
 exports.EmailTemplates = {
   [EmailTemplatePurpose.PASSWORD_RECOVERY]: readStaticFile(

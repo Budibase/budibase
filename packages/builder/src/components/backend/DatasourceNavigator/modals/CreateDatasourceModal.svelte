@@ -1,19 +1,33 @@
 <script>
-  import { ModalContent, Modal, Body, Layout, Detail } from "@budibase/bbui"
+  import {
+    ModalContent,
+    Modal,
+    Body,
+    Layout,
+    Detail,
+    notifications,
+  } from "@budibase/bbui"
   import { onMount } from "svelte"
   import ICONS from "../icons"
-  import api from "builderStore/api"
-  import { IntegrationNames } from "constants"
+  import { API } from "api"
+  import { IntegrationNames, IntegrationTypes } from "constants/backend"
   import CreateTableModal from "components/backend/TableNavigator/modals/CreateTableModal.svelte"
   import DatasourceConfigModal from "components/backend/DatasourceNavigator/modals/DatasourceConfigModal.svelte"
+  import GoogleDatasourceConfigModal from "components/backend/DatasourceNavigator/modals/GoogleDatasourceConfigModal.svelte"
+  import { createRestDatasource } from "builderStore/datasource"
+  import { goto } from "@roxi/routify"
+  import ImportRestQueriesModal from "./ImportRestQueriesModal.svelte"
 
   export let modal
-  let integrations = []
+  let integrations = {}
   let integration = {}
   let internalTableModal
   let externalDatasourceModal
+  let importModal
 
-  const INTERNAL = "BUDIBASE"
+  $: showImportButton = false
+
+  checkShowImport()
 
   onMount(() => {
     fetchIntegrations()
@@ -32,26 +46,50 @@
       plus: selected.plus,
       config,
       schema: selected.datasource,
+      auth: selected.auth,
     }
+    checkShowImport()
   }
 
-  function chooseNextModal() {
-    if (integration.type === INTERNAL) {
+  function checkShowImport() {
+    showImportButton = integration.type === "REST"
+  }
+
+  function showImportModal() {
+    importModal.show()
+  }
+
+  async function chooseNextModal() {
+    if (integration.type === IntegrationTypes.INTERNAL) {
       externalDatasourceModal.hide()
       internalTableModal.show()
+    } else if (integration.type === IntegrationTypes.REST) {
+      try {
+        // Skip modal for rest, create straight away
+        const resp = await createRestDatasource(integration)
+        $goto(`./datasource/${resp._id}`)
+      } catch (error) {
+        notifications.error("Error creating datasource")
+      }
     } else {
       externalDatasourceModal.show()
     }
   }
 
   async function fetchIntegrations() {
-    const response = await api.get("/api/integrations")
-    const json = await response.json()
-    integrations = {
-      [INTERNAL]: { datasource: {}, name: "INTERNAL/CSV" },
-      ...json,
+    let newIntegrations = {
+      [IntegrationTypes.INTERNAL]: { datasource: {}, name: "INTERNAL/CSV" },
     }
-    return json
+    try {
+      const integrationList = await API.getIntegrations()
+      newIntegrations = {
+        ...newIntegrations,
+        ...integrationList,
+      }
+    } catch (error) {
+      notifications.error("Error fetching integrations")
+    }
+    integrations = newIntegrations
   }
 </script>
 
@@ -60,7 +98,21 @@
 </Modal>
 
 <Modal bind:this={externalDatasourceModal}>
-  <DatasourceConfigModal {integration} {modal} />
+  {#if integration?.auth?.type === "google"}
+    <GoogleDatasourceConfigModal {integration} {modal} />
+  {:else}
+    <DatasourceConfigModal {integration} {modal} />
+  {/if}
+</Modal>
+
+<Modal bind:this={importModal}>
+  {#if integration.type === "REST"}
+    <ImportRestQueriesModal
+      navigateDatasource={true}
+      createDatasource={true}
+      onCancel={() => modal.show()}
+    />
+  {/if}
 </Modal>
 
 <Modal bind:this={modal}>
@@ -68,6 +120,9 @@
     disabled={!Object.keys(integration).length}
     title="Data"
     confirmText="Continue"
+    showSecondaryButton={showImportButton}
+    secondaryButtonText="Import"
+    secondaryAction={() => showImportModal()}
     showCancelButton={false}
     size="M"
     onConfirm={() => {
@@ -80,8 +135,8 @@
         to your app using Budibase's built-in database.
       </Body>
       <div
-        class:selected={integration.type === INTERNAL}
-        on:click={() => selectIntegration(INTERNAL)}
+        class:selected={integration.type === IntegrationTypes.INTERNAL}
+        on:click={() => selectIntegration(IntegrationTypes.INTERNAL)}
         class="item hoverable"
       >
         <div class="item-body">
@@ -96,7 +151,7 @@
         <Detail size="S">Connect to data source</Detail>
       </div>
       <div class="item-list">
-        {#each Object.entries(integrations).filter(([key]) => key !== INTERNAL) as [integrationType, schema]}
+        {#each Object.entries(integrations).filter(([key]) => key !== IntegrationTypes.INTERNAL) as [integrationType, schema]}
           <div
             class:selected={integration.type === integrationType}
             on:click={() => selectIntegration(integrationType)}

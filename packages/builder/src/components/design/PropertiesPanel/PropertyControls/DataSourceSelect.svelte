@@ -1,5 +1,5 @@
 <script>
-  import { getDataProviderComponents } from "builderStore/dataBinding"
+  import { getContextProviderComponents } from "builderStore/dataBinding"
   import {
     Button,
     Popover,
@@ -17,8 +17,7 @@
     queries as queriesStore,
   } from "stores/backend"
   import { datasources, integrations } from "stores/backend"
-  import { notifications } from "@budibase/bbui"
-  import ParameterBuilder from "components/integration/QueryParameterBuilder.svelte"
+  import BindingBuilder from "components/integration/QueryBindingBuilder.svelte"
   import IntegrationQueryEditor from "components/integration/index.svelte"
   import { makePropSafe as safe } from "@budibase/string-templates"
 
@@ -31,6 +30,7 @@
   const arrayTypes = ["attachment", "array"]
   let anchorRight, dropdownRight
   let drawer
+  let tmpQueryParams
 
   $: text = value?.label ?? "Choose an option"
   $: tables = $tablesStore.list.map(m => ({
@@ -48,9 +48,7 @@
     return [...acc, ...viewsArr]
   }, [])
   $: queries = $queriesStore.list
-    .filter(
-      query => showAllQueries || query.queryVerb === "read" || query.readable
-    )
+    .filter(q => showAllQueries || q.queryVerb === "read" || q.readable)
     .map(query => ({
       label: query.name,
       name: query.name,
@@ -58,16 +56,19 @@
       ...query,
       type: "query",
     }))
-  $: dataProviders = getDataProviderComponents(
+  $: contextProviders = getContextProviderComponents(
     $currentAsset,
     $store.selectedComponentId
-  ).map(provider => ({
-    label: provider._instanceName,
-    name: provider._instanceName,
-    providerId: provider._id,
-    value: `{{ literal ${safe(provider._id)} }}`,
-    type: "provider",
-  }))
+  )
+  $: dataProviders = contextProviders
+    .filter(component => component._component?.endsWith("/dataprovider"))
+    .map(provider => ({
+      label: provider._instanceName,
+      name: provider._instanceName,
+      providerId: provider._id,
+      value: `{{ literal ${safe(provider._id)} }}`,
+      type: "provider",
+    }))
   $: links = bindings
     .filter(x => x.fieldSchema?.type === "link")
     .map(binding => {
@@ -101,13 +102,29 @@
         value: `{{ literal ${runtimeBinding} }}`,
       }
     })
+  $: jsonArrays = bindings
+    .filter(x => x.fieldSchema?.type === "jsonarray")
+    .map(binding => {
+      const { providerId, readableBinding, runtimeBinding, tableId } = binding
+      const { name, type, prefixKeys } = binding.fieldSchema
+      return {
+        providerId,
+        label: readableBinding,
+        fieldName: name,
+        fieldType: type,
+        tableId,
+        prefixKeys,
+        type: "jsonarray",
+        value: `{{ literal ${runtimeBinding} }}`,
+      }
+    })
 
-  function handleSelected(selected) {
+  const handleSelected = selected => {
     dispatch("change", selected)
     dropdownRight.hide()
   }
 
-  function fetchQueryDefinition(query) {
+  const fetchQueryDefinition = query => {
     const source = $datasources.list.find(
       ds => ds._id === query.datasourceId
     ).source
@@ -121,6 +138,19 @@
   const getQueryDatasource = query => {
     return $datasources.list.find(ds => ds._id === query?.datasourceId)
   }
+
+  const openQueryParamsDrawer = () => {
+    tmpQueryParams = value.queryParams
+    drawer.show()
+  }
+
+  const saveQueryParams = () => {
+    handleSelected({
+      ...value,
+      queryParams: tmpQueryParams,
+    })
+    drawer.hide()
+  }
 </script>
 
 <div class="container" bind:this={anchorRight}>
@@ -131,26 +161,16 @@
     on:click={dropdownRight.show}
   />
   {#if value?.type === "query"}
-    <i class="ri-settings-5-line" on:click={drawer.show} />
-    <Drawer title={"Query Parameters"} bind:this={drawer}>
-      <Button
-        slot="buttons"
-        cta
-        on:click={() => {
-          notifications.success("Query parameters saved.")
-          handleSelected(value)
-          drawer.hide()
-        }}
-      >
-        Save
-      </Button>
+    <i class="ri-settings-5-line" on:click={openQueryParamsDrawer} />
+    <Drawer title={"Query Bindings"} bind:this={drawer}>
+      <Button slot="buttons" cta on:click={saveQueryParams}>Save</Button>
       <DrawerContent slot="body">
-        <Layout noPadding>
-          {#if getQueryParams(value._id).length > 0}
-            <ParameterBuilder
-              bind:customParams={value.queryParams}
-              parameters={getQueryParams(value)}
-              {bindings}
+        <Layout noPadding gap="XS">
+          {#if getQueryParams(value).length > 0}
+            <BindingBuilder
+              bind:customParams={tmpQueryParams}
+              queryBindings={getQueryParams(value)}
+              bind:bindings
             />
           {/if}
           <IntegrationQueryEditor
@@ -220,6 +240,17 @@
       </div>
       <ul>
         {#each fields as field}
+          <li on:click={() => handleSelected(field)}>{field.label}</li>
+        {/each}
+      </ul>
+    {/if}
+    {#if jsonArrays?.length}
+      <Divider size="S" />
+      <div class="title">
+        <Heading size="XS">JSON Arrays</Heading>
+      </div>
+      <ul>
+        {#each jsonArrays as field}
           <li on:click={() => handleSelected(field)}>{field.label}</li>
         {/each}
       </ul>

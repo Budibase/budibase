@@ -16,6 +16,7 @@
   export let showAutoColumns
   export let rowCount
   export let quiet
+  export let compact
   export let size
   export let linkRows
   export let linkURL
@@ -26,7 +27,7 @@
   export let titleButtonURL
   export let titleButtonPeek
 
-  const { API, styleable } = getContext("sdk")
+  const { fetchDatasourceSchema, styleable } = getContext("sdk")
   const context = getContext("context")
   const component = getContext("component")
   const schemaComponentMap = {
@@ -35,11 +36,13 @@
     number: "numberfield",
     datetime: "datetimefield",
     boolean: "booleanfield",
+    formula: "stringfield",
   }
 
   let formId
   let dataProviderId
   let schema
+  let schemaLoaded = false
 
   $: fetchSchema(dataSource)
   $: enrichedSearchColumns = enrichSearchColumns(searchColumns, schema)
@@ -58,12 +61,14 @@
   const enrichFilter = (filter, columns, formId) => {
     let enrichedFilter = [...(filter || [])]
     columns?.forEach(column => {
+      const safePath = column.name.split(".").map(safe).join(".")
+      const stringType = column.type === "string" || column.type === "formula"
       enrichedFilter.push({
         field: column.name,
-        operator: column.type === "string" ? "string" : "equal",
-        type: "string",
+        type: column.type,
+        operator: stringType ? "string" : "equal",
         valueType: "Binding",
-        value: `{{ ${safe(formId)}.${safe(column.name)} }}`,
+        value: `{{ ${safe(formId)}.${safePath} }}`,
       })
     })
     return enrichedFilter
@@ -89,82 +94,88 @@
   // Load the datasource schema so we can determine column types
   const fetchSchema = async dataSource => {
     if (dataSource) {
-      schema = await API.fetchDatasourceSchema(dataSource)
+      schema = await fetchDatasourceSchema(dataSource, {
+        enrichRelationships: true,
+      })
     }
+    schemaLoaded = true
   }
 </script>
 
-<Block>
-  <div class={size} use:styleable={$component.styles}>
-    <BlockComponent type="form" bind:id={formId} props={{ dataSource }}>
-      {#if title || enrichedSearchColumns?.length || showTitleButton}
-        <div class="header" class:mobile={$context.device.mobile}>
-          <div class="title">
-            <Heading>{title || ""}</Heading>
+{#if schemaLoaded}
+  <Block>
+    <div class={size} use:styleable={$component.styles}>
+      <BlockComponent type="form" bind:id={formId} props={{ dataSource }}>
+        {#if title || enrichedSearchColumns?.length || showTitleButton}
+          <div class="header" class:mobile={$context.device.mobile}>
+            <div class="title">
+              <Heading>{title || ""}</Heading>
+            </div>
+            <div class="controls">
+              {#if enrichedSearchColumns?.length}
+                <div
+                  class="search"
+                  style="--cols:{enrichedSearchColumns?.length}"
+                >
+                  {#each enrichedSearchColumns as column}
+                    <BlockComponent
+                      type={column.componentType}
+                      props={{
+                        field: column.name,
+                        placeholder: column.name,
+                        text: column.name,
+                        autoWidth: true,
+                      }}
+                    />
+                  {/each}
+                </div>
+              {/if}
+              {#if showTitleButton}
+                <BlockComponent
+                  type="button"
+                  props={{
+                    onClick: titleButtonAction,
+                    text: titleButtonText,
+                    type: "cta",
+                  }}
+                />
+              {/if}
+            </div>
           </div>
-          <div class="controls">
-            {#if enrichedSearchColumns?.length}
-              <div
-                class="search"
-                style="--cols:{enrichedSearchColumns?.length}"
-              >
-                {#each enrichedSearchColumns as column}
-                  <BlockComponent
-                    type={column.componentType}
-                    props={{
-                      field: column.name,
-                      placeholder: column.name,
-                      text: column.name,
-                      autoWidth: true,
-                    }}
-                  />
-                {/each}
-              </div>
-            {/if}
-            {#if showTitleButton}
-              <BlockComponent
-                type="button"
-                props={{
-                  onClick: titleButtonAction,
-                  text: titleButtonText,
-                  type: "cta",
-                }}
-              />
-            {/if}
-          </div>
-        </div>
-      {/if}
-      <BlockComponent
-        type="dataprovider"
-        bind:id={dataProviderId}
-        props={{
-          dataSource,
-          filter: enrichedFilter,
-          sortColumn,
-          sortOrder,
-          paginate,
-          limit: rowCount,
-        }}
-      >
+        {/if}
         <BlockComponent
-          type="table"
+          type="dataprovider"
+          bind:id={dataProviderId}
           props={{
-            dataProvider: `{{ literal ${safe(dataProviderId)} }}`,
-            columns: tableColumns,
-            showAutoColumns,
-            rowCount,
-            quiet,
-            size,
-            linkRows,
-            linkURL,
-            linkColumn,
-            linkPeek,
+            dataSource,
+            filter: enrichedFilter,
+            sortColumn,
+            sortOrder,
+            paginate,
+            limit: rowCount,
           }}
-        />
+        >
+          <BlockComponent
+            type="table"
+            props={{
+              dataProvider: `{{ literal ${safe(dataProviderId)} }}`,
+              columns: tableColumns,
+              showAutoColumns,
+              rowCount,
+              quiet,
+              compact,
+              size,
+              linkRows,
+              linkURL,
+              linkColumn,
+              linkPeek,
+            }}
+          />
+        </BlockComponent>
       </BlockComponent>
-    </BlockComponent>
-  </div>
-</Block>
+    </div>
+  </Block>
+{/if}
 
 <style>
   .header {

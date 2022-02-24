@@ -7,10 +7,13 @@
   export let disabled = false
   export let error = null
   export let id = null
+  export let height = null
+  export let minHeight = null
   export const getCaretPosition = () => ({
     start: textarea.selectionStart,
     end: textarea.selectionEnd,
   })
+  export let align = null
 
   let focus = false
   let textarea
@@ -19,9 +22,23 @@
     dispatch("change", event.target.value)
     focus = false
   }
+
+  const getStyleString = (attribute, value) => {
+    if (!attribute || value == null) {
+      return ""
+    }
+    if (isNaN(value)) {
+      return `${attribute}:${value};`
+    }
+    return `${attribute}:${value}px;`
+  }
+
+  $: heightString = getStyleString("height", height)
+  $: minHeightString = getStyleString("min-height", minHeight)
 </script>
 
 <div
+  style={`${heightString}${minHeightString}`}
   class="spectrum-Textfield spectrum-Textfield--multiline"
   class:is-invalid={!!error}
   class:is-disabled={disabled}
@@ -42,6 +59,7 @@
     bind:this={textarea}
     placeholder={placeholder || ""}
     class="spectrum-Textfield-input"
+    style={align ? `text-align: ${align}` : ""}
     {disabled}
     {id}
     on:focus={() => (focus = true)}

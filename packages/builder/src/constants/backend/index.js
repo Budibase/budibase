@@ -84,8 +84,13 @@ export const FIELDS = {
   FORMULA: {
     name: "Formula",
     type: "formula",
+    constraints: {},
+  },
+  JSON: {
+    name: "JSON",
+    type: "json",
     constraints: {
-      type: "string",
+      type: "object",
       presence: false,
     },
   },
@@ -140,17 +145,97 @@ export const RelationshipTypes = {
 }
 
 export const ALLOWABLE_STRING_OPTIONS = [FIELDS.STRING, FIELDS.OPTIONS]
-
 export const ALLOWABLE_STRING_TYPES = ALLOWABLE_STRING_OPTIONS.map(
   opt => opt.type
 )
 
 export const ALLOWABLE_NUMBER_OPTIONS = [FIELDS.NUMBER, FIELDS.BOOLEAN]
-
 export const ALLOWABLE_NUMBER_TYPES = ALLOWABLE_NUMBER_OPTIONS.map(
   opt => opt.type
 )
 
-export const SWITCHABLE_TYPES = ALLOWABLE_NUMBER_TYPES.concat(
-  ALLOWABLE_STRING_TYPES
-)
+export const ALLOWABLE_JSON_OPTIONS = [FIELDS.JSON, FIELDS.ARRAY]
+export const ALLOWABLE_JSON_TYPES = ALLOWABLE_JSON_OPTIONS.map(opt => opt.type)
+
+export const SWITCHABLE_TYPES = [
+  ...ALLOWABLE_STRING_TYPES,
+  ...ALLOWABLE_NUMBER_TYPES,
+  ...ALLOWABLE_JSON_TYPES,
+]
+
+export const IntegrationTypes = {
+  POSTGRES: "POSTGRES",
+  MONGODB: "MONGODB",
+  COUCHDB: "COUCHDB",
+  S3: "S3",
+  MYSQL: "MYSQL",
+  REST: "REST",
+  DYNAMODB: "DYNAMODB",
+  ELASTICSEARCH: "ELASTICSEARCH",
+  SQL_SERVER: "SQL_SERVER",
+  AIRTABLE: "AIRTABLE",
+  ARANGODB: "ARANGODB",
+  ORACLE: "ORACLE",
+  INTERNAL: "INTERNAL",
+  GOOGLE_SHEETS: "GOOGLE_SHEETS",
+}
+
+export const IntegrationNames = {
+  [IntegrationTypes.POSTGRES]: "PostgreSQL",
+  [IntegrationTypes.MONGODB]: "MongoDB",
+  [IntegrationTypes.COUCHDB]: "CouchDB",
+  [IntegrationTypes.S3]: "S3",
+  [IntegrationTypes.MYSQL]: "MySQL",
+  [IntegrationTypes.REST]: "REST",
+  [IntegrationTypes.DYNAMODB]: "DynamoDB",
+  [IntegrationTypes.ELASTICSEARCH]: "ElasticSearch",
+  [IntegrationTypes.SQL_SERVER]: "SQL Server",
+  [IntegrationTypes.AIRTABLE]: "Airtable",
+  [IntegrationTypes.ARANGODB]: "ArangoDB",
+  [IntegrationTypes.ORACLE]: "Oracle",
+  [IntegrationTypes.INTERNAL]: "Internal",
+  [IntegrationTypes.GOOGLE_SHEETS]: "Google Sheets",
+}
+
+export const SchemaTypeOptions = [
+  { label: "Text", value: "string" },
+  { label: "Number", value: "number" },
+  { label: "Boolean", value: "boolean" },
+  { label: "Datetime", value: "datetime" },
+]
+
+export const RawRestBodyTypes = {
+  NONE: "none",
+  FORM: "form",
+  ENCODED: "encoded",
+  JSON: "json",
+  TEXT: "text",
+  XML: "xml",
+}
+
+export const RestBodyTypes = [
+  { name: "none", value: "none" },
+  { name: "form-data", value: "form" },
+  { name: "x-www-form-encoded", value: "encoded" },
+  { name: "raw (JSON)", value: "json" },
+  { name: "raw (XML)", value: "xml" },
+  { name: "raw (Text)", value: "text" },
+]
+
+export const PaginationTypes = [
+  { label: "Page number based", value: "page" },
+  { label: "Cursor based", value: "cursor" },
+]
+
+export const PaginationLocations = [
+  { label: "Query parameters", value: "query" },
+  { label: "Request body", value: "body" },
+]
+
+export const BannedSearchTypes = [
+  "link",
+  "attachment",
+  "formula",
+  "json",
+  "jsonarray",
+]

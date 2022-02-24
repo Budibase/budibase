@@ -8,7 +8,9 @@
   import EditQueryPopover from "./popovers/EditQueryPopover.svelte"
   import NavItem from "components/common/NavItem.svelte"
   import TableNavigator from "components/backend/TableNavigator/TableNavigator.svelte"
+  import { customQueryIconText, customQueryIconColor } from "helpers/data/utils"
   import ICONS from "./icons"
+  import { notifications } from "@budibase/bbui"
 
   let openDataSources = []
   $: enrichedDataSources = Array.isArray($datasources.list)
@@ -62,9 +64,13 @@
     }
   }
 
-  onMount(() => {
-    datasources.fetch()
-    queries.fetch()
+  onMount(async () => {
+    try {
+      await datasources.fetch()
+      await queries.fetch()
+    } catch (error) {
+      notifications.error("Error fetching datasources and queries")
+    }
   })
 
   const containsActiveEntity = datasource => {
@@ -129,12 +135,14 @@
           <NavItem
             indentLevel={1}
             icon="SQLQuery"
+            iconText={customQueryIconText(datasource, query)}
+            iconColor={customQueryIconColor(datasource, query)}
             text={query.name}
             opened={$queries.selected === query._id}
             selected={$queries.selected === query._id}
             on:click={() => onClickQuery(query)}
           >
-            <EditQueryPopover {query} />
+            <EditQueryPopover {query} {onClickQuery} />
           </NavItem>
         {/each}
       {/if}

@@ -11,7 +11,7 @@
     DatePicker,
   } from "@budibase/bbui"
   import { currentAsset, selectedComponent } from "builderStore"
-  import { findClosestMatchingComponent } from "builderStore/storeUtils"
+  import { findClosestMatchingComponent } from "builderStore/componentUtils"
   import { getSchemaForDatasource } from "builderStore/dataBinding"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
   import { generate } from "shortid"
@@ -116,6 +116,7 @@
   $: schemaRules = parseRulesFromSchema(field, dataSourceSchema || {})
   $: fieldType = type?.split("/")[1] || "string"
   $: constraintOptions = getConstraintsForType(fieldType)
+
   const getConstraintsForType = type => {
     return ConstraintMap[type]
   }

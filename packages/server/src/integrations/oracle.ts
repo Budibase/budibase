@@ -348,40 +348,13 @@ module OracleModule {
       this.schemaErrors = final.errors
     }
 
-    /**
-     * Knex default returning behaviour does not work with oracle
-     * Manually add the behaviour for the return column
-     */
-    private addReturning(
-      query: SqlQuery,
-      bindings: BindParameters,
-      returnColumn: string
-    ) {
-      if (bindings instanceof Array) {
-        bindings.push({ dir: oracledb.BIND_OUT })
-        query.sql =
-          query.sql + ` returning \"${returnColumn}\" into :${bindings.length}`
-      }
-    }
-
-    private async internalQuery<T>(
-      query: SqlQuery,
-      returnColum?: string,
-      operation?: string
-    ): Promise<Result<T>> {
+    private async internalQuery<T>(query: SqlQuery): Promise<Result<T>> {
       let connection
       try {
         connection = await this.getConnection()
 
         const options: ExecuteOptions = { autoCommit: true }
         const bindings: BindParameters = query.bindings || []
-
-        if (
-          returnColum &&
-          (operation === Operation.CREATE || operation === Operation.UPDATE)
-        ) {
-          this.addReturning(query, bindings, returnColum)
-        }
 
         const result: Result<T> = await connection.execute<T>(
           query.sql,
@@ -408,7 +381,7 @@ module OracleModule {
       }`
       const attributes: ConnectionAttributes = {
         user: this.config.user,
-        password: this.config.user,
+        password: this.config.password,
         connectString,
       }
       return oracledb.getConnection(attributes)
@@ -441,13 +414,46 @@ module OracleModule {
     }
 
     async query(json: QueryJson) {
-      const primaryKeys = json.meta!.table!.primary
-      const primaryKey = primaryKeys ? primaryKeys[0] : undefined
-      const queryFn = (query: any, operation: string) =>
-        this.internalQuery(query, primaryKey, operation)
-      const processFn = (response: any) => (response.rows ? response.rows : [])
-      const output = await this.queryWithReturning(json, queryFn, processFn)
-      return output
+      const operation = this._operation(json)
+      const input = this._query(json, { disableReturning: true })
+      if (Array.isArray(input)) {
+        const responses = []
+        for (let query of input) {
+          responses.push(await this.internalQuery(query))
+        }
+        return responses
+      } else {
+        // read the row to be deleted up front for the return
+        let deletedRows
+        if (operation === Operation.DELETE) {
+          const queryFn = (query: any) => this.internalQuery(query)
+          deletedRows = await this.getReturningRow(queryFn, json)
+        }
+
+        // run the query
+        const response = await this.internalQuery(input)
+
+        // get the results or return the created / updated / deleted row
+        if (deletedRows?.rows?.length) {
+          return deletedRows.rows
+        } else if (response.rows?.length) {
+          return response.rows
+        } else {
+          // get the last row that was updated
+          if (
+            response.lastRowid &&
+            json.endpoint?.entityId &&
+            operation !== Operation.DELETE
+          ) {
+            const lastRow = await this.internalQuery({
+              sql: `SELECT * FROM \"${json.endpoint.entityId}\" WHERE ROWID = '${response.lastRowid}'`,
+            })
+            return lastRow.rows
+          } else {
+            return [{ [operation.toLowerCase()]: true }]
+          }
+        }
+      }
     }
   }
 

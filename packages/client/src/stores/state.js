@@ -1,10 +1,10 @@
 import { writable, get, derived } from "svelte/store"
-import { localStorageStore } from "builder/src/builderStore/store/localStorage"
-import { appStore } from "./app"
+import { createLocalStorageStore } from "@budibase/frontend-core"
 
 const createStateStore = () => {
-  const localStorageKey = `${get(appStore).appId}.state`
-  const persistentStore = localStorageStore(localStorageKey, {})
+  const appId = window["##BUDIBASE_APP_ID##"] || "app"
+  const localStorageKey = `${appId}.state`
+  const persistentStore = createLocalStorageStore(localStorageKey, {})
 
   // Initialise the temp store to mirror the persistent store
   const tempStore = writable(get(persistentStore))
@@ -34,6 +34,9 @@ const createStateStore = () => {
     })
   }
 
+  // Initialises the temporary state store with a certain value
+  const initialise = tempStore.set
+
   // Derive the combination of both persisted and non persisted stores
   const store = derived(
     [tempStore, persistentStore],
@@ -47,7 +50,7 @@ const createStateStore = () => {
 
   return {
     subscribe: store.subscribe,
-    actions: { setValue, deleteValue },
+    actions: { setValue, deleteValue, initialise },
   }
 }
 

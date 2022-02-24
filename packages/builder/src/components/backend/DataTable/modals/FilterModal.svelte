@@ -72,11 +72,15 @@
   $: schema = viewTable && viewTable.schema ? viewTable.schema : {}
 
   function saveView() {
-    views.save(view)
-    notifications.success(`View ${view.name} saved.`)
-    analytics.captureEvent(Events.VIEW.ADDED_FILTER, {
-      filters: JSON.stringify(view.filters),
-    })
+    try {
+      views.save(view)
+      notifications.success(`View ${view.name} saved`)
+      analytics.captureEvent(Events.VIEW.ADDED_FILTER, {
+        filters: JSON.stringify(view.filters),
+      })
+    } catch (error) {
+      notifications.error("Error saving view")
+    }
   }
 
   function removeFilter(idx) {
@@ -158,7 +162,7 @@
             <Select
               bind:value={filter.value}
               options={fieldOptions(filter.key)}
-              getOptionLabel={x => x.toString()}
+              getOptionLabel={x => x?.toString() || ""}
             />
           {:else if filter.key && isDate(filter.key)}
             <DatePicker

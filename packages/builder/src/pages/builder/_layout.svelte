@@ -2,6 +2,7 @@
   import { isActive, redirect, params } from "@roxi/routify"
   import { admin, auth } from "stores/portal"
   import { onMount } from "svelte"
+  import { CookieUtils, Constants } from "@budibase/frontend-core"
 
   let loaded = false
 
@@ -40,9 +41,12 @@
 
       if (user.tenantId !== urlTenantId) {
         // user should not be here - play it safe and log them out
-        await auth.logout()
-        await auth.setOrganisation(null)
-        return
+        try {
+          await auth.logout()
+          await auth.setOrganisation(null)
+        } catch (error) {
+          // Swallow error and do nothing
+        }
       }
     } else {
       // no user - set the org according to the url
@@ -51,22 +55,46 @@
   }
 
   onMount(async () => {
-    if ($params["?template"]) {
-      await auth.setInitInfo({ init_template: $params["?template"] })
+    try {
+      await auth.getSelf()
+      await admin.init()
+
+      // Set init info if present
+      if ($params["?template"]) {
+        await auth.setInitInfo({ init_template: $params["?template"] })
+      }
+
+      // Validate tenant if in a multi-tenant env
+      if (useAccountPortal && multiTenancyEnabled) {
+        await validateTenantId()
+      }
+    } catch (error) {
+      // Don't show a notification here, as we might 403 initially due to not
+      // being logged in
     }
-
-    await auth.checkAuth()
-    await admin.init()
-
-    if (useAccountPortal && multiTenancyEnabled) {
-      await validateTenantId()
-    }
-
     loaded = true
   })
 
   $: {
     const apiReady = $admin.loaded && $auth.loaded
+
+    // firstly, set the return url
+    if (
+      loaded &&
+      apiReady &&
+      !$auth.user &&
+      !CookieUtils.getCookie(Constants.Cookies.ReturnUrl) &&
+      // logout triggers a page refresh, so we don't want to set the return url
+      !$auth.postLogout &&
+      // don't set the return url on pre-login pages
+      !$isActive("./auth") &&
+      !$isActive("./invite") &&
+      !$isActive("./admin")
+    ) {
+      const url = window.location.pathname
+      CookieUtils.setCookie(Constants.Cookies.ReturnUrl, url)
+    }
+
     // if tenant is not set go to it
     if (
       loaded &&
@@ -90,12 +118,19 @@
       !$isActive("./invite") &&
       !$isActive("./admin")
     ) {
-      const returnUrl = encodeURIComponent(window.location.pathname)
-      $redirect("./auth?", { returnUrl })
+      $redirect("./auth")
     }
     // check if password reset required for user
     else if ($auth.user?.forceResetPassword) {
       $redirect("./auth/reset")
+    }
+    // lastly, redirect to the return url if it has been set
+    else if (loaded && apiReady && $auth.user) {
+      const returnUrl = CookieUtils.getCookie(Constants.Cookies.ReturnUrl)
+      if (returnUrl) {
+        CookieUtils.removeCookie(Constants.Cookies.ReturnUrl)
+        window.location.href = returnUrl
+      }
     }
   }
 </script>

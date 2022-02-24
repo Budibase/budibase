@@ -3,8 +3,11 @@ const {
   PermissionTypes,
   getBuiltinPermissionByID,
   isPermissionLevelHigherThanRead,
-} = require("@budibase/auth/permissions")
-const { lowerBuiltinRoleID, getBuiltinRoles } = require("@budibase/auth/roles")
+} = require("@budibase/backend-core/permissions")
+const {
+  lowerBuiltinRoleID,
+  getBuiltinRoles,
+} = require("@budibase/backend-core/roles")
 const { DocumentTypes } = require("../db/utils")
 
 const CURRENTLY_SUPPORTED_LEVELS = [

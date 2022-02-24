@@ -1,7 +1,7 @@
-const authPkg = require("@budibase/auth")
-const { getScopedConfig } = require("@budibase/auth/db")
-const { google } = require("@budibase/auth/src/middleware")
-const { oidc } = require("@budibase/auth/src/middleware")
+const core = require("@budibase/backend-core")
+const { getScopedConfig } = require("@budibase/backend-core/db")
+const { google } = require("@budibase/backend-core/middleware")
+const { oidc } = require("@budibase/backend-core/middleware")
 const { Configs, EmailTemplatePurpose } = require("../../../constants")
 const { sendEmail, isEmailConfigured } = require("../../../utilities/email")
 const {
@@ -11,15 +11,15 @@ const {
   getGlobalUserByEmail,
   hash,
   platformLogout,
-} = authPkg.utils
-const { Cookies } = authPkg.constants
-const { passport } = authPkg.auth
+} = core.utils
+const { Cookies, Headers } = core.constants
+const { passport } = core.auth
 const { checkResetPasswordCode } = require("../../../utilities/redis")
 const {
   getGlobalDB,
   getTenantId,
   isMultiTenant,
-} = require("@budibase/auth/tenancy")
+} = require("@budibase/backend-core/tenancy")
 const env = require("../../../environment")
 
 const ssoCallbackUrl = async (config, type) => {
@@ -56,26 +56,14 @@ async function authInternal(ctx, user, err = null, info = null) {
     return ctx.throw(403, info ? info : "Unauthorized")
   }
 
-  const expires = new Date()
-  expires.setDate(expires.getDate() + 1)
-
   if (!user) {
     return ctx.throw(403, info ? info : "Unauthorized")
   }
 
-  const config = {
-    expires,
-    path: "/",
-    httpOnly: false,
-    overwrite: true,
-  }
-
-  if (env.COOKIE_DOMAIN) {
-    config.domain = env.COOKIE_DOMAIN
-  }
-
-  // just store the user ID
-  ctx.cookies.set(Cookies.Auth, user.token, config)
+  // set a cookie for browser access
+  setCookie(ctx, user.token, Cookies.Auth, { sign: false })
+  // set the token in a header as well for APIs
+  ctx.set(Headers.TOKEN, user.token)
   // get rid of any app cookies on login
   // have to check test because this breaks cypress
   if (!env.isTest()) {
@@ -86,10 +74,7 @@ async function authInternal(ctx, user, err = null, info = null) {
 exports.authenticate = async (ctx, next) => {
   return passport.authenticate("local", async (err, user, info) => {
     await authInternal(ctx, user, err, info)
-
-    delete user.token
-
-    ctx.body = { user }
+    ctx.status = 200
   })(ctx, next)
 }
 
@@ -100,7 +85,7 @@ exports.setInitInfo = ctx => {
 }
 
 exports.getInitInfo = ctx => {
-  ctx.body = getCookie(ctx, Cookies.Init)
+  ctx.body = getCookie(ctx, Cookies.Init) || {}
 }
 
 /**
@@ -153,8 +138,36 @@ exports.resetUpdate = async ctx => {
 }
 
 exports.logout = async ctx => {
-  await platformLogout({ ctx, userId: ctx.user._id })
+  if (ctx.user && ctx.user._id) {
+    await platformLogout({ ctx, userId: ctx.user._id })
+  }
   ctx.body = { message: "User logged out." }
+}
+
+exports.datasourcePreAuth = async (ctx, next) => {
+  const provider = ctx.params.provider
+  const middleware = require(`@budibase/backend-core/middleware`)
+  const handler = middleware.datasource[provider]
+
+  setCookie(
+    ctx,
+    {
+      provider,
+      appId: ctx.query.appId,
+      datasourceId: ctx.query.datasourceId,
+    },
+    Cookies.DatasourceAuth
+  )
+
+  return handler.preAuth(passport, ctx, next)
+}
+
+exports.datasourceAuth = async (ctx, next) => {
+  const authStateCookie = getCookie(ctx, Cookies.DatasourceAuth)
+  const provider = authStateCookie.provider
+  const middleware = require(`@budibase/backend-core/middleware`)
+  const handler = middleware.datasource[provider]
+  return handler.postAuth(passport, ctx, next)
 }
 
 /**
@@ -164,7 +177,7 @@ exports.logout = async ctx => {
 exports.googlePreAuth = async (ctx, next) => {
   const db = getGlobalDB()
 
-  const config = await authPkg.db.getScopedConfig(db, {
+  const config = await core.db.getScopedConfig(db, {
     type: Configs.GOOGLE,
     workspace: ctx.query.workspace,
   })
@@ -179,7 +192,7 @@ exports.googlePreAuth = async (ctx, next) => {
 exports.googleAuth = async (ctx, next) => {
   const db = getGlobalDB()
 
-  const config = await authPkg.db.getScopedConfig(db, {
+  const config = await core.db.getScopedConfig(db, {
     type: Configs.GOOGLE,
     workspace: ctx.query.workspace,
   })
@@ -199,7 +212,7 @@ exports.googleAuth = async (ctx, next) => {
 
 async function oidcStrategyFactory(ctx, configId) {
   const db = getGlobalDB()
-  const config = await authPkg.db.getScopedConfig(db, {
+  const config = await core.db.getScopedConfig(db, {
     type: Configs.OIDC,
     group: ctx.query.group,
   })

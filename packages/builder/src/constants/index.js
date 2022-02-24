@@ -28,6 +28,7 @@ export const IntegrationNames = {
   AIRTABLE: "Airtable",
   ARANGODB: "ArangoDB",
   ORACLE: "Oracle",
+  GOOGLE_SHEETS: "Google Sheets",
 }
 
 // fields on the user table that cannot be edited
@@ -51,4 +52,7 @@ export const LAYOUT_NAMES = {
 
 export const BUDIBASE_INTERNAL_DB = "bb_internal"
 
+// one or more word characters and whitespace
 export const APP_NAME_REGEX = /^[\w\s]+$/
+// zero or more non-whitespace characters
+export const APP_URL_REGEX = /^\S*$/

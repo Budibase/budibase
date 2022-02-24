@@ -22,22 +22,22 @@ const Commands = {
 }
 
 async function init() {
-  // generate envoy file, always do this incase it has changed
+  // generate nginx file, always do this incase it has changed
   const hostingPath = path.join(process.cwd(), "..", "..", "hosting")
-  const envoyHbsPath = path.join(hostingPath, "envoy.dev.yaml.hbs")
-  const envoyOutputPath = path.join(hostingPath, ".generated-envoy.dev.yaml")
-  const contents = fs.readFileSync(envoyHbsPath, "utf8")
+  const nginxHbsPath = path.join(hostingPath, "nginx.dev.conf.hbs")
+  const nginxOutputPath = path.join(hostingPath, ".generated-nginx.dev.conf")
+  const contents = fs.readFileSync(nginxHbsPath, "utf8")
   const config = {
     address: isLinux() ? "172.17.0.1" : "host.docker.internal",
   }
-  fs.writeFileSync(envoyOutputPath, processStringSync(contents, config))
+  fs.writeFileSync(nginxOutputPath, processStringSync(contents, config))
 
   const envFilePath = path.join(process.cwd(), ".env")
   if (!fs.existsSync(envFilePath)) {
     const envFileJson = {
       PORT: 4001,
-      MINIO_URL: "http://localhost:10000/",
-      COUCH_DB_URL: "http://budibase:budibase@localhost:10000/db/",
+      MINIO_URL: "http://localhost:4004",
+      COUCH_DB_URL: "http://budibase:budibase@localhost:4005",
       REDIS_URL: "localhost:6379",
       WORKER_URL: "http://localhost:4002",
       INTERNAL_API_KEY: "budibase",

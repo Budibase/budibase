@@ -9,7 +9,9 @@ const airtable = require("./airtable")
 const mysql = require("./mysql")
 const arangodb = require("./arangodb")
 const rest = require("./rest")
+const googlesheets = require("./googlesheets")
 const { SourceNames } = require("../definitions/datasource")
+const environment = require("../environment")
 
 const DEFINITIONS = {
   [SourceNames.POSTGRES]: postgres.schema,
@@ -44,6 +46,11 @@ if (!(process.arch === "arm64" && process.platform === "darwin")) {
   const oracle = require("./oracle")
   DEFINITIONS[SourceNames.ORACLE] = oracle.schema
   INTEGRATIONS[SourceNames.ORACLE] = oracle.integration
+}
+
+if (environment.SELF_HOSTED) {
+  DEFINITIONS[SourceNames.GOOGLE_SHEETS] = googlesheets.schema
+  INTEGRATIONS[SourceNames.GOOGLE_SHEETS] = googlesheets.integration
 }
 
 module.exports = {

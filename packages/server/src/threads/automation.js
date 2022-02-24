@@ -1,16 +1,15 @@
-// when thread starts, make sure it is recorded
+require("./utils").threadSetup()
 const env = require("../environment")
-env.setInThread()
 const actions = require("../automations/actions")
 const automationUtils = require("../automations/automationUtils")
 const AutomationEmitter = require("../events/AutomationEmitter")
 const { processObject } = require("@budibase/string-templates")
-const { DEFAULT_TENANT_ID } = require("@budibase/auth").constants
-const CouchDB = require("../db")
+const { DEFAULT_TENANT_ID } = require("@budibase/backend-core/constants")
 const { DocumentTypes, isDevAppID } = require("../db/utils")
-const { doInTenant } = require("@budibase/auth/tenancy")
+const { doInTenant } = require("@budibase/backend-core/tenancy")
 const usage = require("../utilities/usageQuota")
 const { definitions: triggerDefs } = require("../automations/triggerInfo")
+const { doInAppContext, getAppDB } = require("@budibase/backend-core/context")
 
 const FILTER_STEP_ID = actions.ACTION_DEFINITIONS.FILTER.stepId
 const CRON_STEP_ID = triggerDefs.CRON.stepId
@@ -60,11 +59,10 @@ class Orchestrator {
   }
 
   async getApp() {
-    const appId = this._appId
     if (this._app) {
       return this._app
     }
-    const db = new CouchDB(appId)
+    const db = getAppDB()
     this._app = await db.get(DocumentTypes.APP_METADATA)
     return this._app
   }
@@ -132,16 +130,19 @@ class Orchestrator {
 }
 
 module.exports = (input, callback) => {
-  const automationOrchestrator = new Orchestrator(
-    input.data.automation,
-    input.data.event
-  )
-  automationOrchestrator
-    .execute()
-    .then(response => {
-      callback(null, response)
-    })
-    .catch(err => {
-      callback(err)
-    })
+  const appId = input.data.event.appId
+  doInAppContext(appId, () => {
+    const automationOrchestrator = new Orchestrator(
+      input.data.automation,
+      input.data.event
+    )
+    automationOrchestrator
+      .execute()
+      .then(response => {
+        callback(null, response)
+      })
+      .catch(err => {
+        callback(err)
+      })
+  })
 }

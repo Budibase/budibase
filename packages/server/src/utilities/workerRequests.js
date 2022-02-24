@@ -1,10 +1,10 @@
 const fetch = require("node-fetch")
 const env = require("../environment")
 const { checkSlashesInUrl } = require("./index")
-const { getDeployedAppID } = require("@budibase/auth/db")
+const { getProdAppID } = require("@budibase/backend-core/db")
 const { updateAppRole } = require("./global")
-const { Headers } = require("@budibase/auth/constants")
-const { getTenantId, isTenantIdSet } = require("@budibase/auth/tenancy")
+const { Headers } = require("@budibase/backend-core/constants")
+const { getTenantId, isTenantIdSet } = require("@budibase/backend-core/tenancy")
 
 function request(ctx, request) {
   if (!request.headers) {
@@ -58,29 +58,6 @@ exports.sendSmtpEmail = async (to, from, subject, contents, automation) => {
   return response.json()
 }
 
-exports.getDeployedApps = async () => {
-  try {
-    const response = await fetch(
-      checkSlashesInUrl(env.WORKER_URL + `/api/apps`),
-      request(null, {
-        method: "GET",
-      })
-    )
-    const json = await response.json()
-    const apps = {}
-    for (let [key, value] of Object.entries(json)) {
-      if (value.url) {
-        value.url = value.url.toLowerCase()
-        apps[key] = value
-      }
-    }
-    return apps
-  } catch (err) {
-    // error, cannot determine deployed apps, don't stop app creation - sort this later
-    return {}
-  }
-}
-
 exports.getGlobalSelf = async (ctx, appId = null) => {
   const endpoint = `/api/global/users/self`
   const response = await fetch(
@@ -93,15 +70,15 @@ exports.getGlobalSelf = async (ctx, appId = null) => {
   }
   let json = await response.json()
   if (appId) {
-    json = updateAppRole(appId, json)
+    json = updateAppRole(json)
   }
   return json
 }
 
 exports.removeAppFromUserRoles = async (ctx, appId) => {
-  const deployedAppId = getDeployedAppID(appId)
+  const prodAppId = getProdAppID(appId)
   const response = await fetch(
-    checkSlashesInUrl(env.WORKER_URL + `/api/global/roles/${deployedAppId}`),
+    checkSlashesInUrl(env.WORKER_URL + `/api/global/roles/${prodAppId}`),
     request(ctx, {
       method: "DELETE",
     })

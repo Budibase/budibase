@@ -36,19 +36,28 @@ CREATE TABLE people
 INSERT products
   (name, description)  
 VALUES  
-  ('Bananas', 'Fruit thing');  
-  
-INSERT products
-  (name, description)  
-VALUES  
+  ('Bananas', 'Fruit thing'),
   ('Meat', 'Animal thing');
-
+  
 INSERT tasks
   (taskname, productid)
 VALUES
   ('Processing', 1);
 
-INSERT people
-  (name, age)
-VALUES
-  ('Bob', '30');
+INSERT INTO people (name, age)
+VALUES ('Bob', '30'),
+  ('Bert', '10'),
+  ('Jack', '12'),
+  ('Mike', '31'),
+  ('Dave', '44'),
+  ('Jim', '43'),
+  ('Kerry', '32'),
+  ('Julie', '12'),
+  ('Kim', '55'),
+  ('Andy', '33'),
+  ('John', '22'),
+  ('Ruth', '66'),
+  ('Robert', '88'),
+  ('Bobert', '99'),
+  ('Jan', '22'),
+  ('Megan', '11');

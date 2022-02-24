@@ -12,11 +12,11 @@
   import { dndzone } from "svelte-dnd-action"
   import { generate } from "shortid"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
-  import { OperatorOptions, getValidOperatorsForType } from "constants/lucene"
+  import { LuceneUtils, Constants } from "@budibase/frontend-core"
   import { selectedComponent } from "builderStore"
   import { getComponentForSettingType } from "./componentSettings"
   import PropertyControl from "./PropertyControl.svelte"
-  import { getComponentSettings } from "builderStore/storeUtils"
+  import { getComponentSettings } from "builderStore/componentUtils"
 
   export let conditions = []
   export let bindings = []
@@ -83,7 +83,7 @@
         valueType: "string",
         id: generate(),
         action: "hide",
-        operator: OperatorOptions.Equals.value,
+        operator: Constants.OperatorOptions.Equals.value,
       },
     ]
   }
@@ -108,13 +108,13 @@
   }
 
   const getOperatorOptions = condition => {
-    return getValidOperatorsForType(condition.valueType)
+    return LuceneUtils.getValidOperatorsForType(condition.valueType)
   }
 
   const onOperatorChange = (condition, newOperator) => {
     const noValueOptions = [
-      OperatorOptions.Empty.value,
-      OperatorOptions.NotEmpty.value,
+      Constants.OperatorOptions.Empty.value,
+      Constants.OperatorOptions.NotEmpty.value,
     ]
     condition.noValue = noValueOptions.includes(newOperator)
     if (condition.noValue) {
@@ -127,9 +127,12 @@
     condition.referenceValue = null
 
     // Ensure a valid operator is set
-    const validOperators = getValidOperatorsForType(newType).map(x => x.value)
+    const validOperators = LuceneUtils.getValidOperatorsForType(newType).map(
+      x => x.value
+    )
     if (!validOperators.includes(condition.operator)) {
-      condition.operator = validOperators[0] ?? OperatorOptions.Equals.value
+      condition.operator =
+        validOperators[0] ?? Constants.OperatorOptions.Equals.value
       onOperatorChange(condition, condition.operator)
     }
   }

@@ -1,4 +1,7 @@
-const { BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
+const core = require("@budibase/backend-core")
+const CouchDB = require("../../db")
+core.init(CouchDB)
+const { BUILTIN_ROLE_IDS } = require("@budibase/backend-core/roles")
 const env = require("../../environment")
 const {
   basicTable,
@@ -15,17 +18,17 @@ const {
 const controllers = require("./controllers")
 const supertest = require("supertest")
 const { cleanup } = require("../../utilities/fileSystem")
-const { Cookies, Headers } = require("@budibase/auth").constants
-const { jwt } = require("@budibase/auth").auth
-const auth = require("@budibase/auth")
-const { getGlobalDB } = require("@budibase/auth/tenancy")
-const { createASession } = require("@budibase/auth/sessions")
-const { user: userCache } = require("@budibase/auth/cache")
-const CouchDB = require("../../db")
-auth.init(CouchDB)
+const { Cookies, Headers } = require("@budibase/backend-core/constants")
+const { jwt } = require("@budibase/backend-core/auth")
+const { getGlobalDB } = require("@budibase/backend-core/tenancy")
+const { createASession } = require("@budibase/backend-core/sessions")
+const { user: userCache } = require("@budibase/backend-core/cache")
+const newid = require("../../db/newid")
+const context = require("@budibase/backend-core/context")
 
 const GLOBAL_USER_ID = "us_uuid1"
 const EMAIL = "babs@babs.com"
+const CSRF_TOKEN = "e3727778-7af0-4226-b5eb-f43cbe60a306"
 
 class TestConfiguration {
   constructor(openServer = true) {
@@ -48,6 +51,10 @@ class TestConfiguration {
     return this.appId
   }
 
+  getCouch() {
+    return CouchDB
+  }
+
   async _req(config, params, controlFunc) {
     const request = {}
     // fake cookies, we don't need them
@@ -59,11 +66,21 @@ class TestConfiguration {
     request.request = {
       body: config,
     }
-    if (params) {
-      request.params = params
+    async function run() {
+      if (params) {
+        request.params = params
+      }
+      await controlFunc(request)
+      return request.body
     }
-    await controlFunc(request)
-    return request.body
+    // check if already in a context
+    if (context.getAppId() == null) {
+      return context.doInAppContext(this.appId, async () => {
+        return run()
+      })
+    } else {
+      return run()
+    }
   }
 
   async globalUser({
@@ -85,7 +102,11 @@ class TestConfiguration {
       roles: roles || {},
       tenantId: TENANT_ID,
     }
-    await createASession(id, { sessionId: "sessionid", tenantId: TENANT_ID })
+    await createASession(id, {
+      sessionId: "sessionid",
+      tenantId: TENANT_ID,
+      csrfToken: CSRF_TOKEN,
+    })
     if (builder) {
       user.builder = { global: true }
     } else {
@@ -98,7 +119,8 @@ class TestConfiguration {
     }
   }
 
-  async init(appName = "test_application") {
+  // use a new id as the name to avoid name collisions
+  async init(appName = newid()) {
     await this.globalUser()
     return this.createApp(appName)
   }
@@ -131,6 +153,7 @@ class TestConfiguration {
         `${Cookies.Auth}=${authToken}`,
         `${Cookies.CurrentApp}=${appToken}`,
       ],
+      [Headers.CSRF_TOKEN]: CSRF_TOKEN,
     }
     if (this.appId) {
       headers[Headers.APP_ID] = this.appId
@@ -163,6 +186,7 @@ class TestConfiguration {
     // create dev app
     this.app = await this._req({ name: appName }, null, controllers.app.create)
     this.appId = this.app.appId
+    context.updateAppId(this.appId)
 
     // create production app
     this.prodApp = await this.deploy()
@@ -175,14 +199,16 @@ class TestConfiguration {
   }
 
   async deploy() {
-    const deployment = await this._req(null, null, controllers.deploy.deployApp)
-    const prodAppId = deployment.appId.replace("_dev", "")
-    const appPackage = await this._req(
-      null,
-      { appId: prodAppId },
-      controllers.app.fetchAppPackage
-    )
-    return appPackage.application
+    await this._req(null, null, controllers.deploy.deployApp)
+    const prodAppId = this.getAppId().replace("_dev", "")
+    return context.doInAppContext(prodAppId, async () => {
+      const appPackage = await this._req(
+        null,
+        { appId: prodAppId },
+        controllers.app.fetchAppPackage
+      )
+      return appPackage.application
+    })
   }
 
   async updateTable(config = null) {
@@ -316,6 +342,64 @@ class TestConfiguration {
     return this.datasource
   }
 
+  async updateDatasource(datasource) {
+    const response = await this._req(
+      datasource,
+      { datasourceId: datasource._id },
+      controllers.datasource.update
+    )
+    this.datasource = response.datasource
+    return this.datasource
+  }
+
+  async restDatasource(cfg) {
+    return this.createDatasource({
+      datasource: {
+        ...basicDatasource().datasource,
+        source: "REST",
+        config: cfg || {},
+      },
+    })
+  }
+
+  async dynamicVariableDatasource() {
+    let datasource = await this.restDatasource()
+    const basedOnQuery = await this.createQuery({
+      ...basicQuery(datasource._id),
+      fields: {
+        path: "www.google.com",
+      },
+    })
+    datasource = await this.updateDatasource({
+      ...datasource,
+      config: {
+        dynamicVariables: [
+          {
+            queryId: basedOnQuery._id,
+            name: "variable3",
+            value: "{{ data.0.[value] }}",
+          },
+        ],
+      },
+    })
+    return { datasource, query: basedOnQuery }
+  }
+
+  async previewQuery(request, config, datasource, fields) {
+    return request
+      .post(`/api/queries/preview`)
+      .send({
+        datasourceId: datasource._id,
+        parameters: {},
+        fields,
+        queryVerb: "read",
+        name: datasource.name,
+      })
+      .set(config.defaultHeaders())
+      .expect("Content-Type", /json/)
+      .expect(200)
+  }
+
   async createQuery(config = null) {
     if (!this.datasource && !config) {
       throw "No data source created for query."
@@ -354,46 +438,47 @@ class TestConfiguration {
 
   async login({ roleId, userId, builder, prodApp = false } = {}) {
     const appId = prodApp ? this.prodAppId : this.appId
-
-    userId = !userId ? `us_uuid1` : userId
-    if (!this.request) {
-      throw "Server has not been opened, cannot login."
-    }
-    // make sure the user exists in the global DB
-    if (roleId !== BUILTIN_ROLE_IDS.PUBLIC) {
-      await this.globalUser({
-        userId,
-        builder,
-        roles: { [this.prodAppId]: roleId },
+    return context.doInAppContext(appId, async () => {
+      userId = !userId ? `us_uuid1` : userId
+      if (!this.request) {
+        throw "Server has not been opened, cannot login."
+      }
+      // make sure the user exists in the global DB
+      if (roleId !== BUILTIN_ROLE_IDS.PUBLIC) {
+        await this.globalUser({
+          id: userId,
+          builder,
+          roles: { [this.prodAppId]: roleId },
+        })
+      }
+      await createASession(userId, {
+        sessionId: "sessionid",
+        tenantId: TENANT_ID,
       })
-    }
-    await createASession(userId, {
-      sessionId: "sessionid",
-      tenantId: TENANT_ID,
-    })
-    // have to fake this
-    const auth = {
-      userId,
-      sessionId: "sessionid",
-      tenantId: TENANT_ID,
-    }
-    const app = {
-      roleId: roleId,
-      appId,
-    }
-    const authToken = jwt.sign(auth, env.JWT_SECRET)
-    const appToken = jwt.sign(app, env.JWT_SECRET)
+      // have to fake this
+      const auth = {
+        userId,
+        sessionId: "sessionid",
+        tenantId: TENANT_ID,
+      }
+      const app = {
+        roleId: roleId,
+        appId,
+      }
+      const authToken = jwt.sign(auth, env.JWT_SECRET)
+      const appToken = jwt.sign(app, env.JWT_SECRET)
 
-    // returning necessary request headers
-    await userCache.invalidateUser(userId)
-    return {
-      Accept: "application/json",
-      Cookie: [
-        `${Cookies.Auth}=${authToken}`,
-        `${Cookies.CurrentApp}=${appToken}`,
-      ],
-      [Headers.APP_ID]: appId,
-    }
+      // returning necessary request headers
+      await userCache.invalidateUser(userId)
+      return {
+        Accept: "application/json",
+        Cookie: [
+          `${Cookies.Auth}=${authToken}`,
+          `${Cookies.CurrentApp}=${appToken}`,
+        ],
+        [Headers.APP_ID]: appId,
+      }
+    })
   }
 }
 

@@ -80,6 +80,17 @@ module DynamoModule {
           },
         },
       },
+      describe: {
+        type: QueryTypes.FIELDS,
+        customisable: true,
+        readable: true,
+        fields: {
+          table: {
+            type: DatasourceFieldTypes.STRING,
+            required: true,
+          },
+        },
+      },
       get: {
         type: QueryTypes.FIELDS,
         customisable: true,
@@ -158,13 +169,11 @@ module DynamoModule {
         IndexName: query.index ? query.index : undefined,
         ...query.json,
       }
-      if (query.index) {
-        const response = await this.client.query(params).promise()
-        if (response.Items) {
-          return response.Items
-        }
-        return response
+      const response = await this.client.query(params).promise()
+      if (response.Items) {
+        return response.Items
       }
+      return response
     }
 
     async scan(query: { table: string; json: object; index: null | string }) {
@@ -178,6 +187,13 @@ module DynamoModule {
         return response.Items
       }
       return response
+    }
+
+    async describe(query: { table: string }) {
+      const params = {
+        TableName: query.table,
+      }
+      return new AWS.DynamoDB().describeTable(params).promise()
     }
 
     async get(query: { table: string; json: object }) {

@@ -9,6 +9,7 @@
     Label,
     Select,
     Button,
+    notifications,
   } from "@budibase/bbui"
   import { store } from "builderStore"
   import AppThemeSelect from "./AppThemeSelect.svelte"
@@ -19,7 +20,7 @@
     primaryColor: "var(--spectrum-global-color-blue-600)",
     primaryColorHover: "var(--spectrum-global-color-blue-500)",
     buttonBorderRadius: "16px",
-    navBackground: "var(--spectrum-global-color-gray-100)",
+    navBackground: "var(--spectrum-global-color-gray-50)",
     navTextColor: "var(--spectrum-global-color-gray-800)",
   }
 
@@ -43,16 +44,31 @@
   ]
 
   const updateProperty = property => {
-    return e => {
-      store.actions.customTheme.save({
-        ...get(store).customTheme,
-        [property]: e.detail,
-      })
+    return async e => {
+      try {
+        store.actions.customTheme.save({
+          ...get(store).customTheme,
+          [property]: e.detail,
+        })
+      } catch (error) {
+        notifications.error("Error updating custom theme")
+      }
     }
   }
 
   const resetTheme = () => {
-    store.actions.customTheme.save(null)
+    try {
+      const theme = get(store).theme
+      store.actions.customTheme.save({
+        ...defaultTheme,
+        navBackground:
+          theme === "spectrum--light"
+            ? "var(--spectrum-global-color-gray-50)"
+            : "var(--spectrum-global-color-gray-100)",
+      })
+    } catch (error) {
+      notifications.error("Error saving custom theme")
+    }
   }
 </script>
 

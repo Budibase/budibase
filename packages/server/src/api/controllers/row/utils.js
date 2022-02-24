@@ -1,11 +1,10 @@
 const validateJs = require("validate.js")
 const { cloneDeep } = require("lodash/fp")
-const CouchDB = require("../../../db")
 const { InternalTables } = require("../../../db/utils")
 const userController = require("../user")
 const { FieldTypes } = require("../../../constants")
-const { processStringSync } = require("@budibase/string-templates")
 const { makeExternalQuery } = require("../../../integrations/base/utils")
+const { getAppDB } = require("@budibase/backend-core/context")
 
 validateJs.extend(validateJs.validators.datetime, {
   parse: function (value) {
@@ -17,14 +16,15 @@ validateJs.extend(validateJs.validators.datetime, {
   },
 })
 
-exports.getDatasourceAndQuery = async (appId, json) => {
+exports.getDatasourceAndQuery = async json => {
   const datasourceId = json.endpoint.datasourceId
-  const db = new CouchDB(appId)
+  const db = getAppDB()
   const datasource = await db.get(datasourceId)
   return makeExternalQuery(datasource, json)
 }
 
-exports.findRow = async (ctx, db, tableId, rowId) => {
+exports.findRow = async (ctx, tableId, rowId) => {
+  const db = getAppDB()
   let row
   // TODO remove special user case in future
   if (tableId === InternalTables.USER_METADATA) {
@@ -42,40 +42,44 @@ exports.findRow = async (ctx, db, tableId, rowId) => {
   return row
 }
 
-exports.validate = async ({ appId, tableId, row, table }) => {
+exports.validate = async ({ tableId, row, table }) => {
   if (!table) {
-    const db = new CouchDB(appId)
+    const db = getAppDB()
     table = await db.get(tableId)
   }
   const errors = {}
   for (let fieldName of Object.keys(table.schema)) {
     const constraints = cloneDeep(table.schema[fieldName].constraints)
+    const type = table.schema[fieldName].type
+    // formulas shouldn't validated, data will be deleted anyway
+    if (type === FieldTypes.FORMULA) {
+      continue
+    }
     // special case for options, need to always allow unselected (null)
-    if (
-      table.schema[fieldName].type ===
-        (FieldTypes.OPTIONS || FieldTypes.ARRAY) &&
-      constraints.inclusion
-    ) {
+    if (type === FieldTypes.OPTIONS && constraints.inclusion) {
       constraints.inclusion.push(null)
     }
     let res
 
     // Validate.js doesn't seem to handle array
-    if (
-      table.schema[fieldName].type === FieldTypes.ARRAY &&
-      row[fieldName] &&
-      row[fieldName].length
-    ) {
-      row[fieldName].map(val => {
-        if (!constraints.inclusion.includes(val)) {
-          errors[fieldName] = "Field not in list"
-        }
-      })
-    } else if (table.schema[fieldName].type === FieldTypes.FORMULA) {
-      res = validateJs.single(
-        processStringSync(table.schema[fieldName].formula, row),
-        constraints
-      )
+    if (type === FieldTypes.ARRAY && row[fieldName]) {
+      if (row[fieldName].length) {
+        row[fieldName].map(val => {
+          if (!constraints.inclusion.includes(val)) {
+            errors[fieldName] = "Field not in list"
+          }
+        })
+      } else if (constraints.presence && row[fieldName].length === 0) {
+        // non required MultiSelect creates an empty array, which should not throw errors
+        errors[fieldName] = [`${fieldName} is required`]
+      }
+    } else if (type === FieldTypes.JSON && typeof row[fieldName] === "string") {
+      // this should only happen if there is an error
+      try {
+        JSON.parse(row[fieldName])
+      } catch (err) {
+        errors[fieldName] = [`Contains invalid JSON`]
+      }
     } else {
       res = validateJs.single(row[fieldName], constraints)
     }

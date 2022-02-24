@@ -1,4 +1,5 @@
 import {
+  FilterTypes,
   IncludeRelationships,
   Operation,
   PaginationJson,
@@ -18,6 +19,19 @@ import {
   isRowId,
   convertRowId,
 } from "../../../integrations/utils"
+import { getDatasourceAndQuery } from "./utils"
+import {
+  DataSourceOperation,
+  FieldTypes,
+  RelationshipTypes,
+} from "../../../constants"
+import { breakExternalTableId, isSQL } from "../../../integrations/utils"
+import { processObjectSync } from "@budibase/string-templates"
+// @ts-ignore
+import { cloneDeep } from "lodash/fp"
+import { processFormulas } from "../../../utilities/rowProcessor/utils"
+// @ts-ignore
+import { getAppDB } from "@budibase/backend-core/context"
 
 interface ManyRelationship {
   tableId?: string
@@ -37,18 +51,6 @@ interface RunConfig {
 }
 
 module External {
-  const { getDatasourceAndQuery } = require("./utils")
-  const {
-    DataSourceOperation,
-    FieldTypes,
-    RelationshipTypes,
-  } = require("../../../constants")
-  const { breakExternalTableId, isSQL } = require("../../../integrations/utils")
-  const { processObjectSync } = require("@budibase/string-templates")
-  const { cloneDeep } = require("lodash/fp")
-  const CouchDB = require("../../../db")
-  const { processFormulas } = require("../../../utilities/rowProcessor/utils")
-
   function buildFilters(
     id: string | undefined,
     filters: SearchFilters,
@@ -118,8 +120,13 @@ module External {
     }
     // check the row and filters to make sure they aren't a key of some sort
     if (config.filters) {
-      for (let filter of Object.values(config.filters)) {
-        if (typeof filter !== "object" || Object.keys(filter).length === 0) {
+      for (let [key, filter] of Object.entries(config.filters)) {
+        // oneOf is an array, don't iterate it
+        if (
+          typeof filter !== "object" ||
+          Object.keys(filter).length === 0 ||
+          key === FilterTypes.ONE_OF
+        ) {
           continue
         }
         iterateObject(filter)
@@ -177,7 +184,7 @@ module External {
     thisRow._id = generateIdForRow(row, table)
     thisRow.tableId = table._id
     thisRow._rev = "rev"
-    return thisRow
+    return processFormulas(table, thisRow)
   }
 
   function fixArrayTypes(row: Row, table: Table) {
@@ -204,19 +211,12 @@ module External {
   }
 
   class ExternalRequest {
-    private readonly appId: string
     private operation: Operation
     private tableId: string
     private datasource: Datasource
     private tables: { [key: string]: Table } = {}
 
-    constructor(
-      appId: string,
-      operation: Operation,
-      tableId: string,
-      datasource: Datasource
-    ) {
-      this.appId = appId
+    constructor(operation: Operation, tableId: string, datasource: Datasource) {
       this.operation = operation
       this.tableId = tableId
       this.datasource = datasource
@@ -225,12 +225,14 @@ module External {
       }
     }
 
-    getTable(tableId: string | undefined): Table {
+    getTable(tableId: string | undefined): Table | undefined {
       if (!tableId) {
         throw "Table ID is unknown, cannot find table"
       }
       const { tableName } = breakExternalTableId(tableId)
-      return this.tables[tableName]
+      if (tableName) {
+        return this.tables[tableName]
+      }
     }
 
     inputProcessing(row: Row | undefined, table: Table) {
@@ -266,9 +268,11 @@ module External {
           newRow[key] = row[key]
           continue
         }
-        const { tableName: linkTableName } = breakExternalTableId(field.tableId)
+        const { tableName: linkTableName } = breakExternalTableId(
+          field?.tableId
+        )
         // table has to exist for many to many
-        if (!this.tables[linkTableName]) {
+        if (!linkTableName || !this.tables[linkTableName]) {
           continue
         }
         const linkTable = this.tables[linkTableName]
@@ -323,8 +327,12 @@ module External {
      * This iterates through the returned rows and works out what elements of the rows
      * actually match up to another row (based on primary keys) - this is pretty specific
      * to SQL and the way that SQL relationships are returned based on joins.
+     * This is complicated, but the idea is that when a SQL query returns all the relations
+     * will be separate rows, with all of the data in each row. We have to decipher what comes
+     * from where (which tables) and how to convert that into budibase columns.
      */
     updateRelationshipColumns(
+      table: Table,
       row: Row,
       rows: { [key: string]: Row },
       relationships: RelationshipsJson[]
@@ -333,6 +341,13 @@ module External {
       for (let relationship of relationships) {
         const linkedTable = this.tables[relationship.tableName]
         if (!linkedTable) {
+          continue
+        }
+        const fromColumn = `${table.name}.${relationship.from}`
+        const toColumn = `${linkedTable.name}.${relationship.to}`
+        // this is important when working with multiple relationships
+        // between the same tables, don't want to overlap/multiply the relations
+        if (!relationship.through && row[fromColumn] !== row[toColumn]) {
           continue
         }
         let linked = basicProcessing(row, linkedTable)
@@ -382,6 +397,7 @@ module External {
         // this is a relationship of some sort
         if (finalRows[rowId]) {
           finalRows = this.updateRelationshipColumns(
+            table,
             row,
             finalRows,
             relationships
@@ -395,6 +411,7 @@ module External {
         finalRows[thisRow._id] = thisRow
         // do this at end once its been added to the final rows
         finalRows = this.updateRelationshipColumns(
+          table,
           row,
           finalRows,
           relationships
@@ -416,7 +433,7 @@ module External {
         }
         const { tableName: linkTableName } = breakExternalTableId(field.tableId)
         // no table to link to, this is not a valid relationships
-        if (!this.tables[linkTableName]) {
+        if (!linkTableName || !this.tables[linkTableName]) {
           continue
         }
         const linkTable = this.tables[linkTableName]
@@ -454,6 +471,9 @@ module External {
     async lookupRelations(tableId: string, row: Row) {
       const related: { [key: string]: any } = {}
       const { tableName } = breakExternalTableId(tableId)
+      if (!tableName) {
+        return related
+      }
       const table = this.tables[tableName]
       // @ts-ignore
       const primaryKey = table.primary[0]
@@ -478,7 +498,7 @@ module External {
         if (!lookupField || !row[lookupField]) {
           continue
         }
-        const response = await getDatasourceAndQuery(this.appId, {
+        const response = await getDatasourceAndQuery({
           endpoint: getEndpoint(tableId, DataSourceOperation.READ),
           filters: {
             equal: {
@@ -509,28 +529,30 @@ module External {
       row: Row,
       relationships: ManyRelationship[]
     ) {
-      const { appId } = this
       // if we're creating (in a through table) need to wipe the existing ones first
       const promises = []
       const related = await this.lookupRelations(mainTableId, row)
       for (let relationship of relationships) {
         const { key, tableId, isUpdate, id, ...rest } = relationship
-        const body = processObjectSync(rest, row)
+        const body: { [key: string]: any } = processObjectSync(rest, row, {})
         const linkTable = this.getTable(tableId)
         // @ts-ignore
-        const linkPrimary = linkTable.primary[0]
-        const rows = related[key].rows || []
+        const linkPrimary = linkTable?.primary[0]
+        if (!linkTable || !linkPrimary) {
+          return
+        }
+        const rows = related[key]?.rows || []
         const found = rows.find(
           (row: { [key: string]: any }) =>
             row[linkPrimary] === relationship.id ||
-            row[linkPrimary] === body[linkPrimary]
+            row[linkPrimary] === body?.[linkPrimary]
         )
         const operation = isUpdate
           ? DataSourceOperation.UPDATE
           : DataSourceOperation.CREATE
         if (!found) {
           promises.push(
-            getDatasourceAndQuery(appId, {
+            getDatasourceAndQuery({
               endpoint: getEndpoint(tableId, operation),
               // if we're doing many relationships then we're writing, only one response
               body,
@@ -546,9 +568,12 @@ module External {
       for (let [colName, { isMany, rows, tableId }] of Object.entries(
         related
       )) {
-        const table: Table = this.getTable(tableId)
+        const table: Table | undefined = this.getTable(tableId)
         // if its not the foreign key skip it, nothing to do
-        if (table.primary && table.primary.indexOf(colName) !== -1) {
+        if (
+          !table ||
+          (table.primary && table.primary.indexOf(colName) !== -1)
+        ) {
           continue
         }
         for (let row of rows) {
@@ -560,7 +585,7 @@ module External {
               : DataSourceOperation.UPDATE
             const body = isMany ? null : { [colName]: null }
             promises.push(
-              getDatasourceAndQuery(this.appId, {
+              getDatasourceAndQuery({
                 endpoint: getEndpoint(tableId, op),
                 body,
                 filters,
@@ -599,20 +624,25 @@ module External {
           continue
         }
         const { tableName: linkTableName } = breakExternalTableId(field.tableId)
-        const linkTable = this.tables[linkTableName]
-        if (linkTable) {
-          const linkedFields = extractRealFields(linkTable, fields)
-          fields = fields.concat(linkedFields)
+        if (linkTableName) {
+          const linkTable = this.tables[linkTableName]
+          if (linkTable) {
+            const linkedFields = extractRealFields(linkTable, fields)
+            fields = fields.concat(linkedFields)
+          }
         }
       }
       return fields
     }
 
     async run(config: RunConfig) {
-      const { appId, operation, tableId } = this
+      const { operation, tableId } = this
       let { datasourceId, tableName } = breakExternalTableId(tableId)
+      if (!tableName) {
+        throw "Unable to run without a table name"
+      }
       if (!this.datasource) {
-        const db = new CouchDB(appId)
+        const db = getAppDB()
         this.datasource = await db.get(datasourceId)
         if (!this.datasource || !this.datasource.entities) {
           throw "No tables found, fetch tables before query."
@@ -664,7 +694,7 @@ module External {
         },
       }
       // can't really use response right now
-      const response = await getDatasourceAndQuery(appId, json)
+      const response = await getDatasourceAndQuery(json)
       // handle many to many relationships now if we know the ID (could be auto increment)
       if (
         operation !== DataSourceOperation.READ &&

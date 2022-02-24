@@ -5,8 +5,11 @@ exports.csv = function (headers, rows) {
     csv = `${csv}\n${headers
       .map(header => {
         let val = row[header]
-        val = typeof val === "object" ? JSON.stringify(val) : val
-        return `"${val}"`.trim()
+        val =
+          typeof val === "object"
+            ? `"${JSON.stringify(val).replace(/"/g, "'")}"`
+            : `"${val}"`
+        return val.trim()
       })
       .join(",")}`
   }

@@ -2,9 +2,8 @@
   import ScreenDetailsModal from "components/design/NavigationPanel/ScreenDetailsModal.svelte"
   import NewScreenModal from "components/design/NavigationPanel/NewScreenModal.svelte"
   import sanitizeUrl from "builderStore/store/screenTemplates/utils/sanitizeUrl"
-  import { Modal } from "@budibase/bbui"
+  import { Modal, notifications } from "@budibase/bbui"
   import { store, selectedAccessRole, allScreens } from "builderStore"
-  import { onDestroy } from "svelte"
   import analytics, { Events } from "analytics"
 
   let newScreenModal
@@ -13,10 +12,11 @@
   let screenName = ""
   let url = ""
   let selectedScreens = []
-  let roleId = $selectedAccessRole || "BASIC"
   let showProgressCircle = false
   let routeError
   let createdScreens = []
+
+  $: roleId = $selectedAccessRole || "BASIC"
 
   const createScreens = async () => {
     for (let screen of selectedScreens) {
@@ -30,18 +30,22 @@
 
   const save = async () => {
     showProgressCircle = true
-    await createScreens()
-    for (let screen of createdScreens) {
-      await saveScreens(screen)
+    try {
+      await createScreens()
+      for (let screen of createdScreens) {
+        await saveScreens(screen)
+      }
+      await store.actions.routing.fetch()
+      selectedScreens = []
+      createdScreens = []
+      screenName = ""
+      url = ""
+    } catch (error) {
+      notifications.error("Error creating screens")
     }
-
-    await store.actions.routing.fetch()
-    selectedScreens = []
-    createdScreens = []
-    screenName = ""
-    url = ""
     showProgressCircle = false
   }
+
   const saveScreens = async draftScreen => {
     let existingScreenCount = $store.screens.filter(
       s => s.props._instanceName == draftScreen.props._instanceName
@@ -71,13 +75,18 @@
       }
 
       draftScreen.routing.route = route
+      draftScreen.routing.roleId = roleId
 
-      await store.actions.screens.create(draftScreen)
+      await store.actions.screens.save(draftScreen)
       if (draftScreen.props._instanceName.endsWith("List")) {
-        await store.actions.components.links.save(
-          draftScreen.routing.route,
-          draftScreen.routing.route.split("/")[1]
-        )
+        try {
+          await store.actions.components.links.save(
+            draftScreen.routing.route,
+            draftScreen.routing.route.split("/")[1]
+          )
+        } catch (error) {
+          notifications.error("Error creating link to screen")
+        }
       }
     }
   }
@@ -90,15 +99,12 @@
     )
   }
 
-  onDestroy(() => {
-    selectedScreens = []
-    screenName = ""
-    url = ""
-    createdScreens = []
-  })
-
   export const showModal = () => {
     newScreenModal.show()
+  }
+
+  const setScreens = evt => {
+    selectedScreens = evt.detail.screens
   }
 
   const chooseModal = index => {
@@ -119,7 +125,7 @@
 
 <Modal bind:this={newScreenModal}>
   <NewScreenModal
-    bind:selectedScreens
+    on:save={setScreens}
     {showProgressCircle}
     {save}
     {chooseModal}

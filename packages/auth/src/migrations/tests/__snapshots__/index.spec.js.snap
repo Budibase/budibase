@@ -1,9 +1,0 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
-
-exports[`migrations should match snapshot 1`] = `
-Object {
-  "_id": "migrations",
-  "_rev": "1-af6c272fe081efafecd2ea49a8fcbb40",
-  "user_email_view_casing": 1487076708000,
-}
-`;

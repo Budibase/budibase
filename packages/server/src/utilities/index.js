@@ -1,9 +1,9 @@
 const env = require("../environment")
 const { OBJ_STORE_DIRECTORY } = require("../constants")
-const { sanitizeKey } = require("@budibase/auth/src/objectStore")
-const CouchDB = require("../db")
+const { sanitizeKey } = require("@budibase/backend-core/objectStore")
 const { generateMetadataID } = require("../db/utils")
 const Readable = require("stream").Readable
+const { getAppDB } = require("@budibase/backend-core/context")
 
 const BB_CDN = "https://cdn.budi.live"
 
@@ -34,7 +34,7 @@ exports.checkSlashesInUrl = url => {
  * @return {string} The base URL of the object store (MinIO or S3).
  */
 exports.objectStoreUrl = () => {
-  if (env.SELF_HOSTED) {
+  if (env.SELF_HOSTED || env.MINIO_URL) {
     // can use a relative url for this as all goes through the proxy (this is hosted in minio)
     return OBJ_STORE_DIRECTORY
   } else {
@@ -73,8 +73,8 @@ exports.attachmentsRelativeURL = attachmentKey => {
   )
 }
 
-exports.updateEntityMetadata = async (appId, type, entityId, updateFn) => {
-  const db = new CouchDB(appId)
+exports.updateEntityMetadata = async (type, entityId, updateFn) => {
+  const db = getAppDB()
   const id = generateMetadataID(type, entityId)
   // read it to see if it exists, we'll overwrite it no matter what
   let rev,
@@ -99,14 +99,14 @@ exports.updateEntityMetadata = async (appId, type, entityId, updateFn) => {
   }
 }
 
-exports.saveEntityMetadata = async (appId, type, entityId, metadata) => {
-  return exports.updateEntityMetadata(appId, type, entityId, () => {
+exports.saveEntityMetadata = async (type, entityId, metadata) => {
+  return exports.updateEntityMetadata(type, entityId, () => {
     return metadata
   })
 }
 
-exports.deleteEntityMetadata = async (appId, type, entityId) => {
-  const db = new CouchDB(appId)
+exports.deleteEntityMetadata = async (type, entityId) => {
+  const db = getAppDB()
   const id = generateMetadataID(type, entityId)
   let rev
   try {
@@ -141,12 +141,13 @@ exports.stringToReadStream = string => {
   })
 }
 
-exports.doesDatabaseExist = async dbName => {
-  try {
-    const db = new CouchDB(dbName, { skip_setup: true })
-    const info = await db.info()
-    return info && !info.error
-  } catch (err) {
-    return false
+exports.formatBytes = bytes => {
+  const units = ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"]
+  const byteIncrements = 1024
+  let unit = 0
+  let size = parseInt(bytes, 10) || 0
+  while (size >= byteIncrements && ++unit) {
+    size /= byteIncrements
   }
+  return `${size.toFixed(size < 10 && unit > 0 ? 1 : 0)}${units[unit]}`
 }

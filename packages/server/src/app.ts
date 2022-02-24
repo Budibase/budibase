@@ -1,9 +1,9 @@
 // need to load environment first
 import { ExtendableContext } from "koa"
 
-const env = require("./environment")
+import * as env from "./environment"
 const CouchDB = require("./db")
-require("@budibase/auth").init(CouchDB)
+require("@budibase/backend-core").init(CouchDB)
 const Koa = require("koa")
 const destroyable = require("server-destroy")
 const koaBody = require("koa-body")
@@ -16,6 +16,7 @@ const Sentry = require("@sentry/node")
 const fileSystem = require("./utilities/fileSystem")
 const bullboard = require("./automations/bullboard")
 const redis = require("./utilities/redis")
+import * as migrations from "./migrations"
 
 const app = new Koa()
 
@@ -84,13 +85,25 @@ module.exports = server.listen(env.PORT || 0, async () => {
   await automations.init()
 })
 
-process.on("uncaughtException", err => {
-  console.error(err)
+const shutdown = () => {
   server.close()
   server.destroy()
+}
+
+process.on("uncaughtException", err => {
+  console.error(err)
+  shutdown()
 })
 
 process.on("SIGTERM", () => {
-  server.close()
-  server.destroy()
+  shutdown()
 })
+
+// run migrations on startup if not done via http
+// not recommended in a clustered environment
+if (!env.HTTP_MIGRATIONS) {
+  migrations.migrate().catch(err => {
+    console.error("Error performing migrations. Exiting.\n", err)
+    shutdown()
+  })
+}

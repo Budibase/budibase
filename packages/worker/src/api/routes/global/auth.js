@@ -2,7 +2,7 @@ const Router = require("@koa/router")
 const authController = require("../../controllers/global/auth")
 const joiValidator = require("../../../middleware/joi-validator")
 const Joi = require("joi")
-const { updateTenantId } = require("@budibase/auth/tenancy")
+const { updateTenantId } = require("@budibase/backend-core/tenancy")
 
 const router = Router()
 
@@ -63,13 +63,27 @@ router
     updateTenant,
     authController.googlePreAuth
   )
+  .get(
+    "/api/global/auth/:tenantId/datasource/:provider",
+    updateTenant,
+    authController.datasourcePreAuth
+  )
   // single tenancy endpoint
   .get("/api/global/auth/google/callback", authController.googleAuth)
+  .get(
+    "/api/global/auth/datasource/:provider/callback",
+    authController.datasourceAuth
+  )
   // multi-tenancy endpoint
   .get(
     "/api/global/auth/:tenantId/google/callback",
     updateTenant,
     authController.googleAuth
+  )
+  .get(
+    "/api/global/auth/:tenantId/datasource/:provider/callback",
+    updateTenant,
+    authController.datasourceAuth
   )
   .get(
     "/api/global/auth/:tenantId/oidc/configs/:configId",

@@ -1,17 +1,17 @@
 const env = require("../../../../environment")
 const controllers = require("./controllers")
 const supertest = require("supertest")
-const { jwt } = require("@budibase/auth").auth
-const { Cookies } = require("@budibase/auth").constants
+const { jwt } = require("@budibase/backend-core/auth")
+const { Cookies, Headers } = require("@budibase/backend-core/constants")
 const { Configs, LOGO_URL } = require("../../../../constants")
-const { getGlobalUserByEmail } = require("@budibase/auth").utils
-const { createASession } = require("@budibase/auth/sessions")
-const { newid } = require("../../../../../../auth/src/hashing")
-const { TENANT_ID } = require("./structures")
-const auth = require("@budibase/auth")
+const { getGlobalUserByEmail } = require("@budibase/backend-core/utils")
+const { createASession } = require("@budibase/backend-core/sessions")
+const { newid } = require("@budibase/backend-core/src/hashing")
+const { TENANT_ID, CSRF_TOKEN } = require("./structures")
+const core = require("@budibase/backend-core")
 const CouchDB = require("../../../../db")
-const { doInTenant } = require("@budibase/auth/tenancy")
-auth.init(CouchDB)
+const { doInTenant } = require("@budibase/backend-core/tenancy")
+core.init(CouchDB)
 
 class TestConfiguration {
   constructor(openServer = true) {
@@ -72,6 +72,7 @@ class TestConfiguration {
     await createASession("us_uuid1", {
       sessionId: "sessionid",
       tenantId: TENANT_ID,
+      csrfToken: CSRF_TOKEN,
     })
   }
 
@@ -98,6 +99,7 @@ class TestConfiguration {
     return {
       Accept: "application/json",
       ...this.cookieHeader([`${Cookies.Auth}=${authToken}`]),
+      [Headers.CSRF_TOKEN]: CSRF_TOKEN,
     }
   }
 

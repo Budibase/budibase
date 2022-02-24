@@ -1,6 +1,6 @@
 {
   "name": "@budibase/cli",
-  "version": "0.9.190-alpha.3",
+  "version": "1.0.76-alpha.3",
   "description": "Budibase CLI, for developers, self hosting and migrations.",
   "main": "src/index.js",
   "bin": {
@@ -13,7 +13,9 @@
   },
   "pkg": {
     "targets": [
-      "node14"
+      "node14-linux",
+      "node14-win",
+      "node14-macos"
     ],
     "outputPath": "build"
   },

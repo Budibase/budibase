@@ -1,18 +1,23 @@
-const CouchDB = require("../../db")
 const {
   generateUserMetadataID,
   getUserMetadataParams,
+  generateUserFlagID,
 } = require("../../db/utils")
 const { InternalTables } = require("../../db/utils")
 const { getGlobalUsers, getRawGlobalUser } = require("../../utilities/global")
 const { getFullUser } = require("../../utilities/users")
 const { isEqual } = require("lodash")
-const { BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
-const { getDevelopmentAppID, getDeployedAppIDs } = require("@budibase/auth/db")
-const { doesDatabaseExist } = require("../../utilities")
-const { UserStatus } = require("@budibase/auth/constants")
+const { BUILTIN_ROLE_IDS } = require("@budibase/backend-core/roles")
+const {
+  getDevelopmentAppID,
+  getProdAppIDs,
+  dbExists,
+} = require("@budibase/backend-core/db")
+const { UserStatus } = require("@budibase/backend-core/constants")
+const { getAppDB, doInAppContext } = require("@budibase/backend-core/context")
 
-async function rawMetadata(db) {
+async function rawMetadata() {
+  const db = getAppDB()
   return (
     await db.allDocs(
       getUserMetadataParams(null, {
@@ -50,13 +55,10 @@ function combineMetadataAndUser(user, metadata) {
   return null
 }
 
-exports.syncGlobalUsers = async appId => {
+exports.syncGlobalUsers = async () => {
   // sync user metadata
-  const db = new CouchDB(appId)
-  const [users, metadata] = await Promise.all([
-    getGlobalUsers(appId),
-    rawMetadata(db),
-  ])
+  const db = getAppDB()
+  const [users, metadata] = await Promise.all([getGlobalUsers(), rawMetadata()])
   const toWrite = []
   for (let user of users) {
     const combined = await combineMetadataAndUser(user, metadata)
@@ -81,7 +83,7 @@ exports.syncUser = async function (ctx) {
       throw err
     }
   }
-  const roles = user.roles
+  const roles = deleting ? {} : user.roles
   // remove props which aren't useful to metadata
   delete user.password
   delete user.forceResetPassword
@@ -90,7 +92,7 @@ exports.syncUser = async function (ctx) {
   let prodAppIds
   // if they are a builder then get all production app IDs
   if ((user.builder && user.builder.global) || deleting) {
-    prodAppIds = await getDeployedAppIDs(CouchDB)
+    prodAppIds = await getProdAppIDs()
   } else {
     prodAppIds = Object.entries(roles)
       .filter(entry => entry[1] !== BUILTIN_ROLE_IDS.PUBLIC)
@@ -100,37 +102,39 @@ exports.syncUser = async function (ctx) {
     const roleId = roles[prodAppId]
     const devAppId = getDevelopmentAppID(prodAppId)
     for (let appId of [prodAppId, devAppId]) {
-      if (!(await doesDatabaseExist(appId))) {
+      if (!(await dbExists(appId))) {
         continue
       }
-      const db = new CouchDB(appId)
-      const metadataId = generateUserMetadataID(userId)
-      let metadata
-      try {
-        metadata = await db.get(metadataId)
-      } catch (err) {
-        if (deleting) {
-          continue
-        }
-        metadata = {
-          tableId: InternalTables.USER_METADATA,
-        }
-      }
-      // assign the roleId for the metadata doc
-      if (roleId) {
-        metadata.roleId = roleId
-      }
-      let combined = !deleting
-        ? combineMetadataAndUser(user, metadata)
-        : {
-            ...metadata,
-            status: UserStatus.INACTIVE,
-            metadata: BUILTIN_ROLE_IDS.PUBLIC,
+      await doInAppContext(appId, async () => {
+        const db = getAppDB()
+        const metadataId = generateUserMetadataID(userId)
+        let metadata
+        try {
+          metadata = await db.get(metadataId)
+        } catch (err) {
+          if (deleting) {
+            return
           }
-      // if its null then there was no updates required
-      if (combined) {
-        await db.put(combined)
-      }
+          metadata = {
+            tableId: InternalTables.USER_METADATA,
+          }
+        }
+        // assign the roleId for the metadata doc
+        if (roleId) {
+          metadata.roleId = roleId
+        }
+        let combined = !deleting
+          ? combineMetadataAndUser(user, metadata)
+          : {
+              ...metadata,
+              status: UserStatus.INACTIVE,
+              metadata: BUILTIN_ROLE_IDS.PUBLIC,
+            }
+        // if its null then there was no updates required
+        if (combined) {
+          await db.put(combined)
+        }
+      })
     }
   }
   ctx.body = {
@@ -139,8 +143,8 @@ exports.syncUser = async function (ctx) {
 }
 
 exports.fetchMetadata = async function (ctx) {
-  const database = new CouchDB(ctx.appId)
-  const global = await getGlobalUsers(ctx.appId)
+  const database = getAppDB()
+  const global = await getGlobalUsers()
   const metadata = await rawMetadata(database)
   const users = []
   for (let user of global) {
@@ -163,12 +167,13 @@ exports.updateSelfMetadata = async function (ctx) {
   ctx.request.body._id = ctx.user._id
   // make sure no stale rev
   delete ctx.request.body._rev
+  // make sure no csrf token
+  delete ctx.request.body.csrfToken
   await exports.updateMetadata(ctx)
 }
 
 exports.updateMetadata = async function (ctx) {
-  const appId = ctx.appId
-  const db = new CouchDB(appId)
+  const db = getAppDB()
   const user = ctx.request.body
   // this isn't applicable to the user
   delete user.roles
@@ -180,7 +185,7 @@ exports.updateMetadata = async function (ctx) {
 }
 
 exports.destroyMetadata = async function (ctx) {
-  const db = new CouchDB(ctx.appId)
+  const db = getAppDB()
   try {
     const dbUser = await db.get(ctx.params.id)
     await db.remove(dbUser._id, dbUser._rev)
@@ -194,4 +199,36 @@ exports.destroyMetadata = async function (ctx) {
 
 exports.findMetadata = async function (ctx) {
   ctx.body = await getFullUser(ctx, ctx.params.id)
+}
+
+exports.setFlag = async function (ctx) {
+  const userId = ctx.user._id
+  const { flag, value } = ctx.request.body
+  if (!flag) {
+    ctx.throw(400, "Must supply a 'flag' field in request body.")
+  }
+  const flagDocId = generateUserFlagID(userId)
+  const db = getAppDB()
+  let doc
+  try {
+    doc = await db.get(flagDocId)
+  } catch (err) {
+    doc = { _id: flagDocId }
+  }
+  doc[flag] = value || true
+  await db.put(doc)
+  ctx.body = { message: "Flag set successfully" }
+}
+
+exports.getFlags = async function (ctx) {
+  const userId = ctx.user._id
+  const docId = generateUserFlagID(userId)
+  const db = getAppDB()
+  let doc
+  try {
+    doc = await db.get(docId)
+  } catch (err) {
+    doc = { _id: docId }
+  }
+  ctx.body = doc
 }

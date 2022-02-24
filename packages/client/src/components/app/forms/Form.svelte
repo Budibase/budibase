@@ -1,7 +1,7 @@
 <script>
   import { getContext } from "svelte"
   import InnerForm from "./InnerForm.svelte"
-  import { hashString } from "utils/helpers"
+  import { Helpers } from "@budibase/bbui"
 
   export let dataSource
   export let theme
@@ -10,7 +10,7 @@
   export let actionType = "Create"
 
   const context = getContext("context")
-  const { API } = getContext("sdk")
+  const { API, fetchDatasourceSchema } = getContext("sdk")
 
   let loaded = false
   let schema
@@ -50,18 +50,22 @@
       dataSource._id &&
       actionType === "Create"
     ) {
-      const query = await API.fetchQueryDefinition(dataSource._id)
-      let paramSchema = {}
-      const params = query.parameters || []
-      params.forEach(param => {
-        paramSchema[param.name] = { ...param, type: "string" }
-      })
-      schema = paramSchema
+      try {
+        const query = await API.fetchQueryDefinition(dataSource._id)
+        let paramSchema = {}
+        const params = query.parameters || []
+        params.forEach(param => {
+          paramSchema[param.name] = { ...param, type: "string" }
+        })
+        schema = paramSchema
+      } catch (error) {
+        schema = {}
+      }
     }
 
     // For all other cases, just grab the normal schema
     else {
-      const dataSourceSchema = await API.fetchDatasourceSchema(dataSource)
+      const dataSourceSchema = await fetchDatasourceSchema(dataSource)
       schema = dataSourceSchema || {}
     }
 
@@ -71,7 +75,7 @@
   }
 
   $: initialValues = getInitialValues(actionType, dataSource, $context)
-  $: resetKey = hashString(
+  $: resetKey = Helpers.hashString(
     JSON.stringify(initialValues) + JSON.stringify(schema)
   )
 </script>

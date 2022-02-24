@@ -1,3 +1,16 @@
 import { writable } from "svelte/store"
+import { API } from "api"
 
-export const integrations = writable({})
+const createIntegrationsStore = () => {
+  const store = writable(null)
+
+  return {
+    ...store,
+    init: async () => {
+      const integrations = await API.getIntegrations()
+      store.set(integrations)
+    },
+  }
+}
+
+export const integrations = createIntegrationsStore()

@@ -1,15 +1,24 @@
 const handlebars = require("handlebars")
-const { registerAll } = require("./helpers/index")
+const { registerAll, registerMinimum } = require("./helpers/index")
 const processors = require("./processors")
-const { removeHandlebarsStatements, atob, btoa } = require("./utilities")
+const { atob, btoa } = require("./utilities")
 const manifest = require("../manifest.json")
+const { FIND_HBS_REGEX, findDoubleHbsInstances } = require("./utilities")
 
 const hbsInstance = handlebars.create()
 registerAll(hbsInstance)
 const hbsInstanceNoHelpers = handlebars.create()
+registerMinimum(hbsInstanceNoHelpers)
+const defaultOpts = {
+  noHelpers: false,
+  cacheTemplates: false,
+  noEscaping: false,
+  escapeNewlines: false,
+  noFinalise: false,
+}
 
 /**
- * utility function to check if the object is valid
+ * Utility function to check if the object is valid.
  */
 function testObject(object) {
   // JSON stringify will fail if there are any cycles, stops infinite recursion
@@ -21,18 +30,46 @@ function testObject(object) {
 }
 
 /**
+ * Creates a HBS template function for a given string, and optionally caches it.
+ */
+let templateCache = {}
+function createTemplate(string, opts) {
+  opts = { ...defaultOpts, ...opts }
+
+  // Finalising adds a helper, can't do this with no helpers
+  const key = `${string}-${JSON.stringify(opts)}`
+
+  // Reuse the cached template is possible
+  if (opts.cacheTemplates && templateCache[key]) {
+    return templateCache[key]
+  }
+
+  string = processors.preprocess(string, opts)
+
+  // Optionally disable built in HBS escaping
+  if (opts.noEscaping) {
+    string = exports.disableEscaping(string)
+  }
+
+  // This does not throw an error when template can't be fulfilled,
+  // have to try correct beforehand
+  const instance = opts.noHelpers ? hbsInstanceNoHelpers : hbsInstance
+  const template = instance.compile(string, {
+    strict: false,
+  })
+  templateCache[key] = template
+  return template
+}
+
+/**
  * Given an input object this will recurse through all props to try and update any handlebars statements within.
  * @param {object|array} object The input structure which is to be recursed, it is important to note that
  * if the structure contains any cycles then this will fail.
  * @param {object} context The context that handlebars should fill data from.
- * @param {object} opts optional - specify some options for processing.
+ * @param {object|undefined} opts optional - specify some options for processing.
  * @returns {Promise<object|array>} The structure input, as fully updated as possible.
  */
-module.exports.processObject = async (
-  object,
-  context,
-  opts = { noHelpers: false }
-) => {
+module.exports.processObject = async (object, context, opts) => {
   testObject(object)
   for (let key of Object.keys(object || {})) {
     if (object[key] != null) {
@@ -60,14 +97,10 @@ module.exports.processObject = async (
  * then nothing will occur.
  * @param {string} string The template string which is the filled from the context object.
  * @param {object} context An object of information which will be used to enrich the string.
- * @param {object} opts optional - specify some options for processing.
+ * @param {object|undefined} opts optional - specify some options for processing.
  * @returns {Promise<string>} The enriched string, all templates should have been replaced if they can be.
  */
-module.exports.processString = async (
-  string,
-  context,
-  opts = { noHelpers: false }
-) => {
+module.exports.processString = async (string, context, opts) => {
   // TODO: carry out any async calls before carrying out async call
   return module.exports.processStringSync(string, context, opts)
 }
@@ -78,14 +111,10 @@ module.exports.processString = async (
  * @param {object|array} object The input structure which is to be recursed, it is important to note that
  * if the structure contains any cycles then this will fail.
  * @param {object} context The context that handlebars should fill data from.
- * @param {object} opts optional - specify some options for processing.
+ * @param {object|undefined} opts optional - specify some options for processing.
  * @returns {object|array} The structure input, as fully updated as possible.
  */
-module.exports.processObjectSync = (
-  object,
-  context,
-  opts = { noHelpers: false }
-) => {
+module.exports.processObjectSync = (object, context, opts) => {
   testObject(object)
   for (let key of Object.keys(object || {})) {
     let val = object[key]
@@ -103,41 +132,50 @@ module.exports.processObjectSync = (
  * then nothing will occur. This is a pure sync call and therefore does not have the full functionality of the async call.
  * @param {string} string The template string which is the filled from the context object.
  * @param {object} context An object of information which will be used to enrich the string.
- * @param {object} opts optional - specify some options for processing.
+ * @param {object|undefined} opts optional - specify some options for processing.
  * @returns {string} The enriched string, all templates should have been replaced if they can be.
  */
-module.exports.processStringSync = (
-  string,
-  context,
-  opts = { noHelpers: false }
-) => {
-  if (!exports.isValid(string)) {
-    return string
-  }
-  // take a copy of input incase error
+module.exports.processStringSync = (string, context, opts) => {
+  // Take a copy of input in case of error
   const input = string
   if (typeof string !== "string") {
     throw "Cannot process non-string types."
   }
   try {
-    const noHelpers = opts && opts.noHelpers
-    // finalising adds a helper, can't do this with no helpers
-    const shouldFinalise = !noHelpers
-    string = processors.preprocess(string, shouldFinalise)
-    // this does not throw an error when template can't be fulfilled, have to try correct beforehand
-    const instance = noHelpers ? hbsInstanceNoHelpers : hbsInstance
-    const template = instance.compile(string, {
-      strict: false,
-    })
+    const template = createTemplate(string, opts)
+    const now = Math.floor(Date.now() / 1000) * 1000
     return processors.postprocess(
       template({
-        now: new Date().toISOString(),
+        now: new Date(now).toISOString(),
+        __opts: opts,
         ...context,
       })
     )
   } catch (err) {
-    return removeHandlebarsStatements(input)
+    return input
   }
+}
+
+/**
+ * By default with expressions like {{ name }} handlebars will escape various
+ * characters, which can be problematic. To fix this we use the syntax {{{ name }}},
+ * this function will find any double braces and switch to triple.
+ * @param string the string to have double HBS statements converted to triple.
+ */
+module.exports.disableEscaping = string => {
+  const matches = findDoubleHbsInstances(string)
+  if (matches == null) {
+    return string
+  }
+
+  // find the unique set
+  const unique = [...new Set(matches)]
+  for (let match of unique) {
+    // add a negative lookahead to exclude any already
+    const regex = new RegExp(`${match}(?!})`, "g")
+    string = string.replace(regex, `{${match}}`)
+  }
+  return string
 }
 
 /**
@@ -155,7 +193,7 @@ module.exports.makePropSafe = property => {
  * @param opts optional - specify some options for processing.
  * @returns {boolean} Whether or not the input string is valid.
  */
-module.exports.isValid = (string, opts = { noHelpers: false }) => {
+module.exports.isValid = (string, opts) => {
   const validCases = [
     "string",
     "number",
@@ -169,8 +207,11 @@ module.exports.isValid = (string, opts = { noHelpers: false }) => {
   // don't really need a real context to check if its valid
   const context = {}
   try {
-    const instance = opts && opts.noHelpers ? hbsInstanceNoHelpers : hbsInstance
-    instance.compile(processors.preprocess(string, false))(context)
+    const template = createTemplate(string, {
+      ...opts,
+      noFinalise: true,
+    })
+    template(context)
     return true
   } catch (err) {
     const msg = err && err.message ? err.message : err
@@ -236,4 +277,48 @@ module.exports.decodeJSBinding = handlebars => {
     return null
   }
   return atob(match[1])
+}
+
+/**
+ * Same as the doesContainString function, but will check for all the strings
+ * before confirming it contains.
+ * @param {string} template The template string to search.
+ * @param {string[]} strings The strings to look for.
+ * @returns {boolean} Will return true if all strings found in HBS statement.
+ */
+module.exports.doesContainStrings = (template, strings) => {
+  let regexp = new RegExp(FIND_HBS_REGEX)
+  let matches = template.match(regexp)
+  if (matches == null) {
+    return false
+  }
+  for (let match of matches) {
+    let hbs = match
+    if (exports.isJSBinding(match)) {
+      hbs = exports.decodeJSBinding(match)
+    }
+    let allFound = true
+    for (let string of strings) {
+      if (!hbs.includes(string)) {
+        allFound = false
+      }
+    }
+    if (allFound) {
+      return true
+    }
+  }
+  return false
+}
+
+/**
+ * This function looks in the supplied template for handlebars instances, if they contain
+ * JS the JS will be decoded and then the supplied string will be looked for. For example
+ * if the template "Hello, your name is {{ related }}" this function would return that true
+ * for the string "related" but not for "name" as it is not within the handlebars statement.
+ * @param {string} template A template string to search for handlebars instances.
+ * @param {string} string The word or sentence to search for.
+ * @returns {boolean} The this return true if the string is found, false if not.
+ */
+module.exports.doesContainString = (template, string) => {
+  return exports.doesContainStrings(template, [string])
 }

@@ -2,7 +2,7 @@
   import { get } from "svelte/store"
   import { store, currentAsset } from "builderStore"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import { findComponentParent } from "builderStore/storeUtils"
+  import { findComponentParent } from "builderStore/componentUtils"
   import { ActionMenu, MenuItem, Icon, notifications } from "@budibase/bbui"
 
   export let component
@@ -29,10 +29,14 @@
     if (currentIndex === 0) {
       return
     }
-    const newChildren = parent._children.filter(c => c !== component)
-    newChildren.splice(currentIndex - 1, 0, component)
-    parent._children = newChildren
-    store.actions.preview.saveSelected()
+    try {
+      const newChildren = parent._children.filter(c => c !== component)
+      newChildren.splice(currentIndex - 1, 0, component)
+      parent._children = newChildren
+      store.actions.preview.saveSelected()
+    } catch (error) {
+      notifications.error("Error saving screen")
+    }
   }
 
   const moveDownComponent = () => {
@@ -45,22 +49,26 @@
     if (currentIndex === parent._children.length - 1) {
       return
     }
-    const newChildren = parent._children.filter(c => c !== component)
-    newChildren.splice(currentIndex + 1, 0, component)
-    parent._children = newChildren
-    store.actions.preview.saveSelected()
+    try {
+      const newChildren = parent._children.filter(c => c !== component)
+      newChildren.splice(currentIndex + 1, 0, component)
+      parent._children = newChildren
+      store.actions.preview.saveSelected()
+    } catch (error) {
+      notifications.error("Error saving screen")
+    }
   }
 
   const duplicateComponent = () => {
     storeComponentForCopy(false)
-    pasteComponent("below")
+    pasteComponent("below", true)
   }
 
   const deleteComponent = async () => {
     try {
       await store.actions.components.delete(component)
     } catch (error) {
-      notifications.error(error)
+      notifications.error("Error deleting component")
     }
   }
 
@@ -69,9 +77,13 @@
     store.actions.components.copy(component, cut)
   }
 
-  const pasteComponent = mode => {
-    // lives in store - also used by drag drop
-    store.actions.components.paste(component, mode)
+  const pasteComponent = (mode, preserveBindings = false) => {
+    try {
+      // lives in store - also used by drag drop
+      store.actions.components.paste(component, mode, preserveBindings)
+    } catch (error) {
+      notifications.error("Error saving component")
+    }
   }
 </script>
 

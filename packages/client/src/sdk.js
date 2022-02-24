@@ -1,16 +1,18 @@
-import * as API from "./api"
+import { API } from "api"
 import {
   authStore,
   notificationStore,
   routeStore,
   screenStore,
   builderStore,
+  uploadStore,
 } from "stores"
 import { styleable } from "utils/styleable"
 import { linkable } from "utils/linkable"
 import { getAction } from "utils/getAction"
 import Provider from "components/context/Provider.svelte"
-import { ActionTypes } from "constants"
+import { ActionTypes } from "./constants"
+import { fetchDatasourceSchema } from "./utils/schema.js"
 
 export default {
   API,
@@ -19,9 +21,11 @@ export default {
   routeStore,
   screenStore,
   builderStore,
+  uploadStore,
   styleable,
   linkable,
   getAction,
+  fetchDatasourceSchema,
   Provider,
   ActionTypes,
 }

@@ -84,7 +84,7 @@ The `HR` schema is populated with dummy data by default in oracle for testing pu
 To connect to the HR schema first update the user password and unlock the account by performing
 ```sql
 ALTER USER hr ACCOUNT UNLOCK;
-ALTER USER hr IDENTIFIED BY hr
+ALTER USER hr IDENTIFIED BY hr;
 ```
 You should now be able to connect to the hr schema using the credentials hr/hr
 

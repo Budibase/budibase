@@ -11,6 +11,7 @@ export { stateStore } from "./state"
 export { themeStore } from "./theme"
 export { devToolsStore } from "./devTools"
 export { componentStore } from "./components"
+export { uploadStore } from "./uploads.js"
 
 // Context stores are layered and duplicated, so it is not a singleton
 export { createContextStore } from "./context"

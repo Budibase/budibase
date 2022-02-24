@@ -13,8 +13,8 @@
     Body,
     notifications,
   } from "@budibase/bbui"
-  import ErrorSVG from "assets/error.svg?raw"
-  import { findComponent, findComponentPath } from "builderStore/storeUtils"
+  import ErrorSVG from "@budibase/frontend-core/assets/error.svg?raw"
+  import { findComponent, findComponentPath } from "builderStore/componentUtils"
 
   let iframe
   let layout
@@ -69,15 +69,7 @@
     previewDevice: $store.previewDevice,
     messagePassing: $store.clientFeatures.messagePassing,
   }
-
-  // Saving pages and screens to the DB causes them to have _revs.
-  // These revisions change every time a save happens and causes
-  // these reactive statements to fire, even though the actual
-  // definition hasn't changed.
-  // By deleting all _rev properties we can avoid this and increase
-  // performance.
   $: json = JSON.stringify(previewData)
-  $: strippedJson = json.replace(/"_rev":\s*"[^"]+"/g, `"_rev":""`)
 
   // Update the iframe with the builder info to render the correct preview
   const refreshContent = message => {
@@ -87,7 +79,7 @@
   }
 
   // Refresh the preview when required
-  $: refreshContent(strippedJson)
+  $: refreshContent(json)
 
   function receiveMessage(message) {
     const handlers = {
@@ -102,7 +94,7 @@
         if (!$store.clientFeatures.intelligentLoading) {
           loading = false
         }
-        refreshContent(strippedJson)
+        refreshContent(json)
       },
       [MessageTypes.ERROR]: event => {
         // Catch any app errors
@@ -154,44 +146,49 @@
     }
   })
 
-  const handleBudibaseEvent = event => {
+  const handleBudibaseEvent = async event => {
     const { type, data } = event.data || event.detail
     if (!type) {
       return
     }
 
-    if (type === "select-component" && data.id) {
-      store.actions.components.select({ _id: data.id })
-    } else if (type === "update-prop") {
-      store.actions.components.updateProp(data.prop, data.value)
-    } else if (type === "delete-component" && data.id) {
-      confirmDeleteComponent(data.id)
-    } else if (type === "preview-loaded") {
-      // Wait for this event to show the client library if intelligent
-      // loading is supported
-      loading = false
-    } else if (type === "move-component") {
-      const { componentId, destinationComponentId } = data
-      const rootComponent = get(currentAsset).props
+    try {
+      if (type === "select-component" && data.id) {
+        store.actions.components.select({ _id: data.id })
+      } else if (type === "update-prop") {
+        await store.actions.components.updateProp(data.prop, data.value)
+      } else if (type === "delete-component" && data.id) {
+        confirmDeleteComponent(data.id)
+      } else if (type === "preview-loaded") {
+        // Wait for this event to show the client library if intelligent
+        // loading is supported
+        loading = false
+      } else if (type === "move-component") {
+        const { componentId, destinationComponentId } = data
+        const rootComponent = get(currentAsset).props
 
-      // Get source and destination components
-      const source = findComponent(rootComponent, componentId)
-      const destination = findComponent(rootComponent, destinationComponentId)
+        // Get source and destination components
+        const source = findComponent(rootComponent, componentId)
+        const destination = findComponent(rootComponent, destinationComponentId)
 
-      // Stop if the target is a child of source
-      const path = findComponentPath(source, destinationComponentId)
-      const ids = path.map(component => component._id)
-      if (ids.includes(data.destinationComponentId)) {
-        return
+        // Stop if the target is a child of source
+        const path = findComponentPath(source, destinationComponentId)
+        const ids = path.map(component => component._id)
+        if (ids.includes(data.destinationComponentId)) {
+          return
+        }
+
+        // Cut and paste the component to the new destination
+        if (source && destination) {
+          store.actions.components.copy(source, true)
+          await store.actions.components.paste(destination, data.mode)
+        }
+      } else {
+        console.warn(`Client sent unknown event type: ${type}`)
       }
-
-      // Cut and paste the component to the new destination
-      if (source && destination) {
-        store.actions.components.copy(source, true)
-        store.actions.components.paste(destination, data.mode)
-      }
-    } else {
-      console.warn(`Client sent unknown event type: ${type}`)
+    } catch (error) {
+      console.warn(error)
+      notifications.error("Error handling event from app preview")
     }
   }
 
@@ -204,7 +201,7 @@
     try {
       await store.actions.components.delete({ _id: idToDelete })
     } catch (error) {
-      notifications.error(error)
+      notifications.error("Error deleting component")
     }
     idToDelete = null
   }

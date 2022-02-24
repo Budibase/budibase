@@ -2,7 +2,7 @@
   import { fade } from "svelte/transition"
   import { goto, params } from "@roxi/routify"
   import { Table, Modal, Heading, notifications, Layout } from "@budibase/bbui"
-  import api from "builderStore/api"
+  import { API } from "api"
   import Spinner from "components/common/Spinner.svelte"
   import DeleteRowsButton from "./buttons/DeleteRowsButton.svelte"
   import CreateEditRow from "./modals/CreateEditRow.svelte"
@@ -39,7 +39,7 @@
   $: editRowComponent = isUsersTable ? CreateEditUser : CreateEditRow
   $: {
     UNSORTABLE_TYPES.forEach(type => {
-      Object.values(schema).forEach(col => {
+      Object.values(schema || {}).forEach(col => {
         if (col.type === type) {
           col.sortable = false
         }
@@ -88,12 +88,17 @@
   }
 
   const deleteRows = async () => {
-    await api.delete(`/api/${tableId}/rows`, {
-      rows: selectedRows,
-    })
-    data = data.filter(row => !selectedRows.includes(row))
-    notifications.success(`Successfully deleted ${selectedRows.length} rows`)
-    selectedRows = []
+    try {
+      await API.deleteRows({
+        tableId,
+        rows: selectedRows,
+      })
+      data = data.filter(row => !selectedRows.includes(row))
+      notifications.success(`Successfully deleted ${selectedRows.length} rows`)
+      selectedRows = []
+    } catch (error) {
+      notifications.error("Error deleting rows")
+    }
   }
 
   const editRow = row => {
@@ -113,16 +118,16 @@
 
 <Layout noPadding gap="S">
   <div>
-    <div class="table-title">
-      {#if title}
+    {#if title}
+      <div class="table-title">
         <Heading size="S">{title}</Heading>
-      {/if}
-      {#if loading}
-        <div transition:fade|local>
-          <Spinner size="10" />
-        </div>
-      {/if}
-    </div>
+        {#if loading}
+          <div transition:fade|local>
+            <Spinner size="10" />
+          </div>
+        {/if}
+      </div>
+    {/if}
     <div class="popovers">
       <slot />
       {#if !isUsersTable && selectedRows.length > 0}
@@ -131,7 +136,7 @@
     </div>
   </div>
   {#key tableId}
-    <div class="table-wrapper" in:fade={{ delay: 200, duration: 100 }}>
+    <div class="table-wrapper">
       <Table
         {data}
         {schema}

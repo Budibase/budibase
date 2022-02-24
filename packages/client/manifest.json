@@ -393,13 +393,13 @@
           {
             "label": "Column",
             "value": "column",
-            "barIcon": "ViewRow",
+            "barIcon": "ViewColumn",
             "barTitle": "Column layout"
           },
           {
             "label": "Row",
             "value": "row",
-            "barIcon": "ViewColumn",
+            "barIcon": "ViewRow",
             "barTitle": "Row layout"
           }
         ],
@@ -500,9 +500,20 @@
         "defaultValue": "M"
       }
     ],
-    "context": {
-      "type": "schema"
-    }
+    "context": [
+      {
+        "type": "schema"
+      },
+      {
+        "type": "static",
+        "values":  [
+          {
+            "label": "Row Index",
+            "key": "index"
+          }
+        ]
+      }
+    ]
   },
   "stackedlist": {
     "deprecated": true,
@@ -805,6 +816,53 @@
           "barIcon": "TextAlignJustify",
           "barTitle": "Justify text"
         }]
+      }
+    ]
+  },
+  "tag": {
+    "name": "Tag",
+    "icon": "TextParagraph",
+    "showSettingsBar": true,
+    "settings": [
+      {
+        "type": "text",
+        "label": "Text",
+        "key": "text"
+      },
+      {
+        "type": "select",
+        "label": "Size",
+        "key": "size",
+        "defaultValue": "M",
+        "showInBar": true,
+        "barStyle": "picker",
+        "options": [{
+          "label": "Small",
+          "value": "S"
+        }, {
+          "label": "Medium",
+          "value": "M"
+        }, {
+          "label": "Large",
+          "value": "L"
+        }]
+      },
+      {
+        "type": "color",
+        "label": "Color",
+        "key": "color",
+        "showInBar": true
+      },
+      {
+        "type": "boolean",
+        "label": "Show delete icon",
+        "key": "closable"
+      },
+      {
+        "type": "event",
+        "label": "On click delete icon",
+        "key": "onClick",
+        "dependsOn": "closable"
       }
     ]
   },
@@ -1776,6 +1834,10 @@
         "type": "static",
         "values":  [
           {
+            "label": "Value",
+            "key": "__value"
+          },
+          {
             "label": "Valid",
             "key": "__valid"
           },
@@ -1876,6 +1938,35 @@
         "type": "validation/string",
         "label": "Validation",
         "key": "validation"
+      },
+      {
+        "type": "select",
+        "label": "Alignment",
+        "key": "align",
+        "defaultValue": "left",
+        "showInBar": true,
+        "barStyle": "buttons",
+        "options": [{
+          "label": "Left",
+          "value": "left",
+          "barIcon": "TextAlignLeft",
+          "barTitle": "Align left"
+        }, {
+          "label": "Center",
+          "value": "center",
+          "barIcon": "TextAlignCenter",
+          "barTitle": "Align center"
+        }, {
+          "label": "Right",
+          "value": "right",
+          "barIcon": "TextAlignRight",
+          "barTitle": "Align right"
+        }, {
+          "label": "Justify",
+          "value": "justify",
+          "barIcon": "TextAlignJustify",
+          "barTitle": "Justify text"
+        }]
       }
     ]
   },
@@ -1998,6 +2089,26 @@
             "value": "radio"
           }
         ]
+      },
+      {
+        "type": "select",
+        "label": "Direction",
+        "key": "direction",
+        "defaultValue": "vertical",
+        "options": [
+          {
+            "label": "Horizontal",
+            "value": "horizontal"
+          },
+          {
+            "label": "Vertical",
+            "value": "vertical"
+          }
+        ],
+        "dependsOn": {
+          "setting": "optionsType",
+          "value": "radio"
+        }
       },
       {
         "type": "text",
@@ -2170,7 +2281,7 @@
           "setting": "optionsSource",
           "value": "provider"
         }
-      }, 
+      },
       {
         "type": "options",
         "key": "customOptions",
@@ -2250,11 +2361,10 @@
     ]
   },
   "longformfield": {
-    "name": "Rich Text",
+    "name": "Long Form Field",
     "icon": "TextParagraph",
     "styles": ["size"],
     "editable": true,
-    "illegalChildren": ["section"],
     "settings": [
       {
         "type": "field/longform",
@@ -2276,6 +2386,27 @@
         "type": "text",
         "label": "Default value",
         "key": "defaultValue"
+      },
+      {
+        "type": "select",
+        "label": "Formatting",
+        "key": "format",
+        "placeholder": null,
+        "options": [
+          {
+            "label": "Auto",
+            "value": "auto"
+          },
+          {
+            "label": "Plain text",
+            "value": "plain"
+          },
+          {
+            "label": "Rich text (markdown)",
+            "value": "rich"
+          }
+        ],
+        "defaultValue": "auto"
       },
       {
         "type": "boolean",
@@ -2319,6 +2450,12 @@
         "defaultValue": true
       },
       {
+        "type": "boolean",
+        "label": "Time Only",
+        "key": "timeOnly",
+        "defaultValue": false
+      },
+      {
         "type": "text",
         "label": "Default value",
         "key": "defaultValue"
@@ -2352,6 +2489,11 @@
         "type": "text",
         "label": "Label",
         "key": "label"
+      },
+      {
+        "type": "text",
+        "label": "Extensions",
+        "key": "extensions"
       },
       {
         "type": "boolean",
@@ -2389,6 +2531,11 @@
         "key": "placeholder"
       },
       {
+        "type": "text",
+        "label": "Default value",
+        "key": "defaultValue"
+      },
+      {
         "type": "boolean",
         "label": "Autocomplete",
         "key": "autocomplete",
@@ -2404,6 +2551,40 @@
         "type": "validation/link",
         "label": "Validation",
         "key": "validation"
+      }
+    ]
+  },
+  "jsonfield": {
+    "name": "JSON Field",
+    "icon": "Brackets",
+    "styles": ["size"],
+    "editable": true,
+    "settings": [
+      {
+        "type": "field/json",
+        "label": "Field",
+        "key": "field"
+      },
+      {
+        "type": "text",
+        "label": "Label",
+        "key": "label"
+      },
+      {
+        "type": "text",
+        "label": "Placeholder",
+        "key": "placeholder"
+      },
+      {
+        "type": "text",
+        "label": "Default value",
+        "key": "defaultValue"
+      },
+      {
+        "type": "boolean",
+        "label": "Disabled",
+        "key": "disabled",
+        "defaultValue": false
       }
     ]
   },
@@ -2457,6 +2638,10 @@
           "label": "Rows",
           "key": "rows"
         },
+	{
+	  "label": "Extra Info",
+	  "key": "info"
+	},
         {
           "label": "Rows Length",
           "key": "rowsLength"
@@ -2491,11 +2676,11 @@
         "defaultValue": 8
       },
       {
-        "type": "multifield",
+        "type": "columns",
         "label": "Columns",
         "key": "columns",
         "dependsOn": "dataProvider",
-        "placeholder": "All columns"
+        "nested": true
       },
       {
         "type": "select",
@@ -2517,6 +2702,11 @@
         "type": "boolean",
         "label": "Quiet",
         "key": "quiet"
+      },
+      {
+        "type": "boolean",
+        "label": "Compact",
+        "key": "compact"
       },
       {
         "type": "boolean",
@@ -2707,7 +2897,7 @@
         "key": "dataSource"
       },
       {
-        "type": "multifield",
+        "type": "searchfield",
         "label": "Search Columns",
         "key": "searchColumns",
         "placeholder": "Choose search columns"
@@ -2757,12 +2947,12 @@
         "settings": [
           {
             "type": "number",
-            "label": "Row Count",
+            "label": "Scroll Limit",
             "key": "rowCount",
             "defaultValue": 8
           },
           {
-            "type": "multifield",
+            "type": "columns",
             "label": "Table Columns",
             "key": "tableColumns",
             "dependsOn": "dataSource",
@@ -2772,6 +2962,11 @@
             "type": "boolean",
             "label": "Quiet table variant",
             "key": "quiet"
+          },
+          {
+            "type": "boolean",
+            "label": "Compact",
+            "key": "compact"
           },
           {
             "type": "boolean",
@@ -2854,7 +3049,7 @@
         "key": "dataSource"
       },
       {
-        "type": "multifield",
+        "type": "searchfield",
         "label": "Search Columns",
         "key": "searchColumns",
         "placeholder": "Choose search columns"
@@ -3178,6 +3373,10 @@
             "label": "Rows",
             "key": "rows"
           },
+	  {
+            "label": "Extra Info",
+            "key": "info"
+          },
           {
             "label": "Rows Length",
             "key": "rowsLength"
@@ -3193,8 +3392,76 @@
         ]
       },
       {
+        "type": "static",
+        "suffix": "repeater",
+        "values":  [
+          {
+            "label": "Row Index",
+            "key": "index"
+          }
+         ]
+      },
+      {
         "type": "schema",
         "suffix": "repeater"
+      }
+    ]
+  },
+  "s3upload": {
+    "name": "S3 File Upload",
+    "info": "This component can't be used with S3 datasources that use custom endpoints.",
+    "icon": "UploadToCloud",
+    "styles": ["size"],
+    "editable": true,
+    "settings": [
+      {
+        "type": "field/attachment",
+        "label": "Field",
+        "key": "field"
+      },
+      {
+        "type": "text",
+        "label": "Label",
+        "key": "label"
+      },
+      {
+        "type": "dataSource/s3",
+        "label": "S3 Datasource",
+        "key": "datasourceId"
+      },
+      {
+        "type": "text",
+        "label": "Bucket",
+        "key": "bucket"
+      },
+      {
+        "type": "text",
+        "label": "File Name",
+        "key": "key"
+      },
+      {
+        "type": "boolean",
+        "label": "Disabled",
+        "key": "disabled",
+        "defaultValue": false
+      },
+      {
+        "type": "validation/attachment",
+        "label": "Validation",
+        "key": "validation"
+      }
+    ]
+  },
+  "markdownviewer": {
+    "name": "Markdown Viewer",
+    "icon": "TaskList",
+    "styles": ["size"],
+    "editable": true,
+    "settings": [
+      {
+        "type": "text",
+        "label": "Markdown",
+        "key": "value"
       }
     ]
   }

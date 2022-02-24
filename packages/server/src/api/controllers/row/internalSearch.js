@@ -1,14 +1,14 @@
 const { SearchIndexes } = require("../../../db/utils")
 const fetch = require("node-fetch")
-const { getCouchUrl } = require("@budibase/auth/db")
+const { getCouchUrl } = require("@budibase/backend-core/db")
+const { getAppId } = require("@budibase/backend-core/context")
 
 /**
  * Class to build lucene query URLs.
  * Optionally takes a base lucene query object.
  */
 class QueryBuilder {
-  constructor(appId, base) {
-    this.appId = appId
+  constructor(base) {
     this.query = {
       string: {},
       fuzzy: {},
@@ -37,22 +37,30 @@ class QueryBuilder {
   }
 
   setLimit(limit) {
-    this.limit = limit
+    if (limit != null) {
+      this.limit = limit
+    }
     return this
   }
 
   setSort(sort) {
-    this.sort = sort
+    if (sort != null) {
+      this.sort = sort
+    }
     return this
   }
 
   setSortOrder(sortOrder) {
-    this.sortOrder = sortOrder
+    if (sortOrder != null) {
+      this.sortOrder = sortOrder
+    }
     return this
   }
 
   setSortType(sortType) {
-    this.sortType = sortType
+    if (sortType != null) {
+      this.sortType = sortType
+    }
     return this
   }
 
@@ -191,7 +199,8 @@ class QueryBuilder {
     }
     if (this.query.equal) {
       build(this.query.equal, (key, value) => {
-        if (!value) {
+        // 0 evaluates to false, which means we would return all rows if we don't check it
+        if (!value && value !== 0) {
           return null
         }
         return `${key}:${builder.preprocess(value, allPreProcessingOpts)}`
@@ -226,13 +235,14 @@ class QueryBuilder {
     if (this.sort) {
       const order = this.sortOrder === "descending" ? "-" : ""
       const type = `<${this.sortType}>`
-      body.sort = `${order}${this.sort.replace(/ /, "_")}${type}`
+      body.sort = `${order}${this.sort.replace(/ /g, "_")}${type}`
     }
     return body
   }
 
   async run() {
-    const url = `${getCouchUrl()}/${this.appId}/_design/database/_search/${
+    const appId = getAppId()
+    const url = `${getCouchUrl()}/${appId}/_design/database/_search/${
       SearchIndexes.ROWS
     }`
     const body = this.buildSearchBody()
@@ -269,7 +279,6 @@ const runQuery = async (url, body) => {
  * Gets round the fixed limit of 200 results from a query by fetching as many
  * pages as required and concatenating the results. This recursively operates
  * until enough results have been found.
- * @param appId {string} The app ID to search
  * @param query {object} The JSON query structure
  * @param params {object} The search params including:
  *   tableId {string} The table ID to search
@@ -282,7 +291,7 @@ const runQuery = async (url, body) => {
  *   rows {array|null} Current results in the recursive search
  * @returns {Promise<*[]|*>}
  */
-const recursiveSearch = async (appId, query, params) => {
+const recursiveSearch = async (query, params) => {
   const bookmark = params.bookmark
   const rows = params.rows || []
   if (rows.length >= params.limit) {
@@ -292,7 +301,7 @@ const recursiveSearch = async (appId, query, params) => {
   if (rows.length > params.limit - 200) {
     pageSize = params.limit - rows.length
   }
-  const page = await new QueryBuilder(appId, query)
+  const page = await new QueryBuilder(query)
     .setVersion(params.version)
     .setTable(params.tableId)
     .setBookmark(bookmark)
@@ -312,14 +321,13 @@ const recursiveSearch = async (appId, query, params) => {
     bookmark: page.bookmark,
     rows: [...rows, ...page.rows],
   }
-  return await recursiveSearch(appId, query, newParams)
+  return await recursiveSearch(query, newParams)
 }
 
 /**
  * Performs a paginated search. A bookmark will be returned to allow the next
  * page to be fetched. There is a max limit off 200 results per page in a
  * paginated search.
- * @param appId {string} The app ID to search
  * @param query {object} The JSON query structure
  * @param params {object} The search params including:
  *   tableId {string} The table ID to search
@@ -331,13 +339,13 @@ const recursiveSearch = async (appId, query, params) => {
  *   bookmark {string} The bookmark to resume from
  * @returns {Promise<{hasNextPage: boolean, rows: *[]}>}
  */
-exports.paginatedSearch = async (appId, query, params) => {
+exports.paginatedSearch = async (query, params) => {
   let limit = params.limit
   if (limit == null || isNaN(limit) || limit < 0) {
     limit = 50
   }
   limit = Math.min(limit, 200)
-  const search = new QueryBuilder(appId, query)
+  const search = new QueryBuilder(query)
     .setVersion(params.version)
     .setTable(params.tableId)
     .setSort(params.sort)
@@ -366,7 +374,6 @@ exports.paginatedSearch = async (appId, query, params) => {
  * desired amount of results. There is a limit of 1000 results to avoid
  * heavy performance hits, and to avoid client components breaking from
  * handling too much data.
- * @param appId {string} The app ID to search
  * @param query {object} The JSON query structure
  * @param params {object} The search params including:
  *   tableId {string} The table ID to search
@@ -377,12 +384,12 @@ exports.paginatedSearch = async (appId, query, params) => {
  *   limit {number} The desired number of results
  * @returns {Promise<{rows: *}>}
  */
-exports.fullSearch = async (appId, query, params) => {
+exports.fullSearch = async (query, params) => {
   let limit = params.limit
   if (limit == null || isNaN(limit) || limit < 0) {
     limit = 1000
   }
   params.limit = Math.min(limit, 1000)
-  const rows = await recursiveSearch(appId, query, params)
+  const rows = await recursiveSearch(query, params)
   return { rows }
 }
