@@ -22,6 +22,9 @@ const publicRouter = new Router({
 })
 
 function addMiddleware(endpoints, middleware) {
+  if (!Array.isArray(endpoints)) {
+    endpoints = [endpoints]
+  }
   for (let endpoint of endpoints) {
     endpoint.addMiddleware(middleware)
   }

@@ -5,7 +5,6 @@ const {
   BUILTIN_PERMISSION_IDS,
   PermissionLevels,
 } = require("@budibase/backend-core/permissions")
-
 const Joi = require("joi")
 
 exports.tableValidator = () => {
@@ -46,6 +45,42 @@ exports.datasourceValidator = () => {
     //   name: Joi.string().required(),
     // })),
   }).unknown(true))
+}
+
+/**
+ *    * {
+ *  "tableId": "ta_70260ff0b85c467ca74364aefc46f26d",
+ *  "query": {
+ *    "string": {},
+ *    "fuzzy": {},
+ *    "range": {
+ *      "columnName": {
+ *        "high": 20,
+ *        "low": 10,
+ *      }
+ *    },
+ *    "equal": {
+ *      "columnName": "someValue"
+ *    },
+ *    "notEqual": {},
+ *    "empty": {},
+ *    "notEmpty": {},
+ *    "oneOf": {
+ *      "columnName": ["value"]
+ *    }
+ *  },
+ *  "limit": 10,
+ *  "sort": "name",
+ *  "sortOrder": "descending",
+ *  "sortType": "string",
+ *  "paginate": true
+ * }
+ */
+exports.searchValidator = () => {
+  // prettier-ignore
+  return joiValidator.body(Joi.object({
+    tableId: Joi.string()
+  }))
 }
 
 exports.datasourceQueryValidator = () => {
