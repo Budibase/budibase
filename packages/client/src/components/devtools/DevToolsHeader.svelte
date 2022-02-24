@@ -44,9 +44,9 @@
       quiet
       overBackground
       icon="Code"
-      on:click={() => devToolsStore.actions.setVisible(true)}
+      on:click={() => devToolsStore.actions.setVisible(!$devToolsStore.visible)}
     >
-      Open DevTools
+      {$devToolsStore.visible ? "Close" : "Open"} DevTools
     </Button>
   {/if}
 </div>

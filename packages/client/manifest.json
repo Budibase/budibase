@@ -3373,7 +3373,7 @@
             "label": "Rows",
             "key": "rows"
           },
-	  {
+	      {
             "label": "Extra Info",
             "key": "info"
           },

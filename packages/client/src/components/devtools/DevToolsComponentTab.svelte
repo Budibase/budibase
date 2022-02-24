@@ -1,29 +1,13 @@
 <script>
-  import {
-    Body,
-    Layout,
-    Heading,
-    Button,
-    TextArea,
-    Tabs,
-    Tab,
-    Toggle,
-  } from "@budibase/bbui"
+  import { Body, Layout, Heading, Button, Tabs, Tab } from "@budibase/bbui"
   import { builderStore, devToolsStore, componentStore } from "stores"
   import DevToolsStat from "./DevToolsStat.svelte"
-  import { getSettingsDefinition } from "utils/componentProps.js"
-
-  let showEnrichedSettings = true
-
-  $: selectedInstance = $componentStore.selectedComponentInstance
-  $: settingsDefinition = getSettingsDefinition(
-    $componentStore.selectedComponentDefinition
-  )
-  $: rawSettings = selectedInstance?.getRawSettings()
-  $: settings = selectedInstance?.getSettings()
+  import DevToolsComponentSettingsTab from "./DevToolsComponentSettingsTab.svelte"
+  import DevToolsComponentContextTab from "./DevToolsComponentContextTab.svelte"
 
   $: {
-    if (!selectedInstance) {
+    // Reset selection store if we can't find a matching instance
+    if (!$componentStore.selectedComponentInstance) {
       builderStore.actions.selectComponent(null)
     }
   }
@@ -46,17 +30,19 @@
     </div>
   </Layout>
 {:else}
-  <Layout noPadding>
+  <Layout noPadding gap="S">
+    <Heading size="XS">
+      {$componentStore.selectedComponent?._instanceName}
+    </Heading>
     <Layout noPadding gap="XS">
-      <DevToolsStat
-        label="Component"
-        value={$componentStore.selectedComponent?._instanceName}
-      />
       <DevToolsStat
         label="Type"
         value={$componentStore.selectedComponentDefinition?.name}
       />
-      <DevToolsStat label="ID" value={$componentStore.selectedComponent?._id} />
+      <DevToolsStat
+        label="Component ID"
+        value={$componentStore.selectedComponent?._id}
+      />
     </Layout>
     <div class="buttons">
       <Button
@@ -79,37 +65,12 @@
         <Tabs selected="Settings">
           <Tab title="Settings">
             <div class="tab-content">
-              <Layout noPadding gap="S">
-                <Toggle
-                  text="Show enriched settings"
-                  bind:value={showEnrichedSettings}
-                />
-                <Layout noPadding gap="XS">
-                  {#each settingsDefinition as setting}
-                    <DevToolsStat
-                      label={setting.label}
-                      value={JSON.stringify(
-                        (showEnrichedSettings ? settings : rawSettings)?.[
-                          setting.key
-                        ]
-                      )}
-                    />
-                  {/each}
-                </Layout>
-              </Layout>
+              <DevToolsComponentSettingsTab />
             </div>
           </Tab>
-          <Tab title="Context">
+          <Tab title="Bindings">
             <div class="tab-content">
-              <TextArea
-                readonly
-                label="Data context"
-                value={JSON.stringify(
-                  selectedInstance?.getDataContext(),
-                  null,
-                  2
-                )}
-              />
+              <DevToolsComponentContextTab />
             </div>
           </Tab>
         </Tabs>
