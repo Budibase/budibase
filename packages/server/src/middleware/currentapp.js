@@ -72,7 +72,7 @@ module.exports = async (ctx, next) => {
     if (isBuilder && isDevApp && roleHeader) {
       // Ensure the role is valid ensuring a definition exists
       try {
-        await getRole(appId, roleHeader)
+        await getRole(roleHeader)
         roleId = roleHeader
       } catch (error) {
         // Swallow error and do nothing
