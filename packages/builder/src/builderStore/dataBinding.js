@@ -32,7 +32,7 @@ export const getBindableProperties = (asset, componentId) => {
   const urlBindings = getUrlBindings(asset)
   const deviceBindings = getDeviceBindings()
   const stateBindings = getStateBindings()
-  const rowBindings = getRowBindings(asset, componentId)
+  const rowBindings = getRowBindings(asset)
   return [
     ...contextBindings,
     ...urlBindings,
@@ -320,22 +320,33 @@ const getDeviceBindings = () => {
 /**
  * Gets all row bindings that are globally available.
  */
-const getRowBindings = () => {
-  let tables = []
-  getAllAssets().forEach(asset => {
-    tables = findAllMatchingComponents(asset.props, component =>
-      component._component.endsWith("table")
-    )
-  })
-
+const getRowBindings = asset => {
   let bindings = []
   if (get(store).clientFeatures?.rowSelection) {
+    // Add bindings for table components
+    let tables = findAllMatchingComponents(asset.props, component =>
+      component._component.endsWith("table")
+    )
     const safeState = makePropSafe("rowSelection")
-    bindings = tables.map(table => ({
-      type: "context",
-      runtimeBinding: `${safeState}.${makePropSafe(table._id)}`,
-      readableBinding: `${table._instanceName}.Rows`,
-    }))
+    bindings = bindings.concat(
+      tables.map(table => ({
+        type: "context",
+        runtimeBinding: `${safeState}.${makePropSafe(table._id)}`,
+        readableBinding: `${table._instanceName}.Selected rows`,
+      }))
+    )
+
+    // Add bindings for table blocks
+    let tableBlocks = findAllMatchingComponents(asset.props, component =>
+      component._component.endsWith("tableblock")
+    )
+    bindings = bindings.concat(
+      tableBlocks.map(block => ({
+        type: "context",
+        runtimeBinding: `${safeState}.${makePropSafe(block._id + "-table")}`,
+        readableBinding: `${block._instanceName}.Selected rows`,
+      }))
+    )
   }
   return bindings
 }
