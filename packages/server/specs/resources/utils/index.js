@@ -1,8 +1,11 @@
 exports.object = (props, opts) => {
-  return {
+  const base = {
     type: "object",
     properties: props,
-    required: Object.keys(props),
     ...opts,
   }
+  if (Object.keys(props).length > 0 && (!opts || !opts.required)) {
+    base.required = Object.keys(props)
+  }
+  return base
 }

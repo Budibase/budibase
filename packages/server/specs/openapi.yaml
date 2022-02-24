@@ -690,18 +690,15 @@ components:
     query:
       type: object
       properties: {}
-      required: []
     user:
       type: object
       properties: {}
-      required: []
     userOutput:
       type: object
       properties:
         user:
           type: object
           properties: {}
-          required: []
       required:
         - user
     nameSearch:
