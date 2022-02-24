@@ -142,7 +142,7 @@
                     <PeekScreenDisplay />
                   </CustomThemeWrapper>
 
-                  {#if $devToolsStore.visible}
+                  {#if $devToolsStore.visible && !$builderStore.inBuilder}
                     <DevTools />
                   {/if}
                 </div>
