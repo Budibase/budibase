@@ -941,21 +941,18 @@
       },
       "query": {
         "type": "object",
-        "properties": {},
-        "required": []
+        "properties": {}
       },
       "user": {
         "type": "object",
-        "properties": {},
-        "required": []
+        "properties": {}
       },
       "userOutput": {
         "type": "object",
         "properties": {
           "user": {
             "type": "object",
-            "properties": {},
-            "required": []
+            "properties": {}
           }
         },
         "required": [
