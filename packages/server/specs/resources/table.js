@@ -63,6 +63,7 @@ const baseColumnDef = {
 const tableSchema = {
   description: "The table to be created/updated.",
   type: "object",
+  required: ["name", "schema"],
   properties: {
     name: {
       description: "The name of the table",
@@ -74,82 +75,85 @@ const tableSchema = {
         "The name of the column which should be used in relationship tags when relating to this table.",
     },
     schema: {
-      oneOf: [
-        // relationship
-        {
-          type: "object",
-          properties: {
-            ...baseColumnDef,
-            type: {
-              type: "string",
-              enum: [FieldTypes.LINK],
-              description: "A relationship column.",
-            },
-            fieldName: {
-              type: "string",
-              description:
-                "The name of the column which a relationship column is related to in another table.",
-            },
-            tableId: {
-              type: "string",
-              description:
-                "The ID of the table which a relationship column is related to.",
-            },
-            relationshipType: {
-              type: "string",
-              enum: Object.values(RelationshipTypes),
-              description:
-                "Defines the type of relationship that this column will be used for.",
-            },
-            through: {
-              type: "string",
-              description:
-                "When using a SQL table that contains many to many relationships this defines the table the relationships are linked through.",
-            },
-            foreignKey: {
-              type: "string",
-              description:
-                "When using a SQL table that contains a one to many relationship this defines the foreign key.",
-            },
-            throughFrom: {
-              type: "string",
-              description:
-                "When using a SQL table that utilises a through table, this defines the primary key in the through table for this table.",
-            },
-            throughTo: {
-              type: "string",
-              description:
-                "When using a SQL table that utilises a through table, this defines the primary key in the through table for the related table.",
-            },
-          },
-        },
-        {
-          type: "object",
-          properties: {
-            ...baseColumnDef,
-            type: {
-              type: "string",
-              enum: [FieldTypes.FORMULA],
-              description: "A formula column.",
-            },
-            formula: {
-              type: "string",
-              description:
-                "Defines a Handlebars or JavaScript formula to use, note that Javascript formulas are expected to be provided in the base64 format.",
-            },
-            formulaType: {
-              type: "string",
-              enum: Object.values(FormulaTypes),
-              description:
-                "Defines whether this is a static or dynamic formula.",
+      type: "object",
+      additionalProperties: {
+        oneOf: [
+          // relationship
+          {
+            type: "object",
+            properties: {
+              ...baseColumnDef,
+              type: {
+                type: "string",
+                enum: [FieldTypes.LINK],
+                description: "A relationship column.",
+              },
+              fieldName: {
+                type: "string",
+                description:
+                  "The name of the column which a relationship column is related to in another table.",
+              },
+              tableId: {
+                type: "string",
+                description:
+                  "The ID of the table which a relationship column is related to.",
+              },
+              relationshipType: {
+                type: "string",
+                enum: Object.values(RelationshipTypes),
+                description:
+                  "Defines the type of relationship that this column will be used for.",
+              },
+              through: {
+                type: "string",
+                description:
+                  "When using a SQL table that contains many to many relationships this defines the table the relationships are linked through.",
+              },
+              foreignKey: {
+                type: "string",
+                description:
+                  "When using a SQL table that contains a one to many relationship this defines the foreign key.",
+              },
+              throughFrom: {
+                type: "string",
+                description:
+                  "When using a SQL table that utilises a through table, this defines the primary key in the through table for this table.",
+              },
+              throughTo: {
+                type: "string",
+                description:
+                  "When using a SQL table that utilises a through table, this defines the primary key in the through table for the related table.",
+              },
             },
           },
-        },
-        {
-          type: "object",
-          properties: baseColumnDef,
-        },
-      ],
+          {
+            type: "object",
+            properties: {
+              ...baseColumnDef,
+              type: {
+                type: "string",
+                enum: [FieldTypes.FORMULA],
+                description: "A formula column.",
+              },
+              formula: {
+                type: "string",
+                description:
+                  "Defines a Handlebars or JavaScript formula to use, note that Javascript formulas are expected to be provided in the base64 format.",
+              },
+              formulaType: {
+                type: "string",
+                enum: Object.values(FormulaTypes),
+                description:
+                  "Defines whether this is a static or dynamic formula.",
+              },
+            },
+          },
+          {
+            type: "object",
+            properties: baseColumnDef,
+          },
+        ],
+      },
     },
   },
 }

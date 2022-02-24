@@ -158,6 +158,7 @@
     "docker-compose": "^0.23.6",
     "eslint": "^6.8.0",
     "jest": "^27.0.5",
+    "jest-openapi": "^0.14.2",
     "nodemon": "^2.0.4",
     "openapi-types": "^9.3.1",
     "path-to-regexp": "^6.2.0",

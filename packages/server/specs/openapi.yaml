@@ -339,6 +339,8 @@ components:
           required:
             - name
             - url
+      required:
+        - application
     row:
       description: The row to be created/updated, based on the table schema.
       type: object
@@ -362,9 +364,14 @@ components:
               - type: integer
               - type: array
               - type: boolean
+      required:
+        - row
     table:
       description: The table to be created/updated.
       type: object
+      required:
+        - name
+        - schema
       properties:
         name:
           description: The name of the table
@@ -374,151 +381,158 @@ components:
           description: The name of the column which should be used in relationship tags
             when relating to this table.
         schema:
-          oneOf:
-            - type: object
-              properties:
-                type:
-                  type: string
-                  enum:
-                    - link
-                  description: A relationship column.
-                constraints:
-                  type: object
-                  description: A constraint can be applied to the column which will be validated
-                    against when a row is saved.
-                  properties:
-                    type:
-                      type: string
-                      enum:
-                        - string
-                        - number
-                        - object
-                        - boolean
-                    presence:
-                      type: boolean
-                      description: Defines whether the column is required or not.
-                name:
-                  type: string
-                  description: The name of the column.
-                autocolumn:
-                  type: boolean
-                  description: Defines whether the column is automatically generated.
-                fieldName:
-                  type: string
-                  description: The name of the column which a relationship column is related to in
-                    another table.
-                tableId:
-                  type: string
-                  description: The ID of the table which a relationship column is related to.
-                relationshipType:
-                  type: string
-                  enum:
-                    - one-to-many
-                    - many-to-one
-                    - many-to-many
-                  description: Defines the type of relationship that this column will be used for.
-                through:
-                  type: string
-                  description: When using a SQL table that contains many to many relationships
-                    this defines the table the relationships are linked through.
-                foreignKey:
-                  type: string
-                  description: When using a SQL table that contains a one to many relationship
-                    this defines the foreign key.
-                throughFrom:
-                  type: string
-                  description: When using a SQL table that utilises a through table, this defines
-                    the primary key in the through table for this table.
-                throughTo:
-                  type: string
-                  description: When using a SQL table that utilises a through table, this defines
-                    the primary key in the through table for the related table.
-            - type: object
-              properties:
-                type:
-                  type: string
-                  enum:
-                    - formula
-                  description: A formula column.
-                constraints:
-                  type: object
-                  description: A constraint can be applied to the column which will be validated
-                    against when a row is saved.
-                  properties:
-                    type:
-                      type: string
-                      enum:
-                        - string
-                        - number
-                        - object
-                        - boolean
-                    presence:
-                      type: boolean
-                      description: Defines whether the column is required or not.
-                name:
-                  type: string
-                  description: The name of the column.
-                autocolumn:
-                  type: boolean
-                  description: Defines whether the column is automatically generated.
-                formula:
-                  type: string
-                  description: Defines a Handlebars or JavaScript formula to use, note that
-                    Javascript formulas are expected to be provided in the
-                    base64 format.
-                formulaType:
-                  type: string
-                  enum:
-                    - static
-                    - dynamic
-                  description: Defines whether this is a static or dynamic formula.
-            - type: object
-              properties:
-                type:
-                  type: string
-                  enum:
-                    - string
-                    - longform
-                    - options
-                    - number
-                    - boolean
-                    - array
-                    - datetime
-                    - attachment
-                    - link
-                    - formula
-                    - auto
-                    - json
-                    - internal
-                  description: Defines the type of the column, most explain themselves, a link
-                    column is a relationship.
-                constraints:
-                  type: object
-                  description: A constraint can be applied to the column which will be validated
-                    against when a row is saved.
-                  properties:
-                    type:
-                      type: string
-                      enum:
-                        - string
-                        - number
-                        - object
-                        - boolean
-                    presence:
-                      type: boolean
-                      description: Defines whether the column is required or not.
-                name:
-                  type: string
-                  description: The name of the column.
-                autocolumn:
-                  type: boolean
-                  description: Defines whether the column is automatically generated.
+          type: object
+          additionalProperties:
+            oneOf:
+              - type: object
+                properties:
+                  type:
+                    type: string
+                    enum:
+                      - link
+                    description: A relationship column.
+                  constraints:
+                    type: object
+                    description: A constraint can be applied to the column which will be validated
+                      against when a row is saved.
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                          - string
+                          - number
+                          - object
+                          - boolean
+                      presence:
+                        type: boolean
+                        description: Defines whether the column is required or not.
+                  name:
+                    type: string
+                    description: The name of the column.
+                  autocolumn:
+                    type: boolean
+                    description: Defines whether the column is automatically generated.
+                  fieldName:
+                    type: string
+                    description: The name of the column which a relationship column is related to in
+                      another table.
+                  tableId:
+                    type: string
+                    description: The ID of the table which a relationship column is related to.
+                  relationshipType:
+                    type: string
+                    enum:
+                      - one-to-many
+                      - many-to-one
+                      - many-to-many
+                    description: Defines the type of relationship that this column will be used for.
+                  through:
+                    type: string
+                    description: When using a SQL table that contains many to many relationships
+                      this defines the table the relationships are linked
+                      through.
+                  foreignKey:
+                    type: string
+                    description: When using a SQL table that contains a one to many relationship
+                      this defines the foreign key.
+                  throughFrom:
+                    type: string
+                    description: When using a SQL table that utilises a through table, this defines
+                      the primary key in the through table for this table.
+                  throughTo:
+                    type: string
+                    description: When using a SQL table that utilises a through table, this defines
+                      the primary key in the through table for the related
+                      table.
+              - type: object
+                properties:
+                  type:
+                    type: string
+                    enum:
+                      - formula
+                    description: A formula column.
+                  constraints:
+                    type: object
+                    description: A constraint can be applied to the column which will be validated
+                      against when a row is saved.
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                          - string
+                          - number
+                          - object
+                          - boolean
+                      presence:
+                        type: boolean
+                        description: Defines whether the column is required or not.
+                  name:
+                    type: string
+                    description: The name of the column.
+                  autocolumn:
+                    type: boolean
+                    description: Defines whether the column is automatically generated.
+                  formula:
+                    type: string
+                    description: Defines a Handlebars or JavaScript formula to use, note that
+                      Javascript formulas are expected to be provided in the
+                      base64 format.
+                  formulaType:
+                    type: string
+                    enum:
+                      - static
+                      - dynamic
+                    description: Defines whether this is a static or dynamic formula.
+              - type: object
+                properties:
+                  type:
+                    type: string
+                    enum:
+                      - string
+                      - longform
+                      - options
+                      - number
+                      - boolean
+                      - array
+                      - datetime
+                      - attachment
+                      - link
+                      - formula
+                      - auto
+                      - json
+                      - internal
+                    description: Defines the type of the column, most explain themselves, a link
+                      column is a relationship.
+                  constraints:
+                    type: object
+                    description: A constraint can be applied to the column which will be validated
+                      against when a row is saved.
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                          - string
+                          - number
+                          - object
+                          - boolean
+                      presence:
+                        type: boolean
+                        description: Defines whether the column is required or not.
+                  name:
+                    type: string
+                    description: The name of the column.
+                  autocolumn:
+                    type: boolean
+                    description: Defines whether the column is automatically generated.
     tableOutput:
       type: object
       properties:
         table:
           description: The table to be created/updated.
           type: object
+          required:
+            - name
+            - schema
           properties:
             name:
               description: The name of the table
@@ -528,159 +542,168 @@ components:
               description: The name of the column which should be used in relationship tags
                 when relating to this table.
             schema:
-              oneOf:
-                - type: object
-                  properties:
-                    type:
-                      type: string
-                      enum:
-                        - link
-                      description: A relationship column.
-                    constraints:
-                      type: object
-                      description: A constraint can be applied to the column which will be validated
-                        against when a row is saved.
-                      properties:
-                        type:
-                          type: string
-                          enum:
-                            - string
-                            - number
-                            - object
-                            - boolean
-                        presence:
-                          type: boolean
-                          description: Defines whether the column is required or not.
-                    name:
-                      type: string
-                      description: The name of the column.
-                    autocolumn:
-                      type: boolean
-                      description: Defines whether the column is automatically generated.
-                    fieldName:
-                      type: string
-                      description: The name of the column which a relationship column is related to in
-                        another table.
-                    tableId:
-                      type: string
-                      description: The ID of the table which a relationship column is related to.
-                    relationshipType:
-                      type: string
-                      enum:
-                        - one-to-many
-                        - many-to-one
-                        - many-to-many
-                      description: Defines the type of relationship that this column will be used for.
-                    through:
-                      type: string
-                      description: When using a SQL table that contains many to many relationships
-                        this defines the table the relationships are linked
-                        through.
-                    foreignKey:
-                      type: string
-                      description: When using a SQL table that contains a one to many relationship
-                        this defines the foreign key.
-                    throughFrom:
-                      type: string
-                      description: When using a SQL table that utilises a through table, this defines
-                        the primary key in the through table for this table.
-                    throughTo:
-                      type: string
-                      description: When using a SQL table that utilises a through table, this defines
-                        the primary key in the through table for the related
-                        table.
-                - type: object
-                  properties:
-                    type:
-                      type: string
-                      enum:
-                        - formula
-                      description: A formula column.
-                    constraints:
-                      type: object
-                      description: A constraint can be applied to the column which will be validated
-                        against when a row is saved.
-                      properties:
-                        type:
-                          type: string
-                          enum:
-                            - string
-                            - number
-                            - object
-                            - boolean
-                        presence:
-                          type: boolean
-                          description: Defines whether the column is required or not.
-                    name:
-                      type: string
-                      description: The name of the column.
-                    autocolumn:
-                      type: boolean
-                      description: Defines whether the column is automatically generated.
-                    formula:
-                      type: string
-                      description: Defines a Handlebars or JavaScript formula to use, note that
-                        Javascript formulas are expected to be provided in the
-                        base64 format.
-                    formulaType:
-                      type: string
-                      enum:
-                        - static
-                        - dynamic
-                      description: Defines whether this is a static or dynamic formula.
-                - type: object
-                  properties:
-                    type:
-                      type: string
-                      enum:
-                        - string
-                        - longform
-                        - options
-                        - number
-                        - boolean
-                        - array
-                        - datetime
-                        - attachment
-                        - link
-                        - formula
-                        - auto
-                        - json
-                        - internal
-                      description: Defines the type of the column, most explain themselves, a link
-                        column is a relationship.
-                    constraints:
-                      type: object
-                      description: A constraint can be applied to the column which will be validated
-                        against when a row is saved.
-                      properties:
-                        type:
-                          type: string
-                          enum:
-                            - string
-                            - number
-                            - object
-                            - boolean
-                        presence:
-                          type: boolean
-                          description: Defines whether the column is required or not.
-                    name:
-                      type: string
-                      description: The name of the column.
-                    autocolumn:
-                      type: boolean
-                      description: Defines whether the column is automatically generated.
+              type: object
+              additionalProperties:
+                oneOf:
+                  - type: object
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                          - link
+                        description: A relationship column.
+                      constraints:
+                        type: object
+                        description: A constraint can be applied to the column which will be validated
+                          against when a row is saved.
+                        properties:
+                          type:
+                            type: string
+                            enum:
+                              - string
+                              - number
+                              - object
+                              - boolean
+                          presence:
+                            type: boolean
+                            description: Defines whether the column is required or not.
+                      name:
+                        type: string
+                        description: The name of the column.
+                      autocolumn:
+                        type: boolean
+                        description: Defines whether the column is automatically generated.
+                      fieldName:
+                        type: string
+                        description: The name of the column which a relationship column is related to in
+                          another table.
+                      tableId:
+                        type: string
+                        description: The ID of the table which a relationship column is related to.
+                      relationshipType:
+                        type: string
+                        enum:
+                          - one-to-many
+                          - many-to-one
+                          - many-to-many
+                        description: Defines the type of relationship that this column will be used for.
+                      through:
+                        type: string
+                        description: When using a SQL table that contains many to many relationships
+                          this defines the table the relationships are linked
+                          through.
+                      foreignKey:
+                        type: string
+                        description: When using a SQL table that contains a one to many relationship
+                          this defines the foreign key.
+                      throughFrom:
+                        type: string
+                        description: When using a SQL table that utilises a through table, this defines
+                          the primary key in the through table for this table.
+                      throughTo:
+                        type: string
+                        description: When using a SQL table that utilises a through table, this defines
+                          the primary key in the through table for the related
+                          table.
+                  - type: object
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                          - formula
+                        description: A formula column.
+                      constraints:
+                        type: object
+                        description: A constraint can be applied to the column which will be validated
+                          against when a row is saved.
+                        properties:
+                          type:
+                            type: string
+                            enum:
+                              - string
+                              - number
+                              - object
+                              - boolean
+                          presence:
+                            type: boolean
+                            description: Defines whether the column is required or not.
+                      name:
+                        type: string
+                        description: The name of the column.
+                      autocolumn:
+                        type: boolean
+                        description: Defines whether the column is automatically generated.
+                      formula:
+                        type: string
+                        description: Defines a Handlebars or JavaScript formula to use, note that
+                          Javascript formulas are expected to be provided in the
+                          base64 format.
+                      formulaType:
+                        type: string
+                        enum:
+                          - static
+                          - dynamic
+                        description: Defines whether this is a static or dynamic formula.
+                  - type: object
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                          - string
+                          - longform
+                          - options
+                          - number
+                          - boolean
+                          - array
+                          - datetime
+                          - attachment
+                          - link
+                          - formula
+                          - auto
+                          - json
+                          - internal
+                        description: Defines the type of the column, most explain themselves, a link
+                          column is a relationship.
+                      constraints:
+                        type: object
+                        description: A constraint can be applied to the column which will be validated
+                          against when a row is saved.
+                        properties:
+                          type:
+                            type: string
+                            enum:
+                              - string
+                              - number
+                              - object
+                              - boolean
+                          presence:
+                            type: boolean
+                            description: Defines whether the column is required or not.
+                      name:
+                        type: string
+                        description: The name of the column.
+                      autocolumn:
+                        type: boolean
+                        description: Defines whether the column is automatically generated.
+      required:
+        - table
     query:
       type: object
       properties: {}
+      required: []
     user:
       type: object
       properties: {}
+      required: []
     userOutput:
       type: object
       properties:
         user:
           type: object
           properties: {}
+          required: []
+      required:
+        - user
     nameSearch:
       type: object
       properties:
@@ -688,38 +711,11 @@ components:
           type: string
           description: The name to be used when searching - this will be used in a case
             insensitive starts with match.
+      required:
+        - name
 security:
   - ApiKeyAuth: []
 paths:
-  /applications/search:
-    post:
-      summary: Search for an application based on its app name.
-      tags:
-        - applications
-      parameters:
-        - $ref: "#/components/parameters/appId"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/nameSearch"
-      responses:
-        "200":
-          description: Returns the applications that were found based on the search
-            parameters.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  applications:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/application"
-              examples:
-                applications:
-                  $ref: "#/components/examples/applications"
   /applications:
     post:
       summary: Create a new application.
@@ -798,11 +794,11 @@ paths:
               examples:
                 application:
                   $ref: "#/components/examples/application"
-  /queries/search:
+  /applications/search:
     post:
-      summary: Search for a query based on its name.
+      summary: Search for an application based on its app name.
       tags:
-        - queries
+        - applications
       parameters:
         - $ref: "#/components/parameters/appId"
       requestBody:
@@ -813,19 +809,22 @@ paths:
               $ref: "#/components/schemas/nameSearch"
       responses:
         "200":
-          description: Returns the queries found based on the search parameters.
+          description: Returns the applications that were found based on the search
+            parameters.
           content:
             application/json:
               schema:
                 type: object
+                required:
+                  - applications
                 properties:
-                  queries:
+                  applications:
                     type: array
                     items:
-                      $ref: "#/components/schemas/query"
+                      $ref: "#/components/schemas/application"
               examples:
-                queries:
-                  $ref: "#/components/examples/queries"
+                applications:
+                  $ref: "#/components/examples/applications"
   "/queries/{queryId}":
     post:
       summary: Execute a query and retrieve its response.
@@ -867,129 +866,36 @@ paths:
                   $ref: "#/components/examples/restResponse"
                 SQL:
                   $ref: "#/components/examples/sqlResponse"
-  "/tables/{tableId}/rows/search":
+  /queries/search:
     post:
-      summary: Used to search for rows within a table.
+      summary: Search for a query based on its name.
       tags:
-        - rows
+        - queries
       parameters:
-        - $ref: "#/components/parameters/tableId"
         - $ref: "#/components/parameters/appId"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                query:
-                  type: object
-                  properties:
-                    string:
-                      type: object
-                      example:
-                        columnName1: value
-                        columnName2: value
-                      description: A map of field name to the string to search for, this will look for
-                        rows that have a value starting with the string value.
-                      additionalProperties:
-                        type: string
-                        description: The value to search for in the column.
-                    fuzzy:
-                      type: object
-                      description: A fuzzy search, only supported by internal tables.
-                    range:
-                      type: object
-                      description: Searches within a range, the format of this must be columnName ->
-                        [low, high].
-                      example:
-                        columnName1:
-                          - 10
-                          - 20
-                    equal:
-                      type: object
-                      description: Searches for rows that have a column value that is exactly the
-                        value set.
-                    notEqual:
-                      type: object
-                      description: Searches for any row which does not contain the specified column
-                        value.
-                    empty:
-                      type: object
-                      description: Searches for rows which do not contain the specified column. The
-                        object should simply contain keys of the column names,
-                        these can map to any value.
-                      example:
-                        columnName1: ""
-                    notEmpty:
-                      type: object
-                      description: Searches for rows which have the specified column.
-                    oneOf:
-                      type: object
-                      description: Searches for rows which have a column value that is any of the
-                        specified values. The format of this must be columnName
-                        -> [value1, value2].
-                paginate:
-                  type: boolean
-                  description: Enables pagination, by default this is disabled.
-                bookmark:
-                  oneOf:
-                    - type: string
-                    - type: integer
-                  description: If retrieving another page, the bookmark from the previous request
-                    must be supplied.
-                limit:
-                  type: integer
-                  description: The maximum number of rows to return, useful when paginating, for
-                    internal tables this will be limited to 1000, for SQL tables
-                    it will be 5000.
-                sort:
-                  type: object
-                  description: A set of parameters describing the sort behaviour of the search.
-                  properties:
-                    order:
-                      type: string
-                      enum:
-                        - ascending
-                        - descending
-                      description: The order of the sort, by default this is ascending.
-                    column:
-                      type: string
-                      description: The name of the column by which the rows will be sorted.
-                    type:
-                      type: string
-                      enum:
-                        - string
-                        - number
-                      description: Defines whether the column should be treated as a string or as
-                        numbers when sorting.
+              $ref: "#/components/schemas/nameSearch"
       responses:
         "200":
-          description: The response will contain an array of rows that match the search
-            parameters.
+          description: Returns the queries found based on the search parameters.
           content:
             application/json:
               schema:
                 type: object
+                required:
+                  - queries
                 properties:
-                  rows:
-                    description: An array of rows, these will each contain an _id field which can be
-                      used to update or delete them.
+                  queries:
                     type: array
                     items:
-                      type: object
-                  bookmark:
-                    oneOf:
-                      - type: string
-                      - type: integer
-                    description: If pagination in use, this should be provided.
-                  hasNextPage:
-                    description: If pagination in use, this will determine if there is another page
-                      to fetch.
-                    type: boolean
+                      $ref: "#/components/schemas/query"
               examples:
-                search:
-                  $ref: "#/components/examples/rows"
+                queries:
+                  $ref: "#/components/examples/queries"
   "/tables/{tableId}/rows":
     post:
       summary: Creates a new row within a specified table.
@@ -1085,34 +991,133 @@ paths:
               examples:
                 row:
                   $ref: "#/components/examples/row"
-  /tables/search:
+  "/tables/{tableId}/rows/search":
     post:
-      summary: Search internal and external tables based on their name.
+      summary: Used to search for rows within a table.
       tags:
-        - tables
+        - rows
       parameters:
+        - $ref: "#/components/parameters/tableId"
         - $ref: "#/components/parameters/appId"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/nameSearch"
+              type: object
+              required:
+                - query
+              properties:
+                query:
+                  type: object
+                  properties:
+                    string:
+                      type: object
+                      example:
+                        columnName1: value
+                        columnName2: value
+                      description: A map of field name to the string to search for, this will look for
+                        rows that have a value starting with the string value.
+                      additionalProperties:
+                        type: string
+                        description: The value to search for in the column.
+                    fuzzy:
+                      type: object
+                      description: A fuzzy search, only supported by internal tables.
+                    range:
+                      type: object
+                      description: Searches within a range, the format of this must be columnName ->
+                        [low, high].
+                      example:
+                        columnName1:
+                          - 10
+                          - 20
+                    equal:
+                      type: object
+                      description: Searches for rows that have a column value that is exactly the
+                        value set.
+                    notEqual:
+                      type: object
+                      description: Searches for any row which does not contain the specified column
+                        value.
+                    empty:
+                      type: object
+                      description: Searches for rows which do not contain the specified column. The
+                        object should simply contain keys of the column names,
+                        these can map to any value.
+                      example:
+                        columnName1: ""
+                    notEmpty:
+                      type: object
+                      description: Searches for rows which have the specified column.
+                    oneOf:
+                      type: object
+                      description: Searches for rows which have a column value that is any of the
+                        specified values. The format of this must be columnName
+                        -> [value1, value2].
+                paginate:
+                  type: boolean
+                  description: Enables pagination, by default this is disabled.
+                bookmark:
+                  oneOf:
+                    - type: string
+                    - type: integer
+                  description: If retrieving another page, the bookmark from the previous request
+                    must be supplied.
+                limit:
+                  type: integer
+                  description: The maximum number of rows to return, useful when paginating, for
+                    internal tables this will be limited to 1000, for SQL tables
+                    it will be 5000.
+                sort:
+                  type: object
+                  description: A set of parameters describing the sort behaviour of the search.
+                  properties:
+                    order:
+                      type: string
+                      enum:
+                        - ascending
+                        - descending
+                      description: The order of the sort, by default this is ascending.
+                    column:
+                      type: string
+                      description: The name of the column by which the rows will be sorted.
+                    type:
+                      type: string
+                      enum:
+                        - string
+                        - number
+                      description: Defines whether the column should be treated as a string or as
+                        numbers when sorting.
       responses:
         "200":
-          description: Returns the found tables, based on the search parameters.
+          description: The response will contain an array of rows that match the search
+            parameters.
           content:
             application/json:
               schema:
                 type: object
+                required:
+                  - rows
                 properties:
-                  applications:
+                  rows:
+                    description: An array of rows, these will each contain an _id field which can be
+                      used to update or delete them.
                     type: array
                     items:
-                      $ref: "#/components/schemas/table"
+                      type: object
+                  bookmark:
+                    oneOf:
+                      - type: string
+                      - type: integer
+                    description: If pagination in use, this should be provided.
+                  hasNextPage:
+                    description: If pagination in use, this will determine if there is another page
+                      to fetch.
+                    type: boolean
               examples:
-                tables:
-                  $ref: "#/components/examples/tables"
+                search:
+                  $ref: "#/components/examples/rows"
   /tables:
     post:
       summary: Create a new table.
@@ -1199,11 +1204,11 @@ paths:
               examples:
                 table:
                   $ref: "#/components/examples/table"
-  /users/search:
+  /tables/search:
     post:
-      summary: Search for a user based on their email/username.
+      summary: Search internal and external tables based on their name.
       tags:
-        - users
+        - tables
       parameters:
         - $ref: "#/components/parameters/appId"
       requestBody:
@@ -1214,16 +1219,21 @@ paths:
               $ref: "#/components/schemas/nameSearch"
       responses:
         "200":
-          description: Returns the found users based on search parameters.
+          description: Returns the found tables, based on the search parameters.
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/user"
+                type: object
+                required:
+                  - tables
+                properties:
+                  tables:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/table"
               examples:
-                users:
-                  $ref: "#/components/examples/users"
+                tables:
+                  $ref: "#/components/examples/tables"
   /users:
     post:
       summary: Create a new user in the Budibase portal.
@@ -1305,4 +1315,34 @@ paths:
               examples:
                 user:
                   $ref: "#/components/examples/user"
+  /users/search:
+    post:
+      summary: Search for a user based on their email/username.
+      tags:
+        - users
+      parameters:
+        - $ref: "#/components/parameters/appId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/nameSearch"
+      responses:
+        "200":
+          description: Returns the found users based on search parameters.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - users
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/user"
+              examples:
+                users:
+                  $ref: "#/components/examples/users"
 tags: []
