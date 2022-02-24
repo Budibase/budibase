@@ -17,7 +17,7 @@
     propsAreSame,
     getSettingsDefinition,
   } from "utils/componentProps"
-  import { builderStore, devToolsStore, componentStore } from "stores"
+  import { builderStore, devToolsStore, componentStore, appStore } from "stores"
   import { Helpers } from "@budibase/bbui"
   import Manifest from "manifest.json"
   import { getActiveConditions, reduceConditionActions } from "utils/conditions"
@@ -349,15 +349,25 @@
   }
 
   onMount(() => {
-    componentStore.actions.registerInstance(id, {
-      getSettings: () => cachedSettings,
-      getRawSettings: () => ({ ...staticSettings, ...dynamicSettings }),
-      getDataContext: () => get(context),
-    })
+    if (
+      $appStore.isDevApp &&
+      !componentStore.actions.isComponentRegistered(id)
+    ) {
+      componentStore.actions.registerInstance(id, {
+        getSettings: () => cachedSettings,
+        getRawSettings: () => ({ ...staticSettings, ...dynamicSettings }),
+        getDataContext: () => get(context),
+      })
+    }
   })
 
   onDestroy(() => {
-    componentStore.actions.unregisterInstance(id)
+    if (
+      $appStore.isDevApp &&
+      componentStore.actions.isComponentRegistered(id)
+    ) {
+      componentStore.actions.unregisterInstance(id)
+    }
   })
 </script>
 

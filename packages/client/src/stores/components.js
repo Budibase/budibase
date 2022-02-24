@@ -9,8 +9,8 @@ const createComponentStore = () => {
   const store = writable({})
 
   const derivedStore = derived(
-    [builderStore, devToolsStore, screenStore],
-    ([$builderState, $devToolsState, $screenState]) => {
+    [store, builderStore, devToolsStore, screenStore],
+    ([$store, $builderState, $devToolsState, $screenState]) => {
       // Avoid any of this logic if we aren't in the builder preview
       if (!$builderState.inBuilder && !$devToolsState.visible) {
         return {}
@@ -34,10 +34,12 @@ const createComponentStore = () => {
         findComponentPathById(asset?.props, selectedComponentId) || []
 
       return {
-        selectedComponentInstance: get(store)[selectedComponentId],
+        selectedComponentInstance: $store[selectedComponentId],
         selectedComponent: component,
         selectedComponentDefinition: definition,
         selectedComponentPath: path?.map(component => component._id),
+        mountedComponents: Object.keys($store).length,
+        currentAsset: asset,
       }
     }
   )
@@ -56,9 +58,23 @@ const createComponentStore = () => {
     })
   }
 
+  const isComponentRegistered = id => {
+    return get(store)[id] != null
+  }
+
+  const getComponentById = id => {
+    const asset = get(derivedStore).currentAsset
+    return findComponentById(asset?.props, id)
+  }
+
   return {
     ...derivedStore,
-    actions: { registerInstance, unregisterInstance },
+    actions: {
+      registerInstance,
+      unregisterInstance,
+      isComponentRegistered,
+      getComponentById,
+    },
   }
 }
 

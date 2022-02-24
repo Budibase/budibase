@@ -1,6 +1,6 @@
 <script>
   import { Layout } from "@budibase/bbui"
-  import { authStore, appStore, screenStore } from "stores"
+  import { authStore, appStore, screenStore, componentStore } from "stores"
   import DevToolsStat from "./DevToolsStat.svelte"
 </script>
 
@@ -21,6 +21,7 @@
     label="Active screen"
     value={$screenStore.activeScreen?.routing.route}
   />
+  <DevToolsStat label="Components" value={$componentStore.mountedComponents} />
   <DevToolsStat label="User" value={$authStore.email} />
   <DevToolsStat label="Role" value={$authStore.roleId} />
 </Layout>
