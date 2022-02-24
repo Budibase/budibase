@@ -64,7 +64,8 @@ typings/
 # dotenv environment variables file
 .env
 !hosting/.env
-hosting/.generated-envoy.dev.yaml
+hosting/.generated-nginx.dev.conf
+hosting/proxy/.generated-nginx.prod.conf
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache
@@ -93,3 +94,6 @@ hosting/.generated-envoy.dev.yaml
 # Sublime text
 *.sublime-project
 *.sublime-workspace
+
+bin/
+packages/builder/cypress.env.json

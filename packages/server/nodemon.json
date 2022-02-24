@@ -1,5 +1,5 @@
 {
-  "watch": ["src", "../auth"],
+  "watch": ["src", "../backend-core"],
   "ext": "js,ts,json",
   "ignore": ["src/**/*.spec.ts", "src/**/*.spec.js"],
   "exec": "ts-node src/index.ts"

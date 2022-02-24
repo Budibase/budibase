@@ -53,8 +53,8 @@ describe("/applications", () => {
 
   describe("fetch", () => {
     it("lists all applications", async () => {
-      await config.createApp(request, "app1")
-      await config.createApp(request, "app2")
+      await config.createApp("app1")
+      await config.createApp("app2")
 
       const res = await request
         .get(`/api/applications?status=${AppStatus.DEV}`)
@@ -75,7 +75,6 @@ describe("/applications", () => {
         .expect("Content-Type", /json/)
         .expect(200)
       // should have empty packages
-      expect(res.body.screens.length).toEqual(1)
       expect(res.body.layouts.length).toEqual(2)
     })
   })
@@ -88,7 +87,6 @@ describe("/applications", () => {
         .expect("Content-Type", /json/)
         .expect(200)
       expect(res.body.application).toBeDefined()
-      expect(res.body.screens.length).toEqual(1)
       expect(res.body.layouts.length).toEqual(2)
     })
   })

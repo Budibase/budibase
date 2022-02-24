@@ -6,8 +6,14 @@
   export let selected
   export let vertical = false
   export let noPadding = false
+  // added as a separate option as noPadding is used for vertical padding
+  export let noHorizPadding = false
   export let quiet = false
   export let emphasized = false
+  // overlay content from the tab bar onto tabs e.g. for a dropdown
+  export let onTop = false
+
+  let thisSelected = undefined
 
   let _id = id()
   const tab = writable({ title: selected, id: _id, emphasized })
@@ -18,9 +24,19 @@
   const dispatch = createEventDispatcher()
 
   $: {
-    if ($tab.title !== selected) {
+    if (thisSelected !== selected) {
+      thisSelected = selected
+      dispatch("select", thisSelected)
+    } else if ($tab.title !== thisSelected) {
+      thisSelected = $tab.title
       selected = $tab.title
-      dispatch("select", selected)
+      dispatch("select", thisSelected)
+    }
+    if ($tab.title !== thisSelected) {
+      tab.update(state => {
+        state.title = thisSelected
+        return state
+      })
     }
   }
 
@@ -59,10 +75,12 @@
 <div
   bind:this={container}
   class:quiet
+  class:noHorizPadding
   class="selected-border spectrum-Tabs {quiet &&
     'spectrum-Tabs--quiet'} spectrum-Tabs--{vertical
     ? 'vertical'
     : 'horizontal'}"
+  class:onTop
 >
   <slot />
   {#if $tab.info}
@@ -83,7 +101,9 @@
   .quiet {
     border-bottom: none !important;
   }
-
+  .onTop {
+    z-index: 20;
+  }
   .spectrum-Tabs {
     padding-left: var(--spacing-xl);
     padding-right: var(--spacing-xl);
@@ -98,6 +118,9 @@
   }
   .spectrum-Tabs--horizontal .spectrum-Tabs-selectionIndicator {
     bottom: 0 !important;
+  }
+  .noHorizPadding {
+    padding: 0;
   }
   .noPadding {
     margin: 0;

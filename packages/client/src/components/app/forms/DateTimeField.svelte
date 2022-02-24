@@ -7,6 +7,7 @@
   export let placeholder
   export let disabled = false
   export let enableTime = false
+  export let timeOnly = false
   export let validation
   export let defaultValue
 
@@ -33,6 +34,7 @@
       id={fieldState.fieldId}
       appendTo={document.getElementById("flatpickr-root")}
       {enableTime}
+      {timeOnly}
       {placeholder}
     />
   {/if}

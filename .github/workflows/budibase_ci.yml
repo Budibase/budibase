@@ -41,4 +41,10 @@ jobs:
         files: ./packages/server/coverage/clover.xml
         name: codecov-umbrella
         verbose: true 
-    - run: yarn test:e2e:ci
+
+    # TODO: parallelise this
+    - name: Cypress run
+      uses: cypress-io/github-action@v2
+      with:
+        install: false
+        command: yarn test:e2e:ci

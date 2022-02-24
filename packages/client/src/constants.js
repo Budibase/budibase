@@ -1,7 +1,3 @@
-export const TableNames = {
-  USERS: "ta_users",
-}
-
 export const FieldTypes = {
   STRING: "string",
   LONGFORM: "longform",
@@ -13,6 +9,7 @@ export const FieldTypes = {
   ATTACHMENT: "attachment",
   LINK: "link",
   FORMULA: "formula",
+  JSON: "json",
 }
 
 export const UnsortableTypes = [
@@ -31,11 +28,3 @@ export const ActionTypes = {
   ClearForm: "ClearForm",
   ChangeFormStep: "ChangeFormStep",
 }
-
-export const ApiVersion = "1"
-
-/**
- * API Version Changelog
- * v1:
- *   - Coerce types for search endpoint
- */

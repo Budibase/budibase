@@ -1,6 +1,5 @@
 import { writable, get } from "svelte/store"
-import { pingEndUser } from "../api"
-import { devToolsStore } from "./devTools"
+import { API } from "api"
 
 const dispatchEvent = (type, data = {}) => {
   window.parent.postMessage({ type, data })
@@ -22,7 +21,6 @@ const createBuilderStore = () => {
     isDragging: false,
   }
   const store = writable(initialState)
-
   const actions = {
     selectComponent: id => {
       if (id === get(store).selectedComponentId) {
@@ -33,7 +31,6 @@ const createBuilderStore = () => {
         editMode: false,
         selectedComponentId: id,
       }))
-      devToolsStore.actions.setAllowSelection(false)
       dispatchEvent("select-component", { id })
     },
     updateProp: (prop, value) => {
@@ -45,8 +42,12 @@ const createBuilderStore = () => {
     notifyLoaded: () => {
       dispatchEvent("preview-loaded")
     },
-    pingEndUser: () => {
-      pingEndUser()
+    pingEndUser: async () => {
+      try {
+        await API.pingEndUser()
+      } catch (error) {
+        // Do nothing
+      }
     },
     setSelectedPath: path => {
       store.update(state => ({ ...state, selectedPath: path }))

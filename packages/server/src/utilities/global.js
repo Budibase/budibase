@@ -2,14 +2,19 @@ const {
   getMultiIDParams,
   getGlobalIDFromUserMetadataID,
 } = require("../db/utils")
-const { BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
-const { getDeployedAppID } = require("@budibase/auth/db")
-const { getGlobalUserParams } = require("@budibase/auth/db")
-const { user: userCache } = require("@budibase/auth/cache")
-const { getGlobalDB, isUserInAppTenant } = require("@budibase/auth/tenancy")
+const { BUILTIN_ROLE_IDS } = require("@budibase/backend-core/roles")
+const { getProdAppID } = require("@budibase/backend-core/db")
+const { getGlobalUserParams } = require("@budibase/backend-core/db")
+const { user: userCache } = require("@budibase/backend-core/cache")
+const {
+  getGlobalDB,
+  isUserInAppTenant,
+} = require("@budibase/backend-core/tenancy")
 const env = require("../environment")
+const { getAppId } = require("@budibase/backend-core/context")
 
-exports.updateAppRole = (appId, user) => {
+exports.updateAppRole = (user, { appId } = {}) => {
+  appId = appId || getAppId()
   if (!user || !user.roles) {
     return user
   }
@@ -21,7 +26,7 @@ exports.updateAppRole = (appId, user) => {
     return user
   }
   // always use the deployed app
-  user.roleId = user.roles[getDeployedAppID(appId)]
+  user.roleId = user.roles[getProdAppID(appId)]
   // if a role wasn't found then either set as admin (builder) or public (everyone else)
   if (!user.roleId && user.builder && user.builder.global) {
     user.roleId = BUILTIN_ROLE_IDS.ADMIN
@@ -32,18 +37,18 @@ exports.updateAppRole = (appId, user) => {
   return user
 }
 
-function processUser(appId, user) {
+function processUser(user, { appId } = {}) {
   if (user) {
     delete user.password
   }
-  return exports.updateAppRole(appId, user)
+  return exports.updateAppRole(user, { appId })
 }
 
 exports.getCachedSelf = async (ctx, appId) => {
   // this has to be tenant aware, can't depend on the context to find it out
   // running some middlewares before the tenancy causes context to break
   const user = await userCache.getUser(ctx.user._id)
-  return processUser(appId, user)
+  return processUser(user, { appId })
 }
 
 exports.getRawGlobalUser = async userId => {
@@ -51,12 +56,13 @@ exports.getRawGlobalUser = async userId => {
   return db.get(getGlobalIDFromUserMetadataID(userId))
 }
 
-exports.getGlobalUser = async (appId, userId) => {
+exports.getGlobalUser = async userId => {
   let user = await exports.getRawGlobalUser(userId)
-  return processUser(appId, user)
+  return processUser(user)
 }
 
-exports.getGlobalUsers = async (appId = null, users = null) => {
+exports.getGlobalUsers = async (users = null) => {
+  const appId = getAppId()
   const db = getGlobalDB()
   let globalUsers
   if (users) {
@@ -83,11 +89,11 @@ exports.getGlobalUsers = async (appId = null, users = null) => {
   if (!appId) {
     return globalUsers
   }
-  return globalUsers.map(user => exports.updateAppRole(appId, user))
+  return globalUsers.map(user => exports.updateAppRole(user))
 }
 
-exports.getGlobalUsersFromMetadata = async (appId, users) => {
-  const globalUsers = await exports.getGlobalUsers(appId, users)
+exports.getGlobalUsersFromMetadata = async users => {
+  const globalUsers = await exports.getGlobalUsers(users)
   return users.map(user => {
     const globalUser = globalUsers.find(
       globalUser => globalUser && user._id.includes(globalUser._id)

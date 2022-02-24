@@ -1,15 +1,13 @@
 import { getFrontendStore } from "./store/frontend"
 import { getAutomationStore } from "./store/automation"
-import { getHostingStore } from "./store/hosting"
 import { getThemeStore } from "./store/theme"
 import { derived, writable } from "svelte/store"
 import { FrontendTypes, LAYOUT_NAMES } from "../constants"
-import { findComponent } from "./storeUtils"
+import { findComponent } from "./componentUtils"
 
 export const store = getFrontendStore()
 export const automationStore = getAutomationStore()
 export const themeStore = getThemeStore()
-export const hostingStore = getHostingStore()
 
 export const currentAsset = derived(store, $store => {
   const type = $store.currentFrontEndType

@@ -1,14 +1,10 @@
-const CouchDB = require("../db")
 const usageQuota = require("../utilities/usageQuota")
-const env = require("../environment")
-const { getTenantId } = require("@budibase/auth/tenancy")
+const { getUniqueRows } = require("../utilities/usageQuota/rows")
 const {
   isExternalTable,
   isRowId: isExternalRowId,
 } = require("../integrations/utils")
-
-// tenants without limits
-const EXCLUDED_TENANTS = ["bb", "default", "bbtest", "bbstaging"]
+const { getAppDB } = require("@budibase/backend-core/context")
 
 // currently only counting new writes and deletes
 const METHOD_MAP = {
@@ -18,13 +14,13 @@ const METHOD_MAP = {
 
 const DOMAIN_MAP = {
   rows: usageQuota.Properties.ROW,
-  upload: usageQuota.Properties.UPLOAD,
-  views: usageQuota.Properties.VIEW,
-  users: usageQuota.Properties.USER,
+  // upload: usageQuota.Properties.UPLOAD,            // doesn't work yet
+  // views: usageQuota.Properties.VIEW,               // doesn't work yet
+  // users: usageQuota.Properties.USER,               // doesn't work yet
   applications: usageQuota.Properties.APPS,
   // this will not be updated by endpoint calls
   // instead it will be updated by triggerInfo
-  automationRuns: usageQuota.Properties.AUTOMATION,
+  // automationRuns: usageQuota.Properties.AUTOMATION, // doesn't work yet
 }
 
 function getProperty(url) {
@@ -36,10 +32,7 @@ function getProperty(url) {
 }
 
 module.exports = async (ctx, next) => {
-  const tenantId = getTenantId()
-
-  // if in development or a self hosted cloud usage quotas should not be executed
-  if (env.isDev() || env.SELF_HOSTED || EXCLUDED_TENANTS.includes(tenantId)) {
+  if (!usageQuota.useQuotas()) {
     return next()
   }
 
@@ -53,7 +46,7 @@ module.exports = async (ctx, next) => {
     const usageId = ctx.request.body._id
     try {
       if (ctx.appId) {
-        const db = new CouchDB(ctx.appId)
+        const db = getAppDB()
         await db.get(usageId)
       }
       return next()
@@ -80,9 +73,92 @@ module.exports = async (ctx, next) => {
     usage = files.map(file => file.size).reduce((total, size) => total + size)
   }
   try {
-    await usageQuota.update(property, usage)
-    return next()
+    await performRequest(ctx, next, property, usage)
   } catch (err) {
     ctx.throw(400, err)
   }
+}
+
+const performRequest = async (ctx, next, property, usage) => {
+  const usageContext = {
+    skipNext: false,
+    skipUsage: false,
+    [usageQuota.Properties.APPS]: {},
+  }
+
+  if (usage === -1) {
+    if (PRE_DELETE[property]) {
+      await PRE_DELETE[property](ctx, usageContext)
+    }
+  } else {
+    if (PRE_CREATE[property]) {
+      await PRE_CREATE[property](ctx, usageContext)
+    }
+  }
+
+  // run the request
+  if (!usageContext.skipNext) {
+    await usageQuota.update(property, usage, { dryRun: true })
+    await next()
+  }
+
+  if (usage === -1) {
+    if (POST_DELETE[property]) {
+      await POST_DELETE[property](ctx, usageContext)
+    }
+  } else {
+    if (POST_CREATE[property]) {
+      await POST_CREATE[property](ctx, usageContext)
+    }
+  }
+
+  // update the usage
+  if (!usageContext.skipUsage) {
+    await usageQuota.update(property, usage)
+  }
+}
+
+const appPreDelete = async (ctx, usageContext) => {
+  if (ctx.query.unpublish) {
+    // don't run usage decrement for unpublish
+    usageContext.skipUsage = true
+    return
+  }
+
+  // store the row count to delete
+  const rows = await getUniqueRows([ctx.appId])
+  if (rows.length) {
+    usageContext[usageQuota.Properties.APPS] = { rowCount: rows.length }
+  }
+}
+
+const appPostDelete = async (ctx, usageContext) => {
+  // delete the app rows from usage
+  const rowCount = usageContext[usageQuota.Properties.APPS].rowCount
+  if (rowCount) {
+    await usageQuota.update(usageQuota.Properties.ROW, -rowCount)
+  }
+}
+
+const appPostCreate = async ctx => {
+  // app import & template creation
+  if (ctx.request.body.useTemplate === "true") {
+    const rows = await getUniqueRows([ctx.response.body.appId])
+    const rowCount = rows ? rows.length : 0
+    await usageQuota.update(usageQuota.Properties.ROW, rowCount)
+  }
+}
+
+const PRE_DELETE = {
+  [usageQuota.Properties.APPS]: appPreDelete,
+}
+
+const POST_DELETE = {
+  [usageQuota.Properties.APPS]: appPostDelete,
+}
+
+const PRE_CREATE = {}
+
+const POST_CREATE = {
+  [usageQuota.Properties.APPS]: appPostCreate,
 }

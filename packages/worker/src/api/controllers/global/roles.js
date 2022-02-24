@@ -1,15 +1,15 @@
-const { getAllRoles } = require("@budibase/auth/roles")
+const { getAllRoles } = require("@budibase/backend-core/roles")
 const {
   getAllApps,
-  getDeployedAppID,
+  getProdAppID,
   DocumentTypes,
-} = require("@budibase/auth/db")
-const CouchDB = require("../../../db")
+} = require("@budibase/backend-core/db")
+const { doInAppContext, getAppDB } = require("@budibase/backend-core/context")
 
 exports.fetch = async ctx => {
   const tenantId = ctx.user.tenantId
   // always use the dev apps as they'll be most up to date (true)
-  const apps = await getAllApps(CouchDB, { tenantId, all: true })
+  const apps = await getAllApps({ tenantId, all: true })
   const promises = []
   for (let app of apps) {
     // use dev app IDs
@@ -18,7 +18,7 @@ exports.fetch = async ctx => {
   const roles = await Promise.all(promises)
   const response = {}
   for (let app of apps) {
-    const deployedAppId = getDeployedAppID(app.appId)
+    const deployedAppId = getProdAppID(app.appId)
     response[deployedAppId] = {
       roles: roles.shift(),
       name: app.name,
@@ -31,12 +31,14 @@ exports.fetch = async ctx => {
 
 exports.find = async ctx => {
   const appId = ctx.params.appId
-  const db = new CouchDB(appId)
-  const app = await db.get(DocumentTypes.APP_METADATA)
-  ctx.body = {
-    roles: await getAllRoles(appId),
-    name: app.name,
-    version: app.version,
-    url: app.url,
-  }
+  await doInAppContext(appId, async () => {
+    const db = getAppDB()
+    const app = await db.get(DocumentTypes.APP_METADATA)
+    ctx.body = {
+      roles: await getAllRoles(),
+      name: app.name,
+      version: app.version,
+      url: app.url,
+    }
+  })
 }

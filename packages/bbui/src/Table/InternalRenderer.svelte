@@ -8,21 +8,38 @@
     copyToClipboard(value)
   }
 
-  function copyToClipboard(value) {
-    navigator.clipboard.writeText(value).then(() => {
-      notifications.success("Copied")
+  const copyToClipboard = value => {
+    return new Promise(res => {
+      if (navigator.clipboard && window.isSecureContext) {
+        // Try using the clipboard API first
+        navigator.clipboard.writeText(value).then(res)
+      } else {
+        // Fall back to the textarea hack
+        let textArea = document.createElement("textarea")
+        textArea.value = value
+        textArea.style.position = "fixed"
+        textArea.style.left = "-9999px"
+        textArea.style.top = "-9999px"
+        document.body.appendChild(textArea)
+        textArea.focus()
+        textArea.select()
+        document.execCommand("copy")
+        textArea.remove()
+        res()
+      }
     })
+      .then(() => {
+        notifications.success("Copied to clipboard")
+      })
+      .catch(() => {
+        notifications.error(
+          "Failed to copy to clipboard. Check the dev console for the value."
+        )
+        console.warn("Failed to copy the value", value)
+      })
   }
 </script>
 
 <div on:click|stopPropagation={onClick}>
   <Icon size="S" name="Copy" />
 </div>
-
-<style>
-  div {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    width: 150px;
-  }
-</style>

@@ -12,17 +12,21 @@
 
   function saveView() {
     if (views.includes(name)) {
-      notifications.error(`View exists with name ${name}.`)
+      notifications.error(`View exists with name ${name}`)
       return
     }
-    viewsStore.save({
-      name,
-      tableId: $tables.selected._id,
-      field,
-    })
-    notifications.success(`View ${name} created`)
-    analytics.captureEvent(Events.VIEW.CREATED, { name })
-    $goto(`../../view/${name}`)
+    try {
+      viewsStore.save({
+        name,
+        tableId: $tables.selected._id,
+        field,
+      })
+      notifications.success(`View ${name} created`)
+      analytics.captureEvent(Events.VIEW.CREATED, { name })
+      $goto(`../../view/${name}`)
+    } catch (error) {
+      notifications.error("Error creating view")
+    }
   }
 </script>
 

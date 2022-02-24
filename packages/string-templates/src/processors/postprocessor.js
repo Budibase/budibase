@@ -16,6 +16,8 @@ class Postprocessor {
   }
 }
 
+module.exports.PostProcessorNames = PostProcessorNames
+
 module.exports.processors = [
   new Postprocessor(PostProcessorNames.CONVERT_LITERALS, statement => {
     if (typeof statement !== "string" || !statement.includes(LITERAL_MARKER)) {
@@ -36,6 +38,11 @@ module.exports.processors = [
         return value === "true"
       case "object":
         return JSON.parse(value)
+      case "js_result":
+        // We use the literal helper to process the result of JS expressions
+        // as we want to be able to return any types.
+        // We wrap the value in an abject to be able to use undefined properly.
+        return JSON.parse(value).data
     }
     return value
   }),

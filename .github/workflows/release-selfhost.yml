@@ -3,53 +3,77 @@ name: Budibase Release Selfhost
 on:
  workflow_dispatch:
 
-env:
-  POSTHOG_TOKEN: ${{ secrets.POSTHOG_TOKEN }}
-  INTERCOM_TOKEN: ${{ secrets.INTERCOM_TOKEN }}
-  POSTHOG_URL: ${{ secrets.POSTHOG_URL }}
-
 jobs:
   release:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
-        with:
+        with: 
           node-version: 14.x
-      - run: yarn
-      - run: yarn bootstrap
+          fetch_depth: 0
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: eu-west-1
-
-      - name: 'Get Previous tag'
-        id: previoustag
-        uses: "WyriHaximus/github-action-get-previous-tag@v1"
-
-      - name: Build/release Docker images (Self Host)
+      - name: Tag and release Docker images (Self Host)
         run: | 
           docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
-          yarn build
-          yarn build:docker:selfhost
+
+          # Get latest release version
+          release_version=$(cat lerna.json | jq -r '.version')
+          echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
+          release_tag=v$release_version
+
+          # Pull apps and worker images
+          docker pull budibase/apps:$release_tag
+          docker pull budibase/worker:$release_tag
+          docker pull budibase/proxy:$release_tag
+
+          # Tag apps and worker images
+          docker tag budibase/apps:$release_tag budibase/apps:$SELFHOST_TAG
+          docker tag budibase/worker:$release_tag budibase/worker:$SELFHOST_TAG
+          docker tag budibase/proxy:$release_tag budibase/proxy:$SELFHOST_TAG
+          
+          # Push images
+          docker push budibase/apps:$SELFHOST_TAG
+          docker push budibase/worker:$SELFHOST_TAG
+          docker push budibase/proxy:$SELFHOST_TAG
         env:
           DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
-          BUDIBASE_RELEASE_VERSION: ${{ steps.previoustag.outputs.tag }}
+          SELFHOST_TAG: latest
       
-      - uses: azure/setup-helm@v1
-        id: install
+      - name: Build CLI executables
+        run: |
+          pushd packages/cli
+          yarn
+          yarn build
+          popd
+      
+      - name: Setup Helm 
+        uses: azure/setup-helm@v1
+        id: helm-install
 
-      # So, we need to inject the values into this
-      - run: yarn release:helm
-
-      - name: Run chart-releaser
-        uses: helm/chart-releaser-action@v1.1.0
-        with:
-          charts_dir: docs
+      - name: Build and release helm chart
+        run: | 
+          git config user.name "Budibase Helm Bot"
+          git config user.email "<>"
+          git pull
+          helm package charts/budibase
+          git checkout gh-pages
+          mv *.tgz docs
+          helm repo index docs
+          git add -A
+          git commit -m "Helm Release: ${{ env.RELEASE_VERSION }}"
+          git push
         env:
-          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Perform Github Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: v${{ env.RELEASE_VERSION }}
+          tag_name: v${{ env.RELEASE_VERSION }}
+          generate_release_notes: true
+          files: |
+            packages/cli/build/cli-win.exe
+            packages/cli/build/cli-linux
+            packages/cli/build/cli-macos 

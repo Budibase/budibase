@@ -1,4 +1,3 @@
-const CouchDB = require("../../db")
 const {
   generateDatasourceID,
   getDatasourceParams,
@@ -10,12 +9,12 @@ const {
 const { BuildSchemaErrors, InvalidColumns } = require("../../constants")
 const { integrations } = require("../../integrations")
 const { getDatasourceAndQuery } = require("./row/utils")
+const { invalidateDynamicVariables } = require("../../threads/utils")
+const { getAppDB } = require("@budibase/backend-core/context")
 
 exports.fetch = async function (ctx) {
-  const database = new CouchDB(ctx.appId)
-
   // Get internal tables
-  const db = new CouchDB(ctx.appId)
+  const db = getAppDB()
   const internalTables = await db.allDocs(
     getTableParams(null, {
       include_docs: true,
@@ -30,18 +29,25 @@ exports.fetch = async function (ctx) {
 
   // Get external datasources
   const datasources = (
-    await database.allDocs(
+    await db.allDocs(
       getDatasourceParams(null, {
         include_docs: true,
       })
     )
   ).rows.map(row => row.doc)
 
+  for (let datasource of datasources) {
+    if (datasource.config && datasource.config.auth) {
+      // strip secrets from response so they don't show in the network request
+      delete datasource.config.auth
+    }
+  }
+
   ctx.body = [bbInternalDb, ...datasources]
 }
 
 exports.buildSchemaFromDb = async function (ctx) {
-  const db = new CouchDB(ctx.appId)
+  const db = getAppDB()
   const datasource = await db.get(ctx.params.datasourceId)
 
   const { tables, error } = await buildSchemaHelper(datasource)
@@ -57,11 +63,49 @@ exports.buildSchemaFromDb = async function (ctx) {
   ctx.body = response
 }
 
+/**
+ * Check for variables that have been updated or removed and invalidate them.
+ */
+const invalidateVariables = async (existingDatasource, updatedDatasource) => {
+  const existingVariables = existingDatasource.config.dynamicVariables
+  const updatedVariables = updatedDatasource.config.dynamicVariables
+  const toInvalidate = []
+
+  if (!existingVariables) {
+    return
+  }
+
+  if (!updatedVariables) {
+    // invalidate all
+    toInvalidate.push(...existingVariables)
+  } else {
+    // invaldate changed / removed
+    existingVariables.forEach(existing => {
+      const unchanged = updatedVariables.find(
+        updated =>
+          existing.name === updated.name &&
+          existing.queryId === updated.queryId &&
+          existing.value === updated.value
+      )
+      if (!unchanged) {
+        toInvalidate.push(existing)
+      }
+    })
+  }
+  await invalidateDynamicVariables(toInvalidate)
+}
+
 exports.update = async function (ctx) {
-  const db = new CouchDB(ctx.appId)
+  const db = getAppDB()
   const datasourceId = ctx.params.datasourceId
   let datasource = await db.get(datasourceId)
+  const auth = datasource.config.auth
+  await invalidateVariables(datasource, ctx.request.body)
   datasource = { ...datasource, ...ctx.request.body }
+  if (auth && !ctx.request.body.auth) {
+    // don't strip auth config from DB
+    datasource.config.auth = auth
+  }
 
   const response = await db.put(datasource)
   datasource._rev = response.rev
@@ -80,7 +124,7 @@ exports.update = async function (ctx) {
 }
 
 exports.save = async function (ctx) {
-  const db = new CouchDB(ctx.appId)
+  const db = getAppDB()
   const plus = ctx.request.body.datasource.plus
   const fetchSchema = ctx.request.body.fetchSchema
 
@@ -116,7 +160,7 @@ exports.save = async function (ctx) {
 }
 
 exports.destroy = async function (ctx) {
-  const db = new CouchDB(ctx.appId)
+  const db = getAppDB()
 
   // Delete all queries for the datasource
   const queries = await db.allDocs(
@@ -138,7 +182,7 @@ exports.destroy = async function (ctx) {
 }
 
 exports.find = async function (ctx) {
-  const database = new CouchDB(ctx.appId)
+  const database = getAppDB()
   ctx.body = await database.get(ctx.params.datasourceId)
 }
 
@@ -146,7 +190,7 @@ exports.find = async function (ctx) {
 exports.query = async function (ctx) {
   const queryJson = ctx.request.body
   try {
-    ctx.body = await getDatasourceAndQuery(ctx.appId, queryJson)
+    ctx.body = await getDatasourceAndQuery(queryJson)
   } catch (err) {
     ctx.throw(400, err)
   }

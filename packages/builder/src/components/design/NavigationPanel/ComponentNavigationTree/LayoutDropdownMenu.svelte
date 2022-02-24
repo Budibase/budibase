@@ -21,9 +21,9 @@
   const deleteLayout = async () => {
     try {
       await store.actions.layouts.delete(layout)
-      notifications.success(`Layout ${layout.name} deleted successfully.`)
+      notifications.success("Layout deleted successfully")
     } catch (err) {
-      notifications.error(`Error deleting layout: ${err.message}`)
+      notifications.error("Error deleting layout")
     }
   }
 
@@ -32,9 +32,9 @@
       const layoutToSave = cloneDeep(layout)
       layoutToSave.name = name
       await store.actions.layouts.save(layoutToSave)
-      notifications.success(`Layout saved successfully.`)
+      notifications.success("Layout saved successfully")
     } catch (err) {
-      notifications.error(`Error saving layout: ${err.message}`)
+      notifications.error("Error saving layout")
     }
   }
 </script>

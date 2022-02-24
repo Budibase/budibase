@@ -20,14 +20,18 @@
   }
 
   async function saveAutomation() {
-    const updatedAutomation = {
-      ...automation,
-      name,
+    try {
+      const updatedAutomation = {
+        ...automation,
+        name,
+      }
+      await automationStore.actions.save(updatedAutomation)
+      notifications.success(`Automation ${name} updated successfully`)
+      analytics.captureEvent(Events.AUTOMATION.SAVED, { name })
+      hide()
+    } catch (error) {
+      notifications.error("Error saving automation")
     }
-    await automationStore.actions.save(updatedAutomation)
-    notifications.success(`Automation ${name} updated successfully.`)
-    analytics.captureEvent(Events.AUTOMATION.SAVED, { name })
-    hide()
   }
 
   function checkValid(evt) {

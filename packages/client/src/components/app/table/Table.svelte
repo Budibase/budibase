@@ -14,6 +14,7 @@
   export let linkURL
   export let linkColumn
   export let linkPeek
+  export let compact
 
   const component = getContext("component")
   const { styleable, getAction, ActionTypes, routeStore } = getContext("sdk")
@@ -40,7 +41,8 @@
     // Check for an invalid column selection
     let invalid = false
     customColumns?.forEach(column => {
-      if (schema[column] == null) {
+      const columnName = typeof column === "string" ? column : column.name
+      if (schema[columnName] == null) {
         invalid = true
       }
     })
@@ -71,13 +73,26 @@
         order: 0,
         sortable: false,
         divider: true,
+        width: "auto",
       }
     }
 
     fields.forEach(field => {
-      newSchema[field] = schema[field]
-      if (schema[field] && UnsortableTypes.indexOf(schema[field].type) !== -1) {
-        newSchema[field].sortable = false
+      const columnName = typeof field === "string" ? field : field.name
+      if (!schema[columnName]) {
+        return
+      }
+      newSchema[columnName] = schema[columnName]
+      if (UnsortableTypes.includes(schema[columnName].type)) {
+        newSchema[columnName].sortable = false
+      }
+
+      // Add additional settings like width etc
+      if (typeof field === "object") {
+        newSchema[columnName] = {
+          ...newSchema[columnName],
+          ...field,
+        }
       }
     })
     return newSchema
@@ -111,12 +126,14 @@
     {loading}
     {rowCount}
     {quiet}
+    {compact}
     {customRenderers}
     allowSelectRows={false}
     allowEditRows={false}
     allowEditColumns={false}
     showAutoColumns={true}
     disableSorting
+    autoSortColumns={!columns?.length}
     on:sort={onSort}
     on:click={onClick}
   >

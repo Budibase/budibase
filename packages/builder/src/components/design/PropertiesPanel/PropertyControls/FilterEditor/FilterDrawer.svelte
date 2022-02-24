@@ -13,7 +13,8 @@
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
   import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
   import { generate } from "shortid"
-  import { getValidOperatorsForType, OperatorOptions } from "constants/lucene"
+  import { LuceneUtils, Constants } from "@budibase/frontend-core"
+  import { getFields } from "helpers/searchFields"
 
   export let schemaFields
   export let filters = []
@@ -21,11 +22,8 @@
   export let panel = ClientBindingPanel
   export let allowBindings = true
 
-  const BannedTypes = ["link", "attachment", "formula"]
-
-  $: fieldOptions = (schemaFields ?? [])
-    .filter(field => !BannedTypes.includes(field.type))
-    .map(field => field.name)
+  $: enrichedSchemaFields = getFields(schemaFields || [])
+  $: fieldOptions = enrichedSchemaFields.map(field => field.name) || []
   $: valueTypeOptions = allowBindings ? ["Value", "Binding"] : ["Value"]
 
   const addFilter = () => {
@@ -34,7 +32,7 @@
       {
         id: generate(),
         field: null,
-        operator: OperatorOptions.Equals.value,
+        operator: Constants.OperatorOptions.Equals.value,
         value: null,
         valueType: "Value",
       },
@@ -53,14 +51,15 @@
 
   const onFieldChange = (expression, field) => {
     // Update the field type
-    expression.type = schemaFields.find(x => x.name === field)?.type
+    expression.type = enrichedSchemaFields.find(x => x.name === field)?.type
 
     // Ensure a valid operator is set
-    const validOperators = getValidOperatorsForType(expression.type).map(
-      x => x.value
-    )
+    const validOperators = LuceneUtils.getValidOperatorsForType(
+      expression.type
+    ).map(x => x.value)
     if (!validOperators.includes(expression.operator)) {
-      expression.operator = validOperators[0] ?? OperatorOptions.Equals.value
+      expression.operator =
+        validOperators[0] ?? Constants.OperatorOptions.Equals.value
       onOperatorChange(expression, expression.operator)
     }
 
@@ -75,8 +74,8 @@
 
   const onOperatorChange = (expression, operator) => {
     const noValueOptions = [
-      OperatorOptions.Empty.value,
-      OperatorOptions.NotEmpty.value,
+      Constants.OperatorOptions.Empty.value,
+      Constants.OperatorOptions.NotEmpty.value,
     ]
     expression.noValue = noValueOptions.includes(operator)
     if (expression.noValue) {
@@ -85,7 +84,7 @@
   }
 
   const getFieldOptions = field => {
-    const schema = schemaFields.find(x => x.name === field)
+    const schema = enrichedSchemaFields.find(x => x.name === field)
     return schema?.constraints?.inclusion || []
   }
 </script>
@@ -112,7 +111,7 @@
             />
             <Select
               disabled={!filter.field}
-              options={getValidOperatorsForType(filter.type)}
+              options={LuceneUtils.getValidOperatorsForType(filter.type)}
               bind:value={filter.operator}
               on:change={e => onOperatorChange(filter, e.detail)}
               placeholder={null}
@@ -133,7 +132,7 @@
                 {bindings}
                 on:change={event => (filter.value = event.detail)}
               />
-            {:else if ["string", "longform", "number"].includes(filter.type)}
+            {:else if ["string", "longform", "number", "formula"].includes(filter.type)}
               <Input disabled={filter.noValue} bind:value={filter.value} />
             {:else if ["options", "array"].includes(filter.type)}
               <Combobox
@@ -185,6 +184,7 @@
     max-width: 1000px;
     margin: 0 auto;
   }
+
   .fields {
     display: grid;
     column-gap: var(--spacing-l);

@@ -2,6 +2,8 @@
   import { writable, get } from "svelte/store"
   import { setContext, onMount } from "svelte"
   import { Layout, Heading, Body } from "@budibase/bbui"
+  import ErrorSVG from "@budibase/frontend-core/assets/error.svg"
+  import { Constants, CookieUtils } from "@budibase/frontend-core"
   import Component from "./Component.svelte"
   import SDK from "sdk"
   import {
@@ -26,7 +28,6 @@
   import HoverIndicator from "components/preview/HoverIndicator.svelte"
   import CustomThemeWrapper from "./CustomThemeWrapper.svelte"
   import DNDHandler from "components/preview/DNDHandler.svelte"
-  import ErrorSVG from "builder/assets/error.svg"
   import KeyboardManager from "components/preview/KeyboardManager.svelte"
   import DevToolsHeader from "components/devtools/DevToolsHeader.svelte"
   import DevTools from "components/devtools/DevTools.svelte"
@@ -67,8 +68,8 @@
       } else {
         // The user is not logged in, redirect them to login
         const returnUrl = `${window.location.pathname}${window.location.hash}`
-        const encodedUrl = encodeURIComponent(returnUrl)
-        // window.location = `/builder/auth/login?returnUrl=${encodedUrl}`
+        CookieUtils.setCookie(Constants.Cookies.ReturnUrl, returnUrl)
+        window.location = "/builder/auth/login"
       }
     }
   }
@@ -81,10 +82,10 @@
     id="spectrum-root"
     lang="en"
     dir="ltr"
-    class="spectrum spectrum--medium {$themeStore.theme}"
+    className="spectrum spectrum--medium {$themeStore.theme}"
   >
     {#if permissionError}
-      <div class="error">
+      <div className="error">
         <Layout justifyItems="center" gap="S">
           {@html ErrorSVG}
           <Heading size="L">You don't have permission to use this app</Heading>
@@ -181,6 +182,7 @@
     justify-content: center;
     align-items: center;
   }
+
   #clip-root {
     max-width: 100%;
     max-height: 100%;
@@ -190,6 +192,7 @@
     overflow: hidden;
     background-color: transparent;
   }
+
   #app-root {
     overflow: hidden;
     height: 100%;
@@ -217,19 +220,23 @@
     text-align: center;
     padding: 20px;
   }
+
   .error :global(svg) {
     fill: var(--spectrum-global-color-gray-500);
     width: 80px;
     height: 80px;
   }
+
   .error :global(h1),
   .error :global(p) {
     color: var(--spectrum-global-color-gray-800);
   }
+
   .error :global(p) {
     font-style: italic;
     margin-top: -0.5em;
   }
+
   .error :global(h1) {
     font-weight: 400;
   }
@@ -239,14 +246,17 @@
   #clip-root.preview {
     padding: 2px;
   }
+
   #clip-root.tablet-preview {
     width: calc(1024px + 6px);
     height: calc(768px + 6px);
   }
+
   #clip-root.mobile-preview {
     width: calc(390px + 6px);
     height: calc(844px + 6px);
   }
+
   .preview #app-root {
     border: 1px solid var(--spectrum-global-color-gray-300);
     border-radius: 4px;

@@ -1,6 +1,5 @@
 <script>
   import { goto, url } from "@roxi/routify"
-  import { store } from "builderStore"
   import { tables } from "stores/backend"
   import { notifications } from "@budibase/bbui"
   import {
@@ -13,24 +12,13 @@
   } from "@budibase/bbui"
   import TableDataImport from "../TableDataImport.svelte"
   import analytics, { Events } from "analytics"
-  import screenTemplates from "builderStore/store/screenTemplates"
   import { buildAutoColumn, getAutoColumnInformation } from "builderStore/utils"
-  import { NEW_ROW_TEMPLATE } from "builderStore/store/screenTemplates/newRowScreen"
-  import { ROW_DETAIL_TEMPLATE } from "builderStore/store/screenTemplates/rowDetailScreen"
-  import { ROW_LIST_TEMPLATE } from "builderStore/store/screenTemplates/rowListScreen"
-
-  const defaultScreens = [
-    NEW_ROW_TEMPLATE,
-    ROW_DETAIL_TEMPLATE,
-    ROW_LIST_TEMPLATE,
-  ]
 
   $: tableNames = $tables.list.map(table => table.name)
 
   export let name
   let dataImport
   let error = ""
-  let createAutoscreens = true
   let autoColumns = getAutoColumnInformation()
 
   function addAutoColumns(tableName, schema) {
@@ -65,37 +53,23 @@
     }
 
     // Create table
-    const table = await tables.save(newTable)
-    notifications.success(`Table ${name} created successfully.`)
-    analytics.captureEvent(Events.TABLE.CREATED, { name })
+    let table
+    try {
+      table = await tables.save(newTable)
+      notifications.success(`Table ${name} created successfully.`)
+      analytics.captureEvent(Events.TABLE.CREATED, { name })
 
-    // Create auto screens
-    if (createAutoscreens) {
-      const screens = screenTemplates($store, [table])
-        .filter(template => defaultScreens.includes(template.id))
-        .map(template => template.create())
-      for (let screen of screens) {
-        // Record the table that created this screen so we can link it later
-        screen.autoTableId = table._id
-        await store.actions.screens.create(screen)
-      }
-
-      // Create autolink to newly created list screen
-      const listScreen = screens.find(screen =>
-        screen.props._instanceName.endsWith("List")
-      )
-      await store.actions.components.links.save(
-        listScreen.routing.route,
-        table.name
-      )
+      // Navigate to new table
+      const currentUrl = $url()
+      const path = currentUrl.endsWith("data")
+        ? `./table/${table._id}`
+        : `../../table/${table._id}`
+      $goto(path)
+    } catch (e) {
+      notifications.error(e)
+      // reload in case the table was created
+      await tables.fetch()
     }
-
-    // Navigate to new table
-    const currentUrl = $url()
-    const path = currentUrl.endsWith("data")
-      ? `./table/${table._id}`
-      : `../../table/${table._id}`
-    $goto(path)
   }
 </script>
 
@@ -128,10 +102,6 @@
     </div>
     <Divider />
   </div>
-  <Toggle
-    text="Generate screens in Design section"
-    bind:value={createAutoscreens}
-  />
   <div>
     <Layout gap="XS" noPadding>
       <Label grey extraSmall>Create Table from CSV (Optional)</Label>

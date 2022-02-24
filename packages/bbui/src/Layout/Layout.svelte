@@ -71,6 +71,9 @@
   .gap-L {
     grid-gap: var(--spectrum-alias-grid-gutter-medium);
   }
+  .gap-XL {
+    grid-gap: var(--spectrum-alias-grid-gutter-large);
+  }
   .horizontal.gap-S :global(*) + :global(*) {
     margin-left: var(--spectrum-alias-grid-gutter-xsmall);
   }

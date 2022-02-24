@@ -2,8 +2,12 @@ const Router = require("@koa/router")
 const compress = require("koa-compress")
 const zlib = require("zlib")
 const { routes } = require("./routes")
-const { buildAuthMiddleware, auditLog, buildTenancyMiddleware } =
-  require("@budibase/auth").auth
+const {
+  buildAuthMiddleware,
+  auditLog,
+  buildTenancyMiddleware,
+  buildCsrfMiddleware,
+} = require("@budibase/backend-core/auth")
 
 const PUBLIC_ENDPOINTS = [
   // old deprecated endpoints kept for backwards compat
@@ -65,6 +69,10 @@ const NO_TENANCY_ENDPOINTS = [
   },
 ]
 
+// most public endpoints are gets, but some are posts
+// add them all to be safe
+const NO_CSRF_ENDPOINTS = [...PUBLIC_ENDPOINTS]
+
 const router = new Router()
 router
   .use(
@@ -82,6 +90,7 @@ router
   .use("/health", ctx => (ctx.status = 200))
   .use(buildAuthMiddleware(PUBLIC_ENDPOINTS))
   .use(buildTenancyMiddleware(PUBLIC_ENDPOINTS, NO_TENANCY_ENDPOINTS))
+  .use(buildCsrfMiddleware({ noCsrfPatterns: NO_CSRF_ENDPOINTS }))
   // for now no public access is allowed to worker (bar health check)
   .use((ctx, next) => {
     if (ctx.publicEndpoint) {

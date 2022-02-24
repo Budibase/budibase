@@ -7,6 +7,7 @@
   export let label
   export let disabled = false
   export let validation
+  export let extensions
 
   let fieldState
   let fieldApi
@@ -28,7 +29,14 @@
     for (let i = 0; i < fileList.length; i++) {
       data.append("file", fileList[i])
     }
-    return await API.uploadAttachment(data, formContext?.dataSource?.tableId)
+    try {
+      return await API.uploadAttachment({
+        data,
+        tableId: formContext?.dataSource?.tableId,
+      })
+    } catch (error) {
+      return []
+    }
   }
 </script>
 
@@ -52,6 +60,7 @@
       }}
       {processFiles}
       {handleFileTooLarge}
+      {extensions}
     />
   {/if}
 </Field>

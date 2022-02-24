@@ -3,7 +3,14 @@
   import { database } from "stores/backend"
   import { automationStore } from "builderStore"
   import { notifications } from "@budibase/bbui"
-  import { Input, ModalContent, Layout, Body, Icon } from "@budibase/bbui"
+  import {
+    Input,
+    InlineAlert,
+    ModalContent,
+    Layout,
+    Body,
+    Icon,
+  } from "@budibase/bbui"
   import analytics, { Events } from "analytics"
 
   let name
@@ -17,29 +24,33 @@
     nameTouched && !name ? "Please specify a name for the automation." : null
 
   async function createAutomation() {
-    await automationStore.actions.create({
-      name,
-      instanceId,
-    })
-    const newBlock = $automationStore.selectedAutomation.constructBlock(
-      "TRIGGER",
-      triggerVal.stepId,
-      triggerVal
-    )
+    try {
+      await automationStore.actions.create({
+        name,
+        instanceId,
+      })
+      const newBlock = $automationStore.selectedAutomation.constructBlock(
+        "TRIGGER",
+        triggerVal.stepId,
+        triggerVal
+      )
 
-    automationStore.actions.addBlockToAutomation(newBlock)
-    if (triggerVal.stepId === "WEBHOOK") {
-      webhookModal.show
+      automationStore.actions.addBlockToAutomation(newBlock)
+      if (triggerVal.stepId === "WEBHOOK") {
+        webhookModal.show
+      }
+
+      await automationStore.actions.save(
+        $automationStore.selectedAutomation?.automation
+      )
+
+      notifications.success(`Automation ${name} created`)
+
+      $goto(`./${$automationStore.selectedAutomation.automation._id}`)
+      analytics.captureEvent(Events.AUTOMATION.CREATED, { name })
+    } catch (error) {
+      notifications.error("Error creating automation")
     }
-
-    await automationStore.actions.save(
-      $automationStore.selectedAutomation?.automation
-    )
-
-    notifications.success(`Automation ${name} created.`)
-
-    $goto(`./${$automationStore.selectedAutomation.automation._id}`)
-    analytics.captureEvent(Events.AUTOMATION.CREATED, { name })
   }
   $: triggers = Object.entries($automationStore.blockDefinitions.TRIGGER)
 
@@ -56,6 +67,10 @@
   onConfirm={createAutomation}
   disabled={!selectedTrigger || !name}
 >
+  <InlineAlert
+    header="You must publish your app to activate your automations."
+    message="To test your automation before publishing, you can use the 'Run Test' functionality on the next screen."
+  />
   <Body size="XS"
     >Please name your automation, then select a trigger. Every automation must
     start with a trigger.

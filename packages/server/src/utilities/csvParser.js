@@ -102,8 +102,11 @@ async function transform({ schema, csvString, existingTable }) {
     schema = updateSchema({ schema, existingTable })
   }
 
-  for (let key of Object.keys(schema)) {
-    colParser[key] = PARSERS[schema[key].type] || schema[key].type
+  for (let [key, field] of Object.entries(schema)) {
+    // don't import data to auto columns
+    if (!field.autocolumn) {
+      colParser[key] = PARSERS[field.type] || field.type
+    }
   }
 
   try {

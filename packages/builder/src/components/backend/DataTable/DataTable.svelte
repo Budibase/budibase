@@ -14,18 +14,19 @@
   import Table from "./Table.svelte"
   import { TableNames } from "constants"
   import CreateEditRow from "./modals/CreateEditRow.svelte"
-  import { fetchTableData } from "helpers/fetchTableData"
   import { Pagination } from "@budibase/bbui"
+  import { fetchData } from "@budibase/frontend-core"
+  import { API } from "api"
 
   let hideAutocolumns = true
+
   $: isUsersTable = $tables.selected?._id === TableNames.USERS
   $: type = $tables.selected?.type
   $: isInternal = type !== "external"
   $: schema = $tables.selected?.schema
   $: enrichedSchema = enrichSchema($tables.selected?.schema)
   $: id = $tables.selected?._id
-  $: search = searchTable(id)
-  $: columnOptions = Object.keys($search.schema || {})
+  $: fetch = createFetch(id)
 
   const enrichSchema = schema => {
     let tempSchema = { ...schema }
@@ -47,18 +48,24 @@
     return tempSchema
   }
   // Fetches new data whenever the table changes
-  const searchTable = tableId => {
-    return fetchTableData({
-      tableId,
-      schema,
-      limit: 10,
-      paginate: true,
+  const createFetch = tableId => {
+    return fetchData({
+      API,
+      datasource: {
+        tableId,
+        type: "table",
+      },
+      options: {
+        schema,
+        limit: 10,
+        paginate: true,
+      },
     })
   }
 
   // Fetch data whenever sorting option changes
   const onSort = e => {
-    search.update({
+    fetch.update({
       sortColumn: e.detail.column,
       sortOrder: e.detail.order,
     })
@@ -66,22 +73,20 @@
 
   // Fetch data whenever filters change
   const onFilter = e => {
-    search.update({
-      filters: e.detail,
+    fetch.update({
+      filter: e.detail,
     })
   }
 
   // Fetch data whenever schema changes
   const onUpdateColumns = () => {
-    search.update({
-      schema,
-    })
+    fetch.refresh()
   }
 
   // Fetch data whenever rows are modified. Unfortunately we have to lose
   // our pagination place, as our bookmarks will have shifted.
   const onUpdateRows = () => {
-    search.update()
+    fetch.refresh()
   }
 </script>
 
@@ -91,9 +96,9 @@
     schema={enrichedSchema}
     {type}
     tableId={id}
-    data={$search.rows}
+    data={$fetch.rows}
     bind:hideAutocolumns
-    loading={$search.loading}
+    loading={!$fetch.loaded}
     on:sort={onSort}
     allowEditing
     disableSorting
@@ -138,11 +143,11 @@
     <div in:fade={{ delay: 200, duration: 100 }}>
       <div class="pagination">
         <Pagination
-          page={$search.pageNumber + 1}
-          hasPrevPage={$search.hasPrevPage}
-          hasNextPage={$search.hasNextPage}
-          goToPrevPage={$search.loading ? null : search.prevPage}
-          goToNextPage={$search.loading ? null : search.nextPage}
+          page={$fetch.pageNumber + 1}
+          hasPrevPage={$fetch.hasPrevPage}
+          hasNextPage={$fetch.hasNextPage}
+          goToPrevPage={$fetch.loading ? null : fetch.prevPage}
+          goToNextPage={$fetch.loading ? null : fetch.nextPage}
         />
       </div>
     </div>

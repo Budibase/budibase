@@ -1,6 +1,6 @@
 <script>
   import { isEmpty } from "lodash/fp"
-  import { Input, DetailSummary } from "@budibase/bbui"
+  import { Input, DetailSummary, notifications } from "@budibase/bbui"
   import { store } from "builderStore"
   import PropertyControl from "./PropertyControls/PropertyControl.svelte"
   import LayoutSelect from "./PropertyControls/LayoutSelect.svelte"
@@ -40,7 +40,13 @@
     ]
   }
 
-  const updateProp = store.actions.components.updateProp
+  const updateProp = async (key, value) => {
+    try {
+      await store.actions.components.updateProp(key, value)
+    } catch (error) {
+      notifications.error("Error updating component prop")
+    }
+  }
 
   const canRenderControl = setting => {
     const control = getComponentForSettingType(setting?.type)
@@ -63,7 +69,14 @@
       // If no specific value is depended upon, check if a value exists at all
       // for the dependent setting
       if (dependantValue == null) {
-        return !isEmpty(componentInstance[dependantSetting])
+        const currentValue = componentInstance[dependantSetting]
+        if (currentValue === false) {
+          return false
+        }
+        if (currentValue === true) {
+          return true
+        }
+        return !isEmpty(currentValue)
       }
 
       // Otherwise check the value matches

@@ -11,7 +11,15 @@
   import ComponentNavigationTree from "components/design/NavigationPanel/ComponentNavigationTree/index.svelte"
   import Layout from "components/design/NavigationPanel/Layout.svelte"
   import NewLayoutModal from "components/design/NavigationPanel/NewLayoutModal.svelte"
-  import { Icon, Modal, Select, Search, Tabs, Tab } from "@budibase/bbui"
+  import {
+    Icon,
+    Modal,
+    Select,
+    Search,
+    Tabs,
+    Tab,
+    notifications,
+  } from "@budibase/bbui"
 
   export let showModal
 
@@ -25,8 +33,7 @@
       key: "layout",
     },
   ]
-
-  let modal
+  let newLayoutModal
   $: selected = tabs.find(t => t.key === $params.assetType)?.title || "Screens"
 
   const navigate = ({ detail }) => {
@@ -59,8 +66,12 @@
     selectedAccessRole.set(role)
   }
 
-  onMount(() => {
-    store.actions.routing.fetch()
+  onMount(async () => {
+    try {
+      await store.actions.routing.fetch()
+    } catch (error) {
+      notifications.error("Error fetching routes")
+    }
   })
 </script>
 
@@ -93,14 +104,18 @@
         {#each $store.layouts as layout, idx (layout._id)}
           <Layout {layout} border={idx > 0} />
         {/each}
-        <Modal bind:this={modal}>
+        <Modal bind:this={newLayoutModal}>
           <NewLayoutModal />
         </Modal>
       </div>
     </Tab>
   </Tabs>
   <div class="add-button">
-    <Icon hoverable name="AddCircle" on:click={showModal()} />
+    <Icon
+      hoverable
+      name="AddCircle"
+      on:click={selected === "Layouts" ? newLayoutModal.show() : showModal()}
+    />
   </div>
 </div>
 

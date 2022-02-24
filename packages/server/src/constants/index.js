@@ -1,6 +1,6 @@
-const { BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
-const { UserStatus } = require("@budibase/auth").constants
-const { ObjectStoreBuckets } = require("@budibase/auth").objectStore
+const { BUILTIN_ROLE_IDS } = require("@budibase/backend-core/roles")
+const { UserStatus } = require("@budibase/backend-core/constants")
+const { ObjectStoreBuckets } = require("@budibase/backend-core/objectStore")
 
 exports.JobQueues = {
   AUTOMATIONS: "automationQueue",
@@ -45,17 +45,25 @@ exports.FieldTypes = {
   INTERNAL: "internal",
 }
 
-exports.SwitchableTypes = [
-  exports.FieldTypes.STRING,
-  exports.FieldTypes.OPTIONS,
-  exports.FieldTypes.NUMBER,
-  exports.FieldTypes.BOOLEAN,
+exports.CanSwitchTypes = [
+  [exports.FieldTypes.JSON, exports.FieldTypes.ARRAY],
+  [exports.FieldTypes.STRING, exports.FieldTypes.OPTIONS],
+  [exports.FieldTypes.BOOLEAN, exports.FieldTypes.NUMBER],
 ]
+
+exports.SwitchableTypes = exports.CanSwitchTypes.reduce((prev, current) =>
+  prev ? prev.concat(current) : current
+)
 
 exports.RelationshipTypes = {
   ONE_TO_MANY: "one-to-many",
   MANY_TO_ONE: "many-to-one",
   MANY_TO_MANY: "many-to-many",
+}
+
+exports.FormulaTypes = {
+  STATIC: "static",
+  DYNAMIC: "dynamic",
 }
 
 exports.AuthTypes = {
@@ -73,6 +81,10 @@ exports.DataSourceOperation = {
   CREATE_TABLE: "CREATE_TABLE",
   UPDATE_TABLE: "UPDATE_TABLE",
   DELETE_TABLE: "DELETE_TABLE",
+}
+
+exports.DatasourceAuthTypes = {
+  GOOGLE: "google",
 }
 
 exports.SortDirection = {

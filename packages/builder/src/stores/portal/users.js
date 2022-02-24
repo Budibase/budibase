@@ -1,38 +1,28 @@
 import { writable } from "svelte/store"
-import api, { post } from "builderStore/api"
+import { API } from "api"
 import { update } from "lodash"
 
 export function createUsersStore() {
   const { subscribe, set } = writable([])
 
   async function init() {
-    const response = await api.get(`/api/global/users`)
-    const json = await response.json()
-    set(json)
+    const users = await API.getUsers()
+    set(users)
   }
 
   async function invite({ email, builder, admin }) {
-    const body = { email, userInfo: {} }
-    if (admin) {
-      body.userInfo.admin = {
-        global: true,
-      }
-    }
-    if (builder) {
-      body.userInfo.builder = {
-        global: true,
-      }
-    }
-    const response = await api.post(`/api/global/users/invite`, body)
-    return await response.json()
+    return API.inviteUser({
+      email,
+      builder,
+      admin,
+    })
   }
 
   async function acceptInvite(inviteCode, password) {
-    const response = await api.post("/api/global/users/invite/accept", {
+    return API.acceptInvite({
       inviteCode,
       password,
     })
-    return await response.json()
   }
 
   async function create({
@@ -56,29 +46,17 @@ export function createUsersStore() {
     if (admin) {
       body.admin = { global: true }
     }
-    const response = await api.post("/api/global/users", body)
+    await API.saveUser(body)
     await init()
-    return await response.json()
   }
 
   async function del(id) {
-    const response = await api.delete(`/api/global/users/${id}`)
+    await API.deleteUser(id)
     update(users => users.filter(user => user._id !== id))
-    const json = await response.json()
-    return {
-      ...json,
-      status: response.status,
-    }
   }
 
   async function save(data) {
-    try {
-      const res = await post(`/api/global/users`, data)
-      return await res.json()
-    } catch (error) {
-      console.log(error)
-      return error
-    }
+    await API.saveUser(data)
   }
 
   return {

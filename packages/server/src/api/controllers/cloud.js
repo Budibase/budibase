@@ -1,13 +1,15 @@
 const env = require("../../environment")
-const { getAllApps } = require("@budibase/auth/db")
-const CouchDB = require("../../db")
+const { getAllApps } = require("@budibase/backend-core/db")
 const {
   exportDB,
   sendTempFile,
   readFileSync,
 } = require("../../utilities/fileSystem")
 const { stringToReadStream } = require("../../utilities")
-const { getGlobalDBName, getGlobalDB } = require("@budibase/auth/tenancy")
+const {
+  getGlobalDBName,
+  getGlobalDB,
+} = require("@budibase/backend-core/tenancy")
 const { create } = require("./application")
 const { getDocParams, DocumentTypes, isDevAppID } = require("../../db/utils")
 
@@ -27,7 +29,7 @@ exports.exportApps = async ctx => {
   if (env.SELF_HOSTED || !env.MULTI_TENANCY) {
     ctx.throw(400, "Exporting only allowed in multi-tenant cloud environments.")
   }
-  const apps = await getAllApps(CouchDB, { all: true })
+  const apps = await getAllApps({ all: true })
   const globalDBString = await exportDB(getGlobalDBName(), {
     filter: doc => !doc._id.startsWith(DocumentTypes.USER),
   })
@@ -60,7 +62,7 @@ async function hasBeenImported() {
   if (!env.SELF_HOSTED || env.MULTI_TENANCY) {
     return true
   }
-  const apps = await getAllApps(CouchDB, { all: true })
+  const apps = await getAllApps({ all: true })
   return apps.length !== 0
 }
 

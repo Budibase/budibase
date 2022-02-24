@@ -1,11 +1,10 @@
-const CouchDB = require("../../db")
 const { outputProcessing } = require("../../utilities/rowProcessor")
 const { InternalTables } = require("../../db/utils")
 const { getFullUser } = require("../../utilities/users")
-const { BUILTIN_ROLE_IDS } = require("@budibase/auth/roles")
+const { BUILTIN_ROLE_IDS } = require("@budibase/backend-core/roles")
+const { getAppDB, getAppId } = require("@budibase/backend-core/context")
 
 exports.fetchSelf = async ctx => {
-  const appId = ctx.appId
   let userId = ctx.user.userId || ctx.user._id
   /* istanbul ignore next */
   if (!userId) {
@@ -16,16 +15,20 @@ exports.fetchSelf = async ctx => {
   const user = await getFullUser(ctx, userId)
   // this shouldn't be returned by the app self
   delete user.roles
+  // forward the csrf token from the session
+  user.csrfToken = ctx.user.csrfToken
 
-  if (appId) {
-    const db = new CouchDB(appId)
+  if (getAppId()) {
+    const db = getAppDB()
     // remove the full roles structure
     delete user.roles
     try {
       const userTable = await db.get(InternalTables.USER_METADATA)
       const metadata = await db.get(userId)
+      // make sure there is never a stale csrf token
+      delete metadata.csrfToken
       // specifically needs to make sure is enriched
-      ctx.body = await outputProcessing(ctx, userTable, {
+      ctx.body = await outputProcessing(userTable, {
         ...user,
         ...metadata,
       })

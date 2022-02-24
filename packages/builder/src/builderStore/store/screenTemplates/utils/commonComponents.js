@@ -137,16 +137,19 @@ const fieldTypeToComponentMap = {
   datetime: "datetimefield",
   attachment: "attachmentfield",
   link: "relationshipfield",
+  json: "jsonfield",
 }
 
 export function makeDatasourceFormComponents(datasource) {
-  const { schema } = getSchemaForDatasource(null, datasource, true)
+  const { schema } = getSchemaForDatasource(null, datasource, {
+    formSchema: true,
+  })
   let components = []
   let fields = Object.keys(schema || {})
   fields.forEach(field => {
     const fieldSchema = schema[field]
     // skip autocolumns
-    if (fieldSchema.autocolumn) {
+    if (fieldSchema.autocolumn || fieldSchema.nestedJSON) {
       return
     }
     const fieldType =
@@ -166,6 +169,11 @@ export function makeDatasourceFormComponents(datasource) {
           placeholder: "Choose an option",
           optionsType: "select",
           optionsSource: "schema",
+        })
+      }
+      if (fieldType === "longform") {
+        component.customProps({
+          format: "auto",
         })
       }
       if (fieldType === "array") {

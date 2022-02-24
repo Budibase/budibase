@@ -4,7 +4,7 @@ const authorized = require("../../middleware/authorized")
 const {
   PermissionLevels,
   PermissionTypes,
-} = require("@budibase/auth/permissions")
+} = require("@budibase/backend-core/permissions")
 
 const router = Router()
 
@@ -38,6 +38,16 @@ router
     "/api/users/metadata/sync/:id",
     authorized(PermissionTypes.USER, PermissionLevels.WRITE),
     controller.syncUser
+  )
+  .post(
+    "/api/users/flags",
+    authorized(PermissionTypes.USER, PermissionLevels.WRITE),
+    controller.setFlag
+  )
+  .get(
+    "/api/users/flags",
+    authorized(PermissionTypes.USER, PermissionLevels.READ),
+    controller.getFlags
   )
 
 module.exports = router

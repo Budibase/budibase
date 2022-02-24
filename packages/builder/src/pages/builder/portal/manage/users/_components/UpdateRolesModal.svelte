@@ -18,33 +18,31 @@
   let selectedRole = user?.roles?.[app?._id]
 
   async function updateUserRoles() {
-    let res
-    if (selectedRole === NO_ACCESS) {
-      // remove the user role
-      const filteredRoles = { ...user.roles }
-      delete filteredRoles[app?._id]
-      res = await users.save({
-        ...user,
-        roles: {
-          ...filteredRoles,
-        },
-      })
-    } else {
-      // add the user role
-      res = await users.save({
-        ...user,
-        roles: {
-          ...user.roles,
-          [app._id]: selectedRole,
-        },
-      })
-    }
-
-    if (res.status === 400) {
-      notifications.error("Failed to update role")
-    } else {
+    try {
+      if (selectedRole === NO_ACCESS) {
+        // Remove the user role
+        const filteredRoles = { ...user.roles }
+        delete filteredRoles[app?._id]
+        await users.save({
+          ...user,
+          roles: {
+            ...filteredRoles,
+          },
+        })
+      } else {
+        // Add the user role
+        await users.save({
+          ...user,
+          roles: {
+            ...user.roles,
+            [app._id]: selectedRole,
+          },
+        })
+      }
       notifications.success("Role updated")
       dispatch("update")
+    } catch (error) {
+      notifications.error("Failed to update role")
     }
   }
 </script>

@@ -10,6 +10,7 @@
     Icon,
     Body,
     Modal,
+    notifications,
   } from "@budibase/bbui"
   import { onMount } from "svelte"
   import { apps, organisation, auth } from "stores/portal"
@@ -26,20 +27,39 @@
   let changePasswordModal
 
   onMount(async () => {
-    await organisation.init()
-    await apps.load()
+    try {
+      await organisation.init()
+      await apps.load()
+    } catch (error) {
+      notifications.error("Error loading apps")
+    }
     loaded = true
   })
 
   const publishedAppsOnly = app => app.status === AppStatus.DEPLOYED
 
   $: publishedApps = $apps.filter(publishedAppsOnly)
-
   $: userApps = $auth.user?.builder?.global
     ? publishedApps
     : publishedApps.filter(app =>
         Object.keys($auth.user?.roles).includes(app.prodId)
       )
+
+  function getUrl(app) {
+    if (app.url) {
+      return `/app${app.url}`
+    } else {
+      return `/${app.prodId}`
+    }
+  }
+
+  const logout = async () => {
+    try {
+      await auth.logout()
+    } catch (error) {
+      // Swallow error and do nothing
+    }
+  }
 </script>
 
 {#if $auth.user && loaded}
@@ -75,7 +95,7 @@
                   Open developer mode
                 </MenuItem>
               {/if}
-              <MenuItem icon="LogOut" on:click={auth.logout}>Log out</MenuItem>
+              <MenuItem icon="LogOut" on:click={logout}>Log out</MenuItem>
             </ActionMenu>
           </div>
           <Layout noPadding gap="XS">
@@ -93,7 +113,7 @@
             <div class="group">
               <Layout gap="S" noPadding>
                 {#each userApps as app, idx (app.appId)}
-                  <a class="app" target="_blank" href={`/${app.prodId}`}>
+                  <a class="app" target="_blank" href={getUrl(app)}>
                     <div class="preview" use:gradient={{ seed: app.name }} />
                     <div class="app-info">
                       <Heading size="XS">{app.name}</Heading>

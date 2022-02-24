@@ -1,29 +1,30 @@
 <script>
   import { store, automationStore } from "builderStore"
-  import { roles } from "stores/backend"
+  import { roles, flags } from "stores/backend"
   import { Icon, ActionGroup, Tabs, Tab, notifications } from "@budibase/bbui"
   import DeployModal from "components/deploy/DeployModal.svelte"
   import RevertModal from "components/deploy/RevertModal.svelte"
   import VersionModal from "components/deploy/VersionModal.svelte"
   import NPSFeedbackForm from "components/feedback/NPSFeedbackForm.svelte"
-  import { get, post } from "builderStore/api"
+  import { API } from "api"
   import { auth, admin } from "stores/portal"
   import { isActive, goto, layout, redirect } from "@roxi/routify"
   import Logo from "assets/bb-emblem.svg"
   import { capitalise } from "helpers"
-  import UpgradeModal from "../../../../components/upgrade/UpgradeModal.svelte"
-  import { onMount } from "svelte"
+  import UpgradeModal from "components/upgrade/UpgradeModal.svelte"
+  import { onMount, onDestroy } from "svelte"
+
+  export let application
 
   // Get Package and set store
-  export let application
   let promise = getPackage()
-  // sync once when you load the app
+
+  // Sync once when you load the app
   let hasSynced = false
+  let userShouldPostFeedback = false
   $: selected = capitalise(
     $layout.children.find(layout => $isActive(layout.path))?.title ?? "data"
   )
-
-  let userShouldPostFeedback = false
 
   function previewApp() {
     if (!$auth?.user?.flags?.feedbackSubmitted) {
@@ -33,33 +34,24 @@
   }
 
   async function getPackage() {
-    const res = await get(`/api/applications/${application}/appPackage`)
-    const pkg = await res.json()
-
-    if (res.ok) {
-      try {
-        await store.actions.initialise(pkg)
-        // edge case, lock wasn't known to client when it re-directed, or user went directly
-      } catch (err) {
-        if (!err.ok && err.reason === "locked") {
-          $redirect("../../")
-        } else {
-          throw err
-        }
-      }
+    try {
+      const pkg = await API.fetchAppPackage(application)
+      await store.actions.initialise(pkg)
       await automationStore.actions.fetch()
       await roles.fetch()
+      await flags.fetch()
       return pkg
-    } else {
-      throw new Error(pkg)
+    } catch (error) {
+      notifications.error(`Error initialising app: ${error?.message}`)
+      $redirect("../../")
     }
   }
 
-  // handles navigation between frontend, backend, automation.
-  // this remembers your last place on each of the sections
+  // Handles navigation between frontend, backend, automation.
+  // This remembers your last place on each of the sections
   // e.g. if one of your screens is selected on front end, then
   // you browse to backend, when you click frontend, you will be
-  // brought back to the same screen
+  // brought back to the same screen.
   const topItemNavigate = path => () => {
     const activeTopNav = $layout.children.find(c => $isActive(c.path))
     if (!activeTopNav) return
@@ -73,12 +65,17 @@
 
   onMount(async () => {
     if (!hasSynced && application) {
-      const res = await post(`/api/applications/${application}/sync`)
-      if (res.status !== 200) {
+      try {
+        await API.syncApp(application)
+      } catch (error) {
         notifications.error("Failed to sync with production database")
       }
       hasSynced = true
     }
+  })
+
+  onDestroy(() => {
+    store.actions.reset()
   })
 </script>
 
