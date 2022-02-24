@@ -1,5 +1,6 @@
 import { writable, get } from "svelte/store"
 import { API } from "api"
+import { devToolsStore } from "./devTools.js"
 
 const dispatchEvent = (type, data = {}) => {
   window.parent.postMessage({ type, data })
@@ -31,6 +32,7 @@ const createBuilderStore = () => {
         editMode: false,
         selectedComponentId: id,
       }))
+      devToolsStore.actions.setAllowSelection(false)
       dispatchEvent("select-component", { id })
     },
     updateProp: (prop, value) => {

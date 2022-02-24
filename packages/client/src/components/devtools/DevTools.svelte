@@ -38,6 +38,7 @@
     background: var(--spectrum-alias-background-color-secondary);
     flex: 0 0 320px;
     border-left: 1px solid var(--spectrum-global-color-gray-300);
+    overflow: auto;
   }
   .devtools.mobile {
     display: none;

@@ -12,7 +12,11 @@
   import { writable, get } from "svelte/store"
   import * as AppComponents from "components/app"
   import Router from "./Router.svelte"
-  import { enrichProps, propsAreSame } from "utils/componentProps"
+  import {
+    enrichProps,
+    propsAreSame,
+    getSettingsDefinition,
+  } from "utils/componentProps"
   import { builderStore, devToolsStore, componentStore } from "stores"
   import { Helpers } from "@budibase/bbui"
   import Manifest from "manifest.json"
@@ -205,22 +209,6 @@
     const prefix = "@budibase/standard-components/"
     const type = component?.replace(prefix, "")
     return type ? Manifest[type] : null
-  }
-
-  // Gets the definition of this component's settings from the manifest
-  const getSettingsDefinition = definition => {
-    if (!definition) {
-      return []
-    }
-    let settings = []
-    definition.settings?.forEach(setting => {
-      if (setting.section) {
-        settings = settings.concat(setting.settings || [])
-      } else {
-        settings.push(setting)
-      }
-    })
-    return settings
   }
 
   const getInstanceSettings = (instance, settingsDefinition) => {

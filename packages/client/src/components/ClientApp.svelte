@@ -208,6 +208,7 @@
     flex-direction: row;
     justify-content: flex-start;
     align-items: stretch;
+    overflow: hidden;
   }
 
   .error {

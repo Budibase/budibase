@@ -30,7 +30,7 @@
 </script>
 
 <div class="dev-preview-header" class:mobile={$context.device.mobile}>
-  <Heading size="XS">Application Preview</Heading>
+  <Heading size="XS">Budibase App Preview</Heading>
   <Select
     quiet
     options={previewOptions}
@@ -53,6 +53,7 @@
 
 <style>
   .dev-preview-header {
+    flex: 0 0 50px;
     height: 50px;
     display: grid;
     align-items: center;
