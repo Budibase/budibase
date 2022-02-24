@@ -18,6 +18,15 @@ export const buildOtherEndpoints = API => ({
   },
 
   /**
+   * Gets the current system status.
+   */
+  getSystemStatus: async () => {
+    return await API.get({
+      url: "/api/system/status",
+    })
+  },
+
+  /**
    * Gets the list of available integrations.
    */
   getIntegrations: async () => {

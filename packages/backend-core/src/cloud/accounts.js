@@ -22,3 +22,18 @@ exports.getAccount = async email => {
 
   return json[0]
 }
+
+exports.getStatus = async () => {
+  const response = await api.get(`/api/status`, {
+    headers: {
+      [Headers.API_KEY]: env.ACCOUNT_PORTAL_API_KEY,
+    },
+  })
+  const json = await response.json()
+
+  if (response.status !== 200) {
+    throw new Error(`Error getting status`)
+  }
+
+  return json
+}
