@@ -29,6 +29,7 @@
   {disabled}
   on:click|preventDefault
   on:mouseover={() => (showTooltip = true)}
+  on:focus={() => (showTooltip = true)}
   on:mouseleave={() => (showTooltip = false)}
 >
   {#if icon}
