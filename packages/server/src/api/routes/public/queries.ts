@@ -1,6 +1,6 @@
-const controller = require("../../controllers/public/queries")
-const Endpoint = require("./utils/Endpoint")
-const { nameValidator } = require("../utils/validators")
+import controller from "../../controllers/public/queries"
+import Endpoint from "./utils/Endpoint"
+import { nameValidator } from "../utils/validators"
 
 const read = [],
   write = []
@@ -89,4 +89,4 @@ read.push(
  */
 write.push(new Endpoint("post", "/queries/:queryId", controller.execute))
 
-module.exports = { read, write }
+export default { read, write }

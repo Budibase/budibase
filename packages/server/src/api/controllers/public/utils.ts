@@ -1,8 +1,11 @@
 const { getAppDB } = require("@budibase/backend-core/context")
-const { isExternalTable } = require("../../../integrations/utils")
+import { isExternalTable } from "../../../integrations/utils"
 
-exports.addRev = async (body, tableId) => {
-  if (!body._id || isExternalTable(tableId)) {
+export async function addRev(
+  body: { _id?: string; _rev?: string },
+  tableId?: string
+) {
+  if (!body._id || (tableId && isExternalTable(tableId))) {
     return body
   }
   const db = getAppDB()
@@ -16,7 +19,7 @@ exports.addRev = async (body, tableId) => {
  * provided key and value. This will be a string based search, using the
  * startsWith function.
  */
-exports.search = (docs, value, key = "name") => {
+export function search(docs: any[], value: any, key = "name") {
   if (!value || typeof value !== "string") {
     return docs
   }

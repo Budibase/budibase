@@ -1,6 +1,6 @@
-const controller = require("../../controllers/public/users")
-const Endpoint = require("./utils/Endpoint")
-const { nameValidator } = require("../utils/validators")
+import controller from "../../controllers/public/users"
+import Endpoint from "./utils/Endpoint"
+import { nameValidator } from "../utils/validators"
 
 const read = [],
   write = []
@@ -117,7 +117,7 @@ write.push(new Endpoint("put", "/users/:userId", controller.update))
  *               user:
  *                 $ref: '#/components/examples/user'
  */
-write.push(new Endpoint("delete", "/users/:userId", controller.delete))
+write.push(new Endpoint("delete", "/users/:userId", controller.destroy))
 
 /**
  * @openapi
@@ -142,4 +142,4 @@ write.push(new Endpoint("delete", "/users/:userId", controller.delete))
  */
 read.push(new Endpoint("get", "/users/:userId", controller.read))
 
-module.exports = { read, write }
+export default { read, write }

@@ -1,6 +1,6 @@
-const controller = require("../../controllers/public/applications")
-const Endpoint = require("./utils/Endpoint")
-const { nameValidator } = require("../utils/validators")
+import controller from "../../controllers/public/applications"
+import Endpoint from "./utils/Endpoint"
+const { nameValidator, applicationValidator } = require("../utils/validators")
 
 const read = [],
   write = []
@@ -118,7 +118,7 @@ write.push(new Endpoint("put", "/applications/:appId", controller.update))
  *               application:
  *                 $ref: '#/components/examples/application'
  */
-write.push(new Endpoint("delete", "/applications/:appId", controller.delete))
+write.push(new Endpoint("delete", "/applications/:appId", controller.destroy))
 
 /**
  * @openapi
@@ -142,4 +142,4 @@ write.push(new Endpoint("delete", "/applications/:appId", controller.delete))
  */
 read.push(new Endpoint("get", "/applications/:appId", controller.read))
 
-module.exports = { read, write }
+export default { read, write }
