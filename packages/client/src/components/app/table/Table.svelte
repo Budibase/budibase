@@ -3,6 +3,7 @@
   import { Table } from "@budibase/bbui"
   import SlotRenderer from "./SlotRenderer.svelte"
   import { UnsortableTypes } from "../../../constants"
+  import { onDestroy } from "svelte"
 
   export let dataProvider
   export let columns
@@ -38,13 +39,13 @@
     dataProvider?.id,
     ActionTypes.SetDataProviderSorting
   )
-
   $: {
     rowSelectionStore.actions.updateSelection(
       $component.id,
       selectedRows.map(row => row._id)
     )
   }
+
   const getFields = (schema, customColumns, showAutoColumns) => {
     // Check for an invalid column selection
     let invalid = false
@@ -125,6 +126,10 @@
     const split = linkURL.split("/:")
     routeStore.actions.navigate(`${split[0]}/${id}`, linkPeek)
   }
+
+  onDestroy(() => {
+    rowSelectionStore.actions.updateSelection($component.id, [])
+  })
 </script>
 
 <div use:styleable={$component.styles} class={size}>
@@ -136,7 +141,7 @@
     {quiet}
     {compact}
     {customRenderers}
-    {allowSelectRows}
+    allowSelectRows={!!allowSelectRows}
     bind:selectedRows
     allowEditRows={false}
     allowEditColumns={false}
@@ -148,8 +153,10 @@
   >
     <slot />
   </Table>
-  {#if allowSelectRows}
-    <div class="row-count">{selectedRows.length} record(s) selected</div>
+  {#if allowSelectRows && selectedRows.length}
+    <div class="row-count">
+      {selectedRows.length} row{selectedRows.length === 1 ? "" : "s"} selected
+    </div>
   {/if}
 </div>
 
@@ -159,7 +166,6 @@
   }
 
   .row-count {
-    margin-top: calc(1.4 * var(--spacing-xl));
-    position: absolute;
+    margin-top: var(--spacing-l);
   }
 </style>
