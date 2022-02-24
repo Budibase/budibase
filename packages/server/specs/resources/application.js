@@ -15,15 +15,17 @@ const application = {
   lockedBy: userResource.getExamples().user.value.user,
 }
 
-const applicationSchema = object({
-  name: {
-    type: "string",
-    required: true,
+const applicationSchema = object(
+  {
+    name: {
+      type: "string",
+    },
+    url: {
+      type: "string",
+    },
   },
-  url: {
-    type: "string",
-  },
-})
+  { required: ["name", "url"] }
+)
 
 module.exports = new Resource()
   .setExamples({
