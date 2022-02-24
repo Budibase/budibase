@@ -1,5 +1,6 @@
 const controller = require("../../controllers/public/queries")
 const Endpoint = require("./utils/Endpoint")
+const { nameValidator } = require("../utils/validators")
 
 const read = [],
   write = []
@@ -35,7 +36,11 @@ const read = [],
  *               queries:
  *                 $ref: '#/components/examples/queries'
  */
-read.push(new Endpoint("post", "/queries/search", controller.search))
+read.push(
+  new Endpoint("post", "/queries/search", controller.search).addMiddleware(
+    nameValidator()
+  )
+)
 
 /**
  * @openapi

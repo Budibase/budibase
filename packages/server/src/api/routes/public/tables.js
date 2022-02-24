@@ -1,6 +1,6 @@
 const controller = require("../../controllers/public/tables")
 const Endpoint = require("./utils/Endpoint")
-const { tableValidator } = require("../utils/validators")
+const { tableValidator, nameValidator } = require("../utils/validators")
 
 const read = [],
   write = []
@@ -36,7 +36,11 @@ const read = [],
  *               tables:
  *                 $ref: '#/components/examples/tables'
  */
-read.push(new Endpoint("post", "/tables/search", controller.search))
+read.push(
+  new Endpoint("post", "/tables/search", controller.search).addMiddleware(
+    nameValidator()
+  )
+)
 
 /**
  * @openapi

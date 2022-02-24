@@ -8,6 +8,7 @@ class Endpoint {
 
   addMiddleware(middleware) {
     this.middlewares.push(middleware)
+    return this
   }
 
   apply(router) {
