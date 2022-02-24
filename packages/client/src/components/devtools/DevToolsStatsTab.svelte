@@ -8,10 +8,12 @@
   <DevToolsStat label="App" value={$appStore.application?.name} />
   <DevToolsStat label="Tenant" value={$appStore.application?.tenantId} />
   <DevToolsStat label="Version" value={$appStore.application?.version} />
-  <DevToolsStat
-    label="Client load time"
-    value={`${$appStore.clientLoadTime} ms`}
-  />
+  {#if $appStore.clientLoadTime}
+    <DevToolsStat
+      label="Client load time"
+      value={`${$appStore.clientLoadTime} ms`}
+    />
+  {/if}
   <DevToolsStat label="App layouts" value={$screenStore.layouts?.length || 0} />
   <DevToolsStat label="Active layout" value={$screenStore.activeLayout?.name} />
   <DevToolsStat label="App screens" value={$screenStore.screens?.length || 0} />

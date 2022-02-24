@@ -82,10 +82,10 @@
     id="spectrum-root"
     lang="en"
     dir="ltr"
-    className="spectrum spectrum--medium {$themeStore.theme}"
+    class="spectrum spectrum--medium {$themeStore.theme}"
   >
     {#if permissionError}
-      <div className="error">
+      <div class="error">
         <Layout justifyItems="center" gap="S">
           {@html ErrorSVG}
           <Heading size="L">You don't have permission to use this app</Heading>

@@ -1,5 +1,5 @@
 import { get } from "svelte/store"
-import { localStorageStore } from "builder/src/builderStore/store/localStorage"
+import { createLocalStorageStore } from "@budibase/frontend-core"
 import { appStore } from "./app"
 import { initialise } from "./initialise"
 import { authStore } from "./auth"
@@ -12,7 +12,7 @@ const initialState = {
 
 const createDevToolStore = () => {
   const localStorageKey = `${get(appStore).appId}.devTools`
-  const store = localStorageStore(localStorageKey, initialState)
+  const store = createLocalStorageStore(localStorageKey, initialState)
 
   const setVisible = visible => {
     store.update(state => ({
