@@ -7,43 +7,6 @@ const read = [],
 
 /**
  * @openapi
- * /tables/search:
- *   post:
- *     summary: Search internal and external tables based on their name.
- *     tags:
- *       - tables
- *     parameters:
- *       - $ref: '#/components/parameters/appId'
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/nameSearch'
- *     responses:
- *       200:
- *         description: Returns the found tables, based on the search parameters.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 applications:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/table'
- *             examples:
- *               tables:
- *                 $ref: '#/components/examples/tables'
- */
-read.push(
-  new Endpoint("post", "/tables/search", controller.search).addMiddleware(
-    nameValidator()
-  )
-)
-
-/**
- * @openapi
  * /tables:
  *   post:
  *     summary: Create a new table.
@@ -157,5 +120,44 @@ write.push(new Endpoint("delete", "/tables/:tableId", controller.destroy))
  *                 $ref: '#/components/examples/table'
  */
 read.push(new Endpoint("get", "/tables/:tableId", controller.read))
+
+/**
+ * @openapi
+ * /tables/search:
+ *   post:
+ *     summary: Search internal and external tables based on their name.
+ *     tags:
+ *       - tables
+ *     parameters:
+ *       - $ref: '#/components/parameters/appId'
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/nameSearch'
+ *     responses:
+ *       200:
+ *         description: Returns the found tables, based on the search parameters.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required:
+ *                 - tables
+ *               properties:
+ *                 tables:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/table'
+ *             examples:
+ *               tables:
+ *                 $ref: '#/components/examples/tables'
+ */
+read.push(
+  new Endpoint("post", "/tables/search", controller.search).addMiddleware(
+    nameValidator()
+  )
+)
 
 export default { read, write }

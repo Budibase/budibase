@@ -7,40 +7,6 @@ const read = [],
 
 /**
  * @openapi
- * /users/search:
- *   post:
- *     summary: Search for a user based on their email/username.
- *     tags:
- *       - users
- *     parameters:
- *       - $ref: '#/components/parameters/appId'
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/nameSearch'
- *     responses:
- *       200:
- *         description: Returns the found users based on search parameters.
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/user'
- *             examples:
- *               users:
- *                 $ref: '#/components/examples/users'
- */
-read.push(
-  new Endpoint("post", "/users/search", controller.search).addMiddleware(
-    nameValidator()
-  )
-)
-
-/**
- * @openapi
  * /users:
  *   post:
  *     summary: Create a new user in the Budibase portal.
@@ -141,5 +107,44 @@ write.push(new Endpoint("delete", "/users/:userId", controller.destroy))
  *                 $ref: '#/components/examples/user'
  */
 read.push(new Endpoint("get", "/users/:userId", controller.read))
+
+/**
+ * @openapi
+ * /users/search:
+ *   post:
+ *     summary: Search for a user based on their email/username.
+ *     tags:
+ *       - users
+ *     parameters:
+ *       - $ref: '#/components/parameters/appId'
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/nameSearch'
+ *     responses:
+ *       200:
+ *         description: Returns the found users based on search parameters.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required:
+ *                 - users
+ *               properties:
+ *                 users:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/user'
+ *             examples:
+ *               users:
+ *                 $ref: '#/components/examples/users'
+ */
+read.push(
+  new Endpoint("post", "/users/search", controller.search).addMiddleware(
+    nameValidator()
+  )
+)
 
 export default { read, write }

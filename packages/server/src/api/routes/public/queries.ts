@@ -7,43 +7,6 @@ const read = [],
 
 /**
  * @openapi
- * /queries/search:
- *   post:
- *     summary: Search for a query based on its name.
- *     tags:
- *       - queries
- *     parameters:
- *       - $ref: '#/components/parameters/appId'
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/nameSearch'
- *     responses:
- *       200:
- *         description: Returns the queries found based on the search parameters.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 queries:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/query'
- *             examples:
- *               queries:
- *                 $ref: '#/components/examples/queries'
- */
-read.push(
-  new Endpoint("post", "/queries/search", controller.search).addMiddleware(
-    nameValidator()
-  )
-)
-
-/**
- * @openapi
  * /queries/{queryId}:
  *   post:
  *     summary: Execute a query and retrieve its response.
@@ -88,5 +51,44 @@ read.push(
  *
  */
 write.push(new Endpoint("post", "/queries/:queryId", controller.execute))
+
+/**
+ * @openapi
+ * /queries/search:
+ *   post:
+ *     summary: Search for a query based on its name.
+ *     tags:
+ *       - queries
+ *     parameters:
+ *       - $ref: '#/components/parameters/appId'
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/nameSearch'
+ *     responses:
+ *       200:
+ *         description: Returns the queries found based on the search parameters.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required:
+ *                 - queries
+ *               properties:
+ *                 queries:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/query'
+ *             examples:
+ *               queries:
+ *                 $ref: '#/components/examples/queries'
+ */
+read.push(
+  new Endpoint("post", "/queries/search", controller.search).addMiddleware(
+    nameValidator()
+  )
+)
 
 export default { read, write }

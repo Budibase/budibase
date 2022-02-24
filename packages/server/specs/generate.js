@@ -49,12 +49,11 @@ const options = {
   apis: [join(__dirname, "..", "src", "api", "routes", "public", "*.ts")],
 }
 
-function writeFile(output, { isJson } = {}) {
+function writeFile(output, filename) {
   try {
-    const filename = isJson ? "openapi.json" : "openapi.yaml"
     const path = join(__dirname, filename)
     let spec = output
-    if (isJson) {
+    if (filename.endsWith("json")) {
       spec = JSON.stringify(output, null, 2)
     }
     // input the static variables
@@ -63,13 +62,22 @@ function writeFile(output, { isJson } = {}) {
     }
     writeFileSync(path, spec)
     console.log(`Wrote spec to ${path}`)
+    return path
   } catch (err) {
     console.error(err)
   }
 }
 
-const outputJSON = swaggerJsdoc(options)
-options.format = ".yaml"
-const outputYAML = swaggerJsdoc(options)
-writeFile(outputJSON, { isJson: true })
-writeFile(outputYAML)
+function run() {
+  const outputJSON = swaggerJsdoc(options)
+  options.format = ".yaml"
+  const outputYAML = swaggerJsdoc(options)
+  writeFile(outputJSON, "openapi.json")
+  return writeFile(outputYAML, "openapi.yaml")
+}
+
+if (require.main === module) {
+  run()
+}
+
+module.exports = run

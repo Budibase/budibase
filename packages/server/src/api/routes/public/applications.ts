@@ -7,43 +7,6 @@ const read = [],
 
 /**
  * @openapi
- * /applications/search:
- *   post:
- *     summary: Search for an application based on its app name.
- *     tags:
- *       - applications
- *     parameters:
- *       - $ref: '#/components/parameters/appId'
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/nameSearch'
- *     responses:
- *       200:
- *         description: Returns the applications that were found based on the search parameters.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 applications:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/application'
- *             examples:
- *               applications:
- *                 $ref: '#/components/examples/applications'
- */
-read.push(
-  new Endpoint("post", "/applications/search", controller.search).addMiddleware(
-    nameValidator()
-  )
-)
-
-/**
- * @openapi
  * /applications:
  *   post:
  *     summary: Create a new application.
@@ -68,7 +31,11 @@ read.push(
  *               application:
  *                 $ref: '#/components/examples/application'
  */
-write.push(new Endpoint("post", "/applications", controller.create))
+write.push(
+  new Endpoint("post", "/applications", controller.create).addMiddleware(
+    applicationValidator
+  )
+)
 
 /**
  * @openapi
@@ -96,7 +63,11 @@ write.push(new Endpoint("post", "/applications", controller.create))
  *               application:
  *                 $ref: '#/components/examples/application'
  */
-write.push(new Endpoint("put", "/applications/:appId", controller.update))
+write.push(
+  new Endpoint("put", "/applications/:appId", controller.update).addMiddleware(
+    applicationValidator
+  )
+)
 
 /**
  * @openapi
@@ -141,5 +112,44 @@ write.push(new Endpoint("delete", "/applications/:appId", controller.destroy))
  *                 $ref: '#/components/examples/application'
  */
 read.push(new Endpoint("get", "/applications/:appId", controller.read))
+
+/**
+ * @openapi
+ * /applications/search:
+ *   post:
+ *     summary: Search for an application based on its app name.
+ *     tags:
+ *       - applications
+ *     parameters:
+ *       - $ref: '#/components/parameters/appId'
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/nameSearch'
+ *     responses:
+ *       200:
+ *         description: Returns the applications that were found based on the search parameters.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required:
+ *                 - applications
+ *               properties:
+ *                 applications:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/application'
+ *             examples:
+ *               applications:
+ *                 $ref: '#/components/examples/applications'
+ */
+read.push(
+  new Endpoint("post", "/applications/search", controller.search).addMiddleware(
+    nameValidator()
+  )
+)
 
 export default { read, write }
