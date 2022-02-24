@@ -47,40 +47,47 @@ exports.datasourceValidator = () => {
   }).unknown(true))
 }
 
-/**
- *    * {
- *  "tableId": "ta_70260ff0b85c467ca74364aefc46f26d",
- *  "query": {
- *    "string": {},
- *    "fuzzy": {},
- *    "range": {
- *      "columnName": {
- *        "high": 20,
- *        "low": 10,
- *      }
- *    },
- *    "equal": {
- *      "columnName": "someValue"
- *    },
- *    "notEqual": {},
- *    "empty": {},
- *    "notEmpty": {},
- *    "oneOf": {
- *      "columnName": ["value"]
- *    }
- *  },
- *  "limit": 10,
- *  "sort": "name",
- *  "sortOrder": "descending",
- *  "sortType": "string",
- *  "paginate": true
- * }
- */
-exports.searchValidator = () => {
+function filterObject() {
+  return Joi.object({
+    string: Joi.object().optional(),
+    fuzzy: Joi.object().optional(),
+    range: Joi.object().optional(),
+    equal: Joi.object().optional(),
+    notEqual: Joi.object().optional(),
+    empty: Joi.object().optional(),
+    notEmpty: Joi.object().optional(),
+    oneOf: Joi.object().optional(),
+  })
+}
+
+exports.internalSearchValidator = () => {
   // prettier-ignore
   return joiValidator.body(Joi.object({
-    tableId: Joi.string()
+    tableId: Joi.string(),
+    query: filterObject(),
+    limit: Joi.number().optional(),
+    sort: Joi.string().optional(),
+    sortOrder: Joi.string().optional(),
+    sortType: Joi.string().optional(),
+    paginate: Joi.boolean().optional(),
+    bookmark: Joi.alternatives().try(Joi.string(), Joi.number()).optional(),
   }))
+}
+
+exports.externalSearchValidator = () => {
+  return joiValidator.body(
+    Joi.object({
+      query: filterObject(),
+      paginate: Joi.boolean().optional(),
+      bookmark: Joi.alternatives().try(Joi.string(), Joi.number()).optional(),
+      limit: Joi.number().optional(),
+      sort: Joi.object({
+        column: Joi.string(),
+        order: Joi.string().optional().valid("ascending", "descending"),
+        type: Joi.string().valid("string", "number"),
+      }).optional(),
+    })
+  )
 }
 
 exports.datasourceQueryValidator = () => {
@@ -96,14 +103,7 @@ exports.datasourceQueryValidator = () => {
     }).optional(),
     body: Joi.object().optional(),
     sort: Joi.object().optional(),
-    filters: Joi.object({
-      string: Joi.object().optional(),
-      range: Joi.object().optional(),
-      equal: Joi.object().optional(),
-      notEqual: Joi.object().optional(),
-      empty: Joi.object().optional(),
-      notEmpty: Joi.object().optional(),
-    }).optional(),
+    filters: filterObject().optional(),
     paginate: Joi.object({
       page: Joi.string().alphanum().optional(),
       limit: Joi.number().optional(),
@@ -201,3 +201,5 @@ exports.automationValidator = (existing = false) => {
     }).required().unknown(true),
   }).unknown(true))
 }
+
+exports.applicationValidator = () => {}

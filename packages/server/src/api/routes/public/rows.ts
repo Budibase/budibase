@@ -1,5 +1,6 @@
-const controller = require("../../controllers/public/rows")
-const Endpoint = require("./utils/Endpoint")
+import controller from "../../controllers/public/rows"
+import Endpoint from "./utils/Endpoint"
+import { externalSearchValidator } from "../utils/validators"
 
 const read = [],
   write = []
@@ -121,7 +122,11 @@ const read = [],
  *                 $ref: '#/components/examples/rows'
  */
 read.push(
-  new Endpoint("post", "/tables/:tableId/rows/search", controller.search)
+  new Endpoint(
+    "post",
+    "/tables/:tableId/rows/search",
+    controller.search
+  ).addMiddleware(externalSearchValidator())
 )
 
 /**
@@ -215,7 +220,7 @@ write.push(
  *                 $ref: '#/components/examples/row'
  */
 write.push(
-  new Endpoint("delete", "/tables/:tableId/rows/:rowId", controller.delete)
+  new Endpoint("delete", "/tables/:tableId/rows/:rowId", controller.destroy)
 )
 
 /**
@@ -242,4 +247,4 @@ write.push(
  */
 read.push(new Endpoint("get", "/tables/:tableId/rows/:rowId", controller.read))
 
-module.exports = { read, write }
+export default { read, write }

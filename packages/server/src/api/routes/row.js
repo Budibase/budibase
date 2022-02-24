@@ -10,6 +10,7 @@ const {
   PermissionLevels,
   PermissionTypes,
 } = require("@budibase/backend-core/permissions")
+const { internalSearchValidator } = require("./utils/validators")
 
 const router = Router()
 
@@ -138,6 +139,7 @@ router
    */
   .post(
     "/api/:tableId/search",
+    internalSearchValidator(),
     paramResource("tableId"),
     authorized(PermissionTypes.TABLE, PermissionLevels.READ),
     rowController.search

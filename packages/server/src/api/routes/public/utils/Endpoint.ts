@@ -1,24 +1,34 @@
+import Router from "koa-router"
+
+export type CtxFn = (ctx: any) => void
+
 class Endpoint {
-  constructor(method, url, controller) {
+  method: string
+  url: string
+  controller: CtxFn
+  middlewares: CtxFn[]
+
+  constructor(method: string, url: string, controller: CtxFn) {
     this.method = method
     this.url = url
     this.controller = controller
     this.middlewares = []
   }
 
-  addMiddleware(middleware) {
+  addMiddleware(middleware: CtxFn) {
     this.middlewares.push(middleware)
     return this
   }
 
-  apply(router) {
+  apply(router: Router) {
     const method = this.method,
       url = this.url
     const middlewares = this.middlewares,
       controller = this.controller
     const params = [url, ...middlewares, controller]
+    // @ts-ignore
     router[method](...params)
   }
 }
 
-module.exports = Endpoint
+export default Endpoint

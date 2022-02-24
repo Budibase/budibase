@@ -1,9 +1,10 @@
-const rowController = require("../row")
-const { addRev } = require("./utils")
+import { default as rowController } from "../row"
+import { addRev } from "./utils"
+import { Row } from "../../../definitions/common"
 
 // makes sure that the user doesn't need to pass in the type, tableId or _id params for
 // the call to be correct
-function fixRow(row, params) {
+function fixRow(row: Row, params: any) {
   if (!params || !row) {
     return row
   }
@@ -19,31 +20,53 @@ function fixRow(row, params) {
   return row
 }
 
-exports.search = async ctx => {
+export async function search(ctx: any) {
+  let { sort, paginate, bookmark, limit, query } = ctx.request.body
+  // update the body to the correct format of the internal search
+  if (!sort) {
+    sort = {}
+  }
+  ctx.request.body = {
+    sort: sort.column,
+    sortType: sort.type,
+    sortOrder: sort.order,
+    bookmark,
+    paginate,
+    limit,
+    query,
+  }
   await rowController.search(ctx)
 }
 
-exports.create = async ctx => {
+export async function create(ctx: any) {
   ctx.request.body = fixRow(ctx.request.body, ctx.params)
   await rowController.save(ctx)
   ctx.body = { row: ctx.body }
 }
 
-exports.read = async ctx => {
+export async function read(ctx: any) {
   await rowController.find(ctx)
   ctx.body = { row: ctx.body }
 }
 
-exports.update = async ctx => {
+export async function update(ctx: any) {
   ctx.request.body = await addRev(fixRow(ctx.request.body, ctx.params.tableId))
   ctx.body = { row: ctx.body }
 }
 
-exports.delete = async ctx => {
+export async function destroy(ctx: any) {
   // set the body as expected, with the _id and _rev fields
   ctx.request.body = await addRev(fixRow({}, ctx.params.tableId))
   await rowController.destroy(ctx)
   // destroy controller doesn't currently return the row as the body, need to adjust this
   // in the public API to be correct
   ctx.body = { row: ctx.row }
+}
+
+export default {
+  create,
+  read,
+  update,
+  destroy,
+  search,
 }
