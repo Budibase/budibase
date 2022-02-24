@@ -18,10 +18,6 @@ function Webhook(name, type, target) {
 
 exports.Webhook = Webhook
 
-exports.WebhookType = {
-  AUTOMATION: "automation",
-}
-
 exports.fetch = async ctx => {
   const db = getAppDB()
   const response = await db.allDocs(

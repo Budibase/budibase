@@ -1,5 +1,6 @@
 const controller = require("../../controllers/public/tables")
 const Endpoint = require("./utils/Endpoint")
+const { tableValidator } = require("../utils/validators")
 
 const read = [],
   write = []
@@ -66,7 +67,11 @@ read.push(new Endpoint("post", "/tables/search", controller.search))
  *               table:
  *                 $ref: '#/components/examples/table'
  */
-write.push(new Endpoint("post", "/tables", controller.create))
+write.push(
+  new Endpoint("post", "/tables", controller.create).addMiddleware(
+    tableValidator()
+  )
+)
 
 /**
  * @openapi
@@ -97,7 +102,11 @@ write.push(new Endpoint("post", "/tables", controller.create))
  *               table:
  *                 $ref: '#/components/examples/table'
  */
-write.push(new Endpoint("put", "/tables/:tableId", controller.update))
+write.push(
+  new Endpoint("put", "/tables/:tableId", controller.update).addMiddleware(
+    tableValidator()
+  )
+)
 
 /**
  * @openapi
