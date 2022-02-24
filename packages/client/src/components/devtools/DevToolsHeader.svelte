@@ -65,8 +65,9 @@
     flex: 0 0 50px;
     grid-template-columns: 1fr auto;
   }
-  .dev-preview-header
-    :global(.spectrum-Heading, .spectrum-Picker-menuIcon, .spectrum-Picker-label) {
+  .dev-preview-header :global(.spectrum-Heading),
+  .dev-preview-header :global(.spectrum-Picker-menuIcon),
+  .dev-preview-header :global(.spectrum-Picker-label) {
     color: white !important;
   }
 </style>

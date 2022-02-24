@@ -4,7 +4,7 @@ import { get, writable } from "svelte/store"
 const initialState = {
   appId: null,
   isDevApp: false,
-  clientLoadTime: Date.now() - (window.INIT_TIME || Date.now()),
+  clientLoadTime: window.INIT_TIME ? Date.now() - window.INIT_TIME : null,
 }
 
 const createAppStore = () => {
@@ -19,6 +19,7 @@ const createAppStore = () => {
     try {
       const appDefinition = await API.fetchAppPackage(appId)
       store.set({
+        ...initialState,
         ...appDefinition,
         appId: appDefinition?.application?.appId,
         isDevApp: appId.startsWith("app_dev"),

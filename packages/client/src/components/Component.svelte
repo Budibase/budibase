@@ -377,7 +377,7 @@
   <!-- The ID is used as a class because getElementsByClassName is O(1) -->
   <!-- and the performance matters for the selection indicators -->
   <div
-    className={`component ${id}`}
+    class={`component ${id}`}
     class:draggable
     class:droppable
     class:empty
