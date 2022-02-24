@@ -219,14 +219,19 @@
   }
 
   const toggleSelectAll = e => {
-    if (e.detail) {
-      selectedRows = [...selectedRows, ...rows]
+    const select = !!e.detail
+    if (select) {
+      // Add any rows which are not already in selected rows
+      rows.forEach(row => {
+        if (selectedRows.findIndex(x => x._id === row._id) === -1) {
+          selectedRows.push(row)
+        }
+      })
     } else {
-      //remove every object from selectedRows that is not in rows
-      let filtered = selectedRows.filter(el =>
+      // Remove any rows from selected rows that are in the current data set
+      selectedRows = selectedRows.filter(el =>
         rows.every(f => f._id !== el._id)
       )
-      selectedRows = filtered
     }
   }
 
@@ -335,13 +340,16 @@
             {#if showEditColumn}
               <div
                 class="spectrum-Table-cell spectrum-Table-cell--divider spectrum-Table-cell--edit"
+                on:click={e => {
+                  toggleSelectRow(row)
+                  e.stopPropagation()
+                }}
               >
                 <SelectEditRenderer
                   data={row}
                   selected={selectedRows.findIndex(
                     selectedRow => selectedRow._id === row._id
                   ) !== -1}
-                  onToggleSelection={() => toggleSelectRow(row)}
                   onEdit={e => editRow(e, row)}
                   {allowSelectRows}
                   {allowEditRows}
