@@ -16,6 +16,7 @@
   export let showAutoColumns
   export let rowCount
   export let quiet
+  export let compact
   export let size
   export let linkRows
   export let linkURL
@@ -162,6 +163,7 @@
               showAutoColumns,
               rowCount,
               quiet,
+              compact,
               size,
               linkRows,
               linkURL,

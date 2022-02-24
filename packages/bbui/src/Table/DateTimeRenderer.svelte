@@ -17,6 +17,8 @@
 
 <style>
   div {
-    width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 </style>
