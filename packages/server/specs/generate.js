@@ -46,7 +46,7 @@ const options = {
     ],
   },
   format: ".json",
-  apis: [join(__dirname, "..", "src", "api", "routes", "public", "*.js")],
+  apis: [join(__dirname, "..", "src", "api", "routes", "public", "*.ts")],
 }
 
 function writeFile(output, { isJson } = {}) {
