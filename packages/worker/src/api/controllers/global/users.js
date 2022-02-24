@@ -24,6 +24,9 @@ const {
 const { removeUserFromInfoDB } = require("@budibase/backend-core/deprovision")
 const env = require("../../../environment")
 const { syncUserInApps } = require("../../../utilities/appService")
+const { isUserInAppTenant } = require("@budibase/backend-core/tenancy")
+const { getCookie, clearCookie } = require("@budibase/backend-core/utils")
+const { Cookies } = require("@budibase/backend-core/constants")
 
 async function allUsers() {
   const db = getGlobalDB()
@@ -158,6 +161,16 @@ exports.removeAppRole = async ctx => {
   }
 }
 
+const checkCurrentApp = ctx => {
+  const appCookie = getCookie(ctx, Cookies.CurrentApp)
+  if (appCookie && !isUserInAppTenant(appCookie.appId)) {
+    // there is a currentapp cookie from another tenant
+    // remove the cookie as this is incompatible with the builder
+    // due to builder and admin permissions being removed
+    clearCookie(ctx, Cookies.CurrentApp)
+  }
+}
+
 exports.getSelf = async ctx => {
   if (!ctx.user) {
     ctx.throw(403, "User not logged in")
@@ -167,6 +180,8 @@ exports.getSelf = async ctx => {
   }
   // this will set the body
   await exports.find(ctx)
+
+  checkCurrentApp(ctx)
 
   // forward session information not found in db
   ctx.body.account = ctx.user.account

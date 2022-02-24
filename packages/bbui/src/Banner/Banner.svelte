@@ -57,3 +57,9 @@
     </div>
   </div>
 {/if}
+
+<style>
+  .spectrum-Toast {
+    pointer-events: all;
+  }
+</style>
