@@ -31,7 +31,10 @@ export async function read(ctx: any) {
 }
 
 export async function update(ctx: any) {
-  ctx.request.body = await addRev(fixTable(ctx.request.body, ctx.params), ctx.params.tableId)
+  ctx.request.body = await addRev(
+    fixTable(ctx.request.body, ctx.params),
+    ctx.params.tableId
+  )
   await controller.save(ctx)
   ctx.body = { table: ctx.body }
 }
