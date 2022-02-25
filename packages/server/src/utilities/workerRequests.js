@@ -31,6 +31,24 @@ function request(ctx, request) {
   return request
 }
 
+async function checkResponse(response, errorMsg, { ctx } = {}) {
+  if (response.status !== 200) {
+    let error
+    try {
+      error = await response.json()
+    } catch (err) {
+      error = await response.text()
+    }
+    const msg = `Unable to ${errorMsg} - ${error.message ? error.message : error}`
+    if (ctx) {
+      ctx.throw(400, msg)
+    } else {
+      throw msg
+    }
+  }
+  return response.json()
+}
+
 exports.request = request
 
 // have to pass in the tenant ID as this could be coming from an automation
@@ -50,12 +68,7 @@ exports.sendSmtpEmail = async (to, from, subject, contents, automation) => {
       },
     })
   )
-
-  if (response.status !== 200) {
-    const error = await response.text()
-    throw `Unable to send email - ${error}`
-  }
-  return response.json()
+  return checkResponse(response, "send email")
 }
 
 exports.getGlobalSelf = async (ctx, appId = null) => {
@@ -65,10 +78,7 @@ exports.getGlobalSelf = async (ctx, appId = null) => {
     // we don't want to use API key when getting self
     request(ctx, { method: "GET" })
   )
-  if (response.status !== 200) {
-    ctx.throw(400, "Unable to get self globally.")
-  }
-  let json = await response.json()
+  let json = await checkResponse(response, "get self globally", { ctx })
   if (appId) {
     json = updateAppRole(json)
   }
@@ -83,8 +93,41 @@ exports.removeAppFromUserRoles = async (ctx, appId) => {
       method: "DELETE",
     })
   )
-  if (response.status !== 200) {
-    throw "Unable to remove app role"
-  }
-  return response.json()
+  return checkResponse(response, "remove app role")
+}
+
+exports.allGlobalUsers = async ctx => {
+  const response = await fetch(
+    checkSlashesInUrl(env.WORKER_URL + "/api/global/users"),
+    // we don't want to use API key when getting self
+    request(ctx, { method: "GET" })
+  )
+  return checkResponse(response, "get users", { ctx })
+}
+
+exports.saveGlobalUser = async ctx => {
+  const response = await fetch(
+    checkSlashesInUrl(env.WORKER_URL + "/api/global/users"),
+    // we don't want to use API key when getting self
+    request(ctx, { method: "POST", body: ctx.request.body })
+  )
+  return checkResponse(response, "save user", { ctx })
+}
+
+exports.deleteGlobalUser = async ctx => {
+  const response = await fetch(
+    checkSlashesInUrl(env.WORKER_URL + `/api/global/users/${ctx.params.userId}`),
+    // we don't want to use API key when getting self
+    request(ctx, { method: "DELETE" })
+  )
+  return checkResponse(response, "delete user", { ctx, body: ctx.request.body })
+}
+
+exports.readGlobalUser = async ctx => {
+  const response = await fetch(
+    checkSlashesInUrl(env.WORKER_URL + `/api/global/users/${ctx.params.userId}`),
+    // we don't want to use API key when getting self
+    request(ctx, { method: "GET" })
+  )
+  return checkResponse(response, "get user", { ctx })
 }
