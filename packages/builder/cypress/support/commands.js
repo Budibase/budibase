@@ -435,7 +435,7 @@ Cypress.Commands.add("addDatasourceConfig", (datasource, skipFetch) => {
   }
 })
 
-Cypress.Commands.add("createRestQuery", (method, restUrl) => {
+Cypress.Commands.add("createRestQuery", (method, restUrl, queryPrettyName) => {
   // addExternalDatasource should be called prior to this
   // Configures REST datasource & sends query
   cy.wait(1000)
@@ -450,5 +450,5 @@ Cypress.Commands.add("createRestQuery", (method, restUrl) => {
   cy.get(".spectrum-Button").contains("Save").click({ force: true })
   cy.get(".hierarchy-items-container")
     .should("contain", method)
-    .and("contain", restUrl)
+    .and("contain", queryPrettyName)
 })
