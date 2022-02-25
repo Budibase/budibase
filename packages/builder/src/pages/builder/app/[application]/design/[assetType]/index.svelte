@@ -45,6 +45,14 @@
         store.actions.screens.select(id)
       }
     }
+
+    // If we didn't find a valid asset, just update the preview type
+    if (!id) {
+      store.update(state => {
+        state.currentFrontEndType = assetType
+        return state
+      })
+    }
   }
 </script>
 
