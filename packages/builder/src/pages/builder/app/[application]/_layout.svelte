@@ -86,13 +86,10 @@
 
   function handleKeyDown(e) {
     if (e.key === "Control") {
-      if (!commandPaletteVisible) {
-        commandPaletteModal.show()
-        commandPaletteVisible = true
-      } else {
-        commandPaletteModal.hide()
-        commandPaletteVisible = false
-      }
+      commandPaletteVisible
+        ? commandPaletteModal.hide()
+        : commandPaletteModal.show()
+      commandPaletteVisible = !commandPaletteVisible
     }
   }
 
@@ -102,7 +99,6 @@
 </script>
 
 <svelte:window on:keydown={handleKeyDown} />
-
 {#await promise}
   <!-- This should probably be some kind of loading state? -->
   <div class="loading" />
