@@ -32,14 +32,14 @@ export const getBindableProperties = (asset, componentId) => {
   const urlBindings = getUrlBindings(asset)
   const deviceBindings = getDeviceBindings()
   const stateBindings = getStateBindings()
-  const rowBindings = getRowBindings(asset)
+  const selectedRowsBindings = getSelectedRowsBindings(asset)
   return [
     ...contextBindings,
     ...urlBindings,
     ...stateBindings,
     ...userBindings,
     ...deviceBindings,
-    ...rowBindings,
+    ...selectedRowsBindings,
   ]
 }
 
@@ -318,13 +318,13 @@ const getDeviceBindings = () => {
 }
 
 /**
- * Gets all row bindings that are globally available.
+ * Gets all selected rows bindings for tables in the current asset.
  */
-const getRowBindings = asset => {
+const getSelectedRowsBindings = asset => {
   let bindings = []
   if (get(store).clientFeatures?.rowSelection) {
     // Add bindings for table components
-    let tables = findAllMatchingComponents(asset.props, component =>
+    let tables = findAllMatchingComponents(asset?.props, component =>
       component._component.endsWith("table")
     )
     const safeState = makePropSafe("rowSelection")
@@ -337,7 +337,7 @@ const getRowBindings = asset => {
     )
 
     // Add bindings for table blocks
-    let tableBlocks = findAllMatchingComponents(asset.props, component =>
+    let tableBlocks = findAllMatchingComponents(asset?.props, component =>
       component._component.endsWith("tableblock")
     )
     bindings = bindings.concat(
