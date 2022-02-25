@@ -116,8 +116,8 @@ export function customQueryText(datasource, query) {
 
   // Remove protocol
   let name = query.name
-  if (name.includes("://")) {
-    name = name.split("://")[1]
+  if (name.includes("//")) {
+    name = name.split("//")[1]
   }
 
   // If no path, return the full name
