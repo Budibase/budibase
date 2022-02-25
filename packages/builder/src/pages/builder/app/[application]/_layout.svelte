@@ -1,7 +1,14 @@
 <script>
   import { store, automationStore } from "builderStore"
   import { roles, flags } from "stores/backend"
-  import { Icon, ActionGroup, Tabs, Tab, notifications } from "@budibase/bbui"
+  import {
+    Icon,
+    ActionGroup,
+    Modal,
+    Tabs,
+    Tab,
+    notifications,
+  } from "@budibase/bbui"
   import DeployModal from "components/deploy/DeployModal.svelte"
   import RevertModal from "components/deploy/RevertModal.svelte"
   import VersionModal from "components/deploy/VersionModal.svelte"
@@ -13,6 +20,7 @@
   import { capitalise } from "helpers"
   import UpgradeModal from "components/upgrade/UpgradeModal.svelte"
   import { onMount, onDestroy } from "svelte"
+  import CommandPalette from "components/commandPalette/CommandPalette.svelte"
 
   export let application
 
@@ -25,6 +33,8 @@
   $: selected = capitalise(
     $layout.children.find(layout => $isActive(layout.path))?.title ?? "data"
   )
+  let commandPaletteModal
+  let commandPaletteVisible = false
 
   function previewApp() {
     if (!$auth?.user?.flags?.feedbackSubmitted) {
@@ -74,10 +84,24 @@
     }
   })
 
+  function handleKeyDown(e) {
+    if (e.key === "Control") {
+      if (!commandPaletteVisible) {
+        commandPaletteModal.show()
+        commandPaletteVisible = true
+      } else {
+        commandPaletteModal.hide()
+        commandPaletteVisible = false
+      }
+    }
+  }
+
   onDestroy(() => {
     store.actions.reset()
   })
 </script>
+
+<svelte:window on:keydown={handleKeyDown} />
 
 {#await promise}
   <!-- This should probably be some kind of loading state? -->
@@ -129,6 +153,16 @@
 {#if userShouldPostFeedback}
   <NPSFeedbackForm on:complete={() => (userShouldPostFeedback = false)} />
 {/if}
+
+<Modal bind:this={commandPaletteModal}>
+  <CommandPalette
+    {previewApp}
+    close={() => {
+      commandPaletteVisible = false
+      commandPaletteModal.hide()
+    }}
+  />
+</Modal>
 
 <style>
   .loading {
