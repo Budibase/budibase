@@ -1,4 +1,3 @@
-const { object } = require("./utils")
 const Resource = require("./utils/Resource")
 
 const query = {
@@ -74,7 +73,20 @@ const sqlResponse = {
   },
 }
 
-const querySchema = object({})
+const querySchema = {
+  description:
+    "The query body must contain the required parameters for the query, this depends on query type, setup and bindings.",
+  type: "object",
+  additionalProperties: {
+    oneOf: [
+      { type: "string" },
+      { type: "object" },
+      { type: "integer" },
+      { type: "array" },
+      { type: "boolean" },
+    ],
+  },
+}
 
 module.exports = new Resource()
   .setExamples({

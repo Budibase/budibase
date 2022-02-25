@@ -12,8 +12,6 @@ const read = [],
  *     summary: Create a new user in the Budibase portal.
  *     tags:
  *       - users
- *     parameters:
- *       - $ref: '#/components/parameters/appId'
  *     requestBody:
  *       required: true
  *       content:
@@ -42,7 +40,6 @@ write.push(new Endpoint("post", "/users", controller.create))
  *       - users
  *     parameters:
  *       - $ref: '#/components/parameters/userId'
- *       - $ref: '#/components/parameters/appId'
  *     requestBody:
  *       required: true
  *       content:
@@ -71,7 +68,6 @@ write.push(new Endpoint("put", "/users/:userId", controller.update))
  *       - users
  *     parameters:
  *       - $ref: '#/components/parameters/userId'
- *       - $ref: '#/components/parameters/appId'
  *     responses:
  *       200:
  *         description: Returns the deleted user.
@@ -94,7 +90,6 @@ write.push(new Endpoint("delete", "/users/:userId", controller.destroy))
  *       - users
  *     parameters:
  *       - $ref: '#/components/parameters/userId'
- *       - $ref: '#/components/parameters/appId'
  *     responses:
  *       200:
  *         description: Returns the retrieved user.
@@ -115,8 +110,6 @@ read.push(new Endpoint("get", "/users/:userId", controller.read))
  *     summary: Search for a user based on their email/username.
  *     tags:
  *       - users
- *     parameters:
- *       - $ref: '#/components/parameters/appId'
  *     requestBody:
  *       required: true
  *       content:
