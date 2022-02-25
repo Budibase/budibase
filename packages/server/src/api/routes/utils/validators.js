@@ -205,4 +205,15 @@ exports.automationValidator = (existing = false) => {
   }).unknown(true))
 }
 
-exports.applicationValidator = () => {}
+exports.applicationValidator = () => {
+  // prettier-ignore
+  return joiValidator.body(Joi.object({
+    _id: OPTIONAL_STRING,
+    _rev: OPTIONAL_STRING,
+    name: Joi.string().required(),
+    url: OPTIONAL_STRING,
+    template: Joi.object({
+      templateString: OPTIONAL_STRING,
+    }).unknown(true),
+  }).unknown(true))
+}

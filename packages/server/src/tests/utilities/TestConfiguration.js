@@ -49,6 +49,10 @@ class TestConfiguration {
     return this.request
   }
 
+  getApp() {
+    return this.app
+  }
+
   getAppId() {
     return this.appId
   }
