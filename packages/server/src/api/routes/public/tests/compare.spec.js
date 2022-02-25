@@ -8,10 +8,10 @@ jestOpenAPI(yamlPath)
 
 let request = setup.getRequest()
 let config = setup.getConfig()
-let apiKey, table
+let apiKey, table, app
 
 beforeAll(async () => {
-  await config.init()
+  app = await config.init()
   table = await config.updateTable()
   apiKey = await config.generateApiKey()
 })
@@ -72,29 +72,47 @@ describe("check the applications endpoints", () => {
 
 describe("check the tables endpoints", () => {
   it("should allow retrieving tables through search", async () => {
+    await config.createApp("new app 1")
+    table = await config.updateTable()
     const res = await makeRequest("post", "/tables/search")
     expect(res).toSatisfyApiSpec()
   })
 
   it("should allow creating a table", async () => {
-
+    const res = await makeRequest("post", "/tables", {
+      name: "table name",
+      primaryDisplay: "column1",
+      schema: {
+        column1: {
+          type: "string",
+          constraints: {},
+        }
+      }
+    })
+    expect(res).toSatisfyApiSpec()
   })
 
   it("should allow updating a table", async () => {
-
+    const updated = { ...table, _rev: undefined, name: "new name" }
+    const res = await makeRequest("put", `/tables/${table._id}`, updated)
+    expect(res).toSatisfyApiSpec()
   })
 
   it("should allow retrieving a table", async () => {
-
+    const res = await makeRequest("get", `/tables/${table._id}`)
+    expect(res).toSatisfyApiSpec()
   })
 
   it("should allow deleting a table", async () => {
-
+    const res = await makeRequest("delete", `/tables/${table._id}`)
+    expect(res).toSatisfyApiSpec()
   })
 })
 
 describe("check the rows endpoints", () => {
+  let row
   it("should allow retrieving rows through search", async () => {
+    table = await config.updateTable()
     const res = await makeRequest("post", `/tables/${table._id}/rows/search`, {
       query: {
       },
@@ -103,19 +121,28 @@ describe("check the rows endpoints", () => {
   })
 
   it("should allow creating a row", async () => {
-
+    const res = await makeRequest("post", `/tables/${table._id}/rows`, {
+      name: "test row",
+    })
+    expect(res).toSatisfyApiSpec()
+    row = res.body.row
   })
 
   it("should allow updating a row", async () => {
-
+    const res = await makeRequest("put", `/tables/${table._id}/rows/${row._id}`, {
+      name: "test row updated",
+    })
+    expect(res).toSatisfyApiSpec()
   })
 
   it("should allow retrieving a row", async () => {
-
+    const res = await makeRequest("get", `/tables/${table._id}/rows/${row._id}`)
+    expect(res).toSatisfyApiSpec()
   })
 
   it("should allow deleting a row", async () => {
-
+    const res = await makeRequest("delete", `/tables/${table._id}/rows/${row._id}`)
+    expect(res).toSatisfyApiSpec()
   })
 })
 
