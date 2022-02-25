@@ -20,6 +20,9 @@ const publicRouter = new Router({
 })
 
 function addMiddleware(endpoints: any, middleware: CtxFn) {
+  if (!endpoints) {
+    return
+  }
   if (!Array.isArray(endpoints)) {
     endpoints = [endpoints]
   }
@@ -29,8 +32,10 @@ function addMiddleware(endpoints: any, middleware: CtxFn) {
 }
 
 function addToRouter(endpoints: any) {
-  for (let endpoint of endpoints) {
-    endpoint.apply(publicRouter)
+  if (endpoints) {
+    for (let endpoint of endpoints) {
+      endpoint.apply(publicRouter)
+    }
   }
 }
 

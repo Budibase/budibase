@@ -136,6 +136,7 @@ module.exports = (
       // allow configuring for public access
       if ((opts && opts.publicAllowed) || publicEndpoint) {
         finalise(ctx, { authenticated: false, version, publicEndpoint })
+        return next()
       } else {
         ctx.throw(err.status || 403, err)
       }

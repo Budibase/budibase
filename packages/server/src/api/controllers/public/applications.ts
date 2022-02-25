@@ -30,6 +30,12 @@ export async function search(ctx: any) {
 }
 
 export async function create(ctx: any) {
+  if (!ctx.request.body || !ctx.request.body.useTemplate) {
+    ctx.request.body = {
+      useTemplate: false,
+      ...ctx.request.body,
+    }
+  }
   await controller.create(ctx)
   await setResponseApp(ctx)
 }

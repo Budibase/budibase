@@ -33,7 +33,7 @@ const read = [],
  */
 write.push(
   new Endpoint("post", "/applications", controller.create).addMiddleware(
-    applicationValidator
+    applicationValidator()
   )
 )
 
@@ -65,7 +65,7 @@ write.push(
  */
 write.push(
   new Endpoint("put", "/applications/:appId", controller.update).addMiddleware(
-    applicationValidator
+    applicationValidator()
   )
 )
 
