@@ -39,7 +39,9 @@ async function checkResponse(response, errorMsg, { ctx } = {}) {
     } catch (err) {
       error = await response.text()
     }
-    const msg = `Unable to ${errorMsg} - ${error.message ? error.message : error}`
+    const msg = `Unable to ${errorMsg} - ${
+      error.message ? error.message : error
+    }`
     if (ctx) {
       ctx.throw(400, msg)
     } else {
@@ -116,7 +118,9 @@ exports.saveGlobalUser = async ctx => {
 
 exports.deleteGlobalUser = async ctx => {
   const response = await fetch(
-    checkSlashesInUrl(env.WORKER_URL + `/api/global/users/${ctx.params.userId}`),
+    checkSlashesInUrl(
+      env.WORKER_URL + `/api/global/users/${ctx.params.userId}`
+    ),
     // we don't want to use API key when getting self
     request(ctx, { method: "DELETE" })
   )
@@ -125,7 +129,9 @@ exports.deleteGlobalUser = async ctx => {
 
 exports.readGlobalUser = async ctx => {
   const response = await fetch(
-    checkSlashesInUrl(env.WORKER_URL + `/api/global/users/${ctx.params.userId}`),
+    checkSlashesInUrl(
+      env.WORKER_URL + `/api/global/users/${ctx.params.userId}`
+    ),
     // we don't want to use API key when getting self
     request(ctx, { method: "GET" })
   )

@@ -147,25 +147,31 @@ describe("check the rows endpoints", () => {
 })
 
 describe("check the users endpoints", () => {
+  let user
   it("should allow retrieving users through search", async () => {
+    user = await config.createUser()
     const res = await makeRequest("post", "/users/search")
     expect(res).toSatisfyApiSpec()
   })
 
   it("should allow creating a user", async () => {
-
+    const res = await makeRequest("post", "/users")
+    expect(res).toSatisfyApiSpec()
   })
 
   it("should allow updating a user", async () => {
-
+    const res = await makeRequest("put", `/users/${user._id}`)
+    expect(res).toSatisfyApiSpec()
   })
 
   it("should allow retrieving a user", async () => {
-
+    const res = await makeRequest("get", `/users/${user._id}`)
+    expect(res).toSatisfyApiSpec()
   })
 
   it("should allow deleting a user", async () => {
-
+    const res = await makeRequest("delete", `/users/${user._id}`)
+    expect(res).toSatisfyApiSpec()
   })
 })
 

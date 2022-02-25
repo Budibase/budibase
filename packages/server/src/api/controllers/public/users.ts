@@ -21,7 +21,7 @@ function fixUser(ctx: any) {
 
 function getUser(ctx: any, userId?: string) {
   if (userId) {
-    ctx.params = {userId}
+    ctx.params = { userId }
   } else if (!ctx.params?.userId) {
     throw "No user ID provided for getting"
   }
