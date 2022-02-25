@@ -180,9 +180,5 @@ describe("check the queries endpoints", () => {
     const res = await makeRequest("post", "/queries/search")
     expect(res).toSatisfyApiSpec()
   })
-
-  it("should allow executing a query", async () => {
-
-  })
 })
 
