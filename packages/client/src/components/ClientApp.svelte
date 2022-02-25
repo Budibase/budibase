@@ -58,8 +58,22 @@
       if ($authStore) {
         // There is a logged in user, so handle them
         if ($screenStore.screens.length) {
+          let firstRoute
+
+          // If using devtools, find the first screen matching our role
+          if ($devToolsStore.role) {
+            firstRoute =
+              $screenStore.screens.filter(
+                screen => screen.routing?.roleId === $devToolsStore.role
+              )[0]?.routing?.route || "/"
+          }
+
+          // Otherwise just use the fist route
+          else {
+            firstRoute = $screenStore.screens[0]?.routing?.route ?? "/"
+          }
+
           // Screens exist so navigate back to the home screen
-          const firstRoute = $screenStore.screens[0].routing?.route ?? "/"
           routeStore.actions.navigate(firstRoute)
         } else {
           // No screens likely means the user has no permissions to view this app
