@@ -2679,7 +2679,8 @@
         "type": "columns",
         "label": "Columns",
         "key": "columns",
-        "dependsOn": "dataProvider"
+        "dependsOn": "dataProvider",
+        "nested": true
       },
       {
         "type": "select",
@@ -2701,6 +2702,11 @@
         "type": "boolean",
         "label": "Quiet",
         "key": "quiet"
+      },
+      {
+        "type": "boolean",
+        "label": "Compact",
+        "key": "compact"
       },
       {
         "type": "boolean",
@@ -2956,6 +2962,11 @@
             "type": "boolean",
             "label": "Quiet table variant",
             "key": "quiet"
+          },
+          {
+            "type": "boolean",
+            "label": "Compact",
+            "key": "compact"
           },
           {
             "type": "boolean",

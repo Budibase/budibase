@@ -194,5 +194,9 @@ describe("check that disabling escaping function works", () => {
   it("should work with a combination", () => {
     expect(disableEscaping("{{ name }} welcome to {{{ platform }}}")).toEqual("{{{ name }}} welcome to {{{ platform }}}")
   })
+
+  it("should work with multiple escaped", () => {
+    expect(disableEscaping("{{ name }} welcome to {{ name }}")).toEqual("{{{ name }}} welcome to {{{ name }}}")
+  })
 })
 
