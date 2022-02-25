@@ -16,10 +16,11 @@ exports.FilterConditions = FilterConditions
 exports.PrettyFilterConditions = PrettyFilterConditions
 
 exports.definition = {
-  name: "Filter",
+  name: "Condition",
   tagline: "{{inputs.field}} {{inputs.condition}} {{inputs.value}}",
   icon: "Branch2",
-  description: "Filter any automations which do not meet certain conditions",
+  description:
+    "Conditionally halt automations which do not meet certain conditions",
   type: "LOGIC",
   internal: true,
   stepId: "FILTER",
