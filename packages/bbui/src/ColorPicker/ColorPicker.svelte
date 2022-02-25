@@ -10,6 +10,7 @@
   export let value
   export let size = "M"
   export let spectrumTheme
+  export let alignRight = false
 
   let open = false
 
@@ -133,6 +134,7 @@
       use:clickOutside={() => (open = false)}
       transition:fly={{ y: -20, duration: 200 }}
       class="spectrum-Popover spectrum-Popover--bottom spectrum-Picker-popover is-open"
+      class:spectrum-Popover--align-right={alignRight}
     >
       {#each categories as category}
         <div class="category">
@@ -249,6 +251,9 @@
     justify-content: flex-start;
     align-items: stretch;
     gap: var(--spacing-xl);
+  }
+  .spectrum-Popover--align-right {
+    right: 0;
   }
   .colors {
     display: grid;
