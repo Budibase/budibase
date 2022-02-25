@@ -40,6 +40,7 @@
         value={$componentStore.selectedComponentDefinition?.name}
       />
       <DevToolsStat
+        copyable
         label="Component ID"
         value={$componentStore.selectedComponent?._id}
       />
