@@ -15,16 +15,16 @@ Cypress.Commands.add("login", () => {
   cy.url().then(url => {
     if (url.includes("builder/admin")) {
       // create admin user
-      cy.get("input").first().type("test@test.com")
-      cy.get('input[type="password"]').first().type("test")
-      cy.get('input[type="password"]').eq(1).type("test")
+      cy.get("input").first().type("conorw@gmail.com")
+      cy.get('input[type="password"]').first().type("AEV2bdp*qmd7yqz5uge")
+      cy.get('input[type="password"]').eq(1).type("AEV2bdp*qmd7yqz5uge")
       cy.contains("Create super admin user").click()
     }
     if (url.includes("builder/auth/login") || url.includes("builder/admin")) {
       // login
       cy.contains("Sign in to Budibase").then(() => {
-        cy.get("input").first().type("test@test.com")
-        cy.get('input[type="password"]').type("test")
+        cy.get("input").first().type("conorw@gmail.com")
+        cy.get('input[type="password"]').type("AEV2bdp*qmd7yqz5uge")
         cy.get("button").first().click()
         cy.wait(1000)
       })

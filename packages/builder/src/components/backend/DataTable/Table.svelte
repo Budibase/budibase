@@ -27,6 +27,7 @@
   export let disableSorting = false
 
   let selectedRows = []
+  let allSelected = false
   let editableColumn
   let editableRow
   let editRowModal
@@ -79,6 +80,7 @@
 
   const resetSelectedRows = () => {
     selectedRows = []
+    allSelected = false
   }
 
   const selectRelationship = ({ tableId, rowId, fieldName }) => {
@@ -145,6 +147,7 @@
         {rowCount}
         {disableSorting}
         bind:selectedRows
+        bind:allSelected
         allowSelectRows={allowEditing && !isUsersTable}
         allowEditRows={allowEditing}
         allowEditColumns={allowEditing}

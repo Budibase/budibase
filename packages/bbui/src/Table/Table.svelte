@@ -5,6 +5,7 @@
   import SelectEditRenderer from "./SelectEditRenderer.svelte"
   import { cloneDeep, deepGet } from "../helpers"
   import ProgressCircle from "../ProgressCircle/ProgressCircle.svelte"
+  import Checkbox from "../Form/Checkbox.svelte"
 
   /**
    * The expected schema is our normal couch schemas for our tables.
@@ -36,6 +37,7 @@
   export let disableSorting = false
   export let autoSortColumns = true
   export let compact = false
+  export let allSelected = false
 
   const dispatch = createEventDispatcher()
 
@@ -202,6 +204,17 @@
     } else {
       selectedRows = [...selectedRows, row]
     }
+    allSelected = selectedRows.length === rows.length
+  }
+  const toggleAllSelected = () => {
+    if (!allowSelectRows) {
+      return
+    }
+    if (!allSelected) {
+      selectedRows = []
+    } else {
+      selectedRows = [...rows]
+    }
   }
 
   const computeCellStyles = schema => {
@@ -244,6 +257,12 @@
             <div
               class="spectrum-Table-headCell spectrum-Table-headCell--divider spectrum-Table-headCell--edit"
             >
+              {#if allowSelectRows}
+                <Checkbox
+                  bind:value={allSelected}
+                  on:change={toggleAllSelected}
+                />
+              {/if}
               {editColumnTitle || ""}
             </div>
           {/if}

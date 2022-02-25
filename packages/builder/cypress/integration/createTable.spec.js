@@ -44,7 +44,7 @@ filterTests(["smoke", "all"], () => {
     })
 
     it("deletes a row", () => {
-      cy.get(".spectrum-Checkbox-input").check({ force: true })
+      cy.get(".spectrum-Table-row > .spectrum-Checkbox-input").check({ force: true })
       cy.contains("Delete 1 row(s)").click()
       cy.get(".spectrum-Modal").contains("Delete").click()
       cy.contains("RoverUpdated").should("not.exist")
