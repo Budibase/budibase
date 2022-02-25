@@ -5,6 +5,7 @@ import {
   deleteGlobalUser,
 } from "../../../utilities/workerRequests"
 import { search as stringSearch } from "./utils"
+const { getProdAppID } = require("@budibase/backend-core/db")
 
 function fixUser(ctx: any) {
   if (!ctx.request.body) {
@@ -15,6 +16,13 @@ function fixUser(ctx: any) {
   }
   if (!ctx.request.body.roles) {
     ctx.request.body.roles = {}
+  } else {
+    const newRoles: { [key: string]: string } = {}
+    for (let [appId, role] of Object.entries(ctx.request.body.roles)) {
+      // @ts-ignore
+      newRoles[getProdAppID(appId)] = role
+    }
+    ctx.request.body.roles = newRoles
   }
   return ctx
 }
