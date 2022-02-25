@@ -5,6 +5,9 @@
   "trailingComma": "es5",
   "arrowParens": "avoid",
   "jsxBracketSameLine": false,
-  "plugins": ["prettier-plugin-svelte"],
+  "endOfLine": "auto",
+  "plugins": [
+    "prettier-plugin-svelte"
+  ],
   "svelteSortOrder": "options-scripts-markup-styles"
 }
