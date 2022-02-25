@@ -133,6 +133,10 @@ const queryExecutionHandler = async action => {
 
     return { result }
   } catch (error) {
+    notificationStore.actions.error(
+      "An error occurred while executing the query"
+    )
+
     // Abort next actions
     return false
   }
