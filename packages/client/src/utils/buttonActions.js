@@ -127,12 +127,16 @@ const queryExecutionHandler = async action => {
     // Trigger a notification and invalidate the datasource as long as this
     // was not a readable query
     if (!query.readable) {
-      API.notifications.error.success("Query executed successfully")
+      notificationStore.actions.success("Query executed successfully")
       await dataSourceStore.actions.invalidateDataSource(query.datasourceId)
     }
 
     return { result }
   } catch (error) {
+    notificationStore.actions.error(
+      "An error occurred while executing the query"
+    )
+
     // Abort next actions
     return false
   }
