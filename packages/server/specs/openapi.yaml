@@ -137,6 +137,20 @@ components:
           relationship:
             - primaryDisplay: Joe
               _id: ro_ta_...
+    enrichedRow:
+      value:
+        row:
+          _id: ro_ta_5b1649e42a5b41dea4ef7742a36a7a70_e6dc7e38cf1343b2b56760265201cda4
+          name: eg
+          tableId: ta_5b1649e42a5b41dea4ef7742a36a7a70
+          type: row
+          relationship:
+            - _id: ro_ta_users_us_8f3d717147d74d759d8cef5b6712062f
+              name: Joe
+              tableId: ta_users
+              internal:
+                - _id: ro_ta_5b1649e42a5b41dea4ef7742a36a7a70_e6dc7e38cf1343b2b56760265201cda4
+                  primaryDisplay: eg
     rows:
       value:
         rows:
@@ -381,6 +395,13 @@ components:
     row:
       description: The row to be created/updated, based on the table schema.
       type: object
+      properties:
+        _id:
+          description: The ID of the row.
+          type: string
+        tableId:
+          description: The ID of the table this row comes from.
+          type: string
       additionalProperties:
         oneOf:
           - type: string
@@ -394,6 +415,13 @@ components:
         row:
           description: The row to be created/updated, based on the table schema.
           type: object
+          properties:
+            _id:
+              description: The ID of the row.
+              type: string
+            tableId:
+              description: The ID of the table this row comes from.
+              type: string
           additionalProperties:
             oneOf:
               - type: string
@@ -1115,6 +1143,9 @@ paths:
                   $ref: "#/components/examples/row"
     get:
       summary: Get a single row from the specified table.
+      description: This gets a single row, it will be enriched with the full related
+        rows, rather than the squashed "primaryDisplay" format returned by the
+        search endpoint.
       tags:
         - rows
       parameters:
@@ -1129,8 +1160,8 @@ paths:
               schema:
                 $ref: "#/components/schemas/rowOutput"
               examples:
-                row:
-                  $ref: "#/components/examples/row"
+                enrichedRow:
+                  $ref: "#/components/examples/enrichedRow"
   "/tables/{tableId}/rows/search":
     post:
       summary: Used to search for rows within a table.
