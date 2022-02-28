@@ -173,12 +173,11 @@ export function createAuthStore() {
       })
     },
     generateAPIKey: async () => {
-      const info = await API.generateAPIKey()
-      return info?.apiKey ? info.apiKey : null
+      return API.generateAPIKey()
     },
     fetchAPIKey: async () => {
       const info = await API.fetchDeveloperInfo()
-      return info?.apiKey ? info.apiKey : null
+      return info?.apiKey
     },
   }
 
