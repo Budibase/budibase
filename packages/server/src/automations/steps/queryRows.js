@@ -74,7 +74,7 @@ exports.definition = {
 async function getTable(appId, tableId) {
   const ctx = buildCtx(appId, null, {
     params: {
-      id: tableId,
+      tableId,
     },
   })
   await tableController.find(ctx)
