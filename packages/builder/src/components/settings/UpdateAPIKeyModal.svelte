@@ -1,7 +1,8 @@
 <script>
-  import { ModalContent, Body, Input, notifications } from "@budibase/bbui"
+  import { ModalContent, Body, notifications } from "@budibase/bbui"
   import { auth } from "stores/portal"
   import { onMount } from "svelte"
+  import CopyInput from "components/common/inputs/CopyInput.svelte"
 
   let apiKey = null
 
@@ -32,5 +33,5 @@
     You can find information about your developer account here, such as the API
     key used to access the Budibase API.
   </Body>
-  <Input disabled bind:value={apiKey} label="API key" />
+  <CopyInput bind:value={apiKey} label="API key" />
 </ModalContent>

@@ -39,18 +39,6 @@
     call-me-maybe "^1.0.1"
     z-schema "^4.2.3"
 
-"@apidevtools/swagger-parser@10.0.3", "@apidevtools/swagger-parser@^10.0.3":
-  version "10.0.3"
-  resolved "https://registry.yarnpkg.com/@apidevtools/swagger-parser/-/swagger-parser-10.0.3.tgz#32057ae99487872c4dd96b314a1ab4b95d89eaf5"
-  integrity sha512-sNiLY51vZOmSPFZA5TF35KZ2HbgYklQnTSDnkghamzLb3EkNtcQnrBQEj5AOCxHpTtXpqMCRM1CrmV2rG6nw4g==
-  dependencies:
-    "@apidevtools/json-schema-ref-parser" "^9.0.6"
-    "@apidevtools/openapi-schemas" "^2.0.4"
-    "@apidevtools/swagger-methods" "^3.0.2"
-    "@jsdevtools/ono" "^7.1.3"
-    call-me-maybe "^1.0.1"
-    z-schema "^5.0.1"
-
 "@azure/abort-controller@^1.0.0":
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/@azure/abort-controller/-/abort-controller-1.0.4.tgz#fd3c4d46c8ed67aace42498c8e2270960250eafd"
@@ -11562,13 +11550,6 @@ swagger-parser@10.0.2:
   dependencies:
     "@apidevtools/swagger-parser" "10.0.2"
 
-swagger-parser@^10.0.3:
-  version "10.0.3"
-  resolved "https://registry.yarnpkg.com/swagger-parser/-/swagger-parser-10.0.3.tgz#04cb01c18c3ac192b41161c77f81e79309135d03"
-  integrity sha512-nF7oMeL4KypldrQhac8RyHerJeGPD1p2xDh900GPvc+Nk7nWP6jX2FcC7WmkinMoAmoO774+AFXcWsW8gMWEIg==
-  dependencies:
-    "@apidevtools/swagger-parser" "10.0.3"
-
 symbol-tree@^3.2.2, symbol-tree@^3.2.4:
   version "3.2.4"
   resolved "https://registry.yarnpkg.com/symbol-tree/-/symbol-tree-3.2.4.tgz#430637d248ba77e078883951fb9aa0eed7c63fa2"
@@ -12299,7 +12280,7 @@ validate.js@0.13.1:
   resolved "https://registry.yarnpkg.com/validate.js/-/validate.js-0.13.1.tgz#b58bfac04a0f600a340f62e5227e70d95971e92a"
   integrity sha512-PnFM3xiZ+kYmLyTiMgTYmU7ZHkjBZz2/+F0DaALc/uUtVzdCt1wAosvYJ5hFQi/hz8O4zb52FQhHZRC+uVkJ+g==
 
-validator@^13.6.0, validator@^13.7.0:
+validator@^13.6.0:
   version "13.7.0"
   resolved "https://registry.yarnpkg.com/validator/-/validator-13.7.0.tgz#4f9658ba13ba8f3d82ee881d3516489ea85c0857"
   integrity sha512-nYXQLCBkpJ8X6ltALua9dRrZDHVYxjJ1wgskNt1lH9fzGjs3tgojGSCBjmEPwkWS1y29+DrizMTW19Pr9uB2nw==
@@ -12838,17 +12819,6 @@ z-schema@^4.2.3:
     lodash.get "^4.4.2"
     lodash.isequal "^4.5.0"
     validator "^13.6.0"
-  optionalDependencies:
-    commander "^2.7.1"
-
-z-schema@^5.0.1:
-  version "5.0.2"
-  resolved "https://registry.yarnpkg.com/z-schema/-/z-schema-5.0.2.tgz#f410394b2c9fcb9edaf6a7511491c0bb4e89a504"
-  integrity sha512-40TH47ukMHq5HrzkeVE40Ad7eIDKaRV2b+Qpi2prLc9X9eFJFzV7tMe5aH12e6avaSS/u5l653EQOv+J9PirPw==
-  dependencies:
-    lodash.get "^4.4.2"
-    lodash.isequal "^4.5.0"
-    validator "^13.7.0"
   optionalDependencies:
     commander "^2.7.1"
 
