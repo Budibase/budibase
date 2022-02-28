@@ -166,7 +166,7 @@
             </MenuItem>
             {#if $auth.isBuilder}
               <MenuItem icon="Key" on:click={() => apiKeyModal.show()}>
-                View developer information
+                View API key
               </MenuItem>
             {/if}
             <MenuItem

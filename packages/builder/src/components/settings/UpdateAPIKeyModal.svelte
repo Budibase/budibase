@@ -9,7 +9,7 @@
   async function generateAPIKey() {
     try {
       apiKey = await auth.generateAPIKey()
-      notifications.success("New API key generated.")
+      notifications.success("New API key generated")
     } catch (err) {
       notifications.error("Unable to generate new API key")
     }
@@ -18,7 +18,11 @@
   }
 
   onMount(async () => {
-    apiKey = await auth.fetchAPIKey()
+    try {
+      apiKey = await auth.fetchAPIKey()
+    } catch (err) {
+      notifications.error("Unable to fetch API key")
+    }
   })
 </script>
 
