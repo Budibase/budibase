@@ -445,9 +445,11 @@
         "type": "object",
         "properties": {
           "name": {
+            "description": "The name of the app.",
             "type": "string"
           },
           "url": {
+            "description": "The URL by which the app is accessed, this must be URL encoded.",
             "type": "string"
           }
         },
@@ -463,15 +465,54 @@
             "type": "object",
             "properties": {
               "name": {
+                "description": "The name of the app.",
                 "type": "string"
               },
               "url": {
+                "description": "The URL by which the app is accessed, this must be URL encoded.",
+                "type": "string"
+              },
+              "status": {
+                "description": "The status of the app, stating it if is the development or published version.",
+                "type": "string",
+                "enum": [
+                  "development",
+                  "published"
+                ]
+              },
+              "createdAt": {
+                "description": "States when the app was created, will be constant. Stored in ISO format.",
+                "type": "string"
+              },
+              "updatedAt": {
+                "description": "States the last time the app was updated - stored in ISO format.",
+                "type": "string"
+              },
+              "version": {
+                "description": "States the version of the Budibase client this app is currently based on.",
+                "type": "string"
+              },
+              "tenantId": {
+                "description": "In a multi-tenant environment this will state the tenant this app is within.",
+                "type": "string"
+              },
+              "lockedBy": {
+                "description": "The user this app is currently being built by.",
+                "type": "object"
+              },
+              "appId": {
+                "description": "The ID of the app.",
                 "type": "string"
               }
             },
             "required": [
               "name",
-              "url"
+              "url",
+              "status",
+              "createdAt",
+              "updatedAt",
+              "version",
+              "appId"
             ]
           }
         },
