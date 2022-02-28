@@ -104,6 +104,8 @@ write.push(
  * /tables/{tableId}/rows/{rowId}:
  *   get:
  *     summary: Get a single row from the specified table.
+ *     description: This gets a single row, it will be enriched with the full related rows, rather than
+ *       the squashed "primaryDisplay" format returned by the search endpoint.
  *     tags:
  *       - rows
  *     parameters:
@@ -118,8 +120,8 @@ write.push(
  *             schema:
  *               $ref: '#/components/schemas/rowOutput'
  *             examples:
- *               row:
- *                 $ref: '#/components/examples/row'
+ *               enrichedRow:
+ *                 $ref: '#/components/examples/enrichedRow'
  */
 read.push(new Endpoint("get", "/tables/:tableId/rows/:rowId", controller.read))
 

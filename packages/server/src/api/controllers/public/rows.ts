@@ -45,7 +45,7 @@ export async function create(ctx: any) {
 }
 
 export async function read(ctx: any) {
-  await rowController.find(ctx)
+  await rowController.fetchEnrichedRow(ctx)
   ctx.body = { row: ctx.body }
 }
 
