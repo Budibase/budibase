@@ -1,7 +1,7 @@
 {
   "name": "@budibase/bbui",
   "description": "A UI solution used in the different Budibase projects.",
-  "version": "1.0.76",
+  "version": "1.0.77",
   "license": "MPL-2.0",
   "svelte": "src/index.js",
   "module": "dist/bbui.es.js",
