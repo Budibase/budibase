@@ -3,7 +3,6 @@ const { cloneDeep } = require("lodash/fp")
 const { InternalTables } = require("../../../db/utils")
 const userController = require("../user")
 const { FieldTypes } = require("../../../constants")
-const { processStringSync } = require("@budibase/string-templates")
 const { makeExternalQuery } = require("../../../integrations/base/utils")
 const { getAppDB } = require("@budibase/backend-core/context")
 
@@ -52,6 +51,10 @@ exports.validate = async ({ tableId, row, table }) => {
   for (let fieldName of Object.keys(table.schema)) {
     const constraints = cloneDeep(table.schema[fieldName].constraints)
     const type = table.schema[fieldName].type
+    // formulas shouldn't validated, data will be deleted anyway
+    if (type === FieldTypes.FORMULA) {
+      continue
+    }
     // special case for options, need to always allow unselected (null)
     if (type === FieldTypes.OPTIONS && constraints.inclusion) {
       constraints.inclusion.push(null)
@@ -77,11 +80,6 @@ exports.validate = async ({ tableId, row, table }) => {
       } catch (err) {
         errors[fieldName] = [`Contains invalid JSON`]
       }
-    } else if (type === FieldTypes.FORMULA) {
-      res = validateJs.single(
-        processStringSync(table.schema[fieldName].formula, row),
-        constraints
-      )
     } else {
       res = validateJs.single(row[fieldName], constraints)
     }

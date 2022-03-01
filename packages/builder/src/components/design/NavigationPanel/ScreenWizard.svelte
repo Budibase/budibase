@@ -12,10 +12,11 @@
   let screenName = ""
   let url = ""
   let selectedScreens = []
-  let roleId = $selectedAccessRole || "BASIC"
   let showProgressCircle = false
   let routeError
   let createdScreens = []
+
+  $: roleId = $selectedAccessRole || "BASIC"
 
   const createScreens = async () => {
     for (let screen of selectedScreens) {
@@ -74,6 +75,7 @@
       }
 
       draftScreen.routing.route = route
+      draftScreen.routing.roleId = roleId
 
       await store.actions.screens.save(draftScreen)
       if (draftScreen.props._instanceName.endsWith("List")) {

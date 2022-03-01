@@ -536,11 +536,13 @@ export const getSchemaForDatasource = (asset, datasource, options) => {
     }
 
     // Add schema properties if required
-    if (addId) {
-      schema["_id"] = { type: "string" }
-    }
-    if (addRev) {
-      schema["_rev"] = { type: "string" }
+    if (schema) {
+      if (addId) {
+        schema["_id"] = { type: "string" }
+      }
+      if (addRev) {
+        schema["_rev"] = { type: "string" }
+      }
     }
 
     // Ensure there are "name" properties for all fields and that field schema

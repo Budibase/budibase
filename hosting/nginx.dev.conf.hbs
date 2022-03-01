@@ -11,6 +11,7 @@ events {
 http {
   include       /etc/nginx/mime.types;
   default_type  application/octet-stream;
+  proxy_set_header Host $host;
 
   log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
                     '$status $body_bytes_sent "$http_referer" '
@@ -43,6 +44,10 @@ http {
       proxy_pass      http://{{ address }}:4001;
     }
 
+    location = / {
+      proxy_pass      http://{{ address }}:4001;
+    }
+
     location /app_ {
       proxy_pass      http://{{ address }}:4001;
     }
@@ -63,7 +68,6 @@ http {
       proxy_http_version  1.1;
       proxy_set_header    Connection          $connection_upgrade;
       proxy_set_header    Upgrade             $http_upgrade;
-      proxy_set_header    Host                $host;
       proxy_set_header    X-Real-IP           $remote_addr;
       proxy_set_header    X-Forwarded-For     $proxy_add_x_forwarded_for;
     }
@@ -72,7 +76,6 @@ http {
       proxy_set_header X-Real-IP $remote_addr;
       proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
       proxy_set_header X-Forwarded-Proto $scheme;
-      proxy_set_header Host $http_host;
 
       proxy_connect_timeout 300;
       proxy_http_version 1.1;

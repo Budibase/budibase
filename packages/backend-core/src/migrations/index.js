@@ -22,6 +22,7 @@ exports.getMigrationsDoc = async db => {
     if (err.status && err.status === 404) {
       return { _id: DocumentTypes.MIGRATIONS }
     }
+    console.error(err)
   }
 }
 
@@ -35,7 +36,7 @@ const runMigration = async (CouchDB, migration, options = {}) => {
   if (migrationType === exports.MIGRATION_TYPES.GLOBAL) {
     dbNames = [getGlobalDBName()]
   } else if (migrationType === exports.MIGRATION_TYPES.APP) {
-    const apps = await getAllApps(CouchDB, migration.opts)
+    const apps = await getAllApps(migration.opts)
     dbNames = apps.map(app => app.appId)
   } else {
     throw new Error(
@@ -94,6 +95,8 @@ exports.runMigrations = async (CouchDB, migrations, options = {}) => {
     if (!options.tenantIds || !options.tenantIds.length) {
       // run for all tenants
       tenantIds = await getTenantIds()
+    } else {
+      tenantIds = options.tenantIds
     }
   } else {
     // single tenancy
