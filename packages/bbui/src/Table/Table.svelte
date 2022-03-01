@@ -5,6 +5,7 @@
   import SelectEditRenderer from "./SelectEditRenderer.svelte"
   import { cloneDeep, deepGet } from "../helpers"
   import ProgressCircle from "../ProgressCircle/ProgressCircle.svelte"
+  import Checkbox from "../Form/Checkbox.svelte"
 
   /**
    * The expected schema is our normal couch schemas for our tables.
@@ -31,7 +32,6 @@
   export let allowEditRows = true
   export let allowEditColumns = true
   export let selectedRows = []
-  export let editColumnTitle = "Edit"
   export let customRenderers = []
   export let disableSorting = false
   export let autoSortColumns = true
@@ -50,6 +50,8 @@
   // Table state
   let height = 0
   let loaded = false
+  let checkboxStatus = false
+
   $: schema = fixSchema(schema)
   $: if (!loading) loaded = true
   $: fields = getFields(schema, showAutoColumns, autoSortColumns)
@@ -66,6 +68,16 @@
   $: gridStyle = getGridStyle(fields, schema, showEditColumn)
   $: showEditColumn = allowEditRows || allowSelectRows
   $: cellStyles = computeCellStyles(schema)
+
+  // Deselect the "select all" checkbox when the user navigates to a new page
+  $: {
+    let checkRowCount = rows.filter(o1 =>
+      selectedRows.some(o2 => o1._id === o2._id)
+    )
+    if (checkRowCount.length === 0) {
+      checkboxStatus = false
+    }
+  }
 
   const fixSchema = schema => {
     let fixedSchema = {}
@@ -197,10 +209,29 @@
     if (!allowSelectRows) {
       return
     }
-    if (selectedRows.includes(row)) {
-      selectedRows = selectedRows.filter(selectedRow => selectedRow !== row)
+    if (selectedRows.some(selectedRow => selectedRow._id === row._id)) {
+      selectedRows = selectedRows.filter(
+        selectedRow => selectedRow._id !== row._id
+      )
     } else {
       selectedRows = [...selectedRows, row]
+    }
+  }
+
+  const toggleSelectAll = e => {
+    const select = !!e.detail
+    if (select) {
+      // Add any rows which are not already in selected rows
+      rows.forEach(row => {
+        if (selectedRows.findIndex(x => x._id === row._id) === -1) {
+          selectedRows.push(row)
+        }
+      })
+    } else {
+      // Remove any rows from selected rows that are in the current data set
+      selectedRows = selectedRows.filter(el =>
+        rows.every(f => f._id !== el._id)
+      )
     }
   }
 
@@ -244,7 +275,14 @@
             <div
               class="spectrum-Table-headCell spectrum-Table-headCell--divider spectrum-Table-headCell--edit"
             >
-              {editColumnTitle || ""}
+              {#if allowSelectRows}
+                <Checkbox
+                  bind:value={checkboxStatus}
+                  on:change={toggleSelectAll}
+                />
+              {:else}
+                Edit
+              {/if}
             </div>
           {/if}
           {#each fields as field}
@@ -302,11 +340,16 @@
             {#if showEditColumn}
               <div
                 class="spectrum-Table-cell spectrum-Table-cell--divider spectrum-Table-cell--edit"
+                on:click={e => {
+                  toggleSelectRow(row)
+                  e.stopPropagation()
+                }}
               >
                 <SelectEditRenderer
                   data={row}
-                  selected={selectedRows.includes(row)}
-                  onToggleSelection={() => toggleSelectRow(row)}
+                  selected={selectedRows.findIndex(
+                    selectedRow => selectedRow._id === row._id
+                  ) !== -1}
                   onEdit={e => editRow(e, row)}
                   {allowSelectRows}
                   {allowEditRows}
