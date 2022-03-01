@@ -1,4 +1,4 @@
-import { Query, ExecuteQueryOutput } from "../types/components"
+import { Query, ExecuteQueryOutput } from "./types"
 
 function query(body: any): Query {
   return {

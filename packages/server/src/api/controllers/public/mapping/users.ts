@@ -1,4 +1,4 @@
-import { User, UserOutput } from "../types/components"
+import { User, UserOutput } from "./types"
 
 function user(body: any): User {
   return {

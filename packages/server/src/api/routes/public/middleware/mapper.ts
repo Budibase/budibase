@@ -9,12 +9,12 @@ enum Resources {
   SEARCH = "search",
 }
 
-function isSearch(ctx: any) {
-  return ctx.url.endsWith(Resources.SEARCH)
+function isArrayResponse(ctx: any) {
+  return ctx.url.endsWith(Resources.SEARCH) || Array.isArray(ctx.body)
 }
 
 function processApplications(ctx: any) {
-  if (isSearch(ctx)) {
+  if (isArrayResponse(ctx)) {
     return mapping.mapApplications(ctx)
   } else {
     return mapping.mapApplication(ctx)
@@ -22,7 +22,7 @@ function processApplications(ctx: any) {
 }
 
 function processTables(ctx: any) {
-  if (isSearch(ctx)) {
+  if (isArrayResponse(ctx)) {
     return mapping.mapTables(ctx)
   } else {
     return mapping.mapTable(ctx)
@@ -30,7 +30,7 @@ function processTables(ctx: any) {
 }
 
 function processRows(ctx: any) {
-  if (isSearch(ctx)) {
+  if (isArrayResponse(ctx)) {
     return mapping.mapRowSearch(ctx)
   } else {
     return mapping.mapRow(ctx)
@@ -38,7 +38,7 @@ function processRows(ctx: any) {
 }
 
 function processUsers(ctx: any) {
-  if (isSearch(ctx)) {
+  if (isArrayResponse(ctx)) {
     return mapping.mapUsers(ctx)
   } else {
     return mapping.mapUser(ctx)
@@ -46,7 +46,7 @@ function processUsers(ctx: any) {
 }
 
 function processQueries(ctx: any) {
-  if (isSearch(ctx)) {
+  if (isArrayResponse(ctx)) {
     return mapping.mapQueries(ctx)
   } else {
     return mapping.mapQueryExecution(ctx)
