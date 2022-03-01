@@ -30,8 +30,8 @@ export function breakQueryString(qs) {
   const params = qs.split("&")
   let paramObj = {}
   for (let param of params) {
-    const [key, value] = param.split("=")
-    paramObj[key] = value
+    const split = param.split("=")
+    paramObj[split[0]] = split.slice(1).join("=")
   }
   return paramObj
 }
