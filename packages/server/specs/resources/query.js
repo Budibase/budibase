@@ -1,4 +1,6 @@
 const Resource = require("./utils/Resource")
+const { object } = require("./utils")
+const { BaseQueryVerbs } = require("../../src/constants")
 
 const query = {
   _id: "query_datasource_plus_4d8be0c506b9465daf4bf84d890fdab6_454854487c574d45bc4029b1e153219e",
@@ -73,7 +75,55 @@ const sqlResponse = {
   },
 }
 
-const querySchema = {
+const querySchema = object(
+  {
+    _id: {
+      description: "The ID of the query.",
+      type: "string",
+    },
+    datasourceId: {
+      description: "The ID of the data source the query belongs to.",
+      type: "string",
+    },
+    parameters: {
+      description: "The bindings which are required to perform this query.",
+      type: "array",
+      items: {
+        type: "string",
+      },
+    },
+    fields: {
+      description:
+        "The fields that are used to perform this query, e.g. the sql statement",
+      type: "object",
+    },
+    queryVerb: {
+      description: "The verb that describes this query.",
+      enum: Object.values(BaseQueryVerbs),
+    },
+    name: {
+      description: "The name of the query.",
+      type: "string",
+    },
+    schema: {
+      description:
+        "The schema of the data returned when the query is executed.",
+      type: "object",
+    },
+    transformer: {
+      description:
+        "The JavaScript transformer function, applied after the query responds with data.",
+      type: "string",
+    },
+    readable: {
+      description: "Whether the query has readable data.",
+      type: "boolean",
+    },
+  },
+  { required: ["name", "schema", "_id"] }
+)
+
+const executeQuerySchema = {
   description:
     "The query body must contain the required parameters for the query, this depends on query type, setup and bindings.",
   type: "object",
@@ -87,6 +137,45 @@ const querySchema = {
     ],
   },
 }
+
+const executeQueryOutputSchema = object(
+  {
+    data: {
+      description: "The data response from the query.",
+      type: "array",
+      items: {
+        type: "object",
+      },
+    },
+    extra: {
+      description:
+        "Extra information that is not part of the main data, e.g. headers.",
+      type: "object",
+      properties: {
+        headers: {
+          description:
+            "If carrying out a REST request, this will contain the response headers.",
+          type: "object",
+        },
+        raw: {
+          description: "The raw query response, as a string.",
+          type: "string",
+        },
+      },
+    },
+    info: {
+      description:
+        "Extra info from the query in a key-value map, like response times.",
+      type: "object",
+    },
+    pagination: {
+      description:
+        "If pagination is supported, this will contain the bookmark/anchor information for it.",
+      type: "object",
+    },
+  },
+  { required: ["data"] }
+)
 
 module.exports = new Resource()
   .setExamples({
@@ -104,5 +193,7 @@ module.exports = new Resource()
     sqlResponse,
   })
   .setSchemas({
+    executeQuery: executeQuerySchema,
+    executeQueryOutput: executeQueryOutputSchema,
     query: querySchema,
   })

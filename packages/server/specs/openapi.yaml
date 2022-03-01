@@ -314,6 +314,9 @@ components:
             url:
               description: The URL by which the app is accessed, this must be URL encoded.
               type: string
+            _id:
+              description: The ID of the app.
+              type: string
             status:
               description: The status of the app, stating it if is the development or
                 published version.
@@ -339,29 +342,19 @@ components:
             lockedBy:
               description: The user this app is currently being built by.
               type: object
-            appId:
-              description: The ID of the app.
-              type: string
           required:
+            - _id
             - name
             - url
             - status
             - createdAt
             - updatedAt
             - version
-            - appId
       required:
         - data
     row:
       description: The row to be created/updated, based on the table schema.
       type: object
-      properties:
-        _id:
-          description: The ID of the row.
-          type: string
-        tableId:
-          description: The ID of the table this row comes from.
-          type: string
       additionalProperties:
         oneOf:
           - type: string
@@ -369,19 +362,32 @@ components:
           - type: integer
           - type: array
           - type: boolean
+    searchOutput:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          description: An array of rows, these will each contain an _id field which can be
+            used to update or delete them.
+          type: array
+          items:
+            type: object
+        bookmark:
+          description: If pagination in use, this should be provided.
+          oneOf:
+            - type: string
+            - type: integer
+        hasNextPage:
+          description: If pagination in use, this will determine if there is another page
+            to fetch.
+          type: boolean
     rowOutput:
       type: object
       properties:
         data:
           description: The row to be created/updated, based on the table schema.
           type: object
-          properties:
-            _id:
-              description: The ID of the row.
-              type: string
-            tableId:
-              description: The ID of the table this row comes from.
-              type: string
           additionalProperties:
             oneOf:
               - type: string
@@ -389,6 +395,16 @@ components:
               - type: integer
               - type: array
               - type: boolean
+          properties:
+            _id:
+              description: The ID of the row.
+              type: string
+            tableId:
+              description: The ID of the table this row comes from.
+              type: string
+          required:
+            - tableId
+            - _id
       required:
         - data
     table:
@@ -399,7 +415,7 @@ components:
         - schema
       properties:
         name:
-          description: The name of the table
+          description: The name of the table.
           type: string
         primaryDisplay:
           type: string
@@ -558,9 +574,10 @@ components:
           required:
             - name
             - schema
+            - _id
           properties:
             name:
-              description: The name of the table
+              description: The name of the table.
               type: string
             primaryDisplay:
               type: string
@@ -710,9 +727,12 @@ components:
                       autocolumn:
                         type: boolean
                         description: Defines whether the column is automatically generated.
+            _id:
+              description: The ID of the table.
+              type: string
       required:
         - data
-    query:
+    executeQuery:
       description: The query body must contain the required parameters for the query,
         this depends on query type, setup and bindings.
       type: object
@@ -723,6 +743,76 @@ components:
           - type: integer
           - type: array
           - type: boolean
+    executeQueryOutput:
+      type: object
+      properties:
+        data:
+          description: The data response from the query.
+          type: array
+          items:
+            type: object
+        extra:
+          description: Extra information that is not part of the main data, e.g. headers.
+          type: object
+          properties:
+            headers:
+              description: If carrying out a REST request, this will contain the response
+                headers.
+              type: object
+            raw:
+              description: The raw query response, as a string.
+              type: string
+        info:
+          description: Extra info from the query in a key-value map, like response times.
+          type: object
+        pagination:
+          description: If pagination is supported, this will contain the bookmark/anchor
+            information for it.
+          type: object
+      required:
+        - data
+    query:
+      type: object
+      properties:
+        _id:
+          description: The ID of the query.
+          type: string
+        datasourceId:
+          description: The ID of the data source the query belongs to.
+          type: string
+        parameters:
+          description: The bindings which are required to perform this query.
+          type: array
+          items:
+            type: string
+        fields:
+          description: The fields that are used to perform this query, e.g. the sql
+            statement
+          type: object
+        queryVerb:
+          description: The verb that describes this query.
+          enum:
+            - create
+            - read
+            - update
+            - delete
+        name:
+          description: The name of the query.
+          type: string
+        schema:
+          description: The schema of the data returned when the query is executed.
+          type: object
+        transformer:
+          description: The JavaScript transformer function, applied after the query
+            responds with data.
+          type: string
+        readable:
+          description: Whether the query has readable data.
+          type: boolean
+      required:
+        - name
+        - schema
+        - _id
     user:
       type: object
       properties:
@@ -827,9 +917,13 @@ components:
                 type: string
                 description: A map of app ID (production app ID, minus the _dev component) to a
                   role ID, e.g. ADMIN.
+            _id:
+              description: The ID of the user.
+              type: string
           required:
             - email
             - roles
+            - _id
       required:
         - data
     nameSearch:
@@ -959,38 +1053,25 @@ paths:
     post:
       summary: Execute a query
       description: Queries which have been created within a Budibase app can be
-        executed using this, - queries
+        executed using this,
+      tags:
+        - queries
       parameters:
         - $ref: "#/components/parameters/queryId"
         - $ref: "#/components/parameters/appId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/executeQuery"
       responses:
         "200":
           description: Returns the result of the query execution.
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  data:
-                    type: array
-                    description: The data retrieved from the query.
-                    items:
-                      type: object
-                      description: The structure of the returned data will be an object, if it is just
-                        a string then this will be an object containing "value".
-                  pagination:
-                    type: object
-                    description: For supported query types this returns pagination information.
-                    properties:
-                      cursor:
-                        type: string
-                        description: The pagination cursor location.
-                  raw:
-                    type: string
-                    description: The raw query response.
-                  headers:
-                    type: object
-                    description: For REST queries the headers in the response will be returned here.
+                $ref: "#/components/schemas/executeQueryOutput"
               examples:
                 REST:
                   $ref: "#/components/examples/restResponse"
@@ -1233,25 +1314,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                required:
-                  - data
-                properties:
-                  data:
-                    description: An array of rows, these will each contain an _id field which can be
-                      used to update or delete them.
-                    type: array
-                    items:
-                      type: object
-                  bookmark:
-                    oneOf:
-                      - type: string
-                      - type: integer
-                    description: If pagination in use, this should be provided.
-                  hasNextPage:
-                    description: If pagination in use, this will determine if there is another page
-                      to fetch.
-                    type: boolean
+                $ref: "#/components/schemas/searchOutput"
               examples:
                 search:
                   $ref: "#/components/examples/rows"

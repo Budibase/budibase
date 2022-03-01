@@ -11,38 +11,24 @@ const read = [],
  *   post:
  *     summary: Execute a query
  *     description: Queries which have been created within a Budibase app can be executed using this,
+ *     tags:
  *       - queries
  *     parameters:
  *       - $ref: '#/components/parameters/queryId'
  *       - $ref: '#/components/parameters/appId'
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/executeQuery'
  *     responses:
  *       200:
  *         description: Returns the result of the query execution.
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 data:
- *                   type: array
- *                   description: The data retrieved from the query.
- *                   items:
- *                     type: object
- *                     description: The structure of the returned data will be an object,
- *                       if it is just a string then this will be an object containing "value".
- *                 pagination:
- *                   type: object
- *                   description: For supported query types this returns pagination information.
- *                   properties:
- *                     cursor:
- *                       type: string
- *                       description: The pagination cursor location.
- *                 raw:
- *                   type: string
- *                   description: The raw query response.
- *                 headers:
- *                   type: object
- *                   description: For REST queries the headers in the response will be returned here.
+ *               $ref: '#/components/schemas/executeQueryOutput'
  *             examples:
  *               REST:
  *                 $ref: '#/components/examples/restResponse'

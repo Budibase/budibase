@@ -7,6 +7,7 @@ import usage from "../../../middleware/usageQuota"
 import authorized from "../../../middleware/authorized"
 import { paramResource, paramSubResource } from "../../../middleware/resourceId"
 import { CtxFn } from "./utils/Endpoint"
+import mapperMiddleware from "./middleware/mapper"
 const Router = require("@koa/router")
 const {
   PermissionLevels,
@@ -19,7 +20,11 @@ const publicRouter = new Router({
   prefix: PREFIX,
 })
 
-function addMiddleware(endpoints: any, middleware: CtxFn) {
+function addMiddleware(
+  endpoints: any,
+  middleware: CtxFn,
+  opts: { output: boolean } = { output: false }
+) {
   if (!endpoints) {
     return
   }
@@ -27,7 +32,11 @@ function addMiddleware(endpoints: any, middleware: CtxFn) {
     endpoints = [endpoints]
   }
   for (let endpoint of endpoints) {
-    endpoint.addMiddleware(middleware)
+    if (opts?.output) {
+      endpoint.addOutputMiddleware(middleware)
+    } else {
+      endpoint.addMiddleware(middleware)
+    }
   }
 }
 
@@ -48,11 +57,17 @@ function applyRoutes(
   const paramMiddleware = subResource
     ? paramSubResource(resource, subResource)
     : paramResource(resource)
+  // add the parameter capture middleware
   addMiddleware(endpoints.read, paramMiddleware)
   addMiddleware(endpoints.write, paramMiddleware)
+  // add the authorization middleware, using the correct perm type
   addMiddleware(endpoints.read, authorized(permType, PermissionLevels.READ))
   addMiddleware(endpoints.write, authorized(permType, PermissionLevels.WRITE))
+  // add the usage quota middleware
   addMiddleware(endpoints.write, usage)
+  // add the output mapper middleware
+  addMiddleware(endpoints.read, mapperMiddleware, { output: true })
+  addMiddleware(endpoints.write, mapperMiddleware, { output: true })
   addToRouter(endpoints.read)
   addToRouter(endpoints.write)
 }

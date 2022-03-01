@@ -29,9 +29,13 @@ const base = {
 
 const applicationSchema = object(base, { required: ["name", "url"] })
 
-const applicationSchemaOutput = object(
+const applicationOutputSchema = object(
   {
     ...base,
+    _id: {
+      description: "The ID of the app.",
+      type: "string",
+    },
     status: {
       description:
         "The status of the app, stating it if is the development or published version.",
@@ -62,20 +66,16 @@ const applicationSchemaOutput = object(
       description: "The user this app is currently being built by.",
       type: "object",
     },
-    appId: {
-      description: "The ID of the app.",
-      type: "string",
-    },
   },
   {
     required: [
+      "_id",
       "name",
       "url",
       "status",
       "createdAt",
       "updatedAt",
       "version",
-      "appId",
     ],
   }
 )
@@ -96,6 +96,6 @@ module.exports = new Resource()
   .setSchemas({
     application: applicationSchema,
     applicationOutput: object({
-      data: applicationSchemaOutput,
+      data: applicationOutputSchema,
     }),
   })

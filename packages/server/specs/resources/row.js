@@ -47,7 +47,21 @@ const enrichedRow = {
 const rowSchema = {
   description: "The row to be created/updated, based on the table schema.",
   type: "object",
+  additionalProperties: {
+    oneOf: [
+      { type: "string" },
+      { type: "object" },
+      { type: "integer" },
+      { type: "array" },
+      { type: "boolean" },
+    ],
+  },
+}
+
+const rowOutputSchema = {
+  ...rowSchema,
   properties: {
+    ...rowSchema.properties,
     _id: {
       description: "The ID of the row.",
       type: "string",
@@ -57,14 +71,30 @@ const rowSchema = {
       type: "string",
     },
   },
-  additionalProperties: {
-    oneOf: [
-      { type: "string" },
-      { type: "object" },
-      { type: "integer" },
-      { type: "array" },
-      { type: "boolean" },
-    ],
+  required: ["tableId", "_id"],
+}
+
+const searchOutputSchema = {
+  type: "object",
+  required: ["data"],
+  properties: {
+    data: {
+      description:
+        "An array of rows, these will each contain an _id field which can be used to update or delete them.",
+      type: "array",
+      items: {
+        type: "object",
+      },
+    },
+    bookmark: {
+      description: "If pagination in use, this should be provided.",
+      oneOf: [{ type: "string" }, { type: "integer" }],
+    },
+    hasNextPage: {
+      description:
+        "If pagination in use, this will determine if there is another page to fetch.",
+      type: "boolean",
+    },
   },
 }
 
@@ -93,7 +123,8 @@ module.exports = new Resource()
   })
   .setSchemas({
     row: rowSchema,
+    searchOutput: searchOutputSchema,
     rowOutput: object({
-      data: rowSchema,
+      data: rowOutputSchema,
     }),
   })
