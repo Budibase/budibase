@@ -125,7 +125,7 @@ describe("check the rows endpoints", () => {
       name: "test row",
     })
     expect(res).toSatisfyApiSpec()
-    row = res.body.row
+    row = res.body.data
   })
 
   it("should allow updating a row", async () => {

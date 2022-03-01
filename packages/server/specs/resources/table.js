@@ -162,18 +162,18 @@ module.exports = new Resource()
   .setExamples({
     table: {
       value: {
-        table: table,
+        data: table,
       },
     },
     tables: {
       value: {
-        tables: [table],
+        data: [table],
       },
     },
   })
   .setSchemas({
     table: tableSchema,
     tableOutput: object({
-      table: tableSchema,
+      data: tableSchema,
     }),
   })

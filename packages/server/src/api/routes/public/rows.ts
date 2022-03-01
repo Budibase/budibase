@@ -9,7 +9,8 @@ const read = [],
  * @openapi
  * /tables/{tableId}/rows:
  *   post:
- *     summary: Creates a new row within a specified table.
+ *     summary: Create a row
+ *     description: Creates a row within the specified table.
  *     tags:
  *       - rows
  *     parameters:
@@ -42,7 +43,8 @@ write.push(new Endpoint("post", "/tables/:tableId/rows", controller.create))
  * @openapi
  * /tables/{tableId}/rows/{rowId}:
  *   put:
- *     summary: Update a single row within a specified table.
+ *     summary: Update a row
+ *     description: Updates a row within the specified table.
  *     tags:
  *       - rows
  *     parameters:
@@ -77,7 +79,8 @@ write.push(
  * @openapi
  * /tables/{tableId}/rows/{rowId}:
  *   delete:
- *     summary: Delete a single row from the specified table.
+ *     summary: Delete a row
+ *     description: Deletes a row within the specified table.
  *     tags:
  *       - rows
  *     parameters:
@@ -103,7 +106,7 @@ write.push(
  * @openapi
  * /tables/{tableId}/rows/{rowId}:
  *   get:
- *     summary: Get a single row from the specified table.
+ *     summary: Retrieve a row
  *     description: This gets a single row, it will be enriched with the full related rows, rather than
  *       the squashed "primaryDisplay" format returned by the search endpoint.
  *     tags:
@@ -129,7 +132,7 @@ read.push(new Endpoint("get", "/tables/:tableId/rows/:rowId", controller.read))
  * @openapi
  * /tables/{tableId}/rows/search:
  *   post:
- *     summary: Used to search for rows within a table.
+ *     summary: Search for rows
  *     tags:
  *       - rows
  *     parameters:
@@ -225,9 +228,9 @@ read.push(new Endpoint("get", "/tables/:tableId/rows/:rowId", controller.read))
  *             schema:
  *               type: object
  *               required:
- *                 - rows
+ *                 - data
  *               properties:
- *                 rows:
+ *                 data:
  *                   description: An array of rows, these will each contain an _id field which can be used
  *                     to update or delete them.
  *                   type: array

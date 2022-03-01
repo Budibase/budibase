@@ -1,4 +1,4 @@
-import { search as stringSearch, addRev } from "./utils"
+import { search as stringSearch, addRev, wrapResponse } from "./utils"
 import { default as controller } from "../table"
 import { Table } from "../../../definitions/common"
 
@@ -15,19 +15,18 @@ function fixTable(table: Table, params: any) {
 export async function search(ctx: any) {
   const { name } = ctx.request.body
   await controller.fetch(ctx)
-  ctx.body = {
-    tables: stringSearch(ctx.body, name),
-  }
+  ctx.body = stringSearch(ctx.body, name)
+  wrapResponse(ctx)
 }
 
 export async function create(ctx: any) {
   await controller.save(ctx)
-  ctx.body = { table: ctx.body }
+  wrapResponse(ctx)
 }
 
 export async function read(ctx: any) {
   await controller.find(ctx)
-  ctx.body = { table: ctx.body }
+  wrapResponse(ctx)
 }
 
 export async function update(ctx: any) {
@@ -36,12 +35,13 @@ export async function update(ctx: any) {
     ctx.params.tableId
   )
   await controller.save(ctx)
-  ctx.body = { table: ctx.body }
+  wrapResponse(ctx)
 }
 
 export async function destroy(ctx: any) {
   await controller.destroy(ctx)
-  ctx.body = { table: ctx.table }
+  ctx.body = ctx.table
+  wrapResponse(ctx)
 }
 
 export default {

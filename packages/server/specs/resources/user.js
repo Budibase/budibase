@@ -97,18 +97,18 @@ module.exports = new Resource()
   .setExamples({
     user: {
       value: {
-        user: user,
+        data: user,
       },
     },
     users: {
       value: {
-        users: [user],
+        data: [user],
       },
     },
   })
   .setSchemas({
     user: userSchema,
     userOutput: object({
-      user: userSchema,
+      data: userSchema,
     }),
   })

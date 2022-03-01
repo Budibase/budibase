@@ -9,7 +9,8 @@ const read = [],
  * @openapi
  * /tables:
  *   post:
- *     summary: Create a new table.
+ *     summary: Create a table
+ *     description: Create a table, this could be internal or external.
  *     tags:
  *       - tables
  *     parameters:
@@ -44,7 +45,8 @@ write.push(
  * @openapi
  * /tables/{tableId}:
  *   put:
- *     summary: Update the specified table.
+ *     summary: Update a table
+ *     description: Update a table, this could be internal or external.
  *     tags:
  *       - tables
  *     parameters:
@@ -79,7 +81,8 @@ write.push(
  * @openapi
  * /tables/{tableId}:
  *   delete:
- *     summary: Delete a single table and all of its data.
+ *     summary: Delete a table
+ *     description: Delete a table, this could be internal or external.
  *     tags:
  *       - tables
  *     parameters:
@@ -102,7 +105,8 @@ write.push(new Endpoint("delete", "/tables/:tableId", controller.destroy))
  * @openapi
  * /tables/{tableId}:
  *   get:
- *     summary: Gets a single table by its ID.
+ *     summary: Retrieve a table
+ *     description: Lookup a table, this could be internal or external.
  *     tags:
  *       - tables
  *     parameters:
@@ -125,7 +129,9 @@ read.push(new Endpoint("get", "/tables/:tableId", controller.read))
  * @openapi
  * /tables/search:
  *   post:
- *     summary: Search internal and external tables based on their name.
+ *     summary: Search for tables
+ *     description: Based on table properties (currently only name) search for tables. This could be
+ *       an internal or an external table.
  *     tags:
  *       - tables
  *     parameters:
@@ -144,9 +150,9 @@ read.push(new Endpoint("get", "/tables/:tableId", controller.read))
  *             schema:
  *               type: object
  *               required:
- *                 - tables
+ *                 - data
  *               properties:
- *                 tables:
+ *                 data:
  *                   type: array
  *                   items:
  *                     $ref: '#/components/schemas/table'

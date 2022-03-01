@@ -1,5 +1,5 @@
 import { default as rowController } from "../row"
-import { addRev } from "./utils"
+import { addRev, wrapResponse } from "./utils"
 import { Row } from "../../../definitions/common"
 
 // makes sure that the user doesn't need to pass in the type, tableId or _id params for
@@ -36,23 +36,25 @@ export async function search(ctx: any) {
     query,
   }
   await rowController.search(ctx)
+  ctx.body.data = ctx.body.rows
+  delete ctx.body.rows
 }
 
 export async function create(ctx: any) {
   ctx.request.body = fixRow(ctx.request.body, ctx.params)
   await rowController.save(ctx)
-  ctx.body = { row: ctx.body }
+  wrapResponse(ctx)
 }
 
 export async function read(ctx: any) {
   await rowController.fetchEnrichedRow(ctx)
-  ctx.body = { row: ctx.body }
+  wrapResponse(ctx)
 }
 
 export async function update(ctx: any) {
   ctx.request.body = await addRev(fixRow(ctx.request.body, ctx.params.tableId))
   await rowController.save(ctx)
-  ctx.body = { row: ctx.body }
+  wrapResponse(ctx)
 }
 
 export async function destroy(ctx: any) {
@@ -63,7 +65,7 @@ export async function destroy(ctx: any) {
   await rowController.destroy(ctx)
   // destroy controller doesn't currently return the row as the body, need to adjust this
   // in the public API to be correct
-  ctx.body = { row: ctx.row }
+  wrapResponse(ctx)
 }
 
 export default {

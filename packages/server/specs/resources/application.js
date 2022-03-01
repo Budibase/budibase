@@ -84,18 +84,18 @@ module.exports = new Resource()
   .setExamples({
     application: {
       value: {
-        application: application,
+        data: application,
       },
     },
     applications: {
       value: {
-        applications: [application],
+        data: [application],
       },
     },
   })
   .setSchemas({
     application: applicationSchema,
     applicationOutput: object({
-      application: applicationSchemaOutput,
+      data: applicationSchemaOutput,
     }),
   })
