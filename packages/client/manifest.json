@@ -851,16 +851,12 @@
         "type": "color",
         "label": "Color",
         "key": "color",
-        "showInBar": true,
-        "barSeparator": false
+        "showInBar": true
       },
       {
         "type": "boolean",
         "label": "Show delete icon",
-        "key": "closable",
-        "showInBar": true,
-        "barIcon": "TagItalic",
-        "barTitle": "Show delete icon"
+        "key": "closable"
       },
       {
         "type": "event",
@@ -2683,7 +2679,8 @@
         "type": "columns",
         "label": "Columns",
         "key": "columns",
-        "dependsOn": "dataProvider"
+        "dependsOn": "dataProvider",
+        "nested": true
       },
       {
         "type": "select",
@@ -2705,6 +2702,11 @@
         "type": "boolean",
         "label": "Quiet",
         "key": "quiet"
+      },
+      {
+        "type": "boolean",
+        "label": "Compact",
+        "key": "compact"
       },
       {
         "type": "boolean",
@@ -2960,6 +2962,11 @@
             "type": "boolean",
             "label": "Quiet table variant",
             "key": "quiet"
+          },
+          {
+            "type": "boolean",
+            "label": "Compact",
+            "key": "compact"
           },
           {
             "type": "boolean",
