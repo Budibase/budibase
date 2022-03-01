@@ -26,8 +26,10 @@ function mapQueryExecution(ctx: any): ExecuteQueryOutput {
   return {
     data: ctx.body.data,
     pagination: ctx.body.pagination,
-    extra: ctx.body.extra,
-    info: ctx.body.info,
+    extra: {
+      raw: ctx.body.raw,
+      headers: ctx.body.headers,
+    },
   }
 }
 
