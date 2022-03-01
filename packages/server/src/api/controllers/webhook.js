@@ -1,6 +1,7 @@
 const { generateWebhookID, getWebhookParams } = require("../../db/utils")
 const toJsonSchema = require("to-json-schema")
 const validate = require("jsonschema").validate
+const { WebhookType } = require("../../constants")
 const triggers = require("../../automations/triggers")
 const { getProdAppID } = require("@budibase/backend-core/db")
 const { getAppDB, updateAppId } = require("@budibase/backend-core/context")
@@ -58,7 +59,7 @@ exports.buildSchema = async ctx => {
   const webhook = await db.get(ctx.params.id)
   webhook.bodySchema = toJsonSchema(ctx.request.body)
   // update the automation outputs
-  if (webhook.action.type === exports.WebhookType.AUTOMATION) {
+  if (webhook.action.type === WebhookType.AUTOMATION) {
     let automation = await db.get(webhook.action.target)
     const autoOutputs = automation.definition.trigger.schema.outputs
     let properties = webhook.bodySchema.properties
@@ -88,7 +89,7 @@ exports.trigger = async ctx => {
       validate(ctx.request.body, webhook.bodySchema)
     }
     const target = await db.get(webhook.action.target)
-    if (webhook.action.type === exports.WebhookType.AUTOMATION) {
+    if (webhook.action.type === WebhookType.AUTOMATION) {
       // trigger with both the pure request and then expand it
       // incase the user has produced a schema to bind to
       await triggers.externalTrigger(target, {
