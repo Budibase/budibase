@@ -5,7 +5,7 @@ const allDbs = require("pouchdb-all-dbs")
 const find = require("pouchdb-find")
 const env = require("../environment")
 
-const COUCH_DB_URL = getCouchUrl() || "http://localhost:10000/db/"
+const COUCH_DB_URL = getCouchUrl() || "http://localhost:4005"
 
 PouchDB.plugin(replicationStream.plugin)
 PouchDB.plugin(find)

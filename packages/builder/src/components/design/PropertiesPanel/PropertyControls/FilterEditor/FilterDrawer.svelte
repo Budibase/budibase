@@ -184,6 +184,7 @@
     max-width: 1000px;
     margin: 0 auto;
   }
+
   .fields {
     display: grid;
     column-gap: var(--spacing-l);

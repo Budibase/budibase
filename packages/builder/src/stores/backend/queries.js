@@ -60,7 +60,7 @@ export function createQueriesStore() {
       })
       return savedQuery
     },
-    import: async (data, datasourceId) => {
+    import: async ({ data, datasourceId }) => {
       return await API.importQueries({
         datasourceId,
         data,

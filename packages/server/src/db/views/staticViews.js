@@ -96,7 +96,7 @@ exports.createAllSearchIndex = async () => {
       function idx(input, prev) {
         for (let key of Object.keys(input)) {
           let idxKey = prev != null ? `${prev}.${key}` : key
-          idxKey = idxKey.replace(/ /, "_")
+          idxKey = idxKey.replace(/ /g, "_")
           if (Array.isArray(input[key])) {
             for (let val of input[key]) {
               if (typeof val !== "object") {

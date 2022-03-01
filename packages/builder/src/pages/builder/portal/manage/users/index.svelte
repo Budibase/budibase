@@ -43,7 +43,7 @@
   let createUserModal
   let basicOnboardingModal
 
-  function openBasicOnoboardingModal() {
+  function openBasicOnboardingModal() {
     createUserModal.hide()
     basicOnboardingModal.show()
   }
@@ -91,7 +91,7 @@
 </Layout>
 
 <Modal bind:this={createUserModal}>
-  <AddUserModal on:change={openBasicOnoboardingModal} />
+  <AddUserModal on:change={openBasicOnboardingModal} />
 </Modal>
 <Modal bind:this={basicOnboardingModal}><BasicOnboardingModal {email} /></Modal>
 

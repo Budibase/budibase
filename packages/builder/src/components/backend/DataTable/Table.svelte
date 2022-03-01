@@ -136,7 +136,7 @@
     </div>
   </div>
   {#key tableId}
-    <div class="table-wrapper" in:fade={{ delay: 200, duration: 100 }}>
+    <div class="table-wrapper">
       <Table
         {data}
         {schema}

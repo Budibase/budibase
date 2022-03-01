@@ -17,14 +17,16 @@
 {#each attachments as attachment}
   {#if isImage(attachment.extension)}
     <Link quiet target="_blank" href={attachment.url}>
-      <img src={attachment.url} alt={attachment.extension} />
+      <div class="center">
+        <img src={attachment.url} alt={attachment.extension} />
+      </div>
     </Link>
   {:else}
     <Tooltip text={attachment.name} direction="right">
       <div class="file">
-        <Link quiet target="_blank" href={attachment.url}
-          >{attachment.extension}</Link
-        >
+        <Link quiet target="_blank" href={attachment.url}>
+          {attachment.extension}
+        </Link>
       </div>
     </Tooltip>
   {/if}
@@ -38,12 +40,15 @@
     height: 32px;
     max-width: 64px;
   }
+  .center,
   .file {
-    height: 32px;
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
+  }
+  .file {
+    height: 32px;
     padding: 0 8px;
     color: var(--spectrum-global-color-gray-800);
     border: 1px solid var(--spectrum-global-color-gray-300);
