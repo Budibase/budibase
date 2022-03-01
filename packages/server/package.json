@@ -25,7 +25,7 @@
     "generate:proxy:preprod": "node scripts/proxy/generateProxyConfig preprod",
     "generate:proxy:prod": "node scripts/proxy/generateProxyConfig prod",
     "format": "prettier --config ../../.prettierrc.json 'src/**/*.ts' --write",
-    "specs": "node specs/generate.js && openapi-typescript specs/openapi.yaml --output src/api/controllers/public/types/openapi.ts",
+    "specs": "node specs/generate.js && openapi-typescript specs/openapi.yaml --output src/definitions/openapi.ts",
     "lint": "eslint --fix src/",
     "lint:fix": "yarn run format && yarn run lint",
     "initialise": "node scripts/initialise.js",

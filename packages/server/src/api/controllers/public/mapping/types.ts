@@ -1,4 +1,4 @@
-import { components } from "./openapi"
+import { components } from "../../../../definitions/openapi"
 
 export type Query = components["schemas"]["query"]
 export type ExecuteQueryOutput = components["schemas"]["executeQueryOutput"]

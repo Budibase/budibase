@@ -1,4 +1,4 @@
-import { Table, TableOutput } from "../types/components"
+import { Table, TableOutput } from "./types"
 
 function table(body: any): Table {
   return {

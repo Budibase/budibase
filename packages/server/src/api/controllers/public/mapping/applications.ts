@@ -1,4 +1,4 @@
-import { Application, ApplicationOutput } from "../types/components"
+import { Application, ApplicationOutput } from "./types"
 
 function application(body: any): Application {
   let app = body?.application ? body.application : body

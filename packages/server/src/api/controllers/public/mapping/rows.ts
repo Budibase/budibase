@@ -1,4 +1,4 @@
-import { Row, RowSearch, RowOutput } from "../types/components"
+import { Row, RowSearch, RowOutput } from "./types"
 
 function row(body: any): Row {
   delete body._rev
