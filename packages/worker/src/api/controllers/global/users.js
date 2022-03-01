@@ -170,6 +170,7 @@ exports.getSelf = async ctx => {
 
   // forward session information not found in db
   ctx.body.account = ctx.user.account
+  ctx.body.license = ctx.user.license
   ctx.body.budibaseAccess = ctx.user.budibaseAccess
   ctx.body.accountPortalAccess = ctx.user.accountPortalAccess
   ctx.body.csrfToken = ctx.user.csrfToken
