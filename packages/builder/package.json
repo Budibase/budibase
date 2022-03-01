@@ -13,7 +13,7 @@
     "cy:setup:ci": "node ./cypress/setup.js",
     "cy:open": "cypress open",
     "cy:run": "cypress run",
-    "cy:run:ci": "xvfb-run cypress run --headed --browser chrome --record",
+    "cy:run:ci": "xvfb-run cypress run --headed --browser chrome",
     "cy:test": "start-server-and-test cy:setup http://localhost:4100/builder cy:run",
     "cy:ci": "start-server-and-test cy:setup:ci http://localhost:4100/builder cy:run:ci",
     "cy:debug": "start-server-and-test cy:setup http://localhost:4100/builder cy:open",
