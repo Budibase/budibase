@@ -163,11 +163,6 @@ const executeQueryOutputSchema = object(
         },
       },
     },
-    info: {
-      description:
-        "Extra info from the query in a key-value map, like response times.",
-      type: "object",
-    },
     pagination: {
       description:
         "If pagination is supported, this will contain the bookmark/anchor information for it.",

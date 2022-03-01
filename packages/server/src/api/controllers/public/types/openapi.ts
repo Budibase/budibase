@@ -850,8 +850,6 @@ export interface components {
         /** @description The raw query response, as a string. */
         raw?: string
       }
-      /** @description Extra info from the query in a key-value map, like response times. */
-      info?: { [key: string]: unknown }
       /** @description If pagination is supported, this will contain the bookmark/anchor information for it. */
       pagination?: { [key: string]: unknown }
     }
