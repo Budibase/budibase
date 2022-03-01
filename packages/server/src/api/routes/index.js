@@ -58,5 +58,5 @@ exports.mainRoutes = [
   migrationRoutes,
 ]
 
-exports.staticRoutes = staticRoutes
 exports.publicRoutes = publicRoutes
+exports.staticRoutes = staticRoutes

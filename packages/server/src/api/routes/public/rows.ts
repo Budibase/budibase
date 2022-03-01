@@ -226,24 +226,7 @@ read.push(new Endpoint("get", "/tables/:tableId/rows/:rowId", controller.read))
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               required:
- *                 - data
- *               properties:
- *                 data:
- *                   description: An array of rows, these will each contain an _id field which can be used
- *                     to update or delete them.
- *                   type: array
- *                   items:
- *                     type: object
- *                 bookmark:
- *                   oneOf:
- *                     - type: string
- *                     - type: integer
- *                   description: If pagination in use, this should be provided.
- *                 hasNextPage:
- *                   description: If pagination in use, this will determine if there is another page to fetch.
- *                   type: boolean
+ *               $ref: '#/components/schemas/searchOutput'
  *             examples:
  *               search:
  *                 $ref: '#/components/examples/rows'

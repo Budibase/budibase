@@ -36,11 +36,3 @@ export function search(docs: any[], value: any, key = "name") {
   }
   return filtered
 }
-
-export function wrapResponse(ctx: any, map?: (input: any) => object) {
-  let data = ctx.body
-  if (map) {
-    data = map(data)
-  }
-  ctx.body = { data }
-}

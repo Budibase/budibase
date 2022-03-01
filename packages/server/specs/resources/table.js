@@ -66,7 +66,7 @@ const tableSchema = {
   required: ["name", "schema"],
   properties: {
     name: {
-      description: "The name of the table",
+      description: "The name of the table.",
       type: "string",
     },
     primaryDisplay: {
@@ -158,6 +158,18 @@ const tableSchema = {
   },
 }
 
+const tableOutputSchema = {
+  ...tableSchema,
+  properties: {
+    ...tableSchema.properties,
+    _id: {
+      description: "The ID of the table.",
+      type: "string",
+    },
+  },
+  required: [...tableSchema.required, "_id"],
+}
+
 module.exports = new Resource()
   .setExamples({
     table: {
@@ -174,6 +186,6 @@ module.exports = new Resource()
   .setSchemas({
     table: tableSchema,
     tableOutput: object({
-      data: tableSchema,
+      data: tableOutputSchema,
     }),
   })

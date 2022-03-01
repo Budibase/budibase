@@ -1,16 +1,17 @@
-import { search as stringSearch, wrapResponse } from "./utils"
+import { search as stringSearch } from "./utils"
 import { default as queryController } from "../query"
 
-export async function search(ctx: any) {
+export async function search(ctx: any, next: any) {
   await queryController.fetch(ctx)
   const { name } = ctx.request.body
   ctx.body = stringSearch(ctx.body, name)
-  wrapResponse(ctx)
+  await next()
 }
 
-export async function execute(ctx: any) {
+export async function execute(ctx: any, next: any) {
+  // don't wrap this, already returns "data"
   await queryController.executeV2(ctx)
-  wrapResponse(ctx)
+  await next()
 }
 
 export default {

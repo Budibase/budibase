@@ -93,6 +93,18 @@ const userSchema = object(
   { required: ["email", "roles"] }
 )
 
+const userOutputSchema = {
+  ...userSchema,
+  properties: {
+    ...userSchema.properties,
+    _id: {
+      description: "The ID of the user.",
+      type: "string",
+    },
+  },
+  required: [...userSchema.required, "_id"],
+}
+
 module.exports = new Resource()
   .setExamples({
     user: {
@@ -109,6 +121,6 @@ module.exports = new Resource()
   .setSchemas({
     user: userSchema,
     userOutput: object({
-      data: userSchema,
+      data: userOutputSchema,
     }),
   })
