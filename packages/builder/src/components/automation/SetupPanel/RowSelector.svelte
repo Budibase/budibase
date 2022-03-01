@@ -1,26 +1,31 @@
 <script>
   import { tables } from "stores/backend"
-  import {
-    Select,
-    Toggle,
-    DatePicker,
-    Multiselect,
-    TextArea,
-  } from "@budibase/bbui"
+  import { Select } from "@budibase/bbui"
   import DrawerBindableInput from "../../common/bindings/DrawerBindableInput.svelte"
   import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
   import { createEventDispatcher } from "svelte"
-  import ModalBindableInput from "components/common/bindings/ModalBindableInput.svelte"
-  import LinkedRowSelector from "components/common/LinkedRowSelector.svelte"
   import { automationStore } from "builderStore"
+  import RowSelectorTypes from "./RowSelectorTypes.svelte"
 
   const dispatch = createEventDispatcher()
 
   export let value
   export let bindings
+  export let block
+
   let table
   let schemaFields
 
+  let placeholders = {
+    number: 10,
+    boolean: "true",
+    datetime: "2022-02-16T12:00:00.000Z ",
+    options: "1",
+    array: "1 2 3 4",
+    link: "ro_ta_123_456",
+    longform: "long form text",
+  }
+  $: rowControl = block.rowControl
   $: {
     table = $tables.list.find(table => table._id === value?.tableId)
     schemaFields = Object.entries(table?.schema ?? {})
@@ -37,18 +42,48 @@
     dispatch("change", value)
   }
 
-  const onChange = (e, field) => {
-    value[field] = e.detail
+  const coerce = (value, type) => {
+    if (type === "boolean") {
+      if (typeof value === "boolean") {
+        return value
+      }
+      return value === "true"
+    }
+    if (type === "number") {
+      if (typeof value === "number") {
+        return value
+      }
+      return Number(value)
+    }
+    if (type === "options") {
+      return [value]
+    }
+    if (type === "array") {
+      if (Array.isArray(value)) {
+        return value
+      }
+      return value.split(",").map(x => x.trim())
+    }
+
+    if (type === "link") {
+      if (Array.isArray(value)) {
+        return value
+      }
+
+      return [value]
+    }
+
+    return value
+  }
+
+  const onChange = (e, field, type) => {
+    value[field] = coerce(e.detail, type)
     dispatch("change", value)
   }
 
   // Ensure any nullish tableId values get set to empty string so
   // that the select works
   $: if (value?.tableId == null) value = { tableId: "" }
-
-  function schemaHasOptions(schema) {
-    return !!schema.constraints?.inclusion?.length
-  }
 </script>
 
 <Select
@@ -62,55 +97,46 @@
   <div class="schema-fields">
     {#each schemaFields as [field, schema]}
       {#if !schema.autocolumn}
-        {#if schemaHasOptions(schema) && schema.type !== "array"}
-          <Select
-            on:change={e => onChange(e, field)}
-            label={field}
-            value={value[field]}
-            options={schema.constraints.inclusion}
-          />
-        {:else if schema.type === "datetime"}
-          <DatePicker
-            label={field}
-            value={value[field]}
-            on:change={e => onChange(e, field)}
-          />
-        {:else if schema.type === "boolean"}
-          <Toggle
-            text={field}
-            value={value[field]}
-            on:change={e => onChange(e, field)}
-          />
-        {:else if schema.type === "array"}
-          <Multiselect
-            bind:value={value[field]}
-            label={field}
-            options={schema.constraints.inclusion}
-          />
-        {:else if schema.type === "longform"}
-          <TextArea label={field} bind:value={value[field]} />
-        {:else if schema.type === "link"}
-          <LinkedRowSelector bind:linkedRows={value[field]} {schema} />
-        {:else if schema.type === "string" || schema.type === "number"}
+        {#if schema.type !== "attachment"}
           {#if $automationStore.selectedAutomation.automation.testData}
-            <ModalBindableInput
-              value={value[field]}
-              panel={AutomationBindingPanel}
-              label={field}
-              type={value.customType}
-              on:change={e => onChange(e, field)}
-              {bindings}
-            />
+            {#if !rowControl}
+              <RowSelectorTypes
+                {field}
+                {schema}
+                {bindings}
+                {value}
+                {onChange}
+              />
+            {:else}
+              <DrawerBindableInput
+                placeholder={placeholders[schema.type]}
+                panel={AutomationBindingPanel}
+                value={Array.isArray(value[field])
+                  ? value[field].join(" ")
+                  : value[field]}
+                on:change={e => onChange(e, field, schema.type)}
+                label={field}
+                type="string"
+                {bindings}
+                fillWidth={true}
+                allowJS={true}
+              />
+            {/if}
+          {:else if !rowControl}
+            <RowSelectorTypes {field} {schema} {bindings} {value} {onChange} />
           {:else}
             <DrawerBindableInput
+              placeholder={placeholders[schema.type]}
               panel={AutomationBindingPanel}
-              value={value[field]}
-              on:change={e => onChange(e, field)}
+              value={Array.isArray(value[field])
+                ? value[field].join(" ")
+                : value[field]}
+              on:change={e => onChange(e, field, schema.type)}
               label={field}
               type="string"
               {bindings}
               fillWidth={true}
-              allowJS={false}
+              allowJS={true}
             />
           {/if}
         {/if}
