@@ -1,4 +1,4 @@
-import { Application, ApplicationOutput } from "./types"
+import { Application } from "./types"
 
 function application(body: any): Application {
   let app = body?.application ? body.application : body
@@ -15,7 +15,7 @@ function application(body: any): Application {
   }
 }
 
-function mapApplication(ctx: any): ApplicationOutput {
+function mapApplication(ctx: any): { data: Application } {
   return {
     data: application(ctx.body),
   }

@@ -128,13 +128,8 @@ const executeQuerySchema = {
     "The query body must contain the required parameters for the query, this depends on query type, setup and bindings.",
   type: "object",
   additionalProperties: {
-    oneOf: [
-      { type: "string" },
-      { type: "object" },
-      { type: "integer" },
-      { type: "array" },
-      { type: "boolean" },
-    ],
+    description:
+      "Key value properties of any type, depending on the query output schema.",
   },
 }
 

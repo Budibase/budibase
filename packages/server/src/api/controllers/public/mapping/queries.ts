@@ -1,4 +1,4 @@
-import { Query, ExecuteQueryOutput } from "./types"
+import { Query, ExecuteQuery } from "./types"
 
 function query(body: any): Query {
   return {
@@ -21,7 +21,7 @@ function mapQueries(ctx: any): { data: Query[] } {
   }
 }
 
-function mapQueryExecution(ctx: any): ExecuteQueryOutput {
+function mapQueryExecution(ctx: any): ExecuteQuery {
   // very little we can map here, structure mostly unknown
   return {
     data: ctx.body.data,

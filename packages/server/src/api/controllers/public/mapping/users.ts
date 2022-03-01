@@ -1,4 +1,4 @@
-import { User, UserOutput } from "./types"
+import { User } from "./types"
 
 function user(body: any): User {
   return {
@@ -15,7 +15,7 @@ function user(body: any): User {
   }
 }
 
-function mapUser(ctx: any): UserOutput {
+function mapUser(ctx: any): { data: User } {
   return {
     data: user(ctx.body),
   }
