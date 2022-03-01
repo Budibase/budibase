@@ -27,10 +27,13 @@ filterTests(["smoke", "all"], () => {
     it("updates a column on the table", () => {
       cy.get(".title").click()
       cy.get(".spectrum-Table-editIcon > use").click()
-      cy.get("input").eq(1).type("updated", { force: true })
+      cy.get(".modal-inner-wrapper").within(() => {
+
+      cy.get("input").eq(0).type("updated", { force: true })
       // Unset table display column
       cy.get(".spectrum-Switch-input").eq(1).click()
       cy.contains("Save Column").click()
+      })
       cy.contains("nameupdated ").should("contain", "nameupdated")
     })
 
