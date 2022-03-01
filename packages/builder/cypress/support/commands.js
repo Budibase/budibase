@@ -172,17 +172,19 @@ Cypress.Commands.add("addRow", values => {
 
 Cypress.Commands.add("addRowMultiValue", values => {
   cy.contains("Create row").click()
-  cy.get(".spectrum-Form-itemField")
-    .click()
-    .then(() => {
-      cy.get(".spectrum-Popover").within(() => {
-        for (let i = 0; i < values.length; i++) {
-          cy.get(".spectrum-Menu-item").eq(i).click()
-        }
+  cy.get(".spectrum-Modal").within(() => {
+    cy.get(".spectrum-Form-itemField")
+      .click()
+      .then(() => {
+        cy.get(".spectrum-Popover").within(() => {
+          for (let i = 0; i < values.length; i++) {
+            cy.get(".spectrum-Menu-item").eq(i).click()
+          }
+        })
+        cy.get(".spectrum-Dialog-grid").click("top")
+        cy.get(".spectrum-ButtonGroup").contains("Create").click()
       })
-      cy.get(".spectrum-Dialog-grid").click("top")
-      cy.get(".spectrum-ButtonGroup").contains("Create").click()
-    })
+  })
 })
 
 Cypress.Commands.add("createUser", email => {
