@@ -1,6 +1,6 @@
 const { getAllApps } = require("@budibase/backend-core/db")
 const { updateAppId } = require("@budibase/backend-core/context")
-import { search as stringSearch } from "./utils"
+import { search as stringSearch, wrapResponse } from "./utils"
 import { default as controller } from "../application"
 import { Application } from "../../../definitions/common"
 
@@ -19,14 +19,15 @@ async function setResponseApp(ctx: any) {
     ctx.params = { appId: ctx.body.appId }
   }
   await controller.fetchAppPackage(ctx)
+  // for now remove everything else
+  wrapResponse(ctx, (input: any) => input.application)
 }
 
 export async function search(ctx: any) {
   const { name } = ctx.request.body
   const apps = await getAllApps({ all: true })
-  ctx.body = {
-    applications: stringSearch(apps, name),
-  }
+  ctx.body = stringSearch(apps, name)
+  wrapResponse(ctx)
 }
 
 export async function create(ctx: any) {

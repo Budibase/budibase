@@ -92,12 +92,12 @@ module.exports = new Resource()
   .setExamples({
     query: {
       value: {
-        query: query,
+        data: query,
       },
     },
     queries: {
       value: {
-        queries: [query],
+        data: [query],
       },
     },
     restResponse,

@@ -9,7 +9,7 @@ const read = [],
  * @openapi
  * /users:
  *   post:
- *     summary: Create a new user in the Budibase portal.
+ *     summary: Create a user
  *     tags:
  *       - users
  *     requestBody:
@@ -35,7 +35,7 @@ write.push(new Endpoint("post", "/users", controller.create))
  * @openapi
  * /users/{userId}:
  *   put:
- *     summary: Update an existing user by their ID.
+ *     summary: Update a user
  *     tags:
  *       - users
  *     parameters:
@@ -63,7 +63,7 @@ write.push(new Endpoint("put", "/users/:userId", controller.update))
  * @openapi
  * /users/{userId}:
  *   delete:
- *     summary: Delete an existing user by their ID.
+ *     summary: Delete a user
  *     tags:
  *       - users
  *     parameters:
@@ -85,7 +85,7 @@ write.push(new Endpoint("delete", "/users/:userId", controller.destroy))
  * @openapi
  * /users/{userId}:
  *   get:
- *     summary: Retrieve a single user by their ID.
+ *     summary: Retrieve a user
  *     tags:
  *       - users
  *     parameters:
@@ -107,7 +107,8 @@ read.push(new Endpoint("get", "/users/:userId", controller.read))
  * @openapi
  * /users/search:
  *   post:
- *     summary: Search for a user based on their email/username.
+ *     summary: Search for users
+ *     description: Based on user properties (currently only name) search for users.
  *     tags:
  *       - users
  *     requestBody:
@@ -124,9 +125,9 @@ read.push(new Endpoint("get", "/users/:userId", controller.read))
  *             schema:
  *               type: object
  *               required:
- *                 - users
+ *                 - data
  *               properties:
- *                 users:
+ *                 data:
  *                   type: array
  *                   items:
  *                     $ref: '#/components/schemas/user'

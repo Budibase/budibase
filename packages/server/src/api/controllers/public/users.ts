@@ -1,10 +1,11 @@
 import {
   allGlobalUsers,
+  deleteGlobalUser,
   readGlobalUser,
   saveGlobalUser,
-  deleteGlobalUser,
 } from "../../../utilities/workerRequests"
-import { search as stringSearch } from "./utils"
+import { search as stringSearch, wrapResponse } from "./utils"
+
 const { getProdAppID } = require("@budibase/backend-core/db")
 
 function fixUser(ctx: any) {
@@ -37,29 +38,21 @@ function getUser(ctx: any, userId?: string) {
 }
 
 export async function search(ctx: any) {
-  try {
-    const { name } = ctx.request.body
-    const users = await allGlobalUsers(ctx)
-    ctx.body = {
-      users: stringSearch(users, name, "email"),
-    }
-  } catch (err) {
-    console.log(err)
-  }
+  const { name } = ctx.request.body
+  const users = await allGlobalUsers(ctx)
+  ctx.body = stringSearch(users, name, "email")
+  wrapResponse(ctx)
 }
 
 export async function create(ctx: any) {
   const response = await saveGlobalUser(fixUser(ctx))
-  ctx.body = {
-    user: await getUser(ctx, response._id),
-  }
+  ctx.body = await getUser(ctx, response._id)
+  wrapResponse(ctx)
 }
 
 export async function read(ctx: any) {
-  const response = await readGlobalUser(ctx)
-  ctx.body = {
-    user: response,
-  }
+  ctx.body = await readGlobalUser(ctx)
+  wrapResponse(ctx)
 }
 
 export async function update(ctx: any) {
@@ -69,17 +62,15 @@ export async function update(ctx: any) {
     _rev: user._rev,
   }
   const response = await saveGlobalUser(fixUser(ctx))
-  ctx.body = {
-    user: await getUser(ctx, response._id),
-  }
+  ctx.body = await getUser(ctx, response._id)
+  wrapResponse(ctx)
 }
 
 export async function destroy(ctx: any) {
   const user = await getUser(ctx)
   await deleteGlobalUser(ctx)
-  ctx.body = {
-    user,
-  }
+  ctx.body = user
+  wrapResponse(ctx)
 }
 
 export default {

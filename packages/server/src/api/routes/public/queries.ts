@@ -9,8 +9,8 @@ const read = [],
  * @openapi
  * /queries/{queryId}:
  *   post:
- *     summary: Execute a query and retrieve its response.
- *     tags:
+ *     summary: Execute a query
+ *     description: Queries which have been created within a Budibase app can be executed using this,
  *       - queries
  *     parameters:
  *       - $ref: '#/components/parameters/queryId'
@@ -56,7 +56,8 @@ write.push(new Endpoint("post", "/queries/:queryId", controller.execute))
  * @openapi
  * /queries/search:
  *   post:
- *     summary: Search for a query based on its name.
+ *     summary: Search for queries
+ *     description: Based on query properties (currently only name) search for queries.
  *     tags:
  *       - queries
  *     parameters:
@@ -75,9 +76,9 @@ write.push(new Endpoint("post", "/queries/:queryId", controller.execute))
  *             schema:
  *               type: object
  *               required:
- *                 - queries
+ *                 - data
  *               properties:
- *                 queries:
+ *                 data:
  *                   type: array
  *                   items:
  *                     $ref: '#/components/schemas/query'

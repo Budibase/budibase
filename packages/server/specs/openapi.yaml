@@ -55,7 +55,7 @@ components:
   examples:
     application:
       value:
-        application:
+        data:
           _id: app_metadata
           appId: app_dev_957b12f943d348faa61db7e18e088d0f
           version: 1.0.58-alpha.0
@@ -65,29 +65,9 @@ components:
           updatedAt: 2022-02-22T13:00:54.035Z
           createdAt: 2022-02-11T18:02:26.961Z
           status: development
-          lockedBy:
-            _id: us_693a73206518477283a8d5ae31103252
-            email: test@test.com
-            roles:
-              app_957b12f943d348faa61db7e18e088d0f: BASIC
-            builder:
-              global: false
-            admin:
-              global: true
-            tenantId: default
-            status: active
-            budibaseAccess: true
-            csrfToken: 9c70291d-7137-48f9-9166-99ab5473a3d4
-            userId: us_693a73206518477283a8d5ae31103252
-            roleId: ADMIN
-            role:
-              _id: ADMIN
-              name: Admin
-              permissionId: admin
-              inherits: POWER
     applications:
       value:
-        applications:
+        data:
           - _id: app_metadata
             appId: app_dev_957b12f943d348faa61db7e18e088d0f
             version: 1.0.58-alpha.0
@@ -97,26 +77,6 @@ components:
             updatedAt: 2022-02-22T13:00:54.035Z
             createdAt: 2022-02-11T18:02:26.961Z
             status: development
-            lockedBy:
-              _id: us_693a73206518477283a8d5ae31103252
-              email: test@test.com
-              roles:
-                app_957b12f943d348faa61db7e18e088d0f: BASIC
-              builder:
-                global: false
-              admin:
-                global: true
-              tenantId: default
-              status: active
-              budibaseAccess: true
-              csrfToken: 9c70291d-7137-48f9-9166-99ab5473a3d4
-              userId: us_693a73206518477283a8d5ae31103252
-              roleId: ADMIN
-              role:
-                _id: ADMIN
-                name: Admin
-                permissionId: admin
-                inherits: POWER
     inputRow:
       value:
         _id: ro_ta_5b1649e42a5b41dea4ef7742a36a7a70_e6dc7e38cf1343b2b56760265201cda4
@@ -128,7 +88,7 @@ components:
           - ro_ta_...
     row:
       value:
-        row:
+        data:
           _id: ro_ta_5b1649e42a5b41dea4ef7742a36a7a70_e6dc7e38cf1343b2b56760265201cda4
           type: row
           tableId: ta_5b1649e42a5b41dea4ef7742a36a7a70
@@ -139,7 +99,7 @@ components:
               _id: ro_ta_...
     enrichedRow:
       value:
-        row:
+        data:
           _id: ro_ta_5b1649e42a5b41dea4ef7742a36a7a70_e6dc7e38cf1343b2b56760265201cda4
           name: eg
           tableId: ta_5b1649e42a5b41dea4ef7742a36a7a70
@@ -153,7 +113,7 @@ components:
                   primaryDisplay: eg
     rows:
       value:
-        rows:
+        data:
           - _id: ro_ta_5b1649e42a5b41dea4ef7742a36a7a70_e6dc7e38cf1343b2b56760265201cda4
             type: row
             tableId: ta_5b1649e42a5b41dea4ef7742a36a7a70
@@ -166,7 +126,7 @@ components:
         bookmark: 10
     table:
       value:
-        table:
+        data:
           _id: ta_5b1649e42a5b41dea4ef7742a36a7a70
           name: People
           schema:
@@ -184,7 +144,7 @@ components:
               relationshipType: many-to-many
     tables:
       value:
-        tables:
+        data:
           - _id: ta_5b1649e42a5b41dea4ef7742a36a7a70
             name: People
             schema:
@@ -202,7 +162,7 @@ components:
                 relationshipType: many-to-many
     query:
       value:
-        query:
+        data:
           _id: query_datasource_plus_4d8be0c506b9465daf4bf84d890fdab6_454854487c574d45bc4029b1e153219e
           datasourceId: datasource_plus_4d8be0c506b9465daf4bf84d890fdab6
           parameters: []
@@ -230,7 +190,7 @@ components:
           readable: true
     queries:
       value:
-        queries:
+        data:
           - _id: query_datasource_plus_4d8be0c506b9465daf4bf84d890fdab6_454854487c574d45bc4029b1e153219e
             datasourceId: datasource_plus_4d8be0c506b9465daf4bf84d890fdab6
             parameters: []
@@ -280,7 +240,7 @@ components:
             city: Dublin
     user:
       value:
-        user:
+        data:
           _id: us_693a73206518477283a8d5ae31103252
           email: test@test.com
           roles:
@@ -302,7 +262,7 @@ components:
             inherits: POWER
     users:
       value:
-        users:
+        data:
           - _id: us_693a73206518477283a8d5ae31103252
             email: test@test.com
             roles:
@@ -345,7 +305,7 @@ components:
     applicationOutput:
       type: object
       properties:
-        application:
+        data:
           type: object
           properties:
             name:
@@ -391,7 +351,7 @@ components:
             - version
             - appId
       required:
-        - application
+        - data
     row:
       description: The row to be created/updated, based on the table schema.
       type: object
@@ -412,7 +372,7 @@ components:
     rowOutput:
       type: object
       properties:
-        row:
+        data:
           description: The row to be created/updated, based on the table schema.
           type: object
           properties:
@@ -430,7 +390,7 @@ components:
               - type: array
               - type: boolean
       required:
-        - row
+        - data
     table:
       description: The table to be created/updated.
       type: object
@@ -592,7 +552,7 @@ components:
     tableOutput:
       type: object
       properties:
-        table:
+        data:
           description: The table to be created/updated.
           type: object
           required:
@@ -751,7 +711,7 @@ components:
                         type: boolean
                         description: Defines whether the column is automatically generated.
       required:
-        - table
+        - data
     query:
       description: The query body must contain the required parameters for the query,
         this depends on query type, setup and bindings.
@@ -818,7 +778,7 @@ components:
     userOutput:
       type: object
       properties:
-        user:
+        data:
           type: object
           properties:
             email:
@@ -871,7 +831,7 @@ components:
             - email
             - roles
       required:
-        - user
+        - data
     nameSearch:
       type: object
       properties:
@@ -886,7 +846,7 @@ security:
 paths:
   /applications:
     post:
-      summary: Create a new application.
+      summary: Create an application
       tags:
         - applications
       parameters:
@@ -909,7 +869,7 @@ paths:
                   $ref: "#/components/examples/application"
   "/applications/{appId}":
     put:
-      summary: Update an existing application by its ID.
+      summary: Update an application
       tags:
         - applications
       parameters:
@@ -931,7 +891,7 @@ paths:
                 application:
                   $ref: "#/components/examples/application"
     delete:
-      summary: Delete an existing application by its ID.
+      summary: Delete an application
       tags:
         - applications
       parameters:
@@ -947,7 +907,7 @@ paths:
                 application:
                   $ref: "#/components/examples/application"
     get:
-      summary: Retrieve a single application by its ID.
+      summary: Retrieve an application
       tags:
         - applications
       parameters:
@@ -964,7 +924,9 @@ paths:
                   $ref: "#/components/examples/application"
   /applications/search:
     post:
-      summary: Search for an application based on its app name.
+      summary: Search for applications
+      description: Based on application properties (currently only name) search for
+        applications.
       tags:
         - applications
       parameters:
@@ -984,9 +946,9 @@ paths:
               schema:
                 type: object
                 required:
-                  - applications
+                  - data
                 properties:
-                  applications:
+                  data:
                     type: array
                     items:
                       $ref: "#/components/schemas/application"
@@ -995,9 +957,9 @@ paths:
                   $ref: "#/components/examples/applications"
   "/queries/{queryId}":
     post:
-      summary: Execute a query and retrieve its response.
-      tags:
-        - queries
+      summary: Execute a query
+      description: Queries which have been created within a Budibase app can be
+        executed using this, - queries
       parameters:
         - $ref: "#/components/parameters/queryId"
         - $ref: "#/components/parameters/appId"
@@ -1036,7 +998,8 @@ paths:
                   $ref: "#/components/examples/sqlResponse"
   /queries/search:
     post:
-      summary: Search for a query based on its name.
+      summary: Search for queries
+      description: Based on query properties (currently only name) search for queries.
       tags:
         - queries
       parameters:
@@ -1055,9 +1018,9 @@ paths:
               schema:
                 type: object
                 required:
-                  - queries
+                  - data
                 properties:
-                  queries:
+                  data:
                     type: array
                     items:
                       $ref: "#/components/schemas/query"
@@ -1066,7 +1029,8 @@ paths:
                   $ref: "#/components/examples/queries"
   "/tables/{tableId}/rows":
     post:
-      summary: Creates a new row within a specified table.
+      summary: Create a row
+      description: Creates a row within the specified table.
       tags:
         - rows
       parameters:
@@ -1095,7 +1059,8 @@ paths:
                   $ref: "#/components/examples/row"
   "/tables/{tableId}/rows/{rowId}":
     put:
-      summary: Update a single row within a specified table.
+      summary: Update a row
+      description: Updates a row within the specified table.
       tags:
         - rows
       parameters:
@@ -1123,7 +1088,8 @@ paths:
                 row:
                   $ref: "#/components/examples/row"
     delete:
-      summary: Delete a single row from the specified table.
+      summary: Delete a row
+      description: Deletes a row within the specified table.
       tags:
         - rows
       parameters:
@@ -1142,7 +1108,7 @@ paths:
                 row:
                   $ref: "#/components/examples/row"
     get:
-      summary: Get a single row from the specified table.
+      summary: Retrieve a row
       description: This gets a single row, it will be enriched with the full related
         rows, rather than the squashed "primaryDisplay" format returned by the
         search endpoint.
@@ -1164,7 +1130,7 @@ paths:
                   $ref: "#/components/examples/enrichedRow"
   "/tables/{tableId}/rows/search":
     post:
-      summary: Used to search for rows within a table.
+      summary: Search for rows
       tags:
         - rows
       parameters:
@@ -1269,9 +1235,9 @@ paths:
               schema:
                 type: object
                 required:
-                  - rows
+                  - data
                 properties:
-                  rows:
+                  data:
                     description: An array of rows, these will each contain an _id field which can be
                       used to update or delete them.
                     type: array
@@ -1291,7 +1257,8 @@ paths:
                   $ref: "#/components/examples/rows"
   /tables:
     post:
-      summary: Create a new table.
+      summary: Create a table
+      description: Create a table, this could be internal or external.
       tags:
         - tables
       parameters:
@@ -1317,7 +1284,8 @@ paths:
                   $ref: "#/components/examples/table"
   "/tables/{tableId}":
     put:
-      summary: Update the specified table.
+      summary: Update a table
+      description: Update a table, this could be internal or external.
       tags:
         - tables
       parameters:
@@ -1342,7 +1310,8 @@ paths:
                 table:
                   $ref: "#/components/examples/table"
     delete:
-      summary: Delete a single table and all of its data.
+      summary: Delete a table
+      description: Delete a table, this could be internal or external.
       tags:
         - tables
       parameters:
@@ -1359,7 +1328,8 @@ paths:
                 table:
                   $ref: "#/components/examples/table"
     get:
-      summary: Gets a single table by its ID.
+      summary: Retrieve a table
+      description: Lookup a table, this could be internal or external.
       tags:
         - tables
       parameters:
@@ -1377,7 +1347,9 @@ paths:
                   $ref: "#/components/examples/table"
   /tables/search:
     post:
-      summary: Search internal and external tables based on their name.
+      summary: Search for tables
+      description: Based on table properties (currently only name) search for tables.
+        This could be an internal or an external table.
       tags:
         - tables
       parameters:
@@ -1396,9 +1368,9 @@ paths:
               schema:
                 type: object
                 required:
-                  - tables
+                  - data
                 properties:
-                  tables:
+                  data:
                     type: array
                     items:
                       $ref: "#/components/schemas/table"
@@ -1407,7 +1379,7 @@ paths:
                   $ref: "#/components/examples/tables"
   /users:
     post:
-      summary: Create a new user in the Budibase portal.
+      summary: Create a user
       tags:
         - users
       requestBody:
@@ -1428,7 +1400,7 @@ paths:
                   $ref: "#/components/examples/user"
   "/users/{userId}":
     put:
-      summary: Update an existing user by their ID.
+      summary: Update a user
       tags:
         - users
       parameters:
@@ -1450,7 +1422,7 @@ paths:
                 user:
                   $ref: "#/components/examples/user"
     delete:
-      summary: Delete an existing user by their ID.
+      summary: Delete a user
       tags:
         - users
       parameters:
@@ -1466,7 +1438,7 @@ paths:
                 user:
                   $ref: "#/components/examples/user"
     get:
-      summary: Retrieve a single user by their ID.
+      summary: Retrieve a user
       tags:
         - users
       parameters:
@@ -1483,7 +1455,8 @@ paths:
                   $ref: "#/components/examples/user"
   /users/search:
     post:
-      summary: Search for a user based on their email/username.
+      summary: Search for users
+      description: Based on user properties (currently only name) search for users.
       tags:
         - users
       requestBody:
@@ -1500,9 +1473,9 @@ paths:
               schema:
                 type: object
                 required:
-                  - users
+                  - data
                 properties:
-                  users:
+                  data:
                     type: array
                     items:
                       $ref: "#/components/schemas/user"

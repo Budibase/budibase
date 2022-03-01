@@ -75,17 +75,17 @@ module.exports = new Resource()
     },
     row: {
       value: {
-        row: row,
+        data: row,
       },
     },
     enrichedRow: {
       value: {
-        row: enrichedRow,
+        data: enrichedRow,
       },
     },
     rows: {
       value: {
-        rows: [row],
+        data: [row],
         hasNextPage: true,
         bookmark: 10,
       },
@@ -94,6 +94,6 @@ module.exports = new Resource()
   .setSchemas({
     row: rowSchema,
     rowOutput: object({
-      row: rowSchema,
+      data: rowSchema,
     }),
   })
