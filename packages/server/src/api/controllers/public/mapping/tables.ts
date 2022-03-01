@@ -1,4 +1,4 @@
-import { Table, TableOutput } from "./types"
+import { Table } from "./types"
 
 function table(body: any): Table {
   return {
@@ -9,7 +9,7 @@ function table(body: any): Table {
   }
 }
 
-function mapTable(ctx: any): TableOutput {
+function mapTable(ctx: any): { data: Table } {
   return {
     data: table(ctx.body),
   }

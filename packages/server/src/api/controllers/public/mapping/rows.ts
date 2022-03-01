@@ -1,4 +1,4 @@
-import { Row, RowSearch, RowOutput } from "./types"
+import { Row, RowSearch } from "./types"
 
 function row(body: any): Row {
   delete body._rev
@@ -19,7 +19,7 @@ function mapRowSearch(ctx: any): RowSearch {
   }
 }
 
-function mapRow(ctx: any): RowOutput {
+function mapRow(ctx: any): { data: Row } {
   return {
     data: row(ctx.body),
   }
