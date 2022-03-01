@@ -10,6 +10,7 @@
     Button,
     StatusLight,
     ActionButton,
+    Select,
     notifications,
   } from "@budibase/bbui"
   import AutomationBlockSetup from "../../SetupPanel/AutomationBlockSetup.svelte"
@@ -18,7 +19,6 @@
   import ActionModal from "./ActionModal.svelte"
   import { externalActions } from "./ExternalActions"
 
-  export let onSelect
   export let block
   export let testDataModal
   let selected
@@ -27,6 +27,10 @@
   let resultsModal
   let setupToggled
   let blockComplete
+
+  $: rowControl = $automationStore.selectedAutomation.automation.rowControl
+  $: showBindingPicker =
+    block.stepId === "CREATE_ROW" || block.stepId === "UPDATE_ROW"
 
   $: testResult = $automationStore.selectedAutomation.testResults?.steps.filter(
     step => (block.id ? step.id === block.id : step.stepId === block.stepId)
@@ -44,12 +48,6 @@
     $automationStore.selectedAutomation?.automation?.definition?.steps.length +
     1
 
-  // Logic for hiding / showing the add button.first we check if it has a child
-  // then we check to see whether its inputs have been commpleted
-  $: disableAddButton = isTrigger
-    ? $automationStore.selectedAutomation?.automation?.definition?.steps
-        .length > 0
-    : !isTrigger && steps.length - blockIdx > 1
   $: hasCompletedInputs = Object.keys(
     block.schema?.inputs?.properties || {}
   ).every(x => block?.inputs[x])
@@ -63,6 +61,26 @@
     } catch (error) {
       notifications.error("Error saving notification")
     }
+  }
+  function toggleFieldControl(evt) {
+    onSelect(block)
+    let rowControl
+    if (evt.detail === "Use values") {
+      rowControl = false
+    } else {
+      rowControl = true
+    }
+    automationStore.actions.toggleFieldControl(rowControl)
+    automationStore.actions.save(
+      $automationStore.selectedAutomation?.automation
+    )
+  }
+
+  async function onSelect(block) {
+    await automationStore.update(state => {
+      state.selectedBlock = block
+      return state
+    })
   }
 </script>
 
@@ -126,15 +144,33 @@
       <Layout noPadding gap="S">
         <div class="splitHeader">
           <ActionButton
-            on:click={() => (setupToggled = !setupToggled)}
+            on:click={() => {
+              onSelect(block)
+              setupToggled = !setupToggled
+            }}
             quiet
             icon={setupToggled ? "ChevronDown" : "ChevronRight"}
           >
             <Detail size="S">Setup</Detail>
           </ActionButton>
           {#if !isTrigger}
-            <div on:click={() => deleteStep()}>
-              <Icon name="DeleteOutline" />
+            <div class="block-options">
+              {#if showBindingPicker}
+                <div>
+                  <Select
+                    on:change={toggleFieldControl}
+                    quiet
+                    defaultValue="Use values"
+                    autoWidth
+                    value={rowControl ? "Use bindings" : "Use values"}
+                    options={["Use values", "Use bindings"]}
+                    placeholder={null}
+                  />
+                </div>
+              {/if}
+              <div class="delete-padding" on:click={() => deleteStep()}>
+                <Icon name="DeleteOutline" />
+              </div>
             </div>
           {/if}
         </div>
@@ -180,6 +216,13 @@
 {/if}
 
 <style>
+  .delete-padding {
+    padding-left: 30px;
+  }
+  .block-options {
+    display: flex;
+    align-items: center;
+  }
   .center-items {
     display: flex;
     align-items: center;

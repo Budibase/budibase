@@ -6,7 +6,8 @@
     "state": true,
     "customThemes": true,
     "devicePreview": true,
-    "messagePassing": true
+    "messagePassing": true,
+    "rowSelection": true
   },
   "layout": {
     "name": "Layout",
@@ -2716,6 +2717,13 @@
       },
       {
         "type": "boolean",
+        "label": "Allow row selection",
+        "key": "allowSelectRows",
+        "defaultValue": false
+      },
+
+      {
+        "type": "boolean",
         "label": "Link table rows",
         "key": "linkRows"
       },
@@ -2972,6 +2980,11 @@
             "type": "boolean",
             "label": "Show auto columns",
             "key": "showAutoColumns"
+          },
+          {
+            "type": "boolean",
+            "label": "Allow row selection",
+            "key": "allowSelectRows"
           },
           {
             "type": "boolean",
