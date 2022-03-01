@@ -39,7 +39,7 @@ Cypress.Commands.add("createApp", name => {
   cy.get(".spectrum-Modal").within(() => {
     cy.get("input").eq(0).type(name).should("have.value", name).blur()
     cy.get(".spectrum-ButtonGroup").contains("Create app").click()
-    cy.wait(5000)
+    cy.wait(10000)
   })
   cy.createTable("Cypress Tests", true)
 })
@@ -116,10 +116,10 @@ Cypress.Commands.add("createTestTableWithData", () => {
 Cypress.Commands.add("createTable", (tableName, initialTable) => {
   if (!initialTable) {
     cy.navigateToDataSection()
-    cy.get(".add-button").click()
+    cy.get(`[data-cy="new-table"]`).click()
   }
-  cy.wait(7000)
-  cy.get(".spectrum-Modal")
+  cy.wait(5000)
+  cy.get(".spectrum-Dialog-grid")
     .contains("Budibase DB")
     .click({ force: true })
     .then(() => {
