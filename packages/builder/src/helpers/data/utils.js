@@ -109,6 +109,36 @@ export function customQueryIconColor(datasource, query) {
   }
 }
 
+export function customQueryText(datasource, query) {
+  if (!query.name || datasource.source !== IntegrationTypes.REST) {
+    return query.name
+  }
+
+  // Remove protocol
+  let name = query.name
+  if (name.includes("//")) {
+    name = name.split("//")[1]
+  }
+
+  // If no path, return the full name
+  if (!name.includes("/")) {
+    return name
+  }
+
+  // Remove trailing slash
+  if (name.endsWith("/")) {
+    name = name.slice(0, -1)
+  }
+
+  // Only use path
+  const split = name.split("/")
+  if (split[1]) {
+    return `/${split.slice(1).join("/")}`
+  } else {
+    return split[0]
+  }
+}
+
 export function flipHeaderState(headersActivity) {
   if (!headersActivity) {
     return {}
