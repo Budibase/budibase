@@ -25,6 +25,8 @@ const { createASession } = require("@budibase/backend-core/sessions")
 const { user: userCache } = require("@budibase/backend-core/cache")
 const newid = require("../../db/newid")
 const context = require("@budibase/backend-core/context")
+const { generateDevInfoID, SEPARATOR } = require("@budibase/backend-core/db")
+const { encrypt } = require("@budibase/backend-core/encryption")
 
 const GLOBAL_USER_ID = "us_uuid1"
 const EMAIL = "babs@babs.com"
@@ -45,6 +47,10 @@ class TestConfiguration {
 
   getRequest() {
     return this.request
+  }
+
+  getApp() {
+    return this.app
   }
 
   getAppId() {
@@ -81,6 +87,20 @@ class TestConfiguration {
     } else {
       return run()
     }
+  }
+
+  async generateApiKey(userId = GLOBAL_USER_ID) {
+    const db = getGlobalDB(TENANT_ID)
+    const id = generateDevInfoID(userId)
+    let devInfo
+    try {
+      devInfo = await db.get(id)
+    } catch (err) {
+      devInfo = { _id: id, userId }
+    }
+    devInfo.apiKey = encrypt(`${TENANT_ID}${SEPARATOR}${newid()}`)
+    await db.put(devInfo)
+    return devInfo.apiKey
   }
 
   async globalUser({
@@ -135,7 +155,7 @@ class TestConfiguration {
     cleanup(this.allApps.map(app => app.appId))
   }
 
-  defaultHeaders() {
+  defaultHeaders(extras = {}) {
     const auth = {
       userId: GLOBAL_USER_ID,
       sessionId: "sessionid",
@@ -154,6 +174,7 @@ class TestConfiguration {
         `${Cookies.CurrentApp}=${appToken}`,
       ],
       [Headers.CSRF_TOKEN]: CSRF_TOKEN,
+      ...extras,
     }
     if (this.appId) {
       headers[Headers.APP_ID] = this.appId
@@ -226,7 +247,7 @@ class TestConfiguration {
 
   async getTable(tableId = null) {
     tableId = tableId || this.table._id
-    return this._req(null, { id: tableId }, controllers.table.find)
+    return this._req(null, { tableId }, controllers.table.find)
   }
 
   async createLinkedTable(relationshipType = null, links = ["link"]) {

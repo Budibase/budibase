@@ -5,7 +5,7 @@ const CouchDB = require("../db")
 const { queue } = require("./bullboard")
 const newid = require("../db/newid")
 const { updateEntityMetadata } = require("../utilities")
-const { MetadataTypes } = require("../constants")
+const { MetadataTypes, WebhookType } = require("../constants")
 const { getProdAppID } = require("@budibase/backend-core/db")
 const { cloneDeep } = require("lodash/fp")
 const { getAppDB, getAppId } = require("@budibase/backend-core/context")
@@ -159,7 +159,7 @@ exports.checkForWebhooks = async ({ oldAuto, newAuto }) => {
       request: {
         body: new webhooks.Webhook(
           "Automation webhook",
-          webhooks.WebhookType.AUTOMATION,
+          WebhookType.AUTOMATION,
           newAuto._id
         ),
       },
