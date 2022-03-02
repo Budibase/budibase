@@ -8,17 +8,30 @@ import authorized from "../../../middleware/authorized"
 import { paramResource, paramSubResource } from "../../../middleware/resourceId"
 import { CtxFn } from "./utils/Endpoint"
 import mapperMiddleware from "./middleware/mapper"
+import env from "../../../environment"
+// below imports don't have declaration files
 const Router = require("@koa/router")
+const RateLimit = require("koa2-ratelimit").RateLimit
 const {
   PermissionLevels,
   PermissionTypes,
 } = require("@budibase/backend-core/permissions")
 
 const PREFIX = "/api/public/v1"
+const DEFAULT_API_LIMITING = 120
+
+// rate limiting, allows for 2 requests per second
+const limiter = RateLimit.middleware({
+  interval: { min: 1 },
+  // per ip, per interval
+  max: env.API_RATE_LIMITING || DEFAULT_API_LIMITING,
+})
 
 const publicRouter = new Router({
   prefix: PREFIX,
 })
+
+publicRouter.use(limiter)
 
 function addMiddleware(
   endpoints: any,
