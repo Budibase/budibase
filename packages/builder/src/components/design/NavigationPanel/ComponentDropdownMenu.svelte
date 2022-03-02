@@ -61,7 +61,7 @@
 
   const duplicateComponent = () => {
     storeComponentForCopy(false)
-    pasteComponent("below", true)
+    pasteComponent("below")
   }
 
   const deleteComponent = async () => {
@@ -77,10 +77,10 @@
     store.actions.components.copy(component, cut)
   }
 
-  const pasteComponent = (mode, preserveBindings = false) => {
+  const pasteComponent = mode => {
     try {
       // lives in store - also used by drag drop
-      store.actions.components.paste(component, mode, preserveBindings)
+      store.actions.components.paste(component, mode)
     } catch (error) {
       notifications.error("Error saving component")
     }
