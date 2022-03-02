@@ -17,7 +17,9 @@ const populateFromDB = async (userId, tenantId) => {
     // TODO: Break this out into it's own cache
     if (account) {
       const license = await accounts.getLicense(user.tenantId)
-      user.license = license
+      if (license) {
+        user.license = license
+      }
       user.account = account
       user.accountPortalAccess = true
     }

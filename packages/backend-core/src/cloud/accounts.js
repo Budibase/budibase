@@ -31,6 +31,11 @@ exports.getLicense = async tenantId => {
     },
   })
 
+  if (response.status === 404) {
+    // no license for the tenant
+    return
+  }
+
   if (response.status !== 200) {
     const text = await response.text()
     console.error("Error getting license: ", text)
