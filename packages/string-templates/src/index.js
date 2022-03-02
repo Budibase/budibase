@@ -322,3 +322,12 @@ module.exports.doesContainStrings = (template, strings) => {
 module.exports.doesContainString = (template, string) => {
   return exports.doesContainStrings(template, [string])
 }
+
+/**
+ * Finds all regular (double bracketed) expressions inside a string.
+ * @param string the string to search
+ * @return {[]} all matching bindings
+ */
+module.exports.findAllBindings = string => {
+  return findDoubleHbsInstances(string)
+}
