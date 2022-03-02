@@ -2,7 +2,6 @@ const threadUtils = require("./utils")
 threadUtils.threadSetup()
 const ScriptRunner = require("../utilities/scriptRunner")
 const { integrations } = require("../integrations")
-const { SourceNames } = require("../definitions/datasource")
 const {
   processStringSync,
   findHBSBlocks,
@@ -28,29 +27,12 @@ class QueryRunner {
     this.hasRerun = false
   }
 
-  interpolateSQL(fields, parameters) {
-    let { datasource } = this
+  interpolateSQL(fields, parameters, integration) {
     let sql = fields.sql
     const bindings = findHBSBlocks(sql)
-    let index = 1
     let variables = []
     for (let binding of bindings) {
-      let variable
-      switch (datasource.source) {
-        case SourceNames.POSTGRES:
-          variable = `$${index}`
-          break
-        case SourceNames.SQL_SERVER:
-          variable = `(@p${index - 1})`
-          break
-        case SourceNames.MYSQL:
-          variable = "?"
-          break
-        case SourceNames.ORACLE:
-          variable = `:${index}`
-          break
-      }
-      index++
+      let variable = integration.getBindingIdentifier()
       variables.push(binding)
       sql = sql.replace(binding, variable)
     }
@@ -62,12 +44,18 @@ class QueryRunner {
 
   async execute() {
     let { datasource, fields, queryVerb, transformer } = this
+    const Integration = integrations[datasource.source]
+    if (!Integration) {
+      throw "Integration type does not exist."
+    }
+    const integration = new Integration(datasource.config)
+
     // pre-query, make sure datasource variables are added to parameters
     const parameters = await this.addDatasourceVariables()
     let query
     // handle SQL injections by interpolating the variables
     if (isSQL(datasource)) {
-      query = this.interpolateSQL(fields, parameters)
+      query = this.interpolateSQL(fields, parameters, integration)
     } else {
       query = this.enrichQueryFields(fields, parameters)
     }
@@ -76,12 +64,6 @@ class QueryRunner {
     if (this.pagination) {
       query.paginationValues = this.pagination
     }
-
-    const Integration = integrations[datasource.source]
-    if (!Integration) {
-      throw "Integration type does not exist."
-    }
-    const integration = new Integration(datasource.config)
 
     let output = threadUtils.formatResponse(await integration[queryVerb](query))
     let rows = output,
