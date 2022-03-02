@@ -1,7 +1,8 @@
 import { queryValidation } from "../validation"
 import { generateQueryID } from "../../../../db/utils"
 import { ImportInfo, ImportSource } from "./sources/base"
-import { OpenAPI2 } from "./sources/openapi2"
+import { OpenAPI3 } from "./sources/openapi2"
+import { OpenAPI3 } from "./sources/openapi3"
 import { Query } from "./../../../../definitions/common"
 import { Curl } from "./sources/curl"
 // @ts-ignore
@@ -18,7 +19,7 @@ export class RestImporter {
 
   constructor(data: string) {
     this.data = data
-    this.sources = [new OpenAPI2(), new Curl()]
+    this.sources = [new OpenAPI3(), new OpenAPI3(), new Curl()]
   }
 
   init = async () => {
