@@ -66,11 +66,7 @@
           )
         }
       }
-
-      // Refresh routing info since we have new screens
-      await store.actions.routing.fetch()
     } catch (error) {
-      console.log(error)
       notifications.error("Error creating screens")
     }
 
