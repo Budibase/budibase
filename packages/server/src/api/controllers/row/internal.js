@@ -2,6 +2,7 @@ const linkRows = require("../../../db/linkedRows")
 const {
   generateRowID,
   getRowParams,
+  getTableIDFromRowID,
   DocumentTypes,
   InternalTables,
 } = require("../../../db/utils")
@@ -386,6 +387,9 @@ exports.fetchEnrichedRow = async ctx => {
   let groups = {},
     tables = {}
   for (let row of response) {
+    if (!row.tableId) {
+      row.tableId = getTableIDFromRowID(row._id)
+    }
     const linkedTableId = row.tableId
     if (groups[linkedTableId] == null) {
       groups[linkedTableId] = [row]
