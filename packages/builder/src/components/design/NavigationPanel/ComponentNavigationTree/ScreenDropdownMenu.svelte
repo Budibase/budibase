@@ -10,6 +10,8 @@
 
   $: screen = $allScreens.find(screen => screen._id === screenId)
 
+  const duplicateScreen = () => {}
+
   const deleteScreen = async () => {
     try {
       await store.actions.screens.delete(screen)
@@ -25,6 +27,9 @@
   <div slot="control" class="icon">
     <Icon size="S" hoverable name="MoreSmallList" />
   </div>
+  <MenuItem noClose icon="Duplicate" on:click={duplicateScreen}>
+    Duplicate
+  </MenuItem>
   <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}>Delete</MenuItem>
 </ActionMenu>
 

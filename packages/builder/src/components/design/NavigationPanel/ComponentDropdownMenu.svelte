@@ -73,13 +73,11 @@
   }
 
   const storeComponentForCopy = (cut = false) => {
-    // lives in store - also used by drag drop
     store.actions.components.copy(component, cut)
   }
 
   const pasteComponent = mode => {
     try {
-      // lives in store - also used by drag drop
       store.actions.components.paste(component, mode)
     } catch (error) {
       notifications.error("Error saving component")
