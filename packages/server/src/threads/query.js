@@ -2,8 +2,13 @@ const threadUtils = require("./utils")
 threadUtils.threadSetup()
 const ScriptRunner = require("../utilities/scriptRunner")
 const { integrations } = require("../integrations")
-const { processStringSync } = require("@budibase/string-templates")
+const { SourceNames } = require("../definitions/datasource")
+const {
+  processStringSync,
+  findHBSBlocks,
+} = require("@budibase/string-templates")
 const { doInAppContext, getAppDB } = require("@budibase/backend-core/context")
+const { isSQL } = require("../integrations/utils")
 
 class QueryRunner {
   constructor(input, flags = { noRecursiveQuery: false }) {
@@ -23,11 +28,49 @@ class QueryRunner {
     this.hasRerun = false
   }
 
+  interpolateSQL(fields, parameters) {
+    let { datasource } = this
+    let sql = fields.sql
+    const bindings = findHBSBlocks(sql)
+    let index = 1
+    let variables = []
+    for (let binding of bindings) {
+      let variable
+      switch (datasource.source) {
+        case SourceNames.POSTGRES:
+          variable = `$${index}`
+          break
+        case SourceNames.SQL_SERVER:
+          variable = `(@p${index - 1})`
+          break
+        case SourceNames.MYSQL:
+          variable = "?"
+          break
+        case SourceNames.ORACLE:
+          variable = `:${index}`
+          break
+      }
+      index++
+      variables.push(binding)
+      sql = sql.replace(binding, variable)
+    }
+    // replicate the knex structure
+    fields.sql = sql
+    fields.bindings = this.enrichQueryFields(variables, parameters)
+    return fields
+  }
+
   async execute() {
     let { datasource, fields, queryVerb, transformer } = this
     // pre-query, make sure datasource variables are added to parameters
     const parameters = await this.addDatasourceVariables()
-    let query = this.enrichQueryFields(fields, parameters)
+    let query
+    // handle SQL injections by interpolating the variables
+    if (isSQL(datasource)) {
+      query = this.interpolateSQL(fields, parameters)
+    } else {
+      query = this.enrichQueryFields(fields, parameters)
+    }
 
     // Add pagination values for REST queries
     if (this.pagination) {
@@ -179,7 +222,7 @@ class QueryRunner {
   }
 
   enrichQueryFields(fields, parameters = {}) {
-    const enrichedQuery = {}
+    const enrichedQuery = Array.isArray(fields) ? [] : {}
 
     // enrich the fields with dynamic parameters
     for (let key of Object.keys(fields)) {
