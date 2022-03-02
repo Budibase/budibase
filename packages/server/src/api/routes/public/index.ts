@@ -12,14 +12,27 @@ import env from "../../../environment"
 // below imports don't have declaration files
 const Router = require("@koa/router")
 const RateLimit = require("koa2-ratelimit").RateLimit
+const Stores = require("koa2-ratelimit").Stores
 const {
   PermissionLevels,
   PermissionTypes,
 } = require("@budibase/backend-core/permissions")
+const { getRedisOptions } = require("@budibase/backend-core/redis").utils
 
 const PREFIX = "/api/public/v1"
 const DEFAULT_API_LIMITING = 120
 
+const REDIS_OPTS = getRedisOptions()
+RateLimit.defaultOptions({
+  store: new Stores.Redis({
+    socket: {
+      host: REDIS_OPTS.host,
+      port: REDIS_OPTS.port,
+    },
+    password: REDIS_OPTS.opts.password,
+    database: 1,
+  }),
+})
 // rate limiting, allows for 2 requests per second
 const limiter = RateLimit.middleware({
   interval: { min: 1 },
