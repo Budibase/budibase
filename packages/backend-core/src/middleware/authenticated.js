@@ -4,6 +4,9 @@ const { getUser } = require("../cache/user")
 const { getSession, updateSessionTTL } = require("../security/sessions")
 const { buildMatcherRegex, matches } = require("./matchers")
 const env = require("../environment")
+const { SEPARATOR, ViewNames, queryGlobalView } = require("../../db")
+const { getGlobalDB } = require("../tenancy")
+const { decrypt } = require("../security/encryption")
 
 function finalise(
   ctx,
@@ -14,6 +17,28 @@ function finalise(
   ctx.user = user
   ctx.internal = internal || false
   ctx.version = version
+}
+
+async function checkApiKey(apiKey, populateUser) {
+  if (apiKey === env.INTERNAL_API_KEY) {
+    return { valid: true }
+  }
+  const decrypted = decrypt(apiKey)
+  const tenantId = decrypted.split(SEPARATOR)[0]
+  const db = getGlobalDB(tenantId)
+  // api key is encrypted in the database
+  const userId = await queryGlobalView(
+    ViewNames.BY_API_KEY,
+    {
+      key: apiKey,
+    },
+    db
+  )
+  if (userId) {
+    return { valid: true, user: await getUser(userId, tenantId, populateUser) }
+  } else {
+    throw "Invalid API key"
+  }
 }
 
 /**
@@ -79,9 +104,19 @@ module.exports = (
       const apiKey = ctx.request.headers[Headers.API_KEY]
       const tenantId = ctx.request.headers[Headers.TENANT_ID]
       // this is an internal request, no user made it
-      if (!authenticated && apiKey && apiKey === env.INTERNAL_API_KEY) {
-        authenticated = true
-        internal = true
+      if (!authenticated && apiKey) {
+        const populateUser = opts.populateUser ? opts.populateUser(ctx) : null
+        const { valid, user: foundUser } = await checkApiKey(
+          apiKey,
+          populateUser
+        )
+        if (valid && foundUser) {
+          authenticated = true
+          user = foundUser
+        } else if (valid) {
+          authenticated = true
+          internal = true
+        }
       }
       if (!user && tenantId) {
         user = { tenantId }
@@ -101,6 +136,7 @@ module.exports = (
       // allow configuring for public access
       if ((opts && opts.publicAllowed) || publicEndpoint) {
         finalise(ctx, { authenticated: false, version, publicEndpoint })
+        return next()
       } else {
         ctx.throw(err.status || 403, err)
       }

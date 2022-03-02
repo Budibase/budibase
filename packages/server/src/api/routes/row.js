@@ -10,6 +10,7 @@ const {
   PermissionLevels,
   PermissionTypes,
 } = require("@budibase/backend-core/permissions")
+const { internalSearchValidator } = require("./utils/validators")
 
 const router = Router()
 
@@ -119,8 +120,6 @@ router
    *    "notEqual": {},
    *    "empty": {},
    *    "notEmpty": {},
-   *    "contains": {},
-   *    "notContains": {}
    *    "oneOf": {
    *      "columnName": ["value"]
    *    }
@@ -140,6 +139,7 @@ router
    */
   .post(
     "/api/:tableId/search",
+    internalSearchValidator(),
     paramResource("tableId"),
     authorized(PermissionTypes.TABLE, PermissionLevels.READ),
     rowController.search
@@ -195,6 +195,7 @@ router
     "/api/:tableId/rows",
     paramResource("tableId"),
     authorized(PermissionTypes.TABLE, PermissionLevels.WRITE),
+    usage,
     rowController.patch
   )
   /**

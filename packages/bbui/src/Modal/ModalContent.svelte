@@ -165,4 +165,8 @@
   .secondary-action {
     margin-right: auto;
   }
+
+  .spectrum-Dialog-buttonGroup {
+    padding-left: 0;
+  }
 </style>
