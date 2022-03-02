@@ -2,11 +2,11 @@
   import {
     Body,
     Input,
-    Select,
+    Label,
     ModalContent,
     notifications,
+    Select,
     Toggle,
-    Label,
   } from "@budibase/bbui"
   import { createValidationStore, emailValidator } from "helpers/validation"
   import { users } from "stores/portal"
@@ -78,23 +78,18 @@
     label="Add new user via:"
   />
 
+  <Input
+    type="email"
+    label="Email"
+    bind:value={$email}
+    error={$touched && $error}
+    placeholder="john@doe.com"
+  />
+
   {#if basic}
-    <Input
-      type="email"
-      label="Email"
-      bind:value={$email}
-      error={$touched && $error}
-    />
     <Input disabled label="Password" value={password} />
-  {:else}
-    <Input
-      type="email"
-      bind:value={$email}
-      error={$touched && $error}
-      placeholder="john@doe.com"
-      label="Email"
-    />
   {/if}
+
   <div>
     <div class="toggle">
       <Label size="L">Development access</Label>
