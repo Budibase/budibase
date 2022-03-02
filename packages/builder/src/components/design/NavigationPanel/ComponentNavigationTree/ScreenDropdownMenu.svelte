@@ -76,7 +76,7 @@
   bind:this={confirmDeleteDialog}
   title="Confirm Deletion"
   body={"Are you sure you wish to delete this screen?"}
-  okText="Delete Screen"
+  okText="Delete screen"
   onOk={deleteScreen}
 />
 
