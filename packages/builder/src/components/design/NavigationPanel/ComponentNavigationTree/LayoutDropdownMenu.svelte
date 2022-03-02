@@ -51,7 +51,7 @@
   bind:this={confirmDeleteDialog}
   title="Confirm Deletion"
   body={"Are you sure you wish to delete this layout?"}
-  okText="Delete Layout"
+  okText="Delete layout"
   onOk={deleteLayout}
 />
 
