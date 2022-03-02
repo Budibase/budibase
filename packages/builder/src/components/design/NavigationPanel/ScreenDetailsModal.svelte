@@ -7,15 +7,17 @@
   export let onConfirm
   export let onCancel
   export let showProgressCircle = false
+  export let screenName
+  export let screenUrl
 
-  let screenName
-  let screenUrl
   let routeError
+  let touched = false
 
   const routeChanged = event => {
     if (!event.detail.startsWith("/")) {
       screenUrl = "/" + event.detail
     }
+    touched = true
     screenUrl = sanitizeUrl(screenUrl)
     if (routeExists(screenUrl)) {
       routeError = "This URL is already taken for this access role"
@@ -48,7 +50,7 @@
   onConfirm={confirmScreenDetails}
   {onCancel}
   cancelText={"Back"}
-  disabled={!screenName || !screenUrl || routeError}
+  disabled={!screenName || !screenUrl || routeError || !touched}
 >
   <Input label="Name" bind:value={screenName} />
   <Input
