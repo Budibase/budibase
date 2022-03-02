@@ -22,17 +22,19 @@ const { getRedisOptions } = require("@budibase/backend-core/redis").utils
 const PREFIX = "/api/public/v1"
 const DEFAULT_API_LIMITING = 120
 
-const REDIS_OPTS = getRedisOptions()
-RateLimit.defaultOptions({
-  store: new Stores.Redis({
-    socket: {
-      host: REDIS_OPTS.host,
-      port: REDIS_OPTS.port,
-    },
-    password: REDIS_OPTS.opts.password,
-    database: 1,
-  }),
-})
+if (!env.isTest()) {
+  const REDIS_OPTS = getRedisOptions()
+  RateLimit.defaultOptions({
+    store: new Stores.Redis({
+      socket: {
+        host: REDIS_OPTS.host,
+        port: REDIS_OPTS.port,
+      },
+      password: REDIS_OPTS.opts.password,
+      database: 1,
+    }),
+  })
+}
 // rate limiting, allows for 2 requests per second
 const limiter = RateLimit.middleware({
   interval: { min: 1 },
