@@ -80,33 +80,6 @@ module MySQLModule {
     },
   }
 
-  function internalQuery(
-    client: any,
-    query: SqlQuery,
-    connect: boolean = true
-  ): Promise<any[] | any> {
-    // Node MySQL is callback based, so we must wrap our call in a promise
-    return new Promise((resolve, reject) => {
-      if (connect) {
-        client.connect()
-      }
-      return client.query(
-        query.sql,
-        query.bindings || {},
-        (error: any, results: object[]) => {
-          if (error) {
-            reject(error)
-          } else {
-            resolve(results)
-          }
-          if (connect) {
-            client.end()
-          }
-        }
-      )
-    })
-  }
-
   class MySQLIntegration extends Sql implements DatasourcePlus {
     private config: MySQLConfig
     private readonly client: any
@@ -122,14 +95,44 @@ module MySQLModule {
       this.client = mysql.createConnection(config)
     }
 
+    getBindingIdentifier(): string {
+      return "?"
+    }
+
+    internalQuery(
+      query: SqlQuery,
+      connect: boolean = true
+    ): Promise<any[] | any> {
+      const client = this.client
+      // Node MySQL is callback based, so we must wrap our call in a promise
+      return new Promise((resolve, reject) => {
+        if (connect) {
+          client.connect()
+        }
+        return client.query(
+          query.sql,
+          query.bindings || {},
+          (error: any, results: object[]) => {
+            if (error) {
+              reject(error)
+            } else {
+              resolve(results)
+            }
+            if (connect) {
+              client.end()
+            }
+          }
+        )
+      })
+    }
+
     async buildSchema(datasourceId: string, entities: Record<string, Table>) {
       const tables: { [key: string]: Table } = {}
       const database = this.config.database
       this.client.connect()
 
       // get the tables first
-      const tablesResp = await internalQuery(
-        this.client,
+      const tablesResp = await this.internalQuery(
         { sql: "SHOW TABLES;" },
         false
       )
@@ -141,8 +144,7 @@ module MySQLModule {
       for (let tableName of tableNames) {
         const primaryKeys = []
         const schema: TableSchema = {}
-        const descResp = await internalQuery(
-          this.client,
+        const descResp = await this.internalQuery(
           { sql: `DESCRIBE \`${tableName}\`;` },
           false
         )
@@ -182,27 +184,27 @@ module MySQLModule {
     }
 
     async create(query: SqlQuery | string) {
-      const results = await internalQuery(this.client, getSqlQuery(query))
+      const results = await this.internalQuery(getSqlQuery(query))
       return results.length ? results : [{ created: true }]
     }
 
     async read(query: SqlQuery | string) {
-      return internalQuery(this.client, getSqlQuery(query))
+      return this.internalQuery(getSqlQuery(query))
     }
 
     async update(query: SqlQuery | string) {
-      const results = await internalQuery(this.client, getSqlQuery(query))
+      const results = await this.internalQuery(getSqlQuery(query))
       return results.length ? results : [{ updated: true }]
     }
 
     async delete(query: SqlQuery | string) {
-      const results = await internalQuery(this.client, getSqlQuery(query))
+      const results = await this.internalQuery(getSqlQuery(query))
       return results.length ? results : [{ deleted: true }]
     }
 
     async query(json: QueryJson) {
       this.client.connect()
-      const queryFn = (query: any) => internalQuery(this.client, query, false)
+      const queryFn = (query: any) => this.internalQuery(query, false)
       const output = await this.queryWithReturning(json, queryFn)
       this.client.end()
       return output

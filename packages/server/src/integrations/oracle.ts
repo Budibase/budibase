@@ -137,6 +137,7 @@ module OracleModule {
 
   class OracleIntegration extends Sql implements DatasourcePlus {
     private readonly config: OracleConfig
+    private index: number = 1
 
     public tables: Record<string, Table> = {}
     public schemaErrors: Record<string, string> = {}
@@ -172,6 +173,10 @@ module OracleModule {
     constructor(config: OracleConfig) {
       super(SqlClients.ORACLE)
       this.config = config
+    }
+
+    getBindingIdentifier(): string {
+      return `:${this.index++}`
     }
 
     /**
@@ -343,6 +348,7 @@ module OracleModule {
     private async internalQuery<T>(query: SqlQuery): Promise<Result<T>> {
       let connection
       try {
+        this.index = 1
         connection = await this.getConnection()
 
         const options: ExecuteOptions = { autoCommit: true }
