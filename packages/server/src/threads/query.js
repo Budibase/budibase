@@ -29,6 +29,9 @@ class QueryRunner {
 
   interpolateSQL(fields, parameters, integration) {
     let sql = fields.sql
+    if (!sql) {
+      return fields
+    }
     const bindings = findHBSBlocks(sql)
     let variables = []
     for (let binding of bindings) {
