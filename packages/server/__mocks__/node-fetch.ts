@@ -53,6 +53,7 @@ module FetchMock {
           {
             doc: {
               _id: "test",
+              tableId: opts.body.split("tableId:")[1].split('"')[0],
             },
           },
         ],

@@ -2,6 +2,18 @@ const TestConfig = require("../../../../tests/utilities/TestConfiguration")
 const structures = require("../../../../tests/utilities/structures")
 const env = require("../../../../environment")
 
+function user() {
+  return {
+    _id: "user",
+    _rev: "rev",
+    createdAt: Date.now(),
+    email: "test@test.com",
+    roles: {},
+    tenantId: "default",
+    status: "active",
+  }
+}
+
 jest.mock("../../../../utilities/workerRequests", () => ({
   getGlobalUsers: jest.fn(() => {
     return {
@@ -12,6 +24,18 @@ jest.mock("../../../../utilities/workerRequests", () => ({
     return {
       _id: "us_uuid1",
     }
+  }),
+  allGlobalUsers: jest.fn(() => {
+    return [user()]
+  }),
+  readGlobalUser: jest.fn(() => {
+    return user()
+  }),
+  saveGlobalUser: jest.fn(() => {
+    return { _id: "user", _rev: "rev" }
+  }),
+  deleteGlobalUser: jest.fn(() => {
+    return { message: "deleted user" }
   }),
   removeAppFromUserRoles: jest.fn(),
 }))

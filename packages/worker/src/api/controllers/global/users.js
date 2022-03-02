@@ -4,10 +4,8 @@ const {
   generateNewUsageQuotaDoc,
 } = require("@budibase/backend-core/db")
 const {
-  hash,
   getGlobalUserByEmail,
   saveUser,
-  platformLogout,
 } = require("@budibase/backend-core/utils")
 const { EmailTemplatePurpose } = require("../../../constants")
 const { checkInviteCode } = require("../../../utilities/redis")
@@ -24,16 +22,7 @@ const {
 const { removeUserFromInfoDB } = require("@budibase/backend-core/deprovision")
 const env = require("../../../environment")
 const { syncUserInApps } = require("../../../utilities/appService")
-
-async function allUsers() {
-  const db = getGlobalDB()
-  const response = await db.allDocs(
-    getGlobalUserParams(null, {
-      include_docs: true,
-    })
-  )
-  return response.rows.map(row => row.doc)
-}
+const { allUsers, getUser } = require("../../utilities")
 
 exports.save = async ctx => {
   try {
@@ -138,72 +127,6 @@ exports.destroy = async ctx => {
   }
 }
 
-exports.removeAppRole = async ctx => {
-  const { appId } = ctx.params
-  const db = getGlobalDB()
-  const users = await allUsers(ctx)
-  const bulk = []
-  const cacheInvalidations = []
-  for (let user of users) {
-    if (user.roles[appId]) {
-      cacheInvalidations.push(userCache.invalidateUser(user._id))
-      delete user.roles[appId]
-      bulk.push(user)
-    }
-  }
-  await db.bulkDocs(bulk)
-  await Promise.all(cacheInvalidations)
-  ctx.body = {
-    message: "App role removed from all users",
-  }
-}
-
-exports.getSelf = async ctx => {
-  if (!ctx.user) {
-    ctx.throw(403, "User not logged in")
-  }
-  ctx.params = {
-    id: ctx.user._id,
-  }
-  // this will set the body
-  await exports.find(ctx)
-
-  // forward session information not found in db
-  ctx.body.account = ctx.user.account
-  ctx.body.budibaseAccess = ctx.user.budibaseAccess
-  ctx.body.accountPortalAccess = ctx.user.accountPortalAccess
-  ctx.body.csrfToken = ctx.user.csrfToken
-}
-
-exports.updateSelf = async ctx => {
-  const db = getGlobalDB()
-  const user = await db.get(ctx.user._id)
-  if (ctx.request.body.password) {
-    // changing password
-    ctx.request.body.password = await hash(ctx.request.body.password)
-    // Log all other sessions out apart from the current one
-    await platformLogout({
-      ctx,
-      userId: ctx.user._id,
-      keepActiveSession: true,
-    })
-  }
-  // don't allow sending up an ID/Rev, always use the existing one
-  delete ctx.request.body._id
-  delete ctx.request.body._rev
-  // don't allow setting the csrf token
-  delete ctx.request.body.csrfToken
-  const response = await db.put({
-    ...user,
-    ...ctx.request.body,
-  })
-  await userCache.invalidateUser(user._id)
-  ctx.body = {
-    _id: response.id,
-    _rev: response.rev,
-  }
-}
-
 // called internally by app server user fetch
 exports.fetch = async ctx => {
   const users = await allUsers(ctx)
@@ -218,18 +141,7 @@ exports.fetch = async ctx => {
 
 // called internally by app server user find
 exports.find = async ctx => {
-  const db = getGlobalDB()
-  let user
-  try {
-    user = await db.get(ctx.params.id)
-  } catch (err) {
-    // no user found, just return nothing
-    user = {}
-  }
-  if (user) {
-    delete user.password
-  }
-  ctx.body = user
+  ctx.body = await getUser(ctx.params.id)
 }
 
 exports.tenantUserLookup = async ctx => {

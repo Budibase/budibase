@@ -1,25 +1,5 @@
 export const buildUserEndpoints = API => ({
   /**
-   * Fetches the currently logged-in user object.
-   * Used in client apps.
-   */
-  fetchSelf: async () => {
-    return await API.get({
-      url: "/api/self",
-    })
-  },
-
-  /**
-   * Fetches the currently logged-in user object.
-   * Used in the builder.
-   */
-  fetchBuilderSelf: async () => {
-    return await API.get({
-      url: "/api/global/users/self",
-    })
-  },
-
-  /**
    * Gets a list of users in the current tenant.
    */
   getUsers: async () => {
@@ -58,17 +38,6 @@ export const buildUserEndpoints = API => ({
     return await API.post({
       url: "/api/global/users/init",
       body: adminUser,
-    })
-  },
-
-  /**
-   * Updates the current logged-in user.
-   * @param user the new user object to save
-   */
-  updateSelf: async user => {
-    return await API.post({
-      url: "/api/global/users/self",
-      body: user,
     })
   },
 
