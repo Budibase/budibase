@@ -8,6 +8,7 @@ const {
   buildTenancyMiddleware,
   buildCsrfMiddleware,
 } = require("@budibase/backend-core/auth")
+const { licensing } = require("@budibase/backend-core")
 
 const PUBLIC_ENDPOINTS = [
   // old deprecated endpoints kept for backwards compat
@@ -91,6 +92,7 @@ router
   .use(buildAuthMiddleware(PUBLIC_ENDPOINTS))
   .use(buildTenancyMiddleware(PUBLIC_ENDPOINTS, NO_TENANCY_ENDPOINTS))
   .use(buildCsrfMiddleware({ noCsrfPatterns: NO_CSRF_ENDPOINTS }))
+  .use(licensing.middleware())
   // for now no public access is allowed to worker (bar health check)
   .use((ctx, next) => {
     if (ctx.publicEndpoint) {

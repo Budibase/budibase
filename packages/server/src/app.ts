@@ -20,7 +20,7 @@ const automations = require("./automations/index")
 const Sentry = require("@sentry/node")
 const fileSystem = require("./utilities/fileSystem")
 const bullboard = require("./automations/bullboard")
-const redis = require("./utilities/redis")
+import redis from "./utilities/redis"
 import * as migrations from "./migrations"
 
 const app = new Koa()

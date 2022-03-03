@@ -15,4 +15,5 @@ module.exports = {
   auth: require("../auth"),
   constants: require("../constants"),
   migrations: require("../migrations"),
+  licensing: require("./licensing"),
 }

@@ -41,6 +41,8 @@ async function init() {
       REDIS_URL: "localhost:6379",
       WORKER_URL: "http://localhost:4002",
       INTERNAL_API_KEY: "budibase",
+      ACCOUNT_PORTAL_URL: "http://localhost:10001",
+      ACCOUNT_PORTAL_API_KEY: "budibase",
       JWT_SECRET: "testsecret",
       REDIS_PASSWORD: "budibase",
       MINIO_ACCESS_KEY: "budibase",

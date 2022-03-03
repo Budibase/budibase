@@ -158,6 +158,29 @@ exports.removeAppRole = async ctx => {
   }
 }
 
+/**
+ * Add the attributes that are session based to the current user.
+ */
+const addSessionAttributesToUser = ctx => {
+  ctx.body.account = ctx.user.account
+  ctx.body.license = ctx.user.license
+  ctx.body.budibaseAccess = ctx.user.budibaseAccess
+  ctx.body.accountPortalAccess = ctx.user.accountPortalAccess
+  ctx.body.csrfToken = ctx.user.csrfToken
+}
+
+/**
+ * Remove the attributes that are session based from the current user,
+ * so that stale values are not written to the db
+ */
+const removeSessionAttributesFromUser = ctx => {
+  delete ctx.request.body.csrfToken
+  delete ctx.request.body.account
+  delete ctx.request.body.accountPortalAccess
+  delete ctx.request.body.budibaseAccess
+  delete ctx.request.body.license
+}
+
 exports.getSelf = async ctx => {
   if (!ctx.user) {
     ctx.throw(403, "User not logged in")
@@ -167,13 +190,7 @@ exports.getSelf = async ctx => {
   }
   // this will set the body
   await exports.find(ctx)
-
-  // forward session information not found in db
-  ctx.body.account = ctx.user.account
-  ctx.body.license = ctx.user.license
-  ctx.body.budibaseAccess = ctx.user.budibaseAccess
-  ctx.body.accountPortalAccess = ctx.user.accountPortalAccess
-  ctx.body.csrfToken = ctx.user.csrfToken
+  addSessionAttributesToUser(ctx)
 }
 
 exports.updateSelf = async ctx => {
@@ -192,8 +209,8 @@ exports.updateSelf = async ctx => {
   // don't allow sending up an ID/Rev, always use the existing one
   delete ctx.request.body._id
   delete ctx.request.body._rev
-  // don't allow setting the csrf token
-  delete ctx.request.body.csrfToken
+  removeSessionAttributesFromUser(ctx)
+
   const response = await db.put({
     ...user,
     ...ctx.request.body,
