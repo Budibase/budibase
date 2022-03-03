@@ -273,4 +273,5 @@ exports.platformLogout = async ({ ctx, userId, keepActiveSession }) => {
     userId,
     sessions.map(({ sessionId }) => sessionId)
   )
+  await userCache.invalidateUser(userId)
 }
