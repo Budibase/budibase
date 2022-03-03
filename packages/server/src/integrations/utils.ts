@@ -18,6 +18,7 @@ const SQL_TYPE_MAP = {
   timestamp: FieldTypes.DATETIME,
   time: FieldTypes.DATETIME,
   boolean: FieldTypes.BOOLEAN,
+  bit: FieldTypes.BOOLEAN,
   json: FieldTypes.JSON,
   date: FieldTypes.DATETIME,
   blob: FieldTypes.LONGFORM,
