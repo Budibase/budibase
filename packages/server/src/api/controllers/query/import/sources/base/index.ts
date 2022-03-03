@@ -23,7 +23,7 @@ export abstract class ImportSource {
     name: string,
     method: string,
     path: string,
-    url: URL,
+    url: URL | null,
     queryString: string,
     headers: object = {},
     parameters: QueryParameter[] = [],
@@ -34,7 +34,9 @@ export abstract class ImportSource {
     const transformer = "return data"
     const schema = {}
     path = this.processPath(path)
-    path = `${url.origin}/${path}`
+    if (url) {
+      path = `${url.origin}/${path}`
+    }
     queryString = this.processQuery(queryString)
     const requestBody = JSON.stringify(body, null, 2)
 

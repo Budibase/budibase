@@ -3,14 +3,7 @@ import { Query, QueryParameter } from "../../../../../definitions/datasource"
 import { OpenAPIV3 } from "openapi-types"
 import { OpenAPISource } from "./base/openapi"
 import { URL } from "url"
-import {
-  getGlobalDB,
-  getTenantId,
-  isMultiTenant,
-} from "@budibase/backend-core/tenancy"
-import { getScopedConfig } from "@budibase/backend-core/db"
 
-const jsonMimeType = "application/json"
 const parameterNotRef = (
   param: OpenAPIV3.ParameterObject | OpenAPIV3.ReferenceObject
 ): param is OpenAPIV3.ParameterObject => {
@@ -21,6 +14,13 @@ const parameterNotRef = (
 const requestBodyNotRef = (
   param: OpenAPIV3.RequestBodyObject | OpenAPIV3.ReferenceObject | undefined
 ): param is OpenAPIV3.RequestBodyObject => {
+  // all refs are deferenced by parser library
+  return param !== undefined
+}
+
+const schemaNotRef = (
+  param: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject | undefined
+): param is OpenAPIV3.SchemaObject => {
   // all refs are deferenced by parser library
   return param !== undefined
 }
@@ -49,9 +49,25 @@ const getRequestBody = (operation: OpenAPIV3.OperationObject) => {
   if (requestBodyNotRef(operation.requestBody)) {
     const request: OpenAPIV3.RequestBodyObject =
       operation.requestBody as OpenAPIV3.RequestBodyObject
-    return request.content[jsonMimeType]?.example
+    const supportedMimeTypes = getMimeTypes(operation)
+    return supportedMimeTypes.length > 0 &&
+      schemaNotRef(request.content[supportedMimeTypes[0]].schema)
+      ? (
+          request.content[supportedMimeTypes[0]]
+            .schema as OpenAPIV3.SchemaObject
+        ).example
+      : undefined
   }
-  return null
+  return undefined
+}
+
+const getMimeTypes = (operation: OpenAPIV3.OperationObject): string[] => {
+  if (requestBodyNotRef(operation.requestBody)) {
+    const request: OpenAPIV3.RequestBodyObject =
+      operation.requestBody as OpenAPIV3.RequestBodyObject
+    return Object.keys(request.content)
+  }
+  return []
 }
 
 /**
@@ -75,34 +91,6 @@ export class OpenAPI3 extends OpenAPISource {
     }
   }
 
-  getPlatformUrl = async (): Promise<string> => {
-    const db = getGlobalDB()
-    const publicConfig = await getScopedConfig(db, {
-      type: "settings",
-    })
-
-    let url = publicConfig.platformUrl
-    if (isMultiTenant()) {
-      url += `/${getTenantId()}`
-    }
-    return url
-  }
-
-  getUrl = async (): Promise<URL> => {
-    const platformUrl = await this.getPlatformUrl()
-    let url = this.document.servers ? this.document.servers[0].url : null
-    if (url) {
-      // check if url is relative or absolute
-      if (url.includes("http") || url.includes("https")) {
-        return new URL(url)
-      }
-
-      return new URL(`${platformUrl}${url}`)
-    }
-    // if the specification doesn't contain a servers object, return the PLATFORM_URM environment variable
-    return new URL(platformUrl)
-  }
-
   getInfo = async (): Promise<ImportInfo> => {
     const name = this.document.info.title || "Swagger Import"
     return {
@@ -111,7 +99,9 @@ export class OpenAPI3 extends OpenAPISource {
   }
 
   getQueries = async (datasourceId: string): Promise<Query[]> => {
-    const url: URL = await this.getUrl()
+    const url: URL | null = this.document.servers
+      ? new URL(this.document.servers[0].url)
+      : null
     const queries: Query[] = []
 
     for (let [path, pathItemObject] of Object.entries(this.document.paths)) {
@@ -138,6 +128,11 @@ export class OpenAPI3 extends OpenAPISource {
         const headers: any = {}
         let requestBody = getRequestBody(operation)
         const parameters: QueryParameter[] = []
+        const mimeTypes = getMimeTypes(operation)
+
+        if (mimeTypes.length > 0) {
+          headers["Content-Type"] = mimeTypes[0]
+        }
 
         // combine the path parameters with the operation parameters
         const operationParams = operation.parameters || []

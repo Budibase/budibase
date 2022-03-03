@@ -5,6 +5,11 @@
     "version": "1.0.0",
     "title": "CRUD"
   },
+  "servers": [
+    {
+      "url": "http://example.com"
+    }
+  ],
   "tags": [
     {
       "name": "entity"
@@ -17,16 +22,24 @@
           "entity"
         ],
         "operationId": "createEntity",
-        "parameters": [
-          {
-            "$ref": "#/components/schemas/CreateEntityParameter"
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateEntity"
+              }
+            }
           }
-        ],
+        },
         "responses": {
           "200": {
             "description": "successful operation",
-            "schema": {
-              "$ref": "#/components/schemas/Entity"
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Entity"
+                }
+              }
             }
           }
         }
@@ -36,22 +49,23 @@
           "entity"
         ],
         "operationId": "getEntities",
-        "produces": [
-          "application/json"
-        ],
         "parameters": [
           {
-            "$ref": "#/components/schemas/PageParameter"
+            "$ref": "#/components/parameters/PageParameter"
           },
           {
-            "$ref": "#/components/schemas/SizeParameter"
+            "$ref": "#/components/parameters/SizeParameter"
           }
         ],
         "responses": {
           "200": {
             "description": "successful operation",
-            "schema": {
-              "$ref": "#/components/schemas/Entities"
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Entities"
+                }
+              }
             }
           }
         }
@@ -60,7 +74,7 @@
     "/entities/{entityId}": {
       "parameters": [
         {
-          "$ref": "#/components/schemas/EntityIdParameter"
+          "$ref": "#/components/parameters/EntityIdParameter"
         }
       ],
       "get": {
@@ -68,14 +82,15 @@
           "entity"
         ],
         "operationId": "getEntity",
-        "produces": [
-          "application/json"
-        ],
         "responses": {
           "200": {
             "description": "successful operation",
-            "schema": {
-              "$ref": "#/components/schemas/Entity"
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Entity"
+                }
+              }
             }
           }
         }
@@ -85,16 +100,24 @@
           "entity"
         ],
         "operationId": "updateEntity",
-        "parameters": [
-          {
-            "$ref": "#/components/schemas/EntityParameter"
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Entity"
+              }
+            }
           }
-        ],
+        },
         "responses": {
           "200": {
             "description": "successful operation",
-            "schema": {
-              "$ref": "#/components/schemas/Entity"
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Entity"
+                }
+              }
             }
           }
         }
@@ -104,16 +127,24 @@
           "entity"
         ],
         "operationId": "patchEntity",
-        "parameters": [
-          {
-            "$ref": "#/components/schemas/EntityParameter"
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Entity"
+              }
+            }
           }
-        ],
+        },
         "responses": {
           "200": {
             "description": "successful operation",
-            "schema": {
-              "$ref": "#/components/schemas/Entity"
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Entity"
+                }
+              }
             }
           }
         }
@@ -124,10 +155,7 @@
         ],
         "parameters": [
           {
-            "type": "string",
-            "name": "x-api-key",
-            "in": "header",
-            "required": false
+            "$ref": "#/components/parameters/APIKeyParameter"
           }
         ],
         "operationId": "deleteEntity",
@@ -140,50 +168,44 @@
     }
   },
   "components": {
-    "schemas": {
+    "parameters": {
       "EntityIdParameter": {
-        "type": "integer",
-        "format": "int64",
+        "schema": {
+          "type": "integer",
+          "format": "int64"
+        },
         "name": "entityId",
         "in": "path",
         "required": true
       },
-      "CreateEntityParameter": {
-        "name": "entity",
-        "in": "body",
-        "required": true,
-        "schema": {
-          "$ref": "#/components/schemas/CreateEntity"
-        }
-      },
-      "EntityParameter": {
-        "name": "entity",
-        "in": "body",
-        "required": true,
-        "schema": {
-          "$ref": "#/components/schemas/Entity"
-        }
-      },
-      "PageParameter": {
-        "type": "integer",
-        "format": "int32",
+     "PageParameter": {
+       "schema": {
+         "type": "integer",
+         "format": "int32"
+        },
         "name": "page",
         "in": "query",
         "required": false
       },
       "SizeParameter": {
-        "type": "integer",
-        "format": "int32",
+        "schema": {
+          "type": "integer",
+          "format": "int32"
+        },
         "name": "size",
         "in": "query",
         "required": false
       },
       "APIKeyParameter": {
-        "type": "string",
+        "schema": {
+          "type": "string"
+        },
         "name": "x-api-key",
         "in": "header",
         "required": false
-      },
+      }
+    },
+    "schemas": {
       "CreateEntity": {
         "type": "object",
         "properties": {
