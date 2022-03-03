@@ -1,10 +1,11 @@
 ---
-openapi: "3.0.2"
+openapi: 3.0.2
 info:
   description: A basic swagger file
   version: 1.0.0
   title: CRUD
-host: example.com
+servers:
+  - url: http://example.com
 tags:
   - name: entity
 paths:
@@ -13,144 +14,140 @@ paths:
       tags:
         - entity
       operationId: createEntity
-      produces:
-        - application/json
-      parameters:
-        - "$ref": "#/parameters/CreateEntity"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/CreateEntity"
       responses:
-        "200":
+        '200':
           description: successful operation
-          schema:
-            "$ref": "#/definitions/Entity"
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Entity"
     get:
       tags:
         - entity
       operationId: getEntities
-      produces:
-        - application/json
       parameters:
-        - "$ref": "#/parameters/Page"
-        - "$ref": "#/parameters/Size"
+        - "$ref": "#/components/parameters/PageParameter"
+        - "$ref": "#/components/parameters/SizeParameter"
       responses:
-        "200":
+        '200':
           description: successful operation
-          schema:
-            "$ref": "#/definitions/Entities"
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Entities"
   "/entities/{entityId}":
     parameters:
-      - "$ref": "#/parameters/EntityId"
+      - "$ref": "#/components/parameters/EntityIdParameter"
     get:
       tags:
         - entity
       operationId: getEntity
-      produces:
-        - application/json
       responses:
-        "200":
+        '200':
           description: successful operation
-          schema:
-            "$ref": "#/definitions/Entity"
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Entity"
     put:
       tags:
         - entity
       operationId: updateEntity
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      parameters:
-        - "$ref": "#/parameters/Entity"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/Entity"
       responses:
-        "200":
+        '200':
           description: successful operation
-          schema:
-            "$ref": "#/definitions/Entity"
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Entity"
     patch:
       tags:
         - entity
       operationId: patchEntity
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      parameters:
-        - "$ref": "#/parameters/Entity"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/Entity"
       responses:
-        "200":
+        '200':
           description: successful operation
-          schema:
-            "$ref": "#/definitions/Entity"
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Entity"
     delete:
       tags:
         - entity
       parameters:
-        - "$ref": "#/parameters/APIKey"
+        - "$ref": "#/components/parameters/APIKeyParameter"
       operationId: deleteEntity
-      produces:
-        - application/json
       responses:
-        "204":
+        '204':
           description: successful operation
-parameters:
-  EntityId:
-    type: integer
-    format: int64
-    name: entityId
-    in: path
-    required: true
-  CreateEntity:
-    name: entity
-    in: body
-    required: true
-    schema:
-      "$ref": "#/definitions/CreateEntity"
-  Entity:
-    name: entity
-    in: body
-    required: true
-    schema:
-      "$ref": "#/definitions/Entity"
-  Page:
-    type: integer
-    format: int32
-    name: page
-    in: query
-    required: false
-  Size:
-    type: integer
-    format: int32
-    name: size
-    in: query
-    required: false
-  APIKey:
-    type: string
-    name: x-api-key
-    in: header
-    required: false
-definitions:
-  CreateEntity:
-    type: object
-    properties:
-      name:
+components:
+  parameters:
+    EntityIdParameter:
+      schema:
+        type: integer
+        format: int64
+      name: entityId
+      in: path
+      required: true
+    PageParameter:
+      schema:
+        type: integer
+        format: int32
+      name: page
+      in: query
+      required: false
+    SizeParameter:
+      schema:
+        type: integer
+        format: int32
+      name: size
+      in: query
+      required: false
+    APIKeyParameter:
+      schema:
         type: string
-      type:
-        type: string
-    example:
-      name: name
-      type: type
-  Entity:
-    allOf:
-      - type: object
-        properties:
-          id:
-            type: integer
-            format: int64
-      - "$ref": "#/definitions/CreateEntity"
-    example:
-      id: 1
-      name: name
-      type: type
-  Entities:
-    type: array
-    items:
-      "$ref": "#/definitions/Entity"
+      name: x-api-key
+      in: header
+      required: false
+  schemas:
+    CreateEntity:
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+      example:
+        name: name
+        type: type
+    Entity:
+      allOf:
+        - type: object
+          properties:
+            id:
+              type: integer
+              format: int64
+        - "$ref": "#/components/schemas/CreateEntity"
+      example:
+        id: 1
+        name: name
+        type: type
+    Entities:
+      type: array
+      items:
+        "$ref": "#/components/schemas/Entity"

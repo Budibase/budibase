@@ -1,21 +1,6 @@
 const fs = require("fs")
 const path = require("path")
-const getGlobalDB = jest.fn().mockReturnValue("db")
-const getTenantId = jest.fn().mockReturnValue("1")
-const isMultiTenant = jest.fn().mockReturnValue(true)
-const getScopedConfig = jest
-  .fn()
-  .mockResolvedValue({ platformUrl: "somePlatform" })
 
-jest.mock("@budibase/backend-core/db", () => ({
-  getScopedConfig,
-}))
-
-jest.mock("@budibase/backend-core/tenancy", () => ({
-  getTenantId,
-  getGlobalDB,
-  isMultiTenant,
-}))
 const { OpenAPI3 } = require("../../openapi3")
 
 const getData = (file, extension) => {
@@ -48,10 +33,9 @@ describe("OpenAPI3 Import", () => {
   })
 
   const runTests = async (filename, test, assertions) => {
-    /*for (let extension of ["json", "yaml"]) {
+    for (let extension of ["json", "yaml"]) {
       await test(filename, extension, assertions)
-    }*/
-    await test(filename, "json", assertions)
+    }
   }
 
   const testImportInfo = async (file, extension) => {
