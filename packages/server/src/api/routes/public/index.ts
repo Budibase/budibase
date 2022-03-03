@@ -19,7 +19,8 @@ const {
 const { getRedisOptions } = require("@budibase/backend-core/redis").utils
 
 const PREFIX = "/api/public/v1"
-const DEFAULT_API_REQ_LIMIT_PER_SEC = 10
+// allow a lot more requests when in test
+const DEFAULT_API_REQ_LIMIT_PER_SEC = env.isTest() ? 100 : 10
 
 function getApiLimitPerSecond(): number {
   if (!env.API_REQ_LIMIT_PER_SEC) {
