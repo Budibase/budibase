@@ -16,7 +16,7 @@ import {
 import { DatasourcePlus } from "./base/datasourcePlus"
 
 module MySQLModule {
-  const mysql = require("mysql2")
+  const mysql = require("mysql")
   const Sql = require("./base/sql")
 
   interface MySQLConfig {
