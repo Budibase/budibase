@@ -42,6 +42,5 @@ exports.getLicense = async tenantId => {
     throw new Error(`Error getting license for tenant ${tenantId}`)
   }
 
-  const json = await response.json()
-  return json
+  return response.json()
 }
