@@ -9,9 +9,9 @@ import { paramResource, paramSubResource } from "../../../middleware/resourceId"
 import { CtxFn } from "./utils/Endpoint"
 import mapperMiddleware from "./middleware/mapper"
 import env from "../../../environment"
-import { RateLimit, Stores } from "koa2-ratelimit"
 // below imports don't have declaration files
 const Router = require("@koa/router")
+const { RateLimit, Stores } = require("koa2-ratelimit")
 const {
   PermissionLevels,
   PermissionTypes,
@@ -32,6 +32,7 @@ if (!env.isTest()) {
   const REDIS_OPTS = getRedisOptions()
   RateLimit.defaultOptions({
     store: new Stores.Redis({
+      // @ts-ignore
       socket: {
         host: REDIS_OPTS.host,
         port: REDIS_OPTS.port,
