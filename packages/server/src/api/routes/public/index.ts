@@ -9,10 +9,9 @@ import { paramResource, paramSubResource } from "../../../middleware/resourceId"
 import { CtxFn } from "./utils/Endpoint"
 import mapperMiddleware from "./middleware/mapper"
 import env from "../../../environment"
+import { RateLimit, Stores } from "koa2-ratelimit"
 // below imports don't have declaration files
 const Router = require("@koa/router")
-const RateLimit = require("koa2-ratelimit").RateLimit
-const Stores = require("koa2-ratelimit").Stores
 const {
   PermissionLevels,
   PermissionTypes,
@@ -20,7 +19,14 @@ const {
 const { getRedisOptions } = require("@budibase/backend-core/redis").utils
 
 const PREFIX = "/api/public/v1"
-const DEFAULT_API_LIMITING = 120
+const DEFAULT_API_REQ_LIMIT_PER_SEC = 10
+
+function getApiLimitPerSecond(): number {
+  if (!env.API_REQ_LIMIT_PER_SEC) {
+    return DEFAULT_API_REQ_LIMIT_PER_SEC
+  }
+  return parseInt(env.API_REQ_LIMIT_PER_SEC)
+}
 
 if (!env.isTest()) {
   const REDIS_OPTS = getRedisOptions()
@@ -37,9 +43,9 @@ if (!env.isTest()) {
 }
 // rate limiting, allows for 2 requests per second
 const limiter = RateLimit.middleware({
-  interval: { min: 1 },
+  interval: { sec: 1 },
   // per ip, per interval
-  max: env.API_RATE_LIMITING || DEFAULT_API_LIMITING,
+  max: getApiLimitPerSecond(),
 })
 
 const publicRouter = new Router({

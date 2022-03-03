@@ -148,6 +148,7 @@
     "@types/jest": "^26.0.23",
     "@types/koa": "^2.13.3",
     "@types/koa-router": "^7.4.2",
+    "@types/koa2-ratelimit": "^0.9.2",
     "@types/node": "^15.12.4",
     "@types/oracledb": "^5.2.1",
     "@typescript-eslint/parser": "4.28.0",
