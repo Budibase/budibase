@@ -24,6 +24,7 @@ const {
 const { removeUserFromInfoDB } = require("@budibase/backend-core/deprovision")
 const env = require("../../../environment")
 const { syncUserInApps } = require("../../../utilities/appService")
+const { errors } = require("@budibase/backend-core")
 
 async function allUsers() {
   const db = getGlobalDB()
@@ -295,6 +296,10 @@ exports.inviteAccept = async ctx => {
       info.tenantId
     )
   } catch (err) {
+    if (err.code === errors.codes.USAGE_LIMIT_EXCEEDED) {
+      // explicitly re-throw limit exceeded errors
+      ctx.throw(400, err)
+    }
     ctx.throw(400, "Unable to create new user, invitation invalid.")
   }
 }

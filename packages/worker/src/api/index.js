@@ -9,6 +9,7 @@ const {
   buildCsrfMiddleware,
 } = require("@budibase/backend-core/auth")
 const { licensing } = require("@budibase/backend-core")
+const { errors } = require("@budibase/backend-core")
 
 const PUBLIC_ENDPOINTS = [
   // old deprecated endpoints kept for backwards compat
@@ -105,16 +106,32 @@ router
   })
   .use(auditLog)
 
-// error handling middleware
+// error handling middleware - TODO: This could be moved to backend-core
 router.use(async (ctx, next) => {
   try {
     await next()
   } catch (err) {
     ctx.log.error(err)
     ctx.status = err.status || err.statusCode || 500
+
+    let error
+    if (err.code || err.type) {
+      // add generic error information
+      error = {
+        code: err.code,
+        type: err.type,
+      }
+
+      // add specific error information
+      if (error.code === errors.codes.USAGE_LIMIT_EXCEEDED) {
+        error.limitName = err.limitName
+      }
+    }
+
     ctx.body = {
       message: err.message,
       status: ctx.status,
+      error,
     }
   }
 })

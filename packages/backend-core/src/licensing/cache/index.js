@@ -29,7 +29,7 @@ exports.getLicense = async (tenantId, opts = { populateLicense: null }) => {
   return license
 }
 
-exports.invalidateLicense = async tenantId => {
+exports.invalidate = async tenantId => {
   const client = await redis.getClient()
   await client.delete(tenantId)
 }
