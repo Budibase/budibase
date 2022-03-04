@@ -143,7 +143,6 @@ module MSSQLModule {
       operation: string | undefined = undefined
     ) {
       const client = this.client
-      const schema = this.config.schema
       const request = client.request()
       this.index = 0
       try {
