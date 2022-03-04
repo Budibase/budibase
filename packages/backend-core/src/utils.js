@@ -6,7 +6,7 @@ const {
 } = require("./db/utils")
 const jwt = require("jsonwebtoken")
 const { options } = require("./middleware/passport/jwt")
-const { createUserEmailView } = require("./db/views")
+const { createUserEmailView, createUserBuildersView } = require("./db/views")
 const { Headers, UserStatus, Cookies, MAX_VALID_DATE } = require("./constants")
 const {
   getGlobalDB,
@@ -20,6 +20,7 @@ const { hash } = require("./hashing")
 const userCache = require("./cache/user")
 const env = require("./environment")
 const { getUserSessions, invalidateSessions } = require("./security/sessions")
+const { usage } = require("./licensing")
 
 const APP_PREFIX = DocumentTypes.APP + SEPARATOR
 
@@ -160,12 +161,33 @@ exports.getGlobalUserByEmail = async email => {
   }
 }
 
+exports.getBuildersCount = async () => {
+  const db = getGlobalDB()
+  try {
+    let users = await db.query(`database/${ViewNames.USER_BY_BUILDERS}`)
+    return users.total_rows
+  } catch (err) {
+    if (err != null && err.name === "not_found") {
+      await createUserBuildersView(db)
+      return exports.getBuildersCount()
+    } else {
+      throw err
+    }
+  }
+}
+
 exports.saveUser = async (
   user,
   tenantId,
   hashPassword = true,
   requirePassword = true
 ) => {
+  // new user
+  // check license restrictions
+  if (!user._id && user.builder) {
+    await usage.checkMaxDevelopers()
+  }
+
   if (!tenantId) {
     throw "No tenancy specified."
   }

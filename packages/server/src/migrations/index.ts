@@ -8,6 +8,7 @@ const {
 import * as userEmailViewCasing from "./functions/userEmailViewCasing"
 import * as quota1 from "./functions/quotas1"
 import * as appUrls from "./functions/appUrls"
+import * as userBuildersView from "./functions/userBuildersView"
 
 export interface Migration {
   type: string
@@ -48,6 +49,11 @@ export const MIGRATIONS: Migration[] = [
     name: "app_urls",
     opts: { all: true },
     fn: appUrls.run,
+  },
+  {
+    type: MIGRATION_TYPES.GLOBAL,
+    name: "user_builders_view",
+    fn: userBuildersView.run,
   },
 ]
 

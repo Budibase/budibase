@@ -31,3 +31,25 @@ exports.createUserEmailView = async db => {
   }
   await db.put(designDoc)
 }
+
+exports.createUserBuildersView = async db => {
+  let designDoc
+  try {
+    designDoc = await db.get("_design/database")
+  } catch (err) {
+    // no design doc, make one
+    designDoc = DesignDoc()
+  }
+  const view = {
+    map: `function(doc) {
+      if (doc.builder && doc.builder.global === true) {
+        emit(doc._id, doc._id)
+      }
+    }`,
+  }
+  designDoc.views = {
+    ...designDoc.views,
+    [ViewNames.USER_BY_BUILDERS]: view,
+  }
+  await db.put(designDoc)
+}

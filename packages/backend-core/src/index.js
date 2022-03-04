@@ -16,4 +16,5 @@ module.exports = {
   constants: require("../constants"),
   migrations: require("../migrations"),
   licensing: require("./licensing"),
+  errors: require("./errors"),
 }

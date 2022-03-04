@@ -30,6 +30,7 @@ const UNICODE_MAX = "\ufff0"
 
 exports.ViewNames = {
   USER_BY_EMAIL: "by_email",
+  USER_BY_BUILDERS: "by_builders",
 }
 
 exports.StaticDatabases = StaticDatabases

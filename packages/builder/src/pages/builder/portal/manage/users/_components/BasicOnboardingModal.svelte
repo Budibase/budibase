@@ -26,7 +26,7 @@
       })
       notifications.success("Successfully created user")
     } catch (error) {
-      notifications.error("Error creating user")
+      notifications.error(error.message)
     }
   }
 </script>
