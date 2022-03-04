@@ -41,7 +41,7 @@ const SQL_TYPE_MAP = {
 export enum SqlClients {
   MS_SQL = "mssql",
   POSTGRES = "pg",
-  MY_SQL = "mysql",
+  MY_SQL = "mysql2",
   ORACLE = "oracledb",
 }
 
