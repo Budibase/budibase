@@ -362,6 +362,23 @@ exports.validate = async ctx => {
   })
 }
 
+exports.exportRows = async ctx => {
+  const db = getAppDB()
+  const table = await db.get(ctx.params.tableId)
+  const rowIds = ctx.request.body
+  let response = (
+    await db.allDocs({
+      include_docs: true,
+      keys: rowIds,
+    })
+  ).rows.map(row => row.doc)
+
+  let rows = await outputProcessing(table, response)
+
+  return rows
+}
+
+
 exports.fetchEnrichedRow = async ctx => {
   const db = getAppDB()
   const tableId = ctx.params.tableId
