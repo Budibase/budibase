@@ -19,6 +19,7 @@ import { Table, TableSchema } from "../definitions/common"
 module MSSQLModule {
   const sqlServer = require("mssql")
   const Sql = require("./base/sql")
+  const DEFAULT_SCHEMA = "dbo"
 
   interface MSSQLConfig {
     user: string
@@ -26,7 +27,15 @@ module MSSQLModule {
     server: string
     port: number
     database: string
+    schema: string
     encrypt?: boolean
+  }
+
+  interface TablesResponse {
+    TABLE_CATALOG: string
+    TABLE_SCHEMA: string
+    TABLE_NAME: string
+    TABLE_TYPE: string
   }
 
   const SCHEMA: Integration = {
@@ -57,6 +66,10 @@ module MSSQLModule {
       database: {
         type: DatasourceFieldTypes.STRING,
         default: "root",
+      },
+      schema: {
+        type: DatasourceFieldTypes.STRING,
+        default: DEFAULT_SCHEMA,
       },
       encrypt: {
         type: DatasourceFieldTypes.BOOLEAN,
@@ -96,11 +109,41 @@ module MSSQLModule {
     TABLES_SQL =
       "SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE='BASE TABLE'"
 
+    constructor(config: MSSQLConfig) {
+      super(SqlClients.MS_SQL)
+      this.config = config
+      const clientCfg = {
+        ...this.config,
+        options: {
+          encrypt: this.config.encrypt,
+          enableArithAbort: true,
+        },
+      }
+      delete clientCfg.encrypt
+      if (!this.pool) {
+        this.pool = new sqlServer.ConnectionPool(clientCfg)
+      }
+    }
+
+    getBindingIdentifier(): string {
+      return `(@p${this.index++})`
+    }
+
+    async connect() {
+      try {
+        this.client = await this.pool.connect()
+      } catch (err) {
+        // @ts-ignore
+        throw new Error(err)
+      }
+    }
+
     async internalQuery(
       query: SqlQuery,
       operation: string | undefined = undefined
     ) {
       const client = this.client
+      const schema = this.config.schema
       const request = client.request()
       this.index = 0
       try {
@@ -151,35 +194,6 @@ module MSSQLModule {
               WHERE TABLE_NAME='${tableName}'`
     }
 
-    constructor(config: MSSQLConfig) {
-      super(SqlClients.MS_SQL)
-      this.config = config
-      const clientCfg = {
-        ...this.config,
-        options: {
-          encrypt: this.config.encrypt,
-          enableArithAbort: true,
-        },
-      }
-      delete clientCfg.encrypt
-      if (!this.pool) {
-        this.pool = new sqlServer.ConnectionPool(clientCfg)
-      }
-    }
-
-    getBindingIdentifier(): string {
-      return `(@p${this.index++})`
-    }
-
-    async connect() {
-      try {
-        this.client = await this.pool.connect()
-      } catch (err) {
-        // @ts-ignore
-        throw new Error(err)
-      }
-    }
-
     async runSQL(sql: string) {
       return (await this.internalQuery(getSqlQuery(sql))).recordset
     }
@@ -191,11 +205,14 @@ module MSSQLModule {
      */
     async buildSchema(datasourceId: string, entities: Record<string, Table>) {
       await this.connect()
-      let tableNames = await this.runSQL(this.TABLES_SQL)
-      if (tableNames == null || !Array.isArray(tableNames)) {
+      let tableInfo: TablesResponse[] = await this.runSQL(this.TABLES_SQL)
+      if (tableInfo == null || !Array.isArray(tableInfo)) {
         throw "Unable to get list of tables in database"
       }
-      tableNames = tableNames
+
+      const schema = this.config.schema || DEFAULT_SCHEMA
+      const tableNames = tableInfo
+        .filter((record: any) => record.TABLE_SCHEMA === schema)
         .map((record: any) => record.TABLE_NAME)
         .filter((name: string) => this.MASTER_TABLES.indexOf(name) === -1)
 
@@ -267,7 +284,11 @@ module MSSQLModule {
     }
 
     async query(json: QueryJson) {
+      const schema = this.config.schema
       await this.connect()
+      if (schema && schema !== DEFAULT_SCHEMA && json?.endpoint) {
+        json.endpoint.schema = schema
+      }
       const operation = this._operation(json)
       const queryFn = (query: any, op: string) => this.internalQuery(query, op)
       const processFn = (result: any) =>
