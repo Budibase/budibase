@@ -153,6 +153,7 @@ export interface QueryJson {
     datasourceId: string
     entityId: string
     operation: Operation
+    schema?: string
   }
   resource: {
     fields: string[]

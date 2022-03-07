@@ -101,28 +101,28 @@ function generateSchema(
 }
 
 function buildCreateTable(
-  knex: Knex,
+  knex: SchemaBuilder,
   table: Table,
   tables: Record<string, Table>
 ): SchemaBuilder {
-  return knex.schema.createTable(table.name, schema => {
+  return knex.createTable(table.name, schema => {
     generateSchema(schema, table, tables)
   })
 }
 
 function buildUpdateTable(
-  knex: Knex,
+  knex: SchemaBuilder,
   table: Table,
   tables: Record<string, Table>,
   oldTable: Table
 ): SchemaBuilder {
-  return knex.schema.alterTable(table.name, schema => {
+  return knex.alterTable(table.name, schema => {
     generateSchema(schema, table, tables, oldTable)
   })
 }
 
-function buildDeleteTable(knex: Knex, table: Table): SchemaBuilder {
-  return knex.schema.dropTable(table.name)
+function buildDeleteTable(knex: SchemaBuilder, table: Table): SchemaBuilder {
+  return knex.dropTable(table.name)
 }
 
 class SqlTableQueryBuilder {
@@ -146,7 +146,11 @@ class SqlTableQueryBuilder {
   }
 
   _tableQuery(json: QueryJson): any {
-    const client = knex({ client: this.sqlClient })
+    let client = knex({ client: this.sqlClient }).schema
+    if (json?.endpoint?.schema) {
+      client = client.withSchema(json.endpoint.schema)
+    }
+
     let query
     if (!json.table || !json.meta || !json.meta.tables) {
       throw "Cannot execute without table being specified"
