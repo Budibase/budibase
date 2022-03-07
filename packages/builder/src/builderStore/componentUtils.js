@@ -3,7 +3,7 @@ import { Helpers } from "@budibase/bbui"
 import {
   decodeJSBinding,
   encodeJSBinding,
-  findAllBindings,
+  findHBSBlocks,
 } from "@budibase/string-templates"
 
 /**
@@ -191,7 +191,7 @@ export const makeComponentUnique = component => {
     children = children.replace(new RegExp(oldId, "g"), newId)
 
     // Replace all instances of this ID in child JS bindings
-    const bindings = findAllBindings(children)
+    const bindings = findHBSBlocks(children)
     bindings.forEach(binding => {
       // JSON.stringify will have escaped double quotes, so we need
       // to account for that

@@ -3,7 +3,11 @@ const { registerAll, registerMinimum } = require("./helpers/index")
 const processors = require("./processors")
 const { atob, btoa } = require("./utilities")
 const manifest = require("../manifest.json")
-const { FIND_HBS_REGEX, findDoubleHbsInstances } = require("./utilities")
+const {
+  FIND_HBS_REGEX,
+  FIND_ANY_HBS_REGEX,
+  findDoubleHbsInstances,
+} = require("./utilities")
 
 const hbsInstance = handlebars.create()
 registerAll(hbsInstance)
@@ -311,6 +315,21 @@ module.exports.doesContainStrings = (template, strings) => {
 }
 
 /**
+ * Given a string, this will return any {{ binding }} or {{{ binding }}} type
+ * statements.
+ * @param {string} string The string to search within.
+ * @return {string[]} The found HBS blocks.
+ */
+module.exports.findHBSBlocks = string => {
+  let regexp = new RegExp(FIND_ANY_HBS_REGEX)
+  let matches = string.match(regexp)
+  if (matches == null) {
+    return []
+  }
+  return matches
+}
+
+/**
  * This function looks in the supplied template for handlebars instances, if they contain
  * JS the JS will be decoded and then the supplied string will be looked for. For example
  * if the template "Hello, your name is {{ related }}" this function would return that true
@@ -321,13 +340,4 @@ module.exports.doesContainStrings = (template, strings) => {
  */
 module.exports.doesContainString = (template, string) => {
   return exports.doesContainStrings(template, [string])
-}
-
-/**
- * Finds all regular (double bracketed) expressions inside a string.
- * @param string the string to search
- * @return {[]} all matching bindings
- */
-module.exports.findAllBindings = string => {
-  return findDoubleHbsInstances(string)
 }

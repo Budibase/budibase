@@ -103,30 +103,11 @@ module PostgresModule {
     },
   }
 
-  async function internalQuery(client: any, query: SqlQuery) {
-    // need to handle a specific issue with json data types in postgres,
-    // new lines inside the JSON data will break it
-    if (query && query.sql) {
-      const matches = query.sql.match(JSON_REGEX)
-      if (matches && matches.length > 0) {
-        for (let match of matches) {
-          const escaped = escapeDangerousCharacters(match)
-          query.sql = query.sql.replace(match, escaped)
-        }
-      }
-    }
-    try {
-      return await client.query(query.sql, query.bindings || [])
-    } catch (err) {
-      // @ts-ignore
-      throw new Error(err)
-    }
-  }
-
   class PostgresIntegration extends Sql implements DatasourcePlus {
     static pool: any
     private readonly client: any
     private readonly config: PostgresConfig
+    private index: number = 1
     public tables: Record<string, Table> = {}
     public schemaErrors: Record<string, string> = {}
 
@@ -161,6 +142,32 @@ module PostgresModule {
 
       this.client = this.pool
       this.setSchema()
+    }
+
+    getBindingIdentifier(): string {
+      return `$${this.index++}`
+    }
+
+    async internalQuery(query: SqlQuery) {
+      const client = this.client
+      this.index = 1
+      // need to handle a specific issue with json data types in postgres,
+      // new lines inside the JSON data will break it
+      if (query && query.sql) {
+        const matches = query.sql.match(JSON_REGEX)
+        if (matches && matches.length > 0) {
+          for (let match of matches) {
+            const escaped = escapeDangerousCharacters(match)
+            query.sql = query.sql.replace(match, escaped)
+          }
+        }
+      }
+      try {
+        return await client.query(query.sql, query.bindings || [])
+      } catch (err) {
+        // @ts-ignore
+        throw new Error(err)
+      }
     }
 
     setSchema() {
@@ -241,22 +248,22 @@ module PostgresModule {
     }
 
     async create(query: SqlQuery | string) {
-      const response = await internalQuery(this.client, getSqlQuery(query))
+      const response = await this.internalQuery(getSqlQuery(query))
       return response.rows.length ? response.rows : [{ created: true }]
     }
 
     async read(query: SqlQuery | string) {
-      const response = await internalQuery(this.client, getSqlQuery(query))
+      const response = await this.internalQuery(getSqlQuery(query))
       return response.rows
     }
 
     async update(query: SqlQuery | string) {
-      const response = await internalQuery(this.client, getSqlQuery(query))
+      const response = await this.internalQuery(getSqlQuery(query))
       return response.rows.length ? response.rows : [{ updated: true }]
     }
 
     async delete(query: SqlQuery | string) {
-      const response = await internalQuery(this.client, getSqlQuery(query))
+      const response = await this.internalQuery(getSqlQuery(query))
       return response.rows.length ? response.rows : [{ deleted: true }]
     }
 
@@ -266,11 +273,11 @@ module PostgresModule {
       if (Array.isArray(input)) {
         const responses = []
         for (let query of input) {
-          responses.push(await internalQuery(this.client, query))
+          responses.push(await this.internalQuery(query))
         }
         return responses
       } else {
-        const response = await internalQuery(this.client, input)
+        const response = await this.internalQuery(input)
         return response.rows.length ? response.rows : [{ [operation]: true }]
       }
     }
