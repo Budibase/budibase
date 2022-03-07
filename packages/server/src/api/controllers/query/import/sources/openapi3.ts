@@ -47,24 +47,32 @@ const isParameter = (
 
 const getRequestBody = (operation: OpenAPIV3.OperationObject) => {
   if (requestBodyNotRef(operation.requestBody)) {
-    const request: OpenAPIV3.RequestBodyObject =
-      operation.requestBody as OpenAPIV3.RequestBodyObject
+    const request: OpenAPIV3.RequestBodyObject = operation.requestBody
     const supportedMimeTypes = getMimeTypes(operation)
-    return supportedMimeTypes.length > 0 &&
-      schemaNotRef(request.content[supportedMimeTypes[0]].schema)
-      ? (
-          request.content[supportedMimeTypes[0]]
-            .schema as OpenAPIV3.SchemaObject
-        ).example
-      : undefined
+    if (supportedMimeTypes.length > 0) {
+      const mimeType = supportedMimeTypes[0]
+
+      // try get example from request
+      const content = request.content[mimeType]
+      if (content.example) {
+        return content.example
+      }
+
+      // try get example from schema
+      if (schemaNotRef(content.schema)) {
+        const schema = content.schema
+        if (schema.example) {
+          return schema.example
+        }
+      }
+    }
   }
   return undefined
 }
 
 const getMimeTypes = (operation: OpenAPIV3.OperationObject): string[] => {
   if (requestBodyNotRef(operation.requestBody)) {
-    const request: OpenAPIV3.RequestBodyObject =
-      operation.requestBody as OpenAPIV3.RequestBodyObject
+    const request: OpenAPIV3.RequestBodyObject = operation.requestBody
     return Object.keys(request.content)
   }
   return []
@@ -99,9 +107,17 @@ export class OpenAPI3 extends OpenAPISource {
   }
 
   getQueries = async (datasourceId: string): Promise<Query[]> => {
-    const url: URL | null = this.document.servers
-      ? new URL(this.document.servers[0].url)
-      : null
+    let url: string | URL | undefined
+    if (this.document.servers?.length) {
+      url = this.document.servers[0].url
+      try {
+        url = new URL(url)
+      } catch (err) {
+        // unable to construct url, e.g. with variables
+        // proceed with string form of url
+      }
+    }
+
     const queries: Query[] = []
 
     for (let [path, pathItemObject] of Object.entries(this.document.paths)) {
