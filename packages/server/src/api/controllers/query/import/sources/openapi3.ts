@@ -26,7 +26,7 @@ const schemaNotRef = (
 }
 
 const isOpenAPI3 = (document: any): document is OpenAPIV3.Document => {
-  return document.openapi.includes("3")
+  return document.openapi.includes("3.0")
 }
 
 const methods: string[] = Object.values(OpenAPIV3.HttpMethods)
@@ -79,8 +79,8 @@ const getMimeTypes = (operation: OpenAPIV3.OperationObject): string[] => {
 }
 
 /**
- * OpenAPI Version 3.1 - aka "Swagger"
- * https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.1.0.md
+ * OpenAPI Version 3.0
+ * https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.0.md
  */
 export class OpenAPI3 extends OpenAPISource {
   document!: OpenAPIV3.Document
@@ -100,7 +100,7 @@ export class OpenAPI3 extends OpenAPISource {
   }
 
   getInfo = async (): Promise<ImportInfo> => {
-    const name = this.document.info.title || "Swagger Import"
+    const name = this.document.info.title || "OpenAPI Import"
     return {
       name,
     }
