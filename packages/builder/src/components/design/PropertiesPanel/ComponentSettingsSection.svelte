@@ -32,7 +32,7 @@
     const customSections = settings.filter(setting => setting.section)
     return [
       {
-        name: "General",
+        name: componentDefinition?.name || "General",
         info: componentDefinition?.info,
         settings: generalSettings,
       },
