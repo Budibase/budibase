@@ -17,12 +17,29 @@ const options = {
     },
     servers: [
       {
-        url: "http://budibase.app/api/public/v1",
+        url: "https://{organisationId}.budibase.app/api/public/v1",
         description: "Budibase Cloud API",
+        variables: {
+          organisationId: {
+            default: "organisation",
+            description: "The organisation you are attempting to access.",
+          },
+        },
       },
       {
-        url: "{protocol}://{hostname}:10000/api/public/v1",
+        url: "{protocol}://{hostname}/api/public/v1",
         description: "Budibase self hosted API",
+        variables: {
+          protocol: {
+            default: "http",
+            description:
+              "Whether HTTP or HTTPS should be used to communicate with your Budibase instance.",
+          },
+          hostname: {
+            default: "localhost:10000",
+            description: "The URL of your Budibase instance.",
+          },
+        },
       },
     ],
     components: {
