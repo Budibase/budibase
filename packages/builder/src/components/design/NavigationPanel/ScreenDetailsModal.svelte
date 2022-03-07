@@ -9,6 +9,7 @@
   export let showProgressCircle = false
   export let screenName
   export let screenUrl
+  export let confirmText = "Continue"
 
   let routeError
   let touched = false
@@ -46,7 +47,7 @@
 <ModalContent
   size="M"
   title={"Enter details"}
-  confirmText={"Continue"}
+  {confirmText}
   onConfirm={confirmScreenDetails}
   {onCancel}
   cancelText={"Back"}

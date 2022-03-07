@@ -85,5 +85,6 @@
     onConfirm={createDuplicateScreen}
     screenName={screen?.props._instanceName}
     screenUrl={screen?.routing.route}
+    confirmText="Duplicate"
   />
 </Modal>
