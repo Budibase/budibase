@@ -6,35 +6,63 @@ import { FieldTypes, BuildSchemaErrors, InvalidColumns } from "../constants"
 const DOUBLE_SEPARATOR = `${SEPARATOR}${SEPARATOR}`
 const ROW_ID_REGEX = /^\[.*]$/g
 
-const SQL_TYPE_MAP = {
-  text: FieldTypes.LONGFORM,
-  varchar: FieldTypes.STRING,
+const SQL_NUMBER_TYPE_MAP = {
   integer: FieldTypes.NUMBER,
+  int: FieldTypes.NUMBER,
   bigint: FieldTypes.NUMBER,
   decimal: FieldTypes.NUMBER,
   smallint: FieldTypes.NUMBER,
   real: FieldTypes.NUMBER,
-  "double precision": FieldTypes.NUMBER,
-  timestamp: FieldTypes.DATETIME,
-  time: FieldTypes.DATETIME,
-  boolean: FieldTypes.BOOLEAN,
-  json: FieldTypes.JSON,
-  date: FieldTypes.DATETIME,
-  blob: FieldTypes.LONGFORM,
-  enum: FieldTypes.STRING,
   float: FieldTypes.NUMBER,
-  int: FieldTypes.NUMBER,
   numeric: FieldTypes.NUMBER,
   mediumint: FieldTypes.NUMBER,
   dec: FieldTypes.NUMBER,
   double: FieldTypes.NUMBER,
   fixed: FieldTypes.NUMBER,
-  datetime: FieldTypes.DATETIME,
-  tinyint: FieldTypes.BOOLEAN,
-  long: FieldTypes.LONGFORM,
+  "double precision": FieldTypes.NUMBER,
   number: FieldTypes.NUMBER,
   binary_float: FieldTypes.NUMBER,
   binary_double: FieldTypes.NUMBER,
+  money: FieldTypes.NUMBER,
+  smallmoney: FieldTypes.NUMBER,
+}
+
+const SQL_DATE_TYPE_MAP = {
+  timestamp: FieldTypes.DATETIME,
+  time: FieldTypes.DATETIME,
+  datetime: FieldTypes.DATETIME,
+  smalldatetime: FieldTypes.DATETIME,
+  date: FieldTypes.DATETIME,
+}
+
+const SQL_STRING_TYPE_MAP = {
+  varchar: FieldTypes.STRING,
+  char: FieldTypes.STRING,
+  nchar: FieldTypes.STRING,
+  nvarchar: FieldTypes.STRING,
+  ntext: FieldTypes.STRING,
+  enum: FieldTypes.STRING,
+  blob: FieldTypes.LONGFORM,
+  long: FieldTypes.LONGFORM,
+  text: FieldTypes.LONGFORM,
+}
+
+const SQL_BOOLEAN_TYPE_MAP = {
+  boolean: FieldTypes.BOOLEAN,
+  bit: FieldTypes.BOOLEAN,
+  tinyint: FieldTypes.BOOLEAN,
+}
+
+const SQL_MISC_TYPE_MAP = {
+  json: FieldTypes.JSON,
+}
+
+const SQL_TYPE_MAP = {
+  ...SQL_NUMBER_TYPE_MAP,
+  ...SQL_DATE_TYPE_MAP,
+  ...SQL_STRING_TYPE_MAP,
+  ...SQL_BOOLEAN_TYPE_MAP,
+  ...SQL_MISC_TYPE_MAP,
 }
 
 export enum SqlClients {
