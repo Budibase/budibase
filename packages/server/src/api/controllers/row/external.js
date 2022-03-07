@@ -164,13 +164,14 @@ exports.exportRows = async ctx => {
   ctx.request.body = {
     query: {
       oneOf: {
-        [table.primaryDisplay]: ctx.request.body.map(id => breakRowIdField(id)[0])
+        [table.primaryDisplay]: ctx.request.body.map(
+          id => breakRowIdField(id)[0]
+        ),
       },
     },
   }
   return exports.search(ctx)
 }
-
 
 exports.fetchEnrichedRow = async ctx => {
   const id = ctx.params.rowId
