@@ -145,5 +145,4 @@ exports.export = async function (ctx) {
   } catch (err) {
     ctx.throw(400, err)
   }
-
 }
