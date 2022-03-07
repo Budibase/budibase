@@ -62,6 +62,14 @@
       notifications.error("Error deleting screen")
     }
   }
+
+  const pasteComponent = mode => {
+    try {
+      store.actions.components.paste(screen?.props, mode)
+    } catch (error) {
+      notifications.error("Error saving component")
+    }
+  }
 </script>
 
 <ActionMenu>
@@ -69,6 +77,13 @@
     <Icon size="S" hoverable name="MoreSmallList" />
   </div>
   <MenuItem icon="Duplicate" on:click={duplicateScreen}>Duplicate</MenuItem>
+  <MenuItem
+    icon="ShowOneLayer"
+    on:click={() => pasteComponent("inside")}
+    disabled={!$store.componentToPaste}
+  >
+    Paste inside
+  </MenuItem>
   <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}>Delete</MenuItem>
 </ActionMenu>
 
