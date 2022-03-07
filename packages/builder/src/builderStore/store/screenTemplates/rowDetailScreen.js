@@ -17,7 +17,7 @@ export default function (tables) {
       name: `${table.name} - Detail`,
       create: () => createScreen(table),
       id: ROW_DETAIL_TEMPLATE,
-      table: table.name,
+      table: table._id,
     }
   })
 }
