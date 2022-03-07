@@ -4,12 +4,8 @@ info:
   description: The public API for Budibase apps and its services.
   version: 1.0.0
 servers:
-  - url: https://{organisationId}.budibase.app/api/public/v1
+  - url: https://budibase.app/api/public/v1
     description: Budibase Cloud API
-    variables:
-      organisationId:
-        default: organisation
-        description: The organisation you are attempting to access.
   - url: "{protocol}://{hostname}/api/public/v1"
     description: Budibase self hosted API
     variables:
