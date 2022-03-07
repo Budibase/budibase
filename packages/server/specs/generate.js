@@ -17,14 +17,8 @@ const options = {
     },
     servers: [
       {
-        url: "https://{organisationId}.budibase.app/api/public/v1",
+        url: "https://budibase.app/api/public/v1",
         description: "Budibase Cloud API",
-        variables: {
-          organisationId: {
-            default: "organisation",
-            description: "The organisation you are attempting to access.",
-          },
-        },
       },
       {
         url: "{protocol}://{hostname}/api/public/v1",
