@@ -1,30 +1,63 @@
 #!/usr/bin/env node
 const path = require("path")
 const fs = require("fs")
-const { processStringSync } = require("@budibase/string-templates")
+
+function processStringSync(string, env) {
+  let output = ""
+
+  // process if statements
+  let removal = false
+  for (let line of string.split("\n")) {
+    if (new RegExp(`{{\/if}}`, "g").test(line)) { 
+      removal = false
+      continue
+    } 
+
+    if (!removal) {
+      const match = line.match(new RegExp(`{{#if (.*)}}`))
+      if (match) {
+        const key = match[1]
+        // check the if statement is true
+        if (!env[key]) {
+          removal = true
+        }
+        continue
+      }
+      output += line + "\n"
+    }
+  }
+
+  for (let key in env) {
+    // replace variables
+    const rgx = new RegExp(`{{\\s*${key}\\s*}}`, "g")
+    output = output.replace(rgx, env[key])
+  }
+
+  return output
+}
 
 const Configs = {
   prod: {
-    k8s: true,
     apps: "app-service.budibase.svc.cluster.local",
     worker: "worker-service.budibase.svc.cluster.local",
     minio: "minio-service.budibase.svc.cluster.local",
     couchdb: "budibase-prod-svc-couchdb",
+    resolver: "kube-dns.kube-system.svc.cluster.local"
   },
   preprod: {
-    k8s: true,
     apps: "app-service.budibase.svc.cluster.local",
     worker: "worker-service.budibase.svc.cluster.local",
     minio: "minio-service.budibase.svc.cluster.local",
     couchdb: "budibase-preprod-svc-couchdb",
+    resolver: "kube-dns.kube-system.svc.cluster.local"
   },
   compose: {
-    compose: true,
     apps: "app-service",
     worker: "worker-service",
     minio: "minio-service",
     couchdb: "couchdb-service",
     watchtower: "watchtower-service",
+    resolver: "127.0.0.11"
   },
 }
 
@@ -36,7 +69,7 @@ const Commands = {
 
 async function init(managementCommand) {
   const config = Configs[managementCommand]
-  const hostingPath = path.join(process.cwd(), "..", "..", "hosting")
+  const hostingPath = path.join(process.cwd(), "hosting")
   const nginxHbsPath = path.join(hostingPath, "nginx.prod.conf.hbs")
   const nginxOutputPath = path.join(
     hostingPath,

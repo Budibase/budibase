@@ -6,11 +6,10 @@ import {
 } from "../definitions/datasource"
 import { OAuth2Client } from "google-auth-library"
 import { DatasourcePlus } from "./base/datasourcePlus"
-import { Row, Table, TableSchema } from "../definitions/common"
+import { Table, TableSchema } from "../definitions/common"
 import { buildExternalTableId } from "./utils"
 import { DataSourceOperation, FieldTypes } from "../constants"
 import { GoogleSpreadsheet } from "google-spreadsheet"
-import { table } from "console"
 
 module GoogleSheetsModule {
   const { getGlobalDB } = require("@budibase/backend-core/tenancy")
@@ -110,6 +109,10 @@ module GoogleSheetsModule {
       this.config = config
       const spreadsheetId = this.cleanSpreadsheetUrl(this.config.spreadsheetId)
       this.client = new GoogleSpreadsheet(spreadsheetId)
+    }
+
+    getBindingIdentifier() {
+      return ""
     }
 
     /**

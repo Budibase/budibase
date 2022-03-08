@@ -3,7 +3,6 @@ myapps/
 .env
 builder/*
 client/*
-public/
 db/dev.db/
 dist
 coverage/

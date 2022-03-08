@@ -39,7 +39,7 @@ Cypress.Commands.add("createApp", name => {
   cy.get(".spectrum-Modal").within(() => {
     cy.get("input").eq(0).type(name).should("have.value", name).blur()
     cy.get(".spectrum-ButtonGroup").contains("Create app").click()
-    cy.wait(5000)
+    cy.wait(10000)
   })
   cy.createTable("Cypress Tests", true)
 })
@@ -116,10 +116,10 @@ Cypress.Commands.add("createTestTableWithData", () => {
 Cypress.Commands.add("createTable", (tableName, initialTable) => {
   if (!initialTable) {
     cy.navigateToDataSection()
-    cy.get(".add-button").click()
+    cy.get(`[data-cy="new-table"]`).click()
   }
-  cy.wait(7000)
-  cy.get(".spectrum-Modal")
+  cy.wait(5000)
+  cy.get(".spectrum-Dialog-grid")
     .contains("Budibase DB")
     .click({ force: true })
     .then(() => {
@@ -172,17 +172,19 @@ Cypress.Commands.add("addRow", values => {
 
 Cypress.Commands.add("addRowMultiValue", values => {
   cy.contains("Create row").click()
-  cy.get(".spectrum-Form-itemField")
-    .click()
-    .then(() => {
-      cy.get(".spectrum-Popover").within(() => {
-        for (let i = 0; i < values.length; i++) {
-          cy.get(".spectrum-Menu-item").eq(i).click()
-        }
+  cy.get(".spectrum-Modal").within(() => {
+    cy.get(".spectrum-Form-itemField")
+      .click()
+      .then(() => {
+        cy.get(".spectrum-Popover").within(() => {
+          for (let i = 0; i < values.length; i++) {
+            cy.get(".spectrum-Menu-item").eq(i).click()
+          }
+        })
+        cy.get(".spectrum-Dialog-grid").click("top")
+        cy.get(".spectrum-ButtonGroup").contains("Create").click()
       })
-      cy.get(".spectrum-Dialog-grid").click("top")
-      cy.get(".spectrum-ButtonGroup").contains("Create").click()
-    })
+  })
 })
 
 Cypress.Commands.add("createUser", email => {
@@ -435,7 +437,7 @@ Cypress.Commands.add("addDatasourceConfig", (datasource, skipFetch) => {
   }
 })
 
-Cypress.Commands.add("createRestQuery", (method, restUrl) => {
+Cypress.Commands.add("createRestQuery", (method, restUrl, queryPrettyName) => {
   // addExternalDatasource should be called prior to this
   // Configures REST datasource & sends query
   cy.wait(1000)
@@ -450,5 +452,5 @@ Cypress.Commands.add("createRestQuery", (method, restUrl) => {
   cy.get(".spectrum-Button").contains("Save").click({ force: true })
   cy.get(".hierarchy-items-container")
     .should("contain", method)
-    .and("contain", restUrl)
+    .and("contain", queryPrettyName)
 })

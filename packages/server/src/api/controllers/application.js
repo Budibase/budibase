@@ -263,6 +263,7 @@ exports.create = async ctx => {
     tenantId: getTenantId(),
     updatedAt: new Date().toISOString(),
     createdAt: new Date().toISOString(),
+    status: AppStatus.DEV,
   }
   const response = await db.put(newApplication, { force: true })
   newApplication._rev = response.rev
