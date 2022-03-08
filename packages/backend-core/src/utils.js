@@ -20,7 +20,6 @@ const { hash } = require("./hashing")
 const userCache = require("./cache/user")
 const env = require("./environment")
 const { getUserSessions, invalidateSessions } = require("./security/sessions")
-const { usage } = require("./licensing")
 
 const APP_PREFIX = DocumentTypes.APP + SEPARATOR
 
@@ -182,11 +181,11 @@ exports.saveUser = async (
   hashPassword = true,
   requirePassword = true
 ) => {
-  // new user
-  // check license restrictions
-  if (!user._id && user.builder) {
-    await usage.checkMaxDevelopers()
-  }
+  // // new user
+  // // check license restrictions
+  // if (!user._id && user.builder) {
+  //   await limits.checkMaxDevelopers()
+  // }
 
   if (!tenantId) {
     throw "No tenancy specified."
