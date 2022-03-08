@@ -22,6 +22,7 @@
     "@budibase/bbui": "^1.0.81-alpha.1",
     "@budibase/frontend-core": "^1.0.81-alpha.1",
     "@budibase/string-templates": "^1.0.81-alpha.1",
+    "dayjs": "^1.10.8",
     "regexparam": "^1.3.0",
     "rollup-plugin-polyfill-node": "^0.8.0",
     "shortid": "^2.2.15",
