@@ -47,6 +47,13 @@ jobs:
           yarn
           yarn build
           popd
+
+      - name: Build OpenAPI sepc
+        run: |
+          pushd packages/server
+          yarn
+          yarn specs
+          popd
       
       - name: Setup Helm 
         uses: azure/setup-helm@v1
@@ -77,3 +84,5 @@ jobs:
             packages/cli/build/cli-win.exe
             packages/cli/build/cli-linux
             packages/cli/build/cli-macos 
+            packages/server/specs/openapi.yaml
+            packages/server/specs/openapi.json

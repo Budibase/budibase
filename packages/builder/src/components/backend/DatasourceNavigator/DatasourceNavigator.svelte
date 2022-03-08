@@ -8,7 +8,11 @@
   import EditQueryPopover from "./popovers/EditQueryPopover.svelte"
   import NavItem from "components/common/NavItem.svelte"
   import TableNavigator from "components/backend/TableNavigator/TableNavigator.svelte"
-  import { customQueryIconText, customQueryIconColor } from "helpers/data/utils"
+  import {
+    customQueryIconText,
+    customQueryIconColor,
+    customQueryText,
+  } from "helpers/data/utils"
   import ICONS from "./icons"
   import { notifications } from "@budibase/bbui"
 
@@ -137,7 +141,7 @@
             icon="SQLQuery"
             iconText={customQueryIconText(datasource, query)}
             iconColor={customQueryIconColor(datasource, query)}
-            text={query.name}
+            text={customQueryText(datasource, query)}
             opened={$queries.selected === query._id}
             selected={$queries.selected === query._id}
             on:click={() => onClickQuery(query)}

@@ -19,13 +19,7 @@ http {
   tcp_nodelay on;
   server_tokens off;
   types_hash_max_size 2048;
-  {{#if compose}}
-  resolver 127.0.0.11 ipv6=off;
-  {{/if}}
-  {{#if k8s}}
-  resolver kube-dns.kube-system.svc.cluster.local valid=10s;
-  {{/if}}
-
+  resolver {{ resolver }} valid=10s ipv6=off;
 
   # buffering
   client_body_buffer_size 1K;

@@ -95,6 +95,10 @@ module MySQLModule {
       this.config = config
     }
 
+    getBindingIdentifier(): string {
+      return "?"
+    }
+
     async connect() {
       this.client = await mysql.createConnection(this.config)
     }

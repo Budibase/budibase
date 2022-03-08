@@ -18,11 +18,13 @@
   import { onMount } from "svelte"
   import UpdateUserInfoModal from "components/settings/UpdateUserInfoModal.svelte"
   import ChangePasswordModal from "components/settings/ChangePasswordModal.svelte"
+  import UpdateAPIKeyModal from "components/settings/UpdateAPIKeyModal.svelte"
   import Logo from "assets/bb-emblem.svg"
 
   let loaded = false
   let userInfoModal
   let changePasswordModal
+  let apiKeyModal
   let mobileMenuVisible = false
 
   $: menu = buildMenu($auth.isAdmin)
@@ -162,6 +164,11 @@
             <MenuItem icon="UserEdit" on:click={() => userInfoModal.show()}>
               Update user information
             </MenuItem>
+            {#if $auth.isBuilder}
+              <MenuItem icon="Key" on:click={() => apiKeyModal.show()}>
+                View API key
+              </MenuItem>
+            {/if}
             <MenuItem
               icon="LockClosed"
               on:click={() => changePasswordModal.show()}
@@ -185,6 +192,9 @@
   </Modal>
   <Modal bind:this={changePasswordModal}>
     <ChangePasswordModal />
+  </Modal>
+  <Modal bind:this={apiKeyModal}>
+    <UpdateAPIKeyModal />
   </Modal>
 {/if}
 

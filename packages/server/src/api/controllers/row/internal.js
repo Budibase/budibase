@@ -2,6 +2,7 @@ const linkRows = require("../../../db/linkedRows")
 const {
   generateRowID,
   getRowParams,
+  getTableIDFromRowID,
   DocumentTypes,
   InternalTables,
 } = require("../../../db/utils")
@@ -361,6 +362,22 @@ exports.validate = async ctx => {
   })
 }
 
+exports.exportRows = async ctx => {
+  const db = getAppDB()
+  const table = await db.get(ctx.params.tableId)
+  const rowIds = ctx.request.body.rows
+  let response = (
+    await db.allDocs({
+      include_docs: true,
+      keys: rowIds,
+    })
+  ).rows.map(row => row.doc)
+
+  let rows = await outputProcessing(table, response)
+
+  return rows
+}
+
 exports.fetchEnrichedRow = async ctx => {
   const db = getAppDB()
   const tableId = ctx.params.tableId
@@ -386,6 +403,9 @@ exports.fetchEnrichedRow = async ctx => {
   let groups = {},
     tables = {}
   for (let row of response) {
+    if (!row.tableId) {
+      row.tableId = getTableIDFromRowID(row._id)
+    }
     const linkedTableId = row.tableId
     if (groups[linkedTableId] == null) {
       groups[linkedTableId] = [row]
