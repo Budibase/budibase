@@ -249,6 +249,9 @@ class InternalBuilder {
   create(knex: Knex, json: QueryJson, opts: QueryOptions): KnexQuery {
     const { endpoint, body } = json
     let query: KnexQuery = knex(endpoint.entityId)
+    if (endpoint.schema) {
+      query = query.withSchema(endpoint.schema)
+    }
     const parsedBody = parseBody(body)
     // make sure no null values in body for creation
     for (let [key, value] of Object.entries(parsedBody)) {
@@ -267,6 +270,9 @@ class InternalBuilder {
   bulkCreate(knex: Knex, json: QueryJson): KnexQuery {
     const { endpoint, body } = json
     let query: KnexQuery = knex(endpoint.entityId)
+    if (endpoint.schema) {
+      query = query.withSchema(endpoint.schema)
+    }
     if (!Array.isArray(body)) {
       return query
     }
@@ -275,7 +281,7 @@ class InternalBuilder {
   }
 
   read(knex: Knex, json: QueryJson, limit: number): KnexQuery {
-    let { endpoint, resource, filters, sort, paginate, relationships } = json
+    let { endpoint, resource, filters, paginate, relationships } = json
     const tableName = endpoint.entityId
     // select all if not specified
     if (!resource) {
@@ -302,6 +308,9 @@ class InternalBuilder {
     }
     // start building the query
     let query: KnexQuery = knex(tableName).limit(foundLimit)
+    if (endpoint.schema) {
+      query = query.withSchema(endpoint.schema)
+    }
     if (foundOffset) {
       query = query.offset(foundOffset)
     }
@@ -331,6 +340,9 @@ class InternalBuilder {
   update(knex: Knex, json: QueryJson, opts: QueryOptions): KnexQuery {
     const { endpoint, body, filters } = json
     let query: KnexQuery = knex(endpoint.entityId)
+    if (endpoint.schema) {
+      query = query.withSchema(endpoint.schema)
+    }
     const parsedBody = parseBody(body)
     query = this.addFilters(query, filters, { tableName: endpoint.entityId })
     // mysql can't use returning
@@ -344,6 +356,9 @@ class InternalBuilder {
   delete(knex: Knex, json: QueryJson, opts: QueryOptions): KnexQuery {
     const { endpoint, filters } = json
     let query: KnexQuery = knex(endpoint.entityId)
+    if (endpoint.schema) {
+      query = query.withSchema(endpoint.schema)
+    }
     query = this.addFilters(query, filters, { tableName: endpoint.entityId })
     // mysql can't use returning
     if (opts.disableReturning) {
