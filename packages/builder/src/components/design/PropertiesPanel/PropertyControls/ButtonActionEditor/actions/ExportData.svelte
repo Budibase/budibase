@@ -5,9 +5,23 @@
   import { onMount } from "svelte"
 
   export let parameters
-  $: components = findAllMatchingComponents($currentAsset?.props, component =>
+
+  $: tables = findAllMatchingComponents($currentAsset?.props, component =>
     component._component.endsWith("table")
-  )
+  ).map(table => ({
+    label: table._instanceName,
+    value: table._id,
+  }))
+
+  $: tableBlocks = findAllMatchingComponents($currentAsset?.props, component =>
+    component._component.endsWith("tableblock")
+  ).map(block => ({
+    label: block._instanceName,
+    value: `${block._id}-table`,
+  }))
+
+  $: componentOptions = tables.concat(tableBlocks)
+
   const FORMATS = [
     {
       label: "CSV",
@@ -38,9 +52,7 @@
     <Label small>Table</Label>
     <Select
       bind:value={parameters.tableComponentId}
-      options={components}
-      getOptionLabel={option => option._instanceName}
-      getOptionValue={option => option._id}
+      options={componentOptions}
     />
 
     <Label small>Export as</Label>
