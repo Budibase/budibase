@@ -28,7 +28,7 @@ export interface Migration {
  */
 export interface MigrationOptions {
   tenantIds?: string[]
-  forced?: {
+  force?: {
     [type: string]: string[]
   }
 }

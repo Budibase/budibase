@@ -1,12 +1,6 @@
 // need to load environment first
 import { ExtendableContext } from "koa"
-
 import * as env from "./environment"
-
-// temp for testing
-import * as poc from "./pro-poc"
-poc.run()
-
 const CouchDB = require("./db")
 require("@budibase/backend-core").init(CouchDB)
 const Koa = require("koa")

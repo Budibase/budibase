@@ -1,6 +1,6 @@
 const rowController = require("../../api/controllers/row")
 const automationUtils = require("../automationUtils")
-const usage = require("../../utilities/usageQuota")
+const { quotas, StaticQuotaName, QuotaUsageType } = require("@budibase/pro")
 const { buildCtx } = require("./utils")
 
 exports.definition = {
@@ -81,9 +81,11 @@ exports.run = async function ({ inputs, appId, emitter }) {
       inputs.row.tableId,
       inputs.row
     )
-    await usage.update(usage.Properties.ROW, 1, { dryRun: true })
+    await quotas.updateUsage(1, StaticQuotaName.ROWS, QuotaUsageType.STATIC, {
+      dryRun: true,
+    })
     await rowController.save(ctx)
-    await usage.update(usage.Properties.ROW, 1)
+    await quotas.updateUsage(1, StaticQuotaName.ROWS, QuotaUsageType.STATIC)
     return {
       row: inputs.row,
       response: ctx.body,
