@@ -243,7 +243,7 @@ const s3UploadHandler = async action => {
 
 const exportDataHandler = async action => {
   let selection = rowSelectionStore.actions.getSelection(
-    action.parameters.tableId
+    action.parameters.tableComponentId
   )
   if (selection.selectedRows && selection.selectedRows.length > 0) {
     try {
