@@ -93,7 +93,7 @@
       return `/${url}-${suffix}`
     } else {
       const split = url.split("/")
-      return `/${split[0]}-${suffix}/${split.join("/")}`
+      return `/${split[0]}-${suffix}/${split.slice(1).join("/")}`
     }
   }
 
