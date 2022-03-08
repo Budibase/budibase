@@ -134,8 +134,9 @@
 
   // Remove all iframe event listeners on component destroy
   onDestroy(() => {
+    window.removeEventListener("message", receiveMessage)
+
     if (iframe.contentWindow) {
-      window.removeEventListener("message", receiveMessage)
       if (!$store.clientFeatures.messagePassing) {
         // Legacy - remove in later versions of BB
         iframe.contentWindow.removeEventListener(

@@ -1,4 +1,5 @@
 import { get } from "svelte/store"
+import download from "downloadjs"
 import {
   routeStore,
   builderStore,
@@ -8,6 +9,7 @@ import {
   notificationStore,
   dataSourceStore,
   uploadStore,
+  rowSelectionStore,
 } from "stores"
 import { API } from "api"
 import { ActionTypes } from "constants"
@@ -239,6 +241,26 @@ const s3UploadHandler = async action => {
   }
 }
 
+const exportDataHandler = async action => {
+  let selection = rowSelectionStore.actions.getSelection(
+    action.parameters.tableId
+  )
+  if (selection.selectedRows && selection.selectedRows.length > 0) {
+    try {
+      const data = await API.exportRows({
+        tableId: selection.tableId,
+        rows: selection.selectedRows,
+      })
+
+      download(JSON.stringify(data), `export.${action.parameters.type}`)
+    } catch (error) {
+      notificationStore.actions.error("There was an error exporting the data")
+    }
+  } else {
+    notificationStore.actions.error("Please select at least one row")
+  }
+}
+
 const handlerMap = {
   ["Save Row"]: saveRowHandler,
   ["Duplicate Row"]: duplicateRowHandler,
@@ -254,6 +276,7 @@ const handlerMap = {
   ["Change Form Step"]: changeFormStepHandler,
   ["Update State"]: updateStateHandler,
   ["Upload File to S3"]: s3UploadHandler,
+  ["Export Data"]: exportDataHandler,
 }
 
 const confirmTextMap = {
