@@ -10,7 +10,7 @@ Cypress.on("uncaught:exception", () => {
 })
 
 Cypress.Commands.add("login", () => {
-  cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
+  cy.visit(`${Cypress.config().baseUrl}/builder`)
   cy.wait(2000)
   cy.url().then(url => {
     if (url.includes("builder/admin")) {
@@ -33,37 +33,69 @@ Cypress.Commands.add("login", () => {
 })
 
 Cypress.Commands.add("createApp", name => {
-  cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
+  cy.visit(`${Cypress.config().baseUrl}/builder`)
   cy.wait(500)
-  cy.request(`${Cypress.config().baseUrl}api/applications?status=all`)
-    .its("body")
-    .then(body => {
-      if (body.length > 0) {
-        cy.get(".spectrum-Button").contains("Create app").click({ force: true })
-      }
-    })
+  cy.get(".spectrum-Button").contains("Create app").click({ force: true })
   cy.get(".spectrum-Modal").within(() => {
     cy.get("input").eq(0).type(name).should("have.value", name).blur()
     cy.get(".spectrum-ButtonGroup").contains("Create app").click()
-    cy.wait(7000)
+    cy.wait(10000)
   })
+  cy.createTable("Cypress Tests", true)
 })
 
-Cypress.Commands.add("deleteApp", appName => {
-  cy.visit(`localhost:${Cypress.env("PORT")}/builder`)
-  cy.wait(1000)
-  cy.request(`localhost:${Cypress.env("PORT")}/api/applications?status=all`)
+Cypress.Commands.add("deleteApp", name => {
+  cy.visit(`${Cypress.config().baseUrl}/builder`)
+  cy.wait(2000)
+  cy.request(`${Cypress.config().baseUrl}/api/applications?status=all`)
     .its("body")
     .then(val => {
       if (val.length > 0) {
-        cy.get(
-          ".appTable > :nth-child(5) > :nth-child(2) > .spectrum-Icon"
-        ).click()
-        cy.contains("Delete").click()
-        cy.get(".spectrum-Modal").within(() => {
-          cy.get("input").type(appName)
-          cy.get(".spectrum-Button--warning").click()
+        cy.searchForApplication(name)
+        cy.get(".appTable").within(() => {
+          cy.get(".spectrum-Icon").eq(1).click()
         })
+        cy.get(".spectrum-Menu").then($menu => {
+          if ($menu.text().includes("Unpublish")) {
+            cy.get(".spectrum-Menu").contains("Unpublish").click()
+            cy.get(".spectrum-Dialog-grid").contains("Unpublish app").click()
+          } else {
+            cy.get(".spectrum-Menu").contains("Delete").click()
+            cy.get(".spectrum-Dialog-grid").within(() => {
+              cy.get("input").type(name)
+            })
+            cy.get(".spectrum-Button--warning").click()
+          }
+        })
+      } else {
+        return
+      }
+    })
+})
+
+Cypress.Commands.add("deleteAllApps", () => {
+  cy.visit(`${Cypress.config().baseUrl}/builder`)
+  cy.wait(500)
+  cy.request(`${Cypress.config().baseUrl}/api/applications?status=all`)
+    .its("body")
+    .then(val => {
+      for (let i = 0; i < val.length; i++) {
+        cy.get(".spectrum-Heading")
+          .eq(1)
+          .then(app => {
+            const name = app.text()
+            cy.get(".title")
+              .children()
+              .within(() => {
+                cy.get(".spectrum-Icon").eq(0).click()
+              })
+            cy.get(".spectrum-Menu").contains("Delete").click()
+            cy.get(".spectrum-Dialog-grid").within(() => {
+              cy.get("input").type(name)
+              cy.get(".spectrum-Button--warning").click()
+            })
+            cy.reload()
+          })
       }
     })
 })
@@ -72,6 +104,7 @@ Cypress.Commands.add("createTestApp", () => {
   const appName = "Cypress Tests"
   cy.deleteApp(appName)
   cy.createApp(appName, "This app is used for Cypress testing.")
+  cy.createScreen("home", "home")
 })
 
 Cypress.Commands.add("createTestTableWithData", () => {
@@ -80,10 +113,18 @@ Cypress.Commands.add("createTestTableWithData", () => {
   cy.addColumn("dog", "age", "Number")
 })
 
-Cypress.Commands.add("createTable", tableName => {
-  cy.contains("Budibase DB").click()
-  cy.contains("Create new table").click()
-
+Cypress.Commands.add("createTable", (tableName, initialTable) => {
+  if (!initialTable) {
+    cy.navigateToDataSection()
+    cy.get(`[data-cy="new-table"]`).click()
+  }
+  cy.wait(5000)
+  cy.get(".spectrum-Dialog-grid")
+    .contains("Budibase DB")
+    .click({ force: true })
+    .then(() => {
+      cy.get(".spectrum-Button").contains("Continue").click({ force: true })
+    })
   cy.get(".spectrum-Modal").within(() => {
     cy.wait(1000)
     cy.get("input").first().type(tableName).blur()
@@ -131,17 +172,19 @@ Cypress.Commands.add("addRow", values => {
 
 Cypress.Commands.add("addRowMultiValue", values => {
   cy.contains("Create row").click()
-  cy.get(".spectrum-Form-itemField")
-    .click()
-    .then(() => {
-      cy.get(".spectrum-Popover").within(() => {
-        for (let i = 0; i < values.length; i++) {
-          cy.get(".spectrum-Menu-item").eq(i).click()
-        }
+  cy.get(".spectrum-Modal").within(() => {
+    cy.get(".spectrum-Form-itemField")
+      .click()
+      .then(() => {
+        cy.get(".spectrum-Popover").within(() => {
+          for (let i = 0; i < values.length; i++) {
+            cy.get(".spectrum-Menu-item").eq(i).click()
+          }
+        })
+        cy.get(".spectrum-Dialog-grid").click("top")
+        cy.get(".spectrum-ButtonGroup").contains("Create").click()
       })
-      cy.get(".spectrum-Dialog-grid").click("top")
-      cy.get(".spectrum-ButtonGroup").contains("Create").click()
-    })
+  })
 })
 
 Cypress.Commands.add("createUser", email => {
@@ -190,22 +233,49 @@ Cypress.Commands.add("navigateToFrontend", () => {
   cy.wait(1000)
   cy.contains("Design").click()
   cy.get(".spectrum-Search").type("/")
-  cy.createScreen("home", "home")
-  cy.addComponent("Elements", "Headline")
   cy.get(".nav-item").contains("home").click()
 })
 
+Cypress.Commands.add("navigateToDataSection", () => {
+  // Clicks on the Data tab
+  cy.wait(500)
+  cy.contains("Data").click()
+})
+
 Cypress.Commands.add("createScreen", (screenName, route) => {
+  cy.contains("Design").click()
   cy.get("[aria-label=AddCircle]").click()
   cy.get(".spectrum-Modal").within(() => {
-    cy.get(".item").first().click()
-    cy.get(".spectrum-Button--cta").click()
+    cy.get(".item").contains("Blank").click()
+    cy.get(".spectrum-Button").contains("Add Screens").click({ force: true })
+    cy.wait(500)
   })
+  cy.get(".spectrum-Dialog-grid").within(() => {
+    cy.get(".spectrum-Form-itemField").eq(0).type(screenName)
+    cy.get(".spectrum-Form-itemField").eq(1).type(route)
+    cy.get(".spectrum-Button").contains("Continue").click({ force: true })
+    cy.wait(1000)
+  })
+})
+
+Cypress.Commands.add("createAutogeneratedScreens", screenNames => {
+  // Screen name must already exist within data source
+  cy.contains("Design").click()
+  cy.get("[aria-label=AddCircle]").click()
+  for (let i = 0; i < screenNames.length; i++) {
+    cy.get(".item").contains(screenNames[i]).click()
+  }
+  cy.get(".spectrum-Button").contains("Add Screens").click({ force: true })
+  cy.wait(4000)
+})
+
+Cypress.Commands.add("addRow", values => {
+  cy.contains("Create row").click()
   cy.get(".spectrum-Modal").within(() => {
-    cy.get("input").first().clear().type(screenName)
-    cy.get("input").eq(1).clear().type(route)
-    cy.get(".spectrum-Button--cta").click()
-    cy.wait(2000)
+    for (let i = 0; i < values.length; i++) {
+      cy.get("input").eq(i).type(values[i]).blur()
+    }
+    cy.get(".spectrum-ButtonGroup").contains("Create").click()
   })
 })
 
@@ -243,7 +313,144 @@ Cypress.Commands.add("addCustomSourceOptions", totalOptions => {
 })
 
 Cypress.Commands.add("searchForApplication", appName => {
-  cy.get(".spectrum-Textfield").within(() => {
-    cy.get("input").eq(0).type(appName)
+  cy.wait(1000)
+  // Searches for the app
+  cy.get(".filter").then(() => {
+    cy.get(".spectrum-Textfield").within(() => {
+      cy.get("input").eq(0).type(appName)
+    })
   })
+  // Confirms app exists after search
+  cy.get(".appTable").contains(appName)
+})
+
+Cypress.Commands.add("selectExternalDatasource", datasourceName => {
+  // Navigates to Data Section
+  cy.navigateToDataSection()
+  // Open Data Source modal
+  cy.get(".nav").within(() => {
+    cy.get(".add-button").click()
+  })
+  // Clicks specified datasource & continue
+  cy.get(".item-list").contains(datasourceName).click()
+  cy.get(".spectrum-Dialog-grid").within(() => {
+    cy.get(".spectrum-Button").contains("Continue").click({ force: true })
+  })
+})
+
+Cypress.Commands.add("addDatasourceConfig", (datasource, skipFetch) => {
+  // selectExternalDatasource should be called prior to this
+  // Adds the config for specified datasource & fetches tables
+  // Currently supports MySQL, PostgreSQL, Oracle
+  // Host IP Address
+  cy.wait(500)
+  cy.get(".spectrum-Dialog-grid").within(() => {
+    cy.get(".form-row")
+      .eq(0)
+      .within(() => {
+        cy.get(".spectrum-Textfield").within(() => {
+          if (datasource == "Oracle") {
+            cy.get("input").clear().type(Cypress.env("oracle").HOST)
+          } else {
+            cy.get("input").clear().type(Cypress.env("HOST_IP"))
+          }
+        })
+      })
+  })
+  // Database Name
+  cy.get(".spectrum-Dialog-grid").within(() => {
+    if (datasource == "MySQL") {
+      cy.get(".form-row")
+        .eq(4)
+        .within(() => {
+          cy.get("input").clear().type(Cypress.env("mysql").DATABASE)
+        })
+    } else {
+      cy.get(".form-row")
+        .eq(2)
+        .within(() => {
+          if (datasource == "PostgreSQL") {
+            cy.get("input").clear().type(Cypress.env("postgresql").DATABASE)
+          }
+          if (datasource == "Oracle") {
+            cy.get("input").clear().type(Cypress.env("oracle").DATABASE)
+          }
+        })
+    }
+  })
+  // User
+  cy.get(".spectrum-Dialog-grid").within(() => {
+    if (datasource == "MySQL") {
+      cy.get(".form-row")
+        .eq(2)
+        .within(() => {
+          cy.get("input").clear().type(Cypress.env("mysql").USER)
+        })
+    } else {
+      cy.get(".form-row")
+        .eq(3)
+        .within(() => {
+          if (datasource == "PostgreSQL") {
+            cy.get("input").clear().type(Cypress.env("postgresql").USER)
+          }
+          if (datasource == "Oracle") {
+            cy.get("input").clear().type(Cypress.env("oracle").USER)
+          }
+        })
+    }
+  })
+  // Password
+  cy.get(".spectrum-Dialog-grid").within(() => {
+    if (datasource == "MySQL") {
+      cy.get(".form-row")
+        .eq(3)
+        .within(() => {
+          cy.get("input").clear().type(Cypress.env("mysql").PASSWORD)
+        })
+    } else {
+      cy.get(".form-row")
+        .eq(4)
+        .within(() => {
+          if (datasource == "PostgreSQL") {
+            cy.get("input").clear().type(Cypress.env("postgresql").PASSWORD)
+          }
+          if (datasource == "Oracle") {
+            cy.get("input").clear().type(Cypress.env("oracle").PASSWORD)
+          }
+        })
+    }
+  })
+  // Click to fetch tables
+  if (skipFetch) {
+    cy.get(".spectrum-Dialog-grid").within(() => {
+      cy.get(".spectrum-Button")
+        .contains("Skip table fetch")
+        .click({ force: true })
+    })
+  } else {
+    cy.get(".spectrum-Dialog-grid").within(() => {
+      cy.get(".spectrum-Button")
+        .contains("Save and fetch tables")
+        .click({ force: true })
+      cy.wait(1000)
+    })
+  }
+})
+
+Cypress.Commands.add("createRestQuery", (method, restUrl, queryPrettyName) => {
+  // addExternalDatasource should be called prior to this
+  // Configures REST datasource & sends query
+  cy.wait(1000)
+  cy.get(".spectrum-Button").contains("Add query").click({ force: true })
+  // Select Method & add Rest URL
+  cy.get(".spectrum-Picker-label").eq(1).click()
+  cy.get(".spectrum-Menu").contains(method).click()
+  cy.get("input").clear().type(restUrl)
+  // Send query
+  cy.get(".spectrum-Button").contains("Send").click({ force: true })
+  cy.wait(500)
+  cy.get(".spectrum-Button").contains("Save").click({ force: true })
+  cy.get(".hierarchy-items-container")
+    .should("contain", method)
+    .and("contain", queryPrettyName)
 })

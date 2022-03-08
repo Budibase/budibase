@@ -6,6 +6,7 @@ import {
   screenStore,
   builderStore,
   uploadStore,
+  rowSelectionStore,
 } from "stores"
 import { styleable } from "utils/styleable"
 import { linkable } from "utils/linkable"
@@ -19,6 +20,7 @@ export default {
   authStore,
   notificationStore,
   routeStore,
+  rowSelectionStore,
   screenStore,
   builderStore,
   uploadStore,

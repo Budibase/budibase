@@ -21,6 +21,7 @@
   import UserBindingsProvider from "components/context/UserBindingsProvider.svelte"
   import DeviceBindingsProvider from "components/context/DeviceBindingsProvider.svelte"
   import StateBindingsProvider from "components/context/StateBindingsProvider.svelte"
+  import RowSelectionProvider from "components/context/RowSelectionProvider.svelte"
   import SettingsBar from "components/preview/SettingsBar.svelte"
   import SelectionIndicator from "components/preview/SelectionIndicator.svelte"
   import HoverIndicator from "components/preview/HoverIndicator.svelte"
@@ -90,59 +91,61 @@
       <UserBindingsProvider>
         <DeviceBindingsProvider>
           <StateBindingsProvider>
-            <!-- Settings bar can be rendered outside of device preview -->
-            <!-- Key block needs to be outside the if statement or it breaks -->
-            {#key $builderStore.selectedComponentId}
-              {#if $builderStore.inBuilder}
-                <SettingsBar />
-              {/if}
-            {/key}
+            <RowSelectionProvider>
+              <!-- Settings bar can be rendered outside of device preview -->
+              <!-- Key block needs to be outside the if statement or it breaks -->
+              {#key $builderStore.selectedComponentId}
+                {#if $builderStore.inBuilder}
+                  <SettingsBar />
+                {/if}
+              {/key}
 
-            <!-- Clip boundary for selection indicators -->
-            <div
-              id="clip-root"
-              class:preview={$builderStore.inBuilder}
-              class:tablet-preview={$builderStore.previewDevice === "tablet"}
-              class:mobile-preview={$builderStore.previewDevice === "mobile"}
-            >
-              <!-- Actual app -->
-              <div id="app-root">
-                <CustomThemeWrapper>
-                  {#key $screenStore.activeLayout._id}
-                    <Component
-                      isLayout
-                      instance={$screenStore.activeLayout.props}
-                    />
-                  {/key}
+              <!-- Clip boundary for selection indicators -->
+              <div
+                id="clip-root"
+                class:preview={$builderStore.inBuilder}
+                class:tablet-preview={$builderStore.previewDevice === "tablet"}
+                class:mobile-preview={$builderStore.previewDevice === "mobile"}
+              >
+                <!-- Actual app -->
+                <div id="app-root">
+                  <CustomThemeWrapper>
+                    {#key `${$screenStore.activeLayout._id}-${$builderStore.previewType}`}
+                      <Component
+                        isLayout
+                        instance={$screenStore.activeLayout.props}
+                      />
+                    {/key}
 
-                  <!--
+                    <!--
                     Flatpickr needs to be inside the theme wrapper.
                     It also needs its own container because otherwise it hijacks
                     key events on the whole page. It is painful to work with.
                   -->
-                  <div id="flatpickr-root" />
+                    <div id="flatpickr-root" />
 
-                  <!-- Modal container to ensure they sit on top -->
-                  <div class="modal-container" />
+                    <!-- Modal container to ensure they sit on top -->
+                    <div class="modal-container" />
 
-                  <!-- Layers on top of app -->
-                  <NotificationDisplay />
-                  <ConfirmationDisplay />
-                  <PeekScreenDisplay />
-                </CustomThemeWrapper>
-              </div>
+                    <!-- Layers on top of app -->
+                    <NotificationDisplay />
+                    <ConfirmationDisplay />
+                    <PeekScreenDisplay />
+                  </CustomThemeWrapper>
+                </div>
 
-              <!-- Selection indicators should be bounded by device -->
-              <!--
+                <!-- Selection indicators should be bounded by device -->
+                <!--
                 We don't want to key these by componentID as they control their own
                 re-mounting to avoid flashes.
               -->
-              {#if $builderStore.inBuilder}
-                <SelectionIndicator />
-                <HoverIndicator />
-                <DNDHandler />
-              {/if}
-            </div>
+                {#if $builderStore.inBuilder}
+                  <SelectionIndicator />
+                  <HoverIndicator />
+                  <DNDHandler />
+                {/if}
+              </div>
+            </RowSelectionProvider>
           </StateBindingsProvider>
         </DeviceBindingsProvider>
       </UserBindingsProvider>

@@ -19,13 +19,7 @@ http {
   tcp_nodelay on;
   server_tokens off;
   types_hash_max_size 2048;
-  {{#if compose}}
-  resolver 127.0.0.11 ipv6=off;
-  {{/if}}
-  {{#if k8s}}
-  resolver kube-dns.kube-system.svc.cluster.local valid=10s;
-  {{/if}}
-
+  resolver {{ resolver }} valid=10s ipv6=off;
 
   # buffering
   client_body_buffer_size 1K;
@@ -55,7 +49,7 @@ http {
     add_header X-Frame-Options SAMEORIGIN always;
     add_header X-Content-Type-Options nosniff always;
     add_header X-XSS-Protection "1; mode=block" always;
-    add_header Content-Security-Policy  "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.budi.live https://js.intercomcdn.com https://widget.intercom.io; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com https://rsms.me https://maxcdn.bootstrapcdn.com; object-src 'none'; base-uri 'self'; connect-src 'self' https://api-iam.intercom.io https://app.posthog.com wss://nexus-websocket-a.intercom.io; font-src 'self' data https://cdn.jsdelivr.net https://fonts.gstatic.com https://rsms.me https://maxcdn.bootstrapcdn.com; frame-src 'self' https:; img-src http: https: data; manifest-src 'self'; media-src 'self'; worker-src 'none';" always;
+    add_header Content-Security-Policy  "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.budi.live https://js.intercomcdn.com https://widget.intercom.io; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com https://rsms.me https://maxcdn.bootstrapcdn.com; object-src 'none'; base-uri 'self'; connect-src 'self' https://api-iam.intercom.io https://app.posthog.com wss://nexus-websocket-a.intercom.io ; font-src 'self' data https://cdn.jsdelivr.net https://fonts.gstatic.com https://rsms.me https://maxcdn.bootstrapcdn.com; frame-src 'self' https:; img-src http: https: data; manifest-src 'self'; media-src 'self'; worker-src 'none';" always;
 
     # upstreams
     set $apps {{ apps }};

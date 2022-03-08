@@ -18,6 +18,7 @@ import OptionsEditor from "./OptionsEditor/OptionsEditor.svelte"
 import FormFieldSelect from "./FormFieldSelect.svelte"
 import ValidationEditor from "./ValidationEditor/ValidationEditor.svelte"
 import DrawerBindableCombobox from "components/common/bindings/DrawerBindableCombobox.svelte"
+import ColumnEditor from "./ColumnEditor/ColumnEditor.svelte"
 
 const componentMap = {
   text: DrawerBindableCombobox,
@@ -40,6 +41,7 @@ const componentMap = {
   navigation: NavigationEditor,
   filter: FilterEditor,
   url: URLSelect,
+  columns: ColumnEditor,
   "field/string": FormFieldSelect,
   "field/number": FormFieldSelect,
   "field/options": FormFieldSelect,

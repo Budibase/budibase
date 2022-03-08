@@ -48,7 +48,7 @@ exports.fetch = async function (ctx) {
 }
 
 exports.find = async function (ctx) {
-  const tableId = ctx.params.id
+  const tableId = ctx.params.tableId
   ctx.body = await getTable(tableId)
 }
 
@@ -70,6 +70,7 @@ exports.destroy = async function (ctx) {
   ctx.eventEmitter &&
     ctx.eventEmitter.emitTable(`table:delete`, appId, deletedTable)
   ctx.status = 200
+  ctx.table = deletedTable
   ctx.body = { message: `Table ${tableId} deleted.` }
 }
 

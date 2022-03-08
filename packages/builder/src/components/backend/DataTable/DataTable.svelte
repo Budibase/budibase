@@ -98,7 +98,7 @@
     tableId={id}
     data={$fetch.rows}
     bind:hideAutocolumns
-    loading={$fetch.loading}
+    loading={!$fetch.loaded}
     on:sort={onSort}
     allowEditing
     disableSorting

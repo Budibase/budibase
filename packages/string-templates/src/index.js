@@ -3,16 +3,26 @@ const { registerAll, registerMinimum } = require("./helpers/index")
 const processors = require("./processors")
 const { atob, btoa } = require("./utilities")
 const manifest = require("../manifest.json")
-const { FIND_HBS_REGEX, findDoubleHbsInstances } = require("./utilities")
+const {
+  FIND_HBS_REGEX,
+  FIND_ANY_HBS_REGEX,
+  findDoubleHbsInstances,
+} = require("./utilities")
 
 const hbsInstance = handlebars.create()
 registerAll(hbsInstance)
 const hbsInstanceNoHelpers = handlebars.create()
 registerMinimum(hbsInstanceNoHelpers)
-const defaultOpts = { noHelpers: false, noEscaping: false }
+const defaultOpts = {
+  noHelpers: false,
+  cacheTemplates: false,
+  noEscaping: false,
+  escapeNewlines: false,
+  noFinalise: false,
+}
 
 /**
- * utility function to check if the object is valid
+ * Utility function to check if the object is valid.
  */
 function testObject(object) {
   // JSON stringify will fail if there are any cycles, stops infinite recursion
@@ -21,6 +31,38 @@ function testObject(object) {
   } catch (err) {
     throw "Unable to process inputs to JSON, cannot recurse"
   }
+}
+
+/**
+ * Creates a HBS template function for a given string, and optionally caches it.
+ */
+let templateCache = {}
+function createTemplate(string, opts) {
+  opts = { ...defaultOpts, ...opts }
+
+  // Finalising adds a helper, can't do this with no helpers
+  const key = `${string}-${JSON.stringify(opts)}`
+
+  // Reuse the cached template is possible
+  if (opts.cacheTemplates && templateCache[key]) {
+    return templateCache[key]
+  }
+
+  string = processors.preprocess(string, opts)
+
+  // Optionally disable built in HBS escaping
+  if (opts.noEscaping) {
+    string = exports.disableEscaping(string)
+  }
+
+  // This does not throw an error when template can't be fulfilled,
+  // have to try correct beforehand
+  const instance = opts.noHelpers ? hbsInstanceNoHelpers : hbsInstance
+  const template = instance.compile(string, {
+    strict: false,
+  })
+  templateCache[key] = template
+  return template
 }
 
 /**
@@ -98,30 +140,20 @@ module.exports.processObjectSync = (object, context, opts) => {
  * @returns {string} The enriched string, all templates should have been replaced if they can be.
  */
 module.exports.processStringSync = (string, context, opts) => {
-  opts = { ...defaultOpts, ...opts }
-
-  // take a copy of input in case of error
+  // Take a copy of input in case of error
   const input = string
   if (typeof string !== "string") {
     throw "Cannot process non-string types."
   }
   try {
-    string = processors.preprocess(string, opts)
-    // this does not throw an error when template can't be fulfilled, have to try correct beforehand
-    const instance = opts.noHelpers ? hbsInstanceNoHelpers : hbsInstance
-    const templateString =
-      opts && opts.noEscaping ? exports.disableEscaping(string) : string
-    const template = instance.compile(templateString, {
-      strict: false,
-    })
+    const template = createTemplate(string, opts)
     const now = Math.floor(Date.now() / 1000) * 1000
     return processors.postprocess(
       template({
         now: new Date(now).toISOString(),
         __opts: opts,
         ...context,
-      }),
-      { escapeNewlines: opts ? opts.escapeNewlines : false }
+      })
     )
   } catch (err) {
     return input
@@ -166,7 +198,6 @@ module.exports.makePropSafe = property => {
  * @returns {boolean} Whether or not the input string is valid.
  */
 module.exports.isValid = (string, opts) => {
-  opts = { ...defaultOpts, ...opts }
   const validCases = [
     "string",
     "number",
@@ -180,10 +211,11 @@ module.exports.isValid = (string, opts) => {
   // don't really need a real context to check if its valid
   const context = {}
   try {
-    const instance = opts.noHelpers ? hbsInstanceNoHelpers : hbsInstance
-    instance.compile(processors.preprocess(string, { noFinalise: true }))(
-      context
-    )
+    const template = createTemplate(string, {
+      ...opts,
+      noFinalise: true,
+    })
+    template(context)
     return true
   } catch (err) {
     const msg = err && err.message ? err.message : err
@@ -280,6 +312,21 @@ module.exports.doesContainStrings = (template, strings) => {
     }
   }
   return false
+}
+
+/**
+ * Given a string, this will return any {{ binding }} or {{{ binding }}} type
+ * statements.
+ * @param {string} string The string to search within.
+ * @return {string[]} The found HBS blocks.
+ */
+module.exports.findHBSBlocks = string => {
+  let regexp = new RegExp(FIND_ANY_HBS_REGEX)
+  let matches = string.match(regexp)
+  if (matches == null) {
+    return []
+  }
+  return matches
 }
 
 /**

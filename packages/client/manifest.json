@@ -6,7 +6,8 @@
     "state": true,
     "customThemes": true,
     "devicePreview": true,
-    "messagePassing": true
+    "messagePassing": true,
+    "rowSelection": true
   },
   "layout": {
     "name": "Layout",
@@ -2676,11 +2677,11 @@
         "defaultValue": 8
       },
       {
-        "type": "multifield",
+        "type": "columns",
         "label": "Columns",
         "key": "columns",
         "dependsOn": "dataProvider",
-        "placeholder": "All columns"
+        "nested": true
       },
       {
         "type": "select",
@@ -2705,10 +2706,22 @@
       },
       {
         "type": "boolean",
+        "label": "Compact",
+        "key": "compact"
+      },
+      {
+        "type": "boolean",
         "label": "Show auto columns",
         "key": "showAutoColumns",
         "defaultValue": false
       },
+      {
+        "type": "boolean",
+        "label": "Allow row selection",
+        "key": "allowSelectRows",
+        "defaultValue": false
+      },
+
       {
         "type": "boolean",
         "label": "Link table rows",
@@ -2947,7 +2960,7 @@
             "defaultValue": 8
           },
           {
-            "type": "multifield",
+            "type": "columns",
             "label": "Table Columns",
             "key": "tableColumns",
             "dependsOn": "dataSource",
@@ -2960,8 +2973,18 @@
           },
           {
             "type": "boolean",
+            "label": "Compact",
+            "key": "compact"
+          },
+          {
+            "type": "boolean",
             "label": "Show auto columns",
             "key": "showAutoColumns"
+          },
+          {
+            "type": "boolean",
+            "label": "Allow row selection",
+            "key": "allowSelectRows"
           },
           {
             "type": "boolean",

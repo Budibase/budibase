@@ -3,7 +3,6 @@
   import { derived, get, writable } from "svelte/store"
   import { createValidatorFromConstraints } from "./validation"
   import { Helpers } from "@budibase/bbui"
-  import { cloneDeep } from "lodash/fp"
 
   export let dataSource
   export let disabled = false
@@ -96,7 +95,7 @@
   // Derive the overall form value and deeply set all field paths so that we
   // can support things like JSON fields.
   const deriveFormValue = (initialValues, values, enrichments) => {
-    let formValue = cloneDeep(initialValues || {})
+    let formValue = Helpers.cloneDeep(initialValues || {})
 
     // We need to sort the keys to avoid a JSON field overwriting a nested field
     const sortedFields = Object.entries(values || {})
