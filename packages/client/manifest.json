@@ -2474,6 +2474,82 @@
       }
     ]
   },
+  "embeddedmap": {
+    "name": "Embedded Map",
+    "icon": "Location",
+    "styles": ["size"],
+    "editable": true,
+    "draggable": false,
+    "illegalChildren": [
+      "section"
+    ],
+    "settings": [
+      {
+        "type": "dataProvider",
+        "label": "Provider",
+        "key": "dataProvider"
+      },
+      {
+        "type": "select",
+        "label": "Map Type",
+        "key": "mapType",
+        "options": [
+          "Roadmap",
+          "Terrain",
+          "Satellite",
+          "Hybrid"
+        ],
+        "defaultValue": "Roadmap"
+      },
+      {
+        "type": "boolean",
+        "label": "Enable Fullscreen",
+        "key": "fullScreenEnabled",
+        "defaultValue": true
+      },
+      {
+        "type": "boolean",
+        "label": "Enabled Location",
+        "key": "locationEnabled",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Enable Zoom",
+        "key": "zoomEnabled",
+        "defaultValue": true
+      },
+      {
+        "type": "number",
+        "label": "Zoom Level (0-100)",
+        "key": "zoomLevel",
+        "defaultValue": 72,
+        "max" : 100,
+        "min" : 0
+      },
+      {
+        "type": "field",
+        "label": "Latitude Key",
+        "key": "latitudeKey"
+      },
+      {
+        "type": "field",
+        "label": "Longitude Key",
+        "key": "longitudeKey"
+      },
+      {
+        "type": "field",
+        "label": "Title Key",
+        "key": "titleKey"
+      },
+      {
+        "type": "text",
+        "label": "Tile URL",
+        "key": "tileURL",
+        "defaultValue": "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      }
+    ]
+  },
   "attachmentfield": {
     "name": "Attachment",
     "icon": "Attach",

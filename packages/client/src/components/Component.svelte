@@ -103,7 +103,12 @@
     ($builderStore.previewType === "layout" || insideScreenslot) &&
     !isBlock
   $: editing = editable && selected && $builderStore.editMode
-  $: draggable = !inDragPath && interactive && !isLayout && !isScreen
+  $: draggable =
+    !inDragPath &&
+    interactive &&
+    !isLayout &&
+    !isScreen &&
+    definition?.draggable !== false
   $: droppable = interactive && !isLayout && !isScreen
 
   // Empty components are those which accept children but do not have any.
