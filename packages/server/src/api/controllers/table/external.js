@@ -25,7 +25,8 @@ async function makeTableRequest(
   operation,
   table,
   tables,
-  oldTable = null
+  oldTable = null,
+  renamed = null
 ) {
   const json = {
     endpoint: {
@@ -40,6 +41,9 @@ async function makeTableRequest(
   }
   if (oldTable) {
     json.meta.table = oldTable
+  }
+  if (renamed) {
+    json.meta.renamed = renamed
   }
   return makeExternalQuery(datasource, json)
 }
@@ -160,6 +164,7 @@ function isRelationshipSetup(column) {
 
 exports.save = async function (ctx) {
   const table = ctx.request.body
+  const { _rename: renamed } = table
   // can't do this right now
   delete table.dataImport
   const datasourceId = getDatasourceId(ctx.request.body)
@@ -241,7 +246,14 @@ exports.save = async function (ctx) {
   const operation = oldTable
     ? DataSourceOperation.UPDATE_TABLE
     : DataSourceOperation.CREATE_TABLE
-  await makeTableRequest(datasource, operation, tableToSave, tables, oldTable)
+  await makeTableRequest(
+    datasource,
+    operation,
+    tableToSave,
+    tables,
+    oldTable,
+    renamed
+  )
   // update any extra tables (like foreign keys in other tables)
   for (let extraTable of extraTablesToUpdate) {
     const oldExtraTable = oldTables[extraTable.name]
@@ -258,6 +270,8 @@ exports.save = async function (ctx) {
     )
   }
 
+  // remove the rename prop
+  delete tableToSave._rename
   // store it into couch now for budibase reference
   datasource.entities[tableToSave.name] = tableToSave
   await db.put(datasource)
