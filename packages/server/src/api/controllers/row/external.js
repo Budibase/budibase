@@ -152,6 +152,27 @@ exports.validate = async () => {
   return { valid: true }
 }
 
+exports.exportRows = async ctx => {
+  const { datasourceId, tableName } = breakExternalTableId(ctx.params.tableId)
+  const db = getAppDB()
+  const datasource = await db.get(datasourceId)
+  if (!datasource || !datasource.entities) {
+    ctx.throw(400, "Datasource has not been configured for plus API.")
+  }
+  const tables = datasource.entities
+  const table = tables[tableName]
+  ctx.request.body = {
+    query: {
+      oneOf: {
+        [table.primaryDisplay]: ctx.request.body.map(
+          id => breakRowIdField(id)[0]
+        ),
+      },
+    },
+  }
+  return exports.search(ctx)
+}
+
 exports.fetchEnrichedRow = async ctx => {
   const id = ctx.params.rowId
   const tableId = ctx.params.tableId
