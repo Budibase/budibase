@@ -33,7 +33,7 @@ filterTests(['smoke', 'all'], () => {
         cy.get(".spectrum-Button--cta").click()
       })
       cy.contains("Setup").click()
-      cy.get(".spectrum-Picker-label").click()
+      cy.get(".spectrum-Picker-label").eq(1).click()
       cy.contains("dog").click()
       cy.get(".spectrum-Textfield-input")
       .first()

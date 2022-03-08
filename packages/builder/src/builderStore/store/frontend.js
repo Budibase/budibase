@@ -41,6 +41,7 @@ const INITIAL_FRONTEND_STATE = {
     intelligentLoading: false,
     deviceAwareness: false,
     state: false,
+    rowSelection: false,
     customThemes: false,
     devicePreview: false,
     messagePassing: false,

@@ -70,6 +70,10 @@ const NO_TENANCY_ENDPOINTS = [
     route: "/api/global/users/self",
     method: "GET",
   },
+  {
+    route: "/api/global/self",
+    method: "GET",
+  },
 ]
 
 // most public endpoints are gets, but some are posts

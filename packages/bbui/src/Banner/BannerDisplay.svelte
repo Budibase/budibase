@@ -6,7 +6,7 @@
   import { fly } from "svelte/transition"
 </script>
 
-<Portal target=".modal-container">
+<Portal target=".banner-container">
   <div class="banner">
     {#if $banner.message}
       <div transition:fly={{ y: -30 }}>
@@ -25,18 +25,7 @@
 
 <style>
   .banner {
-    position: fixed;
-    top: 20px;
-    left: 0;
-    right: 0;
-    margin: 0 auto;
-    padding: 0;
-    z-index: 9999;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: center;
     pointer-events: none;
-    gap: 10px;
+    width: 100%;
   }
 </style>

@@ -54,34 +54,43 @@
 
 <svelte:window on:keydown={handleKey} />
 
-<!-- These svelte if statements need to be defined like this. -->
-<!-- The modal transitions do not work if nested inside more than one "if" -->
-{#if visible && inline}
-  <div use:focusFirstInput class="spectrum-Modal inline is-open">
-    <slot />
-  </div>
-{:else if visible}
+{#if inline}
+  {#if visible}
+    <div use:focusFirstInput class="spectrum-Modal inline is-open">
+      <slot />
+    </div>
+  {/if}
+{:else}
+  <!--
+    We cannot conditionally render the portal as this leads to a missing
+    insertion point when using nested modals. Therefore we just conditionally
+    render the content of the portal.
+    It still breaks the modal animation, but its better than soft bricking the
+    screen.
+  -->
   <Portal target=".modal-container">
-    <div
-      class="spectrum-Underlay is-open"
-      in:fade={{ duration: 200 }}
-      out:fade|local={{ duration: 200 }}
-      on:mousedown|self={cancel}
-    >
-      <div class="modal-wrapper" on:mousedown|self={cancel}>
-        <div class="modal-inner-wrapper" on:mousedown|self={cancel}>
-          <slot name="outside" />
-          <div
-            use:focusFirstInput
-            class="spectrum-Modal is-open"
-            in:fly={{ y: 30, duration: 200 }}
-            out:fly|local={{ y: 30, duration: 200 }}
-          >
-            <slot />
+    {#if visible}
+      <div
+        class="spectrum-Underlay is-open"
+        in:fade={{ duration: 200 }}
+        out:fade|local={{ duration: 200 }}
+        on:mousedown|self={cancel}
+      >
+        <div class="modal-wrapper" on:mousedown|self={cancel}>
+          <div class="modal-inner-wrapper" on:mousedown|self={cancel}>
+            <slot name="outside" />
+            <div
+              use:focusFirstInput
+              class="spectrum-Modal is-open"
+              in:fly={{ y: 30, duration: 200 }}
+              out:fly|local={{ y: 30, duration: 200 }}
+            >
+              <slot />
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    {/if}
   </Portal>
 {/if}
 

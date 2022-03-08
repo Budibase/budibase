@@ -1,24 +1,10 @@
 const Router = require("@koa/router")
 const controller = require("../controllers/permission")
 const authorized = require("../../middleware/authorized")
-const {
-  BUILDER,
-  PermissionLevels,
-} = require("@budibase/backend-core/permissions")
-const Joi = require("joi")
-const joiValidator = require("../../middleware/joi-validator")
+const { BUILDER } = require("@budibase/backend-core/permissions")
+const { permissionValidator } = require("./utils/validators")
 
 const router = Router()
-
-function generateValidator() {
-  const permLevelArray = Object.values(PermissionLevels)
-  // prettier-ignore
-  return joiValidator.params(Joi.object({
-    level: Joi.string().valid(...permLevelArray).required(),
-    resourceId: Joi.string(),
-    roleId: Joi.string(),
-  }).unknown(true))
-}
 
 router
   .get("/api/permission/builtin", authorized(BUILDER), controller.fetchBuiltin)
@@ -33,14 +19,14 @@ router
   .post(
     "/api/permission/:roleId/:resourceId/:level",
     authorized(BUILDER),
-    generateValidator(),
+    permissionValidator(),
     controller.addPermission
   )
   // deleting the level defaults it back the underlying access control for the resource
   .delete(
     "/api/permission/:roleId/:resourceId/:level",
     authorized(BUILDER),
-    generateValidator(),
+    permissionValidator(),
     controller.removePermission
   )
 

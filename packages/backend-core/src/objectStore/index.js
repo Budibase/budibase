@@ -78,6 +78,7 @@ exports.ObjectStore = bucket => {
   const config = {
     s3ForcePathStyle: true,
     signatureVersion: "v4",
+    apiVersion: "2006-03-01",
     params: {
       Bucket: sanitizeBucket(bucket),
     },
@@ -102,17 +103,21 @@ exports.makeSureBucketExists = async (client, bucketName) => {
       .promise()
   } catch (err) {
     const promises = STATE.bucketCreationPromises
+    const doesntExist = err.statusCode === 404,
+      noAccess = err.statusCode === 403
     if (promises[bucketName]) {
       await promises[bucketName]
-    } else if (err.statusCode === 404) {
-      // bucket doesn't exist create it
-      promises[bucketName] = client
-        .createBucket({
-          Bucket: bucketName,
-        })
-        .promise()
-      await promises[bucketName]
-      delete promises[bucketName]
+    } else if (doesntExist || noAccess) {
+      if (doesntExist) {
+        // bucket doesn't exist create it
+        promises[bucketName] = client
+          .createBucket({
+            Bucket: bucketName,
+          })
+          .promise()
+        await promises[bucketName]
+        delete promises[bucketName]
+      }
       // public buckets are quite hidden in the system, make sure
       // no bucket is set accidentally
       if (PUBLIC_BUCKETS.includes(bucketName)) {
@@ -124,7 +129,7 @@ exports.makeSureBucketExists = async (client, bucketName) => {
           .promise()
       }
     } else {
-      throw err
+      throw new Error("Unable to write to object store bucket.")
     }
   }
 }
