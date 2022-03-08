@@ -60,14 +60,7 @@ write.push(new Endpoint("post", "/queries/:queryId", controller.execute))
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               required:
- *                 - data
- *               properties:
- *                 data:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/query'
+ *               $ref: '#/components/schemas/querySearch'
  *             examples:
  *               queries:
  *                 $ref: '#/components/examples/queries'
