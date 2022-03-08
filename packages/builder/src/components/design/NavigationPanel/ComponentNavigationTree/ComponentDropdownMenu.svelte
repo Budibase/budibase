@@ -21,7 +21,7 @@
 
   const moveUpComponent = () => {
     const asset = get(currentAsset)
-    const parent = findComponentParent(asset.props, component._id)
+    const parent = findComponentParent(asset?.props, component._id)
     if (!parent) {
       return
     }
@@ -41,7 +41,7 @@
 
   const moveDownComponent = () => {
     const asset = get(currentAsset)
-    const parent = findComponentParent(asset.props, component._id)
+    const parent = findComponentParent(asset?.props, component._id)
     if (!parent) {
       return
     }

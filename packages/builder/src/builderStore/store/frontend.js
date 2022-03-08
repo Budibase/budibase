@@ -400,11 +400,11 @@ export const getFrontendStore = () => {
             parentComponent = selected
           } else {
             // Otherwise we need to use the parent of this component
-            parentComponent = findComponentParent(asset.props, selected._id)
+            parentComponent = findComponentParent(asset?.props, selected._id)
           }
         } else {
           // Use screen or layout if no component is selected
-          parentComponent = asset.props
+          parentComponent = asset?.props
         }
 
         // Attach component
