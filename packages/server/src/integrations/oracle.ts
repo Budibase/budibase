@@ -1,24 +1,24 @@
 import {
-  Integration,
   DatasourceFieldTypes,
+  Integration,
+  Operation,
+  QueryJson,
   QueryTypes,
   SqlQuery,
-  QueryJson,
-  Operation,
 } from "../definitions/datasource"
 import {
-  finaliseExternalTables,
-  getSqlQuery,
   buildExternalTableId,
   convertSqlType,
+  finaliseExternalTables,
+  getSqlQuery,
   SqlClients,
 } from "./utils"
 import oracledb, {
-  ExecuteOptions,
-  Result,
+  BindParameters,
   Connection,
   ConnectionAttributes,
-  BindParameters,
+  ExecuteOptions,
+  Result,
 } from "oracledb"
 import Sql from "./base/sql"
 import { Table } from "../definitions/common"
@@ -137,6 +137,7 @@ module OracleModule {
 
   class OracleIntegration extends Sql implements DatasourcePlus {
     private readonly config: OracleConfig
+    private index: number = 1
 
     public tables: Record<string, Table> = {}
     public schemaErrors: Record<string, string> = {}
@@ -172,6 +173,10 @@ module OracleModule {
     constructor(config: OracleConfig) {
       super(SqlClients.ORACLE)
       this.config = config
+    }
+
+    getBindingIdentifier(): string {
+      return `:${this.index++}`
     }
 
     /**
@@ -233,20 +238,14 @@ module OracleModule {
       return oracleTables
     }
 
-    private isSupportedColumn(column: OracleColumn) {
-      if (UNSUPPORTED_TYPES.includes(column.type)) {
-        return false
-      }
-
-      return true
+    private static isSupportedColumn(column: OracleColumn) {
+      return !UNSUPPORTED_TYPES.includes(column.type)
     }
 
-    private isAutoColumn(column: OracleColumn) {
-      if (column.default && column.default.toLowerCase().includes("nextval")) {
-        return true
-      }
-
-      return false
+    private static isAutoColumn(column: OracleColumn) {
+      return !!(
+        column.default && column.default.toLowerCase().includes("nextval")
+      )
     }
 
     /**
@@ -254,7 +253,7 @@ module OracleModule {
      * This matches the default behaviour for generating DDL used in knex.
      */
     private isBooleanType(column: OracleColumn): boolean {
-      if (
+      return (
         column.type.toLowerCase() === "number" &&
         Object.values(column.constraints).filter(c => {
           if (
@@ -273,11 +272,7 @@ module OracleModule {
           }
           return false
         }).length > 0
-      ) {
-        return true
-      }
-
-      return false
+      )
     }
 
     private internalConvertType(column: OracleColumn): string {
@@ -317,7 +312,9 @@ module OracleModule {
         // iterate each column on the table
         Object.values(oracleTable.columns)
           // remove columns that we can't read / save
-          .filter(oracleColumn => this.isSupportedColumn(oracleColumn))
+          .filter(oracleColumn =>
+            OracleIntegration.isSupportedColumn(oracleColumn)
+          )
           // match the order of the columns in the db
           .sort((c1, c2) => c1.id - c2.id)
           .forEach(oracleColumn => {
@@ -325,7 +322,7 @@ module OracleModule {
             let fieldSchema = table.schema[columnName]
             if (!fieldSchema) {
               fieldSchema = {
-                autocolumn: this.isAutoColumn(oracleColumn),
+                autocolumn: OracleIntegration.isAutoColumn(oracleColumn),
                 name: columnName,
                 type: this.internalConvertType(oracleColumn),
               }
@@ -351,18 +348,13 @@ module OracleModule {
     private async internalQuery<T>(query: SqlQuery): Promise<Result<T>> {
       let connection
       try {
+        this.index = 1
         connection = await this.getConnection()
 
         const options: ExecuteOptions = { autoCommit: true }
         const bindings: BindParameters = query.bindings || []
 
-        const result: Result<T> = await connection.execute<T>(
-          query.sql,
-          bindings,
-          options
-        )
-
-        return result
+        return await connection.execute<T>(query.sql, bindings, options)
       } finally {
         if (connection) {
           try {

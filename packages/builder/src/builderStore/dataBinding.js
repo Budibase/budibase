@@ -32,12 +32,14 @@ export const getBindableProperties = (asset, componentId) => {
   const urlBindings = getUrlBindings(asset)
   const deviceBindings = getDeviceBindings()
   const stateBindings = getStateBindings()
+  const selectedRowsBindings = getSelectedRowsBindings(asset)
   return [
     ...contextBindings,
     ...urlBindings,
     ...stateBindings,
     ...userBindings,
     ...deviceBindings,
+    ...selectedRowsBindings,
   ]
 }
 
@@ -311,6 +313,44 @@ const getDeviceBindings = () => {
       runtimeBinding: `${safeDevice}.${makePropSafe("tablet")}`,
       readableBinding: `Device.Tablet`,
     })
+  }
+  return bindings
+}
+
+/**
+ * Gets all selected rows bindings for tables in the current asset.
+ */
+const getSelectedRowsBindings = asset => {
+  let bindings = []
+  if (get(store).clientFeatures?.rowSelection) {
+    // Add bindings for table components
+    let tables = findAllMatchingComponents(asset?.props, component =>
+      component._component.endsWith("table")
+    )
+    const safeState = makePropSafe("rowSelection")
+    bindings = bindings.concat(
+      tables.map(table => ({
+        type: "context",
+        runtimeBinding: `${safeState}.${makePropSafe(table._id)}.${makePropSafe(
+          "selectedRows"
+        )}`,
+        readableBinding: `${table._instanceName}.Selected rows`,
+      }))
+    )
+
+    // Add bindings for table blocks
+    let tableBlocks = findAllMatchingComponents(asset?.props, component =>
+      component._component.endsWith("tableblock")
+    )
+    bindings = bindings.concat(
+      tableBlocks.map(block => ({
+        type: "context",
+        runtimeBinding: `${safeState}.${makePropSafe(
+          block._id + "-table"
+        )}.${makePropSafe("selectedRows")}`,
+        readableBinding: `${block._instanceName}.Selected rows`,
+      }))
+    )
   }
   return bindings
 }
@@ -597,14 +637,9 @@ const buildFormSchema = component => {
  * in the app.
  */
 export const getAllStateVariables = () => {
-  // Get all component containing assets
-  let allAssets = []
-  allAssets = allAssets.concat(get(store).layouts || [])
-  allAssets = allAssets.concat(get(store).screens || [])
-
   // Find all button action settings in all components
   let eventSettings = []
-  allAssets.forEach(asset => {
+  getAllAssets().forEach(asset => {
     findAllMatchingComponents(asset.props, component => {
       const settings = getComponentSettings(component._component)
       settings
@@ -633,6 +668,15 @@ export const getAllStateVariables = () => {
     })
   })
   return Array.from(bindingSet)
+}
+
+export const getAllAssets = () => {
+  // Get all component containing assets
+  let allAssets = []
+  allAssets = allAssets.concat(get(store).layouts || [])
+  allAssets = allAssets.concat(get(store).screens || [])
+
+  return allAssets
 }
 
 /**

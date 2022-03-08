@@ -61,5 +61,6 @@
 <style>
   .spectrum-Toast {
     pointer-events: all;
+    width: 100%;
   }
 </style>

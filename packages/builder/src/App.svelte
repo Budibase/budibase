@@ -8,8 +8,10 @@
   const queryHandler = { parse, stringify }
 </script>
 
-<NotificationDisplay />
+<div class="banner-container" />
 <BannerDisplay />
+
+<NotificationDisplay />
 <Router {routes} config={{ queryHandler }} />
 <div class="modal-container" />
 <HelpIcon />
