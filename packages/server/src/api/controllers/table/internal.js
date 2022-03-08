@@ -7,7 +7,7 @@ const {
   getTable,
   handleDataImport,
 } = require("./utils")
-const usageQuota = require("../../../utilities/usageQuota")
+const { quotas, StaticQuotaName, QuotaUsageType } = require("@budibase/pro")
 const { getAppDB } = require("@budibase/backend-core/context")
 const env = require("../../../environment")
 const { cleanupAttachments } = require("../../../utilities/rowProcessor")
@@ -120,7 +120,11 @@ exports.destroy = async function (ctx) {
     })
   )
   await db.bulkDocs(rows.rows.map(row => ({ ...row.doc, _deleted: true })))
-  await usageQuota.update(usageQuota.Properties.ROW, -rows.rows.length)
+  await quotas.updateUsage(
+    -rows.rows.length,
+    StaticQuotaName.ROWS,
+    QuotaUsageType.STATIC
+  )
 
   // update linked rows
   await linkRows.updateLinks({

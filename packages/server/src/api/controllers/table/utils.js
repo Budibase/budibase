@@ -24,7 +24,7 @@ const {
 } = require("../../../integrations/utils")
 const { getViews, saveView } = require("../view/utils")
 const viewTemplate = require("../view/viewBuilder")
-const usageQuota = require("../../../utilities/usageQuota")
+const { quotas, StaticQuotaName, QuotaUsageType } = require("@budibase/pro")
 const { getAppDB } = require("@budibase/backend-core/context")
 const { cloneDeep } = require("lodash/fp")
 
@@ -143,11 +143,20 @@ exports.handleDataImport = async (user, table, dataImport) => {
     finalData.push(row)
   }
 
-  await usageQuota.update(usageQuota.Properties.ROW, finalData.length, {
-    dryRun: true,
-  })
+  await quotas.updateUsage(
+    finalData.length,
+    StaticQuotaName.ROWS,
+    QuotaUsageType.STATIC,
+    {
+      dryRun: true,
+    }
+  )
   await db.bulkDocs(finalData)
-  await usageQuota.update(usageQuota.Properties.ROW, finalData.length)
+  await quotas.updateUsage(
+    finalData.length,
+    StaticQuotaName.ROWS,
+    QuotaUsageType.STATIC
+  )
   let response = await db.put(table)
   table._rev = response._rev
   return table
