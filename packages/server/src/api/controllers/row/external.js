@@ -33,11 +33,11 @@ exports.handleRequest = handleRequest
 exports.patch = async ctx => {
   const inputs = ctx.request.body
   const tableId = ctx.params.tableId
-  const id = breakRowIdField(inputs._id)
+  const id = inputs._id
   // don't save the ID to db
   delete inputs._id
   return handleRequest(DataSourceOperation.UPDATE, tableId, {
-    id,
+    id: breakRowIdField(id),
     row: inputs,
   })
 }
@@ -67,7 +67,7 @@ exports.find = async ctx => {
   const id = ctx.params.rowId
   const tableId = ctx.params.tableId
   const response = await handleRequest(DataSourceOperation.READ, tableId, {
-    id,
+    id: breakRowIdField(id),
   })
   return response ? response[0] : response
 }
@@ -76,7 +76,7 @@ exports.destroy = async ctx => {
   const tableId = ctx.params.tableId
   const id = ctx.request.body._id
   const { row } = await handleRequest(DataSourceOperation.DELETE, tableId, {
-    id,
+    id: breakRowIdField(id),
   })
   return { response: { ok: true }, row }
 }

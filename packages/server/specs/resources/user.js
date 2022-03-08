@@ -123,4 +123,10 @@ module.exports = new Resource()
     userOutput: object({
       data: userOutputSchema,
     }),
+    userSearch: object({
+      data: {
+        type: "array",
+        items: userOutputSchema,
+      },
+    }),
   })
