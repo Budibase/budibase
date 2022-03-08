@@ -10,12 +10,12 @@ const createRowSelectionStore = () => {
     })
   }
 
-  function getSelection(tableId) {
+  function getSelection(tableComponentId) {
     const selection = get(store)
     const componentId = Object.keys(selection).find(
-      componentId => selection[componentId].tableId === tableId
+      componentId => componentId === tableComponentId
     )
-    return componentId ? selection[componentId] : {}
+    return selection[componentId] || {}
   }
 
   return {
