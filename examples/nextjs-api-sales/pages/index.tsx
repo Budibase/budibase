@@ -52,7 +52,7 @@ const Home: NextPage = () => {
 
   return (
     <div className={styles.container}>
-      <h1>Sales</h1>
+      <h1 className="subtitle">Sales</h1>
       <div>{sales.map((sale: any) => <p key={sale.sale_id}>{sale.sale_id}</p>)}</div>
       <button onClick={goToPrevPage}>Prev Page</button>
       <button onClick={goToNextPage}>Next Page</button>
