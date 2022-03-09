@@ -9,7 +9,7 @@
 
 .formSection {
   padding: 2rem;
-  background: #D3D3D3;
+  background: var(--bg-color);
   width: 400px;
   border-radius: 10px;
 }

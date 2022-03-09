@@ -65,7 +65,7 @@ const Home: NextPage = () => {
                 <tr key={sale.sale_id}>
                   <th>{sale.sale_id}</th>
                   <th>{sale.sale_name}</th>
-                  <th>{sale.sales_people?.map((person: any) => person.primaryDisplay)[0]}</th>
+                  <th>{sale.sales_person?.map((person: any) => person.primaryDisplay)[0]}</th>
                 </tr>
               )}
             </tbody>
