@@ -8,21 +8,20 @@ function layout(props: any) {
       <nav className="navbar" role="navigation" aria-label="main navigation">
         <div id="navbar" className="navbar-menu">
           <div className="logo">
-          <Image src="/bb-emblem.svg" width="50" height="50" />
+            <Image alt="logo" src="/bb-emblem.svg" width="50" height="50" />
           </div>
           <div className="navbar-start">
             <Link href="/">
               <a className="navbar-item">
-                Home
+                List
               </a>
             </Link>
             <Link href="/save">
               <a className="navbar-item">
-                Save
+                New sale
               </a>
             </Link>
           </div>
-
           <div className="navbar-end">
             <div className="navbar-item">
               <div className="buttons">
