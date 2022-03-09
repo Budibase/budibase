@@ -66,6 +66,7 @@
     "@types/jest": "^26.0.23",
     "@types/koa": "^2.13.3",
     "@types/koa-router": "^7.4.2",
+    "@types/koa__router": "^8.0.11",
     "@types/node": "^15.12.4",
     "@typescript-eslint/parser": "5.12.0",
     "copyfiles": "^2.4.1",

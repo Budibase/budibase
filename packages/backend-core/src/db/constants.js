@@ -22,6 +22,7 @@ exports.StaticDatabases = {
     docs: {
       apiKeys: "apikeys",
       usageQuota: "usage_quota",
+      licenseInfo: "license_info",
     },
   },
   // contains information about tenancy and so on

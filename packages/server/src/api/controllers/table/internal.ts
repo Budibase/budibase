@@ -1,19 +1,19 @@
-const linkRows = require("../../../db/linkedRows")
-const { getRowParams, generateTableID } = require("../../../db/utils")
-const { FieldTypes } = require("../../../constants")
-const {
+import { updateLinks, EventType } from "../../../db/linkedRows"
+import { getRowParams, generateTableID } from "../../../db/utils"
+import { FieldTypes } from "../../../constants"
+import {
   TableSaveFunctions,
   hasTypeChanged,
   getTable,
   handleDataImport,
-} = require("./utils")
-const { quotas, StaticQuotaName, QuotaUsageType } = require("@budibase/pro")
+} from "./utils"
 const { getAppDB } = require("@budibase/backend-core/context")
-const env = require("../../../environment")
-const { cleanupAttachments } = require("../../../utilities/rowProcessor")
-const { runStaticFormulaChecks } = require("./bulkFormula")
+import { isTest } from "../../../environment"
+import { cleanupAttachments } from "../../../utilities/rowProcessor"
+import { runStaticFormulaChecks } from "./bulkFormula"
+import * as Pro from "@budibase/pro"
 
-exports.save = async function (ctx) {
+export async function save(ctx: any) {
   const db = getAppDB()
   const { dataImport, ...rest } = ctx.request.body
   let tableToSave = {
@@ -80,10 +80,8 @@ exports.save = async function (ctx) {
 
   // update linked rows
   try {
-    const linkResp = await linkRows.updateLinks({
-      eventType: oldTable
-        ? linkRows.EventType.TABLE_UPDATED
-        : linkRows.EventType.TABLE_SAVE,
+    const linkResp: any = await updateLinks({
+      eventType: oldTable ? EventType.TABLE_UPDATED : EventType.TABLE_SAVE,
       table: tableToSave,
       oldTable: oldTable,
     })
@@ -105,11 +103,11 @@ exports.save = async function (ctx) {
 
   tableToSave = await tableSaveFunctions.after(tableToSave)
   // has to run after, make sure it has _id
-  await runStaticFormulaChecks(tableToSave, { oldTable })
+  await runStaticFormulaChecks(tableToSave, { oldTable, deletion: null })
   return tableToSave
 }
 
-exports.destroy = async function (ctx) {
+export async function destroy(ctx: any) {
   const db = getAppDB()
   const tableToDelete = await db.get(ctx.params.tableId)
 
@@ -119,16 +117,18 @@ exports.destroy = async function (ctx) {
       include_docs: true,
     })
   )
-  await db.bulkDocs(rows.rows.map(row => ({ ...row.doc, _deleted: true })))
-  await quotas.updateUsage(
+  await db.bulkDocs(
+    rows.rows.map((row: any) => ({ ...row.doc, _deleted: true }))
+  )
+  await Pro.Licensing.Quotas.updateUsage(
     -rows.rows.length,
-    StaticQuotaName.ROWS,
-    QuotaUsageType.STATIC
+    Pro.StaticQuotaName.ROWS,
+    Pro.QuotaUsageType.STATIC
   )
 
   // update linked rows
-  await linkRows.updateLinks({
-    eventType: linkRows.EventType.TABLE_DELETE,
+  await updateLinks({
+    eventType: EventType.TABLE_DELETE,
     table: tableToDelete,
   })
 
@@ -136,10 +136,10 @@ exports.destroy = async function (ctx) {
   await db.remove(tableToDelete)
 
   // remove table search index
-  if (!env.isTest()) {
+  if (!isTest()) {
     const currentIndexes = await db.getIndexes()
     const existingIndex = currentIndexes.indexes.find(
-      existing => existing.name === `search:${ctx.params.tableId}`
+      (existing: any) => existing.name === `search:${ctx.params.tableId}`
     )
     if (existingIndex) {
       await db.deleteIndex(existingIndex)
@@ -147,12 +147,15 @@ exports.destroy = async function (ctx) {
   }
 
   // has to run after, make sure it has _id
-  await runStaticFormulaChecks(tableToDelete, { deletion: true })
+  await runStaticFormulaChecks(tableToDelete, {
+    oldTable: null,
+    deletion: true,
+  })
   await cleanupAttachments(tableToDelete, { rows })
   return tableToDelete
 }
 
-exports.bulkImport = async function (ctx) {
+export async function bulkImport(ctx: any) {
   const table = await getTable(ctx.params.tableId)
   const { dataImport } = ctx.request.body
   await handleDataImport(ctx.user, table, dataImport)

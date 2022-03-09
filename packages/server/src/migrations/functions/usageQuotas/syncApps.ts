@@ -1,6 +1,6 @@
 import { getTenantId } from "@budibase/backend-core/tenancy"
 import { getAllApps } from "@budibase/backend-core/db"
-import { quotas, QuotaUsageType, StaticQuotaName } from "@budibase/pro"
+import * as Pro from "@budibase/pro"
 
 export const run = async () => {
   // get app count
@@ -11,5 +11,9 @@ export const run = async () => {
   // sync app count
   const tenantId = getTenantId()
   console.log(`[Tenant: ${tenantId}] Syncing app count: ${appCount}`)
-  await quotas.setUsage(appCount, StaticQuotaName.APPS, QuotaUsageType.STATIC)
+  await Pro.Licensing.Quotas.setUsage(
+    appCount,
+    Pro.StaticQuotaName.APPS,
+    Pro.QuotaUsageType.STATIC
+  )
 }

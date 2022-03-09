@@ -13,6 +13,7 @@ exports.Cookies = {
 
 exports.Headers = {
   API_KEY: "x-budibase-api-key",
+  LICENSE_KEY: "x-budibase-license-key",
   API_VER: "x-budibase-api-version",
   APP_ID: "x-budibase-app-id",
   TYPE: "x-budibase-type",
