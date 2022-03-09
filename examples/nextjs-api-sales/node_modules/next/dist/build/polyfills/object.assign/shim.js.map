@@ -1,0 +1,1 @@
+{"version":3,"sources":["../../../../build/polyfills/object.assign/shim.js"],"names":["module","exports","Object","assign"],"mappings":";AAAA,MAAM,CAAC,OAAO,GAAG,QAAQ,GAAI,CAAC;IAC5B,MAAM,CAAC,MAAM,CAAC,MAAM;AACtB,CAAC"}

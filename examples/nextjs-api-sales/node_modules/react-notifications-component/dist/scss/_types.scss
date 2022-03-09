@@ -1,0 +1,91 @@
+@import "_variables.scss";
+
+.rnc__notification-item--default {
+  background-color: $default;
+  border-left: 8px solid $default_dark;
+
+  .rnc__notification-timer {
+    background-color: $default_timer;
+  }
+  .rnc__notification-timer-filler {
+    background-color: $default_timer_filler;
+  }
+  .rnc__notification-close-mark {
+    background-color: $default;
+  }
+}
+
+.rnc__notification-item--success {
+  background-color: $success;
+  border-left: 8px solid $success_dark;
+
+  .rnc__notification-timer {
+    background-color: $success_timer;
+  }
+  .rnc__notification-timer-filler {
+    background-color: $success_timer_filler;
+  }
+  .rnc__notification-close-mark {
+    background-color: $success;
+  }
+}
+
+.rnc__notification-item--danger {
+  background-color: $danger;
+  border-left: 8px solid $danger_dark;
+
+  .rnc__notification-timer {
+    background-color: $danger_timer;
+  }
+  .rnc__notification-timer-filler {
+    background-color: $danger_timer_filler;
+  }
+  .rnc__notification-close-mark {
+    background-color: $danger;
+  }
+}
+
+.rnc__notification-item--info {
+  background-color: $info;
+  border-left: 8px solid $info_dark;
+
+  .rnc__notification-timer {
+    background-color: $info_timer;
+  }
+  .rnc__notification-timer-filler {
+    background-color: $info_timer_filler;
+  }
+  .rnc__notification-close-mark {
+    background-color: $info;
+  }
+}
+
+.rnc__notification-item--warning {
+  background-color: $warning;
+  border-left: 8px solid $warning_dark;
+
+  .rnc__notification-timer {
+    background-color: $warning_timer;
+  }
+  .rnc__notification-timer-filler {
+    background-color: $warning_timer_filler;
+  }
+  .rnc__notification-close-mark {
+    background-color: $warning;
+  }
+}
+
+.rnc__notification-item--awesome {
+  background-color: $awesome;
+  border-left: 8px solid $awesome_dark;
+
+  .rnc__notification-timer {
+    background-color: $awesome_timer;
+  }
+  .rnc__notification-timer-filler {
+    background-color: $awesome_timer_filler;
+  }
+  .rnc__notification-close-mark {
+    background-color: $awesome;
+  }
+}

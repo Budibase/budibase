@@ -1,0 +1,1 @@
+{"version":3,"sources":["../../lib/chalk.ts"],"names":["chalk","process","browser","require","default"],"mappings":";;;;;AAAA,GAAG,CAAC,KAAK;AAET,EAAE,GAAG,OAAO,CAAC,OAAO,EAAE,CAAC;IACrB,KAAK,GAAG,OAAO,CAAC,CAA0B;AAC5C,CAAC,MAAM,CAAC;IACN,KAAK,GAAG,OAAO,CAAC,CAAa,cAAE,OAAO;AACxC,CAAC;eAEc,KAAK"}

@@ -1,0 +1,22 @@
+import React from 'react';
+import { iNotificationProps, iNotificationState } from '../../src/typings';
+export { Notification };
+declare class Notification extends React.Component<iNotificationProps, iNotificationState> {
+    constructor(props: iNotificationProps);
+    private readonly rootElementRef;
+    private timer;
+    componentWillUnmount(): void;
+    componentDidMount(): void;
+    componentDidUpdate(prevProps: iNotificationProps): void;
+    removeNotification(removalFlag: string): void;
+    onClick: () => void;
+    onTouchStart: (event: React.TouchEvent<HTMLDivElement>) => void;
+    onTouchMove: (event: React.TouchEvent) => void;
+    onTouchEnd: () => void;
+    onMouseEnter: () => void;
+    onMouseLeave: () => void;
+    renderTimer(): JSX.Element;
+    renderCustomContent(): JSX.Element;
+    renderNotification(): JSX.Element;
+    render(): JSX.Element;
+}

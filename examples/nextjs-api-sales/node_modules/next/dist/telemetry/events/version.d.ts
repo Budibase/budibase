@@ -1,0 +1,30 @@
+import { NextConfigComplete } from '../../server/config-shared';
+declare type EventCliSessionStarted = {
+    nextVersion: string;
+    nodeVersion: string;
+    cliCommand: string;
+    isSrcDir: boolean | null;
+    hasNowJson: boolean;
+    isCustomServer: boolean | null;
+    hasNextConfig: boolean;
+    buildTarget: string;
+    hasWebpackConfig: boolean;
+    hasBabelConfig: boolean;
+    basePathEnabled: boolean;
+    i18nEnabled: boolean;
+    imageEnabled: boolean;
+    locales: string | null;
+    localeDomainsCount: number | null;
+    localeDetectionEnabled: boolean | null;
+    imageDomainsCount: number | null;
+    imageSizes: string | null;
+    imageLoader: string | null;
+    trailingSlashEnabled: boolean;
+    reactStrictMode: boolean;
+    webpackVersion: number | null;
+};
+export declare function eventCliSession(dir: string, nextConfig: NextConfigComplete, event: Omit<EventCliSessionStarted, 'nextVersion' | 'nodeVersion' | 'hasNextConfig' | 'buildTarget' | 'hasWebpackConfig' | 'hasBabelConfig' | 'basePathEnabled' | 'i18nEnabled' | 'imageEnabled' | 'locales' | 'localeDomainsCount' | 'localeDetectionEnabled' | 'imageDomainsCount' | 'imageSizes' | 'imageLoader' | 'trailingSlashEnabled' | 'reactStrictMode'>): {
+    eventName: string;
+    payload: EventCliSessionStarted;
+}[];
+export {};

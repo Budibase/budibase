@@ -1,0 +1,18 @@
+{
+	"root": true,
+
+	"extends": "@ljharb",
+
+	"rules": {
+		"eqeqeq": [2, "allow-null"],
+	},
+
+	"overrides": [
+		{
+			"files": "test/**",
+			"rules": {
+				"max-lines-per-function": 0,
+			},
+		},
+	],
+}

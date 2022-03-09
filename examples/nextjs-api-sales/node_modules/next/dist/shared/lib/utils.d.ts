@@ -1,0 +1,278 @@
+/// <reference types="node" />
+import type { BuildManifest } from '../../server/get-page-files';
+import type { ComponentType } from 'react';
+import type { DomainLocale } from '../../server/config';
+import type { Env } from '@next/env';
+import type { IncomingMessage, ServerResponse } from 'http';
+import type { NextRouter } from './router/router';
+import type { ParsedUrlQuery } from 'querystring';
+import type { PreviewData } from 'next/types';
+import type { UrlObject } from 'url';
+export declare type NextComponentType<C extends BaseContext = NextPageContext, IP = {}, P = {}> = ComponentType<P> & {
+    /**
+     * Used for initial page load data population. Data returned from `getInitialProps` is serialized when server rendered.
+     * Make sure to return plain `Object` without using `Date`, `Map`, `Set`.
+     * @param ctx Context of `page`
+     */
+    getInitialProps?(context: C): IP | Promise<IP>;
+};
+export declare type DocumentType = NextComponentType<DocumentContext, DocumentInitialProps, DocumentProps>;
+export declare type AppType = NextComponentType<AppContextType, AppInitialProps, AppPropsType>;
+export declare type AppTreeType = ComponentType<AppInitialProps & {
+    [name: string]: any;
+}>;
+/**
+ * Web vitals provided to _app.reportWebVitals by Core Web Vitals plugin developed by Google Chrome team.
+ * https://nextjs.org/blog/next-9-4#integrated-web-vitals-reporting
+ */
+export declare type NextWebVitalsMetric = {
+    id: string;
+    startTime: number;
+    value: number;
+} & ({
+    label: 'web-vital';
+    name: 'FCP' | 'LCP' | 'CLS' | 'FID' | 'TTFB';
+} | {
+    label: 'custom';
+    name: 'Next.js-hydration' | 'Next.js-route-change-to-render' | 'Next.js-render';
+});
+export declare type Enhancer<C> = (Component: C) => C;
+export declare type ComponentsEnhancer = {
+    enhanceApp?: Enhancer<AppType>;
+    enhanceComponent?: Enhancer<NextComponentType>;
+} | Enhancer<NextComponentType>;
+export declare type RenderPageResult = {
+    html: string;
+    head?: Array<JSX.Element | null>;
+};
+export declare type RenderPage = (options?: ComponentsEnhancer) => DocumentInitialProps | Promise<DocumentInitialProps>;
+export declare type BaseContext = {
+    res?: ServerResponse;
+    [k: string]: any;
+};
+export declare type NEXT_DATA = {
+    props: Record<string, any>;
+    page: string;
+    query: ParsedUrlQuery;
+    buildId: string;
+    assetPrefix?: string;
+    runtimeConfig?: {
+        [key: string]: any;
+    };
+    nextExport?: boolean;
+    autoExport?: boolean;
+    isFallback?: boolean;
+    dynamicIds?: (string | number)[];
+    err?: Error & {
+        statusCode?: number;
+    };
+    gsp?: boolean;
+    gssp?: boolean;
+    customServer?: boolean;
+    gip?: boolean;
+    appGip?: boolean;
+    locale?: string;
+    locales?: string[];
+    defaultLocale?: string;
+    domainLocales?: DomainLocale[];
+    scriptLoader?: any[];
+    isPreview?: boolean;
+    notFoundSrcPage?: string;
+    rsc?: boolean;
+};
+/**
+ * `Next` context
+ */
+export interface NextPageContext {
+    /**
+     * Error object if encountered during rendering
+     */
+    err?: (Error & {
+        statusCode?: number;
+    }) | null;
+    /**
+     * `HTTP` request object.
+     */
+    req?: IncomingMessage;
+    /**
+     * `HTTP` response object.
+     */
+    res?: ServerResponse;
+    /**
+     * Path section of `URL`.
+     */
+    pathname: string;
+    /**
+     * Query string section of `URL` parsed as an object.
+     */
+    query: ParsedUrlQuery;
+    /**
+     * `String` of the actual path including query.
+     */
+    asPath?: string;
+    /**
+     * The currently active locale
+     */
+    locale?: string;
+    /**
+     * All configured locales
+     */
+    locales?: string[];
+    /**
+     * The configured default locale
+     */
+    defaultLocale?: string;
+    /**
+     * `Component` the tree of the App to use if needing to render separately
+     */
+    AppTree: AppTreeType;
+}
+export declare type AppContextType<R extends NextRouter = NextRouter> = {
+    Component: NextComponentType<NextPageContext>;
+    AppTree: AppTreeType;
+    ctx: NextPageContext;
+    router: R;
+};
+export declare type AppInitialProps = {
+    pageProps: any;
+};
+export declare type AppPropsType<R extends NextRouter = NextRouter, P = {}> = AppInitialProps & {
+    Component: NextComponentType<NextPageContext, any, P>;
+    router: R;
+    __N_SSG?: boolean;
+    __N_SSP?: boolean;
+    __N_RSC?: boolean;
+};
+export declare type DocumentContext = NextPageContext & {
+    renderPage: RenderPage;
+    defaultGetInitialProps(ctx: DocumentContext): Promise<DocumentInitialProps>;
+};
+export declare type DocumentInitialProps = RenderPageResult & {
+    styles?: React.ReactElement[] | React.ReactFragment;
+};
+export declare type DocumentProps = DocumentInitialProps & HtmlProps;
+export declare type MaybeDeferContentHook = (name: string, contentFn: () => JSX.Element) => [boolean, JSX.Element];
+export declare type HtmlProps = {
+    __NEXT_DATA__: NEXT_DATA;
+    dangerousAsPath: string;
+    docComponentsRendered: {
+        Html?: boolean;
+        Main?: boolean;
+        Head?: boolean;
+        NextScript?: boolean;
+    };
+    buildManifest: BuildManifest;
+    ampPath: string;
+    inAmpMode: boolean;
+    hybridAmp: boolean;
+    isDevelopment: boolean;
+    dynamicImports: string[];
+    assetPrefix?: string;
+    canonicalBase: string;
+    headTags: any[];
+    unstable_runtimeJS?: false;
+    unstable_JsPreload?: false;
+    devOnlyCacheBusterQueryString: string;
+    scriptLoader: {
+        afterInteractive?: string[];
+        beforeInteractive?: any[];
+    };
+    locale?: string;
+    disableOptimizedLoading?: boolean;
+    styles?: React.ReactElement[] | React.ReactFragment;
+    head?: Array<JSX.Element | null>;
+    useMaybeDeferContent: MaybeDeferContentHook;
+    crossOrigin?: string;
+    optimizeCss?: boolean;
+    optimizeFonts?: boolean;
+    runtime?: 'edge' | 'nodejs';
+};
+/**
+ * Next `API` route request
+ */
+export interface NextApiRequest extends IncomingMessage {
+    /**
+     * Object of `query` values from url
+     */
+    query: {
+        [key: string]: string | string[];
+    };
+    /**
+     * Object of `cookies` from header
+     */
+    cookies: {
+        [key: string]: string;
+    };
+    body: any;
+    env: Env;
+    preview?: boolean;
+    /**
+     * Preview data set on the request, if any
+     * */
+    previewData?: PreviewData;
+}
+/**
+ * Send body of response
+ */
+declare type Send<T> = (body: T) => void;
+/**
+ * Next `API` route response
+ */
+export declare type NextApiResponse<T = any> = ServerResponse & {
+    /**
+     * Send data `any` data in response
+     */
+    send: Send<T>;
+    /**
+     * Send data `json` data in response
+     */
+    json: Send<T>;
+    status: (statusCode: number) => NextApiResponse<T>;
+    redirect(url: string): NextApiResponse<T>;
+    redirect(status: number, url: string): NextApiResponse<T>;
+    /**
+     * Set preview data for Next.js' prerender mode
+     */
+    setPreviewData: (data: object | string, options?: {
+        /**
+         * Specifies the number (in seconds) for the preview session to last for.
+         * The given number will be converted to an integer by rounding down.
+         * By default, no maximum age is set and the preview session finishes
+         * when the client shuts down (browser is closed).
+         */
+        maxAge?: number;
+    }) => NextApiResponse<T>;
+    clearPreviewData: () => NextApiResponse<T>;
+    unstable_revalidate: (urlPath: string) => Promise<void>;
+};
+/**
+ * Next `API` route handler
+ */
+export declare type NextApiHandler<T = any> = (req: NextApiRequest, res: NextApiResponse<T>) => void | Promise<void>;
+/**
+ * Utils
+ */
+export declare function execOnce<T extends (...args: any[]) => ReturnType<T>>(fn: T): T;
+export declare function getLocationOrigin(): string;
+export declare function getURL(): string;
+export declare function getDisplayName<P>(Component: ComponentType<P>): string;
+export declare function isResSent(res: ServerResponse): boolean;
+export declare function normalizeRepeatedSlashes(url: string): string;
+export declare function loadGetInitialProps<C extends BaseContext, IP = {}, P = {}>(App: NextComponentType<C, IP, P>, ctx: C): Promise<IP>;
+export declare const urlObjectKeys: string[];
+export declare function formatWithValidation(url: UrlObject): string;
+export declare const SP: boolean;
+export declare const ST: boolean;
+export declare class DecodeError extends Error {
+}
+export declare const HtmlContext: import("react").Context<HtmlProps>;
+export interface CacheFs {
+    readFile(f: string): Promise<string>;
+    readFileSync(f: string): string;
+    writeFile(f: string, d: any): Promise<void>;
+    mkdir(dir: string): Promise<void | string>;
+    stat(f: string): Promise<{
+        mtime: Date;
+    }>;
+}
+export {};
