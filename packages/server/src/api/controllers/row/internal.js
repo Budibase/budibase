@@ -83,7 +83,11 @@ exports.patch = async ctx => {
   const isUserTable = tableId === InternalTables.USER_METADATA
   let oldRow
   try {
-    oldRow = await db.get(inputs._id)
+    let dbTable = await db.get(tableId)
+    oldRow = await outputProcessing(
+      dbTable,
+      await findRow(ctx, tableId, inputs._id)
+    )
   } catch (err) {
     if (isUserTable) {
       // don't include the rev, it'll be the global rev
