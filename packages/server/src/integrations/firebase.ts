@@ -11,6 +11,7 @@ module Firebase {
     email: string
     privateKey: string
     projectId: string
+    serviceAccount?: string
   }
 
   const SCHEMA: Integration = {
@@ -30,6 +31,10 @@ module Firebase {
       projectId: {
         type: DatasourceFieldTypes.STRING,
         required: true,
+      },
+      serviceAccount: {
+        type: DatasourceFieldTypes.JSON,
+        required: false,
       },
     },
     query: {
@@ -86,13 +91,24 @@ module Firebase {
 
     constructor(config: FirebaseConfig) {
       this.config = config
-      this.db = new Firestore({
-        projectId: config.projectId,
-        credential: {
-          clientEmail: config.email,
-          privateKey: config.privateKey,
-        },
-      })
+      if (config.serviceAccount) {
+        const serviceAccount = JSON.parse(config.serviceAccount)
+        this.db = new Firestore({
+          projectId: serviceAccount.project_id,
+          credentials: {
+            client_email: serviceAccount.client_email,
+            private_key: serviceAccount.private_key,
+          },
+        })
+      } else {
+        this.db = new Firestore({
+          projectId: config.projectId,
+          credentials: {
+            client_email: config.email,
+            private_key: config.privateKey,
+          },
+        })
+      }
     }
 
     async create(query: { json: object; extra: { [key: string]: string } }) {
@@ -104,17 +120,21 @@ module Firebase {
       }
     }
 
-    async read(query: {
-      field: string
-      opStr: WhereFilterOp
-      value: any
-      extra: { [key: string]: string }
-    }) {
+    async read(query: { json: object; extra: { [key: string]: string } }) {
       try {
-        const snapshot = await this.db
-          .collection(query.extra.collection)
-          .where(query.field, query.opStr, query.value)
-          .get()
+        let snapshot
+        const collectionRef = this.db.collection(query.extra.collection)
+        if (query.extra.field && query.extra.opStr && query.extra.queryValue) {
+          snapshot = await collectionRef
+            .where(
+              query.extra.field,
+              query.extra.opStr as WhereFilterOp,
+              query.extra.value
+            )
+            .get()
+        } else {
+          snapshot = await collectionRef.get()
+        }
         const result: any[] = []
         snapshot.forEach(doc => result.push(doc.data()))
 
