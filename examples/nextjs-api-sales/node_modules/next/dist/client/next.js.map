@@ -1,1 +1,0 @@
-{"version":3,"sources":["../../client/next.js"],"names":["initNext","version","router","emitter","window","next","catch","console","error"],"mappings":";AAAmD,GAAI,CAAJ,CAAI;AAEvD,MAAM,CAAC,IAAI,GAAG,CAAC;IACb,OAAO,EAH0C,CAAI;IAIrD,EAA0D,AAA1D,wDAA0D;QACtD,MAAM,IAAG,CAAC;QACZ,MAAM,CANyC,CAAI;IAOrD,CAAC;IACD,OAAO,EAR0C,CAAI;AASvD,CAAC;IATkD,CAAI,aAW5C,KAAK,CAAC,OAAO,CAAC,KAAK"}
