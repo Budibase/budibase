@@ -1,6 +1,7 @@
 import { default as rowController } from "../row"
 import { addRev } from "./utils"
 import { Row } from "../../../definitions/common"
+import { convertBookmark } from "../../../utilities"
 
 // makes sure that the user doesn't need to pass in the type, tableId or _id params for
 // the call to be correct
@@ -30,7 +31,7 @@ export async function search(ctx: any, next: any) {
     sort: sort.column,
     sortType: sort.type,
     sortOrder: sort.order,
-    bookmark,
+    bookmark: convertBookmark(bookmark),
     paginate,
     limit,
     query,
