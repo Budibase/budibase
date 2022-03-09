@@ -42,6 +42,7 @@
   $: {
     rowSelectionStore.actions.updateSelection(
       $component.id,
+      selectedRows.length ? selectedRows[0].tableId : "",
       selectedRows.map(row => row._id)
     )
   }

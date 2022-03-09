@@ -80,6 +80,10 @@
           "value": "publicUrl"
         }
       ]
+    },
+    {
+      "name": "Export Data",
+      "component": "ExportData"
     }
   ]
 }
