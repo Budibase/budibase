@@ -123,14 +123,7 @@ read.push(new Endpoint("get", "/users/:userId", controller.read))
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               required:
- *                 - data
- *               properties:
- *                 data:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/user'
+ *               $ref: '#/components/schemas/userSearch'
  *             examples:
  *               users:
  *                 $ref: '#/components/examples/users'
