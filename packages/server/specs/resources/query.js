@@ -186,4 +186,10 @@ module.exports = new Resource()
     executeQuery: executeQuerySchema,
     executeQueryOutput: executeQueryOutputSchema,
     query: querySchema,
+    querySearch: object({
+      data: {
+        type: "array",
+        items: querySchema,
+      },
+    }),
   })
