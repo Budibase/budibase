@@ -14,6 +14,7 @@ export function createTablesStore() {
       ...state,
       list: tables,
     }))
+    return tables
   }
 
   async function select(table) {
