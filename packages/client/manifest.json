@@ -2490,18 +2490,6 @@
         "key": "dataProvider"
       },
       {
-        "type": "select",
-        "label": "Map Type",
-        "key": "mapType",
-        "options": [
-          "Roadmap",
-          "Terrain",
-          "Satellite",
-          "Hybrid"
-        ],
-        "defaultValue": "Roadmap"
-      },
-      {
         "type": "boolean",
         "label": "Enable Fullscreen",
         "key": "fullScreenEnabled",
