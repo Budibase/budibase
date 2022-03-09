@@ -1,0 +1,1 @@
+{"version":3,"sources":["../../lib/is-yarn.ts"],"names":["join","fileExists","isYarn","dir","catch"],"mappings":";;;;;AAAqB,GAAM,CAAN,KAAM;AACA,GAAe,CAAf,WAAe;AAEnC,KAAK,CAAC,MAAM,UAAU,GAAW,GACtC,KAAK,KAHoB,WAAe,iBADrB,KAAM,OAIH,GAAG,EAAE,CAAW,aAAG,KAAK,KAAO,KAAK;;;QAD/C,MAAM,GAAN,MAAM"}

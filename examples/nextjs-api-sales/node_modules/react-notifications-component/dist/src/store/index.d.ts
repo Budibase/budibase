@@ -1,0 +1,16 @@
+import { iNotification, iNotificationStoreParams, iStore } from '../../src/typings';
+declare class Store implements iStore {
+    constructor();
+    removeNotification: (id: string) => void;
+    removeAllNotifications: () => void;
+    private types;
+    private add;
+    private defaultNotificationWidth;
+    private counter;
+    private incrementCounter;
+    addNotification(notification: iNotification): string;
+    getCounter: () => number;
+    register(parameters: iNotificationStoreParams): void;
+}
+declare const _default: Store;
+export default _default;

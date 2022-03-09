@@ -1,0 +1,100 @@
+.rnc__notification-container--top-center,
+.rnc__notification-container--top-left,
+.rnc__notification-container--top-right,
+.rnc__notification-container--bottom-center,
+.rnc__notification-container--bottom-left,
+.rnc__notification-container--bottom-right,
+.rnc__notification-container--center,
+.rnc__notification-container--top-full,
+.rnc__notification-container--bottom-full {
+  min-width: 325px;
+  position: absolute;
+  pointer-events: all;
+}
+
+.rnc__notification-container--center,
+.rnc__notification-container--top-center,
+.rnc__notification-container--bottom-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  left: calc(50% - 175px);
+}
+
+.rnc__notification-container--center,
+.rnc__notification-container--top-center,
+.rnc__notification-container--bottom-center {
+  max-width: 350px;
+}
+
+.rnc__notification-container--center {
+  top: 20px;
+  height: 100%;
+  pointer-events: none;
+}
+
+.rnc__notification-container--top-full,
+.rnc__notification-container--bottom-full {
+  width: 100%;
+  min-width: 100%;
+}
+
+.rnc__notification-container--bottom-full {
+  bottom: 0;
+}
+
+.rnc__util--flex-center {
+  min-width: 325px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  pointer-events: all;
+}
+
+.rnc__notification-container--top-center {
+  top: 20px;
+}
+.rnc__notification-container--bottom-center {
+  bottom: 20px;
+}
+
+.rnc__notification-container--top-left {
+  left: 20px;
+  top: 20px;
+}
+
+.rnc__notification-container--top-right {
+  right: 20px;
+  top: 20px;
+}
+
+.rnc__notification-container--bottom-left {
+  left: 20px;
+  bottom: 20px;
+}
+
+.rnc__notification-container--bottom-right {
+  bottom: 20px;
+  right: 20px;
+}
+
+.rnc__notification-container--mobile-top,
+.rnc__notification-container--mobile-bottom {
+  pointer-events: all;
+  position: absolute;
+}
+
+.rnc__notification-container--mobile-top {
+  right: 20px;
+  left: 20px;
+  top: 20px;
+}
+
+.rnc__notification-container--mobile-bottom {
+  right: 20px;
+  left: 20px;
+  bottom: 20px;
+  margin-bottom: -15px;
+}

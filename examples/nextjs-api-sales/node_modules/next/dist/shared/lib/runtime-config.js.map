@@ -1,0 +1,1 @@
+{"version":3,"sources":["../../../shared/lib/runtime-config.ts"],"names":["runtimeConfig","setConfig","configValue"],"mappings":";;;;QAMgB,SAAS,GAAT,SAAS;;AANzB,GAAG,CAAC,aAAa;mBAEI,CAAC;IACpB,MAAM,CAAC,aAAa;AACtB,CAAC;;SAEe,SAAS,CAAC,WAAgB,EAAQ,CAAC;IACjD,aAAa,GAAG,WAAW;AAC7B,CAAC"}

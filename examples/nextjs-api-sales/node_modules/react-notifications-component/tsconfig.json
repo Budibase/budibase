@@ -1,0 +1,42 @@
+{
+  "tsc-alias": {
+    "verbose": false,
+    "resolveFullPaths": true,
+  },
+
+  "compilerOptions": {
+    "baseUrl": "./",
+    "paths": {
+      // samples project
+      "samples/*": ["samples/*"],
+      "components/*": ["samples/js/components/*"],
+      "utils/*": ["src/utils/*"]
+    },
+
+    "outDir": "./dist",
+    "target": "ES2015",
+    "module": "ES2015",
+    "moduleResolution": "node",
+    "jsx": "react",
+    "declaration": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "alwaysStrict": true
+  },
+
+  "include": [
+    "src",
+    "samples",
+    "./global.d.ts"
+  ],
+
+  "exclude": [
+    "./src/*.js",
+    "./node_modules",
+    "./build",
+    "./dist",
+    "*.js"
+  ]
+}

@@ -1,0 +1,20 @@
+import type { NextConfig } from '../../../../server/config-shared';
+import type { DocumentType, AppType } from '../../../../shared/lib/utils';
+import type { BuildManifest } from '../../../../server/get-page-files';
+import type { ReactLoadableManifest } from '../../../../server/load-components';
+import { NextRequest } from '../../../../server/web/spec-extension/request';
+export declare function getRender({ dev, page, pageMod, errorMod, error500Mod, Document, App, buildManifest, reactLoadableManifest, serverComponentManifest, isServerComponent, config, buildId, }: {
+    dev: boolean;
+    page: string;
+    pageMod: any;
+    errorMod: any;
+    error500Mod: any;
+    Document: DocumentType;
+    App: AppType;
+    buildManifest: BuildManifest;
+    reactLoadableManifest: ReactLoadableManifest;
+    serverComponentManifest: any | null;
+    isServerComponent: boolean;
+    config: NextConfig;
+    buildId: string;
+}): (request: NextRequest) => Promise<Response>;

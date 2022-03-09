@@ -1,0 +1,1 @@
+{"version":3,"sources":["../../../../../build/webpack/plugins/wellknown-errors-plugin/simpleWebpackError.ts"],"names":["webpack","webpack5","SimpleWebpackError","file","constructor","message","Error"],"mappings":";;;;MAKa,kBAAkB,SAAU,KAAK;gBAGhC,IAAY,EAAE,OAAe,CAAE,CAAC;QAC1C,KAAK,CAAC,OAAO;QACb,IAAI,CAAC,IAAI,GAAG,IAAI;IAClB,CAAC;;QANU,kBAAkB,GAAlB,kBAAkB"}
