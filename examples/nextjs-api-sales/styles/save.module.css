@@ -7,24 +7,14 @@
   flex: 1 1 auto;
 }
 
-.buttons {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-}
-
-.tableSection {
+.formSection {
   padding: 2rem;
   background: #D3D3D3;
-  width: 800px;
+  width: 400px;
   border-radius: 10px;
 }
 
-.table table {
-  width: 100%;
-}
-
-.tableSection h1 {
+.formSection h1 {
   text-align: center;
   color: black;
 }

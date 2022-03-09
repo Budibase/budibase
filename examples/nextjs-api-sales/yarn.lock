@@ -2384,6 +2384,11 @@ react-is@^16.13.1:
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-16.13.1.tgz#789729a4dc36de2999dc156dd6c1d9c18cea56a4"
   integrity sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==
 
+react-notifications-component@^3.4.1:
+  version "3.4.1"
+  resolved "https://registry.yarnpkg.com/react-notifications-component/-/react-notifications-component-3.4.1.tgz#3670aa17210a4e63ba3b4f553853bd99ab6a0150"
+  integrity sha512-vS/RLdz+VlXZz0dbK+LCcdhgUdUPi1BvSo7mVp58AQDpixI9emGwI0uISXhiTSjqFn/cPibPlJOJQ8kcvgmUrQ==
+
 react@17.0.2:
   version "17.0.2"
   resolved "https://registry.yarnpkg.com/react/-/react-17.0.2.tgz#d0b5cc516d29eb3eee383f75b62864cfb6800037"
