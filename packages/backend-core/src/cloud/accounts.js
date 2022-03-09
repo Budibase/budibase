@@ -22,25 +22,3 @@ exports.getAccount = async email => {
 
   return json[0]
 }
-
-// TODO: Replace with licensing key
-exports.getLicense = async tenantId => {
-  const response = await api.get(`/api/license/${tenantId}`, {
-    headers: {
-      [Headers.API_KEY]: env.ACCOUNT_PORTAL_API_KEY,
-    },
-  })
-
-  if (response.status === 404) {
-    // no license for the tenant
-    return
-  }
-
-  if (response.status !== 200) {
-    const text = await response.text()
-    console.error("Error getting license: ", text)
-    throw new Error(`Error getting license for tenant ${tenantId}`)
-  }
-
-  return response.json()
-}

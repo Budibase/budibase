@@ -1,9 +1,9 @@
-const rowController = require("../../api/controllers/row")
-const { quotas, StaticQuotaName, QuotaUsageType } = require("@budibase/pro")
-const { buildCtx } = require("./utils")
-const automationUtils = require("../automationUtils")
+import { destroy } from "../../api/controllers/row"
+import * as Pro from "@budibase/pro"
+import { buildCtx } from "./utils"
+import { getError } from "../automationUtils"
 
-exports.definition = {
+export const definition = {
   description: "Delete a row from your database",
   icon: "TableRowRemoveCenter",
   name: "Delete Row",
@@ -52,7 +52,7 @@ exports.definition = {
   },
 }
 
-exports.run = async function ({ inputs, appId, emitter }) {
+export async function run({ inputs, appId, emitter }: any) {
   if (inputs.id == null || inputs.revision == null) {
     return {
       success: false,
@@ -62,7 +62,7 @@ exports.run = async function ({ inputs, appId, emitter }) {
     }
   }
 
-  let ctx = buildCtx(appId, emitter, {
+  let ctx: any = buildCtx(appId, emitter, {
     body: {
       _id: inputs.id,
       _rev: inputs.revision,
@@ -73,8 +73,12 @@ exports.run = async function ({ inputs, appId, emitter }) {
   })
 
   try {
-    await quotas.updateUsage(-1, StaticQuotaName.ROWS, QuotaUsageType.STATIC)
-    await rowController.destroy(ctx)
+    await Pro.Licensing.Quotas.updateUsage(
+      -1,
+      Pro.StaticQuotaName.ROWS,
+      Pro.QuotaUsageType.STATIC
+    )
+    await destroy(ctx)
     return {
       response: ctx.body,
       row: ctx.row,
@@ -83,7 +87,7 @@ exports.run = async function ({ inputs, appId, emitter }) {
   } catch (err) {
     return {
       success: false,
-      response: automationUtils.getError(err),
+      response: getError(err),
     }
   }
 }

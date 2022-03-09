@@ -21,6 +21,7 @@ import { buildTableEndpoints } from "./tables"
 import { buildTemplateEndpoints } from "./templates"
 import { buildUserEndpoints } from "./user"
 import { buildViewEndpoints } from "./views"
+import { buildLicensingEndpoints } from "./licensing"
 
 const defaultAPIClientConfig = {
   /**
@@ -231,5 +232,6 @@ export const createAPIClient = config => {
     ...buildTemplateEndpoints(API),
     ...buildUserEndpoints(API),
     ...buildViewEndpoints(API),
+    ...buildLicensingEndpoints(API),
   }
 }

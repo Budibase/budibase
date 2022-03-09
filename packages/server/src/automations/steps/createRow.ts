@@ -1,9 +1,9 @@
-const rowController = require("../../api/controllers/row")
-const automationUtils = require("../automationUtils")
-const { quotas, StaticQuotaName, QuotaUsageType } = require("@budibase/pro")
-const { buildCtx } = require("./utils")
+import { save } from "../../api/controllers/row"
+import { cleanUpRow, getError } from "../automationUtils"
+import * as Pro from "@budibase/pro"
+import { buildCtx } from "./utils"
 
-exports.definition = {
+export const definition = {
   name: "Create Row",
   tagline: "Create a {{inputs.enriched.table.name}} row",
   icon: "TableRowAddBottom",
@@ -59,7 +59,7 @@ exports.definition = {
   },
 }
 
-exports.run = async function ({ inputs, appId, emitter }) {
+export async function run({ inputs, appId, emitter }: any) {
   if (inputs.row == null || inputs.row.tableId == null) {
     return {
       success: false,
@@ -69,7 +69,7 @@ exports.run = async function ({ inputs, appId, emitter }) {
     }
   }
   // have to clean up the row, remove the table from it
-  const ctx = buildCtx(appId, emitter, {
+  const ctx: any = buildCtx(appId, emitter, {
     body: inputs.row,
     params: {
       tableId: inputs.row.tableId,
@@ -77,15 +77,21 @@ exports.run = async function ({ inputs, appId, emitter }) {
   })
 
   try {
-    inputs.row = await automationUtils.cleanUpRow(
-      inputs.row.tableId,
-      inputs.row
+    inputs.row = await cleanUpRow(inputs.row.tableId, inputs.row)
+    await Pro.Licensing.Quotas.updateUsage(
+      1,
+      Pro.StaticQuotaName.ROWS,
+      Pro.QuotaUsageType.STATIC,
+      {
+        dryRun: true,
+      }
     )
-    await quotas.updateUsage(1, StaticQuotaName.ROWS, QuotaUsageType.STATIC, {
-      dryRun: true,
-    })
-    await rowController.save(ctx)
-    await quotas.updateUsage(1, StaticQuotaName.ROWS, QuotaUsageType.STATIC)
+    await save(ctx)
+    await Pro.Licensing.Quotas.updateUsage(
+      1,
+      Pro.StaticQuotaName.ROWS,
+      Pro.QuotaUsageType.STATIC
+    )
     return {
       row: inputs.row,
       response: ctx.body,
@@ -96,7 +102,7 @@ exports.run = async function ({ inputs, appId, emitter }) {
   } catch (err) {
     return {
       success: false,
-      response: automationUtils.getError(err),
+      response: getError(err),
     }
   }
 }

@@ -1,4 +1,4 @@
-import { quotas, StaticQuotaName, QuotaUsageType } from "@budibase/pro"
+import * as Pro from "@budibase/pro"
 const { getUniqueRows } = require("../utilities/usageQuota/rows")
 const {
   isExternalTable,
@@ -14,12 +14,12 @@ const METHOD_MAP: any = {
 
 const DOMAIN_MAP: any = {
   rows: {
-    name: StaticQuotaName.ROWS,
-    type: QuotaUsageType.STATIC,
+    name: Pro.StaticQuotaName.ROWS,
+    type: Pro.QuotaUsageType.STATIC,
   },
   applications: {
-    name: StaticQuotaName.APPS,
-    type: QuotaUsageType.STATIC,
+    name: Pro.StaticQuotaName.APPS,
+    type: Pro.QuotaUsageType.STATIC,
   },
 }
 
@@ -32,7 +32,7 @@ function getQuotaInfo(url: string) {
 }
 
 module.exports = async (ctx: any, next: any) => {
-  if (!quotas.useQuotas()) {
+  if (!Pro.Licensing.Quotas.useQuotas()) {
     return next()
   }
 
@@ -79,7 +79,7 @@ const performRequest = async (
   const usageContext = {
     skipNext: false,
     skipUsage: false,
-    [StaticQuotaName.APPS]: {},
+    [Pro.StaticQuotaName.APPS]: {},
   }
 
   const quotaName = quotaInfo.name
@@ -96,7 +96,9 @@ const performRequest = async (
 
   // run the request
   if (!usageContext.skipNext) {
-    await quotas.updateUsage(usage, quotaName, quotaInfo.type, { dryRun: true })
+    await Pro.Licensing.Quotas.updateUsage(usage, quotaName, quotaInfo.type, {
+      dryRun: true,
+    })
     await next()
   }
 
@@ -112,7 +114,7 @@ const performRequest = async (
 
   // update the usage
   if (!usageContext.skipUsage) {
-    await quotas.updateUsage(usage, quotaName, quotaInfo.type)
+    await Pro.Licensing.Quotas.updateUsage(usage, quotaName, quotaInfo.type)
   }
 }
 
@@ -126,18 +128,18 @@ const appPreDelete = async (ctx: any, usageContext: any) => {
   // store the row count to delete
   const rows = await getUniqueRows([ctx.appId])
   if (rows.length) {
-    usageContext[StaticQuotaName.APPS] = { rowCount: rows.length }
+    usageContext[Pro.StaticQuotaName.APPS] = { rowCount: rows.length }
   }
 }
 
 const appPostDelete = async (ctx: any, usageContext: any) => {
   // delete the app rows from usage
-  const rowCount = usageContext[StaticQuotaName.ROWS].rowCount
+  const rowCount = usageContext[Pro.StaticQuotaName.ROWS].rowCount
   if (rowCount) {
-    await quotas.updateUsage(
+    await Pro.Licensing.Quotas.updateUsage(
       -rowCount,
-      StaticQuotaName.ROWS,
-      QuotaUsageType.STATIC
+      Pro.StaticQuotaName.ROWS,
+      Pro.QuotaUsageType.STATIC
     )
   }
 }
@@ -147,24 +149,24 @@ const appPostCreate = async (ctx: any) => {
   if (ctx.request.body.useTemplate === "true") {
     const rows = await getUniqueRows([ctx.response.body.appId])
     const rowCount = rows ? rows.length : 0
-    await quotas.updateUsage(
+    await Pro.Licensing.Quotas.updateUsage(
       rowCount,
-      StaticQuotaName.ROWS,
-      QuotaUsageType.STATIC
+      Pro.StaticQuotaName.ROWS,
+      Pro.QuotaUsageType.STATIC
     )
   }
 }
 
 const PRE_DELETE: any = {
-  [StaticQuotaName.APPS]: appPreDelete,
+  [Pro.StaticQuotaName.APPS]: appPreDelete,
 }
 
 const POST_DELETE: any = {
-  [StaticQuotaName.APPS]: appPostDelete,
+  [Pro.StaticQuotaName.APPS]: appPostDelete,
 }
 
 const PRE_CREATE: any = {}
 
 const POST_CREATE: any = {
-  [StaticQuotaName.APPS]: appPostCreate,
+  [Pro.StaticQuotaName.APPS]: appPostCreate,
 }
