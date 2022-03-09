@@ -57,8 +57,13 @@ module Firebase {
         type: DatasourceFieldTypes.STRING,
         required: true,
       },
+      filterField: {
+        displayName: "Filter field",
+        type: DatasourceFieldTypes.STRING,
+        required: false,
+      },
       filter: {
-        displayName: "Filter query",
+        displayName: "Filter comparison",
         type: DatasourceFieldTypes.LIST,
         required: false,
         data: {
@@ -77,8 +82,8 @@ module Firebase {
           ],
         },
       },
-      queryValue: {
-        displayName: "Query value",
+      filterValue: {
+        displayName: "Filter value",
         type: DatasourceFieldTypes.STRING,
         required: false,
       },
@@ -113,7 +118,12 @@ module Firebase {
 
     async create(query: { json: object; extra: { [key: string]: string } }) {
       try {
-        return await this.db.collection(query.extra.collection).add(query.json)
+        const documentReference = this.db
+          .collection(query.extra.collection)
+          .doc()
+        await documentReference.set({ ...query.json, id: documentReference.id })
+        const snapshot = await documentReference.get()
+        return snapshot.data()
       } catch (err) {
         console.error("Error writing to Firestore", err)
         throw err
@@ -124,12 +134,16 @@ module Firebase {
       try {
         let snapshot
         const collectionRef = this.db.collection(query.extra.collection)
-        if (query.extra.field && query.extra.opStr && query.extra.queryValue) {
+        if (
+          query.extra.filterField &&
+          query.extra.filter &&
+          query.extra.filterValue
+        ) {
           snapshot = await collectionRef
             .where(
-              query.extra.field,
-              query.extra.opStr as WhereFilterOp,
-              query.extra.value
+              query.extra.filterField,
+              query.extra.filter as WhereFilterOp,
+              query.extra.filterValue
             )
             .get()
         } else {
@@ -146,27 +160,37 @@ module Firebase {
     }
 
     async update(query: {
-      id: string
-      json: object
+      json: Record<string, any>
       extra: { [key: string]: string }
     }) {
       try {
-        return await this.db
+        await this.db
           .collection(query.extra.collection)
-          .doc(query.id)
+          .doc(query.json.id)
           .update(query.json)
+
+        return (
+          await this.db
+            .collection(query.extra.collection)
+            .doc(query.json.id)
+            .get()
+        ).data()
       } catch (err) {
-        console.error("Error writing to mongodb", err)
+        console.error("Error writing to firebase", err)
         throw err
       }
     }
 
-    async delete(query: { id: string; extra: { [key: string]: string } }) {
+    async delete(query: {
+      json: { id: string }
+      extra: { [key: string]: string }
+    }) {
       try {
-        return await this.db
+        await this.db
           .collection(query.extra.collection)
-          .doc(query.id)
+          .doc(query.json.id)
           .delete()
+        return true
       } catch (err) {
         console.error("Error writing to mongodb", err)
         throw err
