@@ -1,11 +1,15 @@
 ### Budibase API Next.js example
 
 This is an example of how Budibase can be used as a backend for a Postgres database for a Next.js sales app. You will 
-need to follow the walk-through that has been published on the Budibase blog to set up your Budibase app for this example.
+need to follow the walk-through that has been published in the Budibase docs to set up your Budibase app for this example.
 
 ## Pre-requisites
 
-To use this example you will need [Docker](https://www.docker.com/), [Docker Compose](https://docs.docker.com/compose/) and [Node.js](https://nodejs.org/en/) installed.
+To use this example you will need:
+1. [Docker](https://www.docker.com/)
+2. [Docker Compose](https://docs.docker.com/compose/) 
+3. [Node.js](https://nodejs.org/en/)
+4. A self-hosted Budibase installation
 
 ## Getting Started
 
