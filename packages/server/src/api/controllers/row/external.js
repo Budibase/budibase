@@ -33,11 +33,11 @@ exports.handleRequest = handleRequest
 exports.patch = async ctx => {
   const inputs = ctx.request.body
   const tableId = ctx.params.tableId
-  const id = breakRowIdField(inputs._id)
+  const id = inputs._id
   // don't save the ID to db
   delete inputs._id
   return handleRequest(DataSourceOperation.UPDATE, tableId, {
-    id,
+    id: breakRowIdField(id),
     row: inputs,
   })
 }
@@ -67,7 +67,7 @@ exports.find = async ctx => {
   const id = ctx.params.rowId
   const tableId = ctx.params.tableId
   const response = await handleRequest(DataSourceOperation.READ, tableId, {
-    id,
+    id: breakRowIdField(id),
   })
   return response ? response[0] : response
 }
@@ -76,7 +76,7 @@ exports.destroy = async ctx => {
   const tableId = ctx.params.tableId
   const id = ctx.request.body._id
   const { row } = await handleRequest(DataSourceOperation.DELETE, tableId, {
-    id,
+    id: breakRowIdField(id),
   })
   return { response: { ok: true }, row }
 }
@@ -150,6 +150,27 @@ exports.search = async ctx => {
 exports.validate = async () => {
   // can't validate external right now - maybe in future
   return { valid: true }
+}
+
+exports.exportRows = async ctx => {
+  const { datasourceId, tableName } = breakExternalTableId(ctx.params.tableId)
+  const db = getAppDB()
+  const datasource = await db.get(datasourceId)
+  if (!datasource || !datasource.entities) {
+    ctx.throw(400, "Datasource has not been configured for plus API.")
+  }
+  const tables = datasource.entities
+  const table = tables[tableName]
+  ctx.request.body = {
+    query: {
+      oneOf: {
+        [table.primaryDisplay]: ctx.request.body.map(
+          id => breakRowIdField(id)[0]
+        ),
+      },
+    },
+  }
+  return exports.search(ctx)
 }
 
 exports.fetchEnrichedRow = async ctx => {
