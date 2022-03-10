@@ -85,12 +85,6 @@ export interface paths {
   "/applications/search": {
     /** Based on application properties (currently only name) search for applications. */
     post: {
-      parameters: {
-        header: {
-          /** The ID of the app which this request is targeting. */
-          "x-budibase-app-id": components["parameters"]["appId"];
-        };
-      };
       responses: {
         /** Returns the applications that were found based on the search parameters. */
         200: {
@@ -554,7 +548,7 @@ export interface components {
       /** @description The name of the app. */
       name: string;
       /** @description The URL by which the app is accessed, this must be URL encoded. */
-      url: string;
+      url?: string;
     };
     applicationOutput: {
       data: {
