@@ -135,14 +135,7 @@ read.push(new Endpoint("get", "/applications/:appId", controller.read))
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               required:
- *                 - data
- *               properties:
- *                 data:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/application'
+ *               $ref: '#/components/schemas/applicationSearch'
  *             examples:
  *               applications:
  *                 $ref: '#/components/examples/applications'
