@@ -9,7 +9,7 @@ const notifications = {
       title: title,
       dismiss: {
         duration: 10000,
-      }
+      },
     })
   },
   success: (message: string, title: string) => {
@@ -20,9 +20,9 @@ const notifications = {
       title: title,
       dismiss: {
         duration: 3000,
-      }
+      },
     })
-  }
+  },
 }
 
 export default notifications

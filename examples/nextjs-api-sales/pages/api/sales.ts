@@ -15,7 +15,7 @@ async function getSales(req: any) {
       },
       paginate: true,
       bookmark: parseInt(page),
-    }
+    },
   })
 }
 
