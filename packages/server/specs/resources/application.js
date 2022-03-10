@@ -27,7 +27,7 @@ const base = {
   },
 }
 
-const applicationSchema = object(base, { required: ["name", "url"] })
+const applicationSchema = object(base, { required: ["name"] })
 
 const applicationOutputSchema = object(
   {
