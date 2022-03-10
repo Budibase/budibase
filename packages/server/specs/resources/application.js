@@ -98,4 +98,10 @@ module.exports = new Resource()
     applicationOutput: object({
       data: applicationOutputSchema,
     }),
+    applicationSearch: object({
+      data: {
+        type: "array",
+        items: applicationOutputSchema,
+      },
+    }),
   })
