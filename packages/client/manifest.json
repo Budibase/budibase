@@ -2497,7 +2497,7 @@
       },
       {
         "type": "boolean",
-        "label": "Enabled Location",
+        "label": "Enable Location",
         "key": "locationEnabled",
         "defaultValue": false
       },
