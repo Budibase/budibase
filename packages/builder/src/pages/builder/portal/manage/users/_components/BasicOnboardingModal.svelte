@@ -11,7 +11,7 @@
   import { users } from "stores/portal"
 
   const [email, error, touched] = createValidationStore("", emailValidator)
-  const password = Math.random().toString(36).substr(2, 20)
+  const password = Math.random().toString(36).slice(2, 20)
   let builder = false,
     admin = false
 
