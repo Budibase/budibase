@@ -11,7 +11,7 @@ async function getSalespeople() {
         order: "ascending",
         column: "person_id",
       },
-    }
+    },
   })
 }
 
