@@ -34,11 +34,12 @@ jobs:
         run: | 
           docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
           yarn build:docker:proxy:preprod
-          docker tag budibase/proxy:$release_tag budibase/proxy:k8s-preprod
-          docker push budibase/proxy:k8s-preprod
+          docker tag proxy-service budibase/proxy:$PREPROD_TAG
+          docker push budibase/proxy:$PREPROD_TAG
         env:
           DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
+          PREPROD_TAG: k8s-preprod
 
       - name: Pull values.yaml from budibase-infra
         run: | 
