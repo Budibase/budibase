@@ -227,6 +227,7 @@
     border-radius: 4px;
   }
 
+  /* Print styles */
   @media print {
     #spectrum-root,
     #clip-root,
