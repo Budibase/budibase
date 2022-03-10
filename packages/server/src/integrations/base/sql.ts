@@ -27,11 +27,8 @@ function parse(input: any) {
   if (typeof input !== "string") {
     return input
   }
-  if (input === MAX_ISO_DATE) {
-    return new Date(8640000000000000)
-  }
-  if (input === MIN_ISO_DATE) {
-    return new Date(-8640000000000000)
+  if (input === MAX_ISO_DATE || input === MIN_ISO_DATE) {
+    return null
   }
   if (isIsoDateString(input)) {
     return new Date(input)
@@ -130,11 +127,19 @@ class InternalBuilder {
     }
     if (filters.range) {
       iterate(filters.range, (key, value) => {
-        if (!value.high || !value.low) {
-          return
+        if (value.low && value.high) {
+          // Use a between operator if we have 2 valid range values
+          const fnc = allOr ? "orWhereBetween" : "whereBetween"
+          query = query[fnc](key, [value.low, value.high])
+        } else if (value.low) {
+          // Use just a single greater than operator if we only have a low
+          const fnc = allOr ? "orWhere" : "where"
+          query = query[fnc](key, ">", value.low)
+        } else if (value.high) {
+          // Use just a single less than operator if we only have a high
+          const fnc = allOr ? "orWhere" : "where"
+          query = query[fnc](key, "<", value.high)
         }
-        const fnc = allOr ? "orWhereBetween" : "whereBetween"
-        query = query[fnc](key, [value.low, value.high])
       })
     }
     if (filters.equal) {
