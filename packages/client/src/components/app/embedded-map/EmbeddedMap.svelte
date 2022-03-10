@@ -237,7 +237,7 @@
     mapMarkerGroup.addTo(mapInstance)
 
     L.tileLayer(tileURL, {
-      attribution: "&copy; " + mapAttribution, //No attribution, warning?
+      attribution: "&copy; " + mapAttribution || "",
       zoom: adjustedZoomLevel,
     }).addTo(mapInstance)
 
