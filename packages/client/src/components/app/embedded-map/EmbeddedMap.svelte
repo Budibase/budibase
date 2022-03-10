@@ -20,13 +20,16 @@
   export let titleKey = null
   export let fullScreenEnabled = true
   export let locationEnabled = true
+  export let defaultLocation
   export let tileURL = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+  export let mapAttribution
 
   const { styleable, notificationStore } = getContext("sdk")
   const component = getContext("component")
   const embeddedMapId = `${Helpers.uuid()}-wrapper`
 
   let cachedDeviceCoordinates
+  const fallbackCoordinates = [51.5072, -0.1276] //London
 
   let mapInstance
   let mapMarkerGroup = new L.FeatureGroup()
@@ -38,6 +41,14 @@
     ? 72
     : Math.round(zoomLevel * (maxZoomLevel / 100))
 
+  $: zoomControlUpdated(mapInstance, zoomEnabled)
+  $: locationControlUpdated(mapInstance, locationEnabled)
+  $: fullScreenControlUpdated(mapInstance, fullScreenEnabled)
+  $: updateMapDimensions(
+    mapInstance,
+    $component.styles.normal.width,
+    $component.styles.normal.height
+  )
   $: addMapMarkers(
     mapInstance,
     dataProvider?.rows,
@@ -47,16 +58,10 @@
   )
   $: if (typeof mapInstance === "object" && mapMarkers.length > 0) {
     mapInstance.setZoom(0)
-    mapInstance.fitBounds(mapMarkerGroup.getBounds())
+    mapInstance.fitBounds(mapMarkerGroup.getBounds(), {
+      paddingTopLeft: [0, 24],
+    })
   }
-  $: zoomControlUpdated(mapInstance, zoomEnabled)
-  $: locationControlUpdated(mapInstance, locationEnabled)
-  $: fullScreenControlUpdated(mapInstance, fullScreenEnabled)
-  $: updateMapDimensions(
-    mapInstance,
-    $component.styles.normal.width,
-    $component.styles.normal.height
-  )
 
   const updateMapDimensions = mapInstance => {
     if (typeof mapInstance !== "object") {
@@ -64,6 +69,37 @@
     }
     mapInstance.invalidateSize()
   }
+
+  let isValidLatitude = value => {
+    return !isNaN(value) && value > -90 && value < 90
+  }
+
+  let isValidLongitude = value => {
+    return !isNaN(value) && value > -180 && value < 180
+  }
+
+  const parseDefaultLocation = defaultLocation => {
+    if (typeof defaultLocation !== "string") {
+      return fallbackCoordinates
+    }
+    let defaultLocationParts = defaultLocation.split(",")
+    if (defaultLocationParts.length !== 2) {
+      return fallbackCoordinates
+    }
+
+    let parsedDefaultLatitude = parseFloat(defaultLocationParts[0].trim())
+    let parsedDefaultLongitude = parseFloat(defaultLocationParts[1].trim())
+
+    return isValidLatitude(parsedDefaultLatitude) === true &&
+      isValidLongitude(parsedDefaultLongitude) === true
+      ? [parsedDefaultLatitude, parsedDefaultLongitude]
+      : fallbackCoordinates
+  }
+
+  $: defaultCoordinates =
+    mapMarkers.length > 0
+      ? parseDefaultLocation(defaultLocation)
+      : fallbackCoordinates
 
   // Map Button Controls
   let locationControl = new LocationControl({
@@ -165,14 +201,6 @@
 
     mapMarkerGroup.clearLayers()
 
-    let isValidLatitude = value => {
-      return !isNaN(value) && value > -90 && value < 90
-    }
-
-    let isValidLongitude = value => {
-      return !isNaN(value) && value > -180 && value < 180
-    }
-
     const validRows = rows.filter(row => {
       return isValidLatitude(row[latKey]) && isValidLongitude(row[lngKey])
     })
@@ -203,14 +231,13 @@
   }
 
   const initMap = () => {
-    const initCoords = [51.5072, -0.1276]
+    const initCoords = defaultCoordinates
 
     mapInstance = L.map(embeddedMapId, mapOptions)
     mapMarkerGroup.addTo(mapInstance)
 
     L.tileLayer(tileURL, {
-      attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      attribution: "&copy; " + mapAttribution, //No attribution, warning?
       zoom: adjustedZoomLevel,
     }).addTo(mapInstance)
 
@@ -258,9 +285,5 @@
   .embedded-map {
     height: 100%;
     width: 100%;
-  }
-  :global(.leaflet-tile) {
-    width: 258px !important;
-    height: 258px !important;
   }
 </style>

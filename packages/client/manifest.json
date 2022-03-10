@@ -2499,7 +2499,7 @@
         "type": "boolean",
         "label": "Enable Location",
         "key": "locationEnabled",
-        "defaultValue": false
+        "defaultValue": true
       },
       {
         "type": "boolean",
@@ -2535,6 +2535,18 @@
         "label": "Tile URL",
         "key": "tileURL",
         "defaultValue": "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      },
+      {
+        "type": "text",
+        "label": "Default Location (lat,lng)",
+        "key": "defaultLocation",
+        "defaultValue": "51.5072,-0.1276"
+      },
+      {
+        "type": "text",
+        "label": "Map Attribution",
+        "key": "mapAttribution",
+        "defaultValue": "OpenStreetMap contributors"
       }
     ]
   },
