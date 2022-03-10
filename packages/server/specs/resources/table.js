@@ -188,4 +188,10 @@ module.exports = new Resource()
     tableOutput: object({
       data: tableOutputSchema,
     }),
+    tableSearch: object({
+      data: {
+        type: "array",
+        items: tableOutputSchema,
+      },
+    }),
   })
