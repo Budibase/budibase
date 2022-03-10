@@ -1,4 +1,4 @@
-### Budibase API Next.js example
+# Budibase API + Next.js example
 
 This is an example of how Budibase can be used as a backend for a Postgres database for a Next.js sales app. You will 
 need to follow the walk-through that has been published in the Budibase docs to set up your Budibase app for this example.
