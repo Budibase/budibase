@@ -8,6 +8,7 @@ const roleRoutes = require("./global/roles")
 const sessionRoutes = require("./global/sessions")
 const environmentRoutes = require("./system/environment")
 const tenantsRoutes = require("./system/tenants")
+const statusRoutes = require("./system/status")
 const selfRoutes = require("./global/self")
 
 exports.routes = [
@@ -21,5 +22,6 @@ exports.routes = [
   sessionRoutes,
   roleRoutes,
   environmentRoutes,
+  statusRoutes,
   selfRoutes,
 ]
