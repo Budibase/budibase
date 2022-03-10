@@ -63,6 +63,7 @@ jobs:
         run: | 
           git config user.name "Budibase Helm Bot"
           git config user.email "<>"
+          git reset --hard HEAD
           git pull
           helm package charts/budibase
           git checkout gh-pages
