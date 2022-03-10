@@ -309,7 +309,6 @@ components:
           type: string
       required:
         - name
-        - url
     applicationOutput:
       type: object
       properties:
@@ -1346,8 +1345,6 @@ paths:
         applications.
       tags:
         - applications
-      parameters:
-        - $ref: "#/components/parameters/appId"
       requestBody:
         required: true
         content:
