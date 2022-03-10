@@ -42,12 +42,11 @@ jobs:
         run: | 
           docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
           yarn build:docker:proxy:prod
-          docker tag budibase/proxy:$release_tag budibase/proxy:$PROD_TAG
-          docker push budibase/proxy:$PROD_TAG
+          docker tag budibase/proxy:$release_tag budibase/proxy:k8s
+          docker push budibase/proxy:k8s
         env:
           DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
-          PROD_TAG: k8s
       
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
