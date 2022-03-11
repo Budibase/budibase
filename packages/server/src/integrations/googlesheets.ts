@@ -115,6 +115,10 @@ module GoogleSheetsModule {
       return ""
     }
 
+    getStringConcat(parts: string[]) {
+      return ""
+    }
+
     /**
      * Pull the spreadsheet ID out from a valid google sheets URL
      * @param spreadsheetId - the URL or standard spreadsheetId of the google sheet

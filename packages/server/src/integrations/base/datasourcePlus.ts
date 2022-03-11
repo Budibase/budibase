@@ -8,5 +8,6 @@ export interface DatasourcePlus extends IntegrationBase {
   // if the datasource supports the use of bindings directly (to protect against SQL injection)
   // this returns the format of the identifier
   getBindingIdentifier(): string
+  getStringConcat(parts: string[]): string
   buildSchema(datasourceId: string, entities: Record<string, Table>): any
 }
