@@ -40,7 +40,7 @@
 </p>
 
 <h3 align="center">
-  <a href="https://docs.budibase.com/getting-started">Get started</a>
+  <a href="https://docs.budibase.com/docs/hosting-methods">Get started</a>
   <span> · </span>
   <a href="https://docs.budibase.com">Docs</a>
   <span> · </span>
