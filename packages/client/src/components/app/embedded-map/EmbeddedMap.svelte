@@ -1,6 +1,6 @@
 <script>
   import L from "leaflet"
-  import sanitizeHtml from 'sanitize-html'
+  import sanitizeHtml from "sanitize-html"
   import "leaflet/dist/leaflet.css"
   import { Helpers } from "@budibase/bbui"
   import { getContext } from "svelte"
@@ -238,11 +238,11 @@
     mapMarkerGroup.addTo(mapInstance)
 
     const cleanAttribution = sanitizeHtml(mapAttribution, {
-      allowedTags: [ 'a' ],
+      allowedTags: ["a"],
       allowedAttributes: {
-        'a': [ 'href' ]
-      }
-    });
+        a: ["href"],
+      },
+    })
 
     L.tileLayer(tileURL, {
       attribution: "&copy; " + cleanAttribution,
