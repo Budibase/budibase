@@ -180,7 +180,7 @@ module OracleModule {
     }
 
     getStringConcat(parts: string[]): string {
-      return `concat(${parts.join(", ")})`
+      return parts.join(" || ")
     }
 
     /**
