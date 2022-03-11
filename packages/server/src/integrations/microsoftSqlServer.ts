@@ -129,6 +129,10 @@ module MSSQLModule {
       return `(@p${this.index++})`
     }
 
+    getStringConcat(parts: string[]): string {
+      return `concat(${parts.join(", ")})`
+    }
+
     async connect() {
       try {
         this.client = await this.pool.connect()

@@ -179,6 +179,10 @@ module OracleModule {
       return `:${this.index++}`
     }
 
+    getStringConcat(parts: string[]): string {
+      return `concat(${parts.join(", ")})`
+    }
+
     /**
      * Map the flat tabular columns and constraints data into a nested object
      */
