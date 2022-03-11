@@ -48,7 +48,7 @@ jobs:
           yarn build
           popd
 
-      - name: Build OpenAPI sepc
+      - name: Build OpenAPI spec
         run: |
           pushd packages/server
           yarn
