@@ -126,7 +126,7 @@ module MSSQLModule {
     }
 
     getBindingIdentifier(): string {
-      return `(@p${this.index++})`
+      return `@p${this.index++}`
     }
 
     getStringConcat(parts: string[]): string {
