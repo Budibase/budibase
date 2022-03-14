@@ -40,9 +40,11 @@
 </p>
 
 <h3 align="center">
-  <a href="https://docs.budibase.com/docs/hosting-methods">Get started</a>
+  <a href="https://account.budibase.app/register">Get started - we host (Budibase Cloud)</a>
   <span> · </span>
-  <a href="https://docs.budibase.com">Docs</a>
+  <a href="https://docs.budibase.com/docs/hosting-methods">Get started - you host (Docker, K8s, DO)</a>
+  <span> · </span>
+  <a href="https://docs.budibase.com/docs">Docs</a>
   <span> · </span>
   <a href="https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas">Feature request</a>
   <span> · </span>
@@ -104,12 +106,12 @@ Budibase is made to scale. With Budibase, you can self-host on your own infrastr
 
 ## 🏁 Get started
 
-<a href="https://docs.budibase.com/self-hosting/self-host"><img src="https://res.cloudinary.com/daog6scxm/image/upload/v1634808888/logo/deploy_npl9za.png" /></a>
+<a href="https://docs.budibase.com/docs/hosting-methods"><img src="https://res.cloudinary.com/daog6scxm/image/upload/v1634808888/logo/deploy_npl9za.png" /></a>
 
 Deploy Budibase self-hosted in your existing infrastructure, using Docker, Kubernetes, and Digital Ocean.
 Or use Budibase Cloud if you don't need to self-host, and would like to get started quickly.
 
-### [Get started with self-hosting Budibase](https://docs.budibase.com/self-hosting/self-host)
+### [Get started with self-hosting Budibase](https://docs.budibase.com/docs/hosting-methods)
 
 ### [Get started with Budibase Cloud](https://budibase.com)
 
@@ -118,7 +120,7 @@ Or use Budibase Cloud if you don't need to self-host, and would like to get star
 
 ## 🎓 Learning Budibase
 
-The Budibase documentation [lives here](https://docs.budibase.com).
+The Budibase documentation [lives here](https://docs.budibase.com/docs).
 <br />
 
 
