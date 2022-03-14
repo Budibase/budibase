@@ -51,9 +51,6 @@ class QueryRunner {
       } else {
         sql = sql.replace(binding, variable)
       }
-      // const indexOfBinding = sql.indexOf(binding)
-      // const constantStr = `'${binding}'`
-      // sql = sql.replace(sql.indexOf(constantStr) === indexOfBinding - 1 ? constantStr : binding, variable)
     }
     // replicate the knex structure
     fields.sql = sql
