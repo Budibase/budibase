@@ -216,13 +216,10 @@
         row[titleKey]
       )
 
-      marker.bindPopup(markerContent).addTo(mapMarkerGroup)
-
-      //https://github.com/Leaflet/Leaflet/issues/7331
-      marker.on("click", function () {
-        this.openPopup()
-      })
-
+      marker.bindTooltip(markerContent, {
+        direction: "top",
+        offset: [0, -25]
+      }).addTo(mapMarkerGroup)
       mapMarkers = [...mapMarkers, marker]
     })
   }
