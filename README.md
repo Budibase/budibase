@@ -11,7 +11,7 @@
   The low code platform you'll enjoy using
 </h3>
 <p align="center">
-  Budibase is an open source low-code platform, and the easiest way to build internal tools that improve productivity.
+  Budibase is an open source low-code platform, and the easiest way to build internal apps that improve productivity.
 </p>
 
 <h3 align="center">
