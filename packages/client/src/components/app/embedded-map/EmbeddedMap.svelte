@@ -240,7 +240,7 @@
     const cleanAttribution = sanitizeHtml(mapAttribution, {
       allowedTags: ["a"],
       allowedAttributes: {
-        a: ["href"],
+        a: ["href","target"],
       },
     })
 
