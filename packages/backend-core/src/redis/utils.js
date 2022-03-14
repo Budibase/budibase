@@ -40,7 +40,7 @@ exports.getRedisOptions = (clustered = false) => {
   let redisProtocolUrl
 
   // fully qualified redis URL
-  if (/rediss?/.test(REDIS_URL)) {
+  if (/rediss?:\/\//.test(REDIS_URL)) {
     redisProtocolUrl = REDIS_URL
   }
 
