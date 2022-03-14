@@ -28,13 +28,13 @@
     chalk "^2.0.0"
     js-tokens "^4.0.0"
 
-"@budibase/bbui@^1.0.80-alpha.6", "@budibase/bbui@^1.0.81":
-  version "1.0.81"
-  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-1.0.81.tgz#54365af09bf7fdca4fe84639cec13cb993314e7d"
-  integrity sha512-cYggJ6vDria98edMxOoo4yBAe7EAS1rAy0lSlt89TGTFuK6YNnvXOkE44lyyw/xznYD9WlOLlFX9Sq7lC1yK6w==
+"@budibase/bbui@^1.0.84":
+  version "1.0.84"
+  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-1.0.84.tgz#8bf2f3d93aaf71ae353f93b10cb34e06c99d8176"
+  integrity sha512-GO2qXq5wJ00YCdgl93fP1y9eLwAbX0fpt9WVqNYWcgUzAMkeQAOPr7S0ud05GwLZPo736exxqh6RzSwo5H73sg==
   dependencies:
     "@adobe/spectrum-css-workflow-icons" "^1.2.1"
-    "@budibase/string-templates" "^1.0.81"
+    "@budibase/string-templates" "^1.0.84"
     "@spectrum-css/actionbutton" "^1.0.1"
     "@spectrum-css/actiongroup" "^1.0.1"
     "@spectrum-css/avatar" "^3.0.2"
@@ -80,12 +80,12 @@
     svelte-flatpickr "^3.2.3"
     svelte-portal "^1.0.0"
 
-"@budibase/frontend-core@^1.0.80-alpha.6":
-  version "1.0.81"
-  resolved "https://registry.yarnpkg.com/@budibase/frontend-core/-/frontend-core-1.0.81.tgz#e2c95c4fbeead2bab132b076db54f8bd011718b1"
-  integrity sha512-fGYCTnKs74jOistXy9hvqz32mfX8govm9O8tOhMxR721kL/R5kQEMoMolecRI+Nb7ywuOFdm+2CiVelfDIBjbA==
+"@budibase/frontend-core@^1.0.84":
+  version "1.0.84"
+  resolved "https://registry.yarnpkg.com/@budibase/frontend-core/-/frontend-core-1.0.84.tgz#d21594ddb521b79e2ac1b5322903887268f8a9aa"
+  integrity sha512-v6vTIVq8p+1ytnCWckYUqzzJ4Ylo6DF4C/pi2x5UrZxZuU7tQPMYGktHGQOouosHoGoZXsnPXJooeFHy43j0OQ==
   dependencies:
-    "@budibase/bbui" "^1.0.81"
+    "@budibase/bbui" "^1.0.84"
     lodash "^4.17.21"
     svelte "^3.46.2"
 
@@ -114,10 +114,10 @@
     to-gfm-code-block "^0.1.1"
     year "^0.2.1"
 
-"@budibase/string-templates@^1.0.80-alpha.6", "@budibase/string-templates@^1.0.81":
-  version "1.0.81"
-  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-1.0.81.tgz#c88f1efd647e55bd0c0a51d080b27d0f38962286"
-  integrity sha512-G909aR/IZVH74mmofbXF9F6FwtLfDdkduucQE6nxQCTHSBz2ZTNzbNbrjEn2mxDhNLpnmDeYs4LbHF7GkKSpgA==
+"@budibase/string-templates@^1.0.84":
+  version "1.0.84"
+  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-1.0.84.tgz#66669e9898ed20c6be2c46a5eb19d55003eb6bcb"
+  integrity sha512-6Tv/TfGkmr3uBwNdZ3eKAPKwdsRTZbuQ+02puH+EcJK2leCerINo1SpAHf1BOmjQJynKeslKpSkUiisRVerMEg==
   dependencies:
     "@budibase/handlebars-helpers" "^0.11.8"
     dayjs "^1.10.4"
