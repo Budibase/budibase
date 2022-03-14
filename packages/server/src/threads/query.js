@@ -37,7 +37,23 @@ class QueryRunner {
     for (let binding of bindings) {
       let variable = integration.getBindingIdentifier()
       variables.push(binding)
-      sql = sql.replace(binding, variable)
+      // check if the variable was used as part of a string concat e.g. 'Hello {{binding}}'
+      const charConstRegex = new RegExp(`'[^']*${binding}[^']*'`)
+      const charConstMatch = sql.match(charConstRegex)
+      if (charConstMatch) {
+        let [part1, part2] = charConstMatch[0].split(binding)
+        part1 = `'${part1.substring(1)}'`
+        part2 = `'${part2.substring(0, part2.length - 1)}'`
+        sql = sql.replace(
+          charConstMatch[0],
+          integration.getStringConcat([part1, variable, part2])
+        )
+      } else {
+        sql = sql.replace(binding, variable)
+      }
+      // const indexOfBinding = sql.indexOf(binding)
+      // const constantStr = `'${binding}'`
+      // sql = sql.replace(sql.indexOf(constantStr) === indexOfBinding - 1 ? constantStr : binding, variable)
     }
     // replicate the knex structure
     fields.sql = sql

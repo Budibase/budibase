@@ -148,6 +148,10 @@ module PostgresModule {
       return `$${this.index++}`
     }
 
+    getStringConcat(parts: string[]): string {
+      return parts.join(" || ")
+    }
+
     async internalQuery(query: SqlQuery) {
       const client = this.client
       this.index = 1
