@@ -23,3 +23,8 @@ export const getInfo = async (ctx: any) => {
   }
   ctx.status = 200
 }
+
+export const getQuotaUsage = async (ctx: any) => {
+  const usage = await Pro.Licensing.Quotas.getQuotaUsage()
+  ctx.body = usage
+}
