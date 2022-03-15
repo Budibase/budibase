@@ -28,13 +28,13 @@
     chalk "^2.0.0"
     js-tokens "^4.0.0"
 
-"@budibase/bbui@^1.0.80-alpha.6", "@budibase/bbui@^1.0.81":
-  version "1.0.81"
-  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-1.0.81.tgz#54365af09bf7fdca4fe84639cec13cb993314e7d"
-  integrity sha512-cYggJ6vDria98edMxOoo4yBAe7EAS1rAy0lSlt89TGTFuK6YNnvXOkE44lyyw/xznYD9WlOLlFX9Sq7lC1yK6w==
+"@budibase/bbui@^1.0.85":
+  version "1.0.85"
+  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-1.0.85.tgz#b4f4415f2acfe3f2891413545c5338a250522576"
+  integrity sha512-gxRu48r39b/FLaDIaU89xuPnIjr76b9HoKqx7vgNWyiwaNh6IyyA0LtHRTLj7r2/sLjDCTjYXTVBqDkcmbANpw==
   dependencies:
     "@adobe/spectrum-css-workflow-icons" "^1.2.1"
-    "@budibase/string-templates" "^1.0.81"
+    "@budibase/string-templates" "^1.0.85"
     "@spectrum-css/actionbutton" "^1.0.1"
     "@spectrum-css/actiongroup" "^1.0.1"
     "@spectrum-css/avatar" "^3.0.2"
@@ -80,12 +80,12 @@
     svelte-flatpickr "^3.2.3"
     svelte-portal "^1.0.0"
 
-"@budibase/frontend-core@^1.0.80-alpha.6":
-  version "1.0.81"
-  resolved "https://registry.yarnpkg.com/@budibase/frontend-core/-/frontend-core-1.0.81.tgz#e2c95c4fbeead2bab132b076db54f8bd011718b1"
-  integrity sha512-fGYCTnKs74jOistXy9hvqz32mfX8govm9O8tOhMxR721kL/R5kQEMoMolecRI+Nb7ywuOFdm+2CiVelfDIBjbA==
+"@budibase/frontend-core@^1.0.85":
+  version "1.0.85"
+  resolved "https://registry.yarnpkg.com/@budibase/frontend-core/-/frontend-core-1.0.85.tgz#f44d97016edc54d4bd6a10a6066f9d0f8d5b5a45"
+  integrity sha512-dTHnmWrr87wuulxLsyR7g2hlSOxKtMuDAOXsDZe8drGCiD7gdbSgcYPckJ9dC4XxRJ/rKZN0AZ1tZdRoH7Tx6g==
   dependencies:
-    "@budibase/bbui" "^1.0.81"
+    "@budibase/bbui" "^1.0.85"
     lodash "^4.17.21"
     svelte "^3.46.2"
 
@@ -114,10 +114,10 @@
     to-gfm-code-block "^0.1.1"
     year "^0.2.1"
 
-"@budibase/string-templates@^1.0.80-alpha.6", "@budibase/string-templates@^1.0.81":
-  version "1.0.81"
-  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-1.0.81.tgz#c88f1efd647e55bd0c0a51d080b27d0f38962286"
-  integrity sha512-G909aR/IZVH74mmofbXF9F6FwtLfDdkduucQE6nxQCTHSBz2ZTNzbNbrjEn2mxDhNLpnmDeYs4LbHF7GkKSpgA==
+"@budibase/string-templates@^1.0.85":
+  version "1.0.85"
+  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-1.0.85.tgz#1119ddb28bb3a512a894d4f20b9982cc65911cc7"
+  integrity sha512-buU5+rMRXFTQZlG9M3e+uPuaJ57OXE3pSPt/H0mo/8l7Bs5O1Xs9p8O6k2YvTkvQueJeqfwbL9QbztxPmCK9xQ==
   dependencies:
     "@budibase/handlebars-helpers" "^0.11.8"
     dayjs "^1.10.4"
@@ -291,9 +291,9 @@
   integrity sha512-wjZr7NAcqHK6fxNIGKTYEVtAOJugJTbcz4d8K7DZuUDgBVwLJJHJBi4uJ4KrIRYliMWOvqWTZzCJLmmTfx4cyw==
 
 "@spectrum-css/picker@^1.0.1":
-  version "1.1.14"
-  resolved "https://registry.yarnpkg.com/@spectrum-css/picker/-/picker-1.1.14.tgz#91ac4302fedc0e42ea6ef1e69f8f6a1d902877e5"
-  integrity sha512-/sb47P1PiuJ8CtiZRJ7rOZeDiAqB2SzfJXfmiMxcaCZpKzV92c4F1xG4mlvIM+ymwSoJgD+UevHt6MiELoAbkw==
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/picker/-/picker-1.2.0.tgz#5e986d3b725b2f6820949fb92f6ea6262e11dda7"
+  integrity sha512-NQEZUV7pnT5CliHq08g8dO6KpWgipycpa+vBw+Cqw93h8IjIHWCUU+gUo87EV+h/Z1fI1l/sWguBpwzb/nGEAg==
 
 "@spectrum-css/popover@^3.0.1":
   version "3.0.11"
@@ -301,9 +301,9 @@
   integrity sha512-bzyNQJVw6Mn1EBelTaRlXCdd0ZfykNX9O6SHx3a+jXPYu8VBrRpHm0gsfWzPAz1etd1vj1CxwG/teQt4qvyZ/Q==
 
 "@spectrum-css/progressbar@^1.0.2":
-  version "1.0.20"
-  resolved "https://registry.yarnpkg.com/@spectrum-css/progressbar/-/progressbar-1.0.20.tgz#5d66a72a2961bbd4a14be3e256c9c17a7932e5e6"
-  integrity sha512-+hLr06LLjIX3ROxn419O6QlGJJTh1aXYdvwOTB0iOfZifHkyWNoWC85UYQOiXpcTDo+OEKJbIbvdQ/5W/utCzw==
+  version "1.0.21"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/progressbar/-/progressbar-1.0.21.tgz#892a0f3655e0e0f97734362b1e5763a6c3214dcc"
+  integrity sha512-CC7QrVfFT/IwDSBkTooe8aORVG+SuXC2kxkCbRHz789W4ST/ntM5qv62Axvb9AhR0HTGdEVMJByFt6wsdB5ZpQ==
 
 "@spectrum-css/progresscircle@^1.0.2":
   version "1.0.16"
@@ -346,9 +346,9 @@
   integrity sha512-nxwzVjLPsXoY/v4sdxOVYLcC+cEbGgJyLcLclT5LT9MGSbngFeUMJzzVR4EvehzuN4dH7hrATG7Mbuq29Mf0Hg==
 
 "@spectrum-css/tabs@^3.0.1":
-  version "3.2.6"
-  resolved "https://registry.yarnpkg.com/@spectrum-css/tabs/-/tabs-3.2.6.tgz#e15fc5ac742f4b53df37cd2476f2a347d8385754"
-  integrity sha512-ert7szHDDCD4Hf7D2ozRECt3X+ARZoL6U5B9vJoPghes2YX8lhJI2aIJ82Fg39jj7Y+qaJA1lyPIwS/RqE8grQ==
+  version "3.2.7"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/tabs/-/tabs-3.2.7.tgz#f68a6e2a7ffb93520eb7831fe4e391d58a63d23d"
+  integrity sha512-HsdUL5ytBdhjFbA6CnAnU24Fifs4qWVH0MIdKL5hqsVQOauVgul8VqqaTGIhhfvmRBl5G9GRVrpg0I30qD3iDA==
 
 "@spectrum-css/tag@^3.1.4":
   version "3.3.5"
@@ -2672,9 +2672,9 @@ typo-js@*:
   integrity sha512-bTGLjbD3WqZDR3CgEFkyi9Q/SS2oM29ipXrWfDb4M74ea69QwKAECVceYpaBu0GfdnASMg9Qfl67ttB23nePHg==
 
 uglify-js@^3.1.4:
-  version "3.15.2"
-  resolved "https://registry.yarnpkg.com/uglify-js/-/uglify-js-3.15.2.tgz#1ed2c976f448063b1f87adb68c741be79959f951"
-  integrity sha512-peeoTk3hSwYdoc9nrdiEJk+gx1ALCtTjdYuKSXMTDqq7n1W7dHPqWDdSi+BPL0ni2YMeHD7hKUSdbj3TZauY2A==
+  version "3.15.3"
+  resolved "https://registry.yarnpkg.com/uglify-js/-/uglify-js-3.15.3.tgz#9aa82ca22419ba4c0137642ba0df800cb06e0471"
+  integrity sha512-6iCVm2omGJbsu3JWac+p6kUiOpg3wFO2f8lIXjfEb8RrmLjzog1wTPMmwKB7swfzzqxj9YM+sGUM++u1qN4qJg==
 
 union-value@^1.0.0:
   version "1.0.1"

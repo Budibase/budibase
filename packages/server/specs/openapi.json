@@ -437,8 +437,7 @@
           }
         },
         "required": [
-          "name",
-          "url"
+          "name"
         ]
       },
       "applicationOutput": {
@@ -1802,11 +1801,6 @@
         "description": "Based on application properties (currently only name) search for applications.",
         "tags": [
           "applications"
-        ],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/appId"
-          }
         ],
         "requestBody": {
           "required": true,

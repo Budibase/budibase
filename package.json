@@ -39,7 +39,7 @@
     "lint:prettier": "prettier --check \"packages/**/*.{js,ts,svelte}\"",
     "lint": "yarn run lint:eslint && yarn run lint:prettier",
     "lint:fix:eslint": "eslint --fix packages",
-    "lint:fix:prettier": "prettier --write \"packages/**/*.{js,ts,svelte}\"",
+    "lint:fix:prettier": "prettier --write \"packages/**/*.{js,ts,svelte}\" && prettier --write \"examples/**/*.{js,ts,svelte}\"",
     "lint:fix:ts": "lerna run lint:fix",
     "lint:fix": "yarn run lint:fix:ts && yarn run lint:fix:prettier && yarn run lint:fix:eslint",
     "test:e2e": "lerna run cy:test --stream",
