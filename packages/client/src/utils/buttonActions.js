@@ -241,6 +241,24 @@ const s3UploadHandler = async action => {
   }
 }
 
+const convertToCsv = (headers, rows) => {
+  let csv = headers.map(key => `"${key}"`).join(",")
+
+  for (let row of rows) {
+    csv = `${csv}\n${headers
+      .map(header => {
+        let val = row[header]
+        val =
+          typeof val === "object"
+            ? `"${JSON.stringify(val).replace(/"/g, "'")}"`
+            : `"${val}"`
+        return val.trim()
+      })
+      .join(",")}`
+  }
+  return csv
+}
+
 const exportDataHandler = async action => {
   let selection = rowSelectionStore.actions.getSelection(
     action.parameters.tableComponentId
@@ -252,7 +270,14 @@ const exportDataHandler = async action => {
         rows: selection.selectedRows,
       })
 
-      download(JSON.stringify(data), `export.${action.parameters.type}`)
+      let dataToExport
+      const headers = Object.keys(data[0])
+      if (action.parameters.type === "csv") {
+        dataToExport = convertToCsv(headers, data)
+      } else {
+        dataToExport = JSON.stringify(data)
+      }
+      download(dataToExport, `export.${action.parameters.type}`)
     } catch (error) {
       notificationStore.actions.error("There was an error exporting the data")
     }
