@@ -85,7 +85,12 @@ exports.setInitInfo = ctx => {
 }
 
 exports.getInitInfo = ctx => {
-  ctx.body = getCookie(ctx, Cookies.Init) || {}
+  try {
+    ctx.body = getCookie(ctx, Cookies.Init) || {}
+  } catch (err) {
+    clearCookie(ctx, Cookies.Init)
+    ctx.body = {}
+  }
 }
 
 /**
