@@ -1,6 +1,7 @@
 import { writable, get } from "svelte/store"
 import { API } from "api"
 import { auth } from "stores/portal"
+import { banner } from "@budibase/bbui"
 
 export function createAdminStore() {
   const DEFAULT_CONFIG = {
@@ -30,6 +31,13 @@ export function createAdminStore() {
       x => x?.checked
     ).length
     await getEnvironment()
+
+    // enable system status checks in the cloud
+    if (get(admin).cloud) {
+      await getSystemStatus()
+      checkStatus()
+    }
+
     admin.update(store => {
       store.loaded = true
       store.checklist = checklist
@@ -54,6 +62,21 @@ export function createAdminStore() {
       store.disableAccountPortal = environment.disableAccountPortal
       store.accountPortalUrl = environment.accountPortalUrl
       store.isDev = environment.isDev
+      return store
+    })
+  }
+
+  const checkStatus = async () => {
+    const health = get(admin)?.status?.health
+    if (!health?.passing) {
+      await banner.showStatus()
+    }
+  }
+
+  async function getSystemStatus() {
+    const status = await API.getSystemStatus()
+    admin.update(store => {
+      store.status = status
       return store
     })
   }
