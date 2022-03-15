@@ -37,6 +37,7 @@
   let mapInstance
   let mapMarkerGroup = new L.FeatureGroup()
   let mapMarkers = []
+  let loaded = false
 
   let minZoomLevel = 0
   let maxZoomLevel = 18
@@ -60,20 +61,13 @@
     titleKey,
     onMarkerClick
   )
-  $: if (typeof mapInstance === "object" && mapMarkers.length > 0) {
+  $: if (!loaded && typeof mapInstance === "object" && mapMarkers.length > 0) {
+    loaded = true
     mapInstance.setZoom(0)
     mapInstance.fitBounds(mapMarkerGroup.getBounds(), {
       paddingTopLeft: [0, 24],
     })
   }
-  $: mapInstance?.on("click", e => {
-    if (onMapClick) {
-      onMapClick({
-        lat: e.latlng.lat,
-        lng: e.latlng.lng,
-      })
-    }
-  })
 
   const updateMapDimensions = mapInstance => {
     if (typeof mapInstance !== "object") {
@@ -277,6 +271,17 @@
 
     //Initialise the map
     mapInstance.setView(initCoords, adjustedZoomLevel)
+
+    // Add click handler
+    mapInstance?.on("click", e => {
+      console.log("map clicked!")
+      if (onMapClick) {
+        onMapClick({
+          lat: e.latlng.lat,
+          lng: e.latlng.lng,
+        })
+      }
+    })
   }
 
   const mapAction = () => {
