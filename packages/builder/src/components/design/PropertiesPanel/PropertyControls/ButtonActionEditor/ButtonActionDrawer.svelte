@@ -12,11 +12,13 @@
   import { getAvailableActions } from "./index"
   import { generate } from "shortid"
   import { getButtonContextBindings } from "builderStore/dataBinding"
+  import { currentAsset, store } from "builderStore"
 
   const flipDurationMs = 150
   const EVENT_TYPE_KEY = "##eventHandlerType"
   const actionTypes = getAvailableActions()
 
+  export let key
   export let actions
   export let bindings = []
 
@@ -24,6 +26,9 @@
 
   // These are ephemeral bindings which only exist while executing actions
   $: buttonContextBindings = getButtonContextBindings(
+    $currentAsset,
+    $store.selectedComponentId,
+    key,
     actions,
     selectedAction?.id
   )

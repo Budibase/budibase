@@ -308,7 +308,7 @@ export const enrichButtonActions = (actions, context) => {
   let buttonContext = context.actions || []
 
   const handlers = actions.map(def => handlerMap[def["##eventHandlerType"]])
-  return async () => {
+  return async eventContext => {
     for (let i = 0; i < handlers.length; i++) {
       try {
         // Skip any non-existent action definitions
@@ -317,7 +317,11 @@ export const enrichButtonActions = (actions, context) => {
         }
 
         // Built total context for this action
-        const totalContext = { ...context, actions: buttonContext }
+        const totalContext = {
+          ...context,
+          actions: buttonContext,
+          eventContext,
+        }
 
         // Get and enrich this button action with the total context
         let action = actions[i]
