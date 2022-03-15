@@ -31,16 +31,23 @@ function getApiLimitPerSecond(): number {
 
 if (!env.isTest()) {
   const REDIS_OPTS = getRedisOptions()
-  RateLimit.defaultOptions({
-    store: new Stores.Redis({
-      // @ts-ignore
+  let options
+  if (REDIS_OPTS.redisProtocolUrl) {  // fully qualified redis URL
+    options = {
+      url: REDIS_OPTS.redisProtocolUrl,
+    }
+  } else {
+    options = {
       socket: {
         host: REDIS_OPTS.host,
         port: REDIS_OPTS.port,
       },
       password: REDIS_OPTS.opts.password,
       database: 1,
-    }),
+    }
+  }
+  RateLimit.defaultOptions({
+    store: new Stores.Redis(options)
   })
 }
 // rate limiting, allows for 2 requests per second
