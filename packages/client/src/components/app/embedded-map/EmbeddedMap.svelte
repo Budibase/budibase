@@ -25,6 +25,7 @@
   export let tileURL = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
   export let mapAttribution
   export let onMarkerClick
+  export let onMapClick
 
   const { styleable, notificationStore } = getContext("sdk")
   const component = getContext("component")
@@ -65,6 +66,14 @@
       paddingTopLeft: [0, 24],
     })
   }
+  $: mapInstance?.on("click", e => {
+    if (onMapClick) {
+      onMapClick({
+        lat: e.latlng.lat,
+        lng: e.latlng.lng,
+      })
+    }
+  })
 
   const updateMapDimensions = mapInstance => {
     if (typeof mapInstance !== "object") {
@@ -197,7 +206,14 @@
     maxZoomLevel,
   }
 
-  const addMapMarkers = (mapInstance, rows, latKey, lngKey, titleKey, onClick) => {
+  const addMapMarkers = (
+    mapInstance,
+    rows,
+    latKey,
+    lngKey,
+    titleKey,
+    onClick
+  ) => {
     if (typeof mapInstance !== "object" || !rows || !latKey || !lngKey) {
       return
     }
@@ -218,15 +234,17 @@
         row[titleKey]
       )
 
-      marker.bindTooltip(markerContent, {
-        direction: "top",
-        offset: [0, -25]
-      }).addTo(mapMarkerGroup)
+      marker
+        .bindTooltip(markerContent, {
+          direction: "top",
+          offset: [0, -25],
+        })
+        .addTo(mapMarkerGroup)
 
       if (onClick) {
         marker.on("click", () => {
           onClick({
-            marker: row
+            marker: row,
           })
         })
       }

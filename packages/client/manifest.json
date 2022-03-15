@@ -2567,6 +2567,21 @@
         ]
       },
       {
+        "type": "event",
+        "label": "On map click",
+        "key": "onMapClick",
+        "context": [
+          {
+            "label": "Clicked latitude",
+            "key": "lat"
+          },
+          {
+            "label": "Clicked longitude",
+            "key": "lng"
+          }
+        ]
+      },
+      {
         "type": "boolean",
         "label": "Enable Fullscreen",
         "key": "fullScreenEnabled",
