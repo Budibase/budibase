@@ -20,6 +20,10 @@
       label: "Darkest",
       value: "spectrum--darkest",
     },
+    {
+      label: "Nord",
+      value: "spectrum--nord",
+    },
   ]
 
   const onChangeTheme = async theme => {

@@ -21,6 +21,10 @@ export const getThemeStore = () => {
         `spectrum--${option}`,
         option === state.theme
       )
+
+      // Ensure darkest is always added as this is the base class for custom
+      // themes
+      themeElement.classList.add("spectrum--darkest")
     })
   })
 
