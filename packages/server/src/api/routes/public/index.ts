@@ -5,7 +5,7 @@ import rowEndpoints from "./rows"
 import userEndpoints from "./users"
 import usage from "../../../middleware/usageQuota"
 import authorized from "../../../middleware/authorized"
-import publicApiMiddleware from "../../../middleware/publicApi"
+import publicApi from "../../../middleware/publicApi"
 import { paramResource, paramSubResource } from "../../../middleware/resourceId"
 import { CtxFn } from "./utils/Endpoint"
 import mapperMiddleware from "./middleware/mapper"
@@ -102,26 +102,23 @@ function applyRoutes(
   const paramMiddleware = subResource
     ? paramSubResource(resource, subResource)
     : paramResource(resource)
-  function both(middleware: any, opts?: any) {
-    addMiddleware(endpoints.read, middleware, opts)
-    addMiddleware(endpoints.write, paramMiddleware, opts)
-  }
-  // add the public API headers check
-  both(
-    publicApiMiddleware({
-      requiresAppId:
-        permType !== PermissionTypes.APP && permType !== PermissionTypes.USER,
-    })
-  )
-  // add the output mapper middleware
-  both(mapperMiddleware, { output: true })
+  const publicApiMiddleware = publicApi({
+    requiresAppId:
+      permType !== PermissionTypes.APP && permType !== PermissionTypes.USER,
+  })
+  addMiddleware(endpoints.read, publicApiMiddleware)
+  addMiddleware(endpoints.write, publicApiMiddleware)
   // add the parameter capture middleware
-  both(paramMiddleware)
+  addMiddleware(endpoints.read, paramMiddleware)
+  addMiddleware(endpoints.write, paramMiddleware)
   // add the authorization middleware, using the correct perm type
   addMiddleware(endpoints.read, authorized(permType, PermissionLevels.READ))
   addMiddleware(endpoints.write, authorized(permType, PermissionLevels.WRITE))
   // add the usage quota middleware
   addMiddleware(endpoints.write, usage)
+  // add the output mapper middleware
+  addMiddleware(endpoints.read, mapperMiddleware, { output: true })
+  addMiddleware(endpoints.write, mapperMiddleware, { output: true })
   addToRouter(endpoints.read)
   addToRouter(endpoints.write)
 }
