@@ -1,4 +1,4 @@
-const { Headers } = require("../../../backend-core/src/constants")
+const { Headers } = require("@budibase/backend-core/constants")
 const { getAppId } = require("@budibase/backend-core/utils")
 
 module.exports = function ({ requiresAppId } = {}) {
