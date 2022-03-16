@@ -71,9 +71,7 @@
 
   // Deselect the "select all" checkbox when the user navigates to a new page
   $: {
-    let checkRowCount = rows.filter(o1 =>
-      selectedRows.some(o2 => o1._id === o2._id)
-    )
+    let checkRowCount = rows.filter(o1 => selectedRows.some(o2 => o1 === o2))
     if (checkRowCount.length === 0) {
       checkboxStatus = false
     }
@@ -209,10 +207,8 @@
     if (!allowSelectRows) {
       return
     }
-    if (selectedRows.some(selectedRow => selectedRow._id === row._id)) {
-      selectedRows = selectedRows.filter(
-        selectedRow => selectedRow._id !== row._id
-      )
+    if (selectedRows.some(selectedRow => selectedRow === row)) {
+      selectedRows = selectedRows.filter(selectedRow => selectedRow !== row)
     } else {
       selectedRows = [...selectedRows, row]
     }
@@ -223,15 +219,13 @@
     if (select) {
       // Add any rows which are not already in selected rows
       rows.forEach(row => {
-        if (selectedRows.findIndex(x => x._id === row._id) === -1) {
+        if (selectedRows.findIndex(x => x === row) === -1) {
           selectedRows.push(row)
         }
       })
     } else {
       // Remove any rows from selected rows that are in the current data set
-      selectedRows = selectedRows.filter(el =>
-        rows.every(f => f._id !== el._id)
-      )
+      selectedRows = selectedRows.filter(el => rows.every(f => f !== el))
     }
   }
 
@@ -348,7 +342,7 @@
                 <SelectEditRenderer
                   data={row}
                   selected={selectedRows.findIndex(
-                    selectedRow => selectedRow._id === row._id
+                    selectedRow => selectedRow === row
                   ) !== -1}
                   onEdit={e => editRow(e, row)}
                   {allowSelectRows}
