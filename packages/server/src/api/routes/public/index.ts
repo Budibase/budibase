@@ -5,6 +5,7 @@ import rowEndpoints from "./rows"
 import userEndpoints from "./users"
 import usage from "../../../middleware/usageQuota"
 import authorized from "../../../middleware/authorized"
+import publicApi from "../../../middleware/publicApi"
 import { paramResource, paramSubResource } from "../../../middleware/resourceId"
 import { CtxFn } from "./utils/Endpoint"
 import mapperMiddleware from "./middleware/mapper"
@@ -31,16 +32,24 @@ function getApiLimitPerSecond(): number {
 
 if (!env.isTest()) {
   const REDIS_OPTS = getRedisOptions()
-  RateLimit.defaultOptions({
-    store: new Stores.Redis({
-      // @ts-ignore
+  let options
+  if (REDIS_OPTS.redisProtocolUrl) {
+    // fully qualified redis URL
+    options = {
+      url: REDIS_OPTS.redisProtocolUrl,
+    }
+  } else {
+    options = {
       socket: {
         host: REDIS_OPTS.host,
         port: REDIS_OPTS.port,
       },
       password: REDIS_OPTS.opts.password,
       database: 1,
-    }),
+    }
+  }
+  RateLimit.defaultOptions({
+    store: new Stores.Redis(options),
   })
 }
 // rate limiting, allows for 2 requests per second
@@ -93,6 +102,12 @@ function applyRoutes(
   const paramMiddleware = subResource
     ? paramSubResource(resource, subResource)
     : paramResource(resource)
+  const publicApiMiddleware = publicApi({
+    requiresAppId:
+      permType !== PermissionTypes.APP && permType !== PermissionTypes.USER,
+  })
+  addMiddleware(endpoints.read, publicApiMiddleware)
+  addMiddleware(endpoints.write, publicApiMiddleware)
   // add the parameter capture middleware
   addMiddleware(endpoints.read, paramMiddleware)
   addMiddleware(endpoints.write, paramMiddleware)

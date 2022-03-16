@@ -99,6 +99,10 @@ module MySQLModule {
       return "?"
     }
 
+    getStringConcat(parts: string[]): string {
+      return `concat(${parts.join(", ")})`
+    }
+
     async connect() {
       this.client = await mysql.createConnection(this.config)
     }
