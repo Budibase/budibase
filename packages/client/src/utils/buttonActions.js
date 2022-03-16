@@ -250,9 +250,9 @@ const exportDataHandler = async action => {
       const data = await API.exportRows({
         tableId: selection.tableId,
         rows: selection.selectedRows,
+        format: action.parameters.type,
       })
-
-      download(JSON.stringify(data), `export.${action.parameters.type}`)
+      download(data, `${selection.tableId}.${action.parameters.type}`)
     } catch (error) {
       notificationStore.actions.error("There was an error exporting the data")
     }
