@@ -66,11 +66,14 @@ export const buildRowEndpoints = API => ({
    * @param tableId the table ID to export the rows from
    * @param rows the array of rows to export
    */
-  exportRows: async ({ tableId, rows }) => {
+  exportRows: async ({ tableId, rows, format }) => {
     return await API.post({
-      url: `/api/${tableId}/rows/exportRows`,
+      url: `/api/${tableId}/rows/exportRows?format=${format}`,
       body: {
         rows,
+      },
+      parseResponse: async response => {
+        return await response.text()
       },
     })
   },
