@@ -331,33 +331,36 @@ export const enrichButtonActions = (actions, context) => {
         // If this action is confirmable, show confirmation and await a
         // callback to execute further actions
         if (action.parameters?.confirm) {
-          const defaultText = confirmTextMap[action["##eventHandlerType"]]
-          const confirmText = action.parameters?.confirmText || defaultText
-          confirmationStore.actions.showConfirmation(
-            action["##eventHandlerType"],
-            confirmText,
-            async () => {
-              // When confirmed, execute this action immediately,
-              // then execute the rest of the actions in the chain
-              const result = await callback()
-              if (result !== false) {
-                // Generate a new total context to pass into the next enrichment
-                buttonContext.push(result)
-                const newContext = { ...context, actions: buttonContext }
+          return new Promise(resolve => {
+            const defaultText = confirmTextMap[action["##eventHandlerType"]]
+            const confirmText = action.parameters?.confirmText || defaultText
+            confirmationStore.actions.showConfirmation(
+              action["##eventHandlerType"],
+              confirmText,
+              async () => {
+                // When confirmed, execute this action immediately,
+                // then execute the rest of the actions in the chain
+                const result = await callback()
+                if (result !== false) {
+                  // Generate a new total context to pass into the next enrichment
+                  buttonContext.push(result)
+                  const newContext = { ...context, actions: buttonContext }
 
-                // Enrich and call the next button action
-                const next = enrichButtonActions(
-                  actions.slice(i + 1),
-                  newContext
-                )
-                await next()
+                  // Enrich and call the next button action
+                  const next = enrichButtonActions(
+                    actions.slice(i + 1),
+                    newContext
+                  )
+                  resolve(await next())
+                } else {
+                  resolve(false)
+                }
+              },
+              () => {
+                resolve(false)
               }
-            }
-          )
-
-          // Stop enriching actions when encountering a confirmable action,
-          // as the callback continues the action chain
-          return
+            )
+          })
         }
 
         // For non-confirmable actions, execute the handler immediately
