@@ -10,6 +10,8 @@ const {
 } = require("../../../integrations/utils")
 const ExternalRequest = require("./ExternalRequest")
 const { getAppDB } = require("@budibase/backend-core/context")
+const exporters = require("../view/exporters")
+const { apiFileReturn } = require("../../../utilities/fileSystem")
 
 async function handleRequest(operation, tableId, opts = {}) {
   // make sure the filters are cleaned up, no empty strings for equals, fuzzy or string
@@ -155,6 +157,7 @@ exports.validate = async () => {
 exports.exportRows = async ctx => {
   const { datasourceId, tableName } = breakExternalTableId(ctx.params.tableId)
   const db = getAppDB()
+  let format = ctx.query.format
   const datasource = await db.get(datasourceId)
   if (!datasource || !datasource.entities) {
     ctx.throw(400, "Datasource has not been configured for plus API.")
@@ -164,13 +167,22 @@ exports.exportRows = async ctx => {
   ctx.request.body = {
     query: {
       oneOf: {
-        [table.primaryDisplay]: ctx.request.body.map(
+        [table.primaryDisplay]: ctx.request.body.rows.map(
           id => breakRowIdField(id)[0]
         ),
       },
     },
   }
-  return exports.search(ctx)
+
+  let result = await exports.search(ctx)
+
+  let headers = Object.keys(result.rows[0])
+  const exporter = exporters[format]
+  const filename = `export.${format}`
+  
+  // send down the file
+  ctx.attachment(filename)
+  return apiFileReturn(exporter(headers, result.rows))
 }
 
 exports.fetchEnrichedRow = async ctx => {
