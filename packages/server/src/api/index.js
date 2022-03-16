@@ -5,6 +5,7 @@ const {
   buildTenancyMiddleware,
   buildAppTenancyMiddleware,
 } = require("@budibase/backend-core/auth")
+const { errors } = require("@budibase/backend-core")
 const currentApp = require("../middleware/currentapp")
 const compress = require("koa-compress")
 const zlib = require("zlib")
@@ -64,10 +65,12 @@ router.use(async (ctx, next) => {
     await next()
   } catch (err) {
     ctx.status = err.status || err.statusCode || 500
+    const error = errors.getPublicError(err)
     ctx.body = {
       message: err.message,
       status: ctx.status,
       validationErrors: err.validation,
+      error,
     }
     if (env.NODE_ENV !== "jest") {
       ctx.log.error(err)
