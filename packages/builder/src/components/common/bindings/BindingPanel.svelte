@@ -238,6 +238,9 @@
     border: var(--border-light);
     transition: background-color 130ms ease-in-out, color 130ms ease-in-out,
       border-color 130ms ease-in-out;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   li:not(:last-of-type) {
     margin-bottom: var(--spacing-s);
