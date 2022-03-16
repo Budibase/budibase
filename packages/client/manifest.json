@@ -2557,7 +2557,7 @@
       },
       {
         "type": "event",
-        "label": "On marker click",
+        "label": "On Click Marker",
         "key": "onClickMarker",
         "context": [
           {
@@ -2574,7 +2574,7 @@
       },
       {
         "type": "event",
-        "label": "On create marker",
+        "label": "On Create Marker",
         "key": "onCreateMarker",
         "dependsOn": "creationEnabled",
         "context": [
