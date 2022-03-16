@@ -241,7 +241,6 @@ const s3UploadHandler = async action => {
   }
 }
 
-
 const exportDataHandler = async action => {
   let selection = rowSelectionStore.actions.getSelection(
     action.parameters.tableComponentId
