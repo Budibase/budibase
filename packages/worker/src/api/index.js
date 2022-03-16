@@ -113,21 +113,7 @@ router.use(async (ctx, next) => {
   } catch (err) {
     ctx.log.error(err)
     ctx.status = err.status || err.statusCode || 500
-
-    let error
-    if (err.code || err.type) {
-      // add generic error information
-      error = {
-        code: err.code,
-        type: err.type,
-      }
-
-      // add specific error information
-      if (error.code === errors.codes.USAGE_LIMIT_EXCEEDED) {
-        error.limitName = err.limitName
-      }
-    }
-
+    const error = errors.getPublicError(err)
     ctx.body = {
       message: err.message,
       status: ctx.status,

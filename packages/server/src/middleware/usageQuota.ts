@@ -134,7 +134,7 @@ const appPreDelete = async (ctx: any, usageContext: any) => {
 
 const appPostDelete = async (ctx: any, usageContext: any) => {
   // delete the app rows from usage
-  const rowCount = usageContext[Pro.StaticQuotaName.ROWS].rowCount
+  const rowCount = usageContext[Pro.StaticQuotaName.APPS].rowCount
   if (rowCount) {
     await Pro.Licensing.Quotas.updateUsage(
       -rowCount,
