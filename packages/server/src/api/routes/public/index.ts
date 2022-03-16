@@ -5,6 +5,7 @@ import rowEndpoints from "./rows"
 import userEndpoints from "./users"
 import usage from "../../../middleware/usageQuota"
 import authorized from "../../../middleware/authorized"
+import publicApi from "../../../middleware/publicApi"
 import { paramResource, paramSubResource } from "../../../middleware/resourceId"
 import { CtxFn } from "./utils/Endpoint"
 import mapperMiddleware from "./middleware/mapper"
@@ -101,6 +102,12 @@ function applyRoutes(
   const paramMiddleware = subResource
     ? paramSubResource(resource, subResource)
     : paramResource(resource)
+  const publicApiMiddleware = publicApi({
+    requiresAppId:
+      permType !== PermissionTypes.APP && permType !== PermissionTypes.USER,
+  })
+  addMiddleware(endpoints.read, publicApiMiddleware)
+  addMiddleware(endpoints.write, publicApiMiddleware)
   // add the parameter capture middleware
   addMiddleware(endpoints.read, paramMiddleware)
   addMiddleware(endpoints.write, paramMiddleware)
