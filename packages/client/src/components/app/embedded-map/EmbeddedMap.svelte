@@ -364,6 +364,7 @@
 <style>
   .embedded-map-wrapper {
     background-color: #f1f1f1;
+    height: 320px;
   }
   .map-default {
     min-height: 180px;
