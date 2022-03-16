@@ -30,7 +30,7 @@ function getApiLimitPerSecond(): number {
   return parseInt(env.API_REQ_LIMIT_PER_SEC)
 }
 
-/*if (!env.isTest()) {
+if (!env.isTest()) {
   const REDIS_OPTS = getRedisOptions()
   let options
   if (REDIS_OPTS.redisProtocolUrl) {
@@ -51,7 +51,7 @@ function getApiLimitPerSecond(): number {
   RateLimit.defaultOptions({
     store: new Stores.Redis(options),
   })
-}*/
+}
 // rate limiting, allows for 2 requests per second
 const limiter = RateLimit.middleware({
   interval: { sec: 1 },
