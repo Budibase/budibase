@@ -139,6 +139,11 @@ export interface PaginationJson {
   page?: string | number
 }
 
+export interface RenameColumn {
+  old: string
+  updated: string
+}
+
 export interface RelationshipsJson {
   through?: string
   from?: string
@@ -167,6 +172,7 @@ export interface QueryJson {
   meta?: {
     table?: Table
     tables?: Record<string, Table>
+    renamed: RenameColumn
   }
   extra?: {
     idFilter?: SearchFilters

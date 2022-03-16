@@ -286,10 +286,10 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/backend-core@^1.0.76-alpha.5":
-  version "1.0.76-alpha.5"
-  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.0.76-alpha.5.tgz#e97f73f57dd57a9a8824ad95b05719766b8c7ff6"
-  integrity sha512-BezuMSM2ngKh0pfKznP/wopekGsz5IOfT7Dw88dQwbxkcpUane5eblL1ugSZ9ejcZN6/s2izUDf31uoU/S68yA==
+"@budibase/backend-core@^1.0.84":
+  version "1.0.84"
+  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.0.84.tgz#9fb01669129838419c57f1723e9274cb4bb9dfd5"
+  integrity sha512-8hqRxSHO8A46f/hyzcqCdlku05yXBVEea1/FJdkoEDoCPhbuv04VHQ/f/dwkWctQ/oL8fm8MHpCA4ApyO7bnJA==
   dependencies:
     "@techpass/passport-openidconnect" "^0.3.0"
     aws-sdk "^2.901.0"
@@ -335,10 +335,10 @@
     to-gfm-code-block "^0.1.1"
     year "^0.2.1"
 
-"@budibase/string-templates@^1.0.76-alpha.5":
-  version "1.0.76-alpha.5"
-  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-1.0.76-alpha.5.tgz#7051a6bafa708b54e6c11caff73c8f4279293bef"
-  integrity sha512-zfp306gT10WDbMI2rq+kp5i8qRCZjuK3LLGn8e8llIrccvUYrtMFqOIKlFGgcyu40w86+qnZvJRV8qc/jidR6A==
+"@budibase/string-templates@^1.0.84":
+  version "1.0.84"
+  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-1.0.84.tgz#66669e9898ed20c6be2c46a5eb19d55003eb6bcb"
+  integrity sha512-6Tv/TfGkmr3uBwNdZ3eKAPKwdsRTZbuQ+02puH+EcJK2leCerINo1SpAHf1BOmjQJynKeslKpSkUiisRVerMEg==
   dependencies:
     "@budibase/handlebars-helpers" "^0.11.8"
     dayjs "^1.10.4"
@@ -1382,9 +1382,9 @@ aws-sdk@^2.811.0:
     xml2js "0.4.19"
 
 aws-sdk@^2.901.0:
-  version "2.1082.0"
-  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.1082.0.tgz#f6e107cc1473f17292386e7b9f79a5b8bf2a3350"
-  integrity sha512-aDrUZ63O/ocuC827ursDqFQAm3jhqsJu1DvMCCFg73y+FK9pXXNHp2mwdi3UeeHvtfxISCLCjuyO3VFd/tpVfA==
+  version "2.1092.0"
+  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.1092.0.tgz#79452dee35ab35b8c1de63340a0bd697fa8db3e8"
+  integrity sha512-8PH2rOgZazGT3VfGPkKcvzz2K9ylVfDniJH4WfJXHEBGxu0+XEMDbjuYpe8k/L1C7w0UTP6CuChjqCxgJznrxg==
   dependencies:
     buffer "4.9.2"
     events "1.1.1"
@@ -2115,9 +2115,9 @@ dateformat@^4.5.1:
   integrity sha512-2P0p0pFGzHS5EMnhdxQi7aJN+iMheud0UhG4dlE1DLAlvL8JHjJJTX/CSm4JXwV0Ka5nGk3zC5mcb5bUQUxxMA==
 
 dayjs@^1.10.4:
-  version "1.10.7"
-  resolved "https://registry.yarnpkg.com/dayjs/-/dayjs-1.10.7.tgz#2cf5f91add28116748440866a0a1d26f3a6ce468"
-  integrity sha512-P6twpd70BcPK34K26uJ1KT3wlhpuOAPoMwJzpsIWUxHZ7wpmbdZL/hQqBDfz7hGurYSa5PhzdhDHtt319hL3ig==
+  version "1.10.8"
+  resolved "https://registry.yarnpkg.com/dayjs/-/dayjs-1.10.8.tgz#267df4bc6276fcb33c04a6735287e3f429abec41"
+  integrity sha512-wbNwDfBHHur9UOzNUjeKUOJ0fCb0a52Wx0xInmQ7Y8FstyajiV1NmK1e00cxsr9YrE9r7yAChE0VvpuY5Rnlow==
 
 debug@4, debug@^4.0.1, debug@^4.1.0, debug@^4.1.1, debug@^4.3.1, debug@^4.3.2, debug@^4.3.3:
   version "4.3.3"
@@ -6862,9 +6862,9 @@ typescript@4.3.5:
   integrity sha512-DqQgihaQ9cUrskJo9kIyW/+g0Vxsk8cDtZ52a3NGh0YNTfpUSArXSohyUGnvbPazEPLu398C0UxmKSOrPumUzA==
 
 uglify-js@^3.1.4:
-  version "3.15.1"
-  resolved "https://registry.yarnpkg.com/uglify-js/-/uglify-js-3.15.1.tgz#9403dc6fa5695a6172a91bc983ea39f0f7c9086d"
-  integrity sha512-FAGKF12fWdkpvNJZENacOH0e/83eG6JyVQyanIJaBXCN1J11TUQv1T1/z8S+Z0CG0ZPk1nPcreF/c7lrTd0TEQ==
+  version "3.15.3"
+  resolved "https://registry.yarnpkg.com/uglify-js/-/uglify-js-3.15.3.tgz#9aa82ca22419ba4c0137642ba0df800cb06e0471"
+  integrity sha512-6iCVm2omGJbsu3JWac+p6kUiOpg3wFO2f8lIXjfEb8RrmLjzog1wTPMmwKB7swfzzqxj9YM+sGUM++u1qN4qJg==
 
 uid2@0.0.x:
   version "0.0.4"

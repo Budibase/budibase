@@ -27,7 +27,7 @@ const base = {
   },
 }
 
-const applicationSchema = object(base, { required: ["name", "url"] })
+const applicationSchema = object(base, { required: ["name"] })
 
 const applicationOutputSchema = object(
   {
@@ -97,5 +97,11 @@ module.exports = new Resource()
     application: applicationSchema,
     applicationOutput: object({
       data: applicationOutputSchema,
+    }),
+    applicationSearch: object({
+      data: {
+        type: "array",
+        items: applicationOutputSchema,
+      },
     }),
   })

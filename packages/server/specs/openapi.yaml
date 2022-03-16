@@ -309,7 +309,6 @@ components:
           type: string
       required:
         - name
-        - url
     applicationOutput:
       type: object
       properties:
@@ -358,6 +357,58 @@ components:
             - createdAt
             - updatedAt
             - version
+      required:
+        - data
+    applicationSearch:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                description: The name of the app.
+                type: string
+              url:
+                description: The URL by which the app is accessed, this must be URL encoded.
+                type: string
+              _id:
+                description: The ID of the app.
+                type: string
+              status:
+                description: The status of the app, stating it if is the development or
+                  published version.
+                type: string
+                enum:
+                  - development
+                  - published
+              createdAt:
+                description: States when the app was created, will be constant. Stored in ISO
+                  format.
+                type: string
+              updatedAt:
+                description: States the last time the app was updated - stored in ISO format.
+                type: string
+              version:
+                description: States the version of the Budibase client this app is currently
+                  based on.
+                type: string
+              tenantId:
+                description: In a multi-tenant environment this will state the tenant this app
+                  is within.
+                type: string
+              lockedBy:
+                description: The user this app is currently being built by.
+                type: object
+            required:
+              - _id
+              - name
+              - url
+              - status
+              - createdAt
+              - updatedAt
+              - version
       required:
         - data
     row:
@@ -730,6 +781,175 @@ components:
               type: string
       required:
         - data
+    tableSearch:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            description: The table to be created/updated.
+            type: object
+            required:
+              - name
+              - schema
+              - _id
+            properties:
+              name:
+                description: The name of the table.
+                type: string
+              primaryDisplay:
+                type: string
+                description: The name of the column which should be used in relationship tags
+                  when relating to this table.
+              schema:
+                type: object
+                additionalProperties:
+                  oneOf:
+                    - type: object
+                      properties:
+                        type:
+                          type: string
+                          enum:
+                            - link
+                          description: A relationship column.
+                        constraints:
+                          type: object
+                          description: A constraint can be applied to the column which will be validated
+                            against when a row is saved.
+                          properties:
+                            type:
+                              type: string
+                              enum:
+                                - string
+                                - number
+                                - object
+                                - boolean
+                            presence:
+                              type: boolean
+                              description: Defines whether the column is required or not.
+                        name:
+                          type: string
+                          description: The name of the column.
+                        autocolumn:
+                          type: boolean
+                          description: Defines whether the column is automatically generated.
+                        fieldName:
+                          type: string
+                          description: The name of the column which a relationship column is related to in
+                            another table.
+                        tableId:
+                          type: string
+                          description: The ID of the table which a relationship column is related to.
+                        relationshipType:
+                          type: string
+                          enum:
+                            - one-to-many
+                            - many-to-one
+                            - many-to-many
+                          description: Defines the type of relationship that this column will be used for.
+                        through:
+                          type: string
+                          description: When using a SQL table that contains many to many relationships
+                            this defines the table the relationships are linked
+                            through.
+                        foreignKey:
+                          type: string
+                          description: When using a SQL table that contains a one to many relationship
+                            this defines the foreign key.
+                        throughFrom:
+                          type: string
+                          description: When using a SQL table that utilises a through table, this defines
+                            the primary key in the through table for this table.
+                        throughTo:
+                          type: string
+                          description: When using a SQL table that utilises a through table, this defines
+                            the primary key in the through table for the related
+                            table.
+                    - type: object
+                      properties:
+                        type:
+                          type: string
+                          enum:
+                            - formula
+                          description: A formula column.
+                        constraints:
+                          type: object
+                          description: A constraint can be applied to the column which will be validated
+                            against when a row is saved.
+                          properties:
+                            type:
+                              type: string
+                              enum:
+                                - string
+                                - number
+                                - object
+                                - boolean
+                            presence:
+                              type: boolean
+                              description: Defines whether the column is required or not.
+                        name:
+                          type: string
+                          description: The name of the column.
+                        autocolumn:
+                          type: boolean
+                          description: Defines whether the column is automatically generated.
+                        formula:
+                          type: string
+                          description: Defines a Handlebars or JavaScript formula to use, note that
+                            Javascript formulas are expected to be provided in
+                            the base64 format.
+                        formulaType:
+                          type: string
+                          enum:
+                            - static
+                            - dynamic
+                          description: Defines whether this is a static or dynamic formula.
+                    - type: object
+                      properties:
+                        type:
+                          type: string
+                          enum:
+                            - string
+                            - longform
+                            - options
+                            - number
+                            - boolean
+                            - array
+                            - datetime
+                            - attachment
+                            - link
+                            - formula
+                            - auto
+                            - json
+                            - internal
+                          description: Defines the type of the column, most explain themselves, a link
+                            column is a relationship.
+                        constraints:
+                          type: object
+                          description: A constraint can be applied to the column which will be validated
+                            against when a row is saved.
+                          properties:
+                            type:
+                              type: string
+                              enum:
+                                - string
+                                - number
+                                - object
+                                - boolean
+                            presence:
+                              type: boolean
+                              description: Defines whether the column is required or not.
+                        name:
+                          type: string
+                          description: The name of the column.
+                        autocolumn:
+                          type: boolean
+                          description: Defines whether the column is automatically generated.
+              _id:
+                description: The ID of the table.
+                type: string
+      required:
+        - data
     executeQuery:
       description: The query body must contain the required parameters for the query,
         this depends on query type, setup and bindings.
@@ -803,6 +1023,55 @@ components:
         - name
         - schema
         - _id
+    querySearch:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              _id:
+                description: The ID of the query.
+                type: string
+              datasourceId:
+                description: The ID of the data source the query belongs to.
+                type: string
+              parameters:
+                description: The bindings which are required to perform this query.
+                type: array
+                items:
+                  type: string
+              fields:
+                description: The fields that are used to perform this query, e.g. the sql
+                  statement
+                type: object
+              queryVerb:
+                description: The verb that describes this query.
+                enum:
+                  - create
+                  - read
+                  - update
+                  - delete
+              name:
+                description: The name of the query.
+                type: string
+              schema:
+                description: The schema of the data returned when the query is executed.
+                type: object
+              transformer:
+                description: The JavaScript transformer function, applied after the query
+                  responds with data.
+                type: string
+              readable:
+                description: Whether the query has readable data.
+                type: boolean
+            required:
+              - name
+              - schema
+              - _id
+      required:
+        - data
     user:
       type: object
       properties:
@@ -916,6 +1185,69 @@ components:
             - _id
       required:
         - data
+    userSearch:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              email:
+                description: The email address of the user, this must be unique.
+                type: string
+              password:
+                description: The password of the user if using password based login - this will
+                  never be returned. This can be left out of subsequent requests
+                  (updates) and will be enriched back into the user structure.
+                type: string
+              status:
+                description: The status of the user, if they are active.
+                type: string
+                enum:
+                  - active
+              firstName:
+                description: The first name of the user
+                type: string
+              lastName:
+                description: The last name of the user
+                type: string
+              forceResetPassword:
+                description: If set to true forces the user to reset their password on first
+                  login.
+                type: boolean
+              builder:
+                description: Describes if the user is a builder user or not.
+                type: object
+                properties:
+                  global:
+                    description: If set to true the user will be able to build any app in the
+                      system.
+                    type: boolean
+              admin:
+                description: Describes if the user is an admin user or not.
+                type: object
+                properties:
+                  global:
+                    description: If set to true the user will be able to administrate the system.
+                    type: boolean
+              roles:
+                description: Contains the roles of the user per app (assuming they are not a
+                  builder user).
+                type: object
+                additionalProperties:
+                  type: string
+                  description: A map of app ID (production app ID, minus the _dev component) to a
+                    role ID, e.g. ADMIN.
+              _id:
+                description: The ID of the user.
+                type: string
+            required:
+              - email
+              - roles
+              - _id
+      required:
+        - data
     nameSearch:
       type: object
       properties:
@@ -1013,8 +1345,6 @@ paths:
         applications.
       tags:
         - applications
-      parameters:
-        - $ref: "#/components/parameters/appId"
       requestBody:
         required: true
         content:
@@ -1028,14 +1358,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                required:
-                  - data
-                properties:
-                  data:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/application"
+                $ref: "#/components/schemas/applicationSearch"
               examples:
                 applications:
                   $ref: "#/components/examples/applications"
@@ -1087,14 +1410,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                required:
-                  - data
-                properties:
-                  data:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/query"
+                $ref: "#/components/schemas/querySearch"
               examples:
                 queries:
                   $ref: "#/components/examples/queries"
@@ -1419,14 +1735,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                required:
-                  - data
-                properties:
-                  data:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/table"
+                $ref: "#/components/schemas/tableSearch"
               examples:
                 tables:
                   $ref: "#/components/examples/tables"
@@ -1524,14 +1833,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                required:
-                  - data
-                properties:
-                  data:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/user"
+                $ref: "#/components/schemas/userSearch"
               examples:
                 users:
                   $ref: "#/components/examples/users"

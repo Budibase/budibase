@@ -22,12 +22,25 @@ exports.Databases = {
 exports.SEPARATOR = SEPARATOR
 
 exports.getRedisOptions = (clustered = false) => {
-  const [host, port, ...rest] = REDIS_URL.split(":")
+  let password = REDIS_PASSWORD
+  let url = REDIS_URL.split("//")
+  // get rid of the protocol
+  url = url.length > 1 ? url[1] : url[0]
+  // check for a password etc
+  url = url.split("@")
+  if (url.length > 1) {
+    // get the password
+    password = url[0].split(":")[1]
+    url = url[1]
+  } else {
+    url = url[0]
+  }
+  const [host, port] = url.split(":")
 
   let redisProtocolUrl
 
   // fully qualified redis URL
-  if (rest.length && /rediss?/.test(host)) {
+  if (/rediss?:\/\//.test(REDIS_URL)) {
     redisProtocolUrl = REDIS_URL
   }
 
@@ -37,13 +50,13 @@ exports.getRedisOptions = (clustered = false) => {
   if (clustered) {
     opts.redisOptions = {}
     opts.redisOptions.tls = {}
-    opts.redisOptions.password = REDIS_PASSWORD
+    opts.redisOptions.password = password
     opts.slotsRefreshTimeout = SLOT_REFRESH_MS
     opts.dnsLookup = (address, callback) => callback(null, address)
   } else {
     opts.host = host
     opts.port = port
-    opts.password = REDIS_PASSWORD
+    opts.password = password
   }
   return { opts, host, port, redisProtocolUrl }
 }

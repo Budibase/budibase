@@ -331,7 +331,9 @@ const getSelectedRowsBindings = asset => {
     bindings = bindings.concat(
       tables.map(table => ({
         type: "context",
-        runtimeBinding: `${safeState}.${makePropSafe(table._id)}`,
+        runtimeBinding: `${safeState}.${makePropSafe(table._id)}.${makePropSafe(
+          "selectedRows"
+        )}`,
         readableBinding: `${table._instanceName}.Selected rows`,
       }))
     )
@@ -343,7 +345,9 @@ const getSelectedRowsBindings = asset => {
     bindings = bindings.concat(
       tableBlocks.map(block => ({
         type: "context",
-        runtimeBinding: `${safeState}.${makePropSafe(block._id + "-table")}`,
+        runtimeBinding: `${safeState}.${makePropSafe(
+          block._id + "-table"
+        )}.${makePropSafe("selectedRows")}`,
         readableBinding: `${block._instanceName}.Selected rows`,
       }))
     )
