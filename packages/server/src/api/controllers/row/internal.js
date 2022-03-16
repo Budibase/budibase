@@ -377,11 +377,11 @@ exports.exportRows = async ctx => {
   ).rows.map(row => row.doc)
 
   let rows = await outputProcessing(table, response)
-  
+
   let headers = Object.keys(rows[0])
   const exporter = exporters[format]
   const filename = `export.${format}`
-  
+
   // send down the file
   ctx.attachment(filename)
   return apiFileReturn(exporter(headers, rows))

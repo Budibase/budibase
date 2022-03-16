@@ -179,7 +179,7 @@ exports.exportRows = async ctx => {
   let headers = Object.keys(result.rows[0])
   const exporter = exporters[format]
   const filename = `export.${format}`
-  
+
   // send down the file
   ctx.attachment(filename)
   return apiFileReturn(exporter(headers, result.rows))
