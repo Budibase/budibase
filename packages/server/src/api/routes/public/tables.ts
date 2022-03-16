@@ -148,14 +148,7 @@ read.push(new Endpoint("get", "/tables/:tableId", controller.read))
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               required:
- *                 - data
- *               properties:
- *                 data:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/table'
+ *               $ref: '#/components/schemas/tableSearch'
  *             examples:
  *               tables:
  *                 $ref: '#/components/examples/tables'

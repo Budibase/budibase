@@ -137,3 +137,12 @@ exports.fetchEnrichedRow = async function (ctx) {
     ctx.throw(400, err)
   }
 }
+
+exports.export = async function (ctx) {
+  const tableId = getTableId(ctx)
+  try {
+    ctx.body = await pickApi(tableId).exportRows(ctx)
+  } catch (err) {
+    ctx.throw(400, err)
+  }
+}

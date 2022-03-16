@@ -34,7 +34,7 @@ jobs:
         run: | 
           docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
           yarn build:docker:proxy:preprod
-          docker tag budibase/proxy:$release_tag budibase/proxy:$PREPROD_TAG
+          docker tag proxy-service budibase/proxy:$PREPROD_TAG
           docker push budibase/proxy:$PREPROD_TAG
         env:
           DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}

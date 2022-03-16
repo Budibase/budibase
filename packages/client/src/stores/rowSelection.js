@@ -1,13 +1,21 @@
-import { writable } from "svelte/store"
+import { get, writable } from "svelte/store"
 
 const createRowSelectionStore = () => {
   const store = writable({})
 
-  function updateSelection(componentId, selectedRows) {
+  function updateSelection(componentId, tableId, selectedRows) {
     store.update(state => {
-      state[componentId] = [...selectedRows]
+      state[componentId] = { tableId: tableId, selectedRows: selectedRows }
       return state
     })
+  }
+
+  function getSelection(tableComponentId) {
+    const selection = get(store)
+    const componentId = Object.keys(selection).find(
+      componentId => componentId === tableComponentId
+    )
+    return selection[componentId] || {}
   }
 
   return {
@@ -15,6 +23,7 @@ const createRowSelectionStore = () => {
     set: store.set,
     actions: {
       updateSelection,
+      getSelection,
     },
   }
 }

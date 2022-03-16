@@ -28,7 +28,7 @@
     chalk "^2.0.0"
     js-tokens "^4.0.0"
 
-"@budibase/handlebars-helpers@^0.11.7":
+"@budibase/handlebars-helpers@^0.11.8":
   version "0.11.8"
   resolved "https://registry.yarnpkg.com/@budibase/handlebars-helpers/-/handlebars-helpers-0.11.8.tgz#6953d29673a8c5c407e096c0a84890465c7ce841"
   integrity sha512-ggWJUt0GqsHFAEup5tlWlcrmYML57nKhpNGGLzVsqXVYN8eVmf3xluYmmMe7fDYhQH0leSprrdEXmsdFQF3HAQ==
@@ -53,12 +53,12 @@
     to-gfm-code-block "^0.1.1"
     year "^0.2.1"
 
-"@budibase/string-templates@^1.0.72-alpha.0":
-  version "1.0.75"
-  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-1.0.75.tgz#5b4061f1a626160ec092f32f036541376298100c"
-  integrity sha512-hPgr6n5cpSCGFEha5DS/P+rtRXOLc72M6y4J/scl59JvUi/ZUJkjRgJdpQPdBLu04CNKp89V59+rAqAuDjOC0g==
+"@budibase/string-templates@^1.0.84":
+  version "1.0.84"
+  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-1.0.84.tgz#66669e9898ed20c6be2c46a5eb19d55003eb6bcb"
+  integrity sha512-6Tv/TfGkmr3uBwNdZ3eKAPKwdsRTZbuQ+02puH+EcJK2leCerINo1SpAHf1BOmjQJynKeslKpSkUiisRVerMEg==
   dependencies:
-    "@budibase/handlebars-helpers" "^0.11.7"
+    "@budibase/handlebars-helpers" "^0.11.8"
     dayjs "^1.10.4"
     handlebars "^4.7.6"
     handlebars-utils "^1.0.6"
@@ -3410,9 +3410,9 @@ typo-js@*:
   integrity sha512-bTGLjbD3WqZDR3CgEFkyi9Q/SS2oM29ipXrWfDb4M74ea69QwKAECVceYpaBu0GfdnASMg9Qfl67ttB23nePHg==
 
 uglify-js@^3.1.4:
-  version "3.15.1"
-  resolved "https://registry.yarnpkg.com/uglify-js/-/uglify-js-3.15.1.tgz#9403dc6fa5695a6172a91bc983ea39f0f7c9086d"
-  integrity sha512-FAGKF12fWdkpvNJZENacOH0e/83eG6JyVQyanIJaBXCN1J11TUQv1T1/z8S+Z0CG0ZPk1nPcreF/c7lrTd0TEQ==
+  version "3.15.3"
+  resolved "https://registry.yarnpkg.com/uglify-js/-/uglify-js-3.15.3.tgz#9aa82ca22419ba4c0137642ba0df800cb06e0471"
+  integrity sha512-6iCVm2omGJbsu3JWac+p6kUiOpg3wFO2f8lIXjfEb8RrmLjzog1wTPMmwKB7swfzzqxj9YM+sGUM++u1qN4qJg==
 
 unbox-primitive@^1.0.0:
   version "1.0.1"
@@ -3503,9 +3503,9 @@ vendors@^1.0.0:
   integrity sha512-/juG65kTL4Cy2su4P8HjtkTxk6VmJDiOPBufWniqQ6wknac6jNiXS9vU+hO3wgusiyqWlzTbVHi0dyJqRONg3w==
 
 vm2@^3.9.4:
-  version "3.9.8"
-  resolved "https://registry.yarnpkg.com/vm2/-/vm2-3.9.8.tgz#e99c000db042735cd2f94d8db6c42163a17be04e"
-  integrity sha512-/1PYg/BwdKzMPo8maOZ0heT7DLI0DAFTm7YQaz/Lim9oIaFZsJs3EdtalvXuBfZwczNwsYhju75NW4d6E+4q+w==
+  version "3.9.9"
+  resolved "https://registry.yarnpkg.com/vm2/-/vm2-3.9.9.tgz#c0507bc5fbb99388fad837d228badaaeb499ddc5"
+  integrity sha512-xwTm7NLh/uOjARRBs8/95H0e8fT3Ukw5D/JJWhxMbhKzNh1Nu981jQKvkep9iKYNxzlVrdzD0mlBGkDKZWprlw==
   dependencies:
     acorn "^8.7.0"
     acorn-walk "^8.2.0"
