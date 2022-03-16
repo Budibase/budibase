@@ -1,7 +1,6 @@
 const {
   getGlobalUserParams,
   StaticDatabases,
-  generateNewUsageQuotaDoc,
 } = require("@budibase/backend-core/db")
 const {
   hash,
@@ -9,9 +8,9 @@ const {
   saveUser,
   platformLogout,
 } = require("@budibase/backend-core/utils")
-const { EmailTemplatePurpose } = require("../../../constants")
-const { checkInviteCode } = require("../../../utilities/redis")
-const { sendEmail } = require("../../../utilities/email")
+import { EmailTemplatePurpose } from "../../../constants"
+import { checkInviteCode } from "../../../utilities/redis"
+import { sendEmail } from "../../../utilities/email"
 const { user: userCache } = require("@budibase/backend-core/cache")
 const { invalidateSessions } = require("@budibase/backend-core/sessions")
 const accounts = require("@budibase/backend-core/accounts")
@@ -22,36 +21,37 @@ const {
   doesTenantExist,
 } = require("@budibase/backend-core/tenancy")
 const { removeUserFromInfoDB } = require("@budibase/backend-core/deprovision")
-const env = require("../../../environment")
-const { syncUserInApps } = require("../../../utilities/appService")
+import env from "../../../environment"
+import { syncUserInApps } from "../../../utilities/appService"
 const { errors } = require("@budibase/backend-core")
+import * as Pro from "@budibase/pro"
 
-async function allUsers() {
+const allUsers = async () => {
   const db = getGlobalDB()
   const response = await db.allDocs(
     getGlobalUserParams(null, {
       include_docs: true,
     })
   )
-  return response.rows.map(row => row.doc)
+  return response.rows.map((row: any) => row.doc)
 }
 
-exports.save = async ctx => {
+export const save = async (ctx: any) => {
   try {
     const user = await saveUser(ctx.request.body, getTenantId())
     // let server know to sync user
     await syncUserInApps(user._id)
     ctx.body = user
-  } catch (err) {
+  } catch (err: any) {
     ctx.throw(err.status || 400, err)
   }
 }
 
-const parseBooleanParam = param => {
+const parseBooleanParam = (param: any) => {
   return !(param && param === "false")
 }
 
-exports.adminUser = async ctx => {
+export const adminUser = async (ctx: any) => {
   const { email, password, tenantId } = ctx.request.body
 
   // account portal sends a pre-hashed password - honour param to prevent double hashing
@@ -81,10 +81,10 @@ exports.adminUser = async ctx => {
     } catch (err) {
       // don't worry about errors
     }
-    await db.put(generateNewUsageQuotaDoc())
+    await db.put(Pro.Licensing.Quotas.generateNewQuotaUsage())
   }
 
-  if (response.rows.some(row => row.doc.admin)) {
+  if (response.rows.some((row: any) => row.doc.admin)) {
     ctx.throw(
       403,
       "You cannot initialise once an global user has been created."
@@ -106,12 +106,12 @@ exports.adminUser = async ctx => {
   }
   try {
     ctx.body = await saveUser(user, tenantId, hashPassword, requirePassword)
-  } catch (err) {
+  } catch (err: any) {
     ctx.throw(err.status || 400, err)
   }
 }
 
-exports.destroy = async ctx => {
+export const destroy = async (ctx: any) => {
   const db = getGlobalDB()
   const dbUser = await db.get(ctx.params.id)
 
@@ -139,10 +139,10 @@ exports.destroy = async ctx => {
   }
 }
 
-exports.removeAppRole = async ctx => {
+export const removeAppRole = async (ctx: any) => {
   const { appId } = ctx.params
   const db = getGlobalDB()
-  const users = await allUsers(ctx)
+  const users = await allUsers()
   const bulk = []
   const cacheInvalidations = []
   for (let user of users) {
@@ -162,7 +162,7 @@ exports.removeAppRole = async ctx => {
 /**
  * Add the attributes that are session based to the current user.
  */
-const addSessionAttributesToUser = ctx => {
+const addSessionAttributesToUser = (ctx: any) => {
   ctx.body.account = ctx.user.account
   ctx.body.license = ctx.user.license
   ctx.body.budibaseAccess = ctx.user.budibaseAccess
@@ -174,7 +174,7 @@ const addSessionAttributesToUser = ctx => {
  * Remove the attributes that are session based from the current user,
  * so that stale values are not written to the db
  */
-const removeSessionAttributesFromUser = ctx => {
+const removeSessionAttributesFromUser = (ctx: any) => {
   delete ctx.request.body.csrfToken
   delete ctx.request.body.account
   delete ctx.request.body.accountPortalAccess
@@ -182,7 +182,7 @@ const removeSessionAttributesFromUser = ctx => {
   delete ctx.request.body.license
 }
 
-exports.getSelf = async ctx => {
+export const getSelf = async (ctx: any) => {
   if (!ctx.user) {
     ctx.throw(403, "User not logged in")
   }
@@ -194,7 +194,7 @@ exports.getSelf = async ctx => {
   addSessionAttributesToUser(ctx)
 }
 
-exports.updateSelf = async ctx => {
+export const updateSelf = async (ctx: any) => {
   const db = getGlobalDB()
   const user = await db.get(ctx.user._id)
   if (ctx.request.body.password) {
@@ -224,8 +224,8 @@ exports.updateSelf = async ctx => {
 }
 
 // called internally by app server user fetch
-exports.fetch = async ctx => {
-  const users = await allUsers(ctx)
+export const fetch = async (ctx: any) => {
+  const users = await allUsers()
   // user hashed password shouldn't ever be returned
   for (let user of users) {
     if (user) {
@@ -236,7 +236,7 @@ exports.fetch = async ctx => {
 }
 
 // called internally by app server user find
-exports.find = async ctx => {
+export const find = async (ctx: any) => {
   const db = getGlobalDB()
   let user
   try {
@@ -251,7 +251,7 @@ exports.find = async ctx => {
   ctx.body = user
 }
 
-exports.tenantUserLookup = async ctx => {
+export const tenantUserLookup = async (ctx: any) => {
   const id = ctx.params.id
   const user = await getTenantUser(id)
   if (user) {
@@ -261,7 +261,7 @@ exports.tenantUserLookup = async ctx => {
   }
 }
 
-exports.invite = async ctx => {
+export const invite = async (ctx: any) => {
   let { email, userInfo } = ctx.request.body
   const existing = await getGlobalUserByEmail(email)
   if (existing) {
@@ -271,20 +271,21 @@ exports.invite = async ctx => {
     userInfo = {}
   }
   userInfo.tenantId = getTenantId()
-  await sendEmail(email, EmailTemplatePurpose.INVITATION, {
+  const opts: any = {
     subject: "{{ company }} platform invitation",
     info: userInfo,
-  })
+  }
+  await sendEmail(email, EmailTemplatePurpose.INVITATION, opts)
   ctx.body = {
     message: "Invitation has been sent.",
   }
 }
 
-exports.inviteAccept = async ctx => {
+export const inviteAccept = async (ctx: any) => {
   const { inviteCode, password, firstName, lastName } = ctx.request.body
   try {
     // info is an extension of the user object that was stored by global
-    const { email, info } = await checkInviteCode(inviteCode)
+    const { email, info }: any = await checkInviteCode(inviteCode)
     ctx.body = await saveUser(
       {
         firstName,
@@ -295,7 +296,7 @@ exports.inviteAccept = async ctx => {
       },
       info.tenantId
     )
-  } catch (err) {
+  } catch (err: any) {
     if (err.code === errors.codes.USAGE_LIMIT_EXCEEDED) {
       // explicitly re-throw limit exceeded errors
       ctx.throw(400, err)
