@@ -536,18 +536,30 @@ export const getFrontendStore = () => {
             if (!selectedAsset) {
               return state
             }
-            const parent = findComponentParent(
-              selectedAsset.props,
-              targetComponent._id
-            )
-            if (!parent) {
-              return state
-            }
+            // if the selected target is a screen, add it to the children, save it, select the screen and than the component
+            if (targetComponent.layoutId) {
+              targetComponent.props._children.push(cloneDeep(componentToPaste))
 
-            // Insert the component in the correct position
-            const targetIndex = parent._children.indexOf(targetComponent)
-            const index = mode === "above" ? targetIndex : targetIndex + 1
-            parent._children.splice(index, 0, cloneDeep(componentToPaste))
+              promises.push(store.actions.preview.saveSelected())
+              store.actions.screens.select(targetComponent._id)
+              store.actions.components.select(componentToPaste)
+            } else {
+              const parent = findComponentParent(
+                selectedAsset.props,
+                targetComponent._id
+              )
+              if (!parent) {
+                return state
+              }
+
+              // Insert the component in the correct position
+              const targetIndex = parent._children.indexOf(targetComponent)
+              const index = mode === "above" ? targetIndex : targetIndex + 1
+              parent._children.splice(index, 0, cloneDeep(componentToPaste))
+
+              promises.push(store.actions.preview.saveSelected())
+              store.actions.components.select(componentToPaste)
+            }
           }
 
           // Save and select the new component
