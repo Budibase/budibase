@@ -1,4 +1,5 @@
 <script>
+  import { getContext } from "svelte"
   import {
     store,
     selectedComponent,
@@ -21,6 +22,7 @@
   }
 
   const dragDropStore = instantiateStore()
+  const scrollApi = getContext("scroll")
 
   export let route
   export let path
@@ -73,6 +75,9 @@
     opened={routeOpened}
     {border}
     withArrow={route.subpaths}
+    on:mouseover={e => {
+      scrollApi.scrollTo(0, e.detail)
+    }}
   />
 
   {#if routeOpened}
@@ -85,6 +90,9 @@
         text={ROUTE_NAME_MAP[screen.route]?.[screen.role] || screen.route}
         withArrow={route.subpaths}
         on:click={() => changeScreen(screen.id)}
+        on:mouseover={e => {
+          scrollApi.scrollTo(1, e.detail)
+        }}
       >
         <ScreenDropdownMenu screenId={screen.id} />
       </NavItem>

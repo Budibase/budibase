@@ -1,5 +1,5 @@
 <script>
-  import { onMount } from "svelte"
+  import { onMount, setContext } from "svelte"
   import { goto, params } from "@roxi/routify"
   import {
     store,
@@ -18,10 +18,45 @@
     Search,
     Tabs,
     Tab,
+    Layout as BBUILayout,
     notifications,
   } from "@budibase/bbui"
 
   export let showModal
+
+  let scrollRef
+
+  const scrollTo = (indent, width) => {
+    if (!indent) {
+      return
+    }
+
+    // Padding left + icon
+    const end = indent * 14 + 20 + 16 + 4 + width + 40
+    let scrollLeft = 0
+
+    if (end > 259) {
+      scrollLeft = end - 259
+    }
+
+    if (scrollLeft === scrollRef.scrollLeft) {
+      return
+    }
+
+    scrollRef.scroll({
+      left: scrollLeft,
+      behavior: "smooth",
+    })
+
+    // if (indentLevel === 0) {
+    // } else {
+    //   scrollRef.scrollLeft = 4 + indentLevel * 14
+    // }
+  }
+
+  setContext("scroll", {
+    scrollTo,
+  })
 
   const tabs = [
     {
@@ -79,7 +114,7 @@
   <Tabs {selected} on:select={navigate}>
     <Tab title="Screens">
       <div class="tab-content-padding">
-        <div class="role-select">
+        <BBUILayout noPadding gap="XS">
           <Select
             on:change={updateAccessRole}
             value={$selectedAccessRole}
@@ -93,8 +128,8 @@
             label="Search Screens"
             bind:value={$screenSearchString}
           />
-        </div>
-        <div class="nav-items-container">
+        </BBUILayout>
+        <div class="nav-items-container" bind:this={scrollRef}>
           <ComponentNavigationTree />
         </div>
       </div>
@@ -126,23 +161,36 @@
     justify-content: flex-start;
     align-items: stretch;
     position: relative;
+    flex: 1 1 auto;
   }
+  .title :global(.spectrum-Tabs-content),
+  .title :global(.spectrum-Tabs-content > div),
+  .title :global(.spectrum-Tabs-content > div > div) {
+    height: 100%;
+  }
+
   .add-button {
     position: absolute;
     top: var(--spacing-l);
     right: var(--spacing-xl);
   }
 
-  .role-select {
+  .tab-content-padding {
+    padding: 0 var(--spacing-xl);
+    height: 100%;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
-    margin-bottom: var(--spacing-m);
-    gap: var(--spacing-m);
+    gap: var(--spacing-xl);
   }
 
-  .tab-content-padding {
-    padding: 0 var(--spacing-xl);
+  .nav-items-container {
+    border-top: var(--border-light);
+    margin: 0 calc(-1 * var(--spacing-xl));
+    padding: var(--spacing-m) 0;
+    flex: 1 1 auto;
+    overflow: auto;
+    height: 0;
   }
 </style>
