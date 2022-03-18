@@ -38,7 +38,11 @@ export abstract class ImportSource {
       if (typeof url === "string") {
         path = `${url}/${path}`
       } else {
-        path = `${url.origin}/${path}`
+        let href = url.href
+        if (href.endsWith("/")) {
+          href = href.slice(0, -1)
+        }
+        path = `${href}/${path}`
       }
     }
     queryString = this.processQuery(queryString)
