@@ -1,6 +1,6 @@
 import { getTenantId } from "@budibase/backend-core/tenancy"
 import { utils } from "@budibase/backend-core"
-import * as Pro from "@budibase/pro"
+import { quotas, QuotaUsageType, StaticQuotaName } from "@budibase/pro"
 
 export const run = async () => {
   // get developer count
@@ -11,9 +11,9 @@ export const run = async () => {
   console.log(
     `[Tenant: ${tenantId}] Syncing developer count: ${developerCount}`
   )
-  await Pro.Licensing.Quotas.setUsage(
+  await quotas.setUsage(
     developerCount,
-    Pro.StaticQuotaName.DEVELOPERS,
-    Pro.QuotaUsageType.STATIC
+    StaticQuotaName.DEVELOPERS,
+    QuotaUsageType.STATIC
   )
 }

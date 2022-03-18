@@ -181,12 +181,6 @@ exports.saveUser = async (
   hashPassword = true,
   requirePassword = true
 ) => {
-  // // new user
-  // // check license restrictions
-  // if (!user._id && user.builder) {
-  //   await limits.checkMaxDevelopers()
-  // }
-
   if (!tenantId) {
     throw "No tenancy specified."
   }

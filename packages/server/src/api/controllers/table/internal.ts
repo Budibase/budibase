@@ -11,7 +11,7 @@ const { getAppDB } = require("@budibase/backend-core/context")
 import { isTest } from "../../../environment"
 import { cleanupAttachments } from "../../../utilities/rowProcessor"
 import { runStaticFormulaChecks } from "./bulkFormula"
-import * as Pro from "@budibase/pro"
+import { quotas, QuotaUsageType, StaticQuotaName } from "@budibase/pro"
 
 export async function save(ctx: any) {
   const db = getAppDB()
@@ -120,10 +120,10 @@ export async function destroy(ctx: any) {
   await db.bulkDocs(
     rows.rows.map((row: any) => ({ ...row.doc, _deleted: true }))
   )
-  await Pro.Licensing.Quotas.updateUsage(
+  await quotas.updateUsage(
     -rows.rows.length,
-    Pro.StaticQuotaName.ROWS,
-    Pro.QuotaUsageType.STATIC
+    StaticQuotaName.ROWS,
+    QuotaUsageType.STATIC
   )
 
   // update linked rows

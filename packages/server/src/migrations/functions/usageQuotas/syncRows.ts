@@ -1,7 +1,7 @@
 import { getTenantId } from "@budibase/backend-core/tenancy"
 import { getAllApps } from "@budibase/backend-core/db"
-import * as Pro from "@budibase/pro"
 import { getUniqueRows } from "../../../utilities/usageQuota/rows"
+import { quotas, QuotaUsageType, StaticQuotaName } from "@budibase/pro"
 
 export const run = async () => {
   // get all rows in all apps
@@ -15,9 +15,5 @@ export const run = async () => {
   // sync row count
   const tenantId = getTenantId()
   console.log(`[Tenant: ${tenantId}] Syncing row count: ${rowCount}`)
-  await Pro.Licensing.Quotas.setUsage(
-    rowCount,
-    Pro.StaticQuotaName.ROWS,
-    Pro.QuotaUsageType.STATIC
-  )
+  await quotas.setUsage(rowCount, StaticQuotaName.ROWS, QuotaUsageType.STATIC)
 }
