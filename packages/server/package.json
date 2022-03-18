@@ -77,6 +77,7 @@
     "@bull-board/api": "^3.7.0",
     "@bull-board/koa": "^3.7.0",
     "@elastic/elasticsearch": "7.10.0",
+    "@google-cloud/firestore": "^5.0.2",
     "@koa/router": "8.0.0",
     "@sendgrid/mail": "7.1.1",
     "@sentry/node": "^6.0.0",
