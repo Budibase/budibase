@@ -15,6 +15,7 @@
   export let iconColor
 
   const dispatch = createEventDispatcher()
+  let textRef
 
   function onIconClick(event) {
     event.stopPropagation()
@@ -26,49 +27,58 @@
   class="nav-item"
   class:border
   class:selected
-  style={`padding-left: ${indentLevel * 14}px`}
+  style={`padding-left: ${20 + indentLevel * 14}px`}
   {draggable}
   on:dragend
   on:dragstart
   on:dragover
   on:drop
   on:click
+  on:mouseover={() => {
+    const size = textRef.getBoundingClientRect()
+    dispatch("mouseover", size.width)
+  }}
   ondragover="return false"
   ondragenter="return false"
 >
-  <div class="content">
-    {#if withArrow}
-      <div class:opened class="icon arrow" on:click={onIconClick}>
-        <Icon size="S" name="ChevronRight" />
-      </div>
-    {/if}
+  {#if withArrow}
+    <div class:opened class="icon arrow" on:click={onIconClick}>
+      <Icon size="S" name="ChevronRight" />
+    </div>
+  {/if}
 
-    <slot name="icon" />
-    {#if iconText}
-      <div class="iconText" style={iconColor ? `color: ${iconColor};` : ""}>
-        {iconText}
-      </div>
-    {:else if icon}
-      <div class="icon">
-        <Icon color={iconColor} size="S" name={icon} />
-      </div>
-    {/if}
-    <div class="text">{text}</div>
-    {#if withActions}
-      <div class="actions">
-        <slot />
-      </div>
-    {/if}
-  </div>
+  <slot name="icon" />
+  {#if iconText}
+    <div class="iconText" style={iconColor ? `color: ${iconColor};` : ""}>
+      {iconText}
+    </div>
+  {:else if icon}
+    <div class="icon">
+      <Icon color={iconColor} size="S" name={icon} />
+    </div>
+  {/if}
+  <div class="text" bind:this={textRef}>{text}</div>
+  {#if withActions}
+    <div class="actions">
+      <slot />
+    </div>
+  {/if}
 </div>
 
 <style>
   .nav-item {
-    border-radius: var(--border-radius-s);
     cursor: pointer;
     color: var(--grey-7);
     transition: background-color
       var(--spectrum-global-animation-duration-100, 130ms) ease-in-out;
+    padding: 0 var(--spacing-m) 0 var(--spacing-xl);
+    height: 32px;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    gap: var(--spacing-xs);
+    width: calc(max-content - 64px);
   }
   .nav-item.selected {
     background-color: var(--grey-2);
@@ -79,16 +89,6 @@
   }
   .nav-item:hover .actions {
     visibility: visible;
-  }
-
-  .content {
-    padding: 0 var(--spacing-s);
-    height: 32px;
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: center;
-    gap: var(--spacing-xs);
   }
 
   .icon {
@@ -111,12 +111,12 @@
   }
 
   .text {
-    flex: 1 1 auto;
     font-weight: 600;
     font-size: var(--spectrum-global-dimension-font-size-75);
+    white-space: nowrap;
+    max-width: 180px;
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
   }
 
   .actions {
@@ -128,6 +128,7 @@
     flex-direction: row;
     justify-content: center;
     align-items: center;
+    margin-left: var(--spacing-s);
   }
 
   .iconText {

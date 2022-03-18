@@ -68,9 +68,12 @@
 </div>
 
 <style>
+  .root {
+    min-width: max-content;
+  }
   div.empty {
-    font-size: var(--font-size-xs);
+    font-size: var(--font-size-s);
     color: var(--grey-5);
-    padding-top: var(--spacing-xs);
+    padding: var(--spacing-xs) var(--spacing-xl);
   }
 </style>
