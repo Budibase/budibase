@@ -26,7 +26,7 @@ import { getViews, saveView } from "../view/utils"
 import viewTemplate from "../view/viewBuilder"
 const { getAppDB } = require("@budibase/backend-core/context")
 import { cloneDeep } from "lodash/fp"
-import * as Pro from "@budibase/pro"
+import { quotas, QuotaUsageType, StaticQuotaName } from "@budibase/pro"
 
 export async function clearColumns(table: any, columnNames: any) {
   const db = getAppDB()
@@ -117,7 +117,7 @@ export async function handleDataImport(user: any, table: any, dataImport: any) {
     existingTable: table,
   })
 
-  let finalData = []
+  let finalData: any = []
   for (let i = 0; i < data.length; i++) {
     let row = data[i]
     row._id = generateRowID(table._id)
@@ -147,19 +147,11 @@ export async function handleDataImport(user: any, table: any, dataImport: any) {
     finalData.push(row)
   }
 
-  await Pro.Licensing.Quotas.updateUsage(
+  await quotas.tryUpdateUsage(
+    () => db.bulkDocs(finalData),
     finalData.length,
-    Pro.StaticQuotaName.ROWS,
-    Pro.QuotaUsageType.STATIC,
-    {
-      dryRun: true,
-    }
-  )
-  await db.bulkDocs(finalData)
-  await Pro.Licensing.Quotas.updateUsage(
-    finalData.length,
-    Pro.StaticQuotaName.ROWS,
-    Pro.QuotaUsageType.STATIC
+    StaticQuotaName.ROWS,
+    QuotaUsageType.STATIC
   )
   let response = await db.put(table)
   table._rev = response._rev

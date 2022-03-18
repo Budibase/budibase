@@ -1,6 +1,6 @@
+import { quotas, QuotaUsageType, StaticQuotaName } from "@budibase/pro"
 import { save } from "../../api/controllers/row"
 import { cleanUpRow, getError } from "../automationUtils"
-import * as Pro from "@budibase/pro"
 import { buildCtx } from "./utils"
 
 export const definition = {
@@ -78,19 +78,11 @@ export async function run({ inputs, appId, emitter }: any) {
 
   try {
     inputs.row = await cleanUpRow(inputs.row.tableId, inputs.row)
-    await Pro.Licensing.Quotas.updateUsage(
+    await quotas.tryUpdateUsage(
+      () => save(ctx),
       1,
-      Pro.StaticQuotaName.ROWS,
-      Pro.QuotaUsageType.STATIC,
-      {
-        dryRun: true,
-      }
-    )
-    await save(ctx)
-    await Pro.Licensing.Quotas.updateUsage(
-      1,
-      Pro.StaticQuotaName.ROWS,
-      Pro.QuotaUsageType.STATIC
+      StaticQuotaName.ROWS,
+      QuotaUsageType.STATIC
     )
     return {
       row: inputs.row,

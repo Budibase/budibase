@@ -5,7 +5,6 @@ const {
 const {
   hash,
   getGlobalUserByEmail,
-  saveUser,
   platformLogout,
 } = require("@budibase/backend-core/utils")
 import { EmailTemplatePurpose } from "../../../constants"
@@ -23,8 +22,8 @@ const {
 const { removeUserFromInfoDB } = require("@budibase/backend-core/deprovision")
 import env from "../../../environment"
 import { syncUserInApps } from "../../../utilities/appService"
+import { quotas, users } from "@budibase/pro"
 const { errors } = require("@budibase/backend-core")
-import * as Pro from "@budibase/pro"
 
 const allUsers = async () => {
   const db = getGlobalDB()
@@ -38,7 +37,7 @@ const allUsers = async () => {
 
 export const save = async (ctx: any) => {
   try {
-    const user = await saveUser(ctx.request.body, getTenantId())
+    const user = await users.save(ctx.request.body, getTenantId())
     // let server know to sync user
     await syncUserInApps(user._id)
     ctx.body = user
@@ -81,7 +80,7 @@ export const adminUser = async (ctx: any) => {
     } catch (err) {
       // don't worry about errors
     }
-    await db.put(Pro.Licensing.Quotas.generateNewQuotaUsage())
+    await db.put(quotas.generateNewQuotaUsage())
   }
 
   if (response.rows.some((row: any) => row.doc.admin)) {
@@ -105,7 +104,7 @@ export const adminUser = async (ctx: any) => {
     tenantId,
   }
   try {
-    ctx.body = await saveUser(user, tenantId, hashPassword, requirePassword)
+    ctx.body = await users.save(user, tenantId, hashPassword, requirePassword)
   } catch (err: any) {
     ctx.throw(err.status || 400, err)
   }
@@ -286,7 +285,7 @@ export const inviteAccept = async (ctx: any) => {
   try {
     // info is an extension of the user object that was stored by global
     const { email, info }: any = await checkInviteCode(inviteCode)
-    ctx.body = await saveUser(
+    ctx.body = await users.save(
       {
         firstName,
         lastName,

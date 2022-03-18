@@ -1,7 +1,7 @@
-import * as Pro from "@budibase/pro"
+import { quotas } from "@budibase/pro"
 
 export const runQuotaMigration = async (migration: Function) => {
-  if (!Pro.Licensing.Quotas.useQuotas()) {
+  if (!quotas.useQuotas()) {
     return
   }
   await migration()

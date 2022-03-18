@@ -1,7 +1,7 @@
 import { destroy } from "../../api/controllers/row"
-import * as Pro from "@budibase/pro"
 import { buildCtx } from "./utils"
 import { getError } from "../automationUtils"
+import { quotas, QuotaUsageType, StaticQuotaName } from "@budibase/pro"
 
 export const definition = {
   description: "Delete a row from your database",
@@ -73,11 +73,7 @@ export async function run({ inputs, appId, emitter }: any) {
   })
 
   try {
-    await Pro.Licensing.Quotas.updateUsage(
-      -1,
-      Pro.StaticQuotaName.ROWS,
-      Pro.QuotaUsageType.STATIC
-    )
+    await quotas.updateUsage(-1, StaticQuotaName.ROWS, QuotaUsageType.STATIC)
     await destroy(ctx)
     return {
       response: ctx.body,

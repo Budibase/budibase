@@ -12,7 +12,7 @@ const zlib = require("zlib")
 const { mainRoutes, staticRoutes } = require("./routes")
 const pkg = require("../../package.json")
 const env = require("../environment")
-const Pro = require("@budibase/pro")
+const { middleware: pro } = require("@budibase/pro")
 
 const router = new Router()
 
@@ -56,7 +56,7 @@ router
   .use(currentApp)
   // this middleware will try to use the app ID to determine the tenancy
   .use(buildAppTenancyMiddleware())
-  .use(Pro.Middleware.Licensing())
+  .use(pro.licensing())
   .use(auditLog)
 
 // error handling middleware

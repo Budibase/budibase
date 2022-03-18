@@ -1,4 +1,4 @@
-import * as Pro from "@budibase/pro"
+import { licensing, quotas } from "@budibase/pro"
 
 export const activate = async (ctx: any) => {
   const { licenseKey } = ctx.request.body
@@ -6,17 +6,17 @@ export const activate = async (ctx: any) => {
     ctx.throw(400, "licenseKey is required")
   }
 
-  await Pro.Licensing.activateLicenseKey(licenseKey)
+  await licensing.activateLicenseKey(licenseKey)
   ctx.status = 200
 }
 
 export const refresh = async (ctx: any) => {
-  await Pro.Licensing.Cache.refresh()
+  await licensing.cache.refresh()
   ctx.status = 200
 }
 
 export const getInfo = async (ctx: any) => {
-  const licenseInfo = await Pro.Licensing.getLicenseInfo()
+  const licenseInfo = await licensing.getLicenseInfo()
   if (licenseInfo) {
     licenseInfo.licenseKey = "*"
     ctx.body = licenseInfo
@@ -25,6 +25,6 @@ export const getInfo = async (ctx: any) => {
 }
 
 export const getQuotaUsage = async (ctx: any) => {
-  const usage = await Pro.Licensing.Quotas.getQuotaUsage()
+  const usage = await quotas.getQuotaUsage()
   ctx.body = usage
 }
