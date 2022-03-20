@@ -1,14 +1,14 @@
 const Router = require("@koa/router")
-const controller = require("../controllers/static")
-const { budibaseTempDir } = require("../../utilities/budibaseDir")
-const authorized = require("../../middleware/authorized")
-const {
+import * as controller from "../controllers/static"
+import { budibaseTempDir } from "../../utilities/budibaseDir"
+import authorized from "../../middleware/authorized"
+import {
   BUILDER,
   PermissionTypes,
   PermissionLevels,
-} = require("@budibase/backend-core/permissions")
-const env = require("../../environment")
-const { paramResource } = require("../../middleware/resourceId")
+} from "@budibase/backend-core/permissions"
+import * as env from "../../environment"
+import { paramResource } from "../../middleware/resourceId"
 
 const router = Router()
 
@@ -52,4 +52,4 @@ router
     controller.getSignedUploadURL
   )
 
-module.exports = router
+export default router

@@ -28,7 +28,7 @@
   aria-valuenow={$progress}
   aria-valuemin="0"
   aria-valuemax="100"
-  style={width ? `width: ${width}px;` : ""}
+  style={width ? `width: ${width};` : ""}
 >
   {#if $$slots}
     <div

@@ -37,7 +37,7 @@ const allUsers = async () => {
 
 export const save = async (ctx: any) => {
   try {
-    const user = await users.save(ctx.request.body, getTenantId())
+    const user: any = await users.save(ctx.request.body, getTenantId())
     // let server know to sync user
     await syncUserInApps(user._id)
     ctx.body = user
@@ -129,6 +129,7 @@ export const destroy = async (ctx: any) => {
 
   await removeUserFromInfoDB(dbUser)
   await db.remove(dbUser._id, dbUser._rev)
+  await quotas.removeUser(dbUser)
   await userCache.invalidateUser(dbUser._id)
   await invalidateSessions(dbUser._id)
   // let server know to sync user

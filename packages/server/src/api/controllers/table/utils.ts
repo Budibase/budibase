@@ -147,12 +147,7 @@ export async function handleDataImport(user: any, table: any, dataImport: any) {
     finalData.push(row)
   }
 
-  await quotas.tryUpdateUsage(
-    () => db.bulkDocs(finalData),
-    finalData.length,
-    StaticQuotaName.ROWS,
-    QuotaUsageType.STATIC
-  )
+  await quotas.addRows(finalData.length, () => db.bulkDocs(finalData))
   let response = await db.put(table)
   table._rev = response._rev
   return table

@@ -21,7 +21,7 @@ const getPublicError = err => {
       type: err.type,
     }
 
-    if (err.code) {
+    if (err.code && context[err.code]) {
       error = {
         ...error,
         // get any additional context from this error

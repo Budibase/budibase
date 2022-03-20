@@ -1,20 +1,18 @@
-const Deployment = require("./Deployment")
-const {
+import Deployment from "./Deployment"
+import {
   Replication,
   getProdAppID,
   getDevelopmentAppID,
-} = require("@budibase/backend-core/db")
-const { DocumentTypes, getAutomationParams } = require("../../../db/utils")
-const {
-  disableAllCrons,
-  enableCronTrigger,
-} = require("../../../automations/utils")
-const { app: appCache } = require("@budibase/backend-core/cache")
-const {
+} from "@budibase/backend-core/db"
+import { DocumentTypes, getAutomationParams } from "../../../db/utils"
+import { disableAllCrons, enableCronTrigger } from "../../../automations/utils"
+import { app as appCache } from "@budibase/backend-core/cache"
+import {
   getAppId,
   getAppDB,
   getProdAppDB,
-} = require("@budibase/backend-core/context")
+} from "@budibase/backend-core/context"
+import { quotas } from "@budibase/pro"
 
 // the max time we can wait for an invalidation to complete before considering it failed
 const MAX_PENDING_TIME_MS = 30 * 60000
@@ -25,9 +23,10 @@ const DeploymentStatus = {
 }
 
 // checks that deployments are in a good state, any pending will be updated
-async function checkAllDeployments(deployments) {
+async function checkAllDeployments(deployments: any) {
   let updated = false
-  for (let deployment of Object.values(deployments.history)) {
+  let deployment: any
+  for (deployment of Object.values(deployments.history)) {
     // check that no deployments have crashed etc and are now stuck
     if (
       deployment.status === DeploymentStatus.PENDING &&
@@ -41,7 +40,7 @@ async function checkAllDeployments(deployments) {
   return { updated, deployments }
 }
 
-async function storeDeploymentHistory(deployment) {
+async function storeDeploymentHistory(deployment: any) {
   const deploymentJSON = deployment.getJSON()
   const db = getAppDB()
 
@@ -70,7 +69,7 @@ async function storeDeploymentHistory(deployment) {
   return deployment
 }
 
-async function initDeployedApp(prodAppId) {
+async function initDeployedApp(prodAppId: any) {
   const db = getProdAppDB()
   console.log("Reading automation docs")
   const automations = (
@@ -79,7 +78,7 @@ async function initDeployedApp(prodAppId) {
         include_docs: true,
       })
     )
-  ).rows.map(row => row.doc)
+  ).rows.map((row: any) => row.doc)
   console.log("You have " + automations.length + " automations")
   const promises = []
   console.log("Disabling prod crons..")
@@ -93,16 +92,17 @@ async function initDeployedApp(prodAppId) {
   console.log("Enabled cron triggers for deployed app..")
 }
 
-async function deployApp(deployment) {
+async function deployApp(deployment: any) {
   try {
     const appId = getAppId()
     const devAppId = getDevelopmentAppID(appId)
     const productionAppId = getProdAppID(appId)
 
-    const replication = new Replication({
+    const config: any = {
       source: devAppId,
       target: productionAppId,
-    })
+    }
+    const replication = new Replication(config)
 
     console.log("Replication object created")
 
@@ -119,7 +119,7 @@ async function deployApp(deployment) {
     console.log("Deployed app initialised, setting deployment to successful")
     deployment.setStatus(DeploymentStatus.SUCCESS)
     await storeDeploymentHistory(deployment)
-  } catch (err) {
+  } catch (err: any) {
     deployment.setStatus(DeploymentStatus.FAILURE, err.message)
     await storeDeploymentHistory(deployment)
     throw {
@@ -129,14 +129,11 @@ async function deployApp(deployment) {
   }
 }
 
-exports.fetchDeployments = async function (ctx) {
+export async function fetchDeployments(ctx: any) {
   try {
     const db = getAppDB()
     const deploymentDoc = await db.get(DocumentTypes.DEPLOYMENTS)
-    const { updated, deployments } = await checkAllDeployments(
-      deploymentDoc,
-      ctx.user
-    )
+    const { updated, deployments } = await checkAllDeployments(deploymentDoc)
     if (updated) {
       await db.put(deployments)
     }
@@ -146,7 +143,7 @@ exports.fetchDeployments = async function (ctx) {
   }
 }
 
-exports.deploymentProgress = async function (ctx) {
+export async function deploymentProgress(ctx: any) {
   try {
     const db = getAppDB()
     const deploymentDoc = await db.get(DocumentTypes.DEPLOYMENTS)
@@ -159,7 +156,20 @@ exports.deploymentProgress = async function (ctx) {
   }
 }
 
-exports.deployApp = async function (ctx) {
+const isFirstDeploy = async () => {
+  try {
+    const db = getProdAppDB()
+    await db.get(DocumentTypes.APP_METADATA)
+  } catch (e: any) {
+    if (e.status === 404) {
+      return true
+    }
+    throw e
+  }
+  return false
+}
+
+const _deployApp = async function (ctx: any) {
   let deployment = new Deployment()
   console.log("Deployment object created")
   deployment.setStatus(DeploymentStatus.PENDING)
@@ -168,7 +178,14 @@ exports.deployApp = async function (ctx) {
   console.log("Stored deployment history")
 
   console.log("Deploying app...")
-  await deployApp(deployment)
+
+  if (await isFirstDeploy()) {
+    await quotas.addPublishedApp(() => deployApp(deployment))
+  } else {
+    await deployApp(deployment)
+  }
 
   ctx.body = deployment
 }
+
+export { _deployApp as deployApp }

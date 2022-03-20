@@ -120,11 +120,7 @@ export async function destroy(ctx: any) {
   await db.bulkDocs(
     rows.rows.map((row: any) => ({ ...row.doc, _deleted: true }))
   )
-  await quotas.updateUsage(
-    -rows.rows.length,
-    StaticQuotaName.ROWS,
-    QuotaUsageType.STATIC
-  )
+  await quotas.removeRows(rows.rows.length)
 
   // update linked rows
   await updateLinks({
