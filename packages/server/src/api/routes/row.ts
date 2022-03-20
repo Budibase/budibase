@@ -1,11 +1,7 @@
 const Router = require("@koa/router")
-const rowController = require("../controllers/row")
-const authorized = require("../../middleware/authorized")
-const usage = require("../../middleware/usageQuota")
-const {
-  paramResource,
-  paramSubResource,
-} = require("../../middleware/resourceId")
+import * as rowController from "../controllers/row"
+import authorized from "../../middleware/authorized"
+import { paramResource, paramSubResource } from "../../middleware/resourceId"
 const {
   PermissionLevels,
   PermissionTypes,
@@ -180,7 +176,6 @@ router
     "/api/:tableId/rows",
     paramResource("tableId"),
     authorized(PermissionTypes.TABLE, PermissionLevels.WRITE),
-    usage,
     rowController.save
   )
   /**
@@ -247,8 +242,7 @@ router
     "/api/:tableId/rows",
     paramResource("tableId"),
     authorized(PermissionTypes.TABLE, PermissionLevels.WRITE),
-    usage,
     rowController.destroy
   )
 
-module.exports = router
+export default router

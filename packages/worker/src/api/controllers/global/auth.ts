@@ -224,7 +224,7 @@ async function oidcStrategyFactory(ctx: any, configId: any) {
   const chosenConfig = config.configs.filter((c: any) => c.uuid === configId)[0]
   let callbackUrl = await exports.oidcCallbackUrl(chosenConfig)
 
-  return oidc.strategyFactory(chosenConfig, callbackUrl)
+  return oidc.strategyFactory(chosenConfig, callbackUrl, users.save)
 }
 
 /**

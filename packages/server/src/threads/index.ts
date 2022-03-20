@@ -1,12 +1,12 @@
-const workerFarm = require("worker-farm")
-const env = require("../environment")
+import workerFarm from "worker-farm"
+import * as env from "../environment"
 
-const ThreadType = {
+export const ThreadType = {
   QUERY: "query",
   AUTOMATION: "automation",
 }
 
-function typeToFile(type) {
+function typeToFile(type: any) {
   let filename = null
   switch (type) {
     case ThreadType.QUERY:
@@ -21,8 +21,13 @@ function typeToFile(type) {
   return require.resolve(filename)
 }
 
-class Thread {
-  constructor(type, opts = { timeoutMs: null, count: 1 }) {
+export class Thread {
+  type: any
+  count: any
+  disableThreading: any
+  workers: any
+
+  constructor(type: any, opts: any = { timeoutMs: null, count: 1 }) {
     this.type = type
     this.count = opts.count ? opts.count : 1
     this.disableThreading =
@@ -31,7 +36,7 @@ class Thread {
       this.count === 0 ||
       env.isInThread()
     if (!this.disableThreading) {
-      const workerOpts = {
+      const workerOpts: any = {
         autoStart: true,
         maxConcurrentWorkers: this.count,
       }
@@ -42,7 +47,7 @@ class Thread {
     }
   }
 
-  run(data) {
+  run(data: any) {
     return new Promise((resolve, reject) => {
       let fncToCall
       // if in test then don't use threading
@@ -51,7 +56,7 @@ class Thread {
       } else {
         fncToCall = this.workers
       }
-      fncToCall(data, (err, response) => {
+      fncToCall(data, (err: any, response: any) => {
         if (err) {
           reject(err)
         } else {
@@ -61,6 +66,3 @@ class Thread {
     })
   }
 }
-
-module.exports.Thread = Thread
-module.exports.ThreadType = ThreadType

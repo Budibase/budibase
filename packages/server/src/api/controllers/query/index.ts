@@ -1,22 +1,19 @@
-const {
-  generateQueryID,
-  getQueryParams,
-  isProdAppID,
-} = require("../../../db/utils")
-const { BaseQueryVerbs } = require("../../../constants")
-const { Thread, ThreadType } = require("../../../threads")
-const { save: saveDatasource } = require("../datasource")
-const { RestImporter } = require("./import")
-const { invalidateDynamicVariables } = require("../../../threads/utils")
-const environment = require("../../../environment")
-const { getAppDB } = require("@budibase/backend-core/context")
+import { generateQueryID, getQueryParams, isProdAppID } from "../../../db/utils"
+import { BaseQueryVerbs } from "../../../constants"
+import { Thread, ThreadType } from "../../../threads"
+import { save as saveDatasource } from "../datasource"
+import { RestImporter } from "./import"
+import { invalidateDynamicVariables } from "../../../threads/utils"
+import { QUERY_THREAD_TIMEOUT } from "../../../environment"
+import { getAppDB } from "@budibase/backend-core/context"
+import { quotas } from "@budibase/pro"
 
 const Runner = new Thread(ThreadType.QUERY, {
-  timeoutMs: environment.QUERY_THREAD_TIMEOUT || 10000,
+  timeoutMs: QUERY_THREAD_TIMEOUT || 10000,
 })
 
 // simple function to append "readable" to all read queries
-function enrichQueries(input) {
+function enrichQueries(input: any) {
   const wasArray = Array.isArray(input)
   const queries = wasArray ? input : [input]
   for (let query of queries) {
@@ -27,7 +24,7 @@ function enrichQueries(input) {
   return wasArray ? queries : queries[0]
 }
 
-exports.fetch = async function (ctx) {
+export async function fetch(ctx: any) {
   const db = getAppDB()
 
   const body = await db.allDocs(
@@ -36,10 +33,10 @@ exports.fetch = async function (ctx) {
     })
   )
 
-  ctx.body = enrichQueries(body.rows.map(row => row.doc))
+  ctx.body = enrichQueries(body.rows.map((row: any) => row.doc))
 }
 
-exports.import = async ctx => {
+const _import = async (ctx: any) => {
   const body = ctx.request.body
   const data = body.data
 
@@ -49,7 +46,7 @@ exports.import = async ctx => {
   let datasourceId
   if (!body.datasourceId) {
     // construct new datasource
-    const info = await importer.getInfo()
+    const info: any = await importer.getInfo()
     let datasource = {
       type: "datasource",
       source: "REST",
@@ -77,8 +74,9 @@ exports.import = async ctx => {
   }
   ctx.status = 200
 }
+export { _import as import }
 
-exports.save = async function (ctx) {
+export async function save(ctx: any) {
   const db = getAppDB()
   const query = ctx.request.body
 
@@ -93,7 +91,7 @@ exports.save = async function (ctx) {
   ctx.message = `Query ${query.name} saved successfully.`
 }
 
-exports.find = async function (ctx) {
+export async function find(ctx: any) {
   const db = getAppDB()
   const query = enrichQueries(await db.get(ctx.params.queryId))
   // remove properties that could be dangerous in real app
@@ -104,7 +102,7 @@ exports.find = async function (ctx) {
   ctx.body = query
 }
 
-exports.preview = async function (ctx) {
+export async function preview(ctx: any) {
   const db = getAppDB()
 
   const datasource = await db.get(ctx.request.body.datasourceId)
@@ -114,16 +112,18 @@ exports.preview = async function (ctx) {
     ctx.request.body
 
   try {
-    const { rows, keys, info, extra } = await Runner.run({
-      appId: ctx.appId,
-      datasource,
-      queryVerb,
-      fields,
-      parameters,
-      transformer,
-      queryId,
-    })
+    const runFn = () =>
+      Runner.run({
+        appId: ctx.appId,
+        datasource,
+        queryVerb,
+        fields,
+        parameters,
+        transformer,
+        queryId,
+      })
 
+    const { rows, keys, info, extra } = await quotas.addQuery(runFn)
     ctx.body = {
       rows,
       schemaFields: [...new Set(keys)],
@@ -135,7 +135,7 @@ exports.preview = async function (ctx) {
   }
 }
 
-async function execute(ctx, opts = { rowsOnly: false }) {
+async function execute(ctx: any, opts = { rowsOnly: false }) {
   const db = getAppDB()
 
   const query = await db.get(ctx.params.queryId)
@@ -153,16 +153,19 @@ async function execute(ctx, opts = { rowsOnly: false }) {
 
   // call the relevant CRUD method on the integration class
   try {
-    const { rows, pagination, extra } = await Runner.run({
-      appId: ctx.appId,
-      datasource,
-      queryVerb: query.queryVerb,
-      fields: query.fields,
-      pagination: ctx.request.body.pagination,
-      parameters: enrichedParameters,
-      transformer: query.transformer,
-      queryId: ctx.params.queryId,
-    })
+    const runFn = () =>
+      Runner.run({
+        appId: ctx.appId,
+        datasource,
+        queryVerb: query.queryVerb,
+        fields: query.fields,
+        pagination: ctx.request.body.pagination,
+        parameters: enrichedParameters,
+        transformer: query.transformer,
+        queryId: ctx.params.queryId,
+      })
+
+    const { rows, pagination, extra } = await quotas.addQuery(runFn)
     if (opts && opts.rowsOnly) {
       ctx.body = rows
     } else {
@@ -173,15 +176,15 @@ async function execute(ctx, opts = { rowsOnly: false }) {
   }
 }
 
-exports.executeV1 = async function (ctx) {
+export async function executeV1(ctx: any) {
   return execute(ctx, { rowsOnly: true })
 }
 
-exports.executeV2 = async function (ctx) {
+export async function executeV2(ctx: any) {
   return execute(ctx, { rowsOnly: false })
 }
 
-const removeDynamicVariables = async queryId => {
+const removeDynamicVariables = async (queryId: any) => {
   const db = getAppDB()
   const query = await db.get(queryId)
   const datasource = await db.get(query.datasourceId)
@@ -190,19 +193,19 @@ const removeDynamicVariables = async queryId => {
   if (dynamicVariables) {
     // delete dynamic variables from the datasource
     datasource.config.dynamicVariables = dynamicVariables.filter(
-      dv => dv.queryId !== queryId
+      (dv: any) => dv.queryId !== queryId
     )
     await db.put(datasource)
 
     // invalidate the deleted variables
     const variablesToDelete = dynamicVariables.filter(
-      dv => dv.queryId === queryId
+      (dv: any) => dv.queryId === queryId
     )
     await invalidateDynamicVariables(variablesToDelete)
   }
 }
 
-exports.destroy = async function (ctx) {
+export async function destroy(ctx: any) {
   const db = getAppDB()
   await removeDynamicVariables(ctx.params.queryId)
   await db.remove(ctx.params.queryId, ctx.params.revId)

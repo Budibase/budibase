@@ -1,15 +1,16 @@
-const internal = require("./internal")
-const external = require("./external")
-const { isExternalTable } = require("../../../integrations/utils")
+import { quotas } from "@budibase/pro"
+import internal from "./internal"
+import external from "./external"
+import { isExternalTable } from "../../../integrations/utils"
 
-function pickApi(tableId) {
+function pickApi(tableId: any) {
   if (isExternalTable(tableId)) {
     return external
   }
   return internal
 }
 
-function getTableId(ctx) {
+function getTableId(ctx: any) {
   if (ctx.request.body && ctx.request.body.tableId) {
     return ctx.request.body.tableId
   }
@@ -21,13 +22,13 @@ function getTableId(ctx) {
   }
 }
 
-exports.patch = async ctx => {
+export async function patch(ctx: any): Promise<any> {
   const appId = ctx.appId
   const tableId = getTableId(ctx)
   const body = ctx.request.body
   // if it doesn't have an _id then its save
   if (body && !body._id) {
-    return exports.save(ctx)
+    return save(ctx)
   }
   try {
     const { row, table } = await pickApi(tableId).patch(ctx)
@@ -41,13 +42,13 @@ exports.patch = async ctx => {
   }
 }
 
-exports.save = async function (ctx) {
+const saveRow = async (ctx: any) => {
   const appId = ctx.appId
   const tableId = getTableId(ctx)
   const body = ctx.request.body
   // if it has an ID already then its a patch
   if (body && body._id) {
-    return exports.patch(ctx)
+    return patch(ctx)
   }
   try {
     const { row, table } = await pickApi(tableId).save(ctx)
@@ -60,7 +61,11 @@ exports.save = async function (ctx) {
   }
 }
 
-exports.fetchView = async function (ctx) {
+export async function save(ctx: any) {
+  await quotas.addRow(() => saveRow(ctx))
+}
+
+export async function fetchView(ctx: any) {
   const tableId = getTableId(ctx)
   try {
     ctx.body = await pickApi(tableId).fetchView(ctx)
@@ -69,7 +74,7 @@ exports.fetchView = async function (ctx) {
   }
 }
 
-exports.fetch = async function (ctx) {
+export async function fetch(ctx: any) {
   const tableId = getTableId(ctx)
   try {
     ctx.body = await pickApi(tableId).fetch(ctx)
@@ -78,7 +83,7 @@ exports.fetch = async function (ctx) {
   }
 }
 
-exports.find = async function (ctx) {
+export async function find(ctx: any) {
   const tableId = getTableId(ctx)
   try {
     ctx.body = await pickApi(tableId).find(ctx)
@@ -87,19 +92,21 @@ exports.find = async function (ctx) {
   }
 }
 
-exports.destroy = async function (ctx) {
+export async function destroy(ctx: any) {
   const appId = ctx.appId
   const inputs = ctx.request.body
   const tableId = getTableId(ctx)
   let response, row
   if (inputs.rows) {
     let { rows } = await pickApi(tableId).bulkDestroy(ctx)
+    await quotas.removeRows(rows.length)
     response = rows
     for (let row of rows) {
       ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:delete`, appId, row)
     }
   } else {
     let resp = await pickApi(tableId).destroy(ctx)
+    await quotas.removeRow()
     response = resp.response
     row = resp.row
     ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:delete`, appId, row)
@@ -110,7 +117,7 @@ exports.destroy = async function (ctx) {
   ctx.body = response
 }
 
-exports.search = async ctx => {
+export async function search(ctx: any) {
   const tableId = getTableId(ctx)
   try {
     ctx.status = 200
@@ -120,7 +127,7 @@ exports.search = async ctx => {
   }
 }
 
-exports.validate = async function (ctx) {
+export async function validate(ctx: any) {
   const tableId = getTableId(ctx)
   try {
     ctx.body = await pickApi(tableId).validate(ctx)
@@ -129,7 +136,7 @@ exports.validate = async function (ctx) {
   }
 }
 
-exports.fetchEnrichedRow = async function (ctx) {
+export async function fetchEnrichedRow(ctx: any) {
   const tableId = getTableId(ctx)
   try {
     ctx.body = await pickApi(tableId).fetchEnrichedRow(ctx)
