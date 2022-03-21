@@ -66,6 +66,9 @@
     }
     routeManuallyOpened = !routeManuallyOpened
   }
+
+  $: console.log($store.selectedComponentId)
+  $: console.log()
 </script>
 
 {#if !noSearchMatch}
@@ -76,9 +79,6 @@
     opened={routeOpened}
     {border}
     withArrow={route.subpaths}
-    on:mouseover={e => {
-      scrollApi.scrollTo(0, e.detail)
-    }}
   >
     <PathDropdownMenu screens={allScreens} {path} />
   </NavItem>
@@ -88,14 +88,12 @@
       <NavItem
         icon="WebPage"
         indentLevel={indent || 1}
-        selected={$store.selectedScreenId === screen.id}
+        selected={$store.selectedScreenId === screen.id &&
+          $store.currentView === "detail"}
         opened={$store.selectedScreenId === screen.id}
         text={ROUTE_NAME_MAP[screen.route]?.[screen.role] || screen.route}
         withArrow={route.subpaths}
         on:click={() => changeScreen(screen.id)}
-        on:mouseover={e => {
-          scrollApi.scrollTo(1, e.detail)
-        }}
       >
         <ScreenDropdownMenu screenId={screen.id} />
       </NavItem>

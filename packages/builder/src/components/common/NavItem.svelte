@@ -1,6 +1,6 @@
 <script>
   import { Icon } from "@budibase/bbui"
-  import { createEventDispatcher } from "svelte"
+  import { createEventDispatcher, getContext } from "svelte"
 
   export let icon
   export let withArrow = false
@@ -14,12 +14,24 @@
   export let iconText
   export let iconColor
 
+  const scrollApi = getContext("scroll")
   const dispatch = createEventDispatcher()
-  let textRef
+
+  let contentRef
+  $: selected && contentRef && scrollToView()
 
   function onIconClick(event) {
     event.stopPropagation()
     dispatch("iconClick")
+  }
+
+  const scrollToView = () => {
+    if (!scrollApi || !contentRef) {
+      return
+    }
+    console.log("selected", text)
+    const bounds = contentRef.getBoundingClientRect()
+    scrollApi.scrollTo(bounds)
   }
 </script>
 
@@ -34,35 +46,33 @@
   on:dragover
   on:drop
   on:click
-  on:mouseover={() => {
-    const size = textRef.getBoundingClientRect()
-    dispatch("mouseover", size.width)
-  }}
   ondragover="return false"
   ondragenter="return false"
 >
-  {#if withArrow}
-    <div class:opened class="icon arrow" on:click={onIconClick}>
-      <Icon size="S" name="ChevronRight" />
-    </div>
-  {/if}
+  <div class="nav-item-content" bind:this={contentRef}>
+    {#if withArrow}
+      <div class:opened class="icon arrow" on:click={onIconClick}>
+        <Icon size="S" name="ChevronRight" />
+      </div>
+    {/if}
 
-  <slot name="icon" />
-  {#if iconText}
-    <div class="iconText" style={iconColor ? `color: ${iconColor};` : ""}>
-      {iconText}
-    </div>
-  {:else if icon}
-    <div class="icon">
-      <Icon color={iconColor} size="S" name={icon} />
-    </div>
-  {/if}
-  <div class="text" bind:this={textRef}>{text}</div>
-  {#if withActions}
-    <div class="actions">
-      <slot />
-    </div>
-  {/if}
+    <slot name="icon" />
+    {#if iconText}
+      <div class="iconText" style={iconColor ? `color: ${iconColor};` : ""}>
+        {iconText}
+      </div>
+    {:else if icon}
+      <div class="icon">
+        <Icon color={iconColor} size="S" name={icon} />
+      </div>
+    {/if}
+    <div class="text">{text}</div>
+    {#if withActions}
+      <div class="actions">
+        <slot />
+      </div>
+    {/if}
+  </div>
 </div>
 
 <style>
@@ -74,11 +84,9 @@
     padding: 0 var(--spacing-m) 0 var(--spacing-xl);
     height: 32px;
     display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: center;
-    gap: var(--spacing-xs);
-    width: calc(max-content - 64px);
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
   }
   .nav-item.selected {
     background-color: var(--grey-2);
@@ -89,6 +97,16 @@
   }
   .nav-item:hover .actions {
     visibility: visible;
+  }
+
+  .nav-item-content {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    gap: var(--spacing-xs);
+    width: max-content;
   }
 
   .icon {
@@ -117,6 +135,7 @@
     max-width: 180px;
     overflow: hidden;
     text-overflow: ellipsis;
+    flex: 0 0 auto;
   }
 
   .actions {
