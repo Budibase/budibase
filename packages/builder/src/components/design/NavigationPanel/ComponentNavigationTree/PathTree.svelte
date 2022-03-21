@@ -8,6 +8,7 @@
   import instantiateStore from "./dragDropStore"
   import ComponentTree from "./ComponentTree.svelte"
   import NavItem from "components/common/NavItem.svelte"
+  import PathDropdownMenu from "./PathDropdownMenu.svelte"
   import ScreenDropdownMenu from "./ScreenDropdownMenu.svelte"
   import { get } from "svelte/store"
 
@@ -73,7 +74,9 @@
     opened={routeOpened}
     {border}
     withArrow={route.subpaths}
-  />
+  >
+    <PathDropdownMenu screens={allScreens} {path} />
+  </NavItem>
 
   {#if routeOpened}
     {#each filteredScreens as screen (screen.id)}

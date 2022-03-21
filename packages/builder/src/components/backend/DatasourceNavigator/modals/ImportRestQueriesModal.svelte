@@ -7,7 +7,6 @@
     Layout,
     Tabs,
     Tab,
-    Input,
     Heading,
     TextArea,
     Dropzone,
@@ -98,15 +97,16 @@
     <Body size="XS"
       >Import your rest collection using one of the options below</Body
     >
-    <Tabs selected="Link">
-      <Tab title="Link">
+    <Tabs selected="File">
+      <!-- Commenting until nginx csp issue resolved -->
+      <!-- <Tab title="Link">
         <Input
           bind:value={$data.url}
           on:change={() => (lastTouched = "url")}
           label="Enter a URL"
           placeholder="e.g. https://petstore.swagger.io/v2/swagger.json"
         />
-      </Tab>
+      </Tab> -->
       <Tab title="File">
         <Dropzone
           gallery={false}
@@ -115,7 +115,14 @@
             $data.file = e.detail?.[0]
             lastTouched = "file"
           }}
-          fileTags={["OpenAPI 2.0", "Swagger 2.0", "cURL", "YAML", "JSON"]}
+          fileTags={[
+            "OpenAPI 3.0",
+            "OpenAPI 2.0",
+            "Swagger 2.0",
+            "cURL",
+            "YAML",
+            "JSON",
+          ]}
           maximum={1}
         />
       </Tab>
@@ -130,6 +137,3 @@
     </Tabs>
   </Layout>
 </ModalContent>
-
-<style>
-</style>

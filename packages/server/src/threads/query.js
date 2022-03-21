@@ -2,8 +2,12 @@ const threadUtils = require("./utils")
 threadUtils.threadSetup()
 const ScriptRunner = require("../utilities/scriptRunner")
 const { integrations } = require("../integrations")
-const { processStringSync } = require("@budibase/string-templates")
+const {
+  processStringSync,
+  findHBSBlocks,
+} = require("@budibase/string-templates")
 const { doInAppContext, getAppDB } = require("@budibase/backend-core/context")
+const { isSQL } = require("../integrations/utils")
 
 class QueryRunner {
   constructor(input, flags = { noRecursiveQuery: false }) {
@@ -23,22 +27,59 @@ class QueryRunner {
     this.hasRerun = false
   }
 
+  interpolateSQL(fields, parameters, integration) {
+    let sql = fields.sql
+    if (!sql) {
+      return fields
+    }
+    const bindings = findHBSBlocks(sql)
+    let variables = []
+    for (let binding of bindings) {
+      let variable = integration.getBindingIdentifier()
+      variables.push(binding)
+      // check if the variable was used as part of a string concat e.g. 'Hello {{binding}}'
+      const charConstRegex = new RegExp(`'[^']*${binding}[^']*'`)
+      const charConstMatch = sql.match(charConstRegex)
+      if (charConstMatch) {
+        let [part1, part2] = charConstMatch[0].split(binding)
+        part1 = `'${part1.substring(1)}'`
+        part2 = `'${part2.substring(0, part2.length - 1)}'`
+        sql = sql.replace(
+          charConstMatch[0],
+          integration.getStringConcat([part1, variable, part2])
+        )
+      } else {
+        sql = sql.replace(binding, variable)
+      }
+    }
+    // replicate the knex structure
+    fields.sql = sql
+    fields.bindings = this.enrichQueryFields(variables, parameters)
+    return fields
+  }
+
   async execute() {
     let { datasource, fields, queryVerb, transformer } = this
-    // pre-query, make sure datasource variables are added to parameters
-    const parameters = await this.addDatasourceVariables()
-    let query = this.enrichQueryFields(fields, parameters)
-
-    // Add pagination values for REST queries
-    if (this.pagination) {
-      query.paginationValues = this.pagination
-    }
-
     const Integration = integrations[datasource.source]
     if (!Integration) {
       throw "Integration type does not exist."
     }
     const integration = new Integration(datasource.config)
+
+    // pre-query, make sure datasource variables are added to parameters
+    const parameters = await this.addDatasourceVariables()
+    let query
+    // handle SQL injections by interpolating the variables
+    if (isSQL(datasource)) {
+      query = this.interpolateSQL(fields, parameters, integration)
+    } else {
+      query = this.enrichQueryFields(fields, parameters)
+    }
+
+    // Add pagination values for REST queries
+    if (this.pagination) {
+      query.paginationValues = this.pagination
+    }
 
     let output = threadUtils.formatResponse(await integration[queryVerb](query))
     let rows = output,
@@ -179,7 +220,7 @@ class QueryRunner {
   }
 
   enrichQueryFields(fields, parameters = {}) {
-    const enrichedQuery = {}
+    const enrichedQuery = Array.isArray(fields) ? [] : {}
 
     // enrich the fields with dynamic parameters
     for (let key of Object.keys(fields)) {

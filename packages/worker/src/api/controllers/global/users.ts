@@ -2,11 +2,7 @@ const {
   getGlobalUserParams,
   StaticDatabases,
 } = require("@budibase/backend-core/db")
-const {
-  hash,
-  getGlobalUserByEmail,
-  platformLogout,
-} = require("@budibase/backend-core/utils")
+const { getGlobalUserByEmail } = require("@budibase/backend-core/utils")
 import { EmailTemplatePurpose } from "../../../constants"
 import { checkInviteCode } from "../../../utilities/redis"
 import { sendEmail } from "../../../utilities/email"
@@ -24,16 +20,7 @@ import env from "../../../environment"
 import { syncUserInApps } from "../../../utilities/appService"
 import { quotas, users } from "@budibase/pro"
 const { errors } = require("@budibase/backend-core")
-
-const allUsers = async () => {
-  const db = getGlobalDB()
-  const response = await db.allDocs(
-    getGlobalUserParams(null, {
-      include_docs: true,
-    })
-  )
-  return response.rows.map((row: any) => row.doc)
-}
+import { allUsers, getUser } from "../../utilities"
 
 export const save = async (ctx: any) => {
   try {
@@ -139,95 +126,11 @@ export const destroy = async (ctx: any) => {
   }
 }
 
-export const removeAppRole = async (ctx: any) => {
-  const { appId } = ctx.params
-  const db = getGlobalDB()
-  const users = await allUsers()
-  const bulk = []
-  const cacheInvalidations = []
-  for (let user of users) {
-    if (user.roles[appId]) {
-      cacheInvalidations.push(userCache.invalidateUser(user._id))
-      delete user.roles[appId]
-      bulk.push(user)
-    }
-  }
-  await db.bulkDocs(bulk)
-  await Promise.all(cacheInvalidations)
-  ctx.body = {
-    message: "App role removed from all users",
-  }
-}
-
-/**
- * Add the attributes that are session based to the current user.
- */
-const addSessionAttributesToUser = (ctx: any) => {
-  ctx.body.account = ctx.user.account
-  ctx.body.license = ctx.user.license
-  ctx.body.budibaseAccess = ctx.user.budibaseAccess
-  ctx.body.accountPortalAccess = ctx.user.accountPortalAccess
-  ctx.body.csrfToken = ctx.user.csrfToken
-}
-
-/**
- * Remove the attributes that are session based from the current user,
- * so that stale values are not written to the db
- */
-const removeSessionAttributesFromUser = (ctx: any) => {
-  delete ctx.request.body.csrfToken
-  delete ctx.request.body.account
-  delete ctx.request.body.accountPortalAccess
-  delete ctx.request.body.budibaseAccess
-  delete ctx.request.body.license
-}
-
-export const getSelf = async (ctx: any) => {
-  if (!ctx.user) {
-    ctx.throw(403, "User not logged in")
-  }
-  ctx.params = {
-    id: ctx.user._id,
-  }
-  // this will set the body
-  await exports.find(ctx)
-  addSessionAttributesToUser(ctx)
-}
-
-export const updateSelf = async (ctx: any) => {
-  const db = getGlobalDB()
-  const user = await db.get(ctx.user._id)
-  if (ctx.request.body.password) {
-    // changing password
-    ctx.request.body.password = await hash(ctx.request.body.password)
-    // Log all other sessions out apart from the current one
-    await platformLogout({
-      ctx,
-      userId: ctx.user._id,
-      keepActiveSession: true,
-    })
-  }
-  // don't allow sending up an ID/Rev, always use the existing one
-  delete ctx.request.body._id
-  delete ctx.request.body._rev
-  removeSessionAttributesFromUser(ctx)
-
-  const response = await db.put({
-    ...user,
-    ...ctx.request.body,
-  })
-  await userCache.invalidateUser(user._id)
-  ctx.body = {
-    _id: response.id,
-    _rev: response.rev,
-  }
-}
-
 // called internally by app server user fetch
 export const fetch = async (ctx: any) => {
-  const users = await allUsers()
+  const all = await allUsers()
   // user hashed password shouldn't ever be returned
-  for (let user of users) {
+  for (let user of all) {
     if (user) {
       delete user.password
     }
@@ -237,18 +140,7 @@ export const fetch = async (ctx: any) => {
 
 // called internally by app server user find
 export const find = async (ctx: any) => {
-  const db = getGlobalDB()
-  let user
-  try {
-    user = await db.get(ctx.params.id)
-  } catch (err) {
-    // no user found, just return nothing
-    user = {}
-  }
-  if (user) {
-    delete user.password
-  }
-  ctx.body = user
+  ctx.body = await getUser(ctx.params.id)
 }
 
 export const tenantUserLookup = async (ctx: any) => {

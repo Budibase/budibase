@@ -81,7 +81,10 @@
       loading = false
       return res
     } catch (error) {
-      notificationStore.actions.error(`Error uploading file: ${error}`)
+      notificationStore.actions.error(
+        `Error uploading file: ${error?.message || error}`
+      )
+      loading = false
     }
   }
 

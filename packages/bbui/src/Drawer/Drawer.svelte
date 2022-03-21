@@ -1,5 +1,4 @@
 <script>
-  import { slide } from "svelte/transition"
   import Portal from "svelte-portal"
   import Button from "../Button/Button.svelte"
   import Body from "../Typography/Body.svelte"
@@ -7,7 +6,9 @@
 
   export let title
   export let fillWidth
+
   let visible = false
+
   export function show() {
     if (visible) {
       return
@@ -21,11 +22,27 @@
     }
     visible = false
   }
+
+  const easeInOutQuad = x => {
+    return x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2
+  }
+
+  // Use a custom svelte transition here because the built-in slide
+  // transition has a horrible overshoot
+  const slide = () => {
+    return {
+      duration: 360,
+      css: t => {
+        const translation = 100 - Math.round(easeInOutQuad(t) * 100)
+        return `transform: translateY(${translation}%);`
+      },
+    }
+  }
 </script>
 
 {#if visible}
   <Portal>
-    <section class:fillWidth class="drawer" transition:slide>
+    <section class:fillWidth class="drawer" transition:slide|local>
       <header>
         <div class="text">
           <Heading size="XS">{title}</Heading>
@@ -78,5 +95,13 @@
     justify-content: center;
     align-items: flex-start;
     gap: var(--spacing-xs);
+  }
+
+  .buttons {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    gap: var(--spacing-m);
   }
 </style>

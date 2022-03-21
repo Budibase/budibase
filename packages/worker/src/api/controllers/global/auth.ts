@@ -89,7 +89,12 @@ export const setInitInfo = (ctx: any) => {
 }
 
 export const getInitInfo = (ctx: any) => {
-  ctx.body = getCookie(ctx, Cookies.Init) || {}
+  try {
+    ctx.body = getCookie(ctx, Cookies.Init) || {}
+  } catch (err) {
+    clearCookie(ctx, Cookies.Init)
+    ctx.body = {}
+  }
 }
 
 /**

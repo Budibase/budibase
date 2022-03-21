@@ -98,3 +98,11 @@ export const deepSet = (obj, key, value) => {
   }
   obj[split[split.length - 1]] = value
 }
+
+/**
+ * Deeply clones an object. Functions are not supported.
+ * @param obj the object to clone
+ */
+export const cloneDeep = obj => {
+  return JSON.parse(JSON.stringify(obj))
+}

@@ -30,6 +30,7 @@ const UNICODE_MAX = "\ufff0"
 
 exports.ViewNames = {
   USER_BY_EMAIL: "by_email",
+  BY_API_KEY: "by_api_key",
   USER_BY_BUILDERS: "by_builders",
 }
 
@@ -68,6 +69,7 @@ function getDocParams(docType, docId = null, otherProps = {}) {
     endkey: `${docType}${SEPARATOR}${docId}${UNICODE_MAX}`,
   }
 }
+exports.getDocParams = getDocParams
 
 /**
  * Generates a new workspace ID.
@@ -341,6 +343,14 @@ const getConfigParams = ({ type, workspace, user }, otherProps = {}) => {
 }
 
 /**
+ * Generates a new dev info document ID - this is scoped to a user.
+ * @returns {string} The new dev info ID which info for dev (like api key) can be stored under.
+ */
+const generateDevInfoID = userId => {
+  return `${DocumentTypes.DEV_INFO}${SEPARATOR}${userId}`
+}
+
+/**
  * Returns the most granular configuration document from the DB based on the type, workspace and userID passed.
  * @param {Object} db - db instance to query
  * @param {Object} scopes - the type, workspace and userID scopes of the configuration.
@@ -430,3 +440,4 @@ exports.getScopedConfig = getScopedConfig
 exports.generateConfigID = generateConfigID
 exports.getConfigParams = getConfigParams
 exports.getScopedFullConfig = getScopedFullConfig
+exports.generateDevInfoID = generateDevInfoID

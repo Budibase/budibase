@@ -58,7 +58,7 @@ module External {
   ) {
     const primary = table.primary
     // if passed in array need to copy for shifting etc
-    let idCopy = cloneDeep(id)
+    let idCopy: undefined | string | any[] = cloneDeep(id)
     if (filters) {
       // need to map over the filters and make sure the _id field isn't present
       for (let filter of Object.values(filters)) {

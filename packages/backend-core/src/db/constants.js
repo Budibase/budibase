@@ -14,6 +14,7 @@ exports.DocumentTypes = {
   APP_METADATA: `${PRE_APP}${exports.SEPARATOR}metadata`,
   ROLE: "role",
   MIGRATIONS: "migrations",
+  DEV_INFO: "devinfo",
 }
 
 exports.StaticDatabases = {

@@ -11,7 +11,7 @@
   The low code platform you'll enjoy using
 </h3>
 <p align="center">
-  Budibase is an open source low-code platform, and the easiest way to build internal tools that improve productivity.
+  Budibase is an open source low-code platform, and the easiest way to build internal apps that improve productivity.
 </p>
 
 <h3 align="center">
@@ -40,9 +40,11 @@
 </p>
 
 <h3 align="center">
-  <a href="https://docs.budibase.com/getting-started">Get started</a>
+  <a href="https://account.budibase.app/register">Get started - we host (Budibase Cloud)</a>
   <span> · </span>
-  <a href="https://docs.budibase.com">Docs</a>
+  <a href="https://docs.budibase.com/docs/hosting-methods">Get started - you host (Docker, K8s, DO)</a>
+  <span> · </span>
+  <a href="https://docs.budibase.com/docs">Docs</a>
   <span> · </span>
   <a href="https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas">Feature request</a>
   <span> · </span>
@@ -100,16 +102,37 @@ Budibase is made to scale. With Budibase, you can self-host on your own infrastr
 
 - Checkout the promo video: https://youtu.be/xoljVpty_Kw
 
+<br /><br />
+
+### Extend Budibase with its Public API
+As with anything that we build in Budibase, our new public API is simple to use, flexible, and introduces new extensibility. To summarize, the Budibase API enables:
+
+- Budibase as a backend
+- Inter-operability
+
+Guide: [Build an app with Budibase and Next.js](https://budibase.com/blog/building-a-crud-app-with-budibase-and-next.js/)
+
+#### Docs
+You can learn more about the Budibase API at the following places:
+
+- [General documentation](https://docs.budibase.com/docs/public-api) : Learn how to get your API key, how to use spec, and how to use with Postman
+- [Interactive API documentation](https://docs.budibase.com/reference/post_applications) : Learn how to interact with the API
+
+<p align="center">
+  <img alt="Budibase data" src="https://res.cloudinary.com/daog6scxm/image/upload/v1647858558/Feb%20release/Start_building_with_Budibase_s_API_3_rhlzhv.png">
+</p>
+<br /><br />
+
 <br /><br /><br />
 
 ## 🏁 Get started
 
-<a href="https://docs.budibase.com/self-hosting/self-host"><img src="https://res.cloudinary.com/daog6scxm/image/upload/v1634808888/logo/deploy_npl9za.png" /></a>
+<a href="https://docs.budibase.com/docs/hosting-methods"><img src="https://res.cloudinary.com/daog6scxm/image/upload/v1634808888/logo/deploy_npl9za.png" /></a>
 
 Deploy Budibase self-hosted in your existing infrastructure, using Docker, Kubernetes, and Digital Ocean.
 Or use Budibase Cloud if you don't need to self-host, and would like to get started quickly.
 
-### [Get started with self-hosting Budibase](https://docs.budibase.com/self-hosting/self-host)
+### [Get started with self-hosting Budibase](https://docs.budibase.com/docs/hosting-methods)
 
 ### [Get started with Budibase Cloud](https://budibase.com)
 
@@ -118,7 +141,7 @@ Or use Budibase Cloud if you don't need to self-host, and would like to get star
 
 ## 🎓 Learning Budibase
 
-The Budibase documentation [lives here](https://docs.budibase.com).
+The Budibase documentation [lives here](https://docs.budibase.com/docs).
 <br />
 
 

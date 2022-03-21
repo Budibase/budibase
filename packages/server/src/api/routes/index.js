@@ -26,6 +26,7 @@ import cloudRoutes from "./cloud"
 import migrationRoutes from "./migrations"
 
 export { default as staticRoutes } from "./static"
+export { default as publicRoutes } from "./public"
 
 export const mainRoutes = [
   authRoutes,
