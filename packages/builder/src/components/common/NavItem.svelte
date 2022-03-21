@@ -136,7 +136,7 @@
     font-weight: 600;
     font-size: var(--spectrum-global-dimension-font-size-75);
     white-space: nowrap;
-    max-width: 180px;
+    max-width: 160px;
     overflow: hidden;
     text-overflow: ellipsis;
     flex: 0 0 auto;
