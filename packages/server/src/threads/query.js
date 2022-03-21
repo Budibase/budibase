@@ -37,7 +37,7 @@ class QueryRunner {
       arrays = []
     for (let binding of bindings) {
       // look for array/list operations in the SQL statement, which will need handled later
-      const listRegex = new RegExp(`(in|IN|In|iN) ${binding}`)
+      const listRegex = new RegExp(`(in|IN|In|iN)( )+${binding}`)
       const listRegexMatch = sql.match(listRegex)
       // check if the variable was used as part of a string concat e.g. 'Hello {{binding}}'
       const charConstRegex = new RegExp(`'[^']*${binding}[^']*'`)
