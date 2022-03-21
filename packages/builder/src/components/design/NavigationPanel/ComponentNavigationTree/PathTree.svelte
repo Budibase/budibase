@@ -84,7 +84,8 @@
       <NavItem
         icon="WebPage"
         indentLevel={indent || 1}
-        selected={$store.selectedScreenId === screen.id}
+        selected={$store.selectedScreenId === screen.id &&
+          $store.currentView === "detail"}
         opened={$store.selectedScreenId === screen.id}
         text={ROUTE_NAME_MAP[screen.route]?.[screen.role] || screen.route}
         withArrow={route.subpaths}
