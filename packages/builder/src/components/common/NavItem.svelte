@@ -125,10 +125,9 @@
     height: 20px;
     cursor: pointer;
     position: relative;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
+    display: grid;
     margin-left: var(--spacing-s);
+    place-items: center;
   }
 
   .iconText {
