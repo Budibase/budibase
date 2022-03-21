@@ -1,5 +1,4 @@
 <script>
-  import { getContext } from "svelte"
   import {
     store,
     selectedComponent,
@@ -23,14 +22,12 @@
   }
 
   const dragDropStore = instantiateStore()
-  const scrollApi = getContext("scroll")
 
   export let route
   export let path
   export let indent
   export let border
 
-  let folder
   let routeManuallyOpened = false
 
   $: selectedScreen = $currentAsset
