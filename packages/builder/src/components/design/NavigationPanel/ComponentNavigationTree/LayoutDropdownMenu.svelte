@@ -65,3 +65,10 @@
     <Input thin type="text" label="Name" bind:value={name} />
   </ModalContent>
 </Modal>
+
+<style>
+  .icon {
+    display: grid;
+    place-items: center;
+  }
+</style>

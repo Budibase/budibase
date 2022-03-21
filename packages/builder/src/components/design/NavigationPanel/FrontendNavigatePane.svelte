@@ -148,15 +148,21 @@
         </BBUILayout>
         <div class="nav-items-container" bind:this={scrollRef}>
           <ComponentNavigationTree />
-          <div class="overlay" />
         </div>
       </div>
     </Tab>
     <Tab title="Layouts">
       <div class="tab-content-padding">
-        {#each $store.layouts as layout, idx (layout._id)}
-          <Layout {layout} border={idx > 0} />
-        {/each}
+        <div
+          class="nav-items-container nav-items-container--layouts"
+          bind:this={scrollRef}
+        >
+          <div class="layouts-container">
+            {#each $store.layouts as layout, idx (layout._id)}
+              <Layout {layout} border={idx > 0} />
+            {/each}
+          </div>
+        </div>
         <Modal bind:this={newLayoutModal}>
           <NewLayoutModal />
         </Modal>
@@ -211,5 +217,13 @@
     overflow: auto;
     height: 0;
     position: relative;
+  }
+  .nav-items-container--layouts {
+    border-top: none;
+    margin-top: calc(-1 * var(--spectrum-global-dimension-static-size-150));
+  }
+
+  .layouts-container {
+    min-width: max-content;
   }
 </style>
