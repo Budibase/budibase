@@ -4,7 +4,7 @@ const controller = require("../controllers/analytics")
 const router = Router()
 
 router
-  .get("/api/analytics", controller.isEnabled)
-  .post("/api/analytics/ping", controller.endUserPing)
+  .get("/api/bbtel", controller.isEnabled)
+  .post("/api/bbtel/ping", controller.endUserPing)
 
 module.exports = router
