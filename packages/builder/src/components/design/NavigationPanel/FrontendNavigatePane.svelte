@@ -148,6 +148,7 @@
         </BBUILayout>
         <div class="nav-items-container" bind:this={scrollRef}>
           <ComponentNavigationTree />
+          <div class="overlay" />
         </div>
       </div>
     </Tab>
