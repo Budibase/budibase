@@ -20,8 +20,13 @@
   let contentRef
   $: selected && contentRef && scrollToView()
 
-  function onIconClick(event) {
-    event.stopPropagation()
+  const onClick = () => {
+    scrollToView()
+    dispatch("click")
+  }
+
+  const onIconClick = e => {
+    e.stopPropagation()
     dispatch("iconClick")
   }
 
@@ -44,7 +49,7 @@
   on:dragstart
   on:dragover
   on:drop
-  on:click
+  on:click={onClick}
   ondragover="return false"
   ondragenter="return false"
 >
