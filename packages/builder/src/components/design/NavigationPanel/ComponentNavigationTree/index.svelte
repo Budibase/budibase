@@ -55,11 +55,10 @@
   }
 </script>
 
-<div class="root">
+<div class="root" class:has-screens={!!paths?.length}>
   {#each paths as path, idx (path)}
     <PathTree border={idx > 0} {path} route={routes[path]} />
   {/each}
-
   {#if !paths.length}
     <div class="empty">
       There aren't any screens configured with this access role.
@@ -68,7 +67,7 @@
 </div>
 
 <style>
-  .root {
+  .root.has-screens {
     min-width: max-content;
   }
   div.empty {

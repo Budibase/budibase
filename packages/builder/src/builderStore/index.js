@@ -33,7 +33,7 @@ export const selectedComponentPath = derived(
   [store, currentAsset],
   ([$store, $currentAsset]) => {
     return findComponentPath(
-      $currentAsset.props,
+      $currentAsset?.props,
       $store.selectedComponentId
     ).map(component => component._id)
   }
