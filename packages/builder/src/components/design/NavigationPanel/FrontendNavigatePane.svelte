@@ -26,32 +26,50 @@
 
   let scrollRef
 
-  const scrollTo = (indent, width) => {
-    if (!indent) {
+  const scrollTo = bounds => {
+    if (!bounds) {
       return
     }
 
-    // Padding left + icon
-    const end = indent * 14 + 20 + 16 + 4 + width + 40
-    let scrollLeft = 0
+    const sidebarWidth = 259
+    const navItemHeight = 32
 
-    if (end > 259) {
-      scrollLeft = end - 259
+    let scrollBounds = scrollRef.getBoundingClientRect()
+    let newScrollOffsets = {}
+
+    // Calculate left offset
+    const offsetX = bounds.left + bounds.width + scrollRef.scrollLeft + 20
+    if (offsetX > sidebarWidth) {
+      newScrollOffsets.left = offsetX - sidebarWidth
+    } else {
+      newScrollOffsets.left = 0
+    }
+    if (newScrollOffsets.left === scrollRef.scrollLeft) {
+      delete newScrollOffsets.left
     }
 
-    if (scrollLeft === scrollRef.scrollLeft) {
+    // Calculate top offset
+    const offsetY = bounds.top - scrollBounds?.top + scrollRef.scrollTop
+    const upperOffset = 2 * navItemHeight - 8
+    const lowerOffset = navItemHeight + 8
+    if (offsetY > scrollRef.scrollTop + scrollRef.offsetHeight - upperOffset) {
+      newScrollOffsets.top = offsetY - scrollRef.offsetHeight + upperOffset
+    } else if (offsetY < scrollRef.scrollTop + lowerOffset) {
+      newScrollOffsets.top = offsetY - lowerOffset
+    } else {
+      delete newScrollOffsets.top
+    }
+
+    // Skip if offset is unchanged
+    if (newScrollOffsets.left == null && newScrollOffsets.top == null) {
       return
     }
 
+    // Smoothly scroll to the offset
     scrollRef.scroll({
-      left: scrollLeft,
+      ...newScrollOffsets,
       behavior: "smooth",
     })
-
-    // if (indentLevel === 0) {
-    // } else {
-    //   scrollRef.scrollLeft = 4 + indentLevel * 14
-    // }
   }
 
   setContext("scroll", {
@@ -192,5 +210,6 @@
     flex: 1 1 auto;
     overflow: auto;
     height: 0;
+    position: relative;
   }
 </style>

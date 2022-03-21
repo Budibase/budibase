@@ -1,5 +1,4 @@
 <script>
-  import { getContext } from "svelte"
   import { store } from "builderStore"
   import { DropEffect, DropPosition } from "./dragDropStore"
   import ComponentDropdownMenu from "./ComponentDropdownMenu.svelte"
@@ -12,8 +11,6 @@
   export let onSelect = () => {}
   export let level = 0
   export let dragDropStore
-
-  const scrollApi = getContext("scroll")
 
   let closedNodes = {}
 
@@ -96,9 +93,6 @@
         on:dragover={dragover(component, index)}
         on:iconClick={() => toggleNodeOpen(component._id)}
         on:drop={onDrop}
-        on:mouseover={e => {
-          scrollApi.scrollTo(level + 1, e.detail)
-        }}
         text={getComponentText(component)}
         withArrow
         indentLevel={level + 1}
