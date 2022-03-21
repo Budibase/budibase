@@ -33,41 +33,40 @@
 
     const sidebarWidth = 259
     const navItemHeight = 32
+    const { scrollLeft, scrollTop, offsetHeight } = scrollRef
 
     let scrollBounds = scrollRef.getBoundingClientRect()
-    let newScrollOffsets = {}
+    let newOffsets = {}
 
     // Calculate left offset
-    const offsetX = bounds.left + bounds.width + scrollRef.scrollLeft + 20
+    const offsetX = bounds.left + bounds.width + scrollLeft + 20
     if (offsetX > sidebarWidth) {
-      newScrollOffsets.left = offsetX - sidebarWidth
+      newOffsets.left = offsetX - sidebarWidth
     } else {
-      newScrollOffsets.left = 0
+      newOffsets.left = 0
     }
-    if (newScrollOffsets.left === scrollRef.scrollLeft) {
-      delete newScrollOffsets.left
+    if (newOffsets.left === scrollLeft) {
+      delete newOffsets.left
     }
 
     // Calculate top offset
-    const offsetY = bounds.top - scrollBounds?.top + scrollRef.scrollTop
-    const upperOffset = 2 * navItemHeight - 8
-    const lowerOffset = navItemHeight + 8
-    if (offsetY > scrollRef.scrollTop + scrollRef.offsetHeight - upperOffset) {
-      newScrollOffsets.top = offsetY - scrollRef.offsetHeight + upperOffset
-    } else if (offsetY < scrollRef.scrollTop + lowerOffset) {
-      newScrollOffsets.top = offsetY - lowerOffset
+    const offsetY = bounds.top - scrollBounds?.top + scrollTop
+    if (offsetY > scrollTop + offsetHeight - 2 * navItemHeight) {
+      newOffsets.top = offsetY - offsetHeight + 2 * navItemHeight
+    } else if (offsetY < scrollTop + navItemHeight) {
+      newOffsets.top = offsetY - navItemHeight
     } else {
-      delete newScrollOffsets.top
+      delete newOffsets.top
     }
 
     // Skip if offset is unchanged
-    if (newScrollOffsets.left == null && newScrollOffsets.top == null) {
+    if (newOffsets.left == null && newOffsets.top == null) {
       return
     }
 
     // Smoothly scroll to the offset
     scrollRef.scroll({
-      ...newScrollOffsets,
+      ...newOffsets,
       behavior: "smooth",
     })
   }
