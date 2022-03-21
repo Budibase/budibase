@@ -45,6 +45,7 @@ module.exports = {
   INTERNAL_API_KEY: process.env.INTERNAL_API_KEY,
   MULTI_TENANCY: process.env.MULTI_TENANCY,
   HTTP_MIGRATIONS: process.env.HTTP_MIGRATIONS,
+  API_REQ_LIMIT_PER_SEC: process.env.API_REQ_LIMIT_PER_SEC,
   // environment
   NODE_ENV: process.env.NODE_ENV,
   JEST_WORKER_ID: process.env.JEST_WORKER_ID,

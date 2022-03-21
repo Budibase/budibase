@@ -1,11 +1,11 @@
 import { Thread, ThreadType } from "../threads"
 import { definitions } from "./triggerInfo"
-import { destroy, Webhook, WebhookType, save } from "../api/controllers/webhook"
+import * as webhooks from "../api/controllers/webhook"
 import CouchDB from "../db"
 import { queue } from "./bullboard"
 import newid from "../db/newid"
 import { updateEntityMetadata } from "../utilities"
-import { MetadataTypes } from "../constants"
+import { MetadataTypes, WebhookType } from "../constants"
 import { getProdAppID } from "@budibase/backend-core/db"
 import { cloneDeep } from "lodash/fp"
 import { getAppDB, getAppId } from "@budibase/backend-core/context"
@@ -156,7 +156,7 @@ export async function checkForWebhooks({ oldAuto, newAuto }: any) {
         delete newTrigger.webhookId
         newTrigger.inputs = {}
       }
-      await destroy(ctx)
+      await webhooks.destroy(ctx)
     } catch (err) {
       // don't worry about not being able to delete, if it doesn't exist all good
     }
@@ -169,14 +169,14 @@ export async function checkForWebhooks({ oldAuto, newAuto }: any) {
     const ctx: any = {
       appId,
       request: {
-        body: new Webhook(
+        body: new webhooks.Webhook(
           "Automation webhook",
           WebhookType.AUTOMATION,
           newAuto._id
         ),
       },
     }
-    await save(ctx)
+    await webhooks.save(ctx)
     const id = ctx.body.webhook._id
     newTrigger.webhookId = id
     // the app ID has to be development for this endpoint

@@ -9,7 +9,7 @@ const { errors } = require("@budibase/backend-core")
 const currentApp = require("../middleware/currentapp")
 const compress = require("koa-compress")
 const zlib = require("zlib")
-const { mainRoutes, staticRoutes } = require("./routes")
+const { mainRoutes, staticRoutes, publicRoutes } = require("./routes")
 const pkg = require("../../package.json")
 const env = require("../environment")
 const { middleware: pro } = require("@budibase/pro")
@@ -86,6 +86,9 @@ for (let route of mainRoutes) {
   router.use(route.routes())
   router.use(route.allowedMethods())
 }
+
+router.use(publicRoutes.routes())
+router.use(publicRoutes.allowedMethods())
 
 // WARNING - static routes will catch everything else after them this must be last
 router.use(staticRoutes.routes())

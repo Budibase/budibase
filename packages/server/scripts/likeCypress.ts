@@ -2,14 +2,13 @@
  * This script just makes it easy to re-create        *
  * a cypress like environment for testing the backend *
  ******************************************************/
-const path = require("path")
+import path from "path"
 const tmpdir = path.join(require("os").tmpdir(), ".budibase")
 
-const MAIN_PORT = "10001"
-const WORKER_PORT = "10002"
+const SERVER_PORT = "4100"
+const WORKER_PORT = "4200"
 
 // @ts-ignore
-process.env.PORT = MAIN_PORT
 process.env.BUDIBASE_API_KEY = "6BE826CB-6B30-4AEC-8777-2E90464633DE"
 process.env.NODE_ENV = "cypress"
 process.env.ENABLE_ANALYTICS = "false"
@@ -27,7 +26,11 @@ process.env.ALLOW_DEV_AUTOMATIONS = "1"
 
 // don't make this a variable or top level require
 // it will cause environment module to be loaded prematurely
-const server = require("../src/app")
+
+// override the port with the worker port temporarily
 process.env.PORT = WORKER_PORT
 const worker = require("../../worker/src/index")
-process.env.PORT = MAIN_PORT
+
+// override the port with the server port
+process.env.PORT = SERVER_PORT
+const server = require("../src/app")

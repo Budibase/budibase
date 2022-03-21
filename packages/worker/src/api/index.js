@@ -41,7 +41,6 @@ const PUBLIC_ENDPOINTS = [
     method: "GET",
   },
   {
-    // TODO: Add an provisioning API key to this endpoint in the cloud
     route: "/api/global/users/init",
     method: "POST",
   },
@@ -51,6 +50,10 @@ const PUBLIC_ENDPOINTS = [
   },
   {
     route: "api/system/environment",
+    method: "GET",
+  },
+  {
+    route: "api/system/status",
     method: "GET",
   },
   {
@@ -67,6 +70,10 @@ const NO_TENANCY_ENDPOINTS = [
   },
   {
     route: "/api/global/users/self",
+    method: "GET",
+  },
+  {
+    route: "/api/global/self",
     method: "GET",
   },
 ]

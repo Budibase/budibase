@@ -30,8 +30,8 @@ export function breakQueryString(qs) {
   const params = qs.split("&")
   let paramObj = {}
   for (let param of params) {
-    const [key, value] = param.split("=")
-    paramObj[key] = value
+    const split = param.split("=")
+    paramObj[split[0]] = split.slice(1).join("=")
   }
   return paramObj
 }
@@ -106,6 +106,36 @@ export function customQueryIconColor(datasource, query) {
     case "patch":
     default:
       return
+  }
+}
+
+export function customQueryText(datasource, query) {
+  if (!query.name || datasource.source !== IntegrationTypes.REST) {
+    return query.name
+  }
+
+  // Remove protocol
+  let name = query.name
+  if (name.includes("//")) {
+    name = name.split("//")[1]
+  }
+
+  // If no path, return the full name
+  if (!name.includes("/")) {
+    return name
+  }
+
+  // Remove trailing slash
+  if (name.endsWith("/")) {
+    name = name.slice(0, -1)
+  }
+
+  // Only use path
+  const split = name.split("/")
+  if (split[1]) {
+    return `/${split.slice(1).join("/")}`
+  } else {
+    return split[0]
   }
 }
 

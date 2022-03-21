@@ -48,6 +48,7 @@ export enum SourceNames {
   REST = "REST",
   ORACLE = "ORACLE",
   GOOGLE_SHEETS = "GOOGLE_SHEETS",
+  FIREBASE = "FIREBASE",
 }
 
 export enum IncludeRelationships {
@@ -138,6 +139,11 @@ export interface PaginationJson {
   page?: string | number
 }
 
+export interface RenameColumn {
+  old: string
+  updated: string
+}
+
 export interface RelationshipsJson {
   through?: string
   from?: string
@@ -153,6 +159,7 @@ export interface QueryJson {
     datasourceId: string
     entityId: string
     operation: Operation
+    schema?: string
   }
   resource: {
     fields: string[]
@@ -165,6 +172,7 @@ export interface QueryJson {
   meta?: {
     table?: Table
     tables?: Record<string, Table>
+    renamed: RenameColumn
   }
   extra?: {
     idFilter?: SearchFilters

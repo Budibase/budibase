@@ -14,7 +14,7 @@
   } from "@budibase/bbui"
 
   export let automation
-  export let onSelect
+
   let testDataModal
   let blocks
   let confirmDeleteDialog
@@ -45,7 +45,7 @@
     <div class="title">
       <div class="subtitle">
         <Heading size="S">{automation.name}</Heading>
-        <div style="display:flex;">
+        <div style="display:flex; align-items: center;">
           <div class="iconPadding">
             <div class="icon">
               <Icon
@@ -72,7 +72,7 @@
         animate:flip={{ duration: 500 }}
         in:fly|local={{ x: 500, duration: 1500 }}
       >
-        <FlowItem {testDataModal} {onSelect} {block} />
+        <FlowItem {testDataModal} {block} />
       </div>
     {/each}
   </div>

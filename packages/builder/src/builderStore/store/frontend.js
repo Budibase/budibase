@@ -24,9 +24,9 @@ import {
   findAllMatchingComponents,
   findComponent,
   getComponentSettings,
+  makeComponentUnique,
 } from "../componentUtils"
 import { Helpers } from "@budibase/bbui"
-import { removeBindings } from "../dataBinding"
 
 const INITIAL_FRONTEND_STATE = {
   apps: [],
@@ -41,6 +41,7 @@ const INITIAL_FRONTEND_STATE = {
     intelligentLoading: false,
     deviceAwareness: false,
     state: false,
+    rowSelection: false,
     customThemes: false,
     devicePreview: false,
     messagePassing: false,
@@ -399,11 +400,11 @@ export const getFrontendStore = () => {
             parentComponent = selected
           } else {
             // Otherwise we need to use the parent of this component
-            parentComponent = findComponentParent(asset.props, selected._id)
+            parentComponent = findComponentParent(asset?.props, selected._id)
           }
         } else {
           // Use screen or layout if no component is selected
-          parentComponent = asset.props
+          parentComponent = asset?.props
         }
 
         // Attach component
@@ -489,37 +490,22 @@ export const getFrontendStore = () => {
           }
         }
       },
-      paste: async (targetComponent, mode, preserveBindings = false) => {
+      paste: async (targetComponent, mode) => {
         let promises = []
         store.update(state => {
           // Stop if we have nothing to paste
           if (!state.componentToPaste) {
             return state
           }
-
-          // defines if this is a copy or a cut
           const cut = state.componentToPaste.isCut
 
-          // immediately need to remove bindings, currently these aren't valid when pasted
-          if (!cut && !preserveBindings) {
-            state.componentToPaste = removeBindings(state.componentToPaste, "")
-          }
-
-          // Clone the component to paste
-          // Retain the same ID if cutting as things may be referencing this component
+          // Clone the component to paste and make unique if copying
           delete state.componentToPaste.isCut
           let componentToPaste = cloneDeep(state.componentToPaste)
           if (cut) {
             state.componentToPaste = null
           } else {
-            const randomizeIds = component => {
-              if (!component) {
-                return
-              }
-              component._id = Helpers.uuid()
-              component._children?.forEach(randomizeIds)
-            }
-            randomizeIds(componentToPaste)
+            makeComponentUnique(componentToPaste)
           }
 
           if (mode === "inside") {
