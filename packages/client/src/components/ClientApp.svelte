@@ -226,4 +226,13 @@
     border: 1px solid var(--spectrum-global-color-gray-300);
     border-radius: 4px;
   }
+
+  /* Print styles */
+  @media print {
+    #spectrum-root,
+    #clip-root,
+    #app-root {
+      overflow: visible !important;
+    }
+  }
 </style>
