@@ -110,7 +110,7 @@
 </script>
 
 {#if $database?._id}
-  <div class="hierarchy-items-container">
+  <div class="container">
     {#each enrichedDataSources as datasource, idx}
       <NavItem
         border={idx > 0}
