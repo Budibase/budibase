@@ -30,7 +30,9 @@
   export let indent
   export let border
 
+  let folder
   let routeManuallyOpened = false
+
   $: selectedScreen = $currentAsset
   $: allScreens = getAllScreens(route)
   $: filteredScreens = getFilteredScreens(allScreens, $screenSearchString)
@@ -85,8 +87,7 @@
       <NavItem
         icon="WebPage"
         indentLevel={indent || 1}
-        selected={$store.selectedScreenId === screen.id &&
-          $store.currentView === "detail"}
+        selected={$store.selectedScreenId === screen.id}
         opened={$store.selectedScreenId === screen.id}
         text={ROUTE_NAME_MAP[screen.route]?.[screen.role] || screen.route}
         withArrow={route.subpaths}
