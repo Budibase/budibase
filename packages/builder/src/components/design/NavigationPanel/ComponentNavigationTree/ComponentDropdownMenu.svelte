@@ -138,3 +138,10 @@
     onOk={deleteComponent}
   />
 {/if}
+
+<style>
+  .icon {
+    display: grid;
+    place-items: center;
+  }
+</style>
