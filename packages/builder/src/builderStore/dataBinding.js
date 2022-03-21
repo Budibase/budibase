@@ -126,7 +126,7 @@ export const getDatasourceForProvider = (asset, component) => {
   if (dataProviderSetting) {
     const settingValue = component[dataProviderSetting.key]
     const providerId = extractLiteralHandlebarsID(settingValue)
-    const provider = findComponent(asset.props, providerId)
+    const provider = findComponent(asset?.props, providerId)
     return getDatasourceForProvider(asset, provider)
   }
 
@@ -458,7 +458,7 @@ export const getSchemaForDatasource = (asset, datasource, options) => {
     // Determine the entity which backs this datasource.
     // "provider" datasources are those targeting another data provider
     if (type === "provider") {
-      const component = findComponent(asset.props, datasource.providerId)
+      const component = findComponent(asset?.props, datasource.providerId)
       const source = getDatasourceForProvider(asset, component)
       return getSchemaForDatasource(asset, source, options)
     }

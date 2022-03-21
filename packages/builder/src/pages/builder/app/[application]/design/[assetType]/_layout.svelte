@@ -135,7 +135,7 @@
         if (asset?._id) {
           url += `/${asset._id}`
           if (componentId) {
-            const componentPath = findComponentPath(asset.props, componentId)
+            const componentPath = findComponentPath(asset?.props, componentId)
             const componentURL = componentPath
               .slice(1)
               .map(comp => comp._id)

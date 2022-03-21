@@ -2,7 +2,7 @@
   import { getContext } from "svelte"
   import { store } from "builderStore"
   import { DropEffect, DropPosition } from "./dragDropStore"
-  import ComponentDropdownMenu from "../ComponentDropdownMenu.svelte"
+  import ComponentDropdownMenu from "./ComponentDropdownMenu.svelte"
   import NavItem from "components/common/NavItem.svelte"
   import { capitalise } from "helpers"
   import { notifications } from "@budibase/bbui"
