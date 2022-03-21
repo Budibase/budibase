@@ -9,6 +9,7 @@
   import instantiateStore from "./dragDropStore"
   import ComponentTree from "./ComponentTree.svelte"
   import NavItem from "components/common/NavItem.svelte"
+  import PathDropdownMenu from "./PathDropdownMenu.svelte"
   import ScreenDropdownMenu from "./ScreenDropdownMenu.svelte"
   import { get } from "svelte/store"
 
@@ -78,7 +79,9 @@
     on:mouseover={e => {
       scrollApi.scrollTo(0, e.detail)
     }}
-  />
+  >
+    <PathDropdownMenu screens={allScreens} {path} />
+  </NavItem>
 
   {#if routeOpened}
     {#each filteredScreens as screen (screen.id)}

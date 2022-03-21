@@ -25,7 +25,7 @@ export const selectedComponent = derived(
     if (!$currentAsset || !$store.selectedComponentId) {
       return null
     }
-    return findComponent($currentAsset.props, $store.selectedComponentId)
+    return findComponent($currentAsset?.props, $store.selectedComponentId)
   }
 )
 
