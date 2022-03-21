@@ -66,9 +66,6 @@
     }
     routeManuallyOpened = !routeManuallyOpened
   }
-
-  $: console.log($store.selectedComponentId)
-  $: console.log()
 </script>
 
 {#if !noSearchMatch}

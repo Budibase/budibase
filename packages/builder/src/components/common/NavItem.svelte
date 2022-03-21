@@ -29,7 +29,6 @@
     if (!scrollApi || !contentRef) {
       return
     }
-    console.log("selected", text)
     const bounds = contentRef.getBoundingClientRect()
     scrollApi.scrollTo(bounds)
   }
