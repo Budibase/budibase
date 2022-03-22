@@ -9,7 +9,7 @@
     "url": "https://github.com/Budibase/budibase.git"
   },
   "scripts": {
-    "build": "rimraf dist/ && tsc && mv dist/src/* dist/ && rmdir dist/src/ && yarn postbuild",
+    "build": "rimraf dist/ && tsc -p tsconfig.build.json && mv dist/src/* dist/ && rmdir dist/src/ && yarn postbuild",
     "postbuild": "copyfiles -u 1 src/**/*.svelte dist/ && copyfiles -u 1 src/**/*.hbs dist/ && copyfiles -u 1 src/**/*.json dist/",
     "test": "jest --coverage --maxWorkers=2",
     "test:watch": "jest --watch",
@@ -81,6 +81,7 @@
     "@koa/router": "8.0.0",
     "@sendgrid/mail": "7.1.1",
     "@sentry/node": "6.17.7",
+    "@types/koa__router": "^8.0.11",
     "airtable": "0.10.1",
     "arangojs": "7.2.0",
     "aws-sdk": "^2.767.0",
@@ -146,7 +147,7 @@
     "@types/apidoc": "^0.50.0",
     "@types/bull": "^3.15.1",
     "@types/google-spreadsheet": "^3.1.5",
-    "@types/jest": "^26.0.23",
+    "@types/jest": "^27.4.1",
     "@types/koa": "^2.13.3",
     "@types/koa-router": "^7.4.2",
     "@types/lodash": "^4.14.179",

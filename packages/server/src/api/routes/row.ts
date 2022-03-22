@@ -1,4 +1,4 @@
-const Router = require("@koa/router")
+import Router from "@koa/router"
 import * as rowController from "../controllers/row"
 import authorized from "../../middleware/authorized"
 import { paramResource, paramSubResource } from "../../middleware/resourceId"
@@ -8,7 +8,7 @@ const {
 } = require("@budibase/backend-core/permissions")
 const { internalSearchValidator } = require("./utils/validators")
 
-const router = Router()
+const router = new Router()
 
 router
   /**

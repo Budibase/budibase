@@ -19,4 +19,5 @@ module.exports = {
   env: require("./environment"),
   accounts: require("./cloud/accounts"),
   tenancy: require("./tenancy"),
+  featureFlags: require("./featureFlags"),
 }

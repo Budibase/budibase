@@ -1,4 +1,3 @@
-import { quotas } from "@budibase/pro"
 import { save } from "../../api/controllers/row"
 import { cleanUpRow, getError } from "../automationUtils"
 import { buildCtx } from "./utils"
@@ -78,7 +77,7 @@ export async function run({ inputs, appId, emitter }: any) {
 
   try {
     inputs.row = await cleanUpRow(inputs.row.tableId, inputs.row)
-    await quotas.addRow(() => save(ctx))
+    await save(ctx)
     return {
       row: inputs.row,
       response: ctx.body,

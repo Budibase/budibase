@@ -1,31 +1,38 @@
-const rowController = require("../../../controllers/row")
-const appController = require("../../../controllers/application")
-const { AppStatus } = require("../../../../db/utils")
-const { BUILTIN_ROLE_IDS } = require("@budibase/backend-core/roles")
-const { TENANT_ID } = require("../../../../tests/utilities/structures")
-const { getAppDB, doInAppContext } = require("@budibase/backend-core/context")
-const env = require("../../../../environment")
+import * as rowController from "../../../controllers/row"
+import * as appController from "../../../controllers/application"
+import { AppStatus } from "../../../../db/utils"
+import { BUILTIN_ROLE_IDS } from "@budibase/backend-core/roles"
+import { TENANT_ID } from "../../../../tests/utilities/structures"
+import { getAppDB, doInAppContext } from "@budibase/backend-core/context"
+import * as env from "../../../../environment"
 
-function Request(appId, params) {
-  this.appId = appId
-  this.params = params
-  this.request = {}
+class Request {
+  appId: any
+  params: any
+  request: any
+  body: any
+
+  constructor(appId: any, params: any) {
+    this.appId = appId
+    this.params = params
+    this.request = {}
+  }
 }
 
-function runRequest(appId, controlFunc, request) {
+function runRequest(appId: any, controlFunc: any, request?: any) {
   return doInAppContext(appId, async () => {
     return controlFunc(request)
   })
 }
 
-exports.getAllTableRows = async config => {
+export const getAllTableRows = async (config: any) => {
   const req = new Request(config.appId, { tableId: config.table._id })
   await runRequest(config.appId, rowController.fetch, req)
   return req.body
 }
 
-exports.clearAllApps = async (tenantId = TENANT_ID) => {
-  const req = { query: { status: AppStatus.DEV }, user: { tenantId } }
+export const clearAllApps = async (tenantId = TENANT_ID) => {
+  const req: any = { query: { status: AppStatus.DEV }, user: { tenantId } }
   await appController.fetch(req)
   const apps = req.body
   if (!apps || apps.length <= 0) {
@@ -34,11 +41,11 @@ exports.clearAllApps = async (tenantId = TENANT_ID) => {
   for (let app of apps) {
     const { appId } = app
     const req = new Request(null, { appId })
-    await runRequest(appId, appController.delete, req)
+    await runRequest(appId, appController.destroy, req)
   }
 }
 
-exports.clearAllAutomations = async config => {
+export const clearAllAutomations = async (config: any) => {
   const automations = await config.getAllAutomations()
   for (let auto of automations) {
     await doInAppContext(config.appId, async () => {
@@ -47,7 +54,12 @@ exports.clearAllAutomations = async config => {
   }
 }
 
-exports.createRequest = (request, method, url, body) => {
+export const createRequest = (
+  request: any,
+  method: any,
+  url: any,
+  body: any
+) => {
   let req
 
   if (method === "POST") req = request.post(url).send(body)
@@ -59,7 +71,12 @@ exports.createRequest = (request, method, url, body) => {
   return req
 }
 
-exports.checkBuilderEndpoint = async ({ config, method, url, body }) => {
+export const checkBuilderEndpoint = async ({
+  config,
+  method,
+  url,
+  body,
+}: any) => {
   const headers = await config.login({
     userId: "us_fail",
     builder: false,
@@ -71,14 +88,14 @@ exports.checkBuilderEndpoint = async ({ config, method, url, body }) => {
     .expect(403)
 }
 
-exports.checkPermissionsEndpoint = async ({
+export const checkPermissionsEndpoint = async ({
   config,
   method,
   url,
   body,
   passRole,
   failRole,
-}) => {
+}: any) => {
   const passHeader = await config.login({
     roleId: passRole,
     prodApp: true,
@@ -106,11 +123,11 @@ exports.checkPermissionsEndpoint = async ({
     .expect(403)
 }
 
-exports.getDB = () => {
+export const getDB = () => {
   return getAppDB()
 }
 
-exports.testAutomation = async (config, automation) => {
+export const testAutomation = async (config: any, automation: any) => {
   return runRequest(automation.appId, async () => {
     return await config.request
       .post(`/api/automations/${automation._id}/test`)
@@ -126,7 +143,7 @@ exports.testAutomation = async (config, automation) => {
   })
 }
 
-exports.runInProd = async func => {
+export const runInProd = async (func: any) => {
   const nodeEnv = env.NODE_ENV
   const workerId = env.JEST_WORKER_ID
   env._set("NODE_ENV", "PRODUCTION")

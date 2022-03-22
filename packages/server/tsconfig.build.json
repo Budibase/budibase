@@ -1,0 +1,10 @@
+{
+  // Used for building with tsc
+  "extends": "./tsconfig.json",
+  "exclude": [
+    "node_modules",
+    "**/*.json",
+    "**/*.spec.js",
+    "**/*.spec.ts"
+  ]
+}
