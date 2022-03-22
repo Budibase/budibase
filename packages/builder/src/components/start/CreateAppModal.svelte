@@ -9,6 +9,7 @@
   import { goto } from "@roxi/routify"
   import { createValidationStore } from "helpers/validation/yup"
   import * as appValidation from "helpers/validation/yup/app"
+  import TemplateCard from "components/common/TemplateCard.svelte"
 
   export let template
 
@@ -17,8 +18,29 @@
   $: validation.check($values)
 
   onMount(async () => {
+    $values.url = resolveAppUrl(template, $values.name, $values.url)
+    $values.name = resolveAppName(template, $values.name)
     await setupValidation()
   })
+
+  $: appUrl = `${window.location.origin}${
+    $values.url ? $values.url : `/${resolveAppUrl(template, $values.name)}`
+  }`
+
+  const resolveAppUrl = (template, name) => {
+    let parsedName
+    const resolvedName = resolveAppName(template, name)
+    parsedName = resolvedName ? resolvedName.toLowerCase() : ""
+    const parsedUrl = parsedName ? parsedName.replace(/\s+/g, "-") : ""
+    return encodeURI(parsedUrl)
+  }
+
+  const resolveAppName = (template, name) => {
+    if (template && !name) {
+      return template.name
+    }
+    return name.trim()
+  }
 
   const setupValidation = async () => {
     const applications = svelteGet(apps)
@@ -83,6 +105,15 @@
   onConfirm={createNewApp}
   disabled={!$validation.valid}
 >
+  {#if template && !template?.fromFile}
+    <TemplateCard
+      name={template.name}
+      imageSrc={template.image}
+      backgroundColour={template.background}
+      overlayEnabled={false}
+      icon={template.icon}
+    />
+  {/if}
   {#if template?.fromFile}
     <Dropzone
       error={$validation.touched.file && $validation.errors.file}
@@ -104,13 +135,38 @@
       ? `${$auth.user.firstName}s app`
       : "My app"}
   />
-  <Input
-    bind:value={$values.url}
-    error={$validation.touched.url && $validation.errors.url}
-    on:blur={() => ($validation.touched.url = true)}
-    label="URL"
-    placeholder={$values.name
-      ? "/" + encodeURIComponent($values.name).toLowerCase()
-      : "/"}
-  />
+  <span>
+    <Input
+      bind:value={$values.url}
+      error={$validation.touched.url && $validation.errors.url}
+      on:blur={() => ($validation.touched.url = true)}
+      label="URL"
+      placeholder={$values.url
+        ? $values.url
+        : `/${resolveAppUrl(template, $values.name)}`}
+    />
+    {#if $values.name}
+      <div class="app-server-wrap" title={appUrl}>
+        <span class="app-server-prefix">
+          {window.location.origin}
+        </span>
+        {$values.url
+          ? $values.url
+          : `/${resolveAppUrl(template, $values.name)}`}
+      </div>
+    {/if}
+  </span>
 </ModalContent>
+
+<style>
+  .app-server-prefix {
+    color: var(--spectrum-global-color-gray-500);
+  }
+  .app-server-wrap {
+    margin-top: 10px;
+    width: 320px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+</style>
