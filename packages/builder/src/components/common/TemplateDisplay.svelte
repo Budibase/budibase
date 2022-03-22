@@ -4,7 +4,7 @@
   import CreateAppModal from "components/start/CreateAppModal.svelte"
 
   export let templates
-  
+
   let selectedTemplateCategory
   let creationModal
   let template

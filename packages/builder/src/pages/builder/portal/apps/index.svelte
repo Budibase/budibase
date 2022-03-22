@@ -346,13 +346,13 @@
               <div class="app-actions">
                 {#if cloud}
                   <Button
-                      size="M"
-                      icon="Export"
-                      quiet
-                      secondary
-                      on:click={initiateAppsExport}
-                    >
-                      Export apps
+                    size="M"
+                    icon="Export"
+                    quiet
+                    secondary
+                    on:click={initiateAppsExport}
+                  >
+                    Export apps
                   </Button>
                 {/if}
                 <div class="filter">
@@ -448,7 +448,7 @@
     display: flex;
   }
   .app-actions :global(> button) {
-    margin-right: 10px
+    margin-right: 10px;
   }
   .title .welcome > .buttons {
     padding-top: 30px;

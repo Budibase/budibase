@@ -47,7 +47,6 @@
 </div>
 
 <style>
-  
   .template-thumbnail {
     position: relative;
   }
@@ -99,8 +98,8 @@
     min-height: 200px;
   }
 
-  .template-card > *{
-    width : 100%
+  .template-card > * {
+    width: 100%;
   }
 
   .template-card img.loaded {
