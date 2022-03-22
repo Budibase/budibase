@@ -22,9 +22,8 @@ http {
   resolver {{ resolver }} valid=10s ipv6=off;
 
   # buffering
-  client_body_buffer_size 1K;
   client_header_buffer_size 1k;
-  client_max_body_size 10M;
+  client_max_body_size 20M;
   ignore_invalid_headers off;
   proxy_buffering off;
 
