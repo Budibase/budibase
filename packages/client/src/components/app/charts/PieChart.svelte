@@ -14,16 +14,44 @@
   export let donut
   export let palette
 
-  $: options = setUpChart(dataProvider)
+  $: options = setUpChart(
+    title,
+    dataProvider,
+    labelColumn,
+    valueColumn,
+    height,
+    width,
+    dataLabels,
+    animate,
+    legend,
+    donut,
+    palette
+  )
 
-  // Fetch data on mount
-  const setUpChart = provider => {
-    if (!provider || !provider.rows?.length || !labelColumn || !valueColumn) {
+  const setUpChart = (
+    title,
+    dataProvider,
+    labelColumn,
+    valueColumn,
+    height,
+    width,
+    dataLabels,
+    animate,
+    legend,
+    donut,
+    palette
+  ) => {
+    if (
+      !dataProvider ||
+      !dataProvider.rows?.length ||
+      !labelColumn ||
+      !valueColumn
+    ) {
       return null
     }
 
     // Fetch, filter and sort data
-    const { schema, rows } = provider
+    const { schema, rows } = dataProvider
     const data = rows
       .filter(row => row[labelColumn] != null && row[valueColumn] != null)
       .slice(0, 100)
