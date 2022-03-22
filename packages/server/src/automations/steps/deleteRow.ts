@@ -1,7 +1,6 @@
 import { destroy } from "../../api/controllers/row"
 import { buildCtx } from "./utils"
 import { getError } from "../automationUtils"
-import { quotas } from "@budibase/pro"
 
 export const definition = {
   description: "Delete a row from your database",
@@ -74,7 +73,6 @@ export async function run({ inputs, appId, emitter }: any) {
 
   try {
     await destroy(ctx)
-    await quotas.removeRow()
     return {
       response: ctx.body,
       row: ctx.row,

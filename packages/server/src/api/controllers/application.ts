@@ -389,7 +389,7 @@ const destroyApp = async (ctx: any) => {
   const db = getAppDB()
 
   const result = await db.destroy()
-  if (ctx.query.unpublish) {
+  if (ctx.query?.unpublish) {
     await quotas.removePublishedApp()
   } else {
     await quotas.removeApp()
@@ -408,7 +408,7 @@ const destroyApp = async (ctx: any) => {
 }
 
 const preDestroyApp = async (ctx: any) => {
-  const rows = await getUniqueRows([ctx.appId])
+  const rows = await getUniqueRows([ctx.params.appId])
   ctx.rowCount = rows.length
 }
 

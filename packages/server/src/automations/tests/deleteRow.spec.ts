@@ -1,10 +1,9 @@
-jest.mock("../../utilities/usageQuota")
-
-const usageQuota = require("../../utilities/usageQuota")
 const setup = require("./utilities")
 
 describe("test the delete row action", () => {
-  let table, row, inputs
+  let table: any
+  let row: any
+  let inputs: any
   let config = setup.getConfig()
 
   beforeEach(async () => {
@@ -37,7 +36,6 @@ describe("test the delete row action", () => {
   it("check usage quota attempts", async () => {
     await setup.runInProd(async () => {
       await setup.runStep(setup.actions.DELETE_ROW.stepId, inputs)
-      expect(usageQuota.update).toHaveBeenCalledWith("rows", -1)
     })
   })
 

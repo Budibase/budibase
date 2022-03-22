@@ -56,7 +56,8 @@ exports.createApiKeyView = async () => {
   await db.put(designDoc)
 }
 
-exports.createUserBuildersView = async db => {
+exports.createUserBuildersView = async () => {
+  const db = getGlobalDB()
   let designDoc
   try {
     designDoc = await db.get("_design/database")
@@ -82,6 +83,7 @@ exports.queryGlobalView = async (viewName, params, db = null) => {
   const CreateFuncByName = {
     [ViewNames.USER_BY_EMAIL]: exports.createUserEmailView,
     [ViewNames.BY_API_KEY]: exports.createApiKeyView,
+    [ViewNames.USER_BY_BUILDERS]: exports.createUserBuildersView,
   }
   // can pass DB in if working with something specific
   if (!db) {

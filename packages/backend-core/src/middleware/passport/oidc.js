@@ -129,4 +129,4 @@ exports.strategyFactory = async function (config, callbackUrl, saveUserFn) {
 }
 
 // expose for testing
-exports.authenticate = buildVerifyFn
+exports.buildVerifyFn = buildVerifyFn

@@ -1,10 +1,8 @@
-jest.mock("../../utilities/usageQuota")
-
-const usageQuota = require("../../utilities/usageQuota")
-const setup = require("./utilities")
+import * as setup from "./utilities"
 
 describe("test the create row action", () => {
-  let table, row
+  let table: any
+  let row: any
   let config = setup.getConfig()
 
   beforeEach(async () => {
@@ -36,18 +34,9 @@ describe("test the create row action", () => {
       row: {
         tableId: "invalid",
         invalid: "invalid",
-      }
+      },
     })
     expect(res.success).toEqual(false)
-  })
-
-  it("check usage quota attempts", async () => {
-    await setup.runInProd(async () => {
-      await setup.runStep(setup.actions.CREATE_ROW.stepId, {
-        row
-      })
-      expect(usageQuota.update).toHaveBeenCalledWith("rows", 1)
-    })
   })
 
   it("should check invalid inputs return an error", async () => {

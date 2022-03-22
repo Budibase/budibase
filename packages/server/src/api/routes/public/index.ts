@@ -127,4 +127,4 @@ applyRoutes(queryEndpoints, PermissionTypes.QUERY, "queryId")
 // needs to be applied last for routing purposes, don't override other endpoints
 applyRoutes(rowEndpoints, PermissionTypes.TABLE, "tableId", "rowId")
 
-module.exports = publicRouter
+export default publicRouter

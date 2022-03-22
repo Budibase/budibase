@@ -1,9 +1,9 @@
-const Router = require("@koa/router")
+import Router from "@koa/router"
 import * as controller from "../controllers/application"
 import authorized from "../../middleware/authorized"
-const { BUILDER } = require("@budibase/backend-core/permissions")
+import { BUILDER } from "@budibase/backend-core/permissions"
 
-const router = Router()
+const router = new Router()
 
 router
   .post("/api/applications/:appId/sync", authorized(BUILDER), controller.sync)

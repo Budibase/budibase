@@ -1,4 +1,4 @@
-const Router = require("@koa/router")
+import Router from "@koa/router"
 import * as controller from "../controllers/static"
 import { budibaseTempDir } from "../../utilities/budibaseDir"
 import authorized from "../../middleware/authorized"
@@ -10,10 +10,10 @@ import {
 import * as env from "../../environment"
 import { paramResource } from "../../middleware/resourceId"
 
-const router = Router()
+const router = new Router()
 
 /* istanbul ignore next */
-router.param("file", async (file, ctx, next) => {
+router.param("file", async (file: any, ctx: any, next: any) => {
   ctx.file = file && file.includes(".") ? file : "index.html"
   if (!ctx.file.startsWith("budibase-client")) {
     return next()

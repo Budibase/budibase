@@ -147,7 +147,9 @@ exports.getGlobalUserByEmail = async email => {
 }
 
 exports.getBuildersCount = async () => {
-  const builders = await queryGlobalView(ViewNames.BUILDERS)
+  const builders = await queryGlobalView(ViewNames.USER_BY_BUILDERS, {
+    include_docs: false,
+  })
   return builders.total_rows
 }
 

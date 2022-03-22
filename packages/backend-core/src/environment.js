@@ -28,8 +28,7 @@ module.exports = {
   SELF_HOSTED: !!parseInt(process.env.SELF_HOSTED),
   COOKIE_DOMAIN: process.env.COOKIE_DOMAIN,
   PLATFORM_URL: process.env.PLATFORM_URL,
-  USE_QUOTAS: process.env.USE_QUOTAS,
-  EXCLUDE_QUOTAS_TENANTS: process.env.EXCLUDE_QUOTAS_TENANTS,
+  TENANT_FEATURE_FLAGS: process.env.TENANT_FEATURE_FLAGS,
   isTest,
   _set(key, value) {
     process.env[key] = value
