@@ -1,13 +1,11 @@
 require("./utils").threadSetup()
-const env = require("../environment")
 const actions = require("../automations/actions")
 const automationUtils = require("../automations/automationUtils")
 const AutomationEmitter = require("../events/AutomationEmitter")
 const { processObject } = require("@budibase/string-templates")
 const { DEFAULT_TENANT_ID } = require("@budibase/backend-core/constants")
-const { DocumentTypes, isDevAppID } = require("../db/utils")
+const { DocumentTypes } = require("../db/utils")
 const { doInTenant } = require("@budibase/backend-core/tenancy")
-const usage = require("../utilities/usageQuota")
 const { definitions: triggerDefs } = require("../automations/triggerInfo")
 const { doInAppContext, getAppDB } = require("@budibase/backend-core/context")
 
@@ -119,11 +117,6 @@ class Orchestrator {
         console.error(`Automation error - ${step.stepId} - ${err}`)
         return err
       }
-    }
-
-    // Increment quota for automation runs
-    if (!env.SELF_HOSTED && !isDevAppID(this._appId)) {
-      await usage.update(usage.Properties.AUTOMATION, 1)
     }
     return this.executionOutput
   }
