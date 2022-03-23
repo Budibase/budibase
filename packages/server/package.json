@@ -158,6 +158,7 @@
     "copyfiles": "^2.4.1",
     "docker-compose": "^0.23.6",
     "eslint": "^6.8.0",
+    "is-wsl": "^2.2.0",
     "jest": "^27.0.5",
     "jest-openapi": "^0.14.2",
     "nodemon": "^2.0.4",
