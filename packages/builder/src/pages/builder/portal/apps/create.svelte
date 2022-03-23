@@ -9,6 +9,7 @@
     Body,
     Modal,
     Divider,
+    Link,
   } from "@budibase/bbui"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
   import TemplateDisplay from "components/common/TemplateDisplay.svelte"
@@ -60,14 +61,15 @@
 <Page wide>
   <Layout noPadding gap="XL">
     <span>
-      <Button
-        primary
+      <Link
+        quiet
+        secondary
         on:click={() => {
           $goto("../")
         }}
       >
-        Back
-      </Button>
+        &lt;&nbsp;Back
+      </Link>
     </span>
 
     <div class="title">
