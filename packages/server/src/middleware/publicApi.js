@@ -1,9 +1,9 @@
 const { Headers } = require("@budibase/backend-core/constants")
-const { getAppId } = require("@budibase/backend-core/utils")
+const { getAppIdFromCtx } = require("@budibase/backend-core/utils")
 
 module.exports = function ({ requiresAppId } = {}) {
   return async (ctx, next) => {
-    const appId = getAppId(ctx)
+    const appId = await getAppIdFromCtx(ctx)
     if (requiresAppId && !appId) {
       ctx.throw(
         400,
