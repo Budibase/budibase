@@ -103,3 +103,10 @@
     confirmText="Duplicate"
   />
 </Modal>
+
+<style>
+  .icon {
+    display: grid;
+    place-items: center;
+  }
+</style>
