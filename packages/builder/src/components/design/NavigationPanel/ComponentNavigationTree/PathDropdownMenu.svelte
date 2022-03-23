@@ -75,4 +75,8 @@
     align-items: flex-start;
     padding-left: var(--spacing-xl);
   }
+  .icon {
+    display: grid;
+    place-items: center;
+  }
 </style>
