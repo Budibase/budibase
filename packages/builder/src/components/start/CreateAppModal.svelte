@@ -13,18 +13,20 @@
 
   export let template
 
+  let creating = false
+
   const values = writable({ name: "", url: null })
   const validation = createValidationStore()
   $: validation.check($values)
 
   onMount(async () => {
-    $values.url = resolveAppUrl(template, $values.name, $values.url)
     $values.name = resolveAppName(template, $values.name)
+    nameToUrl($values.name)
     await setupValidation()
   })
 
   $: appUrl = `${window.location.origin}${
-    $values.url ? $values.url : `/${resolveAppUrl(template, $values.name)}`
+    $values.url ? $values.url : `${resolveAppUrl(template, $values.name)}`
   }`
 
   const resolveAppUrl = (template, name) => {
@@ -39,7 +41,19 @@
     if (template && !name) {
       return template.name
     }
-    return name.trim()
+    return name ? name.trim() : null
+  }
+
+  const tidyUrl = url => {
+    if (url && !url.startsWith("/")) {
+      url = `/${url}`
+    }
+    $values.url = url === "" ? null : url
+  }
+
+  const nameToUrl = appName => {
+    let resolvedUrl = resolveAppUrl(template, appName)
+    tidyUrl(resolvedUrl)
   }
 
   const setupValidation = async () => {
@@ -52,6 +66,8 @@
   }
 
   async function createNewApp() {
+    creating = true
+
     try {
       // Create form data to create app
       let data = new FormData()
@@ -86,15 +102,9 @@
       await auth.setInitInfo({})
       $goto(`/builder/app/${createdApp.instance._id}`)
     } catch (error) {
+      creating = false
       console.error(error)
       notifications.error("Error creating app")
-    }
-  }
-
-  // auto add slash to url
-  $: {
-    if ($values.url && !$values.url.startsWith("/")) {
-      $values.url = `/${$values.url}`
     }
   }
 </script>
@@ -128,41 +138,38 @@
   {/if}
   <Input
     bind:value={$values.name}
+    disabled={creating}
     error={$validation.touched.name && $validation.errors.name}
     on:blur={() => ($validation.touched.name = true)}
+    on:change={nameToUrl($values.name)}
     label="Name"
-    placeholder={$auth.user.firstName
+    placeholder={$auth.user?.firstName
       ? `${$auth.user.firstName}s app`
       : "My app"}
   />
   <span>
     <Input
       bind:value={$values.url}
+      disabled={creating}
       error={$validation.touched.url && $validation.errors.url}
       on:blur={() => ($validation.touched.url = true)}
+      on:change={tidyUrl($values.url)}
       label="URL"
       placeholder={$values.url
         ? $values.url
         : `/${resolveAppUrl(template, $values.name)}`}
     />
-    {#if $values.name}
-      <div class="app-server-wrap" title={appUrl}>
-        <span class="app-server-prefix">
-          {window.location.origin}
-        </span>
-        {$values.url
-          ? $values.url
-          : `/${resolveAppUrl(template, $values.name)}`}
+    {#if $values.url && $values.url !== "" && !$validation.errors.url}
+      <div class="app-server" title={appUrl}>
+        {`${window.location.origin}${$values.url}`}
       </div>
     {/if}
   </span>
 </ModalContent>
 
 <style>
-  .app-server-prefix {
-    color: var(--spectrum-global-color-gray-500);
-  }
-  .app-server-wrap {
+  .app-server {
+    color: var(--spectrum-global-color-gray-600);
     margin-top: 10px;
     width: 320px;
     white-space: nowrap;

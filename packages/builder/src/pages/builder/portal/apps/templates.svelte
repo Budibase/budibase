@@ -1,6 +1,6 @@
 <script>
   import { goto } from "@roxi/routify"
-  import { Layout, Page, notifications, Button } from "@budibase/bbui"
+  import { Layout, Page, notifications, Link } from "@budibase/bbui"
   import TemplateDisplay from "components/common/TemplateDisplay.svelte"
   import { onMount } from "svelte"
   import { templates } from "stores/portal"
@@ -25,14 +25,15 @@
 <Page wide>
   <Layout noPadding gap="XL">
     <span>
-      <Button
-        primary
+      <Link
+        quiet
+        secondary
         on:click={() => {
           $goto("../")
         }}
       >
-        Back
-      </Button>
+        &lt;&nbsp;Back
+      </Link>
     </span>
     {#if loaded && $templates?.length}
       <TemplateDisplay templates={$templates} />
