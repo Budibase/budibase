@@ -1,5 +1,5 @@
 const {
-  getAppId,
+  getAppIdFromCtx,
   setCookie,
   getCookie,
   clearCookie,
@@ -17,7 +17,7 @@ const { doInAppContext } = require("@budibase/backend-core/context")
 
 module.exports = async (ctx, next) => {
   // try to get the appID from the request
-  let requestAppId = getAppId(ctx)
+  let requestAppId = await getAppIdFromCtx(ctx)
   // get app cookie if it exists
   let appCookie = null
   try {

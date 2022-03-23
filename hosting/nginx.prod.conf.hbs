@@ -62,7 +62,6 @@ http {
 
     location /app {
       proxy_pass      http://$apps:4002;
-      rewrite ^/app/(.*)$ /$1 break;
     }
 
     location = / {
