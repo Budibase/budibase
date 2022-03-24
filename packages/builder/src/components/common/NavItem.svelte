@@ -1,6 +1,6 @@
 <script>
   import { Icon } from "@budibase/bbui"
-  import { createEventDispatcher } from "svelte"
+  import { createEventDispatcher, getContext } from "svelte"
 
   export let icon
   export let withArrow = false
@@ -14,11 +14,28 @@
   export let iconText
   export let iconColor
 
+  const scrollApi = getContext("scroll")
   const dispatch = createEventDispatcher()
 
-  function onIconClick(event) {
-    event.stopPropagation()
+  let contentRef
+  $: selected && contentRef && scrollToView()
+
+  const onClick = () => {
+    scrollToView()
+    dispatch("click")
+  }
+
+  const onIconClick = e => {
+    e.stopPropagation()
     dispatch("iconClick")
+  }
+
+  const scrollToView = () => {
+    if (!scrollApi || !contentRef) {
+      return
+    }
+    const bounds = contentRef.getBoundingClientRect()
+    scrollApi.scrollTo(bounds)
   }
 </script>
 
@@ -26,17 +43,17 @@
   class="nav-item"
   class:border
   class:selected
-  style={`padding-left: ${indentLevel * 14}px`}
+  style={`padding-left: ${20 + indentLevel * 14}px`}
   {draggable}
   on:dragend
   on:dragstart
   on:dragover
   on:drop
-  on:click
+  on:click={onClick}
   ondragover="return false"
   ondragenter="return false"
 >
-  <div class="content">
+  <div class="nav-item-content" bind:this={contentRef}>
     {#if withArrow}
       <div class:opened class="icon arrow" on:click={onIconClick}>
         <Icon size="S" name="ChevronRight" />
@@ -64,11 +81,16 @@
 
 <style>
   .nav-item {
-    border-radius: var(--border-radius-s);
     cursor: pointer;
     color: var(--grey-7);
     transition: background-color
       var(--spectrum-global-animation-duration-100, 130ms) ease-in-out;
+    padding: 0 var(--spacing-m) 0 var(--spacing-xl);
+    height: 32px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
   }
   .nav-item.selected {
     background-color: var(--grey-2);
@@ -81,14 +103,14 @@
     visibility: visible;
   }
 
-  .content {
-    padding: 0 var(--spacing-s);
-    height: 32px;
+  .nav-item-content {
+    flex: 1 1 auto;
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
     gap: var(--spacing-xs);
+    width: max-content;
   }
 
   .icon {
@@ -111,12 +133,13 @@
   }
 
   .text {
-    flex: 1 1 auto;
     font-weight: 600;
     font-size: var(--spectrum-global-dimension-font-size-75);
+    white-space: nowrap;
+    max-width: 160px;
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
+    flex: 0 0 auto;
   }
 
   .actions {
@@ -125,9 +148,9 @@
     height: 20px;
     cursor: pointer;
     position: relative;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
+    display: grid;
+    margin-left: var(--spacing-s);
+    place-items: center;
   }
 
   .iconText {
