@@ -4,7 +4,7 @@ version: "3"
 
 services:
   app-service:
-    restart: always
+    restart: unless-stopped
     image: budibase.docker.scarf.sh/budibase/apps
     container_name: bbapps
     environment:
@@ -28,7 +28,7 @@ services:
       - redis-service
 
   worker-service:
-    restart: always
+    restart: unless-stopped
     image: budibase.docker.scarf.sh/budibase/worker
     container_name: bbworker
     environment:
@@ -53,7 +53,7 @@ services:
       - couch-init
 
   minio-service:
-    restart: always
+    restart: unless-stopped
     image: minio/minio
     volumes:
       - minio_data:/data
@@ -69,7 +69,7 @@ services:
       retries: 3
 
   proxy-service:
-    restart: always
+    restart: unless-stopped
     ports:
       - "${MAIN_PORT}:10000"
     container_name: bbproxy
@@ -81,7 +81,7 @@ services:
       - couchdb-service
 
   couchdb-service:
-    restart: always
+    restart: unless-stopped
     image: ibmcom/couchdb3
     environment:
       - COUCHDB_PASSWORD=${COUCH_DB_PASSWORD}
@@ -98,7 +98,7 @@ services:
     command: ["sh","-c","sleep 10 && $${PUT_CALL}/_users && $${PUT_CALL}/_replicator; fg;"]
 
   redis-service:
-    restart: always
+    restart: unless-stopped
     image: redis
     command: redis-server --requirepass ${REDIS_PASSWORD}
     volumes:
