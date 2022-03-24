@@ -13,6 +13,9 @@ const env = require("../environment")
 
 const router = new Router()
 
+router.get("/health", ctx => (ctx.status = 200))
+router.get("/version", ctx => (ctx.body = pkg.version))
+
 router
   .use(
     compress({
@@ -33,8 +36,6 @@ router
     }
     await next()
   })
-  .use("/health", ctx => (ctx.status = 200))
-  .use("/version", ctx => (ctx.body = pkg.version))
   // re-direct before any middlewares occur
   .redirect("/", "/builder")
   .use(
@@ -70,8 +71,6 @@ router.use(async (ctx, next) => {
     }
   }
 })
-
-router.get("/health", ctx => (ctx.status = 200))
 
 // authenticated routes
 for (let route of mainRoutes) {
