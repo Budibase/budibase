@@ -102,6 +102,35 @@ Budibase is made to scale. With Budibase, you can self-host on your own infrastr
 
 - Checkout the promo video: https://youtu.be/xoljVpty_Kw
 
+<br />
+
+---
+
+<br />
+
+
+## Budibase Public API
+As with anything that we build in Budibase, our new public API is simple to use, flexible, and introduces new extensibility. To summarize, the Budibase API enables:
+
+- Budibase as a backend
+- Interoperability
+
+
+#### Docs
+You can learn more about the Budibase API at the following places:
+
+- [General documentation](https://docs.budibase.com/docs/public-api) : Learn how to get your API key, how to use spec, and how to use with Postman
+- [Interactive API documentation](https://docs.budibase.com/reference/post_applications) : Learn how to interact with the API
+
+#### Guides
+
+- [Build an app with Budibase and Next.js](https://budibase.com/blog/building-a-crud-app-with-budibase-and-next.js/)
+
+<p align="center">
+  <img alt="Budibase data" src="https://res.cloudinary.com/daog6scxm/image/upload/v1647858558/Feb%20release/Start_building_with_Budibase_s_API_3_rhlzhv.png">
+</p>
+<br /><br />
+
 <br /><br /><br />
 
 ## 🏁 Get started

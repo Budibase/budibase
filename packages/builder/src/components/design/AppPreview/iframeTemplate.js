@@ -52,7 +52,7 @@ export default `
           console.error("Client received invalid JSON")
           // Ignore
         }
-        if (!parsed) {
+        if (!parsed || !parsed.isBudibaseEvent) {
           return
         }
 
