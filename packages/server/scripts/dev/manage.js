@@ -2,10 +2,11 @@
 const compose = require("docker-compose")
 const path = require("path")
 const fs = require("fs")
+const isWsl = require("is-wsl")
 const { processStringSync } = require("@budibase/string-templates")
 
 function isLinux() {
-  return process.platform !== "darwin" && process.platform !== "win32"
+  return !isWsl && process.platform !== "darwin" && process.platform !== "win32"
 }
 
 // This script wraps docker-compose allowing you to manage your dev infrastructure with simple commands.
