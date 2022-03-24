@@ -71,21 +71,22 @@ module.exports = async (ctx, next) => {
   }
 
   return doInAppContext(appId, async () => {
-    let noCookieSet = false
+    let skipCookie = false
     // if the user not in the right tenant then make sure they have no permissions
     // need to judge this only based on the request app ID,
     if (
       env.MULTI_TENANCY &&
       ctx.user &&
       requestAppId &&
-      !isUserInAppTenant(requestAppId)
+      !isUserInAppTenant(requestAppId, ctx.user)
     ) {
       // don't error, simply remove the users rights (they are a public user)
       delete ctx.user.builder
       delete ctx.user.admin
       delete ctx.user.roles
+      ctx.isAuthenticated = false
       roleId = BUILTIN_ROLE_IDS.PUBLIC
-      noCookieSet = true
+      skipCookie = true
     }
 
     ctx.appId = appId
@@ -105,7 +106,7 @@ module.exports = async (ctx, next) => {
       (requestAppId !== appId ||
         appCookie == null ||
         appCookie.appId !== requestAppId) &&
-      !noCookieSet
+      !skipCookie
     ) {
       setCookie(ctx, { appId }, Cookies.CurrentApp)
     }

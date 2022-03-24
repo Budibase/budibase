@@ -35,9 +35,7 @@ class TestConfiguration {
   }
 
   executeMiddleware() {
-    return doInAppContext(APP_ID, () => {
-      return this.middleware(this.ctx, this.next)
-    })
+    return this.middleware(this.ctx, this.next)
   }
 
   setUser(user) {
