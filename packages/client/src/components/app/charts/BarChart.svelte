@@ -18,16 +18,53 @@
   export let palette
   export let horizontal
 
-  $: options = setUpChart(dataProvider)
+  $: options = setUpChart(
+    title,
+    dataProvider,
+    labelColumn,
+    valueColumns,
+    xAxisLabel,
+    yAxisLabel,
+    height,
+    width,
+    dataLabels,
+    animate,
+    legend,
+    stacked,
+    yAxisUnits,
+    palette,
+    horizontal
+  )
 
-  const setUpChart = provider => {
+  const setUpChart = (
+    title,
+    dataProvider,
+    labelColumn,
+    valueColumns,
+    xAxisLabel,
+    yAxisLabel,
+    height,
+    width,
+    dataLabels,
+    animate,
+    legend,
+    stacked,
+    yAxisUnits,
+    palette,
+    horizontal
+  ) => {
+    console.log("new chart")
     const allCols = [labelColumn, ...(valueColumns || [null])]
-    if (!provider || !provider.rows?.length || allCols.find(x => x == null)) {
+    if (
+      !dataProvider ||
+      !dataProvider.rows?.length ||
+      allCols.find(x => x == null)
+    ) {
       return null
     }
 
     // Fetch data
-    const { schema, rows } = provider
+    const { schema, rows } = dataProvider
     const reducer = row => (valid, column) => valid && row[column] != null
     const hasAllColumns = row => allCols.reduce(reducer(row), true)
     const data = rows.filter(row => hasAllColumns(row)).slice(0, 100)
