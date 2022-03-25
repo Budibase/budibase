@@ -7,7 +7,7 @@ const { getAppDB, getAppId } = require("@budibase/backend-core/context")
 exports.fetchSelf = async ctx => {
   let userId = ctx.user.userId || ctx.user._id
   /* istanbul ignore next */
-  if (!userId) {
+  if (!userId || !ctx.isAuthenticated) {
     ctx.body = {}
     return
   }
