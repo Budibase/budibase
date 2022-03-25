@@ -12,6 +12,8 @@ const { definitions: triggerDefs } = require("../automations/triggerInfo")
 const { doInAppContext, getAppDB } = require("@budibase/backend-core/context")
 
 const FILTER_STEP_ID = actions.ACTION_DEFINITIONS.FILTER.stepId
+const LOOP_STEP_ID = actions.ACTION_DEFINITIONS.LOOP.stepId
+
 const CRON_STEP_ID = triggerDefs.CRON.stepId
 const STOPPED_STATUS = { success: false, status: "STOPPED" }
 
@@ -80,51 +82,84 @@ class Orchestrator {
     let automation = this._automation
     const app = await this.getApp()
     let stopped = false
+    let loopStep
+
+    let stepCount = 0
+    let loopStepNumber
     for (let step of automation.definition.steps) {
-      // execution stopped, record state for that
-      if (stopped) {
-        this.updateExecutionOutput(step.id, step.stepId, {}, STOPPED_STATUS)
+      stepCount++
+      if (step.stepId === LOOP_STEP_ID) {
+        loopStep = step
+        loopStepNumber = stepCount
         continue
       }
-      let stepFn = await this.getStepFunctionality(step.stepId)
-      step.inputs = await processObject(step.inputs, this._context)
-      step.inputs = automationUtils.cleanInputValues(
-        step.inputs,
-        step.schema.inputs
-      )
-      // appId is always passed
-      try {
-        let tenantId = app.tenantId || DEFAULT_TENANT_ID
-        const outputs = await doInTenant(tenantId, () => {
-          return stepFn({
-            inputs: step.inputs,
-            appId: this._appId,
-            emitter: this._emitter,
-            context: this._context,
-          })
-        })
-        this._context.steps.push(outputs)
-        // if filter causes us to stop execution don't break the loop, set a var
-        // so that we can finish iterating through the steps and record that it stopped
-        if (step.stepId === FILTER_STEP_ID && !outputs.success) {
-          stopped = true
-          this.updateExecutionOutput(step.id, step.stepId, step.inputs, {
-            ...outputs,
-            ...STOPPED_STATUS,
-          })
+
+      let iterations = loopStep ? loopStep.inputs.iterations : 1
+      for (let index = 0; index < iterations; index++) {
+        // execution stopped, record state for that
+        if (stopped) {
+          this.updateExecutionOutput(step.id, step.stepId, {}, STOPPED_STATUS)
           continue
         }
-        this.updateExecutionOutput(step.id, step.stepId, step.inputs, outputs)
-      } catch (err) {
-        console.error(`Automation error - ${step.stepId} - ${err}`)
-        return err
+
+        // If it's a loop step, we need to manually add the bindings to the context
+        if (loopStep) {
+          this._context.steps[loopStepNumber] = {
+            currentItem: loopStep.inputs.binding.split(",")[index],
+          }
+        }
+
+        let stepFn = await this.getStepFunctionality(step.stepId)
+        console.log(step.inputs)
+
+        step.inputs = await processObject(step.inputs, this._context)
+        step.inputs = automationUtils.cleanInputValues(
+          step.inputs,
+          step.schema.inputs
+        )
+        console.log(step.inputs)
+        try {
+          // appId is always passed
+          let tenantId = app.tenantId || DEFAULT_TENANT_ID
+          const outputs = await doInTenant(tenantId, () => {
+            return stepFn({
+              inputs: step.inputs,
+              appId: this._appId,
+              emitter: this._emitter,
+              context: this._context,
+            })
+          })
+          this._context.steps[stepCount] = outputs
+          // if filter causes us to stop execution don't break the loop, set a var
+          // so that we can finish iterating through the steps and record that it stopped
+          if (step.stepId === FILTER_STEP_ID && !outputs.success) {
+            stopped = true
+            this.updateExecutionOutput(step.id, step.stepId, step.inputs, {
+              ...outputs,
+              ...STOPPED_STATUS,
+            })
+            continue
+          }
+          // THE OUTPUTS GET SET IN THE CONSTRUCTOR SO WE NEED TO RESET THEM
+
+          this.updateExecutionOutput(step.id, step.stepId, step.inputs, outputs)
+          console.log(this.executionOutput.input)
+        } catch (err) {
+          console.error(`Automation error - ${step.stepId} - ${err}`)
+          return err
+        }
+        if (index === iterations - 1) {
+          loopStep = null
+          break
+        }
       }
     }
-
     // Increment quota for automation runs
     if (!env.SELF_HOSTED && !isDevAppID(this._appId)) {
       await usage.update(usage.Properties.AUTOMATION, 1)
     }
+    // make  that we don't loop the next step if we have already been looping (loop block only has one step)
+
     return this.executionOutput
   }
 }
