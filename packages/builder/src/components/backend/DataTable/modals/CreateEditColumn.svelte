@@ -12,7 +12,7 @@
     Modal,
     notifications,
   } from "@budibase/bbui"
-  import { createEventDispatcher } from "svelte"
+  import { createEventDispatcher, onMount } from "svelte"
   import { cloneDeep } from "lodash/fp"
   import { tables } from "stores/backend"
   import { TableNames, UNEDITABLE_USER_FIELDS } from "constants"
@@ -321,6 +321,12 @@
     }
     return newError
   }
+
+  onMount(() => {
+    if (primaryDisplay) {
+      field.constraints.presence = { allowEmpty: false }
+    }
+  })
 </script>
 
 <ModalContent

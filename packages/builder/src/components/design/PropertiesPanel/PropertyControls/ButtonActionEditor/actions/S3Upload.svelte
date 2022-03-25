@@ -5,7 +5,7 @@
 
   export let parameters
 
-  $: components = findAllMatchingComponents($currentAsset.props, component =>
+  $: components = findAllMatchingComponents($currentAsset?.props, component =>
     component._component.endsWith("s3upload")
   )
 </script>

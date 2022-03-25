@@ -56,6 +56,7 @@
   $: if (!loading) loaded = true
   $: fields = getFields(schema, showAutoColumns, autoSortColumns)
   $: rows = fields?.length ? data || [] : []
+  $: totalRowCount = rows?.length || 0
   $: visibleRowCount = getVisibleRowCount(
     loaded,
     height,
@@ -63,7 +64,12 @@
     rowCount,
     rowHeight
   )
-  $: contentStyle = getContentStyle(visibleRowCount, rowCount, rowHeight)
+  $: heightStyle = getHeightStyle(
+    visibleRowCount,
+    rowCount,
+    totalRowCount,
+    rowHeight
+  )
   $: sortedRows = sortRows(rows, sortColumn, sortOrder)
   $: gridStyle = getGridStyle(fields, schema, showEditColumn)
   $: showEditColumn = allowEditRows || allowSelectRows
@@ -107,11 +113,16 @@
     return Math.min(allRows, Math.ceil(height / rowHeight))
   }
 
-  const getContentStyle = (visibleRows, rowCount, rowHeight) => {
-    if (!rowCount || !visibleRows) {
+  const getHeightStyle = (
+    visibleRowCount,
+    rowCount,
+    totalRowCount,
+    rowHeight
+  ) => {
+    if (!rowCount || !visibleRowCount || totalRowCount <= rowCount) {
       return ""
     }
-    return `height: ${headerHeight + visibleRows * rowHeight}px;`
+    return `height: ${headerHeight + visibleRowCount * rowHeight}px;`
   }
 
   const getGridStyle = (fields, schema, showEditColumn) => {
@@ -264,11 +275,11 @@
   style={`--row-height: ${rowHeight}px; --header-height: ${headerHeight}px;`}
 >
   {#if !loaded}
-    <div class="loading" style={contentStyle}>
+    <div class="loading" style={heightStyle}>
       <ProgressCircle />
     </div>
   {:else}
-    <div class="spectrum-Table" style={`${contentStyle}${gridStyle}`}>
+    <div class="spectrum-Table" style={`${heightStyle}${gridStyle}`}>
       {#if fields.length}
         <div class="spectrum-Table-head">
           {#if showEditColumn}

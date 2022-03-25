@@ -415,9 +415,7 @@
                 <Banner
                   extraButtonText="Learn more"
                   extraButtonAction={() =>
-                    window.open(
-                      "https://docs.budibase.com/building-apps/data/transformers"
-                    )}
+                    window.open("https://docs.budibase.com/docs/transformers")}
                   on:change={() => updateFlag("queryTransformerBanner", true)}
                 >
                   Add a JavaScript function to transform the query result.
