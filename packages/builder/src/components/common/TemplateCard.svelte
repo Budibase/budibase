@@ -37,7 +37,11 @@
         <use xlink:href="#spectrum-icon-18-{icon}" />
       </svg>
     </div>
-    <div class={overlayEnabled ? "template-thumbnail-action-overlay" : ""}>
+    <div
+      class={overlayEnabled && imageLoaded
+        ? "template-thumbnail-action-overlay"
+        : ""}
+    >
       <slot />
     </div>
   </div>
@@ -52,8 +56,7 @@
   }
 
   .template-card:hover .template-thumbnail-action-overlay {
-    display: flex;
-    flex-direction: column;
+    opacity: 1;
   }
 
   .template-thumbnail-action-overlay {
@@ -62,10 +65,13 @@
     left: 0px;
     width: 100%;
     height: 70%;
-    display: none;
+    display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     background-color: rgba(0, 0, 0, 0.7);
+    opacity: 0;
+    transition: opacity var(--spectrum-global-animation-duration-100) ease;
     border-top-right-radius: inherit;
     border-top-left-radius: inherit;
   }

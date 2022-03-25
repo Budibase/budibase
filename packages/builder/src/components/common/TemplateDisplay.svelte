@@ -1,5 +1,13 @@
 <script>
-  import { Layout, Detail, Heading, Button, Modal } from "@budibase/bbui"
+  import {
+    Layout,
+    Detail,
+    Heading,
+    Button,
+    Modal,
+    ActionGroup,
+    ActionButton,
+  } from "@budibase/bbui"
   import TemplateCard from "components/common/TemplateCard.svelte"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
 
@@ -46,34 +54,30 @@
   }
 </script>
 
-<div class="template-category-filters">
+<div class="template-header">
   <Layout noPadding gap="S">
     <Heading size="S">Templates</Heading>
-
     <div class="template-category-filters spectrum-ActionGroup">
-      <button
-        on:click={() => {
-          selectedTemplateCategory = null
-        }}
-        class="template-category-filter-all template-category-filter spectrum-ActionButton spectrum-ActionButton--sizeM 
-            spectrum-ActionGroup-item {!selectedTemplateCategory ||
-          'is-selected'}"
-      >
-        <span class="spectrum-ActionButton-label">All</span>
-      </button>
-
-      {#each templateCategories as templateCategoryKey}
-        <button
+      <ActionGroup>
+        <ActionButton
+          selected={!selectedTemplateCategory}
           on:click={() => {
-            selectedTemplateCategory = templateCategoryKey
+            selectedTemplateCategory = null
           }}
-          class="template-category-filter spectrum-ActionButton spectrum-ActionButton--sizeM 
-            spectrum-ActionGroup-item {templateCategoryKey ==
-            selectedTemplateCategory || 'is-selected'}"
         >
-          <span class="spectrum-ActionButton-label">{templateCategoryKey}</span>
-        </button>
-      {/each}
+          All
+        </ActionButton>
+        {#each templateCategories as templateCategoryKey}
+          <ActionButton
+            selected={templateCategoryKey == selectedTemplateCategory}
+            on:click={() => {
+              selectedTemplateCategory = templateCategoryKey
+            }}
+          >
+            {templateCategoryKey}
+          </ActionButton>
+        {/each}
+      </ActionGroup>
     </div>
   </Layout>
 </div>

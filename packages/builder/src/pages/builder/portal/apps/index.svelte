@@ -299,7 +299,13 @@
           </Layout>
 
           <div class="buttons">
-            <Button size="L" icon="Add" cta on:click={initiateAppCreation}>
+            <Button
+              dataCy="create-app-btn"
+              size="L"
+              icon="Add"
+              cta
+              on:click={initiateAppCreation}
+            >
               {createAppButtonText}
             </Button>
             {#if $apps?.length > 0}
@@ -315,6 +321,7 @@
             {/if}
             {#if !$apps?.length}
               <Button
+                dataCy="import-app-btn"
                 icon="Import"
                 size="L"
                 quiet
