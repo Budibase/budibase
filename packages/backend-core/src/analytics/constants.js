@@ -1,4 +1,4 @@
-export const Events = {
+const Events = {
   //
   BUILDER: {
     STARTED: "Builder Started",
@@ -50,4 +50,8 @@ export const Events = {
   SSO: {
     SAVED: "budibase:sso_saved",
   },
+}
+
+module.exports = {
+  Events,
 }

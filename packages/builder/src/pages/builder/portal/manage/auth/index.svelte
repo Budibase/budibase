@@ -205,6 +205,7 @@
             providers[res.type]._id = res._id
           })
           notifications.success(`Settings saved`)
+          // todo: move to api
           analytics.captureEvent(Events.SSO.SAVED)
         })
         .catch(() => {

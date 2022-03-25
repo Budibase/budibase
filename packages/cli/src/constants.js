@@ -9,6 +9,7 @@ exports.InitTypes = {
   DIGITAL_OCEAN: "do",
 }
 
+// todo: use backend core
 exports.AnalyticsEvents = {
   OptOut: "analytics_opt_out",
   OptIn: "analytics_opt_in",

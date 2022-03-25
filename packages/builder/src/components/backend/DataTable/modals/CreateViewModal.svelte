@@ -22,6 +22,7 @@
         field,
       })
       notifications.success(`View ${name} created`)
+      // todo: move to api
       analytics.captureEvent(Events.VIEW.CREATED, { name })
       $goto(`../../view/${name}`)
     } catch (error) {

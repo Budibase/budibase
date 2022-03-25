@@ -1,3 +1,4 @@
+// todo: audit
 export const buildAnalyticsEndpoints = API => ({
   /**
    * Notifies that an end user client app has been loaded.

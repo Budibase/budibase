@@ -17,6 +17,7 @@ const fileSystem = require("./utilities/fileSystem")
 const bullboard = require("./automations/bullboard")
 const redis = require("./utilities/redis")
 import * as migrations from "./migrations"
+import { analytics } from "@budibase/backend-core"
 
 const app = new Koa()
 
@@ -74,6 +75,7 @@ server.on("close", async () => {
     console.log("Server Closed")
   }
   await redis.shutdown()
+  await analytics.shutdown()
 })
 
 module.exports = server.listen(env.PORT || 0, async () => {

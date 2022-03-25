@@ -47,6 +47,7 @@
       notifications.success(`Automation ${name} created`)
 
       $goto(`./${$automationStore.selectedAutomation.automation._id}`)
+      // todo: move to api
       analytics.captureEvent(Events.AUTOMATION.CREATED, { name })
     } catch (error) {
       notifications.error("Error creating automation")

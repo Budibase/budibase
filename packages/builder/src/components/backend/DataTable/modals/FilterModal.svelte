@@ -75,6 +75,7 @@
     try {
       views.save(view)
       notifications.success(`View ${view.name} saved`)
+      // todo: move to api
       analytics.captureEvent(Events.VIEW.ADDED_FILTER, {
         filters: JSON.stringify(view.filters),
       })

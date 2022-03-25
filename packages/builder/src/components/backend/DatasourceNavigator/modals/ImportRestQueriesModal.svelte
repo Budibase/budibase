@@ -72,6 +72,7 @@
       }
 
       notifications.success(`Imported successfully.`)
+      // todo: move to api
       analytics.captureEvent(Events.QUERIES.REST.IMPORTED, {
         importType: lastTouched,
         newDatasource: createDatasource,
