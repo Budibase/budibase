@@ -16,6 +16,7 @@ const LOOP_STEP_ID = actions.ACTION_DEFINITIONS.LOOP.stepId
 
 const CRON_STEP_ID = triggerDefs.CRON.stepId
 const STOPPED_STATUS = { success: false, status: "STOPPED" }
+const { cloneDeep } = require("lodash/fp")
 
 /**
  * The automation orchestrator is a class responsible for executing automations.
@@ -96,6 +97,7 @@ class Orchestrator {
 
       let iterations = loopStep ? loopStep.inputs.iterations : 1
       for (let index = 0; index < iterations; index++) {
+        let originalStepInput = cloneDeep(step.inputs)
         // execution stopped, record state for that
         if (stopped) {
           this.updateExecutionOutput(step.id, step.stepId, {}, STOPPED_STATUS)
@@ -108,22 +110,15 @@ class Orchestrator {
             currentItem: loopStep.inputs.binding.split(",")[index],
           }
         }
-
         let stepFn = await this.getStepFunctionality(step.stepId)
-        console.log(step.inputs)
-
-        step.inputs = await processObject(step.inputs, this._context)
-        step.inputs = automationUtils.cleanInputValues(
-          step.inputs,
-          step.schema.inputs
-        )
-        console.log(step.inputs)
+        let inputs = await processObject(originalStepInput, this._context)
+        inputs = automationUtils.cleanInputValues(inputs, step.schema.inputs)
         try {
           // appId is always passed
           let tenantId = app.tenantId || DEFAULT_TENANT_ID
           const outputs = await doInTenant(tenantId, () => {
             return stepFn({
-              inputs: step.inputs,
+              inputs: inputs,
               appId: this._appId,
               emitter: this._emitter,
               context: this._context,
@@ -143,7 +138,6 @@ class Orchestrator {
           // THE OUTPUTS GET SET IN THE CONSTRUCTOR SO WE NEED TO RESET THEM
 
           this.updateExecutionOutput(step.id, step.stepId, step.inputs, outputs)
-          console.log(this.executionOutput.input)
         } catch (err) {
           console.error(`Automation error - ${step.stepId} - ${err}`)
           return err
