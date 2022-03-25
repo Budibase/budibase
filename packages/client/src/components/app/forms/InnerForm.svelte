@@ -157,13 +157,9 @@
         const { fieldState } = get(existingField)
         fieldId = fieldState.fieldId
 
-        // Use new default value if default value changed,
-        // otherwise use the current value if possible
-        if (defaultValue !== fieldState.defaultValue) {
-          initialValue = defaultValue
-        } else {
-          initialValue = fieldState.value ?? initialValue
-        }
+        // Determine the initial value for this field, reusing the current
+        // value if one exists
+        initialValue = fieldState.value ?? initialValue
 
         // If this field has already been registered and we previously had an
         // error set, then re-run the validator to see if we can unset it

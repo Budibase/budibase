@@ -23,17 +23,56 @@
   export let stacked
   export let gradient
 
-  $: options = setUpChart(dataProvider)
+  $: options = setUpChart(
+    title,
+    dataProvider,
+    labelColumn,
+    valueColumns,
+    xAxisLabel,
+    yAxisLabel,
+    height,
+    width,
+    animate,
+    dataLabels,
+    curve,
+    legend,
+    yAxisUnits,
+    palette,
+    area,
+    stacked,
+    gradient
+  )
 
-  // Fetch data on mount
-  const setUpChart = provider => {
+  const setUpChart = (
+    title,
+    dataProvider,
+    labelColumn,
+    valueColumns,
+    xAxisLabel,
+    yAxisLabel,
+    height,
+    width,
+    animate,
+    dataLabels,
+    curve,
+    legend,
+    yAxisUnits,
+    palette,
+    area,
+    stacked,
+    gradient
+  ) => {
     const allCols = [labelColumn, ...(valueColumns || [null])]
-    if (!provider || !provider.rows?.length || allCols.find(x => x == null)) {
+    if (
+      !dataProvider ||
+      !dataProvider.rows?.length ||
+      allCols.find(x => x == null)
+    ) {
       return null
     }
 
     // Fetch, filter and sort data
-    const { schema, rows } = provider
+    const { schema, rows } = dataProvider
     const reducer = row => (valid, column) => valid && row[column] != null
     const hasAllColumns = row => allCols.reduce(reducer(row), true)
     const data = rows.filter(row => hasAllColumns(row))
