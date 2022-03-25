@@ -37,11 +37,7 @@
         <use xlink:href="#spectrum-icon-18-{icon}" />
       </svg>
     </div>
-    <div
-      class={overlayEnabled && imageLoaded
-        ? "template-thumbnail-action-overlay"
-        : ""}
-    >
+    <div class={overlayEnabled ? "template-thumbnail-action-overlay" : ""}>
       <slot />
     </div>
   </div>
