@@ -7,7 +7,8 @@
     "customThemes": true,
     "devicePreview": true,
     "messagePassing": true,
-    "rowSelection": true
+    "rowSelection": true,
+    "continueIfAction": true
   },
   "layout": {
     "name": "Layout",

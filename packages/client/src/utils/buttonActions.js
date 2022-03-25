@@ -261,6 +261,26 @@ const exportDataHandler = async action => {
   }
 }
 
+const continueIfHandler = action => {
+  const { type, value, operator, referenceValue } = action.parameters
+  if (!type || !operator) {
+    return
+  }
+  let match = false
+  if (value == null && referenceValue == null) {
+    match = true
+  } else if (value === referenceValue) {
+    match = true
+  } else {
+    match = JSON.stringify(value) === JSON.stringify(referenceValue)
+  }
+  if (type === "continue") {
+    return operator === "equal" ? match : !match
+  } else {
+    return operator === "equal" ? !match : match
+  }
+}
+
 const handlerMap = {
   ["Save Row"]: saveRowHandler,
   ["Duplicate Row"]: duplicateRowHandler,
@@ -277,6 +297,7 @@ const handlerMap = {
   ["Update State"]: updateStateHandler,
   ["Upload File to S3"]: s3UploadHandler,
   ["Export Data"]: exportDataHandler,
+  ["Continue if / Stop if"]: continueIfHandler,
 }
 
 const confirmTextMap = {
