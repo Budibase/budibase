@@ -37,7 +37,9 @@ const saveRowHandler = async (action, context) => {
     notificationStore.actions.success("Row saved")
 
     // Refresh related datasources
-    await dataSourceStore.actions.invalidateDataSource(row.tableId)
+    await dataSourceStore.actions.invalidateDataSource(row.tableId, {
+      invalidateRelationships: true,
+    })
 
     return { row }
   } catch (error) {
@@ -65,7 +67,9 @@ const duplicateRowHandler = async (action, context) => {
       notificationStore.actions.success("Row saved")
 
       // Refresh related datasources
-      await dataSourceStore.actions.invalidateDataSource(row.tableId)
+      await dataSourceStore.actions.invalidateDataSource(row.tableId, {
+        invalidateRelationships: true,
+      })
 
       return { row }
     } catch (error) {
@@ -83,7 +87,9 @@ const deleteRowHandler = async action => {
       notificationStore.actions.success("Row deleted")
 
       // Refresh related datasources
-      await dataSourceStore.actions.invalidateDataSource(tableId)
+      await dataSourceStore.actions.invalidateDataSource(tableId, {
+        invalidateRelationships: true,
+      })
     } catch (error) {
       // Abort next actions
       return false

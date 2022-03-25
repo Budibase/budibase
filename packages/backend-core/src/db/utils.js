@@ -9,11 +9,7 @@ const {
   APP_PREFIX,
   APP_DEV,
 } = require("./constants")
-const {
-  getTenantId,
-  getTenantIDFromAppID,
-  getGlobalDBName,
-} = require("../tenancy")
+const { getTenantId, getGlobalDBName } = require("../tenancy")
 const fetch = require("node-fetch")
 const { getCouch } = require("./index")
 const { getAppMetadata } = require("../cache/appMetadata")
@@ -39,7 +35,6 @@ exports.DocumentTypes = DocumentTypes
 exports.APP_PREFIX = APP_PREFIX
 exports.APP_DEV = exports.APP_DEV_PREFIX = APP_DEV
 exports.SEPARATOR = SEPARATOR
-exports.getTenantIDFromAppID = getTenantIDFromAppID
 exports.isDevApp = isDevApp
 exports.isProdAppID = isProdAppID
 exports.isDevAppID = isDevAppID
