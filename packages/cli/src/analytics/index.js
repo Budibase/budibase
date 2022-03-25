@@ -3,6 +3,8 @@ const { CommandWords } = require("../constants")
 const { success, error } = require("../utils")
 const AnalyticsClient = require("./Client")
 
+// use backend core
+
 const client = new AnalyticsClient()
 
 async function optOut() {

@@ -6,6 +6,7 @@ const {
 } = require("../constants")
 const ConfigManager = require("../structures/ConfigManager")
 
+// use backend core
 class AnalyticsClient {
   constructor() {
     this.client = new PostHog(BUDIBASE_POSTHOG_TOKEN, {

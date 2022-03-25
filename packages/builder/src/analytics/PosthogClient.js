@@ -1,6 +1,7 @@
 import posthog from "posthog-js"
 import { Events } from "./constants"
 
+//
 export default class PosthogClient {
   constructor(token, url) {
     this.token = token

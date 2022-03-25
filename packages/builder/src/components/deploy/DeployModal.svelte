@@ -10,11 +10,13 @@
   async function deployApp() {
     try {
       await API.deployAppChanges()
+      // todo: move to api
       analytics.captureEvent(Events.APP.PUBLISHED, {
         appId: $store.appId,
       })
       notifications.success("Application published successfully")
     } catch (error) {
+      // todo: move to api
       analytics.captureException(error)
       notifications.error("Error publishing app")
     }

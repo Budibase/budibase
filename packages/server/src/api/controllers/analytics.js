@@ -1,36 +1,26 @@
-const env = require("../../environment")
-const PostHog = require("posthog-node")
-
-let posthogClient
-
-if (env.POSTHOG_TOKEN && env.ENABLE_ANALYTICS && !env.SELF_HOSTED) {
-  posthogClient = new PostHog(env.POSTHOG_TOKEN)
-}
+const { analytics } = require("@budibase/backend-core")
 
 exports.isEnabled = async ctx => {
   ctx.body = {
-    enabled: !env.SELF_HOSTED && env.ENABLE_ANALYTICS === "true",
+    enabled: analytics.enabled(),
   }
 }
 
 exports.endUserPing = async ctx => {
-  if (!posthogClient) {
+  if (!analytics.enabled()) {
     ctx.body = {
       ping: false,
     }
     return
   }
 
-  posthogClient.identify({
-    distinctId: ctx.user && ctx.user._id,
-    properties: {},
-  })
-  posthogClient.capture({
-    event: "budibase:end_user_ping",
-    distinctId: ctx.user && ctx.user._id,
-    properties: {
-      appId: ctx.appId,
-    },
+  // posthogClient.identify({
+  //   distinctId: ctx.user && ctx.user._id,
+  //   properties: {},
+  // })
+
+  analytics.captureEvent(ctx.user._id, "budibase:end_user_ping", {
+    appId: ctx.appId,
   })
 
   ctx.body = {
