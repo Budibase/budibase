@@ -231,11 +231,15 @@
     titleKey,
     onClick
   ) => {
-    if (!mapInstance || !validRows?.length) {
+    if (!mapInstance) {
       return
     }
 
     mapMarkerGroup.clearLayers()
+    if (!validRows?.length) {
+      return
+    }
+
     validRows.forEach(row => {
       let markerCoords = [row[latKey], row[lngKey]]
       let marker = L.marker(markerCoords, mapMarkerOptions).addTo(mapInstance)
