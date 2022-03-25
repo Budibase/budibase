@@ -84,6 +84,11 @@
     {
       "name": "Export Data",
       "component": "ExportData"
+    },
+    {
+      "name": "Continue if / Stop if",
+      "component": "ContinueIf",
+      "dependsOnFeature": "continueIfAction"
     }
   ]
 }
