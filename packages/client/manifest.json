@@ -3125,7 +3125,8 @@
             "label": "Table Columns",
             "key": "tableColumns",
             "dependsOn": "dataSource",
-            "placeholder": "All columns"
+            "placeholder": "All columns",
+            "nested": true
           },
           {
             "type": "boolean",

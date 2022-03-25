@@ -427,4 +427,20 @@
     height: var(--height);
     z-index: 998;
   }
+
+  /* Print styles */
+  @media print {
+    .layout,
+    .main-wrapper {
+      overflow: visible !important;
+    }
+    .nav-wrapper {
+      display: none !important;
+    }
+    .layout {
+      flex-direction: column !important;
+      justify-content: flex-start !important;
+      align-items: stretch !important;
+    }
+  }
 </style>

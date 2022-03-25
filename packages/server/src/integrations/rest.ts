@@ -11,6 +11,7 @@ import {
   PaginationValues,
 } from "../definitions/datasource"
 import { IntegrationBase } from "./base/IntegrationBase"
+import { get } from "lodash"
 
 const BodyTypes = {
   NONE: "none",
@@ -163,7 +164,7 @@ module RestModule {
       // Check if a pagination cursor exists in the response
       let nextCursor = null
       if (pagination?.responseParam) {
-        nextCursor = data?.[pagination.responseParam]
+        nextCursor = get(data, pagination.responseParam)
       }
 
       return {
