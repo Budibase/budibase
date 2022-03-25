@@ -35,6 +35,7 @@
   export let testData
   export let schemaProperties
   export let isTestModal = false
+  export let isLoop = false
   let webhookModal
   let drawer
   let tempFilters = lookForFilters(schemaProperties) || []
@@ -70,6 +71,11 @@
           [key]: e.detail,
         })
         testData[key] = e.detail
+        await automationStore.actions.save(
+          $automationStore.selectedAutomation?.automation
+        )
+      } else if (isLoop) {
+        block.loop[key] = e.detail
         await automationStore.actions.save(
           $automationStore.selectedAutomation?.automation
         )
@@ -261,6 +267,14 @@
             value={inputData[key]}
           />
         </CodeEditorModal>
+      {:else if value.customType === "loopOption"}
+        <Select
+          on:change={e => onChange(e, key)}
+          autoWidth
+          value={inputData[key]}
+          options={["Array", "String"]}
+          defaultValue={"Array"}
+        />
       {:else if value.type === "string" || value.type === "number" || value.type === "integer"}
         {#if isTestModal}
           <ModalBindableInput

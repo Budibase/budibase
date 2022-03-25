@@ -9,8 +9,8 @@
     Modal,
     Button,
     StatusLight,
-    ActionButton,
     Select,
+    Label,
     notifications,
   } from "@budibase/bbui"
   import AutomationBlockSetup from "../../SetupPanel/AutomationBlockSetup.svelte"
@@ -25,7 +25,6 @@
   let webhookModal
   let actionModal
   let resultsModal
-  let setupToggled
   let blockComplete
 
   $: rowControl = $automationStore.selectedAutomation.automation.rowControl
@@ -52,6 +51,8 @@
     block.schema?.inputs?.properties || {}
   ).every(x => block?.inputs[x])
 
+  $: loopingSelected = !!block.llop
+  $: showLooping = false
   async function deleteStep() {
     try {
       automationStore.actions.deleteAutomationBlock(block)
@@ -76,6 +77,37 @@
     )
   }
 
+  /*
+  async function removeLooping() {
+    loopingSelected = false
+    const idx =
+      $automationStore.selectedAutomation.automation.definition.steps.findIndex(
+        x => x.id === block.id
+      )
+
+    delete $automationStore.selectedAutomation.automation.definition.steps[idx]
+      .loop
+
+    await automationStore.actions.save(
+      $automationStore.selectedAutomation?.automation
+    )
+  }*/
+  async function addLooping() {
+    loopingSelected = true
+    const loopDefinition = $automationStore.blockDefinitions.ACTION.LOOP
+
+    const loopBlock = $automationStore.selectedAutomation.constructBlock(
+      "ACTION",
+      "LOOP",
+      loopDefinition
+    )
+    loopBlock.blockToLoop = block.id
+    automationStore.actions.addBlockToAutomation(loopBlock, blockIdx - 1)
+    await automationStore.actions.save(
+      $automationStore.selectedAutomation?.automation
+    )
+  }
+
   async function onSelect(block) {
     await automationStore.update(state => {
       state.selectedBlock = block
@@ -84,13 +116,61 @@
   }
 </script>
 
-<div
-  class={`block ${block.type} hoverable`}
-  class:selected
-  on:click={() => {
-    onSelect(block)
-  }}
->
+<div class={`block ${block.type} hoverable`} class:selected on:click={() => {}}>
+  {#if loopingSelected}
+    <div class="blockSection">
+      <div
+        on:click={() => {
+          showLooping = !showLooping
+        }}
+        class="splitHeader"
+      >
+        <div class="center-items">
+          <svg
+            width="28px"
+            height="28px"
+            class="spectrum-Icon"
+            style="color:grey;"
+            focusable="false"
+          >
+            <use xlink:href="#spectrum-icon-18-Reuse" />
+          </svg>
+          <div class="iconAlign">
+            <Detail size="S">Looping</Detail>
+          </div>
+        </div>
+
+        <div class="blockTitle">
+          <div
+            style="margin-left: 10px;"
+            on:click={() => {
+              onSelect(block)
+            }}
+          >
+            <Icon name={showLooping ? "ChevronDown" : "ChevronUp"} />
+          </div>
+        </div>
+      </div>
+    </div>
+    <Divider noMargin />
+    {#if !showLooping}
+      <div class="blockSection">
+        <Layout noPadding gap="S">
+          <AutomationBlockSetup
+            schemaProperties={Object.entries(
+              $automationStore.blockDefinitions.ACTION.LOOP.schema.inputs
+                .properties
+            )}
+            {block}
+            {webhookModal}
+            isLoop={true}
+          />
+        </Layout>
+      </div>
+      <Divider noMargin />
+    {/if}
+  {/if}
+
   <div class="blockSection">
     <div
       on:click={() => {
@@ -127,34 +207,42 @@
           <Detail size="S">{block?.name?.toUpperCase() || ""}</Detail>
         </div>
       </div>
-      {#if testResult && testResult[0]}
-        <span on:click={() => resultsModal.show()}>
-          <StatusLight
-            positive={isTrigger || testResult[0].outputs?.success}
-            negative={!testResult[0].outputs?.success}
-            ><Body size="XS">View response</Body></StatusLight
-          >
-        </span>
-      {/if}
+      <div class="blockTitle">
+        {#if testResult && testResult[0]}
+          <div style="float: right;" on:click={() => resultsModal.show()}>
+            <StatusLight
+              positive={isTrigger || testResult[0].outputs?.success}
+              negative={!testResult[0].outputs?.success}
+              ><Body size="XS">View response</Body></StatusLight
+            >
+          </div>
+        {/if}
+        <div
+          style="margin-left: 10px;"
+          on:click={() => {
+            onSelect(block)
+          }}
+        >
+          <Icon name={blockComplete ? "ChevronDown" : "ChevronUp"} />
+        </div>
+      </div>
     </div>
   </div>
   {#if !blockComplete}
     <Divider noMargin />
     <div class="blockSection">
       <Layout noPadding gap="S">
-        <div class="splitHeader">
-          <ActionButton
-            on:click={() => {
-              onSelect(block)
-              setupToggled = !setupToggled
-            }}
-            quiet
-            icon={setupToggled ? "ChevronDown" : "ChevronRight"}
-          >
-            <Detail size="S">Setup</Detail>
-          </ActionButton>
-          {#if !isTrigger}
+        {#if !isTrigger}
+          <div>
             <div class="block-options">
+              {#if !loopingSelected}
+                <div style="display: flex;" on:click={() => addLooping()}>
+                  <Icon name="Reuse" />
+                  <div style="margin-left:10px">
+                    <Label>Add looping</Label>
+                  </div>
+                </div>
+              {/if}
               {#if showBindingPicker}
                 <div>
                   <Select
@@ -172,20 +260,18 @@
                 <Icon name="DeleteOutline" />
               </div>
             </div>
-          {/if}
-        </div>
+          </div>
+        {/if}
 
-        {#if setupToggled}
-          <AutomationBlockSetup
-            schemaProperties={Object.entries(block.schema.inputs.properties)}
-            {block}
-            {webhookModal}
-          />
-          {#if lastStep}
-            <Button on:click={() => testDataModal.show()} cta
-              >Finish and test automation</Button
-            >
-          {/if}
+        <AutomationBlockSetup
+          schemaProperties={Object.entries(block.schema.inputs.properties)}
+          {block}
+          {webhookModal}
+        />
+        {#if lastStep}
+          <Button on:click={() => testDataModal.show()} cta
+            >Finish and test automation</Button
+          >
         {/if}
       </Layout>
     </div>
@@ -220,8 +306,9 @@
     padding-left: 30px;
   }
   .block-options {
-    display: flex;
+    justify-content: flex-end;
     align-items: center;
+    display: flex;
   }
   .center-items {
     display: flex;
@@ -255,5 +342,10 @@
     color: var(--grey-4);
     /* center horizontally */
     align-self: center;
+  }
+
+  .blockTitle {
+    display: flex;
+    align-items: center;
   }
 </style>
