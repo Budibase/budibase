@@ -9,7 +9,6 @@
     Body,
     Modal,
     Divider,
-    Link,
   } from "@budibase/bbui"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
   import TemplateDisplay from "components/common/TemplateDisplay.svelte"
@@ -61,15 +60,16 @@
 <Page wide>
   <Layout noPadding gap="XL">
     <span>
-      <Link
+      <Button
         quiet
         secondary
+        icon={"ChevronLeft"}
         on:click={() => {
           $goto("../")
         }}
       >
-        &lt;&nbsp;Back
-      </Link>
+        Back
+      </Button>
     </span>
 
     <div class="title">
@@ -82,10 +82,17 @@
         </Layout>
 
         <div class="buttons">
-          <Button size="L" icon="Add" cta on:click={initiateAppCreation}>
+          <Button
+            dataCy="create-app-btn"
+            size="L"
+            icon="Add"
+            cta
+            on:click={initiateAppCreation}
+          >
             {createAppButtonText}
           </Button>
           <Button
+            dataCy="import-app-btn"
             icon="Import"
             size="L"
             quiet
@@ -96,8 +103,9 @@
           </Button>
         </div>
       </div>
-      <Divider size="S" />
     </div>
+
+    <Divider size="S" />
 
     {#if loaded && $templates?.length}
       <TemplateDisplay templates={$templates} />
