@@ -6,7 +6,6 @@ const { authError } = require("./passport/utils")
 const authenticated = require("./authenticated")
 const auditLog = require("./auditLog")
 const tenancy = require("./tenancy")
-const appTenancy = require("./appTenancy")
 const internalApi = require("./internalApi")
 const datasourceGoogle = require("./passport/datasource/google")
 const csrf = require("./csrf")
@@ -19,7 +18,6 @@ module.exports = {
   authenticated,
   auditLog,
   tenancy,
-  appTenancy,
   authError,
   internalApi,
   datasource: {
