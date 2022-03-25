@@ -2530,9 +2530,7 @@
     "styles": ["size"],
     "editable": true,
     "draggable": false,
-    "illegalChildren": [
-      "section"
-    ],
+    "illegalChildren": ["section"],
     "settings": [
       {
         "type": "dataProvider",
@@ -2540,45 +2538,73 @@
         "key": "dataProvider"
       },
       {
+        "type": "field",
+        "label": "Latitude Key",
+        "key": "latitudeKey",
+        "dependsOn": "dataProvider"
+      },
+      {
+        "type": "field",
+        "label": "Longitude Key",
+        "key": "longitudeKey",
+        "dependsOn": "dataProvider"
+      },
+      {
+        "type": "field",
+        "label": "Title Key",
+        "key": "titleKey",
+        "dependsOn": "dataProvider"
+      },
+      {
+        "type": "event",
+        "label": "On Click Marker",
+        "key": "onClickMarker",
+        "context": [
+          {
+            "label": "Clicked marker",
+            "key": "marker"
+          }
+        ]
+      },
+      {
         "type": "boolean",
-        "label": "Enable Fullscreen",
+        "label": "Enable creating markers",
+        "key": "creationEnabled",
+        "defaultValue": false
+      },
+      {
+        "type": "event",
+        "label": "On Create Marker",
+        "key": "onCreateMarker",
+        "dependsOn": "creationEnabled",
+        "context": [
+          {
+            "label": "New marker latitude",
+            "key": "lat"
+          },
+          {
+            "label": "New marker longitude",
+            "key": "lng"
+          }
+        ]
+      },
+      {
+        "type": "boolean",
+        "label": "Enable fullscreen",
         "key": "fullScreenEnabled",
         "defaultValue": true
       },
       {
         "type": "boolean",
-        "label": "Enable Location",
+        "label": "Enable location",
         "key": "locationEnabled",
         "defaultValue": true
       },
       {
         "type": "boolean",
-        "label": "Enable Zoom",
+        "label": "Enable zoom",
         "key": "zoomEnabled",
         "defaultValue": true
-      },
-      {
-        "type": "number",
-        "label": "Zoom Level (0-100)",
-        "key": "zoomLevel",
-        "defaultValue": 72,
-        "max" : 100,
-        "min" : 0
-      },
-      {
-        "type": "field",
-        "label": "Latitude Key",
-        "key": "latitudeKey"
-      },
-      {
-        "type": "field",
-        "label": "Longitude Key",
-        "key": "longitudeKey"
-      },
-      {
-        "type": "field",
-        "label": "Title Key",
-        "key": "titleKey"
       },
       {
         "type": "text",
@@ -2586,11 +2612,20 @@
         "key": "tileURL",
         "defaultValue": "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       },
+
       {
         "type": "text",
-        "label": "Default Location (lat,lng)",
+        "label": "Default Location (when empty)",
         "key": "defaultLocation",
-        "defaultValue": "51.5072,-0.1276"
+        "placeholder": "51.5072,-0.1276"
+      },
+      {
+        "type": "number",
+        "label": "Default Location Zoom Level (0-100)",
+        "key": "zoomLevel",
+        "placeholder": 50,
+        "max": 100,
+        "min": 0
       },
       {
         "type": "text",
