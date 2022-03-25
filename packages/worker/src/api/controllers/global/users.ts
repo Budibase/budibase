@@ -135,7 +135,7 @@ export const fetch = async (ctx: any) => {
       delete user.password
     }
   }
-  ctx.body = users
+  ctx.body = all
 }
 
 // called internally by app server user find
