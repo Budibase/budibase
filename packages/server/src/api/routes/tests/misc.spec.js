@@ -11,10 +11,10 @@ describe("run misc tests", () => {
     await config.init()
   })
 
-  describe("/analytics", () => {
+  describe("/bbtel", () => {
       it("check if analytics enabled", async () => {
         const res = await request
-          .get(`/api/analytics`)
+          .get(`/api/bbtel`)
           .set(config.defaultHeaders())
           .expect("Content-Type", /json/)
           .expect(200)

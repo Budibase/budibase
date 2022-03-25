@@ -17,6 +17,7 @@
   let table
 
   $: fetchSchema(dataSource)
+  $: fetchTable(dataSource)
 
   // Returns the closes data context which isn't a built in context
   const getInitialValues = (type, dataSource, context) => {
@@ -71,6 +72,16 @@
 
     if (!loaded) {
       loaded = true
+    }
+  }
+
+  const fetchTable = async dataSource => {
+    if (dataSource?.tableId) {
+      try {
+        table = await API.fetchTableDefinition(dataSource.tableId)
+      } catch (error) {
+        table = null
+      }
     }
   }
 
