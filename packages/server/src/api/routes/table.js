@@ -40,7 +40,7 @@ router
   .get(
     "/api/tables/:tableId",
     paramResource("tableId"),
-    authorized(PermissionTypes.TABLE, PermissionLevels.READ),
+    authorized(PermissionTypes.TABLE, PermissionLevels.READ, { schema: true }),
     tableController.find
   )
   /**
