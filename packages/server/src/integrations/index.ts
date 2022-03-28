@@ -52,9 +52,9 @@ if (!(process.arch === "arm64" && process.platform === "darwin")) {
   INTEGRATIONS[SourceNames.ORACLE] = oracle.integration
 }
 
-// if (environment.SELF_HOSTED) {
-//   DEFINITIONS[SourceNames.GOOGLE_SHEETS] = googlesheets.schema
-// }
+if (environment.SELF_HOSTED) {
+  DEFINITIONS[SourceNames.GOOGLE_SHEETS] = googlesheets.schema
+}
 
 module.exports = {
   definitions: DEFINITIONS,
