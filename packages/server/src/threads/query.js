@@ -33,10 +33,12 @@ class QueryRunner {
       return fields
     }
     const bindings = findHBSBlocks(sql)
-    let variables = []
+    let variables = [],
+      arrays = []
     for (let binding of bindings) {
-      let variable = integration.getBindingIdentifier()
-      variables.push(binding)
+      // look for array/list operations in the SQL statement, which will need handled later
+      const listRegex = new RegExp(`(in|IN|In|iN)( )+${binding}`)
+      const listRegexMatch = sql.match(listRegex)
       // check if the variable was used as part of a string concat e.g. 'Hello {{binding}}'
       const charConstRegex = new RegExp(`'[^']*${binding}[^']*'`)
       const charConstMatch = sql.match(charConstRegex)
@@ -46,15 +48,45 @@ class QueryRunner {
         part2 = `'${part2.substring(0, part2.length - 1)}'`
         sql = sql.replace(
           charConstMatch[0],
-          integration.getStringConcat([part1, variable, part2])
+          integration.getStringConcat([
+            part1,
+            integration.getBindingIdentifier(),
+            part2,
+          ])
+        )
+      }
+      // generate SQL parameterised array
+      else if (listRegexMatch) {
+        arrays.push(binding)
+        // determine the length of the array
+        const value = this.enrichQueryFields([binding], parameters)[0].split(
+          ","
+        )
+        // build a string like ($1, $2, $3)
+        sql = sql.replace(
+          binding,
+          `(${Array.apply(null, Array(value.length))
+            .map(() => integration.getBindingIdentifier())
+            .join(",")})`
         )
       } else {
-        sql = sql.replace(binding, variable)
+        sql = sql.replace(binding, integration.getBindingIdentifier())
       }
+      variables.push(binding)
     }
     // replicate the knex structure
     fields.sql = sql
     fields.bindings = this.enrichQueryFields(variables, parameters)
+    // check for arrays in the data
+    let updated = []
+    for (let i = 0; i < variables.length; i++) {
+      if (arrays.includes(variables[i])) {
+        updated = updated.concat(fields.bindings[i].split(","))
+      } else {
+        updated.push(fields.bindings[i])
+      }
+    }
+    fields.bindings = updated
     return fields
   }
 
