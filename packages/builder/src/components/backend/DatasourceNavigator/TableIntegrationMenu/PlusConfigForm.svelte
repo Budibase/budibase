@@ -15,6 +15,7 @@
   import ArrayRenderer from "components/common/renderers/ArrayRenderer.svelte"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { goto } from "@roxi/routify"
+  import GoogleButton from "../_components/GoogleButton.svelte"
 
   export let datasource
   export let save
@@ -160,6 +161,11 @@
       Fetch tables
     </Button>
     <Button cta icon="Add" on:click={createNewTable}>New table</Button>
+    {#if integration.auth}
+      {#if integration.auth.type === "google"}
+        <GoogleButton {datasource} />
+      {/if}
+    {/if}
   </div>
 </div>
 <Body>
