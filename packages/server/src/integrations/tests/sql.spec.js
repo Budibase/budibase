@@ -187,4 +187,55 @@ describe("SQL query builder", () => {
       sql: `select * from (select * from \`${TABLE_NAME}\` limit ?) as \`${TABLE_NAME}\``
     })
   })
+
+  it("should use greater than when only low range specified", () => {
+    const date = new Date()
+    const query = sql._query(generateReadJson({
+      filters: {
+        range: {
+          property: {
+            low: date,
+          }
+        }
+      }
+    }))
+    expect(query).toEqual({
+      bindings: [date, limit],
+      sql: `select * from (select * from "${TABLE_NAME}" where "${TABLE_NAME}"."property" > $1 limit $2) as "${TABLE_NAME}"`
+    })
+  })
+
+  it("should use less than when only high range specified", () => {
+    const date = new Date()
+    const query = sql._query(generateReadJson({
+      filters: {
+        range: {
+          property: {
+            high: date,
+          }
+        }
+      }
+    }))
+    expect(query).toEqual({
+      bindings: [date, limit],
+      sql: `select * from (select * from "${TABLE_NAME}" where "${TABLE_NAME}"."property" < $1 limit $2) as "${TABLE_NAME}"`
+    })
+  })
+
+  it("should use greater than when only low range specified", () => {
+    const date = new Date()
+    const query = sql._query(generateReadJson({
+      filters: {
+        range: {
+          property: {
+            low: date,
+          }
+        }
+      }
+    }))
+    expect(query).toEqual({
+      bindings: [date, limit],
+      sql: `select * from (select * from "${TABLE_NAME}" where "${TABLE_NAME}"."property" > $1 limit $2) as "${TABLE_NAME}"`
+    })
+  })
 })

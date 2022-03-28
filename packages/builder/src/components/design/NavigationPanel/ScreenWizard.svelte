@@ -3,140 +3,133 @@
   import NewScreenModal from "components/design/NavigationPanel/NewScreenModal.svelte"
   import sanitizeUrl from "builderStore/store/screenTemplates/utils/sanitizeUrl"
   import { Modal, notifications } from "@budibase/bbui"
-  import { store, selectedAccessRole, allScreens } from "builderStore"
+  import { store, selectedAccessRole } from "builderStore"
   import analytics, { Events } from "analytics"
+  import { get } from "svelte/store"
 
-  let newScreenModal
-  let navigationSelectionModal
-  let screenDetailsModal
-  let screenName = ""
-  let url = ""
-  let selectedScreens = []
-  let roleId = $selectedAccessRole || "BASIC"
+  let pendingScreen
   let showProgressCircle = false
-  let routeError
-  let createdScreens = []
 
-  const createScreens = async () => {
-    for (let screen of selectedScreens) {
-      let test = screen.create()
-      createdScreens.push(test)
-      analytics.captureEvent(Events.SCREEN.CREATED, {
-        template: screen.id || screen.name,
-      })
-    }
-  }
+  // Modal refs
+  let newScreenModal
+  let screenDetailsModal
 
-  const save = async () => {
-    showProgressCircle = true
-    try {
-      await createScreens()
-      for (let screen of createdScreens) {
-        await saveScreens(screen)
-      }
-      await store.actions.routing.fetch()
-      selectedScreens = []
-      createdScreens = []
-      screenName = ""
-      url = ""
-    } catch (error) {
-      notifications.error("Error creating screens")
-    }
+  // External handler to show the screen wizard
+  export const showModal = () => {
+    newScreenModal.show()
+
+    // Reset state when showing modal again
+    pendingScreen = null
     showProgressCircle = false
   }
 
-  const saveScreens = async draftScreen => {
-    let existingScreenCount = $store.screens.filter(
-      s => s.props._instanceName == draftScreen.props._instanceName
-    ).length
-    if (existingScreenCount > 0) {
-      let oldUrlArr = draftScreen.routing.route.split("/")
-      oldUrlArr[1] = `${oldUrlArr[1]}-${existingScreenCount + 1}`
-      draftScreen.routing.route = oldUrlArr.join("/")
+  // Creates an array of screens, checking and sanitising their URLs
+  const createScreens = async screens => {
+    if (!screens?.length) {
+      return
     }
+    showProgressCircle = true
 
-    let route = url ? sanitizeUrl(`${url}`) : draftScreen.routing.route
-    if (draftScreen) {
-      if (!route) {
-        routeError = "URL is required"
-      } else {
-        if (routeExists(route, roleId)) {
-          routeError = "This URL is already taken for this access role"
-        } else {
-          routeError = ""
+    try {
+      for (let screen of screens) {
+        // Check we aren't clashing with an existing URL
+        if (hasExistingUrl(screen.routing.route)) {
+          let suffix = 2
+          let candidateUrl = makeCandidateUrl(screen, suffix)
+          while (hasExistingUrl(candidateUrl)) {
+            candidateUrl = makeCandidateUrl(screen, ++suffix)
+          }
+          screen.routing.route = candidateUrl
         }
-      }
 
-      if (routeError) return false
+        // Sanitise URL
+        screen.routing.route = sanitizeUrl(screen.routing.route)
 
-      if (screenName) {
-        draftScreen.props._instanceName = screenName
-      }
+        // Use the currently selected role
+        screen.routing.roleId = get(selectedAccessRole) || "BASIC"
 
-      draftScreen.routing.route = route
-      draftScreen.routing.roleId = roleId
+        // Create the screen
+        await store.actions.screens.save(screen)
 
-      await store.actions.screens.save(draftScreen)
-      if (draftScreen.props._instanceName.endsWith("List")) {
-        try {
+        // Analytics
+        if (screen.template) {
+          analytics.captureEvent(Events.SCREEN.CREATED, {
+            template: screen.template,
+          })
+        }
+
+        // Add link in layout for list screens
+        if (screen.props._instanceName.endsWith("List")) {
           await store.actions.components.links.save(
-            draftScreen.routing.route,
-            draftScreen.routing.route.split("/")[1]
+            screen.routing.route,
+            screen.routing.route.split("/")[1]
           )
-        } catch (error) {
-          notifications.error("Error creating link to screen")
         }
       }
+    } catch (error) {
+      notifications.error("Error creating screens")
+    }
+
+    showProgressCircle = false
+  }
+
+  // Checks if any screens exist in the store with the given route and
+  // currently selected role
+  const hasExistingUrl = url => {
+    const roleId = get(selectedAccessRole) || "BASIC"
+    const screens = get(store).screens.filter(s => s.routing.roleId === roleId)
+    return !!screens.find(s => s.routing?.route === url)
+  }
+
+  // Constructs a candidate URL for a new screen, suffixing the base of the
+  // screen's URL with a given suffix.
+  // e.g. "/sales/:id" => "/sales-1/:id"
+  const makeCandidateUrl = (screen, suffix) => {
+    let url = screen.routing?.route || ""
+    if (url.startsWith("/")) {
+      url = url.slice(1)
+    }
+    if (!url.includes("/")) {
+      return `/${url}-${suffix}`
+    } else {
+      const split = url.split("/")
+      return `/${split[0]}-${suffix}/${split.slice(1).join("/")}`
     }
   }
 
-  const routeExists = (route, roleId) => {
-    return $allScreens.some(
-      screen =>
-        screen.routing.route.toLowerCase() === route.toLowerCase() &&
-        screen.routing.roleId === roleId
-    )
-  }
-
-  export const showModal = () => {
-    newScreenModal.show()
-  }
-
-  const setScreens = evt => {
-    selectedScreens = evt.detail.screens
-  }
-
-  const chooseModal = index => {
-    /*
-    0 = newScreenModal
-    1 = screenDetailsModal
-    2 = navigationSelectionModal
-    */
-    if (index === 0) {
-      newScreenModal.show()
-    } else if (index === 1) {
+  // Handler for NewScreenModal
+  const confirmScreenSelection = async templates => {
+    // Handle template selection
+    if (templates?.length > 1) {
+      // Autoscreens, so create immediately
+      const screens = templates.map(template => template.create())
+      await createScreens(screens)
+    } else {
+      // Empty screen, so proceed to the next modal
+      pendingScreen = templates[0].create()
       screenDetailsModal.show()
-    } else if (index === 2) {
-      navigationSelectionModal.show()
     }
+  }
+
+  // Handler for ScreenDetailsModal
+  const confirmScreenDetails = async ({ screenName, screenUrl }) => {
+    if (!pendingScreen) {
+      return
+    }
+    pendingScreen.props._instanceName = screenName
+    pendingScreen.routing.route = screenUrl
+    await createScreens([pendingScreen])
   }
 </script>
 
 <Modal bind:this={newScreenModal}>
-  <NewScreenModal
-    on:save={setScreens}
-    {showProgressCircle}
-    {save}
-    {chooseModal}
-  />
+  <NewScreenModal onConfirm={confirmScreenSelection} {showProgressCircle} />
 </Modal>
 
 <Modal bind:this={screenDetailsModal}>
   <ScreenDetailsModal
-    bind:screenName
-    bind:url
     {showProgressCircle}
-    {save}
-    {chooseModal}
+    onConfirm={confirmScreenDetails}
+    onCancel={() => newScreenModal.show()}
   />
 </Modal>

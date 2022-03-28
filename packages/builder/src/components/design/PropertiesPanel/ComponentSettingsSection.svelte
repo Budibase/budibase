@@ -7,6 +7,7 @@
   import RoleSelect from "./PropertyControls/RoleSelect.svelte"
   import ResetFieldsButton from "./PropertyControls/ResetFieldsButton.svelte"
   import { getComponentForSettingType } from "./PropertyControls/componentSettings"
+  import { Utils } from "@budibase/frontend-core"
 
   export let componentDefinition
   export let componentInstance
@@ -32,7 +33,7 @@
     const customSections = settings.filter(setting => setting.section)
     return [
       {
-        name: "General",
+        name: componentDefinition?.name || "General",
         info: componentDefinition?.info,
         settings: generalSettings,
       },
@@ -40,13 +41,13 @@
     ]
   }
 
-  const updateProp = async (key, value) => {
+  const updateProp = Utils.sequential(async (key, value) => {
     try {
       await store.actions.components.updateProp(key, value)
     } catch (error) {
       notifications.error("Error updating component prop")
     }
-  }
+  })
 
   const canRenderControl = setting => {
     const control = getComponentForSettingType(setting?.type)

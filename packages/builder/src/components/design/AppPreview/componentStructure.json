@@ -82,7 +82,8 @@
       "link",
       "icon",
       "embed",
-      "markdownviewer"
+      "markdownviewer",
+      "embeddedmap"
     ]
   }
 ]

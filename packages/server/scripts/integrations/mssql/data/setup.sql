@@ -1,5 +1,10 @@
 USE master;
-  
+
+IF NOT EXISTS(SELECT 1 FROM sys.schemas WHERE name = 'Chains')
+BEGIN
+    EXEC sys.sp_executesql N'CREATE SCHEMA Chains;'
+END
+
 IF OBJECT_ID ('dbo.products', 'U') IS NOT NULL  
   DROP TABLE products;  
 GO  
@@ -61,3 +66,15 @@ VALUES ('Bob', '30'),
   ('Bobert', '99'),
   ('Jan', '22'),
   ('Megan', '11');
+
+
+IF OBJECT_ID ('Chains.sizes', 'U') IS NOT NULL
+  DROP TABLE Chains.sizes;
+GO
+CREATE TABLE Chains.sizes
+(
+  sizeid int IDENTITY(1, 1),
+  name varchar(30),
+  CONSTRAINT pk_size PRIMARY KEY NONCLUSTERED (sizeid)
+);
+

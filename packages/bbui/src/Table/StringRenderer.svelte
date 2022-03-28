@@ -8,6 +8,7 @@
   div {
     overflow: hidden;
     text-overflow: ellipsis;
-    width: 150px;
+    white-space: nowrap;
+    max-width: var(--max-cell-width);
   }
 </style>

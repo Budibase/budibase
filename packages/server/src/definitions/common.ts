@@ -5,6 +5,10 @@ export interface Base {
   _rev?: string
 }
 
+export interface Application extends Base {
+  appId?: string
+}
+
 export interface FieldSchema {
   // TODO: replace with field types enum when done
   type: string
