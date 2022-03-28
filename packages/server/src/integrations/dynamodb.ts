@@ -131,7 +131,9 @@ module DynamoModule {
 
     constructor(config: DynamoDBConfig) {
       this.config = config
-      this.connect()
+      if (!this.config.endpoint) {
+        this.connect()
+      }
       let options = {
         correctClockSkew: true,
         endpoint: config.endpoint ? config.endpoint : undefined,

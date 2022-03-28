@@ -7,7 +7,8 @@
     "customThemes": true,
     "devicePreview": true,
     "messagePassing": true,
-    "rowSelection": true
+    "rowSelection": true,
+    "continueIfAction": true
   },
   "layout": {
     "name": "Layout",
@@ -2521,6 +2522,117 @@
         "type": "validation/datetime",
         "label": "Validation",
         "key": "validation"
+      }
+    ]
+  },
+  "embeddedmap": {
+    "name": "Embedded Map",
+    "icon": "Location",
+    "styles": ["size"],
+    "editable": true,
+    "draggable": false,
+    "illegalChildren": ["section"],
+    "settings": [
+      {
+        "type": "dataProvider",
+        "label": "Provider",
+        "key": "dataProvider"
+      },
+      {
+        "type": "field",
+        "label": "Latitude Key",
+        "key": "latitudeKey",
+        "dependsOn": "dataProvider"
+      },
+      {
+        "type": "field",
+        "label": "Longitude Key",
+        "key": "longitudeKey",
+        "dependsOn": "dataProvider"
+      },
+      {
+        "type": "field",
+        "label": "Title Key",
+        "key": "titleKey",
+        "dependsOn": "dataProvider"
+      },
+      {
+        "type": "event",
+        "label": "On Click Marker",
+        "key": "onClickMarker",
+        "context": [
+          {
+            "label": "Clicked marker",
+            "key": "marker"
+          }
+        ]
+      },
+      {
+        "type": "boolean",
+        "label": "Enable creating markers",
+        "key": "creationEnabled",
+        "defaultValue": false
+      },
+      {
+        "type": "event",
+        "label": "On Create Marker",
+        "key": "onCreateMarker",
+        "dependsOn": "creationEnabled",
+        "context": [
+          {
+            "label": "New marker latitude",
+            "key": "lat"
+          },
+          {
+            "label": "New marker longitude",
+            "key": "lng"
+          }
+        ]
+      },
+      {
+        "type": "boolean",
+        "label": "Enable fullscreen",
+        "key": "fullScreenEnabled",
+        "defaultValue": true
+      },
+      {
+        "type": "boolean",
+        "label": "Enable location",
+        "key": "locationEnabled",
+        "defaultValue": true
+      },
+      {
+        "type": "boolean",
+        "label": "Enable zoom",
+        "key": "zoomEnabled",
+        "defaultValue": true
+      },
+      {
+        "type": "text",
+        "label": "Tile URL",
+        "key": "tileURL",
+        "defaultValue": "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      },
+
+      {
+        "type": "text",
+        "label": "Default Location (when empty)",
+        "key": "defaultLocation",
+        "placeholder": "51.5072,-0.1276"
+      },
+      {
+        "type": "number",
+        "label": "Default Location Zoom Level (0-100)",
+        "key": "zoomLevel",
+        "placeholder": 50,
+        "max": 100,
+        "min": 0
+      },
+      {
+        "type": "text",
+        "label": "Map Attribution",
+        "key": "mapAttribution",
+        "defaultValue": "OpenStreetMap contributors"
       }
     ]
   },

@@ -22,6 +22,7 @@ exports.processEvent = async job => {
     console.error(
       `${job.data.automation.appId} automation ${job.data.automation._id} was unable to run - ${err}`
     )
+    console.trace(err)
     return { err }
   }
 }
