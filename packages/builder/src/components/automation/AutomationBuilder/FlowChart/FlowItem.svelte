@@ -34,6 +34,7 @@
   $: testResult = $automationStore.selectedAutomation.testResults?.steps.filter(
     step => (block.id ? step.id === block.id : step.stepId === block.stepId)
   )
+  $: console.log(testResult)
   $: isTrigger = block.type === "TRIGGER"
 
   $: selected = $automationStore.selectedBlock?.id === block.id
@@ -51,7 +52,10 @@
     block.schema?.inputs?.properties || {}
   ).every(x => block?.inputs[x])
 
-  $: loopingSelected = !!block.llop
+  $: loopingSelected =
+    $automationStore.selectedAutomation?.automation.definition.steps.find(
+      x => x.blockToLoop === block.id
+    )
   $: showLooping = false
   async function deleteStep() {
     try {
@@ -77,21 +81,18 @@
     )
   }
 
-  /*
   async function removeLooping() {
     loopingSelected = false
-    const idx =
+    const loopToDelete =
       $automationStore.selectedAutomation.automation.definition.steps.findIndex(
-        x => x.id === block.id
+        x => x.blockToLoop === block.id
       )
 
-    delete $automationStore.selectedAutomation.automation.definition.steps[idx]
-      .loop
-
+    automationStore.actions.deleteAutomationBlock(loopToDelete)
     await automationStore.actions.save(
       $automationStore.selectedAutomation?.automation
     )
-  }*/
+  }
   async function addLooping() {
     loopingSelected = true
     const loopDefinition = $automationStore.blockDefinitions.ACTION.LOOP
@@ -152,18 +153,25 @@
         </div>
       </div>
     </div>
+
     <Divider noMargin />
     {#if !showLooping}
       <div class="blockSection">
+        <div class="block-options">
+          <div class="delete-padding" on:click={() => deleteStep()}>
+            <Icon name="DeleteOutline" />
+          </div>
+        </div>
         <Layout noPadding gap="S">
           <AutomationBlockSetup
             schemaProperties={Object.entries(
               $automationStore.blockDefinitions.ACTION.LOOP.schema.inputs
                 .properties
             )}
-            {block}
+            block={$automationStore.selectedAutomation?.automation.definition.steps.find(
+              x => x.blockToLoop === block.id
+            )}
             {webhookModal}
-            isLoop={true}
           />
         </Layout>
       </div>

@@ -17,6 +17,7 @@ const LOOP_STEP_ID = actions.ACTION_DEFINITIONS.LOOP.stepId
 const CRON_STEP_ID = triggerDefs.CRON.stepId
 const STOPPED_STATUS = { success: false, status: "STOPPED" }
 const { cloneDeep } = require("lodash/fp")
+const { loop } = require("svelte/internal")
 
 /**
  * The automation orchestrator is a class responsible for executing automations.
@@ -87,6 +88,7 @@ class Orchestrator {
 
     let stepCount = 0
     let loopStepNumber
+    let loopSteps = []
     for (let step of automation.definition.steps) {
       stepCount++
       if (step.stepId === LOOP_STEP_ID) {
@@ -94,10 +96,18 @@ class Orchestrator {
         loopStepNumber = stepCount
         continue
       }
+      let iterations = loopStep ? loopStep.inputs.binding.split(",").length : 1
 
-      let iterations = loopStep ? loopStep.inputs.iterations : 1
       for (let index = 0; index < iterations; index++) {
         let originalStepInput = cloneDeep(step.inputs)
+
+        /*
+        if (step.stepId === LOOP_STEP_ID && index >= loopStep.inputs.iterations) {
+          this.executionOutput.steps[loopStepNumber].outputs.status = "Loop Broken"
+          break
+        }
+        
+        */
         // execution stopped, record state for that
         if (stopped) {
           this.updateExecutionOutput(step.id, step.stepId, {}, STOPPED_STATUS)
@@ -135,17 +145,49 @@ class Orchestrator {
             })
             continue
           }
-          // THE OUTPUTS GET SET IN THE CONSTRUCTOR SO WE NEED TO RESET THEM
-
-          this.updateExecutionOutput(step.id, step.stepId, step.inputs, outputs)
+          if (loopStep) {
+            loopSteps.push({
+              id: step.id,
+              stepId: step.stepId,
+              inputs: step.inputs,
+              outputs,
+            })
+          } else {
+            this.updateExecutionOutput(
+              step.id,
+              step.stepId,
+              step.inputs,
+              outputs
+            )
+          }
         } catch (err) {
           console.error(`Automation error - ${step.stepId} - ${err}`)
           return err
         }
+
         if (index === iterations - 1) {
           loopStep = null
           break
         }
+      }
+      if (loopSteps) {
+        this.executionOutput.steps.splice(loopStepNumber, 0, {
+          id: step.id,
+          stepId: step.stepId,
+          outputs: {
+            success: true,
+            outputs: loopSteps,
+            iterations: iterations,
+          },
+        })
+        this._context.steps.splice(loopStepNumber, 0, {
+          id: step.id,
+          stepId: step.stepId,
+          steps: loopSteps,
+          iterations,
+          success: true,
+        })
+        loopSteps = null
       }
     }
     // Increment quota for automation runs
@@ -153,7 +195,6 @@ class Orchestrator {
       await usage.update(usage.Properties.AUTOMATION, 1)
     }
     // make  that we don't loop the next step if we have already been looping (loop block only has one step)
-
     return this.executionOutput
   }
 }
