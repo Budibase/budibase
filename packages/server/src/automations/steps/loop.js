@@ -11,7 +11,7 @@ exports.definition = {
       properties: {
         option: {
           customType: "loopOption",
-          title: "Whether it's an array or a string",
+          title: "Input type",
         },
         binding: {
           type: "string",
@@ -30,9 +30,17 @@ exports.definition = {
     },
     outputs: {
       properties: {
-        currentItem: {
+        items: {
           customType: "item",
           description: "the item currently being executed",
+        },
+        success: {
+          type: "boolean",
+          description: "Whether the message sent successfully",
+        },
+        iterations: {
+          type: "number",
+          descriptions: "The amount of times the block ran",
         },
       },
       required: ["success"],

@@ -35,7 +35,6 @@
   export let testData
   export let schemaProperties
   export let isTestModal = false
-  export let isLoop = false
   let webhookModal
   let drawer
   let tempFilters = lookForFilters(schemaProperties) || []
@@ -71,11 +70,6 @@
           [key]: e.detail,
         })
         testData[key] = e.detail
-        await automationStore.actions.save(
-          $automationStore.selectedAutomation?.automation
-        )
-      } else if (isLoop) {
-        block.loop[key] = e.detail
         await automationStore.actions.save(
           $automationStore.selectedAutomation?.automation
         )
