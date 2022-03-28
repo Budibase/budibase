@@ -12,7 +12,7 @@
   export let type
 
   $: form = findClosestMatchingComponent(
-    $currentAsset.props,
+    $currentAsset?.props,
     componentInstance._id,
     component => component._component === "@budibase/standard-components/form"
   )

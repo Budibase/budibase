@@ -51,7 +51,7 @@
   bind:this={confirmDeleteDialog}
   title="Confirm Deletion"
   body={"Are you sure you wish to delete this layout?"}
-  okText="Delete Layout"
+  okText="Delete layout"
   onOk={deleteLayout}
 />
 
@@ -65,3 +65,10 @@
     <Input thin type="text" label="Name" bind:value={name} />
   </ModalContent>
 </Modal>
+
+<style>
+  .icon {
+    display: grid;
+    place-items: center;
+  }
+</style>

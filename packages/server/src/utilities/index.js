@@ -151,3 +151,11 @@ exports.formatBytes = bytes => {
   }
   return `${size.toFixed(size < 10 && unit > 0 ? 1 : 0)}${units[unit]}`
 }
+
+exports.convertBookmark = bookmark => {
+  const IS_NUMBER = /^\d+\.?\d*$/
+  if (typeof bookmark === "string" && bookmark.match(IS_NUMBER)) {
+    return parseFloat(bookmark)
+  }
+  return bookmark
+}

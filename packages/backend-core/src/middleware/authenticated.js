@@ -5,7 +5,7 @@ const { getSession, updateSessionTTL } = require("../security/sessions")
 const { buildMatcherRegex, matches } = require("./matchers")
 const env = require("../environment")
 const { SEPARATOR, ViewNames, queryGlobalView } = require("../../db")
-const { getGlobalDB } = require("../tenancy")
+const { getGlobalDB, doInTenant } = require("../tenancy")
 const { decrypt } = require("../security/encryption")
 
 function finalise(
@@ -25,20 +25,25 @@ async function checkApiKey(apiKey, populateUser) {
   }
   const decrypted = decrypt(apiKey)
   const tenantId = decrypted.split(SEPARATOR)[0]
-  const db = getGlobalDB(tenantId)
-  // api key is encrypted in the database
-  const userId = await queryGlobalView(
-    ViewNames.BY_API_KEY,
-    {
-      key: apiKey,
-    },
-    db
-  )
-  if (userId) {
-    return { valid: true, user: await getUser(userId, tenantId, populateUser) }
-  } else {
-    throw "Invalid API key"
-  }
+  return doInTenant(tenantId, async () => {
+    const db = getGlobalDB()
+    // api key is encrypted in the database
+    const userId = await queryGlobalView(
+      ViewNames.BY_API_KEY,
+      {
+        key: apiKey,
+      },
+      db
+    )
+    if (userId) {
+      return {
+        valid: true,
+        user: await getUser(userId, tenantId, populateUser),
+      }
+    } else {
+      throw "Invalid API key"
+    }
+  })
 }
 
 /**

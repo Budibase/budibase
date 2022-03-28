@@ -121,8 +121,6 @@ read.push(new Endpoint("get", "/applications/:appId", controller.read))
  *     description: Based on application properties (currently only name) search for applications.
  *     tags:
  *       - applications
- *     parameters:
- *       - $ref: '#/components/parameters/appId'
  *     requestBody:
  *       required: true
  *       content:
@@ -135,14 +133,7 @@ read.push(new Endpoint("get", "/applications/:appId", controller.read))
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               required:
- *                 - data
- *               properties:
- *                 data:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/application'
+ *               $ref: '#/components/schemas/applicationSearch'
  *             examples:
  *               applications:
  *                 $ref: '#/components/examples/applications'

@@ -1,10 +1,20 @@
-const { getGlobalDB, getTenantId } = require("@budibase/backend-core/tenancy")
+const {
+  getGlobalDB,
+  getTenantId,
+  isUserInAppTenant,
+} = require("@budibase/backend-core/tenancy")
 const { generateDevInfoID, SEPARATOR } = require("@budibase/backend-core/db")
 const { user: userCache } = require("@budibase/backend-core/cache")
-const { hash, platformLogout } = require("@budibase/backend-core/utils")
+const {
+  hash,
+  platformLogout,
+  getCookie,
+  clearCookie,
+} = require("@budibase/backend-core/utils")
 const { encrypt } = require("@budibase/backend-core/encryption")
 const { newid } = require("@budibase/backend-core/utils")
 const { getUser } = require("../../utilities")
+const { Cookies } = require("@budibase/backend-core/constants")
 
 function newApiKey() {
   return encrypt(`${getTenantId()}${SEPARATOR}${newid()}`)
@@ -48,6 +58,16 @@ exports.fetchAPIKey = async ctx => {
   ctx.body = cleanupDevInfo(devInfo)
 }
 
+const checkCurrentApp = ctx => {
+  const appCookie = getCookie(ctx, Cookies.CurrentApp)
+  if (appCookie && !isUserInAppTenant(appCookie.appId)) {
+    // there is a currentapp cookie from another tenant
+    // remove the cookie as this is incompatible with the builder
+    // due to builder and admin permissions being removed
+    clearCookie(ctx, Cookies.CurrentApp)
+  }
+}
+
 exports.getSelf = async ctx => {
   if (!ctx.user) {
     ctx.throw(403, "User not logged in")
@@ -56,6 +76,9 @@ exports.getSelf = async ctx => {
   ctx.params = {
     id: userId,
   }
+
+  checkCurrentApp(ctx)
+
   // get the main body of the user
   ctx.body = await getUser(userId)
   // forward session information not found in db

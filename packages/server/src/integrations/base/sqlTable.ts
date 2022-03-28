@@ -1,6 +1,10 @@
 import { Knex, knex } from "knex"
 import { Table } from "../../definitions/common"
-import { Operation, QueryJson } from "../../definitions/datasource"
+import {
+  Operation,
+  QueryJson,
+  RenameColumn,
+} from "../../definitions/datasource"
 import { breakExternalTableId } from "../utils"
 import SchemaBuilder = Knex.SchemaBuilder
 import CreateTableBuilder = Knex.CreateTableBuilder
@@ -10,7 +14,8 @@ function generateSchema(
   schema: CreateTableBuilder,
   table: Table,
   tables: Record<string, Table>,
-  oldTable: null | Table = null
+  oldTable: null | Table = null,
+  renamed?: RenameColumn
 ) {
   let primaryKey = table && table.primary ? table.primary[0] : null
   const columns = Object.values(table.schema)
@@ -29,7 +34,11 @@ function generateSchema(
   for (let [key, column] of Object.entries(table.schema)) {
     // skip things that are already correct
     const oldColumn = oldTable ? oldTable.schema[key] : null
-    if ((oldColumn && oldColumn.type) || (primaryKey === key && !isJunction)) {
+    if (
+      (oldColumn && oldColumn.type) ||
+      (primaryKey === key && !isJunction) ||
+      renamed?.updated === key
+    ) {
       continue
     }
     switch (column.type) {
@@ -81,6 +90,10 @@ function generateSchema(
     }
   }
 
+  if (renamed) {
+    schema.renameColumn(renamed.old, renamed.updated)
+  }
+
   // need to check if any columns have been deleted
   if (oldTable) {
     const deletedColumns = Object.entries(oldTable.schema)
@@ -90,6 +103,9 @@ function generateSchema(
       )
       .map(([key]) => key)
     deletedColumns.forEach(key => {
+      if (renamed?.old === key) {
+        return
+      }
       if (oldTable.constrained && oldTable.constrained.indexOf(key) !== -1) {
         schema.dropForeign(key)
       }
@@ -101,28 +117,29 @@ function generateSchema(
 }
 
 function buildCreateTable(
-  knex: Knex,
+  knex: SchemaBuilder,
   table: Table,
   tables: Record<string, Table>
 ): SchemaBuilder {
-  return knex.schema.createTable(table.name, schema => {
+  return knex.createTable(table.name, schema => {
     generateSchema(schema, table, tables)
   })
 }
 
 function buildUpdateTable(
-  knex: Knex,
+  knex: SchemaBuilder,
   table: Table,
   tables: Record<string, Table>,
-  oldTable: Table
+  oldTable: Table,
+  renamed: RenameColumn
 ): SchemaBuilder {
-  return knex.schema.alterTable(table.name, schema => {
-    generateSchema(schema, table, tables, oldTable)
+  return knex.alterTable(table.name, schema => {
+    generateSchema(schema, table, tables, oldTable, renamed)
   })
 }
 
-function buildDeleteTable(knex: Knex, table: Table): SchemaBuilder {
-  return knex.schema.dropTable(table.name)
+function buildDeleteTable(knex: SchemaBuilder, table: Table): SchemaBuilder {
+  return knex.dropTable(table.name)
 }
 
 class SqlTableQueryBuilder {
@@ -146,7 +163,11 @@ class SqlTableQueryBuilder {
   }
 
   _tableQuery(json: QueryJson): any {
-    const client = knex({ client: this.sqlClient })
+    let client = knex({ client: this.sqlClient }).schema
+    if (json?.endpoint?.schema) {
+      client = client.withSchema(json.endpoint.schema)
+    }
+
     let query
     if (!json.table || !json.meta || !json.meta.tables) {
       throw "Cannot execute without table being specified"
@@ -163,7 +184,8 @@ class SqlTableQueryBuilder {
           client,
           json.table,
           json.meta.tables,
-          json.meta.table
+          json.meta.table,
+          json.meta.renamed
         )
         break
       case Operation.DELETE_TABLE:

@@ -85,19 +85,11 @@ export interface paths {
   "/applications/search": {
     /** Based on application properties (currently only name) search for applications. */
     post: {
-      parameters: {
-        header: {
-          /** The ID of the app which this request is targeting. */
-          "x-budibase-app-id": components["parameters"]["appId"]
-        }
-      }
       responses: {
         /** Returns the applications that were found based on the search parameters. */
         200: {
           content: {
-            "application/json": {
-              data: components["schemas"]["application"][]
-            }
+            "application/json": components["schemas"]["applicationSearch"]
           }
         }
       }
@@ -149,9 +141,7 @@ export interface paths {
         /** Returns the queries found based on the search parameters. */
         200: {
           content: {
-            "application/json": {
-              data: components["schemas"]["query"][]
-            }
+            "application/json": components["schemas"]["querySearch"]
           }
         }
       }
@@ -449,9 +439,7 @@ export interface paths {
         /** Returns the found tables, based on the search parameters. */
         200: {
           content: {
-            "application/json": {
-              data: components["schemas"]["table"][]
-            }
+            "application/json": components["schemas"]["tableSearch"]
           }
         }
       }
@@ -541,9 +529,7 @@ export interface paths {
         /** Returns the found users based on search parameters. */
         200: {
           content: {
-            "application/json": {
-              data: components["schemas"]["user"][]
-            }
+            "application/json": components["schemas"]["userSearch"]
           }
         }
       }
@@ -562,7 +548,7 @@ export interface components {
       /** @description The name of the app. */
       name: string
       /** @description The URL by which the app is accessed, this must be URL encoded. */
-      url: string
+      url?: string
     }
     applicationOutput: {
       data: {
@@ -588,6 +574,31 @@ export interface components {
         /** @description The user this app is currently being built by. */
         lockedBy?: { [key: string]: unknown }
       }
+    }
+    applicationSearch: {
+      data: {
+        /** @description The name of the app. */
+        name: string
+        /** @description The URL by which the app is accessed, this must be URL encoded. */
+        url: string
+        /** @description The ID of the app. */
+        _id: string
+        /**
+         * @description The status of the app, stating it if is the development or published version.
+         * @enum {string}
+         */
+        status: "development" | "published"
+        /** @description States when the app was created, will be constant. Stored in ISO format. */
+        createdAt: string
+        /** @description States the last time the app was updated - stored in ISO format. */
+        updatedAt: string
+        /** @description States the version of the Budibase client this app is currently based on. */
+        version: string
+        /** @description In a multi-tenant environment this will state the tenant this app is within. */
+        tenantId?: string
+        /** @description The user this app is currently being built by. */
+        lockedBy?: { [key: string]: unknown }
+      }[]
     }
     /** @description The row to be created/updated, based on the table schema. */
     row: { [key: string]: unknown }
@@ -817,6 +828,113 @@ export interface components {
         _id: string
       }
     }
+    tableSearch: {
+      data: {
+        /** @description The name of the table. */
+        name: string
+        /** @description The name of the column which should be used in relationship tags when relating to this table. */
+        primaryDisplay?: string
+        schema: {
+          [key: string]:
+            | {
+                /**
+                 * @description A relationship column.
+                 * @enum {string}
+                 */
+                type?: "link"
+                /** @description A constraint can be applied to the column which will be validated against when a row is saved. */
+                constraints?: {
+                  /** @enum {string} */
+                  type?: "string" | "number" | "object" | "boolean"
+                  /** @description Defines whether the column is required or not. */
+                  presence?: boolean
+                }
+                /** @description The name of the column. */
+                name?: string
+                /** @description Defines whether the column is automatically generated. */
+                autocolumn?: boolean
+                /** @description The name of the column which a relationship column is related to in another table. */
+                fieldName?: string
+                /** @description The ID of the table which a relationship column is related to. */
+                tableId?: string
+                /**
+                 * @description Defines the type of relationship that this column will be used for.
+                 * @enum {string}
+                 */
+                relationshipType?:
+                  | "one-to-many"
+                  | "many-to-one"
+                  | "many-to-many"
+                /** @description When using a SQL table that contains many to many relationships this defines the table the relationships are linked through. */
+                through?: string
+                /** @description When using a SQL table that contains a one to many relationship this defines the foreign key. */
+                foreignKey?: string
+                /** @description When using a SQL table that utilises a through table, this defines the primary key in the through table for this table. */
+                throughFrom?: string
+                /** @description When using a SQL table that utilises a through table, this defines the primary key in the through table for the related table. */
+                throughTo?: string
+              }
+            | {
+                /**
+                 * @description A formula column.
+                 * @enum {string}
+                 */
+                type?: "formula"
+                /** @description A constraint can be applied to the column which will be validated against when a row is saved. */
+                constraints?: {
+                  /** @enum {string} */
+                  type?: "string" | "number" | "object" | "boolean"
+                  /** @description Defines whether the column is required or not. */
+                  presence?: boolean
+                }
+                /** @description The name of the column. */
+                name?: string
+                /** @description Defines whether the column is automatically generated. */
+                autocolumn?: boolean
+                /** @description Defines a Handlebars or JavaScript formula to use, note that Javascript formulas are expected to be provided in the base64 format. */
+                formula?: string
+                /**
+                 * @description Defines whether this is a static or dynamic formula.
+                 * @enum {string}
+                 */
+                formulaType?: "static" | "dynamic"
+              }
+            | {
+                /**
+                 * @description Defines the type of the column, most explain themselves, a link column is a relationship.
+                 * @enum {string}
+                 */
+                type?:
+                  | "string"
+                  | "longform"
+                  | "options"
+                  | "number"
+                  | "boolean"
+                  | "array"
+                  | "datetime"
+                  | "attachment"
+                  | "link"
+                  | "formula"
+                  | "auto"
+                  | "json"
+                  | "internal"
+                /** @description A constraint can be applied to the column which will be validated against when a row is saved. */
+                constraints?: {
+                  /** @enum {string} */
+                  type?: "string" | "number" | "object" | "boolean"
+                  /** @description Defines whether the column is required or not. */
+                  presence?: boolean
+                }
+                /** @description The name of the column. */
+                name?: string
+                /** @description Defines whether the column is automatically generated. */
+                autocolumn?: boolean
+              }
+        }
+        /** @description The ID of the table. */
+        _id: string
+      }[]
+    }
     /** @description The query body must contain the required parameters for the query, this depends on query type, setup and bindings. */
     executeQuery: { [key: string]: unknown }
     executeQueryOutput: {
@@ -854,6 +972,31 @@ export interface components {
       transformer?: string
       /** @description Whether the query has readable data. */
       readable?: boolean
+    }
+    querySearch: {
+      data: {
+        /** @description The ID of the query. */
+        _id: string
+        /** @description The ID of the data source the query belongs to. */
+        datasourceId?: string
+        /** @description The bindings which are required to perform this query. */
+        parameters?: string[]
+        /** @description The fields that are used to perform this query, e.g. the sql statement */
+        fields?: { [key: string]: unknown }
+        /**
+         * @description The verb that describes this query.
+         * @enum {undefined}
+         */
+        queryVerb?: "create" | "read" | "update" | "delete"
+        /** @description The name of the query. */
+        name: string
+        /** @description The schema of the data returned when the query is executed. */
+        schema: { [key: string]: unknown }
+        /** @description The JavaScript transformer function, applied after the query responds with data. */
+        transformer?: string
+        /** @description Whether the query has readable data. */
+        readable?: boolean
+      }[]
     }
     user: {
       /** @description The email address of the user, this must be unique. */
@@ -916,6 +1059,39 @@ export interface components {
         /** @description The ID of the user. */
         _id: string
       }
+    }
+    userSearch: {
+      data: {
+        /** @description The email address of the user, this must be unique. */
+        email: string
+        /** @description The password of the user if using password based login - this will never be returned. This can be left out of subsequent requests (updates) and will be enriched back into the user structure. */
+        password?: string
+        /**
+         * @description The status of the user, if they are active.
+         * @enum {string}
+         */
+        status?: "active"
+        /** @description The first name of the user */
+        firstName?: string
+        /** @description The last name of the user */
+        lastName?: string
+        /** @description If set to true forces the user to reset their password on first login. */
+        forceResetPassword?: boolean
+        /** @description Describes if the user is a builder user or not. */
+        builder?: {
+          /** @description If set to true the user will be able to build any app in the system. */
+          global?: boolean
+        }
+        /** @description Describes if the user is an admin user or not. */
+        admin?: {
+          /** @description If set to true the user will be able to administrate the system. */
+          global?: boolean
+        }
+        /** @description Contains the roles of the user per app (assuming they are not a builder user). */
+        roles: { [key: string]: string }
+        /** @description The ID of the user. */
+        _id: string
+      }[]
     }
     nameSearch: {
       /** @description The name to be used when searching - this will be used in a case insensitive starts with match. */

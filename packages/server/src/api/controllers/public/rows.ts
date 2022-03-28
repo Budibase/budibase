@@ -1,6 +1,7 @@
 import { default as rowController } from "../row"
 import { addRev } from "./utils"
 import { Row } from "../../../definitions/common"
+import { convertBookmark } from "../../../utilities"
 
 // makes sure that the user doesn't need to pass in the type, tableId or _id params for
 // the call to be correct
@@ -30,7 +31,7 @@ export async function search(ctx: any, next: any) {
     sort: sort.column,
     sortType: sort.type,
     sortOrder: sort.order,
-    bookmark,
+    bookmark: convertBookmark(bookmark),
     paginate,
     limit,
     query,
@@ -51,16 +52,14 @@ export async function read(ctx: any, next: any) {
 }
 
 export async function update(ctx: any, next: any) {
-  ctx.request.body = await addRev(fixRow(ctx.request.body, ctx.params.tableId))
+  ctx.request.body = await addRev(fixRow(ctx.request.body, ctx.params))
   await rowController.save(ctx)
   await next()
 }
 
 export async function destroy(ctx: any, next: any) {
   // set the body as expected, with the _id and _rev fields
-  ctx.request.body = await addRev(
-    fixRow({ _id: ctx.params.rowId }, ctx.params.tableId)
-  )
+  ctx.request.body = await addRev(fixRow({ _id: ctx.params.rowId }, ctx.params))
   await rowController.destroy(ctx)
   // destroy controller doesn't currently return the row as the body, need to adjust this
   // in the public API to be correct
