@@ -30,6 +30,7 @@ module.exports = {
   PLATFORM_URL: process.env.PLATFORM_URL,
   POSTHOG_TOKEN: process.env.POSTHOG_TOKEN,
   ENABLE_ANALYTICS: process.env.ENABLE_ANALYTICS,
+  TENANT_FEATURE_FLAGS: process.env.TENANT_FEATURE_FLAGS,
   isTest,
   _set(key, value) {
     process.env[key] = value
