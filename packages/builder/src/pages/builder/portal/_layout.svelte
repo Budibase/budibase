@@ -57,6 +57,10 @@
             title: "Updates",
             href: "/builder/portal/settings/update",
           },
+          {
+            title: "Upgrade",
+            href: "/builder/portal/settings/upgrade",
+          },
         ])
       }
     } else {

@@ -15,5 +15,9 @@ module.exports = {
   auth: require("../auth"),
   constants: require("../constants"),
   migrations: require("../migrations"),
-  analytics: require("./analytics"),
+  errors: require("./errors"),
+  env: require("./environment"),
+  accounts: require("./cloud/accounts"),
+  tenancy: require("./tenancy"),
+  featureFlags: require("./featureFlags"),
 }
