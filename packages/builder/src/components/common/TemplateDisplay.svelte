@@ -69,6 +69,7 @@
         </ActionButton>
         {#each templateCategories as templateCategoryKey}
           <ActionButton
+            dataCy={templateCategoryKey}
             selected={templateCategoryKey == selectedTemplateCategory}
             on:click={() => {
               selectedTemplateCategory = templateCategoryKey
@@ -85,7 +86,7 @@
 <div class="template-categories">
   <Layout gap="XL" noPadding>
     {#each filteredTemplateCategories as templateCategoryKey}
-      <div class="template-category">
+      <div class="template-category" data-cy={templateCategoryKey}>
         <Detail size="M">{templateCategoryKey}</Detail>
         <div class="template-grid">
           {#each filteredTemplates[templateCategoryKey] as templateEntry}
