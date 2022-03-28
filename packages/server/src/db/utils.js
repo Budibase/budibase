@@ -147,6 +147,18 @@ exports.getRowParams = (tableId = null, rowId = null, otherProps = {}) => {
 }
 
 /**
+ * Given a row ID this will find the table ID within it (only works for internal tables).
+ * @param {string} rowId The ID of the row.
+ * @returns {string} The table ID.
+ */
+exports.getTableIDFromRowID = rowId => {
+  const components = rowId
+    .split(DocumentTypes.TABLE + SEPARATOR)[1]
+    .split(SEPARATOR)
+  return `${DocumentTypes.TABLE}${SEPARATOR}${components[0]}`
+}
+
+/**
  * Gets a new row ID for the specified table.
  * @param {string} tableId The table which the row is being created for.
  * @param {string|null} id If an ID is to be used then the UUID can be substituted for this.

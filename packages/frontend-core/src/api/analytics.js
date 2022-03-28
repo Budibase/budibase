@@ -4,7 +4,7 @@ export const buildAnalyticsEndpoints = API => ({
    */
   pingEndUser: async () => {
     return await API.post({
-      url: `/api/analytics/ping`,
+      url: `/api/bbtel/ping`,
     })
   },
 
@@ -13,7 +13,7 @@ export const buildAnalyticsEndpoints = API => ({
    */
   getAnalyticsStatus: async () => {
     return await API.get({
-      url: "/api/analytics",
+      url: "/api/bbtel",
     })
   },
 })

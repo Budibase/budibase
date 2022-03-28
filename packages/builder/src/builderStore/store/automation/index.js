@@ -57,6 +57,7 @@ const automationActions = store => ({
       return state
     })
   },
+
   save: async automation => {
     const response = await API.updateAutomation(automation)
     store.update(state => {
@@ -128,6 +129,12 @@ const automationActions = store => ({
     })
     analytics.captureEvent(Events.AUTOMATION.BLOCK_ADDED, {
       name: block.name,
+    })
+  },
+  toggleFieldControl: value => {
+    store.update(state => {
+      state.selectedBlock.rowControl = value
+      return state
     })
   },
   deleteAutomationBlock: block => {

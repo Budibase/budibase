@@ -8,9 +8,9 @@
 
 To install oracle express edition simply run `docker-compose up`
 
-- A single instance pluggable database (PDB) will be created named `xepdb`
+- A single instance pluggable database (PDB) will be created named `xepdb1`
 - The default password is configured in the compose file as `oracle`
-  - The `system`, `sys` and `pdbadmin` users all share this password
+  - The `system` and `pdbadmin` users share this password
 
 ## Instant Client 
 

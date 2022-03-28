@@ -7,24 +7,9 @@ const {
   PermissionLevels,
   PermissionTypes,
 } = require("@budibase/backend-core/permissions")
-const joiValidator = require("../../middleware/joi-validator")
-const Joi = require("joi")
+const { tableValidator } = require("./utils/validators")
 
 const router = Router()
-
-function generateSaveValidator() {
-  // prettier-ignore
-  return joiValidator.body(Joi.object({
-    _id: Joi.string(),
-    _rev: Joi.string(),
-    type: Joi.string().valid("table", "internal", "external"),
-    primaryDisplay: Joi.string(),
-    schema: Joi.object().required(),
-    name: Joi.string().required(),
-    views: Joi.object(),
-    dataImport: Joi.object(),
-  }).unknown(true))
-}
 
 router
   /**
@@ -53,8 +38,8 @@ router
    * @apiSuccess {object[]} body The response body will be the table that was found.
    */
   .get(
-    "/api/tables/:id",
-    paramResource("id"),
+    "/api/tables/:tableId",
+    paramResource("tableId"),
     authorized(PermissionTypes.TABLE, PermissionLevels.READ),
     tableController.find
   )
@@ -136,7 +121,7 @@ router
     // allows control over updating a table
     bodyResource("_id"),
     authorized(BUILDER),
-    generateSaveValidator(),
+    tableValidator(),
     tableController.save
   )
   /**

@@ -5,7 +5,6 @@ const { resolve, join } = require("../../../utilities/centralPath")
 const uuid = require("uuid")
 const { ObjectStoreBuckets } = require("../../../constants")
 const { processString } = require("@budibase/string-templates")
-const { getAllApps } = require("@budibase/backend-core/db")
 const {
   loadHandlebarsFile,
   NODE_MODULES_PATH,
@@ -16,7 +15,7 @@ const { clientLibraryPath } = require("../../../utilities")
 const { upload } = require("../../../utilities/fileSystem")
 const { attachmentsRelativeURL } = require("../../../utilities")
 const { DocumentTypes } = require("../../../db/utils")
-const { getAppDB, updateAppId } = require("@budibase/backend-core/context")
+const { getAppDB, getAppId } = require("@budibase/backend-core/context")
 const AWS = require("aws-sdk")
 const AWS_REGION = env.AWS_REGION ? env.AWS_REGION : "eu-west-1"
 
@@ -37,21 +36,6 @@ async function prepareUpload({ s3Key, bucket, metadata, file }) {
     extension: [...file.name.split(".")].pop(),
     key: response.Key,
   }
-}
-
-async function getAppIdFromUrl(ctx) {
-  // the "appId" component of the URL can be the id or the custom url
-  let possibleAppUrl = `/${encodeURI(ctx.params.appId).toLowerCase()}`
-
-  // search prod apps for a url that matches, exclude dev where id is always used
-  const apps = await getAllApps({ dev: false })
-  const app = apps.filter(
-    a => a.url && a.url.toLowerCase() === possibleAppUrl
-  )[0]
-
-  const appId = app && app.appId ? app.appId : ctx.params.appId
-  updateAppId(appId)
-  return appId
 }
 
 exports.serveBuilder = async function (ctx) {
@@ -81,10 +65,10 @@ exports.uploadFile = async function (ctx) {
 }
 
 exports.serveApp = async function (ctx) {
-  let appId = await getAppIdFromUrl(ctx)
   const App = require("./templates/BudibaseApp.svelte").default
   const db = getAppDB({ skip_setup: true })
   const appInfo = await db.get(DocumentTypes.APP_METADATA)
+  let appId = getAppId()
 
   const { head, html, css } = App.render({
     title: appInfo.name,

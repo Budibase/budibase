@@ -3,10 +3,11 @@ const {
   SEPARATOR,
   ViewNames,
   generateGlobalUserID,
+  getAllApps,
 } = require("./db/utils")
 const jwt = require("jsonwebtoken")
 const { options } = require("./middleware/passport/jwt")
-const { createUserEmailView } = require("./db/views")
+const { queryGlobalView } = require("./db/views")
 const { Headers, UserStatus, Cookies, MAX_VALID_DATE } = require("./constants")
 const {
   getGlobalDB,
@@ -20,8 +21,10 @@ const { hash } = require("./hashing")
 const userCache = require("./cache/user")
 const env = require("./environment")
 const { getUserSessions, invalidateSessions } = require("./security/sessions")
+const tenancy = require("./tenancy")
 
 const APP_PREFIX = DocumentTypes.APP + SEPARATOR
+const PROD_APP_PREFIX = "/app/"
 
 function confirmAppId(possibleAppId) {
   return possibleAppId && possibleAppId.startsWith(APP_PREFIX)
@@ -29,16 +32,35 @@ function confirmAppId(possibleAppId) {
     : undefined
 }
 
+async function resolveAppUrl(ctx) {
+  const appUrl = ctx.path.split("/")[2]
+  let possibleAppUrl = `/${appUrl.toLowerCase()}`
+
+  let tenantId = tenancy.getTenantId()
+  if (!env.SELF_HOSTED && ctx.subdomains.length) {
+    // always use the tenant id from the url in cloud
+    tenantId = ctx.subdomains[0]
+  }
+
+  // search prod apps for a url that matches
+  const apps = await tenancy.doInTenant(tenantId, () =>
+    getAllApps({ dev: false })
+  )
+  const app = apps.filter(
+    a => a.url && a.url.toLowerCase() === possibleAppUrl
+  )[0]
+
+  return app && app.appId ? app.appId : undefined
+}
+
 /**
  * Given a request tries to find the appId, which can be located in various places
  * @param {object} ctx The main request body to look through.
  * @returns {string|undefined} If an appId was found it will be returned.
  */
-exports.getAppId = ctx => {
-  const options = [ctx.headers[Headers.APP_ID], ctx.params.appId]
-  if (ctx.subdomains) {
-    options.push(ctx.subdomains[1])
-  }
+exports.getAppIdFromCtx = async ctx => {
+  // look in headers
+  const options = [ctx.headers[Headers.APP_ID]]
   let appId
   for (let option of options) {
     appId = confirmAppId(option)
@@ -47,16 +69,24 @@ exports.getAppId = ctx => {
     }
   }
 
-  // look in body if can't find it in subdomain
+  // look in body
   if (!appId && ctx.request.body && ctx.request.body.appId) {
     appId = confirmAppId(ctx.request.body.appId)
   }
+
+  // look in the url - dev app
   let appPath =
     ctx.request.headers.referrer ||
     ctx.path.split("/").filter(subPath => subPath.startsWith(APP_PREFIX))
-  if (!appId && appPath.length !== 0) {
+  if (!appId && appPath.length) {
     appId = confirmAppId(appPath[0])
   }
+
+  // look in the url - prod app
+  if (!appId && ctx.path.startsWith(PROD_APP_PREFIX)) {
+    appId = confirmAppId(await resolveAppUrl(ctx))
+  }
+
   return appId
 }
 
@@ -139,25 +169,11 @@ exports.getGlobalUserByEmail = async email => {
   if (email == null) {
     throw "Must supply an email address to view"
   }
-  const db = getGlobalDB()
 
-  try {
-    let users = (
-      await db.query(`database/${ViewNames.USER_BY_EMAIL}`, {
-        key: email.toLowerCase(),
-        include_docs: true,
-      })
-    ).rows
-    users = users.map(user => user.doc)
-    return users.length <= 1 ? users[0] : users
-  } catch (err) {
-    if (err != null && err.name === "not_found") {
-      await createUserEmailView(db)
-      return exports.getGlobalUserByEmail(email)
-    } else {
-      throw err
-    }
-  }
+  return queryGlobalView(ViewNames.USER_BY_EMAIL, {
+    key: email.toLowerCase(),
+    include_docs: true,
+  })
 }
 
 exports.saveUser = async (

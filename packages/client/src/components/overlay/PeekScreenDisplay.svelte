@@ -20,8 +20,8 @@
   let listenersAttached = false
 
   const proxyInvalidation = event => {
-    const { dataSourceId } = event.detail
-    dataSourceStore.actions.invalidateDataSource(dataSourceId)
+    const { dataSourceId, options } = event.detail
+    dataSourceStore.actions.invalidateDataSource(dataSourceId, options)
   }
 
   const proxyNotification = event => {

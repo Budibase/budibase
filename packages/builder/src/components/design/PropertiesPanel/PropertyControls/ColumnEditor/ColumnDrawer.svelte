@@ -4,17 +4,19 @@
     Icon,
     DrawerContent,
     Layout,
-    Input,
     Select,
     Label,
     Body,
+    Input,
   } from "@budibase/bbui"
   import { flip } from "svelte/animate"
   import { dndzone } from "svelte-dnd-action"
   import { generate } from "shortid"
+  import CellEditor from "./CellEditor.svelte"
 
   export let columns = []
   export let options = []
+  export let schema = {}
 
   const flipDurationMs = 150
   let dragDisabled = true
@@ -61,11 +63,23 @@
     dragDisabled = true
   }
 
+  const addAllColumns = () => {
+    let newColumns = columns || []
+    options.forEach(field => {
+      const fieldSchema = schema[field]
+      const hasCol = columns && columns.findIndex(x => x.name === field) !== -1
+      if (!fieldSchema?.autocolumn && !hasCol) {
+        newColumns.push({
+          name: field,
+          displayName: field,
+        })
+      }
+    })
+    columns = newColumns
+  }
+
   const reset = () => {
-    columns = options.map(col => ({
-      name: col,
-      displayName: col,
-    }))
+    columns = []
   }
 </script>
 
@@ -78,6 +92,7 @@
             <div />
             <Label size="L">Column</Label>
             <Label size="L">Label</Label>
+            <div />
             <div />
           </div>
           <div
@@ -108,6 +123,7 @@
                   on:change={e => (column.displayName = e.detail)}
                 />
                 <Input bind:value={column.displayName} placeholder="Label" />
+                <CellEditor bind:column />
                 <Icon
                   name="Close"
                   hoverable
@@ -121,19 +137,25 @@
         </Layout>
       {:else}
         <div class="column">
-          <div />
-          <Body size="S">Add the first column to your table.</Body>
+          <div class="wide">
+            <Body size="S">
+              By default, all table columns will automatically be shown.
+              <br />
+              You can manually control which columns are included in your table,
+              and their appearance, by adding them below.
+            </Body>
+          </div>
         </div>
       {/if}
-      <div class="columns">
-        <div class="column">
-          <div />
-          <div class="buttons">
-            <Button secondary icon="Add" on:click={addColumn}>
-              Add column
-            </Button>
+      <div class="column">
+        <div class="buttons wide">
+          <Button secondary icon="Add" on:click={addColumn}>Add column</Button>
+          <Button secondary quiet on:click={addAllColumns}>
+            Add all columns
+          </Button>
+          {#if columns?.length}
             <Button secondary quiet on:click={reset}>Reset columns</Button>
-          </div>
+          {/if}
         </div>
       </div>
     </Layout>
@@ -156,7 +178,7 @@
   .column {
     gap: var(--spacing-l);
     display: grid;
-    grid-template-columns: 20px 1fr 1fr 20px;
+    grid-template-columns: 20px 1fr 1fr auto auto;
     align-items: center;
     border-radius: var(--border-radius-s);
     transition: background-color ease-in-out 130ms;
@@ -167,6 +189,9 @@
   .handle {
     display: grid;
     place-items: center;
+  }
+  .wide {
+    grid-column: 2 / -1;
   }
   .buttons {
     display: flex;

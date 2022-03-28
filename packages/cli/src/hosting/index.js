@@ -35,7 +35,7 @@ async function downloadFiles() {
 
 async function checkDockerConfigured() {
   const error =
-    "docker/docker-compose has not been installed, please follow instructions at: https://docs.budibase.com/self-hosting/hosting-methods/docker-compose#installing-docker"
+    "docker/docker-compose has not been installed, please follow instructions at: https://docs.budibase.com/docs/docker-compose"
   const docker = await lookpath("docker")
   const compose = await lookpath("docker-compose")
   if (!docker || !compose) {
