@@ -7,26 +7,18 @@ const environment = require("../../../environment")
 const { getGlobalDB } = require("../../../tenancy")
 
 async function fetchGoogleCreds() {
-  let config
-
   // try and get the config from the tenant
   const db = getGlobalDB()
   const googleConfig = await getScopedConfig(db, {
     type: Configs.GOOGLE,
   })
-  if (googleConfig.clientID && googleConfig.clientSecret) {
-    config = googleConfig
+  // or fall back to env variables
+  const config = googleConfig || {
+    clientID: environment.GOOGLE_CLIENT_ID,
+    clientSecret: environment.GOOGLE_CLIENT_SECRET,
   }
 
-  // fall back to env variables
-  if (!config) {
-    config = {
-      clientID: environment.GOOGLE_CLIENT_ID,
-      clientSecret: environment.GOOGLE_CLIENT_SECRET,
-    }
-  }
-
-  return googleConfig
+  return config
 }
 
 async function preAuth(passport, ctx, next) {

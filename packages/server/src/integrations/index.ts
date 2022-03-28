@@ -42,6 +42,7 @@ const INTEGRATIONS = {
   [SourceNames.ARANGODB]: arangodb.integration,
   [SourceNames.REST]: rest.integration,
   [SourceNames.FIREBASE]: firebase.integration,
+  [SourceNames.GOOGLE_SHEETS]: googlesheets.integration,
 }
 
 // optionally add oracle integration if the oracle binary can be installed
@@ -51,10 +52,9 @@ if (!(process.arch === "arm64" && process.platform === "darwin")) {
   INTEGRATIONS[SourceNames.ORACLE] = oracle.integration
 }
 
-if (environment.SELF_HOSTED) {
-  DEFINITIONS[SourceNames.GOOGLE_SHEETS] = googlesheets.schema
-  INTEGRATIONS[SourceNames.GOOGLE_SHEETS] = googlesheets.integration
-}
+// if (environment.SELF_HOSTED) {
+//   DEFINITIONS[SourceNames.GOOGLE_SHEETS] = googlesheets.schema
+// }
 
 module.exports = {
   definitions: DEFINITIONS,
