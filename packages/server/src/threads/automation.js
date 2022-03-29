@@ -17,7 +17,6 @@ const LOOP_STEP_ID = actions.ACTION_DEFINITIONS.LOOP.stepId
 const CRON_STEP_ID = triggerDefs.CRON.stepId
 const STOPPED_STATUS = { success: false, status: "STOPPED" }
 const { cloneDeep } = require("lodash/fp")
-const { loop } = require("svelte/internal")
 
 /**
  * The automation orchestrator is a class responsible for executing automations.
@@ -89,6 +88,7 @@ class Orchestrator {
     let stepCount = 0
     let loopStepNumber
     let loopSteps = []
+    let lastLoopStep
     for (let step of automation.definition.steps) {
       stepCount++
       if (step.stepId === LOOP_STEP_ID) {
@@ -145,13 +145,9 @@ class Orchestrator {
             })
             continue
           }
-          if (loopStep) {
-            loopSteps.push({
-              id: step.id,
-              stepId: step.stepId,
-              inputs: step.inputs,
-              outputs,
-            })
+          this._context.steps.splice(loopStepNumber, 1)
+          if (loopStep && loopSteps) {
+            loopSteps.push(outputs)
           } else {
             this.updateExecutionOutput(
               step.id,
@@ -166,34 +162,30 @@ class Orchestrator {
         }
 
         if (index === iterations - 1) {
+          lastLoopStep = loopStep
           loopStep = null
           break
         }
       }
-      if (loopSteps) {
-        this.executionOutput.steps.splice(loopStepNumber, 0, {
-          id: step.id,
-          stepId: step.stepId,
-          outputs: {
-            success: true,
-            outputs: loopSteps,
-            iterations: iterations,
-          },
+
+      if (loopSteps && loopSteps.length) {
+        let tempOutput = { success: true, outputs: loopSteps }
+        this.executionOutput.steps.splice(loopStep, 0, {
+          id: lastLoopStep.id,
+          stepId: lastLoopStep.stepId,
+          outputs: tempOutput,
+          inputs: step.inputs,
         })
-        this._context.steps.splice(loopStepNumber, 0, {
-          id: step.id,
-          stepId: step.stepId,
-          steps: loopSteps,
-          iterations,
-          success: true,
-        })
+        this._context.steps.splice(loopStep, 0, tempOutput)
         loopSteps = null
       }
     }
+
     // Increment quota for automation runs
     if (!env.SELF_HOSTED && !isDevAppID(this._appId)) {
       await usage.update(usage.Properties.AUTOMATION, 1)
     }
+    console.log(JSON.stringify(this._context, null, 2))
     // make  that we don't loop the next step if we have already been looping (loop block only has one step)
     return this.executionOutput
   }

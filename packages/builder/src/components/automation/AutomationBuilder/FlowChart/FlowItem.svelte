@@ -34,7 +34,6 @@
   $: testResult = $automationStore.selectedAutomation.testResults?.steps.filter(
     step => (block.id ? step.id === block.id : step.stepId === block.stepId)
   )
-  $: console.log(testResult)
   $: isTrigger = block.type === "TRIGGER"
 
   $: selected = $automationStore.selectedBlock?.id === block.id
@@ -57,6 +56,7 @@
       x => x.blockToLoop === block.id
     )
   $: showLooping = false
+
   async function deleteStep() {
     try {
       automationStore.actions.deleteAutomationBlock(block)
@@ -81,18 +81,6 @@
     )
   }
 
-  async function removeLooping() {
-    loopingSelected = false
-    const loopToDelete =
-      $automationStore.selectedAutomation.automation.definition.steps.findIndex(
-        x => x.blockToLoop === block.id
-      )
-
-    automationStore.actions.deleteAutomationBlock(loopToDelete)
-    await automationStore.actions.save(
-      $automationStore.selectedAutomation?.automation
-    )
-  }
   async function addLooping() {
     loopingSelected = true
     const loopDefinition = $automationStore.blockDefinitions.ACTION.LOOP
@@ -103,6 +91,7 @@
       loopDefinition
     )
     loopBlock.blockToLoop = block.id
+    block.loopBlock = loopBlock.id
     automationStore.actions.addBlockToAutomation(loopBlock, blockIdx - 1)
     await automationStore.actions.save(
       $automationStore.selectedAutomation?.automation
@@ -142,6 +131,16 @@
         </div>
 
         <div class="blockTitle">
+          {#if testResult && testResult[0]}
+            <div style="float: right;" on:click={() => resultsModal.show()}>
+              <StatusLight
+                positive={isTrigger || testResult[0].outputs?.success}
+                negative={!testResult[0].outputs?.success}
+                ><Body size="XS">View response</Body></StatusLight
+              >
+            </div>
+          {/if}
+
           <div
             style="margin-left: 10px;"
             on:click={() => {

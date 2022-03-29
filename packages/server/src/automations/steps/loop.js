@@ -36,7 +36,7 @@ exports.definition = {
         },
         success: {
           type: "boolean",
-          description: "Whether the message sent successfully",
+          description: "Whether the message loop was successfully",
         },
         iterations: {
           type: "number",
