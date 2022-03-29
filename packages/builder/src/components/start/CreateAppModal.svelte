@@ -25,8 +25,12 @@
     await setupValidation()
   })
 
+  const appPrefix = "/app"
+
   $: appUrl = `${window.location.origin}${
-    $values.url ? $values.url : `${resolveAppUrl(template, $values.name)}`
+    $values.url
+      ? `${appPrefix}${$values.url}`
+      : `${appPrefix}${resolveAppUrl(template, $values.name)}`
   }`
 
   const resolveAppUrl = (template, name) => {
@@ -161,7 +165,7 @@
     />
     {#if $values.url && $values.url !== "" && !$validation.errors.url}
       <div class="app-server" title={appUrl}>
-        {`${window.location.origin}${$values.url}`}
+        {appUrl}
       </div>
     {/if}
   </span>
