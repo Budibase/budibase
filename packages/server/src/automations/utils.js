@@ -1,13 +1,13 @@
 const { Thread, ThreadType } = require("../threads")
 const { definitions } = require("./triggerInfo")
 const webhooks = require("../api/controllers/webhook")
-const CouchDB = require("../db")
 const { queue } = require("./bullboard")
 const newid = require("../db/newid")
 const { updateEntityMetadata } = require("../utilities")
 const { MetadataTypes, WebhookType } = require("../constants")
 const { getProdAppID } = require("@budibase/backend-core/db")
 const { cloneDeep } = require("lodash/fp")
+const { getDB } = require("@budibase/backend-core/db")
 const { getAppDB, getAppId } = require("@budibase/backend-core/context")
 
 const WH_STEP_ID = definitions.WEBHOOK.stepId
@@ -101,7 +101,7 @@ exports.enableCronTrigger = async (appId, automation) => {
     // can't use getAppDB here as this is likely to be called from dev app,
     // but this call could be for dev app or prod app, need to just use what
     // was passed in
-    const db = new CouchDB(appId)
+    const db = getDB(appId)
     const response = await db.put(automation)
     automation._id = response.id
     automation._rev = response.rev

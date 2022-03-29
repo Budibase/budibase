@@ -2,7 +2,7 @@ const { budibaseTempDir } = require("../budibaseDir")
 const fs = require("fs")
 const { join } = require("path")
 const uuid = require("uuid/v4")
-const CouchDB = require("../../db")
+const { getDB } = require("@budibase/backend-core/db")
 const { ObjectStoreBuckets } = require("../../constants")
 const {
   upload,
@@ -151,7 +151,7 @@ exports.streamBackup = async appId => {
  * @return {*} either a readable stream or a string
  */
 exports.exportDB = async (dbName, { stream, filter, exportName } = {}) => {
-  const instanceDb = new CouchDB(dbName)
+  const instanceDb = getDB(dbName)
 
   // Stream the dump if required
   if (stream) {
