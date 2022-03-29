@@ -98,7 +98,6 @@ const automationActions = store => ({
       automationId: automation?._id,
       testData,
     })
-    console.log(result)
     store.update(state => {
       state.selectedAutomation.testResults = result
       return state

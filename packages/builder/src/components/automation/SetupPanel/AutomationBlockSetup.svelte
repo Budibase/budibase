@@ -104,7 +104,13 @@
       )
       bindings = bindings.concat(
         outputs.map(([name, value]) => {
-          const runtime = idx === 0 ? `trigger.${name}` : `steps.${idx}.${name}`
+          let runtimeName =
+            $automationStore.selectedAutomation.automation.definition.steps.find(
+              x => block.id === x.blockToLoop
+            )
+              ? `loop.${name}`
+              : `steps.${idx}.${name}`
+          const runtime = idx === 0 ? `trigger.${name}` : runtimeName
           return {
             label: runtime,
             type: value.type,
@@ -115,6 +121,7 @@
         })
       )
     }
+
     return bindings
   }
 
