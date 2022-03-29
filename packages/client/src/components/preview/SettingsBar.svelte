@@ -147,12 +147,22 @@
       {/if}
     {/each}
     <SettingsButton
+      icon="Duplicate"
+      on:click={() => {
+        builderStore.actions.duplicateComponent(
+          $builderStore.selectedComponent._id
+        )
+      }}
+      title="Duplicate component"
+    />
+    <SettingsButton
       icon="Delete"
       on:click={() => {
         builderStore.actions.deleteComponent(
           $builderStore.selectedComponent._id
         )
       }}
+      title="Delete component"
     />
   </div>
 {/if}

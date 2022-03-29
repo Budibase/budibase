@@ -3,6 +3,7 @@
   import { Table } from "@budibase/bbui"
   import SlotRenderer from "./SlotRenderer.svelte"
   import { UnsortableTypes } from "../../../constants"
+  import { onDestroy } from "svelte"
 
   export let dataProvider
   export let columns
@@ -14,9 +15,12 @@
   export let linkURL
   export let linkColumn
   export let linkPeek
+  export let allowSelectRows
+  export let compact
 
   const component = getContext("component")
-  const { styleable, getAction, ActionTypes, routeStore } = getContext("sdk")
+  const { styleable, getAction, ActionTypes, routeStore, rowSelectionStore } =
+    getContext("sdk")
   const customColumnKey = `custom-${Math.random()}`
   const customRenderers = [
     {
@@ -24,7 +28,7 @@
       component: SlotRenderer,
     },
   ]
-
+  let selectedRows = []
   $: hasChildren = $component.children
   $: loading = dataProvider?.loading ?? false
   $: data = dataProvider?.rows || []
@@ -35,6 +39,13 @@
     dataProvider?.id,
     ActionTypes.SetDataProviderSorting
   )
+  $: {
+    rowSelectionStore.actions.updateSelection(
+      $component.id,
+      selectedRows.length ? selectedRows[0].tableId : "",
+      selectedRows.map(row => row._id)
+    )
+  }
 
   const getFields = (schema, customColumns, showAutoColumns) => {
     // Check for an invalid column selection
@@ -72,6 +83,7 @@
         order: 0,
         sortable: false,
         divider: true,
+        width: "auto",
       }
     }
 
@@ -84,8 +96,13 @@
       if (UnsortableTypes.includes(schema[columnName].type)) {
         newSchema[columnName].sortable = false
       }
-      if (field?.displayName) {
-        newSchema[columnName].displayName = field?.displayName
+
+      // Add additional settings like width etc
+      if (typeof field === "object") {
+        newSchema[columnName] = {
+          ...newSchema[columnName],
+          ...field,
+        }
       }
     })
     return newSchema
@@ -110,6 +127,10 @@
     const split = linkURL.split("/:")
     routeStore.actions.navigate(`${split[0]}/${id}`, linkPeek)
   }
+
+  onDestroy(() => {
+    rowSelectionStore.actions.updateSelection($component.id, [])
+  })
 </script>
 
 <div use:styleable={$component.styles} class={size}>
@@ -119,21 +140,33 @@
     {loading}
     {rowCount}
     {quiet}
+    {compact}
     {customRenderers}
-    allowSelectRows={false}
+    allowSelectRows={!!allowSelectRows}
+    bind:selectedRows
     allowEditRows={false}
     allowEditColumns={false}
     showAutoColumns={true}
     disableSorting
+    autoSortColumns={!columns?.length}
     on:sort={onSort}
     on:click={onClick}
   >
     <slot />
   </Table>
+  {#if allowSelectRows && selectedRows.length}
+    <div class="row-count">
+      {selectedRows.length} row{selectedRows.length === 1 ? "" : "s"} selected
+    </div>
+  {/if}
 </div>
 
 <style>
   div {
     background-color: var(--spectrum-alias-background-color-secondary);
+  }
+
+  .row-count {
+    margin-top: var(--spacing-l);
   }
 </style>

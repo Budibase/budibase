@@ -227,6 +227,7 @@
         />
       {:else if value.customType === "row"}
         <RowSelector
+          {block}
           value={inputData[key]}
           on:change={e => onChange(e, key)}
           {bindings}

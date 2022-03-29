@@ -10,6 +10,7 @@ const PermissionLevels = {
 
 // these are the global types, that govern the underlying default behaviour
 const PermissionTypes = {
+  APP: "app",
   TABLE: "table",
   USER: "user",
   AUTOMATION: "automation",

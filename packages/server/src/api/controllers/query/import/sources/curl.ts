@@ -74,7 +74,7 @@ export class Curl extends ImportSource {
   getQueries = async (datasourceId: string): Promise<Query[]> => {
     const url = this.getUrl()
     const name = url.pathname
-    const path = url.pathname
+    const path = url.origin + url.pathname
     const method = this.curl.method
     const queryString = url.search
     const headers = this.curl.headers
@@ -90,7 +90,7 @@ export class Curl extends ImportSource {
       name,
       method,
       path,
-      url,
+      undefined,
       queryString,
       headers,
       [],

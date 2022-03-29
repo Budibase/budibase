@@ -56,7 +56,7 @@
     <a
       slot="footer"
       target="_blank"
-      href="https://docs.budibase.com/automate/introduction-to-automate"
+      href="https://docs.budibase.com/docs/automation-steps"
     >
       <Icon name="InfoOutline" />
       <span>Learn about automations</span>

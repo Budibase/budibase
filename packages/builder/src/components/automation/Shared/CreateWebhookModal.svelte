@@ -69,7 +69,7 @@
   <a
     slot="footer"
     target="_blank"
-    href="https://docs.budibase.com/automate/steps/triggers"
+    href="https://docs.budibase.com/docs/trigger"
   >
     <Icon name="InfoOutline" />
     <span>Learn about webhooks</span>
