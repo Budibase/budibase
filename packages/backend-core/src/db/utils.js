@@ -15,7 +15,8 @@ const {
   getGlobalDBName,
 } = require("../tenancy")
 const fetch = require("node-fetch")
-const { getCouch } = require("./index")
+const { getDB, allDbs } = require("./index")
+const { getCouchUrl } = require("./pouch")
 const { getAppMetadata } = require("../cache/appMetadata")
 const { checkSlashesInUrl } = require("../helpers")
 const {
@@ -155,25 +156,6 @@ exports.getRoleParams = (roleId = null, otherProps = {}) => {
   return getDocParams(DocumentTypes.ROLE, roleId, otherProps)
 }
 
-exports.getCouchUrl = () => {
-  if (!env.COUCH_DB_URL) return
-
-  // username and password already exist in URL
-  if (env.COUCH_DB_URL.includes("@")) {
-    return env.COUCH_DB_URL
-  }
-
-  const [protocol, ...rest] = env.COUCH_DB_URL.split("://")
-
-  if (!env.COUCH_DB_USERNAME || !env.COUCH_DB_PASSWORD) {
-    throw new Error(
-      "CouchDB configuration invalid. You must provide a fully qualified CouchDB url, or the COUCH_DB_USER and COUCH_DB_PASSWORD environment variables."
-    )
-  }
-
-  return `${protocol}://${env.COUCH_DB_USERNAME}:${env.COUCH_DB_PASSWORD}@${rest}`
-}
-
 exports.getStartEndKeyURL = (base, baseKey, tenantId = null) => {
   const tenancy = tenantId ? `${SEPARATOR}${tenantId}` : ""
   return `${base}?startkey="${baseKey}${tenancy}"&endkey="${baseKey}${tenancy}${UNICODE_MAX}"`
@@ -189,7 +171,7 @@ exports.getAllDbs = async (opts = { efficient: false }) => {
   const efficient = opts && opts.efficient
   // specifically for testing we use the pouch package for this
   if (env.isTest()) {
-    return getCouch().allDbs()
+    return allDbs()
   }
   let dbs = []
   async function addDbs(url) {
@@ -201,7 +183,7 @@ exports.getAllDbs = async (opts = { efficient: false }) => {
       throw "Cannot connect to CouchDB instance"
     }
   }
-  let couchUrl = `${exports.getCouchUrl()}/_all_dbs`
+  let couchUrl = `${getCouchUrl()}/_all_dbs`
   let tenantId = getTenantId()
   if (!env.MULTI_TENANCY || (!efficient && tenantId === DEFAULT_TENANT_ID)) {
     // just get all DBs when:
@@ -232,7 +214,6 @@ exports.getAllDbs = async (opts = { efficient: false }) => {
  * @return {Promise<object[]>} returns the app information document stored in each app database.
  */
 exports.getAllApps = async ({ dev, all, idsOnly, efficient } = {}) => {
-  const CouchDB = getCouch()
   let tenantId = getTenantId()
   if (!env.MULTI_TENANCY && !tenantId) {
     tenantId = DEFAULT_TENANT_ID
@@ -260,7 +241,7 @@ exports.getAllApps = async ({ dev, all, idsOnly, efficient } = {}) => {
   }
   const appPromises = appDbNames.map(app =>
     // skip setup otherwise databases could be re-created
-    getAppMetadata(app, CouchDB)
+    getAppMetadata(app)
   )
   if (appPromises.length === 0) {
     return []
@@ -304,10 +285,9 @@ exports.getDevAppIDs = async () => {
 }
 
 exports.dbExists = async dbName => {
-  const CouchDB = getCouch()
   let exists = false
   try {
-    const db = CouchDB(dbName, { skip_setup: true })
+    const db = getDB(dbName, { skip_setup: true })
     // check if database exists
     const info = await db.info()
     if (info && !info.error) {

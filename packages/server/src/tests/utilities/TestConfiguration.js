@@ -1,6 +1,4 @@
-const core = require("@budibase/backend-core")
-const CouchDB = require("../../db")
-core.init(CouchDB)
+require("../../db").init()
 const { BUILTIN_ROLE_IDS } = require("@budibase/backend-core/roles")
 const env = require("../../environment")
 const {
@@ -55,10 +53,6 @@ class TestConfiguration {
 
   getAppId() {
     return this.appId
-  }
-
-  getCouch() {
-    return CouchDB
   }
 
   async _req(config, params, controlFunc) {

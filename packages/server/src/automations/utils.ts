@@ -1,12 +1,11 @@
 import { Thread, ThreadType } from "../threads"
 import { definitions } from "./triggerInfo"
 import * as webhooks from "../api/controllers/webhook"
-import CouchDB from "../db"
 import { queue } from "./bullboard"
 import newid from "../db/newid"
 import { updateEntityMetadata } from "../utilities"
 import { MetadataTypes, WebhookType } from "../constants"
-import { getProdAppID } from "@budibase/backend-core/db"
+import { getProdAppID, getDB } from "@budibase/backend-core/db"
 import { cloneDeep } from "lodash/fp"
 import { getAppDB, getAppId } from "@budibase/backend-core/context"
 import { tenancy } from "@budibase/backend-core"
@@ -20,13 +19,17 @@ export async function processEvent(job: any) {
   try {
     const tenantId = tenancy.getTenantIDFromAppID(job.data.event.appId)
     return await tenancy.doInTenant(tenantId, async () => {
+      console.log(
+        `${job.data.automation.appId} automation ${job.data.automation._id} running`
+      )
       // need to actually await these so that an error can be captured properly
       const runFn = () => Runner.run(job)
       return quotas.addAutomation(runFn)
     })
   } catch (err) {
+    const errJson = JSON.stringify(err)
     console.error(
-      `${job.data.automation.appId} automation ${job.data.automation._id} was unable to run - ${err}`
+      `${job.data.automation.appId} automation ${job.data.automation._id} was unable to run - ${errJson}`
     )
     return { err }
   }
@@ -108,7 +111,7 @@ export async function enableCronTrigger(appId: any, automation: any) {
     // can't use getAppDB here as this is likely to be called from dev app,
     // but this call could be for dev app or prod app, need to just use what
     // was passed in
-    const db = new CouchDB(appId)
+    const db = getDB(appId)
     const response = await db.put(automation)
     automation._id = response.id
     automation._rev = response.rev
