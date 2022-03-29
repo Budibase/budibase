@@ -1,6 +1,9 @@
 const { getRowParams, USER_METDATA_PREFIX } = require("../../db/utils")
-const CouchDB = require("../../db")
-const { isDevAppID, getDevelopmentAppID } = require("@budibase/backend-core/db")
+const {
+  isDevAppID,
+  getDevelopmentAppID,
+  getDB,
+} = require("@budibase/backend-core/db")
 
 const ROW_EXCLUSIONS = [USER_METDATA_PREFIX]
 
@@ -24,7 +27,7 @@ const getAppPairs = appIds => {
 
 const getAppRows = async appId => {
   // need to specify the app ID, as this is used for different apps in one call
-  const appDb = new CouchDB(appId)
+  const appDb = getDB(appId)
   const response = await appDb.allDocs(
     getRowParams(null, null, {
       include_docs: false,

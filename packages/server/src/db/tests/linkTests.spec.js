@@ -1,8 +1,8 @@
 const TestConfig = require("../../tests/utilities/TestConfiguration")
 const { basicTable } = require("../../tests/utilities/structures")
 const linkUtils = require("../linkedRows/linkUtils")
-const CouchDB = require("../index")
 const { getAppDB } = require("@budibase/backend-core/context")
+const { getDB } = require("@budibase/backend-core/db")
 
 describe("test link functionality", () => {
   const config = new TestConfig(false)
@@ -48,7 +48,7 @@ describe("test link functionality", () => {
   describe("getLinkDocuments", () => {
     it("should create the link view when it doesn't exist", async () => {
       // create the DB and a very basic app design DB
-      const db = new CouchDB("test")
+      const db = getDB("test")
       await db.put({ _id: "_design/database", views: {} })
       const output = await linkUtils.getLinkDocuments({
         tableId: "test",

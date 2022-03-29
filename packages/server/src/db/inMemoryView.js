@@ -1,12 +1,9 @@
-const PouchDB = require("pouchdb")
-const memory = require("pouchdb-adapter-memory")
 const newid = require("./newid")
 
-PouchDB.plugin(memory)
-const Pouch = PouchDB.defaults({
-  prefix: undefined,
-  adapter: "memory",
-})
+// bypass the main application db config
+// use in memory pouchdb directly
+const { getPouch } = require("@budibase/backend-core/db")
+const Pouch = getPouch({ inMemory: true })
 
 exports.runView = async (view, calculation, group, data) => {
   // use a different ID each time for the DB, make sure they

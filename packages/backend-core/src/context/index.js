@@ -2,7 +2,7 @@ const env = require("../environment")
 const { Headers } = require("../../constants")
 const { SEPARATOR, DocumentTypes } = require("../db/constants")
 const cls = require("./FunctionContext")
-const { getCouch } = require("../db")
+const { getDB } = require("../db")
 const { getProdAppID, getDevelopmentAppID } = require("../db/conversions")
 const { isEqual } = require("lodash")
 
@@ -167,7 +167,7 @@ exports.getAppId = () => {
   }
 }
 
-function getDB(key, opts) {
+function getContextDB(key, opts) {
   const dbOptsKey = `${key}${ContextKeys.DB_OPTS}`
   let storedOpts = cls.getFromContext(dbOptsKey)
   let db = cls.getFromContext(key)
@@ -175,7 +175,6 @@ function getDB(key, opts) {
     return db
   }
   const appId = exports.getAppId()
-  const CouchDB = getCouch()
   let toUseAppId
   switch (key) {
     case ContextKeys.CURRENT_DB:
@@ -188,7 +187,7 @@ function getDB(key, opts) {
       toUseAppId = getDevelopmentAppID(appId)
       break
   }
-  db = new CouchDB(toUseAppId, opts)
+  db = getDB(toUseAppId, opts)
   try {
     cls.setOnContext(key, db)
     if (opts) {
@@ -207,7 +206,7 @@ function getDB(key, opts) {
  * contained, dev or prod.
  */
 exports.getAppDB = opts => {
-  return getDB(ContextKeys.CURRENT_DB, opts)
+  return getContextDB(ContextKeys.CURRENT_DB, opts)
 }
 
 /**
@@ -215,7 +214,7 @@ exports.getAppDB = opts => {
  * contained a development app ID, this will open the prod one.
  */
 exports.getProdAppDB = opts => {
-  return getDB(ContextKeys.PROD_DB, opts)
+  return getContextDB(ContextKeys.PROD_DB, opts)
 }
 
 /**
@@ -223,5 +222,5 @@ exports.getProdAppDB = opts => {
  * contained a prod app ID, this will open the dev one.
  */
 exports.getDevAppDB = opts => {
-  return getDB(ContextKeys.DEV_DB, opts)
+  return getContextDB(ContextKeys.DEV_DB, opts)
 }

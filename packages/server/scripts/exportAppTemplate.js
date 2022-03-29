@@ -2,7 +2,8 @@
 const yargs = require("yargs")
 const fs = require("fs")
 const { join } = require("path")
-const CouchDB = require("../src/db")
+require("../src/db").init()
+const { getDB } = require("@budibase/backend-core/db")
 // load environment
 const env = require("../src/environment")
 const {
@@ -47,7 +48,7 @@ yargs
       const writeStream = fs.createWriteStream(join(exportPath, "dump.text"))
       // perform couch dump
 
-      const instanceDb = new CouchDB(appId)
+      const instanceDb = getDB(appId)
       await instanceDb.dump(writeStream, {
         filter: doc =>
           !(
