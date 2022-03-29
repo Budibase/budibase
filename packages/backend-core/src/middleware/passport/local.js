@@ -5,10 +5,7 @@ const env = require("../../environment")
 const { getGlobalUserByEmail } = require("../../utils")
 const { authError } = require("./utils")
 const { newid } = require("../../hashing")
-const {
-  createASession,
-  invalidateSessions,
-} = require("../../security/sessions")
+const { createASession } = require("../../security/sessions")
 const { getTenantId } = require("../../tenancy")
 
 const INVALID_ERR = "Invalid credentials"
@@ -56,9 +53,6 @@ exports.authenticate = async function (ctx, email, password, done) {
 
   // authenticate
   if (await compare(password, dbUser.password)) {
-    // invalidate all other sessions
-    await invalidateSessions(dbUser._id)
-
     const sessionId = newid()
     const tenantId = getTenantId()
     await createASession(dbUser._id, { sessionId, tenantId })
