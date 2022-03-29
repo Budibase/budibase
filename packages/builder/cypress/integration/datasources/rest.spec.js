@@ -24,7 +24,7 @@ filterTests(["smoke", "all"], () => {
       cy.wait("@queryError")
       cy.get("@queryError")
         .its("response.body")
-        .should("have.property", "message", "Invalid URL")
+        .should("have.property", "message", "Invalid URL: http://random text?")
       cy.get("@queryError")
         .its("response.body")
         .should("have.property", "status", 400)
