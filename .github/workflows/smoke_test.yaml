@@ -48,5 +48,5 @@ jobs:
           webhook-url: ${{ secrets.BUDI_QA_WEBHOOK }}
           content: "Smoke test run completed with ${{ steps.cypress.outcome }}. See results at ${{ steps.cypress.dashboardUrl }}"
           embed-title: ${{ steps.cypress.outcome }}
-          embed-color: ${{ steps.cypress.outcome == "success" && '3066993' || '15548997' }}
+          embed-color: ${{ steps.cypress.outcome == 'success' && '3066993' || '15548997' }}
 
