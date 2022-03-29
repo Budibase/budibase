@@ -935,8 +935,18 @@ export interface components {
         _id: string;
       }[];
     };
-    /** @description The query body must contain the required parameters for the query, this depends on query type, setup and bindings. */
-    executeQuery: { [key: string]: unknown };
+    /** @description The parameters required for executing a query. */
+    executeQuery: {
+      /** @description This contains the required parameters for the query, this depends on query type, setup and bindings. */
+      parameters?: { [key: string]: unknown };
+      /** @description For supported query types (currently on REST) pagination can be performed using these properties. */
+      pagination?: {
+        /** @description The page which has been returned from a previous query. */
+        page?: string;
+        /** @description The number of rows to return per page. */
+        limit?: number;
+      };
+    };
     executeQueryOutput: {
       /** @description The data response from the query. */
       data: { [key: string]: unknown }[];
