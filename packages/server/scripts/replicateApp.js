@@ -5,10 +5,9 @@
  * e.g. node scripts/replicateApp Mike http://admin:password@127.0.0.1:5984
  */
 
-const CouchDB = require("../src/db")
+require("../src/db").init()
 const { DocumentTypes } = require("../src/db/utils")
-const { getAllDbs } = require("@budibase/backend-core/db")
-
+const { getAllDbs, getDB } = require("@budibase/backend-core/db")
 const appName = process.argv[2].toLowerCase()
 const remoteUrl = process.argv[3]
 
@@ -19,7 +18,7 @@ const run = async () => {
   const appDbNames = dbs.filter(dbName => dbName.startsWith("inst_app"))
   let apps = []
   for (let dbName of appDbNames) {
-    const db = new CouchDB(dbName)
+    const db = getDB(dbName)
     apps.push(db.get(DocumentTypes.APP_METADATA))
   }
   apps = await Promise.all(apps)
@@ -34,8 +33,8 @@ const run = async () => {
     return
   }
 
-  const instanceDb = new CouchDB(app.appId)
-  const remoteDb = new CouchDB(`${remoteUrl}/${appName}`)
+  const instanceDb = getDB(app.appId)
+  const remoteDb = getDB(`${remoteUrl}/${appName}`)
 
   instanceDb.replicate
     .to(remoteDb)

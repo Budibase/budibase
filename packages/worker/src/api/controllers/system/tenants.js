@@ -1,11 +1,10 @@
-const CouchDB = require("../../../db")
-const { StaticDatabases } = require("@budibase/backend-core/db")
+const { StaticDatabases, getDB } = require("@budibase/backend-core/db")
 const { getTenantId } = require("@budibase/backend-core/tenancy")
 const { deleteTenant } = require("@budibase/backend-core/deprovision")
 
 exports.exists = async ctx => {
   const tenantId = ctx.request.params
-  const db = new CouchDB(StaticDatabases.PLATFORM_INFO.name)
+  const db = getDB(StaticDatabases.PLATFORM_INFO.name)
   let exists = false
   try {
     const tenantsDoc = await db.get(StaticDatabases.PLATFORM_INFO.docs.tenants)
@@ -21,7 +20,7 @@ exports.exists = async ctx => {
 }
 
 exports.fetch = async ctx => {
-  const db = new CouchDB(StaticDatabases.PLATFORM_INFO.name)
+  const db = getDB(StaticDatabases.PLATFORM_INFO.name)
   let tenants = []
   try {
     const tenantsDoc = await db.get(StaticDatabases.PLATFORM_INFO.docs.tenants)

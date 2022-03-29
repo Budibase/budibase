@@ -1,12 +1,4 @@
-
-const bulkDocs = jest.fn()
-const db = jest.fn(() => {
-  return {
-    bulkDocs
-  }
-})
-jest.mock("../../../../../db", () => db)
-require("@budibase/backend-core").init(require("../../../../../db"))
+const TestConfig = require("../../../../../tests/utilities/TestConfiguration")
 
 const { RestImporter } = require("../index")
 
@@ -48,6 +40,12 @@ const datasets = {
 }
 
 describe("Rest Importer", () => {
+  const config = new TestConfig(false)
+
+  beforeEach(async () => {
+    await config.init()
+  })
+
   let restImporter 
 
   const init = async (data) => {
@@ -105,11 +103,9 @@ describe("Rest Importer", () => {
 
   const testImportQueries = async (key, data, assertions) => {
     await init(data)
-    bulkDocs.mockReturnValue([])
     const importResult = await restImporter.importQueries("datasourceId")
     expect(importResult.errorQueries.length).toBe(0)
     expect(importResult.queries.length).toBe(assertions[key].count)
-    expect(bulkDocs).toHaveBeenCalledTimes(1)
     jest.clearAllMocks()
   }
 

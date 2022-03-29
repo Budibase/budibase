@@ -1,13 +1,36 @@
-let Pouch
+const pouch = require("./pouch")
 
-module.exports.setDB = pouch => {
-  Pouch = pouch
+let PouchDB
+let initialised = false
+
+const put =
+  dbPut =>
+  async (doc, options = {}) => {
+    const response = await dbPut(doc, options)
+    // TODO: add created / updated
+    return response
+  }
+
+const checkInitialised = () => {
+  if (!initialised) {
+    throw new Error("init has not been called")
+  }
 }
 
-module.exports.getDB = dbName => {
-  return new Pouch(dbName)
+exports.init = opts => {
+  PouchDB = pouch.getPouch(opts)
+  initialised = true
 }
 
-module.exports.getCouch = () => {
-  return Pouch
+exports.getDB = (dbName, opts) => {
+  checkInitialised()
+  const db = new PouchDB(dbName, opts)
+  const dbPut = db.put
+  db.put = put(dbPut)
+  return db
+}
+
+exports.allDbs = () => {
+  checkInitialised()
+  return PouchDB.allDbs()
 }

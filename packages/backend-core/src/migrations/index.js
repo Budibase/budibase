@@ -1,4 +1,5 @@
 const { DEFAULT_TENANT_ID } = require("../constants")
+const { getDB } = require("../db")
 const { DocumentTypes } = require("../db/constants")
 const { getAllApps } = require("../db/utils")
 const environment = require("../environment")
@@ -26,7 +27,7 @@ exports.getMigrationsDoc = async db => {
   }
 }
 
-const runMigration = async (CouchDB, migration, options = {}) => {
+const runMigration = async (migration, options = {}) => {
   const tenantId = getTenantId()
   const migrationType = migration.type
   const migrationName = migration.name
@@ -46,7 +47,7 @@ const runMigration = async (CouchDB, migration, options = {}) => {
 
   // run the migration against each db
   for (const dbName of dbNames) {
-    const db = new CouchDB(dbName)
+    const db = getDB(dbName)
     try {
       const doc = await exports.getMigrationsDoc(db)
 
@@ -88,7 +89,7 @@ const runMigration = async (CouchDB, migration, options = {}) => {
   }
 }
 
-exports.runMigrations = async (CouchDB, migrations, options = {}) => {
+exports.runMigrations = async (migrations, options = {}) => {
   console.log("Running migrations")
   let tenantIds
   if (environment.MULTI_TENANCY) {
@@ -108,9 +109,7 @@ exports.runMigrations = async (CouchDB, migrations, options = {}) => {
     // for all migrations
     for (const migration of migrations) {
       // run the migration
-      await doInTenant(tenantId, () =>
-        runMigration(CouchDB, migration, options)
-      )
+      await doInTenant(tenantId, () => runMigration(migration, options))
     }
   }
   console.log("Migrations complete")
