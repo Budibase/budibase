@@ -15,6 +15,9 @@ function makeSessionID(userId, sessionId) {
 }
 
 exports.createASession = async (userId, session) => {
+  // invalidate all other sessions
+  await this.invalidateSessions(userId)
+
   const client = await redis.getSessionClient()
   const sessionId = session.sessionId
   if (!session.csrfToken) {

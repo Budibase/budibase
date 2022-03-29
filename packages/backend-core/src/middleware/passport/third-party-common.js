@@ -4,10 +4,7 @@ const { generateGlobalUserID } = require("../../db/utils")
 const { saveUser } = require("../../utils")
 const { authError } = require("./utils")
 const { newid } = require("../../hashing")
-const {
-  createASession,
-  invalidateSessions,
-} = require("../../security/sessions")
+const { createASession } = require("../../security/sessions")
 const { getGlobalUserByEmail } = require("../../utils")
 const { getGlobalDB, getTenantId } = require("../../tenancy")
 const fetch = require("node-fetch")
@@ -78,9 +75,6 @@ exports.authenticateThirdParty = async function (
 
   // never prompt for password reset
   dbUser.forceResetPassword = false
-
-  // invalidate all other sessions
-  await invalidateSessions(dbUser._id)
 
   // create or sync the user
   let response
