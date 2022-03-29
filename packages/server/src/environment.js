@@ -46,6 +46,8 @@ module.exports = {
   MULTI_TENANCY: process.env.MULTI_TENANCY,
   HTTP_MIGRATIONS: process.env.HTTP_MIGRATIONS,
   API_REQ_LIMIT_PER_SEC: process.env.API_REQ_LIMIT_PER_SEC,
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
   // environment
   NODE_ENV: process.env.NODE_ENV,
   JEST_WORKER_ID: process.env.JEST_WORKER_ID,
