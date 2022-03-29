@@ -264,11 +264,13 @@ class QueryRunner {
         enrichedQuery[key] = this.enrichQueryFields(fields[key], parameters)
       } else if (typeof fields[key] === "string") {
         // enrich string value as normal
-        enrichedQuery[key] = processStringSync(fields[key], parameters, {
+        const fieldValue = processStringSync(fields[key], parameters, {
           noEscaping: true,
           noHelpers: true,
           escapeNewlines: true,
         })
+        // try to parse the value to a number
+        enrichedQuery[key] = isNaN(fieldValue) ? fieldValue : Number(fieldValue)
       } else {
         enrichedQuery[key] = fields[key]
       }

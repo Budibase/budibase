@@ -79,7 +79,9 @@ export function createQueriesStore() {
       const parameters = query.parameters.reduce(
         (acc, next) => ({
           ...acc,
-          [next.name]: next.default,
+          [next.name]: isNaN(next.default)
+            ? next.default
+            : Number(next.default),
         }),
         {}
       )
