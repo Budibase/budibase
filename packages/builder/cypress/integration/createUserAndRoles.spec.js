@@ -4,9 +4,14 @@ filterTests(["smoke", "all"], () => {
   context("Create a User and Assign Roles", () => {
     before(() => {
       cy.login()
+      cy.visit(`${Cypress.config().baseUrl}/builder`)
+      cy.wait(500)
+      cy.createAppFromScratch("Initial App")
     })
 
     it("should create a user", () => {
+      cy.visit(`${Cypress.config().baseUrl}/builder`)
+      cy.wait(1000)
       cy.createUser("bbuser@test.com")
       cy.get(".spectrum-Table").should("contain", "bbuser")
     })
@@ -30,7 +35,14 @@ filterTests(["smoke", "all"], () => {
             for (let i = 1; i < 3; i++) {
               const uuid = () => Cypress._.random(0, 1e6)
               const name = uuid()
-              cy.createApp(name)
+              if(i < 1){
+                cy.createApp(name)
+              } else {
+                cy.visit(`${Cypress.config().baseUrl}/builder`)
+                cy.wait(500)
+                cy.get(`[data-cy="create-app-btn"]`).click({ force: true })
+                cy.createAppFromScratch(name)
+              }
             }
           }
         })
