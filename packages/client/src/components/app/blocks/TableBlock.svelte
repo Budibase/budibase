@@ -16,7 +16,9 @@
   export let showAutoColumns
   export let rowCount
   export let quiet
+  export let compact
   export let size
+  export let allowSelectRows
   export let linkRows
   export let linkURL
   export let linkColumn
@@ -156,12 +158,15 @@
         >
           <BlockComponent
             type="table"
+            context="table"
             props={{
               dataProvider: `{{ literal ${safe(dataProviderId)} }}`,
               columns: tableColumns,
               showAutoColumns,
               rowCount,
               quiet,
+              compact,
+              allowSelectRows,
               size,
               linkRows,
               linkURL,

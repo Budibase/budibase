@@ -3,16 +3,18 @@ const {
   buildAuthMiddleware,
   auditLog,
   buildTenancyMiddleware,
-  buildAppTenancyMiddleware,
 } = require("@budibase/backend-core/auth")
 const currentApp = require("../middleware/currentapp")
 const compress = require("koa-compress")
 const zlib = require("zlib")
-const { mainRoutes, staticRoutes } = require("./routes")
+const { mainRoutes, staticRoutes, publicRoutes } = require("./routes")
 const pkg = require("../../package.json")
 const env = require("../environment")
 
 const router = new Router()
+
+router.get("/health", ctx => (ctx.status = 200))
+router.get("/version", ctx => (ctx.body = pkg.version))
 
 router
   .use(
@@ -34,8 +36,6 @@ router
     }
     await next()
   })
-  .use("/health", ctx => (ctx.status = 200))
-  .use("/version", ctx => (ctx.body = pkg.version))
   // re-direct before any middlewares occur
   .redirect("/", "/builder")
   .use(
@@ -52,8 +52,6 @@ router
     })
   )
   .use(currentApp)
-  // this middleware will try to use the app ID to determine the tenancy
-  .use(buildAppTenancyMiddleware())
   .use(auditLog)
 
 // error handling middleware
@@ -74,13 +72,14 @@ router.use(async (ctx, next) => {
   }
 })
 
-router.get("/health", ctx => (ctx.status = 200))
-
 // authenticated routes
 for (let route of mainRoutes) {
   router.use(route.routes())
   router.use(route.allowedMethods())
 }
+
+router.use(publicRoutes.routes())
+router.use(publicRoutes.allowedMethods())
 
 // WARNING - static routes will catch everything else after them this must be last
 router.use(staticRoutes.routes())

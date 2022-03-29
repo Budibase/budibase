@@ -7,6 +7,7 @@ const {
   encodeJSBinding,
   doesContainString,
   disableEscaping,
+  findHBSBlocks,
 } = require("../src/index.cjs")
 
 describe("Test that the string processing works correctly", () => {
@@ -193,6 +194,20 @@ describe("check that disabling escaping function works", () => {
 
   it("should work with a combination", () => {
     expect(disableEscaping("{{ name }} welcome to {{{ platform }}}")).toEqual("{{{ name }}} welcome to {{{ platform }}}")
+  })
+
+  it("should work with multiple escaped", () => {
+    expect(disableEscaping("{{ name }} welcome to {{ name }}")).toEqual("{{{ name }}} welcome to {{{ name }}}")
+  })
+})
+
+describe("check find hbs blocks function", () => {
+  it("should find none", () => {
+    expect(findHBSBlocks("hello there")).toEqual([])
+  })
+
+  it("should find two", () => {
+    expect(findHBSBlocks("{{ hello }} there {{{ name }}}")).toEqual(["{{ hello }}", "{{{ name }}}"])
   })
 })
 

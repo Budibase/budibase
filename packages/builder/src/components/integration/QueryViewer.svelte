@@ -33,8 +33,7 @@
   let parameters
   let data = []
   let saveId
-  const transformerDocs =
-    "https://docs.budibase.com/building-apps/data/transformers"
+  const transformerDocs = "https://docs.budibase.com/docs/transformers"
 
   $: datasource = $datasources.list.find(ds => ds._id === query.datasourceId)
   $: query.schema = fieldsToSchema(fields)

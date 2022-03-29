@@ -47,6 +47,13 @@ jobs:
           yarn
           yarn build
           popd
+
+      - name: Build OpenAPI spec
+        run: |
+          pushd packages/server
+          yarn
+          yarn specs
+          popd
       
       - name: Setup Helm 
         uses: azure/setup-helm@v1
@@ -56,6 +63,7 @@ jobs:
         run: | 
           git config user.name "Budibase Helm Bot"
           git config user.email "<>"
+          git reset --hard
           git pull
           helm package charts/budibase
           git checkout gh-pages
@@ -77,3 +85,5 @@ jobs:
             packages/cli/build/cli-win.exe
             packages/cli/build/cli-linux
             packages/cli/build/cli-macos 
+            packages/server/specs/openapi.yaml
+            packages/server/specs/openapi.json

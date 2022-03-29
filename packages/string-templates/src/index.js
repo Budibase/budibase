@@ -3,7 +3,11 @@ const { registerAll, registerMinimum } = require("./helpers/index")
 const processors = require("./processors")
 const { atob, btoa } = require("./utilities")
 const manifest = require("../manifest.json")
-const { FIND_HBS_REGEX, findDoubleHbsInstances } = require("./utilities")
+const {
+  FIND_HBS_REGEX,
+  FIND_ANY_HBS_REGEX,
+  findDoubleHbsInstances,
+} = require("./utilities")
 
 const hbsInstance = handlebars.create()
 registerAll(hbsInstance)
@@ -167,8 +171,13 @@ module.exports.disableEscaping = string => {
   if (matches == null) {
     return string
   }
-  for (let match of matches) {
-    string = string.replace(match, `{${match}}`)
+
+  // find the unique set
+  const unique = [...new Set(matches)]
+  for (let match of unique) {
+    // add a negative lookahead to exclude any already
+    const regex = new RegExp(`${match}(?!})`, "g")
+    string = string.replace(regex, `{${match}}`)
   }
   return string
 }
@@ -303,6 +312,21 @@ module.exports.doesContainStrings = (template, strings) => {
     }
   }
   return false
+}
+
+/**
+ * Given a string, this will return any {{ binding }} or {{{ binding }}} type
+ * statements.
+ * @param {string} string The string to search within.
+ * @return {string[]} The found HBS blocks.
+ */
+module.exports.findHBSBlocks = string => {
+  let regexp = new RegExp(FIND_ANY_HBS_REGEX)
+  let matches = string.match(regexp)
+  if (matches == null) {
+    return []
+  }
+  return matches
 }
 
 /**

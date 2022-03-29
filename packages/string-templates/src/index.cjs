@@ -18,6 +18,7 @@ module.exports.processObject = templates.processObject
 module.exports.doesContainStrings = templates.doesContainStrings
 module.exports.doesContainString = templates.doesContainString
 module.exports.disableEscaping = templates.disableEscaping
+module.exports.findHBSBlocks = templates.findHBSBlocks
 
 /**
  * Use vm2 to run JS scripts in a node env

@@ -32,11 +32,10 @@ const populateFromDB = async (userId, tenantId) => {
  * @param {*} populateUser function to provide the user for re-caching. default to couch db
  * @returns
  */
-exports.getUser = async (
-  userId,
-  tenantId = null,
-  populateUser = populateFromDB
-) => {
+exports.getUser = async (userId, tenantId = null, populateUser = null) => {
+  if (!populateUser) {
+    populateUser = populateFromDB
+  }
   if (!tenantId) {
     try {
       tenantId = getTenantId()

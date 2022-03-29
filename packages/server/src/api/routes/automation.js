@@ -1,49 +1,19 @@
 const Router = require("@koa/router")
 const controller = require("../controllers/automation")
 const authorized = require("../../middleware/authorized")
-const joiValidator = require("../../middleware/joi-validator")
 const {
   BUILDER,
   PermissionLevels,
   PermissionTypes,
 } = require("@budibase/backend-core/permissions")
-const Joi = require("joi")
 const { bodyResource, paramResource } = require("../../middleware/resourceId")
 const {
   middleware: appInfoMiddleware,
   AppType,
 } = require("../../middleware/appInfo")
+const { automationValidator } = require("./utils/validators")
 
 const router = Router()
-
-// prettier-ignore
-function generateStepSchema(allowStepTypes) {
-  return Joi.object({
-    stepId: Joi.string().required(),
-    id: Joi.string().required(),
-    description: Joi.string().required(),
-    name: Joi.string().required(),
-    tagline: Joi.string().required(),
-    icon: Joi.string().required(),
-    params: Joi.object(),
-    args: Joi.object(),
-    type: Joi.string().required().valid(...allowStepTypes),
-  }).unknown(true)
-}
-
-function generateValidator(existing = false) {
-  // prettier-ignore
-  return joiValidator.body(Joi.object({
-    _id: existing ? Joi.string().required() : Joi.string(),
-    _rev: existing ? Joi.string().required() : Joi.string(),
-    name: Joi.string().required(),
-    type: Joi.string().valid("automation").required(),
-    definition: Joi.object({
-      steps: Joi.array().required().items(generateStepSchema(["ACTION", "LOGIC"])),
-      trigger: generateStepSchema(["TRIGGER"]).allow(null),
-    }).required().unknown(true),
-  }).unknown(true))
-}
 
 router
   .get(
@@ -72,13 +42,13 @@ router
     "/api/automations",
     bodyResource("_id"),
     authorized(BUILDER),
-    generateValidator(true),
+    automationValidator(true),
     controller.update
   )
   .post(
     "/api/automations",
     authorized(BUILDER),
-    generateValidator(false),
+    automationValidator(false),
     controller.create
   )
   .delete(

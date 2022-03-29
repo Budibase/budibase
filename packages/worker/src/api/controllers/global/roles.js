@@ -5,6 +5,9 @@ const {
   DocumentTypes,
 } = require("@budibase/backend-core/db")
 const { doInAppContext, getAppDB } = require("@budibase/backend-core/context")
+const { user: userCache } = require("@budibase/backend-core/cache")
+const { getGlobalDB } = require("@budibase/backend-core/tenancy")
+const { allUsers } = require("../../utilities")
 
 exports.fetch = async ctx => {
   const tenantId = ctx.user.tenantId
@@ -41,4 +44,24 @@ exports.find = async ctx => {
       url: app.url,
     }
   })
+}
+
+exports.removeAppRole = async ctx => {
+  const { appId } = ctx.params
+  const db = getGlobalDB()
+  const users = await allUsers(ctx)
+  const bulk = []
+  const cacheInvalidations = []
+  for (let user of users) {
+    if (user.roles[appId]) {
+      cacheInvalidations.push(userCache.invalidateUser(user._id))
+      delete user.roles[appId]
+      bulk.push(user)
+    }
+  }
+  await db.bulkDocs(bulk)
+  await Promise.all(cacheInvalidations)
+  ctx.body = {
+    message: "App role removed from all users",
+  }
 }
