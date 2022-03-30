@@ -6,9 +6,11 @@ let initialised = false
 const put =
   dbPut =>
   async (doc, options = {}) => {
-    const response = await dbPut(doc, options)
-    // TODO: add created / updated
-    return response
+    if (!doc.createdAt) {
+      doc.createdAt = new Date().toISOString()
+    }
+    doc.updatedAt = new Date().toISOString()
+    return dbPut(doc, options)
   }
 
 const checkInitialised = () => {
