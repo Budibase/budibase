@@ -4,7 +4,7 @@ filterTests(["smoke", "all"], () => {
   context("Query Level Transformers", () => {
     before(() => {
       cy.login()
-      cy.deleteApp("Cypress Tests")
+      cy.deleteAllApps()
       cy.createApp("Cypress Tests")
     })
 

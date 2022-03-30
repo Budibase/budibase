@@ -126,7 +126,7 @@ export const getDatasourceForProvider = (asset, component) => {
   if (dataProviderSetting) {
     const settingValue = component[dataProviderSetting.key]
     const providerId = extractLiteralHandlebarsID(settingValue)
-    const provider = findComponent(asset.props, providerId)
+    const provider = findComponent(asset?.props, providerId)
     return getDatasourceForProvider(asset, provider)
   }
 
@@ -393,18 +393,45 @@ const getUrlBindings = asset => {
 
 /**
  * Gets all bindable properties exposed in a button actions flow up until
- * the specified action ID.
+ * the specified action ID, as well as context provided for the action
+ * setting as a whole by the component.
  */
-export const getButtonContextBindings = (actions, actionId) => {
+export const getButtonContextBindings = (
+  asset,
+  componentId,
+  settingKey,
+  actions,
+  actionId
+) => {
+  let bindings = []
+
+  // Check if any context bindings are provided by the component for this
+  // setting
+  const component = findComponent(asset.props, componentId)
+  const settings = getComponentSettings(component?._component)
+  const eventSetting = settings.find(setting => setting.key === settingKey)
+  if (!eventSetting) {
+    return bindings
+  }
+  if (eventSetting.context?.length) {
+    eventSetting.context.forEach(contextEntry => {
+      bindings.push({
+        readableBinding: contextEntry.label,
+        runtimeBinding: `${makePropSafe("eventContext")}.${makePropSafe(
+          contextEntry.key
+        )}`,
+      })
+    })
+  }
+
   // Get the steps leading up to this value
   const index = actions?.findIndex(action => action.id === actionId)
   if (index == null || index === -1) {
-    return []
+    return bindings
   }
   const prevActions = actions.slice(0, index)
 
   // Generate bindings for any steps which provide context
-  let bindings = []
   prevActions.forEach((action, idx) => {
     const def = ActionDefinitions.actions.find(
       x => x.name === action["##eventHandlerType"]
@@ -418,6 +445,7 @@ export const getButtonContextBindings = (actions, actionId) => {
       })
     }
   })
+
   return bindings
 }
 
@@ -458,7 +486,7 @@ export const getSchemaForDatasource = (asset, datasource, options) => {
     // Determine the entity which backs this datasource.
     // "provider" datasources are those targeting another data provider
     if (type === "provider") {
-      const component = findComponent(asset.props, datasource.providerId)
+      const component = findComponent(asset?.props, datasource.providerId)
       const source = getDatasourceForProvider(asset, component)
       return getSchemaForDatasource(asset, source, options)
     }

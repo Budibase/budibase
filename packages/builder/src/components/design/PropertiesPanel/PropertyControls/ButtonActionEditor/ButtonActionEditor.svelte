@@ -8,6 +8,7 @@
 
   const dispatch = createEventDispatcher()
 
+  export let key
   export let value = []
   export let name
   export let bindings
@@ -81,5 +82,6 @@
     bind:actions={tmpValue}
     eventType={name}
     {bindings}
+    {key}
   />
 </Drawer>

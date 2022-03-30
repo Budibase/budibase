@@ -48,6 +48,7 @@ export enum SourceNames {
   REST = "REST",
   ORACLE = "ORACLE",
   GOOGLE_SHEETS = "GOOGLE_SHEETS",
+  FIREBASE = "FIREBASE",
 }
 
 export enum IncludeRelationships {

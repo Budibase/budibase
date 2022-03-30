@@ -71,7 +71,9 @@
       <Heading size="S">Users</Heading>
       <ButtonGroup>
         <Button disabled secondary>Import users</Button>
-        <Button primary on:click={createUserModal.show}>Add user</Button>
+        <Button primary dataCy="add-user" on:click={createUserModal.show}
+          >Add user</Button
+        >
       </ButtonGroup>
     </div>
     <div class="field">
