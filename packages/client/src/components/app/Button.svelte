@@ -37,7 +37,6 @@
   <button
     class={`spectrum-Button spectrum-Button--size${size} spectrum-Button--${type}`}
     class:spectrum-Button--quiet={quiet}
-    class:editing={$component.editing}
     {disabled}
     use:styleable={$component.styles}
     on:click={onClick}
