@@ -182,11 +182,7 @@ export interface QueryJson {
 
 export interface SqlQuery {
   sql: string
-  bindings?:
-    | string[]
-    | {
-        [key: string]: any
-      }
+  bindings?: string[]
 }
 
 export interface QueryOptions {

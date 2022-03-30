@@ -3,6 +3,9 @@ const { EmailTemplatePurpose } = require("../../../constants")
 const nodemailer = require("nodemailer")
 const fetch = require("node-fetch")
 
+// for the real email tests give them a long time to try complete/fail
+jest.setTimeout(30000)
+
 describe("/api/global/email", () => {
   let request = setup.getRequest()
   let config = setup.getConfig()
@@ -27,6 +30,7 @@ describe("/api/global/email", () => {
           userId: user._id,
         })
         .set(config.defaultHeaders())
+        .timeout(20000)
       // ethereal hiccup, can't test right now
       if (res.status >= 300) {
         return
@@ -39,7 +43,7 @@ describe("/api/global/email", () => {
       text = await response.text()
     } catch (err) {
       // ethereal hiccup, can't test right now
-      if (parseInt(err.status) >= 300) {
+      if (parseInt(err.status) >= 300 || (err && err.errno === "ETIME")) {
         return
       } else {
         throw err
