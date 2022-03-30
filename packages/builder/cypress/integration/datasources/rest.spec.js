@@ -4,6 +4,7 @@ filterTests(["smoke", "all"], () => {
   context("REST Datasource Testing", () => {
     before(() => {
       cy.login()
+      cy.deleteAllApps()
       cy.createTestApp()
     })
 
@@ -36,10 +37,12 @@ filterTests(["smoke", "all"], () => {
       // createRestQuery confirms query creation
       cy.createRestQuery("GET", restUrl, "/breweries")
       // Confirm status code response within REST datasource
-      cy.get(".spectrum-FieldLabel")
-        .contains("Status")
-        .children()
+      cy.wait(1000)
+      cy.get(".stats").within(() => {
+        cy.get(".spectrum-FieldLabel")
+        .eq(0)
         .should("contain", 200)
+      })
     })
   })
 })

@@ -5,6 +5,7 @@
   import Divider from "../Divider/Divider.svelte"
   import Icon from "../Icon/Icon.svelte"
   import Context from "../context"
+  import ProgressCircle from "../ProgressCircle/ProgressCircle.svelte"
 
   export let title = undefined
   export let size = "S"
@@ -102,15 +103,22 @@
           <Button group secondary on:click={close}>{cancelText}</Button>
         {/if}
         {#if showConfirmButton}
-          <Button
-            group
-            cta
-            {...$$restProps}
-            disabled={confirmDisabled}
-            on:click={confirm}
-          >
-            {confirmText}
-          </Button>
+          <span class="confirm-wrap">
+            <Button
+              group
+              cta
+              {...$$restProps}
+              disabled={confirmDisabled}
+              on:click={confirm}
+            >
+              {#if loading}
+                <ProgressCircle overBackground={true} size="S" />
+              {/if}
+              {#if !loading}
+                {confirmText}
+              {/if}
+            </Button>
+          </span>
         {/if}
       </div>
     {/if}
@@ -168,5 +176,9 @@
 
   .spectrum-Dialog-buttonGroup {
     padding-left: 0;
+  }
+
+  .confirm-wrap :global(.spectrum-Button-label) {
+    display: contents;
   }
 </style>

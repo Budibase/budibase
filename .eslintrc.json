@@ -44,5 +44,8 @@
   ],
   "rules": {
     "no-self-assign": "off"
+  },
+  "globals": {
+    "GeolocationPositionError": true
   }
 }
