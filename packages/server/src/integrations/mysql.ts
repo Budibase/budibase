@@ -80,6 +80,20 @@ module MySQLModule {
     },
   }
 
+  function bindingTypeCoerce(bindings: any[]) {
+    for (let i = 0; i < bindings.length; i++) {
+      const binding = bindings[i]
+      if (typeof binding !== "string") {
+        continue
+      }
+      const matches = binding.match(/^\d*/g)
+      if (matches && matches[0] !== "" && !isNaN(Number(matches[0]))) {
+        bindings[i] = parseFloat(binding)
+      }
+    }
+    return bindings
+  }
+
   class MySQLIntegration extends Sql implements DatasourcePlus {
     private config: MySQLConfig
     private client: any
@@ -122,7 +136,7 @@ module MySQLModule {
         // Node MySQL is callback based, so we must wrap our call in a promise
         const response = await this.client.query(
           query.sql,
-          query.bindings || []
+          bindingTypeCoerce(query.bindings || [])
         )
         return response[0]
       } finally {
