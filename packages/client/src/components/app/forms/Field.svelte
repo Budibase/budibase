@@ -50,22 +50,24 @@
   $: labelClass = labelPos === "above" ? "" : `spectrum-FieldLabel--${labelPos}`
 
   const updateLabel = e => {
-    builderStore.actions.updateProp("label", e.target.textContent.trim())
+    builderStore.actions.updateProp("label", e.target.textContent)
   }
 </script>
 
 <FieldGroupFallback>
   <div class="spectrum-Form-item" use:styleable={$component.styles}>
-    <label
-      bind:this={labelNode}
-      contenteditable={$component.editing}
-      on:blur={$component.editing ? updateLabel : null}
-      class:hidden={!label}
-      for={fieldState?.fieldId}
-      class={`spectrum-FieldLabel spectrum-FieldLabel--sizeM spectrum-Form-itemLabel ${labelClass}`}
-    >
-      {label || " "}
-    </label>
+    {#key $component.editing}
+      <label
+        bind:this={labelNode}
+        contenteditable={$component.editing}
+        on:blur={$component.editing ? updateLabel : null}
+        class:hidden={!label}
+        for={fieldState?.fieldId}
+        class={`spectrum-FieldLabel spectrum-FieldLabel--sizeM spectrum-Form-itemLabel ${labelClass}`}
+      >
+        {label || " "}
+      </label>
+    {/key}
     <div class="spectrum-Form-itemField">
       {#if !formContext}
         <Placeholder text="Form components need to be wrapped in a form" />
