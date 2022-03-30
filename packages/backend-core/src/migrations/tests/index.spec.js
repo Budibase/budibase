@@ -1,12 +1,12 @@
-require("../../tests/utilities/dbConfig")
-
+const { MOCK_DATE_TIMESTAMP, MOCK_DATE } = require("../../tests/utilities/TestConfiguration")
 const { runMigrations, getMigrationsDoc } = require("../index")
 const { getDB } = require("../../db")
 const {
   StaticDatabases,
 } = require("../../db/utils")
 
-Date.now = jest.fn(() => 1487076708000)
+Date = jest.fn(() => MOCK_DATE)
+Date.now = jest.fn(() => MOCK_DATE_TIMESTAMP)
 let db
 
 describe("migrations", () => {
