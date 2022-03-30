@@ -2529,7 +2529,6 @@
     "name": "Embedded Map",
     "icon": "Location",
     "styles": ["size"],
-    "editable": true,
     "draggable": false,
     "illegalChildren": ["section"],
     "settings": [
@@ -3631,7 +3630,6 @@
     "name": "Markdown Viewer",
     "icon": "TaskList",
     "styles": ["size"],
-    "editable": true,
     "settings": [
       {
         "type": "text",
