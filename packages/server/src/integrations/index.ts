@@ -26,7 +26,6 @@ const DEFINITIONS = {
   [SourceNames.MYSQL]: mysql.schema,
   [SourceNames.ARANGODB]: arangodb.schema,
   [SourceNames.REST]: rest.schema,
-  [SourceNames.FIREBASE]: firebase.schema,
 }
 
 const INTEGRATIONS = {
