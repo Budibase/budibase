@@ -11,6 +11,7 @@ const arangodb = require("./arangodb")
 const rest = require("./rest")
 const googlesheets = require("./googlesheets")
 const firebase = require("./firebase")
+const redis = require("./redis")
 const { SourceNames } = require("../definitions/datasource")
 const environment = require("../environment")
 
@@ -27,6 +28,7 @@ const DEFINITIONS = {
   [SourceNames.ARANGODB]: arangodb.schema,
   [SourceNames.REST]: rest.schema,
   [SourceNames.FIREBASE]: firebase.schema,
+  [SourceNames.REDIS]: redis.schema,
 }
 
 const INTEGRATIONS = {
@@ -43,6 +45,7 @@ const INTEGRATIONS = {
   [SourceNames.REST]: rest.integration,
   [SourceNames.FIREBASE]: firebase.integration,
   [SourceNames.GOOGLE_SHEETS]: googlesheets.integration,
+  [SourceNames.REDIS]: redis.integration,
 }
 
 // optionally add oracle integration if the oracle binary can be installed
