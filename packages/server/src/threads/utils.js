@@ -72,7 +72,9 @@ exports.hasExtraData = response => {
   return (
     typeof response === "object" &&
     !Array.isArray(response) &&
+    response &&
     response.data != null &&
+    response &&
     response.info != null
   )
 }
