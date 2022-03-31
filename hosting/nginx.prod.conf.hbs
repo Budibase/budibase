@@ -42,13 +42,25 @@ http {
     client_max_body_size 1000m;
     ignore_invalid_headers off;
     proxy_buffering off;
-    # port_in_redirect off;
+    
+    set $csp_default "default-src 'self'"
+    set $csp_script "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.budi.live https://js.intercomcdn.com https://widget.intercom.io";
+    set $csp_style "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com https://rsms.me https://maxcdn.bootstrapcdn.com";
+    set $csp_object "object-src 'none'";
+    set $csp_base_uri "base-uri 'self'";
+    set $csp_connect "connect-src 'self' https://api-iam.intercom.io https://api-iam.intercom.io  https://api-ping.intercom.io https://app.posthog.com wss://nexus-websocket-a.intercom.io  wss://nexus-websocket-b.intercom.io https://nexus-websocket-a.intercom.io https://nexus-websocket-b.intercom.io  https://uploads.intercomcdn.com  https://uploads.intercomusercontent.com";
+    set $csp_font "font-src 'self' data: https://cdn.jsdelivr.net https://fonts.gstatic.com https://rsms.me https://maxcdn.bootstrapcdn.com  https://js.intercomcdn.com  https://fonts.intercomcdn.com";
+    set $csp_frame "frame-src 'self' https:";
+    set $csp_img "img-src http: https: data: blob:";
+    set $csp_manifest "manifest-src 'self'";
+    set $csp_media "media-src 'self' https://js.intercomcdn.com";
+    set $csp_worker "worker-src 'none'";
 
     # Security Headers
     add_header X-Frame-Options SAMEORIGIN always;
     add_header X-Content-Type-Options nosniff always;
     add_header X-XSS-Protection "1; mode=block" always;
-    add_header Content-Security-Policy  "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.budi.live https://js.intercomcdn.com https://widget.intercom.io; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com https://rsms.me https://maxcdn.bootstrapcdn.com; object-src 'none'; base-uri 'self'; connect-src 'self' https://api-iam.intercom.io https://app.posthog.com wss://nexus-websocket-a.intercom.io ; font-src 'self' data: https://cdn.jsdelivr.net https://fonts.gstatic.com https://rsms.me https://maxcdn.bootstrapcdn.com; frame-src 'self' https:; img-src http: https: data:; manifest-src 'self'; media-src 'self'; worker-src 'none';" always;
+    add_header Content-Security-Policy ${csp_default}; ${csp_script}; ${csp_style}; ${csp_object}; ${csp_base_uri}; ${csp_connect}; ${csp_font}; ${csp_frame}; ${csp_img}; ${csp_manifest}; ${csp_media}; ${csp_worker};" always;
 
     # upstreams
     set $apps {{ apps }};
