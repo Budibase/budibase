@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Budibase</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">  
+  </head>
+
+  <script src="https://jspm.dev/@spectrum-web-components/bundle/elements.js" type="module" async></script>
+
+  <script>
+    function goToStatus() {
+      window.location.href = "https://status.budibase.com";
+    }
+    function goHome() {
+      window.location.href = window.location.origin;
+    }
+    function getStatus() {
+      var http = new XMLHttpRequest()
+      var url = window.location.href
+      http.open('GET', url, true)
+      http.send()
+      http.onreadystatechange = (e) => {
+        var status = http.status
+        document.getElementById("status").innerHTML = status
+
+        var message
+        if (status === 502) {
+          message = "Bad gateway. Please try again later."
+        } else if (status === 503) {
+          message = "Service Unavailable. Please try again later."
+        } else if (status === 504) {
+          message = "Gateway timeout. Please try again later."
+        } else {
+          message = "Please try again later."
+        }
+
+        document.getElementById("message").innerHTML = message
+      }
+    }
+
+    getStatus()
+  </script>
+
+  <style>
+    html, body {
+      background-color: #1a1a1a;
+      padding: 0;
+      margin: 0;
+      overflow: hidden;
+      color: #e7e7e7;
+    } 
+    .main {
+      height: 100vh;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+    }
+    .info {
+      display: flex;
+      flex-direction: column;
+      align-items: left;
+    }
+
+    @media only screen and (max-width: 600px) {
+      .info {
+        align-items: center;
+      }
+    }
+
+    .status {
+      color: var(--spectrum-global-color-gray-600)
+    }
+    .title {
+      font-weight: 400;
+      color: var(--spectrum-global-color-gray-900)
+    }
+    .message {
+      font-weight: 200;
+      color: var(--spectrum-global-color-gray-800)
+    }
+    .buttons {
+      display: flex;
+      flex-direction: row;
+      margin-top: 15px;
+    }
+    .statusButton {
+      margin-left: 20px;
+      border: none;
+    }
+    .hero {
+      height: 160px;
+      width: 160px;
+      margin-right: 80px;
+    }
+    .content {
+      display: flex;
+      flex-direction: row;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    @media only screen and (max-width: 600px) {
+      .content {
+        flex-direction: column;
+      }
+    }
+  </style>
+
+  <script src="">
+  </script>
+
+  <body>
+    <sp-theme scale="medium" color="dark">
+      <div class="main">
+        <div class="content">
+          <div class="hero">
+            <img src="https://raw.githubusercontent.com/Budibase/budibase/master/packages/builder/assets/bb-space-man.svg" alt="Budibase Logo">
+          </div>
+          <div class="info">
+            <div>
+              <h4 id="status" class="status"></h4>
+              <h1 class="title">
+                Houston we have a problem!
+              </h1>
+              <h3 id="message" class="message">
+              </h3>
+            </div>
+            <div class="buttons">
+              <sp-button onclick=goHome()>Return home</sp-button> 
+              <sp-button class="statusButton" quiet variant="secondary" onclick=goToStatus()>Check out status</sp-button> 
+            </div>
+          </div>
+        </div>
+        
+      </div>
+    </sp-theme>
+  </body>
+
+</html>
