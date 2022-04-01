@@ -342,7 +342,7 @@ Cypress.Commands.add("addCustomSourceOptions", totalOptions => {
 
 //Filters visible with 1 or more
 Cypress.Commands.add("searchForApplication", appName => {
-  cy.wait(1000)
+  cy.wait(2000)
   // Searches for the app
   cy.get(".filter").then(() => {
     cy.get(".spectrum-Textfield").within(() => {
