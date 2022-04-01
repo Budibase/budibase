@@ -40,7 +40,7 @@
   let unpublishModal
   let iconModal
   let creatingApp = false
-  let loaded = false
+  let loaded = $apps?.length || $templates?.length
   let searchTerm = ""
   let cloud = $admin.cloud
   let appName = ""
