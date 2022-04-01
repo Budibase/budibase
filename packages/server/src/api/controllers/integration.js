@@ -5,10 +5,6 @@ const { SourceNames } = require("../../definitions/datasource")
 const googlesheets = require("../../integrations/googlesheets")
 const env = require("../../environment")
 
-// const homedir = require("os").homedir();
-// const path = require("path")
-// const customDatasources = path.resolve(homedir, ".budibase")
-
 exports.fetch = async function (ctx) {
   ctx.status = 200
   const defs = cloneDeep(definitions)
