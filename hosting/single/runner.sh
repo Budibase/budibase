@@ -1,6 +1,6 @@
 redis-server --requirepass $REDIS_PASSWORD &
 /opt/clouseau/bin/clouseau &
-/minio/minio server /data &
+/minio/minio server /minio &
 /docker-entrypoint.sh /opt/couchdb/bin/couchdb &
 /etc/init.d/nginx restart
 pushd app

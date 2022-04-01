@@ -86,6 +86,8 @@ RUN touch /etc/nginx/logs/error.log
 RUN touch /etc/nginx/logs/nginx.pid
 
 EXPOSE 10000
+VOLUME /opt/couchdb/data
+VOLUME /minio
 
 # must set this just before running
 ENV NODE_ENV=production
