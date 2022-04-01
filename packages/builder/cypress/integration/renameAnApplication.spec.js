@@ -11,7 +11,8 @@ filterTests(['all'], () => {
       const appName = "Cypress Tests"
       const appRename = "Cypress Renamed"
       // Rename app, Search for app, Confirm name was changed
-      cy.get(".home-logo").click()
+      cy.visit(`${Cypress.config().baseUrl}/builder`)
+      cy.wait(500)
       renameApp(appName, appRename)
       cy.reload()
       cy.wait(1000)
@@ -37,7 +38,8 @@ filterTests(['all'], () => {
           cy.get(".spectrum-Button").contains("Publish").click({ force: true })
         })
       // Rename app, Search for app, Confirm name was changed
-      cy.get(".home-logo").click()
+      cy.visit(`${Cypress.config().baseUrl}/builder`)
+      cy.wait(500)
       renameApp(appName, appRename, true)
       cy.get(".appTable").find(".wrapper").should("have.length", 1)
       cy.applicationInAppTable(appRename)
@@ -45,7 +47,8 @@ filterTests(['all'], () => {
 
     it("Should try to rename an application to have no name", () => {
       const appName = "Cypress Tests"
-      cy.get(".home-logo").click()
+      cy.visit(`${Cypress.config().baseUrl}/builder`)
+      cy.wait(500)
       renameApp(appName, " ", false, true)
       cy.wait(500)
       // Close modal and confirm name has not been changed
