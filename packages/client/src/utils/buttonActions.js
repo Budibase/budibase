@@ -346,6 +346,7 @@ export const enrichButtonActions = (actions, context) => {
         // Built total context for this action
         const totalContext = {
           ...context,
+          state: get(stateStore),
           actions: buttonContext,
           eventContext,
         }
