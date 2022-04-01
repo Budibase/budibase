@@ -76,7 +76,7 @@ server.on("close", async () => {
   await redis.shutdown()
 })
 
-module.exports = server.listen(env.PORT || 4001, async () => {
+module.exports = server.listen(env.PORT || 0, async () => {
   console.log(`Budibase running on ${JSON.stringify(server.address())}`)
   env._set("PORT", server.address().port)
   eventEmitter.emitPort(env.PORT)
