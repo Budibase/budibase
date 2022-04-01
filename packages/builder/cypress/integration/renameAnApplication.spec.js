@@ -92,6 +92,7 @@ filterTests(['all'], () => {
     })
 
     const renameApp = (originalName, changedName, published, noName) => {
+      cy.wait(2000)
       cy.searchForApplication(originalName)
       cy.request(`${Cypress.config().baseUrl}/api/applications?status=all`)
         .its("body")
