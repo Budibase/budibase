@@ -11,6 +11,7 @@ const { integrations } = require("../../integrations")
 const { getDatasourceAndQuery } = require("./row/utils")
 const { invalidateDynamicVariables } = require("../../threads/utils")
 const { getAppDB } = require("@budibase/backend-core/context")
+const { events } = require("@budibase/backend-core")
 
 exports.fetch = async function (ctx) {
   // Get internal tables
@@ -142,6 +143,7 @@ exports.save = async function (ctx) {
   }
 
   const dbResp = await db.put(datasource)
+  events.datasourceCreated(datasource)
   datasource._rev = dbResp.rev
 
   // Drain connection pools when configuration is changed
