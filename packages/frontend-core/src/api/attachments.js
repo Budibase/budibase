@@ -48,7 +48,6 @@ export const buildAttachmentEndpoints = API => {
      * @param data the file to upload
      */
     externalUpload: async ({ datasourceId, bucket, key, data }) => {
-      console.log(API)
       const { signedUrl, publicUrl } = await getSignedDatasourceURL({
         datasourceId,
         bucket,

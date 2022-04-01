@@ -49,7 +49,6 @@
       }
     } catch (error) {
       notifications.error("Error duplicating screen")
-      console.log(error)
     }
   }
 

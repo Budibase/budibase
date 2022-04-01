@@ -47,7 +47,6 @@ filterTests(["smoke", "all"], () => {
       cy.readFile(
         "cypress/support/queryLevelTransformerFunctionWithData.js"
       ).then(transformerFunction => {
-        //console.log(transformerFunction[1])
         cy.get(".CodeMirror textarea")
           // Highlight current text and overwrite with file contents
           .type(Cypress.platform === "darwin" ? "{cmd}a" : "{ctrl}a", {

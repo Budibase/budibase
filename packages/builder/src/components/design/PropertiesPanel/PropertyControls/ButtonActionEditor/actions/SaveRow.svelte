@@ -10,11 +10,13 @@
 
   export let parameters
   export let bindings = []
+  export let nested
 
   $: formComponents = getContextProviderComponents(
     $currentAsset,
     $store.selectedComponentId,
-    "form"
+    "form",
+    { includeSelf: nested }
   )
   $: schemaComponents = getContextProviderComponents(
     $currentAsset,

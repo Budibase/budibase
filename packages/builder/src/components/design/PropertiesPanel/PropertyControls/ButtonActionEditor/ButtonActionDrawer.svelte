@@ -21,6 +21,7 @@
   export let key
   export let actions
   export let bindings = []
+  export let nested
 
   let selectedAction = actions?.length ? actions[0] : null
 
@@ -137,6 +138,7 @@
             this={selectedActionComponent}
             parameters={selectedAction.parameters}
             bindings={allBindings}
+            {nested}
           />
         </div>
       {/key}
