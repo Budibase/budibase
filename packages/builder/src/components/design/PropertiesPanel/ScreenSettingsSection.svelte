@@ -15,8 +15,17 @@
 
   let errors = {}
 
-  const routeExists = url => {
+  const routeTaken = url => {
     const roleId = get(selectedAccessRole) || "BASIC"
+    return get(allScreens).some(
+      screen =>
+        screen.routing.route.toLowerCase() === url.toLowerCase() &&
+        screen.routing.roleId === roleId
+    )
+  }
+
+  const roleTaken = roleId => {
+    const url = get(currentAsset)?.routing.route
     return get(allScreens).some(
       screen =>
         screen.routing.route.toLowerCase() === url.toLowerCase() &&
@@ -76,14 +85,25 @@
         return sanitizeUrl(val)
       },
       validate: val => {
-        const exisingValue = deepGet($currentAsset, "routing.route")
-        if (val !== exisingValue && routeExists(val)) {
-          return "That URL is already in use"
+        const exisingValue = get(currentAsset)?.routing.route
+        if (val !== exisingValue && routeTaken(val)) {
+          return "That URL is already in use for this role"
         }
         return null
       },
     },
-    { key: "routing.roleId", label: "Access", control: RoleSelect },
+    {
+      key: "routing.roleId",
+      label: "Access",
+      control: RoleSelect,
+      validate: val => {
+        const exisingValue = get(currentAsset)?.routing.roleId
+        if (val !== exisingValue && roleTaken(val)) {
+          return "That role is already in use for this URL"
+        }
+        return null
+      },
+    },
     { key: "layoutId", label: "Layout", control: LayoutSelect },
   ]
 </script>
