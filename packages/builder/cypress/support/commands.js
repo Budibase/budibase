@@ -351,8 +351,7 @@ Cypress.Commands.add("searchForApplication", appName => {
     .then(val => {
       if (val.length < 2) {
         return
-        }
-      else {
+      } else {
         // Searches for the app
         cy.get(".filter").then(() => {
           cy.get(".spectrum-Textfield").within(() => {
@@ -362,7 +361,7 @@ Cypress.Commands.add("searchForApplication", appName => {
         })
       }
     })
-  })
+})
 
 //Assumes there are no others
 Cypress.Commands.add("applicationInAppTable", appName => {
