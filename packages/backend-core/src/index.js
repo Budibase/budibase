@@ -20,5 +20,5 @@ module.exports = {
   accounts: require("./cloud/accounts"),
   tenancy: require("./tenancy"),
   featureFlags: require("./featureFlags"),
-  analytics: require("./analytics"),
+  events: require("./events"),
 }

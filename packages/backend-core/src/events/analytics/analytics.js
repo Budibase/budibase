@@ -1,5 +1,5 @@
 const PosthogClient = require("./posthog")
-const env = require("../environment")
+const env = require("../../environment")
 
 class Analytics {
   constructor() {
@@ -19,9 +19,11 @@ class Analytics {
     this.posthog.updateUser(userId, properties)
   }
 
-  captureEvent(userId, eventName, props = {}) {
+  captureEvent(eventName, properties) {
     if (!this.isEnabled) return
-    this.posthog.capture(userId, eventName, props)
+    // TODO: get the user id from context
+    const userId = "TESTING_USER_ID"
+    this.posthog.capture(userId, eventName, properties)
   }
 
   shutdown() {
