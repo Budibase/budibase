@@ -15,6 +15,7 @@ filterTests(['all'], () => {
       renameApp(appName, appRename)
       cy.reload()
       cy.wait(1000)
+      cy.searchForApplication(appRename)
       cy.get(".appTable").find(".title").should("have.length", 1)
       cy.applicationInAppTable(appRename)
       // Set app name back to Cypress Tests
@@ -52,8 +53,6 @@ filterTests(['all'], () => {
       cy.reload()
       cy.wait(1000)
       cy.applicationInAppTable(appName)
-      cy.get(".appTable").find(".title").should("have.length", 1)
-
     })
 
     xit("Should create two applications with the same name", () => {
@@ -82,7 +81,6 @@ filterTests(['all'], () => {
       cy.reload()
       cy.wait(1000)
       cy.applicationInAppTable(numberName)
-      cy.get(".appTable").find(".title").should("have.length", 1)
       cy.reload()
       cy.wait(1000)
       renameApp(numberName, specialCharName)
@@ -94,7 +92,7 @@ filterTests(['all'], () => {
     })
 
     const renameApp = (originalName, changedName, published, noName) => {
-      cy.applicationInAppTable(originalName)
+      cy.searchForApplication(originalName)
       cy.request(`${Cypress.config().baseUrl}/api/applications?status=all`)
         .its("body")
         .then(val => {

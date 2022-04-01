@@ -4,10 +4,13 @@ filterTests(["smoke", "all"], () => {
   context("Create a User and Assign Roles", () => {
     before(() => {
       cy.login()
-      cy.visit(`${Cypress.config().baseUrl}/builder`)
-      cy.wait(500)
-      cy.createAppFromScratch("Initial App")
     })
+
+    if (!(Cypress.env("TEST_ENV"))) {
+      after(() => {
+        cy.deleteAllApps()
+      })
+    }
 
     it("should create a user", () => {
       cy.visit(`${Cypress.config().baseUrl}/builder`)
