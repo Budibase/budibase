@@ -344,14 +344,25 @@ Cypress.Commands.add("addCustomSourceOptions", totalOptions => {
 Cypress.Commands.add("searchForApplication", appName => {
   cy.visit(`${Cypress.config().baseUrl}/builder`)
   cy.wait(2000)
-  // Searches for the app
-  cy.get(".filter").then(() => {
-    cy.get(".spectrum-Textfield").within(() => {
-      cy.get("input").eq(0).clear()
-      cy.get("input").eq(0).type(appName)
+
+  // No app filter functionality if only 1 app exists
+  cy.request(`${Cypress.config().baseUrl}/api/applications?status=all`)
+    .its("body")
+    .then(val => {
+      if (val.length < 2) {
+        return
+        }
+      else {
+        // Searches for the app
+        cy.get(".filter").then(() => {
+          cy.get(".spectrum-Textfield").within(() => {
+            cy.get("input").eq(0).clear()
+            cy.get("input").eq(0).type(appName)
+          })
+        })
+      }
     })
   })
-})
 
 //Assumes there are no others
 Cypress.Commands.add("applicationInAppTable", appName => {
