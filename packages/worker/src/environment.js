@@ -19,7 +19,7 @@ if (!LOADED && isDev() && !isTest()) {
 module.exports = {
   NODE_ENV: process.env.NODE_ENV,
   SELF_HOSTED: !!parseInt(process.env.SELF_HOSTED),
-  PORT: process.env.PORT,
+  PORT: process.env.PORT || process.env.WORKER_PORT,
   CLUSTER_PORT: process.env.CLUSTER_PORT,
   MINIO_ACCESS_KEY: process.env.MINIO_ACCESS_KEY,
   MINIO_SECRET_KEY: process.env.MINIO_SECRET_KEY,
