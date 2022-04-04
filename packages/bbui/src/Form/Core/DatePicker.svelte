@@ -54,10 +54,9 @@
     if (newValue) {
       newValue = newValue.toISOString()
     }
-    // if time only set date component to today
+    // if time only set date component to 2000-01-01
     if (timeOnly) {
-      const todayDate = new Date().toISOString().split("T")[0]
-      newValue = `${todayDate}T${newValue.split("T")[1]}`
+      newValue = `2000-01-01T${newValue.split("T")[1]}`
     }
     dispatch("change", newValue)
   }
