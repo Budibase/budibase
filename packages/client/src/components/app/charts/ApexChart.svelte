@@ -34,7 +34,7 @@
     color: var(--spectrum-global-color-gray-700) !important;
   }
   div :global(.apexcharts-datalabel) {
-    fill: var(--spectrum-global-color-gray-800);
+    fill: white;
   }
   div :global(.apexcharts-tooltip) {
     background-color: var(--spectrum-global-color-gray-200) !important;
