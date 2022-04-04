@@ -19,10 +19,22 @@
   export let value = defaultValue || (meta.type === "boolean" ? false : "")
   export let readonly
 
+  const resolveTimeStamp = timestamp => {
+    let maskedDate = new Date(`0-${timestamp}`)
+    if (maskedDate instanceof Date && !isNaN(maskedDate.getTime())) {
+      return maskedDate
+    } else {
+      return null
+    }
+  }
+
   $: stringVal =
     typeof value === "object" ? JSON.stringify(value, null, 2) : value
   $: type = meta?.type
   $: label = meta.name ? capitalise(meta.name) : ""
+
+  const timeStamp = resolveTimeStamp(value)
+  const isTimeStamp = timeStamp ? true : false
 </script>
 
 {#if type === "options"}
@@ -34,7 +46,7 @@
     sort
   />
 {:else if type === "datetime"}
-  <DatePicker {label} bind:value />
+  <DatePicker {label} timeOnly={isTimeStamp} bind:value />
 {:else if type === "attachment"}
   <Dropzone {label} bind:value />
 {:else if type === "boolean"}
