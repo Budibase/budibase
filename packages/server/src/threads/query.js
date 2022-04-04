@@ -9,6 +9,8 @@ const {
 const { doInAppContext, getAppDB } = require("@budibase/backend-core/context")
 const { isSQL } = require("../integrations/utils")
 
+const CONST_CHAR_REGEX = new RegExp("'[^']*'", "g")
+
 class QueryRunner {
   constructor(input, flags = { noRecursiveQuery: false }) {
     this.datasource = input.datasource
@@ -37,17 +39,22 @@ class QueryRunner {
       arrays = []
     for (let binding of bindings) {
       // look for array/list operations in the SQL statement, which will need handled later
-      const listRegex = new RegExp(`(in|IN|In|iN)( )+[(]?${binding}[)]?`)
-      const listRegexMatch = sql.match(listRegex)
+      const listRegexMatch = sql.match(
+        new RegExp(`(in|IN|In|iN)( )+[(]?${binding}[)]?`)
+      )
       // check if the variable was used as part of a string concat e.g. 'Hello {{binding}}'
-      const charConstRegex = new RegExp(`'[^']*${binding}[^']*'`)
-      const charConstMatch = sql.match(charConstRegex)
-      if (charConstMatch) {
-        let [part1, part2] = charConstMatch[0].split(binding)
+      // start by finding all the instances of const character strings
+      const charConstMatch = sql.match(CONST_CHAR_REGEX) || []
+      // now look within them to see if a binding is used
+      const charConstBindingMatch = charConstMatch.find(string =>
+        string.match(new RegExp(`'[^']*${binding}[^']*'`))
+      )
+      if (charConstBindingMatch) {
+        let [part1, part2] = charConstBindingMatch.split(binding)
         part1 = `'${part1.substring(1)}'`
         part2 = `'${part2.substring(0, part2.length - 1)}'`
         sql = sql.replace(
-          charConstMatch[0],
+          charConstBindingMatch,
           integration.getStringConcat([
             part1,
             integration.getBindingIdentifier(),
