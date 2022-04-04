@@ -61,7 +61,7 @@
     {#if app.deployed}Published{:else}Unpublished{/if}
   </StatusLight>
 </div>
-<div>
+<div data-cy={`row_actions_${app.appId}`}>
   <Button
     size="S"
     disabled={app.lockedOther}

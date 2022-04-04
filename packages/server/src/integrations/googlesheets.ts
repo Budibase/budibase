@@ -10,6 +10,7 @@ import { Table, TableSchema } from "../definitions/common"
 import { buildExternalTableId } from "./utils"
 import { DataSourceOperation, FieldTypes } from "../constants"
 import { GoogleSpreadsheet } from "google-spreadsheet"
+import env from "../environment"
 
 module GoogleSheetsModule {
   const { getGlobalDB } = require("@budibase/backend-core/tenancy")
@@ -138,12 +139,26 @@ module GoogleSheetsModule {
       try {
         // Initialise oAuth client
         const db = getGlobalDB()
-        const googleConfig = await getScopedConfig(db, {
+        let googleConfig = await getScopedConfig(db, {
           type: Configs.GOOGLE,
         })
+
+        if (!googleConfig) {
+          googleConfig = {
+            clientID: env.GOOGLE_CLIENT_ID,
+            clientSecret: env.GOOGLE_CLIENT_SECRET,
+          }
+        }
+
         const oauthClient = new OAuth2Client({
           clientId: googleConfig.clientID,
           clientSecret: googleConfig.clientSecret,
+        })
+        oauthClient.on("tokens", tokens => {
+          oauthClient.setCredentials({
+            refresh_token: googleConfig.refreshToken,
+            access_token: tokens.access_token,
+          })
         })
         oauthClient.credentials.access_token = this.config.auth.accessToken
         oauthClient.credentials.refresh_token = this.config.auth.refreshToken

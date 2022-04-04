@@ -47,24 +47,25 @@
 
   // Convert contenteditable HTML to text and save
   const updateText = e => {
-    const sanitized = e.target.innerHTML.replace(/<br>/gi, "\n").trim()
-    builderStore.actions.updateProp("text", sanitized)
+    builderStore.actions.updateProp("text", e.target.textContent)
   }
 </script>
 
-<h1
-  bind:this={node}
-  contenteditable={$component.editing}
-  use:styleable={styles}
-  class:placeholder
-  class:bold
-  class:italic
-  class:underline
-  class="spectrum-Heading {sizeClass} {alignClass}"
-  on:blur={$component.editing ? updateText : null}
->
-  {componentText}
-</h1>
+{#key $component.editing}
+  <h1
+    bind:this={node}
+    contenteditable={$component.editing}
+    use:styleable={styles}
+    class:placeholder
+    class:bold
+    class:italic
+    class:underline
+    class="spectrum-Heading {sizeClass} {alignClass}"
+    on:blur={$component.editing ? updateText : null}
+  >
+    {componentText}
+  </h1>
+{/key}
 
 <style>
   h1 {

@@ -12,7 +12,7 @@ All ports are BLOCKED except 22 (SSH), 80 (HTTP), 443 (HTTPS), and 10000
 
 * Budibase website: http://budibase.com
 
-For help and more information, visit https://docs.budibase.com/self-hosting/hosting-methods/digitalocean
+For help and more information, visit https://docs.budibase.com/docs/digitalocean
 
 ********************************************************************************
 To delete this message of the day: rm -rf $(readlink -f ${0})

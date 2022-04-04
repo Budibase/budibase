@@ -9,8 +9,12 @@ import {
 } from "../../definitions/datasource"
 import { isIsoDateString, SqlClients } from "../utils"
 import SqlTableQueryBuilder from "./sqlTable"
+import environment from "../../environment"
 
-const BASE_LIMIT = 5000
+const envLimit = environment.SQL_MAX_ROWS
+  ? parseInt(environment.SQL_MAX_ROWS)
+  : null
+const BASE_LIMIT = envLimit || 5000
 
 type KnexQuery = Knex.QueryBuilder | Knex
 // these are invalid dates sent by the client, need to convert them to a real max date
@@ -27,11 +31,8 @@ function parse(input: any) {
   if (typeof input !== "string") {
     return input
   }
-  if (input === MAX_ISO_DATE) {
-    return new Date(8640000000000000)
-  }
-  if (input === MIN_ISO_DATE) {
-    return new Date(-8640000000000000)
+  if (input === MAX_ISO_DATE || input === MIN_ISO_DATE) {
+    return null
   }
   if (isIsoDateString(input)) {
     return new Date(input)
@@ -130,11 +131,19 @@ class InternalBuilder {
     }
     if (filters.range) {
       iterate(filters.range, (key, value) => {
-        if (!value.high || !value.low) {
-          return
+        if (value.low && value.high) {
+          // Use a between operator if we have 2 valid range values
+          const fnc = allOr ? "orWhereBetween" : "whereBetween"
+          query = query[fnc](key, [value.low, value.high])
+        } else if (value.low) {
+          // Use just a single greater than operator if we only have a low
+          const fnc = allOr ? "orWhere" : "where"
+          query = query[fnc](key, ">", value.low)
+        } else if (value.high) {
+          // Use just a single less than operator if we only have a high
+          const fnc = allOr ? "orWhere" : "where"
+          query = query[fnc](key, "<", value.high)
         }
-        const fnc = allOr ? "orWhereBetween" : "whereBetween"
-        query = query[fnc](key, [value.low, value.high])
       })
     }
     if (filters.equal) {
