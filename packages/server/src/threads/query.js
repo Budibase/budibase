@@ -37,7 +37,7 @@ class QueryRunner {
       arrays = []
     for (let binding of bindings) {
       // look for array/list operations in the SQL statement, which will need handled later
-      const listRegex = new RegExp(`(in|IN|In|iN)( )+${binding}`)
+      const listRegex = new RegExp(`(in|IN|In|iN)( )+[(]?${binding}[)]?`)
       const listRegexMatch = sql.match(listRegex)
       // check if the variable was used as part of a string concat e.g. 'Hello {{binding}}'
       const charConstRegex = new RegExp(`'[^']*${binding}[^']*'`)
@@ -63,12 +63,14 @@ class QueryRunner {
           ","
         )
         // build a string like ($1, $2, $3)
-        sql = sql.replace(
-          binding,
-          `(${Array.apply(null, Array(value.length))
-            .map(() => integration.getBindingIdentifier())
-            .join(",")})`
-        )
+        let replacement = `${Array.apply(null, Array(value.length))
+          .map(() => integration.getBindingIdentifier())
+          .join(",")}`
+        // check if parentheses are needed
+        if (!listRegexMatch[0].includes(`(${binding})`)) {
+          replacement = `(${replacement})`
+        }
+        sql = sql.replace(binding, replacement)
       } else {
         sql = sql.replace(binding, integration.getBindingIdentifier())
       }
