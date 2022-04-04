@@ -31,8 +31,6 @@
     }
   }
 
-  const isTS = resolveTimeStamp(value) != null
-
   $: flatpickrOptions = {
     element: `#${flatpickrId}`,
     enableTime: timeOnly || enableTime || false,
