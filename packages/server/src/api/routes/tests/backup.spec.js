@@ -21,6 +21,7 @@ describe("/backups", () => {
         .expect(200)
       expect(res.text).toBeDefined()
       expect(res.text.includes(`"db_name":"${config.getAppId()}"`)).toEqual(true)
+      expect(config.getEvents().app.exported.mock.calls.length).toBe(1)
     })
 
     it("should apply authorization to endpoint", async () => {

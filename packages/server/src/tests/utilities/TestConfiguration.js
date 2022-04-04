@@ -25,6 +25,7 @@ const newid = require("../../db/newid")
 const context = require("@budibase/backend-core/context")
 const { generateDevInfoID, SEPARATOR } = require("@budibase/backend-core/db")
 const { encrypt } = require("@budibase/backend-core/encryption")
+const { events } = require("./mockEvents")
 
 const GLOBAL_USER_ID = "us_uuid1"
 const EMAIL = "babs@babs.com"
@@ -53,6 +54,14 @@ class TestConfiguration {
 
   getAppId() {
     return this.appId
+  }
+
+  getProdAppId() {
+    return this.prodAppId
+  }
+
+  getEvents() {
+    return events
   }
 
   async _req(config, params, controlFunc) {

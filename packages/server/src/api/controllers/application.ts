@@ -51,7 +51,7 @@ const {
 } = require("@budibase/backend-core/context")
 import { getUniqueRows } from "../../utilities/usageQuota/rows"
 import { quotas } from "@budibase/pro"
-import { errors } from "@budibase/backend-core"
+import { errors, events } from "@budibase/backend-core"
 
 const URL_REGEX_SLASH = /\/|\\/g
 
@@ -291,7 +291,33 @@ const performAppCreate = async (ctx: any) => {
   return newApplication
 }
 
+const creationEvents = (request: any) => {
+  let creationFns = []
+
+  const body = request.body
+  if (body.useTemplate === "true") {
+    // from template
+    if (body.templateKey) {
+      creationFns.push(() => events.app.templateImported(body.templateKey))
+    }
+    // from file
+    else if (request.files?.templateFile) {
+      creationFns.push(events.app.fileImported)
+    }
+    // unknown
+    else {
+      console.error("Could not determine template creation event")
+    }
+  }
+  creationFns.push(events.app.created)
+
+  for (let fn of creationFns) {
+    fn()
+  }
+}
+
 const appPostCreate = async (ctx: any, appId: string) => {
+  creationEvents(ctx.request)
   // app import & template creation
   if (ctx.request.body.useTemplate === "true") {
     const rows = await getUniqueRows([appId])
@@ -336,6 +362,7 @@ export const update = async (ctx: any) => {
   }
 
   const data = await updateAppPackage(ctx.request.body, ctx.params.appId)
+  events.app.updated()
   ctx.status = 200
   ctx.body = data
 }
@@ -358,6 +385,7 @@ export const updateClient = async (ctx: any) => {
     revertableVersion: currentVersion,
   }
   const data = await updateAppPackage(appPackageUpdates, ctx.params.appId)
+  events.app.versionUpdated()
   ctx.status = 200
   ctx.body = data
 }
@@ -381,6 +409,7 @@ export const revertClient = async (ctx: any) => {
     revertableVersion: null,
   }
   const data = await updateAppPackage(appPackageUpdates, ctx.params.appId)
+  events.app.versionReverted()
   ctx.status = 200
   ctx.body = data
 }
@@ -391,8 +420,10 @@ const destroyApp = async (ctx: any) => {
   const result = await db.destroy()
   if (ctx.query?.unpublish) {
     await quotas.removePublishedApp()
+    events.app.unpublished()
   } else {
     await quotas.removeApp()
+    events.app.deleted()
   }
   /* istanbul ignore next */
   if (!env.isTest() && !ctx.query.unpublish) {

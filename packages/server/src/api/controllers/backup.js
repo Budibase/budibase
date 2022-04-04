@@ -1,4 +1,5 @@
 const { streamBackup } = require("../../utilities/fileSystem")
+const { events } = require("@budibase/backend-core")
 
 exports.exportAppDump = async function (ctx) {
   const { appId } = ctx.query
@@ -6,4 +7,5 @@ exports.exportAppDump = async function (ctx) {
   const backupIdentifier = `${appName}-export-${new Date().getTime()}.txt`
   ctx.attachment(backupIdentifier)
   ctx.body = await streamBackup(appId)
+  events.app.exported()
 }
