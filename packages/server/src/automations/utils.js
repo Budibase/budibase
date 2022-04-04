@@ -17,11 +17,16 @@ const Runner = new Thread(ThreadType.AUTOMATION)
 exports.processEvent = async job => {
   try {
     // need to actually await these so that an error can be captured properly
+    console.log(
+      `${job.data.automation.appId} automation ${job.data.automation._id} running`
+    )
     return await Runner.run(job)
   } catch (err) {
+    const errJson = JSON.stringify(err)
     console.error(
-      `${job.data.automation.appId} automation ${job.data.automation._id} was unable to run - ${err}`
+      `${job.data.automation.appId} automation ${job.data.automation._id} was unable to run - ${errJson}`
     )
+    console.trace(err)
     return { err }
   }
 }

@@ -5,7 +5,6 @@
   import DeployModal from "components/deploy/DeployModal.svelte"
   import RevertModal from "components/deploy/RevertModal.svelte"
   import VersionModal from "components/deploy/VersionModal.svelte"
-  import NPSFeedbackForm from "components/feedback/NPSFeedbackForm.svelte"
   import { API } from "api"
   import { auth, admin } from "stores/portal"
   import { isActive, goto, layout, redirect } from "@roxi/routify"
@@ -21,15 +20,11 @@
 
   // Sync once when you load the app
   let hasSynced = false
-  let userShouldPostFeedback = false
   $: selected = capitalise(
     $layout.children.find(layout => $isActive(layout.path))?.title ?? "data"
   )
 
   function previewApp() {
-    if (!$auth?.user?.flags?.feedbackSubmitted) {
-      userShouldPostFeedback = true
-    }
     window.open(`/${application}`)
   }
 
@@ -125,10 +120,6 @@
 {:catch error}
   <p>Something went wrong: {error.message}</p>
 {/await}
-
-{#if userShouldPostFeedback}
-  <NPSFeedbackForm on:complete={() => (userShouldPostFeedback = false)} />
-{/if}
 
 <style>
   .loading {

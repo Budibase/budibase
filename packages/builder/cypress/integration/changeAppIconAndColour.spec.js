@@ -5,10 +5,14 @@ filterTests(['all'], () => {
       before(() => {
         cy.login()
       })
+
+      after(() => {
+        cy.deleteAllApps()
+      })
       
       it("should change the icon and colour for an application", () => {
           // Search for test application
-          cy.searchForApplication("Cypress Tests")
+          cy.applicationInAppTable("Cypress Tests")
           cy.get(".appTable")
             .within(() => {
               cy.get(".spectrum-Icon").eq(1).click()

@@ -11,7 +11,7 @@
 
   const resetFormFields = async () => {
     const form = findClosestMatchingComponent(
-      $currentAsset.props,
+      $currentAsset?.props,
       componentInstance._id,
       component => component._component.endsWith("/form")
     )
