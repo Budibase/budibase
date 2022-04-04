@@ -13,6 +13,7 @@ import {
   getProdAppDB,
 } from "@budibase/backend-core/context"
 import { quotas } from "@budibase/pro"
+import { events } from "@budibase/backend-core"
 
 // the max time we can wait for an invalidation to complete before considering it failed
 const MAX_PENDING_TIME_MS = 30 * 60000
@@ -185,6 +186,7 @@ const _deployApp = async function (ctx: any) {
     await deployApp(deployment)
   }
 
+  events.app.published()
   ctx.body = deployment
 }
 

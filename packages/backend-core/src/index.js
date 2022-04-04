@@ -21,4 +21,5 @@ module.exports = {
   tenancy: require("./tenancy"),
   featureFlags: require("./featureFlags"),
   events: require("./events"),
+  analytics: require("./analytics"),
 }

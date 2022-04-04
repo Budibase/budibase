@@ -28,17 +28,49 @@ describe("/applications", () => {
   beforeEach(async () => {
     await clearAllApps()
     await config.init()
+    jest.clearAllMocks()
   })
 
   describe("create", () => {
-    it("returns a success message when the application is successfully created", async () => {
+    it("creates empty app", async () => {
       const res = await request
         .post("/api/applications")
-        .send({ name: "My App" })
+        .field("name", "My App")
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
       expect(res.body._id).toBeDefined()
+      expect(config.getEvents().app.created.mock.calls.length).toBe(1)
+    })
+
+    it("creates app from template", async () => {
+      const res = await request
+        .post("/api/applications")
+        .field("name", "My App")
+        .field("useTemplate", "true")
+        .field("templateKey", "test")
+        .field("templateString", "{}") // override the file download
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+      expect(res.body._id).toBeDefined()
+      expect(config.getEvents().app.created.mock.calls.length).toBe(1)
+      expect(config.getEvents().app.templateImported.mock.calls.length).toBe(1)
+    })
+
+
+    it("creates app from file", async () => {
+      const res = await request
+        .post("/api/applications")
+        .field("name", "My App")
+        .field("useTemplate", "true")
+        .set(config.defaultHeaders())
+        .attach('templateFile', 'src/api/routes/tests/data/export.txt')
+        .expect("Content-Type", /json/)
+        .expect(200)
+      expect(res.body._id).toBeDefined()
+      expect(config.getEvents().app.created.mock.calls.length).toBe(1)
+      expect(config.getEvents().app.fileImported.mock.calls.length).toBe(1)
     })
 
     it("should apply authorization to endpoint", async () => {
@@ -102,6 +134,31 @@ describe("/applications", () => {
         .expect("Content-Type", /json/)
         .expect(200)
       expect(res.body.rev).toBeDefined()
+      expect(config.getEvents().app.updated.mock.calls.length).toBe(1)
+    })
+  })
+
+  describe("delete", () => {
+    it("should delete app", async () => {
+      await config.createApp("to-delete")
+      const appId = config.getAppId()
+      await request
+        .delete(`/api/applications/${appId}`)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+      expect(config.getEvents().app.deleted.mock.calls.length).toBe(1)
+    })
+
+    it("should unpublish app", async () => {
+      await config.createApp("to-unpublish")
+      const appId = config.getProdAppId()
+      await request
+        .delete(`/api/applications/${appId}?unpublish=true`)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+      expect(config.getEvents().app.unpublished.mock.calls.length).toBe(1)
     })
   })
 
@@ -113,6 +170,7 @@ describe("/applications", () => {
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
+        expect(config.getEvents().app.versionUpdated.mock.calls.length).toBe(1)
     })
     it("should be able to revert the app client library version", async () => {
       // We need to first update the version so that we can then revert
@@ -126,6 +184,7 @@ describe("/applications", () => {
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
+        expect(config.getEvents().app.versionReverted.mock.calls.length).toBe(1)
     })
   })
 

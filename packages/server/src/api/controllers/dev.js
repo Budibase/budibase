@@ -7,6 +7,7 @@ const { Replication, getProdAppID } = require("@budibase/backend-core/db")
 const { DocumentTypes } = require("../../db/utils")
 const { app: appCache } = require("@budibase/backend-core/cache")
 const { getProdAppDB, getAppDB } = require("@budibase/backend-core/context")
+const { events } = require("@budibase/backend-core")
 
 async function redirect(ctx, method, path = "global") {
   const { devPath } = ctx.params
@@ -101,7 +102,10 @@ exports.revert = async ctx => {
       target: appId,
     })
 
-    await replication.rollback()
+    if (!env.isTest()) {
+      // in-memory db stalls on rollback
+      await replication.rollback()
+    }
     // update appID in reverted app to be dev version again
     const db = getAppDB()
     const appDoc = await db.get(DocumentTypes.APP_METADATA)
@@ -112,13 +116,16 @@ exports.revert = async ctx => {
     ctx.body = {
       message: "Reverted changes successfully.",
     }
+    events.app.reverted()
   } catch (err) {
     ctx.throw(400, `Unable to revert. ${err}`)
   }
 }
 
 exports.getBudibaseVersion = async ctx => {
+  const version = require("../../../package.json").version
   ctx.body = {
-    version: require("../../../package.json").version,
+    version,
   }
+  events.org.versionChecked(version)
 }

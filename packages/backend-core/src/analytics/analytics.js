@@ -1,5 +1,5 @@
 const PosthogClient = require("./posthog")
-const env = require("../../environment")
+const env = require("../environment")
 
 class Analytics {
   constructor() {
