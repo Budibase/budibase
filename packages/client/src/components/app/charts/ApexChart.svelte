@@ -45,4 +45,12 @@
     background-color: var(--spectrum-global-color-gray-100) !important;
     border-color: var(--spectrum-global-color-gray-300) !important;
   }
+  div :global(.apexcharts-theme-dark .apexcharts-tooltip-text) {
+    color: white;
+  }
+  div
+    :global(.apexcharts-theme-dark
+      .apexcharts-tooltip-series-group.apexcharts-active) {
+    padding-bottom: 0;
+  }
 </style>
