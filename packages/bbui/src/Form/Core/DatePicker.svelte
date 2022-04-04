@@ -19,18 +19,35 @@
   const dispatch = createEventDispatcher()
   const flatpickrId = `${uuid()}-wrapper`
   let open = false
-  let flatpickr, flatpickrOptions, isTimeOnly
+  let flatpickr, flatpickrOptions
 
-  $: isTimeOnly = !timeOnly && value ? !isNaN(new Date(`0-${value}`)) : timeOnly
+  const resolveTimeStamp = timestamp => {
+    let maskedDate = new Date(`0-${timestamp}`)
+
+    if (maskedDate instanceof Date && !isNaN(maskedDate.getTime())) {
+      return maskedDate
+    } else {
+      return null
+    }
+  }
+
+  const isTS = resolveTimeStamp(value) != null
+
   $: flatpickrOptions = {
     element: `#${flatpickrId}`,
-    enableTime: isTimeOnly || enableTime || false,
-    noCalendar: isTimeOnly || false,
+    enableTime: timeOnly || enableTime || false,
+    noCalendar: timeOnly || false,
     altInput: true,
-    altFormat: isTimeOnly ? "H:i" : enableTime ? "F j Y, H:i" : "F j, Y",
+    altFormat: timeOnly ? "H:i" : enableTime ? "F j Y, H:i" : "F j, Y",
     wrap: true,
     appendTo,
     disableMobile: "true",
+    onReady: () => {
+      let timestamp = resolveTimeStamp(value)
+      if (timeOnly && timestamp) {
+        dispatch("change", timestamp.toISOString())
+      }
+    },
   }
 
   const handleChange = event => {
@@ -76,10 +93,13 @@
       return null
     }
     let date
-    let time = new Date(`0-${val}`)
+    let time
+
     // it is a string like 00:00:00, just time
-    if (timeOnly || (typeof val === "string" && !isNaN(time))) {
-      date = time
+    let ts = resolveTimeStamp(val)
+
+    if (timeOnly && ts) {
+      date = ts
     } else if (val instanceof Date) {
       // Use real date obj if already parsed
       date = val
@@ -101,7 +121,7 @@
   }
 </script>
 
-{#key isTimeOnly}
+{#key timeOnly}
   <Flatpickr
     bind:flatpickr
     value={parseDate(value)}
