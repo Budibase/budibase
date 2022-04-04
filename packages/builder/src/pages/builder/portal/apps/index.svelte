@@ -292,8 +292,8 @@
       <div class="title">
         <div class="welcome">
           <Layout noPadding gap="XS">
-            <Heading size="M">{welcomeHeader}</Heading>
-            <Body size="S">
+            <Heading size="L">{welcomeHeader}</Heading>
+            <Body size="M">
               {welcomeBody}
             </Body>
           </Layout>
@@ -301,7 +301,7 @@
           <div class="buttons">
             <Button
               dataCy="create-app-btn"
-              size="L"
+              size="M"
               icon="Add"
               cta
               on:click={initiateAppCreation}
@@ -311,7 +311,7 @@
             {#if $apps?.length > 0}
               <Button
                 icon="Experience"
-                size="L"
+                size="M"
                 quiet
                 secondary
                 on:click={$goto("/builder/portal/apps/templates")}
@@ -348,7 +348,7 @@
       {#if enrichedApps.length}
         <Layout noPadding gap="S">
           <div class="title">
-            <Detail size="L">My apps</Detail>
+            <Detail size="L">Apps</Detail>
             {#if enrichedApps.length > 1}
               <div class="app-actions">
                 {#if cloud}
