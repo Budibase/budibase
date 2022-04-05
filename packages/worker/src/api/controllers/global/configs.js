@@ -14,72 +14,74 @@ const {
 const { getGlobalDB, getTenantId } = require("@budibase/backend-core/tenancy")
 const env = require("../../../environment")
 const { googleCallbackUrl, oidcCallbackUrl } = require("./auth")
-// const { events } = require("@budibase/backend-core")
+const { events } = require("@budibase/backend-core")
 
 const BB_TENANT_CDN = "https://tenants.cdn.budi.live"
 
-// const getEventFns = (db, config) => {
-//   const fns = []
-//   const isNew = !!config._id
-//   const type = config.type
+const getEventFns = async (db, config) => {
+  const fns = []
+  const type = config.type
 
-//   let existing
-//   if (!isNew) {
-//     existing = db.get(config._id)
-//   }
-//   if (!existing) {
-//     switch (config.type) {
-//       case Configs.SMTP:
-//         fns.push(events.emailSMTPCreated)
-//         break
-//       case Configs.GOOGLE:
-//         fns.push(() => events.authSSOCreated(type))
-//         break
-//       case Configs.OIDC:
-//         fns.push(() => events.authSSOCreated(type))
-//         break
-//       case Configs.SETTINGS:
-//         if (config.company) {
-//           fns.push(events.orgNameUpdated)
-//         }
-//         if (config.logoUrl) {
-//           fns.push(events.orgLogoUpdated)
-//         }
-//         if (config.platformUrl) {
-//           fns.push(events.orgPlatformURLUpdated)
-//         }
-//         break
-//     }
-//   } else {
-//     switch (config.type) {
-//       case Configs.SMTP:
-//         fns.push(events.emailSMTPUpdated)
-//         break
-//       case Configs.GOOGLE:
-//         fns.push(() => events.authSSOUpdated(type))
-//         break
-//       case Configs.OIDC:
-//         fns.push(() => events.authSSOUpdated(type))
-//         break
-//       case Configs.SETTINGS:
-//         if (config.company && existing.company !== config.company) {
-//           fns.push(events.orgNameUpdated)
-//         }
-//         if (config.logoUrl && existing.logoUrl !== config.logoUrl) {
-//           fns.push(events.orgLogoUpdated)
-//         }
-//         if (config.platformUrl && existing.platformUrl !== config.platformUrl) {
-//           fns.push(events.orgPlatformURLUpdated)
-//         }
-//         break
-//     }
-//   }
-// }
+  let existing
+  if (config._id) {
+    existing = await db.get(config._id)
+  }
+
+  if (!existing) {
+    switch (config.type) {
+      case Configs.SMTP:
+        fns.push(events.email.SMTPCreated)
+        break
+      case Configs.GOOGLE:
+        fns.push(() => events.auth.SSOCreated(type))
+        break
+      case Configs.OIDC:
+        fns.push(() => events.auth.SSOCreated(type))
+        break
+      case Configs.SETTINGS:
+        if (config.company) {
+          fns.push(events.org.nameUpdated)
+        }
+        if (config.logoUrl) {
+          fns.push(events.org.logoUpdated)
+        }
+        if (config.platformUrl) {
+          fns.push(events.org.platformURLUpdated)
+        }
+        break
+    }
+  } else {
+    switch (config.type) {
+      case Configs.SMTP:
+        fns.push(events.email.SMTPUpdated)
+        break
+      case Configs.GOOGLE:
+        fns.push(() => events.auth.SSOUpdated(type))
+        break
+      case Configs.OIDC:
+        fns.push(() => events.auth.SSOUpdated(type))
+        break
+      case Configs.SETTINGS:
+        if (config.company && existing.company !== config.company) {
+          fns.push(events.org.nameUpdated)
+        }
+        if (config.logoUrl && existing.logoUrl !== config.logoUrl) {
+          fns.push(events.org.logoUpdated)
+        }
+        if (config.platformUrl && existing.platformUrl !== config.platformUrl) {
+          fns.push(events.org.platformURLUpdated)
+        }
+        break
+    }
+  }
+
+  return fns
+}
 
 exports.save = async function (ctx) {
   const db = getGlobalDB()
   const { type, workspace, user, config } = ctx.request.body
-  // let eventFns = getEventFns(db, ctx.request.body)
+  let eventFns = await getEventFns(db, ctx.request.body)
   // Config does not exist yet
   if (!ctx.request.body._id) {
     ctx.request.body._id = generateConfigID({
@@ -101,9 +103,9 @@ exports.save = async function (ctx) {
 
   try {
     const response = await db.put(ctx.request.body)
-    // for (const fn of eventFns) {
-    //   fn()
-    // }
+    for (const fn of eventFns) {
+      fn()
+    }
     ctx.body = {
       type,
       _id: response.id,
