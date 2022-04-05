@@ -17,16 +17,20 @@ describe("configs", () => {
     jest.clearAllMocks()
   })
 
-  afterAll(setup.afterAll)
+  afterAll(async () => {
+    await setup.afterAll()
+  })
 
   describe("post /api/global/configs", () => {
 
-    const saveConfig = async (type, _id, _rev) => {
+    const saveConfig = async (conf, type, _id, _rev) => {
       const data = {
         type,
+        config: conf,
         _id,
         _rev
       }
+
       const res = await request
         .post(`/api/global/configs`)
         .send(data)
@@ -34,49 +38,136 @@ describe("configs", () => {
         .expect("Content-Type", /json/)
         .expect(200)
 
-      return res.body
+      return {
+        ...data,
+        ...res.body
+      }
     }
 
     describe("google", () => {
-      const saveGoogleConfig = async (_id, _rev) => {
-        return saveConfig(Configs.GOOGLE, _id, _rev)
+      const saveGoogleConfig = async (conf, _id, _rev) => {
+        const googleConfig = {
+          clientID: "clientID",
+          clientSecret: "clientSecret",
+          activated: true,
+          ...conf
+        }
+
+        return saveConfig(googleConfig, Configs.GOOGLE, _id, _rev)
       }
   
-      it ("should create google config", async () => {
-        await saveGoogleConfig()
-        expect(events.auth.SSOCreated).toBeCalledTimes(1)
-        expect(events.auth.SSOCreated).toBeCalledWith(Configs.GOOGLE)
-        await config.deleteConfig(Configs.GOOGLE)
+      describe("create", () => {
+        it ("should create activated google config", async () => {
+          await saveGoogleConfig()
+          expect(events.auth.SSOCreated).toBeCalledTimes(1)
+          expect(events.auth.SSOCreated).toBeCalledWith(Configs.GOOGLE)
+          expect(events.auth.SSODeactivated).not.toBeCalled()
+          expect(events.auth.SSOActivated).toBeCalledTimes(1)
+          expect(events.auth.SSOActivated).toBeCalledWith(Configs.GOOGLE)
+          await config.deleteConfig(Configs.GOOGLE)
+        })
+
+        it ("should create deactivated google config", async () => {
+          await saveGoogleConfig({ activated: false })
+          expect(events.auth.SSOCreated).toBeCalledTimes(1)
+          expect(events.auth.SSOCreated).toBeCalledWith(Configs.GOOGLE)
+          expect(events.auth.SSOActivated).not.toBeCalled()
+          expect(events.auth.SSODeactivated).not.toBeCalled()
+          await config.deleteConfig(Configs.GOOGLE)
+        })
       })
-  
-      it ("should update google config", async () => {
-        const googleConf = await saveGoogleConfig()
-        await saveGoogleConfig(googleConf._id, googleConf._rev)
-        expect(events.auth.SSOUpdated).toBeCalledTimes(1)
-        expect(events.auth.SSOUpdated).toBeCalledWith(Configs.GOOGLE)
-        await config.deleteConfig(Configs.GOOGLE)
-      })
+
+      describe("update", () => {
+        it ("should update google config to deactivated", async () => {
+          const googleConf = await saveGoogleConfig()
+          jest.clearAllMocks()
+          await saveGoogleConfig({ ...googleConf.config, activated: false }, googleConf._id, googleConf._rev)
+          expect(events.auth.SSOUpdated).toBeCalledTimes(1)
+          expect(events.auth.SSOUpdated).toBeCalledWith(Configs.GOOGLE)
+          expect(events.auth.SSOActivated).not.toBeCalled()
+          expect(events.auth.SSODeactivated).toBeCalledTimes(1)
+          expect(events.auth.SSODeactivated).toBeCalledWith(Configs.GOOGLE)
+          await config.deleteConfig(Configs.GOOGLE)
+        })
+
+        it ("should update google config to activated", async () => {
+          const googleConf = await saveGoogleConfig({ activated: false })
+          jest.clearAllMocks()
+          await saveGoogleConfig({ ...googleConf.config, activated: true}, googleConf._id, googleConf._rev)
+          expect(events.auth.SSOUpdated).toBeCalledTimes(1)
+          expect(events.auth.SSOUpdated).toBeCalledWith(Configs.GOOGLE)
+          expect(events.auth.SSODeactivated).not.toBeCalled()
+          expect(events.auth.SSOActivated).toBeCalledTimes(1)
+          expect(events.auth.SSOActivated).toBeCalledWith(Configs.GOOGLE)
+          await config.deleteConfig(Configs.GOOGLE)
+        })
+      })     
     })
 
     describe("oidc", () => {
-      const saveOIDCConfig = async (_id, _rev) => {
-        return saveConfig(Configs.OIDC, _id, _rev)
+      const saveOIDCConfig = async (conf, _id, _rev) => {
+        const oidcConfig = {
+          configs: [{
+            clientID: "clientID",
+            clientSecret: "clientSecret",
+            configUrl: "http://example.com",
+            logo: "logo",
+            name: "oidc",
+            uuid: "uuid",
+            activated: true,
+            ...conf
+          }]
+        }
+        return saveConfig(oidcConfig, Configs.OIDC, _id, _rev)
       }
 
-      it ("should create OIDC config", async () => {
-        await saveOIDCConfig()
-        expect(events.auth.SSOCreated).toBeCalledTimes(1)
-        expect(events.auth.SSOCreated).toBeCalledWith(Configs.OIDC)
-        await config.deleteConfig(Configs.OIDC)
+      describe("create", () => {
+        it ("should create activated OIDC config", async () => {
+          await saveOIDCConfig()
+          expect(events.auth.SSOCreated).toBeCalledTimes(1)
+          expect(events.auth.SSOCreated).toBeCalledWith(Configs.OIDC)
+          expect(events.auth.SSODeactivated).not.toBeCalled()
+          expect(events.auth.SSOActivated).toBeCalledTimes(1)
+          expect(events.auth.SSOActivated).toBeCalledWith(Configs.OIDC)
+          await config.deleteConfig(Configs.OIDC)
+        })
+
+        it ("should create deactivated OIDC config", async () => {
+          await saveOIDCConfig({ activated: false })
+          expect(events.auth.SSOCreated).toBeCalledTimes(1)
+          expect(events.auth.SSOCreated).toBeCalledWith(Configs.OIDC)
+          expect(events.auth.SSOActivated).not.toBeCalled()
+          expect(events.auth.SSODeactivated).not.toBeCalled()
+          await config.deleteConfig(Configs.OIDC)
+        })
       })
-  
-      it ("should update OIDC config", async () => {
-        const oidcConf = await saveOIDCConfig()
-        await saveOIDCConfig(oidcConf._id, oidcConf._rev)
-        expect(events.auth.SSOUpdated).toBeCalledTimes(1)
-        expect(events.auth.SSOUpdated).toBeCalledWith(Configs.OIDC)
-        await config.deleteConfig(Configs.OIDC)
+
+      describe("update", () => {
+        it ("should update OIDC config to deactivated", async () => {
+          const oidcConf = await saveOIDCConfig()
+          jest.clearAllMocks()
+          await saveOIDCConfig({ ...oidcConf.config.configs[0], activated: false }, oidcConf._id, oidcConf._rev)
+          expect(events.auth.SSOUpdated).toBeCalledTimes(1)
+          expect(events.auth.SSOUpdated).toBeCalledWith(Configs.OIDC)
+          expect(events.auth.SSOActivated).not.toBeCalled()
+          expect(events.auth.SSODeactivated).toBeCalledTimes(1)
+          expect(events.auth.SSODeactivated).toBeCalledWith(Configs.OIDC)
+          await config.deleteConfig(Configs.OIDC)
+        })
+
+        it ("should update google config to activated", async () => {
+          const oidcConf = await saveOIDCConfig({ activated: false })
+          jest.clearAllMocks()
+          await saveOIDCConfig({ ...oidcConf.config.configs[0], activated: true}, oidcConf._id, oidcConf._rev)
+          expect(events.auth.SSOUpdated).toBeCalledTimes(1)
+          expect(events.auth.SSOUpdated).toBeCalledWith(Configs.OIDC)
+          expect(events.auth.SSODeactivated).not.toBeCalled()
+          expect(events.auth.SSOActivated).toBeCalledTimes(1)
+          expect(events.auth.SSOActivated).toBeCalledWith(Configs.OIDC)
+          await config.deleteConfig(Configs.OIDC)
+        })
       })
+
     })
   })
 
