@@ -1,5 +1,10 @@
 jest.mock("../../../events", () => {
   return {
+    account: {
+      created: jest.fn(),
+      deleted: jest.fn(),
+      verified: jest.fn(),
+    },
     app: {
       created: jest.fn(),
       updated: jest.fn(),
