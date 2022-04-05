@@ -34,9 +34,15 @@ const getEventFns = async (db, config) => {
         break
       case Configs.GOOGLE:
         fns.push(() => events.auth.SSOCreated(type))
+        if (config.config.activated) {
+          fns.push(() => events.auth.SSOActivated(type))
+        }
         break
       case Configs.OIDC:
         fns.push(() => events.auth.SSOCreated(type))
+        if (config.config.configs[0].activated) {
+          fns.push(() => events.auth.SSOActivated(type))
+        }
         break
       case Configs.SETTINGS:
         if (config.company) {
@@ -57,9 +63,25 @@ const getEventFns = async (db, config) => {
         break
       case Configs.GOOGLE:
         fns.push(() => events.auth.SSOUpdated(type))
+        if (!existing.config.activated && config.config.activated) {
+          fns.push(() => events.auth.SSOActivated(type))
+        } else if (existing.config.activated && !config.config.activated) {
+          fns.push(() => events.auth.SSODeactivated(type))
+        }
         break
       case Configs.OIDC:
         fns.push(() => events.auth.SSOUpdated(type))
+        if (
+          !existing.config.configs[0].activated &&
+          config.config.configs[0].activated
+        ) {
+          fns.push(() => events.auth.SSOActivated(type))
+        } else if (
+          existing.config.configs[0].activated &&
+          !config.config.configs[0].activated
+        ) {
+          fns.push(() => events.auth.SSODeactivated(type))
+        }
         break
       case Configs.SETTINGS:
         if (config.company && existing.company !== config.company) {

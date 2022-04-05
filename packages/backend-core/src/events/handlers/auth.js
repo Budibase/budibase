@@ -13,7 +13,6 @@ exports.logout = () => {
   events.processEvent(Events.AUTH_LOGOUT, properties)
 }
 
-// TODO
 exports.SSOCreated = type => {
   const properties = {
     type,
@@ -21,7 +20,6 @@ exports.SSOCreated = type => {
   events.processEvent(Events.AUTH_SSO_CREATED, properties)
 }
 
-// TODO
 exports.SSOUpdated = type => {
   const properties = {
     type,
@@ -29,7 +27,6 @@ exports.SSOUpdated = type => {
   events.processEvent(Events.AUTH_SSO_UPDATED, properties)
 }
 
-// TODO
 exports.SSOActivated = type => {
   const properties = {
     type,
@@ -37,7 +34,6 @@ exports.SSOActivated = type => {
   events.processEvent(Events.AUTH_SSO_ACTIVATED, properties)
 }
 
-// TODO
 exports.SSODeactivated = type => {
   const properties = {
     type,
