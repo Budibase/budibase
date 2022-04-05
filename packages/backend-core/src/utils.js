@@ -20,6 +20,7 @@ const { hash } = require("./hashing")
 const userCache = require("./cache/user")
 const env = require("./environment")
 const { getUserSessions, invalidateSessions } = require("./security/sessions")
+const events = require("./events")
 
 const APP_PREFIX = DocumentTypes.APP + SEPARATOR
 
@@ -266,5 +267,6 @@ exports.platformLogout = async ({ ctx, userId, keepActiveSession }) => {
     userId,
     sessions.map(({ sessionId }) => sessionId)
   )
+  events.auth.logout()
   await userCache.invalidateUser(userId)
 }
