@@ -7,7 +7,11 @@ import {
   getComponentSettings,
 } from "./componentUtils"
 import { store } from "builderStore"
-import { queries as queriesStores, tables as tablesStore } from "stores/backend"
+import {
+  queries as queriesStores,
+  tables as tablesStore,
+  roles as rolesStore,
+} from "stores/backend"
 import {
   makePropSafe,
   isJSBinding,
@@ -33,6 +37,7 @@ export const getBindableProperties = (asset, componentId) => {
   const deviceBindings = getDeviceBindings()
   const stateBindings = getStateBindings()
   const selectedRowsBindings = getSelectedRowsBindings(asset)
+  const roleBindings = getRoleBindings()
   return [
     ...contextBindings,
     ...urlBindings,
@@ -40,6 +45,7 @@ export const getBindableProperties = (asset, componentId) => {
     ...userBindings,
     ...deviceBindings,
     ...selectedRowsBindings,
+    ...roleBindings,
   ]
 }
 
@@ -389,6 +395,16 @@ const getUrlBindings = asset => {
     runtimeBinding: `${safeURL}.${makePropSafe(param)}`,
     readableBinding: `URL.${param}`,
   }))
+}
+
+const getRoleBindings = () => {
+  return (get(rolesStore) || []).map(role => {
+    return {
+      type: "context",
+      runtimeBinding: `trim "${role._id}"`,
+      readableBinding: `Roles.${role.name}`,
+    }
+  })
 }
 
 /**
