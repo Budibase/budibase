@@ -23,6 +23,13 @@ RUN apt-get install software-properties-common wget nginx -y
 RUN apt-add-repository 'deb http://security.debian.org/debian-security stretch/updates main'
 RUN apt-get update
 
+# setup nginx
+ADD hosting/single/nginx.conf /etc/nginx
+RUN mkdir /etc/nginx/logs
+RUN useradd www
+RUN touch /etc/nginx/logs/error.log
+RUN touch /etc/nginx/logs/nginx.pid
+
 # install java
 RUN apt-get install openjdk-8-jdk -y
 
@@ -76,14 +83,10 @@ WORKDIR /minio
 RUN wget https://dl.min.io/server/minio/release/linux-${ARCHITECTURE}64/minio
 RUN chmod +x minio
 
+# setup runner file
 WORKDIR /
 ADD hosting/single/runner.sh .
 RUN chmod +x ./runner.sh
-ADD hosting/single/nginx.conf /etc/nginx
-RUN mkdir /etc/nginx/logs
-RUN useradd www
-RUN touch /etc/nginx/logs/error.log
-RUN touch /etc/nginx/logs/nginx.pid
 
 EXPOSE 10000
 VOLUME /opt/couchdb/data
