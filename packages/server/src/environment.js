@@ -62,6 +62,7 @@ module.exports = {
   SENDGRID_API_KEY: process.env.SENDGRID_API_KEY,
   DYNAMO_ENDPOINT: process.env.DYNAMO_ENDPOINT,
   POSTHOG_TOKEN: process.env.POSTHOG_TOKEN,
+  BASH_SCRIPTING_TIMEOUT: process.env.BASH_SCRIPTING_TIMEOUT,
   // old - to remove
   CLIENT_ID: process.env.CLIENT_ID,
   BUDIBASE_DIR: process.env.BUDIBASE_DIR,
