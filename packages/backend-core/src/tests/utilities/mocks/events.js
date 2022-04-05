@@ -1,5 +1,3 @@
-const core = require("@budibase/backend-core")
-
 const events = {
   app: {
     created: jest.fn(),
@@ -14,9 +12,14 @@ const events = {
     reverted: jest.fn(),
     exported: jest.fn(),
   },
+  auth: {
+    login: jest.fn(),
+  },
+  datasource: {
+    created: jest.fn(),
+    updated: jest.fn(),
+    deleted: jest.fn(),
+  },
 }
 
-core.events = events
-module.exports = {
-  events,
-}
+module.exports = events

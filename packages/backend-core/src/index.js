@@ -22,4 +22,5 @@ module.exports = {
   featureFlags: require("./featureFlags"),
   events: require("./events"),
   analytics: require("./analytics"),
+  testUtils: require("./tests/utilities"),
 }

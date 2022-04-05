@@ -1,7 +1,7 @@
-const { MOCK_DATE } = require("../../tests/utilities/TestConfiguration")
+require("../../tests/utilities/TestConfiguration")
+const { mocks } = require("../../tests/utilities")
+mocks.date.mock()
 const { getDB, allDbs } = require("../")
-
-Date = jest.fn(() => MOCK_DATE)
 
 describe("db", () => { 
   
@@ -19,8 +19,8 @@ describe("db", () => {
       let doc = { _id: "test" }
       await db.put(doc)
       doc = await db.get(doc._id)
-      expect(doc.createdAt).toBe(MOCK_DATE.toISOString())
-      expect(doc.updatedAt).toBe(MOCK_DATE.toISOString())
+      expect(doc.createdAt).toBe(new Date().toISOString())
+      expect(doc.updatedAt).toBe(new Date().toISOString())
       await db.destroy()
     })
   })

@@ -2,9 +2,7 @@ const { outputProcessing } = require("../../../utilities/rowProcessor")
 const setup = require("./utilities")
 const { basicRow } = setup.structures
 const { doInAppContext } = require("@budibase/backend-core/context")
-
-// mock the fetch for the search system
-jest.mock("node-fetch")
+const { testUtils } = require("@budibase/backend-core")
 
 describe("/rows", () => {
   let request = setup.getRequest()
@@ -68,6 +66,10 @@ describe("/rows", () => {
         .set(config.defaultHeaders())
         .expect('Content-Type', /json/)
         .expect(200)
+
+      // can't mock dates due to coercion test requiring real Date clas 
+      delete res.body.createdAt
+      delete res.body.updatedAt
 
       expect(res.body).toEqual({
         ...row,

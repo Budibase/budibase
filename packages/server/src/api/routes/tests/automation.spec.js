@@ -6,7 +6,8 @@ const {
 } = require("./utilities/TestFunctions")
 const setup = require("./utilities")
 const { basicAutomation } = setup.structures
-
+const { testUtils } = require("@budibase/backend-core")
+testUtils.mocks.date.mock()
 const MAX_RETRIES = 4
 
 let ACTION_DEFINITIONS = {}

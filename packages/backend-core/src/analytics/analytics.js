@@ -1,5 +1,17 @@
 const PosthogClient = require("./posthog")
 const env = require("../environment")
+const { getTenantId } = require("../context")
+
+const IdentityType = {
+  TENANT: "tenant",
+  USER: "user",
+  ACCOUNT: "account",
+}
+
+const Hosting = {
+  CLOUD: "cloud",
+  SELF: "self",
+}
 
 class Analytics {
   constructor() {
@@ -14,9 +26,38 @@ class Analytics {
     return this.isEnabled
   }
 
-  updateUser(userId, properties) {
+  identify(type, id, hosting) {
     if (!this.isEnabled) return
-    this.posthog.updateUser(userId, properties)
+    const tenantId = getTenantId()
+    if (!hosting) {
+      hosting = env.SELF_HOSTED ? Hosting.SELF : Hosting.CLOUD
+    }
+    const properties = {
+      type,
+      hosting,
+      tenant: tenantId,
+    }
+    this.posthog.identify(id, properties)
+  }
+
+  identifyUser(userId) {
+    this.identify(IdentityType.USER, userId)
+  }
+
+  identifyTenant() {
+    let distinctId
+    if (env.SELF_HOSTED) {
+      distinctId = getTenantId() // TODO: Get installation ID
+    } else {
+      distinctId = getTenantId()
+    }
+    this.identify(IdentityType.TENANT, distinctId)
+  }
+
+  identifyAccount(account) {
+    const distinctId = account.accountId
+    const hosting = account.hosting
+    this.identify(IdentityType.ACCOUNT, distinctId, hosting)
   }
 
   captureEvent(eventName, properties) {
