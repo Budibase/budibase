@@ -4,7 +4,6 @@ filterTests(["smoke", "all"], () => {
   context("REST Datasource Testing", () => {
     before(() => {
       cy.login()
-      cy.deleteAllApps()
       cy.createTestApp()
     })
 
