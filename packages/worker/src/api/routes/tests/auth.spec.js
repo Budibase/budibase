@@ -1,6 +1,7 @@
 jest.mock("nodemailer")
 const setup = require("./utilities")
 const sendMailMock = setup.emailMock()
+const { events } = require("@budibase/backend-core")
 
 const TENANT_ID = "default"
 
@@ -17,6 +18,14 @@ describe("/api/global/auth", () => {
 
   afterEach(() => {
     jest.clearAllMocks()
+  })
+
+  it("should logout", async () => {
+    await request
+      .post("/api/global/auth/logout")
+      .set(config.defaultHeaders())
+      .expect(200)
+    expect(events.auth.logout.mock.calls.length).toBe(1)
   })
 
   it("should be able to generate password reset email", async () => {

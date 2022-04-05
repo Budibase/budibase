@@ -8,7 +8,6 @@ exports.login = source => {
   events.processEvent(Events.AUTH_LOGIN, properties)
 }
 
-// TODO
 exports.logout = () => {
   const properties = {}
   events.processEvent(Events.AUTH_LOGOUT, properties)

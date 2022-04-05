@@ -1,3 +1,4 @@
+require("./mocks")
 require("../../../../db").init()
 const env = require("../../../../environment")
 const controllers = require("./controllers")
