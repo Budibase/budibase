@@ -13,6 +13,8 @@ const setup = require("./utilities")
 const { checkBuilderEndpoint } = require("./utilities/TestFunctions")
 const { checkCacheForDynamicVariable } = require("../../../threads/utils")
 const { basicQuery, basicDatasource } = setup.structures
+const { testUtils } = require("@budibase/backend-core")
+testUtils.mocks.date.mock()
 
 describe("/queries", () => {
   let request = setup.getRequest()
@@ -56,6 +58,8 @@ describe("/queries", () => {
         _rev: res.body._rev,
         _id: res.body._id,
         ...query,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       })
     })
   })
@@ -73,7 +77,9 @@ describe("/queries", () => {
         {
           _rev: query._rev,
           _id: query._id,
+          createdAt: new Date().toISOString(),
           ...basicQuery(datasource._id),
+          updatedAt: new Date().toISOString(),
           readable: true,
         },
       ])

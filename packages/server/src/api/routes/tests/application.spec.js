@@ -18,6 +18,7 @@ const {
 } = require("./utilities/TestFunctions")
 const setup = require("./utilities")
 const { AppStatus } = require("../../../db/utils")
+const { events } = require("@budibase/backend-core")
 
 describe("/applications", () => {
   let request = setup.getRequest()
@@ -40,7 +41,7 @@ describe("/applications", () => {
         .expect("Content-Type", /json/)
         .expect(200)
       expect(res.body._id).toBeDefined()
-      expect(config.getEvents().app.created.mock.calls.length).toBe(1)
+      expect(events.app.created.mock.calls.length).toBe(1)
     })
 
     it("creates app from template", async () => {
@@ -54,8 +55,8 @@ describe("/applications", () => {
         .expect("Content-Type", /json/)
         .expect(200)
       expect(res.body._id).toBeDefined()
-      expect(config.getEvents().app.created.mock.calls.length).toBe(1)
-      expect(config.getEvents().app.templateImported.mock.calls.length).toBe(1)
+      expect(events.app.created.mock.calls.length).toBe(1)
+      expect(events.app.templateImported.mock.calls.length).toBe(1)
     })
 
 
@@ -69,8 +70,8 @@ describe("/applications", () => {
         .expect("Content-Type", /json/)
         .expect(200)
       expect(res.body._id).toBeDefined()
-      expect(config.getEvents().app.created.mock.calls.length).toBe(1)
-      expect(config.getEvents().app.fileImported.mock.calls.length).toBe(1)
+      expect(events.app.created.mock.calls.length).toBe(1)
+      expect(events.app.fileImported.mock.calls.length).toBe(1)
     })
 
     it("should apply authorization to endpoint", async () => {
@@ -134,7 +135,7 @@ describe("/applications", () => {
         .expect("Content-Type", /json/)
         .expect(200)
       expect(res.body.rev).toBeDefined()
-      expect(config.getEvents().app.updated.mock.calls.length).toBe(1)
+      expect(events.app.updated.mock.calls.length).toBe(1)
     })
   })
 
@@ -147,7 +148,7 @@ describe("/applications", () => {
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
-      expect(config.getEvents().app.deleted.mock.calls.length).toBe(1)
+      expect(events.app.deleted.mock.calls.length).toBe(1)
     })
 
     it("should unpublish app", async () => {
@@ -158,7 +159,7 @@ describe("/applications", () => {
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
-      expect(config.getEvents().app.unpublished.mock.calls.length).toBe(1)
+      expect(events.app.unpublished.mock.calls.length).toBe(1)
     })
   })
 
@@ -170,7 +171,7 @@ describe("/applications", () => {
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
-        expect(config.getEvents().app.versionUpdated.mock.calls.length).toBe(1)
+        expect(events.app.versionUpdated.mock.calls.length).toBe(1)
     })
     it("should be able to revert the app client library version", async () => {
       // We need to first update the version so that we can then revert
@@ -184,7 +185,7 @@ describe("/applications", () => {
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
-        expect(config.getEvents().app.versionReverted.mock.calls.length).toBe(1)
+        expect(events.app.versionReverted.mock.calls.length).toBe(1)
     })
   })
 

@@ -53,7 +53,6 @@ exports.reverted = () => {
   events.processEvent(Events.APP_REVERTED, properties)
 }
 
-// TODO
 exports.exported = () => {
   const properties = {}
   events.processEvent(Events.APP_EXPORTED, properties)

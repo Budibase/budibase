@@ -5,8 +5,8 @@ class PosthogClient {
     this.posthog = new PostHog(token)
   }
 
-  updateUser(userId, properties) {
-    this.posthog.identify({ distinctId: userId, properties })
+  identify(distinctId, properties) {
+    this.posthog.identify({ distinctId, properties })
   }
 
   capture(userId, event, properties) {

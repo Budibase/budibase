@@ -131,4 +131,9 @@ exports.Events = {
 
   // LICENSING
   LICENSING_QUOTA_EXCEEDED: "licensing:quota:exceeded",
+
+  // ACCOUNT
+  ACCOUNT_CREATED: "account:created",
+  ACCOUNT_DELETED: "account:deleted",
+  ACCOUNT_VERIFIED: "account:verified",
 }

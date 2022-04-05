@@ -22,6 +22,7 @@ const {
 } = require("@budibase/backend-core/tenancy")
 const env = require("../../../environment")
 import { users } from "@budibase/pro"
+const { events } = require("@budibase/backend-core")
 
 const ssoCallbackUrl = async (config: any, type: any) => {
   // incase there is a callback URL from before
@@ -77,6 +78,7 @@ export const authenticate = async (ctx: any, next: any) => {
     "local",
     async (err: any, user: any, info: any) => {
       await authInternal(ctx, user, err, info)
+      events.auth.login("local")
       ctx.status = 200
     }
   )(ctx, next)
@@ -213,7 +215,7 @@ export const googleAuth = async (ctx: any, next: any) => {
     { successRedirect: "/", failureRedirect: "/error" },
     async (err: any, user: any, info: any) => {
       await authInternal(ctx, user, err, info)
-
+      events.auth.login("google")
       ctx.redirect("/")
     }
   )(ctx, next)
@@ -257,7 +259,7 @@ export const oidcAuth = async (ctx: any, next: any) => {
     { successRedirect: "/", failureRedirect: "/error" },
     async (err: any, user: any, info: any) => {
       await authInternal(ctx, user, err, info)
-
+      events.auth.login("oidc")
       ctx.redirect("/")
     }
   )(ctx, next)
