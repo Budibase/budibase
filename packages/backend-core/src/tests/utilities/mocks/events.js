@@ -21,11 +21,19 @@ jest.mock("../../../events", () => {
     auth: {
       login: jest.fn(),
       logout: jest.fn(),
+      SSOCreated: jest.fn(),
+      SSOUpdated: jest.fn(),
+      SSOActivated: jest.fn(),
+      SSODeactivated: jest.fn(),
     },
     datasource: {
       created: jest.fn(),
       updated: jest.fn(),
       deleted: jest.fn(),
+    },
+    email: {
+      SMTPCreated: jest.fn(),
+      SMTPUpdated: jest.fn(),
     },
   }
 })
