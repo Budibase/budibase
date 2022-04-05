@@ -1,3 +1,4 @@
+const account = require("./account")
 const app = require("./app")
 const auth = require("./auth")
 const automation = require("./automation")
@@ -14,6 +15,7 @@ const user = require("./user")
 const view = require("./view")
 
 module.exports = {
+  account,
   app,
   auth,
   automation,
