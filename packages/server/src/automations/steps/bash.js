@@ -1,7 +1,7 @@
 const { execSync } = require("child_process")
 const { processStringSync } = require("@budibase/string-templates")
 const automationUtils = require("../automationUtils")
-const env = require("../../environment");
+const env = require("../../environment")
 const BASH_SCRIPTING_TIMEOUT = env.BASH_SCRIPTING_TIMEOUT || 500
 
 exports.definition = {
