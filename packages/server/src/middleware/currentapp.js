@@ -68,7 +68,7 @@ module.exports = async (ctx, next) => {
     const isBuilder =
       globalUser && globalUser.builder && globalUser.builder.global
     const isDevApp = appId && isDevAppID(appId)
-    const roleHeader = ctx.request.headers[Headers.PREVIEW_ROLE]
+    const roleHeader = ctx.request && ctx.request.headers[Headers.PREVIEW_ROLE]
     if (isBuilder && isDevApp && roleHeader) {
       // Ensure the role is valid by ensuring a definition exists
       try {
