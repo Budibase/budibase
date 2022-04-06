@@ -5,7 +5,7 @@ const CouchDB = require("../db")
 const { queue } = require("./bullboard")
 const newid = require("../db/newid")
 const { updateEntityMetadata } = require("../utilities")
-const { MetadataTypes } = require("../constants")
+const { MetadataTypes, WebhookType } = require("../constants")
 const { getProdAppID } = require("@budibase/backend-core/db")
 const { cloneDeep } = require("lodash/fp")
 const { getAppDB, getAppId } = require("@budibase/backend-core/context")
@@ -17,11 +17,16 @@ const Runner = new Thread(ThreadType.AUTOMATION)
 exports.processEvent = async job => {
   try {
     // need to actually await these so that an error can be captured properly
+    console.log(
+      `${job.data.automation.appId} automation ${job.data.automation._id} running`
+    )
     return await Runner.run(job)
   } catch (err) {
+    const errJson = JSON.stringify(err)
     console.error(
-      `${job.data.automation.appId} automation ${job.data.automation._id} was unable to run - ${err}`
+      `${job.data.automation.appId} automation ${job.data.automation._id} was unable to run - ${errJson}`
     )
+    console.trace(err)
     return { err }
   }
 }
@@ -159,7 +164,7 @@ exports.checkForWebhooks = async ({ oldAuto, newAuto }) => {
       request: {
         body: new webhooks.Webhook(
           "Automation webhook",
-          webhooks.WebhookType.AUTOMATION,
+          WebhookType.AUTOMATION,
           newAuto._id
         ),
       },

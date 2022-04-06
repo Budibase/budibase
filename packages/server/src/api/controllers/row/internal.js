@@ -2,6 +2,7 @@ const linkRows = require("../../../db/linkedRows")
 const {
   generateRowID,
   getRowParams,
+  getTableIDFromRowID,
   DocumentTypes,
   InternalTables,
 } = require("../../../db/utils")
@@ -26,6 +27,8 @@ const {
 const { cloneDeep } = require("lodash/fp")
 const { getAppDB } = require("@budibase/backend-core/context")
 const { finaliseRow, updateRelatedFormula } = require("./staticFormula")
+const exporters = require("../view/exporters")
+const { apiFileReturn } = require("../../../utilities/fileSystem")
 
 const CALCULATION_TYPES = {
   SUM: "sum",
@@ -82,7 +85,11 @@ exports.patch = async ctx => {
   const isUserTable = tableId === InternalTables.USER_METADATA
   let oldRow
   try {
-    oldRow = await db.get(inputs._id)
+    let dbTable = await db.get(tableId)
+    oldRow = await outputProcessing(
+      dbTable,
+      await findRow(ctx, tableId, inputs._id)
+    )
   } catch (err) {
     if (isUserTable) {
       // don't include the rev, it'll be the global rev
@@ -361,6 +368,29 @@ exports.validate = async ctx => {
   })
 }
 
+exports.exportRows = async ctx => {
+  const db = getAppDB()
+  const table = await db.get(ctx.params.tableId)
+  const rowIds = ctx.request.body.rows
+  let format = ctx.query.format
+  let response = (
+    await db.allDocs({
+      include_docs: true,
+      keys: rowIds,
+    })
+  ).rows.map(row => row.doc)
+
+  let rows = await outputProcessing(table, response)
+
+  let headers = Object.keys(rows[0])
+  const exporter = exporters[format]
+  const filename = `export.${format}`
+
+  // send down the file
+  ctx.attachment(filename)
+  return apiFileReturn(exporter(headers, rows))
+}
+
 exports.fetchEnrichedRow = async ctx => {
   const db = getAppDB()
   const tableId = ctx.params.tableId
@@ -386,6 +416,9 @@ exports.fetchEnrichedRow = async ctx => {
   let groups = {},
     tables = {}
   for (let row of response) {
+    if (!row.tableId) {
+      row.tableId = getTableIDFromRowID(row._id)
+    }
     const linkedTableId = row.tableId
     if (groups[linkedTableId] == null) {
       groups[linkedTableId] = [row]

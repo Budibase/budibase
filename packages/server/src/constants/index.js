@@ -186,5 +186,9 @@ exports.BuildSchemaErrors = {
   INVALID_COLUMN: "invalid_column",
 }
 
+exports.WebhookType = {
+  AUTOMATION: "automation",
+}
+
 // pass through the list from the auth/core lib
 exports.ObjectStoreBuckets = ObjectStoreBuckets

@@ -12,6 +12,7 @@ import Rest from "./Rest.svelte"
 import Budibase from "./Budibase.svelte"
 import Oracle from "./Oracle.svelte"
 import GoogleSheets from "./GoogleSheets.svelte"
+import Firebase from "./Firebase.svelte"
 
 export default {
   BUDIBASE: Budibase,
@@ -28,4 +29,5 @@ export default {
   REST: Rest,
   ORACLE: Oracle,
   GOOGLE_SHEETS: GoogleSheets,
+  FIREBASE: Firebase,
 }

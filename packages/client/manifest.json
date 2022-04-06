@@ -6,7 +6,9 @@
     "state": true,
     "customThemes": true,
     "devicePreview": true,
-    "messagePassing": true
+    "messagePassing": true,
+    "rowSelection": true,
+    "continueIfAction": true
   },
   "layout": {
     "name": "Layout",
@@ -263,7 +265,8 @@
           {
             "label": "Primary",
             "value": "primary"
-          }, {
+          },
+          {
             "label": "Secondary",
             "value": "secondary"
           },
@@ -506,7 +509,7 @@
       },
       {
         "type": "static",
-        "values":  [
+        "values": [
           {
             "label": "Row Index",
             "key": "index"
@@ -625,28 +628,36 @@
         "defaultValue": "M",
         "showInBar": true,
         "barStyle": "picker",
-        "options": [{
-          "label": "Extra Small",
-          "value": "XS"
-        }, {
-          "label": "Small",
-          "value": "S"
-        }, {
-          "label": "Medium",
-          "value": "M"
-        }, {
-          "label": "Large",
-          "value": "L"
-        }, {
-          "label": "Extra Large",
-          "value": "XL"
-        }, {
-          "label": "2XL",
-          "value": "XXL"
-        }, {
-          "label": "3XL",
-          "value": "XXXL"
-        }]
+        "options": [
+          {
+            "label": "Extra Small",
+            "value": "XS"
+          },
+          {
+            "label": "Small",
+            "value": "S"
+          },
+          {
+            "label": "Medium",
+            "value": "M"
+          },
+          {
+            "label": "Large",
+            "value": "L"
+          },
+          {
+            "label": "Extra Large",
+            "value": "XL"
+          },
+          {
+            "label": "2XL",
+            "value": "XXL"
+          },
+          {
+            "label": "3XL",
+            "value": "XXXL"
+          }
+        ]
       },
       {
         "type": "color",
@@ -688,27 +699,32 @@
         "defaultValue": "left",
         "showInBar": true,
         "barStyle": "buttons",
-        "options": [{
-          "label": "Left",
-          "value": "left",
-          "barIcon": "TextAlignLeft",
-          "barTitle": "Align left"
-        }, {
-          "label": "Center",
-          "value": "center",
-          "barIcon": "TextAlignCenter",
-          "barTitle": "Align center"
-        }, {
-          "label": "Right",
-          "value": "right",
-          "barIcon": "TextAlignRight",
-          "barTitle": "Align right"
-        }, {
-          "label": "Justify",
-          "value": "justify",
-          "barIcon": "TextAlignJustify",
-          "barTitle": "Justify text"
-        }]
+        "options": [
+          {
+            "label": "Left",
+            "value": "left",
+            "barIcon": "TextAlignLeft",
+            "barTitle": "Align left"
+          },
+          {
+            "label": "Center",
+            "value": "center",
+            "barIcon": "TextAlignCenter",
+            "barTitle": "Align center"
+          },
+          {
+            "label": "Right",
+            "value": "right",
+            "barIcon": "TextAlignRight",
+            "barTitle": "Align right"
+          },
+          {
+            "label": "Justify",
+            "value": "justify",
+            "barIcon": "TextAlignJustify",
+            "barTitle": "Justify text"
+          }
+        ]
       }
     ]
   },
@@ -732,28 +748,36 @@
         "defaultValue": "M",
         "showInBar": true,
         "barStyle": "picker",
-        "options": [{
-          "label": "Extra Small",
-          "value": "XS"
-        }, {
-          "label": "Small",
-          "value": "S"
-        }, {
-          "label": "Medium",
-          "value": "M"
-        }, {
-          "label": "Large",
-          "value": "L"
-        }, {
-          "label": "Extra Large",
-          "value": "XL"
-        }, {
-          "label": "2XL",
-          "value": "XXL"
-        }, {
-          "label": "3XL",
-          "value": "XXXL"
-        }]
+        "options": [
+          {
+            "label": "Extra Small",
+            "value": "XS"
+          },
+          {
+            "label": "Small",
+            "value": "S"
+          },
+          {
+            "label": "Medium",
+            "value": "M"
+          },
+          {
+            "label": "Large",
+            "value": "L"
+          },
+          {
+            "label": "Extra Large",
+            "value": "XL"
+          },
+          {
+            "label": "2XL",
+            "value": "XXL"
+          },
+          {
+            "label": "3XL",
+            "value": "XXXL"
+          }
+        ]
       },
       {
         "type": "color",
@@ -795,27 +819,32 @@
         "defaultValue": "left",
         "showInBar": true,
         "barStyle": "buttons",
-        "options": [{
-          "label": "Left",
-          "value": "left",
-          "barIcon": "TextAlignLeft",
-          "barTitle": "Align left"
-        }, {
-          "label": "Center",
-          "value": "center",
-          "barIcon": "TextAlignCenter",
-          "barTitle": "Align center"
-        }, {
-          "label": "Right",
-          "value": "right",
-          "barIcon": "TextAlignRight",
-          "barTitle": "Align right"
-        }, {
-          "label": "Justify",
-          "value": "justify",
-          "barIcon": "TextAlignJustify",
-          "barTitle": "Justify text"
-        }]
+        "options": [
+          {
+            "label": "Left",
+            "value": "left",
+            "barIcon": "TextAlignLeft",
+            "barTitle": "Align left"
+          },
+          {
+            "label": "Center",
+            "value": "center",
+            "barIcon": "TextAlignCenter",
+            "barTitle": "Align center"
+          },
+          {
+            "label": "Right",
+            "value": "right",
+            "barIcon": "TextAlignRight",
+            "barTitle": "Align right"
+          },
+          {
+            "label": "Justify",
+            "value": "justify",
+            "barIcon": "TextAlignJustify",
+            "barTitle": "Justify text"
+          }
+        ]
       }
     ]
   },
@@ -836,16 +865,20 @@
         "defaultValue": "M",
         "showInBar": true,
         "barStyle": "picker",
-        "options": [{
-          "label": "Small",
-          "value": "S"
-        }, {
-          "label": "Medium",
-          "value": "M"
-        }, {
-          "label": "Large",
-          "value": "L"
-        }]
+        "options": [
+          {
+            "label": "Small",
+            "value": "S"
+          },
+          {
+            "label": "Medium",
+            "value": "M"
+          },
+          {
+            "label": "Large",
+            "value": "L"
+          }
+        ]
       },
       {
         "type": "color",
@@ -1036,16 +1069,20 @@
         "defaultValue": "M",
         "showInBar": true,
         "barStyle": "picker",
-        "options": [{
-          "label": "Small",
-          "value": "S"
-        }, {
-          "label": "Medium",
-          "value": "M"
-        }, {
-          "label": "Large",
-          "value": "L"
-        }]
+        "options": [
+          {
+            "label": "Small",
+            "value": "S"
+          },
+          {
+            "label": "Medium",
+            "value": "M"
+          },
+          {
+            "label": "Large",
+            "value": "L"
+          }
+        ]
       },
       {
         "type": "color",
@@ -1087,27 +1124,32 @@
         "defaultValue": "left",
         "showInBar": true,
         "barStyle": "buttons",
-        "options": [{
-          "label": "Left",
-          "value": "left",
-          "barIcon": "TextAlignLeft",
-          "barTitle": "Align left"
-        }, {
-          "label": "Center",
-          "value": "center",
-          "barIcon": "TextAlignCenter",
-          "barTitle": "Align center"
-        }, {
-          "label": "Right",
-          "value": "right",
-          "barIcon": "TextAlignRight",
-          "barTitle": "Align right"
-        }, {
-          "label": "Justify",
-          "value": "justify",
-          "barIcon": "TextAlignJustify",
-          "barTitle": "Justify text"
-        }]
+        "options": [
+          {
+            "label": "Left",
+            "value": "left",
+            "barIcon": "TextAlignLeft",
+            "barTitle": "Align left"
+          },
+          {
+            "label": "Center",
+            "value": "center",
+            "barIcon": "TextAlignCenter",
+            "barTitle": "Align center"
+          },
+          {
+            "label": "Right",
+            "value": "right",
+            "barIcon": "TextAlignRight",
+            "barTitle": "Align right"
+          },
+          {
+            "label": "Justify",
+            "value": "justify",
+            "barIcon": "TextAlignJustify",
+            "barTitle": "Justify text"
+          }
+        ]
       }
     ]
   },
@@ -1164,7 +1206,15 @@
         "type": "select",
         "label": "Card Width",
         "key": "cardWidth",
-        "options": ["24rem", "28rem", "32rem", "40rem", "48rem", "60rem", "100%"],
+        "options": [
+          "24rem",
+          "28rem",
+          "32rem",
+          "40rem",
+          "48rem",
+          "60rem",
+          "100%"
+        ],
         "defaultValue": "32rem"
       },
       {
@@ -1784,11 +1834,7 @@
     "icon": "Form",
     "hasChildren": true,
     "illegalChildren": ["section", "form"],
-    "actions": [
-      "ValidateForm",
-      "ClearForm",
-      "ChangeFormStep"
-    ],
+    "actions": ["ValidateForm", "ClearForm", "ChangeFormStep"],
     "styles": ["size"],
     "settings": [
       {
@@ -1815,7 +1861,8 @@
           {
             "label": "Medium",
             "value": "spectrum--medium"
-          }, {
+          },
+          {
             "label": "Large",
             "value": "spectrum--large"
           }
@@ -1832,7 +1879,7 @@
     "context": [
       {
         "type": "static",
-        "values":  [
+        "values": [
           {
             "label": "Value",
             "key": "__value"
@@ -1946,27 +1993,32 @@
         "defaultValue": "left",
         "showInBar": true,
         "barStyle": "buttons",
-        "options": [{
-          "label": "Left",
-          "value": "left",
-          "barIcon": "TextAlignLeft",
-          "barTitle": "Align left"
-        }, {
-          "label": "Center",
-          "value": "center",
-          "barIcon": "TextAlignCenter",
-          "barTitle": "Align center"
-        }, {
-          "label": "Right",
-          "value": "right",
-          "barIcon": "TextAlignRight",
-          "barTitle": "Align right"
-        }, {
-          "label": "Justify",
-          "value": "justify",
-          "barIcon": "TextAlignJustify",
-          "barTitle": "Justify text"
-        }]
+        "options": [
+          {
+            "label": "Left",
+            "value": "left",
+            "barIcon": "TextAlignLeft",
+            "barTitle": "Align left"
+          },
+          {
+            "label": "Center",
+            "value": "center",
+            "barIcon": "TextAlignCenter",
+            "barTitle": "Align center"
+          },
+          {
+            "label": "Right",
+            "value": "right",
+            "barIcon": "TextAlignRight",
+            "barTitle": "Align right"
+          },
+          {
+            "label": "Justify",
+            "value": "justify",
+            "barIcon": "TextAlignJustify",
+            "barTitle": "Justify text"
+          }
+        ]
       }
     ]
   },
@@ -2473,6 +2525,116 @@
       }
     ]
   },
+  "embeddedmap": {
+    "name": "Embedded Map",
+    "icon": "Location",
+    "styles": ["size"],
+    "draggable": false,
+    "illegalChildren": ["section"],
+    "settings": [
+      {
+        "type": "dataProvider",
+        "label": "Provider",
+        "key": "dataProvider"
+      },
+      {
+        "type": "field",
+        "label": "Latitude Key",
+        "key": "latitudeKey",
+        "dependsOn": "dataProvider"
+      },
+      {
+        "type": "field",
+        "label": "Longitude Key",
+        "key": "longitudeKey",
+        "dependsOn": "dataProvider"
+      },
+      {
+        "type": "field",
+        "label": "Title Key",
+        "key": "titleKey",
+        "dependsOn": "dataProvider"
+      },
+      {
+        "type": "event",
+        "label": "On Click Marker",
+        "key": "onClickMarker",
+        "context": [
+          {
+            "label": "Clicked marker",
+            "key": "marker"
+          }
+        ]
+      },
+      {
+        "type": "boolean",
+        "label": "Enable creating markers",
+        "key": "creationEnabled",
+        "defaultValue": false
+      },
+      {
+        "type": "event",
+        "label": "On Create Marker",
+        "key": "onCreateMarker",
+        "dependsOn": "creationEnabled",
+        "context": [
+          {
+            "label": "New marker latitude",
+            "key": "lat"
+          },
+          {
+            "label": "New marker longitude",
+            "key": "lng"
+          }
+        ]
+      },
+      {
+        "type": "boolean",
+        "label": "Enable fullscreen",
+        "key": "fullScreenEnabled",
+        "defaultValue": true
+      },
+      {
+        "type": "boolean",
+        "label": "Enable location",
+        "key": "locationEnabled",
+        "defaultValue": true
+      },
+      {
+        "type": "boolean",
+        "label": "Enable zoom",
+        "key": "zoomEnabled",
+        "defaultValue": true
+      },
+      {
+        "type": "text",
+        "label": "Tile URL",
+        "key": "tileURL",
+        "defaultValue": "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      },
+
+      {
+        "type": "text",
+        "label": "Default Location (when empty)",
+        "key": "defaultLocation",
+        "placeholder": "51.5072,-0.1276"
+      },
+      {
+        "type": "number",
+        "label": "Default Location Zoom Level (0-100)",
+        "key": "zoomLevel",
+        "placeholder": 50,
+        "max": 100,
+        "min": 0
+      },
+      {
+        "type": "text",
+        "label": "Map Attribution",
+        "key": "mapAttribution",
+        "defaultValue": "OpenStreetMap contributors"
+      }
+    ]
+  },
   "attachmentfield": {
     "name": "Attachment",
     "icon": "Attach",
@@ -2633,15 +2795,15 @@
     ],
     "context": {
       "type": "static",
-      "values":  [
+      "values": [
         {
           "label": "Rows",
           "key": "rows"
         },
-	{
-	  "label": "Extra Info",
-	  "key": "info"
-	},
+        {
+          "label": "Extra Info",
+          "key": "info"
+        },
         {
           "label": "Rows Length",
           "key": "rowsLength"
@@ -2714,6 +2876,13 @@
         "key": "showAutoColumns",
         "defaultValue": false
       },
+      {
+        "type": "boolean",
+        "label": "Allow row selection",
+        "key": "allowSelectRows",
+        "defaultValue": false
+      },
+
       {
         "type": "boolean",
         "label": "Link table rows",
@@ -2956,7 +3125,8 @@
             "label": "Table Columns",
             "key": "tableColumns",
             "dependsOn": "dataSource",
-            "placeholder": "All columns"
+            "placeholder": "All columns",
+            "nested": true
           },
           {
             "type": "boolean",
@@ -2972,6 +3142,11 @@
             "type": "boolean",
             "label": "Show auto columns",
             "key": "showAutoColumns"
+          },
+          {
+            "type": "boolean",
+            "label": "Allow row selection",
+            "key": "allowSelectRows"
           },
           {
             "type": "boolean",
@@ -3103,7 +3278,6 @@
             "key": "cardDescription",
             "label": "Description",
             "nested": true
-
           },
           {
             "type": "text",
@@ -3368,12 +3542,12 @@
       {
         "type": "static",
         "suffix": "provider",
-        "values":  [
+        "values": [
           {
             "label": "Rows",
             "key": "rows"
           },
-	      {
+          {
             "label": "Extra Info",
             "key": "info"
           },
@@ -3394,12 +3568,12 @@
       {
         "type": "static",
         "suffix": "repeater",
-        "values":  [
+        "values": [
           {
             "label": "Row Index",
             "key": "index"
           }
-         ]
+        ]
       },
       {
         "type": "schema",
@@ -3456,7 +3630,6 @@
     "name": "Markdown Viewer",
     "icon": "TaskList",
     "styles": ["size"],
-    "editable": true,
     "settings": [
       {
         "type": "text",

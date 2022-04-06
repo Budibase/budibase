@@ -1,4 +1,5 @@
 import { get } from "svelte/store"
+import download from "downloadjs"
 import {
   routeStore,
   builderStore,
@@ -8,6 +9,7 @@ import {
   notificationStore,
   dataSourceStore,
   uploadStore,
+  rowSelectionStore,
 } from "stores"
 import { API } from "api"
 import { ActionTypes } from "constants"
@@ -35,7 +37,9 @@ const saveRowHandler = async (action, context) => {
     notificationStore.actions.success("Row saved")
 
     // Refresh related datasources
-    await dataSourceStore.actions.invalidateDataSource(row.tableId)
+    await dataSourceStore.actions.invalidateDataSource(row.tableId, {
+      invalidateRelationships: true,
+    })
 
     return { row }
   } catch (error) {
@@ -63,7 +67,9 @@ const duplicateRowHandler = async (action, context) => {
       notificationStore.actions.success("Row saved")
 
       // Refresh related datasources
-      await dataSourceStore.actions.invalidateDataSource(row.tableId)
+      await dataSourceStore.actions.invalidateDataSource(row.tableId, {
+        invalidateRelationships: true,
+      })
 
       return { row }
     } catch (error) {
@@ -81,7 +87,9 @@ const deleteRowHandler = async action => {
       notificationStore.actions.success("Row deleted")
 
       // Refresh related datasources
-      await dataSourceStore.actions.invalidateDataSource(tableId)
+      await dataSourceStore.actions.invalidateDataSource(tableId, {
+        invalidateRelationships: true,
+      })
     } catch (error) {
       // Abort next actions
       return false
@@ -127,12 +135,16 @@ const queryExecutionHandler = async action => {
     // Trigger a notification and invalidate the datasource as long as this
     // was not a readable query
     if (!query.readable) {
-      API.notifications.error.success("Query executed successfully")
+      notificationStore.actions.success("Query executed successfully")
       await dataSourceStore.actions.invalidateDataSource(query.datasourceId)
     }
 
     return { result }
   } catch (error) {
+    notificationStore.actions.error(
+      "An error occurred while executing the query"
+    )
+
     // Abort next actions
     return false
   }
@@ -235,6 +247,46 @@ const s3UploadHandler = async action => {
   }
 }
 
+const exportDataHandler = async action => {
+  let selection = rowSelectionStore.actions.getSelection(
+    action.parameters.tableComponentId
+  )
+  if (selection.selectedRows && selection.selectedRows.length > 0) {
+    try {
+      const data = await API.exportRows({
+        tableId: selection.tableId,
+        rows: selection.selectedRows,
+        format: action.parameters.type,
+      })
+      download(data, `${selection.tableId}.${action.parameters.type}`)
+    } catch (error) {
+      notificationStore.actions.error("There was an error exporting the data")
+    }
+  } else {
+    notificationStore.actions.error("Please select at least one row")
+  }
+}
+
+const continueIfHandler = action => {
+  const { type, value, operator, referenceValue } = action.parameters
+  if (!type || !operator) {
+    return
+  }
+  let match = false
+  if (value == null && referenceValue == null) {
+    match = true
+  } else if (value === referenceValue) {
+    match = true
+  } else {
+    match = JSON.stringify(value) === JSON.stringify(referenceValue)
+  }
+  if (type === "continue") {
+    return operator === "equal" ? match : !match
+  } else {
+    return operator === "equal" ? !match : match
+  }
+}
+
 const handlerMap = {
   ["Save Row"]: saveRowHandler,
   ["Duplicate Row"]: duplicateRowHandler,
@@ -250,6 +302,8 @@ const handlerMap = {
   ["Change Form Step"]: changeFormStepHandler,
   ["Update State"]: updateStateHandler,
   ["Upload File to S3"]: s3UploadHandler,
+  ["Export Data"]: exportDataHandler,
+  ["Continue if / Stop if"]: continueIfHandler,
 }
 
 const confirmTextMap = {
@@ -281,7 +335,7 @@ export const enrichButtonActions = (actions, context) => {
   let buttonContext = context.actions || []
 
   const handlers = actions.map(def => handlerMap[def["##eventHandlerType"]])
-  return async () => {
+  return async eventContext => {
     for (let i = 0; i < handlers.length; i++) {
       try {
         // Skip any non-existent action definitions
@@ -290,7 +344,11 @@ export const enrichButtonActions = (actions, context) => {
         }
 
         // Built total context for this action
-        const totalContext = { ...context, actions: buttonContext }
+        const totalContext = {
+          ...context,
+          actions: buttonContext,
+          eventContext,
+        }
 
         // Get and enrich this button action with the total context
         let action = actions[i]
@@ -300,33 +358,36 @@ export const enrichButtonActions = (actions, context) => {
         // If this action is confirmable, show confirmation and await a
         // callback to execute further actions
         if (action.parameters?.confirm) {
-          const defaultText = confirmTextMap[action["##eventHandlerType"]]
-          const confirmText = action.parameters?.confirmText || defaultText
-          confirmationStore.actions.showConfirmation(
-            action["##eventHandlerType"],
-            confirmText,
-            async () => {
-              // When confirmed, execute this action immediately,
-              // then execute the rest of the actions in the chain
-              const result = await callback()
-              if (result !== false) {
-                // Generate a new total context to pass into the next enrichment
-                buttonContext.push(result)
-                const newContext = { ...context, actions: buttonContext }
+          return new Promise(resolve => {
+            const defaultText = confirmTextMap[action["##eventHandlerType"]]
+            const confirmText = action.parameters?.confirmText || defaultText
+            confirmationStore.actions.showConfirmation(
+              action["##eventHandlerType"],
+              confirmText,
+              async () => {
+                // When confirmed, execute this action immediately,
+                // then execute the rest of the actions in the chain
+                const result = await callback()
+                if (result !== false) {
+                  // Generate a new total context to pass into the next enrichment
+                  buttonContext.push(result)
+                  const newContext = { ...context, actions: buttonContext }
 
-                // Enrich and call the next button action
-                const next = enrichButtonActions(
-                  actions.slice(i + 1),
-                  newContext
-                )
-                await next()
+                  // Enrich and call the next button action
+                  const next = enrichButtonActions(
+                    actions.slice(i + 1),
+                    newContext
+                  )
+                  resolve(await next())
+                } else {
+                  resolve(false)
+                }
+              },
+              () => {
+                resolve(false)
               }
-            }
-          )
-
-          // Stop enriching actions when encountering a confirmable action,
-          // as the callback continues the action chain
-          return
+            )
+          })
         }
 
         // For non-confirmable actions, execute the handler immediately

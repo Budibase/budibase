@@ -6,11 +6,11 @@ import {
 } from "../definitions/datasource"
 import { OAuth2Client } from "google-auth-library"
 import { DatasourcePlus } from "./base/datasourcePlus"
-import { Row, Table, TableSchema } from "../definitions/common"
+import { Table, TableSchema } from "../definitions/common"
 import { buildExternalTableId } from "./utils"
 import { DataSourceOperation, FieldTypes } from "../constants"
 import { GoogleSpreadsheet } from "google-spreadsheet"
-import { table } from "console"
+import env from "../environment"
 
 module GoogleSheetsModule {
   const { getGlobalDB } = require("@budibase/backend-core/tenancy")
@@ -112,6 +112,14 @@ module GoogleSheetsModule {
       this.client = new GoogleSpreadsheet(spreadsheetId)
     }
 
+    getBindingIdentifier() {
+      return ""
+    }
+
+    getStringConcat(parts: string[]) {
+      return ""
+    }
+
     /**
      * Pull the spreadsheet ID out from a valid google sheets URL
      * @param spreadsheetId - the URL or standard spreadsheetId of the google sheet
@@ -131,12 +139,26 @@ module GoogleSheetsModule {
       try {
         // Initialise oAuth client
         const db = getGlobalDB()
-        const googleConfig = await getScopedConfig(db, {
+        let googleConfig = await getScopedConfig(db, {
           type: Configs.GOOGLE,
         })
+
+        if (!googleConfig) {
+          googleConfig = {
+            clientID: env.GOOGLE_CLIENT_ID,
+            clientSecret: env.GOOGLE_CLIENT_SECRET,
+          }
+        }
+
         const oauthClient = new OAuth2Client({
           clientId: googleConfig.clientID,
           clientSecret: googleConfig.clientSecret,
+        })
+        oauthClient.on("tokens", tokens => {
+          oauthClient.setCredentials({
+            refresh_token: googleConfig.refreshToken,
+            access_token: tokens.access_token,
+          })
         })
         oauthClient.credentials.access_token = this.config.auth.accessToken
         oauthClient.credentials.refresh_token = this.config.auth.refreshToken
