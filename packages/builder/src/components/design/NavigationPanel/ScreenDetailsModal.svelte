@@ -1,18 +1,18 @@
 <script>
-  import { ModalContent, Input, ProgressCircle } from "@budibase/bbui"
+  import { ModalContent, Input, Select } from "@budibase/bbui"
   import sanitizeUrl from "builderStore/store/screenTemplates/utils/sanitizeUrl"
   import { selectedAccessRole, allScreens } from "builderStore"
   import { get } from "svelte/store"
+  import { roles } from "stores/backend"
 
   export let onConfirm
   export let onCancel
-  export let showProgressCircle = false
-  export let screenName
   export let screenUrl
   export let confirmText = "Continue"
 
   let routeError
   let touched = false
+  let screenAccessRole = $selectedAccessRole + ""
 
   const routeChanged = event => {
     if (!event.detail.startsWith("/")) {
@@ -38,8 +38,8 @@
 
   const confirmScreenDetails = async () => {
     await onConfirm({
-      screenName,
       screenUrl,
+      screenAccessRole,
     })
   }
 </script>
@@ -51,24 +51,24 @@
   onConfirm={confirmScreenDetails}
   {onCancel}
   cancelText={"Back"}
-  disabled={!screenName || !screenUrl || routeError || !touched}
+  disabled={!screenAccessRole || !screenUrl || routeError || !touched}
 >
-  <Input label="Name" bind:value={screenName} />
+  <!-- <Input label="Name" bind:value={screenName} /> -->
   <Input
     label="URL"
     error={routeError}
     bind:value={screenUrl}
     on:change={routeChanged}
   />
-  <div slot="footer">
-    {#if showProgressCircle}
-      <div class="footer-progress"><ProgressCircle size="S" /></div>
-    {/if}
-  </div>
+  <Select
+    bind:value={screenAccessRole}
+    label="Screen access"
+    getOptionLabel={role => role.name}
+    getOptionValue={role => role._id}
+    getOptionColor={role => role.color}
+    options={$roles}
+  />
 </ModalContent>
 
 <style>
-  .footer-progress {
-    margin-top: var(--spacing-s);
-  }
 </style>
