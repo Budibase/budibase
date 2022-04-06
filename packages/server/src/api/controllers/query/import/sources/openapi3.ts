@@ -106,6 +106,10 @@ export class OpenAPI3 extends OpenAPISource {
     }
   }
 
+  getImportSource(): string {
+    return "openapi3.0"
+  }
+
   getQueries = async (datasourceId: string): Promise<Query[]> => {
     let url: string | URL | undefined
     if (this.document.servers?.length) {

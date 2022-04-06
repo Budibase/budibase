@@ -1,5 +1,6 @@
 const setup = require("./utilities")
 const { events } = require("@budibase/backend-core")
+const version = require("../../../../package.json").version
 
 describe("/dev", () => {
   let request = setup.getRequest()
@@ -19,7 +20,21 @@ describe("/dev", () => {
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
-      expect(events.app.reverted.mock.calls.length).toBe(1)
+      expect(events.app.reverted).toBeCalledTimes(1)
+    })
+  })
+
+  describe("version", () => {
+    it("should get the installation version", async () => {
+      const res = await request
+        .get(`/api/dev/version`)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+
+      expect(res.body.version).toBe(version)
+      expect(events.org.versionChecked).toBeCalledTimes(1)
+      expect(events.org.versionChecked).toBeCalledWith(version)
     })
   })
 })

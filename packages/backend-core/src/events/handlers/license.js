@@ -16,9 +16,9 @@ exports.updated = () => {
   events.processEvent(Events.LICENSE_UPDATED, properties)
 }
 
-exports.paired = () => {
+exports.activated = () => {
   const properties = {}
-  events.processEvent(Events.LICENSE_PAIRED, properties)
+  events.processEvent(Events.LICENSE_ACTIVATED, properties)
 }
 
 exports.quotaExceeded = (quotaName, value) => {

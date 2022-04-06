@@ -23,12 +23,8 @@ exports.versionChecked = version => {
   events.processEvent(Events.UPDATE_VERSION_CHECKED, properties)
 }
 
+// TODO
 exports.analyticsOptOut = () => {
   const properties = {}
   events.processEvent(Events.ANALYTICS_OPT_OUT, properties)
-}
-
-exports.npsSubmitted = () => {
-  const properties = {}
-  events.processEvent(Events.NPS_SUBMITTED, properties)
 }

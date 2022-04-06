@@ -54,7 +54,13 @@ jest.mock("../../../events", () => {
       platformURLUpdated: jest.fn(),
       versionChecked: jest.fn(),
       analyticsOptOut: jest.fn(),
-      npsSubmitted: jest.fn(),
+    },
+    query: {
+      created: jest.fn(),
+      updated: jest.fn(),
+      deleted: jest.fn(),
+      import: jest.fn(),
+      previewed: jest.fn(),
     },
   }
 })

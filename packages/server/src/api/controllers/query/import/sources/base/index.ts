@@ -17,6 +17,7 @@ export abstract class ImportSource {
   abstract isSupported(data: string): Promise<boolean>
   abstract getInfo(): Promise<ImportInfo>
   abstract getQueries(datasourceId: string): Promise<Query[]>
+  abstract getImportSource(): string
 
   constructQuery = (
     datasourceId: string,
