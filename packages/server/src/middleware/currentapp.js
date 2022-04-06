@@ -70,7 +70,7 @@ module.exports = async (ctx, next) => {
     const isDevApp = appId && isDevAppID(appId)
     const roleHeader = ctx.request.headers[Headers.PREVIEW_ROLE]
     if (isBuilder && isDevApp && roleHeader) {
-      // Ensure the role is valid ensuring a definition exists
+      // Ensure the role is valid by ensuring a definition exists
       try {
         await getRole(roleHeader)
         roleId = roleHeader

@@ -63,10 +63,10 @@
 
           // If using devtools, find the first screen matching our role
           if ($devToolsStore.role) {
-            firstRoute =
-              $screenStore.screens.filter(
-                screen => screen.routing?.roleId === $devToolsStore.role
-              )[0]?.routing?.route || "/"
+            const roleRoutes = $screenStore.screens.filter(
+              screen => screen.routing?.roleId === $devToolsStore.role
+            )
+            firstRoute = roleRoutes[0]?.routing?.route || "/"
           }
 
           // Otherwise just use the fist route
@@ -143,10 +143,10 @@
                       {/key}
 
                       <!--
-                      Flatpickr needs to be inside the theme wrapper.
-                      It also needs its own container because otherwise it hijacks
-                      key events on the whole page. It is painful to work with.
-                    -->
+                        Flatpickr needs to be inside the theme wrapper.
+                        It also needs its own container because otherwise it hijacks
+                        key events on the whole page. It is painful to work with.
+                      -->
                       <div id="flatpickr-root" />
 
                       <!-- Modal container to ensure they sit on top -->
@@ -164,12 +164,10 @@
                   </div>
                 </div>
 
-                <!-- Selection indicators should be bounded by device -->
-                <!--
-                  We don't want to key these by componentID as they control their own
-                  re-mounting to avoid flashes.
-                -->
-                <SelectionIndicator />
+                <!-- Preview and dev tools utilities  -->
+                {#if $appStore.isDevApp}
+                  <SelectionIndicator />
+                {/if}
                 {#if $builderStore.inBuilder || $devToolsStore.allowSelection}
                   <HoverIndicator />
                 {/if}
@@ -219,6 +217,7 @@
     justify-content: flex-start;
     align-items: stretch;
   }
+
   #app-body {
     flex: 1 1 auto;
     display: flex;
