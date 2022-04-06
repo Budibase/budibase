@@ -18,7 +18,7 @@
     <Heading size="XS">Please choose a component</Heading>
     <Body size="S">
       Press the button below to enable component selection, then click a
-      component in your app to view what context values are available.
+      component in your app to view its settings and available data bindings.
     </Body>
     <div>
       <Button
