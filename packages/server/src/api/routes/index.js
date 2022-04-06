@@ -25,6 +25,7 @@ const metadataRoutes = require("./metadata")
 const devRoutes = require("./dev")
 const cloudRoutes = require("./cloud")
 const migrationRoutes = require("./migrations")
+const publicRoutes = require("./public")
 
 exports.mainRoutes = [
   authRoutes,
@@ -57,4 +58,5 @@ exports.mainRoutes = [
   migrationRoutes,
 ]
 
+exports.publicRoutes = publicRoutes
 exports.staticRoutes = staticRoutes

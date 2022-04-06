@@ -10,6 +10,7 @@ const {
   PermissionLevels,
   PermissionTypes,
 } = require("@budibase/backend-core/permissions")
+const { internalSearchValidator } = require("./utils/validators")
 
 const router = Router()
 
@@ -119,8 +120,6 @@ router
    *    "notEqual": {},
    *    "empty": {},
    *    "notEmpty": {},
-   *    "contains": {},
-   *    "notContains": {}
    *    "oneOf": {
    *      "columnName": ["value"]
    *    }
@@ -140,6 +139,7 @@ router
    */
   .post(
     "/api/:tableId/search",
+    internalSearchValidator(),
     paramResource("tableId"),
     authorized(PermissionTypes.TABLE, PermissionLevels.READ),
     rowController.search
@@ -195,6 +195,7 @@ router
     "/api/:tableId/rows",
     paramResource("tableId"),
     authorized(PermissionTypes.TABLE, PermissionLevels.WRITE),
+    usage,
     rowController.patch
   )
   /**
@@ -249,6 +250,27 @@ router
     authorized(PermissionTypes.TABLE, PermissionLevels.WRITE),
     usage,
     rowController.destroy
+  )
+
+  /**
+   * @api {post} /api/:tableId/rows/exportRows Export Rows
+   * @apiName Export rows
+   * @apiGroup rows
+   * @apiPermission table write access
+   * @apiDescription This API can export a number of provided rows
+   *
+   * @apiParam {string} tableId The ID of the table the row is to be deleted from.
+   *
+   * @apiParam (Body) {object[]} [rows] The row IDs which are to be exported
+   *
+   * @apiSuccess {object[]|object}
+   */
+  .post(
+    "/api/:tableId/rows/exportRows",
+    paramResource("tableId"),
+    authorized(PermissionTypes.TABLE, PermissionLevels.WRITE),
+    usage,
+    rowController.export
   )
 
 module.exports = router

@@ -1,6 +1,6 @@
 {
   "name": "@budibase/builder",
-  "version": "1.0.76-alpha.3",
+  "version": "1.0.105-alpha.4",
   "license": "GPL-3.0",
   "private": true,
   "scripts": {
@@ -11,12 +11,13 @@
     "rollup": "rollup -c -w",
     "cy:setup": "ts-node ./cypress/ts/setup.ts",
     "cy:setup:ci": "node ./cypress/setup.js",
-    "cy:run": "xvfb-run cypress run --headed --browser chrome",
     "cy:open": "cypress open",
-    "cy:run:ci": "cypress run --record",
-    "cy:test": "start-server-and-test cy:setup http://localhost:10001/builder cy:run",
-    "cy:ci": "start-server-and-test cy:setup:ci http://localhost:10001/builder cy:run",
-    "cy:debug": "start-server-and-test cy:setup http://localhost:10001/builder cy:open"
+    "cy:run": "cypress run",
+    "cy:run:ci": "xvfb-run cypress run --headed --browser chrome",
+    "cy:test": "start-server-and-test cy:setup http://localhost:4100/builder cy:run",
+    "cy:ci": "start-server-and-test cy:setup:ci http://localhost:4100/builder cy:run:ci",
+    "cy:debug": "start-server-and-test cy:setup http://localhost:4100/builder cy:open",
+    "cy:debug:ci": "start-server-and-test cy:setup:ci http://localhost:4100/builder cy:open"
   },
   "jest": {
     "globals": {
@@ -64,10 +65,10 @@
     }
   },
   "dependencies": {
-    "@budibase/bbui": "^1.0.76-alpha.3",
-    "@budibase/client": "^1.0.76-alpha.3",
-    "@budibase/frontend-core": "^1.0.76-alpha.3",
-    "@budibase/string-templates": "^1.0.76-alpha.3",
+    "@budibase/bbui": "^1.0.105-alpha.4",
+    "@budibase/client": "^1.0.105-alpha.4",
+    "@budibase/frontend-core": "^1.0.105-alpha.4",
+    "@budibase/string-templates": "^1.0.105-alpha.4",
     "@sentry/browser": "5.19.1",
     "@spectrum-css/page": "^3.0.1",
     "@spectrum-css/vars": "^3.0.1",

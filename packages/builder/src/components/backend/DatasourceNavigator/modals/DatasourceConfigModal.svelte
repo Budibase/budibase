@@ -20,7 +20,9 @@
       $goto(`./datasource/${resp._id}`)
       notifications.success(`Datasource updated successfully.`)
     } catch (err) {
-      notifications.error("Error saving datasource")
+      notifications.error(err?.message ?? "Error saving datasource")
+      // prevent the modal from closing
+      return false
     }
   }
 

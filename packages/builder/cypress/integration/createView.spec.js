@@ -4,6 +4,7 @@ filterTests(['smoke', 'all'], () => {
   context("Create a View", () => {
     before(() => {
       cy.login()
+
       cy.createTestApp()
       cy.createTable("data")
       cy.addColumn("data", "group", "Text")

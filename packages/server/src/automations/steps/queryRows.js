@@ -74,7 +74,7 @@ exports.definition = {
 async function getTable(appId, tableId) {
   const ctx = buildCtx(appId, null, {
     params: {
-      id: tableId,
+      tableId,
     },
   })
   await tableController.find(ctx)
@@ -85,7 +85,7 @@ exports.run = async function ({ inputs, appId }) {
   const { tableId, filters, sortColumn, sortOrder, limit } = inputs
   const table = await getTable(appId, tableId)
   let sortType = FieldTypes.STRING
-  if (table && table.schema && sortColumn) {
+  if (table && table.schema && table.schema[sortColumn] && sortColumn) {
     const fieldType = table.schema[sortColumn].type
     sortType =
       fieldType === FieldTypes.NUMBER ? FieldTypes.NUMBER : FieldTypes.STRING

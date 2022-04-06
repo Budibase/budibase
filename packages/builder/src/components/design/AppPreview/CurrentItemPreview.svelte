@@ -68,6 +68,7 @@
     customTheme: $store.customTheme,
     previewDevice: $store.previewDevice,
     messagePassing: $store.clientFeatures.messagePassing,
+    isBudibaseEvent: true
   }
   $: json = JSON.stringify(previewData)
 
@@ -134,8 +135,9 @@
 
   // Remove all iframe event listeners on component destroy
   onDestroy(() => {
+    window.removeEventListener("message", receiveMessage)
+
     if (iframe.contentWindow) {
-      window.removeEventListener("message", receiveMessage)
       if (!$store.clientFeatures.messagePassing) {
         // Legacy - remove in later versions of BB
         iframe.contentWindow.removeEventListener(
@@ -159,6 +161,11 @@
         await store.actions.components.updateProp(data.prop, data.value)
       } else if (type === "delete-component" && data.id) {
         confirmDeleteComponent(data.id)
+      } else if (type === "duplicate-component" && data.id) {
+        const rootComponent = get(currentAsset).props
+        const component = findComponent(rootComponent, data.id)
+        store.actions.components.copy(component)
+        await store.actions.components.paste(component)
       } else if (type === "preview-loaded") {
         // Wait for this event to show the client library if intelligent
         // loading is supported

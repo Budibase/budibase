@@ -162,7 +162,7 @@
         <Select
           on:change={e => onChange(e, key)}
           value={inputData[key]}
-          options={Object.keys(table.schema)}
+          options={Object.keys(table?.schema || {})}
         />
       {:else if value.customType === "filters"}
         <ActionButton on:click={drawer.show}>Define filters</ActionButton>
@@ -227,6 +227,7 @@
         />
       {:else if value.customType === "row"}
         <RowSelector
+          {block}
           value={inputData[key]}
           on:change={e => onChange(e, key)}
           {bindings}
