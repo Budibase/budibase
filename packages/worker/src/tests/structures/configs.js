@@ -1,4 +1,4 @@
-const { Configs, LOGO_URL } = require("../../constants")
+const { Configs } = require("../../constants")
 const { utils } = require("@budibase/backend-core")
 
 exports.oidc = conf => {
@@ -68,7 +68,7 @@ exports.settings = conf => {
     type: Configs.SETTINGS,
     config: {
       platformUrl: "http://localhost:10000",
-      logoUrl: LOGO_URL,
+      logoUrl: "",
       company: "Budibase",
       ...conf,
     },

@@ -130,8 +130,12 @@ exports.Events = {
   AUTOMATION_STEP_DELETED: "automation:step:deleted",
   AUTOMATION_TRIGGER_UPDATED: "automation:trigger:updated",
 
-  // LICENSING
-  LICENSING_QUOTA_EXCEEDED: "licensing:quota:exceeded",
+  // LICENSE
+  LICENSE_UPGRADED: "license:upgraded",
+  LICENSE_DOWNGRADED: "license:downgraded",
+  LICENSE_UPDATED: "license:updated",
+  LICENSE_PAIRED: "license:paired",
+  LICENSE_QUOTA_EXCEEDED: "license:quota:exceeded",
 
   // ACCOUNT
   ACCOUNT_CREATED: "account:created",

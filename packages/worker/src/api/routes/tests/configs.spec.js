@@ -177,6 +177,56 @@ describe("configs", () => {
         })
       })
     })
+
+    describe("settings", () => {
+      const saveSettingsConfig = async (conf, _id, _rev) => {
+        const settingsConfig = structures.configs.settings(conf)
+        return saveConfig(settingsConfig, _id, _rev)
+      }
+
+      describe("create", () => {
+        it ("should create settings config with default settings", async () => {
+          await config.deleteConfig(Configs.SETTINGS)
+          
+          await saveSettingsConfig()
+
+          expect(events.org.nameUpdated).not.toBeCalled()
+          expect(events.org.logoUpdated).not.toBeCalled()
+          expect(events.org.platformURLUpdated).not.toBeCalled()
+        })
+
+        it ("should create settings config with non-default settings", async () => {
+          await config.deleteConfig(Configs.SETTINGS)
+          const conf = {
+            company: "acme",
+            logoUrl: "http://example.com",
+            platformUrl: "http://example.com"
+          }
+
+          await saveSettingsConfig(conf)
+          
+          expect(events.org.nameUpdated).toBeCalledTimes(1)
+          expect(events.org.logoUpdated).toBeCalledTimes(1)
+          expect(events.org.platformURLUpdated).toBeCalledTimes(1)
+        })
+      })
+
+      describe("update", () => {
+        it ("should update settings config", async () => {
+          await config.deleteConfig(Configs.SETTINGS)
+          const settingsConfig = await saveSettingsConfig()
+          settingsConfig.config.company = "acme"
+          settingsConfig.config.logoUrl = "http://example.com"
+          settingsConfig.config.platformUrl = "http://example.com"
+
+          await saveSettingsConfig(settingsConfig.config, settingsConfig._id, settingsConfig._rev)
+
+          expect(events.org.nameUpdated).toBeCalledTimes(1)
+          expect(events.org.logoUpdated).toBeCalledTimes(1)
+          expect(events.org.platformURLUpdated).toBeCalledTimes(1)
+        })
+      })
+    })
   })
 
   it("should return the correct checklist status based on the state of the budibase installation", async () => {

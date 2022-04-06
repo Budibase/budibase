@@ -29,39 +29,52 @@ const getEventFns = async (db, config) => {
 
   if (!existing) {
     switch (config.type) {
-      case Configs.SMTP:
+      case Configs.SMTP: {
         fns.push(events.email.SMTPCreated)
         break
-      case Configs.GOOGLE:
+      }
+      case Configs.GOOGLE: {
         fns.push(() => events.auth.SSOCreated(type))
         if (config.config.activated) {
           fns.push(() => events.auth.SSOActivated(type))
         }
         break
-      case Configs.OIDC:
+      }
+      case Configs.OIDC: {
         fns.push(() => events.auth.SSOCreated(type))
         if (config.config.configs[0].activated) {
           fns.push(() => events.auth.SSOActivated(type))
         }
         break
-      case Configs.SETTINGS:
-        if (config.company) {
+      }
+      case Configs.SETTINGS: {
+        // company
+        const company = config.config.company
+        if (company && company !== "Budibase") {
           fns.push(events.org.nameUpdated)
         }
-        if (config.logoUrl) {
+
+        // logo
+        const logoUrl = config.config.logoUrl
+        if (logoUrl) {
           fns.push(events.org.logoUpdated)
         }
-        if (config.platformUrl) {
+
+        // platform url
+        const platformUrl = config.config.platformUrl
+        if (platformUrl && platformUrl !== "http://localhost:10000") {
           fns.push(events.org.platformURLUpdated)
         }
         break
+      }
     }
   } else {
     switch (config.type) {
-      case Configs.SMTP:
+      case Configs.SMTP: {
         fns.push(events.email.SMTPUpdated)
         break
-      case Configs.GOOGLE:
+      }
+      case Configs.GOOGLE: {
         fns.push(() => events.auth.SSOUpdated(type))
         if (!existing.config.activated && config.config.activated) {
           fns.push(() => events.auth.SSOActivated(type))
@@ -69,7 +82,8 @@ const getEventFns = async (db, config) => {
           fns.push(() => events.auth.SSODeactivated(type))
         }
         break
-      case Configs.OIDC:
+      }
+      case Configs.OIDC: {
         fns.push(() => events.auth.SSOUpdated(type))
         if (
           !existing.config.configs[0].activated &&
@@ -83,17 +97,34 @@ const getEventFns = async (db, config) => {
           fns.push(() => events.auth.SSODeactivated(type))
         }
         break
-      case Configs.SETTINGS:
-        if (config.company && existing.company !== config.company) {
+      }
+      case Configs.SETTINGS: {
+        // company
+        const existingCompany = existing.config.company
+        const company = config.config.company
+        if (company && company !== "Budibase" && existingCompany !== company) {
           fns.push(events.org.nameUpdated)
         }
-        if (config.logoUrl && existing.logoUrl !== config.logoUrl) {
+
+        // logo
+        const existingLogoUrl = existing.config.logoUrl
+        const logoUrl = config.config.logoUrl
+        if (logoUrl && existingLogoUrl !== logoUrl) {
           fns.push(events.org.logoUpdated)
         }
-        if (config.platformUrl && existing.platformUrl !== config.platformUrl) {
+
+        // platform url
+        const existingPlatformUrl = existing.config.platformUrl
+        const platformUrl = config.config.platformUrl
+        if (
+          platformUrl &&
+          platformUrl !== "http://localhost:10000" &&
+          existingPlatformUrl !== platformUrl
+        ) {
           fns.push(events.org.platformURLUpdated)
         }
         break
+      }
     }
   }
 
