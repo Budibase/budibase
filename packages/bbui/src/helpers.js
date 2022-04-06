@@ -1,5 +1,3 @@
-import { notifications } from "./Stores/notifications"
-
 /**
  * Generates a DOM safe UUID.
  * Starting with a letter is important to make it DOM safe.
