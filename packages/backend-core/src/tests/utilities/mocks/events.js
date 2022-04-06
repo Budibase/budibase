@@ -44,6 +44,10 @@ jest.mock("../../../events", () => {
       SMTPCreated: jest.fn(),
       SMTPUpdated: jest.fn(),
     },
+    layout: {
+      created: jest.fn(),
+      deleted: jest.fn(),
+    },
   }
 })
 
