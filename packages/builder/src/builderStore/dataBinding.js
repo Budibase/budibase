@@ -402,7 +402,7 @@ const getRoleBindings = () => {
     return {
       type: "context",
       runtimeBinding: `trim "${role._id}"`,
-      readableBinding: `Roles.${role.name}`,
+      readableBinding: `Role.${role.name}`,
     }
   })
 }
