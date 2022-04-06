@@ -155,7 +155,7 @@ describe("configs", () => {
           await config.deleteConfig(Configs.OIDC)
         })
 
-        it ("should update google config to activated", async () => {
+        it ("should update OIDC config to activated", async () => {
           const oidcConf = await saveOIDCConfig({ activated: false })
           jest.clearAllMocks()
           await saveOIDCConfig({ ...oidcConf.config.configs[0], activated: true}, oidcConf._id, oidcConf._rev)
