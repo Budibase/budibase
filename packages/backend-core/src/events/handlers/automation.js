@@ -6,32 +6,33 @@ exports.created = () => {
   events.processEvent(Events.AUTOMATION_CREATED, properties)
 }
 
-// TODO
 exports.deleted = () => {
   const properties = {}
   events.processEvent(Events.AUTOMATION_DELETED, properties)
 }
 
-// TODO
 exports.tested = () => {
   const properties = {}
   events.processEvent(Events.AUTOMATION_TESTED, properties)
 }
 
 // TODO
-exports.run = () => {
-  const properties = {}
-  events.processEvent(Events.AUTOMATION_RUN, properties)
-}
+// exports.run = () => {
+//   const properties = {}
+//   events.processEvent(Events.AUTOMATION_RUN, properties)
+// }
 
-// TODO
 exports.stepCreated = () => {
   const properties = {}
   events.processEvent(Events.AUTOMATION_STEP_CREATED, properties)
 }
 
-// TODO
 exports.stepDeleted = () => {
   const properties = {}
   events.processEvent(Events.AUTOMATION_STEP_DELETED, properties)
+}
+
+exports.triggerUpdated = () => {
+  const properties = {}
+  events.processEvent(Events.AUTOMATION_TRIGGER_UPDATED, properties)
 }

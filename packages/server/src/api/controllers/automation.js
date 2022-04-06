@@ -10,6 +10,7 @@ const { deleteEntityMetadata } = require("../../utilities")
 const { MetadataTypes } = require("../../constants")
 const { setTestFlag, clearTestFlag } = require("../../utilities/redis")
 const { getAppDB } = require("@budibase/backend-core/context")
+const { events } = require("@budibase/backend-core")
 
 const ACTION_DEFS = removeDeprecated(actions.ACTION_DEFINITIONS)
 const TRIGGER_DEFS = removeDeprecated(triggers.TRIGGER_DEFINITIONS)
@@ -70,6 +71,10 @@ exports.create = async function (ctx) {
     newAuto: automation,
   })
   const response = await db.put(automation)
+  events.automation.created()
+  for (let step of automation.definition.steps) {
+    events.automation.stepCreated(step)
+  }
   automation._rev = response.rev
 
   ctx.status = 200
@@ -82,6 +87,29 @@ exports.create = async function (ctx) {
   }
 }
 
+const getNewSteps = (oldAutomation, automation) => {
+  const oldStepIds = oldAutomation.definition.steps.map(s => s.id)
+  return automation.definition.steps.filter(s => !oldStepIds.includes(s.id))
+}
+
+const getDeletedSteps = (oldAutomation, automation) => {
+  const stepIds = automation.definition.steps.map(s => s.id)
+  return oldAutomation.definition.steps.filter(s => !stepIds.includes(s.id))
+}
+
+const handleStepEvents = (oldAutomation, automation) => {
+  // new steps
+  const newSteps = getNewSteps(oldAutomation, automation)
+  for (let step of newSteps) {
+    events.automation.stepCreated(step)
+  }
+
+  // old steps
+  const deletedSteps = getDeletedSteps(oldAutomation, automation)
+  for (let step of deletedSteps) {
+    events.automation.stepDeleted(step)
+  }
+}
 exports.update = async function (ctx) {
   const db = getAppDB()
   let automation = ctx.request.body
@@ -98,19 +126,22 @@ exports.update = async function (ctx) {
   const oldAutoTrigger =
     oldAutomation && oldAutomation.definition.trigger
       ? oldAutomation.definition.trigger
-      : {}
+      : undefined
   const newAutoTrigger =
     automation && automation.definition.trigger
       ? automation.definition.trigger
       : {}
   // trigger has been updated, remove the test inputs
-  if (oldAutoTrigger.id !== newAutoTrigger.id) {
+  if (oldAutoTrigger && oldAutoTrigger.id !== newAutoTrigger.id) {
+    events.automation.triggerUpdated()
     await deleteEntityMetadata(
       ctx.appId,
       MetadataTypes.AUTOMATION_TEST_INPUT,
       automation._id
     )
   }
+
+  handleStepEvents(oldAutomation, automation)
 
   ctx.status = 200
   ctx.body = {
@@ -148,6 +179,7 @@ exports.destroy = async function (ctx) {
   // delete metadata first
   await cleanupAutomationMetadata(automationId)
   ctx.body = await db.remove(automationId, ctx.params.rev)
+  events.automation.deleted()
 }
 
 exports.getActionList = async function (ctx) {
@@ -215,4 +247,5 @@ exports.test = async function (ctx) {
   })
   await clearTestFlag(automation._id)
   ctx.body = response
+  events.automation.tested()
 }
