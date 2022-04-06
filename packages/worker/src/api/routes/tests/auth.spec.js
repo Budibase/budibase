@@ -1,20 +1,20 @@
 jest.mock("nodemailer")
-const setup = require("./utilities")
-const sendMailMock = setup.emailMock()
+const { config, request, mocks, structures } = require("../../../tests")
+const sendMailMock = mocks.email.mock()
 const { events } = require("@budibase/backend-core")
 
-const TENANT_ID = "default"
+const TENANT_ID = structures.TENANT_ID
 
 describe("/api/global/auth", () => {
-  let request = setup.getRequest()
-  let config = setup.getConfig()
   let code
 
   beforeAll(async () => {
-    await config.init()
+    await config.beforeAll()
   })
 
-  afterAll(setup.afterAll)
+  afterAll(async () => {
+    await config.afterAll()
+  })
 
   afterEach(() => {
     jest.clearAllMocks()

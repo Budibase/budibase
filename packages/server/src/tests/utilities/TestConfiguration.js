@@ -60,6 +60,26 @@ class TestConfiguration {
     return this.prodAppId
   }
 
+  // SETUP /  TEARDOWN
+
+  // use a new id as the name to avoid name collisions
+  async init(appName = newid()) {
+    await this.globalUser()
+    return this.createApp(appName)
+  }
+
+  end() {
+    if (!this) {
+      return
+    }
+    if (this.server) {
+      this.server.close()
+    }
+    cleanup(this.allApps.map(app => app.appId))
+  }
+
+  // UTILS
+
   async _req(config, params, controlFunc) {
     const request = {}
     // fake cookies, we don't need them
@@ -88,19 +108,7 @@ class TestConfiguration {
     }
   }
 
-  async generateApiKey(userId = GLOBAL_USER_ID) {
-    const db = getGlobalDB(TENANT_ID)
-    const id = generateDevInfoID(userId)
-    let devInfo
-    try {
-      devInfo = await db.get(id)
-    } catch (err) {
-      devInfo = { _id: id, userId }
-    }
-    devInfo.apiKey = encrypt(`${TENANT_ID}${SEPARATOR}${newid()}`)
-    await db.put(devInfo)
-    return devInfo.apiKey
-  }
+  // USER / AUTH
 
   async globalUser({
     id = GLOBAL_USER_ID,
@@ -136,314 +144,6 @@ class TestConfiguration {
       _rev: resp._rev,
       ...user,
     }
-  }
-
-  // use a new id as the name to avoid name collisions
-  async init(appName = newid()) {
-    await this.globalUser()
-    return this.createApp(appName)
-  }
-
-  end() {
-    if (!this) {
-      return
-    }
-    if (this.server) {
-      this.server.close()
-    }
-    cleanup(this.allApps.map(app => app.appId))
-  }
-
-  defaultHeaders(extras = {}) {
-    const auth = {
-      userId: GLOBAL_USER_ID,
-      sessionId: "sessionid",
-      tenantId: TENANT_ID,
-    }
-    const app = {
-      roleId: BUILTIN_ROLE_IDS.ADMIN,
-      appId: this.appId,
-    }
-    const authToken = jwt.sign(auth, env.JWT_SECRET)
-    const appToken = jwt.sign(app, env.JWT_SECRET)
-    const headers = {
-      Accept: "application/json",
-      Cookie: [
-        `${Cookies.Auth}=${authToken}`,
-        `${Cookies.CurrentApp}=${appToken}`,
-      ],
-      [Headers.CSRF_TOKEN]: CSRF_TOKEN,
-      ...extras,
-    }
-    if (this.appId) {
-      headers[Headers.APP_ID] = this.appId
-    }
-    return headers
-  }
-
-  publicHeaders({ prodApp = true } = {}) {
-    const appId = prodApp ? this.prodAppId : this.appId
-
-    const headers = {
-      Accept: "application/json",
-    }
-    if (appId) {
-      headers[Headers.APP_ID] = appId
-    }
-    return headers
-  }
-
-  async roleHeaders({
-    email = EMAIL,
-    roleId = BUILTIN_ROLE_IDS.ADMIN,
-    builder = false,
-    prodApp = true,
-  } = {}) {
-    return this.login({ email, roleId, builder, prodApp })
-  }
-
-  async createApp(appName) {
-    // create dev app
-    this.app = await this._req({ name: appName }, null, controllers.app.create)
-    this.appId = this.app.appId
-    context.updateAppId(this.appId)
-
-    // create production app
-    this.prodApp = await this.deploy()
-    this.prodAppId = this.prodApp.appId
-
-    this.allApps.push(this.prodApp)
-    this.allApps.push(this.app)
-
-    return this.app
-  }
-
-  async deploy() {
-    await this._req(null, null, controllers.deploy.deployApp)
-    const prodAppId = this.getAppId().replace("_dev", "")
-    return context.doInAppContext(prodAppId, async () => {
-      const appPackage = await this._req(
-        null,
-        { appId: prodAppId },
-        controllers.app.fetchAppPackage
-      )
-      return appPackage.application
-    })
-  }
-
-  async updateTable(config = null) {
-    config = config || basicTable()
-    this.table = await this._req(config, null, controllers.table.save)
-    return this.table
-  }
-
-  async createTable(config = null) {
-    if (config != null && config._id) {
-      delete config._id
-    }
-    return this.updateTable(config)
-  }
-
-  async getTable(tableId = null) {
-    tableId = tableId || this.table._id
-    return this._req(null, { tableId }, controllers.table.find)
-  }
-
-  async createLinkedTable(relationshipType = null, links = ["link"]) {
-    if (!this.table) {
-      throw "Must have created a table first."
-    }
-    const tableConfig = basicTable()
-    tableConfig.primaryDisplay = "name"
-    for (let link of links) {
-      tableConfig.schema[link] = {
-        type: "link",
-        fieldName: link,
-        tableId: this.table._id,
-        name: link,
-      }
-      if (relationshipType) {
-        tableConfig.schema[link].relationshipType = relationshipType
-      }
-    }
-    const linkedTable = await this.createTable(tableConfig)
-    this.linkedTable = linkedTable
-    return linkedTable
-  }
-
-  async createAttachmentTable() {
-    const table = basicTable()
-    table.schema.attachment = {
-      type: "attachment",
-    }
-    return this.createTable(table)
-  }
-
-  async createRow(config = null) {
-    if (!this.table) {
-      throw "Test requires table to be configured."
-    }
-    const tableId = (config && config.tableId) || this.table._id
-    config = config || basicRow(tableId)
-    return this._req(config, { tableId }, controllers.row.save)
-  }
-
-  async getRow(tableId, rowId) {
-    return this._req(null, { tableId, rowId }, controllers.row.find)
-  }
-
-  async getRows(tableId) {
-    if (!tableId && this.table) {
-      tableId = this.table._id
-    }
-    return this._req(null, { tableId }, controllers.row.fetch)
-  }
-
-  async createRole(config = null) {
-    config = config || basicRole()
-    return this._req(config, null, controllers.role.save)
-  }
-
-  async addPermission(roleId, resourceId, level = "read") {
-    return this._req(
-      null,
-      {
-        roleId,
-        resourceId,
-        level,
-      },
-      controllers.perms.addPermission
-    )
-  }
-
-  async createView(config) {
-    if (!this.table) {
-      throw "Test requires table to be configured."
-    }
-    const view = config || {
-      map: "function(doc) { emit(doc[doc.key], doc._id); } ",
-      tableId: this.table._id,
-      name: "ViewTest",
-    }
-    return this._req(view, null, controllers.view.save)
-  }
-
-  async createAutomation(config) {
-    config = config || basicAutomation()
-    if (config._rev) {
-      delete config._rev
-    }
-    this.automation = (
-      await this._req(config, null, controllers.automation.create)
-    ).automation
-    return this.automation
-  }
-
-  async getAllAutomations() {
-    return this._req(null, null, controllers.automation.fetch)
-  }
-
-  async deleteAutomation(automation = null) {
-    automation = automation || this.automation
-    if (!automation) {
-      return
-    }
-    return this._req(
-      null,
-      { id: automation._id, rev: automation._rev },
-      controllers.automation.destroy
-    )
-  }
-
-  async createDatasource(config = null) {
-    config = config || basicDatasource()
-    const response = await this._req(config, null, controllers.datasource.save)
-    this.datasource = response.datasource
-    return this.datasource
-  }
-
-  async updateDatasource(datasource) {
-    const response = await this._req(
-      datasource,
-      { datasourceId: datasource._id },
-      controllers.datasource.update
-    )
-    this.datasource = response.datasource
-    return this.datasource
-  }
-
-  async restDatasource(cfg) {
-    return this.createDatasource({
-      datasource: {
-        ...basicDatasource().datasource,
-        source: "REST",
-        config: cfg || {},
-      },
-    })
-  }
-
-  async dynamicVariableDatasource() {
-    let datasource = await this.restDatasource()
-    const basedOnQuery = await this.createQuery({
-      ...basicQuery(datasource._id),
-      fields: {
-        path: "www.google.com",
-      },
-    })
-    datasource = await this.updateDatasource({
-      ...datasource,
-      config: {
-        dynamicVariables: [
-          {
-            queryId: basedOnQuery._id,
-            name: "variable3",
-            value: "{{ data.0.[value] }}",
-          },
-        ],
-      },
-    })
-    return { datasource, query: basedOnQuery }
-  }
-
-  async previewQuery(request, config, datasource, fields) {
-    return request
-      .post(`/api/queries/preview`)
-      .send({
-        datasourceId: datasource._id,
-        parameters: {},
-        fields,
-        queryVerb: "read",
-        name: datasource.name,
-      })
-      .set(config.defaultHeaders())
-      .expect("Content-Type", /json/)
-      .expect(200)
-  }
-
-  async createQuery(config = null) {
-    if (!this.datasource && !config) {
-      throw "No data source created for query."
-    }
-    config = config || basicQuery(this.datasource._id)
-    return this._req(config, null, controllers.query.save)
-  }
-
-  async createScreen(config = null) {
-    config = config || basicScreen()
-    return this._req(config, null, controllers.screen.save)
-  }
-
-  async createWebhook(config = null) {
-    if (!this.automation) {
-      throw "Must create an automation before creating webhook."
-    }
-    config = config || basicWebhook(this.automation._id)
-    return (await this._req(config, null, controllers.webhook.save)).webhook
-  }
-
-  async createLayout(config = null) {
-    config = config || basicLayout()
-    return await this._req(config, null, controllers.layout.save)
   }
 
   async createUser(id = null, email = EMAIL) {
@@ -499,6 +199,334 @@ class TestConfiguration {
         [Headers.APP_ID]: appId,
       }
     })
+  }
+
+  defaultHeaders(extras = {}) {
+    const auth = {
+      userId: GLOBAL_USER_ID,
+      sessionId: "sessionid",
+      tenantId: TENANT_ID,
+    }
+    const app = {
+      roleId: BUILTIN_ROLE_IDS.ADMIN,
+      appId: this.appId,
+    }
+    const authToken = jwt.sign(auth, env.JWT_SECRET)
+    const appToken = jwt.sign(app, env.JWT_SECRET)
+    const headers = {
+      Accept: "application/json",
+      Cookie: [
+        `${Cookies.Auth}=${authToken}`,
+        `${Cookies.CurrentApp}=${appToken}`,
+      ],
+      [Headers.CSRF_TOKEN]: CSRF_TOKEN,
+      ...extras,
+    }
+    if (this.appId) {
+      headers[Headers.APP_ID] = this.appId
+    }
+    return headers
+  }
+
+  publicHeaders({ prodApp = true } = {}) {
+    const appId = prodApp ? this.prodAppId : this.appId
+
+    const headers = {
+      Accept: "application/json",
+    }
+    if (appId) {
+      headers[Headers.APP_ID] = appId
+    }
+    return headers
+  }
+
+  async roleHeaders({
+    email = EMAIL,
+    roleId = BUILTIN_ROLE_IDS.ADMIN,
+    builder = false,
+    prodApp = true,
+  } = {}) {
+    return this.login({ email, roleId, builder, prodApp })
+  }
+
+  // API
+
+  async generateApiKey(userId = GLOBAL_USER_ID) {
+    const db = getGlobalDB(TENANT_ID)
+    const id = generateDevInfoID(userId)
+    let devInfo
+    try {
+      devInfo = await db.get(id)
+    } catch (err) {
+      devInfo = { _id: id, userId }
+    }
+    devInfo.apiKey = encrypt(`${TENANT_ID}${SEPARATOR}${newid()}`)
+    await db.put(devInfo)
+    return devInfo.apiKey
+  }
+
+  // APP
+
+  async createApp(appName) {
+    // create dev app
+    this.app = await this._req({ name: appName }, null, controllers.app.create)
+    this.appId = this.app.appId
+    context.updateAppId(this.appId)
+
+    // create production app
+    this.prodApp = await this.deploy()
+    this.prodAppId = this.prodApp.appId
+
+    this.allApps.push(this.prodApp)
+    this.allApps.push(this.app)
+
+    return this.app
+  }
+
+  async deploy() {
+    await this._req(null, null, controllers.deploy.deployApp)
+    const prodAppId = this.getAppId().replace("_dev", "")
+    return context.doInAppContext(prodAppId, async () => {
+      const appPackage = await this._req(
+        null,
+        { appId: prodAppId },
+        controllers.app.fetchAppPackage
+      )
+      return appPackage.application
+    })
+  }
+
+  // TABLE
+
+  async updateTable(config = null) {
+    config = config || basicTable()
+    this.table = await this._req(config, null, controllers.table.save)
+    return this.table
+  }
+
+  async createTable(config = null) {
+    if (config != null && config._id) {
+      delete config._id
+    }
+    return this.updateTable(config)
+  }
+
+  async getTable(tableId = null) {
+    tableId = tableId || this.table._id
+    return this._req(null, { tableId }, controllers.table.find)
+  }
+
+  async createLinkedTable(relationshipType = null, links = ["link"]) {
+    if (!this.table) {
+      throw "Must have created a table first."
+    }
+    const tableConfig = basicTable()
+    tableConfig.primaryDisplay = "name"
+    for (let link of links) {
+      tableConfig.schema[link] = {
+        type: "link",
+        fieldName: link,
+        tableId: this.table._id,
+        name: link,
+      }
+      if (relationshipType) {
+        tableConfig.schema[link].relationshipType = relationshipType
+      }
+    }
+    const linkedTable = await this.createTable(tableConfig)
+    this.linkedTable = linkedTable
+    return linkedTable
+  }
+
+  async createAttachmentTable() {
+    const table = basicTable()
+    table.schema.attachment = {
+      type: "attachment",
+    }
+    return this.createTable(table)
+  }
+
+  // ROW
+
+  async createRow(config = null) {
+    if (!this.table) {
+      throw "Test requires table to be configured."
+    }
+    const tableId = (config && config.tableId) || this.table._id
+    config = config || basicRow(tableId)
+    return this._req(config, { tableId }, controllers.row.save)
+  }
+
+  async getRow(tableId, rowId) {
+    return this._req(null, { tableId, rowId }, controllers.row.find)
+  }
+
+  async getRows(tableId) {
+    if (!tableId && this.table) {
+      tableId = this.table._id
+    }
+    return this._req(null, { tableId }, controllers.row.fetch)
+  }
+
+  // ROLE
+
+  async createRole(config = null) {
+    config = config || basicRole()
+    return this._req(config, null, controllers.role.save)
+  }
+
+  async addPermission(roleId, resourceId, level = "read") {
+    return this._req(
+      null,
+      {
+        roleId,
+        resourceId,
+        level,
+      },
+      controllers.perms.addPermission
+    )
+  }
+
+  // VIEW
+
+  async createView(config) {
+    if (!this.table) {
+      throw "Test requires table to be configured."
+    }
+    const view = config || {
+      map: "function(doc) { emit(doc[doc.key], doc._id); } ",
+      tableId: this.table._id,
+      name: "ViewTest",
+    }
+    return this._req(view, null, controllers.view.save)
+  }
+
+  // AUTOMATION
+
+  async createAutomation(config) {
+    config = config || basicAutomation()
+    if (config._rev) {
+      delete config._rev
+    }
+    this.automation = (
+      await this._req(config, null, controllers.automation.create)
+    ).automation
+    return this.automation
+  }
+
+  async getAllAutomations() {
+    return this._req(null, null, controllers.automation.fetch)
+  }
+
+  async deleteAutomation(automation = null) {
+    automation = automation || this.automation
+    if (!automation) {
+      return
+    }
+    return this._req(
+      null,
+      { id: automation._id, rev: automation._rev },
+      controllers.automation.destroy
+    )
+  }
+
+  async createWebhook(config = null) {
+    if (!this.automation) {
+      throw "Must create an automation before creating webhook."
+    }
+    config = config || basicWebhook(this.automation._id)
+    return (await this._req(config, null, controllers.webhook.save)).webhook
+  }
+
+  // DATASOURCE
+
+  async createDatasource(config = null) {
+    config = config || basicDatasource()
+    const response = await this._req(config, null, controllers.datasource.save)
+    this.datasource = response.datasource
+    return this.datasource
+  }
+
+  async updateDatasource(datasource) {
+    const response = await this._req(
+      datasource,
+      { datasourceId: datasource._id },
+      controllers.datasource.update
+    )
+    this.datasource = response.datasource
+    return this.datasource
+  }
+
+  async restDatasource(cfg) {
+    return this.createDatasource({
+      datasource: {
+        ...basicDatasource().datasource,
+        source: "REST",
+        config: cfg || {},
+      },
+    })
+  }
+
+  async dynamicVariableDatasource() {
+    let datasource = await this.restDatasource()
+    const basedOnQuery = await this.createQuery({
+      ...basicQuery(datasource._id),
+      fields: {
+        path: "www.google.com",
+      },
+    })
+    datasource = await this.updateDatasource({
+      ...datasource,
+      config: {
+        dynamicVariables: [
+          {
+            queryId: basedOnQuery._id,
+            name: "variable3",
+            value: "{{ data.0.[value] }}",
+          },
+        ],
+      },
+    })
+    return { datasource, query: basedOnQuery }
+  }
+
+  // QUERY
+
+  async previewQuery(request, config, datasource, fields) {
+    return request
+      .post(`/api/queries/preview`)
+      .send({
+        datasourceId: datasource._id,
+        parameters: {},
+        fields,
+        queryVerb: "read",
+        name: datasource.name,
+      })
+      .set(config.defaultHeaders())
+      .expect("Content-Type", /json/)
+      .expect(200)
+  }
+
+  async createQuery(config = null) {
+    if (!this.datasource && !config) {
+      throw "No data source created for query."
+    }
+    config = config || basicQuery(this.datasource._id)
+    return this._req(config, null, controllers.query.save)
+  }
+
+  // SCREEN
+
+  async createScreen(config = null) {
+    config = config || basicScreen()
+    return this._req(config, null, controllers.screen.save)
+  }
+
+  // LAYOUT
+
+  async createLayout(config = null) {
+    config = config || basicLayout()
+    return await this._req(config, null, controllers.layout.save)
   }
 }
 

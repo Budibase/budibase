@@ -1,19 +1,20 @@
 jest.mock("nodemailer")
-const setup = require("./utilities")
-const sendMailMock = setup.emailMock()
+const { config, mocks, structures, request } = require("../../../tests")
+const sendMailMock = mocks.email.mock()
 
 const { EmailTemplatePurpose } = require("../../../constants")
-const { TENANT_ID } = require("./utilities/structures")
+
+const TENANT_ID = structures.TENANT_ID
 
 describe("/api/global/email", () => {
-  let request = setup.getRequest()
-  let config = setup.getConfig()
 
   beforeAll(async () => {
-    await config.init()
+    await config.beforeAll()
   })
 
-  afterAll(setup.afterAll)
+  afterAll(async () => {
+    await config.afterAll()
+  })
 
   it("should be able to send an email (with mocking)", async () => {
     // initially configure settings
