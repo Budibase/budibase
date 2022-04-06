@@ -28,6 +28,7 @@ jobs:
 
       - name: Cypress run
         id: cypress
+        continue-on-error: true
         uses: cypress-io/github-action@v2
         with:
           install: false
