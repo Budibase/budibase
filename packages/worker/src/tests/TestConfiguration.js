@@ -1,22 +1,22 @@
 require("./mocks")
-require("../../../../db").init()
-const env = require("../../../../environment")
+require("../db").init()
+const env = require("../environment")
 const controllers = require("./controllers")
 const supertest = require("supertest")
 const { jwt } = require("@budibase/backend-core/auth")
 const { Cookies, Headers } = require("@budibase/backend-core/constants")
-const { Configs, LOGO_URL } = require("../../../../constants")
+const { Configs } = require("../constants")
 const { getGlobalUserByEmail } = require("@budibase/backend-core/utils")
 const { createASession } = require("@budibase/backend-core/sessions")
-const { newid } = require("@budibase/backend-core/src/hashing")
 const { TENANT_ID, CSRF_TOKEN } = require("./structures")
+const structures = require("./structures")
 const { doInTenant } = require("@budibase/backend-core/tenancy")
 
 class TestConfiguration {
   constructor(openServer = true) {
     if (openServer) {
-      env.PORT = 4012
-      this.server = require("../../../../index")
+      env.PORT = "0" // random port
+      this.server = require("../index")
       // we need the request for logging in, involves cookies, hard to fake
       this.request = supertest(this.server)
     }
@@ -25,6 +25,8 @@ class TestConfiguration {
   getRequest() {
     return this.request
   }
+
+  // UTILS
 
   async _req(config, params, controlFunc) {
     const request = {}
@@ -49,36 +51,42 @@ class TestConfiguration {
     return request.body
   }
 
-  async init(createUser = true) {
-    if (createUser) {
-      // create a test user
-      await this._req(
-        {
-          email: "test@test.com",
-          password: "test",
-          _id: "us_uuid1",
-          builder: {
-            global: true,
-          },
-          admin: {
-            global: true,
-          },
-        },
-        null,
-        controllers.users.save
-      )
+  // SETUP / TEARDOWN
+
+  async beforeAll() {
+    await this.login()
+  }
+
+  async afterAll() {
+    if (this.server) {
+      await this.server.close()
     }
+  }
+
+  // USER / AUTH
+
+  async login() {
+    // create a test user
+    await this._req(
+      {
+        email: "test@test.com",
+        password: "test",
+        _id: "us_uuid1",
+        builder: {
+          global: true,
+        },
+        admin: {
+          global: true,
+        },
+      },
+      null,
+      controllers.users.save
+    )
     await createASession("us_uuid1", {
       sessionId: "sessionid",
       tenantId: TENANT_ID,
       csrfToken: CSRF_TOKEN,
     })
-  }
-
-  async end() {
-    if (this.server) {
-      await this.server.close()
-    }
   }
 
   cookieHeader(cookies) {
@@ -123,6 +131,20 @@ class TestConfiguration {
     )
   }
 
+  async saveAdminUser() {
+    await this._req(
+      {
+        email: "testuser@test.com",
+        password: "test@test.com",
+        tenantId: TENANT_ID,
+      },
+      null,
+      controllers.users.adminUser
+    )
+  }
+
+  // CONFIGS
+
   async deleteConfig(type) {
     try {
       const cfg = await this._req(
@@ -147,36 +169,25 @@ class TestConfiguration {
     }
   }
 
+  // CONFIGS - SETTINGS
+
   async saveSettingsConfig() {
     await this.deleteConfig(Configs.SETTINGS)
     await this._req(
-      {
-        type: Configs.SETTINGS,
-        config: {
-          platformUrl: "http://localhost:10000",
-          logoUrl: LOGO_URL,
-          company: "Budibase",
-        },
-      },
+      structures.configs.settings(),
       null,
       controllers.config.save
     )
   }
 
-  async saveOAuthConfig() {
+  // CONFIGS - GOOGLE
+
+  async saveGoogleConfig() {
     await this.deleteConfig(Configs.GOOGLE)
-    await this._req(
-      {
-        type: Configs.GOOGLE,
-        config: {
-          clientID: "clientId",
-          clientSecret: "clientSecret",
-        },
-      },
-      null,
-      controllers.config.save
-    )
+    await this._req(structures.configs.google(), null, controllers.config.save)
   }
+
+  // CONFIGS - OIDC
 
   getOIDConfigCookie(configId) {
     const token = jwt.sign(configId, env.JWT_SECRET)
@@ -185,73 +196,25 @@ class TestConfiguration {
 
   async saveOIDCConfig() {
     await this.deleteConfig(Configs.OIDC)
-    const config = {
-      type: Configs.OIDC,
-      config: {
-        configs: [
-          {
-            configUrl: "http://someconfigurl",
-            clientID: "clientId",
-            clientSecret: "clientSecret",
-            logo: "Microsoft",
-            name: "Active Directory",
-            uuid: newid(),
-          },
-        ],
-      },
-    }
+    const config = structures.configs.oidc()
 
     await this._req(config, null, controllers.config.save)
     return config
   }
 
+  // CONFIGS - SMTP
+
   async saveSmtpConfig() {
     await this.deleteConfig(Configs.SMTP)
-    await this._req(
-      {
-        type: Configs.SMTP,
-        config: {
-          port: 12345,
-          host: "smtptesthost.com",
-          from: "testfrom@test.com",
-          subject: "Hello!",
-        },
-      },
-      null,
-      controllers.config.save
-    )
+    await this._req(structures.configs.smtp(), null, controllers.config.save)
   }
 
   async saveEtherealSmtpConfig() {
     await this.deleteConfig(Configs.SMTP)
     await this._req(
-      {
-        type: Configs.SMTP,
-        config: {
-          port: 587,
-          host: "smtp.ethereal.email",
-          secure: false,
-          auth: {
-            user: "don.bahringer@ethereal.email",
-            pass: "yCKSH8rWyUPbnhGYk9",
-          },
-          connectionTimeout: 1000, // must be less than the jest default of 5000
-        },
-      },
+      structures.configs.smtpEthereal(),
       null,
       controllers.config.save
-    )
-  }
-
-  async saveAdminUser() {
-    await this._req(
-      {
-        email: "testuser@test.com",
-        password: "test@test.com",
-        tenantId: TENANT_ID,
-      },
-      null,
-      controllers.users.adminUser
     )
   }
 }

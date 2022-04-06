@@ -1,17 +1,17 @@
 jest.mock("nodemailer")
-const setup = require("./utilities")
-const sendMailMock = setup.emailMock()
+const { config, request, mocks } = require("../../../tests")
+const sendMailMock = mocks.email.mock()
 
 describe("/api/global/users", () => {
-  let request = setup.getRequest()
-  let config = setup.getConfig()
   let code
 
   beforeAll(async () => {
-    await config.init()
+    await config.beforeAll()
   })
 
-  afterAll(setup.afterAll)
+  afterAll(async () => {
+    await config.afterAll()
+  })
 
   it("should be able to generate an invitation", async () => {
     // initially configure settings

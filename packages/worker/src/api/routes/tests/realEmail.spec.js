@@ -1,17 +1,17 @@
-const setup = require("./utilities")
+const { config, request } = require("../../../tests")
 const { EmailTemplatePurpose } = require("../../../constants")
 const nodemailer = require("nodemailer")
 const fetch = require("node-fetch")
 
 describe("/api/global/email", () => {
-  let request = setup.getRequest()
-  let config = setup.getConfig()
 
   beforeAll(async () => {
-    await config.init()
+    await config.beforeAll()
   })
 
-  afterAll(setup.afterAll)
+  afterAll(async () => {
+    await config.afterAll()
+  })
 
   async function sendRealEmail(purpose) {
     let response, text

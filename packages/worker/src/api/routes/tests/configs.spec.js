@@ -1,16 +1,14 @@
 // mock the email system
 jest.mock("nodemailer")
-const setup = require("./utilities")
-setup.emailMock()
+const { config, structures, mocks, request } = require("../../../tests")
+mocks.email.mock()
 const { Configs } = require("@budibase/backend-core/constants")
 const { events } = require("@budibase/backend-core")
 
 describe("configs", () => {
-  let request = setup.getRequest()
-  let config = setup.getConfig()
 
   beforeAll(async () => {
-    await config.init()
+    await config.beforeAll()
   })
 
   beforeEach(() => {
@@ -18,15 +16,14 @@ describe("configs", () => {
   })
 
   afterAll(async () => {
-    await setup.afterAll()
+    await config.afterAll()
   })
 
   describe("post /api/global/configs", () => {
 
-    const saveConfig = async (conf, type, _id, _rev) => {
+    const saveConfig = async (conf, _id, _rev) => {
       const data = {
-        type,
-        config: conf,
+        ...conf,
         _id,
         _rev
       }
@@ -46,14 +43,8 @@ describe("configs", () => {
 
     describe("google", () => {
       const saveGoogleConfig = async (conf, _id, _rev) => {
-        const googleConfig = {
-          clientID: "clientID",
-          clientSecret: "clientSecret",
-          activated: true,
-          ...conf
-        }
-
-        return saveConfig(googleConfig, Configs.GOOGLE, _id, _rev)
+        const googleConfig = structures.configs.google(conf)
+        return saveConfig(googleConfig, _id, _rev)
       }
   
       describe("create", () => {
@@ -106,19 +97,8 @@ describe("configs", () => {
 
     describe("oidc", () => {
       const saveOIDCConfig = async (conf, _id, _rev) => {
-        const oidcConfig = {
-          configs: [{
-            clientID: "clientID",
-            clientSecret: "clientSecret",
-            configUrl: "http://example.com",
-            logo: "logo",
-            name: "oidc",
-            uuid: "uuid",
-            activated: true,
-            ...conf
-          }]
-        }
-        return saveConfig(oidcConfig, Configs.OIDC, _id, _rev)
+        const oidcConfig = structures.configs.oidc(conf)
+        return saveConfig(oidcConfig, _id, _rev)
       }
 
       describe("create", () => {
@@ -168,6 +148,34 @@ describe("configs", () => {
         })
       })
 
+    })
+
+    describe("smtp", () => {
+      const saveSMTPConfig = async (conf, _id, _rev) => {
+        const smtpConfig = structures.configs.smtp(conf)
+        return saveConfig(smtpConfig, _id, _rev)
+      }
+
+      describe("create", () => {
+        it ("should create SMTP config", async () => {
+          await config.deleteConfig(Configs.SMTP)
+          await saveSMTPConfig()
+          expect(events.email.SMTPUpdated).not.toBeCalled()
+          expect(events.email.SMTPCreated).toBeCalledTimes(1)
+          await config.deleteConfig(Configs.SMTP)
+        })
+      })
+
+      describe("update", () => {
+        it ("should update SMTP config", async () => {
+          const smtpConf = await saveSMTPConfig()
+          jest.clearAllMocks()
+          await saveSMTPConfig(smtpConf.config, smtpConf._id, smtpConf._rev)
+          expect(events.email.SMTPCreated).not.toBeCalled()
+          expect(events.email.SMTPUpdated).toBeCalledTimes(1)
+          await config.deleteConfig(Configs.SMTP)
+        })
+      })
     })
   })
 
