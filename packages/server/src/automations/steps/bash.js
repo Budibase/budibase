@@ -1,6 +1,7 @@
 const { execSync } = require("child_process")
 const { processStringSync } = require("@budibase/string-templates")
 const automationUtils = require("../automationUtils")
+const environment = require("../../environment")
 
 exports.definition = {
   name: "Bash Scripting",
@@ -51,7 +52,9 @@ exports.run = async function ({ inputs, context }) {
     let stdout,
       success = true
     try {
-      stdout = execSync(command, { timeout: 500 }).toString()
+      stdout = execSync(command, {
+        timeout: environment.QUERY_THREAD_TIMEOUT || 500,
+      }).toString()
     } catch (err) {
       stdout = err.message
       success = false
