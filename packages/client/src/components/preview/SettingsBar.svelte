@@ -66,6 +66,11 @@
         newTop = deviceBottom - 44
       }
 
+      //If element is at the very top of the screen, put the bar below the element
+      if (elBounds.top < elBounds.height) {
+        newTop = elBounds.bottom + verticalOffset
+      }
+
       // Horizontally, try to center first.
       // Failing that, render to left edge of component.
       // Failing that, render to right edge of component,
