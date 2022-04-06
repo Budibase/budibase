@@ -1,7 +1,7 @@
 const mocks = require("./mocks")
-const data = require("./data")
+const structures = require("./structures")
 
 module.exports = {
   mocks,
-  data,
+  structures,
 }

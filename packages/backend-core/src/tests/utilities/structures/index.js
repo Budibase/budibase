@@ -1,8 +1,8 @@
 require("../mocks")
 const koa = require("./koa")
 
-const data = {
+const structures = {
   koa,
 }
 
-module.exports = data
+module.exports = structures
