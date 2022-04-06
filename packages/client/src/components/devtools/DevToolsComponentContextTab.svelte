@@ -8,6 +8,7 @@
     state: "State",
     url: "URL",
     device: "Device",
+    rowSelection: "Selected rows",
   }
 
   let category
