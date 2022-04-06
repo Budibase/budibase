@@ -15,6 +15,7 @@ const { checkCacheForDynamicVariable } = require("../../../threads/utils")
 const { basicQuery, basicDatasource } = setup.structures
 const { mocks } = require("@budibase/backend-core/testUtils")
 mocks.date.mock()
+const { events } = require("@budibase/backend-core")
 
 describe("/queries", () => {
   let request = setup.getRequest()
@@ -40,16 +41,21 @@ describe("/queries", () => {
     return { datasource, query }
   }
 
+  const createQuery = async (query) => {
+    return request
+      .post(`/api/queries`)
+      .send(query)
+      .set(config.defaultHeaders())
+      .expect("Content-Type", /json/)
+      .expect(200)
+  }
+
   describe("create", () => {
     it("should create a new query", async () => {
       const { _id } = await config.createDatasource()
       const query = basicQuery(_id)
-      const res = await request
-        .post(`/api/queries`)
-        .send(query)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+      jest.clearAllMocks()
+      const res = await createQuery(query)
 
       expect(res.res.statusMessage).toEqual(
         `Query ${query.name} saved successfully.`
@@ -61,6 +67,33 @@ describe("/queries", () => {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       })
+      expect(events.query.created).toBeCalledTimes(1)
+      expect(events.query.updated).not.toBeCalled()
+    })
+  })
+
+  describe("update", () => {
+    it("should update query", async () => {
+      const { _id } = await config.createDatasource()
+      const query = basicQuery(_id)
+      const res = await createQuery(query)
+      jest.clearAllMocks()
+      query._id = res.body._id
+      query._rev = res.body._rev
+      await createQuery(query)
+
+      expect(res.res.statusMessage).toEqual(
+        `Query ${query.name} saved successfully.`
+      )
+      expect(res.body).toEqual({
+        _rev: res.body._rev,
+        _id: res.body._id,
+        ...query,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      })
+      expect(events.query.created).not.toBeCalled()
+      expect(events.query.updated).toBeCalledTimes(1)
     })
   })
 
@@ -155,6 +188,7 @@ describe("/queries", () => {
         .expect(200)
 
       expect(res.body).toEqual([])
+      expect(events.query.deleted).toBeCalledTimes(1)
     })
 
     it("should apply authorization to endpoint", async () => {
@@ -183,6 +217,9 @@ describe("/queries", () => {
       // these responses come from the mock
       expect(res.body.schemaFields).toEqual(["a", "b"])
       expect(res.body.rows.length).toEqual(1)
+      expect(events.query.previewed).toBeCalledTimes(1)
+      datasource.config = { schema: "public" }
+      expect(events.query.previewed).toBeCalledWith(datasource)
     })
 
     it("should apply authorization to endpoint", async () => {

@@ -6,29 +6,27 @@ exports.created = () => {
   events.processEvent(Events.QUERY_CREATED, properties)
 }
 
-// TODO
 exports.updated = () => {
   const properties = {}
   events.processEvent(Events.QUERY_UPDATED, properties)
 }
 
-// TODO
 exports.deleted = () => {
   const properties = {}
   events.processEvent(Events.QUERY_DELETED, properties)
 }
 
 // TODO
-exports.imported = () => {
+exports.import = () => {
   const properties = {}
-  events.processEvent(Events.QUERY_IMPORTED, properties)
+  events.processEvent(Events.QUERY_IMPORT, properties)
 }
 
 // TODO
-exports.run = () => {
-  const properties = {}
-  events.processEvent(Events.QUERY_RUN, properties)
-}
+// exports.run = () => {
+//   const properties = {}
+//   events.processEvent(Events.QUERY_RUN, properties)
+// }
 
 // TODO
 exports.previewed = () => {

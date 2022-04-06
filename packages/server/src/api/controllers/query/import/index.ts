@@ -7,6 +7,8 @@ import { Query } from "./../../../../definitions/common"
 import { Curl } from "./sources/curl"
 // @ts-ignore
 import { getAppDB } from "@budibase/backend-core/context"
+import { events } from "@budibase/backend-core"
+
 interface ImportResult {
   errorQueries: Query[]
   queries: Query[]
@@ -36,7 +38,7 @@ export class RestImporter {
   }
 
   importQueries = async (datasourceId: string): Promise<ImportResult> => {
-    // constuct the queries
+    // construct the queries
     let queries = await this.source.getQueries(datasourceId)
 
     // validate queries
@@ -76,9 +78,20 @@ export class RestImporter {
       }
     })
 
+    const successQueries = Object.values(queryIndex)
+
+    // events
+    const count = successQueries.length
+    const importSource = this.source.getImportSource()
+    const datasource = await db.get(datasourceId)
+    events.query.import({ datasource, importSource, count })
+    for (let query of successQueries) {
+      events.query.created(query)
+    }
+
     return {
       errorQueries,
-      queries: Object.values(queryIndex),
+      queries: successQueries,
     }
   }
 }

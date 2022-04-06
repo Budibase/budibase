@@ -7,6 +7,7 @@ import { invalidateDynamicVariables } from "../../../threads/utils"
 import { QUERY_THREAD_TIMEOUT } from "../../../environment"
 import { getAppDB } from "@budibase/backend-core/context"
 import { quotas } from "@budibase/pro"
+import { events } from "@budibase/backend-core"
 
 const Runner = new Thread(ThreadType.QUERY, {
   timeoutMs: QUERY_THREAD_TIMEOUT || 10000,
@@ -80,11 +81,18 @@ export async function save(ctx: any) {
   const db = getAppDB()
   const query = ctx.request.body
 
+  const datasource = await db.get(query.datasourceId)
+
+  let eventFn
   if (!query._id) {
     query._id = generateQueryID(query.datasourceId)
+    eventFn = () => events.query.created(datasource, query)
+  } else {
+    eventFn = () => events.query.updated(datasource, query)
   }
 
   const response = await db.put(query)
+  eventFn()
   query._rev = response.rev
 
   ctx.body = query
@@ -124,6 +132,7 @@ export async function preview(ctx: any) {
       })
 
     const { rows, keys, info, extra } = await quotas.addQuery(runFn)
+    events.query.previewed(datasource)
     ctx.body = {
       rows,
       schemaFields: [...new Set(keys)],
@@ -211,4 +220,5 @@ export async function destroy(ctx: any) {
   await db.remove(ctx.params.queryId, ctx.params.revId)
   ctx.message = `Query deleted.`
   ctx.status = 200
+  events.query.deleted()
 }

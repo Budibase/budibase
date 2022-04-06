@@ -38,9 +38,6 @@ exports.Events = {
   ORG_LOGO_UPDATED: "org:info:logo:updated",
   ORG_PLATFORM_URL_UPDATED: "org:platformurl:updated",
 
-  // ORG / NPS
-  NPS_SUBMITTED: "nps:submitted",
-
   // ORG / UPDATE
   UPDATE_VERSION_CHECKED: "version:checked",
 
@@ -77,8 +74,8 @@ exports.Events = {
   QUERY_CREATED: "query:created",
   QUERY_UPDATED: "query:updated",
   QUERY_DELETED: "query:deleted",
-  QUERY_IMPORTED: "query:imported",
-  QUERY_RUN: "query:run",
+  QUERY_IMPORT: "query:import",
+  // QUERY_RUN: "query:run",
   QUERY_PREVIEWED: "query:previewed",
 
   // TABLE
@@ -101,10 +98,7 @@ exports.Events = {
   VIEW_CALCULATION_DELETED: "view:calculation:created",
 
   // ROW
-  ROW_CREATED: "row:created",
-  ROW_UPDATED: "row:updated",
-  ROW_DELETED: "row:deleted",
-  ROW_IMPORTED: "row:imported",
+  // ROW_CREATED: "row:created",
 
   // BUILDER
   BUILDER_SERVED: "builder:served",
@@ -134,7 +128,7 @@ exports.Events = {
   LICENSE_UPGRADED: "license:upgraded",
   LICENSE_DOWNGRADED: "license:downgraded",
   LICENSE_UPDATED: "license:updated",
-  LICENSE_PAIRED: "license:paired",
+  LICENSE_ACTIVATED: "license:activated",
   LICENSE_QUOTA_EXCEEDED: "license:quota:exceeded",
 
   // ACCOUNT

@@ -70,6 +70,10 @@ export class OpenAPI2 extends OpenAPISource {
     }
   }
 
+  getImportSource(): string {
+    return "openapi2.0"
+  }
+
   getQueries = async (datasourceId: string): Promise<Query[]> => {
     const url = this.getUrl()
     const queries = []

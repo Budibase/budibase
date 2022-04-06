@@ -14,11 +14,6 @@ exports.endUserPing = async ctx => {
     return
   }
 
-  // posthogClient.identify({
-  //   distinctId: ctx.user && ctx.user._id,
-  //   properties: {},
-  // })
-
   analytics.captureEvent(ctx.user._id, "budibase:end_user_ping", {
     appId: ctx.appId,
   })

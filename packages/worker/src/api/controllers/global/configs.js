@@ -62,7 +62,11 @@ const getEventFns = async (db, config) => {
 
         // platform url
         const platformUrl = config.config.platformUrl
-        if (platformUrl && platformUrl !== "http://localhost:10000") {
+        if (
+          platformUrl &&
+          platformUrl !== "http://localhost:10000" &&
+          env.SELF_HOSTED
+        ) {
           fns.push(events.org.platformURLUpdated)
         }
         break
@@ -119,7 +123,8 @@ const getEventFns = async (db, config) => {
         if (
           platformUrl &&
           platformUrl !== "http://localhost:10000" &&
-          existingPlatformUrl !== platformUrl
+          existingPlatformUrl !== platformUrl &&
+          env.SELF_HOSTED
         ) {
           fns.push(events.org.platformURLUpdated)
         }
