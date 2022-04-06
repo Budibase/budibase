@@ -48,6 +48,14 @@ jest.mock("../../../events", () => {
       created: jest.fn(),
       deleted: jest.fn(),
     },
+    org: {
+      nameUpdated: jest.fn(),
+      logoUpdated: jest.fn(),
+      platformURLUpdated: jest.fn(),
+      versionChecked: jest.fn(),
+      analyticsOptOut: jest.fn(),
+      npsSubmitted: jest.fn(),
+    },
   }
 })
 

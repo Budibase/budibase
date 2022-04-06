@@ -4,7 +4,7 @@ const auth = require("./auth")
 const automation = require("./automation")
 const datasource = require("./datasource")
 const email = require("./email")
-const licensing = require("./licensing")
+const license = require("./license")
 const layout = require("./layout")
 const org = require("./org")
 const query = require("./query")
@@ -21,7 +21,7 @@ module.exports = {
   automation,
   datasource,
   email,
-  licensing,
+  license,
   layout,
   org,
   query,
