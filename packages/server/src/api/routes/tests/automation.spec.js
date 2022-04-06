@@ -10,6 +10,7 @@ const { mocks } = require("@budibase/backend-core/testUtils")
 mocks.date.mock()
 const MAX_RETRIES = 4
 const { TRIGGER_DEFINITIONS, ACTION_DEFINITIONS } = require("../../../automations")
+const { events } = require("@budibase/backend-core")
 
 describe("/automations", () => {
   let request = setup.getRequest()
@@ -58,8 +59,9 @@ describe("/automations", () => {
   })
 
   describe("create", () => {
-    it("returns a success message when the automation is successfully created", async () => {
+    it("creates an automation with no steps", async () => {
       const automation = newAutomation()
+      automation.definition.steps = []
 
       const res = await request
         .post(`/api/automations`)
@@ -71,6 +73,27 @@ describe("/automations", () => {
       expect(res.body.message).toEqual("Automation created successfully")
       expect(res.body.automation.name).toEqual("My Automation")
       expect(res.body.automation._id).not.toEqual(null)
+      expect(events.automation.created).toBeCalledTimes(1)
+      expect(events.automation.stepCreated).not.toBeCalled()
+    })
+
+    it("creates an automation with steps", async () => {
+      const automation = newAutomation()
+      automation.definition.steps.push(automationStep())
+      jest.clearAllMocks()
+
+      const res = await request
+        .post(`/api/automations`)
+        .set(config.defaultHeaders())
+        .send(automation)
+        .expect('Content-Type', /json/)
+        .expect(200)
+
+      expect(res.body.message).toEqual("Automation created successfully")
+      expect(res.body.automation.name).toEqual("My Automation")
+      expect(res.body.automation._id).not.toEqual(null)
+      expect(events.automation.created).toBeCalledTimes(1)
+      expect(events.automation.stepCreated).toBeCalledTimes(2)
     })
 
     it("should apply authorization to endpoint", async () => {
@@ -97,8 +120,8 @@ describe("/automations", () => {
     })
   })
 
-  describe("trigger", () => {
-    it("trigger the automation successfully", async () => {
+  describe("test", () => {
+    it("tests the automation successfully", async () => {
       let table = await config.createTable()
       let automation = newAutomation()
       automation.definition.trigger.inputs.tableId = table._id
@@ -113,6 +136,7 @@ describe("/automations", () => {
       automation = await config.createAutomation(automation)
       await setup.delay(500)
       const res = await testAutomation(config, automation)
+      expect(events.automation.tested).toBeCalledTimes(1)
       // this looks a bit mad but we don't actually have a way to wait for a response from the automation to
       // know that it has finished all of its actions - this is currently the best way
       // also when this runs in CI it is very temper-mental so for now trying to make run stable by repeating until it works
@@ -134,53 +158,141 @@ describe("/automations", () => {
   })
 
   describe("update", () => {
-    it("updates a automations data", async () => {
-      let automation = newAutomation()
-      await config.createAutomation(automation)
-      automation.name = "Updated Name"
 
-      const res = await request
+    const update = async (automation) => {
+      return request
         .put(`/api/automations`)
         .set(config.defaultHeaders())
         .send(automation)
         .expect('Content-Type', /json/)
         .expect(200)
+    }
 
-        expect(res.body.message).toEqual(`Automation ${automation._id} updated successfully.`)
-        expect(res.body.automation.name).toEqual("Updated Name")
-    })
-
-    it("should be able to update an automation trigger", async () => {
-      // create webhook automation
-      const webhookTrigger = automationTrigger(TRIGGER_DEFINITIONS.WEBHOOK)
-      let automation = newAutomation({ trigger: webhookTrigger })
-
-      let res = await request
+    const updateWithPost = async (automation) => {
+      return request
         .post(`/api/automations`)
         .set(config.defaultHeaders())
         .send(automation)
         .expect('Content-Type', /json/)
         .expect(200)
+    }
 
-      automation = res.body.automation
-      expect(automation._id).toBeDefined()
-      expect(automation._rev).toBeDefined()
+    it("updates a automations name", async () => {
+      let automation = newAutomation()
+      await config.createAutomation(automation)
+      automation.name = "Updated Name"
+      jest.clearAllMocks()
 
-      // change the trigger
-      automation.trigger = automationTrigger(TRIGGER_DEFINITIONS.ROW_SAVED)
-
-      // check the post request honours updates with same id
-      res = await request
-        .post(`/api/automations`)
-        .set(config.defaultHeaders())
-        .send(automation)
-        .expect('Content-Type', /json/)
-        .expect(200)
+      const res = await update(automation)
 
       const automationRes = res.body.automation
+      const message = res.body.message
+
+      // doc attributes
       expect(automationRes._id).toEqual(automation._id)
       expect(automationRes._rev).toBeDefined()
       expect(automationRes._rev).not.toEqual(automation._rev)
+      // content updates
+      expect(automationRes.name).toEqual("Updated Name")
+      expect(message).toEqual(`Automation ${automation._id} updated successfully.`)
+      // events
+      expect(events.automation.created).not.toBeCalled()
+      expect(events.automation.stepCreated).not.toBeCalled()
+      expect(events.automation.stepDeleted).not.toBeCalled()
+      expect(events.automation.triggerUpdated).not.toBeCalled()
+    })
+
+
+    it("updates a automations name using POST request", async () => {
+      let automation = newAutomation()
+      await config.createAutomation(automation)
+      automation.name = "Updated Name"
+      jest.clearAllMocks()
+
+      // the POST request will defer to the update
+      // when an id has been supplied.
+      const res = await updateWithPost(automation)
+
+      const automationRes = res.body.automation
+      const message = res.body.message
+      // doc attributes
+      expect(automationRes._id).toEqual(automation._id)
+      expect(automationRes._rev).toBeDefined()
+      expect(automationRes._rev).not.toEqual(automation._rev)
+      // content updates
+      expect(automationRes.name).toEqual("Updated Name")
+      expect(message).toEqual(`Automation ${automation._id} updated successfully.`)
+      // events
+      expect(events.automation.created).not.toBeCalled()
+      expect(events.automation.stepCreated).not.toBeCalled()
+      expect(events.automation.stepDeleted).not.toBeCalled()
+      expect(events.automation.triggerUpdated).not.toBeCalled()
+    })
+
+    it("updates an automation trigger", async () => {
+      let automation = newAutomation()
+      automation = await config.createAutomation(automation)
+      automation.definition.trigger = automationTrigger(TRIGGER_DEFINITIONS.WEBHOOK)
+      jest.clearAllMocks()
+
+      await update(automation)
+
+      // events
+      expect(events.automation.created).not.toBeCalled()
+      expect(events.automation.stepCreated).not.toBeCalled()
+      expect(events.automation.stepDeleted).not.toBeCalled()
+      expect(events.automation.triggerUpdated).toBeCalledTimes(1)
+    })
+
+    it("adds automation steps", async () => {
+      let automation = newAutomation()
+      automation = await config.createAutomation(automation)
+      automation.definition.steps.push(automationStep())
+      automation.definition.steps.push(automationStep())
+      jest.clearAllMocks()
+
+      // check the post request honours updates with same id
+      await update(automation)
+
+      // events
+      expect(events.automation.stepCreated).toBeCalledTimes(2)
+      expect(events.automation.created).not.toBeCalled()
+      expect(events.automation.stepDeleted).not.toBeCalled()
+      expect(events.automation.triggerUpdated).not.toBeCalled()
+    })
+
+
+    it("removes automation steps", async () => {
+      let automation = newAutomation()
+      automation.definition.steps.push(automationStep())
+      automation = await config.createAutomation(automation)
+      automation.definition.steps = []
+      jest.clearAllMocks()
+
+      // check the post request honours updates with same id
+      await update(automation)
+
+      // events
+      expect(events.automation.stepDeleted).toBeCalledTimes(2)
+      expect(events.automation.stepCreated).not.toBeCalled()
+      expect(events.automation.created).not.toBeCalled()
+      expect(events.automation.triggerUpdated).not.toBeCalled()
+    })
+
+    it("adds and removes automation steps", async () => {
+      let automation = newAutomation()
+      automation = await config.createAutomation(automation)
+      automation.definition.steps = [automationStep(), automationStep()]
+      jest.clearAllMocks()
+
+      // check the post request honours updates with same id
+      await update(automation)
+
+      // events
+      expect(events.automation.stepCreated).toBeCalledTimes(2)
+      expect(events.automation.stepDeleted).toBeCalledTimes(1)
+      expect(events.automation.created).not.toBeCalled()
+      expect(events.automation.triggerUpdated).not.toBeCalled()
     })
   })
 
@@ -216,7 +328,8 @@ describe("/automations", () => {
         .expect('Content-Type', /json/)
         .expect(200)
 
-        expect(res.body.id).toEqual(automation._id)
+      expect(res.body.id).toEqual(automation._id)
+      expect(events.automation.deleted).toBeCalledTimes(1)
     })
 
     it("should apply authorization to endpoint", async () => {

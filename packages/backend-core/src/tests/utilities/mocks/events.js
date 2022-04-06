@@ -26,6 +26,15 @@ jest.mock("../../../events", () => {
       SSOActivated: jest.fn(),
       SSODeactivated: jest.fn(),
     },
+    automation: {
+      created: jest.fn(),
+      deleted: jest.fn(),
+      tested: jest.fn(),
+      // run: jest.fn(),
+      stepCreated: jest.fn(),
+      stepDeleted: jest.fn(),
+      triggerUpdated: jest.fn(),
+    },
     datasource: {
       created: jest.fn(),
       updated: jest.fn(),

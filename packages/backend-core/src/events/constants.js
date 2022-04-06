@@ -125,9 +125,10 @@ exports.Events = {
   AUTOMATION_CREATED: "automation:created",
   AUTOMATION_DELETED: "automation:deleted",
   AUTOMATION_TESTED: "automation:tested",
-  AUTOMATION_RUN: "automation:run",
+  // AUTOMATION_RUN: "automation:run",
   AUTOMATION_STEP_CREATED: "automation:step:created",
   AUTOMATION_STEP_DELETED: "automation:step:deleted",
+  AUTOMATION_TRIGGER_UPDATED: "automation:trigger:updated",
 
   // LICENSING
   LICENSING_QUOTA_EXCEEDED: "licensing:quota:exceeded",
