@@ -22,7 +22,7 @@ export const Events = {
   },
   SCREEN: {
     CREATED: "Screen Created",
-    CREATE_ROLE_UPDATED: "Changed Role On Screen Creation"
+    CREATE_ROLE_UPDATED: "Changed Role On Screen Creation",
   },
   AUTOMATION: {
     CREATED: "Automation Created",
