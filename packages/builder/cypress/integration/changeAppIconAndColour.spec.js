@@ -6,10 +6,6 @@ filterTests(['all'], () => {
         cy.login()
       })
 
-      after(() => {
-        cy.deleteAllApps()
-      })
-      
       it("should change the icon and colour for an application", () => {
           // Search for test application
           cy.applicationInAppTable("Cypress Tests")

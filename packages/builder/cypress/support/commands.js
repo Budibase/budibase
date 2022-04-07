@@ -35,8 +35,16 @@ Cypress.Commands.add("login", () => {
 Cypress.Commands.add("createApp", name => {
   cy.visit(`${Cypress.config().baseUrl}/builder`)
   cy.wait(500)
-
   cy.get(`[data-cy="create-app-btn"]`).click({ force: true })
+
+  // If apps already exist
+  cy.request(`${Cypress.config().baseUrl}/api/applications?status=all`)
+    .its("body")
+    .then(val => {
+      if (val.length > 0) {
+        cy.get(`[data-cy="create-app-btn"]`).click({ force: true })
+      }
+    })
 
   cy.get(".spectrum-Modal").within(() => {
     cy.get("input").eq(0).type(name).should("have.value", name).blur()
@@ -53,22 +61,29 @@ Cypress.Commands.add("deleteApp", name => {
     .its("body")
     .then(val => {
       if (val.length > 0) {
-        const appId = val.reduce((acc, app) => {
-          if (name === app.name) {
-            acc = app.appId
+        if (Cypress.env("TEST_ENV")) {
+          cy.searchForApplication(name)
+          cy.get(".appTable").within(() => {
+            cy.get(".spectrum-Icon").eq(1).click()
+          })
+        } else {
+          const appId = val.reduce((acc, app) => {
+            if (name === app.name) {
+              acc = app.appId
+            }
+            return acc
+          }, "")
+
+          if (appId == "") {
+            return
           }
-          return acc
-        }, "")
 
-        if (appId == "") {
-          return
+          const appIdParsed = appId.split("_").pop()
+          const actionEleId = `[data-cy=row_actions_${appIdParsed}]`
+          cy.get(actionEleId).within(() => {
+            cy.get(".spectrum-Icon").eq(0).click()
+          })
         }
-
-        const appIdParsed = appId.split("_").pop()
-        const actionEleId = `[data-cy=row_actions_${appIdParsed}]`
-        cy.get(actionEleId).within(() => {
-          cy.get(".spectrum-Icon").eq(0).click()
-        })
 
         cy.get(".spectrum-Menu").then($menu => {
           if ($menu.text().includes("Unpublish")) {
@@ -327,16 +342,25 @@ Cypress.Commands.add("addCustomSourceOptions", totalOptions => {
 
 //Filters visible with 1 or more
 Cypress.Commands.add("searchForApplication", appName => {
-  cy.wait(1000)
-  // Searches for the app
-  cy.get(".filter").then(() => {
-    cy.get(".spectrum-Textfield").within(() => {
-      cy.get("input").eq(0).clear()
-      cy.get("input").eq(0).type(appName)
+  cy.visit(`${Cypress.config().baseUrl}/builder`)
+  cy.wait(2000)
+
+  // No app filter functionality if only 1 app exists
+  cy.request(`${Cypress.config().baseUrl}/api/applications?status=all`)
+    .its("body")
+    .then(val => {
+      if (val.length < 2) {
+        return
+      } else {
+        // Searches for the app
+        cy.get(".filter").then(() => {
+          cy.get(".spectrum-Textfield").within(() => {
+            cy.get("input").eq(0).clear()
+            cy.get("input").eq(0).type(appName)
+          })
+        })
+      }
     })
-  })
-  // Confirms app exists after search
-  cy.applicationInAppTable(appName)
 })
 
 //Assumes there are no others

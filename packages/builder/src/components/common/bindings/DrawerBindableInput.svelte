@@ -36,7 +36,7 @@
   }
 </script>
 
-<div class="control">
+<div class="control" class:disabled>
   <Input
     {label}
     {disabled}
@@ -102,5 +102,9 @@
     color: var(--spectrum-alias-text-color-hover);
     background-color: var(--spectrum-global-color-gray-50);
     border-color: var(--spectrum-alias-border-color-hover);
+  }
+
+  .control:not(.disabled) :global(.spectrum-Textfield-input) {
+    padding-right: 40px;
   }
 </style>
