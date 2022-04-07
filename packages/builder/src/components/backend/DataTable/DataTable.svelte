@@ -28,7 +28,7 @@
   $: id = $tables.selected?._id
   $: fetch = createFetch(id)
   $: hasCols = checkHasCols(schema)
-  $: hasRows = !!$fetch.data?.length
+  $: hasRows = !!$fetch.rows?.length
 
   const enrichSchema = schema => {
     let tempSchema = { ...schema }
@@ -124,14 +124,17 @@
   >
     <div class="buttons">
       <div class="left-buttons">
-        <CreateColumnButton highlighted on:updatecolumns={onUpdateColumns} />
+        <CreateColumnButton
+          highlighted={$fetch.loaded && (!hasCols || !hasRows)}
+          on:updatecolumns={onUpdateColumns}
+        />
         {#if !isUsersTable}
           <CreateRowButton
             on:updaterows={onUpdateRows}
             title={"Create row"}
             modalContentComponent={CreateEditRow}
             disabled={!hasCols}
-            highlighted={hasCols && !hasRows}
+            highlighted={$fetch.loaded && hasCols && !hasRows}
           />
         {/if}
         {#if isInternal}
@@ -169,11 +172,19 @@
     </div>
     <div slot="placeholder">
       <Layout gap="S">
-        <Heading>Let's create some columns!</Heading>
-        <Body>
-          Start building out your table structure<br />
-          by adding some columns
-        </Body>
+        {#if !hasCols}
+          <Heading>Let's create some columns</Heading>
+          <Body>
+            Start building out your table structure<br />
+            by adding some columns
+          </Body>
+        {:else}
+          <Heading>Now let's add a row</Heading>
+          <Body>
+            Add some data to your table<br />
+            by adding some rows
+          </Body>
+        {/if}
       </Layout>
     </div>
   </Table>
