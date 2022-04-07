@@ -28,7 +28,7 @@ let inThread = false
 
 module.exports = {
   // important
-  PORT: process.env.PORT,
+  PORT: process.env.PORT || process.env.APP_PORT,
   JWT_SECRET: process.env.JWT_SECRET,
   COUCH_DB_URL: process.env.COUCH_DB_URL,
   MINIO_URL: process.env.MINIO_URL,

@@ -7,10 +7,6 @@ filterTests(["smoke", "all"], () => {
       cy.createTestApp()
     })
 
-    after(() => {
-      cy.deleteAllApps()
-    })
-
     it("should create a new Table", () => {
       cy.createTable("dog")
       cy.wait(1000)

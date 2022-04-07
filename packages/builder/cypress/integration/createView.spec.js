@@ -4,7 +4,6 @@ filterTests(['smoke', 'all'], () => {
   context("Create a View", () => {
     before(() => {
       cy.login()
-      cy.deleteAllApps()
 
       cy.createTestApp()
       cy.createTable("data")
