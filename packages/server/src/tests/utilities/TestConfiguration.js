@@ -80,7 +80,7 @@ class TestConfiguration {
       return request.body
     }
     // check if already in a context
-    if (context.getAppId() == null) {
+    if (context.getAppId() == null && this.appId !== null) {
       return context.doInAppContext(this.appId, async () => {
         return run()
       })
