@@ -14,7 +14,7 @@
   import Table from "./Table.svelte"
   import { TableNames } from "constants"
   import CreateEditRow from "./modals/CreateEditRow.svelte"
-  import { Pagination } from "@budibase/bbui"
+  import { Pagination, Heading, Body, Layout } from "@budibase/bbui"
   import { fetchData } from "@budibase/frontend-core"
   import { API } from "api"
 
@@ -27,6 +27,8 @@
   $: enrichedSchema = enrichSchema($tables.selected?.schema)
   $: id = $tables.selected?._id
   $: fetch = createFetch(id)
+  $: hasCols = checkHasCols(schema)
+  $: hasRows = !!$fetch.data?.length
 
   const enrichSchema = schema => {
     let tempSchema = { ...schema }
@@ -47,6 +49,20 @@
 
     return tempSchema
   }
+
+  const checkHasCols = schema => {
+    if (!schema || Object.keys(schema).length === 0) {
+      return false
+    }
+    let fields = Object.values(schema)
+    for (let field of fields) {
+      if (!field.autocolumn) {
+        return true
+      }
+    }
+    return false
+  }
+
   // Fetches new data whenever the table changes
   const createFetch = tableId => {
     return fetchData({
@@ -104,19 +120,27 @@
     disableSorting
     on:updatecolumns={onUpdateColumns}
     on:updaterows={onUpdateRows}
+    customPlaceholder
   >
-    <CreateColumnButton on:updatecolumns={onUpdateColumns} />
-    {#if schema && Object.keys(schema).length > 0}
-      {#if !isUsersTable}
-        <CreateRowButton
-          on:updaterows={onUpdateRows}
-          title={"Create row"}
-          modalContentComponent={CreateEditRow}
-        />
-      {/if}
-      {#if isInternal}
-        <CreateViewButton />
-      {/if}
+    <div class="buttons">
+      <div class="left-buttons">
+        <CreateColumnButton highlighted on:updatecolumns={onUpdateColumns} />
+        {#if !isUsersTable}
+          <CreateRowButton
+            on:updaterows={onUpdateRows}
+            title={"Create row"}
+            modalContentComponent={CreateEditRow}
+            disabled={!hasCols}
+            highlighted={hasCols && !hasRows}
+          />
+        {/if}
+        {#if isInternal}
+          <CreateViewButton disabled={!hasCols || !hasRows} />
+        {/if}
+      </div>
+      <div class="right-buttons" />
+    </div>
+    {#if hasCols}
       <ManageAccessButton resourceId={$tables.selected?._id} />
       {#if isUsersTable}
         <EditRolesButton />
@@ -138,6 +162,15 @@
         <TableFilterButton {schema} on:change={onFilter} />
       {/key}
     {/if}
+    <div slot="placeholder">
+      <Layout gap="S">
+        <Heading>Let's create some columns!</Heading>
+        <Body>
+          Start building out your table structure<br />
+          by adding some columns
+        </Body>
+      </Layout>
+    </div>
   </Table>
   {#key id}
     <div in:fade={{ delay: 200, duration: 100 }}>

@@ -36,6 +36,7 @@
   export let disableSorting = false
   export let autoSortColumns = true
   export let compact = false
+  export let customPlaceholder = false
 
   const dispatch = createEventDispatcher()
 
@@ -387,13 +388,24 @@
           </div>
         {/each}
       {:else}
-        <div class="placeholder" class:placeholder--no-fields={!fields?.length}>
-          <div class="placeholder-content">
-            <svg class="spectrum-Icon spectrum-Icon--sizeXXL" focusable="false">
-              <use xlink:href="#spectrum-icon-18-Table" />
-            </svg>
-            <div>No rows found</div>
-          </div>
+        <div
+          class="placeholder"
+          class:placeholder--custom={customPlaceholder}
+          class:placeholder--no-fields={!fields?.length}
+        >
+          {#if customPlaceholder}
+            <slot name="placeholder" />
+          {:else}
+            <div class="placeholder-content">
+              <svg
+                class="spectrum-Icon spectrum-Icon--sizeXXL"
+                focusable="false"
+              >
+                <use xlink:href="#spectrum-icon-18-Table" />
+              </svg>
+              <div>No rows found</div>
+            </div>
+          {/if}
         </div>
       {/if}
     </div>
@@ -576,16 +588,19 @@
     border-top: none;
     grid-column: 1 / -1;
     background-color: var(--table-bg);
+    padding: 60px 40px;
   }
   .placeholder--no-fields {
     border-top: var(--table-border);
+  }
+  .placeholder--custom {
+    justify-content: flex-start;
   }
   .wrapper--quiet .placeholder {
     border-left: none;
     border-right: none;
   }
   .placeholder-content {
-    padding: 40px;
     display: flex;
     flex-direction: column;
     justify-content: center;
