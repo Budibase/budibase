@@ -282,7 +282,7 @@ Cypress.Commands.add("createScreen", (screenName, route, accessLevelLabel) => {
   cy.get(".spectrum-Dialog-grid").within(() => {
     cy.get(".spectrum-Form-itemField").eq(0).type(route)
 
-    if(accessLevelLabel){
+    if (accessLevelLabel) {
       cy.get(".spectrum-Picker-label").click()
       cy.wait(500)
       cy.contains(accessLevelLabel).click()
