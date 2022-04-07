@@ -150,14 +150,20 @@
           />
         {/if}
         <HideAutocolumnButton bind:hideAutocolumns />
-        <!-- always have the export last -->
-        <ExportButton view={$tables.selected?._id} />
         <ImportButton
           tableId={$tables.selected?._id}
           on:updaterows={onUpdateRows}
         />
+        <ExportButton
+          disabled={!hasRows || !hasCols}
+          view={$tables.selected?._id}
+        />
         {#key id}
-          <TableFilterButton {schema} on:change={onFilter} />
+          <TableFilterButton
+            {schema}
+            on:change={onFilter}
+            disabled={!hasCols || !hasRows}
+          />
         {/key}
       </div>
     </div>
