@@ -25,6 +25,7 @@
   export let rowCount
   export let type
   export let disableSorting = false
+  export let customPlaceholder = false
 
   let selectedRows = []
   let editableColumn
@@ -144,6 +145,7 @@
         {customRenderers}
         {rowCount}
         {disableSorting}
+        {customPlaceholder}
         bind:selectedRows
         allowSelectRows={allowEditing && !isUsersTable}
         allowEditRows={allowEditing}
@@ -153,7 +155,9 @@
         on:editrow={e => editRow(e.detail)}
         on:clickrelationship={e => selectRelationship(e.detail)}
         on:sort
-      />
+      >
+        <slot slot="placeholder" name="placeholder" />
+      </Table>
     </div>
   {/key}
 </Layout>
