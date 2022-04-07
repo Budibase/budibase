@@ -138,30 +138,29 @@
           <CreateViewButton disabled={!hasCols || !hasRows} />
         {/if}
       </div>
-      <div class="right-buttons" />
-    </div>
-    {#if hasCols}
-      <ManageAccessButton resourceId={$tables.selected?._id} />
-      {#if isUsersTable}
-        <EditRolesButton />
-      {/if}
-      {#if !isInternal}
-        <ExistingRelationshipButton
-          table={$tables.selected}
-          on:updatecolumns={onUpdateColumns}
+      <div class="right-buttons">
+        <ManageAccessButton resourceId={$tables.selected?._id} />
+        {#if isUsersTable}
+          <EditRolesButton />
+        {/if}
+        {#if !isInternal}
+          <ExistingRelationshipButton
+            table={$tables.selected}
+            on:updatecolumns={onUpdateColumns}
+          />
+        {/if}
+        <HideAutocolumnButton bind:hideAutocolumns />
+        <!-- always have the export last -->
+        <ExportButton view={$tables.selected?._id} />
+        <ImportButton
+          tableId={$tables.selected?._id}
+          on:updaterows={onUpdateRows}
         />
-      {/if}
-      <HideAutocolumnButton bind:hideAutocolumns />
-      <!-- always have the export last -->
-      <ExportButton view={$tables.selected?._id} />
-      <ImportButton
-        tableId={$tables.selected?._id}
-        on:updaterows={onUpdateRows}
-      />
-      {#key id}
-        <TableFilterButton {schema} on:change={onFilter} />
-      {/key}
-    {/if}
+        {#key id}
+          <TableFilterButton {schema} on:change={onFilter} />
+        {/key}
+      </div>
+    </div>
     <div slot="placeholder">
       <Layout gap="S">
         <Heading>Let's create some columns!</Heading>
@@ -194,5 +193,12 @@
     justify-content: flex-end;
     align-items: center;
     margin-top: var(--spacing-xl);
+  }
+  .buttons {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
   }
 </style>
