@@ -588,7 +588,7 @@
     border-top: none;
     grid-column: 1 / -1;
     background-color: var(--table-bg);
-    padding: 60px 40px;
+    padding: 40px;
   }
   .placeholder--no-fields {
     border-top: var(--table-border);
