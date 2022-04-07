@@ -104,7 +104,10 @@
       )
       bindings = bindings.concat(
         outputs.map(([name, value]) => {
-          const runtime = idx === 0 ? `trigger.${name}` : `steps.${idx}.${name}`
+          const stepsLabel = block.name.toLowerCase().includes("bash")
+            ? `steps.${idx}.${name}`
+            : `steps[${idx - 1}].${name}`
+          const runtime = idx === 0 ? `trigger.${name}` : stepsLabel
           return {
             label: runtime,
             type: value.type,
