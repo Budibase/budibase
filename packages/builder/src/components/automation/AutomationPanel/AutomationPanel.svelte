@@ -10,12 +10,10 @@
 <div class="title">
   <Tabs selected="Automations">
     <Tab title="Automations">
-      <div class="tab-content-padding">
-        <AutomationList />
-        <Modal bind:this={modal}>
-          <CreateAutomationModal {webhookModal} />
-        </Modal>
-      </div>
+      <AutomationList />
+      <Modal bind:this={modal}>
+        <CreateAutomationModal {webhookModal} />
+      </Modal>
     </Tab>
   </Tabs>
   <div class="add-button" data-cy="new-screen">
@@ -24,9 +22,6 @@
 </div>
 
 <style>
-  .tab-content-padding {
-    padding: 0 var(--spacing-xl);
-  }
   .add-button {
     position: absolute;
     top: var(--spacing-l);

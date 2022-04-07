@@ -23,10 +23,8 @@
   <div class="nav">
     <Tabs {selected} on:select={selectFirstDatasource}>
       <Tab title="Sources">
-        <div class="tab-content-padding">
-          <DatasourceNavigator />
-          <CreateDatasourceModal bind:modal />
-        </div>
+        <DatasourceNavigator />
+        <CreateDatasourceModal bind:modal />
       </Tab>
     </Tabs>
     <div
@@ -61,10 +59,6 @@
   }
   .content :global(> span) {
     display: contents;
-  }
-
-  .tab-content-padding {
-    padding: 0 var(--spacing-xl);
   }
 
   .nav {

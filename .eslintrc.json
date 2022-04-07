@@ -24,9 +24,28 @@
     {
       "files": ["*.svelte"],
       "processor": "svelte3/svelte3"
+    },
+    {
+      "files": ["**/*.ts"],
+      "parser": "@typescript-eslint/parser",
+      "plugins": [],
+      "extends": [
+        "eslint:recommended"
+      ],
+      "rules": {
+        "no-unused-vars": "off",
+        "no-inner-declarations": "off",
+        "no-case-declarations": "off",
+        "no-useless-escape": "off",
+        "no-undef": "off",
+        "no-prototype-builtins": "off"
+      }
     }
   ],
   "rules": {
     "no-self-assign": "off"
+  },
+  "globals": {
+    "GeolocationPositionError": true
   }
 }

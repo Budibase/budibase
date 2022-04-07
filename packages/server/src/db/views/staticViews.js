@@ -33,6 +33,7 @@ exports.createLinkView = async () => {
       if (doc.type === "link") {
         let doc1 = doc.doc1
         let doc2 = doc.doc2
+        // eslint-disable-next-line no-undef
         emit([doc1.tableId, doc1.rowId], {
           id: doc2.rowId,
           thisId: doc1.rowId,
@@ -40,6 +41,7 @@ exports.createLinkView = async () => {
         })
         // if linking to same table can't emit twice
         if (doc1.tableId !== doc2.tableId) {
+          // eslint-disable-next-line no-undef
           emit([doc2.tableId, doc2.rowId], {
             id: doc1.rowId,
             thisId: doc2.rowId,
