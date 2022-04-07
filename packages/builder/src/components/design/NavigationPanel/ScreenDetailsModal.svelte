@@ -4,6 +4,7 @@
   import { selectedAccessRole, allScreens } from "builderStore"
   import { get } from "svelte/store"
   import { roles } from "stores/backend"
+  import analytics, { Events } from "analytics"
 
   export let onConfirm
   export let onCancel
@@ -53,7 +54,6 @@
   cancelText={"Back"}
   disabled={!screenAccessRole || !screenUrl || routeError || !touched}
 >
-  <!-- <Input label="Name" bind:value={screenName} /> -->
   <Input
     label="URL"
     error={routeError}
@@ -62,6 +62,11 @@
   />
   <Select
     bind:value={screenAccessRole}
+    on:change={() => {
+      analytics.captureEvent(Events.SCREEN.CREATE_ROLE_UPDATED, {
+        screenAccessRole,
+      })
+    }}
     label="Screen access"
     getOptionLabel={role => role.name}
     getOptionValue={role => role._id}
@@ -69,6 +74,3 @@
     options={$roles}
   />
 </ModalContent>
-
-<style>
-</style>

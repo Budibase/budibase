@@ -1,10 +1,11 @@
 <script>
   import { store, selectedAccessRole } from "builderStore"
-  import { ModalContent, Layout, Select } from "@budibase/bbui"
+  import { ModalContent, Layout, Select, Divider } from "@budibase/bbui"
   import { tables, datasources, roles } from "stores/backend"
   import getTemplates from "builderStore/store/screenTemplates"
   import ICONS from "../../backend/DatasourceNavigator/icons"
   import { IntegrationNames } from "constants"
+  import analytics, { Events } from "analytics"
 
   export let onCancel
   export let onConfirm
@@ -12,14 +13,21 @@
   let selectedScreens = []
   let screenAccessRole = $selectedAccessRole + ""
 
-  const toggleScreenSelection = table => {
+  const toggleScreenSelection = (table, datasource) => {
     if (selectedScreens.find(s => s.table === table.name)) {
       selectedScreens = selectedScreens.filter(
         screen => screen.table !== table.name
       )
     } else {
-      let partialTemplates = getTemplates($store, $tables.list).filter(
-        template => template.table === table.name
+      let partialTemplates = getTemplates($store, $tables.list).reduce(
+        (acc, template) => {
+          if (template.table === table.name) {
+            template.datasource = datasource.name
+            acc.push(template)
+          }
+          return acc
+        },
+        []
       )
       selectedScreens = [...partialTemplates, ...selectedScreens]
     }
@@ -33,15 +41,11 @@
   }
 
   $: filteredSources = $datasources.list.reduce((acc, datasource) => {
-    acc["restSources"] = !acc["restSources"] ? [] : acc["restSources"]
-    acc["otherSources"] = !acc["otherSources"] ? [] : acc["otherSources"]
-    if (datasource.source === IntegrationNames.REST) {
-      acc["restSources"].push(datasource)
-    } else {
-      acc["otherSources"].push(datasource)
+    if (datasource.source !== IntegrationNames.REST && datasource["entities"]) {
+      acc.push(datasource)
     }
     return acc
-  }, {})
+  }, [])
 </script>
 
 <ModalContent
@@ -54,7 +58,7 @@
   size="L"
 >
   <Layout noPadding gap="XS">
-    {#each filteredSources.otherSources as datasource}
+    {#each filteredSources as datasource}
       <div class="data-source-header">
         <div class="datasource-icon">
           <svelte:component
@@ -72,7 +76,7 @@
           <div
             class="data-source-entry"
             class:selected={selectedScreens.find(x => x.table === table.name)}
-            on:click={() => toggleScreenSelection(table)}
+            on:click={() => toggleScreenSelection(table, datasource)}
           >
             <svg
               width="16px"
@@ -95,7 +99,7 @@
               x => x.table === datasource.entities[table_key].name
             )}
             on:click={() =>
-              toggleScreenSelection(datasource.entities[table_key])}
+              toggleScreenSelection(datasource.entities[table_key], datasource)}
           >
             <svg
               width="16px"
@@ -111,8 +115,16 @@
         {/each}
       {/if}
     {/each}
+    <div>
+      <Divider size="S" />
+    </div>
     <Select
       bind:value={screenAccessRole}
+      on:change={() => {
+        analytics.captureEvent(Events.SCREEN.CREATE_ROLE_UPDATED, {
+          screenAccessRole,
+        })
+      }}
       label="Screen access"
       getOptionLabel={role => role.name}
       getOptionValue={role => role._id}
