@@ -11,7 +11,6 @@
   import { tables } from "stores/backend"
 
   let pendingScreen
-  let showProgressCircle = false
 
   // Modal refs
   let newScreenModal
@@ -24,7 +23,6 @@
 
     // Reset state when showing modal again
     pendingScreen = null
-    showProgressCircle = false
   }
 
   // Creates an array of screens, checking and sanitising their URLs
@@ -32,7 +30,6 @@
     if (!screens?.length) {
       return
     }
-    showProgressCircle = true
 
     try {
       for (let screen of screens) {
@@ -61,6 +58,8 @@
         if (screen.template) {
           analytics.captureEvent(Events.SCREEN.CREATED, {
             template: screen.template,
+            datasource: screen.datasource,
+            screenAccessRole,
           })
         }
 
@@ -75,8 +74,6 @@
     } catch (error) {
       notifications.error("Error creating screens")
     }
-
-    showProgressCircle = false
   }
 
   // Checks if any screens exist in the store with the given route and
@@ -119,12 +116,14 @@
 
   // Handler for DatasourceModal
   const confirmScreenDatasources = async ({ templates, screenAccessRole }) => {
-    console.log("selected ", screenAccessRole)
-    console.log("global ", $selectedAccessRole)
     // // Handle template selection
     if (templates?.length > 1) {
       // Autoscreens, so create immediately
-      const screens = templates.map(template => template.create())
+      const screens = templates.map(template => {
+        let screenTemplate = template.create()
+        screenTemplate.datasource = template.datasource
+        return screenTemplate
+      })
       await createScreens({ screens, screenAccessRole })
     }
   }
