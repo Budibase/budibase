@@ -3,13 +3,14 @@ export default function (url) {
     .split("/")
     .map(part => {
       part = decodeURIComponent(part)
+      part = part.replace(/ /g, "-")
 
       // If parameter, then use as is
       if (!part.startsWith(":")) {
         part = encodeURIComponent(part)
       }
 
-      return part.replace(/ /g, "-")
+      return part
     })
     .join("/")
     .toLowerCase()
