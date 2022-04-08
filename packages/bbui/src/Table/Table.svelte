@@ -470,6 +470,13 @@
     justify-content: flex-start;
     align-items: center;
     user-select: none;
+    border-top: var(--table-border);
+  }
+  .spectrum-Table-headCell:first-of-type {
+    border-left: var(--table-border);
+  }
+  .spectrum-Table-headCell:last-of-type {
+    border-right: var(--table-border);
   }
   .spectrum-Table-headCell--alignCenter {
     justify-content: center;

@@ -118,10 +118,10 @@
 </script>
 
 <Layout noPadding gap="S">
-  <div>
+  <Layout noPadding gap="XS">
     {#if title}
       <div class="table-title">
-        <Heading size="S">{title}</Heading>
+        <Heading size="M">{title}</Heading>
         {#if loading}
           <div transition:fade|local>
             <Spinner size="10" />
@@ -135,7 +135,7 @@
         <DeleteRowsButton on:updaterows {selectedRows} {deleteRows} />
       {/if}
     </div>
-  </div>
+  </Layout>
   {#key tableId}
     <div class="table-wrapper">
       <Table
@@ -180,6 +180,7 @@
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
+    margin-top: var(--spacing-m);
   }
   .table-title > div {
     margin-left: var(--spacing-xs);
