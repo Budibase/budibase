@@ -6,8 +6,7 @@
 
   export let title
   export let fillWidth
-
-  let visible = false
+  export let visible = false
 
   export function show() {
     if (visible) {
