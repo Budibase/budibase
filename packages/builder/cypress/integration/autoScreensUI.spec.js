@@ -80,6 +80,11 @@ filterTests(['smoke', 'all'], () => {
         cy.get(".nav-item").contains("/table-four").click()
         cy.get(".nav-item").should('contain', 'table-four/:id')
           .and('contain', 'table-four/new/row')
+
+        //The access level should now be set to admin. Previous screens should be filtered.
+        cy.get(".nav-item").contains("/table-two").should('not.exist')
+        cy.get(".nav-item").contains("/cypress-tests").should('not.exist')
+        
       })
     })
 
