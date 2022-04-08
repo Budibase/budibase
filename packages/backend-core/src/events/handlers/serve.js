@@ -1,14 +1,19 @@
 const events = require("../events")
 const { Events } = require("../constants")
 
-// TODO
-exports.builderServed = () => {
+/* eslint-disable */
+
+exports.servedBuilder = version => {
   const properties = {}
-  events.processEvent(Events.BUILDER_SERVED, properties)
+  events.processEvent(Events.SERVED_BUILDER, properties)
 }
 
-// TODO
-exports.clientServed = () => {
+exports.servedApp = appMetadata => {
   const properties = {}
-  events.processEvent(Events.CLIENT_SERVED, properties)
+  events.processEvent(Events.SERVED_APP, properties)
+}
+
+exports.servedAppPreview = appMetadata => {
+  const properties = {}
+  events.processEvent(Events.SERVED_APP_PREVIEW, properties)
 }

@@ -1,7 +1,10 @@
 function isTest() {
+  return isCypress() || isJest()
+}
+
+function isJest() {
   return (
     process.env.NODE_ENV === "jest" ||
-    process.env.NODE_ENV === "cypress" ||
     (process.env.JEST_WORKER_ID != null &&
       process.env.JEST_WORKER_ID !== "null")
   )
@@ -73,6 +76,7 @@ module.exports = {
     module.exports[key] = value
   },
   isTest,
+  isJest,
   isCypress,
   isDev,
   isProd: () => {
