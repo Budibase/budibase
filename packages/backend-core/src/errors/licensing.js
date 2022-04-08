@@ -1,8 +1,6 @@
-const { BudibaseError } = require("./base")
+const { HTTPError } = require("./http")
 
-const types = {
-  LICENSE_ERROR: "license_error",
-}
+const type = "license_error"
 
 const codes = {
   USAGE_LIMIT_EXCEEDED: "usage_limit_exceeded",
@@ -16,16 +14,15 @@ const context = {
   },
 }
 
-class UsageLimitError extends BudibaseError {
+class UsageLimitError extends HTTPError {
   constructor(message, limitName) {
-    super(message, types.LICENSE_ERROR, codes.USAGE_LIMIT_EXCEEDED)
+    super(message, 400, codes.USAGE_LIMIT_EXCEEDED, type)
     this.limitName = limitName
-    this.status = 400
   }
 }
 
 module.exports = {
-  types,
+  type,
   codes,
   context,
   UsageLimitError,

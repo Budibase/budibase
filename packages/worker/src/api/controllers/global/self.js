@@ -13,7 +13,7 @@ const {
 } = require("@budibase/backend-core/utils")
 const { encrypt } = require("@budibase/backend-core/encryption")
 const { newid } = require("@budibase/backend-core/utils")
-const { getUser } = require("../../utilities")
+const { users } = require("../../../sdk")
 const { Cookies } = require("@budibase/backend-core/constants")
 
 function newApiKey() {
@@ -103,7 +103,7 @@ exports.getSelf = async ctx => {
   checkCurrentApp(ctx)
 
   // get the main body of the user
-  ctx.body = await getUser(userId)
+  ctx.body = await users.getUser(userId)
   addSessionAttributesToUser(ctx)
 }
 

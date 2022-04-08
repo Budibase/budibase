@@ -4,7 +4,7 @@ const analytics = require("../analytics")
 const logEvent = messsage => {
   const tenantId = getTenantId()
   const userId = getTenantId() // TODO
-  console.log(`[tenant=${tenantId}] [user=${userId}] ${messsage}`)
+  console.log(`[audit] [tenant=${tenantId}] [user=${userId}] ${messsage}`)
 }
 
 exports.processEvent = (event, properties) => {

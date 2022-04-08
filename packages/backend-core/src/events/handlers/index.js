@@ -8,6 +8,7 @@ const license = require("./license")
 const layout = require("./layout")
 const org = require("./org")
 const query = require("./query")
+const role = require("./role")
 const row = require("./screen")
 const table = require("./table")
 const serve = require("./serve")
@@ -25,6 +26,7 @@ module.exports = {
   layout,
   org,
   query,
+  role,
   row,
   table,
   serve,

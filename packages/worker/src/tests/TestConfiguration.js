@@ -6,7 +6,7 @@ const supertest = require("supertest")
 const { jwt } = require("@budibase/backend-core/auth")
 const { Cookies, Headers } = require("@budibase/backend-core/constants")
 const { Configs } = require("../constants")
-const { getGlobalUserByEmail } = require("@budibase/backend-core/utils")
+const { users } = require("@budibase/backend-core")
 const { createASession } = require("@budibase/backend-core/sessions")
 const { TENANT_ID, CSRF_TOKEN } = require("./structures")
 const structures = require("./structures")
@@ -112,20 +112,17 @@ class TestConfiguration {
 
   async getUser(email) {
     return doInTenant(TENANT_ID, () => {
-      return getGlobalUserByEmail(email)
+      return users.getGlobalUserByEmail(email)
     })
   }
 
-  async createUser(email = "test@test.com", password = "test") {
-    const user = await this.getUser(email)
+  async createUser(email, password) {
+    const user = await this.getUser(structures.users.email)
     if (user) {
       return user
     }
     await this._req(
-      {
-        email,
-        password,
-      },
+      structures.users.user({ email, password }),
       null,
       controllers.users.save
     )
@@ -133,11 +130,7 @@ class TestConfiguration {
 
   async saveAdminUser() {
     await this._req(
-      {
-        email: "testuser@test.com",
-        password: "test@test.com",
-        tenantId: TENANT_ID,
-      },
+      structures.users.user({ tenantId: TENANT_ID }),
       null,
       controllers.users.adminUser
     )

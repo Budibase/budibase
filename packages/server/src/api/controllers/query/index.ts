@@ -216,9 +216,12 @@ const removeDynamicVariables = async (queryId: any) => {
 
 export async function destroy(ctx: any) {
   const db = getAppDB()
-  await removeDynamicVariables(ctx.params.queryId)
+  const queryId = ctx.params.queryId
+  await removeDynamicVariables(queryId)
+  const query = await db.get(queryId)
+  const datasource = await db.get(query.datasourceId)
   await db.remove(ctx.params.queryId, ctx.params.revId)
   ctx.message = `Query deleted.`
   ctx.status = 200
-  events.query.deleted()
+  events.query.deleted(datasource, query)
 }
