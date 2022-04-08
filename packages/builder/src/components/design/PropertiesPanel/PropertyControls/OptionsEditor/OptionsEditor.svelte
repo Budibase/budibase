@@ -31,9 +31,7 @@
   $: {
     if (
       !drawerVisible ||
-      tempValue.some(
-        option => option.label?.length > 0 && option.value?.length > 0
-      )
+      tempValue.some(option => option.label && option.value)
     ) {
       valid = true
     }
