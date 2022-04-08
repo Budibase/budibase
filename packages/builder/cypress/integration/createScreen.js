@@ -1,18 +1,6 @@
 import filterTests from "../support/filterTests"
 
 filterTests(["smoke", "all"], () => {
-  /*
-    Blank screen
-    URL
-    Screen access
-    Screen access confirmation.
-
-    CRUD Tests
-    list the sources
-    check for exluded contents
-      rest, user table etc
-  */
-
   context("Screen Tests", () => {
     before(() => {
       cy.login()
@@ -34,10 +22,17 @@ filterTests(["smoke", "all"], () => {
       })
     })
 
-    it("Should update create the screen with the selected", () => {
-      cy.createScreen("Test Screen", "admin only", "Admin")
+    it("Should create a blank screen with the selected access level", () => {
+      cy.createScreen("Test Screen Admin", "admin only", "Admin")
+
       cy.get(".nav-items-container").within(() => {
         cy.contains("/admin-only").should("exist")
+      })
+
+      cy.createScreen("Test Screen Public", "open to all", "Public")
+
+      cy.get(".nav-items-container").within(() => {
+        cy.contains("/open-to-all").should("exist")
       })
     })
   })
