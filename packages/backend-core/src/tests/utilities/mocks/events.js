@@ -90,7 +90,11 @@ jest.mock("../../../events", () => {
       passwordResetRequested: jest.fn(),
       passwordReset: jest.fn(),
     },
-    serve: {},
+    serve: {
+      servedBuilder: jest.fn(),
+      servedApp: jest.fn(),
+      servedAppPreview: jest.fn(),
+    },
     table: {},
     view: {},
   }

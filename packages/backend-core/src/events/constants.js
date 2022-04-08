@@ -64,8 +64,10 @@ exports.Events = {
   ROLE_ASSIGNED: "role:assigned",
   ROLE_UNASSIGNED: "role:unassigned",
 
-  // APP / CLIENT
-  CLIENT_SERVED: "client:served",
+  // SERVE
+  SERVED_BUILDER: "served:builder",
+  SERVED_APP: "served:app",
+  SERVED_APP_PREVIEW: "served:app:preview",
 
   // DATASOURCE
   DATASOURCE_CREATED: "datasource:created",
@@ -101,9 +103,6 @@ exports.Events = {
 
   // ROW
   // ROW_CREATED: "row:created",
-
-  // BUILDER
-  BUILDER_SERVED: "builder:served",
 
   // COMPONENT
   COMPONENT_CREATED: "component:created",
