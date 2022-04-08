@@ -1,11 +1,18 @@
 <script>
   import { store, selectedAccessRole } from "builderStore"
-  import { ModalContent, Layout, Select, Divider } from "@budibase/bbui"
+  import {
+    ModalContent,
+    Layout,
+    Select,
+    Divider,
+    notifications,
+  } from "@budibase/bbui"
   import { tables, datasources, roles } from "stores/backend"
   import getTemplates from "builderStore/store/screenTemplates"
   import ICONS from "../../backend/DatasourceNavigator/icons"
   import { IntegrationNames } from "constants"
   import analytics, { Events } from "analytics"
+  import { onMount } from "svelte"
 
   export let onCancel
   export let onConfirm
@@ -40,12 +47,25 @@
     })
   }
 
-  $: filteredSources = $datasources.list.reduce((acc, datasource) => {
-    if (datasource.source !== IntegrationNames.REST && datasource["entities"]) {
-      acc.push(datasource)
+  $: filteredSources = Array.isArray($datasources.list)
+    ? $datasources.list.reduce((acc, datasource) => {
+        if (
+          datasource.source !== IntegrationNames.REST &&
+          datasource["entities"]
+        ) {
+          acc.push(datasource)
+        }
+        return acc
+      }, [])
+    : []
+
+  onMount(async () => {
+    try {
+      await datasources.fetch()
+    } catch (error) {
+      notifications.error("Error fetching datasources")
     }
-    return acc
-  }, [])
+  })
 </script>
 
 <ModalContent
