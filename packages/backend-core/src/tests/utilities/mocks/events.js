@@ -69,6 +69,11 @@ jest.mock("../../../events", () => {
       assigned: jest.fn(),
       unassigned: jest.fn(),
     },
+    row: {},
+    screen: {
+      created: jest.fn(),
+      deleted: jest.fn(),
+    },
     user: {
       created: jest.fn(),
       updated: jest.fn(),
@@ -85,6 +90,9 @@ jest.mock("../../../events", () => {
       passwordResetRequested: jest.fn(),
       passwordReset: jest.fn(),
     },
+    serve: {},
+    table: {},
+    view: {},
   }
 })
 
