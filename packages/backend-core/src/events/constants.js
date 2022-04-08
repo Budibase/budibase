@@ -59,8 +59,10 @@ exports.Events = {
 
   // ROLE
   ROLE_CREATED: "role:created",
+  ROLE_UPDATED: "role:updated",
   ROLE_DELETED: "role:deleted",
   ROLE_ASSIGNED: "role:assigned",
+  ROLE_UNASSIGNED: "role:unassigned",
 
   // APP / CLIENT
   CLIENT_SERVED: "client:served",

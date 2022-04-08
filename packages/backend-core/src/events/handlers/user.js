@@ -1,85 +1,87 @@
 const events = require("../events")
 const { Events } = require("../constants")
 
-// TODO
-exports.created = () => {
+/* eslint-disable */
+
+exports.created = user => {
   const properties = {}
   events.processEvent(Events.USER_CREATED, properties)
 }
 
-// TODO
-exports.updated = () => {
+exports.updated = user => {
   const properties = {}
   events.processEvent(Events.USER_UPDATED, properties)
 }
 
-exports.deleted = () => {
+exports.deleted = user => {
   const properties = {}
   events.processEvent(Events.USER_DELETED, properties)
 }
 
 // TODO
-exports.passwordForceReset = () => {
+exports.passwordForceReset = user => {
   const properties = {}
   events.processEvent(Events.USER_PASSWORD_FORCE_RESET, properties)
 }
 
 // PERMISSIONS
 
-// TODO
-exports.permissionAdminAssigned = () => {
+exports.permissionAdminAssigned = user => {
   const properties = {}
   events.processEvent(Events.USER_PERMISSION_ADMIN_ASSIGNED, properties)
 }
 
-// TODO
-exports.permissionAdminRemoved = () => {
+exports.permissionAdminRemoved = user => {
   const properties = {}
   events.processEvent(Events.USER_PERMISSION_ADMIN_REMOVED, properties)
 }
 
-// TODO
-exports.permissionBuilderAssigned = () => {
+exports.permissionBuilderAssigned = user => {
   const properties = {}
   events.processEvent(Events.USER_PERMISSION_BUILDER_ASSIGNED, properties)
 }
 
-// TODO
-exports.permissionBuilderRemoved = () => {
+exports.permissionBuilderRemoved = user => {
   const properties = {}
   events.processEvent(Events.USER_PERMISSION_BUILDER_REMOVED, properties)
 }
 
 // INVITE
 
-exports.invited = () => {
+// TODO
+exports.invited = user => {
   const properties = {}
   events.processEvent(Events.USER_INVITED, properties)
 }
 
-exports.inviteAccepted = () => {
+// TODO
+exports.inviteAccepted = user => {
   const properties = {}
   events.processEvent(Events.USER_INVITED_ACCEPTED, properties)
 }
 
 // SELF
 
-exports.selfUpdated = () => {
+// TODO
+exports.selfUpdated = user => {
   const properties = {}
   events.processEvent(Events.USER_SELF_UPDATED, properties)
 }
 
-exports.selfPasswordUpdated = () => {
+// TODO
+exports.selfPasswordUpdated = user => {
   const properties = {}
   events.processEvent(Events.USER_SELF_PASSWORD_UPDATED, properties)
 }
 
-exports.passwordResetRequested = () => {
+// TODO
+exports.passwordResetRequested = user => {
   const properties = {}
   events.processEvent(Events.USER_PASSWORD_RESET_REQUESTED, properties)
 }
 
-exports.passwordReset = () => {
+// TODO
+exports.passwordReset = user => {
   const properties = {}
   events.processEvent(Events.USER_PASSWORD_RESET, properties)
 }

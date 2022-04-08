@@ -1,8 +1,8 @@
-const joiValidator = require("../../middleware/joi-validator")
-const Joi = require("joi")
+import joiValidator from "../../../middleware/joi-validator"
+import Joi from "joi"
 
-exports.buildUserSaveValidation = (isSelf = false) => {
-  let schema = {
+export const buildUserSaveValidation = (isSelf = false) => {
+  let schema: any = {
     email: Joi.string().allow(null, ""),
     password: Joi.string().allow(null, ""),
     forceResetPassword: Joi.boolean().optional(),

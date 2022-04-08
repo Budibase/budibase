@@ -109,8 +109,7 @@ describe("Rest Importer", () => {
     expect(importResult.errorQueries.length).toBe(0)
     expect(importResult.queries.length).toBe(assertions[key].count)
     expect(events.query.import).toBeCalledTimes(1)
-    const eventData = { datasource, importSource: assertions[key].source, count: assertions[key].count}
-    expect(events.query.import).toBeCalledWith(eventData)
+    expect(events.query.import).toBeCalledWith(datasource, assertions[key].source, assertions[key].count)
     jest.clearAllMocks()
   }
 

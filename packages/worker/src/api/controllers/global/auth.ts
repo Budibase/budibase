@@ -4,14 +4,7 @@ const { google } = require("@budibase/backend-core/middleware")
 const { oidc } = require("@budibase/backend-core/middleware")
 const { Configs, EmailTemplatePurpose } = require("../../../constants")
 const { sendEmail, isEmailConfigured } = require("../../../utilities/email")
-const {
-  setCookie,
-  getCookie,
-  clearCookie,
-  getGlobalUserByEmail,
-  hash,
-  platformLogout,
-} = core.utils
+const { setCookie, getCookie, clearCookie, hash, platformLogout } = core.utils
 const { Cookies, Headers } = core.constants
 const { passport } = core.auth
 const { checkResetPasswordCode } = require("../../../utilities/redis")
@@ -21,8 +14,8 @@ const {
   isMultiTenant,
 } = require("@budibase/backend-core/tenancy")
 const env = require("../../../environment")
-import { users } from "@budibase/pro"
-const { events } = require("@budibase/backend-core")
+const { events, users: usersCore } = require("@budibase/backend-core")
+import { users } from "../../../sdk"
 
 const ssoCallbackUrl = async (config: any, type: any) => {
   // incase there is a callback URL from before
@@ -112,7 +105,7 @@ export const reset = async (ctx: any) => {
     )
   }
   try {
-    const user = await getGlobalUserByEmail(email)
+    const user = await usersCore.getGlobalUserByEmail(email)
     // only if user exists, don't error though if they don't
     if (user) {
       await sendEmail(email, EmailTemplatePurpose.PASSWORD_RECOVERY, {

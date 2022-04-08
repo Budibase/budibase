@@ -189,6 +189,7 @@ describe("/queries", () => {
 
       expect(res.body).toEqual([])
       expect(events.query.deleted).toBeCalledTimes(1)
+      expect(events.query.deleted).toBeCalledWith(datasource, query)
     })
 
     it("should apply authorization to endpoint", async () => {

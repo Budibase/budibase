@@ -1,12 +1,11 @@
+const http = require("./http")
 const licensing = require("./licensing")
 
 const codes = {
   ...licensing.codes,
 }
 
-const types = {
-  ...licensing.types,
-}
+const types = [licensing.type]
 
 const context = {
   ...licensing.context,
@@ -36,6 +35,9 @@ const getPublicError = err => {
 module.exports = {
   codes,
   types,
-  UsageLimitError: licensing.UsageLimitError,
+  errors: {
+    UsageLimitError: licensing.UsageLimitError,
+    HTTPError: http.HTTPError,
+  },
   getPublicError,
 }

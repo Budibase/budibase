@@ -62,6 +62,29 @@ jest.mock("../../../events", () => {
       import: jest.fn(),
       previewed: jest.fn(),
     },
+    role: {
+      created: jest.fn(),
+      updated: jest.fn(),
+      deleted: jest.fn(),
+      assigned: jest.fn(),
+      unassigned: jest.fn(),
+    },
+    user: {
+      created: jest.fn(),
+      updated: jest.fn(),
+      deleted: jest.fn(),
+      passwordForceReset: jest.fn(),
+      permissionAdminAssigned: jest.fn(),
+      permissionAdminRemoved: jest.fn(),
+      permissionBuilderAssigned: jest.fn(),
+      permissionBuilderRemoved: jest.fn(),
+      invited: jest.fn(),
+      inviteAccepted: jest.fn(),
+      selfUpdated: jest.fn(),
+      selfPasswordUpdated: jest.fn(),
+      passwordResetRequested: jest.fn(),
+      passwordReset: jest.fn(),
+    },
   }
 })
 

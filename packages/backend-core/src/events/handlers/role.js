@@ -1,19 +1,29 @@
 const events = require("../events")
 const { Events } = require("../constants")
 
-exports.created = () => {
+/* eslint-disable */
+
+exports.created = role => {
   const properties = {}
   events.processEvent(Events.ROLE_CREATED, properties)
 }
 
-// TODO
-exports.deleted = () => {
+exports.updated = role => {
+  const properties = {}
+  events.processEvent(Events.ROLE_UPDATED, properties)
+}
+
+exports.deleted = role => {
   const properties = {}
   events.processEvent(Events.ROLE_DELETED, properties)
 }
 
-// TODO
-exports.assigned = () => {
+exports.assigned = (user, role) => {
   const properties = {}
   events.processEvent(Events.ROLE_ASSIGNED, properties)
+}
+
+exports.unassigned = (user, role) => {
+  const properties = {}
+  events.processEvent(Events.ROLE_UNASSIGNED, properties)
 }
