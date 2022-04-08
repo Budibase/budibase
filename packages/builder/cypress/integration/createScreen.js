@@ -34,7 +34,7 @@ filterTests(["smoke", "all"], () => {
       cy.get(".nav-items-container").within(() => {
         cy.contains("/open-to-all").should("exist")
         //The access level should now be set to admin. Previous screens should be filtered.
-        cy.get(".nav-item").contains("/test-screen").should('not.exist')
+        cy.get(".nav-item").contains("/test-screen").should("not.exist")
       })
     })
   })
