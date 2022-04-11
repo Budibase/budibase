@@ -9,7 +9,7 @@
     "url": "https://github.com/Budibase/budibase.git"
   },
   "scripts": {
-    "build": "rimraf dist/ && tsc && mv dist/src/* dist/ && rmdir dist/src/ && yarn postbuild",
+    "build": "rimraf dist/ && tsc && mv dist/src/* dist/ && rimraf dist/src/ && yarn postbuild",
     "postbuild": "copyfiles -u 1 src/**/*.svelte dist/ && copyfiles -u 1 src/**/*.hbs dist/ && copyfiles -u 1 src/**/*.json dist/",
     "test": "jest --coverage --maxWorkers=2",
     "test:watch": "jest --watch",
