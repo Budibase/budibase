@@ -1,29 +1,29 @@
 const events = require("../events")
 const { Events } = require("../constants")
 
-exports.created = () => {
+/* eslint-disable */
+
+exports.created = table => {
   const properties = {}
   events.processEvent(Events.TABLE_CREATED, properties)
 }
 
-exports.updated = () => {
+exports.updated = table => {
   const properties = {}
   events.processEvent(Events.TABLE_UPDATED, properties)
 }
 
-exports.deleted = () => {
+exports.deleted = table => {
   const properties = {}
   events.processEvent(Events.TABLE_DELETED, properties)
 }
 
-// TODO
-exports.exported = () => {
+exports.exported = (table, format) => {
   const properties = {}
   events.processEvent(Events.TABLE_EXPORTED, properties)
 }
 
-// TODO
-exports.imported = () => {
+exports.imported = (table, format) => {
   const properties = {}
   events.processEvent(Events.TABLE_IMPORTED, properties)
 }

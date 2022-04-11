@@ -56,11 +56,16 @@ exports.find = async function (ctx) {
 exports.save = async function (ctx) {
   const appId = ctx.appId
   const table = ctx.request.body
+  const importFormat =
+    table.dataImport && table.dataImport.csvString ? "csv" : undefined
   const savedTable = await pickApi({ table }).save(ctx)
   if (!table._id) {
     events.table.created(savedTable)
   } else {
     events.table.updated(savedTable)
+  }
+  if (importFormat) {
+    events.table.imported(savedTable, importFormat)
   }
   ctx.status = 200
   ctx.message = `Table ${table.name} saved successfully.`

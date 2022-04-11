@@ -1,4 +1,5 @@
 const setup = require("./utilities")
+const { events } = require("@budibase/backend-core")
 
 function priceTable() {
   return {
@@ -205,33 +206,77 @@ describe("/views", () => {
   })
 
   describe("exportView", () => {
-    it("should be able to export a view", async () => {
-      await config.createTable(priceTable())
-      await config.createRow()
+
+    beforeEach(() => {
+      jest.clearAllMocks()
+    })
+
+    const setupExport = async () => {
+      const table = await config.createTable()
+      await config.createRow({ name: "test-name", description: "test-desc" })
+      return table
+    }
+
+    const exportView = async (viewName, format) => {
+      return request
+        .get(`/api/views/export?view=${viewName}&format=${format}`)
+        .set(config.defaultHeaders())
+        .expect(200)
+    }
+
+    const assertJsonExport = (res) => {
+      const rows = JSON.parse(res.text)
+      expect(rows.length).toBe(1)
+      expect(rows[0].name).toBe("test-name")
+      expect(rows[0].description).toBe("test-desc")
+    }
+
+    const assertCSVExport = (res) => {
+      expect(res.text).toBe("\"name\",\"description\"\n\"test-name\",\"test-desc\"")
+    }
+
+    it("should be able to export a table as JSON", async () => {
+      const table = await setupExport()
+
+      const res = await exportView(table._id, "json")
+
+      assertJsonExport(res)
+      expect(events.table.exported).toBeCalledTimes(1)
+      expect(events.table.exported).toBeCalledWith(table, "json")
+    })
+
+    it("should be able to export a table as CSV", async () => {
+      const table = await setupExport()
+
+      const res = await exportView(table._id, "csv")
+
+      assertCSVExport(res)
+      expect(events.table.exported).toBeCalledTimes(1)
+      expect(events.table.exported).toBeCalledWith(table, "csv")
+    })
+
+    it("should be able to export a view as JSON", async () => {
+      let table = await setupExport()
       const view = await config.createView()
-      let res = await request
-        .get(`/api/views/export?view=${view.name}&format=json`)
-        .set(config.defaultHeaders())
-        .expect(200)
-      let error
-      try {
-        const obj = JSON.parse(res.text)
-        expect(obj.length).toBe(1)
-      } catch (err) {
-        error = err
-      }
-      expect(error).toBeUndefined()
-      res = await request
-        .get(`/api/views/export?view=${view.name}&format=csv`)
-        .set(config.defaultHeaders())
-        .expect(200)
-      // this shouldn't be JSON
-      try {
-        JSON.parse(res.text)
-      } catch (err) {
-        error = err
-      }
-      expect(error).toBeDefined()
+      table = await config.getTable(table._id)
+
+      let res = await exportView(view.name, "json")
+
+      assertJsonExport(res)
+      expect(events.view.exported).toBeCalledTimes(1)
+      expect(events.view.exported).toBeCalledWith(table, "json")
+    })
+
+    it("should be able to export a view as CSV", async () => {
+      let table = await setupExport()
+      const view = await config.createView()
+      table = await config.getTable(table._id)
+
+      let res = await exportView(view.name, "csv")
+
+      assertCSVExport(res)
+      expect(events.view.exported).toBeCalledTimes(1)
+      expect(events.view.exported).toBeCalledWith(table, "csv")
     })
   })
 })

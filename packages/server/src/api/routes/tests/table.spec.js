@@ -14,23 +14,48 @@ describe("/tables", () => {
   })
 
   describe("create", () => {
-    it("returns a success message when the table is successfully created", async () => {
-      const res = await request
+
+    beforeEach(() => {
+      jest.clearAllMocks()
+    })
+
+    const createTable = (table) => {
+      if (!table) {
+        table = basicTable()
+      }
+      return request
         .post(`/api/tables`)
-        .send({
-          name: "TestTable",
-          key: "name",
-          schema: {
-            name: {type: "string"}
-          }
-        })
+        .send(table)
         .set(config.defaultHeaders())
         .expect('Content-Type', /json/)
         .expect(200)
+
+    }
+
+    it("returns a success message when the table is successfully created", async () => {
+      const res = await createTable()
+
       expect(res.res.statusMessage).toEqual("Table TestTable saved successfully.")
       expect(res.body.name).toEqual("TestTable")
       expect(events.table.created).toBeCalledTimes(1)
       expect(events.table.created).toBeCalledWith(res.body)
+    })
+
+    it("creates a table via data import CSV", async () => {
+      const table = basicTable()
+      table.dataImport = {
+        csvString: "\"name\",\"description\"\n\"test-name\",\"test-desc\"",
+      }
+      table.dataImport.schema = table.schema
+
+      const res = await createTable(table)
+ 
+      expect(events.table.created).toBeCalledTimes(1)
+      expect(events.table.created).toBeCalledWith(res.body)
+      expect(events.table.imported).toBeCalledTimes(1)
+      expect(events.table.imported).toBeCalledWith(res.body, "csv")
+      expect(events.row.import).toBeCalledTimes(1)
+      expect(events.row.import).toBeCalledWith(res.body, "csv", 1)
     })
 
     it("should apply authorization to endpoint", async () => {
@@ -38,13 +63,7 @@ describe("/tables", () => {
         config,
         method: "POST",
         url: `/api/tables`,
-        body: {
-          name: "TestTable",
-          key: "name",
-          schema: {
-            name: {type: "string"}
-          }
-        }
+        body: basicTable()
       })
     })
   })
@@ -121,6 +140,30 @@ describe("/tables", () => {
         expect(res.body.schema.email).toBeDefined()
         expect(res.body.schema.roleId).toBeDefined()
       })
+    })
+  })
+
+  describe("import", () => {
+    it("imports rows successfully", async () => {
+      const table = await config.createTable()
+      const importRequest = {
+        dataImport: {
+          csvString: "\"name\",\"description\"\n\"test-name\",\"test-desc\"",
+          schema: table.schema
+        }
+      }
+      jest.clearAllMocks()
+
+      await request
+        .post(`/api/tables/${table._id}/import`)
+        .send(importRequest)
+        .set(config.defaultHeaders())
+        .expect('Content-Type', /json/)
+        .expect(200)
+
+      expect(events.table.created).not.toHaveBeenCalled()
+      expect(events.row.import).toBeCalledTimes(1)
+      expect(events.row.import).toBeCalledWith(table, "csv", 1)
     })
   })
 
