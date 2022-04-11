@@ -41,12 +41,14 @@
               bind:value={option.label}
               label="Label"
               labelPosition="left"
+              error={option.error?.label}
             />
             <Input
               placeholder="Value"
               bind:value={option.value}
               label="Value"
               labelPosition="left"
+              error={option.error?.value}
             />
             <Icon
               name="Close"
