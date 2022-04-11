@@ -15,6 +15,7 @@ import {
 } from "./utils"
 import { DatasourcePlus } from "./base/datasourcePlus"
 import dayjs from "dayjs"
+const { NUMBER_REGEX } = require("../utilities")
 
 module MySQLModule {
   const mysql = require("mysql2/promise")
@@ -87,7 +88,7 @@ module MySQLModule {
       if (typeof binding !== "string") {
         continue
       }
-      const matches = binding.match(/^\d*$/g)
+      const matches = binding.match(NUMBER_REGEX)
       // check if number first
       if (matches && matches[0] !== "" && !isNaN(Number(matches[0]))) {
         bindings[i] = parseFloat(binding)
