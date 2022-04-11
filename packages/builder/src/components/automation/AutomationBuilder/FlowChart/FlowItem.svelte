@@ -10,7 +10,7 @@
     Button,
     StatusLight,
     Select,
-    Label,
+    ActionButton,
     notifications,
   } from "@budibase/bbui"
   import AutomationBlockSetup from "../../SetupPanel/AutomationBlockSetup.svelte"
@@ -58,7 +58,15 @@
   $: showLooping = false
 
   async function deleteStep() {
+    let loopBlock =
+      $automationStore.selectedAutomation?.automation.definition.steps.find(
+        x => x.blockToLoop === block.id
+      )
+
     try {
+      if (loopBlock) {
+        automationStore.actions.deleteAutomationBlock(loopBlock)
+      }
       automationStore.actions.deleteAutomationBlock(block)
       await automationStore.actions.save(
         $automationStore.selectedAutomation?.automation
@@ -233,29 +241,24 @@
           <div>
             <div class="block-options">
               {#if !loopingSelected}
-                <div style="display: flex;" on:click={() => addLooping()}>
-                  <Icon name="Reuse" />
-                  <div style="margin-left:10px">
-                    <Label>Add looping</Label>
-                  </div>
-                </div>
+                <ActionButton on:click={() => addLooping()} icon="Reuse"
+                  >Add Looping</ActionButton
+                >
               {/if}
               {#if showBindingPicker}
-                <div>
-                  <Select
-                    on:change={toggleFieldControl}
-                    quiet
-                    defaultValue="Use values"
-                    autoWidth
-                    value={rowControl ? "Use bindings" : "Use values"}
-                    options={["Use values", "Use bindings"]}
-                    placeholder={null}
-                  />
-                </div>
+                <Select
+                  on:change={toggleFieldControl}
+                  defaultValue="Use values"
+                  autoWidth
+                  value={rowControl ? "Use bindings" : "Use values"}
+                  options={["Use values", "Use bindings"]}
+                  placeholder={null}
+                />
               {/if}
-              <div class="delete-padding" on:click={() => deleteStep()}>
-                <Icon name="DeleteOutline" />
-              </div>
+              <ActionButton
+                on:click={() => deleteStep()}
+                icon="DeleteOutline"
+              />
             </div>
           </div>
         {/if}
@@ -306,6 +309,7 @@
     justify-content: flex-end;
     align-items: center;
     display: flex;
+    gap: var(--spacing-m);
   }
   .center-items {
     display: flex;
