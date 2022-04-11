@@ -5,6 +5,7 @@ const { isExternalTable, isSQL } = require("../../../integrations/utils")
 const { getDatasourceParams } = require("../../../db/utils")
 const { getAppDB } = require("@budibase/backend-core/context")
 const { getTable, getAllInternalTables } = require("./utils")
+const { events } = require("@budibase/backend-core")
 
 function pickApi({ tableId, table }) {
   if (table && !tableId) {
@@ -56,6 +57,11 @@ exports.save = async function (ctx) {
   const appId = ctx.appId
   const table = ctx.request.body
   const savedTable = await pickApi({ table }).save(ctx)
+  if (!table._id) {
+    events.table.created(savedTable)
+  } else {
+    events.table.updated(savedTable)
+  }
   ctx.status = 200
   ctx.message = `Table ${table.name} saved successfully.`
   ctx.eventEmitter &&
@@ -67,6 +73,7 @@ exports.destroy = async function (ctx) {
   const appId = ctx.appId
   const tableId = ctx.params.tableId
   const deletedTable = await pickApi({ tableId }).destroy(ctx)
+  events.table.deleted(deletedTable)
   ctx.eventEmitter &&
     ctx.eventEmitter.emitTable(`table:delete`, appId, deletedTable)
   ctx.status = 200
