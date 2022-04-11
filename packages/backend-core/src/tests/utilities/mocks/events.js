@@ -69,7 +69,9 @@ jest.mock("../../../events", () => {
       assigned: jest.fn(),
       unassigned: jest.fn(),
     },
-    row: {},
+    row: {
+      import: jest.fn(),
+    },
     screen: {
       created: jest.fn(),
       deleted: jest.fn(),
@@ -103,7 +105,9 @@ jest.mock("../../../events", () => {
       imported: jest.fn(),
       permissionUpdated: jest.fn(),
     },
-    view: {},
+    view: {
+      exported: jest.fn(),
+    },
   }
 })
 

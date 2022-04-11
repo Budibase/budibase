@@ -9,7 +9,8 @@ const layout = require("./layout")
 const org = require("./org")
 const query = require("./query")
 const role = require("./role")
-const row = require("./screen")
+const screen = require("./screen")
+const row = require("./row")
 const table = require("./table")
 const serve = require("./serve")
 const user = require("./user")
@@ -27,6 +28,7 @@ module.exports = {
   org,
   query,
   role,
+  screen,
   row,
   table,
   serve,

@@ -6,6 +6,8 @@ const { fetchView } = require("../row")
 const { getTable } = require("../table/utils")
 const { FieldTypes } = require("../../../constants")
 const { getAppDB } = require("@budibase/backend-core/context")
+const { events } = require("@budibase/backend-core")
+const { DocumentTypes } = require("../../../db/utils")
 
 exports.fetch = async ctx => {
   ctx.body = await getViews()
@@ -79,9 +81,9 @@ exports.exportView = async ctx => {
   let rows = ctx.body
 
   let schema = view && view.meta && view.meta.schema
+  const tableId = ctx.params.tableId || view.meta.tableId
+  const table = await getTable(tableId)
   if (!schema) {
-    const tableId = ctx.params.tableId || view.meta.tableId
-    const table = await getTable(tableId)
     schema = table.schema
   }
 
@@ -116,4 +118,10 @@ exports.exportView = async ctx => {
   // send down the file
   ctx.attachment(filename)
   ctx.body = apiFileReturn(exporter(headers, rows))
+
+  if (viewName.startsWith(DocumentTypes.TABLE)) {
+    events.table.exported(table, format)
+  } else {
+    events.view.exported(table, format)
+  }
 }

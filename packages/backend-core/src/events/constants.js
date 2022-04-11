@@ -103,6 +103,7 @@ exports.Events = {
 
   // ROW
   // ROW_CREATED: "row:created",
+  ROW_IMPORT: "row:import",
 
   // COMPONENT
   COMPONENT_CREATED: "component:created",
