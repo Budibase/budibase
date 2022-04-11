@@ -106,7 +106,16 @@ jest.mock("../../../events", () => {
       permissionUpdated: jest.fn(),
     },
     view: {
+      created: jest.fn(),
+      updated: jest.fn(),
+      deleted: jest.fn(),
       exported: jest.fn(),
+      filterCreated: jest.fn(),
+      filterUpdated: jest.fn(),
+      filterDeleted: jest.fn(),
+      calculationCreated: jest.fn(),
+      calculationUpdated: jest.fn(),
+      calculationDeleted: jest.fn(),
     },
   }
 })

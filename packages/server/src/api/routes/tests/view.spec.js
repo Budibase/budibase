@@ -30,27 +30,70 @@ describe("/views", () => {
 
   beforeEach(async () => {
     await config.init()
+    table = await config.createTable(priceTable())
   })
 
+  const saveView = async (view) => {
+    const viewToSave = {
+      name: "TestView",
+      field: "Price",
+      calculation: "stats",
+      tableId: table._id,
+      ...view
+    }
+    return request
+      .post(`/api/views`)
+      .send(viewToSave)
+      .set(config.defaultHeaders())
+      .expect("Content-Type", /json/)
+      .expect(200)
+  }
+
   describe("create", () => {
-    beforeEach(async () => {
-      table = await config.createTable(priceTable())
-    })
 
     it("returns a success message when the view is successfully created", async () => {
-      const res = await request
-        .post(`/api/views`)
-        .send({
-          name: "TestView",
-          field: "Price",
-          calculation: "stats",
-          tableId: table._id,
-        })
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+      const res = await saveView()
+      expect(res.body.tableId).toBe(table._id)
+      expect(events.view.created).toBeCalledTimes(1)
+    })
+
+    it("creates a view with a calculation", async () => {
+      jest.clearAllMocks()
+
+      const res = await saveView({ calculation: "count" })
 
       expect(res.body.tableId).toBe(table._id)
+      expect(events.view.created).toBeCalledTimes(1)
+      expect(events.view.updated).not.toBeCalled()
+      expect(events.view.calculationCreated).toBeCalledTimes(1)
+      expect(events.view.calculationUpdated).not.toBeCalled()
+      expect(events.view.calculationDeleted).not.toBeCalled()
+      expect(events.view.filterCreated).not.toBeCalled()
+      expect(events.view.filterUpdated).not.toBeCalled()
+      expect(events.view.filterDeleted).not.toBeCalled()
+    })
+
+    it("creates a view with a filter", async () => {
+      jest.clearAllMocks()
+
+      const res = await saveView({
+        calculation: null,
+        filters: [{
+          value: "1",
+          condition: "EQUALS",
+          key: "price"
+        }],
+      })
+
+      expect(res.body.tableId).toBe(table._id)
+      expect(events.view.created).toBeCalledTimes(1)
+      expect(events.view.updated).not.toBeCalled()
+      expect(events.view.calculationCreated).not.toBeCalled()
+      expect(events.view.calculationUpdated).not.toBeCalled()
+      expect(events.view.calculationDeleted).not.toBeCalled()
+      expect(events.view.filterCreated).toBeCalledTimes(1)
+      expect(events.view.filterUpdated).not.toBeCalled()
+      expect(events.view.filterDeleted).not.toBeCalled()
     })
 
     it("updates the table row with the new view metadata", async () => {
@@ -102,6 +145,100 @@ describe("/views", () => {
     })
   })
 
+  describe("update", () => {
+    it("updates a view with no calculation or filter changed", async () => {
+      await saveView()
+      jest.clearAllMocks()
+
+      await saveView()
+
+      expect(events.view.created).not.toBeCalled()
+      expect(events.view.updated).toBeCalledTimes(1)
+      expect(events.view.calculationCreated).not.toBeCalled()
+      expect(events.view.calculationUpdated).not.toBeCalled()
+      expect(events.view.calculationDeleted).not.toBeCalled()
+      expect(events.view.filterCreated).not.toBeCalled()
+      expect(events.view.filterUpdated).not.toBeCalled()
+      expect(events.view.filterDeleted).not.toBeCalled()
+    })
+
+    it("updates a view calculation", async () => {
+      await saveView({ calculation: "sum" })
+      jest.clearAllMocks()
+
+      await saveView({ calculation: "count" })
+
+      expect(events.view.created).not.toBeCalled()
+      expect(events.view.updated).toBeCalledTimes(1)
+      expect(events.view.calculationCreated).not.toBeCalled()
+      expect(events.view.calculationUpdated).toBeCalledTimes(1)
+      expect(events.view.calculationDeleted).not.toBeCalled()
+      expect(events.view.filterCreated).not.toBeCalled()
+      expect(events.view.filterUpdated).not.toBeCalled()
+      expect(events.view.filterDeleted).not.toBeCalled()
+    })
+
+    it("deletes a view calculation", async () => {
+      await saveView({ calculation: "sum" })
+      jest.clearAllMocks()
+
+      await saveView({ calculation: null })
+
+      expect(events.view.created).not.toBeCalled()
+      expect(events.view.updated).toBeCalledTimes(1)
+      expect(events.view.calculationCreated).not.toBeCalled()
+      expect(events.view.calculationUpdated).not.toBeCalled()
+      expect(events.view.calculationDeleted).toBeCalledTimes(1)
+      expect(events.view.filterCreated).not.toBeCalled()
+      expect(events.view.filterUpdated).not.toBeCalled()
+      expect(events.view.filterDeleted).not.toBeCalled()
+    })
+
+    it("updates a view filter", async () => {
+      await saveView({ filters: [{
+        value: "1",
+        condition: "EQUALS",
+        key: "price"
+      }] })
+      jest.clearAllMocks()
+
+      await saveView({ filters: [{
+        value: "2",
+        condition: "EQUALS",
+        key: "price"
+      }] })
+
+      expect(events.view.created).not.toBeCalled()
+      expect(events.view.updated).toBeCalledTimes(1)
+      expect(events.view.calculationCreated).not.toBeCalled()
+      expect(events.view.calculationUpdated).not.toBeCalled()
+      expect(events.view.calculationDeleted).not.toBeCalled()
+      expect(events.view.filterCreated).not.toBeCalled()
+      expect(events.view.filterUpdated).toBeCalledTimes(1)
+      expect(events.view.filterDeleted).not.toBeCalled()
+    })
+
+    it("deletes a view filter", async () => {
+      await saveView({ filters: [{
+        value: "1",
+        condition: "EQUALS",
+        key: "price"
+      }] })
+      jest.clearAllMocks()
+
+      await saveView({ filters: [] })
+
+      expect(events.view.created).not.toBeCalled()
+      expect(events.view.updated).toBeCalledTimes(1)
+      expect(events.view.calculationCreated).not.toBeCalled()
+      expect(events.view.calculationUpdated).not.toBeCalled()
+      expect(events.view.calculationDeleted).not.toBeCalled()
+      expect(events.view.filterCreated).not.toBeCalled()
+      expect(events.view.filterUpdated).not.toBeCalled()
+      expect(events.view.filterDeleted).toBeCalledTimes(1)
+    })
+  })
+
   describe("fetch", () => {
     beforeEach(async () => {
       table = await config.createTable(priceTable())
@@ -125,10 +262,6 @@ describe("/views", () => {
   })
 
   describe("query", () => {
-    beforeEach(async () => {
-      table = await config.createTable(priceTable())
-    })
-
     it("returns data for the created view", async () => {
       await config.createView({
         name: "TestView",
@@ -202,6 +335,7 @@ describe("/views", () => {
         .expect(200)
       expect(res.body.map).toBeDefined()
       expect(res.body.meta.tableId).toEqual(table._id)
+      expect(events.view.deleted).toBeCalledTimes(1)
     })
   })
 

@@ -97,9 +97,11 @@ exports.Events = {
   VIEW_DELETED: "view:deleted",
   VIEW_EXPORTED: "view:exported",
   VIEW_FILTER_CREATED: "view:filter:created",
-  VIEW_FILTER_DELETED: "view:filter:created",
+  VIEW_FILTER_UPDATED: "view:filter:updated",
+  VIEW_FILTER_DELETED: "view:filter:deleted",
   VIEW_CALCULATION_CREATED: "view:calculation:created",
-  VIEW_CALCULATION_DELETED: "view:calculation:created",
+  VIEW_CALCULATION_UPDATED: "view:calculation:updated",
+  VIEW_CALCULATION_DELETED: "view:calculation:deleted",
 
   // ROW
   // ROW_CREATED: "row:created",
