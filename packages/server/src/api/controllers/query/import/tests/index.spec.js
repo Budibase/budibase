@@ -3,8 +3,6 @@ const { RestImporter } = require("../index")
 const fs = require("fs")
 const path = require('path')
 const { events} = require("@budibase/backend-core")
-const { mocks } = require("@budibase/backend-core/testUtils")
-mocks.date.mock()
 
 const getData = (file) => {
   return fs.readFileSync(path.join(__dirname, `../sources/tests/${file}`), "utf8")

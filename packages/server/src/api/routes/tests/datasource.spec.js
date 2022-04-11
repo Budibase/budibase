@@ -6,8 +6,6 @@ let { checkBuilderEndpoint } = require("./utilities/TestFunctions")
 const pg = require("pg")
 const { checkCacheForDynamicVariable } = require("../../../threads/utils")
 const { events } = require("@budibase/backend-core") 
-const { mocks } = require("@budibase/backend-core/testUtils") 
-mocks.date.mock()
 
 describe("/datasources", () => {
   let request = setup.getRequest()

@@ -1,6 +1,4 @@
 require("../../tests/utilities/TestConfiguration")
-const { mocks } = require("../../tests/utilities")
-mocks.date.mock()
 const { getDB, allDbs } = require("../")
 
 describe("db", () => { 

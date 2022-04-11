@@ -13,8 +13,6 @@ const setup = require("./utilities")
 const { checkBuilderEndpoint } = require("./utilities/TestFunctions")
 const { checkCacheForDynamicVariable } = require("../../../threads/utils")
 const { basicQuery, basicDatasource } = setup.structures
-const { mocks } = require("@budibase/backend-core/testUtils")
-mocks.date.mock()
 const { events } = require("@budibase/backend-core")
 
 describe("/queries", () => {

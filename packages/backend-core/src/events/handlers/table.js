@@ -6,13 +6,11 @@ exports.created = () => {
   events.processEvent(Events.TABLE_CREATED, properties)
 }
 
-// TODO
 exports.updated = () => {
   const properties = {}
   events.processEvent(Events.TABLE_UPDATED, properties)
 }
 
-// TODO
 exports.deleted = () => {
   const properties = {}
   events.processEvent(Events.TABLE_DELETED, properties)

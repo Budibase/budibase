@@ -95,7 +95,14 @@ jest.mock("../../../events", () => {
       servedApp: jest.fn(),
       servedAppPreview: jest.fn(),
     },
-    table: {},
+    table: {
+      created: jest.fn(),
+      updated: jest.fn(),
+      deleted: jest.fn(),
+      exported: jest.fn(),
+      imported: jest.fn(),
+      permissionUpdated: jest.fn(),
+    },
     view: {},
   }
 })

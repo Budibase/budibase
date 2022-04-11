@@ -11,7 +11,7 @@ const { getAppDB } = require("@budibase/backend-core/context")
 import { isTest } from "../../../environment"
 import { cleanupAttachments } from "../../../utilities/rowProcessor"
 import { runStaticFormulaChecks } from "./bulkFormula"
-import { quotas, QuotaUsageType, StaticQuotaName } from "@budibase/pro"
+import { quotas } from "@budibase/pro"
 
 export async function save(ctx: any) {
   const db = getAppDB()
