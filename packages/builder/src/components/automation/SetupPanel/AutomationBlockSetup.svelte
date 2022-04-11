@@ -30,7 +30,6 @@
   import FilterDrawer from "components/design/PropertiesPanel/PropertyControls/FilterEditor/FilterDrawer.svelte"
   import { LuceneUtils } from "@budibase/frontend-core"
   import { getSchemaForTable } from "builderStore/dataBinding"
-  import { cloneDeep } from "lodash/fp"
 
   export let block
   export let testData
@@ -97,33 +96,29 @@
     }
     let blockIdx = allSteps.findIndex(step => step.id === block.id)
 
-    let loopBlockIdx = cloneDeep(allSteps)
-      .splice(0, blockIdx)
-      .findIndex(x => x.stepId === "LOOP")
-    // if a loop stepId exists in previous steps, we need to decerement the blockIdx
-    if (loopBlockIdx > -1 && blockIdx > loopBlockIdx) {
-      blockIdx--
-    }
     // Extract all outputs from all previous steps as available bindins
     let bindings = []
     for (let idx = 0; idx < blockIdx; idx++) {
-      let isLoopBlock = allSteps[idx + 1]?.blockToLoop === block.id
+      let wasLoopBlock = allSteps[idx]?.stepId === "LOOP"
+      let isLoopBlock =
+        allSteps[idx]?.stepId === "LOOP" &&
+        allSteps.find(x => x.blockToLoop === block.id)
+
+      // If the previous block was a loop block, decerement the index so the following
+      // steps are in the correct order
+      if (wasLoopBlock) {
+        blockIdx--
+      }
 
       let schema = allSteps[idx]?.schema?.outputs?.properties ?? {}
+
+      // If its a Loop Block, we need to add this custom schema
       if (isLoopBlock) {
         schema = {
           currentItem: {
             type: "string",
             description: "the item currently being executed",
           },
-        }
-      }
-
-      if (loopBlockIdx && allSteps[blockIdx - 1]?.stepId === "LOOP") {
-        schema = {
-          ...schema,
-          ...$automationStore.blockDefinitions.ACTION.LOOP.schema.outputs
-            .properties.properties,
         }
       }
       const outputs = Object.entries(schema)

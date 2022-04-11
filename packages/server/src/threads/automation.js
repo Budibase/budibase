@@ -77,6 +77,24 @@ class Orchestrator {
     this.executionOutput.steps.push(stepObj)
   }
 
+  updateContextAndOutput(loopStepNumber, step, output, result) {
+    this.executionOutput.steps.splice(loopStepNumber, 0, {
+      id: step.id,
+      stepId: step.stepId,
+      outputs: {
+        ...output,
+        success: result.success,
+        status: result.status,
+      },
+      inputs: step.inputs,
+    })
+    this._context.steps.splice(loopStepNumber, 0, {
+      ...output,
+      success: result.success,
+      status: result.status,
+    })
+  }
+
   async execute() {
     let automation = this._automation
     const app = await this.getApp()
@@ -118,62 +136,30 @@ class Orchestrator {
           this._context.steps[loopStepNumber] = {
             currentItem: newInput.binding[index],
           }
+
           let tempOutput = { items: loopSteps, iterations: iterationCount }
-
           if (
-            loopStep.inputs.option === "Array" &&
-            !Array.isArray(newInput.binding)
+            (loopStep.inputs.option === "Array" &&
+              !Array.isArray(newInput.binding)) ||
+            (loopStep.inputs.option === "String" &&
+              typeof newInput.binding !== "string")
           ) {
-            this.executionOutput.steps.splice(loopStepNumber, 0, {
-              id: step.id,
-              stepId: step.stepId,
-              outputs: {
-                ...tempOutput,
-                success: true,
-                status: "INCORRECT_TYPE",
-              },
-              inputs: step.inputs,
-            })
-            this._context.steps.splice(loopStepNumber, 0, {
-              ...tempOutput,
-              success: true,
+            this.updateContextAndOutput(loopStepNumber, step, tempOutput, {
               status: "INCORRECT_TYPE",
+              success: false,
             })
-
-            loopSteps = null
-            loopStep = null
-            break
-          } else if (
-            loopStep.inputs.option === "String" &&
-            typeof newInput.binding !== "string"
-          ) {
-            this.executionOutput.steps.splice(loopStepNumber, 0, {
-              id: step.id,
-              stepId: step.stepId,
-              outputs: {
-                ...tempOutput,
-                success: false,
-                status: "INCORRECT_TYPE",
-              },
-              inputs: step.inputs,
-            })
-            this._context.steps.splice(loopStepNumber, 0, {
-              ...tempOutput,
-              success: true,
-              status: "INCORRECT_TYPE",
-            })
-
             loopSteps = null
             loopStep = null
             break
           }
 
           // The "Loop" binding in the front end is "fake", so replace it here so the context can understand it
+          // Pretty hacky because we need to account for the row object
           for (let key in originalStepInput) {
             if (key === "row") {
-              for (let test in originalStepInput["row"]) {
-                originalStepInput["row"][test] = originalStepInput["row"][
-                  test
+              for (let val in originalStepInput["row"]) {
+                originalStepInput["row"][val] = originalStepInput["row"][
+                  val
                 ].replace(/loop/, `steps.${loopStepNumber}`)
               }
             } else {
@@ -185,18 +171,10 @@ class Orchestrator {
           }
 
           if (index >= loopStep.inputs.iterations) {
-            this.executionOutput.steps.splice(loopStepNumber, 0, {
-              id: step.id,
-              stepId: step.stepId,
-              outputs: { ...tempOutput, success: true, status: "LOOP_BROKEN" },
-              inputs: step.inputs,
-            })
-            this._context.steps.splice(loopStepNumber, 0, {
-              ...tempOutput,
+            this.updateContextAndOutput(loopStepNumber, step, tempOutput, {
+              status: "MAX_ITERATIONS_REACHED",
               success: true,
-              status: "LOOP_BROKEN",
             })
-
             loopSteps = null
             loopStep = null
             break
@@ -206,23 +184,10 @@ class Orchestrator {
             this._context.steps[loopStepNumber]?.currentItem ===
             loopStep.inputs.failure
           ) {
-            console.log("hello?????")
-            this.executionOutput.steps.splice(loopStepNumber, 0, {
-              id: step.id,
-              stepId: step.stepId,
-              outputs: {
-                ...tempOutput,
-                success: false,
-                status: "FAILURE_CONDITION_MET",
-              },
-              inputs: step.inputs,
-            })
-            this._context.steps.splice(loopStepNumber, 0, {
-              ...tempOutput,
-              success: false,
+            this.updateContextAndOutput(loopStepNumber, step, tempOutput, {
               status: "FAILURE_CONDITION_MET",
+              success: false,
             })
-
             loopSteps = null
             loopStep = null
             break
