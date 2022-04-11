@@ -48,8 +48,3 @@ exports.definition = {
   },
   type: "LOGIC",
 }
-
-exports.run = async function filter({ inputs }) {
-  let currentItem = inputs.binding
-  return { currentItem }
-}

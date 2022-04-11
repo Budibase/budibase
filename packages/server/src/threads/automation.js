@@ -86,26 +86,149 @@ class Orchestrator {
     let stepCount = 0
     let loopStepNumber
     let loopSteps = []
-    let lastLoopStep
     for (let step of automation.definition.steps) {
       stepCount++
+      let input
       if (step.stepId === LOOP_STEP_ID) {
         loopStep = step
         loopStepNumber = stepCount
         continue
       }
-      let iterations = loopStep ? loopStep.inputs.binding.split(",").length : 1
 
+      if (loopStep) {
+        input = await processObject(loopStep.inputs, this._context)
+      }
+      let iterations = loopStep ? input.binding.length : 1
+      let iterationCount = 0
       for (let index = 0; index < iterations; index++) {
         let originalStepInput = cloneDeep(step.inputs)
 
-        /*
-        if (step.stepId === LOOP_STEP_ID && index >= loopStep.inputs.iterations) {
-          this.executionOutput.steps[loopStepNumber].outputs.status = "Loop Broken"
-          break
+        // Handle if the user has set a max iteration count or if it reaches the max limit set by us
+        if (loopStep) {
+          // lets first of all handle the input
+          // if the input is array then use it, if it is a string then split it on every new line
+          let newInput = await processObject(
+            loopStep.inputs,
+            cloneDeep(this._context)
+          )
+          newInput = automationUtils.cleanInputValues(
+            newInput,
+            loopStep.schema.inputs
+          )
+          this._context.steps[loopStepNumber] = {
+            currentItem: newInput.binding[index],
+          }
+          let tempOutput = { items: loopSteps, iterations: iterationCount }
+
+          if (
+            loopStep.inputs.option === "Array" &&
+            !Array.isArray(newInput.binding)
+          ) {
+            this.executionOutput.steps.splice(loopStepNumber, 0, {
+              id: step.id,
+              stepId: step.stepId,
+              outputs: {
+                ...tempOutput,
+                success: true,
+                status: "INCORRECT_TYPE",
+              },
+              inputs: step.inputs,
+            })
+            this._context.steps.splice(loopStepNumber, 0, {
+              ...tempOutput,
+              success: true,
+              status: "INCORRECT_TYPE",
+            })
+
+            loopSteps = null
+            loopStep = null
+            break
+          } else if (
+            loopStep.inputs.option === "String" &&
+            typeof newInput.binding !== "string"
+          ) {
+            this.executionOutput.steps.splice(loopStepNumber, 0, {
+              id: step.id,
+              stepId: step.stepId,
+              outputs: {
+                ...tempOutput,
+                success: false,
+                status: "INCORRECT_TYPE",
+              },
+              inputs: step.inputs,
+            })
+            this._context.steps.splice(loopStepNumber, 0, {
+              ...tempOutput,
+              success: true,
+              status: "INCORRECT_TYPE",
+            })
+
+            loopSteps = null
+            loopStep = null
+            break
+          }
+
+          // The "Loop" binding in the front end is "fake", so replace it here so the context can understand it
+          for (let key in originalStepInput) {
+            if (key === "row") {
+              for (let test in originalStepInput["row"]) {
+                originalStepInput["row"][test] = originalStepInput["row"][
+                  test
+                ].replace(/loop/, `steps.${loopStepNumber}`)
+              }
+            } else {
+              originalStepInput[key] = originalStepInput[key].replace(
+                /loop/,
+                `steps.${loopStepNumber}`
+              )
+            }
+          }
+
+          if (index >= loopStep.inputs.iterations) {
+            this.executionOutput.steps.splice(loopStepNumber, 0, {
+              id: step.id,
+              stepId: step.stepId,
+              outputs: { ...tempOutput, success: true, status: "LOOP_BROKEN" },
+              inputs: step.inputs,
+            })
+            this._context.steps.splice(loopStepNumber, 0, {
+              ...tempOutput,
+              success: true,
+              status: "LOOP_BROKEN",
+            })
+
+            loopSteps = null
+            loopStep = null
+            break
+          }
+
+          if (
+            this._context.steps[loopStepNumber]?.currentItem ===
+            loopStep.inputs.failure
+          ) {
+            console.log("hello?????")
+            this.executionOutput.steps.splice(loopStepNumber, 0, {
+              id: step.id,
+              stepId: step.stepId,
+              outputs: {
+                ...tempOutput,
+                success: false,
+                status: "FAILURE_CONDITION_MET",
+              },
+              inputs: step.inputs,
+            })
+            this._context.steps.splice(loopStepNumber, 0, {
+              ...tempOutput,
+              success: false,
+              status: "FAILURE_CONDITION_MET",
+            })
+
+            loopSteps = null
+            loopStep = null
+            break
+          }
         }
-        
-        */
+
         // execution stopped, record state for that
         if (stopped) {
           this.updateExecutionOutput(step.id, step.stepId, {}, STOPPED_STATUS)
@@ -113,11 +236,6 @@ class Orchestrator {
         }
 
         // If it's a loop step, we need to manually add the bindings to the context
-        if (loopStep) {
-          this._context.steps[loopStepNumber] = {
-            currentItem: loopStep.inputs.binding.split(",")[index],
-          }
-        }
         let stepFn = await this.getStepFunctionality(step.stepId)
         let inputs = await processObject(originalStepInput, this._context)
         inputs = automationUtils.cleanInputValues(inputs, step.schema.inputs)
@@ -143,7 +261,6 @@ class Orchestrator {
             })
             continue
           }
-          this._context.steps.splice(loopStepNumber, 1)
           if (loopStep && loopSteps) {
             loopSteps.push(outputs)
           } else {
@@ -158,26 +275,34 @@ class Orchestrator {
           console.error(`Automation error - ${step.stepId} - ${err}`)
           return err
         }
-
-        if (index === iterations - 1) {
-          lastLoopStep = loopStep
-          loopStep = null
-          break
+        if (loopStep) {
+          iterationCount++
+          if (index === iterations - 1) {
+            loopStep = null
+            this._context.steps.splice(loopStepNumber, 1)
+            break
+          }
         }
       }
 
       if (loopSteps && loopSteps.length) {
-        let tempOutput = { success: true, outputs: loopSteps }
-        this.executionOutput.steps.splice(loopStep, 0, {
-          id: lastLoopStep.id,
-          stepId: lastLoopStep.stepId,
+        let tempOutput = {
+          success: true,
+          items: loopSteps,
+          iterations: iterationCount,
+        }
+        this.executionOutput.steps.splice(loopStepNumber + 1, 0, {
+          id: step.id,
+          stepId: step.stepId,
           outputs: tempOutput,
           inputs: step.inputs,
         })
-        this._context.steps.splice(loopStep, 0, tempOutput)
+
+        this._context.steps.splice(loopStepNumber, 0, tempOutput)
         loopSteps = null
       }
     }
+
     return this.executionOutput
   }
 }
