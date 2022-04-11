@@ -2533,57 +2533,78 @@
     "illegalChildren": ["section"],
     "settings": [
       {
-        "type": "dataProvider",
-        "label": "Provider",
-        "key": "dataProvider"
-      },
-      {
-        "type": "field",
-        "label": "Latitude Key",
-        "key": "latitudeKey",
-        "dependsOn": "dataProvider"
-      },
-      {
-        "type": "field",
-        "label": "Longitude Key",
-        "key": "longitudeKey",
-        "dependsOn": "dataProvider"
-      },
-      {
-        "type": "field",
-        "label": "Title Key",
-        "key": "titleKey",
-        "dependsOn": "dataProvider"
-      },
-      {
-        "type": "event",
-        "label": "On Click Marker",
-        "key": "onClickMarker",
-        "context": [
+        "section": true,
+        "name": "Markers",
+        "settings": [
           {
-            "label": "Clicked marker",
-            "key": "marker"
+            "type": "dataProvider",
+            "label": "Data Provider",
+            "key": "markerProvider"
+          },
+          {
+            "type": "field",
+            "label": "Marker Latitude Key",
+            "key": "markerLatitudeKey",
+            "dependsOn": "markerProvider"
+          },
+          {
+            "type": "field",
+            "label": "Marker Longitude Key",
+            "key": "markerLongitudeKey",
+            "dependsOn": "markerProvider"
+          },
+          {
+            "type": "field",
+            "label": "Marker Title Key",
+            "key": "markerTitleKey",
+            "dependsOn": "markerProvider"
+          },
+          {
+            "type": "boolean",
+            "label": "Enable creating markers",
+            "key": "markerCreationEnabled",
+            "defaultValue": false
+          },
+          {
+            "type": "event",
+            "label": "On Click Marker",
+            "key": "onClickMarker",
+            "context": [
+              {
+                "label": "Clicked marker",
+                "key": "marker"
+              }
+            ]
+          },
+          {
+            "type": "event",
+            "label": "On Create Marker",
+            "key": "onCreateMarker",
+            "dependsOn": "markerCreationEnabled",
+            "context": [
+              {
+                "label": "New marker latitude",
+                "key": "lat"
+              },
+              {
+                "label": "New marker longitude",
+                "key": "lng"
+              }
+            ]
           }
         ]
       },
       {
-        "type": "boolean",
-        "label": "Enable creating markers",
-        "key": "creationEnabled",
-        "defaultValue": false
-      },
-      {
         "type": "event",
-        "label": "On Create Marker",
-        "key": "onCreateMarker",
-        "dependsOn": "creationEnabled",
+        "label": "On Click Map",
+        "key": "onClickMap",
         "context": [
           {
-            "label": "New marker latitude",
+            "label": "Latitude",
             "key": "lat"
           },
           {
-            "label": "New marker longitude",
+            "label": "Longitude",
             "key": "lng"
           }
         ]
@@ -2607,12 +2628,29 @@
         "defaultValue": true
       },
       {
-        "type": "text",
-        "label": "Tile URL",
-        "key": "tileURL",
-        "defaultValue": "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        "section": true,
+        "name": "GIS Integration",
+        "settings": [
+          {
+            "type": "mapLayers",
+            "label": "Configure layers",
+            "key": "tileLayers"
+          },
+          {
+            "type": "boolean",
+            "label": "Enable Attribution Prefix",
+            "key": "enableAttributionPrefix",
+            "defaultValue": "false"
+          },
+          {
+            "type": "text",
+            "label": "Custom Attribution Prefix",
+            "key": "customAttributionPrefix",
+            "dependsOn": "enableAttributionPrefix",
+            "defaultValue": ""
+          }
+        ]
       },
-
       {
         "type": "text",
         "label": "Default Location (when empty)",
@@ -2621,17 +2659,21 @@
       },
       {
         "type": "number",
-        "label": "Default Location Zoom Level (0-100)",
-        "key": "zoomLevel",
-        "placeholder": 50,
-        "max": 100,
-        "min": 0
+        "label": "Minimum Zoom Level",
+        "key": "minZoomLevel",
+        "defaultValue": 0
       },
       {
-        "type": "text",
-        "label": "Map Attribution",
-        "key": "mapAttribution",
-        "defaultValue": "OpenStreetMap contributors"
+        "type": "number",
+        "label": "Default Zoom Level",
+        "key": "defaultZoomLevel",
+        "defaultValue": 9
+      },
+      {
+        "type": "number",
+        "label": "Maximum Zoom Level",
+        "key": "maxZoomLevel",
+        "defaultValue": 18
       }
     ]
   },

@@ -1,6 +1,5 @@
 <script>
   import L from "leaflet"
-  import sanitizeHtml from "sanitize-html"
   import "leaflet/dist/leaflet.css"
   import { Helpers, Button } from "@budibase/bbui"
   import { onMount, getContext } from "svelte"
@@ -12,21 +11,88 @@
 
   initMapControls()
 
-  export let dataProvider
-  export let error
-  export let zoomLevel
+  export let markerProvider
+  export let markerLatitudeKey = null
+  export let markerLongitudeKey = null
+  export let markerTitleKey = null
+  export let markerCreationEnabled = false
+  export let onCreateMarker
+  export let onClickMarker
+
+  export let onClickMap
   export let zoomEnabled = true
-  export let latitudeKey = null
-  export let longitudeKey = null
-  export let titleKey = null
   export let fullScreenEnabled = true
   export let locationEnabled = true
   export let defaultLocation
-  export let tileURL = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-  export let mapAttribution
-  export let creationEnabled = false
-  export let onClickMarker
-  export let onCreateMarker
+
+  export let minZoomLevel = 0
+  export let defaultZoomLevel = 9
+  export let maxZoomLevel = 18
+
+  export let error
+
+  export let tileLayers = [
+    {
+      type: "XYZ",
+      url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+      visibility: true,
+      leafletOptions: {
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      },
+    },
+  ]
+
+  export let enableAttributionPrefix = false
+  export let customAttributionPrefix = ""
+
+  const fallbackCoordinates = [51.5072, -0.1276] //London
+
+  let mapInstance
+  let mapMarkerGroup = new L.FeatureGroup()
+  let candidateMarkerGroup = new L.FeatureGroup()
+  let candidateMarkerPosition
+  let mounted = false
+  let initialMarkerZoomCompleted = false
+  let cachedDeviceCoordinates
+  let safeZoomLevel
+
+  $: validMarkers = getValidRows(
+    markerProvider?.rows,
+    markerLatitudeKey,
+    markerLongitudeKey
+  )
+  $: addMapMarkers(
+    mapInstance,
+    validMarkers,
+    markerLatitudeKey,
+    markerLongitudeKey,
+    markerTitleKey,
+    onClickMarker
+  )
+
+  $: minZoomLevel,
+    defaultZoomLevel,
+    maxZoomLevel,
+    safeZoomLevel,
+    initMap(tileLayers)
+  $: zoomControlUpdated(mapInstance, zoomEnabled)
+  $: locationControlUpdated(mapInstance, locationEnabled)
+  $: fullScreenControlUpdated(mapInstance, fullScreenEnabled)
+
+  $: width = $component.styles.normal.width
+  $: height = $component.styles.normal.height
+  $: width, height, mapInstance?.invalidateSize()
+
+  $: safeZoomLevel = parseZoomLevel(
+    minZoomLevel,
+    defaultZoomLevel,
+    maxZoomLevel
+  )
+  $: defaultCoordinates, resetView()
+  $: defaultCoordinates = parseDefaultLocation(defaultLocation)
+
+  $: attributionPrefixUpdated(enableAttributionPrefix, customAttributionPrefix)
 
   const { styleable, notificationStore } = getContext("sdk")
   const component = getContext("component")
@@ -59,9 +125,11 @@
       }
     },
   })
+
   const fullScreenControl = new FullScreenControl({
     position: "topright",
   })
+
   const zoomControl = L.control.zoom({
     position: "bottomright",
   })
@@ -76,11 +144,13 @@
     iconAnchor: [13, 26],
     popupAnchor: [0, -13],
   }
+
   const mapMarkerOptions = {
     icon: L.divIcon(defaultMarkerOptions),
     draggable: false,
     alt: "Location Marker",
   }
+
   const candidateMarkerOptions = {
     icon: L.divIcon({
       ...defaultMarkerOptions,
@@ -89,44 +159,6 @@
     draggable: false,
     alt: "Location Marker",
   }
-  const mapOptions = {
-    fullScreen: false,
-    zoomControl: false,
-    scrollWheelZoom: zoomEnabled,
-    minZoomLevel,
-    maxZoomLevel,
-  }
-  const fallbackCoordinates = [51.5072, -0.1276] //London
-
-  let mapInstance
-  let mapMarkerGroup = new L.FeatureGroup()
-  let candidateMarkerGroup = new L.FeatureGroup()
-  let candidateMarkerPosition
-  let mounted = false
-  let initialMarkerZoomCompleted = false
-  let minZoomLevel = 0
-  let maxZoomLevel = 18
-  let cachedDeviceCoordinates
-
-  $: validRows = getValidRows(dataProvider?.rows, latitudeKey, longitudeKey)
-  $: safeZoomLevel = parseZoomLevel(zoomLevel)
-  $: defaultCoordinates = parseDefaultLocation(defaultLocation)
-  $: initMap(tileURL, mapAttribution, safeZoomLevel)
-  $: zoomControlUpdated(mapInstance, zoomEnabled)
-  $: locationControlUpdated(mapInstance, locationEnabled)
-  $: fullScreenControlUpdated(mapInstance, fullScreenEnabled)
-  $: width = $component.styles.normal.width
-  $: height = $component.styles.normal.height
-  $: width, height, mapInstance?.invalidateSize()
-  $: defaultCoordinates, resetView()
-  $: addMapMarkers(
-    mapInstance,
-    validRows,
-    latitudeKey,
-    longitudeKey,
-    titleKey,
-    onClickMarker
-  )
 
   const isValidLatitude = value => {
     return !isNaN(value) && value > -90 && value < 90
@@ -145,15 +177,8 @@
     })
   }
 
-  const parseZoomLevel = zoomLevel => {
-    let zoom = zoomLevel
-    if (zoom == null || isNaN(zoom)) {
-      zoom = 50
-    } else {
-      zoom = parseFloat(zoom)
-      zoom = Math.max(0, Math.min(100, zoom))
-    }
-    return Math.round((zoom * maxZoomLevel) / 100)
+  const parseZoomLevel = (minZoomLevel, defaultZoomLevel, maxZoomLevel) => {
+    return Math.min(Math.max(defaultZoomLevel, minZoomLevel), maxZoomLevel)
   }
 
   const parseDefaultLocation = defaultLocation => {
@@ -272,42 +297,69 @@
     }
   }
 
+  const attributionPrefixUpdated = (enabled, prefix) => {
+    if (!mapInstance) {
+      return
+    }
+    if (enabled) {
+      mapInstance.attributionControl.setPrefix(prefix)
+    } else {
+      mapInstance.attributionControl.setPrefix(
+        '<a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a>'
+      )
+    }
+  }
+
   const generateMarkerPopupContent = (latitude, longitude, text) => {
     return text || latitude + "," + longitude
   }
 
-  const initMap = (tileURL, attribution, zoom) => {
+  const initMap = tileLayers => {
     if (!mounted) {
       return
     }
+
     if (mapInstance) {
       mapInstance.remove()
     }
-    mapInstance = L.map(embeddedMapId, mapOptions)
+
+    mapInstance = L.map(embeddedMapId, {
+      fullScreen: false,
+      zoomControl: false,
+      scrollWheelZoom: zoomEnabled,
+      minZoom: minZoomLevel,
+      maxZoom: maxZoomLevel,
+    })
     mapMarkerGroup.addTo(mapInstance)
     candidateMarkerGroup.addTo(mapInstance)
 
-    // Add attribution
-    const cleanAttribution = sanitizeHtml(attribution, {
-      allowedTags: ["a"],
-      allowedAttributes: {
-        a: ["href", "target"],
-      },
+    tileLayers.map(tileLayer => {
+      if (!tileLayer.visibility || tileLayer.visibility != "true") return
+      if (tileLayer.type == "XYZ") {
+        L.tileLayer(tileLayer.url, tileLayer.leafletOptions).addTo(mapInstance)
+      } else if (tileLayer.type == "WMS") {
+        L.tileLayer
+          .wms(tileLayer.url, tileLayer.leafletOptions)
+          .addTo(mapInstance)
+      }
     })
-    L.tileLayer(tileURL, {
-      attribution: "&copy; " + cleanAttribution,
-      zoom,
-    }).addTo(mapInstance)
 
     // Add click handler
     mapInstance.on("click", handleMapClick)
 
     // Reset view
     resetView()
+    attributionPrefixUpdated(enableAttributionPrefix, customAttributionPrefix)
   }
 
   const handleMapClick = e => {
-    if (!creationEnabled) {
+    if (onClickMap != null) {
+      onClickMap({
+        lat: e.latlng.lat,
+        lng: e.latlng.lng,
+      })
+    }
+    if (!markerCreationEnabled) {
       return
     }
     candidateMarkerGroup.clearLayers()
@@ -346,7 +398,7 @@
 
   onMount(() => {
     mounted = true
-    initMap(tileURL, mapAttribution, safeZoomLevel)
+    initMap(tileLayers)
   })
 </script>
 

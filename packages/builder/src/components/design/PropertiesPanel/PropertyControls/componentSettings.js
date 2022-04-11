@@ -1,11 +1,17 @@
-import { Checkbox, Select, Stepper } from "@budibase/bbui"
+import {
+  Checkbox,
+  Select,
+  Stepper
+} from "@budibase/bbui"
 import DataSourceSelect from "./DataSourceSelect.svelte"
 import S3DataSourceSelect from "./S3DataSourceSelect.svelte"
 import DataProviderSelect from "./DataProviderSelect.svelte"
 import ButtonActionEditor from "./ButtonActionEditor/ButtonActionEditor.svelte"
 import TableSelect from "./TableSelect.svelte"
 import ColorPicker from "./ColorPicker.svelte"
-import { IconSelect } from "./IconSelect"
+import {
+  IconSelect
+} from "./IconSelect"
 import FieldSelect from "./FieldSelect.svelte"
 import MultiFieldSelect from "./MultiFieldSelect.svelte"
 import SearchFieldSelect from "./SearchFieldSelect.svelte"
@@ -19,6 +25,7 @@ import FormFieldSelect from "./FormFieldSelect.svelte"
 import ValidationEditor from "./ValidationEditor/ValidationEditor.svelte"
 import DrawerBindableCombobox from "components/common/bindings/DrawerBindableCombobox.svelte"
 import ColumnEditor from "./ColumnEditor/ColumnEditor.svelte"
+import MapLayersEditor from "./MapLayersEditor/MapLayersEditor.svelte"
 
 const componentMap = {
   text: DrawerBindableCombobox,
@@ -42,6 +49,7 @@ const componentMap = {
   filter: FilterEditor,
   url: URLSelect,
   columns: ColumnEditor,
+  mapLayers: MapLayersEditor,
   "field/string": FormFieldSelect,
   "field/number": FormFieldSelect,
   "field/options": FormFieldSelect,
