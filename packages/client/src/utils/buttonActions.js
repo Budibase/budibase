@@ -329,13 +329,13 @@ export const enrichButtonActions = (actions, context) => {
     return actions
   }
 
-  // Button context is built up as actions are executed.
-  // Inherit any previous button context which may have come from actions
-  // before a confirmable action since this breaks the chain.
-  let buttonContext = context.actions || []
-
   const handlers = actions.map(def => handlerMap[def["##eventHandlerType"]])
   return async eventContext => {
+    // Button context is built up as actions are executed.
+    // Inherit any previous button context which may have come from actions
+    // before a confirmable action since this breaks the chain.
+    let buttonContext = context.actions || []
+
     for (let i = 0; i < handlers.length; i++) {
       try {
         // Skip any non-existent action definitions
@@ -346,6 +346,7 @@ export const enrichButtonActions = (actions, context) => {
         // Built total context for this action
         const totalContext = {
           ...context,
+          state: get(stateStore),
           actions: buttonContext,
           eventContext,
         }
