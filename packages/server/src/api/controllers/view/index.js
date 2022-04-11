@@ -8,6 +8,7 @@ const { FieldTypes } = require("../../../constants")
 const { getAppDB } = require("@budibase/backend-core/context")
 const { events } = require("@budibase/backend-core")
 const { DocumentTypes } = require("../../../db/utils")
+const { cloneDeep, isEqual } = require("lodash")
 
 exports.fetch = async ctx => {
   ctx.body = await getViews()
@@ -17,29 +18,89 @@ exports.save = async ctx => {
   const db = getAppDB()
   const { originalName, ...viewToSave } = ctx.request.body
   const view = viewTemplate(viewToSave)
+  const viewName = viewToSave.name
 
-  if (!viewToSave.name) {
+  if (!viewName) {
     ctx.throw(400, "Cannot create view without a name")
   }
 
-  await saveView(originalName, viewToSave.name, view)
+  await saveView(originalName, viewName, view)
 
   // add views to table document
-  const table = await db.get(ctx.request.body.tableId)
+  const existingTable = await db.get(ctx.request.body.tableId)
+  const table = cloneDeep(existingTable)
   if (!table.views) table.views = {}
   if (!view.meta.schema) {
     view.meta.schema = table.schema
   }
-  table.views[viewToSave.name] = view.meta
+  table.views[viewName] = view.meta
   if (originalName) {
     delete table.views[originalName]
+    existingTable.views[viewName] = existingTable.views[originalName]
   }
   await db.put(table)
+  handleViewEvents(existingTable.views[viewName], table.views[viewName])
 
   ctx.body = {
     ...table.views[viewToSave.name],
     name: viewToSave.name,
   }
+}
+
+const calculationEvents = (existingView, newView) => {
+  const existingCalculation = existingView && existingView.calculation
+  const newCalculation = newView && newView.calculation
+
+  if (existingCalculation && !newCalculation) {
+    events.view.calculationDeleted()
+  }
+
+  if (!existingCalculation && newCalculation) {
+    events.view.calculationCreated()
+  }
+
+  if (
+    existingCalculation &&
+    newCalculation &&
+    existingCalculation !== newCalculation
+  ) {
+    events.view.calculationUpdated()
+  }
+}
+
+const filterEvents = (existingView, newView) => {
+  const hasExistingFilters = !!(
+    existingView &&
+    existingView.filters &&
+    existingView.filters.length
+  )
+  const hasNewFilters = !!(newView && newView.filters && newView.filters.length)
+
+  if (hasExistingFilters && !hasNewFilters) {
+    events.view.filterDeleted()
+  }
+
+  if (!hasExistingFilters && hasNewFilters) {
+    events.view.filterCreated()
+  }
+
+  if (
+    hasExistingFilters &&
+    hasNewFilters &&
+    !isEqual(existingView.filters, newView.filters)
+  ) {
+    events.view.filterUpdated()
+  }
+}
+
+const handleViewEvents = (existingView, newView) => {
+  if (!existingView) {
+    events.view.created()
+  } else {
+    events.view.updated()
+  }
+  calculationEvents(existingView, newView)
+  filterEvents(existingView, newView)
 }
 
 exports.destroy = async ctx => {
@@ -49,6 +110,7 @@ exports.destroy = async ctx => {
   const table = await db.get(view.meta.tableId)
   delete table.views[viewName]
   await db.put(table)
+  events.view.deleted()
 
   ctx.body = view
 }
