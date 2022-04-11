@@ -7,55 +7,60 @@
 
   export let value
 
-  let drawerVisible = false
   let drawer
-  let valid = true
   let tempValue = value || []
 
   const saveFilter = async () => {
-    // Filter out incomplete options, but if all are incomplete then show error
-    let filteredOptions = tempValue.filter(
-      option => option.value && option.label
-    )
-    if (filteredOptions.length > 0 || tempValue.length === 0) {
-      tempValue = filteredOptions
-      valid = true
-      dispatch("change", tempValue)
+    let hasError = false
+    for (let i = 0; i < tempValue.length; i++) {
+      let option = tempValue[i]
+      if (!(option.label && option.value)) {
+        option.error = {
+          label: option.label ? undefined : "You must provide a label.",
+          value: option.value ? undefined : "You must provide a value.",
+        }
+        tempValue[i] = option
+        hasError = true
+      }
+    }
+    if (!hasError) {
       drawer.hide()
-    } else {
-      valid = false
+    }
+    dispatch("change", tempValue)
+  }
+
+  const clearOptionErrors = () => {
+    for (let i = 0; i < tempValue.length; i++) {
+      let option = tempValue[i]
+      option.error = undefined
+      tempValue[i] = option
     }
   }
 
-  //If the drawer is hidden or error corrected, reset the validation
   $: {
-    if (
-      !drawerVisible ||
-      tempValue.some(option => option.label && option.value)
-    ) {
-      valid = true
+    for (let i = 0; i < tempValue.length; i++) {
+      let option = tempValue[i]
+      if (option.error?.label && option.label) {
+        option.error.label = undefined
+      }
+      if (option.error?.value && option.value) {
+        option.error.value = undefined
+      }
+      tempValue[i] = option
     }
   }
 </script>
 
-<ActionButton on:click={drawer.show}>Define Options</ActionButton>
-<Drawer bind:this={drawer} bind:visible={drawerVisible} title="Options">
+<ActionButton
+  on:click={() => {
+    clearOptionErrors()
+    drawer.show()
+  }}>Define Options</ActionButton
+>
+<Drawer bind:this={drawer} title="Options">
   <svelte:fragment slot="description">
-    {#if !valid}
-      <span class="syntax-error"
-        >You must provide option labels and values.</span
-      >
-    {:else}
-      Define the options for this picker.
-    {/if}
+    Define the options for this picker.
   </svelte:fragment>
   <Button cta slot="buttons" on:click={saveFilter}>Save</Button>
   <OptionsDrawer bind:options={tempValue} slot="body" />
 </Drawer>
-
-<style>
-  .syntax-error {
-    padding-top: var(--spacing-m);
-    color: var(--red);
-  }
-</style>
