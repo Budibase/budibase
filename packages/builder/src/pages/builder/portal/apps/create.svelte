@@ -15,7 +15,7 @@
   import { onMount } from "svelte"
   import { templates } from "stores/portal"
 
-  let loaded = false
+  let loaded = $templates?.length
   let template
   let creationModal = false
   let creatingApp = false
