@@ -30,6 +30,7 @@
   import FilterDrawer from "components/design/PropertiesPanel/PropertyControls/FilterEditor/FilterDrawer.svelte"
   import { LuceneUtils } from "@budibase/frontend-core"
   import { getSchemaForTable } from "builderStore/dataBinding"
+  import { cloneDeep } from "lodash/fp"
 
   export let block
   export let testData
@@ -88,34 +89,61 @@
     if (!block || !automation) {
       return []
     }
-
     // Find previous steps to the selected one
     let allSteps = [...automation.steps]
+
     if (automation.trigger) {
       allSteps = [automation.trigger, ...allSteps]
     }
-    const blockIdx = allSteps.findIndex(step => step.id === block.id)
+    let blockIdx = allSteps.findIndex(step => step.id === block.id)
 
-    // Extract all outputs from all previous steps as available bindings
+    let loopBlockIdx = cloneDeep(allSteps)
+      .splice(0, blockIdx)
+      .findIndex(x => x.stepId === "LOOP")
+    // if a loop stepId exists in previous steps, we need to decerement the blockIdx
+    if (loopBlockIdx > -1 && blockIdx > loopBlockIdx) {
+      blockIdx--
+    }
+    // Extract all outputs from all previous steps as available bindins
     let bindings = []
     for (let idx = 0; idx < blockIdx; idx++) {
-      const outputs = Object.entries(
-        allSteps[idx].schema?.outputs?.properties ?? {}
-      )
+      let isLoopBlock = allSteps[idx + 1]?.blockToLoop === block.id
+
+      let schema = allSteps[idx]?.schema?.outputs?.properties ?? {}
+      if (isLoopBlock) {
+        schema = {
+          currentItem: {
+            type: "string",
+            description: "the item currently being executed",
+          },
+        }
+      }
+
+      if (loopBlockIdx && allSteps[blockIdx - 1]?.stepId === "LOOP") {
+        schema = {
+          ...schema,
+          ...$automationStore.blockDefinitions.ACTION.LOOP.schema.outputs
+            .properties.properties,
+        }
+      }
+      const outputs = Object.entries(schema)
+
       bindings = bindings.concat(
         outputs.map(([name, value]) => {
-          let runtimeName =
-            $automationStore.selectedAutomation.automation.definition.steps.find(
-              x => block.id === x.blockToLoop
-            )
-              ? `loop.${name}`
-              : `steps.${idx}.${name}`
+          let runtimeName = isLoopBlock
+            ? `loop.${name}`
+            : `steps.${idx}.${name}`
           const runtime = idx === 0 ? `trigger.${name}` : runtimeName
           return {
             label: runtime,
             type: value.type,
             description: value.description,
-            category: idx === 0 ? "Trigger outputs" : `Step ${idx} outputs`,
+            category:
+              idx === 0
+                ? "Trigger outputs"
+                : isLoopBlock
+                ? "Loop Outputs"
+                : `Step ${idx} outputs`,
             path: runtime,
           }
         })
