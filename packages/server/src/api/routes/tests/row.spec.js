@@ -2,7 +2,6 @@ const { outputProcessing } = require("../../../utilities/rowProcessor")
 const setup = require("./utilities")
 const { basicRow } = setup.structures
 const { doInAppContext } = require("@budibase/backend-core/context")
-const { testUtils } = require("@budibase/backend-core")
 
 describe("/rows", () => {
   let request = setup.getRequest()
@@ -67,15 +66,13 @@ describe("/rows", () => {
         .expect('Content-Type', /json/)
         .expect(200)
 
-      // can't mock dates due to coercion test requiring real Date clas 
-      delete res.body.createdAt
-      delete res.body.updatedAt
-
       expect(res.body).toEqual({
         ...row,
         _id: existing._id,
         _rev: existing._rev,
         type: "row",
+        createdAt: "2020-01-01T00:00:00.000Z",
+        updatedAt: "2020-01-01T00:00:00.000Z",
       })
     })
 
