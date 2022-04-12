@@ -39,7 +39,7 @@
 </p>
 
 <h3 align="center">
-  <a href="https://docs.budibase.com/getting-started">Los Geht's</a>
+  <a href="https://docs.budibase.com/docs/quickstart-tutorials">Los Geht's</a>
   <span> · </span>
   <a href="https://docs.budibase.com">Dokumentation</a>
   <span> · </span>
@@ -109,7 +109,7 @@ $ budi hosting --start
 4. Lege einen Admin-Benutzer an.
 Gib die E-Mail und das Passwort für den neuen Admin-Benutzer ein.
 
-Schon geschafft! Jetzt kann es losgehen mit der minutenschnellen Entwicklung deiner Tools. Für weitere Informationen und Tipps schau doch mal in unsere [Dokumentation](https://docs.budibase.com/getting-started).
+Schon geschafft! Jetzt kann es losgehen mit der minutenschnellen Entwicklung deiner Tools. Für weitere Informationen und Tipps schau doch mal in unsere [Dokumentation](https://docs.budibase.com/docs/quickstart-tutorials).
 
 <br />
 

@@ -244,8 +244,6 @@
     display: flex;
     flex-direction: column;
     gap: var(--spacing-l);
-    padding: 0 0 60px 0;
-    overflow-y: auto;
     border-right: var(--border-light);
   }
 

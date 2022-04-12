@@ -7,7 +7,11 @@ import {
   getComponentSettings,
 } from "./componentUtils"
 import { store } from "builderStore"
-import { queries as queriesStores, tables as tablesStore } from "stores/backend"
+import {
+  queries as queriesStores,
+  tables as tablesStore,
+  roles as rolesStore,
+} from "stores/backend"
 import {
   makePropSafe,
   isJSBinding,
@@ -33,6 +37,7 @@ export const getBindableProperties = (asset, componentId) => {
   const deviceBindings = getDeviceBindings()
   const stateBindings = getStateBindings()
   const selectedRowsBindings = getSelectedRowsBindings(asset)
+  const roleBindings = getRoleBindings()
   return [
     ...contextBindings,
     ...urlBindings,
@@ -40,6 +45,7 @@ export const getBindableProperties = (asset, componentId) => {
     ...userBindings,
     ...deviceBindings,
     ...selectedRowsBindings,
+    ...roleBindings,
   ]
 }
 
@@ -391,20 +397,57 @@ const getUrlBindings = asset => {
   }))
 }
 
+const getRoleBindings = () => {
+  return (get(rolesStore) || []).map(role => {
+    return {
+      type: "context",
+      runtimeBinding: `trim "${role._id}"`,
+      readableBinding: `Role.${role.name}`,
+    }
+  })
+}
+
 /**
  * Gets all bindable properties exposed in a button actions flow up until
- * the specified action ID.
+ * the specified action ID, as well as context provided for the action
+ * setting as a whole by the component.
  */
-export const getButtonContextBindings = (actions, actionId) => {
+export const getButtonContextBindings = (
+  asset,
+  componentId,
+  settingKey,
+  actions,
+  actionId
+) => {
+  let bindings = []
+
+  // Check if any context bindings are provided by the component for this
+  // setting
+  const component = findComponent(asset.props, componentId)
+  const settings = getComponentSettings(component?._component)
+  const eventSetting = settings.find(setting => setting.key === settingKey)
+  if (!eventSetting) {
+    return bindings
+  }
+  if (eventSetting.context?.length) {
+    eventSetting.context.forEach(contextEntry => {
+      bindings.push({
+        readableBinding: contextEntry.label,
+        runtimeBinding: `${makePropSafe("eventContext")}.${makePropSafe(
+          contextEntry.key
+        )}`,
+      })
+    })
+  }
+
   // Get the steps leading up to this value
   const index = actions?.findIndex(action => action.id === actionId)
   if (index == null || index === -1) {
-    return []
+    return bindings
   }
   const prevActions = actions.slice(0, index)
 
   // Generate bindings for any steps which provide context
-  let bindings = []
   prevActions.forEach((action, idx) => {
     const def = ActionDefinitions.actions.find(
       x => x.name === action["##eventHandlerType"]
@@ -418,6 +461,7 @@ export const getButtonContextBindings = (actions, actionId) => {
       })
     }
   })
+
   return bindings
 }
 

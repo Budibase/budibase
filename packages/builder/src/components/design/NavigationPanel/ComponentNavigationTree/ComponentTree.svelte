@@ -5,6 +5,7 @@
   import NavItem from "components/common/NavItem.svelte"
   import { capitalise } from "helpers"
   import { notifications } from "@budibase/bbui"
+  import { selectedComponentPath } from "builderStore"
 
   export let components = []
   export let currentComponent
@@ -71,10 +72,20 @@
       notifications.error("Error saving component")
     }
   }
+
+  const isOpen = (component, selectedComponentPath, closedNodes) => {
+    if (!component?._children?.length) {
+      return false
+    }
+    if (selectedComponentPath.includes(component._id)) {
+      return true
+    }
+    return !closedNodes[component._id]
+  }
 </script>
 
 <ul>
-  {#each components as component, index (component._id)}
+  {#each components || [] as component, index (component._id)}
     <li on:click|stopPropagation={() => selectComponent(component)}>
       {#if $dragDropStore?.targetComponent === component && $dragDropStore.dropPosition === DropPosition.ABOVE}
         <div
@@ -97,12 +108,12 @@
         withArrow
         indentLevel={level + 1}
         selected={$store.selectedComponentId === component._id}
-        opened={!closedNodes[component._id] && component?._children?.length}
+        opened={isOpen(component, $selectedComponentPath, closedNodes)}
       >
         <ComponentDropdownMenu {component} />
       </NavItem>
 
-      {#if component._children && !closedNodes[component._id]}
+      {#if isOpen(component, $selectedComponentPath, closedNodes)}
         <svelte:self
           components={component._children}
           {currentComponent}
@@ -132,6 +143,10 @@
     list-style: none;
     padding-left: 0;
     margin: 0;
+  }
+  ul,
+  li {
+    min-width: max-content;
   }
 
   .drop-item {

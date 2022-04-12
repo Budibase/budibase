@@ -28,7 +28,7 @@ let inThread = false
 
 module.exports = {
   // important
-  PORT: process.env.PORT,
+  PORT: process.env.PORT || process.env.APP_PORT,
   JWT_SECRET: process.env.JWT_SECRET,
   COUCH_DB_URL: process.env.COUCH_DB_URL,
   MINIO_URL: process.env.MINIO_URL,
@@ -44,6 +44,8 @@ module.exports = {
   MULTI_TENANCY: process.env.MULTI_TENANCY,
   HTTP_MIGRATIONS: process.env.HTTP_MIGRATIONS,
   API_REQ_LIMIT_PER_SEC: process.env.API_REQ_LIMIT_PER_SEC,
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
   // environment
   NODE_ENV: process.env.NODE_ENV,
   JEST_WORKER_ID: process.env.JEST_WORKER_ID,
@@ -68,6 +70,7 @@ module.exports = {
   ALLOW_DEV_AUTOMATIONS: process.env.ALLOW_DEV_AUTOMATIONS,
   DISABLE_THREADING: process.env.DISABLE_THREADING,
   QUERY_THREAD_TIMEOUT: process.env.QUERY_THREAD_TIMEOUT,
+  SQL_MAX_ROWS: process.env.SQL_MAX_ROWS,
   _set(key, value) {
     process.env[key] = value
     module.exports[key] = value

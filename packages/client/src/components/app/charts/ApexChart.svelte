@@ -34,6 +34,23 @@
     color: var(--spectrum-global-color-gray-700) !important;
   }
   div :global(.apexcharts-datalabel) {
-    fill: var(--spectrum-global-color-gray-800);
+    fill: white;
+  }
+  div :global(.apexcharts-tooltip) {
+    background-color: var(--spectrum-global-color-gray-200) !important;
+    border-color: var(--spectrum-global-color-gray-300) !important;
+    box-shadow: 2px 2px 6px -4px rgba(0, 0, 0, 0.1) !important;
+  }
+  div :global(.apexcharts-tooltip-title) {
+    background-color: var(--spectrum-global-color-gray-100) !important;
+    border-color: var(--spectrum-global-color-gray-300) !important;
+  }
+  div :global(.apexcharts-theme-dark .apexcharts-tooltip-text) {
+    color: white;
+  }
+  div
+    :global(.apexcharts-theme-dark
+      .apexcharts-tooltip-series-group.apexcharts-active) {
+    padding-bottom: 0;
   }
 </style>

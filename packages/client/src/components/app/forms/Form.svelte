@@ -9,6 +9,10 @@
   export let disabled = false
   export let actionType = "Create"
 
+  // Not exposed as a builder setting. Used internally to disable validation
+  // for fields rendered in things like search blocks.
+  export let disableValidation = false
+
   const context = getContext("context")
   const { API, fetchDatasourceSchema } = getContext("sdk")
 
@@ -17,6 +21,7 @@
   let table
 
   $: fetchSchema(dataSource)
+  $: fetchTable(dataSource)
 
   // Returns the closes data context which isn't a built in context
   const getInitialValues = (type, dataSource, context) => {
@@ -74,6 +79,16 @@
     }
   }
 
+  const fetchTable = async dataSource => {
+    if (dataSource?.tableId) {
+      try {
+        table = await API.fetchTableDefinition(dataSource.tableId)
+      } catch (error) {
+        table = null
+      }
+    }
+  }
+
   $: initialValues = getInitialValues(actionType, dataSource, $context)
   $: resetKey = Helpers.hashString(
     JSON.stringify(initialValues) + JSON.stringify(schema)
@@ -91,6 +106,7 @@
       {schema}
       {table}
       {initialValues}
+      {disableValidation}
     >
       <slot />
     </InnerForm>

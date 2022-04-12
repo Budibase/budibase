@@ -10,6 +10,7 @@
   export let size
   export let schema
   export let table
+  export let disableValidation = false
 
   const component = getContext("component")
   const { styleable, Provider, ActionTypes } = getContext("sdk")
@@ -141,12 +142,14 @@
 
       // Create validation function based on field schema
       const schemaConstraints = schema?.[field]?.constraints
-      const validator = createValidatorFromConstraints(
-        schemaConstraints,
-        validationRules,
-        field,
-        table
-      )
+      const validator = disableValidation
+        ? null
+        : createValidatorFromConstraints(
+            schemaConstraints,
+            validationRules,
+            field,
+            table
+          )
 
       // If we've already registered this field then keep some existing state
       let initialValue = Helpers.deepGet(initialValues, field) ?? defaultValue
@@ -157,18 +160,14 @@
         const { fieldState } = get(existingField)
         fieldId = fieldState.fieldId
 
-        // Use new default value if default value changed,
-        // otherwise use the current value if possible
-        if (defaultValue !== fieldState.defaultValue) {
-          initialValue = defaultValue
-        } else {
-          initialValue = fieldState.value ?? initialValue
-        }
+        // Determine the initial value for this field, reusing the current
+        // value if one exists
+        initialValue = fieldState.value ?? initialValue
 
         // If this field has already been registered and we previously had an
         // error set, then re-run the validator to see if we can unset it
         if (fieldState.error) {
-          initialError = validator(initialValue)
+          initialError = validator?.(initialValue)
         }
       }
 
@@ -258,7 +257,7 @@
       }
 
       // Update field state
-      const error = validator ? validator(value) : null
+      const error = validator?.(value)
       fieldInfo.update(state => {
         state.fieldState.value = value
         state.fieldState.error = error
@@ -292,12 +291,14 @@
 
       // Create new validator
       const schemaConstraints = schema?.[field]?.constraints
-      const validator = createValidatorFromConstraints(
-        schemaConstraints,
-        validationRules,
-        field,
-        table
-      )
+      const validator = disableValidation
+        ? null
+        : createValidatorFromConstraints(
+            schemaConstraints,
+            validationRules,
+            field,
+            table
+          )
 
       // Update validator
       fieldInfo.update(state => {

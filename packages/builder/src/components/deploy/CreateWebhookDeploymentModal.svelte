@@ -40,7 +40,7 @@
   <a
     slot="footer"
     target="_blank"
-    href="https://docs.budibase.com/automate/steps/triggers"
+    href="https://docs.budibase.com/docs/trigger"
   >
     <i class="ri-information-line" />
     <span>Learn about webhooks</span>
