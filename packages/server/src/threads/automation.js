@@ -15,6 +15,7 @@ const LOOP_STEP_ID = actions.ACTION_DEFINITIONS.LOOP.stepId
 const CRON_STEP_ID = triggerDefs.CRON.stepId
 const STOPPED_STATUS = { success: false, status: "STOPPED" }
 const { cloneDeep } = require("lodash/fp")
+const env = require("../environment")
 
 /**
  * The automation orchestrator is a class responsible for executing automations.
@@ -170,7 +171,10 @@ class Orchestrator {
             }
           }
 
-          if (index >= loopStep.inputs.iterations) {
+          if (
+            index === env.AUTOMATION_MAX_ITERATIONS ||
+            index === loopStep.inputs.iterations
+          ) {
             this.updateContextAndOutput(loopStepNumber, step, tempOutput, {
               status: "MAX_ITERATIONS_REACHED",
               success: true,
