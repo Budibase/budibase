@@ -112,6 +112,7 @@ export const reset = async (ctx: any) => {
         user,
         subject: "{{ company }} platform password reset",
       })
+      events.user.passwordResetRequested(user)
     }
   } catch (err) {
     console.log(err)
@@ -136,6 +137,9 @@ export const resetUpdate = async (ctx: any) => {
     ctx.body = {
       message: "password reset successfully.",
     }
+    // remove password from the user before sending events
+    delete user.password
+    events.user.passwordReset(user)
   } catch (err) {
     ctx.throw(400, "Cannot reset password.")
   }

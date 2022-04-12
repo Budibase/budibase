@@ -12,8 +12,20 @@ exports.getGlobalUserByEmail = async email => {
     throw "Must supply an email address to view"
   }
 
-  return queryGlobalView(ViewNames.USER_BY_EMAIL, {
+  const response = await queryGlobalView(ViewNames.USER_BY_EMAIL, {
     key: email.toLowerCase(),
     include_docs: true,
   })
+
+  if (response) {
+    if (Array.isArray(response)) {
+      for (let user of response) {
+        delete user.password
+      }
+    } else {
+      delete response.password
+    }
+  }
+
+  return response
 }

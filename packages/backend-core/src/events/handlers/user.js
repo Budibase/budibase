@@ -18,12 +18,6 @@ exports.deleted = user => {
   events.processEvent(Events.USER_DELETED, properties)
 }
 
-// TODO
-exports.passwordForceReset = user => {
-  const properties = {}
-  events.processEvent(Events.USER_PASSWORD_FORCE_RESET, properties)
-}
-
 // PERMISSIONS
 
 exports.permissionAdminAssigned = user => {
@@ -48,39 +42,33 @@ exports.permissionBuilderRemoved = user => {
 
 // INVITE
 
-// TODO
-exports.invited = user => {
+exports.invited = userInfo => {
   const properties = {}
   events.processEvent(Events.USER_INVITED, properties)
 }
 
-// TODO
 exports.inviteAccepted = user => {
   const properties = {}
   events.processEvent(Events.USER_INVITED_ACCEPTED, properties)
 }
 
-// SELF
+// PASSWORD
 
-// TODO
-exports.selfUpdated = user => {
+exports.passwordForceReset = user => {
   const properties = {}
-  events.processEvent(Events.USER_SELF_UPDATED, properties)
+  events.processEvent(Events.USER_PASSWORD_FORCE_RESET, properties)
 }
 
-// TODO
-exports.selfPasswordUpdated = user => {
+exports.passwordUpdated = user => {
   const properties = {}
-  events.processEvent(Events.USER_SELF_PASSWORD_UPDATED, properties)
+  events.processEvent(Events.USER_PASSWORD_UPDATED, properties)
 }
 
-// TODO
 exports.passwordResetRequested = user => {
   const properties = {}
   events.processEvent(Events.USER_PASSWORD_RESET_REQUESTED, properties)
 }
 
-// TODO
 exports.passwordReset = user => {
   const properties = {}
   events.processEvent(Events.USER_PASSWORD_RESET, properties)

@@ -52,6 +52,14 @@ export const handleSaveEvents = (user: any, existingUser: any) => {
     if (isRemovingAdmin(user, existingUser)) {
       events.user.permissionAdminRemoved(user)
     }
+
+    if (
+      !existingUser.forceResetPassword &&
+      user.forceResetPassword &&
+      user.password
+    ) {
+      events.user.passwordForceReset(user)
+    }
   } else {
     events.user.created(user)
   }

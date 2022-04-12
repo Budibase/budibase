@@ -3,7 +3,6 @@ exports.Events = {
   USER_CREATED: "user:created",
   USER_UPDATED: "user:updated",
   USER_DELETED: "user:deleted",
-  USER_PASSWORD_FORCE_RESET: "user:password:force:reset",
 
   // USER / PERMISSIONS
   USER_PERMISSION_ADMIN_ASSIGNED: "user:admin:assigned",
@@ -15,9 +14,9 @@ exports.Events = {
   USER_INVITED: "user:invited",
   USER_INVITED_ACCEPTED: "user:invite:accepted",
 
-  // USER / SELF
-  USER_SELF_UPDATED: "user:self:updated",
-  USER_SELF_PASSWORD_UPDATED: "user:self:password:updated",
+  // USER / PASSWORD
+  USER_PASSWORD_FORCE_RESET: "user:password:force:reset",
+  USER_PASSWORD_UPDATED: "user:password:updated",
   USER_PASSWORD_RESET_REQUESTED: "user:password:reset:requested",
   USER_PASSWORD_RESET: "user:password:reset",
 

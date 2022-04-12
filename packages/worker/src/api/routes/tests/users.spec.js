@@ -4,7 +4,6 @@ const sendMailMock = mocks.email.mock()
 const { events } = require("@budibase/backend-core")
 
 describe("/api/global/users", () => {
-  let code
 
   beforeAll(async () => {
     await config.beforeAll()
@@ -14,8 +13,7 @@ describe("/api/global/users", () => {
     await config.afterAll()
   })
 
-  it("should be able to generate an invitation", async () => {
-    // initially configure settings
+  const sendUserInvite = async () => {
     await config.saveSmtpConfig()
     await config.saveSettingsConfig()
     const res = await request
@@ -26,16 +24,27 @@ describe("/api/global/users", () => {
       .set(config.defaultHeaders())
       .expect("Content-Type", /json/)
       .expect(200)
+    
+      const emailCall = sendMailMock.mock.calls[0][0]
+      // after this URL there should be a code
+    const parts = emailCall.html.split("http://localhost:10000/builder/invite?code=")
+    const code = parts[1].split("\"")[0].split("&")[0]
+    return { code, res }
+  }
+
+  it("should be able to generate an invitation", async () => {
+    const { code, res } = await sendUserInvite()
+
     expect(res.body).toEqual({ message: "Invitation has been sent." })
     expect(sendMailMock).toHaveBeenCalled()
-    const emailCall = sendMailMock.mock.calls[0][0]
-    // after this URL there should be a code
-    const parts = emailCall.html.split("http://localhost:10000/builder/invite?code=")
-    code = parts[1].split("\"")[0].split("&")[0]
     expect(code).toBeDefined()
+    expect(events.user.invited).toBeCalledTimes(1)
+    expect(events.user.invited).toBeCalledWith({ tenantId: structures.TENANT_ID })
   })
 
   it("should be able to create new user from invite", async () => {
+    const { code } = await sendUserInvite()
+
     const res = await request
       .post(`/api/global/users/invite/accept`)
       .send({
@@ -48,6 +57,8 @@ describe("/api/global/users", () => {
     const user = await config.getUser("invite@test.com")
     expect(user).toBeDefined()
     expect(user._id).toEqual(res.body._id)
+    expect(events.user.inviteAccepted).toBeCalledTimes(1)
+    expect(events.user.inviteAccepted).toBeCalledWith(res.body)
   })
 
   const createUser = async (user) => { 
@@ -70,7 +81,7 @@ describe("/api/global/users", () => {
       .send(user)
       .set(config.defaultHeaders())
       .expect("Content-Type", /json/)
-      // .expect(200)
+      .expect(200)
     return res.body
   }
 
@@ -149,6 +160,23 @@ describe("/api/global/users", () => {
       expect(events.user.updated).toBeCalledTimes(1)
       expect(events.user.permissionBuilderAssigned).not.toBeCalled()
       expect(events.user.permissionAdminAssigned).not.toBeCalled()
+      expect(events.user.passwordForceReset).not.toBeCalled()
+    })
+
+    it("should be able to force reset password", async () => {
+      let user = structures.users.user({ email: "basic-password-update@test.com" })
+      await createUser(user)
+      jest.clearAllMocks()
+
+      user.forceResetPassword = true
+      user.password = "tempPassword"
+      await updateUser(user)
+
+      expect(events.user.created).not.toBeCalled()
+      expect(events.user.updated).toBeCalledTimes(1)
+      expect(events.user.permissionBuilderAssigned).not.toBeCalled()
+      expect(events.user.permissionAdminAssigned).not.toBeCalled()
+      expect(events.user.passwordForceReset).toBeCalledTimes(1)
     })
 
     it("should be able to update a basic user to an admin user", async () => {
