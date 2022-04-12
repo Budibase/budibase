@@ -41,7 +41,7 @@ describe("/applications", () => {
         .expect("Content-Type", /json/)
         .expect(200)
       expect(res.body._id).toBeDefined()
-      expect(events.app.created.mock.calls.length).toBe(1)
+      expect(events.app.created).toBeCalledTimes(1)
     })
 
     it("creates app from template", async () => {
@@ -55,8 +55,8 @@ describe("/applications", () => {
         .expect("Content-Type", /json/)
         .expect(200)
       expect(res.body._id).toBeDefined()
-      expect(events.app.created.mock.calls.length).toBe(1)
-      expect(events.app.templateImported.mock.calls.length).toBe(1)
+      expect(events.app.created).toBeCalledTimes(1)
+      expect(events.app.templateImported).toBeCalledTimes(1)
     })
 
 
@@ -70,8 +70,8 @@ describe("/applications", () => {
         .expect("Content-Type", /json/)
         .expect(200)
       expect(res.body._id).toBeDefined()
-      expect(events.app.created.mock.calls.length).toBe(1)
-      expect(events.app.fileImported.mock.calls.length).toBe(1)
+      expect(events.app.created).toBeCalledTimes(1)
+      expect(events.app.fileImported).toBeCalledTimes(1)
     })
 
     it("should apply authorization to endpoint", async () => {
@@ -135,7 +135,7 @@ describe("/applications", () => {
         .expect("Content-Type", /json/)
         .expect(200)
       expect(res.body.rev).toBeDefined()
-      expect(events.app.updated.mock.calls.length).toBe(1)
+      expect(events.app.updated).toBeCalledTimes(1)
     })
   })
 
@@ -148,7 +148,7 @@ describe("/applications", () => {
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
-      expect(events.app.deleted.mock.calls.length).toBe(1)
+      expect(events.app.deleted).toBeCalledTimes(1)
     })
 
     it("should unpublish app", async () => {
@@ -159,7 +159,7 @@ describe("/applications", () => {
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
-      expect(events.app.unpublished.mock.calls.length).toBe(1)
+      expect(events.app.unpublished).toBeCalledTimes(1)
     })
   })
 
@@ -171,7 +171,7 @@ describe("/applications", () => {
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
-        expect(events.app.versionUpdated.mock.calls.length).toBe(1)
+        expect(events.app.versionUpdated).toBeCalledTimes(1)
     })
     it("should be able to revert the app client library version", async () => {
       // We need to first update the version so that we can then revert
@@ -185,7 +185,7 @@ describe("/applications", () => {
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
-        expect(events.app.versionReverted.mock.calls.length).toBe(1)
+        expect(events.app.versionReverted).toBeCalledTimes(1)
     })
   })
 
