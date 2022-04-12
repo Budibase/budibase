@@ -15,6 +15,7 @@ const { encrypt } = require("@budibase/backend-core/encryption")
 const { newid } = require("@budibase/backend-core/utils")
 const { users } = require("../../../sdk")
 const { Cookies } = require("@budibase/backend-core/constants")
+const { events } = require("@budibase/backend-core")
 
 function newApiKey() {
   return encrypt(`${getTenantId()}${SEPARATOR}${newid()}`)
@@ -110,8 +111,10 @@ exports.getSelf = async ctx => {
 exports.updateSelf = async ctx => {
   const db = getGlobalDB()
   const user = await db.get(ctx.user._id)
+  let passwordChange = false
   if (ctx.request.body.password) {
     // changing password
+    passwordChange = true
     ctx.request.body.password = await hash(ctx.request.body.password)
     // Log all other sessions out apart from the current one
     await platformLogout({
@@ -133,5 +136,12 @@ exports.updateSelf = async ctx => {
   ctx.body = {
     _id: response.id,
     _rev: response.rev,
+  }
+
+  // remove the old password from the user before sending events
+  delete user.password
+  events.user.updated(user)
+  if (passwordChange) {
+    events.user.passwordUpdated(user)
   }
 }

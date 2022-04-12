@@ -1,7 +1,6 @@
 import env from "../../environment"
 import { quotas } from "@budibase/pro"
 import * as apps from "../../utilities/appService"
-const { events } = require("@budibase/backend-core")
 import * as eventHelpers from "./events"
 
 const {
@@ -125,7 +124,7 @@ export const save = async (
     const putUserFn = () => {
       return db.put(user)
     }
-    if (await eventHelpers.isAddingBuilder(user, dbUser)) {
+    if (eventHelpers.isAddingBuilder(user, dbUser)) {
       response = await quotas.addDeveloper(putUserFn)
     } else {
       response = await putUserFn()

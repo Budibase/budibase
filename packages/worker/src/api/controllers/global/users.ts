@@ -8,6 +8,7 @@ const {
   users: usersCore,
   tenancy,
   db: dbUtils,
+  events,
 } = require("@budibase/backend-core")
 
 export const save = async (ctx: any) => {
@@ -121,6 +122,7 @@ export const invite = async (ctx: any) => {
   ctx.body = {
     message: "Invitation has been sent.",
   }
+  events.user.invited(userInfo)
 }
 
 export const inviteAccept = async (ctx: any) => {
@@ -128,14 +130,16 @@ export const inviteAccept = async (ctx: any) => {
   try {
     // info is an extension of the user object that was stored by global
     const { email, info }: any = await checkInviteCode(inviteCode)
-    ctx.body = await tenancy.doInTenant(info.tenantId, () => {
-      return users.save({
+    ctx.body = await tenancy.doInTenant(info.tenantId, async () => {
+      const user = await users.save({
         firstName,
         lastName,
         password,
         email,
         ...info,
       })
+      events.user.inviteAccepted(user)
+      return user
     })
   } catch (err: any) {
     if (err.code === errors.codes.USAGE_LIMIT_EXCEEDED) {

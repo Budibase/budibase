@@ -6,7 +6,6 @@ const { events } = require("@budibase/backend-core")
 const TENANT_ID = structures.TENANT_ID
 
 describe("/api/global/auth", () => {
-  let code
 
   beforeAll(async () => {
     await config.beforeAll()
@@ -20,16 +19,7 @@ describe("/api/global/auth", () => {
     jest.clearAllMocks()
   })
 
-  it("should logout", async () => {
-    await request
-      .post("/api/global/auth/logout")
-      .set(config.defaultHeaders())
-      .expect(200)
-    expect(events.auth.logout.mock.calls.length).toBe(1)
-  })
-
-  it("should be able to generate password reset email", async () => {
-    // initially configure settings
+  const requestPasswordReset = async () => {
     await config.saveSmtpConfig()
     await config.saveSettingsConfig()
     await config.createUser()
@@ -40,16 +30,36 @@ describe("/api/global/auth", () => {
       })
       .expect("Content-Type", /json/)
       .expect(200)
+    const emailCall = sendMailMock.mock.calls[0][0]
+    const parts = emailCall.html.split(`http://localhost:10000/builder/auth/reset?code=`)
+    const code = parts[1].split("\"")[0].split("&")[0]
+    return { code, res }
+  }
+
+  it("should logout", async () => {
+    await request
+      .post("/api/global/auth/logout")
+      .set(config.defaultHeaders())
+      .expect(200)
+    expect(events.auth.logout.mock.calls.length).toBe(1)
+  })
+
+  it("should be able to generate password reset email", async () => {
+    const { res, code } = await requestPasswordReset()
+    const user = await config.getUser("test@test.com")
+
     expect(res.body).toEqual({ message: "Please check your email for a reset link." })
     expect(sendMailMock).toHaveBeenCalled()
-    const emailCall = sendMailMock.mock.calls[0][0]
-    // after this URL there should be a code
-    const parts = emailCall.html.split(`http://localhost:10000/builder/auth/reset?code=`)
-    code = parts[1].split("\"")[0].split("&")[0]
+    
     expect(code).toBeDefined()
+    expect(events.user.passwordResetRequested).toBeCalledTimes(1)
+    expect(events.user.passwordResetRequested).toBeCalledWith(user)
   })
 
   it("should allow resetting user password with code", async () => {
+    const { code } = await requestPasswordReset()
+    const user = await config.getUser("test@test.com")
+
     const res = await request
       .post(`/api/global/auth/${TENANT_ID}/reset/update`)
       .send({
@@ -59,6 +69,8 @@ describe("/api/global/auth", () => {
       .expect("Content-Type", /json/)
       .expect(200)
     expect(res.body).toEqual({ message: "password reset successfully." })
+    expect(events.user.passwordReset).toBeCalledTimes(1)
+    expect(events.user.passwordReset).toBeCalledWith(user)
   })
 
   describe("oidc", () => {
