@@ -25,9 +25,13 @@ filterTests(['smoke', 'all'], () => {
       cy.visit(`${Cypress.config().baseUrl}/builder`)
       cy.wait(500)
 
-      if (Cypress.env("TEST_ENV")) {
-        cy.get(".spectrum-Button").contains("Templates").click({force: true})
-      }
+      cy.request(`${Cypress.config().baseUrl}/api/applications?status=all`)
+        .its("body")
+        .then(val => {
+          if (val.length > 0) {
+            cy.get(".spectrum-Button").contains("Templates").click({force: true})
+          }
+        })
 
       cy.get(".template-category-filters").should("exist")
       cy.get(".template-categories").should("exist")
