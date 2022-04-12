@@ -75,18 +75,18 @@ Cypress.Commands.add("deleteApp", name => {
               }
               return acc
             }, "")
-  
+
             if (appId == "") {
               return
             }
-  
+
             const appIdParsed = appId.split("_").pop()
             const actionEleId = `[data-cy=row_actions_${appIdParsed}]`
             cy.get(actionEleId).within(() => {
               cy.get(".spectrum-Icon").eq(0).click()
             })
           }
-  
+
           cy.get(".spectrum-Menu").then($menu => {
             if ($menu.text().includes("Unpublish")) {
               cy.get(".spectrum-Menu").contains("Unpublish").click()
@@ -102,8 +102,7 @@ Cypress.Commands.add("deleteApp", name => {
         } else {
           return
         }
-      }
-      else {
+      } else {
         return
       }
     })
