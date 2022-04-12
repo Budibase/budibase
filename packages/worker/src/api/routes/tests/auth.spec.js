@@ -41,7 +41,7 @@ describe("/api/global/auth", () => {
       .post("/api/global/auth/logout")
       .set(config.defaultHeaders())
       .expect(200)
-    expect(events.auth.logout.mock.calls.length).toBe(1)
+    expect(events.auth.logout).toBeCalledTimes(1)
   })
 
   it("should be able to generate password reset email", async () => {

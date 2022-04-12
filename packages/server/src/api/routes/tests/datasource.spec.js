@@ -31,7 +31,7 @@ describe("/datasources", () => {
 
       expect(res.body.datasource.name).toEqual("Test")
       expect(res.body.errors).toBeUndefined()
-      expect(events.datasource.created.mock.calls.length).toBe(1)
+      expect(events.datasource.created).toBeCalledTimes(1)
     })
   })
 
@@ -47,7 +47,7 @@ describe("/datasources", () => {
 
       expect(res.body.datasource.name).toEqual("Updated Test")
       expect(res.body.errors).toBeUndefined()
-      expect(events.datasource.updated.mock.calls.length).toBe(1)
+      expect(events.datasource.updated).toBeCalledTimes(1)
     })
 
     describe("dynamic variables", () => {
@@ -164,7 +164,7 @@ describe("/datasources", () => {
         .expect(200)
 
       expect(res.body.length).toEqual(1)
-      expect(events.datasource.deleted.mock.calls.length).toBe(1)
+      expect(events.datasource.deleted).toBeCalledTimes(1)
     })
 
     it("should apply authorization to endpoint", async () => {

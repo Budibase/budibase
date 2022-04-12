@@ -7,7 +7,7 @@ describe("utils", () => {
     it("should call platform logout", async () => {
       const ctx = structures.koa.newContext()
       await utils.platformLogout({ ctx, userId: "test" })
-      expect(events.auth.logout.mock.calls.length).toBe(1)
+      expect(events.auth.logout).toBeCalledTimes(1)
     })
   })
 })
