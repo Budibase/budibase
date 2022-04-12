@@ -1,16 +1,13 @@
 <script>
   import { store, automationStore } from "builderStore"
   import { roles, flags } from "stores/backend"
-  import { Icon, ActionGroup, Tabs, Tab, notifications } from "@budibase/bbui"
+  import { Icon, Tabs, Tab, notifications, Heading } from "@budibase/bbui"
   import DeployModal from "components/deploy/DeployModal.svelte"
   import RevertModal from "components/deploy/RevertModal.svelte"
-  import VersionModal from "components/deploy/VersionModal.svelte"
   import { API } from "api"
-  import { auth, admin } from "stores/portal"
+  import { apps } from "stores/portal"
   import { isActive, goto, layout, redirect } from "@roxi/routify"
-  import Logo from "assets/bb-emblem.svg"
   import { capitalise } from "helpers"
-  import UpgradeModal from "components/upgrade/UpgradeModal.svelte"
   import { onMount, onDestroy } from "svelte"
 
   export let application
@@ -20,12 +17,19 @@
 
   // Sync once when you load the app
   let hasSynced = false
+
   $: selected = capitalise(
     $layout.children.find(layout => $isActive(layout.path))?.title ?? "data"
   )
+  $: appInfo = $apps?.find(app => app.devId === application)
+  $: published = appInfo?.status === "published"
 
-  function previewApp() {
+  const viewPreviewApp = () => {
     window.open(`/${application}`)
+  }
+
+  const viewPublishedApp = () => {
+    window.open(`/app${appInfo?.url}`)
   }
 
   async function getPackage() {
@@ -67,6 +71,9 @@
       }
       hasSynced = true
     }
+    if (!$apps?.length) {
+      apps.load()
+    }
   })
 
   onDestroy(() => {
@@ -81,37 +88,43 @@
   <div class="root">
     <div class="top-nav">
       <div class="topleftnav">
-        <button class="home-logo">
-          <img
-            src={Logo}
-            alt="budibase icon"
-            on:click={() => $goto(`../../portal/`)}
-          />
-        </button>
-
-        <div class="tabs">
-          <Tabs {selected}>
-            {#each $layout.children as { path, title }}
-              <Tab
-                quiet
-                selected={$isActive(path)}
-                on:click={topItemNavigate(path)}
-                title={capitalise(title)}
-              />
-            {/each}
-          </Tabs>
-        </div>
-
-        <!-- This gets all indexable subroutes and sticks them in the top nav. -->
-        <ActionGroup />
+        <Icon
+          size="M"
+          name="ArrowLeft"
+          hoverable
+          on:click={() => $goto("../")}
+        />
+        <Heading size="S">{$store.name || "App"}</Heading>
+      </div>
+      <div class="topcenternav">
+        <Tabs {selected} size="M">
+          {#each $layout.children as { path, title }}
+            <Tab
+              quiet
+              selected={$isActive(path)}
+              on:click={topItemNavigate(path)}
+              title={capitalise(title)}
+            />
+          {/each}
+        </Tabs>
       </div>
       <div class="toprightnav">
-        {#if $admin.cloud && $auth.user.account}
-          <UpgradeModal />
-        {/if}
-        <VersionModal />
         <RevertModal />
-        <Icon name="Play" hoverable on:click={previewApp} />
+        <Icon
+          name="Visibility"
+          hoverable
+          on:click={viewPreviewApp}
+          tooltip="View app preview"
+        />
+        <Icon
+          name={published ? "Globe" : "GlobeStrike"}
+          hoverable
+          disabled={!published}
+          on:click={viewPublishedApp}
+          tooltip={published
+            ? "View published app"
+            : "Your app is not published"}
+        />
         <DeployModal />
       </div>
     </div>
@@ -138,14 +151,35 @@
   }
 
   .top-nav {
-    flex: 0 0 auto;
+    flex: 0 0 60px;
     background: var(--background);
     padding: 0 var(--spacing-xl);
     display: flex;
+    flex-direction: row;
     box-sizing: border-box;
     justify-content: space-between;
-    align-items: center;
+    align-items: stretch;
     border-bottom: var(--border-light);
+  }
+
+  .topleftnav {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    gap: var(--spacing-xl);
+  }
+  .topleftnav :global(.spectrum-Heading) {
+    font-weight: 600;
+  }
+
+  .topcenternav {
+    display: flex;
+    position: relative;
+    margin-bottom: -2px;
+  }
+  .topcenternav :global(.spectrum-Tabs-itemLabel) {
+    font-weight: bold !important;
   }
 
   .toprightnav {
@@ -154,36 +188,5 @@
     justify-content: flex-end;
     align-items: center;
     gap: var(--spacing-xl);
-  }
-
-  .topleftnav {
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: center;
-  }
-
-  .tabs {
-    display: flex;
-    position: relative;
-    margin-bottom: -1px;
-  }
-
-  .home-logo {
-    border-style: none;
-    background-color: rgba(0, 0, 0, 0);
-    cursor: pointer;
-    outline: none;
-    padding: 0 10px 0 0;
-    align-items: center;
-    height: 32px;
-  }
-
-  .home-logo:active {
-    outline: none;
-  }
-
-  .home-logo img {
-    height: 30px;
   }
 </style>
