@@ -1,6 +1,7 @@
 <script context="module">
   // Cache the definition of settings for each component type
   let SettingsDefinitionCache = {}
+  let SettingsDefinitionMapCache = {}
 
   // Cache the settings of each component ID.
   // This speeds up remounting as well as repeaters.
@@ -74,6 +75,8 @@
   // Component information derived during initialisation
   let constructor
   let definition
+  let settingsDefinition
+  let settingsDefinitionMap
 
   // Set up initial state for each new component instance
   $: initialise(instance)
@@ -118,7 +121,7 @@
   $: emptyState = empty && showEmptyState
 
   // Enrich component settings
-  $: enrichComponentSettings($context)
+  $: enrichComponentSettings($context, settingsDefinitionMap)
 
   // Evaluate conditional UI settings and store any component setting changes
   // which need to be made. This is broken into 2 lines to avoid svelte
@@ -168,12 +171,14 @@
     }
 
     // Get the settings definition for this component, and cache it
-    let settingsDefinition
     if (SettingsDefinitionCache[definition.name]) {
       settingsDefinition = SettingsDefinitionCache[definition.name]
+      settingsDefinitionMap = SettingsDefinitionMapCache[definition.name]
     } else {
       settingsDefinition = getSettingsDefinition(definition)
+      settingsDefinitionMap = getSettingsDefinitionMap(settingsDefinition)
       SettingsDefinitionCache[definition.name] = settingsDefinition
+      SettingsDefinitionMapCache[definition.name] = settingsDefinitionMap
     }
 
     // Parse the instance settings, and cache them
@@ -190,7 +195,9 @@
     dynamicSettings = instanceSettings.dynamicSettings
 
     // Force an initial enrichment of the new settings
-    enrichComponentSettings(get(context), { force: true })
+    enrichComponentSettings(get(context), settingsDefinitionMap, {
+      force: true,
+    })
   }
 
   // Gets the component constructor for the specified component
@@ -226,6 +233,14 @@
     return settings
   }
 
+  const getSettingsDefinitionMap = settingsDefinition => {
+    let map = {}
+    settingsDefinition?.forEach(setting => {
+      map[setting.key] = setting
+    })
+    return map
+  }
+
   const getInstanceSettings = (instance, settingsDefinition) => {
     // Get raw settings
     let settings = {}
@@ -248,7 +263,7 @@
         } else if (typeof value === "string" && value.includes("{{")) {
           // Strings can be trivially checked
           delete newStaticSettings[setting.key]
-        } else if (value[0]?.["##eventHandlerType"] != null) {
+        } else if (setting.type === "event") {
           // Always treat button actions as dynamic
           delete newStaticSettings[setting.key]
         } else if (typeof value === "object") {
@@ -273,7 +288,11 @@
   }
 
   // Enriches any string component props using handlebars
-  const enrichComponentSettings = (context, options = { force: false }) => {
+  const enrichComponentSettings = (
+    context,
+    settingsDefinitionMap,
+    options = { force: false }
+  ) => {
     const contextChanged = context.key !== lastContextKey
     if (!contextChanged && !options?.force) {
       return
@@ -285,7 +304,11 @@
     const enrichmentTime = latestUpdateTime
 
     // Enrich settings with context
-    const newEnrichedSettings = enrichProps(dynamicSettings, context)
+    const newEnrichedSettings = enrichProps(
+      dynamicSettings,
+      context,
+      settingsDefinitionMap
+    )
 
     // Abandon this update if a newer update has started
     if (enrichmentTime !== latestUpdateTime) {

@@ -14,7 +14,7 @@ jest.mock("aws-sdk", () => ({
 }))
 
 const setup = require("./utilities")
-const { events } = require("@budibase/backend-core")
+const { events, constants } = require("@budibase/backend-core")
 const version = require("../../../../package.json").version
 
 describe("/static", () => {
@@ -49,9 +49,12 @@ describe("/static", () => {
     })
 
     it("should serve the app by id", async () => {
+      const headers = config.defaultHeaders()
+      delete headers[constants.Headers.APP_ID]
+
       const res = await request
         .get(`/${config.prodAppId}`)
-        .set(config.defaultHeaders())
+        .set(headers)
         .expect(200)
 
       expect(res.body.appId).toBe(config.prodAppId)
@@ -61,9 +64,12 @@ describe("/static", () => {
     })
 
     it("should serve the app by url", async () => {
+      const headers = config.defaultHeaders()
+      delete headers[constants.Headers.APP_ID]
+      
       const res = await request
-        .get(`${config.prodApp.url}`)
-        .set(config.defaultHeaders())
+        .get(`/app${config.prodApp.url}`)
+        .set(headers)
         .expect(200)
 
       expect(res.body.appId).toBe(config.prodAppId)

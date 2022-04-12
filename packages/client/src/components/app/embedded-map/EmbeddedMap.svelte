@@ -2,8 +2,8 @@
   import L from "leaflet"
   import sanitizeHtml from "sanitize-html"
   import "leaflet/dist/leaflet.css"
-  import { Helpers } from "@budibase/bbui"
-  import { getContext } from "svelte"
+  import { Helpers, Button } from "@budibase/bbui"
+  import { onMount, getContext } from "svelte"
   import {
     FullScreenControl,
     LocationControl,
@@ -24,86 +24,16 @@
   export let defaultLocation
   export let tileURL = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
   export let mapAttribution
+  export let creationEnabled = false
+  export let onClickMarker
+  export let onCreateMarker
 
   const { styleable, notificationStore } = getContext("sdk")
   const component = getContext("component")
   const embeddedMapId = `${Helpers.uuid()}-wrapper`
 
-  let cachedDeviceCoordinates
-  const fallbackCoordinates = [51.5072, -0.1276] //London
-
-  let mapInstance
-  let mapMarkerGroup = new L.FeatureGroup()
-  let mapMarkers = []
-
-  let minZoomLevel = 0
-  let maxZoomLevel = 18
-  let adjustedZoomLevel = !Number.isInteger(zoomLevel)
-    ? 72
-    : Math.round(zoomLevel * (maxZoomLevel / 100))
-
-  $: zoomControlUpdated(mapInstance, zoomEnabled)
-  $: locationControlUpdated(mapInstance, locationEnabled)
-  $: fullScreenControlUpdated(mapInstance, fullScreenEnabled)
-  $: updateMapDimensions(
-    mapInstance,
-    $component.styles.normal.width,
-    $component.styles.normal.height
-  )
-  $: addMapMarkers(
-    mapInstance,
-    dataProvider?.rows,
-    latitudeKey,
-    longitudeKey,
-    titleKey
-  )
-  $: if (typeof mapInstance === "object" && mapMarkers.length > 0) {
-    mapInstance.setZoom(0)
-    mapInstance.fitBounds(mapMarkerGroup.getBounds(), {
-      paddingTopLeft: [0, 24],
-    })
-  }
-
-  const updateMapDimensions = mapInstance => {
-    if (typeof mapInstance !== "object") {
-      return
-    }
-    mapInstance.invalidateSize()
-  }
-
-  let isValidLatitude = value => {
-    return !isNaN(value) && value > -90 && value < 90
-  }
-
-  let isValidLongitude = value => {
-    return !isNaN(value) && value > -180 && value < 180
-  }
-
-  const parseDefaultLocation = defaultLocation => {
-    if (typeof defaultLocation !== "string") {
-      return fallbackCoordinates
-    }
-    let defaultLocationParts = defaultLocation.split(",")
-    if (defaultLocationParts.length !== 2) {
-      return fallbackCoordinates
-    }
-
-    let parsedDefaultLatitude = parseFloat(defaultLocationParts[0].trim())
-    let parsedDefaultLongitude = parseFloat(defaultLocationParts[1].trim())
-
-    return isValidLatitude(parsedDefaultLatitude) === true &&
-      isValidLongitude(parsedDefaultLongitude) === true
-      ? [parsedDefaultLatitude, parsedDefaultLongitude]
-      : fallbackCoordinates
-  }
-
-  $: defaultCoordinates =
-    mapMarkers.length > 0
-      ? parseDefaultLocation(defaultLocation)
-      : fallbackCoordinates
-
   // Map Button Controls
-  let locationControl = new LocationControl({
+  const locationControl = new LocationControl({
     position: "bottomright",
     onLocationFail: err => {
       if (err.code === GeolocationPositionError.PERMISSION_DENIED) {
@@ -129,12 +59,134 @@
       }
     },
   })
-  let fullScreenControl = new FullScreenControl({
+  const fullScreenControl = new FullScreenControl({
     position: "topright",
   })
-  let zoomControl = L.control.zoom({
+  const zoomControl = L.control.zoom({
     position: "bottomright",
   })
+
+  // Map and marker configuration
+  const defaultMarkerOptions = {
+    html:
+      '<div><svg width="26px" height="26px" class="spectrum-Icon" focusable="false" stroke="#b12b27" stroke-width="1%">' +
+      '<use xlink:href="#spectrum-icon-18-Location" /></svg></div>',
+    className: "embedded-map-marker",
+    iconSize: [26, 26],
+    iconAnchor: [13, 26],
+    popupAnchor: [0, -13],
+  }
+  const mapMarkerOptions = {
+    icon: L.divIcon(defaultMarkerOptions),
+    draggable: false,
+    alt: "Location Marker",
+  }
+  const candidateMarkerOptions = {
+    icon: L.divIcon({
+      ...defaultMarkerOptions,
+      className: "embedded-map-marker--candidate",
+    }),
+    draggable: false,
+    alt: "Location Marker",
+  }
+  const mapOptions = {
+    fullScreen: false,
+    zoomControl: false,
+    scrollWheelZoom: zoomEnabled,
+    minZoomLevel,
+    maxZoomLevel,
+  }
+  const fallbackCoordinates = [51.5072, -0.1276] //London
+
+  let mapInstance
+  let mapMarkerGroup = new L.FeatureGroup()
+  let candidateMarkerGroup = new L.FeatureGroup()
+  let candidateMarkerPosition
+  let mounted = false
+  let initialMarkerZoomCompleted = false
+  let minZoomLevel = 0
+  let maxZoomLevel = 18
+  let cachedDeviceCoordinates
+
+  $: validRows = getValidRows(dataProvider?.rows, latitudeKey, longitudeKey)
+  $: safeZoomLevel = parseZoomLevel(zoomLevel)
+  $: defaultCoordinates = parseDefaultLocation(defaultLocation)
+  $: initMap(tileURL, mapAttribution, safeZoomLevel)
+  $: zoomControlUpdated(mapInstance, zoomEnabled)
+  $: locationControlUpdated(mapInstance, locationEnabled)
+  $: fullScreenControlUpdated(mapInstance, fullScreenEnabled)
+  $: width = $component.styles.normal.width
+  $: height = $component.styles.normal.height
+  $: width, height, mapInstance?.invalidateSize()
+  $: defaultCoordinates, resetView()
+  $: addMapMarkers(
+    mapInstance,
+    validRows,
+    latitudeKey,
+    longitudeKey,
+    titleKey,
+    onClickMarker
+  )
+
+  const isValidLatitude = value => {
+    return !isNaN(value) && value > -90 && value < 90
+  }
+
+  const isValidLongitude = value => {
+    return !isNaN(value) && value > -180 && value < 180
+  }
+
+  const getValidRows = (rows, latKey, lngKey) => {
+    if (!rows?.length || !latKey || !lngKey) {
+      return []
+    }
+    return rows.filter(row => {
+      return isValidLatitude(row[latKey]) && isValidLongitude(row[lngKey])
+    })
+  }
+
+  const parseZoomLevel = zoomLevel => {
+    let zoom = zoomLevel
+    if (zoom == null || isNaN(zoom)) {
+      zoom = 50
+    } else {
+      zoom = parseFloat(zoom)
+      zoom = Math.max(0, Math.min(100, zoom))
+    }
+    return Math.round((zoom * maxZoomLevel) / 100)
+  }
+
+  const parseDefaultLocation = defaultLocation => {
+    if (typeof defaultLocation !== "string") {
+      return fallbackCoordinates
+    }
+    let defaultLocationParts = defaultLocation.split(",")
+    if (defaultLocationParts.length !== 2) {
+      return fallbackCoordinates
+    }
+
+    let parsedDefaultLatitude = parseFloat(defaultLocationParts[0].trim())
+    let parsedDefaultLongitude = parseFloat(defaultLocationParts[1].trim())
+
+    return isValidLatitude(parsedDefaultLatitude) === true &&
+      isValidLongitude(parsedDefaultLongitude) === true
+      ? [parsedDefaultLatitude, parsedDefaultLongitude]
+      : fallbackCoordinates
+  }
+
+  const resetView = () => {
+    if (!mapInstance) {
+      return
+    }
+    if (mapMarkerGroup.getLayers().length) {
+      mapInstance.setZoom(0)
+      mapInstance.fitBounds(mapMarkerGroup.getBounds(), {
+        paddingTopLeft: [0, 24],
+      })
+    } else {
+      mapInstance.setView(defaultCoordinates, safeZoomLevel)
+    }
+  }
 
   const locationControlUpdated = (mapInstance, locationEnabled) => {
     if (typeof mapInstance !== "object") {
@@ -171,44 +223,25 @@
     }
   }
 
-  //Map icon and marker configuration
-  const mapIconMarkup =
-    '<div><svg width="26px" height="26px" class="spectrum-Icon" focusable="false" stroke="#b12b27" stroke-width="1%">' +
-    '<use xlink:href="#spectrum-icon-18-Location" /></svg></div>'
-  const mapIcon = L.divIcon({
-    html: mapIconMarkup,
-    className: "embedded-map-marker",
-    iconSize: [26, 26],
-    iconAnchor: [13, 26],
-    popupAnchor: [0, -13],
-  })
-  const mapMarkerOptions = {
-    icon: mapIcon,
-    draggable: false,
-    alt: "Location Marker",
-  }
-  let mapOptions = {
-    fullScreen: false,
-    zoomControl: false,
-    scrollWheelZoom: zoomEnabled,
-    minZoomLevel,
-    maxZoomLevel,
-  }
-
-  const addMapMarkers = (mapInstance, rows, latKey, lngKey, titleKey) => {
-    if (typeof mapInstance !== "object" || !rows || !latKey || !lngKey) {
+  const addMapMarkers = (
+    mapInstance,
+    validRows,
+    latKey,
+    lngKey,
+    titleKey,
+    onClick
+  ) => {
+    if (!mapInstance) {
       return
     }
 
     mapMarkerGroup.clearLayers()
-
-    const validRows = rows.filter(row => {
-      return isValidLatitude(row[latKey]) && isValidLongitude(row[lngKey])
-    })
+    if (!validRows?.length) {
+      return
+    }
 
     validRows.forEach(row => {
       let markerCoords = [row[latKey], row[lngKey]]
-
       let marker = L.marker(markerCoords, mapMarkerOptions).addTo(mapInstance)
       let markerContent = generateMarkerPopupContent(
         row[latKey],
@@ -216,52 +249,105 @@
         row[titleKey]
       )
 
-      marker.bindPopup(markerContent).addTo(mapMarkerGroup)
+      marker
+        .bindTooltip(markerContent, {
+          direction: "top",
+          offset: [0, -25],
+        })
+        .addTo(mapMarkerGroup)
 
-      //https://github.com/Leaflet/Leaflet/issues/7331
-      marker.on("click", function () {
-        this.openPopup()
-      })
-
-      mapMarkers = [...mapMarkers, marker]
+      if (onClick) {
+        marker.on("click", () => {
+          onClick({
+            marker: row,
+          })
+        })
+      }
     })
+
+    // Zoom to markers if this is the first time
+    if (!initialMarkerZoomCompleted) {
+      resetView()
+      initialMarkerZoomCompleted = true
+    }
   }
 
   const generateMarkerPopupContent = (latitude, longitude, text) => {
     return text || latitude + "," + longitude
   }
 
-  const initMap = () => {
-    const initCoords = defaultCoordinates
-
+  const initMap = (tileURL, attribution, zoom) => {
+    if (!mounted) {
+      return
+    }
+    if (mapInstance) {
+      mapInstance.remove()
+    }
     mapInstance = L.map(embeddedMapId, mapOptions)
     mapMarkerGroup.addTo(mapInstance)
+    candidateMarkerGroup.addTo(mapInstance)
 
-    const cleanAttribution = sanitizeHtml(mapAttribution, {
+    // Add attribution
+    const cleanAttribution = sanitizeHtml(attribution, {
       allowedTags: ["a"],
       allowedAttributes: {
         a: ["href", "target"],
       },
     })
-
     L.tileLayer(tileURL, {
       attribution: "&copy; " + cleanAttribution,
-      zoom: adjustedZoomLevel,
+      zoom,
     }).addTo(mapInstance)
 
-    //Initialise the map
-    mapInstance.setView(initCoords, adjustedZoomLevel)
+    // Add click handler
+    mapInstance.on("click", handleMapClick)
+
+    // Reset view
+    resetView()
   }
 
-  const mapAction = () => {
-    initMap()
-    return {
-      destroy() {
-        mapInstance.remove()
-        mapInstance = undefined
-      },
+  const handleMapClick = e => {
+    if (!creationEnabled) {
+      return
+    }
+    candidateMarkerGroup.clearLayers()
+    candidateMarkerPosition = [e.latlng.lat, e.latlng.lng]
+    let candidateMarker = L.marker(
+      candidateMarkerPosition,
+      candidateMarkerOptions
+    )
+    candidateMarker
+      .bindTooltip("New marker", {
+        permanent: true,
+        direction: "top",
+        offset: [0, -25],
+      })
+      .addTo(candidateMarkerGroup)
+      .on("click", clearCandidateMarker)
+  }
+
+  const createMarker = async () => {
+    if (!onCreateMarker) {
+      return
+    }
+    const res = await onCreateMarker({
+      lat: candidateMarkerPosition[0],
+      lng: candidateMarkerPosition[1],
+    })
+    if (res !== false) {
+      clearCandidateMarker()
     }
   }
+
+  const clearCandidateMarker = () => {
+    candidateMarkerGroup.clearLayers()
+    candidateMarkerPosition = null
+  }
+
+  onMount(() => {
+    mounted = true
+    initMap(tileURL, mapAttribution, safeZoomLevel)
+  })
 </script>
 
 <div class="embedded-map-wrapper map-default" use:styleable={$component.styles}>
@@ -269,12 +355,20 @@
     <div>{error}</div>
   {/if}
 
-  <div id={embeddedMapId} class="embedded embedded-map" use:mapAction />
+  <div id={embeddedMapId} class="embedded embedded-map" />
+
+  {#if candidateMarkerPosition}
+    <div class="button-container">
+      <Button secondary quiet on:click={clearCandidateMarker}>Cancel</Button>
+      <Button cta on:click={createMarker}>Create marker</Button>
+    </div>
+  {/if}
 </div>
 
 <style>
   .embedded-map-wrapper {
     background-color: #f1f1f1;
+    height: 320px;
   }
   .map-default {
     min-height: 180px;
@@ -287,11 +381,22 @@
   .embedded-map :global(.embedded-map-marker) {
     color: #ee3b35;
   }
+  .embedded-map :global(.embedded-map-marker--candidate) {
+    color: var(--primaryColor);
+  }
   .embedded-map :global(.embedded-map-control) {
     font-size: 22px;
   }
   .embedded-map {
     height: 100%;
     width: 100%;
+  }
+  .button-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: var(--spacing-xl);
+    margin-top: var(--spacing-xl);
   }
 </style>

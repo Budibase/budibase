@@ -44,8 +44,8 @@ router
     authorized(PermissionTypes.TABLE, PermissionLevels.WRITE),
     controller.uploadFile
   )
-  // TODO: this likely needs to be secured in some way
   .get("/:appId/:path*", controller.serveApp)
+  .get("/app/:appUrl/:path*", controller.serveApp)
   .post(
     "/api/attachments/:datasourceId/url",
     authorized(PermissionTypes.TABLE, PermissionLevels.READ),

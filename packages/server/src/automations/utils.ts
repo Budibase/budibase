@@ -17,12 +17,12 @@ const Runner = new Thread(ThreadType.AUTOMATION)
 
 export async function processEvent(job: any) {
   try {
+    console.log(
+      `${job.data.automation.appId} automation ${job.data.automation._id} running`
+    )
+    // need to actually await these so that an error can be captured properly
     const tenantId = tenancy.getTenantIDFromAppID(job.data.event.appId)
     return await tenancy.doInTenant(tenantId, async () => {
-      console.log(
-        `${job.data.automation.appId} automation ${job.data.automation._id} running`
-      )
-      // need to actually await these so that an error can be captured properly
       const runFn = () => Runner.run(job)
       return quotas.addAutomation(runFn)
     })
@@ -31,6 +31,7 @@ export async function processEvent(job: any) {
     console.error(
       `${job.data.automation.appId} automation ${job.data.automation._id} was unable to run - ${errJson}`
     )
+    console.trace(err)
     return { err }
   }
 }

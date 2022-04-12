@@ -951,11 +951,27 @@ components:
       required:
         - data
     executeQuery:
-      description: The query body must contain the required parameters for the query,
-        this depends on query type, setup and bindings.
+      description: The parameters required for executing a query.
       type: object
-      additionalProperties:
-        description: Key value properties of any type, depending on the query output schema.
+      properties:
+        parameters:
+          type: object
+          description: This contains the required parameters for the query, this depends
+            on query type, setup and bindings.
+          additionalProperties:
+            description: Key value properties of any type, depending on the query output
+              schema.
+        pagination:
+          type: object
+          description: For supported query types (currently on REST) pagination can be
+            performed using these properties.
+          properties:
+            page:
+              type: string
+              description: The page which has been returned from a previous query.
+            limit:
+              type: number
+              description: The number of rows to return per page.
     executeQueryOutput:
       type: object
       properties:

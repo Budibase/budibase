@@ -4,7 +4,7 @@
 version: "3.8"
 services:
   db:
-    restart: always
+    restart: unless-stopped
     platform: linux/x86_64
     image: container-registry.oracle.com/database/express:18.4.0-xe
     environment:

@@ -14,6 +14,7 @@ import {
   finaliseExternalTables,
 } from "./utils"
 import { DatasourcePlus } from "./base/datasourcePlus"
+import dayjs from "dayjs"
 
 module MySQLModule {
   const mysql = require("mysql2/promise")
@@ -80,6 +81,26 @@ module MySQLModule {
     },
   }
 
+  function bindingTypeCoerce(bindings: any[]) {
+    for (let i = 0; i < bindings.length; i++) {
+      const binding = bindings[i]
+      if (typeof binding !== "string") {
+        continue
+      }
+      const matches = binding.match(/^\d*$/g)
+      // check if number first
+      if (matches && matches[0] !== "" && !isNaN(Number(matches[0]))) {
+        bindings[i] = parseFloat(binding)
+      }
+      // if not a number, see if it is a date - important to do in this order as any
+      // integer will be considered a valid date
+      else if (dayjs(binding).isValid()) {
+        bindings[i] = dayjs(binding).toDate()
+      }
+    }
+    return bindings
+  }
+
   class MySQLIntegration extends Sql implements DatasourcePlus {
     private config: MySQLConfig
     private client: any
@@ -122,7 +143,7 @@ module MySQLModule {
         // Node MySQL is callback based, so we must wrap our call in a promise
         const response = await this.client.query(
           query.sql,
-          query.bindings || []
+          bindingTypeCoerce(query.bindings || [])
         )
         return response[0]
       } finally {

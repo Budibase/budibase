@@ -3,13 +3,14 @@
   import PathTree from "./PathTree.svelte"
 
   let routes = {}
-  $: paths = Object.keys(routes || {}).sort()
+  let paths = []
 
-  $: {
-    const allRoutes = $store.routes
+  $: allRoutes = $store.routes
+  $: selectedScreenId = $store.selectedScreenId
+  $: updatePaths(allRoutes, $selectedAccessRole, selectedScreenId)
+
+  const updatePaths = (allRoutes, selectedRoleId, selectedScreenId) => {
     const sortedPaths = Object.keys(allRoutes || {}).sort()
-    const selectedRoleId = $selectedAccessRole
-    const selectedScreenId = $store.selectedScreenId
 
     let found = false
     let firstValidScreenId
@@ -41,11 +42,15 @@
         })
       })
     })
-    routes = filteredRoutes
+    routes = { ...filteredRoutes }
+    paths = Object.keys(routes || {}).sort()
 
     // Select the correct role for the current screen ID
     if (!found && screenRoleId) {
       selectedAccessRole.set(screenRoleId)
+      if (screenRoleId !== selectedRoleId) {
+        updatePaths(allRoutes, screenRoleId, selectedScreenId)
+      }
     }
 
     // If the selected screen isn't in this filtered list, select the first one

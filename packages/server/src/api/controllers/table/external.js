@@ -119,8 +119,8 @@ function generateManyLinkSchema(datasource, column, table, relatedTable) {
     },
   }
   column.through = junctionTable._id
-  column.throughFrom = primary
-  column.throughTo = relatedPrimary
+  column.throughFrom = relatedPrimary
+  column.throughTo = primary
   column.fieldName = relatedPrimary
   return junctionTable
 }
@@ -147,7 +147,7 @@ function generateRelatedSchema(linkColumn, table, relatedTable, columnName) {
   // is many to many
   else {
     // don't need to copy through, already got it
-    relatedSchema.fieldName = linkColumn.throughFrom
+    relatedSchema.fieldName = linkColumn.throughTo
     relatedSchema.throughTo = linkColumn.throughFrom
     relatedSchema.throughFrom = linkColumn.throughTo
   }
