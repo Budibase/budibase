@@ -1,5 +1,5 @@
 const { cloneDeep } = require("lodash/fp")
-const { BUILTIN_PERMISSION_IDS } = require("./permissions")
+const { BUILTIN_PERMISSION_IDS, PermissionLevels } = require("./permissions")
 const {
   generateRoleID,
   getRoleParams,
@@ -180,6 +180,20 @@ exports.getUserRoleHierarchy = async (userRoleId, opts = { idOnly: true }) => {
   return opts.idOnly ? roles.map(role => role._id) : roles
 }
 
+// this function checks that the provided permissions are in an array format
+// some templates/older apps will use a simple string instead of array for roles
+// convert the string to an array using the theory that write is higher than read
+exports.checkForRoleResourceArray = (rolePerms, resourceId) => {
+  if (rolePerms && !Array.isArray(rolePerms[resourceId])) {
+    const permLevel = rolePerms[resourceId]
+    rolePerms[resourceId] = [permLevel]
+    if (permLevel === PermissionLevels.WRITE) {
+      rolePerms[resourceId].push(PermissionLevels.READ)
+    }
+  }
+  return rolePerms
+}
+
 /**
  * Given an app ID this will retrieve all of the roles that are currently within that app.
  * @return {Promise<object[]>} An array of the role objects that were found.
@@ -209,15 +223,27 @@ exports.getAllRoles = async appId => {
       roles.push(Object.assign(builtinRole, dbBuiltin))
     }
   }
+  // check permissions
+  for (let role of roles) {
+    if (!role.permissions) {
+      continue
+    }
+    for (let resourceId of Object.keys(role.permissions)) {
+      role.permissions = exports.checkForRoleResourceArray(
+        role.permissions,
+        resourceId
+      )
+    }
+  }
   return roles
 }
 
 /**
- * This retrieves the required role
- * @param permLevel
- * @param resourceId
- * @param subResourceId
- * @return {Promise<{permissions}|Object>}
+ * This retrieves the required role for a resource
+ * @param permLevel The level of request
+ * @param resourceId The resource being requested
+ * @param subResourceId The sub resource being requested
+ * @return {Promise<{permissions}|Object>} returns the permissions required to access.
  */
 exports.getRequiredResourceRole = async (
   permLevel,

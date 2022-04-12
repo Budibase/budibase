@@ -52,16 +52,14 @@ export async function read(ctx: any, next: any) {
 }
 
 export async function update(ctx: any, next: any) {
-  ctx.request.body = await addRev(fixRow(ctx.request.body, ctx.params.tableId))
+  ctx.request.body = await addRev(fixRow(ctx.request.body, ctx.params))
   await rowController.save(ctx)
   await next()
 }
 
 export async function destroy(ctx: any, next: any) {
   // set the body as expected, with the _id and _rev fields
-  ctx.request.body = await addRev(
-    fixRow({ _id: ctx.params.rowId }, ctx.params.tableId)
-  )
+  ctx.request.body = await addRev(fixRow({ _id: ctx.params.rowId }, ctx.params))
   await rowController.destroy(ctx)
   // destroy controller doesn't currently return the row as the body, need to adjust this
   // in the public API to be correct

@@ -13,6 +13,7 @@
   export let icon = undefined
   export let active = false
   export let tooltip = undefined
+  export let dataCy
 
   let showTooltip = false
 </script>
@@ -27,6 +28,7 @@
   class:active
   class="spectrum-Button spectrum-Button--size{size.toUpperCase()}"
   {disabled}
+  data-cy={dataCy}
   on:click|preventDefault
   on:mouseover={() => (showTooltip = true)}
   on:focus={() => (showTooltip = true)}

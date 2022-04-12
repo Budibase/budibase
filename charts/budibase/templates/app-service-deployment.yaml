@@ -106,6 +106,10 @@ spec:
           value: {{ .Values.globals.cookieDomain | quote }}
         - name: HTTP_MIGRATIONS
           value: {{ .Values.globals.httpMigrations | quote }}
+        - name: GOOGLE_CLIENT_ID
+          value: {{ .Values.globals.google.clientId | quote }}
+        - name: GOOGLE_CLIENT_SECRET
+          value: {{ .Values.globals.google.secret | quote }}
         image: budibase/apps:{{ .Values.globals.appVersion }}
         imagePullPolicy: Always
         name: bbapps

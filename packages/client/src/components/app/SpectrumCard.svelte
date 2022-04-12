@@ -102,7 +102,7 @@
     white-space: nowrap;
   }
   .spectrum-Card-footer {
-    word-wrap: anywhere;
+    word-wrap: break-word;
     white-space: pre-wrap;
   }
   .horizontal .spectrum-Card-coverPhoto {
@@ -130,6 +130,7 @@
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    word-break: break-all;
   }
 
   .button-container {

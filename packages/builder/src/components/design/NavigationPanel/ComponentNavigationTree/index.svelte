@@ -3,13 +3,14 @@
   import PathTree from "./PathTree.svelte"
 
   let routes = {}
-  $: paths = Object.keys(routes || {}).sort()
+  let paths = []
 
-  $: {
-    const allRoutes = $store.routes
+  $: allRoutes = $store.routes
+  $: selectedScreenId = $store.selectedScreenId
+  $: updatePaths(allRoutes, $selectedAccessRole, selectedScreenId)
+
+  const updatePaths = (allRoutes, selectedRoleId, selectedScreenId) => {
     const sortedPaths = Object.keys(allRoutes || {}).sort()
-    const selectedRoleId = $selectedAccessRole
-    const selectedScreenId = $store.selectedScreenId
 
     let found = false
     let firstValidScreenId
@@ -41,11 +42,15 @@
         })
       })
     })
-    routes = filteredRoutes
+    routes = { ...filteredRoutes }
+    paths = Object.keys(routes || {}).sort()
 
     // Select the correct role for the current screen ID
     if (!found && screenRoleId) {
       selectedAccessRole.set(screenRoleId)
+      if (screenRoleId !== selectedRoleId) {
+        updatePaths(allRoutes, screenRoleId, selectedScreenId)
+      }
     }
 
     // If the selected screen isn't in this filtered list, select the first one
@@ -55,11 +60,10 @@
   }
 </script>
 
-<div class="root">
+<div class="root" class:has-screens={!!paths?.length}>
   {#each paths as path, idx (path)}
     <PathTree border={idx > 0} {path} route={routes[path]} />
   {/each}
-
   {#if !paths.length}
     <div class="empty">
       There aren't any screens configured with this access role.
@@ -68,9 +72,12 @@
 </div>
 
 <style>
+  .root.has-screens {
+    min-width: max-content;
+  }
   div.empty {
-    font-size: var(--font-size-xs);
+    font-size: var(--font-size-s);
     color: var(--grey-5);
-    padding-top: var(--spacing-xs);
+    padding: var(--spacing-xs) var(--spacing-xl);
   }
 </style>

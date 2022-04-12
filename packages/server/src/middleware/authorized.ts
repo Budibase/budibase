@@ -5,6 +5,7 @@ import {
 } from "@budibase/backend-core/roles"
 const {
   PermissionTypes,
+  PermissionLevels,
   doesHaveBasePermission,
 } = require("@budibase/backend-core/permissions")
 const builderMiddleware = require("./builder")
@@ -70,7 +71,7 @@ const checkAuthorizedResource = async (
   }
 }
 
-export = (permType: any, permLevel: any = null) =>
+export = (permType: any, permLevel: any = null, opts = { schema: false }) =>
   async (ctx: any, next: any) => {
     // webhooks don't need authentication, each webhook unique
     // also internal requests (between services) don't need authorized
@@ -87,15 +88,25 @@ export = (permType: any, permLevel: any = null) =>
     await builderMiddleware(ctx, permType)
 
     // get the resource roles
-    let resourceRoles: any = []
+    let resourceRoles = [],
+      otherLevelRoles
+    const otherLevel =
+      permLevel === PermissionLevels.READ
+        ? PermissionLevels.WRITE
+        : PermissionLevels.READ
     const appId = getAppId()
     if (appId && hasResource(ctx)) {
       resourceRoles = await getRequiredResourceRole(permLevel, ctx)
+      if (opts && opts.schema) {
+        otherLevelRoles = await getRequiredResourceRole(otherLevel, ctx)
+      }
     }
 
     // if the resource is public, proceed
-    const isPublicResource = resourceRoles.includes(BUILTIN_ROLE_IDS.PUBLIC)
-    if (isPublicResource) {
+    if (
+      resourceRoles.includes(BUILTIN_ROLE_IDS.PUBLIC) ||
+      (otherLevelRoles && otherLevelRoles.includes(BUILTIN_ROLE_IDS.PUBLIC))
+    ) {
       return next()
     }
 
@@ -104,8 +115,17 @@ export = (permType: any, permLevel: any = null) =>
       return ctx.throw(403, "Session not authenticated")
     }
 
-    // check authorized
-    await checkAuthorized(ctx, resourceRoles, permType, permLevel)
+    try {
+      // check authorized
+      await checkAuthorized(ctx, resourceRoles, permType, permLevel)
+    } catch (err) {
+      // this is a schema, check if
+      if (opts && opts.schema && permLevel) {
+        await checkAuthorized(ctx, otherLevelRoles, permType, otherLevel)
+      } else {
+        throw err
+      }
+    }
 
     // csrf protection
     return csrf(ctx, next)

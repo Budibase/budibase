@@ -52,9 +52,8 @@ http {
       proxy_pass      http://{{ address }}:4001;
     }
 
-    location /app/ {
+    location /app {
       proxy_pass      http://{{ address }}:4001;
-      rewrite ^/app/(.*)$ /$1 break;
     }
 
     location /builder {

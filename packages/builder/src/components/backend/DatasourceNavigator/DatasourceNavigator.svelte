@@ -22,10 +22,11 @@
         const selected = $datasources.selected === datasource._id
         const open = openDataSources.includes(datasource._id)
         const containsSelected = containsActiveEntity(datasource)
+        const onlySource = $datasources.list.length === 1
         return {
           ...datasource,
           selected,
-          open: selected || open || containsSelected,
+          open: selected || open || containsSelected || onlySource,
         }
       })
     : []

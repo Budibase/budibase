@@ -51,7 +51,10 @@ exports.strategyFactory = async function (config, callbackUrl, saveUserFn) {
     )
   } catch (err) {
     console.error(err)
-    throw new Error("Error constructing google authentication strategy", err)
+    throw new Error(
+      `Error constructing google authentication strategy: ${err}`,
+      err
+    )
   }
 }
 // expose for testing
