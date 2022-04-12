@@ -4,6 +4,7 @@ const {
   getDBRoleID,
   getExternalRoleID,
   getBuiltinRoles,
+  checkForRoleResourceArray,
 } = require("@budibase/backend-core/roles")
 const { getRoleParams } = require("../../db/utils")
 const {
@@ -144,12 +145,11 @@ exports.getResourcePerms = async function (ctx) {
   for (let level of SUPPORTED_LEVELS) {
     // update the various roleIds in the resource permissions
     for (let role of roles) {
-      const rolePerms = role.permissions
+      const rolePerms = checkForRoleResourceArray(role.permissions, resourceId)
       if (
         rolePerms &&
         rolePerms[resourceId] &&
-        (rolePerms[resourceId] === level ||
-          rolePerms[resourceId].indexOf(level) !== -1)
+        rolePerms[resourceId].indexOf(level) !== -1
       ) {
         permissions[level] = getExternalRoleID(role._id)
       }

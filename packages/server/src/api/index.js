@@ -3,7 +3,6 @@ const {
   buildAuthMiddleware,
   auditLog,
   buildTenancyMiddleware,
-  buildAppTenancyMiddleware,
 } = require("@budibase/backend-core/auth")
 const { errors } = require("@budibase/backend-core")
 const currentApp = require("../middleware/currentapp")
@@ -15,6 +14,9 @@ const env = require("../environment")
 const { middleware: pro } = require("@budibase/pro")
 
 const router = new Router()
+
+router.get("/health", ctx => (ctx.status = 200))
+router.get("/version", ctx => (ctx.body = pkg.version))
 
 router
   .use(
@@ -36,8 +38,6 @@ router
     }
     await next()
   })
-  .use("/health", ctx => (ctx.status = 200))
-  .use("/version", ctx => (ctx.body = pkg.version))
   // re-direct before any middlewares occur
   .redirect("/", "/builder")
   .use(
@@ -54,8 +54,6 @@ router
     })
   )
   .use(currentApp)
-  // this middleware will try to use the app ID to determine the tenancy
-  .use(buildAppTenancyMiddleware())
   .use(pro.licensing())
   .use(auditLog)
 
@@ -76,8 +74,6 @@ router.use(async (ctx, next) => {
     console.trace(err)
   }
 })
-
-router.get("/health", ctx => (ctx.status = 200))
 
 // authenticated routes
 for (let route of mainRoutes) {

@@ -1,5 +1,6 @@
 const env = require("../environment")
 const { Headers } = require("../../constants")
+const { SEPARATOR, DocumentTypes } = require("../db/constants")
 const cls = require("./FunctionContext")
 const { getDB } = require("../db")
 const { getProdAppID, getDevelopmentAppID } = require("../db/conversions")
@@ -42,8 +43,39 @@ exports.doInTenant = (tenantId, task) => {
   })
 }
 
+/**
+ * Given an app ID this will attempt to retrieve the tenant ID from it.
+ * @return {null|string} The tenant ID found within the app ID.
+ */
+exports.getTenantIDFromAppID = appId => {
+  if (!appId) {
+    return null
+  }
+  const split = appId.split(SEPARATOR)
+  const hasDev = split[1] === DocumentTypes.DEV
+  if ((hasDev && split.length === 3) || (!hasDev && split.length === 2)) {
+    return null
+  }
+  if (hasDev) {
+    return split[2]
+  } else {
+    return split[1]
+  }
+}
+
+const setAppTenantId = appId => {
+  const appTenantId = this.getTenantIDFromAppID(appId) || this.DEFAULT_TENANT_ID
+  this.updateTenantId(appTenantId)
+}
+
 exports.doInAppContext = (appId, task) => {
+  if (!appId) {
+    throw new Error("appId is required")
+  }
   return cls.run(() => {
+    // set the app tenant id
+    setAppTenantId(appId)
+
     // set the app ID
     cls.setOnContext(ContextKeys.APP_ID, appId)
 

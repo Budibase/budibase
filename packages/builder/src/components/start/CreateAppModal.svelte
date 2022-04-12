@@ -9,16 +9,56 @@
   import { goto } from "@roxi/routify"
   import { createValidationStore } from "helpers/validation/yup"
   import * as appValidation from "helpers/validation/yup/app"
+  import TemplateCard from "components/common/TemplateCard.svelte"
 
   export let template
+
+  let creating = false
 
   const values = writable({ name: "", url: null })
   const validation = createValidationStore()
   $: validation.check($values)
 
   onMount(async () => {
+    $values.name = resolveAppName(template, $values.name)
+    nameToUrl($values.name)
     await setupValidation()
   })
+
+  const appPrefix = "/app"
+
+  $: appUrl = `${window.location.origin}${
+    $values.url
+      ? `${appPrefix}${$values.url}`
+      : `${appPrefix}${resolveAppUrl(template, $values.name)}`
+  }`
+
+  const resolveAppUrl = (template, name) => {
+    let parsedName
+    const resolvedName = resolveAppName(template, name)
+    parsedName = resolvedName ? resolvedName.toLowerCase() : ""
+    const parsedUrl = parsedName ? parsedName.replace(/\s+/g, "-") : ""
+    return encodeURI(parsedUrl)
+  }
+
+  const resolveAppName = (template, name) => {
+    if (template && !name) {
+      return template.name
+    }
+    return name ? name.trim() : null
+  }
+
+  const tidyUrl = url => {
+    if (url && !url.startsWith("/")) {
+      url = `/${url}`
+    }
+    $values.url = url === "" ? null : url
+  }
+
+  const nameToUrl = appName => {
+    let resolvedUrl = resolveAppUrl(template, appName)
+    tidyUrl(resolvedUrl)
+  }
 
   const setupValidation = async () => {
     const applications = svelteGet(apps)
@@ -30,6 +70,8 @@
   }
 
   async function createNewApp() {
+    creating = true
+
     try {
       // Create form data to create app
       let data = new FormData()
@@ -65,15 +107,9 @@
       await auth.setInitInfo({})
       $goto(`/builder/app/${createdApp.instance._id}`)
     } catch (error) {
+      creating = false
       console.error(error)
       notifications.error("Error creating app")
-    }
-  }
-
-  // auto add slash to url
-  $: {
-    if ($values.url && !$values.url.startsWith("/")) {
-      $values.url = `/${$values.url}`
     }
   }
 </script>
@@ -84,6 +120,15 @@
   onConfirm={createNewApp}
   disabled={!$validation.valid}
 >
+  {#if template && !template?.fromFile}
+    <TemplateCard
+      name={template.name}
+      imageSrc={template.image}
+      backgroundColour={template.background}
+      overlayEnabled={false}
+      icon={template.icon}
+    />
+  {/if}
   {#if template?.fromFile}
     <Dropzone
       error={$validation.touched.file && $validation.errors.file}
@@ -98,20 +143,42 @@
   {/if}
   <Input
     bind:value={$values.name}
+    disabled={creating}
     error={$validation.touched.name && $validation.errors.name}
     on:blur={() => ($validation.touched.name = true)}
+    on:change={nameToUrl($values.name)}
     label="Name"
-    placeholder={$auth.user.firstName
+    placeholder={$auth.user?.firstName
       ? `${$auth.user.firstName}s app`
       : "My app"}
   />
-  <Input
-    bind:value={$values.url}
-    error={$validation.touched.url && $validation.errors.url}
-    on:blur={() => ($validation.touched.url = true)}
-    label="URL"
-    placeholder={$values.name
-      ? "/" + encodeURIComponent($values.name).toLowerCase()
-      : "/"}
-  />
+  <span>
+    <Input
+      bind:value={$values.url}
+      disabled={creating}
+      error={$validation.touched.url && $validation.errors.url}
+      on:blur={() => ($validation.touched.url = true)}
+      on:change={tidyUrl($values.url)}
+      label="URL"
+      placeholder={$values.url
+        ? $values.url
+        : `/${resolveAppUrl(template, $values.name)}`}
+    />
+    {#if $values.url && $values.url !== "" && !$validation.errors.url}
+      <div class="app-server" title={appUrl}>
+        {appUrl}
+      </div>
+    {/if}
+  </span>
 </ModalContent>
+
+<style>
+  .app-server {
+    color: var(--spectrum-global-color-gray-600);
+    margin-top: 10px;
+    width: 320px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+</style>

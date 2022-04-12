@@ -9,8 +9,12 @@ import {
 } from "../../definitions/datasource"
 import { isIsoDateString, SqlClients } from "../utils"
 import SqlTableQueryBuilder from "./sqlTable"
+import environment from "../../environment"
 
-const BASE_LIMIT = 5000
+const envLimit = environment.SQL_MAX_ROWS
+  ? parseInt(environment.SQL_MAX_ROWS)
+  : null
+const BASE_LIMIT = envLimit || 5000
 
 type KnexQuery = Knex.QueryBuilder | Knex
 // these are invalid dates sent by the client, need to convert them to a real max date
