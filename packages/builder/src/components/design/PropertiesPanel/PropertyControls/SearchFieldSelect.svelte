@@ -22,7 +22,7 @@
   function getOptions(ds, dsSchema) {
     let base = Object.values(dsSchema)
     if (!ds?.tableId) {
-      return base
+      return base.map(field => field.name)
     }
     const currentTable = $tables.list.find(table => table._id === ds.tableId)
     return getFields(base, { allowLinks: currentTable?.sql }).map(
