@@ -18,7 +18,7 @@
   }
 </script>
 
-<!-- routify:options index=0 -->
+<!-- routify:options index=2 -->
 <div class="root">
   <div class="nav">
     <Tabs {selected} on:select={selectFirstDatasource}>

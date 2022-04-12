@@ -4,5 +4,3 @@
 
   $goto(`./${FrontendTypes.SCREEN}`)
 </script>
-
-<!-- routify:options index=1 -->

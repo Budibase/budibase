@@ -20,4 +20,3 @@
 </script>
 
 <CreateDatasourceModal bind:modal />
-<!-- routify:options index=false -->
