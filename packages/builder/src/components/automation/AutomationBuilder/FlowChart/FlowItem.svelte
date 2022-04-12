@@ -26,6 +26,7 @@
   let actionModal
   let resultsModal
   let blockComplete
+  let showLooping = false
 
   $: rowControl = $automationStore.selectedAutomation.automation.rowControl
   $: showBindingPicker =
@@ -55,7 +56,6 @@
     $automationStore.selectedAutomation?.automation.definition.steps.find(
       x => x.blockToLoop === block.id
     )
-  $: showLooping = false
 
   async function deleteStep() {
     let loopBlock =
