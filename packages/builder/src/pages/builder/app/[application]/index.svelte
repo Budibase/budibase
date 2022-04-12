@@ -1,6 +1,6 @@
 <script>
   import { goto } from "@roxi/routify"
-  $goto("./data")
+  $goto("./design")
 </script>
 
 <!-- routify:options index=false -->
