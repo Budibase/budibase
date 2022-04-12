@@ -96,7 +96,9 @@ export const patchAPI = API => {
   // handlebars enrichment
   const fetchTableDefinition = API.fetchTableDefinition
   API.fetchTableDefinition = async tableId => {
-    const definition = tableId.startsWith("ta_") ? await fetchTableDefinition(tableId) : undefined
+    const definition = !tableId.startsWith("query")
+      ? await fetchTableDefinition(tableId)
+      : undefined
     Object.keys(definition?.schema || {}).forEach(field => {
       if (definition.schema[field]?.type === "formula") {
         delete definition.schema[field].formula
