@@ -80,7 +80,7 @@
   }
 
   const fetchTable = async dataSource => {
-    if (dataSource?.tableId) {
+    if (dataSource?.tableId && dataSource?.type !== "query") {
       try {
         table = await API.fetchTableDefinition(dataSource.tableId)
       } catch (error) {

@@ -10,9 +10,15 @@
   let drawer
   let tempValue = value || []
 
-  const saveFilter = async () => {
-    // Filter out incomplete options
-    tempValue = tempValue.filter(option => option.value && option.label)
+  const saveOptions = async () => {
+    // Filter out incomplete options, default if needed
+    tempValue = tempValue.filter(option => option.value || option.label)
+    for (let i = 0; i < tempValue.length; i++) {
+      let option = tempValue[i]
+      option.label = option.label ? option.label : option.value
+      option.value = option.value ? option.value : option.label
+      tempValue[i] = option
+    }
     dispatch("change", tempValue)
     drawer.hide()
   }
@@ -23,6 +29,6 @@
   <svelte:fragment slot="description">
     Define the options for this picker.
   </svelte:fragment>
-  <Button cta slot="buttons" on:click={saveFilter}>Save</Button>
+  <Button cta slot="buttons" on:click={saveOptions}>Save</Button>
   <OptionsDrawer bind:options={tempValue} slot="body" />
 </Drawer>
