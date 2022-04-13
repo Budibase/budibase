@@ -180,7 +180,7 @@ exports.getBuildersCount = async () => {
   const builders = await queryGlobalView(ViewNames.USER_BY_BUILDERS, {
     include_docs: false,
   })
-  return builders.length
+  return builders ? builders.length : 0
 }
 
 exports.saveUser = async (
