@@ -33,8 +33,9 @@ jobs:
       with:
         repository: budibase/budibase-pro
         ref: ${{ steps.extract_branch.outputs.branch }}
-        path: '../budibase-pro'
+        path: './pro'
         token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+    - run: mv pro ../budibase-pro
 
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
