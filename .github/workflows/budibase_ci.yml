@@ -27,6 +27,7 @@ jobs:
       with:
         repository: budibase/budibase-pro
         path: './pro'
+        token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
