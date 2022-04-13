@@ -22,11 +22,18 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+
+    - name: Extract branch name
+      shell: bash
+      run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
+      id: extract_branch
+
     - name: Checkout
       uses: actions/checkout@v2
       with:
         repository: budibase/budibase-pro
-        path: './pro'
+        ref: ${{ steps.extract_branch.outputs.branch }}
+        path: '../budibase-pro'
         token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
     - name: Use Node.js ${{ matrix.node-version }}
