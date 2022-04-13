@@ -21,8 +21,7 @@
   },
   "scripts": {
     "setup": "node ./hosting/scripts/setup.js && yarn && yarn bootstrap && yarn build && yarn dev",
-    "bootstrap": "yarn run pre-bootstrap && lerna link && lerna bootstrap",
-    "pre-bootstrap": "./scripts/link-dependencies.sh",
+    "bootstrap": "lerna link && lerna bootstrap && ./scripts/link-dependencies.sh",
     "build": "lerna run build",
     "publishnpm": "yarn build && lerna publish --force-publish",
     "release": "lerna publish patch --yes --force-publish",

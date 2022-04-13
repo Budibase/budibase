@@ -88,8 +88,8 @@ export = (permType: any, permLevel: any = null, opts = { schema: false }) =>
     await builderMiddleware(ctx, permType)
 
     // get the resource roles
-    let resourceRoles = [],
-      otherLevelRoles
+    let resourceRoles: any = []
+    let otherLevelRoles: any = []
     const otherLevel =
       permLevel === PermissionLevels.READ
         ? PermissionLevels.WRITE
