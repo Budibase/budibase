@@ -1,8 +1,3 @@
-if [ "${CI}" = true ]; then
-  echo 'Skipping bootstrap-pro in CI'
-  exit 0
-fi
-
 echo "Linking backend-core"
 cd packages/backend-core
 yarn link
