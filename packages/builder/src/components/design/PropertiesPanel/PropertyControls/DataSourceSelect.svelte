@@ -52,7 +52,6 @@
     .map(query => ({
       label: query.name,
       name: query.name,
-      tableId: query._id,
       ...query,
       type: "query",
     }))
