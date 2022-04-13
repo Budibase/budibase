@@ -36,7 +36,8 @@ jobs:
 
     # Can't checkout in the parent directory directly
     # Just do a move afterwards instead 
-    - run: mv pro ../budibase-pro
+    - name: Setup pro
+      run: mv pro ../budibase-pro && cd ../budibase-pro && yarn setup
 
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
