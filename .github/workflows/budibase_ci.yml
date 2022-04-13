@@ -12,6 +12,9 @@ on:
       - master
       - develop 
 
+env:
+  branch: ${{ github.event.pull_request.head.ref }}
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -23,16 +26,11 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Extract branch name
-      shell: bash
-      run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
-      id: extract_branch
-
-    - name: Checkout
+    - name: Checkout budibase-pro
       uses: actions/checkout@v2
       with:
         repository: budibase/budibase-pro
-        ref: ${{ steps.extract_branch.outputs.branch }}
+        ref: ${{ env.branch }}
         path: './pro'
         token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
     - run: mv pro ../budibase-pro
