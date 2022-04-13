@@ -286,10 +286,10 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/backend-core@^1.0.104":
-  version "1.0.104"
-  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.0.104.tgz#eb435c27327a1f2ea5e83b3cf242b9f85b7a5f8a"
-  integrity sha512-YXI8R/bdWDO5RhcMdqu88DQ7Dn26v3SUTs5FuHvXG4b2mKDTHduecqTuhIhrbqQ5KjnTYuhAEz2iG0sP2rj5rg==
+"@budibase/backend-core@^1.0.105-alpha.10":
+  version "1.0.112"
+  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.0.112.tgz#38d5f8faadc08d863b13eeadefce067fd572ae27"
+  integrity sha512-/MS1+QZjEpwcy1Lj4tkvXE3V8Q1Kd41/30y8Y2yaDosnDoKZmUs5muZjXZJnmYADajPwA3u7uop2psEdg5diLg==
   dependencies:
     "@techpass/passport-openidconnect" "^0.3.0"
     aws-sdk "^2.901.0"
@@ -335,10 +335,10 @@
     to-gfm-code-block "^0.1.1"
     year "^0.2.1"
 
-"@budibase/string-templates@^1.0.104":
-  version "1.0.104"
-  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-1.0.104.tgz#f812700f2b21f638fd1e48dde065ae693fae2897"
-  integrity sha512-3caq3qwpIieyb9m8eSl8OhcE0ppzuyJ/0ubDlWmtpbmwmG2v3ynI+DwxpbG4CcVQFuebD2yxU0CZfioU76vKCQ==
+"@budibase/string-templates@^1.0.105-alpha.10":
+  version "1.0.112"
+  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-1.0.112.tgz#754f8f725262e58dfeac946de5f87d8d333077b7"
+  integrity sha512-UOVpMT87eR8ZfoZo5D3UsxR0Qsfj0FmE6bxcJLYd5ey/RIeMErnl8fKu/0Chj6JOxGc3q/U7dIYsqzdVsJFhyQ==
   dependencies:
     "@budibase/handlebars-helpers" "^0.11.8"
     dayjs "^1.10.4"
@@ -6805,9 +6805,9 @@ uri-js@^4.2.2:
     punycode "^2.1.0"
 
 urijs@^1.19.2:
-  version "1.19.8"
-  resolved "https://registry.yarnpkg.com/urijs/-/urijs-1.19.8.tgz#ee0407a18528934d3c383e691912f47043a58feb"
-  integrity sha512-iIXHrjomQ0ZCuDRy44wRbyTZVnfVNLVo3Ksz1yxNyE5wV1IDZW2S5Jszy45DTlw/UdsnRT7DyDhIz7Gy+vJumw==
+  version "1.19.11"
+  resolved "https://registry.yarnpkg.com/urijs/-/urijs-1.19.11.tgz#204b0d6b605ae80bea54bea39280cdb7c9f923cc"
+  integrity sha512-HXgFDgDommxn5/bIv0cnQZsPhHDA90NPHD6+c/v21U5+Sx5hoP8+dP9IZXBU1gIfvdRfhG8cel9QNPeionfcCQ==
 
 urix@^0.1.0:
   version "0.1.0"

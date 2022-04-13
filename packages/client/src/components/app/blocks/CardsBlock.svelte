@@ -125,7 +125,11 @@
 {#if schemaLoaded}
   <Block>
     <div class="card-list" use:styleable={$component.styles}>
-      <BlockComponent type="form" bind:id={formId} props={{ dataSource }}>
+      <BlockComponent
+        type="form"
+        bind:id={formId}
+        props={{ dataSource, disableValidation: true }}
+      >
         {#if title || enrichedSearchColumns?.length || showTitleButton}
           <div class="header" class:mobile={$context.device.mobile}>
             <div class="title">
