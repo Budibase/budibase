@@ -61,7 +61,8 @@ filterTests(["smoke", "all"], () => {
         for (let i = 1; i < totalRows; i++) {
           cy.addRow([i])
         }
-        cy.wait(1000)
+        cy.reload()
+        cy.wait(2000)
         cy.get(".spectrum-Pagination").within(() => {
           cy.get(".spectrum-ActionButton").eq(1).click()
         })
@@ -71,12 +72,12 @@ filterTests(["smoke", "all"], () => {
       })
 
       it("Deletes rows and checks pagination", () => {
-        // Delete rows, removing second page of rows from table
-        const deleteRows = 5
+        // Delete rows, removing second page from table
         cy.get(".spectrum-Checkbox-input").check({ force: true })
-        cy.get(".spectrum-Table")
-        cy.contains("Delete 5 row(s)").click()
-        cy.get(".spectrum-Modal").contains("Delete").click()
+        cy.get(".popovers").within(() => {
+          cy.get(".spectrum-Button").click({ force: true })
+        })
+        cy.get(".spectrum-Dialog-grid").contains("Delete").click({ force: true })
         cy.wait(1000)
 
         // Confirm table only has one page
