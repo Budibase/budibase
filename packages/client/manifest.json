@@ -1982,7 +1982,7 @@
       },
       {
         "type": "event",
-        "label": "On change",
+        "label": "On Change",
         "key": "onChange",
         "context": [
           {
@@ -2067,7 +2067,7 @@
       },
       {
         "type": "event",
-        "label": "On change",
+        "label": "On Change",
         "key": "onChange",
         "context": [
           {
@@ -2118,7 +2118,7 @@
       },
       {
         "type": "event",
-        "label": "On change",
+        "label": "On Change",
         "key": "onChange",
         "context": [
           {
@@ -2165,7 +2165,7 @@
       },
       {
         "type": "event",
-        "label": "On change",
+        "label": "On Change",
         "key": "onChange",
         "context": [
           {
@@ -2325,7 +2325,7 @@
       },
       {
         "type": "event",
-        "label": "On change",
+        "label": "On Change",
         "key": "onChange",
         "context": [
           {
@@ -2461,7 +2461,7 @@
       },
       {
         "type": "event",
-        "label": "On change",
+        "label": "On Change",
         "key": "onChange",
         "context": [
           {
@@ -2512,7 +2512,7 @@
       },
       {
         "type": "event",
-        "label": "On change",
+        "label": "On Change",
         "key": "onChange",
         "context": [
           {
@@ -2596,7 +2596,7 @@
       },
       {
         "type": "event",
-        "label": "On change",
+        "label": "On Change",
         "key": "onChange",
         "context": [
           {
@@ -2752,7 +2752,7 @@
       },
       {
         "type": "event",
-        "label": "On change",
+        "label": "On Change",
         "key": "onChange",
         "context": [
           {
@@ -2803,7 +2803,7 @@
       },
       {
         "type": "event",
-        "label": "On change",
+        "label": "On Change",
         "key": "onChange",
         "context": [
           {
@@ -2859,7 +2859,7 @@
       },
       {
         "type": "event",
-        "label": "On change",
+        "label": "On Change",
         "key": "onChange",
         "context": [
           {
@@ -2910,7 +2910,7 @@
       },
       {
         "type": "event",
-        "label": "On change",
+        "label": "On Change",
         "key": "onChange",
         "context": [
           {
