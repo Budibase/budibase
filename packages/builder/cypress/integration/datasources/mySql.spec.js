@@ -180,11 +180,12 @@ filterTests(["all"], () => {
       })
 
       it("should duplicate a query", () => {
-        // Get last nav item - The query
+        /// Get query nav item - QueryName
         cy.get(".nav-item")
-          .last()
+          .contains(queryName)
+          .parent()
           .within(() => {
-            cy.get(".icon").eq(1).click({ force: true })
+            cy.get(".spectrum-Icon").eq(1).click({ force: true })
           })
         // Select and confirm duplication
         cy.get(".spectrum-Menu").contains("Duplicate").click()
