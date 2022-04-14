@@ -1834,7 +1834,12 @@
     "icon": "Form",
     "hasChildren": true,
     "illegalChildren": ["section", "form"],
-    "actions": ["ValidateForm", "ClearForm", "ChangeFormStep"],
+    "actions": [
+      "ValidateForm",
+      "ClearForm",
+      "ChangeFormStep",
+      "UpdateFieldValue"
+    ],
     "styles": ["size"],
     "settings": [
       {
@@ -1976,6 +1981,17 @@
         "key": "defaultValue"
       },
       {
+        "type": "event",
+        "label": "On change",
+        "key": "onChange",
+        "context": [
+          {
+            "label": "Field Value",
+            "key": "value"
+          }
+        ]
+      },
+      {
         "type": "boolean",
         "label": "Disabled",
         "key": "disabled",
@@ -2050,6 +2066,17 @@
         "key": "defaultValue"
       },
       {
+        "type": "event",
+        "label": "On change",
+        "key": "onChange",
+        "context": [
+          {
+            "label": "Field Value",
+            "key": "value"
+          }
+        ]
+      },
+      {
         "type": "boolean",
         "label": "Disabled",
         "key": "disabled",
@@ -2090,6 +2117,17 @@
         "key": "defaultValue"
       },
       {
+        "type": "event",
+        "label": "On change",
+        "key": "onChange",
+        "context": [
+          {
+            "label": "Field Value",
+            "key": "value"
+          }
+        ]
+      },
+      {
         "type": "boolean",
         "label": "Disabled",
         "key": "disabled",
@@ -2124,6 +2162,17 @@
         "label": "Placeholder",
         "key": "placeholder",
         "placeholder": "Choose an option"
+      },
+      {
+        "type": "event",
+        "label": "On change",
+        "key": "onChange",
+        "context": [
+          {
+            "label": "Field Value",
+            "key": "value"
+          }
+        ]
       },
       {
         "type": "select",
@@ -2275,6 +2324,17 @@
         "key": "defaultValue"
       },
       {
+        "type": "event",
+        "label": "On change",
+        "key": "onChange",
+        "context": [
+          {
+            "label": "Field Value",
+            "key": "value"
+          }
+        ]
+      },
+      {
         "type": "boolean",
         "label": "Autocomplete",
         "key": "autocomplete",
@@ -2400,6 +2460,17 @@
         "key": "defaultValue"
       },
       {
+        "type": "event",
+        "label": "On change",
+        "key": "onChange",
+        "context": [
+          {
+            "label": "Field Value",
+            "key": "value"
+          }
+        ]
+      },
+      {
         "type": "boolean",
         "label": "Disabled",
         "key": "disabled",
@@ -2438,6 +2509,17 @@
         "type": "text",
         "label": "Default value",
         "key": "defaultValue"
+      },
+      {
+        "type": "event",
+        "label": "On change",
+        "key": "onChange",
+        "context": [
+          {
+            "label": "Field Value",
+            "key": "value"
+          }
+        ]
       },
       {
         "type": "select",
@@ -2511,6 +2593,17 @@
         "type": "text",
         "label": "Default value",
         "key": "defaultValue"
+      },
+      {
+        "type": "event",
+        "label": "On change",
+        "key": "onChange",
+        "context": [
+          {
+            "label": "Field Value",
+            "key": "value"
+          }
+        ]
       },
       {
         "type": "boolean",
@@ -2658,6 +2751,17 @@
         "key": "extensions"
       },
       {
+        "type": "event",
+        "label": "On change",
+        "key": "onChange",
+        "context": [
+          {
+            "label": "Field Value",
+            "key": "value"
+          }
+        ]
+      },
+      {
         "type": "boolean",
         "label": "Disabled",
         "key": "disabled",
@@ -2696,6 +2800,17 @@
         "type": "text",
         "label": "Default value",
         "key": "defaultValue"
+      },
+      {
+        "type": "event",
+        "label": "On change",
+        "key": "onChange",
+        "context": [
+          {
+            "label": "Field Value",
+            "key": "value"
+          }
+        ]
       },
       {
         "type": "boolean",
@@ -2741,6 +2856,17 @@
         "type": "text",
         "label": "Default value",
         "key": "defaultValue"
+      },
+      {
+        "type": "event",
+        "label": "On change",
+        "key": "onChange",
+        "context": [
+          {
+            "label": "Field Value",
+            "key": "value"
+          }
+        ]
       },
       {
         "type": "boolean",
