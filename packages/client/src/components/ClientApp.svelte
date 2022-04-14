@@ -69,7 +69,7 @@
             firstRoute = roleRoutes[0]?.routing?.route || "/"
           }
 
-          // Otherwise just use the fist route
+          // Otherwise just use the first route
           else {
             firstRoute = $screenStore.screens[0]?.routing?.route ?? "/"
           }
