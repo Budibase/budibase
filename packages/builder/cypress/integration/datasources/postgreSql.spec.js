@@ -31,6 +31,7 @@ filterTests(["all"], () => {
         cy.get("@datasource")
           .its("response.body")
           .should("have.property", "status", 500)
+        cy.get(".spectrum-Button").contains("Skip table fetch").click({ force: true })
       })
 
       it("should add PostgreSQL data source and fetch tables", () => {
@@ -113,13 +114,13 @@ filterTests(["all"], () => {
       })
 
       it("should delete a relationship", () => {
-        cy.get(".hierarchy-items-container").contains(datasource).click()
+        cy.get(".hierarchy-items-container").contains("PostgreSQL-2").click()
         cy.reload()
         // Delete one relationship
         cy.get(".spectrum-Table")
           .eq(1)
           .within(() => {
-            cy.get(".spectrum-Table-row").eq(0).click()
+            cy.get(".spectrum-Table-row").eq(0).click({ force: true })
             cy.wait(500)
           })
         cy.get(".spectrum-Dialog-grid").within(() => {
@@ -161,7 +162,7 @@ filterTests(["all"], () => {
 
       it("should switch to schema with no tables", () => {
         // Switch Schema - To one without any tables
-        cy.get(".hierarchy-items-container").contains(datasource).click()
+        cy.get(".hierarchy-items-container").contains("PostgreSQL-2").click()
         switchSchema("randomText")
 
         // No tables displayed
@@ -208,11 +209,12 @@ filterTests(["all"], () => {
       })
 
       it("should duplicate a query", () => {
-        // Get last nav item - The query
+        // Locate previously created query
         cy.get(".nav-item")
-          .last()
+          .contains(queryName)
+          .siblings(".actions")
           .within(() => {
-            cy.get(".icon").eq(1).click({ force: true })
+            cy.get(".icon").click({ force: true })
           })
         // Select and confirm duplication
         cy.get(".spectrum-Menu").contains("Duplicate").click()
