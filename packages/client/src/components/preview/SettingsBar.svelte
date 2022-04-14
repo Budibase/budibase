@@ -67,7 +67,7 @@
       }
 
       //If element is at the very top of the screen, put the bar below the element
-      if (elBounds.top < elBounds.height) {
+      if (elBounds.top < elBounds.height && elBounds.height < 80) {
         newTop = elBounds.bottom + verticalOffset
       }
 
