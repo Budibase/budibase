@@ -230,6 +230,8 @@ couchdb:
   ## Optional tolerations
   tolerations: []
 
+  affinity: {}
+
   service:
     # annotations:
     enabled: true
