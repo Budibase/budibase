@@ -1,14 +1,5 @@
 {
-  "name": "@budibase/backend-core",
-  "version": "1.0.105-alpha.14",
-  "description": "Budibase backend core libraries used in server and worker",
-  "main": "src/index.js",
   "author": "Budibase",
-  "license": "GPL-3.0",
-  "scripts": {
-    "test": "jest",
-    "test:watch": "jest --watchAll"
-  },
   "dependencies": {
     "@techpass/passport-openidconnect": "^0.3.0",
     "aws-sdk": "^2.901.0",
@@ -20,6 +11,7 @@
     "lodash": "^4.17.21",
     "lodash.isarguments": "^3.1.0",
     "node-fetch": "^2.6.1",
+    "node-fetch-with-proxy": "^0.1.6",
     "passport-google-auth": "^1.0.2",
     "passport-google-oauth": "^2.0.0",
     "passport-jwt": "^4.0.0",
@@ -29,11 +21,7 @@
     "uuid": "^8.3.2",
     "zlib": "^1.0.5"
   },
-  "jest": {
-    "setupFiles": [
-      "./scripts/jestSetup.js"
-    ]
-  },
+  "description": "Budibase backend core libraries used in server and worker",
   "devDependencies": {
     "ioredis-mock": "^5.5.5",
     "jest": "^26.6.3",
@@ -41,5 +29,18 @@
     "pouchdb-adapter-memory": "^7.2.2",
     "pouchdb-all-dbs": "^1.0.2"
   },
-  "gitHead": "d1836a898cab3f8ab80ee6d8f42be1a9eed7dcdc"
+  "gitHead": "d1836a898cab3f8ab80ee6d8f42be1a9eed7dcdc",
+  "jest": {
+    "setupFiles": [
+      "./scripts/jestSetup.js"
+    ]
+  },
+  "license": "GPL-3.0",
+  "main": "src/index.js",
+  "name": "@starzeus/budibase-backend-core",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watchAll"
+  },
+  "version": "1.0.1"
 }

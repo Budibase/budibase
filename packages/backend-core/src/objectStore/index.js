@@ -1,7 +1,7 @@
 const sanitize = require("sanitize-s3-objectkey")
 const AWS = require("aws-sdk")
 const stream = require("stream")
-const fetch = require("node-fetch")
+const fetch = require("node-fetch-with-proxy")
 const tar = require("tar-fs")
 const zlib = require("zlib")
 const { promisify } = require("util")
