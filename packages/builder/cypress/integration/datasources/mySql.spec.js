@@ -19,6 +19,7 @@ filterTests(["all"], () => {
         cy.get(".spectrum-Button")
           .contains("Save and fetch tables")
           .click({ force: true })
+          cy.wait(500)
         // Intercept Request after button click & apply assertions
         cy.wait("@datasource")
         cy.get("@datasource")
@@ -31,6 +32,7 @@ filterTests(["all"], () => {
         cy.get("@datasource")
           .its("response.body")
           .should("have.property", "status", 500)
+        cy.get(".spectrum-Button").contains("Skip table fetch").click({ force: true })
       })
 
       it("should add MySQL data source and fetch tables", () => {
@@ -131,7 +133,7 @@ filterTests(["all"], () => {
               cy.get(".spectrum-Table")
                 .eq(1)
                 .within(() => {
-                  cy.get(".spectrum-Table-row").eq(0).click()
+                  cy.get(".spectrum-Table-row").eq(0).click({ force: true })
                   cy.wait(500)
                 })
               cy.get(".spectrum-Dialog-grid").within(() => {
