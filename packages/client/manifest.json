@@ -2876,6 +2876,62 @@
       }
     ]
   },
+  "s3upload": {
+    "name": "S3 File Upload",
+    "info": "This component can't be used with S3 datasources that use custom endpoints.",
+    "icon": "UploadToCloud",
+    "styles": ["size"],
+    "editable": true,
+    "settings": [
+      {
+        "type": "field/attachment",
+        "label": "Field",
+        "key": "field"
+      },
+      {
+        "type": "text",
+        "label": "Label",
+        "key": "label"
+      },
+      {
+        "type": "dataSource/s3",
+        "label": "S3 Datasource",
+        "key": "datasourceId"
+      },
+      {
+        "type": "text",
+        "label": "Bucket",
+        "key": "bucket"
+      },
+      {
+        "type": "text",
+        "label": "File Name",
+        "key": "key"
+      },
+      {
+        "type": "event",
+        "label": "On change",
+        "key": "onChange",
+        "context": [
+          {
+            "label": "Field Value",
+            "key": "value"
+          }
+        ]
+      },
+      {
+        "type": "boolean",
+        "label": "Disabled",
+        "key": "disabled",
+        "defaultValue": false
+      },
+      {
+        "type": "validation/attachment",
+        "label": "Validation",
+        "key": "validation"
+      }
+    ]
+  },
   "dataprovider": {
     "name": "Data Provider",
     "info": "Pagination is only available for data stored in tables.",
@@ -3704,51 +3760,6 @@
       {
         "type": "schema",
         "suffix": "repeater"
-      }
-    ]
-  },
-  "s3upload": {
-    "name": "S3 File Upload",
-    "info": "This component can't be used with S3 datasources that use custom endpoints.",
-    "icon": "UploadToCloud",
-    "styles": ["size"],
-    "editable": true,
-    "settings": [
-      {
-        "type": "field/attachment",
-        "label": "Field",
-        "key": "field"
-      },
-      {
-        "type": "text",
-        "label": "Label",
-        "key": "label"
-      },
-      {
-        "type": "dataSource/s3",
-        "label": "S3 Datasource",
-        "key": "datasourceId"
-      },
-      {
-        "type": "text",
-        "label": "Bucket",
-        "key": "bucket"
-      },
-      {
-        "type": "text",
-        "label": "File Name",
-        "key": "key"
-      },
-      {
-        "type": "boolean",
-        "label": "Disabled",
-        "key": "disabled",
-        "defaultValue": false
-      },
-      {
-        "type": "validation/attachment",
-        "label": "Validation",
-        "key": "validation"
       }
     ]
   },
