@@ -74,10 +74,13 @@ filterTests(["all"], () => {
           cy.get(".spectrum-Popover").contains("COUNTRIES").click()
           cy.get(".spectrum-Picker").eq(4).click()
           cy.get(".spectrum-Popover").contains("REGION_ID").click()
-          // Save relationship & reload page
-          cy.get(".spectrum-Button").contains("Save").click({ force: true })
-          cy.reload()
         })
+        // Save relationship & reload page
+        cy.get(".spectrum-ButtonGroup").within(() => {
+          cy.get(".spectrum-Button").contains("Save").click({ force: true })
+        })
+        cy.reload()
+
         // Confirm table length & column name
         cy.get(".spectrum-Table")
           .eq(1)
@@ -201,23 +204,21 @@ filterTests(["all"], () => {
       })
 
       it("should delete a query", () => {
-        // Get last nav item - The query
-        for (let i = 0; i < 2; i++) {
-          cy.get(".nav-item")
-            .last()
-            .within(() => {
-              cy.get(".icon").eq(1).click({ force: true })
-            })
-          // Select Delete
-          cy.get(".spectrum-Menu").contains("Delete").click()
-          cy.get(".spectrum-Button")
-            .contains("Delete Query")
-            .click({ force: true })
-          cy.wait(1000)
-        }
+        // Get query nav item - QueryName
+        cy.get(".nav-item")
+          .contains(queryName)
+          .parent()
+          .within(() => {
+            cy.get(".spectrum-Icon").eq(1).click({ force: true })
+        })
+        // Select Delete
+        cy.get(".spectrum-Menu").contains("Delete").click()
+        cy.get(".spectrum-Button")
+          .contains("Delete Query")
+          .click({ force: true })
+        cy.wait(1000)
         // Confirm deletion
         cy.get(".nav-item").should("not.contain", queryName)
-        cy.get(".nav-item").should("not.contain", queryRename)
       })
     }
   })

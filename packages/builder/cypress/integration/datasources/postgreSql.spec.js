@@ -23,13 +23,6 @@ filterTests(["all"], () => {
         cy.wait("@datasource")
         cy.get("@datasource")
           .its("response.body")
-          .should(
-            "have.property",
-            "message",
-            "connect ECONNREFUSED 127.0.0.1:5432"
-          )
-        cy.get("@datasource")
-          .its("response.body")
           .should("have.property", "status", 500)
         cy.get(".spectrum-Button").contains("Skip table fetch").click({ force: true })
       })
@@ -242,23 +235,21 @@ filterTests(["all"], () => {
       })
 
       it("should delete a query", () => {
-        // Get last nav item - The query
-        for (let i = 0; i < 2; i++) {
-          cy.get(".nav-item")
-            .last()
-            .within(() => {
-              cy.get(".icon").eq(1).click({ force: true })
-            })
-          // Select Delete
-          cy.get(".spectrum-Menu").contains("Delete").click()
-          cy.get(".spectrum-Button")
-            .contains("Delete Query")
-            .click({ force: true })
-          cy.wait(1000)
-        }
+        // Get query nav item - QueryName
+        cy.get(".nav-item")
+          .contains(queryName)
+          .parent()
+          .within(() => {
+            cy.get(".spectrum-Icon").eq(1).click({ force: true })
+        })
+        // Select Delete
+        cy.get(".spectrum-Menu").contains("Delete").click()
+        cy.get(".spectrum-Button")
+          .contains("Delete Query")
+          .click({ force: true })
+        cy.wait(1000)
         // Confirm deletion
         cy.get(".nav-item").should("not.contain", queryName)
-        cy.get(".nav-item").should("not.contain", queryRename)
       })
 
       const switchSchema = schema => {
