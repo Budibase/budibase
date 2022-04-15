@@ -1,7 +1,7 @@
 {
   "author": "Budibase",
   "dependencies": {
-    "@techpass/passport-openidconnect": "^0.3.0",
+    "@starzeus/passport-openidconnect-proxy": "^0.3.1",
     "aws-sdk": "^2.901.0",
     "bcryptjs": "^2.4.3",
     "cls-hooked": "^4.2.2",
@@ -42,5 +42,5 @@
     "test": "jest",
     "test:watch": "jest --watchAll"
   },
-  "version": "1.0.1"
+  "version": "1.0.3"
 }

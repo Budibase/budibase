@@ -504,14 +504,15 @@
   dependencies:
     "@sinonjs/commons" "^1.7.0"
 
-"@techpass/passport-openidconnect@^0.3.0":
-  version "0.3.2"
-  resolved "https://registry.yarnpkg.com/@techpass/passport-openidconnect/-/passport-openidconnect-0.3.2.tgz#f8fd5d97256286665dbf26dac92431f977ab1e63"
-  integrity sha512-fnCtEiexXSHA029B//hJcCJlLJrT3lhpNCyA0rnz58Qttz0BLGCVv6yMT8HmOnGThH6vcDOVwdgKM3kbCQtEhw==
+"@starzeus/passport-openidconnect-proxy@^0.3.1":
+  version "0.3.1"
+  resolved "https://registry.yarnpkg.com/@starzeus/passport-openidconnect-proxy/-/passport-openidconnect-proxy-0.3.1.tgz#d9087a0c588878c097ce90e0e7b1f2428e4b5ee2"
+  integrity sha512-yapHXOxEKOTC2rScJxZSlo2qmI1CLJZ5YXd+Kr/qcHHjoT4Tb5uwPJ+a71Rysf7ytyLI+GmJaRoQlUHwLlqkFw==
   dependencies:
     base64url "^3.0.1"
     oauth "^0.9.15"
     passport-strategy "^1.0.0"
+    proxy-agent "^5.0.0"
     request "^2.88.0"
     webfinger "^0.4.2"
 
