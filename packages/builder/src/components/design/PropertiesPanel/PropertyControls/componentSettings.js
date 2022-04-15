@@ -1,17 +1,11 @@
-import {
-  Checkbox,
-  Select,
-  Stepper
-} from "@budibase/bbui"
+import { Checkbox, Select, Stepper } from "@budibase/bbui"
 import DataSourceSelect from "./DataSourceSelect.svelte"
 import S3DataSourceSelect from "./S3DataSourceSelect.svelte"
 import DataProviderSelect from "./DataProviderSelect.svelte"
 import ButtonActionEditor from "./ButtonActionEditor/ButtonActionEditor.svelte"
 import TableSelect from "./TableSelect.svelte"
 import ColorPicker from "./ColorPicker.svelte"
-import {
-  IconSelect
-} from "./IconSelect"
+import { IconSelect } from "./IconSelect"
 import FieldSelect from "./FieldSelect.svelte"
 import MultiFieldSelect from "./MultiFieldSelect.svelte"
 import SearchFieldSelect from "./SearchFieldSelect.svelte"
