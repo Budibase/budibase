@@ -29,9 +29,12 @@ export const getOptions = (
   if (optionsSource === "provider" && valueColumn) {
     let optionsSet = {}
     dataProvider?.rows?.forEach(row => {
-      const value = row?.[valueColumn]
+      let value = row?.[valueColumn]
+      const label = row[labelColumn] || value
+      if (Array.isArray(value)) {
+        value = value.map(item => item._id).join()
+      }
       if (value != null) {
-        const label = row[labelColumn] || value
         optionsSet[value] = { value, label }
       }
     })
