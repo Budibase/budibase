@@ -5,7 +5,7 @@ module.exports = {
     setDB(pouch)
   },
   // some default exports from the library, however these ideally shouldn't
-  // be used, instead the syntax require("@starzeus/budibase-backend-core/db") should be used
+  // be used, instead the syntax require("@budibase/backend-core/db") should be used
   StaticDatabases: require("./db/utils").StaticDatabases,
   db: require("../db"),
   redis: require("../redis"),
