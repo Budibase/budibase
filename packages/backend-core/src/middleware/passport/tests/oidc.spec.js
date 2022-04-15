@@ -35,12 +35,12 @@ const user = data.buildThirdPartyUser(issuer, "oidc", profile)
 describe("oidc", () => {
   describe("strategyFactory", () => {  
     // mock passport strategy factory
-    jest.mock("@techpass/passport-openidconnect")
-    const mockStrategy = require("@techpass/passport-openidconnect").Strategy
+    jest.mock("@starzeus/passport-openidconnect-proxy")
+    const mockStrategy = require("@starzeus/passport-openidconnect-proxy").Strategy
     
     // mock the request to retrieve the oidc configuration
-    jest.mock("node-fetch")
-    const mockFetch = require("node-fetch")
+    jest.mock("node-fetch-with-proxy")
+    const mockFetch = require("node-fetch-with-proxy")
     mockFetch.mockReturnValue({
       ok: true,
       json: () => oidcConfigUrlResponse

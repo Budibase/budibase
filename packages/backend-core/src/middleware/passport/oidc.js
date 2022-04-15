@@ -1,5 +1,5 @@
 const fetch = require("node-fetch-with-proxy")
-const OIDCStrategy = require("@techpass/passport-openidconnect").Strategy
+const OIDCStrategy = require("@starzeus/passport-openidconnect-proxy").Strategy
 const { authenticateThirdParty } = require("./third-party-common")
 
 /**
