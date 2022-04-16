@@ -415,7 +415,9 @@ Cypress.Commands.add("addDatasourceConfig", (datasource, skipFetch) => {
           if (datasource == "Oracle") {
             cy.get("input").clear().type(Cypress.env("oracle").HOST)
           } else {
-            cy.get("input").clear().type(Cypress.env("HOST_IP"))
+            cy.get("input")
+              .clear({ force: true })
+              .type(Cypress.env("mysql").HOST, { force: true })
           }
         })
       })

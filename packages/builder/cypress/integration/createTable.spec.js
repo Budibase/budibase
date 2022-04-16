@@ -55,7 +55,7 @@ filterTests(["smoke", "all"], () => {
 
     if (Cypress.env("TEST_ENV")) {
       // No Pagination in CI - Test env only for the next two tests
-      it("Adds 15 rows and checks pagination", () => {
+      xit("Adds 15 rows and checks pagination", () => {
         // 10 rows per page, 15 rows should create 2 pages within table
         const totalRows = 16
         for (let i = 1; i < totalRows; i++) {
@@ -71,7 +71,7 @@ filterTests(["smoke", "all"], () => {
         })
       })
 
-      it("Deletes rows and checks pagination", () => {
+      xit("Deletes rows and checks pagination", () => {
         // Delete rows, removing second page from table
         cy.get(".spectrum-Checkbox-input").check({ force: true })
         cy.get(".popovers").within(() => {

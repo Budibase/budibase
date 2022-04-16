@@ -42,5 +42,5 @@
     "test": "jest",
     "test:watch": "jest --watchAll"
   },
-  "version": "1.0.3"
+  "version": "1.0.105-alpha.19"
 }
