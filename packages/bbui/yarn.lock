@@ -53,10 +53,10 @@
     to-gfm-code-block "^0.1.1"
     year "^0.2.1"
 
-"@budibase/string-templates@^1.0.104":
-  version "1.0.104"
-  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-1.0.104.tgz#f812700f2b21f638fd1e48dde065ae693fae2897"
-  integrity sha512-3caq3qwpIieyb9m8eSl8OhcE0ppzuyJ/0ubDlWmtpbmwmG2v3ynI+DwxpbG4CcVQFuebD2yxU0CZfioU76vKCQ==
+"@budibase/string-templates@^1.0.105-alpha.4":
+  version "1.0.108"
+  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-1.0.108.tgz#14949560148ef11b6b385952ed5787c12b890f2c"
+  integrity sha512-7Tts91Dzy+A7OdObTIaBNAdaixC7wmabnNTWYqk1d6TM6H5yv++bd/a9gVdUM7ptsuMy7uoP/ZoTZZRhp3ozfA==
   dependencies:
     "@budibase/handlebars-helpers" "^0.11.8"
     dayjs "^1.10.4"
