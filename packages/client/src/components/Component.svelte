@@ -9,12 +9,16 @@
 </script>
 
 <script>
-  import { getContext, setContext } from "svelte"
+  import { getContext, setContext, onMount, onDestroy } from "svelte"
   import { writable, get } from "svelte/store"
   import * as AppComponents from "components/app"
   import Router from "./Router.svelte"
-  import { enrichProps, propsAreSame } from "utils/componentProps"
-  import { builderStore } from "stores"
+  import {
+    enrichProps,
+    propsAreSame,
+    getSettingsDefinition,
+  } from "utils/componentProps"
+  import { builderStore, devToolsStore, componentStore, appStore } from "stores"
   import { Helpers } from "@budibase/bbui"
   import Manifest from "manifest.json"
   import { getActiveConditions, reduceConditionActions } from "utils/conditions"
@@ -30,8 +34,8 @@
   const insideScreenslot = !!getContext("screenslot")
 
   // Create component context
-  const componentStore = writable({})
-  setContext("component", componentStore)
+  const store = writable({})
+  setContext("component", store)
 
   // Ref to the svelte component
   let ref
@@ -90,7 +94,7 @@
   // leading to the selected component
   $: selected =
     $builderStore.inBuilder && $builderStore.selectedComponentId === id
-  $: inSelectedPath = $builderStore.selectedComponentPath?.includes(id)
+  $: inSelectedPath = $componentStore.selectedComponentPath?.includes(id)
   $: inDragPath = inSelectedPath && $builderStore.editMode
 
   // Derive definition properties which can all be optional, so need to be
@@ -101,10 +105,12 @@
 
   // Interactive components can be selected, dragged and highlighted inside
   // the builder preview
-  $: interactive =
+  $: builderInteractive =
     $builderStore.inBuilder &&
     ($builderStore.previewType === "layout" || insideScreenslot) &&
     !isBlock
+  $: devToolsInteractive = $devToolsStore.allowSelection && !isBlock
+  $: interactive = builderInteractive || devToolsInteractive
   $: editing = editable && selected && $builderStore.editMode
   $: draggable =
     !inDragPath &&
@@ -133,7 +139,7 @@
   $: applySettings(staticSettings, enrichedSettings, conditionalSettings)
 
   // Update component context
-  $: componentStore.set({
+  $: store.set({
     id,
     children: children.length,
     styles: {
@@ -215,22 +221,6 @@
     const prefix = "@budibase/standard-components/"
     const type = component?.replace(prefix, "")
     return type ? Manifest[type] : null
-  }
-
-  // Gets the definition of this component's settings from the manifest
-  const getSettingsDefinition = definition => {
-    if (!definition) {
-      return []
-    }
-    let settings = []
-    definition.settings?.forEach(setting => {
-      if (setting.section) {
-        settings = settings.concat(setting.settings || [])
-      } else {
-        settings.push(setting)
-      }
-    })
-    return settings
   }
 
   const getSettingsDefinitionMap = settingsDefinition => {
@@ -385,6 +375,28 @@
       })
     }
   }
+
+  onMount(() => {
+    if (
+      $appStore.isDevApp &&
+      !componentStore.actions.isComponentRegistered(id)
+    ) {
+      componentStore.actions.registerInstance(id, {
+        getSettings: () => cachedSettings,
+        getRawSettings: () => ({ ...staticSettings, ...dynamicSettings }),
+        getDataContext: () => get(context),
+      })
+    }
+  })
+
+  onDestroy(() => {
+    if (
+      $appStore.isDevApp &&
+      componentStore.actions.isComponentRegistered(id)
+    ) {
+      componentStore.actions.unregisterInstance(id)
+    }
+  })
 </script>
 
 {#if constructor && initialSettings && (visible || inSelectedPath)}
@@ -419,12 +431,15 @@
   .component {
     display: contents;
   }
+
   .interactive :global(*:hover) {
     cursor: pointer;
   }
+
   .draggable :global(*:hover) {
     cursor: grab;
   }
+
   .editing :global(*:hover) {
     cursor: auto;
   }

@@ -127,6 +127,8 @@
         outputs.map(([name, value]) => {
           let runtimeName = isLoopBlock
             ? `loop.${name}`
+            : block.name.startsWith("JS")
+            ? `steps[${idx}].${name}`
             : `steps.${idx}.${name}`
           const runtime = idx === 0 ? `trigger.${name}` : runtimeName
           return {
