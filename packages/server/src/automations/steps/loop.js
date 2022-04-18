@@ -32,7 +32,7 @@ exports.definition = {
       properties: {
         items: {
           customType: "item",
-          description: "the item currently being executed",
+          description: "The item currently being executed",
         },
         success: {
           type: "boolean",
@@ -43,7 +43,7 @@ exports.definition = {
           descriptions: "The amount of times the block ran",
         },
       },
-      required: ["success"],
+      required: ["success, items, iterations"],
     },
   },
   type: "LOGIC",
