@@ -8,7 +8,7 @@ const { DocumentTypes } = require("../db/utils")
 const { doInTenant } = require("@budibase/backend-core/tenancy")
 const { definitions: triggerDefs } = require("../automations/triggerInfo")
 const { doInAppContext, getAppDB } = require("@budibase/backend-core/context")
-
+const { AutomationErrors } = require("../constants")
 const FILTER_STEP_ID = actions.ACTION_DEFINITIONS.FILTER.stepId
 const LOOP_STEP_ID = actions.ACTION_DEFINITIONS.LOOP.stepId
 
@@ -146,7 +146,7 @@ class Orchestrator {
               typeof newInput.binding !== "string")
           ) {
             this.updateContextAndOutput(loopStepNumber, step, tempOutput, {
-              status: "INCORRECT_TYPE",
+              status: AutomationErrors.INCORRECT_TYPE,
               success: false,
             })
             loopSteps = null
@@ -156,18 +156,26 @@ class Orchestrator {
 
           // The "Loop" binding in the front end is "fake", so replace it here so the context can understand it
           // Pretty hacky because we need to account for the row object
-          for (let key in originalStepInput) {
-            if (key === "row") {
-              for (let val in originalStepInput["row"]) {
-                originalStepInput["row"][val] = originalStepInput["row"][
-                  val
-                ].replace(/loop/, `steps.${loopStepNumber}`)
+          for (let [key, value] of Object.entries(originalStepInput)) {
+            if (typeof value === "object") {
+              for (let [innerKey, innerValue] of Object.entries(
+                originalStepInput[key]
+              )) {
+                if (typeof innerValue === "string") {
+                  originalStepInput[key][innerKey] =
+                    automationUtils.substituteLoopStep(
+                      innerValue,
+                      `steps.${loopStepNumber}`
+                    )
+                }
               }
             } else {
-              originalStepInput[key] = originalStepInput[key].replace(
-                /loop/,
-                `steps.${loopStepNumber}`
-              )
+              if (typeof value === "string") {
+                originalStepInput[key] = automationUtils.substituteLoopStep(
+                  value,
+                  `steps.${loopStepNumber}`
+                )
+              }
             }
           }
 
@@ -176,7 +184,7 @@ class Orchestrator {
             index === loopStep.inputs.iterations
           ) {
             this.updateContextAndOutput(loopStepNumber, step, tempOutput, {
-              status: "MAX_ITERATIONS_REACHED",
+              status: AutomationErrors.MAX_ITERATIONS,
               success: true,
             })
             loopSteps = null
@@ -189,7 +197,7 @@ class Orchestrator {
             loopStep.inputs.failure
           ) {
             this.updateContextAndOutput(loopStepNumber, step, tempOutput, {
-              status: "FAILURE_CONDITION_MET",
+              status: AutomationErrors.FAILURE_CONDITION,
               success: false,
             })
             loopSteps = null
