@@ -116,6 +116,7 @@ globals:
 services:
   budibaseVersion: latest
   dns: cluster.local
+  deploymentRestart: false
 
   proxy:
     port: 10000

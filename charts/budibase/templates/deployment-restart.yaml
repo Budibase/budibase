@@ -1,0 +1,73 @@
+{{- if .Values.services.deploymentRestart }}
+---
+# Service account the client will use to reset the deployment,
+# by default the pods running inside the cluster can do no such things.
+kind: ServiceAccount
+apiVersion: v1
+metadata:
+  name: deployment-restart
+  namespace: budibase
+---
+# allow getting status and patching only the one deployment you want
+# to restart
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: deployment-restart
+  namespace: budibase
+rules:
+  - apiGroups: ["apps", "extensions"]
+    resources: ["deployments"]
+    resourceNames: ["app-service", "worker-service"]
+    verbs: ["get", "patch", "list", "watch"] # "list" and "watch" are only needed
+                                             # if you want to use `rollout status`
+---
+# bind the role to the service account
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: deployment-restart
+  namespace: budibase
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: deployment-restart
+subjects:
+  - kind: ServiceAccount
+    name: deployment-restart
+    namespace: budibase
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: deployment-restart
+  namespace: budibase
+spec:
+  concurrencyPolicy: Forbid
+  schedule: '0 * * * *' # every hour
+  jobTemplate:
+    spec:
+      backoffLimit: 2 # this has very low chance of failing, as all this does
+                      # is prompt kubernetes to schedule new replica set for
+                      # the deployment
+      activeDeadlineSeconds: 600 # timeout, makes most sense with 
+                                 # "waiting for rollout" variant specified below
+      template:
+        spec:
+          serviceAccountName: deployment-restart # name of the service
+                                                 # account configured above
+          restartPolicy: Never
+          containers:
+            - name: kubectl
+              image: bitnami/kubectl # probably any kubectl image will do,
+                                     # optionaly specify version, but this
+                                     # should not be necessary, as long the
+                                     # version of kubectl is new enough to
+                                     # have `rollout restart`
+                command:
+                - bash
+                - -c
+                - >-
+                  kubectl rollout restart deployment/app-service &&
+                  kubectl rollout restart deployment/worker-service
+{{- end }}
