@@ -178,7 +178,7 @@ function getDB(key, opts) {
   const appId = exports.getAppId()
   const CouchDB = getCouch()
   let toUseAppId
-  
+
   switch (key) {
     case ContextKeys.CURRENT_DB:
       toUseAppId = appId

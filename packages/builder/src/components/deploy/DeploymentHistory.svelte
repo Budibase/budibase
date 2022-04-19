@@ -49,7 +49,7 @@
           newDeployments
         )
         if (pendingDeployments.length) {
-          showErrorReasonModal(incomingDeployment.err)
+          showErrorReasonModal(pendingDeployments[0].err)
         }
       }
       deployments = newDeployments

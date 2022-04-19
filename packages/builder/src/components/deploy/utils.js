@@ -20,6 +20,6 @@ export function checkIncomingDeploymentStatus(current, incoming) {
         acc.push(incomingDeployment)
       }
     }
-    return acc;
+    return acc
   }, [])
 }

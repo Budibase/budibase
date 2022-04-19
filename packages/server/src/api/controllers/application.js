@@ -356,7 +356,7 @@ exports.delete = async ctx => {
     appId = getProdAppID(appId)
   }
 
-  const db = ctx.query.unpublish ? getProdAppDB() : getAppDB();
+  const db = ctx.query.unpublish ? getProdAppDB() : getAppDB()
   const result = await db.destroy()
 
   /* istanbul ignore next */
@@ -369,7 +369,7 @@ exports.delete = async ctx => {
   // make sure the app/role doesn't stick around after the app has been deleted
   await removeAppFromUserRoles(ctx, appId)
   await appCache.invalidateAppMetadata(appId)
-  
+
   ctx.status = 200
   ctx.body = result
 }
