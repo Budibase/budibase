@@ -1,5 +1,5 @@
 <script>
-  import { store, automationStore, allScreens } from "builderStore"
+  import { store, automationStore } from "builderStore"
   import { roles, flags } from "stores/backend"
   import {
     Icon,
@@ -32,7 +32,7 @@
   let promise = getPackage()
   let unpublishModal
   let publishPopover
-  let notPublishedPopover
+  // let notPublishedPopover
 
   $: enrichedApps = enrichApps($apps, $auth.user)
   const enrichApps = (apps, user) => {
