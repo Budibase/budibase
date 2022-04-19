@@ -2,7 +2,7 @@
 
 require("../../../tests/utilities/dbConfig")
 
-const database = require("../../../db")
+const { dangerousGetDB } = require("../../../db")
 const { authenticateThirdParty } = require("../third-party-common")
 const { data } = require("./utilities/mock-data")
 
@@ -29,7 +29,7 @@ describe("third party common", () => {
     let thirdPartyUser
     
     beforeEach(() => {
-      db = database.getDB(StaticDatabases.GLOBAL.name)
+      db = dangerousGetDB(StaticDatabases.GLOBAL.name)
       thirdPartyUser = data.buildThirdPartyUser()
     })
 

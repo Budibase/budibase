@@ -18,7 +18,7 @@ const supertest = require("supertest")
 const { cleanup } = require("../../utilities/fileSystem")
 const { Cookies, Headers } = require("@budibase/backend-core/constants")
 const { jwt } = require("@budibase/backend-core/auth")
-const { getGlobalDB } = require("@budibase/backend-core/tenancy")
+const { doWithGlobalDB } = require("@budibase/backend-core/tenancy")
 const { createASession } = require("@budibase/backend-core/sessions")
 const { user: userCache } = require("@budibase/backend-core/cache")
 const newid = require("../../db/newid")
@@ -84,17 +84,18 @@ class TestConfiguration {
   }
 
   async generateApiKey(userId = GLOBAL_USER_ID) {
-    const db = getGlobalDB(TENANT_ID)
-    const id = generateDevInfoID(userId)
-    let devInfo
-    try {
-      devInfo = await db.get(id)
-    } catch (err) {
-      devInfo = { _id: id, userId }
-    }
-    devInfo.apiKey = encrypt(`${TENANT_ID}${SEPARATOR}${newid()}`)
-    await db.put(devInfo)
-    return devInfo.apiKey
+    return doWithGlobalDB(TENANT_ID, async db => {
+      const id = generateDevInfoID(userId)
+      let devInfo
+      try {
+        devInfo = await db.get(id)
+      } catch (err) {
+        devInfo = { _id: id, userId }
+      }
+      devInfo.apiKey = encrypt(`${TENANT_ID}${SEPARATOR}${newid()}`)
+      await db.put(devInfo)
+      return devInfo.apiKey
+    })
   }
 
   async globalUser({
@@ -103,34 +104,35 @@ class TestConfiguration {
     email = EMAIL,
     roles,
   } = {}) {
-    const db = getGlobalDB(TENANT_ID)
-    let existing
-    try {
-      existing = await db.get(id)
-    } catch (err) {
-      existing = { email }
-    }
-    const user = {
-      _id: id,
-      ...existing,
-      roles: roles || {},
-      tenantId: TENANT_ID,
-    }
-    await createASession(id, {
-      sessionId: "sessionid",
-      tenantId: TENANT_ID,
-      csrfToken: CSRF_TOKEN,
+    return doWithGlobalDB(TENANT_ID, async db => {
+      let existing
+      try {
+        existing = await db.get(id)
+      } catch (err) {
+        existing = { email }
+      }
+      const user = {
+        _id: id,
+        ...existing,
+        roles: roles || {},
+        tenantId: TENANT_ID,
+      }
+      await createASession(id, {
+        sessionId: "sessionid",
+        tenantId: TENANT_ID,
+        csrfToken: CSRF_TOKEN,
+      })
+      if (builder) {
+        user.builder = { global: true }
+      } else {
+        user.builder = { global: false }
+      }
+      const resp = await db.put(user)
+      return {
+        _rev: resp._rev,
+        ...user,
+      }
     })
-    if (builder) {
-      user.builder = { global: true }
-    } else {
-      user.builder = { global: false }
-    }
-    const resp = await db.put(user)
-    return {
-      _rev: resp._rev,
-      ...user,
-    }
   }
 
   // use a new id as the name to avoid name collisions

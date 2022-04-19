@@ -1,5 +1,5 @@
 const redis = require("../redis/authRedis")
-const { getDB } = require("../db")
+const { doWithDB } = require("../db")
 const { DocumentTypes } = require("../db/constants")
 
 const AppState = {
@@ -11,8 +11,13 @@ const EXPIRY_SECONDS = 3600
  * The default populate app metadata function
  */
 const populateFromDB = async appId => {
-  const db = getDB(appId, { skip_setup: true })
-  return db.get(DocumentTypes.APP_METADATA)
+  return doWithDB(
+    appId,
+    db => {
+      return db.get(DocumentTypes.APP_METADATA)
+    },
+    { skip_setup: true }
+  )
 }
 
 const isInvalid = metadata => {
