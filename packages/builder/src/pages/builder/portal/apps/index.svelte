@@ -174,6 +174,10 @@
     }
   }
 
+  const previewApp = app => {
+    window.open(`/${app.devId}`)
+  }
+
   const editApp = app => {
     if (app.lockedOther) {
       notifications.error(
@@ -392,6 +396,7 @@
                 {exportApp}
                 {deleteApp}
                 {updateApp}
+                {previewApp}
               />
             {/each}
           </div>

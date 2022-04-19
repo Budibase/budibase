@@ -350,20 +350,26 @@ exports.revertClient = async ctx => {
 }
 
 exports.delete = async ctx => {
-  const db = getAppDB()
+  let appId = ctx.params.appId
 
+  if (ctx.query.unpublish) {
+    appId = getProdAppID(appId)
+  }
+
+  const db = ctx.query.unpublish ? getProdAppDB() : getAppDB();
   const result = await db.destroy()
+
   /* istanbul ignore next */
   if (!env.isTest() && !ctx.query.unpublish) {
-    await deleteApp(ctx.params.appId)
+    await deleteApp(appId)
   }
   if (ctx.query && ctx.query.unpublish) {
-    await cleanupAutomations(ctx.params.appId)
+    await cleanupAutomations(appId)
   }
   // make sure the app/role doesn't stick around after the app has been deleted
-  await removeAppFromUserRoles(ctx, ctx.params.appId)
-  await appCache.invalidateAppMetadata(ctx.params.appId)
-
+  await removeAppFromUserRoles(ctx, appId)
+  await appCache.invalidateAppMetadata(appId)
+  
   ctx.status = 200
   ctx.body = result
 }

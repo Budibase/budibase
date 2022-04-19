@@ -10,11 +10,11 @@
 <ModalContent
   showCloseIcon={false}
   showConfirmButton={false}
-  title="Test Automation"
   cancelText="Close"
 >
-  <div slot="header">
-    <div style="float: right;">
+  <div slot="header" class="result-modal-header">
+    <span>Test Automation</span>
+    <div>
       {#if isTrigger || testResult[0].outputs.success}
         <div class="iconSuccess">
           <Icon size="S" name="CheckmarkCircle" />
@@ -89,6 +89,14 @@
 </ModalContent>
 
 <style>
+  .result-modal-header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+  }
+
   .iconSuccess {
     color: var(--spectrum-global-color-green-600);
   }

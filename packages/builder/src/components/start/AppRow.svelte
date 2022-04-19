@@ -5,6 +5,7 @@
     Icon,
     ActionMenu,
     MenuItem,
+    ButtonGroup,
     StatusLight,
   } from "@budibase/bbui"
   import { processStringSync } from "@budibase/string-templates"
@@ -15,6 +16,7 @@
   export let editApp
   export let updateApp
   export let deleteApp
+  export let previewApp
   export let unpublishApp
   export let releaseLock
   export let editIcon
@@ -57,19 +59,36 @@
   </StatusLight>
 </div>
 <div class="desktop">
-  <StatusLight active={app.deployed} neutral={!app.deployed}>
-    {#if app.deployed}Published{:else}Unpublished{/if}
-  </StatusLight>
+  <div class="app-status">
+    {#if app.deployed}
+      <Icon name="Globe" disabled={false} />
+      Published
+    {:else}
+      <Icon name="GlobeStrike" disabled={true} />
+      <span class="disabled"> Unpublished </span>
+    {/if}
+  </div>
 </div>
 <div data-cy={`row_actions_${app.appId}`}>
-  <Button
-    size="S"
-    disabled={app.lockedOther}
-    on:click={() => editApp(app)}
-    secondary
-  >
-    Open
-  </Button>
+  <div class="app-actions">
+    {#if app.deployed}
+      <Button size="S" secondary quiet on:click={() => viewApp(app)}
+        >View app
+      </Button>
+    {:else}
+      <Button size="S" secondary quiet on:click={() => previewApp(app)}
+        >Preview
+      </Button>
+    {/if}
+    <Button
+      size="S"
+      cta
+      disabled={app.lockedOther}
+      on:click={() => editApp(app)}
+    >
+      Edit
+    </Button>
+  </div>
   <ActionMenu align="right">
     <Icon hoverable slot="control" name="More" />
     {#if app.deployed}
@@ -97,6 +116,18 @@
 </div>
 
 <style>
+  .app-actions {
+    grid-gap: var(--spacing-s);
+    display: grid;
+    grid-template-columns: 75px 75px;
+  }
+  .app-status {
+    display: grid;
+    grid-template-columns: 24px 100px;
+  }
+  .app-status span.disabled {
+    opacity: 0.3;
+  }
   .name {
     text-decoration: none;
     overflow: hidden;
