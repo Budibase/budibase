@@ -11,7 +11,7 @@ const {
 } = require("./constants")
 const { getTenantId, getGlobalDBName } = require("../tenancy")
 const fetch = require("node-fetch")
-const { getDB, allDbs } = require("./index")
+const { doWithDB, allDbs } = require("./index")
 const { getCouchUrl } = require("./pouch")
 const { getAppMetadata } = require("../cache/appMetadata")
 const { checkSlashesInUrl } = require("../helpers")
@@ -280,17 +280,22 @@ exports.getDevAppIDs = async () => {
 
 exports.dbExists = async dbName => {
   let exists = false
-  try {
-    const db = getDB(dbName, { skip_setup: true })
-    // check if database exists
-    const info = await db.info()
-    if (info && !info.error) {
-      exists = true
-    }
-  } catch (err) {
-    exists = false
-  }
-  return exists
+  return doWithDB(
+    dbName,
+    async db => {
+      try {
+        // check if database exists
+        const info = await db.info()
+        if (info && !info.error) {
+          exists = true
+        }
+      } catch (err) {
+        exists = false
+      }
+      return exists
+    },
+    { skip_setup: true }
+  )
 }
 
 /**

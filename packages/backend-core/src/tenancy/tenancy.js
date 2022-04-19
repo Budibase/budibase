@@ -1,5 +1,6 @@
-const { getDB } = require("../db")
-const { SEPARATOR, StaticDatabases } = require("../db/constants")
+const { doWithDB } = require("../db")
+const { StaticDatabases } = require("../db/constants")
+const { baseGlobalDBName } = require("./utils")
 const {
   getTenantId,
   DEFAULT_TENANT_ID,
@@ -23,59 +24,61 @@ exports.addTenantToUrl = url => {
 }
 
 exports.doesTenantExist = async tenantId => {
-  const db = getDB(PLATFORM_INFO_DB)
-  let tenants
-  try {
-    tenants = await db.get(TENANT_DOC)
-  } catch (err) {
-    // if theres an error the doc doesn't exist, no tenants exist
-    return false
-  }
-  return (
-    tenants &&
-    Array.isArray(tenants.tenantIds) &&
-    tenants.tenantIds.indexOf(tenantId) !== -1
-  )
+  return doWithDB(PLATFORM_INFO_DB, async db => {
+    let tenants
+    try {
+      tenants = await db.get(TENANT_DOC)
+    } catch (err) {
+      // if theres an error the doc doesn't exist, no tenants exist
+      return false
+    }
+    return (
+      tenants &&
+      Array.isArray(tenants.tenantIds) &&
+      tenants.tenantIds.indexOf(tenantId) !== -1
+    )
+  })
 }
 
 exports.tryAddTenant = async (tenantId, userId, email) => {
-  const db = getDB(PLATFORM_INFO_DB)
-  const getDoc = async id => {
-    if (!id) {
-      return null
+  return doWithDB(PLATFORM_INFO_DB, async db => {
+    const getDoc = async id => {
+      if (!id) {
+        return null
+      }
+      try {
+        return await db.get(id)
+      } catch (err) {
+        return { _id: id }
+      }
     }
-    try {
-      return await db.get(id)
-    } catch (err) {
-      return { _id: id }
+    let [tenants, userIdDoc, emailDoc] = await Promise.all([
+      getDoc(TENANT_DOC),
+      getDoc(userId),
+      getDoc(email),
+    ])
+    if (!Array.isArray(tenants.tenantIds)) {
+      tenants = {
+        _id: TENANT_DOC,
+        tenantIds: [],
+      }
     }
-  }
-  let [tenants, userIdDoc, emailDoc] = await Promise.all([
-    getDoc(TENANT_DOC),
-    getDoc(userId),
-    getDoc(email),
-  ])
-  if (!Array.isArray(tenants.tenantIds)) {
-    tenants = {
-      _id: TENANT_DOC,
-      tenantIds: [],
+    let promises = []
+    if (userIdDoc) {
+      userIdDoc.tenantId = tenantId
+      promises.push(db.put(userIdDoc))
     }
-  }
-  let promises = []
-  if (userIdDoc) {
-    userIdDoc.tenantId = tenantId
-    promises.push(db.put(userIdDoc))
-  }
-  if (emailDoc) {
-    emailDoc.tenantId = tenantId
-    emailDoc.userId = userId
-    promises.push(db.put(emailDoc))
-  }
-  if (tenants.tenantIds.indexOf(tenantId) === -1) {
-    tenants.tenantIds.push(tenantId)
-    promises.push(db.put(tenants))
-  }
-  await Promise.all(promises)
+    if (emailDoc) {
+      emailDoc.tenantId = tenantId
+      emailDoc.userId = userId
+      promises.push(db.put(emailDoc))
+    }
+    if (tenants.tenantIds.indexOf(tenantId) === -1) {
+      tenants.tenantIds.push(tenantId)
+      promises.push(db.put(tenants))
+    }
+    await Promise.all(promises)
+  })
 }
 
 exports.getGlobalDBName = (tenantId = null) => {
@@ -84,43 +87,37 @@ exports.getGlobalDBName = (tenantId = null) => {
   if (!tenantId) {
     tenantId = getTenantId()
   }
-
-  let dbName
-  if (tenantId === DEFAULT_TENANT_ID) {
-    dbName = StaticDatabases.GLOBAL.name
-  } else {
-    dbName = `${tenantId}${SEPARATOR}${StaticDatabases.GLOBAL.name}`
-  }
-  return dbName
+  return baseGlobalDBName(tenantId)
 }
 
-exports.getGlobalDB = (tenantId = null) => {
-  const dbName = exports.getGlobalDBName(tenantId)
-  return getDB(dbName)
+exports.doWithGlobalDB = (tenantId, cb) => {
+  return doWithDB(exports.getGlobalDBName(tenantId), cb)
 }
 
 exports.lookupTenantId = async userId => {
-  const db = getDB(StaticDatabases.PLATFORM_INFO.name)
-  let tenantId = env.MULTI_TENANCY ? DEFAULT_TENANT_ID : null
-  try {
-    const doc = await db.get(userId)
-    if (doc && doc.tenantId) {
-      tenantId = doc.tenantId
+  return doWithDB(StaticDatabases.PLATFORM_INFO.name, async db => {
+    let tenantId = env.MULTI_TENANCY ? DEFAULT_TENANT_ID : null
+    try {
+      const doc = await db.get(userId)
+      if (doc && doc.tenantId) {
+        tenantId = doc.tenantId
+      }
+    } catch (err) {
+      // just return the default
     }
-  } catch (err) {
-    // just return the default
-  }
-  return tenantId
+    return tenantId
+  })
 }
 
 // lookup, could be email or userId, either will return a doc
 exports.getTenantUser = async identifier => {
-  const db = getDB(PLATFORM_INFO_DB)
-  try {
-    return await db.get(identifier)
-  } catch (err) {
-    return null
-  }
+  return doWithDB(PLATFORM_INFO_DB, async db => {
+    try {
+      return await db.get(identifier)
+    } catch (err) {
+      return null
+    }
+  })
 }
 
 exports.isUserInAppTenant = (appId, user = null) => {
@@ -135,13 +132,14 @@ exports.isUserInAppTenant = (appId, user = null) => {
 }
 
 exports.getTenantIds = async () => {
-  const db = getDB(PLATFORM_INFO_DB)
-  let tenants
-  try {
-    tenants = await db.get(TENANT_DOC)
-  } catch (err) {
-    // if theres an error the doc doesn't exist, no tenants exist
-    return []
-  }
-  return (tenants && tenants.tenantIds) || []
+  return doWithDB(PLATFORM_INFO_DB, async db => {
+    let tenants
+    try {
+      tenants = await db.get(TENANT_DOC)
+    } catch (err) {
+      // if theres an error the doc doesn't exist, no tenants exist
+      return []
+    }
+    return (tenants && tenants.tenantIds) || []
+  })
 }

@@ -1,4 +1,4 @@
-const { getDB } = require(".")
+const { dangerousGetDB } = require(".")
 
 class Replication {
   /**
@@ -7,8 +7,8 @@ class Replication {
    * @param {String} target - the DB you want to replicate to, or rollback from
    */
   constructor({ source, target }) {
-    this.source = getDB(source)
-    this.target = getDB(target)
+    this.source = dangerousGetDB(source)
+    this.target = dangerousGetDB(target)
   }
 
   promisify(operation, opts = {}) {
@@ -51,7 +51,7 @@ class Replication {
   async rollback() {
     await this.target.destroy()
     // Recreate the DB again
-    this.target = getDB(this.target.name)
+    this.target = dangerousGetDB(this.target.name)
     await this.replicate()
   }
 

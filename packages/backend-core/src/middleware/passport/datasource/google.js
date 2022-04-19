@@ -1,7 +1,7 @@
 const google = require("../google")
 const { Cookies, Configs } = require("../../../constants")
 const { clearCookie, getCookie } = require("../../../utils")
-const { getDB } = require("../../../db")
+const { doWithDB } = require("../../../db")
 const { getScopedConfig } = require("../../../db/utils")
 const environment = require("../../../environment")
 const { getGlobalDB } = require("../../../tenancy")
@@ -13,12 +13,12 @@ async function fetchGoogleCreds() {
     type: Configs.GOOGLE,
   })
   // or fall back to env variables
-  const config = googleConfig || {
-    clientID: environment.GOOGLE_CLIENT_ID,
-    clientSecret: environment.GOOGLE_CLIENT_SECRET,
-  }
-
-  return config
+  return (
+    googleConfig || {
+      clientID: environment.GOOGLE_CLIENT_ID,
+      clientSecret: environment.GOOGLE_CLIENT_SECRET,
+    }
+  )
 }
 
 async function preAuth(passport, ctx, next) {
@@ -59,16 +59,17 @@ async function postAuth(passport, ctx, next) {
     { successRedirect: "/", failureRedirect: "/error" },
     async (err, tokens) => {
       // update the DB for the datasource with all the user info
-      const db = getDB(authStateCookie.appId)
-      const datasource = await db.get(authStateCookie.datasourceId)
-      if (!datasource.config) {
-        datasource.config = {}
-      }
-      datasource.config.auth = { type: "google", ...tokens }
-      await db.put(datasource)
-      ctx.redirect(
-        `/builder/app/${authStateCookie.appId}/data/datasource/${authStateCookie.datasourceId}`
-      )
+      await doWithDB(authStateCookie.appId, async db => {
+        const datasource = await db.get(authStateCookie.datasourceId)
+        if (!datasource.config) {
+          datasource.config = {}
+        }
+        datasource.config.auth = { type: "google", ...tokens }
+        await db.put(datasource)
+        ctx.redirect(
+          `/builder/app/${authStateCookie.appId}/data/datasource/${authStateCookie.datasourceId}`
+        )
+      })
     }
   )(ctx, next)
 }

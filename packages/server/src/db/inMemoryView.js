@@ -41,5 +41,6 @@ exports.runView = async (view, calculation, group, data) => {
     }
   }
   await db.destroy()
+  await db.close()
   return response
 }
