@@ -43,7 +43,7 @@ exports.definition = {
           descriptions: "The amount of times the block ran",
         },
       },
-      required: ["success, items, iterations"],
+      required: ["success", "items", "iterations"],
     },
   },
   type: "LOGIC",
