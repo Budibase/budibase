@@ -1,5 +1,5 @@
 <script>
-  import { ModalContent, Icon, Detail, TextArea } from "@budibase/bbui"
+  import { ModalContent, Icon, Detail, TextArea, Label } from "@budibase/bbui"
 
   export let testResult
   export let isTrigger
@@ -13,7 +13,7 @@
   cancelText="Close"
 >
   <div slot="header" class="result-modal-header">
-    <span>Test Automation</span>
+    <span>Test Results</span>
     <div>
       {#if isTrigger || testResult[0].outputs.success}
         <div class="iconSuccess">
@@ -26,7 +26,18 @@
       {/if}
     </div>
   </div>
-
+  <span>
+    {#if testResult[0].outputs.iterations}
+      <div style="display: flex;">
+        <Icon name="Reuse" />
+        <div style="margin-left: 10px;">
+          <Label>
+            This loop ran {testResult[0].outputs.iterations} times.</Label
+          >
+        </div>
+      </div>
+    {/if}
+  </span>
   <div
     on:click={() => {
       inputToggled = !inputToggled
