@@ -104,7 +104,6 @@
     padding-left: var(--spacing-xl);
     padding-right: var(--spacing-xl);
     position: relative;
-    z-index: 20;
     border-bottom-color: var(--spectrum-global-color-gray-200);
   }
   .spectrum-Tabs-content {
