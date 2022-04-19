@@ -11,6 +11,9 @@
   export let align = "right"
   export let portalTarget
 
+  let clazz
+  export { clazz as class }
+
   export const show = () => {
     dispatch("open")
     open = true
@@ -37,7 +40,7 @@
       use:positionDropdown={{ anchor, align }}
       use:clickOutside={hide}
       on:keydown={handleEscape}
-      class="spectrum-Popover is-open"
+      class={"spectrum-Popover is-open " + clazz}
       role="presentation"
     >
       <slot />

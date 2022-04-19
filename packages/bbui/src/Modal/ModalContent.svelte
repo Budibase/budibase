@@ -72,12 +72,20 @@
         class:header-spacing={$$slots.header}
       >
         {title}
+      </h1>
+    {:else if $$slots.header}
+      <h1
+        class="spectrum-Dialog-heading spectrum-Dialog-heading--noHeader"
+        class:noDivider={!showDivider}
+        class:header-spacing={$$slots.header}
+      >
         <slot name="header" />
       </h1>
-      {#if showDivider}
-        <Divider size="M" />
-      {/if}
     {/if}
+    {#if showDivider && (title || $$slots.header)}
+      <Divider size="M" />
+    {/if}
+
     <!-- TODO: Remove content-grid class once Layout components are in bbui -->
     <section class="spectrum-Dialog-content content-grid">
       <slot />
