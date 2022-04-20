@@ -65,23 +65,17 @@
   aria-modal="true"
 >
   <div class="spectrum-Dialog-grid">
-    {#if title}
-      <h1
-        class="spectrum-Dialog-heading spectrum-Dialog-heading--noHeader"
-        class:noDivider={!showDivider}
-        class:header-spacing={$$slots.header}
-      >
+    <h1
+      class="spectrum-Dialog-heading spectrum-Dialog-heading--noHeader"
+      class:noDivider={!showDivider}
+      class:header-spacing={$$slots.header}
+    >
+      {#if title}
         {title}
-      </h1>
-    {:else if $$slots.header}
-      <h1
-        class="spectrum-Dialog-heading spectrum-Dialog-heading--noHeader"
-        class:noDivider={!showDivider}
-        class:header-spacing={$$slots.header}
-      >
+      {:else if $$slots.header}
         <slot name="header" />
-      </h1>
-    {/if}
+      {/if}
+    </h1>
     {#if showDivider && (title || $$slots.header)}
       <Divider size="M" />
     {/if}
