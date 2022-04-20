@@ -49,7 +49,7 @@ exports.definition = {
 }
 
 exports.run = async function ({ inputs, appId, emitter }) {
-  if (inputs.id == null || inputs.revision == null) {
+  if (inputs.id == null) {
     return {
       success: false,
       response: {
