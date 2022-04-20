@@ -90,7 +90,7 @@ exports.doInTenant = (tenantId, task) => {
     }
   }
   const using = cls.getFromContext(ContextKeys.IN_USE)
-  if (using) {
+  if (using && cls.getFromContext(ContextKeys.TENANT_ID) === tenantId) {
     cls.setOnContext(ContextKeys.IN_USE, using + 1)
     return internal({ existing: true })
   } else {
@@ -154,7 +154,7 @@ exports.doInAppContext = (appId, task) => {
     }
   }
   const using = cls.getFromContext(ContextKeys.IN_USE)
-  if (using) {
+  if (using && cls.getFromContext(ContextKeys.APP_ID) === appId) {
     cls.setOnContext(ContextKeys.IN_USE, using + 1)
     return internal({ existing: true })
   } else {
