@@ -53,9 +53,11 @@ exports.doWithDB = async (dbName, cb, opts) => {
   const db = exports.dangerousGetDB(dbName, opts)
   // need this to be async so that we can correctly close DB after all
   // async operations have been completed
-  const resp = await cb(db)
-  await exports.closeDB(db)
-  return resp
+  try {
+    return await cb(db)
+  } finally {
+    await exports.closeDB(db)
+  }
 }
 
 exports.allDbs = () => {

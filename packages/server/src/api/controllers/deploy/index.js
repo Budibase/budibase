@@ -94,15 +94,15 @@ async function initDeployedApp(prodAppId) {
 }
 
 async function deployApp(deployment) {
-  const appId = getAppId()
-  const devAppId = getDevelopmentAppID(appId)
-  const productionAppId = getProdAppID(appId)
-  const replication = new Replication({
-    source: devAppId,
-    target: productionAppId,
-  })
-
+  let replication
   try {
+    const appId = getAppId()
+    const devAppId = getDevelopmentAppID(appId)
+    const productionAppId = getProdAppID(appId)
+    replication = new Replication({
+      source: devAppId,
+      target: productionAppId,
+    })
     console.log("Replication object created")
     await replication.replicate()
     console.log("replication complete.. replacing app meta doc")
