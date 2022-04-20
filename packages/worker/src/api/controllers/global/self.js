@@ -15,6 +15,7 @@ const { encrypt } = require("@budibase/backend-core/encryption")
 const { newid } = require("@budibase/backend-core/utils")
 const { getUser } = require("../../utilities")
 const { Cookies } = require("@budibase/backend-core/constants")
+const { featureFlags } = require("@budibase/backend-core")
 
 function newApiKey() {
   return encrypt(`${getTenantId()}${SEPARATOR}${newid()}`)
@@ -104,6 +105,11 @@ exports.getSelf = async ctx => {
 
   // get the main body of the user
   ctx.body = await getUser(userId)
+
+  // add the feature flags for this tenant
+  const tenantId = getTenantId()
+  ctx.body.featureFlags = featureFlags.getTenantFeatureFlags(tenantId)
+
   addSessionAttributesToUser(ctx)
 }
 
