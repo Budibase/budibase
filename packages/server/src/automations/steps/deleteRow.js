@@ -23,7 +23,7 @@ exports.definition = {
         id: {
           type: "string",
           title: "Row ID",
-        }
+        },
       },
       required: ["tableId", "id"],
     },
