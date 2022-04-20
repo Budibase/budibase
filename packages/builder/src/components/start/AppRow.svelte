@@ -88,7 +88,7 @@
       Edit
     </Button>
   </div>
-  <ActionMenu align="right">
+  <ActionMenu align="right" dataCy="app-row-actions-menu-popover">
     <Icon hoverable slot="control" name="More" dataCy="app-row-actions-menu" />
     {#if app.lockedYou}
       <MenuItem on:click={() => releaseLock(app)} icon="LockOpen">
