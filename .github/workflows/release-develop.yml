@@ -36,7 +36,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: budibase/budibase-pro
-          ref: ${{ env.GITHUB_REF_NAME }}
+          ref: ${GITHUB_REF_NAME}
           path: './pro'
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
       - name: Setup pro
