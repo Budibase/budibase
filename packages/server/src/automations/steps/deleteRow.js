@@ -24,12 +24,8 @@ exports.definition = {
           type: "string",
           title: "Row ID",
         },
-        revision: {
-          type: "string",
-          title: "Row Revision",
-        },
       },
-      required: ["tableId", "id", "revision"],
+      required: ["tableId", "id"],
     },
     outputs: {
       properties: {
@@ -53,7 +49,7 @@ exports.definition = {
 }
 
 exports.run = async function ({ inputs, appId, emitter }) {
-  if (inputs.id == null || inputs.revision == null) {
+  if (inputs.id == null) {
     return {
       success: false,
       response: {
