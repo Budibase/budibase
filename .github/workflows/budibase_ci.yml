@@ -26,23 +26,22 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Checkout budibase-pro
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
+
+    # Add @budibase/pro to filesystem
+    - name: Checkout pro
       uses: actions/checkout@v2
       with:
         repository: budibase/budibase-pro
         ref: ${{ env.branch }}
         path: './pro'
         token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-
-    # Can't checkout in the parent directory directly
-    # Just do a move afterwards instead 
     - name: Setup pro
       run: mv pro ../budibase-pro && cd ../budibase-pro && yarn setup
 
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v1
-      with:
-        node-version: ${{ matrix.node-version }}
     - run: yarn
     - run: yarn bootstrap
     - run: yarn lint
