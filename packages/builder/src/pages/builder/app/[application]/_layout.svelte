@@ -33,7 +33,7 @@
   let promise = getPackage()
   let unpublishModal
   let publishPopover
-  // let notPublishedPopover
+  let notPublishedPopover
 
   $: enrichedApps = enrichApps($apps, $auth.user)
   const enrichApps = (apps, user) => {
@@ -224,47 +224,69 @@
         <RevertModal />
         <Icon name="Play" hoverable on:click={previewApp} />
 
-        <PopoverMenu
-          bind:this={publishPopover}
-          align="right"
-          disabled={!isPublished}
-        >
-          <div slot="control" class="icon">
-            <Icon
-              size="M"
-              hoverable
-              name={isPublished ? "Globe" : "GlobeStrike"}
-              disabled={!isPublished}
-            />
-          </div>
-          <Layout gap="M">
-            <Heading size="XS">Your app is live!</Heading>
-            <div class="publish-popover-message">
-              {#if isPublished}
-                {processStringSync(
-                  "Last Published: {{ duration time 'millisecond' }} ago",
-                  {
-                    time:
-                      new Date().getTime() -
-                      new Date(latestDeployments[0].updatedAt).getTime(),
-                  }
-                )}
-              {/if}
-            </div>
-            <div class="publish-popover-actions">
-              <Button
-                warning={true}
-                icon="Globe"
+        {#if isPublished}
+          <PopoverMenu
+            bind:this={publishPopover}
+            align="right"
+            disabled={!isPublished}
+          >
+            <div slot="control" class="icon">
+              <Icon
+                size="M"
+                hoverable
+                name={isPublished ? "Globe" : "GlobeStrike"}
                 disabled={!isPublished}
-                on:click={unpublishApp}
-                dataCy="publish-popover-action"
-              >
-                Unpublish
-              </Button>
-              <Button cta on:click={viewApp}>View App</Button>
+              />
             </div>
-          </Layout>
-        </PopoverMenu>
+            <Layout gap="M">
+              <Heading size="XS">Your app is live!</Heading>
+              <div class="publish-popover-message">
+                {#if isPublished}
+                  {processStringSync(
+                    "Last Published: {{ duration time 'millisecond' }} ago",
+                    {
+                      time:
+                        new Date().getTime() -
+                        new Date(latestDeployments[0].updatedAt).getTime(),
+                    }
+                  )}
+                {/if}
+              </div>
+              <div class="publish-popover-actions">
+                <Button
+                  warning={true}
+                  icon="GlobeStrike"
+                  disabled={!isPublished}
+                  on:click={unpublishApp}
+                  dataCy="publish-popover-action"
+                >
+                  Unpublish
+                </Button>
+                <Button cta on:click={viewApp}>View App</Button>
+              </div>
+            </Layout>
+          </PopoverMenu>
+        {/if}
+
+        {#if !isPublished}
+          <PopoverMenu bind:this={notPublishedPopover} align="right">
+            <div
+              slot="control"
+              class="icon"
+              on:mouseenter={() => {
+                notPublishedPopover.show()
+              }}
+              on:mouseout={() => {
+                notPublishedPopover.hide()
+              }}
+              on:blur={() => void 0}
+              disabled={true}
+            >
+              <Icon size="M" name={"GlobeStrike"} disabled={true} />
+            </div>
+            This app has not been published yet
+          </PopoverMenu>
+        {/if}
 
         <DeployModal onOk={completePublish} />
       </div>
