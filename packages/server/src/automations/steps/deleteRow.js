@@ -23,13 +23,9 @@ exports.definition = {
         id: {
           type: "string",
           title: "Row ID",
-        },
-        revision: {
-          type: "string",
-          title: "Row Revision",
-        },
+        }
       },
-      required: ["tableId", "id", "revision"],
+      required: ["tableId", "id"],
     },
     outputs: {
       properties: {
