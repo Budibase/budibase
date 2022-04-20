@@ -4,7 +4,6 @@ on:
  push:
     branches:
       - develop
-      - feature/licensing
     paths:
       - '.aws/**'
       - '.github/**'
@@ -68,7 +67,7 @@ jobs:
           git config --global user.name "Budibase Staging Release Bot"
           git config --global user.email "<>"
           echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} >> .npmrc 
- #         yarn release:develop
+          yarn release:develop
 
       - name: Get the latest budibase release version
         id: version
@@ -85,11 +84,11 @@ jobs:
           echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} >> .npmrc 
           yarn release:develop $RELEASE_VERSION
 
-      # - name: Build/release Docker images
-      #   run: | 
-      #     docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
-      #     yarn build
-      #     yarn build:docker:develop
-      #   env:
-      #     DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
-      #     DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
+      - name: Build/release Docker images
+        run: | 
+          docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+          yarn build
+          yarn build:docker:develop
+        env:
+          DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
