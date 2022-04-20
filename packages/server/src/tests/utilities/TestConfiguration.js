@@ -203,7 +203,7 @@ class TestConfiguration {
     // create dev app
     this.app = await this._req({ name: appName }, null, controllers.app.create)
     this.appId = this.app.appId
-    context.updateAppId(this.appId)
+    await context.updateAppId(this.appId)
 
     // create production app
     this.prodApp = await this.deploy()

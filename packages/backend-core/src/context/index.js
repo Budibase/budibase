@@ -23,6 +23,8 @@ const ContextKeys = {
   // get the dev app DB from the request
   DEV_DB: "devDb",
   DB_OPTS: "dbOpts",
+  // check if something else is using the context, don't close DB
+  IN_USE: "inUse",
 }
 
 exports.DEFAULT_TENANT_ID = DEFAULT_TENANT_ID
@@ -41,6 +43,15 @@ async function closeAppDBs() {
       continue
     }
     await closeDB(db)
+    // clear the DB from context, incase someone tries to use it again
+    cls.setOnContext(dbKey, null)
+  }
+  // clear the app ID now that the databases are closed
+  if (cls.getFromContext(ContextKeys.APP_ID)) {
+    cls.setOnContext(ContextKeys.APP_ID, null)
+  }
+  if (cls.getFromContext(ContextKeys.DB_OPTS)) {
+    cls.setOnContext(ContextKeys.DB_OPTS, null)
   }
 }
 
@@ -67,15 +78,24 @@ exports.doInTenant = (tenantId, task) => {
       // invoke the task
       return await task()
     } finally {
-      if (!opts.existing) {
+      const using = cls.getFromContext(ContextKeys.IN_USE)
+      if (!using || using <= 1) {
         await closeDB(exports.getGlobalDB())
+        // clear from context now that database is closed/task is finished
+        cls.setOnContext(ContextKeys.TENANT_ID, null)
+        cls.setOnContext(ContextKeys.GLOBAL_DB, null)
+      } else {
+        cls.setOnContext(using - 1)
       }
     }
   }
-  if (cls.getFromContext(ContextKeys.TENANT_ID) === tenantId) {
+  const using = cls.getFromContext(ContextKeys.IN_USE)
+  if (using) {
+    cls.setOnContext(ContextKeys.IN_USE, using + 1)
     return internal({ existing: true })
   } else {
     return cls.run(async () => {
+      cls.setOnContext(ContextKeys.IN_USE, 1)
       return internal()
     })
   }
@@ -111,6 +131,7 @@ exports.doInAppContext = (appId, task) => {
   if (!appId) {
     throw new Error("appId is required")
   }
+
   // the internal function is so that we can re-use an existing
   // context - don't want to close DB on a parent context
   async function internal(opts = { existing: false }) {
@@ -124,15 +145,21 @@ exports.doInAppContext = (appId, task) => {
       // invoke the task
       return await task()
     } finally {
-      if (!opts.existing) {
+      const using = cls.getFromContext(ContextKeys.IN_USE)
+      if (!using || using <= 1) {
         await closeAppDBs()
+      } else {
+        cls.setOnContext(using - 1)
       }
     }
   }
-  if (appId === cls.getFromContext(ContextKeys.APP_ID)) {
+  const using = cls.getFromContext(ContextKeys.IN_USE)
+  if (using) {
+    cls.setOnContext(ContextKeys.IN_USE, using + 1)
     return internal({ existing: true })
   } else {
     return cls.run(async () => {
+      cls.setOnContext(ContextKeys.IN_USE, 1)
       return internal()
     })
   }
@@ -147,10 +174,6 @@ exports.updateAppId = appId => {
     // have to close first, before removing the databases from context
     const promise = closeAppDBs()
     cls.setOnContext(ContextKeys.APP_ID, appId)
-    cls.setOnContext(ContextKeys.PROD_DB, null)
-    cls.setOnContext(ContextKeys.DEV_DB, null)
-    cls.setOnContext(ContextKeys.CURRENT_DB, null)
-    cls.setOnContext(ContextKeys.DB_OPTS, null)
     return promise
   } catch (err) {
     if (env.isTest()) {
