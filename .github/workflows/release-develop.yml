@@ -26,6 +26,11 @@ jobs:
     runs-on: ubuntu-latest 
 
     steps:
+      - name: Extract branch name
+        shell: bash
+        run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF_NAME})"
+        id: extract_branch
+
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
         with:
@@ -36,7 +41,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: budibase/budibase-pro
-          ref: "$GITHUB_REF_NAME"
+          ref: ${{ steps.extract_branch.outputs.branch }}
           path: './pro'
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
       - name: Setup pro
