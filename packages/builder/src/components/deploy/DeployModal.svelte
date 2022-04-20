@@ -7,7 +7,7 @@
     Layout,
   } from "@budibase/bbui"
   import { API } from "api"
-  import analytics, { Events } from "analytics"
+  import analytics, { Events, EventSource } from "analytics"
   import { store } from "builderStore"
   import { ProgressCircle } from "@budibase/bbui"
   import CopyInput from "components/common/inputs/CopyInput.svelte"
@@ -49,6 +49,10 @@
 
   const viewApp = () => {
     if (published) {
+      analytics.captureEvent(Events.APP.VIEW_PUBLISHED, {
+        appId: $store.appId,
+        eventSource: EventSource.PORTAL,
+      })
       window.open(publishedUrl, "_blank")
     }
   }

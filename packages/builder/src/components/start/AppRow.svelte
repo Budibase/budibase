@@ -90,11 +90,6 @@
   </div>
   <ActionMenu align="right">
     <Icon hoverable slot="control" name="More" dataCy="app-row-actions-menu" />
-    {#if app.deployed}
-      <MenuItem on:click={() => viewApp(app)} icon="GlobeOutline">
-        View published app
-      </MenuItem>
-    {/if}
     {#if app.lockedYou}
       <MenuItem on:click={() => releaseLock(app)} icon="LockOpen">
         Release lock

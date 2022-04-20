@@ -25,6 +25,7 @@
   import { onMount, onDestroy } from "svelte"
   import { processStringSync } from "@budibase/string-templates"
   import { checkIncomingDeploymentStatus } from "components/deploy/utils"
+  import analytics, { Events, EventSource } from "analytics"
 
   export let application
 
@@ -73,6 +74,10 @@
   }
 
   const viewApp = () => {
+    analytics.captureEvent(Events.APP.VIEW_PUBLISHED, {
+      appId: selectedApp.appId,
+      eventSource: EventSource.PORTAL,
+    })
     if (selectedApp.url) {
       window.open(`/app${selectedApp.url}`)
     } else {
@@ -168,6 +173,9 @@
       return
     }
     try {
+      analytics.captureEvent(Events.APP.UNPUBLISHED, {
+        appId: selectedApp.appId,
+      })
       await API.unpublishApp(selectedApp.prodId)
       await apps.load()
       notifications.success("App unpublished successfully")

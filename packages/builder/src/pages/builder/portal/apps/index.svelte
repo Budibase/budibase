@@ -28,7 +28,7 @@
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import AppRow from "components/start/AppRow.svelte"
   import { AppStatus } from "constants"
-  import analytics, { Events } from "analytics"
+  import analytics, { Events, EventSource } from "analytics"
   import Logo from "assets/bb-space-man.svg"
 
   let sortBy = "name"
@@ -167,6 +167,10 @@
   }
 
   const viewApp = app => {
+    analytics.captureEvent(Events.APP.VIEW_PUBLISHED, {
+      appId: app.appId,
+      eventSource: EventSource.PORTAL,
+    })
     if (app.url) {
       window.open(`/app${app.url}`)
     } else {
@@ -209,6 +213,9 @@
       return
     }
     try {
+      analytics.captureEvent(Events.APP.UNPUBLISHED, {
+        appId: selectedApp.appId,
+      })
       await API.unpublishApp(selectedApp.prodId)
       await apps.load()
       notifications.success("App unpublished successfully")
