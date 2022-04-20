@@ -57,9 +57,6 @@
     .filter(deployment => deployment.status === "SUCCESS")
     .sort((a, b) => a.updatedAt > b.updatedAt)
 
-  $: console.log("Deployments ", deployments)
-  $: console.log("Latest Deployments ", latestDeployments)
-
   $: isPublished =
     selectedApp.deployed && latestDeployments && latestDeployments?.length
       ? true
