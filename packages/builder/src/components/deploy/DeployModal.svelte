@@ -25,11 +25,11 @@
 
   async function deployApp() {
     try {
-      published = await API.deployAppChanges()
-
       //In Progress
       asyncModal.show()
       publishModal.hide()
+
+      published = await API.deployAppChanges()
 
       analytics.captureEvent(Events.APP.PUBLISHED, {
         appId: $store.appId,
