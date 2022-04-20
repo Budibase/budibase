@@ -20,7 +20,7 @@ env:
   POSTHOG_TOKEN: ${{ secrets.POSTHOG_TOKEN }}
   INTERCOM_TOKEN: ${{ secrets.INTERCOM_TOKEN }}
   POSTHOG_URL: ${{ secrets.POSTHOG_URL }}
-  BRANCH: ${{ GITHUB_REF_NAME }}
+  BRANCH: $GITHUB_REF_NAME
       
 jobs:
   release:
