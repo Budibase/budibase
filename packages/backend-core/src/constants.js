@@ -17,6 +17,7 @@ exports.Headers = {
   API_VER: "x-budibase-api-version",
   APP_ID: "x-budibase-app-id",
   TYPE: "x-budibase-type",
+  PREVIEW_ROLE: "x-budibase-role",
   TENANT_ID: "x-budibase-tenant-id",
   TOKEN: "x-budibase-token",
   CSRF_TOKEN: "x-csrf-token",
