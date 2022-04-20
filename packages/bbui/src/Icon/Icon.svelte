@@ -10,6 +10,7 @@
   export let hoverable = false
   export let disabled = false
   export let color
+  export let dataCy = null
 
   $: rotation = getRotation(direction)
 
@@ -20,6 +21,7 @@
 
 <svg
   on:click
+  data-cy={dataCy}
   class:hoverable
   class:disabled
   class="spectrum-Icon spectrum-Icon--size{size}"

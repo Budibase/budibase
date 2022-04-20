@@ -23,7 +23,7 @@
 
 <div class="title">
   <div style="display: flex;">
-    <div style="color: {app.icon?.color || ''}">
+    <div class="app-icon" style="color: {app.icon?.color || ''}">
       <Icon size="XL" name={app.icon?.name || "Apps"} />
     </div>
     <div class="name" on:click={() => editApp(app)}>
@@ -69,7 +69,7 @@
   </div>
 </div>
 <div data-cy={`row_actions_${app.appId}`}>
-  <div class="app-actions">
+  <div class="app-row-actions">
     {#if app.deployed}
       <Button size="S" secondary quiet on:click={() => viewApp(app)}
         >View app
@@ -89,7 +89,7 @@
     </Button>
   </div>
   <ActionMenu align="right">
-    <Icon hoverable slot="control" name="More" />
+    <Icon hoverable slot="control" name="More" dataCy="app-row-actions-menu" />
     {#if app.deployed}
       <MenuItem on:click={() => viewApp(app)} icon="GlobeOutline">
         View published app
@@ -115,7 +115,7 @@
 </div>
 
 <style>
-  .app-actions {
+  .app-row-actions {
     grid-gap: var(--spacing-s);
     display: grid;
     grid-template-columns: 75px 75px;

@@ -352,7 +352,7 @@ exports.revertClient = async ctx => {
 exports.delete = async ctx => {
   let appId = ctx.params.appId
 
-  if (ctx.query.unpublish) {
+  if (ctx.query && ctx.query.unpublish) {
     appId = getProdAppID(appId)
   }
 
