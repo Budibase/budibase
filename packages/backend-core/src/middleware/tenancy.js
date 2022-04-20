@@ -1,4 +1,5 @@
 const { setTenantId, setGlobalDB, getGlobalDB } = require("../tenancy")
+const { closeDB } = require("../db")
 const ContextFactory = require("../context/FunctionContext")
 const { buildMatcherRegex, matches } = require("./matchers")
 
@@ -18,7 +19,8 @@ module.exports = (
     setGlobalDB(tenantId)
   }
   const destroyFn = async () => {
-    await getGlobalDB().close()
+    const db = getGlobalDB()
+    await closeDB(db)
   }
 
   return ContextFactory.getMiddleware(updateCtxFn, destroyFn)
