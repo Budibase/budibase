@@ -109,8 +109,8 @@ filterTests(['all'], () => {
         cy.get(".spectrum-Dialog-grid").contains("Unpublish app").click()
         cy.get(".appTable > :nth-child(5) > :nth-child(2) > .spectrum-Icon").click()
       }
-      cy.get(".app-row-actions").within(() => {
-        cy.get(".spectrum-Button").contains("Edit").click({ force: true })
+      cy.get("[data-cy='app-row-actions-menu-popover']").eq(0).within(() => {
+        cy.get(".spectrum-Menu-item").contains("Edit").click({ force: true })
       })
       cy.get(".spectrum-Modal")
         .within(() => {
