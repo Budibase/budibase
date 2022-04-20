@@ -65,8 +65,8 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: | 
           # setup the username and email.
-          git config --global user.name "Budibase Staging Release Bot"
-          git config --global user.email "<>"
+          git config user.name "Budibase Staging Release Bot"
+          git config user.email "<>"
           echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} >> .npmrc 
  #         yarn release:develop
 
@@ -81,9 +81,9 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           VERSION: ${{ steps.previoustag.outputs.tag }}
         run: | 
+          cd ../budibase-pro
           git config user.name "Budibase Staging Release Bot"
           git config user.email "<>"
-          cd ../budibase-pro
           echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} >> .npmrc 
           yarn release:develop $RELEASE_VERSION
 
