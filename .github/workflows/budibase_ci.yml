@@ -13,7 +13,7 @@ on:
       - develop 
 
 env:
-  branch: ${{ github.event.pull_request.head.ref }}
+  BRANCH: ${{ github.event.pull_request.head.ref }}
 
 jobs:
   build:
@@ -36,7 +36,7 @@ jobs:
       uses: actions/checkout@v2
       with:
         repository: budibase/budibase-pro
-        ref: ${{ env.branch }}
+        ref: ${{ env.BRANCH }}
         path: './pro'
         token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
     - name: Setup pro
