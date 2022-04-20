@@ -404,6 +404,8 @@ exports.sync = async (ctx, next) => {
     })
   } catch (err) {
     error = err
+  } finally {
+    await replication.close()
   }
 
   // sync the users

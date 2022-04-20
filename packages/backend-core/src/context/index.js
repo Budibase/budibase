@@ -3,7 +3,7 @@ const { Headers } = require("../../constants")
 const { SEPARATOR, DocumentTypes } = require("../db/constants")
 const { DEFAULT_TENANT_ID } = require("../constants")
 const cls = require("./FunctionContext")
-const { dangerousGetDB } = require("../db")
+const { dangerousGetDB, closeDB } = require("../db")
 const { getProdAppID, getDevelopmentAppID } = require("../db/conversions")
 const { baseGlobalDBName } = require("../tenancy/utils")
 const { isEqual } = require("lodash")
@@ -40,11 +40,7 @@ async function closeAppDBs() {
     if (!db) {
       continue
     }
-    try {
-      await db.close()
-    } catch (err) {
-      // ignore error, its already closed likely
-    }
+    await closeDB(db)
   }
 }
 
@@ -67,12 +63,14 @@ exports.doInTenant = (tenantId, task) => {
       exports.setGlobalDB(tenantId)
     }
 
-    // invoke the task
-    const response = await task()
-    if (!opts.existing) {
-      await exports.getGlobalDB().close()
+    try {
+      // invoke the task
+      return await task()
+    } finally {
+      if (!opts.existing) {
+        await closeDB(exports.getGlobalDB())
+      }
     }
-    return response
   }
   if (cls.getFromContext(ContextKeys.TENANT_ID) === tenantId) {
     return internal({ existing: true })
@@ -122,12 +120,14 @@ exports.doInAppContext = (appId, task) => {
     }
     // set the app ID
     cls.setOnContext(ContextKeys.APP_ID, appId)
-    // invoke the task
-    const response = await task()
-    if (!opts.existing) {
-      await closeAppDBs()
+    try {
+      // invoke the task
+      return await task()
+    } finally {
+      if (!opts.existing) {
+        await closeAppDBs()
+      }
     }
-    return response
   }
   if (appId === cls.getFromContext(ContextKeys.APP_ID)) {
     return internal({ existing: true })
@@ -144,6 +144,7 @@ exports.updateTenantId = tenantId => {
 
 exports.updateAppId = appId => {
   try {
+    // have to close first, before removing the databases from context
     const promise = closeAppDBs()
     cls.setOnContext(ContextKeys.APP_ID, appId)
     cls.setOnContext(ContextKeys.PROD_DB, null)

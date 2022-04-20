@@ -55,7 +55,7 @@
     "passport-jwt": "^4.0.0",
     "passport-local": "^1.0.0",
     "pino-pretty": "^4.0.0",
-    "pouchdb": "^7.2.1",
+    "pouchdb": "7.3.0",
     "pouchdb-all-dbs": "^1.0.2",
     "server-destroy": "^1.0.1"
   },

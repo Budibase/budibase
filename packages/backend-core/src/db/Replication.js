@@ -1,4 +1,4 @@
-const { dangerousGetDB } = require(".")
+const { dangerousGetDB, closeDB } = require(".")
 
 class Replication {
   /**
@@ -9,6 +9,10 @@ class Replication {
   constructor({ source, target }) {
     this.source = dangerousGetDB(source)
     this.target = dangerousGetDB(target)
+  }
+
+  close() {
+    return Promise.all([closeDB(this.source), closeDB(this.target)])
   }
 
   promisify(operation, opts = {}) {
