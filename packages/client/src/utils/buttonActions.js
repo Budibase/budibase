@@ -81,7 +81,7 @@ const duplicateRowHandler = async (action, context) => {
 
 const deleteRowHandler = async action => {
   const { tableId, revId, rowId } = action.parameters
-  if (tableId && revId && rowId) {
+  if (tableId && rowId) {
     try {
       await API.deleteRow({ tableId, rowId, revId })
       notificationStore.actions.success("Row deleted")

@@ -101,6 +101,7 @@ globals:
   google:
     clientId: ""
     secret: ""
+  automationMaxIterations: "500"
 
   createSecrets: true # creates an internal API key, JWT secrets and redis password for you
 
@@ -227,6 +228,8 @@ couchdb:
 
   ## Optional tolerations
   tolerations: []
+
+  affinity: {}
 
   service:
     # annotations:
