@@ -59,13 +59,13 @@
             href: "/builder/portal/settings/update",
           },
         ])
-      }
 
-      if (isEnabled(FEATURE_FLAGS.LICENSING)) {
-        menu = menu.concat({
-          title: "Upgrade",
-          href: "/builder/portal/settings/upgrade",
-        })
+        if (isEnabled(FEATURE_FLAGS.LICENSING)) {
+          menu = menu.concat({
+            title: "Upgrade",
+            href: "/builder/portal/settings/upgrade",
+          })
+        }
       }
     } else {
       menu = menu.concat([
