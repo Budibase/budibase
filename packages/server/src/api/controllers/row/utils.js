@@ -65,7 +65,10 @@ exports.validate = async ({ tableId, row, table }) => {
     if (type === FieldTypes.ARRAY && row[fieldName]) {
       if (row[fieldName].length) {
         row[fieldName].map(val => {
-          if (!constraints.inclusion.includes(val)) {
+          if (
+            !constraints.inclusion.includes(val) &&
+            constraints.inclusion.length !== 0
+          ) {
             errors[fieldName] = "Field not in list"
           }
         })
