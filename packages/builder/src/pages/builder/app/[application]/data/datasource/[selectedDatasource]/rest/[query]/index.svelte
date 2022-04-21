@@ -136,7 +136,7 @@
         notifications.success("Request sent successfully")
       }
     } catch (error) {
-      notifications.error("Error running query")
+      notifications.error(`Query Error: ${error.message}`)
     }
   }
 
