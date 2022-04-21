@@ -36,6 +36,7 @@ class Thread {
         maxConcurrentWorkers: this.count,
       }
       if (opts.timeoutMs) {
+        this.timeoutMs = opts.timeoutMs
         workerOpts.maxCallTime = opts.timeoutMs
       }
       this.workers = workerFarm(workerOpts, typeToFile(type))
@@ -43,6 +44,7 @@ class Thread {
   }
 
   run(data) {
+    const timeoutMs = this.timeoutMs
     return new Promise((resolve, reject) => {
       let fncToCall
       // if in test then don't use threading
@@ -52,7 +54,11 @@ class Thread {
         fncToCall = this.workers
       }
       fncToCall(data, (err, response) => {
-        if (err) {
+        if (err && err.type === "TimeoutError") {
+          reject(
+            new Error(`Query response time exceeded ${timeoutMs}ms timeout.`)
+          )
+        } else if (err) {
           reject(err)
         } else {
           resolve(response)
