@@ -93,15 +93,13 @@ globals:
   logLevel: info
   selfHosted: "1" # set to 0 for budibase cloud environment, set to 1 for self-hosted setup
   multiTenancy: "0" # set to 0 to disable multiple orgs, set to 1 to enable multiple orgs
-  useQuotas: "0"
-  excludeQuotasTenants: "" # comma seperated list of tenants to exclude from quotas
   accountPortalUrl: ""
   accountPortalApiKey: ""
   cookieDomain: ""
   platformUrl: ""
   httpMigrations: "0"
   google:
-    clientId: "" 
+    clientId: ""
     secret: ""
   automationMaxIterations: "500"
 

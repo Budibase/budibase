@@ -25,10 +25,27 @@ jobs:
     runs-on: ubuntu-latest 
 
     steps:
+      - name: Extract branch name
+        shell: bash
+        run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF_NAME})"
+        id: extract_branch
+
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
         with:
           node-version: 14.x
+
+      # Add @budibase/pro to filesystem
+      - name: Checkout pro
+        uses: actions/checkout@v2
+        with:
+          repository: budibase/budibase-pro
+          ref: ${{ steps.extract_branch.outputs.branch }}
+          path: './pro'
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+      - name: Setup pro
+        run: mv pro ../budibase-pro && cd ../budibase-pro && yarn setup
+
       - run: yarn 
       - run: yarn bootstrap 
       - run: yarn lint 
@@ -46,11 +63,26 @@ jobs:
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: | 
-          # setup the username and email. I tend to use 'GitHub Actions Bot' with no email by default
-          git config user.name "Budibase Staging Release Bot"
-          git config user.email "<>"
+          # setup the username and email.
+          git config --global user.name "Budibase Staging Release Bot"
+          git config --global user.email "<>"
           echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} >> .npmrc 
           yarn release:develop
+
+      - name: Get the latest budibase release version
+        id: version
+        run: | 
+          release_version=$(cat lerna.json | jq -r '.version')
+          echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
+
+      - name: Publish @budibase/pro package to NPM
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          VERSION: ${{ steps.previoustag.outputs.tag }}
+        run: | 
+          cd ../budibase-pro
+          echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} >> .npmrc 
+          yarn release:develop $RELEASE_VERSION
 
       - name: Build/release Docker images
         run: | 
