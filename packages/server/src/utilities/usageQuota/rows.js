@@ -62,7 +62,7 @@ exports.getUniqueRows = async appIds => {
         continue
       }
       try {
-        appRows.push(await getAppRows(appId))
+        appRows = appRows.concat(await getAppRows(appId))
       } catch (e) {
         console.error(e)
         // don't error out if we can't count the app rows, just continue

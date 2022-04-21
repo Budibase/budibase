@@ -1,4 +1,5 @@
 const pouch = require("./pouch")
+const env = require("../environment")
 
 let PouchDB
 let initialised = false
@@ -36,7 +37,7 @@ exports.dangerousGetDB = (dbName, opts) => {
 // use this function if you have called dangerousGetDB - close
 // the databases you've opened once finished
 exports.closeDB = async db => {
-  if (!db) {
+  if (!db || env.isTest()) {
     return
   }
   try {
