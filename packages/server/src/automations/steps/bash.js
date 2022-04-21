@@ -53,7 +53,7 @@ exports.run = async function ({ inputs, context }) {
       success = true
     try {
       stdout = execSync(command, {
-        timeout: environment.QUERY_THREAD_TIMEOUT || 500,
+        timeout: parseInt(environment.QUERY_THREAD_TIMEOUT) || 500,
       }).toString()
     } catch (err) {
       stdout = err.message
