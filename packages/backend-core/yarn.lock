@@ -4063,7 +4063,7 @@ pouchdb-utils@7.2.2:
     pouchdb-md5 "7.2.2"
     uuid "8.1.0"
 
-pouchdb@^7.3.0:
+pouchdb@7.3.0:
   version "7.3.0"
   resolved "https://registry.yarnpkg.com/pouchdb/-/pouchdb-7.3.0.tgz#440fbef12dfd8f9002320802528665e883a3b7f8"
   integrity sha512-OwsIQGXsfx3TrU1pLruj6PGSwFH+h5k4hGNxFkZ76Um7/ZI8F5TzUHFrpldVVIhfXYi2vP31q0q7ot1FSLFYOw==
