@@ -229,8 +229,9 @@
             bind:this={publishPopover}
             align="right"
             disabled={!isPublished}
+            dataCy="publish-popover-menu"
           >
-            <div slot="control" class="icon">
+            <div slot="control" class="icon app-status-icon">
               <Icon
                 size="M"
                 hoverable
@@ -272,7 +273,7 @@
           <PopoverMenu bind:this={notPublishedPopover} align="right">
             <div
               slot="control"
-              class="icon"
+              class="icon app-status-icon"
               on:mouseenter={() => {
                 notPublishedPopover.show()
               }}
@@ -297,6 +298,7 @@
       title="Confirm unpublish"
       okText="Unpublish app"
       onOk={confirmUnpublishApp}
+      dataCy={"unpublish-modal"}
     >
       Are you sure you want to unpublish the app <b>{selectedApp?.name}</b>?
     </ConfirmDialog>

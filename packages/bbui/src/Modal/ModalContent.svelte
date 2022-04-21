@@ -23,6 +23,7 @@
   export let secondaryButtonText = undefined
   export let secondaryAction = undefined
   export let secondaryButtonWarning = false
+  export let dataCy = null
 
   const { hide, cancel } = getContext(Context.Modal)
   let loading = false
@@ -63,6 +64,7 @@
   role="dialog"
   tabindex="-1"
   aria-modal="true"
+  data-cy={dataCy}
 >
   <div class="spectrum-Dialog-grid">
     <h1
