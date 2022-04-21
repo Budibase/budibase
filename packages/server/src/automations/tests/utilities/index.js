@@ -18,7 +18,6 @@ exports.afterAll = () => {
 
 exports.runInProd = async fn => {
   env._set("NODE_ENV", "production")
-  env._set("USE_QUOTAS", 1)
   let error
   try {
     await fn()
@@ -26,7 +25,6 @@ exports.runInProd = async fn => {
     error = err
   }
   env._set("NODE_ENV", "jest")
-  env._set("USE_QUOTAS", null)
   if (error) {
     throw error
   }
