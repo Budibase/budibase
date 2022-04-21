@@ -34,6 +34,8 @@ jobs:
 
     - name: Install Pro
       run: yarn install:pro $BRANCH $BASE_BRANCH
+      env:
+        PERSONAL_ACCESS_TOKEN : ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
     - run: yarn
     - run: yarn bootstrap
