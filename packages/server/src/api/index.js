@@ -4,12 +4,14 @@ const {
   auditLog,
   buildTenancyMiddleware,
 } = require("@budibase/backend-core/auth")
+const { errors } = require("@budibase/backend-core")
 const currentApp = require("../middleware/currentapp")
 const compress = require("koa-compress")
 const zlib = require("zlib")
 const { mainRoutes, staticRoutes, publicRoutes } = require("./routes")
 const pkg = require("../../package.json")
 const env = require("../environment")
+const { middleware: pro } = require("@budibase/pro")
 
 const router = new Router()
 
@@ -52,6 +54,7 @@ router
     })
   )
   .use(currentApp)
+  .use(pro.licensing())
   .use(auditLog)
 
 // error handling middleware
@@ -60,10 +63,12 @@ router.use(async (ctx, next) => {
     await next()
   } catch (err) {
     ctx.status = err.status || err.statusCode || 500
+    const error = errors.getPublicError(err)
     ctx.body = {
       message: err.message,
       status: ctx.status,
       validationErrors: err.validation,
+      error,
     }
     if (env.NODE_ENV !== "jest") {
       ctx.log.error(err)

@@ -1,7 +1,6 @@
 const env = require("../../environment")
 const jwt = require("jsonwebtoken")
 const { generateGlobalUserID } = require("../../db/utils")
-const { saveUser } = require("../../utils")
 const { authError } = require("./utils")
 const { newid } = require("../../hashing")
 const { createASession } = require("../../security/sessions")
@@ -16,8 +15,11 @@ exports.authenticateThirdParty = async function (
   thirdPartyUser,
   requireLocalAccount = true,
   done,
-  saveUserFn = saveUser
+  saveUserFn
 ) {
+  if (!saveUserFn) {
+    throw new Error("Save user function must be provided")
+  }
   if (!thirdPartyUser.provider) {
     return authError(done, "third party user provider required")
   }

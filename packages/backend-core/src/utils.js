@@ -176,6 +176,13 @@ exports.getGlobalUserByEmail = async email => {
   })
 }
 
+exports.getBuildersCount = async () => {
+  const builders = await queryGlobalView(ViewNames.USER_BY_BUILDERS, {
+    include_docs: false,
+  })
+  return builders ? builders.length : 0
+}
+
 exports.saveUser = async (
   user,
   tenantId,
@@ -289,4 +296,5 @@ exports.platformLogout = async ({ ctx, userId, keepActiveSession }) => {
     userId,
     sessions.map(({ sessionId }) => sessionId)
   )
+  await userCache.invalidateUser(userId)
 }
