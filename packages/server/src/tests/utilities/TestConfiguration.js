@@ -18,7 +18,7 @@ const supertest = require("supertest")
 const { cleanup } = require("../../utilities/fileSystem")
 const { Cookies, Headers } = require("@budibase/backend-core/constants")
 const { jwt } = require("@budibase/backend-core/auth")
-const { doWithGlobalDB } = require("@budibase/backend-core/tenancy")
+const { doInTenant, doWithGlobalDB } = require("@budibase/backend-core/tenancy")
 const { createASession } = require("@budibase/backend-core/sessions")
 const { user: userCache } = require("@budibase/backend-core/cache")
 const newid = require("../../db/newid")
@@ -55,6 +55,22 @@ class TestConfiguration {
     return this.appId
   }
 
+  async doInContext(appId, task) {
+    if (!appId) {
+      appId = this.appId
+    }
+    return doInTenant(TENANT_ID, () => {
+      // check if already in a context
+      if (context.getAppId() == null && appId !== null) {
+        return context.doInAppContext(appId, async () => {
+          return task()
+        })
+      } else {
+        return task()
+      }
+    })
+  }
+
   async _req(config, params, controlFunc) {
     const request = {}
     // fake cookies, we don't need them
@@ -66,21 +82,13 @@ class TestConfiguration {
     request.request = {
       body: config,
     }
-    async function run() {
+    return this.doInContext(this.appId, async () => {
       if (params) {
         request.params = params
       }
       await controlFunc(request)
       return request.body
-    }
-    // check if already in a context
-    if (context.getAppId() == null && this.appId !== null) {
-      return context.doInAppContext(this.appId, async () => {
-        return run()
-      })
-    } else {
-      return run()
-    }
+    })
   }
 
   async generateApiKey(userId = GLOBAL_USER_ID) {
@@ -201,6 +209,9 @@ class TestConfiguration {
 
   async createApp(appName) {
     // create dev app
+    // clear any old app
+    this.appId = null
+    await context.updateAppId(null)
     this.app = await this._req({ name: appName }, null, controllers.app.create)
     this.appId = this.app.appId
     await context.updateAppId(this.appId)

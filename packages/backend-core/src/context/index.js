@@ -169,12 +169,11 @@ exports.updateTenantId = tenantId => {
   cls.setOnContext(ContextKeys.TENANT_ID, tenantId)
 }
 
-exports.updateAppId = appId => {
+exports.updateAppId = async appId => {
   try {
     // have to close first, before removing the databases from context
-    const promise = closeAppDBs()
+    await closeAppDBs()
     cls.setOnContext(ContextKeys.APP_ID, appId)
-    return promise
   } catch (err) {
     if (env.isTest()) {
       TEST_APP_ID = appId

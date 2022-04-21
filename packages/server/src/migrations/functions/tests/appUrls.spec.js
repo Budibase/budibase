@@ -14,7 +14,7 @@ describe("run", () => {
 
   it("runs successfully", async () => {
     const app = await config.createApp("testApp")
-    const metadata = doWithDB(app.appId, async db => {
+    const metadata = await doWithDB(app.appId, async db => {
       const metadataDoc = await db.get(DocumentTypes.APP_METADATA)
       delete metadataDoc.url
       await db.put(metadataDoc)

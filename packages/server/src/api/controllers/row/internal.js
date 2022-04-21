@@ -6,6 +6,7 @@ const {
   DocumentTypes,
   InternalTables,
 } = require("../../../db/utils")
+const { dangerousGetDB } = require("@budibase/backend-core/db")
 const userController = require("../user")
 const {
   inputProcessing,
@@ -250,7 +251,7 @@ exports.fetch = async ctx => {
 }
 
 exports.find = async ctx => {
-  const db = getAppDB()
+  const db = dangerousGetDB(ctx.appId)
   const table = await db.get(ctx.params.tableId)
   let row = await findRow(ctx, ctx.params.tableId, ctx.params.rowId)
   row = await outputProcessing(table, row)
