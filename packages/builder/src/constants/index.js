@@ -2,6 +2,14 @@ export const TableNames = {
   USERS: "ta_users",
 }
 
+export const DesignTabs = {
+  SCREENS: "screens",
+  COMPONENTS: "components",
+  THEME: "theme",
+  NAVIGATION: "navigation",
+  LAYOUTS: "layouts",
+}
+
 export const FrontendTypes = {
   PAGE: "page",
   SCREEN: "screen",

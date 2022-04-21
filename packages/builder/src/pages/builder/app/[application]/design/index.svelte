@@ -1,6 +1,6 @@
 <script>
   import { goto } from "@roxi/routify"
-  import { FrontendTypes } from "constants"
+  import { DesignTabs } from "constants"
 
-  $goto(`./${FrontendTypes.SCREEN}`)
+  $goto(`./${DesignTabs.SCREENS}`)
 </script>
