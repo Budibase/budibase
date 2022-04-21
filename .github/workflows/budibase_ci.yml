@@ -14,6 +14,7 @@ on:
 
 env:
   BRANCH: ${{ github.event.pull_request.head.ref }}
+  BASE_BRANCH: ${{ github.event.pull_request.base.ref}}
 
 jobs:
   build:
@@ -32,7 +33,7 @@ jobs:
         node-version: ${{ matrix.node-version }}
 
     - name: Install Pro
-      run: yarn install:pro
+      run: yarn install:pro $BRANCH $BASE_BRANCH
 
     - run: yarn
     - run: yarn bootstrap

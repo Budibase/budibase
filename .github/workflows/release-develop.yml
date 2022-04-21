@@ -31,7 +31,7 @@ jobs:
           node-version: 14.x
 
       - name: Install Pro
-        run: yarn install:pro
+        run: yarn install:pro develop
 
       - run: yarn 
       - run: yarn bootstrap 
