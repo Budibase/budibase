@@ -8,6 +8,7 @@
   export let anchor
   export let showTip = true
   export let direction = "bottom"
+  export let dataCy = null
 
   let dropdown
   let tipSvg =
@@ -55,7 +56,7 @@
       {@html tipSvg}
     {/if}
 
-    <div class="popover-container">
+    <div class="popover-container" data-cy={dataCy}>
       <div class="popover-menu-wrap">
         <slot />
       </div>
