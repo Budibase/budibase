@@ -1,10 +1,16 @@
-const redis = require("ioredis")
+const Redis = require("ioredis-mock")
 const RedisIntegration = require("../redis")
-jest.mock("ioredis")
 
 class TestConfiguration {
   constructor(config = {}) {
     this.integration = new RedisIntegration.integration(config) 
+    this.redis = new Redis({
+      data: {
+        test: 'test',
+        result: "1"
+      },
+    })
+    this.integration.client = this.redis
   }
 }
 
@@ -21,7 +27,7 @@ describe("Redis Integration", () => {
       value: "value"
     }
     const response = await config.integration.create(body)
-    expect(config.integration.client.set).toHaveBeenCalledWith(body.key, body.value)
+    expect(await config.redis.get("key")).toEqual("value")
   })
 
   it("calls the read method with the correct params", async () => {
@@ -29,17 +35,15 @@ describe("Redis Integration", () => {
       key: "test"
     }
     const response = await config.integration.read(body)
-    expect(config.integration.client.get).toHaveBeenCalledWith(body.key)
-    expect(response).toEqual(expect.any(Object))
+    expect(response).toEqual("test")
   })
 
   it("calls the delete method with the correct params", async () => {
     const body = {
       key: "test"
     }
-    const response = await config.integration.delete(body)
-    expect(config.integration.client.del).toHaveBeenCalledWith(body.key)
-    expect(response).toEqual(expect.any(Object))
+    await config.integration.delete(body)
+    expect(await config.redis.get(body.key)).toEqual(null)
   })
 
   it("calls the command method with the correct params", async () => {
@@ -47,9 +51,10 @@ describe("Redis Integration", () => {
       json: "KEYS *"
     }
 
-    const response = await config.integration.command(body)
+    // ioredis-mock doesn't support pipelines
+    config.integration.client.pipeline = jest.fn(() => ({ exec: jest.fn(() => [[]]) }))
 
+    await config.integration.command(body)
     expect(config.integration.client.pipeline).toHaveBeenCalledWith([["KEYS", "*"]])
-    expect(response).toEqual(expect.any(Array))
   })
 })
