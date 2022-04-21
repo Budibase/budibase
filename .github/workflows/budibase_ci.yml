@@ -15,6 +15,7 @@ on:
 env:
   BRANCH: ${{ github.event.pull_request.head.ref }}
   BASE_BRANCH: ${{ github.event.pull_request.base.ref}}
+  PERSONAL_ACCESS_TOKEN : ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
 jobs:
   build:
@@ -34,8 +35,6 @@ jobs:
 
     - name: Install Pro
       run: yarn install:pro $BRANCH $BASE_BRANCH
-      env:
-        PERSONAL_ACCESS_TOKEN : ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
     - run: yarn
     - run: yarn bootstrap
