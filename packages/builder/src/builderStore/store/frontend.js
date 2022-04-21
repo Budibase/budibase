@@ -15,7 +15,7 @@ import {
   tables,
 } from "stores/backend"
 import { API } from "api"
-import { FrontendTypes } from "constants"
+import { DesignTabs, FrontendTypes } from "constants"
 import analytics, { Events } from "analytics"
 import {
   findComponentType,
@@ -48,6 +48,7 @@ const INITIAL_FRONTEND_STATE = {
     continueIfAction: false,
   },
   currentFrontEndType: "none",
+  selectedDesignTab: DesignTabs.SCREENS,
   selectedScreenId: "",
   selectedLayoutId: "",
   selectedComponentId: "",

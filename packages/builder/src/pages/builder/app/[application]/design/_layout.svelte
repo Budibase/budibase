@@ -2,6 +2,30 @@
   import { IconSideNav, IconSideNavItem } from "@budibase/bbui"
   import { params, goto } from "@roxi/routify"
   import { DesignTabs } from "constants"
+  import { store } from "builderStore"
+  import { syncURLToState } from "helpers/urlStateSync"
+  import { onDestroy } from "svelte"
+
+  const updateTab = tab => {
+    store.update(state => {
+      state.selectedDesignTab = tab
+      return state
+    })
+  }
+
+  const unsync = syncURLToState({
+    keys: [
+      {
+        url: "tab",
+        state: "selectedDesignTab",
+      },
+    ],
+    store,
+    params,
+    goto,
+  })
+
+  onDestroy(unsync)
 </script>
 
 <!-- routify:options index=1 -->
@@ -11,32 +35,32 @@
       <IconSideNavItem
         icon="WebPage"
         tooltip="Screens"
-        active={$params.tab === DesignTabs.SCREENS}
-        on:click={() => $goto(`./${DesignTabs.SCREENS}`)}
+        active={$store.selectedDesignTab === DesignTabs.SCREENS}
+        on:click={() => updateTab(DesignTabs.SCREENS)}
       />
       <IconSideNavItem
         icon="ViewList"
         tooltip="Components"
-        active={$params.tab === DesignTabs.COMPONENTS}
-        on:click={() => $goto(`./${DesignTabs.COMPONENTS}`)}
+        active={$store.selectedDesignTab === DesignTabs.COMPONENTS}
+        on:click={() => updateTab(DesignTabs.COMPONENTS)}
       />
       <IconSideNavItem
         icon="Brush"
         tooltip="Theme"
-        active={$params.tab === DesignTabs.THEME}
-        on:click={() => $goto(`./${DesignTabs.THEME}`)}
+        active={$store.selectedDesignTab === DesignTabs.THEME}
+        on:click={() => updateTab(DesignTabs.THEME)}
       />
       <IconSideNavItem
         icon="Link"
         tooltip="Navigation"
-        active={$params.tab === DesignTabs.NAVIGATION}
-        on:click={() => $goto(`./${DesignTabs.NAVIGATION}`)}
+        active={$store.selectedDesignTab === DesignTabs.NAVIGATION}
+        on:click={() => updateTab(DesignTabs.NAVIGATION)}
       />
       <IconSideNavItem
         icon="Experience"
         tooltip="Layouts"
-        active={$params.tab === DesignTabs.LAYOUTS}
-        on:click={() => $goto(`./${DesignTabs.LAYOUTS}`)}
+        active={$store.selectedDesignTab === DesignTabs.LAYOUTS}
+        on:click={() => updateTab(DesignTabs.LAYOUTS)}
       />
     </IconSideNav>
   </div>
