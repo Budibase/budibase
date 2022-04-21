@@ -31,16 +31,8 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
 
-    # Add @budibase/pro to filesystem
-    - name: Checkout pro
-      uses: actions/checkout@v2
-      with:
-        repository: budibase/budibase-pro
-        ref: ${{ env.BRANCH }}
-        path: './pro'
-        token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-    - name: Setup pro
-      run: mv pro ../budibase-pro && cd ../budibase-pro && yarn setup
+    - name: Install Pro
+      run: yarn install:pro
 
     - run: yarn
     - run: yarn bootstrap
