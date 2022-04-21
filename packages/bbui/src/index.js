@@ -64,6 +64,8 @@ export { default as BannerDisplay } from "./Banner/BannerDisplay.svelte"
 export { default as MarkdownEditor } from "./Markdown/MarkdownEditor.svelte"
 export { default as MarkdownViewer } from "./Markdown/MarkdownViewer.svelte"
 export { default as RichTextField } from "./Form/RichTextField.svelte"
+export { default as IconSideNav } from "./IconSideNav/IconSideNav.svelte"
+export { default as IconSideNavItem } from "./IconSideNav/IconSideNavItem.svelte"
 
 // Renderers
 export { default as BoldRenderer } from "./Table/BoldRenderer.svelte"
