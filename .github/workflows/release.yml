@@ -30,6 +30,10 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: 14.x
+
+      - name: Install Pro
+        run: yarn install:pro master
+
       - run: yarn
       - run: yarn bootstrap
       - run: yarn lint
