@@ -8,7 +8,7 @@ BASE_BRANCH=$2
 
 cd ../
 echo "Cloning pro repo..."
-git clone git@github.com:Budibase/budibase-pro.git
+git clone https://$PERSONAL_ACCESS_TOKEN@github.com/Budibase/budibase-pro.git
 cd budibase-pro
 
 # Try to checkout the matching pro branch
