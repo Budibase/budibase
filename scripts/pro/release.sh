@@ -19,8 +19,7 @@ echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} >> .npmrc
 
 # Determine tag to use
 TAG=""
-if [[ $COMMAND == "develop" ]]
-then
+if [[ $COMMAND == "develop" ]]; then
   TAG="develop"
 else
   TAG="latest"
@@ -32,8 +31,7 @@ lerna publish $VERSION --yes --force-publish --dist-tag $TAG
 
 cd -
 
-if [[ $COMMAND == "develop" ]]
-then
+if [[ $COMMAND == "develop" ]]; then
   # Pin pro version for develop container build
   echo "Pinning pro version"
   cd packages/server
