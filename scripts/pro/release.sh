@@ -1,19 +1,23 @@
-if [[ -z "${CI}" ]]; then
-  echo 'Cannot run release.sh unless in CI'
-  exit 0
-fi
+#!/bin/bash 
+
+# if [[ -z "${CI}" ]]; then
+#   echo 'Cannot run release.sh unless in CI'
+#   exit 0
+# fi
 
 # Release pro as same version as budibase
 VERSION=$(jq -r .version lerna.json)
+echo "Version: $VERSION"
+COMMAND=$1
+echo "Command: $COMMAND"
 
 # Go to pro package
 cd ../budibase-pro
 
 # Install NPM credentials
-echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} >> .npmrc 
+# echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} >> .npmrc 
 
 # Determine tag to use
-COMMAND=$1
 TAG=""
 if [[ $COMMAND == "develop" ]]
 then
@@ -24,7 +28,7 @@ fi
 
 echo "Releasing version $VERSION"
 echo "Releasing tag $TAG"
-lerna publish $VERSION --yes --force-publish --dist-tag $TAG
+# lerna publish $VERSION --yes --force-publish --dist-tag $TAG
 
 cd -
 
