@@ -3,12 +3,12 @@
   import NewScreenModal from "components/design/NavigationPanel/NewScreenModal.svelte"
   import DatasourceModal from "components/design/NavigationPanel/DatasourceModal.svelte"
   import sanitizeUrl from "builderStore/store/screenTemplates/utils/sanitizeUrl"
-  import { Modal, notifications } from "@budibase/bbui"
+  import { Modal, ModalContent, Select, notifications } from "@budibase/bbui"
   import { store, selectedAccessRole } from "builderStore"
   import analytics, { Events } from "analytics"
   import { get } from "svelte/store"
   import getTemplates from "builderStore/store/screenTemplates"
-  import { tables } from "stores/backend"
+  import { tables, roles } from "stores/backend"
 
   let pendingScreen
 
@@ -16,11 +16,22 @@
   let newScreenModal
   let screenDetailsModal
   let datasourceModal
+  let screenAccessRoleModal
+
+  // Cache variables for workflow
+  let screenAccessRole = $selectedAccessRole + ""
+  let selectedTemplates = null
+  let blankScreenUrl = null
+
+  let screenMode = null
 
   // External handler to show the screen wizard
   export const showModal = () => {
-    newScreenModal.show()
+    selectedTemplates = null
+    blankScreenUrl = null
+    screenMode = null
 
+    newScreenModal.show()
     // Reset state when showing modal again
     pendingScreen = null
   }
@@ -102,6 +113,8 @@
 
   // Handler for NewScreenModal
   const confirmScreenSelection = async mode => {
+    screenMode = mode
+
     if (mode == "autoCreate") {
       datasourceModal.show()
     } else {
@@ -114,12 +127,18 @@
     }
   }
 
-  // Handler for DatasourceModal
-  const confirmScreenDatasources = async ({ templates, screenAccessRole }) => {
+  // Handler for DatasourceModal confirmation, move to screen access select
+  const confirmScreenDatasources = async ({ templates }) => {
+    selectedTemplates = templates
+    screenAccessRoleModal.show()
+  }
+
+  // Handler for Datasource Screen Creation
+  const completeDatasourceScreenCreation = async () => {
     // // Handle template selection
-    if (templates?.length > 1) {
+    if (selectedTemplates?.length > 1) {
       // Autoscreens, so create immediately
-      const screens = templates.map(template => {
+      const screens = selectedTemplates.map(template => {
         let screenTemplate = template.create()
         screenTemplate.datasource = template.datasource
         return screenTemplate
@@ -128,13 +147,41 @@
     }
   }
 
-  // Handler for ScreenDetailsModal
-  const confirmScreenDetails = async ({ screenUrl, screenAccessRole }) => {
+  const confirmScreenBlank = async ({ screenUrl }) => {
+    blankScreenUrl = screenUrl
+    screenAccessRoleModal.show()
+  }
+
+  // Submit request for a blank screen
+  const confirmBlankScreenCreation = async ({
+    screenUrl,
+    screenAccessRole,
+  }) => {
     if (!pendingScreen) {
       return
     }
     pendingScreen.routing.route = screenUrl
     await createScreens({ screens: [pendingScreen], screenAccessRole })
+  }
+
+  // Submit screen config for creation.
+  const confirmScreenCreation = async () => {
+    if (screenMode === "blankScreen") {
+      confirmBlankScreenCreation({
+        screenUrl: blankScreenUrl,
+        screenAccessRole,
+      })
+    } else {
+      completeDatasourceScreenCreation()
+    }
+  }
+
+  const roleSelectBack = () => {
+    if (screenMode === "blankScreen") {
+      newScreenModal.show()
+    } else {
+      datasourceModal.show()
+    }
   }
 </script>
 
@@ -146,12 +193,39 @@
   <DatasourceModal
     onConfirm={confirmScreenDatasources}
     onCancel={() => newScreenModal.show()}
+    initalScreens={!selectedTemplates ? [] : [...selectedTemplates]}
   />
+</Modal>
+
+<Modal bind:this={screenAccessRoleModal}>
+  <ModalContent
+    title={"Create CRUD Screens"}
+    confirmText={"Done"}
+    cancelText={"Back"}
+    onConfirm={confirmScreenCreation}
+    onCancel={roleSelectBack}
+  >
+    Select which level of access you want your screens to have
+    <Select
+      bind:value={screenAccessRole}
+      on:change={() => {
+        analytics.captureEvent(Events.SCREEN.CREATE_ROLE_UPDATED, {
+          screenAccessRole,
+        })
+      }}
+      label="Access"
+      getOptionLabel={role => role.name}
+      getOptionValue={role => role._id}
+      getOptionColor={role => role.color}
+      options={$roles}
+    />
+  </ModalContent>
 </Modal>
 
 <Modal bind:this={screenDetailsModal}>
   <ScreenDetailsModal
-    onConfirm={confirmScreenDetails}
+    onConfirm={confirmScreenBlank}
     onCancel={() => newScreenModal.show()}
+    initialUrl={blankScreenUrl}
   />
 </Modal>
