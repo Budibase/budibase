@@ -1,24 +1,17 @@
 <script>
-  import { store, selectedAccessRole } from "builderStore"
-  import {
-    ModalContent,
-    Layout,
-    Select,
-    Divider,
-    notifications,
-  } from "@budibase/bbui"
-  import { tables, datasources, roles } from "stores/backend"
+  import { store } from "builderStore"
+  import { ModalContent, Layout, notifications, Icon } from "@budibase/bbui"
+  import { tables, datasources } from "stores/backend"
   import getTemplates from "builderStore/store/screenTemplates"
   import ICONS from "../../backend/DatasourceNavigator/icons"
   import { IntegrationNames } from "constants"
-  import analytics, { Events } from "analytics"
   import { onMount } from "svelte"
 
   export let onCancel
   export let onConfirm
+  export let initalScreens = []
 
-  let selectedScreens = []
-  let screenAccessRole = $selectedAccessRole + ""
+  let selectedScreens = [...initalScreens]
 
   const toggleScreenSelection = (table, datasource) => {
     if (selectedScreens.find(s => s.table === table.name)) {
@@ -43,7 +36,6 @@
   const confirmDatasourceSelection = async () => {
     await onConfirm({
       templates: selectedScreens,
-      screenAccessRole,
     })
   }
 
@@ -77,91 +69,92 @@
   disabled={!selectedScreens.length}
   size="L"
 >
-  <Layout noPadding gap="XS">
+  <Layout noPadding gap="S">
     {#each filteredSources as datasource}
-      <div class="data-source-header">
-        <div class="datasource-icon">
-          <svelte:component
-            this={ICONS[datasource.source]}
-            height="24"
-            width="24"
-          />
+      <div class="data-source-wrap">
+        <div class="data-source-header">
+          <div class="datasource-icon">
+            <svelte:component
+              this={ICONS[datasource.source]}
+              height="24"
+              width="24"
+            />
+          </div>
+          <div class="data-source-name">{datasource.name}</div>
         </div>
-        <div class="content">
-          <div class="text">{datasource.name}</div>
-        </div>
+        {#if Array.isArray(datasource.entities)}
+          {#each datasource.entities.filter(table => table._id !== "ta_users") as table}
+            <div
+              class="data-source-entry"
+              class:selected={selectedScreens.find(x => x.table === table.name)}
+              on:click={() => toggleScreenSelection(table, datasource)}
+            >
+              <svg
+                width="16px"
+                height="16px"
+                class="spectrum-Icon"
+                style="color: white"
+                focusable="false"
+              >
+                <use xlink:href="#spectrum-icon-18-Table" />
+              </svg>
+              {table.name}
+
+              {#if selectedScreens.find(x => x.table === table.name)}
+                <span class="data-source-check">
+                  <Icon size="S" name="CheckmarkCircle" />
+                </span>
+              {/if}
+            </div>
+          {/each}
+        {/if}
+        {#if datasource["entities"] && !Array.isArray(datasource.entities)}
+          {#each Object.keys(datasource.entities).filter(table => table._id !== "ta_users") as table_key}
+            <div
+              class="data-source-entry"
+              class:selected={selectedScreens.find(
+                x => x.table === datasource.entities[table_key].name
+              )}
+              on:click={() =>
+                toggleScreenSelection(
+                  datasource.entities[table_key],
+                  datasource
+                )}
+            >
+              <svg
+                width="16px"
+                height="16px"
+                class="spectrum-Icon"
+                style="color: white"
+                focusable="false"
+              >
+                <use xlink:href="#spectrum-icon-18-Table" />
+              </svg>
+              {datasource.entities[table_key].name}
+
+              {#if selectedScreens.find(x => x.table === datasource.entities[table_key].name)}
+                <span class="data-source-check">
+                  <Icon size="S" name="CheckmarkCircle" />
+                </span>
+              {/if}
+            </div>
+          {/each}
+        {/if}
       </div>
-      {#if Array.isArray(datasource.entities)}
-        {#each datasource.entities.filter(table => table._id !== "ta_users") as table}
-          <div
-            class="data-source-entry"
-            class:selected={selectedScreens.find(x => x.table === table.name)}
-            on:click={() => toggleScreenSelection(table, datasource)}
-          >
-            <svg
-              width="16px"
-              height="16px"
-              class="spectrum-Icon"
-              style="color: white"
-              focusable="false"
-            >
-              <use xlink:href="#spectrum-icon-18-Table" />
-            </svg>
-            {table.name}
-          </div>
-        {/each}
-      {/if}
-      {#if datasource["entities"] && !Array.isArray(datasource.entities)}
-        {#each Object.keys(datasource.entities).filter(table => table._id !== "ta_users") as table_key}
-          <div
-            class="data-source-entry"
-            class:selected={selectedScreens.find(
-              x => x.table === datasource.entities[table_key].name
-            )}
-            on:click={() =>
-              toggleScreenSelection(datasource.entities[table_key], datasource)}
-          >
-            <svg
-              width="16px"
-              height="16px"
-              class="spectrum-Icon"
-              style="color: white"
-              focusable="false"
-            >
-              <use xlink:href="#spectrum-icon-18-Table" />
-            </svg>
-            {datasource.entities[table_key].name}
-          </div>
-        {/each}
-      {/if}
     {/each}
-    <div>
-      <Divider size="S" />
-    </div>
-    <Select
-      bind:value={screenAccessRole}
-      on:change={() => {
-        analytics.captureEvent(Events.SCREEN.CREATE_ROLE_UPDATED, {
-          screenAccessRole,
-        })
-      }}
-      label="Screen access"
-      getOptionLabel={role => role.name}
-      getOptionValue={role => role._id}
-      getOptionColor={role => role.color}
-      options={$roles}
-    />
   </Layout>
 </ModalContent>
 
 <style>
+  .data-source-wrap {
+    padding-bottom: var(--spectrum-alias-item-padding-s);
+    display: grid;
+    grid-gap: var(--spacing-xs);
+  }
+
   .data-source-header {
     display: flex;
     align-items: center;
-  }
-
-  .data-source-header .content {
-    padding: var(--spectrum-alias-item-padding-l);
   }
 
   .data-source-entry {
@@ -172,7 +165,6 @@
     transition: 0.3s all;
     border: 1px solid var(--spectrum-global-color-gray-300);
     border-radius: 4px;
-    box-sizing: border-box;
     border-width: 1px;
     display: flex;
     align-items: center;
@@ -181,5 +173,23 @@
   .data-source-entry:hover,
   .selected {
     background: var(--spectrum-alias-background-color-tertiary);
+  }
+
+  .data-source-name {
+    padding: var(--spectrum-alias-item-padding-s);
+    min-height: var(--spectrum-icon-size-s);
+  }
+
+  .data-source-entry .data-source-check {
+    margin-left: auto;
+  }
+
+  .data-source-entry :global(.spectrum-Icon) {
+    min-width: 16px;
+  }
+
+  .data-source-entry .data-source-check :global(.spectrum-Icon) {
+    color: var(--spectrum-global-color-green-600);
+    display: block;
   }
 </style>

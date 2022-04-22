@@ -1,10 +1,8 @@
 <script>
-  import { ModalContent, Input, Select } from "@budibase/bbui"
+  import { ModalContent, Input } from "@budibase/bbui"
   import sanitizeUrl from "builderStore/store/screenTemplates/utils/sanitizeUrl"
   import { selectedAccessRole, allScreens } from "builderStore"
   import { get } from "svelte/store"
-  import { roles } from "stores/backend"
-  import analytics, { Events } from "analytics"
 
   export let onConfirm
   export let onCancel
@@ -40,7 +38,6 @@
   const confirmScreenDetails = async () => {
     await onConfirm({
       screenUrl,
-      screenAccessRole,
     })
   }
 </script>
@@ -55,22 +52,9 @@
   disabled={!screenAccessRole || !screenUrl || routeError || !touched}
 >
   <Input
-    label="URL"
+    label="Enter a URL for the new screen"
     error={routeError}
     bind:value={screenUrl}
     on:change={routeChanged}
-  />
-  <Select
-    bind:value={screenAccessRole}
-    on:change={() => {
-      analytics.captureEvent(Events.SCREEN.CREATE_ROLE_UPDATED, {
-        screenAccessRole,
-      })
-    }}
-    label="Screen access"
-    getOptionLabel={role => role.name}
-    getOptionValue={role => role._id}
-    getOptionColor={role => role.color}
-    options={$roles}
   />
 </ModalContent>
