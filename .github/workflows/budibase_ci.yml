@@ -14,6 +14,8 @@ on:
 
 env:
   BRANCH: ${{ github.event.pull_request.head.ref }}
+  BASE_BRANCH: ${{ github.event.pull_request.base.ref}}
+  PERSONAL_ACCESS_TOKEN : ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
 jobs:
   build:
@@ -31,16 +33,8 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
 
-    # Add @budibase/pro to filesystem
-    - name: Checkout pro
-      uses: actions/checkout@v2
-      with:
-        repository: budibase/budibase-pro
-        ref: ${{ env.BRANCH }}
-        path: './pro'
-        token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-    - name: Setup pro
-      run: mv pro ../budibase-pro && cd ../budibase-pro && yarn setup
+    - name: Install Pro
+      run: yarn install:pro $BRANCH $BASE_BRANCH
 
     - run: yarn
     - run: yarn bootstrap

@@ -32,9 +32,12 @@ if [ -d "../account-portal" ]; then
   yarn link "@budibase/backend-core"
 
   echo "Linking string-templates to account-portal"
-  yarn link "@budibase/pro"
+  yarn link "@budibase/string-templates"
 
-  echo "Linking pro to account-portal"
-  yarn link "@budibase/pro"
+  if [ -d "../../../budibase-pro" ]; then
+    echo "Linking pro to account-portal"
+    yarn link "@budibase/pro"
+  fi
+
   cd -
 fi

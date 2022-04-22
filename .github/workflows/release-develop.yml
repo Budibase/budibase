@@ -19,32 +19,20 @@ env:
   POSTHOG_TOKEN: ${{ secrets.POSTHOG_TOKEN }}
   INTERCOM_TOKEN: ${{ secrets.INTERCOM_TOKEN }}
   POSTHOG_URL: ${{ secrets.POSTHOG_URL }}
+  PERSONAL_ACCESS_TOKEN : ${{ secrets.PERSONAL_ACCESS_TOKEN }}
       
 jobs:
   release:
     runs-on: ubuntu-latest 
 
     steps:
-      - name: Extract branch name
-        shell: bash
-        run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF_NAME})"
-        id: extract_branch
-
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
         with:
           node-version: 14.x
 
-      # Add @budibase/pro to filesystem
-      - name: Checkout pro
-        uses: actions/checkout@v2
-        with:
-          repository: budibase/budibase-pro
-          ref: ${{ steps.extract_branch.outputs.branch }}
-          path: './pro'
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-      - name: Setup pro
-        run: mv pro ../budibase-pro && cd ../budibase-pro && yarn setup
+      - name: Install Pro
+        run: yarn install:pro develop
 
       - run: yarn 
       - run: yarn bootstrap 
@@ -68,21 +56,6 @@ jobs:
           git config --global user.email "<>"
           echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} >> .npmrc 
           yarn release:develop
-
-      - name: Get the latest budibase release version
-        id: version
-        run: | 
-          release_version=$(cat lerna.json | jq -r '.version')
-          echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
-
-      - name: Publish @budibase/pro package to NPM
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          VERSION: ${{ steps.previoustag.outputs.tag }}
-        run: | 
-          cd ../budibase-pro
-          echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} >> .npmrc 
-          yarn release:develop $RELEASE_VERSION
 
       - name: Build/release Docker images
         run: | 
