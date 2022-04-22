@@ -162,6 +162,19 @@ const executeActionHandler = async (
   }
 }
 
+const updateFieldValueHandler = async (action, context) => {
+  return await executeActionHandler(
+    context,
+    action.parameters.componentId,
+    ActionTypes.UpdateFieldValue,
+    {
+      type: action.parameters.type,
+      field: action.parameters.field,
+      value: action.parameters.value,
+    }
+  )
+}
+
 const validateFormHandler = async (action, context) => {
   return await executeActionHandler(
     context,
@@ -295,6 +308,7 @@ const handlerMap = {
   ["Execute Query"]: queryExecutionHandler,
   ["Trigger Automation"]: triggerAutomationHandler,
   ["Validate Form"]: validateFormHandler,
+  ["Update Field Value"]: updateFieldValueHandler,
   ["Refresh Data Provider"]: refreshDataProviderHandler,
   ["Log Out"]: logoutHandler,
   ["Clear Form"]: clearFormHandler,
