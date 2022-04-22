@@ -60,90 +60,94 @@
   })
 </script>
 
-<ModalContent
-  title="Create CRUD Screens"
-  confirmText="Confirm"
-  cancelText="Back"
-  onConfirm={confirmDatasourceSelection}
-  {onCancel}
-  disabled={!selectedScreens.length}
-  size="L"
->
-  <Layout noPadding gap="S">
-    {#each filteredSources as datasource}
-      <div class="data-source-wrap">
-        <div class="data-source-header">
-          <div class="datasource-icon">
-            <svelte:component
-              this={ICONS[datasource.source]}
-              height="24"
-              width="24"
-            />
+<span data-cy="data-source-modal">
+  <ModalContent
+    title="Create CRUD Screens"
+    confirmText="Confirm"
+    cancelText="Back"
+    onConfirm={confirmDatasourceSelection}
+    {onCancel}
+    disabled={!selectedScreens.length}
+    size="L"
+  >
+    <Layout noPadding gap="S">
+      {#each filteredSources as datasource}
+        <div class="data-source-wrap">
+          <div class="data-source-header">
+            <div class="datasource-icon">
+              <svelte:component
+                this={ICONS[datasource.source]}
+                height="24"
+                width="24"
+              />
+            </div>
+            <div class="data-source-name">{datasource.name}</div>
           </div>
-          <div class="data-source-name">{datasource.name}</div>
-        </div>
-        {#if Array.isArray(datasource.entities)}
-          {#each datasource.entities.filter(table => table._id !== "ta_users") as table}
-            <div
-              class="data-source-entry"
-              class:selected={selectedScreens.find(x => x.table === table.name)}
-              on:click={() => toggleScreenSelection(table, datasource)}
-            >
-              <svg
-                width="16px"
-                height="16px"
-                class="spectrum-Icon"
-                style="color: white"
-                focusable="false"
-              >
-                <use xlink:href="#spectrum-icon-18-Table" />
-              </svg>
-              {table.name}
-
-              {#if selectedScreens.find(x => x.table === table.name)}
-                <span class="data-source-check">
-                  <Icon size="S" name="CheckmarkCircle" />
-                </span>
-              {/if}
-            </div>
-          {/each}
-        {/if}
-        {#if datasource["entities"] && !Array.isArray(datasource.entities)}
-          {#each Object.keys(datasource.entities).filter(table => table._id !== "ta_users") as table_key}
-            <div
-              class="data-source-entry"
-              class:selected={selectedScreens.find(
-                x => x.table === datasource.entities[table_key].name
-              )}
-              on:click={() =>
-                toggleScreenSelection(
-                  datasource.entities[table_key],
-                  datasource
+          {#if Array.isArray(datasource.entities)}
+            {#each datasource.entities.filter(table => table._id !== "ta_users") as table}
+              <div
+                class="data-source-entry"
+                class:selected={selectedScreens.find(
+                  x => x.table === table.name
                 )}
-            >
-              <svg
-                width="16px"
-                height="16px"
-                class="spectrum-Icon"
-                style="color: white"
-                focusable="false"
+                on:click={() => toggleScreenSelection(table, datasource)}
               >
-                <use xlink:href="#spectrum-icon-18-Table" />
-              </svg>
-              {datasource.entities[table_key].name}
+                <svg
+                  width="16px"
+                  height="16px"
+                  class="spectrum-Icon"
+                  style="color: white"
+                  focusable="false"
+                >
+                  <use xlink:href="#spectrum-icon-18-Table" />
+                </svg>
+                {table.name}
 
-              {#if selectedScreens.find(x => x.table === datasource.entities[table_key].name)}
-                <span class="data-source-check">
-                  <Icon size="S" name="CheckmarkCircle" />
-                </span>
-              {/if}
-            </div>
-          {/each}
-        {/if}
-      </div>
-    {/each}
-  </Layout>
-</ModalContent>
+                {#if selectedScreens.find(x => x.table === table.name)}
+                  <span class="data-source-check">
+                    <Icon size="S" name="CheckmarkCircle" />
+                  </span>
+                {/if}
+              </div>
+            {/each}
+          {/if}
+          {#if datasource["entities"] && !Array.isArray(datasource.entities)}
+            {#each Object.keys(datasource.entities).filter(table => table._id !== "ta_users") as table_key}
+              <div
+                class="data-source-entry"
+                class:selected={selectedScreens.find(
+                  x => x.table === datasource.entities[table_key].name
+                )}
+                on:click={() =>
+                  toggleScreenSelection(
+                    datasource.entities[table_key],
+                    datasource
+                  )}
+              >
+                <svg
+                  width="16px"
+                  height="16px"
+                  class="spectrum-Icon"
+                  style="color: white"
+                  focusable="false"
+                >
+                  <use xlink:href="#spectrum-icon-18-Table" />
+                </svg>
+                {datasource.entities[table_key].name}
+
+                {#if selectedScreens.find(x => x.table === datasource.entities[table_key].name)}
+                  <span class="data-source-check">
+                    <Icon size="S" name="CheckmarkCircle" />
+                  </span>
+                {/if}
+              </div>
+            {/each}
+          {/if}
+        </div>
+      {/each}
+    </Layout>
+  </ModalContent>
+</span>
 
 <style>
   .data-source-wrap {
