@@ -13,6 +13,12 @@
   let touched = false
   let screenAccessRole = $selectedAccessRole + ""
 
+  const appPrefix = "/app"
+
+  $: appUrl = screenUrl
+    ? `${window.location.origin}${appPrefix}${screenUrl}`
+    : `${window.location.origin}${appPrefix}`
+
   const routeChanged = event => {
     if (!event.detail.startsWith("/")) {
       screenUrl = "/" + event.detail
@@ -57,4 +63,17 @@
     bind:value={screenUrl}
     on:change={routeChanged}
   />
+  <div class="app-server" title={appUrl}>
+    {appUrl}
+  </div>
 </ModalContent>
+
+<style>
+  .app-server {
+    color: var(--spectrum-global-color-gray-600);
+    width: 320px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+</style>
