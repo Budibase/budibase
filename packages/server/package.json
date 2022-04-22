@@ -1,84 +1,20 @@
 {
-  "name": "@budibase/server",
-  "email": "hi@budibase.com",
-  "version": "1.0.105-alpha.19",
-  "description": "Budibase Web Server",
-  "main": "src/index.ts",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/Budibase/budibase.git"
-  },
-  "scripts": {
-    "build": "rimraf dist/ && tsc && mv dist/src/* dist/ && rimraf dist/src/ && yarn postbuild",
-    "postbuild": "copyfiles -u 1 src/**/*.svelte dist/ && copyfiles -u 1 src/**/*.hbs dist/ && copyfiles -u 1 src/**/*.json dist/",
-    "test": "jest --coverage --maxWorkers=2",
-    "test:watch": "jest --watch",
-    "predocker": "copyfiles -f ../client/dist/budibase-client.js ../client/manifest.json client",
-    "build:docker": "yarn run predocker && docker build . -t app-service --label version=$BUDIBASE_RELEASE_VERSION",
-    "build:docs": "node ./scripts/docs/generate.js open",
-    "run:docker": "node dist/index.js",
-    "dev:stack:up": "node scripts/dev/manage.js up",
-    "dev:stack:down": "node scripts/dev/manage.js down",
-    "dev:stack:nuke": "node scripts/dev/manage.js nuke",
-    "dev:builder": "yarn run dev:stack:up && nodemon",
-    "specs": "node specs/generate.js && openapi-typescript specs/openapi.yaml --output src/definitions/openapi.ts",
-    "initialise": "node scripts/initialise.js",
-    "env:multi:enable": "node scripts/multiTenancy.js enable",
-    "env:multi:disable": "node scripts/multiTenancy.js disable",
-    "env:selfhost:enable": "node scripts/selfhost.js enable",
-    "env:selfhost:disable": "node scripts/selfhost.js disable",
-    "env:localdomain:enable": "node scripts/localdomain.js enable",
-    "env:localdomain:disable": "node scripts/localdomain.js disable",
-    "env:account:enable": "node scripts/account.js enable",
-    "env:account:disable": "node scripts/account.js disable"
-  },
-  "jest": {
-    "preset": "ts-jest",
-    "testEnvironment": "node",
-    "setupFiles": [
-      "./scripts/jestSetup.js"
-    ],
-    "collectCoverageFrom": [
-      "src/**/*.js",
-      "!**/node_modules/**",
-      "!src/db/views/*.js",
-      "!src/api/controllers/deploy/**/*.js",
-      "!src/*.js",
-      "!src/api/controllers/static/**/*",
-      "!src/db/dynamoClient.js",
-      "!src/utilities/usageQuota.js",
-      "!src/api/routes/tests/**/*",
-      "!src/db/tests/**/*",
-      "!src/tests/**/*",
-      "!src/automations/tests/**/*",
-      "!src/utilities/fileProcessor.js",
-      "!src/utilities/fileSystem/**/*",
-      "!src/utilities/redis.js"
-    ],
-    "coverageReporters": [
-      "lcov",
-      "json",
-      "clover"
-    ]
-  },
-  "keywords": [
-    "budibase"
-  ],
   "author": "Budibase",
-  "license": "GPL-3.0",
   "dependencies": {
     "@apidevtools/swagger-parser": "^10.0.3",
-    "@budibase/backend-core": "^1.0.105-alpha.19",
-    "@budibase/client": "^1.0.105-alpha.19",
-    "@budibase/string-templates": "^1.0.105-alpha.19",
+    "@budibase/backend-core": "^1.0.105-alpha.29",
+    "@budibase/client": "^1.0.105-alpha.29",
+    "@budibase/pro": "^1.0.0",
+    "@budibase/string-templates": "^1.0.105-alpha.29",
     "@bull-board/api": "^3.7.0",
     "@bull-board/koa": "^3.7.0",
     "@elastic/elasticsearch": "7.10.0",
     "@google-cloud/firestore": "^5.0.2",
     "@koa/router": "8.0.0",
     "@sendgrid/mail": "7.1.1",
-    "@sentry/node": "^6.0.0",
+    "@sentry/node": "6.17.7",
     "@types/global-agent": "^2.1.1",
+    "@types/koa__router": "^8.0.11",
     "airtable": "0.10.1",
     "arangojs": "7.2.0",
     "aws-sdk": "^2.767.0",
@@ -137,6 +73,7 @@
     "yargs": "13.2.4",
     "zlib": "1.0.5"
   },
+  "description": "Budibase Web Server",
   "devDependencies": {
     "@babel/core": "^7.14.3",
     "@babel/preset-env": "^7.14.4",
@@ -145,13 +82,14 @@
     "@types/apidoc": "^0.50.0",
     "@types/bull": "^3.15.1",
     "@types/google-spreadsheet": "^3.1.5",
-    "@types/jest": "^26.0.23",
+    "@types/jest": "^27.4.1",
     "@types/koa": "^2.13.3",
     "@types/koa-router": "^7.4.2",
     "@types/lodash": "4.14.180",
     "@types/node": "^15.12.4",
     "@types/oracledb": "^5.2.1",
     "@types/redis": "^4.0.11",
+    "@typescript-eslint/parser": "5.12.0",
     "apidoc": "^0.50.2",
     "babel-jest": "^27.0.2",
     "copyfiles": "^2.4.1",
@@ -170,11 +108,76 @@
     "swagger-jsdoc": "^6.1.0",
     "ts-jest": "^27.0.3",
     "ts-node": "^10.0.0",
-    "typescript": "^4.3.5",
+    "typescript": "^4.5.5",
     "update-dotenv": "^1.1.1"
   },
+  "email": "hi@budibase.com",
+  "gitHead": "d1836a898cab3f8ab80ee6d8f42be1a9eed7dcdc",
+  "jest": {
+    "collectCoverageFrom": [
+      "src/**/*.js",
+      "!**/node_modules/**",
+      "!src/db/views/*.js",
+      "!src/api/controllers/deploy/**/*.js",
+      "!src/*.js",
+      "!src/api/controllers/static/**/*",
+      "!src/db/dynamoClient.js",
+      "!src/utilities/usageQuota.js",
+      "!src/api/routes/tests/**/*",
+      "!src/db/tests/**/*",
+      "!src/tests/**/*",
+      "!src/automations/tests/**/*",
+      "!src/utilities/fileProcessor.js",
+      "!src/utilities/fileSystem/**/*",
+      "!src/utilities/redis.js"
+    ],
+    "coverageReporters": [
+      "lcov",
+      "json",
+      "clover"
+    ],
+    "preset": "ts-jest",
+    "setupFiles": [
+      "./scripts/jestSetup.js"
+    ],
+    "testEnvironment": "node"
+  },
+  "keywords": [
+    "budibase"
+  ],
+  "license": "GPL-3.0",
+  "main": "src/index.ts",
+  "name": "@budibase/server",
   "optionalDependencies": {
     "oracledb": "^5.3.0"
   },
-  "gitHead": "d1836a898cab3f8ab80ee6d8f42be1a9eed7dcdc"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Budibase/budibase.git"
+  },
+  "scripts": {
+    "build": "rimraf dist/ && tsc -p tsconfig.build.json && mv dist/src/* dist/ && rimraf dist/src/ && yarn postbuild",
+    "build:docker": "yarn run predocker && docker build . -t app-service --label version=$BUDIBASE_RELEASE_VERSION",
+    "build:docs": "node ./scripts/docs/generate.js open",
+    "dev:builder": "yarn run dev:stack:up && nodemon",
+    "dev:stack:down": "node scripts/dev/manage.js down",
+    "dev:stack:nuke": "node scripts/dev/manage.js nuke",
+    "dev:stack:up": "node scripts/dev/manage.js up",
+    "env:account:disable": "node scripts/account.js disable",
+    "env:account:enable": "node scripts/account.js enable",
+    "env:localdomain:disable": "node scripts/localdomain.js disable",
+    "env:localdomain:enable": "node scripts/localdomain.js enable",
+    "env:multi:disable": "node scripts/multiTenancy.js disable",
+    "env:multi:enable": "node scripts/multiTenancy.js enable",
+    "env:selfhost:disable": "node scripts/selfhost.js disable",
+    "env:selfhost:enable": "node scripts/selfhost.js enable",
+    "initialise": "node scripts/initialise.js",
+    "postbuild": "copyfiles -u 1 src/**/*.svelte dist/ && copyfiles -u 1 src/**/*.hbs dist/ && copyfiles -u 1 src/**/*.json dist/",
+    "predocker": "copyfiles -f ../client/dist/budibase-client.js ../client/manifest.json client",
+    "run:docker": "node dist/index.js",
+    "specs": "node specs/generate.js && openapi-typescript specs/openapi.yaml --output src/definitions/openapi.ts",
+    "test": "jest --coverage --maxWorkers=2",
+    "test:watch": "jest --watch"
+  },
+  "version": "1.0.105-alpha.29"
 }
