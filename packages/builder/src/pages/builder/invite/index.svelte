@@ -14,7 +14,7 @@
       notifications.success("Invitation accepted successfully")
       $goto("../auth/login")
     } catch (error) {
-      notifications.error("Error accepting invitation")
+      notifications.error(error.message)
     }
   }
 </script>
