@@ -310,12 +310,13 @@
     uuid "^8.3.2"
     zlib "^1.0.5"
 
-"@budibase/pro@^1.0.0":
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-1.0.0.tgz#9f38a43b39a886a5c54afae13f20d13104da648e"
-  integrity sha512-W4sGodU7cr8AugIJtsMxgaVoHChv7Lmax6bVoIkz9WVWwa0vuigAZXZuESg7hHdXI/+IvuKDS9dCSw1nuP/LhQ==
+"@budibase/pro@1.0.105-alpha.25":
+  version "1.0.105-alpha.25"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-1.0.105-alpha.25.tgz#48f69f95f39c78fb93a08c76929afa9f900dc661"
+  integrity sha512-i1L2qLR1H7yP+mn0bnqBKIM3oCC6NIbbSIkZRNBLi+0HXncbx130I4fudgfgXBK/ucbSi9W/hVMav9ObYywxCA==
   dependencies:
     "@budibase/backend-core" "^1.0.48"
+    node-fetch "^2.6.1"
 
 "@cspotcode/source-map-consumer@0.8.0":
   version "0.8.0"
