@@ -15,6 +15,7 @@ const { invalidateSessions } = require("@budibase/backend-core/sessions")
 const accounts = require("@budibase/backend-core/accounts")
 const {
   getGlobalDB,
+  doWithGlobalDB,
   getTenantId,
   getTenantUser,
   doesTenantExist,
@@ -51,26 +52,27 @@ exports.adminUser = async ctx => {
     ctx.throw(403, "Organisation already exists.")
   }
 
-  const db = getGlobalDB(tenantId)
-  const response = await db.allDocs(
-    getGlobalUserParams(null, {
-      include_docs: true,
-    })
-  )
-
-  // write usage quotas for cloud
-  if (!env.SELF_HOSTED) {
-    // could be a scenario where it exists, make sure its clean
-    try {
-      const usageQuota = await db.get(StaticDatabases.GLOBAL.docs.usageQuota)
-      if (usageQuota) {
-        await db.remove(usageQuota._id, usageQuota._rev)
+  const response = await doWithGlobalDB(tenantId, async db => {
+    const response = await db.allDocs(
+      getGlobalUserParams(null, {
+        include_docs: true,
+      })
+    )
+    // write usage quotas for cloud
+    if (!env.SELF_HOSTED) {
+      // could be a scenario where it exists, make sure its clean
+      try {
+        const usageQuota = await db.get(StaticDatabases.GLOBAL.docs.usageQuota)
+        if (usageQuota) {
+          await db.remove(usageQuota._id, usageQuota._rev)
+        }
+      } catch (err) {
+        // don't worry about errors
       }
-    } catch (err) {
-      // don't worry about errors
+      await db.put(generateNewUsageQuotaDoc())
     }
-    await db.put(generateNewUsageQuotaDoc())
-  }
+    return response
+  })
 
   if (response.rows.some(row => row.doc.admin)) {
     ctx.throw(

@@ -3,7 +3,7 @@ const appController = require("../../../controllers/application")
 const { AppStatus } = require("../../../../db/utils")
 const { BUILTIN_ROLE_IDS } = require("@budibase/backend-core/roles")
 const { TENANT_ID } = require("../../../../tests/utilities/structures")
-const { getAppDB, doInAppContext } = require("@budibase/backend-core/context")
+const { doInAppContext } = require("@budibase/backend-core/context")
 const env = require("../../../../environment")
 
 function Request(appId, params) {
@@ -104,10 +104,6 @@ exports.checkPermissionsEndpoint = async ({
     .createRequest(config.request, method, url, body)
     .set(failHeader)
     .expect(403)
-}
-
-exports.getDB = () => {
-  return getAppDB()
 }
 
 exports.testAutomation = async (config, automation) => {
