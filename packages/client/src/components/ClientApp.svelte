@@ -276,7 +276,7 @@
 
   .preview #app-root {
     border: 1px solid var(--spectrum-global-color-gray-300);
-    border-radius: 4px;
+    border-radius: 2px;
   }
 
   /* Print styles */

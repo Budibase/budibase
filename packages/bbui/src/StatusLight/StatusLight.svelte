@@ -17,10 +17,13 @@
   export let negative = false
   export let disabled = false
   export let active = false
+  export let color = null
 </script>
 
 <div
   class="spectrum-StatusLight spectrum-StatusLight--size{size}"
+  class:custom={!!color}
+  style={`--color: ${color};`}
   class:spectrum-StatusLight--celery={celery}
   class:spectrum-StatusLight--yellow={yellow}
   class:spectrum-StatusLight--fuchsia={fuchsia}
@@ -39,3 +42,13 @@
 >
   <slot />
 </div>
+
+<style>
+  .spectrum-StatusLight {
+    display: grid;
+    place-items: center;
+  }
+  .custom::before {
+    background: var(--color) !important;
+  }
+</style>

@@ -131,21 +131,7 @@
   <Tabs {selected} on:select={navigate}>
     <Tab title="Screens">
       <div class="tab-content-padding">
-        <BBUILayout noPadding gap="XS">
-          <Select
-            on:change={updateAccessRole}
-            value={$selectedAccessRole}
-            label="Filter by Access"
-            getOptionLabel={role => role.name}
-            getOptionValue={role => role._id}
-            options={$roles}
-          />
-          <Search
-            placeholder="Enter a route to search"
-            label="Search Screens"
-            bind:value={$screenSearchString}
-          />
-        </BBUILayout>
+        <BBUILayout noPadding gap="XS" />
         <div class="nav-items-container" bind:this={scrollRef}>
           <ComponentNavigationTree />
         </div>

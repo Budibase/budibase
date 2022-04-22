@@ -10,7 +10,7 @@
     Helpers,
     notifications,
   } from "@budibase/bbui"
-  import ScreenDetailsModal from "../ScreenDetailsModal.svelte"
+  import ScreenDetailsModal from "./ScreenDetailsModal.svelte"
   import sanitizeUrl from "builderStore/store/screenTemplates/utils/sanitizeUrl"
   import analytics, { Events } from "analytics"
   import { makeComponentUnique } from "builderStore/componentUtils"

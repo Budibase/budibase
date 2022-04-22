@@ -141,9 +141,6 @@
 </Modal>
 
 <style>
-  .container {
-    padding-right: 8px;
-  }
   .setting {
     display: flex;
     flex-direction: row;
