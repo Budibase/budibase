@@ -14,6 +14,7 @@
   export let valueColumn
   export let customOptions
   export let autocomplete = false
+  export let onChange
 
   let fieldState
   let fieldApi
@@ -34,12 +35,17 @@
     if (!values) {
       return []
     }
-
     if (Array.isArray(values)) {
       return values
     }
-
     return values.split(",").map(value => value.trim())
+  }
+
+  const handleChange = e => {
+    fieldApi.setValue(e.detail)
+    if (onChange) {
+      onChange({ value: e.detail })
+    }
   }
 </script>
 
@@ -62,7 +68,7 @@
       getOptionValue={flatOptions ? x => x : x => x.value}
       id={fieldState.fieldId}
       disabled={fieldState.disabled}
-      on:change={e => fieldApi.setValue(e.detail)}
+      on:change={handleChange}
       {placeholder}
       {options}
       {autocomplete}
