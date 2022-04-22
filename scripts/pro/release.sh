@@ -32,12 +32,12 @@ lerna publish $VERSION --yes --force-publish --dist-tag $TAG
 # reset main and types to point to src for dev
 cd packages/pro
 jq '.main = "src/index.ts" | .types = "src/index.ts"' package.json > package.json.tmp && mv package.json.tmp package.json
-cd ../../
+cd -
 git add packages/pro/package.json
 git commit -m 'Prep dev'
 git push 
 
-cd -
+cd ../budibase
 
 if [[ $COMMAND == "develop" ]]; then
   # Pin pro version for develop container build
