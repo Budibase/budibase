@@ -1,6 +1,6 @@
 #!/bin/bash 
 
-if [[ -z "${CI}" ]] then
+if [[ -z "${CI}" ]]; then
   echo 'Cannot run insall.sh unless in CI'
   exit 0
 fi
@@ -15,8 +15,7 @@ git clone https://$PERSONAL_ACCESS_TOKEN@github.com/Budibase/budibase-pro.git
 # Community forks won't be able to clone the pro repo as they can't access secrets
 # Skip the rest of the installation and rely on npm version instead
 # This should be ok as forks will not rely on pro changes
-if [ -d "budibase-pro" ] 
-then
+if [[ -d "budibase-pro" ]]; then
   cd budibase-pro
 
   # Try to checkout the matching pro branch
