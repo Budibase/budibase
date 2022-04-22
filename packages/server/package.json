@@ -2,10 +2,10 @@
   "author": "Budibase",
   "dependencies": {
     "@apidevtools/swagger-parser": "^10.0.3",
-    "@budibase/backend-core": "^1.0.105-alpha.29",
-    "@budibase/client": "^1.0.105-alpha.29",
+    "@budibase/backend-core": "^1.0.105-alpha.30",
+    "@budibase/client": "^1.0.105-alpha.30",
     "@budibase/pro": "^1.0.0",
-    "@budibase/string-templates": "^1.0.105-alpha.29",
+    "@budibase/string-templates": "^1.0.105-alpha.30",
     "@bull-board/api": "^3.7.0",
     "@bull-board/koa": "^3.7.0",
     "@elastic/elasticsearch": "7.10.0",
@@ -148,9 +148,6 @@
   "license": "GPL-3.0",
   "main": "src/index.ts",
   "name": "@budibase/server",
-  "optionalDependencies": {
-    "oracledb": "^5.3.0"
-  },
   "repository": {
     "type": "git",
     "url": "https://github.com/Budibase/budibase.git"
@@ -179,5 +176,5 @@
     "test": "jest --coverage --maxWorkers=2",
     "test:watch": "jest --watch"
   },
-  "version": "1.0.105-alpha.29"
+  "version": "1.0.105-alpha.30"
 }
