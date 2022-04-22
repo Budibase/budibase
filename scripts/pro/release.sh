@@ -1,3 +1,5 @@
+#!/bin/bash 
+
 if [[ -z "${CI}" ]]; then
   echo 'Cannot run release.sh unless in CI'
   exit 0
@@ -5,6 +7,9 @@ fi
 
 # Release pro as same version as budibase
 VERSION=$(jq -r .version lerna.json)
+echo "Version: $VERSION"
+COMMAND=$1
+echo "Command: $COMMAND"
 
 # Go to pro package
 cd ../budibase-pro
@@ -13,7 +18,6 @@ cd ../budibase-pro
 echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} >> .npmrc 
 
 # Determine tag to use
-COMMAND=$1
 TAG=""
 if [[ $COMMAND == "develop" ]]
 then
