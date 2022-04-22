@@ -1,3 +1,5 @@
-const packageConfiguration = require("../../index")
-const CouchDB = require("./db")
-packageConfiguration.init(CouchDB)
+const core = require("../../index")
+const dbConfig = {
+  inMemory: true,
+}
+core.init({ db: dbConfig })

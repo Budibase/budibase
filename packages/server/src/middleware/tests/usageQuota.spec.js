@@ -6,7 +6,10 @@ jest.mock("@budibase/backend-core/tenancy", () => ({
 
 const usageQuotaMiddleware = require("../usageQuota")
 const usageQuota = require("../../utilities/usageQuota")
-const CouchDB = require("../../db")
+
+jest.mock("@budibase/backend-core/db")
+const { dangerousGetDB } = require("@budibase/backend-core/db")
+
 const env = require("../../environment")
 
 class TestConfiguration {
@@ -80,7 +83,7 @@ describe("usageQuota middleware", () => {
       _rev: "test",
     })
 
-    CouchDB.mockImplementationOnce(() => ({ 
+    dangerousGetDB.mockImplementationOnce(() => ({
       get: async () => true
     }))
 
@@ -96,7 +99,7 @@ describe("usageQuota middleware", () => {
     })
     config.setProd(true)
 
-    CouchDB.mockImplementationOnce(() => ({ 
+    dangerousGetDB.mockImplementationOnce(() => ({
       get: async () => {
         throw new Error()
       } 
@@ -114,21 +117,4 @@ describe("usageQuota middleware", () => {
     expect(usageQuota.update).toHaveBeenCalledWith("rows", 1)
     expect(config.next).toHaveBeenCalled()
   })
-
-  // it("calculates the correct file size from a file upload call and adds it to quota", async () => {
-  //   config.setUrl("/upload")
-  //   config.setProd(true)
-  //   config.setFiles([
-  //     {
-  //       size: 100
-  //     },
-  //     {
-  //       size: 10000
-  //     },
-  //   ])
-  //   await config.executeMiddleware()
-
-  //   expect(usageQuota.update).toHaveBeenCalledWith("storage", 10100)
-  //   expect(config.next).toHaveBeenCalled()
-  // })
 })
