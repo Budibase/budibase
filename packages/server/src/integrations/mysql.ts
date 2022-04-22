@@ -27,7 +27,8 @@ module MySQLModule {
     user: string
     password: string
     database: string
-    ssl?: object
+    ssl?: { [key: string]: any }
+    rejectUnauthorized: boolean
   }
 
   const SCHEMA: Integration = {
@@ -63,6 +64,11 @@ module MySQLModule {
       },
       ssl: {
         type: DatasourceFieldTypes.OBJECT,
+        required: false,
+      },
+      rejectUnauthorized: {
+        type: DatasourceFieldTypes.BOOLEAN,
+        default: true,
         required: false,
       },
     },
@@ -114,6 +120,16 @@ module MySQLModule {
       if (config.ssl && Object.keys(config.ssl).length === 0) {
         delete config.ssl
       }
+      // make sure this defaults to true
+      if (
+        config.rejectUnauthorized != null &&
+        !config.rejectUnauthorized &&
+        config.ssl
+      ) {
+        config.ssl.rejectUnauthorized = config.rejectUnauthorized
+      }
+      // @ts-ignore
+      delete config.rejectUnauthorized
       this.config = config
     }
 
