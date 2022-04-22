@@ -22,9 +22,24 @@
   export let panel = ClientBindingPanel
   export let allowBindings = true
 
+  const validFormulaTypeOptions = [
+    {
+      value: "string",
+      label: "Text",
+    },
+    {
+      value: "number",
+      label: "Number",
+    },
+    {
+      value: "datetime",
+      label: "Date",
+    },
+  ]
+
   $: enrichedSchemaFields = getFields(schemaFields || [])
   $: fieldOptions = enrichedSchemaFields.map(field => field.name) || []
-  $: valueTypeOptions = allowBindings ? ["Value", "Binding"] : ["Value"]
+  $: validFormulaTypeOptions[0].label = allowBindings ? "Binding" : "Text"
 
   const addFilter = () => {
     filters = [
@@ -32,9 +47,10 @@
       {
         id: generate(),
         field: null,
+        fieldType: null,
         operator: Constants.OperatorOptions.Equals.value,
         value: null,
-        valueType: "Value",
+        valueType: validFormulaTypeOptions[0].label,
       },
     ]
   }
@@ -49,9 +65,30 @@
     filters = [...filters, duplicate]
   }
 
+  const onValueTypeChange = (expression, valueType) => {
+    let valueTypeLabel = validFormulaTypeOptions.find(
+      option => option.value === valueType
+    )?.label
+    if (!valueTypeLabel) return
+
+    expression.valueType = valueTypeLabel
+    expression.type = valueType
+    if (valueType === "number") {
+      expression.value = Number(expression.value)
+    } else if (
+      valueType === "string" &&
+      validFormulaTypeOptions.some(
+        option => option.value === typeof expression.value
+      )
+    ) {
+      expression.value = expression.value?.toString()
+    }
+  }
+
   const onFieldChange = (expression, field) => {
     // Update the field type
     expression.type = enrichedSchemaFields.find(x => x.name === field)?.type
+    expression.fieldType = expression.type
 
     // Ensure a valid operator is set
     const validOperators = LuceneUtils.getValidOperatorsForType(
@@ -70,6 +107,11 @@
     } else {
       filters[idx].value = null
     }
+
+    if (expression.fieldType !== "formula")
+      expression.valueType = allowBindings ? "Binding" : "Value"
+    else if (expression.valueType === "Value")
+      expression.valueType = allowBindings ? "Binding" : "Text"
   }
 
   const onOperatorChange = (expression, operator) => {
@@ -86,6 +128,14 @@
   const getFieldOptions = field => {
     const schema = enrichedSchemaFields.find(x => x.name === field)
     return schema?.constraints?.inclusion || []
+  }
+
+  const getValueTypeOptions = fieldType => {
+    return fieldType === "formula"
+      ? validFormulaTypeOptions
+      : allowBindings
+      ? ["Binding", "Value"]
+      : ["Value"]
   }
 </script>
 
@@ -118,13 +168,14 @@
             />
             <Select
               disabled={filter.noValue || !filter.field}
-              options={valueTypeOptions}
+              options={getValueTypeOptions(filter.fieldType)}
               bind:value={filter.valueType}
               placeholder={null}
+              on:change={e => onValueTypeChange(filter, e.detail)}
             />
             {#if filter.valueType === "Binding"}
               <DrawerBindableInput
-                disabled={filter.noValue}
+                disabled={filter.noValue || !filter.field}
                 title={`Value for "${filter.field}"`}
                 value={filter.value}
                 placeholder="Value"
@@ -133,16 +184,19 @@
                 on:change={event => (filter.value = event.detail)}
               />
             {:else if ["string", "longform", "number", "formula"].includes(filter.type)}
-              <Input disabled={filter.noValue} bind:value={filter.value} />
+              <Input
+                disabled={filter.noValue || !filter.field}
+                bind:value={filter.value}
+              />
             {:else if ["options", "array"].includes(filter.type)}
               <Combobox
-                disabled={filter.noValue}
+                disabled={filter.noValue || !filter.field}
                 options={getFieldOptions(filter.field)}
                 bind:value={filter.value}
               />
             {:else if filter.type === "boolean"}
               <Combobox
-                disabled={filter.noValue}
+                disabled={filter.noValue || !filter.field}
                 options={[
                   { label: "True", value: "true" },
                   { label: "False", value: "false" },
@@ -150,7 +204,10 @@
                 bind:value={filter.value}
               />
             {:else if filter.type === "datetime"}
-              <DatePicker disabled={filter.noValue} bind:value={filter.value} />
+              <DatePicker
+                disabled={filter.noValue || !filter.field}
+                bind:value={filter.value}
+              />
             {:else}
               <DrawerBindableInput disabled />
             {/if}
