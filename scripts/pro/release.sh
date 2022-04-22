@@ -29,6 +29,12 @@ echo "Releasing version $VERSION"
 echo "Releasing tag $TAG"
 lerna publish $VERSION --yes --force-publish --dist-tag $TAG
 
+# reset main and types to point to src for dev
+jq '.main = "src/index.ts" | .types = "src/index.ts"' package.json > package.json.tmp && mv package.json.tmp package.json
+git add package.json
+git commit -m 'Prep dev'
+git push 
+
 cd -
 
 if [[ $COMMAND == "develop" ]]; then
