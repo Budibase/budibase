@@ -1,3 +1,5 @@
+#!/bin/bash 
+
 if [[ -z "${CI}" ]]; then
   echo 'Cannot run insall.sh unless in CI'
   exit 0
