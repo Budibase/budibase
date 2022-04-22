@@ -1,12 +1,12 @@
 {
   "name": "@budibase/frontend-core",
-  "version": "1.0.105-alpha.31",
+  "version": "1.0.105-alpha.32",
   "description": "Budibase frontend core libraries used in builder and client",
   "author": "Budibase",
   "license": "MPL-2.0",
   "svelte": "src/index.js",
   "dependencies": {
-    "@budibase/bbui": "^1.0.105-alpha.31",
+    "@budibase/bbui": "^1.0.105-alpha.32",
     "lodash": "^4.17.21",
     "svelte": "^3.46.2"
   }
