@@ -178,7 +178,7 @@
 
   const roleSelectBack = () => {
     if (screenMode === "blankScreen") {
-      newScreenModal.show()
+      screenDetailsModal.show()
     } else {
       datasourceModal.show()
     }
