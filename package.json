@@ -23,8 +23,10 @@
     "setup": "node ./hosting/scripts/setup.js && yarn && yarn bootstrap && yarn build && yarn dev",
     "bootstrap": "lerna link && lerna bootstrap && ./scripts/link-dependencies.sh",
     "build": "lerna run build",
-    "release": "lerna publish patch --yes --force-publish",
-    "release:develop": "lerna publish prerelease --yes --force-publish --dist-tag develop",
+    "release": "lerna publish patch --yes --force-publish && yarn:release:pro",
+    "release:develop": "lerna publish prerelease --yes --force-publish --dist-tag develop && yarn:release:pro:develop",
+    "release:pro": "sh ./scripts/pro/release.sh",
+    "release:pro:develop": "sh ./scripts/pro/release.sh develop",
     "restore": "yarn run clean && yarn run bootstrap && yarn run build",
     "nuke": "yarn run nuke:packages && yarn run nuke:docker",
     "nuke:packages": "yarn run restore",
@@ -71,6 +73,7 @@
     "mode:cloud": "yarn env:selfhost:disable && yarn env:multi:enable && yarn env:account:disable",
     "mode:account": "yarn mode:cloud && yarn env:account:enable",
     "security:audit": "node scripts/audit.js",
-    "postinstall": "husky install"
+    "postinstall": "husky install",
+    "install:pro": "sh ./scripts/pro/install.sh"
   }
 }
