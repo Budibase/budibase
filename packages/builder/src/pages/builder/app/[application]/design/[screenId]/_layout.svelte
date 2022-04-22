@@ -1,23 +1,15 @@
 <script>
   import { IconSideNav, IconSideNavItem } from "@budibase/bbui"
-  import { params, goto } from "@roxi/routify"
-  import { DesignTabs } from "constants"
+  import { params, goto, isActive } from "@roxi/routify"
   import { store } from "builderStore"
   import { syncURLToState } from "helpers/urlStateSync"
   import { onDestroy } from "svelte"
 
-  const updateTab = tab => {
-    store.update(state => {
-      state.selectedDesignTab = tab
-      return state
-    })
-  }
-
   const unsync = syncURLToState({
     keys: [
       {
-        url: "tab",
-        state: "selectedDesignTab",
+        url: "screenId",
+        state: "selectedScreenId",
       },
     ],
     store,
@@ -30,37 +22,37 @@
 
 <!-- routify:options index=1 -->
 <div class="design">
-  <div class="side-nav">
+  <div class="icon-nav">
     <IconSideNav>
       <IconSideNavItem
         icon="WebPage"
         tooltip="Screens"
-        active={$store.selectedDesignTab === DesignTabs.SCREENS}
-        on:click={() => updateTab(DesignTabs.SCREENS)}
+        active={$isActive("./screens")}
+        on:click={() => $goto("./screens")}
       />
       <IconSideNavItem
         icon="ViewList"
         tooltip="Components"
-        active={$store.selectedDesignTab === DesignTabs.COMPONENTS}
-        on:click={() => updateTab(DesignTabs.COMPONENTS)}
+        active={$isActive("./components")}
+        on:click={() => $goto("./components")}
       />
       <IconSideNavItem
         icon="Brush"
         tooltip="Theme"
-        active={$store.selectedDesignTab === DesignTabs.THEME}
-        on:click={() => updateTab(DesignTabs.THEME)}
+        active={$isActive("./theme")}
+        on:click={() => $goto("./theme")}
       />
       <IconSideNavItem
         icon="Link"
         tooltip="Navigation"
-        active={$store.selectedDesignTab === DesignTabs.NAVIGATION}
-        on:click={() => updateTab(DesignTabs.NAVIGATION)}
+        active={$isActive("./navigation")}
+        on:click={() => $goto("./navigation")}
       />
       <IconSideNavItem
         icon="Experience"
         tooltip="Layouts"
-        active={$store.selectedDesignTab === DesignTabs.LAYOUTS}
-        on:click={() => updateTab(DesignTabs.LAYOUTS)}
+        active={$isActive("./layouts")}
+        on:click={() => $goto("./layouts")}
       />
     </IconSideNav>
   </div>
@@ -77,12 +69,14 @@
     grid-template-columns: auto 1fr;
     align-items: stretch;
   }
-  .side-nav {
+  .icon-nav {
     background: var(--background);
     border-right: var(--border-light);
   }
   .content {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: stretch;
   }
 </style>

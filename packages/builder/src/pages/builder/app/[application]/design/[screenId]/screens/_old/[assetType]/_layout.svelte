@@ -156,24 +156,7 @@
   </div>
 
   <div class="preview-pane">
-    {#if $currentAsset}
-      <div class="preview-header">
-        <ComponentSelectionList />
-        {#if $store.clientFeatures.devicePreview}
-          <DevicePreviewSelect />
-        {/if}
-        {#if $store.clientFeatures.customThemes}
-          <ThemeEditor />
-        {:else if $store.clientFeatures.spectrumThemes}
-          <AppThemeSelect />
-        {/if}
-      </div>
-      <div class="preview-content">
-        {#key $store.version}
-          <CurrentItemPreview />
-        {/key}
-      </div>
-    {:else}
+    {#if $currentAsset}{:else}
       <div class="centered">
         <div class="main">
           <Layout gap="S" justifyItems="center">
@@ -245,34 +228,6 @@
     flex-direction: column;
     gap: var(--spacing-l);
     border-right: var(--border-light);
-  }
-
-  .preview-pane {
-    grid-column: 2;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: stretch;
-    gap: var(--spacing-m);
-    padding: var(--spacing-xl) 40px;
-  }
-  .preview-header {
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: flex-start;
-    gap: 1rem;
-  }
-  .preview-header > :global(*) {
-    flex: 0 0 auto;
-  }
-  .preview-header > :global(*:first-child) {
-    flex: 1 1 auto;
-  }
-
-  .preview-content {
-    flex: 1 1 auto;
   }
 
   .components-pane {

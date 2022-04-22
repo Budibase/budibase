@@ -55,7 +55,7 @@ export const syncURLToState = options => {
   // Updates the URL with new state values
   const mapStateToUrl = state => {
     // Determine new URL while checking for changes
-    let url = "."
+    let url = ".."
     let needsUpdate = false
     for (let key of keys) {
       const urlValue = cachedParams?.[key.url]

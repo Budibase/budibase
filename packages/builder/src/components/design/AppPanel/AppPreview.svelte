@@ -1,7 +1,7 @@
 <script>
   import { get } from "svelte/store"
   import { onMount, onDestroy } from "svelte"
-  import { store, currentAsset } from "builderStore"
+  import { store, currentAsset, allScreens } from "builderStore"
   import iframeTemplate from "./iframeTemplate"
   import { Screen } from "builderStore/store/screenTemplates/utils/Screen"
   import { FrontendTypes } from "constants"
@@ -49,13 +49,8 @@
 
   // Extract data to pass to the iframe
   $: {
-    if ($store.currentFrontEndType === FrontendTypes.LAYOUT) {
-      layout = $currentAsset
-      screen = screenPlaceholder
-    } else {
-      screen = $currentAsset
-      layout = $store.layouts.find(layout => layout._id === screen?.layoutId)
-    }
+    screen = $allScreens.find(x => x._id === $store.selectedScreenId)
+    layout = $store.layouts.find(layout => layout._id === screen?.layoutId)
   }
   $: selectedComponentId = $store.selectedComponentId ?? ""
   $: previewData = {
@@ -68,7 +63,7 @@
     customTheme: $store.customTheme,
     previewDevice: $store.previewDevice,
     messagePassing: $store.clientFeatures.messagePassing,
-    isBudibaseEvent: true
+    isBudibaseEvent: true,
   }
   $: json = JSON.stringify(previewData)
 

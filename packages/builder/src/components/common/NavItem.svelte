@@ -1,5 +1,5 @@
 <script>
-  import { Icon } from "@budibase/bbui"
+  import { Icon, StatusLight } from "@budibase/bbui"
   import { createEventDispatcher, getContext } from "svelte"
 
   export let icon
@@ -13,6 +13,8 @@
   export let draggable = false
   export let iconText
   export let iconColor
+  export let scrollable = false
+  export let color
 
   const scrollApi = getContext("scroll")
   const dispatch = createEventDispatcher()
@@ -43,7 +45,7 @@
   class="nav-item"
   class:border
   class:selected
-  style={`padding-left: ${20 + indentLevel * 14}px`}
+  style={`padding-left: ${14 + indentLevel * 14}px`}
   {draggable}
   on:dragend
   on:dragstart
@@ -52,6 +54,7 @@
   on:click={onClick}
   ondragover="return false"
   ondragenter="return false"
+  class:scrollable
 >
   <div class="nav-item-content" bind:this={contentRef}>
     {#if withArrow}
@@ -76,6 +79,9 @@
         <slot />
       </div>
     {/if}
+    {#if color}
+      <StatusLight size="L" {color} />
+    {/if}
   </div>
 </div>
 
@@ -85,9 +91,14 @@
     color: var(--grey-7);
     transition: background-color
       var(--spectrum-global-animation-duration-100, 130ms) ease-in-out;
-    padding: 0 var(--spacing-m) 0 var(--spacing-xl);
+    padding: 0 var(--spacing-m) 0 var(--spacing-l);
     height: 32px;
     display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+  }
+  .nav-item.scrollable {
     flex-direction: column;
     justify-content: center;
     align-items: flex-start;
@@ -136,10 +147,13 @@
     font-weight: 600;
     font-size: var(--spectrum-global-dimension-font-size-75);
     white-space: nowrap;
-    max-width: 160px;
     overflow: hidden;
     text-overflow: ellipsis;
+    flex: 1 1 auto;
+  }
+  .scrollable .text {
     flex: 0 0 auto;
+    max-width: 160px;
   }
 
   .actions {
