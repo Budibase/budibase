@@ -3,14 +3,14 @@ if [[ -z "${CI}" ]]; then
   exit 0
 fi
 
+# Release pro as same version as budibase
+VERSION=$(jq -r .version lerna.json)
+
 # Go to pro package
 cd ../budibase-pro
 
 # Install NPM credentials
 echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} >> .npmrc 
-
-# Release pro as same version as budibase
-VERSION=$(jq -r .version lerna.json)
 
 # Determine tag to use
 COMMAND=$1
