@@ -39,9 +39,7 @@ filterTests(["smoke", "all"], () => {
     })
 
     it("Should create a set of datasource screens with the selected access level", () => {
-      
       cy.createDatasourceScreen("Cypress Tests", "Public")
-
     })
   })
 })
