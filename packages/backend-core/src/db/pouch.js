@@ -20,16 +20,47 @@ exports.getCouchUrl = () => {
   return `${protocol}://${env.COUCH_DB_USERNAME}:${env.COUCH_DB_PASSWORD}@${rest}`
 }
 
+exports.splitCouchUrl = url => {
+  const [protocol, rest] = url.split("://")
+  const [auth, host] = rest.split("@")
+  const [username, password] = auth.split(":")
+  return {
+    url: `${protocol}://${host}`,
+    auth: {
+      username,
+      password,
+    },
+  }
+}
+
 /**
  * Return a constructor for PouchDB.
  * This should be rarely used outside of the main application config.
  * Exposed for exceptional cases such as in-memory views.
  */
 exports.getPouch = (opts = {}) => {
-  const COUCH_DB_URL = exports.getCouchUrl() || "http://localhost:4005"
+  let auth = {
+    username: env.COUCH_DB_USERNAME,
+    password: env.COUCH_DB_PASSWORD,
+  }
+  let url = exports.getCouchUrl() || "http://localhost:4005"
+  // need to update security settings
+  if (!auth.username || !auth.password || url.includes("@")) {
+    const split = exports.splitCouchUrl(url)
+    url = split.url
+    auth = split.auth
+  }
 
+  const authCookie = Buffer.from(`${auth.username}:${auth.password}`).toString(
+    "base64"
+  )
   let POUCH_DB_DEFAULTS = {
-    prefix: COUCH_DB_URL,
+    prefix: url,
+    fetch: (url, opts) => {
+      // use a specific authorization cookie - be very explicit about how we authenticate
+      opts.headers.set("Authorization", `Basic ${authCookie}`)
+      return PouchDB.fetch(url, opts)
+    },
   }
 
   if (opts.inMemory) {
