@@ -330,7 +330,7 @@ module External {
     ): Row {
       for (let relationship of relationships) {
         const linkedTable = this.tables[relationship.tableName]
-        if (!linkedTable) {
+        if (!linkedTable || !row[relationship.column]) {
           continue
         }
         const display = linkedTable.primaryDisplay
