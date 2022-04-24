@@ -369,6 +369,20 @@ class LinkController {
           tableId: table._id,
           fieldName: fieldName,
         })
+        
+        if(/(.+)-Created By/.test(field.name) || /(.+)-Updated By/.test(field.name)){
+            // these are props specially for Created By and Updated By linked column
+              fields.linkedField = {
+                  ...fields.linkedField,  
+                  subtype: (/(.+)-Created By/.test(field.name)) ? 'createdBy' : 'updatedBy',
+                  icon: 'ri-magic-line',
+                  autocolumn: true,
+                  constraints: {
+                    type: 'array',
+                    presence: false
+                  },
+              }
+        }
 
         // update table schema after checking relationship types
         schema[fieldName] = fields.linkerField
