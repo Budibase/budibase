@@ -71,18 +71,20 @@
     )?.label
     if (!valueTypeLabel) return
 
+    if (valueType === "datetime") {
+      if (isNaN(expression.value)) expression.value = new Date(0)
+      else expression.value = new Date(Number(expression.value))
+    } else if (valueType === "number") {
+      if (isNaN(expression.value)) expression.value = 0
+      else expression.value = Number(expression.value)
+    } else if (valueType === "string") {
+      if (typeof expression.value === "object")
+        expression.value = expression.value.getTime().toString()
+      else expression.value = expression.value?.toString()
+    }
+
     expression.valueType = valueTypeLabel
     expression.type = valueType
-    if (valueType === "number") {
-      expression.value = Number(expression.value)
-    } else if (
-      valueType === "string" &&
-      validFormulaTypeOptions.some(
-        option => option.value === typeof expression.value
-      )
-    ) {
-      expression.value = expression.value?.toString()
-    }
   }
 
   const onFieldChange = (expression, field) => {
