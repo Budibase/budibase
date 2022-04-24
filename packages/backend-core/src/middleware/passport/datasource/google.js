@@ -2,7 +2,7 @@ const google = require("../google")
 const { Cookies, Configs } = require("../../../constants")
 const { clearCookie, getCookie } = require("../../../utils")
 const { getDB } = require("../../../db")
-const { getScopedConfig } = require("../../../db/utils")
+const { getScopedConfig, getPlatformUrl } = require("../../../db/utils")
 const environment = require("../../../environment")
 const { getGlobalDB } = require("../../../tenancy")
 
@@ -21,10 +21,20 @@ async function fetchGoogleCreds() {
   return config
 }
 
+async function platformUrl() {
+  const db = getGlobalDB()
+  const publicConfig = await getScopedConfig(db, {
+    type: Configs.SETTINGS,
+  })
+  return getPlatformUrl(publicConfig)
+}
+
 async function preAuth(passport, ctx, next) {
   // get the relevant config
   const googleConfig = await fetchGoogleCreds()
-  let callbackUrl = `${environment.PLATFORM_URL}/api/global/auth/datasource/google/callback`
+  const platUrl = await platformUrl()
+
+  let callbackUrl = `${platUrl}/api/global/auth/datasource/google/callback`
   const strategy = await google.strategyFactory(googleConfig, callbackUrl)
 
   if (!ctx.query.appId || !ctx.query.datasourceId) {
@@ -41,8 +51,9 @@ async function preAuth(passport, ctx, next) {
 async function postAuth(passport, ctx, next) {
   // get the relevant config
   const config = await fetchGoogleCreds()
+  const platUrl = await platformUrl()
 
-  let callbackUrl = `${environment.PLATFORM_URL}/api/global/auth/datasource/google/callback`
+  let callbackUrl = `${platUrl}/api/global/auth/datasource/google/callback`
   const strategy = await google.strategyFactory(
     config,
     callbackUrl,
