@@ -460,3 +460,4 @@ exports.getConfigParams = getConfigParams
 exports.getScopedFullConfig = getScopedFullConfig
 exports.generateNewUsageQuotaDoc = generateNewUsageQuotaDoc
 exports.generateDevInfoID = generateDevInfoID
+exports.getPlatformUrl = getPlatformUrl
