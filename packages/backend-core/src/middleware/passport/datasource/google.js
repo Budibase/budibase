@@ -59,7 +59,7 @@ async function postAuth(passport, ctx, next) {
     callbackUrl,
     (accessToken, refreshToken, profile, done) => {
       clearCookie(ctx, Cookies.DatasourceAuth)
-      done(null, { accessToken, refreshToken })
+      done(null, { refreshToken })
     }
   )
 
