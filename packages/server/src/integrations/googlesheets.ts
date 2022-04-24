@@ -10,13 +10,13 @@ import { Table, TableSchema } from "../definitions/common"
 import { buildExternalTableId } from "./utils"
 import { DataSourceOperation, FieldTypes } from "../constants"
 import { GoogleSpreadsheet } from "google-spreadsheet"
-import fetch from "node-fetch"
 import env from "../environment"
 
 module GoogleSheetsModule {
   const { getGlobalDB } = require("@budibase/backend-core/tenancy")
   const { getScopedConfig } = require("@budibase/backend-core/db")
   const { Configs } = require("@budibase/backend-core/constants")
+  const fetch = require("node-fetch")
 
   interface GoogleSheetsConfig {
     spreadsheetId: string
