@@ -31,10 +31,6 @@
       value: "number",
       label: "Number",
     },
-    {
-      value: "datetime",
-      label: "Date",
-    },
   ]
 
   $: enrichedSchemaFields = getFields(schemaFields || [])
@@ -71,16 +67,11 @@
     )?.label
     if (!valueTypeLabel) return
 
-    if (valueType === "datetime") {
-      if (isNaN(expression.value)) expression.value = new Date(0)
-      else expression.value = new Date(Number(expression.value))
-    } else if (valueType === "number") {
+    if (valueType === "number") {
       if (isNaN(expression.value)) expression.value = 0
       else expression.value = Number(expression.value)
     } else if (valueType === "string") {
-      if (typeof expression.value === "object")
-        expression.value = expression.value.getTime().toString()
-      else expression.value = expression.value?.toString()
+      expression.value = expression.value?.toString()
     }
 
     expression.valueType = valueTypeLabel
