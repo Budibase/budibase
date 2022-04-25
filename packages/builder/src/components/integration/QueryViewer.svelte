@@ -72,7 +72,7 @@
       fields = response.schema
       notifications.success("Query executed successfully")
     } catch (error) {
-      notifications.error("Error previewing query")
+      notifications.error(`Query Error: ${error.message}`)
     }
   }
 

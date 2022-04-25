@@ -7,7 +7,11 @@ import {
   getComponentSettings,
 } from "./componentUtils"
 import { store } from "builderStore"
-import { queries as queriesStores, tables as tablesStore } from "stores/backend"
+import {
+  queries as queriesStores,
+  tables as tablesStore,
+  roles as rolesStore,
+} from "stores/backend"
 import {
   makePropSafe,
   isJSBinding,
@@ -33,6 +37,7 @@ export const getBindableProperties = (asset, componentId) => {
   const deviceBindings = getDeviceBindings()
   const stateBindings = getStateBindings()
   const selectedRowsBindings = getSelectedRowsBindings(asset)
+  const roleBindings = getRoleBindings()
   return [
     ...contextBindings,
     ...urlBindings,
@@ -40,6 +45,7 @@ export const getBindableProperties = (asset, componentId) => {
     ...userBindings,
     ...deviceBindings,
     ...selectedRowsBindings,
+    ...roleBindings,
   ]
 }
 
@@ -391,6 +397,16 @@ const getUrlBindings = asset => {
   }))
 }
 
+const getRoleBindings = () => {
+  return (get(rolesStore) || []).map(role => {
+    return {
+      type: "context",
+      runtimeBinding: `trim "${role._id}"`,
+      readableBinding: `Role.${role.name}`,
+    }
+  })
+}
+
 /**
  * Gets all bindable properties exposed in a button actions flow up until
  * the specified action ID, as well as context provided for the action
@@ -638,7 +654,7 @@ export const getSchemaForDatasource = (asset, datasource, options) => {
  * Builds a form schema given a form component.
  * A form schema is a schema of all the fields nested anywhere within a form.
  */
-const buildFormSchema = component => {
+export const buildFormSchema = component => {
   let schema = {}
   if (!component) {
     return schema

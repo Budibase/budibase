@@ -1,6 +1,6 @@
 <script>
   import { Icon } from "@budibase/bbui"
-  import { builderStore } from "stores"
+  import { builderStore, componentStore } from "stores"
   import { createEventDispatcher } from "svelte"
 
   export let prop
@@ -11,7 +11,7 @@
   export let bool = false
 
   const dispatch = createEventDispatcher()
-  $: currentValue = $builderStore.selectedComponent?.[prop]
+  $: currentValue = $componentStore.selectedComponent?.[prop]
   $: active = prop && (bool ? !!currentValue : currentValue === value)
 </script>
 

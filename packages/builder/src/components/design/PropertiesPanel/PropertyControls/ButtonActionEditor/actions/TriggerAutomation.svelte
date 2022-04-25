@@ -19,7 +19,7 @@
     .filter(a => a.definition.trigger?.stepId === "APP")
     .map(automation => {
       const schema = Object.entries(
-        automation.definition.trigger.inputs.fields
+        automation.definition.trigger.inputs.fields || {}
       ).map(([name, type]) => ({ name, type }))
 
       return {
