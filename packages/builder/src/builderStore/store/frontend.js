@@ -1,7 +1,6 @@
 import { get, writable } from "svelte/store"
 import { cloneDeep } from "lodash/fp"
 import {
-  allScreens,
   currentAsset,
   mainLayout,
   selectedComponent,
@@ -148,7 +147,7 @@ export const getFrontendStore = () => {
     screens: {
       select: screenId => {
         store.update(state => {
-          let screens = get(allScreens)
+          let screens = state.screens
           let screen =
             screens.find(screen => screen._id === screenId) || screens[0]
           if (!screen) return state

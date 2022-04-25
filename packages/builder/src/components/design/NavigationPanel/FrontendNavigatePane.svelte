@@ -1,12 +1,7 @@
 <script>
   import { onMount, setContext } from "svelte"
   import { goto, params } from "@roxi/routify"
-  import {
-    store,
-    allScreens,
-    selectedAccessRole,
-    screenSearchString,
-  } from "builderStore"
+  import { store, selectedAccessRole, screenSearchString } from "builderStore"
   import { roles } from "stores/backend"
   import ComponentNavigationTree from "components/design/NavigationPanel/ComponentNavigationTree/index.svelte"
   import Layout from "components/design/NavigationPanel/Layout.svelte"
@@ -99,7 +94,7 @@
     // Select a valid screen with this new role - otherwise we'll not be
     // able to change role at all because ComponentNavigationTree will kick us
     // back the current role again because the same screen ID is still selected
-    const firstValidScreenId = $allScreens.find(
+    const firstValidScreenId = $store.screens.find(
       screen => screen.routing.roleId === role
     )?._id
     if (firstValidScreenId) {

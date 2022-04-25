@@ -2,7 +2,7 @@ import { get } from "svelte/store"
 import { isChangingPage } from "@roxi/routify"
 
 export const syncURLToState = options => {
-  const { keys, params, store, goto, redirect } = options || {}
+  const { keys, params, store, goto, redirect, baseUrl = "." } = options || {}
   if (
     !keys?.length ||
     !params?.subscribe ||
@@ -22,13 +22,15 @@ export const syncURLToState = options => {
   let cachedGoto = get(goto)
   let cachedRedirect = get(redirect)
   let hydrated = false
+  let debug = false
+  const log = (...params) => debug && console.log(...params)
 
   // Navigate to a certain URL
   const gotoUrl = url => {
     if (get(isChangingPage) && hydrated) {
       return
     }
-    console.log("Navigating to", url)
+    log("Navigating to", url)
     cachedGoto(url)
   }
 
@@ -37,7 +39,7 @@ export const syncURLToState = options => {
     if (get(isChangingPage) && hydrated) {
       return
     }
-    console.log("Redirecting to", url)
+    log("Redirecting to", url)
     cachedRedirect(url)
   }
 
@@ -50,7 +52,7 @@ export const syncURLToState = options => {
       const urlValue = params?.[key.url]
       const stateValue = state?.[key.state]
       if (urlValue && urlValue !== stateValue) {
-        console.log(
+        log(
           `state.${key.state} (${stateValue}) <= url.${key.url} (${urlValue})`
         )
         stateUpdates.push(state => {
@@ -58,7 +60,7 @@ export const syncURLToState = options => {
         })
         if (key.validate && key.fallbackUrl) {
           if (!key.validate(urlValue)) {
-            console.log("Invalid URL param!")
+            log("Invalid URL param!")
             redirectUrl(key.fallbackUrl)
             hydrated = true
             return
@@ -77,7 +79,7 @@ export const syncURLToState = options => {
     }
 
     // Apply the required state updates
-    console.log("Performing", stateUpdates.length, "state updates")
+    log("Performing", stateUpdates.length, "state updates")
     store.update(state => {
       for (let update of stateUpdates) {
         update(state)
@@ -89,7 +91,7 @@ export const syncURLToState = options => {
   // Updates the URL with new state values
   const mapStateToUrl = state => {
     // Determine new URL while checking for changes
-    let url = ".."
+    let url = baseUrl
     let needsUpdate = false
     for (let key of keys) {
       const urlValue = cachedParams?.[key.url]
@@ -97,12 +99,12 @@ export const syncURLToState = options => {
       url += `/${stateValue}`
       if (stateValue !== urlValue) {
         needsUpdate = true
-        console.log(
+        log(
           `url.${key.url} (${urlValue}) <= state.${key.state} (${stateValue})`
         )
         if (key.validate && key.fallbackUrl) {
           if (!key.validate(stateValue)) {
-            console.log("Invalid state param!")
+            log("Invalid state param!")
             redirectUrl(key.fallbackUrl)
             return
           }

@@ -1,7 +1,7 @@
 <script>
   import { get } from "svelte/store"
   import { onMount, onDestroy } from "svelte"
-  import { store, currentAsset, allScreens } from "builderStore"
+  import { store, selectedScreen, currentAsset } from "builderStore"
   import iframeTemplate from "./iframeTemplate"
   import { Screen } from "builderStore/store/screenTemplates/utils/Screen"
   import { FrontendTypes } from "constants"
@@ -49,7 +49,7 @@
 
   // Extract data to pass to the iframe
   $: {
-    screen = $allScreens.find(x => x._id === $store.selectedScreenId)
+    screen = $selectedScreen
     layout = $store.layouts.find(layout => layout._id === screen?.layoutId)
   }
   $: selectedComponentId = $store.selectedComponentId ?? ""

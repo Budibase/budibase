@@ -1,6 +1,6 @@
 <script>
   import { goto } from "@roxi/routify"
-  import { store, allScreens } from "builderStore"
+  import { store } from "builderStore"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import {
     ActionMenu,
@@ -20,7 +20,7 @@
   let confirmDeleteDialog
   let screenDetailsModal
 
-  $: screen = $allScreens.find(screen => screen._id === screenId)
+  $: screen = $store.screens.find(screen => screen._id === screenId)
 
   const duplicateScreen = () => {
     screenDetailsModal.show()

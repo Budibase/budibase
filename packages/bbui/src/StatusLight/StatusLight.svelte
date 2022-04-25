@@ -39,6 +39,7 @@
   class:spectrum-StatusLight--negative={negative}
   class:spectrum-StatusLight--disabled={disabled}
   class:spectrum-StatusLight--active={active}
+  class:withText={!!$$slots.default}
 >
   <slot />
 </div>
@@ -49,6 +50,10 @@
     flex-direction: row;
     justify-content: center;
     align-items: center;
+    --spectrum-statuslight-info-text-gap: 4px;
+  }
+  .spectrum-StatusLight.withText::before {
+    margin-right: 12px;
   }
   .custom::before {
     background: var(--color) !important;

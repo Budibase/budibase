@@ -45,6 +45,7 @@
   class="nav-item"
   class:border
   class:selected
+  class:withActions
   style={`padding-left: ${14 + indentLevel * 14}px`}
   {draggable}
   on:dragend
@@ -80,7 +81,9 @@
       </div>
     {/if}
     {#if color}
-      <StatusLight size="L" {color} />
+      <div class="light">
+        <StatusLight size="L" {color} />
+      </div>
     {/if}
   </div>
 </div>
@@ -91,7 +94,7 @@
     color: var(--grey-7);
     transition: background-color
       var(--spectrum-global-animation-duration-100, 130ms) ease-in-out;
-    padding: 0 var(--spacing-m) 0 var(--spacing-l);
+    padding: 0 var(--spacing-l) 0;
     height: 32px;
     display: flex;
     flex-direction: row;
@@ -111,9 +114,8 @@
     background-color: var(--grey-3);
   }
   .nav-item:hover .actions {
-    visibility: visible;
+    display: grid;
   }
-
   .nav-item-content {
     flex: 1 1 auto;
     display: flex;
@@ -122,6 +124,7 @@
     align-items: center;
     gap: var(--spacing-xs);
     width: max-content;
+    overflow: hidden;
   }
 
   .icon {
@@ -157,19 +160,23 @@
   }
 
   .actions {
-    visibility: hidden;
-    width: 20px;
-    height: 20px;
     cursor: pointer;
     position: relative;
-    display: grid;
-    margin-left: var(--spacing-s);
+    display: none;
     place-items: center;
   }
-
+  .actions,
+  .light :global(.spectrum-StatusLight) {
+    width: 20px;
+    height: 20px;
+    margin-left: var(--spacing-s);
+  }
   .iconText {
     margin-top: 1px;
     font-size: var(--spectrum-global-dimension-font-size-50);
     flex: 0 0 34px;
+  }
+  .nav-item.withActions:hover .light {
+    display: none;
   }
 </style>
