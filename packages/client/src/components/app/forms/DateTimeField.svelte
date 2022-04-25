@@ -10,9 +10,17 @@
   export let timeOnly = false
   export let validation
   export let defaultValue
+  export let onChange
 
   let fieldState
   let fieldApi
+
+  const handleChange = e => {
+    fieldApi.setValue(e.detail)
+    if (onChange) {
+      onChange({ value: e.detail })
+    }
+  }
 </script>
 
 <Field
@@ -28,7 +36,7 @@
   {#if fieldState}
     <CoreDatePicker
       value={fieldState.value}
-      on:change={e => fieldApi.setValue(e.detail)}
+      on:change={handleChange}
       disabled={fieldState.disabled}
       error={fieldState.error}
       id={fieldState.fieldId}

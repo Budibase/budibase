@@ -1,5 +1,5 @@
 import { createAPIClient } from "@budibase/frontend-core"
-import { notificationStore, authStore } from "../stores"
+import { notificationStore, authStore, devToolsStore } from "../stores"
 import { get } from "svelte/store"
 
 export const API = createAPIClient({
@@ -20,6 +20,12 @@ export const API = createAPIClient({
     const auth = get(authStore)
     if (auth?.csrfToken) {
       headers["x-csrf-token"] = auth.csrfToken
+    }
+
+    // Add role header
+    const role = get(devToolsStore).role
+    if (role) {
+      headers["x-budibase-role"] = role
     }
   },
 

@@ -72,7 +72,9 @@
         animate:flip={{ duration: 500 }}
         in:fly|local={{ x: 500, duration: 1500 }}
       >
-        <FlowItem {testDataModal} {block} />
+        {#if block.stepId !== "LOOP"}
+          <FlowItem {testDataModal} {block} />
+        {/if}
       </div>
     {/each}
   </div>
