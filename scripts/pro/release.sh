@@ -84,6 +84,11 @@ cd -
 cd packages/worker
 jq '.dependencies."@budibase/pro"="'$VERSION'"' package.json > package.json.tmp && mv package.json.tmp package.json
 
+# Go back to budibase repo root
+cd -
+
 # Commit and push changes
+git add packages/server/package.json
+git add packages/worker/package.json
 git commit -m "Update pro version to $VERSION"
 git push
