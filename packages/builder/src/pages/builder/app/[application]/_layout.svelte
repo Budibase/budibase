@@ -1,14 +1,8 @@
 <script>
   import { store, automationStore } from "builderStore"
   import { roles, flags } from "stores/backend"
-  import { Icon, Tabs, Tab, notifications, Heading } from "@budibase/bbui"
-  import DeployModal from "components/deploy/DeployModal.svelte"
-  import RevertModal from "components/deploy/RevertModal.svelte"
-  import { API } from "api"
-  import { apps } from "stores/portal"
   import {
     Icon,
-    ActionGroup,
     Tabs,
     Tab,
     notifications,
@@ -20,7 +14,6 @@
   } from "@budibase/bbui"
   import DeployModal from "components/deploy/DeployModal.svelte"
   import RevertModal from "components/deploy/RevertModal.svelte"
-  import VersionModal from "components/deploy/VersionModal.svelte"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { API } from "api"
   import { auth, apps } from "stores/portal"
