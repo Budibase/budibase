@@ -45,8 +45,10 @@
 
 <style>
   .spectrum-StatusLight {
-    display: grid;
-    place-items: center;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
   }
   .custom::before {
     background: var(--color) !important;
