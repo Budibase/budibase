@@ -99,30 +99,32 @@ filterTests(['all'], () => {
       cy.searchForApplication(originalName)
       cy.get(".appTable")
         .within(() => {
-          cy.get(".spectrum-Icon").eq(1).click()
-          })
-        // Check for when an app is published
-        if (published == true) {
-          // Should not have Edit as option, will unpublish app
-          cy.should("not.have.value", "Edit")
-          cy.get(".spectrum-Menu").contains("Unpublish").click()
-          cy.get(".spectrum-Dialog-grid").contains("Unpublish app").click()
-          cy.get(".appTable > :nth-child(5) > :nth-child(2) > .spectrum-Icon").click()
-        }
-        cy.contains("Edit").click()
-        cy.get(".spectrum-Modal")
-          .within(() => {
-            if (noName == true) {
-              cy.get("input").clear()
-              cy.get(".spectrum-Dialog-grid").click()
-                .contains("App name must be letters, numbers and spaces only")
-              return cy
-            }
+          cy.get("[data-cy='app-row-actions-menu']").eq(0).click()
+        })
+      // Check for when an app is published
+      if (published == true) {
+        // Should not have Edit as option, will unpublish app
+        cy.should("not.have.value", "Edit")
+        cy.get(".spectrum-Menu").contains("Unpublish").click()
+        cy.get(".spectrum-Dialog-grid").contains("Unpublish app").click()
+        cy.get(".appTable > :nth-child(5) > :nth-child(2) > .spectrum-Icon").click()
+      }
+      cy.get("[data-cy='app-row-actions-menu-popover']").eq(0).within(() => {
+        cy.get(".spectrum-Menu-item").contains("Edit").click({ force: true })
+      })
+      cy.get(".spectrum-Modal")
+        .within(() => {
+          if (noName == true) {
             cy.get("input").clear()
-            cy.get("input").eq(0).type(changedName).should("have.value", changedName).blur()
-            cy.get(".spectrum-ButtonGroup").contains("Save").click({ force: true })
-            cy.wait(500)
-          })
-        }
+            cy.get(".spectrum-Dialog-grid").click()
+              .contains("App name must be letters, numbers and spaces only")
+            return cy
+          }
+          cy.get("input").clear()
+          cy.get("input").eq(0).type(changedName).should("have.value", changedName).blur()
+          cy.get(".spectrum-ButtonGroup").contains("Save").click({ force: true })
+          cy.wait(500)
+        })
+      }
     })
 })

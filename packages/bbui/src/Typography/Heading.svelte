@@ -5,12 +5,13 @@
   export let size = "M"
   export let textAlign
   export let noPadding = false
+  export let weight = "default" // light, heavy, default
 </script>
 
 <h1
   style={textAlign ? `text-align:${textAlign}` : ``}
   class:noPadding
-  class="spectrum-Heading spectrum-Heading--size{size}"
+  class="spectrum-Heading spectrum-Heading--size{size} spectrum-Heading--{weight}"
 >
   <slot />
 </h1>

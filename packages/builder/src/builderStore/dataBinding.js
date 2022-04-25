@@ -654,7 +654,7 @@ export const getSchemaForDatasource = (asset, datasource, options) => {
  * Builds a form schema given a form component.
  * A form schema is a schema of all the fields nested anywhere within a form.
  */
-const buildFormSchema = component => {
+export const buildFormSchema = component => {
   let schema = {}
   if (!component) {
     return schema
