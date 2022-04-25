@@ -123,7 +123,7 @@ async function createInstance(template) {
   const tenantId = isMultiTenant() ? getTenantId() : null
   const baseAppId = generateAppID(tenantId)
   const appId = generateDevAppID(baseAppId)
-  updateAppId(appId)
+  await updateAppId(appId)
 
   const db = getAppDB()
   await db.put({
@@ -404,6 +404,8 @@ exports.sync = async (ctx, next) => {
     })
   } catch (err) {
     error = err
+  } finally {
+    await replication.close()
   }
 
   // sync the users
