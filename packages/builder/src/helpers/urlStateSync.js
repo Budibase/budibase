@@ -1,22 +1,45 @@
 import { get } from "svelte/store"
+import { isChangingPage } from "@roxi/routify"
 
 export const syncURLToState = options => {
-  const { keys, params, store, goto } = options || {}
+  const { keys, params, store, goto, redirect } = options || {}
   if (
     !keys?.length ||
     !params?.subscribe ||
     !store?.subscribe ||
-    !goto?.subscribe
+    !goto?.subscribe ||
+    !redirect?.subscribe
   ) {
+    console.warn("syncURLToState invoked with missing parameters")
     return
   }
 
-  // We can't dynamically fetch the value of routify stores so we need to
-  // just subscribe and cache the latest versions.
+  // We can't dynamically fetch the value of stateful routify stores so we need
+  // to just subscribe and cache the latest versions.
   // We can grab their initial values as this is during component
   // initialisation.
   let cachedParams = get(params)
   let cachedGoto = get(goto)
+  let cachedRedirect = get(redirect)
+  let hydrated = false
+
+  // Navigate to a certain URL
+  const gotoUrl = url => {
+    if (get(isChangingPage) && hydrated) {
+      return
+    }
+    console.log("Navigating to", url)
+    cachedGoto(url)
+  }
+
+  // Redirect to a certain URL
+  const redirectUrl = url => {
+    if (get(isChangingPage) && hydrated) {
+      return
+    }
+    console.log("Redirecting to", url)
+    cachedRedirect(url)
+  }
 
   // Updates state with new URL params
   const mapUrlToState = params => {
@@ -26,15 +49,26 @@ export const syncURLToState = options => {
     for (let key of keys) {
       const urlValue = params?.[key.url]
       const stateValue = state?.[key.state]
-      if (urlValue !== stateValue) {
+      if (urlValue && urlValue !== stateValue) {
         console.log(
           `state.${key.state} (${stateValue}) <= url.${key.url} (${urlValue})`
         )
         stateUpdates.push(state => {
           state[key.state] = urlValue
         })
+        if (key.validate && key.fallbackUrl) {
+          if (!key.validate(urlValue)) {
+            console.log("Invalid URL param!")
+            redirectUrl(key.fallbackUrl)
+            hydrated = true
+            return
+          }
+        }
       }
     }
+
+    // Mark our initial hydration as completed
+    hydrated = true
 
     // Avoid updating the store at all if not necessary to prevent a wasted
     // store invalidation
@@ -62,10 +96,17 @@ export const syncURLToState = options => {
       const stateValue = state?.[key.state]
       url += `/${stateValue}`
       if (stateValue !== urlValue) {
+        needsUpdate = true
         console.log(
           `url.${key.url} (${urlValue}) <= state.${key.state} (${stateValue})`
         )
-        needsUpdate = true
+        if (key.validate && key.fallbackUrl) {
+          if (!key.validate(stateValue)) {
+            console.log("Invalid state param!")
+            redirectUrl(key.fallbackUrl)
+            return
+          }
+        }
       }
     }
 
@@ -76,8 +117,9 @@ export const syncURLToState = options => {
     }
 
     // Navigate to the new URL
-    console.log("Navigating to", url)
-    cachedGoto(url)
+    if (!get(isChangingPage)) {
+      gotoUrl(url)
+    }
   }
 
   // Initially hydrate state from URL
@@ -89,9 +131,12 @@ export const syncURLToState = options => {
     mapUrlToState($urlParams)
   })
 
-  // Subscribe to goto changes and cache them
+  // Subscribe to routify store changes and cache them
   const unsubscribeGoto = goto.subscribe($goto => {
     cachedGoto = $goto
+  })
+  const unsubscribeRedirect = redirect.subscribe($redirect => {
+    cachedRedirect = $redirect
   })
 
   // Subscribe to store changes and keep URL up to date
@@ -101,6 +146,7 @@ export const syncURLToState = options => {
   return () => {
     unsubscribeParams()
     unsubscribeGoto()
+    unsubscribeRedirect()
     unsubscribeStore()
   }
 }
