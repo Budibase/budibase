@@ -14,22 +14,7 @@ function makeSessionID(userId, sessionId) {
   return `${userId}/${sessionId}`
 }
 
-exports.createASession = async (userId, session) => {
-  const client = await redis.getSessionClient()
-  const sessionId = session.sessionId
-  if (!session.csrfToken) {
-    session.csrfToken = uuidv4()
-  }
-  session = {
-    createdAt: new Date().toISOString(),
-    lastAccessedAt: new Date().toISOString(),
-    ...session,
-    userId,
-  }
-  await client.store(makeSessionID(userId, sessionId), session, EXPIRY_SECONDS)
-}
-
-exports.invalidateSessions = async (userId, sessionIds = null) => {
+async function invalidateSessions(userId, sessionIds = null) {
   let sessions = []
 
   // If no sessionIds, get all the sessions for the user
@@ -55,6 +40,24 @@ exports.invalidateSessions = async (userId, sessionIds = null) => {
   await Promise.all(promises)
 }
 
+exports.createASession = async (userId, session) => {
+  // invalidate all other sessions
+  await invalidateSessions(userId)
+
+  const client = await redis.getSessionClient()
+  const sessionId = session.sessionId
+  if (!session.csrfToken) {
+    session.csrfToken = uuidv4()
+  }
+  session = {
+    createdAt: new Date().toISOString(),
+    lastAccessedAt: new Date().toISOString(),
+    ...session,
+    userId,
+  }
+  await client.store(makeSessionID(userId, sessionId), session, EXPIRY_SECONDS)
+}
+
 exports.updateSessionTTL = async session => {
   const client = await redis.getSessionClient()
   const key = makeSessionID(session.userId, session.sessionId)
@@ -66,8 +69,6 @@ exports.endSession = async (userId, sessionId) => {
   const client = await redis.getSessionClient()
   await client.delete(makeSessionID(userId, sessionId))
 }
-
-exports.getUserSessions = getSessionsForUser
 
 exports.getSession = async (userId, sessionId) => {
   try {
@@ -84,3 +85,6 @@ exports.getAllSessions = async () => {
   const sessions = await client.scan()
   return sessions.map(session => session.value)
 }
+
+exports.getUserSessions = getSessionsForUser
+exports.invalidateSessions = invalidateSessions

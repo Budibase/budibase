@@ -3,24 +3,35 @@ import filterTests from '../support/filterTests'
 filterTests(['smoke', 'all'], () => {
   context("Create an Application", () => {
 
-    beforeEach(() => {
+    before(() => {
       cy.login()
+      cy.deleteApp("Cypress Tests")
     })
 
-    it("should show the new user UI/UX", () => {
-      cy.visit(`${Cypress.config().baseUrl}/builder`)
-      cy.get(`[data-cy="create-app-btn"]`).contains('Start from scratch').should("exist")
-      cy.get(`[data-cy="import-app-btn"]`).should("exist")
-      
-      cy.get(".template-category-filters").should("exist")
-      cy.get(".template-categories").should("exist")
-      
-      cy.get(".appTable").should("not.exist")
-    })
+    if (!(Cypress.env("TEST_ENV"))) {
+      it("should show the new user UI/UX", () => {
+        cy.visit(`${Cypress.config().baseUrl}/builder`)
+        cy.get(`[data-cy="create-app-btn"]`).contains('Start from scratch').should("exist")
+        cy.get(`[data-cy="import-app-btn"]`).should("exist")
+        
+        cy.get(".template-category-filters").should("exist")
+        cy.get(".template-categories").should("exist")
+        
+        cy.get(".appTable").should("not.exist")
+      })
+    }
 
     it("should provide filterable templates", () => {
       cy.visit(`${Cypress.config().baseUrl}/builder`)
       cy.wait(500)
+
+      cy.request(`${Cypress.config().baseUrl}/api/applications?status=all`)
+        .its("body")
+        .then(val => {
+          if (val.length > 0) {
+            cy.get(".spectrum-Button").contains("Templates").click({force: true})
+          }
+        })
 
       cy.get(".template-category-filters").should("exist")
       cy.get(".template-categories").should("exist")
@@ -39,14 +50,22 @@ filterTests(['smoke', 'all'], () => {
       cy.visit(`${Cypress.config().baseUrl}/builder`)
       cy.wait(500)
 
-      const appName = "A New App"
-      
-      cy.get(`[data-cy="create-app-btn"]`).contains('Start from scratch').click({force: true})
+      // Start create app process. If apps already exist, click second button
+      cy.get(`[data-cy="create-app-btn"]`).click({ force: true })
+      cy.request(`${Cypress.config().baseUrl}/api/applications?status=all`)
+        .its("body")
+        .then(val => {
+          if (val.length > 0) {
+            cy.get(`[data-cy="create-app-btn"]`).click({ force: true })
+          }
+        })
+
+      const appName = "Cypress Tests"
       cy.get(".spectrum-Modal").within(() => {
 
         //Auto fill
         cy.get("input").eq(0).type(appName).should("have.value", appName).blur()
-        cy.get("input").eq(1).should("have.value", "/a-new-app")
+        cy.get("input").eq(1).should("have.value", "/cypress-tests")
         cy.get(".spectrum-ButtonGroup").contains("Create app").should('not.be.disabled')
 
         //Empty the app url - disabled create
@@ -69,8 +88,7 @@ filterTests(['smoke', 'all'], () => {
 
     it("should create the first application from scratch", () => {
       const appName = "Cypress Tests"
-      cy.deleteApp(appName)
-      cy.createApp(appName, "This app is used for Cypress testing.")
+      cy.createApp(appName)
 
       cy.visit(`${Cypress.config().baseUrl}/builder`)
       cy.wait(1000)
@@ -83,10 +101,19 @@ filterTests(['smoke', 'all'], () => {
       cy.visit(`${Cypress.config().baseUrl}/builder`)
       cy.wait(500)
 
+      // Navigate to Create new app section if apps already exist
+      cy.request(`${Cypress.config().baseUrl}/api/applications?status=all`)
+        .its("body")
+        .then(val => {
+          if (val.length > 0) {
+            cy.get(`[data-cy="create-app-btn"]`).click({ force: true })
+          }
+        })
+
       cy.get(".template-category-filters").should("exist")
       cy.get(".template-categories").should("exist")
 
-      //### Select nth template and choose to create?
+      // Select template
       cy.get('.template-category').eq(0).within(() => {
         const card = cy.get('.template-card').eq(0).should("exist");
         const cardOverlay = card.get('.template-thumbnail-action-overlay').should("exist")
@@ -94,7 +121,7 @@ filterTests(['smoke', 'all'], () => {
         cardOverlay.get("button").contains("Use template").should("exist").click({force: true})
       })
 
-      //### CMD Create app from theme card
+      // CMD Create app from theme card
       cy.get(".spectrum-Modal").should('be.visible')
       
       const templateName = cy.get(".spectrum-Modal .template-thumbnail-text")
@@ -111,27 +138,22 @@ filterTests(['smoke', 'all'], () => {
         cy.wait(1000)
 
         cy.applicationInAppTable(templateNameText)
-        cy.deleteAllApps() 
+        cy.deleteApp(templateNameText) 
       });
 
     })
 
     it("should display a second application and app filtering", () => {
+      // Create first app
       const appName = "Cypress Tests"
-      cy.deleteApp(appName)
-      cy.createApp(appName, "This app is used for Cypress testing.")
+      cy.createApp(appName)
 
       cy.visit(`${Cypress.config().baseUrl}/builder`)
       cy.wait(500)
 
+      // Create second app
       const secondAppName = "Second App Demo"
-      cy.deleteApp(secondAppName)
-
-      cy.get(`[data-cy="create-app-btn"]`).contains('Create new app').click({force: true})
-      cy.wait(500)
-      cy.url().should('include', '/builder/portal/apps/create')
-
-      cy.createAppFromScratch(secondAppName)
+      cy.createApp(secondAppName)
 
       cy.visit(`${Cypress.config().baseUrl}/builder`)
       cy.wait(500)
@@ -140,7 +162,7 @@ filterTests(['smoke', 'all'], () => {
       cy.searchForApplication(appName)
       cy.searchForApplication(secondAppName)
 
-      cy.deleteAllApps()
+      cy.deleteApp(secondAppName)
     })
 
   })  

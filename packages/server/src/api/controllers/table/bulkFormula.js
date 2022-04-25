@@ -25,7 +25,7 @@ function getFormulaThatUseColumn(table, columnNames) {
     if (!isStaticFormula(column)) {
       continue
     }
-    if (!doesContainStrings(column.formula, columnNames)) {
+    if (!doesContainStrings(column?.formula ?? "", columnNames)) {
       continue
     }
     formula.push(column.name)
