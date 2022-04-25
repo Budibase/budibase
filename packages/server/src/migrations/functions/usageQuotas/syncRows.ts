@@ -1,10 +1,9 @@
-import { getGlobalDB, getTenantId } from "@budibase/backend-core/tenancy"
+import { getTenantId } from "@budibase/backend-core/tenancy"
 import { getAllApps } from "@budibase/backend-core/db"
-import { getUsageQuotaDoc } from "../../../utilities/usageQuota"
 import { getUniqueRows } from "../../../utilities/usageQuota/rows"
+import { quotas, QuotaUsageType, StaticQuotaName } from "@budibase/pro"
 
 export const run = async () => {
-  const db = getGlobalDB()
   // get all rows in all apps
   // @ts-ignore
   const allApps = await getAllApps({ all: true })
@@ -16,7 +15,5 @@ export const run = async () => {
   // sync row count
   const tenantId = getTenantId()
   console.log(`[Tenant: ${tenantId}] Syncing row count: ${rowCount}`)
-  const usageDoc = await getUsageQuotaDoc(db)
-  usageDoc.usageQuota.rows = rowCount
-  await db.put(usageDoc)
+  await quotas.setUsage(rowCount, StaticQuotaName.ROWS, QuotaUsageType.STATIC)
 }

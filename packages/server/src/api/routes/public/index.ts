@@ -3,7 +3,6 @@ import queryEndpoints from "./queries"
 import tableEndpoints from "./tables"
 import rowEndpoints from "./rows"
 import userEndpoints from "./users"
-import usage from "../../../middleware/usageQuota"
 import authorized from "../../../middleware/authorized"
 import publicApi from "../../../middleware/publicApi"
 import { paramResource, paramSubResource } from "../../../middleware/resourceId"
@@ -114,8 +113,6 @@ function applyRoutes(
   // add the authorization middleware, using the correct perm type
   addMiddleware(endpoints.read, authorized(permType, PermissionLevels.READ))
   addMiddleware(endpoints.write, authorized(permType, PermissionLevels.WRITE))
-  // add the usage quota middleware
-  addMiddleware(endpoints.write, usage)
   // add the output mapper middleware
   addMiddleware(endpoints.read, mapperMiddleware, { output: true })
   addMiddleware(endpoints.write, mapperMiddleware, { output: true })
@@ -130,4 +127,4 @@ applyRoutes(queryEndpoints, PermissionTypes.QUERY, "queryId")
 // needs to be applied last for routing purposes, don't override other endpoints
 applyRoutes(rowEndpoints, PermissionTypes.TABLE, "tableId", "rowId")
 
-module.exports = publicRouter
+export default publicRouter
