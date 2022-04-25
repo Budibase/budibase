@@ -46,7 +46,7 @@
   class:border
   class:selected
   class:withActions
-  style={`padding-left: ${14 + indentLevel * 14}px`}
+  style={`padding-left: calc(var(--spacing-l) + ${indentLevel * 14}px)`}
   {draggable}
   on:dragend
   on:dragstart

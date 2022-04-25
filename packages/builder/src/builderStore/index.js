@@ -13,14 +13,7 @@ export const selectedScreen = derived(store, $store => {
   return $store.screens.find(screen => screen._id === $store.selectedScreenId)
 })
 
-export const currentAsset = derived(store, $store => {
-  const type = $store.currentFrontEndType
-  if (type === FrontendTypes.SCREEN) {
-  } else if (type === FrontendTypes.LAYOUT) {
-    return $store.layouts.find(layout => layout._id === $store.selectedLayoutId)
-  }
-  return null
-})
+export const currentAsset = selectedScreen
 
 export const selectedComponent = derived(
   [store, currentAsset],

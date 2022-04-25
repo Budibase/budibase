@@ -30,7 +30,7 @@
     align-items: stretch;
   }
   .header {
-    height: 55px;
+    height: 50px;
     display: flex;
     flex-direction: row;
     justify-content: flex-start;

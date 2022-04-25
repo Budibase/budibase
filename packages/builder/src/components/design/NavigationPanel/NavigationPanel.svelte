@@ -31,7 +31,7 @@
     align-items: stretch;
   }
   .header {
-    height: 55px;
+    height: 48px;
     display: flex;
     flex-direction: row;
     justify-content: space-between;
@@ -51,8 +51,8 @@
     white-space: nowrap;
   }
   .add-button {
-    flex: 0 0 32px;
-    height: 32px;
+    flex: 0 0 30px;
+    height: 30px;
     display: grid;
     place-items: center;
     border-radius: 4px;
