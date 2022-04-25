@@ -195,7 +195,7 @@
           size="M"
           name="ArrowLeft"
           hoverable
-          on:click={() => $goto("../")}
+          on:click={() => $goto("../../portal/apps")}
         />
         <Heading size="S">{$store.name || "App"}</Heading>
       </div>
