@@ -83,8 +83,10 @@ describe("oidc", () => {
 
     async function doAuthenticate() {
       const oidc = require("../oidc")
+      const mockSaveUserFn = jest.fn()
+      const authenticate = await oidc.buildVerifyFn(mockSaveUserFn)
 
-      await oidc.authenticate(
+      await authenticate(
         issuer,
         sub,
         profile,
