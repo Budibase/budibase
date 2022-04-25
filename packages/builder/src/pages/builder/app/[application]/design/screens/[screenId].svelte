@@ -2,18 +2,26 @@
   import { Search, Layout, Select } from "@budibase/bbui"
   import NavigationPanel from "components/design/NavigationPanel/NavigationPanel.svelte"
   import { roles } from "stores/backend"
-  import { store, allScreens } from "builderStore"
+  import { store, selectedScreen } from "builderStore"
   import NavItem from "components/common/NavItem.svelte"
   import ScreenDropdownMenu from "./_components/ScreenDropdownMenu.svelte"
-  import AppPanel from "components/design/AppPanel/AppPanel.svelte"
   import { RoleColours } from "constants"
   import ScreenWizard from "./_components/ScreenWizard.svelte"
+  import { onDestroy } from "svelte"
+  import { syncURLToState } from "helpers/urlStateSync"
+  import { goto, params, redirect } from "@roxi/routify"
+  import AppPanel from "components/design/AppPanel/AppPanel.svelte"
+  import SettingsPanel from "components/design/SettingsPanel/SettingsPanel.svelte"
 
   let searchString
   let accessRole = "all"
   let showNewScreenModal
 
-  $: filteredScreens = getFilteredScreens($allScreens, searchString, accessRole)
+  $: filteredScreens = getFilteredScreens(
+    $store.screens,
+    searchString,
+    accessRole
+  )
 
   const getFilteredScreens = (screens, search, role) => {
     return screens
@@ -32,6 +40,24 @@
   const getRoleColor = roleId => {
     return RoleColours[roleId] || "pink"
   }
+
+  // Keep URL and state in sync for selected screen ID
+  const stopSyncing = syncURLToState({
+    keys: [
+      {
+        url: "screenId",
+        state: "selectedScreenId",
+        validate: screenId => $store.screens.some(x => x._id === screenId),
+        fallbackUrl: "../",
+      },
+    ],
+    store,
+    params,
+    goto,
+    redirect,
+  })
+
+  onDestroy(stopSyncing)
 </script>
 
 <NavigationPanel
@@ -64,17 +90,14 @@
     >
       <ScreenDropdownMenu screenId={screen._id} />
     </NavItem>
-    <!--{#if selectedScreen?._id === screen.id}-->
-    <!--  <ComponentTree-->
-    <!--    level={1}-->
-    <!--    components={selectedScreen.props._children}-->
-    <!--    currentComponent={$selectedComponent}-->
-    <!--    {dragDropStore}-->
-    <!--  />-->
-    <!--{/if}-->
   {/each}
 </NavigationPanel>
 
-<ScreenWizard bind:showModal={showNewScreenModal} />
-
 <AppPanel />
+
+<SettingsPanel
+  title={$selectedScreen?.routing.route}
+  icon={$selectedScreen.routing.route === "/" ? "Home" : "WebPage"}
+/>
+
+<ScreenWizard bind:showModal={showNewScreenModal} />

@@ -1,30 +1,8 @@
 <script>
   import { IconSideNav, IconSideNavItem } from "@budibase/bbui"
-  import { params, goto, redirect, isActive } from "@roxi/routify"
-  import { store, allScreens } from "builderStore"
-  import { syncURLToState } from "helpers/urlStateSync"
-  import { onDestroy } from "svelte"
-
-  // Keep URL and state in sync for selected screen ID
-  const unsync = syncURLToState({
-    keys: [
-      {
-        url: "screenId",
-        state: "selectedScreenId",
-        validate: screenId => $allScreens.some(x => x._id === screenId),
-        fallbackUrl: "../",
-      },
-    ],
-    store,
-    params,
-    goto,
-    redirect,
-  })
-
-  onDestroy(unsync)
+  import { goto, isActive } from "@roxi/routify"
 </script>
 
-<!-- routify:options index=1 -->
 <div class="design">
   <div class="icon-nav">
     <IconSideNav>

@@ -9,10 +9,13 @@ export const store = getFrontendStore()
 export const automationStore = getAutomationStore()
 export const themeStore = getThemeStore()
 
+export const selectedScreen = derived(store, $store => {
+  return $store.screens.find(screen => screen._id === $store.selectedScreenId)
+})
+
 export const currentAsset = derived(store, $store => {
   const type = $store.currentFrontEndType
   if (type === FrontendTypes.SCREEN) {
-    return $store.screens.find(screen => screen._id === $store.selectedScreenId)
   } else if (type === FrontendTypes.LAYOUT) {
     return $store.layouts.find(layout => layout._id === $store.selectedLayoutId)
   }
@@ -39,19 +42,8 @@ export const selectedComponentPath = derived(
   }
 )
 
-export const currentAssetId = derived(store, $store => {
-  return $store.currentFrontEndType === FrontendTypes.SCREEN
-    ? $store.selectedScreenId
-    : $store.selectedLayoutId
-})
-
 export const currentAssetName = derived(currentAsset, $currentAsset => {
   return $currentAsset?.name
-})
-
-// leave this as before for consistency
-export const allScreens = derived(store, $store => {
-  return $store.screens
 })
 
 export const mainLayout = derived(store, $store => {

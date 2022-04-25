@@ -1,10 +1,5 @@
 <script>
-  import {
-    store,
-    currentAsset,
-    selectedComponent,
-    allScreens,
-  } from "builderStore"
+  import { store, currentAsset, selectedComponent } from "builderStore"
   import { Detail, Layout, Button, Icon } from "@budibase/bbui"
 
   import CurrentItemPreview from "components/design/AppPreview"

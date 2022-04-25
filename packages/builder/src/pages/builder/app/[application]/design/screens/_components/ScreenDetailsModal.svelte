@@ -1,7 +1,7 @@
 <script>
   import { ModalContent, Input } from "@budibase/bbui"
   import sanitizeUrl from "builderStore/store/screenTemplates/utils/sanitizeUrl"
-  import { selectedAccessRole, allScreens } from "builderStore"
+  import { store, selectedAccessRole } from "builderStore"
   import { get } from "svelte/store"
 
   export let onConfirm
@@ -35,7 +35,7 @@
 
   const routeExists = url => {
     const roleId = get(selectedAccessRole) || "BASIC"
-    return get(allScreens).some(
+    return get(store).screens.some(
       screen =>
         screen.routing.route.toLowerCase() === url.toLowerCase() &&
         screen.routing.roleId === roleId

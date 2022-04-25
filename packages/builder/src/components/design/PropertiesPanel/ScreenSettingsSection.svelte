@@ -8,7 +8,7 @@
   import { currentAsset, store } from "builderStore"
   import { FrontendTypes } from "constants"
   import sanitizeUrl from "builderStore/store/screenTemplates/utils/sanitizeUrl"
-  import { allScreens, selectedAccessRole } from "builderStore"
+  import { store, selectedAccessRole } from "builderStore"
 
   export let componentInstance
   export let bindings
@@ -17,7 +17,7 @@
 
   const routeTaken = url => {
     const roleId = get(selectedAccessRole) || "BASIC"
-    return get(allScreens).some(
+    return get(store).screens.some(
       screen =>
         screen.routing.route.toLowerCase() === url.toLowerCase() &&
         screen.routing.roleId === roleId
@@ -26,7 +26,7 @@
 
   const roleTaken = roleId => {
     const url = get(currentAsset)?.routing.route
-    return get(allScreens).some(
+    return get(store).screens.some(
       screen =>
         screen.routing.route.toLowerCase() === url.toLowerCase() &&
         screen.routing.roleId === roleId

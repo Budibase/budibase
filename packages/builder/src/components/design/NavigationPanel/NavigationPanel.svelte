@@ -31,11 +31,12 @@
     align-items: stretch;
   }
   .header {
+    height: 55px;
     display: flex;
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    padding: var(--spacing-m) var(--spacing-l);
+    padding: 0 var(--spacing-l);
     border-bottom: var(--border-light);
     gap: var(--spacing-l);
   }
