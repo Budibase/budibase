@@ -22,7 +22,8 @@ module.exports = {
   MINIO_URL: process.env.MINIO_URL,
   INTERNAL_API_KEY: process.env.INTERNAL_API_KEY,
   MULTI_TENANCY: process.env.MULTI_TENANCY,
-  ACCOUNT_PORTAL_URL: process.env.ACCOUNT_PORTAL_URL,
+  ACCOUNT_PORTAL_URL:
+    process.env.ACCOUNT_PORTAL_URL || "https://account.budibase.app",
   ACCOUNT_PORTAL_API_KEY: process.env.ACCOUNT_PORTAL_API_KEY,
   DISABLE_ACCOUNT_PORTAL: process.env.DISABLE_ACCOUNT_PORTAL,
   SELF_HOSTED: !!parseInt(process.env.SELF_HOSTED),
