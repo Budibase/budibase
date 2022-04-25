@@ -1,8 +1,8 @@
-const { setDB } = require("./db")
+const db = require("./db")
 
 module.exports = {
-  init(pouch) {
-    setDB(pouch)
+  init(opts = {}) {
+    db.init(opts.db)
   },
   // some default exports from the library, however these ideally shouldn't
   // be used, instead the syntax require("@budibase/backend-core/db") should be used
@@ -15,4 +15,7 @@ module.exports = {
   auth: require("../auth"),
   constants: require("../constants"),
   migrations: require("../migrations"),
+  env: require("./environment"),
+  accounts: require("./cloud/accounts"),
+  tenancy: require("./tenancy"),
 }
