@@ -6,9 +6,14 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">  
   </head>
 
-  <script src="https://jspm.dev/@spectrum-web-components/bundle/elements.js" type="module" async></script>
-
   <script>
+    function checkStatusButton() {
+      if (window.location.href.includes("budibase.app")) {
+        var button = document.getElementById("statusButton")
+        button.removeAttribute("hidden")
+      }
+    }
+
     function goToStatus() {
       window.location.href = "https://status.budibase.com";
     }
@@ -39,17 +44,42 @@
       }
     }
 
-    getStatus()
+    window.onload = function() {
+      checkStatusButton()
+      getStatus()
+    };
+   
   </script>
 
   <style>
+
+    :root {
+      --spectrum-global-color-gray-600: rgb(144,144,144);
+      --spectrum-global-color-gray-900: rgb(255,255,255);
+      --spectrum-global-color-gray-800: rgb(227,227,227);
+      --spectrum-global-color-static-blue-600: rgb(20,115,230);
+      --spectrum-global-color-static-blue-hover: rgb(	18, 103, 207);
+    }
+
     html, body {
       background-color: #1a1a1a;
       padding: 0;
       margin: 0;
       overflow: hidden;
       color: #e7e7e7;
+      font-family: 'Roboto', sans-serif;
     } 
+    button {
+      color: #e7e7e7;
+      font-family: 'Roboto', sans-serif;
+      border: none;
+      font-size: 15px;
+      border-radius: 15px;
+      padding: 8px 22px;
+    }
+    button:hover {
+      cursor: pointer;
+    }
     .main {
       height: 100vh;
       display: flex;
@@ -85,7 +115,14 @@
       flex-direction: row;
       margin-top: 15px;
     }
+    .homeButton {
+      background-color: var(--spectrum-global-color-static-blue-600);
+    }
+    .homeButton:hover {
+      background-color: var(--spectrum-global-color-static-blue-hover);
+    }
     .statusButton {
+      background-color: transparent;
       margin-left: 20px;
       border: none;
     }
@@ -112,30 +149,27 @@
   </script>
 
   <body>
-    <sp-theme scale="medium" color="dark">
-      <div class="main">
-        <div class="content">
-          <div class="hero">
-            <img src="https://raw.githubusercontent.com/Budibase/budibase/master/packages/builder/assets/bb-space-man.svg" alt="Budibase Logo">
+    <div class="main">
+      <div class="content">
+        <div class="hero">
+          <img src="https://raw.githubusercontent.com/Budibase/budibase/master/packages/builder/assets/bb-space-man.svg" alt="Budibase Logo">
+        </div>
+        <div class="info">
+          <div>
+            <h4 id="status" class="status"></h4>
+            <h1 class="title">
+              Houston we have a problem!
+            </h1>
+            <h3 id="message" class="message">
+            </h3>
           </div>
-          <div class="info">
-            <div>
-              <h4 id="status" class="status"></h4>
-              <h1 class="title">
-                Houston we have a problem!
-              </h1>
-              <h3 id="message" class="message">
-              </h3>
-            </div>
-            <div class="buttons">
-              <sp-button onclick=goHome()>Return home</sp-button> 
-              <sp-button class="statusButton" quiet variant="secondary" onclick=goToStatus()>Check out status</sp-button> 
-            </div>
+          <div class="buttons">
+            <button class="homeButton" onclick=goHome()>Return home</button> 
+            <button id="statusButton" class="statusButton" hidden="true" onclick=goToStatus()>Check out status</button> 
           </div>
         </div>
-        
       </div>
-    </sp-theme>
+    </div>
   </body>
 
 </html>
