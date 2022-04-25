@@ -179,6 +179,7 @@ export const IntegrationTypes = {
   INTERNAL: "INTERNAL",
   GOOGLE_SHEETS: "GOOGLE_SHEETS",
   FIREBASE: "FIREBASE",
+  REDIS: "REDIS",
 }
 
 export const IntegrationNames = {
@@ -197,6 +198,7 @@ export const IntegrationNames = {
   [IntegrationTypes.INTERNAL]: "Internal",
   [IntegrationTypes.GOOGLE_SHEETS]: "Google Sheets",
   [IntegrationTypes.FIREBASE]: "Firebase",
+  [IntegrationTypes.REDIS]: "Redis",
 }
 
 export const SchemaTypeOptions = [
