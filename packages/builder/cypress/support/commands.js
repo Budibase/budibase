@@ -60,43 +60,48 @@ Cypress.Commands.add("deleteApp", name => {
   cy.request(`${Cypress.config().baseUrl}/api/applications?status=all`)
     .its("body")
     .then(val => {
-      if (val.length > 0) {
-        if (Cypress.env("TEST_ENV")) {
-          cy.searchForApplication(name)
-          cy.get(".appTable").within(() => {
-            cy.get(".spectrum-Icon").eq(1).click()
+      const findAppName = val.some(val => val.name == name)
+      if (findAppName) {
+        if (val.length > 0) {
+          if (Cypress.env("TEST_ENV")) {
+            cy.searchForApplication(name)
+            cy.get(".appTable").within(() => {
+              cy.get(".spectrum-Icon").eq(1).click()
+            })
+          } else {
+            const appId = val.reduce((acc, app) => {
+              if (name === app.name) {
+                acc = app.appId
+              }
+              return acc
+            }, "")
+
+            if (appId == "") {
+              return
+            }
+
+            const appIdParsed = appId.split("_").pop()
+            const actionEleId = `[data-cy=row_actions_${appIdParsed}]`
+            cy.get(actionEleId).within(() => {
+              cy.get(".spectrum-Icon").eq(0).click()
+            })
+          }
+
+          cy.get(".spectrum-Menu").then($menu => {
+            if ($menu.text().includes("Unpublish")) {
+              cy.get(".spectrum-Menu").contains("Unpublish").click()
+              cy.get(".spectrum-Dialog-grid").contains("Unpublish app").click()
+            } else {
+              cy.get(".spectrum-Menu").contains("Delete").click()
+              cy.get(".spectrum-Dialog-grid").within(() => {
+                cy.get("input").type(name)
+              })
+              cy.get(".spectrum-Button--warning").click()
+            }
           })
         } else {
-          const appId = val.reduce((acc, app) => {
-            if (name === app.name) {
-              acc = app.appId
-            }
-            return acc
-          }, "")
-
-          if (appId == "") {
-            return
-          }
-
-          const appIdParsed = appId.split("_").pop()
-          const actionEleId = `[data-cy=row_actions_${appIdParsed}]`
-          cy.get(actionEleId).within(() => {
-            cy.get(".spectrum-Icon").eq(0).click()
-          })
+          return
         }
-
-        cy.get(".spectrum-Menu").then($menu => {
-          if ($menu.text().includes("Unpublish")) {
-            cy.get(".spectrum-Menu").contains("Unpublish").click()
-            cy.get(".spectrum-Dialog-grid").contains("Unpublish app").click()
-          } else {
-            cy.get(".spectrum-Menu").contains("Delete").click()
-            cy.get(".spectrum-Dialog-grid").within(() => {
-              cy.get("input").type(name)
-            })
-            cy.get(".spectrum-Button--warning").click()
-          }
-        })
       } else {
         return
       }
@@ -410,7 +415,9 @@ Cypress.Commands.add("addDatasourceConfig", (datasource, skipFetch) => {
           if (datasource == "Oracle") {
             cy.get("input").clear().type(Cypress.env("oracle").HOST)
           } else {
-            cy.get("input").clear().type(Cypress.env("HOST_IP"))
+            cy.get("input")
+              .clear({ force: true })
+              .type(Cypress.env("mysql").HOST, { force: true })
           }
         })
       })

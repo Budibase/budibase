@@ -190,5 +190,11 @@ exports.WebhookType = {
   AUTOMATION: "automation",
 }
 
+exports.AutomationErrors = {
+  INCORRECT_TYPE: "INCORRECT_TYPE",
+  MAX_ITERATIONS: "MAX_ITERATIONS_REACHED",
+  FAILURE_CONDITION: "FAILURE_CONDITION_MET",
+}
+
 // pass through the list from the auth/core lib
 exports.ObjectStoreBuckets = ObjectStoreBuckets

@@ -19,6 +19,7 @@ env:
   POSTHOG_TOKEN: ${{ secrets.POSTHOG_TOKEN }}
   INTERCOM_TOKEN: ${{ secrets.INTERCOM_TOKEN }}
   POSTHOG_URL: ${{ secrets.POSTHOG_URL }}
+  PERSONAL_ACCESS_TOKEN : ${{ secrets.PERSONAL_ACCESS_TOKEN }}
       
 jobs:
   release:
@@ -29,6 +30,10 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: 14.x
+
+      - name: Install Pro
+        run: yarn install:pro develop
+
       - run: yarn 
       - run: yarn bootstrap 
       - run: yarn lint 
@@ -46,9 +51,9 @@ jobs:
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: | 
-          # setup the username and email. I tend to use 'GitHub Actions Bot' with no email by default
-          git config user.name "Budibase Staging Release Bot"
-          git config user.email "<>"
+          # setup the username and email.
+          git config --global user.name "Budibase Staging Release Bot"
+          git config --global user.email "<>"
           echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} >> .npmrc 
           yarn release:develop
 
