@@ -1,6 +1,6 @@
 <script>
-  import ScreenDetailsModal from "components/design/NavigationPanel/ScreenDetailsModal.svelte"
-  import NewScreenModal from "components/design/NavigationPanel/NewScreenModal.svelte"
+  import ScreenDetailsModal from "./ScreenDetailsModal.svelte"
+  import NewScreenModal from "./NewScreenModal.svelte"
   import sanitizeUrl from "builderStore/store/screenTemplates/utils/sanitizeUrl"
   import { Modal, notifications } from "@budibase/bbui"
   import { store, selectedAccessRole } from "builderStore"

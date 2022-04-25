@@ -7,17 +7,22 @@
   import ScreenDropdownMenu from "./_components/ScreenDropdownMenu.svelte"
   import AppPanel from "components/design/AppPanel/AppPanel.svelte"
   import { RoleColours } from "constants"
+  import ScreenWizard from "./_components/ScreenWizard.svelte"
 
   let searchString
-  let accessRole
+  let accessRole = "all"
+  let showNewScreenModal
 
-  $: filteredScreens = getFilteredScreens($allScreens, searchString)
+  $: filteredScreens = getFilteredScreens($allScreens, searchString, accessRole)
 
-  const getFilteredScreens = (screens, searchString) => {
+  const getFilteredScreens = (screens, search, role) => {
     return screens
-      .filter(
-        screen => !searchString || screen.routing.route.includes(searchString)
-      )
+      .filter(screen => {
+        const searchMatch = !search || screen.routing.route.includes(search)
+        const roleMatch =
+          !role || role === "all" || screen.routing.roleId === role
+        return searchMatch && roleMatch
+      })
       .slice()
       .sort((a, b) => {
         return a.routing.route < b.routing.route ? -1 : 1
@@ -29,7 +34,11 @@
   }
 </script>
 
-<NavigationPanel title="Screens" showAddButton onClickAddButton>
+<NavigationPanel
+  title="Screens"
+  showAddButton
+  onClickAddButton={showNewScreenModal}
+>
   <Layout paddingX="L" paddingY="XL" gap="S">
     <Search
       placeholder="Enter a route to search"
@@ -38,10 +47,10 @@
     />
     <Select
       bind:value={accessRole}
-      placeholder="All screens"
+      placeholder={null}
       getOptionLabel={role => role.name}
       getOptionValue={role => role._id}
-      options={$roles}
+      options={[{ name: "All screens", _id: "all" }, ...$roles]}
     />
   </Layout>
   {#each filteredScreens as screen (screen._id)}
@@ -65,5 +74,7 @@
     <!--{/if}-->
   {/each}
 </NavigationPanel>
+
+<ScreenWizard bind:showModal={showNewScreenModal} />
 
 <AppPanel />

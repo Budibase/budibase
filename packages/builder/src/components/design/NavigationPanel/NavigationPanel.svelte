@@ -12,8 +12,8 @@
       <Heading size="XS">{title || ""}</Heading>
     </div>
     {#if showAddButton}
-      <div class="add-button">
-        <Icon name="Add" on:click={onClickAddButton} />
+      <div class="add-button" on:click={onClickAddButton}>
+        <Icon name="Add" />
       </div>
     {/if}
   </div>
