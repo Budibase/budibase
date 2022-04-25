@@ -114,7 +114,7 @@
     background-color: var(--grey-3);
   }
   .nav-item:hover .actions {
-    display: grid;
+    visibility: visible;
   }
   .nav-item-content {
     flex: 1 1 auto;
@@ -125,6 +125,7 @@
     gap: var(--spacing-xs);
     width: max-content;
     overflow: hidden;
+    position: relative;
   }
 
   .icon {
@@ -145,6 +146,11 @@
   .icon + .icon {
     margin-left: -4px;
   }
+  .iconText {
+    margin-top: 1px;
+    font-size: var(--spectrum-global-dimension-font-size-50);
+    flex: 0 0 34px;
+  }
 
   .text {
     font-weight: 600;
@@ -162,8 +168,9 @@
   .actions {
     cursor: pointer;
     position: relative;
-    display: none;
+    display: grid;
     place-items: center;
+    visibility: hidden;
   }
   .actions,
   .light :global(.spectrum-StatusLight) {
@@ -171,10 +178,9 @@
     height: 20px;
     margin-left: var(--spacing-s);
   }
-  .iconText {
-    margin-top: 1px;
-    font-size: var(--spectrum-global-dimension-font-size-50);
-    flex: 0 0 34px;
+  .light {
+    position: absolute;
+    right: 0;
   }
   .nav-item.withActions:hover .light {
     display: none;
