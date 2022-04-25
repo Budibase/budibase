@@ -495,7 +495,7 @@ Cypress.Commands.add("addDatasourceConfig", (datasource, skipFetch) => {
           } else {
             cy.get("input")
               .clear({ force: true })
-              .type(Cypress.env("mysql").HOST, { force: true })
+              .type(Cypress.env("HOST_IP"), { force: true })
           }
         })
       })
