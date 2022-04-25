@@ -1014,10 +1014,10 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/backend-core@1.0.105-alpha.38":
-  version "1.0.105-alpha.38"
-  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.0.105-alpha.38.tgz#399bc37877392f04c0072936d1c74d35d2997d6c"
-  integrity sha512-IKVw3+a42Yea49Qc8vbVd+KZzOIAfgAFEohApJZSxqKA5UaFeWPJ343LQ7oC6jbYOkRVlGRnkrvXXa1jRggqbA==
+"@budibase/backend-core@1.0.105-alpha.40":
+  version "1.0.105-alpha.40"
+  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.0.105-alpha.40.tgz#7e8e3c548d09001a002364d2a9fa4dabf2d1bcce"
+  integrity sha512-lOUJx5yFAcBld+SNwbO1hUV2ucM2J+Y4AIG0BQeNH2kPul74sHlZpEocbmNu+R88NgKinTLcnB0wCdoD0MP+4g==
   dependencies:
     "@techpass/passport-openidconnect" "^0.3.0"
     aws-sdk "^2.901.0"
@@ -1087,12 +1087,12 @@
     svelte-flatpickr "^3.2.3"
     svelte-portal "^1.0.0"
 
-"@budibase/pro@1.0.105-alpha.38":
-  version "1.0.105-alpha.38"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-1.0.105-alpha.38.tgz#f025daf5667798083a7b0af301d6231dc3e58f00"
-  integrity sha512-TXSov/c2KT7YuxZRspSd4iNPZPiJOdpl91ZTxGrqaPfK8PDmgk/XBWkHci+z1WLCvf6YY2kuQJGp1moldoLO1g==
+"@budibase/pro@1.0.105-alpha.40":
+  version "1.0.105-alpha.40"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-1.0.105-alpha.40.tgz#155952a2645b547cb974a3c1bccb17f3075849e2"
+  integrity sha512-qrd7vxBkLcLoxWVtakg1P8M7NZUVM5d/ROveUsS1pDAVQndiI8fVrc7YeOfIiHmqdaFQXbwp9tn6ZviMuihVsA==
   dependencies:
-    "@budibase/backend-core" "1.0.105-alpha.38"
+    "@budibase/backend-core" "1.0.105-alpha.40"
     node-fetch "^2.6.1"
 
 "@budibase/standard-components@^0.9.139":
