@@ -52,7 +52,7 @@ interface RunConfig {
 
 module External {
   function buildFilters(
-    id: string | undefined,
+    id: string | undefined | string[],
     filters: SearchFilters,
     table: Table
   ) {

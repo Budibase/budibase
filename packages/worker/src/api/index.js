@@ -8,6 +8,8 @@ const {
   buildTenancyMiddleware,
   buildCsrfMiddleware,
 } = require("@budibase/backend-core/auth")
+const { middleware: pro } = require("@budibase/pro")
+const { errors } = require("@budibase/backend-core")
 
 const PUBLIC_ENDPOINTS = [
   // old deprecated endpoints kept for backwards compat
@@ -98,6 +100,7 @@ router
   .use(buildAuthMiddleware(PUBLIC_ENDPOINTS))
   .use(buildTenancyMiddleware(PUBLIC_ENDPOINTS, NO_TENANCY_ENDPOINTS))
   .use(buildCsrfMiddleware({ noCsrfPatterns: NO_CSRF_ENDPOINTS }))
+  .use(pro.licensing())
   // for now no public access is allowed to worker (bar health check)
   .use((ctx, next) => {
     if (ctx.publicEndpoint) {
@@ -110,16 +113,18 @@ router
   })
   .use(auditLog)
 
-// error handling middleware
+// error handling middleware - TODO: This could be moved to backend-core
 router.use(async (ctx, next) => {
   try {
     await next()
   } catch (err) {
     ctx.log.error(err)
     ctx.status = err.status || err.statusCode || 500
+    const error = errors.getPublicError(err)
     ctx.body = {
       message: err.message,
       status: ctx.status,
+      error,
     }
   }
 })

@@ -15,16 +15,14 @@
 
   const dispatch = createEventDispatcher()
   $: datasource = getDatasourceForProvider($currentAsset, componentInstance)
-  $: schema = getSchemaForDatasource($currentAsset, datasource, {
-    searchableSchema: true,
-  }).schema
+  $: schema = getSchemaForDatasource($currentAsset, datasource).schema
   $: options = getOptions(datasource, schema || {})
   $: boundValue = getSelectedOption(value, options)
 
   function getOptions(ds, dsSchema) {
     let base = Object.values(dsSchema)
     if (!ds?.tableId) {
-      return base
+      return base.map(field => field.name)
     }
     const currentTable = $tables.list.find(table => table._id === ds.tableId)
     return getFields(base, { allowLinks: currentTable?.sql }).map(

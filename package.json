@@ -21,18 +21,17 @@
   },
   "scripts": {
     "setup": "node ./hosting/scripts/setup.js && yarn && yarn bootstrap && yarn build && yarn dev",
-    "bootstrap": "lerna link && lerna bootstrap",
+    "bootstrap": "lerna link && lerna bootstrap && ./scripts/link-dependencies.sh",
     "build": "lerna run build",
-    "publishdev": "lerna run publishdev",
-    "publishnpm": "yarn build && lerna publish --force-publish",
-    "release": "lerna publish patch --yes --force-publish",
-    "release:develop": "lerna publish prerelease --yes --force-publish --dist-tag develop",
+    "release": "lerna publish patch --yes --force-publish && yarn release:pro",
+    "release:develop": "lerna publish prerelease --yes --force-publish --dist-tag develop && yarn release:pro:develop",
+    "release:pro": "bash scripts/pro/release.sh",
+    "release:pro:develop": "bash scripts/pro/release.sh develop",
     "restore": "yarn run clean && yarn run bootstrap && yarn run build",
     "nuke": "yarn run nuke:packages && yarn run nuke:docker",
     "nuke:packages": "yarn run restore",
     "nuke:docker": "lerna run --parallel dev:stack:nuke",
     "clean": "lerna clean",
-    "kill-port": "kill-port 4001",
     "kill-builder": "kill-port 3000",
     "kill-server": "kill-port 4001 4002",
     "kill-all": "yarn run kill-builder && yarn run kill-server",
@@ -74,6 +73,7 @@
     "mode:cloud": "yarn env:selfhost:disable && yarn env:multi:enable && yarn env:account:disable",
     "mode:account": "yarn mode:cloud && yarn env:account:enable",
     "security:audit": "node scripts/audit.js",
-    "postinstall": "husky install"
+    "postinstall": "husky install",
+    "install:pro": "bash scripts/pro/install.sh"
   }
 }

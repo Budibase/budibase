@@ -121,6 +121,14 @@ spec:
         ports:
         - containerPort: {{ .Values.services.worker.port }}
         resources: {}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
       restartPolicy: Always
       serviceAccountName: ""
 status: {}

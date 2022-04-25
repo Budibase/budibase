@@ -3,7 +3,7 @@
   import SettingsButton from "./SettingsButton.svelte"
   import SettingsColorPicker from "./SettingsColorPicker.svelte"
   import SettingsPicker from "./SettingsPicker.svelte"
-  import { builderStore } from "stores"
+  import { builderStore, componentStore } from "stores"
   import { domDebounce } from "utils/domDebounce"
 
   const verticalOffset = 28
@@ -15,7 +15,7 @@
   let self
   let measured = false
 
-  $: definition = $builderStore.selectedComponentDefinition
+  $: definition = $componentStore.selectedComponentDefinition
   $: showBar = definition?.showSettingsBar && !$builderStore.isDragging
   $: settings = getBarSettings(definition)
 
@@ -67,7 +67,7 @@
       }
 
       //If element is at the very top of the screen, put the bar below the element
-      if (elBounds.top < elBounds.height) {
+      if (elBounds.top < elBounds.height && elBounds.height < 80) {
         newTop = elBounds.bottom + verticalOffset
       }
 
@@ -163,9 +163,7 @@
     <SettingsButton
       icon="Delete"
       on:click={() => {
-        builderStore.actions.deleteComponent(
-          $builderStore.selectedComponent._id
-        )
+        builderStore.actions.deleteComponent($builderStore.selectedComponentId)
       }}
       title="Delete component"
     />
