@@ -1,5 +1,4 @@
 <script>
-  import { selectedScreen } from "builderStore"
   import SettingsPanel from "components/design/SettingsPanel/SettingsPanel.svelte"
   import { get } from "svelte/store"
   import { get as deepGet, setWith } from "lodash"
@@ -13,14 +12,13 @@
   } from "@budibase/bbui"
   import PropertyControl from "components/design/PropertiesPanel/PropertyControls/PropertyControl.svelte"
   import RoleSelect from "components/design/PropertiesPanel/PropertyControls/RoleSelect.svelte"
-  import { currentAsset, store, selectedAccessRole } from "builderStore"
-  import { FrontendTypes } from "constants"
+  import { selectedScreen, store } from "builderStore"
   import sanitizeUrl from "builderStore/store/screenTemplates/utils/sanitizeUrl"
 
   let errors = {}
 
   const routeTaken = url => {
-    const roleId = get(selectedAccessRole) || "BASIC"
+    const roleId = get(selectedScreen)?.routing.roleId || "BASIC"
     return get(store).screens.some(
       screen =>
         screen.routing.route.toLowerCase() === url.toLowerCase() &&
@@ -29,7 +27,7 @@
   }
 
   const roleTaken = roleId => {
-    const url = get(currentAsset)?.routing.route
+    const url = get(selectedScreen)?.routing.route
     return get(store).screens.some(
       screen =>
         screen.routing.route.toLowerCase() === url.toLowerCase() &&
@@ -37,10 +35,15 @@
     )
   }
 
-  const setAssetProps = (name, value, parser, validate) => {
+  const setScreenSetting = (setting, value) => {
+    const { name, parser, validate } = setting
+
+    // Parse value if required
     if (parser) {
       value = parser(value)
     }
+
+    // Validate value if required and determine errors
     if (validate) {
       const error = validate(value)
       errors = {
@@ -57,23 +60,17 @@
       }
     }
 
-    const selectedAsset = get(currentAsset)
+    // Update screen object in store
     store.update(state => {
-      if (
-        name === "_instanceName" &&
-        state.currentFrontEndType === FrontendTypes.SCREEN
-      ) {
-        selectedAsset.props._instanceName = value
-      } else {
-        setWith(selectedAsset, name.split("."), value, Object)
-      }
+      setWith(get(selectedScreen), name.split("."), value, Object)
       return state
     })
 
+    // Save new definition
     try {
       store.actions.preview.saveSelected()
     } catch (error) {
-      notifications.error("Error saving settings")
+      notifications.error("Error saving screen settings")
     }
   }
 
@@ -95,9 +92,9 @@
         }
         return sanitizeUrl(val)
       },
-      validate: val => {
-        const exisingValue = get(currentAsset)?.routing.route
-        if (val !== exisingValue && routeTaken(val)) {
+      validate: route => {
+        const existingRoute = get(selectedScreen)?.routing.route
+        if (route !== existingRoute && routeTaken(route)) {
           return "That URL is already in use for this role"
         }
         return null
@@ -107,9 +104,9 @@
       key: "routing.roleId",
       label: "Access",
       control: RoleSelect,
-      validate: val => {
-        const exisingValue = get(currentAsset)?.routing.roleId
-        if (val !== exisingValue && roleTaken(val)) {
+      validate: role => {
+        const existingRole = get(selectedScreen)?.routing.roleId
+        if (role !== existingRole && roleTaken(role)) {
           return "That role is already in use for this URL"
         }
         return null
@@ -131,14 +128,14 @@
   icon={$selectedScreen.routing.route === "/" ? "Home" : "WebPage"}
 >
   <Layout gap="S" paddingX="L" paddingY="XL">
-    {#each screenSettings as def (def.key)}
+    {#each screenSettings as setting (setting.key)}
       <PropertyControl
-        control={def.control}
-        label={def.label}
-        key={def.key}
-        value={deepGet($currentAsset, def.key)}
-        onChange={val => setAssetProps(def.key, val, def.parser, def.validate)}
-        props={{ ...def.props, error: errors[def.key] }}
+        control={setting.control}
+        label={setting.label}
+        key={setting.key}
+        value={deepGet($selectedScreen, setting.key)}
+        onChange={val => setScreenSetting(setting, val)}
+        props={{ ...setting.props, error: errors[setting.key] }}
       />
     {/each}
     <Button cta>View components</Button>
