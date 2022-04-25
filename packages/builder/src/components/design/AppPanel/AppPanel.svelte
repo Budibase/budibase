@@ -35,7 +35,7 @@
     justify-content: flex-start;
     align-items: stretch;
     gap: var(--spacing-m);
-    padding: var(--spacing-l) 24px;
+    padding: var(--spacing-l) var(--spacing-xl);
   }
   .header {
     display: flex;
