@@ -54,7 +54,6 @@
   $: schemaFields = Object.values(schema || {})
 
   const onChange = async (e, key) => {
-    console.log(e, key)
     try {
       if (isTestModal) {
         // Special case for webhook, as it requires a body, but the schema already brings back the body's contents
