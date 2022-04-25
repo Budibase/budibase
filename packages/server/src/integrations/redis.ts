@@ -49,6 +49,9 @@ module RedisModule {
             type: DatasourceFieldTypes.STRING,
             required: true,
           },
+          ttl: {
+            type: DatasourceFieldTypes.NUMBER,
+          },
         },
       },
       read: {
@@ -106,9 +109,12 @@ module RedisModule {
       }
     }
 
-    async create(query: { key: string; value: string }) {
+    async create(query: { key: string; value: string; ttl: number }) {
       return this.redisContext(async () => {
         const response = await this.client.set(query.key, query.value)
+        if (query.ttl) {
+          await this.client.expire(query.key, query.ttl)
+        }
         return response
       })
     }

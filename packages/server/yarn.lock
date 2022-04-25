@@ -996,9 +996,9 @@
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
 "@budibase/backend-core@^1.0.105-alpha.0":
-  version "1.0.113"
-  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.0.113.tgz#4ae128eea13126227e9147a1f1703ad12a25c1c6"
-  integrity sha512-lYV8AYGxj1ggbhEmE1IPLgguEJa8lkCbilmDGLCSttXwz4teXGlxmWl1Wrssheh2StJTvD7AJth414DUHvNmNw==
+  version "1.0.119"
+  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.0.119.tgz#2c5b6d9f3d0eb66f26974adee92731ee34b1a14e"
+  integrity sha512-xgxBS5ur88q3PUiFUFpvP0CM2y925Fe9RCxbq8OMKCoB6VJHQaTv3KIiRp0BkFklUe/1uJjPyMCZq/dJo1BWUQ==
   dependencies:
     "@techpass/passport-openidconnect" "^0.3.0"
     aws-sdk "^2.901.0"
@@ -1014,6 +1014,10 @@
     passport-google-oauth "^2.0.0"
     passport-jwt "^4.0.0"
     passport-local "^1.0.0"
+    posthog-node "^1.3.0"
+    pouchdb "7.3.0"
+    pouchdb-find "^7.2.2"
+    pouchdb-replication-stream "^1.2.9"
     sanitize-s3-objectkey "^0.0.1"
     tar-fs "^2.1.1"
     uuid "^8.3.2"
@@ -1068,13 +1072,13 @@
     svelte-flatpickr "^3.2.3"
     svelte-portal "^1.0.0"
 
-"@budibase/bbui@^1.0.113":
-  version "1.0.113"
-  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-1.0.113.tgz#8d1823d5b0bda4319232643456dc9ca9d14ebbd4"
-  integrity sha512-PCMwwmeapT6Ec/a+oZtasBwIzozSJPW9bM/fJvusm197M8jp7Qm77Ywk28NU2yE/KsTQ8So7aDgH60S/F5cPoQ==
+"@budibase/bbui@^1.0.119":
+  version "1.0.119"
+  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-1.0.119.tgz#253d6bafdec943fdf94ec93f8931d12ba6f96a02"
+  integrity sha512-yGKK4y/k0K6nxH+vcDRFrjOWTFOxRHdvwyb9sEKSgg/QP2+xdlwEFexe+943N6tyD+uxz5APgYYn7/32/iBZ6A==
   dependencies:
     "@adobe/spectrum-css-workflow-icons" "^1.2.1"
-    "@budibase/string-templates" "^1.0.113"
+    "@budibase/string-templates" "^1.0.119"
     "@spectrum-css/actionbutton" "^1.0.1"
     "@spectrum-css/actiongroup" "^1.0.1"
     "@spectrum-css/avatar" "^3.0.2"
@@ -1121,13 +1125,13 @@
     svelte-portal "^1.0.0"
 
 "@budibase/client@^1.0.105-alpha.0":
-  version "1.0.113"
-  resolved "https://registry.yarnpkg.com/@budibase/client/-/client-1.0.113.tgz#1da61320d487991aca562dd316641b81ae7fcd4f"
-  integrity sha512-kv529O0z/ZeSeseqkEf87Lq7U4tZ1Vo3cyDi+QDvYhzwANJsDcOVks9Egy7bfeJuoN/KzvO8nNsih8A7ac/v9A==
+  version "1.0.119"
+  resolved "https://registry.yarnpkg.com/@budibase/client/-/client-1.0.119.tgz#22f28d09e53c956061b66efa4e641ca4108ad118"
+  integrity sha512-0+ZWjHIa9ezgmpD1wy6ccDl15reKUnFufhcDQQvByDP7p67H3aqpaxiCRkMU+hz4ut4XeGDfRS6KLAqiGGmwsg==
   dependencies:
-    "@budibase/bbui" "^1.0.113"
-    "@budibase/frontend-core" "^1.0.113"
-    "@budibase/string-templates" "^1.0.113"
+    "@budibase/bbui" "^1.0.119"
+    "@budibase/frontend-core" "^1.0.119"
+    "@budibase/string-templates" "^1.0.119"
     "@spectrum-css/button" "^3.0.3"
     "@spectrum-css/card" "^3.0.3"
     "@spectrum-css/divider" "^1.0.3"
@@ -1150,12 +1154,12 @@
     svelte-flatpickr "^3.1.0"
     svelte-spa-router "^3.0.5"
 
-"@budibase/frontend-core@^1.0.113":
-  version "1.0.113"
-  resolved "https://registry.yarnpkg.com/@budibase/frontend-core/-/frontend-core-1.0.113.tgz#833909617a96f752ce16beb9b4005b825ebd1930"
-  integrity sha512-5abbJJ9ZUETNtELda559mkEDHtUD68zgo3gEaixJx6pq0A2Uni6KUAsRlkBJN1ucR8fXf5RJ3RexeoeQTXQ/MA==
+"@budibase/frontend-core@^1.0.119":
+  version "1.0.119"
+  resolved "https://registry.yarnpkg.com/@budibase/frontend-core/-/frontend-core-1.0.119.tgz#842319f8c5289a546414e2f1f481fd0fdec00626"
+  integrity sha512-kgLdae0hmnMt3m4QbPpvX2de/5FOcbmVMVz1TfJOMTxUfaySe44Powkbarx4bOQxS0SBw9mrLlzV0F1ZXjYTWA==
   dependencies:
-    "@budibase/bbui" "^1.0.113"
+    "@budibase/bbui" "^1.0.119"
     lodash "^4.17.21"
     svelte "^3.46.2"
 
@@ -1202,10 +1206,10 @@
     svelte-apexcharts "^1.0.2"
     svelte-flatpickr "^3.1.0"
 
-"@budibase/string-templates@^1.0.105-alpha.0", "@budibase/string-templates@^1.0.113":
-  version "1.0.113"
-  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-1.0.113.tgz#96c1d578d40795495c634f9d0fe021188c0dc410"
-  integrity sha512-Dr3YMAc6nF/THiakPCxUPOiAVn/cApkdYXomnPvYrmmfMxOMz3s4GJCXHIpoSY/tbhkM+MFNW0foHn6HMAubYw==
+"@budibase/string-templates@^1.0.105-alpha.0", "@budibase/string-templates@^1.0.119":
+  version "1.0.119"
+  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-1.0.119.tgz#80273fd7b7848be1e1055b8e190438033f746392"
+  integrity sha512-W9K3217f4HX9A/tUBMCDE5NgWBI1ESH4w73fzQmVoK+3hMWOEFg4ESYKw3P62LyrXMc1TfayuLXa4Q1e6fvHVA==
   dependencies:
     "@budibase/handlebars-helpers" "^0.11.8"
     dayjs "^1.10.4"
@@ -2354,9 +2358,9 @@
   integrity sha512-UtfW8bA1quYnJM6v/lp6AVYGnQFkiUix2FHAf/4VHVrk4mh7ydtLiXS0IR3Kx+t/S8FWdSdSQHDZ8tHbY1ZLZg==
 
 "@spectrum-css/tag@^3.1.4":
-  version "3.3.7"
-  resolved "https://registry.yarnpkg.com/@spectrum-css/tag/-/tag-3.3.7.tgz#4d7ade045697c2f9f1dec9d8664d73ddb35ec047"
-  integrity sha512-7Mgssli+z8vhb42SzdFQhI3v1y3RYn1B/QrVSguPjNc/18/EW+tupS6JTmh0afkXrJOdJO3BCJVoDCmAozZwog==
+  version "3.3.10"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/tag/-/tag-3.3.10.tgz#3710a29767315332078956b93e99408b781eb160"
+  integrity sha512-cwKgpEx4OYyS/WqyNDCvQhSVQUYdHhbjz3nRdg4jABaI96T8UBHcAvK07TR1/OfD5rBo+xBO+rsGqd4aH21zdA==
 
 "@spectrum-css/tags@^3.0.2":
   version "3.0.3"
@@ -3524,9 +3528,9 @@ aws-sdk@^2.767.0:
     xml2js "0.4.19"
 
 aws-sdk@^2.901.0:
-  version "2.1100.0"
-  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.1100.0.tgz#20bbabc12fbc316067ba02af66bf371a455af9e3"
-  integrity sha512-StLSQCYFmFPxjoMntIb+8jUZ0vzmq3xkrwG5e/4qU1bSGWCmhhjvz6c+4j38AnIy8MFV1+tV8RArbhLUEV2dGw==
+  version "2.1120.0"
+  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.1120.0.tgz#a299f595448019c4b4b69fa9aa57fd58658497a6"
+  integrity sha512-3cKXUFxC3CDBbJ/JlXEKmJZKFZhqGii7idGaLxvV5/OzqEDUstYkHGX3TCJdQRHrRwpFvRVOekXSwLxBltqXuQ==
   dependencies:
     buffer "4.9.2"
     events "1.1.1"
@@ -3949,6 +3953,11 @@ buffer-from@1.1.1:
   resolved "https://registry.yarnpkg.com/buffer-from/-/buffer-from-1.1.1.tgz#32713bc028f75c02fdb710d7c7bcec1f2c6070ef"
   integrity sha512-MQcXEUbCKtEo7bhqEs6560Hyd4XaovZlO/k9V3hjVUF/zwW7KBVdSK4gIt/bzwS9MbR5qob+F5jusZsb0YQK2A==
 
+buffer-from@1.1.2:
+  version "1.1.2"
+  resolved "https://registry.yarnpkg.com/buffer-from/-/buffer-from-1.1.2.tgz#2b146a6fd72e80b4f55d255f35ed59a3a9a41bd5"
+  integrity sha512-E+XQCRwSbaaiChtv6k6Dwgc+bx+Bs6vuKJHHl5kox/BaKbhiXzqQOwK4cO22yElGp2OCmjwVhT3HmxgyPGnJfQ==
+
 buffer-writer@2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/buffer-writer/-/buffer-writer-2.0.0.tgz#ce7eb81a38f7829db09c873f2fbb792c0c98ec04"
@@ -4279,9 +4288,9 @@ codemirror-spell-checker@1.1.2:
     typo-js "*"
 
 codemirror@^5.63.1:
-  version "5.65.2"
-  resolved "https://registry.yarnpkg.com/codemirror/-/codemirror-5.65.2.tgz#5799a70cb3d706e10f60e267245e3a75205d3dd9"
-  integrity sha512-SZM4Zq7XEC8Fhroqe3LxbEEX1zUPWH1wMr5zxiBuiUF64iYOUH/JI88v4tBag8MiBS8B8gRv8O1pPXGYXQ4ErA==
+  version "5.65.3"
+  resolved "https://registry.yarnpkg.com/codemirror/-/codemirror-5.65.3.tgz#2d029930d5a293bc5fb96ceea64654803c0d4ac7"
+  integrity sha512-kCC0iwGZOVZXHEKW3NDTObvM7pTIyowjty4BUqeREROc/3I6bWbgZDA3fGDwlA+rbgRjvnRnfqs9SfXynel1AQ==
 
 collect-v8-coverage@^1.0.0:
   version "1.0.1"
@@ -4989,9 +4998,9 @@ doctrine@3.0.0, doctrine@^3.0.0:
     esutils "^2.0.2"
 
 dom-serializer@^1.0.1:
-  version "1.3.2"
-  resolved "https://registry.yarnpkg.com/dom-serializer/-/dom-serializer-1.3.2.tgz#6206437d32ceefaec7161803230c7a20bc1b4d91"
-  integrity sha512-5c54Bk5Dw4qAxNOI1pFEizPSjVsx5+bpJKmL2kPn8JhBUq2q09tTCa3mjijun2NfK78NMouDYNMBkOrPZiS+ig==
+  version "1.4.1"
+  resolved "https://registry.yarnpkg.com/dom-serializer/-/dom-serializer-1.4.1.tgz#de5d41b1aea290215dc45a6dae8adcf1d32e2d30"
+  integrity sha512-VHwB3KfrcOOkelEG2ZOfxqLZdfkil8PtJi4P8N2MMXucZq2yLp75ClViUlOVwyoHEDjYU433Aq+5zWP61+RGag==
   dependencies:
     domelementtype "^2.0.1"
     domhandler "^4.2.0"
@@ -5003,9 +5012,9 @@ dom-walk@^0.1.0:
   integrity sha512-6QvTW9mrGeIegrFXdtQi9pk7O/nSK6lSdXW2eqUspN5LWD7UTji2Fqw5V2YLjBpHEoU9Xl/eUWNpDeZvoyOv2w==
 
 domelementtype@^2.0.1, domelementtype@^2.2.0:
-  version "2.2.0"
-  resolved "https://registry.yarnpkg.com/domelementtype/-/domelementtype-2.2.0.tgz#9a0b6c2782ed6a1c7323d42267183df9bd8b1d57"
-  integrity sha512-DtBMo82pv1dFtUmHyr48beiuq792Sxohr+8Hm9zoxklYPfa6n0Z3Byjj2IV7bmr2IyqClnqEQhfgHJJ5QF0R5A==
+  version "2.3.0"
+  resolved "https://registry.yarnpkg.com/domelementtype/-/domelementtype-2.3.0.tgz#5c45e8e869952626331d7aab326d01daf65d589d"
+  integrity sha512-OLETBj6w0OsagBwdXnPdN0cnMfF9opN69co+7ZrbfPGrdpPVNBUj02spi6B1N7wChLQiPn4CSH/zJvXw56gmHw==
 
 domexception@^1.0.1:
   version "1.0.1"
@@ -5921,6 +5930,13 @@ fetch-cookie@0.10.1:
   version "0.10.1"
   resolved "https://registry.yarnpkg.com/fetch-cookie/-/fetch-cookie-0.10.1.tgz#5ea88f3d36950543c87997c27ae2aeafb4b5c4d4"
   integrity sha512-beB+VEd4cNeVG1PY+ee74+PkuCQnik78pgLi5Ah/7qdUfov8IctU0vLUbBT8/10Ma5GMBeI4wtxhGrEfKNYs2g==
+  dependencies:
+    tough-cookie "^2.3.3 || ^3.0.1 || ^4.0.0"
+
+fetch-cookie@0.11.0:
+  version "0.11.0"
+  resolved "https://registry.yarnpkg.com/fetch-cookie/-/fetch-cookie-0.11.0.tgz#e046d2abadd0ded5804ce7e2cae06d4331c15407"
+  integrity sha512-BQm7iZLFhMWFy5CZ/162sAGjBfdNWb7a8LEqqnzsHFhxT/X/SVj/z2t2nu3aJvjlbQkrAlTUApplPRjWyH4mhA==
   dependencies:
     tough-cookie "^2.3.3 || ^3.0.1 || ^4.0.0"
 
@@ -8987,9 +9003,9 @@ lcid@^2.0.0:
     invert-kv "^2.0.0"
 
 leaflet@^1.7.1:
-  version "1.7.1"
-  resolved "https://registry.yarnpkg.com/leaflet/-/leaflet-1.7.1.tgz#10d684916edfe1bf41d688a3b97127c0322a2a19"
-  integrity sha512-/xwPEBidtg69Q3HlqPdU3DnrXQOvQU/CCHA1tcDQVzOwm91YMYaILjNp7L4Eaw5Z4sOYdbBz6koWyibppd8Zqw==
+  version "1.8.0"
+  resolved "https://registry.yarnpkg.com/leaflet/-/leaflet-1.8.0.tgz#4615db4a22a304e8e692cae9270b983b38a2055e"
+  integrity sha512-gwhMjFCQiYs3x/Sf+d49f10ERXaEFCPr+nVTryhAW8DWbMGqJqt9G4XuIaHmFW08zYvhgdzqXGr8AlW8v8dQkA==
 
 left-pad@^1.3.0:
   version "1.3.0"
@@ -9071,10 +9087,28 @@ level@6.0.0:
     leveldown "^5.4.0"
     opencollective-postinstall "^2.0.0"
 
+level@6.0.1:
+  version "6.0.1"
+  resolved "https://registry.yarnpkg.com/level/-/level-6.0.1.tgz#dc34c5edb81846a6de5079eac15706334b0d7cd6"
+  integrity sha512-psRSqJZCsC/irNhfHzrVZbmPYXDcEYhA5TVNwr+V92jF44rbf86hqGp8fiT702FyiArScYIlPSBTDUASCVNSpw==
+  dependencies:
+    level-js "^5.0.0"
+    level-packager "^5.1.0"
+    leveldown "^5.4.0"
+
 leveldown@5.4.1, leveldown@^5.4.0:
   version "5.4.1"
   resolved "https://registry.yarnpkg.com/leveldown/-/leveldown-5.4.1.tgz#83a8fdd9bb52b1ed69be2ef59822b6cdfcdb51ec"
   integrity sha512-3lMPc7eU3yj5g+qF1qlALInzIYnkySIosR1AsUKFjL9D8fYbTLuENBAeDRZXIG4qeWOAyqRItOoLu2v2avWiMA==
+  dependencies:
+    abstract-leveldown "~6.2.1"
+    napi-macros "~2.0.0"
+    node-gyp-build "~4.1.0"
+
+leveldown@5.6.0:
+  version "5.6.0"
+  resolved "https://registry.yarnpkg.com/leveldown/-/leveldown-5.6.0.tgz#16ba937bb2991c6094e13ac5a6898ee66d3eee98"
+  integrity sha512-iB8O/7Db9lPaITU1aA2txU/cBEXAt4vWwKQRrrWuS6XDgbP4QZGj9BL2aNbwb002atoQ/lIotJkfyzz+ygQnUQ==
   dependencies:
     abstract-leveldown "~6.2.1"
     napi-macros "~2.0.0"
@@ -9476,9 +9510,9 @@ markdown-it@^12.2.0:
     uc.micro "^1.0.5"
 
 marked@^4.0.10:
-  version "4.0.12"
-  resolved "https://registry.yarnpkg.com/marked/-/marked-4.0.12.tgz#2262a4e6fd1afd2f13557726238b69a48b982f7d"
-  integrity sha512-hgibXWrEDNBWgGiK18j/4lkS6ihTe9sxtV4Q1OQppb/0zzyPSzoFANBa5MfsG/zgsWklmNnhm0XACZOH/0HBiQ==
+  version "4.0.14"
+  resolved "https://registry.yarnpkg.com/marked/-/marked-4.0.14.tgz#7a3a5fa5c80580bac78c1ed2e3b84d7bd6fc3870"
+  integrity sha512-HL5sSPE/LP6U9qKgngIIPTthuxC0jrfxpYMZ3LdGDD3vTnLs59m2Z7r6+LNDR3ToqEQdkKd6YaaEfJhodJmijQ==
 
 md5@^2.3.0:
   version "2.3.0"
@@ -9776,9 +9810,9 @@ nanoid@^2.1.0:
   integrity sha512-s/snB+WGm6uwi0WjsZdaVcuf3KJXlfGl2LcxgwkEwJF0D/BWzVWAZW/XY4bFaiR7s0Jk3FPvlnepg1H1b1UwlA==
 
 nanoid@^3.3.1:
-  version "3.3.2"
-  resolved "https://registry.yarnpkg.com/nanoid/-/nanoid-3.3.2.tgz#c89622fafb4381cd221421c69ec58547a1eec557"
-  integrity sha512-CuHBogktKwpm5g2sRgv83jEy2ijFzBwMoYA60orPDR7ynsLijJDqgsi4RDGj3OJpy3Ieb+LYwiRmIOGyytgITA==
+  version "3.3.3"
+  resolved "https://registry.yarnpkg.com/nanoid/-/nanoid-3.3.3.tgz#fd8e8b7aa761fe807dba2d1b98fb7241bb724a25"
+  integrity sha512-p1sjXuopFs0xg+fPASzQ28agW1oHD7xDsd9Xkf3T15H3c/cifrFHVwrh74PdoklAPi+i7MdRsE47vm2r6JoB+w==
 
 nanomatch@^1.2.9:
   version "1.2.13"
@@ -10740,6 +10774,20 @@ posthog-node@^1.1.4:
     remove-trailing-slash "^0.1.1"
     uuid "^8.3.2"
 
+posthog-node@^1.3.0:
+  version "1.3.0"
+  resolved "https://registry.yarnpkg.com/posthog-node/-/posthog-node-1.3.0.tgz#804ed2f213a2f05253f798bf9569d55a9cad94f7"
+  integrity sha512-2+VhqiY/rKIqKIXyvemBFHbeijHE25sP7eKltnqcFqAssUE6+sX6vusN9A4luzToOqHQkUZexiCKxvuGagh7JA==
+  dependencies:
+    axios "0.24.0"
+    axios-retry "^3.1.9"
+    component-type "^1.2.1"
+    join-component "^1.1.0"
+    md5 "^2.3.0"
+    ms "^2.1.3"
+    remove-trailing-slash "^0.1.1"
+    uuid "^8.3.2"
+
 pouch-stream@^0.4.0:
   version "0.4.1"
   resolved "https://registry.yarnpkg.com/pouch-stream/-/pouch-stream-0.4.1.tgz#0c6d8475c9307677627991a2f079b301c3b89bdd"
@@ -10904,7 +10952,7 @@ pouchdb-promise@^6.0.4:
   dependencies:
     lie "3.1.1"
 
-pouchdb-replication-stream@1.2.9:
+pouchdb-replication-stream@1.2.9, pouchdb-replication-stream@^1.2.9:
   version "1.2.9"
   resolved "https://registry.yarnpkg.com/pouchdb-replication-stream/-/pouchdb-replication-stream-1.2.9.tgz#aa4fa5d8f52df4825392f18e07c7e11acffc650a"
   integrity sha1-qk+l2PUt9IJTkvGOB8fhGs/8ZQo=
@@ -10963,6 +11011,32 @@ pouchdb@7.2.1:
     spark-md5 "3.0.0"
     through2 "3.0.1"
     uuid "3.3.3"
+    vuvuzela "1.0.3"
+
+pouchdb@7.3.0:
+  version "7.3.0"
+  resolved "https://registry.yarnpkg.com/pouchdb/-/pouchdb-7.3.0.tgz#440fbef12dfd8f9002320802528665e883a3b7f8"
+  integrity sha512-OwsIQGXsfx3TrU1pLruj6PGSwFH+h5k4hGNxFkZ76Um7/ZI8F5TzUHFrpldVVIhfXYi2vP31q0q7ot1FSLFYOw==
+  dependencies:
+    abort-controller "3.0.0"
+    argsarray "0.0.1"
+    buffer-from "1.1.2"
+    clone-buffer "1.0.0"
+    double-ended-queue "2.1.0-0"
+    fetch-cookie "0.11.0"
+    immediate "3.3.0"
+    inherits "2.0.4"
+    level "6.0.1"
+    level-codec "9.0.2"
+    level-write-stream "1.0.0"
+    leveldown "5.6.0"
+    levelup "4.4.0"
+    ltgt "2.2.1"
+    node-fetch "2.6.7"
+    readable-stream "1.1.14"
+    spark-md5 "3.0.2"
+    through2 "3.0.2"
+    uuid "8.3.2"
     vuvuzela "1.0.3"
 
 prelude-ls@~1.1.2:
@@ -12149,6 +12223,11 @@ spark-md5@3.0.1:
   resolved "https://registry.yarnpkg.com/spark-md5/-/spark-md5-3.0.1.tgz#83a0e255734f2ab4e5c466e5a2cfc9ba2aa2124d"
   integrity sha512-0tF3AGSD1ppQeuffsLDIOWlKUd3lS92tFxcsrh5Pe3ZphhnoK+oXIBTzOAThZCiuINZLvpiLH/1VS1/ANEJVig==
 
+spark-md5@3.0.2:
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/spark-md5/-/spark-md5-3.0.2.tgz#7952c4a30784347abcee73268e473b9c0167e3fc"
+  integrity sha512-wcFzz9cDfbuqe0FZzfi2or1sgyIrsDwmPwfZC4hiNidPdPINjeUwNfv5kldczoEAcjl9Y1L3SM7Uz2PUEQzxQw==
+
 sparse-bitfield@^3.0.3:
   version "3.0.3"
   resolved "https://registry.yarnpkg.com/sparse-bitfield/-/sparse-bitfield-3.0.3.tgz#ff4ae6e68656056ba4b3e792ab3334d38273ca11"
@@ -12568,9 +12647,9 @@ svelte@^3.38.2:
   integrity sha512-4DrCEJoBvdR689efHNSxIQn2pnFwB7E7j2yLEJtHE/P8hxwZWIphCtJ8are7bjl/iVMlcEf5uh5pJ68IwR09vQ==
 
 svelte@^3.46.2:
-  version "3.46.4"
-  resolved "https://registry.yarnpkg.com/svelte/-/svelte-3.46.4.tgz#0c46bc4a3e20a2617a1b7dc43a722f9d6c084a38"
-  integrity sha512-qKJzw6DpA33CIa+C/rGp4AUdSfii0DOTCzj/2YpSKKayw5WGSS624Et9L1nU1k2OVRS9vaENQXp2CVZNU+xvIg==
+  version "3.47.0"
+  resolved "https://registry.yarnpkg.com/svelte/-/svelte-3.47.0.tgz#ba46fe4aea99fc650d6939c215cd4694f5325a19"
+  integrity sha512-4JaJp3HEoTCGARRWZQIZDUanhYv0iyoHikklVHVLH9xFE9db22g4TDv7CPeNA8HD1JgjXI1vlhR1JZvvhaTu2Q==
 
 svg.draggable.js@^2.2.2:
   version "2.2.2"
@@ -13405,7 +13484,7 @@ uuid@8.1.0:
   resolved "https://registry.yarnpkg.com/uuid/-/uuid-8.1.0.tgz#6f1536eb43249f473abc6bd58ff983da1ca30d8d"
   integrity sha512-CI18flHDznR0lq54xBycOVmphdCYnQLKn8abKn7PXUiKUGdEd+/l9LWNJmugXel4hXq7S+RMNl34ecyC9TntWg==
 
-uuid@^8.3.0, uuid@^8.3.2:
+uuid@8.3.2, uuid@^8.3.0, uuid@^8.3.2:
   version "8.3.2"
   resolved "https://registry.yarnpkg.com/uuid/-/uuid-8.3.2.tgz#80d5b5ced271bb9af6c445f21a1a04c606cefbe2"
   integrity sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==
