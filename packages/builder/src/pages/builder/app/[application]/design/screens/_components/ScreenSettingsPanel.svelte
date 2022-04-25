@@ -1,17 +1,21 @@
 <script>
+  import { selectedScreen } from "builderStore"
+  import SettingsPanel from "components/design/SettingsPanel/SettingsPanel.svelte"
   import { get } from "svelte/store"
   import { get as deepGet, setWith } from "lodash"
-  import { Input, DetailSummary, notifications } from "@budibase/bbui"
-  import PropertyControl from "./PropertyControls/PropertyControl.svelte"
-  import LayoutSelect from "./PropertyControls/LayoutSelect.svelte"
-  import RoleSelect from "./PropertyControls/RoleSelect.svelte"
-  import { currentAsset, store } from "builderStore"
+  import {
+    Input,
+    Layout,
+    Button,
+    Toggle,
+    Checkbox,
+    notifications,
+  } from "@budibase/bbui"
+  import PropertyControl from "components/design/PropertiesPanel/PropertyControls/PropertyControl.svelte"
+  import RoleSelect from "components/design/PropertiesPanel/PropertyControls/RoleSelect.svelte"
+  import { currentAsset, store, selectedAccessRole } from "builderStore"
   import { FrontendTypes } from "constants"
   import sanitizeUrl from "builderStore/store/screenTemplates/utils/sanitizeUrl"
-  import { store, selectedAccessRole } from "builderStore"
-
-  export let componentInstance
-  export let bindings
 
   let errors = {}
 
@@ -75,6 +79,13 @@
 
   const screenSettings = [
     {
+      key: "routing.homeScreen",
+      control: Checkbox,
+      props: {
+        text: "Set as home screen",
+      },
+    },
+    {
       key: "routing.route",
       label: "Route",
       control: Input,
@@ -104,8 +115,32 @@
         return null
       },
     },
-    { key: "layoutId", label: "Layout", control: LayoutSelect },
+    {
+      key: "showNavigation",
+      label: "Navigation",
+      control: Toggle,
+      props: {
+        text: "Show navigation",
+      },
+    },
   ]
 </script>
 
-{#if $store.currentView !== "component" && $currentAsset && $store.currentFrontEndType === FrontendTypes.SCREEN}{/if}
+<SettingsPanel
+  title={$selectedScreen?.routing.route}
+  icon={$selectedScreen.routing.route === "/" ? "Home" : "WebPage"}
+>
+  <Layout gap="S" paddingX="L" paddingY="XL">
+    {#each screenSettings as def (def.key)}
+      <PropertyControl
+        control={def.control}
+        label={def.label}
+        key={def.key}
+        value={deepGet($currentAsset, def.key)}
+        onChange={val => setAssetProps(def.key, val, def.parser, def.validate)}
+        props={{ ...def.props, error: errors[def.key] }}
+      />
+    {/each}
+    <Button cta>View components</Button>
+  </Layout>
+</SettingsPanel>
