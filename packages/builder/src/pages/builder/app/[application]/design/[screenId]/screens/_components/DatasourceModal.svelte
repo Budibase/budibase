@@ -1,6 +1,12 @@
 <script>
   import { store } from "builderStore"
-  import { ModalContent, Layout, notifications, Icon } from "@budibase/bbui"
+  import {
+    ModalContent,
+    Layout,
+    notifications,
+    Icon,
+    Body,
+  } from "@budibase/bbui"
   import { tables, datasources } from "stores/backend"
   import getTemplates from "builderStore/store/screenTemplates"
   import ICONS from "components/backend/DatasourceNavigator/icons"
@@ -70,17 +76,18 @@
     disabled={!selectedScreens.length}
     size="L"
   >
+    <Body size="S">
+      Select which data source you would like to use to create your screens
+    </Body>
     <Layout noPadding gap="S">
       {#each filteredSources as datasource}
         <div class="data-source-wrap">
           <div class="data-source-header">
-            <div class="datasource-icon">
-              <svelte:component
-                this={ICONS[datasource.source]}
-                height="24"
-                width="24"
-              />
-            </div>
+            <svelte:component
+              this={ICONS[datasource.source]}
+              height="24"
+              width="24"
+            />
             <div class="data-source-name">{datasource.name}</div>
           </div>
           {#if Array.isArray(datasource.entities)}
@@ -153,19 +160,21 @@
   .data-source-wrap {
     padding-bottom: var(--spectrum-alias-item-padding-s);
     display: grid;
-    grid-gap: var(--spacing-xs);
+    grid-gap: var(--spacing-s);
   }
 
   .data-source-header {
     display: flex;
     align-items: center;
+    gap: var(--spacing-m);
+    padding-bottom: var(--spacing-xs);
   }
 
   .data-source-entry {
     cursor: pointer;
     grid-gap: var(--spectrum-alias-grid-margin-xsmall);
     padding: var(--spectrum-alias-item-padding-s);
-    background: var(--spectrum-alias-background-color-primary);
+    background: var(--spectrum-alias-background-color-secondary);
     transition: 0.3s all;
     border: 1px solid var(--spectrum-global-color-gray-300);
     border-radius: 4px;
@@ -177,11 +186,6 @@
   .data-source-entry:hover,
   .selected {
     background: var(--spectrum-alias-background-color-tertiary);
-  }
-
-  .data-source-name {
-    padding: var(--spectrum-alias-item-padding-s);
-    min-height: var(--spectrum-icon-size-s);
   }
 
   .data-source-entry .data-source-check {

@@ -7,6 +7,7 @@
   export let onConfirm
   export let onCancel
   export let screenUrl
+  export let screenName
   export let confirmText = "Continue"
 
   let routeError
@@ -44,6 +45,7 @@
   const confirmScreenDetails = async () => {
     await onConfirm({
       screenUrl,
+      screenName,
     })
   }
 </script>

@@ -107,7 +107,7 @@
     cursor: pointer;
     grid-gap: var(--spectrum-alias-grid-margin-xsmall);
     padding: var(--spectrum-alias-item-padding-s);
-    background: var(--spectrum-alias-background-color-primary);
+    background: var(--spectrum-alias-background-color-secondary);
     transition: 0.3s all;
     border: 1px solid var(--spectrum-global-color-gray-300);
     border-radius: 4px;
@@ -122,6 +122,9 @@
   }
   .screen-type-wrap .screen-type-text {
     padding-left: var(--spectrum-alias-item-padding-xl);
+  }
+  .screen-type-wrap .screen-type-text :global(h1) {
+    padding-bottom: var(--spacing-xs);
   }
   .screen-type-wrap :global(.spectrum-Icon) {
     min-width: var(--spectrum-icon-size-m);
