@@ -5,17 +5,15 @@ if [[ -z "${CI}" ]]; then
   exit 0
 fi
 
-# Release pro as same version as budibase
+#############################################
+#                   SETUP                   #
+#############################################
+
+# Release pro with same version as budibase
 VERSION=$(jq -r .version lerna.json)
 echo "Version: $VERSION"
 COMMAND=$1
 echo "Command: $COMMAND"
-
-# Go to pro package
-cd ../budibase-pro
-
-# Install NPM credentials
-echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} >> .npmrc 
 
 # Determine tag to use
 TAG=""
@@ -27,24 +25,65 @@ fi
 
 echo "Releasing version $VERSION"
 echo "Releasing tag $TAG"
+
+#############################################
+#                PRE-PUBLISH                #
+#############################################
+
+# Go to pro repo root
+cd ../budibase-pro
+
+# Install NPM credentials
+echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} >> .npmrc 
+
+# Sync backend-core version in packages/pro/package.json
+# Ensures pro does not use out of date dependency
+cd packages/pro
+jq '.dependencies."@budibase/backend-core"="'$VERSION'"' package.json > package.json.tmp && mv package.json.tmp package.json
+
+# Go back to pro repo root
+cd -
+
+#############################################
+#                  PUBLISH                  #
+#############################################
+
 lerna publish $VERSION --yes --force-publish --dist-tag $TAG
 
-# reset main and types to point to src for dev
+#############################################
+#              POST-PUBLISH - PRO           #
+#############################################
+
+# Revert build changes on packages/pro/package.json
 cd packages/pro
 jq '.main = "src/index.ts" | .types = "src/index.ts"' package.json > package.json.tmp && mv package.json.tmp package.json
+
+# Go back to pro repo root
 cd -
+
+# Commit and push changes
 git add packages/pro/package.json
-git commit -m 'Prep dev'
+git commit -m "Prep next development iteration"
 git push 
 
+#############################################
+#            POST-PUBLISH - BUDIBASE        #
+#############################################
+
+# Go to budibase repo root
 cd ../budibase
 
-if [[ $COMMAND == "develop" ]]; then
-  # Pin pro version for develop container build
-  echo "Pinning pro version"
-  cd packages/server
-  jq '.dependencies."@budibase/pro"="'$VERSION'"' package.json > package.json.tmp && mv package.json.tmp package.json
-  cd -
-  cd packages/worker
-  jq '.dependencies."@budibase/pro"="'$VERSION'"' package.json > package.json.tmp && mv package.json.tmp package.json
-fi
+# Update pro version in packages/server/package.json
+cd packages/server
+jq '.dependencies."@budibase/pro"="'$VERSION'"' package.json > package.json.tmp && mv package.json.tmp package.json
+
+# Go back to budibase repo root
+cd -
+
+# Update pro version in packages/worker/package.json
+cd packages/worker
+jq '.dependencies."@budibase/pro"="'$VERSION'"' package.json > package.json.tmp && mv package.json.tmp package.json
+
+# Commit and push changes
+git commit -m "Update pro version to $VERSION"
+git push
