@@ -54,7 +54,7 @@ exports.destroy = async ctx => {
 }
 
 exports.buildSchema = async ctx => {
-  updateAppId(ctx.params.instance)
+  await updateAppId(ctx.params.instance)
   const db = getAppDB()
   const webhook = await db.get(ctx.params.id)
   webhook.bodySchema = toJsonSchema(ctx.request.body)
@@ -80,7 +80,7 @@ exports.buildSchema = async ctx => {
 
 exports.trigger = async ctx => {
   const prodAppId = getProdAppID(ctx.params.instance)
-  updateAppId(prodAppId)
+  await updateAppId(prodAppId)
   try {
     const db = getAppDB()
     const webhook = await db.get(ctx.params.id)

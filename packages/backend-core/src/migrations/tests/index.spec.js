@@ -1,7 +1,7 @@
 require("../../tests/utilities/dbConfig")
 
 const { runMigrations, getMigrationsDoc } = require("../index")
-const CouchDB = require("../../db").getCouch()
+const { dangerousGetDB } = require("../../db")
 const {
   StaticDatabases,
 } = require("../../db/utils")
@@ -20,7 +20,7 @@ describe("migrations", () => {
   }]
 
   beforeEach(() => {
-    db = new CouchDB(StaticDatabases.GLOBAL.name)
+    db = dangerousGetDB(StaticDatabases.GLOBAL.name)
   })
 
   afterEach(async () => {
@@ -29,7 +29,7 @@ describe("migrations", () => {
   })
 
   const migrate = () => {
-    return runMigrations(CouchDB, MIGRATIONS)
+    return runMigrations(MIGRATIONS)
   }
 
   it("should run a new migration", async () => {

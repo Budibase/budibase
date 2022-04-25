@@ -10,7 +10,7 @@ const { options } = require("./middleware/passport/jwt")
 const { queryGlobalView } = require("./db/views")
 const { Headers, UserStatus, Cookies, MAX_VALID_DATE } = require("./constants")
 const {
-  getGlobalDB,
+  doWithGlobalDB,
   updateTenantId,
   getTenantUser,
   tryAddTenant,
@@ -188,82 +188,83 @@ exports.saveUser = async (
   // need to set the context for this request, as specified
   updateTenantId(tenantId)
   // specify the tenancy incase we're making a new admin user (public)
-  const db = getGlobalDB(tenantId)
-  let { email, password, _id } = user
-  // make sure another user isn't using the same email
-  let dbUser
-  if (email) {
-    // check budibase users inside the tenant
-    dbUser = await exports.getGlobalUserByEmail(email)
-    if (dbUser != null && (dbUser._id !== _id || Array.isArray(dbUser))) {
-      throw `Email address ${email} already in use.`
-    }
-
-    // check budibase users in other tenants
-    if (env.MULTI_TENANCY) {
-      const tenantUser = await getTenantUser(email)
-      if (tenantUser != null && tenantUser.tenantId !== tenantId) {
+  return doWithGlobalDB(tenantId, async db => {
+    let { email, password, _id } = user
+    // make sure another user isn't using the same email
+    let dbUser
+    if (email) {
+      // check budibase users inside the tenant
+      dbUser = await exports.getGlobalUserByEmail(email)
+      if (dbUser != null && (dbUser._id !== _id || Array.isArray(dbUser))) {
         throw `Email address ${email} already in use.`
       }
-    }
 
-    // check root account users in account portal
-    if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
-      const account = await accounts.getAccount(email)
-      if (account && account.verified && account.tenantId !== tenantId) {
-        throw `Email address ${email} already in use.`
+      // check budibase users in other tenants
+      if (env.MULTI_TENANCY) {
+        const tenantUser = await getTenantUser(email)
+        if (tenantUser != null && tenantUser.tenantId !== tenantId) {
+          throw `Email address ${email} already in use.`
+        }
       }
-    }
-  } else {
-    dbUser = await db.get(_id)
-  }
 
-  // get the password, make sure one is defined
-  let hashedPassword
-  if (password) {
-    hashedPassword = hashPassword ? await hash(password) : password
-  } else if (dbUser) {
-    hashedPassword = dbUser.password
-  } else if (requirePassword) {
-    throw "Password must be specified."
-  }
-
-  _id = _id || generateGlobalUserID()
-  user = {
-    createdAt: Date.now(),
-    ...dbUser,
-    ...user,
-    _id,
-    password: hashedPassword,
-    tenantId,
-  }
-  // make sure the roles object is always present
-  if (!user.roles) {
-    user.roles = {}
-  }
-  // add the active status to a user if its not provided
-  if (user.status == null) {
-    user.status = UserStatus.ACTIVE
-  }
-  try {
-    const response = await db.put({
-      password: hashedPassword,
-      ...user,
-    })
-    await tryAddTenant(tenantId, _id, email)
-    await userCache.invalidateUser(response.id)
-    return {
-      _id: response.id,
-      _rev: response.rev,
-      email,
-    }
-  } catch (err) {
-    if (err.status === 409) {
-      throw "User exists already"
+      // check root account users in account portal
+      if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
+        const account = await accounts.getAccount(email)
+        if (account && account.verified && account.tenantId !== tenantId) {
+          throw `Email address ${email} already in use.`
+        }
+      }
     } else {
-      throw err
+      dbUser = await db.get(_id)
     }
-  }
+
+    // get the password, make sure one is defined
+    let hashedPassword
+    if (password) {
+      hashedPassword = hashPassword ? await hash(password) : password
+    } else if (dbUser) {
+      hashedPassword = dbUser.password
+    } else if (requirePassword) {
+      throw "Password must be specified."
+    }
+
+    _id = _id || generateGlobalUserID()
+    user = {
+      createdAt: Date.now(),
+      ...dbUser,
+      ...user,
+      _id,
+      password: hashedPassword,
+      tenantId,
+    }
+    // make sure the roles object is always present
+    if (!user.roles) {
+      user.roles = {}
+    }
+    // add the active status to a user if its not provided
+    if (user.status == null) {
+      user.status = UserStatus.ACTIVE
+    }
+    try {
+      const response = await db.put({
+        password: hashedPassword,
+        ...user,
+      })
+      await tryAddTenant(tenantId, _id, email)
+      await userCache.invalidateUser(response.id)
+      return {
+        _id: response.id,
+        _rev: response.rev,
+        email,
+      }
+    } catch (err) {
+      if (err.status === 409) {
+        throw "User exists already"
+      } else {
+        throw err
+      }
+    }
+  })
 }
 
 /**

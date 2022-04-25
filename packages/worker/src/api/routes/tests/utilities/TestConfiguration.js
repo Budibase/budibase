@@ -1,3 +1,4 @@
+require("../../../../db").init()
 const env = require("../../../../environment")
 const controllers = require("./controllers")
 const supertest = require("supertest")
@@ -8,15 +9,12 @@ const { getGlobalUserByEmail } = require("@budibase/backend-core/utils")
 const { createASession } = require("@budibase/backend-core/sessions")
 const { newid } = require("@budibase/backend-core/src/hashing")
 const { TENANT_ID, CSRF_TOKEN } = require("./structures")
-const core = require("@budibase/backend-core")
-const CouchDB = require("../../../../db")
 const { doInTenant } = require("@budibase/backend-core/tenancy")
-core.init(CouchDB)
 
 class TestConfiguration {
   constructor(openServer = true) {
     if (openServer) {
-      env.PORT = 4003
+      env.PORT = 4012
       this.server = require("../../../../index")
       // we need the request for logging in, involves cookies, hard to fake
       this.request = supertest(this.server)

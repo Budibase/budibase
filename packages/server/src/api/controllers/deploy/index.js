@@ -94,18 +94,16 @@ async function initDeployedApp(prodAppId) {
 }
 
 async function deployApp(deployment) {
+  let replication
   try {
     const appId = getAppId()
     const devAppId = getDevelopmentAppID(appId)
     const productionAppId = getProdAppID(appId)
-
-    const replication = new Replication({
+    replication = new Replication({
       source: devAppId,
       target: productionAppId,
     })
-
     console.log("Replication object created")
-
     await replication.replicate()
     console.log("replication complete.. replacing app meta doc")
     const db = getProdAppDB()
@@ -126,6 +124,8 @@ async function deployApp(deployment) {
       ...err,
       message: `Deployment Failed: ${err.message}`,
     }
+  } finally {
+    await replication.close()
   }
 }
 

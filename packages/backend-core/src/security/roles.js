@@ -7,7 +7,7 @@ const {
   SEPARATOR,
 } = require("../db/utils")
 const { getAppDB } = require("../context")
-const { getDB } = require("../db")
+const { doWithDB } = require("../db")
 
 const BUILTIN_IDS = {
   ADMIN: "ADMIN",
@@ -199,43 +199,49 @@ exports.checkForRoleResourceArray = (rolePerms, resourceId) => {
  * @return {Promise<object[]>} An array of the role objects that were found.
  */
 exports.getAllRoles = async appId => {
-  const db = appId ? getDB(appId) : getAppDB()
-  const body = await db.allDocs(
-    getRoleParams(null, {
-      include_docs: true,
-    })
-  )
-  let roles = body.rows.map(row => row.doc)
-  const builtinRoles = exports.getBuiltinRoles()
+  if (appId) {
+    return doWithDB(appId, internal)
+  } else {
+    return internal(getAppDB())
+  }
+  async function internal(db) {
+    const body = await db.allDocs(
+      getRoleParams(null, {
+        include_docs: true,
+      })
+    )
+    let roles = body.rows.map(row => row.doc)
+    const builtinRoles = exports.getBuiltinRoles()
 
-  // need to combine builtin with any DB record of them (for sake of permissions)
-  for (let builtinRoleId of EXTERNAL_BUILTIN_ROLE_IDS) {
-    const builtinRole = builtinRoles[builtinRoleId]
-    const dbBuiltin = roles.filter(
-      dbRole => exports.getExternalRoleID(dbRole._id) === builtinRoleId
-    )[0]
-    if (dbBuiltin == null) {
-      roles.push(builtinRole || builtinRoles.BASIC)
-    } else {
-      // remove role and all back after combining with the builtin
-      roles = roles.filter(role => role._id !== dbBuiltin._id)
-      dbBuiltin._id = exports.getExternalRoleID(dbBuiltin._id)
-      roles.push(Object.assign(builtinRole, dbBuiltin))
+    // need to combine builtin with any DB record of them (for sake of permissions)
+    for (let builtinRoleId of EXTERNAL_BUILTIN_ROLE_IDS) {
+      const builtinRole = builtinRoles[builtinRoleId]
+      const dbBuiltin = roles.filter(
+        dbRole => exports.getExternalRoleID(dbRole._id) === builtinRoleId
+      )[0]
+      if (dbBuiltin == null) {
+        roles.push(builtinRole || builtinRoles.BASIC)
+      } else {
+        // remove role and all back after combining with the builtin
+        roles = roles.filter(role => role._id !== dbBuiltin._id)
+        dbBuiltin._id = exports.getExternalRoleID(dbBuiltin._id)
+        roles.push(Object.assign(builtinRole, dbBuiltin))
+      }
     }
+    // check permissions
+    for (let role of roles) {
+      if (!role.permissions) {
+        continue
+      }
+      for (let resourceId of Object.keys(role.permissions)) {
+        role.permissions = exports.checkForRoleResourceArray(
+          role.permissions,
+          resourceId
+        )
+      }
+    }
+    return roles
   }
-  // check permissions
-  for (let role of roles) {
-    if (!role.permissions) {
-      continue
-    }
-    for (let resourceId of Object.keys(role.permissions)) {
-      role.permissions = exports.checkForRoleResourceArray(
-        role.permissions,
-        resourceId
-      )
-    }
-  }
-  return roles
 }
 
 /**
