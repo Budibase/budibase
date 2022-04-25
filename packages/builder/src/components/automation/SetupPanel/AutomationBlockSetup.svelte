@@ -193,6 +193,7 @@
             on:change={e => onChange(e, key)}
             {bindings}
             fillWidth
+            updateOnChange={false}
           />
         {:else}
           <DrawerBindableInput
@@ -270,6 +271,7 @@
             type={value.customType}
             on:change={e => onChange(e, key)}
             {bindings}
+            updateOnChange={false}
           />
         {:else}
           <div class="test">
