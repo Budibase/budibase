@@ -11,7 +11,7 @@
       {#if icon}
         <Icon name={icon} />
       {/if}
-      <div class="title">
+      <div class="title" {title}>
         <Heading size="XS">{title || ""}</Heading>
       </div>
     </div>
