@@ -28,7 +28,7 @@ export const API = createAPIClient({
   // Or we could check error.status and redirect to login on a 403 etc.
   onError: error => {
     const { status, method, url, message, handled } = error || {}
-    const ignoreErrorUrls = ["analytics", "/api/global/self"]
+    const ignoreErrorUrls = ["bbtel", "/api/global/self"]
 
     // Log any errors that we haven't manually handled
     if (!handled) {
