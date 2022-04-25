@@ -1,8 +1,6 @@
 <script>
   import ComponentSelectionList from "./ComponentSelectionList.svelte"
   import DevicePreviewSelect from "./DevicePreviewSelect.svelte"
-  import ThemeEditor from "./ThemeEditor.svelte"
-  import AppThemeSelect from "./AppThemeSelect.svelte"
   import AppPreview from "./AppPreview.svelte"
   import { store } from "builderStore"
 </script>
@@ -12,11 +10,6 @@
     <ComponentSelectionList />
     {#if $store.clientFeatures.devicePreview}
       <DevicePreviewSelect />
-    {/if}
-    {#if $store.clientFeatures.customThemes}
-      <ThemeEditor />
-    {:else if $store.clientFeatures.spectrumThemes}
-      <AppThemeSelect />
     {/if}
   </div>
   <div class="content">
