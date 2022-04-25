@@ -73,7 +73,7 @@
 </script>
 
 <div class="container">
-  <ActionButton icon="Brush" on:click={modal.show}>Theme</ActionButton>
+  <ActionButton icon="Brush" on:click={modal.show}>Edit theme</ActionButton>
 </div>
 <Modal bind:this={modal}>
   <ModalContent
