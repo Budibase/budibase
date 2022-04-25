@@ -19,7 +19,7 @@
   "exclude": [
     "node_modules",
     "**/*.json",
-    "**/*.spec.ts",
-    "**/*.spec.js"
+    "**/*.spec.js",
+    // "**/*.spec.ts" // don't exclude spec.ts files for editor support
   ]
 }

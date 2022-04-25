@@ -28,7 +28,7 @@ let inThread = false
 
 module.exports = {
   // important
-  PORT: process.env.PORT,
+  PORT: process.env.PORT || process.env.APP_PORT,
   JWT_SECRET: process.env.JWT_SECRET,
   COUCH_DB_URL: process.env.COUCH_DB_URL,
   MINIO_URL: process.env.MINIO_URL,
@@ -38,8 +38,6 @@ module.exports = {
   ENABLE_ANALYTICS: process.env.ENABLE_ANALYTICS,
   MINIO_ACCESS_KEY: process.env.MINIO_ACCESS_KEY,
   MINIO_SECRET_KEY: process.env.MINIO_SECRET_KEY,
-  USE_QUOTAS: process.env.USE_QUOTAS,
-  EXCLUDE_QUOTAS_TENANTS: process.env.EXCLUDE_QUOTAS_TENANTS,
   REDIS_URL: process.env.REDIS_URL,
   REDIS_PASSWORD: process.env.REDIS_PASSWORD,
   INTERNAL_API_KEY: process.env.INTERNAL_API_KEY,
@@ -59,6 +57,7 @@ module.exports = {
   LOG_LEVEL: process.env.LOG_LEVEL,
   AUTOMATION_DIRECTORY: process.env.AUTOMATION_DIRECTORY,
   AUTOMATION_BUCKET: process.env.AUTOMATION_BUCKET,
+  AUTOMATION_MAX_ITERATIONS: process.env.AUTOMATION_MAX_ITERATIONS,
   SENDGRID_API_KEY: process.env.SENDGRID_API_KEY,
   DYNAMO_ENDPOINT: process.env.DYNAMO_ENDPOINT,
   POSTHOG_TOKEN: process.env.POSTHOG_TOKEN,

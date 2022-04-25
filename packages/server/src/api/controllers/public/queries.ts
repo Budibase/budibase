@@ -1,5 +1,5 @@
 import { search as stringSearch } from "./utils"
-import { default as queryController } from "../query"
+import * as queryController from "../query"
 
 export async function search(ctx: any, next: any) {
   await queryController.fetch(ctx)

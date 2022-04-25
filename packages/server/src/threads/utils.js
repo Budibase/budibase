@@ -74,7 +74,6 @@ exports.hasExtraData = response => {
     !Array.isArray(response) &&
     response &&
     response.data != null &&
-    response &&
     response.info != null
   )
 }
