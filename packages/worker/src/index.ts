@@ -2,6 +2,7 @@
 import { Scope } from "@sentry/node"
 import { Event } from "@sentry/types/dist/event"
 import Application from "koa"
+import { bootstrap } from "global-agent"
 
 const env = require("./environment")
 const CouchDB = require("./db")
@@ -16,6 +17,9 @@ const http = require("http")
 const api = require("./api")
 const redis = require("./utilities/redis")
 const Sentry = require("@sentry/node")
+
+// this will setup http and https proxies form env variables
+bootstrap()
 
 const app: Application = new Koa()
 

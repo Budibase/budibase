@@ -25,9 +25,11 @@
 </script>
 
 <div
+  class="icon"
   on:mouseover={() => (showTooltip = true)}
   on:focus={() => (showTooltip = true)}
   on:mouseleave={() => (showTooltip = false)}
+  on:click={() => (showTooltip = false)}
 >
   <svg
     on:click
@@ -45,13 +47,13 @@
   </svg>
   {#if tooltip && showTooltip}
     <div class="tooltip" in:fade={{ duration: 130, delay: 250 }}>
-      <Tooltip textWrapping={true} direction={"bottom"} text={tooltip} />
+      <Tooltip textWrapping direction="bottom" text={tooltip} />
     </div>
   {/if}
 </div>
 
 <style>
-  div {
+  .icon {
     position: relative;
     display: grid;
     place-items: center;
@@ -75,8 +77,10 @@
     position: absolute;
     pointer-events: none;
     left: 50%;
-    top: 100%;
-    white-space: nowrap;
+    top: calc(100% + 4px);
+    width: 100vw;
+    max-width: 150px;
     transform: translateX(-50%);
+    text-align: center;
   }
 </style>

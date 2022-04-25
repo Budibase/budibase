@@ -23,6 +23,7 @@
   export let secondaryButtonText = undefined
   export let secondaryAction = undefined
   export let secondaryButtonWarning = false
+  export let dataCy = null
 
   const { hide, cancel } = getContext(Context.Modal)
   let loading = false
@@ -63,21 +64,24 @@
   role="dialog"
   tabindex="-1"
   aria-modal="true"
+  data-cy={dataCy}
 >
   <div class="spectrum-Dialog-grid">
-    {#if title}
-      <h1
-        class="spectrum-Dialog-heading spectrum-Dialog-heading--noHeader"
-        class:noDivider={!showDivider}
-        class:header-spacing={$$slots.header}
-      >
+    <h1
+      class="spectrum-Dialog-heading spectrum-Dialog-heading--noHeader"
+      class:noDivider={!showDivider}
+      class:header-spacing={$$slots.header}
+    >
+      {#if title}
         {title}
+      {:else if $$slots.header}
         <slot name="header" />
-      </h1>
-      {#if showDivider}
-        <Divider size="M" />
       {/if}
+    </h1>
+    {#if showDivider && (title || $$slots.header)}
+      <Divider size="M" />
     {/if}
+
     <!-- TODO: Remove content-grid class once Layout components are in bbui -->
     <section class="spectrum-Dialog-content content-grid">
       <slot />

@@ -8,6 +8,7 @@
   export let disabled = false
   export let validation
   export let extensions
+  export let onChange
 
   let fieldState
   let fieldApi
@@ -38,6 +39,13 @@
       return []
     }
   }
+
+  const handleChange = e => {
+    fieldApi.setValue(e.detail)
+    if (onChange) {
+      onChange({ value: e.detail })
+    }
+  }
 </script>
 
 <Field
@@ -55,9 +63,7 @@
       value={fieldState.value}
       disabled={fieldState.disabled}
       error={fieldState.error}
-      on:change={e => {
-        fieldApi.setValue(e.detail)
-      }}
+      on:change={handleChange}
       {processFiles}
       {handleFileTooLarge}
       {extensions}

@@ -1,5 +1,5 @@
 <script>
-  import { ModalContent, Icon, Detail, TextArea } from "@budibase/bbui"
+  import { ModalContent, Icon, Detail, TextArea, Label } from "@budibase/bbui"
 
   export let testResult
   export let isTrigger
@@ -10,11 +10,11 @@
 <ModalContent
   showCloseIcon={false}
   showConfirmButton={false}
-  title="Test Automation"
   cancelText="Close"
 >
-  <div slot="header">
-    <div style="float: right;">
+  <div slot="header" class="result-modal-header">
+    <span>Test Results</span>
+    <div>
       {#if isTrigger || testResult[0].outputs.success}
         <div class="iconSuccess">
           <Icon size="S" name="CheckmarkCircle" />
@@ -26,7 +26,18 @@
       {/if}
     </div>
   </div>
-
+  <span>
+    {#if testResult[0].outputs.iterations}
+      <div style="display: flex;">
+        <Icon name="Reuse" />
+        <div style="margin-left: 10px;">
+          <Label>
+            This loop ran {testResult[0].outputs.iterations} times.</Label
+          >
+        </div>
+      </div>
+    {/if}
+  </span>
   <div
     on:click={() => {
       inputToggled = !inputToggled
@@ -89,6 +100,14 @@
 </ModalContent>
 
 <style>
+  .result-modal-header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+  }
+
   .iconSuccess {
     color: var(--spectrum-global-color-green-600);
   }

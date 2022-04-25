@@ -75,8 +75,8 @@
     <div class="title">
       <div class="welcome">
         <Layout noPadding gap="XS">
-          <Heading size="M">{createAppTitle}</Heading>
-          <Body size="S">
+          <Heading size="L">{createAppTitle}</Heading>
+          <Body size="M">
             {welcomeBody}
           </Body>
         </Layout>
@@ -84,7 +84,7 @@
         <div class="buttons">
           <Button
             dataCy="create-app-btn"
-            size="L"
+            size="M"
             icon="Add"
             cta
             on:click={initiateAppCreation}
@@ -94,7 +94,7 @@
           <Button
             dataCy="import-app-btn"
             icon="Import"
-            size="L"
+            size="M"
             quiet
             secondary
             on:click={initiateAppImport}

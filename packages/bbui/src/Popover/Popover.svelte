@@ -10,6 +10,10 @@
   export let anchor
   export let align = "right"
   export let portalTarget
+  export let dataCy
+
+  let clazz
+  export { clazz as class }
 
   export const show = () => {
     dispatch("open")
@@ -37,8 +41,9 @@
       use:positionDropdown={{ anchor, align }}
       use:clickOutside={hide}
       on:keydown={handleEscape}
-      class="spectrum-Popover is-open"
+      class={"spectrum-Popover is-open " + (clazz || "")}
       role="presentation"
+      data-cy={dataCy}
     >
       <slot />
     </div>
