@@ -11,6 +11,7 @@
     Layout,
     Button,
     Heading,
+    Body,
   } from "@budibase/bbui"
   import DeployModal from "components/deploy/DeployModal.svelte"
   import RevertModal from "components/deploy/RevertModal.svelte"
@@ -33,7 +34,6 @@
   let promise = getPackage()
   let unpublishModal
   let publishPopover
-  let notPublishedPopover
 
   $: enrichedApps = enrichApps($apps, $auth.user)
   const enrichApps = (apps, user) => {
@@ -235,16 +235,17 @@
               <Icon
                 size="M"
                 hoverable
-                name={isPublished ? "Globe" : "GlobeStrike"}
+                name="Globe"
                 disabled={!isPublished}
+                tooltip="Your published app"
               />
             </div>
             <Layout gap="M">
-              <Heading size="XS">Your app is live!</Heading>
-              <div class="publish-popover-message">
+              <Heading size="XS">Your published app</Heading>
+              <Body size="S">
                 {#if isPublished}
                   {processStringSync(
-                    "Last Published: {{ duration time 'millisecond' }} ago",
+                    "Last published {{ duration time 'millisecond' }} ago",
                     {
                       time:
                         new Date().getTime() -
@@ -252,7 +253,7 @@
                     }
                   )}
                 {/if}
-              </div>
+              </Body>
               <div class="publish-popover-actions">
                 <Button
                   warning={true}
@@ -263,30 +264,19 @@
                 >
                   Unpublish
                 </Button>
-                <Button cta on:click={viewApp}>View App</Button>
+                <Button cta on:click={viewApp}>View app</Button>
               </div>
             </Layout>
           </PopoverMenu>
         {/if}
 
         {#if !isPublished}
-          <PopoverMenu bind:this={notPublishedPopover} align="right">
-            <div
-              slot="control"
-              class="icon app-status-icon"
-              on:mouseenter={() => {
-                notPublishedPopover.show()
-              }}
-              on:mouseout={() => {
-                notPublishedPopover.hide()
-              }}
-              on:blur={() => void 0}
-              disabled={true}
-            >
-              <Icon size="M" name={"GlobeStrike"} disabled={true} />
-            </div>
-            This app has not been published yet
-          </PopoverMenu>
+          <Icon
+            size="M"
+            name="GlobeStrike"
+            disabled
+            tooltip="Your app has not been published yet"
+          />
         {/if}
 
         <DeployModal onOk={completePublish} />
