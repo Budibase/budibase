@@ -60,5 +60,6 @@
     {bindings}
     fillWidth={true}
     allowJS={true}
+    updateOnChange={false}
   />
 {/if}
