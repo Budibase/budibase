@@ -86,6 +86,7 @@
   const addComponent = async item => {
     try {
       await store.actions.components.create(item.component)
+      $goto("../")
     } catch (error) {
       notifications.error("Error creating component")
     }
@@ -142,7 +143,7 @@
       <Body>Blocks are a collection of pre-built components</Body>
       <Layout noPadding gap="XS">
         {#each blocks as block}
-          <div class="component block">
+          <div class="component block" on:click={() => addComponent(block)}>
             <Icon name={block.icon} />
             <Body size="XS">{block.name}</Body>
           </div>
