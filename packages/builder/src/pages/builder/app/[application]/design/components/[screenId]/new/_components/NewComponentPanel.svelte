@@ -10,6 +10,7 @@
     Icon,
     Body,
     Divider,
+    notifications,
   } from "@budibase/bbui"
   import structure from "./componentStructure.json"
   import { store } from "builderStore"
@@ -75,7 +76,20 @@
     return structure
   }
 
-  const addComponent = () => {}
+  const isChildAllowed = ({ name }, selectedComponent) => {
+    const currentComponent = store.actions.components.getDefinition(
+      selectedComponent?._component
+    )
+    return currentComponent?.illegalChildren?.includes(name.toLowerCase())
+  }
+
+  const addComponent = async item => {
+    try {
+      await store.actions.components.create(item.component)
+    } catch (error) {
+      notifications.error("Error creating component")
+    }
+  }
 </script>
 
 <NavigationPanel
@@ -125,7 +139,7 @@
     {/each}
   {:else}
     <Layout paddingX="L" paddingY="XL" gap="S">
-      <Body size="S">Blocks are a collection of pre-built components</Body>
+      <Body>Blocks are a collection of pre-built components</Body>
       <Layout noPadding gap="XS">
         {#each blocks as block}
           <div class="component block">

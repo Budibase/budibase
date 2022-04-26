@@ -64,20 +64,11 @@
   {#each paths as path, idx (path)}
     <PathTree border={idx > 0} {path} route={routes[path]} />
   {/each}
-  {#if !paths.length}
-    <div class="empty">
-      There aren't any screens configured with this access role.
-    </div>
-  {/if}
+  {#if !paths.length}{/if}
 </div>
 
 <style>
   .root.has-screens {
     min-width: max-content;
-  }
-  div.empty {
-    font-size: var(--font-size-s);
-    color: var(--grey-5);
-    padding: var(--spacing-xs) var(--spacing-xl);
   }
 </style>

@@ -127,9 +127,6 @@
     <Tab title="Screens">
       <div class="tab-content-padding">
         <BBUILayout noPadding gap="XS" />
-        <div class="nav-items-container" bind:this={scrollRef}>
-          <ComponentNavigationTree />
-        </div>
       </div>
     </Tab>
     <Tab title="Layouts">
@@ -190,15 +187,6 @@
     gap: var(--spacing-xl);
   }
 
-  .nav-items-container {
-    border-top: var(--border-light);
-    margin: 0 calc(-1 * var(--spacing-xl));
-    padding: var(--spacing-m) 0;
-    flex: 1 1 auto;
-    overflow: auto;
-    height: 0;
-    position: relative;
-  }
   .nav-items-container--layouts {
     border-top: none;
     margin-top: calc(-1 * var(--spectrum-global-dimension-static-size-150));

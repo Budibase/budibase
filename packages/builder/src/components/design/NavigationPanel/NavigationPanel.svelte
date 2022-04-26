@@ -23,7 +23,9 @@
       </div>
     {/if}
   </div>
-  <slot />
+  <div class="body">
+    <slot />
+  </div>
 </div>
 
 <style>
@@ -35,7 +37,6 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
-    overflow: auto;
   }
   .navigation-panel.wide {
     width: 360px;
@@ -77,5 +78,14 @@
   }
   .add-button :global(svg) {
     fill: white;
+  }
+  .body {
+    flex: 1 1 auto;
+    overflow: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
   }
 </style>

@@ -9,15 +9,10 @@
 
   export let components = []
   export let currentComponent
-  export let onSelect = () => {}
   export let level = 0
   export let dragDropStore
 
   let closedNodes = {}
-
-  const selectComponent = component => {
-    store.actions.components.select(component)
-  }
 
   const dragstart = component => e => {
     e.dataTransfer.dropEffect = DropEffect.MOVE
@@ -86,7 +81,11 @@
 
 <ul>
   {#each components || [] as component, index (component._id)}
-    <li on:click|stopPropagation={() => selectComponent(component)}>
+    <li
+      on:click|stopPropagation={() => {
+        $store.selectedComponentId = component._id
+      }}
+    >
       {#if $dragDropStore?.targetComponent === component && $dragDropStore.dropPosition === DropPosition.ABOVE}
         <div
           on:drop={onDrop}
@@ -98,6 +97,7 @@
       {/if}
 
       <NavItem
+        scrollable
         draggable
         on:dragend={dragDropStore.actions.reset}
         on:dragstart={dragstart(component)}
@@ -117,7 +117,6 @@
         <svelte:self
           components={component._children}
           {currentComponent}
-          {onSelect}
           {dragDropStore}
           level={level + 1}
         />

@@ -1,5 +1,7 @@
 <script>
-  import ComponentListPanel from "./_components/ComponentListPanel.svelte"
+  import NewComponentPanel from "./_components/NewComponentPanel.svelte"
+  import NewComponentTargetPanel from "./_components/NewComponentTargetPanel.svelte"
 </script>
 
-<ComponentListPanel />
+<NewComponentPanel />
+<NewComponentTargetPanel />

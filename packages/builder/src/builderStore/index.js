@@ -2,7 +2,7 @@ import { getFrontendStore } from "./store/frontend"
 import { getAutomationStore } from "./store/automation"
 import { getThemeStore } from "./store/theme"
 import { derived, writable } from "svelte/store"
-import { FrontendTypes, LAYOUT_NAMES } from "../constants"
+import { LAYOUT_NAMES } from "../constants"
 import { findComponent, findComponentPath } from "./componentUtils"
 
 export const store = getFrontendStore()
@@ -13,31 +13,25 @@ export const selectedScreen = derived(store, $store => {
   return $store.screens.find(screen => screen._id === $store.selectedScreenId)
 })
 
-export const currentAsset = selectedScreen
-
 export const selectedComponent = derived(
-  [store, currentAsset],
-  ([$store, $currentAsset]) => {
-    if (!$currentAsset || !$store.selectedComponentId) {
+  [store, selectedScreen],
+  ([$store, $selectedScreen]) => {
+    if (!$selectedScreen || !$store.selectedComponentId) {
       return null
     }
-    return findComponent($currentAsset?.props, $store.selectedComponentId)
+    return findComponent($selectedScreen?.props, $store.selectedComponentId)
   }
 )
 
 export const selectedComponentPath = derived(
-  [store, currentAsset],
-  ([$store, $currentAsset]) => {
+  [store, selectedScreen],
+  ([$store, $selectedScreen]) => {
     return findComponentPath(
-      $currentAsset?.props,
+      $selectedScreen?.props,
       $store.selectedComponentId
     ).map(component => component._id)
   }
 )
-
-export const currentAssetName = derived(currentAsset, $currentAsset => {
-  return $currentAsset?.name
-})
 
 export const mainLayout = derived(store, $store => {
   return $store.layouts?.find(
@@ -47,4 +41,5 @@ export const mainLayout = derived(store, $store => {
 
 export const selectedAccessRole = writable("BASIC")
 
-export const screenSearchString = writable(null)
+// For compatibility
+export const currentAsset = selectedScreen
