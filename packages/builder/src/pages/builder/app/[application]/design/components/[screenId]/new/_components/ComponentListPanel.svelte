@@ -134,7 +134,9 @@
     gap: var(--spacing-s);
     padding-top: 4px;
     transition: background 130ms ease-out;
-    line-height: 1.2;
+  }
+  .component :global(.spectrum-Body) {
+    line-height: 1.2 !important;
   }
   .component:hover {
     cursor: pointer;
