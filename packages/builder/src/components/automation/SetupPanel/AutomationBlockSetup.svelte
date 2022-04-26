@@ -29,6 +29,7 @@
   import FilterDrawer from "components/design/PropertiesPanel/PropertyControls/FilterEditor/FilterDrawer.svelte"
   import { LuceneUtils } from "@budibase/frontend-core"
   import { getSchemaForTable } from "builderStore/dataBinding"
+  import { Utils } from "@budibase/frontend-core"
 
   export let block
   export let testData
@@ -53,7 +54,7 @@
   $: schema = getSchemaForTable(tableId, { searchableSchema: true }).schema
   $: schemaFields = Object.values(schema || {})
 
-  const onChange = async (e, key) => {
+  const onChange = Utils.sequential(async (e, key) => {
     try {
       if (isTestModal) {
         // Special case for webhook, as it requires a body, but the schema already brings back the body's contents
@@ -81,7 +82,7 @@
     } catch (error) {
       notifications.error("Error saving automation")
     }
-  }
+  })
 
   function getAvailableBindings(block, automation) {
     if (!block || !automation) {
