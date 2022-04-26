@@ -21,17 +21,23 @@
   )
 </script>
 
-<SettingsPanel
-  title={$selectedComponent._instanceName}
-  icon={componentDefinition.icon}
->
-  <ComponentSettingsSection
-    {componentInstance}
-    {componentDefinition}
-    {bindings}
-    {componentBindings}
-  />
-  <DesignSection {componentInstance} {componentDefinition} {bindings} />
-  <CustomStylesSection {componentInstance} {componentDefinition} {bindings} />
-  <ConditionalUISection {componentInstance} {componentDefinition} {bindings} />
-</SettingsPanel>
+{#if $selectedComponent}
+  <SettingsPanel
+    title={$selectedComponent._instanceName}
+    icon={componentDefinition.icon}
+  >
+    <ComponentSettingsSection
+      {componentInstance}
+      {componentDefinition}
+      {bindings}
+      {componentBindings}
+    />
+    <DesignSection {componentInstance} {componentDefinition} {bindings} />
+    <CustomStylesSection {componentInstance} {componentDefinition} {bindings} />
+    <ConditionalUISection
+      {componentInstance}
+      {componentDefinition}
+      {bindings}
+    />
+  </SettingsPanel>
+{/if}
