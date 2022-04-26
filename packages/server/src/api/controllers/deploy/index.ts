@@ -110,6 +110,9 @@ async function deployApp(deployment: any) {
     console.log("replication complete.. replacing app meta doc")
     const db = getProdAppDB()
     const appDoc = await db.get(DocumentTypes.APP_METADATA)
+
+    deployment.appUrl = appDoc.url
+
     appDoc.appId = productionAppId
     appDoc.instance._id = productionAppId
     await db.put(appDoc)
