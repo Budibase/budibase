@@ -269,8 +269,10 @@ function getContextDB(key, opts) {
   if (db && isEqual(opts, storedOpts)) {
     return db
   }
+
   const appId = exports.getAppId()
   let toUseAppId
+
   switch (key) {
     case ContextKeys.CURRENT_DB:
       toUseAppId = appId

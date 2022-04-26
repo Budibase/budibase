@@ -386,24 +386,32 @@ export const revertClient = async (ctx: any) => {
 }
 
 const destroyApp = async (ctx: any) => {
-  const db = getAppDB()
+  let appId = ctx.params.appId
+  let isUnpublish = ctx.query && ctx.query.unpublish
 
+  if (isUnpublish) {
+    appId = getProdAppID(appId)
+  }
+
+  const db = isUnpublish ? getProdAppDB() : getAppDB()
   const result = await db.destroy()
-  if (ctx.query?.unpublish) {
+
+  if (isUnpublish) {
     await quotas.removePublishedApp()
   } else {
     await quotas.removeApp()
   }
+
   /* istanbul ignore next */
-  if (!env.isTest() && !ctx.query.unpublish) {
-    await deleteApp(ctx.params.appId)
+  if (!env.isTest() && !isUnpublish) {
+    await deleteApp(appId)
   }
-  if (ctx.query && ctx.query.unpublish) {
-    await cleanupAutomations(ctx.params.appId)
+  if (isUnpublish) {
+    await cleanupAutomations(appId)
   }
   // make sure the app/role doesn't stick around after the app has been deleted
-  await removeAppFromUserRoles(ctx, ctx.params.appId)
-  await appCache.invalidateAppMetadata(ctx.params.appId)
+  await removeAppFromUserRoles(ctx, appId)
+  await appCache.invalidateAppMetadata(appId)
   return result
 }
 

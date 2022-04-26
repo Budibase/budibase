@@ -6,6 +6,7 @@
   export let disabled = false
   export let align = "left"
   export let portalTarget
+  export let dataCy
 
   let anchor
   let dropdown
@@ -36,7 +37,7 @@
 <div use:getAnchor on:click={openMenu}>
   <slot name="control" />
 </div>
-<Popover bind:this={dropdown} {anchor} {align} {portalTarget}>
+<Popover bind:this={dropdown} {anchor} {align} {portalTarget} {dataCy}>
   <Menu>
     <slot />
   </Menu>
