@@ -27,6 +27,7 @@ services:
     image: nginx:latest
     volumes:
       - ./.generated-nginx.dev.conf:/etc/nginx/nginx.conf
+      - ./proxy/error.html:/usr/share/nginx/html/error.html
     ports:
       - "${MAIN_PORT}:10000"
     depends_on:
