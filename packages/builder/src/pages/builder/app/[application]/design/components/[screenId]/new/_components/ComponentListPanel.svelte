@@ -9,6 +9,7 @@
     DetailSummary,
     Icon,
     Body,
+    Divider,
   } from "@budibase/bbui"
   import structure from "./componentStructure.json"
   import { store } from "builderStore"
@@ -22,6 +23,7 @@
     section,
     searchString
   )
+  $: blocks = enrichedStructure.find(x => x.name === "Blocks").children
 
   const enrichStructure = (structure, definitions) => {
     let enrichedStructure = []
@@ -95,24 +97,45 @@
         on:click={() => (section = "blocks")}>Blocks</ActionButton
       >
     </ActionGroup>
-    <Search
-      placeholder="Search"
-      value={searchString}
-      on:change={e => (searchString = e.detail)}
-    />
   </Layout>
-  {#each filteredStructure as category}
-    <DetailSummary name={category.name} collapsible={false}>
-      <div class="component-grid">
-        {#each category.children as component}
-          <div class="component" on:click={() => addComponent(component)}>
-            <Icon name={component.icon} />
-            <Body size="XS">{component.name}</Body>
+  <div>
+    <Divider noMargin noGrid />
+  </div>
+  {#if section === "components"}
+    <Layout paddingX="L" paddingY="XL">
+      <Search
+        placeholder="Search"
+        value={searchString}
+        on:change={e => (searchString = e.detail)}
+      />
+    </Layout>
+  {/if}
+  {#if section === "components"}
+    {#each filteredStructure as category}
+      <DetailSummary name={category.name} collapsible={false}>
+        <div class="component-grid">
+          {#each category.children as component}
+            <div class="component" on:click={() => addComponent(component)}>
+              <Icon name={component.icon} />
+              <Body size="XS">{component.name}</Body>
+            </div>
+          {/each}
+        </div>
+      </DetailSummary>
+    {/each}
+  {:else}
+    <Layout paddingX="L" paddingY="XL" gap="S">
+      <Body size="S">Blocks are a collection of pre-built components</Body>
+      <Layout noPadding gap="XS">
+        {#each blocks as block}
+          <div class="component block">
+            <Icon name={block.icon} />
+            <Body size="XS">{block.name}</Body>
           </div>
         {/each}
-      </div>
-    </DetailSummary>
-  {/each}
+      </Layout>
+    </Layout>
+  {/if}
 </NavigationPanel>
 
 <style>
@@ -141,5 +164,12 @@
   .component:hover {
     cursor: pointer;
     background: var(--spectrum-alias-background-color-tertiary);
+  }
+  .block {
+    flex-direction: row;
+    justify-content: flex-start;
+    height: 48px;
+    padding: 0 var(--spacing-l);
+    gap: var(--spacing-m);
   }
 </style>
