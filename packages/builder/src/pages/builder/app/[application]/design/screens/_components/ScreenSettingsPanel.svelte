@@ -1,5 +1,5 @@
 <script>
-  import SettingsPanel from "components/design/SettingsPanel/SettingsPanel.svelte"
+  import SettingsPanel from "components/design/settings/SettingsPanel.svelte"
   import { get } from "svelte/store"
   import { get as deepGet, setWith } from "lodash"
   import {
@@ -10,8 +10,8 @@
     Checkbox,
     notifications,
   } from "@budibase/bbui"
-  import PropertyControl from "components/design/PropertiesPanel/PropertyControls/PropertyControl.svelte"
-  import RoleSelect from "components/design/PropertiesPanel/PropertyControls/RoleSelect.svelte"
+  import PropertyControl from "components/design/settings/controls/PropertyControl.svelte"
+  import RoleSelect from "components/design/settings/controls/RoleSelect.svelte"
   import { selectedScreen, store } from "builderStore"
   import sanitizeUrl from "builderStore/store/screenTemplates/utils/sanitizeUrl"
 

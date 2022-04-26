@@ -1,5 +1,5 @@
 <script>
-  import NavigationPanel from "components/design/NavigationPanel/NavigationPanel.svelte"
+  import NavigationPanel from "components/design/navigation/NavigationPanel.svelte"
   import ComponentTree from "./ComponentTree.svelte"
   import instantiateStore from "./dragDropStore.js"
   import { goto } from "@roxi/routify"

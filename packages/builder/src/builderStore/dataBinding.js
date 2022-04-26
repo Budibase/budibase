@@ -20,7 +20,7 @@ import {
 } from "@budibase/string-templates"
 import { TableNames } from "../constants"
 import { JSONUtils } from "@budibase/frontend-core"
-import ActionDefinitions from "components/design/PropertiesPanel/PropertyControls/ButtonActionEditor/manifest.json"
+import ActionDefinitions from "components/design/settings/controls/ButtonActionEditor/manifest.json"
 
 // Regex to match all instances of template strings
 const CAPTURE_VAR_INSIDE_TEMPLATE = /{{([^}]+)}}/g

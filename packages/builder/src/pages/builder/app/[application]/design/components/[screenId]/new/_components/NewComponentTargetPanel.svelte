@@ -1,5 +1,5 @@
 <script>
-  import SettingsPanel from "components/design/SettingsPanel/SettingsPanel.svelte"
+  import SettingsPanel from "components/design/settings/SettingsPanel.svelte"
   import { Body, Layout } from "@budibase/bbui"
 </script>
 

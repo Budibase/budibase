@@ -2,11 +2,11 @@
   import { isEmpty } from "lodash/fp"
   import { Input, DetailSummary, notifications } from "@budibase/bbui"
   import { store } from "builderStore"
-  import PropertyControl from "./PropertyControls/PropertyControl.svelte"
-  import LayoutSelect from "./PropertyControls/LayoutSelect.svelte"
-  import RoleSelect from "./PropertyControls/RoleSelect.svelte"
-  import ResetFieldsButton from "./PropertyControls/ResetFieldsButton.svelte"
-  import { getComponentForSettingType } from "./PropertyControls/componentSettings"
+  import PropertyControl from "components/design/settings/controls/PropertyControl.svelte"
+  import LayoutSelect from "components/design/settings/controls/LayoutSelect.svelte"
+  import RoleSelect from "components/design/settings/controls/RoleSelect.svelte"
+  import ResetFieldsButton from "components/design/settings/controls/ResetFieldsButton.svelte"
+  import { getComponentForSettingType } from "components/design/settings/componentSettings"
   import { Utils } from "@budibase/frontend-core"
 
   export let componentDefinition
@@ -33,7 +33,7 @@
     const customSections = settings.filter(setting => setting.section)
     return [
       {
-        name: componentDefinition?.name || "General",
+        name: "General",
         info: componentDefinition?.info,
         settings: generalSettings,
       },

@@ -16,7 +16,9 @@
       </div>
     </div>
   {/if}
-  <slot />
+  <div class="body">
+    <slot />
+  </div>
 </div>
 
 <style>
@@ -28,7 +30,6 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
-    overflow: auto;
   }
   .header {
     flex: 0 0 48px;
@@ -52,5 +53,14 @@
     font-weight: 600;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+  .body {
+    flex: 1 1 auto;
+    overflow: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
   }
 </style>

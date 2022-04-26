@@ -1,5 +1,5 @@
 <script>
-  import PropertyControl from "./PropertyControls/PropertyControl.svelte"
+  import PropertyControl from "components/design/settings/controls/PropertyControl.svelte"
   import { DetailSummary, notifications } from "@budibase/bbui"
   import { store } from "builderStore"
 
