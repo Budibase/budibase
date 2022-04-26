@@ -1,6 +1,6 @@
 <script>
   import { Search, Layout, Select } from "@budibase/bbui"
-  import NavigationPanel from "components/design/NavigationPanel/NavigationPanel.svelte"
+  import NavigationPanel from "components/design/navigation/NavigationPanel.svelte"
   import { roles } from "stores/backend"
   import { store } from "builderStore"
   import NavItem from "components/common/NavItem.svelte"

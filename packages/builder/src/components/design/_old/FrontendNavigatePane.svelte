@@ -3,9 +3,9 @@
   import { goto, params } from "@roxi/routify"
   import { store, selectedAccessRole, screenSearchString } from "builderStore"
   import { roles } from "stores/backend"
-  import ComponentNavigationTree from "components/design/NavigationPanel/ComponentNavigationTree/index.svelte"
-  import Layout from "components/design/NavigationPanel/Layout.svelte"
-  import NewLayoutModal from "components/design/NavigationPanel/NewLayoutModal.svelte"
+  import ComponentNavigationTree from "components/design/navigation/ComponentNavigationTree/index.svelte"
+  import Layout from "components/design/navigation/Layout.svelte"
+  import NewLayoutModal from "components/design/navigation/NewLayoutModal.svelte"
   import {
     Icon,
     Modal,

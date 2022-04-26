@@ -5,7 +5,7 @@
   import CurrentItemPreview from "components/design/AppPreview"
   import PropertiesPanel from "components/design/PropertiesPanel/PropertiesPanel.svelte"
   import ComponentSelectionList from "components/design/AppPreview/ComponentSelectionList.svelte"
-  import FrontendNavigatePane from "components/design/NavigationPanel/FrontendNavigatePane.svelte"
+  import FrontendNavigatePane from "components/design/navigation/FrontendNavigatePane.svelte"
   import { goto, leftover, params } from "@roxi/routify"
   import { FrontendTypes } from "constants"
   import { findComponent, findComponentPath } from "builderStore/componentUtils"
@@ -14,7 +14,7 @@
   import ThemeEditor from "components/design/AppPreview/ThemeEditor.svelte"
   import DevicePreviewSelect from "components/design/AppPreview/DevicePreviewSelect.svelte"
   import Logo from "assets/bb-space-man.svg"
-  import ScreenWizard from "components/design/NavigationPanel/ScreenWizard.svelte"
+  import ScreenWizard from "components/design/navigation/ScreenWizard.svelte"
 
   // Cache previous values so we don't update the URL more than necessary
   let previousType

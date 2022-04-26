@@ -7,7 +7,7 @@
     notifications,
   } from "@budibase/bbui"
   import { store } from "builderStore"
-  import ConditionalUIDrawer from "./PropertyControls/ConditionalUIDrawer.svelte"
+  import ConditionalUIDrawer from "./ConditionalUIDrawer.svelte"
 
   export let componentInstance
   export let bindings
