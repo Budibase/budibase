@@ -1,4 +1,3 @@
-import CouchDB from "../db"
 const {
   MIGRATION_TYPES,
   runMigrations,
@@ -64,5 +63,5 @@ export const MIGRATIONS: Migration[] = [
 ]
 
 export const migrate = async (options?: MigrationOptions) => {
-  await runMigrations(CouchDB, MIGRATIONS, options)
+  await runMigrations(MIGRATIONS, options)
 }
