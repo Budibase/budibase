@@ -58,13 +58,13 @@
 
   const viewApp = () => {
     analytics.captureEvent(Events.APP.VIEW_PUBLISHED, {
-      appId: application.appId,
+      appId: selectedApp.appId,
       eventSource: EventSource.PORTAL,
     })
-    if (application.url) {
-      window.open(`/app${application.url}`)
+    if (selectedApp.url) {
+      window.open(`/app${selectedApp.url}`)
     } else {
-      window.open(`/${application.prodId}`)
+      window.open(`/${selectedApp.prodId}`)
     }
   }
 
@@ -80,9 +80,9 @@
     }
     try {
       analytics.captureEvent(Events.APP.UNPUBLISHED, {
-        appId: application.appId,
+        appId: selectedApp.appId,
       })
-      await API.unpublishApp(application.prodId)
+      await API.unpublishApp(selectedApp.prodId)
       await apps.load()
       notifications.success("App unpublished successfully")
     } catch (err) {
