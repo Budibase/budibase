@@ -47,9 +47,11 @@
 <style>
   .design {
     flex: 1 1 auto;
-    display: grid;
-    grid-template-columns: auto 1fr;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
     align-items: stretch;
+    height: 0;
   }
   .icon-nav {
     background: var(--background);
@@ -60,5 +62,6 @@
     flex-direction: row;
     justify-content: flex-start;
     align-items: stretch;
+    flex: 1 1 auto;
   }
 </style>
