@@ -292,7 +292,7 @@ Cypress.Commands.add("createScreen", (route, accessLevelLabel) => {
   cy.contains("Design").click()
   cy.get("[aria-label=AddCircle]").click()
   cy.get(".spectrum-Modal").within(() => {
-    cy.get(".item").contains("Blank screen").click()
+    cy.get("[data-cy='blank-screen']").click()
     cy.get(".spectrum-Button").contains("Continue").click({ force: true })
     cy.wait(500)
   })
@@ -473,6 +473,7 @@ Cypress.Commands.add("selectExternalDatasource", datasourceName => {
     cy.get(".add-button").click()
   })
   // Clicks specified datasource & continue
+  cy.wait(1000)
   cy.get(".item-list").contains(datasourceName).click()
   cy.get(".spectrum-Dialog-grid").within(() => {
     cy.get(".spectrum-Button").contains("Continue").click({ force: true })
