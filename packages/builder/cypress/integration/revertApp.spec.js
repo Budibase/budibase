@@ -12,7 +12,7 @@ filterTests(['smoke', 'all'], () => {
             cy.get(".toprightnav").within(() => {
                 cy.get("[aria-label='Revert']").click({ force: true })
             })
-            cy.get(".spectrum-Dialog-grid").within(() => {
+            cy.get(".spectrum-Modal").within(() => {
                 // Enter app name before revert
                 cy.get("input").type("Cypress Tests")
                 cy.intercept('**/revert').as('revertApp')
