@@ -3,8 +3,6 @@
   import { onMount, onDestroy } from "svelte"
   import { store, selectedScreen, currentAsset } from "builderStore"
   import iframeTemplate from "./iframeTemplate"
-  import { Screen } from "builderStore/store/screenTemplates/utils/Screen"
-  import { FrontendTypes } from "constants"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import {
     ProgressCircle,
@@ -24,17 +22,8 @@
   let loading = true
   let error
 
-  // Create screen slot placeholder for use when a page is selected rather
-  // than a screen
-  const screenPlaceholder = new Screen()
-    .name("Screen Placeholder")
-    .route("*")
-    .component("@budibase/standard-components/screenslot")
-    .instanceName("Content Placeholder")
-    .json()
-
   // Messages that can be sent from the iframe preview to the builder
-  // Budibase events are and initalisation events
+  // Budibase events are and initialisation events
   const MessageTypes = {
     READY: "ready",
     ERROR: "error",

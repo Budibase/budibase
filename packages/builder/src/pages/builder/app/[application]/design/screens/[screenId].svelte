@@ -3,7 +3,6 @@
   import { onDestroy } from "svelte"
   import { syncURLToState } from "helpers/urlStateSync"
   import { goto, params, redirect } from "@roxi/routify"
-  import AppPanel from "components/design/AppPanel/AppPanel.svelte"
   import ScreenNavigationPanel from "./_components/ScreenNavigationPanel.svelte"
   import ScreenSettingsPanel from "./_components/ScreenSettingsPanel.svelte"
 
@@ -27,5 +26,4 @@
 </script>
 
 <ScreenNavigationPanel />
-<AppPanel />
 <ScreenSettingsPanel />
