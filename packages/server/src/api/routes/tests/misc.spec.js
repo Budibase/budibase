@@ -43,53 +43,55 @@ describe("run misc tests", () => {
 
   describe("test table utilities", () => {
     it("should be able to import a CSV", async () => {
-      const table = await config.createTable({
-        name: "table",
-        type: "table",
-        key: "name",
-        schema: {
-          a: {
-            type: "string",
-            constraints: {
+      return config.doInContext(null, async () => {
+        const table = await config.createTable({
+          name: "table",
+          type: "table",
+          key: "name",
+          schema: {
+            a: {
               type: "string",
+              constraints: {
+                type: "string",
+              },
+            },
+            b: {
+              type: "string",
+              constraints: {
+                type: "string",
+              },
+            },
+            c: {
+              type: "string",
+              constraints: {
+                type: "string",
+              },
+            },
+            d: {
+              type: "string",
+              constraints: {
+                type: "string",
+              },
             },
           },
-          b: {
-            type: "string",
-            constraints: {
-              type: "string",
-            },
-          },
-          c: {
-            type: "string",
-            constraints: {
-              type: "string",
-            },
-          },
-          d: {
-            type: "string",
-            constraints: {
-              type: "string",
-            },
-          },
-        },
+        })
+        const dataImport = {
+          csvString: "a,b,c,d\n1,2,3,4",
+          schema: {},
+        }
+        for (let col of ["a", "b", "c", "d"]) {
+          dataImport.schema[col] = { type: "string" }
+        }
+        await tableUtils.handleDataImport(
+          { userId: "test" },
+          table,
+          dataImport
+        )
+        const rows = await config.getRows()
+        expect(rows[0].a).toEqual("1")
+        expect(rows[0].b).toEqual("2")
+        expect(rows[0].c).toEqual("3")
       })
-      const dataImport = {
-        csvString: "a,b,c,d\n1,2,3,4",
-        schema: {},
-      }
-      for (let col of ["a", "b", "c", "d"]) {
-        dataImport.schema[col] = { type: "string" }
-      }
-      await tableUtils.handleDataImport(
-        { userId: "test" },
-        table,
-        dataImport
-      )
-      const rows = await config.getRows()
-      expect(rows[0].a).toEqual("1")
-      expect(rows[0].b).toEqual("2")
-      expect(rows[0].c).toEqual("3")
     })
   })
 })
