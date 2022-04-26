@@ -43,7 +43,7 @@
 >
   <Layout paddingX="L" paddingY="XL" gap="S">
     <Search
-      placeholder="Enter a route to search"
+      placeholder="Search"
       value={searchString}
       on:change={e => (searchString = e.detail)}
     />

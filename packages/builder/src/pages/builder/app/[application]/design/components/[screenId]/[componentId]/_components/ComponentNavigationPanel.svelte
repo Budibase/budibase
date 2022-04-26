@@ -9,7 +9,7 @@
 <NavigationPanel
   title="Components"
   showAddButton
-  onClickAddButton={() => $goto("./new")}
+  onClickAddButton={() => $goto("../new")}
 >
   <Layout paddingX="L" paddingY="XL" gap="S">
     <Search
