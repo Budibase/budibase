@@ -11,7 +11,7 @@ filterTests(['all'], () => {
           cy.applicationInAppTable("Cypress Tests")
           cy.get(".appTable")
             .within(() => {
-              cy.get("[data-cy='app-row-actions-menu']").eq(0).click()
+              cy.get(".app-row-actions-icon").eq(0).click()
             })
           cy.get(".spectrum-Menu").contains("Edit icon").click()
           // Select random icon

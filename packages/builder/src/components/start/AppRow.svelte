@@ -89,7 +89,9 @@
     </Button>
   </div>
   <ActionMenu align="right" dataCy="app-row-actions-menu-popover">
-    <Icon hoverable slot="control" name="More" />
+    <span slot="control" class="app-row-actions-icon">
+      <Icon hoverable name="More" />
+    </span>
     {#if app.lockedYou}
       <MenuItem on:click={() => releaseLock(app)} icon="LockOpen">
         Release lock
