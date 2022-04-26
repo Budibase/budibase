@@ -47,7 +47,7 @@
   </Body>
   <Input
     type="email"
-    label="Username"
+    label="Email"
     bind:value={$email}
     error={$touched && $error}
   />
