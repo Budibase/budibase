@@ -50,7 +50,7 @@ export const adminUser = async (ctx: any) => {
     ctx.throw(403, "Organisation already exists.")
   }
 
-  const response = await doWithGlobalDB(tenantId, async db => {
+  const response = await doWithGlobalDB(tenantId, async (db: any) => {
     const response = await db.allDocs(
       getGlobalUserParams(null, {
         include_docs: true,
@@ -67,7 +67,7 @@ export const adminUser = async (ctx: any) => {
       } catch (err) {
         // don't worry about errors
       }
-      await db.put(quotas.generateNewUsageQuotaDoc())
+      await db.put(quotas.generateNewQuotaUsage())
     }
     return response
   })

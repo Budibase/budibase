@@ -102,7 +102,7 @@ async function deployApp(deployment: any) {
       source: devAppId,
       target: productionAppId,
     }
-    const replication = new Replication(config)
+    var replication = new Replication(config)
 
     console.log("Replication object created")
     await replication.replicate()
