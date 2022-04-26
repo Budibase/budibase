@@ -162,6 +162,14 @@ exports.AutoFieldSubTypes = {
   AUTO_ID: "autoID",
 }
 
+exports.AutoFieldDefaultNames = {
+  CREATED_BY: "Created By",
+  CREATED_AT: "Created At",
+  UPDATED_BY: "Updated By",
+  UPDATED_AT: "Updated At",
+  AUTO_ID: "Auto ID",
+}
+
 exports.OBJ_STORE_DIRECTORY = "/prod-budi-app-assets"
 exports.BaseQueryVerbs = {
   CREATE: "create",

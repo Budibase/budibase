@@ -19,6 +19,7 @@ export interface FieldSchema {
   through?: string
   foreignKey?: string
   autocolumn?: boolean
+  subtype?: string
   throughFrom?: string
   throughTo?: string
   formula?: string

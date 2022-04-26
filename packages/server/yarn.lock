@@ -1014,10 +1014,10 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/backend-core@1.0.105-alpha.43":
-  version "1.0.105-alpha.43"
-  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.0.105-alpha.43.tgz#9790310c2758867b958f6c4a8313e9fbd2a4df4e"
-  integrity sha512-pS2VmSPi/i+r4EjsG4WszQ2VeIssu+ugVgl1O+oXA8/acPMWSWv1ct3JKrckz3sdKiSjllXhy+B4ZPvfN1Ezpg==
+"@budibase/backend-core@1.0.123-alpha.1":
+  version "1.0.123-alpha.1"
+  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.0.123-alpha.1.tgz#3ce95c41837a0a4f071aee08d5d8ad504b5bd14c"
+  integrity sha512-IbalOeH26jOBCEa0ur8zFChVT+NpxYai40rHU2w8ytDxVpVBYidkcPPD0udCGKEoKRz+QJVf47nAH+g+ahsBgg==
   dependencies:
     "@techpass/passport-openidconnect" "^0.3.0"
     aws-sdk "^2.901.0"
@@ -1033,6 +1033,10 @@
     passport-google-oauth "^2.0.0"
     passport-jwt "^4.0.0"
     passport-local "^1.0.0"
+    posthog-node "^1.3.0"
+    pouchdb "7.3.0"
+    pouchdb-find "^7.2.2"
+    pouchdb-replication-stream "^1.2.9"
     sanitize-s3-objectkey "^0.0.1"
     tar-fs "^2.1.1"
     uuid "^8.3.2"
@@ -1087,12 +1091,12 @@
     svelte-flatpickr "^3.2.3"
     svelte-portal "^1.0.0"
 
-"@budibase/pro@1.0.105-alpha.43":
-  version "1.0.105-alpha.43"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-1.0.105-alpha.43.tgz#0f90aa8570d789b8a69acf3895b6af036e32cc75"
-  integrity sha512-fz9JbHcWMsu2lHt7rH6HZqx6SosKjwKF2CUH3FMQgtQqCjJfe58GIPXgLh/eLT8O8Eq2F46HzRjABlqMUFjQSw==
+"@budibase/pro@1.0.123-alpha.1":
+  version "1.0.123-alpha.1"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-1.0.123-alpha.1.tgz#d585c8062142b418378fe6583f7495ff3981d2e4"
+  integrity sha512-nwjYv8aeMTWw0bbhiCKnDGm8WMgCWUHXZojyAGJThipK+lhZaLGHRbfkNQ3mJeCmN1EPpKxn0GZ0NGUwqOjb+g==
   dependencies:
-    "@budibase/backend-core" "1.0.105-alpha.43"
+    "@budibase/backend-core" "1.0.123-alpha.1"
     node-fetch "^2.6.1"
 
 "@budibase/standard-components@^0.9.139":
@@ -10509,7 +10513,7 @@ postgres-interval@^1.1.0:
   dependencies:
     xtend "^4.0.0"
 
-posthog-node@^1.1.4:
+posthog-node@^1.1.4, posthog-node@^1.3.0:
   version "1.3.0"
   resolved "https://registry.yarnpkg.com/posthog-node/-/posthog-node-1.3.0.tgz#804ed2f213a2f05253f798bf9569d55a9cad94f7"
   integrity sha512-2+VhqiY/rKIqKIXyvemBFHbeijHE25sP7eKltnqcFqAssUE6+sX6vusN9A4luzToOqHQkUZexiCKxvuGagh7JA==
@@ -10687,7 +10691,7 @@ pouchdb-promise@^6.0.4:
   dependencies:
     lie "3.1.1"
 
-pouchdb-replication-stream@1.2.9:
+pouchdb-replication-stream@1.2.9, pouchdb-replication-stream@^1.2.9:
   version "1.2.9"
   resolved "https://registry.yarnpkg.com/pouchdb-replication-stream/-/pouchdb-replication-stream-1.2.9.tgz#aa4fa5d8f52df4825392f18e07c7e11acffc650a"
   integrity sha1-qk+l2PUt9IJTkvGOB8fhGs/8ZQo=
