@@ -2,7 +2,7 @@ const GoogleStrategy = require("passport-google-oauth").OAuth2Strategy
 
 const { authenticateThirdParty } = require("./third-party-common")
 
-const buildVerifyFn = async saveUserFn => {
+const buildVerifyFn = saveUserFn => {
   return (accessToken, refreshToken, profile, done) => {
     const thirdPartyUser = {
       provider: profile.provider, // should always be 'google'
