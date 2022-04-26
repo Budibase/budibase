@@ -6,6 +6,7 @@
   import { createEventDispatcher } from "svelte"
   import clickOutside from "../../Actions/click_outside"
   import Search from "./Search.svelte"
+  import Icon from "../../Icon/Icon.svelte"
 
   export let id = null
   export let disabled = false
@@ -83,7 +84,7 @@
 >
   {#if fieldIcon}
     <span class="icon-Placeholder-Padding">
-      <img src={fieldIcon} alt="icon" width="20" height="15" />
+      <Icon name={fieldIcon} />
     </span>
   {/if}
 
@@ -159,12 +160,7 @@
           >
             {#if getOptionIcon(option, idx)}
               <span class="icon-Padding">
-                <img
-                  src={getOptionIcon(option, idx)}
-                  alt="icon"
-                  width="20"
-                  height="15"
-                />
+                <Icon name={getOptionIcon(option, idx)} />
               </span>
             {/if}
             <span class="spectrum-Menu-itemLabel">
@@ -216,7 +212,6 @@
     padding-right: 10px;
   }
   .icon-Placeholder-Padding {
-    padding-top: 5px;
     padding-right: 10px;
   }
   .spectrum-Popover :global(.spectrum-Search) {
