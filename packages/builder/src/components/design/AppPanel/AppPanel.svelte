@@ -26,6 +26,7 @@
         options={$store.screens}
         getOptionLabel={x => x.routing.route}
         getOptionValue={x => x._id}
+        getOptionIcon={x => (x.routing.homeScreen ? "Home" : "WebPage")}
         bind:value={$store.selectedScreenId}
       />
       <StatusLight custom color={roleColor}>
@@ -77,7 +78,7 @@
     gap: var(--spacing-l);
   }
   .header-left :global(.spectrum-Picker) {
-    width: 200px;
+    width: 240px;
   }
   .content {
     flex: 1 1 auto;
