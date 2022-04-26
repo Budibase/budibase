@@ -10,8 +10,29 @@ const {
 const usageQuota = require("../../../utilities/usageQuota")
 const { getAppDB } = require("@budibase/backend-core/context")
 const env = require("../../../environment")
-const { cleanupAttachments } = require("../../../utilities/rowProcessor")
+const {
+  cleanupAttachments,
+  fixAutoColumnSubType,
+} = require("../../../utilities/rowProcessor")
 const { runStaticFormulaChecks } = require("./bulkFormula")
+
+function checkAutoColumns(table, oldTable) {
+  if (!table.schema) {
+    return table
+  }
+  for (let [key, schema] of Object.entries(table.schema)) {
+    if (!schema.autocolumn || schema.subtype) {
+      continue
+    }
+    const oldSchema = oldTable && oldTable.schema[key]
+    if (oldSchema && oldSchema.subtype) {
+      table.schema[key].subtype = oldSchema.subtype
+    } else {
+      table.schema[key] = fixAutoColumnSubType(schema)
+    }
+  }
+  return table
+}
 
 exports.save = async function (ctx) {
   const db = getAppDB()
@@ -29,9 +50,12 @@ exports.save = async function (ctx) {
     oldTable = await db.get(ctx.request.body._id)
   }
 
+  // check all types are correct
   if (hasTypeChanged(tableToSave, oldTable)) {
     ctx.throw(400, "A column type has changed.")
   }
+  // check that subtypes have been maintained
+  tableToSave = checkAutoColumns(tableToSave, oldTable)
 
   // saving a table is a complex operation, involving many different steps, this
   // has been broken out into a utility to make it more obvious/easier to manipulate
