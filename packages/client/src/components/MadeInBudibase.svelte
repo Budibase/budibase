@@ -1,15 +1,19 @@
-<a
+<script>
+  import { Link } from "@budibase/bbui"
+</script>
+
+<Link
   href="https://www.budibase.com/?utm_source=budibase-apps-public-screens&utm_medium=badge&utm_campaign=made-in-budibase"
 >
   <div>
     <img src="https://i.imgur.com/Xhdt1YP.png" alt="Budibase" />
     <p>Made In Budibase</p>
   </div>
-</a>
+</Link>
 
 <style>
   div {
-    position: absolute;
+    position: fixed;
     right: 20px;
     bottom: 20px;
     padding: 10px;
@@ -26,11 +30,6 @@
   }
 
   p {
-    text-decoration: none;
-    color: var(--spectrum-heading-m-text-color);
-  }
-
-  a:visited {
     text-decoration: none;
     color: var(--spectrum-heading-m-text-color);
   }

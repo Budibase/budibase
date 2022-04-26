@@ -4,6 +4,15 @@ const { getFullUser } = require("../../utilities/users")
 const { BUILTIN_ROLE_IDS } = require("@budibase/backend-core/roles")
 const { getAppDB, getAppId } = require("@budibase/backend-core/context")
 
+/**
+ * Add the attributes that are session based to the current user.
+ */
+const addSessionAttributesToUser = ctx => {
+  if (ctx.user) {
+    ctx.body.license = ctx.user.license
+  }
+}
+
 exports.fetchSelf = async ctx => {
   let userId = ctx.user.userId || ctx.user._id
   /* istanbul ignore next */
@@ -55,4 +64,6 @@ exports.fetchSelf = async ctx => {
   } else {
     ctx.body = user
   }
+
+  addSessionAttributesToUser(ctx)
 }
