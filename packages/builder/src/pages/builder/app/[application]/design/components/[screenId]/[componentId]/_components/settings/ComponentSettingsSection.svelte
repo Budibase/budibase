@@ -14,6 +14,7 @@
   export let assetInstance
   export let bindings
   export let componentBindings
+  export let isScreen = false
 
   const layoutDefinition = []
   const screenDefinition = [
@@ -90,7 +91,7 @@
 
 {#each sections as section, idx (section.name)}
   <DetailSummary name={section.name} collapsible={false}>
-    {#if idx === 0 && !componentInstance._component.endsWith("/layout")}
+    {#if idx === 0 && !componentInstance._component.endsWith("/layout") && !isScreen}
       <PropertyControl
         control={Input}
         label="Name"
