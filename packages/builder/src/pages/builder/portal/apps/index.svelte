@@ -28,7 +28,7 @@
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import AppRow from "components/start/AppRow.svelte"
   import { AppStatus } from "constants"
-  import analytics, { Events } from "analytics"
+  import analytics, { Events, EventSource } from "analytics"
   import Logo from "assets/bb-space-man.svg"
 
   let sortBy = "name"
@@ -40,7 +40,7 @@
   let unpublishModal
   let iconModal
   let creatingApp = false
-  let loaded = false
+  let loaded = $apps?.length || $templates?.length
   let searchTerm = ""
   let cloud = $admin.cloud
   let appName = ""
@@ -167,11 +167,19 @@
   }
 
   const viewApp = app => {
+    analytics.captureEvent(Events.APP.VIEW_PUBLISHED, {
+      appId: app.appId,
+      eventSource: EventSource.PORTAL,
+    })
     if (app.url) {
       window.open(`/app${app.url}`)
     } else {
       window.open(`/${app.prodId}`)
     }
+  }
+
+  const previewApp = app => {
+    window.open(`/${app.devId}`)
   }
 
   const editApp = app => {
@@ -205,6 +213,9 @@
       return
     }
     try {
+      analytics.captureEvent(Events.APP.UNPUBLISHED, {
+        appId: selectedApp.appId,
+      })
       await API.unpublishApp(selectedApp.prodId)
       await apps.load()
       notifications.success("App unpublished successfully")
@@ -292,8 +303,8 @@
       <div class="title">
         <div class="welcome">
           <Layout noPadding gap="XS">
-            <Heading size="M">{welcomeHeader}</Heading>
-            <Body size="S">
+            <Heading size="L">{welcomeHeader}</Heading>
+            <Body size="M">
               {welcomeBody}
             </Body>
           </Layout>
@@ -301,7 +312,7 @@
           <div class="buttons">
             <Button
               dataCy="create-app-btn"
-              size="L"
+              size="M"
               icon="Add"
               cta
               on:click={initiateAppCreation}
@@ -311,7 +322,7 @@
             {#if $apps?.length > 0}
               <Button
                 icon="Experience"
-                size="L"
+                size="M"
                 quiet
                 secondary
                 on:click={$goto("/builder/portal/apps/templates")}
@@ -348,7 +359,7 @@
       {#if enrichedApps.length}
         <Layout noPadding gap="S">
           <div class="title">
-            <Detail size="L">My apps</Detail>
+            <Detail size="L">Apps</Detail>
             {#if enrichedApps.length > 1}
               <div class="app-actions">
                 {#if cloud}
@@ -392,6 +403,7 @@
                 {exportApp}
                 {deleteApp}
                 {updateApp}
+                {previewApp}
               />
             {/each}
           </div>
@@ -444,6 +456,7 @@
   title="Confirm unpublish"
   okText="Unpublish app"
   onOk={confirmUnpublishApp}
+  dataCy={"unpublish-modal"}
 >
   Are you sure you want to unpublish the app <b>{selectedApp?.name}</b>?
 </ConfirmDialog>

@@ -71,7 +71,9 @@ exports.doInTenant = (tenantId, task) => {
     // set the tenant id
     if (!opts.existing) {
       cls.setOnContext(ContextKeys.TENANT_ID, tenantId)
-      exports.setGlobalDB(tenantId)
+      if (env.USE_COUCH) {
+        exports.setGlobalDB(tenantId)
+      }
     }
 
     try {
@@ -80,7 +82,9 @@ exports.doInTenant = (tenantId, task) => {
     } finally {
       const using = cls.getFromContext(ContextKeys.IN_USE)
       if (!using || using <= 1) {
-        await closeDB(exports.getGlobalDB())
+        if (env.USE_COUCH) {
+          await closeDB(exports.getGlobalDB())
+        }
         // clear from context now that database is closed/task is finished
         cls.setOnContext(ContextKeys.TENANT_ID, null)
         cls.setOnContext(ContextKeys.GLOBAL_DB, null)
@@ -167,6 +171,7 @@ exports.doInAppContext = (appId, task) => {
 
 exports.updateTenantId = tenantId => {
   cls.setOnContext(ContextKeys.TENANT_ID, tenantId)
+  exports.setGlobalDB(tenantId)
 }
 
 exports.updateAppId = async appId => {
@@ -269,8 +274,10 @@ function getContextDB(key, opts) {
   if (db && isEqual(opts, storedOpts)) {
     return db
   }
+
   const appId = exports.getAppId()
   let toUseAppId
+
   switch (key) {
     case ContextKeys.CURRENT_DB:
       toUseAppId = appId

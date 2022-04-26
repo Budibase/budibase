@@ -98,10 +98,6 @@ spec:
           value: http://worker-service:{{ .Values.services.worker.port }}
         - name: PLATFORM_URL
           value: {{ .Values.globals.platformUrl | quote }}
-        - name: USE_QUOTAS
-          value: {{ .Values.globals.useQuotas | quote }}
-        - name: EXCLUDE_QUOTAS_TENANTS
-          value: {{ .Values.globals.excludeQuotasTenants | quote }}
         - name: ACCOUNT_PORTAL_URL
           value: {{ .Values.globals.accountPortalUrl | quote }}
         - name: ACCOUNT_PORTAL_API_KEY
@@ -114,12 +110,23 @@ spec:
           value: {{ .Values.globals.google.clientId | quote }}
         - name: GOOGLE_CLIENT_SECRET
           value: {{ .Values.globals.google.secret | quote }}
+        - name: AUTOMATION_MAX_ITERATIONS
+          value: {{ .Values.globals.automationMaxIterations | quote }}
+
         image: budibase/apps:{{ .Values.globals.appVersion }}
         imagePullPolicy: Always
         name: bbapps
         ports:
         - containerPort: {{ .Values.services.apps.port }}
         resources: {}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
       restartPolicy: Always
       serviceAccountName: ""
 status: {}

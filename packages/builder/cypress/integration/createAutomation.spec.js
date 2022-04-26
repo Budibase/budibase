@@ -11,7 +11,7 @@ filterTests(['smoke', 'all'], () => {
       cy.createTestTableWithData()
       cy.wait(2000)
       cy.contains("Automate").click()
-      cy.get("[data-cy='new-screen'] > .spectrum-Icon").click()
+      cy.get(".add-button .spectrum-Icon").click()
       cy.get(".modal-inner-wrapper").within(() => {
         cy.get("input").type("Add Row")
         cy.contains("Row Created").click({ force: true })
@@ -20,7 +20,6 @@ filterTests(['smoke', 'all'], () => {
       })
 
       // Setup trigger
-      cy.contains("Setup").click()
       cy.get(".spectrum-Picker-label").click()
       cy.wait(500)
       cy.contains("dog").click()
@@ -32,12 +31,11 @@ filterTests(['smoke', 'all'], () => {
         cy.contains("Create Row").trigger('mouseover').click().click()
         cy.get(".spectrum-Button--cta").click()
       })
-      cy.contains("Setup").click()
       cy.get(".spectrum-Picker-label").eq(1).click()
       cy.contains("dog").click()
       cy.get(".spectrum-Textfield-input")
-      .first()
-      .type("{{ trigger.row.name }}", { parseSpecialCharSequences: false })
+        .first()
+        .type("{{ trigger.row.name }}", { parseSpecialCharSequences: false })
       cy.get(".spectrum-Textfield-input")
         .eq(1)
         .type("11")

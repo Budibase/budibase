@@ -9,8 +9,8 @@
     Modal,
     Button,
     StatusLight,
-    ActionButton,
     Select,
+    ActionButton,
     notifications,
   } from "@budibase/bbui"
   import AutomationBlockSetup from "../../SetupPanel/AutomationBlockSetup.svelte"
@@ -25,8 +25,8 @@
   let webhookModal
   let actionModal
   let resultsModal
-  let setupToggled
   let blockComplete
+  let showLooping = false
 
   $: rowControl = $automationStore.selectedAutomation.automation.rowControl
   $: showBindingPicker =
@@ -48,12 +48,21 @@
     $automationStore.selectedAutomation?.automation?.definition?.steps.length +
     1
 
-  $: hasCompletedInputs = Object.keys(
-    block.schema?.inputs?.properties || {}
-  ).every(x => block?.inputs[x])
+  $: loopingSelected =
+    $automationStore.selectedAutomation?.automation.definition.steps.find(
+      x => x.blockToLoop === block.id
+    )
 
   async function deleteStep() {
+    let loopBlock =
+      $automationStore.selectedAutomation?.automation.definition.steps.find(
+        x => x.blockToLoop === block.id
+      )
+
     try {
+      if (loopBlock) {
+        automationStore.actions.deleteAutomationBlock(loopBlock)
+      }
       automationStore.actions.deleteAutomationBlock(block)
       await automationStore.actions.save(
         $automationStore.selectedAutomation?.automation
@@ -76,6 +85,23 @@
     )
   }
 
+  async function addLooping() {
+    loopingSelected = true
+    const loopDefinition = $automationStore.blockDefinitions.ACTION.LOOP
+
+    const loopBlock = $automationStore.selectedAutomation.constructBlock(
+      "ACTION",
+      "LOOP",
+      loopDefinition
+    )
+    loopBlock.blockToLoop = block.id
+    block.loopBlock = loopBlock.id
+    automationStore.actions.addBlockToAutomation(loopBlock, blockIdx)
+    await automationStore.actions.save(
+      $automationStore.selectedAutomation?.automation
+    )
+  }
+
   async function onSelect(block) {
     await automationStore.update(state => {
       state.selectedBlock = block
@@ -84,13 +110,68 @@
   }
 </script>
 
-<div
-  class={`block ${block.type} hoverable`}
-  class:selected
-  on:click={() => {
-    onSelect(block)
-  }}
->
+<div class={`block ${block.type} hoverable`} class:selected on:click={() => {}}>
+  {#if loopingSelected}
+    <div class="blockSection">
+      <div
+        on:click={() => {
+          showLooping = !showLooping
+        }}
+        class="splitHeader"
+      >
+        <div class="center-items">
+          <svg
+            width="28px"
+            height="28px"
+            class="spectrum-Icon"
+            style="color:grey;"
+            focusable="false"
+          >
+            <use xlink:href="#spectrum-icon-18-Reuse" />
+          </svg>
+          <div class="iconAlign">
+            <Detail size="S">Looping</Detail>
+          </div>
+        </div>
+
+        <div class="blockTitle">
+          <div
+            style="margin-left: 10px;"
+            on:click={() => {
+              onSelect(block)
+            }}
+          >
+            <Icon name={showLooping ? "ChevronDown" : "ChevronUp"} />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <Divider noMargin />
+    {#if !showLooping}
+      <div class="blockSection">
+        <div class="block-options">
+          <div class="delete-padding" on:click={() => deleteStep()}>
+            <Icon name="DeleteOutline" />
+          </div>
+        </div>
+        <Layout noPadding gap="S">
+          <AutomationBlockSetup
+            schemaProperties={Object.entries(
+              $automationStore.blockDefinitions.ACTION.LOOP.schema.inputs
+                .properties
+            )}
+            block={$automationStore.selectedAutomation?.automation.definition.steps.find(
+              x => x.blockToLoop === block.id
+            )}
+            {webhookModal}
+          />
+        </Layout>
+      </div>
+      <Divider noMargin />
+    {/if}
+  {/if}
+
   <div class="blockSection">
     <div
       on:click={() => {
@@ -127,65 +208,66 @@
           <Detail size="S">{block?.name?.toUpperCase() || ""}</Detail>
         </div>
       </div>
-      {#if testResult && testResult[0]}
-        <span on:click={() => resultsModal.show()}>
-          <StatusLight
-            positive={isTrigger || testResult[0].outputs?.success}
-            negative={!testResult[0].outputs?.success}
-            ><Body size="XS">View response</Body></StatusLight
-          >
-        </span>
-      {/if}
+      <div class="blockTitle">
+        {#if testResult && testResult[0]}
+          <div style="float: right;" on:click={() => resultsModal.show()}>
+            <StatusLight
+              positive={isTrigger || testResult[0].outputs?.success}
+              negative={!testResult[0].outputs?.success}
+              ><Body size="XS">View response</Body></StatusLight
+            >
+          </div>
+        {/if}
+        <div
+          style="margin-left: 10px;"
+          on:click={() => {
+            onSelect(block)
+          }}
+        >
+          <Icon name={blockComplete ? "ChevronDown" : "ChevronUp"} />
+        </div>
+      </div>
     </div>
   </div>
   {#if !blockComplete}
     <Divider noMargin />
     <div class="blockSection">
       <Layout noPadding gap="S">
-        <div class="splitHeader">
-          <ActionButton
-            on:click={() => {
-              onSelect(block)
-              setupToggled = !setupToggled
-            }}
-            quiet
-            icon={setupToggled ? "ChevronDown" : "ChevronRight"}
-          >
-            <Detail size="S">Setup</Detail>
-          </ActionButton>
-          {#if !isTrigger}
+        {#if !isTrigger}
+          <div>
             <div class="block-options">
-              {#if showBindingPicker}
-                <div>
-                  <Select
-                    on:change={toggleFieldControl}
-                    quiet
-                    defaultValue="Use values"
-                    autoWidth
-                    value={rowControl ? "Use bindings" : "Use values"}
-                    options={["Use values", "Use bindings"]}
-                    placeholder={null}
-                  />
-                </div>
+              {#if !loopingSelected}
+                <ActionButton on:click={() => addLooping()} icon="Reuse"
+                  >Add Looping</ActionButton
+                >
               {/if}
-              <div class="delete-padding" on:click={() => deleteStep()}>
-                <Icon name="DeleteOutline" />
-              </div>
+              {#if showBindingPicker}
+                <Select
+                  on:change={toggleFieldControl}
+                  defaultValue="Use values"
+                  autoWidth
+                  value={rowControl ? "Use bindings" : "Use values"}
+                  options={["Use values", "Use bindings"]}
+                  placeholder={null}
+                />
+              {/if}
+              <ActionButton
+                on:click={() => deleteStep()}
+                icon="DeleteOutline"
+              />
             </div>
-          {/if}
-        </div>
+          </div>
+        {/if}
 
-        {#if setupToggled}
-          <AutomationBlockSetup
-            schemaProperties={Object.entries(block.schema.inputs.properties)}
-            {block}
-            {webhookModal}
-          />
-          {#if lastStep}
-            <Button on:click={() => testDataModal.show()} cta
-              >Finish and test automation</Button
-            >
-          {/if}
+        <AutomationBlockSetup
+          schemaProperties={Object.entries(block.schema.inputs.properties)}
+          {block}
+          {webhookModal}
+        />
+        {#if lastStep}
+          <Button on:click={() => testDataModal.show()} cta
+            >Finish and test automation</Button
+          >
         {/if}
       </Layout>
     </div>
@@ -204,13 +286,7 @@
   </Modal>
 </div>
 <div class="separator" />
-<Icon
-  on:click={() => actionModal.show()}
-  disabled={!hasCompletedInputs}
-  hoverable
-  name="AddCircle"
-  size="S"
-/>
+<Icon on:click={() => actionModal.show()} hoverable name="AddCircle" size="S" />
 {#if isTrigger ? totalBlocks > 1 : blockIdx !== totalBlocks - 2}
   <div class="separator" />
 {/if}
@@ -220,8 +296,10 @@
     padding-left: 30px;
   }
   .block-options {
-    display: flex;
+    justify-content: flex-end;
     align-items: center;
+    display: flex;
+    gap: var(--spacing-m);
   }
   .center-items {
     display: flex;
@@ -255,5 +333,10 @@
     color: var(--grey-4);
     /* center horizontally */
     align-self: center;
+  }
+
+  .blockTitle {
+    display: flex;
+    align-items: center;
   }
 </style>
