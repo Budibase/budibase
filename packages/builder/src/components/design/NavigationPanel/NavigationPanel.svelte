@@ -2,12 +2,18 @@
   import { Icon, Heading } from "@budibase/bbui"
 
   export let title
-  export let showAddButton
+  export let showAddButton = false
+  export let showBackButton = false
   export let onClickAddButton
+  export let onClickBackButton
+  export let wide = false
 </script>
 
-<div class="navigation-panel">
+<div class="navigation-panel" class:wide>
   <div class="header">
+    {#if showBackButton}
+      <Icon name="ArrowLeft" hoverable on:click={onClickBackButton} />
+    {/if}
     <div class="title">
       <Heading size="XS">{title || ""}</Heading>
     </div>
@@ -29,9 +35,13 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
+    overflow: auto;
+  }
+  .navigation-panel.wide {
+    width: 360px;
   }
   .header {
-    height: 48px;
+    flex: 0 0 48px;
     display: flex;
     flex-direction: row;
     justify-content: space-between;

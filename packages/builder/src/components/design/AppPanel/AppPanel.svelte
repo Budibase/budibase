@@ -1,5 +1,4 @@
 <script>
-  import ComponentSelectionList from "./ComponentSelectionList.svelte"
   import DevicePreviewSelect from "./DevicePreviewSelect.svelte"
   import AppPreview from "./AppPreview.svelte"
   import { store } from "builderStore"
@@ -7,7 +6,6 @@
 
 <div class="app-panel">
   <div class="header">
-    <ComponentSelectionList />
     {#if $store.clientFeatures.devicePreview}
       <DevicePreviewSelect />
     {/if}
