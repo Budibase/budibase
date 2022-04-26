@@ -17,6 +17,7 @@
   export let disabled = false
   export let fillWidth
   export let allowJS = true
+  export let updateOnChange = true
 
   const dispatch = createEventDispatcher()
   let bindingDrawer
@@ -44,6 +45,7 @@
     value={isJS ? "(JavaScript function)" : readableValue}
     on:change={event => onChange(event.detail)}
     {placeholder}
+    {updateOnChange}
   />
   {#if !disabled}
     <div class="icon" on:click={bindingDrawer.show}>

@@ -26,7 +26,7 @@ filterTests(['smoke', 'all'], () => {
 
     it("should add a URL param binding", () => {
       const paramName = "foo"
-      cy.createScreen("Test Param", `/test/:${paramName}`)
+      cy.createScreen(`/test/:${paramName}`)
       cy.addComponent("Elements", "Paragraph").then(componentId => {
         addSettingBinding("text", `URL.${paramName}`)
         // The builder preview pages don't have a real URL, so all we can do
