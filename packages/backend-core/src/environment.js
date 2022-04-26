@@ -30,9 +30,18 @@ module.exports = {
   COOKIE_DOMAIN: process.env.COOKIE_DOMAIN,
   PLATFORM_URL: process.env.PLATFORM_URL,
   TENANT_FEATURE_FLAGS: process.env.TENANT_FEATURE_FLAGS,
+  USE_COUCH: process.env.USE_COUCH || true,
   isTest,
   _set(key, value) {
     process.env[key] = value
     module.exports[key] = value
   },
+}
+
+// clean up any environment variable edge cases
+for (let [key, value] of Object.entries(module.exports)) {
+  // handle the edge case of "0" to disable an environment variable
+  if (value === "0") {
+    module.exports[key] = 0
+  }
 }
