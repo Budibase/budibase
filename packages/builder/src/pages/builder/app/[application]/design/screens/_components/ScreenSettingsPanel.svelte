@@ -14,6 +14,7 @@
   import RoleSelect from "components/design/settings/controls/RoleSelect.svelte"
   import { selectedScreen, store } from "builderStore"
   import sanitizeUrl from "builderStore/store/screenTemplates/utils/sanitizeUrl"
+  import { goto } from "@roxi/routify"
 
   let errors = {}
 
@@ -138,6 +139,6 @@
         props={{ ...setting.props, error: errors[setting.key] }}
       />
     {/each}
-    <Button cta>View components</Button>
+    <Button cta on:click={() => $goto("../components")}>View components</Button>
   </Layout>
 </SettingsPanel>
