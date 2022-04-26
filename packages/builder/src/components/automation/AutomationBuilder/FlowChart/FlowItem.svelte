@@ -48,10 +48,6 @@
     $automationStore.selectedAutomation?.automation?.definition?.steps.length +
     1
 
-  $: hasCompletedInputs = Object.keys(
-    block.schema?.inputs?.properties || {}
-  ).every(x => block?.inputs[x])
-
   $: loopingSelected =
     $automationStore.selectedAutomation?.automation.definition.steps.find(
       x => x.blockToLoop === block.id
@@ -290,13 +286,7 @@
   </Modal>
 </div>
 <div class="separator" />
-<Icon
-  on:click={() => actionModal.show()}
-  disabled={!hasCompletedInputs}
-  hoverable
-  name="AddCircle"
-  size="S"
-/>
+<Icon on:click={() => actionModal.show()} hoverable name="AddCircle" size="S" />
 {#if isTrigger ? totalBlocks > 1 : blockIdx !== totalBlocks - 2}
   <div class="separator" />
 {/if}
