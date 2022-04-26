@@ -28,9 +28,10 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
+    overflow: auto;
   }
   .header {
-    height: 50px;
+    flex: 0 0 48px;
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
