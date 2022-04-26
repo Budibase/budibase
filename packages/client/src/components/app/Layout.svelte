@@ -4,6 +4,8 @@
   import { Heading, Icon } from "@budibase/bbui"
   import { FieldTypes } from "../../constants"
   import active from "svelte-spa-router/active"
+  import MadeInBudibase from "../MadeInBudibase.svelte"
+  import licensing from "../../licensing"
 
   const { routeStore, styleable, linkable, builderStore } = getContext("sdk")
   const component = getContext("component")
@@ -164,6 +166,11 @@
       </div>
     </div>
   {/if}
+
+  {#if !$builderStore.inBuilder && licensing.logoEnabled()}
+    <MadeInBudibase />
+  {/if}
+
   <div class="main-wrapper">
     <div class="main size--{widthClass}">
       <slot />
