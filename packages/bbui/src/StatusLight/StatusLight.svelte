@@ -53,7 +53,7 @@
     --spectrum-statuslight-info-text-gap: 4px;
   }
   .spectrum-StatusLight.withText::before {
-    margin-right: 12px;
+    margin-right: 10px;
   }
   .custom::before {
     background: var(--color) !important;
