@@ -6,7 +6,7 @@
   onMount(() => {
     if ($selectedScreen) {
       // Select the screen slot if a screen exists
-      $redirect(`./slot`)
+      $redirect(`./${$selectedScreen.props._id}`)
     } else {
       // Otherwise go up so we can select a new valid screen
       $redirect("../")

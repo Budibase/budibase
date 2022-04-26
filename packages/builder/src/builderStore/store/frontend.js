@@ -48,7 +48,6 @@ const INITIAL_FRONTEND_STATE = {
   },
   currentFrontEndType: "none",
   selectedLayoutId: "",
-  selectedComponentId: "",
   errors: [],
   hasAppPackage: false,
   libraries: null,
@@ -61,6 +60,7 @@ const INITIAL_FRONTEND_STATE = {
 
   // URL params
   selectedScreenId: null,
+  selectedComponentId: null,
 }
 
 export const getFrontendStore = () => {
@@ -300,32 +300,6 @@ export const getFrontendStore = () => {
       },
     },
     components: {
-      select: component => {
-        const asset = get(currentAsset)
-        if (!asset || !component) {
-          return
-        }
-
-        // If this is the root component, select the asset instead
-        const parent = findComponentParent(asset.props, component._id)
-        if (parent == null) {
-          const state = get(store)
-          const isLayout = state.currentFrontEndType === FrontendTypes.LAYOUT
-          if (isLayout) {
-            store.actions.layouts.select(asset._id)
-          } else {
-            store.actions.screens.select(asset._id)
-          }
-          return
-        }
-
-        // Otherwise select the component
-        store.update(state => {
-          state.selectedComponentId = component._id
-          state.currentView = "component"
-          return state
-        })
-      },
       getDefinition: componentName => {
         if (!componentName) {
           return null
@@ -464,7 +438,10 @@ export const getFrontendStore = () => {
           parent._children = parent._children.filter(
             child => child._id !== component._id
           )
-          store.actions.components.select(parent)
+          store.update(state => {
+            state.selectedComponentId = parent._id
+            return state
+          })
         }
         await store.actions.preview.saveSelected()
       },
@@ -488,7 +465,10 @@ export const getFrontendStore = () => {
             parent._children = parent._children.filter(
               child => child._id !== component._id
             )
-            store.actions.components.select(parent)
+            store.update(state => {
+              state.selectedComponentId = parent._id
+              return state
+            })
           }
         }
       },
@@ -539,7 +519,7 @@ export const getFrontendStore = () => {
 
           // Save and select the new component
           promises.push(store.actions.preview.saveSelected())
-          store.actions.components.select(componentToPaste)
+          state.selectedComponentId = componentToPaste._id
           return state
         })
         await Promise.all(promises)

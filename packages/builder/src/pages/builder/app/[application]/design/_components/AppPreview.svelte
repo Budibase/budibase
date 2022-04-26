@@ -140,7 +140,10 @@
 
     try {
       if (type === "select-component" && data.id) {
-        store.actions.components.select({ _id: data.id })
+        store.update(state => {
+          state.selectedComponentId = data.id
+          return state
+        })
       } else if (type === "update-prop") {
         await store.actions.components.updateProp(data.prop, data.value)
       } else if (type === "delete-component" && data.id) {

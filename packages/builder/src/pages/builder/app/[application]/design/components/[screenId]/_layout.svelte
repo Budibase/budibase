@@ -18,6 +18,7 @@
     params,
     goto,
     redirect,
+    baseUrl: "..",
   })
 
   onDestroy(stopSyncing)

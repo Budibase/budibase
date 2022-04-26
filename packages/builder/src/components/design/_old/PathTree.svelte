@@ -1,10 +1,5 @@
 <script>
-  import {
-    store,
-    selectedComponent,
-    currentAsset,
-    screenSearchString,
-  } from "builderStore"
+  import { store, selectedComponent, currentAsset } from "builderStore"
   import instantiateStore from "./dragDropStore"
   import ComponentTree from "./ComponentTree.svelte"
   import PathDropdownMenu from "./PathDropdownMenu.svelte"

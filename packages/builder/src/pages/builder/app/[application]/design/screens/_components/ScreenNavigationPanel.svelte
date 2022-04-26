@@ -67,6 +67,19 @@
       <ScreenDropdownMenu screenId={screen._id} />
     </NavItem>
   {/each}
+  {#if !filteredScreens?.length}
+    <div class="empty">
+      There aren't any screens matching the current filters
+    </div>
+  {/if}
 </NavigationPanel>
 
 <ScreenWizard bind:showModal={showNewScreenModal} />
+
+<style>
+  .empty {
+    font-size: var(--spectrum-global-dimension-font-size-75);
+    color: var(--grey-7);
+    padding: 0 var(--spacing-l);
+  }
+</style>
