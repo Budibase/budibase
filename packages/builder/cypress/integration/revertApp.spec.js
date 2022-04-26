@@ -10,7 +10,7 @@ filterTests(['smoke', 'all'], () => {
         it("should try to revert an unpublished app", () => {
             // Click revert icon
             cy.get(".toprightnav").within(() => {
-                cy.get("[data-cy='revert-application-topnav']").click({ force: true })
+                cy.get("[aria-label='Revert']").click({ force: true })
             })
             cy.get(".spectrum-Dialog-grid").within(() => {
                 // Enter app name before revert
@@ -41,7 +41,7 @@ filterTests(['smoke', 'all'], () => {
             cy.addComponent("Elements", "Button")
             // Click Revert
             cy.get(".toprightnav").within(() => {
-                cy.get("[data-cy='revert-application-topnav']").click({ force: true })
+                cy.get("[aria-label='Revert']").click({ force: true })
             })
             cy.get(".spectrum-Dialog-grid").within(() => {
                 // Click Revert
@@ -58,7 +58,7 @@ filterTests(['smoke', 'all'], () => {
         it("should enter incorrect app name when reverting", () => {
             // Click Revert
             cy.get(".toprightnav").within(() => {
-                cy.get("[data-cy='revert-application-topnav']").click({ force: true })
+                cy.get("[aria-label='Revert']").click({ force: true })
             })
             // Enter incorrect app name
             cy.get(".spectrum-Dialog-grid").within(() => {

@@ -96,33 +96,31 @@
 </Modal>
 
 <!-- Publish complete -->
-<span class="publish-modal-wrap">
-  <Modal bind:this={publishCompleteModal}>
-    <ModalContent
-      confirmText="Done"
-      cancelText="View App"
-      onCancel={viewApp}
-      dataCy={"deploy-app-success-modal"}
-    >
-      <div slot="header" class="app-published-header">
-        <svg
-          width="26px"
-          height="26px"
-          class="spectrum-Icon success-icon"
-          focusable="false"
-        >
-          <use xlink:href="#spectrum-icon-18-GlobeCheck" />
-        </svg>
-        <span class="app-published-header-text">App Published!</span>
-      </div>
-      <CopyInput
-        value={publishedUrl}
-        label="You can view your app at:"
-        dataCy="deployed-app-url"
-      />
-    </ModalContent>
-  </Modal>
-</span>
+<Modal bind:this={publishCompleteModal}>
+  <ModalContent
+    confirmText="Done"
+    cancelText="View App"
+    onCancel={viewApp}
+    dataCy={"deploy-app-success-modal"}
+  >
+    <div slot="header" class="app-published-header">
+      <svg
+        width="26px"
+        height="26px"
+        class="spectrum-Icon success-icon"
+        focusable="false"
+      >
+        <use xlink:href="#spectrum-icon-18-GlobeCheck" />
+      </svg>
+      <span class="app-published-header-text">App Published!</span>
+    </div>
+    <CopyInput
+      value={publishedUrl}
+      label="You can view your app at:"
+      dataCy="deployed-app-url"
+    />
+  </ModalContent>
+</Modal>
 
 <style>
   .app-published-header {
