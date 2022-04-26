@@ -1,7 +1,7 @@
 {
   "name": "@budibase/worker",
   "email": "hi@budibase.com",
-  "version": "1.0.105-alpha.41",
+  "version": "1.0.122",
   "description": "Budibase background service",
   "main": "src/index.ts",
   "repository": {
@@ -31,9 +31,9 @@
   "author": "Budibase",
   "license": "GPL-3.0",
   "dependencies": {
-    "@budibase/backend-core": "^1.0.105-alpha.41",
-    "@budibase/pro": "1.0.105-alpha.41",
-    "@budibase/string-templates": "^1.0.105-alpha.41",
+    "@budibase/backend-core": "^1.0.122",
+    "@budibase/string-templates": "^1.0.122",
+    "@budibase/pro": "^1.0.122",
     "@koa/router": "^8.0.0",
     "@sentry/node": "6.17.7",
     "@techpass/passport-openidconnect": "^0.3.0",
@@ -58,7 +58,7 @@
     "passport-jwt": "^4.0.0",
     "passport-local": "^1.0.0",
     "pino-pretty": "^4.0.0",
-    "pouchdb": "^7.2.1",
+    "pouchdb": "7.3.0",
     "pouchdb-all-dbs": "^1.0.2",
     "server-destroy": "^1.0.1"
   },

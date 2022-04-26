@@ -4,7 +4,11 @@ const { newid } = require("../hashing")
 const REQUEST_ID_KEY = "requestId"
 
 class FunctionContext {
-  static getMiddleware(updateCtxFn = null, contextName = "session") {
+  static getMiddleware(
+    updateCtxFn = null,
+    destroyFn = null,
+    contextName = "session"
+  ) {
     const namespace = this.createNamespace(contextName)
 
     return async function (ctx, next) {
@@ -18,7 +22,14 @@ class FunctionContext {
           if (updateCtxFn) {
             updateCtxFn(ctx)
           }
-          next().then(resolve).catch(reject)
+          next()
+            .then(resolve)
+            .catch(reject)
+            .finally(() => {
+              if (destroyFn) {
+                return destroyFn(ctx)
+              }
+            })
         })
       )
     }

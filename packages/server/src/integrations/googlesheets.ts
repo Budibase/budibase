@@ -16,6 +16,7 @@ module GoogleSheetsModule {
   const { getGlobalDB } = require("@budibase/backend-core/tenancy")
   const { getScopedConfig } = require("@budibase/backend-core/db")
   const { Configs } = require("@budibase/backend-core/constants")
+  const fetch = require("node-fetch")
 
   interface GoogleSheetsConfig {
     spreadsheetId: string
@@ -26,6 +27,16 @@ module GoogleSheetsModule {
     appId: string
     accessToken: string
     refreshToken: string
+  }
+
+  interface AuthTokenRequest {
+    client_id: string
+    client_secret: string
+    refresh_token: string
+  }
+
+  interface AuthTokenResponse {
+    access_token: string
   }
 
   const SCHEMA: Integration = {
@@ -40,6 +51,7 @@ module GoogleSheetsModule {
     friendlyName: "Google Sheets",
     datasource: {
       spreadsheetId: {
+        display: "Google Sheet URL",
         type: DatasourceFieldTypes.STRING,
         required: true,
       },
@@ -135,6 +147,30 @@ module GoogleSheetsModule {
       return parts.length > 5 ? parts[5] : spreadsheetId
     }
 
+    async fetchAccessToken(
+      payload: AuthTokenRequest
+    ): Promise<AuthTokenResponse> {
+      const response = await fetch(
+        "https://www.googleapis.com/oauth2/v4/token",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            ...payload,
+            grant_type: "refresh_token",
+          }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      )
+
+      if (response.status !== 200) {
+        throw new Error("Error authenticating with google sheets.")
+      }
+
+      return response.json()
+    }
+
     async connect() {
       try {
         // Initialise oAuth client
@@ -154,14 +190,18 @@ module GoogleSheetsModule {
           clientId: googleConfig.clientID,
           clientSecret: googleConfig.clientSecret,
         })
-        oauthClient.on("tokens", tokens => {
-          oauthClient.setCredentials({
-            refresh_token: googleConfig.refreshToken,
-            access_token: tokens.access_token,
-          })
+
+        const tokenResponse = await this.fetchAccessToken({
+          client_id: googleConfig.clientID,
+          client_secret: googleConfig.clientSecret,
+          refresh_token: this.config.auth.refreshToken,
         })
-        oauthClient.credentials.access_token = this.config.auth.accessToken
-        oauthClient.credentials.refresh_token = this.config.auth.refreshToken
+
+        oauthClient.setCredentials({
+          refresh_token: this.config.auth.refreshToken,
+          access_token: tokenResponse.access_token,
+        })
+
         this.client.useOAuth2Client(oauthClient)
         await this.client.loadInfo()
       } catch (err) {

@@ -105,7 +105,6 @@ async function deployApp(deployment: any) {
     const replication = new Replication(config)
 
     console.log("Replication object created")
-
     await replication.replicate()
     console.log("replication complete.. replacing app meta doc")
     const db = getProdAppDB()
@@ -126,6 +125,8 @@ async function deployApp(deployment: any) {
       ...err,
       message: `Deployment Failed: ${err.message}`,
     }
+  } finally {
+    await replication.close()
   }
 }
 
