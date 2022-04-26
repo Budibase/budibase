@@ -2,6 +2,7 @@ const { outputProcessing } = require("../../../utilities/rowProcessor")
 const setup = require("./utilities")
 const { basicRow } = setup.structures
 const { doInAppContext } = require("@budibase/backend-core/context")
+const { doInTenant } = require("@budibase/backend-core/tenancy")
 
 // mock the fetch for the search system
 jest.mock("node-fetch")
@@ -340,17 +341,20 @@ describe("/rows", () => {
 
   describe("fetchEnrichedRows", () => {
     it("should allow enriching some linked rows", async () => {
-      const table = await config.createLinkedTable()
-      const firstRow = await config.createRow({
-        name: "Test Contact",
-        description: "original description",
-        tableId: table._id
-      })
-      const secondRow = await config.createRow({
-        name: "Test 2",
-        description: "og desc",
-        link: [{_id: firstRow._id}],
-        tableId: table._id,
+      const { table, firstRow, secondRow } = await doInTenant(setup.structures.TENANT_ID, async () => {
+        const table = await config.createLinkedTable()
+        const firstRow = await config.createRow({
+          name: "Test Contact",
+          description: "original description",
+          tableId: table._id
+        })
+        const secondRow = await config.createRow({
+          name: "Test 2",
+          description: "og desc",
+          link: [{_id: firstRow._id}],
+          tableId: table._id,
+        })
+        return { table, firstRow, secondRow }
       })
 
       // test basic enrichment
