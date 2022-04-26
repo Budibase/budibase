@@ -25,11 +25,11 @@
   import QueryParamSelector from "./QueryParamSelector.svelte"
   import CronBuilder from "./CronBuilder.svelte"
   import Editor from "components/integration/QueryEditor.svelte"
-  import { debounce } from "lodash"
   import ModalBindableInput from "components/common/bindings/ModalBindableInput.svelte"
   import FilterDrawer from "components/design/PropertiesPanel/PropertyControls/FilterEditor/FilterDrawer.svelte"
   import { LuceneUtils } from "@budibase/frontend-core"
   import { getSchemaForTable } from "builderStore/dataBinding"
+  import { Utils } from "@budibase/frontend-core"
 
   export let block
   export let testData
@@ -54,7 +54,7 @@
   $: schema = getSchemaForTable(tableId, { searchableSchema: true }).schema
   $: schemaFields = Object.values(schema || {})
 
-  const onChange = debounce(async function (e, key) {
+  const onChange = Utils.sequential(async (e, key) => {
     try {
       if (isTestModal) {
         // Special case for webhook, as it requires a body, but the schema already brings back the body's contents
@@ -82,7 +82,7 @@
     } catch (error) {
       notifications.error("Error saving automation")
     }
-  }, 800)
+  })
 
   function getAvailableBindings(block, automation) {
     if (!block || !automation) {
@@ -226,6 +226,7 @@
             on:change={e => onChange(e, key)}
             {bindings}
             fillWidth
+            updateOnChange={false}
           />
         {:else}
           <DrawerBindableInput
@@ -237,6 +238,7 @@
             on:change={e => onChange(e, key)}
             {bindings}
             allowJS={false}
+            updateOnChange={false}
           />
         {/if}
       {:else if value.customType === "query"}
@@ -310,6 +312,7 @@
             type={value.customType}
             on:change={e => onChange(e, key)}
             {bindings}
+            updateOnChange={false}
           />
         {:else}
           <div class="test">
@@ -321,6 +324,7 @@
               value={inputData[key]}
               on:change={e => onChange(e, key)}
               {bindings}
+              updateOnChange={false}
             />
           </div>
         {/if}
