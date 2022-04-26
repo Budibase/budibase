@@ -24,7 +24,7 @@ function checkAutoColumns(table, oldTable) {
     if (!schema.autocolumn || schema.subtype) {
       continue
     }
-    const oldSchema = oldTable.schema[key]
+    const oldSchema = oldTable && oldTable.schema[key]
     if (oldSchema && oldSchema.subtype) {
       table.schema[key].subtype = oldSchema.subtype
     } else {
