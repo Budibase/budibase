@@ -36,7 +36,7 @@
   }
 
   const setScreenSetting = (setting, value) => {
-    const { name, parser, validate } = setting
+    const { key, parser, validate } = setting
 
     // Parse value if required
     if (parser) {
@@ -48,7 +48,7 @@
       const error = validate(value)
       errors = {
         ...errors,
-        [name]: error,
+        [key]: error,
       }
       if (error) {
         return
@@ -56,13 +56,13 @@
     } else {
       errors = {
         ...errors,
-        [name]: null,
+        [key]: null,
       }
     }
 
     // Update screen object in store
     store.update(state => {
-      setWith(get(selectedScreen), name.split("."), value, Object)
+      setWith(get(selectedScreen), key.split("."), value, Object)
       return state
     })
 

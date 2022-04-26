@@ -1,7 +1,6 @@
 <script>
   import NavigationPanel from "components/design/NavigationPanel/NavigationPanel.svelte"
   import { Body, Layout } from "@budibase/bbui"
-  import AppPanel from "components/design/AppPanel/AppPanel.svelte"
   import ThemeEditor from "./_components/ThemeEditor.svelte"
 </script>
 
@@ -11,5 +10,3 @@
     <ThemeEditor />
   </Layout>
 </NavigationPanel>
-
-<AppPanel />

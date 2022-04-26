@@ -1,6 +1,7 @@
 <script>
   import { IconSideNav, IconSideNavItem } from "@budibase/bbui"
   import { goto, isActive } from "@roxi/routify"
+  import AppPanel from "./_components/AppPanel.svelte"
 </script>
 
 <div class="design">
@@ -41,6 +42,7 @@
 
   <div class="content">
     <slot />
+    <AppPanel />
   </div>
 </div>
 
@@ -63,5 +65,18 @@
     justify-content: flex-start;
     align-items: stretch;
     flex: 1 1 auto;
+  }
+  /*
+    This is hacky, yes, but it's the only way to prevent routify from
+    remounting the iframe on route changes.
+  */
+  .content :global(> *:last-child) {
+    order: 1;
+  }
+  .content :global(> *:first-child) {
+    order: 0;
+  }
+  .content :global(> *:nth-child(2)) {
+    order: 2;
   }
 </style>
