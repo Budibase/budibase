@@ -95,16 +95,15 @@ globals:
   logLevel: info
   selfHosted: "1" # set to 0 for budibase cloud environment, set to 1 for self-hosted setup
   multiTenancy: "0" # set to 0 to disable multiple orgs, set to 1 to enable multiple orgs
-  useQuotas: "0"
-  excludeQuotasTenants: "" # comma seperated list of tenants to exclude from quotas
   accountPortalUrl: ""
   accountPortalApiKey: ""
   cookieDomain: ""
   platformUrl: ""
   httpMigrations: "0"
   google:
-    clientId: "" 
+    clientId: ""
     secret: ""
+  automationMaxIterations: "500"
 
   createSecrets: true # creates an internal API key, JWT secrets and redis password for you
 
@@ -152,6 +151,11 @@ services:
     url: "" # only change if pointing to existing redis cluster and enabled: false
     password: "budibase" # recommended to override if using built-in redis
     storage: 100Mi
+    ## If defined, storageClassName: <storageClass>
+    ## If set to "-", storageClassName: "", which disables dynamic provisioning
+    ## If undefined (the default) or set to null, no storageClassName spec is
+    ##   set, choosing the default provisioner.
+    storageClass: "-"
 
   objectStore:
     minio: true
@@ -163,6 +167,11 @@ services:
     region: "" # AWS_REGION if using S3 or existing minio secret
     url: "http://minio-service:9000" # only change if pointing to existing minio cluster or S3 and minio: false
     storage: 100Mi
+    ## If defined, storageClassName: <storageClass>
+    ## If set to "-", storageClassName: "", which disables dynamic provisioning
+    ## If undefined (the default) or set to null, no storageClassName spec is
+    ##   set, choosing the default provisioner.
+    storageClass: "-"
 
 # Override values in couchDB subchart
 couchdb:
@@ -231,6 +240,8 @@ couchdb:
 
   ## Optional tolerations
   tolerations: []
+
+  affinity: {}
 
   service:
     # annotations:

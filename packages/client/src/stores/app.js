@@ -1,8 +1,14 @@
 import { API } from "api"
 import { get, writable } from "svelte/store"
 
+const initialState = {
+  appId: null,
+  isDevApp: false,
+  clientLoadTime: window.INIT_TIME ? Date.now() - window.INIT_TIME : null,
+}
+
 const createAppStore = () => {
-  const store = writable(null)
+  const store = writable(initialState)
 
   // Fetches the app definition including screens, layouts and theme
   const fetchAppDefinition = async () => {
@@ -13,11 +19,13 @@ const createAppStore = () => {
     try {
       const appDefinition = await API.fetchAppPackage(appId)
       store.set({
+        ...initialState,
         ...appDefinition,
         appId: appDefinition?.application?.appId,
+        isDevApp: appId.startsWith("app_dev"),
       })
     } catch (error) {
-      store.set(null)
+      store.set(initialState)
     }
   }
 

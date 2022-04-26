@@ -260,8 +260,9 @@ exports.find = async ctx => {
 
 exports.destroy = async function (ctx) {
   const db = getAppDB()
-  const { _id, _rev } = ctx.request.body
+  const { _id } = ctx.request.body
   let row = await db.get(_id)
+  let _rev = ctx.request.body._rev || row._rev
 
   if (row.tableId !== ctx.params.tableId) {
     throw "Supplied tableId doesn't match the row's tableId"

@@ -17,6 +17,7 @@
   export let disabled = false
   export let fillWidth
   export let allowJS = true
+  export let updateOnChange = true
 
   const dispatch = createEventDispatcher()
   let bindingDrawer
@@ -36,7 +37,7 @@
   }
 </script>
 
-<div class="control">
+<div class="control" class:disabled>
   <Input
     {label}
     {disabled}
@@ -44,6 +45,7 @@
     value={isJS ? "(JavaScript function)" : readableValue}
     on:change={event => onChange(event.detail)}
     {placeholder}
+    {updateOnChange}
   />
   {#if !disabled}
     <div class="icon" on:click={bindingDrawer.show}>
@@ -102,5 +104,9 @@
     color: var(--spectrum-alias-text-color-hover);
     background-color: var(--spectrum-global-color-gray-50);
     border-color: var(--spectrum-alias-border-color-hover);
+  }
+
+  .control:not(.disabled) :global(.spectrum-Textfield-input) {
+    padding-right: 40px;
   }
 </style>

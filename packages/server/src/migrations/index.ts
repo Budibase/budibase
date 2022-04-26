@@ -7,6 +7,8 @@ const {
 import * as userEmailViewCasing from "./functions/userEmailViewCasing"
 import * as quota1 from "./functions/quotas1"
 import * as appUrls from "./functions/appUrls"
+import * as developerQuota from "./functions/developerQuota"
+import * as publishedAppsQuota from "./functions/publishedAppsQuota"
 
 export interface Migration {
   type: string
@@ -26,7 +28,7 @@ export interface Migration {
  */
 export interface MigrationOptions {
   tenantIds?: string[]
-  forced?: {
+  force?: {
     [type: string]: string[]
   }
 }
@@ -47,6 +49,16 @@ export const MIGRATIONS: Migration[] = [
     name: "app_urls",
     opts: { all: true },
     fn: appUrls.run,
+  },
+  {
+    type: MIGRATION_TYPES.GLOBAL,
+    name: "developer_quota",
+    fn: developerQuota.run,
+  },
+  {
+    type: MIGRATION_TYPES.GLOBAL,
+    name: "published_apps_quota",
+    fn: publishedAppsQuota.run,
   },
 ]
 
