@@ -43,7 +43,7 @@
   }
 
   const coerce = (value, type) => {
-    var re = new RegExp(/{{([^{].*?)}}/g)
+    const re = new RegExp(/{{([^{].*?)}}/g)
     if (re.test(value)) {
       return value
     }
