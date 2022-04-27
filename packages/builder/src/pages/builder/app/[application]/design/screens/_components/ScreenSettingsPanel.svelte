@@ -61,6 +61,12 @@
       }
     }
 
+    // Home screen changes need to be handled manually
+    if (key === "routing.homeScreen") {
+      store.actions.screens.updateHomeScreen(get(selectedScreen), value)
+      return
+    }
+
     // Update screen object in store
     store.update(state => {
       setWith(get(selectedScreen), key.split("."), value, Object)

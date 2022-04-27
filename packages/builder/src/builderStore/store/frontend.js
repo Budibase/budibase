@@ -225,6 +225,31 @@ export const getFrontendStore = () => {
         // Refresh routes
         await store.actions.routing.fetch()
       },
+      updateHomeScreen: async (screen, makeHomeScreen = true) => {
+        let promises = []
+
+        // Find any existing home screen for this role so we can remove it,
+        // if we are setting this to be the new home screen
+        if (makeHomeScreen) {
+          const roleId = screen.routing.roleId
+          let existingHomeScreen = get(store).screens.find(s => {
+            return (
+              s.routing.roleId === roleId &&
+              s.routing.homeScreen &&
+              s._id !== screen._id
+            )
+          })
+          if (existingHomeScreen) {
+            existingHomeScreen.routing.homeScreen = false
+            promises.push(store.actions.screens.save(existingHomeScreen))
+          }
+        }
+
+        // Update the passed in screen
+        screen.routing.homeScreen = makeHomeScreen
+        promises.push(store.actions.screens.save(screen))
+        return await Promise.all(promises)
+      },
     },
     preview: {
       saveSelected: async () => {
