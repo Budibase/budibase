@@ -4,9 +4,11 @@
   export let title
   export let showAddButton = false
   export let showBackButton = false
+  export let showExpandIcon = false
   export let onClickAddButton
   export let onClickBackButton
-  export let wide = false
+
+  let wide = false
 </script>
 
 <div class="navigation-panel" class:wide>
@@ -17,6 +19,13 @@
     <div class="title">
       <Heading size="XS">{title || ""}</Heading>
     </div>
+    {#if showExpandIcon}
+      <Icon
+        name={wide ? "Minimize" : "Maximize"}
+        hoverable
+        on:click={() => (wide = !wide)}
+      />
+    {/if}
     {#if showAddButton}
       <div class="add-button" on:click={onClickAddButton}>
         <Icon name="Add" />
@@ -30,16 +39,17 @@
 
 <style>
   .navigation-panel {
-    width: 260px;
+    width: 280px;
     background: var(--background);
     border-right: var(--border-light);
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
+    transition: width 130ms ease-out;
   }
   .navigation-panel.wide {
-    width: 360px;
+    width: 420px;
   }
   .header {
     flex: 0 0 48px;
