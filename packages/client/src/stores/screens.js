@@ -60,6 +60,9 @@ const createScreenStore = () => {
               title: activeScreen.navigation ?? $appStore.application?.name,
             }
           }
+          if (!navigationProps.navigation) {
+            navigationProps.navigation = "Top"
+          }
         }
         activeLayout = {
           _id: "layout",
