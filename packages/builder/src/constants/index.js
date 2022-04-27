@@ -11,6 +11,13 @@ export const RoleColours = {
   [Roles.PUBLIC]: "var(--spectrum-global-color-static-yellow-400)",
 }
 
+export const RolePriorities = {
+  [Roles.ADMIN]: 4,
+  [Roles.POWER]: 3,
+  [Roles.BASIC]: 2,
+  [Roles.PUBLIC]: 1,
+}
+
 export const FrontendTypes = {
   PAGE: "page",
   SCREEN: "screen",

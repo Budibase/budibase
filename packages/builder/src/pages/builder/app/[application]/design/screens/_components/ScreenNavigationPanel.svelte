@@ -1,11 +1,11 @@
 <script>
-  import { Search, Layout, Select } from "@budibase/bbui"
+  import { Search, Layout, Select, Body } from "@budibase/bbui"
   import NavigationPanel from "components/design/navigation/NavigationPanel.svelte"
   import { roles } from "stores/backend"
   import { store } from "builderStore"
   import NavItem from "components/common/NavItem.svelte"
   import ScreenDropdownMenu from "./ScreenDropdownMenu.svelte"
-  import { RoleColours } from "constants"
+  import { RoleColours, RolePriorities } from "constants"
   import ScreenWizard from "./ScreenWizard.svelte"
   let searchString
   let accessRole = "all"
@@ -27,6 +27,19 @@
       })
       .slice()
       .sort((a, b) => {
+        // Sort by role first
+        const roleA = RolePriorities[a.routing.roleId]
+        const roleB = RolePriorities[b.routing.roleId]
+        if (roleA !== roleB) {
+          return roleA > roleB ? -1 : 1
+        }
+        // Then put home screens first
+        const homeA = a.routing.homeScreen
+        const homeB = b.routing.homeScreen
+        if (homeA !== homeB) {
+          return homeA ? -1 : 1
+        }
+        // Finally sort alphabetically by route
         return a.routing.route < b.routing.route ? -1 : 1
       })
   }
@@ -68,18 +81,12 @@
     </NavItem>
   {/each}
   {#if !filteredScreens?.length}
-    <div class="empty">
-      There aren't any screens matching the current filters
-    </div>
+    <Layout paddingY="" paddingX="L">
+      <Body size="S">
+        There aren't any screens matching the current filters
+      </Body>
+    </Layout>
   {/if}
 </NavigationPanel>
 
 <ScreenWizard bind:showModal={showNewScreenModal} />
-
-<style>
-  .empty {
-    font-size: var(--spectrum-global-dimension-font-size-75);
-    color: var(--grey-7);
-    padding: 0 var(--spacing-l);
-  }
-</style>
