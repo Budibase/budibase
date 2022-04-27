@@ -39,7 +39,11 @@
       {#if $store.clientFeatures.devicePreview}
         <DevicePreviewSelect />
       {/if}
-      <Button cta icon="Add" on:click={() => $goto(newComponentUrl)}>
+      <Button
+        cta
+        icon="Add"
+        on:click={() => $goto(`./components/${$selectedScreen._id}/new`)}
+      >
         Component
       </Button>
     </div>

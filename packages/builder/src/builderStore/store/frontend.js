@@ -5,6 +5,7 @@ import {
   mainLayout,
   selectedComponent,
   selectedAccessRole,
+  store,
 } from "builderStore"
 import {
   datasources,
