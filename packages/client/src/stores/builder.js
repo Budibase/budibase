@@ -9,7 +9,6 @@ const dispatchEvent = (type, data = {}) => {
 const createBuilderStore = () => {
   const initialState = {
     inBuilder: false,
-    layout: null,
     screen: null,
     selectedComponentId: null,
     editMode: false,
@@ -20,6 +19,9 @@ const createBuilderStore = () => {
     customTheme: null,
     previewDevice: "desktop",
     isDragging: false,
+
+    // Legacy - allow the builder to specify a layout
+    layout: null,
   }
   const store = writable(initialState)
   const actions = {

@@ -13,31 +13,69 @@ const createScreenStore = () => {
     [appStore, routeStore, builderStore],
     ([$appStore, $routeStore, $builderStore]) => {
       let activeLayout, activeScreen
-      let layouts, screens
+      let screens
+
       if ($builderStore.inBuilder) {
         // Use builder defined definitions if inside the builder preview
-        activeLayout = $builderStore.layout
         activeScreen = $builderStore.screen
-        layouts = [activeLayout]
         screens = [activeScreen]
-      } else {
-        activeLayout = { props: { _component: "screenslot" } }
 
+        // Legacy - allow the builder to specify a layout
+        if ($builderStore.layout) {
+          activeLayout = $builderStore.layout
+        }
+      } else {
         // Find the correct screen by matching the current route
         screens = $appStore.screens
-        layouts = $appStore.layouts
         if ($routeStore.activeRoute) {
           activeScreen = screens.find(
             screen => screen._id === $routeStore.activeRoute.screenId
           )
         }
+
+        // Legacy - find the custom layout for the selected screen
         if (activeScreen) {
-          activeLayout = layouts.find(
+          const screenLayout = $appStore.layouts?.find(
             layout => layout._id === activeScreen.layoutId
           )
+          if (screenLayout) {
+            activeLayout = screenLayout
+          }
         }
       }
-      return { layouts, screens, activeLayout, activeScreen }
+
+      // If we don't have a legacy custom layout, build a layout structure
+      // from the screen navigation settings
+      if (!activeLayout) {
+        activeLayout = {
+          _id: "layout",
+          props: {
+            _component: "@budibase/standard-components/layout",
+            _children: [
+              {
+                _component: "screenslot",
+                _id: "screenslot",
+                _styles: {
+                  normal: {
+                    flex: "1 1 auto",
+                    display: "flex",
+                    "flex-direction": "column",
+                    "justify-content": "flex-start",
+                    "align-items": "stretch",
+                  },
+                },
+              },
+            ],
+            // If this is a legacy screen without any navigation settings,
+            // fall back to just showing the app title
+            ...(activeScreen.navigation || {
+              title: $appStore.application?.name,
+            }),
+          },
+        }
+      }
+
+      return { screens, activeLayout, activeScreen }
     }
   )
 

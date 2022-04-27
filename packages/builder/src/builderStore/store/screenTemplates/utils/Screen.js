@@ -5,7 +5,7 @@ export class Screen extends BaseStructure {
   constructor() {
     super(true)
     this._json = {
-      layoutId: "layout_private_master",
+      showNavigation: true,
       props: {
         _id: Helpers.uuid(),
         _component: "@budibase/standard-components/container",
