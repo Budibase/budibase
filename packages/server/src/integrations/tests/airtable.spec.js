@@ -7,7 +7,9 @@ class TestConfiguration {
     this.integration = new AirtableIntegration.integration(config) 
     this.client = {
       create: jest.fn(),
-      select: jest.fn(),
+      select: jest.fn(() => ({
+        firstPage: jest.fn(() => []),
+      })),
       update: jest.fn(),
       destroy: jest.fn(),
     }

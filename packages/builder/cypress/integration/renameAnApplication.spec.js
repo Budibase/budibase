@@ -99,7 +99,7 @@ filterTests(['all'], () => {
       cy.searchForApplication(originalName)
       cy.get(".appTable")
         .within(() => {
-          cy.get("[data-cy='app-row-actions-menu']").eq(0).click()
+          cy.get("[aria-label='More']").eq(0).click()
         })
       // Check for when an app is published
       if (published == true) {

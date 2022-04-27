@@ -67,19 +67,21 @@
   data-cy={dataCy}
 >
   <div class="spectrum-Dialog-grid">
-    <h1
-      class="spectrum-Dialog-heading spectrum-Dialog-heading--noHeader"
-      class:noDivider={!showDivider}
-      class:header-spacing={$$slots.header}
-    >
-      {#if title}
-        {title}
-      {:else if $$slots.header}
-        <slot name="header" />
+    {#if title || $$slots.header}
+      <h1
+        class="spectrum-Dialog-heading spectrum-Dialog-heading--noHeader"
+        class:noDivider={!showDivider}
+        class:header-spacing={$$slots.header}
+      >
+        {#if title}
+          {title}
+        {:else if $$slots.header}
+          <slot name="header" />
+        {/if}
+      </h1>
+      {#if showDivider}
+        <Divider size="M" />
       {/if}
-    </h1>
-    {#if showDivider && (title || $$slots.header)}
-      <Divider size="M" />
     {/if}
 
     <!-- TODO: Remove content-grid class once Layout components are in bbui -->

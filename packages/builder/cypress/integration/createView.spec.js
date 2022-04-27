@@ -125,7 +125,7 @@ filterTests(['smoke', 'all'], () => {
 
     it("renames a view", () => {
       cy.contains(".nav-item", "Test View")
-        .find(".actions .icon")
+        .find(".actions .icon.open-popover")
         .click({ force: true })
       cy.get(".spectrum-Menu-itemLabel").contains("Edit").click()
       cy.get(".modal-inner-wrapper").within(() => {
@@ -138,7 +138,7 @@ filterTests(['smoke', 'all'], () => {
 
     it("deletes a view", () => {
       cy.contains(".nav-item", "Test View Updated")
-        .find(".actions .icon")
+        .find(".actions .icon.open-popover")
         .click({ force: true })
       cy.contains("Delete").click()
       cy.contains("Delete View").click()

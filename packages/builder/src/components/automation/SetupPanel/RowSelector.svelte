@@ -43,6 +43,11 @@
   }
 
   const coerce = (value, type) => {
+    const re = new RegExp(/{{([^{].*?)}}/g)
+    if (re.test(value)) {
+      return value
+    }
+
     if (type === "boolean") {
       if (typeof value === "boolean") {
         return value
@@ -120,6 +125,7 @@
                 {bindings}
                 fillWidth={true}
                 allowJS={true}
+                updateOnChange={false}
               />
             {/if}
           {:else if !rowControl}
@@ -137,6 +143,7 @@
               {bindings}
               fillWidth={true}
               allowJS={true}
+              updateOnChange={false}
             />
           {/if}
         {/if}

@@ -1,63 +1,18 @@
 <script>
   import { store, automationStore } from "builderStore"
   import { roles, flags } from "stores/backend"
-  import {
-    Icon,
-    Tabs,
-    Tab,
-    notifications,
-    PopoverMenu,
-    Layout,
-    Button,
-    Heading,
-    Body,
-  } from "@budibase/bbui"
-  import DeployModal from "components/deploy/DeployModal.svelte"
+  import { Icon, Tabs, Tab, Heading, notifications } from "@budibase/bbui"
   import RevertModal from "components/deploy/RevertModal.svelte"
-  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+  import DeployNavigation from "components/deploy/DeployNavigation.svelte"
   import { API } from "api"
-  import { auth, apps } from "stores/portal"
   import { isActive, goto, layout, redirect } from "@roxi/routify"
   import { capitalise } from "helpers"
   import { onMount, onDestroy } from "svelte"
-  import { processStringSync } from "@budibase/string-templates"
-  import { checkIncomingDeploymentStatus } from "components/deploy/utils"
-  import analytics, { Events, EventSource } from "analytics"
 
   export let application
 
   // Get Package and set store
   let promise = getPackage()
-  let unpublishModal
-  let publishPopover
-
-  $: enrichedApps = enrichApps($apps, $auth.user)
-  const enrichApps = (apps, user) => {
-    const enrichedApps = apps
-      .map(app => ({
-        ...app,
-        deployed: app.status === "published",
-        lockedYou: app.lockedBy && app.lockedBy.email === user?.email,
-        lockedOther: app.lockedBy && app.lockedBy.email !== user?.email,
-      }))
-      .filter(app => {
-        return app.devId === application
-      })
-
-    return enrichedApps
-  }
-
-  $: selectedApp = enrichedApps.length > 0 ? enrichedApps[0] : {}
-
-  $: deployments = []
-  $: latestDeployments = deployments
-    .filter(deployment => deployment.status === "SUCCESS")
-    .sort((a, b) => a.updatedAt > b.updatedAt)
-
-  $: isPublished =
-    selectedApp.deployed && latestDeployments && latestDeployments?.length
-      ? true
-      : false
 
   // Sync once when you load the app
   let hasSynced = false
@@ -65,23 +20,9 @@
   $: selected = capitalise(
     $layout.children.find(layout => $isActive(layout.path))?.title ?? "data"
   )
-  $: appInfo = $apps?.find(app => app.devId === application)
-  $: published = appInfo?.status === "published"
 
   const previewApp = () => {
     window.open(`/${application}`)
-  }
-
-  const viewApp = () => {
-    analytics.captureEvent(Events.APP.VIEW_PUBLISHED, {
-      appId: selectedApp.appId,
-      eventSource: EventSource.PORTAL,
-    })
-    if (selectedApp.url) {
-      window.open(`/app${selectedApp.url}`)
-    } else {
-      window.open(`/${selectedApp.prodId}`)
-    }
   }
 
   async function getPackage() {
@@ -114,74 +55,20 @@
     })
   }
 
-  const reviewPendingDeployments = (deployments, newDeployments) => {
-    if (deployments.length > 0) {
-      const pending = checkIncomingDeploymentStatus(deployments, newDeployments)
-      if (pending.length) {
-        notifications.warning(
-          "Deployment has been queued and will be processed shortly"
-        )
-      }
-    }
-  }
-
-  async function fetchDeployments() {
-    try {
-      const newDeployments = await API.getAppDeployments()
-      reviewPendingDeployments(deployments, newDeployments)
-      return newDeployments
-    } catch (err) {
-      notifications.error("Error fetching deployment history")
-    }
-  }
-
   onMount(async () => {
     if (!hasSynced && application) {
       try {
         await API.syncApp(application)
-        await apps.load()
       } catch (error) {
         notifications.error("Failed to sync with production database")
       }
       hasSynced = true
     }
-    deployments = await fetchDeployments()
   })
 
   onDestroy(() => {
     store.actions.reset()
   })
-
-  const unpublishApp = () => {
-    publishPopover.hide()
-    unpublishModal.show()
-  }
-
-  const completePublish = async () => {
-    try {
-      await apps.load()
-      deployments = await fetchDeployments()
-    } catch (err) {
-      notifications.error("Error refreshing app")
-    }
-  }
-
-  const confirmUnpublishApp = async () => {
-    if (!application || !isPublished) {
-      //confirm the app has loaded.
-      return
-    }
-    try {
-      analytics.captureEvent(Events.APP.UNPUBLISHED, {
-        appId: selectedApp.appId,
-      })
-      await API.unpublishApp(selectedApp.prodId)
-      await apps.load()
-      notifications.success("App unpublished successfully")
-    } catch (err) {
-      notifications.error("Error unpublishing app")
-    }
-  }
 </script>
 
 {#await promise}
@@ -215,87 +102,20 @@
         <RevertModal />
         <Icon
           name="Visibility"
+          tooltip="Open app preview"
           hoverable
           on:click={previewApp}
-          tooltip="View app preview"
         />
-        {#if isPublished}
-          <PopoverMenu
-            bind:this={publishPopover}
-            align="right"
-            disabled={!isPublished}
-            dataCy="publish-popover-menu"
-          >
-            <div slot="control" class="icon app-status-icon">
-              <Icon
-                size="M"
-                hoverable
-                name="Globe"
-                disabled={!isPublished}
-                tooltip="Your published app"
-              />
-            </div>
-            <Layout gap="M">
-              <Heading size="XS">Your published app</Heading>
-              <Body size="S">
-                {#if isPublished}
-                  {processStringSync(
-                    "Last published {{ duration time 'millisecond' }} ago",
-                    {
-                      time:
-                        new Date().getTime() -
-                        new Date(latestDeployments[0].updatedAt).getTime(),
-                    }
-                  )}
-                {/if}
-              </Body>
-              <div class="publish-popover-actions">
-                <Button
-                  warning={true}
-                  icon="GlobeStrike"
-                  disabled={!isPublished}
-                  on:click={unpublishApp}
-                  dataCy="publish-popover-action"
-                >
-                  Unpublish
-                </Button>
-                <Button cta on:click={viewApp}>View app</Button>
-              </div>
-            </Layout>
-          </PopoverMenu>
-        {/if}
-
-        {#if !isPublished}
-          <Icon
-            size="M"
-            name="GlobeStrike"
-            disabled
-            tooltip="Your app has not been published yet"
-          />
-        {/if}
-
-        <DeployModal onOk={completePublish} />
+        <DeployNavigation {application} />
       </div>
     </div>
     <slot />
-    <ConfirmDialog
-      bind:this={unpublishModal}
-      title="Confirm unpublish"
-      okText="Unpublish app"
-      onOk={confirmUnpublishApp}
-      dataCy={"unpublish-modal"}
-    >
-      Are you sure you want to unpublish the app <b>{selectedApp?.name}</b>?
-    </ConfirmDialog>
   </div>
 {:catch error}
   <p>Something went wrong: {error.message}</p>
 {/await}
 
 <style>
-  .publish-popover-actions :global([data-cy="publish-popover-action"]) {
-    margin-right: var(--spacing-s);
-  }
   .loading {
     min-height: 100%;
     height: 100%;

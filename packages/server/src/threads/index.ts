@@ -26,6 +26,7 @@ export class Thread {
   count: any
   disableThreading: any
   workers: any
+  timeoutMs: any
 
   constructor(type: any, opts: any = { timeoutMs: null, count: 1 }) {
     this.type = type
@@ -41,6 +42,7 @@ export class Thread {
         maxConcurrentWorkers: this.count,
       }
       if (opts.timeoutMs) {
+        this.timeoutMs = opts.timeoutMs
         workerOpts.maxCallTime = opts.timeoutMs
       }
       this.workers = workerFarm(workerOpts, typeToFile(type))
@@ -57,7 +59,13 @@ export class Thread {
         fncToCall = this.workers
       }
       fncToCall(data, (err: any, response: any) => {
-        if (err) {
+        if (err && err.type === "TimeoutError") {
+          reject(
+            new Error(
+              `Query response time exceeded ${this.timeoutMs}ms timeout.`
+            )
+          )
+        } else if (err) {
           reject(err)
         } else {
           resolve(response)
