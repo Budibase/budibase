@@ -23,8 +23,8 @@ filterTests(['all'], () => {
         cy.get(".spectrum-Button").contains("Edit").click({ force: true })
       })
       
-      cy.get(".app-status-icon svg[aria-label='GlobeStrike']").should("exist")
-      cy.get(".app-status-icon svg[aria-label='Globe']").should("not.exist")
+      cy.get(".deployment-top-nav svg[aria-label='GlobeStrike']").should("exist")
+      cy.get(".deployment-top-nav svg[aria-label='Globe']").should("not.exist")
     })
 
     it("Should publish an application and correctly reflect that", () => {
@@ -61,13 +61,13 @@ filterTests(['all'], () => {
         cy.get(".spectrum-Button").contains("Edit").click({ force: true })
       })
 
-      cy.get(".app-status-icon svg[aria-label='Globe']").should("exist").click({ force: true })
+      cy.get(".deployment-top-nav svg[aria-label='Globe']").should("exist").click({ force: true })
       
       cy.get("[data-cy='publish-popover-menu']").should("be.visible")
       .within(() => {
         cy.get("[data-cy='publish-popover-action']").should("exist")
-        cy.get("button").contains("View App").should("exist")
-        cy.get(".publish-popover-message").should("have.text", "Last Published: a few seconds ago")
+        cy.get("button").contains("View app").should("exist")
+        cy.get(".publish-popover-message").should("have.text", "Last published a few seconds ago")
       })
     })
 
@@ -89,7 +89,7 @@ filterTests(['all'], () => {
       })
 
       //The published status 
-      cy.get(".app-status-icon svg[aria-label='Globe']").should("exist")
+      cy.get(".deployment-top-nav svg[aria-label='Globe']").should("exist")
       .click({ force: true })
 
       cy.get("[data-cy='publish-popover-menu']").should("be.visible")
@@ -101,7 +101,7 @@ filterTests(['all'], () => {
         cy.get(".confirm-wrap button").click({ force: true }
       )})
 
-      cy.get(".app-status-icon svg[aria-label='GlobeStrike']").should("exist")
+      cy.get(".deployment-top-nav svg[aria-label='GlobeStrike']").should("exist")
 
       cy.visit(`${Cypress.config().baseUrl}/builder`)
 

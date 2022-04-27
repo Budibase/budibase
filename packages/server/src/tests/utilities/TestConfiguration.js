@@ -1,6 +1,4 @@
-const core = require("@budibase/backend-core")
-const CouchDB = require("../../db")
-core.init(CouchDB)
+require("../../db").init()
 const { BUILTIN_ROLE_IDS } = require("@budibase/backend-core/roles")
 const env = require("../../environment")
 const {
@@ -20,7 +18,7 @@ const supertest = require("supertest")
 const { cleanup } = require("../../utilities/fileSystem")
 const { Cookies, Headers } = require("@budibase/backend-core/constants")
 const { jwt } = require("@budibase/backend-core/auth")
-const { getGlobalDB } = require("@budibase/backend-core/tenancy")
+const { doInTenant, doWithGlobalDB } = require("@budibase/backend-core/tenancy")
 const { createASession } = require("@budibase/backend-core/sessions")
 const { user: userCache } = require("@budibase/backend-core/cache")
 const newid = require("../../db/newid")
@@ -57,8 +55,20 @@ class TestConfiguration {
     return this.appId
   }
 
-  getCouch() {
-    return CouchDB
+  async doInContext(appId, task) {
+    if (!appId) {
+      appId = this.appId
+    }
+    return doInTenant(TENANT_ID, () => {
+      // check if already in a context
+      if (context.getAppId() == null && appId !== null) {
+        return context.doInAppContext(appId, async () => {
+          return task()
+        })
+      } else {
+        return task()
+      }
+    })
   }
 
   async _req(config, params, controlFunc) {
@@ -72,35 +82,28 @@ class TestConfiguration {
     request.request = {
       body: config,
     }
-    async function run() {
+    return this.doInContext(this.appId, async () => {
       if (params) {
         request.params = params
       }
       await controlFunc(request)
       return request.body
-    }
-    // check if already in a context
-    if (context.getAppId() == null && this.appId !== null) {
-      return context.doInAppContext(this.appId, async () => {
-        return run()
-      })
-    } else {
-      return run()
-    }
+    })
   }
 
   async generateApiKey(userId = GLOBAL_USER_ID) {
-    const db = getGlobalDB(TENANT_ID)
-    const id = generateDevInfoID(userId)
-    let devInfo
-    try {
-      devInfo = await db.get(id)
-    } catch (err) {
-      devInfo = { _id: id, userId }
-    }
-    devInfo.apiKey = encrypt(`${TENANT_ID}${SEPARATOR}${newid()}`)
-    await db.put(devInfo)
-    return devInfo.apiKey
+    return doWithGlobalDB(TENANT_ID, async db => {
+      const id = generateDevInfoID(userId)
+      let devInfo
+      try {
+        devInfo = await db.get(id)
+      } catch (err) {
+        devInfo = { _id: id, userId }
+      }
+      devInfo.apiKey = encrypt(`${TENANT_ID}${SEPARATOR}${newid()}`)
+      await db.put(devInfo)
+      return devInfo.apiKey
+    })
   }
 
   async globalUser({
@@ -109,34 +112,35 @@ class TestConfiguration {
     email = EMAIL,
     roles,
   } = {}) {
-    const db = getGlobalDB(TENANT_ID)
-    let existing
-    try {
-      existing = await db.get(id)
-    } catch (err) {
-      existing = { email }
-    }
-    const user = {
-      _id: id,
-      ...existing,
-      roles: roles || {},
-      tenantId: TENANT_ID,
-    }
-    await createASession(id, {
-      sessionId: "sessionid",
-      tenantId: TENANT_ID,
-      csrfToken: CSRF_TOKEN,
+    return doWithGlobalDB(TENANT_ID, async db => {
+      let existing
+      try {
+        existing = await db.get(id)
+      } catch (err) {
+        existing = { email }
+      }
+      const user = {
+        _id: id,
+        ...existing,
+        roles: roles || {},
+        tenantId: TENANT_ID,
+      }
+      await createASession(id, {
+        sessionId: "sessionid",
+        tenantId: TENANT_ID,
+        csrfToken: CSRF_TOKEN,
+      })
+      if (builder) {
+        user.builder = { global: true }
+      } else {
+        user.builder = { global: false }
+      }
+      const resp = await db.put(user)
+      return {
+        _rev: resp._rev,
+        ...user,
+      }
     })
-    if (builder) {
-      user.builder = { global: true }
-    } else {
-      user.builder = { global: false }
-    }
-    const resp = await db.put(user)
-    return {
-      _rev: resp._rev,
-      ...user,
-    }
   }
 
   // use a new id as the name to avoid name collisions
@@ -205,9 +209,12 @@ class TestConfiguration {
 
   async createApp(appName) {
     // create dev app
+    // clear any old app
+    this.appId = null
+    await context.updateAppId(null)
     this.app = await this._req({ name: appName }, null, controllers.app.create)
     this.appId = this.app.appId
-    context.updateAppId(this.appId)
+    await context.updateAppId(this.appId)
 
     // create production app
     this.prodApp = await this.deploy()

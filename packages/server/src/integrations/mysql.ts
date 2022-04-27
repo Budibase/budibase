@@ -15,6 +15,7 @@ import {
 } from "./utils"
 import { DatasourcePlus } from "./base/datasourcePlus"
 import dayjs from "dayjs"
+const { NUMBER_REGEX } = require("../utilities")
 
 module MySQLModule {
   const mysql = require("mysql2/promise")
@@ -26,7 +27,8 @@ module MySQLModule {
     user: string
     password: string
     database: string
-    ssl?: object
+    ssl?: { [key: string]: any }
+    rejectUnauthorized: boolean
   }
 
   const SCHEMA: Integration = {
@@ -64,6 +66,11 @@ module MySQLModule {
         type: DatasourceFieldTypes.OBJECT,
         required: false,
       },
+      rejectUnauthorized: {
+        type: DatasourceFieldTypes.BOOLEAN,
+        default: true,
+        required: false,
+      },
     },
     query: {
       create: {
@@ -87,7 +94,7 @@ module MySQLModule {
       if (typeof binding !== "string") {
         continue
       }
-      const matches = binding.match(/^\d*$/g)
+      const matches = binding.match(NUMBER_REGEX)
       // check if number first
       if (matches && matches[0] !== "" && !isNaN(Number(matches[0]))) {
         bindings[i] = parseFloat(binding)
@@ -113,6 +120,16 @@ module MySQLModule {
       if (config.ssl && Object.keys(config.ssl).length === 0) {
         delete config.ssl
       }
+      // make sure this defaults to true
+      if (
+        config.rejectUnauthorized != null &&
+        !config.rejectUnauthorized &&
+        config.ssl
+      ) {
+        config.ssl.rejectUnauthorized = config.rejectUnauthorized
+      }
+      // @ts-ignore
+      delete config.rejectUnauthorized
       this.config = config
     }
 

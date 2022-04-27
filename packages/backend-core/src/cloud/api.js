@@ -29,9 +29,7 @@ class API {
         credentials: "include",
       }
 
-      const resp = await fetch(`${this.host}${url}`, requestOptions)
-
-      return resp
+      return await fetch(`${this.host}${url}`, requestOptions)
     }
 
   post = this.apiCall("POST")

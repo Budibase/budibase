@@ -9,13 +9,17 @@ yarn link
 cd -
 
 if [ -d "../budibase-pro" ]; then
-  cd ../budibase-pro/packages/pro
+  cd ../budibase-pro
+  yarn bootstrap
+
+  cd packages/pro
   echo "Linking pro"
   yarn link
 
   echo "Linking backend-core to pro"
   yarn link '@budibase/backend-core'
-  cd -
+
+  cd ../../../budibase
 
   echo "Linking pro to worker"
   cd packages/worker && yarn link '@budibase/pro'

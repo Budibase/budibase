@@ -5,8 +5,8 @@ import Application from "koa"
 import { bootstrap } from "global-agent"
 
 const env = require("./environment")
-const CouchDB = require("./db")
-require("@budibase/backend-core").init(CouchDB)
+import db from "./db"
+db.init()
 const Koa = require("koa")
 const destroyable = require("server-destroy")
 const koaBody = require("koa-body")
