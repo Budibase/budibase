@@ -8,6 +8,7 @@
     Button,
     Toggle,
     Checkbox,
+    Banner,
     notifications,
   } from "@budibase/bbui"
   import PropertyControl from "components/design/settings/controls/PropertyControl.svelte"
@@ -128,6 +129,13 @@
       },
     },
   ]
+
+  const removeCustomLayout = async () => {
+    let screen = get(selectedScreen)
+    screen.layoutId = null
+    screen.showNavigation = true
+    await store.actions.screens.save(screen)
+  }
 </script>
 
 <SettingsPanel
@@ -135,6 +143,16 @@
   icon={$selectedScreen.routing.route === "/" ? "Home" : "WebPage"}
 >
   <Layout gap="S" paddingX="L" paddingY="XL">
+    {#if $selectedScreen.layoutId}
+      <Banner
+        type="warning"
+        extraButtonText="Update"
+        extraButtonAction={removeCustomLayout}
+        showCloseButton={false}
+      >
+        This screen uses a custom layout, which is deprecated
+      </Banner>
+    {/if}
     {#each screenSettings as setting (setting.key)}
       <PropertyControl
         control={setting.control}
