@@ -110,12 +110,23 @@ spec:
           value: {{ .Values.globals.google.clientId | quote }}
         - name: GOOGLE_CLIENT_SECRET
           value: {{ .Values.globals.google.secret | quote }}
+        - name: AUTOMATION_MAX_ITERATIONS
+          value: {{ .Values.globals.automationMaxIterations | quote }}
+
         image: budibase/apps:{{ .Values.globals.appVersion }}
         imagePullPolicy: Always
         name: bbapps
         ports:
         - containerPort: {{ .Values.services.apps.port }}
         resources: {}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
       restartPolicy: Always
       serviceAccountName: ""
 status: {}

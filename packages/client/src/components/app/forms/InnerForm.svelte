@@ -219,10 +219,10 @@
       })
       return valid
     },
-    clear: () => {
-      // Clear the form by clearing each individual field
+    reset: () => {
+      // Reset the form by resetting each individual field
       fields.forEach(field => {
-        get(field).fieldApi.clearValue()
+        get(field).fieldApi.reset()
       })
     },
     changeStep: ({ type, number }) => {
@@ -240,6 +240,22 @@
       if (step) {
         currentStep.set(step)
       }
+    },
+    setFieldValue: (fieldName, value) => {
+      const field = getField(fieldName)
+      if (!field) {
+        return
+      }
+      const { fieldApi } = get(field)
+      fieldApi.setValue(value)
+    },
+    resetField: fieldName => {
+      const field = getField(fieldName)
+      if (!field) {
+        return
+      }
+      const { fieldApi } = get(field)
+      fieldApi.reset()
     },
   }
 
@@ -268,11 +284,11 @@
       return !error
     }
 
-    // Clears the value of a certain field back to the initial value
-    const clearValue = () => {
+    // Clears the value of a certain field back to the default value
+    const reset = () => {
       const fieldInfo = getField(field)
       const { fieldState } = get(fieldInfo)
-      const newValue = initialValues[field] ?? fieldState.defaultValue
+      const newValue = fieldState.defaultValue
 
       // Update field state
       fieldInfo.update(state => {
@@ -329,7 +345,7 @@
 
     return {
       setValue,
-      clearValue,
+      reset,
       updateValidation,
       setDisabled,
       validate: () => {
@@ -354,11 +370,20 @@
   // register their fields to step 1
   setContext("form-step", writable(1))
 
+  const handleUpdateFieldValue = ({ type, field, value }) => {
+    if (type === "set") {
+      formApi.setFieldValue(field, value)
+    } else {
+      formApi.resetField(field)
+    }
+  }
+
   // Action context to pass to children
   const actions = [
     { type: ActionTypes.ValidateForm, callback: formApi.validate },
-    { type: ActionTypes.ClearForm, callback: formApi.clear },
+    { type: ActionTypes.ClearForm, callback: formApi.reset },
     { type: ActionTypes.ChangeFormStep, callback: formApi.changeStep },
+    { type: ActionTypes.UpdateFieldValue, callback: handleUpdateFieldValue },
   ]
 </script>
 

@@ -150,10 +150,24 @@ exports.isClient = ctx => {
   return ctx.headers[Headers.TYPE] === "client"
 }
 
-exports.getBuildersCount = async () => {
+const getBuilders = async () => {
   const builders = await queryGlobalView(ViewNames.USER_BY_BUILDERS, {
     include_docs: false,
   })
+
+  if (!builders) {
+    return []
+  }
+
+  if (Array.isArray(builders)) {
+    return builders
+  } else {
+    return [builders]
+  }
+}
+
+exports.getBuildersCount = async () => {
+  const builders = await getBuilders()
   return builders.length
 }
 

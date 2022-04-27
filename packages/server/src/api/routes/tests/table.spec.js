@@ -1,5 +1,6 @@
+const { checkBuilderEndpoint } = require("./utilities/TestFunctions")
+const { getAppDB } = require("@budibase/backend-core/context")
 const setup = require("./utilities")
-const { checkBuilderEndpoint, getDB } = require("./utilities/TestFunctions")
 const { basicTable } = setup.structures
 const { events } = require("@budibase/backend-core")
 
@@ -200,7 +201,7 @@ describe("/tables", () => {
 
   describe("indexing", () => {
     it("should be able to create a table with indexes", async () => {
-      const db = getDB(config)
+      const db = getAppDB(config)
       const indexCount = (await db.getIndexes()).total_rows
       const table = basicTable()
       table.indexes = ["name"]

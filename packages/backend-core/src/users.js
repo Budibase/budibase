@@ -17,15 +17,5 @@ exports.getGlobalUserByEmail = async email => {
     include_docs: true,
   })
 
-  if (response) {
-    if (Array.isArray(response)) {
-      for (let user of response) {
-        delete user.password
-      }
-    } else {
-      delete response.password
-    }
-  }
-
   return response
 }

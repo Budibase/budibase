@@ -31,9 +31,9 @@ describe("/api/global/self", () => {
     it("should update self", async () => {
       const user = await config.createUser()
 
+      delete user.password
       const res = await updateSelf(user)
 
-      delete user.password
       expect(res.body._id).toBe(user._id)
       expect(events.user.updated).toBeCalledTimes(1)
       expect(events.user.updated).toBeCalledWith(user)

@@ -2,7 +2,7 @@ const { getRowParams, USER_METDATA_PREFIX } = require("../../db/utils")
 const {
   isDevAppID,
   getDevelopmentAppID,
-  getDB,
+  doWithDB,
 } = require("@budibase/backend-core/db")
 
 const ROW_EXCLUSIONS = [USER_METDATA_PREFIX]
@@ -27,22 +27,23 @@ const getAppPairs = appIds => {
 
 const getAppRows = async appId => {
   // need to specify the app ID, as this is used for different apps in one call
-  const appDb = getDB(appId)
-  const response = await appDb.allDocs(
-    getRowParams(null, null, {
-      include_docs: false,
-    })
-  )
-  return response.rows
-    .map(r => r.id)
-    .filter(id => {
-      for (let exclusion of ROW_EXCLUSIONS) {
-        if (id.startsWith(exclusion)) {
-          return false
+  return doWithDB(appId, async db => {
+    const response = await db.allDocs(
+      getRowParams(null, null, {
+        include_docs: false,
+      })
+    )
+    return response.rows
+      .map(r => r.id)
+      .filter(id => {
+        for (let exclusion of ROW_EXCLUSIONS) {
+          if (id.startsWith(exclusion)) {
+            return false
+          }
         }
-      }
-      return true
-    })
+        return true
+      })
+  })
 }
 
 /**
@@ -61,7 +62,7 @@ exports.getUniqueRows = async appIds => {
         continue
       }
       try {
-        appRows.push(await getAppRows(appId))
+        appRows = appRows.concat(await getAppRows(appId))
       } catch (e) {
         console.error(e)
         // don't error out if we can't count the app rows, just continue

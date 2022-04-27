@@ -23,12 +23,8 @@ export const definition = {
           type: "string",
           title: "Row ID",
         },
-        revision: {
-          type: "string",
-          title: "Row Revision",
-        },
       },
-      required: ["tableId", "id", "revision"],
+      required: ["tableId", "id"],
     },
     outputs: {
       properties: {
@@ -52,7 +48,7 @@ export const definition = {
 }
 
 export async function run({ inputs, appId, emitter }: any) {
-  if (inputs.id == null || inputs.revision == null) {
+  if (inputs.id == null) {
     return {
       success: false,
       response: {

@@ -179,6 +179,7 @@
     justify-content: flex-start;
     align-items: stretch;
     height: 100%;
+    flex: 1 1 auto;
     overflow: auto;
     overflow-x: hidden;
     position: relative;

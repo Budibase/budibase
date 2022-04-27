@@ -160,6 +160,10 @@
     }
 
     docs.forEach(element => {
+      // Delete unsupported fields
+      delete element.createdAt
+      delete element.updatedAt
+
       if (element.type === ConfigTypes.OIDC) {
         // Add a UUID here so each config is distinguishable when it arrives at the login page
         for (let config of element.config.configs) {

@@ -23,6 +23,7 @@ export const Events = {
   },
   SCREEN: {
     CREATED: "Screen Created",
+    CREATE_ROLE_UPDATED: "Changed Role On Screen Creation",
   },
   AUTOMATION: {
     CREATED: "Automation Created",
@@ -36,6 +37,7 @@ export const Events = {
     CREATED: "budibase:app_created",
     PUBLISHED: "budibase:app_published",
     UNPUBLISHED: "budibase:app_unpublished",
+    VIEW_PUBLISHED: "budibase:view_published_app",
   },
   ANALYTICS: {
     OPT_IN: "budibase:analytics_opt_in",
@@ -50,4 +52,10 @@ export const Events = {
   SSO: {
     SAVED: "budibase:sso_saved",
   },
+}
+
+export const EventSource = {
+  PORTAL: "portal",
+  URL: "url",
+  NOTIFICATION: "notification",
 }

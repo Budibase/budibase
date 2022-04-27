@@ -59,6 +59,7 @@ describe("/api/global/auth", () => {
   it("should allow resetting user password with code", async () => {
     const { code } = await requestPasswordReset()
     const user = await config.getUser("test@test.com")
+    delete user.password 
 
     const res = await request
       .post(`/api/global/auth/${TENANT_ID}/reset/update`)

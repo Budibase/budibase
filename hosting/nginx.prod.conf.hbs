@@ -56,6 +56,12 @@ http {
     set $csp_media "media-src 'self' https://js.intercomcdn.com";
     set $csp_worker "worker-src 'none'";
 
+    error_page 502 503 504 /error.html;
+    location = /error.html {
+      root /usr/share/nginx/html; 
+      internal;
+    }
+
     # Security Headers
     add_header X-Frame-Options SAMEORIGIN always;
     add_header X-Content-Type-Options nosniff always;
