@@ -33,7 +33,7 @@ exports.getCouchInfo = () => {
   } else if (urlInfo.auth.username) {
     // set from url
     username = urlInfo.auth.username
-  } else {
+  } else if (!env.isTest()) {
     throw new Error("CouchDB username not set")
   }
   if (env.COUCH_DB_PASSWORD) {
@@ -42,7 +42,7 @@ exports.getCouchInfo = () => {
   } else if (urlInfo.auth.password) {
     // set from url
     password = urlInfo.auth.password
-  } else {
+  } else if (!env.isTest()) {
     throw new Error("CouchDB password not set")
   }
   const authCookie = Buffer.from(`${username}:${password}`).toString("base64")
