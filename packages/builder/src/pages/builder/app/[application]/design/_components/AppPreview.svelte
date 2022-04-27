@@ -13,6 +13,7 @@
   } from "@budibase/bbui"
   import ErrorSVG from "@budibase/frontend-core/assets/error.svg?raw"
   import { findComponent, findComponentPath } from "builderStore/componentUtils"
+  import { isActive, goto } from "@roxi/routify"
 
   let iframe
   let layout
@@ -41,7 +42,10 @@
     screen = $selectedScreen
     layout = $store.layouts.find(layout => layout._id === screen?.layoutId)
   }
-  $: selectedComponentId = $store.selectedComponentId ?? ""
+  // Don't show selected components unless on the components tab
+  $: selectedComponentId = $isActive("./components")
+    ? $store.selectedComponentId
+    : ""
   $: previewData = {
     appId: $store.appId,
     layout,
@@ -140,10 +144,10 @@
 
     try {
       if (type === "select-component" && data.id) {
-        store.update(state => {
-          state.selectedComponentId = data.id
-          return state
-        })
+        $store.selectedComponentId = data.id
+        if (!$isActive("./components")) {
+          $goto("./components")
+        }
       } else if (type === "update-prop") {
         await store.actions.components.updateProp(data.prop, data.value)
       } else if (type === "delete-component" && data.id) {
