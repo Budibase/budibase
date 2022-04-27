@@ -66,7 +66,7 @@ jobs:
           config-files: values.production.yaml
           chart-path: charts/budibase
           namespace: budibase
-          values: globals.appVersion=v${{ env.RELEASE_VERSION }}
+          values: globals.appVersion=v${{ env.RELEASE_VERSION }},services.couchdb.backup.target=${{ secrets.PRODUCTION_COUCHDB_URL }}
           name: budibase-prod
 
       - name: Discord Webhook Action
