@@ -207,11 +207,20 @@ function shouldCopySpecialColumn(
   column: { type: string },
   fetchedColumn: { type: string } | undefined
 ) {
+  const specialTypes = [
+    FieldTypes.OPTIONS,
+    FieldTypes.LONGFORM,
+    FieldTypes.ARRAY,
+    FieldTypes.FORMULA,
+  ]
+  if (column && !fetchedColumn) {
+    return true
+  }
+  const fetchedIsNumber =
+    !fetchedColumn || fetchedColumn.type === FieldTypes.NUMBER
   return (
-    column.type === FieldTypes.OPTIONS ||
-    column.type === FieldTypes.ARRAY ||
-    ((!fetchedColumn || fetchedColumn.type === FieldTypes.NUMBER) &&
-      column.type === FieldTypes.BOOLEAN)
+    specialTypes.indexOf(column.type) !== -1 ||
+    (fetchedIsNumber && column.type === FieldTypes.BOOLEAN)
   )
 }
 
