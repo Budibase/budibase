@@ -51,7 +51,7 @@ const createScreenStore = () => {
           navigation: "None",
         }
         if (activeScreen.showNavigation) {
-          navigationProps = activeScreen.navigation
+          navigationProps = $appStore.application?.navigation
 
           // Legacy - if this is a legacy screen without any navigation
           // settings fall back to just showing the app title
