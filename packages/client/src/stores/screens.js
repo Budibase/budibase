@@ -47,6 +47,20 @@ const createScreenStore = () => {
       // If we don't have a legacy custom layout, build a layout structure
       // from the screen navigation settings
       if (!activeLayout) {
+        let navigationProps = {
+          navigation: "None",
+        }
+        if (activeScreen.showNavigation) {
+          navigationProps = activeScreen.navigation
+
+          // Legacy - if this is a legacy screen without any navigation
+          // settings fall back to just showing the app title
+          if (!navigationProps) {
+            navigationProps = {
+              title: activeScreen.navigation ?? $appStore.application?.name,
+            }
+          }
+        }
         activeLayout = {
           _id: "layout",
           props: {
@@ -66,11 +80,7 @@ const createScreenStore = () => {
                 },
               },
             ],
-            // If this is a legacy screen without any navigation settings,
-            // fall back to just showing the app title
-            ...(activeScreen.navigation || {
-              title: $appStore.application?.name,
-            }),
+            ...navigationProps,
           },
         }
       }
