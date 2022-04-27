@@ -1,5 +1,5 @@
 const { DEFAULT_TENANT_ID } = require("../constants")
-const { getDB } = require("../db")
+const { doWithDB } = require("../db")
 const { DocumentTypes } = require("../db/constants")
 const { getAllApps } = require("../db/utils")
 const environment = require("../environment")
@@ -47,45 +47,46 @@ const runMigration = async (migration, options = {}) => {
 
   // run the migration against each db
   for (const dbName of dbNames) {
-    const db = getDB(dbName)
-    try {
-      const doc = await exports.getMigrationsDoc(db)
+    await doWithDB(dbName, async db => {
+      try {
+        const doc = await exports.getMigrationsDoc(db)
 
-      // exit if the migration has been performed already
-      if (doc[migrationName]) {
-        if (
-          options.force &&
-          options.force[migrationType] &&
-          options.force[migrationType].includes(migrationName)
-        ) {
-          console.log(
-            `[Tenant: ${tenantId}] [Migration: ${migrationName}] [DB: ${dbName}] Forcing`
-          )
-        } else {
-          // the migration has already been performed
-          continue
+        // exit if the migration has been performed already
+        if (doc[migrationName]) {
+          if (
+            options.force &&
+            options.force[migrationType] &&
+            options.force[migrationType].includes(migrationName)
+          ) {
+            console.log(
+              `[Tenant: ${tenantId}] [Migration: ${migrationName}] [DB: ${dbName}] Forcing`
+            )
+          } else {
+            // the migration has already been performed
+            return
+          }
         }
+
+        console.log(
+          `[Tenant: ${tenantId}] [Migration: ${migrationName}] [DB: ${dbName}] Running`
+        )
+        // run the migration with tenant context
+        await migration.fn(db)
+        console.log(
+          `[Tenant: ${tenantId}] [Migration: ${migrationName}] [DB: ${dbName}] Complete`
+        )
+
+        // mark as complete
+        doc[migrationName] = Date.now()
+        await db.put(doc)
+      } catch (err) {
+        console.error(
+          `[Tenant: ${tenantId}] [Migration: ${migrationName}] [DB: ${dbName}] Error: `,
+          err
+        )
+        throw err
       }
-
-      console.log(
-        `[Tenant: ${tenantId}] [Migration: ${migrationName}] [DB: ${dbName}] Running`
-      )
-      // run the migration with tenant context
-      await migration.fn(db)
-      console.log(
-        `[Tenant: ${tenantId}] [Migration: ${migrationName}] [DB: ${dbName}] Complete`
-      )
-
-      // mark as complete
-      doc[migrationName] = Date.now()
-      await db.put(doc)
-    } catch (err) {
-      console.error(
-        `[Tenant: ${tenantId}] [Migration: ${migrationName}] [DB: ${dbName}] Error: `,
-        err
-      )
-      throw err
-    }
+    })
   }
 }
 

@@ -3,7 +3,7 @@ const yargs = require("yargs")
 const fs = require("fs")
 const { join } = require("path")
 require("../src/db").init()
-const { getDB } = require("@budibase/backend-core/db")
+const { doWithDB } = require("@budibase/backend-core/db")
 // load environment
 const env = require("../src/environment")
 const {
@@ -48,13 +48,14 @@ yargs
       const writeStream = fs.createWriteStream(join(exportPath, "dump.text"))
       // perform couch dump
 
-      const instanceDb = getDB(appId)
-      await instanceDb.dump(writeStream, {
-        filter: doc =>
-          !(
-            doc._id.includes(USER_METDATA_PREFIX) ||
-            doc.includes(LINK_USER_METADATA_PREFIX)
-          ),
+      await doWithDB(appId, async db => {
+        return db.dump(writeStream, {
+          filter: doc =>
+            !(
+              doc._id.includes(USER_METDATA_PREFIX) ||
+              doc.includes(LINK_USER_METADATA_PREFIX)
+            ),
+        })
       })
       console.log(`Template ${name} exported to ${exportPath}`)
     }

@@ -2,7 +2,7 @@ const { budibaseTempDir } = require("../budibaseDir")
 const fs = require("fs")
 const { join } = require("path")
 const uuid = require("uuid/v4")
-const { getDB } = require("@budibase/backend-core/db")
+const { doWithDB } = require("@budibase/backend-core/db")
 const { ObjectStoreBuckets } = require("../../constants")
 const {
   upload,
@@ -151,41 +151,41 @@ exports.streamBackup = async appId => {
  * @return {*} either a readable stream or a string
  */
 exports.exportDB = async (dbName, { stream, filter, exportName } = {}) => {
-  const instanceDb = getDB(dbName)
-
-  // Stream the dump if required
-  if (stream) {
-    const memStream = new MemoryStream()
-    instanceDb.dump(memStream, { filter })
-    return memStream
-  }
-
-  // Write the dump to file if required
-  if (exportName) {
-    const path = join(budibaseTempDir(), exportName)
-    const writeStream = fs.createWriteStream(path)
-    await instanceDb.dump(writeStream, { filter })
-
-    // Upload the dump to the object store if self hosted
-    if (env.SELF_HOSTED) {
-      await streamUpload(
-        ObjectStoreBuckets.BACKUPS,
-        join(dbName, exportName),
-        fs.createReadStream(path)
-      )
+  return doWithDB(dbName, async db => {
+    // Stream the dump if required
+    if (stream) {
+      const memStream = new MemoryStream()
+      db.dump(memStream, { filter })
+      return memStream
     }
 
-    return fs.createReadStream(path)
-  }
+    // Write the dump to file if required
+    if (exportName) {
+      const path = join(budibaseTempDir(), exportName)
+      const writeStream = fs.createWriteStream(path)
+      await db.dump(writeStream, { filter })
 
-  // Stringify the dump in memory if required
-  const memStream = new MemoryStream()
-  let appString = ""
-  memStream.on("data", chunk => {
-    appString += chunk.toString()
+      // Upload the dump to the object store if self hosted
+      if (env.SELF_HOSTED) {
+        await streamUpload(
+          ObjectStoreBuckets.BACKUPS,
+          join(dbName, exportName),
+          fs.createReadStream(path)
+        )
+      }
+
+      return fs.createReadStream(path)
+    }
+
+    // Stringify the dump in memory if required
+    const memStream = new MemoryStream()
+    let appString = ""
+    memStream.on("data", chunk => {
+      appString += chunk.toString()
+    })
+    await db.dump(memStream, { filter })
+    return appString
   })
-  await instanceDb.dump(memStream, { filter })
-  return appString
 }
 
 /**

@@ -28,7 +28,7 @@
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import AppRow from "components/start/AppRow.svelte"
   import { AppStatus } from "constants"
-  import analytics, { Events } from "analytics"
+  import analytics, { Events, EventSource } from "analytics"
   import Logo from "assets/bb-space-man.svg"
 
   let sortBy = "name"
@@ -168,11 +168,19 @@
   }
 
   const viewApp = app => {
+    analytics.captureEvent(Events.APP.VIEW_PUBLISHED, {
+      appId: app.appId,
+      eventSource: EventSource.PORTAL,
+    })
     if (app.url) {
       window.open(`/app${app.url}`)
     } else {
       window.open(`/${app.prodId}`)
     }
+  }
+
+  const previewApp = app => {
+    window.open(`/${app.devId}`)
   }
 
   const editApp = app => {
@@ -206,6 +214,9 @@
       return
     }
     try {
+      analytics.captureEvent(Events.APP.UNPUBLISHED, {
+        appId: selectedApp.appId,
+      })
       await API.unpublishApp(selectedApp.prodId)
       await apps.load()
       notifications.success("App unpublished successfully")
@@ -393,6 +404,7 @@
                 {exportApp}
                 {deleteApp}
                 {updateApp}
+                {previewApp}
               />
             {/each}
           </div>
@@ -445,6 +457,7 @@
   title="Confirm unpublish"
   okText="Unpublish app"
   onOk={confirmUnpublishApp}
+  dataCy={"unpublish-modal"}
 >
   Are you sure you want to unpublish the app <b>{selectedApp?.name}</b>?
 </ConfirmDialog>

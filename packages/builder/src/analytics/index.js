@@ -2,7 +2,7 @@ import { API } from "api"
 import PosthogClient from "./PosthogClient"
 import IntercomClient from "./IntercomClient"
 import SentryClient from "./SentryClient"
-import { Events } from "./constants"
+import { Events, EventSource } from "./constants"
 
 const posthog = new PosthogClient(
   process.env.POSTHOG_TOKEN,
@@ -58,5 +58,5 @@ class AnalyticsHub {
 
 const analytics = new AnalyticsHub()
 
-export { Events }
+export { Events, EventSource }
 export default analytics

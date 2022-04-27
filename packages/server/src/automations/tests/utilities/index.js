@@ -1,4 +1,6 @@
 const TestConfig = require("../../../tests/utilities/TestConfiguration")
+const { TENANT_ID } = require("../../../tests/utilities/structures")
+const { doInTenant } = require("@budibase/backend-core/tenancy")
 const actions = require("../../actions")
 const emitter = require("../../../events/index")
 const env = require("../../../environment")
@@ -31,14 +33,16 @@ exports.runInProd = async fn => {
 }
 
 exports.runStep = async function runStep(stepId, inputs) {
-  let step = await actions.getAction(stepId)
-  expect(step).toBeDefined()
-  return step({
-    inputs,
-    appId: config ? config.getAppId() : null,
-    // don't really need an API key, mocked out usage quota, not being tested here
-    apiKey: exports.apiKey,
-    emitter,
+  return doInTenant(TENANT_ID, async () => {
+    let step = await actions.getAction(stepId)
+    expect(step).toBeDefined()
+    return step({
+      inputs,
+      appId: config ? config.getAppId() : null,
+      // don't really need an API key, mocked out usage quota, not being tested here
+      apiKey: exports.apiKey,
+      emitter,
+    })
   })
 }
 

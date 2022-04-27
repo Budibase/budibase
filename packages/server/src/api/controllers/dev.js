@@ -84,7 +84,9 @@ exports.revert = async ctx => {
   try {
     const db = getProdAppDB({ skip_setup: true })
     const info = await db.info()
-    if (info.error) throw info.error
+    if (info.error) {
+      throw info.error
+    }
     const deploymentDoc = await db.get(DocumentTypes.DEPLOYMENTS)
     if (
       !deploymentDoc.history ||
@@ -96,16 +98,16 @@ exports.revert = async ctx => {
     return ctx.throw(400, "App has not yet been deployed")
   }
 
+  const replication = new Replication({
+    source: productionAppId,
+    target: appId,
+  })
   try {
-    const replication = new Replication({
-      source: productionAppId,
-      target: appId,
-    })
-
     if (!env.isTest()) {
       // in-memory db stalls on rollback
       await replication.rollback()
     }
+
     // update appID in reverted app to be dev version again
     const db = getAppDB()
     const appDoc = await db.get(DocumentTypes.APP_METADATA)
@@ -119,6 +121,8 @@ exports.revert = async ctx => {
     events.app.reverted()
   } catch (err) {
     ctx.throw(400, `Unable to revert. ${err}`)
+  } finally {
+    await replication.close()
   }
 }
 

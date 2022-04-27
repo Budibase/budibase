@@ -1,10 +1,14 @@
 mockAuthWithNoCookie()
 mockWorker()
 
-jest.mock("@budibase/backend-core/db", () => ({
-  ...jest.requireActual("@budibase/backend-core/db"),
-  dbExists: () => true,
-}))
+jest.mock("@budibase/backend-core/db", () => {
+  const coreDb = jest.requireActual("@budibase/backend-core/db")
+  coreDb.init()
+  return {
+    ...coreDb,
+    dbExists: () => true,
+  }
+})
 
 function mockWorker() {
   jest.mock("../../utilities/workerRequests", () => ({

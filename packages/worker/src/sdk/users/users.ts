@@ -56,9 +56,7 @@ export const save = async (
   requirePassword = true
 ) => {
   const tenantId = tenancy.getTenantId()
-
-  // specify the tenancy incase we're making a new admin user (public)
-  const db = tenancy.getGlobalDB(tenantId)
+  const db = tenancy.getGlobalDB()
   let { email, password, _id } = user
   // make sure another user isn't using the same email
   let dbUser

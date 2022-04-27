@@ -376,6 +376,7 @@ class LinkController {
 
         if (field.autocolumn) {
           linkedField.autocolumn = field.autocolumn
+          linkedField.subtype = field.subtype
         }
 
         // check the linked table to make sure we aren't overwriting an existing column

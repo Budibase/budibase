@@ -27,6 +27,12 @@ if (!LOADED && isDev() && !isTest()) {
   LOADED = true
 }
 
+function parseIntSafe(number) {
+  if (number) {
+    return parseInt(number)
+  }
+}
+
 let inThread = false
 
 module.exports = {
@@ -60,9 +66,11 @@ module.exports = {
   LOG_LEVEL: process.env.LOG_LEVEL,
   AUTOMATION_DIRECTORY: process.env.AUTOMATION_DIRECTORY,
   AUTOMATION_BUCKET: process.env.AUTOMATION_BUCKET,
+  AUTOMATION_MAX_ITERATIONS: process.env.AUTOMATION_MAX_ITERATIONS,
   SENDGRID_API_KEY: process.env.SENDGRID_API_KEY,
   DYNAMO_ENDPOINT: process.env.DYNAMO_ENDPOINT,
   POSTHOG_TOKEN: process.env.POSTHOG_TOKEN,
+  QUERY_THREAD_TIMEOUT: parseIntSafe(process.env.QUERY_THREAD_TIMEOUT),
   // old - to remove
   CLIENT_ID: process.env.CLIENT_ID,
   BUDIBASE_DIR: process.env.BUDIBASE_DIR,
@@ -72,7 +80,6 @@ module.exports = {
   DEPLOYMENT_CREDENTIALS_URL: process.env.DEPLOYMENT_CREDENTIALS_URL,
   ALLOW_DEV_AUTOMATIONS: process.env.ALLOW_DEV_AUTOMATIONS,
   DISABLE_THREADING: process.env.DISABLE_THREADING,
-  QUERY_THREAD_TIMEOUT: process.env.QUERY_THREAD_TIMEOUT,
   SQL_MAX_ROWS: process.env.SQL_MAX_ROWS,
   _set(key, value) {
     process.env[key] = value

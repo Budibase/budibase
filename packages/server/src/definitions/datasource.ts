@@ -49,6 +49,7 @@ export enum SourceNames {
   ORACLE = "ORACLE",
   GOOGLE_SHEETS = "GOOGLE_SHEETS",
   FIREBASE = "FIREBASE",
+  REDIS = "REDIS",
 }
 
 export enum IncludeRelationships {

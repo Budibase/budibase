@@ -25,11 +25,11 @@
   import QueryParamSelector from "./QueryParamSelector.svelte"
   import CronBuilder from "./CronBuilder.svelte"
   import Editor from "components/integration/QueryEditor.svelte"
-  import { debounce } from "lodash"
   import ModalBindableInput from "components/common/bindings/ModalBindableInput.svelte"
   import FilterDrawer from "components/design/PropertiesPanel/PropertyControls/FilterEditor/FilterDrawer.svelte"
   import { LuceneUtils } from "@budibase/frontend-core"
   import { getSchemaForTable } from "builderStore/dataBinding"
+  import { Utils } from "@budibase/frontend-core"
 
   export let block
   export let testData
@@ -54,7 +54,7 @@
   $: schema = getSchemaForTable(tableId, { searchableSchema: true }).schema
   $: schemaFields = Object.values(schema || {})
 
-  const onChange = debounce(async function (e, key) {
+  const onChange = Utils.sequential(async (e, key) => {
     try {
       if (isTestModal) {
         // Special case for webhook, as it requires a body, but the schema already brings back the body's contents
@@ -82,39 +82,71 @@
     } catch (error) {
       notifications.error("Error saving automation")
     }
-  }, 800)
+  })
 
   function getAvailableBindings(block, automation) {
     if (!block || !automation) {
       return []
     }
-
     // Find previous steps to the selected one
     let allSteps = [...automation.steps]
+
     if (automation.trigger) {
       allSteps = [automation.trigger, ...allSteps]
     }
-    const blockIdx = allSteps.findIndex(step => step.id === block.id)
+    let blockIdx = allSteps.findIndex(step => step.id === block.id)
 
-    // Extract all outputs from all previous steps as available bindings
+    // Extract all outputs from all previous steps as available bindins
     let bindings = []
     for (let idx = 0; idx < blockIdx; idx++) {
-      const outputs = Object.entries(
-        allSteps[idx].schema?.outputs?.properties ?? {}
-      )
+      let wasLoopBlock = allSteps[idx]?.stepId === "LOOP"
+      let isLoopBlock =
+        allSteps[idx]?.stepId === "LOOP" &&
+        allSteps.find(x => x.blockToLoop === block.id)
+
+      // If the previous block was a loop block, decerement the index so the following
+      // steps are in the correct order
+      if (wasLoopBlock) {
+        blockIdx--
+      }
+
+      let schema = allSteps[idx]?.schema?.outputs?.properties ?? {}
+
+      // If its a Loop Block, we need to add this custom schema
+      if (isLoopBlock) {
+        schema = {
+          currentItem: {
+            type: "string",
+            description: "the item currently being executed",
+          },
+        }
+      }
+      const outputs = Object.entries(schema)
+
       bindings = bindings.concat(
         outputs.map(([name, value]) => {
-          const runtime = idx === 0 ? `trigger.${name}` : `steps.${idx}.${name}`
+          let runtimeName = isLoopBlock
+            ? `loop.${name}`
+            : block.name.startsWith("JS")
+            ? `steps[${idx}].${name}`
+            : `steps.${idx}.${name}`
+          const runtime = idx === 0 ? `trigger.${name}` : runtimeName
           return {
             label: runtime,
             type: value.type,
             description: value.description,
-            category: idx === 0 ? "Trigger outputs" : `Step ${idx} outputs`,
+            category:
+              idx === 0
+                ? "Trigger outputs"
+                : isLoopBlock
+                ? "Loop Outputs"
+                : `Step ${idx} outputs`,
             path: runtime,
           }
         })
       )
     }
+
     return bindings
   }
 
@@ -194,6 +226,7 @@
             on:change={e => onChange(e, key)}
             {bindings}
             fillWidth
+            updateOnChange={false}
           />
         {:else}
           <DrawerBindableInput
@@ -205,6 +238,7 @@
             on:change={e => onChange(e, key)}
             {bindings}
             allowJS={false}
+            updateOnChange={false}
           />
         {/if}
       {:else if value.customType === "query"}
@@ -261,6 +295,14 @@
             value={inputData[key]}
           />
         </CodeEditorModal>
+      {:else if value.customType === "loopOption"}
+        <Select
+          on:change={e => onChange(e, key)}
+          autoWidth
+          value={inputData[key]}
+          options={["Array", "String"]}
+          defaultValue={"Array"}
+        />
       {:else if value.type === "string" || value.type === "number" || value.type === "integer"}
         {#if isTestModal}
           <ModalBindableInput
@@ -270,6 +312,7 @@
             type={value.customType}
             on:change={e => onChange(e, key)}
             {bindings}
+            updateOnChange={false}
           />
         {:else}
           <div class="test">
@@ -281,6 +324,7 @@
               value={inputData[key]}
               on:change={e => onChange(e, key)}
               {bindings}
+              updateOnChange={false}
             />
           </div>
         {/if}

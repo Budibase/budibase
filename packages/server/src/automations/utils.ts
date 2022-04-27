@@ -5,7 +5,7 @@ import { queue } from "./bullboard"
 import newid from "../db/newid"
 import { updateEntityMetadata } from "../utilities"
 import { MetadataTypes, WebhookType } from "../constants"
-import { getProdAppID, getDB } from "@budibase/backend-core/db"
+import { getProdAppID, doWithDB } from "@budibase/backend-core/db"
 import { cloneDeep } from "lodash/fp"
 import { getAppDB, getAppId } from "@budibase/backend-core/context"
 import { tenancy } from "@budibase/backend-core"
@@ -112,10 +112,11 @@ export async function enableCronTrigger(appId: any, automation: any) {
     // can't use getAppDB here as this is likely to be called from dev app,
     // but this call could be for dev app or prod app, need to just use what
     // was passed in
-    const db = getDB(appId)
-    const response = await db.put(automation)
-    automation._id = response.id
-    automation._rev = response.rev
+    await doWithDB(appId, async (db: any) => {
+      const response = await db.put(automation)
+      automation._id = response.id
+      automation._rev = response.rev
+    })
   }
   return automation
 }

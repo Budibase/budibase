@@ -11,7 +11,7 @@ filterTests(['all'], () => {
           cy.applicationInAppTable("Cypress Tests")
           cy.get(".appTable")
             .within(() => {
-              cy.get(".spectrum-Icon").eq(1).click()
+              cy.get(".app-row-actions-icon").eq(0).click()
             })
           cy.get(".spectrum-Menu").contains("Edit icon").click()
           // Select random icon
@@ -38,6 +38,7 @@ filterTests(['all'], () => {
               cy.get(".title").children().children()
               .should('have.attr', 'style').and('contains', 'color')
             })
+          cy.deleteAllApps()
       })
   })
 })

@@ -36,12 +36,13 @@ export const adminUser = async (ctx: any) => {
     ctx.throw(403, "Organisation already exists.")
   }
 
-  const db = tenancy.getGlobalDB(tenantId)
-  const response = await db.allDocs(
-    dbUtils.getGlobalUserParams(null, {
-      include_docs: true,
-    })
-  )
+  const response = await tenancy.doWithGlobalDB(tenantId, async (db: any) => {
+    return db.allDocs(
+      dbUtils.getGlobalUserParams(null, {
+        include_docs: true,
+      })
+    )
+  })
 
   if (response.rows.some((row: any) => row.doc.admin)) {
     ctx.throw(403, "You cannot initialise once a global user has been created.")
