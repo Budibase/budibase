@@ -34,8 +34,8 @@
           return roleA > roleB ? -1 : 1
         }
         // Then put home screens first
-        const homeA = a.routing.homeScreen
-        const homeB = b.routing.homeScreen
+        const homeA = !!a.routing.homeScreen
+        const homeB = !!b.routing.homeScreen
         if (homeA !== homeB) {
           return homeA ? -1 : 1
         }
