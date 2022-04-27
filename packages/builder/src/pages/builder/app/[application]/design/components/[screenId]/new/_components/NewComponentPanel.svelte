@@ -139,7 +139,7 @@
     {/each}
   {:else}
     <Layout paddingX="L" paddingY="XL" gap="S">
-      <Body>Blocks are a collection of pre-built components</Body>
+      <Body size="S">Blocks are collections of pre-built components</Body>
       <Layout noPadding gap="XS">
         {#each blocks as block}
           <div class="component block" on:click={() => addComponent(block)}>

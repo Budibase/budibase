@@ -8,10 +8,11 @@
   )
   $: isScreen = $selectedComponent?._id === $selectedScreen?.props._id
   $: title = isScreen ? "Screen" : $selectedComponent?._instanceName
+  $: position = componentDefinition?.hasChildren ? "inside" : "below"
 </script>
 
 <SettingsPanel {title} icon={componentDefinition?.icon}>
   <Layout paddingX="L" paddingY="XL">
-    <Body>The component you add will be placed inside {title}</Body>
+    <Body size="S">Components you add will be placed {position} {title}</Body>
   </Layout>
 </SettingsPanel>
