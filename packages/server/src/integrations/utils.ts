@@ -42,9 +42,9 @@ const SQL_STRING_TYPE_MAP = {
   nvarchar: FieldTypes.STRING,
   ntext: FieldTypes.STRING,
   enum: FieldTypes.STRING,
-  blob: FieldTypes.LONGFORM,
-  long: FieldTypes.LONGFORM,
-  text: FieldTypes.LONGFORM,
+  blob: FieldTypes.STRING,
+  long: FieldTypes.STRING,
+  text: FieldTypes.STRING,
 }
 
 const SQL_BOOLEAN_TYPE_MAP = {

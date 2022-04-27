@@ -47,7 +47,11 @@ exports.FieldTypes = {
 
 exports.CanSwitchTypes = [
   [exports.FieldTypes.JSON, exports.FieldTypes.ARRAY],
-  [exports.FieldTypes.STRING, exports.FieldTypes.OPTIONS],
+  [
+    exports.FieldTypes.STRING,
+    exports.FieldTypes.OPTIONS,
+    exports.FieldTypes.LONGFORM,
+  ],
   [exports.FieldTypes.BOOLEAN, exports.FieldTypes.NUMBER],
 ]
 
