@@ -293,10 +293,10 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/backend-core@1.0.123-alpha.1":
-  version "1.0.123-alpha.1"
-  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.0.123-alpha.1.tgz#3ce95c41837a0a4f071aee08d5d8ad504b5bd14c"
-  integrity sha512-IbalOeH26jOBCEa0ur8zFChVT+NpxYai40rHU2w8ytDxVpVBYidkcPPD0udCGKEoKRz+QJVf47nAH+g+ahsBgg==
+"@budibase/backend-core@1.0.124-alpha.0":
+  version "1.0.124-alpha.0"
+  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.0.124-alpha.0.tgz#33a9408206088da49154710910dafc8088d864d2"
+  integrity sha512-0ZUkDeqaoXS9qyK91SjwokYEA1wUPhi48nFE0+UwBloF8i7zVDFp2kOX7VNUrUer4gLuND9BoihEdpqsdQDvAg==
   dependencies:
     "@techpass/passport-openidconnect" "^0.3.0"
     aws-sdk "^2.901.0"
@@ -321,12 +321,12 @@
     uuid "^8.3.2"
     zlib "^1.0.5"
 
-"@budibase/pro@1.0.123-alpha.1":
-  version "1.0.123-alpha.1"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-1.0.123-alpha.1.tgz#d585c8062142b418378fe6583f7495ff3981d2e4"
-  integrity sha512-nwjYv8aeMTWw0bbhiCKnDGm8WMgCWUHXZojyAGJThipK+lhZaLGHRbfkNQ3mJeCmN1EPpKxn0GZ0NGUwqOjb+g==
+"@budibase/pro@1.0.124-alpha.0":
+  version "1.0.124-alpha.0"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-1.0.124-alpha.0.tgz#6287a51fa7c19754e44374c209c4aa3480fc3ac9"
+  integrity sha512-EgMuh+XSd/9tb3Ej9EZa4Y8hgiS6fHG+tuUwUcTuP6zvHbTijQGPb9075yImUbSc10bS3o41AP2qa2/ZdZKV2w==
   dependencies:
-    "@budibase/backend-core" "1.0.123-alpha.1"
+    "@budibase/backend-core" "1.0.124-alpha.0"
     node-fetch "^2.6.1"
 
 "@cspotcode/source-map-consumer@0.8.0":
