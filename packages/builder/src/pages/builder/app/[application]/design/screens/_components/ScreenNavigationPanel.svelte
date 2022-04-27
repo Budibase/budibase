@@ -28,8 +28,8 @@
       .slice()
       .sort((a, b) => {
         // Sort by role first
-        const roleA = RolePriorities[a.routing.roleId]
-        const roleB = RolePriorities[b.routing.roleId]
+        const roleA = RolePriorities[a.routing.roleId] ?? 0
+        const roleB = RolePriorities[b.routing.roleId] ?? 0
         if (roleA !== roleB) {
           return roleA > roleB ? -1 : 1
         }
