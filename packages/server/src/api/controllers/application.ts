@@ -406,11 +406,14 @@ const destroyApp = async (ctx: any) => {
   if (!env.isTest() && !isUnpublish) {
     await deleteApp(appId)
   }
+  // automations only in production
   if (isUnpublish) {
     await cleanupAutomations(appId)
   }
-  // make sure the app/role doesn't stick around after the app has been deleted
-  await removeAppFromUserRoles(ctx, appId)
+  // remove app role when the dev app is deleted (no trace of app anymore)
+  else {
+    await removeAppFromUserRoles(ctx, appId)
+  }
   await appCache.invalidateAppMetadata(appId)
   return result
 }
