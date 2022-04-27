@@ -97,7 +97,6 @@
   title="Add component"
   showBackButton
   onClickBackButton={() => $goto("../slot")}
-  wide
 >
   <Layout paddingX="L" paddingY="XL" gap="S">
     <ActionGroup compact justified>
@@ -156,7 +155,7 @@
 <style>
   .component-grid {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: var(--spacing-s);
   }
   .component {

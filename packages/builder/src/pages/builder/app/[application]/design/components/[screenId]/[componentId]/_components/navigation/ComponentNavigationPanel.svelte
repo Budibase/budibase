@@ -64,6 +64,7 @@
   title="Components"
   showAddButton
   onClickAddButton={() => $goto("../new")}
+  showExpandIcon
 >
   <div class="nav-items-container" bind:this={scrollRef}>
     <NavItem

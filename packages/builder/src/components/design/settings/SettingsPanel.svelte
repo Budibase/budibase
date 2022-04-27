@@ -23,7 +23,7 @@
 
 <style>
   .settings-panel {
-    width: 260px;
+    width: 280px;
     background: var(--background);
     border-left: var(--border-light);
     display: flex;
