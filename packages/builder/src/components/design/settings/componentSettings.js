@@ -11,7 +11,6 @@ import MultiFieldSelect from "./controls/MultiFieldSelect.svelte"
 import SearchFieldSelect from "./controls/SearchFieldSelect.svelte"
 import SchemaSelect from "./controls/SchemaSelect.svelte"
 import SectionSelect from "./controls/SectionSelect.svelte"
-import NavigationEditor from "./controls/NavigationEditor/NavigationEditor.svelte"
 import FilterEditor from "./controls/FilterEditor/FilterEditor.svelte"
 import URLSelect from "./controls/URLSelect.svelte"
 import OptionsEditor from "./controls/OptionsEditor/OptionsEditor.svelte"
@@ -38,7 +37,6 @@ const componentMap = {
   options: OptionsEditor,
   schema: SchemaSelect,
   section: SectionSelect,
-  navigation: NavigationEditor,
   filter: FilterEditor,
   url: URLSelect,
   columns: ColumnEditor,

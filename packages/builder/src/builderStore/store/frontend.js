@@ -101,6 +101,7 @@ export const getFrontendStore = () => {
         previousTopNavPath: {},
         version: application.version,
         revertableVersion: application.revertableVersion,
+        navigation: application.navigation || {},
       }))
 
       // Initialise backend stores
@@ -132,6 +133,19 @@ export const getFrontendStore = () => {
         })
         store.update(state => {
           state.customTheme = customTheme
+          return state
+        })
+      },
+    },
+    navigation: {
+      save: async navigation => {
+        const appId = get(store).appId
+        await API.saveAppMetadata({
+          appId,
+          metadata: { navigation },
+        })
+        store.update(state => {
+          state.navigation = navigation
           return state
         })
       },
