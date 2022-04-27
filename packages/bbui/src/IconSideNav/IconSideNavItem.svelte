@@ -35,13 +35,15 @@
     border-radius: 4px;
     position: relative;
     cursor: pointer;
+    transition: background 130ms ease-out;
   }
   .icon-side-nav-item:hover :global(svg),
   .active :global(svg) {
     color: white;
   }
+  .icon-side-nav-item:hover,
   .active {
-    background-color: var(--spectrum-global-color-gray-200);
+    background: var(--spectrum-global-color-gray-200);
   }
   .tooltip {
     position: absolute;
