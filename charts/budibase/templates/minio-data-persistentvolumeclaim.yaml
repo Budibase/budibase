@@ -12,10 +12,6 @@ spec:
   resources:
     requests:
       storage: {{ .Values.services.objectStore.storage }}
-  {{- if (eq "-" .Values.services.objectStore.storageClass) }}
-  storageClassName: ""
-  {{- else }}
-  storageClassName: "{{ .Values.services.objectStore.storageClass }}"
-  {{- end }}
+  storageClassName: {{ .Values.services.objectStore.storageClass }}
 status: {}
 {{- end }}
