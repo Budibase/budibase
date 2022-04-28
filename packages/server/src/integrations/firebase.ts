@@ -92,13 +92,13 @@ module Firebase {
 
   class FirebaseIntegration implements IntegrationBase {
     private config: FirebaseConfig
-    private db: Firestore
+    private client: Firestore
 
     constructor(config: FirebaseConfig) {
       this.config = config
       if (config.serviceAccount) {
         const serviceAccount = JSON.parse(config.serviceAccount)
-        this.db = new Firestore({
+        this.client = new Firestore({
           projectId: serviceAccount.project_id,
           credentials: {
             client_email: serviceAccount.client_email,
@@ -106,7 +106,7 @@ module Firebase {
           },
         })
       } else {
-        this.db = new Firestore({
+        this.client = new Firestore({
           projectId: config.projectId,
           credentials: {
             client_email: config.email,
@@ -118,7 +118,7 @@ module Firebase {
 
     async create(query: { json: object; extra: { [key: string]: string } }) {
       try {
-        const documentReference = this.db
+        const documentReference = this.client
           .collection(query.extra.collection)
           .doc()
         await documentReference.set({ ...query.json, id: documentReference.id })
@@ -133,7 +133,7 @@ module Firebase {
     async read(query: { json: object; extra: { [key: string]: string } }) {
       try {
         let snapshot
-        const collectionRef = this.db.collection(query.extra.collection)
+        const collectionRef = this.client.collection(query.extra.collection)
         if (
           query.extra.filterField &&
           query.extra.filter &&
@@ -164,19 +164,19 @@ module Firebase {
       extra: { [key: string]: string }
     }) {
       try {
-        await this.db
+        await this.client
           .collection(query.extra.collection)
           .doc(query.json.id)
           .update(query.json)
 
         return (
-          await this.db
+          await this.client
             .collection(query.extra.collection)
             .doc(query.json.id)
             .get()
         ).data()
       } catch (err) {
-        console.error("Error writing to firebase", err)
+        console.error("Error writing to Firestore", err)
         throw err
       }
     }
@@ -186,13 +186,13 @@ module Firebase {
       extra: { [key: string]: string }
     }) {
       try {
-        await this.db
+        await this.client
           .collection(query.extra.collection)
           .doc(query.json.id)
           .delete()
         return true
       } catch (err) {
-        console.error("Error writing to mongodb", err)
+        console.error("Error deleting from Firestore", err)
         throw err
       }
     }
