@@ -15,10 +15,6 @@ describe("Postgres Integration", () => {
     config = new TestConfiguration()
   })
 
-  it("calls the connection callback", async () => {
-    expect(pg.on).toHaveBeenCalledWith('connect', expect.anything())
-  })
-
   it("calls the create method with the correct params", async () => {
     const sql = "insert into users (name, age) values ('Joe', 123);"
     await config.integration.create({
