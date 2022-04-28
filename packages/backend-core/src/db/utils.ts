@@ -1,47 +1,26 @@
-const { newid } = require("../hashing")
-const Replication = require("./Replication")
-const { DEFAULT_TENANT_ID, Configs } = require("../constants")
-const env = require("../environment")
-const {
-  StaticDatabases,
-  SEPARATOR,
-  DocumentTypes,
-  APP_PREFIX,
-  APP_DEV,
-} = require("./constants")
-const { getTenantId, getGlobalDBName } = require("../tenancy")
-const fetch = require("node-fetch")
-const { doWithDB, allDbs } = require("./index")
-const { getCouchUrl } = require("./pouch")
-const { getAppMetadata } = require("../cache/appMetadata")
-const { checkSlashesInUrl } = require("../helpers")
-const {
-  isDevApp,
-  isProdAppID,
-  isDevAppID,
-  getDevelopmentAppID,
-  getProdAppID,
-} = require("./conversions")
+import { newid } from "../hashing"
+import { DEFAULT_TENANT_ID, Configs } from "../constants"
+import * as env from "../environment"
+import { SEPARATOR, DocumentTypes } from "./constants"
+import { getTenantId, getGlobalDBName } from "../tenancy"
+import fetch from "node-fetch"
+import { doWithDB, allDbs } from "./index"
+import { getCouchUrl } from "./pouch"
+import { getAppMetadata } from "../cache/appMetadata"
+import { checkSlashesInUrl } from "../helpers"
+import { isDevApp, isDevAppID } from "./conversions"
 
 const UNICODE_MAX = "\ufff0"
 
-exports.ViewNames = {
+export const ViewNames = {
   USER_BY_EMAIL: "by_email",
   BY_API_KEY: "by_api_key",
   USER_BY_BUILDERS: "by_builders",
 }
 
-exports.StaticDatabases = StaticDatabases
-
-exports.DocumentTypes = DocumentTypes
-exports.APP_PREFIX = APP_PREFIX
-exports.APP_DEV = exports.APP_DEV_PREFIX = APP_DEV
-exports.SEPARATOR = SEPARATOR
-exports.isDevApp = isDevApp
-exports.isProdAppID = isProdAppID
-exports.isDevAppID = isDevAppID
-exports.getDevelopmentAppID = getDevelopmentAppID
-exports.getProdAppID = getProdAppID
+export * from "./constants"
+export * from "./conversions"
+export { default as Replication } from "./Replication"
 
 /**
  * If creating DB allDocs/query params with only a single top level ID this can be used, this
@@ -55,7 +34,11 @@ exports.getProdAppID = getProdAppID
  * @param {object} otherProps Add any other properties onto the request, e.g. include_docs.
  * @returns {object} Parameters which can then be used with an allDocs request.
  */
-function getDocParams(docType, docId = null, otherProps = {}) {
+export function getDocParams(
+  docType: any,
+  docId: any = null,
+  otherProps: any = {}
+) {
   if (docId == null) {
     docId = ""
   }
@@ -65,20 +48,19 @@ function getDocParams(docType, docId = null, otherProps = {}) {
     endkey: `${docType}${SEPARATOR}${docId}${UNICODE_MAX}`,
   }
 }
-exports.getDocParams = getDocParams
 
 /**
  * Generates a new workspace ID.
  * @returns {string} The new workspace ID which the workspace doc can be stored under.
  */
-exports.generateWorkspaceID = () => {
+export function generateWorkspaceID() {
   return `${DocumentTypes.WORKSPACE}${SEPARATOR}${newid()}`
 }
 
 /**
  * Gets parameters for retrieving workspaces.
  */
-exports.getWorkspaceParams = (id = "", otherProps = {}) => {
+export function getWorkspaceParams(id = "", otherProps = {}) {
   return {
     ...otherProps,
     startkey: `${DocumentTypes.WORKSPACE}${SEPARATOR}${id}`,
@@ -90,14 +72,14 @@ exports.getWorkspaceParams = (id = "", otherProps = {}) => {
  * Generates a new global user ID.
  * @returns {string} The new user ID which the user doc can be stored under.
  */
-exports.generateGlobalUserID = id => {
+export function generateGlobalUserID(id: any) {
   return `${DocumentTypes.USER}${SEPARATOR}${id || newid()}`
 }
 
 /**
  * Gets parameters for retrieving users.
  */
-exports.getGlobalUserParams = (globalId, otherProps = {}) => {
+export function getGlobalUserParams(globalId: any, otherProps = {}) {
   if (!globalId) {
     globalId = ""
   }
@@ -112,14 +94,18 @@ exports.getGlobalUserParams = (globalId, otherProps = {}) => {
  * Generates a template ID.
  * @param ownerId The owner/user of the template, this could be global or a workspace level.
  */
-exports.generateTemplateID = ownerId => {
+export function generateTemplateID(ownerId: any) {
   return `${DocumentTypes.TEMPLATE}${SEPARATOR}${ownerId}${SEPARATOR}${newid()}`
 }
 
 /**
  * Gets parameters for retrieving templates. Owner ID must be specified, either global or a workspace level.
  */
-exports.getTemplateParams = (ownerId, templateId, otherProps = {}) => {
+export function getTemplateParams(
+  ownerId: any,
+  templateId: any,
+  otherProps = {}
+) {
   if (!templateId) {
     templateId = ""
   }
@@ -140,18 +126,18 @@ exports.getTemplateParams = (ownerId, templateId, otherProps = {}) => {
  * Generates a new role ID.
  * @returns {string} The new role ID which the role doc can be stored under.
  */
-exports.generateRoleID = id => {
+export function generateRoleID(id: any) {
   return `${DocumentTypes.ROLE}${SEPARATOR}${id || newid()}`
 }
 
 /**
  * Gets parameters for retrieving a role, this is a utility function for the getDocParams function.
  */
-exports.getRoleParams = (roleId = null, otherProps = {}) => {
+export function getRoleParams(roleId = null, otherProps = {}) {
   return getDocParams(DocumentTypes.ROLE, roleId, otherProps)
 }
 
-exports.getStartEndKeyURL = (base, baseKey, tenantId = null) => {
+export function getStartEndKeyURL(base: any, baseKey: any, tenantId = null) {
   const tenancy = tenantId ? `${SEPARATOR}${tenantId}` : ""
   return `${base}?startkey="${baseKey}${tenancy}"&endkey="${baseKey}${tenancy}${UNICODE_MAX}"`
 }
@@ -162,14 +148,14 @@ exports.getStartEndKeyURL = (base, baseKey, tenantId = null) => {
  * opts.efficient can be provided to make sure this call is always quick in a multi-tenant environment,
  * but it may not be 100% accurate in full efficiency mode (some tenantless apps may be missed).
  */
-exports.getAllDbs = async (opts = { efficient: false }) => {
+export async function getAllDbs(opts = { efficient: false }) {
   const efficient = opts && opts.efficient
   // specifically for testing we use the pouch package for this
   if (env.isTest()) {
     return allDbs()
   }
-  let dbs = []
-  async function addDbs(url) {
+  let dbs: any = []
+  async function addDbs(url: any) {
     const response = await fetch(checkSlashesInUrl(encodeURI(url)))
     if (response.status === 200) {
       let json = await response.json()
@@ -189,13 +175,9 @@ exports.getAllDbs = async (opts = { efficient: false }) => {
     await addDbs(couchUrl)
   } else {
     // get prod apps
-    await addDbs(
-      exports.getStartEndKeyURL(couchUrl, DocumentTypes.APP, tenantId)
-    )
+    await addDbs(getStartEndKeyURL(couchUrl, DocumentTypes.APP, tenantId))
     // get dev apps
-    await addDbs(
-      exports.getStartEndKeyURL(couchUrl, DocumentTypes.APP_DEV, tenantId)
-    )
+    await addDbs(getStartEndKeyURL(couchUrl, DocumentTypes.APP_DEV, tenantId))
     // add global db name
     dbs.push(getGlobalDBName(tenantId))
   }
@@ -208,13 +190,13 @@ exports.getAllDbs = async (opts = { efficient: false }) => {
  *
  * @return {Promise<object[]>} returns the app information document stored in each app database.
  */
-exports.getAllApps = async ({ dev, all, idsOnly, efficient } = {}) => {
+export async function getAllApps({ dev, all, idsOnly, efficient }: any = {}) {
   let tenantId = getTenantId()
   if (!env.MULTI_TENANCY && !tenantId) {
     tenantId = DEFAULT_TENANT_ID
   }
-  let dbs = await exports.getAllDbs({ efficient })
-  const appDbNames = dbs.filter(dbName => {
+  let dbs = await getAllDbs({ efficient })
+  const appDbNames = dbs.filter((dbName: any) => {
     const split = dbName.split(SEPARATOR)
     // it is an app, check the tenantId
     if (split[0] === DocumentTypes.APP) {
@@ -234,7 +216,7 @@ exports.getAllApps = async ({ dev, all, idsOnly, efficient } = {}) => {
   if (idsOnly) {
     return appDbNames
   }
-  const appPromises = appDbNames.map(app =>
+  const appPromises = appDbNames.map((app: any) =>
     // skip setup otherwise databases could be re-created
     getAppMetadata(app)
   )
@@ -243,17 +225,19 @@ exports.getAllApps = async ({ dev, all, idsOnly, efficient } = {}) => {
   } else {
     const response = await Promise.allSettled(appPromises)
     const apps = response
-      .filter(result => result.status === "fulfilled" && result.value != null)
-      .map(({ value }) => value)
+      .filter(
+        (result: any) => result.status === "fulfilled" && result.value != null
+      )
+      .map(({ value }: any) => value)
     if (!all) {
-      return apps.filter(app => {
+      return apps.filter((app: any) => {
         if (dev) {
           return isDevApp(app)
         }
         return !isDevApp(app)
       })
     } else {
-      return apps.map(app => ({
+      return apps.map((app: any) => ({
         ...app,
         status: isDevApp(app) ? "development" : "published",
       }))
@@ -264,26 +248,26 @@ exports.getAllApps = async ({ dev, all, idsOnly, efficient } = {}) => {
 /**
  * Utility function for getAllApps but filters to production apps only.
  */
-exports.getProdAppIDs = async () => {
-  return (await exports.getAllApps({ idsOnly: true })).filter(
-    id => !exports.isDevAppID(id)
+export async function getProdAppIDs() {
+  return (await getAllApps({ idsOnly: true })).filter(
+    (id: any) => !isDevAppID(id)
   )
 }
 
 /**
  * Utility function for the inverse of above.
  */
-exports.getDevAppIDs = async () => {
-  return (await exports.getAllApps({ idsOnly: true })).filter(id =>
-    exports.isDevAppID(id)
+export async function getDevAppIDs() {
+  return (await getAllApps({ idsOnly: true })).filter((id: any) =>
+    isDevAppID(id)
   )
 }
 
-exports.dbExists = async dbName => {
+export async function dbExists(dbName: any) {
   let exists = false
   return doWithDB(
     dbName,
-    async db => {
+    async (db: any) => {
       try {
         // check if database exists
         const info = await db.info()
@@ -303,7 +287,7 @@ exports.dbExists = async dbName => {
  * Generates a new configuration ID.
  * @returns {string} The new configuration ID which the config doc can be stored under.
  */
-const generateConfigID = ({ type, workspace, user }) => {
+export const generateConfigID = ({ type, workspace, user }: any) => {
   const scope = [type, workspace, user].filter(Boolean).join(SEPARATOR)
 
   return `${DocumentTypes.CONFIG}${SEPARATOR}${scope}`
@@ -312,7 +296,10 @@ const generateConfigID = ({ type, workspace, user }) => {
 /**
  * Gets parameters for retrieving configurations.
  */
-const getConfigParams = ({ type, workspace, user }, otherProps = {}) => {
+export const getConfigParams = (
+  { type, workspace, user }: any,
+  otherProps = {}
+) => {
   const scope = [type, workspace, user].filter(Boolean).join(SEPARATOR)
 
   return {
@@ -326,7 +313,7 @@ const getConfigParams = ({ type, workspace, user }, otherProps = {}) => {
  * Generates a new dev info document ID - this is scoped to a user.
  * @returns {string} The new dev info ID which info for dev (like api key) can be stored under.
  */
-const generateDevInfoID = userId => {
+export const generateDevInfoID = (userId: any) => {
   return `${DocumentTypes.DEV_INFO}${SEPARATOR}${userId}`
 }
 
@@ -336,7 +323,10 @@ const generateDevInfoID = userId => {
  * @param {Object} scopes - the type, workspace and userID scopes of the configuration.
  * @returns The most granular configuration document based on the scope.
  */
-const getScopedFullConfig = async function (db, { type, user, workspace }) {
+export const getScopedFullConfig = async function (
+  db: any,
+  { type, user, workspace }: any
+) {
   const response = await db.allDocs(
     getConfigParams(
       { type, user, workspace },
@@ -346,7 +336,7 @@ const getScopedFullConfig = async function (db, { type, user, workspace }) {
     )
   )
 
-  function determineScore(row) {
+  function determineScore(row: any) {
     const config = row.doc
 
     // Config is specific to a user and a workspace
@@ -367,7 +357,7 @@ const getScopedFullConfig = async function (db, { type, user, workspace }) {
 
   // Find the config with the most granular scope based on context
   let scopedConfig = response.rows.sort(
-    (a, b) => determineScore(a) - determineScore(b)
+    (a: any, b: any) => determineScore(a) - determineScore(b)
   )[0]
 
   // custom logic for settings doc
@@ -391,7 +381,7 @@ const getScopedFullConfig = async function (db, { type, user, workspace }) {
   return scopedConfig && scopedConfig.doc
 }
 
-const getPlatformUrl = async settings => {
+export const getPlatformUrl = async (settings?: any) => {
   let platformUrl = env.PLATFORM_URL || "http://localhost:10000"
 
   if (!env.SELF_HOSTED && env.MULTI_TENANCY) {
@@ -410,15 +400,7 @@ const getPlatformUrl = async settings => {
   return platformUrl
 }
 
-async function getScopedConfig(db, params) {
+export async function getScopedConfig(db: any, params: any) {
   const configDoc = await getScopedFullConfig(db, params)
   return configDoc && configDoc.config ? configDoc.config : configDoc
 }
-
-exports.Replication = Replication
-exports.getScopedConfig = getScopedConfig
-exports.generateConfigID = generateConfigID
-exports.getConfigParams = getConfigParams
-exports.getScopedFullConfig = getScopedFullConfig
-exports.generateDevInfoID = generateDevInfoID
-exports.getPlatformUrl = getPlatformUrl
