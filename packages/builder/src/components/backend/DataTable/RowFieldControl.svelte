@@ -20,6 +20,9 @@
   export let readonly
 
   const resolveTimeStamp = timestamp => {
+    if (!timestamp) {
+      return null
+    }
     let maskedDate = new Date(`0-${timestamp}`)
     if (maskedDate instanceof Date && !isNaN(maskedDate.getTime())) {
       return maskedDate
