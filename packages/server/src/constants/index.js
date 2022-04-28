@@ -47,7 +47,11 @@ exports.FieldTypes = {
 
 exports.CanSwitchTypes = [
   [exports.FieldTypes.JSON, exports.FieldTypes.ARRAY],
-  [exports.FieldTypes.STRING, exports.FieldTypes.OPTIONS],
+  [
+    exports.FieldTypes.STRING,
+    exports.FieldTypes.OPTIONS,
+    exports.FieldTypes.LONGFORM,
+  ],
   [exports.FieldTypes.BOOLEAN, exports.FieldTypes.NUMBER],
 ]
 
@@ -160,6 +164,14 @@ exports.AutoFieldSubTypes = {
   UPDATED_BY: "updatedBy",
   UPDATED_AT: "updatedAt",
   AUTO_ID: "autoID",
+}
+
+exports.AutoFieldDefaultNames = {
+  CREATED_BY: "Created By",
+  CREATED_AT: "Created At",
+  UPDATED_BY: "Updated By",
+  UPDATED_AT: "Updated At",
+  AUTO_ID: "Auto ID",
 }
 
 exports.OBJ_STORE_DIRECTORY = "/prod-budi-app-assets"

@@ -2,6 +2,7 @@ import * as rowController from "../../../controllers/row"
 import * as appController from "../../../controllers/application"
 import { AppStatus } from "../../../../db/utils"
 import { BUILTIN_ROLE_IDS } from "@budibase/backend-core/roles"
+import { doInTenant } from "@budibase/backend-core/tenancy"
 import { TENANT_ID } from "../../../../tests/utilities/structures"
 import { getAppDB, doInAppContext } from "@budibase/backend-core/context"
 import * as env from "../../../../environment"
@@ -32,17 +33,19 @@ export const getAllTableRows = async (config: any) => {
 }
 
 export const clearAllApps = async (tenantId = TENANT_ID) => {
-  const req: any = { query: { status: AppStatus.DEV }, user: { tenantId } }
-  await appController.fetch(req)
-  const apps = req.body
-  if (!apps || apps.length <= 0) {
-    return
-  }
-  for (let app of apps) {
-    const { appId } = app
-    const req = new Request(null, { appId })
-    await runRequest(appId, appController.destroy, req)
-  }
+  await doInTenant(tenantId, async () => {
+    const req: any = { query: { status: AppStatus.DEV }, user: { tenantId } }
+    await appController.fetch(req)
+    const apps = req.body
+    if (!apps || apps.length <= 0) {
+      return
+    }
+    for (let app of apps) {
+      const { appId } = app
+      const req = new Request(null, { appId })
+      await runRequest(appId, appController.destroy, req)
+    }
+  })
 }
 
 export const clearAllAutomations = async (config: any) => {

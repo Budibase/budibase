@@ -8,7 +8,7 @@ function isTest() {
 
 module.exports = {
   JWT_SECRET: process.env.JWT_SECRET,
-  COUCH_DB_URL: process.env.COUCH_DB_URL,
+  COUCH_DB_URL: process.env.COUCH_DB_URL || "http://localhost:4005",
   COUCH_DB_USERNAME: process.env.COUCH_DB_USER,
   COUCH_DB_PASSWORD: process.env.COUCH_DB_PASSWORD,
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
@@ -36,9 +36,18 @@ module.exports = {
   GLOBAL_BUCKET_NAME: process.env.GLOBAL_BUCKET_NAME || "global",
   GLOBAL_CLOUD_BUCKET_NAME:
     process.env.GLOBAL_CLOUD_BUCKET_NAME || "prod-budi-tenant-uploads",
+  USE_COUCH: process.env.USE_COUCH || true,
   isTest,
   _set(key, value) {
     process.env[key] = value
     module.exports[key] = value
   },
+}
+
+// clean up any environment variable edge cases
+for (let [key, value] of Object.entries(module.exports)) {
+  // handle the edge case of "0" to disable an environment variable
+  if (value === "0") {
+    module.exports[key] = 0
+  }
 }

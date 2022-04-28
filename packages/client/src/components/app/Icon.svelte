@@ -36,8 +36,13 @@
   div {
     font-style: italic;
   }
-  .hoverable:hover {
+  @media (hover: hover) {
+    .hoverable:hover {
+      color: var(--spectrum-alias-icon-color-selected-hover) !important;
+      cursor: pointer;
+    }
+  }
+  .hoverable:active {
     color: var(--spectrum-alias-icon-color-selected-hover) !important;
-    cursor: pointer;
   }
 </style>
