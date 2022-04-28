@@ -16,7 +16,7 @@ import {
 import { DatasourcePlus } from "./base/datasourcePlus"
 
 module PostgresModule {
-  const { Pool } = require("pg")
+  const { Client } = require("pg")
   const Sql = require("./base/sql")
   const { escapeDangerousCharacters } = require("../utilities")
 
@@ -104,7 +104,6 @@ module PostgresModule {
   }
 
   class PostgresIntegration extends Sql implements DatasourcePlus {
-    static pool: any
     private readonly client: any
     private readonly config: PostgresConfig
     private index: number = 1
@@ -136,11 +135,7 @@ module PostgresModule {
             }
           : undefined,
       }
-      if (!this.pool) {
-        this.pool = new Pool(newConfig)
-      }
-
-      this.client = this.pool
+      this.client = new Client(newConfig)
       this.setSchema()
     }
 
@@ -171,16 +166,17 @@ module PostgresModule {
       } catch (err) {
         // @ts-ignore
         throw new Error(err)
+      } finally {
+        await this.client.end()
       }
     }
 
-    setSchema() {
+    async setSchema() {
+      await this.client.connect()
       if (!this.config.schema) {
         this.config.schema = "public"
       }
-      this.client.on("connect", (client: any) => {
-        client.query(`SET search_path TO ${this.config.schema}`)
-      })
+      this.client.query(`SET search_path TO ${this.config.schema}`)
       this.COLUMNS_SQL = `select * from information_schema.columns where table_schema = '${this.config.schema}'`
     }
 
