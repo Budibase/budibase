@@ -12,7 +12,7 @@
   $: roleName = $roles.find(x => x._id === roleId)?.name || "Unknown"
 
   const getRoleColor = roleId => {
-    return RoleColours[roleId] || "#ffa500"
+    return RoleColours[roleId] || "#ff6500"
   }
 </script>
 
