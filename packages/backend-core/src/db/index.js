@@ -41,7 +41,8 @@ exports.closeDB = async db => {
     return
   }
   try {
-    return db.close()
+    // specifically await so that if there is an error, it can be ignored
+    return await db.close()
   } catch (err) {
     // ignore error, already closed
   }
