@@ -1,12 +1,7 @@
-import { derived, get } from "svelte/store"
+import { derived } from "svelte/store"
 import { routeStore } from "./routes"
 import { builderStore } from "./builder"
 import { appStore } from "./app"
-import {
-  findComponentPathById,
-  findChildrenByType,
-  findComponentById,
-} from "../utils/components"
 
 const createScreenStore = () => {
   const store = derived(
@@ -47,21 +42,22 @@ const createScreenStore = () => {
       // If we don't have a legacy custom layout, build a layout structure
       // from the screen navigation settings
       if (!activeLayout) {
-        let navigationProps = {
+        let navigationSettings = {
           navigation: "None",
         }
         if (activeScreen?.showNavigation) {
-          navigationProps = $appStore.application?.navigation
+          navigationSettings =
+            $builderStore.navigation || $appStore.application?.navigation
 
           // Legacy - if this is a legacy screen without any navigation
           // settings fall back to just showing the app title
-          if (!navigationProps) {
-            navigationProps = {
-              title: activeScreen?.navigation ?? $appStore.application?.name,
+          if (!navigationSettings) {
+            navigationSettings = {
+              title: $appStore.application?.name,
             }
           }
-          if (!navigationProps.navigation) {
-            navigationProps.navigation = "Top"
+          if (!navigationSettings.navigation) {
+            navigationSettings.navigation = "Top"
           }
         }
         activeLayout = {
@@ -83,7 +79,7 @@ const createScreenStore = () => {
                 },
               },
             ],
-            ...navigationProps,
+            ...navigationSettings,
           },
         }
       }
@@ -92,38 +88,8 @@ const createScreenStore = () => {
     }
   )
 
-  // Utils to parse component definitions
-  const actions = {
-    findComponentById: componentId => {
-      const { activeScreen, activeLayout } = get(store)
-      let result = findComponentById(activeScreen?.props, componentId)
-      if (result) {
-        return result
-      }
-      return findComponentById(activeLayout?.props)
-    },
-    findComponentPathById: componentId => {
-      const { activeScreen, activeLayout } = get(store)
-      let result = findComponentPathById(activeScreen?.props, componentId)
-      if (result) {
-        return result
-      }
-      return findComponentPathById(activeLayout?.props)
-    },
-    findChildrenByType: (componentId, type) => {
-      const component = actions.findComponentById(componentId)
-      if (!component || !component._children) {
-        return null
-      }
-      let children = []
-      findChildrenByType(component, type, children)
-      return children
-    },
-  }
-
   return {
     subscribe: store.subscribe,
-    actions,
   }
 }
 
