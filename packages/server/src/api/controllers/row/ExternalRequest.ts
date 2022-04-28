@@ -324,6 +324,28 @@ module External {
       return { row: newRow, manyRelationships }
     }
 
+    squashRelationshipColumns(
+      table: Table,
+      row: Row,
+      relationships: RelationshipsJson[]
+    ): Row {
+      for (let relationship of relationships) {
+        const linkedTable = this.tables[relationship.tableName]
+        if (!linkedTable || !row[relationship.column]) {
+          continue
+        }
+        const display = linkedTable.primaryDisplay
+        for (let key of Object.keys(row[relationship.column])) {
+          const related: Row = row[relationship.column][key]
+          row[relationship.column][key] = {
+            primaryDisplay: display ? related[display] : undefined,
+            _id: related._id,
+          }
+        }
+      }
+      return row
+    }
+
     /**
      * This iterates through the returned rows and works out what elements of the rows
      * actually match up to another row (based on primary keys) - this is pretty specific
@@ -354,12 +376,6 @@ module External {
         let linked = basicProcessing(row, linkedTable)
         if (!linked._id) {
           continue
-        }
-        // if not returning full docs then get the minimal links out
-        const display = linkedTable.primaryDisplay
-        linked = {
-          primaryDisplay: display ? linked[display] : undefined,
-          _id: linked._id,
         }
         columns[relationship.column] = linked
       }
@@ -418,7 +434,9 @@ module External {
           relationships
         )
       }
-      return processFormulas(table, Object.values(finalRows))
+      return processFormulas(table, Object.values(finalRows)).map((row: Row) =>
+        this.squashRelationshipColumns(table, row, relationships)
+      )
     }
 
     /**

@@ -34,6 +34,7 @@ export const API = createAPIClient({
   // Or we could check error.status and redirect to login on a 403 etc.
   onError: error => {
     const { status, method, url, message, handled } = error || {}
+    const ignoreErrorUrls = ["bbtel", "/api/global/self"]
 
     // Log any errors that we haven't manually handled
     if (!handled) {
@@ -45,7 +46,14 @@ export const API = createAPIClient({
     if (message) {
       // Don't notify if the URL contains the word analytics as it may be
       // blocked by browser extensions
-      if (!url?.includes("analytics")) {
+      let ignore = false
+      for (let ignoreUrl of ignoreErrorUrls) {
+        if (url?.includes(ignoreUrl)) {
+          ignore = true
+          break
+        }
+      }
+      if (!ignore) {
         notificationStore.actions.error(message)
       }
     }
