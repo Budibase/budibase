@@ -13,6 +13,9 @@
 
 <SettingsPanel {title} icon={componentDefinition?.icon}>
   <Layout paddingX="L" paddingY="XL">
-    <Body size="S">Components you add will be placed {position} {title}</Body>
+    <Body size="S">
+      Components that you add will be placed {position}
+      {title}
+    </Body>
   </Layout>
 </SettingsPanel>

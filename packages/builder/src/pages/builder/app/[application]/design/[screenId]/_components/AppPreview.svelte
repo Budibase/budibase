@@ -56,6 +56,7 @@
     customTheme: $store.customTheme,
     previewDevice: $store.previewDevice,
     messagePassing: $store.clientFeatures.messagePassing,
+    navigation: $store.navigation,
     isBudibaseEvent: true,
   }
   $: json = JSON.stringify(previewData)

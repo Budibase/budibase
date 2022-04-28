@@ -19,6 +19,7 @@ const createBuilderStore = () => {
     customTheme: null,
     previewDevice: "desktop",
     isDragging: false,
+    navigation: null,
 
     // Legacy - allow the builder to specify a layout
     layout: null,
@@ -55,9 +56,6 @@ const createBuilderStore = () => {
       } catch (error) {
         // Do nothing
       }
-    },
-    setSelectedPath: path => {
-      store.update(state => ({ ...state, selectedPath: path }))
     },
     moveComponent: (componentId, destinationComponentId, mode) => {
       dispatchEvent("move-component", {
