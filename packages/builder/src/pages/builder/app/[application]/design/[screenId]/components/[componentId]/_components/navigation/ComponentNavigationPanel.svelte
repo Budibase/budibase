@@ -22,7 +22,7 @@
     let newOffsets = {}
 
     // Calculate left offset
-    const offsetX = bounds.left + bounds.width + scrollLeft - 40
+    const offsetX = bounds.left + bounds.width + scrollLeft - 58
     if (offsetX > sidebarWidth) {
       newOffsets.left = offsetX - sidebarWidth
     } else {
@@ -91,8 +91,7 @@
 
 <style>
   .nav-items-container {
-    margin: 0 calc(-1 * var(--spacing-l));
-    padding: var(--spacing-xl) var(--spacing-l);
+    padding: var(--spacing-xl) 0;
     flex: 1 1 auto;
     overflow: auto;
     height: 0;

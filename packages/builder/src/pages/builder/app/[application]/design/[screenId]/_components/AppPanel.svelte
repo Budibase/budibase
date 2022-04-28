@@ -11,9 +11,6 @@
   $: roleColor = getRoleColor(roleId)
   $: roleName = $roles.find(x => x._id === roleId)?.name || "Unknown"
 
-  // Needs to be absolute as we embed this component from multiple different URLs
-  $: newComponentUrl = `/builder/app/${$store.appId}/design/components/${$selectedScreen?._id}/new`
-
   const getRoleColor = roleId => {
     return RoleColours[roleId] || "#ffa500"
   }
@@ -42,7 +39,7 @@
       <Button
         cta
         icon="Add"
-        on:click={() => $goto(`./components/${$selectedScreen._id}/new`)}
+        on:click={() => $goto(`../${$selectedScreen._id}/components/new`)}
       >
         Component
       </Button>

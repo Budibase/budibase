@@ -1,7 +1,23 @@
 <script>
   import { IconSideNav, IconSideNavItem } from "@budibase/bbui"
-  import { goto, isActive } from "@roxi/routify"
+  import * as routify from "@roxi/routify"
   import AppPanel from "./_components/AppPanel.svelte"
+  import { syncURLToState } from "helpers/urlStateSync"
+  import { store, selectedScreen } from "builderStore"
+  import { onDestroy } from "svelte"
+  const { isActive, goto } = routify
+
+  // Keep URL and state in sync for selected screen ID
+  const stopSyncing = syncURLToState({
+    urlParam: "screenId",
+    stateKey: "selectedScreenId",
+    validate: id => $store.screens.some(screen => screen._id === id),
+    fallbackUrl: "../../",
+    store,
+    routify,
+  })
+
+  onDestroy(stopSyncing)
 </script>
 
 <div class="design">
@@ -41,8 +57,10 @@
   </div>
 
   <div class="content">
-    <slot />
-    <AppPanel />
+    {#if $selectedScreen}
+      <slot />
+      <AppPanel />
+    {/if}
   </div>
 </div>
 
