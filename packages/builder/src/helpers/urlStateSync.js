@@ -2,13 +2,26 @@ import { get } from "svelte/store"
 import { isChangingPage } from "@roxi/routify"
 
 export const syncURLToState = options => {
-  const { keys, params, store, goto, redirect, baseUrl = "." } = options || {}
+  const {
+    urlParam,
+    stateKey,
+    validate,
+    baseUrl = "..",
+    fallbackUrl,
+    store,
+    routify,
+  } = options || {}
   if (
-    !keys?.length ||
-    !params?.subscribe ||
+    !urlParam ||
+    !stateKey ||
+    !baseUrl ||
+    !urlParam ||
     !store?.subscribe ||
-    !goto?.subscribe ||
-    !redirect?.subscribe
+    !routify ||
+    !routify.params?.subscribe ||
+    !routify.goto?.subscribe ||
+    !routify.redirect?.subscribe ||
+    !routify.page?.subscribe
   ) {
     console.warn("syncURLToState invoked with missing parameters")
     return
@@ -18,96 +31,70 @@ export const syncURLToState = options => {
   // to just subscribe and cache the latest versions.
   // We can grab their initial values as this is during component
   // initialisation.
-  let cachedParams = get(params)
-  let cachedGoto = get(goto)
-  let cachedRedirect = get(redirect)
-  let hydrated = false
+  let cachedParams = get(routify.params)
+  let cachedGoto = get(routify.goto)
+  let cachedRedirect = get(routify.redirect)
+  let cachedPage = get(routify.page)
+  let previousParamsHash = null
   let debug = false
   const log = (...params) => debug && console.log(...params)
 
   // Navigate to a certain URL
-  const gotoUrl = url => {
-    if (get(isChangingPage) && hydrated) {
-      return
-    }
-    log("Navigating to", url)
-    cachedGoto(url)
+  const gotoUrl = (url, params) => {
+    log("Navigating to", url, "with params", params)
+    cachedGoto(url, params)
   }
 
   // Redirect to a certain URL
   const redirectUrl = url => {
-    if (get(isChangingPage) && hydrated) {
-      return
-    }
     log("Redirecting to", url)
     cachedRedirect(url)
   }
 
   // Updates state with new URL params
   const mapUrlToState = params => {
-    // Determine any required state updates
-    let stateUpdates = []
-    const state = get(store)
-    for (let key of keys) {
-      const urlValue = params?.[key.url]
-      const stateValue = state?.[key.state]
-      if (urlValue && urlValue !== stateValue) {
-        log(
-          `state.${key.state} (${stateValue}) <= url.${key.url} (${urlValue})`
-        )
-        stateUpdates.push(state => {
-          state[key.state] = urlValue
-        })
-        if (key.validate && key.fallbackUrl) {
-          if (!key.validate(urlValue)) {
-            log("Invalid URL param!")
-            redirectUrl(key.fallbackUrl)
-            hydrated = true
-            return
-          }
-        }
-      }
-    }
-
-    // Mark our initial hydration as completed
-    hydrated = true
-
-    // Avoid updating the store at all if not necessary to prevent a wasted
-    // store invalidation
-    if (!stateUpdates.length) {
+    // Check if we have new URL params
+    const paramsHash = JSON.stringify(params)
+    const newParams = paramsHash !== previousParamsHash
+    previousParamsHash = paramsHash
+    const urlValue = params?.[urlParam]
+    const stateValue = get(store)?.[stateKey]
+    if (!newParams || !urlValue) {
       return
     }
 
-    // Apply the required state updates
-    log("Performing", stateUpdates.length, "state updates")
-    store.update(state => {
-      for (let update of stateUpdates) {
-        update(state)
+    // Check if new value is valid
+    if (validate && fallbackUrl) {
+      if (!validate(urlValue)) {
+        log("Invalid URL param!")
+        redirectUrl(fallbackUrl)
+        return
       }
-      return state
-    })
+    }
+
+    // Only update state if we have a new value
+    if (urlValue !== stateValue) {
+      log(`state.${stateKey} (${stateValue}) <= url.${urlParam} (${urlValue})`)
+      store.update(state => {
+        state[stateKey] = urlValue
+        return state
+      })
+    }
   }
 
   // Updates the URL with new state values
   const mapStateToUrl = state => {
-    // Determine new URL while checking for changes
-    let url = baseUrl
     let needsUpdate = false
-    for (let key of keys) {
-      const urlValue = cachedParams?.[key.url]
-      const stateValue = state?.[key.state]
-      url += `/${stateValue}`
-      if (stateValue !== urlValue) {
-        needsUpdate = true
-        log(
-          `url.${key.url} (${urlValue}) <= state.${key.state} (${stateValue})`
-        )
-        if (key.validate && key.fallbackUrl) {
-          if (!key.validate(stateValue)) {
-            log("Invalid state param!")
-            redirectUrl(key.fallbackUrl)
-            return
-          }
+    const urlValue = cachedParams?.[urlParam]
+    const stateValue = state?.[stateKey]
+    if (stateValue !== urlValue) {
+      needsUpdate = true
+      log(`url.${urlParam} (${urlValue}) <= state.${stateKey} (${stateValue})`)
+      if (validate && fallbackUrl) {
+        if (!validate(stateValue)) {
+          log("Invalid state param!")
+          redirectUrl(fallbackUrl)
+          return
         }
       }
     }
@@ -120,7 +107,11 @@ export const syncURLToState = options => {
 
     // Navigate to the new URL
     if (!get(isChangingPage)) {
-      gotoUrl(url)
+      const newUrlParams = {
+        ...cachedParams,
+        [urlParam]: stateValue,
+      }
+      gotoUrl(cachedPage.path, newUrlParams)
     }
   }
 
@@ -128,17 +119,20 @@ export const syncURLToState = options => {
   mapUrlToState(cachedParams)
 
   // Subscribe to URL changes and cache them
-  const unsubscribeParams = params.subscribe($urlParams => {
+  const unsubscribeParams = routify.params.subscribe($urlParams => {
     cachedParams = $urlParams
     mapUrlToState($urlParams)
   })
 
   // Subscribe to routify store changes and cache them
-  const unsubscribeGoto = goto.subscribe($goto => {
+  const unsubscribeGoto = routify.goto.subscribe($goto => {
     cachedGoto = $goto
   })
-  const unsubscribeRedirect = redirect.subscribe($redirect => {
+  const unsubscribeRedirect = routify.redirect.subscribe($redirect => {
     cachedRedirect = $redirect
+  })
+  const unsubscribePage = routify.page.subscribe($page => {
+    cachedPage = $page
   })
 
   // Subscribe to store changes and keep URL up to date
@@ -149,6 +143,7 @@ export const syncURLToState = options => {
     unsubscribeParams()
     unsubscribeGoto()
     unsubscribeRedirect()
+    unsubscribePage()
     unsubscribeStore()
   }
 }

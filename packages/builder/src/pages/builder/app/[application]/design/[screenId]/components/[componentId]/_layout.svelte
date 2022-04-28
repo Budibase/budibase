@@ -1,27 +1,18 @@
 <script>
   import { syncURLToState } from "helpers/urlStateSync"
   import { store, selectedScreen } from "builderStore"
-  import { goto, params, redirect } from "@roxi/routify"
+  import * as routify from "@roxi/routify"
   import { onDestroy } from "svelte"
   import { findComponent } from "builderStore/componentUtils"
 
   // Keep URL and state in sync for selected component ID
   const stopSyncing = syncURLToState({
-    keys: [
-      {
-        url: "componentId",
-        state: "selectedComponentId",
-        validate: componentId => {
-          return !!findComponent($selectedScreen.props, componentId)
-        },
-        fallbackUrl: "../",
-      },
-    ],
+    urlParam: "componentId",
+    stateKey: "selectedComponentId",
+    validate: id => !!findComponent($selectedScreen.props, id),
+    fallbackUrl: "../",
     store,
-    params,
-    goto,
-    redirect,
-    baseUrl: "..",
+    routify,
   })
 
   onDestroy(stopSyncing)
