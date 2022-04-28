@@ -3,17 +3,13 @@
   import AppPreview from "./AppPreview.svelte"
   import { store, selectedScreen } from "builderStore"
   import { Button, Select, StatusLight, Body } from "@budibase/bbui"
-  import { RoleColours } from "constants"
+  import { RoleUtils } from "@budibase/frontend-core"
   import { roles } from "stores/backend"
   import { goto } from "@roxi/routify"
 
   $: roleId = $selectedScreen?.routing.roleId
-  $: roleColor = getRoleColor(roleId)
+  $: roleColor = RoleUtils.getRoleColour(roleId)
   $: roleName = $roles.find(x => x._id === roleId)?.name || "Unknown"
-
-  const getRoleColor = roleId => {
-    return RoleColours[roleId] || "#ff6500"
-  }
 </script>
 
 <div class="app-panel">
