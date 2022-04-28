@@ -1,21 +1,5 @@
-import { Roles } from "./backend"
-
 export const TableNames = {
   USERS: "ta_users",
-}
-
-export const RoleColours = {
-  [Roles.ADMIN]: "var(--spectrum-global-color-static-seafoam-400)",
-  [Roles.POWER]: "var(--spectrum-global-color-static-purple-400)",
-  [Roles.BASIC]: "var(--spectrum-global-color-static-magenta-400)",
-  [Roles.PUBLIC]: "var(--spectrum-global-color-static-yellow-400)",
-}
-
-export const RolePriorities = {
-  [Roles.ADMIN]: 4,
-  [Roles.POWER]: 3,
-  [Roles.BASIC]: 2,
-  [Roles.PUBLIC]: 1,
 }
 
 export const FrontendTypes = {

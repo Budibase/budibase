@@ -5,8 +5,9 @@
   import { store } from "builderStore"
   import NavItem from "components/common/NavItem.svelte"
   import ScreenDropdownMenu from "./ScreenDropdownMenu.svelte"
-  import { RoleColours, RolePriorities } from "constants"
   import ScreenWizard from "./ScreenWizard.svelte"
+  import { RoleUtils } from "@budibase/frontend-core"
+
   let searchString
   let accessRole = "all"
   let showNewScreenModal
@@ -28,8 +29,8 @@
       .slice()
       .sort((a, b) => {
         // Sort by role first
-        const roleA = RolePriorities[a.routing.roleId] ?? 0
-        const roleB = RolePriorities[b.routing.roleId] ?? 0
+        const roleA = RoleUtils.getRolePriority(a.routing.roleId)
+        const roleB = RoleUtils.getRolePriority(b.routing.roleId)
         if (roleA !== roleB) {
           return roleA > roleB ? -1 : 1
         }
@@ -42,10 +43,6 @@
         // Finally sort alphabetically by route
         return a.routing.route < b.routing.route ? -1 : 1
       })
-  }
-
-  const getRoleColor = roleId => {
-    return RoleColours[roleId] || "#ff6500"
   }
 </script>
 
@@ -75,7 +72,7 @@
       selected={$store.selectedScreenId === screen._id}
       text={screen.routing.route}
       on:click={() => ($store.selectedScreenId = screen._id)}
-      color={getRoleColor(screen.routing.roleId)}
+      color={RoleUtils.getRoleColour(screen.routing.roleId)}
     >
       <ScreenDropdownMenu screenId={screen._id} />
     </NavItem>

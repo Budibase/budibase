@@ -3,7 +3,7 @@
   import { setContext, onMount } from "svelte"
   import { Layout, Heading, Body } from "@budibase/bbui"
   import ErrorSVG from "@budibase/frontend-core/assets/error.svg"
-  import { Constants, CookieUtils } from "@budibase/frontend-core"
+  import { Constants, CookieUtils, RoleUtils } from "@budibase/frontend-core"
   import Component from "./Component.svelte"
   import SDK from "sdk"
   import {
@@ -41,41 +41,22 @@
   let dataLoaded = false
   let permissionError = false
 
-  // Load app config
-  onMount(async () => {
-    await initialise()
-    await authStore.actions.fetchUser()
-    dataLoaded = true
-    if (get(builderStore).inBuilder) {
-      builderStore.actions.notifyLoaded()
-    } else {
-      builderStore.actions.pingEndUser()
-    }
-  })
+  // Determine if we should show devtools or not
+  $: isDevPreview = $appStore.isDevApp && !$builderStore.inBuilder
 
-  // Handle no matching route - this is likely a permission error
+  // Handle no matching route
   $: {
     if (dataLoaded && $routeStore.routerLoaded && !$routeStore.activeRoute) {
       if ($authStore) {
         // There is a logged in user, so handle them
         if ($screenStore.screens.length) {
-          let firstRoute
-
-          // If using devtools, find the first screen matching our role
-          if ($devToolsStore.role) {
-            const roleRoutes = $screenStore.screens.filter(
-              screen => screen.routing?.roleId === $devToolsStore.role
-            )
-            firstRoute = roleRoutes[0]?.routing?.route || "/"
-          }
-
-          // Otherwise just use the first route
-          else {
-            firstRoute = $screenStore.screens[0]?.routing?.route ?? "/"
-          }
-
-          // Screens exist so navigate back to the home screen
-          routeStore.actions.navigate(firstRoute)
+          // Find the best route to push the user to initially
+          const route = getBestRoute(
+            $authStore,
+            $screenStore.screens,
+            $devToolsStore.role
+          )
+          routeStore.actions.navigate(route)
         } else {
           // No screens likely means the user has no permissions to view this app
           permissionError = true
@@ -89,7 +70,44 @@
     }
   }
 
-  $: isDevPreview = $appStore.isDevApp && !$builderStore.inBuilder
+  const getBestRoute = (user, screens) => {
+    // Rank all screens, preferring all home screens
+    const rankScreen = screen => {
+      const roleId = screen.routing.roleId
+      let rank = RoleUtils.getRolePriority(roleId)
+      if (screen.routing.homeScreen) {
+        rank += 100
+      }
+      return rank
+    }
+    const enrichedScreens = screens?.map(screen => ({
+      ...screen,
+      rank: rankScreen(screen),
+    }))
+    const rankedScreens = enrichedScreens?.sort((a, b) => {
+      // First sort by rank
+      if (a.rank !== b.rank) {
+        return a.rank > b.rank ? -1 : 1
+      }
+      // Then sort alphabetically
+      return a.routing.route < b.routing.route ? -1 : 1
+    })
+
+    // Use the best ranking screen
+    return rankedScreens?.[0].routing?.route || "/"
+  }
+
+  // Load app config
+  onMount(async () => {
+    await initialise()
+    await authStore.actions.fetchUser()
+    dataLoaded = true
+    if (get(builderStore).inBuilder) {
+      builderStore.actions.notifyLoaded()
+    } else {
+      builderStore.actions.pingEndUser()
+    }
+  })
 </script>
 
 {#if dataLoaded}
@@ -158,7 +176,7 @@
                       <PeekScreenDisplay />
                     </CustomThemeWrapper>
 
-                    {#if $appStore.isDevApp && !$builderStore.inBuilder}
+                    {#if isDevPreview}
                       <DevTools />
                     {/if}
                   </div>

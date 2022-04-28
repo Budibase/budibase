@@ -63,3 +63,12 @@ export const TableNames = {
  *   - Coerce types for search endpoint
  */
 export const ApiVersion = "1"
+
+// Role IDs
+export const Roles = {
+  ADMIN: "ADMIN",
+  POWER: "POWER",
+  BASIC: "BASIC",
+  PUBLIC: "PUBLIC",
+  BUILDER: "BUILDER",
+}
