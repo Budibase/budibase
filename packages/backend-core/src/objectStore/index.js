@@ -1,16 +1,16 @@
-const sanitize = require("sanitize-s3-objectkey")
-const AWS = require("aws-sdk")
-const stream = require("stream")
-const fetch = require("node-fetch")
-const tar = require("tar-fs")
-const zlib = require("zlib")
-const { promisify } = require("util")
-const { join } = require("path")
-const fs = require("fs")
-const env = require("../environment")
-const { budibaseTempDir, ObjectStoreBuckets } = require("./utils")
-const { v4 } = require("uuid")
-const { APP_PREFIX, APP_DEV_PREFIX } = require("../db/utils")
+import sanitize from "sanitize-s3-objectkey"
+import AWS from "aws-sdk"
+import stream from "stream"
+import fetch from "node-fetch"
+import tar from "tar-fs"
+import zlib from "zlib"
+import { promisify } from "util"
+import { join } from "path"
+import fs from "fs"
+import env from "../environment"
+import { budibaseTempDir, ObjectStoreBuckets } from "./utils"
+import { v4 } from "uuid"
+import { APP_PREFIX, APP_DEV_PREFIX } from "../db/utils"
 
 const streamPipeline = promisify(stream.pipeline)
 // use this as a temporary store of buckets that are being created
