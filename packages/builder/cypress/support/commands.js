@@ -77,27 +77,23 @@ Cypress.Commands.add("deleteApp", name => {
         if (val.length > 0) {
           if (Cypress.env("TEST_ENV")) {
             cy.searchForApplication(name)
-            cy.get(".appTable").within(() => {
-              cy.get(".spectrum-Icon").eq(1).click()
-            })
-          } else {
-            const appId = val.reduce((acc, app) => {
-              if (name === app.name) {
-                acc = app.appId
-              }
-              return acc
-            }, "")
-
-            if (appId == "") {
-              return
-            }
-
-            const appIdParsed = appId.split("_").pop()
-            const actionEleId = `[data-cy=row_actions_${appIdParsed}]`
-            cy.get(actionEleId).within(() => {
-              cy.get(".spectrum-Icon").eq(0).click()
-            })
           }
+          const appId = val.reduce((acc, app) => {
+            if (name === app.name) {
+              acc = app.appId
+            }
+            return acc
+          }, "")
+
+          if (appId == "") {
+            return
+          }
+
+          const appIdParsed = appId.split("_").pop()
+          const actionEleId = `[data-cy=row_actions_${appIdParsed}]`
+          cy.get(actionEleId).within(() => {
+            cy.get(".spectrum-Icon").eq(0).click()
+          })
 
           cy.get(".spectrum-Menu").then($menu => {
             if ($menu.text().includes("Unpublish")) {
