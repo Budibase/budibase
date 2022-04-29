@@ -85,9 +85,9 @@ export function breakExternalTableId(tableId: string | undefined) {
     return {}
   }
   const parts = tableId.split(DOUBLE_SEPARATOR)
-  let tableName = parts.pop()
+  let datasourceId = parts.shift()
   // if they need joined
-  let datasourceId = parts.join(DOUBLE_SEPARATOR)
+  let tableName = parts.join(DOUBLE_SEPARATOR)
   return { datasourceId, tableName }
 }
 
