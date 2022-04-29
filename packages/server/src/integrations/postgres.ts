@@ -204,6 +204,8 @@ module PostgresModule {
         }
       } catch (err) {
         tableKeys = {}
+      } finally {
+        await this.client.close()
       }
 
       const columnsResponse = await this.client.query(this.COLUMNS_SQL)
