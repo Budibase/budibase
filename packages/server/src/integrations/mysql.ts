@@ -101,7 +101,7 @@ module MySQLModule {
       }
       // if not a number, see if it is a date - important to do in this order as any
       // integer will be considered a valid date
-      else if (dayjs(binding).isValid()) {
+      else if (/^\d/.test(binding) && dayjs(binding).isValid()) {
         bindings[i] = dayjs(binding).toDate()
       }
     }
@@ -151,20 +151,24 @@ module MySQLModule {
 
     async internalQuery(
       query: SqlQuery,
-      connect: boolean = true
+      opts: { connect?: boolean; disableCoercion?: boolean } = {
+        connect: true,
+        disableCoercion: false,
+      }
     ): Promise<any[] | any> {
       try {
-        if (connect) {
+        if (opts?.connect) {
           await this.connect()
         }
+        const baseBindings = query.bindings || []
+        const bindings = opts?.disableCoercion
+          ? baseBindings
+          : bindingTypeCoerce(baseBindings)
         // Node MySQL is callback based, so we must wrap our call in a promise
-        const response = await this.client.query(
-          query.sql,
-          bindingTypeCoerce(query.bindings || [])
-        )
+        const response = await this.client.query(query.sql, bindings)
         return response[0]
       } finally {
-        if (connect) {
+        if (opts?.connect) {
           await this.disconnect()
         }
       }
@@ -179,7 +183,7 @@ module MySQLModule {
         // get the tables first
         const tablesResp = await this.internalQuery(
           { sql: "SHOW TABLES;" },
-          false
+          { connect: false }
         )
         const tableNames = tablesResp.map(
           (obj: any) =>
@@ -191,7 +195,7 @@ module MySQLModule {
           const schema: TableSchema = {}
           const descResp = await this.internalQuery(
             { sql: `DESCRIBE \`${tableName}\`;` },
-            false
+            { connect: false }
           )
           for (let column of descResp) {
             const columnName = column.Field
@@ -254,7 +258,8 @@ module MySQLModule {
     async query(json: QueryJson) {
       await this.connect()
       try {
-        const queryFn = (query: any) => this.internalQuery(query, false)
+        const queryFn = (query: any) =>
+          this.internalQuery(query, { connect: false, disableCoercion: true })
         return await this.queryWithReturning(json, queryFn)
       } finally {
         await this.disconnect()
