@@ -1,12 +1,16 @@
-const { dangerousGetDB, closeDB } = require(".")
+import { dangerousGetDB, closeDB } from "."
 
 class Replication {
+  source: any
+  target: any
+  replication: any
+
   /**
    *
    * @param {String} source - the DB you want to replicate or rollback to
    * @param {String} target - the DB you want to replicate to, or rollback from
    */
-  constructor({ source, target }) {
+  constructor({ source, target }: any) {
     this.source = dangerousGetDB(source)
     this.target = dangerousGetDB(target)
   }
@@ -15,17 +19,17 @@ class Replication {
     return Promise.all([closeDB(this.source), closeDB(this.target)])
   }
 
-  promisify(operation, opts = {}) {
+  promisify(operation: any, opts = {}) {
     return new Promise(resolve => {
       operation(this.target, opts)
-        .on("denied", function (err) {
+        .on("denied", function (err: any) {
           // a document failed to replicate (e.g. due to permissions)
           throw new Error(`Denied: Document failed to replicate ${err}`)
         })
-        .on("complete", function (info) {
+        .on("complete", function (info: any) {
           return resolve(info)
         })
-        .on("error", function (err) {
+        .on("error", function (err: any) {
           throw new Error(`Replication Error: ${err}`)
         })
     })
@@ -64,4 +68,4 @@ class Replication {
   }
 }
 
-module.exports = Replication
+export default Replication
