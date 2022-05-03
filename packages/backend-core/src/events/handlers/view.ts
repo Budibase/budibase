@@ -11,6 +11,9 @@ import {
   ViewFilterDeletedEvent,
   ViewFilterUpdatedEvent,
   ViewUpdatedEvent,
+  View,
+  Table,
+  TableExportFormat,
 } from "@budibase/types"
 
 /* eslint-disable */
@@ -30,7 +33,7 @@ export function deleted() {
   processEvent(Events.VIEW_DELETED, properties)
 }
 
-export function exported(table, format) {
+export function exported(table: Table, format: TableExportFormat) {
   const properties: ViewExportedEvent = {}
   processEvent(Events.VIEW_EXPORTED, properties)
 }

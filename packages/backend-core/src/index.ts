@@ -1,9 +1,9 @@
-const db = require("./db")
-const errors = require("./errors")
+import db from "./db"
+import errors from "./errors"
 import * as events from "./events"
 
-module.exports = {
-  init(opts = {}) {
+export = {
+  init(opts: any = {}) {
     db.init(opts.db)
   },
   // some default exports from the library, however these ideally shouldn't
@@ -18,7 +18,7 @@ module.exports = {
   auth: require("../auth"),
   constants: require("../constants"),
   migrations: require("../migrations"),
-  errors: require("./errors"),
+  errors,
   ...errors.errors,
   env: require("./environment"),
   accounts: require("./cloud/accounts"),

@@ -6,7 +6,7 @@ function isTest() {
   )
 }
 
-module.exports = {
+export = {
   JWT_SECRET: process.env.JWT_SECRET,
   COUCH_DB_URL: process.env.COUCH_DB_URL,
   COUCH_DB_USERNAME: process.env.COUCH_DB_USER,
@@ -26,7 +26,7 @@ module.exports = {
     process.env.ACCOUNT_PORTAL_URL || "https://account.budibase.app",
   ACCOUNT_PORTAL_API_KEY: process.env.ACCOUNT_PORTAL_API_KEY,
   DISABLE_ACCOUNT_PORTAL: process.env.DISABLE_ACCOUNT_PORTAL,
-  SELF_HOSTED: !!parseInt(process.env.SELF_HOSTED),
+  SELF_HOSTED: !!parseInt(process.env.SELF_HOSTED || ""),
   COOKIE_DOMAIN: process.env.COOKIE_DOMAIN,
   PLATFORM_URL: process.env.PLATFORM_URL,
   POSTHOG_TOKEN: process.env.POSTHOG_TOKEN,
@@ -34,7 +34,7 @@ module.exports = {
   TENANT_FEATURE_FLAGS: process.env.TENANT_FEATURE_FLAGS,
   USE_COUCH: process.env.USE_COUCH || true,
   isTest,
-  _set(key, value) {
+  _set(key: any, value: any) {
     process.env[key] = value
     module.exports[key] = value
   },

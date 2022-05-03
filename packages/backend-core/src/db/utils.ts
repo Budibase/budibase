@@ -1,6 +1,6 @@
 import { newid } from "../hashing"
 import { DEFAULT_TENANT_ID, Configs } from "../constants"
-import * as env from "../environment"
+import env from "../environment"
 import { SEPARATOR, DocumentTypes } from "./constants"
 import { getTenantId, getGlobalDBName } from "../tenancy"
 import fetch from "node-fetch"

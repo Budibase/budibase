@@ -1,9 +1,9 @@
-const env = require("../src/environment")
-const { mocks } = require("../testUtils")
+import env from "../src/environment"
+import { mocks } from "../testUtils"
 
 // mock all dates to 2020-01-01T00:00:00.000Z
 // use tk.reset() to use real dates in individual tests
-const tk = require("timekeeper")
+import tk from "timekeeper"
 tk.freeze(mocks.date.MOCK_DATE)
 
 env._set("SELF_HOSTED", "1")
