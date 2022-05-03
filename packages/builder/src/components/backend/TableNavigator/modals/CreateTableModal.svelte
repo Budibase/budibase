@@ -45,6 +45,8 @@
       name,
       schema: addAutoColumns(name, dataImport.schema || {}),
       dataImport,
+      type: "internal",
+      sourceId: "bb_internal",
     }
 
     // Only set primary display if defined
