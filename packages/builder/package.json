@@ -1,6 +1,6 @@
 {
   "name": "@budibase/builder",
-  "version": "1.0.131",
+  "version": "1.0.135",
   "license": "GPL-3.0",
   "private": true,
   "scripts": {
@@ -13,7 +13,7 @@
     "cy:setup:ci": "node ./cypress/setup.js",
     "cy:open": "cypress open",
     "cy:run": "cypress run",
-    "cy:run:ci": "xvfb-run cypress run --headed --browser chrome",
+    "cy:run:ci": "xvfb-run cypress run --headed --browser chrome --record",
     "cy:test": "start-server-and-test cy:setup http://localhost:4100/builder cy:run",
     "cy:ci": "start-server-and-test cy:setup:ci http://localhost:4100/builder cy:run:ci",
     "cy:debug": "start-server-and-test cy:setup http://localhost:4100/builder cy:open",
@@ -65,10 +65,10 @@
     }
   },
   "dependencies": {
-    "@budibase/bbui": "^1.0.131",
-    "@budibase/client": "^1.0.131",
-    "@budibase/frontend-core": "^1.0.131",
-    "@budibase/string-templates": "^1.0.131",
+    "@budibase/bbui": "^1.0.135",
+    "@budibase/client": "^1.0.135",
+    "@budibase/frontend-core": "^1.0.135",
+    "@budibase/string-templates": "^1.0.135",
     "@sentry/browser": "5.19.1",
     "@spectrum-css/page": "^3.0.1",
     "@spectrum-css/vars": "^3.0.1",
