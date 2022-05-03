@@ -49,6 +49,10 @@
     filters = [...filters, duplicate]
   }
 
+  const getSchema = filter => {
+    return schemaFields.find(field => field.name === filter.field)
+  }
+
   const onFieldChange = (expression, field) => {
     // Update the field type
     expression.type = enrichedSchemaFields.find(x => x.name === field)?.type
@@ -150,7 +154,12 @@
                 bind:value={filter.value}
               />
             {:else if filter.type === "datetime"}
-              <DatePicker disabled={filter.noValue} bind:value={filter.value} />
+              <DatePicker
+                disabled={filter.noValue}
+                enableTime={!getSchema(filter).dateOnly}
+                timeOnly={getSchema(filter).timeOnly}
+                bind:value={filter.value}
+              />
             {:else}
               <DrawerBindableInput disabled />
             {/if}

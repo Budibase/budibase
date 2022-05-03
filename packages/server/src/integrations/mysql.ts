@@ -15,6 +15,7 @@ import {
 } from "./utils"
 import { DatasourcePlus } from "./base/datasourcePlus"
 import dayjs from "dayjs"
+import { FieldTypes } from "../constants"
 const { NUMBER_REGEX } = require("../utilities")
 
 module MySQLModule {
@@ -215,8 +216,8 @@ module MySQLModule {
             schema[columnName] = {
               name: columnName,
               autocolumn: isAuto,
-              type: convertSqlType(column.Type),
               constraints,
+              ...convertSqlType(column.Type),
             }
           }
           if (!tables[tableName]) {

@@ -35,6 +35,9 @@ const SQL_DATE_TYPE_MAP = {
   date: FieldTypes.DATETIME,
 }
 
+const SQL_DATE_ONLY_TYPES = ["date"]
+const SQL_TIME_ONLY_TYPES = ["time"]
+
 const SQL_STRING_TYPE_MAP = {
   varchar: FieldTypes.STRING,
   char: FieldTypes.STRING,
@@ -137,12 +140,20 @@ export function breakRowIdField(_id: string | { _id: string }): any[] {
 }
 
 export function convertSqlType(type: string) {
+  let foundType = FieldTypes.STRING
+  const lcType = type.toLowerCase()
   for (let [external, internal] of Object.entries(SQL_TYPE_MAP)) {
-    if (type.toLowerCase().includes(external)) {
-      return internal
+    if (lcType.includes(external)) {
+      foundType = internal
+      break
     }
   }
-  return FieldTypes.STRING
+  const schema: any = { type: foundType }
+  if (foundType === FieldTypes.DATETIME) {
+    schema.dateOnly = SQL_DATE_ONLY_TYPES.includes(lcType)
+    schema.timeOnly = SQL_TIME_ONLY_TYPES.includes(lcType)
+  }
+  return schema
 }
 
 export function getSqlQuery(query: SqlQuery | string): SqlQuery {

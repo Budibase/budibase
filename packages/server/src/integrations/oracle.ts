@@ -279,9 +279,9 @@ module OracleModule {
       )
     }
 
-    private internalConvertType(column: OracleColumn): string {
+    private internalConvertType(column: OracleColumn): { type: string } {
       if (this.isBooleanType(column)) {
-        return FieldTypes.BOOLEAN
+        return { type: FieldTypes.BOOLEAN }
       }
 
       return convertSqlType(column.type)
@@ -328,7 +328,7 @@ module OracleModule {
               fieldSchema = {
                 autocolumn: OracleIntegration.isAutoColumn(oracleColumn),
                 name: columnName,
-                type: this.internalConvertType(oracleColumn),
+                ...this.internalConvertType(oracleColumn),
               }
               table.schema[columnName] = fieldSchema
             }
