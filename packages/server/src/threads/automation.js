@@ -100,10 +100,10 @@ class Orchestrator {
     let automation = this._automation
     const app = await this.getApp()
     let stopped = false
-    let loopStep
+    let loopStep = null
 
     let stepCount = 0
-    let loopStepNumber
+    let loopStepNumber = null
     let loopSteps = []
     for (let step of automation.definition.steps) {
       stepCount++
@@ -286,18 +286,16 @@ class Orchestrator {
 
 module.exports = (input, callback) => {
   const appId = input.data.event.appId
-  doInAppContext(appId, () => {
+  doInAppContext(appId, async () => {
     const automationOrchestrator = new Orchestrator(
       input.data.automation,
       input.data.event
     )
-    automationOrchestrator
-      .execute()
-      .then(response => {
-        callback(null, response)
-      })
-      .catch(err => {
-        callback(err)
-      })
+    try {
+      const response = await automationOrchestrator.execute()
+      callback(null, response)
+    } catch (err) {
+      callback(err)
+    }
   })
 }
