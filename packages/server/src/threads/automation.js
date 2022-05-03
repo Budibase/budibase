@@ -100,10 +100,10 @@ class Orchestrator {
     let automation = this._automation
     const app = await this.getApp()
     let stopped = false
-    let loopStep
+    let loopStep = null
 
     let stepCount = 0
-    let loopStepNumber
+    let loopStepNumber = null
     let loopSteps = []
     for (let step of automation.definition.steps) {
       stepCount++
