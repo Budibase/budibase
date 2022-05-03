@@ -33,6 +33,8 @@ jobs:
         with:
           install: false
           command: yarn test:e2e:ci
+        env:
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
       
       # TODO: upload recordings to s3
       # - name: Configure AWS Credentials
