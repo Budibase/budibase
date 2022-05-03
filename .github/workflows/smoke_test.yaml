@@ -32,7 +32,7 @@ jobs:
         uses: cypress-io/github-action@v2
         with:
           install: false
-          command: yarn test:e2e:ci
+          command: yarn test:e2e:ci:record
         env:
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
       
