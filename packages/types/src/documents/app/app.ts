@@ -1,1 +1,3 @@
-export interface App {}
+export interface App {
+  appId: string
+}

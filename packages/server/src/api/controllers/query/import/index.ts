@@ -84,9 +84,9 @@ export class RestImporter {
     const count = successQueries.length
     const importSource = this.source.getImportSource()
     const datasource = await db.get(datasourceId)
-    events.query.import(datasource, importSource, count)
+    events.query.imported(datasource, importSource, count)
     for (let query of successQueries) {
-      events.query.created(query)
+      events.query.created(datasource, query)
     }
 
     return {

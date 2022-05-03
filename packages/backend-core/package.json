@@ -2,7 +2,7 @@
   "name": "@budibase/backend-core",
   "version": "1.0.126-alpha.0",
   "description": "Budibase backend core libraries used in server and worker",
-  "main": "src/index.js",
+  "main": "src/index.ts",
   "types": "dist/src/index.d.ts",
   "author": "Budibase",
   "license": "GPL-3.0",
@@ -36,22 +36,29 @@
     "zlib": "^1.0.5"
   },
   "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
     "setupFiles": [
-      "./scripts/jestSetup.js"
+      "./scripts/jestSetup.ts"
     ]
   },
   "devDependencies": {
+    "@shopify/jest-koa-mocks": "^3.1.5",
+    "@budibase/types": "^1.0.126-alpha.0",
     "@types/jest": "^27.4.1",
+    "@types/koa": "^2.13.3",
     "@types/node": "^15.12.4",
     "@types/node-fetch": "^2.6.1",
-    "@budibase/types": "^1.0.126-alpha.0",
-    "typescript": "^4.5.5",
-    "@shopify/jest-koa-mocks": "^3.1.5",
+    "@types/tar-fs": "^2.0.1",
+    "@types/uuid": "^8.3.4",
     "ioredis-mock": "^5.5.5",
-    "jest": "^26.6.3",
+    "jest": "^27.0.3",
+    "koa": "2.7.0",
     "pouchdb-adapter-memory": "^7.2.2",
     "pouchdb-all-dbs": "^1.0.2",
-    "timekeeper": "^2.2.0"
+    "timekeeper": "^2.2.0",
+    "ts-jest": "^27.0.3",
+    "typescript": "^4.5.5"
   },
   "gitHead": "d1836a898cab3f8ab80ee6d8f42be1a9eed7dcdc"
 }

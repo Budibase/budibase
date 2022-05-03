@@ -55,8 +55,8 @@ describe("/tables", () => {
       expect(events.table.created).toBeCalledWith(res.body)
       expect(events.table.imported).toBeCalledTimes(1)
       expect(events.table.imported).toBeCalledWith(res.body, "csv")
-      expect(events.row.import).toBeCalledTimes(1)
-      expect(events.row.import).toBeCalledWith(res.body, "csv", 1)
+      expect(events.row.imported).toBeCalledTimes(1)
+      expect(events.row.imported).toBeCalledWith(res.body, "csv", 1)
     })
 
     it("should apply authorization to endpoint", async () => {
@@ -163,8 +163,8 @@ describe("/tables", () => {
         .expect(200)
 
       expect(events.table.created).not.toHaveBeenCalled()
-      expect(events.row.import).toBeCalledTimes(1)
-      expect(events.row.import).toBeCalledWith(table, "csv", 1)
+      expect(events.row.imported).toBeCalledTimes(1)
+      expect(events.row.imported).toBeCalledWith(table, "csv", 1)
     })
   })
 

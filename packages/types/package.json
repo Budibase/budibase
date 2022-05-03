@@ -7,7 +7,7 @@
   "author": "Budibase",
   "license": "GPL-3.0",
   "scripts": {
-    "build": "rimraf dist/ && tsc -p tsconfig.json"
+    "build": "rimraf dist/ && tsc"
   },
   "jest": {
   },

@@ -59,7 +59,7 @@ jest.mock("../../../events", () => {
       created: jest.fn(),
       updated: jest.fn(),
       deleted: jest.fn(),
-      import: jest.fn(),
+      imported: jest.fn(),
       previewed: jest.fn(),
     },
     role: {
@@ -70,7 +70,7 @@ jest.mock("../../../events", () => {
       unassigned: jest.fn(),
     },
     row: {
-      import: jest.fn(),
+      imported: jest.fn(),
     },
     screen: {
       created: jest.fn(),

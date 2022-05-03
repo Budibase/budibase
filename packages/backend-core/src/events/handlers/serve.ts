@@ -1,10 +1,10 @@
-import { AppServedEvent } from "./../../../../types/src/events/serve"
 import { processEvent } from "../events"
 import {
   App,
   BuilderServedEvent,
   Events,
   AppPreviewServedEvent,
+  AppServedEvent,
 } from "@budibase/types"
 
 /* eslint-disable */

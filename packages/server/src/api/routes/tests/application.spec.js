@@ -134,7 +134,7 @@ describe("/applications", () => {
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
-      expect(res.body.rev).toBeDefined()
+      expect(res.body._rev).toBeDefined()
       expect(events.app.updated).toBeCalledTimes(1)
     })
   })
@@ -201,7 +201,7 @@ describe("/applications", () => {
         .set(headers)
         .expect("Content-Type", /json/)
         .expect(200)
-      expect(res.body.rev).toBeDefined()
+      expect(res.body._rev).toBeDefined()
       // retrieve the app to check it
       const getRes = await request
         .get(`/api/applications/${config.getAppId()}/appPackage`)

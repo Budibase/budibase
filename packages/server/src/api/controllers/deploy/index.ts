@@ -123,6 +123,7 @@ async function deployApp(deployment: any) {
     console.log("Deployed app initialised, setting deployment to successful")
     deployment.setStatus(DeploymentStatus.SUCCESS)
     await storeDeploymentHistory(deployment)
+    return appDoc
   } catch (err: any) {
     deployment.setStatus(DeploymentStatus.FAILURE, err.message)
     await storeDeploymentHistory(deployment)
@@ -187,13 +188,14 @@ const _deployApp = async function (ctx: any) {
 
   console.log("Deploying app...")
 
+  let app
   if (await isFirstDeploy()) {
-    await quotas.addPublishedApp(() => deployApp(deployment))
+    app = await quotas.addPublishedApp(() => deployApp(deployment))
   } else {
-    await deployApp(deployment)
+    app = await deployApp(deployment)
   }
 
-  events.app.published()
+  events.app.published(app)
   ctx.body = deployment
 }
 
