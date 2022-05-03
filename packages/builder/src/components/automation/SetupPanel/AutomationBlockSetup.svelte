@@ -265,6 +265,7 @@
           value={inputData[key]}
           on:change={e => onChange(e, key)}
           {bindings}
+          {isTestModal}
         />
       {:else if value.customType === "webhookUrl"}
         <WebhookDisplay
