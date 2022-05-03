@@ -24,14 +24,8 @@ export function createAdminStore() {
   const admin = writable(DEFAULT_CONFIG)
 
   async function init() {
-    const tenantId = get(auth).tenantId
-    const checklist = await API.getChecklist(tenantId)
-    const totalSteps = Object.keys(checklist).length
-    const completedSteps = Object.values(checklist).filter(
-      x => x?.checked
-    ).length
+    await getChecklist()
     await getEnvironment()
-
     // enable system status checks in the cloud
     if (get(admin).cloud) {
       await getSystemStatus()
@@ -40,8 +34,6 @@ export function createAdminStore() {
 
     admin.update(store => {
       store.loaded = true
-      store.checklist = checklist
-      store.onboardingProgress = (completedSteps / totalSteps) * 100
       return store
     })
   }
@@ -81,6 +73,20 @@ export function createAdminStore() {
     })
   }
 
+  async function getChecklist() {
+    const tenantId = get(auth).tenantId
+    const checklist = await API.getChecklist(tenantId)
+    const totalSteps = Object.keys(checklist).length
+    const completedSteps = Object.values(checklist).filter(
+      x => x?.checked
+    ).length
+    admin.update(store => {
+      store.checklist = checklist
+      store.onboardingProgress = (completedSteps / totalSteps) * 100
+      return store
+    })
+  }
+
   function unload() {
     admin.update(store => {
       store.loaded = false
@@ -93,6 +99,7 @@ export function createAdminStore() {
     init,
     checkImportComplete,
     unload,
+    getChecklist,
   }
 }
 
