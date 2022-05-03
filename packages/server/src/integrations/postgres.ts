@@ -227,7 +227,6 @@ module PostgresModule {
           }
         }
 
-        const type: string = convertSqlType(column.data_type)
         const identity = !!(
           column.identity_generation ||
           column.identity_start ||
@@ -242,7 +241,7 @@ module PostgresModule {
         tables[tableName].schema[columnName] = {
           autocolumn: isAuto,
           name: columnName,
-          type,
+          ...convertSqlType(column.data_type),
         }
       }
 

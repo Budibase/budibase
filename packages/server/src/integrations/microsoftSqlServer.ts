@@ -242,12 +242,10 @@ module MSSQLModule {
           if (typeof name !== "string") {
             continue
           }
-          const type: string = convertSqlType(def.DATA_TYPE)
-
           schema[name] = {
             autocolumn: !!autoColumns.find((col: string) => col === name),
             name: name,
-            type,
+            ...convertSqlType(def.DATA_TYPE),
           }
         }
         tables[tableName] = {
