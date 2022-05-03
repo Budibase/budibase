@@ -191,14 +191,13 @@ class QueryRunner {
 }
 
 module.exports = (input, callback) => {
-  doInAppContext(input.appId, () => {
+  doInAppContext(input.appId, async () => {
     const Runner = new QueryRunner(input)
-    Runner.execute()
-      .then(response => {
-        callback(null, response)
-      })
-      .catch(err => {
-        callback(err)
-      })
+    try {
+      const response = await Runner.execute()
+      callback(null, response)
+    } catch (err) {
+      callback(err)
+    }
   })
 }
