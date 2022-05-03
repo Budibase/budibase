@@ -2,7 +2,11 @@ const { budibaseTempDir } = require("../budibaseDir")
 const fs = require("fs")
 const { join } = require("path")
 const uuid = require("uuid/v4")
-const { doWithDB } = require("@budibase/backend-core/db")
+const {
+  doWithDB,
+  dangerousGetDB,
+  closeDB,
+} = require("@budibase/backend-core/db")
 const { ObjectStoreBuckets } = require("../../constants")
 const {
   upload,
@@ -151,14 +155,18 @@ exports.streamBackup = async appId => {
  * @return {*} either a readable stream or a string
  */
 exports.exportDB = async (dbName, { stream, filter, exportName } = {}) => {
-  return doWithDB(dbName, async db => {
-    // Stream the dump if required
-    if (stream) {
-      const memStream = new MemoryStream()
-      db.dump(memStream, { filter })
-      return memStream
-    }
+  // streaming a DB dump is a bit more complicated, can't close DB
+  if (stream) {
+    const db = dangerousGetDB(dbName)
+    const memStream = new MemoryStream()
+    memStream.on("end", async () => {
+      await closeDB(db)
+    })
+    db.dump(memStream, { filter })
+    return memStream
+  }
 
+  return doWithDB(dbName, async db => {
     // Write the dump to file if required
     if (exportName) {
       const path = join(budibaseTempDir(), exportName)
