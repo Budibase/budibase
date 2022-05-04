@@ -48,8 +48,7 @@
   $: {
     for (let i = 0; i < data.length; i++) {
       let row = data[i]
-      for (let fieldNameIndex in Object.keys(fields)) {
-        let fieldName = Object.keys(fields)[fieldNameIndex]
+      for (let fieldName of Object.keys(fields)) {
         if (fields[fieldName] === "number" && !isNaN(Number(row[fieldName]))) {
           row[fieldName] = Number(row[fieldName])
         } else {
