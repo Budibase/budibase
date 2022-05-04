@@ -177,8 +177,6 @@
     onChange({ detail: tempFilters }, defKey)
     drawer.hide()
   }
-  console.log(schemaProperties)
-  console.log(inputData)
 </script>
 
 <div class="fields">
