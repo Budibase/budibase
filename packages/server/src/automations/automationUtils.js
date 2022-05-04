@@ -86,3 +86,15 @@ exports.substituteLoopStep = (hbsString, substitute) => {
 
   return hbsString
 }
+
+exports.stringSplit = value => {
+  if (value == null) {
+    return []
+  }
+  if (value.split("\n").length > 1) {
+    value = value.split("\n")
+  } else {
+    value = value.split(",")
+  }
+  return value
+}

@@ -100,10 +100,10 @@ class Orchestrator {
     let automation = this._automation
     const app = await this.getApp()
     let stopped = false
-    let loopStep
+    let loopStep = null
 
     let stepCount = 0
-    let loopStepNumber
+    let loopStepNumber = null
     let loopSteps = []
     for (let step of automation.definition.steps) {
       stepCount++
@@ -117,15 +117,17 @@ class Orchestrator {
       if (loopStep) {
         input = await processObject(loopStep.inputs, this._context)
       }
-      let iterations = loopStep ? input.binding.length : 1
+      let iterations = loopStep
+        ? Array.isArray(input.binding)
+          ? input.binding.length
+          : automationUtils.stringSplit(input.binding).length
+        : 1
       let iterationCount = 0
       for (let index = 0; index < iterations; index++) {
         let originalStepInput = cloneDeep(step.inputs)
 
         // Handle if the user has set a max iteration count or if it reaches the max limit set by us
         if (loopStep) {
-          // lets first of all handle the input
-          // if the input is array then use it, if it is a string then split it on every new line
           let newInput = await processObject(
             loopStep.inputs,
             cloneDeep(this._context)
@@ -134,9 +136,6 @@ class Orchestrator {
             newInput,
             loopStep.schema.inputs
           )
-          this._context.steps[loopStepNumber] = {
-            currentItem: newInput.binding[index],
-          }
 
           let tempOutput = { items: loopSteps, iterations: iterationCount }
           if (
@@ -152,6 +151,20 @@ class Orchestrator {
             loopSteps = null
             loopStep = null
             break
+          }
+
+          let item
+          if (
+            typeof loopStep.inputs.binding === "string" &&
+            loopStep.inputs.option === "String"
+          ) {
+            item = automationUtils.stringSplit(newInput.binding)
+          } else {
+            item = loopStep.inputs.binding
+          }
+
+          this._context.steps[loopStepNumber] = {
+            currentItem: item[index],
           }
 
           // The "Loop" binding in the front end is "fake", so replace it here so the context can understand it
@@ -178,7 +191,6 @@ class Orchestrator {
               }
             }
           }
-
           if (
             index === parseInt(env.AUTOMATION_MAX_ITERATIONS) ||
             index === loopStep.inputs.iterations
@@ -192,10 +204,25 @@ class Orchestrator {
             break
           }
 
+          let isFailure = false
           if (
-            this._context.steps[loopStepNumber]?.currentItem ===
-            loopStep.inputs.failure
+            typeof this._context.steps[loopStepNumber]?.currentItem === "object"
           ) {
+            isFailure = Object.keys(
+              this._context.steps[loopStepNumber].currentItem
+            ).some(value => {
+              return (
+                this._context.steps[loopStepNumber].currentItem[value] ===
+                loopStep.inputs.failure
+              )
+            })
+          } else {
+            isFailure =
+              this._context.steps[loopStepNumber]?.currentItem ===
+              loopStep.inputs.failure
+          }
+
+          if (isFailure) {
             this.updateContextAndOutput(loopStepNumber, step, tempOutput, {
               status: AutomationErrors.FAILURE_CONDITION,
               success: false,
@@ -286,18 +313,16 @@ class Orchestrator {
 
 module.exports = (input, callback) => {
   const appId = input.data.event.appId
-  doInAppContext(appId, () => {
+  doInAppContext(appId, async () => {
     const automationOrchestrator = new Orchestrator(
       input.data.automation,
       input.data.event
     )
-    automationOrchestrator
-      .execute()
-      .then(response => {
-        callback(null, response)
-      })
-      .catch(err => {
-        callback(err)
-      })
+    try {
+      const response = await automationOrchestrator.execute()
+      callback(null, response)
+    } catch (err) {
+      callback(err)
+    }
   })
 }
