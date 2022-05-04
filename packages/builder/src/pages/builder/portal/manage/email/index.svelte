@@ -13,7 +13,7 @@
     Table,
     Checkbox,
   } from "@budibase/bbui"
-  import { email } from "stores/portal"
+  import { email, admin } from "stores/portal"
   import { API } from "api"
   import { cloneDeep } from "lodash/fp"
   import analytics, { Events } from "analytics"
@@ -58,6 +58,7 @@
       const savedConfig = await API.saveConfig(smtp)
       smtpConfig._rev = savedConfig._rev
       smtpConfig._id = savedConfig._id
+      await admin.getChecklist()
       notifications.success(`Settings saved`)
       analytics.captureEvent(Events.SMTP.SAVED)
     } catch (error) {
