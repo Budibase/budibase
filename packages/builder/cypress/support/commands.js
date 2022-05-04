@@ -44,7 +44,7 @@ Cypress.Commands.add("createApp", (name, addDefaultTable) => {
     typeof addDefaultTable != "boolean" ? true : addDefaultTable
 
   cy.visit(`${Cypress.config().baseUrl}/builder`)
-  cy.wait(500)
+  cy.wait(1000)
   cy.get(`[data-cy="create-app-btn"]`).click({ force: true })
 
   // If apps already exist
@@ -94,19 +94,21 @@ Cypress.Commands.add("deleteApp", name => {
           cy.get(actionEleId).within(() => {
             cy.get(".spectrum-Icon").eq(0).click()
           })
-
           cy.get(".spectrum-Menu").then($menu => {
             if ($menu.text().includes("Unpublish")) {
               cy.get(".spectrum-Menu").contains("Unpublish").click()
               cy.get(".spectrum-Dialog-grid").contains("Unpublish app").click()
-            } else {
-              cy.get(".spectrum-Menu").contains("Delete").click()
-              cy.get(".spectrum-Dialog-grid").within(() => {
-                cy.get("input").type(name)
-              })
-              cy.get(".spectrum-Button--warning").click()
             }
           })
+
+          cy.get(actionEleId).within(() => {
+            cy.get(".spectrum-Icon").eq(0).click()
+          })
+          cy.get(".spectrum-Menu").contains("Delete").click()
+          cy.get(".spectrum-Dialog-grid").within(() => {
+            cy.get("input").type(name)
+          })
+          cy.get(".spectrum-Button--warning").click()
         } else {
           return
         }
