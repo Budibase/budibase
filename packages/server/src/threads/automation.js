@@ -144,7 +144,6 @@ class Orchestrator {
             (loopStep.inputs.option === "String" &&
               typeof newInput.binding !== "string")
           ) {
-            console.log("hello")
             this.updateContextAndOutput(loopStepNumber, step, tempOutput, {
               status: AutomationErrors.INCORRECT_TYPE,
               success: false,
@@ -222,7 +221,6 @@ class Orchestrator {
               this._context.steps[loopStepNumber]?.currentItem ===
               loopStep.inputs.failure
           }
-          console.log(isFailure)
 
           if (isFailure) {
             this.updateContextAndOutput(loopStepNumber, step, tempOutput, {
