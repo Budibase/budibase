@@ -329,6 +329,17 @@
       }
     }
 
+    // We don't want to actually remove the field state when deregistering, just
+    // remove any errors and validation
+    const deregister = () => {
+      const fieldInfo = getField(field)
+      fieldInfo.update(state => {
+        state.fieldState.validator = null
+        state.fieldState.error = null
+        return state
+      })
+    }
+
     // Updates the disabled state of a certain field
     const setDisabled = fieldDisabled => {
       const fieldInfo = getField(field)
@@ -348,6 +359,7 @@
       reset,
       updateValidation,
       setDisabled,
+      deregister,
       validate: () => {
         // Validate the field by force setting the same value again
         const { fieldState } = get(getField(field))
