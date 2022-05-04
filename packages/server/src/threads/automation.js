@@ -191,7 +191,6 @@ class Orchestrator {
               }
             }
           }
-
           if (
             index === parseInt(env.AUTOMATION_MAX_ITERATIONS) ||
             index === loopStep.inputs.iterations
@@ -205,10 +204,25 @@ class Orchestrator {
             break
           }
 
+          let isFailure = false
           if (
-            this._context.steps[loopStepNumber]?.currentItem ===
-            loopStep.inputs.failure
+            typeof this._context.steps[loopStepNumber]?.currentItem === "object"
           ) {
+            isFailure = Object.keys(
+              this._context.steps[loopStepNumber].currentItem
+            ).some(value => {
+              return (
+                this._context.steps[loopStepNumber].currentItem[value] ===
+                loopStep.inputs.failure
+              )
+            })
+          } else {
+            isFailure =
+              this._context.steps[loopStepNumber]?.currentItem ===
+              loopStep.inputs.failure
+          }
+
+          if (isFailure) {
             this.updateContextAndOutput(loopStepNumber, step, tempOutput, {
               status: AutomationErrors.FAILURE_CONDITION,
               success: false,
