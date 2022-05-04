@@ -1014,38 +1014,10 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/backend-core@1.0.130-alpha.1":
-  version "1.0.130-alpha.1"
-  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.0.130-alpha.1.tgz#670c090b91edef708fa77f63d0288f9a2f8733c1"
-  integrity sha512-Twhy7YtK7URjrw948UVO0MkxRtz8GWAROGTf/uZkla2visuinKVlmXvsnjK/eDKWVfzN+WBqoMjgslEpDqLLtg==
-  dependencies:
-    "@techpass/passport-openidconnect" "^0.3.0"
-    aws-sdk "^2.901.0"
-    bcryptjs "^2.4.3"
-    cls-hooked "^4.2.2"
-    ioredis "^4.27.1"
-    jsonwebtoken "^8.5.1"
-    koa-passport "^4.1.4"
-    lodash "^4.17.21"
-    lodash.isarguments "^3.1.0"
-    node-fetch "^2.6.1"
-    passport-google-auth "^1.0.2"
-    passport-google-oauth "^2.0.0"
-    passport-jwt "^4.0.0"
-    passport-local "^1.0.0"
-    posthog-node "^1.3.0"
-    pouchdb "7.3.0"
-    pouchdb-find "^7.2.2"
-    pouchdb-replication-stream "^1.2.9"
-    sanitize-s3-objectkey "^0.0.1"
-    tar-fs "^2.1.1"
-    uuid "^8.3.2"
-    zlib "^1.0.5"
-
-"@budibase/backend-core@^1.0.130-alpha.1":
-  version "1.0.134"
-  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.0.134.tgz#c5fa1b179d7545339d6c5f2d69b0cd3f99d43c5c"
-  integrity sha512-otv40D1q6UOozv38XcXpyXzyIdqdNJA3PxJ7hQDUEoEQXy8xSdzvWy/wiC/paDy5zh4pCVYyIHPGZQtodHmbXQ==
+"@budibase/backend-core@1.0.138":
+  version "1.0.138"
+  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.0.138.tgz#5297d6cf5b9ec8c15f0a6df4c7d8273b8ac900f0"
+  integrity sha512-1qN/5urKX8bBXwEz266Z94rco8dTI7VqIh75m8ZcqrAfoUpjvZJS76gZxfc5U/QWPwrgVFnLtYvnEjaLbGEflg==
   dependencies:
     "@techpass/passport-openidconnect" "^0.3.0"
     aws-sdk "^2.901.0"
@@ -1119,128 +1091,12 @@
     svelte-flatpickr "^3.2.3"
     svelte-portal "^1.0.0"
 
-"@budibase/bbui@^1.0.134":
-  version "1.0.134"
-  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-1.0.134.tgz#bd7cec68ccca9392829dccf7c6154b6979e278d1"
-  integrity sha512-KcZwUy22jCrePb39yUsz8kiSXK458rpRL2iDdsdZD+GIHITP3qrUu5uu6HfcHrlDQHBgPcI/vJfppjBspCC79A==
+"@budibase/pro@1.0.138":
+  version "1.0.138"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-1.0.138.tgz#cacbebe5ce93eb533af62a794a638944c2c61544"
+  integrity sha512-4ABlUZvl2h8sd8awJATf3KJeoFWV/8SoqdbKiH1ICdUcM/6dad7nhbJ15QqJL+Uuh/+mN2yEbr8V6Un2+yF+CA==
   dependencies:
-    "@adobe/spectrum-css-workflow-icons" "^1.2.1"
-    "@budibase/string-templates" "^1.0.134"
-    "@spectrum-css/actionbutton" "^1.0.1"
-    "@spectrum-css/actiongroup" "^1.0.1"
-    "@spectrum-css/avatar" "^3.0.2"
-    "@spectrum-css/button" "^3.0.1"
-    "@spectrum-css/buttongroup" "^3.0.2"
-    "@spectrum-css/checkbox" "^3.0.2"
-    "@spectrum-css/dialog" "^3.0.1"
-    "@spectrum-css/divider" "^1.0.3"
-    "@spectrum-css/dropzone" "^3.0.2"
-    "@spectrum-css/fieldgroup" "^3.0.2"
-    "@spectrum-css/fieldlabel" "^3.0.1"
-    "@spectrum-css/icon" "^3.0.1"
-    "@spectrum-css/illustratedmessage" "^3.0.2"
-    "@spectrum-css/inlinealert" "^2.0.1"
-    "@spectrum-css/inputgroup" "^3.0.2"
-    "@spectrum-css/label" "^2.0.10"
-    "@spectrum-css/link" "^3.1.1"
-    "@spectrum-css/menu" "^3.0.1"
-    "@spectrum-css/modal" "^3.0.1"
-    "@spectrum-css/pagination" "^3.0.3"
-    "@spectrum-css/picker" "^1.0.1"
-    "@spectrum-css/popover" "^3.0.1"
-    "@spectrum-css/progressbar" "^1.0.2"
-    "@spectrum-css/progresscircle" "^1.0.2"
-    "@spectrum-css/radio" "^3.0.2"
-    "@spectrum-css/search" "^3.0.2"
-    "@spectrum-css/sidenav" "^3.0.2"
-    "@spectrum-css/statuslight" "^3.0.2"
-    "@spectrum-css/stepper" "^3.0.3"
-    "@spectrum-css/switch" "^1.0.2"
-    "@spectrum-css/table" "^3.0.1"
-    "@spectrum-css/tabs" "^3.0.1"
-    "@spectrum-css/tags" "^3.0.2"
-    "@spectrum-css/textfield" "^3.0.1"
-    "@spectrum-css/toast" "^3.0.1"
-    "@spectrum-css/tooltip" "^3.0.3"
-    "@spectrum-css/treeview" "^3.0.2"
-    "@spectrum-css/typography" "^3.0.1"
-    "@spectrum-css/underlay" "^2.0.9"
-    "@spectrum-css/vars" "^3.0.1"
-    dayjs "^1.10.4"
-    easymde "^2.16.1"
-    svelte-flatpickr "^3.2.3"
-    svelte-portal "^1.0.0"
-
-"@budibase/client@^1.0.130-alpha.1":
-  version "1.0.134"
-  resolved "https://registry.yarnpkg.com/@budibase/client/-/client-1.0.134.tgz#b1dfd9137045e80e4f6c6982d7d28ae3053f0910"
-  integrity sha512-SYBDaybFyoJalabjzgvqG80l/bZjI8lG1rzR4bGGqyHf0wDYbHbHWeDvj/4pLhCSpcjGabi7eC+wvjxejIqQng==
-  dependencies:
-    "@budibase/bbui" "^1.0.134"
-    "@budibase/frontend-core" "^1.0.134"
-    "@budibase/string-templates" "^1.0.134"
-    "@spectrum-css/button" "^3.0.3"
-    "@spectrum-css/card" "^3.0.3"
-    "@spectrum-css/divider" "^1.0.3"
-    "@spectrum-css/link" "^3.1.3"
-    "@spectrum-css/page" "^3.0.1"
-    "@spectrum-css/tag" "^3.1.4"
-    "@spectrum-css/typography" "^3.0.2"
-    "@spectrum-css/vars" "^3.0.1"
-    apexcharts "^3.22.1"
-    dayjs "^1.10.5"
-    downloadjs "1.4.7"
-    leaflet "^1.7.1"
-    regexparam "^1.3.0"
-    rollup-plugin-polyfill-node "^0.8.0"
-    sanitize-html "^2.7.0"
-    screenfull "^6.0.1"
-    shortid "^2.2.15"
-    svelte "^3.38.2"
-    svelte-apexcharts "^1.0.2"
-    svelte-flatpickr "^3.1.0"
-    svelte-spa-router "^3.0.5"
-
-"@budibase/frontend-core@^1.0.134":
-  version "1.0.134"
-  resolved "https://registry.yarnpkg.com/@budibase/frontend-core/-/frontend-core-1.0.134.tgz#3d5efbddea60cf8fd479ad396dd41ab82d794cad"
-  integrity sha512-PZxUVNXSHngBASfsNXx5TWy6JiGlqJrnAqux9Unc7oeQcHFkoDH21BcJjNZlX5TgCmAMQCeNksB42q9nfkMlgg==
-  dependencies:
-    "@budibase/bbui" "^1.0.134"
-    lodash "^4.17.21"
-    svelte "^3.46.2"
-
-"@budibase/handlebars-helpers@^0.11.8":
-  version "0.11.8"
-  resolved "https://registry.yarnpkg.com/@budibase/handlebars-helpers/-/handlebars-helpers-0.11.8.tgz#6953d29673a8c5c407e096c0a84890465c7ce841"
-  integrity sha512-ggWJUt0GqsHFAEup5tlWlcrmYML57nKhpNGGLzVsqXVYN8eVmf3xluYmmMe7fDYhQH0leSprrdEXmsdFQF3HAQ==
-  dependencies:
-    array-sort "^1.0.0"
-    define-property "^2.0.2"
-    extend-shallow "^3.0.2"
-    for-in "^1.0.2"
-    get-object "^0.2.0"
-    get-value "^3.0.1"
-    handlebars "^4.7.7"
-    handlebars-utils "^1.0.6"
-    has-value "^2.0.2"
-    helper-md "^0.2.2"
-    html-tag "^2.0.0"
-    is-even "^1.0.0"
-    is-glob "^4.0.1"
-    kind-of "^6.0.3"
-    micromatch "^3.1.5"
-    relative "^3.0.2"
-    striptags "^3.1.1"
-    to-gfm-code-block "^0.1.1"
-    year "^0.2.1"
-
-"@budibase/pro@1.0.130-alpha.1":
-  version "1.0.130-alpha.1"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-1.0.130-alpha.1.tgz#12112ef0c178b25cbc24d2e42a644fdcf948cd80"
-  integrity sha512-TMcfMPM8DSSgoh7WfyPyXvWqOLYBnK8/8LsUcnDsvlEx22YsY/UNQX8eDZ+U9unE+pyCNR1dhP78uvQiFwiq3w==
-  dependencies:
-    "@budibase/backend-core" "1.0.130-alpha.1"
+    "@budibase/backend-core" "1.0.138"
     node-fetch "^2.6.1"
 
 "@budibase/standard-components@^0.9.139":
