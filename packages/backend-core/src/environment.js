@@ -6,9 +6,13 @@ function isTest() {
   )
 }
 
+function isDev() {
+  return process.env.NODE_ENV !== "production"
+}
+
 module.exports = {
   JWT_SECRET: process.env.JWT_SECRET,
-  COUCH_DB_URL: process.env.COUCH_DB_URL,
+  COUCH_DB_URL: process.env.COUCH_DB_URL || "http://localhost:4005",
   COUCH_DB_USERNAME: process.env.COUCH_DB_USER,
   COUCH_DB_PASSWORD: process.env.COUCH_DB_PASSWORD,
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
@@ -32,6 +36,7 @@ module.exports = {
   TENANT_FEATURE_FLAGS: process.env.TENANT_FEATURE_FLAGS,
   USE_COUCH: process.env.USE_COUCH || true,
   isTest,
+  isDev,
   _set(key, value) {
     process.env[key] = value
     module.exports[key] = value
