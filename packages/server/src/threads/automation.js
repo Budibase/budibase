@@ -107,6 +107,7 @@ class Orchestrator {
     let loopSteps = []
     for (let step of automation.definition.steps) {
       stepCount++
+      let input
       if (step.stepId === LOOP_STEP_ID) {
         loopStep = step
         loopStepNumber = stepCount
@@ -114,15 +115,13 @@ class Orchestrator {
       }
 
       if (loopStep) {
-        // lets first of all handle the input
-        if (
-          typeof loopStep.inputs.binding === "string" &&
-          loopStep.inputs.option === "String"
-        ) {
-          loopStep.inputs.binding = loopStep.inputs.binding.split("\n")
-        }
+        input = await processObject(loopStep.inputs, this._context)
       }
-      let iterations = loopStep ? loopStep.inputs.binding.length : 1
+      let iterations = loopStep
+        ? Array.isArray(input.binding)
+          ? input.binding.length
+          : automationUtils.stringSplit(input.binding).length
+        : 1
       let iterationCount = 0
       for (let index = 0; index < iterations; index++) {
         let originalStepInput = cloneDeep(step.inputs)
@@ -140,10 +139,10 @@ class Orchestrator {
 
           let tempOutput = { items: loopSteps, iterations: iterationCount }
           if (
-            (originalStepInput.option === "Array" &&
-              !Array.isArray(originalStepInput.binding)) ||
-            (originalStepInput.option === "String" &&
-              typeof originalStepInput.binding !== "string")
+            (loopStep.inputs.option === "Array" &&
+              !Array.isArray(newInput.binding)) ||
+            (loopStep.inputs.option === "String" &&
+              typeof newInput.binding !== "string")
           ) {
             this.updateContextAndOutput(loopStepNumber, step, tempOutput, {
               status: AutomationErrors.INCORRECT_TYPE,
@@ -153,8 +152,19 @@ class Orchestrator {
             loopStep = null
             break
           }
+
+          let item
+          if (
+            typeof loopStep.inputs.binding === "string" &&
+            loopStep.inputs.option === "String"
+          ) {
+            item = automationUtils.stringSplit(newInput.binding)
+          } else {
+            item = loopStep.inputs.binding
+          }
+
           this._context.steps[loopStepNumber] = {
-            currentItem: newInput.binding[index],
+            currentItem: item[index],
           }
 
           // The "Loop" binding in the front end is "fake", so replace it here so the context can understand it
