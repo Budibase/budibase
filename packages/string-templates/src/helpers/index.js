@@ -25,7 +25,7 @@ const HELPERS = [
     if (
       value != null &&
       typeof value === "object" &&
-      value.toString() === "[object Object]"
+      (value.toString() === "[object Object]" || Array.isArray(value))
     ) {
       return new SafeString(JSON.stringify(value))
     }
