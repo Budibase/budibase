@@ -107,7 +107,6 @@ class Orchestrator {
     let loopSteps = []
     for (let step of automation.definition.steps) {
       stepCount++
-      let input
       if (step.stepId === LOOP_STEP_ID) {
         loopStep = step
         loopStepNumber = stepCount
@@ -115,17 +114,21 @@ class Orchestrator {
       }
 
       if (loopStep) {
-        input = await processObject(loopStep.inputs, this._context)
+        // lets first of all handle the input
+        if (
+          typeof loopStep.inputs.binding === "string" &&
+          loopStep.inputs.option === "String"
+        ) {
+          loopStep.inputs.binding = loopStep.inputs.binding.split("\n")
+        }
       }
-      let iterations = loopStep ? input.binding.length : 1
+      let iterations = loopStep ? loopStep.inputs.binding.length : 1
       let iterationCount = 0
       for (let index = 0; index < iterations; index++) {
         let originalStepInput = cloneDeep(step.inputs)
 
         // Handle if the user has set a max iteration count or if it reaches the max limit set by us
         if (loopStep) {
-          // lets first of all handle the input
-          // if the input is array then use it, if it is a string then split it on every new line
           let newInput = await processObject(
             loopStep.inputs,
             cloneDeep(this._context)
@@ -134,16 +137,13 @@ class Orchestrator {
             newInput,
             loopStep.schema.inputs
           )
-          this._context.steps[loopStepNumber] = {
-            currentItem: newInput.binding[index],
-          }
 
           let tempOutput = { items: loopSteps, iterations: iterationCount }
           if (
-            (loopStep.inputs.option === "Array" &&
-              !Array.isArray(newInput.binding)) ||
-            (loopStep.inputs.option === "String" &&
-              typeof newInput.binding !== "string")
+            (originalStepInput.option === "Array" &&
+              !Array.isArray(originalStepInput.binding)) ||
+            (originalStepInput.option === "String" &&
+              typeof originalStepInput.binding !== "string")
           ) {
             this.updateContextAndOutput(loopStepNumber, step, tempOutput, {
               status: AutomationErrors.INCORRECT_TYPE,
@@ -152,6 +152,9 @@ class Orchestrator {
             loopSteps = null
             loopStep = null
             break
+          }
+          this._context.steps[loopStepNumber] = {
+            currentItem: newInput.binding[index],
           }
 
           // The "Loop" binding in the front end is "fake", so replace it here so the context can understand it
