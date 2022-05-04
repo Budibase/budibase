@@ -7,7 +7,9 @@ image:
   # Overrides the image tag whose default is the chart appVersion.
   tag: ""
 
-imagePullSecrets: []
+# Add base64 dockerconfigjson to pull authenticated images
+# imagePullSecret: ""
+
 nameOverride: ""
 # fullnameOverride: ""
 
