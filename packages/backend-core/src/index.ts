@@ -1,6 +1,7 @@
 import db from "./db"
 import errors from "./errors"
 import * as events from "./events"
+import * as migrations from "./migrations"
 
 export = {
   init(opts: any = {}) {
@@ -17,7 +18,7 @@ export = {
   cache: require("../cache"),
   auth: require("../auth"),
   constants: require("../constants"),
-  migrations: require("../migrations"),
+  migrations,
   errors,
   ...errors.errors,
   env: require("./environment"),

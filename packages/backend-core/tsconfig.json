@@ -29,6 +29,7 @@
   ],
   "exclude": [
     "node_modules",
+    "dist/**/*",
     "**/*.spec.js",
     // "**/*.spec.ts" // don't exclude spec.ts files for editor support
   ]

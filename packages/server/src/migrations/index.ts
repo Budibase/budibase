@@ -1,7 +1,4 @@
-const {
-  MIGRATION_TYPES,
-  runMigrations,
-} = require("@budibase/backend-core/migrations")
+import { migrations } from "@budibase/backend-core"
 
 // migration functions
 import * as userEmailViewCasing from "./functions/userEmailViewCasing"
@@ -35,33 +32,43 @@ export interface MigrationOptions {
 
 export const MIGRATIONS: Migration[] = [
   {
-    type: MIGRATION_TYPES.GLOBAL,
+    type: migrations.MIGRATION_TYPES.GLOBAL,
     name: "user_email_view_casing",
     fn: userEmailViewCasing.run,
   },
   {
-    type: MIGRATION_TYPES.GLOBAL,
+    type: migrations.MIGRATION_TYPES.GLOBAL,
     name: "quotas_1",
     fn: quota1.run,
   },
   {
-    type: MIGRATION_TYPES.APP,
+    type: migrations.MIGRATION_TYPES.APP,
     name: "app_urls",
     opts: { all: true },
     fn: appUrls.run,
   },
   {
-    type: MIGRATION_TYPES.GLOBAL,
+    type: migrations.MIGRATION_TYPES.GLOBAL,
     name: "developer_quota",
     fn: developerQuota.run,
   },
   {
-    type: MIGRATION_TYPES.GLOBAL,
+    type: migrations.MIGRATION_TYPES.GLOBAL,
     name: "published_apps_quota",
+    fn: publishedAppsQuota.run,
+  },
+  {
+    type: migrations.MIGRATION_TYPES.GLOBAL,
+    name: "event_backfill",
+    fn: publishedAppsQuota.run,
+  },
+  {
+    type: migrations.MIGRATION_TYPES.APP,
+    name: "event_app_backfill",
     fn: publishedAppsQuota.run,
   },
 ]
 
 export const migrate = async (options?: MigrationOptions) => {
-  await runMigrations(MIGRATIONS, options)
+  await migrations.runMigrations(MIGRATIONS, options)
 }
