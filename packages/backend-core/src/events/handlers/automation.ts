@@ -1,7 +1,7 @@
 import { processEvent } from "../events"
 import {
   Automation,
-  Events,
+  Event,
   AutomationStep,
   AutomationTrigger,
   AutomationCreatedEvent,
@@ -14,17 +14,17 @@ import {
 
 export function created(automation: Automation) {
   const properties: AutomationCreatedEvent = {}
-  processEvent(Events.AUTOMATION_CREATED, properties)
+  processEvent(Event.AUTOMATION_CREATED, properties)
 }
 
 export function deleted(automation: Automation) {
   const properties: AutomationDeletedEvent = {}
-  processEvent(Events.AUTOMATION_DELETED, properties)
+  processEvent(Event.AUTOMATION_DELETED, properties)
 }
 
 export function tested(automation: Automation) {
   const properties: AutomationTestedEvent = {}
-  processEvent(Events.AUTOMATION_TESTED, properties)
+  processEvent(Event.AUTOMATION_TESTED, properties)
 }
 
 // TODO
@@ -35,12 +35,12 @@ export function tested(automation: Automation) {
 
 export function stepCreated(automation: Automation, step: AutomationStep) {
   const properties: AutomationStepCreatedEvent = {}
-  processEvent(Events.AUTOMATION_STEP_CREATED, properties)
+  processEvent(Event.AUTOMATION_STEP_CREATED, properties)
 }
 
 export function stepDeleted(automation: Automation, step: AutomationStep) {
   const properties: AutomationStepDeletedEvent = {}
-  processEvent(Events.AUTOMATION_STEP_DELETED, properties)
+  processEvent(Event.AUTOMATION_STEP_DELETED, properties)
 }
 
 export function triggerUpdated(
@@ -48,5 +48,5 @@ export function triggerUpdated(
   trigger: AutomationTrigger
 ) {
   const properties: AutomationTriggerUpdatedEvent = {}
-  processEvent(Events.AUTOMATION_TRIGGER_UPDATED, properties)
+  processEvent(Event.AUTOMATION_TRIGGER_UPDATED, properties)
 }

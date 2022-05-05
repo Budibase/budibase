@@ -1,10 +1,12 @@
-export const backfillAppCreated = () => {}
+import { events, db } from "@budibase/backend-core"
+import { App } from "@budibase/types"
 
-export const backfillAppPublished = () => {}
-
-// APP_CREATED = "app:created",
-// APP_PUBLISHED = "app:published",
-
-// Maybe
-// APP_TEMPLATE_IMPORTED = "app:template:imported",
-// APP_FILE_IMPORTED = "app:file:imported",
+export const backfill = async (appDb: any) => {
+  const app: App = await appDb.get(db.DocumentTypes.APP_METADATA)
+  if (db.isDevAppID(app.appId)) {
+    events.app.created(app)
+  }
+  if (db.isProdAppID(app.appId)) {
+    events.app.published(app)
+  }
+}

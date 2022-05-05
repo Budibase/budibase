@@ -102,7 +102,7 @@ process.on("SIGTERM", () => {
 
 // run migrations on startup if not done via http
 // not recommended in a clustered environment
-if (!env.HTTP_MIGRATIONS) {
+if (!env.HTTP_MIGRATIONS && !env.isTest()) {
   migrations.migrate().catch(err => {
     console.error("Error performing migrations. Exiting.\n", err)
     shutdown()

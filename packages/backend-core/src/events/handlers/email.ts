@@ -1,6 +1,6 @@
 import { processEvent } from "../events"
 import {
-  Events,
+  Event,
   SMTPConfig,
   SMTPCreatedEvent,
   SMTPUpdatedEvent,
@@ -8,10 +8,10 @@ import {
 
 export function SMTPCreated(config: SMTPConfig) {
   const properties: SMTPCreatedEvent = {}
-  processEvent(Events.EMAIL_SMTP_CREATED, properties)
+  processEvent(Event.EMAIL_SMTP_CREATED, properties)
 }
 
 export function SMTPUpdated(config: SMTPConfig) {
   const properties: SMTPUpdatedEvent = {}
-  processEvent(Events.EMAIL_SMTP_UPDATED, properties)
+  processEvent(Event.EMAIL_SMTP_UPDATED, properties)
 }

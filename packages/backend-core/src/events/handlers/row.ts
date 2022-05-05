@@ -1,6 +1,6 @@
 import { processEvent } from "../events"
 import {
-  Events,
+  Event,
   RowImportedEvent,
   RowImportFormat,
   Table,
@@ -19,5 +19,5 @@ export const imported = (
   count: number
 ) => {
   const properties: RowImportedEvent = {}
-  processEvent(Events.ROW_IMPORT, properties)
+  processEvent(Event.ROW_IMPORT, properties)
 }

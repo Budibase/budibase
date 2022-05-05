@@ -1,6 +1,6 @@
 import { processEvent } from "../events"
 import {
-  Events,
+  Event,
   Screen,
   ScreenCreatedEvent,
   ScreenDeletedEvent,
@@ -8,10 +8,10 @@ import {
 
 export function created(screen: Screen) {
   const properties: ScreenCreatedEvent = {}
-  processEvent(Events.SCREEN_CREATED, properties)
+  processEvent(Event.SCREEN_CREATED, properties)
 }
 
 export function deleted(screen: Screen) {
   const properties: ScreenDeletedEvent = {}
-  processEvent(Events.SCREEN_DELETED, properties)
+  processEvent(Event.SCREEN_DELETED, properties)
 }

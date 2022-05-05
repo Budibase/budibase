@@ -1,6 +1,6 @@
 import { processEvent } from "../events"
 import {
-  Events,
+  Event,
   ViewCalculationCreatedEvent,
   ViewCalculationDeletedEvent,
   ViewCalculationUpdatedEvent,
@@ -20,50 +20,50 @@ import {
 
 export function created(view: View) {
   const properties: ViewCreatedEvent = {}
-  processEvent(Events.VIEW_CREATED, properties)
+  processEvent(Event.VIEW_CREATED, properties)
 }
 
 export function updated(view: View) {
   const properties: ViewUpdatedEvent = {}
-  processEvent(Events.VIEW_UPDATED, properties)
+  processEvent(Event.VIEW_UPDATED, properties)
 }
 
 export function deleted() {
   const properties: ViewDeletedEvent = {}
-  processEvent(Events.VIEW_DELETED, properties)
+  processEvent(Event.VIEW_DELETED, properties)
 }
 
 export function exported(table: Table, format: TableExportFormat) {
   const properties: ViewExportedEvent = {}
-  processEvent(Events.VIEW_EXPORTED, properties)
+  processEvent(Event.VIEW_EXPORTED, properties)
 }
 
 export function filterCreated() {
   const properties: ViewFilterCreatedEvent = {}
-  processEvent(Events.VIEW_FILTER_CREATED, properties)
+  processEvent(Event.VIEW_FILTER_CREATED, properties)
 }
 
 export function filterUpdated() {
   const properties: ViewFilterUpdatedEvent = {}
-  processEvent(Events.VIEW_FILTER_UPDATED, properties)
+  processEvent(Event.VIEW_FILTER_UPDATED, properties)
 }
 
 export function filterDeleted() {
   const properties: ViewFilterDeletedEvent = {}
-  processEvent(Events.VIEW_FILTER_DELETED, properties)
+  processEvent(Event.VIEW_FILTER_DELETED, properties)
 }
 
 export function calculationCreated() {
   const properties: ViewCalculationCreatedEvent = {}
-  processEvent(Events.VIEW_CALCULATION_CREATED, properties)
+  processEvent(Event.VIEW_CALCULATION_CREATED, properties)
 }
 
 export function calculationUpdated() {
   const properties: ViewCalculationUpdatedEvent = {}
-  processEvent(Events.VIEW_CALCULATION_UPDATED, properties)
+  processEvent(Event.VIEW_CALCULATION_UPDATED, properties)
 }
 
 export function calculationDeleted() {
   const properties: ViewCalculationDeletedEvent = {}
-  processEvent(Events.VIEW_CALCULATION_DELETED, properties)
+  processEvent(Event.VIEW_CALCULATION_DELETED, properties)
 }

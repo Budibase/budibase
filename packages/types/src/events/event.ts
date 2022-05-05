@@ -1,4 +1,4 @@
-export enum Events {
+export enum Event {
   // USER
   USER_CREATED = "user:created",
   USER_UPDATED = "user:updated",
@@ -138,6 +138,12 @@ export enum Events {
   ACCOUNT_CREATED = "account:created",
   ACCOUNT_DELETED = "account:deleted",
   ACCOUNT_VERIFIED = "account:verified",
+}
+
+export enum IdentityType {
+  TENANT = "tenant",
+  USER = "user",
+  ACCOUNT = "account",
 }
 
 export type RowImportFormat = "csv"

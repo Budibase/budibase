@@ -1,32 +1,24 @@
-const PosthogClient = require("./posthog")
-const env = require("../environment")
-const { getTenantId } = require("../context")
-
-const IdentityType = {
-  TENANT: "tenant",
-  USER: "user",
-  ACCOUNT: "account",
-}
-
-const Hosting = {
-  CLOUD: "cloud",
-  SELF: "self",
-}
+import PosthogClient from "./PosthogClient"
+import env from "../environment"
+import { getTenantId } from "../context"
+import { Account, Hosting, Event, IdentityType } from "@budibase/types"
 
 class Analytics {
+  isEnabled: boolean
+  posthog: PosthogClient | undefined
+
   constructor() {
     // check enabled before init
-    this.isEnabled = !!(!env.SELF_HOSTED && env.ENABLE_ANALYTICS)
+    this.isEnabled = !!env.ENABLE_ANALYTICS // TODO: use db flag instead
     if (!this.isEnabled) return
-
-    this.posthog = new PosthogClient(process.env.POSTHOG_TOKEN)
+    this.posthog = new PosthogClient(env.POSTHOG_TOKEN)
   }
 
   enabled() {
     return this.isEnabled
   }
 
-  identify(type, id, hosting) {
+  identify(type: IdentityType, id: string, hosting?: Hosting) {
     if (!this.isEnabled) return
     const tenantId = getTenantId()
     if (!hosting) {
@@ -35,12 +27,12 @@ class Analytics {
     const properties = {
       type,
       hosting,
-      tenant: tenantId,
+      tenantId,
     }
-    this.posthog.identify(id, properties)
+    this.posthog!.identify(id, properties)
   }
 
-  identifyUser(userId) {
+  identifyUser(userId: string) {
     this.identify(IdentityType.USER, userId)
   }
 
@@ -54,23 +46,23 @@ class Analytics {
     this.identify(IdentityType.TENANT, distinctId)
   }
 
-  identifyAccount(account) {
+  identifyAccount(account: Account) {
     const distinctId = account.accountId
     const hosting = account.hosting
     this.identify(IdentityType.ACCOUNT, distinctId, hosting)
   }
 
-  captureEvent(eventName, properties) {
+  captureEvent(event: Event, properties: any) {
     if (!this.isEnabled) return
     // TODO: get the user id from context
     const userId = "TESTING_USER_ID"
-    this.posthog.capture(userId, eventName, properties)
+    this.posthog!.capture(userId, event, properties)
   }
 
   shutdown() {
     if (!this.isEnabled) return
-    this.posthog.shutdown()
+    this.posthog!.shutdown()
   }
 }
 
-module.exports = Analytics
+export default Analytics
