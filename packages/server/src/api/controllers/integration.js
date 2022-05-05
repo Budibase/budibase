@@ -1,21 +1,16 @@
 const { cloneDeep } = require("lodash")
 const { definitions } = require("../../integrations")
-const { getTenantId } = require("@budibase/backend-core/tenancy")
 const { SourceNames } = require("../../definitions/datasource")
 const googlesheets = require("../../integrations/googlesheets")
-const env = require("../../environment")
+const { featureFlags } = require("@budibase/backend-core")
 
 exports.fetch = async function (ctx) {
   ctx.status = 200
   const defs = cloneDeep(definitions)
 
   // for google sheets integration google verification
-  if (env.EXCLUDE_QUOTAS_TENANTS) {
-    const excludedTenants = env.EXCLUDE_QUOTAS_TENANTS.split(",")
-    const tenantId = getTenantId()
-    if (excludedTenants.includes(tenantId)) {
-      defs[SourceNames.GOOGLE_SHEETS] = googlesheets.schema
-    }
+  if (featureFlags.isEnabled(featureFlags.FeatureFlag.GOOGLE_SHEETS)) {
+    defs[SourceNames.GOOGLE_SHEETS] = googlesheets.schema
   }
 
   ctx.body = defs
