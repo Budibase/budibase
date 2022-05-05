@@ -1,5 +1,1 @@
-const handlers = require("./handlers")
-
-module.exports = {
-  ...handlers,
-}
+export * from "./handlers"
