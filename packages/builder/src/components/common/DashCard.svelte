@@ -1,0 +1,62 @@
+<script>
+  import { Icon, Detail } from "@budibase/bbui"
+
+  export let title = ""
+  export let actionIcon
+  export let action
+
+  $: actionDefined = typeof action === "function"
+</script>
+
+<div class="dash-card">
+  <div
+    class={actionDefined ? "dash-card-header active" : "dash-card-header"}
+    on:click={() => {
+      if (actionDefined) {
+        action()
+      }
+    }}
+  >
+    <span class="dash-card-title">
+      <Detail size="M">{title}</Detail>
+    </span>
+    <span class="dash-card-action">
+      {#if actionDefined}
+        <Icon name={actionIcon ? actionIcon : "ChevronRight"} />
+      {/if}
+    </span>
+  </div>
+  <div class="dash-card-body">
+    <slot />
+  </div>
+</div>
+
+<style>
+  .dash-card {
+    background: var(--spectrum-alias-background-color-primary);
+    border-radius: var(--border-radius-s);
+    border: 1px solid var(--spectrum-global-color-gray-300);
+    overflow: hidden;
+    min-height: 150px;
+  }
+  .dash-card-header {
+    padding: var(--spacing-l);
+    border-bottom: 1px solid var(--spectrum-global-color-gray-300);
+    display: flex;
+    justify-content: space-between;
+  }
+  .dash-card-body {
+    padding: var(--spacing-l);
+  }
+  .dash-card-title :global(.spectrum-Detail) {
+    color: var(
+      --spectrum-sidenav-heading-text-color,
+      var(--spectrum-global-color-gray-700)
+    );
+    display: inline-block;
+  }
+  .dash-card-header.active:hover {
+    background-color: var(--spectrum-global-color-gray-200);
+    cursor: pointer;
+  }
+</style>

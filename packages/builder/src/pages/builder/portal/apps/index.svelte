@@ -182,6 +182,10 @@
     window.open(`/${app.devId}`)
   }
 
+  const appOverview = app => {
+    $goto(`../overview/${app.devId}`)
+  }
+
   const editApp = app => {
     if (app.lockedOther) {
       notifications.error(
@@ -404,6 +408,7 @@
                 {deleteApp}
                 {updateApp}
                 {previewApp}
+                {appOverview}
               />
             {/each}
           </div>
