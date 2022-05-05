@@ -165,7 +165,7 @@
           <TableFilterButton
             {schema}
             on:change={onFilter}
-            disabled={!hasCols || !hasRows}
+            disabled={!hasCols}
           />
         {/key}
       </div>
