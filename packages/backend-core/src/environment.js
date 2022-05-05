@@ -6,6 +6,10 @@ function isTest() {
   )
 }
 
+function isDev() {
+  return process.env.NODE_ENV !== "production"
+}
+
 module.exports = {
   JWT_SECRET: process.env.JWT_SECRET,
   COUCH_DB_URL: process.env.COUCH_DB_URL || "http://localhost:4005",
@@ -38,6 +42,7 @@ module.exports = {
     process.env.GLOBAL_CLOUD_BUCKET_NAME || "prod-budi-tenant-uploads",
   USE_COUCH: process.env.USE_COUCH || true,
   isTest,
+  isDev,
   _set(key, value) {
     process.env[key] = value
     module.exports[key] = value

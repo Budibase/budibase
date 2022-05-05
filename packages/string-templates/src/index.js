@@ -70,7 +70,7 @@ function createTemplate(string, opts) {
  * @param {object|array} object The input structure which is to be recursed, it is important to note that
  * if the structure contains any cycles then this will fail.
  * @param {object} context The context that handlebars should fill data from.
- * @param {object|undefined} opts optional - specify some options for processing.
+ * @param {object|undefined} [opts] optional - specify some options for processing.
  * @returns {Promise<object|array>} The structure input, as fully updated as possible.
  */
 module.exports.processObject = async (object, context, opts) => {
@@ -101,7 +101,7 @@ module.exports.processObject = async (object, context, opts) => {
  * then nothing will occur.
  * @param {string} string The template string which is the filled from the context object.
  * @param {object} context An object of information which will be used to enrich the string.
- * @param {object|undefined} opts optional - specify some options for processing.
+ * @param {object|undefined} [opts] optional - specify some options for processing.
  * @returns {Promise<string>} The enriched string, all templates should have been replaced if they can be.
  */
 module.exports.processString = async (string, context, opts) => {
@@ -115,7 +115,7 @@ module.exports.processString = async (string, context, opts) => {
  * @param {object|array} object The input structure which is to be recursed, it is important to note that
  * if the structure contains any cycles then this will fail.
  * @param {object} context The context that handlebars should fill data from.
- * @param {object|undefined} opts optional - specify some options for processing.
+ * @param {object|undefined} [opts] optional - specify some options for processing.
  * @returns {object|array} The structure input, as fully updated as possible.
  */
 module.exports.processObjectSync = (object, context, opts) => {
@@ -136,7 +136,7 @@ module.exports.processObjectSync = (object, context, opts) => {
  * then nothing will occur. This is a pure sync call and therefore does not have the full functionality of the async call.
  * @param {string} string The template string which is the filled from the context object.
  * @param {object} context An object of information which will be used to enrich the string.
- * @param {object|undefined} opts optional - specify some options for processing.
+ * @param {object|undefined} [opts] optional - specify some options for processing.
  * @returns {string} The enriched string, all templates should have been replaced if they can be.
  */
 module.exports.processStringSync = (string, context, opts) => {
@@ -194,7 +194,7 @@ module.exports.makePropSafe = property => {
 /**
  * Checks whether or not a template string contains totally valid syntax (simply tries running it)
  * @param string The string to test for valid syntax - this may contain no templates and will be considered valid.
- * @param opts optional - specify some options for processing.
+ * @param [opts] optional - specify some options for processing.
  * @returns {boolean} Whether or not the input string is valid.
  */
 module.exports.isValid = (string, opts) => {
@@ -205,6 +205,7 @@ module.exports.isValid = (string, opts) => {
     "array",
     "cannot read property",
     "undefined",
+    "json at position 0",
   ]
   // this is a portion of a specific string always output by handlebars in the case of a syntax error
   const invalidCases = [`expecting '`]
