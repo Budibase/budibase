@@ -1,5 +1,6 @@
 const db = require("./db")
 const errors = require("./errors")
+import * as events from "./events"
 
 module.exports = {
   init(opts = {}) {
@@ -23,7 +24,7 @@ module.exports = {
   accounts: require("./cloud/accounts"),
   tenancy: require("./tenancy"),
   featureFlags: require("./featureFlags"),
-  events: require("./events"),
+  events,
   analytics: require("./analytics"),
   sessions: require("./security/sessions"),
   deprovisioning: require("./context/deprovision"),

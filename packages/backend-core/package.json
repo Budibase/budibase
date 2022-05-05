@@ -44,6 +44,7 @@
     "@types/jest": "^27.4.1",
     "@types/node": "^15.12.4",
     "@types/node-fetch": "^2.6.1",
+    "@budibase/types": "^1.0.126-alpha.0",
     "typescript": "^4.5.5",
     "@shopify/jest-koa-mocks": "^3.1.5",
     "ioredis-mock": "^5.5.5",
