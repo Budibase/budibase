@@ -57,5 +57,123 @@ filterTests(["all"], () => {
             cy.window().its('open').should('be.calledOnce')
         })
     })
+
+    it("should add active/inactive vacancies", () => {
+        // Visit published app
+        cy.visit(`${Cypress.config().baseUrl}/app/` + templateNameParsed)
+
+        // loop for active/inactive vacancies
+        for (let i = 0; i < 2; i++) {
+            // Vacancies section
+            cy.get(".links").contains("Vacancies").click({ force: true })
+            cy.get(".spectrum-Button").contains("Create New").click()
+
+            // Add inactive vacancy
+            // Title
+            cy.get('[data-name="Title"]').within(() => {
+                cy.get(".spectrum-Textfield").type("Tester")
+            })
+
+            // Closing Date
+            cy.get('[data-name="Closing date"]').within(() => {
+                cy.get('[aria-label=Calendar]').click({ force: true })
+            })
+            cy.get("[aria-current=date]").click()
+
+            // Department
+            cy.get('[data-name="Department"]').within(() => {
+                cy.get(".spectrum-Picker-label").click()
+            })
+            cy.get(".spectrum-Menu").find('li').its('length').then(len => {
+                cy.get(".spectrum-Menu-item").eq(Math.floor(Math.random() * len)).click()
+            })
+
+            // Employment Type
+            cy.get('[data-name="Employment type"]').within(() => {
+                cy.get(".spectrum-Picker-label").click()
+            })
+            cy.get(".spectrum-Menu").find('li').its('length').then(len => {
+                cy.get(".spectrum-Menu-item").eq(Math.floor(Math.random() * len)).click()
+            })
+
+            // Salary
+            cy.get('[data-name="Salary ($)"]').within(() => {
+                cy.get(".spectrum-Textfield").type(40000)
+            })
+
+            // Description
+            cy.get('[data-name="Description"]').within(() => {
+                cy.get(".spectrum-Textfield").type("description")
+            })
+
+            // Responsibilities
+            cy.get('[data-name="Responsibilities"]').within(() => {
+                cy.get(".spectrum-Textfield").type("Responsibilities")
+            })
+
+            // Requirements
+            cy.get('[data-name="Requirements"]').within(() => {
+                cy.get(".spectrum-Textfield").type("Requirements")
+            })
+
+            // Hiring manager
+            cy.get('[data-name="Hiring manager"]').within(() => {
+                cy.get(".spectrum-Picker-label").click()
+            })
+            cy.get(".spectrum-Menu").find('li').its('length').then(len => {
+                cy.get(".spectrum-Menu-item").eq(Math.floor(Math.random() * len)).click()
+            })
+
+            // Active
+            if (i == 0) {
+                cy.get('[data-name="Active"]').within(() => {
+                    cy.get(".spectrum-Checkbox-box").click({ force: true })
+                })
+            }
+
+            // Location
+            cy.get('[data-name="Location"]').within(() => {
+                cy.get(".spectrum-Picker-label").click()
+            })
+            cy.get(".spectrum-Menu").find('li').its('length').then(len => {
+                cy.get(".spectrum-Menu-item").eq(Math.floor(Math.random() * len)).click()
+            })
+
+            // Save vacancy
+            cy.get(".spectrum-Button").contains("Save").click({ force: true })
+            cy.wait(1000)
+
+            // Check table was updated
+            cy.get('[data-name="Vacancies Table"]').eq(i).should('contain', 'Tester')
+        }
+        })
+
+    it("should filter applications by stage", () => {
+        // Visit published app
+        cy.visit(`${Cypress.config().baseUrl}/app/` + templateNameParsed)
+        cy.wait(1000)
+
+        // Applications section
+        cy.get(".links").contains("Applications").click({ force: true })
+        cy.wait(1000)
+
+        // Filter by stage - Confirm table updates
+        cy.get(".spectrum-Picker").contains("Filter by stage").click({ force: true })
+        cy.get(".spectrum-Menu").find('li').its('length').then(len => {
+            for (let i = 1; i < len; i++) {
+                cy.get(".spectrum-Menu-item").eq(i).click()
+                const stage = cy.get(".spectrum-Picker-label")
+                stage.invoke('text').then(stageText => {
+                    if (stageText == "1st interview") {
+                        cy.get(".placeholder").should('contain', 'No rows found')
+                    }
+                    else {
+                        cy.get(".spectrum-Table-row").should('contain', stageText)
+                    }
+                    cy.get(".spectrum-Picker").contains(stageText).click({ force: true })
+                })
+            }
+        })
+    })
     })
 })
