@@ -15,7 +15,10 @@
     routify,
   })
 
-  onDestroy(stopSyncing)
+  onDestroy(() => {
+    console.log("============= stop syncing component ID!")
+    stopSyncing()
+  })
 </script>
 
 <slot />

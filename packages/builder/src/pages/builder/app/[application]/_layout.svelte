@@ -27,6 +27,7 @@
 
   async function getPackage() {
     try {
+      store.actions.reset()
       const pkg = await API.fetchAppPackage(application)
       await store.actions.initialise(pkg)
       await automationStore.actions.fetch()
@@ -64,10 +65,6 @@
       }
       hasSynced = true
     }
-  })
-
-  onDestroy(() => {
-    store.actions.reset()
   })
 </script>
 

@@ -17,7 +17,10 @@
     routify,
   })
 
-  onDestroy(stopSyncing)
+  onDestroy(() => {
+    console.log("============= stop syncing screen ID!")
+    stopSyncing()
+  })
 </script>
 
 <div class="design">
