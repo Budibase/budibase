@@ -1,6 +1,6 @@
 import { processEvent } from "../events"
 import {
-  Events,
+  Event,
   Datasource,
   Query,
   QueryCreatedEvent,
@@ -14,17 +14,17 @@ import {
 
 export const created = (datasource: Datasource, query: Query) => {
   const properties: QueryCreatedEvent = {}
-  processEvent(Events.QUERY_CREATED, properties)
+  processEvent(Event.QUERY_CREATED, properties)
 }
 
 export const updated = (datasource: Datasource, query: Query) => {
   const properties: QueryUpdatedEvent = {}
-  processEvent(Events.QUERY_UPDATED, properties)
+  processEvent(Event.QUERY_UPDATED, properties)
 }
 
 export const deleted = (datasource: Datasource, query: Query) => {
   const properties: QueryDeletedEvent = {}
-  processEvent(Events.QUERY_DELETED, properties)
+  processEvent(Event.QUERY_DELETED, properties)
 }
 
 export const imported = (
@@ -33,7 +33,7 @@ export const imported = (
   count: any
 ) => {
   const properties: QueryImportedEvent = {}
-  processEvent(Events.QUERY_IMPORT, properties)
+  processEvent(Event.QUERY_IMPORT, properties)
 }
 
 // TODO
@@ -44,5 +44,5 @@ export const imported = (
 
 export const previewed = (datasource: Datasource) => {
   const properties: QueryPreviewedEvent = {}
-  processEvent(Events.QUERY_PREVIEWED, properties)
+  processEvent(Event.QUERY_PREVIEWED, properties)
 }

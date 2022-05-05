@@ -1,6 +1,6 @@
 import { processEvent } from "../events"
 import {
-  Events,
+  Event,
   Layout,
   LayoutCreatedEvent,
   LayoutDeletedEvent,
@@ -8,10 +8,10 @@ import {
 
 export function created(layout: Layout) {
   const properties: LayoutCreatedEvent = {}
-  processEvent(Events.LAYOUT_CREATED, properties)
+  processEvent(Event.LAYOUT_CREATED, properties)
 }
 
 export function deleted(layout: Layout) {
   const properties: LayoutDeletedEvent = {}
-  processEvent(Events.LAYOUT_DELETED, properties)
+  processEvent(Event.LAYOUT_DELETED, properties)
 }

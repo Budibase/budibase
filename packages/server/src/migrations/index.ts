@@ -6,6 +6,7 @@ import * as quota1 from "./functions/quotas1"
 import * as appUrls from "./functions/appUrls"
 import * as developerQuota from "./functions/developerQuota"
 import * as publishedAppsQuota from "./functions/publishedAppsQuota"
+import * as backfill from "./functions/backfill"
 
 export interface Migration {
   type: string
@@ -59,13 +60,14 @@ export const MIGRATIONS: Migration[] = [
   },
   {
     type: migrations.MIGRATION_TYPES.GLOBAL,
-    name: "event_backfill",
-    fn: publishedAppsQuota.run,
+    name: "event_global_backfill",
+    fn: backfill.global.run,
   },
   {
     type: migrations.MIGRATION_TYPES.APP,
     name: "event_app_backfill",
-    fn: publishedAppsQuota.run,
+    opts: { all: true },
+    fn: backfill.app.run,
   },
 ]
 

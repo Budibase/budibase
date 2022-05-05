@@ -1,16 +1,17 @@
 import { getTenantId } from "../context"
-import { captureEvent } from "../analytics"
+import analytics from "../analytics"
+import { Event } from "@budibase/types"
 
-const logEvent = messsage => {
+const logEvent = (messsage: string) => {
   const tenantId = getTenantId()
   const userId = getTenantId() // TODO
   console.log(`[audit] [tenant=${tenantId}] [user=${userId}] ${messsage}`)
 }
 
-export const processEvent = (event, properties) => {
+export const processEvent = (event: Event, properties: any) => {
   // logging
   logEvent(event)
 
   // analytics
-  captureEvent(event, properties)
+  analytics.captureEvent(event, properties)
 }

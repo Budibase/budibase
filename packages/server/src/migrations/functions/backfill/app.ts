@@ -8,4 +8,6 @@ import * as app from "./app/app"
  * Backfill app events.
  */
 
-export const run = async (db: any) => {}
+export const run = async (appDb: any) => {
+  await app.backfill(appDb)
+}

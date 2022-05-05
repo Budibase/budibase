@@ -2,6 +2,23 @@ import db from "./db"
 import errors from "./errors"
 import * as events from "./events"
 import * as migrations from "./migrations"
+import * as users from "./users"
+import env from "./environment"
+import accounts from "./cloud/accounts"
+import tenancy from "./tenancy"
+import featureFlags from "./featureFlags"
+import analytics from "./analytics"
+import sessions from "./security/sessions"
+import deprovisioning from "./context/deprovision"
+
+// outer packages
+import dbPkg from "../db"
+import redis from "../redis"
+import objectStore from "../objectStore"
+import utils from "../utils"
+import cache from "../cache"
+import auth from "../auth"
+import constants from "../constants"
 
 export = {
   init(opts: any = {}) {
@@ -9,24 +26,24 @@ export = {
   },
   // some default exports from the library, however these ideally shouldn't
   // be used, instead the syntax require("@budibase/backend-core/db") should be used
-  StaticDatabases: require("./db/utils").StaticDatabases,
-  db: require("../db"),
-  redis: require("../redis"),
-  objectStore: require("../objectStore"),
-  utils: require("../utils"),
-  users: require("./users"),
-  cache: require("../cache"),
-  auth: require("../auth"),
-  constants: require("../constants"),
+  StaticDatabases: dbPkg.StaticDatabases,
+  db: dbPkg,
+  redis,
+  objectStore,
+  utils,
+  users,
+  cache,
+  auth,
+  constants,
   migrations,
   errors,
   ...errors.errors,
-  env: require("./environment"),
-  accounts: require("./cloud/accounts"),
-  tenancy: require("./tenancy"),
-  featureFlags: require("./featureFlags"),
+  env,
+  accounts,
+  tenancy,
+  featureFlags,
   events,
-  analytics: require("./analytics"),
-  sessions: require("./security/sessions"),
-  deprovisioning: require("./context/deprovision"),
+  analytics,
+  sessions,
+  deprovisioning,
 }

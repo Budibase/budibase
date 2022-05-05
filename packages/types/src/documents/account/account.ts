@@ -1,1 +1,6 @@
-export interface Account {}
+import { Hosting } from "../../core"
+
+export interface Account {
+  accountId: string
+  hosting: Hosting
+}

@@ -1,6 +1,6 @@
 import { processEvent } from "../events"
 import {
-  Events,
+  Event,
   Role,
   RoleAssignedEvent,
   RoleCreatedEvent,
@@ -14,25 +14,25 @@ import {
 
 export function created(role: Role) {
   const properties: RoleCreatedEvent = {}
-  processEvent(Events.ROLE_CREATED, properties)
+  processEvent(Event.ROLE_CREATED, properties)
 }
 
 export function updated(role: Role) {
   const properties: RoleUpdatedEvent = {}
-  processEvent(Events.ROLE_UPDATED, properties)
+  processEvent(Event.ROLE_UPDATED, properties)
 }
 
 export function deleted(role: Role) {
   const properties: RoleDeletedEvent = {}
-  processEvent(Events.ROLE_DELETED, properties)
+  processEvent(Event.ROLE_DELETED, properties)
 }
 
 export function assigned(user: User, role: Role) {
   const properties: RoleAssignedEvent = {}
-  processEvent(Events.ROLE_ASSIGNED, properties)
+  processEvent(Event.ROLE_ASSIGNED, properties)
 }
 
 export function unassigned(user: User, role: Role) {
   const properties: RoleUnassignedEvent = {}
-  processEvent(Events.ROLE_UNASSIGNED, properties)
+  processEvent(Event.ROLE_UNASSIGNED, properties)
 }
