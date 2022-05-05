@@ -53,6 +53,18 @@
       x => x.blockToLoop === block.id
     )
 
+  async function removeLooping() {
+    loopingSelected = false
+    let loopBlock =
+      $automationStore.selectedAutomation?.automation.definition.steps.find(
+        x => x.blockToLoop === block.id
+      )
+    automationStore.actions.deleteAutomationBlock(loopBlock)
+    await automationStore.actions.save(
+      $automationStore.selectedAutomation?.automation
+    )
+  }
+
   async function deleteStep() {
     let loopBlock =
       $automationStore.selectedAutomation?.automation.definition.steps.find(
@@ -151,9 +163,7 @@
     {#if !showLooping}
       <div class="blockSection">
         <div class="block-options">
-          <div class="delete-padding" on:click={() => deleteStep()}>
-            <Icon name="DeleteOutline" />
-          </div>
+          <ActionButton on:click={() => removeLooping()} icon="DeleteOutline" />
         </div>
         <Layout noPadding gap="S">
           <AutomationBlockSetup
