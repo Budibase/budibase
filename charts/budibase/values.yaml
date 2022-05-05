@@ -155,7 +155,7 @@ services:
     ## If set to "-", storageClassName: "", which disables dynamic provisioning
     ## If undefined (the default) or set to null, no storageClassName spec is
     ##   set, choosing the default provisioner.
-    storageClass: "-"
+    storageClass: ""
 
   objectStore:
     minio: true
@@ -171,7 +171,7 @@ services:
     ## If set to "-", storageClassName: "", which disables dynamic provisioning
     ## If undefined (the default) or set to null, no storageClassName spec is
     ##   set, choosing the default provisioner.
-    storageClass: "-"
+    storageClass: ""
 
 # Override values in couchDB subchart
 couchdb:
@@ -215,7 +215,7 @@ couchdb:
   ## The CouchDB image
   image:
     repository: couchdb
-    tag: 3.1.0
+    tag: 3.2.1
     pullPolicy: IfNotPresent
 
   ## Experimental integration with Lucene-powered fulltext search
