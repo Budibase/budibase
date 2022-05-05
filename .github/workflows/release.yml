@@ -14,6 +14,7 @@ on:
       - 'yarn.lock'
       - 'package.json'
       - 'yarn.lock'
+ workflow_dispatch:
 
 env:
   POSTHOG_TOKEN: ${{ secrets.POSTHOG_TOKEN }}
@@ -27,6 +28,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Fail if branch is not master
+        if: github.ref != 'refs/heads/master' 
+        run: | 
+          echo "Ref is not master, you must run this job from master."
+          exit 1
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
         with:
