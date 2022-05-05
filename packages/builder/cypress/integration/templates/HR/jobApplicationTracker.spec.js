@@ -175,5 +175,65 @@ filterTests(["all"], () => {
             }
         })
     })
+
+    it("should edit an application", () => {
+        // Switch application from not hired to hired
+        // Visit published app
+        cy.visit(`${Cypress.config().baseUrl}/app/` + templateNameParsed)
+        cy.wait(1000)
+
+        // Not Hired section
+        cy.get(".links").contains("Not hired").click({ force: true })
+        cy.wait(500)
+
+        // View application
+        cy.get(".spectrum-Table").within(() => {
+            cy.get(".spectrum-Button").contains("View").click({ force: true })
+            cy.wait(500)
+        })
+
+        // Update value for 'Staged'
+        cy.get('[data-name="Stage"]').within(() => {
+            cy.get(".spectrum-Picker-label").click()
+        })
+        cy.get(".spectrum-Menu").within(() => {
+            cy.get(".spectrum-Menu-item").contains("Hired").click()
+        })
+
+        // Save application
+        cy.get(".spectrum-Button").contains("Save").click({ force: true })
+        cy.wait(500)
+
+        // Hired section
+        cy.get(".links").contains("Hired").click({ force: true })
+        cy.wait(500)
+
+        // Verify Table size - Total rows = 2
+        cy.get(".spectrum-Table").find(".spectrum-Table-row").its('length').then((len => {
+            expect(len).to.eq(2)
+        }))
+    })
+
+    xit("should delete an application", () => {
+        // Visit published app
+        cy.visit(`${Cypress.config().baseUrl}/app/` + templateNameParsed)
+        cy.wait(1000)
+
+        // Hired section
+        cy.get(".links").contains("Hired").click({ force: true })
+        cy.wait(500)
+
+        // View first application
+        cy.get(".spectrum-Table-row").eq(0).within(() => {
+            cy.get(".spectrum-Button").contains("View").click({ force: true })
+            cy.wait(500)
+        })
+
+        // Delete application
+        cy.get(".spectrum-Button").contains("Delete").click({ force: true })
+        cy.get(".spectrum-Dialog-grid").within(() => {
+            cy.get(".spectrum-Button").contains("Confirm").click()
+        })
+    })
     })
 })
