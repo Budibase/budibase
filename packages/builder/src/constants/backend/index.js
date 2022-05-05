@@ -144,7 +144,11 @@ export const RelationshipTypes = {
   MANY_TO_ONE: "many-to-one",
 }
 
-export const ALLOWABLE_STRING_OPTIONS = [FIELDS.STRING, FIELDS.OPTIONS]
+export const ALLOWABLE_STRING_OPTIONS = [
+  FIELDS.STRING,
+  FIELDS.OPTIONS,
+  FIELDS.LONGFORM,
+]
 export const ALLOWABLE_STRING_TYPES = ALLOWABLE_STRING_OPTIONS.map(
   opt => opt.type
 )

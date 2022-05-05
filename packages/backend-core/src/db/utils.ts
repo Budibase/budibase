@@ -5,7 +5,7 @@ import { SEPARATOR, DocumentTypes } from "./constants"
 import { getTenantId, getGlobalDBName } from "../tenancy"
 import fetch from "node-fetch"
 import { doWithDB, allDbs } from "./index"
-import { getCouchUrl } from "./pouch"
+import { getCouchInfo } from "./pouch"
 import { getAppMetadata } from "../cache/appMetadata"
 import { checkSlashesInUrl } from "../helpers"
 import { isDevApp, isDevAppID } from "./conversions"
@@ -154,9 +154,15 @@ export async function getAllDbs(opts = { efficient: false }) {
   if (env.isTest()) {
     return allDbs()
   }
-  let dbs: any = []
-  async function addDbs(url: any) {
-    const response = await fetch(checkSlashesInUrl(encodeURI(url)))
+  let dbs: any[] = []
+  let { url, cookie } = getCouchInfo()
+  async function addDbs(couchUrl: string) {
+    const response = await fetch(checkSlashesInUrl(encodeURI(couchUrl)), {
+      method: "GET",
+      headers: {
+        Authorization: cookie,
+      },
+    })
     if (response.status === 200) {
       let json = await response.json()
       dbs = dbs.concat(json)
@@ -164,7 +170,7 @@ export async function getAllDbs(opts = { efficient: false }) {
       throw "Cannot connect to CouchDB instance"
     }
   }
-  let couchUrl = `${getCouchUrl()}/_all_dbs`
+  let couchUrl = `${url}/_all_dbs`
   let tenantId = getTenantId()
   if (!env.MULTI_TENANCY || (!efficient && tenantId === DEFAULT_TENANT_ID)) {
     // just get all DBs when:
