@@ -36,7 +36,7 @@
   {/if}
 </div>
 <div class="desktop">
-  <AppLockModal {app} />
+  <AppLockModal {app} buttonSize="S" />
 </div>
 <div class="desktop">
   <div class="app-status">
