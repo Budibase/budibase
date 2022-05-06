@@ -17,7 +17,7 @@
   import { onMount } from "svelte"
   import { DefaultAppTheme } from "constants"
 
-  const updateNavigation = async (key, value) => {
+  const update = async (key, value) => {
     try {
       let navigation = $store.navigation
       navigation[key] = value
@@ -65,13 +65,13 @@
           selected={$store.navigation.navigation === "Top"}
           quiet={$store.navigation.navigation !== "Top"}
           icon="PaddingTop"
-          on:click={() => updateNavigation("navigation", "Top")}
+          on:click={() => update("navigation", "Top")}
         />
         <ActionButton
           selected={$store.navigation.navigation === "Left"}
           quiet={$store.navigation.navigation !== "Left"}
           icon="PaddingLeft"
-          on:click={() => updateNavigation("navigation", "Left")}
+          on:click={() => update("navigation", "Left")}
         />
       </ActionGroup>
     </Layout>
@@ -79,19 +79,19 @@
       <Checkbox
         text="Sticky header"
         value={$store.navigation.sticky}
-        on:change={e => updateNavigation("sticky", e.detail)}
+        on:change={e => update("sticky", e.detail)}
       />
     {/if}
     <Layout noPadding gap="XS">
       <Checkbox
         text="Logo"
         value={!$store.navigation.hideLogo}
-        on:change={e => updateNavigation("hideLogo", !e.detail)}
+        on:change={e => update("hideLogo", !e.detail)}
       />
       {#if !$store.navigation.hideLogo}
         <Input
           value={$store.navigation.logoUrl}
-          on:change={e => updateNavigation("logoUrl", e.detail)}
+          on:change={e => update("logoUrl", e.detail)}
           placeholder="Add logo URL"
           updateOnChange={false}
         />
@@ -101,12 +101,12 @@
       <Checkbox
         text="Title"
         value={!$store.navigation.hideTitle}
-        on:change={e => updateNavigation("hideTitle", !e.detail)}
+        on:change={e => update("hideTitle", !e.detail)}
       />
       {#if !$store.navigation.hideTitle}
         <Input
           value={$store.navigation.title}
-          on:change={e => updateNavigation("title", e.detail)}
+          on:change={e => update("title", e.detail)}
           placeholder="Add title"
           updateOnChange={false}
         />

@@ -94,21 +94,9 @@
       </div>
       <div class="setting">
         <Label size="L">Accent color</Label>
-        <ColorPicker
-          spectrumTheme={$store.theme}
-          value={$store.customTheme?.primaryColor ||
-            DefaultAppTheme.primaryColor}
-          on:change={updateProperty("primaryColor")}
-        />
       </div>
       <div class="setting">
         <Label size="L">Accent color (hover)</Label>
-        <ColorPicker
-          spectrumTheme={$store.theme}
-          value={$store.customTheme?.primaryColorHover ||
-            DefaultAppTheme.primaryColorHover}
-          on:change={updateProperty("primaryColorHover")}
-        />
       </div>
     </Layout>
     <div slot="footer">
