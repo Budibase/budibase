@@ -35,7 +35,7 @@
 
     // Attach the new name and URL
     duplicateScreen.routing.route = sanitizeUrl(screenUrl)
-    duplicateScreen.props._instanceName = screenName
+    duplicateScreen.props._instanceName = screen.props._instanceName
 
     try {
       // Create the screen
