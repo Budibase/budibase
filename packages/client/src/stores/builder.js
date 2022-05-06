@@ -76,6 +76,10 @@ const createBuilderStore = () => {
       }
       store.update(state => ({ ...state, editMode: enabled }))
     },
+    clickNav: () => {
+      console.log("click nav")
+      dispatchEvent("click-nav")
+    },
   }
   return {
     ...store,

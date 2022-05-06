@@ -182,6 +182,10 @@
           store.actions.components.copy(source, true)
           await store.actions.components.paste(destination, data.mode)
         }
+      } else if (type === "click-nav") {
+        if (!$isActive("./navigation")) {
+          $goto("./navigation")
+        }
       } else {
         console.warn(`Client sent unknown event type: ${type}`)
       }
