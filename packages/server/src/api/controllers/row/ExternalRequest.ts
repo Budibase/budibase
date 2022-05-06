@@ -175,9 +175,10 @@ module External {
     const thisRow: Row = {}
     // filter the row down to what is actually the row (not joined)
     for (let fieldName of Object.keys(table.schema)) {
-      const value = row[`${table.name}.${fieldName}`] || row[fieldName]
+      const pathValue = row[`${table.name}.${fieldName}`]
+      const value = pathValue != null ? pathValue : row[fieldName]
       // all responses include "select col as table.col" so that overlaps are handled
-      if (value) {
+      if (value != null) {
         thisRow[fieldName] = value
       }
     }
