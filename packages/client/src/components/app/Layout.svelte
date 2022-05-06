@@ -121,6 +121,8 @@
       class="nav-wrapper"
       class:sticky
       class:hidden={isPeeking}
+      class:clickable={$builderStore.inBuilder}
+      on:click={$builderStore.inBuilder ? builderStore.actions.clickNav : null}
       style={navStyle}
     >
       <div class="nav nav--{typeClass} size--{navWidthClass}">
@@ -220,6 +222,12 @@
     z-index: 2;
     border-bottom: 1px solid var(--spectrum-global-color-gray-300);
     box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.05);
+  }
+  .nav-wrapper.clickable {
+    cursor: pointer;
+  }
+  .nav-wrapper.clickable .nav {
+    pointer-events: none;
   }
   .nav-wrapper.hidden {
     display: none;
