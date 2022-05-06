@@ -47,14 +47,6 @@
   })
   setContext("layout", store)
 
-  // Permanently go into peek mode if we ever get the peek flag
-  let isPeeking = false
-  $: {
-    if ($routeStore.queryParams?.peek) {
-      isPeeking = true
-    }
-  }
-
   $: validLinks = links?.filter(link => link.text && link.url) || []
   $: typeClass = NavigationClasses[navigation] || NavigationClasses.None
   $: navWidthClass = WidthClasses[navWidth || width] || WidthClasses.Large
@@ -120,7 +112,7 @@
     <div
       class="nav-wrapper"
       class:sticky
-      class:hidden={isPeeking}
+      class:hidden={$routeStore.queryParams?.peek}
       class:clickable={$builderStore.inBuilder}
       on:click={$builderStore.inBuilder ? builderStore.actions.clickNav : null}
       style={navStyle}
