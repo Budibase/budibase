@@ -13,16 +13,9 @@
   } from "@budibase/bbui"
   import { store } from "builderStore"
   import AppThemeSelect from "./AppThemeSelect.svelte"
+  import { DefaultAppTheme } from "constants"
 
   let modal
-
-  const defaultTheme = {
-    primaryColor: "var(--spectrum-global-color-blue-600)",
-    primaryColorHover: "var(--spectrum-global-color-blue-500)",
-    buttonBorderRadius: "16px",
-    navBackground: "var(--spectrum-global-color-gray-50)",
-    navTextColor: "var(--spectrum-global-color-gray-800)",
-  }
 
   const buttonBorderRadiusOptions = [
     {
@@ -93,7 +86,7 @@
           <Select
             placeholder={null}
             value={$store.customTheme?.buttonBorderRadius ||
-              defaultTheme.buttonBorderRadius}
+              DefaultAppTheme.buttonBorderRadius}
             on:change={updateProperty("buttonBorderRadius")}
             options={buttonBorderRadiusOptions}
           />
@@ -103,7 +96,8 @@
         <Label size="L">Accent color</Label>
         <ColorPicker
           spectrumTheme={$store.theme}
-          value={$store.customTheme?.primaryColor || defaultTheme.primaryColor}
+          value={$store.customTheme?.primaryColor ||
+            DefaultAppTheme.primaryColor}
           on:change={updateProperty("primaryColor")}
         />
       </div>
@@ -112,25 +106,8 @@
         <ColorPicker
           spectrumTheme={$store.theme}
           value={$store.customTheme?.primaryColorHover ||
-            defaultTheme.primaryColorHover}
+            DefaultAppTheme.primaryColorHover}
           on:change={updateProperty("primaryColorHover")}
-        />
-      </div>
-      <div class="setting">
-        <Label size="L">Navigation bar background color</Label>
-        <ColorPicker
-          spectrumTheme={$store.theme}
-          value={$store.customTheme?.navBackground ||
-            defaultTheme.navBackground}
-          on:change={updateProperty("navBackground")}
-        />
-      </div>
-      <div class="setting">
-        <Label size="L">Navigation bar text color</Label>
-        <ColorPicker
-          spectrumTheme={$store.theme}
-          value={$store.customTheme?.navTextColor || defaultTheme.navTextColor}
-          on:change={updateProperty("navTextColor")}
         />
       </div>
     </Layout>

@@ -9,6 +9,7 @@
   const component = getContext("component")
   const context = getContext("context")
 
+  // Legacy props which must remain unchanged for backwards compatibility
   export let title
   export let hideTitle = false
   export let logoUrl
@@ -18,12 +19,18 @@
   export let links
   export let width = "Large"
 
-  const navigationClasses = {
+  // New props from new design UI
+  export let navBackground
+  export let navTextColor
+  export let navWidth
+  export let pageWidth
+
+  const NavigationClasses = {
     Top: "top",
     Left: "left",
     None: "none",
   }
-  const widthClasses = {
+  const WidthClasses = {
     Max: "max",
     Large: "l",
     Medium: "m",
@@ -49,8 +56,15 @@
   }
 
   $: validLinks = links?.filter(link => link.text && link.url) || []
-  $: typeClass = navigationClasses[navigation] || "none"
-  $: widthClass = widthClasses[width] || "l"
+  $: typeClass = NavigationClasses[navigation] || NavigationClasses.None
+  $: navWidthClass = WidthClasses[navWidth || width] || WidthClasses.Large
+  $: pageWidthClass = WidthClasses[pageWidth || width] || WidthClasses.Large
+  $: navStyle = getNavStyle(
+    navBackground,
+    navTextColor,
+    $context.device.width,
+    $context.device.height
+  )
   let mobileOpen = false
 
   const isInternal = url => {
@@ -83,6 +97,17 @@
       return navigation === "Top" ? "137px" : "0px"
     }
   }
+
+  const getNavStyle = (backgroundColor, textColor, width, height) => {
+    let style = `--width:${width}px;--height:${height}px;`
+    if (backgroundColor) {
+      style += `--navBackground: ${backgroundColor};`
+    }
+    if (textColor) {
+      style += `--navTextColor: ${textColor};`
+    }
+    return style
+  }
 </script>
 
 <div
@@ -96,9 +121,9 @@
       class="nav-wrapper"
       class:sticky
       class:hidden={isPeeking}
-      style={`--height:${$context.device.height}px; --width:${$context.device.width}px;`}
+      style={navStyle}
     >
-      <div class="nav nav--{typeClass} size--{widthClass}">
+      <div class="nav nav--{typeClass} size--{navWidthClass}">
         <div class="nav-header">
           {#if validLinks?.length}
             <div class="burger">
@@ -165,7 +190,7 @@
     </div>
   {/if}
   <div class="main-wrapper">
-    <div class="main size--{widthClass}">
+    <div class="main size--{pageWidthClass}">
       <slot />
     </div>
   </div>
