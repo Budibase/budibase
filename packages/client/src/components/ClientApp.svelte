@@ -42,7 +42,10 @@
   let permissionError = false
 
   // Determine if we should show devtools or not
-  $: isDevPreview = $appStore.isDevApp && !$builderStore.inBuilder
+  $: isDevPreview =
+    $appStore.isDevApp &&
+    !$builderStore.inBuilder &&
+    !$routeStore.queryParams?.peek
 
   // Handle no matching route
   $: {
