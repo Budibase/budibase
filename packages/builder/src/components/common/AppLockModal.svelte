@@ -5,20 +5,23 @@
     ModalContent,
     Modal,
     notifications,
+    ProgressCircle,
   } from "@budibase/bbui"
   import { auth, apps } from "stores/portal"
   import { processStringSync } from "@budibase/string-templates"
   import { API } from "api"
 
   export let app
+  export let buttonSize = "M"
 
-  let APP_DEV_LOCK_SECONDS = 600
+  let APP_DEV_LOCK_SECONDS = 600 //common area for this?
   let appLockModal
+  let processing = false
 
   $: lockedBy = app?.lockedBy
   $: lockedByYou = $auth.user.email === lockedBy?.email
   $: lockIdentifer = `${
-    Object.prototype.hasOwnProperty.call(lockedBy, "firstName")
+    lockedBy && Object.prototype.hasOwnProperty.call(lockedBy, "firstName")
       ? lockedBy?.firstName
       : lockedBy?.email
   }`
@@ -28,7 +31,7 @@
   $: lockExpiry = getExpiryDuration(app)
 
   const getExpiryDuration = app => {
-    if (!app.lockedBy) {
+    if (!app?.lockedBy?.lockedAt) {
       return -1
     }
     let expiry =
@@ -37,6 +40,7 @@
   }
 
   const releaseLock = async () => {
+    processing = true
     if (app) {
       try {
         await API.releaseAppLock(app.devId)
@@ -48,6 +52,7 @@
     } else {
       notifications.error("No application is selected")
     }
+    processing = false
   }
 </script>
 
@@ -57,6 +62,7 @@
       quiet
       secondary
       icon="LockClosed"
+      size={buttonSize}
       on:click={() => {
         appLockModal.show()
       }}
@@ -93,6 +99,7 @@
         <Button
           secondary
           quiet={lockedBy && lockedByYou}
+          disabled={processing}
           on:click={() => {
             appLockModal.hide()
           }}
@@ -104,12 +111,17 @@
         {#if lockedByYou && lockExpiry > 0}
           <Button
             secondary
+            disabled={processing}
             on:click={() => {
               releaseLock()
               appLockModal.hide()
             }}
           >
-            <span class="unlock">Release Lock</span>
+            {#if processing}
+              <ProgressCircle overBackground={true} size="S" />
+            {:else}
+              <span class="unlock">Release Lock</span>
+            {/if}
           </Button>
         {/if}
       </ButtonGroup>

@@ -2,7 +2,6 @@
   import {
     Heading,
     Layout,
-    Detail,
     Button,
     Input,
     Select,
@@ -312,48 +311,7 @@
               {welcomeBody}
             </Body>
           </Layout>
-
-          <div class="buttons">
-            <Button
-              dataCy="create-app-btn"
-              size="M"
-              icon="Add"
-              cta
-              on:click={initiateAppCreation}
-            >
-              {createAppButtonText}
-            </Button>
-            {#if $apps?.length > 0}
-              <Button
-                icon="Experience"
-                size="M"
-                quiet
-                secondary
-                on:click={$goto("/builder/portal/apps/templates")}
-              >
-                Templates
-              </Button>
-            {/if}
-            {#if !$apps?.length}
-              <Button
-                dataCy="import-app-btn"
-                icon="Import"
-                size="L"
-                quiet
-                secondary
-                on:click={initiateAppImport}
-              >
-                Import app
-              </Button>
-            {/if}
-          </div>
         </div>
-        <div>
-          <Layout gap="S" justifyItems="center">
-            <img class="img-logo img-size" alt="logo" src={Logo} />
-          </Layout>
-        </div>
-        <Divider size="S" />
       </div>
 
       {#if !$apps?.length && $templates?.length}
@@ -363,7 +321,40 @@
       {#if enrichedApps.length}
         <Layout noPadding gap="S">
           <div class="title">
-            <Detail size="L">Apps</Detail>
+            <div class="buttons">
+              <Button
+                dataCy="create-app-btn"
+                size="M"
+                icon="Add"
+                cta
+                on:click={initiateAppCreation}
+              >
+                {createAppButtonText}
+              </Button>
+              {#if $apps?.length > 0}
+                <Button
+                  icon="Experience"
+                  size="M"
+                  quiet
+                  secondary
+                  on:click={$goto("/builder/portal/apps/templates")}
+                >
+                  Templates
+                </Button>
+              {/if}
+              {#if !$apps?.length}
+                <Button
+                  dataCy="import-app-btn"
+                  icon="Import"
+                  size="L"
+                  quiet
+                  secondary
+                  on:click={initiateAppImport}
+                >
+                  Import app
+                </Button>
+              {/if}
+            </div>
             {#if enrichedApps.length > 1}
               <div class="app-actions">
                 {#if cloud}
@@ -394,7 +385,7 @@
               </div>
             {/if}
           </div>
-
+          <Divider size="S" />
           <div class="appTable">
             {#each filteredApps as app (app.appId)}
               <AppRow
@@ -474,9 +465,6 @@
   }
   .app-actions :global(> button) {
     margin-right: 10px;
-  }
-  .title .welcome > .buttons {
-    padding-top: 30px;
   }
   .title {
     display: flex;

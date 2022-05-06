@@ -1,17 +1,43 @@
 <script>
-  import DashCard from "../../../../../components/common/DashCard.svelte"
+  import DashCard from "components/common/DashCard.svelte"
   import { AppStatus } from "constants"
-  import { Icon, Heading, Link, Avatar } from "@budibase/bbui"
+  import { Icon, Heading, Link, Avatar, notifications } from "@budibase/bbui"
   import { store } from "builderStore"
   import clientPackage from "@budibase/client/package.json"
   import { processStringSync } from "@budibase/string-templates"
+  import { users, auth } from "stores/portal"
 
   export let app
   export let deployments
   export let navigateTab
 
+  const userInit = async () => {
+    try {
+      await users.init()
+    } catch (error) {
+      notifications.error("Error getting user list")
+    }
+  }
+
+  let userPromise = userInit()
+
   $: updateAvailable = clientPackage.version !== $store.version
-  $: isPublished = app.status === AppStatus.DEPLOYED
+  $: isPublished = app && app?.status === AppStatus.DEPLOYED
+  $: appEditorId = !app?.updatedBy ? $auth.user._id : app?.updatedBy
+  $: appEditorText = appEditor?.firstName || appEditor?.email
+  $: filteredUsers = !appEditorId
+    ? []
+    : $users.filter(user => user._id === appEditorId)
+
+  $: appEditor = filteredUsers.length ? filteredUsers[0] : null
+
+  const getInitials = user => {
+    let initials = ""
+    initials += user.firstName ? user.firstName[0] : ""
+    initials += user.lastName ? user.lastName[0] : ""
+
+    return initials == "" ? user.email[0] : initials
+  }
 </script>
 
 <div class="overview-tab">
@@ -46,14 +72,21 @@
       </div>
     </DashCard>
     <DashCard title={"Last Edited"}>
-      {app.updatedAt}
       <div class="last-edited-content">
-        <!-- Where is this information sourced? auditLog > Placeholder,  metadata -->
-        <div class="updated-by">
-          <!-- Add a link to the user? new window? -->
-          <Avatar size="M" initials={app.updatedBy.initials} />
-          <div>{app.updatedBy.firstName}</div>
-        </div>
+        {#await userPromise}
+          <Avatar size="M" initials={"-"} />
+        {:then _}
+          <div class="updated-by">
+            {#if appEditor}
+              <Avatar size="M" initials={getInitials(appEditor)} />
+              <div>
+                {appEditor._id === $auth.user._id ? "You" : appEditorText}
+              </div>
+            {/if}
+          </div>
+        {:catch error}
+          <p>Could not fetch user: {error.message}</p>
+        {/await}
         <p class="last-edit-text">
           {#if app}
             {processStringSync(
@@ -70,7 +103,7 @@
       title={"App Version"}
       showIcon={true}
       action={() => {
-        navigateTab("App Version")
+        navigateTab("Settings")
       }}
     >
       <div class="version-content">
@@ -81,7 +114,7 @@
             <Link
               on:click={() => {
                 if (typeof navigateTab === "function") {
-                  navigateTab("App Version")
+                  navigateTab("Settings")
                 }
               }}
             >
@@ -120,7 +153,12 @@
         </div>
       </div>
     </DashCard>
-    <DashCard title={"Backups"}>
+    <DashCard
+      title={"Backups"}
+      action={() => {
+        navigateTab("Backups")
+      }}
+    >
       <div class="backups-content">test</div>
     </DashCard>
   </div>

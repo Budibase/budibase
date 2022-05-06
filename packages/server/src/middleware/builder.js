@@ -52,20 +52,8 @@ async function updateAppUpdatedAt(ctx) {
     const metadata = await db.get(DocumentTypes.APP_METADATA)
     metadata.updatedAt = new Date().toISOString()
 
-    const getInitials = user => {
-      let initials = ""
-      initials += user.firstName ? user.firstName[0] : ""
-      initials += user.lastName ? user.lastName[0] : ""
-      return initials == "" ? undefined : initials
-    }
+    metadata.updatedBy = getGlobalIDFromUserMetadataID(ctx.user.userId)
 
-    metadata.updatedBy = {
-      email: ctx.user.email,
-      firstName: ctx.user.firstName,
-      lastName: ctx.user.lastName,
-      initials: getInitials(ctx.user),
-      _id: getGlobalIDFromUserMetadataID(ctx.user.userId),
-    }
     const response = await db.put(metadata)
     metadata._rev = response.rev
     await appCache.invalidateAppMetadata(appId, metadata)

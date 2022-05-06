@@ -13,12 +13,9 @@
     ProgressCircle,
   } from "@budibase/bbui"
   import OverviewTab from "../_components/OverviewTab.svelte"
-  import VersionTab from "../_components/VersionTab.svelte"
-  import SelfHostTab from "../_components/SelfHostTab.svelte"
+  import SettingsTab from "../_components/SettingsTab.svelte"
   import { API } from "api"
-  import { onMount } from "svelte"
   import { store } from "builderStore"
-  import { roles, flags } from "stores/backend"
   import { apps, auth } from "stores/portal"
   import analytics, { Events, EventSource } from "analytics"
   import { AppStatus } from "constants"
@@ -37,7 +34,7 @@
   $: lockedBy = selectedApp?.lockedBy
   $: lockedByYou = $auth.user.email === lockedBy?.email
   $: lockIdentifer = `${
-    Object.prototype.hasOwnProperty.call(lockedBy, "firstName")
+    lockedBy && Object.prototype.hasOwnProperty.call(lockedBy, "firstName")
       ? lockedBy?.firstName
       : lockedBy?.email
   }`
@@ -55,13 +52,7 @@
     selectedApp?.status === AppStatus.DEPLOYED && latestDeployments?.length > 0
 
   $: appUrl = `${window.origin}/app${selectedApp?.url}`
-  $: tabs = [
-    "Overview",
-    "Automation History",
-    "Backups",
-    "App Version",
-    "Self-host",
-  ]
+  $: tabs = ["Overview", "Automation History", "Backups", "Settings"]
   $: selectedTab = "Overview"
 
   const handleTabChange = tabKey => {
@@ -78,9 +69,8 @@
     try {
       const pkg = await API.fetchAppPackage(application)
       await store.actions.initialise(pkg)
-      // await automationStore.actions.fetch()
-      await roles.fetch()
-      await flags.fetch()
+      await apps.load()
+      deployments = await fetchDeployments()
       return pkg
     } catch (error) {
       notifications.error(`Error initialising app: ${error?.message}`)
@@ -108,8 +98,6 @@
     }
   }
 
-  //Show prod: published, appUrl
-  //Behaviour incorrect. It should be enabled if at least 1 live deployment is available
   const viewApp = () => {
     if (isPublished) {
       analytics.captureEvent(Events.APP.VIEW_PUBLISHED, {
@@ -129,18 +117,6 @@
     }
     $goto(`../../../app/${app.devId}`)
   }
-
-  onMount(async () => {
-    // if (!hasSynced && application) {
-    //   try {
-    //     await API.syncApp(application)
-    //   } catch (error) {
-    //     notifications.error("Failed to sync with production database")
-    //   }
-    //   hasSynced = true
-    // }
-    deployments = await fetchDeployments()
-  })
 </script>
 
 <Page wide>
@@ -187,7 +163,14 @@
               disabled={!isPublished}
               on:click={viewApp}>View app</Button
             >
-            <Button size="M" cta icon="Edit" on:click={editApp(selectedApp)}>
+            <Button
+              size="M"
+              cta
+              icon="Edit"
+              on:click={() => {
+                editApp(selectedApp)
+              }}
+            >
               <span>Edit</span>
             </Button>
           </ButtonGroup>
@@ -213,11 +196,8 @@
         <Tab title="Backups">
           <div class="container">Backups contents</div>
         </Tab>
-        <Tab title="App Version">
-          <VersionTab app={selectedApp} />
-        </Tab>
-        <Tab title="Self-host">
-          <SelfHostTab />
+        <Tab title="Settings">
+          <SettingsTab app={selectedApp} />
         </Tab>
       </Tabs>
     {:catch error}
