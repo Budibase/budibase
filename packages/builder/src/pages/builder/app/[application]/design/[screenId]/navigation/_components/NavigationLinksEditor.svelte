@@ -1,6 +1,6 @@
 <script>
   import { Button, Drawer } from "@budibase/bbui"
-  import NavigationDrawer from "./NavigationDrawer.svelte"
+  import NavigationLinksDrawer from "./NavigationLinksDrawer.svelte"
   import { cloneDeep } from "lodash/fp"
   import { store } from "builderStore"
 
@@ -30,5 +30,5 @@
     Configure the links in your navigation bar.
   </svelte:fragment>
   <Button cta slot="buttons" on:click={save}>Save</Button>
-  <NavigationDrawer slot="body" bind:links />
+  <NavigationLinksDrawer slot="body" bind:links />
 </Drawer>

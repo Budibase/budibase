@@ -47,17 +47,16 @@ const createScreenStore = () => {
         }
         if (activeScreen?.showNavigation) {
           navigationSettings =
-            $builderStore.navigation || $appStore.application?.navigation
+            $builderStore.navigation || $appStore.application?.navigation || {}
 
-          // Legacy - if this is a legacy screen without any navigation
-          // settings fall back to just showing the app title
-          if (!navigationSettings) {
-            navigationSettings = {
-              title: $appStore.application?.name,
-            }
-          }
+          // Default navigation to top
           if (!navigationSettings.navigation) {
             navigationSettings.navigation = "Top"
+          }
+
+          // Default title to app name
+          if (!navigationSettings.title && !navigationSettings.hideTitle) {
+            navigationSettings.title = $appStore.application?.name
           }
         }
         activeLayout = {
