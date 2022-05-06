@@ -31,6 +31,7 @@ jobs:
         continue-on-error: true
         uses: cypress-io/github-action@v2
         with:
+          record: true
           install: false
           command: yarn test:e2e:ci:record
         env:
