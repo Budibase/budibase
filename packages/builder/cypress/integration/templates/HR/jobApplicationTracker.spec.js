@@ -148,7 +148,7 @@ filterTests(["all"], () => {
         }
         })
 
-    it("should filter applications by stage", () => {
+    xit("should filter applications by stage", () => {
         // Visit published app
         cy.visit(`${Cypress.config().baseUrl}/app/` + templateNameParsed)
         cy.wait(1000)
@@ -176,7 +176,7 @@ filterTests(["all"], () => {
         })
     })
 
-    it("should edit an application", () => {
+    xit("should edit an application", () => {
         // Switch application from not hired to hired
         // Visit published app
         cy.visit(`${Cypress.config().baseUrl}/app/` + templateNameParsed)
