@@ -19,6 +19,7 @@
   export let unpublishApp
   export let releaseLock
   export let editIcon
+  export let copyAppId
 </script>
 
 <div class="title">
@@ -101,6 +102,9 @@
     {#if app.deployed}
       <MenuItem on:click={() => unpublishApp(app)} icon="GlobeRemove">
         Unpublish
+      </MenuItem>
+      <MenuItem on:click={() => copyAppId(app)} icon="Copy">
+        Copy App ID
       </MenuItem>
     {/if}
     {#if !app.deployed}

@@ -12,6 +12,7 @@
     Body,
     Search,
     Divider,
+    Helpers,
   } from "@budibase/bbui"
   import TemplateDisplay from "components/common/TemplateDisplay.svelte"
   import Spinner from "components/common/Spinner.svelte"
@@ -261,6 +262,11 @@
     }
   }
 
+  const copyAppId = async app => {
+    await Helpers.copyToClipboard(app.prodId)
+    notifications.success("App ID copied to clipboard.")
+  }
+
   function createAppFromTemplateUrl(templateKey) {
     // validate the template key just to make sure
     const templateParts = templateKey.split("/")
@@ -394,6 +400,7 @@
           <div class="appTable">
             {#each filteredApps as app (app.appId)}
               <AppRow
+                {copyAppId}
                 {releaseLock}
                 {editIcon}
                 {app}
