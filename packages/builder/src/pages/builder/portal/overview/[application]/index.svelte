@@ -9,7 +9,6 @@
     Tab,
     Tabs,
     notifications,
-    Icon,
     ProgressCircle,
   } from "@budibase/bbui"
   import OverviewTab from "../_components/OverviewTab.svelte"
@@ -19,8 +18,10 @@
   import { apps, auth } from "stores/portal"
   import analytics, { Events, EventSource } from "analytics"
   import { AppStatus } from "constants"
-  import AppLockModal from "../../../../../components/common/AppLockModal.svelte"
+  import AppLockModal from "components/common/AppLockModal.svelte"
+  import EditableIcon from "components/common/EditableIcon.svelte"
   import { checkIncomingDeploymentStatus } from "components/deploy/utils"
+  import { onDestroy, onMount } from "svelte"
 
   export let application
 
@@ -55,6 +56,10 @@
   $: tabs = ["Overview", "Automation History", "Backups", "Settings"]
   $: selectedTab = "Overview"
 
+  const backToAppList = () => {
+    $goto(`../../../portal/`)
+  }
+
   const handleTabChange = tabKey => {
     if (tabKey === selectedTab) {
       return
@@ -69,8 +74,6 @@
     try {
       const pkg = await API.fetchAppPackage(application)
       await store.actions.initialise(pkg)
-      await apps.load()
-      deployments = await fetchDeployments()
       return pkg
     } catch (error) {
       notifications.error(`Error initialising app: ${error?.message}`)
@@ -110,26 +113,34 @@
 
   const editApp = app => {
     if (lockedBy && !lockedByYou) {
-      notifications.warn(
+      notifications.warning(
         `App locked by ${lockIdentifer}. Please allow lock to expire or have them unlock this app.`
       )
       return
     }
     $goto(`../../../app/${app.devId}`)
   }
+
+  onDestroy(() => {
+    store.actions.reset()
+  })
+
+  onMount(async () => {
+    try {
+      if (!apps.length) {
+        await apps.load()
+      }
+      deployments = await fetchDeployments()
+    } catch (error) {
+      notifications.error("Error initialising app overview")
+    }
+  })
 </script>
 
 <Page wide>
   <Layout noPadding gap="XL">
     <span>
-      <Button
-        quiet
-        secondary
-        icon={"ChevronLeft"}
-        on:click={() => {
-          $goto("../../")
-        }}
-      >
+      <Button quiet secondary icon={"ChevronLeft"} on:click={backToAppList}>
         Back
       </Button>
     </span>
@@ -145,7 +156,11 @@
               class="app-icon"
               style="color: {selectedApp?.icon?.color || ''}"
             >
-              <Icon size="XL" name={selectedApp?.icon?.name || "Apps"} />
+              <EditableIcon
+                app={selectedApp}
+                size="XL"
+                name={selectedApp?.icon?.name || "Apps"}
+              />
             </div>
           </div>
           <div class="app-details">
@@ -167,6 +182,7 @@
               size="M"
               cta
               icon="Edit"
+              disabled={lockedBy && !lockedByYou}
               on:click={() => {
                 editApp(selectedApp)
               }}

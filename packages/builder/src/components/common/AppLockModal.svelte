@@ -108,7 +108,7 @@
             >{lockedBy && !lockedByYou ? "Done" : "Cancel"}</span
           >
         </Button>
-        {#if lockedByYou && lockExpiry > 0}
+        {#if lockedByYou}
           <Button
             secondary
             disabled={processing}
