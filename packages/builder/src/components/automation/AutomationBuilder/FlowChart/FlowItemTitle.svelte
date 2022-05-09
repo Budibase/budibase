@@ -76,7 +76,7 @@
         </div>
       {/if}
       <div
-        style="margin-left: 10px;"
+        style="margin-left: 10px; margin-bottom: var(--spacing-xs);"
         on:click={() => {
           onSelect(block)
         }}
