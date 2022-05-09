@@ -44,7 +44,6 @@
     fieldApi = value?.fieldApi
     fieldSchema = value?.fieldSchema
   })
-  onDestroy(() => unsubscribe?.())
 
   // Determine label class from position
   $: labelClass = labelPos === "above" ? "" : `spectrum-FieldLabel--${labelPos}`
@@ -52,6 +51,11 @@
   const updateLabel = e => {
     builderStore.actions.updateProp("label", e.target.textContent)
   }
+
+  onDestroy(() => {
+    fieldApi?.deregister()
+    unsubscribe?.()
+  })
 </script>
 
 <FieldGroupFallback>

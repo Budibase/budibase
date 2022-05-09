@@ -66,13 +66,13 @@ filterTests(["smoke", "all"], () => {
             .then(() => {
               cy.wait(1000)
               if (i == 0) {
-                cy.get(".spectrum-Popover").contains("Admin").click()
+                cy.get(".spectrum-Menu").contains("Admin").click({ force: true })
               }
-              if (i == 1) {
-                cy.get(".spectrum-Popover").contains("Power").click()
+              else if (i == 1) {
+                cy.get(".spectrum-Menu").contains("Power").click({ force: true })
               }
-              if (i == 2) {
-                cy.get(".spectrum-Popover").contains("Basic").click()
+              else if (i == 2) {
+                cy.get(".spectrum-Menu").contains("Basic").click({ force: true })
               }
               cy.wait(1000)
               cy.get(".spectrum-Button")

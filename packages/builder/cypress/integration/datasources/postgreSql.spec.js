@@ -207,7 +207,7 @@ filterTests(["all"], () => {
           .contains(queryName)
           .siblings(".actions")
           .within(() => {
-            cy.get(".icon").click({ force: true })
+            cy.get(".spectrum-Icon").click({ force: true })
           })
         // Select and confirm duplication
         cy.get(".spectrum-Menu").contains("Duplicate").click()
