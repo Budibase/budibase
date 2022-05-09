@@ -11,7 +11,6 @@
   ]
 
   $: themeIndex = ThemeOptions.indexOf($store.theme) ?? 2
-  $: console.log("index", themeIndex)
 
   const onChangeTheme = async e => {
     try {
