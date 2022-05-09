@@ -44,6 +44,18 @@ exports.getDevelopmentAppID = getDevelopmentAppID
 exports.getProdAppID = getProdAppID
 
 /**
+ * Generates a new app ID.
+ * @returns {string} The new app ID which the app doc can be stored under.
+ */
+exports.generateAppID = (tenantId = null) => {
+  let id = APP_PREFIX
+  if (tenantId) {
+    id += `${tenantId}${SEPARATOR}`
+  }
+  return `${id}${newid()}`
+}
+
+/**
  * If creating DB allDocs/query params with only a single top level ID this can be used, this
  * is usually the case as most of our docs are top level e.g. tables, automations, users and so on.
  * More complex cases such as link docs and rows which have multiple levels of IDs that their
