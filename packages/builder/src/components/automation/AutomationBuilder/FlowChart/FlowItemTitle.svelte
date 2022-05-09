@@ -1,0 +1,117 @@
+<script>
+  import { automationStore } from "builderStore"
+  import { Icon, Body, Detail, StatusLight, Modal } from "@budibase/bbui"
+  import { externalActions } from "./ExternalActions"
+  import ResultsModal from "./ResultsModal.svelte"
+
+  export let block
+  export let blockComplete
+  export let showTestStatus = false
+  export let showParameters
+  let resultsModal
+
+  $: testResult =
+    $automationStore.selectedAutomation?.testResults?.steps.filter(step =>
+      block.id ? step.id === block.id : step.stepId === block.stepId
+    )
+  $: isTrigger = block.type === "TRIGGER"
+
+  async function onSelect(block) {
+    await automationStore.update(state => {
+      state.selectedBlock = block
+      return state
+    })
+  }
+</script>
+
+<div class="blockSection">
+  <div
+    on:click={() => {
+      blockComplete = !blockComplete
+      showParameters = { complete: !showParameters?.complete, id: block.id }
+    }}
+    class="splitHeader"
+  >
+    <div class="center-items">
+      {#if externalActions[block.stepId]}
+        <img
+          alt={externalActions[block.stepId].name}
+          width="28px"
+          height="28px"
+          src={externalActions[block.stepId].icon}
+        />
+      {:else}
+        <svg
+          width="28px"
+          height="28px"
+          class="spectrum-Icon"
+          style="color:grey;"
+          focusable="false"
+        >
+          <use xlink:href="#spectrum-icon-18-{block.icon}" />
+        </svg>
+      {/if}
+      <div class="iconAlign">
+        {#if isTrigger}
+          <Body size="XS">When this happens:</Body>
+        {:else}
+          <Body size="XS">Do this:</Body>
+        {/if}
+
+        <Detail size="S">{block?.name?.toUpperCase() || ""}</Detail>
+      </div>
+    </div>
+    <div class="blockTitle">
+      {#if showTestStatus && testResult && testResult[0]}
+        <div style="float: right;" on:click={() => resultsModal.show()}>
+          <StatusLight
+            positive={isTrigger || testResult[0].outputs?.success}
+            negative={!testResult[0].outputs?.success}
+            ><Body size="XS"
+              >{testResult[0].outputs?.success || isTrigger
+                ? "Success"
+                : "Error"}</Body
+            ></StatusLight
+          >
+        </div>
+      {/if}
+      <div
+        style="margin-left: 10px;"
+        on:click={() => {
+          onSelect(block)
+        }}
+      >
+        <Icon name={blockComplete ? "ChevronDown" : "ChevronUp"} />
+      </div>
+    </div>
+  </div>
+</div>
+
+<Modal bind:this={resultsModal} width="30%">
+  <ResultsModal {isTrigger} {testResult} />
+</Modal>
+
+<style>
+  .center-items {
+    display: flex;
+    align-items: center;
+  }
+  .splitHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .iconAlign {
+    padding: 0 0 0 var(--spacing-m);
+    display: inline-block;
+  }
+
+  .blockSection {
+    padding: var(--spacing-xl);
+  }
+
+  .blockTitle {
+    display: flex;
+    align-items: center;
+  }
+</style>
