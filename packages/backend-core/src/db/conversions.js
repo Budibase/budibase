@@ -27,6 +27,9 @@ exports.isDevApp = app => {
  * @returns {string} the dev app ID which can be used for dev database.
  */
 exports.getDevelopmentAppID = appId => {
+  if (!appId || appId.startsWith(APP_DEV_PREFIX)) {
+    return appId
+  }
   // split to take off the app_ element, then join it together incase any other app_ exist
   const split = appId.split(APP_PREFIX)
   split.shift()
@@ -38,6 +41,9 @@ exports.getDevelopmentAppID = appId => {
  * Convert a development app ID to a deployed app ID.
  */
 exports.getProdAppID = appId => {
+  if (!appId || !appId.startsWith(APP_DEV_PREFIX)) {
+    return appId
+  }
   // split to take off the app_dev element, then join it together incase any other app_ exist
   const split = appId.split(APP_DEV_PREFIX)
   split.shift()
