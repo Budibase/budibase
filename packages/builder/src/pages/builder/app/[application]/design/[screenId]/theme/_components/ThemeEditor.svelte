@@ -78,7 +78,6 @@
     <Layout noPadding gap="S">
       <div class="setting">
         <Label size="L">Theme</Label>
-        <AppThemeSelect />
       </div>
       <div class="setting">
         <Label size="L">Button roundness</Label>

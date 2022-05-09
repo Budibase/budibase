@@ -206,6 +206,11 @@
   resolved "https://registry.yarnpkg.com/@spectrum-css/sidenav/-/sidenav-3.0.2.tgz#9d70f408d588ee79c69857751010333671f32713"
   integrity sha512-YpIdH/F0jEICYmoduGrnkTmxwJq1kfKxEp0wOs+ZkQOsvKMv1an7nyhsfOKCQqcGNfYzJ9mJAk7/u5+vsxHa8g==
 
+"@spectrum-css/slider@3.0.1":
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/slider/-/slider-3.0.1.tgz#5281e6f47eb5a4fd3d1816c138bf66d01d7f2e49"
+  integrity sha512-DI2dtMRnQuDM1miVzl3SGyR1khUEKnwdXfO5EHDFwkC3yav43F5QogkfjmjFmWWobMVovdJlAuiaaJ/IHejD0Q==
+
 "@spectrum-css/statuslight@^3.0.2":
   version "3.0.2"
   resolved "https://registry.yarnpkg.com/@spectrum-css/statuslight/-/statuslight-3.0.2.tgz#dc54b6cd113413dcdb909c486b5d7bae60db65c5"

@@ -11,6 +11,7 @@
   import { store } from "builderStore"
   import { get } from "svelte/store"
   import { DefaultAppTheme } from "constants"
+  import AppThemeSelect from "./_components/AppThemeSelect.svelte"
 
   const ButtonBorderRadiusOptions = [
     {
@@ -52,6 +53,7 @@
     </Body>
     <Layout noPadding gap="XS">
       <Label>Theme</Label>
+      <AppThemeSelect />
     </Layout>
     <Layout noPadding gap="XS">
       <Label>Buttons</Label>
