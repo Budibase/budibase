@@ -7,6 +7,7 @@ import {
   builderStore,
   uploadStore,
   rowSelectionStore,
+  componentStore,
 } from "stores"
 import { styleable } from "utils/styleable"
 import { linkable } from "utils/linkable"
@@ -24,6 +25,7 @@ export default {
   screenStore,
   builderStore,
   uploadStore,
+  componentStore,
   styleable,
   linkable,
   getAction,

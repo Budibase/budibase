@@ -46,6 +46,7 @@ const INTEGRATIONS = {
   [SourceNames.FIREBASE]: firebase.integration,
   [SourceNames.GOOGLE_SHEETS]: googlesheets.integration,
   [SourceNames.REDIS]: redis.integration,
+  [SourceNames.FIREBASE]: firebase.integration,
 }
 
 // optionally add oracle integration if the oracle binary can be installed
