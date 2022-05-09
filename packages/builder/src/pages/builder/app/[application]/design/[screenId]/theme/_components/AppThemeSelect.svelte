@@ -1,29 +1,21 @@
 <script>
-  import { notifications, Select } from "@budibase/bbui"
+  import { notifications, Slider, Icon } from "@budibase/bbui"
   import { store } from "builderStore"
   import { get } from "svelte/store"
 
-  const themeOptions = [
-    {
-      label: "Lightest",
-      value: "spectrum--lightest",
-    },
-    {
-      label: "Light",
-      value: "spectrum--light",
-    },
-    {
-      label: "Dark",
-      value: "spectrum--dark",
-    },
-    {
-      label: "Darkest",
-      value: "spectrum--darkest",
-    },
+  const ThemeOptions = [
+    "spectrum--darkest",
+    "spectrum--dark",
+    "spectrum--light",
+    "spectrum--lightest",
   ]
 
-  const onChangeTheme = async theme => {
+  $: themeIndex = ThemeOptions.indexOf($store.theme) ?? 2
+  $: console.log("index", themeIndex)
+
+  const onChangeTheme = async e => {
     try {
+      const theme = ThemeOptions[e.detail] ?? ThemeOptions[2]
       await store.actions.theme.save(theme)
       await store.actions.customTheme.save({
         ...get(store).customTheme,
@@ -38,17 +30,27 @@
   }
 </script>
 
-<div>
-  <Select
-    value={$store.theme}
-    options={themeOptions}
-    placeholder={null}
-    on:change={e => onChangeTheme(e.detail)}
+<div class="container">
+  <Icon name="Moon" />
+  <Slider
+    min={0}
+    max={3}
+    step={1}
+    value={themeIndex}
+    on:change={onChangeTheme}
   />
+  <Icon name="Light" />
 </div>
 
 <style>
   div {
-    width: 100px;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    gap: var(--spacing-m);
+  }
+  div :global(.spectrum-Form-item) {
+    flex: 1 1 auto;
   }
 </style>
