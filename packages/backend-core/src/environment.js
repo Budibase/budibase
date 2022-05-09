@@ -34,6 +34,12 @@ module.exports = {
   COOKIE_DOMAIN: process.env.COOKIE_DOMAIN,
   PLATFORM_URL: process.env.PLATFORM_URL,
   TENANT_FEATURE_FLAGS: process.env.TENANT_FEATURE_FLAGS,
+  BACKUPS_BUCKET_NAME: process.env.BACKUPS_BUCKET_NAME || "backups",
+  APPS_BUCKET_NAME: process.env.APPS_BUCKET_NAME || "prod-budi-app-assets",
+  TEMPLATES_BUCKET_NAME: process.env.TEMPLATES_BUCKET_NAME || "templates",
+  GLOBAL_BUCKET_NAME: process.env.GLOBAL_BUCKET_NAME || "global",
+  GLOBAL_CLOUD_BUCKET_NAME:
+    process.env.GLOBAL_CLOUD_BUCKET_NAME || "prod-budi-tenant-uploads",
   USE_COUCH: process.env.USE_COUCH || true,
   isTest,
   isDev,

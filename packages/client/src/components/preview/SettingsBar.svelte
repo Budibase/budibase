@@ -155,7 +155,7 @@
       icon="Duplicate"
       on:click={() => {
         builderStore.actions.duplicateComponent(
-          $builderStore.selectedComponent._id
+          $builderStore.selectedComponentId
         )
       }}
       title="Duplicate component"

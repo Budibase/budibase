@@ -114,8 +114,8 @@ spec:
           value: {{ .Values.globals.google.secret | quote }}
         - name: AUTOMATION_MAX_ITERATIONS
           value: {{ .Values.globals.automationMaxIterations | quote }}
-        - name: EXCLUDE_QUOTAS_TENANTS
-          value: {{ .Values.globals.excludeQuotasTenants | quote }}
+        - name: TENANT_FEATURE_FLAGS
+          value: {{ .Values.globals.tenantFeatureFlags | quote }}
 
         image: budibase/apps:{{ .Values.globals.appVersion }}
         imagePullPolicy: Always
