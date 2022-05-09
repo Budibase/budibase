@@ -4,14 +4,15 @@
   import DrawerBindableInput from "../../common/bindings/DrawerBindableInput.svelte"
   import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
   import { createEventDispatcher } from "svelte"
-  import { automationStore } from "builderStore"
   import RowSelectorTypes from "./RowSelectorTypes.svelte"
+  import ModalBindableInput from "../../common/bindings/ModalBindableInput.svelte"
 
   const dispatch = createEventDispatcher()
 
   export let value
   export let bindings
   export let block
+  export let isTestModal
 
   let table
   let schemaFields
@@ -103,35 +104,18 @@
     {#each schemaFields as [field, schema]}
       {#if !schema.autocolumn}
         {#if schema.type !== "attachment"}
-          {#if $automationStore.selectedAutomation.automation.testData}
-            {#if !rowControl}
-              <RowSelectorTypes
-                {field}
-                {schema}
-                {bindings}
-                {value}
-                {onChange}
-              />
-            {:else}
-              <DrawerBindableInput
-                placeholder={placeholders[schema.type]}
-                panel={AutomationBindingPanel}
-                value={Array.isArray(value[field])
-                  ? value[field].join(" ")
-                  : value[field]}
-                on:change={e => onChange(e, field, schema.type)}
-                label={field}
-                type="string"
-                {bindings}
-                fillWidth={true}
-                allowJS={true}
-                updateOnChange={false}
-              />
-            {/if}
-          {:else if !rowControl}
-            <RowSelectorTypes {field} {schema} {bindings} {value} {onChange} />
+          {#if !rowControl}
+            <RowSelectorTypes
+              {isTestModal}
+              {field}
+              {schema}
+              {bindings}
+              {value}
+              {onChange}
+            />
           {:else}
-            <DrawerBindableInput
+            <svelte:component
+              this={isTestModal ? ModalBindableInput : DrawerBindableInput}
               placeholder={placeholders[schema.type]}
               panel={AutomationBindingPanel}
               value={Array.isArray(value[field])
