@@ -301,7 +301,7 @@
 </script>
 
 <Page wide>
-  <Layout noPadding gap="XL">
+  <Layout noPadding gap="M">
     {#if loaded}
       <div class="title">
         <div class="welcome">
@@ -311,6 +311,29 @@
               {welcomeBody}
             </Body>
           </Layout>
+          {#if !$apps?.length}
+            <div class="buttons">
+              <Button
+                dataCy="create-app-btn"
+                size="M"
+                icon="Add"
+                cta
+                on:click={initiateAppCreation}
+              >
+                {createAppButtonText}
+              </Button>
+              <Button
+                dataCy="import-app-btn"
+                icon="Import"
+                size="L"
+                quiet
+                secondary
+                on:click={initiateAppImport}
+              >
+                Import app
+              </Button>
+            </div>
+          {/if}
         </div>
       </div>
 
@@ -465,6 +488,9 @@
   }
   .app-actions :global(> button) {
     margin-right: 10px;
+  }
+  .title .welcome > .buttons {
+    padding-top: var(--spacing-l);
   }
   .title {
     display: flex;
