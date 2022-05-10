@@ -7,7 +7,7 @@
   import { API } from "api"
   import { isActive, goto, layout, redirect } from "@roxi/routify"
   import { capitalise } from "helpers"
-  import { onMount } from "svelte"
+  import { onMount, onDestroy } from "svelte"
 
   export let application
 
@@ -65,6 +65,13 @@
       }
       hasSynced = true
     }
+  })
+
+  onDestroy(() => {
+    store.update(state => {
+      state.appId = null
+      return state
+    })
   })
 </script>
 
