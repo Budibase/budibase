@@ -1011,6 +1011,33 @@
         "key": "color"
       },
       {
+        "type": "text",
+        "label": "Tooltip text",
+        "key": "tooltip"
+      },
+      {
+        "type": "color",
+        "label": "Tooltip color",
+        "key": "tooltipColor"
+      },
+      {
+        "type": "color",
+        "label": "Tooltip text color",
+        "key": "tooltipTextColor"
+      },
+      {
+        "type": "select",
+        "label": "Tooltip direction",
+        "key": "tooltipDirection",
+        "defaultValue": "top",
+        "options": [
+          { "value": "top", "label": "Top" },
+          { "value": "right", "label": "Right" },
+          { "value": "bottom", "label": "Bottom" },
+          { "value": "left", "label": "Left" }
+        ]
+      },
+      {
         "type": "event",
         "label": "On Click",
         "key": "onClick"

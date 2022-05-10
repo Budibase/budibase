@@ -1,7 +1,7 @@
 <script>
   import { getContext } from "svelte"
   import Placeholder from "./Placeholder.svelte"
-
+  import Tooltip from "./Tooltip.svelte"
   const { styleable, builderStore } = getContext("sdk")
   const component = getContext("component")
 
@@ -9,6 +9,10 @@
   export let size
   export let color
   export let onClick
+  export let tooltip
+  export let tooltipColor
+  export let tooltipTextColor
+  export let tooltipDirection
 
   $: styles = {
     ...$component.styles,
@@ -20,12 +24,21 @@
 </script>
 
 {#if icon}
-  <i
-    use:styleable={styles}
-    class="{icon} {size}"
-    on:click={onClick}
-    class:hoverable={onClick != null}
-  />
+  <div use:styleable={$component.styles}>
+    <Tooltip
+      tip={tooltip}
+      color={tooltipColor}
+      textColor={tooltipTextColor}
+      direction={tooltipDirection}
+    >
+      <i
+        use:styleable={styles}
+        class="{icon} {size}"
+        on:click={onClick}
+        class:hoverable={onClick != null}
+      />
+    </Tooltip>
+  </div>
 {:else if $builderStore.inBuilder}
   <div use:styleable={styles}>
     <Placeholder />
