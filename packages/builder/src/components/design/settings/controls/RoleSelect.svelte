@@ -1,6 +1,7 @@
 <script>
   import { Select } from "@budibase/bbui"
   import { roles } from "stores/backend"
+  import { RoleUtils } from "@budibase/frontend-core"
 
   export let value
   export let error
@@ -12,5 +13,6 @@
   options={$roles}
   getOptionLabel={role => role.name}
   getOptionValue={role => role._id}
+  getOptionColour={role => RoleUtils.getRoleColour(role._id)}
   {error}
 />
