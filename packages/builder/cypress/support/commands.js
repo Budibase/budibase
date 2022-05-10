@@ -32,6 +32,18 @@ Cypress.Commands.add("login", () => {
   })
 })
 
+Cypress.Commands.add("basicOnboardAppUser", () => {
+  cy.createUser("another@budibase.com")
+})
+
+// log out.
+// Cypress.Commands.add("logOut", () => {
+//   cy.visit(`${Cypress.config().baseUrl}/builder`)
+//   cy.get(".user-dropdown .avatar > .icon").click({ force: true })
+
+//   cy.wait(2000)
+// })
+
 Cypress.Commands.add("closeModal", () => {
   cy.get(".spectrum-Modal").within(() => {
     cy.get(".close-icon").click()
@@ -137,6 +149,56 @@ Cypress.Commands.add("deleteAllApps", () => {
           cy.get(".spectrum-Button--warning").click()
         })
         cy.reload()
+      }
+    })
+})
+
+Cypress.Commands.add("customiseAppIcon", () => {
+  // Select random icon
+  cy.get(".grid").within(() => {
+    cy.get(".icon-item")
+      .eq(Math.floor(Math.random() * 23) + 1)
+      .click()
+  })
+  // Select random colour
+  cy.get(".fill").click()
+  cy.get(".colors").within(() => {
+    cy.get(".color")
+      .eq(Math.floor(Math.random() * 33) + 1)
+      .click()
+  })
+  cy.intercept("**/applications/**").as("iconChange")
+  cy.get(".spectrum-Button").contains("Save").click({ force: true })
+  cy.wait("@iconChange")
+  cy.get("@iconChange").its("response.statusCode").should("eq", 200)
+  cy.wait(1000)
+})
+
+Cypress.Commands.add("unlockApp", unlock_config => {
+  let config = { ...unlock_config }
+
+  cy.get(".spectrum-Modal .spectrum-Dialog[data-cy='app-lock-modal']")
+    .should("be.visible")
+    .within(() => {
+      if (config.owned) {
+        cy.get(".spectrum-Dialog-heading").contains("Locked by you")
+        cy.get(".lock-expiry-body").contains(
+          "This lock will expire in 10 minutes from now"
+        )
+
+        cy.intercept("**/lock").as("unlockApp")
+        cy.get(".spectrum-Button")
+          .contains("Release Lock")
+          .click({ force: true })
+        cy.wait("@unlockApp")
+        cy.get("@unlockApp").its("response.statusCode").should("eq", 200)
+        cy.get("@unlockApp").its("response.body").should("deep.equal", {
+          message: "Lock released successfully.",
+        })
+      } else {
+        //Show the name ?
+        cy.get(".lock-expiry-body").should("not.be.visible")
+        cy.get(".spectrum-Button").contains("Done")
       }
     })
 })

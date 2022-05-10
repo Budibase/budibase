@@ -176,8 +176,11 @@
               secondary
               icon="Globe"
               disabled={!isPublished}
-              on:click={viewApp}>View app</Button
+              on:click={viewApp}
+              dataCy="view-app"
             >
+              View app
+            </Button>
             <Button
               size="M"
               cta
