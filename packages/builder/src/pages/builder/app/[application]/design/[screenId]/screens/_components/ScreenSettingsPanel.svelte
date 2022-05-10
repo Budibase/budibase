@@ -9,6 +9,7 @@
     Toggle,
     Checkbox,
     Banner,
+    Select,
     notifications,
   } from "@budibase/bbui"
   import PropertyControl from "components/design/settings/controls/PropertyControl.svelte"
@@ -133,6 +134,15 @@
       control: Toggle,
       props: {
         text: "Show navigation",
+      },
+    },
+    {
+      key: "width",
+      label: "Width",
+      control: Select,
+      props: {
+        options: ["Extra small", "Small", "Medium", "Large", "Max"],
+        placeholder: "Default",
       },
     },
   ]
