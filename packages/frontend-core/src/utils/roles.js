@@ -18,5 +18,5 @@ export const getRolePriority = roleId => {
 }
 
 export const getRoleColour = roleId => {
-  return RoleColours[roleId] ?? "#ffa500"
+  return RoleColours[roleId] ?? "rgb(20, 115, 230)"
 }

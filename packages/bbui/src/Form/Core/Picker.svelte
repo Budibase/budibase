@@ -109,7 +109,7 @@
   {/if}
   {#if fieldColour}
     <span class="option-colour">
-      <StatusLight custom color={fieldColour} />
+      <StatusLight size="L" color={fieldColour} />
     </span>
   {/if}
   <svg
@@ -182,7 +182,7 @@
             </svg>
             {#if getOptionColour(option, idx)}
               <span class="option-colour">
-                <StatusLight custom color={getOptionColour(option, idx)} />
+                <StatusLight size="L" color={getOptionColour(option, idx)} />
               </span>
             {/if}
           </li>
