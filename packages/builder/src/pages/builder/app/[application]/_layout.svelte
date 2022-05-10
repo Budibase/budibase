@@ -7,7 +7,7 @@
   import { API } from "api"
   import { isActive, goto, layout, redirect } from "@roxi/routify"
   import { capitalise } from "helpers"
-  import { onMount, onDestroy } from "svelte"
+  import { onMount } from "svelte"
 
   export let application
 
@@ -131,10 +131,10 @@
     flex: 0 0 60px;
     background: var(--background);
     padding: 0 var(--spacing-xl);
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
     flex-direction: row;
     box-sizing: border-box;
-    justify-content: space-between;
     align-items: stretch;
     border-bottom: var(--border-light);
   }
@@ -147,7 +147,11 @@
     gap: var(--spacing-xl);
   }
   .topleftnav :global(.spectrum-Heading) {
+    flex: 1 1 auto;
+    width: 0;
     font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .topcenternav {
