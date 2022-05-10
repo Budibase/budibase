@@ -2348,6 +2348,43 @@
       },
       {
         "type": "select",
+        "label": "Type",
+        "key": "optionsType",
+        "defaultValue": "select",
+        "placeholder": "Pick an options type",
+        "options": [
+          {
+            "label": "Select",
+            "value": "select"
+          },
+          {
+            "label": "Checkbox buttons",
+            "value": "checkbox"
+          }
+        ]
+      },
+      {
+        "type": "select",
+        "label": "Direction",
+        "key": "direction",
+        "defaultValue": "vertical",
+        "options": [
+          {
+            "label": "Horizontal",
+            "value": "horizontal"
+          },
+          {
+            "label": "Vertical",
+            "value": "vertical"
+          }
+        ],
+        "dependsOn": {
+          "setting": "optionsType",
+          "value": "checkbox"
+        }
+      },
+      {
+        "type": "select",
         "label": "Options source",
         "key": "optionsSource",
         "defaultValue": "schema",
