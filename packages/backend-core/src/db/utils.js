@@ -12,7 +12,7 @@ const {
 const { getTenantId, getGlobalDBName } = require("../tenancy")
 const fetch = require("node-fetch")
 const { doWithDB, allDbs } = require("./index")
-const { getCouchUrl } = require("./pouch")
+const { getCouchInfo } = require("./pouch")
 const { getAppMetadata } = require("../cache/appMetadata")
 const { checkSlashesInUrl } = require("../helpers")
 const {
@@ -42,6 +42,18 @@ exports.isProdAppID = isProdAppID
 exports.isDevAppID = isDevAppID
 exports.getDevelopmentAppID = getDevelopmentAppID
 exports.getProdAppID = getProdAppID
+
+/**
+ * Generates a new app ID.
+ * @returns {string} The new app ID which the app doc can be stored under.
+ */
+exports.generateAppID = (tenantId = null) => {
+  let id = APP_PREFIX
+  if (tenantId) {
+    id += `${tenantId}${SEPARATOR}`
+  }
+  return `${id}${newid()}`
+}
 
 /**
  * If creating DB allDocs/query params with only a single top level ID this can be used, this
@@ -169,8 +181,14 @@ exports.getAllDbs = async (opts = { efficient: false }) => {
     return allDbs()
   }
   let dbs = []
-  async function addDbs(url) {
-    const response = await fetch(checkSlashesInUrl(encodeURI(url)))
+  let { url, cookie } = getCouchInfo()
+  async function addDbs(couchUrl) {
+    const response = await fetch(checkSlashesInUrl(encodeURI(couchUrl)), {
+      method: "GET",
+      headers: {
+        Authorization: cookie,
+      },
+    })
     if (response.status === 200) {
       let json = await response.json()
       dbs = dbs.concat(json)
@@ -178,7 +196,7 @@ exports.getAllDbs = async (opts = { efficient: false }) => {
       throw "Cannot connect to CouchDB instance"
     }
   }
-  let couchUrl = `${getCouchUrl()}/_all_dbs`
+  let couchUrl = `${url}/_all_dbs`
   let tenantId = getTenantId()
   if (!env.MULTI_TENANCY || (!efficient && tenantId === DEFAULT_TENANT_ID)) {
     // just get all DBs when:
