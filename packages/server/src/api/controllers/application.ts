@@ -277,8 +277,17 @@ const performAppCreate = async (ctx: any) => {
       title: name,
       navWidth: "Large",
       navBackground: "var(--spectrum-global-color-gray-50)",
+      links: [
+        {
+          url: "/home",
+          text: "Home",
+        },
+      ],
     },
     theme: "spectrum--light",
+    customTheme: {
+      buttonBorderRadius: "16px",
+    },
   }
   const response = await db.put(newApplication, { force: true })
   newApplication._rev = response.rev
