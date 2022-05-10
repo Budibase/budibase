@@ -14,9 +14,11 @@
   } from "@budibase/bbui"
   import structure from "./componentStructure.json"
   import { store } from "builderStore"
+  import { onMount } from "svelte"
 
   let section = "components"
   let searchString
+  let searchRef
 
   $: enrichedStructure = enrichStructure(structure, $store.components)
   $: filteredStructure = filterStructure(
@@ -52,7 +54,6 @@
     if (!structure?.length) {
       return []
     }
-
     if (section === "components") {
       structure = structure.filter(category => category.name !== "Blocks")
     } else {
@@ -91,6 +92,10 @@
       notifications.error("Error creating component")
     }
   }
+
+  onMount(() => {
+    searchRef.focus()
+  })
 </script>
 
 <NavigationPanel
@@ -121,6 +126,7 @@
         placeholder="Search"
         value={searchString}
         on:change={e => (searchString = e.detail)}
+        bind:inputRef={searchRef}
       />
     </Layout>
   {/if}
