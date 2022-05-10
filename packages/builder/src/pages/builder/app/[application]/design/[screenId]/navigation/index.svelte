@@ -81,6 +81,13 @@
         value={$store.navigation.sticky}
         on:change={e => update("sticky", e.detail)}
       />
+      <Select
+        label="Width"
+        options={["Max", "Large", "Medium", "Small"]}
+        plaveholder={null}
+        value={$store.navigation.navWidth}
+        on:change={e => update("navWidth", e.detail)}
+      />
     {/if}
     <Layout noPadding gap="XS">
       <Checkbox
@@ -112,19 +119,12 @@
         />
       {/if}
     </Layout>
-    <Select
-      label="Width"
-      options={["Max", "Large", "Medium", "Small"]}
-      plaveholder={null}
-      value={$store.navigation.navWidth}
-      on:change={e => updateNavigation("navWidth", e.detail)}
-    />
     <Layout noPadding gap="XS">
       <Label>Background color</Label>
       <ColorPicker
         spectrumTheme={$store.theme}
         value={$store.navigation.navBackground || DefaultAppTheme.navBackground}
-        on:change={e => updateNavigation("navBackground", e.detail)}
+        on:change={e => update("navBackground", e.detail)}
       />
     </Layout>
     <Layout noPadding gap="XS">
@@ -132,7 +132,7 @@
       <ColorPicker
         spectrumTheme={$store.theme}
         value={$store.navigation.navTextColor || DefaultAppTheme.navTextColor}
-        on:change={e => updateNavigation("navTextColor", e.detail)}
+        on:change={e => update("navTextColor", e.detail)}
       />
     </Layout>
   </Layout>
