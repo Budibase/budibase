@@ -69,14 +69,21 @@
     }
 
     // Update screen object in store
-    store.update(state => {
-      setWith(get(selectedScreen), key.split("."), value, Object)
-      return state
+    // If there are 2 home screens after this change, remove this screen as a
+    // home screen
+    const screen = get(selectedScreen)
+    setWith(screen, key.split("."), value, Object)
+    const roleId = screen.routing.roleId
+    const homeScreens = get(store).screens.filter(screen => {
+      return screen.routing.roleId === roleId && screen.routing.homeScreen
     })
+    if (homeScreens.length > 1) {
+      screen.routing.homeScreen = false
+    }
 
     // Save new definition
     try {
-      store.actions.preview.saveSelected()
+      store.actions.screens.save(screen)
     } catch (error) {
       notifications.error("Error saving screen settings")
     }
