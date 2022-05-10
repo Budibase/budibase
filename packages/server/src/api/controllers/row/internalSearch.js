@@ -1,6 +1,6 @@
 const { SearchIndexes } = require("../../../db/utils")
 const fetch = require("node-fetch")
-const { getCouchUrl } = require("@budibase/backend-core/db")
+const { getCouchInfo } = require("@budibase/backend-core/db")
 const { getAppId } = require("@budibase/backend-core/context")
 
 /**
@@ -242,11 +242,10 @@ class QueryBuilder {
 
   async run() {
     const appId = getAppId()
-    const url = `${getCouchUrl()}/${appId}/_design/database/_search/${
-      SearchIndexes.ROWS
-    }`
+    const { url, cookie } = getCouchInfo()
+    const fullPath = `${url}/${appId}/_design/database/_search/${SearchIndexes.ROWS}`
     const body = this.buildSearchBody()
-    return await runQuery(url, body)
+    return await runQuery(fullPath, body, cookie)
   }
 }
 
@@ -254,12 +253,16 @@ class QueryBuilder {
  * Executes a lucene search query.
  * @param url The query URL
  * @param body The request body defining search criteria
+ * @param cookie The auth cookie for CouchDB
  * @returns {Promise<{rows: []}>}
  */
-const runQuery = async (url, body) => {
+const runQuery = async (url, body, cookie) => {
   const response = await fetch(url, {
     body: JSON.stringify(body),
     method: "POST",
+    headers: {
+      Authorization: cookie,
+    },
   })
   const json = await response.json()
 

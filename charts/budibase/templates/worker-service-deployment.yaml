@@ -29,6 +29,7 @@ spec:
       - env:
         - name: CLUSTER_PORT
           value: {{ .Values.services.worker.port | quote }}
+        {{ if .Values.services.couchdb.enabled }}
         - name: COUCH_DB_USER
           valueFrom:
             secretKeyRef:
@@ -39,6 +40,7 @@ spec:
             secretKeyRef:
               name: {{ template "couchdb.fullname" . }}
               key: adminPassword
+        {{ end }}
         - name: COUCH_DB_URL
           {{ if .Values.services.couchdb.url }}
           value: {{ .Values.services.couchdb.url }}
