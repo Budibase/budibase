@@ -13,7 +13,6 @@
   import AppThemeSelect from "components/design/AppPreview/AppThemeSelect.svelte"
   import ThemeEditor from "components/design/AppPreview/ThemeEditor.svelte"
   import DevicePreviewSelect from "components/design/AppPreview/DevicePreviewSelect.svelte"
-  import Logo from "assets/bb-space-man.svg"
   import ScreenWizard from "components/design/navigation/ScreenWizard.svelte"
 
   // Cache previous values so we don't update the URL more than necessary
@@ -150,28 +149,7 @@
     <FrontendNavigatePane {showModal} />
   </div>
 
-  <div class="preview-pane">
-    {#if $currentAsset}{:else}
-      <div class="centered">
-        <div class="main">
-          <Layout gap="S" justifyItems="center">
-            <img class="img-size" alt="logo" src={Logo} />
-            <div class="new-screen-text">
-              <Detail size="M">LET’S BRING THIS APP TO LIFE</Detail>
-            </div>
-            <Button on:click={() => showModal()} size="M" cta>
-              <div class="new-screen-button">
-                <div class="background-icon" style="color: white;">
-                  <Icon name="Add" />
-                </div>
-                Add Screen
-              </div></Button
-            >
-          </Layout>
-        </div>
-      </div>
-    {/if}
-  </div>
+  <div class="preview-pane" />
 
   {#if $selectedComponent != null}
     <div class="components-pane">
@@ -192,30 +170,7 @@
     flex: 1 1 auto;
     height: 0;
   }
-  .new-screen-text {
-    width: 160px;
-    text-align: center;
-    color: #2c2c2c;
-    font-weight: 600;
-  }
 
-  .new-screen-button {
-    margin-left: 5px;
-    height: 20px;
-    width: 100px;
-    display: flex;
-    align-items: center;
-  }
-
-  .background-icon {
-    margin-top: 4px;
-    margin-right: 4px;
-  }
-
-  .img-size {
-    width: 160px;
-    height: 160px;
-  }
   .ui-nav {
     grid-column: 1;
     background-color: var(--background);
@@ -235,19 +190,5 @@
     align-items: stretch;
     border-left: var(--border-light);
     overflow-x: hidden;
-  }
-
-  .centered {
-    width: calc(100% - 350px);
-    height: calc(100% - 100px);
-    position: absolute;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-  }
-
-  .main {
-    width: 300px;
   }
 </style>
