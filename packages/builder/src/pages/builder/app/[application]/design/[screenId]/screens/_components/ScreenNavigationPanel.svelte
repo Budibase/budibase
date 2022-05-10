@@ -2,7 +2,7 @@
   import { Search, Layout, Select, Body } from "@budibase/bbui"
   import NavigationPanel from "components/design/navigation/NavigationPanel.svelte"
   import { roles } from "stores/backend"
-  import { store } from "builderStore"
+  import { store, sortedScreens } from "builderStore"
   import NavItem from "components/common/NavItem.svelte"
   import ScreenDropdownMenu from "./ScreenDropdownMenu.svelte"
   import ScreenWizard from "./ScreenWizard.svelte"
@@ -13,36 +13,18 @@
   let showNewScreenModal
 
   $: filteredScreens = getFilteredScreens(
-    $store.screens,
+    $sortedScreens,
     searchString,
     accessRole
   )
 
   const getFilteredScreens = (screens, search, role) => {
-    return screens
-      .filter(screen => {
-        const searchMatch = !search || screen.routing.route.includes(search)
-        const roleMatch =
-          !role || role === "all" || screen.routing.roleId === role
-        return searchMatch && roleMatch
-      })
-      .slice()
-      .sort((a, b) => {
-        // Sort by role first
-        const roleA = RoleUtils.getRolePriority(a.routing.roleId)
-        const roleB = RoleUtils.getRolePriority(b.routing.roleId)
-        if (roleA !== roleB) {
-          return roleA > roleB ? -1 : 1
-        }
-        // Then put home screens first
-        const homeA = !!a.routing.homeScreen
-        const homeB = !!b.routing.homeScreen
-        if (homeA !== homeB) {
-          return homeA ? -1 : 1
-        }
-        // Finally sort alphabetically by route
-        return a.routing.route < b.routing.route ? -1 : 1
-      })
+    return screens.filter(screen => {
+      const searchMatch = !search || screen.routing.route.includes(search)
+      const roleMatch =
+        !role || role === "all" || screen.routing.roleId === role
+      return searchMatch && roleMatch
+    })
   }
 </script>
 
