@@ -88,7 +88,7 @@
   // Extract component instance info
   $: children = instance._children || []
   $: id = instance._id
-  $: name = instance._instanceName
+  $: name = isScreen ? "Screen" : instance._instanceName
 
   // Determine if the component is selected or is part of the critical path
   // leading to the selected component
