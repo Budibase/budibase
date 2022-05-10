@@ -116,7 +116,7 @@
           await store.actions.screens.save(defaultScreenTemplate)
         } catch (err) {
           console.error("Could not create a default application screen", err)
-          notifications.warn(
+          notifications.warning(
             "Encountered an issue creating the default screen."
           )
         }
