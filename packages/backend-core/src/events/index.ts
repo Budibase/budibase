@@ -1,1 +1,7 @@
-export * from "./handlers"
+export * from "./publishers"
+
+import { processors } from "./processors"
+
+export const shutdown = () => {
+  processors.shutdown()
+}

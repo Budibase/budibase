@@ -1,4 +1,4 @@
-import { processEvent } from "../events"
+import { publishEvent } from "../events"
 import {
   Event,
   Layout,
@@ -8,10 +8,10 @@ import {
 
 export function created(layout: Layout) {
   const properties: LayoutCreatedEvent = {}
-  processEvent(Event.LAYOUT_CREATED, properties)
+  publishEvent(Event.LAYOUT_CREATED, properties)
 }
 
 export function deleted(layout: Layout) {
   const properties: LayoutDeletedEvent = {}
-  processEvent(Event.LAYOUT_DELETED, properties)
+  publishEvent(Event.LAYOUT_DELETED, properties)
 }

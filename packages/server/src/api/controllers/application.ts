@@ -258,7 +258,7 @@ const performAppCreate = async (ctx: any) => {
   } catch (err) {
     // nothing to do
   }
-  const newApplication = {
+  const newApplication: App = {
     _id: DocumentTypes.APP_METADATA,
     _rev,
     appId: instance._id,
