@@ -87,12 +87,14 @@
     </p>
 
     {#if lockedByYou && lockExpiry > 0}
-      {processStringSync(
-        "This lock will expire in {{ duration time 'millisecond' }} from now",
-        {
-          time: lockExpiry,
-        }
-      )}
+      <span class="lock-expiry-body">
+        {processStringSync(
+          "This lock will expire in {{ duration time 'millisecond' }} from now",
+          {
+            time: lockExpiry,
+          }
+        )}
+      </span>
     {/if}
     <div class="lock-modal-actions">
       <ButtonGroup>

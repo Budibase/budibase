@@ -14,7 +14,7 @@
   export let editIcon
 </script>
 
-<div class="title">
+<div class="title" data-cy={`${app.devId}`}>
   <div style="display: flex;">
     <div class="app-icon" style="color: {app.icon?.color || ''}">
       <Icon size="XL" name={app.icon?.name || "Apps"} />

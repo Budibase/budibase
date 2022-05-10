@@ -42,7 +42,7 @@
 
 <div class="overview-tab">
   <div class="top">
-    <DashCard title={"App Status"}>
+    <DashCard title={"App Status"} dataCy={"app-status"}>
       <div class="status-content">
         <div class="status-display">
           {#if isPublished}
@@ -71,7 +71,7 @@
         </p>
       </div>
     </DashCard>
-    <DashCard title={"Last Edited"}>
+    <DashCard title={"Last Edited"} dataCy={"edited-by"}>
       <div class="last-edited-content">
         {#await userPromise}
           <Avatar size="M" initials={"-"} />
@@ -105,6 +105,7 @@
       action={() => {
         navigateTab("Settings")
       }}
+      dataCy={"app-version"}
     >
       <div class="version-content">
         <Heading size="XS">{app?.version}</Heading>
@@ -133,6 +134,7 @@
       action={() => {
         navigateTab("Automation History")
       }}
+      dataCy={"automation-history"}
     >
       <div class="automation-content">
         <div class="automation-metrics">
@@ -158,6 +160,7 @@
       action={() => {
         navigateTab("Backups")
       }}
+      dataCy={"backups"}
     >
       <div class="backups-content">test</div>
     </DashCard>
