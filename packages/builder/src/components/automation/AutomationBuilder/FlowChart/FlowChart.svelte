@@ -14,7 +14,6 @@
   } from "@budibase/bbui"
 
   export let automation
-
   let testDataModal
   let blocks
   let confirmDeleteDialog
