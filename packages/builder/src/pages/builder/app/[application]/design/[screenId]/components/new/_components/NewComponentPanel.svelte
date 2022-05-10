@@ -13,21 +13,40 @@
     notifications,
   } from "@budibase/bbui"
   import structure from "./componentStructure.json"
-  import { store } from "builderStore"
+  import { store, selectedComponent } from "builderStore"
   import { onMount } from "svelte"
 
   let section = "components"
   let searchString
   let searchRef
+  let selectedIndex
+  let componentList = []
 
+  $: currentDefinition = store.actions.components.getDefinition(
+    $selectedComponent?._component
+  )
   $: enrichedStructure = enrichStructure(structure, $store.components)
   $: filteredStructure = filterStructure(
     enrichedStructure,
     section,
+    currentDefinition,
     searchString
   )
   $: blocks = enrichedStructure.find(x => x.name === "Blocks").children
+  $: orderMap = createComponentOrderMap(componentList)
 
+  // Creates a simple lookup map from an array, so we can find the selected
+  // component much faster
+  const createComponentOrderMap = list => {
+    let map = {}
+    list.forEach((component, idx) => {
+      map[component] = idx
+    })
+    return map
+  }
+
+  // Parses the structure in the manifest and returns an enriched structure with
+  // explicit categories
   const enrichStructure = (structure, definitions) => {
     let enrichedStructure = []
     structure.forEach(item => {
@@ -50,51 +69,86 @@
     return enrichedStructure
   }
 
-  const filterStructure = (structure, section, search) => {
+  const filterStructure = (structure, section, currentDefinition, search) => {
+    selectedIndex = search ? 0 : null
+    componentList = []
     if (!structure?.length) {
       return []
     }
+
+    // Split list into either components or blocks initially
     if (section === "components") {
       structure = structure.filter(category => category.name !== "Blocks")
     } else {
       structure = structure.filter(category => category.name === "Blocks")
     }
-    if (search) {
-      let filteredStructure = []
-      structure.forEach(category => {
-        let matchedChildren = category.children.filter(child => {
-          return child.name.toLowerCase().includes(search.toLowerCase())
-        })
-        if (matchedChildren.length) {
-          filteredStructure.push({
-            ...category,
-            children: matchedChildren,
-          })
+
+    // Return only items which match the search string
+    let filteredStructure = []
+    structure.forEach(category => {
+      let matchedChildren = category.children.filter(child => {
+        const name = child.name.toLowerCase()
+
+        // Check if the component matches the search string
+        if (search && !name.includes(search.toLowerCase())) {
+          return false
         }
+
+        // Check if the component is allowed as a child
+        return !currentDefinition?.illegalChildren?.includes(name)
       })
-      structure = filteredStructure
-    }
+      if (matchedChildren.length) {
+        filteredStructure.push({
+          ...category,
+          children: matchedChildren,
+        })
+
+        // Create a flat list of all components so that we can reference them by
+        // order later
+        componentList = componentList.concat(
+          matchedChildren.map(x => x.component)
+        )
+      }
+    })
+    structure = filteredStructure
     return structure
   }
 
-  const isChildAllowed = ({ name }, selectedComponent) => {
-    const currentComponent = store.actions.components.getDefinition(
-      selectedComponent?._component
-    )
-    return currentComponent?.illegalChildren?.includes(name.toLowerCase())
-  }
-
-  const addComponent = async item => {
+  const addComponent = async component => {
     try {
-      await store.actions.components.create(item.component)
+      await store.actions.components.create(component)
       $goto("../")
     } catch (error) {
       notifications.error("Error creating component")
     }
   }
 
+  const handleKeyDown = e => {
+    if (e.key === "Tab") {
+      // Cycle selected components on tab press
+      if (selectedIndex == null) {
+        selectedIndex = 0
+      } else {
+        selectedIndex = (selectedIndex + 1) % componentList.length
+      }
+      e.preventDefault()
+      e.stopPropagation()
+      return false
+    } else if (e.key === "Enter") {
+      // Add selected component on enter press
+      if (componentList[selectedIndex]) {
+        addComponent(componentList[selectedIndex])
+      }
+    }
+  }
+
   onMount(() => {
     searchRef.focus()
+    window.addEventListener("keydown", handleKeyDown)
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown)
+    }
   })
 </script>
 
@@ -135,7 +189,12 @@
       <DetailSummary name={category.name} collapsible={false}>
         <div class="component-grid">
           {#each category.children as component}
-            <div class="component" on:click={() => addComponent(component)}>
+            <div
+              class="component"
+              class:selected={selectedIndex === orderMap[component.component]}
+              on:click={() => addComponent(component.component)}
+              on:mouseover={() => (selectedIndex = null)}
+            >
               <Icon name={component.icon} />
               <Body size="XS">{component.name}</Body>
             </div>
@@ -148,7 +207,10 @@
       <Body size="S">Blocks are collections of pre-built components</Body>
       <Layout noPadding gap="XS">
         {#each blocks as block}
-          <div class="component block" on:click={() => addComponent(block)}>
+          <div
+            class="component block"
+            on:click={() => addComponent(block.component)}
+          >
             <Icon name={block.icon} />
             <Body size="XS">{block.name}</Body>
           </div>
@@ -176,15 +238,20 @@
     padding: 0 var(--spacing-s);
     gap: var(--spacing-s);
     padding-top: 4px;
-    transition: background 130ms ease-out;
+    border: 1px solid var(--spectrum-global-color-gray-200);
+    transition: border-color 130ms ease-out;
+  }
+  .component.selected,
+  .component:hover {
+    border-color: var(--spectrum-global-color-blue-400);
+  }
+  .component:hover {
+    cursor: pointer;
   }
   .component :global(.spectrum-Body) {
     line-height: 1.2 !important;
   }
-  .component:hover {
-    cursor: pointer;
-    background: var(--spectrum-alias-background-color-tertiary);
-  }
+
   .block {
     flex-direction: row;
     justify-content: flex-start;
