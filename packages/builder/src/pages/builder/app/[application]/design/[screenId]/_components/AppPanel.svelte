@@ -1,8 +1,8 @@
 <script>
   import DevicePreviewSelect from "./DevicePreviewSelect.svelte"
   import AppPreview from "./AppPreview.svelte"
-  import { store, selectedScreen } from "builderStore"
-  import { Button, Select, StatusLight, Body } from "@budibase/bbui"
+  import { store, selectedScreen, sortedScreens } from "builderStore"
+  import { Button, Select, StatusLight, Body, Badge } from "@budibase/bbui"
   import { RoleUtils } from "@budibase/frontend-core"
   import { roles } from "stores/backend"
   import { goto } from "@roxi/routify"
@@ -16,17 +16,13 @@
   <div class="header">
     <div class="header-left">
       <Select
-        options={$store.screens}
+        options={$sortedScreens}
         getOptionLabel={x => x.routing.route}
         getOptionValue={x => x._id}
         getOptionIcon={x => (x.routing.homeScreen ? "Home" : "WebPage")}
+        getOptionColour={x => RoleUtils.getRoleColour(x.routing.roleId)}
         bind:value={$store.selectedScreenId}
       />
-      <StatusLight custom color={roleColor}>
-        <Body size="S">
-          {roleName} access
-        </Body>
-      </StatusLight>
     </div>
     <div class="header-right">
       {#if $store.clientFeatures.devicePreview}
@@ -75,7 +71,7 @@
     gap: var(--spacing-l);
   }
   .header-left :global(.spectrum-Picker) {
-    width: 240px;
+    width: 250px;
   }
   .content {
     flex: 1 1 auto;
