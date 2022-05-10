@@ -272,6 +272,13 @@ const performAppCreate = async (ctx: any) => {
     updatedAt: new Date().toISOString(),
     createdAt: new Date().toISOString(),
     status: AppStatus.DEV,
+    navigation: {
+      navigation: "Top",
+      title: name,
+      navWidth: "Large",
+      navBackground: "var(--spectrum-global-color-gray-50)",
+    },
+    theme: "spectrum--light",
   }
   const response = await db.put(newApplication, { force: true })
   newApplication._rev = response.rev
