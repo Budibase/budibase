@@ -52,7 +52,7 @@
     <div class="block">
       {#if block.stepId !== "LOOP"}
         <FlowItemTitle showTestStatus={true} bind:showParameters {block} />
-        {#if showParameters?.complete && block?.id === showParameters?.id}
+        {#if showParameters && showParameters[block.id]}
           <Divider noMargin />
 
           <div class="tabs">

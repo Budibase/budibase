@@ -28,7 +28,7 @@
   <div
     on:click={() => {
       blockComplete = !blockComplete
-      showParameters = { complete: !showParameters?.complete, id: block.id }
+      showParameters[block.id] = blockComplete
     }}
     class="splitHeader"
   >
