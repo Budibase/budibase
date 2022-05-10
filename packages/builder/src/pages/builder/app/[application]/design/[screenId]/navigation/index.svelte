@@ -14,7 +14,6 @@
   } from "@budibase/bbui"
   import NavigationLinksEditor from "./_components/NavigationLinksEditor.svelte"
   import { store } from "builderStore"
-  import { onMount } from "svelte"
   import { DefaultAppTheme } from "constants"
 
   const update = async (key, value) => {
@@ -26,26 +25,6 @@
       notifications.error("Error updating navigation settings")
     }
   }
-
-  onMount(() => {
-    // Add navigation settings to old apps
-    let changed = false
-    if (!$store.navigation.navigation) {
-      $store.navigation.navigation = "Top"
-      changed = true
-    }
-    if (!$store.navigation.hideTitle && !$store.navigation.title) {
-      $store.navigation.title = $store.name
-      changed = true
-    }
-    if (!$store.navigation.width) {
-      $store.navigation.width = "Large"
-      changed = true
-    }
-    if (changed) {
-      store.actions.navigation.save($store.navigation)
-    }
-  })
 </script>
 
 <NavigationPanel title="Navigation">
