@@ -51,6 +51,9 @@
     justify-content: center;
     align-items: center;
     --spectrum-statuslight-info-text-gap: 4px;
+    min-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
   }
   .spectrum-StatusLight.withText::before {
     margin-right: 10px;

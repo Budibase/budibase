@@ -7,12 +7,14 @@
   import clickOutside from "../../Actions/click_outside"
   import Search from "./Search.svelte"
   import Icon from "../../Icon/Icon.svelte"
+  import StatusLight from "../../StatusLight/StatusLight.svelte"
 
   export let id = null
   export let disabled = false
   export let error = null
   export let fieldText = ""
   export let fieldIcon = ""
+  export let fieldColour = ""
   export let isPlaceholder = false
   export let placeholderOption = null
   export let options = []
@@ -21,6 +23,7 @@
   export let getOptionLabel = option => option
   export let getOptionValue = option => option
   export let getOptionIcon = () => null
+  export let getOptionColour = () => null
   export let open = false
   export let readonly = false
   export let quiet = false
@@ -83,11 +86,10 @@
   on:mousedown={onClick}
 >
   {#if fieldIcon}
-    <span class="icon-Placeholder-Padding">
+    <span class="option-icon">
       <Icon name={fieldIcon} />
     </span>
   {/if}
-
   <span
     class="spectrum-Picker-label"
     class:is-placeholder={isPlaceholder}
@@ -104,6 +106,11 @@
     >
       <use xlink:href="#spectrum-icon-18-Alert" />
     </svg>
+  {/if}
+  {#if fieldColour}
+    <span class="option-colour">
+      <StatusLight custom color={fieldColour} />
+    </span>
   {/if}
   <svg
     class="spectrum-Icon spectrum-UIIcon-ChevronDown100 spectrum-Picker-menuIcon"
@@ -159,7 +166,7 @@
             on:click={() => onSelectOption(getOptionValue(option, idx))}
           >
             {#if getOptionIcon(option, idx)}
-              <span class="icon-Padding">
+              <span class="option-icon">
                 <Icon name={getOptionIcon(option, idx)} />
               </span>
             {/if}
@@ -173,6 +180,11 @@
             >
               <use xlink:href="#spectrum-css-icon-Checkmark100" />
             </svg>
+            {#if getOptionColour(option, idx)}
+              <span class="option-colour">
+                <StatusLight custom color={getOptionColour(option, idx)} />
+              </span>
+            {/if}
           </li>
         {/each}
       {/if}
@@ -208,12 +220,18 @@
     padding-right: 2px;
   }
 
-  .icon-Padding {
-    padding-right: 10px;
+  /* Icon and colour alignment */
+  .spectrum-Menu-checkmark {
+    align-self: center;
+    margin-top: 0;
   }
-  .icon-Placeholder-Padding {
-    padding-right: 10px;
+  .option-colour {
+    padding-left: 8px;
   }
+  .option-icon {
+    padding-right: 8px;
+  }
+
   .spectrum-Popover :global(.spectrum-Search) {
     margin-top: -1px;
     margin-left: -1px;
