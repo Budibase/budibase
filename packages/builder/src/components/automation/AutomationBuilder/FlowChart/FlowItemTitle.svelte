@@ -7,7 +7,7 @@
   export let block
   export let blockComplete
   export let showTestStatus = false
-  export let showParameters
+  export let showParameters = {}
   let resultsModal
 
   $: testResult =
