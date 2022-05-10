@@ -44,7 +44,7 @@
     {/if}
   </div>
 
-  {#if automation.showTestPanel}
+  {#if automation?.showTestPanel}
     <div class="setup"><TestPanel {automation} /></div>
   {/if}
   <Modal bind:this={modal}>
