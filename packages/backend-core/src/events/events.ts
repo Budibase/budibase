@@ -1,17 +1,9 @@
-import { getTenantId } from "../context"
-import analytics from "../analytics"
 import { Event } from "@budibase/types"
+import { processors } from "./processors"
 
-const logEvent = (messsage: string) => {
-  const tenantId = getTenantId()
-  const userId = getTenantId() // TODO
-  console.log(`[audit] [tenant=${tenantId}] [user=${userId}] ${messsage}`)
-}
-
-export const processEvent = (event: Event, properties: any) => {
-  // logging
-  logEvent(event)
-
-  // analytics
-  analytics.captureEvent(event, properties)
+export const publishEvent = (event: Event, properties: any) => {
+  // in future this should use async events
+  // via a queue. For now we can use sync as
+  // this is non-blocking
+  processors.processEvent(event, properties)
 }

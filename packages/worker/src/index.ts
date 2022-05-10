@@ -17,6 +17,7 @@ const http = require("http")
 const api = require("./api")
 const redis = require("./utilities/redis")
 const Sentry = require("@sentry/node")
+import { events } from "@budibase/backend-core"
 
 // this will setup http and https proxies form env variables
 bootstrap()
@@ -67,6 +68,7 @@ server.on("close", async () => {
     console.log("Server Closed")
   }
   await redis.shutdown()
+  await events.shutdown()
 })
 
 module.exports = server.listen(parseInt(env.PORT || 4002), async () => {

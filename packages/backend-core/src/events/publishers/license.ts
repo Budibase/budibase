@@ -1,4 +1,4 @@
-import { processEvent } from "../events"
+import { publishEvent } from "../events"
 import {
   Event,
   License,
@@ -12,25 +12,25 @@ import {
 // TODO
 export function updgraded(license: License) {
   const properties: LicenseUpgradedEvent = {}
-  processEvent(Event.LICENSE_UPGRADED, properties)
+  publishEvent(Event.LICENSE_UPGRADED, properties)
 }
 
 // TODO
 export function downgraded(license: License) {
   const properties: LicenseDowngradedEvent = {}
-  processEvent(Event.LICENSE_DOWNGRADED, properties)
+  publishEvent(Event.LICENSE_DOWNGRADED, properties)
 }
 
 // TODO
 export function updated(license: License) {
   const properties: LicenseUpdatedEvent = {}
-  processEvent(Event.LICENSE_UPDATED, properties)
+  publishEvent(Event.LICENSE_UPDATED, properties)
 }
 
 // TODO
 export function activated(license: License) {
   const properties: LicenseActivatedEvent = {}
-  processEvent(Event.LICENSE_ACTIVATED, properties)
+  publishEvent(Event.LICENSE_ACTIVATED, properties)
 }
 
 // TODO
@@ -39,5 +39,5 @@ export function quotaExceeded(quotaName: string, value: number) {
     name: quotaName,
     value,
   }
-  processEvent(Event.LICENSE_QUOTA_EXCEEDED, properties)
+  publishEvent(Event.LICENSE_QUOTA_EXCEEDED, properties)
 }

@@ -1,4 +1,4 @@
-import { processEvent } from "../events"
+import { publishEvent } from "../events"
 import {
   Event,
   RowImportedEvent,
@@ -19,5 +19,5 @@ export const imported = (
   count: number
 ) => {
   const properties: RowImportedEvent = {}
-  processEvent(Event.ROW_IMPORT, properties)
+  publishEvent(Event.ROW_IMPORT, properties)
 }

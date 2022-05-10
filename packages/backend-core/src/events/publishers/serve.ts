@@ -1,4 +1,4 @@
-import { processEvent } from "../events"
+import { publishEvent } from "../events"
 import {
   App,
   BuilderServedEvent,
@@ -11,15 +11,15 @@ import {
 
 export function servedBuilder(version: number) {
   const properties: BuilderServedEvent = {}
-  processEvent(Event.SERVED_BUILDER, properties)
+  publishEvent(Event.SERVED_BUILDER, properties)
 }
 
 export function servedApp(app: App) {
   const properties: AppServedEvent = {}
-  processEvent(Event.SERVED_APP, properties)
+  publishEvent(Event.SERVED_APP, properties)
 }
 
 export function servedAppPreview(app: App) {
   const properties: AppPreviewServedEvent = {}
-  processEvent(Event.SERVED_APP_PREVIEW, properties)
+  publishEvent(Event.SERVED_APP_PREVIEW, properties)
 }

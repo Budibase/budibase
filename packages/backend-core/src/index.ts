@@ -7,7 +7,6 @@ import env from "./environment"
 import accounts from "./cloud/accounts"
 import tenancy from "./tenancy"
 import featureFlags from "./featureFlags"
-import analytics from "./analytics"
 import sessions from "./security/sessions"
 import deprovisioning from "./context/deprovision"
 
@@ -43,7 +42,6 @@ export = {
   tenancy,
   featureFlags,
   events,
-  analytics,
   sessions,
   deprovisioning,
 }
