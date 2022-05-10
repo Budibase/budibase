@@ -44,10 +44,13 @@ const createScreenStore = () => {
       if (!activeLayout) {
         let navigationSettings = {
           navigation: "None",
+          pageWidth: activeScreen?.width || "Large",
         }
         if (activeScreen?.showNavigation) {
-          navigationSettings =
-            $builderStore.navigation || $appStore.application?.navigation || {}
+          navigationSettings = {
+            ...navigationSettings,
+            ...($builderStore.navigation || $appStore.application?.navigation),
+          }
 
           // Default navigation to top
           if (!navigationSettings.navigation) {

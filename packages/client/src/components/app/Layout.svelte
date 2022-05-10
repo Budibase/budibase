@@ -23,17 +23,19 @@
   export let navBackground
   export let navTextColor
   export let navWidth
+  export let pageWidth
 
   const NavigationClasses = {
     Top: "top",
     Left: "left",
     None: "none",
   }
-  const WidthStyles = {
-    Max: "100%",
-    Large: "1400px",
-    Medium: "1100px",
-    Small: "800px",
+  const WidthClasses = {
+    Max: "max",
+    Large: "l",
+    Medium: "m",
+    Small: "s",
+    "Extra small": "xs",
   }
 
   // Set some layout context. This isn't used in bindings but can be used
@@ -48,8 +50,8 @@
 
   $: validLinks = links?.filter(link => link.text && link.url) || []
   $: typeClass = NavigationClasses[navigation] || NavigationClasses.None
-  $: navWidthStyle = WidthStyles[navWidth || width] || WidthStyles.Large
-  $: pageWidthStyle = WidthStyles[width] || WidthStyles.Max
+  $: navWidthClass = WidthClasses[navWidth || width] || WidthClasses.Large
+  $: pageWidthClass = WidthClasses[pageWidth || width] || WidthClasses.Large
   $: navStyle = getNavStyle(
     navBackground,
     navTextColor,
@@ -116,7 +118,7 @@
       on:click={$builderStore.inBuilder ? builderStore.actions.clickNav : null}
       style={navStyle}
     >
-      <div class="nav nav--{typeClass}" style={`width: ${navWidthStyle};`}>
+      <div class="nav nav--{typeClass} size--{navWidthClass}">
         <div class="nav-header">
           {#if validLinks?.length}
             <div class="burger">
@@ -183,7 +185,7 @@
     </div>
   {/if}
   <div class="main-wrapper">
-    <div class="main" style={`--pageWidth: ${pageWidthStyle};`}>
+    <div class="main size--{pageWidthClass}">
       <slot />
     </div>
   </div>
@@ -274,10 +276,24 @@
     max-width: 100%;
     position: relative;
     padding: 32px;
-    width: 100%;
   }
   .layout--none .main {
     padding: 0;
+  }
+  .size--xs {
+    width: 400px;
+  }
+  .size--s {
+    width: 800px;
+  }
+  .size--m {
+    width: 1100px;
+  }
+  .size--l {
+    width: 1400px;
+  }
+  .size--max {
+    width: 100%;
   }
 
   /*  Nav components */
