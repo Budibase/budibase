@@ -250,7 +250,7 @@ Cypress.Commands.add("addComponent", (category, component) => {
   if (component) {
     cy.get(`[data-cy="component-${component}"]`).click({ force: true })
   }
-  cy.wait(2000)
+  cy.wait(5000)
   cy.location().then(loc => {
     const params = loc.pathname.split("/")
     const componentId = params[params.length - 1]
