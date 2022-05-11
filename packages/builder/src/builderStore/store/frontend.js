@@ -1,12 +1,6 @@
 import { get, writable } from "svelte/store"
 import { cloneDeep } from "lodash/fp"
-import {
-  currentAsset,
-  mainLayout,
-  selectedComponent,
-  selectedAccessRole,
-  store,
-} from "builderStore"
+import { currentAsset, mainLayout, selectedComponent } from "builderStore"
 import {
   datasources,
   integrations,
@@ -196,10 +190,6 @@ export const getFrontendStore = () => {
           let screen =
             screens.find(screen => screen._id === screenId) || screens[0]
           if (!screen) return state
-
-          // Update role to the screen's role setting so that it will always
-          // be visible
-          selectedAccessRole.set(screen.routing.roleId)
 
           state.currentFrontEndType = FrontendTypes.SCREEN
           state.selectedScreenId = screen._id

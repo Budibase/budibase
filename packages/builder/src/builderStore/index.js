@@ -59,7 +59,5 @@ export const mainLayout = derived(store, $store => {
   )
 })
 
-export const selectedAccessRole = writable("BASIC")
-
 // For compatibility
 export const currentAsset = selectedScreen
