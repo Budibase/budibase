@@ -9,6 +9,8 @@ const {
   StaticDatabases,
   isDevAppID,
   isProdAppID,
+  getDevelopmentAppID,
+  generateAppID,
 } = require("@budibase/backend-core/db")
 
 const UNICODE_MAX = "\ufff0"
@@ -80,6 +82,8 @@ exports.UNICODE_MAX = UNICODE_MAX
 exports.SearchIndexes = SearchIndexes
 exports.AppStatus = AppStatus
 exports.BudibaseInternalDB = BudibaseInternalDB
+exports.generateAppID = generateAppID
+exports.generateDevAppID = getDevelopmentAppID
 
 exports.generateRoleID = generateRoleID
 exports.getRoleParams = getRoleParams
@@ -241,28 +245,6 @@ exports.generateLinkID = (
  */
 exports.getLinkParams = (otherProps = {}) => {
   return getDocParams(DocumentTypes.LINK, null, otherProps)
-}
-
-/**
- * Generates a new app ID.
- * @returns {string} The new app ID which the app doc can be stored under.
- */
-exports.generateAppID = (tenantId = null) => {
-  let id = `${DocumentTypes.APP}${SEPARATOR}`
-  if (tenantId) {
-    id += `${tenantId}${SEPARATOR}`
-  }
-  return `${id}${newid()}`
-}
-
-/**
- * Generates a development app ID from a real app ID.
- * @returns {string} the dev app ID which can be used for dev database.
- */
-exports.generateDevAppID = appId => {
-  const prefix = `${DocumentTypes.APP}${SEPARATOR}`
-  const rest = appId.split(prefix)[1]
-  return `${DocumentTypes.APP_DEV}${SEPARATOR}${rest}`
 }
 
 /**
