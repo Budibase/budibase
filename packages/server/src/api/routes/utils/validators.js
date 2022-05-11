@@ -9,6 +9,7 @@ const Joi = require("joi")
 
 const OPTIONAL_STRING = Joi.string().optional().allow(null).allow("")
 const OPTIONAL_NUMBER = Joi.number().optional().allow(null)
+const OPTIONAL_BOOLEAN = Joi.boolean().optional().allow(null)
 
 exports.tableValidator = () => {
   // prettier-ignore
@@ -159,15 +160,16 @@ exports.screenValidator = () => {
   // prettier-ignore
   return joiValidator.body(Joi.object({
     name: Joi.string().required(),
+    showNavigation: OPTIONAL_BOOLEAN,
     routing: Joi.object({
       route: Joi.string().required(),
       roleId: Joi.string().required().allow(""),
+      homeScreen: OPTIONAL_BOOLEAN,
     }).required().unknown(true),
     props: Joi.object({
       _id: Joi.string().required(),
       _component: Joi.string().required(),
       _children: Joi.array().required(),
-      _instanceName: Joi.string().required(),
       _styles: Joi.object().required(),
       type: OPTIONAL_STRING,
       table: OPTIONAL_STRING,
