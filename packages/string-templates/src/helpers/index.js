@@ -13,6 +13,16 @@ const HTML_SWAPS = {
   ">": "&gt;",
 }
 
+function isObject(value) {
+  if (value == null || typeof value !== "object") {
+    return false
+  }
+  return (
+    value.toString() === "[object Object]" ||
+    (value.length > 0 && typeof value[0] === "object")
+  )
+}
+
 const HELPERS = [
   // external helpers
   new Helper(HelperFunctionNames.OBJECT, value => {
@@ -22,11 +32,7 @@ const HELPERS = [
   new Helper(HelperFunctionNames.JS, processJS, false),
   // this help is applied to all statements
   new Helper(HelperFunctionNames.ALL, (value, { __opts }) => {
-    if (
-      value != null &&
-      typeof value === "object" &&
-      value.toString() === "[object Object]"
-    ) {
+    if (isObject(value)) {
       return new SafeString(JSON.stringify(value))
     }
     // null/undefined values produce bad results
