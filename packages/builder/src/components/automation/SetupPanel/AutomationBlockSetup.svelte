@@ -53,6 +53,7 @@
     : { schema: {} }
   $: schema = getSchemaForTable(tableId, { searchableSchema: true }).schema
   $: schemaFields = Object.values(schema || {})
+  $: queryLimit = tableId?.includes("datasource") ? "∞" : "1000"
 
   const onChange = Utils.sequential(async (e, key) => {
     try {
@@ -330,6 +331,7 @@
               on:change={e => onChange(e, key)}
               {bindings}
               updateOnChange={false}
+              placeholder={value.customType === "queryLimit" ? queryLimit : ""}
             />
           </div>
         {/if}
