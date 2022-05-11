@@ -10,22 +10,30 @@
   export let size
   export let gap
   export let wrap
+  export let onClick
 
   $: directionClass = direction ? `valid-container direction-${direction}` : ""
   $: hAlignClass = hAlign ? `hAlign-${hAlign}` : ""
   $: vAlignClass = vAlign ? `vAlign-${vAlign}` : ""
   $: sizeClass = size ? `size-${size}` : ""
   $: gapClass = gap ? `gap-${gap}` : ""
+  $: clickableClass = onClick ? "clickable" : ""
   $: classNames = [
     directionClass,
     hAlignClass,
     vAlignClass,
     sizeClass,
     gapClass,
+    clickableClass,
   ].join(" ")
 </script>
 
-<div class={classNames} use:styleable={$component.styles} class:wrap>
+<div
+  class={classNames}
+  use:styleable={$component.styles}
+  class:wrap
+  on:click={onClick}
+>
   <slot />
 </div>
 
@@ -103,5 +111,8 @@
 
   .wrap {
     flex-wrap: wrap;
+  }
+  .clickable {
+    cursor: pointer;
   }
 </style>
