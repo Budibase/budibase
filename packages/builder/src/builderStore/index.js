@@ -28,8 +28,18 @@ export const sortedScreens = derived(store, $store => {
     if (homeA !== homeB) {
       return homeA ? -1 : 1
     }
-    // Finally sort alphabetically by route
-    return a.routing.route < b.routing.route ? -1 : 1
+    // Then sort alphabetically by each URL param
+    const aParams = a.routing.route.split("/")
+    const bParams = b.routing.route.split("/")
+    let minParams = Math.min(aParams.length, bParams.length)
+    for (let i = 0; i < minParams; i++) {
+      if (aParams[i] === bParams[i]) {
+        continue
+      }
+      return aParams[i] < bParams[i] ? -1 : 1
+    }
+    // Then sort by the fewest amount of URL params
+    return aParams.length < bParams.length ? -1 : 1
   })
 })
 
