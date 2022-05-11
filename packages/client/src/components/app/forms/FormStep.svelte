@@ -22,7 +22,7 @@
     if (
       formContext &&
       $builderStore.inBuilder &&
-      $componentStore?.selectedComponentPath?.includes($component.id)
+      $componentStore.selectedComponentPath?.includes($component.id)
     ) {
       formContext.formApi.setStep(step)
     }
