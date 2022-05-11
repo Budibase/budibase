@@ -18,14 +18,14 @@ Cypress.Commands.add("login", () => {
       cy.get("input").first().type("test@test.com")
       cy.get('input[type="password"]').first().type("test")
       cy.get('input[type="password"]').eq(1).type("test")
-      cy.contains("Create super admin user").click()
+      cy.contains("Create super admin user").click({ force: true })
     }
     if (url.includes("builder/auth/login") || url.includes("builder/admin")) {
       // login
       cy.contains("Sign in to Budibase").then(() => {
         cy.get("input").first().type("test@test.com")
         cy.get('input[type="password"]').type("test")
-        cy.get("button").first().click()
+        cy.get("button").first().click({ force: true })
         cy.wait(1000)
       })
     }
@@ -58,7 +58,9 @@ Cypress.Commands.add("createApp", (name, addDefaultTable) => {
 
   cy.get(".spectrum-Modal").within(() => {
     cy.get("input").eq(0).type(name).should("have.value", name).blur()
-    cy.get(".spectrum-ButtonGroup").contains("Create app").click()
+    cy.get(".spectrum-ButtonGroup")
+      .contains("Create app")
+      .click({ force: true })
     cy.wait(10000)
   })
   if (shouldCreateDefaultTable) {
@@ -89,7 +91,7 @@ Cypress.Commands.add("deleteApp", name => {
           const appIdParsed = appId.split("_").pop()
           const actionEleId = `[data-cy=row_actions_${appIdParsed}]`
           cy.get(actionEleId).within(() => {
-            cy.get(".spectrum-Icon").eq(0).click()
+            cy.get(".spectrum-Icon").eq(0).click({ force: true })
           })
           cy.get(".spectrum-Menu").then($menu => {
             if ($menu.text().includes("Unpublish")) {
@@ -99,7 +101,7 @@ Cypress.Commands.add("deleteApp", name => {
           })
 
           cy.get(actionEleId).within(() => {
-            cy.get(".spectrum-Icon").eq(0).click()
+            cy.get(".spectrum-Icon").eq(0).click({ force: true })
           })
           cy.get(".spectrum-Menu").contains("Delete").click()
           cy.get(".spectrum-Dialog-grid").within(() => {
@@ -125,7 +127,7 @@ Cypress.Commands.add("deleteAllApps", () => {
         const appIdParsed = val[i].appId.split("_").pop()
         const actionEleId = `[data-cy=row_actions_${appIdParsed}]`
         cy.get(actionEleId).within(() => {
-          cy.get(".spectrum-Icon").eq(0).click()
+          cy.get(".spectrum-Icon").eq(0).click({ force: true })
         })
 
         cy.get(".spectrum-Menu").contains("Delete").click()
