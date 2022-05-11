@@ -31,7 +31,16 @@
   $: menu = buildMenu($auth.isAdmin)
 
   const buildMenu = admin => {
-    let menu = [{ title: "Apps", href: "/builder/portal/apps" }]
+    let menu = [
+      {
+        title: "Apps",
+        href: "/builder/portal/apps",
+      },
+      {
+        title: "Run History",
+        href: "/builder/portal/history",
+      },
+    ]
     if (admin) {
       menu = menu.concat([
         {
