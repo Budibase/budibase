@@ -10,6 +10,7 @@
   },
   "scripts": {
     "build": "rimraf dist/ && tsc -p tsconfig.build.json && mv dist/src/* dist/ && rimraf dist/src/ && yarn postbuild",
+    "debug": "yarn build && node --expose-gc --inspect=9222 dist/index.js",
     "postbuild": "copyfiles -u 1 src/**/*.svelte dist/ && copyfiles -u 1 src/**/*.hbs dist/ && copyfiles -u 1 src/**/*.json dist/",
     "test": "jest --coverage --maxWorkers=2",
     "test:watch": "jest --watch",
