@@ -37,7 +37,7 @@
   import AccessLevelSelect from "components/integration/AccessLevelSelect.svelte"
   import DynamicVariableModal from "../../_components/DynamicVariableModal.svelte"
   import Placeholder from "assets/bb-spaceship.svg"
-  import { cloneDeep } from "lodash/fp"
+  import { cloneDeep, isEqual } from "lodash/fp"
   import { RawRestBodyTypes } from "constants/backend"
 
   let query, datasource
@@ -47,6 +47,7 @@
   let response, schema, enabledHeaders
   let authConfigId
   let dynamicVariables, addVariableModal, varBinding
+  let baseQuery, baseDatasource, baseVariables
 
   $: datasourceType = datasource?.source
   $: integrationInfo = $integrations[datasourceType]
@@ -62,6 +63,15 @@
   $: hasSchema =
     Object.keys(schema || {}).length !== 0 ||
     Object.keys(query?.schema || {}).length !== 0
+  $: baseQuery = !baseQuery ? cloneDeep(query) : baseQuery
+  $: baseDatasource = !baseDatasource ? cloneDeep(datasource) : baseDatasource
+  $: baseVariables = !baseVariables
+    ? cloneDeep(dynamicVariables)
+    : baseVariables
+  $: hasChanged =
+    !isEqual(baseQuery, query) ||
+    !isEqual(baseDatasource, datasource) ||
+    !isEqual(baseVariables, dynamicVariables)
 
   function getSelectedQuery() {
     return cloneDeep(
@@ -120,6 +130,9 @@
         datasource.config.dynamicVariables = rebuildVariables(saveId)
         datasource = await datasources.save(datasource)
       }
+      baseQuery = query
+      baseDatasource = datasource
+      baseVariables = dynamicVariables
     } catch (err) {
       notifications.error(`Error saving query`)
     }
@@ -299,6 +312,7 @@
   {dynamicVariables}
   bind:binding={varBinding}
   bind:this={addVariableModal}
+  on:change={saveQuery}
 />
 {#if query && queryConfig}
   <div class="inner">
@@ -332,7 +346,7 @@
           </div>
           <Button primary disabled={!url} on:click={runQuery}>Send</Button>
           <Button
-            disabled={!query.name}
+            disabled={!query.name || !hasChanged}
             cta
             on:click={saveQuery}
             tooltip={!hasSchema
