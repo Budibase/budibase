@@ -75,9 +75,6 @@ Cypress.Commands.add("deleteApp", name => {
       const findAppName = val.some(val => val.name == name)
       if (findAppName) {
         if (val.length > 0) {
-          if (Cypress.env("TEST_ENV")) {
-            cy.searchForApplication(name)
-          }
           const appId = val.reduce((acc, app) => {
             if (name === app.name) {
               acc = app.appId
