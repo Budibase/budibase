@@ -245,12 +245,12 @@ Cypress.Commands.add("createUser", email => {
 
 Cypress.Commands.add("addComponent", (category, component) => {
   if (category) {
-    cy.get(`[data-cy="category-${category}"]`).click()
+    cy.get(`[data-cy="category-${category}"]`).click({ force: true })
   }
   if (component) {
-    cy.get(`[data-cy="component-${component}"]`).click()
+    cy.get(`[data-cy="component-${component}"]`).click({ force: true })
   }
-  cy.wait(1000)
+  cy.wait(2000)
   cy.location().then(loc => {
     const params = loc.pathname.split("/")
     const componentId = params[params.length - 1]
