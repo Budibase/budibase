@@ -135,7 +135,7 @@ filterTests(['smoke', 'all'], () => {
         cy.wait(5000)
         
         cy.visit(`${Cypress.config().baseUrl}/builder`)
-        cy.wait(1000)
+        cy.wait(2000)
 
         cy.applicationInAppTable(templateNameText)
         cy.deleteApp(templateNameText) 
