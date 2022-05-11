@@ -11,6 +11,7 @@
   <div class="header">
     <div class="header-left">
       <Select
+        placeholder={null}
         options={$sortedScreens}
         getOptionLabel={x => x.routing.route}
         getOptionValue={x => x._id}
