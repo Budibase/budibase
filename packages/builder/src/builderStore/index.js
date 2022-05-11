@@ -1,7 +1,7 @@
 import { getFrontendStore } from "./store/frontend"
 import { getAutomationStore } from "./store/automation"
 import { getThemeStore } from "./store/theme"
-import { derived, writable } from "svelte/store"
+import { derived } from "svelte/store"
 import { LAYOUT_NAMES } from "../constants"
 import { findComponent, findComponentPath } from "./componentUtils"
 import { RoleUtils } from "@budibase/frontend-core"
@@ -13,6 +13,20 @@ export const themeStore = getThemeStore()
 export const selectedScreen = derived(store, $store => {
   return $store.screens.find(screen => screen._id === $store.selectedScreenId)
 })
+
+export const selectedLayout = derived(store, $store => {
+  return $store.layouts?.find(layout => layout._id === $store.selectedLayoutId)
+})
+
+export const selectedComponent = derived(
+  [store, selectedScreen],
+  ([$store, $selectedScreen]) => {
+    if (!$selectedScreen || !$store.selectedComponentId) {
+      return null
+    }
+    return findComponent($selectedScreen?.props, $store.selectedComponentId)
+  }
+)
 
 export const sortedScreens = derived(store, $store => {
   return $store.screens.slice().sort((a, b) => {
@@ -42,16 +56,6 @@ export const sortedScreens = derived(store, $store => {
     return aParams.length < bParams.length ? -1 : 1
   })
 })
-
-export const selectedComponent = derived(
-  [store, selectedScreen],
-  ([$store, $selectedScreen]) => {
-    if (!$selectedScreen || !$store.selectedComponentId) {
-      return null
-    }
-    return findComponent($selectedScreen?.props, $store.selectedComponentId)
-  }
-)
 
 export const selectedComponentPath = derived(
   [store, selectedScreen],

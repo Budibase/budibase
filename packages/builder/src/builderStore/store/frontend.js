@@ -43,7 +43,6 @@ const INITIAL_FRONTEND_STATE = {
     continueIfAction: false,
   },
   currentFrontEndType: "none",
-  selectedLayoutId: "",
   errors: [],
   hasAppPackage: false,
   libraries: null,
@@ -57,6 +56,7 @@ const INITIAL_FRONTEND_STATE = {
   // URL params
   selectedScreenId: null,
   selectedComponentId: null,
+  selectedLayoutId: null,
 }
 
 export const getFrontendStore = () => {

@@ -1,5 +1,13 @@
 <script>
-  import NavigationPanel from "components/design/navigation/NavigationPanel.svelte"
+  import { store } from "builderStore"
+  import { onMount } from "svelte"
+  import { redirect } from "@roxi/routify"
+
+  onMount(() => {
+    if ($store.layouts?.length) {
+      $redirect(`./${$store.layouts[0]._id}`)
+    }
+  })
 </script>
 
-<NavigationPanel title="Layouts" />
+You don't have any layouts
