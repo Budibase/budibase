@@ -26,6 +26,8 @@ filterTests(['smoke', 'all'], () => {
         })
         
         it("should revert a published app", () => {
+            cy.navigateToFrontend()
+
             // Add initial component - Paragraph
             cy.addComponent("Elements", "Paragraph")
             // Publish app
@@ -37,6 +39,7 @@ filterTests(['smoke', 'all'], () => {
             cy.get(".spectrum-ButtonGroup").within(() => {
                 cy.get(".spectrum-Button").contains("Done").click({ force: true })
             })
+
             // Add second component - Button
             cy.addComponent("Elements", "Button")
             // Click Revert

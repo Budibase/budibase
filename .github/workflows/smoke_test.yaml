@@ -31,6 +31,7 @@ jobs:
         continue-on-error: true
         uses: cypress-io/github-action@v2
         with:
+          record: true
           install: false
           command: yarn test:e2e:ci:record
         env:
@@ -48,7 +49,7 @@ jobs:
         uses: tsickert/discord-webhook@v4.0.0
         with:
           webhook-url: ${{ secrets.BUDI_QA_WEBHOOK }}
-          content: "Smoke test run completed with ${{ steps.cypress.outcome }}. See results at ${{ steps.cypress.dashboardUrl }}"
+          content: "Smoke test run completed with ${{ steps.cypress.outcome }}. See results at ${{ steps.cypress.outputs.dashboardUrl }}"
           embed-title: ${{ steps.cypress.outcome }}
           embed-color: ${{ steps.cypress.outcome == 'success' && '3066993' || '15548997' }}
 
