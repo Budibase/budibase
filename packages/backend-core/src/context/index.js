@@ -55,6 +55,15 @@ async function closeAppDBs() {
   }
 }
 
+exports.closeTenancy = async () => {
+  if (env.USE_COUCH) {
+    await closeDB(exports.getGlobalDB())
+  }
+  // clear from context now that database is closed/task is finished
+  cls.setOnContext(ContextKeys.TENANT_ID, null)
+  cls.setOnContext(ContextKeys.GLOBAL_DB, null)
+}
+
 exports.isDefaultTenant = () => {
   return exports.getTenantId() === exports.DEFAULT_TENANT_ID
 }
@@ -82,12 +91,7 @@ exports.doInTenant = (tenantId, task) => {
     } finally {
       const using = cls.getFromContext(ContextKeys.IN_USE)
       if (!using || using <= 1) {
-        if (env.USE_COUCH) {
-          await closeDB(exports.getGlobalDB())
-        }
-        // clear from context now that database is closed/task is finished
-        cls.setOnContext(ContextKeys.TENANT_ID, null)
-        cls.setOnContext(ContextKeys.GLOBAL_DB, null)
+        await exports.closeTenancy()
       } else {
         cls.setOnContext(using - 1)
       }
