@@ -1,12 +1,12 @@
 <script>
-  import NavigationPanel from "components/design/navigation/NavigationPanel.svelte"
+  import Panel from "components/design/Panel.svelte"
   import { Banner, Layout } from "@budibase/bbui"
   import NavItem from "components/common/NavItem.svelte"
   import { store } from "builderStore"
   import LayoutDropdownMenu from "./LayoutDropdownMenu.svelte"
 </script>
 
-<NavigationPanel title="Layouts">
+<Panel title="Layouts" borderRight>
   <Layout paddingX="L" paddingY="XL" gap="S">
     <Banner
       type="warning"
@@ -28,7 +28,7 @@
       <LayoutDropdownMenu {layout} />
     </NavItem>
   {/each}
-</NavigationPanel>
+</Panel>
 
 <!--      -->
 <!--      color={RoleUtils.getRoleColour(screen.routing.roleId)}-->
