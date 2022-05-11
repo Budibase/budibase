@@ -1,5 +1,5 @@
 <script>
-  import NavigationPanel from "components/design/navigation/NavigationPanel.svelte"
+  import Panel from "components/design/Panel.svelte"
   import ComponentTree from "./ComponentTree.svelte"
   import instantiateStore from "./dragDropStore.js"
   import { goto } from "@roxi/routify"
@@ -60,11 +60,12 @@
   })
 </script>
 
-<NavigationPanel
+<Panel
   title="Components"
   showAddButton
   onClickAddButton={() => $goto("../new")}
   showExpandIcon
+  borderRight
 >
   <div class="nav-items-container" bind:this={scrollRef}>
     <NavItem
@@ -87,7 +88,7 @@
       {dragDropStore}
     />
   </div>
-</NavigationPanel>
+</Panel>
 
 <style>
   .nav-items-container {

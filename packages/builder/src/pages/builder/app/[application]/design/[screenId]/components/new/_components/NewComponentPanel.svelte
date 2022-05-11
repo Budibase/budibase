@@ -1,5 +1,5 @@
 <script>
-  import NavigationPanel from "components/design/navigation/NavigationPanel.svelte"
+  import Panel from "components/design/Panel.svelte"
   import { goto } from "@roxi/routify"
   import {
     Layout,
@@ -152,10 +152,11 @@
   })
 </script>
 
-<NavigationPanel
+<Panel
   title="Add component"
   showBackButton
   onClickBackButton={() => $goto("../slot")}
+  borderRight
 >
   <Layout paddingX="L" paddingY="XL" gap="S">
     <ActionGroup compact justified>
@@ -218,7 +219,7 @@
       </Layout>
     </Layout>
   {/if}
-</NavigationPanel>
+</Panel>
 
 <style>
   .component-grid {

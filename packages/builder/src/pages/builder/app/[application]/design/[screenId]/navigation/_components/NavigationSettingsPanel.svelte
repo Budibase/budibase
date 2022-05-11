@@ -1,5 +1,5 @@
 <script>
-  import NavigationPanel from "components/design/navigation/NavigationPanel.svelte"
+  import Panel from "components/design/Panel.svelte"
   import {
     Body,
     Layout,
@@ -27,7 +27,7 @@
   }
 </script>
 
-<NavigationPanel title="Navigation">
+<Panel title="Navigation" borderRight>
   <Layout paddingX="L" paddingY="XL" gap="S">
     <Body size="S">
       Your navigation is configured for all the screens within your app
@@ -115,4 +115,4 @@
       />
     </Layout>
   </Layout>
-</NavigationPanel>
+</Panel>

@@ -1,5 +1,5 @@
 <script>
-  import SettingsPanel from "components/design/settings/SettingsPanel.svelte"
+  import Panel from "components/design/Panel.svelte"
   import { get } from "svelte/store"
   import { get as deepGet, setWith } from "lodash"
   import {
@@ -164,9 +164,10 @@
   }
 </script>
 
-<SettingsPanel
+<Panel
   title={$selectedScreen?.routing.route}
   icon={$selectedScreen.routing.route === "/" ? "Home" : "WebPage"}
+  borderLeft
 >
   <Layout gap="S" paddingX="L" paddingY="XL">
     {#if $selectedScreen.layoutId}
@@ -191,4 +192,4 @@
     {/each}
     <Button cta on:click={() => $goto("../components")}>View components</Button>
   </Layout>
-</SettingsPanel>
+</Panel>

@@ -14,7 +14,7 @@
   let wide = false
 </script>
 
-<div class="navigation-panel" class:wide class:borderLeft class:borderRight>
+<div class="panel" class:wide class:borderLeft class:borderRight>
   <div class="header">
     {#if showBackButton}
       <Icon name="ArrowLeft" hoverable on:click={onClickBackButton} />
@@ -44,7 +44,7 @@
 </div>
 
 <style>
-  .navigation-panel {
+  .panel {
     width: 280px;
     background: var(--background);
     display: flex;
@@ -53,13 +53,13 @@
     align-items: stretch;
     transition: width 130ms ease-out;
   }
-  .navigation-panel.border-left {
+  .panel.borderLeft {
     border-left: var(--border-light);
   }
-  .navigation-panel.border-right {
+  .panel.borderRight {
     border-right: var(--border-light);
   }
-  .navigation-panel.wide {
+  .panel.wide {
     width: 420px;
   }
   .header {

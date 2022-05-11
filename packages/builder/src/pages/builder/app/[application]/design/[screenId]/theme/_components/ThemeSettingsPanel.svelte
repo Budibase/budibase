@@ -1,5 +1,5 @@
 <script>
-  import NavigationPanel from "components/design/navigation/NavigationPanel.svelte"
+  import Panel from "components/design/Panel.svelte"
   import {
     Body,
     Layout,
@@ -46,7 +46,7 @@
   }
 </script>
 
-<NavigationPanel title="Theme">
+<Panel title="Theme" borderRight>
   <Layout paddingX="L" paddingY="XL" gap="S">
     <Body size="S">
       Your theme is set across all the screens within your app
@@ -91,7 +91,7 @@
       />
     </Layout>
   </Layout>
-</NavigationPanel>
+</Panel>
 
 <style>
   .buttons {
