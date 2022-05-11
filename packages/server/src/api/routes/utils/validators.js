@@ -161,6 +161,7 @@ exports.screenValidator = () => {
   return joiValidator.body(Joi.object({
     name: Joi.string().required(),
     showNavigation: OPTIONAL_BOOLEAN,
+    width: OPTIONAL_STRING,
     routing: Joi.object({
       route: Joi.string().required(),
       roleId: Joi.string().required().allow(""),
