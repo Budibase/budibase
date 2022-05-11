@@ -2,13 +2,15 @@
   import ScreenDetailsModal from "./ScreenDetailsModal.svelte"
   import NewScreenModal from "./NewScreenModal.svelte"
   import DatasourceModal from "./DatasourceModal.svelte"
+  import ScreenRoleModal from "./ScreenRoleModal.svelte"
   import sanitizeUrl from "builderStore/store/screenTemplates/utils/sanitizeUrl"
-  import { Modal, ModalContent, Select, notifications } from "@budibase/bbui"
-  import { store, selectedAccessRole } from "builderStore"
+  import { Modal, notifications } from "@budibase/bbui"
+  import { store } from "builderStore"
   import analytics, { Events } from "analytics"
   import { get } from "svelte/store"
   import getTemplates from "builderStore/store/screenTemplates"
-  import { tables, roles } from "stores/backend"
+  import { tables } from "stores/backend"
+  import { Roles } from "constants/backend"
 
   let pendingScreen
 
@@ -19,10 +21,9 @@
   let screenAccessRoleModal
 
   // Cache variables for workflow
-  let screenAccessRole = $selectedAccessRole + ""
+  let screenAccessRole = Roles.BASIC
   let selectedTemplates = null
   let blankScreenUrl = null
-
   let screenMode = null
 
   // External handler to show the screen wizard
@@ -30,10 +31,9 @@
     selectedTemplates = null
     blankScreenUrl = null
     screenMode = null
-
-    newScreenModal.show()
-    // Reset state when showing modal again
     pendingScreen = null
+    screenAccessRole = Roles.BASIC
+    newScreenModal.show()
   }
 
   // Creates an array of screens, checking and sanitising their URLs
@@ -58,9 +58,11 @@
         screen.routing.route = sanitizeUrl(screen.routing.route)
 
         // Use the currently selected role
+        if (!screenAccessRole) {
+          console.log("NO ROLE")
+          return
+        }
         screen.routing.roleId = screenAccessRole
-          ? screenAccessRole
-          : get(selectedAccessRole) || "BASIC"
 
         // Create the screen
         await store.actions.screens.save(screen)
@@ -90,7 +92,7 @@
   // Checks if any screens exist in the store with the given route and
   // currently selected role
   const hasExistingUrl = url => {
-    const roleId = get(selectedAccessRole) || "BASIC"
+    const roleId = screenAccessRole
     const screens = get(store).screens.filter(s => s.routing.roleId === roleId)
     return !!screens.find(s => s.routing?.route === url)
   }
@@ -115,7 +117,7 @@
   const confirmScreenSelection = async mode => {
     screenMode = mode
 
-    if (mode == "autoCreate") {
+    if (mode === "autoCreate") {
       datasourceModal.show()
     } else {
       let templates = getTemplates($store, $tables.list)
@@ -198,28 +200,12 @@
 </Modal>
 
 <Modal bind:this={screenAccessRoleModal}>
-  <ModalContent
-    title={"Create CRUD Screens"}
-    confirmText={"Done"}
-    cancelText={"Back"}
+  <ScreenRoleModal
     onConfirm={confirmScreenCreation}
     onCancel={roleSelectBack}
-  >
-    Select which level of access you want your screens to have
-    <Select
-      bind:value={screenAccessRole}
-      on:change={() => {
-        analytics.captureEvent(Events.SCREEN.CREATE_ROLE_UPDATED, {
-          screenAccessRole,
-        })
-      }}
-      label="Access"
-      getOptionLabel={role => role.name}
-      getOptionValue={role => role._id}
-      getOptionColor={role => role.color}
-      options={$roles}
-    />
-  </ModalContent>
+    bind:screenAccessRole
+    screenUrl={blankScreenUrl}
+  />
 </Modal>
 
 <Modal bind:this={screenDetailsModal}>

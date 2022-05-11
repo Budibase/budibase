@@ -84,8 +84,8 @@
 <Modal bind:this={screenDetailsModal}>
   <ScreenDetailsModal
     onConfirm={createDuplicateScreen}
-    screenName={screen?.props._instanceName}
     screenUrl={screen?.routing.route}
+    screenRole={screen?.routing.roleId}
     confirmText="Duplicate"
   />
 </Modal>

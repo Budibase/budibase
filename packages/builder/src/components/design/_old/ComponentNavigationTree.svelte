@@ -1,5 +1,5 @@
 <script>
-  import { store, selectedAccessRole } from "builderStore"
+  import { store } from "builderStore"
   import PathTree from "./PathTree.svelte"
 
   let routes = {}

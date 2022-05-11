@@ -11,6 +11,7 @@
   bind:value
   on:change
   options={$roles}
+  placeholder={null}
   getOptionLabel={role => role.name}
   getOptionValue={role => role._id}
   getOptionColour={role => RoleUtils.getRoleColour(role._id)}

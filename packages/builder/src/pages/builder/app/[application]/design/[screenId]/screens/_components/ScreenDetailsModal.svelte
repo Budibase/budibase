@@ -1,20 +1,18 @@
 <script>
   import { ModalContent, Input } from "@budibase/bbui"
   import sanitizeUrl from "builderStore/store/screenTemplates/utils/sanitizeUrl"
-  import { store, selectedAccessRole } from "builderStore"
   import { get } from "svelte/store"
+  import { store } from "builderStore"
 
   export let onConfirm
   export let onCancel
   export let screenUrl
-  export let screenName
+  export let screenRole
   export let confirmText = "Continue"
 
-  let routeError
-  let touched = false
-  let screenAccessRole = $selectedAccessRole + ""
-
   const appPrefix = "/app"
+  let touched = false
+  let error
 
   $: appUrl = screenUrl
     ? `${window.location.origin}${appPrefix}${screenUrl}`
@@ -27,41 +25,42 @@
     touched = true
     screenUrl = sanitizeUrl(screenUrl)
     if (routeExists(screenUrl)) {
-      routeError = "This URL is already taken for this access role"
+      error = "This URL is already taken for this access role"
     } else {
-      routeError = null
+      error = null
     }
   }
 
   const routeExists = url => {
-    const roleId = get(selectedAccessRole) || "BASIC"
+    if (!screenRole) {
+      return false
+    }
     return get(store).screens.some(
       screen =>
         screen.routing.route.toLowerCase() === url.toLowerCase() &&
-        screen.routing.roleId === roleId
+        screen.routing.roleId === screenRole
     )
   }
 
   const confirmScreenDetails = async () => {
     await onConfirm({
       screenUrl,
-      screenName,
     })
   }
 </script>
 
 <ModalContent
   size="M"
-  title={"Enter details"}
+  title={"Screen details"}
   {confirmText}
   onConfirm={confirmScreenDetails}
   {onCancel}
   cancelText={"Back"}
-  disabled={!screenAccessRole || !screenUrl || routeError || !touched}
+  disabled={!screenUrl || error || !touched}
 >
   <Input
     label="Enter a URL for the new screen"
-    error={routeError}
+    {error}
     bind:value={screenUrl}
     on:change={routeChanged}
   />
