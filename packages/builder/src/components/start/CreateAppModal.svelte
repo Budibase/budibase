@@ -10,6 +10,8 @@
   import { createValidationStore } from "helpers/validation/yup"
   import * as appValidation from "helpers/validation/yup/app"
   import TemplateCard from "components/common/TemplateCard.svelte"
+  import createFromScratchScreen from "builderStore/store/screenTemplates/createFromScratchScreen"
+  import { Roles } from "constants/backend"
 
   export let template
 
@@ -81,7 +83,7 @@
       }
       data.append("useTemplate", template != null)
       if (template) {
-        data.append("templateName", template.name)
+        data.append("templateName", template.name) //or here?
         data.append("templateKey", template.key)
         data.append("templateFile", $values.file)
       }
@@ -104,6 +106,22 @@
       // Create user
       await API.updateOwnMetadata({ roleId: $values.roleId })
       await auth.setInitInfo({})
+
+      // Create a default home screen if no template was selected
+      if (template == null) {
+        let defaultScreenTemplate = createFromScratchScreen.create()
+        defaultScreenTemplate.routing.route = "/home"
+        defaultScreenTemplate.routing.roldId = Roles.BASIC
+        try {
+          await store.actions.screens.save(defaultScreenTemplate)
+        } catch (err) {
+          console.error("Could not create a default application screen", err)
+          notifications.warning(
+            "Encountered an issue creating the default screen."
+          )
+        }
+      }
+
       $goto(`/builder/app/${createdApp.instance._id}`)
     } catch (error) {
       creating = false
