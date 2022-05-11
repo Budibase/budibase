@@ -1,4 +1,5 @@
 import filterTests from "../support/filterTests"
+import clientPackage from "@budibase/client/package.json"
 
 filterTests(['all'], () => {
   context("Application Overview screen", () => {
@@ -6,67 +7,10 @@ filterTests(['all'], () => {
       cy.login()
       cy.createTestApp()
     })
-    
-    /*
-      The ability to switch accounts will deffo be necessary
-
-      x APP Screen
-        Click on app name
-        Click on edit
-      
-      x Edit Icon Functionality
-
-      Lock button display and behaviour
-      
-      Edit button status and behaviour
-
-      ** To ratifying alot of this stuff will require the app itself
-        cy.visit(`${Cypress.config().baseUrl}/builder`)
-        cy.wait(2000)
-        cy.request(`${Cypress.config().baseUrl}/api/applications?status=all`)
-          .its("body")
-          .then(val => {
-            const findAppName = val.some(val => val.name == name)
-            if (findAppName) {
-
-      Publish Card
-        x Never published
-        Unpublished
-          Should show the last valid publish date
-        x Published
-          Should show the valid publish date
-      Edit Card
-        D or DH or the first letter of their email.
-        Timestamp vaguely matches.
-      Version Card
-        How to get use cases? Available/Unavailable?
-      
-      Settings Tab
-        Edit Url
-        Edit Name
-
-        Versioning?
-
-      Tab behaviour
-        Click all 3 main tabs.
-        Check positioning.
-        Dashcard behaviour. Concentrate on the App version
-          Header behaviour on click
-          Quick link behaviour 
-
-      Locking behaviour
-        Button contents, D or DH or the first letter of their email.
-        Locked by you
-        Locked by someone else
-
-        Timeout check. Apps > edit > back > app title
-        "This lock will expire in 10 minutes from now"
-    */
 
     it("Should be accessible from the applications list", () => {
       cy.visit(`${Cypress.config().baseUrl}/builder`)
       
-      // Reusable command? toAppOverview
       cy.get(".appTable .title").eq(0)
       .invoke('attr', 'data-cy')
       .then(($dataCy) => {
@@ -206,10 +150,143 @@ filterTests(['all'], () => {
       })
     })
 
-    it("Should log out.", () => { 
-      //You
-      //Last edited a few seconds ago.
-      cy.logOut();
+    it("Should reflect the last time the application was edited", () => {
+      cy.visit(`${Cypress.config().baseUrl}/builder`)
+      cy.get(".appTable .name").eq(0).click()
+
+      cy.get(".header-right button").contains("Edit").click({ force: true });
+
+      cy.navigateToFrontend()
+
+      cy.addComponent("Elements", "Headline").then(componentId => {
+        cy.getComponent(componentId).should("exist")
+      })
+
+      cy.visit(`${Cypress.config().baseUrl}/builder`)
+      cy.get(".appTable .name").eq(0).click()
+
+      cy.get(".overview-tab [data-cy='edited-by']").within(() => {
+        cy.get(".editor-name").contains("You")
+        cy.get(".last-edit-text").contains("Last edited a few seconds ago")
+      })
+    });
+
+    it("Should reflect application version is up-to-date", () => {
+      cy.visit(`${Cypress.config().baseUrl}/builder`)
+      cy.get(".appTable .name").eq(0).click()
+
+      cy.get(".overview-tab [data-cy='app-version']").within(() => {
+        cy.get(".version-status").contains("You're running the latest!")
+      })
+    });
+
+    it("Should navigate to the settings tab when clicking the App Version card header", () => {
+      cy.visit(`${Cypress.config().baseUrl}/builder`)
+      cy.get(".appTable .name").eq(0).click()
+
+      cy.get(".spectrum-Tabs-item.is-selected").contains("Overview")
+      cy.get(".overview-tab").should("be.visible")
+
+      cy.get(".overview-tab [data-cy='app-version'] .dash-card-header").click({ force : true })
+
+      cy.get(".spectrum-Tabs-item.is-selected").contains("Settings")
+      cy.get(".settings-tab").should("be.visible")
+      cy.get(".overview-tab").should("not.exist")
+
+    });
+
+    it("Should allow the upgrading of an application, if available.", () => {
+      cy.visit(`${Cypress.config().baseUrl}/builder`)
+      cy.get(".appTable .name").eq(0).click()
+      cy.wait(500)
+
+      cy.location().then(loc => {
+        const params = loc.pathname.split("/")
+        const appId = params[params.length - 1]
+        cy.log(appId)
+        //Downgrade the app for the test
+        cy.alterAppVersion(appId, "0.0.1-alpha.0")
+        .then(()=>{
+          cy.reload()
+          cy.wait(1000)
+          cy.log("Current deployment version: " + clientPackage.version)
+
+          cy.get(".version-status a").contains("Update").click()
+          cy.get(".spectrum-Tabs-item.is-selected").contains("Settings")
+
+          cy.get(".version-section .page-action button").contains("Update").click({ force: true })
+          
+          cy.intercept('POST', '**/applications/**/client/update').as('updateVersion')
+          cy.get(".spectrum-Modal.is-open button").contains("Update").click({ force: true })
+
+          cy.wait("@updateVersion")
+          .its('response.statusCode').should('eq', 200)
+          .then(() => {
+            cy.visit(`${Cypress.config().baseUrl}/builder`)
+            cy.get(".appTable .name").eq(0).click()
+
+            cy.get(".spectrum-Tabs-item").contains("Overview").click({ force: true })
+            cy.get(".overview-tab [data-cy='app-version']").within(() => {
+              cy.get(".spectrum-Heading").contains(clientPackage.version)
+              cy.get(".version-status").contains("You're running the latest!")
+            })
+          })
+        })
+      });
+      
     })
+
+    it("Should allow editing of the app details.", () => {
+      cy.visit(`${Cypress.config().baseUrl}/builder`)
+      cy.get(".appTable .name").eq(0).click()
+
+      cy.get(".spectrum-Tabs-item").contains("Settings").click()
+      cy.get(".spectrum-Tabs-item.is-selected").contains("Settings")
+      cy.get(".settings-tab").should("be.visible")
+
+      cy.get(".details-section .page-action button").contains("Edit").click({ force: true })
+      cy.updateAppName("sample name")
+
+      //publish and check its disabled
+      cy.visit(`${Cypress.config().baseUrl}/builder`)
+      cy.get(".appTable .app-row-actions button").contains("Edit").eq(0).click({force: true})
+
+      cy.get(".toprightnav button.spectrum-Button").contains("Publish").click({ force : true })
+      cy.get(".spectrum-Modal [data-cy='deploy-app-modal']").should("be.visible")
+      .within(() => {
+        cy.get(".spectrum-Button").contains("Publish").click({ force : true })
+        cy.wait(1000)
+      });
+
+      cy.visit(`${Cypress.config().baseUrl}/builder`)
+      cy.get(".appTable .name").eq(0).click()
+      cy.get(".spectrum-Tabs-item").contains("Settings").click()
+      cy.get(".spectrum-Tabs-item.is-selected").contains("Settings")
+
+      cy.get(".details-section .page-action .spectrum-Button").scrollIntoView()
+      cy.wait(1000)
+      cy.get(".details-section .page-action .spectrum-Button").should("be.disabled")
+
+    })
+    
+    after(() => {
+      cy.visit(`${Cypress.config().baseUrl}/builder`)
+      cy.get(".appTable .app-row-actions button").contains("Edit").eq(0).click({force: true})
+
+      cy.get(".deployment-top-nav svg[aria-label='Globe']")
+      .click({ force: true })
+
+      cy.get("[data-cy='publish-popover-menu']").should("be.visible")
+      cy.get("[data-cy='publish-popover-menu'] [data-cy='publish-popover-action']")
+      .click({ force : true })
+      
+      cy.get("[data-cy='unpublish-modal']").should("be.visible")
+      .within(() => {
+        cy.get(".confirm-wrap button").click({ force: true }
+      )})
+      cy.wait(1000)
+      cy.deleteAllApps()
+    })
+
   })
 })

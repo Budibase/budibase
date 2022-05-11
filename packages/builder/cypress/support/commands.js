@@ -32,17 +32,14 @@ Cypress.Commands.add("login", () => {
   })
 })
 
-Cypress.Commands.add("basicOnboardAppUser", () => {
-  cy.createUser("another@budibase.com")
+Cypress.Commands.add("logOut", () => {
+  cy.visit(`${Cypress.config().baseUrl}/builder`)
+  cy.get(".user-dropdown .avatar > .icon").click({ force: true })
+  cy.get(".spectrum-Popover[data-cy='user-menu']").within(() => {
+    cy.get("li[data-cy='user-logout']").click({ force: true })
+  })
+  cy.wait(2000)
 })
-
-// log out.
-// Cypress.Commands.add("logOut", () => {
-//   cy.visit(`${Cypress.config().baseUrl}/builder`)
-//   cy.get(".user-dropdown .avatar > .icon").click({ force: true })
-
-//   cy.wait(2000)
-// })
 
 Cypress.Commands.add("closeModal", () => {
   cy.get(".spectrum-Modal").within(() => {
@@ -172,6 +169,36 @@ Cypress.Commands.add("customiseAppIcon", () => {
   cy.wait("@iconChange")
   cy.get("@iconChange").its("response.statusCode").should("eq", 200)
   cy.wait(1000)
+})
+
+Cypress.Commands.add("alterAppVersion", (appId, version) => {
+  return cy
+    .request("put", `${Cypress.config().baseUrl}/api/applications/${appId}`, {
+      version: version || "0.0.1-alpha.0",
+    })
+    .then(resp => {
+      expect(resp.status).to.eq(200)
+    })
+})
+
+Cypress.Commands.add("updateAppName", (changedName, noName) => {
+  cy.get(".spectrum-Modal").within(() => {
+    if (noName == true) {
+      cy.get("input").clear()
+      cy.get(".spectrum-Dialog-grid")
+        .click()
+        .contains("App name must be letters, numbers and spaces only")
+      return cy
+    }
+    cy.get("input").clear()
+    cy.get("input")
+      .eq(0)
+      .type(changedName)
+      .should("have.value", changedName)
+      .blur()
+    cy.get(".spectrum-ButtonGroup").contains("Save").click({ force: true })
+    cy.wait(500)
+  })
 })
 
 Cypress.Commands.add("unlockApp", unlock_config => {

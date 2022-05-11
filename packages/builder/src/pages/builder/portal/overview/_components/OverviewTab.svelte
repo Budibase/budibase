@@ -79,7 +79,7 @@
           <div class="updated-by">
             {#if appEditor}
               <Avatar size="M" initials={getInitials(appEditor)} />
-              <div>
+              <div class="editor-name">
                 {appEditor._id === $auth.user._id ? "You" : appEditorText}
               </div>
             {/if}
@@ -107,10 +107,10 @@
       }}
       dataCy={"app-version"}
     >
-      <div class="version-content">
-        <Heading size="XS">{app?.version}</Heading>
+      <div class="version-content" data-cy={$store.version}>
+        <Heading size="XS">{$store.version}</Heading>
         {#if updateAvailable}
-          <p>
+          <p class="version-status">
             New version <strong>{clientPackage.version}</strong> is available -
             <Link
               on:click={() => {
@@ -123,7 +123,7 @@
             </Link>
           </p>
         {:else}
-          <p>You're running the latest!</p>
+          <p class="version-status">You're running the latest!</p>
         {/if}
       </div>
     </DashCard>
