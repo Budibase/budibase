@@ -144,6 +144,7 @@ Cypress.Commands.add("createTestApp", () => {
   const appName = "Cypress Tests"
   cy.deleteApp(appName)
   cy.createApp(appName, "This app is used for Cypress testing.")
+  cy.createScreen("home")
 })
 
 Cypress.Commands.add("createTestTableWithData", () => {
