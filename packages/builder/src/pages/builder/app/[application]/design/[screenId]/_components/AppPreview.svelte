@@ -1,7 +1,12 @@
 <script>
   import { get } from "svelte/store"
   import { onMount, onDestroy } from "svelte"
-  import { store, selectedScreen, currentAsset } from "builderStore"
+  import {
+    store,
+    selectedScreen,
+    selectedLayout,
+    currentAsset,
+  } from "builderStore"
   import iframeTemplate from "./iframeTemplate"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import {
@@ -40,8 +45,15 @@
   // Extract data to pass to the iframe
   $: {
     screen = $selectedScreen
-    layout = $store.layouts.find(layout => layout._id === screen?.layoutId)
+
+    // If viewing legacy layouts, always show the custom layout
+    if ($isActive("./layouts")) {
+      layout = $selectedLayout
+    } else {
+      layout = $store.layouts.find(layout => layout._id === screen?.layoutId)
+    }
   }
+
   // Don't show selected components unless on the components tab
   $: selectedComponentId = $isActive("./components")
     ? $store.selectedComponentId
@@ -59,7 +71,10 @@
     navigation: $store.navigation,
     isBudibaseEvent: true,
   }
+
+  // Refresh the preview when required
   $: json = JSON.stringify(previewData)
+  $: refreshContent(json)
 
   // Update the iframe with the builder info to render the correct preview
   const refreshContent = message => {
@@ -68,10 +83,7 @@
     }
   }
 
-  // Refresh the preview when required
-  $: refreshContent(json)
-
-  function receiveMessage(message) {
+  const receiveMessage = message => {
     const handlers = {
       [MessageTypes.READY]: () => {
         // Initialise the app when mounted
@@ -96,46 +108,6 @@
     const messageHandler = handlers[message.data.type] || handleBudibaseEvent
     messageHandler(message)
   }
-
-  onMount(() => {
-    window.addEventListener("message", receiveMessage)
-    if (!$store.clientFeatures.messagePassing) {
-      // Legacy - remove in later versions of BB
-      iframe.contentWindow.addEventListener(
-        "ready",
-        () => {
-          receiveMessage({ data: { type: MessageTypes.READY } })
-        },
-        { once: true }
-      )
-      iframe.contentWindow.addEventListener(
-        "error",
-        event => {
-          receiveMessage({
-            data: { type: MessageTypes.ERROR, error: event.detail },
-          })
-        },
-        { once: true }
-      )
-      // Add listener for events sent by client library in preview
-      iframe.contentWindow.addEventListener("bb-event", handleBudibaseEvent)
-    }
-  })
-
-  // Remove all iframe event listeners on component destroy
-  onDestroy(() => {
-    window.removeEventListener("message", receiveMessage)
-
-    if (iframe.contentWindow) {
-      if (!$store.clientFeatures.messagePassing) {
-        // Legacy - remove in later versions of BB
-        iframe.contentWindow.removeEventListener(
-          "bb-event",
-          handleBudibaseEvent
-        )
-      }
-    }
-  })
 
   const handleBudibaseEvent = async event => {
     const { type, data } = event.data || event.detail
@@ -212,6 +184,46 @@
   const cancelDeleteComponent = () => {
     idToDelete = null
   }
+
+  onMount(() => {
+    window.addEventListener("message", receiveMessage)
+    if (!$store.clientFeatures.messagePassing) {
+      // Legacy - remove in later versions of BB
+      iframe.contentWindow.addEventListener(
+        "ready",
+        () => {
+          receiveMessage({ data: { type: MessageTypes.READY } })
+        },
+        { once: true }
+      )
+      iframe.contentWindow.addEventListener(
+        "error",
+        event => {
+          receiveMessage({
+            data: { type: MessageTypes.ERROR, error: event.detail },
+          })
+        },
+        { once: true }
+      )
+      // Add listener for events sent by client library in preview
+      iframe.contentWindow.addEventListener("bb-event", handleBudibaseEvent)
+    }
+  })
+
+  // Remove all iframe event listeners on component destroy
+  onDestroy(() => {
+    window.removeEventListener("message", receiveMessage)
+
+    if (iframe.contentWindow) {
+      if (!$store.clientFeatures.messagePassing) {
+        // Legacy - remove in later versions of BB
+        iframe.contentWindow.removeEventListener(
+          "bb-event",
+          handleBudibaseEvent
+        )
+      }
+    }
+  })
 </script>
 
 <div class="component-container">
