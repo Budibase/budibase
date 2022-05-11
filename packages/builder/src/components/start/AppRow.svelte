@@ -12,6 +12,7 @@
   export let appOverview
   export let releaseLock
   export let editIcon
+  export let copyAppId
 </script>
 
 <div class="title" data-cy={`${app.devId}`}>
@@ -74,6 +75,9 @@
     {#if app.deployed}
       <MenuItem on:click={() => unpublishApp(app)} icon="GlobeRemove">
         Unpublish
+      </MenuItem>
+      <MenuItem on:click={() => copyAppId(app)} icon="Copy">
+        Copy App ID
       </MenuItem>
     {/if}
     {#if !app.deployed}
