@@ -1,5 +1,5 @@
 <script>
-  import SettingsPanel from "components/design/settings/SettingsPanel.svelte"
+  import Panel from "components/design/Panel.svelte"
   import { store, selectedComponent, selectedScreen } from "builderStore"
   import ComponentSettingsSection from "./ComponentSettingsSection.svelte"
   import DesignSection from "./DesignSection.svelte"
@@ -27,7 +27,7 @@
 </script>
 
 {#if $selectedComponent}
-  <SettingsPanel {title} icon={componentDefinition.icon}>
+  <Panel {title} icon={componentDefinition.icon} borderLeft>
     <ComponentSettingsSection
       {componentInstance}
       {componentDefinition}
@@ -42,5 +42,5 @@
       {componentDefinition}
       {bindings}
     />
-  </SettingsPanel>
+  </Panel>
 {/if}

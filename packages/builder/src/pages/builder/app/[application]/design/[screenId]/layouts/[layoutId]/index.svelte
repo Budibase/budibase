@@ -1,5 +1,7 @@
 <script>
-  import LayoutNavigationPanel from "./_components/LayoutNavigationPanel.svelte"
+  import LayoutListPanel from "./_components/LayoutListPanel.svelte"
+  import LayoutSettingsPanel from "./_components/LayoutSettingsPanel.svelte"
 </script>
 
-<LayoutNavigationPanel />
+<LayoutListPanel />
+<LayoutSettingsPanel />

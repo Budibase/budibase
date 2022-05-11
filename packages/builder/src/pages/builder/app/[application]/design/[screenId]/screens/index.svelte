@@ -1,7 +1,7 @@
 <script>
-  import ScreenNavigationPanel from "./_components/ScreenNavigationPanel.svelte"
+  import ScreenListPanel from "./_components/ScreenListPanel.svelte"
   import ScreenSettingsPanel from "./_components/ScreenSettingsPanel.svelte"
 </script>
 
-<ScreenNavigationPanel />
+<ScreenListPanel />
 <ScreenSettingsPanel />

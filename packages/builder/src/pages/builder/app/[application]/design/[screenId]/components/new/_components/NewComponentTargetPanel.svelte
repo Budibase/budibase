@@ -1,5 +1,5 @@
 <script>
-  import SettingsPanel from "components/design/settings/SettingsPanel.svelte"
+  import Panel from "components/design/Panel.svelte"
   import { Body, Layout } from "@budibase/bbui"
   import { selectedComponent, selectedScreen, store } from "builderStore"
 
@@ -11,11 +11,11 @@
   $: position = componentDefinition?.hasChildren ? "inside" : "below"
 </script>
 
-<SettingsPanel {title} icon={componentDefinition?.icon}>
+<Panel {title} icon={componentDefinition?.icon} borderLeft>
   <Layout paddingX="L" paddingY="XL">
     <Body size="S">
       Components that you add will be placed {position}
       {title}
     </Body>
   </Layout>
-</SettingsPanel>
+</Panel>

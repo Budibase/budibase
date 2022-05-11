@@ -29,6 +29,3 @@
     </NavItem>
   {/each}
 </Panel>
-
-<!--      -->
-<!--      color={RoleUtils.getRoleColour(screen.routing.roleId)}-->

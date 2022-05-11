@@ -1,5 +1,5 @@
 <script>
-  import SettingsPanel from "components/design/settings/SettingsPanel.svelte"
+  import Panel from "components/design/Panel.svelte"
 </script>
 
-<
+<Panel title="Layout" borderLeft />

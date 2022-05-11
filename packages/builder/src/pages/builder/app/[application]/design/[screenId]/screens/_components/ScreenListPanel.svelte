@@ -1,6 +1,6 @@
 <script>
   import { Search, Layout, Select, Body } from "@budibase/bbui"
-  import NavigationPanel from "components/design/navigation/NavigationPanel.svelte"
+  import Panel from "components/design/Panel.svelte"
   import { roles } from "stores/backend"
   import { store, sortedScreens } from "builderStore"
   import NavItem from "components/common/NavItem.svelte"
@@ -28,10 +28,11 @@
   }
 </script>
 
-<NavigationPanel
+<Panel
   title="Screens"
   showAddButton
   onClickAddButton={showNewScreenModal}
+  borderRight
 >
   <Layout paddingX="L" paddingY="XL" gap="S">
     <Search
@@ -66,6 +67,6 @@
       </Body>
     </Layout>
   {/if}
-</NavigationPanel>
+</Panel>
 
 <ScreenWizard bind:showModal={showNewScreenModal} />
