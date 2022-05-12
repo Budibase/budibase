@@ -2228,6 +2228,12 @@
       },
       {
         "type": "boolean",
+        "label": "Sort in lexographic order",
+        "key": "sort",
+        "defaultValue": true
+      },
+      {
+        "type": "boolean",
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
