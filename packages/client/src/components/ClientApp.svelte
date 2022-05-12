@@ -156,7 +156,7 @@
 
                   <div id="app-body">
                     <CustomThemeWrapper>
-                      {#key `${$screenStore.activeLayout._id}-${$builderStore.previewType}`}
+                      {#key $screenStore.activeLayout._id}
                         <Component
                           isLayout
                           instance={$screenStore.activeLayout.props}

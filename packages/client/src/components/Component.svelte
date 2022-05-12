@@ -106,9 +106,7 @@
   // Interactive components can be selected, dragged and highlighted inside
   // the builder preview
   $: builderInteractive =
-    $builderStore.inBuilder &&
-    ($builderStore.previewType === "layout" || insideScreenslot) &&
-    !isBlock
+    $builderStore.inBuilder && insideScreenslot && !isBlock
   $: devToolsInteractive = $devToolsStore.allowSelection && !isBlock
   $: interactive = builderInteractive || devToolsInteractive
   $: editing = editable && selected && $builderStore.editMode
@@ -210,7 +208,7 @@
   const getComponentConstructor = component => {
     const split = component?.split("/")
     const name = split?.[split.length - 1]
-    if (name === "screenslot" && $builderStore.previewType !== "layout") {
+    if (name === "screenslot" && !insideScreenslot) {
       return Router
     }
     return AppComponents[name]

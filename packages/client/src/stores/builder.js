@@ -13,7 +13,6 @@ const createBuilderStore = () => {
     selectedComponentId: null,
     editMode: false,
     previewId: null,
-    previewType: null,
     selectedPath: [],
     theme: null,
     customTheme: null,
