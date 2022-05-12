@@ -20,11 +20,11 @@
 
   $: lockedBy = app?.lockedBy
   $: lockedByYou = $auth.user.email === lockedBy?.email
+
   $: lockIdentifer = `${
-    lockedBy && Object.prototype.hasOwnProperty.call(lockedBy, "firstName")
-      ? lockedBy?.firstName
-      : lockedBy?.email
+    lockedBy && lockedBy.firstName ? lockedBy?.firstName : lockedBy?.email
   }`
+
   $: lockedByHeading =
     lockedBy && lockedByYou ? "Locked by you" : `Locked by ${lockIdentifer}`
 
@@ -141,9 +141,6 @@
   .lock-status {
     display: flex;
     gap: var(--spacing-s);
+    max-width: 175px;
   }
-  /* .lock-status :global(.spectrum-Button-label) {
-    font-weight: 200;
-    font-family: var(--font-sans);
-  } */
 </style>
