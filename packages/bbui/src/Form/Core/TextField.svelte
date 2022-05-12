@@ -13,9 +13,17 @@
   export let quiet = false
   export let dataCy
   export let align
+  export let autofocus = false
 
   const dispatch = createEventDispatcher()
+
+  let field
   let focus = false
+
+  $: if (autofocus === true && field) {
+    focus = true
+    field.focus()
+  }
 
   const updateValue = newValue => {
     if (readonly) {
@@ -77,6 +85,7 @@
     </svg>
   {/if}
   <input
+    bind:this={field}
     {disabled}
     {readonly}
     {id}

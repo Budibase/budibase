@@ -22,7 +22,10 @@
   $: validation.check($values)
 
   onMount(async () => {
-    $values.name = resolveAppName(template, $values.name)
+    const defaultName = $auth.user?.firstName
+      ? `${$auth.user.firstName}s app`
+      : "My app"
+    $values.name = resolveAppName(template, defaultName)
     nameToUrl($values.name)
     await setupValidation()
   })
@@ -44,7 +47,7 @@
   }
 
   const resolveAppName = (template, name) => {
-    if (template && !name) {
+    if (template && !template.fromFile) {
       return template.name
     }
     return name ? name.trim() : null
@@ -83,7 +86,7 @@
       }
       data.append("useTemplate", template != null)
       if (template) {
-        data.append("templateName", template.name) //or here?
+        data.append("templateName", template.name)
         data.append("templateKey", template.key)
         data.append("templateFile", $values.file)
       }
@@ -159,6 +162,7 @@
     />
   {/if}
   <Input
+    autofocus={true}
     bind:value={$values.name}
     disabled={creating}
     error={$validation.touched.name && $validation.errors.name}
