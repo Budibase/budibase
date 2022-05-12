@@ -9,7 +9,6 @@
     Modal,
   } from "@budibase/bbui"
   import { store } from "builderStore"
-  import { auth } from "stores/portal"
   import clientPackage from "@budibase/client/package.json"
   import VersionModal from "components/deploy/VersionModal.svelte"
   import UpdateAppModal from "components/start/UpdateAppModal.svelte"
@@ -24,8 +23,6 @@
 
   $: updateAvailable = clientPackage.version !== $store.version
   $: appUrl = `${window.origin}/app${app?.url}`
-  $: lockedBy = app?.lockedBy
-  $: lockedByYou = $auth.user.email === lockedBy?.email
   $: appDeployed = app.status === AppStatus.DEPLOYED
 </script>
 
@@ -84,11 +81,7 @@
               fixes.
             </p>
             <div class="page-action">
-              <Button
-                cta
-                on:click={versionModal.show()}
-                disabled={!updateAvailable}>Update App</Button
-              >
+              <Button cta on:click={versionModal.show()}>Update App</Button>
             </div>
           </Body>
         </Layout>

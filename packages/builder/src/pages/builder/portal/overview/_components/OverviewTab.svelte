@@ -128,43 +128,45 @@
       </div>
     </DashCard>
   </div>
-  <div class="bottom">
-    <DashCard
-      title={"Automation History"}
-      action={() => {
-        navigateTab("Automation History")
-      }}
-      dataCy={"automation-history"}
-    >
-      <div class="automation-content">
-        <div class="automation-metrics">
-          <div class="succeeded">
-            <Heading size="XL">0</Heading>
-            <div class="metric-info">
-              <Icon name="CheckmarkCircle" />
-              Success
+  {#if false}
+    <div class="bottom">
+      <DashCard
+        title={"Automation History"}
+        action={() => {
+          navigateTab("Automation History")
+        }}
+        dataCy={"automation-history"}
+      >
+        <div class="automation-content">
+          <div class="automation-metrics">
+            <div class="succeeded">
+              <Heading size="XL">0</Heading>
+              <div class="metric-info">
+                <Icon name="CheckmarkCircle" />
+                Success
+              </div>
             </div>
-          </div>
-          <div class="failed">
-            <Heading size="XL">0</Heading>
-            <div class="metric-info">
-              <Icon name="Alert" />
-              Error
+            <div class="failed">
+              <Heading size="XL">0</Heading>
+              <div class="metric-info">
+                <Icon name="Alert" />
+                Error
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    </DashCard>
-    <DashCard
-      title={"Backups"}
-      action={() => {
-        navigateTab("Backups")
-      }}
-      dataCy={"backups"}
-    >
-      <div class="backups-content">test</div>
-    </DashCard>
-  </div>
+      </DashCard>
+      <DashCard
+        title={"Backups"}
+        action={() => {
+          navigateTab("Backups")
+        }}
+        dataCy={"backups"}
+      >
+        <div class="backups-content">test</div>
+      </DashCard>
+    </div>
+  {/if}
 </div>
 
 <style>

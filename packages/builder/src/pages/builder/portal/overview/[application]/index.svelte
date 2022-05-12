@@ -209,12 +209,14 @@
             navigateTab={handleTabChange}
           />
         </Tab>
-        <Tab title="Automation History">
-          <div class="container">Automation History contents</div>
-        </Tab>
-        <Tab title="Backups">
-          <div class="container">Backups contents</div>
-        </Tab>
+        {#if false}
+          <Tab title="Automation History">
+            <div class="container">Automation History contents</div>
+          </Tab>
+          <Tab title="Backups">
+            <div class="container">Backups contents</div>
+          </Tab>
+        {/if}
         <Tab title="Settings">
           <SettingsTab app={selectedApp} />
         </Tab>
