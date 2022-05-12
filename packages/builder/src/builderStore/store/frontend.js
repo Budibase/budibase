@@ -9,7 +9,6 @@ import {
   tables,
 } from "stores/backend"
 import { API } from "api"
-import { FrontendTypes } from "constants"
 import analytics, { Events } from "analytics"
 import {
   findComponentType,
