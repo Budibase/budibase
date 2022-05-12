@@ -9,39 +9,95 @@
     Input,
   } from "@budibase/bbui"
   import DateTimeRenderer from "components/common/renderers/DateTimeRenderer.svelte"
+  import StatusRenderer from "components/portal/history/StatusRenderer.svelte"
   import HistoryDetailsPanel from "components/portal/history/HistoryDetailsPanel.svelte"
+  import { automationStore } from "builderStore"
+  import { onMount } from "svelte"
 
   let showPanel = false
   let selectedHistory = null
+  let runHistory = []
 
   const runHistorySchema = {
-    status: "",
-    time: "",
-    app: "",
-    automation: "",
+    status: { displayName: "Status" },
+    timestamp: { displayName: "Time" },
+    appName: { displayName: "App" },
+    name: { displayName: "Automation" },
   }
 
-  const customRenderers = [{ column: "time", component: DateTimeRenderer }]
-
-  let runHistory = [
-    {
-      status: "Error",
-      time: "2022-05-11T16:06:14.438Z",
-      app: "App name",
-      automation: "automation name",
-    },
-    {
-      status: "Success",
-      time: "2022-05-11T16:03:14.438Z",
-      app: "App name",
-      automation: "automation name",
-    },
+  const customRenderers = [
+    { column: "time", component: DateTimeRenderer },
+    { column: "status", component: StatusRenderer },
   ]
+
+  function enrichHistory(definitions, runHistory) {
+    const finalHistory = []
+    for (let history of runHistory) {
+      if (!history.steps) {
+        continue
+      }
+      let notFound = false
+      for (let step of history.steps) {
+        const trigger = definitions.trigger[step.stepId],
+          action = definitions.action[step.stepId]
+        if (!trigger && !action) {
+          notFound = true
+          break
+        }
+        step.icon = trigger ? trigger.icon : action.icon
+        step.name = trigger ? trigger.name : action.name
+      }
+      if (!notFound) {
+        finalHistory.push(history)
+      }
+    }
+    return finalHistory
+  }
 
   function viewDetails({ detail }) {
     selectedHistory = detail
     showPanel = true
   }
+
+  onMount(async () => {
+    let definitions = await automationStore.actions.definitions()
+    runHistory = enrichHistory(definitions, [
+      {
+        status: "Error",
+        timestamp: "2022-05-11T16:06:14.438Z",
+        appName: "App name",
+        name: "automation name",
+        steps: [
+          {
+            stepId: "ROW_SAVED",
+            outputs: {},
+          },
+          {
+            stepId: "SEND_EMAIL_SMTP",
+            inputs: {},
+            outputs: {},
+          },
+        ],
+      },
+      {
+        status: "Success",
+        timestamp: "2022-05-11T16:03:14.438Z",
+        appName: "App name",
+        name: "automation name",
+        steps: [
+          {
+            stepId: "ROW_SAVED",
+            outputs: {},
+          },
+          {
+            stepId: "SEND_EMAIL_SMTP",
+            inputs: {},
+            outputs: {},
+          },
+        ],
+      },
+    ])
+  })
 </script>
 
 <div class="root" class:panelOpen={showPanel}>
@@ -65,15 +121,17 @@
           <Input placeholder="Search" />
         </div>
       </div>
-      <Table
-        on:click={viewDetails}
-        schema={runHistorySchema}
-        allowSelectRows={false}
-        allowEditColumns={false}
-        allowEditRows={false}
-        data={runHistory}
-        {customRenderers}
-      />
+      {#if runHistory}
+        <Table
+          on:click={viewDetails}
+          schema={runHistorySchema}
+          allowSelectRows={false}
+          allowEditColumns={false}
+          allowEditRows={false}
+          data={runHistory}
+          {customRenderers}
+        />
+      {/if}
     </Layout>
   </Page>
   <div class="panel" class:panelShow={showPanel}>
@@ -94,7 +152,7 @@
   }
 
   .panelOpen {
-    grid-template-columns: 1fr 390px;
+    grid-template-columns: 1fr 360px;
   }
 
   .search {

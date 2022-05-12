@@ -20,6 +20,17 @@ export const getAutomationStore = () => {
 }
 
 const automationActions = store => ({
+  definitions: async () => {
+    const response = await API.getAutomationDefinitions()
+    store.update(state => {
+      state.blockDefinitions = {
+        TRIGGER: response.trigger,
+        ACTION: response.action,
+      }
+      return state
+    })
+    return response
+  },
   fetch: async () => {
     const responses = await Promise.all([
       API.getAutomations(),
