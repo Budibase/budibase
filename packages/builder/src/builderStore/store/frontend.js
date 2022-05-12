@@ -191,7 +191,6 @@ export const getFrontendStore = () => {
           if (!screen) return state
 
           state.selectedScreenId = screen._id
-          state.currentView = "detail"
           state.selectedComponentId = screen.props?._id
           return state
         })
@@ -446,7 +445,6 @@ export const getFrontendStore = () => {
         // Save components and update UI
         await store.actions.preview.saveSelected()
         store.update(state => {
-          state.currentView = "component"
           state.selectedComponentId = componentInstance._id
           return state
         })
