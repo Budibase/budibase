@@ -68,7 +68,7 @@
     }
   }
 
-  async function clearSmtp() {
+  async function deleteSmtp() {
     // Delete the SMTP config
     try {
       await API.deleteConfig({
@@ -178,7 +178,13 @@
     </Layout>
     <div class="spectrum-ButtonGroup spectrum-Settings-buttonGroup">
       <Button cta on:click={saveSmtp}>Save</Button>
-      <Button secondary on:click={clearSmtp}>Clear</Button>
+      <Button
+        secondary
+        on:click={deleteSmtp}
+        disabled={!$admin.checklist.smtp.checked}
+      >
+        Reset
+      </Button>
     </div>
     <Divider />
     <Layout gap="XS" noPadding>
