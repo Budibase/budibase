@@ -6,8 +6,8 @@
   onMount(() => {
     if ($store.layouts?.length) {
       $redirect(`./${$store.layouts[0]._id}`)
+    } else {
+      $redirect("../")
     }
   })
 </script>
-
-You don't have any layouts
