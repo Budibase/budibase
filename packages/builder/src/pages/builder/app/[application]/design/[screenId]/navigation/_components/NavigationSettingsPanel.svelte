@@ -30,11 +30,11 @@
 <Panel title="Navigation" borderRight>
   <Layout paddingX="L" paddingY="XL" gap="S">
     <Body size="S">
-      Your navigation is configured for all the screens within your app
+      Your navigation is configured for all the screens within your app.
     </Body>
     <Body size="S">
       You can hide and show your navigation for each screen in the screen
-      settings
+      settings.
     </Body>
     <NavigationLinksEditor />
     <Layout noPadding gap="XS">
