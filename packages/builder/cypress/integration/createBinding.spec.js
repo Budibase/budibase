@@ -24,7 +24,7 @@ filterTests(['smoke', 'all'], () => {
       })
     })
 
-    it("should add a URL param binding", () => {
+    xit("should add a URL param binding", () => {
       const paramName = "foo"
       cy.createScreen(`/test/:${paramName}`)
       cy.addComponent("Elements", "Paragraph").then(componentId => {
