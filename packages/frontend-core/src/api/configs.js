@@ -21,13 +21,13 @@ export const buildConfigEndpoints = API => ({
   },
 
   /**
-   * Deletes a global config 
+   * Deletes a global config
    * @param id the id of the config to delete
    * @param rev the revision of the config to delete
    */
   deleteConfig: async ({ id, rev }) => {
     return await API.delete({
-      url: `/api/global/configs/${id}/${rev}`
+      url: `/api/global/configs/${id}/${rev}`,
     })
   },
 
