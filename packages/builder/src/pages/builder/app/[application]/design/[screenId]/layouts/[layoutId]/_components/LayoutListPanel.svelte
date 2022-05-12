@@ -14,7 +14,7 @@
       extraButtonText="View details"
       extraButtonAction={() => {}}
     >
-      Custom layouts are being deprecated. They will be removed from June 1st.
+      Custom layouts are being deprecated. They will be removed on [date].
     </Banner>
   </Layout>
   {#each $store.layouts as layout (layout._id)}
