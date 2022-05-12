@@ -61,7 +61,6 @@ export default `
           selectedComponentId,
           layout,
           screen,
-          previewType,
           appId,
           theme,
           customTheme,
@@ -76,7 +75,6 @@ export default `
         window["##BUDIBASE_PREVIEW_SCREEN##"] = screen
         window["##BUDIBASE_SELECTED_COMPONENT_ID##"] = selectedComponentId
         window["##BUDIBASE_PREVIEW_ID##"] = Math.random()
-        window["##BUDIBASE_PREVIEW_TYPE##"] = previewType
         window["##BUDIBASE_PREVIEW_THEME##"] = theme
         window["##BUDIBASE_PREVIEW_CUSTOM_THEME##"] = customTheme
         window["##BUDIBASE_PREVIEW_DEVICE##"] = previewDevice

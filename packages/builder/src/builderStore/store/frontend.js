@@ -42,7 +42,6 @@ const INITIAL_FRONTEND_STATE = {
     messagePassing: false,
     continueIfAction: false,
   },
-  currentFrontEndType: "none",
   errors: [],
   hasAppPackage: false,
   libraries: null,
@@ -191,7 +190,6 @@ export const getFrontendStore = () => {
             screens.find(screen => screen._id === screenId) || screens[0]
           if (!screen) return state
 
-          state.currentFrontEndType = FrontendTypes.SCREEN
           state.selectedScreenId = screen._id
           state.currentView = "detail"
           state.selectedComponentId = screen.props?._id
@@ -287,13 +285,8 @@ export const getFrontendStore = () => {
     },
     preview: {
       saveSelected: async () => {
-        const state = get(store)
         const selectedAsset = get(currentAsset)
-        if (state.currentFrontEndType !== FrontendTypes.LAYOUT) {
-          return await store.actions.screens.save(selectedAsset)
-        } else {
-          return await store.actions.layouts.save(selectedAsset)
-        }
+        return await store.actions.screens.save(selectedAsset)
       },
       setDevice: device => {
         store.update(state => {
@@ -308,8 +301,6 @@ export const getFrontendStore = () => {
           const layout =
             store.actions.layouts.find(layoutId) || get(store).layouts[0]
           if (!layout) return
-          state.currentFrontEndType = FrontendTypes.LAYOUT
-          state.currentView = "detail"
           state.selectedLayoutId = layout._id
           state.selectedComponentId = layout.props?._id
           return state

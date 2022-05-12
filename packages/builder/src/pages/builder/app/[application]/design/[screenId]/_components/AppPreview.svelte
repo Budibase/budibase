@@ -19,6 +19,7 @@
   import ErrorSVG from "@budibase/frontend-core/assets/error.svg?raw"
   import { findComponent, findComponentPath } from "builderStore/componentUtils"
   import { isActive, goto } from "@roxi/routify"
+  import { Screen } from "builderStore/store/screenTemplates/utils/Screen"
 
   let iframe
   let layout
@@ -42,14 +43,22 @@
     $store.clientLibPath
   )
 
+  const placeholderScreen = new Screen()
+    .name("Screen Placeholder")
+    .route("/")
+    .component("@budibase/standard-components/screenslot")
+    .instanceName("Content Placeholder")
+    .normalStyle({ flex: "1 1 auto" })
+    .json()
+
   // Extract data to pass to the iframe
   $: {
-    screen = $selectedScreen
-
     // If viewing legacy layouts, always show the custom layout
     if ($isActive("./layouts")) {
+      screen = placeholderScreen
       layout = $selectedLayout
     } else {
+      screen = $selectedScreen
       layout = $store.layouts.find(layout => layout._id === screen?.layoutId)
     }
   }
@@ -63,7 +72,6 @@
     layout,
     screen,
     selectedComponentId,
-    previewType: $store.currentFrontEndType,
     theme: $store.theme,
     customTheme: $store.customTheme,
     previewDevice: $store.previewDevice,
