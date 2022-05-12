@@ -71,4 +71,9 @@
   .dev-preview-header :global(.spectrum-Picker-label) {
     color: white !important;
   }
+  @media print {
+    .dev-preview-header {
+      display: none;
+    }
+  }
 </style>

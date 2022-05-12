@@ -283,7 +283,8 @@
   @media print {
     #spectrum-root,
     #clip-root,
-    #app-root {
+    #app-root,
+    #app-body {
       overflow: visible !important;
     }
   }
