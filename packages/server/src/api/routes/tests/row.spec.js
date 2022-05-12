@@ -3,6 +3,7 @@ const setup = require("./utilities")
 const { basicRow } = setup.structures
 const { doInAppContext } = require("@budibase/backend-core/context")
 const { doInTenant } = require("@budibase/backend-core/tenancy")
+const { quotas, QuotaUsageType, StaticQuotaName, MonthlyQuotaName } = require("@budibase/pro")
 
 // mock the fetch for the search system
 jest.mock("node-fetch")
@@ -28,9 +29,29 @@ describe("/rows", () => {
       .expect('Content-Type', /json/)
       .expect(status)
 
+  const getRowUsage = async () => {
+    return config.doInContext(null, () => quotas.getCurrentUsageValue(QuotaUsageType.STATIC, StaticQuotaName.ROWS))
+  }
+
+  const getQueryUsage = async () => {
+    return config.doInContext(null, () => quotas.getCurrentUsageValue(QuotaUsageType.MONTHLY, MonthlyQuotaName.QUERIES))
+  }
+
+  const assertRowUsage = async (expected) => {
+    const usage = await getRowUsage()
+    expect(usage).toBe(expected)
+  }
+
+  const assertQueryUsage = async (expected) => {
+    const usage = await getQueryUsage()
+    expect(usage).toBe(expected)
+  }
 
   describe("save, load, update", () => {
     it("returns a success message when the row is created", async () => {
+      const rowUsage = await getRowUsage()
+      const queryUsage = await getQueryUsage()
+
       const res = await request
         .post(`/api/${row.tableId}/rows`)
         .send(row)
@@ -40,10 +61,14 @@ describe("/rows", () => {
       expect(res.res.statusMessage).toEqual(`${table.name} saved successfully`)
       expect(res.body.name).toEqual("Test Contact")
       expect(res.body._rev).toBeDefined()
+      await assertRowUsage(rowUsage + 1)
+      await assertQueryUsage(queryUsage + 1)
     })
 
     it("updates a row successfully", async () => {
       const existing = await config.createRow()
+      const rowUsage = await getRowUsage()
+      const queryUsage = await getQueryUsage()
 
       const res = await request
         .post(`/api/${table._id}/rows`)
@@ -59,10 +84,13 @@ describe("/rows", () => {
       
       expect(res.res.statusMessage).toEqual(`${table.name} updated successfully.`)
       expect(res.body.name).toEqual("Updated Name")
+      await assertRowUsage(rowUsage)
+      await assertQueryUsage(queryUsage + 1)
     })
 
     it("should load a row", async () => {
       const existing = await config.createRow()
+      const queryUsage = await getQueryUsage()
 
       const res = await request
         .get(`/api/${table._id}/rows/${existing._id}`)
@@ -76,6 +104,7 @@ describe("/rows", () => {
         _rev: existing._rev,
         type: "row",
       })
+      await assertQueryUsage(queryUsage + 1)
     })
 
     it("should list all rows for given tableId", async () => {
@@ -86,6 +115,7 @@ describe("/rows", () => {
       }
       await config.createRow()
       await config.createRow(newRow)
+      const queryUsage = await getQueryUsage()
 
       const res = await request
         .get(`/api/${table._id}/rows`)
@@ -96,15 +126,19 @@ describe("/rows", () => {
       expect(res.body.length).toBe(2)
       expect(res.body.find(r => r.name === newRow.name)).toBeDefined()
       expect(res.body.find(r => r.name === row.name)).toBeDefined()
+      await assertQueryUsage(queryUsage + 1)
     })
 
     it("load should return 404 when row does not exist", async () => {
       await config.createRow()
+      const queryUsage = await getQueryUsage()
+
       await request
         .get(`/api/${table._id}/rows/not-a-valid-id`)
         .set(config.defaultHeaders())
         .expect('Content-Type', /json/)
         .expect(404)
+      await assertQueryUsage(queryUsage) // no change
     })
 
     it("row values are coerced", async () => {
@@ -202,6 +236,9 @@ describe("/rows", () => {
     it("should update only the fields that are supplied", async () => {
       const existing = await config.createRow()
 
+      const rowUsage = await getRowUsage()
+      const queryUsage = await getQueryUsage()
+
       const res = await request
         .patch(`/api/${table._id}/rows`)
         .send({
@@ -222,10 +259,15 @@ describe("/rows", () => {
 
       expect(savedRow.body.description).toEqual(existing.description)
       expect(savedRow.body.name).toEqual("Updated Name")
+      await assertRowUsage(rowUsage)
+      await assertQueryUsage(queryUsage + 2) // account for the second load
     })
 
     it("should throw an error when given improper types", async () => {
       const existing = await config.createRow()
+      const rowUsage = await getRowUsage()
+      const queryUsage = await getQueryUsage()
+
       await request
         .patch(`/api/${table._id}/rows`)
         .send({
@@ -236,12 +278,18 @@ describe("/rows", () => {
         })
         .set(config.defaultHeaders())
         .expect(400)
+
+      await assertRowUsage(rowUsage)
+      await assertQueryUsage(queryUsage)
     })
   })
 
   describe("destroy", () => {
     it("should be able to delete a row", async () => {
       const createdRow = await config.createRow(row)
+      const rowUsage = await getRowUsage()
+      const queryUsage = await getQueryUsage()
+
       const res = await request
         .delete(`/api/${table._id}/rows`)
         .send({
@@ -253,11 +301,16 @@ describe("/rows", () => {
         .expect('Content-Type', /json/)
         .expect(200)
       expect(res.body[0]._id).toEqual(createdRow._id)
+      await assertRowUsage(rowUsage -1)
+      await assertQueryUsage(queryUsage +1)
     })
   })
 
   describe("validate", () => {
     it("should return no errors on valid row", async () => {
+      const rowUsage = await getRowUsage()
+      const queryUsage = await getQueryUsage()
+
       const res = await request
         .post(`/api/${table._id}/rows/validate`)
         .send({ name: "ivan" })
@@ -267,9 +320,14 @@ describe("/rows", () => {
       
       expect(res.body.valid).toBe(true)
       expect(Object.keys(res.body.errors)).toEqual([])
+      await assertRowUsage(rowUsage)
+      await assertQueryUsage(queryUsage)
     })
 
     it("should errors on invalid row", async () => {
+      const rowUsage = await getRowUsage()
+      const queryUsage = await getQueryUsage()
+
       const res = await request
         .post(`/api/${table._id}/rows/validate`)
         .send({ name: 1 })
@@ -279,7 +337,8 @@ describe("/rows", () => {
       
       expect(res.body.valid).toBe(false)
       expect(Object.keys(res.body.errors)).toEqual(["name"])
-
+      await assertRowUsage(rowUsage)
+      await assertQueryUsage(queryUsage)
     })
   })
 
@@ -287,6 +346,9 @@ describe("/rows", () => {
     it("should be able to delete a bulk set of rows", async () => {
       const row1 = await config.createRow()
       const row2 = await config.createRow()
+      const rowUsage = await getRowUsage()
+      const queryUsage = await getQueryUsage()
+
       const res = await request
         .delete(`/api/${table._id}/rows`)
         .send({
@@ -298,14 +360,20 @@ describe("/rows", () => {
         .set(config.defaultHeaders())
         .expect('Content-Type', /json/)
         .expect(200)
+
       expect(res.body.length).toEqual(2)
       await loadRow(row1._id, 404)
+      await assertRowUsage(rowUsage - 2)
+      await assertQueryUsage(queryUsage +1)
     })
   })
 
   describe("fetchView", () => {
     it("should be able to fetch tables contents via 'view'", async () => {
       const row = await config.createRow()
+      const rowUsage = await getRowUsage()
+      const queryUsage = await getQueryUsage()
+
       const res = await request
         .get(`/api/views/${table._id}`)
         .set(config.defaultHeaders())
@@ -313,18 +381,29 @@ describe("/rows", () => {
         .expect(200)
       expect(res.body.length).toEqual(1)
       expect(res.body[0]._id).toEqual(row._id)
+      await assertRowUsage(rowUsage)
+      await assertQueryUsage(queryUsage +1)
     })
 
     it("should throw an error if view doesn't exist", async () => {
+      const rowUsage = await getRowUsage()
+      const queryUsage = await getQueryUsage()
+
       await request
         .get(`/api/views/derp`)
         .set(config.defaultHeaders())
         .expect(404)
+
+      await assertRowUsage(rowUsage)
+      await assertQueryUsage(queryUsage)
     })
 
     it("should be able to run on a view", async () => {
       const view = await config.createView()
       const row = await config.createRow()
+      const rowUsage = await getRowUsage()
+      const queryUsage = await getQueryUsage()
+
       const res = await request
         .get(`/api/views/${view.name}`)
         .set(config.defaultHeaders())
@@ -332,11 +411,10 @@ describe("/rows", () => {
         .expect(200)
       expect(res.body.length).toEqual(1)
       expect(res.body[0]._id).toEqual(row._id)
+
+      await assertRowUsage(rowUsage)
+      await assertQueryUsage(queryUsage + 1)
     })
-  })
-
-  describe("user testing", () => {
-
   })
 
   describe("fetchEnrichedRows", () => {
@@ -356,6 +434,8 @@ describe("/rows", () => {
         })
         return { table, firstRow, secondRow }
       })
+      const rowUsage = await getRowUsage()
+      const queryUsage = await getQueryUsage()
 
       // test basic enrichment
       const resBasic = await request
@@ -376,6 +456,8 @@ describe("/rows", () => {
       expect(resEnriched.body.link[0]._id).toBe(firstRow._id)
       expect(resEnriched.body.link[0].name).toBe("Test Contact")
       expect(resEnriched.body.link[0].description).toBe("original description")
+      await assertRowUsage(rowUsage)
+      await assertQueryUsage(queryUsage +2)
     })
   })
 
