@@ -6,6 +6,8 @@
   export let app
   export let user
 
+  let devAccess = user?.admin?.global || user?.builder?.global
+
   const NO_ACCESS = "NO_ACCESS"
 
   const dispatch = createEventDispatcher()
@@ -14,7 +16,10 @@
   let options = roles
     .filter(role => role._id !== "PUBLIC")
     .map(role => ({ value: role._id, label: role.name }))
-  options.push({ value: NO_ACCESS, label: "No Access" })
+
+  if (!devAccess) {
+    options.push({ value: NO_ACCESS, label: "No Access" })
+  }
   let selectedRole = user?.roles?.[app?._id]
 
   async function updateUserRoles() {
