@@ -276,7 +276,7 @@ const performAppCreate = async (ctx: any) => {
       navigation: "Top",
       title: name,
       navWidth: "Large",
-      navBackground: "var(--spectrum-global-color-gray-50)",
+      navBackground: "var(--spectrum-global-color-gray-100)",
       links: [
         {
           url: "/home",

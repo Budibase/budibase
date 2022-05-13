@@ -1,7 +1,7 @@
 <script>
   import Panel from "components/design/Panel.svelte"
   import { store, selectedLayout } from "builderStore"
-  import { Layout, Body, Button, notifications } from "@budibase/bbui"
+  import { Layout, Body, Button, Banner, notifications } from "@budibase/bbui"
   import { Component } from "builderStore/store/screenTemplates/utils/Component"
 
   const copyLayout = () => {
@@ -37,6 +37,14 @@
 
 <Panel title={$selectedLayout?.name} icon="Experience" borderLeft>
   <Layout paddingX="L" paddingY="XL" gap="S">
+    <Banner
+      type="warning"
+      showCloseButton={false}
+      extraButtonText="View details"
+      extraButtonAction={() => {}}
+    >
+      Custom layouts are being deprecated. They will be removed on [date].
+    </Banner>
     <Body size="S">
       You can save the content of this layout by pressing the button below.
     </Body>
