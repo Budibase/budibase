@@ -70,11 +70,11 @@
   <div class="nav-items-container" bind:this={scrollRef}>
     <NavItem
       text="Screen"
-      withArrow
       indentLevel={0}
       selected={$store.selectedComponentId === $selectedScreen?.props._id}
       opened
       scrollable
+      icon="WebPage"
       on:click={() => {
         $store.selectedComponentId = $selectedScreen?.props._id
       }}
