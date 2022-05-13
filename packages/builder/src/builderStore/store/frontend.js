@@ -1,6 +1,12 @@
 import { get, writable } from "svelte/store"
 import { cloneDeep } from "lodash/fp"
-import { currentAsset, mainLayout, selectedComponent } from "builderStore"
+import {
+  currentAsset,
+  mainLayout,
+  selectedComponent,
+  selectedScreen,
+  store,
+} from "builderStore"
 import {
   datasources,
   integrations,
@@ -279,6 +285,18 @@ export const getFrontendStore = () => {
         screen.routing.homeScreen = makeHomeScreen
         promises.push(store.actions.screens.save(screen))
         return await Promise.all(promises)
+      },
+      removeCustomLayout: async screen => {
+        // Pull relevant settings from old layout, if required
+        const layout = get(store).layouts.find(x => x._id === screen.layoutId)
+        screen.layoutId = null
+        if (screen.showNavigation == null) {
+          screen.showNavigation = layout?.props.navigation !== "None"
+        }
+        if (screen.width == null) {
+          screen.width = layout?.props.width || "Large"
+        }
+        await store.actions.screens.save(screen)
       },
     },
     preview: {
