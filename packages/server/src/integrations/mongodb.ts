@@ -222,13 +222,14 @@ module MongoDBModule {
         await this.connect()
         const db = this.client.db(this.config.db)
         const collection = db.collection(query.extra.collection)
+        let json = this.createObjectIds(query.json)
 
         switch (query.extra.actionTypes) {
           case "deleteOne": {
-            return await collection.deleteOne(query.json)
+            return await collection.deleteOne(json)
           }
           case "deleteMany": {
-            return await collection.deleteMany(query.json).toArray()
+            return await collection.deleteMany(json)
           }
           default: {
             throw new Error(
