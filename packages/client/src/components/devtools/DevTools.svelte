@@ -66,4 +66,9 @@
   .tab-content {
     padding: 0 var(--spacing-xl);
   }
+  @media print {
+    .devtools {
+      display: none;
+    }
+  }
 </style>
