@@ -51,6 +51,16 @@
     return capitalise(type)
   }
 
+  const getComponentIcon = component => {
+    const def = store.actions.components.getDefinition(component?._component)
+    return def?.icon
+  }
+
+  const componentHasChildren = component => {
+    const def = store.actions.components.getDefinition(component?._component)
+    return def?.hasChildren && component._children?.length
+  }
+
   function toggleNodeOpen(componentId) {
     if (closedNodes[componentId]) {
       delete closedNodes[componentId]
@@ -105,7 +115,8 @@
         on:iconClick={() => toggleNodeOpen(component._id)}
         on:drop={onDrop}
         text={getComponentText(component)}
-        withArrow
+        icon={getComponentIcon(component)}
+        withArrow={componentHasChildren(component)}
         indentLevel={level + 1}
         selected={$store.selectedComponentId === component._id}
         opened={isOpen(component, $selectedComponentPath, closedNodes)}
@@ -142,6 +153,13 @@
     list-style: none;
     padding-left: 0;
     margin: 0;
+  }
+  ul :global(.icon.arrow) {
+    transition: opacity 130ms ease-out;
+    opacity: 0;
+  }
+  ul:hover :global(.icon.arrow) {
+    opacity: 1;
   }
   ul,
   li {

@@ -46,7 +46,7 @@
   class:border
   class:selected
   class:withActions
-  style={`padding-left: calc(var(--spacing-l) + ${indentLevel * 14}px)`}
+  style={`padding-left: calc(${indentLevel * 14}px)`}
   {draggable}
   on:dragend
   on:dragstart
@@ -59,7 +59,13 @@
 >
   <div class="nav-item-content" bind:this={contentRef}>
     {#if withArrow}
-      <div class:opened class="icon arrow" on:click={onIconClick}>
+      <div
+        class:opened
+        class:relative={indentLevel === 0}
+        class:absolute={indentLevel > 0}
+        class="icon arrow"
+        on:click={onIconClick}
+      >
         <Icon size="S" name="ChevronRight" />
       </div>
     {/if}
@@ -126,25 +132,40 @@
     width: max-content;
     overflow: hidden;
     position: relative;
+    padding-left: var(--spacing-l);
   }
 
   .icon {
     font-size: 16px;
-    flex: 0 0 20px;
+    flex: 0 0 24px;
     display: flex;
     flex-direction: row;
     justify-content: center;
     align-items: center;
+    color: var(--spectrum-global-color-gray-600);
   }
   .icon.arrow {
-    margin: 0 -2px 0 -6px;
-    font-size: 12px;
+    flex: 0 0 20px;
+  }
+  .icon.arrow.absolute {
+    position: absolute;
+    left: 0;
+    padding: 8px;
+    margin-left: -8px;
+  }
+  .icon.arrow :global(svg) {
+    width: 12px;
+    height: 12px;
+  }
+  .icon.arrow.relative {
+    position: relative;
+    margin: 0 -6px 0 -4px;
   }
   .icon.arrow.opened {
     transform: rotate(90deg);
   }
   .icon + .icon {
-    margin-left: -4px;
+    /*margin-left: -4px;*/
   }
   .iconText {
     margin-top: 1px;
@@ -154,11 +175,12 @@
 
   .text {
     font-weight: 600;
-    font-size: var(--spectrum-global-dimension-font-size-75);
+    font-size: 12px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     flex: 1 1 auto;
+    color: var(--spectrum-global-color-gray-800);
   }
   .scrollable .text {
     flex: 0 0 auto;
