@@ -292,12 +292,6 @@ const performAppCreate = async (ctx: any) => {
   const response = await db.put(newApplication, { force: true })
   newApplication._rev = response.rev
 
-  // Only create the default home screens and layout if we aren't importing
-  // an app
-  if (useTemplate !== "true") {
-    await createEmptyAppPackage(ctx, newApplication)
-  }
-
   /* istanbul ignore next */
   if (!env.isTest()) {
     await createApp(appId)
@@ -523,16 +517,4 @@ const updateAppPackage = async (appPackage: any, appId: any) => {
   // remove any cached metadata, so that it will be updated
   await appCache.invalidateAppMetadata(appId)
   return response
-}
-
-const createEmptyAppPackage = async (ctx: any, app: any) => {
-  const db = getAppDB()
-
-  let screensAndLayouts = []
-  for (let layout of BASE_LAYOUTS) {
-    const cloned = cloneDeep(layout)
-    screensAndLayouts.push(await processObject(cloned, app))
-  }
-
-  await db.bulkDocs(screensAndLayouts)
 }
