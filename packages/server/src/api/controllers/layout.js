@@ -1,7 +1,4 @@
-const {
-  EMPTY_LAYOUT,
-  BASE_LAYOUT_PROP_IDS,
-} = require("../../constants/layouts")
+const { EMPTY_LAYOUT } = require("../../constants/layouts")
 const { generateLayoutID, getScreenParams } = require("../../db/utils")
 const { getAppDB } = require("@budibase/backend-core/context")
 
