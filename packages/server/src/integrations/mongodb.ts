@@ -6,7 +6,7 @@ import {
 import { IntegrationBase } from "./base/IntegrationBase"
 
 module MongoDBModule {
-  const { MongoClient } = require("mongodb")
+  const { MongoClient, ObjectID } = require("mongodb")
 
   interface MongoDBConfig {
     connectionString: string
@@ -76,20 +76,41 @@ module MongoDBModule {
       return this.client.connect()
     }
 
+    createObjectIds(json: any): object {
+      function replaceObjectIds(json: any) {
+        for (let field of Object.keys(json)) {
+          if (field === "_id" && json["_id"].includes("ObjectId")) {
+            const id = json["_id"].match(/(?<=objectid\(['"]).*(?=['"]\))/gi)[0]
+            json["_id"] = new ObjectID.createFromHexString(id)
+          }
+        }
+        return json
+      }
+
+      if (Array.isArray(json)) {
+        for (let i = 0; i < json.length; i++) {
+          json[i] = replaceObjectIds(json[i])
+        }
+        return json
+      }
+      return replaceObjectIds(json)
+    }
+
     async create(query: { json: object; extra: { [key: string]: string } }) {
       try {
         await this.connect()
         const db = this.client.db(this.config.db)
         const collection = db.collection(query.extra.collection)
+        let json = this.createObjectIds(query.json)
 
         // For mongodb we add an extra actionType to specify
         // which method we want to call on the collection
         switch (query.extra.actionTypes) {
           case "insertOne": {
-            return await collection.insertOne(query.json)
+            return await collection.insertOne(json)
           }
           case "insertMany": {
-            return await collection.insertOne(query.json).toArray()
+            return await collection.insertMany(json)
           }
           default: {
             throw new Error(
@@ -110,22 +131,23 @@ module MongoDBModule {
         await this.connect()
         const db = this.client.db(this.config.db)
         const collection = db.collection(query.extra.collection)
+        let json = this.createObjectIds(query.json)
 
         switch (query.extra.actionTypes) {
           case "find": {
-            return await collection.find(query.json).toArray()
+            return await collection.find(json).toArray()
           }
           case "findOne": {
-            return await collection.findOne(query.json)
+            return await collection.findOne(json)
           }
           case "findOneAndUpdate": {
-            return await collection.findOneAndUpdate(query.json)
+            return await collection.findOneAndUpdate(json)
           }
           case "count": {
-            return await collection.countDocuments(query.json)
+            return await collection.countDocuments(json)
           }
           case "distinct": {
-            return await collection.distinct(query.json)
+            return await collection.distinct(json)
           }
           default: {
             throw new Error(
