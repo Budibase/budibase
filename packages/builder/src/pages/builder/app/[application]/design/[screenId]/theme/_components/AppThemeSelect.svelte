@@ -16,13 +16,6 @@
     try {
       const theme = ThemeOptions[e.detail] ?? ThemeOptions[2]
       await store.actions.theme.save(theme)
-      await store.actions.navigation.save({
-        ...get(store).navigation,
-        navBackground:
-          theme === "spectrum--light"
-            ? "var(--spectrum-global-color-gray-50)"
-            : "var(--spectrum-global-color-gray-100)",
-      })
     } catch (error) {
       notifications.error("Error updating theme")
     }
