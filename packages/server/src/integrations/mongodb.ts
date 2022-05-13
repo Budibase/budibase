@@ -91,7 +91,9 @@ module MongoDBModule {
             json[field] = self.createObjectIds(json[field])
           }
           if (field === "_id") {
-            const id = json["_id"].match(/(?<=objectid\(['"]).*(?=['"]\))/gi)[0]
+            const id = json["_id"].match(
+              /(?<=objectid\(['"]).*(?=['"]\))/gi
+            )?.[0]
             if (id) {
               json["_id"] = new ObjectID.createFromHexString(id)
             }
