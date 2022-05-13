@@ -85,12 +85,12 @@ module MongoDBModule {
 
     createObjectIds(json: any): object {
       const self = this
-      function replaceObjectIds(json: any) {
+      function interpolateObjectIds(json: any) {
         for (let field of Object.keys(json)) {
           if (json[field] instanceof Object) {
             json[field] = self.createObjectIds(json[field])
           }
-          if (field === "_id") {
+          if (field === "_id" && typeof json[field] === "string") {
             const id = json["_id"].match(
               /(?<=objectid\(['"]).*(?=['"]\))/gi
             )?.[0]
@@ -104,11 +104,11 @@ module MongoDBModule {
 
       if (Array.isArray(json)) {
         for (let i = 0; i < json.length; i++) {
-          json[i] = replaceObjectIds(json[i])
+          json[i] = interpolateObjectIds(json[i])
         }
         return json
       }
-      return replaceObjectIds(json)
+      return interpolateObjectIds(json)
     }
 
     async create(query: { json: object; extra: { [key: string]: string } }) {
