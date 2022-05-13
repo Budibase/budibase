@@ -135,8 +135,12 @@
     padding-left: var(--spacing-l);
   }
 
+  /* Needed to fully display the actions icon */
+  .nav-item.scrollable .nav-item-content {
+    padding-right: 1px;
+  }
+
   .icon {
-    font-size: 16px;
     flex: 0 0 24px;
     display: flex;
     flex-direction: row;
@@ -163,9 +167,6 @@
   }
   .icon.arrow.opened {
     transform: rotate(90deg);
-  }
-  .icon + .icon {
-    /*margin-left: -4px;*/
   }
   .iconText {
     margin-top: 1px;
