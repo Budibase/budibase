@@ -48,9 +48,6 @@
 
 <Panel title="Theme" borderRight>
   <Layout paddingX="L" paddingY="XL" gap="S">
-    <Body size="S">
-      Your theme is set across all the screens within your app.
-    </Body>
     <Layout noPadding gap="XS">
       <Label>Theme</Label>
       <AppThemeSelect />
