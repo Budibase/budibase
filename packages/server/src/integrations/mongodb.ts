@@ -1,3 +1,4 @@
+import { Object } from "aws-sdk/clients/customerprofiles"
 import {
   Integration,
   DatasourceFieldTypes,
@@ -11,6 +12,12 @@ module MongoDBModule {
   interface MongoDBConfig {
     connectionString: string
     db: string
+  }
+
+  interface UpdateDoc {
+    filter: object
+    update: object
+    options: Object
   }
 
   const SCHEMA: Integration = {
@@ -77,11 +84,17 @@ module MongoDBModule {
     }
 
     createObjectIds(json: any): object {
+      const self = this
       function replaceObjectIds(json: any) {
         for (let field of Object.keys(json)) {
-          if (field === "_id" && json["_id"].includes("ObjectId")) {
+          if (json[field] instanceof Object) {
+            json[field] = self.createObjectIds(json[field])
+          }
+          if (field === "_id") {
             const id = json["_id"].match(/(?<=objectid\(['"]).*(?=['"]\))/gi)[0]
-            json["_id"] = new ObjectID.createFromHexString(id)
+            if (id) {
+              json["_id"] = new ObjectID.createFromHexString(id)
+            }
           }
         }
         return json
@@ -141,7 +154,12 @@ module MongoDBModule {
             return await collection.findOne(json)
           }
           case "findOneAndUpdate": {
-            return await collection.findOneAndUpdate(json)
+            let findAndUpdateJson = json as UpdateDoc
+            return await collection.findOneAndUpdate(
+              findAndUpdateJson.filter,
+              findAndUpdateJson.update,
+              findAndUpdateJson.options
+            )
           }
           case "count": {
             return await collection.countDocuments(json)
@@ -163,18 +181,27 @@ module MongoDBModule {
       }
     }
 
-    async update(query: { json: object; extra: { [key: string]: string } }) {
+    async update(query: { json: UpdateDoc; extra: { [key: string]: string } }) {
       try {
         await this.connect()
         const db = this.client.db(this.config.db)
         const collection = db.collection(query.extra.collection)
+        let json = this.createObjectIds(query.json) as UpdateDoc
 
         switch (query.extra.actionTypes) {
           case "updateOne": {
-            return await collection.updateOne(query.json)
+            return await collection.updateOne(
+              json.filter,
+              json.update,
+              json.options
+            )
           }
           case "updateMany": {
-            return await collection.updateMany(query.json).toArray()
+            return await collection.updateMany(
+              json.filter,
+              json.update,
+              json.options
+            )
           }
           default: {
             throw new Error(
