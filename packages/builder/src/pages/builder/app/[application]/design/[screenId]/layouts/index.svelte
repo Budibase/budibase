@@ -6,8 +6,7 @@
   onMount(() => {
     if ($store.layouts?.length) {
       $redirect(`./${$store.layouts[0]._id}`)
-    } else {
-      $redirect("../")
     }
+    // The redirection when no layouts exist is handled by the routify layout
   })
 </script>

@@ -13,7 +13,7 @@
       await store.actions.layouts.delete(layout)
       notifications.success("Layout deleted successfully")
     } catch (err) {
-      notifications.error("Error deleting layout")
+      notifications.error(err?.message || "Error deleting layout")
     }
   }
 </script>

@@ -30,19 +30,15 @@ exports.destroy = async function (ctx) {
   const layoutId = ctx.params.layoutId,
     layoutRev = ctx.params.layoutRev
 
-  if (Object.values(BASE_LAYOUT_PROP_IDS).includes(layoutId)) {
-    ctx.throw(400, "Cannot delete a built-in layout")
-  } else {
-    const layoutsUsedByScreens = (
-      await db.allDocs(
-        getScreenParams(null, {
-          include_docs: true,
-        })
-      )
-    ).rows.map(element => element.doc.layoutId)
-    if (layoutsUsedByScreens.includes(layoutId)) {
-      ctx.throw(400, "Cannot delete a layout that's being used by a screen")
-    }
+  const layoutsUsedByScreens = (
+    await db.allDocs(
+      getScreenParams(null, {
+        include_docs: true,
+      })
+    )
+  ).rows.map(element => element.doc.layoutId)
+  if (layoutsUsedByScreens.includes(layoutId)) {
+    ctx.throw(400, "Cannot delete a layout that's being used by a screen")
   }
 
   await db.remove(layoutId, layoutRev)

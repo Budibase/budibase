@@ -47,12 +47,14 @@
         active={$isActive("./navigation")}
         on:click={() => $goto("./navigation")}
       />
-      <IconSideNavItem
-        icon="Experience"
-        tooltip="Layouts"
-        active={$isActive("./layouts")}
-        on:click={() => $goto("./layouts")}
-      />
+      {#if $store.layouts?.length}
+        <IconSideNavItem
+          icon="Experience"
+          tooltip="Layouts"
+          active={$isActive("./layouts")}
+          on:click={() => $goto("./layouts")}
+        />
+      {/if}
     </IconSideNav>
   </div>
 
