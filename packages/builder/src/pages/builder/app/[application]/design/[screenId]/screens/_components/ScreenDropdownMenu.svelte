@@ -21,6 +21,15 @@
   let screenDetailsModal
 
   $: screen = $store.screens.find(screen => screen._id === screenId)
+  $: noPaste = !$store.componentToPaste
+
+  const pasteComponent = mode => {
+    try {
+      store.actions.components.paste(screen.props, mode)
+    } catch (error) {
+      notifications.error("Error saving component")
+    }
+  }
 
   const duplicateScreen = () => {
     screenDetailsModal.show()
@@ -69,6 +78,13 @@
   <div slot="control" class="icon">
     <Icon size="S" hoverable name="MoreSmallList" />
   </div>
+  <MenuItem
+    icon="ShowOneLayer"
+    on:click={() => pasteComponent("inside")}
+    disabled={noPaste}
+  >
+    Paste inside
+  </MenuItem>
   <MenuItem icon="Duplicate" on:click={duplicateScreen}>Duplicate</MenuItem>
   <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}>Delete</MenuItem>
 </ActionMenu>
