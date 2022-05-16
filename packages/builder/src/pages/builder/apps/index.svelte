@@ -69,7 +69,7 @@
         <Layout noPadding>
           <div class="header">
             <img alt="logo" src={$organisation.logoUrl || Logo} />
-            <ActionMenu align="right">
+            <ActionMenu align="right" dataCy="user-menu">
               <div slot="control" class="avatar">
                 <Avatar
                   size="M"
