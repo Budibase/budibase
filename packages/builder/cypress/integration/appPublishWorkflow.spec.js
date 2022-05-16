@@ -19,7 +19,7 @@ filterTests(['all'], () => {
 
       cy.get(".appTable .app-row-actions").eq(0)
       .within(() => {
-        cy.get(".spectrum-Button").contains("Preview")
+        cy.get(".spectrum-Button").contains("View")
         cy.get(".spectrum-Button").contains("Edit").click({ force: true })
       })
       
@@ -57,7 +57,7 @@ filterTests(['all'], () => {
 
       cy.get(".appTable .app-row-actions").eq(0)
       .within(() => {
-        cy.get(".spectrum-Button").contains("View app")
+        cy.get(".spectrum-Button").contains("View")
         cy.get(".spectrum-Button").contains("Edit").click({ force: true })
       })
 
@@ -66,7 +66,7 @@ filterTests(['all'], () => {
       cy.get("[data-cy='publish-popover-menu']").should("be.visible")
       .within(() => {
         cy.get("[data-cy='publish-popover-action']").should("exist")
-        cy.get("button").contains("View app").should("exist")
+        cy.get("button").contains("View").should("exist")
         cy.get(".publish-popover-message").should("have.text", "Last published a few seconds ago")
       })
     })
@@ -84,7 +84,7 @@ filterTests(['all'], () => {
 
       cy.get(".appTable .app-row-actions").eq(0)
       .within(() => {
-        cy.get(".spectrum-Button").contains("View app")
+        cy.get(".spectrum-Button").contains("View")
         cy.get(".spectrum-Button").contains("Edit").click({ force: true })
       })
 

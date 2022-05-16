@@ -169,7 +169,7 @@
           />
         </div>
         <div class="user-dropdown">
-          <ActionMenu align="right">
+          <ActionMenu align="right" dataCy="user-menu">
             <div slot="control" class="avatar">
               <Avatar
                 size="M"
@@ -195,7 +195,9 @@
             <MenuItem icon="UserDeveloper" on:click={() => $goto("../apps")}>
               Close developer mode
             </MenuItem>
-            <MenuItem icon="LogOut" on:click={logout}>Log out</MenuItem>
+            <MenuItem dataCy="user-logout" icon="LogOut" on:click={logout}
+              >Log out
+            </MenuItem>
           </ActionMenu>
         </div>
       </div>
