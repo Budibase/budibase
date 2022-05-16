@@ -2338,7 +2338,11 @@
         "type": "boolean",
         "label": "Autocomplete",
         "key": "autocomplete",
-        "defaultValue": false
+        "defaultValue": false,
+        "dependsOn": {
+          "setting": "optionsType",
+          "value": "select"
+        }
       },
       {
         "type": "boolean",
