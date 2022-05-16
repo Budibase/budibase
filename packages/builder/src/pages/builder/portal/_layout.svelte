@@ -62,6 +62,10 @@
 
         if (isEnabled(FEATURE_FLAGS.LICENSING)) {
           menu = menu.concat({
+            title: "Billing",
+            href: "/builder/portal/settings/billing",
+          })
+          menu = menu.concat({
             title: "Upgrade",
             href: "/builder/portal/settings/upgrade",
           })
