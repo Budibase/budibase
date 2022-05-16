@@ -33,6 +33,7 @@ jobs:
         with:
           record: true
           install: false
+          tag: nightly
           command: yarn test:e2e:ci:record
         env:
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
