@@ -72,12 +72,7 @@ describe("/views", () => {
           field: "Price",
           calculation: "stats",
           tableId: table._id,
-          filters: [
-            {
-              condition: "NOT_EMPTY",
-              key: "Price",
-            }
-          ],
+          filters: [],
           schema: {
             sum: {
               type: "number",
