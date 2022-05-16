@@ -1,18 +1,12 @@
 <script>
-  import {
-    Layout,
-    Page,
-    Heading,
-    Body,
-    Table,
-    Select,
-    Input,
-  } from "@budibase/bbui"
+  import { Layout, Table, Select } from "@budibase/bbui"
   import DateTimeRenderer from "components/common/renderers/DateTimeRenderer.svelte"
-  import StatusRenderer from "components/portal/history/StatusRenderer.svelte"
-  import HistoryDetailsPanel from "components/portal/history/HistoryDetailsPanel.svelte"
+  import StatusRenderer from "./StatusRenderer.svelte"
+  import HistoryDetailsPanel from "./HistoryDetailsPanel.svelte"
   import { automationStore } from "builderStore"
   import { onMount } from "svelte"
+
+  export let appId
 
   let showPanel = false
   let selectedHistory = null
@@ -101,39 +95,30 @@
 </script>
 
 <div class="root" class:panelOpen={showPanel}>
-  <Page wide>
-    <Layout noPadding gap="S">
-      <Heading size="L">Run History</Heading>
-      <Body>View all the automations your published apps have performed</Body>
-      <div class="search">
-        <div class="select"><Select placeholder="All apps" label="Apps" /></div>
-        <div class="select">
-          <Select placeholder="All automations" label="Automation" />
-        </div>
-        <div class="select">
-          <Select placeholder="Past 30 days" label="Date range" />
-        </div>
-        <div class="select">
-          <Select placeholder="All status" label="Status" />
-        </div>
-        <div class="separator" />
-        <div class="searchInput">
-          <Input placeholder="Search" />
-        </div>
+  <Layout paddingX="XL" gap="S" alignContent="start">
+    <div class="search">
+      <div class="select">
+        <Select placeholder="All automations" label="Automation" />
       </div>
-      {#if runHistory}
-        <Table
-          on:click={viewDetails}
-          schema={runHistorySchema}
-          allowSelectRows={false}
-          allowEditColumns={false}
-          allowEditRows={false}
-          data={runHistory}
-          {customRenderers}
-        />
-      {/if}
-    </Layout>
-  </Page>
+      <div class="select">
+        <Select placeholder="Past 30 days" label="Date range" />
+      </div>
+      <div class="select">
+        <Select placeholder="All status" label="Status" />
+      </div>
+    </div>
+    {#if runHistory}
+      <Table
+        on:click={viewDetails}
+        schema={runHistorySchema}
+        allowSelectRows={false}
+        allowEditColumns={false}
+        allowEditRows={false}
+        data={runHistory}
+        {customRenderers}
+      />
+    {/if}
+  </Layout>
   <div class="panel" class:panelShow={showPanel}>
     <HistoryDetailsPanel
       bind:history={selectedHistory}
@@ -178,7 +163,7 @@
     display: none;
     right: 0;
     height: 100%;
-    width: 99%;
+    width: 100%;
   }
 
   .panelShow {

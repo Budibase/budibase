@@ -135,7 +135,7 @@
         action={() => {
           navigateTab("Automation History")
         }}
-        dataCy={"automation-history"}
+        dataCy={"automation-overview"}
       >
         <div class="automation-content">
           <div class="automation-metrics">

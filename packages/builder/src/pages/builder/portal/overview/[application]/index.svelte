@@ -20,6 +20,7 @@
   import { AppStatus } from "constants"
   import AppLockModal from "components/common/AppLockModal.svelte"
   import EditableIcon from "components/common/EditableIcon.svelte"
+  import HistoryTab from "components/portal/overview/HistoryTab.svelte"
   import { checkIncomingDeploymentStatus } from "components/deploy/utils"
   import { onDestroy, onMount } from "svelte"
 
@@ -97,7 +98,7 @@
       reviewPendingDeployments(deployments, newDeployments)
       return newDeployments
     } catch (err) {
-      notifications.error("Error fetching deployment history")
+      notifications.error("Error fetching deployment overview")
     }
   }
 
@@ -209,10 +210,10 @@
             navigateTab={handleTabChange}
           />
         </Tab>
+        <Tab title="Automation History">
+          <HistoryTab appId={selectedApp?._id} />
+        </Tab>
         {#if false}
-          <Tab title="Automation History">
-            <div class="container">Automation History contents</div>
-          </Tab>
           <Tab title="Backups">
             <div class="container">Backups contents</div>
           </Tab>
