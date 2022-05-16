@@ -8,7 +8,7 @@ const { DocumentTypes } = require("../db/utils")
 const { doInTenant } = require("@budibase/backend-core/tenancy")
 const { definitions: triggerDefs } = require("../automations/triggerInfo")
 const { doInAppContext, getAppDB } = require("@budibase/backend-core/context")
-const { AutomationErrors } = require("../constants")
+const { AutomationErrors, LoopStepTypes } = require("../constants")
 const FILTER_STEP_ID = actions.ACTION_DEFINITIONS.FILTER.stepId
 const LOOP_STEP_ID = actions.ACTION_DEFINITIONS.LOOP.stepId
 
@@ -16,6 +16,41 @@ const CRON_STEP_ID = triggerDefs.CRON.stepId
 const STOPPED_STATUS = { success: false, status: "STOPPED" }
 const { cloneDeep } = require("lodash/fp")
 const env = require("../environment")
+
+function typecastForLooping(loopStep, input) {
+  if (!input || !input.binding) {
+    return null
+  }
+  const isArray = Array.isArray(input.binding),
+    isString = typeof input.binding === "string"
+  try {
+    switch (loopStep.inputs.option) {
+      case LoopStepTypes.ARRAY:
+        if (isString) {
+          return JSON.parse(input.binding)
+        }
+        break
+      case LoopStepTypes.STRING:
+        if (isArray) {
+          return input.binding.join(",")
+        }
+        break
+    }
+  } catch (err) {
+    throw new Error("Unable to cast to correct type")
+  }
+  return input.binding
+}
+
+function getLoopIterations(loopStep, input) {
+  const binding = typecastForLooping(loopStep, input)
+  if (!loopStep || !binding) {
+    return 1
+  }
+  return Array.isArray(binding)
+    ? binding.length
+    : automationUtils.stringSplit(binding).length
+}
 
 /**
  * The automation orchestrator is a class responsible for executing automations.
@@ -107,7 +142,9 @@ class Orchestrator {
     let loopSteps = []
     for (let step of automation.definition.steps) {
       stepCount++
-      let input
+      let input,
+        iterations = 1,
+        iterationCount = 0
       if (step.stepId === LOOP_STEP_ID) {
         loopStep = step
         loopStepNumber = stepCount
@@ -116,13 +153,9 @@ class Orchestrator {
 
       if (loopStep) {
         input = await processObject(loopStep.inputs, this._context)
+        iterations = getLoopIterations(loopStep, input)
       }
-      let iterations = loopStep
-        ? Array.isArray(input.binding)
-          ? input.binding.length
-          : automationUtils.stringSplit(input.binding).length
-        : 1
-      let iterationCount = 0
+
       for (let index = 0; index < iterations; index++) {
         let originalStepInput = cloneDeep(step.inputs)
 
@@ -132,18 +165,11 @@ class Orchestrator {
             loopStep.inputs,
             cloneDeep(this._context)
           )
-          newInput = automationUtils.cleanInputValues(
-            newInput,
-            loopStep.schema.inputs
-          )
 
           let tempOutput = { items: loopSteps, iterations: iterationCount }
-          if (
-            (loopStep.inputs.option === "Array" &&
-              !Array.isArray(newInput.binding)) ||
-            (loopStep.inputs.option === "String" &&
-              typeof newInput.binding !== "string")
-          ) {
+          try {
+            newInput.binding = typecastForLooping(loopStep, newInput)
+          } catch (err) {
             this.updateContextAndOutput(loopStepNumber, step, tempOutput, {
               status: AutomationErrors.INCORRECT_TYPE,
               success: false,
@@ -205,21 +231,13 @@ class Orchestrator {
           }
 
           let isFailure = false
-          if (
-            typeof this._context.steps[loopStepNumber]?.currentItem === "object"
-          ) {
-            isFailure = Object.keys(
-              this._context.steps[loopStepNumber].currentItem
-            ).some(value => {
-              return (
-                this._context.steps[loopStepNumber].currentItem[value] ===
-                loopStep.inputs.failure
-              )
+          const currentItem = this._context.steps[loopStepNumber]?.currentItem
+          if (currentItem && typeof currentItem === "object") {
+            isFailure = Object.keys(currentItem).some(value => {
+              return currentItem[value] === loopStep.inputs.failure
             })
           } else {
-            isFailure =
-              this._context.steps[loopStepNumber]?.currentItem ===
-              loopStep.inputs.failure
+            isFailure = currentItem && currentItem === loopStep.inputs.failure
           }
 
           if (isFailure) {

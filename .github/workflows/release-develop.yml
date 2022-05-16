@@ -1,4 +1,5 @@
 name: Budibase Release Staging
+concurrency: release-develop
 
 on: 
  push:

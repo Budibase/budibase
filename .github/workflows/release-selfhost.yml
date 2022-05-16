@@ -87,3 +87,10 @@ jobs:
             packages/cli/build/cli-macos 
             packages/server/specs/openapi.yaml
             packages/server/specs/openapi.json
+
+      - name: Discord Webhook Action
+        uses: tsickert/discord-webhook@v4.0.0
+        with:
+          webhook-url: ${{ secrets.PROD_DEPLOY_WEBHOOK_URL }}
+          content: "Self Host Deployment Complete: ${{ env.RELEASE_VERSION }} deployed to Self Host."
+          embed-title: ${{ env.RELEASE_VERSION }}
