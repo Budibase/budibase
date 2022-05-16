@@ -1,4 +1,3 @@
-import { Object } from "aws-sdk/clients/customerprofiles"
 import {
   Integration,
   DatasourceFieldTypes,
