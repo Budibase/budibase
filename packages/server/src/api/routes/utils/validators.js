@@ -167,7 +167,6 @@ exports.screenValidator = () => {
       _id: Joi.string().required(),
       _component: Joi.string().required(),
       _children: Joi.array().required(),
-      _instanceName: Joi.string().required(),
       _styles: Joi.object().required(),
       type: OPTIONAL_STRING,
       table: OPTIONAL_STRING,
