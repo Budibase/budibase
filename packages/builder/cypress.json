@@ -7,5 +7,9 @@
     "WORKER_PORT": "4200",
     "JWT_SECRET": "test",
     "HOST_IP": ""
+  },
+  "retries": {
+    "runMode": 2,
+    "openMode": 0
   }
 }
