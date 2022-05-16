@@ -1,6 +1,6 @@
 <script>
   import "@spectrum-css/textfield/dist/index-vars.css"
-  import { createEventDispatcher } from "svelte"
+  import { createEventDispatcher, onMount } from "svelte"
 
   export let value = null
   export let placeholder = null
@@ -19,11 +19,6 @@
 
   let field
   let focus = false
-
-  $: if (autofocus === true && field) {
-    focus = true
-    field.focus()
-  }
 
   const updateValue = newValue => {
     if (readonly) {
@@ -66,6 +61,11 @@
       updateValue(event.target.value)
     }
   }
+
+  onMount(() => {
+    focus = autofocus
+    if (focus) field.focus()
+  })
 </script>
 
 <div
