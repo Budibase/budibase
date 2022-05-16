@@ -132,7 +132,8 @@ function viewTemplate({ field, tableId, groupBy, filters = [], calculation }) {
     delete filters[0].conjunction
   }
 
-  let schema = null
+  let schema = null,
+    statFilter = null
 
   if (calculation) {
     schema = {
@@ -145,7 +146,9 @@ function viewTemplate({ field, tableId, groupBy, filters = [], calculation }) {
           filter.key === field && filter.condition === CONDITIONS.NOT_EMPTY
       )
     ) {
-      filters.push({ key: field, condition: CONDITIONS.NOT_EMPTY })
+      statFilter = parseFilterExpression([
+        { key: field, condition: CONDITIONS.NOT_EMPTY },
+      ])
     }
   }
 
@@ -153,7 +156,10 @@ function viewTemplate({ field, tableId, groupBy, filters = [], calculation }) {
   const filterExpression = parsedFilters ? `&& (${parsedFilters})` : ""
 
   const emitExpression = parseEmitExpression(field, groupBy)
-
+  const tableExpression = `doc.tableId === "${tableId}"`
+  const coreExpression = statFilter
+    ? `(${tableExpression} && ${statFilter})`
+    : tableExpression
   const reduction = field && calculation ? { reduce: `_${calculation}` } : {}
 
   return {
@@ -166,7 +172,7 @@ function viewTemplate({ field, tableId, groupBy, filters = [], calculation }) {
       calculation,
     },
     map: `function (doc) {
-      if (doc.tableId === "${tableId}" ${filterExpression}) {
+      if (${coreExpression} ${filterExpression}) {
         ${emitExpression}
       }
     }`,
