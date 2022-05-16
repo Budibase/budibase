@@ -17,19 +17,18 @@
   $: vAlignClass = vAlign ? `vAlign-${vAlign}` : ""
   $: sizeClass = size ? `size-${size}` : ""
   $: gapClass = gap ? `gap-${gap}` : ""
-  $: clickableClass = onClick ? "clickable" : ""
   $: classNames = [
     directionClass,
     hAlignClass,
     vAlignClass,
     sizeClass,
     gapClass,
-    clickableClass,
   ].join(" ")
 </script>
 
 <div
   class={classNames}
+  class:clickable={onClick}
   use:styleable={$component.styles}
   class:wrap
   on:click={onClick}
