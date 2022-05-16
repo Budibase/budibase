@@ -123,6 +123,17 @@ filterTests(['smoke', 'all'], () => {
       cy.applicationInAppTable("Teds app")
       cy.deleteApp("Teds app")
 
+      //Accomodate names that end in 'S'
+      cy.updateUserInformation("Chris", "Userman")
+      
+      cy.createApp()
+
+      cy.visit(`${Cypress.config().baseUrl}/builder`)
+      cy.wait(1000)
+
+      cy.applicationInAppTable("Chris app")
+      cy.deleteApp("Chris app")
+
       cy.updateUserInformation("", "")
     })
 

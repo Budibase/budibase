@@ -79,8 +79,9 @@ Cypress.Commands.add("updateUserInformation", (firstName, lastName) => {
   })
 
   cy.get(".spectrum-Modal.is-open").within(() => {
+    cy.get("[data-cy='user-first-name']").clear()
+
     if (!firstName || firstName == "") {
-      cy.get("[data-cy='user-first-name']").clear()
       cy.get("[data-cy='user-first-name']").invoke("val").should("be.empty")
     } else {
       cy.get("[data-cy='user-first-name']")
@@ -88,8 +89,10 @@ Cypress.Commands.add("updateUserInformation", (firstName, lastName) => {
         .should("have.value", firstName)
         .blur()
     }
+
+    cy.get("[data-cy='user-last-name']").clear()
+
     if (!lastName || lastName == "") {
-      cy.get("[data-cy='user-last-name']").clear()
       cy.get("[data-cy='user-last-name']").invoke("val").should("be.empty")
     } else {
       cy.get("[data-cy='user-last-name']")

@@ -16,16 +16,27 @@
   export let template
 
   let creating = false
+  let defaultAppName
 
   const values = writable({ name: "", url: null })
   const validation = createValidationStore()
   $: validation.check($values)
 
   onMount(async () => {
-    const defaultName = $auth.user?.firstName
-      ? `${$auth.user.firstName}s app`
-      : "My app"
-    $values.name = resolveAppName(template, defaultName)
+    const lastChar = $auth.user?.firstName
+      ? $auth.user?.firstName[$auth.user?.firstName.length - 1]
+      : null
+    console.log(lastChar)
+    defaultAppName =
+      lastChar && lastChar.toLowerCase() == "s"
+        ? `${$auth.user?.firstName} app`
+        : `${$auth.user.firstName}s app`
+
+    console.log(defaultAppName)
+    $values.name = resolveAppName(
+      template,
+      !$auth.user?.firstName ? "My app" : defaultAppName
+    )
     nameToUrl($values.name)
     await setupValidation()
   })
@@ -169,9 +180,7 @@
     on:blur={() => ($validation.touched.name = true)}
     on:change={nameToUrl($values.name)}
     label="Name"
-    placeholder={$auth.user?.firstName
-      ? `${$auth.user.firstName}s app`
-      : "My app"}
+    placeholder={defaultAppName}
   />
   <span>
     <Input
