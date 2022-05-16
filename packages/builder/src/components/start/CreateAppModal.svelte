@@ -26,13 +26,12 @@
     const lastChar = $auth.user?.firstName
       ? $auth.user?.firstName[$auth.user?.firstName.length - 1]
       : null
-    console.log(lastChar)
+
     defaultAppName =
       lastChar && lastChar.toLowerCase() == "s"
         ? `${$auth.user?.firstName} app`
         : `${$auth.user.firstName}s app`
 
-    console.log(defaultAppName)
     $values.name = resolveAppName(
       template,
       !$auth.user?.firstName ? "My app" : defaultAppName
