@@ -90,7 +90,7 @@
     }
   }
 
-  const screenSettings = [
+  $: screenSettings = [
     {
       key: "routing.homeScreen",
       control: Checkbox,
@@ -134,6 +134,7 @@
       control: Toggle,
       props: {
         text: "Show navigation",
+        disabled: !!$selectedScreen.layoutId,
       },
     },
     {
@@ -143,6 +144,7 @@
       props: {
         options: ["Extra small", "Small", "Medium", "Large", "Max"],
         placeholder: "Default",
+        disabled: !!$selectedScreen.layoutId,
       },
     },
   ]

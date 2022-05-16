@@ -290,12 +290,8 @@ export const getFrontendStore = () => {
         // Pull relevant settings from old layout, if required
         const layout = get(store).layouts.find(x => x._id === screen.layoutId)
         screen.layoutId = null
-        if (screen.showNavigation == null) {
-          screen.showNavigation = layout?.props.navigation !== "None"
-        }
-        if (screen.width == null) {
-          screen.width = layout?.props.width || "Large"
-        }
+        screen.showNavigation = layout?.props.navigation !== "None"
+        screen.width = layout?.props.width || "Large"
         await store.actions.screens.save(screen)
       },
     },
