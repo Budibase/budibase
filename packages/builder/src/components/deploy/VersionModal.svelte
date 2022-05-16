@@ -11,6 +11,16 @@
   import { API } from "api"
   import clientPackage from "@budibase/client/package.json"
 
+  export function show() {
+    updateModal.show()
+  }
+
+  export function hide() {
+    updateModal.hide()
+  }
+
+  export let hideIcon = false
+
   let updateModal
 
   $: appId = $store.appId
@@ -57,9 +67,11 @@
   }
 </script>
 
-<div class="icon-wrapper" class:highlight={updateAvailable}>
-  <Icon name="Refresh" hoverable on:click={updateModal.show} />
-</div>
+{#if !hideIcon}
+  <div class="icon-wrapper" class:highlight={updateAvailable}>
+    <Icon name="Refresh" hoverable on:click={updateModal.show} />
+  </div>
+{/if}
 <Modal bind:this={updateModal}>
   <ModalContent
     title="App version"

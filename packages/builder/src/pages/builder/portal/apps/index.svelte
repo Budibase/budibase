@@ -2,7 +2,6 @@
   import {
     Heading,
     Layout,
-    Detail,
     Button,
     Input,
     Select,
@@ -183,6 +182,10 @@
     window.open(`/${app.devId}`)
   }
 
+  const appOverview = app => {
+    $goto(`../overview/${app.devId}`)
+  }
+
   const editApp = app => {
     if (app.lockedOther) {
       notifications.error(
@@ -304,7 +307,7 @@
 </script>
 
 <Page wide>
-  <Layout noPadding gap="XL">
+  <Layout noPadding gap="M">
     {#if loaded}
       <div class="title">
         <div class="welcome">
@@ -314,29 +317,17 @@
               {welcomeBody}
             </Body>
           </Layout>
-
-          <div class="buttons">
-            <Button
-              dataCy="create-app-btn"
-              size="M"
-              icon="Add"
-              cta
-              on:click={initiateAppCreation}
-            >
-              {createAppButtonText}
-            </Button>
-            {#if $apps?.length > 0}
+          {#if !$apps?.length}
+            <div class="buttons">
               <Button
-                icon="Experience"
+                dataCy="create-app-btn"
                 size="M"
-                quiet
-                secondary
-                on:click={$goto("/builder/portal/apps/templates")}
+                icon="Add"
+                cta
+                on:click={initiateAppCreation}
               >
-                Templates
+                {createAppButtonText}
               </Button>
-            {/if}
-            {#if !$apps?.length}
               <Button
                 dataCy="import-app-btn"
                 icon="Import"
@@ -347,15 +338,9 @@
               >
                 Import app
               </Button>
-            {/if}
-          </div>
+            </div>
+          {/if}
         </div>
-        <div>
-          <Layout gap="S" justifyItems="center">
-            <img class="img-logo img-size" alt="logo" src={Logo} />
-          </Layout>
-        </div>
-        <Divider size="S" />
       </div>
 
       {#if !$apps?.length && $templates?.length}
@@ -365,7 +350,40 @@
       {#if enrichedApps.length}
         <Layout noPadding gap="S">
           <div class="title">
-            <Detail size="L">Apps</Detail>
+            <div class="buttons">
+              <Button
+                dataCy="create-app-btn"
+                size="M"
+                icon="Add"
+                cta
+                on:click={initiateAppCreation}
+              >
+                {createAppButtonText}
+              </Button>
+              {#if $apps?.length > 0}
+                <Button
+                  icon="Experience"
+                  size="M"
+                  quiet
+                  secondary
+                  on:click={$goto("/builder/portal/apps/templates")}
+                >
+                  Templates
+                </Button>
+              {/if}
+              {#if !$apps?.length}
+                <Button
+                  dataCy="import-app-btn"
+                  icon="Import"
+                  size="L"
+                  quiet
+                  secondary
+                  on:click={initiateAppImport}
+                >
+                  Import app
+                </Button>
+              {/if}
+            </div>
             {#if enrichedApps.length > 1}
               <div class="app-actions">
                 {#if cloud}
@@ -396,7 +414,7 @@
               </div>
             {/if}
           </div>
-
+          <Divider size="S" />
           <div class="appTable">
             {#each filteredApps as app (app.appId)}
               <AppRow
@@ -411,6 +429,7 @@
                 {deleteApp}
                 {updateApp}
                 {previewApp}
+                {appOverview}
               />
             {/each}
           </div>
@@ -478,7 +497,7 @@
     margin-right: 10px;
   }
   .title .welcome > .buttons {
-    padding-top: 30px;
+    padding-top: var(--spacing-l);
   }
   .title {
     display: flex;
