@@ -112,6 +112,33 @@ module MongoDBModule {
       return interpolateObjectIds(json)
     }
 
+    parseQueryParams(params: string, mode: string) {
+      let queryParams = params.split(/(?<=(},)).*{/g)
+      let group1 = queryParams[0]
+      let group2 = queryParams[2]
+      let group3 = queryParams[4]
+      if (group1) {
+        group1 = JSON.parse(group1.replace(/,+$/, ""))
+      }
+      if (group2) {
+        group2 = JSON.parse("{" + group2.replace(/,+$/, ""))
+      }
+      if (group3) {
+        group3 = JSON.parse("{" + group3.replace(/,+$/, ""))
+      }
+      if (mode === "update") {
+        return {
+          filter: group1,
+          update: group2,
+          options: group3 ?? {},
+        }
+      }
+      return {
+        filter: group1,
+        options: group2 ?? {},
+      }
+    }
+
     async create(query: { json: object; extra: { [key: string]: string } }) {
       try {
         await this.connect()
@@ -193,7 +220,11 @@ module MongoDBModule {
         await this.connect()
         const db = this.client.db(this.config.db)
         const collection = db.collection(query.extra.collection)
-        let json = this.createObjectIds(query.json) as {
+        let queryJson = query.json
+        if (typeof queryJson === "string") {
+          queryJson = this.parseQueryParams(queryJson, "update")
+        }
+        let json = this.createObjectIds(queryJson) as {
           filter: FilterQuery<any>
           update: UpdateQuery<any>
           options: object
@@ -233,7 +264,11 @@ module MongoDBModule {
         await this.connect()
         const db = this.client.db(this.config.db)
         const collection = db.collection(query.extra.collection)
-        let json = this.createObjectIds(query.json) as {
+        let queryJson = query.json
+        if (typeof queryJson === "string") {
+          queryJson = this.parseQueryParams(queryJson, "delete")
+        }
+        let json = this.createObjectIds(queryJson) as {
           filter: FilterQuery<any>
           options: CommonOptions
         }
