@@ -52,7 +52,7 @@
       reviewPendingDeployments(deployments, newDeployments)
       return newDeployments
     } catch (err) {
-      notifications.error("Error fetching deployment history")
+      notifications.error("Error fetching deployment overview")
     }
   }
 

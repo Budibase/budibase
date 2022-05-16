@@ -1,7 +1,7 @@
 <script>
   import { Body, Layout, Icon, ActionButton, Heading } from "@budibase/bbui"
   import { capitalise } from "helpers"
-  import StatusRenderer from "components/portal/history/StatusRenderer.svelte"
+  import StatusRenderer from "components/portal/overview/StatusRenderer.svelte"
   import DateTimeRenderer from "components/common/renderers/DateTimeRenderer.svelte"
   import FlowItemHeader from "components/automation/AutomationBuilder/FlowChart/FlowItemHeader.svelte"
 
