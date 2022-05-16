@@ -3,14 +3,24 @@
 exports[`viewBuilder Calculate creates a view with the calculation statistics schema 1`] = `
 Object {
   "map": "function (doc) {
-      if (doc.tableId === \\"14f1c4e94d6a47b682ce89d35d4c78b0\\" ) {
+      if (doc.tableId === \\"14f1c4e94d6a47b682ce89d35d4c78b0\\" && (!(
+      doc[\\"myField\\"] === undefined ||
+      doc[\\"myField\\"] === null ||
+      doc[\\"myField\\"] === \\"\\" ||
+      (Array.isArray(doc[\\"myField\\"]) && doc[\\"myField\\"].length === 0)
+  ))) {
         emit(doc[\\"_id\\"], doc[\\"myField\\"]);
       }
     }",
   "meta": Object {
     "calculation": "stats",
     "field": "myField",
-    "filters": Array [],
+    "filters": Array [
+      Object {
+        "condition": "NOT_EMPTY",
+        "key": "myField",
+      },
+    ],
     "groupBy": undefined,
     "schema": Object {
       "avg": Object {
