@@ -4,19 +4,21 @@ import {
   QueryTypes,
 } from "../definitions/datasource"
 import { IntegrationBase } from "./base/IntegrationBase"
+import {
+  MongoClient,
+  ObjectID,
+  FilterQuery,
+  UpdateQuery,
+  FindOneAndUpdateOption,
+  UpdateOneOptions,
+  UpdateManyOptions,
+  CommonOptions,
+} from "mongodb"
 
 module MongoDBModule {
-  const { MongoClient, ObjectID } = require("mongodb")
-
   interface MongoDBConfig {
     connectionString: string
     db: string
-  }
-
-  interface UpdateDoc {
-    filter: object
-    update: object
-    options: object
   }
 
   const SCHEMA: Integration = {
@@ -94,7 +96,7 @@ module MongoDBModule {
               /(?<=objectid\(['"]).*(?=['"]\))/gi
             )?.[0]
             if (id) {
-              json["_id"] = new ObjectID.createFromHexString(id)
+              json["_id"] = ObjectID.createFromHexString(id)
             }
           }
         }
@@ -155,7 +157,11 @@ module MongoDBModule {
             return await collection.findOne(json)
           }
           case "findOneAndUpdate": {
-            let findAndUpdateJson = json as UpdateDoc
+            let findAndUpdateJson = json as {
+              filter: FilterQuery<any>
+              update: UpdateQuery<any>
+              options: FindOneAndUpdateOption<any>
+            }
             return await collection.findOneAndUpdate(
               findAndUpdateJson.filter,
               findAndUpdateJson.update,
@@ -182,26 +188,30 @@ module MongoDBModule {
       }
     }
 
-    async update(query: { json: UpdateDoc; extra: { [key: string]: string } }) {
+    async update(query: { json: object; extra: { [key: string]: string } }) {
       try {
         await this.connect()
         const db = this.client.db(this.config.db)
         const collection = db.collection(query.extra.collection)
-        let json = this.createObjectIds(query.json) as UpdateDoc
+        let json = this.createObjectIds(query.json) as {
+          filter: FilterQuery<any>
+          update: UpdateQuery<any>
+          options: object
+        }
 
         switch (query.extra.actionTypes) {
           case "updateOne": {
             return await collection.updateOne(
               json.filter,
               json.update,
-              json.options
+              json.options as UpdateOneOptions
             )
           }
           case "updateMany": {
             return await collection.updateMany(
               json.filter,
               json.update,
-              json.options
+              json.options as UpdateManyOptions
             )
           }
           default: {
@@ -223,14 +233,17 @@ module MongoDBModule {
         await this.connect()
         const db = this.client.db(this.config.db)
         const collection = db.collection(query.extra.collection)
-        let json = this.createObjectIds(query.json)
+        let json = this.createObjectIds(query.json) as {
+          filter: FilterQuery<any>
+          options: CommonOptions
+        }
 
         switch (query.extra.actionTypes) {
           case "deleteOne": {
-            return await collection.deleteOne(json)
+            return await collection.deleteOne(json.filter, json.options)
           }
           case "deleteMany": {
-            return await collection.deleteMany(json)
+            return await collection.deleteMany(json.filter, json.options)
           }
           default: {
             throw new Error(

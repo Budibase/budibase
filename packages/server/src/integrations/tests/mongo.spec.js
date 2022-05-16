@@ -50,12 +50,17 @@ describe("MongoDB Integration", () => {
   it("calls the delete method with the correct params", async () => {
     const query = {
       json: {
-        id: "test",
+        filter: {
+          id: "test",
+        },
+        options: {
+          opt: "option"
+        }
       },
       extra: { collection: "testCollection", actionTypes: "deleteOne" },
     }
     await config.integration.delete(query)
-    expect(config.integration.client.deleteOne).toHaveBeenCalledWith(query.json)
+    expect(config.integration.client.deleteOne).toHaveBeenCalledWith(query.json.filter, query.json.options)
   })
 
   it("calls the update method with the correct params", async () => {
