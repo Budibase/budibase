@@ -573,7 +573,7 @@ Cypress.Commands.add("addDatasourceConfig", (datasource, skipFetch) => {
       cy.get(".spectrum-Button")
         .contains("Save and fetch tables")
         .click({ force: true })
-      cy.wait(1000)
+      cy.wait(3000)
     })
   }
 })
