@@ -17,7 +17,7 @@ module MongoDBModule {
   interface UpdateDoc {
     filter: object
     update: object
-    options: Object
+    options: object
   }
 
   const SCHEMA: Integration = {
