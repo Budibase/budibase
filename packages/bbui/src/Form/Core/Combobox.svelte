@@ -3,13 +3,14 @@
   import "@spectrum-css/popover/dist/index-vars.css"
   import "@spectrum-css/menu/dist/index-vars.css"
   import { fly } from "svelte/transition"
-  import { createEventDispatcher } from "svelte"
+  import { createEventDispatcher, getContext } from "svelte"
 
   export let value = null
   export let id = null
   export let placeholder = "Choose an option or type"
   export let disabled = false
   export let readonly = false
+  export let autofocus = false
   export let error = null
   export let options = []
   export let getOptionLabel = option => option
@@ -18,22 +19,12 @@
   const dispatch = createEventDispatcher()
   let open = false
   let focus = false
-  $: fieldText = getFieldText(value, options, placeholder)
+  let comboInput
 
-  const getFieldText = (value, options, placeholder) => {
-    // Always use placeholder if no value
-    if (value == null || value === "") {
-      return placeholder || "Choose an option or type"
-    }
+  let builderFocus = getContext("field_focus")
 
-    // Wait for options to load if there is a value but no options
-    if (!options?.length) {
-      return ""
-    }
-
-    // Render the label if the selected option is found, otherwise raw value
-    const selected = options.find(option => getOptionValue(option) === value)
-    return selected ? getOptionLabel(selected) : value
+  $: if (autofocus && comboInput) {
+    comboInput.focus()
   }
 
   const selectOption = value => {
@@ -66,10 +57,16 @@
     class:is-focused={open || focus}
   >
     <input
+      bind:this={comboInput}
       {id}
       type="text"
       on:focus={() => (focus = true)}
-      on:blur={() => (focus = false)}
+      on:blur={() => {
+        if (builderFocus) {
+          builderFocus.clear()
+        }
+        focus = false
+      }}
       on:change={onType}
       value={value || ""}
       placeholder={placeholder || ""}

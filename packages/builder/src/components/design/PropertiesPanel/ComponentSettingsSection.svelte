@@ -86,6 +86,14 @@
 
     return true
   }
+
+  const isFocused = setting => {
+    return (
+      componentInstance._id === $store.builderFocus?.target &&
+      setting.key === $store.builderFocus?.key &&
+      "component_settings" === $store.builderFocus?.location
+    )
+  }
 </script>
 
 {#each sections as section, idx (section.name)}
@@ -120,6 +128,7 @@
           {componentBindings}
           {componentInstance}
           {componentDefinition}
+          autofocus={isFocused(setting)}
         />
       {/if}
     {/each}
