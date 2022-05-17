@@ -43,6 +43,7 @@ module.exports = {
   PLATFORM_URL: process.env.PLATFORM_URL,
   COOKIE_DOMAIN: process.env.COOKIE_DOMAIN,
   APPS_URL: process.env.APPS_URL,
+  DISABLE_DEVELOPER_LICENSE: process.env.DISABLE_DEVELOPER_LICENSE,
   _set(key, value) {
     process.env[key] = value
     module.exports[key] = value

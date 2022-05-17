@@ -14,7 +14,7 @@
   }
 
   const getPercentage = () => {
-    return (usage.used / usage.total) * 100
+    return Math.min(Math.ceil((usage.used / usage.total) * 100), 100)
   }
 
   onMount(() => {
@@ -51,5 +51,6 @@
     display: flex;
     flex-direction: row;
     justify-content: space-between;
+    gap: var(--spacing-m);
   }
 </style>
