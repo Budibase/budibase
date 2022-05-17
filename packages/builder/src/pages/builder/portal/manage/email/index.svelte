@@ -68,6 +68,26 @@
     }
   }
 
+  async function deleteSmtp() {
+    // Delete the SMTP config
+    try {
+      await API.deleteConfig({
+        id: smtpConfig._id,
+        rev: smtpConfig._rev,
+      })
+      smtpConfig = {
+        config: {},
+      }
+      await admin.getChecklist()
+      notifications.success(`Settings cleared`)
+      analytics.captureEvent(Events.SMTP.SAVED)
+    } catch (error) {
+      notifications.error(
+        `Failed to clear email settings, reason: ${error?.message || "Unknown"}`
+      )
+    }
+  }
+
   async function fetchSmtp() {
     loading = true
     try {
@@ -156,8 +176,15 @@
         </div>
       {/if}
     </Layout>
-    <div>
+    <div class="spectrum-ButtonGroup spectrum-Settings-buttonGroup">
       <Button cta on:click={saveSmtp}>Save</Button>
+      <Button
+        secondary
+        on:click={deleteSmtp}
+        disabled={!$admin.checklist.smtp.checked}
+      >
+        Reset
+      </Button>
     </div>
     <Divider />
     <Layout gap="XS" noPadding>
@@ -185,5 +212,9 @@
     grid-template-columns: 120px 1fr;
     grid-gap: var(--spacing-l);
     align-items: center;
+  }
+  .spectrum-Settings-buttonGroup {
+    gap: var(--spectrum-global-dimension-static-size-200);
+    align-items: flex-end;
   }
 </style>
