@@ -7,6 +7,7 @@ const {
 } = require("../../../db/utils")
 const env = require("../../../environment")
 const { getAppDB } = require("@budibase/backend-core/context")
+const viewBuilder = require("./viewBuilder")
 
 exports.getView = async viewName => {
   const db = getAppDB()
@@ -114,7 +115,8 @@ exports.deleteView = async viewName => {
 exports.migrateToInMemoryView = async (db, viewName) => {
   // delete the view initially
   const designDoc = await db.get("_design/database")
-  const view = designDoc.views[viewName]
+  // run the view back through the view builder to update it
+  const view = viewBuilder(designDoc.views[viewName].meta)
   delete designDoc.views[viewName]
   await db.put(designDoc)
   await exports.saveView(db, null, viewName, view)
@@ -123,7 +125,7 @@ exports.migrateToInMemoryView = async (db, viewName) => {
 exports.migrateToDesignView = async (db, viewName) => {
   let view = await db.get(generateMemoryViewID(viewName))
   const designDoc = await db.get("_design/database")
-  designDoc.views[viewName] = view.view
+  designDoc.views[viewName] = viewBuilder(view.view.meta)
   await db.put(designDoc)
   await db.remove(view._id, view._rev)
 }
