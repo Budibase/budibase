@@ -2,7 +2,7 @@
   import { onMount, onDestroy } from "svelte"
   import Indicator from "./Indicator.svelte"
   import { domDebounce } from "utils/domDebounce"
-  import { builderStore } from "stores"
+  import { builderStore, componentStore } from "stores"
 
   export let componentId
   export let color
@@ -15,11 +15,23 @@
   let text
   $: visibleIndicators = indicators.filter(x => x.visible)
   $: offset = $builderStore.inBuilder ? 0 : 2
+  $: icon = getComponentIcon(componentId)
+  $: console.log(icon)
 
   let updating = false
   let observers = []
   let callbackCount = 0
   let nextIndicators = []
+
+  const getComponentIcon = id => {
+    if (!id) {
+      return null
+    }
+    const component = componentStore.actions.getComponentById(id)
+    const type = component?._component
+    const definition = componentStore.actions.getComponentDefinition(type)
+    return definition?.icon
+  }
 
   const createIntersectionCallback = idx => entries => {
     if (callbackCount >= observers.length) {
@@ -121,6 +133,7 @@
       width={indicator.width}
       height={indicator.height}
       text={idx === 0 ? text : null}
+      icon={idx === 0 ? icon : null}
       {transition}
       {zIndex}
       {color}

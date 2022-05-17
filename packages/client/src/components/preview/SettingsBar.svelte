@@ -6,7 +6,7 @@
   import { builderStore, componentStore } from "stores"
   import { domDebounce } from "utils/domDebounce"
 
-  const verticalOffset = 28
+  const verticalOffset = 34
   const horizontalOffset = 2
 
   let top = 0

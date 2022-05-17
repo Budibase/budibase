@@ -20,7 +20,6 @@
   } from "utils/componentProps"
   import { builderStore, devToolsStore, componentStore, appStore } from "stores"
   import { Helpers } from "@budibase/bbui"
-  import Manifest from "manifest.json"
   import { getActiveConditions, reduceConditionActions } from "utils/conditions"
   import Placeholder from "components/app/Placeholder.svelte"
 
@@ -171,8 +170,9 @@
     }
 
     // Pull definition and constructor
-    constructor = getComponentConstructor(instance._component)
-    definition = getComponentDefinition(instance._component)
+    const component = instance._component
+    constructor = getComponentConstructor(component)
+    definition = componentStore.actions.getComponentDefinition(component)
     if (!definition) {
       return
     }
@@ -215,13 +215,6 @@
       return Router
     }
     return AppComponents[name]
-  }
-
-  // Gets this component's definition from the manifest
-  const getComponentDefinition = component => {
-    const prefix = "@budibase/standard-components/"
-    const type = component?.replace(prefix, "")
-    return type ? Manifest[type] : null
   }
 
   const getSettingsDefinitionMap = settingsDefinition => {
@@ -382,7 +375,7 @@
     if (!node) {
       return
     }
-    node.style.scrollMargin = "80px"
+    node.style.scrollMargin = "86px"
     node.scrollIntoView({
       behavior: "smooth",
       block: "start",
