@@ -67,6 +67,12 @@ const createComponentStore = () => {
     return findComponentById(asset?.props, id)
   }
 
+  const getComponentDefinition = type => {
+    const prefix = "@budibase/standard-components/"
+    type = type?.replace(prefix, "")
+    return type ? Manifest[type] : null
+  }
+
   return {
     ...derivedStore,
     actions: {
@@ -74,6 +80,7 @@ const createComponentStore = () => {
       unregisterInstance,
       isComponentRegistered,
       getComponentById,
+      getComponentDefinition,
     },
   }
 }
