@@ -1,5 +1,5 @@
 <script>
-  import { CoreMultiselect } from "@budibase/bbui"
+  import { CoreMultiselect, CoreCheckboxGroup } from "@budibase/bbui"
   import Field from "./Field.svelte"
   import { getOptions } from "./optionsParser"
   export let field
@@ -15,6 +15,8 @@
   export let customOptions
   export let autocomplete = false
   export let onChange
+  export let optionsType = "select"
+  export let direction = "vertical"
 
   let fieldState
   let fieldApi
@@ -61,17 +63,31 @@
   bind:fieldSchema
 >
   {#if fieldState}
-    <CoreMultiselect
-      value={fieldState.value || []}
-      error={fieldState.error}
-      getOptionLabel={flatOptions ? x => x : x => x.label}
-      getOptionValue={flatOptions ? x => x : x => x.value}
-      id={fieldState.fieldId}
-      disabled={fieldState.disabled}
-      on:change={handleChange}
-      {placeholder}
-      {options}
-      {autocomplete}
-    />
+    {#if !optionsType || optionsType === "select"}
+      <CoreMultiselect
+        value={fieldState.value || []}
+        error={fieldState.error}
+        getOptionLabel={flatOptions ? x => x : x => x.label}
+        getOptionValue={flatOptions ? x => x : x => x.value}
+        id={fieldState.fieldId}
+        disabled={fieldState.disabled}
+        on:change={handleChange}
+        {placeholder}
+        {options}
+        {autocomplete}
+      />
+    {:else if optionsType === "checkbox"}
+      <CoreCheckboxGroup
+        value={fieldState.value || []}
+        id={fieldState.fieldId}
+        disabled={fieldState.disabled}
+        error={fieldState.error}
+        {options}
+        {direction}
+        on:change={handleChange}
+        getOptionLabel={flatOptions ? x => x : x => x.label}
+        getOptionValue={flatOptions ? x => x : x => x.value}
+      />
+    {/if}
   {/if}
 </Field>

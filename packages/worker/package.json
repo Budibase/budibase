@@ -1,7 +1,7 @@
 {
   "name": "@budibase/worker",
   "email": "hi@budibase.com",
-  "version": "1.0.159-alpha.0",
+  "version": "1.0.164-alpha.0",
   "description": "Budibase background service",
   "main": "src/index.ts",
   "repository": {
@@ -31,9 +31,9 @@
   "author": "Budibase",
   "license": "GPL-3.0",
   "dependencies": {
-    "@budibase/backend-core": "^1.0.159-alpha.0",
-    "@budibase/pro": "1.0.159-alpha.0",
-    "@budibase/string-templates": "^1.0.159-alpha.0",
+    "@budibase/backend-core": "^1.0.164-alpha.0",
+    "@budibase/pro": "1.0.164-alpha.0",
+    "@budibase/string-templates": "^1.0.164-alpha.0",
     "@koa/router": "^8.0.0",
     "@sentry/node": "6.17.7",
     "@techpass/passport-openidconnect": "^0.3.0",
