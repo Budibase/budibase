@@ -123,6 +123,7 @@ filterTests(['smoke', 'all'], () => {
 
       cy.applicationInAppTable("Teds app")
       cy.deleteApp("Teds app")
+      cy.wait(2000)
 
       //Accomodate names that end in 'S'
       cy.updateUserInformation("Chris", "Userman")
@@ -134,6 +135,7 @@ filterTests(['smoke', 'all'], () => {
 
       cy.applicationInAppTable("Chris app")
       cy.deleteApp("Chris app")
+      cy.wait(2000)
 
       cy.updateUserInformation("", "")
     })

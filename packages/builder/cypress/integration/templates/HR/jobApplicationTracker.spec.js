@@ -1,7 +1,7 @@
 import filterTests from "../../../support/filterTests"
 
 filterTests(["all"], () => {
-  context("Job Application Functionality", () => {
+  context("Job Application Tracker Template Functionality", () => {
     const templateName = "Job Application Tracker"
     const templateNameParsed = templateName.toLowerCase().replace(/\s+/g, '-')
     
@@ -14,15 +14,7 @@ filterTests(["all"], () => {
             }
         })
         cy.wait(2000)
-
-        // Template navigation
-        cy.request(`${Cypress.config().baseUrl}/api/applications?status=all`)
-        .its("body")
-        .then(val => {
-            if (val.length > 0) {
-            cy.get(".spectrum-Button").contains("Templates").click({force: true})
-            }
-        })
+        cy.templateNavigation()
         })
 
     it("should create and publish app with Job Application Tracker template", () => {
