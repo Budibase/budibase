@@ -64,7 +64,10 @@ filterTests(['smoke', 'all'], () => {
       const appName = "Cypress Tests"
       cy.get(interact.SPECTRUM_MODAL).within(() => {
 
+        cy.get(interact.APP_NAME_INPUT).eq(0).should('have.focus')
+
         //Auto fill
+        cy.get(interact.APP_NAME_INPUT).eq(0).clear()
         cy.get(interact.APP_NAME_INPUT).eq(0).type(appName).should("have.value", appName).blur()
         cy.get(interact.APP_NAME_INPUT).eq(1).should("have.value", "/cypress-tests")
         cy.get(interact.SPECTRUM_BUTTON_GROUP).contains("Create app").should('not.be.disabled')
@@ -96,6 +99,75 @@ filterTests(['smoke', 'all'], () => {
 
       cy.applicationInAppTable(appName)
       cy.deleteApp(appName)
+    })
+
+    it("should create the first application from scratch with a default name", () => {
+      cy.createApp()
+
+      cy.visit(`${Cypress.config().baseUrl}/builder`)
+      cy.wait(1000)
+
+      cy.applicationInAppTable("My app")
+      cy.deleteApp("My app")
+    })
+
+    it("should create the first application from scratch, using the users first name as the default app name", () => {
+      cy.visit(`${Cypress.config().baseUrl}/builder`)
+
+      cy.updateUserInformation("Ted", "Userman")
+      
+      cy.createApp()
+
+      cy.visit(`${Cypress.config().baseUrl}/builder`)
+      cy.wait(1000)
+
+      cy.applicationInAppTable("Teds app")
+      cy.deleteApp("Teds app")
+
+      //Accomodate names that end in 'S'
+      cy.updateUserInformation("Chris", "Userman")
+      
+      cy.createApp()
+
+      cy.visit(`${Cypress.config().baseUrl}/builder`)
+      cy.wait(1000)
+
+      cy.applicationInAppTable("Chris app")
+      cy.deleteApp("Chris app")
+
+      cy.updateUserInformation("", "")
+    })
+
+    it("should create an application from an export", () => {
+      const exportedApp = 'cypress/fixtures/exported-app.txt'
+
+      cy.importApp(exportedApp, "")
+
+      cy.visit(`${Cypress.config().baseUrl}/builder`)
+
+      cy.applicationInAppTable("My app")
+      
+      cy.get(".appTable .name").eq(0).click()
+
+      cy.deleteApp("My app")
+    })
+
+    it("should create an application from an export, using the users first name as the default app name", () => {
+      const exportedApp = 'cypress/fixtures/exported-app.txt'
+
+      cy.updateUserInformation("Ted", "Userman")
+
+      cy.importApp(exportedApp, "")
+
+      cy.visit(`${Cypress.config().baseUrl}/builder`)
+
+      cy.applicationInAppTable("Teds app")
+      
+      cy.get(".appTable .name").eq(0).click()
+
+      cy.deleteApp("Teds app")
+
+      cy.updateUserInformation("", "")
     })
 
     it("should generate the first application from a template", () => {
