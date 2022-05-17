@@ -136,6 +136,9 @@
   // Determine and apply settings to the component
   $: applySettings(staticSettings, enrichedSettings, conditionalSettings)
 
+  // Scroll the selected element into view
+  $: selected && scrollIntoView()
+
   // Update component context
   $: store.set({
     id,
@@ -372,6 +375,19 @@
         }
       })
     }
+  }
+
+  const scrollIntoView = () => {
+    const node = document.getElementsByClassName(id)?.[0]?.childNodes[0]
+    if (!node) {
+      return
+    }
+    node.style.scrollMargin = "80px"
+    node.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+      inline: "start",
+    })
   }
 
   onMount(() => {
