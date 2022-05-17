@@ -4,6 +4,7 @@ filterTests(["smoke", "all"], () => {
   context("Create a User and Assign Roles", () => {
     before(() => {
       cy.login()
+      cy.deleteApp("Cypress Tests")
       cy.createApp("Cypress Tests")
     })
 
