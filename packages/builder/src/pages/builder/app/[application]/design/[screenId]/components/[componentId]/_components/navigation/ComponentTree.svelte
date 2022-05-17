@@ -5,7 +5,13 @@
   import NavItem from "components/common/NavItem.svelte"
   import { capitalise } from "helpers"
   import { notifications } from "@budibase/bbui"
-  import { selectedComponentPath } from "builderStore"
+  import {
+    selectedComponentPath,
+    selectedComponent,
+    selectedScreen,
+  } from "builderStore"
+  import { findComponentPath } from "builderStore/componentUtils"
+  import { get } from "svelte/store"
 
   export let components = []
   export let currentComponent
@@ -87,6 +93,15 @@
     }
     return !closedNodes[component._id]
   }
+
+  const isChildOfSelectedComponent = component => {
+    const selectedComponentId = get(selectedComponent)?._id
+    const selectedScreenId = get(selectedScreen)?.props._id
+    if (!selectedComponentId || selectedComponentId === selectedScreenId) {
+      return false
+    }
+    return findComponentPath($selectedComponent, component._id)?.length > 0
+  }
 </script>
 
 <ul>
@@ -120,6 +135,7 @@
         indentLevel={level + 1}
         selected={$store.selectedComponentId === component._id}
         opened={isOpen(component, $selectedComponentPath, closedNodes)}
+        highlighted={isChildOfSelectedComponent(component)}
       >
         <ComponentDropdownMenu {component} />
       </NavItem>
