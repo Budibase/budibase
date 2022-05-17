@@ -15,6 +15,7 @@
   export let iconColor
   export let scrollable = false
   export let color
+  export let highlighted = false
 
   const scrollApi = getContext("scroll")
   const dispatch = createEventDispatcher()
@@ -46,6 +47,8 @@
   class:border
   class:selected
   class:withActions
+  class:scrollable
+  class:highlighted
   style={`padding-left: calc(${indentLevel * 14}px)`}
   {draggable}
   on:dragend
@@ -55,7 +58,6 @@
   on:click={onClick}
   ondragover="return false"
   ondragenter="return false"
-  class:scrollable
 >
   <div class="nav-item-content" bind:this={contentRef}>
     {#if withArrow}
@@ -112,12 +114,15 @@
     justify-content: center;
     align-items: flex-start;
   }
+  .nav-item.highlighted {
+    background-color: var(--spectrum-global-color-gray-200);
+  }
   .nav-item.selected {
-    background-color: var(--grey-2);
+    background-color: var(--spectrum-global-color-gray-300);
     color: var(--ink);
   }
   .nav-item:hover {
-    background-color: var(--grey-3);
+    background-color: var(--spectrum-global-color-gray-300);
   }
   .nav-item:hover .actions {
     visibility: visible;
