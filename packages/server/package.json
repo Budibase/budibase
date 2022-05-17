@@ -146,6 +146,7 @@
     "@budibase/standard-components": "^0.9.139",
     "@jest/test-sequencer": "^24.8.0",
     "@types/apidoc": "^0.50.0",
+    "@types/bson": "^4.2.0",
     "@types/bull": "^3.15.1",
     "@types/google-spreadsheet": "^3.1.5",
     "@types/jest": "^27.4.1",
