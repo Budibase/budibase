@@ -169,7 +169,11 @@
               />
               <Icon size="XL" name="ChevronDown" />
             </div>
-            <MenuItem icon="UserEdit" on:click={() => userInfoModal.show()}>
+            <MenuItem
+              icon="UserEdit"
+              on:click={() => userInfoModal.show()}
+              dataCy={"user-info"}
+            >
               Update user information
             </MenuItem>
             {#if $auth.isBuilder}
