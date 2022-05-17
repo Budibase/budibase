@@ -157,6 +157,14 @@
     try {
       if (type === "select-component" && data.id) {
         store.actions.components.select({ _id: data.id })
+        //Clear focus
+        if(data.id !== $store.builderFocus?.target){
+          store.update(state => {
+            delete state.builderFocus
+            return state
+          })
+        }
+        //check if the builder-focus matches?
       } else if (type === "update-prop") {
         await store.actions.components.updateProp(data.prop, data.value)
       } else if (type === "delete-component" && data.id) {
@@ -190,6 +198,12 @@
           store.actions.components.copy(source, true)
           await store.actions.components.paste(destination, data.mode)
         }
+      } else if(type == "builder-focus")  {
+        store.update(state => ({
+          ...state,
+          builderFocus : 
+          { ...data }
+        }))
       } else {
         console.warn(`Client sent unknown event type: ${type}`)
       }

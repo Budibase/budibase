@@ -1,9 +1,7 @@
-// TODO for now components are skipped, might not be good to keep doing this
-
 import filterTests from "../support/filterTests"
 
 filterTests(['all'], () => {
-  xcontext("Create Components", () => {
+  context("Create Components", () => {
     let headlineId
 
     before(() => {
@@ -12,12 +10,13 @@ filterTests(['all'], () => {
       cy.createTable("dog")
       cy.addColumn("dog", "name", "Text")
       cy.addColumn("dog", "age", "Number")
-      cy.addColumn("dog", "type", "Options")
+      cy.addColumn("dog", "breed", "Options")
       cy.navigateToFrontend()
+      cy.wait(1000) //allow the iframe some wiggle room
     })
 
     it("should add a container", () => {
-      cy.addComponent(null, "Container").then(componentId => {
+      cy.addComponent("Layout", "Container").then(componentId => {
         cy.getComponent(componentId).should("exist")
       })
     })
@@ -31,7 +30,6 @@ filterTests(['all'], () => {
 
     it("should change the text of the headline", () => {
       const text = "Lorem ipsum dolor sit amet."
-      cy.get("[data-cy=Settings]").click()
       cy.get("[data-cy=setting-text] input")
         .type(text)
         .blur()
@@ -39,32 +37,34 @@ filterTests(['all'], () => {
     })
 
     it("should change the size of the headline", () => {
-      cy.get("[data-cy=Design]").click()
-      cy.contains("Typography").click()
-      cy.get("[data-cy=font-size-prop-control]").click()
-      cy.contains("60px").click()
-      cy.getComponent(headlineId).should("have.css", "font-size", "60px")
+      cy.get("[data-cy=setting-size]").scrollIntoView().click()
+      cy.get("[data-cy=setting-size]").within(() => {
+        cy.get(".spectrum-Form-item li.spectrum-Menu-item").contains("3XL").click()
+      })
+      
+      cy.getComponent(headlineId).within(() => {
+        cy.get(".spectrum-Heading").should("have.css", "font-size", "60px")
+      })
     })
 
     it("should create a form and reset to match schema", () => {
       cy.addComponent("Form", "Form").then(() => {
-        cy.get("[data-cy=Settings]").click()
         cy.get("[data-cy=setting-dataSource]")
-          .contains("Choose option")
+          .contains("Custom")
           .click()
         cy.get(".dropdown")
           .contains("dog")
           .click()
         cy.addComponent("Form", "Field Group").then(fieldGroupId => {
-          cy.get("[data-cy=Settings]").click()
-          cy.contains("Update Form Fields").click()
-          cy.get(".modal")
-            .get("button.primary")
+          cy.contains("Update form fields").click()
+          cy.get(".spectrum-Modal")
+            .get(".confirm-wrap .spectrum-Button")
             .click()
+          cy.wait(500)
           cy.getComponent(fieldGroupId).within(() => {
             cy.contains("name").should("exist")
             cy.contains("age").should("exist")
-            cy.contains("type").should("exist")
+            cy.contains("breed").should("exist")
           })
           cy.getComponent(fieldGroupId)
             .find("input")
@@ -81,16 +81,77 @@ filterTests(['all'], () => {
         cy.get("[data-cy=setting-_instanceName] input")
           .type(componentId)
           .blur()
-        cy.get(".ui-nav ul .nav-item.selected .ri-more-line").click({
+        cy.get(".nav-items-container .nav-item.selected .actions > div > .icon").click({
           force: true,
         })
-        cy.get(".dropdown-container")
+        cy.get(".spectrum-Popover.is-open li")
           .contains("Delete")
           .click()
-        cy.get(".modal")
+        cy.get(".spectrum-Modal button")
           .contains("Delete Component")
-          .click()
+          .click({
+            force: true,
+          })
         cy.getComponent(componentId).should("not.exist")
+      })
+    })
+
+    it("should set focus to the field setting when fields are added to a form", () => {
+      cy.addComponent("Form", "Form").then(() => {
+        cy.get("[data-cy=setting-dataSource]")
+          .contains("Custom")
+          .click()
+        cy.get(".dropdown")
+          .contains("dog")
+          .click()
+        
+        const componentTypeLabels = ["Text Field", "Number Field", "Password Field", 
+          "Options Picker", "Checkbox", "Long Form Field", "Date Picker", "Attachment", 
+          "JSON Field", "Multi-select Picker", "Relationship Picker"]
+
+        const refocusTest = (componentId) => {
+          let inputClasses
+
+          cy.getComponent(componentId)
+          .find(".showMe").should("exist").click({ force: true })
+          
+          cy.get("[data-cy=setting-field] .spectrum-InputGroup")
+          .should("have.class", "is-focused").within(() => {
+            cy.get("input").should(($input) => {
+              expect($input).to.have.length(1)
+              inputClasses = Cypress.$($input).attr('class')
+            })
+          })
+
+          cy.focused().then(($focused) => {
+            const focusedClasses = Cypress.$($focused).attr('class')
+            expect(inputClasses).to.equal(focusedClasses)
+          })
+        }
+
+        const testFieldFocusOnCreate = (componentLabel) => {
+          let inputClasses
+
+          cy.addComponent("Form", componentLabel).then((componentId) => {
+           
+            refocusTest(componentId)
+
+            cy.get("[data-cy=setting-field] .spectrum-InputGroup")
+            .should("have.class", "is-focused").within(() => {
+              cy.get("input").should(($input) => {
+                expect($input).to.have.length(1)
+                inputClasses = Cypress.$($input).attr('class')
+              })
+            })
+          })
+          cy.focused().then(($focused) => {
+            const focusedClasses = Cypress.$($focused).attr('class')
+            expect(inputClasses).to.equal(focusedClasses)
+          })
+        }
+
+        componentTypeLabels.forEach( testFieldFocusOnCreate )
+
       })
     })
   })

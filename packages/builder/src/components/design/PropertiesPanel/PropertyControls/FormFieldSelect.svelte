@@ -4,12 +4,24 @@
     getDatasourceForProvider,
     getSchemaForDatasource,
   } from "builderStore/dataBinding"
-  import { currentAsset } from "builderStore"
+  import { currentAsset, store } from "builderStore"
   import { findClosestMatchingComponent } from "builderStore/componentUtils"
+  import { setContext } from "svelte"
+
+  setContext("field_focus", {
+    clear: () => {
+      store.update(state => {
+        delete state.builderFocus
+        return state
+      })
+    },
+    test: $store.builderFocus?.target,
+  })
 
   export let componentInstance
   export let value
   export let type
+  export let autofocus = false
 
   $: form = findClosestMatchingComponent(
     $currentAsset?.props,
@@ -40,4 +52,4 @@
   }
 </script>
 
-<Combobox on:change {value} {options} />
+<Combobox on:change {value} {options} {autofocus} />

@@ -16,6 +16,7 @@
   export let bindings = []
   export let componentBindings = []
   export let nested = false
+  export let autofocus = false
 
   $: allBindings = getAllBindings(bindings, componentBindings, nested)
   $: safeValue = getSafeValue(value, props.defaultValue, allBindings)
@@ -82,6 +83,7 @@
       {key}
       {type}
       {...props}
+      {autofocus}
     />
   </div>
 </div>

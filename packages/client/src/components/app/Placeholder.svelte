@@ -9,7 +9,10 @@
 
 {#if $builderStore.inBuilder}
   <div>
-    {text || $component.name || "Placeholder"}
+    {#if !$$slots.content}
+      {text || $component.name || "Placeholder"}
+    {/if}
+    <slot name="content" />
   </div>
 {/if}
 

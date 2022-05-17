@@ -334,9 +334,9 @@ Cypress.Commands.add("getComponent", componentId => {
     .its("0.contentDocument")
     .should("exist")
     .its("body")
-    .should("not.be.null")
+    .should("not.be.undefined")
     .then(cy.wrap)
-    .find(`[data-id=${componentId}]`)
+    .find(`[data-id='${componentId}']`)
 })
 
 Cypress.Commands.add("navigateToFrontend", () => {
