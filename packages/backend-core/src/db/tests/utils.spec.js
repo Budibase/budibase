@@ -169,6 +169,8 @@ describe("getScopedConfig", () => {
   describe("settings config", () => {
 
     beforeEach(async () => {
+      env._set("SELF_HOSTED", 1)
+      env._set("PLATFORM_URL", "")
       await clearSettingsConfig()
     })
 
