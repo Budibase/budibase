@@ -1,12 +1,5 @@
 <script>
-  import {
-    Body,
-    Divider,
-    Heading,
-    Layout,
-    notifications,
-    Page,
-  } from "@budibase/bbui"
+  import { Body, Divider, Heading, Layout, notifications } from "@budibase/bbui"
   import { onMount } from "svelte"
   import { auth, licensing } from "stores/portal"
   import Usage from "components/billing/Usage.svelte"
@@ -76,46 +69,44 @@
   }
 </script>
 
-<Page maxWidth={"100ch"}>
-  {#if loaded}
-    <Layout>
-      <Heading>Billing</Heading>
-      <Body>Get information about your current usage and manage your plan</Body>
+{#if loaded}
+  <Layout>
+    <Heading>Usage</Heading>
+    <Body>Get information about your current usage within Budibase.</Body>
+  </Layout>
+  <Layout gap="S">
+    <Divider size="S" />
+  </Layout>
+  <Layout gap="S" noPadding>
+    <Layout gap="XS">
+      <Body size="S">YOUR PLAN</Body>
+      <Heading size="S">{capitalise(license?.plan.type)}</Heading>
     </Layout>
     <Layout gap="S">
-      <Divider />
+      <Body size="S">USAGE</Body>
+      <div class="usages">
+        {#each staticUsage as usage}
+          <div class="usage">
+            <Usage {usage} />
+          </div>
+        {/each}
+      </div>
     </Layout>
-    <Layout gap="S" noPadding>
-      <Layout gap="XS">
-        <Body size="S">Your plan</Body>
-        <Heading size="S">{capitalise(license?.plan.type)}</Heading>
-      </Layout>
+    {#if monthlyUsage.length}
       <Layout gap="S">
-        <Body size="S">Usage</Body>
+        <Body size="S">MONTHLY</Body>
         <div class="usages">
-          {#each staticUsage as usage}
+          {#each monthlyUsage as usage}
             <div class="usage">
               <Usage {usage} />
             </div>
           {/each}
         </div>
       </Layout>
-      {#if monthlyUsage.length}
-        <Layout gap="S">
-          <Body size="S">Monthly</Body>
-          <div class="usages">
-            {#each monthlyUsage as usage}
-              <div class="usage">
-                <Usage {usage} />
-              </div>
-            {/each}
-          </div>
-        </Layout>
-        <div />
-      {/if}
-    </Layout>
-  {/if}
-</Page>
+      <div />
+    {/if}
+  </Layout>
+{/if}
 
 <style>
   .usages {

@@ -31,7 +31,16 @@
   $: menu = buildMenu($auth.isAdmin)
 
   const buildMenu = admin => {
-    let menu = [{ title: "Apps", href: "/builder/portal/apps" }]
+    let menu = [
+      {
+        title: "Apps",
+        href: "/builder/portal/apps",
+      },
+      {
+        title: "Usage",
+        href: "/builder/portal/settings/usage",
+      },
+    ]
     if (admin) {
       menu = menu.concat([
         {
@@ -61,10 +70,6 @@
         ])
 
         if (isEnabled(FEATURE_FLAGS.LICENSING)) {
-          menu = menu.concat({
-            title: "Billing",
-            href: "/builder/portal/settings/billing",
-          })
           menu = menu.concat({
             title: "Upgrade",
             href: "/builder/portal/settings/upgrade",
