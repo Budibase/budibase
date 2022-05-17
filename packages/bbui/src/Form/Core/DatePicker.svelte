@@ -58,6 +58,11 @@
     if (timeOnly) {
       newValue = `2000-01-01T${newValue.split("T")[1]}`
     }
+    // date only, offset for timezone so always right date
+    else if (!enableTime) {
+      const offset = dates[0].getTimezoneOffset() * 60000
+      newValue = new Date(dates[0].getTime() - offset).toISOString()
+    }
     dispatch("change", newValue)
   }
 
