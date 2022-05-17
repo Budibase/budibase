@@ -1014,10 +1014,10 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/backend-core@1.0.160":
-  version "1.0.160"
-  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.0.160.tgz#000e3b5a3ed91e73a542b4caa202a6f147d91294"
-  integrity sha512-XfAFU6sRPrCSEKlm58WeuPw8lUoJK+KwO0tcbT+bB2Nb7XCHplskryEgk/PM9ujRU6SMPDx11zKeqRebHlycbA==
+"@budibase/backend-core@1.0.163":
+  version "1.0.163"
+  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.0.163.tgz#290f471f9a3d81537c710412920c167e860c89bd"
+  integrity sha512-rqjTj4b11NJK5Qj9Uxc4krFTIveL/+3ubjXYd7Djh94RIJ9LZ0vRMUYPJqqWxpsQFTEmr1viNG4YeQgph5IcnQ==
   dependencies:
     "@techpass/passport-openidconnect" "^0.3.0"
     aws-sdk "^2.901.0"
@@ -1091,12 +1091,12 @@
     svelte-flatpickr "^3.2.3"
     svelte-portal "^1.0.0"
 
-"@budibase/pro@1.0.160":
-  version "1.0.160"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-1.0.160.tgz#921c4e3f65b866d84292644dfd8793c4d0b667c7"
-  integrity sha512-p+Jhnk1n98CWCJXydSQSO7a+HDpqGAHekGQbOR7aayuwuoYzyOXxTcHNLdBp+3lkXhLSZq9oIwfEGpgdrrhXPA==
+"@budibase/pro@1.0.163":
+  version "1.0.163"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-1.0.163.tgz#5de1e026c390ae52678d3a37e5b5b45d3010b8f2"
+  integrity sha512-KG7YZ1CAyMDuV+brTuj9eJNm5r5Wd9zF4BJoYlMLMTCqQs0cC3e+nw4qcjFUkz86PrrBNQopbMi0tQg7jPg5Dg==
   dependencies:
-    "@budibase/backend-core" "1.0.160"
+    "@budibase/backend-core" "1.0.163"
     node-fetch "^2.6.1"
 
 "@budibase/standard-components@^0.9.139":
@@ -2430,6 +2430,13 @@
     "@types/connect" "*"
     "@types/node" "*"
 
+"@types/bson@*":
+  version "4.2.0"
+  resolved "https://registry.yarnpkg.com/@types/bson/-/bson-4.2.0.tgz#a2f71e933ff54b2c3bf267b67fa221e295a33337"
+  integrity sha512-ELCPqAdroMdcuxqwMgUpifQyRoTpyYCNr1V9xKyF40VsBobsj+BbWNRvwGchMgBPGqkw655ypkjj2MEF5ywVwg==
+  dependencies:
+    bson "*"
+
 "@types/bull@^3.15.1":
   version "3.15.8"
   resolved "https://registry.yarnpkg.com/@types/bull/-/bull-3.15.8.tgz#ae2139f94490d740b37c8da5d828ce75dd82ce7c"
@@ -2650,6 +2657,14 @@
   version "1.3.2"
   resolved "https://registry.yarnpkg.com/@types/mime/-/mime-1.3.2.tgz#93e25bf9ee75fe0fd80b594bc4feb0e862111b5a"
   integrity sha512-YATxVxgRqNH6nHEIsvg6k2Boc1JHI9ZbH5iWFFv/MTkchz3b1ieGDa5T0a9RznNdI0KhVbdbWSN+KWWrQZRxTw==
+
+"@types/mongodb@3.6.3":
+  version "3.6.3"
+  resolved "https://registry.yarnpkg.com/@types/mongodb/-/mongodb-3.6.3.tgz#5655af409d9e32d5d5ae9a653abf3e5f9c83eb7a"
+  integrity sha512-6YNqGP1hk5bjUFaim+QoFFuI61WjHiHE1BNeB41TA00Xd2K7zG4lcWyLLq/XtIp36uMavvS5hoAUJ+1u/GcX2Q==
+  dependencies:
+    "@types/bson" "*"
+    "@types/node" "*"
 
 "@types/node@*", "@types/node@>=13.13.4":
   version "17.0.18"
@@ -3866,6 +3881,13 @@ bser@2.1.1:
   integrity sha512-gQxTNE/GAfIIrmHLUE3oJyp5FO6HRBfhjnw4/wMmA63ZGDJnWBmgY/lyQBpnDUkGmAhbSe39tx2d/iTOAfglwQ==
   dependencies:
     node-int64 "^0.4.0"
+
+bson@*:
+  version "4.6.3"
+  resolved "https://registry.yarnpkg.com/bson/-/bson-4.6.3.tgz#d1a9a0b84b9e84b62390811fc5580f6a8b1d858c"
+  integrity sha512-rAqP5hcUVJhXP2MCSNVsf0oM2OGU1So6A9pVRDYayvJ5+hygXHQApf87wd5NlhPM1J9RJnbqxIG/f8QTzRoQ4A==
+  dependencies:
+    buffer "^5.6.0"
 
 bson@^1.1.4:
   version "1.1.6"
