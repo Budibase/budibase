@@ -1,7 +1,7 @@
 const google = require("../google")
 const { Cookies, Configs } = require("../../../constants")
 const { clearCookie, getCookie } = require("../../../utils")
-const { getScopedConfig, getPlatformUrl } = require("../../../db/utils")
+const { getScopedConfig } = require("../../../db/utils")
 const { doWithDB } = require("../../../db")
 const environment = require("../../../environment")
 const { getGlobalDB } = require("../../../tenancy")
@@ -21,20 +21,28 @@ async function fetchGoogleCreds() {
   )
 }
 
-async function platformUrl() {
+async function getPlatformUrl() {
+  let platformUrl = environment.PLATFORM_URL || "http://localhost:10000"
+
   const db = getGlobalDB()
-  const publicConfig = await getScopedConfig(db, {
+  const settings = await getScopedConfig(db, {
     type: Configs.SETTINGS,
   })
-  return getPlatformUrl(publicConfig)
+
+  // self hosted - check for platform url override
+  if (settings && settings.platformUrl) {
+    platformUrl = settings.platformUrl
+  }
+
+  return platformUrl
 }
 
 async function preAuth(passport, ctx, next) {
   // get the relevant config
   const googleConfig = await fetchGoogleCreds()
-  const platUrl = await platformUrl()
+  const platformUrl = await getPlatformUrl()
 
-  let callbackUrl = `${platUrl}/api/global/auth/datasource/google/callback`
+  let callbackUrl = `${platformUrl}/api/global/auth/datasource/google/callback`
   const strategy = await google.strategyFactory(googleConfig, callbackUrl)
 
   if (!ctx.query.appId || !ctx.query.datasourceId) {
@@ -51,9 +59,9 @@ async function preAuth(passport, ctx, next) {
 async function postAuth(passport, ctx, next) {
   // get the relevant config
   const config = await fetchGoogleCreds()
-  const platUrl = await platformUrl()
+  const platformUrl = await getPlatformUrl()
 
-  let callbackUrl = `${platUrl}/api/global/auth/datasource/google/callback`
+  let callbackUrl = `${platformUrl}/api/global/auth/datasource/google/callback`
   const strategy = await google.strategyFactory(
     config,
     callbackUrl,
