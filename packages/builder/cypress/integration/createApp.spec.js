@@ -1,4 +1,5 @@
 import filterTests from '../support/filterTests'
+const interact = require('../support/interact')
 
 filterTests(['smoke', 'all'], () => {
   context("Create an Application", () => {
@@ -10,14 +11,14 @@ filterTests(['smoke', 'all'], () => {
 
     if (!(Cypress.env("TEST_ENV"))) {
       it("should show the new user UI/UX", () => {
-        cy.visit(`${Cypress.config().baseUrl}/builder`)
-        cy.get(`[data-cy="create-app-btn"]`).contains('Start from scratch').should("exist")
-        cy.get(`[data-cy="import-app-btn"]`).should("exist")
+        cy.visit(`${Cypress.config().baseUrl}/builder/portal/apps/create`) //added /portal/apps/create
+        cy.get(interact.CREATE_APP_BUTTON).contains('Start from scratch').should("exist")
+        cy.get(interact.CREATE_APP_BUTTON).should("exist")
         
-        cy.get(".template-category-filters").should("exist")
-        cy.get(".template-categories").should("exist")
+        cy.get(interact.TEMPLATE_CATEGORY_FILTER).should("exist")
+        cy.get(interact.TEMPLATE_CATEGORY).should("exist")
         
-        cy.get(".appTable").should("not.exist")
+        cy.get(interact.APP_TABLE).should("not.exist")
       })
     }
 
@@ -29,21 +30,21 @@ filterTests(['smoke', 'all'], () => {
         .its("body")
         .then(val => {
           if (val.length > 0) {
-            cy.get(".spectrum-Button").contains("Templates").click({force: true})
+            cy.get(interact.SPECTRUM_BUTTON_TEMPLATE).contains("Templates").click({force: true})
           }
         })
 
-      cy.get(".template-category-filters").should("exist")
-      cy.get(".template-categories").should("exist")
+      cy.get(interact.TEMPLATE_CATEGORY_FILTER).should("exist")
+      cy.get(interact.TEMPLATE_CATEGORY).should("exist")
       
-      cy.get(".template-category").its('length').should('be.gt', 1)
-      cy.get(".template-category-filters .spectrum-ActionButton").its('length').should('be.gt', 2)
+      cy.get(interact.TEMPLATE_CATEGORY_ACTIONGROUP).its('length').should('be.gt', 1)
+      cy.get(interact.TEMPLATE_CATEGORY_FILTER_ACTIONBUTTON).its('length').should('be.gt', 2)
       
-      cy.get(".template-category-filters .spectrum-ActionButton").eq(1).click()
-      cy.get(".template-category").should('have.length', 1)
+      cy.get(interact.TEMPLATE_CATEGORY_FILTER_ACTIONBUTTON).eq(1).click()
+      cy.get(interact.TEMPLATE_CATEGORY_ACTIONGROUP).should('have.length', 1)
 
-      cy.get(".template-category-filters .spectrum-ActionButton").eq(0).click()
-      cy.get(".template-category").its('length').should('be.gt', 1)
+      cy.get(interact.TEMPLATE_CATEGORY_FILTER_ACTIONBUTTON).eq(0).click()
+      cy.get(interact.TEMPLATE_CATEGORY_ACTIONGROUP).its('length').should('be.gt', 1)
     })
 
     it("should enforce a valid url before submission", () => {
@@ -51,40 +52,40 @@ filterTests(['smoke', 'all'], () => {
       cy.wait(500)
 
       // Start create app process. If apps already exist, click second button
-      cy.get(`[data-cy="create-app-btn"]`).click({ force: true })
+      cy.get(interact.CREATE_APP_BUTTON).click({ force: true })
       cy.request(`${Cypress.config().baseUrl}/api/applications?status=all`)
         .its("body")
         .then(val => {
           if (val.length > 0) {
-            cy.get(`[data-cy="create-app-btn"]`).click({ force: true })
+            cy.get(interact.CREATE_APP_BUTTON).click({ force: true })
           }
         })
 
       const appName = "Cypress Tests"
-      cy.get(".spectrum-Modal").within(() => {
+      cy.get(interact.SPECTRUM_MODAL).within(() => {
 
-        cy.get("input").eq(0).should('have.focus')
+        cy.get(interact.APP_NAME_INPUT).eq(0).should('have.focus')
 
         //Auto fill
-        cy.get("input").eq(0).clear()
-        cy.get("input").eq(0).type(appName).should("have.value", appName).blur()
-        cy.get("input").eq(1).should("have.value", "/cypress-tests")
-        cy.get(".spectrum-ButtonGroup").contains("Create app").should('not.be.disabled')
+        cy.get(interact.APP_NAME_INPUT).eq(0).clear()
+        cy.get(interact.APP_NAME_INPUT).eq(0).type(appName).should("have.value", appName).blur()
+        cy.get(interact.APP_NAME_INPUT).eq(1).should("have.value", "/cypress-tests")
+        cy.get(interact.SPECTRUM_BUTTON_GROUP).contains("Create app").should('not.be.disabled')
 
         //Empty the app url - disabled create
-        cy.get("input").eq(1).clear().blur()
-        cy.get(".spectrum-ButtonGroup").contains("Create app").should('be.disabled')
+        cy.get(interact.APP_NAME_INPUT).eq(1).clear().blur()
+        cy.get(interact.SPECTRUM_BUTTON_GROUP).contains("Create app").should('be.disabled')
 
         //Invalid url
-        cy.get("input").eq(1).type("/new app-url").blur()
-        cy.get(".spectrum-ButtonGroup").contains("Create app").should('be.disabled')
+        cy.get(interact.APP_NAME_INPUT).eq(1).type("/new app-url").blur()
+        cy.get(interact.SPECTRUM_BUTTON_GROUP).contains("Create app").should('be.disabled')
 
         //Specifically alter the url
-        cy.get("input").eq(1).clear()
-        cy.get("input").eq(1).type("another-app-name").blur()
-        cy.get("input").eq(1).should("have.value", "/another-app-name")
-        cy.get("input").eq(0).should("have.value", appName)
-        cy.get(".spectrum-ButtonGroup").contains("Create app").should('not.be.disabled')
+        cy.get(interact.APP_NAME_INPUT).eq(1).clear()
+        cy.get(interact.APP_NAME_INPUT).eq(1).type("another-app-name").blur()
+        cy.get(interact.APP_NAME_INPUT).eq(1).should("have.value", "/another-app-name")
+        cy.get(interact.APP_NAME_INPUT).eq(0).should("have.value", appName)
+        cy.get(interact.SPECTRUM_BUTTON_GROUP).contains("Create app").should('not.be.disabled')
 
       })
     })
@@ -178,15 +179,15 @@ filterTests(['smoke', 'all'], () => {
         .its("body")
         .then(val => {
           if (val.length > 0) {
-            cy.get(`[data-cy="create-app-btn"]`).click({ force: true })
+            cy.get(interact.CREATE_APP_BUTTON).click({ force: true })
           }
         })
 
-      cy.get(".template-category-filters").should("exist")
-      cy.get(".template-categories").should("exist")
+      cy.get(interact.TEMPLATE_CATEGORY_FILTER).should("exist")
+      cy.get(interact.TEMPLATE_CATEGORY).should("exist")
 
       // Select template
-      cy.get('.template-category').eq(0).within(() => {
+      cy.get(interact.TEMPLATE_CATEGORY_ACTIONGROUP).eq(0).within(() => {
         const card = cy.get('.template-card').eq(0).should("exist");
         const cardOverlay = card.get('.template-thumbnail-action-overlay').should("exist")
         cardOverlay.invoke("show")
@@ -200,8 +201,8 @@ filterTests(['smoke', 'all'], () => {
       templateName.invoke('text')
       .then(templateNameText => {
         const templateNameParsed = "/"+templateNameText.toLowerCase().replace(/\s+/g, "-")
-        cy.get(".spectrum-Modal input").eq(0).should("have.value", templateNameText)
-        cy.get(".spectrum-Modal input").eq(1).should("have.value", templateNameParsed)
+        cy.get(interact.SPECTRUM_MODAL_INPUT).eq(0).should("have.value", templateNameText)
+        cy.get(interact.SPECTRUM_MODAL_INPUT).eq(1).should("have.value", templateNameParsed)
 
         cy.get(".spectrum-Modal .spectrum-ButtonGroup").contains("Create app").click()
         cy.wait(5000)
