@@ -524,7 +524,12 @@ Cypress.Commands.add("createAppFromScratch", appName => {
     .contains("Start from scratch")
     .click({ force: true })
   cy.get(".spectrum-Modal").within(() => {
-    cy.get("input").eq(0).type(appName).should("have.value", appName).blur()
+    cy.get("input")
+      .eq(0)
+      .clear()
+      .type(appName)
+      .should("have.value", appName)
+      .blur()
     cy.get(".spectrum-ButtonGroup").contains("Create app").click()
     cy.wait(10000)
   })
@@ -642,7 +647,8 @@ Cypress.Commands.add("addDatasourceConfig", (datasource, skipFetch) => {
       cy.get(".spectrum-Button")
         .contains("Save and fetch tables")
         .click({ force: true })
-      cy.wait(3000)
+      // Check modal closes after datasource config & fetch
+      cy.get(".spectrum-Dialog-grid", { timeout: 7000 }).should("not.exist")
     })
   }
 })

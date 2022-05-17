@@ -4,6 +4,7 @@ filterTests(["smoke", "all"], () => {
   context("Create a User and Assign Roles", () => {
     before(() => {
       cy.login()
+      cy.createApp("Cypress Tests")
     })
 
     it("should create a user", () => {
@@ -52,7 +53,7 @@ filterTests(["smoke", "all"], () => {
         cy.get(".spectrum-Table").contains("bbuser").click()
         cy.wait(1000)
         for (let i = 0; i < 3; i++) {
-          cy.get(".spectrum-Table")
+          cy.get(".spectrum-Table", { timeout: 3000})
             .eq(1)
             .find(".spectrum-Table-row")
             .eq(0)
@@ -79,6 +80,7 @@ filterTests(["smoke", "all"], () => {
                 .contains("Update role")
                 .click({ force: true })
             })
+            cy.reload()
         }
         // Confirm roles exist within Configure roles table
         cy.wait(2000)
