@@ -14,6 +14,7 @@
   export let updateOnChange = true
   export let quiet = false
   export let dataCy
+  export let autofocus
 
   const dispatch = createEventDispatcher()
   const onChange = e => {
@@ -33,6 +34,7 @@
     {placeholder}
     {type}
     {quiet}
+    {autofocus}
     on:change={onChange}
     on:click
     on:input

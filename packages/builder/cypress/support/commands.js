@@ -39,6 +39,71 @@ Cypress.Commands.add("closeModal", () => {
   })
 })
 
+Cypress.Commands.add("importApp", (exportFilePath, name) => {
+  cy.visit(`${Cypress.config().baseUrl}/builder`)
+
+  cy.request(`${Cypress.config().baseUrl}/api/applications?status=all`)
+    .its("body")
+    .then(val => {
+      if (val.length > 0) {
+        cy.get(`[data-cy="create-app-btn"]`).click({ force: true })
+        cy.wait(500)
+      }
+      cy.get(`[data-cy="import-app-btn"]`).click({ force: true })
+    })
+
+  cy.get(".spectrum-Modal").within(() => {
+    cy.get("input").eq(1).should("have.focus")
+
+    cy.get(".spectrum-Dropzone").selectFile(exportFilePath, {
+      action: "drag-drop",
+    })
+
+    cy.get(".gallery .filename").contains("exported-app.txt")
+
+    if (name && name != "") {
+      cy.get("input").eq(0).type(name).should("have.value", name).blur()
+    }
+    cy.get(".confirm-wrap button")
+      .should("not.be.disabled")
+      .click({ force: true })
+    cy.wait(5000)
+  })
+})
+
+Cypress.Commands.add("updateUserInformation", (firstName, lastName) => {
+  cy.get(".user-dropdown .avatar > .icon").click({ force: true })
+
+  cy.get(".spectrum-Popover[data-cy='user-menu']").within(() => {
+    cy.get("li[data-cy='user-info']").click({ force: true })
+  })
+
+  cy.get(".spectrum-Modal.is-open").within(() => {
+    cy.get("[data-cy='user-first-name']").clear()
+
+    if (!firstName || firstName == "") {
+      cy.get("[data-cy='user-first-name']").invoke("val").should("be.empty")
+    } else {
+      cy.get("[data-cy='user-first-name']")
+        .type(firstName)
+        .should("have.value", firstName)
+        .blur()
+    }
+
+    cy.get("[data-cy='user-last-name']").clear()
+
+    if (!lastName || lastName == "") {
+      cy.get("[data-cy='user-last-name']").invoke("val").should("be.empty")
+    } else {
+      cy.get("[data-cy='user-last-name']")
+        .type(lastName)
+        .should("have.value", lastName)
+        .blur()
+    }
+    cy.get("button").contains("Update information").click({ force: true })
+  })
+})
+
 Cypress.Commands.add("createApp", (name, addDefaultTable) => {
   const shouldCreateDefaultTable =
     typeof addDefaultTable != "boolean" ? true : addDefaultTable
@@ -57,7 +122,11 @@ Cypress.Commands.add("createApp", (name, addDefaultTable) => {
     })
 
   cy.get(".spectrum-Modal").within(() => {
-    cy.get("input").eq(0).type(name).should("have.value", name).blur()
+    cy.get("input").eq(0).should("have.focus")
+    if (name && name != "") {
+      cy.get("input").eq(0).clear()
+      cy.get("input").eq(0).type(name).should("have.value", name).blur()
+    }
     cy.get(".spectrum-ButtonGroup")
       .contains("Create app")
       .click({ force: true })
@@ -573,7 +642,7 @@ Cypress.Commands.add("addDatasourceConfig", (datasource, skipFetch) => {
       cy.get(".spectrum-Button")
         .contains("Save and fetch tables")
         .click({ force: true })
-      cy.wait(1000)
+      cy.wait(3000)
     })
   }
 })
