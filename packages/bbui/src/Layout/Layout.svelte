@@ -40,6 +40,10 @@
     padding-left: var(--spacing-xl);
     padding-right: var(--spacing-xl);
   }
+  .paddingX-XXL {
+    padding-left: calc(var(--spacing-xl) * 2);
+    padding-right: calc(var(--spacing-xl) * 2);
+  }
   .paddingY-S {
     padding-top: var(--spacing-s);
     padding-bottom: var(--spacing-s);
@@ -55,6 +59,10 @@
   .paddingY-XL {
     padding-top: var(--spacing-xl);
     padding-bottom: var(--spacing-xl);
+  }
+  .paddingY-XXL {
+    padding-top: calc(var(--spacing-xl) * 2);
+    padding-bottom: calc(var(--spacing-xl) * 2);
   }
   .gap-XXS {
     grid-gap: var(--spacing-xs);

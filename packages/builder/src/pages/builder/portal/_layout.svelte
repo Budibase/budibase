@@ -321,7 +321,7 @@
 
     .mobile-toggle,
     .user-dropdown {
-      flex: 1 1 0;
+      flex: 0 1 0;
     }
 
     /* Reduce BBUI page padding */

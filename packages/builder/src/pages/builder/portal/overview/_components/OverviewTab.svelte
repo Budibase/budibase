@@ -1,7 +1,14 @@
 <script>
   import DashCard from "components/common/DashCard.svelte"
   import { AppStatus } from "constants"
-  import { Icon, Heading, Link, Avatar, notifications } from "@budibase/bbui"
+  import {
+    Icon,
+    Heading,
+    Link,
+    Avatar,
+    notifications,
+    Layout,
+  } from "@budibase/bbui"
   import { store } from "builderStore"
   import clientPackage from "@budibase/client/package.json"
   import { processStringSync } from "@budibase/string-templates"
@@ -41,132 +48,136 @@
 </script>
 
 <div class="overview-tab">
-  <div class="top">
-    <DashCard title={"App Status"} dataCy={"app-status"}>
-      <div class="status-content">
-        <div class="status-display">
-          {#if isPublished}
-            <Icon name="GlobeCheck" size="XL" disabled={false} />
-            <span>Published</span>
-          {:else}
-            <Icon name="GlobeStrike" size="XL" disabled={true} />
-            <span class="disabled"> Unpublished </span>
-          {/if}
-        </div>
-
-        <p class="status-text">
-          {#if deployments?.length}
-            {processStringSync(
-              "Last published {{ duration time 'millisecond' }} ago",
-              {
-                time:
-                  new Date().getTime() -
-                  new Date(deployments[0].updatedAt).getTime(),
-              }
-            )}
-          {/if}
-          {#if !deployments?.length}
-            -
-          {/if}
-        </p>
-      </div>
-    </DashCard>
-    <DashCard title={"Last Edited"} dataCy={"edited-by"}>
-      <div class="last-edited-content">
-        {#await userPromise}
-          <Avatar size="M" initials={"-"} />
-        {:then _}
-          <div class="updated-by">
-            {#if appEditor}
-              <Avatar size="M" initials={getInitials(appEditor)} />
-              <div class="editor-name">
-                {appEditor._id === $auth.user._id ? "You" : appEditorText}
-              </div>
+  <Layout paddingX="XXL" paddingY="XXL">
+    <div class="top">
+      <DashCard title={"App Status"} dataCy={"app-status"}>
+        <div class="status-content">
+          <div class="status-display">
+            {#if isPublished}
+              <Icon name="GlobeCheck" size="XL" disabled={false} />
+              <span>Published</span>
+            {:else}
+              <Icon name="GlobeStrike" size="XL" disabled={true} />
+              <span class="disabled"> Unpublished </span>
             {/if}
           </div>
-        {:catch error}
-          <p>Could not fetch user: {error.message}</p>
-        {/await}
-        <p class="last-edit-text">
-          {#if app}
-            {processStringSync(
-              "Last edited {{ duration time 'millisecond' }} ago",
-              {
-                time: new Date().getTime() - new Date(app?.updatedAt).getTime(),
-              }
-            )}
-          {/if}
-        </p>
-      </div>
-    </DashCard>
-    <DashCard
-      title={"App Version"}
-      showIcon={true}
-      action={() => {
-        navigateTab("Settings")
-      }}
-      dataCy={"app-version"}
-    >
-      <div class="version-content" data-cy={$store.version}>
-        <Heading size="XS">{$store.version}</Heading>
-        {#if updateAvailable}
-          <p class="version-status">
-            New version <strong>{clientPackage.version}</strong> is available -
-            <Link
-              on:click={() => {
-                if (typeof navigateTab === "function") {
-                  navigateTab("Settings")
+
+          <p class="status-text">
+            {#if deployments?.length}
+              {processStringSync(
+                "Last published {{ duration time 'millisecond' }} ago",
+                {
+                  time:
+                    new Date().getTime() -
+                    new Date(deployments[0].updatedAt).getTime(),
                 }
-              }}
-            >
-              Update
-            </Link>
+              )}
+            {/if}
+            {#if !deployments?.length}
+              -
+            {/if}
           </p>
-        {:else}
-          <p class="version-status">You're running the latest!</p>
-        {/if}
-      </div>
-    </DashCard>
-  </div>
-  {#if false}
-    <div class="bottom">
-      <DashCard
-        title={"Automation History"}
-        action={() => {
-          navigateTab("Automation History")
-        }}
-        dataCy={"automation-history"}
-      >
-        <div class="automation-content">
-          <div class="automation-metrics">
-            <div class="succeeded">
-              <Heading size="XL">0</Heading>
-              <div class="metric-info">
-                <Icon name="CheckmarkCircle" />
-                Success
-              </div>
+        </div>
+      </DashCard>
+      <DashCard title={"Last Edited"} dataCy={"edited-by"}>
+        <div class="last-edited-content">
+          {#await userPromise}
+            <Avatar size="M" initials={"-"} />
+          {:then _}
+            <div class="updated-by">
+              {#if appEditor}
+                <Avatar size="M" initials={getInitials(appEditor)} />
+                <div class="editor-name">
+                  {appEditor._id === $auth.user._id ? "You" : appEditorText}
+                </div>
+              {/if}
             </div>
-            <div class="failed">
-              <Heading size="XL">0</Heading>
-              <div class="metric-info">
-                <Icon name="Alert" />
-                Error
-              </div>
-            </div>
-          </div>
+          {:catch error}
+            <p>Could not fetch user: {error.message}</p>
+          {/await}
+          <p class="last-edit-text">
+            {#if app}
+              {processStringSync(
+                "Last edited {{ duration time 'millisecond' }} ago",
+                {
+                  time:
+                    new Date().getTime() - new Date(app?.updatedAt).getTime(),
+                }
+              )}
+            {/if}
+          </p>
         </div>
       </DashCard>
       <DashCard
-        title={"Backups"}
+        title={"App Version"}
+        showIcon={true}
         action={() => {
-          navigateTab("Backups")
+          navigateTab("Settings")
         }}
-        dataCy={"backups"}
+        dataCy={"app-version"}
       >
-        <div class="backups-content">test</div>
+        <div class="version-content" data-cy={$store.version}>
+          <Heading size="XS">{$store.version}</Heading>
+          {#if updateAvailable}
+            <p class="version-status">
+              New version <strong>{clientPackage.version}</strong> is available
+              -
+              <Link
+                on:click={() => {
+                  if (typeof navigateTab === "function") {
+                    navigateTab("Settings")
+                  }
+                }}
+              >
+                Update
+              </Link>
+            </p>
+          {:else}
+            <p class="version-status">You're running the latest!</p>
+          {/if}
+        </div>
       </DashCard>
     </div>
-  {/if}
+    {#if false}
+      <div class="bottom">
+        <DashCard
+          title={"Automation History"}
+          action={() => {
+            navigateTab("Automation History")
+          }}
+          dataCy={"automation-history"}
+        >
+          <div class="automation-content">
+            <div class="automation-metrics">
+              <div class="succeeded">
+                <Heading size="XL">0</Heading>
+                <div class="metric-info">
+                  <Icon name="CheckmarkCircle" />
+                  Success
+                </div>
+              </div>
+              <div class="failed">
+                <Heading size="XL">0</Heading>
+                <div class="metric-info">
+                  <Icon name="Alert" />
+                  Error
+                </div>
+              </div>
+            </div>
+          </div>
+        </DashCard>
+        <DashCard
+          title={"Backups"}
+          action={() => {
+            navigateTab("Backups")
+          }}
+          dataCy={"backups"}
+        >
+          <div class="backups-content">test</div>
+        </DashCard>
+      </div>
+    {/if}
+  </Layout>
 </div>
 
 <style>
@@ -180,6 +191,23 @@
     grid-gap: var(--spacing-xl);
     grid-template-columns: repeat(auto-fill, minmax(30%, 1fr));
   }
+
+  @media (max-width: 1000px) {
+    .overview-tab .top {
+      display: grid;
+      grid-gap: var(--spacing-xl);
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  @media (max-width: 800px) {
+    .overview-tab .top {
+      display: grid;
+      grid-gap: var(--spacing-xl);
+      grid-template-columns: 1fr;
+    }
+  }
+
   .overview-tab .bottom,
   .automation-metrics {
     display: grid;

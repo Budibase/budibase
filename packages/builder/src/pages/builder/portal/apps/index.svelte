@@ -10,7 +10,6 @@
     notifications,
     Body,
     Search,
-    Divider,
     Helpers,
   } from "@budibase/bbui"
   import TemplateDisplay from "components/common/TemplateDisplay.svelte"
@@ -65,6 +64,9 @@
   $: filteredApps = enrichedApps.filter(app =>
     app?.name?.toLowerCase().includes(searchTerm.toLowerCase())
   )
+
+  $: lockedApps = filteredApps.filter(app => app?.lockedYou || app?.lockedOther)
+  $: unlocked = lockedApps?.length == 0
 
   const enrichApps = (apps, user, sortBy) => {
     const enrichedApps = apps.map(app => ({
@@ -176,10 +178,6 @@
     } else {
       window.open(`/${app.prodId}`)
     }
-  }
-
-  const previewApp = app => {
-    window.open(`/${app.devId}`)
   }
 
   const appOverview = app => {
@@ -348,7 +346,7 @@
       {/if}
 
       {#if enrichedApps.length}
-        <Layout noPadding gap="S">
+        <Layout noPadding gap="L">
           <div class="title">
             <div class="buttons">
               <Button
@@ -414,8 +412,8 @@
               </div>
             {/if}
           </div>
-          <Divider size="S" />
-          <div class="appTable">
+
+          <div class="appTable" class:unlocked>
             {#each filteredApps as app (app.appId)}
               <AppRow
                 {copyAppId}
@@ -428,7 +426,6 @@
                 {exportApp}
                 {deleteApp}
                 {updateApp}
-                {previewApp}
                 {appOverview}
               />
             {/each}
@@ -490,6 +487,9 @@
 <ChooseIconModal app={selectedApp} bind:this={iconModal} />
 
 <style>
+  .appTable {
+    border-top: var(--border-light);
+  }
   .app-actions {
     display: flex;
   }
@@ -533,6 +533,11 @@
     grid-template-columns: 1fr 1fr 1fr 1fr auto;
     align-items: center;
   }
+
+  .appTable.unlocked {
+    grid-template-columns: 1fr 1fr auto 1fr auto;
+  }
+
   .appTable :global(> div) {
     height: 70px;
     display: grid;

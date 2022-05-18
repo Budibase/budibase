@@ -28,10 +28,10 @@
 
 <div class="settings-tab">
   <Page wide={false}>
-    <Layout gap="XL" noPadding>
+    <Layout gap="XL" paddingY="XXL" paddingX="">
       <span class="details-section">
         <Layout gap="XS" noPadding>
-          <Heading size="S">Name and Url</Heading>
+          <Heading size="S">Name and URL</Heading>
           <Divider />
           <Body>
             <div class="app-details">
@@ -60,8 +60,8 @@
         </Layout>
       </span>
       <span class="version-section">
-        <Layout gap="XS" noPadding>
-          <Heading size="S">App Version</Heading>
+        <Layout gap="XS" paddingY="XXL" paddingX="">
+          <Heading size="S">App version</Heading>
           <Divider />
           <Body>
             {#if updateAvailable}
@@ -76,28 +76,26 @@
                 <strong>{$store.version}</strong>. You're running the latest!
               </p>
             {/if}
-            <p>
-              Updates can contain new features, performance improvements and bug
-              fixes.
-            </p>
+
+            Updates can contain new features, performance improvements and bug
+            fixes.
+
             <div class="page-action">
-              <Button cta on:click={versionModal.show()}>Update App</Button>
+              <Button cta on:click={versionModal.show()}>Update app</Button>
             </div>
           </Body>
         </Layout>
       </span>
       <span class="selfhost-section">
-        <Layout gap="XS" noPadding>
+        <Layout gap="XS" paddingY="XXL" paddingX="">
           <Heading size="S">Self-host Budibase</Heading>
           <Divider />
           <Body>
-            <p>
-              Self-host Budibase for free to get unlimited apps and more - and
-              it only takes a few minutes!
-            </p>
+            Self-host Budibase for free to get unlimited apps and more - and it
+            only takes a few minutes!
             <div class="page-action">
               <Button
-                cta
+                secondary
                 on:click={() => {
                   window.open(selfHostPath, "_blank")
                 }}>Self-host Budibase</Button
