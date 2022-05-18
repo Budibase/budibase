@@ -1,7 +1,14 @@
 <script>
-  import { Body, Divider, Heading, Layout, notifications } from "@budibase/bbui"
+  import {
+    Body,
+    Divider,
+    Heading,
+    Layout,
+    notifications,
+    Link,
+  } from "@budibase/bbui"
   import { onMount } from "svelte"
-  import { auth, licensing } from "stores/portal"
+  import { admin, auth, licensing } from "stores/portal"
   import Usage from "components/billing/Usage.svelte"
 
   let staticUsage = []
@@ -10,6 +17,9 @@
 
   $: quotaUsage = $licensing.quotaUsage
   $: license = $auth.user?.license
+  $: console.log($auth.user)
+
+  const upgradeUrl = `${$admin.accountPortalUrl}/portal/upgrade`
 
   const setMonthlyUsage = () => {
     monthlyUsage = []
@@ -72,7 +82,19 @@
 {#if loaded}
   <Layout>
     <Heading>Usage</Heading>
-    <Body>Get information about your current usage within Budibase.</Body>
+    <Body
+      >Get information about your current usage within Budibase.
+      {#if $admin.cloud}
+        {#if $auth.user?.accountPortalAccess}
+          To upgrade your plan and usage limits visit your <Link
+            size="L"
+            href={upgradeUrl}>Account</Link
+          >.
+        {:else}
+          Contact your account holder to upgrade your usage limits.
+        {/if}
+      {/if}
+    </Body>
   </Layout>
   <Layout gap="S">
     <Divider size="S" />
