@@ -71,7 +71,7 @@ describe("oidc", () => {
   
   describe("authenticate", () => {    
     afterEach(() => {
-      jest.clearAllMocks();
+      jest.clearAllMocks()
     });
 
     // mock third party common authentication
@@ -80,10 +80,10 @@ describe("oidc", () => {
     
     // mock the passport callback
     const mockDone = jest.fn()
+    const mockSaveUserFn = jest.fn()
 
     async function doAuthenticate() {
       const oidc = require("../oidc")
-      const mockSaveUserFn = jest.fn()
       const authenticate = await oidc.buildVerifyFn(mockSaveUserFn)
 
       await authenticate(
@@ -105,11 +105,13 @@ describe("oidc", () => {
       expect(authenticateThirdParty).toHaveBeenCalledWith(
         user,
         false, 
-        mockDone)
+        mockDone,
+        mockSaveUserFn,
+      )
     }
 
     it("delegates authentication to third party common", async () => {
-      doTest()
+      await doTest()
     })
 
     it("uses JWT email to get email", async () => {
@@ -118,7 +120,7 @@ describe("oidc", () => {
         email : "mock@budibase.com"
       }
 
-      doTest()
+      await doTest()
     })
   
     it("uses JWT username to get email", async () => {
@@ -127,7 +129,7 @@ describe("oidc", () => {
         preferred_username : "mock@budibase.com"
       }
 
-      doTest()
+      await doTest()
     })
 
     it("uses JWT invalid username to get email", async () => {
