@@ -78,6 +78,7 @@ module.exports = {
   ALLOW_DEV_AUTOMATIONS: process.env.ALLOW_DEV_AUTOMATIONS,
   DISABLE_THREADING: process.env.DISABLE_THREADING,
   SQL_MAX_ROWS: process.env.SQL_MAX_ROWS,
+  TEST_ENV: true,
   _set(key, value) {
     process.env[key] = value
     module.exports[key] = value
