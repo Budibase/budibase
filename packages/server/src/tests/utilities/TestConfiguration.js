@@ -60,13 +60,14 @@ class TestConfiguration {
     return this.prodAppId
   }
 
-  async doInContext(appId, task) {
+  async doInContext(appId, task, opts = { prod: false }) {
     if (!appId) {
-      appId = this.appId
+      appId = opts.prod ? this.prodAppId : this.appId
     }
     return doInTenant(TENANT_ID, () => {
       // check if already in a context
-      if (context.getAppId() == null && appId !== null) {
+      const contextId = context.getAppId()
+      if (appId !== null && (contextId === null || contextId !== appId)) {
         return context.doInAppContext(appId, async () => {
           return task()
         })
@@ -276,7 +277,7 @@ class TestConfiguration {
 
   // APP
 
-  async createApp(appName) {
+  async createApp(appName, opts = { deploy: true }) {
     // create dev app
     // clear any old app
     this.appId = null
@@ -286,10 +287,12 @@ class TestConfiguration {
     await context.updateAppId(this.appId)
 
     // create production app
-    this.prodApp = await this.deploy()
-    this.prodAppId = this.prodApp.appId
+    if (opts.deploy) {
+      this.prodApp = await this.deploy()
+      this.prodAppId = this.prodApp.appId
+      this.allApps.push(this.prodApp)
+    }
 
-    this.allApps.push(this.prodApp)
     this.allApps.push(this.app)
 
     return this.app

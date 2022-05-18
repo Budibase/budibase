@@ -10,6 +10,7 @@
   },
   "scripts": {
     "build": "rimraf dist/ && tsc -p tsconfig.build.json && mv dist/src/* dist/ && rimraf dist/src/ && yarn postbuild",
+    "build:watch": "rimraf dist/ && tsc -p tsconfig.build.json --watch --preserveWatchOutput",
     "postbuild": "copyfiles -u 1 src/**/*.svelte dist/ && copyfiles -u 1 src/**/*.hbs dist/ && copyfiles -u 1 src/**/*.json dist/",
     "test": "jest --coverage --maxWorkers=2",
     "test:watch": "jest --watch",

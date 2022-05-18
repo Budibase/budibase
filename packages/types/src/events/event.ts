@@ -102,9 +102,9 @@ export enum Event {
   VIEW_CALCULATION_UPDATED = "view:calculation:updated",
   VIEW_CALCULATION_DELETED = "view:calculation:deleted",
 
-  // ROW
-  // ROW_CREATED = "row:created",
-  ROW_IMPORT = "row:import",
+  // ROWS
+  ROWS_CREATED = "rows:created",
+  ROWS_IMPORTED = "rows:imported",
 
   // COMPONENT
   COMPONENT_CREATED = "component:created",

@@ -23,6 +23,7 @@
     "setup": "node ./hosting/scripts/setup.js && yarn && yarn bootstrap && yarn build && yarn dev",
     "bootstrap": "lerna link && lerna bootstrap && ./scripts/link-dependencies.sh",
     "build": "lerna run build",
+    "build:watch": "lerna run build:watch --ignore @budibase/backend-core --stream --parallel",
     "release": "lerna publish patch --yes --force-publish && yarn release:pro",
     "release:develop": "lerna publish prerelease --yes --force-publish --dist-tag develop && yarn release:pro:develop",
     "release:pro": "bash scripts/pro/release.sh",
