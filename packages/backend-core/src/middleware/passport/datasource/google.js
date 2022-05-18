@@ -22,7 +22,11 @@ async function fetchGoogleCreds() {
 }
 
 async function getPlatformUrl() {
-  let platformUrl = environment.PLATFORM_URL || "http://localhost:10000"
+  if (environment.PLATFORM_URL) {
+    return environment.PLATFORM_URL
+  }
+
+  let platformUrl = "http://localhost:10000"
 
   const db = getGlobalDB()
   const settings = await getScopedConfig(db, {
