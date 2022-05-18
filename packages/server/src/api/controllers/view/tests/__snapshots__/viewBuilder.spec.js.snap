@@ -1,9 +1,66 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`viewBuilder Calculate and filter creates a view with the calculation statistics and filter schema 1`] = `
+Object {
+  "map": "function (doc) {
+      if ((doc.tableId === \\"14f1c4e94d6a47b682ce89d35d4c78b0\\" && !(
+      doc[\\"myField\\"] === undefined ||
+      doc[\\"myField\\"] === null ||
+      doc[\\"myField\\"] === \\"\\" ||
+      (Array.isArray(doc[\\"myField\\"]) && doc[\\"myField\\"].length === 0)
+  )) && (doc[\\"age\\"] > 17)) {
+        emit(doc[\\"_id\\"], doc[\\"myField\\"]);
+      }
+    }",
+  "meta": Object {
+    "calculation": "stats",
+    "field": "myField",
+    "filters": Array [
+      Object {
+        "condition": "MT",
+        "key": "age",
+        "value": 17,
+      },
+    ],
+    "groupBy": undefined,
+    "schema": Object {
+      "avg": Object {
+        "type": "number",
+      },
+      "count": Object {
+        "type": "number",
+      },
+      "field": Object {
+        "type": "string",
+      },
+      "max": Object {
+        "type": "number",
+      },
+      "min": Object {
+        "type": "number",
+      },
+      "sum": Object {
+        "type": "number",
+      },
+      "sumsqr": Object {
+        "type": "number",
+      },
+    },
+    "tableId": "14f1c4e94d6a47b682ce89d35d4c78b0",
+  },
+  "reduce": "_stats",
+}
+`;
+
 exports[`viewBuilder Calculate creates a view with the calculation statistics schema 1`] = `
 Object {
   "map": "function (doc) {
-      if (doc.tableId === \\"14f1c4e94d6a47b682ce89d35d4c78b0\\" ) {
+      if ((doc.tableId === \\"14f1c4e94d6a47b682ce89d35d4c78b0\\" && !(
+      doc[\\"myField\\"] === undefined ||
+      doc[\\"myField\\"] === null ||
+      doc[\\"myField\\"] === \\"\\" ||
+      (Array.isArray(doc[\\"myField\\"]) && doc[\\"myField\\"].length === 0)
+  )) ) {
         emit(doc[\\"_id\\"], doc[\\"myField\\"]);
       }
     }",
