@@ -1,7 +1,7 @@
 {
   "name": "@budibase/server",
   "email": "hi@budibase.com",
-  "version": "1.0.164-alpha.4",
+  "version": "1.0.166",
   "description": "Budibase Web Server",
   "main": "src/index.ts",
   "repository": {
@@ -69,10 +69,10 @@
   "license": "GPL-3.0",
   "dependencies": {
     "@apidevtools/swagger-parser": "^10.0.3",
-    "@budibase/backend-core": "^1.0.164-alpha.4",
-    "@budibase/client": "^1.0.164-alpha.4",
-    "@budibase/pro": "1.0.164-alpha.4",
-    "@budibase/string-templates": "^1.0.164-alpha.4",
+    "@budibase/backend-core": "^1.0.166",
+    "@budibase/client": "^1.0.166",
+    "@budibase/pro": "1.0.166",
+    "@budibase/string-templates": "^1.0.166",
     "@bull-board/api": "^3.7.0",
     "@bull-board/koa": "^3.7.0",
     "@elastic/elasticsearch": "7.10.0",
@@ -146,6 +146,7 @@
     "@budibase/standard-components": "^0.9.139",
     "@jest/test-sequencer": "^24.8.0",
     "@types/apidoc": "^0.50.0",
+    "@types/bson": "^4.2.0",
     "@types/bull": "^3.15.1",
     "@types/google-spreadsheet": "^3.1.5",
     "@types/jest": "^27.4.1",
