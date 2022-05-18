@@ -1,5 +1,4 @@
 import { publishEvent } from "../events"
-import { getAppDB } from "../../context"
 import {
   Event,
   App,
@@ -15,13 +14,6 @@ import {
   AppRevertedEvent,
   AppExportedEvent,
 } from "@budibase/types"
-
-const saveApp = async (app: App): Promise<App> => {
-  const db = getAppDB()
-  const response = await db.save(app)
-  app._rev = response.rev
-  return app
-}
 
 export const created = async (app: App) => {
   const properties: AppCreatedEvent = {}
