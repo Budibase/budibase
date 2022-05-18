@@ -650,7 +650,7 @@ Cypress.Commands.add("addDatasourceConfig", (datasource, skipFetch) => {
         .click({ force: true })
     })
     // Wait for tables to be fetched
-    cy.wait("@datasourceTables")
+    cy.wait("@datasourceTables", { timeout: 60000 })
   }
 })
 
