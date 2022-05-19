@@ -222,6 +222,21 @@ Cypress.Commands.add("createTestTableWithData", () => {
   cy.addColumn("dog", "age", "Number")
 })
 
+Cypress.Commands.add("publishApp", (viewApp = false) => {
+  cy.get(".toprightnav").contains("Publish").click({ force: true })
+  cy.get(".spectrum-Dialog-grid").within(() => {
+    cy.get(".spectrum-Button").contains("Publish").click({ force: true })
+  })
+  cy.wait(2000) // Wait for App to publish and modal to appear
+  cy.get(".spectrum-Dialog-grid").within(() => {
+    if (viewApp) {
+      cy.get(".spectrum-Button").contains("View App").click({ force: true })
+    } else {
+      cy.get(".spectrum-Button").contains("Done").click({ force: true })
+    }
+  })
+})
+
 Cypress.Commands.add("createTable", (tableName, initialTable) => {
   if (!initialTable) {
     cy.navigateToDataSection()
