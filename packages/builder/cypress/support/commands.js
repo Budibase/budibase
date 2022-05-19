@@ -298,6 +298,29 @@ Cypress.Commands.add("unlockApp", unlock_config => {
     })
 })
 
+Cypress.Commands.add("publishApp", resolvedAppPath => {
+  //Assumes you have navigated to an application first
+  cy.get(".toprightnav button.spectrum-Button")
+    .contains("Publish")
+    .click({ force: true })
+
+  cy.get(".spectrum-Modal [data-cy='deploy-app-modal']")
+    .should("be.visible")
+    .within(() => {
+      cy.get(".spectrum-Button").contains("Publish").click({ force: true })
+      cy.wait(1000)
+    })
+
+  //Verify that the app url is presented correctly to the user
+  cy.get(".spectrum-Modal [data-cy='deploy-app-success-modal']")
+    .should("be.visible")
+    .within(() => {
+      let appUrl = Cypress.config().baseUrl + "/app/" + resolvedAppPath
+      cy.get("[data-cy='deployed-app-url'] input").should("have.value", appUrl)
+      cy.get(".spectrum-Button").contains("Done").click({ force: true })
+    })
+})
+
 Cypress.Commands.add("createTestApp", () => {
   const appName = "Cypress Tests"
   cy.deleteApp(appName)
