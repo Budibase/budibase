@@ -8,13 +8,13 @@ filterTests(["all"], () => {
     before(() => {
         cy.login()
         cy.deleteApp(templateName)
-        cy.visit(`${Cypress.config().baseUrl}/builder`, {
+        // Template navigation
+        cy.visit(`${Cypress.config().baseUrl}/builder/portal/apps/templates`, {
             onBeforeLoad(win) {
                 cy.stub(win, 'open')
             }
         })
         cy.wait(2000)
-        cy.templateNavigation()
         })
 
     it("should create and publish app with Job Application Tracker template", () => {

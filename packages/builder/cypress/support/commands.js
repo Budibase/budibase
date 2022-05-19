@@ -671,15 +671,3 @@ Cypress.Commands.add("createRestQuery", (method, restUrl, queryPrettyName) => {
     .should("contain", method)
     .and("contain", queryPrettyName)
 })
-
-Cypress.Commands.add("templateNavigation", () => {
-  // Navigates to templates section
-  cy.request(`${Cypress.config().baseUrl}/api/applications?status=all`)
-    .its("body")
-    .then(val => {
-      // Templates button needs clicked if apps already exist
-      if (val.length > 0) {
-        cy.get(".spectrum-Button").contains("Templates").click({ force: true })
-      }
-    })
-})
