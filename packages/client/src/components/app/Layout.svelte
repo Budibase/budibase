@@ -268,7 +268,7 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
-    padding: 24px 32px;
+    padding: 24px 32px 20px 32px;
     max-width: 100%;
     gap: var(--spacing-xl);
   }
