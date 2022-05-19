@@ -41,8 +41,8 @@
     padding-right: var(--spacing-xl);
   }
   .paddingX-XXL {
-    padding-left: calc(var(--spacing-xl) * 2);
-    padding-right: calc(var(--spacing-xl) * 2);
+    padding-left: var(--spectrum-alias-grid-gutter-large);
+    padding-right: var(--spectrum-alias-grid-gutter-large);
   }
   .paddingY-S {
     padding-top: var(--spacing-s);
@@ -61,8 +61,8 @@
     padding-bottom: var(--spacing-xl);
   }
   .paddingY-XXL {
-    padding-top: calc(var(--spacing-xl) * 2);
-    padding-bottom: calc(var(--spacing-xl) * 2);
+    padding-top: var(--spectrum-alias-grid-gutter-large);
+    padding-bottom: var(--spectrum-alias-grid-gutter-large);
   }
   .gap-XXS {
     grid-gap: var(--spacing-xs);

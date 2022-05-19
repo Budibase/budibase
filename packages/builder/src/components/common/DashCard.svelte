@@ -33,7 +33,7 @@
     min-height: 150px;
   }
   .dash-card-header {
-    padding: var(--spacing-xl) calc(var(--spacing-xl) * 2);
+    padding: var(--spacing-xl) var(--spectrum-global-dimension-static-size-400);
     border-bottom: 1px solid var(--spectrum-global-color-gray-300);
     display: flex;
     justify-content: space-between;

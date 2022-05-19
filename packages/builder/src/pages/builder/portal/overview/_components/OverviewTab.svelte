@@ -48,7 +48,7 @@
 </script>
 
 <div class="overview-tab">
-  <Layout paddingX="XXL" paddingY="XXL">
+  <Layout paddingX="XXL" paddingY="XXL" gap="XL">
     <div class="top">
       <DashCard title={"App Status"} dataCy={"app-status"}>
         <div class="status-content">
@@ -183,33 +183,37 @@
 <style>
   .overview-tab {
     display: grid;
-    grid-gap: var(--spacing-xl);
   }
 
   .overview-tab .top {
     display: grid;
-    grid-gap: calc(var(--spacing-xl) * 2);
+    grid-gap: var(--spectrum-alias-grid-gutter-medium);
     grid-template-columns: repeat(auto-fill, minmax(30%, 1fr));
+  }
+
+  .overview-tab .bottom,
+  .automation-metrics {
+    display: grid;
+    grid-gap: var(--spectrum-alias-grid-gutter-large);
+    grid-template-columns: 1fr 1fr;
   }
 
   @media (max-width: 1000px) {
     .overview-tab .top {
       grid-template-columns: 1fr 1fr;
     }
-  }
-
-  @media (max-width: 800px) {
-    .overview-tab .top {
+    .overview-tab .bottom {
       grid-template-columns: 1fr;
     }
   }
 
-  .overview-tab .bottom,
-  .automation-metrics {
-    display: grid;
-    grid-gap: var(--spacing-xl);
-    grid-template-columns: 1fr 1fr;
+  @media (max-width: 800px) {
+    .overview-tab .top,
+    .overview-tab .bottom {
+      grid-template-columns: 1fr;
+    }
   }
+
   .status-display {
     display: flex;
     align-items: center;
