@@ -9,7 +9,7 @@
   } from "@budibase/bbui"
   import { onMount } from "svelte"
   import { admin, auth, licensing } from "stores/portal"
-  import Usage from "components/billing/Usage.svelte"
+  import Usage from "components/usage/Usage.svelte"
 
   let staticUsage = []
   let monthlyUsage = []
@@ -17,7 +17,6 @@
 
   $: quotaUsage = $licensing.quotaUsage
   $: license = $auth.user?.license
-  $: console.log($auth.user)
 
   const upgradeUrl = `${$admin.accountPortalUrl}/portal/upgrade`
 
