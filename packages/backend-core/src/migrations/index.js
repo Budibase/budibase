@@ -27,7 +27,7 @@ exports.getMigrationsDoc = async db => {
   }
 }
 
-const runMigration = async (migration, options = {}) => {
+exports.runMigration = async (migration, options = {}) => {
   const tenantId = getTenantId()
   const migrationType = migration.type
   const migrationName = migration.name
@@ -110,7 +110,7 @@ exports.runMigrations = async (migrations, options = {}) => {
     // for all migrations
     for (const migration of migrations) {
       // run the migration
-      await doInTenant(tenantId, () => runMigration(migration, options))
+      await doInTenant(tenantId, () => exports.runMigration(migration, options))
     }
   }
   console.log("Migrations complete")

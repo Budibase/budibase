@@ -1,1 +1,3 @@
-export interface Role {}
+import { Document } from "./document"
+
+export interface Role extends Document {}
