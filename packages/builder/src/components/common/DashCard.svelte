@@ -33,13 +33,13 @@
     min-height: 150px;
   }
   .dash-card-header {
-    padding: var(--spacing-l);
+    padding: var(--spacing-xl) calc(var(--spacing-xl) * 2);
     border-bottom: 1px solid var(--spectrum-global-color-gray-300);
     display: flex;
     justify-content: space-between;
   }
   .dash-card-body {
-    padding: var(--spacing-l);
+    padding: var(--spacing-xl) calc(var(--spacing-xl) * 2);
   }
   .dash-card-title :global(.spectrum-Detail) {
     color: var(

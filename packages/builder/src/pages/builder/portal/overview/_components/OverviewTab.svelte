@@ -62,7 +62,7 @@
             {/if}
           </div>
 
-          <p class="status-text">
+          <div class="status-text">
             {#if deployments?.length}
               {processStringSync(
                 "Last published {{ duration time 'millisecond' }} ago",
@@ -76,7 +76,7 @@
             {#if !deployments?.length}
               -
             {/if}
-          </p>
+          </div>
         </div>
       </DashCard>
       <DashCard title={"Last Edited"} dataCy={"edited-by"}>
@@ -95,7 +95,7 @@
           {:catch error}
             <p>Could not fetch user: {error.message}</p>
           {/await}
-          <p class="last-edit-text">
+          <div class="last-edit-text">
             {#if app}
               {processStringSync(
                 "Last edited {{ duration time 'millisecond' }} ago",
@@ -105,7 +105,7 @@
                 }
               )}
             {/if}
-          </p>
+          </div>
         </div>
       </DashCard>
       <DashCard
@@ -119,7 +119,7 @@
         <div class="version-content" data-cy={$store.version}>
           <Heading size="XS">{$store.version}</Heading>
           {#if updateAvailable}
-            <p class="version-status">
+            <div class="version-status">
               New version <strong>{clientPackage.version}</strong> is available
               -
               <Link
@@ -131,9 +131,9 @@
               >
                 Update
               </Link>
-            </p>
+            </div>
           {:else}
-            <p class="version-status">You're running the latest!</p>
+            <div class="version-status">You're running the latest!</div>
           {/if}
         </div>
       </DashCard>
@@ -181,29 +181,25 @@
 </div>
 
 <style>
-  /* Add in size checks */
   .overview-tab {
     display: grid;
     grid-gap: var(--spacing-xl);
   }
+
   .overview-tab .top {
     display: grid;
-    grid-gap: var(--spacing-xl);
+    grid-gap: calc(var(--spacing-xl) * 2);
     grid-template-columns: repeat(auto-fill, minmax(30%, 1fr));
   }
 
   @media (max-width: 1000px) {
     .overview-tab .top {
-      display: grid;
-      grid-gap: var(--spacing-xl);
       grid-template-columns: 1fr 1fr;
     }
   }
 
   @media (max-width: 800px) {
     .overview-tab .top {
-      display: grid;
-      grid-gap: var(--spacing-xl);
       grid-template-columns: 1fr;
     }
   }
@@ -241,5 +237,10 @@
     display: flex;
     gap: var(--spacing-l);
     margin-top: var(--spacing-s);
+  }
+  .version-status,
+  .last-edit-text,
+  .status-text {
+    padding-top: var(--spacing-xl);
   }
 </style>
