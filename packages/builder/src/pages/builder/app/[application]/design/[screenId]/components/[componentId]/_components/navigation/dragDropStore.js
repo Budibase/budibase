@@ -23,44 +23,29 @@ export default function () {
         return state
       })
     },
-    dragover: ({
-      component,
-      index,
-      canHaveChildrenButIsEmpty,
-      mousePosition,
-    }) => {
+    dragover: ({ component, canHaveChildren, mousePosition }) => {
       store.update(state => {
         state.targetComponent = component
         // only allow dropping inside when container is empty
         // if container has children, drag over them
 
-        if (canHaveChildrenButIsEmpty && index === 0) {
-          // hovered above center of target
-          if (mousePosition < 0.4) {
+        if (canHaveChildren) {
+          if (mousePosition <= 0.33) {
+            // hovered above center of target
             state.dropPosition = DropPosition.ABOVE
-          }
-
-          // hovered around bottom of target
-          if (mousePosition > 0.8) {
+          } else if (mousePosition >= 0.66) {
+            // hovered around bottom of target
             state.dropPosition = DropPosition.BELOW
-          }
-
-          // hovered in center of target
-          if (mousePosition > 0.4 && mousePosition < 0.8) {
+          } else {
+            // hovered in center of target
             state.dropPosition = DropPosition.INSIDE
           }
           return state
         }
 
         // bottom half
-        if (mousePosition > 0.5) {
-          state.dropPosition = DropPosition.BELOW
-        } else {
-          state.dropPosition = canHaveChildrenButIsEmpty
-            ? DropPosition.INSIDE
-            : DropPosition.ABOVE
-        }
-
+        state.dropPosition =
+          mousePosition > 0.5 ? DropPosition.BELOW : DropPosition.ABOVE
         return state
       })
     },

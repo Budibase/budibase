@@ -19,6 +19,7 @@
   export let dragDropStore
 
   let closedNodes = {}
+  let indicatorY = 0
 
   const dragstart = component => e => {
     e.dataTransfer.dropEffect = DropEffect.MOVE
@@ -29,18 +30,19 @@
     const definition = store.actions.components.getDefinition(
       component._component
     )
-    const canHaveChildrenButIsEmpty =
-      definition?.hasChildren && !component._children?.length
+    const canHaveChildren = definition?.hasChildren
 
     e.dataTransfer.dropEffect = DropEffect.COPY
 
     // how far down the mouse pointer is on the drop target
     const mousePosition = e.offsetY / e.currentTarget.offsetHeight
 
+    indicatorY = e.currentTarget.offsetTop
+
     dragDropStore.actions.dragover({
       component,
       index,
-      canHaveChildrenButIsEmpty,
+      canHaveChildren,
       mousePosition,
     })
 
@@ -62,9 +64,13 @@
     return def?.icon
   }
 
-  const componentHasChildren = component => {
+  const componentSupportsChildren = component => {
     const def = store.actions.components.getDefinition(component?._component)
-    return def?.hasChildren && component._children?.length
+    return def?.hasChildren
+  }
+
+  const componentHasChildren = component => {
+    return componentSupportsChildren(component) && component._children?.length
   }
 
   function toggleNodeOpen(componentId) {
@@ -111,13 +117,17 @@
         $store.selectedComponentId = component._id
       }}
     >
-      {#if $dragDropStore?.targetComponent === component && $dragDropStore.dropPosition === DropPosition.ABOVE}
+      {#if dragDropStore && $dragDropStore?.targetComponent === component}
         <div
+          class:above={$dragDropStore.dropPosition === DropPosition.ABOVE}
+          class:below={$dragDropStore.dropPosition === DropPosition.BELOW}
+          class:inside={$dragDropStore.dropPosition === DropPosition.INSIDE}
           on:drop={onDrop}
           ondragover="return false"
           ondragenter="return false"
           class="drop-item"
-          style="margin-left: {(level + 1) * 16}px"
+          style="--indicatorX: {(level + 2) *
+            14}px; --indicatorY:{indicatorY}px;"
         />
       {/if}
 
@@ -148,18 +158,6 @@
           level={level + 1}
         />
       {/if}
-
-      {#if $dragDropStore?.targetComponent === component && ($dragDropStore.dropPosition === DropPosition.INSIDE || $dragDropStore.dropPosition === DropPosition.BELOW)}
-        <div
-          on:drop={onDrop}
-          ondragover="return false"
-          ondragenter="return false"
-          class="drop-item"
-          style="margin-left: {(level +
-            ($dragDropStore.dropPosition === DropPosition.INSIDE ? 3 : 1)) *
-            16}px"
-        />
-      {/if}
     </li>
   {/each}
 </ul>
@@ -183,8 +181,25 @@
   }
 
   .drop-item {
-    border-radius: var(--border-radius-m);
+    height: 2px;
+    background: green;
+    z-index: 999;
+    position: absolute;
+    top: calc(var(--indicatorY) - 1px);
+    left: var(--indicatorX);
+    width: 100px;
+  }
+  .drop-item.above {
+    background: red;
+  }
+  .drop-item.below {
+    background: blue;
+    margin-top: 32px;
+  }
+  .drop-item.inside {
+    background: transparent;
+    border: 2px solid green;
     height: 32px;
-    background: var(--grey-3);
+    pointer-events: none;
   }
 </style>
