@@ -138,6 +138,7 @@
     overflow: hidden;
     position: relative;
     padding-left: var(--spacing-l);
+    pointer-events: none;
   }
 
   /* Needed to fully display the actions icon */
