@@ -16,7 +16,6 @@
   $: visibleIndicators = indicators.filter(x => x.visible)
   $: offset = $builderStore.inBuilder ? 0 : 2
   $: icon = getComponentIcon(componentId)
-  $: console.log(icon)
 
   let updating = false
   let observers = []
