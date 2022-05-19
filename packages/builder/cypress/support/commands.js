@@ -35,7 +35,7 @@ Cypress.Commands.add("login", () => {
 Cypress.Commands.add("closeModal", () => {
   cy.get(".spectrum-Modal").within(() => {
     cy.get(".close-icon").click()
-    cy.wait(500)
+    cy.wait(1000) // Wait for modal to close
   })
 })
 
