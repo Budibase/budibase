@@ -27,12 +27,12 @@ export function deleted(role: Role) {
   publishEvent(Event.ROLE_DELETED, properties)
 }
 
-export function assigned(user: User, role: Role) {
+export function assigned(user: User, role: string) {
   const properties: RoleAssignedEvent = {}
   publishEvent(Event.ROLE_ASSIGNED, properties)
 }
 
-export function unassigned(user: User, role: Role) {
+export function unassigned(user: User, role: string) {
   const properties: RoleUnassignedEvent = {}
   publishEvent(Event.ROLE_UNASSIGNED, properties)
 }

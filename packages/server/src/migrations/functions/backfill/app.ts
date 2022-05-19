@@ -1,4 +1,10 @@
-import * as app from "./app/app"
+import * as apps from "./app/apps"
+import * as automations from "./app/automations"
+import * as datasources from "./app/datasources"
+import * as layouts from "./app/layouts"
+import * as queries from "./app/queries"
+import * as roles from "./app/roles"
+import * as tables from "./app/tables"
 
 /**
  * Date:
@@ -9,5 +15,11 @@ import * as app from "./app/app"
  */
 
 export const run = async (appDb: any) => {
-  await app.backfill(appDb)
+  await apps.backfill(appDb)
+  await automations.backfill(appDb)
+  await datasources.backfill(appDb)
+  await layouts.backfill(appDb)
+  await queries.backfill(appDb)
+  await roles.backfill(appDb)
+  await tables.backfill(appDb)
 }

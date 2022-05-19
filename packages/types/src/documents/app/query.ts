@@ -1,1 +1,3 @@
-export interface Query {}
+export interface Query {
+  datasourceId: string
+}

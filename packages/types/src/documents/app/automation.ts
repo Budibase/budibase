@@ -1,4 +1,9 @@
-export interface Automation {}
+export interface Automation {
+  definition: {
+    steps: AutomationStep[]
+    trigger: AutomationTrigger
+  }
+}
 
 export interface AutomationStep {}
 
