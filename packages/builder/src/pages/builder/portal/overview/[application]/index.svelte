@@ -402,12 +402,12 @@
     margin-bottom: var(--spacing-s);
   }
   .tab-wrap :global(.spectrum-Tabs) {
-    padding-left: calc(var(--spacing-xl) * 2);
-    padding-right: calc(var(--spacing-xl) * 2);
+    padding-left: var(--spectrum-alias-grid-gutter-large);
+    padding-right: var(--spectrum-alias-grid-gutter-large);
   }
   .page-header {
-    padding-left: calc(var(--spacing-xl) * 2);
-    padding-right: calc(var(--spacing-xl) * 2);
-    padding-top: calc(var(--spacing-xl) * 2);
+    padding-left: var(--spectrum-alias-grid-gutter-large);
+    padding-right: var(--spectrum-alias-grid-gutter-large);
+    padding-top: var(--spectrum-alias-grid-gutter-large);
   }
 </style>
