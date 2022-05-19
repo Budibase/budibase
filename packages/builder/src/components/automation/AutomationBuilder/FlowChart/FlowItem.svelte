@@ -28,7 +28,7 @@
   let blockComplete
   let showLooping = false
 
-  $: rowControl = $automationStore.selectedAutomation.automation.rowControl
+  $: rowControl = steps[blockIdx]?.rowControl
   $: showBindingPicker =
     block.stepId === "CREATE_ROW" || block.stepId === "UPDATE_ROW"
 

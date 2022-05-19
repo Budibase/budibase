@@ -134,6 +134,12 @@ const automationActions = store => ({
   toggleFieldControl: value => {
     store.update(state => {
       state.selectedBlock.rowControl = value
+      const idx =
+        state.selectedAutomation.automation.definition.steps.findIndex(
+          x => x.id === state.selectedBlock.id
+        )
+      state.selectedAutomation.automation.definition.steps[idx].rowControl =
+        value
       return state
     })
   },
