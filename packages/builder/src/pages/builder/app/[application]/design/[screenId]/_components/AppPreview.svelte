@@ -24,6 +24,7 @@
   let iframe
   let layout
   let screen
+  let selectedComponentId
   let confirmDeleteDialog
   let idToDelete
   let loading = true
@@ -63,10 +64,17 @@
     }
   }
 
-  // Don't show selected components unless on the components tab
-  $: selectedComponentId = $isActive("./components")
-    ? $store.selectedComponentId
-    : ""
+  // Determine selected component ID
+  $: {
+    if ($isActive("./components")) {
+      selectedComponentId = $store.selectedComponentId
+    } else if ($isActive("./navigation")) {
+      selectedComponentId = "navigation"
+    } else {
+      selectedComponentId = null
+    }
+  }
+
   $: previewData = {
     appId: $store.appId,
     layout,
