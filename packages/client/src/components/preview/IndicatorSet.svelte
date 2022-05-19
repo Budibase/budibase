@@ -13,9 +13,11 @@
   let indicators = []
   let interval
   let text
+  let icon
+
   $: visibleIndicators = indicators.filter(x => x.visible)
   $: offset = $builderStore.inBuilder ? 0 : 2
-  $: icon = getComponentIcon(componentId)
+  $: getComponentIcon(componentId)
 
   let updating = false
   let observers = []
@@ -24,12 +26,14 @@
 
   const getComponentIcon = id => {
     if (!id) {
-      return null
+      return
     }
     const component = componentStore.actions.getComponentById(id)
     const type = component?._component
     const definition = componentStore.actions.getComponentDefinition(type)
-    return definition?.icon
+    if (definition?.icon) {
+      icon = definition.icon
+    }
   }
 
   const createIntersectionCallback = idx => entries => {
@@ -67,6 +71,9 @@
       text = parents[0].dataset.name
       if (prefix) {
         text = `${prefix} ${text}`
+      }
+      if (parents[0].dataset.icon) {
+        icon = parents[0].dataset.icon
       }
     }
 
