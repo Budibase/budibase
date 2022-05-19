@@ -7,7 +7,7 @@ const DEFAULT_TEMPLATES_BUCKET =
   "prod-budi-templates.s3-eu-west-1.amazonaws.com"
 
 exports.fetch = async function (ctx) {
-  let type = env.TEMPLATE_REPOSITORY || "app"
+  let type = env.TEMPLATE_REPOSITORY
   let response,
     error = false
   try {
