@@ -524,7 +524,12 @@ Cypress.Commands.add("createAppFromScratch", appName => {
     .contains("Start from scratch")
     .click({ force: true })
   cy.get(".spectrum-Modal").within(() => {
-    cy.get("input").eq(0).type(appName).should("have.value", appName).blur()
+    cy.get("input")
+      .eq(0)
+      .clear()
+      .type(appName)
+      .should("have.value", appName)
+      .blur()
     cy.get(".spectrum-ButtonGroup").contains("Create app").click()
     cy.wait(10000)
   })
@@ -638,12 +643,14 @@ Cypress.Commands.add("addDatasourceConfig", (datasource, skipFetch) => {
         .click({ force: true })
     })
   } else {
+    cy.intercept("**/tables").as("datasourceTables")
     cy.get(".spectrum-Dialog-grid").within(() => {
       cy.get(".spectrum-Button")
         .contains("Save and fetch tables")
         .click({ force: true })
-      cy.wait(3000)
     })
+    // Wait for tables to be fetched
+    cy.wait("@datasourceTables", { timeout: 60000 })
   }
 })
 
@@ -663,4 +670,16 @@ Cypress.Commands.add("createRestQuery", (method, restUrl, queryPrettyName) => {
   cy.get(".hierarchy-items-container")
     .should("contain", method)
     .and("contain", queryPrettyName)
+})
+
+Cypress.Commands.add("templateNavigation", () => {
+  // Navigates to templates section
+  cy.request(`${Cypress.config().baseUrl}/api/applications?status=all`)
+    .its("body")
+    .then(val => {
+      // Templates button needs clicked if apps already exist
+      if (val.length > 0) {
+        cy.get(".spectrum-Button").contains("Templates").click({ force: true })
+      }
+    })
 })
