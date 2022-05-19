@@ -36,11 +36,15 @@
         title: "Apps",
         href: "/builder/portal/apps",
       },
-      {
-        title: "Usage",
-        href: "/builder/portal/settings/usage",
-      },
     ]
+    if (isEnabled(FEATURE_FLAGS.LICENSING)) {
+      menu = menu.concat([
+        {
+          title: "Usage",
+          href: "/builder/portal/settings/usage",
+        },
+      ])
+    }
     if (admin) {
       menu = menu.concat([
         {
