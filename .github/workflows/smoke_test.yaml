@@ -33,23 +33,20 @@ jobs:
         with:
           record: true
           install: false
+          tag: nightly
           command: yarn test:e2e:ci:record
         env:
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
       
-      # TODO: upload recordings to s3
-      # - name: Configure AWS Credentials
-      #   uses: aws-actions/configure-aws-credentials@v1
-      #   with:
-      #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      #     aws-region: eu-west-1
-        
-      - name: Discord Webhook Action
-        uses: tsickert/discord-webhook@v4.0.0
+      - uses: actions/upload-artifact@v3
         with:
-          webhook-url: ${{ secrets.BUDI_QA_WEBHOOK }}
-          content: "Smoke test run completed with ${{ steps.cypress.outcome }}. See results at ${{ steps.cypress.outputs.dashboardUrl }}"
-          embed-title: ${{ steps.cypress.outcome }}
-          embed-color: ${{ steps.cypress.outcome == 'success' && '3066993' || '15548997' }}
+          name: Test Reports
+          path: packages/cypress/reports/mocha
 
+      - name: Cypress Discord Notify
+        run: yarn test:e2e:ci:notify
+        env:
+          CYPRESS_WEBHOOK_URL: ${{ secrets.BUDI_QA_WEBHOOK }}
+          CYPRESS_OUTCOME: ${{ steps.cypress.outcome }}
+          CYPRESS_DASHBOARD_URL: ${{ steps.cypress.outputs.dashboardUrl }}
+          GITHUB_RUN_URL: ${{ env.GITHUB_SERVER_URL }}/${{ env.GITHUB_REPOSITORY }}/actions/runs/${{ env.GITHUB_RUN_ID }}

@@ -2,6 +2,10 @@
   "baseUrl": "http://localhost:4100",
   "video": true,
   "projectId": "bmbemn",
+  "reporter": "cypress-multi-reporters",
+  "reporterOptions": {
+    "configFile": "reporterConfig.json"
+  },
   "env": {
     "PORT": "4100",
     "WORKER_PORT": "4200",
