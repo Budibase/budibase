@@ -19,3 +19,8 @@ export const DATASOURCE_PROP_CONTROL = '[data-cy="dataSource-prop-control"]'
 export const DROPDOWN = ".dropdown"
 export const SPECTRUM_Picker_LABEL = ".spectrum-Picker-label"
 export const DATASOURCE_FIELD_CONTROL = '[data-cy="field-prop-control"]'
+export const OPTION_TYPE_PROP_CONTROL = '[data-cy="optionsType-prop-control'
+
+//AddRadioButtons
+export const SPECTRUM_POPOVER = ".spectrum-Popover"
+export const OPTION_SOURCE_PROP_CONROL = '[data-cy="optionsSource-prop-control'
