@@ -38,6 +38,8 @@
     "Extra small": "xs",
   }
 
+  let mobileOpen = false
+
   // Set some layout context. This isn't used in bindings but can be used
   // determine things about the current app layout.
   $: mobile = $context.device.mobile
@@ -58,7 +60,25 @@
     $context.device.width,
     $context.device.height
   )
-  let mobileOpen = false
+
+  // Scroll navigation into view if selected
+  $: {
+    if (
+      $builderStore.inBuilder &&
+      $builderStore.selectedComponentId === "navigation"
+    ) {
+      const node = document.getElementsByClassName("nav-wrapper")?.[0]
+      if (node) {
+        console.log("scroll")
+        node.style.scrollMargin = "100px"
+        node.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+          inline: "start",
+        })
+      }
+    }
+  }
 
   const isInternal = url => {
     return url.startsWith("/")
@@ -111,76 +131,85 @@
 >
   {#if typeClass !== "none"}
     <div
-      class="nav-wrapper"
-      class:sticky
-      class:hidden={$routeStore.queryParams?.peek}
-      class:clickable={$builderStore.inBuilder}
-      on:click={$builderStore.inBuilder ? builderStore.actions.clickNav : null}
-      style={navStyle}
+      class="interactive component navigation"
+      data-id="navigation"
+      data-name="Navigation"
+      data-icon="Link"
     >
-      <div class="nav nav--{typeClass} size--{navWidthClass}">
-        <div class="nav-header">
+      <div
+        class="nav-wrapper"
+        class:sticky
+        class:hidden={$routeStore.queryParams?.peek}
+        class:clickable={$builderStore.inBuilder}
+        on:click={$builderStore.inBuilder
+          ? builderStore.actions.clickNav
+          : null}
+        style={navStyle}
+      >
+        <div class="nav nav--{typeClass} size--{navWidthClass}">
+          <div class="nav-header">
+            {#if validLinks?.length}
+              <div class="burger">
+                <Icon
+                  hoverable
+                  name="ShowMenu"
+                  on:click={() => (mobileOpen = !mobileOpen)}
+                />
+              </div>
+            {/if}
+            <div class="logo">
+              {#if !hideLogo}
+                <img
+                  src={logoUrl || "https://i.imgur.com/Xhdt1YP.png"}
+                  alt={title}
+                />
+              {/if}
+              {#if !hideTitle && title}
+                <Heading size="S">{title}</Heading>
+              {/if}
+            </div>
+            <div class="portal">
+              <Icon hoverable name="Apps" on:click={navigateToPortal} />
+            </div>
+          </div>
+          <div
+            class="mobile-click-handler"
+            class:visible={mobileOpen}
+            on:click={() => (mobileOpen = false)}
+          />
           {#if validLinks?.length}
-            <div class="burger">
-              <Icon
-                hoverable
-                name="ShowMenu"
-                on:click={() => (mobileOpen = !mobileOpen)}
-              />
+            <div class="links" class:visible={mobileOpen}>
+              {#each validLinks as { text, url }}
+                {#if isInternal(url)}
+                  <a
+                    class={FieldTypes.LINK}
+                    href={url}
+                    use:linkable
+                    on:click={close}
+                    use:active={url}
+                  >
+                    {text}
+                  </a>
+                {:else}
+                  <a
+                    class={FieldTypes.LINK}
+                    href={ensureExternal(url)}
+                    on:click={close}
+                  >
+                    {text}
+                  </a>
+                {/if}
+              {/each}
+              <div class="close">
+                <Icon
+                  hoverable
+                  name="Close"
+                  on:click={() => (mobileOpen = false)}
+                />
+              </div>
             </div>
           {/if}
-          <div class="logo">
-            {#if !hideLogo}
-              <img
-                src={logoUrl || "https://i.imgur.com/Xhdt1YP.png"}
-                alt={title}
-              />
-            {/if}
-            {#if !hideTitle && title}
-              <Heading size="S">{title}</Heading>
-            {/if}
-          </div>
-          <div class="portal">
-            <Icon hoverable name="Apps" on:click={navigateToPortal} />
-          </div>
         </div>
-        <div
-          class="mobile-click-handler"
-          class:visible={mobileOpen}
-          on:click={() => (mobileOpen = false)}
-        />
-        {#if validLinks?.length}
-          <div class="links" class:visible={mobileOpen}>
-            {#each validLinks as { text, url }}
-              {#if isInternal(url)}
-                <a
-                  class={FieldTypes.LINK}
-                  href={url}
-                  use:linkable
-                  on:click={close}
-                  use:active={url}
-                >
-                  {text}
-                </a>
-              {:else}
-                <a
-                  class={FieldTypes.LINK}
-                  href={ensureExternal(url)}
-                  on:click={close}
-                >
-                  {text}
-                </a>
-              {/if}
-            {/each}
-            <div class="close">
-              <Icon
-                hoverable
-                name="Close"
-                on:click={() => (mobileOpen = false)}
-              />
-            </div>
-          </div>
-        {/if}
       </div>
     </div>
   {/if}
@@ -193,6 +222,9 @@
 
 <style>
   /*  Main components */
+  .component {
+    display: contents;
+  }
   .layout {
     display: flex;
     flex-direction: column;
