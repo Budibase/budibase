@@ -29,22 +29,8 @@ filterTests(['all'], () => {
 
     it("Should publish an application and correctly reflect that", () => {
       //Assuming the previous test was run and the unpublished app is open in edit mode.
-      cy.get(".toprightnav button.spectrum-Button").contains("Publish").click({ force : true })
 
-      cy.get(".spectrum-Modal [data-cy='deploy-app-modal']").should("be.visible")
-      .within(() => {
-        cy.get(".spectrum-Button").contains("Publish").click({ force : true })
-        cy.wait(1000)
-      });
-
-      //Verify that the app url is presented correctly to the user
-      cy.get(".spectrum-Modal [data-cy='deploy-app-success-modal']")
-      .should("be.visible")
-      .within(() => {
-        let appUrl = Cypress.config().baseUrl + '/app/cypress-tests'
-        cy.get("[data-cy='deployed-app-url'] input").should('have.value', appUrl)
-        cy.get(".spectrum-Button").contains("Done").click({ force: true })
-      })
+      cy.publishApp("cypress-tests")
 
       cy.visit(`${Cypress.config().baseUrl}/builder`)
       cy.wait(1000)
