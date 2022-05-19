@@ -14,7 +14,7 @@
   export let line = false
   export let alignRight = false
 
-  $: flipped = top < 26
+  $: flipped = top < 24
 </script>
 
 <div
@@ -68,8 +68,8 @@
     position: absolute;
     top: 0;
     left: -2px;
-    height: 26px;
-    padding: 0 6px 2px 6px;
+    height: 24px;
+    padding: 0 6px 0 6px;
     transform: translateY(-100%);
     border-top-left-radius: 4px;
     border-top-right-radius: 4px;
@@ -88,7 +88,7 @@
   .label.flipped {
     border-radius: 4px;
     transform: translateY(0%);
-    top: -2px;
+    top: -1px;
   }
   .label.right {
     right: -2px;
