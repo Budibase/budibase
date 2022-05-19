@@ -182,24 +182,23 @@
 
   .drop-item {
     height: 2px;
-    background: green;
+    background: var(--spectrum-global-color-static-green-500);
     z-index: 999;
     position: absolute;
     top: calc(var(--indicatorY) - 1px);
     left: var(--indicatorX);
     width: 100px;
+      border-radius: 4px;
   }
   .drop-item.above {
-    background: red;
   }
   .drop-item.below {
-    background: blue;
     margin-top: 32px;
   }
   .drop-item.inside {
     background: transparent;
-    border: 2px solid green;
-    height: 32px;
+    border: 2px solid var(--spectrum-global-color-static-green-500);
+    height: 29px;
     pointer-events: none;
   }
 </style>
