@@ -643,13 +643,14 @@ Cypress.Commands.add("addDatasourceConfig", (datasource, skipFetch) => {
         .click({ force: true })
     })
   } else {
+    cy.intercept("**/tables").as("datasourceTables")
     cy.get(".spectrum-Dialog-grid").within(() => {
       cy.get(".spectrum-Button")
         .contains("Save and fetch tables")
         .click({ force: true })
-      // Check modal closes after datasource config & fetch
-      cy.get(".spectrum-Dialog-grid", { timeout: 7000 }).should("not.exist")
     })
+    // Wait for tables to be fetched
+    cy.wait("@datasourceTables", { timeout: 60000 })
   }
 })
 
