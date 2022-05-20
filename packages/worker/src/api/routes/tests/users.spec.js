@@ -139,12 +139,13 @@ describe("/api/global/users", () => {
       }
 
       await createUser(user)
+      const savedUser = await config.getUser(user.email)
 
       expect(events.user.created).toBeCalledTimes(1)
       expect(events.user.updated).not.toBeCalled()
       expect(events.role.assigned).toBeCalledTimes(2)
-      expect(events.role.assigned).toBeCalledWith("role1")
-      expect(events.role.assigned).toBeCalledWith("role2")
+      expect(events.role.assigned).toBeCalledWith(savedUser, "role1")
+      expect(events.role.assigned).toBeCalledWith(savedUser, "role2")
     })
   })
 
@@ -243,12 +244,13 @@ describe("/api/global/users", () => {
         "app_456": "role2",
       }
       await updateUser(user)
+      const savedUser = await config.getUser(user.email)
 
       expect(events.user.created).not.toBeCalled()
       expect(events.user.updated).toBeCalledTimes(1)
       expect(events.role.assigned).toBeCalledTimes(2)
-      expect(events.role.assigned).toBeCalledWith("role1")
-      expect(events.role.assigned).toBeCalledWith("role2")
+      expect(events.role.assigned).toBeCalledWith(savedUser, "role1")
+      expect(events.role.assigned).toBeCalledWith(savedUser, "role2")
     })
 
     it("should be able to unassign app roles", async () => {
@@ -262,12 +264,13 @@ describe("/api/global/users", () => {
 
       user.roles = {}
       await updateUser(user)
+      const savedUser = await config.getUser(user.email)
 
       expect(events.user.created).not.toBeCalled()
       expect(events.user.updated).toBeCalledTimes(1)
       expect(events.role.unassigned).toBeCalledTimes(2)
-      expect(events.role.unassigned).toBeCalledWith("role1")
-      expect(events.role.unassigned).toBeCalledWith("role2")
+      expect(events.role.unassigned).toBeCalledWith(savedUser, "role1")
+      expect(events.role.unassigned).toBeCalledWith(savedUser, "role2")
     })
 
     it("should be able to update existing app roles", async () => {
@@ -284,13 +287,14 @@ describe("/api/global/users", () => {
         "app_456": "role2-edit",
       }
       await updateUser(user)
+      const savedUser = await config.getUser(user.email)
 
       expect(events.user.created).not.toBeCalled()
       expect(events.user.updated).toBeCalledTimes(1)
       expect(events.role.unassigned).toBeCalledTimes(1)
-      expect(events.role.unassigned).toBeCalledWith("role2")
+      expect(events.role.unassigned).toBeCalledWith(savedUser, "role2")
       expect(events.role.assigned).toBeCalledTimes(1)
-      expect(events.role.assigned).toBeCalledWith("role2-edit")
+      expect(events.role.assigned).toBeCalledWith(savedUser, "role2-edit")
     })
   })
 

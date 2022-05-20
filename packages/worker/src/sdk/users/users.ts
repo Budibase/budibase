@@ -127,6 +127,7 @@ export const save = async (
     } else {
       response = await putUserFn()
     }
+    user._rev = response.rev
 
     eventHelpers.handleSaveEvents(user, dbUser)
 

@@ -1,6 +1,6 @@
 export interface Document {
-  _id: string
+  _id?: string
   _rev?: string
-  createdAt: string
-  updatedAt: string
+  createdAt?: string
+  updatedAt?: string
 }

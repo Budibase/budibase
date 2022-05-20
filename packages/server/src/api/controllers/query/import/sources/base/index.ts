@@ -1,4 +1,4 @@
-import { Query, QueryParameter } from "../../../../../../definitions/datasource"
+import { Query, QueryParameter } from "@budibase/types"
 import { URL } from "url"
 
 export interface ImportInfo {

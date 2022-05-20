@@ -30,6 +30,41 @@ exports.basicTable = () => {
   }
 }
 
+exports.basicView = tableId => {
+  return {
+    tableId,
+    name: "ViewTest",
+  }
+}
+
+exports.filterView = tableId => {
+  return {
+    ...this.basicView(tableId),
+    filters: [
+      {
+        value: 0,
+        condition: "MT",
+        key: "count",
+      },
+    ],
+  }
+}
+
+exports.calculationView = tableId => {
+  return {
+    ...this.basicView(tableId),
+    field: "count",
+    calculation: "sum",
+  }
+}
+
+exports.view = tableId => {
+  return {
+    ...this.filterView(tableId),
+    ...this.calculationView(tableId),
+  }
+}
+
 exports.automationStep = (actionDefinition = ACTION_DEFINITIONS.CREATE_ROW) => {
   return {
     id: uuidv4(),

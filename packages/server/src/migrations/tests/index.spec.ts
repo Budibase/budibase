@@ -29,7 +29,11 @@ describe("migrations", () => {
         await config.createRole()
         await config.createRole()
         await config.createTable()
+        await config.createView()
         await config.createTable()
+        await config.createView(structures.view(config.table._id))
+        await config.createScreen()
+        await config.createScreen()
 
         jest.clearAllMocks()
         const migration = MIGRATIONS.filter(
@@ -46,6 +50,10 @@ describe("migrations", () => {
         expect(events.query.created).toBeCalledTimes(2)
         expect(events.role.created).toBeCalledTimes(2)
         expect(events.table.created).toBeCalledTimes(3)
+        expect(events.view.created).toBeCalledTimes(2)
+        expect(events.view.calculationCreated).toBeCalledTimes(1)
+        expect(events.view.filterCreated).toBeCalledTimes(1)
+        expect(events.screen.created).toBeCalledTimes(2)
       })
     })
   })

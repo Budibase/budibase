@@ -69,7 +69,7 @@ jest.mock("../../../events", () => {
       assigned: jest.fn(),
       unassigned: jest.fn(),
     },
-    row: {
+    rows: {
       imported: jest.fn(),
     },
     screen: {

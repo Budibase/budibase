@@ -1,1 +1,3 @@
-export interface Screen {}
+import { Document } from "./document"
+
+export interface Screen extends Document {}
