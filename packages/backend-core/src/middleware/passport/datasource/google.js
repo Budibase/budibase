@@ -1,7 +1,7 @@
 const google = require("../google")
 const { Cookies, Configs } = require("../../../constants")
 const { clearCookie, getCookie } = require("../../../utils")
-const { getScopedConfig } = require("../../../db/utils")
+const { getScopedConfig, getPlatformUrl } = require("../../../db/utils")
 const { doWithDB } = require("../../../db")
 const environment = require("../../../environment")
 const { getGlobalDB } = require("../../../tenancy")
@@ -21,26 +21,10 @@ async function fetchGoogleCreds() {
   )
 }
 
-async function getPlatformUrl() {
-  let platformUrl = environment.PLATFORM_URL || "http://localhost:10000"
-
-  const db = getGlobalDB()
-  const settings = await getScopedConfig(db, {
-    type: Configs.SETTINGS,
-  })
-
-  // self hosted - check for platform url override
-  if (settings && settings.platformUrl) {
-    platformUrl = settings.platformUrl
-  }
-
-  return platformUrl
-}
-
 async function preAuth(passport, ctx, next) {
   // get the relevant config
   const googleConfig = await fetchGoogleCreds()
-  const platformUrl = await getPlatformUrl()
+  const platformUrl = await getPlatformUrl({ tenantAware: false })
 
   let callbackUrl = `${platformUrl}/api/global/auth/datasource/google/callback`
   const strategy = await google.strategyFactory(googleConfig, callbackUrl)
@@ -59,7 +43,7 @@ async function preAuth(passport, ctx, next) {
 async function postAuth(passport, ctx, next) {
   // get the relevant config
   const config = await fetchGoogleCreds()
-  const platformUrl = await getPlatformUrl()
+  const platformUrl = await getPlatformUrl({ tenantAware: false })
 
   let callbackUrl = `${platformUrl}/api/global/auth/datasource/google/callback`
   const strategy = await google.strategyFactory(

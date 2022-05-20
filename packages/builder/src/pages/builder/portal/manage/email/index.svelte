@@ -132,7 +132,7 @@
       values below and click activate.
     </Body>
   </Layout>
-  <Divider />
+  <Divider size="S" />
   {#if smtpConfig}
     <Layout gap="XS" noPadding>
       <Heading size="S">SMTP</Heading>
@@ -186,7 +186,7 @@
         Reset
       </Button>
     </div>
-    <Divider />
+    <Divider size="S" />
     <Layout gap="XS" noPadding>
       <Heading size="S">Templates</Heading>
       <Body size="S">
