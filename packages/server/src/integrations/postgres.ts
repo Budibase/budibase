@@ -136,7 +136,7 @@ module PostgresModule {
           : undefined,
       }
       this.client = new Client(newConfig)
-      this.setSchema()
+      this.open = false
     }
 
     getBindingIdentifier(): string {
@@ -147,7 +147,34 @@ module PostgresModule {
       return parts.join(" || ")
     }
 
+    async openConnection() {
+      await this.client.connect()
+      if (!this.config.schema) {
+        this.config.schema = "public"
+      }
+      this.client.query(`SET search_path TO ${this.config.schema}`)
+      this.COLUMNS_SQL = `select * from information_schema.columns where table_schema = '${this.config.schema}'`
+      this.open = true
+    }
+
+    closeConnection() {
+      const pg = this
+      return new Promise<void>((resolve, reject) => {
+        this.client.end((err: any) => {
+          pg.open = false
+          if (err) {
+            reject(err)
+          } else {
+            resolve()
+          }
+        })
+      })
+    }
+
     async internalQuery(query: SqlQuery, close: boolean = true) {
+      if (!this.open) {
+        await this.openConnection()
+      }
       const client = this.client
       this.index = 1
       // need to handle a specific issue with json data types in postgres,
@@ -164,21 +191,14 @@ module PostgresModule {
       try {
         return await client.query(query.sql, query.bindings || [])
       } catch (err) {
-        await this.client.end()
+        await this.closeConnection()
         // @ts-ignore
         throw new Error(err)
       } finally {
-        if (close) await this.client.end()
+        if (close) {
+          await this.closeConnection()
+        }
       }
-    }
-
-    async setSchema() {
-      await this.client.connect()
-      if (!this.config.schema) {
-        this.config.schema = "public"
-      }
-      this.client.query(`SET search_path TO ${this.config.schema}`)
-      this.COLUMNS_SQL = `select * from information_schema.columns where table_schema = '${this.config.schema}'`
     }
 
     /**
@@ -251,7 +271,7 @@ module PostgresModule {
         // @ts-ignore
         throw new Error(err)
       } finally {
-        await this.client.end()
+        await this.closeConnection()
       }
     }
 
@@ -283,7 +303,7 @@ module PostgresModule {
         for (let query of input) {
           responses.push(await this.internalQuery(query, false))
         }
-        await this.client.end()
+        await this.closeConnection()
         return responses
       } else {
         const response = await this.internalQuery(input)
