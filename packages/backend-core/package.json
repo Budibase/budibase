@@ -1,6 +1,6 @@
 {
   "name": "@budibase/backend-core",
-  "version": "1.0.164-alpha.0",
+  "version": "1.0.167-alpha.7",
   "description": "Budibase backend core libraries used in server and worker",
   "main": "src/index.js",
   "author": "Budibase",
@@ -13,6 +13,7 @@
     "@techpass/passport-openidconnect": "^0.3.0",
     "aws-sdk": "^2.901.0",
     "bcryptjs": "^2.4.3",
+    "dotenv": "^16.0.1",
     "emitter-listener": "^1.1.2",
     "ioredis": "^4.27.1",
     "jsonwebtoken": "^8.5.1",
