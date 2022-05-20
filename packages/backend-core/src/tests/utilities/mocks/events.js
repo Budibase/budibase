@@ -71,6 +71,7 @@ jest.mock("../../../events", () => {
     },
     rows: {
       imported: jest.fn(),
+      created: jest.fn(),
     },
     screen: {
       created: jest.fn(),

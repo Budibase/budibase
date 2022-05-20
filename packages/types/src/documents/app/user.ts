@@ -1,4 +1,4 @@
-import { Document } from "./document"
+import { Document } from "../document"
 
 export interface UserMetadata extends Document {
   roleId: string

@@ -10,5 +10,7 @@ export const backfill = async () => {
   const appIds = allApps ? allApps.map((app: { appId: any }) => app.appId) : []
   const rows: Row[] = await getUniqueRows(appIds)
   const rowCount = rows ? rows.length : 0
-  events.rows.created(rowCount)
+  if (rowCount) {
+    events.rows.created(rowCount)
+  }
 }
