@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 const fetch = require("node-fetch")
-const fs = require("fs")
 const path = require("path")
+const { merge } = require("mochawesome-merge")
 
 const WEBHOOK_URL = process.env.CYPRESS_WEBHOOK_URL
 const OUTCOME = process.env.CYPRESS_OUTCOME
@@ -10,29 +10,32 @@ const DASHBOARD_URL = process.env.CYPRESS_DASHBOARD_URL
 const GIT_SHA = process.env.GITHUB_SHA
 const GITHUB_ACTIONS_RUN_URL = process.env.GITHUB_ACTIONS_RUN_URL
 
-// read the report file
-const REPORT_PATH = path.resolve(
-  __dirname,
-  "..",
-  "cypress",
-  "reports",
-  "mocha",
-  "mochawesome.json"
-)
-const testReport = JSON.parse(fs.readFileSync(REPORT_PATH, "utf-8"))
+async function generateReport() {
+  // read the report file
+  const REPORT_PATH = path.resolve(
+    __dirname,
+    "..",
+    "cypress",
+    "reports",
+    "mocha",
+    "*.json"
+  )
+  const testReport = await merge({ files: [REPORT_PATH] })
+  return testReport
+}
 
-const {
-  suites,
-  tests,
-  passes,
-  pending,
-  failures,
-  duration,
-  passPercent,
-  skipped,
-} = testReport.stats
+async function discordCypressResultsNotification(report) {
+  const {
+    suites,
+    tests,
+    passes,
+    pending,
+    failures,
+    duration,
+    passPercent,
+    skipped,
+  } = report.stats
 
-async function discordCypressResultsNotification() {
   const options = {
     method: "POST",
     headers: {
@@ -63,7 +66,7 @@ async function discordCypressResultsNotification() {
           fields: [
             {
               name: "Commit",
-              value: GIT_SHA,
+              value: GIT_SHA || "None Supplied",
             },
             {
               name: "Cypress Dashboard URL",
@@ -121,7 +124,8 @@ async function discordCypressResultsNotification() {
 }
 
 async function run() {
-  await discordCypressResultsNotification()
+  const report = await generateReport()
+  await discordCypressResultsNotification(report)
 }
 
 run()
