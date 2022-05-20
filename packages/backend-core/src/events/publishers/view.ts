@@ -12,6 +12,7 @@ import {
   ViewFilterUpdatedEvent,
   ViewUpdatedEvent,
   View,
+  ViewCalculation,
   Table,
   TableExportFormat,
 } from "@budibase/types"
@@ -53,7 +54,7 @@ export function filterDeleted() {
   publishEvent(Event.VIEW_FILTER_DELETED, properties)
 }
 
-export function calculationCreated() {
+export function calculationCreated(calculation: ViewCalculation) {
   const properties: ViewCalculationCreatedEvent = {}
   publishEvent(Event.VIEW_CALCULATION_CREATED, properties)
 }

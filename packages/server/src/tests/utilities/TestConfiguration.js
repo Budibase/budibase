@@ -409,7 +409,6 @@ class TestConfiguration {
       throw "Test requires table to be configured."
     }
     const view = config || {
-      map: "function(doc) { emit(doc[doc.key], doc._id); } ",
       tableId: this.table._id,
       name: "ViewTest",
     }

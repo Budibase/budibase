@@ -5,6 +5,7 @@ import * as layouts from "./app/layouts"
 import * as queries from "./app/queries"
 import * as roles from "./app/roles"
 import * as tables from "./app/tables"
+import * as screens from "./app/screens"
 
 /**
  * Date:
@@ -22,4 +23,5 @@ export const run = async (appDb: any) => {
   await queries.backfill(appDb)
   await roles.backfill(appDb)
   await tables.backfill(appDb)
+  await screens.backfill(appDb)
 }

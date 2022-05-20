@@ -3,11 +3,11 @@ import { generateQueryID } from "../../../../db/utils"
 import { ImportInfo, ImportSource } from "./sources/base"
 import { OpenAPI2 } from "./sources/openapi2"
 import { OpenAPI3 } from "./sources/openapi3"
-import { Query } from "./../../../../definitions/common"
 import { Curl } from "./sources/curl"
 // @ts-ignore
 import { getAppDB } from "@budibase/backend-core/context"
 import { events } from "@budibase/backend-core"
+import { Datasource, Query } from "@budibase/types"
 
 interface ImportResult {
   errorQueries: Query[]
@@ -83,7 +83,7 @@ export class RestImporter {
     // events
     const count = successQueries.length
     const importSource = this.source.getImportSource()
-    const datasource = await db.get(datasourceId)
+    const datasource: Datasource = await db.get(datasourceId)
     events.query.imported(datasource, importSource, count)
     for (let query of successQueries) {
       events.query.created(datasource, query)

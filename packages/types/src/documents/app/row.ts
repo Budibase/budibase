@@ -1,1 +1,3 @@
-export interface Row {}
+import { Document } from "./document"
+
+export interface Row extends Document {}
