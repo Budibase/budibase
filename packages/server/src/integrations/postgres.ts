@@ -208,6 +208,7 @@ module PostgresModule {
      */
     async buildSchema(datasourceId: string, entities: Record<string, Table>) {
       let tableKeys: { [key: string]: string[] } = {}
+      await this.openConnection()
       try {
         const primaryKeysResponse = await this.client.query(
           this.PRIMARY_KEYS_SQL
