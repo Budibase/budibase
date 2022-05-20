@@ -41,12 +41,12 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           name: Test Reports
-          path: packages/builder/cypress/reports/mocha
+          path: packages/builder/cypress/reports/testReport.html
 
       - name: Cypress Discord Notify
-        run: yarn test:e2e:ci:report
+        run: yarn test:e2e:ci:notify
         env:
           CYPRESS_WEBHOOK_URL: ${{ secrets.BUDI_QA_WEBHOOK }}
           CYPRESS_OUTCOME: ${{ steps.cypress.outcome }}
           CYPRESS_DASHBOARD_URL: ${{ steps.cypress.outputs.dashboardUrl }}
-          GITHUB_RUN_URL: ${{ env.GITHUB_SERVER_URL }}/${{ env.GITHUB_REPOSITORY }}/actions/runs/${{ env.GITHUB_RUN_ID }}
+          GITHUB_RUN_URL: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
