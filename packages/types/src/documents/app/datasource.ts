@@ -1,3 +1,3 @@
-import { Document } from "./document"
+import { Document } from "../document"
 
 export interface Datasource extends Document {}

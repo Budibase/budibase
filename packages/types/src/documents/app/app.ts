@@ -1,4 +1,4 @@
-import { Document } from "./document"
+import { Document } from "../document"
 
 export interface App extends Document {
   appId: string

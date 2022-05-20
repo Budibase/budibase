@@ -1,7 +1,0 @@
-// EMAIL_SMTP_CREATED = "email:smtp:created",
-// AUTH_SSO_CREATED = "auth:sso:created",
-// AUTH_SSO_ACTIVATED = "auth:sso:activated",
-// AUTH_SSO_DEACTIVATED = "auth:sso:deactivated",
-// ORG_NAME_UPDATED = "org:info:name:updated",
-// ORG_LOGO_UPDATED = "org:info:logo:updated",
-// ORG_PLATFORM_URL_UPDATED = "org:platformurl:updated",

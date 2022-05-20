@@ -121,6 +121,7 @@ class TestConfiguration {
   async globalUser({
     id = GLOBAL_USER_ID,
     builder = true,
+    admin = false,
     email = EMAIL,
     roles,
   } = {}) {
@@ -147,6 +148,11 @@ class TestConfiguration {
       } else {
         user.builder = { global: false }
       }
+      if (admin) {
+        user.admin = { global: true }
+      } else {
+        user.admin = { global: false }
+      }
       const resp = await db.put(user)
       return {
         _rev: resp._rev,
@@ -155,9 +161,17 @@ class TestConfiguration {
     })
   }
 
-  async createUser(id = null, email = EMAIL) {
+  async createUser(id = null, email = EMAIL, builder = true, admin = false) {
     const globalId = !id ? `us_${Math.random()}` : `us_${id}`
-    const resp = await this.globalUser({ id: globalId, email })
+    const appId = this.prodAppId
+    const roles = { [appId]: "role_12345" }
+    const resp = await this.globalUser({
+      id: globalId,
+      email,
+      builder,
+      admin,
+      roles,
+    })
     await userCache.invalidateUser(globalId)
     return {
       ...resp,
@@ -277,7 +291,7 @@ class TestConfiguration {
 
   // APP
 
-  async createApp(appName, opts = { deploy: true }) {
+  async createApp(appName) {
     // create dev app
     // clear any old app
     this.appId = null
@@ -287,11 +301,9 @@ class TestConfiguration {
     await context.updateAppId(this.appId)
 
     // create production app
-    if (opts.deploy) {
-      this.prodApp = await this.deploy()
-      this.prodAppId = this.prodApp.appId
-      this.allApps.push(this.prodApp)
-    }
+    this.prodApp = await this.deploy()
+    this.prodAppId = this.prodApp.appId
+    this.allApps.push(this.prodApp)
 
     this.allApps.push(this.app)
 
