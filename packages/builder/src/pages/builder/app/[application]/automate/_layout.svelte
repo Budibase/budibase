@@ -5,6 +5,8 @@
   import CreateAutomationModal from "components/automation/AutomationPanel/CreateAutomationModal.svelte"
   import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
   import TestPanel from "components/automation/AutomationBuilder/TestPanel.svelte"
+  import { fly } from "svelte/transition"
+
   $: automation =
     $automationStore.selectedAutomation?.automation ||
     $automationStore.automations[0]
@@ -45,7 +47,13 @@
   </div>
 
   {#if automation?.showTestPanel}
-    <div class="setup"><TestPanel {automation} /></div>
+    <div
+      in:fly|local={{ x: 500, duration: 500 }}
+      out:fly|local={{ x: 500, duration: 500 }}
+      class="setup"
+    >
+      <TestPanel {automation} />
+    </div>
   {/if}
   <Modal bind:this={modal}>
     <CreateAutomationModal {webhookModal} />
@@ -62,6 +70,7 @@
     display: grid;
     grid-auto-flow: column dense;
     grid-template-columns: 260px minmax(510px, 1fr) fit-content(500px);
+    overflow: hidden;
   }
 
   .nav {
@@ -73,6 +82,7 @@
     border-right: var(--border-light);
     background-color: var(--background);
     padding-bottom: 60px;
+    overflow: hidden;
   }
 
   .content {

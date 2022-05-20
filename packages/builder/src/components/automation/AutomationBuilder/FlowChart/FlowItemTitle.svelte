@@ -81,7 +81,7 @@
           onSelect(block)
         }}
       >
-        <Icon name={blockComplete ? "ChevronDown" : "ChevronUp"} />
+        <Icon name={blockComplete ? "ChevronUp" : "ChevronDown"} />
       </div>
     </div>
   </div>
