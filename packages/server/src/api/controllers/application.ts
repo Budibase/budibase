@@ -439,6 +439,15 @@ export const destroy = async (ctx: any) => {
 }
 
 export const sync = async (ctx: any, next: any) => {
+  if (env.DISABLE_AUTO_PROD_APP_SYNC) {
+    ctx.status = 200
+    ctx.body = {
+      message:
+        "App sync disabled. You can reenable with the DISABLE_AUTO_PROD_APP_SYNC environment variable.",
+    }
+    return next()
+  }
+
   const appId = ctx.params.appId
   if (!isDevAppID(appId)) {
     ctx.throw(400, "This action cannot be performed for production apps")
