@@ -23,29 +23,30 @@ export default function () {
         return state
       })
     },
-    dragover: ({ component, canHaveChildren, mousePosition }) => {
+    dragover: ({ component, canHaveChildren, hasChildren, mousePosition }) => {
       store.update(state => {
-        state.targetComponent = component
-        // only allow dropping inside when container is empty
-        // if container has children, drag over them
-
         if (canHaveChildren) {
           if (mousePosition <= 0.33) {
-            // hovered above center of target
             state.dropPosition = DropPosition.ABOVE
           } else if (mousePosition >= 0.66) {
-            // hovered around bottom of target
             state.dropPosition = DropPosition.BELOW
           } else {
-            // hovered in center of target
             state.dropPosition = DropPosition.INSIDE
           }
-          return state
+        } else {
+          state.dropPosition =
+            mousePosition > 0.5 ? DropPosition.BELOW : DropPosition.ABOVE
         }
 
-        // bottom half
-        state.dropPosition =
-          mousePosition > 0.5 ? DropPosition.BELOW : DropPosition.ABOVE
+        // If hovering over a component with children and attempting to drop
+        // below, we need to change this to be above the first child instead
+        if (state.dropPosition === DropPosition.BELOW && hasChildren) {
+          state.targetComponent = component._children[0]
+          state.dropPosition = DropPosition.ABOVE
+        } else {
+          state.targetComponent = component
+        }
+
         return state
       })
     },
@@ -76,7 +77,7 @@ export default function () {
       }
 
       // Cut and paste the component
-      frontendStore.actions.components.copy(state.dragged, true)
+      frontendStore.actions.components.copy(state.dragged, true, false)
       await frontendStore.actions.components.paste(
         state.targetComponent,
         state.dropPosition

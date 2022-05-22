@@ -31,6 +31,7 @@
       component._component
     )
     const canHaveChildren = definition?.hasChildren
+    const hasChildren = componentHasChildren(component)
 
     e.dataTransfer.dropEffect = DropEffect.COPY
 
@@ -43,6 +44,7 @@
       component,
       index,
       canHaveChildren,
+      hasChildren,
       mousePosition,
     })
 
@@ -122,6 +124,7 @@
           class:above={$dragDropStore.dropPosition === DropPosition.ABOVE}
           class:below={$dragDropStore.dropPosition === DropPosition.BELOW}
           class:inside={$dragDropStore.dropPosition === DropPosition.INSIDE}
+          class:hasChildren={componentHasChildren(component)}
           on:drop={onDrop}
           ondragover="return false"
           ondragenter="return false"
@@ -187,8 +190,8 @@
     position: absolute;
     top: calc(var(--indicatorY) - 1px);
     left: var(--indicatorX);
-    width: 100px;
-      border-radius: 4px;
+    width: calc(100% - var(--indicatorX));
+    border-radius: 4px;
   }
   .drop-item.above {
   }
@@ -200,5 +203,6 @@
     border: 2px solid var(--spectrum-global-color-static-green-500);
     height: 29px;
     pointer-events: none;
+    width: calc(100% - var(--indicatorX) - 4px);
   }
 </style>

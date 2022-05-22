@@ -507,7 +507,7 @@ export const getFrontendStore = () => {
         }
         await store.actions.preview.saveSelected()
       },
-      copy: (component, cut = false) => {
+      copy: (component, cut = false, selectParent = true) => {
         const selectedAsset = get(currentAsset)
         if (!selectedAsset) {
           return null
@@ -527,10 +527,12 @@ export const getFrontendStore = () => {
             parent._children = parent._children.filter(
               child => child._id !== component._id
             )
-            store.update(state => {
-              state.selectedComponentId = parent._id
-              return state
-            })
+            if (selectParent) {
+              store.update(state => {
+                state.selectedComponentId = parent._id
+                return state
+              })
+            }
           }
         }
       },
