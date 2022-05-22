@@ -2,7 +2,7 @@
 
 const fetch = require("node-fetch")
 const path = require("path")
-const { merge } = require("mochawesome-merge")
+const fs = require("fs")
 
 const WEBHOOK_URL = process.env.CYPRESS_WEBHOOK_URL
 const OUTCOME = process.env.CYPRESS_OUTCOME
@@ -17,11 +17,10 @@ async function generateReport() {
     "..",
     "cypress",
     "reports",
-    "mocha",
-    "*.json"
+    "testReport.json"
   )
-  const testReport = await merge({ files: [REPORT_PATH] })
-  return testReport
+  const report = fs.readFileSync(REPORT_PATH, "utf-8")
+  return JSON.parse(report)
 }
 
 async function discordCypressResultsNotification(report) {
@@ -66,7 +65,7 @@ async function discordCypressResultsNotification(report) {
           fields: [
             {
               name: "Commit",
-              value: GIT_SHA || "None Supplied",
+              value: `https://github.com/Budibase/budibase/commit/${GIT_SHA}`,
             },
             {
               name: "Cypress Dashboard URL",
@@ -74,7 +73,7 @@ async function discordCypressResultsNotification(report) {
             },
             {
               name: "Github Actions Run URL",
-              value: GITHUB_ACTIONS_RUN_URL,
+              value: GITHUB_ACTIONS_RUN_URL || "None Supplied",
             },
             {
               name: "Test Suites",
@@ -106,7 +105,7 @@ async function discordCypressResultsNotification(report) {
             },
             {
               name: "Pass Percentage",
-              value: passPercent,
+              value: Math.floor(passPercent),
             },
           ],
         },
