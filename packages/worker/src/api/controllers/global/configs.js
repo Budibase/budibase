@@ -1,7 +1,6 @@
 const {
   generateConfigID,
   getConfigParams,
-  getGlobalUserParams,
   getScopedFullConfig,
   getAllApps,
 } = require("@budibase/backend-core/db")
@@ -271,13 +270,6 @@ exports.configChecklist = async function (ctx) {
     const oidcConfig = await getScopedFullConfig(db, {
       type: Configs.OIDC,
     })
-    // They have set up an global user
-    const users = await db.allDocs(
-      getGlobalUserParams(null, {
-        include_docs: true,
-      })
-    )
-    const adminUser = users.rows.some(row => row.doc.admin)
 
     ctx.body = {
       apps: {
@@ -291,7 +283,7 @@ exports.configChecklist = async function (ctx) {
         link: "/builder/portal/manage/email",
       },
       adminUser: {
-        checked: adminUser,
+        checked: true,
         label: "Create your first user",
         link: "/builder/portal/manage/users",
       },
