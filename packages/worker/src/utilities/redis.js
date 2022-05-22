@@ -1,5 +1,6 @@
 const { Client, utils } = require("@budibase/backend-core/redis")
 const { newid } = require("@budibase/backend-core/utils")
+const env = require("../environment")
 
 function getExpirySecondsForDB(db) {
   switch (db) {
@@ -119,7 +120,9 @@ exports.withCache = async (key, ttl, fetchFn) => {
   try {
     const fetchedValue = await fetchFn()
 
-    await cachingClient.store(key, fetchedValue, ttl)
+    if (!env.isTest()) {
+      await cachingClient.store(key, fetchedValue, ttl)
+    }
     return fetchedValue
   } catch (err) {
     console.error("Error calling fetch function", err)
