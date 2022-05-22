@@ -18,6 +18,7 @@ exports.Databases = {
   APP_METADATA: "appMetadata",
   QUERY_VARS: "queryVars",
   LICENSES: "license",
+  DATA_CACHE: "data_cache",
 }
 
 exports.SEPARATOR = SEPARATOR

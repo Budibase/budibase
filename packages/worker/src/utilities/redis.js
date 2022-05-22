@@ -12,7 +12,7 @@ function getExpirySecondsForDB(db) {
   }
 }
 
-let pwResetClient, invitationClient
+let pwResetClient, invitationClient, cachingClient
 
 function getClient(db) {
   switch (db) {
@@ -20,6 +20,8 @@ function getClient(db) {
       return pwResetClient
     case utils.Databases.INVITATIONS:
       return invitationClient
+    case utils.Databases.DATA_CACHE:
+      return cachingClient
   }
 }
 
@@ -45,8 +47,10 @@ async function getACode(db, code, deleteCode = true) {
 exports.init = async () => {
   pwResetClient = new Client(utils.Databases.PW_RESETS)
   invitationClient = new Client(utils.Databases.INVITATIONS)
+  cachingClient = new Client(utils.Databases.DATA_CACHE)
   await pwResetClient.init()
   await invitationClient.init()
+  await cachingClient.init()
 }
 
 /**
@@ -102,5 +106,23 @@ exports.checkInviteCode = async (inviteCode, deleteCode = true) => {
     return getACode(utils.Databases.INVITATIONS, inviteCode, deleteCode)
   } catch (err) {
     throw "Invitation is not valid or has expired, please request a new one."
+  }
+}
+
+// TODO: move into backend-core
+exports.withCache = async (key, ttl, fetchFn) => {
+  const cachedValue = await cachingClient.get(key)
+  if (cachedValue) {
+    return cachedValue
+  }
+
+  try {
+    const fetchedValue = await fetchFn()
+
+    await cachingClient.store(key, fetchedValue, ttl)
+    return fetchedValue
+  } catch (err) {
+    console.error("Error calling fetch function", err)
+    throw err
   }
 }
