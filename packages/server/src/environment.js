@@ -1,3 +1,5 @@
+const { join } = require("path")
+
 function isTest() {
   return (
     process.env.NODE_ENV === "jest" ||
@@ -20,7 +22,9 @@ function isCypress() {
 
 let LOADED = false
 if (!LOADED && isDev() && !isTest()) {
-  require("dotenv").config()
+  require("dotenv").config({
+    path: join(__dirname, "..", ".env"),
+  })
   LOADED = true
 }
 

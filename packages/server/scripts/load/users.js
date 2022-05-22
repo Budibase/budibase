@@ -1,13 +1,21 @@
-const fetch = require("node-fetch")
-const { getProdAppID } = require("@budibase/backend-core/db")
+// get the JWT secret etc
+require("../../src/environment")
+require("@budibase/backend-core").init()
+const {
+  getProdAppID,
+  generateGlobalUserID,
+} = require("@budibase/backend-core/db")
+const { doInTenant, getGlobalDB } = require("@budibase/backend-core/tenancy")
+const { internalSaveUser } = require("@budibase/backend-core/utils")
+const { publicApiUserFix } = require("../../src/utilities/users")
+const { hash } = require("@budibase/backend-core/utils")
 
 const USER_LOAD_NUMBER = 10000
-const BATCH_SIZE = 25
-const SERVER_URL = "http://localhost:4001"
+const BATCH_SIZE = 200
 const PASSWORD = "test"
+const TENANT_ID = "default"
 
 const APP_ID = process.argv[2]
-const API_KEY = process.argv[3]
 
 const words = [
   "test",
@@ -31,17 +39,15 @@ if (!APP_ID) {
   console.error("Must supply app ID as first CLI option!")
   process.exit(-1)
 }
-if (!API_KEY) {
-  console.error("Must supply API key as second CLI option!")
-  process.exit(-1)
-}
 
 const WORD_1 = words[Math.floor(Math.random() * words.length)]
 const WORD_2 = words[Math.floor(Math.random() * words.length)]
+let HASHED_PASSWORD
 
 function generateUser(count) {
   return {
-    password: PASSWORD,
+    _id: generateGlobalUserID(),
+    password: HASHED_PASSWORD,
     email: `${WORD_1}${count}@${WORD_2}.com`,
     roles: {
       [getProdAppID(APP_ID)]: "BASIC",
@@ -54,23 +60,31 @@ function generateUser(count) {
 }
 
 async function run() {
-  for (let i = 0; i < USER_LOAD_NUMBER; i += BATCH_SIZE) {
-    let promises = []
-    for (let j = 0; j < BATCH_SIZE; j++) {
-      promises.push(
-        fetch(`${SERVER_URL}/api/public/v1/users`, {
-          method: "POST",
-          body: JSON.stringify(generateUser(i + j)),
-          headers: {
-            "x-budibase-api-key": API_KEY,
-            "Content-Type": "application/json",
+  HASHED_PASSWORD = await hash(PASSWORD)
+  return doInTenant(TENANT_ID, async () => {
+    const db = getGlobalDB()
+    for (let i = 0; i < USER_LOAD_NUMBER; i += BATCH_SIZE) {
+      let userSavePromises = []
+      for (let j = 0; j < BATCH_SIZE; j++) {
+        // like the public API
+        const ctx = publicApiUserFix({
+          request: {
+            body: generateUser(i + j),
           },
         })
-      )
+        userSavePromises.push(
+          internalSaveUser(ctx.request.body, TENANT_ID, {
+            hashPassword: false,
+            requirePassword: true,
+            bulkCreate: true,
+          })
+        )
+      }
+      const users = await Promise.all(userSavePromises)
+      await db.bulkDocs(users)
+      console.log(`${i + BATCH_SIZE} users have been created.`)
     }
-    await Promise.all(promises)
-    console.log(`${i + BATCH_SIZE} users have been created.`)
-  }
+  })
 }
 
 run()
