@@ -25,6 +25,7 @@ const {
 import { BASE_LAYOUTS } from "../../constants/layouts"
 import { cloneDeep } from "lodash/fp"
 const { processObject } = require("@budibase/string-templates")
+const { CacheKeys, bustCache } = require("@budibase/backend-core/cache")
 const {
   getAllApps,
   isDevAppID,
@@ -316,6 +317,7 @@ const appPostCreate = async (ctx: any, appId: string) => {
 export const create = async (ctx: any) => {
   const newApplication = await quotas.addApp(() => performAppCreate(ctx))
   await appPostCreate(ctx, newApplication.appId)
+  await bustCache(CacheKeys.CHECKLIST)
   ctx.body = newApplication
   ctx.status = 200
 }
