@@ -1,5 +1,5 @@
 <script>
-  import FlowItemTitle from "./FlowItemTitle.svelte"
+  import FlowItemHeader from "./FlowItemHeader.svelte"
 
   import { automationStore } from "builderStore"
   import {
@@ -176,7 +176,7 @@
     {/if}
   {/if}
 
-  <FlowItemTitle bind:blockComplete {block} {testDataModal} />
+  <FlowItemHeader bind:blockComplete {block} {testDataModal} />
   {#if !blockComplete}
     <Divider noMargin />
     <div class="blockSection">
