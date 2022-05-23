@@ -80,7 +80,9 @@
         />
       </Layout>
       <Layout gap="XS" noPadding>
-        <Button cta on:click={login}>Sign in to {company}</Button>
+        <Button cta disabled={!username && !password} on:click={login}
+          >Sign in to {company}</Button
+        >
         <ActionButton quiet on:click={() => $goto("./forgot")}>
           Forgot password?
         </ActionButton>

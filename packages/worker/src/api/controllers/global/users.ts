@@ -3,9 +3,6 @@ const {
   StaticDatabases,
 } = require("@budibase/backend-core/db")
 const { getGlobalUserByEmail } = require("@budibase/backend-core/utils")
-import { EmailTemplatePurpose } from "../../../constants"
-import { checkInviteCode } from "../../../utilities/redis"
-import { sendEmail } from "../../../utilities/email"
 const { user: userCache } = require("@budibase/backend-core/cache")
 const { invalidateSessions } = require("@budibase/backend-core/sessions")
 const accounts = require("@budibase/backend-core/accounts")
@@ -17,11 +14,15 @@ const {
   doesTenantExist,
 } = require("@budibase/backend-core/tenancy")
 const { removeUserFromInfoDB } = require("@budibase/backend-core/deprovision")
+const { errors } = require("@budibase/backend-core")
+const { CacheKeys, bustCache } = require("@budibase/backend-core/cache")
 import env from "../../../environment"
 import { syncUserInApps } from "../../../utilities/appService"
 import { quotas, users } from "@budibase/pro"
-const { errors } = require("@budibase/backend-core")
 import { allUsers, getUser } from "../../utilities"
+import { EmailTemplatePurpose } from "../../../constants"
+import { checkInviteCode } from "../../../utilities/redis"
+import { sendEmail } from "../../../utilities/email"
 
 export const save = async (ctx: any) => {
   try {
@@ -93,7 +94,14 @@ export const adminUser = async (ctx: any) => {
     tenantId,
   }
   try {
-    ctx.body = await users.save(user, tenantId, hashPassword, requirePassword)
+    const finalUser = await users.save(
+      user,
+      tenantId,
+      hashPassword,
+      requirePassword
+    )
+    await bustCache(CacheKeys.CHECKLIST)
+    ctx.body = finalUser
   } catch (err: any) {
     ctx.throw(err.status || 400, err)
   }
