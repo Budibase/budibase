@@ -21,20 +21,12 @@ async function fetchGoogleCreds() {
   )
 }
 
-async function platformUrl() {
-  const db = getGlobalDB()
-  const publicConfig = await getScopedConfig(db, {
-    type: Configs.SETTINGS,
-  })
-  return getPlatformUrl(publicConfig)
-}
-
 async function preAuth(passport, ctx, next) {
   // get the relevant config
   const googleConfig = await fetchGoogleCreds()
-  const platUrl = await platformUrl()
+  const platformUrl = await getPlatformUrl({ tenantAware: false })
 
-  let callbackUrl = `${platUrl}/api/global/auth/datasource/google/callback`
+  let callbackUrl = `${platformUrl}/api/global/auth/datasource/google/callback`
   const strategy = await google.strategyFactory(googleConfig, callbackUrl)
 
   if (!ctx.query.appId || !ctx.query.datasourceId) {
@@ -51,9 +43,9 @@ async function preAuth(passport, ctx, next) {
 async function postAuth(passport, ctx, next) {
   // get the relevant config
   const config = await fetchGoogleCreds()
-  const platUrl = await platformUrl()
+  const platformUrl = await getPlatformUrl({ tenantAware: false })
 
-  let callbackUrl = `${platUrl}/api/global/auth/datasource/google/callback`
+  let callbackUrl = `${platformUrl}/api/global/auth/datasource/google/callback`
   const strategy = await google.strategyFactory(
     config,
     callbackUrl,

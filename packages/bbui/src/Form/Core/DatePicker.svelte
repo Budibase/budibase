@@ -58,6 +58,11 @@
     if (timeOnly) {
       newValue = `2000-01-01T${newValue.split("T")[1]}`
     }
+    // date only, offset for timezone so always right date
+    else if (!enableTime) {
+      const offset = dates[0].getTimezoneOffset() * 60000
+      newValue = new Date(dates[0].getTime() - offset).toISOString()
+    }
     dispatch("change", newValue)
   }
 
@@ -156,8 +161,8 @@
         <input
           data-input
           type="text"
-          {disabled}
           class="spectrum-Textfield-input spectrum-InputGroup-input"
+          class:is-disabled={disabled}
           {placeholder}
           {id}
           {value}
@@ -167,7 +172,7 @@
         type="button"
         class="spectrum-Picker spectrum-Picker--sizeM spectrum-InputGroup-button"
         tabindex="-1"
-        {disabled}
+        class:is-disabled={disabled}
         class:is-invalid={!!error}
         on:click={flatpickr?.open}
       >
@@ -211,5 +216,8 @@
   }
   :global(.flatpickr-calendar) {
     font-family: "Source Sans Pro", sans-serif;
+  }
+  .is-disabled {
+    pointer-events: none !important;
   }
 </style>

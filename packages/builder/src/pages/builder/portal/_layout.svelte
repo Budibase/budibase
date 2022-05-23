@@ -31,7 +31,20 @@
   $: menu = buildMenu($auth.isAdmin)
 
   const buildMenu = admin => {
-    let menu = [{ title: "Apps", href: "/builder/portal/apps" }]
+    let menu = [
+      {
+        title: "Apps",
+        href: "/builder/portal/apps",
+      },
+    ]
+    if (isEnabled(FEATURE_FLAGS.LICENSING)) {
+      menu = menu.concat([
+        {
+          title: "Usage",
+          href: "/builder/portal/settings/usage",
+        },
+      ])
+    }
     if (admin) {
       menu = menu.concat([
         {
@@ -160,7 +173,7 @@
           />
         </div>
         <div class="user-dropdown">
-          <ActionMenu align="right">
+          <ActionMenu align="right" dataCy="user-menu">
             <div slot="control" class="avatar">
               <Avatar
                 size="M"
@@ -169,7 +182,11 @@
               />
               <Icon size="XL" name="ChevronDown" />
             </div>
-            <MenuItem icon="UserEdit" on:click={() => userInfoModal.show()}>
+            <MenuItem
+              icon="UserEdit"
+              on:click={() => userInfoModal.show()}
+              dataCy={"user-info"}
+            >
               Update user information
             </MenuItem>
             {#if $auth.isBuilder}

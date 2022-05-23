@@ -60,14 +60,13 @@ class TestConfiguration {
     return this.prodAppId
   }
 
-  async doInContext(appId, task, opts = { prod: false }) {
+  async doInContext(appId, task) {
     if (!appId) {
-      appId = opts.prod ? this.prodAppId : this.appId
+      appId = this.appId
     }
     return doInTenant(TENANT_ID, () => {
       // check if already in a context
-      const contextId = context.getAppId()
-      if (appId !== null && (contextId === null || contextId !== appId)) {
+      if (context.getAppId() == null && appId !== null) {
         return context.doInAppContext(appId, async () => {
           return task()
         })
@@ -161,10 +160,14 @@ class TestConfiguration {
     })
   }
 
-  async createUser(id = null, email = EMAIL, builder = true, admin = false) {
+  async createUser(
+    id = null,
+    email = EMAIL,
+    builder = true,
+    admin = false,
+    roles = {}
+  ) {
     const globalId = !id ? `us_${Math.random()}` : `us_${id}`
-    const appId = this.prodAppId
-    const roles = { [appId]: "role_12345" }
     const resp = await this.globalUser({
       id: globalId,
       email,
@@ -303,8 +306,8 @@ class TestConfiguration {
     // create production app
     this.prodApp = await this.deploy()
     this.prodAppId = this.prodApp.appId
-    this.allApps.push(this.prodApp)
 
+    this.allApps.push(this.prodApp)
     this.allApps.push(this.app)
 
     return this.app
