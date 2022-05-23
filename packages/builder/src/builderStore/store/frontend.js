@@ -380,21 +380,6 @@ export const getFrontendStore = () => {
         const selected = get(selectedComponent)
         const asset = get(currentAsset)
 
-        const formComponents = [
-          "stringfield",
-          "optionsfield",
-          "numberfield",
-          "datetimefield",
-          "booleanfield",
-          "passwordfield",
-          "longformfield",
-          "attachmentfield",
-          "jsonfield",
-          "relationshipfield",
-          "multifieldselect",
-          "s3upload",
-        ]
-
         // Create new component
         const componentInstance = store.actions.components.createInstance(
           componentName,
@@ -432,16 +417,7 @@ export const getFrontendStore = () => {
         }
         parentComponent._children.push(componentInstance)
 
-        let isFormComponent = false
-        let componentPrefix = "@budibase/standard-components/"
-        if (parentComponent._component === componentPrefix + "form") {
-          const mappedComponentTypes = formComponents.map(cmp => {
-            return componentPrefix + cmp
-          })
-          if (mappedComponentTypes.indexOf(componentInstance._component) > -1) {
-            isFormComponent = true
-          }
-        }
+        const definition = store.actions.components.getDefinition(componentName)
 
         // Save components and update UI
         await store.actions.preview.saveSelected()
@@ -449,13 +425,17 @@ export const getFrontendStore = () => {
           state.currentView = "component"
           state.selectedComponentId = componentInstance._id
 
-          if (isFormComponent) {
-            //A field component added to a form.
-            state.builderFocus = {
-              key: "field",
+          const focusSetting = definition.settings.filter((setting) => { return setting.required })
+          const mappedSettings = focusSetting.map((setting) => {
+            return {
+              key: setting.key,
               target: state.selectedComponentId,
               location: "component_settings",
             }
+          })
+
+          if(focusSetting.length){
+            state.builderFocus = mappedSettings
           }
           return state
         })

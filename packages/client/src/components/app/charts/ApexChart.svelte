@@ -13,7 +13,24 @@
   <div use:chart={options} use:styleable={$component.styles} />
 {:else if $builderStore.inBuilder}
   <div use:styleable={$component.styles}>
-    <Placeholder text="Use the settings panel to build your chart" />
+    <Placeholder>
+      <div slot="content">
+        Use the settings panel to select a <mark>Provider</mark> and start
+        building your chart&nbsp;
+        <span
+          class="showMe spectrum-Link"
+          on:click={() => {
+            builderStore.actions.setFocus({
+              location: "component_settings",
+              key: "dataProvider",
+              target: $component.id,
+            })
+          }}
+        >
+          Show me
+        </span>
+      </div>
+    </Placeholder>
   </div>
 {/if}
 

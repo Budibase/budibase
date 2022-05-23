@@ -3,10 +3,6 @@
   import FieldGroupFallback from "./FieldGroupFallback.svelte"
   import { getContext, onDestroy } from "svelte"
 
-  const dispatchEvent = (type, data = {}) => {
-    window.parent.postMessage({ type, data })
-  }
-
   export let label
   export let field
   export let fieldState
@@ -81,26 +77,24 @@
         <Placeholder text="Form components need to be wrapped in a form" />
       {:else if !fieldState}
         {#if $builderStore.inBuilder}
-          <div class="placeholder_wrap">
-            <Placeholder>
-              <div slot="content">
-                Add the <mark>Field</mark> setting to start using your
-                component&nbsp;
-                <span
-                  class="showMe"
-                  on:click={() => {
-                    dispatchEvent("builder-focus", {
-                      location: "component_settings",
-                      key: "field",
-                      target: $component.id,
-                    })
-                  }}
-                >
-                  Show me
-                </span>
-              </div>
-            </Placeholder>
-          </div>
+          <Placeholder>
+            <div slot="content">
+              Add the <mark>Field</mark> setting to start using your
+              component&nbsp;
+              <span
+                class="showMe spectrum-Link"
+                on:click={() => {
+                  builderStore.actions.setFocus({
+                    location: "component_settings",
+                    key: "field",
+                    target: $component.id,
+                  })
+                }}
+              >
+                Show me
+              </span>
+            </div>
+          </Placeholder>
         {/if}
       {:else if schemaType && schemaType !== type && type !== "options"}
         <Placeholder
@@ -117,30 +111,16 @@
 </FieldGroupFallback>
 
 <style>
-  .placeholder_wrap mark {
-    background-color: var(--spectrum-global-color-gray-400);
-    padding: 0px 2px;
-    border-radius: 2px;
-  }
-  div.spectrum-Form-item .placeholder_wrap .showMe {
-    color: black;
-    cursor: pointer;
-  }
-  .showMe:hover {
-    text-decoration: underline;
-  }
   label {
     white-space: nowrap;
   }
   label.hidden {
     padding: 0;
   }
-
   .spectrum-Form-itemField {
     position: relative;
     width: 100%;
   }
-
   .error {
     color: var(
       --spectrum-semantic-negative-color-default,
@@ -149,7 +129,6 @@
     font-size: var(--spectrum-global-dimension-font-size-75);
     margin-top: var(--spectrum-global-dimension-size-75);
   }
-
   .spectrum-FieldLabel--right,
   .spectrum-FieldLabel--left {
     padding-right: var(--spectrum-global-dimension-size-200);

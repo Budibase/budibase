@@ -15,7 +15,23 @@
     class="placeholder"
     use:styleable={{ ...$component.styles, empty: true }}
   >
-    <Placeholder />
+    <Placeholder>
+      <div slot="content">
+        Add the <mark>URL</mark> and start updating your image&nbsp;
+        <span
+          class="showMe spectrum-Link"
+          on:click={() => {
+            builderStore.actions.setFocus({
+              location: "component_settings",
+              key: "url",
+              target: $component.id,
+            })
+          }}
+        >
+          Show me
+        </span>
+      </div>
+    </Placeholder>
   </div>
 {/if}
 

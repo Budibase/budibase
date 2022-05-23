@@ -3,29 +3,16 @@
   import { Input, DetailSummary, notifications } from "@budibase/bbui"
   import { store } from "builderStore"
   import PropertyControl from "./PropertyControls/PropertyControl.svelte"
-  import LayoutSelect from "./PropertyControls/LayoutSelect.svelte"
-  import RoleSelect from "./PropertyControls/RoleSelect.svelte"
   import ResetFieldsButton from "./PropertyControls/ResetFieldsButton.svelte"
   import { getComponentForSettingType } from "./PropertyControls/componentSettings"
   import { Utils } from "@budibase/frontend-core"
 
   export let componentDefinition
   export let componentInstance
-  export let assetInstance
   export let bindings
   export let componentBindings
 
-  const layoutDefinition = []
-  const screenDefinition = [
-    { key: "description", label: "Description", control: Input },
-    { key: "routing.route", label: "Route", control: Input },
-    { key: "routing.roleId", label: "Access", control: RoleSelect },
-    { key: "layoutId", label: "Layout", control: LayoutSelect },
-  ]
-
   $: sections = getSections(componentDefinition)
-  $: isLayout = assetInstance && assetInstance.favicon
-  $: assetDefinition = isLayout ? layoutDefinition : screenDefinition
 
   const getSections = definition => {
     const settings = definition?.settings ?? []
@@ -88,11 +75,10 @@
   }
 
   const isFocused = setting => {
-    return (
-      componentInstance._id === $store.builderFocus?.target &&
-      setting.key === $store.builderFocus?.key &&
-      "component_settings" === $store.builderFocus?.location
-    )
+    if (!$store.builderFocus) {
+      return false
+    }
+    return setting.required === true
   }
 </script>
 
