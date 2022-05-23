@@ -16,18 +16,18 @@ export const backfill = async (appDb: any) => {
     const tables = await getTables(appDb)
 
     for (const table of tables) {
-      events.table.created(table)
+      await events.table.created(table)
 
       if (table.views) {
         for (const view of Object.values(table.views)) {
-          events.view.created(view)
+          await events.view.created(view)
 
           if (view.calculation) {
-            events.view.calculationCreated(view.calculation)
+            await events.view.calculationCreated(view.calculation)
           }
 
           if (view.filters?.length) {
-            events.view.filterCreated()
+            await events.view.filterCreated()
           }
         }
       }

@@ -8,6 +8,8 @@ export interface User extends Document {
   admin?: {
     global: boolean
   }
+  providerType?: string
+  tenantId: string
 }
 
 export interface UserRoles {

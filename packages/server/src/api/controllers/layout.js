@@ -20,7 +20,7 @@ exports.save = async function (ctx) {
 
   layout._id = layout._id || generateLayoutID()
   const response = await db.put(layout)
-  events.layout.created()
+  await events.layout.created()
   layout._rev = response.rev
 
   ctx.body = layout
@@ -48,7 +48,7 @@ exports.destroy = async function (ctx) {
   }
 
   await db.remove(layoutId, layoutRev)
-  events.layout.deleted()
+  await events.layout.deleted()
   ctx.body = { message: "Layout deleted successfully" }
   ctx.status = 200
 }

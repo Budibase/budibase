@@ -92,7 +92,7 @@ export async function save(ctx: any) {
   }
 
   const response = await db.put(query)
-  eventFn()
+  await eventFn()
   query._rev = response.rev
 
   ctx.body = query
@@ -132,7 +132,7 @@ export async function preview(ctx: any) {
       })
 
     const { rows, keys, info, extra } = await quotas.addQuery(runFn)
-    events.query.previewed(datasource)
+    await events.query.previewed(datasource)
     ctx.body = {
       rows,
       schemaFields: [...new Set(keys)],
@@ -223,5 +223,5 @@ export async function destroy(ctx: any) {
   await db.remove(ctx.params.queryId, ctx.params.revId)
   ctx.message = `Query deleted.`
   ctx.status = 200
-  events.query.deleted(datasource, query)
+  await events.query.deleted(datasource, query)
 }

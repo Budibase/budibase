@@ -19,19 +19,19 @@ export const backfill = async (globalDb: any) => {
   const users = await getUsers(globalDb)
 
   for (const user of users) {
-    events.user.created(user)
+    await events.user.created(user)
 
     if (user.admin?.global) {
-      events.user.permissionAdminAssigned(user)
+      await events.user.permissionAdminAssigned(user)
     }
 
     if (user.builder?.global) {
-      events.user.permissionBuilderAssigned(user)
+      await events.user.permissionBuilderAssigned(user)
     }
 
     if (user.roles) {
       for (const [appId, role] of Object.entries(user.roles)) {
-        events.role.assigned(user, role)
+        await events.role.assigned(user, role)
       }
     }
   }

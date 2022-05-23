@@ -39,7 +39,7 @@ exports.save = async ctx => {
     existingTable.views[viewName] = existingTable.views[originalName]
   }
   await db.put(table)
-  handleViewEvents(existingTable.views[viewName], table.views[viewName])
+  await handleViewEvents(existingTable.views[viewName], table.views[viewName])
 
   ctx.body = {
     ...table.views[viewToSave.name],
@@ -47,16 +47,16 @@ exports.save = async ctx => {
   }
 }
 
-const calculationEvents = (existingView, newView) => {
+const calculationEvents = async (existingView, newView) => {
   const existingCalculation = existingView && existingView.calculation
   const newCalculation = newView && newView.calculation
 
   if (existingCalculation && !newCalculation) {
-    events.view.calculationDeleted()
+    await events.view.calculationDeleted()
   }
 
   if (!existingCalculation && newCalculation) {
-    events.view.calculationCreated()
+    await events.view.calculationCreated()
   }
 
   if (
@@ -64,11 +64,11 @@ const calculationEvents = (existingView, newView) => {
     newCalculation &&
     existingCalculation !== newCalculation
   ) {
-    events.view.calculationUpdated()
+    await events.view.calculationUpdated()
   }
 }
 
-const filterEvents = (existingView, newView) => {
+const filterEvents = async (existingView, newView) => {
   const hasExistingFilters = !!(
     existingView &&
     existingView.filters &&
@@ -77,11 +77,11 @@ const filterEvents = (existingView, newView) => {
   const hasNewFilters = !!(newView && newView.filters && newView.filters.length)
 
   if (hasExistingFilters && !hasNewFilters) {
-    events.view.filterDeleted()
+    await events.view.filterDeleted()
   }
 
   if (!hasExistingFilters && hasNewFilters) {
-    events.view.filterCreated()
+    await events.view.filterCreated()
   }
 
   if (
@@ -89,18 +89,18 @@ const filterEvents = (existingView, newView) => {
     hasNewFilters &&
     !isEqual(existingView.filters, newView.filters)
   ) {
-    events.view.filterUpdated()
+    await events.view.filterUpdated()
   }
 }
 
-const handleViewEvents = (existingView, newView) => {
+const handleViewEvents = async (existingView, newView) => {
   if (!existingView) {
-    events.view.created()
+    await events.view.created()
   } else {
-    events.view.updated()
+    await events.view.updated()
   }
-  calculationEvents(existingView, newView)
-  filterEvents(existingView, newView)
+  await calculationEvents(existingView, newView)
+  await filterEvents(existingView, newView)
 }
 
 exports.destroy = async ctx => {
@@ -110,7 +110,7 @@ exports.destroy = async ctx => {
   const table = await db.get(view.meta.tableId)
   delete table.views[viewName]
   await db.put(table)
-  events.view.deleted()
+  await events.view.deleted()
 
   ctx.body = view
 }
@@ -182,8 +182,8 @@ exports.exportView = async ctx => {
   ctx.body = apiFileReturn(exporter(headers, rows))
 
   if (viewName.startsWith(DocumentTypes.TABLE)) {
-    events.table.exported(table, format)
+    await events.table.exported(table, format)
   } else {
-    events.view.exported(table, format)
+    await events.view.exported(table, format)
   }
 }

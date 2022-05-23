@@ -1,19 +1,19 @@
 import { events } from "@budibase/backend-core"
 import { User, UserRoles } from "@budibase/types"
 
-export const handleDeleteEvents = (user: any) => {
-  events.user.deleted(user)
+export const handleDeleteEvents = async (user: any) => {
+  await events.user.deleted(user)
 
   if (isBuilder(user)) {
-    events.user.permissionBuilderRemoved(user)
+    await events.user.permissionBuilderRemoved(user)
   }
 
   if (isAdmin(user)) {
-    events.user.permissionAdminRemoved(user)
+    await events.user.permissionAdminRemoved(user)
   }
 }
 
-const assignAppRoleEvents = (
+const assignAppRoleEvents = async (
   user: User,
   roles: UserRoles,
   existingRoles: UserRoles
@@ -21,12 +21,12 @@ const assignAppRoleEvents = (
   for (const [appId, role] of Object.entries(roles)) {
     // app role in existing is not same as new
     if (!existingRoles || existingRoles[appId] !== role) {
-      events.role.assigned(user, role)
+      await events.role.assigned(user, role)
     }
   }
 }
 
-const unassignAppRoleEvents = (
+const unassignAppRoleEvents = async (
   user: User,
   roles: UserRoles,
   existingRoles: UserRoles
@@ -37,29 +37,29 @@ const unassignAppRoleEvents = (
   for (const [appId, role] of Object.entries(existingRoles)) {
     // app role in new is not same as existing
     if (!roles || roles[appId] !== role) {
-      events.role.unassigned(user, role)
+      await events.role.unassigned(user, role)
     }
   }
 }
 
-const handleAppRoleEvents = (user: any, existingUser: any) => {
+const handleAppRoleEvents = async (user: any, existingUser: any) => {
   const roles = user.roles
   const existingRoles = existingUser?.roles
 
-  assignAppRoleEvents(user, roles, existingRoles)
-  unassignAppRoleEvents(user, roles, existingRoles)
+  await assignAppRoleEvents(user, roles, existingRoles)
+  await unassignAppRoleEvents(user, roles, existingRoles)
 }
 
-export const handleSaveEvents = (user: any, existingUser: any) => {
+export const handleSaveEvents = async (user: any, existingUser: any) => {
   if (existingUser) {
-    events.user.updated(user)
+    await events.user.updated(user)
 
     if (isRemovingBuilder(user, existingUser)) {
-      events.user.permissionBuilderRemoved(user)
+      await events.user.permissionBuilderRemoved(user)
     }
 
     if (isRemovingAdmin(user, existingUser)) {
-      events.user.permissionAdminRemoved(user)
+      await events.user.permissionAdminRemoved(user)
     }
 
     if (
@@ -67,21 +67,21 @@ export const handleSaveEvents = (user: any, existingUser: any) => {
       user.forceResetPassword &&
       user.password
     ) {
-      events.user.passwordForceReset(user)
+      await events.user.passwordForceReset(user)
     }
   } else {
-    events.user.created(user)
+    await events.user.created(user)
   }
 
   if (isAddingBuilder(user, existingUser)) {
-    events.user.permissionBuilderAssigned(user)
+    await events.user.permissionBuilderAssigned(user)
   }
 
   if (isAddingAdmin(user, existingUser)) {
-    events.user.permissionAdminAssigned(user)
+    await events.user.permissionAdminAssigned(user)
   }
 
-  handleAppRoleEvents(user, existingUser)
+  await handleAppRoleEvents(user, existingUser)
 }
 
 const isBuilder = (user: any) => user.builder && user.builder.global

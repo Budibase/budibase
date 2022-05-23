@@ -9,17 +9,17 @@ import {
 
 /* eslint-disable */
 
-export function servedBuilder(version: number) {
+export async function servedBuilder(version: number) {
   const properties: BuilderServedEvent = {}
-  publishEvent(Event.SERVED_BUILDER, properties)
+  await publishEvent(Event.SERVED_BUILDER, properties)
 }
 
-export function servedApp(app: App) {
+export async function servedApp(app: App) {
   const properties: AppServedEvent = {}
-  publishEvent(Event.SERVED_APP, properties)
+  await publishEvent(Event.SERVED_APP, properties)
 }
 
-export function servedAppPreview(app: App) {
+export async function servedAppPreview(app: App) {
   const properties: AppPreviewServedEvent = {}
-  publishEvent(Event.SERVED_APP_PREVIEW, properties)
+  await publishEvent(Event.SERVED_APP_PREVIEW, properties)
 }

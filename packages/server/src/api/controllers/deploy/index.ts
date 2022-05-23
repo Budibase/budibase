@@ -195,7 +195,7 @@ const _deployApp = async function (ctx: any) {
     app = await deployApp(deployment)
   }
 
-  events.app.published(app)
+  await events.app.published(app)
   ctx.body = deployment
 }
 

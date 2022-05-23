@@ -109,7 +109,7 @@ exports.update = async function (ctx) {
   }
 
   const response = await db.put(datasource)
-  events.datasource.updated()
+  await events.datasource.updated()
   datasource._rev = response.rev
 
   // Drain connection pools when configuration is changed
@@ -144,7 +144,7 @@ exports.save = async function (ctx) {
   }
 
   const dbResp = await db.put(datasource)
-  events.datasource.created()
+  await events.datasource.created()
   datasource._rev = dbResp.rev
 
   // Drain connection pools when configuration is changed
@@ -179,7 +179,7 @@ exports.destroy = async function (ctx) {
 
   // delete the datasource
   await db.remove(ctx.params.datasourceId, ctx.params.revId)
-  events.datasource.deleted()
+  await events.datasource.deleted()
 
   ctx.message = `Datasource deleted.`
   ctx.status = 200

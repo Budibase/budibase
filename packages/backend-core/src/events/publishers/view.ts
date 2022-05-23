@@ -19,52 +19,52 @@ import {
 
 /* eslint-disable */
 
-export function created(view: View) {
+export async function created(view: View) {
   const properties: ViewCreatedEvent = {}
-  publishEvent(Event.VIEW_CREATED, properties)
+  await publishEvent(Event.VIEW_CREATED, properties)
 }
 
-export function updated(view: View) {
+export async function updated(view: View) {
   const properties: ViewUpdatedEvent = {}
-  publishEvent(Event.VIEW_UPDATED, properties)
+  await publishEvent(Event.VIEW_UPDATED, properties)
 }
 
-export function deleted() {
+export async function deleted() {
   const properties: ViewDeletedEvent = {}
-  publishEvent(Event.VIEW_DELETED, properties)
+  await publishEvent(Event.VIEW_DELETED, properties)
 }
 
-export function exported(table: Table, format: TableExportFormat) {
+export async function exported(table: Table, format: TableExportFormat) {
   const properties: ViewExportedEvent = {}
-  publishEvent(Event.VIEW_EXPORTED, properties)
+  await publishEvent(Event.VIEW_EXPORTED, properties)
 }
 
-export function filterCreated() {
+export async function filterCreated() {
   const properties: ViewFilterCreatedEvent = {}
-  publishEvent(Event.VIEW_FILTER_CREATED, properties)
+  await publishEvent(Event.VIEW_FILTER_CREATED, properties)
 }
 
-export function filterUpdated() {
+export async function filterUpdated() {
   const properties: ViewFilterUpdatedEvent = {}
-  publishEvent(Event.VIEW_FILTER_UPDATED, properties)
+  await publishEvent(Event.VIEW_FILTER_UPDATED, properties)
 }
 
-export function filterDeleted() {
+export async function filterDeleted() {
   const properties: ViewFilterDeletedEvent = {}
-  publishEvent(Event.VIEW_FILTER_DELETED, properties)
+  await publishEvent(Event.VIEW_FILTER_DELETED, properties)
 }
 
-export function calculationCreated(calculation: ViewCalculation) {
+export async function calculationCreated(calculation: ViewCalculation) {
   const properties: ViewCalculationCreatedEvent = {}
-  publishEvent(Event.VIEW_CALCULATION_CREATED, properties)
+  await publishEvent(Event.VIEW_CALCULATION_CREATED, properties)
 }
 
-export function calculationUpdated() {
+export async function calculationUpdated() {
   const properties: ViewCalculationUpdatedEvent = {}
-  publishEvent(Event.VIEW_CALCULATION_UPDATED, properties)
+  await publishEvent(Event.VIEW_CALCULATION_UPDATED, properties)
 }
 
-export function calculationDeleted() {
+export async function calculationDeleted() {
   const properties: ViewCalculationDeletedEvent = {}
-  publishEvent(Event.VIEW_CALCULATION_DELETED, properties)
+  await publishEvent(Event.VIEW_CALCULATION_DELETED, properties)
 }

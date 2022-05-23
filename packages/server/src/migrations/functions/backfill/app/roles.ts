@@ -16,7 +16,7 @@ export const backfill = async (appDb: any) => {
     const roles = await getRoles(appDb)
 
     for (const role of roles) {
-      events.role.created(role)
+      await events.role.created(role)
     }
   }
 }

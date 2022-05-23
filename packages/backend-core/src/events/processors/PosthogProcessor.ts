@@ -1,7 +1,6 @@
 import PostHog from "posthog-node"
-import { Event } from "@budibase/types"
+import { Event, Identity } from "@budibase/types"
 import { EventProcessor } from "./types"
-import { getTenantId } from "../../context"
 
 export default class PosthogProcessor implements EventProcessor {
   posthog: PostHog
@@ -13,13 +12,16 @@ export default class PosthogProcessor implements EventProcessor {
     this.posthog = new PostHog(token)
   }
 
-  processEvent(event: Event, properties: any): void {
-    const userId = getTenantId() // TODO
-    this.posthog.capture({ distinctId: userId, event, properties })
+  async processEvent(
+    event: Event,
+    identity: Identity,
+    properties: any
+  ): Promise<void> {
+    this.posthog.capture({ distinctId: identity.id, event, properties })
   }
 
-  identify(distinctId: string, properties: any) {
-    this.posthog.identify({ distinctId, properties })
+  async identify(identity: Identity) {
+    this.posthog.identify({ distinctId: identity.id, properties: identity })
   }
 
   shutdown() {

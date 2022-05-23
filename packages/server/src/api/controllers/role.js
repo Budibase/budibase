@@ -66,9 +66,9 @@ exports.save = async function (ctx) {
   }
   const result = await db.put(role)
   if (isCreate) {
-    events.role.created(role)
+    await events.role.created(role)
   } else {
-    events.role.updated(role)
+    await events.role.updated(role)
   }
   await updateRolesOnUserTable(db, _id, UpdateRolesOptions.CREATED)
   role._rev = result.rev
@@ -97,7 +97,7 @@ exports.destroy = async function (ctx) {
   }
 
   await db.remove(roleId, ctx.params.rev)
-  events.role.deleted(role)
+  await events.role.deleted(role)
   await updateRolesOnUserTable(
     db,
     ctx.params.roleId,

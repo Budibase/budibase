@@ -7,5 +7,5 @@ exports.exportAppDump = async function (ctx) {
   const backupIdentifier = `${appName}-export-${new Date().getTime()}.txt`
   ctx.attachment(backupIdentifier)
   ctx.body = await streamBackup(appId)
-  events.app.exported()
+  await events.app.exported()
 }

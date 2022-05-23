@@ -129,7 +129,7 @@ export const save = async (
     }
     user._rev = response.rev
 
-    eventHelpers.handleSaveEvents(user, dbUser)
+    await eventHelpers.handleSaveEvents(user, dbUser)
 
     await tenancy.tryAddTenant(tenantId, _id, email)
     await cache.user.invalidateUser(response.id)
@@ -169,7 +169,7 @@ export const destroy = async (id: string, currentUser: any) => {
 
   await deprovisioning.removeUserFromInfoDB(dbUser)
   await db.remove(dbUser._id, dbUser._rev)
-  eventHelpers.handleDeleteEvents(dbUser)
+  await eventHelpers.handleDeleteEvents(dbUser)
   await quotas.removeUser(dbUser)
   await cache.user.invalidateUser(dbUser._id)
   await sessions.invalidateSessions(dbUser._id)

@@ -292,14 +292,14 @@ const performAppCreate = async (ctx: any) => {
   return newApplication
 }
 
-const creationEvents = (request: any, app: App) => {
-  let creationFns = []
+const creationEvents = async (request: any, app: App) => {
+  let creationFns: ((app: App) => Promise<void>)[] = []
 
   const body = request.body
   if (body.useTemplate === "true") {
     // from template
     if (body.templateKey) {
-      creationFns.push(() => events.app.templateImported(body.templateKey))
+      creationFns.push(app => events.app.templateImported(body.templateKey))
     }
     // from file
     else if (request.files?.templateFile) {
@@ -313,12 +313,12 @@ const creationEvents = (request: any, app: App) => {
   creationFns.push(events.app.created)
 
   for (let fn of creationFns) {
-    fn(app)
+    await fn(app)
   }
 }
 
 const appPostCreate = async (ctx: any, app: App) => {
-  creationEvents(ctx.request, app)
+  await creationEvents(ctx.request, app)
   // app import & template creation
   if (ctx.request.body.useTemplate === "true") {
     const rows = await getUniqueRows([app.appId])
@@ -363,7 +363,7 @@ export const update = async (ctx: any) => {
   }
 
   const app = await updateAppPackage(ctx.request.body, ctx.params.appId)
-  events.app.updated(app)
+  await events.app.updated(app)
   ctx.status = 200
   ctx.body = app
 }
@@ -386,7 +386,7 @@ export const updateClient = async (ctx: any) => {
     revertableVersion: currentVersion,
   }
   const app = await updateAppPackage(appPackageUpdates, ctx.params.appId)
-  events.app.versionUpdated(app)
+  await events.app.versionUpdated(app)
   ctx.status = 200
   ctx.body = app
 }
@@ -410,7 +410,7 @@ export const revertClient = async (ctx: any) => {
     revertableVersion: null,
   }
   const app = await updateAppPackage(appPackageUpdates, ctx.params.appId)
-  events.app.versionReverted(app)
+  await events.app.versionReverted(app)
   ctx.status = 200
   ctx.body = app
 }
@@ -429,10 +429,10 @@ const destroyApp = async (ctx: any) => {
 
   if (isUnpublish) {
     await quotas.removePublishedApp()
-    events.app.unpublished(app)
+    await events.app.unpublished(app)
   } else {
     await quotas.removeApp()
-    events.app.deleted(app)
+    await events.app.deleted(app)
   }
 
   /* istanbul ignore next */

@@ -11,42 +11,42 @@ import {
   SSOUpdatedEvent,
 } from "@budibase/types"
 
-export function login(source: LoginSource) {
+export async function login(source: LoginSource) {
   const properties: LoginEvent = {
     source,
   }
-  publishEvent(Event.AUTH_LOGIN, properties)
+  await publishEvent(Event.AUTH_LOGIN, properties)
 }
 
-export function logout() {
+export async function logout() {
   const properties: LogoutEvent = {}
-  publishEvent(Event.AUTH_LOGOUT, properties)
+  await publishEvent(Event.AUTH_LOGOUT, properties)
 }
 
-export function SSOCreated(type: SSOType) {
+export async function SSOCreated(type: SSOType) {
   const properties: SSOCreatedEvent = {
     type,
   }
-  publishEvent(Event.AUTH_SSO_CREATED, properties)
+  await publishEvent(Event.AUTH_SSO_CREATED, properties)
 }
 
-export function SSOUpdated(type: SSOType) {
+export async function SSOUpdated(type: SSOType) {
   const properties: SSOUpdatedEvent = {
     type,
   }
-  publishEvent(Event.AUTH_SSO_UPDATED, properties)
+  await publishEvent(Event.AUTH_SSO_UPDATED, properties)
 }
 
-export function SSOActivated(type: SSOType) {
+export async function SSOActivated(type: SSOType) {
   const properties: SSOActivatedEvent = {
     type,
   }
-  publishEvent(Event.AUTH_SSO_ACTIVATED, properties)
+  await publishEvent(Event.AUTH_SSO_ACTIVATED, properties)
 }
 
-export function SSODeactivated(type: SSOType) {
+export async function SSODeactivated(type: SSOType) {
   const properties: SSODeactivatedEvent = {
     type,
   }
-  publishEvent(Event.AUTH_SSO_DEACTIVATED, properties)
+  await publishEvent(Event.AUTH_SSO_DEACTIVATED, properties)
 }

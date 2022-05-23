@@ -5,10 +5,10 @@ export const backfill = async (appDb: any) => {
   const app: App = await appDb.get(db.DocumentTypes.APP_METADATA)
 
   if (db.isDevAppID(app.appId)) {
-    events.app.created(app)
+    await events.app.created(app)
   }
 
   if (db.isProdAppID(app.appId)) {
-    events.app.published(app)
+    await events.app.published(app)
   }
 }

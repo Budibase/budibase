@@ -43,7 +43,7 @@ async function prepareUpload({ s3Key, bucket, metadata, file }) {
 exports.serveBuilder = async function (ctx) {
   let builderPath = resolve(TOP_LEVEL_PATH, "builder")
   await send(ctx, ctx.file, { root: builderPath })
-  events.serve.servedBuilder(version)
+  await events.serve.servedBuilder(version)
 }
 
 exports.uploadFile = async function (ctx) {
@@ -94,9 +94,9 @@ exports.serveApp = async function (ctx) {
   }
 
   if (isDevAppID(appInfo.appId)) {
-    events.serve.servedAppPreview(appInfo)
+    await events.serve.servedAppPreview(appInfo)
   } else {
-    events.serve.servedApp(appInfo)
+    await events.serve.servedApp(appInfo)
   }
 }
 

@@ -1,30 +1,35 @@
 import { publishEvent } from "../events"
 import { Event, VersionCheckedEvent } from "@budibase/types"
 
-export function nameUpdated() {
+export async function nameUpdated() {
   const properties = {}
-  publishEvent(Event.ORG_NAME_UPDATED, properties)
+  await publishEvent(Event.ORG_NAME_UPDATED, properties)
 }
 
-export function logoUpdated() {
+export async function logoUpdated() {
   const properties = {}
-  publishEvent(Event.ORG_LOGO_UPDATED, properties)
+  await publishEvent(Event.ORG_LOGO_UPDATED, properties)
 }
 
-export function platformURLUpdated() {
+export async function platformURLUpdated() {
   const properties = {}
-  publishEvent(Event.ORG_PLATFORM_URL_UPDATED, properties)
+  await publishEvent(Event.ORG_PLATFORM_URL_UPDATED, properties)
 }
 
-export function versionChecked(version: number) {
+export async function versionChecked(version: number) {
   const properties: VersionCheckedEvent = {
     version,
   }
-  publishEvent(Event.UPDATE_VERSION_CHECKED, properties)
+  await publishEvent(Event.UPDATE_VERSION_CHECKED, properties)
 }
 
 // TODO
-export function analyticsOptOut() {
+export async function analyticsOptOut() {
   const properties = {}
-  publishEvent(Event.ANALYTICS_OPT_OUT, properties)
+  await publishEvent(Event.ANALYTICS_OPT_OUT, properties)
+}
+
+export async function analyticsOptIn() {
+  const properties = {}
+  await publishEvent(Event.ANALYTICS_OPT_OUT, properties)
 }

@@ -16,7 +16,7 @@ export const backfill = async (appDb: any) => {
     const layouts: Layout[] = await getLayouts(appDb)
 
     for (const layout of layouts) {
-      events.layout.created(layout)
+      await events.layout.created(layout)
     }
   }
 }

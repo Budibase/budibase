@@ -60,12 +60,12 @@ exports.save = async function (ctx) {
     table.dataImport && table.dataImport.csvString ? "csv" : undefined
   const savedTable = await pickApi({ table }).save(ctx)
   if (!table._id) {
-    events.table.created(savedTable)
+    await events.table.created(savedTable)
   } else {
-    events.table.updated(savedTable)
+    await events.table.updated(savedTable)
   }
   if (importFormat) {
-    events.table.imported(savedTable, importFormat)
+    await events.table.imported(savedTable, importFormat)
   }
   ctx.status = 200
   ctx.message = `Table ${table.name} saved successfully.`
@@ -78,7 +78,7 @@ exports.destroy = async function (ctx) {
   const appId = ctx.appId
   const tableId = ctx.params.tableId
   const deletedTable = await pickApi({ tableId }).destroy(ctx)
-  events.table.deleted(deletedTable)
+  await events.table.deleted(deletedTable)
   ctx.eventEmitter &&
     ctx.eventEmitter.emitTable(`table:delete`, appId, deletedTable)
   ctx.status = 200

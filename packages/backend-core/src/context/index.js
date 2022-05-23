@@ -16,6 +16,7 @@ const ContextKeys = {
   TENANT_ID: "tenantId",
   GLOBAL_DB: "globalDb",
   APP_ID: "appId",
+  USER: "user",
   // whatever the request app DB was
   CURRENT_DB: "currentDb",
   // get the prod app DB from the request
@@ -170,6 +171,21 @@ exports.doInAppContext = (appId, task) => {
       cls.setOnContext(ContextKeys.IN_USE, 1)
       return internal()
     })
+  }
+}
+
+exports.doInUserContext = (user, task) => {
+  return cls.run(async () => {
+    cls.setOnContext(ContextKeys.USER, user)
+    return task()
+  })
+}
+
+exports.getUser = () => {
+  try {
+    return cls.getFromContext(ContextKeys.USER)
+  } catch (e) {
+    // do nothing - user is not in context
   }
 }
 
