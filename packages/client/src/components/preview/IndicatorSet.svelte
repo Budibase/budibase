@@ -17,24 +17,11 @@
 
   $: visibleIndicators = indicators.filter(x => x.visible)
   $: offset = $builderStore.inBuilder ? 0 : 2
-  $: getComponentIcon(componentId)
 
   let updating = false
   let observers = []
   let callbackCount = 0
   let nextIndicators = []
-
-  const getComponentIcon = id => {
-    if (!id) {
-      return
-    }
-    const component = componentStore.actions.getComponentById(id)
-    const type = component?._component
-    const definition = componentStore.actions.getComponentDefinition(type)
-    if (definition?.icon) {
-      icon = definition.icon
-    }
-  }
 
   const createIntersectionCallback = idx => entries => {
     if (callbackCount >= observers.length) {

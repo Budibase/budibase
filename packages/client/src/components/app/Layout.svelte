@@ -69,7 +69,6 @@
     ) {
       const node = document.getElementsByClassName("nav-wrapper")?.[0]
       if (node) {
-        console.log("scroll")
         node.style.scrollMargin = "100px"
         node.scrollIntoView({
           behavior: "smooth",
@@ -112,12 +111,12 @@
   }
 
   const getNavStyle = (backgroundColor, textColor, width, height) => {
-    let style = `--width:${width}px;--height:${height}px;`
+    let style = `--width:${width}px; --height:${height}px;`
     if (backgroundColor) {
-      style += `--navBackground: ${backgroundColor};`
+      style += `--navBackground:${backgroundColor};`
     }
     if (textColor) {
-      style += `--navTextColor: ${textColor};`
+      style += `--navTextColor:${textColor};`
     }
     return style
   }
@@ -245,8 +244,6 @@
     align-items: stretch;
     background: var(--navBackground);
     z-index: 2;
-    border-bottom: 1px solid var(--spectrum-global-color-gray-300);
-    box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.05);
   }
   .nav-wrapper.clickable {
     cursor: pointer;
@@ -299,6 +296,10 @@
     align-items: stretch;
     flex: 1 1 auto;
     z-index: 1;
+    border-top: 1px solid var(--spectrum-global-color-gray-300);
+  }
+  .layout--none .main-wrapper {
+    border-top: none;
   }
   .main {
     display: flex;
