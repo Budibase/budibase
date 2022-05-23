@@ -250,11 +250,9 @@ exports.configChecklist = async function (ctx) {
   const tenantId = getTenantId()
 
   try {
-    const ONE_MINUTE = 600
-
     ctx.body = await withCache(
       `checklist:${tenantId}`,
-      ONE_MINUTE,
+      env.CHECKLIST_CACHE_TTL,
       async () => {
         let apps = []
         if (!env.MULTI_TENANCY || tenantId) {
