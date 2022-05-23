@@ -1,47 +1,65 @@
 <script>
-  import { level } from "./ComponentTree.svelte"
+  import { DropPosition } from "./dndStore"
 
-  export let componentId
-  export let dndStore
+  export let component
+  export let position
 
-  const indicatorX = (level + 2) * 14
-  let indicatorY = 0
+  let x
+  let y
+  let width
+  let height
+
+  $: calculatePosition(component)
+
+  const calculatePosition = component => {
+    // Get root li element
+    const el = document.getElementById(`component-${component?._id}`)
+    // Get inner nav item content element
+    const child = el?.childNodes[0]?.childNodes[0]
+    if (!el) {
+      return
+    }
+    x = child.offsetLeft
+    y = child.offsetTop
+    width = child.clientWidth
+    height = child.clientHeight
+  }
 </script>
 
-{#if $dndStore.dragging && $dndStore.valid}
-  {#if $dndStore?.target?._id === componentId}
-    <div
-      class:above={$dndStore.dropPosition === DropPosition.ABOVE}
-      class:below={$dndStore.dropPosition === DropPosition.BELOW}
-      class:inside={$dndStore.dropPosition === DropPosition.INSIDE}
-      class="drop-item"
-      style="--indicatorX: {indicatorX}px; --indicatorY:{indicatorY}px;"
-    />
-  {/if}
+{#if component && position}
+  <div
+    class:above={position === DropPosition.ABOVE}
+    class:below={position === DropPosition.BELOW}
+    class:inside={position === DropPosition.INSIDE}
+    class="indicator"
+    style="--x:{x}px; --y:{y}px; --width:{width}px; --height:{height}px"
+  />
 {/if}
-]
 
 <style>
-  .drop-item {
+  .indicator {
     height: 2px;
     background: var(--spectrum-global-color-static-green-500);
     z-index: 999;
     position: absolute;
-    left: var(--indicatorX);
-    width: calc(100% - var(--indicatorX));
+    left: calc(var(--x) + 18px);
+    top: var(--y);
+    width: calc(100% - var(--x) - 18px);
     border-radius: 4px;
     pointer-events: none;
   }
-  .drop-item.above {
+  .indicator.above {
   }
-  .drop-item.below {
+  .indicator.below {
     margin-top: 32px;
   }
-  .drop-item.inside {
+  .indicator.inside {
     background: transparent;
     border: 2px solid var(--spectrum-global-color-static-green-500);
-    height: 29px;
     pointer-events: none;
-    width: calc(100% - var(--indicatorX) - 4px);
+    width: calc(var(--width) - 34px);
+    height: calc(var(--height) - 9px);
+    left: calc(var(--x) + 13px);
+    top: calc(var(--y) + 2px);
   }
 </style>

@@ -156,6 +156,7 @@
   }
   .icon.arrow {
     flex: 0 0 20px;
+    pointer-events: all;
   }
   .icon.arrow.absolute {
     position: absolute;
