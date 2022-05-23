@@ -1,6 +1,5 @@
 const { Client, utils } = require("@budibase/backend-core/redis")
 const { newid } = require("@budibase/backend-core/utils")
-const env = require("../environment")
 
 function getExpirySecondsForDB(db) {
   switch (db) {
@@ -13,7 +12,7 @@ function getExpirySecondsForDB(db) {
   }
 }
 
-let pwResetClient, invitationClient, cachingClient
+let pwResetClient, invitationClient
 
 function getClient(db) {
   switch (db) {
@@ -21,8 +20,6 @@ function getClient(db) {
       return pwResetClient
     case utils.Databases.INVITATIONS:
       return invitationClient
-    case utils.Databases.DATA_CACHE:
-      return cachingClient
   }
 }
 
@@ -48,10 +45,8 @@ async function getACode(db, code, deleteCode = true) {
 exports.init = async () => {
   pwResetClient = new Client(utils.Databases.PW_RESETS)
   invitationClient = new Client(utils.Databases.INVITATIONS)
-  cachingClient = new Client(utils.Databases.DATA_CACHE)
   await pwResetClient.init()
   await invitationClient.init()
-  await cachingClient.init()
 }
 
 /**
@@ -66,6 +61,7 @@ exports.shutdown = async () => {
  * Given a user ID this will store a code (that is returned) for an hour in redis.
  * The user can then return this code for resetting their password (through their reset link).
  * @param {string} userId the ID of the user which is to be reset.
+ * @param {object} info Info about the user/the reset process.
  * @return {Promise<string>} returns the code that was stored to redis.
  */
 exports.getResetPasswordCode = async (userId, info) => {
@@ -107,25 +103,5 @@ exports.checkInviteCode = async (inviteCode, deleteCode = true) => {
     return getACode(utils.Databases.INVITATIONS, inviteCode, deleteCode)
   } catch (err) {
     throw "Invitation is not valid or has expired, please request a new one."
-  }
-}
-
-// TODO: move into backend-core
-exports.withCache = async (key, ttl, fetchFn) => {
-  const cachedValue = await cachingClient.get(key)
-  if (cachedValue) {
-    return cachedValue
-  }
-
-  try {
-    const fetchedValue = await fetchFn()
-
-    if (!env.isTest()) {
-      await cachingClient.store(key, fetchedValue, ttl)
-    }
-    return fetchedValue
-  } catch (err) {
-    console.error("Error calling fetch function", err)
-    throw err
   }
 }
