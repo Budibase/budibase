@@ -61,8 +61,10 @@ describe("migrations", () => {
 
   it("runs global db migration", async () => {
     await config.doInContext(null, async () => {
-      await config.createUser(undefined, undefined, false, true) // admin only
-      await config.createUser(undefined, undefined, false, false) // non admin non builder
+      const appId = config.prodAppId
+      const roles = { [appId]: "role_12345" }
+      await config.createUser(undefined, undefined, false, true, roles) // admin only
+      await config.createUser(undefined, undefined, false, false, roles) // non admin non builder
       await config.createTable()
       await config.createRow()
       await config.createRow()

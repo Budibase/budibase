@@ -55,7 +55,7 @@ describe("/tables", () => {
       expect(events.table.created).toBeCalledWith(res.body)
       expect(events.table.imported).toBeCalledTimes(1)
       expect(events.table.imported).toBeCalledWith(res.body, "csv")
-      expect(events.rowsimported).toBeCalledTimes(1)
+      expect(events.rows.imported).toBeCalledTimes(1)
       expect(events.rows.imported).toBeCalledWith(res.body, "csv", 1)
     })
 
@@ -163,8 +163,8 @@ describe("/tables", () => {
         .expect(200)
 
       expect(events.table.created).not.toHaveBeenCalled()
-      expect(events.row.imported).toBeCalledTimes(1)
-      expect(events.row.imported).toBeCalledWith(table, "csv", 1)
+      expect(events.rows.imported).toBeCalledTimes(1)
+      expect(events.rows.imported).toBeCalledWith(table, "csv", 1)
     })
   })
 

@@ -48,8 +48,6 @@
     dataLoaded = true
     if (get(builderStore).inBuilder) {
       builderStore.actions.notifyLoaded()
-    } else {
-      builderStore.actions.pingEndUser()
     }
   })
 
@@ -283,7 +281,8 @@
   @media print {
     #spectrum-root,
     #clip-root,
-    #app-root {
+    #app-root,
+    #app-body {
       overflow: visible !important;
     }
   }

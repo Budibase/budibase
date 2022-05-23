@@ -18,6 +18,7 @@ import utils from "../utils"
 import cache from "../cache"
 import auth from "../auth"
 import constants from "../constants"
+import context from "../context"
 
 export = {
   init(opts: any = {}) {
@@ -40,6 +41,7 @@ export = {
   env,
   accounts,
   tenancy,
+  context,
   featureFlags,
   events,
   sessions,

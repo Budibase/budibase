@@ -2,13 +2,14 @@ import { newid } from "../hashing"
 import { DEFAULT_TENANT_ID, Configs } from "../constants"
 import env from "../environment"
 import { SEPARATOR, DocumentTypes } from "./constants"
-import { getTenantId, getGlobalDBName } from "../tenancy"
+import { getTenantId, getGlobalDBName, getGlobalDB } from "../tenancy"
 import fetch from "node-fetch"
 import { doWithDB, allDbs } from "./index"
 import { getCouchInfo } from "./pouch"
 import { getAppMetadata } from "../cache/appMetadata"
 import { checkSlashesInUrl } from "../helpers"
 import { isDevApp, isDevAppID } from "./conversions"
+import { APP_PREFIX } from "./constants"
 
 const UNICODE_MAX = "\ufff0"
 
@@ -21,6 +22,18 @@ export const ViewNames = {
 export * from "./constants"
 export * from "./conversions"
 export { default as Replication } from "./Replication"
+
+/**
+ * Generates a new app ID.
+ * @returns {string} The new app ID which the app doc can be stored under.
+ */
+export const generateAppID = (tenantId = null) => {
+  let id = APP_PREFIX
+  if (tenantId) {
+    id += `${tenantId}${SEPARATOR}`
+  }
+  return `${id}${newid()}`
+}
 
 /**
  * If creating DB allDocs/query params with only a single top level ID this can be used, this
@@ -370,9 +383,7 @@ export const getScopedFullConfig = async function (
   // always provide the platform URL
   if (type === Configs.SETTINGS) {
     if (scopedConfig && scopedConfig.doc) {
-      scopedConfig.doc.config.platformUrl = await getPlatformUrl(
-        scopedConfig.doc.config
-      )
+      scopedConfig.doc.config.platformUrl = await getPlatformUrl()
     } else {
       scopedConfig = {
         doc: {
@@ -387,19 +398,30 @@ export const getScopedFullConfig = async function (
   return scopedConfig && scopedConfig.doc
 }
 
-export const getPlatformUrl = async (settings?: any) => {
+export const getPlatformUrl = async (opts = { tenantAware: true }) => {
   let platformUrl = env.PLATFORM_URL || "http://localhost:10000"
 
-  if (!env.SELF_HOSTED && env.MULTI_TENANCY) {
+  if (!env.SELF_HOSTED && env.MULTI_TENANCY && opts.tenantAware) {
     // cloud and multi tenant - add the tenant to the default platform url
     const tenantId = getTenantId()
     if (!platformUrl.includes("localhost:")) {
       platformUrl = platformUrl.replace("://", `://${tenantId}.`)
     }
-  } else {
+  } else if (env.SELF_HOSTED) {
+    const db = getGlobalDB()
+    // get the doc directly instead of with getScopedConfig to prevent loop
+    let settings
+    try {
+      settings = await db.get(generateConfigID({ type: Configs.SETTINGS }))
+    } catch (e: any) {
+      if (e.status !== 404) {
+        throw e
+      }
+    }
+
     // self hosted - check for platform url override
-    if (settings && settings.platformUrl) {
-      platformUrl = settings.platformUrl
+    if (settings && settings.config && settings.config.platformUrl) {
+      platformUrl = settings.config.platformUrl
     }
   }
 

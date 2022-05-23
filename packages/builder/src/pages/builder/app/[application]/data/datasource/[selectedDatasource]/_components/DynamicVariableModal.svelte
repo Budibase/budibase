@@ -1,5 +1,8 @@
 <script>
   import { Input, ModalContent, Modal, Body } from "@budibase/bbui"
+  import { createEventDispatcher } from "svelte"
+
+  const dispatch = createEventDispatcher()
 
   export let dynamicVariables
   export let datasource
@@ -35,6 +38,7 @@
     name = null
     binding = null
     dynamicVariables[copiedName] = copiedBinding
+    dispatch("change", dynamicVariables)
   }
 </script>
 
