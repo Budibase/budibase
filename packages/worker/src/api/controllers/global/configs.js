@@ -256,62 +256,58 @@ exports.configChecklist = async function (ctx) {
   const tenantId = getTenantId()
 
   try {
-    ctx.body = await withCache(
-      CacheKeys.CHECKLIST,
-      TTL.ONE_MINUTE,
-      async () => {
-        let apps = []
-        if (!env.MULTI_TENANCY || tenantId) {
-          // Apps exist
-          apps = await getAllApps({ idsOnly: true, efficient: true })
-        }
-
-        // They have set up SMTP
-        const smtpConfig = await getScopedFullConfig(db, {
-          type: Configs.SMTP,
-        })
-
-        // They have set up Google Auth
-        const googleConfig = await getScopedFullConfig(db, {
-          type: Configs.GOOGLE,
-        })
-
-        // They have set up OIDC
-        const oidcConfig = await getScopedFullConfig(db, {
-          type: Configs.OIDC,
-        })
-
-        // They have set up an global user
-        const users = await db.allDocs(
-          getGlobalUserParams(null, {
-            include_docs: true,
-            limit: 1,
-          })
-        )
-        return {
-          apps: {
-            checked: apps.length > 0,
-            label: "Create your first app",
-            link: "/builder/portal/apps",
-          },
-          smtp: {
-            checked: !!smtpConfig,
-            label: "Set up email",
-            link: "/builder/portal/manage/email",
-          },
-          adminUser: {
-            checked: users && users.rows.length >= 1,
-            label: "Create your first user",
-            link: "/builder/portal/manage/users",
-          },
-          sso: {
-            checked: !!googleConfig || !!oidcConfig,
-            label: "Set up single sign-on",
-            link: "/builder/portal/manage/auth",
-          },
-        }
+    ctx.body = await withCache(CacheKeys.CHECKLIST, TTL.ONE_HOUR, async () => {
+      let apps = []
+      if (!env.MULTI_TENANCY || tenantId) {
+        // Apps exist
+        apps = await getAllApps({ idsOnly: true, efficient: true })
       }
-    )
+
+      // They have set up SMTP
+      const smtpConfig = await getScopedFullConfig(db, {
+        type: Configs.SMTP,
+      })
+
+      // They have set up Google Auth
+      const googleConfig = await getScopedFullConfig(db, {
+        type: Configs.GOOGLE,
+      })
+
+      // They have set up OIDC
+      const oidcConfig = await getScopedFullConfig(db, {
+        type: Configs.OIDC,
+      })
+
+      // They have set up an global user
+      const users = await db.allDocs(
+        getGlobalUserParams(null, {
+          include_docs: true,
+          limit: 1,
+        })
+      )
+      return {
+        apps: {
+          checked: apps.length > 0,
+          label: "Create your first app",
+          link: "/builder/portal/apps",
+        },
+        smtp: {
+          checked: !!smtpConfig,
+          label: "Set up email",
+          link: "/builder/portal/manage/email",
+        },
+        adminUser: {
+          checked: users && users.rows.length >= 1,
+          label: "Create your first user",
+          link: "/builder/portal/manage/users",
+        },
+        sso: {
+          checked: !!googleConfig || !!oidcConfig,
+          label: "Set up single sign-on",
+          link: "/builder/portal/manage/auth",
+        },
+      }
+    })
   } catch (err) {
     ctx.throw(err.status, err)
   }

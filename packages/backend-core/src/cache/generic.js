@@ -8,6 +8,8 @@ exports.CacheKeys = {
 
 exports.TTL = {
   ONE_MINUTE: 600,
+  ONE_HOUR: 3600,
+  ONE_DAY: 86400,
 }
 
 function generateTenantKey(key) {
