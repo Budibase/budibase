@@ -1,12 +1,6 @@
 import { get, writable } from "svelte/store"
 import { cloneDeep } from "lodash/fp"
-import {
-  currentAsset,
-  mainLayout,
-  selectedComponent,
-  selectedScreen,
-  store,
-} from "builderStore"
+import { currentAsset, mainLayout, selectedComponent } from "builderStore"
 import {
   datasources,
   integrations,

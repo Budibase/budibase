@@ -1,7 +1,6 @@
 <script>
   import Panel from "components/design/Panel.svelte"
   import {
-    Body,
     Layout,
     Label,
     ColorPicker,

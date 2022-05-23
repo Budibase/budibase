@@ -1,7 +1,6 @@
 <script>
   import { notifications, Slider, Icon } from "@budibase/bbui"
   import { store } from "builderStore"
-  import { get } from "svelte/store"
 
   const ThemeOptions = [
     "spectrum--darkest",
