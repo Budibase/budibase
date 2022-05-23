@@ -1,14 +1,15 @@
 <script>
   import Panel from "components/design/Panel.svelte"
   import ComponentTree from "./ComponentTree.svelte"
-  import createDNDStore from "./dndStore.js"
+  import { dndStore } from "./dndStore.js"
   import { goto } from "@roxi/routify"
   import { store, selectedScreen } from "builderStore"
   import NavItem from "components/common/NavItem.svelte"
   import ScreenslotDropdownMenu from "./ScreenslotDropdownMenu.svelte"
   import { setContext } from "svelte"
+  import DNDPositionIndicator from "./DNDPositionIndicator.svelte"
+  import { DropPosition } from "./dndStore"
 
-  const dndStore = createDNDStore()
   let scrollRef
 
   const scrollTo = bounds => {
@@ -68,24 +69,43 @@
   borderRight
 >
   <div class="nav-items-container" bind:this={scrollRef}>
-    <NavItem
-      text="Screen"
-      indentLevel={0}
-      selected={$store.selectedComponentId === $selectedScreen?.props._id}
-      opened
-      scrollable
-      icon="WebPage"
-      on:click={() => {
-        $store.selectedComponentId = $selectedScreen?.props._id
-      }}
-    >
-      <ScreenslotDropdownMenu component={$selectedScreen?.props} />
-    </NavItem>
-    <ComponentTree
-      level={0}
-      components={$selectedScreen?.props._children}
-      {dndStore}
-    />
+    <ul>
+      <li
+        on:click={() => {
+          $store.selectedComponentId = $selectedScreen?.props._id
+        }}
+        id={`component-${$selectedScreen?.props._id}`}
+      >
+        <NavItem
+          text="Screen"
+          indentLevel={0}
+          selected={$store.selectedComponentId === $selectedScreen?.props._id}
+          opened
+          scrollable
+          icon="WebPage"
+        >
+          <ScreenslotDropdownMenu component={$selectedScreen?.props} />
+        </NavItem>
+        <ComponentTree
+          level={0}
+          components={$selectedScreen?.props._children}
+        />
+
+        <!-- Show drop indicators for the target and the parent -->
+        {#if $dndStore.dragging && $dndStore.valid}
+          <DNDPositionIndicator
+            component={$dndStore.target}
+            position={$dndStore.dropPosition}
+          />
+          {#if $dndStore.dropPosition !== DropPosition.INSIDE}
+            <DNDPositionIndicator
+              component={$dndStore.targetParent}
+              position={DropPosition.INSIDE}
+            />
+          {/if}
+        {/if}
+      </li>
+    </ul>
   </div>
 </Panel>
 
@@ -95,6 +115,15 @@
     flex: 1 1 auto;
     overflow: auto;
     height: 0;
+  }
+  ul {
+    list-style: none;
+    padding-left: 0;
+    margin: 0;
     position: relative;
+  }
+  ul,
+  li {
+    min-width: max-content;
   }
 </style>

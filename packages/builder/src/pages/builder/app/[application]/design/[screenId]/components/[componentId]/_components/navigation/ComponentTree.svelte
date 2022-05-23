@@ -1,6 +1,5 @@
 <script>
   import { store } from "builderStore"
-  import { DropEffect, DropPosition } from "./dndStore"
   import ComponentDropdownMenu from "./ComponentDropdownMenu.svelte"
   import NavItem from "components/common/NavItem.svelte"
   import { capitalise } from "helpers"
@@ -12,17 +11,12 @@
   } from "builderStore"
   import { findComponentPath } from "builderStore/componentUtils"
   import { get } from "svelte/store"
+  import { dndStore } from "./dndStore"
 
   export let components = []
   export let level = 0
-  export let dndStore
 
   let closedNodes = {}
-  let ref
-
-  const dragstart = component => e => {
-    dndStore.actions.dragstart(component)
-  }
 
   const dragover = (component, index) => e => {
     const mousePosition = e.offsetY / e.currentTarget.offsetHeight
@@ -98,26 +92,24 @@
 
 <ul>
   {#each components || [] as component, index (component._id)}
-    {@const hasChildren = componentHasChildren(component)}
     {@const opened = isOpen(component, $selectedComponentPath, closedNodes)}
     <li
-      bind:this={ref}
       on:click|stopPropagation={() => {
         $store.selectedComponentId = component._id
       }}
-      id={`nav-${component._id}`}
+      id={`component-${component._id}`}
     >
       <NavItem
         scrollable
         draggable
         on:dragend={dndStore.actions.reset}
-        on:dragstart={dragstart(component)}
+        on:dragstart={() => dndStore.actions.dragstart(component)}
         on:dragover={dragover(component, index)}
         on:iconClick={() => toggleNodeOpen(component._id)}
         on:drop={onDrop}
         text={getComponentText(component)}
         icon={getComponentIcon(component)}
-        withArrow={hasChildren}
+        withArrow={componentHasChildren(component)}
         indentLevel={level + 1}
         selected={$store.selectedComponentId === component._id}
         {opened}
@@ -125,7 +117,6 @@
       >
         <ComponentDropdownMenu {component} />
       </NavItem>
-
       {#if opened}
         <svelte:self
           components={component._children}
@@ -153,8 +144,5 @@
   ul,
   li {
     min-width: max-content;
-  }
-  li {
-    position: relative;
   }
 </style>

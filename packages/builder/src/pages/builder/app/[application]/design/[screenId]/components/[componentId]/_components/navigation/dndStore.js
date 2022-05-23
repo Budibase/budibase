@@ -20,7 +20,7 @@ const initialState = {
   valid: false,
 }
 
-export default function () {
+const createDNDStore = () => {
   const store = writable(initialState)
   const actions = {
     dragstart: component => {
@@ -46,17 +46,8 @@ export default function () {
       let target
       let targetParent
 
-      // If the component has children, it cannot be dropped below
-      if (hasChildren) {
-        if (mousePosition <= 0.33) {
-          dropPosition = DropPosition.ABOVE
-        } else {
-          dropPosition = DropPosition.INSIDE
-        }
-      }
-
       // If it can have children then it can be any position
-      else if (canHaveChildren) {
+      if (canHaveChildren) {
         if (mousePosition <= 0.33) {
           dropPosition = DropPosition.ABOVE
         } else if (mousePosition >= 0.66) {
@@ -79,6 +70,15 @@ export default function () {
         dropPosition = DropPosition.ABOVE
       } else {
         target = component
+      }
+
+      // If drop position and target are the same then we can skip this update
+      const state = get(store)
+      if (
+        dropPosition === state.dropPosition &&
+        target?._id === state.target?._id
+      ) {
+        return
       }
 
       // Find the parent of the target component
@@ -125,3 +125,5 @@ export default function () {
     actions,
   }
 }
+
+export const dndStore = createDNDStore()
