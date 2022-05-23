@@ -18,7 +18,7 @@
     "build:docker": "yarn run predocker && docker build . -t app-service --label version=$BUDIBASE_RELEASE_VERSION",
     "build:docs": "node ./scripts/docs/generate.js open",
     "run:docker": "node dist/index.js",
-    "run:docker:cluster": "pm2-runtime start pm2.js",
+    "run:docker:cluster": "pm2-runtime start pm2.config.js",
     "dev:stack:up": "node scripts/dev/manage.js up",
     "dev:stack:down": "node scripts/dev/manage.js down",
     "dev:stack:nuke": "node scripts/dev/manage.js nuke",
