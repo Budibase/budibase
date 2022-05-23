@@ -8,7 +8,7 @@
 </script>
 
 {#if $builderStore.inBuilder}
-  <div>
+  <div class="placeholder_wrap">
     {#if !$$slots.content}
       {text || $component.name || "Placeholder"}
     {/if}
@@ -20,5 +20,18 @@
   div {
     color: var(--spectrum-global-color-gray-600);
     font-size: var(--font-size-s);
+    padding: var(--spacing-xs);
+  }
+  :global(div.placeholder_wrap mark) {
+    background-color: var(--spectrum-global-color-gray-400);
+    padding: 0px 2px;
+    border-radius: 2px;
+  }
+  :global(div.placeholder_wrap .showMe) {
+    cursor: pointer;
+  }
+  :global(div.placeholder_wrap .showMe:hover) {
+    text-decoration: underline;
+    cursor: pointer;
   }
 </style>

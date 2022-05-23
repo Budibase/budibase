@@ -1,5 +1,6 @@
 <script>
   import { getContext } from "svelte"
+  import Placeholder from "./Placeholder.svelte"
 
   const { linkable, styleable, builderStore } = getContext("sdk")
   const component = getContext("component")
@@ -79,7 +80,35 @@
     {componentText}
   </div>
 {:else if $builderStore.inBuilder || componentText}
-  {#if externalLink || openInNewTab}
+  {#if !url && !text}
+    <div use:styleable={{ ...$component.styles, empty: true }}>
+      <Placeholder>
+        <div slot="content">
+          Add the <mark>URL</mark> and <mark>Text</mark> settings and start
+          using your link&nbsp;
+          <span
+            class="showMe spectrum-Link"
+            on:click={() => {
+              builderStore.actions.setFocus([
+                {
+                  location: "component_settings",
+                  key: "url",
+                  target: $component.id,
+                },
+                {
+                  location: "component_settings",
+                  key: "text",
+                  target: $component.id,
+                },
+              ])
+            }}
+          >
+            Show me
+          </span>
+        </div>
+      </Placeholder>
+    </div>
+  {:else if externalLink || openInNewTab}
     <a
       {target}
       href={sanitizedUrl}

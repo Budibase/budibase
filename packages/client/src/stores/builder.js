@@ -76,6 +76,9 @@ const createBuilderStore = () => {
       }
       store.update(state => ({ ...state, editMode: enabled }))
     },
+    setFocus: data => {
+      window.parent.postMessage({ type: "builder-focus", data })
+    }
   }
   return {
     ...store,
