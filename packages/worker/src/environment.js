@@ -20,6 +20,12 @@ if (!LOADED && isDev() && !isTest()) {
   LOADED = true
 }
 
+function parseIntSafe(number) {
+  if (number) {
+    return parseInt(number)
+  }
+}
+
 module.exports = {
   NODE_ENV: process.env.NODE_ENV,
   SELF_HOSTED: !!parseInt(process.env.SELF_HOSTED),
@@ -46,6 +52,7 @@ module.exports = {
   SMTP_FROM_ADDRESS: process.env.SMTP_FROM_ADDRESS,
   PLATFORM_URL: process.env.PLATFORM_URL,
   COOKIE_DOMAIN: process.env.COOKIE_DOMAIN,
+  CHECKLIST_CACHE_TTL: parseIntSafe(process.env.CHECKLIST_CACHE_TTL) || 600,
   APPS_URL: process.env.APPS_URL,
   _set(key, value) {
     process.env[key] = value
