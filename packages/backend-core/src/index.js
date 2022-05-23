@@ -23,6 +23,7 @@ module.exports = {
   env: require("./environment"),
   accounts: require("./cloud/accounts"),
   tenancy: require("./tenancy"),
+  context: require("../context"),
   featureFlags: require("./featureFlags"),
   events,
   analytics: require("./analytics"),

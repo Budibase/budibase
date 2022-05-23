@@ -21,6 +21,31 @@ type KnexQuery = Knex.QueryBuilder | Knex
 const MIN_ISO_DATE = "0000-00-00T00:00:00.000Z"
 const MAX_ISO_DATE = "9999-00-00T00:00:00.000Z"
 
+function likeKey(client: string, key: string): string {
+  if (!key.includes(" ")) {
+    return key
+  }
+  let start: string, end: string
+  switch (client) {
+    case SqlClients.MY_SQL:
+      start = end = "`"
+      break
+    case SqlClients.ORACLE:
+    case SqlClients.POSTGRES:
+      start = end = '"'
+      break
+    case SqlClients.MS_SQL:
+      start = "["
+      end = "]"
+      break
+    default:
+      throw "Unknown client"
+  }
+  const parts = key.split(".")
+  key = parts.map(part => `${start}${part}${end}`).join(".")
+  return key
+}
+
 function parse(input: any) {
   if (Array.isArray(input)) {
     return JSON.stringify(input)
@@ -125,7 +150,9 @@ class InternalBuilder {
         } else {
           const rawFnc = `${fnc}Raw`
           // @ts-ignore
-          query = query[rawFnc](`LOWER(${key}) LIKE ?`, [`%${value}%`])
+          query = query[rawFnc](`LOWER(${likeKey(this.client, key)}) LIKE ?`, [
+            `%${value}%`,
+          ])
         }
       })
     }
