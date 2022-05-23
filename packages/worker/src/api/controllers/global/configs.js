@@ -14,7 +14,12 @@ const {
 const { getGlobalDB, getTenantId } = require("@budibase/backend-core/tenancy")
 const env = require("../../../environment")
 const { googleCallbackUrl, oidcCallbackUrl } = require("./auth")
-const { withCache } = require("../../../utilities/redis")
+const {
+  withCache,
+  CacheKeys,
+  TTL,
+  bustCache,
+} = require("@budibase/backend-core/cache")
 
 const BB_TENANT_CDN = "https://tenants.cdn.budi.live"
 
@@ -44,6 +49,7 @@ exports.save = async function (ctx) {
 
   try {
     const response = await db.put(ctx.request.body)
+    await bustCache(CacheKeys.CHECKLIST)
     ctx.body = {
       type,
       _id: response.id,
@@ -250,11 +256,9 @@ exports.configChecklist = async function (ctx) {
   const tenantId = getTenantId()
 
   try {
-    const ONE_MINUTE = 600
-
     ctx.body = await withCache(
-      `checklist:${tenantId}`,
-      ONE_MINUTE,
+      CacheKeys.CHECKLIST,
+      TTL.ONE_MINUTE,
       async () => {
         let apps = []
         if (!env.MULTI_TENANCY || tenantId) {
