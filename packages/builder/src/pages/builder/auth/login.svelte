@@ -28,7 +28,7 @@
   async function login() {
     try {
       await auth.login({
-        username,
+        username: username.trim(),
         password,
       })
       if ($auth?.user?.forceResetPassword) {
