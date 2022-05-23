@@ -1,6 +1,7 @@
 <script>
   import { CoreTextField } from "@budibase/bbui"
   import Field from "./Field.svelte"
+  import currency from "currency.js"
 
   export let field
   export let label
@@ -37,7 +38,9 @@
   {#if fieldState}
     <CoreTextField
       updateOnChange={false}
-      value={fieldState.value}
+      value={type === "number" && typeof fieldState.value === "string"
+        ? currency(fieldState.value).value
+        : fieldState.value}
       on:change={handleChange}
       disabled={fieldState.disabled}
       error={fieldState.error}
