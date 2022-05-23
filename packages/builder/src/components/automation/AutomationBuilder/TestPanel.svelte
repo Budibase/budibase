@@ -1,6 +1,6 @@
 <script>
-  import { Icon, Divider, Tabs, Tab, TextArea } from "@budibase/bbui"
-  import FlowItemTitle from "./FlowChart/FlowItemTitle.svelte"
+  import { Icon, Divider, Tabs, Tab, TextArea, Label } from "@budibase/bbui"
+  import FlowItemHeader from "./FlowChart/FlowItemHeader.svelte"
   import { automationStore } from "builderStore"
 
   export let automation
@@ -35,9 +35,6 @@
     <Icon
       on:click={async () => {
         $automationStore.selectedAutomation.automation.showTestPanel = false
-        await automationStore.actions.save(
-          $automationStore.selectedAutomation?.automation
-        )
       }}
       hoverable
       name="Close"
@@ -51,15 +48,26 @@
   {#each blocks as block, idx}
     <div class="block">
       {#if block.stepId !== "LOOP"}
-        <FlowItemTitle showTestStatus={true} bind:showParameters {block} />
+        <FlowItemHeader showTestStatus={true} bind:showParameters {block} />
         {#if showParameters && showParameters[block.id]}
           <Divider noMargin />
+          {#if testResults?.[idx]?.outputs.iterations}
+            <div style="display: flex; padding: 10px 10px 0px 12px;">
+              <Icon name="Reuse" />
+              <div style="margin-left: 10px;">
+                <Label>
+                  This loop ran {testResults?.[idx]?.outputs.iterations} times.</Label
+                >
+              </div>
+            </div>
+          {/if}
 
           <div class="tabs">
             <Tabs quiet noPadding selected="Input">
               <Tab title="Input">
                 <div style="padding: 10px 10px 10px 10px;">
                   <TextArea
+                    minHeight="80px"
                     disabled
                     value={JSON.stringify(testResults?.[idx]?.inputs, null, 2)}
                   />
@@ -68,6 +76,7 @@
               <Tab title="Output">
                 <div style="padding: 10px 10px 10px 10px;">
                   <TextArea
+                    minHeight="100px"
                     disabled
                     value={JSON.stringify(testResults?.[idx]?.outputs, null, 2)}
                   />

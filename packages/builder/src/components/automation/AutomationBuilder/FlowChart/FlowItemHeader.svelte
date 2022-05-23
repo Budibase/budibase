@@ -1,14 +1,12 @@
 <script>
   import { automationStore } from "builderStore"
-  import { Icon, Body, Detail, StatusLight, Modal } from "@budibase/bbui"
+  import { Icon, Body, Detail, StatusLight } from "@budibase/bbui"
   import { externalActions } from "./ExternalActions"
-  import ResultsModal from "./ResultsModal.svelte"
 
   export let block
   export let blockComplete
   export let showTestStatus = false
   export let showParameters = {}
-  let resultsModal
 
   $: testResult =
     $automationStore.selectedAutomation?.testResults?.steps.filter(step =>
@@ -63,7 +61,7 @@
     </div>
     <div class="blockTitle">
       {#if showTestStatus && testResult && testResult[0]}
-        <div style="float: right;" on:click={() => resultsModal.show()}>
+        <div style="float: right;">
           <StatusLight
             positive={isTrigger || testResult[0].outputs?.success}
             negative={!testResult[0].outputs?.success}
@@ -86,10 +84,6 @@
     </div>
   </div>
 </div>
-
-<Modal bind:this={resultsModal} width="30%">
-  <ResultsModal {isTrigger} {testResult} />
-</Modal>
 
 <style>
   .center-items {
