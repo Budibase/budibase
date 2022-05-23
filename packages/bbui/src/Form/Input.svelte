@@ -21,7 +21,7 @@
     value = e.detail
     dispatch("change", e.detail)
   }
-  const isMoney = () => {
+  const isCurrency = () => {
     return type === "number" && typeof value === "string"
   }
 </script>
@@ -33,7 +33,7 @@
     {error}
     {disabled}
     {readonly}
-    value={isMoney() ? currency(value).value : value}
+    value={isCurrency() ? currency(value).value : value}
     {placeholder}
     {type}
     {quiet}

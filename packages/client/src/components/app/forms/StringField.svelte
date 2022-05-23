@@ -22,6 +22,10 @@
       onChange({ value: e.detail })
     }
   }
+
+  const isCurrency = val => {
+    return type === "number" && typeof val === "string"
+  }
 </script>
 
 <Field
@@ -38,7 +42,7 @@
   {#if fieldState}
     <CoreTextField
       updateOnChange={false}
-      value={type === "number" && typeof fieldState.value === "string"
+      value={isCurrency(fieldState.value)
         ? currency(fieldState.value).value
         : fieldState.value}
       on:change={handleChange}
