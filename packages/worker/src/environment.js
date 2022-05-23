@@ -1,3 +1,5 @@
+const { join } = require("path")
+
 function isDev() {
   return process.env.NODE_ENV !== "production"
 }
@@ -12,7 +14,9 @@ function isTest() {
 
 let LOADED = false
 if (!LOADED && isDev() && !isTest()) {
-  require("dotenv").config()
+  require("dotenv").config({
+    path: join(__dirname, "..", ".env"),
+  })
   LOADED = true
 }
 
