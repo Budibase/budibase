@@ -1,4 +1,5 @@
 name: Budibase Release
+concurrency: release
 
 on:
  push:

@@ -2338,13 +2338,54 @@
         "type": "boolean",
         "label": "Autocomplete",
         "key": "autocomplete",
-        "defaultValue": false
+        "defaultValue": false,
+        "dependsOn": {
+          "setting": "optionsType",
+          "value": "select"
+        }
       },
       {
         "type": "boolean",
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
+      },
+      {
+        "type": "select",
+        "label": "Type",
+        "key": "optionsType",
+        "defaultValue": "select",
+        "placeholder": "Pick an options type",
+        "options": [
+          {
+            "label": "Select",
+            "value": "select"
+          },
+          {
+            "label": "Checkboxes",
+            "value": "checkbox"
+          }
+        ]
+      },
+      {
+        "type": "select",
+        "label": "Direction",
+        "key": "direction",
+        "defaultValue": "vertical",
+        "options": [
+          {
+            "label": "Horizontal",
+            "value": "horizontal"
+          },
+          {
+            "label": "Vertical",
+            "value": "vertical"
+          }
+        ],
+        "dependsOn": {
+          "setting": "optionsType",
+          "value": "checkbox"
+        }
       },
       {
         "type": "select",

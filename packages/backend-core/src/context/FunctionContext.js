@@ -1,83 +1,46 @@
-const cls = require("cls-hooked")
+const cls = require("../clshooked")
 const { newid } = require("../hashing")
 
 const REQUEST_ID_KEY = "requestId"
+const MAIN_CTX = cls.createNamespace("main")
+
+function getContextStorage(namespace) {
+  if (namespace && namespace.active) {
+    let contextData = namespace.active
+    delete contextData.id
+    delete contextData._ns_name
+    return contextData
+  }
+  return {}
+}
 
 class FunctionContext {
-  static getMiddleware(
-    updateCtxFn = null,
-    destroyFn = null,
-    contextName = "session"
-  ) {
-    const namespace = this.createNamespace(contextName)
-
-    return async function (ctx, next) {
-      await new Promise(
-        namespace.bind(function (resolve, reject) {
-          // store a contextual request ID that can be used anywhere (audit logs)
-          namespace.set(REQUEST_ID_KEY, newid())
-          namespace.bindEmitter(ctx.req)
-          namespace.bindEmitter(ctx.res)
-
-          if (updateCtxFn) {
-            updateCtxFn(ctx)
-          }
-          next()
-            .then(resolve)
-            .catch(reject)
-            .finally(() => {
-              if (destroyFn) {
-                return destroyFn(ctx)
-              }
-            })
-        })
-      )
-    }
+  static run(callback) {
+    return MAIN_CTX.runAndReturn(async () => {
+      const namespaceId = newid()
+      MAIN_CTX.set(REQUEST_ID_KEY, namespaceId)
+      const namespace = cls.createNamespace(namespaceId)
+      let response = await namespace.runAndReturn(callback)
+      cls.destroyNamespace(namespaceId)
+      return response
+    })
   }
 
-  static run(callback, contextName = "session") {
-    const namespace = this.createNamespace(contextName)
-
-    return namespace.runAndReturn(callback)
-  }
-
-  static setOnContext(key, value, contextName = "session") {
-    const namespace = this.createNamespace(contextName)
+  static setOnContext(key, value) {
+    const namespaceId = MAIN_CTX.get(REQUEST_ID_KEY)
+    const namespace = cls.getNamespace(namespaceId)
     namespace.set(key, value)
   }
 
-  static getContextStorage() {
-    if (this._namespace && this._namespace.active) {
-      let contextData = this._namespace.active
-      delete contextData.id
-      delete contextData._ns_name
-      return contextData
-    }
-
-    return {}
-  }
-
   static getFromContext(key) {
-    const context = this.getContextStorage()
+    const namespaceId = MAIN_CTX.get(REQUEST_ID_KEY)
+    const namespace = cls.getNamespace(namespaceId)
+    const context = getContextStorage(namespace)
     if (context) {
       return context[key]
     } else {
       return null
     }
-  }
-
-  static destroyNamespace(name = "session") {
-    if (this._namespace) {
-      cls.destroyNamespace(name)
-      this._namespace = null
-    }
-  }
-
-  static createNamespace(name = "session") {
-    if (!this._namespace) {
-      this._namespace = cls.createNamespace(name)
-    }
-    return this._namespace
   }
 }
 

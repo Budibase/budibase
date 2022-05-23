@@ -75,8 +75,8 @@ const checkCurrentApp = ctx => {
 const addSessionAttributesToUser = ctx => {
   ctx.body.account = ctx.user.account
   ctx.body.license = ctx.user.license
-  ctx.body.budibaseAccess = ctx.user.budibaseAccess
-  ctx.body.accountPortalAccess = ctx.user.accountPortalAccess
+  ctx.body.budibaseAccess = !!ctx.user.budibaseAccess
+  ctx.body.accountPortalAccess = !!ctx.user.accountPortalAccess
   ctx.body.csrfToken = ctx.user.csrfToken
 }
 
