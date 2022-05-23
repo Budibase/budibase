@@ -1,4 +1,5 @@
 import filterTests from "../support/filterTests"
+const interact = require('../support/interact')
 
 filterTests(['all'], () => {
     context("Add Radio Buttons", () => {
@@ -12,10 +13,10 @@ filterTests(['all'], () => {
         cy.addComponent("Form", "Form")
         cy.addComponent("Form", "Options Picker").then((componentId) => {
             // Provide field setting
-        cy.get(`[data-cy="field-prop-control"]`).type("1")
+        cy.get(interact.DATASOURCE_FIELD_CONTROL).type("1")
         // Open dropdown and select Radio buttons
-        cy.get(`[data-cy="optionsType-prop-control"]`).click().then(() => {
-            cy.get('.spectrum-Popover').contains('Radio buttons')
+        cy.get(interact.OPTION_TYPE_PROP_CONTROL).click().then(() => {
+            cy.get(interact.SPECTRUM_POPOVER).contains('Radio buttons')
             .wait(500)
             .click()
             })
@@ -28,8 +29,8 @@ filterTests(['all'], () => {
         })
         
         const addRadioButtonData = (totalRadioButtons) => {
-            cy.get(`[data-cy="optionsSource-prop-control"]`).click().then(() => {
-                cy.get('.spectrum-Popover').contains('Custom')
+            cy.get(interact.OPTION_SOURCE_PROP_CONROL).click().then(() => {
+                cy.get(interact.SPECTRUM_POPOVER).contains('Custom')
                 .wait(500)
                 .click()
             })
