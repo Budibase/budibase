@@ -1,14 +1,14 @@
 <script>
   import Panel from "components/design/Panel.svelte"
   import ComponentTree from "./ComponentTree.svelte"
-  import instantiateStore from "./dragDropStore.js"
+  import createDNDStore from "./dndStore.js"
   import { goto } from "@roxi/routify"
-  import { store, selectedScreen, selectedComponent } from "builderStore"
+  import { store, selectedScreen } from "builderStore"
   import NavItem from "components/common/NavItem.svelte"
   import ScreenslotDropdownMenu from "./ScreenslotDropdownMenu.svelte"
   import { setContext } from "svelte"
 
-  const dragDropStore = instantiateStore()
+  const dndStore = createDNDStore()
   let scrollRef
 
   const scrollTo = bounds => {
@@ -84,8 +84,7 @@
     <ComponentTree
       level={0}
       components={$selectedScreen?.props._children}
-      currentComponent={$selectedComponent}
-      {dragDropStore}
+      {dndStore}
     />
   </div>
 </Panel>

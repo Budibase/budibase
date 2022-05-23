@@ -1,6 +1,6 @@
 <script>
   import { store } from "builderStore"
-  import { DropEffect, DropPosition } from "./dragDropStore"
+  import { DropEffect, DropPosition } from "./dndStore"
   import ComponentDropdownMenu from "./ComponentDropdownMenu.svelte"
   import NavItem from "components/common/NavItem.svelte"
   import { capitalise } from "helpers"
@@ -14,40 +14,23 @@
   import { get } from "svelte/store"
 
   export let components = []
-  export let currentComponent
   export let level = 0
-  export let dragDropStore
+  export let dndStore
 
   let closedNodes = {}
-  let indicatorY = 0
+  let ref
 
   const dragstart = component => e => {
-    e.dataTransfer.dropEffect = DropEffect.MOVE
-    dragDropStore.actions.dragstart(component)
+    dndStore.actions.dragstart(component)
   }
 
   const dragover = (component, index) => e => {
-    const definition = store.actions.components.getDefinition(
-      component._component
-    )
-    const canHaveChildren = definition?.hasChildren
-    const hasChildren = componentHasChildren(component)
-
-    e.dataTransfer.dropEffect = DropEffect.COPY
-
-    // how far down the mouse pointer is on the drop target
     const mousePosition = e.offsetY / e.currentTarget.offsetHeight
-
-    indicatorY = e.currentTarget.offsetTop
-
-    dragDropStore.actions.dragover({
+    dndStore.actions.dragover({
       component,
       index,
-      canHaveChildren,
-      hasChildren,
       mousePosition,
     })
-
     return false
   }
 
@@ -86,8 +69,9 @@
 
   const onDrop = async () => {
     try {
-      await dragDropStore.actions.drop()
+      await dndStore.actions.drop()
     } catch (error) {
+      console.error(error)
       notifications.error("Error saving component")
     }
   }
@@ -114,50 +98,38 @@
 
 <ul>
   {#each components || [] as component, index (component._id)}
+    {@const hasChildren = componentHasChildren(component)}
+    {@const opened = isOpen(component, $selectedComponentPath, closedNodes)}
     <li
+      bind:this={ref}
       on:click|stopPropagation={() => {
         $store.selectedComponentId = component._id
       }}
+      id={`nav-${component._id}`}
     >
-      {#if dragDropStore && $dragDropStore?.targetComponent === component}
-        <div
-          class:above={$dragDropStore.dropPosition === DropPosition.ABOVE}
-          class:below={$dragDropStore.dropPosition === DropPosition.BELOW}
-          class:inside={$dragDropStore.dropPosition === DropPosition.INSIDE}
-          class:hasChildren={componentHasChildren(component)}
-          on:drop={onDrop}
-          ondragover="return false"
-          ondragenter="return false"
-          class="drop-item"
-          style="--indicatorX: {(level + 2) *
-            14}px; --indicatorY:{indicatorY}px;"
-        />
-      {/if}
-
       <NavItem
         scrollable
         draggable
-        on:dragend={dragDropStore.actions.reset}
+        on:dragend={dndStore.actions.reset}
         on:dragstart={dragstart(component)}
         on:dragover={dragover(component, index)}
         on:iconClick={() => toggleNodeOpen(component._id)}
         on:drop={onDrop}
         text={getComponentText(component)}
         icon={getComponentIcon(component)}
-        withArrow={componentHasChildren(component)}
+        withArrow={hasChildren}
         indentLevel={level + 1}
         selected={$store.selectedComponentId === component._id}
-        opened={isOpen(component, $selectedComponentPath, closedNodes)}
+        {opened}
         highlighted={isChildOfSelectedComponent(component)}
       >
         <ComponentDropdownMenu {component} />
       </NavItem>
 
-      {#if isOpen(component, $selectedComponentPath, closedNodes)}
+      {#if opened}
         <svelte:self
           components={component._children}
-          {currentComponent}
-          {dragDropStore}
+          {dndStore}
           level={level + 1}
         />
       {/if}
@@ -182,27 +154,7 @@
   li {
     min-width: max-content;
   }
-
-  .drop-item {
-    height: 2px;
-    background: var(--spectrum-global-color-static-green-500);
-    z-index: 999;
-    position: absolute;
-    top: calc(var(--indicatorY) - 1px);
-    left: var(--indicatorX);
-    width: calc(100% - var(--indicatorX));
-    border-radius: 4px;
-  }
-  .drop-item.above {
-  }
-  .drop-item.below {
-    margin-top: 32px;
-  }
-  .drop-item.inside {
-    background: transparent;
-    border: 2px solid var(--spectrum-global-color-static-green-500);
-    height: 29px;
-    pointer-events: none;
-    width: calc(100% - var(--indicatorX) - 4px);
+  li {
+    position: relative;
   }
 </style>
