@@ -2,6 +2,7 @@
   import Field from "./Field.svelte"
   import TextField from "./Core/TextField.svelte"
   import { createEventDispatcher } from "svelte"
+  import currency from "currency.js"
 
   export let value = null
   export let label = null
@@ -20,6 +21,9 @@
     value = e.detail
     dispatch("change", e.detail)
   }
+  const isMoney = () => {
+    return type === "number" && typeof value === "string"
+  }
 </script>
 
 <Field {label} {labelPosition} {error}>
@@ -29,7 +33,7 @@
     {error}
     {disabled}
     {readonly}
-    {value}
+    value={isMoney() ? currency(value).value : value}
     {placeholder}
     {type}
     {quiet}
