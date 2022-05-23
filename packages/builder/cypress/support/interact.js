@@ -24,3 +24,13 @@ export const OPTION_TYPE_PROP_CONTROL = '[data-cy="optionsType-prop-control'
 //AddRadioButtons
 export const SPECTRUM_POPOVER = ".spectrum-Popover"
 export const OPTION_SOURCE_PROP_CONROL = '[data-cy="optionsSource-prop-control'
+export const APP_TABLE_STATUS = ".appTable .app-status"
+export const APP_TABLE_ROW_ACTION = ".appTable .app-row-actions"
+export const DEPLOYMENT_TOP_NAV_GLOBESTRIKE =
+  ".deployment-top-nav svg[aria-label=GlobeStrike]"
+export const DEPLOYMENT_TOP_GLOBE = ".deployment-top-nav svg[aria-label=Globe]"
+export const PUBLISH_POPOVER_MENU = '[data-cy="publish-popover-menu"]'
+export const PUBLISH_POPOVER_ACTION = '[data-cy="publish-popover-action"]'
+export const PUBLISH_POPOVER_MESSAGE = ".publish-popover-message"
+export const SPECTRUM_BUTTON = ".spectrum-Button"
+export const TOPRIGHTNAV_BUTTON_SPECTRUM = ".toprightnav button.spectrum-Button"
