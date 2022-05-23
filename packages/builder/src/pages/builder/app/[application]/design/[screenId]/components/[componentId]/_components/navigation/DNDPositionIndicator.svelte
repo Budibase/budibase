@@ -1,5 +1,6 @@
 <script>
   import { DropPosition } from "./dndStore"
+  import { fade } from "svelte/transition"
 
   export let component
   export let position
@@ -28,6 +29,7 @@
 
 {#if component && position}
   <div
+    in:fade={{ duration: 130 }}
     class:above={position === DropPosition.ABOVE}
     class:below={position === DropPosition.BELOW}
     class:inside={position === DropPosition.INSIDE}
