@@ -7,17 +7,17 @@ import {
   DatasourceDeletedEvent,
 } from "@budibase/types"
 
-export function created(datasource: Datasource) {
+export async function created(datasource: Datasource) {
   const properties: DatasourceCreatedEvent = {}
-  publishEvent(Event.DATASOURCE_CREATED, properties)
+  await publishEvent(Event.DATASOURCE_CREATED, properties)
 }
 
-export function updated(datasource: Datasource) {
+export async function updated(datasource: Datasource) {
   const properties: DatasourceUpdatedEvent = {}
-  publishEvent(Event.DATASOURCE_UPDATED, properties)
+  await publishEvent(Event.DATASOURCE_UPDATED, properties)
 }
 
-export function deleted(datasource: Datasource) {
+export async function deleted(datasource: Datasource) {
   const properties: DatasourceDeletedEvent = {}
-  publishEvent(Event.DATASOURCE_DELETED, properties)
+  await publishEvent(Event.DATASOURCE_DELETED, properties)
 }

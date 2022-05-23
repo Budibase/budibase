@@ -25,16 +25,16 @@ export const backfill = async (globalDb: any) => {
 
   for (const config of configs) {
     if (isSMTPConfig(config)) {
-      events.email.SMTPCreated(config)
+      await events.email.SMTPCreated(config)
     }
     if (isGoogleConfig(config)) {
-      events.auth.SSOCreated("google")
+      await events.auth.SSOCreated("google")
       if (config.config.activated) {
-        events.auth.SSOActivated("google")
+        await events.auth.SSOActivated("google")
       }
     }
     if (isOIDCConfig(config)) {
-      events.auth.SSOCreated("oidc")
+      await events.auth.SSOCreated("oidc")
       if (config.config.configs[0].activated) {
         events.auth.SSOActivated("oidc")
       }
@@ -42,12 +42,12 @@ export const backfill = async (globalDb: any) => {
     if (isSettingsConfig(config)) {
       const company = config.config.company
       if (company && company !== "Budibase") {
-        events.org.nameUpdated()
+        await events.org.nameUpdated()
       }
 
       const logoUrl = config.config.logoUrl
       if (logoUrl) {
-        events.org.logoUpdated()
+        await events.org.logoUpdated()
       }
 
       const platformUrl = config.config.platformUrl
@@ -56,7 +56,7 @@ export const backfill = async (globalDb: any) => {
         platformUrl !== "http://localhost:10000" &&
         env.SELF_HOSTED
       ) {
-        events.org.platformURLUpdated()
+        await events.org.platformURLUpdated()
       }
     }
   }

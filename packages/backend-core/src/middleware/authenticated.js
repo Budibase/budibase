@@ -7,6 +7,7 @@ const env = require("../environment")
 const { SEPARATOR, ViewNames, queryGlobalView } = require("../../db")
 const { getGlobalDB, doInTenant } = require("../tenancy")
 const { decrypt } = require("../security/encryption")
+const context = require("../context")
 
 function finalise(
   ctx,
@@ -132,7 +133,12 @@ module.exports = (
       }
       // isAuthenticated is a function, so use a variable to be able to check authed state
       finalise(ctx, { authenticated, user, internal, version, publicEndpoint })
-      return next()
+
+      if (user && user.email) {
+        return context.doInUserContext(user, next)
+      } else {
+        return next
+      }
     } catch (err) {
       // invalid token, clear the cookie
       if (err && err.name === "JsonWebTokenError") {
@@ -141,7 +147,7 @@ module.exports = (
       // allow configuring for public access
       if ((opts && opts.publicAllowed) || publicEndpoint) {
         finalise(ctx, { authenticated: false, version, publicEndpoint })
-        return next()
+        return context.doInUserContext({ _id: "public_user" }, next)
       } else {
         ctx.throw(err.status || 403, err)
       }

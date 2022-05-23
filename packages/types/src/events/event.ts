@@ -42,6 +42,7 @@ export enum Event {
 
   // ORG / ANALYTICS
   ANALYTICS_OPT_OUT = "analytics:opt:out",
+  ANALYTICS_OPT_IN = "analytics:opt:in",
 
   // APP
   APP_CREATED = "app:created",
@@ -88,7 +89,6 @@ export enum Event {
   TABLE_EXPORTED = "table:exported",
   TABLE_IMPORTED = "table:imported",
   TABLE_DATA_IMPORTED = "table:data:imported",
-  TABLE_PERMISSION_UPDATED = "table:permission:updated",
 
   // VIEW
   VIEW_CREATED = "view:created",
@@ -138,12 +138,6 @@ export enum Event {
   ACCOUNT_CREATED = "account:created",
   ACCOUNT_DELETED = "account:deleted",
   ACCOUNT_VERIFIED = "account:verified",
-}
-
-export enum IdentityType {
-  TENANT = "tenant",
-  USER = "user",
-  ACCOUNT = "account",
 }
 
 export type RowImportFormat = "csv"

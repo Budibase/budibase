@@ -10,6 +10,7 @@ import { getAppMetadata } from "../cache/appMetadata"
 import { checkSlashesInUrl } from "../helpers"
 import { isDevApp, isDevAppID } from "./conversions"
 import { APP_PREFIX } from "./constants"
+import * as events from "../events"
 
 const UNICODE_MAX = "\ufff0"
 
@@ -380,15 +381,19 @@ export const getScopedFullConfig = async function (
   )[0]
 
   // custom logic for settings doc
-  // always provide the platform URL
   if (type === Configs.SETTINGS) {
     if (scopedConfig && scopedConfig.doc) {
+      // overrides affected by environment variables
       scopedConfig.doc.config.platformUrl = await getPlatformUrl()
+      scopedConfig.doc.config.analyticsEnabled =
+        await events.analytics.enabled()
     } else {
+      // defaults
       scopedConfig = {
         doc: {
           config: {
             platformUrl: await getPlatformUrl(),
+            analyticsEnabled: await events.analytics.enabled(),
           },
         },
       }

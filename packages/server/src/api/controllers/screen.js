@@ -33,7 +33,7 @@ exports.save = async ctx => {
   const response = await db.put(screen)
 
   if (eventFn) {
-    eventFn(screen)
+    await eventFn(screen)
   }
   ctx.message = `Screen ${screen.name} saved.`
   ctx.body = {
@@ -50,7 +50,7 @@ exports.destroy = async ctx => {
 
   await db.remove(id, ctx.params.screenRev)
 
-  events.screen.deleted(screen)
+  await events.screen.deleted(screen)
   ctx.body = {
     message: "Screen deleted successfully",
   }

@@ -10,34 +10,34 @@ import {
 } from "@budibase/types"
 
 // TODO
-export function updgraded(license: License) {
+export async function updgraded(license: License) {
   const properties: LicenseUpgradedEvent = {}
-  publishEvent(Event.LICENSE_UPGRADED, properties)
+  await publishEvent(Event.LICENSE_UPGRADED, properties)
 }
 
 // TODO
-export function downgraded(license: License) {
+export async function downgraded(license: License) {
   const properties: LicenseDowngradedEvent = {}
-  publishEvent(Event.LICENSE_DOWNGRADED, properties)
+  await publishEvent(Event.LICENSE_DOWNGRADED, properties)
 }
 
 // TODO
-export function updated(license: License) {
+export async function updated(license: License) {
   const properties: LicenseUpdatedEvent = {}
-  publishEvent(Event.LICENSE_UPDATED, properties)
+  await publishEvent(Event.LICENSE_UPDATED, properties)
 }
 
 // TODO
-export function activated(license: License) {
+export async function activated(license: License) {
   const properties: LicenseActivatedEvent = {}
-  publishEvent(Event.LICENSE_ACTIVATED, properties)
+  await publishEvent(Event.LICENSE_ACTIVATED, properties)
 }
 
 // TODO
-export function quotaExceeded(quotaName: string, value: number) {
+export async function quotaExceeded(quotaName: string, value: number) {
   const properties: LicenseQuotaExceededEvent = {
     name: quotaName,
     value,
   }
-  publishEvent(Event.LICENSE_QUOTA_EXCEEDED, properties)
+  await publishEvent(Event.LICENSE_QUOTA_EXCEEDED, properties)
 }

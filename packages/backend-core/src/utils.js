@@ -194,6 +194,6 @@ exports.platformLogout = async ({ ctx, userId, keepActiveSession }) => {
     userId,
     sessions.map(({ sessionId }) => sessionId)
   )
-  events.auth.logout()
+  await events.auth.logout()
   await userCache.invalidateUser(userId)
 }

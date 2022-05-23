@@ -6,12 +6,12 @@ import {
   ScreenDeletedEvent,
 } from "@budibase/types"
 
-export function created(screen: Screen) {
+export async function created(screen: Screen) {
   const properties: ScreenCreatedEvent = {}
-  publishEvent(Event.SCREEN_CREATED, properties)
+  await publishEvent(Event.SCREEN_CREATED, properties)
 }
 
-export function deleted(screen: Screen) {
+export async function deleted(screen: Screen) {
   const properties: ScreenDeletedEvent = {}
-  publishEvent(Event.SCREEN_DELETED, properties)
+  await publishEvent(Event.SCREEN_DELETED, properties)
 }

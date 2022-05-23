@@ -16,7 +16,7 @@ if (!LOADED && isDev() && !isTest()) {
   LOADED = true
 }
 
-export = {
+const env: any = {
   isTest,
   isDev,
   JWT_SECRET: process.env.JWT_SECRET,
@@ -59,9 +59,11 @@ export = {
 }
 
 // clean up any environment variable edge cases
-for (let [key, value] of Object.entries(module.exports)) {
+for (let [key, value] of Object.entries(env)) {
   // handle the edge case of "0" to disable an environment variable
   if (value === "0") {
-    module.exports[key] = 0
+    env[key] = 0
   }
 }
+
+export = env

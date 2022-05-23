@@ -71,7 +71,7 @@ export const authenticate = async (ctx: any, next: any) => {
     "local",
     async (err: any, user: any, info: any) => {
       await authInternal(ctx, user, err, info)
-      events.auth.login("local")
+      await events.auth.login("local")
       ctx.status = 200
     }
   )(ctx, next)
@@ -112,7 +112,7 @@ export const reset = async (ctx: any) => {
         user,
         subject: "{{ company }} platform password reset",
       })
-      events.user.passwordResetRequested(user)
+      await events.user.passwordResetRequested(user)
     }
   } catch (err) {
     console.log(err)
@@ -139,7 +139,7 @@ export const resetUpdate = async (ctx: any) => {
     }
     // remove password from the user before sending events
     delete user.password
-    events.user.passwordReset(user)
+    await events.user.passwordReset(user)
   } catch (err) {
     ctx.throw(400, "Cannot reset password.")
   }
@@ -212,7 +212,7 @@ export const googleAuth = async (ctx: any, next: any) => {
     { successRedirect: "/", failureRedirect: "/error" },
     async (err: any, user: any, info: any) => {
       await authInternal(ctx, user, err, info)
-      events.auth.login("google")
+      await events.auth.login("google")
       ctx.redirect("/")
     }
   )(ctx, next)
@@ -256,7 +256,7 @@ export const oidcAuth = async (ctx: any, next: any) => {
     { successRedirect: "/", failureRedirect: "/error" },
     async (err: any, user: any, info: any) => {
       await authInternal(ctx, user, err, info)
-      events.auth.login("oidc")
+      await events.auth.login("oidc")
       ctx.redirect("/")
     }
   )(ctx, next)

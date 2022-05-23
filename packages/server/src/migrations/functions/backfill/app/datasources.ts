@@ -16,7 +16,7 @@ export const backfill = async (appDb: any) => {
     const datasources: Datasource[] = await getDatasources(appDb)
 
     for (const datasource of datasources) {
-      events.datasource.created(datasource)
+      await events.datasource.created(datasource)
     }
   }
 }

@@ -1,4 +1,4 @@
-import { Event } from "@budibase/types"
+import { Event, Identity } from "@budibase/types"
 
 export enum EventProcessorType {
   POSTHOG = "posthog",
@@ -6,6 +6,6 @@ export enum EventProcessorType {
 }
 
 export interface EventProcessor {
-  processEvent(event: Event, properties: any): void
+  processEvent(event: Event, identity: Identity, properties: any): Promise<void>
   shutdown(): void
 }

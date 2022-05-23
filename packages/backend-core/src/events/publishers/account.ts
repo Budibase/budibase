@@ -1,17 +1,17 @@
 import { publishEvent } from "../events"
 import { Event, Account } from "@budibase/types"
 
-export function created(account: Account) {
+export async function created(account: Account) {
   const properties = {}
-  publishEvent(Event.ACCOUNT_CREATED, properties)
+  await publishEvent(Event.ACCOUNT_CREATED, properties)
 }
 
-export function deleted(account: Account) {
+export async function deleted(account: Account) {
   const properties = {}
-  publishEvent(Event.ACCOUNT_DELETED, properties)
+  await publishEvent(Event.ACCOUNT_DELETED, properties)
 }
 
-export function verified(account: Account) {
+export async function verified(account: Account) {
   const properties = {}
-  publishEvent(Event.ACCOUNT_VERIFIED, properties)
+  await publishEvent(Event.ACCOUNT_VERIFIED, properties)
 }

@@ -130,7 +130,7 @@
       <Divider size="S" />
       <Layout gap="XS" noPadding>
         <Heading size="S">Analytics</Heading>
-        <Body size="S">Choose whether to opt-in or opt-out of analtics</Body>
+        <Body size="S">Choose whether to opt-in or opt-out of analytics.</Body>
       </Layout>
       <div class="fields">
         <div class="field">

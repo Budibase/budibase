@@ -1,6 +1,8 @@
 jest.mock("../../../events", () => {
   return {
-    analyticsEnabled: () => false,
+    analytics: {
+      enabled: () => false,
+    },
     shutdown: () => {},
     account: {
       created: jest.fn(),

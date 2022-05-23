@@ -16,7 +16,7 @@ export const backfill = async (appDb: any) => {
     const screens = await getScreens(appDb)
 
     for (const screen of screens) {
-      events.screen.created(screen)
+      await events.screen.created(screen)
     }
   }
 }

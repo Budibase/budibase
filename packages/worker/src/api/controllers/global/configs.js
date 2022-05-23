@@ -162,7 +162,7 @@ exports.save = async function (ctx) {
   try {
     const response = await db.put(ctx.request.body)
     for (const fn of eventFns) {
-      fn()
+      await fn()
     }
     ctx.body = {
       type,

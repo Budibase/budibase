@@ -13,33 +13,27 @@ import {
 
 /* eslint-disable */
 
-export function created(table: Table) {
+export async function created(table: Table) {
   const properties: TableCreatedEvent = {}
-  publishEvent(Event.TABLE_CREATED, properties)
+  await publishEvent(Event.TABLE_CREATED, properties)
 }
 
-export function updated(table: Table) {
+export async function updated(table: Table) {
   const properties: TableUpdatedEvent = {}
-  publishEvent(Event.TABLE_UPDATED, properties)
+  await publishEvent(Event.TABLE_UPDATED, properties)
 }
 
-export function deleted(table: Table) {
+export async function deleted(table: Table) {
   const properties: TableDeletedEvent = {}
-  publishEvent(Event.TABLE_DELETED, properties)
+  await publishEvent(Event.TABLE_DELETED, properties)
 }
 
-export function exported(table: Table, format: TableExportFormat) {
+export async function exported(table: Table, format: TableExportFormat) {
   const properties: TableExportedEvent = {}
-  publishEvent(Event.TABLE_EXPORTED, properties)
+  await publishEvent(Event.TABLE_EXPORTED, properties)
 }
 
-export function imported(table: Table, format: TableImportFormat) {
+export async function imported(table: Table, format: TableImportFormat) {
   const properties: TableImportedEvent = {}
-  publishEvent(Event.TABLE_IMPORTED, properties)
-}
-
-// TODO
-export function permissionUpdated() {
-  const properties = {}
-  publishEvent(Event.TABLE_PERMISSION_UPDATED, properties)
+  await publishEvent(Event.TABLE_IMPORTED, properties)
 }

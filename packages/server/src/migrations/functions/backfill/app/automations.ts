@@ -16,10 +16,10 @@ export const backfill = async (appDb: any) => {
     const automations = await getAutomations(appDb)
 
     for (const automation of automations) {
-      events.automation.created(automation)
+      await events.automation.created(automation)
 
       for (const step of automation.definition.steps) {
-        events.automation.stepCreated(automation, step)
+        await events.automation.stepCreated(automation, step)
       }
     }
   }

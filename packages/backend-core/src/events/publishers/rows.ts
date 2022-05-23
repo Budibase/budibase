@@ -9,18 +9,18 @@ import {
 
 /* eslint-disable */
 
-export const created = (count: number) => {
+export const created = async (count: number) => {
   const properties: RowsCreatedEvent = {
     count,
   }
-  publishEvent(Event.ROWS_CREATED, properties)
+  await publishEvent(Event.ROWS_CREATED, properties)
 }
 
-export const imported = (
+export const imported = async (
   table: Table,
   format: RowImportFormat,
   count: number
 ) => {
   const properties: RowsImportedEvent = {}
-  publishEvent(Event.ROWS_IMPORTED, properties)
+  await publishEvent(Event.ROWS_IMPORTED, properties)
 }

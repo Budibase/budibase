@@ -27,7 +27,7 @@ export const backfill = async (appDb: any) => {
         appDb,
         query.datasourceId
       )
-      events.query.created(datasource, query)
+      await events.query.created(datasource, query)
     }
   }
 }

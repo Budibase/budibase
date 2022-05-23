@@ -6,12 +6,12 @@ import {
   LayoutDeletedEvent,
 } from "@budibase/types"
 
-export function created(layout: Layout) {
+export async function created(layout: Layout) {
   const properties: LayoutCreatedEvent = {}
-  publishEvent(Event.LAYOUT_CREATED, properties)
+  await publishEvent(Event.LAYOUT_CREATED, properties)
 }
 
-export function deleted(layout: Layout) {
+export async function deleted(layout: Layout) {
   const properties: LayoutDeletedEvent = {}
-  publishEvent(Event.LAYOUT_DELETED, properties)
+  await publishEvent(Event.LAYOUT_DELETED, properties)
 }

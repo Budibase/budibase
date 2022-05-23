@@ -71,9 +71,9 @@ exports.create = async function (ctx) {
     newAuto: automation,
   })
   const response = await db.put(automation)
-  events.automation.created()
+  await events.automation.created()
   for (let step of automation.definition.steps) {
-    events.automation.stepCreated(step)
+    await events.automation.stepCreated(step)
   }
   automation._rev = response.rev
 
@@ -97,19 +97,20 @@ const getDeletedSteps = (oldAutomation, automation) => {
   return oldAutomation.definition.steps.filter(s => !stepIds.includes(s.id))
 }
 
-const handleStepEvents = (oldAutomation, automation) => {
+const handleStepEvents = async (oldAutomation, automation) => {
   // new steps
   const newSteps = getNewSteps(oldAutomation, automation)
   for (let step of newSteps) {
-    events.automation.stepCreated(step)
+    await events.automation.stepCreated(step)
   }
 
   // old steps
   const deletedSteps = getDeletedSteps(oldAutomation, automation)
   for (let step of deletedSteps) {
-    events.automation.stepDeleted(step)
+    await events.automation.stepDeleted(step)
   }
 }
+
 exports.update = async function (ctx) {
   const db = getAppDB()
   let automation = ctx.request.body
@@ -133,7 +134,7 @@ exports.update = async function (ctx) {
       : {}
   // trigger has been updated, remove the test inputs
   if (oldAutoTrigger && oldAutoTrigger.id !== newAutoTrigger.id) {
-    events.automation.triggerUpdated()
+    await events.automation.triggerUpdated()
     await deleteEntityMetadata(
       ctx.appId,
       MetadataTypes.AUTOMATION_TEST_INPUT,
@@ -141,7 +142,7 @@ exports.update = async function (ctx) {
     )
   }
 
-  handleStepEvents(oldAutomation, automation)
+  await handleStepEvents(oldAutomation, automation)
 
   ctx.status = 200
   ctx.body = {
@@ -179,7 +180,7 @@ exports.destroy = async function (ctx) {
   // delete metadata first
   await cleanupAutomationMetadata(automationId)
   ctx.body = await db.remove(automationId, ctx.params.rev)
-  events.automation.deleted()
+  await events.automation.deleted()
 }
 
 exports.getActionList = async function (ctx) {
@@ -247,5 +248,5 @@ exports.test = async function (ctx) {
   })
   await clearTestFlag(automation._id)
   ctx.body = response
-  events.automation.tested()
+  await events.automation.tested()
 }
