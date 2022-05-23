@@ -20,6 +20,12 @@ if (!LOADED && isDev() && !isTest()) {
   LOADED = true
 }
 
+function parseIntSafe(number) {
+  if (number) {
+    return parseInt(number)
+  }
+}
+
 module.exports = {
   // auth
   MINIO_ACCESS_KEY: process.env.MINIO_ACCESS_KEY,
@@ -53,6 +59,8 @@ module.exports = {
   SMTP_HOST: process.env.SMTP_HOST,
   SMTP_PORT: process.env.SMTP_PORT,
   SMTP_FROM_ADDRESS: process.env.SMTP_FROM_ADDRESS,
+  // other
+  CHECKLIST_CACHE_TTL: parseIntSafe(process.env.CHECKLIST_CACHE_TTL) || 3600,
   _set(key, value) {
     process.env[key] = value
     module.exports[key] = value
