@@ -6,6 +6,7 @@
     "@types/mongodb": "3.6.3",
     "@typescript-eslint/parser": "4.28.0",
     "babel-eslint": "^10.0.3",
+    "currency.js": "^2.0.4",
     "eslint": "^7.28.0",
     "eslint-plugin-cypress": "^2.11.3",
     "eslint-plugin-svelte3": "^3.2.0",
