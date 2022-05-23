@@ -92,11 +92,5 @@ exports.getPouch = (opts = {}) => {
     PouchDB.plugin(find)
   }
 
-  const Pouch = PouchDB.defaults(POUCH_DB_DEFAULTS)
-  if (opts.allDbs) {
-    const allDbs = require("pouchdb-all-dbs")
-    allDbs(Pouch)
-  }
-
-  return Pouch
+  return PouchDB.defaults(POUCH_DB_DEFAULTS)
 }

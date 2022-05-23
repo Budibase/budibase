@@ -14,7 +14,9 @@ module PgMock {
   function Client() {}
 
   Client.prototype.query = query
-  Client.prototype.end = jest.fn()
+  Client.prototype.end = jest.fn(cb => {
+    if (cb) cb()
+  })
   Client.prototype.connect = jest.fn()
   Client.prototype.release = jest.fn()
 
