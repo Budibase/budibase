@@ -1,5 +1,4 @@
 const { join } = require("path")
-const { TTL } = require("@budibase/backend-core/cache")
 
 function isDev() {
   return process.env.NODE_ENV !== "production"
@@ -53,8 +52,7 @@ module.exports = {
   SMTP_FROM_ADDRESS: process.env.SMTP_FROM_ADDRESS,
   PLATFORM_URL: process.env.PLATFORM_URL,
   COOKIE_DOMAIN: process.env.COOKIE_DOMAIN,
-  CHECKLIST_CACHE_TTL:
-    parseIntSafe(process.env.CHECKLIST_CACHE_TTL) || TTL.ONE_HOUR,
+  CHECKLIST_CACHE_TTL: parseIntSafe(process.env.CHECKLIST_CACHE_TTL) || 3600,
   APPS_URL: process.env.APPS_URL,
   _set(key, value) {
     process.env[key] = value
