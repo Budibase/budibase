@@ -15,6 +15,7 @@
     "build": "rimraf dist/ && tsc",
     "postbuild": "copyfiles -u 1 src/**/*.hbs dist/",
     "run:docker": "node dist/index.js",
+    "run:docker:cluster": "pm2-runtime start pm2.js",
     "build:docker": "docker build . -t worker-service --label version=$BUDIBASE_RELEASE_VERSION",
     "dev:stack:init": "node ./scripts/dev/manage.js init",
     "dev:builder": "npm run dev:stack:init && nodemon",
