@@ -88,6 +88,7 @@
   $: children = instance._children || []
   $: id = instance._id
   $: name = isScreen ? "Screen" : instance._instanceName
+  $: icon = definition?.icon
 
   // Determine if the component is selected or is part of the critical path
   // leading to the selected component
@@ -419,6 +420,7 @@
     class:block={isBlock}
     data-id={id}
     data-name={name}
+    data-icon={icon}
   >
     <svelte:component this={constructor} bind:this={ref} {...initialSettings}>
       {#if children.length}
