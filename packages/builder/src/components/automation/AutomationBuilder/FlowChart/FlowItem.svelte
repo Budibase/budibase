@@ -1,30 +1,27 @@
 <script>
+  import FlowItemHeader from "./FlowItemHeader.svelte"
+
   import { automationStore } from "builderStore"
   import {
     Icon,
     Divider,
     Layout,
-    Body,
     Detail,
     Modal,
     Button,
-    StatusLight,
     Select,
     ActionButton,
     notifications,
   } from "@budibase/bbui"
   import AutomationBlockSetup from "../../SetupPanel/AutomationBlockSetup.svelte"
   import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
-  import ResultsModal from "./ResultsModal.svelte"
   import ActionModal from "./ActionModal.svelte"
-  import { externalActions } from "./ExternalActions"
 
   export let block
   export let testDataModal
   let selected
   let webhookModal
   let actionModal
-  let resultsModal
   let blockComplete
   let showLooping = false
 
@@ -32,9 +29,6 @@
   $: showBindingPicker =
     block.stepId === "CREATE_ROW" || block.stepId === "UPDATE_ROW"
 
-  $: testResult = $automationStore.selectedAutomation.testResults?.steps.filter(
-    step => (block.id ? step.id === block.id : step.stepId === block.stepId)
-  )
   $: isTrigger = block.type === "TRIGGER"
 
   $: selected = $automationStore.selectedBlock?.id === block.id
@@ -182,63 +176,7 @@
     {/if}
   {/if}
 
-  <div class="blockSection">
-    <div
-      on:click={() => {
-        blockComplete = !blockComplete
-      }}
-      class="splitHeader"
-    >
-      <div class="center-items">
-        {#if externalActions[block.stepId]}
-          <img
-            alt={externalActions[block.stepId].name}
-            width="28px"
-            height="28px"
-            src={externalActions[block.stepId].icon}
-          />
-        {:else}
-          <svg
-            width="28px"
-            height="28px"
-            class="spectrum-Icon"
-            style="color:grey;"
-            focusable="false"
-          >
-            <use xlink:href="#spectrum-icon-18-{block.icon}" />
-          </svg>
-        {/if}
-        <div class="iconAlign">
-          {#if isTrigger}
-            <Body size="XS">When this happens:</Body>
-          {:else}
-            <Body size="XS">Do this:</Body>
-          {/if}
-
-          <Detail size="S">{block?.name?.toUpperCase() || ""}</Detail>
-        </div>
-      </div>
-      <div class="blockTitle">
-        {#if testResult && testResult[0]}
-          <div style="float: right;" on:click={() => resultsModal.show()}>
-            <StatusLight
-              positive={isTrigger || testResult[0].outputs?.success}
-              negative={!testResult[0].outputs?.success}
-              ><Body size="XS">View response</Body></StatusLight
-            >
-          </div>
-        {/if}
-        <div
-          style="margin-left: 10px;"
-          on:click={() => {
-            onSelect(block)
-          }}
-        >
-          <Icon name={blockComplete ? "ChevronDown" : "ChevronUp"} />
-        </div>
-      </div>
-    </div>
-  </div>
+  <FlowItemHeader bind:blockComplete {block} {testDataModal} />
   {#if !blockComplete}
     <Divider noMargin />
     <div class="blockSection">
@@ -282,10 +220,6 @@
       </Layout>
     </div>
   {/if}
-
-  <Modal bind:this={resultsModal} width="30%">
-    <ResultsModal {isTrigger} {testResult} />
-  </Modal>
 
   <Modal bind:this={actionModal} width="30%">
     <ActionModal {blockIdx} bind:blockComplete />
