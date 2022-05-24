@@ -19,6 +19,7 @@ export const backfill = async (globalDb: any) => {
   const users = await getUsers(globalDb)
 
   for (const user of users) {
+    await events.identification.identifyUser(user)
     await events.user.created(user)
 
     if (user.admin?.global) {

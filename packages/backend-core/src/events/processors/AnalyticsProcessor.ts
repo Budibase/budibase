@@ -16,13 +16,14 @@ export default class AnalyticsProcessor implements EventProcessor {
   async processEvent(
     event: Event,
     identity: Identity,
-    properties: any
+    properties: any,
+    timestamp?: string
   ): Promise<void> {
     if (!(await analytics.enabled())) {
       return
     }
     if (this.posthog) {
-      this.posthog.processEvent(event, identity, properties)
+      this.posthog.processEvent(event, identity, properties, timestamp)
     }
   }
 

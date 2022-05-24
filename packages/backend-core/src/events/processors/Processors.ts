@@ -12,10 +12,11 @@ export default class Processor implements EventProcessor {
   async processEvent(
     event: Event,
     identity: Identity,
-    properties: any
+    properties: any,
+    timestamp?: string | number
   ): Promise<void> {
     for (const eventProcessor of this.processors) {
-      await eventProcessor.processEvent(event, identity, properties)
+      await eventProcessor.processEvent(event, identity, properties, timestamp)
     }
   }
 

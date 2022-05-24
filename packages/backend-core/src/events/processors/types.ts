@@ -6,6 +6,11 @@ export enum EventProcessorType {
 }
 
 export interface EventProcessor {
-  processEvent(event: Event, identity: Identity, properties: any): Promise<void>
+  processEvent(
+    event: Event,
+    identity: Identity,
+    properties: any,
+    timestamp?: string | number
+  ): Promise<void>
   shutdown(): void
 }

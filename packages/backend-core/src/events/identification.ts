@@ -23,18 +23,22 @@ export const getCurrentIdentity = async (): Promise<Identity> => {
   const user: SessionUser | undefined = context.getUser()
   let tenantId = context.getTenantId()
   let id: string
+  let type: IdentityType
 
   if (user) {
     id = user._id
+    type = IdentityType.USER
   } else {
     const global = await getGlobalIdentifiers(tenantId)
     id = global.id
     tenantId = global.tenantId
+    type = IdentityType.TENANT
   }
 
   return {
     id,
     tenantId,
+    type,
   }
 }
 
@@ -113,14 +117,13 @@ export const identifyAccount = async (account: Account) => {
   let id = account.accountId
   const tenantId = account.tenantId
   const hosting = account.hosting
-  let type = IdentityType.ACCOUNT
+  let type = IdentityType.USER
   let providerType = isSSOAccount(account) ? account.providerType : undefined
 
   if (isCloudAccount(account)) {
     if (account.budibaseUserId) {
       // use the budibase user as the id if set
       id = account.budibaseUserId
-      type = IdentityType.USER
     }
   }
 
