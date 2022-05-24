@@ -73,7 +73,7 @@ exports.isMultiTenant = () => {
 }
 
 // used for automations, API endpoints should always be in context already
-exports.doInTenant = (tenantId, task) => {
+exports.doInTenant = (tenantId, task, { forceNew } = {}) => {
   // the internal function is so that we can re-use an existing
   // context - don't want to close DB on a parent context
   async function internal(opts = { existing: false }) {
@@ -98,7 +98,11 @@ exports.doInTenant = (tenantId, task) => {
     }
   }
   const using = cls.getFromContext(ContextKeys.IN_USE)
-  if (using && cls.getFromContext(ContextKeys.TENANT_ID) === tenantId) {
+  if (
+    !forceNew &&
+    using &&
+    cls.getFromContext(ContextKeys.TENANT_ID) === tenantId
+  ) {
     cls.setOnContext(ContextKeys.IN_USE, using + 1)
     return internal({ existing: true })
   } else {
@@ -135,7 +139,7 @@ const setAppTenantId = appId => {
   exports.updateTenantId(appTenantId)
 }
 
-exports.doInAppContext = (appId, task) => {
+exports.doInAppContext = (appId, task, { forceNew } = {}) => {
   if (!appId) {
     throw new Error("appId is required")
   }
@@ -162,7 +166,7 @@ exports.doInAppContext = (appId, task) => {
     }
   }
   const using = cls.getFromContext(ContextKeys.IN_USE)
-  if (using && cls.getFromContext(ContextKeys.APP_ID) === appId) {
+  if (!forceNew && using && cls.getFromContext(ContextKeys.APP_ID) === appId) {
     cls.setOnContext(ContextKeys.IN_USE, using + 1)
     return internal({ existing: true })
   } else {

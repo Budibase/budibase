@@ -105,9 +105,7 @@ const automationActions = store => ({
   },
   select: automation => {
     store.update(state => {
-      let testResults = state.selectedAutomation?.testResults
       state.selectedAutomation = new Automation(cloneDeep(automation))
-      state.selectedAutomation.testResults = testResults
       state.selectedBlock = null
       return state
     })
