@@ -78,7 +78,7 @@ const createBuilderStore = () => {
     },
     setFocus: data => {
       window.parent.postMessage({ type: "builder-focus", data })
-    }
+    },
   }
   return {
     ...store,

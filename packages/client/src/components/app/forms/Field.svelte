@@ -84,11 +84,13 @@
               <span
                 class="showMe spectrum-Link"
                 on:click={() => {
-                  builderStore.actions.setFocus({
-                    location: "component_settings",
-                    key: "field",
-                    target: $component.id,
-                  })
+                  builderStore.actions.setFocus([
+                    {
+                      location: "component_settings",
+                      key: "field",
+                      target: $component.id,
+                    },
+                  ])
                 }}
               >
                 Show me

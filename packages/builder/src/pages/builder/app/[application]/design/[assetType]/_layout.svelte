@@ -201,7 +201,6 @@
       class="components-pane"
       use:clickOutside={() => {
         if ($store?.builderFocus) {
-          console.log($store?.builderFocus)
           const otherSettings = $store?.builderFocus?.filter(field => {
             return field.location !== "component_settings"
           })

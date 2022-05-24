@@ -56,8 +56,12 @@
       bind:this={comboInput}
       {id}
       type="text"
-      on:focus={() => (focus = true)}
-      on:blur={() => (focus = false)}
+      on:focus={() => {
+        focus = true
+      }}
+      on:blur={() => {
+        focus = false
+      }}
       on:change={onType}
       value={value || ""}
       placeholder={placeholder || ""}

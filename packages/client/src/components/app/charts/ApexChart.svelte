@@ -15,16 +15,27 @@
   <div use:styleable={$component.styles}>
     <Placeholder>
       <div slot="content">
-        Use the settings panel to select a <mark>Provider</mark> and start
-        building your chart&nbsp;
+        Use the settings panel start building your chart&nbsp;
         <span
           class="showMe spectrum-Link"
           on:click={() => {
-            builderStore.actions.setFocus({
-              location: "component_settings",
-              key: "dataProvider",
-              target: $component.id,
-            })
+            builderStore.actions.setFocus([
+              {
+                location: "component_settings",
+                key: "dataProvider",
+                target: $component.id,
+              },
+              {
+                location: "component_settings",
+                key: "valueColumns",
+                target: $component.id,
+              },
+              {
+                location: "component_settings",
+                key: "dataColumns",
+                target: $component.id,
+              },
+            ])
           }}
         >
           Show me

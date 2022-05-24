@@ -425,8 +425,10 @@ export const getFrontendStore = () => {
           state.currentView = "component"
           state.selectedComponentId = componentInstance._id
 
-          const focusSetting = definition.settings.filter((setting) => { return setting.required })
-          const mappedSettings = focusSetting.map((setting) => {
+          const focusSetting = definition.settings.filter(setting => {
+            return setting.required
+          })
+          const mappedSettings = focusSetting.map(setting => {
             return {
               key: setting.key,
               target: state.selectedComponentId,
@@ -434,7 +436,7 @@ export const getFrontendStore = () => {
             }
           })
 
-          if(focusSetting.length){
+          if (focusSetting.length) {
             state.builderFocus = mappedSettings
           }
           return state

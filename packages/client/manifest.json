@@ -1034,7 +1034,8 @@
       {
         "type": "icon",
         "label": "Icon",
-        "key": "icon"
+        "key": "icon",
+        "required": true
       },
       {
         "type": "select",

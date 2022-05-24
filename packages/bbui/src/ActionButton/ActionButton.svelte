@@ -13,6 +13,10 @@
   export let size = "M"
   export let active = false
   export let fullWidth = false
+  export let autofocus = false
+
+  let focus = false
+  $: focus = autofocus
 
   function longPress(element) {
     if (!longPressable) return
@@ -44,9 +48,16 @@
   class:fullWidth
   class="spectrum-ActionButton spectrum-ActionButton--size{size}"
   class:active
+  class:is-focused={focus}
   {disabled}
   on:longPress
   on:click|preventDefault
+  on:focus={() => {
+    focus = true
+  }}
+  on:blur={() => {
+    focus = false
+  }}
 >
   {#if longPressable}
     <svg
@@ -79,5 +90,11 @@
   .active,
   .active svg {
     color: var(--spectrum-global-color-blue-600);
+  }
+  button.is-focused {
+    border-color: var(
+      --spectrum-textfield-m-border-color-down,
+      var(--spectrum-alias-border-color-mouse-focus)
+    );
   }
 </style>
