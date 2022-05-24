@@ -32,6 +32,15 @@ Cypress.Commands.add("login", () => {
   })
 })
 
+Cypress.Commands.add("logOut", () => {
+  cy.visit(`${Cypress.config().baseUrl}/builder`)
+  cy.get(".user-dropdown .avatar > .icon").click({ force: true })
+  cy.get(".spectrum-Popover[data-cy='user-menu']").within(() => {
+    cy.get("li[data-cy='user-logout']").click({ force: true })
+  })
+  cy.wait(2000)
+})
+
 Cypress.Commands.add("closeModal", () => {
   cy.get(".spectrum-Modal").within(() => {
     cy.get(".close-icon").click()
@@ -206,6 +215,109 @@ Cypress.Commands.add("deleteAllApps", () => {
         })
         cy.reload()
       }
+    })
+})
+
+Cypress.Commands.add("customiseAppIcon", () => {
+  // Select random icon
+  cy.get(".grid").within(() => {
+    cy.get(".icon-item")
+      .eq(Math.floor(Math.random() * 23) + 1)
+      .click()
+  })
+  // Select random colour
+  cy.get(".fill").click()
+  cy.get(".colors").within(() => {
+    cy.get(".color")
+      .eq(Math.floor(Math.random() * 33) + 1)
+      .click()
+  })
+  cy.intercept("**/applications/**").as("iconChange")
+  cy.get(".spectrum-Button").contains("Save").click({ force: true })
+  cy.wait("@iconChange")
+  cy.get("@iconChange").its("response.statusCode").should("eq", 200)
+  cy.wait(1000)
+})
+
+Cypress.Commands.add("alterAppVersion", (appId, version) => {
+  return cy
+    .request("put", `${Cypress.config().baseUrl}/api/applications/${appId}`, {
+      version: version || "0.0.1-alpha.0",
+    })
+    .then(resp => {
+      expect(resp.status).to.eq(200)
+    })
+})
+
+Cypress.Commands.add("updateAppName", (changedName, noName) => {
+  cy.get(".spectrum-Modal").within(() => {
+    if (noName == true) {
+      cy.get("input").clear()
+      cy.get(".spectrum-Dialog-grid")
+        .click()
+        .contains("App name must be letters, numbers and spaces only")
+      return cy
+    }
+    cy.get("input").clear()
+    cy.get("input")
+      .eq(0)
+      .type(changedName)
+      .should("have.value", changedName)
+      .blur()
+    cy.get(".spectrum-ButtonGroup").contains("Save").click({ force: true })
+    cy.wait(500)
+  })
+})
+
+Cypress.Commands.add("unlockApp", unlock_config => {
+  let config = { ...unlock_config }
+
+  cy.get(".spectrum-Modal .spectrum-Dialog[data-cy='app-lock-modal']")
+    .should("be.visible")
+    .within(() => {
+      if (config.owned) {
+        cy.get(".spectrum-Dialog-heading").contains("Locked by you")
+        cy.get(".lock-expiry-body").contains(
+          "This lock will expire in 10 minutes from now"
+        )
+
+        cy.intercept("**/lock").as("unlockApp")
+        cy.get(".spectrum-Button")
+          .contains("Release Lock")
+          .click({ force: true })
+        cy.wait("@unlockApp")
+        cy.get("@unlockApp").its("response.statusCode").should("eq", 200)
+        cy.get("@unlockApp").its("response.body").should("deep.equal", {
+          message: "Lock released successfully.",
+        })
+      } else {
+        //Show the name ?
+        cy.get(".lock-expiry-body").should("not.be.visible")
+        cy.get(".spectrum-Button").contains("Done")
+      }
+    })
+})
+
+Cypress.Commands.add("publishApp", resolvedAppPath => {
+  //Assumes you have navigated to an application first
+  cy.get(".toprightnav button.spectrum-Button")
+    .contains("Publish")
+    .click({ force: true })
+
+  cy.get(".spectrum-Modal [data-cy='deploy-app-modal']")
+    .should("be.visible")
+    .within(() => {
+      cy.get(".spectrum-Button").contains("Publish").click({ force: true })
+      cy.wait(1000)
+    })
+
+  //Verify that the app url is presented correctly to the user
+  cy.get(".spectrum-Modal [data-cy='deploy-app-success-modal']")
+    .should("be.visible")
+    .within(() => {
+      let appUrl = Cypress.config().baseUrl + "/app/" + resolvedAppPath
+      cy.get("[data-cy='deployed-app-url'] input").should("have.value", appUrl)
+      cy.get(".spectrum-Button").contains("Done").click({ force: true })
     })
 })
 
