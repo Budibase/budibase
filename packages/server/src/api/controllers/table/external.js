@@ -315,6 +315,6 @@ exports.bulkImport = async function (ctx) {
   await handleRequest(DataSourceOperation.BULK_CREATE, table._id, {
     rows,
   })
-  events.row.import(table, "csv", rows.length)
+  await events.rows.imported(table, "csv", rows.length)
   return table
 }

@@ -1,4 +1,4 @@
-export type LoginSource = "local" | "sso"
+export type LoginSource = "local" | "google" | "oidc"
 export type SSOType = "oidc" | "google"
 
 export interface LoginEvent {

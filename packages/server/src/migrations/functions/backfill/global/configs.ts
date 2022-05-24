@@ -36,7 +36,7 @@ export const backfill = async (globalDb: any) => {
     if (isOIDCConfig(config)) {
       await events.auth.SSOCreated("oidc")
       if (config.config.configs[0].activated) {
-        events.auth.SSOActivated("oidc")
+        await events.auth.SSOActivated("oidc")
       }
     }
     if (isSettingsConfig(config)) {

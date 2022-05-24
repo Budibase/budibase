@@ -1,7 +1,3 @@
-import {
-  isCloudAccount,
-  isSSOAccount,
-} from "./../../../types/src/documents/account/account"
 import * as context from "../context"
 import env from "../environment"
 import {
@@ -13,6 +9,8 @@ import {
   Account,
   AccountIdentity,
   BudibaseIdentity,
+  isCloudAccount,
+  isSSOAccount,
 } from "@budibase/types"
 import { analyticsProcessor } from "./processors"
 
@@ -26,7 +24,7 @@ export const getCurrentIdentity = (): Identity => {
   } else if (env.SELF_HOSTED) {
     id = "installationId" // TODO
   } else {
-    id = context.getTenantId()
+    id = tenantId
   }
 
   return {

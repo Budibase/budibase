@@ -131,5 +131,5 @@ exports.getBudibaseVersion = async ctx => {
   ctx.body = {
     version,
   }
-  events.org.versionChecked(version)
+  await events.org.versionChecked(version)
 }
