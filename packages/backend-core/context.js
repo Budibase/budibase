@@ -5,6 +5,7 @@ const {
   getAppId,
   updateAppId,
   doInAppContext,
+  doInUserContext,
 } = require("./src/context")
 
 module.exports = {
@@ -14,4 +15,5 @@ module.exports = {
   getAppId,
   updateAppId,
   doInAppContext,
+  doInUserContext,
 }

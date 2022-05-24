@@ -137,7 +137,7 @@ module.exports = (
       if (user && user.email) {
         return context.doInUserContext(user, next)
       } else {
-        return next
+        return next()
       }
     } catch (err) {
       // invalid token, clear the cookie

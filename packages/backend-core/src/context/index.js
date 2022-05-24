@@ -1,5 +1,4 @@
 const env = require("../environment")
-const { Headers } = require("../../constants")
 const { SEPARATOR, DocumentTypes } = require("../db/constants")
 const { DEFAULT_TENANT_ID } = require("../constants")
 const cls = require("./FunctionContext")
@@ -77,7 +76,11 @@ exports.isMultiTenant = () => {
 exports.doInTenant = (tenantId, task) => {
   // the internal function is so that we can re-use an existing
   // context - don't want to close DB on a parent context
-  async function internal(opts = { existing: false }) {
+  async function internal(opts = { existing: false, user: undefined }) {
+    // preserve the user
+    if (user) {
+      exports.setUser(user)
+    }
     // set the tenant id
     if (!opts.existing) {
       cls.setOnContext(ContextKeys.TENANT_ID, tenantId)
@@ -98,14 +101,16 @@ exports.doInTenant = (tenantId, task) => {
       }
     }
   }
+
+  const user = cls.getFromContext(ContextKeys.USER)
   const using = cls.getFromContext(ContextKeys.IN_USE)
   if (using && cls.getFromContext(ContextKeys.TENANT_ID) === tenantId) {
     cls.setOnContext(ContextKeys.IN_USE, using + 1)
-    return internal({ existing: true })
+    return internal({ existing: true, user })
   } else {
     return cls.run(async () => {
       cls.setOnContext(ContextKeys.IN_USE, 1)
-      return internal()
+      return internal({ existing: false, user })
     })
   }
 }
@@ -143,7 +148,11 @@ exports.doInAppContext = (appId, task) => {
 
   // the internal function is so that we can re-use an existing
   // context - don't want to close DB on a parent context
-  async function internal(opts = { existing: false }) {
+  async function internal(opts = { existing: false, user: undefined }) {
+    // preserve the user
+    if (user) {
+      exports.setUser(user)
+    }
     // set the app tenant id
     if (!opts.existing) {
       setAppTenantId(appId)
@@ -162,28 +171,39 @@ exports.doInAppContext = (appId, task) => {
       }
     }
   }
+  const user = cls.getFromContext(ContextKeys.USER)
   const using = cls.getFromContext(ContextKeys.IN_USE)
   if (using && cls.getFromContext(ContextKeys.APP_ID) === appId) {
     cls.setOnContext(ContextKeys.IN_USE, using + 1)
-    return internal({ existing: true })
+    return internal({ existing: true, user })
   } else {
     return cls.run(async () => {
       cls.setOnContext(ContextKeys.IN_USE, 1)
-      return internal()
+      return internal({ existing: false, user })
     })
   }
 }
 
 exports.doInUserContext = (user, task) => {
-  return cls.run(async () => {
-    cls.setOnContext(ContextKeys.USER, user)
+  return cls.run(() => {
+    let tenantId = user.tenantId
+    if (!tenantId) {
+      tenantId = exports.getTenantId()
+    }
+    cls.setOnContext(ContextKeys.TENANT_ID, tenantId)
+    exports.setUser(user)
     return task()
   })
 }
 
+exports.setUser = user => {
+  cls.setOnContext(ContextKeys.USER, user)
+}
+
 exports.getUser = () => {
   try {
-    return cls.getFromContext(ContextKeys.USER)
+    const user = cls.getFromContext(ContextKeys.USER)
+    return user
   } catch (e) {
     // do nothing - user is not in context
   }
@@ -206,45 +226,6 @@ exports.updateAppId = async appId => {
       throw err
     }
   }
-}
-
-exports.setTenantId = (
-  ctx,
-  opts = { allowQs: false, allowNoTenant: false }
-) => {
-  let tenantId
-  // exit early if not multi-tenant
-  if (!exports.isMultiTenant()) {
-    cls.setOnContext(ContextKeys.TENANT_ID, exports.DEFAULT_TENANT_ID)
-    return exports.DEFAULT_TENANT_ID
-  }
-
-  const allowQs = opts && opts.allowQs
-  const allowNoTenant = opts && opts.allowNoTenant
-  const header = ctx.request.headers[Headers.TENANT_ID]
-  const user = ctx.user || {}
-  if (allowQs) {
-    const query = ctx.request.query || {}
-    tenantId = query.tenantId
-  }
-  // override query string (if allowed) by user, or header
-  // URL params cannot be used in a middleware, as they are
-  // processed later in the chain
-  tenantId = user.tenantId || header || tenantId
-
-  // Set the tenantId from the subdomain
-  if (!tenantId) {
-    tenantId = ctx.subdomains && ctx.subdomains[0]
-  }
-
-  if (!tenantId && !allowNoTenant) {
-    ctx.throw(403, "Tenant id not set")
-  }
-  // check tenant ID just incase no tenant was allowed
-  if (tenantId) {
-    cls.setOnContext(ContextKeys.TENANT_ID, tenantId)
-  }
-  return tenantId
 }
 
 exports.setGlobalDB = tenantId => {

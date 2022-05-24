@@ -14,8 +14,9 @@ const {
   isMultiTenant,
 } = require("@budibase/backend-core/tenancy")
 const env = require("../../../environment")
-const { events, users: usersCore } = require("@budibase/backend-core")
+import { events, users as usersCore, context } from "@budibase/backend-core"
 import { users } from "../../../sdk"
+import { User } from "@budibase/types"
 
 const ssoCallbackUrl = async (config: any, type: any) => {
   // incase there is a callback URL from before
@@ -71,7 +72,9 @@ export const authenticate = async (ctx: any, next: any) => {
     "local",
     async (err: any, user: any, info: any) => {
       await authInternal(ctx, user, err, info)
-      await events.auth.login("local")
+      await context.doInUserContext(user, async () => {
+        await events.auth.login("local")
+      })
       ctx.status = 200
     }
   )(ctx, next)
@@ -105,7 +108,7 @@ export const reset = async (ctx: any) => {
     )
   }
   try {
-    const user = await usersCore.getGlobalUserByEmail(email)
+    const user = (await usersCore.getGlobalUserByEmail(email)) as User
     // only if user exists, don't error though if they don't
     if (user) {
       await sendEmail(email, EmailTemplatePurpose.PASSWORD_RECOVERY, {
@@ -212,7 +215,9 @@ export const googleAuth = async (ctx: any, next: any) => {
     { successRedirect: "/", failureRedirect: "/error" },
     async (err: any, user: any, info: any) => {
       await authInternal(ctx, user, err, info)
-      await events.auth.login("google")
+      await context.doInUserContext(user, async () => {
+        await events.auth.login("google")
+      })
       ctx.redirect("/")
     }
   )(ctx, next)
@@ -256,7 +261,9 @@ export const oidcAuth = async (ctx: any, next: any) => {
     { successRedirect: "/", failureRedirect: "/error" },
     async (err: any, user: any, info: any) => {
       await authInternal(ctx, user, err, info)
-      await events.auth.login("oidc")
+      await context.doInUserContext(user, async () => {
+        await events.auth.login("oidc")
+      })
       ctx.redirect("/")
     }
   )(ctx, next)
