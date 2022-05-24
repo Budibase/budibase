@@ -1,3 +1,5 @@
+const { join } = require("path")
+
 function isDev() {
   return process.env.NODE_ENV !== "production"
 }
@@ -12,8 +14,16 @@ function isTest() {
 
 let LOADED = false
 if (!LOADED && isDev() && !isTest()) {
-  require("dotenv").config()
+  require("dotenv").config({
+    path: join(__dirname, "..", ".env"),
+  })
   LOADED = true
+}
+
+function parseIntSafe(number) {
+  if (number) {
+    return parseInt(number)
+  }
 }
 
 module.exports = {
@@ -49,6 +59,8 @@ module.exports = {
   SMTP_HOST: process.env.SMTP_HOST,
   SMTP_PORT: process.env.SMTP_PORT,
   SMTP_FROM_ADDRESS: process.env.SMTP_FROM_ADDRESS,
+  // other
+  CHECKLIST_CACHE_TTL: parseIntSafe(process.env.CHECKLIST_CACHE_TTL) || 3600,
   _set(key, value) {
     process.env[key] = value
     module.exports[key] = value

@@ -28,7 +28,7 @@
   async function login() {
     try {
       await auth.login({
-        username,
+        username: username.trim(),
         password,
       })
       if ($auth?.user?.forceResetPassword) {
@@ -80,7 +80,9 @@
         />
       </Layout>
       <Layout gap="XS" noPadding>
-        <Button cta on:click={login}>Sign in to {company}</Button>
+        <Button cta disabled={!username && !password} on:click={login}
+          >Sign in to {company}</Button
+        >
         <ActionButton quiet on:click={() => $goto("./forgot")}>
           Forgot password?
         </ActionButton>
