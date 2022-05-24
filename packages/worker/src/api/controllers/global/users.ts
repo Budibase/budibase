@@ -2,13 +2,15 @@ import { EmailTemplatePurpose } from "../../../constants"
 import { checkInviteCode } from "../../../utilities/redis"
 import { sendEmail } from "../../../utilities/email"
 import { users } from "../../../sdk"
+import { User } from "@budibase/types"
+import { events } from "@budibase/backend-core"
+import { getGlobalDB } from "@budibase/backend-core/dist/src/context"
 
 const {
   errors,
   users: usersCore,
   tenancy,
   db: dbUtils,
-  events,
 } = require("@budibase/backend-core")
 
 export const save = async (ctx: any) => {
@@ -48,10 +50,9 @@ export const adminUser = async (ctx: any) => {
     ctx.throw(403, "You cannot initialise once a global user has been created.")
   }
 
-  const user = {
+  const user: User = {
     email: email,
     password: password,
-    createdAt: Date.now(),
     roles: {},
     builder: {
       global: true,
@@ -65,6 +66,7 @@ export const adminUser = async (ctx: any) => {
     ctx.body = await tenancy.doInTenant(tenantId, async () => {
       return users.save(user, hashPassword, requirePassword)
     })
+    await events.identification.identifyTenant(tenantId)
   } catch (err: any) {
     ctx.throw(err.status || 400, err)
   }
@@ -132,15 +134,17 @@ export const inviteAccept = async (ctx: any) => {
     // info is an extension of the user object that was stored by global
     const { email, info }: any = await checkInviteCode(inviteCode)
     ctx.body = await tenancy.doInTenant(info.tenantId, async () => {
-      const user = await users.save({
+      const saved = await users.save({
         firstName,
         lastName,
         password,
         email,
         ...info,
       })
+      const db = getGlobalDB()
+      const user = await db.get(saved._id)
       await events.user.inviteAccepted(user)
-      return user
+      return saved
     })
   } catch (err: any) {
     if (err.code === errors.codes.USAGE_LIMIT_EXCEEDED) {

@@ -11,10 +11,15 @@ export interface Identity {
   tenantId: string
 }
 
-export interface UserIdentity extends Identity {
+export interface TenantIdentity extends Identity {
   hosting: Hosting
   type: IdentityType
-  authType: string
+}
+
+export interface UserIdentity extends TenantIdentity {
+  hosting: Hosting
+  type: IdentityType
+  providerType?: string
 }
 
 export interface BudibaseIdentity extends UserIdentity {

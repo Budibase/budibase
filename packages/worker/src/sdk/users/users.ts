@@ -2,6 +2,7 @@ import env from "../../environment"
 import { quotas } from "@budibase/pro"
 import * as apps from "../../utilities/appService"
 import * as eventHelpers from "./events"
+import { User } from "@budibase/types"
 
 const {
   tenancy,
@@ -15,6 +16,8 @@ const {
   sessions,
   HTTPError,
 } = require("@budibase/backend-core")
+
+import { events } from "@budibase/backend-core"
 
 /**
  * Retrieves all users from the current tenancy.
@@ -51,7 +54,7 @@ export const getUser = async (userId: string) => {
 }
 
 export const save = async (
-  user: any,
+  user: User,
   hashPassword = true,
   requirePassword = true
 ) => {
@@ -97,7 +100,7 @@ export const save = async (
   }
 
   if (!_id) {
-    _id = dbUtils.generateGlobalUserID(email)
+    _id = dbUtils.generateGlobalUserID()
   }
 
   user = {
@@ -130,7 +133,7 @@ export const save = async (
     user._rev = response.rev
 
     await eventHelpers.handleSaveEvents(user, dbUser)
-
+    await events.identification.identifyUser(user)
     await tenancy.tryAddTenant(tenantId, _id, email)
     await cache.user.invalidateUser(response.id)
     // let server know to sync user
