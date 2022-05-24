@@ -259,6 +259,24 @@ export default class DataFetch {
       return null
     }
 
+    // Check for any JSON fields so we can add any top level properties
+    let jsonAdditions = {}
+    Object.keys(schema).forEach(fieldKey => {
+      const fieldSchema = schema[fieldKey]
+      if (fieldSchema?.type === "json") {
+        const jsonSchema = convertJSONSchemaToTableSchema(fieldSchema, {
+          squashObjects: true,
+        })
+        Object.keys(jsonSchema).forEach(jsonKey => {
+          jsonAdditions[`${fieldKey}.${jsonKey}`] = {
+            type: jsonSchema[jsonKey].type,
+            nestedJSON: true,
+          }
+        })
+      }
+    })
+    schema = { ...schema, ...jsonAdditions }
+
     // Ensure schema is in the correct structure
     let enrichedSchema = {}
     Object.entries(schema).forEach(([fieldName, fieldSchema]) => {
@@ -274,24 +292,6 @@ export default class DataFetch {
         }
       }
     })
-
-    // Check for any JSON fields so we can add any top level properties
-    let jsonAdditions = {}
-    Object.keys(enrichedSchema).forEach(fieldKey => {
-      const fieldSchema = enrichedSchema[fieldKey]
-      if (fieldSchema?.type === "json") {
-        const jsonSchema = convertJSONSchemaToTableSchema(fieldSchema, {
-          squashObjects: true,
-        })
-        Object.keys(jsonSchema).forEach(jsonKey => {
-          jsonAdditions[`${fieldKey}.${jsonKey}`] = {
-            type: jsonSchema[jsonKey].type,
-            nestedJSON: true,
-          }
-        })
-      }
-    })
-    enrichedSchema = { ...enrichedSchema, ...jsonAdditions }
 
     return enrichedSchema
   }
