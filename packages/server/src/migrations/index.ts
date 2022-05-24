@@ -7,12 +7,14 @@ import * as appUrls from "./functions/appUrls"
 import * as developerQuota from "./functions/developerQuota"
 import * as publishedAppsQuota from "./functions/publishedAppsQuota"
 import * as backfill from "./functions/backfill"
+import env from "../environment"
 
 export interface Migration {
   type: string
   name: string
   opts?: object
   fn: Function
+  silent?: boolean
 }
 
 /**
@@ -59,15 +61,17 @@ export const MIGRATIONS: Migration[] = [
     fn: publishedAppsQuota.run,
   },
   {
-    type: migrations.MIGRATION_TYPES.GLOBAL,
-    name: "event_global_backfill",
-    fn: backfill.global.run,
-  },
-  {
     type: migrations.MIGRATION_TYPES.APP,
     name: "event_app_backfill",
     opts: { all: true },
     fn: backfill.app.run,
+    silent: !!env.SELF_HOSTED, // reduce noisy logging
+  },
+  {
+    type: migrations.MIGRATION_TYPES.GLOBAL,
+    name: "event_global_backfill",
+    fn: backfill.global.run,
+    silent: !!env.SELF_HOSTED, // reduce noisy logging
   },
 ]
 

@@ -31,6 +31,13 @@ exports.runMigration = async (migration, options = {}) => {
   const tenantId = getTenantId()
   const migrationType = migration.type
   const migrationName = migration.name
+  const silent = migration.silent
+
+  const log = message => {
+    if (!silent) {
+      console.log(message)
+    }
+  }
 
   // get the db to store the migration in
   let dbNames
@@ -45,8 +52,14 @@ exports.runMigration = async (migration, options = {}) => {
     )
   }
 
+  const length = dbNames.length
+  let count = 0
+
   // run the migration against each db
   for (const dbName of dbNames) {
+    count++
+    const lengthStatement = length > 1 ? `[${count}/${length}]` : ""
+
     await doWithDB(dbName, async db => {
       try {
         const doc = await exports.getMigrationsDoc(db)
@@ -58,7 +71,7 @@ exports.runMigration = async (migration, options = {}) => {
             options.force[migrationType] &&
             options.force[migrationType].includes(migrationName)
           ) {
-            console.log(
+            log(
               `[Tenant: ${tenantId}] [Migration: ${migrationName}] [DB: ${dbName}] Forcing`
             )
           } else {
@@ -67,12 +80,12 @@ exports.runMigration = async (migration, options = {}) => {
           }
         }
 
-        console.log(
-          `[Tenant: ${tenantId}] [Migration: ${migrationName}] [DB: ${dbName}] Running`
+        log(
+          `[Tenant: ${tenantId}] [Migration: ${migrationName}] [DB: ${dbName}] Running ${lengthStatement}`
         )
         // run the migration with tenant context
         await migration.fn(db)
-        console.log(
+        log(
           `[Tenant: ${tenantId}] [Migration: ${migrationName}] [DB: ${dbName}] Complete`
         )
 
@@ -91,7 +104,6 @@ exports.runMigration = async (migration, options = {}) => {
 }
 
 exports.runMigrations = async (migrations, options = {}) => {
-  console.log("Running migrations")
   let tenantIds
   if (environment.MULTI_TENANCY) {
     if (!options.tenantIds || !options.tenantIds.length) {
@@ -105,8 +117,19 @@ exports.runMigrations = async (migrations, options = {}) => {
     tenantIds = [DEFAULT_TENANT_ID]
   }
 
+  if (tenantIds.length > 1) {
+    console.log(`Checking migrations for ${tenantIds.length} tenants`)
+  } else {
+    console.log("Checking migrations")
+  }
+
+  let count = 0
   // for all tenants
   for (const tenantId of tenantIds) {
+    count++
+    if (tenantIds.length > 1) {
+      console.log(`Progress [${count}/${tenantIds.length}]`)
+    }
     // for all migrations
     for (const migration of migrations) {
       // run the migration
