@@ -29,7 +29,7 @@ passport.deserializeUser(async (user, done) => {
     const user = await db.get(user._id)
     return done(null, user)
   } catch (err) {
-    console.error("User not found", err)
+    console.error(`User not found`, err)
     return done(null, false, { message: "User not found" })
   }
 })
