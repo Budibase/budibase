@@ -41,6 +41,7 @@ module.exports = {
   GLOBAL_CLOUD_BUCKET_NAME:
     process.env.GLOBAL_CLOUD_BUCKET_NAME || "prod-budi-tenant-uploads",
   USE_COUCH: process.env.USE_COUCH || true,
+  DEFAULT_LICENSE: process.env.DEFAULT_LICENSE,
   isTest,
   isDev,
   _set(key, value) {

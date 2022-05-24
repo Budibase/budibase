@@ -1,6 +1,6 @@
 {
   "name": "@budibase/backend-core",
-  "version": "1.0.167",
+  "version": "1.0.176",
   "description": "Budibase backend core libraries used in server and worker",
   "main": "src/index.js",
   "author": "Budibase",
@@ -41,8 +41,7 @@
   "devDependencies": {
     "ioredis-mock": "^5.5.5",
     "jest": "^26.6.3",
-    "pouchdb-adapter-memory": "^7.2.2",
-    "pouchdb-all-dbs": "^1.0.2"
+    "pouchdb-adapter-memory": "^7.2.2"
   },
   "gitHead": "d1836a898cab3f8ab80ee6d8f42be1a9eed7dcdc"
 }
