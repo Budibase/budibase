@@ -35,7 +35,7 @@ Cypress.Commands.add("login", () => {
 Cypress.Commands.add("closeModal", () => {
   cy.get(".spectrum-Modal").within(() => {
     cy.get(".close-icon").click()
-    cy.wait(500)
+    cy.wait(1000) // Wait for modal to close
   })
 })
 
@@ -220,6 +220,21 @@ Cypress.Commands.add("createTestTableWithData", () => {
   cy.createTable("dog")
   cy.addColumn("dog", "name", "Text")
   cy.addColumn("dog", "age", "Number")
+})
+
+Cypress.Commands.add("publishApp", (viewApp = false) => {
+  cy.get(".toprightnav").contains("Publish").click({ force: true })
+  cy.get(".spectrum-Dialog-grid").within(() => {
+    cy.get(".spectrum-Button").contains("Publish").click({ force: true })
+  })
+  cy.wait(2000) // Wait for App to publish and modal to appear
+  cy.get(".spectrum-Dialog-grid").within(() => {
+    if (viewApp) {
+      cy.get(".spectrum-Button").contains("View App").click({ force: true })
+    } else {
+      cy.get(".spectrum-Button").contains("Done").click({ force: true })
+    }
+  })
 })
 
 Cypress.Commands.add("createTable", (tableName, initialTable) => {
@@ -670,16 +685,4 @@ Cypress.Commands.add("createRestQuery", (method, restUrl, queryPrettyName) => {
   cy.get(".hierarchy-items-container")
     .should("contain", method)
     .and("contain", queryPrettyName)
-})
-
-Cypress.Commands.add("templateNavigation", () => {
-  // Navigates to templates section
-  cy.request(`${Cypress.config().baseUrl}/api/applications?status=all`)
-    .its("body")
-    .then(val => {
-      // Templates button needs clicked if apps already exist
-      if (val.length > 0) {
-        cy.get(".spectrum-Button").contains("Templates").click({ force: true })
-      }
-    })
 })
