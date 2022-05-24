@@ -6,6 +6,7 @@ import {
   runLuceneQuery,
   luceneSort,
 } from "../utils/lucene"
+import { convertJSONSchemaToTableSchema } from "../utils/json"
 
 /**
  * Parent class which handles the implementation of fetching data from an
@@ -248,7 +249,8 @@ export default class DataFetch {
   }
 
   /**
-   * Enriches the schema and ensures that entries are objects with names
+   * Enriches a datasource schema with nested fields and ensures the structure
+   * is correct.
    * @param schema the datasource schema
    * @return {object} the enriched datasource schema
    */
@@ -256,6 +258,8 @@ export default class DataFetch {
     if (schema == null) {
       return null
     }
+
+    // Ensure schema is in the correct structure
     let enrichedSchema = {}
     Object.entries(schema).forEach(([fieldName, fieldSchema]) => {
       if (typeof fieldSchema === "string") {
@@ -270,6 +274,25 @@ export default class DataFetch {
         }
       }
     })
+
+    // Check for any JSON fields so we can add any top level properties
+    let jsonAdditions = {}
+    Object.keys(enrichedSchema).forEach(fieldKey => {
+      const fieldSchema = enrichedSchema[fieldKey]
+      if (fieldSchema?.type === "json") {
+        const jsonSchema = convertJSONSchemaToTableSchema(fieldSchema, {
+          squashObjects: true,
+        })
+        Object.keys(jsonSchema).forEach(jsonKey => {
+          jsonAdditions[`${fieldKey}.${jsonKey}`] = {
+            type: jsonSchema[jsonKey].type,
+            nestedJSON: true,
+          }
+        })
+      }
+    })
+    enrichedSchema = { ...enrichedSchema, ...jsonAdditions }
+
     return enrichedSchema
   }
 
