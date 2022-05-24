@@ -76,17 +76,10 @@ exports.isMultiTenant = () => {
 exports.doInTenant = (tenantId, task) => {
   // the internal function is so that we can re-use an existing
   // context - don't want to close DB on a parent context
-  async function internal(opts = { existing: false, user: undefined }) {
-    // preserve the user
-    if (user) {
-      exports.setUser(user)
-    }
+  async function internal(opts = { existing: false }) {
     // set the tenant id
     if (!opts.existing) {
-      cls.setOnContext(ContextKeys.TENANT_ID, tenantId)
-      if (env.USE_COUCH) {
-        exports.setGlobalDB(tenantId)
-      }
+      exports.updateTenantId(tenantId)
     }
 
     try {
@@ -102,15 +95,14 @@ exports.doInTenant = (tenantId, task) => {
     }
   }
 
-  const user = cls.getFromContext(ContextKeys.USER)
   const using = cls.getFromContext(ContextKeys.IN_USE)
   if (using && cls.getFromContext(ContextKeys.TENANT_ID) === tenantId) {
     cls.setOnContext(ContextKeys.IN_USE, using + 1)
-    return internal({ existing: true, user })
+    return internal({ existing: true })
   } else {
     return cls.run(async () => {
       cls.setOnContext(ContextKeys.IN_USE, 1)
-      return internal({ existing: false, user })
+      return internal()
     })
   }
 }
@@ -146,19 +138,19 @@ exports.doInAppContext = (appId, task) => {
     throw new Error("appId is required")
   }
 
+  const user = exports.getUser()
+
   // the internal function is so that we can re-use an existing
   // context - don't want to close DB on a parent context
   async function internal(opts = { existing: false, user: undefined }) {
-    // preserve the user
-    if (user) {
-      exports.setUser(user)
-    }
     // set the app tenant id
     if (!opts.existing) {
       setAppTenantId(appId)
     }
     // set the app ID
     cls.setOnContext(ContextKeys.APP_ID, appId)
+    // preserve the user
+    exports.setUser(user)
     try {
       // invoke the task
       return await task()
@@ -171,29 +163,56 @@ exports.doInAppContext = (appId, task) => {
       }
     }
   }
-  const user = cls.getFromContext(ContextKeys.USER)
   const using = cls.getFromContext(ContextKeys.IN_USE)
   if (using && cls.getFromContext(ContextKeys.APP_ID) === appId) {
     cls.setOnContext(ContextKeys.IN_USE, using + 1)
-    return internal({ existing: true, user })
+    return internal({ existing: true })
   } else {
     return cls.run(async () => {
       cls.setOnContext(ContextKeys.IN_USE, 1)
-      return internal({ existing: false, user })
+      return internal()
     })
   }
 }
 
 exports.doInUserContext = (user, task) => {
-  return cls.run(() => {
-    let tenantId = user.tenantId
-    if (!tenantId) {
-      tenantId = exports.getTenantId()
+  if (!user) {
+    throw new Error("user is required")
+  }
+
+  async function internal(opts = { existing: false }) {
+    if (!opts.existing) {
+      cls.setOnContext(ContextKeys.USER, user)
+      // set the tenant so that doInTenant will preserve user
+      if (user.tenantId) {
+        exports.updateTenantId(user.tenantId)
+      }
     }
-    cls.setOnContext(ContextKeys.TENANT_ID, tenantId)
-    exports.setUser(user)
-    return task()
-  })
+
+    try {
+      // invoke the task
+      return await task()
+    } finally {
+      const using = cls.getFromContext(ContextKeys.IN_USE)
+      if (!using || using <= 1) {
+        exports.setUser(null)
+      } else {
+        cls.setOnContext(using - 1)
+      }
+    }
+  }
+
+  const existing = cls.getFromContext(ContextKeys.USER)
+  const using = cls.getFromContext(ContextKeys.IN_USE)
+  if (using && existing && existing._id === user._id) {
+    cls.setOnContext(ContextKeys.IN_USE, using + 1)
+    return internal({ existing: true })
+  } else {
+    return cls.run(async () => {
+      cls.setOnContext(ContextKeys.IN_USE, 1)
+      return internal({ existing: false })
+    })
+  }
 }
 
 exports.setUser = user => {
@@ -202,8 +221,7 @@ exports.setUser = user => {
 
 exports.getUser = () => {
   try {
-    const user = cls.getFromContext(ContextKeys.USER)
-    return user
+    return cls.getFromContext(ContextKeys.USER)
   } catch (e) {
     // do nothing - user is not in context
   }
@@ -211,7 +229,9 @@ exports.getUser = () => {
 
 exports.updateTenantId = tenantId => {
   cls.setOnContext(ContextKeys.TENANT_ID, tenantId)
-  exports.setGlobalDB(tenantId)
+  if (env.USE_COUCH) {
+    exports.setGlobalDB(tenantId)
+  }
 }
 
 exports.updateAppId = async appId => {

@@ -79,14 +79,14 @@ exports.authenticateThirdParty = async function (
   dbUser.forceResetPassword = false
 
   // create or sync the user
-  let response
   try {
-    response = await saveUserFn(dbUser, false, false)
+    await saveUserFn(dbUser, false, false)
   } catch (err) {
     return authError(done, err)
   }
 
-  dbUser._rev = response.rev
+  // now that we're sure user exists, load them from the db
+  dbUser = await users.getGlobalUserByEmail(thirdPartyUser.email)
 
   // authenticate
   const sessionId = newid()

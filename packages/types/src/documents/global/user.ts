@@ -10,6 +10,9 @@ export interface User extends Document {
   }
   providerType?: string
   tenantId: string
+  email: string
+  password?: string
+  status?: string
 }
 
 export interface UserRoles {
