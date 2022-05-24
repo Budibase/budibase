@@ -1092,10 +1092,10 @@
     svelte-flatpickr "^3.2.3"
     svelte-portal "^1.0.0"
 
-"@budibase/pro@1.0.176-alpha.0":
-  version "1.0.176-alpha.0"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-1.0.176-alpha.0.tgz#416522800ef47b6ccc9e8bfc0e8d722db54f5c68"
-  integrity sha512-oe/HQsDpGZ3HO7t0TPqfKfh/FjZw5f9V22LxS45WXoOgL8b66U2WGwCaN7iF/zzxgPXlZ3h8TSHo9ai9d2UOgA==
+"@budibase/pro@^1.0.175":
+  version "1.0.175"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-1.0.175.tgz#1d8ddc698ad17e2f5d73b1ab741c6641da4bda47"
+  integrity sha512-iGqOtsXeO5bHcg4IJjg8NwOK5bNjI3TnJCr7PtcTjlLyZyCyj+onL2GTk3A6X+d1ZKSQKy9bl3Q+hIsdbZ9GIg==
   dependencies:
     "@budibase/backend-core" "1.0.176-alpha.0"
     node-fetch "^2.6.1"
