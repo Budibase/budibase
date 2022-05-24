@@ -15,6 +15,7 @@
 
   export let value = ""
   export let maxIconsPerPage = 30
+  export let autofocus = false
 
   let searchTerm = ""
   let selectedLetter = "A"
@@ -117,7 +118,9 @@
 </script>
 
 <div bind:this={buttonAnchor}>
-  <ActionButton on:click={dropdown.show}>{displayValue}</ActionButton>
+  <ActionButton on:click={dropdown.show} {autofocus}>
+    {displayValue}
+  </ActionButton>
 </div>
 <Popover bind:this={dropdown} on:open={setSelectedUI} anchor={buttonAnchor}>
   <div class="container">

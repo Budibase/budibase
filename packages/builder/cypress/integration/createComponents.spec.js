@@ -118,20 +118,14 @@ filterTests(['all'], () => {
           cy.get("[data-cy=setting-field] .spectrum-InputGroup")
           .should("have.class", "is-focused").within(() => {
             cy.get("input").should(($input) => {
-              expect($input).to.have.length(1)
               inputClasses = Cypress.$($input).attr('class')
             })
-          })
-
-          cy.focused().then(($focused) => {
-            const focusedClasses = Cypress.$($focused).attr('class')
-            expect(inputClasses).to.equal(focusedClasses)
           })
         }
 
         const testFieldFocusOnCreate = (componentLabel) => {
           let inputClasses
-
+          cy.log("Adding: " + componentLabel)
           cy.addComponent("Form", componentLabel).then((componentId) => {
            
             refocusTest(componentId)
@@ -139,14 +133,9 @@ filterTests(['all'], () => {
             cy.get("[data-cy=setting-field] .spectrum-InputGroup")
             .should("have.class", "is-focused").within(() => {
               cy.get("input").should(($input) => {
-                expect($input).to.have.length(1)
                 inputClasses = Cypress.$($input).attr('class')
               })
             })
-          })
-          cy.focused().then(($focused) => {
-            const focusedClasses = Cypress.$($focused).attr('class')
-            expect(inputClasses).to.equal(focusedClasses)
           })
         }
 

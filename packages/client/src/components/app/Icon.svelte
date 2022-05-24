@@ -28,14 +28,29 @@
   />
 {:else if $builderStore.inBuilder}
   <div use:styleable={styles}>
-    <Placeholder />
+    <Placeholder>
+      <div slot="content">
+        Add the <mark>Icon</mark> in the settings menu&nbsp;
+        <span
+          class="showMe spectrum-Link"
+          on:click={() => {
+            builderStore.actions.setFocus([
+              {
+                location: "component_settings",
+                key: "icon",
+                target: $component.id,
+              },
+            ])
+          }}
+        >
+          Show me
+        </span>
+      </div>
+    </Placeholder>
   </div>
 {/if}
 
 <style>
-  div {
-    font-style: italic;
-  }
   @media (hover: hover) {
     .hoverable:hover {
       color: var(--spectrum-alias-icon-color-selected-hover) !important;

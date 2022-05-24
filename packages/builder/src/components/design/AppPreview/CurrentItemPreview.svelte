@@ -210,7 +210,7 @@
         store.update(state => ({
           ...state,
           builderFocus : 
-          [{...data}]
+          [...data]
         }))
       } else {
         console.warn(`Client sent unknown event type: ${type}`)
