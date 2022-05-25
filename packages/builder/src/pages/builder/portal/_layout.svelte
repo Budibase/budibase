@@ -203,7 +203,9 @@
             <MenuItem icon="UserDeveloper" on:click={() => $goto("../apps")}>
               Close developer mode
             </MenuItem>
-            <MenuItem icon="LogOut" on:click={logout}>Log out</MenuItem>
+            <MenuItem dataCy="user-logout" icon="LogOut" on:click={logout}
+              >Log out
+            </MenuItem>
           </ActionMenu>
         </div>
       </div>
@@ -332,7 +334,7 @@
 
     .mobile-toggle,
     .user-dropdown {
-      flex: 1 1 0;
+      flex: 0 1 0;
     }
 
     /* Reduce BBUI page padding */
