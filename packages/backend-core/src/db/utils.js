@@ -80,6 +80,28 @@ function getDocParams(docType, docId = null, otherProps = {}) {
 exports.getDocParams = getDocParams
 
 /**
+ * Check if a given ID is that of a table.
+ * @returns {boolean}
+ */
+exports.isTableId = id => {
+  // this includes datasource plus tables
+  return (
+    id &&
+    (id.startsWith(`${DocumentTypes.TABLE}${SEPARATOR}`) ||
+      id.startsWith(`${DocumentTypes.DATASOURCE_PLUS}${SEPARATOR}`))
+  )
+}
+
+/**
+ * Check if a given ID is that of a datasource or datasource plus.
+ * @returns {boolean}
+ */
+exports.isDatasourceId = id => {
+  // this covers both datasources and datasource plus
+  return id && id.startsWith(`${DocumentTypes.DATASOURCE}${SEPARATOR}`)
+}
+
+/**
  * Generates a new workspace ID.
  * @returns {string} The new workspace ID which the workspace doc can be stored under.
  */

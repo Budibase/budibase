@@ -15,6 +15,10 @@ exports.DocumentTypes = {
   ROLE: "role",
   MIGRATIONS: "migrations",
   DEV_INFO: "devinfo",
+  TABLE: "ta",
+  ROW: "ro",
+  DATASOURCE: "datasource",
+  DATASOURCE_PLUS: "datasource_plus",
 }
 
 exports.StaticDatabases = {
