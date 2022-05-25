@@ -18,6 +18,7 @@
   import CreateAppModal from "components/start/CreateAppModal.svelte"
   import UpdateAppModal from "components/start/UpdateAppModal.svelte"
   import ChooseIconModal from "components/start/ChooseIconModal.svelte"
+  import ExportAppModal from "components/start/ExportAppModal.svelte"
 
   import { store, automationStore } from "builderStore"
   import { API } from "api"
@@ -38,6 +39,7 @@
   let updatingModal
   let deletionModal
   let unpublishModal
+  let exportModal
   let iconModal
   let creatingApp = false
   let loaded = $apps?.length || $templates?.length
@@ -198,9 +200,8 @@
   }
 
   const exportApp = app => {
-    const id = app.deployed ? app.prodId : app.devId
-    const appName = encodeURIComponent(app.name)
-    window.location = `/api/backups/export?appId=${id}&appname=${appName}`
+    exportModal.show()
+    selectedApp = app
   }
 
   const unpublishApp = app => {
@@ -432,6 +433,10 @@
 
 <Modal bind:this={updatingModal} padding={false} width="600px">
   <UpdateAppModal app={selectedApp} />
+</Modal>
+
+<Modal bind:this={exportModal} padding={false} width="600px">
+  <ExportAppModal app={selectedApp} />
 </Modal>
 
 <ConfirmDialog
