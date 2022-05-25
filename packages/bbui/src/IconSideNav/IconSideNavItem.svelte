@@ -43,7 +43,7 @@
   }
   .icon-side-nav-item:hover,
   .active {
-    background: var(--spectrum-global-color-gray-200);
+    background: var(--spectrum-global-color-gray-300);
   }
   .tooltip {
     position: absolute;
