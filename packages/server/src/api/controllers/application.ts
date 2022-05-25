@@ -502,7 +502,7 @@ export const sync = async (ctx: any, next: any) => {
 }
 
 const updateAppPackage = async (appPackage: any, appId: any) => {
-  const db = getAppDB()
+  const db = getAppDB({ appId })
   const application = await db.get(DocumentTypes.APP_METADATA)
 
   const newAppPackage = { ...application, ...appPackage }
