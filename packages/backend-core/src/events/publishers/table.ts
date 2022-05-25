@@ -13,9 +13,9 @@ import {
 
 /* eslint-disable */
 
-export async function created(table: Table) {
+export async function created(table: Table, timestamp?: string) {
   const properties: TableCreatedEvent = {}
-  await publishEvent(Event.TABLE_CREATED, properties)
+  await publishEvent(Event.TABLE_CREATED, properties, timestamp)
 }
 
 export async function updated(table: Table) {

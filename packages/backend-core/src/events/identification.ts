@@ -79,7 +79,10 @@ const getHostingFromEnv = () => {
   return env.SELF_HOSTED ? Hosting.SELF : Hosting.CLOUD
 }
 
-export const identifyTenant = async (tenantId: string) => {
+export const identifyTenant = async (
+  tenantId: string,
+  timestamp?: string | number
+) => {
   const global = await getGlobalIdentifiers(tenantId)
 
   const identity: TenantIdentity = {
@@ -88,10 +91,10 @@ export const identifyTenant = async (tenantId: string) => {
     hosting: getHostingFromEnv(),
     type: IdentityType.TENANT,
   }
-  await identify(identity)
+  await identify(identity, timestamp)
 }
 
-export const identifyUser = async (user: User) => {
+export const identifyUser = async (user: User, timestamp?: string | number) => {
   const id = user._id as string
   const tenantId = user.tenantId
   const hosting = env.SELF_HOSTED ? Hosting.SELF : Hosting.CLOUD
@@ -110,7 +113,7 @@ export const identifyUser = async (user: User) => {
     providerType,
   }
 
-  await identify(identity)
+  await identify(identity, timestamp)
 }
 
 export const identifyAccount = async (account: Account) => {
@@ -141,6 +144,6 @@ export const identifyAccount = async (account: Account) => {
   await identify(identity)
 }
 
-const identify = async (identity: Identity) => {
-  await analyticsProcessor.identify(identity)
+const identify = async (identity: Identity, timestamp?: string | number) => {
+  await analyticsProcessor.identify(identity, timestamp)
 }

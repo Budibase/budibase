@@ -25,8 +25,12 @@ export default class PosthogProcessor implements EventProcessor {
     this.posthog.capture(payload)
   }
 
-  async identify(identity: Identity) {
-    this.posthog.identify({ distinctId: identity.id, properties: identity })
+  async identify(identity: Identity, timestamp?: string | number) {
+    const payload: any = { distinctId: identity.id, properties: identity }
+    if (timestamp) {
+      payload.timestamp = new Date(timestamp)
+    }
+    this.posthog.identify(payload)
   }
 
   shutdown() {

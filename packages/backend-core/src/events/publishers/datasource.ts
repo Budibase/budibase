@@ -7,9 +7,9 @@ import {
   DatasourceDeletedEvent,
 } from "@budibase/types"
 
-export async function created(datasource: Datasource) {
+export async function created(datasource: Datasource, timestamp?: string) {
   const properties: DatasourceCreatedEvent = {}
-  await publishEvent(Event.DATASOURCE_CREATED, properties)
+  await publishEvent(Event.DATASOURCE_CREATED, properties, timestamp)
 }
 
 export async function updated(datasource: Datasource) {

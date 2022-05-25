@@ -13,7 +13,8 @@
     "types": [ "node", "jest"],
   },
   "references": [
-    { "path": "../backend-core/tsconfig.build.json" }
+    { "path": "../backend-core/tsconfig.build.json" },
+    { "path": "../types" }
   ],
   "include": [
     "./src/**/*"

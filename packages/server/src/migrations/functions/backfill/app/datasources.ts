@@ -1,4 +1,4 @@
-import { events, db } from "@budibase/backend-core"
+import { events } from "@budibase/backend-core"
 import { getDatasourceParams } from "../../../../db/utils"
 import { Datasource } from "@budibase/types"
 
@@ -11,12 +11,10 @@ const getDatasources = async (appDb: any): Promise<Datasource[]> => {
   return response.rows.map((row: any) => row.doc)
 }
 
-export const backfill = async (appDb: any) => {
-  if (db.isDevAppID(appDb.name)) {
-    const datasources: Datasource[] = await getDatasources(appDb)
+export const backfill = async (appDb: any, timestamp: string) => {
+  const datasources: Datasource[] = await getDatasources(appDb)
 
-    for (const datasource of datasources) {
-      await events.datasource.created(datasource)
-    }
+  for (const datasource of datasources) {
+    await events.datasource.created(datasource, timestamp)
   }
 }

@@ -6,9 +6,12 @@ import {
   SMTPUpdatedEvent,
 } from "@budibase/types"
 
-export async function SMTPCreated(config: SMTPConfig) {
+export async function SMTPCreated(
+  config: SMTPConfig,
+  timestamp?: string | number
+) {
   const properties: SMTPCreatedEvent = {}
-  await publishEvent(Event.EMAIL_SMTP_CREATED, properties)
+  await publishEvent(Event.EMAIL_SMTP_CREATED, properties, timestamp)
 }
 
 export async function SMTPUpdated(config: SMTPConfig) {

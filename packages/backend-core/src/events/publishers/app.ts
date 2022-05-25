@@ -15,9 +15,9 @@ import {
   AppExportedEvent,
 } from "@budibase/types"
 
-export const created = async (app: App) => {
+export const created = async (app: App, timestamp?: string | number) => {
   const properties: AppCreatedEvent = {}
-  await publishEvent(Event.APP_CREATED, properties)
+  await publishEvent(Event.APP_CREATED, properties, timestamp)
 }
 
 export async function updated(app: App) {
@@ -30,9 +30,9 @@ export async function deleted(app: App) {
   await publishEvent(Event.APP_DELETED, properties)
 }
 
-export async function published(app: App) {
+export async function published(app: App, timestamp?: string | number) {
   const properties: AppPublishedEvent = {}
-  await publishEvent(Event.APP_PUBLISHED, properties)
+  await publishEvent(Event.APP_PUBLISHED, properties, timestamp)
 }
 
 export async function unpublished(app: App) {

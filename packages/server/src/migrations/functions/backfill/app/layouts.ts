@@ -1,4 +1,4 @@
-import { events, db } from "@budibase/backend-core"
+import { events } from "@budibase/backend-core"
 import { getLayoutParams } from "../../../../db/utils"
 import { Layout } from "@budibase/types"
 
@@ -11,12 +11,10 @@ const getLayouts = async (appDb: any): Promise<Layout[]> => {
   return response.rows.map((row: any) => row.doc)
 }
 
-export const backfill = async (appDb: any) => {
-  if (db.isDevAppID(appDb.name)) {
-    const layouts: Layout[] = await getLayouts(appDb)
+export const backfill = async (appDb: any, timestamp: string) => {
+  const layouts: Layout[] = await getLayouts(appDb)
 
-    for (const layout of layouts) {
-      await events.layout.created(layout)
-    }
+  for (const layout of layouts) {
+    await events.layout.created(layout, timestamp)
   }
 }

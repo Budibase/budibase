@@ -12,9 +12,9 @@ import {
 
 /* eslint-disable */
 
-export async function created(role: Role) {
+export async function created(role: Role, timestamp?: string) {
   const properties: RoleCreatedEvent = {}
-  await publishEvent(Event.ROLE_CREATED, properties)
+  await publishEvent(Event.ROLE_CREATED, properties, timestamp)
 }
 
 export async function updated(role: Role) {
@@ -27,9 +27,9 @@ export async function deleted(role: Role) {
   await publishEvent(Event.ROLE_DELETED, properties)
 }
 
-export async function assigned(user: User, role: string) {
+export async function assigned(user: User, role: string, timestamp?: number) {
   const properties: RoleAssignedEvent = {}
-  await publishEvent(Event.ROLE_ASSIGNED, properties)
+  await publishEvent(Event.ROLE_ASSIGNED, properties, timestamp)
 }
 
 export async function unassigned(user: User, role: string) {

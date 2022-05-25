@@ -1,4 +1,4 @@
-import { events, db } from "@budibase/backend-core"
+import { events } from "@budibase/backend-core"
 import { getQueryParams } from "../../../../db/utils"
 import { Query, Datasource } from "@budibase/types"
 
@@ -18,16 +18,14 @@ const getDatasource = async (
   return appDb.get(datasourceId)
 }
 
-export const backfill = async (appDb: any) => {
-  if (db.isDevAppID(appDb.name)) {
-    const queries: Query[] = await getQueries(appDb)
+export const backfill = async (appDb: any, timestamp: string) => {
+  const queries: Query[] = await getQueries(appDb)
 
-    for (const query of queries) {
-      const datasource: Datasource = await getDatasource(
-        appDb,
-        query.datasourceId
-      )
-      await events.query.created(datasource, query)
-    }
+  for (const query of queries) {
+    const datasource: Datasource = await getDatasource(
+      appDb,
+      query.datasourceId
+    )
+    await events.query.created(datasource, query, timestamp)
   }
 }

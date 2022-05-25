@@ -9,11 +9,11 @@ import {
 
 /* eslint-disable */
 
-export const created = async (count: number) => {
+export const created = async (count: number, timestamp?: string) => {
   const properties: RowsCreatedEvent = {
     count,
   }
-  await publishEvent(Event.ROWS_CREATED, properties)
+  await publishEvent(Event.ROWS_CREATED, properties, timestamp)
 }
 
 export const imported = async (

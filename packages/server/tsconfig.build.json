@@ -2,7 +2,8 @@
   // Used for building with tsc
   "extends": "./tsconfig.json",
   "references": [
-    { "path": "../backend-core/tsconfig.build.json" }
+    { "path": "../backend-core/tsconfig.build.json" },
+    { "path": "../types" }
   ],
   "exclude": [
     "node_modules",
