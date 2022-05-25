@@ -134,10 +134,10 @@ exports.defineFilter = includeRows => {
  * @param {object} config Config to send to export DB
  * @returns {*} either a string or a stream of the backup
  */
-const backupAppData = async (appId, config, noRows) => {
+const backupAppData = async (appId, config, includeRows) => {
   return await exports.exportDB(appId, {
     ...config,
-    filter: exports.defineFilter(noRows),
+    filter: exports.defineFilter(includeRows),
   })
 }
 
