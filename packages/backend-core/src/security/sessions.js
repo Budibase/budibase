@@ -80,6 +80,7 @@ exports.getSession = async (userId, sessionId) => {
     return client.get(makeSessionID(userId, sessionId))
   } catch (err) {
     // if can't get session don't error, just don't return anything
+    console.error(err)
     return null
   }
 }
