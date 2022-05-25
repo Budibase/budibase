@@ -3007,6 +3007,7 @@
     "illegalChildren": ["section"],
     "hasChildren": true,
     "showEmptyState": false,
+    "info": "Row selection is only compatible with internal or SQL tables", 
     "settings": [
       {
         "type": "dataProvider",
@@ -3295,6 +3296,7 @@
       {
         "section": true,
         "name": "Table",
+        "info": "Row selection is only compatible with internal or SQL tables",
         "settings": [
           {
             "type": "number",

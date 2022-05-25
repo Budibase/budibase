@@ -39,6 +39,8 @@
     dataProvider?.id,
     ActionTypes.SetDataProviderSorting
   )
+  $: table = dataProvider?.datasource?.type === "table"
+
   $: {
     rowSelectionStore.actions.updateSelection(
       $component.id,
@@ -142,7 +144,7 @@
     {quiet}
     {compact}
     {customRenderers}
-    allowSelectRows={!!allowSelectRows}
+    allowSelectRows={allowSelectRows && table}
     bind:selectedRows
     allowEditRows={false}
     allowEditColumns={false}
