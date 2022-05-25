@@ -13,7 +13,7 @@
   ],
   "scripts": {
     "build": "rimraf dist/ && tsc",
-    "build:watch": "rimraf dist/ && tsc --watch --preserveWatchOutput",
+    "build:watch": "rimraf dist/ && tsc --build --watch --preserveWatchOutput",
     "postbuild": "copyfiles -u 1 src/**/*.hbs dist/",
     "run:docker": "node dist/index.js",
     "build:docker": "docker build . -t worker-service --label version=$BUDIBASE_RELEASE_VERSION",

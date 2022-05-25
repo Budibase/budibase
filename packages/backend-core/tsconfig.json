@@ -22,6 +22,7 @@
     "resolveJsonModule": true,
     "incremental": true,
     "types": [ "node", "jest"],
+    "composite": true
   },
   "include": [
     "**/*.js",

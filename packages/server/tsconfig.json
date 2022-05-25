@@ -16,6 +16,9 @@
     "./src/**/*",
     "./src/module.d.ts"
   ],
+  "references": [
+    { "path": "../backend-core/tsconfig.build.json" }
+  ],
   "exclude": [
     "node_modules",
     "**/*.json",

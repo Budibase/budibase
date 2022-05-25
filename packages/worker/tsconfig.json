@@ -12,6 +12,9 @@
     "incremental": true,
     "types": [ "node", "jest"],
   },
+  "references": [
+    { "path": "../backend-core/tsconfig.build.json" }
+  ],
   "include": [
     "./src/**/*"
   ],
