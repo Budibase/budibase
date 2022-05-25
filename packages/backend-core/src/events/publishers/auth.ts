@@ -23,11 +23,11 @@ export async function logout() {
   await publishEvent(Event.AUTH_LOGOUT, properties)
 }
 
-export async function SSOCreated(type: SSOType) {
+export async function SSOCreated(type: SSOType, timestamp?: string | number) {
   const properties: SSOCreatedEvent = {
     type,
   }
-  await publishEvent(Event.AUTH_SSO_CREATED, properties)
+  await publishEvent(Event.AUTH_SSO_CREATED, properties, timestamp)
 }
 
 export async function SSOUpdated(type: SSOType) {
@@ -37,11 +37,11 @@ export async function SSOUpdated(type: SSOType) {
   await publishEvent(Event.AUTH_SSO_UPDATED, properties)
 }
 
-export async function SSOActivated(type: SSOType) {
+export async function SSOActivated(type: SSOType, timestamp?: string | number) {
   const properties: SSOActivatedEvent = {
     type,
   }
-  await publishEvent(Event.AUTH_SSO_ACTIVATED, properties)
+  await publishEvent(Event.AUTH_SSO_ACTIVATED, properties, timestamp)
 }
 
 export async function SSODeactivated(type: SSOType) {

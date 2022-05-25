@@ -1,6 +1,8 @@
 import { Document } from "../document"
 
 export interface User extends Document {
+  tenantId: string
+  email: string
   roles: UserRoles
   builder?: {
     global: boolean
@@ -9,10 +11,9 @@ export interface User extends Document {
     global: boolean
   }
   providerType?: string
-  tenantId: string
-  email: string
   password?: string
   status?: string
+  createdAt?: number // override the default createdAt behaviour - users sdk historically set this to Date.now()
 }
 
 export interface UserRoles {

@@ -1,12 +1,12 @@
-import { events, db } from "@budibase/backend-core"
+import { events, db as dbUtils } from "@budibase/backend-core"
 import { User } from "@budibase/types"
 
 // manually define user doc params - normally server doesn't read users from the db
 const getUserParams = (props: any) => {
-  return db.getDocParams(db.DocumentTypes.USER, null, props)
+  return dbUtils.getDocParams(dbUtils.DocumentTypes.USER, null, props)
 }
 
-const getUsers = async (globalDb: any): Promise<User[]> => {
+export const getUsers = async (globalDb: any): Promise<User[]> => {
   const response = await globalDb.allDocs(
     getUserParams({
       include_docs: true,
@@ -19,20 +19,21 @@ export const backfill = async (globalDb: any) => {
   const users = await getUsers(globalDb)
 
   for (const user of users) {
-    await events.identification.identifyUser(user)
-    await events.user.created(user)
+    const timestamp = user.createdAt as number
+    await events.identification.identifyUser(user, timestamp)
+    await events.user.created(user, timestamp)
 
     if (user.admin?.global) {
-      await events.user.permissionAdminAssigned(user)
+      await events.user.permissionAdminAssigned(user, timestamp)
     }
 
     if (user.builder?.global) {
-      await events.user.permissionBuilderAssigned(user)
+      await events.user.permissionBuilderAssigned(user, timestamp)
     }
 
     if (user.roles) {
       for (const [appId, role] of Object.entries(user.roles)) {
-        await events.role.assigned(user, role)
+        await events.role.assigned(user, role, timestamp)
       }
     }
   }

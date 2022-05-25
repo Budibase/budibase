@@ -17,9 +17,9 @@ import {
 
 /* eslint-disable */
 
-export async function created(user: User) {
+export async function created(user: User, timestamp?: number) {
   const properties: UserCreatedEvent = {}
-  await publishEvent(Event.USER_CREATED, properties)
+  await publishEvent(Event.USER_CREATED, properties, timestamp)
 }
 
 export async function updated(user: User) {
@@ -34,9 +34,13 @@ export async function deleted(user: User) {
 
 // PERMISSIONS
 
-export async function permissionAdminAssigned(user: User) {
+export async function permissionAdminAssigned(user: User, timestamp?: number) {
   const properties: UserPermissionAssignedEvent = {}
-  await publishEvent(Event.USER_PERMISSION_ADMIN_ASSIGNED, properties)
+  await publishEvent(
+    Event.USER_PERMISSION_ADMIN_ASSIGNED,
+    properties,
+    timestamp
+  )
 }
 
 export async function permissionAdminRemoved(user: User) {
@@ -44,9 +48,16 @@ export async function permissionAdminRemoved(user: User) {
   await publishEvent(Event.USER_PERMISSION_ADMIN_REMOVED, properties)
 }
 
-export async function permissionBuilderAssigned(user: User) {
+export async function permissionBuilderAssigned(
+  user: User,
+  timestamp?: number
+) {
   const properties: UserPermissionAssignedEvent = {}
-  await publishEvent(Event.USER_PERMISSION_BUILDER_ASSIGNED, properties)
+  await publishEvent(
+    Event.USER_PERMISSION_BUILDER_ASSIGNED,
+    properties,
+    timestamp
+  )
 }
 
 export async function permissionBuilderRemoved(user: User) {

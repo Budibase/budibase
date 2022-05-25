@@ -1,4 +1,4 @@
-import { events, db } from "@budibase/backend-core"
+import { events } from "@budibase/backend-core"
 import { getScreenParams } from "../../../../db/utils"
 import { Screen } from "@budibase/types"
 
@@ -11,12 +11,10 @@ const getScreens = async (appDb: any): Promise<Screen[]> => {
   return response.rows.map((row: any) => row.doc)
 }
 
-export const backfill = async (appDb: any) => {
-  if (db.isDevAppID(appDb.name)) {
-    const screens = await getScreens(appDb)
+export const backfill = async (appDb: any, timestamp: string) => {
+  const screens = await getScreens(appDb)
 
-    for (const screen of screens) {
-      await events.screen.created(screen)
-    }
+  for (const screen of screens) {
+    await events.screen.created(screen, timestamp)
   }
 }

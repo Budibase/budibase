@@ -10,6 +10,7 @@
     "resolveJsonModule": true,
     "incremental": true,
     "types": [ "node"],
+    "composite": true
   },
   "include": [
     "**/*.ts",

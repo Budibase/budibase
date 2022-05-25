@@ -6,9 +6,9 @@ import {
   LayoutDeletedEvent,
 } from "@budibase/types"
 
-export async function created(layout: Layout) {
+export async function created(layout: Layout, timestamp?: string) {
   const properties: LayoutCreatedEvent = {}
-  await publishEvent(Event.LAYOUT_CREATED, properties)
+  await publishEvent(Event.LAYOUT_CREATED, properties, timestamp)
 }
 
 export async function deleted(layout: Layout) {

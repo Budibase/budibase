@@ -17,7 +17,7 @@ export default class AnalyticsProcessor implements EventProcessor {
     event: Event,
     identity: Identity,
     properties: any,
-    timestamp?: string
+    timestamp?: string | number
   ): Promise<void> {
     if (!(await analytics.enabled())) {
       return
@@ -27,12 +27,12 @@ export default class AnalyticsProcessor implements EventProcessor {
     }
   }
 
-  async identify(identity: Identity) {
+  async identify(identity: Identity, timestamp?: string | number) {
     if (!(await analytics.enabled())) {
       return
     }
     if (this.posthog) {
-      this.posthog.identify(identity)
+      this.posthog.identify(identity, timestamp)
     }
   }
 

@@ -12,9 +12,13 @@ import {
 
 /* eslint-disable */
 
-export const created = async (datasource: Datasource, query: Query) => {
+export const created = async (
+  datasource: Datasource,
+  query: Query,
+  timestamp?: string
+) => {
   const properties: QueryCreatedEvent = {}
-  await publishEvent(Event.QUERY_CREATED, properties)
+  await publishEvent(Event.QUERY_CREATED, properties, timestamp)
 }
 
 export const updated = async (datasource: Datasource, query: Query) => {
