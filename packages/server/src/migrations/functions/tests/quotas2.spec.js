@@ -4,7 +4,7 @@ const syncApps = jest.fn()
 const syncRows = jest.fn()
 
 jest.mock("../usageQuotas/syncApps", () => ({ run: syncApps }) )
-jest.mock("../usageQuotas/syncRows", () => ({ run: syncRows }) )
+jest.mock("../usageQuotas/syncAppRows", () => ({ run: syncRows }) )
 
 const migration = require("../quotas2")
 
