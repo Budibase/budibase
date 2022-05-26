@@ -341,7 +341,6 @@ export const update = async (ctx: any) => {
   const data = await updateAppPackage(ctx.request.body, ctx.params.appId)
   ctx.status = 200
   ctx.body = data
-  console.log(JSON.stringify(data))
 }
 
 export const updateClient = async (ctx: any) => {
