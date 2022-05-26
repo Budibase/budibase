@@ -5,7 +5,7 @@ const {
 
 // migration functions
 import * as userEmailViewCasing from "./functions/userEmailViewCasing"
-import * as quota1 from "./functions/quotas1"
+import * as quota2 from "./functions/quotas2"
 import * as appUrls from "./functions/appUrls"
 import * as developerQuota from "./functions/developerQuota"
 import * as publishedAppsQuota from "./functions/publishedAppsQuota"
@@ -41,8 +41,8 @@ export const MIGRATIONS: Migration[] = [
   },
   {
     type: MIGRATION_TYPES.GLOBAL,
-    name: "quotas_1",
-    fn: quota1.run,
+    name: "quotas_2",
+    fn: quota2.run,
   },
   {
     type: MIGRATION_TYPES.APP,

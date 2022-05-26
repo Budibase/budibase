@@ -1,6 +1,6 @@
 import { runQuotaMigration } from "./usageQuotas"
 import * as syncApps from "./usageQuotas/syncApps"
-import * as syncRows from "./usageQuotas/syncRows"
+import * as syncAppRows from "./usageQuotas/syncAppRows"
 
 /**
  * Date:
@@ -15,6 +15,6 @@ import * as syncRows from "./usageQuotas/syncRows"
 export const run = async () => {
   await runQuotaMigration(async () => {
     await syncApps.run()
-    await syncRows.run()
+    await syncAppRows.run()
   })
 }
