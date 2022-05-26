@@ -298,9 +298,6 @@ function getContextDB(key, opts) {
       break
   }
 
-  //If the appId is specified, override context
-  toUseAppId = opts?.appId ? opts?.appId : toUseAppId
-
   db = dangerousGetDB(toUseAppId, opts)
   try {
     cls.setOnContext(key, db)
