@@ -23,24 +23,30 @@ exports.isDevApp = app => {
 }
 
 /**
- * Convert a development app ID to a deployed app ID.
+ * Generates a development app ID from a real app ID.
+ * @returns {string} the dev app ID which can be used for dev database.
  */
-exports.getProdAppID = appId => {
-  // if dev, convert it
-  if (appId.startsWith(APP_DEV_PREFIX)) {
-    const id = appId.split(APP_DEV_PREFIX)[1]
-    return `${APP_PREFIX}${id}`
+exports.getDevelopmentAppID = appId => {
+  if (!appId || appId.startsWith(APP_DEV_PREFIX)) {
+    return appId
   }
-  return appId
+  // split to take off the app_ element, then join it together incase any other app_ exist
+  const split = appId.split(APP_PREFIX)
+  split.shift()
+  const rest = split.join(APP_PREFIX)
+  return `${APP_DEV_PREFIX}${rest}`
 }
 
 /**
- * Convert a deployed app ID to a development app ID.
+ * Convert a development app ID to a deployed app ID.
  */
-exports.getDevelopmentAppID = appId => {
-  if (!appId.startsWith(APP_DEV_PREFIX)) {
-    const id = appId.split(APP_PREFIX)[1]
-    return `${APP_DEV_PREFIX}${id}`
+exports.getProdAppID = appId => {
+  if (!appId || !appId.startsWith(APP_DEV_PREFIX)) {
+    return appId
   }
-  return appId
+  // split to take off the app_dev element, then join it together incase any other app_ exist
+  const split = appId.split(APP_DEV_PREFIX)
+  split.shift()
+  const rest = split.join(APP_DEV_PREFIX)
+  return `${APP_PREFIX}${rest}`
 }

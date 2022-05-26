@@ -10,7 +10,15 @@ function isDev() {
   return process.env.NODE_ENV !== "production"
 }
 
+let LOADED = false
+if (!LOADED && isDev() && !isTest()) {
+  require("dotenv").config()
+  LOADED = true
+}
+
 module.exports = {
+  isTest,
+  isDev,
   JWT_SECRET: process.env.JWT_SECRET,
   COUCH_DB_URL: process.env.COUCH_DB_URL || "http://localhost:4005",
   COUCH_DB_USERNAME: process.env.COUCH_DB_USER,
@@ -34,9 +42,15 @@ module.exports = {
   COOKIE_DOMAIN: process.env.COOKIE_DOMAIN,
   PLATFORM_URL: process.env.PLATFORM_URL,
   TENANT_FEATURE_FLAGS: process.env.TENANT_FEATURE_FLAGS,
+  BACKUPS_BUCKET_NAME: process.env.BACKUPS_BUCKET_NAME || "backups",
+  APPS_BUCKET_NAME: process.env.APPS_BUCKET_NAME || "prod-budi-app-assets",
+  TEMPLATES_BUCKET_NAME: process.env.TEMPLATES_BUCKET_NAME || "templates",
+  GLOBAL_BUCKET_NAME: process.env.GLOBAL_BUCKET_NAME || "global",
+  GLOBAL_CLOUD_BUCKET_NAME:
+    process.env.GLOBAL_CLOUD_BUCKET_NAME || "prod-budi-tenant-uploads",
   USE_COUCH: process.env.USE_COUCH || true,
-  isTest,
-  isDev,
+  DISABLE_DEVELOPER_LICENSE: process.env.DISABLE_DEVELOPER_LICENSE,
+  DEFAULT_LICENSE: process.env.DEFAULT_LICENSE,
   _set(key, value) {
     process.env[key] = value
     module.exports[key] = value

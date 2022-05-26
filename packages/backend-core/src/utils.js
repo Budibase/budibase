@@ -197,11 +197,16 @@ exports.getBuildersCount = async () => {
   return builders.length
 }
 
-exports.saveUser = async (
+const DEFAULT_SAVE_USER = {
+  hashPassword: true,
+  requirePassword: true,
+  bulkCreate: false,
+}
+
+exports.internalSaveUser = async (
   user,
   tenantId,
-  hashPassword = true,
-  requirePassword = true
+  { hashPassword, requirePassword, bulkCreate } = DEFAULT_SAVE_USER
 ) => {
   if (!tenantId) {
     throw "No tenancy specified."
@@ -213,7 +218,10 @@ exports.saveUser = async (
     let { email, password, _id } = user
     // make sure another user isn't using the same email
     let dbUser
-    if (email) {
+    // user can't exist in bulk creation
+    if (bulkCreate) {
+      dbUser = null
+    } else if (email) {
       // check budibase users inside the tenant
       dbUser = await exports.getGlobalUserByEmail(email)
       if (dbUser != null && (dbUser._id !== _id || Array.isArray(dbUser))) {
@@ -267,11 +275,17 @@ exports.saveUser = async (
       user.status = UserStatus.ACTIVE
     }
     try {
-      const response = await db.put({
+      const putOpts = {
         password: hashedPassword,
         ...user,
-      })
-      await tryAddTenant(tenantId, _id, email)
+      }
+      if (bulkCreate) {
+        return putOpts
+      }
+      const response = await db.put(putOpts)
+      if (env.MULTI_TENANCY) {
+        await tryAddTenant(tenantId, _id, email)
+      }
       await userCache.invalidateUser(response.id)
       return {
         _id: response.id,
@@ -285,6 +299,19 @@ exports.saveUser = async (
         throw err
       }
     }
+  })
+}
+
+// maintained for api compat, don't want to change function signature
+exports.saveUser = async (
+  user,
+  tenantId,
+  hashPassword = true,
+  requirePassword = true
+) => {
+  return exports.internalSaveUser(user, tenantId, {
+    hashPassword,
+    requirePassword,
   })
 }
 

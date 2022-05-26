@@ -9,7 +9,7 @@ const {
   APP_PREFIX,
   APP_DEV,
 } = require("./constants")
-const { getTenantId, getGlobalDBName } = require("../tenancy")
+const { getTenantId, getGlobalDBName, getGlobalDB } = require("../tenancy")
 const fetch = require("node-fetch")
 const { doWithDB, allDbs } = require("./index")
 const { getCouchInfo } = require("./pouch")
@@ -42,6 +42,18 @@ exports.isProdAppID = isProdAppID
 exports.isDevAppID = isDevAppID
 exports.getDevelopmentAppID = getDevelopmentAppID
 exports.getProdAppID = getProdAppID
+
+/**
+ * Generates a new app ID.
+ * @returns {string} The new app ID which the app doc can be stored under.
+ */
+exports.generateAppID = (tenantId = null) => {
+  let id = APP_PREFIX
+  if (tenantId) {
+    id += `${tenantId}${SEPARATOR}`
+  }
+  return `${id}${newid()}`
+}
 
 /**
  * If creating DB allDocs/query params with only a single top level ID this can be used, this
@@ -380,9 +392,7 @@ const getScopedFullConfig = async function (db, { type, user, workspace }) {
   // always provide the platform URL
   if (type === Configs.SETTINGS) {
     if (scopedConfig && scopedConfig.doc) {
-      scopedConfig.doc.config.platformUrl = await getPlatformUrl(
-        scopedConfig.doc.config
-      )
+      scopedConfig.doc.config.platformUrl = await getPlatformUrl()
     } else {
       scopedConfig = {
         doc: {
@@ -397,19 +407,30 @@ const getScopedFullConfig = async function (db, { type, user, workspace }) {
   return scopedConfig && scopedConfig.doc
 }
 
-const getPlatformUrl = async settings => {
+const getPlatformUrl = async (opts = { tenantAware: true }) => {
   let platformUrl = env.PLATFORM_URL || "http://localhost:10000"
 
-  if (!env.SELF_HOSTED && env.MULTI_TENANCY) {
+  if (!env.SELF_HOSTED && env.MULTI_TENANCY && opts.tenantAware) {
     // cloud and multi tenant - add the tenant to the default platform url
     const tenantId = getTenantId()
     if (!platformUrl.includes("localhost:")) {
       platformUrl = platformUrl.replace("://", `://${tenantId}.`)
     }
-  } else {
+  } else if (env.SELF_HOSTED) {
+    const db = getGlobalDB()
+    // get the doc directly instead of with getScopedConfig to prevent loop
+    let settings
+    try {
+      settings = await db.get(generateConfigID({ type: Configs.SETTINGS }))
+    } catch (e) {
+      if (e.status !== 404) {
+        throw e
+      }
+    }
+
     // self hosted - check for platform url override
-    if (settings && settings.platformUrl) {
-      platformUrl = settings.platformUrl
+    if (settings && settings.config && settings.config.platformUrl) {
+      platformUrl = settings.config.platformUrl
     }
   }
 
