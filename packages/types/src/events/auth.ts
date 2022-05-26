@@ -2,15 +2,26 @@ export type LoginSource = "local" | "google" | "oidc"
 export type SSOType = "oidc" | "google"
 
 export interface LoginEvent {
+  userId: string
   source: LoginSource
 }
 
-export interface LogoutEvent {}
+export interface LogoutEvent {
+  userId: string
+}
 
-export interface SSOCreatedEvent {}
+export interface SSOCreatedEvent {
+  type: SSOType
+}
 
-export interface SSOUpdatedEvent {}
+export interface SSOUpdatedEvent {
+  type: SSOType
+}
 
-export interface SSOActivatedEvent {}
+export interface SSOActivatedEvent {
+  type: SSOType
+}
 
-export interface SSODeactivatedEvent {}
+export interface SSODeactivatedEvent {
+  type: SSOType
+}

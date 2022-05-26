@@ -3,7 +3,6 @@ import {
   Automation,
   Event,
   AutomationStep,
-  AutomationTrigger,
   AutomationCreatedEvent,
   AutomationDeletedEvent,
   AutomationTestedEvent,
@@ -13,17 +12,42 @@ import {
 } from "@budibase/types"
 
 export async function created(automation: Automation, timestamp?: string) {
-  const properties: AutomationCreatedEvent = {}
+  const properties: AutomationCreatedEvent = {
+    appId: automation.appId,
+    automationId: automation._id as string,
+    triggerId: automation.definition?.trigger?.id,
+    triggerType: automation.definition?.trigger?.stepId,
+  }
   await publishEvent(Event.AUTOMATION_CREATED, properties, timestamp)
 }
 
+export async function triggerUpdated(automation: Automation) {
+  const properties: AutomationTriggerUpdatedEvent = {
+    appId: automation.appId,
+    automationId: automation._id as string,
+    triggerId: automation.definition?.trigger?.id,
+    triggerType: automation.definition?.trigger?.stepId,
+  }
+  await publishEvent(Event.AUTOMATION_TRIGGER_UPDATED, properties)
+}
+
 export async function deleted(automation: Automation) {
-  const properties: AutomationDeletedEvent = {}
+  const properties: AutomationDeletedEvent = {
+    appId: automation.appId,
+    automationId: automation._id as string,
+    triggerId: automation.definition?.trigger?.id,
+    triggerType: automation.definition?.trigger?.stepId,
+  }
   await publishEvent(Event.AUTOMATION_DELETED, properties)
 }
 
 export async function tested(automation: Automation) {
-  const properties: AutomationTestedEvent = {}
+  const properties: AutomationTestedEvent = {
+    appId: automation.appId,
+    automationId: automation._id as string,
+    triggerId: automation.definition?.trigger?.id,
+    triggerType: automation.definition?.trigger?.stepId,
+  }
   await publishEvent(Event.AUTOMATION_TESTED, properties)
 }
 
@@ -32,7 +56,14 @@ export async function stepCreated(
   step: AutomationStep,
   timestamp?: string
 ) {
-  const properties: AutomationStepCreatedEvent = {}
+  const properties: AutomationStepCreatedEvent = {
+    appId: automation.appId,
+    automationId: automation._id as string,
+    triggerId: automation.definition?.trigger?.id,
+    triggerType: automation.definition?.trigger?.stepId,
+    stepId: step.id,
+    stepType: step.stepId,
+  }
   await publishEvent(Event.AUTOMATION_STEP_CREATED, properties, timestamp)
 }
 
@@ -40,14 +71,13 @@ export async function stepDeleted(
   automation: Automation,
   step: AutomationStep
 ) {
-  const properties: AutomationStepDeletedEvent = {}
+  const properties: AutomationStepDeletedEvent = {
+    appId: automation.appId,
+    automationId: automation._id as string,
+    triggerId: automation.definition?.trigger?.id,
+    triggerType: automation.definition?.trigger?.stepId,
+    stepId: step.id,
+    stepType: step.stepId,
+  }
   await publishEvent(Event.AUTOMATION_STEP_DELETED, properties)
-}
-
-export async function triggerUpdated(
-  automation: Automation,
-  trigger: AutomationTrigger
-) {
-  const properties: AutomationTriggerUpdatedEvent = {}
-  await publishEvent(Event.AUTOMATION_TRIGGER_UPDATED, properties)
 }

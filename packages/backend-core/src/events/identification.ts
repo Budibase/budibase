@@ -14,15 +14,21 @@ import {
   SettingsConfig,
   CloudAccount,
   UserIdentity,
+  InstallationIdentity,
+  Installation,
+  isInstallation,
 } from "@budibase/types"
-import { analyticsProcessor } from "./processors"
+import { processors } from "./processors"
 import * as dbUtils from "../db/utils"
 import { Configs } from "../constants"
 import * as hashing from "../hashing"
 
+const pkg = require("../../package.json")
+
 export const getCurrentIdentity = async (): Promise<Identity> => {
   const user: SessionUser | undefined = context.getUser()
-  let tenantId = context.getTenantId()
+
+  const tenantId = await getGlobalTenantId(context.getTenantId())
   let id: string
   let type: IdentityType
 
@@ -30,10 +36,12 @@ export const getCurrentIdentity = async (): Promise<Identity> => {
     id = user._id
     type = IdentityType.USER
   } else {
-    const global = await getGlobalIdentifiers(tenantId)
-    id = global.id
-    tenantId = global.tenantId
+    id = tenantId
     type = IdentityType.TENANT
+  }
+
+  if (user && isInstallation(user)) {
+    type = IdentityType.INSTALLATION
   }
 
   return {
@@ -43,36 +51,29 @@ export const getCurrentIdentity = async (): Promise<Identity> => {
   }
 }
 
-const getGlobalId = async (): Promise<string> => {
+const getGlobalId = async (tenantId: string): Promise<string> => {
   const db = context.getGlobalDB()
   const config: SettingsConfig = await dbUtils.getScopedFullConfig(db, {
     type: Configs.SETTINGS,
   })
+
+  let globalId: string
   if (config.config.globalId) {
     return config.config.globalId
   } else {
-    const globalId = `global_${hashing.newid()}`
+    globalId = `${hashing.newid()}_${tenantId}`
     config.config.globalId = globalId
     await db.put(config)
     return globalId
   }
 }
 
-const getGlobalIdentifiers = async (
-  tenantId: string
-): Promise<{ id: string; tenantId: string }> => {
+const getGlobalTenantId = async (tenantId: string): Promise<string> => {
   if (env.SELF_HOSTED) {
-    const globalId = await getGlobalId()
-    return {
-      id: globalId,
-      tenantId: `${globalId}-${tenantId}`,
-    }
+    return getGlobalId(tenantId)
   } else {
     // tenant id's in the cloud are already unique
-    return {
-      id: tenantId,
-      tenantId: tenantId,
-    }
+    return tenantId
   }
 }
 
@@ -80,13 +81,34 @@ const getHostingFromEnv = () => {
   return env.SELF_HOSTED ? Hosting.SELF : Hosting.CLOUD
 }
 
+export const identifyInstallation = async (
+  install: Installation,
+  timestamp: string | number
+) => {
+  const id = install.installId
+  // the default tenant id, so we can match installations to other events
+  const tenantId = await getGlobalTenantId(context.getTenantId())
+  const version: string = pkg.version as string
+  const type = IdentityType.INSTALLATION
+  const hosting = getHostingFromEnv()
+
+  const identity: InstallationIdentity = {
+    id,
+    tenantId,
+    type,
+    version,
+    hosting,
+  }
+  await identify(identity, timestamp)
+}
+
 export const identifyTenant = async (
   tenantId: string,
   account: CloudAccount | undefined,
   timestamp?: string | number
 ) => {
-  const global = await getGlobalIdentifiers(tenantId)
-  const id = global.id
+  const globalTenantId = await getGlobalTenantId(tenantId)
+  const id = globalTenantId
   const hosting = getHostingFromEnv()
   const type = IdentityType.TENANT
   const profession = account?.profession
@@ -94,7 +116,7 @@ export const identifyTenant = async (
 
   const identity: TenantIdentity = {
     id,
-    tenantId: global.tenantId,
+    tenantId: globalTenantId,
     hosting,
     type,
     profession,
@@ -116,7 +138,8 @@ export const identifyUser = async (
   let admin = user.admin?.global
   let providerType = user.providerType
   const accountHolder = account?.budibaseUserId === user._id
-  const verified = account ? account.verified : false
+  const verified =
+    account && account?.budibaseUserId === user._id ? account.verified : false
   const profession = account?.profession
   const companySize = account?.size
 
@@ -170,6 +193,9 @@ export const identifyAccount = async (account: Account) => {
   await identify(identity)
 }
 
-const identify = async (identity: Identity, timestamp?: string | number) => {
-  await analyticsProcessor.identify(identity, timestamp)
+export const identify = async (
+  identity: Identity,
+  timestamp?: string | number
+) => {
+  await processors.identify(identity, timestamp)
 }

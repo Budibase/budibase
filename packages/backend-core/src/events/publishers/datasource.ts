@@ -8,16 +8,25 @@ import {
 } from "@budibase/types"
 
 export async function created(datasource: Datasource, timestamp?: string) {
-  const properties: DatasourceCreatedEvent = {}
+  const properties: DatasourceCreatedEvent = {
+    datasourceId: datasource._id as string,
+    source: datasource.source,
+  }
   await publishEvent(Event.DATASOURCE_CREATED, properties, timestamp)
 }
 
 export async function updated(datasource: Datasource) {
-  const properties: DatasourceUpdatedEvent = {}
+  const properties: DatasourceUpdatedEvent = {
+    datasourceId: datasource._id as string,
+    source: datasource.source,
+  }
   await publishEvent(Event.DATASOURCE_UPDATED, properties)
 }
 
 export async function deleted(datasource: Datasource) {
-  const properties: DatasourceDeletedEvent = {}
+  const properties: DatasourceDeletedEvent = {
+    datasourceId: datasource._id as string,
+    source: datasource.source,
+  }
   await publishEvent(Event.DATASOURCE_DELETED, properties)
 }

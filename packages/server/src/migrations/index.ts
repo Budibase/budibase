@@ -73,6 +73,12 @@ export const MIGRATIONS: Migration[] = [
     fn: backfill.global.run,
     silent: !!env.SELF_HOSTED, // reduce noisy logging
   },
+  {
+    type: migrations.MIGRATION_TYPES.INSTALLATION,
+    name: "event_installation_backfill",
+    fn: backfill.installation.run,
+    silent: !!env.SELF_HOSTED, // reduce noisy logging
+  },
 ]
 
 export const migrate = async (options?: MigrationOptions) => {

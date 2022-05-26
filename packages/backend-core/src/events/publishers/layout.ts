@@ -7,11 +7,15 @@ import {
 } from "@budibase/types"
 
 export async function created(layout: Layout, timestamp?: string) {
-  const properties: LayoutCreatedEvent = {}
+  const properties: LayoutCreatedEvent = {
+    layoutId: layout._id as string,
+  }
   await publishEvent(Event.LAYOUT_CREATED, properties, timestamp)
 }
 
 export async function deleted(layout: Layout) {
-  const properties: LayoutDeletedEvent = {}
+  const properties: LayoutDeletedEvent = {
+    layoutId: layout._id as string,
+  }
   await publishEvent(Event.LAYOUT_DELETED, properties)
 }

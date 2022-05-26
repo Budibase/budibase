@@ -1,6 +1,6 @@
 const { DEFAULT_TENANT_ID } = require("../constants")
 const { doWithDB } = require("../db")
-const { DocumentTypes } = require("../db/constants")
+const { DocumentTypes, StaticDatabases } = require("../db/constants")
 const { getAllApps } = require("../db/utils")
 const environment = require("../environment")
 const {
@@ -11,8 +11,9 @@ const {
 } = require("../tenancy")
 
 exports.MIGRATION_TYPES = {
-  GLOBAL: "global", // run once, recorded in global db, global db is provided as an argument
+  GLOBAL: "global", // run once per tenant, recorded in global db, global db is provided as an argument
   APP: "app", // run per app, recorded in each app db, app db is provided as an argument
+  INSTALLATION: "installation", // run once, recorded in global info db, global info db is provided as an argument
 }
 
 exports.getMigrationsDoc = async db => {
@@ -22,14 +23,19 @@ exports.getMigrationsDoc = async db => {
   } catch (err) {
     if (err.status && err.status === 404) {
       return { _id: DocumentTypes.MIGRATIONS }
+    } else {
+      console.error(err)
+      throw err
     }
-    console.error(err)
   }
 }
 
 exports.runMigration = async (migration, options = {}) => {
-  const tenantId = getTenantId()
   const migrationType = migration.type
+  let tenantId
+  if (migrationType !== exports.MIGRATION_TYPES.INSTALLATION) {
+    tenantId = getTenantId()
+  }
   const migrationName = migration.name
   const silent = migration.silent
 
@@ -46,10 +52,10 @@ exports.runMigration = async (migration, options = {}) => {
   } else if (migrationType === exports.MIGRATION_TYPES.APP) {
     const apps = await getAllApps(migration.opts)
     dbNames = apps.map(app => app.appId)
+  } else if (migrationType === exports.MIGRATION_TYPES.INSTALLATION) {
+    dbNames = [StaticDatabases.PLATFORM_INFO.name]
   } else {
-    throw new Error(
-      `[Tenant: ${tenantId}] Unrecognised migration type [${migrationType}]`
-    )
+    throw new Error(`Unrecognised migration type [${migrationType}]`)
   }
 
   const length = dbNames.length

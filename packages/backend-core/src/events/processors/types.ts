@@ -12,5 +12,6 @@ export interface EventProcessor {
     properties: any,
     timestamp?: string | number
   ): Promise<void>
+  identify(identity: Identity, timestamp?: string | number): Promise<void>
   shutdown(): void
 }
