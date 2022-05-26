@@ -35,7 +35,8 @@ describe("/rows", () => {
   }
 
   const getQueryUsage = async () => {
-    return config.doInContext(null, () => quotas.getAllCurrentUsageValue(QuotaUsageType.MONTHLY, MonthlyQuotaName.QUERIES))
+    const { total } = await config.doInContext(null, () => quotas.getAllCurrentUsageValue(QuotaUsageType.MONTHLY, MonthlyQuotaName.QUERIES))
+    return total
   }
 
   const assertRowUsage = async (expected) => {
