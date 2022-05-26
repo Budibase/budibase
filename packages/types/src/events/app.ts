@@ -1,21 +1,50 @@
-export interface AppCreatedEvent {}
+export interface AppCreatedEvent {
+  appId: string
+  version: string
+}
 
-export interface AppUpdatedEvent {}
+export interface AppUpdatedEvent {
+  appId: string
+  version: string
+}
 
-export interface AppDeletedEvent {}
+export interface AppDeletedEvent {
+  appId: string
+}
 
-export interface AppPublishedEvent {}
+export interface AppPublishedEvent {
+  appId: string
+}
 
-export interface AppUnpublishedEvent {}
+export interface AppUnpublishedEvent {
+  appId: string
+}
 
-export interface AppFileImportedEvent {}
+export interface AppFileImportedEvent {
+  appId: string
+}
 
-export interface AppTemplateImportedEvent {}
+export interface AppTemplateImportedEvent {
+  appId: string
+  templateKey: string
+}
 
-export interface AppVersionUpdatedEvent {}
+export interface AppVersionUpdatedEvent {
+  appId: string
+  currentVersion: string
+  updatedToVersion: string
+}
 
-export interface AppVersionRevertedEvent {}
+export interface AppVersionRevertedEvent {
+  appId: string
+  currentVersion: string
+  revertedToVersion: string
+}
 
-export interface AppRevertedEvent {}
+export interface AppRevertedEvent {
+  appId: string
+}
 
-export interface AppExportedEvent {}
+export interface AppExportedEvent {
+  appId: string
+}

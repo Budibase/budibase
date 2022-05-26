@@ -2,14 +2,13 @@ import { EmailTemplatePurpose } from "../../../constants"
 import { checkInviteCode } from "../../../utilities/redis"
 import { sendEmail } from "../../../utilities/email"
 import { users } from "../../../sdk"
-import { User } from "@budibase/types"
-import { events } from "@budibase/backend-core"
-import { getGlobalDB } from "@budibase/backend-core/dist/src/context"
+import env from "../../../environment"
+import { User, CloudAccount } from "@budibase/types"
+import { events, accounts, tenancy } from "@budibase/backend-core"
 
 const {
   errors,
   users: usersCore,
-  tenancy,
   db: dbUtils,
 } = require("@budibase/backend-core")
 
@@ -66,7 +65,11 @@ export const adminUser = async (ctx: any) => {
     ctx.body = await tenancy.doInTenant(tenantId, async () => {
       return users.save(user, hashPassword, requirePassword)
     })
-    await events.identification.identifyTenant(tenantId)
+    let account: CloudAccount | undefined
+    if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
+      account = await accounts.getAccountByTenantId(tenantId)
+    }
+    await events.identification.identifyTenant(tenantId, account)
   } catch (err: any) {
     ctx.throw(err.status || 400, err)
   }
@@ -141,7 +144,7 @@ export const inviteAccept = async (ctx: any) => {
         email,
         ...info,
       })
-      const db = getGlobalDB()
+      const db = tenancy.getGlobalDB()
       const user = await db.get(saved._id)
       await events.user.inviteAccepted(user)
       return saved

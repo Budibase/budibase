@@ -11,6 +11,7 @@ export interface App extends Document {
   instance: AppInstance
   tenantId: string
   status: string
+  revertableVersion?: string
 }
 
 export interface AppInstance {

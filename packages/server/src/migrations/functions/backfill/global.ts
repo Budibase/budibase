@@ -1,7 +1,9 @@
 import * as users from "./global/users"
 import * as rows from "./global/rows"
 import * as configs from "./global/configs"
-import { tenancy, events, migrations } from "@budibase/backend-core"
+import { tenancy, events, migrations, accounts } from "@budibase/backend-core"
+import { CloudAccount } from "@budibase/types"
+import env from "../../../environment"
 
 /**
  * Date:
@@ -14,12 +16,20 @@ import { tenancy, events, migrations } from "@budibase/backend-core"
 export const run = async (db: any) => {
   const tenantId = tenancy.getTenantId()
   const installTimestamp = (await getInstallTimestamp(db)) as number
+  let account: CloudAccount | undefined
+  if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
+    account = await accounts.getAccountByTenantId(tenantId)
+  }
 
-  await events.identification.identifyTenant(tenantId, installTimestamp)
+  await events.identification.identifyTenant(
+    tenantId,
+    account,
+    installTimestamp
+  )
   await configs.backfill(db, installTimestamp)
 
   // users and rows provide their own timestamp
-  await users.backfill(db)
+  await users.backfill(db, account)
   await rows.backfill()
 }
 
