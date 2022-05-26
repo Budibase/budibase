@@ -13,21 +13,19 @@ export interface Identity {
 
 export interface TenantIdentity extends Identity {
   hosting: Hosting
+  profession?: string
+  companySize?: string
 }
 
 export interface UserIdentity extends TenantIdentity {
   hosting: Hosting
   type: IdentityType
+  verified: boolean
+  accountHolder: boolean
   providerType?: string
 }
 
 export interface BudibaseIdentity extends UserIdentity {
   builder?: boolean
   admin?: boolean
-}
-
-export interface AccountIdentity extends UserIdentity {
-  verified: boolean
-  profession: string | undefined
-  companySize: string | undefined
 }

@@ -2,11 +2,10 @@ import env from "../../environment"
 import { quotas } from "@budibase/pro"
 import * as apps from "../../utilities/appService"
 import * as eventHelpers from "./events"
-import { User } from "@budibase/types"
+import { User, CloudAccount } from "@budibase/types"
 
 const {
   tenancy,
-  accounts,
   utils,
   db: dbUtils,
   constants,
@@ -17,7 +16,7 @@ const {
   HTTPError,
 } = require("@budibase/backend-core")
 
-import { events } from "@budibase/backend-core"
+import { events, accounts } from "@budibase/backend-core"
 
 /**
  * Retrieves all users from the current tenancy.
@@ -133,7 +132,14 @@ export const save = async (
     user._rev = response.rev
 
     await eventHelpers.handleSaveEvents(user, dbUser)
-    await events.identification.identifyUser(user)
+
+    // identify
+    let tenantAccount: CloudAccount | undefined
+    if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
+      tenantAccount = await accounts.getAccountByTenantId(tenantId)
+    }
+    await events.identification.identifyUser(user, tenantAccount)
+
     await tenancy.tryAddTenant(tenantId, _id, email)
     await cache.user.invalidateUser(response.id)
     // let server know to sync user

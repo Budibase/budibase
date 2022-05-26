@@ -7,12 +7,13 @@ import {
   Identity,
   IdentityType,
   Account,
-  AccountIdentity,
   BudibaseIdentity,
   isCloudAccount,
   isSSOAccount,
   TenantIdentity,
   SettingsConfig,
+  CloudAccount,
+  UserIdentity,
 } from "@budibase/types"
 import { analyticsProcessor } from "./processors"
 import * as dbUtils from "../db/utils"
@@ -81,20 +82,32 @@ const getHostingFromEnv = () => {
 
 export const identifyTenant = async (
   tenantId: string,
+  account: CloudAccount | undefined,
   timestamp?: string | number
 ) => {
   const global = await getGlobalIdentifiers(tenantId)
+  const id = global.id
+  const hosting = getHostingFromEnv()
+  const type = IdentityType.TENANT
+  const profession = account?.profession
+  const companySize = account?.size
 
   const identity: TenantIdentity = {
-    id: global.id,
+    id,
     tenantId: global.tenantId,
-    hosting: getHostingFromEnv(),
-    type: IdentityType.TENANT,
+    hosting,
+    type,
+    profession,
+    companySize,
   }
   await identify(identity, timestamp)
 }
 
-export const identifyUser = async (user: User, timestamp?: string | number) => {
+export const identifyUser = async (
+  user: User,
+  account: CloudAccount | undefined,
+  timestamp?: string | number
+) => {
   const id = user._id as string
   const tenantId = user.tenantId
   const hosting = env.SELF_HOSTED ? Hosting.SELF : Hosting.CLOUD
@@ -102,6 +115,10 @@ export const identifyUser = async (user: User, timestamp?: string | number) => {
   let builder = user.builder?.global
   let admin = user.admin?.global
   let providerType = user.providerType
+  const accountHolder = account?.budibaseUserId === user._id
+  const verified = account ? account.verified : false
+  const profession = account?.profession
+  const companySize = account?.size
 
   const identity: BudibaseIdentity = {
     id,
@@ -111,6 +128,10 @@ export const identifyUser = async (user: User, timestamp?: string | number) => {
     builder,
     admin,
     providerType,
+    accountHolder,
+    verified,
+    profession,
+    companySize,
   }
 
   await identify(identity, timestamp)
@@ -122,6 +143,10 @@ export const identifyAccount = async (account: Account) => {
   const hosting = account.hosting
   let type = IdentityType.USER
   let providerType = isSSOAccount(account) ? account.providerType : undefined
+  const verified = account.verified
+  const profession = account.profession
+  const companySize = account.size
+  const accountHolder = true
 
   if (isCloudAccount(account)) {
     if (account.budibaseUserId) {
@@ -130,15 +155,16 @@ export const identifyAccount = async (account: Account) => {
     }
   }
 
-  const identity: AccountIdentity = {
+  const identity: UserIdentity = {
     id,
     tenantId,
     hosting,
     type,
     providerType,
-    verified: account.verified,
-    profession: account.profession,
-    companySize: account.size,
+    verified,
+    profession,
+    companySize,
+    accountHolder,
   }
 
   await identify(identity)

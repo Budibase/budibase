@@ -298,19 +298,19 @@ const creationEvents = async (request: any, app: App) => {
   const body = request.body
   if (body.useTemplate === "true") {
     // from template
-    if (body.templateKey) {
-      creationFns.push(app => events.app.templateImported(body.templateKey))
+    if (body.templateKey && body.templateKey !== "undefined") {
+      creationFns.push(a => events.app.templateImported(a, body.templateKey))
     }
     // from file
     else if (request.files?.templateFile) {
-      creationFns.push(events.app.fileImported)
+      creationFns.push(a => events.app.fileImported(a))
     }
     // unknown
     else {
       console.error("Could not determine template creation event")
     }
   }
-  creationFns.push(events.app.created)
+  creationFns.push(a => events.app.created(a))
 
   for (let fn of creationFns) {
     await fn(app)
@@ -381,12 +381,13 @@ export const updateClient = async (ctx: any) => {
   }
 
   // Update versions in app package
+  const updatedToVersion = packageJson.version
   const appPackageUpdates = {
-    version: packageJson.version,
+    version: updatedToVersion,
     revertableVersion: currentVersion,
   }
   const app = await updateAppPackage(appPackageUpdates, ctx.params.appId)
-  await events.app.versionUpdated(app)
+  await events.app.versionUpdated(app, currentVersion, updatedToVersion)
   ctx.status = 200
   ctx.body = app
 }
@@ -405,12 +406,14 @@ export const revertClient = async (ctx: any) => {
   }
 
   // Update versions in app package
+  const currentVersion = application.version
+  const revertedToVersion = application.revertableVersion
   const appPackageUpdates = {
-    version: application.revertableVersion,
+    version: revertedToVersion,
     revertableVersion: null,
   }
   const app = await updateAppPackage(appPackageUpdates, ctx.params.appId)
-  await events.app.versionReverted(app)
+  await events.app.versionReverted(app, currentVersion, revertedToVersion)
   ctx.status = 200
   ctx.body = app
 }

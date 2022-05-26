@@ -1,5 +1,5 @@
 import { events, db as dbUtils } from "@budibase/backend-core"
-import { User } from "@budibase/types"
+import { User, CloudAccount } from "@budibase/types"
 
 // manually define user doc params - normally server doesn't read users from the db
 const getUserParams = (props: any) => {
@@ -15,12 +15,15 @@ export const getUsers = async (globalDb: any): Promise<User[]> => {
   return response.rows.map((row: any) => row.doc)
 }
 
-export const backfill = async (globalDb: any) => {
+export const backfill = async (
+  globalDb: any,
+  account: CloudAccount | undefined
+) => {
   const users = await getUsers(globalDb)
 
   for (const user of users) {
     const timestamp = user.createdAt as number
-    await events.identification.identifyUser(user, timestamp)
+    await events.identification.identifyUser(user, account, timestamp)
     await events.user.created(user, timestamp)
 
     if (user.admin?.global) {
