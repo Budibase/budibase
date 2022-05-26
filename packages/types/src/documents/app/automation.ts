@@ -5,8 +5,15 @@ export interface Automation extends Document {
     steps: AutomationStep[]
     trigger: AutomationTrigger
   }
+  appId: string
 }
 
-export interface AutomationStep {}
+export interface AutomationStep {
+  id: string
+  stepId: string
+}
 
-export interface AutomationTrigger {}
+export interface AutomationTrigger {
+  id: string
+  stepId: string
+}

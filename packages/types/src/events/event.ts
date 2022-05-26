@@ -38,7 +38,9 @@ export enum Event {
   ORG_PLATFORM_URL_UPDATED = "org:platformurl:updated",
 
   // ORG / UPDATE
-  UPDATE_VERSION_CHECKED = "version:checked",
+  VERSION_CHECKED = "version:checked",
+  VERSION_UPGRADED = "version:upgraded",
+  VERSION_DOWNGRADED = "version:downgraded",
 
   // ORG / ANALYTICS
   ANALYTICS_OPT_OUT = "analytics:opt:out",

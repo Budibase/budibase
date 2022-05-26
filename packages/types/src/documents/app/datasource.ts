@@ -1,3 +1,5 @@
 import { Document } from "../document"
 
-export interface Datasource extends Document {}
+export interface Datasource extends Document {
+  source: string
+}

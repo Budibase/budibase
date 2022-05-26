@@ -20,6 +20,15 @@ export default class Processor implements EventProcessor {
     }
   }
 
+  async identify(
+    identity: Identity,
+    timestamp?: string | number
+  ): Promise<void> {
+    for (const eventProcessor of this.processors) {
+      await eventProcessor.identify(identity, timestamp)
+    }
+  }
+
   shutdown() {
     for (const eventProcessor of this.processors) {
       eventProcessor.shutdown()

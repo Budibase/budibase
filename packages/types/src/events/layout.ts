@@ -1,3 +1,7 @@
-export interface LayoutCreatedEvent {}
+export interface LayoutCreatedEvent {
+  layoutId: string
+}
 
-export interface LayoutDeletedEvent {}
+export interface LayoutDeletedEvent {
+  layoutId: string
+}

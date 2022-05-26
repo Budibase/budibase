@@ -10,16 +10,22 @@ import {
   SSOType,
   SSOUpdatedEvent,
 } from "@budibase/types"
+import { identification } from ".."
 
 export async function login(source: LoginSource) {
+  const identity = await identification.getCurrentIdentity()
   const properties: LoginEvent = {
+    userId: identity.id,
     source,
   }
   await publishEvent(Event.AUTH_LOGIN, properties)
 }
 
 export async function logout() {
-  const properties: LogoutEvent = {}
+  const identity = await identification.getCurrentIdentity()
+  const properties: LogoutEvent = {
+    userId: identity.id,
+  }
   await publishEvent(Event.AUTH_LOGOUT, properties)
 }
 

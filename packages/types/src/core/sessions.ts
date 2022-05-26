@@ -33,4 +33,17 @@ export const isUserSession = (
   return !user.account || user.account?.hosting === Hosting.CLOUD
 }
 
-export type SessionUser = AccountUserSession | BudibaseUserSession
+// not technically a session, but used to identify the installation
+export interface InstallationSession {
+  _id: string
+  isInstallation: boolean
+}
+
+export const isInstallation = (user: any): user is InstallationSession => {
+  return !!user.isInstallation
+}
+
+export type SessionUser =
+  | AccountUserSession
+  | BudibaseUserSession
+  | InstallationSession

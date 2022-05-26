@@ -22,6 +22,21 @@ export default class LoggingProcessor implements EventProcessor {
     )
   }
 
+  async identify(identity: Identity, timestamp?: string | number) {
+    if (env.SELF_HOSTED && !env.isDev()) {
+      return
+    }
+
+    let timestampString = ""
+    if (timestamp) {
+      timestampString = `[timestamp=${new Date(timestamp).toISOString()}]`
+    }
+
+    console.log(
+      `[audit] [${JSON.stringify(identity)}] ${timestampString} identified`
+    )
+  }
+
   shutdown(): void {
     // no-op
   }

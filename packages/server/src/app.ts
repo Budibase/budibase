@@ -17,6 +17,7 @@ const bullboard = require("./automations/bullboard")
 import redis from "./utilities/redis"
 import * as migrations from "./migrations"
 import { events } from "@budibase/backend-core"
+import * as installation from "./installation"
 
 const app = new Koa()
 
@@ -108,3 +109,6 @@ if (!env.HTTP_MIGRATIONS && !env.isTest()) {
     shutdown()
   })
 }
+
+// check for version updates
+installation.checkInstallVersion()

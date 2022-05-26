@@ -1,11 +1,45 @@
-export interface AutomationCreatedEvent {}
+export interface AutomationCreatedEvent {
+  appId: string
+  automationId: string
+  triggerId: string
+  triggerType: string
+}
 
-export interface AutomationDeletedEvent {}
+export interface AutomationTriggerUpdatedEvent {
+  appId: string
+  automationId: string
+  triggerId: string
+  triggerType: string
+}
 
-export interface AutomationTestedEvent {}
+export interface AutomationDeletedEvent {
+  appId: string
+  automationId: string
+  triggerId: string
+  triggerType: string
+}
 
-export interface AutomationStepCreatedEvent {}
+export interface AutomationTestedEvent {
+  appId: string
+  automationId: string
+  triggerId: string
+  triggerType: string
+}
 
-export interface AutomationStepDeletedEvent {}
+export interface AutomationStepCreatedEvent {
+  appId: string
+  automationId: string
+  triggerId: string
+  triggerType: string
+  stepId: string
+  stepType: string
+}
 
-export interface AutomationTriggerUpdatedEvent {}
+export interface AutomationStepDeletedEvent {
+  appId: string
+  automationId: string
+  triggerId: string
+  triggerType: string
+  stepId: string
+  stepType: string
+}
