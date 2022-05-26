@@ -9,11 +9,20 @@ export const run = async () => {
   const allApps = await getAllApps({ all: true })
   // @ts-ignore
   const appIds = allApps ? allApps.map((app: { appId: any }) => app.appId) : []
-  const { rows } = await getUniqueRows(appIds)
-  const rowCount = rows ? rows.length : 0
+  const { appRows } = await getUniqueRows(appIds)
+  const counts: { [key: string]: number } = {}
+  let rowCount = 0
+  Object.entries(appRows).forEach(([appId, rows]) => {
+    counts[appId] = rows.length
+    rowCount += rows.length
+  })
 
   // sync row count
   const tenantId = getTenantId()
   console.log(`[Tenant: ${tenantId}] Syncing row count: ${rowCount}`)
-  await quotas.setUsage(rowCount, StaticQuotaName.ROWS, QuotaUsageType.STATIC)
+  await quotas.setUsagePerApp(
+    counts,
+    StaticQuotaName.ROWS,
+    QuotaUsageType.STATIC
+  )
 }
