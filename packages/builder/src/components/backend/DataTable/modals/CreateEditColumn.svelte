@@ -304,7 +304,9 @@
       )
     }
     const newError = {}
-    if (PROHIBITED_COLUMN_NAMES.some(name => fieldInfo.name === name)) {
+    if (!external && fieldInfo.name?.startsWith("_")) {
+      newError.name = `Column name cannot start with an underscore.`
+    } else if (PROHIBITED_COLUMN_NAMES.some(name => fieldInfo.name === name)) {
       newError.name = `${PROHIBITED_COLUMN_NAMES.join(
         ", "
       )} are not allowed as column names`
