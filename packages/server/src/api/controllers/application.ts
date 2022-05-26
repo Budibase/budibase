@@ -295,7 +295,7 @@ const performAppCreate = async (ctx: any) => {
 const appPostCreate = async (ctx: any, appId: string) => {
   // app import & template creation
   if (ctx.request.body.useTemplate === "true") {
-    const rows = await getUniqueRows([appId])
+    const { rows } = await getUniqueRows([appId])
     const rowCount = rows ? rows.length : 0
     if (rowCount) {
       try {
@@ -421,7 +421,7 @@ const destroyApp = async (ctx: any) => {
 }
 
 const preDestroyApp = async (ctx: any) => {
-  const rows = await getUniqueRows([ctx.params.appId])
+  const { rows } = await getUniqueRows([ctx.params.appId])
   ctx.rowCount = rows.length
 }
 

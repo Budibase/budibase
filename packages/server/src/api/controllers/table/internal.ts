@@ -145,7 +145,9 @@ export async function destroy(ctx: any) {
   await db.bulkDocs(
     rows.rows.map((row: any) => ({ ...row.doc, _deleted: true }))
   )
-  await quotas.removeRows(rows.rows.length)
+  await quotas.removeRows(rows.rows.length, {
+    tableId: ctx.params.tableId,
+  })
 
   // update linked rows
   await updateLinks({

@@ -17,14 +17,17 @@ const Runner = new Thread(ThreadType.AUTOMATION)
 
 export async function processEvent(job: any) {
   try {
+    const automationId = job.data.automation._id
     console.log(
-      `${job.data.automation.appId} automation ${job.data.automation._id} running`
+      `${job.data.automation.appId} automation ${automationId} running`
     )
     // need to actually await these so that an error can be captured properly
     const tenantId = tenancy.getTenantIDFromAppID(job.data.event.appId)
     return await tenancy.doInTenant(tenantId, async () => {
       const runFn = () => Runner.run(job)
-      return quotas.addAutomation(runFn)
+      return quotas.addAutomation(runFn, {
+        automationId,
+      })
     })
   } catch (err) {
     const errJson = JSON.stringify(err)

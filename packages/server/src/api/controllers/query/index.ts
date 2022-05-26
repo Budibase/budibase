@@ -123,7 +123,9 @@ export async function preview(ctx: any) {
         queryId,
       })
 
-    const { rows, keys, info, extra } = await quotas.addQuery(runFn)
+    const { rows, keys, info, extra } = await quotas.addQuery(runFn, {
+      datasourceId: datasource._id,
+    })
     ctx.body = {
       rows,
       schemaFields: [...new Set(keys)],
@@ -165,7 +167,9 @@ async function execute(ctx: any, opts = { rowsOnly: false }) {
         queryId: ctx.params.queryId,
       })
 
-    const { rows, pagination, extra } = await quotas.addQuery(runFn)
+    const { rows, pagination, extra } = await quotas.addQuery(runFn, {
+      datasourceId: datasource._id,
+    })
     if (opts && opts.rowsOnly) {
       ctx.body = rows
     } else {
