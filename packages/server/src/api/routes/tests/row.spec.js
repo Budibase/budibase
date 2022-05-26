@@ -4,6 +4,7 @@ const { basicRow } = setup.structures
 const { doInAppContext } = require("@budibase/backend-core/context")
 const { doInTenant } = require("@budibase/backend-core/tenancy")
 const { quotas, QuotaUsageType, StaticQuotaName, MonthlyQuotaName } = require("@budibase/pro")
+const {getAllCurrentUsageValue} = require("../../../../../../../budibase-pro/packages/pro/src/db/quotas")
 
 // mock the fetch for the search system
 jest.mock("node-fetch")
@@ -34,7 +35,7 @@ describe("/rows", () => {
   }
 
   const getQueryUsage = async () => {
-    return config.doInContext(null, () => quotas.getCurrentUsageValue(QuotaUsageType.MONTHLY, MonthlyQuotaName.QUERIES))
+    return config.doInContext(null, () => quotas.getAllCurrentUsageValue(QuotaUsageType.MONTHLY, MonthlyQuotaName.QUERIES))
   }
 
   const assertRowUsage = async (expected) => {
