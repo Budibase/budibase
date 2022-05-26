@@ -73,7 +73,7 @@ jobs:
           DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
 
-          - name: Get the latest budibase release version
+      - name: Get the latest budibase release version
         id: version
         run: | 
           release_version=$(cat lerna.json | jq -r '.version')
@@ -83,25 +83,25 @@ jobs:
         run: | 
           docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
           yarn build:docker:proxy:preprod
-          docker tag proxy-service budibase/proxy:$STAGING_TAG
-          docker push budibase/proxy:$STAGING_TAG
+          docker tag proxy-service budibase/proxy:$RELEASE_TAG
+          docker push budibase/proxy:$RELEASE_TAG
         env:
           DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
-          STAGING_TAG: k8s-staging
+          RELEASE_TAG: k8s-release
 
       - name: Pull values.yaml from budibase-infra
         run: | 
           curl -H "Authorization: token ${{ secrets.GH_PERSONAL_TOKEN }}" \
           -H 'Accept: application/vnd.github.v3.raw' \
-          -o values.preprod.yaml \
-          -L https://api.github.com/repos/budibase/budibase-infra/contents/kubernetes/budibase-staging/values.yaml
-          wc -l values.staging.yaml
+          -o values.release.yaml \
+          -L https://api.github.com/repos/budibase/budibase-infra/contents/kubernetes/budibase-release/values.yaml
+          wc -l values.release.yaml
 
-      - name: Deploy to Staging Environment
+      - name: Deploy to Release Environment
         uses: glopezep/helm@v1.7.1
         with:
-          release: budibase-staging
+          release: budibase-release
           namespace: budibase
           chart: charts/budibase
           token: ${{ github.token }}
@@ -114,14 +114,14 @@ jobs:
               nginx: true
           value-files: >-
             [
-              "values.staging.yaml"
+              "values.release.yaml"
             ]
         env:
-          KUBECONFIG_FILE: '${{ secrets.STAGING_KUBECONFIG }}'
+          KUBECONFIG_FILE: '${{ secrets.RELEASE_KUBECONFIG }}'
 
       - name: Discord Webhook Action
         uses: tsickert/discord-webhook@v4.0.0
         with:
           webhook-url: ${{ secrets.PROD_DEPLOY_WEBHOOK_URL }}
-          content: "Preprod Deployment Complete: ${{ env.RELEASE_VERSION }} deployed to Budibase Staging."
+          content: "Release Env Deployment Complete: ${{ env.RELEASE_VERSION }} deployed to Budibase Release Env."
           embed-title: ${{ env.RELEASE_VERSION }}
