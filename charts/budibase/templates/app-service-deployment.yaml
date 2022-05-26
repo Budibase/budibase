@@ -34,6 +34,7 @@ spec:
           {{ else }}
           value: http://{{ .Release.Name }}-svc-couchdb:{{ .Values.services.couchdb.port }}
           {{ end }}
+        {{ if .Values.services.couchdb.enabled }}
         - name: COUCH_DB_USER
           valueFrom:
             secretKeyRef:
@@ -44,6 +45,7 @@ spec:
             secretKeyRef:
               name: {{ template "couchdb.fullname" . }}
               key: adminPassword
+        {{ end }}
         - name: ENABLE_ANALYTICS
           value: {{ .Values.globals.enableAnalytics | quote }}
         - name: INTERNAL_API_KEY
@@ -112,8 +114,8 @@ spec:
           value: {{ .Values.globals.google.secret | quote }}
         - name: AUTOMATION_MAX_ITERATIONS
           value: {{ .Values.globals.automationMaxIterations | quote }}
-        - name: EXCLUDE_QUOTAS_TENANTS
-          value: {{ .Values.globals.excludeQuotasTenants | quote }}
+        - name: TENANT_FEATURE_FLAGS
+          value: {{ .Values.globals.tenantFeatureFlags | quote }}
 
         image: budibase/apps:{{ .Values.globals.appVersion }}
         imagePullPolicy: Always

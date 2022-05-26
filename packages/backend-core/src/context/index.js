@@ -55,6 +55,15 @@ async function closeAppDBs() {
   }
 }
 
+exports.closeTenancy = async () => {
+  if (env.USE_COUCH) {
+    await closeDB(exports.getGlobalDB())
+  }
+  // clear from context now that database is closed/task is finished
+  cls.setOnContext(ContextKeys.TENANT_ID, null)
+  cls.setOnContext(ContextKeys.GLOBAL_DB, null)
+}
+
 exports.isDefaultTenant = () => {
   return exports.getTenantId() === exports.DEFAULT_TENANT_ID
 }
@@ -64,7 +73,7 @@ exports.isMultiTenant = () => {
 }
 
 // used for automations, API endpoints should always be in context already
-exports.doInTenant = (tenantId, task) => {
+exports.doInTenant = (tenantId, task, { forceNew } = {}) => {
   // the internal function is so that we can re-use an existing
   // context - don't want to close DB on a parent context
   async function internal(opts = { existing: false }) {
@@ -82,19 +91,18 @@ exports.doInTenant = (tenantId, task) => {
     } finally {
       const using = cls.getFromContext(ContextKeys.IN_USE)
       if (!using || using <= 1) {
-        if (env.USE_COUCH) {
-          await closeDB(exports.getGlobalDB())
-        }
-        // clear from context now that database is closed/task is finished
-        cls.setOnContext(ContextKeys.TENANT_ID, null)
-        cls.setOnContext(ContextKeys.GLOBAL_DB, null)
+        await exports.closeTenancy()
       } else {
         cls.setOnContext(using - 1)
       }
     }
   }
   const using = cls.getFromContext(ContextKeys.IN_USE)
-  if (using && cls.getFromContext(ContextKeys.TENANT_ID) === tenantId) {
+  if (
+    !forceNew &&
+    using &&
+    cls.getFromContext(ContextKeys.TENANT_ID) === tenantId
+  ) {
     cls.setOnContext(ContextKeys.IN_USE, using + 1)
     return internal({ existing: true })
   } else {
@@ -131,7 +139,7 @@ const setAppTenantId = appId => {
   exports.updateTenantId(appTenantId)
 }
 
-exports.doInAppContext = (appId, task) => {
+exports.doInAppContext = (appId, task, { forceNew } = {}) => {
   if (!appId) {
     throw new Error("appId is required")
   }
@@ -158,7 +166,7 @@ exports.doInAppContext = (appId, task) => {
     }
   }
   const using = cls.getFromContext(ContextKeys.IN_USE)
-  if (using && cls.getFromContext(ContextKeys.APP_ID) === appId) {
+  if (!forceNew && using && cls.getFromContext(ContextKeys.APP_ID) === appId) {
     cls.setOnContext(ContextKeys.IN_USE, using + 1)
     return internal({ existing: true })
   } else {
