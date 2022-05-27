@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
 if [[ -z $CLUSTER_MODE ]]; then
   yarn run:docker
