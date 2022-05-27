@@ -3042,6 +3042,12 @@
         "key": "extensions"
       },
       {
+        "type": "number",
+        "label": "No. of attachment",
+        "key": "maximum",
+        "min": 1
+      },
+      {
         "type": "event",
         "label": "On Change",
         "key": "onChange",
@@ -3318,6 +3324,7 @@
     ],
     "hasChildren": true,
     "showEmptyState": false,
+    "info": "Row selection is only compatible with internal or SQL tables", 
     "settings": [
       {
         "type": "dataProvider",
@@ -3618,6 +3625,7 @@
       {
         "section": true,
         "name": "Table",
+        "info": "Row selection is only compatible with internal or SQL tables",
         "settings": [
           {
             "type": "number",
