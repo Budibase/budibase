@@ -1,25 +1,31 @@
 <script>
-  import { Icon, Body } from "@budibase/bbui"
+  import { Icon } from "@budibase/bbui"
   export let value
 
   $: isError = value === "Error"
+  $: color = isError
+    ? "var(--spectrum-semantic-negative-color-background)"
+    : "var(--green)"
 </script>
 
 <div class="cell">
-  <Icon
-    color={isError
-      ? "var(--spectrum-semantic-negative-color-background)"
-      : "var(--green)"}
-    name={isError ? "Alert" : "CheckmarkCircle"}
-  />
-  <Body>{value}</Body>
+  <Icon {color} name={isError ? "Alert" : "CheckmarkCircle"} />
+  <div class:green={!isError} class:red={isError}>{value}</div>
 </div>
 
 <style>
   .cell {
-    color: var(--spectrum-semantic-negative-color-background);
     display: flex;
     flex-direction: row;
     gap: var(--spacing-m);
+    align-items: center;
+  }
+
+  .green {
+    color: var(--green);
+  }
+
+  .red {
+    color: var(--spectrum-semantic-negative-color-background);
   }
 </style>

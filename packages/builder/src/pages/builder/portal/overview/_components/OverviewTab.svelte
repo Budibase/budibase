@@ -47,18 +47,18 @@
   }
 </script>
 
-<div className="overview-tab">
+<div class="overview-tab">
   <Layout paddingX="XXL" paddingY="XXL" gap="XL">
-    <div className="top">
+    <div class="top">
       <DashCard title={"App Status"} dataCy={"app-status"}>
-        <div className="status-content">
-          <div className="status-display">
+        <div class="status-content">
+          <div class="status-display">
             {#if isPublished}
               <Icon name="GlobeCheck" size="XL" disabled={false} />
               <span>Published</span>
             {:else}
               <Icon name="GlobeStrike" size="XL" disabled={true} />
-              <span className="disabled"> Unpublished </span>
+              <span class="disabled"> Unpublished </span>
             {/if}
           </div>
 

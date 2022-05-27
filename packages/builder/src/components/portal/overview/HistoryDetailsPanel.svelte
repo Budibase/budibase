@@ -1,35 +1,29 @@
 <script>
-  import { Body, Layout, Icon, ActionButton, Heading } from "@budibase/bbui"
-  import { capitalise } from "helpers"
+  import { Layout, Icon, ActionButton } from "@budibase/bbui"
   import StatusRenderer from "components/portal/overview/StatusRenderer.svelte"
   import DateTimeRenderer from "components/common/renderers/DateTimeRenderer.svelte"
   import FlowItemHeader from "components/automation/AutomationBuilder/FlowChart/FlowItemHeader.svelte"
 
   export let history
   export let close
-
-  $: console.log(history)
 </script>
 
 {#if history}
   <div class="body">
     <div class="top">
       <div class="controls">
-        <Icon name="Clock" />
-        <Body>Run log details</Body>
+        <StatusRenderer value={history.status} />
         <ActionButton noPadding size="S" icon="Close" quiet on:click={close} />
       </div>
     </div>
     <Layout paddingX="XL" gap="S">
-      <Heading>{capitalise(history.appName || "")}</Heading>
-      <StatusRenderer value={history.status} />
       <div class="icon">
         <Icon name="Clock" />
         <DateTimeRenderer value={history.timestamp} />
       </div>
       <div class="icon">
         <Icon name="JourneyVoyager" />
-        <Body>{history.name}</Body>
+        <div>{history.name}</div>
       </div>
       <div>
         <ActionButton icon="Edit" fullWidth={false}
@@ -39,12 +33,12 @@
     </Layout>
     <div class="bottom">
       {#each history.steps as step}
-        <FlowItemHeader useResultsModal={false} block={step} />
+        <FlowItemHeader block={step} />
       {/each}
     </div>
   </div>
 {:else}
-  <Body>No details found</Body>
+  <div>No details found</div>
 {/if}
 
 <style>
@@ -56,13 +50,14 @@
   }
 
   .top {
-    padding: var(--spacing-l) 0 var(--spacing-l) 0;
+    padding: var(--spacing-m) 0 var(--spacing-m) 0;
     border-bottom: var(--border-light);
   }
 
   .bottom {
     margin-top: var(--spacing-m);
     border-top: var(--border-light);
+    height: 100%;
   }
 
   .icon {
@@ -73,7 +68,7 @@
   .controls {
     padding: 0 var(--spacing-l) 0 var(--spacing-l);
     display: grid;
-    grid-template-columns: auto 1fr auto;
+    grid-template-columns: 1fr auto;
     gap: var(--spacing-s);
   }
 </style>

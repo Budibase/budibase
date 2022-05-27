@@ -15,7 +15,6 @@
   const runHistorySchema = {
     status: { displayName: "Status" },
     timestamp: { displayName: "Time" },
-    appName: { displayName: "App" },
     name: { displayName: "Automation" },
   }
 
@@ -59,7 +58,6 @@
       {
         status: "Error",
         timestamp: "2022-05-11T16:06:14.438Z",
-        appName: "App name",
         name: "automation name",
         steps: [
           {
@@ -76,7 +74,6 @@
       {
         status: "Success",
         timestamp: "2022-05-11T16:03:14.438Z",
-        appName: "App name",
         name: "automation name",
         steps: [
           {
@@ -137,7 +134,7 @@
   }
 
   .panelOpen {
-    grid-template-columns: 1fr 360px;
+    grid-template-columns: auto 360px;
   }
 
   .search {
@@ -161,9 +158,12 @@
 
   .panel {
     display: none;
+    position: absolute;
     right: 0;
     height: 100%;
-    width: 100%;
+    width: 360px;
+    overflow: hidden;
+    background-color: var(--background);
   }
 
   .panelShow {
