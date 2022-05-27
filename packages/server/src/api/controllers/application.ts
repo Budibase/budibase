@@ -25,6 +25,7 @@ const {
 import { BASE_LAYOUTS } from "../../constants/layouts"
 import { cloneDeep } from "lodash/fp"
 const { processObject } = require("@budibase/string-templates")
+const { CacheKeys, bustCache } = require("@budibase/backend-core/cache")
 const {
   getAllApps,
   isDevAppID,
@@ -316,6 +317,7 @@ const appPostCreate = async (ctx: any, appId: string) => {
 export const create = async (ctx: any) => {
   const newApplication = await quotas.addApp(() => performAppCreate(ctx))
   await appPostCreate(ctx, newApplication.appId)
+  await bustCache(CacheKeys.CHECKLIST)
   ctx.body = newApplication
   ctx.status = 200
 }
@@ -439,6 +441,15 @@ export const destroy = async (ctx: any) => {
 }
 
 export const sync = async (ctx: any, next: any) => {
+  if (env.DISABLE_AUTO_PROD_APP_SYNC) {
+    ctx.status = 200
+    ctx.body = {
+      message:
+        "App sync disabled. You can reenable with the DISABLE_AUTO_PROD_APP_SYNC environment variable.",
+    }
+    return next()
+  }
+
   const appId = ctx.params.appId
   if (!isDevAppID(appId)) {
     ctx.throw(400, "This action cannot be performed for production apps")

@@ -25,6 +25,5 @@ export const getInfo = async (ctx: any) => {
 }
 
 export const getQuotaUsage = async (ctx: any) => {
-  const usage = await quotas.getQuotaUsage()
-  ctx.body = usage
+  ctx.body = await quotas.getQuotaUsage()
 }

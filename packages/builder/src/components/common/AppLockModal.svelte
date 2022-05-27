@@ -28,8 +28,6 @@
   $: lockedByHeading =
     lockedBy && lockedByYou ? "Locked by you" : `Locked by ${lockIdentifer}`
 
-  $: lockExpiry = getExpiryDuration(app)
-
   const getExpiryDuration = app => {
     if (!app?.lockedBy?.lockedAt) {
       return -1
@@ -86,12 +84,12 @@
       between your team.
     </p>
 
-    {#if lockedByYou && lockExpiry > 0}
+    {#if lockedByYou && getExpiryDuration(app) > 0}
       <span class="lock-expiry-body">
         {processStringSync(
           "This lock will expire in {{ duration time 'millisecond' }} from now",
           {
-            time: lockExpiry,
+            time: getExpiryDuration(app),
           }
         )}
       </span>

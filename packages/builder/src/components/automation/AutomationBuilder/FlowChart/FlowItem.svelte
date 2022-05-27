@@ -24,13 +24,9 @@
   let blockComplete
   let showLooping = false
 
-  $: rowControl = $automationStore.selectedAutomation.automation.rowControl
   $: showBindingPicker =
     block.stepId === "CREATE_ROW" || block.stepId === "UPDATE_ROW"
 
-  $: testResult = $automationStore.selectedAutomation.testResults?.steps.filter(
-    step => (block.id ? step.id === block.id : step.stepId === block.stepId)
-  )
   $: isTrigger = block.type === "TRIGGER"
 
   $: selected = $automationStore.selectedBlock?.id === block.id
@@ -178,12 +174,7 @@
     {/if}
   {/if}
 
-  <FlowItemHeader
-    {onSelect}
-    {block}
-    bind:results={testResult}
-    bind:open={blockComplete}
-  />
+  <FlowItemHeader bind:blockComplete {block} {testDataModal} />
   {#if !blockComplete}
     <Divider noMargin />
     <div class="blockSection">
@@ -201,7 +192,7 @@
                   on:change={toggleFieldControl}
                   defaultValue="Use values"
                   autoWidth
-                  value={rowControl ? "Use bindings" : "Use values"}
+                  value={block.rowControl ? "Use bindings" : "Use values"}
                   options={["Use values", "Use bindings"]}
                   placeholder={null}
                 />
