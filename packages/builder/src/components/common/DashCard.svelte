@@ -10,20 +10,13 @@
 </script>
 
 <div class="dash-card" data-cy={dataCy}>
-  <div
-    class={actionDefined ? "dash-card-header active" : "dash-card-header"}
-    on:click={() => {
-      if (actionDefined) {
-        action()
-      }
-    }}
-  >
+  <div class="dash-card-header" class:active={actionDefined} on:click={action}>
     <span class="dash-card-title">
       <Detail size="M">{title}</Detail>
     </span>
     <span class="dash-card-action">
       {#if actionDefined}
-        <Icon name={actionIcon ? actionIcon : "ChevronRight"} />
+        <Icon name={actionIcon || "ChevronRight"} />
       {/if}
     </span>
   </div>
@@ -36,18 +29,17 @@
   .dash-card {
     background: var(--spectrum-alias-background-color-primary);
     border-radius: var(--border-radius-s);
-    border: 1px solid var(--spectrum-global-color-gray-300);
     overflow: hidden;
     min-height: 150px;
   }
   .dash-card-header {
-    padding: var(--spacing-l);
+    padding: var(--spacing-xl) var(--spectrum-global-dimension-static-size-400);
     border-bottom: 1px solid var(--spectrum-global-color-gray-300);
     display: flex;
     justify-content: space-between;
   }
   .dash-card-body {
-    padding: var(--spacing-l);
+    padding: var(--spacing-xl) calc(var(--spacing-xl) * 2);
   }
   .dash-card-title :global(.spectrum-Detail) {
     color: var(

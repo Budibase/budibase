@@ -37,6 +37,14 @@
         href: "/builder/portal/apps",
       },
     ]
+    if (isEnabled(FEATURE_FLAGS.LICENSING)) {
+      menu = menu.concat([
+        {
+          title: "Usage",
+          href: "/builder/portal/settings/usage",
+        },
+      ])
+    }
     if (admin) {
       menu = menu.concat([
         {
@@ -174,7 +182,11 @@
               />
               <Icon size="XL" name="ChevronDown" />
             </div>
-            <MenuItem icon="UserEdit" on:click={() => userInfoModal.show()}>
+            <MenuItem
+              icon="UserEdit"
+              on:click={() => userInfoModal.show()}
+              dataCy={"user-info"}
+            >
               Update user information
             </MenuItem>
             {#if $auth.isBuilder}
@@ -322,7 +334,7 @@
 
     .mobile-toggle,
     .user-dropdown {
-      flex: 1 1 0;
+      flex: 0 1 0;
     }
 
     /* Reduce BBUI page padding */

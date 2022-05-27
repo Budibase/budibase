@@ -44,7 +44,72 @@ Cypress.Commands.add("logOut", () => {
 Cypress.Commands.add("closeModal", () => {
   cy.get(".spectrum-Modal").within(() => {
     cy.get(".close-icon").click()
-    cy.wait(500)
+    cy.wait(1000) // Wait for modal to close
+  })
+})
+
+Cypress.Commands.add("importApp", (exportFilePath, name) => {
+  cy.visit(`${Cypress.config().baseUrl}/builder`)
+
+  cy.request(`${Cypress.config().baseUrl}/api/applications?status=all`)
+    .its("body")
+    .then(val => {
+      if (val.length > 0) {
+        cy.get(`[data-cy="create-app-btn"]`).click({ force: true })
+        cy.wait(500)
+      }
+      cy.get(`[data-cy="import-app-btn"]`).click({ force: true })
+    })
+
+  cy.get(".spectrum-Modal").within(() => {
+    cy.get("input").eq(1).should("have.focus")
+
+    cy.get(".spectrum-Dropzone").selectFile(exportFilePath, {
+      action: "drag-drop",
+    })
+
+    cy.get(".gallery .filename").contains("exported-app.txt")
+
+    if (name && name != "") {
+      cy.get("input").eq(0).type(name).should("have.value", name).blur()
+    }
+    cy.get(".confirm-wrap button")
+      .should("not.be.disabled")
+      .click({ force: true })
+    cy.wait(5000)
+  })
+})
+
+Cypress.Commands.add("updateUserInformation", (firstName, lastName) => {
+  cy.get(".user-dropdown .avatar > .icon").click({ force: true })
+
+  cy.get(".spectrum-Popover[data-cy='user-menu']").within(() => {
+    cy.get("li[data-cy='user-info']").click({ force: true })
+  })
+
+  cy.get(".spectrum-Modal.is-open").within(() => {
+    cy.get("[data-cy='user-first-name']").clear()
+
+    if (!firstName || firstName == "") {
+      cy.get("[data-cy='user-first-name']").invoke("val").should("be.empty")
+    } else {
+      cy.get("[data-cy='user-first-name']")
+        .type(firstName)
+        .should("have.value", firstName)
+        .blur()
+    }
+
+    cy.get("[data-cy='user-last-name']").clear()
+
+    if (!lastName || lastName == "") {
+      cy.get("[data-cy='user-last-name']").invoke("val").should("be.empty")
+    } else {
+      cy.get("[data-cy='user-last-name']")
+        .type(lastName)
+        .should("have.value", lastName)
+        .blur()
+    }
+    cy.get("button").contains("Update information").click({ force: true })
   })
 })
 
@@ -66,7 +131,11 @@ Cypress.Commands.add("createApp", (name, addDefaultTable) => {
     })
 
   cy.get(".spectrum-Modal").within(() => {
-    cy.get("input").eq(0).type(name).should("have.value", name).blur()
+    cy.get("input").eq(0).should("have.focus")
+    if (name && name != "") {
+      cy.get("input").eq(0).clear()
+      cy.get("input").eq(0).type(name).should("have.value", name).blur()
+    }
     cy.get(".spectrum-ButtonGroup")
       .contains("Create app")
       .click({ force: true })
@@ -229,6 +298,29 @@ Cypress.Commands.add("unlockApp", unlock_config => {
     })
 })
 
+Cypress.Commands.add("publishApp", resolvedAppPath => {
+  //Assumes you have navigated to an application first
+  cy.get(".toprightnav button.spectrum-Button")
+    .contains("Publish")
+    .click({ force: true })
+
+  cy.get(".spectrum-Modal [data-cy='deploy-app-modal']")
+    .should("be.visible")
+    .within(() => {
+      cy.get(".spectrum-Button").contains("Publish").click({ force: true })
+      cy.wait(1000)
+    })
+
+  //Verify that the app url is presented correctly to the user
+  cy.get(".spectrum-Modal [data-cy='deploy-app-success-modal']")
+    .should("be.visible")
+    .within(() => {
+      let appUrl = Cypress.config().baseUrl + "/app/" + resolvedAppPath
+      cy.get("[data-cy='deployed-app-url'] input").should("have.value", appUrl)
+      cy.get(".spectrum-Button").contains("Done").click({ force: true })
+    })
+})
+
 Cypress.Commands.add("createTestApp", () => {
   const appName = "Cypress Tests"
   cy.deleteApp(appName)
@@ -240,6 +332,21 @@ Cypress.Commands.add("createTestTableWithData", () => {
   cy.createTable("dog")
   cy.addColumn("dog", "name", "Text")
   cy.addColumn("dog", "age", "Number")
+})
+
+Cypress.Commands.add("publishApp", (viewApp = false) => {
+  cy.get(".toprightnav").contains("Publish").click({ force: true })
+  cy.get(".spectrum-Dialog-grid").within(() => {
+    cy.get(".spectrum-Button").contains("Publish").click({ force: true })
+  })
+  cy.wait(2000) // Wait for App to publish and modal to appear
+  cy.get(".spectrum-Dialog-grid").within(() => {
+    if (viewApp) {
+      cy.get(".spectrum-Button").contains("View App").click({ force: true })
+    } else {
+      cy.get(".spectrum-Button").contains("Done").click({ force: true })
+    }
+  })
 })
 
 Cypress.Commands.add("createTable", (tableName, initialTable) => {
@@ -544,7 +651,12 @@ Cypress.Commands.add("createAppFromScratch", appName => {
     .contains("Start from scratch")
     .click({ force: true })
   cy.get(".spectrum-Modal").within(() => {
-    cy.get("input").eq(0).type(appName).should("have.value", appName).blur()
+    cy.get("input")
+      .eq(0)
+      .clear()
+      .type(appName)
+      .should("have.value", appName)
+      .blur()
     cy.get(".spectrum-ButtonGroup").contains("Create app").click()
     cy.wait(10000)
   })
@@ -658,12 +770,14 @@ Cypress.Commands.add("addDatasourceConfig", (datasource, skipFetch) => {
         .click({ force: true })
     })
   } else {
+    cy.intercept("**/tables").as("datasourceTables")
     cy.get(".spectrum-Dialog-grid").within(() => {
       cy.get(".spectrum-Button")
         .contains("Save and fetch tables")
         .click({ force: true })
-      cy.wait(1000)
     })
+    // Wait for tables to be fetched
+    cy.wait("@datasourceTables", { timeout: 60000 })
   }
 })
 

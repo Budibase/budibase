@@ -268,23 +268,77 @@ filterTests(['all'], () => {
       cy.get(".details-section .page-action .spectrum-Button").should("be.disabled")
 
     })
-    
-    after(() => {
+
+    it("Should allow copying of the published application Id", () => {
       cy.visit(`${Cypress.config().baseUrl}/builder`)
-      cy.get(".appTable .app-row-actions button").contains("Edit").eq(0).click({force: true})
+      cy.get(".appTable .app-row-actions").eq(0)
+      .within(() => {
+        cy.get(".spectrum-Button").contains("Edit").click({ force: true })
+      })
 
-      cy.get(".deployment-top-nav svg[aria-label='Globe']")
-      .click({ force: true })
+      cy.publishApp("sample-name")
 
-      cy.get("[data-cy='publish-popover-menu']").should("be.visible")
-      cy.get("[data-cy='publish-popover-menu'] [data-cy='publish-popover-action']")
-      .click({ force : true })
-      
+      cy.visit(`${Cypress.config().baseUrl}/builder`)
+      cy.get(".appTable .name").eq(0).click()
+
+      cy.get(".app-overview-actions-icon > .icon").click({ force : true })
+
+      cy.get("[data-cy='app-overview-menu-popover']").eq(0).within(() => {
+        cy.get(".spectrum-Menu-item").contains("Copy App ID").click({ force: true })
+      })
+
+      cy.get(".spectrum-Toast-content").contains("App ID copied to clipboard.").should("be.visible")
+    })
+
+    it("Should allow unpublishing of the application", () => {
+      cy.visit(`${Cypress.config().baseUrl}/builder`)
+      cy.get(".appTable .name").eq(0).click()
+
+      cy.get(".app-overview-actions-icon > .icon").click({ force : true })
+
+      cy.get("[data-cy='app-overview-menu-popover']").eq(0).within(() => {
+        cy.get(".spectrum-Menu-item").contains("Unpublish").click({ force: true })
+        cy.wait(500)
+      })
+
       cy.get("[data-cy='unpublish-modal']").should("be.visible")
       .within(() => {
         cy.get(".confirm-wrap button").click({ force: true }
       )})
-      cy.wait(1000)
+
+      cy.get(".overview-tab [data-cy='app-status']").within(() => {
+        cy.get(".status-display").contains("Unpublished")
+        cy.get(".status-display .icon svg[aria-label='GlobeStrike']").should("exist")
+      })
+    })
+
+    it("Should allow deleting of the application", () => {
+      cy.visit(`${Cypress.config().baseUrl}/builder`)
+      cy.get(".appTable .name").eq(0).click()
+
+      cy.get(".app-overview-actions-icon > .icon").click({ force : true })
+
+      cy.get("[data-cy='app-overview-menu-popover']").eq(0).within(() => {
+        cy.get(".spectrum-Menu-item").contains("Delete").click({ force: true })
+        cy.wait(500)
+      })  
+
+      //The test application was renamed earlier in the spec
+      cy.get(".spectrum-Dialog-grid").within(() => {
+        cy.get("input").type("sample name")
+        cy.get(".spectrum-Button--warning").click()
+      })
+
+      cy.location().should((loc) => {
+        expect(loc.pathname).to.eq('/builder/portal/apps')
+      })
+
+      cy.get(".appTable").should("not.exist")
+      
+      cy.get(".welcome .container h1").contains("Let's create your first app!")
+    })
+
+    after(() => {
       cy.deleteAllApps()
     })
 
