@@ -2792,6 +2792,12 @@
         "key": "extensions"
       },
       {
+        "type": "number",
+        "label": "No. of attachment",
+        "key": "maximum",
+        "min": 1
+      },
+      {
         "type": "event",
         "label": "On Change",
         "key": "onChange",
