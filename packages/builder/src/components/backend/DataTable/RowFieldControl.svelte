@@ -53,6 +53,7 @@
     {label}
     timeOnly={isTimeStamp}
     enableTime={!meta?.dateOnly}
+    disableTimezone={meta?.disableTimezone}
     bind:value
   />
 {:else if type === "attachment"}

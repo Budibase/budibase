@@ -12,10 +12,12 @@
   export let timeOnly = false
   export let placeholder = null
   export let appendTo = undefined
+  export let disableTimezone = false
 
   const dispatch = createEventDispatcher()
 
   const onChange = e => {
+    console.log("VALUE", e.detail)
     value = e.detail
     dispatch("change", e.detail)
   }

@@ -15,6 +15,7 @@
   export let placeholder = null
   export let appendTo = undefined
   export let timeOnly = false
+  export let disableTimezone = false
 
   const dispatch = createEventDispatcher()
   const flatpickrId = `${uuid()}-wrapper`
@@ -50,19 +51,29 @@
 
   const handleChange = event => {
     const [dates] = event.detail
+    const noTimezone = enableTime && !timeOnly && disableTimezone
     let newValue = dates[0]
     if (newValue) {
       newValue = newValue.toISOString()
     }
-    // if time only set date component to 2000-01-01
+
+    // If time only set date component to 2000-01-01
     if (timeOnly) {
       newValue = `2000-01-01T${newValue.split("T")[1]}`
     }
-    // date only, offset for timezone so always right date
-    else if (!enableTime) {
+
+    // Offset for local timezone if using a date only field or if timezone
+    // awareness is disabled
+    else if (!enableTime || noTimezone) {
       const offset = dates[0].getTimezoneOffset() * 60000
       newValue = new Date(dates[0].getTime() - offset).toISOString()
     }
+
+    // Strip time timezone suffix if required
+    if (noTimezone) {
+      newValue = newValue.slice(0, -1)
+    }
+
     dispatch("change", newValue)
   }
 
@@ -112,10 +123,18 @@
       // Treat as numerical timestamp
       date = new Date(parseInt(val))
     }
+
+    // If not using UTC conversion, we need to offset the timezone again here
+    // if (!timeOnly && enableTime && noUTCConversion) {
+    //   const offset = date.getTimezoneOffset() * 60000
+    //   date = new Date(date.getTime() + offset)
+    // }
+
     time = date.getTime()
     if (isNaN(time)) {
       return null
     }
+
     // By rounding to the nearest second we avoid locking up in an endless
     // loop in the builder, caused by potentially enriching {{ now }} to every
     // millisecond.

@@ -65,3 +65,27 @@ exports.processFormulas = (
   }
   return single ? rows[0] : rows
 }
+
+/**
+ * Processes any date fields that have timezone awareness disabled by stripping
+ * the timezone suffix.
+ */
+exports.processDates = (table, rows) => {
+  for (let [column, schema] of Object.entries(table.schema)) {
+    if (schema.type !== FieldTypes.DATETIME || !schema.disableTimezone) {
+      continue
+    }
+    for (let row of rows) {
+      // We only need to convert cases where the dates have been parsed into
+      // date objects by knex.
+      // Strings used in internal tables are stored as-is, so already won't have
+      // a timezone suffix.
+      if (row[column] && typeof row[column] === "object") {
+        // Strip the timezone suffix from the ISO string so that the date string
+        // will be parsed as if it is in the users local timezone
+        row[column] = row[column].toISOString().slice(0, -1)
+      }
+    }
+  }
+  return rows
+}

@@ -428,6 +428,18 @@
       bind:value={field.constraints.datetime.earliest}
     />
     <DatePicker label="Latest" bind:value={field.constraints.datetime.latest} />
+    <div>
+      <Label
+        size="S"
+        tooltip="By default, date/time values are timezone aware and stored as UTC timestamps. You can disable timezone awareness if you would prefer that date/time values are always stored relative to the servers timezone."
+      >
+        Timezone
+      </Label>
+      <Toggle
+        bind:value={field.disableTimezone}
+        text="Disable timezone awareness"
+      />
+    </div>
   {:else if field.type === "number"}
     <Input
       type="number"

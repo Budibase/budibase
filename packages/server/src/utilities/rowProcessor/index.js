@@ -2,7 +2,11 @@ const linkRows = require("../../db/linkedRows")
 const { cloneDeep } = require("lodash/fp")
 const { FieldTypes, AutoFieldSubTypes } = require("../../constants")
 const { attachmentsRelativeURL } = require("../index")
-const { processFormulas, fixAutoColumnSubType } = require("./utils")
+const {
+  processFormulas,
+  processDates,
+  fixAutoColumnSubType,
+} = require("./utils")
 const { deleteFiles } = require("../../utilities/fileSystem/utilities")
 const { ObjectStoreBuckets } = require("../../constants")
 const {
@@ -273,6 +277,9 @@ exports.outputProcessing = async (table, rows, opts = { squash: true }) => {
 
   // process formulas
   enriched = processFormulas(table, enriched, { dynamic: true })
+
+  // process non timezone aware dates
+  enriched = processDates(table, enriched)
 
   // update the attachments URL depending on hosting
   for (let [property, column] of Object.entries(table.schema)) {
