@@ -15,7 +15,9 @@ ENV BUDIBASE_ENVIRONMENT=PRODUCTION
 
 # copy files and install dependencies
 COPY . ./
-RUN yarn
+# handle node-gyp
+RUN apk add --no-cache --virtual .gyp python3 make g++ \
+    && yarn && apk del .gyp
 RUN yarn global add pm2
 RUN yarn build
 
