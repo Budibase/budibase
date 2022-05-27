@@ -25,7 +25,6 @@
   let blockComplete
   let showLooping = false
 
-  $: rowControl = $automationStore.selectedAutomation.automation.rowControl
   $: showBindingPicker =
     block.stepId === "CREATE_ROW" || block.stepId === "UPDATE_ROW"
 
@@ -194,7 +193,7 @@
                   on:change={toggleFieldControl}
                   defaultValue="Use values"
                   autoWidth
-                  value={rowControl ? "Use bindings" : "Use values"}
+                  value={block.rowControl ? "Use bindings" : "Use values"}
                   options={["Use values", "Use bindings"]}
                   placeholder={null}
                 />
