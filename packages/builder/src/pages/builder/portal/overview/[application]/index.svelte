@@ -26,8 +26,8 @@
   import { AppStatus } from "constants"
   import AppLockModal from "components/common/AppLockModal.svelte"
   import EditableIcon from "components/common/EditableIcon.svelte"
-  import HistoryTab from "components/portal/overview/HistoryTab.svelte"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+  import HistoryTab from "components/portal/overview/HistoryTab.svelte"
   import { checkIncomingDeploymentStatus } from "components/deploy/utils"
   import { onDestroy, onMount } from "svelte"
 
@@ -110,7 +110,7 @@
       reviewPendingDeployments(deployments, newDeployments)
       return newDeployments
     } catch (err) {
-      notifications.error("Error fetching deployment overview")
+      notifications.error("Error fetching deployment history")
     }
   }
 
@@ -215,7 +215,7 @@
         <ProgressCircle size="XL" />
       </div>
     {:then _}
-      <Layout paddingX="XXL" paddingY="XXL" gap="XL">
+      <Layout paddingX="XXL" paddingY="XL" gap="L">
         <span class="page-header" class:loaded>
           <ActionButton secondary icon={"ArrowLeft"} on:click={backToAppList}>
             Back
@@ -292,32 +292,6 @@
             </ActionMenu>
           </div>
         </div>
-        <div class="header-right">
-          <AppLockModal app={selectedApp} />
-          <ButtonGroup gap="XS">
-            <Button
-              size="M"
-              secondary
-              icon="Globe"
-              disabled={!isPublished}
-              on:click={viewApp}
-              dataCy="view-app"
-            >
-              View app
-            </Button>
-            <Button
-              size="M"
-              cta
-              icon="Edit"
-              disabled={lockedBy && !lockedByYou}
-              on:click={() => {
-                editApp(selectedApp)
-              }}
-            >
-              <span>Edit</span>
-            </Button>
-          </ButtonGroup>
-        </div>
       </Layout>
       <div class="tab-wrap">
         <Tabs
@@ -342,13 +316,6 @@
               <div class="container">Backups contents</div>
             </Tab>
           {/if}
-          <Tab title="Overview">
-            <OverviewTab
-              app={selectedApp}
-              deployments={latestDeployments}
-              navigateTab={handleTabChange}
-            />
-          </Tab>
           <Tab title="Settings">
             <SettingsTab app={selectedApp} />
           </Tab>
