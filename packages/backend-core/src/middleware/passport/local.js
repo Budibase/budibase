@@ -30,7 +30,7 @@ exports.authenticate = async function (ctx, email, password, done) {
 
   const dbUser = await users.getGlobalUserByEmail(email)
   if (dbUser == null) {
-    return authError(done, "User not found")
+    return authError(done, `User not found: [${email}]`)
   }
 
   // check that the user is currently inactive, if this is the case throw invalid

@@ -8,13 +8,13 @@ filterTests(["all"], () => {
     before(() => {
         cy.login()
         cy.deleteApp(templateName)
-        cy.visit(`${Cypress.config().baseUrl}/builder`, {
+        // Template navigation
+        cy.visit(`${Cypress.config().baseUrl}/builder/portal/apps/templates`, {
             onBeforeLoad(win) {
                 cy.stub(win, 'open')
             }
         })
         cy.wait(2000)
-        cy.templateNavigation()
         })
 
     it("should create and publish app with Job Application Tracker template", () => {
@@ -35,19 +35,10 @@ filterTests(["all"], () => {
             cy.get(".spectrum-Button").contains("Create app").click({ force: true })
         })
 
-        // Publish App
+        // Publish App & Verify it opened
         cy.wait(2000) // Wait for app to generate
-        cy.get(".toprightnav").contains("Publish").click({ force: true })
-        cy.get(".spectrum-Dialog-grid").within(() => {
-            cy.get(".spectrum-Button").contains("Publish").click({ force: true })
-        })
-
-        // Verify Published app
-        cy.wait(2000) // Wait for App to publish and modal to appear
-        cy.get(".spectrum-Dialog-grid").within(() => {
-            cy.get(".spectrum-Button").contains("View App").click({ force: true })
-            cy.window().its('open').should('be.calledOnce')
-        })
+        cy.publishApp(true)
+        cy.window().its('open').should('be.calledOnce')
     })
 
     it("should add active/inactive vacancies", () => {

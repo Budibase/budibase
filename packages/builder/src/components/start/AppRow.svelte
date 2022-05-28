@@ -1,33 +1,26 @@
 <script>
-  import {
-    Heading,
-    Button,
-    Icon,
-    ActionMenu,
-    MenuItem,
-    StatusLight,
-  } from "@budibase/bbui"
+  import { Heading, Button, Icon, ActionMenu, MenuItem } from "@budibase/bbui"
+  import AppLockModal from "../common/AppLockModal.svelte"
   import { processStringSync } from "@budibase/string-templates"
 
   export let app
   export let exportApp
-  export let viewApp
   export let editApp
   export let updateApp
   export let deleteApp
-  export let previewApp
   export let unpublishApp
+  export let appOverview
   export let releaseLock
   export let editIcon
   export let copyAppId
 </script>
 
-<div class="title">
+<div class="title" data-cy={`${app.devId}`}>
   <div style="display: flex;">
     <div class="app-icon" style="color: {app.icon?.color || ''}">
       <Icon size="XL" name={app.icon?.name || "Apps"} />
     </div>
-    <div class="name" on:click={() => editApp(app)}>
+    <div class="name" on:click={() => appOverview(app)}>
       <Heading size="XS">
         {app.name}
       </Heading>
@@ -44,19 +37,7 @@
   {/if}
 </div>
 <div class="desktop">
-  <StatusLight
-    positive={!app.lockedYou && !app.lockedOther}
-    notice={app.lockedYou}
-    negative={app.lockedOther}
-  >
-    {#if app.lockedYou}
-      Locked by you
-    {:else if app.lockedOther}
-      Locked by {app.lockedBy.email}
-    {:else}
-      Open
-    {/if}
-  </StatusLight>
+  <AppLockModal {app} buttonSize="S" />
 </div>
 <div class="desktop">
   <div class="app-status">
@@ -71,23 +52,15 @@
 </div>
 <div data-cy={`row_actions_${app.appId}`}>
   <div class="app-row-actions">
-    {#if app.deployed}
-      <Button size="S" secondary quiet on:click={() => viewApp(app)}
-        >View app
-      </Button>
-    {:else}
-      <Button size="S" secondary quiet on:click={() => previewApp(app)}
-        >Preview
-      </Button>
-    {/if}
     <Button
       size="S"
-      cta
+      secondary
+      quiet
       disabled={app.lockedOther}
       on:click={() => editApp(app)}
-    >
-      Edit
+      >Edit
     </Button>
+    <Button size="S" cta on:click={() => appOverview(app)}>View</Button>
   </div>
   <ActionMenu align="right" dataCy="app-row-actions-menu-popover">
     <span slot="control" class="app-row-actions-icon">
@@ -123,6 +96,7 @@
   }
   .app-status {
     display: grid;
+    grid-gap: var(--spacing-s);
     grid-template-columns: 24px 100px;
   }
   .app-status span.disabled {
