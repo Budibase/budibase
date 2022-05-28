@@ -1,7 +1,7 @@
 {
   "name": "@budibase/worker",
   "email": "hi@budibase.com",
-  "version": "1.0.167-alpha.8",
+  "version": "1.0.189",
   "description": "Budibase background service",
   "main": "src/index.ts",
   "repository": {
@@ -15,6 +15,7 @@
     "build": "rimraf dist/ && tsc",
     "postbuild": "copyfiles -u 1 src/**/*.hbs dist/",
     "run:docker": "node dist/index.js",
+    "run:docker:cluster": "pm2-runtime start pm2.config.js",
     "build:docker": "docker build . -t worker-service --label version=$BUDIBASE_RELEASE_VERSION",
     "dev:stack:init": "node ./scripts/dev/manage.js init",
     "dev:builder": "npm run dev:stack:init && nodemon",
@@ -31,9 +32,9 @@
   "author": "Budibase",
   "license": "GPL-3.0",
   "dependencies": {
-    "@budibase/backend-core": "^1.0.167-alpha.8",
-    "@budibase/pro": "1.0.167-alpha.8",
-    "@budibase/string-templates": "^1.0.167-alpha.8",
+    "@budibase/backend-core": "^1.0.189",
+    "@budibase/pro": "1.0.189",
+    "@budibase/string-templates": "^1.0.189",
     "@koa/router": "^8.0.0",
     "@sentry/node": "6.17.7",
     "@techpass/passport-openidconnect": "^0.3.0",

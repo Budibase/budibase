@@ -1,7 +1,5 @@
 FROM node:14-slim
 
-RUN apt-get update
-
 LABEL com.centurylinklabs.watchtower.lifecycle.pre-check="scripts/watchtower-hooks/pre-check.sh"
 LABEL com.centurylinklabs.watchtower.lifecycle.pre-update="scripts/watchtower-hooks/pre-update.sh"
 LABEL com.centurylinklabs.watchtower.lifecycle.post-update="scripts/watchtower-hooks/post-update.sh"
@@ -15,7 +13,14 @@ ENV BUDIBASE_ENVIRONMENT=PRODUCTION
 
 # copy files and install dependencies
 COPY . ./
-RUN yarn
+# handle node-gyp
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends g++ make python \
+    && yarn \
+    && yarn cache clean \
+    && apt-get remove -y --purge --auto-remove g++ make python \
+    && rm -rf /tmp/* /root/.node-gyp /usr/local/lib/node_modules/npm/node_modules/node-gyp
+RUN yarn global add pm2
 RUN yarn build
 
 # Install client for oracle datasource
@@ -28,4 +33,5 @@ EXPOSE 4001
 # due to this causing yarn to stop installing dev dependencies
 # which are actually needed to get this environment up and running
 ENV NODE_ENV=production
-CMD ["yarn", "run:docker"]
+ENV CLUSTER_MODE=${CLUSTER_MODE}
+CMD ["./docker_run.sh"]

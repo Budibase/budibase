@@ -1,3 +1,5 @@
+const { join } = require("path")
+
 function isTest() {
   return isCypress() || isJest()
 }
@@ -23,7 +25,9 @@ function isCypress() {
 
 let LOADED = false
 if (!LOADED && isDev() && !isTest()) {
-  require("dotenv").config()
+  require("dotenv").config({
+    path: join(__dirname, "..", ".env"),
+  })
   LOADED = true
 }
 
@@ -58,6 +62,7 @@ module.exports = {
   BUDIBASE_ENVIRONMENT: process.env.BUDIBASE_ENVIRONMENT,
   DISABLE_ACCOUNT_PORTAL: process.env.DISABLE_ACCOUNT_PORTAL,
   TEMPLATE_REPOSITORY: process.env.TEMPLATE_REPOSITORY || "app",
+  DISABLE_AUTO_PROD_APP_SYNC: process.env.DISABLE_AUTO_PROD_APP_SYNC,
   // minor
   SALT_ROUNDS: process.env.SALT_ROUNDS,
   LOGGER: process.env.LOGGER,
