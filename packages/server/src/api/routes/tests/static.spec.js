@@ -38,7 +38,6 @@ describe("/static", () => {
 
       expect(res.text).toContain("<title>Budibase</title>")
       expect(events.serve.servedBuilder).toBeCalledTimes(1)
-      expect(events.serve.servedBuilder).toBeCalledWith(version)
     })
   })
 

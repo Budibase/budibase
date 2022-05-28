@@ -22,18 +22,5 @@ describe("db", () => {
       await db.destroy()
     })
   })
-
-  describe("allDbs", () => {
-    it("returns all dbs", async () => {
-      let all = await allDbs()
-      expect(all).toStrictEqual([])
-      const db1 = dangerousGetDB("test1")
-      await db1.put({ _id: "test1" })
-      const db2 = dangerousGetDB("test2")
-      await db2.put({ _id: "test2" })
-      all = await allDbs()
-      expect(all.length).toBe(2)
-    })
-  })
 })
 

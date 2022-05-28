@@ -53,6 +53,7 @@ const env: any = {
   USE_COUCH: process.env.USE_COUCH || true,
   DISABLE_DEVELOPER_LICENSE: process.env.DISABLE_DEVELOPER_LICENSE,
   SERVICE: process.env.SERVICE || "budibase",
+  DEFAULT_LICENSE: process.env.DEFAULT_LICENSE,
   _set(key: any, value: any) {
     process.env[key] = value
     module.exports[key] = value

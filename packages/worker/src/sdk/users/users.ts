@@ -2,21 +2,18 @@ import env from "../../environment"
 import { quotas } from "@budibase/pro"
 import * as apps from "../../utilities/appService"
 import * as eventHelpers from "./events"
-import { User, CloudAccount } from "@budibase/types"
-
-const {
+import {
   tenancy,
   utils,
-  db: dbUtils,
+  db as dbUtils,
   constants,
   cache,
-  users: usersCore,
+  users as usersCore,
   deprovisioning,
   sessions,
   HTTPError,
-} = require("@budibase/backend-core")
-
-import { events, accounts } from "@budibase/backend-core"
+  accounts,
+} from "@budibase/backend-core"
 
 /**
  * Retrieves all users from the current tenancy.
@@ -52,17 +49,28 @@ export const getUser = async (userId: string) => {
   return user
 }
 
+interface SaveUserOpts {
+  hashPassword?: boolean
+  requirePassword?: boolean
+  bulkCreate?: boolean
+}
+
 export const save = async (
-  user: User,
-  hashPassword = true,
-  requirePassword = true
+  user: any,
+  opts: SaveUserOpts = {
+    hashPassword: true,
+    requirePassword: true,
+    bulkCreate: false,
+  }
 ) => {
   const tenantId = tenancy.getTenantId()
   const db = tenancy.getGlobalDB()
   let { email, password, _id } = user
   // make sure another user isn't using the same email
-  let dbUser
-  if (email) {
+  let dbUser: any
+  if (opts.bulkCreate) {
+    dbUser = null
+  } else if (email) {
     // check budibase users inside the tenant
     dbUser = await usersCore.getGlobalUserByEmail(email)
     if (dbUser != null && (dbUser._id !== _id || Array.isArray(dbUser))) {
@@ -91,17 +99,14 @@ export const save = async (
   // get the password, make sure one is defined
   let hashedPassword
   if (password) {
-    hashedPassword = hashPassword ? await utils.hash(password) : password
+    hashedPassword = opts.hashPassword ? await utils.hash(password) : password
   } else if (dbUser) {
     hashedPassword = dbUser.password
-  } else if (requirePassword) {
+  } else if (opts.requirePassword) {
     throw "Password must be specified."
   }
 
-  if (!_id) {
-    _id = dbUtils.generateGlobalUserID()
-  }
-
+  _id = _id || dbUtils.generateGlobalUserID(email)
   user = {
     createdAt: Date.now(),
     ...dbUser,
@@ -119,6 +124,13 @@ export const save = async (
     user.status = constants.UserStatus.ACTIVE
   }
   try {
+    const putOpts = {
+      password: hashedPassword,
+      ...user,
+    }
+    if (opts.bulkCreate) {
+      return putOpts
+    }
     // save the user to db
     let response
     const putUserFn = () => {
@@ -133,14 +145,9 @@ export const save = async (
 
     await eventHelpers.handleSaveEvents(user, dbUser)
 
-    // identify
-    let tenantAccount: CloudAccount | undefined
-    if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
-      tenantAccount = await accounts.getAccountByTenantId(tenantId)
+    if (env.MULTI_TENANCY) {
+      await tenancy.tryAddTenant(tenantId, _id, email)
     }
-    await events.identification.identifyUser(user, tenantAccount)
-
-    await tenancy.tryAddTenant(tenantId, _id, email)
     await cache.user.invalidateUser(response.id)
     // let server know to sync user
     await apps.syncUserInApps(user._id)

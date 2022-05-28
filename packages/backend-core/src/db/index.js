@@ -3,6 +3,7 @@ const env = require("../environment")
 
 let PouchDB
 let initialised = false
+const dbList = new Set()
 
 const put =
   dbPut =>
@@ -30,6 +31,9 @@ exports.init = opts => {
 // in situations that using the function doWithDB does not work
 exports.dangerousGetDB = (dbName, opts) => {
   checkInitialised()
+  if (env.isTest()) {
+    dbList.add(dbName)
+  }
   const db = new PouchDB(dbName, opts)
   const dbPut = db.put
   db.put = put(dbPut)
@@ -65,6 +69,9 @@ exports.doWithDB = async (dbName, cb, opts) => {
 }
 
 exports.allDbs = () => {
+  if (!env.isTest()) {
+    throw new Error("Cannot be used outside test environment.")
+  }
   checkInitialised()
-  return PouchDB.allDbs()
+  return [...dbList]
 }

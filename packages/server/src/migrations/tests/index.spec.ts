@@ -4,6 +4,9 @@ import structures from "../../tests/utilities/structures"
 import { MIGRATIONS } from "../"
 import * as helpers from "./helpers"
 
+const { mocks } = require("@budibase/backend-core/testUtils")
+const timestamp = mocks.date.MOCK_DATE.toISOString()
+
 jest.setTimeout(100000)
 
 describe("migrations", () => {
@@ -86,7 +89,7 @@ describe("migrations", () => {
       expect(events.user.permissionBuilderAssigned).toBeCalledTimes(1) // default test user
       expect(events.user.permissionAdminAssigned).toBeCalledTimes(1) // admin from above
       expect(events.rows.created).toBeCalledTimes(1)
-      expect(events.rows.created).toBeCalledWith(2)
+      expect(events.rows.created).toBeCalledWith(2, timestamp)
       expect(events.email.SMTPCreated).toBeCalledTimes(1)
       expect(events.auth.SSOCreated).toBeCalledTimes(2)
       expect(events.auth.SSOActivated).toBeCalledTimes(2)

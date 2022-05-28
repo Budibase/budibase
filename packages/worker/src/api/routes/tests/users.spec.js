@@ -58,7 +58,7 @@ describe("/api/global/users", () => {
     expect(user).toBeDefined()
     expect(user._id).toEqual(res.body._id)
     expect(events.user.inviteAccepted).toBeCalledTimes(1)
-    expect(events.user.inviteAccepted).toBeCalledWith(res.body)
+    expect(events.user.inviteAccepted).toBeCalledWith(user)
   })
 
   const createUser = async (user) => { 

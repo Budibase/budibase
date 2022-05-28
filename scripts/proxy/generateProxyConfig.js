@@ -51,6 +51,13 @@ const Configs = {
     couchdb: "budibase-preprod-svc-couchdb",
     resolver: "kube-dns.kube-system.svc.cluster.local"
   },
+  release: {
+    apps: "app-service.budibase.svc.cluster.local",
+    worker: "worker-service.budibase.svc.cluster.local",
+    minio: "minio-service.budibase.svc.cluster.local",
+    couchdb: "budibase-release-svc-couchdb",
+    resolver: "kube-dns.kube-system.svc.cluster.local"
+  },
   compose: {
     apps: "app-service",
     worker: "worker-service",
@@ -64,6 +71,7 @@ const Configs = {
 const Commands = {
   Prod: "prod",
   Preprod: "preprod",
+  Release: "release",
   Compose: "compose",
 }
 

@@ -7,21 +7,15 @@ filterTests(["all"], () => {
       cy.login()
 
       // Template navigation
-      cy.request(`${Cypress.config().baseUrl}/api/applications?status=all`)
-      .its("body")
-      .then(val => {
-        if (val.length > 0) {
-          cy.get(".spectrum-Button").contains("Templates").click({force: true})
-        }
-      })
+      cy.visit(`${Cypress.config().baseUrl}/builder/portal/apps/templates`)
+
+      // Filter Portal Templates
+      cy.get(".template-category-filters").within(() => {
+        cy.get('[data-cy="Portal"]').click()
+    })
     })
 
   it("should verify the details option for Portal templates", () => {
-    // Filter Portal Templates
-    cy.get(".template-category-filters").within(() => {
-        cy.get('[data-cy="Portal"]').click()
-      })
-    
     cy.get(".template-grid").find(".template-card").its('length')
     .then(len => {
       for (let i = 0; i < len; i++) {

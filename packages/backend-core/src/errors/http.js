@@ -1,8 +1,8 @@
 const { GenericError } = require("./generic")
 
 class HTTPError extends GenericError {
-  constructor(message, httpStatus, code, type) {
-    super(message, code ? code : "http", type)
+  constructor(message, httpStatus, code = "http", type = "generic") {
+    super(message, code, type)
     this.status = httpStatus
   }
 }

@@ -4,13 +4,15 @@ import { sendEmail } from "../../../utilities/email"
 import { users } from "../../../sdk"
 import env from "../../../environment"
 import { User, CloudAccount } from "@budibase/types"
-import { events, accounts, tenancy } from "@budibase/backend-core"
-
-const {
+import {
+  events,
   errors,
-  users: usersCore,
-  db: dbUtils,
-} = require("@budibase/backend-core")
+  accounts,
+  db as dbUtils,
+  users as usersCore,
+  tenancy,
+  cache,
+} from "@budibase/backend-core"
 
 export const save = async (ctx: any) => {
   try {
@@ -27,52 +29,63 @@ const parseBooleanParam = (param: any) => {
 
 export const adminUser = async (ctx: any) => {
   const { email, password, tenantId } = ctx.request.body
+  await tenancy.doInTenant(tenantId, async () => {
+    // account portal sends a pre-hashed password - honour param to prevent double hashing
+    const hashPassword = parseBooleanParam(ctx.request.query.hashPassword)
+    // account portal sends no password for SSO users
+    const requirePassword = parseBooleanParam(ctx.request.query.requirePassword)
 
-  // account portal sends a pre-hashed password - honour param to prevent double hashing
-  const hashPassword = parseBooleanParam(ctx.request.query.hashPassword)
-  // account portal sends no password for SSO users
-  const requirePassword = parseBooleanParam(ctx.request.query.requirePassword)
-
-  if (await tenancy.doesTenantExist(tenantId)) {
-    ctx.throw(403, "Organisation already exists.")
-  }
-
-  const response = await tenancy.doWithGlobalDB(tenantId, async (db: any) => {
-    return db.allDocs(
-      dbUtils.getGlobalUserParams(null, {
-        include_docs: true,
-      })
-    )
-  })
-
-  if (response.rows.some((row: any) => row.doc.admin)) {
-    ctx.throw(403, "You cannot initialise once a global user has been created.")
-  }
-
-  const user: User = {
-    email: email,
-    password: password,
-    roles: {},
-    builder: {
-      global: true,
-    },
-    admin: {
-      global: true,
-    },
-    tenantId,
-  }
-  try {
-    ctx.body = await tenancy.doInTenant(tenantId, async () => {
-      return users.save(user, hashPassword, requirePassword)
-    })
-    let account: CloudAccount | undefined
-    if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
-      account = await accounts.getAccountByTenantId(tenantId)
+    if (await tenancy.doesTenantExist(tenantId)) {
+      ctx.throw(403, "Organisation already exists.")
     }
-    await events.identification.identifyTenantGroup(tenantId, account)
-  } catch (err: any) {
-    ctx.throw(err.status || 400, err)
-  }
+
+    const response = await tenancy.doWithGlobalDB(tenantId, async (db: any) => {
+      return db.allDocs(
+        dbUtils.getGlobalUserParams(null, {
+          include_docs: true,
+        })
+      )
+    })
+
+    if (response.rows.some((row: any) => row.doc.admin)) {
+      ctx.throw(
+        403,
+        "You cannot initialise once an global user has been created."
+      )
+    }
+
+    const user: User = {
+      email: email,
+      password: password,
+      createdAt: Date.now(),
+      roles: {},
+      builder: {
+        global: true,
+      },
+      admin: {
+        global: true,
+      },
+      tenantId,
+    }
+    try {
+      const finalUser = await users.save(user, {
+        hashPassword,
+        requirePassword,
+      })
+      await cache.bustCache(cache.CacheKeys.CHECKLIST)
+
+      // events
+      let account: CloudAccount | undefined
+      if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
+        account = await accounts.getAccountByTenantId(tenantId)
+      }
+      await events.identification.identifyTenantGroup(tenantId, account)
+
+      ctx.body = finalUser
+    } catch (err: any) {
+      ctx.throw(err.status || 400, err)
+    }
+  })
 }
 
 export const destroy = async (ctx: any) => {

@@ -7,14 +7,8 @@ filterTests(["all"], () => {
       cy.login()
 
       // Template navigation
-      cy.request(`${Cypress.config().baseUrl}/api/applications?status=all`)
-      .its("body")
-      .then(val => {
-        if (val.length > 0) {
-          cy.get(".spectrum-Button").contains("Templates").click({force: true})
-        }
-      })
-
+      cy.visit(`${Cypress.config().baseUrl}/builder/portal/apps/templates`)
+      
       // Filter Business Apps Templates
       cy.get(".template-category-filters").within(() => {
         cy.get('[data-cy="Business Apps"]').click()
