@@ -2,7 +2,6 @@
   import {
     Heading,
     Layout,
-    Detail,
     Button,
     Input,
     Select,
@@ -11,7 +10,6 @@
     notifications,
     Body,
     Search,
-    Divider,
     Helpers,
   } from "@budibase/bbui"
   import TemplateDisplay from "components/common/TemplateDisplay.svelte"
@@ -66,6 +64,9 @@
   $: filteredApps = enrichedApps.filter(app =>
     app?.name?.toLowerCase().includes(searchTerm.toLowerCase())
   )
+
+  $: lockedApps = filteredApps.filter(app => app?.lockedYou || app?.lockedOther)
+  $: unlocked = lockedApps?.length == 0
 
   const enrichApps = (apps, user, sortBy) => {
     const enrichedApps = apps.map(app => ({
@@ -180,8 +181,8 @@
     }
   }
 
-  const previewApp = app => {
-    window.open(`/${app.devId}`)
+  const appOverview = app => {
+    $goto(`../overview/${app.devId}`)
   }
 
   const editApp = app => {
@@ -305,7 +306,7 @@
 </script>
 
 <Page wide>
-  <Layout noPadding gap="XL">
+  <Layout noPadding gap="M">
     {#if loaded}
       <div class="title">
         <div class="welcome">
@@ -315,29 +316,17 @@
               {welcomeBody}
             </Body>
           </Layout>
-
-          <div class="buttons">
-            <Button
-              dataCy="create-app-btn"
-              size="M"
-              icon="Add"
-              cta
-              on:click={initiateAppCreation}
-            >
-              {createAppButtonText}
-            </Button>
-            {#if $apps?.length > 0}
+          {#if !$apps?.length}
+            <div class="buttons">
               <Button
-                icon="Experience"
+                dataCy="create-app-btn"
                 size="M"
-                quiet
-                secondary
-                on:click={$goto("/builder/portal/apps/templates")}
+                icon="Add"
+                cta
+                on:click={initiateAppCreation}
               >
-                Templates
+                {createAppButtonText}
               </Button>
-            {/if}
-            {#if !$apps?.length}
               <Button
                 dataCy="import-app-btn"
                 icon="Import"
@@ -348,15 +337,9 @@
               >
                 Import app
               </Button>
-            {/if}
-          </div>
+            </div>
+          {/if}
         </div>
-        <div>
-          <Layout gap="S" justifyItems="center">
-            <img class="img-logo img-size" alt="logo" src={Logo} />
-          </Layout>
-        </div>
-        <Divider size="S" />
       </div>
 
       {#if !$apps?.length && $templates?.length}
@@ -364,9 +347,42 @@
       {/if}
 
       {#if enrichedApps.length}
-        <Layout noPadding gap="S">
+        <Layout noPadding gap="L">
           <div class="title">
-            <Detail size="L">Apps</Detail>
+            <div class="buttons">
+              <Button
+                dataCy="create-app-btn"
+                size="M"
+                icon="Add"
+                cta
+                on:click={initiateAppCreation}
+              >
+                {createAppButtonText}
+              </Button>
+              {#if $apps?.length > 0}
+                <Button
+                  icon="Experience"
+                  size="M"
+                  quiet
+                  secondary
+                  on:click={$goto("/builder/portal/apps/templates")}
+                >
+                  Templates
+                </Button>
+              {/if}
+              {#if !$apps?.length}
+                <Button
+                  dataCy="import-app-btn"
+                  icon="Import"
+                  size="L"
+                  quiet
+                  secondary
+                  on:click={initiateAppImport}
+                >
+                  Import app
+                </Button>
+              {/if}
+            </div>
             {#if enrichedApps.length > 1}
               <div class="app-actions">
                 {#if cloud}
@@ -398,7 +414,7 @@
             {/if}
           </div>
 
-          <div class="appTable">
+          <div class="appTable" class:unlocked>
             {#each filteredApps as app (app.appId)}
               <AppRow
                 {copyAppId}
@@ -411,7 +427,7 @@
                 {exportApp}
                 {deleteApp}
                 {updateApp}
-                {previewApp}
+                {appOverview}
               />
             {/each}
           </div>
@@ -472,6 +488,9 @@
 <ChooseIconModal app={selectedApp} bind:this={iconModal} />
 
 <style>
+  .appTable {
+    border-top: var(--border-light);
+  }
   .app-actions {
     display: flex;
   }
@@ -479,7 +498,7 @@
     margin-right: 10px;
   }
   .title .welcome > .buttons {
-    padding-top: 30px;
+    padding-top: var(--spacing-l);
   }
   .title {
     display: flex;
@@ -515,6 +534,11 @@
     grid-template-columns: 1fr 1fr 1fr 1fr auto;
     align-items: center;
   }
+
+  .appTable.unlocked {
+    grid-template-columns: 1fr 1fr auto 1fr auto;
+  }
+
   .appTable :global(> div) {
     height: 70px;
     display: grid;

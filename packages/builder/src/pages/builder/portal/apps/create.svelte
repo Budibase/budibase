@@ -9,6 +9,7 @@
     Body,
     Modal,
     Divider,
+    ActionButton,
   } from "@budibase/bbui"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
   import TemplateDisplay from "components/common/TemplateDisplay.svelte"
@@ -60,16 +61,15 @@
 <Page wide>
   <Layout noPadding gap="XL">
     <span>
-      <Button
-        quiet
+      <ActionButton
         secondary
-        icon={"ChevronLeft"}
+        icon={"ArrowLeft"}
         on:click={() => {
           $goto("../")
         }}
       >
         Back
-      </Button>
+      </ActionButton>
     </span>
 
     <div class="title">

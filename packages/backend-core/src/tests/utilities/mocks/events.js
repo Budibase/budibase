@@ -1,5 +1,9 @@
 jest.mock("../../../events", () => {
   return {
+    identification: {
+      identifyTenantGroup: jest.fn(),
+      identifyUser: jest.fn(),
+    },
     analytics: {
       enabled: () => false,
     },

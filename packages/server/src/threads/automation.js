@@ -219,7 +219,7 @@ class Orchestrator {
           }
           if (
             index === parseInt(env.AUTOMATION_MAX_ITERATIONS) ||
-            index === loopStep.inputs.iterations
+            index === parseInt(loopStep.inputs.iterations)
           ) {
             this.updateContextAndOutput(loopStepNumber, step, tempOutput, {
               status: AutomationErrors.MAX_ITERATIONS,

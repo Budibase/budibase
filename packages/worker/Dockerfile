@@ -9,7 +9,10 @@ WORKDIR /app
 
 # copy files and install dependencies
 COPY . ./
-RUN yarn
+# handle node-gyp
+RUN apk add --no-cache --virtual .gyp python3 make g++ \
+    && yarn && apk del .gyp
+RUN yarn global add pm2
 
 EXPOSE 4001
 
@@ -17,4 +20,5 @@ EXPOSE 4001
 # due to this causing yarn to stop installing dev dependencies
 # which are actually needed to get this environment up and running
 ENV NODE_ENV=production
-CMD ["yarn", "run:docker"]
+ENV CLUSTER_MODE=${CLUSTER_MODE}
+CMD ["./docker_run.sh"]

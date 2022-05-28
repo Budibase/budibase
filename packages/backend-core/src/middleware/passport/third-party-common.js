@@ -86,7 +86,7 @@ exports.authenticateThirdParty = async function (
   }
 
   // now that we're sure user exists, load them from the db
-  dbUser = await users.getGlobalUserByEmail(thirdPartyUser.email)
+  dbUser = await db.get(dbUser._id)
 
   // authenticate
   const sessionId = newid()
