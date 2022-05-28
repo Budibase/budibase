@@ -1,4 +1,4 @@
-export type LoginSource = "local" | "google" | "oidc"
+export type LoginSource = "local" | "google" | "oidc" | "google-internal"
 export type SSOType = "oidc" | "google"
 
 export interface LoginEvent {

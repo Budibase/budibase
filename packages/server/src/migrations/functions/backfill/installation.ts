@@ -1,6 +1,5 @@
-import { events, tenancy } from "@budibase/backend-core"
+import { events, tenancy, installation } from "@budibase/backend-core"
 import { Installation } from "@budibase/types"
-import * as installation from "../../../installation"
 import * as global from "./global"
 
 /**
@@ -17,6 +16,9 @@ export const run = async () => {
     const db = tenancy.getGlobalDB()
     const installTimestamp = (await global.getInstallTimestamp(db)) as number
     const install: Installation = await installation.getInstall()
-    await events.identification.identifyInstallation(install, installTimestamp)
+    await events.identification.identifyInstallationGroup(
+      install.installId,
+      installTimestamp
+    )
   })
 }

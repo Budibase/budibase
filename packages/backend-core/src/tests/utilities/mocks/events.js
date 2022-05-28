@@ -56,8 +56,10 @@ jest.mock("../../../events", () => {
       nameUpdated: jest.fn(),
       logoUpdated: jest.fn(),
       platformURLUpdated: jest.fn(),
-      versionChecked: jest.fn(),
       analyticsOptOut: jest.fn(),
+    },
+    version: {
+      checked: jest.fn(),
     },
     query: {
       created: jest.fn(),

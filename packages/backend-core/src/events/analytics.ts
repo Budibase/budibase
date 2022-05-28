@@ -3,6 +3,7 @@ import * as tenancy from "../tenancy"
 import * as dbUtils from "../db/utils"
 import { Configs } from "../constants"
 
+// TODO: cache in redis
 export const enabled = async () => {
   // cloud - always use the environment variable
   if (!env.SELF_HOSTED) {

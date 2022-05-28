@@ -1,5 +1,11 @@
 export interface BuilderServedEvent {}
 
-export interface AppServedEvent {}
+export interface AppServedEvent {
+  appId: string
+  appVersion: string
+}
 
-export interface AppPreviewServedEvent {}
+export interface AppPreviewServedEvent {
+  appId: string
+  appVersion: string
+}

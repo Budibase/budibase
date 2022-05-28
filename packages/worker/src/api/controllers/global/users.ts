@@ -69,7 +69,7 @@ export const adminUser = async (ctx: any) => {
     if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
       account = await accounts.getAccountByTenantId(tenantId)
     }
-    await events.identification.identifyTenant(tenantId, account)
+    await events.identification.identifyTenantGroup(tenantId, account)
   } catch (err: any) {
     ctx.throw(err.status || 400, err)
   }

@@ -16,8 +16,7 @@ const fileSystem = require("./utilities/fileSystem")
 const bullboard = require("./automations/bullboard")
 import redis from "./utilities/redis"
 import * as migrations from "./migrations"
-import { events } from "@budibase/backend-core"
-import * as installation from "./installation"
+import { events, installation } from "@budibase/backend-core"
 
 const app = new Koa()
 

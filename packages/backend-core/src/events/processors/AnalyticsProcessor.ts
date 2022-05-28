@@ -1,8 +1,14 @@
-import { Event, Identity } from "@budibase/types"
+import { Event, Identity, Group, IdentityType } from "@budibase/types"
 import { EventProcessor } from "./types"
 import env from "../../environment"
 import * as analytics from "../analytics"
 import PosthogProcessor from "./PosthogProcessor"
+
+/**
+ * Events that are always captured.
+ */
+const EVENT_WHITELIST = [Event.VERSION_UPGRADED, Event.VERSION_DOWNGRADED]
+const IDENTITY_WHITELIST = [IdentityType.INSTALLATION, IdentityType.TENANT]
 
 export default class AnalyticsProcessor implements EventProcessor {
   posthog: PosthogProcessor | undefined
@@ -19,7 +25,7 @@ export default class AnalyticsProcessor implements EventProcessor {
     properties: any,
     timestamp?: string | number
   ): Promise<void> {
-    if (!(await analytics.enabled())) {
+    if (!EVENT_WHITELIST.includes(event) && !(await analytics.enabled())) {
       return
     }
     if (this.posthog) {
@@ -28,11 +34,22 @@ export default class AnalyticsProcessor implements EventProcessor {
   }
 
   async identify(identity: Identity, timestamp?: string | number) {
-    if (!(await analytics.enabled())) {
+    // Group indentifications (tenant and installation) always on
+    if (
+      !IDENTITY_WHITELIST.includes(identity.type) &&
+      !(await analytics.enabled())
+    ) {
       return
     }
     if (this.posthog) {
       this.posthog.identify(identity, timestamp)
+    }
+  }
+
+  async identifyGroup(group: Group, timestamp?: string | number) {
+    // Group indentifications (tenant and installation) always on
+    if (this.posthog) {
+      this.posthog.identifyGroup(group, timestamp)
     }
   }
 

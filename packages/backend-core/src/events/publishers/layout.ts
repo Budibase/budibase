@@ -13,9 +13,9 @@ export async function created(layout: Layout, timestamp?: string) {
   await publishEvent(Event.LAYOUT_CREATED, properties, timestamp)
 }
 
-export async function deleted(layout: Layout) {
+export async function deleted(layoutId: string) {
   const properties: LayoutDeletedEvent = {
-    layoutId: layout._id as string,
+    layoutId,
   }
   await publishEvent(Event.LAYOUT_DELETED, properties)
 }

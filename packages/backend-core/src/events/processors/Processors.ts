@@ -1,4 +1,4 @@
-import { Event, Identity } from "@budibase/types"
+import { Event, Identity, Group } from "@budibase/types"
 import { EventProcessor } from "./types"
 
 export default class Processor implements EventProcessor {
@@ -26,6 +26,15 @@ export default class Processor implements EventProcessor {
   ): Promise<void> {
     for (const eventProcessor of this.processors) {
       await eventProcessor.identify(identity, timestamp)
+    }
+  }
+
+  async identifyGroup(
+    identity: Group,
+    timestamp?: string | number
+  ): Promise<void> {
+    for (const eventProcessor of this.processors) {
+      await eventProcessor.identifyGroup(identity, timestamp)
     }
   }
 

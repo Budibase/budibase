@@ -1,29 +1,27 @@
-import {
-  db as dbUtils,
-  events,
-  utils,
-  context,
-  tenancy,
-} from "@budibase/backend-core"
-import { Installation } from "@budibase/types"
+import * as hashing from "./hashing"
+import * as events from "./events"
+import { StaticDatabases } from "./db/constants"
+import { doWithDB } from "./db"
+import { Installation, IdentityType } from "@budibase/types"
+import * as context from "./context"
 import semver from "semver"
 
 const pkg = require("../package.json")
 
 export const getInstall = async (): Promise<Installation> => {
-  return dbUtils.doWithDB(
-    dbUtils.StaticDatabases.PLATFORM_INFO.name,
+  return doWithDB(
+    StaticDatabases.PLATFORM_INFO.name,
     async (platformDb: any) => {
       let install: Installation
       try {
         install = await platformDb.get(
-          dbUtils.StaticDatabases.PLATFORM_INFO.docs.install
+          StaticDatabases.PLATFORM_INFO.docs.install
         )
       } catch (e: any) {
         if (e.status === 404) {
           install = {
-            _id: dbUtils.StaticDatabases.PLATFORM_INFO.docs.install,
-            installId: utils.newid(),
+            _id: StaticDatabases.PLATFORM_INFO.docs.install,
+            installId: hashing.newid(),
             version: pkg.version,
           }
           const resp = await platformDb.put(install)
@@ -40,8 +38,8 @@ export const getInstall = async (): Promise<Installation> => {
 
 const updateVersion = async (version: string): Promise<boolean> => {
   try {
-    await dbUtils.doWithDB(
-      dbUtils.StaticDatabases.PLATFORM_INFO.name,
+    await doWithDB(
+      StaticDatabases.PLATFORM_INFO.name,
       async (platformDb: any) => {
         const install = await getInstall()
         install.version = version
@@ -73,11 +71,10 @@ export const checkInstallVersion = async (): Promise<void> => {
     const success = await updateVersion(newVersion)
 
     if (success) {
-      await context.doInUserContext(
+      await context.doInIdentityContext(
         {
           _id: install.installId,
-          isInstall: true,
-          tenantId: tenancy.DEFAULT_TENANT_ID,
+          type: IdentityType.INSTALLATION,
         },
         async () => {
           if (isUpgrade) {
@@ -87,6 +84,7 @@ export const checkInstallVersion = async (): Promise<void> => {
           }
         }
       )
+      await events.identification.identifyInstallationGroup(install.installId)
     }
   }
 }

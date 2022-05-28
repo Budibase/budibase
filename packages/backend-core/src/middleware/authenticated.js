@@ -7,7 +7,7 @@ const env = require("../environment")
 const { SEPARATOR, ViewNames, queryGlobalView } = require("../../db")
 const { getGlobalDB, doInTenant } = require("../tenancy")
 const { decrypt } = require("../security/encryption")
-const context = require("../context")
+const identity = require("../context/identity")
 
 function finalise(
   ctx,
@@ -135,7 +135,7 @@ module.exports = (
       finalise(ctx, { authenticated, user, internal, version, publicEndpoint })
 
       if (user && user.email) {
-        return context.doInUserContext(user, next)
+        return identity.doInUserContext(user, next)
       } else {
         return next()
       }
@@ -147,7 +147,7 @@ module.exports = (
       // allow configuring for public access
       if ((opts && opts.publicAllowed) || publicEndpoint) {
         finalise(ctx, { authenticated: false, version, publicEndpoint })
-        return context.doInUserContext({ _id: "public_user" }, next)
+        return next()
       } else {
         ctx.throw(err.status || 403, err)
       }
