@@ -33,8 +33,8 @@ describe("/dev", () => {
         .expect(200)
 
       expect(res.body.version).toBe(version)
-      expect(events.org.versionChecked).toBeCalledTimes(1)
-      expect(events.org.versionChecked).toBeCalledWith(version)
+      expect(events.version.checked).toBeCalledTimes(1)
+      expect(events.version.checked).toBeCalledWith(version)
     })
   })
 })

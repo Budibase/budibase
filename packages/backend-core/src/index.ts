@@ -4,6 +4,7 @@ import * as events from "./events"
 import * as migrations from "./migrations"
 import * as users from "./users"
 import * as accounts from "./cloud/accounts"
+import * as installation from "./installation"
 import env from "./environment"
 import tenancy from "./tenancy"
 import featureFlags from "./featureFlags"
@@ -46,4 +47,5 @@ export = {
   events,
   sessions,
   deprovisioning,
+  installation,
 }

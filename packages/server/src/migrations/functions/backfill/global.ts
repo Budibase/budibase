@@ -2,9 +2,8 @@ import * as users from "./global/users"
 import * as rows from "./global/rows"
 import * as configs from "./global/configs"
 import { tenancy, events, migrations, accounts } from "@budibase/backend-core"
-import { CloudAccount, Installation } from "@budibase/types"
+import { CloudAccount } from "@budibase/types"
 import env from "../../../environment"
-import * as installation from "../../../installation"
 
 /**
  * Date:
@@ -22,7 +21,7 @@ export const run = async (db: any) => {
     account = await accounts.getAccountByTenantId(tenantId)
   }
 
-  await events.identification.identifyTenant(
+  await events.identification.identifyTenantGroup(
     tenantId,
     account,
     installTimestamp

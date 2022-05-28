@@ -19,7 +19,6 @@ const { getAppDB, getAppId } = require("@budibase/backend-core/context")
 const AWS = require("aws-sdk")
 const AWS_REGION = env.AWS_REGION ? env.AWS_REGION : "eu-west-1"
 const { events } = require("@budibase/backend-core")
-const version = require("../../../../package.json").version
 
 async function prepareUpload({ s3Key, bucket, metadata, file }) {
   const response = await upload({
@@ -43,7 +42,7 @@ async function prepareUpload({ s3Key, bucket, metadata, file }) {
 exports.serveBuilder = async function (ctx) {
   let builderPath = resolve(TOP_LEVEL_PATH, "builder")
   await send(ctx, ctx.file, { root: builderPath })
-  await events.serve.servedBuilder(version)
+  await events.serve.servedBuilder()
 }
 
 exports.uploadFile = async function (ctx) {

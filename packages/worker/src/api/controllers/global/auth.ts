@@ -70,9 +70,9 @@ async function authInternal(ctx: any, user: any, err = null, info = null) {
 export const authenticate = async (ctx: any, next: any) => {
   return passport.authenticate(
     "local",
-    async (err: any, user: any, info: any) => {
+    async (err: any, user: User, info: any) => {
       await authInternal(ctx, user, err, info)
-      await context.doInUserContext(user, async () => {
+      await context.identity.doInUserContext(user, async () => {
         await events.auth.login("local")
       })
       ctx.status = 200
@@ -213,10 +213,10 @@ export const googleAuth = async (ctx: any, next: any) => {
   return passport.authenticate(
     strategy,
     { successRedirect: "/", failureRedirect: "/error" },
-    async (err: any, user: any, info: any) => {
+    async (err: any, user: User, info: any) => {
       await authInternal(ctx, user, err, info)
-      await context.doInUserContext(user, async () => {
-        await events.auth.login("google")
+      await context.identity.doInUserContext(user, async () => {
+        await events.auth.login("google-internal")
       })
       ctx.redirect("/")
     }
@@ -261,7 +261,7 @@ export const oidcAuth = async (ctx: any, next: any) => {
     { successRedirect: "/", failureRedirect: "/error" },
     async (err: any, user: any, info: any) => {
       await authInternal(ctx, user, err, info)
-      await context.doInUserContext(user, async () => {
+      await context.identity.doInUserContext(user, async () => {
         await events.auth.login("oidc")
       })
       ctx.redirect("/")

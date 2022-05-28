@@ -52,6 +52,7 @@ const env: any = {
     process.env.GLOBAL_CLOUD_BUCKET_NAME || "prod-budi-tenant-uploads",
   USE_COUCH: process.env.USE_COUCH || true,
   DISABLE_DEVELOPER_LICENSE: process.env.DISABLE_DEVELOPER_LICENSE,
+  SERVICE: process.env.SERVICE || "budibase",
   _set(key: any, value: any) {
     process.env[key] = value
     module.exports[key] = value

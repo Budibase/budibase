@@ -8,7 +8,7 @@ export enum Event {
   USER_PERMISSION_ADMIN_ASSIGNED = "user:admin:assigned",
   USER_PERMISSION_ADMIN_REMOVED = "user:admin:removed",
   USER_PERMISSION_BUILDER_ASSIGNED = "user:builder:assigned",
-  USER_PERMISSION_BUILDER_REMOVED = "userbuilder:removed",
+  USER_PERMISSION_BUILDER_REMOVED = "user:builder:removed",
 
   // USER / INVITE
   USER_INVITED = "user:invited",

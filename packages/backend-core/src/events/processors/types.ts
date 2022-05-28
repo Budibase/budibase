@@ -1,4 +1,4 @@
-import { Event, Identity } from "@budibase/types"
+import { Event, Identity, Group } from "@budibase/types"
 
 export enum EventProcessorType {
   POSTHOG = "posthog",
@@ -13,5 +13,6 @@ export interface EventProcessor {
     timestamp?: string | number
   ): Promise<void>
   identify(identity: Identity, timestamp?: string | number): Promise<void>
+  identifyGroup(group: Group, timestamp?: string | number): Promise<void>
   shutdown(): void
 }
