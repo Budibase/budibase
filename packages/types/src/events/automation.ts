@@ -43,3 +43,7 @@ export interface AutomationStepDeletedEvent {
   stepId: string
   stepType: string
 }
+
+export interface AutomationsRunEvent {
+  count: number
+}

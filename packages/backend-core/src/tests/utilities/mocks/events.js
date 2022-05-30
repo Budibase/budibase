@@ -1,135 +1,106 @@
-jest.mock("../../../events", () => {
-  return {
-    identification: {
-      identifyTenantGroup: jest.fn(),
-      identifyUser: jest.fn(),
-    },
-    analytics: {
-      enabled: () => false,
-    },
-    shutdown: () => {},
-    account: {
-      created: jest.fn(),
-      deleted: jest.fn(),
-      verified: jest.fn(),
-    },
-    app: {
-      created: jest.fn(),
-      updated: jest.fn(),
-      deleted: jest.fn(),
-      published: jest.fn(),
-      unpublished: jest.fn(),
-      templateImported: jest.fn(),
-      fileImported: jest.fn(),
-      versionUpdated: jest.fn(),
-      versionReverted: jest.fn(),
-      reverted: jest.fn(),
-      exported: jest.fn(),
-    },
-    auth: {
-      login: jest.fn(),
-      logout: jest.fn(),
-      SSOCreated: jest.fn(),
-      SSOUpdated: jest.fn(),
-      SSOActivated: jest.fn(),
-      SSODeactivated: jest.fn(),
-    },
-    automation: {
-      created: jest.fn(),
-      deleted: jest.fn(),
-      tested: jest.fn(),
-      // run: jest.fn(),
-      stepCreated: jest.fn(),
-      stepDeleted: jest.fn(),
-      triggerUpdated: jest.fn(),
-    },
-    datasource: {
-      created: jest.fn(),
-      updated: jest.fn(),
-      deleted: jest.fn(),
-    },
-    email: {
-      SMTPCreated: jest.fn(),
-      SMTPUpdated: jest.fn(),
-    },
-    layout: {
-      created: jest.fn(),
-      deleted: jest.fn(),
-    },
-    org: {
-      nameUpdated: jest.fn(),
-      logoUpdated: jest.fn(),
-      platformURLUpdated: jest.fn(),
-      analyticsOptOut: jest.fn(),
-    },
-    version: {
-      checked: jest.fn(),
-    },
-    query: {
-      created: jest.fn(),
-      updated: jest.fn(),
-      deleted: jest.fn(),
-      imported: jest.fn(),
-      previewed: jest.fn(),
-    },
-    role: {
-      created: jest.fn(),
-      updated: jest.fn(),
-      deleted: jest.fn(),
-      assigned: jest.fn(),
-      unassigned: jest.fn(),
-    },
-    rows: {
-      imported: jest.fn(),
-      created: jest.fn(),
-    },
-    screen: {
-      created: jest.fn(),
-      deleted: jest.fn(),
-    },
-    user: {
-      created: jest.fn(),
-      updated: jest.fn(),
-      deleted: jest.fn(),
-      permissionAdminAssigned: jest.fn(),
-      permissionAdminRemoved: jest.fn(),
-      permissionBuilderAssigned: jest.fn(),
-      permissionBuilderRemoved: jest.fn(),
-      invited: jest.fn(),
-      inviteAccepted: jest.fn(),
-      passwordForceReset: jest.fn(),
-      passwordUpdated: jest.fn(),
-      passwordResetRequested: jest.fn(),
-      passwordReset: jest.fn(),
-    },
-    serve: {
-      servedBuilder: jest.fn(),
-      servedApp: jest.fn(),
-      servedAppPreview: jest.fn(),
-    },
-    table: {
-      created: jest.fn(),
-      updated: jest.fn(),
-      deleted: jest.fn(),
-      exported: jest.fn(),
-      imported: jest.fn(),
-      permissionUpdated: jest.fn(),
-    },
-    view: {
-      created: jest.fn(),
-      updated: jest.fn(),
-      deleted: jest.fn(),
-      exported: jest.fn(),
-      filterCreated: jest.fn(),
-      filterUpdated: jest.fn(),
-      filterDeleted: jest.fn(),
-      calculationCreated: jest.fn(),
-      calculationUpdated: jest.fn(),
-      calculationDeleted: jest.fn(),
-    },
-  }
-})
-
 const events = require("../../../events")
+
+jest.spyOn(events.identification, "identifyTenantGroup")
+jest.spyOn(events.identification, "identifyUser")
+
+jest.spyOn(events.account, "created")
+jest.spyOn(events.account, "deleted")
+jest.spyOn(events.account, "verified")
+
+jest.spyOn(events.app, "created")
+jest.spyOn(events.app, "updated")
+jest.spyOn(events.app, "deleted")
+jest.spyOn(events.app, "published")
+jest.spyOn(events.app, "unpublished")
+jest.spyOn(events.app, "templateImported")
+jest.spyOn(events.app, "fileImported")
+jest.spyOn(events.app, "versionUpdated")
+jest.spyOn(events.app, "versionReverted")
+jest.spyOn(events.app, "reverted")
+jest.spyOn(events.app, "exported")
+
+jest.spyOn(events.auth, "login")
+jest.spyOn(events.auth, "logout")
+jest.spyOn(events.auth, "SSOCreated")
+jest.spyOn(events.auth, "SSOUpdated")
+jest.spyOn(events.auth, "SSOActivated")
+jest.spyOn(events.auth, "SSODeactivated")
+
+jest.spyOn(events.automation, "created")
+jest.spyOn(events.automation, "deleted")
+jest.spyOn(events.automation, "tested")
+jest.spyOn(events.automation, "stepCreated")
+jest.spyOn(events.automation, "stepDeleted")
+jest.spyOn(events.automation, "triggerUpdated")
+
+jest.spyOn(events.datasource, "created")
+jest.spyOn(events.datasource, "updated")
+jest.spyOn(events.datasource, "deleted")
+
+jest.spyOn(events.email, "SMTPCreated")
+jest.spyOn(events.email, "SMTPUpdated")
+
+jest.spyOn(events.layout, "created")
+jest.spyOn(events.layout, "deleted")
+
+jest.spyOn(events.org, "nameUpdated")
+jest.spyOn(events.org, "logoUpdated")
+jest.spyOn(events.org, "platformURLUpdated")
+jest.spyOn(events.org, "analyticsOptOut")
+
+jest.spyOn(events.version, "checked")
+
+jest.spyOn(events.query, "created")
+jest.spyOn(events.query, "updated")
+jest.spyOn(events.query, "deleted")
+jest.spyOn(events.query, "imported")
+jest.spyOn(events.query, "previewed")
+
+jest.spyOn(events.role, "created")
+jest.spyOn(events.role, "updated")
+jest.spyOn(events.role, "deleted")
+jest.spyOn(events.role, "assigned")
+jest.spyOn(events.role, "unassigned")
+
+jest.spyOn(events.rows, "imported")
+jest.spyOn(events.rows, "created")
+
+jest.spyOn(events.screen, "created")
+jest.spyOn(events.screen, "deleted")
+
+jest.spyOn(events.user, "created")
+jest.spyOn(events.user, "updated")
+jest.spyOn(events.user, "deleted")
+jest.spyOn(events.user, "permissionAdminAssigned")
+jest.spyOn(events.user, "permissionAdminRemoved")
+jest.spyOn(events.user, "permissionBuilderAssigned")
+jest.spyOn(events.user, "permissionBuilderRemoved")
+jest.spyOn(events.user, "invited")
+jest.spyOn(events.user, "inviteAccepted")
+jest.spyOn(events.user, "passwordForceReset")
+jest.spyOn(events.user, "passwordUpdated")
+jest.spyOn(events.user, "passwordResetRequested")
+jest.spyOn(events.user, "passwordReset")
+
+jest.spyOn(events.serve, "servedBuilder")
+jest.spyOn(events.serve, "servedApp")
+jest.spyOn(events.serve, "servedAppPreview")
+
+jest.spyOn(events.table, "created")
+jest.spyOn(events.table, "updated")
+jest.spyOn(events.table, "deleted")
+jest.spyOn(events.table, "exported")
+jest.spyOn(events.table, "imported")
+
+jest.spyOn(events.view, "created")
+jest.spyOn(events.view, "updated")
+jest.spyOn(events.view, "deleted")
+jest.spyOn(events.view, "exported")
+jest.spyOn(events.view, "filterCreated")
+jest.spyOn(events.view, "filterUpdated")
+jest.spyOn(events.view, "filterDeleted")
+jest.spyOn(events.view, "calculationCreated")
+jest.spyOn(events.view, "calculationUpdated")
+jest.spyOn(events.view, "calculationDeleted")
 
 module.exports = events

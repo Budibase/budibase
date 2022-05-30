@@ -40,4 +40,6 @@ export const backfill = async (
       }
     }
   }
+
+  return users.length
 }

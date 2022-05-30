@@ -2,8 +2,8 @@ import env from "../environment"
 import * as tenancy from "../tenancy"
 import * as dbUtils from "../db/utils"
 import { Configs } from "../constants"
+import { withCache, TTL, CacheKeys } from "../cache/generic"
 
-// TODO: cache in redis
 export const enabled = async () => {
   // cloud - always use the environment variable
   if (!env.SELF_HOSTED) {
@@ -11,13 +11,24 @@ export const enabled = async () => {
   }
 
   // self host - prefer the settings doc
-  // check for explicit true/false values to support
-  // backwards compatibility where setting may not exist
-  const settings = await getSettingsDoc()
-  if (settings?.config?.analyticsEnabled === false) {
-    return false
-  } else if (settings?.config?.analyticsEnabled === true) {
-    return true
+  // use cache as events have high throughput
+  const enabledInDB = await withCache(
+    CacheKeys.ANALYTICS_ENABLED,
+    TTL.ONE_DAY,
+    async () => {
+      const settings = await getSettingsDoc()
+
+      // need to do explicit checks in case the field is not set
+      if (settings?.config?.analyticsEnabled === false) {
+        return false
+      } else if (settings?.config?.analyticsEnabled === true) {
+        return true
+      }
+    }
+  )
+
+  if (enabledInDB !== undefined) {
+    return enabledInDB
   }
 
   // fallback to the environment variable

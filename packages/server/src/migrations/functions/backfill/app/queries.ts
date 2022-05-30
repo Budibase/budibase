@@ -28,4 +28,6 @@ export const backfill = async (appDb: any, timestamp: string) => {
     )
     await events.query.created(datasource, query, timestamp)
   }
+
+  return queries.length
 }

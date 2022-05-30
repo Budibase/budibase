@@ -53,9 +53,11 @@ describe("Rest Importer", () => {
   }
 
   const runTest = async (test, assertions) => {
-    for (let [key, data] of Object.entries(datasets)) {
-      await test(key, data, assertions)
-    }
+    config.doInContext(config.appId, async () => {
+      for (let [key, data] of Object.entries(datasets)) {
+        await test(key, data, assertions)
+      }
+    })
   }
 
   const testGetInfo = async (key, data, assertions) => {

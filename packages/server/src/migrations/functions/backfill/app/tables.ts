@@ -31,4 +31,6 @@ export const backfill = async (appDb: any, timestamp: string) => {
       }
     }
   }
+
+  return tables.length
 }

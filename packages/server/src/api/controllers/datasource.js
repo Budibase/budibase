@@ -144,7 +144,7 @@ exports.save = async function (ctx) {
   }
 
   const dbResp = await db.put(datasource)
-  await events.datasource.created()
+  await events.datasource.created(datasource)
   datasource._rev = dbResp.rev
 
   // Drain connection pools when configuration is changed

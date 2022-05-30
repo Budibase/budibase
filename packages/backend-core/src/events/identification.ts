@@ -23,6 +23,7 @@ import * as dbUtils from "../db/utils"
 import { Configs } from "../constants"
 import * as hashing from "../hashing"
 import * as installation from "../installation"
+import { withCache, TTL, CacheKeys } from "../cache/generic"
 
 const pkg = require("../../package.json")
 
@@ -53,7 +54,7 @@ export const getCurrentIdentity = async (): Promise<Identity> => {
     }
   } else if (identityType === IdentityType.TENANT) {
     const installationId = await getInstallationId()
-    const tenantId = await getCurrentTenantId()
+    const tenantId = await getEventTenantId(context.getTenantId())
 
     return {
       id: formatDistinctId(tenantId, identityType),
@@ -63,7 +64,7 @@ export const getCurrentIdentity = async (): Promise<Identity> => {
     }
   } else if (identityType === IdentityType.USER) {
     const userContext = identityContext as UserContext
-    const tenantId = await getCurrentTenantId()
+    const tenantId = await getEventTenantId(context.getTenantId())
     let installationId: string | undefined
 
     // self host account users won't have installation
@@ -109,7 +110,7 @@ export const identifyTenantGroup = async (
   account: Account | undefined,
   timestamp?: string | number
 ): Promise<void> => {
-  const id = await getGlobalTenantId(tenantId)
+  const id = await getEventTenantId(tenantId)
   const type = IdentityType.TENANT
 
   let hosting: Hosting
@@ -144,7 +145,7 @@ export const identifyUser = async (
   timestamp?: string | number
 ) => {
   const id = user._id as string
-  const tenantId = await getGlobalTenantId(user.tenantId)
+  const tenantId = await getEventTenantId(user.tenantId)
   const type = IdentityType.USER
   let builder = user.builder?.global || false
   let admin = user.admin?.global || false
@@ -214,8 +215,6 @@ const getHostingFromEnv = () => {
   return env.SELF_HOSTED ? Hosting.SELF : Hosting.CLOUD
 }
 
-export const getCurrentTenantId = () => getGlobalTenantId(context.getTenantId())
-
 export const getInstallationId = async () => {
   if (isAccountPortal()) {
     return "account-portal"
@@ -224,31 +223,35 @@ export const getInstallationId = async () => {
   return install.installId
 }
 
-const getGlobalTenantId = async (tenantId: string): Promise<string> => {
+const getEventTenantId = async (tenantId: string): Promise<string> => {
   if (env.SELF_HOSTED) {
-    return getGlobalId(tenantId)
+    return getUniqueTenantId(tenantId)
   } else {
     // tenant id's in the cloud are already unique
     return tenantId
   }
 }
 
-// TODO: cache in redis
-const getGlobalId = async (tenantId: string): Promise<string> => {
-  const db = context.getGlobalDB()
-  const config: SettingsConfig = await dbUtils.getScopedFullConfig(db, {
-    type: Configs.SETTINGS,
-  })
+const getUniqueTenantId = async (tenantId: string): Promise<string> => {
+  // make sure this tenantId always matches the tenantId in context
+  return context.doInTenant(tenantId, () => {
+    return withCache(CacheKeys.UNIQUE_TENANT_ID, TTL.ONE_DAY, async () => {
+      const db = context.getGlobalDB()
+      const config: SettingsConfig = await dbUtils.getScopedFullConfig(db, {
+        type: Configs.SETTINGS,
+      })
 
-  let globalId: string
-  if (config.config.globalId) {
-    return config.config.globalId
-  } else {
-    globalId = `${hashing.newid()}_${tenantId}`
-    config.config.globalId = globalId
-    await db.put(config)
-    return globalId
-  }
+      let uniqueTenantId: string
+      if (config.config.uniqueTenantId) {
+        return config.config.uniqueTenantId
+      } else {
+        uniqueTenantId = `${hashing.newid()}_${tenantId}`
+        config.config.uniqueTenantId = uniqueTenantId
+        await db.put(config)
+        return uniqueTenantId
+      }
+    })
+  })
 }
 
 const isAccountPortal = () => {

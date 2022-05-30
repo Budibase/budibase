@@ -19,7 +19,7 @@ export interface SettingsConfig extends Config {
     company: string
     logoUrl: string
     platformUrl: string
-    globalId?: string
+    uniqueTenantId?: string
   }
 }
 

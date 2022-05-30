@@ -8,6 +8,7 @@ import {
   QueryDeletedEvent,
   QueryImportedEvent,
   QueryPreviewedEvent,
+  QueriesRunEvent,
 } from "@budibase/types"
 
 /* eslint-disable */
@@ -38,6 +39,13 @@ export const imported = async (
 ) => {
   const properties: QueryImportedEvent = {}
   await publishEvent(Event.QUERY_IMPORT, properties)
+}
+
+export const run = async (count: number, timestamp?: string | number) => {
+  const properties: QueriesRunEvent = {
+    count,
+  }
+  await publishEvent(Event.QUERIES_RUN, properties, timestamp)
 }
 
 export const previewed = async (datasource: Datasource) => {

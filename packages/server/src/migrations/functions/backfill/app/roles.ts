@@ -17,4 +17,6 @@ export const backfill = async (appDb: any, timestamp: string) => {
   for (const role of roles) {
     await events.role.created(role, timestamp)
   }
+
+  return roles.length
 }

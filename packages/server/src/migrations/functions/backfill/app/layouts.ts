@@ -17,4 +17,6 @@ export const backfill = async (appDb: any, timestamp: string) => {
   for (const layout of layouts) {
     await events.layout.created(layout, timestamp)
   }
+
+  return layouts.length
 }

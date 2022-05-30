@@ -21,4 +21,6 @@ export const backfill = async (appDb: any, timestamp: string) => {
       await events.automation.stepCreated(automation, step, timestamp)
     }
   }
+
+  return automations.length
 }

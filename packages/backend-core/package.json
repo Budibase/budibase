@@ -8,6 +8,7 @@
   "license": "GPL-3.0",
   "scripts": {
     "build": "rimraf dist/ && tsc -p tsconfig.build.json",
+    "build:watch": "rimraf dist/ && tsc --build tsconfig.build.json --watch --preserveWatchOutput",
     "test": "jest",
     "test:watch": "jest --watchAll"
   },

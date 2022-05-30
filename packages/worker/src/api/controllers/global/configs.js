@@ -167,6 +167,7 @@ exports.save = async function (ctx) {
   try {
     const response = await db.put(ctx.request.body)
     await bustCache(CacheKeys.CHECKLIST)
+    await bustCache(CacheKeys.ANALYTICS_ENABLED)
 
     for (const fn of eventFns) {
       await fn()

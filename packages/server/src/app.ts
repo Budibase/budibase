@@ -83,6 +83,22 @@ module.exports = server.listen(env.PORT || 0, async () => {
   eventEmitter.emitPort(env.PORT)
   fileSystem.init()
   await redis.init()
+
+  // run migrations on startup if not done via http
+  // not recommended in a clustered environment
+  if (!env.HTTP_MIGRATIONS && !env.isTest()) {
+    try {
+      await migrations.migrate()
+    } catch (e) {
+      console.error("Error performing migrations. Exiting.\n", e)
+      shutdown()
+    }
+  }
+
+  // check for version updates
+  await installation.checkInstallVersion()
+
+  // done last - this will never complete
   await automations.init()
 })
 
@@ -99,15 +115,3 @@ process.on("uncaughtException", err => {
 process.on("SIGTERM", () => {
   shutdown()
 })
-
-// run migrations on startup if not done via http
-// not recommended in a clustered environment
-if (!env.HTTP_MIGRATIONS && !env.isTest()) {
-  migrations.migrate().catch(err => {
-    console.error("Error performing migrations. Exiting.\n", err)
-    shutdown()
-  })
-}
-
-// check for version updates
-installation.checkInstallVersion()

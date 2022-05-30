@@ -6,8 +6,21 @@ import * as roles from "./app/roles"
 import * as tables from "./app/tables"
 import * as screens from "./app/screens"
 import * as global from "./global"
-import { App } from "@budibase/types"
+import { App, AppBackfillSucceededEvent } from "@budibase/types"
 import { db as dbUtils, events } from "@budibase/backend-core"
+import env from "../../../environment"
+
+const failGraceful = env.SELF_HOSTED && !env.isDev()
+
+const handleError = (e: any, errors?: any) => {
+  if (failGraceful) {
+    if (errors) {
+      errors.push(e)
+    }
+    return
+  }
+  throw e
+}
 
 /**
  * Date:
@@ -18,28 +31,92 @@ import { db as dbUtils, events } from "@budibase/backend-core"
  */
 
 export const run = async (appDb: any) => {
-  if (await global.isComplete()) {
-    // make sure new apps aren't backfilled
-    // return if the global migration for this tenant is complete
-    // which runs after the app migrations
-    return
-  }
+  try {
+    if (await global.isComplete()) {
+      // make sure new apps aren't backfilled
+      // return if the global migration for this tenant is complete
+      // which runs after the app migrations
+      return
+    }
 
-  const app: App = await appDb.get(dbUtils.DocumentTypes.APP_METADATA)
-  const timestamp = app.createdAt as string
+    const app: App = await appDb.get(dbUtils.DocumentTypes.APP_METADATA)
+    const timestamp = app.createdAt as string
 
-  if (dbUtils.isDevAppID(app.appId)) {
-    await events.app.created(app, timestamp)
-    await automations.backfill(appDb, timestamp)
-    await datasources.backfill(appDb, timestamp)
-    await layouts.backfill(appDb, timestamp)
-    await queries.backfill(appDb, timestamp)
-    await roles.backfill(appDb, timestamp)
-    await tables.backfill(appDb, timestamp)
-    await screens.backfill(appDb, timestamp)
-  }
+    if (dbUtils.isProdAppID(app.appId)) {
+      await events.app.published(app, timestamp)
+    }
 
-  if (dbUtils.isProdAppID(app.appId)) {
-    await events.app.published(app, timestamp)
+    const totals: any = {}
+    const errors: any = []
+
+    if (dbUtils.isDevAppID(app.appId)) {
+      await events.app.created(app, timestamp)
+      try {
+        totals.automations = await automations.backfill(appDb, timestamp)
+      } catch (e) {
+        handleError(e, errors)
+      }
+
+      try {
+        totals.datasources = await datasources.backfill(appDb, timestamp)
+      } catch (e) {
+        handleError(e, errors)
+      }
+
+      try {
+        totals.layouts = await layouts.backfill(appDb, timestamp)
+      } catch (e) {
+        handleError(e, errors)
+      }
+
+      try {
+        totals.queries = await queries.backfill(appDb, timestamp)
+      } catch (e) {
+        handleError(e, errors)
+      }
+
+      try {
+        totals.roles = await roles.backfill(appDb, timestamp)
+      } catch (e) {
+        handleError(e, errors)
+      }
+
+      try {
+        totals.screens = await screens.backfill(appDb, timestamp)
+      } catch (e) {
+        handleError(e, errors)
+      }
+
+      try {
+        totals.tables = await tables.backfill(appDb, timestamp)
+      } catch (e) {
+        handleError(e, errors)
+      }
+    }
+
+    const properties: AppBackfillSucceededEvent = {
+      appId: app.appId,
+      automations: totals.automations,
+      datasources: totals.datasources,
+      layouts: totals.layouts,
+      queries: totals.queries,
+      roles: totals.roles,
+      tables: totals.tables,
+      screens: totals.screens,
+    }
+
+    if (errors.length) {
+      properties.errors = errors.map((e: any) =>
+        JSON.stringify(e, Object.getOwnPropertyNames(e))
+      )
+      properties.errorCount = errors.length
+    } else {
+      properties.errorCount = 0
+    }
+
+    await events.backfill.appSucceeded(properties)
+  } catch (e) {
+    handleError(e)
+    await events.backfill.appFailed(e)
   }
 }

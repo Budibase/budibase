@@ -5,10 +5,17 @@ import { doWithDB } from "./db"
 import { Installation, IdentityType } from "@budibase/types"
 import * as context from "./context"
 import semver from "semver"
+import { bustCache, withCache, TTL, CacheKeys } from "./cache/generic"
 
 const pkg = require("../package.json")
 
 export const getInstall = async (): Promise<Installation> => {
+  return withCache(CacheKeys.INSTALLATION, TTL.ONE_DAY, getInstallFromDB, {
+    useTenancy: false,
+  })
+}
+
+const getInstallFromDB = async (): Promise<Installation> => {
   return doWithDB(
     StaticDatabases.PLATFORM_INFO.name,
     async (platformDb: any) => {
@@ -44,6 +51,7 @@ const updateVersion = async (version: string): Promise<boolean> => {
         const install = await getInstall()
         install.version = version
         await platformDb.put(install)
+        await bustCache(CacheKeys.INSTALLATION)
       },
       {}
     )
