@@ -8,7 +8,7 @@ import { MetadataTypes, WebhookType } from "../constants"
 import { getProdAppID, doWithDB } from "@budibase/backend-core/db"
 import { cloneDeep } from "lodash/fp"
 import { getAppDB, getAppId } from "@budibase/backend-core/context"
-import { tenancy } from "@budibase/backend-core"
+import { context } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 
 const WH_STEP_ID = definitions.WEBHOOK.stepId
@@ -22,8 +22,7 @@ export async function processEvent(job: any) {
       `${job.data.automation.appId} automation ${automationId} running`
     )
     // need to actually await these so that an error can be captured properly
-    const tenantId = tenancy.getTenantIDFromAppID(job.data.event.appId)
-    return await tenancy.doInTenant(tenantId, async () => {
+    return await context.doInContext(job.data.event.appId, async () => {
       const runFn = () => Runner.run(job)
       return quotas.addAutomation(runFn, {
         automationId,

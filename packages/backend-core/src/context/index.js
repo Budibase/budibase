@@ -139,6 +139,16 @@ const setAppTenantId = appId => {
   exports.updateTenantId(appTenantId)
 }
 
+// gets the tenant ID from the app ID
+exports.doInContext = async (appId, task) => {
+  const tenantId = exports.getTenantIDFromAppID(appId)
+  return exports.doInTenant(tenantId, async () => {
+    return exports.doInAppContext(appId, async () => {
+      return task()
+    })
+  })
+}
+
 exports.doInAppContext = (appId, task, { forceNew } = {}) => {
   if (!appId) {
     throw new Error("appId is required")
