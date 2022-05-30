@@ -14,6 +14,8 @@ const automations = require("./automations/index")
 const Sentry = require("@sentry/node")
 const fileSystem = require("./utilities/fileSystem")
 const bullboard = require("./automations/bullboard")
+const context = require("@budibase/backend-core/context")
+const { Thread } = require("./threads")
 import redis from "./utilities/redis"
 import * as migrations from "./migrations"
 
@@ -49,7 +51,7 @@ app.context.eventEmitter = eventEmitter
 app.context.auth = {}
 
 // api routes
-app.use(api.routes())
+app.use(api.router.routes())
 
 if (env.isProd()) {
   env._set("NODE_ENV", "production")
@@ -68,11 +70,20 @@ if (env.isProd()) {
 const server = http.createServer(app.callback())
 destroyable(server)
 
+let shuttingDown = false
 server.on("close", async () => {
-  if (env.NODE_ENV !== "jest") {
+  // already in process
+  if (shuttingDown) {
+    return
+  }
+  shuttingDown = true
+  if (!env.isTest()) {
     console.log("Server Closed")
   }
+  await automations.shutdown()
   await redis.shutdown()
+  await Thread.shutdown()
+  api.shutdown()
 })
 
 module.exports = server.listen(env.PORT || 0, async () => {
