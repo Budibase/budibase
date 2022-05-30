@@ -417,28 +417,12 @@ export const getFrontendStore = () => {
         }
         parentComponent._children.push(componentInstance)
 
-        const definition = store.actions.components.getDefinition(componentName)
-
         // Save components and update UI
         await store.actions.preview.saveSelected()
         store.update(state => {
           state.currentView = "component"
           state.selectedComponentId = componentInstance._id
 
-          const focusSetting = definition.settings.filter(setting => {
-            return setting.required
-          })
-          const mappedSettings = focusSetting.map(setting => {
-            return {
-              key: setting.key,
-              target: state.selectedComponentId,
-              location: "component_settings",
-            }
-          })
-
-          if (focusSetting.length) {
-            state.builderFocus = mappedSettings
-          }
           return state
         })
 

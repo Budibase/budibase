@@ -975,7 +975,8 @@
       {
         "type": "text",
         "label": "URL",
-        "key": "url"
+        "key": "url",
+        "required": true
       },
       {
         "type": "select",
@@ -3255,7 +3256,8 @@
       {
         "type": "dataSource",
         "label": "Data",
-        "key": "dataSource"
+        "key": "dataSource",
+        "required": true
       },
       {
         "type": "filter",
@@ -3324,7 +3326,7 @@
     ],
     "hasChildren": true,
     "showEmptyState": false,
-    "info": "Row selection is only compatible with internal or SQL tables", 
+    "info": "Row selection is only compatible with internal or SQL tables",
     "settings": [
       {
         "type": "dataProvider",

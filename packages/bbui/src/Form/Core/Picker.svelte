@@ -33,7 +33,7 @@
   let focus = false
   let pickerButton
 
-  $: focus = autofocus && pickerButton
+  $: focus = autofocus && pickerButton !== null
 
   $: sortedOptions = getSortedOptions(options, getOptionLabel, sort)
   $: filteredOptions = getFilteredOptions(
@@ -88,6 +88,14 @@
     class:is-focused={focus}
     bind:this={pickerButton}
     on:mousedown={onClick}
+    on:keydown={e => {
+      var keycode = e.key
+      if (focus) {
+        if (keycode === "Enter") {
+          onClick(e)
+        }
+      }
+    }}
     on:focus={() => {
       focus = true
     }}
