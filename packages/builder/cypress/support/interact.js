@@ -34,3 +34,11 @@ export const PUBLISH_POPOVER_ACTION = '[data-cy="publish-popover-action"]'
 export const PUBLISH_POPOVER_MESSAGE = ".publish-popover-message"
 export const SPECTRUM_BUTTON = ".spectrum-Button"
 export const TOPRIGHTNAV_BUTTON_SPECTRUM = ".toprightnav button.spectrum-Button"
+
+//createComponents
+export const DATA_CY_SETTINGS = "[data-cy=Settings]"
+export const SETTINGS_INPUT = "[data-cy=setting-text] input"
+export const DATA_CY_DESIGN = "[data-cy=Design]"
+export const DATA_CY_FSPCONTROL = "[data-cy=font-size-prop-control]"
+export const DATA_CY_DATASOURCE = "[data-cy=setting-dataSource]"
+export const DROPDOWN_CONTAINER = ".dropdown-container"
