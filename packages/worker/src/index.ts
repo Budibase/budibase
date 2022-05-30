@@ -71,6 +71,7 @@ server.on("close", async () => {
     console.log("Server Closed")
   }
   await redis.shutdown()
+  process.exit()
 })
 
 const shutdown = () => {
