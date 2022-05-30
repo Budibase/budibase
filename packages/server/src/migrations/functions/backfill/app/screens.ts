@@ -17,4 +17,6 @@ export const backfill = async (appDb: any, timestamp: string) => {
   for (const screen of screens) {
     await events.screen.created(screen, timestamp)
   }
+
+  return screens.length
 }

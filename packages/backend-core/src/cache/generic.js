@@ -4,6 +4,9 @@ const { getTenantId } = require("../context")
 
 exports.CacheKeys = {
   CHECKLIST: "checklist",
+  INSTALLATION: "installation",
+  ANALYTICS_ENABLED: "analyticsEnabled",
+  UNIQUE_TENANT_ID: "uniqueTenantId",
 }
 
 exports.TTL = {
@@ -17,8 +20,8 @@ function generateTenantKey(key) {
   return `${key}:${tenantId}`
 }
 
-exports.withCache = async (key, ttl, fetchFn) => {
-  key = generateTenantKey(key)
+exports.withCache = async (key, ttl, fetchFn, opts = { useTenancy: true }) => {
+  key = opts.useTenancy ? generateTenantKey(key) : key
   const client = await redis.getCacheClient()
   const cachedValue = await client.get(key)
   if (cachedValue) {

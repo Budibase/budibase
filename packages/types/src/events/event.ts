@@ -81,7 +81,7 @@ export enum Event {
   QUERY_UPDATED = "query:updated",
   QUERY_DELETED = "query:deleted",
   QUERY_IMPORT = "query:import",
-  // QUERY_RUN = "query:run",
+  QUERIES_RUN = "queries:run",
   QUERY_PREVIEWED = "query:previewed",
 
   // TABLE
@@ -124,7 +124,7 @@ export enum Event {
   AUTOMATION_CREATED = "automation:created",
   AUTOMATION_DELETED = "automation:deleted",
   AUTOMATION_TESTED = "automation:tested",
-  // AUTOMATION_RUN = "automation:run",
+  AUTOMATIONS_RUN = "automations:run",
   AUTOMATION_STEP_CREATED = "automation:step:created",
   AUTOMATION_STEP_DELETED = "automation:step:deleted",
   AUTOMATION_TRIGGER_UPDATED = "automation:trigger:updated",
@@ -140,6 +140,14 @@ export enum Event {
   ACCOUNT_CREATED = "account:created",
   ACCOUNT_DELETED = "account:deleted",
   ACCOUNT_VERIFIED = "account:verified",
+
+  // BACKFILL
+  APP_BACKFILL_SUCCEEDED = "app:backfill:succeeded",
+  APP_BACKFILL_FAILED = "app:backfill:failed",
+  TENANT_BACKFILL_SUCCEEDED = "tenant:backfill:succeeded",
+  TENANT_BACKFILL_FAILED = "tenant:backfill:failed",
+  INSTALLATION_BACKFILL_SUCCEEDED = "installation:backfill:succeeded",
+  INSTALLATION_BACKFILL_FAILED = "installation:backfill:failed",
 }
 
 export type RowImportFormat = "csv"

@@ -17,4 +17,6 @@ export const backfill = async (appDb: any, timestamp: string) => {
   for (const datasource of datasources) {
     await events.datasource.created(datasource, timestamp)
   }
+
+  return datasources.length
 }

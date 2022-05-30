@@ -391,6 +391,7 @@ export const getScopedFullConfig = async function (
       // defaults
       scopedConfig = {
         doc: {
+          _id: generateConfigID({ type, user, workspace }),
           config: {
             platformUrl: await getPlatformUrl(),
             analyticsEnabled: await events.analytics.enabled(),

@@ -71,9 +71,9 @@ exports.create = async function (ctx) {
     newAuto: automation,
   })
   const response = await db.put(automation)
-  await events.automation.created()
+  await events.automation.created(automation)
   for (let step of automation.definition.steps) {
-    await events.automation.stepCreated(step)
+    await events.automation.stepCreated(automation, step)
   }
   automation._rev = response.rev
 

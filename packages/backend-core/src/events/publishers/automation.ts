@@ -9,6 +9,7 @@ import {
   AutomationStepCreatedEvent,
   AutomationStepDeletedEvent,
   AutomationTriggerUpdatedEvent,
+  AutomationsRunEvent,
 } from "@budibase/types"
 
 export async function created(automation: Automation, timestamp?: string) {
@@ -49,6 +50,13 @@ export async function tested(automation: Automation) {
     triggerType: automation.definition?.trigger?.stepId,
   }
   await publishEvent(Event.AUTOMATION_TESTED, properties)
+}
+
+export const run = async (count: number, timestamp?: string | number) => {
+  const properties: AutomationsRunEvent = {
+    count,
+  }
+  await publishEvent(Event.AUTOMATIONS_RUN, properties, timestamp)
 }
 
 export async function stepCreated(
