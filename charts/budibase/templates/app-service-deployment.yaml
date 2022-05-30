@@ -119,6 +119,12 @@ spec:
 
         image: budibase/apps:{{ .Values.globals.appVersion }}
         imagePullPolicy: Always
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: {{ .Values.services.apps.port }}
+          initialDelaySeconds: 5
+          periodSeconds: 5
         name: bbapps
         ports:
         - containerPort: {{ .Values.services.apps.port }}
