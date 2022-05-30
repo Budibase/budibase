@@ -77,26 +77,7 @@
         <Placeholder text="Form components need to be wrapped in a form" />
       {:else if !fieldState}
         {#if $builderStore.inBuilder}
-          <Placeholder>
-            <div slot="content">
-              Add the <mark>Field</mark> setting to start using your
-              component&nbsp;
-              <span
-                class="showMe spectrum-Link"
-                on:click={() => {
-                  builderStore.actions.setFocus([
-                    {
-                      location: "component_settings",
-                      key: "field",
-                      target: $component.id,
-                    },
-                  ])
-                }}
-              >
-                Show me
-              </span>
-            </div>
-          </Placeholder>
+          <Placeholder />
         {/if}
       {:else if schemaType && schemaType !== type && type !== "options"}
         <Placeholder

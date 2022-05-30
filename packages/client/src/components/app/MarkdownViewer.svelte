@@ -14,25 +14,6 @@
   {#if value}
     <MarkdownViewer {value} {height} />
   {:else if $builderStore.inBuilder}
-    <Placeholder>
-      <div slot="content">
-        Add some <mark>Markdown</mark> in the field setting to start using your
-        component&nbsp;
-        <span
-          class="showMe spectrum-Link"
-          on:click={() => {
-            builderStore.actions.setFocus([
-              {
-                location: "component_settings",
-                key: "value",
-                target: $component.id,
-              },
-            ])
-          }}
-        >
-          Show me
-        </span>
-      </div>
-    </Placeholder>
+    <Placeholder />
   {/if}
 </div>

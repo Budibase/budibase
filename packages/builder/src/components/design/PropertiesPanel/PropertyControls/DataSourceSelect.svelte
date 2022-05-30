@@ -25,6 +25,7 @@
   export let otherSources
   export let showAllQueries
   export let bindings = []
+  export let autofocus = false
 
   const dispatch = createEventDispatcher()
   const arrayTypes = ["attachment", "array"]
@@ -158,6 +159,7 @@
     value={text}
     options={[text]}
     on:click={dropdownRight.show}
+    {autofocus}
   />
   {#if value?.type === "query"}
     <i class="ri-settings-5-line" on:click={openQueryParamsDrawer} />

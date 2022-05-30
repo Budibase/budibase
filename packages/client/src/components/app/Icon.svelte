@@ -28,25 +28,7 @@
   />
 {:else if $builderStore.inBuilder}
   <div use:styleable={styles}>
-    <Placeholder>
-      <div slot="content">
-        Add the <mark>Icon</mark> in the settings menu&nbsp;
-        <span
-          class="showMe spectrum-Link"
-          on:click={() => {
-            builderStore.actions.setFocus([
-              {
-                location: "component_settings",
-                key: "icon",
-                target: $component.id,
-              },
-            ])
-          }}
-        >
-          Show me
-        </span>
-      </div>
-    </Placeholder>
+    <Placeholder />
   </div>
 {/if}
 
