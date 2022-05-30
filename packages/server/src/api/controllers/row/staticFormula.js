@@ -21,7 +21,6 @@ exports.updateRelatedFormula = async (table, enrichedRows) => {
   if (!table.relatedFormula) {
     return
   }
-  let promises = []
   for (let enrichedRow of Array.isArray(enrichedRows)
     ? enrichedRows
     : [enrichedRows]) {
@@ -55,18 +54,17 @@ exports.updateRelatedFormula = async (table, enrichedRows) => {
           column.formulaType === FormulaTypes.STATIC
         ) {
           // re-enrich rows for all the related, don't update the related formula for them
-          promises = promises.concat(
-            relatedRows[tableId].map(related =>
-              exports.finaliseRow(relatedTable, related, {
+          for (let i = 0; i < relatedRows[tableId].length; i++) {
+            relatedRows[tableId][i] = (
+              await exports.finaliseRow(relatedTable, relatedRows[tableId][i], {
                 updateFormula: false,
               })
-            )
-          )
+            ).row
+          }
         }
       }
     }
   }
-  await Promise.all(promises)
 }
 
 exports.updateAllFormulasInTable = async table => {
