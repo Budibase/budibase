@@ -84,6 +84,7 @@ server.on("close", async () => {
   await redis.shutdown()
   await Thread.shutdown()
   api.shutdown()
+  process.exit()
 })
 
 module.exports = server.listen(env.PORT || 0, async () => {
