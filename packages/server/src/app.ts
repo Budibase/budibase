@@ -102,6 +102,11 @@ const shutdown = () => {
 }
 
 process.on("uncaughtException", err => {
+  // @ts-ignore
+  // don't worry about this error, comes from zlib isn't important
+  if (err && err["code"] === "ERR_INVALID_CHAR") {
+    return
+  }
   console.error(err)
   shutdown()
 })
