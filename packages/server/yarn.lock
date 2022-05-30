@@ -1014,14 +1014,15 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/backend-core@1.0.187":
-  version "1.0.187"
-  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.0.187.tgz#bf2d6de627185e5388d567762491334bc1d2d546"
-  integrity sha512-C9FqOf+/SNNWk7bZU7PfnzDvXM5ntnZFgpX1bI/bfHH3xYGw6jOFB2BpoTaV2sQGq14wfmo9e9vNHqYIT9tPrg==
+"@budibase/backend-core@1.0.188-alpha.2":
+  version "1.0.188-alpha.2"
+  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.0.188-alpha.2.tgz#ef7c4d846344880a922bea52c37d192c9fd8c25d"
+  integrity sha512-13WzcXmsjfpmDff/mWBJYU9MRfxiwbRC9codPMvQ7y2O1NsADfblkycV76cMu3nUH+HiEV+ESMWTj8hHq9Z5IQ==
   dependencies:
     "@techpass/passport-openidconnect" "^0.3.0"
     aws-sdk "^2.901.0"
     bcrypt "^5.0.1"
+    dotenv "^16.0.1"
     emitter-listener "^1.1.2"
     ioredis "^4.27.1"
     jsonwebtoken "^8.5.1"
@@ -1091,12 +1092,12 @@
     svelte-flatpickr "^3.2.3"
     svelte-portal "^1.0.0"
 
-"@budibase/pro@1.0.187":
-  version "1.0.187"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-1.0.187.tgz#40ed5e9809f924e5d0c7bbb7d09a602ea47dfe92"
-  integrity sha512-whEcWAcgkIL4EHgh08jp8itR37LZYlZxFLl0GYY5AOIguEScJ1FRe9WcYFNW0Pw768uaq7IE7hKkrAzWetzu4g==
+"@budibase/pro@1.0.188-alpha.2":
+  version "1.0.188-alpha.2"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-1.0.188-alpha.2.tgz#ebbc7d896ae016efd074db989cf870c24acac431"
+  integrity sha512-/v5Px7178dO+M+Hft3jfKYBRPmSxNT3mfbdCahatLgdZ22btA/JofXj9MMiRE1LulJ+Fhyn9iQn2zfAVQYUqWQ==
   dependencies:
-    "@budibase/backend-core" "1.0.187"
+    "@budibase/backend-core" "1.0.188-alpha.2"
     node-fetch "^2.6.1"
 
 "@budibase/standard-components@^0.9.139":
@@ -5045,6 +5046,11 @@ dotenv@8.2.0:
   version "8.2.0"
   resolved "https://registry.yarnpkg.com/dotenv/-/dotenv-8.2.0.tgz#97e619259ada750eea3e4ea3e26bceea5424b16a"
   integrity sha512-8sJ78ElpbDJBHNeBzUbUVLsqKdccaa/BXF1uPTw3GrvQTBgrQrtObr2mUrE38vzYd8cEv+m/JBfDLioYcfXoaw==
+
+dotenv@^16.0.1:
+  version "16.0.1"
+  resolved "https://registry.yarnpkg.com/dotenv/-/dotenv-16.0.1.tgz#8f8f9d94876c35dac989876a5d3a82a267fdce1d"
+  integrity sha512-1K6hR6wtk2FviQ4kEiSjFiH5rpzEVi8WW0x96aztHVMhEspNpc4DVOUTEHtEva5VThQ8IaBX1Pe4gSzpVVUsKQ==
 
 dotenv@^8.2.0:
   version "8.6.0"
