@@ -28,7 +28,6 @@ app.keys = ["secret", "key"]
 // set up top level koa middleware
 app.use(koaBody({ multipart: true }))
 app.use(koaSession(app))
-
 app.use(
   logger({
     prettyPrint: {
@@ -62,12 +61,22 @@ if (env.isProd()) {
 const server = http.createServer(app.callback())
 destroyable(server)
 
+let shuttingDown = false
 server.on("close", async () => {
-  if (env.isProd()) {
+  if (shuttingDown) {
+    return
+  }
+  shuttingDown = true
+  if (!env.isTest()) {
     console.log("Server Closed")
   }
   await redis.shutdown()
 })
+
+const shutdown = () => {
+  server.close()
+  server.destroy()
+}
 
 module.exports = server.listen(parseInt(env.PORT || 4002), async () => {
   console.log(`Worker running on ${JSON.stringify(server.address())}`)
@@ -76,11 +85,9 @@ module.exports = server.listen(parseInt(env.PORT || 4002), async () => {
 
 process.on("uncaughtException", err => {
   console.error(err)
-  server.close()
-  server.destroy()
+  shutdown()
 })
 
 process.on("SIGTERM", () => {
-  server.close()
-  server.destroy()
+  shutdown()
 })
