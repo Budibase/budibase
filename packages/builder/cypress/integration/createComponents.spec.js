@@ -1,6 +1,7 @@
 // TODO for now components are skipped, might not be good to keep doing this
 
 import filterTests from "../support/filterTests"
+const interact = require('../support/interact')
 
 filterTests(['all'], () => {
   xcontext("Create Components", () => {
@@ -31,32 +32,32 @@ filterTests(['all'], () => {
 
     it("should change the text of the headline", () => {
       const text = "Lorem ipsum dolor sit amet."
-      cy.get("[data-cy=Settings]").click()
-      cy.get("[data-cy=setting-text] input")
+      cy.get(interact.DATA_CY_SETTINGS).click()
+      cy.get(interact.SETTINGS_INPUT)
         .type(text)
         .blur()
       cy.getComponent(headlineId).should("have.text", text)
     })
 
     it("should change the size of the headline", () => {
-      cy.get("[data-cy=Design]").click()
+      cy.get(interact.DATA_CY_DESIGN).click()
       cy.contains("Typography").click()
-      cy.get("[data-cy=font-size-prop-control]").click()
+      cy.get(interact.DATA_CY_FSPCONTROL).click()
       cy.contains("60px").click()
       cy.getComponent(headlineId).should("have.css", "font-size", "60px")
     })
 
     it("should create a form and reset to match schema", () => {
       cy.addComponent("Form", "Form").then(() => {
-        cy.get("[data-cy=Settings]").click()
-        cy.get("[data-cy=setting-dataSource]")
+        cy.get(interact.DATA_CY_SETTINGS).click()
+        cy.get(interact.DATA_CY_DATASOURCE)
           .contains("Choose option")
           .click()
-        cy.get(".dropdown")
+        cy.get(interact.DROPDOWN)
           .contains("dog")
           .click()
         cy.addComponent("Form", "Field Group").then(fieldGroupId => {
-          cy.get("[data-cy=Settings]").click()
+          cy.get(interact.DATA_CY_SETTINGS).click()
           cy.contains("Update Form Fields").click()
           cy.get(".modal")
             .get("button.primary")
@@ -84,7 +85,7 @@ filterTests(['all'], () => {
         cy.get(".ui-nav ul .nav-item.selected .ri-more-line").click({
           force: true,
         })
-        cy.get(".dropdown-container")
+        cy.get(interact.DROPDOWN_CONTAINER)
           .contains("Delete")
           .click()
         cy.get(".modal")
