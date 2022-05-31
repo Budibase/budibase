@@ -79,7 +79,7 @@ module SnowflakeModule {
       })
     }
 
-    async read(query: SqlQuery) {
+    async internalQuery(query: SqlQuery) {
       await this.connectAsync()
       let response: any = await new Promise((resolve, reject) =>
         this.client.execute({
@@ -96,6 +96,22 @@ module SnowflakeModule {
         })
       )
       return response.rows
+    }
+
+    async create(query: SqlQuery) {
+      return this.internalQuery(query)
+    }
+
+    async read(query: SqlQuery) {
+      return this.internalQuery(query)
+    }
+
+    async update(query: SqlQuery) {
+      return this.internalQuery(query)
+    }
+
+    async delete(query: SqlQuery) {
+      return this.internalQuery(query)
     }
   }
 
