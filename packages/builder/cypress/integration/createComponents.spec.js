@@ -32,7 +32,7 @@ filterTests(['all'], () => {
 
     it("should change the text of the headline", () => {
       const text = "Lorem ipsum dolor sit amet."
-      cy.get(interact.DATA_CY_SETTINGS).click()
+      cy.get(interact.SETTINGS).click()
       cy.get(interact.SETTINGS_INPUT)
         .type(text)
         .blur()
@@ -40,16 +40,16 @@ filterTests(['all'], () => {
     })
 
     it("should change the size of the headline", () => {
-      cy.get(interact.DATA_CY_DESIGN).click()
+      cy.get(interact.DESIGN).click()
       cy.contains("Typography").click()
-      cy.get(interact.DATA_CY_FSPCONTROL).click()
+      cy.get(interact.FONT_SIZE_PROP_CONTROL).click()
       cy.contains("60px").click()
       cy.getComponent(headlineId).should("have.css", "font-size", "60px")
     })
 
     it("should create a form and reset to match schema", () => {
       cy.addComponent("Form", "Form").then(() => {
-        cy.get(interact.DATA_CY_SETTINGS).click()
+        cy.get(interact.SETTINGS).click()
         cy.get(interact.DATA_CY_DATASOURCE)
           .contains("Choose option")
           .click()
@@ -57,7 +57,7 @@ filterTests(['all'], () => {
           .contains("dog")
           .click()
         cy.addComponent("Form", "Field Group").then(fieldGroupId => {
-          cy.get(interact.DATA_CY_SETTINGS).click()
+          cy.get(interact.SETTINGS).click()
           cy.contains("Update Form Fields").click()
           cy.get(".modal")
             .get("button.primary")
@@ -71,7 +71,7 @@ filterTests(['all'], () => {
             .find("input")
             .should("have.length", 2)
           cy.getComponent(fieldGroupId)
-            .find(".spectrum-Picker")
+            .find(interact.SPECTRUM_PICKER)
             .should("have.length", 1)
         })
       })

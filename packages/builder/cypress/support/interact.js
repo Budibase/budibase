@@ -17,7 +17,7 @@ export const CATEGORY_DATA = '[data-cy="category-Data"]'
 export const COMPONENT_DATA_PROVIDER = '[data-cy="component-Data Provider"]'
 export const DATASOURCE_PROP_CONTROL = '[data-cy="dataSource-prop-control"]'
 export const DROPDOWN = ".dropdown"
-export const SPECTRUM_Picker_LABEL = ".spectrum-Picker-label"
+export const SPECTRUM_PICKER_LABEL = ".spectrum-Picker-label"
 export const DATASOURCE_FIELD_CONTROL = '[data-cy="field-prop-control"]'
 export const OPTION_TYPE_PROP_CONTROL = '[data-cy="optionsType-prop-control'
 
@@ -36,9 +36,10 @@ export const SPECTRUM_BUTTON = ".spectrum-Button"
 export const TOPRIGHTNAV_BUTTON_SPECTRUM = ".toprightnav button.spectrum-Button"
 
 //createComponents
-export const DATA_CY_SETTINGS = "[data-cy=Settings]"
+export const SETTINGS = "[data-cy=Settings]"
 export const SETTINGS_INPUT = "[data-cy=setting-text] input"
-export const DATA_CY_DESIGN = "[data-cy=Design]"
-export const DATA_CY_FSPCONTROL = "[data-cy=font-size-prop-control]"
+export const DESIGN = "[data-cy=Design]"
+export const FONT_SIZE_PROP_CONTRO = "[data-cy=font-size-prop-control]"
 export const DATA_CY_DATASOURCE = "[data-cy=setting-dataSource]"
 export const DROPDOWN_CONTAINER = ".dropdown-container"
+export const SPECTRUM_PICKER = ".spectrum-Picker"
