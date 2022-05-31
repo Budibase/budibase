@@ -31,6 +31,7 @@ const DocumentTypes = {
   ROW: "ro",
   USER: "us",
   AUTOMATION: "au",
+  AUTOMATION_LOG: "log_au",
   LINK: "li",
   WEBHOOK: "wh",
   INSTANCE: "inst",
@@ -48,6 +49,7 @@ const DocumentTypes = {
 const ViewNames = {
   LINK: "by_link",
   ROUTING: "screen_routes",
+  LOGS_BY_AUTOMATION: "log_by_auto",
 }
 
 const InternalTables = {
@@ -360,6 +362,29 @@ exports.generateMemoryViewID = viewName => {
 
 exports.getMemoryViewParams = (otherProps = {}) => {
   return getDocParams(DocumentTypes.MEM_VIEW, null, otherProps)
+}
+
+exports.generateAutomationLogID = (automationId, isoDate) => {
+  return `${DocumentTypes.AUTOMATION_LOG}${SEPARATOR}${isoDate}${SEPARATOR}${automationId}`
+}
+
+exports.getAutomationLogParams = (
+  { startIso, endIso, automationId } = {},
+  otherProps = {}
+) => {
+  const base = `${DocumentTypes.AUTOMATION_LOG}${SEPARATOR}`
+  let start = startIso || "",
+    end = endIso || ""
+  // reverse for view
+  if (automationId) {
+    start = `${automationId}${SEPARATOR}${start}`
+    end = `${automationId}${SEPARATOR}${end}`
+  }
+  return {
+    ...otherProps,
+    startkey: `${base}${start}`,
+    endkey: `${base}${end}${UNICODE_MAX}`,
+  }
 }
 
 /**
