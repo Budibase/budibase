@@ -119,6 +119,12 @@ spec:
           value: {{ .Values.globals.google.secret | quote }}
         image: budibase/worker:{{ .Values.globals.appVersion }}
         imagePullPolicy: Always
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: {{ .Values.services.worker.port }}
+          initialDelaySeconds: 5
+          periodSeconds: 5
         name: bbworker
         ports:
         - containerPort: {{ .Values.services.worker.port }}
