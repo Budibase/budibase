@@ -28,6 +28,8 @@ export class Thread {
   workers: any
   timeoutMs: any
 
+  static workerRefs: any[] = []
+
   constructor(type: any, opts: any = { timeoutMs: null, count: 1 }) {
     this.type = type
     this.count = opts.count ? opts.count : 1
@@ -46,6 +48,7 @@ export class Thread {
         workerOpts.maxCallTime = opts.timeoutMs
       }
       this.workers = workerFarm(workerOpts, typeToFile(type))
+      Thread.workerRefs.push(this.workers)
     }
   }
 
@@ -71,6 +74,25 @@ export class Thread {
           resolve(response)
         }
       })
+    })
+  }
+
+  static shutdown() {
+    return new Promise<void>(resolve => {
+      if (Thread.workerRefs.length === 0) {
+        resolve()
+      }
+      let count = 0
+      function complete() {
+        count++
+        if (count >= Thread.workerRefs.length) {
+          resolve()
+        }
+      }
+      for (let worker of Thread.workerRefs) {
+        workerFarm.end(worker, complete)
+      }
+      Thread.workerRefs = []
     })
   }
 }
