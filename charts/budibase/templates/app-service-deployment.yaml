@@ -78,6 +78,8 @@ spec:
           value: {{ .Values.services.objectStore.url }}
         - name: PORT
           value: {{ .Values.services.apps.port | quote }}
+        - name: API_REQ_LIMIT_PER_SEC
+          value: {{ .Values.globals.apps.publicApiRateLimitPerSecond | quote }}
         - name: MULTI_TENANCY
           value: {{ .Values.globals.multiTenancy | quote }}
         - name: LOG_LEVEL
