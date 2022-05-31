@@ -62,12 +62,28 @@
         steps: [
           {
             stepId: "ROW_SAVED",
-            outputs: {},
+            inputs: null,
+            outputs: {
+              id: "awd",
+              revision: "awd",
+              row: {
+                tableId: "ta_240cfde36405479fa814b8a2c46655b5",
+                name: "",
+                suppliers: [],
+                "supplier name": "",
+                _id: "awd",
+                _rev: "awd",
+              },
+            },
           },
           {
-            stepId: "SEND_EMAIL_SMTP",
-            inputs: {},
-            outputs: {},
+            stepId: "SERVER_LOG",
+            inputs: {
+              text: "awdawdawd",
+            },
+            outputs: {
+              success: true,
+            },
           },
         ],
       },
@@ -78,6 +94,7 @@
         steps: [
           {
             stepId: "ROW_SAVED",
+            inputs: {},
             outputs: {},
           },
           {

@@ -2,7 +2,7 @@
   import { Layout, Icon, ActionButton } from "@budibase/bbui"
   import StatusRenderer from "components/portal/overview/StatusRenderer.svelte"
   import DateTimeRenderer from "components/common/renderers/DateTimeRenderer.svelte"
-  import FlowItemHeader from "components/automation/AutomationBuilder/FlowChart/FlowItemHeader.svelte"
+  import TestDisplay from "components/automation/AutomationBuilder/TestDisplay.svelte"
 
   export let history
   export let close
@@ -32,9 +32,7 @@
       </div>
     </Layout>
     <div class="bottom">
-      {#each history.steps as step}
-        <FlowItemHeader block={step} />
-      {/each}
+      <TestDisplay testResults={history} width="100%" />
     </div>
   </div>
 {:else}
@@ -57,6 +55,7 @@
   .bottom {
     margin-top: var(--spacing-m);
     border-top: var(--border-light);
+    padding-top: var(--spacing-xl);
     height: 100%;
   }
 
