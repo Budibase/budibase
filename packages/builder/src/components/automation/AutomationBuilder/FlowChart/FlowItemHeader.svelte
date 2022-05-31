@@ -7,12 +7,18 @@
   export let blockComplete
   export let showTestStatus = false
   export let showParameters = {}
+  export let testResult
+  export let isTrigger
 
-  $: testResult =
-    $automationStore.selectedAutomation?.testResults?.steps.filter(step =>
-      block.id ? step.id === block.id : step.stepId === block.stepId
-    )
-  $: isTrigger = block.type === "TRIGGER"
+  $: {
+    if (!testResult) {
+      testResult =
+        $automationStore.selectedAutomation?.testResults?.steps.filter(step =>
+          block.id ? step.id === block.id : step.stepId === block.stepId
+        )[0]
+    }
+  }
+  $: isTrigger = isTrigger || block.type === "TRIGGER"
 
   async function onSelect(block) {
     await automationStore.update(state => {
@@ -60,13 +66,13 @@
       </div>
     </div>
     <div class="blockTitle">
-      {#if showTestStatus && testResult && testResult[0]}
+      {#if showTestStatus && testResult}
         <div style="float: right;">
           <StatusLight
-            positive={isTrigger || testResult[0].outputs?.success}
-            negative={!testResult[0].outputs?.success}
+            positive={isTrigger || testResult.outputs?.success}
+            negative={!testResult.outputs?.success}
             ><Body size="XS"
-              >{testResult[0].outputs?.success || isTrigger
+              >{testResult.outputs?.success || isTrigger
                 ? "Success"
                 : "Error"}</Body
             ></StatusLight
