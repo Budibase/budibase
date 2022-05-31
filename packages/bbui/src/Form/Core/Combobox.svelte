@@ -3,7 +3,7 @@
   import "@spectrum-css/popover/dist/index-vars.css"
   import "@spectrum-css/menu/dist/index-vars.css"
   import { fly } from "svelte/transition"
-  import { createEventDispatcher } from "svelte"
+  import { createEventDispatcher, getContext } from "svelte"
 
   export let value = null
   export let id = null
@@ -16,12 +16,16 @@
   export let getOptionLabel = option => option
   export let getOptionValue = option => option
 
+  const context = getContext("builderFocus")
   const dispatch = createEventDispatcher()
   let open = false
   let focus = false
   let comboInput
 
-  $: focus = autofocus && comboInput
+  $: focus = autofocus && comboInput !== undefined
+  $: if (focus) {
+    comboInput.focus()
+  }
 
   const selectOption = value => {
     dispatch("change", value)
@@ -61,6 +65,7 @@
       }}
       on:blur={() => {
         focus = false
+        context.clear()
       }}
       on:change={onType}
       value={value || ""}

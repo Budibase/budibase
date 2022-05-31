@@ -6,7 +6,6 @@
   import ResetFieldsButton from "./PropertyControls/ResetFieldsButton.svelte"
   import { getComponentForSettingType } from "./PropertyControls/componentSettings"
   import { Utils } from "@budibase/frontend-core"
-  import { onMount } from "svelte"
 
   export let componentDefinition
   export let componentInstance
@@ -83,37 +82,6 @@
       setting.required === true && $store.builderFocus[0].key === setting.key
     )
   }
-
-  onMount(() => {
-    const emptyFields = (definition, options) => {
-      if (!options) {
-        return []
-      }
-      return definition?.settings
-        ? definition.settings.filter(setting => {
-            return (
-              setting.required &&
-              (!options[setting.key] || options[setting.key] == "")
-            )
-          })
-        : []
-    }
-
-    let target = emptyFields(componentDefinition, componentInstance)[0]
-
-    if (target) {
-      store.update(state => ({
-        ...state,
-        builderFocus: [
-          {
-            location: "component_settings",
-            key: target.key,
-            target: componentInstance._id,
-          },
-        ],
-      }))
-    }
-  })
 </script>
 
 {#each sections as section, idx (section.name)}

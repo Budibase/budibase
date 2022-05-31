@@ -4,6 +4,8 @@
     readableToRuntimeBinding,
     runtimeToReadableBinding,
   } from "builderStore/dataBinding"
+  import { setContext } from "svelte"
+  import { store } from "builderStore"
 
   export let label = ""
   export let componentInstance = {}
@@ -61,6 +63,28 @@
       ? defaultValue
       : enriched
   }
+
+  setContext("builderFocus", {
+    clear: () => {
+      if (!$store?.builderFocus) {
+        return
+      }
+      store.update(state => {
+        const updatedFocus = $store?.builderFocus?.filter(focus => {
+          return (
+            focus.location === "component_settings" &&
+            focus.target !== componentInstance._id
+          )
+        })
+        if (updatedFocus?.length > 0) {
+          state.builderFocus = updatedFocus
+        } else {
+          delete state.builderFocus
+        }
+        return state
+      })
+    },
+  })
 </script>
 
 <div class="property-control" data-cy={`setting-${key}`}>
