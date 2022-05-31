@@ -51,7 +51,7 @@ cd -
 lerna publish $VERSION --yes --force-publish --dist-tag $TAG
 
 #############################################
-#              POST-PUBLISH - PRO           #
+#             POST-PUBLISH - PRO            #
 #############################################
 
 # Revert build changes on packages/pro/package.json

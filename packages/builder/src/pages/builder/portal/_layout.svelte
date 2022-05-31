@@ -31,7 +31,20 @@
   $: menu = buildMenu($auth.isAdmin)
 
   const buildMenu = admin => {
-    let menu = [{ title: "Apps", href: "/builder/portal/apps" }]
+    let menu = [
+      {
+        title: "Apps",
+        href: "/builder/portal/apps",
+      },
+    ]
+    if (isEnabled(FEATURE_FLAGS.LICENSING)) {
+      menu = menu.concat([
+        {
+          title: "Usage",
+          href: "/builder/portal/settings/usage",
+        },
+      ])
+    }
     if (admin) {
       menu = menu.concat([
         {
@@ -190,7 +203,9 @@
             <MenuItem icon="UserDeveloper" on:click={() => $goto("../apps")}>
               Close developer mode
             </MenuItem>
-            <MenuItem icon="LogOut" on:click={logout}>Log out</MenuItem>
+            <MenuItem dataCy="user-logout" icon="LogOut" on:click={logout}
+              >Log out
+            </MenuItem>
           </ActionMenu>
         </div>
       </div>
@@ -319,7 +334,7 @@
 
     .mobile-toggle,
     .user-dropdown {
-      flex: 1 1 0;
+      flex: 0 1 0;
     }
 
     /* Reduce BBUI page padding */
