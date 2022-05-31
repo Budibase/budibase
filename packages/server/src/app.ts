@@ -14,7 +14,7 @@ const automations = require("./automations/index")
 const Sentry = require("@sentry/node")
 const fileSystem = require("./utilities/fileSystem")
 const bullboard = require("./automations/bullboard")
-const context = require("@budibase/backend-core/context")
+const { logAlert } = require("@budibase/backend-core/logging")
 const { Thread } = require("./threads")
 import redis from "./utilities/redis"
 import * as migrations from "./migrations"
@@ -70,7 +70,8 @@ if (env.isProd()) {
 const server = http.createServer(app.callback())
 destroyable(server)
 
-let shuttingDown = false
+let shuttingDown = false,
+  errCode = 0
 server.on("close", async () => {
   // already in process
   if (shuttingDown) {
@@ -84,7 +85,9 @@ server.on("close", async () => {
   await redis.shutdown()
   await Thread.shutdown()
   api.shutdown()
-  process.exit()
+  if (!env.isTest()) {
+    process.exit(errCode)
+  }
 })
 
 module.exports = server.listen(env.PORT || 0, async () => {
@@ -107,7 +110,8 @@ process.on("uncaughtException", err => {
   if (err && err["code"] === "ERR_INVALID_CHAR") {
     return
   }
-  console.error(err)
+  errCode = -1
+  logAlert("Uncaught exception.", err)
   shutdown()
 })
 
@@ -119,7 +123,7 @@ process.on("SIGTERM", () => {
 // not recommended in a clustered environment
 if (!env.HTTP_MIGRATIONS) {
   migrations.migrate().catch(err => {
-    console.error("Error performing migrations. Exiting.\n", err)
+    logAlert("Error performing migrations. Exiting.", err)
     shutdown()
   })
 }
