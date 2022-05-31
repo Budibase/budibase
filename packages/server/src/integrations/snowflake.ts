@@ -1,5 +1,10 @@
 import { Integration, QueryTypes, SqlQuery } from "../definitions/datasource"
-const snowflake = require("snowflake-sdk")
+import {
+  SnowflakeError,
+  Statement,
+  createConnection,
+  Connection,
+} from "snowflake-sdk"
 
 module SnowflakeModule {
   interface SnowflakeConfig {
@@ -59,17 +64,15 @@ module SnowflakeModule {
   }
 
   class SnowflakeIntegration {
-    private config: SnowflakeConfig
-    private client: any
+    private client: Connection
 
     constructor(config: SnowflakeConfig) {
-      this.config = config
-      this.client = snowflake.createConnection(config)
+      this.client = createConnection(config)
     }
 
-    async connAsync(connection: any) {
+    async connectAsync() {
       return new Promise((resolve, reject) => {
-        connection.connect(function (err: any, conn: any) {
+        this.client.connect(function (err: any, conn: any) {
           if (err) reject(err)
           resolve(conn)
         })
@@ -77,12 +80,17 @@ module SnowflakeModule {
     }
 
     async read(query: SqlQuery) {
-      let connection: any = await this.connAsync(this.client)
+      await this.connectAsync()
       let response: any = await new Promise((resolve, reject) =>
-        connection.execute({
+        this.client.execute({
           sqlText: query.sql,
           streamResult: false,
-          complete: (err: any, statement: any, rows: any) => {
+          complete: (
+            err: SnowflakeError | undefined,
+            stmt: Statement,
+            rows: any[] | undefined
+          ) => {
+            if (err) reject(err?.message.split(":")[1] || err?.message)
             resolve({ rows })
           },
         })
