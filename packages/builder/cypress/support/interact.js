@@ -43,3 +43,10 @@ export const FONT_SIZE_PROP_CONTRO = "[data-cy=font-size-prop-control]"
 export const DATA_CY_DATASOURCE = "[data-cy=setting-dataSource]"
 export const DROPDOWN_CONTAINER = ".dropdown-container"
 export const SPECTRUM_PICKER = ".spectrum-Picker"
+
+//autoScreens
+export const LABEL_ADD_CIRCLE = "[aria-label=AddCircle]"
+export const ITEM_DISABLED = ".item.disabled"
+export const CONFIRM_WRAP_SPE_BUTTON = ".confirm-wrap .spectrum-Button"
+export const DATA_SOURCE_ENTRY = ".data-source-entry"
+export const NAV_ITEMS_CONTAINER = ".nav-items-container"
