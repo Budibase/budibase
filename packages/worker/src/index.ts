@@ -12,6 +12,7 @@ const destroyable = require("server-destroy")
 const koaBody = require("koa-body")
 const koaSession = require("koa-session")
 const { passport } = require("@budibase/backend-core/auth")
+const { logAlert } = require("@budibase/backend-core/logging")
 const logger = require("koa-pino-logger")
 const http = require("http")
 const api = require("./api")
@@ -61,7 +62,8 @@ if (env.isProd()) {
 const server = http.createServer(app.callback())
 destroyable(server)
 
-let shuttingDown = false
+let shuttingDown = false,
+  errCode = 0
 server.on("close", async () => {
   if (shuttingDown) {
     return
@@ -71,7 +73,9 @@ server.on("close", async () => {
     console.log("Server Closed")
   }
   await redis.shutdown()
-  process.exit()
+  if (!env.isTest()) {
+    process.exit(errCode)
+  }
 })
 
 const shutdown = () => {
@@ -85,7 +89,8 @@ module.exports = server.listen(parseInt(env.PORT || 4002), async () => {
 })
 
 process.on("uncaughtException", err => {
-  console.error(err)
+  errCode = -1
+  logAlert("Uncaught exception.", err)
   shutdown()
 })
 
