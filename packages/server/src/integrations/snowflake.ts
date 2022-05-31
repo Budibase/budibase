@@ -112,15 +112,9 @@ module SnowflakeModule {
         const descResp = await this.internalQuery({
           sql: `DESCRIBE TABLE ${tableName};`,
         })
-        if (tableName === "CUSTOMER") {
-          console.log("DESC = ", descResp)
-        }
         for (let column of descResp) {
-          const columnName = column.Field
-          if (
-            column["primary key"] === "Y" &&
-            primaryKeys.indexOf(column.Key) === -1
-          ) {
+          const columnName = column.name
+          if (column["primary key"] === "Y") {
             primaryKeys.push(columnName)
           }
           const constraints = {
