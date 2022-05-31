@@ -52,11 +52,11 @@ const calculationEvents = async (existingView, newView) => {
   const newCalculation = newView && newView.calculation
 
   if (existingCalculation && !newCalculation) {
-    await events.view.calculationDeleted()
+    await events.view.calculationDeleted(existingView)
   }
 
   if (!existingCalculation && newCalculation) {
-    await events.view.calculationCreated()
+    await events.view.calculationCreated(newView)
   }
 
   if (
@@ -64,7 +64,7 @@ const calculationEvents = async (existingView, newView) => {
     newCalculation &&
     existingCalculation !== newCalculation
   ) {
-    await events.view.calculationUpdated()
+    await events.view.calculationUpdated(newView)
   }
 }
 
@@ -77,11 +77,11 @@ const filterEvents = async (existingView, newView) => {
   const hasNewFilters = !!(newView && newView.filters && newView.filters.length)
 
   if (hasExistingFilters && !hasNewFilters) {
-    await events.view.filterDeleted()
+    await events.view.filterDeleted(newView)
   }
 
   if (!hasExistingFilters && hasNewFilters) {
-    await events.view.filterCreated()
+    await events.view.filterCreated(newView)
   }
 
   if (
@@ -89,15 +89,15 @@ const filterEvents = async (existingView, newView) => {
     hasNewFilters &&
     !isEqual(existingView.filters, newView.filters)
   ) {
-    await events.view.filterUpdated()
+    await events.view.filterUpdated(newView)
   }
 }
 
 const handleViewEvents = async (existingView, newView) => {
   if (!existingView) {
-    await events.view.created()
+    await events.view.created(newView)
   } else {
-    await events.view.updated()
+    await events.view.updated(newView)
   }
   await calculationEvents(existingView, newView)
   await filterEvents(existingView, newView)
@@ -110,7 +110,7 @@ exports.destroy = async ctx => {
   const table = await db.get(view.meta.tableId)
   delete table.views[viewName]
   await db.put(table)
-  await events.view.deleted()
+  await events.view.deleted(view)
 
   ctx.body = view
 }

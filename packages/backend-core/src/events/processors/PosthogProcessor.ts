@@ -1,7 +1,8 @@
 import PostHog from "posthog-node"
-import { Event, Identity, Group } from "@budibase/types"
+import { Event, Identity, Group, BaseEvent } from "@budibase/types"
 import { EventProcessor } from "./types"
 import env from "../../environment"
+import context from "../../context"
 const pkg = require("../../../package.json")
 
 export default class PosthogProcessor implements EventProcessor {
@@ -17,12 +18,19 @@ export default class PosthogProcessor implements EventProcessor {
   async processEvent(
     event: Event,
     identity: Identity,
-    properties: any,
+    properties: BaseEvent,
     timestamp?: string | number
   ): Promise<void> {
     properties.version = pkg.version
     properties.service = env.SERVICE
+
+    const appId = context.getAppId()
+    if (appId) {
+      properties.appId = appId
+    }
+
     const payload: any = { distinctId: identity.id, event, properties }
+
     if (timestamp) {
       payload.timestamp = new Date(timestamp)
     }
@@ -32,9 +40,11 @@ export default class PosthogProcessor implements EventProcessor {
       payload.groups = {}
       if (identity.installationId) {
         payload.groups.installation = identity.installationId
+        payload.properties.installationId = identity.installationId
       }
       if (identity.tenantId) {
         payload.groups.tenant = identity.tenantId
+        payload.properties.tenantId = identity.tenantId
       }
     }
 

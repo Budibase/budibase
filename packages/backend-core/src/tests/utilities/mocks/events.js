@@ -1,7 +1,14 @@
+const processors = require("../../../events/processors")
+
+jest.spyOn(processors.analyticsProcessor, "processEvent")
+
 const events = require("../../../events")
 
 jest.spyOn(events.identification, "identifyTenantGroup")
 jest.spyOn(events.identification, "identifyUser")
+
+jest.spyOn(events.backfill, "appSucceeded")
+jest.spyOn(events.backfill, "tenantSucceeded")
 
 jest.spyOn(events.account, "created")
 jest.spyOn(events.account, "deleted")
@@ -102,5 +109,3 @@ jest.spyOn(events.view, "filterDeleted")
 jest.spyOn(events.view, "calculationCreated")
 jest.spyOn(events.view, "calculationUpdated")
 jest.spyOn(events.view, "calculationDeleted")
-
-module.exports = events

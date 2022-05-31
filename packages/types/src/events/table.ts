@@ -1,9 +1,23 @@
-export interface TableCreatedEvent {}
+import { BaseEvent, TableExportFormat, TableImportFormat } from "./event"
 
-export interface TableUpdatedEvent {}
+export interface TableCreatedEvent extends BaseEvent {
+  tableId: string
+}
 
-export interface TableDeletedEvent {}
+export interface TableUpdatedEvent extends BaseEvent {
+  tableId: string
+}
 
-export interface TableExportedEvent {}
+export interface TableDeletedEvent extends BaseEvent {
+  tableId: string
+}
 
-export interface TableImportedEvent {}
+export interface TableExportedEvent extends BaseEvent {
+  tableId: string
+  format: TableExportFormat
+}
+
+export interface TableImportedEvent extends BaseEvent {
+  tableId: string
+  format: TableImportFormat
+}

@@ -7,11 +7,19 @@ import {
 } from "@budibase/types"
 
 export async function created(screen: Screen, timestamp?: string) {
-  const properties: ScreenCreatedEvent = {}
+  const properties: ScreenCreatedEvent = {
+    layoutId: screen.layoutId,
+    screenId: screen._id as string,
+    roleId: screen.routing.roleId,
+  }
   await publishEvent(Event.SCREEN_CREATED, properties, timestamp)
 }
 
 export async function deleted(screen: Screen) {
-  const properties: ScreenDeletedEvent = {}
+  const properties: ScreenDeletedEvent = {
+    layoutId: screen.layoutId,
+    screenId: screen._id as string,
+    roleId: screen.routing.roleId,
+  }
   await publishEvent(Event.SCREEN_DELETED, properties)
 }

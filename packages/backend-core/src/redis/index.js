@@ -164,6 +164,10 @@ class RedisWrapper {
     return promisifyStream(stream)
   }
 
+  async keys(pattern) {
+    return CLIENT.keys(pattern)
+  }
+
   async get(key) {
     const db = this._db
     let response = await CLIENT.get(addDbPrefix(db, key))

@@ -28,7 +28,7 @@ export const backfill = async (
 
   for (const config of configs) {
     if (isSMTPConfig(config)) {
-      await events.email.SMTPCreated(config, timestamp)
+      await events.email.SMTPCreated(timestamp)
     }
     if (isGoogleConfig(config)) {
       await events.auth.SSOCreated("google", timestamp)

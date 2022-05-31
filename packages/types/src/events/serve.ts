@@ -1,11 +1,11 @@
-export interface BuilderServedEvent {}
+import { BaseEvent } from "./event"
 
-export interface AppServedEvent {
-  appId: string
+export interface BuilderServedEvent extends BaseEvent {}
+
+export interface AppServedEvent extends BaseEvent {
   appVersion: string
 }
 
-export interface AppPreviewServedEvent {
-  appId: string
+export interface AppPreviewServedEvent extends BaseEvent {
   appVersion: string
 }

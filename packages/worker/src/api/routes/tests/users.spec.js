@@ -39,7 +39,6 @@ describe("/api/global/users", () => {
     expect(sendMailMock).toHaveBeenCalled()
     expect(code).toBeDefined()
     expect(events.user.invited).toBeCalledTimes(1)
-    expect(events.user.invited).toBeCalledWith({ tenantId: structures.TENANT_ID })
   })
 
   it("should be able to create new user from invite", async () => {

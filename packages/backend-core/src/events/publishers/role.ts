@@ -10,29 +10,45 @@ import {
   User,
 } from "@budibase/types"
 
-/* eslint-disable */
-
 export async function created(role: Role, timestamp?: string) {
-  const properties: RoleCreatedEvent = {}
+  const properties: RoleCreatedEvent = {
+    roleId: role._id as string,
+    permissionId: role.permissionId,
+    inherits: role.inherits,
+  }
   await publishEvent(Event.ROLE_CREATED, properties, timestamp)
 }
 
 export async function updated(role: Role) {
-  const properties: RoleUpdatedEvent = {}
+  const properties: RoleUpdatedEvent = {
+    roleId: role._id as string,
+    permissionId: role.permissionId,
+    inherits: role.inherits,
+  }
   await publishEvent(Event.ROLE_UPDATED, properties)
 }
 
 export async function deleted(role: Role) {
-  const properties: RoleDeletedEvent = {}
+  const properties: RoleDeletedEvent = {
+    roleId: role._id as string,
+    permissionId: role.permissionId,
+    inherits: role.inherits,
+  }
   await publishEvent(Event.ROLE_DELETED, properties)
 }
 
-export async function assigned(user: User, role: string, timestamp?: number) {
-  const properties: RoleAssignedEvent = {}
+export async function assigned(user: User, roleId: string, timestamp?: number) {
+  const properties: RoleAssignedEvent = {
+    userId: user._id as string,
+    roleId,
+  }
   await publishEvent(Event.ROLE_ASSIGNED, properties, timestamp)
 }
 
-export async function unassigned(user: User, role: string) {
-  const properties: RoleUnassignedEvent = {}
+export async function unassigned(user: User, roleId: string) {
+  const properties: RoleUnassignedEvent = {
+    userId: user._id as string,
+    roleId,
+  }
   await publishEvent(Event.ROLE_UNASSIGNED, properties)
 }

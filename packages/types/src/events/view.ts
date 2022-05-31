@@ -1,19 +1,46 @@
-export interface ViewCreatedEvent {}
+import { ViewCalculation } from "../documents"
+import { BaseEvent, TableExportFormat } from "./event"
 
-export interface ViewUpdatedEvent {}
+export interface ViewCreatedEvent extends BaseEvent {
+  tableId: string
+}
 
-export interface ViewDeletedEvent {}
+export interface ViewUpdatedEvent extends BaseEvent {
+  tableId: string
+}
 
-export interface ViewExportedEvent {}
+export interface ViewDeletedEvent extends BaseEvent {
+  tableId: string
+}
 
-export interface ViewFilterCreatedEvent {}
+export interface ViewExportedEvent extends BaseEvent {
+  tableId: string
+  format: TableExportFormat
+}
 
-export interface ViewFilterUpdatedEvent {}
+export interface ViewFilterCreatedEvent extends BaseEvent {
+  tableId: string
+}
 
-export interface ViewFilterDeletedEvent {}
+export interface ViewFilterUpdatedEvent extends BaseEvent {
+  tableId: string
+}
 
-export interface ViewCalculationCreatedEvent {}
+export interface ViewFilterDeletedEvent extends BaseEvent {
+  tableId: string
+}
 
-export interface ViewCalculationUpdatedEvent {}
+export interface ViewCalculationCreatedEvent extends BaseEvent {
+  tableId: string
+  calculation: ViewCalculation
+}
 
-export interface ViewCalculationDeletedEvent {}
+export interface ViewCalculationUpdatedEvent extends BaseEvent {
+  tableId: string
+  calculation: ViewCalculation
+}
+
+export interface ViewCalculationDeletedEvent extends BaseEvent {
+  tableId: string
+  calculation: ViewCalculation
+}

@@ -1,6 +1,6 @@
 jest.mock("nodemailer")
 const { config, request } = require("../../../tests")
-const { events, utils } = require("@budibase/backend-core")
+const { events } = require("@budibase/backend-core")
 
 describe("/api/global/self", () => {
 

@@ -7,8 +7,6 @@ import {
   AppServedEvent,
 } from "@budibase/types"
 
-/* eslint-disable */
-
 export async function servedBuilder() {
   const properties: BuilderServedEvent = {}
   await publishEvent(Event.SERVED_BUILDER, properties)
@@ -16,7 +14,6 @@ export async function servedBuilder() {
 
 export async function servedApp(app: App) {
   const properties: AppServedEvent = {
-    appId: app.appId,
     appVersion: app.version,
   }
   await publishEvent(Event.SERVED_APP, properties)

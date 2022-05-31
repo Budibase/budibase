@@ -118,7 +118,7 @@ exports.revert = async ctx => {
     ctx.body = {
       message: "Reverted changes successfully.",
     }
-    await events.app.reverted()
+    await events.app.reverted(appDoc)
   } catch (err) {
     ctx.throw(400, `Unable to revert. ${err}`)
   } finally {

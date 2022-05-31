@@ -109,7 +109,7 @@ exports.update = async function (ctx) {
   }
 
   const response = await db.put(datasource)
-  await events.datasource.updated()
+  await events.datasource.updated(datasource)
   datasource._rev = response.rev
 
   // Drain connection pools when configuration is changed
@@ -164,11 +164,11 @@ exports.save = async function (ctx) {
 
 exports.destroy = async function (ctx) {
   const db = getAppDB()
+  const datasourceId = ctx.params.datasourceId
 
+  const datasource = await db.get(datasourceId)
   // Delete all queries for the datasource
-  const queries = await db.allDocs(
-    getQueryParams(ctx.params.datasourceId, null)
-  )
+  const queries = await db.allDocs(getQueryParams(datasourceId, null))
   await db.bulkDocs(
     queries.rows.map(row => ({
       _id: row.id,
@@ -178,8 +178,8 @@ exports.destroy = async function (ctx) {
   )
 
   // delete the datasource
-  await db.remove(ctx.params.datasourceId, ctx.params.revId)
-  await events.datasource.deleted()
+  await db.remove(datasourceId, ctx.params.revId)
+  await events.datasource.deleted(datasource)
 
   ctx.message = `Datasource deleted.`
   ctx.status = 200

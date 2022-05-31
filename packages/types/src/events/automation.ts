@@ -1,41 +1,34 @@
-export interface AutomationCreatedEvent {
+import { BaseEvent } from "./event"
+
+export interface AutomationCreatedEvent extends BaseEvent {
   appId: string
   automationId: string
   triggerId: string
   triggerType: string
 }
 
-export interface AutomationTriggerUpdatedEvent {
+export interface AutomationTriggerUpdatedEvent extends BaseEvent {
   appId: string
   automationId: string
   triggerId: string
   triggerType: string
 }
 
-export interface AutomationDeletedEvent {
+export interface AutomationDeletedEvent extends BaseEvent {
   appId: string
   automationId: string
   triggerId: string
   triggerType: string
 }
 
-export interface AutomationTestedEvent {
+export interface AutomationTestedEvent extends BaseEvent {
   appId: string
   automationId: string
   triggerId: string
   triggerType: string
 }
 
-export interface AutomationStepCreatedEvent {
-  appId: string
-  automationId: string
-  triggerId: string
-  triggerType: string
-  stepId: string
-  stepType: string
-}
-
-export interface AutomationStepDeletedEvent {
+export interface AutomationStepCreatedEvent extends BaseEvent {
   appId: string
   automationId: string
   triggerId: string
@@ -44,6 +37,15 @@ export interface AutomationStepDeletedEvent {
   stepType: string
 }
 
-export interface AutomationsRunEvent {
+export interface AutomationStepDeletedEvent extends BaseEvent {
+  appId: string
+  automationId: string
+  triggerId: string
+  triggerType: string
+  stepId: string
+  stepType: string
+}
+
+export interface AutomationsRunEvent extends BaseEvent {
   count: number
 }
