@@ -20,7 +20,6 @@
   import DevicePreviewSelect from "components/design/AppPreview/DevicePreviewSelect.svelte"
   import Logo from "assets/bb-space-man.svg"
   import ScreenWizard from "components/design/NavigationPanel/ScreenWizard.svelte"
-  import { clickOutside } from "@budibase/bbui"
 
   // Cache previous values so we don't update the URL more than necessary
   let previousType
@@ -197,27 +196,7 @@
   </div>
 
   {#if $selectedComponent != null}
-    <div
-      class="components-pane"
-      use:clickOutside={() => {
-        if ($store?.builderFocus) {
-          const otherSettings = $store?.builderFocus?.filter(field => {
-            return field.location !== "component_settings"
-          })
-          if (otherSettings.length) {
-            store.update(state => {
-              state.builderFocus = otherSettings
-              return state
-            })
-          } else {
-            store.update(state => {
-              delete state.builderFocus
-              return state
-            })
-          }
-        }
-      }}
-    >
+    <div class="components-pane">
       <PropertiesPanel />
     </div>
   {/if}

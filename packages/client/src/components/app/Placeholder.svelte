@@ -19,7 +19,6 @@
     return componentKey
   }
 
-  //Corify this somewhere
   const emptyFields = (definition, options) => {
     if (!options) {
       return []
@@ -62,9 +61,6 @@
       </div>
     {:else}
       {text || $component.name || "Placeholder"}
-      <!-- {#if definition.hasChildren}
-        <span>: Add a component or two!</span>
-      {/if} -->
     {/if}
   </div>
 {/if}

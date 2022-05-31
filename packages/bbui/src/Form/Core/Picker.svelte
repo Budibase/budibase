@@ -3,7 +3,7 @@
   import "@spectrum-css/popover/dist/index-vars.css"
   import "@spectrum-css/menu/dist/index-vars.css"
   import { fly } from "svelte/transition"
-  import { createEventDispatcher } from "svelte"
+  import { createEventDispatcher, getContext } from "svelte"
   import clickOutside from "../../Actions/click_outside"
   import Search from "./Search.svelte"
 
@@ -28,12 +28,16 @@
   export let sort = false
   export let autofocus = false
 
+  const context = getContext("builderFocus")
   const dispatch = createEventDispatcher()
   let searchTerm = null
   let focus = false
   let pickerButton
 
-  $: focus = autofocus && pickerButton !== null
+  $: focus = autofocus && pickerButton !== undefined
+  $: if (focus) {
+    pickerButton.focus()
+  }
 
   $: sortedOptions = getSortedOptions(options, getOptionLabel, sort)
   $: filteredOptions = getFilteredOptions(
@@ -101,6 +105,7 @@
     }}
     on:blur={() => {
       focus = false
+      if (context) context.clear()
     }}
   >
     {#if fieldIcon}

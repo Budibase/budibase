@@ -423,6 +423,24 @@ Cypress.Commands.add("addRowMultiValue", values => {
   })
 })
 
+Cypress.Commands.add("addRowAttachment", (values, name, path) => {
+  cy.contains("Create row").click()
+  cy.get(".spectrum-Modal").within(() => {
+    for (let i = 0; i < values.length; i++) {
+      cy.get("input").eq(i).type(values[i]).blur()
+    }
+
+    cy.get(".spectrum-Dropzone").selectFile(path, {
+      action: "drag-drop",
+    })
+
+    cy.get(".gallery .filename").contains(name)
+    cy.get(".confirm-wrap .spectrum-Button")
+      .contains("Create Row")
+      .click({ force: true })
+  })
+})
+
 Cypress.Commands.add("createUser", email => {
   // quick hacky recorded way to create a user
   cy.contains("Users").click()
@@ -446,7 +464,7 @@ Cypress.Commands.add("addComponent", (category, component) => {
   if (component) {
     cy.get(`[data-cy="component-${component}"]`).click({ force: true })
   }
-  cy.wait(2000)
+  cy.wait(1000)
   cy.location().then(loc => {
     const params = loc.pathname.split("/")
     const componentId = params[params.length - 1]
