@@ -101,13 +101,13 @@ const handleStepEvents = async (oldAutomation, automation) => {
   // new steps
   const newSteps = getNewSteps(oldAutomation, automation)
   for (let step of newSteps) {
-    await events.automation.stepCreated(step)
+    await events.automation.stepCreated(automation, step)
   }
 
   // old steps
   const deletedSteps = getDeletedSteps(oldAutomation, automation)
   for (let step of deletedSteps) {
-    await events.automation.stepDeleted(step)
+    await events.automation.stepDeleted(automation, step)
   }
 }
 
@@ -134,7 +134,7 @@ exports.update = async function (ctx) {
       : {}
   // trigger has been updated, remove the test inputs
   if (oldAutoTrigger && oldAutoTrigger.id !== newAutoTrigger.id) {
-    await events.automation.triggerUpdated()
+    await events.automation.triggerUpdated(automation)
     await deleteEntityMetadata(
       ctx.appId,
       MetadataTypes.AUTOMATION_TEST_INPUT,
@@ -180,7 +180,7 @@ exports.destroy = async function (ctx) {
   // delete metadata first
   await cleanupAutomationMetadata(automationId)
   ctx.body = await db.remove(automationId, ctx.params.rev)
-  await events.automation.deleted()
+  await events.automation.deleted(oldAutomation)
 }
 
 exports.getActionList = async function (ctx) {
@@ -248,5 +248,5 @@ exports.test = async function (ctx) {
   })
   await clearTestFlag(automation._id)
   ctx.body = response
-  await events.automation.tested()
+  await events.automation.tested(automation)
 }

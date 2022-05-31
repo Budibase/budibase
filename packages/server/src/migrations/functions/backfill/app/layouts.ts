@@ -15,6 +15,13 @@ export const backfill = async (appDb: any, timestamp: string) => {
   const layouts: Layout[] = await getLayouts(appDb)
 
   for (const layout of layouts) {
+    // exclude default layouts
+    if (
+      layout._id === "layout_private_master" ||
+      layout._id === "layout_public_master"
+    ) {
+      continue
+    }
     await events.layout.created(layout, timestamp)
   }
 

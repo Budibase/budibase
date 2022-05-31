@@ -141,7 +141,7 @@ export const invite = async (ctx: any) => {
   ctx.body = {
     message: "Invitation has been sent.",
   }
-  await events.user.invited(userInfo)
+  await events.user.invited()
 }
 
 export const inviteAccept = async (ctx: any) => {

@@ -1,5 +1,5 @@
 require("../../tests/utilities/TestConfiguration")
-const { dangerousGetDB, allDbs } = require("../")
+const { dangerousGetDB } = require("../")
 
 describe("db", () => { 
   

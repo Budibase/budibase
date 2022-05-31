@@ -15,27 +15,33 @@ import {
   UserUpdatedEvent,
 } from "@budibase/types"
 
-/* eslint-disable */
-
 export async function created(user: User, timestamp?: number) {
-  const properties: UserCreatedEvent = {}
+  const properties: UserCreatedEvent = {
+    userId: user._id as string,
+  }
   await publishEvent(Event.USER_CREATED, properties, timestamp)
 }
 
 export async function updated(user: User) {
-  const properties: UserUpdatedEvent = {}
+  const properties: UserUpdatedEvent = {
+    userId: user._id as string,
+  }
   await publishEvent(Event.USER_UPDATED, properties)
 }
 
 export async function deleted(user: User) {
-  const properties: UserDeletedEvent = {}
+  const properties: UserDeletedEvent = {
+    userId: user._id as string,
+  }
   await publishEvent(Event.USER_DELETED, properties)
 }
 
 // PERMISSIONS
 
 export async function permissionAdminAssigned(user: User, timestamp?: number) {
-  const properties: UserPermissionAssignedEvent = {}
+  const properties: UserPermissionAssignedEvent = {
+    userId: user._id as string,
+  }
   await publishEvent(
     Event.USER_PERMISSION_ADMIN_ASSIGNED,
     properties,
@@ -44,7 +50,9 @@ export async function permissionAdminAssigned(user: User, timestamp?: number) {
 }
 
 export async function permissionAdminRemoved(user: User) {
-  const properties: UserPermissionRemovedEvent = {}
+  const properties: UserPermissionRemovedEvent = {
+    userId: user._id as string,
+  }
   await publishEvent(Event.USER_PERMISSION_ADMIN_REMOVED, properties)
 }
 
@@ -52,7 +60,9 @@ export async function permissionBuilderAssigned(
   user: User,
   timestamp?: number
 ) {
-  const properties: UserPermissionAssignedEvent = {}
+  const properties: UserPermissionAssignedEvent = {
+    userId: user._id as string,
+  }
   await publishEvent(
     Event.USER_PERMISSION_BUILDER_ASSIGNED,
     properties,
@@ -61,40 +71,52 @@ export async function permissionBuilderAssigned(
 }
 
 export async function permissionBuilderRemoved(user: User) {
-  const properties: UserPermissionRemovedEvent = {}
+  const properties: UserPermissionRemovedEvent = {
+    userId: user._id as string,
+  }
   await publishEvent(Event.USER_PERMISSION_BUILDER_REMOVED, properties)
 }
 
 // INVITE
 
-export async function invited(userInfo: any) {
+export async function invited() {
   const properties: UserInvitedEvent = {}
   await publishEvent(Event.USER_INVITED, properties)
 }
 
 export async function inviteAccepted(user: User) {
-  const properties: UserInviteAcceptedEvent = {}
+  const properties: UserInviteAcceptedEvent = {
+    userId: user._id as string,
+  }
   await publishEvent(Event.USER_INVITED_ACCEPTED, properties)
 }
 
 // PASSWORD
 
 export async function passwordForceReset(user: User) {
-  const properties: UserPasswordForceResetEvent = {}
+  const properties: UserPasswordForceResetEvent = {
+    userId: user._id as string,
+  }
   await publishEvent(Event.USER_PASSWORD_FORCE_RESET, properties)
 }
 
 export async function passwordUpdated(user: User) {
-  const properties: UserPasswordUpdatedEvent = {}
+  const properties: UserPasswordUpdatedEvent = {
+    userId: user._id as string,
+  }
   await publishEvent(Event.USER_PASSWORD_UPDATED, properties)
 }
 
 export async function passwordResetRequested(user: User) {
-  const properties: UserPasswordResetRequestedEvent = {}
+  const properties: UserPasswordResetRequestedEvent = {
+    userId: user._id as string,
+  }
   await publishEvent(Event.USER_PASSWORD_RESET_REQUESTED, properties)
 }
 
 export async function passwordReset(user: User) {
-  const properties: UserPasswordResetEvent = {}
+  const properties: UserPasswordResetEvent = {
+    userId: user._id as string,
+  }
   await publishEvent(Event.USER_PASSWORD_RESET, properties)
 }

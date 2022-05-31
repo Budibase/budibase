@@ -6,7 +6,7 @@ import * as roles from "./app/roles"
 import * as tables from "./app/tables"
 import * as screens from "./app/screens"
 import * as global from "./global"
-import { App, AppBackfillSucceededEvent } from "@budibase/types"
+import { App, AppBackfillSucceededEvent, Event } from "@budibase/types"
 import { db as dbUtils, events } from "@budibase/backend-core"
 import env from "../../../environment"
 
@@ -21,6 +21,22 @@ const handleError = (e: any, errors?: any) => {
   }
   throw e
 }
+
+const EVENTS = [
+  Event.AUTOMATION_CREATED,
+  Event.AUTOMATION_STEP_CREATED,
+  Event.DATASOURCE_CREATED,
+  Event.LAYOUT_CREATED,
+  Event.QUERY_CREATED,
+  Event.ROLE_CREATED,
+  Event.SCREEN_CREATED,
+  Event.TABLE_CREATED,
+  Event.VIEW_CREATED,
+  Event.VIEW_CALCULATION_CREATED,
+  Event.VIEW_FILTER_CREATED,
+  Event.APP_PUBLISHED,
+  Event.APP_CREATED,
+]
 
 /**
  * Date:
@@ -38,6 +54,10 @@ export const run = async (appDb: any) => {
       // which runs after the app migrations
       return
     }
+
+    // tell the event pipeline to start caching
+    // events for this tenant
+    await events.backfillCache.start(EVENTS)
 
     const app: App = await appDb.get(dbUtils.DocumentTypes.APP_METADATA)
     const timestamp = app.createdAt as string
@@ -115,6 +135,8 @@ export const run = async (appDb: any) => {
     }
 
     await events.backfill.appSucceeded(properties)
+    // tell the event pipeline to stop caching events for this tenant
+    await events.backfillCache.end()
   } catch (e) {
     handleError(e)
     await events.backfill.appFailed(e)

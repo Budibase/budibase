@@ -26,5 +26,15 @@ export const saveSmtpConfig = async (globalDb: any) => {
 
 const saveConfig = async (config: Config, globalDb: any) => {
   config._id = db.generateConfigID({ type: config.type })
-  await globalDb.put(config)
+
+  let response
+  try {
+    response = await globalDb.get(config._id)
+    config._rev = response._rev
+    await globalDb.put(config)
+  } catch (e: any) {
+    if (e.status === 404) {
+      await globalDb.put(config)
+    }
+  }
 }

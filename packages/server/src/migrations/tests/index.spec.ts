@@ -7,8 +7,6 @@ import * as helpers from "./helpers"
 const { mocks } = require("@budibase/backend-core/testUtils")
 const timestamp = mocks.date.MOCK_DATE.toISOString()
 
-jest.setTimeout(100000)
-
 describe("migrations", () => {
   const config = new TestConfig()
 
@@ -50,7 +48,7 @@ describe("migrations", () => {
         expect(events.automation.created).toBeCalledTimes(2)
         expect(events.automation.stepCreated).toBeCalledTimes(1)
         expect(events.datasource.created).toBeCalledTimes(2)
-        expect(events.layout.created).toBeCalledTimes(3)
+        expect(events.layout.created).toBeCalledTimes(1)
         expect(events.query.created).toBeCalledTimes(2)
         expect(events.role.created).toBeCalledTimes(2)
         expect(events.table.created).toBeCalledTimes(3)
@@ -58,6 +56,15 @@ describe("migrations", () => {
         expect(events.view.calculationCreated).toBeCalledTimes(1)
         expect(events.view.filterCreated).toBeCalledTimes(1)
         expect(events.screen.created).toBeCalledTimes(2)
+        expect(events.backfill.appSucceeded).toBeCalledTimes(2)
+
+        const processor = events.processors.analyticsProcessor.processEvent
+        console.log(processor)
+
+        // to make sure caching is working as expected
+        expect(
+          events.processors.analyticsProcessor.processEvent
+        ).toBeCalledTimes(23)
       })
     })
   })
@@ -96,6 +103,12 @@ describe("migrations", () => {
       expect(events.org.logoUpdated).toBeCalledTimes(1)
       expect(events.org.nameUpdated).toBeCalledTimes(1)
       expect(events.org.platformURLUpdated).toBeCalledTimes(1)
+      expect(events.backfill.tenantSucceeded).toBeCalledTimes(1)
+
+      // to make sure caching is working as expected
+      expect(events.processors.analyticsProcessor.processEvent).toBeCalledTimes(
+        19
+      )
     })
   })
 })

@@ -21,6 +21,10 @@ export const imported = async (
   format: RowImportFormat,
   count: number
 ) => {
-  const properties: RowsImportedEvent = {}
+  const properties: RowsImportedEvent = {
+    tableId: table._id as string,
+    format,
+    count,
+  }
   await publishEvent(Event.ROWS_IMPORTED, properties)
 }

@@ -1,13 +1,15 @@
-export interface AccountCreatedEvent {
+import { BaseEvent } from "./event"
+
+export interface AccountCreatedEvent extends BaseEvent {
   tenantId: string
   registrationStep?: string
 }
 
-export interface AccountDeletedEvent {
+export interface AccountDeletedEvent extends BaseEvent {
   tenantId: string
   registrationStep?: string
 }
 
-export interface AccountVerifiedEvent {
+export interface AccountVerifiedEvent extends BaseEvent {
   tenantId: string
 }

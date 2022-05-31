@@ -18,17 +18,32 @@ export const created = async (
   query: Query,
   timestamp?: string
 ) => {
-  const properties: QueryCreatedEvent = {}
+  const properties: QueryCreatedEvent = {
+    queryId: query._id as string,
+    datasourceId: datasource._id as string,
+    source: datasource.source,
+    queryVerb: query.queryVerb,
+  }
   await publishEvent(Event.QUERY_CREATED, properties, timestamp)
 }
 
 export const updated = async (datasource: Datasource, query: Query) => {
-  const properties: QueryUpdatedEvent = {}
+  const properties: QueryUpdatedEvent = {
+    queryId: query._id as string,
+    datasourceId: datasource._id as string,
+    source: datasource.source,
+    queryVerb: query.queryVerb,
+  }
   await publishEvent(Event.QUERY_UPDATED, properties)
 }
 
 export const deleted = async (datasource: Datasource, query: Query) => {
-  const properties: QueryDeletedEvent = {}
+  const properties: QueryDeletedEvent = {
+    queryId: query._id as string,
+    datasourceId: datasource._id as string,
+    source: datasource.source,
+    queryVerb: query.queryVerb,
+  }
   await publishEvent(Event.QUERY_DELETED, properties)
 }
 
@@ -37,7 +52,12 @@ export const imported = async (
   importSource: any,
   count: any
 ) => {
-  const properties: QueryImportedEvent = {}
+  const properties: QueryImportedEvent = {
+    datasourceId: datasource._id as string,
+    source: datasource.source,
+    count,
+    importSource,
+  }
   await publishEvent(Event.QUERY_IMPORT, properties)
 }
 
@@ -48,7 +68,12 @@ export const run = async (count: number, timestamp?: string | number) => {
   await publishEvent(Event.QUERIES_RUN, properties, timestamp)
 }
 
-export const previewed = async (datasource: Datasource) => {
-  const properties: QueryPreviewedEvent = {}
+export const previewed = async (datasource: Datasource, query: Query) => {
+  const properties: QueryPreviewedEvent = {
+    queryId: query._id,
+    datasourceId: datasource._id as string,
+    source: datasource.source,
+    queryVerb: query.queryVerb,
+  }
   await publishEvent(Event.QUERY_PREVIEWED, properties)
 }

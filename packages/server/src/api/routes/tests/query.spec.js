@@ -201,15 +201,16 @@ describe("/queries", () => {
 
   describe("preview", () => {
     it("should be able to preview the query", async () => {
+      const query = {
+        datasourceId: datasource._id,
+        parameters: {},
+        fields: {},
+        queryVerb: "read",
+        name: datasource.name,
+      }
       const res = await request
         .post(`/api/queries/preview`)
-        .send({
-          datasourceId: datasource._id,
-          parameters: {},
-          fields: {},
-          queryVerb: "read",
-          name: datasource.name,
-        })
+        .send(query)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
@@ -218,7 +219,7 @@ describe("/queries", () => {
       expect(res.body.rows.length).toEqual(1)
       expect(events.query.previewed).toBeCalledTimes(1)
       datasource.config = { schema: "public" }
-      expect(events.query.previewed).toBeCalledWith(datasource)
+      expect(events.query.previewed).toBeCalledWith(datasource, query)
     })
 
     it("should apply authorization to endpoint", async () => {

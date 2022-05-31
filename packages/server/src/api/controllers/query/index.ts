@@ -114,10 +114,10 @@ export async function preview(ctx: any) {
   const db = getAppDB()
 
   const datasource = await db.get(ctx.request.body.datasourceId)
+  const query = ctx.request.body
   // preview may not have a queryId as it hasn't been saved, but if it does
   // this stops dynamic variables from calling the same query
-  const { fields, parameters, queryVerb, transformer, queryId } =
-    ctx.request.body
+  const { fields, parameters, queryVerb, transformer, queryId } = query
 
   try {
     const runFn = () =>
@@ -132,7 +132,7 @@ export async function preview(ctx: any) {
       })
 
     const { rows, keys, info, extra } = await quotas.addQuery(runFn)
-    await events.query.previewed(datasource)
+    await events.query.previewed(datasource, query)
     ctx.body = {
       rows,
       schemaFields: [...new Set(keys)],

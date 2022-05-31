@@ -4,7 +4,6 @@ import {
   License,
   LicenseActivatedEvent,
   LicenseDowngradedEvent,
-  LicenseQuotaExceededEvent,
   LicenseUpdatedEvent,
   LicenseUpgradedEvent,
 } from "@budibase/types"
@@ -31,13 +30,4 @@ export async function updated(license: License) {
 export async function activated(license: License) {
   const properties: LicenseActivatedEvent = {}
   await publishEvent(Event.LICENSE_ACTIVATED, properties)
-}
-
-// TODO
-export async function quotaExceeded(quotaName: string, value: number) {
-  const properties: LicenseQuotaExceededEvent = {
-    name: quotaName,
-    value,
-  }
-  await publishEvent(Event.LICENSE_QUOTA_EXCEEDED, properties)
 }

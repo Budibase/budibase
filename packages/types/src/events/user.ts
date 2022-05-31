@@ -1,21 +1,43 @@
-export interface UserCreatedEvent {}
+import { BaseEvent } from "./event"
 
-export interface UserUpdatedEvent {}
+export interface UserCreatedEvent extends BaseEvent {
+  userId: string
+}
 
-export interface UserDeletedEvent {}
+export interface UserUpdatedEvent extends BaseEvent {
+  userId: string
+}
 
-export interface UserPermissionAssignedEvent {}
+export interface UserDeletedEvent extends BaseEvent {
+  userId: string
+}
 
-export interface UserPermissionRemovedEvent {}
+export interface UserPermissionAssignedEvent extends BaseEvent {
+  userId: string
+}
 
-export interface UserInvitedEvent {}
+export interface UserPermissionRemovedEvent extends BaseEvent {
+  userId: string
+}
 
-export interface UserInviteAcceptedEvent {}
+export interface UserInvitedEvent extends BaseEvent {}
 
-export interface UserPasswordForceResetEvent {}
+export interface UserInviteAcceptedEvent extends BaseEvent {
+  userId: string
+}
 
-export interface UserPasswordUpdatedEvent {}
+export interface UserPasswordForceResetEvent extends BaseEvent {
+  userId: string
+}
 
-export interface UserPasswordResetRequestedEvent {}
+export interface UserPasswordUpdatedEvent extends BaseEvent {
+  userId: string
+}
 
-export interface UserPasswordResetEvent {}
+export interface UserPasswordResetRequestedEvent extends BaseEvent {
+  userId: string
+}
+
+export interface UserPasswordResetEvent extends BaseEvent {
+  userId: string
+}

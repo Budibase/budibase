@@ -1,13 +1,40 @@
-export interface QueryCreatedEvent {}
+import { BaseEvent } from "./event"
 
-export interface QueryUpdatedEvent {}
+export interface QueryCreatedEvent extends BaseEvent {
+  queryId: string
+  datasourceId: string
+  source: string
+  queryVerb: string
+}
 
-export interface QueryDeletedEvent {}
+export interface QueryUpdatedEvent extends BaseEvent {
+  queryId: string
+  datasourceId: string
+  source: string
+  queryVerb: string
+}
 
-export interface QueryImportedEvent {}
+export interface QueryDeletedEvent extends BaseEvent {
+  queryId: string
+  datasourceId: string
+  source: string
+  queryVerb: string
+}
 
-export interface QueryPreviewedEvent {}
+export interface QueryImportedEvent extends BaseEvent {
+  datasourceId: string
+  source: string
+  count: number
+  importSource: string
+}
 
-export interface QueriesRunEvent {
+export interface QueryPreviewedEvent extends BaseEvent {
+  queryId?: string
+  datasourceId: string
+  source: string
+  queryVerb: string
+}
+
+export interface QueriesRunEvent extends BaseEvent {
   count: number
 }

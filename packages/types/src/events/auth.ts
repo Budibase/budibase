@@ -1,27 +1,29 @@
+import { BaseEvent } from "./event"
+
 export type LoginSource = "local" | "google" | "oidc" | "google-internal"
 export type SSOType = "oidc" | "google"
 
-export interface LoginEvent {
+export interface LoginEvent extends BaseEvent {
   userId: string
   source: LoginSource
 }
 
-export interface LogoutEvent {
+export interface LogoutEvent extends BaseEvent {
   userId: string
 }
 
-export interface SSOCreatedEvent {
+export interface SSOCreatedEvent extends BaseEvent {
   type: SSOType
 }
 
-export interface SSOUpdatedEvent {
+export interface SSOUpdatedEvent extends BaseEvent {
   type: SSOType
 }
 
-export interface SSOActivatedEvent {
+export interface SSOActivatedEvent extends BaseEvent {
   type: SSOType
 }
 
-export interface SSODeactivatedEvent {
+export interface SSODeactivatedEvent extends BaseEvent {
   type: SSOType
 }

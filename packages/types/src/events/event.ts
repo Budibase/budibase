@@ -37,7 +37,7 @@ export enum Event {
   ORG_LOGO_UPDATED = "org:info:logo:updated",
   ORG_PLATFORM_URL_UPDATED = "org:platformurl:updated",
 
-  // ORG / UPDATE
+  // VERSIONS
   VERSION_CHECKED = "version:checked",
   VERSION_UPGRADED = "version:upgraded",
   VERSION_DOWNGRADED = "version:downgraded",
@@ -134,7 +134,6 @@ export enum Event {
   LICENSE_DOWNGRADED = "license:downgraded",
   LICENSE_UPDATED = "license:updated",
   LICENSE_ACTIVATED = "license:activated",
-  LICENSE_QUOTA_EXCEEDED = "license:quota:exceeded",
 
   // ACCOUNT
   ACCOUNT_CREATED = "account:created",
@@ -148,6 +147,15 @@ export enum Event {
   TENANT_BACKFILL_FAILED = "tenant:backfill:failed",
   INSTALLATION_BACKFILL_SUCCEEDED = "installation:backfill:succeeded",
   INSTALLATION_BACKFILL_FAILED = "installation:backfill:failed",
+}
+
+// properties added at the final stage of the event pipeline
+export interface BaseEvent {
+  version?: string
+  service?: string
+  appId?: string
+  installationId?: string
+  tenantId?: string
 }
 
 export type RowImportFormat = "csv"

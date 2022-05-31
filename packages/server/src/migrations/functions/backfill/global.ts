@@ -1,4 +1,3 @@
-import { TenantBackfillSucceededEvent } from "./../../../../../types/src/events/backfill"
 import * as users from "./global/users"
 import * as configs from "./global/configs"
 import * as quotas from "./global/quotas"
@@ -10,7 +9,12 @@ import {
   db as dbUtils,
 } from "@budibase/backend-core"
 import { QuotaUsage } from "@budibase/pro"
-import { CloudAccount, App } from "@budibase/types"
+import {
+  CloudAccount,
+  App,
+  TenantBackfillSucceededEvent,
+  Event,
+} from "@budibase/types"
 import env from "../../../environment"
 
 const failGraceful = env.SELF_HOSTED && !env.isDev()
@@ -57,6 +61,22 @@ const formatUsage = (usage: QuotaUsage) => {
   }
 }
 
+const EVENTS = [
+  Event.EMAIL_SMTP_CREATED,
+  Event.AUTH_SSO_CREATED,
+  Event.AUTH_SSO_ACTIVATED,
+  Event.ORG_NAME_UPDATED,
+  Event.ORG_LOGO_UPDATED,
+  Event.ORG_PLATFORM_URL_UPDATED,
+  Event.USER_CREATED,
+  Event.USER_PERMISSION_ADMIN_ASSIGNED,
+  Event.USER_PERMISSION_BUILDER_ASSIGNED,
+  Event.ROLE_ASSIGNED,
+  Event.ROWS_CREATED,
+  Event.QUERIES_RUN,
+  Event.AUTOMATIONS_RUN,
+]
+
 /**
  * Date:
  * May 2022
@@ -94,6 +114,10 @@ export const run = async (db: any) => {
       handleError(e, errors)
     }
 
+    // tell the event pipeline to start caching
+    // events for this tenant
+    await events.backfillCache.start(EVENTS)
+
     try {
       await configs.backfill(db, installTimestamp)
     } catch (e) {
@@ -130,7 +154,10 @@ export const run = async (db: any) => {
     } else {
       properties.errorCount = 0
     }
+
     await events.backfill.tenantSucceeded(properties)
+    // tell the event pipeline to stop caching events for this tenant
+    await events.backfillCache.end()
   } catch (e) {
     handleError(e)
     await events.backfill.tenantFailed(e)

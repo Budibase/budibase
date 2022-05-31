@@ -22,11 +22,11 @@ export const backfill = async (appDb: any, timestamp: string) => {
         await events.view.created(view, timestamp)
 
         if (view.calculation) {
-          await events.view.calculationCreated(view.calculation, timestamp)
+          await events.view.calculationCreated(view, timestamp)
         }
 
         if (view.filters?.length) {
-          await events.view.filterCreated(timestamp)
+          await events.view.filterCreated(view, timestamp)
         }
       }
     }

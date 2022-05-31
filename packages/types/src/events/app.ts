@@ -1,50 +1,52 @@
-export interface AppCreatedEvent {
+import { BaseEvent } from "./event"
+
+export interface AppCreatedEvent extends BaseEvent {
   appId: string
   version: string
 }
 
-export interface AppUpdatedEvent {
+export interface AppUpdatedEvent extends BaseEvent {
   appId: string
   version: string
 }
 
-export interface AppDeletedEvent {
+export interface AppDeletedEvent extends BaseEvent {
   appId: string
 }
 
-export interface AppPublishedEvent {
+export interface AppPublishedEvent extends BaseEvent {
   appId: string
 }
 
-export interface AppUnpublishedEvent {
+export interface AppUnpublishedEvent extends BaseEvent {
   appId: string
 }
 
-export interface AppFileImportedEvent {
+export interface AppFileImportedEvent extends BaseEvent {
   appId: string
 }
 
-export interface AppTemplateImportedEvent {
+export interface AppTemplateImportedEvent extends BaseEvent {
   appId: string
   templateKey: string
 }
 
-export interface AppVersionUpdatedEvent {
+export interface AppVersionUpdatedEvent extends BaseEvent {
   appId: string
   currentVersion: string
   updatedToVersion: string
 }
 
-export interface AppVersionRevertedEvent {
+export interface AppVersionRevertedEvent extends BaseEvent {
   appId: string
   currentVersion: string
   revertedToVersion: string
 }
 
-export interface AppRevertedEvent {
+export interface AppRevertedEvent extends BaseEvent {
   appId: string
 }
 
-export interface AppExportedEvent {
+export interface AppExportedEvent extends BaseEvent {
   appId: string
 }
