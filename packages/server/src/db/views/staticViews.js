@@ -6,6 +6,7 @@ const {
   SearchIndexes,
 } = require("../utils")
 const SCREEN_PREFIX = DocumentTypes.SCREEN + SEPARATOR
+const LOG_PREFIX = DocumentTypes.AUTOMATION_LOG + SEPARATOR
 
 /**************************************************
  *                  INFORMATION                   *
@@ -54,6 +55,28 @@ exports.createLinkView = async () => {
   designDoc.views = {
     ...designDoc.views,
     [ViewNames.LINK]: view,
+  }
+  await db.put(designDoc)
+}
+
+/**
+ * A separate view that allows us to perform queries by the automation ID and time series, while the
+ * main all_docs allows access to time series only
+ */
+exports.createLogByAutomationView = async () => {
+  const db = getAppDB()
+  const designDoc = await db.get("_design/database")
+  const view = {
+    map: `function(doc) {
+      if (doc._id.startsWith("${LOG_PREFIX}")) {
+        let key = doc.automationId + ${SEPARATOR} + doc.createdAt
+        emit(key, doc._id)
+      }
+    }`,
+  }
+  designDoc.views = {
+    ...designDoc.views,
+    [ViewNames.LOGS_BY_AUTOMATION]: view,
   }
   await db.put(designDoc)
 }

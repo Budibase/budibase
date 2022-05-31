@@ -19,6 +19,7 @@ exports.Databases = {
   QUERY_VARS: "queryVars",
   LICENSES: "license",
   GENERIC_CACHE: "data_cache",
+  AUTOMATION_LOGS: "autoLogs",
 }
 
 exports.SEPARATOR = SEPARATOR

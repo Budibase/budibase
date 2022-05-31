@@ -13,6 +13,13 @@
     return results.steps.filter(x => x.stepId !== "LOOP" || [])
   }
 
+  function textArea(results, message) {
+    if (!results) {
+      return message
+    }
+    return JSON.stringify(results, null, 2)
+  }
+
   $: filteredResults = prepTestResults(testResults)
 
   $: {
@@ -66,11 +73,7 @@
                   <TextArea
                     minHeight="80px"
                     disabled
-                    value={JSON.stringify(
-                      filteredResults?.[idx]?.inputs,
-                      null,
-                      2
-                    )}
+                    value={textArea(filteredResults?.[idx]?.inputs, "No input")}
                   />
                 </div></Tab
               >
@@ -79,10 +82,9 @@
                   <TextArea
                     minHeight="100px"
                     disabled
-                    value={JSON.stringify(
+                    value={textArea(
                       filteredResults?.[idx]?.outputs,
-                      null,
-                      2
+                      "No output"
                     )}
                   />
                 </div>

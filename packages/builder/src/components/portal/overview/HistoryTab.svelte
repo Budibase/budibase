@@ -56,7 +56,7 @@
     let definitions = await automationStore.actions.definitions()
     runHistory = enrichHistory(definitions, [
       {
-        status: "Error",
+        status: "Success",
         timestamp: "2022-05-11T16:06:14.438Z",
         name: "automation name",
         steps: [
@@ -88,7 +88,7 @@
         ],
       },
       {
-        status: "Success",
+        status: "Error",
         timestamp: "2022-05-11T16:03:14.438Z",
         name: "automation name",
         steps: [
@@ -151,7 +151,7 @@
   }
 
   .panelOpen {
-    grid-template-columns: auto 360px;
+    grid-template-columns: auto 420px;
   }
 
   .search {
@@ -178,7 +178,7 @@
     position: absolute;
     right: 0;
     height: 100%;
-    width: 360px;
+    width: 420px;
     overflow: hidden;
     background-color: var(--background);
   }
