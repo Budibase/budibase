@@ -3,9 +3,6 @@ const {
   StaticDatabases,
 } = require("@budibase/backend-core/db")
 const { getGlobalUserByEmail } = require("@budibase/backend-core/utils")
-import { EmailTemplatePurpose } from "../../../constants"
-import { checkInviteCode } from "../../../utilities/redis"
-import { sendEmail } from "../../../utilities/email"
 const { user: userCache } = require("@budibase/backend-core/cache")
 const { invalidateSessions } = require("@budibase/backend-core/sessions")
 const accounts = require("@budibase/backend-core/accounts")
@@ -15,13 +12,18 @@ const {
   getTenantId,
   getTenantUser,
   doesTenantExist,
+  doInTenant,
 } = require("@budibase/backend-core/tenancy")
 const { removeUserFromInfoDB } = require("@budibase/backend-core/deprovision")
+const { errors } = require("@budibase/backend-core")
+const { CacheKeys, bustCache } = require("@budibase/backend-core/cache")
 import env from "../../../environment"
 import { syncUserInApps } from "../../../utilities/appService"
 import { quotas, users } from "@budibase/pro"
-const { errors } = require("@budibase/backend-core")
 import { allUsers, getUser } from "../../utilities"
+import { EmailTemplatePurpose } from "../../../constants"
+import { checkInviteCode } from "../../../utilities/redis"
+import { sendEmail } from "../../../utilities/email"
 
 export const save = async (ctx: any) => {
   try {
@@ -40,63 +42,73 @@ const parseBooleanParam = (param: any) => {
 
 export const adminUser = async (ctx: any) => {
   const { email, password, tenantId } = ctx.request.body
+  await doInTenant(tenantId, async () => {
+    // account portal sends a pre-hashed password - honour param to prevent double hashing
+    const hashPassword = parseBooleanParam(ctx.request.query.hashPassword)
+    // account portal sends no password for SSO users
+    const requirePassword = parseBooleanParam(ctx.request.query.requirePassword)
 
-  // account portal sends a pre-hashed password - honour param to prevent double hashing
-  const hashPassword = parseBooleanParam(ctx.request.query.hashPassword)
-  // account portal sends no password for SSO users
-  const requirePassword = parseBooleanParam(ctx.request.query.requirePassword)
-
-  if (await doesTenantExist(tenantId)) {
-    ctx.throw(403, "Organisation already exists.")
-  }
-
-  const response = await doWithGlobalDB(tenantId, async (db: any) => {
-    const response = await db.allDocs(
-      getGlobalUserParams(null, {
-        include_docs: true,
-      })
-    )
-    // write usage quotas for cloud
-    if (!env.SELF_HOSTED) {
-      // could be a scenario where it exists, make sure its clean
-      try {
-        const usageQuota = await db.get(StaticDatabases.GLOBAL.docs.usageQuota)
-        if (usageQuota) {
-          await db.remove(usageQuota._id, usageQuota._rev)
-        }
-      } catch (err) {
-        // don't worry about errors
-      }
-      await db.put(quotas.generateNewQuotaUsage())
+    if (await doesTenantExist(tenantId)) {
+      ctx.throw(403, "Organisation already exists.")
     }
-    return response
+
+    const response = await doWithGlobalDB(tenantId, async (db: any) => {
+      const response = await db.allDocs(
+        getGlobalUserParams(null, {
+          include_docs: true,
+        })
+      )
+      // write usage quotas for cloud
+      if (!env.SELF_HOSTED) {
+        // could be a scenario where it exists, make sure its clean
+        try {
+          const usageQuota = await db.get(
+            StaticDatabases.GLOBAL.docs.usageQuota
+          )
+          if (usageQuota) {
+            await db.remove(usageQuota._id, usageQuota._rev)
+          }
+        } catch (err) {
+          // don't worry about errors
+        }
+        await db.put(quotas.generateNewQuotaUsage())
+      }
+      return response
+    })
+
+    if (response.rows.some((row: any) => row.doc.admin)) {
+      ctx.throw(
+        403,
+        "You cannot initialise once an global user has been created."
+      )
+    }
+
+    const user = {
+      email: email,
+      password: password,
+      createdAt: Date.now(),
+      roles: {},
+      builder: {
+        global: true,
+      },
+      admin: {
+        global: true,
+      },
+      tenantId,
+    }
+    try {
+      const finalUser = await users.save(
+        user,
+        tenantId,
+        hashPassword,
+        requirePassword
+      )
+      await bustCache(CacheKeys.CHECKLIST)
+      ctx.body = finalUser
+    } catch (err: any) {
+      ctx.throw(err.status || 400, err)
+    }
   })
-
-  if (response.rows.some((row: any) => row.doc.admin)) {
-    ctx.throw(
-      403,
-      "You cannot initialise once an global user has been created."
-    )
-  }
-
-  const user = {
-    email: email,
-    password: password,
-    createdAt: Date.now(),
-    roles: {},
-    builder: {
-      global: true,
-    },
-    admin: {
-      global: true,
-    },
-    tenantId,
-  }
-  try {
-    ctx.body = await users.save(user, tenantId, hashPassword, requirePassword)
-  } catch (err: any) {
-    ctx.throw(err.status || 400, err)
-  }
 }
 
 export const destroy = async (ctx: any) => {

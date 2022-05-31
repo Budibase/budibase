@@ -11,6 +11,7 @@
   export let fileSizeLimit = undefined
   export let processFiles = undefined
   export let handleFileTooLarge = undefined
+  export let handleTooManyFiles = undefined
   export let gallery = true
   export let fileTags = []
   export let maximum = undefined
@@ -30,6 +31,7 @@
     {fileSizeLimit}
     {processFiles}
     {handleFileTooLarge}
+    {handleTooManyFiles}
     {gallery}
     {fileTags}
     {maximum}

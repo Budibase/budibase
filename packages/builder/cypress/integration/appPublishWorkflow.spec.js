@@ -58,7 +58,7 @@ filterTests(['all'], () => {
 
       cy.get(".appTable .app-row-actions").eq(0)
       .within(() => {
-        cy.get(".spectrum-Button").contains("View app")
+        cy.get(".spectrum-Button").contains("View")
         cy.get(".spectrum-Button").contains("Edit").click({ force: true })
       })
 

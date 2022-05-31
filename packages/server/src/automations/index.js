@@ -1,5 +1,5 @@
 const { processEvent } = require("./utils")
-const { queue } = require("./bullboard")
+const { queue, shutdown } = require("./bullboard")
 
 /**
  * This module is built purely to kick off the worker farm and manage the inputs/outputs
@@ -14,4 +14,9 @@ exports.init = function () {
 exports.getQueues = () => {
   return [queue]
 }
+
+exports.shutdown = () => {
+  return shutdown()
+}
+
 exports.queue = queue
