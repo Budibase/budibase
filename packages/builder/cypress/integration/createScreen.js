@@ -9,7 +9,7 @@ filterTests(["smoke", "all"], () => {
     })
 
     it("Should successfully create a screen", () => {
-      cy.createScreen("/test")
+      cy.createScreen("test")
       cy.get(".nav-items-container").within(() => {
         cy.contains("/test").should("exist")
       })

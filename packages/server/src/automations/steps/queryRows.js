@@ -50,6 +50,7 @@ exports.definition = {
         limit: {
           type: "number",
           title: "Limit",
+          customType: "queryLimit",
         },
       },
       required: ["tableId"],

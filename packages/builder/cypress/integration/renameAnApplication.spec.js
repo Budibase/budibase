@@ -112,19 +112,9 @@ filterTests(['all'], () => {
       cy.get("[data-cy='app-row-actions-menu-popover']").eq(0).within(() => {
         cy.get(".spectrum-Menu-item").contains("Edit").click({ force: true })
       })
-      cy.get(".spectrum-Modal")
-        .within(() => {
-          if (noName == true) {
-            cy.get("input").clear()
-            cy.get(".spectrum-Dialog-grid").click()
-              .contains("App name must be letters, numbers and spaces only")
-            return cy
-          }
-          cy.get("input").clear()
-          cy.get("input").eq(0).type(changedName).should("have.value", changedName).blur()
-          cy.get(".spectrum-ButtonGroup").contains("Save").click({ force: true })
-          cy.wait(500)
-        })
-      }
-    })
+
+      cy.updateAppName(changedName, noName)
+
+    }
+  })
 })

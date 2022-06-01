@@ -18,6 +18,7 @@
   export let fileSizeLimit = BYTES_IN_MB * 20
   export let processFiles = null
   export let handleFileTooLarge = null
+  export let handleTooManyFiles = null
   export let gallery = true
   export let error = null
   export let fileTags = []
@@ -71,6 +72,13 @@
       handleFileTooLarge(fileSizeLimit, value)
       return
     }
+
+    const fileCount = fileList.length + value.length
+    if (handleTooManyFiles && maximum && fileCount > maximum) {
+      handleTooManyFiles(maximum)
+      return
+    }
+
     if (processFiles) {
       const processedFiles = await processFiles(fileList)
       const newValue = [...value, ...processedFiles]

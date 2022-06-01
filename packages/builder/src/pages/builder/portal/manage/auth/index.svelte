@@ -297,7 +297,7 @@
     </Body>
   </Layout>
   {#if providers.google}
-    <Divider />
+    <Divider size="S" />
     <Layout gap="XS" noPadding>
       <Heading size="S">
         <div class="provider-title">
@@ -336,7 +336,7 @@
     </Layout>
   {/if}
   {#if providers.oidc}
-    <Divider />
+    <Divider size="S" />
     <Layout gap="XS" noPadding>
       <Heading size="S">
         <div class="provider-title">
