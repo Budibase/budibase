@@ -8,13 +8,13 @@
   export let disabled = false
   export let enableTime = false
   export let timeOnly = false
+  export let ignoreTimezones = false
   export let validation
   export let defaultValue
   export let onChange
 
   let fieldState
   let fieldApi
-  let fieldSchema
 
   const handleChange = e => {
     fieldApi.setValue(e.detail)
@@ -33,7 +33,6 @@
   type="datetime"
   bind:fieldState
   bind:fieldApi
-  bind:fieldSchema
 >
   {#if fieldState}
     <CoreDatePicker
@@ -45,8 +44,8 @@
       appendTo={document.getElementById("flatpickr-root")}
       {enableTime}
       {timeOnly}
+      {ignoreTimezones}
       {placeholder}
-      ignoreTimezones={fieldSchema?.ignoreTimezones}
     />
   {/if}
 </Field>

@@ -2620,14 +2620,20 @@
       },
       {
         "type": "boolean",
-        "label": "Show Time",
+        "label": "Show time",
         "key": "enableTime",
         "defaultValue": true
       },
       {
         "type": "boolean",
-        "label": "Time Only",
+        "label": "Time only",
         "key": "timeOnly",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Ignore time zones",
+        "key": "ignoreTimezones",
         "defaultValue": false
       },
       {
