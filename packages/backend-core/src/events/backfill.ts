@@ -18,6 +18,7 @@ import {
   UserCreatedEvent,
   RoleAssignedEvent,
   UserPermissionAssignedEvent,
+  AppCreatedEvent,
 } from "@budibase/types"
 import * as context from "../context"
 import { CacheKeys } from "../cache/generic"
@@ -130,7 +131,7 @@ const CUSTOM_PROPERTY_SUFFIX: any = {
   [Event.VIEW_FILTER_CREATED]: (properties: ViewFilterCreatedEvent) => {
     return properties.tableId // best uniqueness
   },
-  [Event.APP_PUBLISHED]: (properties: AppPublishedEvent) => {
+  [Event.APP_CREATED]: (properties: AppCreatedEvent) => {
     return properties.appId // best uniqueness
   },
   [Event.APP_PUBLISHED]: (properties: AppPublishedEvent) => {

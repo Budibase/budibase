@@ -9,6 +9,7 @@ const {
   getGlobalDBName,
   getTenantId,
 } = require("../tenancy")
+const context = require("../context")
 
 exports.MIGRATION_TYPES = {
   GLOBAL: "global", // run once per tenant, recorded in global db, global db is provided as an argument
@@ -90,7 +91,14 @@ exports.runMigration = async (migration, options = {}) => {
           `[Tenant: ${tenantId}] [Migration: ${migrationName}] [DB: ${dbName}] Running ${lengthStatement}`
         )
         // run the migration with tenant context
-        await migration.fn(db)
+        if (migrationType === exports.MIGRATION_TYPES.APP) {
+          await context.doInAppContext(db.name, async () => {
+            await migration.fn(db)
+          })
+        } else {
+          await migration.fn(db)
+        }
+
         log(
           `[Tenant: ${tenantId}] [Migration: ${migrationName}] [DB: ${dbName}] Complete`
         )
