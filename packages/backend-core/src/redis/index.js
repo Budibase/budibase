@@ -165,7 +165,8 @@ class RedisWrapper {
   }
 
   async keys(pattern) {
-    return CLIENT.keys(pattern)
+    const db = this._db
+    return CLIENT.keys(addDbPrefix(db, pattern))
   }
 
   async get(key) {
