@@ -45,4 +45,12 @@ exports.init = () => {
   return serverAdapter.registerPlugin()
 }
 
+exports.shutdown = async () => {
+  if (automationQueue) {
+    clearInterval(cleanupInternal)
+    await automationQueue.close()
+    automationQueue = null
+  }
+}
+
 exports.queue = automationQueue

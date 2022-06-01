@@ -14,6 +14,8 @@ const automations = require("./automations/index")
 const Sentry = require("@sentry/node")
 const fileSystem = require("./utilities/fileSystem")
 const bullboard = require("./automations/bullboard")
+const { logAlert } = require("@budibase/backend-core/logging")
+const { Thread } = require("./threads")
 import redis from "./utilities/redis"
 import * as migrations from "./migrations"
 
@@ -49,7 +51,7 @@ app.context.eventEmitter = eventEmitter
 app.context.auth = {}
 
 // api routes
-app.use(api.routes())
+app.use(api.router.routes())
 
 if (env.isProd()) {
   env._set("NODE_ENV", "production")
@@ -68,11 +70,24 @@ if (env.isProd()) {
 const server = http.createServer(app.callback())
 destroyable(server)
 
+let shuttingDown = false,
+  errCode = 0
 server.on("close", async () => {
-  if (env.NODE_ENV !== "jest") {
+  // already in process
+  if (shuttingDown) {
+    return
+  }
+  shuttingDown = true
+  if (!env.isTest()) {
     console.log("Server Closed")
   }
+  await automations.shutdown()
   await redis.shutdown()
+  await Thread.shutdown()
+  api.shutdown()
+  if (!env.isTest()) {
+    process.exit(errCode)
+  }
 })
 
 module.exports = server.listen(env.PORT || 0, async () => {
@@ -90,7 +105,13 @@ const shutdown = () => {
 }
 
 process.on("uncaughtException", err => {
-  console.error(err)
+  // @ts-ignore
+  // don't worry about this error, comes from zlib isn't important
+  if (err && err["code"] === "ERR_INVALID_CHAR") {
+    return
+  }
+  errCode = -1
+  logAlert("Uncaught exception.", err)
   shutdown()
 })
 
@@ -102,7 +123,7 @@ process.on("SIGTERM", () => {
 // not recommended in a clustered environment
 if (!env.HTTP_MIGRATIONS) {
   migrations.migrate().catch(err => {
-    console.error("Error performing migrations. Exiting.\n", err)
+    logAlert("Error performing migrations. Exiting.", err)
     shutdown()
   })
 }
