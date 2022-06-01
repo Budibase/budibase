@@ -4,11 +4,14 @@ filterTests(['all'], () => {
   context("Change Application Icon and Colour", () => {
       before(() => {
         cy.login()
+        cy.createTestApp()
       })
 
       it("should change the icon and colour for an application", () => {
           // Search for test application
-          cy.applicationInAppTable("Cypress Tests")
+          //cy.applicationInAppTable("Cypress Tests")
+          cy.visit(`${Cypress.config().baseUrl}/builder`)
+          cy.wait(2000)
           cy.get(".appTable")
             .within(() => {
               cy.get(".app-row-actions-icon").eq(0).click()
