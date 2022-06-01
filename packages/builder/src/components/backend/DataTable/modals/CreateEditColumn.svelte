@@ -10,6 +10,7 @@
     ModalContent,
     Context,
     Modal,
+    Banner,
     notifications,
   } from "@budibase/bbui"
   import { createEventDispatcher, onMount } from "svelte"
@@ -63,6 +64,7 @@
   let primaryDisplay =
     $tables.selected.primaryDisplay == null ||
     $tables.selected.primaryDisplay === field.name
+  let isCreating = originalName == null
 
   let table = $tables.selected
   let indexes = [...($tables.selected.indexes || [])]
@@ -430,15 +432,13 @@
     <DatePicker label="Latest" bind:value={field.constraints.datetime.latest} />
     <div>
       <Label
-        size="S"
-        tooltip="By default, date/time values are timezone aware and stored as UTC timestamps. You can disable timezone awareness if you would prefer that date/time values are always stored relative to the servers timezone."
+        tooltip={isCreating
+          ? null
+          : "We recommend not changing how timezones are handled for existing columns, as existing data will not be updated"}
       >
-        Timezone
+        Time zones
       </Label>
-      <Toggle
-        bind:value={field.disableTimezone}
-        text="Disable timezone awareness"
-      />
+      <Toggle bind:value={field.ignoreTimezones} text="Ignore time zones" />
     </div>
   {:else if field.type === "number"}
     <Input
