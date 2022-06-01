@@ -130,6 +130,7 @@
     "pouchdb-replication-stream": "1.2.9",
     "redis": "4",
     "server-destroy": "1.0.1",
+    "snowflake-sdk": "^1.6.10",
     "svelte": "^3.38.2",
     "swagger-parser": "^10.0.3",
     "to-json-schema": "0.2.5",
