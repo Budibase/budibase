@@ -10,7 +10,7 @@ import {
   User,
 } from "@budibase/types"
 
-export async function created(role: Role, timestamp?: string) {
+export async function created(role: Role, timestamp?: string | number) {
   const properties: RoleCreatedEvent = {
     roleId: role._id as string,
     permissionId: role.permissionId,

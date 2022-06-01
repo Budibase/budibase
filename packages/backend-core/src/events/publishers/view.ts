@@ -19,7 +19,7 @@ import {
 
 /* eslint-disable */
 
-export async function created(view: View, timestamp?: string) {
+export async function created(view: View, timestamp?: string | number) {
   const properties: ViewCreatedEvent = {
     tableId: view.tableId,
   }
@@ -48,7 +48,7 @@ export async function exported(table: Table, format: TableExportFormat) {
   await publishEvent(Event.VIEW_EXPORTED, properties)
 }
 
-export async function filterCreated(view: View, timestamp?: string) {
+export async function filterCreated(view: View, timestamp?: string | number) {
   const properties: ViewFilterCreatedEvent = {
     tableId: view.tableId,
   }
@@ -69,7 +69,10 @@ export async function filterDeleted(view: View) {
   await publishEvent(Event.VIEW_FILTER_DELETED, properties)
 }
 
-export async function calculationCreated(view: View, timestamp?: string) {
+export async function calculationCreated(
+  view: View,
+  timestamp?: string | number
+) {
   const properties: ViewCalculationCreatedEvent = {
     tableId: view.tableId,
     calculation: view.calculation as ViewCalculation,

@@ -18,7 +18,7 @@ const getDatasource = async (
   return appDb.get(datasourceId)
 }
 
-export const backfill = async (appDb: any, timestamp: string) => {
+export const backfill = async (appDb: any, timestamp: string | number) => {
   const queries: Query[] = await getQueries(appDb)
 
   for (const query of queries) {

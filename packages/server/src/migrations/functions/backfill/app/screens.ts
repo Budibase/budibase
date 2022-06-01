@@ -11,7 +11,7 @@ const getScreens = async (appDb: any): Promise<Screen[]> => {
   return response.rows.map((row: any) => row.doc)
 }
 
-export const backfill = async (appDb: any, timestamp: string) => {
+export const backfill = async (appDb: any, timestamp: string | number) => {
   const screens = await getScreens(appDb)
 
   for (const screen of screens) {

@@ -12,7 +12,10 @@ import {
   AutomationsRunEvent,
 } from "@budibase/types"
 
-export async function created(automation: Automation, timestamp?: string) {
+export async function created(
+  automation: Automation,
+  timestamp?: string | number
+) {
   const properties: AutomationCreatedEvent = {
     appId: automation.appId,
     automationId: automation._id as string,
@@ -62,7 +65,7 @@ export const run = async (count: number, timestamp?: string | number) => {
 export async function stepCreated(
   automation: Automation,
   step: AutomationStep,
-  timestamp?: string
+  timestamp?: string | number
 ) {
   const properties: AutomationStepCreatedEvent = {
     appId: automation.appId,

@@ -11,7 +11,7 @@ const getRoles = async (appDb: any): Promise<Role[]> => {
   return response.rows.map((row: any) => row.doc)
 }
 
-export const backfill = async (appDb: any, timestamp: string) => {
+export const backfill = async (appDb: any, timestamp: string | number) => {
   const roles = await getRoles(appDb)
 
   for (const role of roles) {

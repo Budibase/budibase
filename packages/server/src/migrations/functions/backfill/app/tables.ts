@@ -11,7 +11,7 @@ const getTables = async (appDb: any): Promise<Table[]> => {
   return response.rows.map((row: any) => row.doc)
 }
 
-export const backfill = async (appDb: any, timestamp: string) => {
+export const backfill = async (appDb: any, timestamp: string | number) => {
   const tables = await getTables(appDb)
 
   for (const table of tables) {

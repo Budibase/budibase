@@ -6,7 +6,7 @@ import {
   LayoutDeletedEvent,
 } from "@budibase/types"
 
-export async function created(layout: Layout, timestamp?: string) {
+export async function created(layout: Layout, timestamp?: string | number) {
   const properties: LayoutCreatedEvent = {
     layoutId: layout._id as string,
   }

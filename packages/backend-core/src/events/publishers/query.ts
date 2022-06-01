@@ -16,7 +16,7 @@ import {
 export const created = async (
   datasource: Datasource,
   query: Query,
-  timestamp?: string
+  timestamp?: string | number
 ) => {
   const properties: QueryCreatedEvent = {
     queryId: query._id as string,

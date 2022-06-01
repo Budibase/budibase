@@ -11,7 +11,7 @@ const getLayouts = async (appDb: any): Promise<Layout[]> => {
   return response.rows.map((row: any) => row.doc)
 }
 
-export const backfill = async (appDb: any, timestamp: string) => {
+export const backfill = async (appDb: any, timestamp: string | number) => {
   const layouts: Layout[] = await getLayouts(appDb)
 
   for (const layout of layouts) {

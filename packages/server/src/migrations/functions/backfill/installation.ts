@@ -1,3 +1,4 @@
+import { DEFAULT_TIMESTAMP } from "./index"
 import { events, tenancy, installation } from "@budibase/backend-core"
 import { Installation } from "@budibase/types"
 import * as global from "./global"
@@ -28,11 +29,17 @@ export const run = async () => {
     // need to use the default tenant to try to get the installation time
     await tenancy.doInTenant(tenancy.DEFAULT_TENANT_ID, async () => {
       const db = tenancy.getGlobalDB()
-      const installTimestamp = (await global.getInstallTimestamp(db)) as number
+      let timestamp: string | number = DEFAULT_TIMESTAMP
+
+      const installTimestamp = await global.getInstallTimestamp(db)
+      if (installTimestamp) {
+        timestamp = installTimestamp
+      }
+
       const install: Installation = await installation.getInstall()
       await events.identification.identifyInstallationGroup(
         install.installId,
-        installTimestamp
+        timestamp
       )
     })
     await events.backfill.installationSucceeded()

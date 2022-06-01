@@ -1,3 +1,4 @@
+import { DEFAULT_TIMESTAMP } from "./../index"
 import { events } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import { App } from "@budibase/types"
@@ -33,8 +34,14 @@ export const backfill = async (allApps: App[]) => {
   const usage = await quotas.getQuotaUsage()
 
   const rows = usage.usageQuota.rows
-  const rowsTimestamp = getOldestCreatedAt(allApps)
-  await events.rows.created(rows, rowsTimestamp)
+  let timestamp: string | number = DEFAULT_TIMESTAMP
+
+  const oldestAppTimestamp = getOldestCreatedAt(allApps)
+  if (oldestAppTimestamp) {
+    timestamp = oldestAppTimestamp
+  }
+
+  await events.rows.created(rows, timestamp)
 
   for (const [monthString, quotas] of Object.entries(usage.monthly)) {
     if (monthString === "current") {

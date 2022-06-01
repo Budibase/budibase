@@ -9,6 +9,7 @@ import * as global from "./global"
 import { App, AppBackfillSucceededEvent, Event } from "@budibase/types"
 import { db as dbUtils, events } from "@budibase/backend-core"
 import env from "../../../environment"
+import { DEFAULT_TIMESTAMP } from "."
 
 const failGraceful = env.SELF_HOSTED && !env.isDev()
 
@@ -59,8 +60,11 @@ export const run = async (appDb: any) => {
     // events for this tenant
     await events.backfillCache.start(EVENTS)
 
+    let timestamp: string | number = DEFAULT_TIMESTAMP
     const app: App = await appDb.get(dbUtils.DocumentTypes.APP_METADATA)
-    const timestamp = app.createdAt as string
+    if (app.createdAt) {
+      timestamp = app.createdAt as string
+    }
 
     if (dbUtils.isProdAppID(app.appId)) {
       await events.app.published(app, timestamp)
