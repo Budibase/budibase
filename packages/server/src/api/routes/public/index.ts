@@ -29,6 +29,7 @@ function getApiLimitPerSecond(): number {
   return parseInt(env.API_REQ_LIMIT_PER_SEC)
 }
 
+let rateLimitStore: any = null
 if (!env.isTest()) {
   const REDIS_OPTS = getRedisOptions()
   let options
@@ -47,8 +48,9 @@ if (!env.isTest()) {
       database: 1,
     }
   }
+  rateLimitStore = new Stores.Redis(options)
   RateLimit.defaultOptions({
-    store: new Stores.Redis(options),
+    store: rateLimitStore,
   })
 }
 // rate limiting, allows for 2 requests per second
@@ -128,3 +130,10 @@ applyRoutes(queryEndpoints, PermissionTypes.QUERY, "queryId")
 applyRoutes(rowEndpoints, PermissionTypes.TABLE, "tableId", "rowId")
 
 export default publicRouter
+
+export const shutdown = () => {
+  if (rateLimitStore) {
+    rateLimitStore.client.disconnect()
+    rateLimitStore = null
+  }
+}
