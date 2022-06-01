@@ -2,7 +2,7 @@
   import { Icon } from "@budibase/bbui"
   export let value
 
-  $: isError = value === "Error"
+  $: isError = !value || value.toLowerCase() === "error"
   $: color = isError
     ? "var(--spectrum-semantic-negative-color-background)"
     : "var(--green)"

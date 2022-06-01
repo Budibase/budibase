@@ -45,7 +45,7 @@
     {/if}
   </div>
 
-  {#if automation?.showTestPanel}
+  {#if $automationStore.showTestPanel}
     <div class="setup">
       <TestPanel {automation} />
     </div>

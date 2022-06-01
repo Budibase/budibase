@@ -369,12 +369,12 @@ exports.generateAutomationLogID = (automationId, isoDate) => {
 }
 
 exports.getAutomationLogParams = (
-  { startIso, endIso, automationId } = {},
+  { startDate, endDate, automationId } = {},
   otherProps = {}
 ) => {
   const base = `${DocumentTypes.AUTOMATION_LOG}${SEPARATOR}`
-  let start = startIso || "",
-    end = endIso || ""
+  let start = startDate || "",
+    end = endDate || ""
   // reverse for view
   if (automationId) {
     start = `${automationId}${SEPARATOR}${start}`

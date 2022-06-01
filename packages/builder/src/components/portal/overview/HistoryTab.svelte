@@ -14,12 +14,12 @@
 
   const runHistorySchema = {
     status: { displayName: "Status" },
-    timestamp: { displayName: "Time" },
-    name: { displayName: "Automation" },
+    createdAt: { displayName: "Time" },
+    automationName: { displayName: "Automation" },
   }
 
   const customRenderers = [
-    { column: "time", component: DateTimeRenderer },
+    { column: "createdAt", component: DateTimeRenderer },
     { column: "status", component: StatusRenderer },
   ]
 
@@ -54,57 +54,10 @@
 
   onMount(async () => {
     let definitions = await automationStore.actions.definitions()
-    runHistory = enrichHistory(definitions, [
-      {
-        status: "Success",
-        timestamp: "2022-05-11T16:06:14.438Z",
-        name: "automation name",
-        steps: [
-          {
-            stepId: "ROW_SAVED",
-            inputs: null,
-            outputs: {
-              id: "awd",
-              revision: "awd",
-              row: {
-                tableId: "ta_240cfde36405479fa814b8a2c46655b5",
-                name: "",
-                suppliers: [],
-                "supplier name": "",
-                _id: "awd",
-                _rev: "awd",
-              },
-            },
-          },
-          {
-            stepId: "SERVER_LOG",
-            inputs: {
-              text: "awdawdawd",
-            },
-            outputs: {
-              success: true,
-            },
-          },
-        ],
-      },
-      {
-        status: "Error",
-        timestamp: "2022-05-11T16:03:14.438Z",
-        name: "automation name",
-        steps: [
-          {
-            stepId: "ROW_SAVED",
-            inputs: {},
-            outputs: {},
-          },
-          {
-            stepId: "SEND_EMAIL_SMTP",
-            inputs: {},
-            outputs: {},
-          },
-        ],
-      },
-    ])
+    runHistory = enrichHistory(
+      definitions,
+      await automationStore.actions.getLogs()
+    )
   })
 </script>
 
