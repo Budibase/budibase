@@ -30,7 +30,7 @@ filterTests(['smoke', 'all'], () => {
         .its("body")
         .then(val => {
           if (val.length > 0) {
-            cy.get(interact.SPECTRUM_BUTTON_TEMPLATE).contains("Templates").click({force: true})
+            cy.get(interact.SPECTRUM_BUTTON).contains("Templates").click({force: true})
           }
         })
 
