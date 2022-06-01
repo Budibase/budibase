@@ -23,7 +23,7 @@ function connectionError(timeout, err) {
   if (CLOSED) {
     return
   }
-  CLIENT.end()
+  CLIENT.disconnect()
   CLOSED = true
   // always clear this on error
   clearTimeout(timeout)
