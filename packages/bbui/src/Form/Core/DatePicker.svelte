@@ -15,7 +15,7 @@
   export let placeholder = null
   export let appendTo = undefined
   export let timeOnly = false
-  export let disableTimezone = false
+  export let ignoreTimezones = false
 
   const dispatch = createEventDispatcher()
   const flatpickrId = `${uuid()}-wrapper`
@@ -51,7 +51,7 @@
 
   const handleChange = event => {
     const [dates] = event.detail
-    const noTimezone = enableTime && !timeOnly && disableTimezone
+    const noTimezone = enableTime && !timeOnly && ignoreTimezones
     let newValue = dates[0]
     if (newValue) {
       newValue = newValue.toISOString()
@@ -62,15 +62,18 @@
       newValue = `2000-01-01T${newValue.split("T")[1]}`
     }
 
-    // Offset for local timezone if using a date only field or if timezone
-    // awareness is disabled
-    else if (!enableTime || noTimezone) {
-      const offset = dates[0].getTimezoneOffset() * 60000
-      newValue = new Date(dates[0].getTime() - offset).toISOString()
+    // Date only
+    else if (!enableTime) {
+      const year = dates[0].getFullYear()
+      const month = `${dates[0].getMonth() + 1}`.padStart(2, "0")
+      const day = `${dates[0].getDay() + 1}`.padStart(2, "0")
+      newValue = `${year}-${month}-${day}T00:00:00.000`
     }
 
-    // Strip time timezone suffix if required
-    if (noTimezone) {
+    // Non timezone aware timestamps
+    else if (noTimezone) {
+      const offset = dates[0].getTimezoneOffset() * 60000
+      newValue = new Date(dates[0].getTime() - offset).toISOString()
       newValue = newValue.slice(0, -1)
     }
 
@@ -125,7 +128,7 @@
     }
 
     // If not using UTC conversion, we need to offset the timezone again here
-    // if (!timeOnly && enableTime && noUTCConversion) {
+    // if (!timeOnly && enableTime && ignoreTimezones) {
     //   const offset = date.getTimezoneOffset() * 60000
     //   date = new Date(date.getTime() + offset)
     // }
