@@ -14,6 +14,7 @@
 
   let fieldState
   let fieldApi
+  let fieldSchema
 
   const handleChange = e => {
     fieldApi.setValue(e.detail)
@@ -32,6 +33,7 @@
   type="datetime"
   bind:fieldState
   bind:fieldApi
+  bind:fieldSchema
 >
   {#if fieldState}
     <CoreDatePicker
@@ -44,6 +46,7 @@
       {enableTime}
       {timeOnly}
       {placeholder}
+      ignoreTimezones={fieldSchema?.ignoreTimezones}
     />
   {/if}
 </Field>
