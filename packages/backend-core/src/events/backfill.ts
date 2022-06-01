@@ -1,4 +1,3 @@
-import { UserPermissionAssignedEvent } from "./../../../types/src/events/user"
 import {
   Event,
   BackfillMetadata,
@@ -18,7 +17,7 @@ import {
   AppPublishedEvent,
   UserCreatedEvent,
   RoleAssignedEvent,
-  RowsCreatedEvent,
+  UserPermissionAssignedEvent,
 } from "@budibase/types"
 import * as context from "../context"
 import { CacheKeys } from "../cache/generic"
@@ -173,7 +172,7 @@ const getEventKey = (event?: Event, properties?: any) => {
     const custom = CUSTOM_PROPERTY_SUFFIX[event]
     const suffix = custom ? custom(properties) : undefined
     if (suffix) {
-      eventKey = `${event}:${suffix}`
+      eventKey = `${eventKey}:${suffix}`
     }
   } else {
     eventKey = `${CacheKeys.EVENTS}:${tenantId}:*`
