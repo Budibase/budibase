@@ -10,7 +10,7 @@
   let blocks
 
   function prepTestResults(results) {
-    return results.steps.filter(x => x.stepId !== "LOOP" || [])
+    return results?.steps.filter(x => x.stepId !== "LOOP" || [])
   }
 
   function textArea(results, message) {

@@ -36,7 +36,7 @@
   <div style="padding-right: var(--spacing-xl)">
     <Icon
       on:click={async () => {
-        $automationStore.selectedAutomation.automation.showTestPanel = false
+        $automationStore.showTestPanel = false
       }}
       hoverable
       name="Close"

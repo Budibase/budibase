@@ -1,6 +1,12 @@
+export enum AutomationStatus {
+  SUCCESS = "success",
+  ERROR = "error",
+}
+
 export interface AutomationResults {
   automationId: string
   status: string
+  trigger?: any
   steps: {
     stepId: string
     inputs: {
@@ -10,4 +16,10 @@ export interface AutomationResults {
       [key: string]: any
     }
   }[]
+}
+
+export interface AutomationLog extends AutomationResults {
+  createdAt: string
+  _id: string
+  _rev: string
 }

@@ -6,6 +6,7 @@ import analytics, { Events } from "analytics"
 
 const initialAutomationState = {
   automations: [],
+  showTestPanel: false,
   blockDefinitions: {
     TRIGGER: [],
     ACTION: [],
@@ -119,6 +120,12 @@ const automationActions = store => ({
       state.selectedAutomation = new Automation(cloneDeep(automation))
       state.selectedBlock = null
       return state
+    })
+  },
+  getLogs: async (automationId, startDate) => {
+    return await API.getAutomationLogs({
+      automationId,
+      startDate,
     })
   },
   addTestDataToAutomation: data => {

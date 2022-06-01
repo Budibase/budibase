@@ -73,4 +73,19 @@ export const buildAutomationEndpoints = API => ({
       url: `/api/automations/${automationId}/${automationRev}`,
     })
   },
+
+  /**
+   * Get the logs for the app, or by automation ID.
+   * @param automationId The ID of the automation to get logs for.
+   * @param startDate An ISO date string to state the start of the date range.
+   */
+  getAutomationLogs: async ({ automationId, startDate }) => {
+    return await API.post({
+      url: "/api/automations/logs/search",
+      body: {
+        automationId,
+        startDate,
+      },
+    })
+  },
 })

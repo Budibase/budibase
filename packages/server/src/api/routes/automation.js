@@ -58,6 +58,11 @@ router
     controller.destroy
   )
   .post(
+    "/api/automations/logs/search",
+    authorized(BUILDER),
+    controller.logSearch
+  )
+  .post(
     "/api/automations/:id/trigger",
     appInfoMiddleware({ appType: AppType.PROD }),
     paramResource("id"),

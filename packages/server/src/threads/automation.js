@@ -9,6 +9,7 @@ const { doInTenant } = require("@budibase/backend-core/tenancy")
 const { definitions: triggerDefs } = require("../automations/triggerInfo")
 const { doInAppContext, getAppDB } = require("@budibase/backend-core/context")
 const { AutomationErrors, LoopStepTypes } = require("../constants")
+const { storeLog } = require("../automations/history")
 const FILTER_STEP_ID = actions.ACTION_DEFINITIONS.FILTER.stepId
 const LOOP_STEP_ID = actions.ACTION_DEFINITIONS.LOOP.stepId
 
@@ -325,6 +326,8 @@ class Orchestrator {
       }
     }
 
+    // store the history for the automation run
+    await storeLog(this._automation, this.executionOutput)
     return this.executionOutput
   }
 }
