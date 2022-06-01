@@ -50,6 +50,7 @@ export enum SourceNames {
   GOOGLE_SHEETS = "GOOGLE_SHEETS",
   FIREBASE = "FIREBASE",
   REDIS = "REDIS",
+  SNOWFLAKE = "SNOWFLAKE",
 }
 
 export enum IncludeRelationships {
