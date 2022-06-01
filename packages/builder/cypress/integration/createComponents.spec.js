@@ -1,4 +1,5 @@
 import filterTests from "../support/filterTests"
+const interact = require('../support/interact')
 
 filterTests(['all'], () => {
   context("Create Components", () => {
@@ -48,36 +49,36 @@ filterTests(['all'], () => {
 
     it("should change the text of the headline", () => {
       const text = "Lorem ipsum dolor sit amet."
-      cy.get("[data-cy=setting-text] input")
+      cy.get(interact.SETTINGS).click()
+      cy.get(interact.SETTINGS_INPUT)
         .type(text)
         .blur()
       cy.getComponent(headlineId).should("have.text", text)
     })
 
     it("should change the size of the headline", () => {
-      cy.get("[data-cy=setting-size]").scrollIntoView().click()
-      cy.get("[data-cy=setting-size]").within(() => {
-        cy.get(".spectrum-Form-item li.spectrum-Menu-item").contains("3XL").click()
-      })
-      
-      cy.getComponent(headlineId).within(() => {
-        cy.get(".spectrum-Heading").should("have.css", "font-size", "60px")
-      })
+      cy.get(interact.DESIGN).click()
+      cy.contains("Typography").click()
+      cy.get(interact.FONT_SIZE_PROP_CONTROL).click()
+      cy.contains("60px").click()
+      cy.getComponent(headlineId).should("have.css", "font-size", "60px")
     })
 
     it("should create a form and reset to match schema", () => {
       cy.addComponent("Form", "Form").then(() => {
-        cy.get("[data-cy=setting-dataSource]")
-          .contains("Custom")
+        cy.get(interact.SETTINGS).click()
+        cy.get(interact.DATA_CY_DATASOURCE)
+          .contains("Choose option")
           .click()
-        cy.get(".dropdown")
+        cy.get(interact.DROPDOWN)
           .contains("dog")
           .click()
           cy.wait(500)
         cy.addComponent("Form", "Field Group").then(fieldGroupId => {
-          cy.contains("Update form fields").click()
-          cy.get(".spectrum-Modal")
-            .get(".confirm-wrap .spectrum-Button")
+          cy.get(interact.SETTINGS).click()
+          cy.contains("Update Form Fields").click()
+          cy.get(".modal")
+            .get("button.primary")
             .click()
           cy.wait(500)
           cy.getComponent(fieldGroupId).within(() => {
@@ -90,7 +91,7 @@ filterTests(['all'], () => {
             .find("input")
             .should("have.length", 2)
           cy.getComponent(fieldGroupId)
-            .find(".spectrum-Picker")
+            .find(interact.SPECTRUM_PICKER)
             .should("have.length", 1)
         })
       })
@@ -104,7 +105,7 @@ filterTests(['all'], () => {
         cy.get(".nav-items-container .nav-item.selected .actions > div > .icon").click({
           force: true,
         })
-        cy.get(".spectrum-Popover.is-open li")
+        cy.get(interact.DROPDOWN_CONTAINER)
           .contains("Delete")
           .click()
         cy.get(".spectrum-Modal button")
