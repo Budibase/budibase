@@ -39,6 +39,16 @@ async function prepareUpload({ s3Key, bucket, metadata, file }) {
 }
 
 exports.serveBuilder = async function (ctx) {
+  // TODO: read from cookie, redis (prob best) or DB
+  // Maybe use the flags abstraction
+  const showNewUi = true
+  // const cdnUrl = "cdn.budi.live"
+
+  // serve the new UI directly from S3
+  if (showNewUi) {
+    await send(ctx)
+  }
+
   let builderPath = resolve(TOP_LEVEL_PATH, "builder")
   await send(ctx, ctx.file, { root: builderPath })
 }
