@@ -10,7 +10,9 @@
 
 <div class="cell">
   <Icon {color} name={isError ? "Alert" : "CheckmarkCircle"} />
-  <div class:green={!isError} class:red={isError}>{value}</div>
+  <div class:green={!isError} class:red={isError}>
+    {isError ? "Error" : "Success"}
+  </div>
 </div>
 
 <style>

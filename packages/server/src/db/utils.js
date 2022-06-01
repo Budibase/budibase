@@ -49,7 +49,13 @@ const DocumentTypes = {
 const ViewNames = {
   LINK: "by_link",
   ROUTING: "screen_routes",
-  LOGS_BY_AUTOMATION: "log_by_auto",
+  AUTO_LOGS: "auto_log",
+}
+
+const ViewModes = {
+  ALL: "all",
+  AUTOMATION: "auto",
+  STATUS: "status",
 }
 
 const InternalTables = {
@@ -77,6 +83,7 @@ exports.isProdAppID = isProdAppID
 exports.USER_METDATA_PREFIX = `${DocumentTypes.ROW}${SEPARATOR}${InternalTables.USER_METADATA}${SEPARATOR}`
 exports.LINK_USER_METADATA_PREFIX = `${DocumentTypes.LINK}${SEPARATOR}${InternalTables.USER_METADATA}${SEPARATOR}`
 exports.ViewNames = ViewNames
+exports.ViewModes = ViewModes
 exports.InternalTables = InternalTables
 exports.DocumentTypes = DocumentTypes
 exports.SEPARATOR = SEPARATOR
@@ -364,26 +371,32 @@ exports.getMemoryViewParams = (otherProps = {}) => {
   return getDocParams(DocumentTypes.MEM_VIEW, null, otherProps)
 }
 
-exports.generateAutomationLogID = (automationId, isoDate) => {
+exports.generateAutomationLogID = (isoDate, status, automationId) => {
   return `${DocumentTypes.AUTOMATION_LOG}${SEPARATOR}${isoDate}${SEPARATOR}${automationId}`
 }
 
 exports.getAutomationLogParams = (
-  { startDate, endDate, automationId } = {},
+  startDate,
+  endDate,
+  { status, automationId } = {},
   otherProps = {}
 ) => {
-  const base = `${DocumentTypes.AUTOMATION_LOG}${SEPARATOR}`
-  let start = startDate || "",
-    end = endDate || ""
-  // reverse for view
-  if (automationId) {
-    start = `${automationId}${SEPARATOR}${start}`
-    end = `${automationId}${SEPARATOR}${end}`
+  const automationBase = automationId ? `${automationId}${SEPARATOR}` : ""
+  const statusBase = status ? `${status}${SEPARATOR}` : ""
+  let base
+  if (status && automationId) {
+    base = `${ViewModes.ALL}${SEPARATOR}${statusBase}${automationBase}`
+  } else if (status) {
+    base = `${ViewModes.STATUS}${SEPARATOR}${statusBase}`
+  } else if (automationId) {
+    base = `${ViewModes.AUTOMATION}${SEPARATOR}${automationBase}`
+  } else {
+    base = `${DocumentTypes.AUTOMATION_LOG}${SEPARATOR}`
   }
   return {
     ...otherProps,
-    startkey: `${base}${start}`,
-    endkey: `${base}${end}${UNICODE_MAX}`,
+    startkey: `${base}${startDate}`,
+    endkey: `${base}${endDate}${UNICODE_MAX}`,
   }
 }
 
