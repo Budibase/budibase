@@ -11,7 +11,7 @@ filterTests(["all"], () => {
       const queryName = "Cypress Test Query"
       const queryRename = "CT Query Rename"
 
-      it("Should add PostgreSQL data source without configuration", () => {
+      xit("Should add PostgreSQL data source without configuration", () => {
         // Select PostgreSQL data source
         cy.selectExternalDatasource(datasource)
         // Attempt to fetch tables without applying configuration
@@ -107,7 +107,7 @@ filterTests(["all"], () => {
       })
 
       it("should delete a relationship", () => {
-        cy.get(".hierarchy-items-container").contains("PostgreSQL-2").click()
+        cy.get(".hierarchy-items-container").contains("PostgreSQL").click()
         cy.reload()
         // Delete one relationship
         cy.get(".spectrum-Table")
@@ -155,7 +155,7 @@ filterTests(["all"], () => {
 
       it("should switch to schema with no tables", () => {
         // Switch Schema - To one without any tables
-        cy.get(".hierarchy-items-container").contains("PostgreSQL-2").click()
+        cy.get(".hierarchy-items-container").contains("PostgreSQL").click()
         switchSchema("randomText")
 
         // No tables displayed
@@ -207,7 +207,7 @@ filterTests(["all"], () => {
           .contains(queryName)
           .siblings(".actions")
           .within(() => {
-            cy.get(".icon").click({ force: true })
+            cy.get(".spectrum-Icon").click({ force: true })
           })
         // Select and confirm duplication
         cy.get(".spectrum-Menu").contains("Duplicate").click()

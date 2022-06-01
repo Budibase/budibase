@@ -9,7 +9,6 @@ const SERVER_PORT = "4100"
 const WORKER_PORT = "4200"
 
 // @ts-ignore
-process.env.BUDIBASE_API_KEY = "6BE826CB-6B30-4AEC-8777-2E90464633DE"
 process.env.NODE_ENV = "cypress"
 process.env.ENABLE_ANALYTICS = "false"
 process.env.JWT_SECRET = "budibase"

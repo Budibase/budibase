@@ -7,6 +7,7 @@
   export let icon = ""
   export let selected = false
   export let disabled = false
+  export let dataCy
 </script>
 
 <li
@@ -14,6 +15,7 @@
   class:is-selected={selected}
   class:is-disabled={disabled}
   on:click
+  data-cy={dataCy}
 >
   {#if heading}
     <h2 class="spectrum-SideNav-heading" id="nav-heading-{heading}">

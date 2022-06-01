@@ -9,6 +9,7 @@
   export let validation
   export let extensions
   export let onChange
+  export let maximum = undefined
 
   let fieldState
   let fieldApi
@@ -22,6 +23,12 @@
       `Files cannot exceed ${
         fileSizeLimit / BYTES_IN_MB
       } MB. Please try again with smaller files.`
+    )
+  }
+
+  const handleTooManyFiles = fileLimit => {
+    notificationStore.actions.warning(
+      `Please select a maximum of ${fileLimit} files.`
     )
   }
 
@@ -66,6 +73,8 @@
       on:change={handleChange}
       {processFiles}
       {handleFileTooLarge}
+      {handleTooManyFiles}
+      {maximum}
       {extensions}
     />
   {/if}
