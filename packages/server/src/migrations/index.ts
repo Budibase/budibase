@@ -1,4 +1,4 @@
-import { migrations } from "@budibase/backend-core"
+import { migrations, redis } from "@budibase/backend-core"
 
 // migration functions
 import * as userEmailViewCasing from "./functions/userEmailViewCasing"
@@ -15,6 +15,7 @@ export interface Migration {
   opts?: object
   fn: Function
   silent?: boolean
+  preventRetry?: boolean
 }
 
 /**
@@ -66,21 +67,63 @@ export const MIGRATIONS: Migration[] = [
     opts: { all: true },
     fn: backfill.app.run,
     silent: !!env.SELF_HOSTED, // reduce noisy logging
+    preventRetry: !!env.SELF_HOSTED, // only ever run once
   },
   {
     type: migrations.MIGRATION_TYPES.GLOBAL,
     name: "event_global_backfill",
     fn: backfill.global.run,
     silent: !!env.SELF_HOSTED, // reduce noisy logging
+    preventRetry: !!env.SELF_HOSTED, // only ever run once
   },
   {
     type: migrations.MIGRATION_TYPES.INSTALLATION,
     name: "event_installation_backfill",
     fn: backfill.installation.run,
     silent: !!env.SELF_HOSTED, // reduce noisy logging
+    preventRetry: !!env.SELF_HOSTED, // only ever run once
   },
 ]
 
 export const migrate = async (options?: MigrationOptions) => {
-  await migrations.runMigrations(MIGRATIONS, options)
+  if (env.SELF_HOSTED) {
+    // self host runs migrations on startup
+    // make sure only a single instance runs them
+    await migrateWithLock(options)
+  } else {
+    await migrations.runMigrations(MIGRATIONS, options)
+  }
+}
+
+const migrateWithLock = async (options?: MigrationOptions) => {
+  // get a new lock client
+
+  const redlock = await redis.clients.getMigrationsRedlock()
+  // lock for 15 minutes
+  const ttl = 1000 * 60 * 15
+
+  let migrationLock
+
+  // acquire lock
+  try {
+    migrationLock = await redlock.lock("migrations", ttl)
+  } catch (e: any) {
+    if (e.name === "LockError") {
+      return
+    } else {
+      throw e
+    }
+  }
+
+  // run migrations
+  try {
+    await migrations.runMigrations(MIGRATIONS, options)
+  } finally {
+    // release lock
+    try {
+      await migrationLock.unlock()
+    } catch (e) {
+      console.error("unable to release migration lock")
+    }
+  }
 }

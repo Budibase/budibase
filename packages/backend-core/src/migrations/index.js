@@ -90,6 +90,15 @@ exports.runMigration = async (migration, options = {}) => {
         log(
           `[Tenant: ${tenantId}] [Migration: ${migrationName}] [DB: ${dbName}] Running ${lengthStatement}`
         )
+
+        if (migration.preventRetry) {
+          // eagerly set the completion date
+          // so that we never run this migration twice even upon failure
+          doc[migrationName] = Date.now()
+          const response = await db.put(doc)
+          doc._rev = response.rev
+        }
+
         // run the migration with tenant context
         if (migrationType === exports.MIGRATION_TYPES.APP) {
           await context.doInAppContext(db.name, async () => {

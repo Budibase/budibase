@@ -139,6 +139,10 @@ class RedisWrapper {
     this._db = db
   }
 
+  getClient() {
+    return CLIENT
+  }
+
   async init() {
     CLOSED = false
     init()
