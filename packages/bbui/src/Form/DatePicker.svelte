@@ -17,7 +17,6 @@
   const dispatch = createEventDispatcher()
 
   const onChange = e => {
-    console.log("VALUE", e.detail)
     value = e.detail
     dispatch("change", e.detail)
   }
