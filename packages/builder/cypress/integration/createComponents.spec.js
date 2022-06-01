@@ -49,36 +49,36 @@ filterTests(['all'], () => {
 
     it("should change the text of the headline", () => {
       const text = "Lorem ipsum dolor sit amet."
-      cy.get(interact.SETTINGS).click()
-      cy.get(interact.SETTINGS_INPUT)
+      cy.get("[data-cy=setting-text] input")
         .type(text)
         .blur()
       cy.getComponent(headlineId).should("have.text", text)
     })
 
     it("should change the size of the headline", () => {
-      cy.get(interact.DESIGN).click()
-      cy.contains("Typography").click()
-      cy.get(interact.FONT_SIZE_PROP_CONTROL).click()
-      cy.contains("60px").click()
-      cy.getComponent(headlineId).should("have.css", "font-size", "60px")
+      cy.get("[data-cy=setting-size]").scrollIntoView().click()
+      cy.get("[data-cy=setting-size]").within(() => {
+        cy.get(".spectrum-Form-item li.spectrum-Menu-item").contains("3XL").click()
+      })
+      
+      cy.getComponent(headlineId).within(() => {
+        cy.get(".spectrum-Heading").should("have.css", "font-size", "60px")
+      })
     })
 
     it("should create a form and reset to match schema", () => {
       cy.addComponent("Form", "Form").then(() => {
-        cy.get(interact.SETTINGS).click()
-        cy.get(interact.DATA_CY_DATASOURCE)
-          .contains("Choose option")
+        cy.get("[data-cy=setting-dataSource]")
+          .contains("Custom")
           .click()
         cy.get(interact.DROPDOWN)
           .contains("dog")
           .click()
           cy.wait(500)
         cy.addComponent("Form", "Field Group").then(fieldGroupId => {
-          cy.get(interact.SETTINGS).click()
-          cy.contains("Update Form Fields").click()
-          cy.get(".modal")
-            .get("button.primary")
+          cy.contains("Update form fields").click()
+          cy.get(".spectrum-Modal")
+            .get(".confirm-wrap .spectrum-Button")
             .click()
           cy.wait(500)
           cy.getComponent(fieldGroupId).within(() => {
@@ -105,7 +105,7 @@ filterTests(['all'], () => {
         cy.get(".nav-items-container .nav-item.selected .actions > div > .icon").click({
           force: true,
         })
-        cy.get(interact.DROPDOWN_CONTAINER)
+        cy.get(".spectrum-Popover.is-open li")
           .contains("Delete")
           .click()
         cy.get(".spectrum-Modal button")
