@@ -50,3 +50,11 @@ export const ITEM_DISABLED = ".item.disabled"
 export const CONFIRM_WRAP_SPE_BUTTON = ".confirm-wrap .spectrum-Button"
 export const DATA_SOURCE_ENTRY = ".data-source-entry"
 export const NAV_ITEMS_CONTAINER = ".nav-items-container"
+
+//publishWorkFlow
+export const DEPLOY_APP_MODAL = ".spectrum-Modal [data-cy=deploy-app-modal]"
+export const DEPLOY_APP_URL_INPUT = "[data-cy=deployed-app-url] input"
+export const GLOBESTRIKE = "svg[aria-label=GlobeStrike]"
+export const GLOBE = "svg[aria-label=Globe]"
+export const UNPUBLISH_MODAL = "[data-cy=unpublish-modal]"
+export const CONFIRM_WRAP_BUTTON = ".confirm-wrap button"
