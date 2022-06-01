@@ -73,6 +73,7 @@ filterTests(['all'], () => {
         cy.get(".dropdown")
           .contains("dog")
           .click()
+          cy.wait(500)
         cy.addComponent("Form", "Field Group").then(fieldGroupId => {
           cy.contains("Update form fields").click()
           cy.get(".spectrum-Modal")
