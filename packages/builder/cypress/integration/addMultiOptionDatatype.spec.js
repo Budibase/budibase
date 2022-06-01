@@ -41,7 +41,7 @@ filterTests(['all'], () => {
       }
       // Check items have been selected
       cy.getComponent(componentId)
-        .find(interact.SPECTRUM_Picker_LABEL)
+        .find(interact.SPECTRUM_PICKER_LABEL)
         .contains("(5)")
       })
     })
