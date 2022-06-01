@@ -1,5 +1,6 @@
 import { events, db as dbUtils } from "@budibase/backend-core"
 import { User, CloudAccount } from "@budibase/types"
+import { DEFAULT_TIMESTAMP } from ".."
 
 // manually define user doc params - normally server doesn't read users from the db
 const getUserParams = (props: any) => {
@@ -22,7 +23,10 @@ export const backfill = async (
   const users = await getUsers(globalDb)
 
   for (const user of users) {
-    const timestamp = user.createdAt as number
+    let timestamp: string | number = DEFAULT_TIMESTAMP
+    if (user.createdAt) {
+      timestamp = user.createdAt
+    }
     await events.identification.identifyUser(user, account, timestamp)
     await events.user.created(user, timestamp)
 

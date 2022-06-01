@@ -16,6 +16,7 @@ import {
   Event,
 } from "@budibase/types"
 import env from "../../../environment"
+import { DEFAULT_TIMESTAMP } from "."
 
 const failGraceful = env.SELF_HOSTED && !env.isDev()
 
@@ -88,13 +89,16 @@ const EVENTS = [
 export const run = async (db: any) => {
   try {
     const tenantId = tenancy.getTenantId()
-    let installTimestamp
+    let timestamp: string | number = DEFAULT_TIMESTAMP
 
     const totals: any = {}
     const errors: any = []
 
     try {
-      installTimestamp = await getInstallTimestamp(db)
+      const installTimestamp = await getInstallTimestamp(db)
+      if (installTimestamp) {
+        timestamp = installTimestamp
+      }
     } catch (e) {
       handleError(e, errors)
     }
@@ -108,7 +112,7 @@ export const run = async (db: any) => {
       await events.identification.identifyTenantGroup(
         tenantId,
         account,
-        installTimestamp
+        timestamp
       )
     } catch (e) {
       handleError(e, errors)
@@ -119,7 +123,7 @@ export const run = async (db: any) => {
     await events.backfillCache.start(EVENTS)
 
     try {
-      await configs.backfill(db, installTimestamp)
+      await configs.backfill(db, timestamp)
     } catch (e) {
       handleError(e, errors)
     }

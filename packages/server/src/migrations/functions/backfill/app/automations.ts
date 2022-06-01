@@ -11,7 +11,7 @@ const getAutomations = async (appDb: any): Promise<Automation[]> => {
   return response.rows.map((row: any) => row.doc)
 }
 
-export const backfill = async (appDb: any, timestamp: string) => {
+export const backfill = async (appDb: any, timestamp: string | number) => {
   const automations = await getAutomations(appDb)
 
   for (const automation of automations) {

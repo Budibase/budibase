@@ -11,7 +11,7 @@ const getDatasources = async (appDb: any): Promise<Datasource[]> => {
   return response.rows.map((row: any) => row.doc)
 }
 
-export const backfill = async (appDb: any, timestamp: string) => {
+export const backfill = async (appDb: any, timestamp: string | number) => {
   const datasources: Datasource[] = await getDatasources(appDb)
 
   for (const datasource of datasources) {

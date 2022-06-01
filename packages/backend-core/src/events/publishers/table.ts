@@ -11,7 +11,7 @@ import {
   TableImportedEvent,
 } from "@budibase/types"
 
-export async function created(table: Table, timestamp?: string) {
+export async function created(table: Table, timestamp?: string | number) {
   const properties: TableCreatedEvent = {
     tableId: table._id as string,
   }

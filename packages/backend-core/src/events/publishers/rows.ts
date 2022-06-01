@@ -9,7 +9,7 @@ import {
 
 /* eslint-disable */
 
-export const created = async (count: number, timestamp?: string) => {
+export const created = async (count: number, timestamp?: string | number) => {
   const properties: RowsCreatedEvent = {
     count,
   }
