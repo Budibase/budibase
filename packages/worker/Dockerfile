@@ -21,4 +21,6 @@ EXPOSE 4001
 # which are actually needed to get this environment up and running
 ENV NODE_ENV=production
 ENV CLUSTER_MODE=${CLUSTER_MODE}
+ENV SERVICE=worker-service
+
 CMD ["./docker_run.sh"]

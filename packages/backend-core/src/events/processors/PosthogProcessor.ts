@@ -23,6 +23,7 @@ export default class PosthogProcessor implements EventProcessor {
   ): Promise<void> {
     properties.version = pkg.version
     properties.service = env.SERVICE
+    properties.environment = env.DEPLOYMENT_ENVIRONMENT
 
     const appId = context.getAppId()
     if (appId) {

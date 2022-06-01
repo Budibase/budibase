@@ -153,6 +153,7 @@ export enum Event {
 export interface BaseEvent {
   version?: string
   service?: string
+  environment?: string
   appId?: string
   installationId?: string
   tenantId?: string

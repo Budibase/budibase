@@ -10,6 +10,7 @@ WORKDIR /app
 ENV PORT=4001
 ENV COUCH_DB_URL=https://couchdb.budi.live:5984
 ENV BUDIBASE_ENVIRONMENT=PRODUCTION
+ENV SERVICE=app-service
 
 # copy files and install dependencies
 COPY . ./

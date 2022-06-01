@@ -28,6 +28,8 @@ spec:
       - env:
         - name: BUDIBASE_ENVIRONMENT
           value: {{ .Values.globals.budibaseEnv }}
+        - name: DEPLOYMENT_ENVIRONMENT
+          value: "kubernetes"
         - name: COUCH_DB_URL
           {{ if .Values.services.couchdb.url }}
           value: {{ .Values.services.couchdb.url }}
