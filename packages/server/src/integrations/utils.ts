@@ -73,7 +73,6 @@ export enum SqlClients {
   POSTGRES = "pg",
   MY_SQL = "mysql2",
   ORACLE = "oracledb",
-  SNOWFLAKE = "snowflake-sdk",
 }
 
 export function isExternalTable(tableId: string) {
@@ -174,7 +173,6 @@ export function isSQL(datasource: Datasource): boolean {
     SourceNames.SQL_SERVER,
     SourceNames.MYSQL,
     SourceNames.ORACLE,
-    SourceNames.SNOWFLAKE,
   ]
   return SQL.indexOf(datasource.source) !== -1
 }
