@@ -122,10 +122,12 @@ const automationActions = store => ({
       return state
     })
   },
-  getLogs: async (automationId, startDate) => {
+  getLogs: async ({ automationId, startDate, status, page } = {}) => {
     return await API.getAutomationLogs({
       automationId,
       startDate,
+      status,
+      page,
     })
   },
   addTestDataToAutomation: data => {

@@ -1,5 +1,5 @@
 <script>
-  import { Layout, Table, Select } from "@budibase/bbui"
+  import { Layout, Table, Select, Pagination } from "@budibase/bbui"
   import DateTimeRenderer from "components/common/renderers/DateTimeRenderer.svelte"
   import StatusRenderer from "./StatusRenderer.svelte"
   import HistoryDetailsPanel from "./HistoryDetailsPanel.svelte"
@@ -8,9 +8,24 @@
 
   export let appId
 
+  let runHistory = []
   let showPanel = false
   let selectedHistory = null
-  let runHistory = []
+  let automationOptions = []
+  let automationId = null
+  let status = null
+  let prevPage,
+    nextPage,
+    page,
+    hasNextPage,
+    pageNumber = 1
+
+  $: fetchLogs(automationId, status, page)
+
+  const statusOptions = [
+    { value: "success", label: "Success" },
+    { value: "error", label: "Error" },
+  ]
 
   const runHistorySchema = {
     status: { displayName: "Status" },
@@ -23,7 +38,33 @@
     { column: "status", component: StatusRenderer },
   ]
 
+  async function fetchLogs(automationId, status, page) {
+    const response = await automationStore.actions.getLogs({
+      automationId,
+      status,
+      page,
+    })
+    nextPage = response.nextPage
+    hasNextPage = response.hasNextPage
+    runHistory = enrichHistory($automationStore.blockDefinitions, response.data)
+  }
+
+  function goToNextPage() {
+    pageNumber++
+    prevPage = page
+    page = nextPage
+  }
+
+  function goToPrevPage() {
+    pageNumber--
+    nextPage = page
+    page = prevPage
+  }
+
   function enrichHistory(definitions, runHistory) {
+    if (!definitions) {
+      return []
+    }
     const finalHistory = []
     for (let history of runHistory) {
       if (!history.steps) {
@@ -31,8 +72,8 @@
       }
       let notFound = false
       for (let step of history.steps) {
-        const trigger = definitions.trigger[step.stepId],
-          action = definitions.action[step.stepId]
+        const trigger = definitions.TRIGGER[step.stepId],
+          action = definitions.ACTION[step.stepId]
         if (!trigger && !action) {
           notFound = true
           break
@@ -53,11 +94,12 @@
   }
 
   onMount(async () => {
-    let definitions = await automationStore.actions.definitions()
-    runHistory = enrichHistory(
-      definitions,
-      await automationStore.actions.getLogs()
-    )
+    await automationStore.actions.fetch()
+    await fetchLogs()
+    automationOptions = []
+    for (let automation of $automationStore.automations) {
+      automationOptions.push({ value: automation._id, label: automation.name })
+    }
   })
 </script>
 
@@ -65,13 +107,23 @@
   <Layout paddingX="XL" gap="S" alignContent="start">
     <div class="search">
       <div class="select">
-        <Select placeholder="All automations" label="Automation" />
+        <Select
+          placeholder="All automations"
+          label="Automation"
+          bind:value={automationId}
+          options={automationOptions}
+        />
       </div>
       <div class="select">
         <Select placeholder="Past 30 days" label="Date range" />
       </div>
       <div class="select">
-        <Select placeholder="All status" label="Status" />
+        <Select
+          placeholder="All status"
+          label="Status"
+          bind:value={status}
+          options={statusOptions}
+        />
       </div>
     </div>
     {#if runHistory}
@@ -94,6 +146,15 @@
       }}
     />
   </div>
+</div>
+<div class="pagination">
+  <Pagination
+    page={pageNumber}
+    hasPrevPage={pageNumber > 1}
+    {hasNextPage}
+    {goToPrevPage}
+    {goToNextPage}
+  />
 </div>
 
 <style>
@@ -118,12 +179,11 @@
     flex-basis: 150px;
   }
 
-  .separator {
-    flex-grow: 1;
-  }
-
-  .searchInput {
-    margin-top: auto;
+  .pagination {
+    position: absolute;
+    bottom: 0;
+    margin-bottom: var(--spacing-xl);
+    margin-left: var(--spacing-l);
   }
 
   .panel {

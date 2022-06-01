@@ -3,6 +3,7 @@ const {
   DocumentTypes,
   SEPARATOR,
   ViewNames,
+  ViewModes,
   SearchIndexes,
 } = require("../utils")
 const SCREEN_PREFIX = DocumentTypes.SCREEN + SEPARATOR
@@ -69,14 +70,20 @@ exports.createLogByAutomationView = async () => {
   const view = {
     map: `function(doc) {
       if (doc._id.startsWith("${LOG_PREFIX}")) {
-        let key = doc.automationId + ${SEPARATOR} + doc.createdAt
-        emit(key, doc._id)
+        let autoId = doc.automationId + "${SEPARATOR}"
+        let status = doc.status + "${SEPARATOR}"
+        let autoKey = "${ViewModes.AUTOMATION}${SEPARATOR}" + autoId + doc.createdAt
+        let statusKey = "${ViewModes.STATUS}${SEPARATOR}" + status + doc.createdAt
+        let allKey = "${ViewModes.ALL}${SEPARATOR}" + status + autoId + doc.createdAt
+        emit(statusKey)
+        emit(autoKey)
+        emit(allKey)
       }
     }`,
   }
   designDoc.views = {
     ...designDoc.views,
-    [ViewNames.LOGS_BY_AUTOMATION]: view,
+    [ViewNames.AUTO_LOGS]: view,
   }
   await db.put(designDoc)
 }

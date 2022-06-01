@@ -1,6 +1,6 @@
 const actions = require("../../automations/actions")
 const triggers = require("../../automations/triggers")
-const { getLogs, oneDayAgo } = require("../../automations/history")
+const { getLogs, oneDayAgo } = require("../../automations/logging")
 const { getAutomationParams, generateAutomationID } = require("../../db/utils")
 const {
   checkForWebhooks,
@@ -152,11 +152,11 @@ exports.destroy = async function (ctx) {
 }
 
 exports.logSearch = async function (ctx) {
-  const { automationId } = ctx.request.body
+  const { automationId, status, page } = ctx.request.body
   // TODO: check if there is a date range in the search params
   // also check the date range vs their license, see if it is allowed
   const startDate = oneDayAgo()
-  ctx.body = await getLogs(startDate, automationId)
+  ctx.body = await getLogs(startDate, status, automationId, page)
 }
 
 exports.getActionList = async function (ctx) {

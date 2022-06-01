@@ -23,3 +23,9 @@ export interface AutomationLog extends AutomationResults {
   _id: string
   _rev: string
 }
+
+export interface AutomationLogPage {
+  data: AutomationLog[]
+  hasNextPage: boolean
+  nextPage?: string
+}
