@@ -16,9 +16,14 @@ import {
 import { DatasourcePlus } from "./base/datasourcePlus"
 
 module PostgresModule {
-  const { Client } = require("pg")
+  const { Client, types } = require("pg")
   const Sql = require("./base/sql")
   const { escapeDangerousCharacters } = require("../utilities")
+
+  // Return "date" and "timestamp" types as plain strings.
+  // This lets us reference the original stored timezone.
+  types.setTypeParser(1114, (val: any) => val)
+  types.setTypeParser(1082, (val: any) => val)
 
   const JSON_REGEX = /'{.*}'::json/s
 
