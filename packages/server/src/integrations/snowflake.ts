@@ -1,10 +1,5 @@
 import { Integration, QueryTypes, SqlQuery } from "../definitions/datasource"
-import {
-  SnowflakeError,
-  Statement,
-  createConnection,
-  Connection,
-} from "snowflake-sdk"
+import { Snowflake } from "snowflake-promise"
 
 module SnowflakeModule {
   interface SnowflakeConfig {
@@ -64,38 +59,19 @@ module SnowflakeModule {
   }
 
   class SnowflakeIntegration {
-    private client: Connection
+    private client: Snowflake
 
     constructor(config: SnowflakeConfig) {
-      this.client = createConnection(config)
-    }
-
-    async connectAsync() {
-      return new Promise((resolve, reject) => {
-        this.client.connect(function (err: any, conn: any) {
-          if (err) reject(err)
-          resolve(conn)
-        })
-      })
+      this.client = new Snowflake(config)
     }
 
     async internalQuery(query: SqlQuery) {
-      await this.connectAsync()
-      let response: any = await new Promise((resolve, reject) =>
-        this.client.execute({
-          sqlText: query.sql,
-          streamResult: false,
-          complete: (
-            err: SnowflakeError | undefined,
-            stmt: Statement,
-            rows: any[] | undefined
-          ) => {
-            if (err) reject(err?.message.split(":")[1] || err?.message)
-            resolve({ rows })
-          },
-        })
-      )
-      return response.rows
+      await this.client.connect()
+      try {
+        return await this.client.execute(query.sql)
+      } catch (err: any) {
+        throw err?.message.split(":")[1] || err?.message
+      }
     }
 
     async create(query: SqlQuery) {
