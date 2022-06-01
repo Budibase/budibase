@@ -66,7 +66,8 @@
     else if (!enableTime) {
       const year = dates[0].getFullYear()
       const month = `${dates[0].getMonth() + 1}`.padStart(2, "0")
-      const day = `${dates[0].getDay() + 1}`.padStart(2, "0")
+      const day = `${dates[0].getDate()}`.padStart(2, "0")
+      console.log(year, month, day)
       newValue = `${year}-${month}-${day}T00:00:00.000`
     }
 
