@@ -3574,7 +3574,8 @@
       {
         "type": "dataSource",
         "label": "Data",
-        "key": "dataSource"
+        "key": "dataSource",
+        "required": true
       },
       {
         "type": "searchfield",
@@ -3738,7 +3739,8 @@
       {
         "type": "dataSource",
         "label": "Data",
-        "key": "dataSource"
+        "key": "dataSource",
+        "required": true
       },
       {
         "type": "searchfield",
@@ -3901,7 +3903,8 @@
       {
         "type": "dataSource",
         "label": "Data",
-        "key": "dataSource"
+        "key": "dataSource",
+        "required": true
       },
       {
         "type": "filter",
