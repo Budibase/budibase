@@ -132,22 +132,36 @@ filterTests(['all'], () => {
       })
     })
 
-    it("Should allow the editing of the application icon", () => { 
+    it("Should allow the editing of the application icon and colour", () => { 
       cy.visit(`${Cypress.config().baseUrl}/builder`)
-
-      cy.get(".appTable .name").eq(0).click()
-
-      cy.get(".app-logo .edit-hover").should("exist").invoke("show").click()
-
-      cy.customiseAppIcon()
-
-      cy.get(".app-logo")
-      .within(() => {
-        cy.get('[aria-label]').eq(0).children()
-        .should('have.attr', 'xlink:href').and('not.contain', '#spectrum-icon-18-Apps')
-        cy.get(".app-icon")
-        .should('have.attr', 'style').and('contains', 'color')
+      cy.get(".appTable", { timeout: 2000})
+        .within(() => {
+          cy.get(".app-row-actions-icon").eq(0).click()
+        })
+      cy.get(".spectrum-Menu").contains("Edit icon").click()
+      // Select random icon
+      cy.get(".grid").within(() => {
+          cy.get(".icon-item").eq(Math.floor(Math.random() * 23) + 1).click()
       })
+      // Select random colour
+      cy.get(".fill").click()
+      cy.get(".colors").within(() => {
+          cy.get(".color").eq(Math.floor(Math.random() * 33) + 1).click()
+      })
+      cy.intercept('**/applications/**').as('iconChange')
+      cy.get(".spectrum-Button").contains("Save").click({ force: true })
+      cy.wait("@iconChange")
+      cy.get("@iconChange").its('response.statusCode')
+      .should('eq', 200)
+      // Confirm icon has changed from default
+      // Confirm colour has been applied
+      cy.get(".appTable", { timeout: 2000})
+        .within(() => {
+          cy.get('[aria-label]').eq(0).children()
+          .should('have.attr', 'xlink:href').and('not.contain', '#spectrum-icon-18-Apps')
+          cy.get(".title").children().children()
+          .should('have.attr', 'style').and('contains', 'color')
+        })
     })
 
     it("Should reflect the last time the application was edited", () => {
@@ -259,6 +273,7 @@ filterTests(['all'], () => {
       });
 
       cy.visit(`${Cypress.config().baseUrl}/builder`)
+      cy.wait(1000)
       cy.get(".appTable .name").eq(0).click()
       cy.get(".spectrum-Tabs-item").contains("Settings").click()
       cy.get(".spectrum-Tabs-item.is-selected").contains("Settings")
@@ -269,7 +284,7 @@ filterTests(['all'], () => {
 
     })
 
-    it("Should allow copying of the published application Id", () => {
+    xit("Should allow copying of the published application Id", () => {
       cy.visit(`${Cypress.config().baseUrl}/builder`)
       cy.get(".appTable .app-row-actions").eq(0)
       .within(() => {

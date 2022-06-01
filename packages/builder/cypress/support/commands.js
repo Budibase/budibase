@@ -218,27 +218,6 @@ Cypress.Commands.add("deleteAllApps", () => {
     })
 })
 
-Cypress.Commands.add("customiseAppIcon", () => {
-  // Select random icon
-  cy.get(".grid").within(() => {
-    cy.get(".icon-item")
-      .eq(Math.floor(Math.random() * 23) + 1)
-      .click()
-  })
-  // Select random colour
-  cy.get(".fill").click()
-  cy.get(".colors").within(() => {
-    cy.get(".color")
-      .eq(Math.floor(Math.random() * 33) + 1)
-      .click()
-  })
-  cy.intercept("**/applications/**").as("iconChange")
-  cy.get(".spectrum-Button").contains("Save").click({ force: true })
-  cy.wait("@iconChange")
-  cy.get("@iconChange").its("response.statusCode").should("eq", 200)
-  cy.wait(1000)
-})
-
 Cypress.Commands.add("alterAppVersion", (appId, version) => {
   return cy
     .request("put", `${Cypress.config().baseUrl}/api/applications/${appId}`, {
