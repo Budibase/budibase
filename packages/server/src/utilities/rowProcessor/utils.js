@@ -67,23 +67,25 @@ exports.processFormulas = (
 }
 
 /**
- * Processes any date fields that have timezone awareness disabled by stripping
- * the timezone suffix.
+ * Processes any date columns and ensures that those without the ignoreTimezones
+ * flag set are parsed as UTC rather than local time.
  */
 exports.processDates = (table, rows) => {
+  let datesWithTZ = []
   for (let [column, schema] of Object.entries(table.schema)) {
-    if (schema.type !== FieldTypes.DATETIME || !schema.disableTimezone) {
+    if (schema.type !== FieldTypes.DATETIME) {
       continue
     }
-    for (let row of rows) {
-      // We only need to convert cases where the dates have been parsed into
-      // date objects by knex.
-      // Strings used in internal tables are stored as-is, so already won't have
-      // a timezone suffix.
-      if (row[column] && typeof row[column] === "object") {
-        // Strip the timezone suffix from the ISO string so that the date string
-        // will be parsed as if it is in the users local timezone
-        row[column] = row[column].toISOString().slice(0, -1)
+    if (!schema.ignoreTimezones) {
+      datesWithTZ.push(column)
+    }
+  }
+
+  for (let row of rows) {
+    for (let col of datesWithTZ) {
+      if (row[col] && typeof row[col] === "string" && !row[col].endsWith("Z")) {
+        console.log(col, "needs converted to UTC!")
+        row[col] = new Date(row[col]).toISOString()
       }
     }
   }
