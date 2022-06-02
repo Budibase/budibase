@@ -58,3 +58,20 @@ export const GLOBESTRIKE = "svg[aria-label=GlobeStrike]"
 export const GLOBE = "svg[aria-label=Globe]"
 export const UNPUBLISH_MODAL = "[data-cy=unpublish-modal]"
 export const CONFIRM_WRAP_BUTTON = ".confirm-wrap button"
+
+//changeAppiconAndColour
+export const APP_ROW_ACTION = ".app-row-actions-icon"
+export const SPECTRUM_MENU = ".spectrum-Menu"
+export const ICON_ITEM = ".icon-item"
+export const FILL = ".fill"
+export const COLOURSS = ".colors"
+export const AREA_LABEL = "[aria-label]"
+export const TITLE = ".title"
+export const GRID = ".grid"
+export const COLOUR = ".color"
+
+//createAutomation
+export const ADD_BUTTON_SPECTRUM = ".add-button .spectrum-Icon"
+export const MODAL_INNER_WRAPPER = ".modal-inner-wrapper"
+export const SPECTRUM_BUTTON_CTA = ".spectrum-Button--cta"
+export const SPECTRUM_TEXTFIELD_INPUT = ".spectrum-Textfield-input"
