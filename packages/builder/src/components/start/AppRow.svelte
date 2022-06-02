@@ -20,7 +20,7 @@
     <div class="app-icon" style="color: {app.icon?.color || ''}">
       <Icon size="XL" name={app.icon?.name || "Apps"} />
     </div>
-    <div class="name" on:click={() => appOverview(app)}>
+    <div class="name" data-cy="app-name-link" on:click={() => appOverview(app)}>
       <Heading size="XS">
         {app.name}
       </Heading>
