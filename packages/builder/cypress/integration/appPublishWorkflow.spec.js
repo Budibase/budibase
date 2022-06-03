@@ -21,7 +21,6 @@ filterTests(['all'], () => {
 
       cy.get(interact.APP_TABLE_ROW_ACTION).eq(0)
       .within(() => {
-        //cy.get(interact.SPECTRUM_BUTTON_TEMPLATE).contains("Preview")
         cy.get(interact.SPECTRUM_BUTTON_TEMPLATE).contains("Edit").click({ force: true })
       })
 
