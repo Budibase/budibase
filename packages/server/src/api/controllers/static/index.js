@@ -16,6 +16,7 @@ const { upload } = require("../../../utilities/fileSystem")
 const { attachmentsRelativeURL } = require("../../../utilities")
 const { DocumentTypes } = require("../../../db/utils")
 const { getAppDB, getAppId } = require("@budibase/backend-core/context")
+const { setCookie, clearCookie } = require("@budibase/backend-core/utils")
 const AWS = require("aws-sdk")
 const AWS_REGION = env.AWS_REGION ? env.AWS_REGION : "eu-west-1"
 
@@ -38,18 +39,37 @@ async function prepareUpload({ s3Key, bucket, metadata, file }) {
   }
 }
 
-exports.serveBuilder = async function (ctx) {
-  // TODO: read from cookie, redis (prob best) or DB
-  // Maybe use the flags abstraction
-  const showNewUi = true
-  // const cdnUrl = "cdn.budi.live"
+exports.toggleBetaUiFeature = async function (ctx) {
+  const cookieName = `beta:${ctx.params.feature}`
 
-  // serve the new UI directly from S3
-  if (showNewUi) {
-    await send(ctx)
+  if (ctx.cookies.get(cookieName)) {
+    clearCookie(ctx, cookieName)
+    ctx.body = {
+      message: `${ctx.params.feature} disabled`,
+    }
+    return
   }
 
-  let builderPath = resolve(TOP_LEVEL_PATH, "builder")
+  setCookie(ctx, {}, cookieName)
+
+  ctx.body = {
+    message: `${ctx.params.feature} enabled`,
+  }
+}
+
+exports.serveBuilder = async function (ctx) {
+  const newUiCookie = ctx.cookies.get("beta:design_ui")
+  // When user uses the builder, they should be able to switch to the new UI through a button in a banner
+  // When in the new UI, they should be able to switch back with a button in a banner
+  // Maybe use the flags abstraction
+  // COS
+  // - Users who click the button get the latest version of the new UI
+  //
+  let uiPath = "builder"
+  if (newUiCookie) {
+    uiPath = "newbuilder"
+  }
+  let builderPath = resolve(TOP_LEVEL_PATH, uiPath)
   await send(ctx, ctx.file, { root: builderPath })
 }
 
@@ -97,6 +117,13 @@ exports.serveApp = async function (ctx) {
 }
 
 exports.serveClientLibrary = async function (ctx) {
+  const newUiCookie = ctx.cookies.get("beta:design_ui")
+  if (newUiCookie) {
+    return send(ctx, "budibase-client.js", {
+      root: join(TOP_LEVEL_PATH, "newbuilder"),
+    })
+  }
+
   return send(ctx, "budibase-client.js", {
     root: join(NODE_MODULES_PATH, "@budibase", "client", "dist"),
   })

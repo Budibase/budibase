@@ -1,7 +1,15 @@
 <script>
   import { store, automationStore } from "builderStore"
   import { roles, flags } from "stores/backend"
-  import { Icon, ActionGroup, Tabs, Tab, notifications } from "@budibase/bbui"
+  import {
+    Button,
+    Icon,
+    ActionGroup,
+    Tabs,
+    Tab,
+    notifications,
+    Banner,
+  } from "@budibase/bbui"
   import RevertModal from "components/deploy/RevertModal.svelte"
   import VersionModal from "components/deploy/VersionModal.svelte"
   import DeployNavigation from "components/deploy/DeployNavigation.svelte"
@@ -58,6 +66,11 @@
     })
   }
 
+  async function newDesignUi() {
+    await flags.toggleUiFeature("design_ui")
+    window.location.reload()
+  }
+
   onMount(async () => {
     if (!hasSynced && application) {
       try {
@@ -79,6 +92,10 @@
   <div class="loading" />
 {:then _}
   <div class="root">
+    <Banner>
+      Wanna try the new UI?
+      <Button on:click={newDesignUi}>Try the all new Budibase Design UI</Button>
+    </Banner>
     <div class="top-nav">
       <div class="topleftnav">
         <button class="home-logo">
