@@ -22,4 +22,9 @@ export const buildFlagEndpoints = API => ({
       },
     })
   },
+  toggleUiFeature: async ({ value }) => {
+    return await API.post({
+      url: `/api/ui/feature/${value}`,
+    })
+  },
 })

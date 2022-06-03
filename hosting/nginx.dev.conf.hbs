@@ -63,7 +63,7 @@ http {
     }
 
     location /builder {
-      proxy_pass      http://{{ address }}:3000;
+      proxy_pass      http://{{ address }}:4001;
       rewrite ^/builder(.*)$ /builder/$1 break;
     }
 
