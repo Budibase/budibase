@@ -91,7 +91,11 @@
       notifications.success(`Datasource ${name} tables updated successfully.`)
       await tables.fetch()
     } catch (error) {
-      notifications.error("Error updating datasource schema")
+      notifications.error(
+        `Error updating datasource schema ${
+          error?.message ? `: ${error.message}` : ""
+        }`
+      )
     }
   }
 
