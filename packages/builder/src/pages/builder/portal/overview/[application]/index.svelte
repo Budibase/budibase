@@ -273,12 +273,6 @@
                 Export
               </MenuItem>
               {#if isPublished}
-                <MenuItem
-                  on:click={() => unpublishApp(selectedApp)}
-                  icon="GlobeRemove"
-                >
-                  Unpublish
-                </MenuItem>
                 <MenuItem on:click={() => copyAppId(selectedApp)} icon="Copy">
                   Copy App ID
                 </MenuItem>
@@ -305,6 +299,7 @@
               app={selectedApp}
               deployments={latestDeployments}
               navigateTab={handleTabChange}
+              on:unpublish={e => unpublishApp(e.detail)}
             />
           </Tab>
           {#if false}
