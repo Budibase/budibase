@@ -26,6 +26,7 @@ export const SPECTRUM_POPOVER = ".spectrum-Popover"
 export const OPTION_SOURCE_PROP_CONROL = '[data-cy="optionsSource-prop-control'
 export const APP_TABLE_STATUS = ".appTable .app-status"
 export const APP_TABLE_ROW_ACTION = ".appTable .app-row-actions"
+export const APP_TABLE_APP_NAME = '[data-cy="app-name-link"]'
 export const DEPLOYMENT_TOP_NAV_GLOBESTRIKE =
   ".deployment-top-nav svg[aria-label=GlobeStrike]"
 export const DEPLOYMENT_TOP_GLOBE = ".deployment-top-nav svg[aria-label=Globe]"
@@ -33,13 +34,14 @@ export const PUBLISH_POPOVER_MENU = '[data-cy="publish-popover-menu"]'
 export const PUBLISH_POPOVER_ACTION = '[data-cy="publish-popover-action"]'
 export const PUBLISH_POPOVER_MESSAGE = ".publish-popover-message"
 export const SPECTRUM_BUTTON = ".spectrum-Button"
+export const SPECTRUM_LINK = ".spectrum-Link"
 export const TOPRIGHTNAV_BUTTON_SPECTRUM = ".toprightnav button.spectrum-Button"
 
 //createComponents
 export const SETTINGS = "[data-cy=Settings]"
 export const SETTINGS_INPUT = "[data-cy=setting-text] input"
 export const DESIGN = "[data-cy=Design]"
-export const FONT_SIZE_PROP_CONTRO = "[data-cy=font-size-prop-control]"
+export const FONT_SIZE_PROP_CONTROL = "[data-cy=font-size-prop-control]"
 export const DATA_CY_DATASOURCE = "[data-cy=setting-dataSource]"
 export const DROPDOWN_CONTAINER = ".dropdown-container"
 export const SPECTRUM_PICKER = ".spectrum-Picker"
@@ -53,6 +55,8 @@ export const NAV_ITEMS_CONTAINER = ".nav-items-container"
 
 //publishWorkFlow
 export const DEPLOY_APP_MODAL = ".spectrum-Modal [data-cy=deploy-app-modal]"
+export const DEPLOY_SUCCESS_MODAL =
+  ".spectrum-Modal [data-cy=deploy-app-success-modal]"
 export const DEPLOY_APP_URL_INPUT = "[data-cy=deployed-app-url] input"
 export const GLOBESTRIKE = "svg[aria-label=GlobeStrike]"
 export const GLOBE = "svg[aria-label=Globe]"
