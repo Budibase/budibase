@@ -1,6 +1,7 @@
 FROM couchdb
 
 ENV DEPLOYMENT_ENVIRONMENT=docker
+ENV POSTHOG_TOKEN=phc_fg5I3nDOf6oJVMHSaycEhpPdlgS8rzXG2r6F2IpxCHS
 ENV COUCHDB_PASSWORD=budibase
 ENV COUCHDB_USER=budibase
 ENV COUCH_DB_URL=http://budibase:budibase@localhost:5984
