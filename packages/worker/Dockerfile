@@ -22,5 +22,6 @@ EXPOSE 4001
 ENV NODE_ENV=production
 ENV CLUSTER_MODE=${CLUSTER_MODE}
 ENV SERVICE=worker-service
+ENV POSTHOG_TOKEN=phc_fg5I3nDOf6oJVMHSaycEhpPdlgS8rzXG2r6F2IpxCHS
 
 CMD ["./docker_run.sh"]
