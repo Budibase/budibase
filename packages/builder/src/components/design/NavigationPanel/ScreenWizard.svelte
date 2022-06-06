@@ -67,7 +67,6 @@
 
         // Analytics
         if (screen.template) {
-          // todo: move to api
           analytics.captureEvent(Events.SCREEN.CREATED, {
             template: screen.template,
             datasource: screen.datasource,

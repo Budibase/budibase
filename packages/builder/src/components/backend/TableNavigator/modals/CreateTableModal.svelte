@@ -59,7 +59,6 @@
     try {
       table = await tables.save(newTable)
       notifications.success(`Table ${name} created successfully.`)
-      // todo: move to api
       analytics.captureEvent(Events.TABLE.CREATED, { name })
 
       // Navigate to new table

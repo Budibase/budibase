@@ -11,7 +11,7 @@ const posthog = new PosthogClient(
 const sentry = new SentryClient(process.env.SENTRY_DSN)
 const intercom = new IntercomClient(process.env.INTERCOM_TOKEN)
 
-//
+// TODO: Remove most UI events
 class AnalyticsHub {
   constructor() {
     this.clients = [posthog, sentry, intercom]

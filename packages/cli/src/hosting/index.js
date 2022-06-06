@@ -15,7 +15,6 @@ const makeEnv = require("./makeEnv")
 const axios = require("axios")
 const AnalyticsClient = require("../analytics/Client")
 
-// todo: use backend core
 const BUDIBASE_SERVICES = ["app-service", "worker-service", "proxy-service"]
 const ERROR_FILE = "docker-error.log"
 const FILE_URLS = [

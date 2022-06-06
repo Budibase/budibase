@@ -1,5 +1,5 @@
 export const Events = {
-  //
+  // TODO: Remove most UI events
   BUILDER: {
     STARTED: "Builder Started",
   },

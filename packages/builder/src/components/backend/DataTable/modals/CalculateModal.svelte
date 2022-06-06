@@ -41,7 +41,6 @@
     try {
       views.save(view)
       notifications.success(`View ${view.name} saved`)
-      // todo: move to api
       analytics.captureEvent(Events.VIEW.ADDED_CALCULATE, { field: view.field })
     } catch (error) {
       notifications.error("Error saving view")

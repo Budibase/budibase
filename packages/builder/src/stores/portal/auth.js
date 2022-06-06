@@ -57,7 +57,6 @@ export function createAuthStore() {
       analytics
         .activate()
         .then(() => {
-          // todo: move to api
           analytics.identify(user._id, user)
           analytics.showChat({
             email: user.email,

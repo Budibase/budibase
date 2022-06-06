@@ -125,7 +125,6 @@ const automationActions = store => ({
       state.selectedBlock = newBlock
       return state
     })
-    // todo: move to api
     analytics.captureEvent(Events.AUTOMATION.BLOCK_ADDED, {
       name: block.name,
     })

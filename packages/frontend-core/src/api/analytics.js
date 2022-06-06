@@ -1,4 +1,3 @@
-// todo: audit
 export const buildAnalyticsEndpoints = API => ({
   /**
    * Gets the current status of analytics for this environment

@@ -60,7 +60,6 @@
       smtpConfig._id = savedConfig._id
       await admin.getChecklist()
       notifications.success(`Settings saved`)
-      // todo: move to api
       analytics.captureEvent(Events.SMTP.SAVED)
     } catch (error) {
       notifications.error(
