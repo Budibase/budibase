@@ -75,3 +75,20 @@ export const ADD_BUTTON_SPECTRUM = ".add-button .spectrum-Icon"
 export const MODAL_INNER_WRAPPER = ".modal-inner-wrapper"
 export const SPECTRUM_BUTTON_CTA = ".spectrum-Button--cta"
 export const SPECTRUM_TEXTFIELD_INPUT = ".spectrum-Textfield-input"
+
+//createTable
+export const TABLE_TITLE_H1 = ".table-title h1"
+export const TABLE_TITLE = ".title"
+export const SPECTRUM_TABLE_EDIT = ".spectrum-Table-editIcon > use"
+export const SPECTRUM_SWITCH_INPUT = ".spectrum-Switch-input"
+export const SPECTRUM_CHECKBOX_INPUT = ".spectrum-Checkbox-input"
+export const SPECTRUM_PAGINATION = ".spectrum-Pagination"
+export const SPECTRUM_ACTION_BUTTON = ".spectrum-ActionButton"
+export const SPECTRUM_BODY_SECOND = ".spectrum-Body--secondary"
+export const POPOVERS = ".popovers"
+export const SPECTRUM_DIALOG_GRID = ".spectrum-Dialog-grid"
+export const DELETE_COLUMN_CONFIRM = '[data-cy="delete-column-confirm"]'
+export const NAV_ITEM = ".nav-item"
+export const ACTION_SPECTRUM_ICON = ".actions .spectrum-Icon"
+export const SPECTRUM_MENU_CHILD2 = ".spectrum-Menu > :nth-child(2)"
+export const DELETE_TABLE_CONFIRM = '[data-cy="delete-table-confirm"]'
