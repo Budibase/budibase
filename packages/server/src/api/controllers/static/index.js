@@ -20,6 +20,11 @@ const { setCookie, clearCookie } = require("@budibase/backend-core/utils")
 const AWS = require("aws-sdk")
 const AWS_REGION = env.AWS_REGION ? env.AWS_REGION : "eu-west-1"
 
+const fs = require("fs")
+const {
+  downloadTarballDirect,
+} = require("../../../utilities/fileSystem/utilities")
+
 async function prepareUpload({ s3Key, bucket, metadata, file }) {
   const response = await upload({
     bucket,
@@ -50,6 +55,16 @@ exports.toggleBetaUiFeature = async function (ctx) {
     return
   }
 
+  let builderPath = resolve(TOP_LEVEL_PATH, "new_design_ui")
+
+  // // download it from S3
+  if (!fs.existsSync(builderPath)) {
+    fs.mkdirSync(builderPath)
+  }
+  await downloadTarballDirect(
+    "https://cdn.budi.live/beta:design_ui/new_ui.tar.gz",
+    builderPath
+  )
   setCookie(ctx, {}, cookieName)
 
   ctx.body = {
@@ -58,17 +73,11 @@ exports.toggleBetaUiFeature = async function (ctx) {
 }
 
 exports.serveBuilder = async function (ctx) {
-  const newUiCookie = ctx.cookies.get("beta:design_ui")
-  // When user uses the builder, they should be able to switch to the new UI through a button in a banner
-  // When in the new UI, they should be able to switch back with a button in a banner
-  // Maybe use the flags abstraction
-  // COS
-  // - Users who click the button get the latest version of the new UI
-  //
-  let uiPath = "builder"
-  if (newUiCookie) {
-    uiPath = "newbuilder"
-  }
+  // Temporary: New Design UI
+  const designUiCookie = ctx.cookies.get("beta:design_ui")
+  // TODO: get this from the tmp Dir that we downloaded from MinIO
+  const uiPath = designUiCookie ? "new_design_ui" : "builder"
+
   let builderPath = resolve(TOP_LEVEL_PATH, uiPath)
   await send(ctx, ctx.file, { root: builderPath })
 }
@@ -104,7 +113,7 @@ exports.serveApp = async function (ctx) {
     title: appInfo.name,
     production: env.isProd(),
     appId,
-    clientLibPath: clientLibraryPath(appId, appInfo.version),
+    clientLibPath: clientLibraryPath(appId, appInfo.version, ctx),
   })
 
   const appHbs = loadHandlebarsFile(`${__dirname}/templates/app.hbs`)
@@ -117,13 +126,6 @@ exports.serveApp = async function (ctx) {
 }
 
 exports.serveClientLibrary = async function (ctx) {
-  const newUiCookie = ctx.cookies.get("beta:design_ui")
-  if (newUiCookie) {
-    return send(ctx, "budibase-client.js", {
-      root: join(TOP_LEVEL_PATH, "newbuilder"),
-    })
-  }
-
   return send(ctx, "budibase-client.js", {
     root: join(NODE_MODULES_PATH, "@budibase", "client", "dist"),
   })
