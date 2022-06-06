@@ -84,7 +84,6 @@ exports.processDates = (table, rows) => {
   for (let row of rows) {
     for (let col of datesWithTZ) {
       if (row[col] && typeof row[col] === "string" && !row[col].endsWith("Z")) {
-        console.log(col, "needs converted to UTC!")
         row[col] = new Date(row[col]).toISOString()
       }
     }
