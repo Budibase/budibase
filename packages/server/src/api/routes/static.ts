@@ -38,7 +38,7 @@ router
   // TODO: for now this builder endpoint is not authorized/secured, will need to be
   .get("/builder/:file*", controller.serveBuilder)
   .post("/api/attachments/process", authorized(BUILDER), controller.uploadFile)
-  .post("/api/ui/feature/:feature", controller.toggleBetaUiFeature)
+  .post("/api/beta/:feature", controller.toggleBetaUiFeature)
   .post(
     "/api/attachments/:tableId/upload",
     paramResource("tableId"),

@@ -2,7 +2,6 @@
   import { store, automationStore } from "builderStore"
   import { roles, flags } from "stores/backend"
   import {
-    Button,
     Icon,
     ActionGroup,
     Tabs,
@@ -92,9 +91,8 @@
   <div class="loading" />
 {:then _}
   <div class="root">
-    <Banner>
-      Wanna try the new UI?
-      <Button on:click={newDesignUi}>Try the all new Budibase Design UI</Button>
+    <Banner extraButtonText="Try New UI (Beta)" extraButtonAction={newDesignUi}>
+      Try the <b>all new</b> budibase design interface.
     </Banner>
     <div class="top-nav">
       <div class="topleftnav">

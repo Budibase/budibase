@@ -22,9 +22,13 @@ export const buildFlagEndpoints = API => ({
       },
     })
   },
+  /**
+   * Allows us to experimentally toggle a beta UI feature through a cookie.
+   * @param value the feature to toggle
+   */
   toggleUiFeature: async ({ value }) => {
     return await API.post({
-      url: `/api/ui/feature/${value}`,
+      url: `/api/beta/${value}`,
     })
   },
 })
