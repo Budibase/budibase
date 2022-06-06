@@ -4,7 +4,7 @@ concurrency: release-develop
 on: 
  push:
     branches:
-      - develop
+      - release
     paths:
       - '.aws/**'
       - '.github/**'
