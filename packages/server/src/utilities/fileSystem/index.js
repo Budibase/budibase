@@ -110,19 +110,19 @@ exports.apiFileReturn = contents => {
   return fs.createReadStream(path)
 }
 
-exports.defineFilter = includeRows => {
-  if (includeRows) {
-    return doc =>
-      !(
-        doc._id.includes(USER_METDATA_PREFIX) ||
-        doc._id.includes(LINK_USER_METADATA_PREFIX)
-      )
-  } else if (!includeRows) {
+exports.defineFilter = excludeRows => {
+  if (excludeRows) {
     return doc =>
       !(
         doc._id.includes(USER_METDATA_PREFIX) ||
         doc._id.includes(LINK_USER_METADATA_PREFIX) ||
         doc._id.includes(TABLE_ROW_PREFIX)
+      )
+  } else if (!excludeRows) {
+    return doc =>
+      !(
+        doc._id.includes(USER_METDATA_PREFIX) ||
+        doc._id.includes(LINK_USER_METADATA_PREFIX)
       )
   }
 }
