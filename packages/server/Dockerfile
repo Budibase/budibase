@@ -11,6 +11,7 @@ ENV PORT=4001
 ENV COUCH_DB_URL=https://couchdb.budi.live:5984
 ENV BUDIBASE_ENVIRONMENT=PRODUCTION
 ENV SERVICE=app-service
+ENV POSTHOG_TOKEN=phc_fg5I3nDOf6oJVMHSaycEhpPdlgS8rzXG2r6F2IpxCHS
 
 # copy files and install dependencies
 COPY . ./
