@@ -12,6 +12,7 @@ const { mainRoutes, staticRoutes, publicRoutes } = require("./routes")
 const pkg = require("../../package.json")
 const env = require("../environment")
 const { middleware: pro } = require("@budibase/pro")
+const { shutdown } = require("./routes/public")
 
 const router = new Router()
 
@@ -88,4 +89,5 @@ router.use(publicRoutes.allowedMethods())
 router.use(staticRoutes.routes())
 router.use(staticRoutes.allowedMethods())
 
-module.exports = router
+module.exports.router = router
+module.exports.shutdown = shutdown
