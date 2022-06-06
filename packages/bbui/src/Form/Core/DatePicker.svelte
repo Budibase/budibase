@@ -62,7 +62,8 @@
       newValue = `2000-01-01T${newValue.split("T")[1]}`
     }
 
-    // Date only
+    // For date-only fields, construct a manual timestamp string without a time
+    // or time zone
     else if (!enableTime) {
       const year = dates[0].getFullYear()
       const month = `${dates[0].getMonth() + 1}`.padStart(2, "0")
@@ -70,11 +71,13 @@
       newValue = `${year}-${month}-${day}T00:00:00.000`
     }
 
-    // Non timezone aware timestamps
+    // For non-timezone-aware fields, create an ISO 8601 timestamp of the exact
+    // time picked, without timezone
     else if (noTimezone) {
       const offset = dates[0].getTimezoneOffset() * 60000
-      newValue = new Date(dates[0].getTime() - offset).toISOString()
-      newValue = newValue.slice(0, -1)
+      newValue = new Date(dates[0].getTime() - offset)
+        .toISOString()
+        .slice(0, -1)
     }
 
     dispatch("change", newValue)
