@@ -1,5 +1,5 @@
 const { processEvent } = require("./utils")
-const { queue } = require("./bullboard")
+const { queue, shutdown } = require("./bullboard")
 const { TRIGGER_DEFINITIONS } = require("./triggers")
 const { ACTION_DEFINITIONS } = require("./actions")
 
@@ -15,6 +15,10 @@ exports.init = function () {
 
 exports.getQueues = () => {
   return [queue]
+}
+
+exports.shutdown = () => {
+  return shutdown()
 }
 
 exports.queue = queue
