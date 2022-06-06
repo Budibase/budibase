@@ -432,7 +432,7 @@
       bind:value={field.constraints.datetime.earliest}
     />
     <DatePicker label="Latest" bind:value={field.constraints.datetime.latest} />
-    {#if datasource.source !== "ORACLE"}
+    {#if datasource?.source !== "ORACLE" && datasource?.source !== "SQL_SERVER"}
       <div>
         <Label
           tooltip={isCreating
