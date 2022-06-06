@@ -136,7 +136,11 @@ module MySQLModule {
       this.config = {
         ...config,
         typeCast: function (field: any, next: any) {
-          if (field.type == "DATETIME") {
+          if (
+            field.type == "DATETIME" ||
+            field.type === "DATE" ||
+            field.type === "TIMESTAMP"
+          ) {
             return field.string()
           }
           return next()
