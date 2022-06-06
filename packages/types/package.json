@@ -1,6 +1,6 @@
 {
   "name": "@budibase/types",
-  "version": "1.0.167-alpha.8",
+  "version": "1.0.195",
   "description": "Budibase types",
   "main": "src/index.ts",
   "types": "src/index.ts",
