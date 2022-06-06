@@ -11,7 +11,6 @@ const posthog = new PosthogClient(
 const sentry = new SentryClient(process.env.SENTRY_DSN)
 const intercom = new IntercomClient(process.env.INTERCOM_TOKEN)
 
-// TODO: Remove most UI events
 class AnalyticsHub {
   constructor() {
     this.clients = [posthog, sentry, intercom]
@@ -25,11 +24,8 @@ class AnalyticsHub {
     }
   }
 
-  identify(id, metadata) {
+  identify(id) {
     posthog.identify(id)
-    if (metadata) {
-      posthog.updateUser(metadata)
-    }
     sentry.identify(id)
   }
 
@@ -44,10 +40,6 @@ class AnalyticsHub {
 
   showChat(user) {
     intercom.show(user)
-  }
-
-  submitFeedback(values) {
-    posthog.npsFeedback(values)
   }
 
   async logout() {

@@ -23,7 +23,6 @@
   import { API } from "api"
   import { organisation, admin } from "stores/portal"
   import { Helpers } from "@budibase/bbui"
-  import analytics, { Events } from "analytics"
 
   const ConfigTypes = {
     Google: "google",
@@ -209,8 +208,6 @@
             providers[res.type]._id = res._id
           })
           notifications.success(`Settings saved`)
-          // todo: move to api
-          analytics.captureEvent(Events.SSO.SAVED)
         })
         .catch(() => {
           notifications.error("Failed to update auth settings")

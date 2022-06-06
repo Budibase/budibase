@@ -138,12 +138,6 @@
 
       // Create App
       const createdApp = await API.createApp(data)
-      analytics.captureEvent(Events.APP.CREATED, {
-        name: appName,
-        appId: createdApp.instance._id,
-        template,
-        fromTemplateMarketplace: true,
-      })
 
       // Select Correct Application/DB in prep for creating user
       const pkg = await API.fetchAppPackage(createdApp.instance._id)
@@ -169,7 +163,7 @@
   }
 
   const viewApp = app => {
-    analytics.captureEvent(Events.APP.VIEW_PUBLISHED, {
+    analytics.captureEvent(Events.APP_VIEW_PUBLISHED, {
       appId: app.appId,
       eventSource: EventSource.PORTAL,
     })
@@ -215,9 +209,6 @@
       return
     }
     try {
-      analytics.captureEvent(Events.APP.UNPUBLISHED, {
-        appId: selectedApp.appId,
-      })
       await API.unpublishApp(selectedApp.prodId)
       await apps.load()
       notifications.success("App unpublished successfully")
