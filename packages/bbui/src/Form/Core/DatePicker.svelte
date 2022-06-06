@@ -127,12 +127,6 @@
       date = new Date(parseInt(val))
     }
 
-    // If not using UTC conversion, we need to offset the timezone again here
-    // if (!timeOnly && enableTime && ignoreTimezones) {
-    //   const offset = date.getTimezoneOffset() * 60000
-    //   date = new Date(date.getTime() + offset)
-    // }
-
     time = date.getTime()
     if (isNaN(time)) {
       return null
