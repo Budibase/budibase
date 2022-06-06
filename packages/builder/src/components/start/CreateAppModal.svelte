@@ -103,7 +103,6 @@
 
       // Create App
       const createdApp = await API.createApp(data)
-      // todo: move to api
       analytics.captureEvent(Events.APP.CREATED, {
         name: $values.name,
         appId: createdApp.instance._id,

@@ -24,7 +24,6 @@
     try {
       const res = await users.invite({ email: $email, builder, admin })
       notifications.success(res.message)
-      // todo: move to api
       analytics.captureEvent(Events.USER.INVITE, { type: selected })
     } catch (error) {
       notifications.error("Error inviting user")

@@ -27,7 +27,6 @@
       }
       await automationStore.actions.save(updatedAutomation)
       notifications.success(`Automation ${name} updated successfully`)
-      // todo: move to api
       analytics.captureEvent(Events.AUTOMATION.SAVED, { name })
       hide()
     } catch (error) {

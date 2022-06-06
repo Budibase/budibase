@@ -42,7 +42,6 @@
       asyncModal.hide()
       publishCompleteModal.show()
     } catch (error) {
-      // todo: move to api
       analytics.captureException(error)
       notifications.error("Error publishing app")
     }

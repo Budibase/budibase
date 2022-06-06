@@ -426,7 +426,6 @@ export const getFrontendStore = () => {
         })
 
         // Log event
-        // todo: move to api
         analytics.captureEvent(Events.COMPONENT.CREATED, {
           name: componentInstance._component,
         })

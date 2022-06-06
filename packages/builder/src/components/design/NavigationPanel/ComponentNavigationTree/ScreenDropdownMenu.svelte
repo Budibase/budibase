@@ -43,7 +43,6 @@
 
       // Analytics
       if (screen.template) {
-        // todo: move to api
         analytics.captureEvent(Events.SCREEN.CREATED, {
           template: "createFromScratch",
         })

@@ -35,7 +35,6 @@
     }
     await datasources.save(updatedDatasource)
     notifications.success(`Datasource ${name} updated successfully.`)
-    // todo: move to api
     analytics.captureEvent(Events.DATASOURCE.UPDATED, updatedDatasource)
     hide()
   }

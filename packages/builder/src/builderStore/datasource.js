@@ -31,7 +31,6 @@ export async function saveDatasource(config, skipFetch = false) {
   // update the tables incase data source plus
   await tables.fetch()
   await datasources.select(resp._id)
-  // todo: move to api
   analytics.captureEvent(Events.DATASOURCE.CREATED, {
     name: resp.name,
     source: resp.source,
