@@ -67,7 +67,7 @@
               <Tab title="Input">
                 <div style="padding: 10px 10px 10px 10px;">
                   <TextArea
-                    minHeight="80px"
+                    minHeight="150px"
                     disabled
                     value={JSON.stringify(testResults?.[idx]?.inputs, null, 2)}
                   />
@@ -76,7 +76,7 @@
               <Tab title="Output">
                 <div style="padding: 10px 10px 10px 10px;">
                   <TextArea
-                    minHeight="100px"
+                    minHeight="150px"
                     disabled
                     value={JSON.stringify(testResults?.[idx]?.outputs, null, 2)}
                   />

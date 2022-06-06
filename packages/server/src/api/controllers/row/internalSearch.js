@@ -304,6 +304,26 @@ const recursiveSearch = async (query, params) => {
   if (rows.length > params.limit - 200) {
     pageSize = params.limit - rows.length
   }
+
+  /*
+  If a null value is passed to a filter expression, we currently return 
+  every row, this can and has resulted in data loss via automation loops etc.
+  So here we are checking if any null values exist in the filters, and if they do
+  just return an empty rows array.
+  */
+  let nullValuesExist = false
+  Object.keys(query).forEach(key => {
+    Object.values(query[key]).forEach(innerVal => {
+      if (innerVal === "" || innerVal === null) {
+        nullValuesExist = true
+      }
+    })
+  })
+
+  if (nullValuesExist) {
+    return rows
+  }
+
   const page = await new QueryBuilder(query)
     .setVersion(params.version)
     .setTable(params.tableId)
