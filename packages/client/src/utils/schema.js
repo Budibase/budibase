@@ -1,5 +1,4 @@
 import { API } from "api"
-import { JSONUtils } from "@budibase/frontend-core"
 import TableFetch from "@budibase/frontend-core/src/fetch/TableFetch.js"
 import ViewFetch from "@budibase/frontend-core/src/fetch/ViewFetch.js"
 import QueryFetch from "@budibase/frontend-core/src/fetch/QueryFetch.js"
@@ -40,44 +39,41 @@ export const fetchDatasourceSchema = async (
     return null
   }
 
-  // Check for any JSON fields so we can add any top level properties
-  let jsonAdditions = {}
-  Object.keys(schema).forEach(fieldKey => {
+  // Enrich schema with relationships if required
+  if (definition?.sql && options?.enrichRelationships) {
+    const relationshipAdditions = await getRelationshipSchemaAdditions(schema)
+    schema = {
+      ...schema,
+      ...relationshipAdditions,
+    }
+  }
+
+  // Ensure schema is in the correct structure
+  return instance.enrichSchema(schema)
+}
+
+/**
+ * Fetches the schema of relationship fields for a SQL table schema
+ * @param schema the schema to enrich
+ */
+export const getRelationshipSchemaAdditions = async schema => {
+  if (!schema) {
+    return null
+  }
+  let relationshipAdditions = {}
+  for (let fieldKey of Object.keys(schema)) {
     const fieldSchema = schema[fieldKey]
-    if (fieldSchema?.type === "json") {
-      const jsonSchema = JSONUtils.convertJSONSchemaToTableSchema(fieldSchema, {
-        squashObjects: true,
+    if (fieldSchema?.type === "link") {
+      const linkSchema = await fetchDatasourceSchema({
+        type: "table",
+        tableId: fieldSchema?.tableId,
       })
-      Object.keys(jsonSchema).forEach(jsonKey => {
-        jsonAdditions[`${fieldKey}.${jsonKey}`] = {
-          type: jsonSchema[jsonKey].type,
-          nestedJSON: true,
+      Object.keys(linkSchema || {}).forEach(linkKey => {
+        relationshipAdditions[`${fieldKey}.${linkKey}`] = {
+          type: linkSchema[linkKey].type,
         }
       })
     }
-  })
-  schema = { ...schema, ...jsonAdditions }
-
-  // Check for any relationship fields if required
-  if (options?.enrichRelationships && definition.sql) {
-    let relationshipAdditions = {}
-    for (let fieldKey of Object.keys(schema)) {
-      const fieldSchema = schema[fieldKey]
-      if (fieldSchema?.type === "link") {
-        const linkSchema = await fetchDatasourceSchema({
-          type: "table",
-          tableId: fieldSchema?.tableId,
-        })
-        Object.keys(linkSchema || {}).forEach(linkKey => {
-          relationshipAdditions[`${fieldKey}.${linkKey}`] = {
-            type: linkSchema[linkKey].type,
-          }
-        })
-      }
-    }
-    schema = { ...schema, ...relationshipAdditions }
   }
-
-  // Ensure schema structure is correct
-  return instance.enrichSchema(schema)
+  return relationshipAdditions
 }
