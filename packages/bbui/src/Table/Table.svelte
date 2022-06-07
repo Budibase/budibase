@@ -28,7 +28,7 @@
   export let rowCount = 0
   export let quiet = false
   export let loading = false
-  export let allowSelectRows = true
+  export let allowSelectRows
   export let allowEditRows = true
   export let allowEditColumns = true
   export let selectedRows = []
