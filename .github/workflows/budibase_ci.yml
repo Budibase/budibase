@@ -39,7 +39,7 @@ jobs:
       run: yarn install:pro $BRANCH $BASE_BRANCH
 
     - run: yarn
-    - run: yarn bootstrap --loglevel debug
+    - run: yarn bootstrap
     - run: yarn lint
     - run: yarn build
     - run: yarn test
