@@ -76,11 +76,9 @@
       return []
     }
 
-    // Split list into either components or blocks initially
-    if (section === "components") {
+    // Remove blocks if there is no search string
+    if (!search) {
       structure = structure.filter(category => category.name !== "Blocks")
-    } else {
-      structure = structure.filter(category => category.name === "Blocks")
     }
 
     // Return only items which match the search string
@@ -159,33 +157,31 @@
   borderRight
 >
   <Layout paddingX="L" paddingY="XL" gap="S">
-    <ActionGroup compact justified>
-      <ActionButton
-        fullWidth
-        selected={section === "components"}
-        on:click={() => (section = "components")}>Components</ActionButton
-      >
-      <ActionButton
-        fullWidth
-        selected={section === "blocks"}
-        on:click={() => (section = "blocks")}>Blocks</ActionButton
-      >
-    </ActionGroup>
+    <Search
+      placeholder="Search"
+      value={searchString}
+      on:change={e => (searchString = e.detail)}
+      bind:inputRef={searchRef}
+    />
+    {#if !searchString}
+      <ActionGroup compact justified>
+        <ActionButton
+          fullWidth
+          selected={section === "components"}
+          on:click={() => (section = "components")}>Components</ActionButton
+        >
+        <ActionButton
+          fullWidth
+          selected={section === "blocks"}
+          on:click={() => (section = "blocks")}>Blocks</ActionButton
+        >
+      </ActionGroup>
+    {/if}
   </Layout>
   <div>
     <Divider noMargin noGrid />
   </div>
-  {#if section === "components"}
-    <Layout paddingX="L" paddingY="XL">
-      <Search
-        placeholder="Search"
-        value={searchString}
-        on:change={e => (searchString = e.detail)}
-        bind:inputRef={searchRef}
-      />
-    </Layout>
-  {/if}
-  {#if section === "components"}
+  {#if searchString || section === "components"}
     {#each filteredStructure as category}
       <DetailSummary name={category.name} collapsible={false}>
         <div class="component-grid">
