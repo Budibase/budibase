@@ -38,6 +38,7 @@ jobs:
     - name: Install Pro
       run: yarn install:pro $BRANCH $BASE_BRANCH
 
+    - run: yarn global add yarn
     - run: yarn
     - run: yarn bootstrap
     - run: yarn lint
