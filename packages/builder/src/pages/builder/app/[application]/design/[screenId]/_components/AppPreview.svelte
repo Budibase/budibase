@@ -174,6 +174,8 @@
         if (!$isActive("./navigation")) {
           $goto("./navigation")
         }
+      } else if (type === "request-add-component") {
+        $goto("./components/new")
       } else {
         console.warn(`Client sent unknown event type: ${type}`)
       }

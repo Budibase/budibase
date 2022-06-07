@@ -22,6 +22,7 @@
   import { Helpers } from "@budibase/bbui"
   import { getActiveConditions, reduceConditionActions } from "utils/conditions"
   import Placeholder from "components/app/Placeholder.svelte"
+  import ScreenPlaceholder from "components/app/ScreenPlaceholder.svelte"
 
   export let instance = {}
   export let isLayout = false
@@ -428,7 +429,11 @@
           <svelte:self instance={child} />
         {/each}
       {:else if emptyState}
-        <Placeholder />
+        {#if isScreen}
+          <ScreenPlaceholder />
+        {:else}
+          <Placeholder />
+        {/if}
       {:else if isBlock}
         <slot />
       {/if}
