@@ -38,9 +38,8 @@ jobs:
     - name: Install Pro
       run: yarn install:pro $BRANCH $BASE_BRANCH
 
-    - run: yarn cache clean
     - run: yarn
-    - run: yarn bootstrap
+    - run: yarn bootstrap --loglevel debug
     - run: yarn lint
     - run: yarn build
     - run: yarn test
