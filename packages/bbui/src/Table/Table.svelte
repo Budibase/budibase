@@ -132,7 +132,7 @@
       style += " auto"
     }
     fields?.forEach(field => {
-      const fieldSchema = schema[field]
+      const fieldSchema = schema[field.name]
       if (fieldSchema.width) {
         style += ` ${fieldSchema.width}`
       } else {
@@ -204,7 +204,6 @@
         return nameA < nameB ? a : b
       })
       .concat(autoColumns)
-      .map(column => column.name)
   }
 
   const editColumn = (e, field) => {
@@ -300,19 +299,19 @@
           {#each fields as field}
             <div
               class="spectrum-Table-headCell"
-              class:spectrum-Table-headCell--alignCenter={schema[field]
+              class:spectrum-Table-headCell--alignCenter={schema[field.name]
                 .align === "Center"}
-              class:spectrum-Table-headCell--alignRight={schema[field].align ===
-                "Right"}
-              class:is-sortable={schema[field].sortable !== false}
-              class:is-sorted-desc={sortColumn === field &&
+              class:spectrum-Table-headCell--alignRight={schema[field.name]
+                .align === "Right"}
+              class:is-sortable={schema[field.name].sortable !== false}
+              class:is-sorted-desc={sortColumn === field.name &&
                 sortOrder === "Descending"}
-              class:is-sorted-asc={sortColumn === field &&
+              class:is-sorted-asc={sortColumn === field.name &&
                 sortOrder === "Ascending"}
-              on:click={() => sortBy(schema[field])}
+              on:click={() => sortBy(schema[field.name])}
             >
-              <div class="title">{getDisplayName(schema[field])}</div>
-              {#if schema[field]?.autocolumn}
+              <div class="title">{getDisplayName(schema[field.name])}</div>
+              {#if schema[field.name]?.autocolumn}
                 <svg
                   class="spectrum-Icon spectrum-Table-autoIcon"
                   focusable="false"
@@ -320,7 +319,7 @@
                   <use xlink:href="#spectrum-icon-18-MagicWand" />
                 </svg>
               {/if}
-              {#if sortColumn === field}
+              {#if sortColumn === field.name}
                 <svg
                   class="spectrum-Icon spectrum-UIIcon-ArrowDown100 spectrum-Table-sortedIcon"
                   focusable="false"
@@ -329,11 +328,11 @@
                   <use xlink:href="#spectrum-css-icon-Arrow100" />
                 </svg>
               {/if}
-              {#if allowEditColumns && schema[field]?.editable !== false}
+              {#if allowEditColumns && schema[field.name]?.editable !== false}
                 <svg
                   class="spectrum-Icon spectrum-Table-editIcon"
                   focusable="false"
-                  on:click={e => editColumn(e, field)}
+                  on:click={e => editColumn(e, field.name)}
                 >
                   <use xlink:href="#spectrum-icon-18-Edit" />
                 </svg>
@@ -343,7 +342,7 @@
         </div>
       {/if}
       {#if sortedRows?.length}
-        {#each sortedRows as row, idx}
+        {#each sortedRows as row}
           <div class="spectrum-Table-row">
             {#if showEditColumn}
               <div
@@ -367,15 +366,12 @@
             {#each fields as field}
               <div
                 class="spectrum-Table-cell"
-                class:spectrum-Table-cell--divider={!!schema[field].divider}
-                style={cellStyles[field]}
+                class:spectrum-Table-cell--divider={!!schema[field.name]
+                  .divider}
+                style={cellStyles[field.name]}
                 on:click={() => {
-                  if (!field.startsWith("custom-")) {
+                  if (!field.preventSelectRow) {
                     dispatch("click", row)
-                  }
-                }}
-                on:click={() => {
-                  if (!field.startsWith("custom-")) {
                     toggleSelectRow(row)
                   }
                 }}
@@ -383,8 +379,8 @@
                 <CellRenderer
                   {customRenderers}
                   {row}
-                  schema={schema[field]}
-                  value={deepGet(row, field)}
+                  schema={schema[field.name]}
+                  value={deepGet(row, field.name)}
                   on:clickrelationship
                 >
                   <slot />
