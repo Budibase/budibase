@@ -2,7 +2,7 @@
   import { onMount, onDestroy } from "svelte"
   import Indicator from "./Indicator.svelte"
   import { domDebounce } from "utils/domDebounce"
-  import { builderStore, componentStore } from "stores"
+  import { builderStore } from "stores"
 
   export let componentId
   export let color
