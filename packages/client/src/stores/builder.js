@@ -78,6 +78,9 @@ const createBuilderStore = () => {
     clickNav: () => {
       dispatchEvent("click-nav")
     },
+    requestAddComponent: () => {
+      dispatchEvent("request-add-component")
+    },
   }
   return {
     ...store,
