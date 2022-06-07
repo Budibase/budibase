@@ -22,9 +22,12 @@ module PostgresModule {
 
   // Return "date" and "timestamp" types as plain strings.
   // This lets us reference the original stored timezone.
-  types.setTypeParser(1114, (val: any) => val) // timestamp
-  types.setTypeParser(1082, (val: any) => val) // date
-  types.setTypeParser(1184, (val: any) => val) // timestampz
+  // types is undefined when running in a test env for some reason.
+  if (types) {
+    types.setTypeParser(1114, (val: any) => val) // timestamp
+    types.setTypeParser(1082, (val: any) => val) // date
+    types.setTypeParser(1184, (val: any) => val) // timestampz
+  }
 
   const JSON_REGEX = /'{.*}'::json/s
 
