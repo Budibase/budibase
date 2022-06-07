@@ -370,12 +370,8 @@
                 class:spectrum-Table-cell--divider={!!schema[field].divider}
                 style={cellStyles[field]}
                 on:click={() => {
-                  if (!field.startsWith("custom-")) {
+                  if (!schema[field]?.preventSelectRow) {
                     dispatch("click", row)
-                  }
-                }}
-                on:click={() => {
-                  if (!field.startsWith("custom-")) {
                     toggleSelectRow(row)
                   }
                 }}
