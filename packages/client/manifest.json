@@ -2228,7 +2228,7 @@
       },
       {
         "type": "boolean",
-        "label": "Sort in lexographic order",
+        "label": "Sort in alphabetical order",
         "key": "sort",
         "defaultValue": true
       },
