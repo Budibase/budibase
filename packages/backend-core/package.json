@@ -49,7 +49,7 @@
   "devDependencies": {
     "@shopify/jest-koa-mocks": "^3.1.5",
     "@budibase/types": "^1.0.195",
-    "@types/jest": "^27.4.1",
+    "@types/jest": "^26.0.0",
     "@types/koa": "^2.13.3",
     "@types/node": "^14.0.0",
     "@types/node-fetch": "^2.6.1",
