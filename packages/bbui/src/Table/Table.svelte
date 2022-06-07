@@ -344,11 +344,7 @@
       {/if}
       {#if sortedRows?.length}
         {#each sortedRows as row, idx}
-          <div
-            class="spectrum-Table-row"
-            on:click={() => dispatch("click", row)}
-            on:click={() => toggleSelectRow(row)}
-          >
+          <div class="spectrum-Table-row">
             {#if showEditColumn}
               <div
                 class="spectrum-Table-cell spectrum-Table-cell--divider spectrum-Table-cell--edit"
@@ -373,6 +369,16 @@
                 class="spectrum-Table-cell"
                 class:spectrum-Table-cell--divider={!!schema[field].divider}
                 style={cellStyles[field]}
+                on:click={() => {
+                  if (!field.startsWith("custom-")) {
+                    dispatch("click", row)
+                  }
+                }}
+                on:click={() => {
+                  if (!field.startsWith("custom-")) {
+                    toggleSelectRow(row)
+                  }
+                }}
               >
                 <CellRenderer
                   {customRenderers}
