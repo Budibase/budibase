@@ -43,7 +43,8 @@
       extraButtonText="View details"
       extraButtonAction={() => {}}
     >
-      Custom layouts are being deprecated. They will be removed on [date].
+      Custom layouts are being deprecated. They will be removed in a future
+      release.
     </Banner>
     <Body size="S">
       You can save the content of this layout by pressing the button below.
