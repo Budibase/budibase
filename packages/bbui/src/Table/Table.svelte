@@ -28,7 +28,7 @@
   export let rowCount = 0
   export let quiet = false
   export let loading = false
-  export let allowSelectRows = true
+  export let allowSelectRows
   export let allowEditRows = true
   export let allowEditColumns = true
   export let selectedRows = []
@@ -344,11 +344,7 @@
       {/if}
       {#if sortedRows?.length}
         {#each sortedRows as row, idx}
-          <div
-            class="spectrum-Table-row"
-            on:click={() => dispatch("click", row)}
-            on:click={() => toggleSelectRow(row)}
-          >
+          <div class="spectrum-Table-row">
             {#if showEditColumn}
               <div
                 class="spectrum-Table-cell spectrum-Table-cell--divider spectrum-Table-cell--edit"
@@ -373,6 +369,12 @@
                 class="spectrum-Table-cell"
                 class:spectrum-Table-cell--divider={!!schema[field].divider}
                 style={cellStyles[field]}
+                on:click={() => {
+                  if (!schema[field]?.preventSelectRow) {
+                    dispatch("click", row)
+                    toggleSelectRow(row)
+                  }
+                }}
               >
                 <CellRenderer
                   {customRenderers}
