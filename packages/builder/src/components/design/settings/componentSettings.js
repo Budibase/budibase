@@ -18,6 +18,7 @@ import FormFieldSelect from "./controls/FormFieldSelect.svelte"
 import ValidationEditor from "./controls/ValidationEditor/ValidationEditor.svelte"
 import DrawerBindableCombobox from "components/common/bindings/DrawerBindableCombobox.svelte"
 import ColumnEditor from "./controls/ColumnEditor/ColumnEditor.svelte"
+import BarButtonList from "./controls/BarButtonList.svelte"
 
 const componentMap = {
   text: DrawerBindableCombobox,
@@ -61,6 +62,16 @@ const componentMap = {
   "validation/link": ValidationEditor,
 }
 
-export const getComponentForSettingType = type => {
+export const getComponentForSetting = setting => {
+  const { type, showInBar, barStyle } = setting || {}
+  if (!type) {
+    return null
+  }
+
+  // We can show a clone of the bar settings for certain select settings
+  if (showInBar && type === "select" && barStyle === "buttons") {
+    return BarButtonList
+  }
+
   return componentMap[type]
 }

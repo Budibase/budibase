@@ -14,7 +14,7 @@
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
   import { LuceneUtils, Constants } from "@budibase/frontend-core"
   import { selectedComponent } from "builderStore"
-  import { getComponentForSettingType } from "components/design/settings/componentSettings"
+  import { getComponentForSetting } from "components/design/settings/componentSettings"
   import PropertyControl from "components/design/settings/controls/PropertyControl.svelte"
   import { getComponentSettings } from "builderStore/componentUtils"
 
@@ -69,11 +69,6 @@
 
   const getSettingDefinition = key => {
     return settings.find(setting => setting.key === key)
-  }
-
-  const getComponentForSetting = key => {
-    const settingDefinition = getSettingDefinition(key)
-    return getComponentForSettingType(settingDefinition?.type || "text")
   }
 
   const addCondition = () => {
@@ -154,6 +149,7 @@
           on:consider={updateConditions}
         >
           {#each conditions as condition (condition.id)}
+            {@const definition = getSettingDefinition(condition.setting)}
             <div
               class="condition"
               class:update={condition.action === "update"}
@@ -178,18 +174,17 @@
                   bind:value={condition.setting}
                 />
                 <div>TO</div>
-                {#if getSettingDefinition(condition.setting)}
+                {#if definition}
                   <PropertyControl
-                    type={getSettingDefinition(condition.setting).type}
-                    control={getComponentForSetting(condition.setting)}
-                    key={getSettingDefinition(condition.setting).key}
+                    type={definition.type}
+                    control={getComponentForSetting(definition)}
+                    key={definition.key}
                     value={condition.settingValue}
                     componentInstance={$selectedComponent}
                     onChange={val => (condition.settingValue = val)}
                     props={{
-                      options: getSettingDefinition(condition.setting).options,
-                      placeholder: getSettingDefinition(condition.setting)
-                        .placeholder,
+                      options: definition.options,
+                      placeholder: definition.placeholder,
                     }}
                     {bindings}
                   />
