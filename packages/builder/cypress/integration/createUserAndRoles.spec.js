@@ -19,9 +19,8 @@ filterTests(["smoke", "all"], () => {
     it("should confirm there is No Access for a New User", () => {
       // Click into the user
       cy.contains("bbuser").click()
-      cy.wait(500)
       // Get No Access table - Confirm it has apps in it
-      cy.get(interact.SPECTRUM_TABLE).eq(1).should("not.contain", "No rows found")
+      cy.get(interact.SPECTRUM_TABLE, { timeout: 500 }).eq(1).should("not.contain", "No rows found")
       // Get Configure Roles table - Confirm it has no apps
       cy.get(interact.SPECTRUM_TABLE).eq(0).contains("No rows found")
     })
@@ -40,8 +39,7 @@ filterTests(["smoke", "all"], () => {
                   cy.createApp(name)
                 } else {
                   cy.visit(`${Cypress.config().baseUrl}/builder`)
-                  cy.wait(500)
-                  cy.get(interact.CREATE_APP_BUTTON).click({ force: true })
+                  cy.get(interact.CREATE_APP_BUTTON, { timeout: 1000 }).click({ force: true })
                   cy.createAppFromScratch(name)
                 }
               }
@@ -172,6 +170,29 @@ filterTests(["smoke", "all"], () => {
         .within(() => {
           cy.get(interact.SPECTRUM_TABLE).contains("No rows found")
         })
+    })
+
+    it("Should edit user details", () => {
+      // Add First name
+      cy.get(".field").eq(2).within(() => {
+        cy.get(interact.SPECTRUM_TEXTFIELD_INPUT).type("bb")
+      })
+      // Add Last name
+      cy.get(".field").eq(3).within(() => {
+        cy.get(interact.SPECTRUM_TEXTFIELD_INPUT).type("test")
+      })
+      // Navigate away and back to the user
+      cy.contains("Apps").click()
+      cy.contains("Users").click()
+      cy.contains("bbuser").click()
+
+      // Confirm details have been saved
+      cy.get(".field").eq(2).within(() => {
+        cy.get(interact.SPECTRUM_TEXTFIELD_INPUT).should('have.value', "bb")
+      })
+      cy.get(".field").eq(3).within(() => {
+        cy.get(interact.SPECTRUM_TEXTFIELD_INPUT).should('have.value', "test")
+      })
     })
 
     it("should delete a user", () => {
