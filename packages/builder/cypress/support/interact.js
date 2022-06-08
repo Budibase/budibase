@@ -104,3 +104,6 @@ export const SPECTRUM_TABLE_ROW = ".spectrum-Table-row"
 export const SPECTRUM_TABLE_CELL = ".spectrum-Table-cell"
 export const FIELD = ".field"
 export const CONTAINER = ".container"
+
+//createView
+export const SPECTRUM_MENU_ITEM_LABEL = ".spectrum-Menu-itemLabel"
