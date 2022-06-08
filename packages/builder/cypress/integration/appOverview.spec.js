@@ -309,11 +309,8 @@ filterTests(['all'], () => {
       cy.visit(`${Cypress.config().baseUrl}/builder`)
       cy.get(".appTable .name").eq(0).click()
 
-      cy.get(".app-overview-actions-icon > .icon").click({ force : true })
-
-      cy.get("[data-cy='app-overview-menu-popover']").eq(0).within(() => {
-        cy.get(".spectrum-Menu-item").contains("Unpublish").click({ force: true })
-        cy.wait(500)
+      cy.get(".overview-tab [data-cy='app-status']").within(() => {
+        cy.get(".spectrum-Link").contains("Unpublish").click()
       })
 
       cy.get("[data-cy='unpublish-modal']").should("be.visible")
