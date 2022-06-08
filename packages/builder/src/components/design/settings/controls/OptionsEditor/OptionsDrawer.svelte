@@ -6,6 +6,7 @@
     DrawerContent,
     Layout,
     Body,
+    Label,
   } from "@budibase/bbui"
   import { generate } from "shortid"
 
@@ -35,19 +36,12 @@
       {/if}
       {#if options?.length}
         <div class="options">
+          <Label>Label</Label>
+          <Label>Value</Label>
+          <div />
           {#each options as option (option.id)}
-            <Input
-              placeholder="Label"
-              bind:value={option.label}
-              label="Label"
-              labelPosition="left"
-            />
-            <Input
-              placeholder="Value"
-              bind:value={option.value}
-              label="Value"
-              labelPosition="left"
-            />
+            <Input placeholder="Label" bind:value={option.label} />
+            <Input placeholder="Value" bind:value={option.value} />
             <Icon
               name="Close"
               hoverable
