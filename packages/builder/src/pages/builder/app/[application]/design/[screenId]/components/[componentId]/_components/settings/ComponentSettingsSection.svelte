@@ -6,7 +6,7 @@
   import LayoutSelect from "components/design/settings/controls/LayoutSelect.svelte"
   import RoleSelect from "components/design/settings/controls/RoleSelect.svelte"
   import ResetFieldsButton from "components/design/settings/controls/ResetFieldsButton.svelte"
-  import { getComponentForSettingType } from "components/design/settings/componentSettings"
+  import { getComponentForSetting } from "components/design/settings/componentSettings"
   import { Utils } from "@budibase/frontend-core"
 
   export let componentDefinition
@@ -51,7 +51,7 @@
   })
 
   const canRenderControl = setting => {
-    const control = getComponentForSettingType(setting?.type)
+    const control = getComponentForSetting(setting)
     if (!control) {
       return false
     }
@@ -104,7 +104,7 @@
       {#if canRenderControl(setting)}
         <PropertyControl
           type={setting.type}
-          control={getComponentForSettingType(setting.type)}
+          control={getComponentForSetting(setting)}
           label={setting.label}
           key={setting.key}
           value={componentInstance[setting.key] ??
@@ -112,8 +112,13 @@
           nested={setting.nested}
           onChange={val => updateProp(setting.key, val)}
           props={{
-            options: setting.options || [],
+            // Generic settings
             placeholder: setting.placeholder || null,
+
+            // Select settings
+            options: setting.options || [],
+
+            // Number fields
             min: setting.min || null,
             max: setting.max || null,
           }}

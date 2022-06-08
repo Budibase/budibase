@@ -80,4 +80,7 @@
   .active svg {
     color: var(--spectrum-global-color-blue-600);
   }
+  :global([dir="ltr"] .spectrum-ActionButton .spectrum-Icon) {
+    margin-left: 0;
+  }
 </style>
