@@ -83,4 +83,7 @@
   :global([dir="ltr"] .spectrum-ActionButton .spectrum-Icon) {
     margin-left: 0;
   }
+  .is-selected {
+    background: var(--spectrum-global-color-gray-300);
+  }
 </style>
