@@ -83,9 +83,8 @@ filterTests(['all'], () => {
         cy.get("svg[aria-label='Globe']").should("exist")
       })
 
-      cy.get(interact.APP_TABLE_ROW_ACTION).eq(0)
+      cy.get(interact.APP_TABLE).eq(0)
       .within(() => {
-        cy.get(interact.SPECTRUM_BUTTON).contains("View")
         cy.get(interact.APP_TABLE_APP_NAME).click({ force: true })
       })
 
@@ -96,11 +95,8 @@ filterTests(['all'], () => {
         cy.get(interact.CONFIRM_WRAP_BUTTON).click({ force: true }
       )})
 
-      cy.get(interact.DEPLOYMENT_TOP_NAV_GLOBESTRIKE).should("exist")
-
       cy.visit(`${Cypress.config().baseUrl}/builder`)
-
-      cy.get(interact.APP_TABLE_STATUS).eq(0).contains("Unpublished")
+      cy.get(interact.APP_TABLE_STATUS, { timeout: 1000 }).eq(0).contains("Unpublished")
 
     })
   })
