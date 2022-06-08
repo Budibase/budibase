@@ -1,13 +1,13 @@
 <script>
   import { Body, Button, Layout, Heading } from "@budibase/bbui"
-  import { CookieUtils } from "@budibase/frontend-core"
+  import { flags } from "stores/backend"
 
   function openFeedbackApp() {
     window.open(`https://bb.budibase.app/betauifeedback`)
   }
 
-  function revertToOldBuilder() {
-    CookieUtils.removeCookie("beta:new_design_ui")
+  async function revertToOldBuilder() {
+    await flags.toggleUiFeature("design_ui")
     window.location.reload()
   }
 </script>
