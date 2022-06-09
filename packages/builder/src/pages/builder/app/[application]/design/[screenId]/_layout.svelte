@@ -12,7 +12,7 @@
     urlParam: "screenId",
     stateKey: "selectedScreenId",
     validate: id => $store.screens.some(screen => screen._id === id),
-    fallbackUrl: "../../",
+    fallbackUrl: "../../design",
     store,
     routify,
   })
