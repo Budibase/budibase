@@ -7,7 +7,9 @@
   "author": "Budibase",
   "license": "GPL-3.0",
   "scripts": {
-    "build": "rimraf dist/ && tsc -p tsconfig.build.json",
+    "prebuild": "rimraf dist/",
+    "build": "tsc -p tsconfig.build.json",
+    "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
     "test": "jest",
     "test:watch": "jest --watchAll"
   },

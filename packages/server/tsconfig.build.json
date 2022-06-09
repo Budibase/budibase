@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "es6",
     "module": "commonjs",
-    "lib": ["es2020"],
+    "lib": ["es2020", "dom"],
     "allowJs": true,
     "strict": true,
     "noImplicitAny": true,
@@ -14,6 +14,7 @@
   },
   "include": [
     "src/**/*",
+    "specs",
     "package.json"
   ],
   "exclude": [
