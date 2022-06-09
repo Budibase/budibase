@@ -142,7 +142,7 @@
     "zlib": "1.0.5"
   },
   "devDependencies": {
-    "@budibase/types": "^1.0.195",
+    "@budibase/types": "^1.0.198",
     "@budibase/standard-components": "^0.9.139",
     "@babel/core": "7.17.4",
     "@babel/preset-env": "7.16.11",

@@ -66,7 +66,7 @@
     "server-destroy": "1.0.1"
   },
   "devDependencies": {
-    "@budibase/types": "^1.0.195",
+    "@budibase/types": "^1.0.198",
     "@types/koa": "2.13.4",
     "@types/koa-router": "7.4.4",
     "@types/koa__router": "8.0.11",
