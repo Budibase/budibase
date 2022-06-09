@@ -59,6 +59,7 @@
             $screenStore.screens,
             $devToolsStore.role
           )
+          permissionError = false
           routeStore.actions.navigate(route)
         } else {
           // No screens likely means the user has no permissions to view this app
@@ -120,17 +121,24 @@
     dir="ltr"
     class="spectrum spectrum--medium {$themeStore.theme}"
   >
-    {#if permissionError}
-      <div class="error">
-        <Layout justifyItems="center" gap="S">
-          {@html ErrorSVG}
-          <Heading size="L">You don't have permission to use this app</Heading>
-          <Body size="S">Ask your administrator to grant you access</Body>
-        </Layout>
-      </div>
-    {:else if $screenStore.activeLayout}
+    <DeviceBindingsProvider>
       <UserBindingsProvider>
-        <DeviceBindingsProvider>
+        {#if permissionError}
+          <div class="error-wrapper">
+            {#if isDevPreview}
+              <DevToolsHeader />
+            {/if}
+            <div class="error">
+              <Layout justifyItems="center" gap="S">
+                {@html ErrorSVG}
+                <Heading size="L"
+                  >You don't have permission to use this app</Heading
+                >
+                <Body size="S">Ask your administrator to grant you access</Body>
+              </Layout>
+            </div>
+          </div>
+        {:else if $screenStore.activeLayout}
           <StateBindingsProvider>
             <RowSelectionProvider>
               <!-- Settings bar can be rendered outside of device preview -->
@@ -198,9 +206,9 @@
               </div>
             </RowSelectionProvider>
           </StateBindingsProvider>
-        </DeviceBindingsProvider>
+        {/if}
       </UserBindingsProvider>
-    {/if}
+    </DeviceBindingsProvider>
   </div>
   <KeyboardManager />
 {/if}
@@ -248,8 +256,11 @@
     overflow: hidden;
   }
 
+  .error-wrapper {
+    width: 100%;
+    height: 100%;
+  }
   .error {
-    position: absolute;
     width: 100%;
     height: 100%;
     display: grid;
@@ -258,23 +269,19 @@
     text-align: center;
     padding: 20px;
   }
-
   .error :global(svg) {
     fill: var(--spectrum-global-color-gray-500);
     width: 80px;
     height: 80px;
   }
-
   .error :global(h1),
   .error :global(p) {
     color: var(--spectrum-global-color-gray-800);
   }
-
   .error :global(p) {
     font-style: italic;
     margin-top: -0.5em;
   }
-
   .error :global(h1) {
     font-weight: 400;
   }
@@ -284,12 +291,10 @@
   #clip-root.preview {
     padding: 2px;
   }
-
   #clip-root.tablet-preview {
     width: calc(1024px + 6px);
     height: calc(768px + 6px);
   }
-
   #clip-root.mobile-preview {
     width: calc(390px + 6px);
     height: calc(844px + 6px);
