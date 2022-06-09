@@ -1,6 +1,7 @@
 import ClientApp from "./components/ClientApp.svelte"
-import { builderStore, appStore } from "./stores"
+import { builderStore, appStore, devToolsStore } from "./stores"
 import loadSpectrumIcons from "@budibase/bbui/spectrum-icons-rollup.js"
+import { get } from "svelte/store"
 
 // Initialise spectrum icons
 loadSpectrumIcons()
@@ -23,7 +24,12 @@ const loadBudibase = () => {
 
   // Set app ID - this window flag is set by both the preview and the real
   // server rendered app HTML
-  appStore.actions.setAppID(window["##BUDIBASE_APP_ID##"])
+  appStore.actions.setAppId(window["##BUDIBASE_APP_ID##"])
+
+  // Enable dev tools or not. We need to be using a dev app and not inside
+  // the builder preview to enable them.
+  const enableDevTools = !get(builderStore).inBuilder && get(appStore).isDevApp
+  devToolsStore.actions.setEnabled(enableDevTools)
 
   // Create app if one hasn't been created yet
   if (!app) {

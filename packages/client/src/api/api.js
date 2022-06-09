@@ -23,9 +23,9 @@ export const API = createAPIClient({
     }
 
     // Add role header
-    const role = get(devToolsStore).role
-    if (role) {
-      headers["x-budibase-role"] = role
+    const devToolsState = get(devToolsStore)
+    if (devToolsState.enabled && devToolsState.role) {
+      headers["x-budibase-role"] = devToolsState.role
     }
   },
 

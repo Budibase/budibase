@@ -24,11 +24,10 @@ export { createContextStore } from "./context"
 // Initialises an app by loading screens and routes
 export { initialise } from "./initialise"
 
-// Derive the current role of the logged-in user, which may be overridden by
-// dev tools
+// Derive the current role of the logged-in user
 export const currentRole = derived(
   [devToolsStore, authStore],
   ([$devToolsStore, $authStore]) => {
-    return $devToolsStore.role || $authStore?.roleId
+    return ($devToolsStore.enabled && $devToolsStore.role) || $authStore?.roleId
   }
 )
