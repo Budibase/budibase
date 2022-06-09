@@ -12,7 +12,9 @@
     "budibase"
   ],
   "scripts": {
-    "build": "rimraf dist/ && rm -f tsconfig.build.tsbuildinfo && tsc -p tsconfig.build.json && mv dist/src/* dist/ && rimraf dist/src/",
+    "prebuild": "rimraf dist/",
+    "build": "tsc -p tsconfig.build.json",
+    "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
     "postbuild": "copyfiles -u 1 src/**/*.hbs dist/",
     "run:docker": "node dist/index.js",
     "run:docker:cluster": "pm2-runtime start pm2.config.js",

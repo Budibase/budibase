@@ -9,7 +9,9 @@
     "url": "https://github.com/Budibase/budibase.git"
   },
   "scripts": {
-    "build": "rimraf dist/ && tsc -p tsconfig.build.json && mv dist/src/* dist/ && rimraf dist/src/",
+    "prebuild": "rimraf dist/",
+    "build": "tsc -p tsconfig.build.json && mv dist/src/* dist/ && rimraf dist/src/",
+    "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
     "debug": "yarn build && node --expose-gc --inspect=9222 dist/index.js",
     "postbuild": "copyfiles -u 1 src/**/*.svelte dist/ && copyfiles -u 1 src/**/*.hbs dist/ && copyfiles -u 1 src/**/*.json dist/",
     "test": "jest --coverage --maxWorkers=2",
@@ -158,6 +160,7 @@
     "@types/redis": "4.0.11",
     "@types/jest": "27.5.1",
     "@types/global-agent": "2.1.1",
+    "@types/node-fetch": "2.6.1",
     "@typescript-eslint/parser": "5.12.0",
     "apidoc": "0.50.4",
     "babel-jest": "27.5.1",
