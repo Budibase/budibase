@@ -120,46 +120,55 @@
   >
     <DeviceBindingsProvider>
       <UserBindingsProvider>
-        {#if permissionError}
-          <div class="error-wrapper">
-            {#if showDevTools}
-              <DevToolsHeader />
-            {/if}
-            <div class="error">
-              <Layout justifyItems="center" gap="S">
-                {@html ErrorSVG}
-                <Heading size="L"
-                  >You don't have permission to use this app</Heading
-                >
-                <Body size="S">Ask your administrator to grant you access</Body>
-              </Layout>
-            </div>
-          </div>
-        {:else if $screenStore.activeLayout}
-          <StateBindingsProvider>
-            <RowSelectionProvider>
-              <!-- Settings bar can be rendered outside of device preview -->
-              <!-- Key block needs to be outside the if statement or it breaks -->
-              {#key $builderStore.selectedComponentId}
-                {#if $builderStore.inBuilder}
-                  <SettingsBar />
+        <StateBindingsProvider>
+          <RowSelectionProvider>
+            <!-- Settings bar can be rendered outside of device preview -->
+            <!-- Key block needs to be outside the if statement or it breaks -->
+            {#key $builderStore.selectedComponentId}
+              {#if $builderStore.inBuilder}
+                <SettingsBar />
+              {/if}
+            {/key}
+
+            <!-- Clip boundary for selection indicators -->
+            <div
+              id="clip-root"
+              class:preview={$builderStore.inBuilder}
+              class:tablet-preview={$builderStore.previewDevice === "tablet"}
+              class:mobile-preview={$builderStore.previewDevice === "mobile"}
+            >
+              <!-- Actual app -->
+              <div id="app-root">
+                {#if showDevTools}
+                  <DevToolsHeader />
                 {/if}
-              {/key}
 
-              <!-- Clip boundary for selection indicators -->
-              <div
-                id="clip-root"
-                class:preview={$builderStore.inBuilder}
-                class:tablet-preview={$builderStore.previewDevice === "tablet"}
-                class:mobile-preview={$builderStore.previewDevice === "mobile"}
-              >
-                <!-- Actual app -->
-                <div id="app-root">
-                  {#if showDevTools}
-                    <DevToolsHeader />
-                  {/if}
-
-                  <div id="app-body">
+                <div id="app-body">
+                  {#if permissionError}
+                    <div class="error">
+                      <Layout justifyItems="center" gap="S">
+                        {@html ErrorSVG}
+                        <Heading size="L">
+                          You don't have permission to use this app
+                        </Heading>
+                        <Body size="S">
+                          Ask your administrator to grant you access
+                        </Body>
+                      </Layout>
+                    </div>
+                  {:else if !$screenStore.activeLayout}
+                    <div class="error">
+                      <Layout justifyItems="center" gap="S">
+                        {@html ErrorSVG}
+                        <Heading size="L">
+                          Something went wrong rendering your app
+                        </Heading>
+                        <Body size="S">
+                          Get in touch with support if this issue persists
+                        </Body>
+                      </Layout>
+                    </div>
+                  {:else}
                     <CustomThemeWrapper>
                       {#key $screenStore.activeLayout._id}
                         <Component
@@ -183,27 +192,27 @@
                       <ConfirmationDisplay />
                       <PeekScreenDisplay />
                     </CustomThemeWrapper>
+                  {/if}
 
-                    {#if showDevTools}
-                      <DevTools />
-                    {/if}
-                  </div>
+                  {#if showDevTools}
+                    <DevTools />
+                  {/if}
                 </div>
-
-                <!-- Preview and dev tools utilities  -->
-                {#if $appStore.isDevApp}
-                  <SelectionIndicator />
-                {/if}
-                {#if $builderStore.inBuilder || $devToolsStore.allowSelection}
-                  <HoverIndicator />
-                {/if}
-                {#if $builderStore.inBuilder}
-                  <DNDHandler />
-                {/if}
               </div>
-            </RowSelectionProvider>
-          </StateBindingsProvider>
-        {/if}
+
+              <!-- Preview and dev tools utilities  -->
+              {#if $appStore.isDevApp}
+                <SelectionIndicator />
+              {/if}
+              {#if $builderStore.inBuilder || $devToolsStore.allowSelection}
+                <HoverIndicator />
+              {/if}
+              {#if $builderStore.inBuilder}
+                <DNDHandler />
+              {/if}
+            </div>
+          </RowSelectionProvider>
+        </StateBindingsProvider>
       </UserBindingsProvider>
     </DeviceBindingsProvider>
   </div>
@@ -253,10 +262,6 @@
     overflow: hidden;
   }
 
-  .error-wrapper {
-    width: 100%;
-    height: 100%;
-  }
   .error {
     width: 100%;
     height: 100%;
