@@ -27,7 +27,7 @@ const DEFINITIONS = {
   [SourceNames.MYSQL]: mysql.schema,
   [SourceNames.ARANGODB]: arangodb.schema,
   [SourceNames.REST]: rest.schema,
-  [SourceNames.FIREBASE]: firebase.schema,
+  [SourceNames.FIRESTORE]: firebase.schema,
   [SourceNames.REDIS]: redis.schema,
 }
 
@@ -43,10 +43,9 @@ const INTEGRATIONS = {
   [SourceNames.MYSQL]: mysql.integration,
   [SourceNames.ARANGODB]: arangodb.integration,
   [SourceNames.REST]: rest.integration,
-  [SourceNames.FIREBASE]: firebase.integration,
+  [SourceNames.FIRESTORE]: firebase.integration,
   [SourceNames.GOOGLE_SHEETS]: googlesheets.integration,
   [SourceNames.REDIS]: redis.integration,
-  [SourceNames.FIREBASE]: firebase.integration,
 }
 
 // optionally add oracle integration if the oracle binary can be installed
