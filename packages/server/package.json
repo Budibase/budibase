@@ -145,7 +145,7 @@
     "@budibase/types": "^1.0.195",
     "@budibase/standard-components": "^0.9.139",
     "@babel/core": "7.17.4",
-    "@babel/preset-env": "^7.14.4",
+    "@babel/preset-env": "7.16.11",
     "@jest/test-sequencer": "24.9.0",
     "@types/apidoc": "0.50.0",
     "@types/bson": "4.2.0",
