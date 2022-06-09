@@ -332,7 +332,7 @@ function getContextDB(key, opts) {
  * Opens the app database based on whatever the request
  * contained, dev or prod.
  */
-exports.getAppDB = opts => {
+exports.getAppDB = (opts = null) => {
   return getContextDB(ContextKeys.CURRENT_DB, opts)
 }
 
@@ -340,7 +340,7 @@ exports.getAppDB = opts => {
  * This specifically gets the prod app ID, if the request
  * contained a development app ID, this will open the prod one.
  */
-exports.getProdAppDB = opts => {
+exports.getProdAppDB = (opts = null) => {
   return getContextDB(ContextKeys.PROD_DB, opts)
 }
 
@@ -348,6 +348,6 @@ exports.getProdAppDB = opts => {
  * This specifically gets the dev app ID, if the request
  * contained a prod app ID, this will open the dev one.
  */
-exports.getDevAppDB = opts => {
+exports.getDevAppDB = (opts = null) => {
   return getContextDB(ContextKeys.DEV_DB, opts)
 }

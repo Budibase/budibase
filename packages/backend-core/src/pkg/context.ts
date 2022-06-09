@@ -1,4 +1,6 @@
-const {
+// Mimic the outer package export for usage in index.ts
+// The outer exports can't be used as they now reference dist directly
+import {
   getAppDB,
   getDevAppDB,
   getProdAppDB,
@@ -6,11 +8,11 @@ const {
   updateAppId,
   doInAppContext,
   doInTenant,
-} = require("./dist/src/context")
+} from "../context"
 
-const identity = require("./dist/src/context/identity")
+import * as identity from "../context/identity"
 
-module.exports = {
+export = {
   getAppDB,
   getDevAppDB,
   getProdAppDB,

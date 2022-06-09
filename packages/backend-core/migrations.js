@@ -1,1 +1,1 @@
-module.exports = require("./src/migrations")
+module.exports = require("./dist/src/migrations")

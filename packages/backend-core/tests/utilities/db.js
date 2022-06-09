@@ -1,4 +1,4 @@
-const core = require("../../index")
+const core = require("../../src/index")
 const dbConfig = {
   inMemory: true,
   allDbs: true,

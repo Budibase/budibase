@@ -11,21 +11,17 @@
     "incremental": true,
     "sourceMap": true,
     "declaration": true,
-    "types": [ "node", "jest" ],
     "outDir": "dist",
-    "rootDir": "."
+    "rootDir": "src",
+    "types": []
   },
   "include": [
-    "**/*.js",
-    "**/*.ts",
-    "package.json"
+    "src/**/*",
   ],
   "exclude": [
     "node_modules",
     "dist",
     "**/*.spec.ts",
-    "**/*.spec.js",
-    "tests",
-    "scripts/jestSetup.ts"
+    "**/*.spec.js"
   ]
 }

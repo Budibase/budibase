@@ -1,7 +1,7 @@
 module.exports = {
-  ...require("./src/db/utils"),
-  ...require("./src/db/constants"),
-  ...require("./src/db"),
-  ...require("./src/db/views"),
-  ...require("./src/db/pouch"),
+  ...require("./dist/src/db/utils"),
+  ...require("./dist/src/db/constants"),
+  ...require("./dist/src/db"),
+  ...require("./dist/src/db/views"),
+  ...require("./dist/src/db/pouch"),
 }

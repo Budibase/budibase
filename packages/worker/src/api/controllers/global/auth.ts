@@ -144,6 +144,7 @@ export const resetUpdate = async (ctx: any) => {
     delete user.password
     await events.user.passwordReset(user)
   } catch (err) {
+    console.error(err)
     ctx.throw(400, "Cannot reset password.")
   }
 }

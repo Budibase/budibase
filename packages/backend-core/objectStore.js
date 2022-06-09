@@ -1,4 +1,4 @@
 module.exports = {
-  ...require("./src/objectStore"),
-  ...require("./src/objectStore/utils"),
+  ...require("./dist/src/objectStore"),
+  ...require("./dist/src/objectStore/utils"),
 }
