@@ -1,5 +1,4 @@
 <script>
-  import { goto } from "@roxi/routify"
   import { store } from "builderStore"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import {
