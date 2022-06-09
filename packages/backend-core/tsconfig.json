@@ -1,37 +1,17 @@
 {
+  "extends": "./tsconfig.build.json",
   "compilerOptions": {
-    "target": "es6",
-    "module": "commonjs",
-    "lib": ["es2020"],
-      // Tells TypeScript to read JS files, as
-    // normally they are ignored as source files
-    "allowJs": true,
-    // Generate d.ts files
-    "declaration": true,
-    // go to js file when using IDE functions like
-    // "Go to Definition" in VSCode
-    "declarationMap": true,
-    "sourceMap": true,
-    // Types should go into this directory.
-    // Removing this would place the .d.ts files
-    // next to the .js files
-    "outDir": "dist",
-    "strict": true,
-    "noImplicitAny": true,
-    "esModuleInterop": true,
-    "resolveJsonModule": true,
-    "incremental": true,
-    "types": [ "node", "jest"],
-    "composite": true
+    "composite": true,
+    "paths": {
+      "@budibase/types": ["../types/src"],
+      "@budibase/backend-core": ["./src"],
+    }
   },
-  "include": [
-    "**/*.js",
-    "**/*.ts",
+  "references": [
+    { "path": "../types/tsconfig.json" },
   ],
   "exclude": [
     "node_modules",
-    "dist/**/*",
-    "**/*.spec.js",
-    // "**/*.spec.ts" // don't exclude spec.ts files for editor support
+    "dist",
   ]
 }

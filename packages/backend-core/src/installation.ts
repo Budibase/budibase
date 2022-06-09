@@ -38,8 +38,7 @@ const getInstallFromDB = async (): Promise<Installation> => {
         }
       }
       return install
-    },
-    {}
+    }
   )
 }
 
@@ -52,8 +51,7 @@ const updateVersion = async (version: string): Promise<boolean> => {
         install.version = version
         await platformDb.put(install)
         await bustCache(CacheKeys.INSTALLATION)
-      },
-      {}
+      }
     )
   } catch (e: any) {
     if (e.status === 409) {

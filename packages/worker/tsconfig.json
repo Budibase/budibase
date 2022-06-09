@@ -1,28 +1,21 @@
 {
+  "extends": "./tsconfig.build.json",
   "compilerOptions": {
-    "target": "es6",
-    "module": "commonjs",
-    "lib": ["es2020"],
-    "allowJs": true,
-    "outDir": "dist",
-    "strict": true,
-    "noImplicitAny": true,
-    "esModuleInterop": true,
-    "resolveJsonModule": true,
-    "incremental": true,
-    "types": [ "node", "jest"],
+    "composite": true,
+    "declaration": true,
+    "sourceMap": true,
+    "paths": {
+      "@budibase/types": ["../types/src"],
+      "@budibase/backend-core": ["../backend-core/src"],
+      "@budibase/worker": ["./src"],
+    }
   },
   "references": [
-    { "path": "../backend-core/tsconfig.build.json" },
-    { "path": "../types" }
-  ],
-  "include": [
-    "./src/**/*"
+    { "path": "../types/tsconfig.json" },
+    { "path": "../backend-core/tsconfig.json" },
   ],
   "exclude": [
     "node_modules",
-    "**/*.json",
-    "**/*.spec.ts",
-    "**/*.spec.js"
+    "dist"
   ]
 }

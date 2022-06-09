@@ -1,6 +1,6 @@
 const { doInTenant, isMultiTenant, DEFAULT_TENANT_ID } = require("../tenancy")
 const { buildMatcherRegex, matches } = require("./matchers")
-const { Headers } = require("../../constants")
+const { Headers } = require("../constants")
 
 const getTenantID = (ctx, opts = { allowQs: false, allowNoTenant: false }) => {
   // exit early if not multi-tenant

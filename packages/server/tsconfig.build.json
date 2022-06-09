@@ -1,14 +1,25 @@
 {
-  // Used for building with tsc
-  "extends": "./tsconfig.json",
-  "references": [
-    { "path": "../backend-core/tsconfig.build.json" },
-    { "path": "../types" }
+  "compilerOptions": {
+    "target": "es6",
+    "module": "commonjs",
+    "lib": ["es2020"],
+    "allowJs": true,
+    "strict": true,
+    "noImplicitAny": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "incremental": true,
+    "types": [ "node", "jest" ],
+    "outDir": "dist"
+  },
+  "include": [
+    "src/**/*",
+    "package.json"
   ],
   "exclude": [
     "node_modules",
-    "**/*.json",
-    "**/*.spec.js",
-    "**/*.spec.ts"
+    "dist",
+    "**/*.spec.ts",
+    "**/*.spec.js"
   ]
 }

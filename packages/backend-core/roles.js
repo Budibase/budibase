@@ -1,1 +1,1 @@
-module.exports = require("./src/security/roles")
+module.exports = require("./dist/src/security/roles")

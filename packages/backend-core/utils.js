@@ -1,4 +1,4 @@
 module.exports = {
-  ...require("./src/utils"),
-  ...require("./src/hashing"),
+  ...require("./dist/src/utils"),
+  ...require("./dist/src/hashing"),
 }

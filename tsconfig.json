@@ -1,0 +1,8 @@
+{
+  "references": [
+    { "path": "packages/types/tsconfig.json" },
+    { "path": "packages/backend-core/tsconfig.json" },
+    { "path": "packages/server/tsconfig.json" },
+    { "path": "packages/worker/tsconfig.json" },
+  ]
+}

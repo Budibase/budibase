@@ -57,7 +57,7 @@ exports.closeDB = async db => {
 // we have to use a callback for this so that we can close
 // the DB when we're done, without this manual requests would
 // need to close the database when done with it to avoid memory leaks
-exports.doWithDB = async (dbName, cb, opts) => {
+exports.doWithDB = async (dbName, cb, opts = {}) => {
   const db = exports.dangerousGetDB(dbName, opts)
   // need this to be async so that we can correctly close DB after all
   // async operations have been completed

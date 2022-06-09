@@ -1,1 +1,1 @@
-module.exports = require("./src/middleware")
+module.exports = require("./dist/src/middleware")

@@ -1,4 +1,4 @@
-require("../../../tests/utilities/TestConfiguration")
+require("../../../../tests/utilities/TestConfiguration")
 const { authenticateThirdParty } = require("../third-party-common")
 const { data } = require("./utilities/mock-data")
 const { DEFAULT_TENANT_ID } = require("../../../constants")

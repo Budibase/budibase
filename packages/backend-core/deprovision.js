@@ -1,1 +1,1 @@
-module.exports = require("./src/context/deprovision")
+module.exports = require("./dist/src/context/deprovision")

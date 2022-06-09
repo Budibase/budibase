@@ -1,1 +1,1 @@
-module.exports = require("./src/security/encryption")
+module.exports = require("./dist/src/security/encryption")

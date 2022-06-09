@@ -1,1 +1,1 @@
-module.exports = require("./src/auth")
+module.exports = require("./dist/src/auth")
