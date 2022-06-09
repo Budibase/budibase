@@ -42,10 +42,7 @@
   let permissionError = false
 
   // Determine if we should show devtools or not
-  $: isDevPreview =
-    $appStore.isDevApp &&
-    !$builderStore.inBuilder &&
-    !$routeStore.queryParams?.peek
+  $: showDevTools = $devToolsStore.enabled && !$routeStore.queryParams?.peek
 
   // Handle no matching route
   $: {
@@ -125,7 +122,7 @@
       <UserBindingsProvider>
         {#if permissionError}
           <div class="error-wrapper">
-            {#if isDevPreview}
+            {#if showDevTools}
               <DevToolsHeader />
             {/if}
             <div class="error">
@@ -158,7 +155,7 @@
               >
                 <!-- Actual app -->
                 <div id="app-root">
-                  {#if isDevPreview}
+                  {#if showDevTools}
                     <DevToolsHeader />
                   {/if}
 
@@ -187,7 +184,7 @@
                       <PeekScreenDisplay />
                     </CustomThemeWrapper>
 
-                    {#if isDevPreview}
+                    {#if showDevTools}
                       <DevTools />
                     {/if}
                   </div>
