@@ -1,4 +1,4 @@
 <script>
   import { redirect } from "@roxi/routify"
-  $redirect("./design")
+  $redirect("./data")
 </script>
