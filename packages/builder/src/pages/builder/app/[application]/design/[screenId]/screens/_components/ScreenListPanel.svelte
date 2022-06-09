@@ -45,6 +45,12 @@
       placeholder={null}
       getOptionLabel={role => role.name}
       getOptionValue={role => role._id}
+      getOptionColour={role => {
+        if (role?._id === "all") {
+          return null
+        }
+        return RoleUtils.getRoleColour(role._id)
+      }}
       options={[{ name: "All screens", _id: "all" }, ...$roles]}
     />
   </Layout>
