@@ -1,1 +1,1 @@
-module.exports = require("./dist/src/cloud/accounts")
+module.exports = require("./src/cloud/accounts")

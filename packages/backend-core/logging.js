@@ -1,1 +1,1 @@
-module.exports = require("./dist/src/logging")
+module.exports = require("./src/logging")

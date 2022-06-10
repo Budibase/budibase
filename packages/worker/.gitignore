@@ -2,4 +2,3 @@ node_modules/
 .env
 watchtower-hook.json
 dist/
-tsconfig.build.tsbuildinfo

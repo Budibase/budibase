@@ -1,5 +1,3 @@
 node_modules/
 dist
 coverage/
-tsconfig.build.tsbuildinfo
-tsconfig.tsbuildinfo

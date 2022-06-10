@@ -1,7 +1,7 @@
-const generic = require("./dist/src/cache/generic")
+const generic = require("./src/cache/generic")
 
 module.exports = {
-  user: require("./dist/src/cache/user"),
-  app: require("./dist/src/cache/appMetadata"),
+  user: require("./src/cache/user"),
+  app: require("./src/cache/appMetadata"),
   ...generic,
 }

@@ -6,9 +6,7 @@ env._set("JWT_SECRET", "test-jwtsecret")
 env._set("LOG_LEVEL", "silent")
 env._set("MULTI_TENANCY", true)
 
-const core = require("@budibase/backend-core")
-const { mocks, init } = require("@budibase/backend-core/tests")
-init(core)
+const { mocks } = require("@budibase/backend-core/tests")
 
 // mock all dates to 2020-01-01T00:00:00.000Z
 // use tk.reset() to use real dates in individual tests

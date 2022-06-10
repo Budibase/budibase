@@ -10,7 +10,8 @@
     "resolveJsonModule": true,
     "incremental": true,
     "types": [ "node", "jest" ],
-    "outDir": "dist"
+    "outDir": "dist",
+    "skipLibCheck": true
   },
   "include": [
     "src/**/*"
@@ -19,7 +20,6 @@
     "node_modules",
     "dist",
     "**/*.spec.ts",
-    "**/*.spec.js",
-    "src/tests"
+    "**/*.spec.js"
   ]
 }

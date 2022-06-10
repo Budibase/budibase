@@ -1,1 +1,1 @@
-module.exports = require("./dist/src/tenancy")
+module.exports = require("./src/tenancy")
