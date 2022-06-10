@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "es6",
     "module": "commonjs",
-    "lib": ["es2020", "dom"],
+    "lib": ["es2020"],
     "allowJs": true,
     "strict": true,
     "noImplicitAny": true,
@@ -10,12 +10,11 @@
     "resolveJsonModule": true,
     "incremental": true,
     "types": [ "node", "jest" ],
-    "outDir": "dist"
+    "outDir": "dist",
+    "skipLibCheck": true
   },
   "include": [
-    "src/**/*",
-    "specs",
-    "package.json"
+    "src/**/*"
   ],
   "exclude": [
     "node_modules",

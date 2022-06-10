@@ -1,1 +1,1 @@
-module.exports = require("./dist/src/constants")
+module.exports = require("./src/constants")

@@ -4,6 +4,10 @@
   "description": "Budibase backend core libraries used in server and worker",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
+  "exports": {
+    ".":  "./dist/src/index.js",
+    "./*": "./dist/*.js"
+  },
   "author": "Budibase",
   "license": "GPL-3.0",
   "scripts": {
@@ -43,12 +47,15 @@
   "jest": {
     "preset": "ts-jest",
     "testEnvironment": "node",
+    "moduleNameMapper": {
+      "@budibase/types": "<rootDir>/../types/src"
+    },
     "setupFiles": [
       "./scripts/jestSetup.ts"
     ]
   },
   "devDependencies": {
-    "@budibase/types": "^1.0.195",
+    "@budibase/types": "^1.0.198",
     "@shopify/jest-koa-mocks": "3.1.5",
     "@types/koa": "2.0.52",
     "@types/node": "14.18.20",

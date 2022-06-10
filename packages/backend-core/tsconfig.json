@@ -2,16 +2,12 @@
   "extends": "./tsconfig.build.json",
   "compilerOptions": {
     "composite": true,
+    "baseUrl": ".",
     "paths": {
-      "@budibase/types": ["../types/src"],
-      "@budibase/backend-core": ["./src"],
+      "@budibase/types": ["../types/src"]
     }
   },
   "references": [
-    { "path": "../types/tsconfig.json" },
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
+    { "path": "../types" },
   ]
 }

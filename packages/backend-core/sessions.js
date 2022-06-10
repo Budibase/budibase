@@ -1,1 +1,1 @@
-module.exports = require("./dist/src/security/sessions")
+module.exports = require("./src/security/sessions")

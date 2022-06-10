@@ -11,12 +11,10 @@
     "incremental": true,
     "sourceMap": true,
     "declaration": true,
-    "outDir": "dist",
-    "rootDir": "src",
-    "types": []
+    "outDir": "dist"
   },
   "include": [
-    "src/**/*",
+    "src/**/*"
   ],
   "exclude": [
     "node_modules",
