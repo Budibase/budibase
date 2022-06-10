@@ -95,7 +95,7 @@ module Firebase {
         projectId: config.projectId,
         credentials: {
           client_email: config.email,
-          private_key: config.privateKey,
+          private_key: config.privateKey?.replace(/\\n/g, "\n"),
         },
       })
     }
