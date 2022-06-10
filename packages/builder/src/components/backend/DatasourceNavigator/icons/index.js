@@ -14,6 +14,7 @@ import Oracle from "./Oracle.svelte"
 import GoogleSheets from "./GoogleSheets.svelte"
 import Firebase from "./Firebase.svelte"
 import Redis from "./Redis.svelte"
+import Snowflake from "./Snowflake.svelte"
 
 export default {
   BUDIBASE: Budibase,
@@ -32,4 +33,5 @@ export default {
   GOOGLE_SHEETS: GoogleSheets,
   FIREBASE: Firebase,
   REDIS: Redis,
+  SNOWFLAKE: Snowflake,
 }
