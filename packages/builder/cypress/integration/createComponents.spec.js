@@ -12,9 +12,7 @@ filterTests(['all'], () => {
       cy.addColumn("dog", "name", "Text")
       cy.addColumn("dog", "age", "Number")
       cy.addColumn("dog", "breed", "Options")
-      // Works but the image doesn't resolve.
-      // cy.addColumn("dog", "image", "Attachment")
-      // cy.addRowAttachment(["fido", 12])
+
       cy.navigateToFrontend()
       cy.wait(1000) //allow the iframe some wiggle room
     })
