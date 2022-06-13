@@ -116,3 +116,11 @@ export const ROOT = ".root"
 //quertLevelTransformers
 export const SPECTRUM_TABS_ITEM = ".spectrum-Tabs-itemLabel"
 export const CODEMIRROR_TEXTAREA = ".CodeMirror textarea"
+
+//renemaApplication
+export const WRAPPER = ".wrapper"
+export const ERROR = ".error"
+export const AREA_LABEL_MORE = "[aria-label=More]"
+export const APP_ROW_ACTION_MENU_POPOVER =
+  '[data-cy="app-row-actions-menu-popover"]'
+export const SPECTRUM_MENU_ITEMM = ".spectrum-Menu-item"
