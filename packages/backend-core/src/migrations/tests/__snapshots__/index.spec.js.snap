@@ -3,7 +3,9 @@
 exports[`migrations should match snapshot 1`] = `
 Object {
   "_id": "migrations",
-  "_rev": "1-6277abc4e3db950221768e5a2618a059",
-  "test": 1487076708000,
+  "_rev": "1-a32b0b708e59eeb006ed5e063cfeb36a",
+  "createdAt": "2020-01-01T00:00:00.000Z",
+  "test": 1577836800000,
+  "updatedAt": "2020-01-01T00:00:00.000Z",
 }
 `;

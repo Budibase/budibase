@@ -4,7 +4,7 @@ concurrency: release-develop
 on: 
  push:
     branches:
-      - develop
+      - release
     paths:
       - '.aws/**'
       - '.github/**'
@@ -18,9 +18,9 @@ on:
  workflow_dispatch:
 
 env:
-  POSTHOG_TOKEN: ${{ secrets.POSTHOG_TOKEN }}
+  # Posthog token used by ui at build time 
+  POSTHOG_TOKEN: phc_mA8rLA1Flfs1MLgkDQnhYYGhD2s3VBupMvhHyED19bh
   INTERCOM_TOKEN: ${{ secrets.INTERCOM_TOKEN }}
-  POSTHOG_URL: ${{ secrets.POSTHOG_URL }}
   PERSONAL_ACCESS_TOKEN : ${{ secrets.PERSONAL_ACCESS_TOKEN }}
       
 jobs:
