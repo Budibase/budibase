@@ -71,10 +71,8 @@ router.use(async (ctx, next) => {
       validationErrors: err.validation,
       error,
     }
-    if (env.NODE_ENV !== "jest") {
-      ctx.log.error(err)
-      console.trace(err)
-    }
+    ctx.log.error(err)
+    console.trace(err)
   }
 })
 

@@ -57,7 +57,7 @@ export function createAuthStore() {
       analytics
         .activate()
         .then(() => {
-          analytics.identify(user._id, user)
+          analytics.identify(user._id)
           analytics.showChat({
             email: user.email,
             created_at: (user.createdAt || Date.now()) / 1000,
