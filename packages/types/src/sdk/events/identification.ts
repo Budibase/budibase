@@ -1,4 +1,4 @@
-import { Hosting } from "."
+import { Hosting } from ".."
 
 // GROUPS
 

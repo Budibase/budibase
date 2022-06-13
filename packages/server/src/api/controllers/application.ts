@@ -52,8 +52,8 @@ const {
 } = require("@budibase/backend-core/context")
 import { getUniqueRows } from "../../utilities/usageQuota/rows"
 import { quotas } from "@budibase/pro"
-import { errors, events } from "@budibase/backend-core"
-import { App } from "@budibase/types"
+import { errors, events, migrations } from "@budibase/backend-core"
+import { App, MigrationType } from "@budibase/types"
 
 const URL_REGEX_SLASH = /\/|\\/g
 
@@ -319,6 +319,12 @@ const creationEvents = async (request: any, app: App) => {
 }
 
 const appPostCreate = async (ctx: any, app: App) => {
+  const tenantId = getTenantId()
+  await migrations.backPopulateMigrations({
+    type: MigrationType.APP,
+    tenantId,
+    appId: app.appId,
+  })
   await creationEvents(ctx.request, app)
   // app import & template creation
   if (ctx.request.body.useTemplate === "true") {

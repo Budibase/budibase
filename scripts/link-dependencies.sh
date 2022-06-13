@@ -13,6 +13,10 @@ cd packages/types
 yarn link
 cd -
 
+echo "Linking bbui"
+cd packages/bbui 
+yarn link
+cd -
 
 if [ -d "../budibase-pro" ]; then
   cd ../budibase-pro
@@ -52,5 +56,7 @@ if [ -d "../account-portal" ]; then
     yarn link "@budibase/pro"
   fi
 
-  cd -
+  cd ../ui
+  echo "Linking bbui to account-portal"
+  yarn link "@budibase/bbui"
 fi

@@ -1,4 +1,4 @@
 export * from "./documents"
-export * from "./events"
-export * from "./licensing"
-export * from "./core"
+export * from "./sdk/events"
+export * from "./sdk/licensing"
+export * from "./sdk"

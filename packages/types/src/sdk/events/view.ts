@@ -1,4 +1,4 @@
-import { ViewCalculation } from "../documents"
+import { ViewCalculation } from "../../documents"
 import { BaseEvent, TableExportFormat } from "./event"
 
 export interface ViewCreatedEvent extends BaseEvent {

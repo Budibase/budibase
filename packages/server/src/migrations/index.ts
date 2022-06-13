@@ -1,4 +1,6 @@
 import { migrations, redis } from "@budibase/backend-core"
+import { Migration, MigrationOptions, MigrationName } from "@budibase/types"
+import env from "../environment"
 
 // migration functions
 import * as userEmailViewCasing from "./functions/userEmailViewCasing"
@@ -7,83 +9,88 @@ import * as appUrls from "./functions/appUrls"
 import * as developerQuota from "./functions/developerQuota"
 import * as publishedAppsQuota from "./functions/publishedAppsQuota"
 import * as backfill from "./functions/backfill"
-import env from "../environment"
-
-export interface Migration {
-  type: string
-  name: string
-  opts?: object
-  fn: Function
-  silent?: boolean
-  preventRetry?: boolean
-}
 
 /**
- * e.g.
- * {
- *   tenantIds: ['bb'],
- *   force: {
- *    global: ['quota_1']
- *   }
- * }
+ * Populate the migration function and additional configuration from
+ * the static migration definitions.
  */
-export interface MigrationOptions {
-  tenantIds?: string[]
-  force?: {
-    [type: string]: string[]
+export const buildMigrations = () => {
+  const definitions = migrations.DEFINITIONS
+  const serverMigrations: Migration[] = []
+
+  for (const definition of definitions) {
+    switch (definition.name) {
+      case MigrationName.USER_EMAIL_VIEW_CASING: {
+        serverMigrations.push({
+          ...definition,
+          fn: userEmailViewCasing.run,
+        })
+        break
+      }
+      case MigrationName.QUOTAS_1: {
+        serverMigrations.push({
+          ...definition,
+          fn: quota1.run,
+        })
+        break
+      }
+      case MigrationName.APP_URLS: {
+        serverMigrations.push({
+          ...definition,
+          appOpts: { all: true },
+          fn: appUrls.run,
+        })
+        break
+      }
+      case MigrationName.DEVELOPER_QUOTA: {
+        serverMigrations.push({
+          ...definition,
+          fn: developerQuota.run,
+        })
+        break
+      }
+      case MigrationName.PUBLISHED_APP_QUOTA: {
+        serverMigrations.push({
+          ...definition,
+          fn: publishedAppsQuota.run,
+        })
+        break
+      }
+      case MigrationName.EVENT_APP_BACKFILL: {
+        serverMigrations.push({
+          ...definition,
+          appOpts: { all: true },
+          fn: backfill.app.run,
+          silent: !!env.SELF_HOSTED, // reduce noisy logging
+          preventRetry: !!env.SELF_HOSTED, // only ever run once
+        })
+        break
+      }
+      case MigrationName.EVENT_GLOBAL_BACKFILL: {
+        serverMigrations.push({
+          ...definition,
+          fn: backfill.global.run,
+          silent: !!env.SELF_HOSTED, // reduce noisy logging
+          preventRetry: !!env.SELF_HOSTED, // only ever run once
+        })
+        break
+      }
+      case MigrationName.EVENT_INSTALLATION_BACKFILL: {
+        serverMigrations.push({
+          ...definition,
+          fn: backfill.installation.run,
+          silent: !!env.SELF_HOSTED, // reduce noisy logging
+          preventRetry: !!env.SELF_HOSTED, // only ever run once
+        })
+        break
+      }
+    }
   }
+
+  return serverMigrations
 }
 
-export const MIGRATIONS: Migration[] = [
-  {
-    type: migrations.MIGRATION_TYPES.GLOBAL,
-    name: "user_email_view_casing",
-    fn: userEmailViewCasing.run,
-  },
-  {
-    type: migrations.MIGRATION_TYPES.GLOBAL,
-    name: "quotas_1",
-    fn: quota1.run,
-  },
-  {
-    type: migrations.MIGRATION_TYPES.APP,
-    name: "app_urls",
-    opts: { all: true },
-    fn: appUrls.run,
-  },
-  {
-    type: migrations.MIGRATION_TYPES.GLOBAL,
-    name: "developer_quota",
-    fn: developerQuota.run,
-  },
-  {
-    type: migrations.MIGRATION_TYPES.GLOBAL,
-    name: "published_apps_quota",
-    fn: publishedAppsQuota.run,
-  },
-  {
-    type: migrations.MIGRATION_TYPES.APP,
-    name: "event_app_backfill",
-    opts: { all: true },
-    fn: backfill.app.run,
-    silent: !!env.SELF_HOSTED, // reduce noisy logging
-    preventRetry: !!env.SELF_HOSTED, // only ever run once
-  },
-  {
-    type: migrations.MIGRATION_TYPES.GLOBAL,
-    name: "event_global_backfill",
-    fn: backfill.global.run,
-    silent: !!env.SELF_HOSTED, // reduce noisy logging
-    preventRetry: !!env.SELF_HOSTED, // only ever run once
-  },
-  {
-    type: migrations.MIGRATION_TYPES.INSTALLATION,
-    name: "event_installation_backfill",
-    fn: backfill.installation.run,
-    silent: !!env.SELF_HOSTED, // reduce noisy logging
-    preventRetry: !!env.SELF_HOSTED, // only ever run once
-  },
-]
+export const MIGRATIONS = buildMigrations()
 
 export const migrate = async (options?: MigrationOptions) => {
   if (env.SELF_HOSTED) {

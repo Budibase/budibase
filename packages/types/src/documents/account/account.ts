@@ -1,4 +1,4 @@
-import { Hosting } from "../../core"
+import { Hosting } from "../../sdk"
 
 export interface CreateAccount {
   email: string
