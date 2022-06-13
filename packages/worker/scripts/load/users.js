@@ -6,7 +6,7 @@ const {
   generateGlobalUserID,
 } = require("@budibase/backend-core/db")
 const { doInTenant, getGlobalDB } = require("@budibase/backend-core/tenancy")
-const { internalSaveUser } = require("@budibase/backend-core/utils")
+const users = require("../../src/sdk/users")
 const { publicApiUserFix } = require("../../src/utilities/users")
 const { hash } = require("@budibase/backend-core/utils")
 
@@ -73,15 +73,15 @@ async function run() {
           },
         })
         userSavePromises.push(
-          internalSaveUser(ctx.request.body, TENANT_ID, {
+          users.save(ctx.request.body, {
             hashPassword: false,
             requirePassword: true,
             bulkCreate: true,
           })
         )
       }
-      const users = await Promise.all(userSavePromises)
-      await db.bulkDocs(users)
+      const allUsers = await Promise.all(userSavePromises)
+      await db.bulkDocs(allUsers)
       console.log(`${i + BATCH_SIZE} users have been created.`)
     }
   })
