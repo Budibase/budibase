@@ -4,14 +4,7 @@ const { google } = require("@budibase/backend-core/middleware")
 const { oidc } = require("@budibase/backend-core/middleware")
 const { Configs, EmailTemplatePurpose } = require("../../../constants")
 const { sendEmail, isEmailConfigured } = require("../../../utilities/email")
-const {
-  setCookie,
-  getCookie,
-  clearCookie,
-  getGlobalUserByEmail,
-  hash,
-  platformLogout,
-} = core.utils
+const { setCookie, getCookie, clearCookie, hash, platformLogout } = core.utils
 const { Cookies, Headers } = core.constants
 const { passport } = core.auth
 const { checkResetPasswordCode } = require("../../../utilities/redis")
@@ -21,7 +14,9 @@ const {
   isMultiTenant,
 } = require("@budibase/backend-core/tenancy")
 const env = require("../../../environment")
-import { users } from "@budibase/pro"
+import { events, users as usersCore, context } from "@budibase/backend-core"
+import { users } from "../../../sdk"
+import { User } from "@budibase/types"
 
 const ssoCallbackUrl = async (config: any, type: any) => {
   // incase there is a callback URL from before
@@ -75,8 +70,11 @@ async function authInternal(ctx: any, user: any, err = null, info = null) {
 export const authenticate = async (ctx: any, next: any) => {
   return passport.authenticate(
     "local",
-    async (err: any, user: any, info: any) => {
+    async (err: any, user: User, info: any) => {
       await authInternal(ctx, user, err, info)
+      await context.identity.doInUserContext(user, async () => {
+        await events.auth.login("local")
+      })
       ctx.status = 200
     }
   )(ctx, next)
@@ -110,13 +108,14 @@ export const reset = async (ctx: any) => {
     )
   }
   try {
-    const user = await getGlobalUserByEmail(email)
+    const user = (await usersCore.getGlobalUserByEmail(email)) as User
     // only if user exists, don't error though if they don't
     if (user) {
       await sendEmail(email, EmailTemplatePurpose.PASSWORD_RECOVERY, {
         user,
         subject: "{{ company }} platform password reset",
       })
+      await events.user.passwordResetRequested(user)
     }
   } catch (err) {
     console.log(err)
@@ -141,7 +140,11 @@ export const resetUpdate = async (ctx: any) => {
     ctx.body = {
       message: "password reset successfully.",
     }
+    // remove password from the user before sending events
+    delete user.password
+    await events.user.passwordReset(user)
   } catch (err) {
+    console.error(err)
     ctx.throw(400, "Cannot reset password.")
   }
 }
@@ -211,9 +214,11 @@ export const googleAuth = async (ctx: any, next: any) => {
   return passport.authenticate(
     strategy,
     { successRedirect: "/", failureRedirect: "/error" },
-    async (err: any, user: any, info: any) => {
+    async (err: any, user: User, info: any) => {
       await authInternal(ctx, user, err, info)
-
+      await context.identity.doInUserContext(user, async () => {
+        await events.auth.login("google-internal")
+      })
       ctx.redirect("/")
     }
   )(ctx, next)
@@ -257,7 +262,9 @@ export const oidcAuth = async (ctx: any, next: any) => {
     { successRedirect: "/", failureRedirect: "/error" },
     async (err: any, user: any, info: any) => {
       await authInternal(ctx, user, err, info)
-
+      await context.identity.doInUserContext(user, async () => {
+        await events.auth.login("oidc")
+      })
       ctx.redirect("/")
     }
   )(ctx, next)

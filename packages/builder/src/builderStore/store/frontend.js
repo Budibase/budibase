@@ -442,7 +442,7 @@ export const getFrontendStore = () => {
         })
 
         // Log event
-        analytics.captureEvent(Events.COMPONENT.CREATED, {
+        analytics.captureEvent(Events.COMPONENT_CREATED, {
           name: componentInstance._component,
         })
 
