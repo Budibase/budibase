@@ -13,7 +13,9 @@ import {
   sessions,
   HTTPError,
   accounts,
+  migrations,
 } from "@budibase/backend-core"
+import { MigrationType } from "@budibase/types"
 
 /**
  * Retrieves all users from the current tenancy.
@@ -146,7 +148,12 @@ export const save = async (
     await eventHelpers.handleSaveEvents(user, dbUser)
 
     if (env.MULTI_TENANCY) {
-      await tenancy.tryAddTenant(tenantId, _id, email)
+      const afterCreateTenant = () =>
+        migrations.backPopulateMigrations({
+          type: MigrationType.GLOBAL,
+          tenantId,
+        })
+      await tenancy.tryAddTenant(tenantId, _id, email, afterCreateTenant)
     }
     await cache.user.invalidateUser(response.id)
     // let server know to sync user

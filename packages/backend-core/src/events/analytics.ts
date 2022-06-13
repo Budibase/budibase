@@ -1,5 +1,5 @@
 import env from "../environment"
-import * as tenancy from "../tenancy"
+import tenancy from "../tenancy"
 import * as dbUtils from "../db/utils"
 import { Configs } from "../constants"
 import { withCache, TTL, CacheKeys } from "../cache/generic"

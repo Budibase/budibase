@@ -1,4 +1,11 @@
-import { events, migrations, tenancy } from "@budibase/backend-core"
+import {
+  events,
+  migrations,
+  tenancy,
+  DocumentTypes,
+  context,
+  db,
+} from "@budibase/backend-core"
 import TestConfig from "../../tests/utilities/TestConfiguration"
 import structures from "../../tests/utilities/structures"
 import { MIGRATIONS } from "../"
@@ -6,6 +13,15 @@ import * as helpers from "./helpers"
 
 const { mocks } = require("@budibase/backend-core/tests")
 const timestamp = mocks.date.MOCK_DATE.toISOString()
+
+const clearMigrations = async () => {
+  const dbs = [context.getDevAppDB(), context.getProdAppDB()]
+  for (const db of dbs) {
+    const doc = await db.get(DocumentTypes.MIGRATIONS)
+    const newDoc = { _id: doc._id, _rev: doc._rev }
+    await db.put(newDoc)
+  }
+}
 
 describe("migrations", () => {
   const config = new TestConfig()
@@ -21,6 +37,7 @@ describe("migrations", () => {
   describe("backfill", () => {
     it("runs app db migration", async () => {
       await config.doInContext(null, async () => {
+        await clearMigrations()
         await config.createAutomation()
         await config.createAutomation(structures.newAutomation())
         await config.createDatasource()
@@ -71,6 +88,7 @@ describe("migrations", () => {
 
   it("runs global db migration", async () => {
     await config.doInContext(null, async () => {
+      await clearMigrations()
       const appId = config.prodAppId
       const roles = { [appId]: "role_12345" }
       await config.createUser(undefined, undefined, false, true, roles) // admin only

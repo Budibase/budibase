@@ -12,6 +12,7 @@ import sessions from "./security/sessions"
 import deprovisioning from "./context/deprovision"
 import auth from "./auth"
 import constants from "./constants"
+import * as dbConstants from "./db/constants"
 
 // mimic the outer package exports
 import * as db from "./pkg/db"
@@ -20,7 +21,6 @@ import * as utils from "./pkg/utils"
 import redis from "./pkg/redis"
 import cache from "./pkg/cache"
 import context from "./pkg/context"
-const StaticDatabases = db.StaticDatabases
 
 const init = (opts: any = {}) => {
   db.init(opts.db)
@@ -28,8 +28,8 @@ const init = (opts: any = {}) => {
 
 const core = {
   init,
-  StaticDatabases,
   db,
+  ...dbConstants,
   redis,
   objectStore,
   utils,
@@ -37,6 +37,7 @@ const core = {
   cache,
   auth,
   constants,
+  ...constants,
   migrations,
   env,
   accounts,
