@@ -1,4 +1,5 @@
 import filterTests from "../support/filterTests"
+const interact = require('../support/interact')
 
 filterTests(['all'], () => {
   context("Rename an App", () => {
@@ -17,7 +18,7 @@ filterTests(['all'], () => {
       cy.reload()
       cy.wait(1000)
       cy.searchForApplication(appRename)
-      cy.get(".appTable").find(".title").should("have.length", 1)
+      cy.get(interact.APP_TABLE).find(interact.TITLE).should("have.length", 1)
       cy.applicationInAppTable(appRename)
       // Set app name back to Cypress Tests
       cy.reload()
@@ -30,18 +31,18 @@ filterTests(['all'], () => {
       const appName = "Cypress Tests"
       const appRename = "Cypress Renamed"
       // Publish the app
-      cy.get(".toprightnav")
-      cy.get(".spectrum-Button").contains("Publish").click({ force: true })
-      cy.get(".spectrum-Dialog-grid")
+      cy.get(interact.TOP_RIGHT_NAV)
+      cy.get(interact.SPECTRUM_BUTTON).contains("Publish").click({ force: true })
+      cy.get(interact.SPECTRUM_DIALOG_GRID)
         .within(() => {
           // Click publish again within the modal
-          cy.get(".spectrum-Button").contains("Publish").click({ force: true })
+          cy.get(interact.SPECTRUM_BUTTON).contains("Publish").click({ force: true })
         })
       // Rename app, Search for app, Confirm name was changed
       cy.visit(`${Cypress.config().baseUrl}/builder`)
       cy.wait(500)
       renameApp(appName, appRename, true)
-      cy.get(".appTable").find(".wrapper").should("have.length", 1)
+      cy.get(interact.APP_TABLE).find(interact.WRAPPER).should("have.length", 1)
       cy.applicationInAppTable(appRename)
     })
 
@@ -52,7 +53,7 @@ filterTests(['all'], () => {
       renameApp(appName, " ", false, true)
       cy.wait(500)
       // Close modal and confirm name has not been changed
-      cy.get(".spectrum-Dialog-grid").contains("Cancel").click()
+      cy.get(interact.SPECTRUM_DIALOG_GRID).contains("Cancel").click()
       cy.reload()
       cy.wait(1000)
       cy.applicationInAppTable(appName)
@@ -63,13 +64,13 @@ filterTests(['all'], () => {
       const appName = "Cypress Tests"
       cy.visit(`${Cypress.config().baseUrl}/builder`)
       cy.wait(500)
-      cy.get(".spectrum-Button").contains("Create app").click({ force: true })
+      cy.get(interact.SPECTRUM_BUTTON).contains("Create app").click({ force: true })
       cy.contains(/Start from scratch/).click()
-      cy.get(".spectrum-Modal")
+      cy.get(interact.SPECTRUM_MODAL)
         .within(() => {
           cy.get("input").eq(0).type(appName)
-          cy.get(".spectrum-ButtonGroup").contains("Create app").click({ force: true })
-          cy.get(".error").should("have.text", "Another app with the same name already exists")
+          cy.get(interact.SPECTRUM_BUTTON_GROUP).contains("Create app").click({ force: true })
+          cy.get(interact.ERROR).should("have.text", "Another app with the same name already exists")
         })
     })
 
@@ -88,7 +89,7 @@ filterTests(['all'], () => {
       cy.reload()
       cy.wait(1000)
       renameApp(numberName, specialCharName)
-      cy.get(".error").should("have.text", "App name must be letters, numbers and spaces only")
+      cy.get(interact.ERROR).should("have.text", "App name must be letters, numbers and spaces only")
       // Set app name back to Cypress Tests
       cy.reload()
       cy.wait(1000)
@@ -97,20 +98,20 @@ filterTests(['all'], () => {
 
     const renameApp = (originalName, changedName, published, noName) => {
       cy.searchForApplication(originalName)
-      cy.get(".appTable")
+      cy.get(interact.APP_TABLE)
         .within(() => {
-          cy.get("[aria-label='More']").eq(0).click()
+          cy.get(interact.AREA_LABEL_MORE).eq(0).click()
         })
       // Check for when an app is published
       if (published == true) {
         // Should not have Edit as option, will unpublish app
         cy.should("not.have.value", "Edit")
-        cy.get(".spectrum-Menu").contains("Unpublish").click()
-        cy.get(".spectrum-Dialog-grid").contains("Unpublish app").click()
+        cy.get(interact.SPECTRUM_MENU).contains("Unpublish").click()
+        cy.get(interact.SPECTRUM_DIALOG_GRID).contains("Unpublish app").click()
         cy.get(".appTable > :nth-child(5) > :nth-child(2) > .spectrum-Icon").click()
       }
-      cy.get("[data-cy='app-row-actions-menu-popover']").eq(0).within(() => {
-        cy.get(".spectrum-Menu-item").contains("Edit").click({ force: true })
+      cy.get(interact.APP_ROW_ACTION_MENU_POPOVER).eq(0).within(() => {
+        cy.get(interact.SPECTRUM_MENU_ITEMM).contains("Edit").click({ force: true })
       })
 
       cy.updateAppName(changedName, noName)
