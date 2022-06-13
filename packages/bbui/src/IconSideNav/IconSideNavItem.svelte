@@ -41,7 +41,6 @@
   .active :global(svg) {
     color: white;
   }
-  .icon-side-nav-item:hover,
   .active {
     background: var(--spectrum-global-color-gray-300);
   }

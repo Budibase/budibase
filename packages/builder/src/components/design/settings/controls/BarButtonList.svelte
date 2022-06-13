@@ -10,8 +10,9 @@
   {#each options as option}
     <ActionButton
       icon={option.barIcon}
-      quiet={option.value !== value}
+      quiet
       on:click={() => onChange(option.value)}
+      selected={option.value === value}
     />
   {/each}
 </ActionGroup>

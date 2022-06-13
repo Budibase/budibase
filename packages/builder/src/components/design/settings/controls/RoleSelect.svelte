@@ -5,15 +5,16 @@
 
   export let value
   export let error
+  export let placeholder = null
 </script>
 
 <Select
   bind:value
   on:change
   options={$roles}
-  placeholder={null}
   getOptionLabel={role => role.name}
   getOptionValue={role => role._id}
   getOptionColour={role => RoleUtils.getRoleColour(role._id)}
+  {placeholder}
   {error}
 />
