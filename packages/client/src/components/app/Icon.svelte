@@ -33,9 +33,6 @@
 {/if}
 
 <style>
-  div {
-    font-style: italic;
-  }
   @media (hover: hover) {
     .hoverable:hover {
       color: var(--spectrum-alias-icon-color-selected-hover) !important;
