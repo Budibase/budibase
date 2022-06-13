@@ -2450,6 +2450,12 @@
       },
       {
         "type": "boolean",
+        "label": "Sort in alphabetical order",
+        "key": "sort",
+        "defaultValue": true
+      },
+      {
+        "type": "boolean",
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
