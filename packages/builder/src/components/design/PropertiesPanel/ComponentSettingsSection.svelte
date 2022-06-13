@@ -73,15 +73,6 @@
 
     return true
   }
-
-  const isFocused = setting => {
-    if (!$store.builderFocus) {
-      return false
-    }
-    return (
-      setting.required === true && $store.builderFocus[0].key === setting.key
-    )
-  }
 </script>
 
 {#each sections as section, idx (section.name)}
@@ -116,7 +107,6 @@
           {componentBindings}
           {componentInstance}
           {componentDefinition}
-          autofocus={isFocused(setting)}
         />
       {/if}
     {/each}

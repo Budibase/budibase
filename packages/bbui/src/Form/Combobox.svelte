@@ -13,7 +13,6 @@
   export let options = []
   export let getOptionLabel = option => extractProperty(option, "label")
   export let getOptionValue = option => extractProperty(option, "value")
-  export let autofocus = false
 
   const dispatch = createEventDispatcher()
   const onChange = e => {
@@ -36,7 +35,6 @@
     {options}
     {placeholder}
     {readonly}
-    {autofocus}
     {getOptionLabel}
     {getOptionValue}
     on:change={onChange}

@@ -5,26 +5,20 @@
   const { styleable } = getContext("sdk")
   const component = getContext("component")
 
-  $: focusSetting = $component.missingRequiredSettings?.[0]
+  $: requiredSetting = $component.missingRequiredSettings?.[0]
 </script>
 
-{#if $builderStore.inBuilder && focusSetting}
+{#if $builderStore.inBuilder && requiredSetting}
   <div use:styleable={$component.styles}>
     <div class="component-placeholder">
       <span>
-        Add the <mark>{focusSetting?.label}</mark> setting to start using your component
-        &nbsp;
+        Add the <mark>{requiredSetting.label}</mark> setting to start using your
+        component &nbsp;
       </span>
       <span
         class="spectrum-Link"
         on:click={() => {
-          builderStore.actions.setFocus([
-            {
-              location: "component_settings",
-              key: focusSetting.key,
-              target: $component.id,
-            },
-          ])
+          builderStore.actions.highlightSetting(requiredSetting.key)
         }}
       >
         Show me

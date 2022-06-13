@@ -1167,7 +1167,8 @@
       {
         "type": "boolean",
         "label": "New Tab",
-        "key": "openInNewTab"
+        "key": "openInNewTab",
+        "required": true
       },
       {
         "type": "select",
@@ -1176,6 +1177,7 @@
         "defaultValue": "M",
         "showInBar": true,
         "barStyle": "picker",
+        "required": true,
         "options": [
           {
             "label": "Small",
@@ -1196,7 +1198,8 @@
         "label": "Color",
         "key": "color",
         "showInBar": true,
-        "barSeparator": false
+        "barSeparator": false,
+        "required": true
       },
       {
         "type": "boolean",
@@ -1205,7 +1208,8 @@
         "showInBar": true,
         "barIcon": "TagBold",
         "barTitle": "Bold text",
-        "barSeparator": false
+        "barSeparator": false,
+        "required": true
       },
       {
         "type": "boolean",
@@ -1214,7 +1218,8 @@
         "showInBar": true,
         "barIcon": "TagItalic",
         "barTitle": "Italic text",
-        "barSeparator": false
+        "barSeparator": false,
+        "required": true
       },
       {
         "type": "boolean",

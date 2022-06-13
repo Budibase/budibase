@@ -4,8 +4,6 @@
     readableToRuntimeBinding,
     runtimeToReadableBinding,
   } from "builderStore/dataBinding"
-  import { setContext } from "svelte"
-  import { store } from "builderStore"
 
   export let label = ""
   export let componentInstance = {}
@@ -18,7 +16,6 @@
   export let bindings = []
   export let componentBindings = []
   export let nested = false
-  export let autofocus = false
 
   $: allBindings = getAllBindings(bindings, componentBindings, nested)
   $: safeValue = getSafeValue(value, props.defaultValue, allBindings)
@@ -63,28 +60,6 @@
       ? defaultValue
       : enriched
   }
-
-  setContext("builderFocus", {
-    clear: () => {
-      if (!$store?.builderFocus) {
-        return
-      }
-      store.update(state => {
-        const updatedFocus = $store?.builderFocus?.filter(focus => {
-          return (
-            focus.location === "component_settings" &&
-            focus.target !== componentInstance._id
-          )
-        })
-        if (updatedFocus?.length > 0) {
-          state.builderFocus = updatedFocus
-        } else {
-          delete state.builderFocus
-        }
-        return state
-      })
-    },
-  })
 </script>
 
 <div class="property-control" data-cy={`setting-${key}`}>
@@ -107,7 +82,6 @@
       {key}
       {type}
       {...props}
-      {autofocus}
     />
   </div>
 </div>
@@ -119,6 +93,13 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
+    padding: 4px 8px;
+    margin: -6px -10px;
+    border: 2px solid transparent;
+    border-radius: 4px;
+  }
+  .property-control.highlighted {
+    border-color: var(--spectrum-global-color-blue-400);
   }
   .label {
     padding-bottom: var(--spectrum-global-dimension-size-65);
