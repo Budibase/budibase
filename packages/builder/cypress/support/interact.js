@@ -110,7 +110,7 @@ export const SPECTRUM_MENU_ITEM_LABEL = ".spectrum-Menu-itemLabel"
 
 //revertApp
 export const TOP_RIGHT_NAV = ".toprightnav"
-export const AREA_LAVEL_REVERT = "[aria-label=Revert]"
+export const AREA_LABEL_REVERT = "[aria-label=Revert]"
 export const ROOT = ".root"
 
 //quertLevelTransformers
