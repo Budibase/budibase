@@ -1,12 +1,10 @@
-require("../../tests/utilities/dbConfig")
-
+require("../../../tests/utilities/TestConfiguration")
 const { runMigrations, getMigrationsDoc } = require("../index")
 const { dangerousGetDB } = require("../../db")
 const {
   StaticDatabases,
 } = require("../../db/utils")
 
-Date.now = jest.fn(() => 1487076708000)
 let db
 
 describe("migrations", () => {

@@ -4,7 +4,7 @@ function isSuppressed(e) {
   return e && e["suppressAlert"]
 }
 
-module.exports.logAlert = (message, e = null) => {
+module.exports.logAlert = (message, e) => {
   if (e && NonErrors.includes(e.name) && isSuppressed(e)) {
     return
   }
