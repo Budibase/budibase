@@ -6,6 +6,7 @@
   import { createEventDispatcher, onMount } from "svelte"
 
   export let value
+  export let autofocus = false
 
   const dispatch = createEventDispatcher()
   const getValue = component => `{{ literal ${makePropSafe(component._id)} }}`
@@ -24,6 +25,7 @@
 
 <Select
   {value}
+  {autofocus}
   placeholder={null}
   on:change
   options={providers}

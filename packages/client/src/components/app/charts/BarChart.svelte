@@ -53,7 +53,6 @@
     palette,
     horizontal
   ) => {
-    console.log("new chart")
     const allCols = [labelColumn, ...(valueColumns || [null])]
     if (
       !dataProvider ||

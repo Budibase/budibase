@@ -3,7 +3,7 @@
   import "@spectrum-css/popover/dist/index-vars.css"
   import "@spectrum-css/menu/dist/index-vars.css"
   import { fly } from "svelte/transition"
-  import { createEventDispatcher } from "svelte"
+  import { createEventDispatcher, getContext } from "svelte"
   import clickOutside from "../../Actions/click_outside"
   import Search from "./Search.svelte"
 
@@ -26,9 +26,18 @@
   export let autoWidth = false
   export let autocomplete = false
   export let sort = false
+  export let autofocus = false
 
+  const context = getContext("builderFocus")
   const dispatch = createEventDispatcher()
   let searchTerm = null
+  let focus = false
+  let pickerButton
+
+  $: focus = autofocus && pickerButton !== undefined
+  $: if (focus) {
+    pickerButton.focus()
+  }
 
   $: sortedOptions = getSortedOptions(options, getOptionLabel, sort)
   $: filteredOptions = getFilteredOptions(
@@ -80,7 +89,24 @@
     class:is-invalid={!!error}
     class:is-open={open}
     aria-haspopup="listbox"
+    class:is-focused={focus}
+    bind:this={pickerButton}
     on:mousedown={onClick}
+    on:keydown={e => {
+      var keycode = e.key
+      if (focus) {
+        if (keycode === "Enter") {
+          onClick(e)
+        }
+      }
+    }}
+    on:focus={() => {
+      focus = true
+    }}
+    on:blur={() => {
+      focus = false
+      if (context) context.clear()
+    }}
   >
     {#if fieldIcon}
       <span class="icon-Placeholder-Padding">
@@ -199,6 +225,7 @@
   }
   .spectrum-Picker {
     width: 100%;
+    box-shadow: none;
   }
   .spectrum-Picker-label:not(.auto-width) {
     overflow: hidden;
