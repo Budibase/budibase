@@ -112,3 +112,7 @@ export const SPECTRUM_MENU_ITEM_LABEL = ".spectrum-Menu-itemLabel"
 export const TOP_RIGHT_NAV = ".toprightnav"
 export const AREA_LAVEL_REVERT = "[aria-label=Revert]"
 export const ROOT = ".root"
+
+//quertLevelTransformers
+export const SPECTRUM_TABS_ITEM = ".spectrum-Tabs-itemLabel"
+export const CODEMIRROR_TEXTAREA = ".CodeMirror textarea"
