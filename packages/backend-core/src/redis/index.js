@@ -139,6 +139,10 @@ class RedisWrapper {
     this._db = db
   }
 
+  getClient() {
+    return CLIENT
+  }
+
   async init() {
     CLOSED = false
     init()
@@ -162,6 +166,11 @@ class RedisWrapper {
       stream = CLIENT.scanStream({ match: key + "*", count: 100 })
     }
     return promisifyStream(stream)
+  }
+
+  async keys(pattern) {
+    const db = this._db
+    return CLIENT.keys(addDbPrefix(db, pattern))
   }
 
   async get(key) {
