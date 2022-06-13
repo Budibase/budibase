@@ -1,5 +1,4 @@
 <script>
-  import { goto } from "@roxi/routify"
   import { store } from "builderStore"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import {
@@ -66,7 +65,6 @@
   const deleteScreen = async () => {
     try {
       await store.actions.screens.delete(screen)
-      $goto("../")
       notifications.success("Deleted screen successfully.")
     } catch (err) {
       notifications.error("Error deleting screen")

@@ -42,10 +42,7 @@
   let permissionError = false
 
   // Determine if we should show devtools or not
-  $: isDevPreview =
-    $appStore.isDevApp &&
-    !$builderStore.inBuilder &&
-    !$routeStore.queryParams?.peek
+  $: showDevTools = $devToolsStore.enabled && !$routeStore.queryParams?.peek
 
   // Handle no matching route
   $: {
@@ -59,6 +56,7 @@
             $screenStore.screens,
             $devToolsStore.role
           )
+          permissionError = false
           routeStore.actions.navigate(route)
         } else {
           // No screens likely means the user has no permissions to view this app
@@ -120,41 +118,57 @@
     dir="ltr"
     class="spectrum spectrum--medium {$themeStore.theme}"
   >
-    {#if permissionError}
-      <div class="error">
-        <Layout justifyItems="center" gap="S">
-          {@html ErrorSVG}
-          <Heading size="L">You don't have permission to use this app</Heading>
-          <Body size="S">Ask your administrator to grant you access</Body>
-        </Layout>
-      </div>
-    {:else if $screenStore.activeLayout}
+    <DeviceBindingsProvider>
       <UserBindingsProvider>
-        <DeviceBindingsProvider>
-          <StateBindingsProvider>
-            <RowSelectionProvider>
-              <!-- Settings bar can be rendered outside of device preview -->
-              <!-- Key block needs to be outside the if statement or it breaks -->
-              {#key $builderStore.selectedComponentId}
-                {#if $builderStore.inBuilder}
-                  <SettingsBar />
+        <StateBindingsProvider>
+          <RowSelectionProvider>
+            <!-- Settings bar can be rendered outside of device preview -->
+            <!-- Key block needs to be outside the if statement or it breaks -->
+            {#key $builderStore.selectedComponentId}
+              {#if $builderStore.inBuilder}
+                <SettingsBar />
+              {/if}
+            {/key}
+
+            <!-- Clip boundary for selection indicators -->
+            <div
+              id="clip-root"
+              class:preview={$builderStore.inBuilder}
+              class:tablet-preview={$builderStore.previewDevice === "tablet"}
+              class:mobile-preview={$builderStore.previewDevice === "mobile"}
+            >
+              <!-- Actual app -->
+              <div id="app-root">
+                {#if showDevTools}
+                  <DevToolsHeader />
                 {/if}
-              {/key}
 
-              <!-- Clip boundary for selection indicators -->
-              <div
-                id="clip-root"
-                class:preview={$builderStore.inBuilder}
-                class:tablet-preview={$builderStore.previewDevice === "tablet"}
-                class:mobile-preview={$builderStore.previewDevice === "mobile"}
-              >
-                <!-- Actual app -->
-                <div id="app-root">
-                  {#if isDevPreview}
-                    <DevToolsHeader />
-                  {/if}
-
-                  <div id="app-body">
+                <div id="app-body">
+                  {#if permissionError}
+                    <div class="error">
+                      <Layout justifyItems="center" gap="S">
+                        {@html ErrorSVG}
+                        <Heading size="L">
+                          You don't have permission to use this app
+                        </Heading>
+                        <Body size="S">
+                          Ask your administrator to grant you access
+                        </Body>
+                      </Layout>
+                    </div>
+                  {:else if !$screenStore.activeLayout}
+                    <div class="error">
+                      <Layout justifyItems="center" gap="S">
+                        {@html ErrorSVG}
+                        <Heading size="L">
+                          Something went wrong rendering your app
+                        </Heading>
+                        <Body size="S">
+                          Get in touch with support if this issue persists
+                        </Body>
+                      </Layout>
+                    </div>
+                  {:else}
                     <CustomThemeWrapper>
                       {#key $screenStore.activeLayout._id}
                         <Component
@@ -178,29 +192,29 @@
                       <ConfirmationDisplay />
                       <PeekScreenDisplay />
                     </CustomThemeWrapper>
+                  {/if}
 
-                    {#if isDevPreview}
-                      <DevTools />
-                    {/if}
-                  </div>
+                  {#if showDevTools}
+                    <DevTools />
+                  {/if}
                 </div>
-
-                <!-- Preview and dev tools utilities  -->
-                {#if $appStore.isDevApp}
-                  <SelectionIndicator />
-                {/if}
-                {#if $builderStore.inBuilder || $devToolsStore.allowSelection}
-                  <HoverIndicator />
-                {/if}
-                {#if $builderStore.inBuilder}
-                  <DNDHandler />
-                {/if}
               </div>
-            </RowSelectionProvider>
-          </StateBindingsProvider>
-        </DeviceBindingsProvider>
+
+              <!-- Preview and dev tools utilities  -->
+              {#if $appStore.isDevApp}
+                <SelectionIndicator />
+              {/if}
+              {#if $builderStore.inBuilder || $devToolsStore.allowSelection}
+                <HoverIndicator />
+              {/if}
+              {#if $builderStore.inBuilder}
+                <DNDHandler />
+              {/if}
+            </div>
+          </RowSelectionProvider>
+        </StateBindingsProvider>
       </UserBindingsProvider>
-    {/if}
+    </DeviceBindingsProvider>
   </div>
   <KeyboardManager />
 {/if}
@@ -249,7 +263,6 @@
   }
 
   .error {
-    position: absolute;
     width: 100%;
     height: 100%;
     display: grid;
@@ -258,23 +271,19 @@
     text-align: center;
     padding: 20px;
   }
-
   .error :global(svg) {
     fill: var(--spectrum-global-color-gray-500);
     width: 80px;
     height: 80px;
   }
-
   .error :global(h1),
   .error :global(p) {
     color: var(--spectrum-global-color-gray-800);
   }
-
   .error :global(p) {
     font-style: italic;
     margin-top: -0.5em;
   }
-
   .error :global(h1) {
     font-weight: 400;
   }
@@ -284,12 +293,10 @@
   #clip-root.preview {
     padding: 2px;
   }
-
   #clip-root.tablet-preview {
     width: calc(1024px + 6px);
     height: calc(768px + 6px);
   }
-
   #clip-root.mobile-preview {
     width: calc(390px + 6px);
     height: calc(844px + 6px);

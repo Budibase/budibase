@@ -11,6 +11,7 @@
   import { dndzone } from "svelte-dnd-action"
   import { generate } from "shortid"
   import { store } from "builderStore"
+  import RoleSelect from "components/design/settings/controls/RoleSelect.svelte"
 
   export let links = []
 
@@ -75,6 +76,7 @@
                 placeholder="URL"
                 options={urlOptions}
               />
+              <RoleSelect bind:value={link.roleId} placeholder="Minimum role" />
               <Icon
                 name="Close"
                 hoverable
@@ -95,7 +97,7 @@
 <style>
   .container {
     width: 100%;
-    max-width: 600px;
+    max-width: 800px;
     margin: 0 auto;
   }
   .links {
