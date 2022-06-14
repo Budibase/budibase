@@ -12,4 +12,6 @@
   }
 </script>
 
-<slot />
+{#key $params.selectedDatasource}
+  <slot />
+{/key}

@@ -121,6 +121,9 @@ export async function preview(ctx: any) {
         parameters,
         transformer,
         queryId,
+        ctx: {
+          user: ctx.user,
+        },
       })
 
     const { rows, keys, info, extra } = await quotas.addQuery(runFn)

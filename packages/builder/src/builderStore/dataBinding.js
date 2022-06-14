@@ -50,6 +50,42 @@ export const getBindableProperties = (asset, componentId) => {
 }
 
 /**
+ * Gets all rest bindable data fields
+ */
+export const getRestBindings = () => {
+  const userBindings = getUserBindings()
+  return [...userBindings]
+}
+
+/**
+ * Utility - coverting a map of readable bindings to runtime
+ */
+export const readableToRuntimeMap = (bindings, ctx) => {
+  if (!bindings || !ctx) {
+    return {}
+  }
+  return Object.keys(ctx).reduce((acc, key) => {
+    let parsedQuery = readableToRuntimeBinding(bindings, ctx[key])
+    acc[key] = parsedQuery
+    return acc
+  }, {})
+}
+
+/**
+ * Utility - coverting a map of runtime bindings to readable
+ */
+export const runtimeToReadableMap = (bindings, ctx) => {
+  if (!bindings || !ctx) {
+    return {}
+  }
+  return Object.keys(ctx).reduce((acc, key) => {
+    let parsedQuery = runtimeToReadableBinding(bindings, ctx[key])
+    acc[key] = parsedQuery
+    return acc
+  }, {})
+}
+
+/**
  * Gets the bindable properties exposed by a certain component.
  */
 export const getComponentBindableProperties = (asset, componentId) => {
@@ -298,7 +334,6 @@ const getUserBindings = () => {
       providerId: "user",
     })
   })
-
   return bindings
 }
 

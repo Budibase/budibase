@@ -40,13 +40,22 @@
   import { cloneDeep } from "lodash/fp"
   import { RawRestBodyTypes } from "constants/backend"
 
+  import {
+    getRestBindings,
+    readableToRuntimeBinding,
+    runtimeToReadableBinding,
+    runtimeToReadableMap,
+    readableToRuntimeMap,
+  } from "builderStore/dataBinding"
+
   let query, datasource
   let breakQs = {},
-    bindings = {}
+    requestBindings = {}
   let saveId, url
   let response, schema, enabledHeaders
   let authConfigId
   let dynamicVariables, addVariableModal, varBinding
+  let restBindings = getRestBindings()
 
   $: datasourceType = datasource?.source
   $: integrationInfo = $integrations[datasourceType]
@@ -63,8 +72,10 @@
     Object.keys(schema || {}).length !== 0 ||
     Object.keys(query?.schema || {}).length !== 0
 
+  $: runtimeUrlQueries = readableToRuntimeMap(restBindings, breakQs)
+
   function getSelectedQuery() {
-    return cloneDeep(
+    const cloneQuery = cloneDeep(
       $queries.list.find(q => q._id === $queries.selected) || {
         datasourceId: $params.selectedDatasource,
         parameters: [],
@@ -76,6 +87,30 @@
         queryVerb: "read",
       }
     )
+
+    if (cloneQuery?.fields?.headers) {
+      cloneQuery.fields.headers = runtimeToReadableMap(
+        restBindings,
+        cloneQuery.fields.headers
+      )
+    }
+
+    if (cloneQuery?.fields?.requestBody) {
+      cloneQuery.fields.requestBody = runtimeToReadableBinding(
+        restBindings,
+        cloneQuery.fields.requestBody
+      )
+    }
+
+    if (cloneQuery?.parameters) {
+      const flatParams = restUtils.queryParametersToKeyValue(
+        cloneQuery.parameters
+      )
+      const updatedParams = runtimeToReadableMap(restBindings, flatParams)
+      cloneQuery.parameters = restUtils.keyValueToQueryParameters(updatedParams)
+    }
+
+    return cloneQuery
   }
 
   function checkQueryName(inputUrl = null) {
@@ -89,7 +124,9 @@
     if (!base) {
       return base
     }
-    const qs = restUtils.buildQueryString(qsObj)
+    const qs = restUtils.buildQueryString(
+      runtimeToReadableMap(restBindings, qsObj)
+    )
     let newUrl = base
     if (base.includes("?")) {
       newUrl = base.split("?")[0]
@@ -98,14 +135,30 @@
   }
 
   function buildQuery() {
-    const newQuery = { ...query }
-    const queryString = restUtils.buildQueryString(breakQs)
+    const newQuery = cloneDeep(query)
+    const queryString = restUtils.buildQueryString(runtimeUrlQueries)
+    newQuery.fields.headers = readableToRuntimeMap(
+      restBindings,
+      newQuery.fields.headers
+    )
+    newQuery.fields.requestBody = readableToRuntimeBinding(
+      restBindings,
+      newQuery.fields.requestBody
+    )
     newQuery.fields.path = url.split("?")[0]
     newQuery.fields.queryString = queryString
     newQuery.fields.authConfigId = authConfigId
     newQuery.fields.disabledHeaders = restUtils.flipHeaderState(enabledHeaders)
     newQuery.schema = restUtils.fieldsToSchema(schema)
-    newQuery.parameters = restUtils.keyValueToQueryParameters(bindings)
+
+    const parsedRequestBindings = readableToRuntimeMap(
+      restBindings,
+      requestBindings
+    )
+    newQuery.parameters = restUtils.keyValueToQueryParameters(
+      parsedRequestBindings
+    )
+
     return newQuery
   }
 
@@ -127,7 +180,7 @@
 
   async function runQuery() {
     try {
-      response = await queries.preview(buildQuery(query))
+      response = await queries.preview(buildQuery())
       if (response.rows.length === 0) {
         notifications.info("Request did not return any data")
       } else {
@@ -250,6 +303,8 @@
     const datasourceUrl = datasource?.config.url
     const qs = query?.fields.queryString
     breakQs = restUtils.breakQueryString(qs)
+    breakQs = runtimeToReadableMap(restBindings, breakQs)
+
     const path = query.fields.path
     if (
       datasourceUrl &&
@@ -260,7 +315,7 @@
     }
     url = buildUrl(query.fields.path, breakQs)
     schema = restUtils.schemaToFields(query.schema)
-    bindings = restUtils.queryParametersToKeyValue(query.parameters)
+    requestBindings = restUtils.queryParametersToKeyValue(query.parameters)
     authConfigId = getAuthConfigId()
     if (!query.fields.disabledHeaders) {
       query.fields.disabledHeaders = {}
@@ -344,7 +399,7 @@
         <Tabs selected="Bindings" quiet noPadding noHorizPadding onTop>
           <Tab title="Bindings">
             <KeyValueBuilder
-              bind:object={bindings}
+              bind:object={requestBindings}
               tooltip="Set the name of the binding which can be used in Handlebars statements throughout your query"
               name="binding"
               headings
