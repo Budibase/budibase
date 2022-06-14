@@ -14,7 +14,6 @@ import {
   CloudAccount,
   UserIdentity,
   InstallationGroup,
-  isSelfHostAccount,
   UserContext,
   Group,
 } from "@budibase/types"
@@ -47,34 +46,42 @@ export const getCurrentIdentity = async (): Promise<Identity> => {
 
   if (identityType === IdentityType.INSTALLATION) {
     const installationId = await getInstallationId()
+    const hosting = getHostingFromEnv()
     return {
       id: formatDistinctId(installationId, identityType),
+      hosting,
       type: identityType,
       installationId,
     }
   } else if (identityType === IdentityType.TENANT) {
     const installationId = await getInstallationId()
     const tenantId = await getEventTenantId(context.getTenantId())
+    const hosting = getHostingFromEnv()
 
     return {
       id: formatDistinctId(tenantId, identityType),
       type: identityType,
+      hosting,
       installationId,
       tenantId,
     }
   } else if (identityType === IdentityType.USER) {
     const userContext = identityContext as UserContext
     const tenantId = await getEventTenantId(context.getTenantId())
-    let installationId: string | undefined
+    const installationId = await getInstallationId()
 
-    // self host account users won't have installation
-    if (!userContext.account || !isSelfHostAccount(userContext.account)) {
-      installationId = await getInstallationId()
+    const account = userContext.account
+    let hosting
+    if (account) {
+      hosting = account.hosting
+    } else {
+      hosting = getHostingFromEnv()
     }
 
     return {
       id: userContext._id,
       type: identityType,
+      hosting,
       installationId,
       tenantId,
     }
@@ -112,6 +119,7 @@ export const identifyTenantGroup = async (
 ): Promise<void> => {
   const id = await getEventTenantId(tenantId)
   const type = IdentityType.TENANT
+  const installationId = await getInstallationId()
 
   let hosting: Hosting
   let profession: string | undefined
@@ -129,6 +137,7 @@ export const identifyTenantGroup = async (
     id,
     type,
     hosting,
+    installationId,
     profession,
     companySize,
   }
@@ -154,10 +163,12 @@ export const identifyUser = async (
   const verified =
     account && account?.budibaseUserId === user._id ? account.verified : false
   const installationId = await getInstallationId()
+  const hosting = account ? account.hosting : getHostingFromEnv()
 
   const identity: UserIdentity = {
     id,
     type,
+    hosting,
     installationId,
     tenantId,
     verified,
@@ -177,6 +188,8 @@ export const identifyAccount = async (account: Account) => {
   let providerType = isSSOAccount(account) ? account.providerType : undefined
   const verified = account.verified
   const accountHolder = true
+  const hosting = account.hosting
+  const installationId = await getInstallationId()
 
   if (isCloudAccount(account)) {
     if (account.budibaseUserId) {
@@ -188,6 +201,8 @@ export const identifyAccount = async (account: Account) => {
   const identity: UserIdentity = {
     id,
     type,
+    hosting,
+    installationId,
     tenantId,
     providerType,
     verified,

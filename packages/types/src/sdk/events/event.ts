@@ -1,3 +1,5 @@
+import { Hosting } from "../hosting"
+
 export enum Event {
   // USER
   USER_CREATED = "user:created",
@@ -157,6 +159,7 @@ export interface BaseEvent {
   appId?: string
   installationId?: string
   tenantId?: string
+  hosting?: Hosting
 }
 
 export type RowImportFormat = "csv"
