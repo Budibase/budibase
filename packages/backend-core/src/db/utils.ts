@@ -86,7 +86,7 @@ export function getWorkspaceParams(id = "", otherProps = {}) {
  * Generates a new global user ID.
  * @returns {string} The new user ID which the user doc can be stored under.
  */
-export function generateGlobalUserID(id: any) {
+export function generateGlobalUserID(id?: any) {
   return `${DocumentTypes.USER}${SEPARATOR}${id || newid()}`
 }
 

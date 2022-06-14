@@ -43,7 +43,6 @@ export const run = async () => {
       )
     })
     await events.backfill.installationSucceeded()
-    throw new Error("fail")
   } catch (e) {
     handleError(e)
     await events.backfill.installationFailed(e)
