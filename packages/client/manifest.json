@@ -1154,21 +1154,18 @@
       {
         "type": "text",
         "label": "Text",
-        "key": "text",
-        "required": true
+        "key": "text"
       },
       {
         "type": "url",
         "label": "URL",
         "key": "url",
-        "placeholder": "/screen",
-        "required": true
+        "placeholder": "/screen"
       },
       {
         "type": "boolean",
         "label": "New Tab",
-        "key": "openInNewTab",
-        "required": true
+        "key": "openInNewTab"
       },
       {
         "type": "select",
@@ -1177,7 +1174,6 @@
         "defaultValue": "M",
         "showInBar": true,
         "barStyle": "picker",
-        "required": true,
         "options": [
           {
             "label": "Small",
@@ -1198,8 +1194,7 @@
         "label": "Color",
         "key": "color",
         "showInBar": true,
-        "barSeparator": false,
-        "required": true
+        "barSeparator": false
       },
       {
         "type": "boolean",
@@ -1208,8 +1203,7 @@
         "showInBar": true,
         "barIcon": "TagBold",
         "barTitle": "Bold text",
-        "barSeparator": false,
-        "required": true
+        "barSeparator": false
       },
       {
         "type": "boolean",
@@ -1218,8 +1212,7 @@
         "showInBar": true,
         "barIcon": "TagItalic",
         "barTitle": "Italic text",
-        "barSeparator": false,
-        "required": true
+        "barSeparator": false
       },
       {
         "type": "boolean",
