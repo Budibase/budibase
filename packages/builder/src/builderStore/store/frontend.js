@@ -60,7 +60,6 @@ const INITIAL_FRONTEND_STATE = {
   theme: "",
   customTheme: {},
   previewDevice: "desktop",
-  highlightedSettingComponentId: null,
   highlightedSettingKey: null,
 }
 
