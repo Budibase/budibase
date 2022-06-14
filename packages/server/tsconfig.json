@@ -8,7 +8,7 @@
     "paths": {
       "@budibase/types": ["../types/src"],
       "@budibase/backend-core": ["../backend-core/src"],
-      "@budibase/backend-core/*": ["../backend-core/*.js"]
+      "@budibase/backend-core/*": ["../backend-core/*"]
     }
   },
   "ts-node": {
