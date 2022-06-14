@@ -101,10 +101,10 @@
 
   // Derive definition properties which can all be optional, so need to be
   // coerced to booleans
-  $: editable = !!definition?.editable
   $: hasChildren = !!definition?.hasChildren
   $: showEmptyState = definition?.showEmptyState !== false
   $: hasMissingRequiredSettings = missingRequiredSettings?.length > 0
+  $: editable = !!definition?.editable && !hasMissingRequiredSettings
 
   // Interactive components can be selected, dragged and highlighted inside
   // the builder preview
