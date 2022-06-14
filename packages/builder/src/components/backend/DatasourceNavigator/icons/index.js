@@ -31,7 +31,7 @@ export default {
   REST: Rest,
   ORACLE: Oracle,
   GOOGLE_SHEETS: GoogleSheets,
-  FIREBASE: Firebase,
+  FIRESTORE: Firebase,
   REDIS: Redis,
   SNOWFLAKE: Snowflake,
 }

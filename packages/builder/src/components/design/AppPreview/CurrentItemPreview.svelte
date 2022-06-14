@@ -148,6 +148,21 @@
     }
   })
 
+  const resolveFocus = (data) => {
+    if($store.builderFocus){
+      const comp = $store.builderFocus.reduce((acc, item)=>{
+      acc = item.target
+        return acc
+      }, "")
+      if(data.id !== comp){
+          store.update(state => {
+          delete state.builderFocus
+          return state
+        })
+      }
+    }
+  }
+
   const handleBudibaseEvent = async event => {
     const { type, data } = event.data || event.detail
     if (!type) {
@@ -157,6 +172,7 @@
     try {
       if (type === "select-component" && data.id) {
         store.actions.components.select({ _id: data.id })
+        resolveFocus(data)
       } else if (type === "update-prop") {
         await store.actions.components.updateProp(data.prop, data.value)
       } else if (type === "delete-component" && data.id) {
@@ -190,6 +206,12 @@
           store.actions.components.copy(source, true)
           await store.actions.components.paste(destination, data.mode)
         }
+      } else if(type == "builder-focus")  {
+        store.update(state => ({
+          ...state,
+          builderFocus : 
+          [...data]
+        }))
       } else {
         console.warn(`Client sent unknown event type: ${type}`)
       }

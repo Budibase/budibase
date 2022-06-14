@@ -10,6 +10,7 @@
   export let componentInstance = {}
   export let value = ""
   export let placeholder
+  export let autofocus = false
 
   const dispatch = createEventDispatcher()
   $: datasource = getDatasourceForProvider($currentAsset, componentInstance)
@@ -37,4 +38,10 @@
   }
 </script>
 
-<Select {placeholder} value={boundValue} on:change={onChange} {options} />
+<Select
+  {placeholder}
+  value={boundValue}
+  on:change={onChange}
+  {options}
+  {autofocus}
+/>

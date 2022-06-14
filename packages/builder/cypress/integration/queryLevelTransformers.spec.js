@@ -1,4 +1,5 @@
 import filterTests from "../support/filterTests"
+const interact = require('../support/interact')
 
 filterTests(["smoke", "all"], () => {
   context("Query Level Transformers", () => {
@@ -13,11 +14,11 @@ filterTests(["smoke", "all"], () => {
       const restUrl = "https://api.openbrewerydb.org/breweries"
       cy.selectExternalDatasource(datasource)
       cy.createRestQuery("GET", restUrl, "/breweries")
-      cy.get(".spectrum-Tabs-itemLabel").contains("Transformer").click()
+      cy.get(interact.SPECTRUM_TABS_ITEM).contains("Transformer").click()
       // Get Transformer Function from file
       cy.readFile("cypress/support/queryLevelTransformerFunction.js").then(
         transformerFunction => {
-          cy.get(".CodeMirror textarea")
+          cy.get(interact.CODEMIRROR_TEXTAREA)
             // Highlight current text and overwrite with file contents
             .type(Cypress.platform === "darwin" ? "{cmd}a" : "{ctrl}a", {
               force: true,
@@ -27,7 +28,7 @@ filterTests(["smoke", "all"], () => {
       )
       // Send Query
       cy.intercept("**/queries/preview").as("query")
-      cy.get(".spectrum-Button").contains("Send").click({ force: true })
+      cy.get(interact.SPECTRUM_BUTTON).contains("Send").click({ force: true })
       cy.wait("@query")
       // Assert against Status Code, body, & body rows
       cy.get("@query").its("response.statusCode").should("eq", 200)
@@ -41,13 +42,13 @@ filterTests(["smoke", "all"], () => {
       const restUrl = "https://api.openbrewerydb.org/breweries"
       cy.selectExternalDatasource(datasource)
       cy.createRestQuery("GET", restUrl, "/breweries")
-      cy.get(".spectrum-Tabs-itemLabel").contains("Transformer").click()
+      cy.get(interact.SPECTRUM_TABS_ITEM).contains("Transformer").click()
       // Get Transformer Function with Data from file
       cy.readFile(
         "cypress/support/queryLevelTransformerFunctionWithData.js"
       ).then(transformerFunction => {
         //console.log(transformerFunction[1])
-        cy.get(".CodeMirror textarea")
+        cy.get(interact.CODEMIRROR_TEXTAREA)
           // Highlight current text and overwrite with file contents
           .type(Cypress.platform === "darwin" ? "{cmd}a" : "{ctrl}a", {
             force: true,
@@ -56,7 +57,7 @@ filterTests(["smoke", "all"], () => {
       })
       // Send Query
       cy.intercept("**/queries/preview").as("query")
-      cy.get(".spectrum-Button").contains("Send").click({ force: true })
+      cy.get(interact.SPECTRUM_BUTTON).contains("Send").click({ force: true })
       cy.wait("@query")
       // Assert against Status Code, body, & body rows
       cy.get("@query").its("response.statusCode").should("eq", 200)
@@ -70,16 +71,16 @@ filterTests(["smoke", "all"], () => {
       const restUrl = "https://api.openbrewerydb.org/breweries"
       cy.selectExternalDatasource(datasource)
       cy.createRestQuery("GET", restUrl, "/breweries")
-      cy.get(".spectrum-Tabs-itemLabel").contains("Transformer").click()
+      cy.get(interact.SPECTRUM_TABS_ITEM).contains("Transformer").click()
       // Clear the code box and add "test"
-      cy.get(".CodeMirror textarea")
+      cy.get(interact.CODEMIRROR_TEXTAREA)
         .type(Cypress.platform === "darwin" ? "{cmd}a" : "{ctrl}a", {
           force: true,
         })
         .type("test")
       // Run Query and intercept
       cy.intercept("**/preview").as("queryError")
-      cy.get(".spectrum-Button").contains("Send").click({ force: true })
+      cy.get(interact.SPECTRUM_BUTTON).contains("Send").click({ force: true })
       cy.wait("@queryError")
       cy.wait(500)
       // Assert against message and status for the query error

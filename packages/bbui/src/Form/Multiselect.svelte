@@ -14,6 +14,7 @@
   export let getOptionLabel = option => option
   export let getOptionValue = option => option
   export let sort = false
+  export let autofocus = false
 
   const dispatch = createEventDispatcher()
   const onChange = e => {
@@ -35,5 +36,6 @@
     {getOptionValue}
     on:change={onChange}
     on:click
+    {autofocus}
   />
 </Field>

@@ -76,9 +76,9 @@
       {#if !formContext}
         <Placeholder text="Form components need to be wrapped in a form" />
       {:else if !fieldState}
-        <Placeholder
-          text="Add the Field setting to start using your component"
-        />
+        {#if $builderStore.inBuilder}
+          <Placeholder />
+        {/if}
       {:else if schemaType && schemaType !== type && type !== "options"}
         <Placeholder
           text="This Field setting is the wrong data type for this component"
@@ -100,12 +100,10 @@
   label.hidden {
     padding: 0;
   }
-
   .spectrum-Form-itemField {
     position: relative;
     width: 100%;
   }
-
   .error {
     color: var(
       --spectrum-semantic-negative-color-default,
@@ -114,7 +112,6 @@
     font-size: var(--spectrum-global-dimension-font-size-75);
     margin-top: var(--spectrum-global-dimension-size-75);
   }
-
   .spectrum-FieldLabel--right,
   .spectrum-FieldLabel--left {
     padding-right: var(--spectrum-global-dimension-size-200);

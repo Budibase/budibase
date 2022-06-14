@@ -1,5 +1,6 @@
 <script>
   import { getContext } from "svelte"
+  import Placeholder from "./Placeholder.svelte"
 
   const { linkable, styleable, builderStore } = getContext("sdk")
   const component = getContext("component")
@@ -79,7 +80,11 @@
     {componentText}
   </div>
 {:else if $builderStore.inBuilder || componentText}
-  {#if externalLink || openInNewTab}
+  {#if !url && !text}
+    <div use:styleable={{ ...$component.styles, empty: true }}>
+      <Placeholder />
+    </div>
+  {:else if externalLink || openInNewTab}
     <a
       {target}
       href={sanitizedUrl}

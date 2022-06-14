@@ -4,6 +4,7 @@
 
   export let value
   export let bindings
+  export let autofocus
 
   $: urlOptions = $store.screens
     .map(screen => screen.routing?.route)
@@ -16,4 +17,5 @@
   on:change
   options={urlOptions}
   appendBindingsAsOptions={false}
+  {autofocus}
 />

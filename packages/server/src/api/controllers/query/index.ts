@@ -7,6 +7,7 @@ import { invalidateDynamicVariables } from "../../../threads/utils"
 import { QUERY_THREAD_TIMEOUT } from "../../../environment"
 import { getAppDB } from "@budibase/backend-core/context"
 import { quotas } from "@budibase/pro"
+import { events } from "@budibase/backend-core"
 
 const Runner = new Thread(ThreadType.QUERY, {
   timeoutMs: QUERY_THREAD_TIMEOUT || 10000,
@@ -80,11 +81,18 @@ export async function save(ctx: any) {
   const db = getAppDB()
   const query = ctx.request.body
 
+  const datasource = await db.get(query.datasourceId)
+
+  let eventFn
   if (!query._id) {
     query._id = generateQueryID(query.datasourceId)
+    eventFn = () => events.query.created(datasource, query)
+  } else {
+    eventFn = () => events.query.updated(datasource, query)
   }
 
   const response = await db.put(query)
+  await eventFn()
   query._rev = response.rev
 
   ctx.body = query
@@ -106,10 +114,10 @@ export async function preview(ctx: any) {
   const db = getAppDB()
 
   const datasource = await db.get(ctx.request.body.datasourceId)
+  const query = ctx.request.body
   // preview may not have a queryId as it hasn't been saved, but if it does
   // this stops dynamic variables from calling the same query
-  const { fields, parameters, queryVerb, transformer, queryId } =
-    ctx.request.body
+  const { fields, parameters, queryVerb, transformer, queryId } = query
 
   try {
     const runFn = () =>
@@ -127,6 +135,7 @@ export async function preview(ctx: any) {
       })
 
     const { rows, keys, info, extra } = await quotas.addQuery(runFn)
+    await events.query.previewed(datasource, query)
     ctx.body = {
       rows,
       schemaFields: [...new Set(keys)],
@@ -210,8 +219,12 @@ const removeDynamicVariables = async (queryId: any) => {
 
 export async function destroy(ctx: any) {
   const db = getAppDB()
-  await removeDynamicVariables(ctx.params.queryId)
+  const queryId = ctx.params.queryId
+  await removeDynamicVariables(queryId)
+  const query = await db.get(queryId)
+  const datasource = await db.get(query.datasourceId)
   await db.remove(ctx.params.queryId, ctx.params.revId)
   ctx.message = `Query deleted.`
   ctx.status = 200
+  await events.query.deleted(datasource, query)
 }

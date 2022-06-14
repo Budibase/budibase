@@ -31,9 +31,6 @@
 
       published = await API.deployAppChanges()
 
-      analytics.captureEvent(Events.APP.PUBLISHED, {
-        appId: $store.appId,
-      })
       if (typeof onOk === "function") {
         await onOk()
       }
@@ -49,7 +46,7 @@
 
   const viewApp = () => {
     if (published) {
-      analytics.captureEvent(Events.APP.VIEW_PUBLISHED, {
+      analytics.captureEvent(Events.APP_VIEW_PUBLISHED, {
         appId: $store.appId,
         eventSource: EventSource.PORTAL,
       })

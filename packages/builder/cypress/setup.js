@@ -8,7 +8,7 @@ const SERVER_PORT = cypressConfig.env.PORT
 const WORKER_PORT = cypressConfig.env.WORKER_PORT
 
 process.env.NODE_ENV = "cypress"
-process.env.ENABLE_ANALYTICS = "false"
+process.env.ENABLE_ANALYTICS = "0"
 process.env.JWT_SECRET = cypressConfig.env.JWT_SECRET
 process.env.COUCH_URL = `leveldb://${tmpdir}/.data/`
 process.env.SELF_HOSTED = 1
