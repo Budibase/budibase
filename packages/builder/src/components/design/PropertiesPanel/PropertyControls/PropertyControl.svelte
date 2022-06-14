@@ -4,6 +4,8 @@
     readableToRuntimeBinding,
     runtimeToReadableBinding,
   } from "builderStore/dataBinding"
+  import { store } from "builderStore"
+  import { onDestroy } from "svelte"
 
   export let label = ""
   export let componentInstance = {}
@@ -16,6 +18,7 @@
   export let bindings = []
   export let componentBindings = []
   export let nested = false
+  export let highlighted = false
 
   $: allBindings = getAllBindings(bindings, componentBindings, nested)
   $: safeValue = getSafeValue(value, props.defaultValue, allBindings)
@@ -60,9 +63,15 @@
       ? defaultValue
       : enriched
   }
+
+  onDestroy(() => {
+    if (highlighted) {
+      store.actions.settings.highlight(null)
+    }
+  })
 </script>
 
-<div class="property-control" data-cy={`setting-${key}`}>
+<div class="property-control" data-cy={`setting-${key}`} class:highlighted>
   {#if type !== "boolean" && label}
     <div class="label">
       <Label>{label}</Label>
@@ -93,12 +102,14 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
-    padding: 4px 8px;
-    margin: -6px -10px;
-    border: 2px solid transparent;
-    border-radius: 4px;
+    transition: background 130ms ease-out, border-color 130ms ease-out;
+    border-left: 4px solid transparent;
+    margin-left: -4px;
   }
   .property-control.highlighted {
+    background: var(--spectrum-global-color-gray-300);
+    margin: -6px calc(-1 * var(--spacing-xl));
+    padding: 6px var(--spacing-xl) 6px calc(var(--spacing-xl) - 4px);
     border-color: var(--spectrum-global-color-blue-400);
   }
   .label {

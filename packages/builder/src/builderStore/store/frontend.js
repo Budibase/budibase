@@ -60,6 +60,8 @@ const INITIAL_FRONTEND_STATE = {
   theme: "",
   customTheme: {},
   previewDevice: "desktop",
+  highlightedSettingComponentId: null,
+  highlightedSettingKey: null,
 }
 
 export const getFrontendStore = () => {
@@ -660,6 +662,14 @@ export const getFrontendStore = () => {
           // Save layout
           await store.actions.layouts.save(layout)
         },
+      },
+    },
+    settings: {
+      highlight: key => {
+        store.update(state => ({
+          ...state,
+          highlightedSettingKey: key,
+        }))
       },
     },
   }
