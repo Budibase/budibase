@@ -13,7 +13,7 @@
     <div class="component-placeholder">
       <span>
         Add the <mark>{requiredSetting.label}</mark> setting to start using your
-        component &nbsp;
+        component -
       </span>
       <span
         class="spectrum-Link"
