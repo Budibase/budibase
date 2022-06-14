@@ -108,7 +108,7 @@ export const save = async (
     throw "Password must be specified."
   }
 
-  _id = _id || dbUtils.generateGlobalUserID(email)
+  _id = _id || dbUtils.generateGlobalUserID()
   user = {
     createdAt: Date.now(),
     ...dbUser,
