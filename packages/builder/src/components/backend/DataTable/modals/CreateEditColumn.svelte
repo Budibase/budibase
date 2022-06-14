@@ -14,7 +14,7 @@
   } from "@budibase/bbui"
   import { createEventDispatcher, onMount } from "svelte"
   import { cloneDeep } from "lodash/fp"
-  import { tables } from "stores/backend"
+  import { tables, datasources } from "stores/backend"
   import { TableNames, UNEDITABLE_USER_FIELDS } from "constants"
   import {
     FIELDS,
@@ -63,6 +63,7 @@
   let primaryDisplay =
     $tables.selected.primaryDisplay == null ||
     $tables.selected.primaryDisplay === field.name
+  let isCreating = originalName == null
 
   let table = $tables.selected
   let indexes = [...($tables.selected.indexes || [])]
@@ -81,6 +82,9 @@
     (field.type === LINK_TYPE && !field.tableId) ||
     Object.keys(errors).length !== 0
   $: errors = checkErrors(field)
+  $: datasource = $datasources.list.find(
+    source => source._id === table?.sourceId
+  )
 
   // used to select what different options can be displayed for column type
   $: canBeSearched =
@@ -430,6 +434,18 @@
       bind:value={field.constraints.datetime.earliest}
     />
     <DatePicker label="Latest" bind:value={field.constraints.datetime.latest} />
+    {#if datasource?.source !== "ORACLE" && datasource?.source !== "SQL_SERVER"}
+      <div>
+        <Label
+          tooltip={isCreating
+            ? null
+            : "We recommend not changing how timezones are handled for existing columns, as existing data will not be updated"}
+        >
+          Time zones
+        </Label>
+        <Toggle bind:value={field.ignoreTimezones} text="Ignore time zones" />
+      </div>
+    {/if}
   {:else if field.type === "number"}
     <Input
       type="number"

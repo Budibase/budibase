@@ -1,5 +1,9 @@
 const setup = require("./utilities")
 
+// need real Date for this test
+const tk = require('timekeeper');
+tk.reset()
+
 describe("test the delay logic", () => {
   it("should be able to run the delay", async () => {
     const time = 100
