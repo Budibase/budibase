@@ -93,10 +93,11 @@
           control={getComponentForSettingType(setting.type)}
           label={setting.label}
           key={setting.key}
-          value={componentInstance[setting.key] ??
-            componentDefinition[setting.key]?.defaultValue}
+          value={componentInstance[setting.key]}
+          defaultValue={setting.defaultValue}
           nested={setting.nested}
           onChange={val => updateProp(setting.key, val)}
+          highlighted={$store.highlightedSettingKey === setting.key}
           props={{
             options: setting.options || [],
             placeholder: setting.placeholder || null,
@@ -107,9 +108,6 @@
           {componentBindings}
           {componentInstance}
           {componentDefinition}
-          highlighted={$store.highlightedSettingKey === setting.key &&
-            (componentInstance[setting.key] == null ||
-              componentInstance[setting.key] === "")}
         />
       {/if}
     {/each}
