@@ -21,6 +21,8 @@ class QueryRunner {
     this.queryId = input.queryId
     this.noRecursiveQuery = flags.noRecursiveQuery
     this.cachedVariables = []
+    // Additional context items for enrichment
+    this.ctx = input.ctx
     // allows the response from a query to be stored throughout this
     // execution so that if it needs to be re-used for another variable
     // it can be
@@ -38,12 +40,24 @@ class QueryRunner {
 
     // pre-query, make sure datasource variables are added to parameters
     const parameters = await this.addDatasourceVariables()
+
+    // Enrich the parameters with the addition context items.
+    // 'user' is now a reserved variable key in mapping parameters
+    const enrichedParameters = enrichQueryFields(parameters, this.ctx)
+    const enrichedContext = { ...enrichedParameters, ...this.ctx }
+
+    // Parse global headers
+    datasource.config.defaultHeaders = enrichQueryFields(
+      datasource.config.defaultHeaders,
+      enrichedContext
+    )
+
     let query
     // handle SQL injections by interpolating the variables
     if (isSQL(datasource)) {
-      query = interpolateSQL(fields, parameters, integration)
+      query = interpolateSQL(fields, enrichedParameters, integration)
     } else {
-      query = enrichQueryFields(fields, parameters)
+      query = enrichQueryFields(fields, enrichedContext)
     }
 
     // Add pagination values for REST queries
@@ -67,7 +81,7 @@ class QueryRunner {
     if (transformer) {
       const runner = new ScriptRunner(transformer, {
         data: rows,
-        params: parameters,
+        params: enrichedParameters,
       })
       rows = runner.execute()
     }
