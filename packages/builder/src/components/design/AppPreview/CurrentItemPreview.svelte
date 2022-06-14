@@ -191,7 +191,7 @@
           await store.actions.components.paste(destination, data.mode)
         }
       } else if (type === "highlight-setting") {
-        console.log(data.setting)
+        store.actions.settings.highlight(data.setting)
       } else {
         console.warn(`Client sent unknown event type: ${type}`)
       }

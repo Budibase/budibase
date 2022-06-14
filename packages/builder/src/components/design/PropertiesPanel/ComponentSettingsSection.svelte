@@ -94,7 +94,7 @@
           label={setting.label}
           key={setting.key}
           value={componentInstance[setting.key] ??
-            componentInstance[setting.key]?.defaultValue}
+            componentDefinition[setting.key]?.defaultValue}
           nested={setting.nested}
           onChange={val => updateProp(setting.key, val)}
           props={{
@@ -107,6 +107,9 @@
           {componentBindings}
           {componentInstance}
           {componentDefinition}
+          highlighted={$store.highlightedSettingKey === setting.key &&
+            (componentInstance[setting.key] == null ||
+              componentInstance[setting.key] === "")}
         />
       {/if}
     {/each}
