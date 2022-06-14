@@ -1,5 +1,5 @@
 <script>
-  import { createEventDispatcher } from "svelte"
+  //import { createEventDispatcher } from "svelte"
   import "@spectrum-css/popover/dist/index-vars.css"
   import clickOutside from "../Actions/click_outside"
   import { fly } from "svelte/transition"
@@ -11,7 +11,7 @@
 
   let open = false
 
-  const dispatch = createEventDispatcher()
+  // const dispatch = createEventDispatcher()
 
   const iconList = [
     {
@@ -44,11 +44,12 @@
       ],
     },
   ]
-
+  /*
   const onChange = value => {
     dispatch("change", value)
     open = false
   }
+*/
 </script>
 
 <div class="container">
