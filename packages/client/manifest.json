@@ -274,7 +274,8 @@
       {
         "type": "text",
         "label": "Text",
-        "key": "text"
+        "key": "text",
+        "defaultValue": "New Button"
       },
       {
         "type": "select",
