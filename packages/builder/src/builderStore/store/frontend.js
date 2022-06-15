@@ -60,6 +60,7 @@ const INITIAL_FRONTEND_STATE = {
   theme: "",
   customTheme: {},
   previewDevice: "desktop",
+  highlightedSettingKey: null,
 }
 
 export const getFrontendStore = () => {
@@ -426,7 +427,7 @@ export const getFrontendStore = () => {
         })
 
         // Log event
-        analytics.captureEvent(Events.COMPONENT.CREATED, {
+        analytics.captureEvent(Events.COMPONENT_CREATED, {
           name: componentInstance._component,
         })
 
@@ -660,6 +661,14 @@ export const getFrontendStore = () => {
           // Save layout
           await store.actions.layouts.save(layout)
         },
+      },
+    },
+    settings: {
+      highlight: key => {
+        store.update(state => ({
+          ...state,
+          highlightedSettingKey: key,
+        }))
       },
     },
   }

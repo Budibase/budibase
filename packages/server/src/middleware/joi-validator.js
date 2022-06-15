@@ -1,3 +1,5 @@
+const Joi = require("joi")
+
 function validate(schema, property) {
   // Return a Koa middleware function
   return (ctx, next) => {
@@ -10,6 +12,12 @@ function validate(schema, property) {
     } else if (ctx.request[property] != null) {
       params = ctx.request[property]
     }
+
+    schema = schema.append({
+      createdAt: Joi.any().optional(),
+      updatedAt: Joi.any().optional(),
+    })
+
     const { error } = schema.validate(params)
     if (error) {
       ctx.throw(400, `Invalid ${property} - ${error.message}`)

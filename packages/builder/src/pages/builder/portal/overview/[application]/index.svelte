@@ -116,7 +116,7 @@
 
   const viewApp = () => {
     if (isPublished) {
-      analytics.captureEvent(Events.APP.VIEW_PUBLISHED, {
+      analytics.captureEvent(Events.APP_VIEW_PUBLISHED, {
         appId: $store.appId,
         eventSource: EventSource.PORTAL,
       })
@@ -155,9 +155,6 @@
       return
     }
     try {
-      analytics.captureEvent(Events.APP.UNPUBLISHED, {
-        appId: selectedApp.appId,
-      })
       await API.unpublishApp(selectedApp.prodId)
       await apps.load()
       notifications.success("App unpublished successfully")
@@ -274,12 +271,6 @@
                 Export
               </MenuItem>
               {#if isPublished}
-                <MenuItem
-                  on:click={() => unpublishApp(selectedApp)}
-                  icon="GlobeRemove"
-                >
-                  Unpublish
-                </MenuItem>
                 <MenuItem on:click={() => copyAppId(selectedApp)} icon="Copy">
                   Copy App ID
                 </MenuItem>
@@ -306,6 +297,7 @@
               app={selectedApp}
               deployments={latestDeployments}
               navigateTab={handleTabChange}
+              on:unpublish={e => unpublishApp(e.detail)}
             />
           </Tab>
           <Tab title="Automation History">

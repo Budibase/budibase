@@ -25,6 +25,7 @@ export interface FieldSchema {
   formula?: string
   formulaType?: string
   main?: boolean
+  ignoreTimezones?: boolean
   meta?: {
     toTable: string
     toKey: string

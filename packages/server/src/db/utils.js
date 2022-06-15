@@ -82,6 +82,7 @@ exports.isDevAppID = isDevAppID
 exports.isProdAppID = isProdAppID
 exports.USER_METDATA_PREFIX = `${DocumentTypes.ROW}${SEPARATOR}${InternalTables.USER_METADATA}${SEPARATOR}`
 exports.LINK_USER_METADATA_PREFIX = `${DocumentTypes.LINK}${SEPARATOR}${InternalTables.USER_METADATA}${SEPARATOR}`
+exports.TABLE_ROW_PREFIX = `${DocumentTypes.ROW}${SEPARATOR}${DocumentTypes.TABLE}`
 exports.ViewNames = ViewNames
 exports.ViewModes = ViewModes
 exports.InternalTables = InternalTables
