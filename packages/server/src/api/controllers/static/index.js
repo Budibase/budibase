@@ -42,7 +42,9 @@ async function prepareUpload({ s3Key, bucket, metadata, file }) {
 exports.serveBuilder = async function (ctx) {
   let builderPath = resolve(TOP_LEVEL_PATH, "builder")
   await send(ctx, ctx.file, { root: builderPath })
-  await events.serve.servedBuilder()
+  if (!ctx.file.includes("assets/")) {
+    await events.serve.servedBuilder()
+  }
 }
 
 exports.uploadFile = async function (ctx) {
