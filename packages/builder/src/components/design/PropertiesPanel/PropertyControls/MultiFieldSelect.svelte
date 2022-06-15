@@ -10,7 +10,6 @@
   export let componentInstance = {}
   export let value = ""
   export let placeholder
-  export let autofocus
 
   const dispatch = createEventDispatcher()
   $: datasource = getDatasourceForProvider($currentAsset, componentInstance)
@@ -32,10 +31,4 @@
   }
 </script>
 
-<Multiselect
-  {placeholder}
-  value={boundValue}
-  on:change={setValue}
-  {options}
-  {autofocus}
-/>
+<Multiselect {placeholder} value={boundValue} on:change={setValue} {options} />
