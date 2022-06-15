@@ -35,6 +35,7 @@ const pkg = require("../../package.json")
  */
 export const getCurrentIdentity = async (): Promise<Identity> => {
   let identityContext = identityCtx.getIdentity()
+  const environment = getDeploymentEnvironment()
 
   let identityType
 
@@ -52,6 +53,7 @@ export const getCurrentIdentity = async (): Promise<Identity> => {
       hosting,
       type: identityType,
       installationId,
+      environment,
     }
   } else if (identityType === IdentityType.TENANT) {
     const installationId = await getInstallationId()
@@ -64,6 +66,7 @@ export const getCurrentIdentity = async (): Promise<Identity> => {
       hosting,
       installationId,
       tenantId,
+      environment,
     }
   } else if (identityType === IdentityType.USER) {
     const userContext = identityContext as UserContext
@@ -84,6 +87,7 @@ export const getCurrentIdentity = async (): Promise<Identity> => {
       hosting,
       installationId,
       tenantId,
+      environment,
     }
   } else {
     throw new Error("Unknown identity type")
@@ -98,12 +102,14 @@ export const identifyInstallationGroup = async (
   const type = IdentityType.INSTALLATION
   const hosting = getHostingFromEnv()
   const version = pkg.version
+  const environment = getDeploymentEnvironment()
 
   const group: InstallationGroup = {
     id,
     type,
     hosting,
     version,
+    environment,
   }
 
   await identifyGroup(group, timestamp)
@@ -120,6 +126,7 @@ export const identifyTenantGroup = async (
   const id = await getEventTenantId(tenantId)
   const type = IdentityType.TENANT
   const installationId = await getInstallationId()
+  const environment = getDeploymentEnvironment()
 
   let hosting: Hosting
   let profession: string | undefined
@@ -137,6 +144,7 @@ export const identifyTenantGroup = async (
     id,
     type,
     hosting,
+    environment,
     installationId,
     profession,
     companySize,
@@ -164,6 +172,7 @@ export const identifyUser = async (
     account && account?.budibaseUserId === user._id ? account.verified : false
   const installationId = await getInstallationId()
   const hosting = account ? account.hosting : getHostingFromEnv()
+  const environment = getDeploymentEnvironment()
 
   const identity: UserIdentity = {
     id,
@@ -176,6 +185,7 @@ export const identifyUser = async (
     providerType,
     builder,
     admin,
+    environment,
   }
 
   await identify(identity, timestamp)
@@ -190,6 +200,7 @@ export const identifyAccount = async (account: Account) => {
   const accountHolder = true
   const hosting = account.hosting
   const installationId = await getInstallationId()
+  const environment = getDeploymentEnvironment()
 
   if (isCloudAccount(account)) {
     if (account.budibaseUserId) {
@@ -207,6 +218,7 @@ export const identifyAccount = async (account: Account) => {
     providerType,
     verified,
     accountHolder,
+    environment,
   }
 
   await identify(identity)
@@ -224,6 +236,14 @@ export const identifyGroup = async (
   timestamp?: string | number
 ) => {
   await processors.identifyGroup(group, timestamp)
+}
+
+const getDeploymentEnvironment = () => {
+  if (env.isDev()) {
+    return "development"
+  } else {
+    return env.DEPLOYMENT_ENVIRONMENT
+  }
 }
 
 const getHostingFromEnv = () => {

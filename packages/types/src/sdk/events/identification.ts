@@ -10,6 +10,8 @@ export enum GroupType {
 export interface Group {
   id: string
   type: IdentityType
+  environment: string
+  hosting: Hosting
 }
 
 export interface TenantGroup extends Group {
@@ -17,13 +19,11 @@ export interface TenantGroup extends Group {
   // as we don't have this at the user level
   profession?: string // only available in cloud
   companySize?: string // only available in cloud
-  hosting: Hosting // need hosting at the tenant level for cloud self host accounts
   installationId: string
 }
 
 export interface InstallationGroup extends Group {
   version: string
-  hosting: Hosting
 }
 
 // IDENTITIES
@@ -38,6 +38,7 @@ export interface Identity {
   id: string
   type: IdentityType
   hosting: Hosting
+  environment: string
   installationId?: string
   tenantId?: string
 }
