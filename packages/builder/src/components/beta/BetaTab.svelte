@@ -1,26 +1,43 @@
 <script>
-  import { Body, Button, Layout, Heading } from "@budibase/bbui"
+  import {
+    Body,
+    Button,
+    ButtonGroup,
+    Divider,
+    Layout,
+    Heading,
+    Page,
+  } from "@budibase/bbui"
   import { flags } from "stores/backend"
+  import { goto } from "@roxi/routify"
 
   function openFeedbackApp() {
-    window.open(`https://bb.budibase.app/betauifeedback`)
+    window.open(
+      "https://bb.budibase.app/app/design-feedback-hub#/beta-questions"
+    )
   }
 
   async function revertToOldBuilder() {
     await flags.toggleUiFeature("design_ui")
+    $goto("../")
     window.location.reload()
   }
 </script>
 
-<Layout>
-  <Heading size="M">Beta Builder</Heading>
-  <Body>
-    Your account has been given access to the budibase beta program. We would
-    love to hear what you think and get your feedback and suggestions on the new
-    Design UI.
-  </Body>
-  <Button cta on:click={openFeedbackApp}>Give Feedback</Button>
-  <Button secondary on:click={revertToOldBuilder}
-    >Revert back to old builder</Button
-  >
-</Layout>
+<Page maxWidth="90ch" wide={false}>
+  <Layout>
+    <Heading size="S">Beta Builder</Heading>
+    <Divider />
+    <Body>
+      Your account has been given access to the budibase beta program. We would
+      love to hear what you think and get your feedback and suggestions on the
+      new Design UI.
+    </Body>
+    <ButtonGroup>
+      <Button cta on:click={openFeedbackApp}>Give Feedback</Button>
+      <Button secondary on:click={revertToOldBuilder}
+        >Revert back to old builder</Button
+      >
+    </ButtonGroup>
+  </Layout>
+</Page>
