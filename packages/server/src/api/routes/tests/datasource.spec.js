@@ -5,6 +5,7 @@ let { basicDatasource } = setup.structures
 let { checkBuilderEndpoint } = require("./utilities/TestFunctions")
 const pg = require("pg")
 const { checkCacheForDynamicVariable } = require("../../../threads/utils")
+const { events } = require("@budibase/backend-core") 
 
 describe("/datasources", () => {
   let request = setup.getRequest()
@@ -16,6 +17,7 @@ describe("/datasources", () => {
   beforeEach(async () => {
     await config.init()
     datasource = await config.createDatasource()
+    jest.clearAllMocks()
   })
 
   describe("create", () => {
@@ -29,6 +31,7 @@ describe("/datasources", () => {
 
       expect(res.body.datasource.name).toEqual("Test")
       expect(res.body.errors).toBeUndefined()
+      expect(events.datasource.created).toBeCalledTimes(1)
     })
   })
 
@@ -44,6 +47,7 @@ describe("/datasources", () => {
 
       expect(res.body.datasource.name).toEqual("Updated Test")
       expect(res.body.errors).toBeUndefined()
+      expect(events.datasource.updated).toBeCalledTimes(1)
     })
 
     describe("dynamic variables", () => {
@@ -160,6 +164,7 @@ describe("/datasources", () => {
         .expect(200)
 
       expect(res.body.length).toEqual(1)
+      expect(events.datasource.deleted).toBeCalledTimes(1)
     })
 
     it("should apply authorization to endpoint", async () => {

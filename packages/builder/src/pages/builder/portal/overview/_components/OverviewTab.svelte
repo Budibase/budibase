@@ -13,10 +13,12 @@
   import clientPackage from "@budibase/client/package.json"
   import { processStringSync } from "@budibase/string-templates"
   import { users, auth } from "stores/portal"
+  import { createEventDispatcher } from "svelte"
 
   export let app
   export let deployments
   export let navigateTab
+  const dispatch = createEventDispatcher()
 
   const userInit = async () => {
     try {
@@ -24,6 +26,10 @@
     } catch (error) {
       notifications.error("Error getting user list")
     }
+  }
+
+  const unpublishApp = () => {
+    dispatch("unpublish", app)
   }
 
   let userPromise = userInit()
@@ -72,6 +78,9 @@
                     new Date(deployments[0].updatedAt).getTime(),
                 }
               )}
+              {#if isPublished}
+                - <Link on:click={unpublishApp}>Unpublish</Link>
+              {/if}
             {/if}
             {#if !deployments?.length}
               -

@@ -2,7 +2,6 @@ import { writable } from "svelte/store"
 import { API } from "api"
 import Automation from "./Automation"
 import { cloneDeep } from "lodash/fp"
-import analytics, { Events } from "analytics"
 
 const initialAutomationState = {
   automations: [],
@@ -144,9 +143,6 @@ const automationActions = store => ({
       )
       state.selectedBlock = newBlock
       return state
-    })
-    analytics.captureEvent(Events.AUTOMATION.BLOCK_ADDED, {
-      name: block.name,
     })
   },
   toggleFieldControl: value => {

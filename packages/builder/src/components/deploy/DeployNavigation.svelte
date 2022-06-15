@@ -57,7 +57,7 @@
   }
 
   const viewApp = () => {
-    analytics.captureEvent(Events.APP.VIEW_PUBLISHED, {
+    analytics.captureEvent(Events.APP_VIEW_PUBLISHED, {
       appId: selectedApp.appId,
       eventSource: EventSource.PORTAL,
     })
@@ -79,9 +79,6 @@
       return
     }
     try {
-      analytics.captureEvent(Events.APP.UNPUBLISHED, {
-        appId: selectedApp.appId,
-      })
       await API.unpublishApp(selectedApp.prodId)
       await apps.load()
       notifications.success("App unpublished successfully")
