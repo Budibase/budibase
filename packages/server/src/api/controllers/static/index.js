@@ -17,7 +17,6 @@ const { attachmentsRelativeURL } = require("../../../utilities")
 const { DocumentTypes } = require("../../../db/utils")
 const { getAppDB, getAppId } = require("@budibase/backend-core/context")
 const AWS = require("aws-sdk")
-const AWS_REGION = env.AWS_REGION ? env.AWS_REGION : "eu-west-1"
 
 async function prepareUpload({ s3Key, bucket, metadata, file }) {
   const response = await upload({
@@ -115,6 +114,7 @@ exports.getSignedUploadURL = async function (ctx) {
   // Determine type of datasource and generate signed URL
   let signedUrl
   let publicUrl
+  const AWS_REGION = datasource?.config?.region ?? "eu-west-1"
   if (datasource.source === "S3") {
     const { bucket, key } = ctx.request.body || {}
     if (!bucket || !key) {
