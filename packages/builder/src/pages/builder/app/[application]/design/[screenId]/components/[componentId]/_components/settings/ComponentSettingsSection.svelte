@@ -3,30 +3,17 @@
   import { Input, DetailSummary, notifications } from "@budibase/bbui"
   import { store } from "builderStore"
   import PropertyControl from "components/design/settings/controls/PropertyControl.svelte"
-  import LayoutSelect from "components/design/settings/controls/LayoutSelect.svelte"
-  import RoleSelect from "components/design/settings/controls/RoleSelect.svelte"
   import ResetFieldsButton from "components/design/settings/controls/ResetFieldsButton.svelte"
   import { getComponentForSetting } from "components/design/settings/componentSettings"
   import { Utils } from "@budibase/frontend-core"
 
   export let componentDefinition
   export let componentInstance
-  export let assetInstance
   export let bindings
   export let componentBindings
   export let isScreen = false
 
-  const layoutDefinition = []
-  const screenDefinition = [
-    { key: "description", label: "Description", control: Input },
-    { key: "routing.route", label: "Route", control: Input },
-    { key: "routing.roleId", label: "Access", control: RoleSelect },
-    { key: "layoutId", label: "Layout", control: LayoutSelect },
-  ]
-
   $: sections = getSections(componentDefinition)
-  $: isLayout = assetInstance && assetInstance.favicon
-  $: assetDefinition = isLayout ? layoutDefinition : screenDefinition
 
   const getSections = definition => {
     const settings = definition?.settings ?? []
@@ -107,10 +94,11 @@
           control={getComponentForSetting(setting)}
           label={setting.label}
           key={setting.key}
-          value={componentInstance[setting.key] ??
-            componentInstance[setting.key]?.defaultValue}
+          value={componentInstance[setting.key]}
+          defaultValue={setting.defaultValue}
           nested={setting.nested}
           onChange={val => updateProp(setting.key, val)}
+          highlighted={$store.highlightedSettingKey === setting.key}
           props={{
             // Generic settings
             placeholder: setting.placeholder || null,

@@ -61,7 +61,9 @@ function generateSchema(
         schema.boolean(key)
         break
       case FieldTypes.DATETIME:
-        schema.datetime(key)
+        schema.datetime(key, {
+          useTz: !column.ignoreTimezones,
+        })
         break
       case FieldTypes.ARRAY:
         schema.json(key)

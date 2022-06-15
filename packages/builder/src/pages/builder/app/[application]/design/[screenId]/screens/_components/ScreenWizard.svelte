@@ -4,9 +4,8 @@
   import DatasourceModal from "./DatasourceModal.svelte"
   import ScreenRoleModal from "./ScreenRoleModal.svelte"
   import sanitizeUrl from "builderStore/store/screenTemplates/utils/sanitizeUrl"
-  import { Modal, notifications } from "@budibase/bbui"
+  import { Modal, Select, notifications } from "@budibase/bbui"
   import { store } from "builderStore"
-  import analytics, { Events } from "analytics"
   import { get } from "svelte/store"
   import getTemplates from "builderStore/store/screenTemplates"
   import { tables } from "stores/backend"
@@ -66,15 +65,6 @@
 
         // Create the screen
         await store.actions.screens.save(screen)
-
-        // Analytics
-        if (screen.template) {
-          analytics.captureEvent(Events.SCREEN.CREATED, {
-            template: screen.template,
-            datasource: screen.datasource,
-            screenAccessRole,
-          })
-        }
 
         // Add link in layout for list screens
         if (screen.props._instanceName.endsWith("List")) {

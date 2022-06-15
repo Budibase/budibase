@@ -1,4 +1,5 @@
 import filterTests from "../support/filterTests"
+const interact = require('../support/interact')
 
 filterTests(['smoke', 'all'], () => {
     context("Revert apps", () => {
@@ -9,15 +10,15 @@ filterTests(['smoke', 'all'], () => {
         
         it("should try to revert an unpublished app", () => {
             // Click revert icon
-            cy.get(".toprightnav").within(() => {
-                cy.get("[aria-label='Revert']").click({ force: true })
+            cy.get(interact.TOP_RIGHT_NAV).within(() => {
+                cy.get(interact.AREA_LABEL_REVERT).click({ force: true })
             })
-            cy.get(".spectrum-Modal").within(() => {
+            cy.get(interact.SPECTRUM_MODAL).within(() => {
                 // Enter app name before revert
                 cy.get("input").type("Cypress Tests")
                 cy.intercept('**/revert').as('revertApp')
                 // Click Revert
-                cy.get(".spectrum-Button").contains("Revert").click({ force: true })
+                cy.get(interact.SPECTRUM_BUTTON).contains("Revert").click({ force: true })
                 // Intercept Request after button click & apply assertions
                 cy.wait("@revertApp")
                 cy.get("@revertApp").its('response.body').should('have.property', 'message', "App has not yet been deployed")
@@ -31,43 +32,43 @@ filterTests(['smoke', 'all'], () => {
             // Add initial component - Paragraph
             cy.addComponent("Elements", "Paragraph")
             // Publish app
-            cy.get(".spectrum-Button").contains("Publish").click({ force: true })
-            cy.get(".spectrum-ButtonGroup").within(() => {
-                cy.get(".spectrum-Button").contains("Publish").click({ force: true })
+            cy.get(interact.SPECTRUM_BUTTON).contains("Publish").click({ force: true })
+            cy.get(interact.SPECTRUM_BUTTON_GROUP).within(() => {
+                cy.get(interact.SPECTRUM_BUTTON).contains("Publish").click({ force: true })
             })
             cy.wait(1000)
-            cy.get(".spectrum-ButtonGroup").within(() => {
-                cy.get(".spectrum-Button").contains("Done").click({ force: true })
+            cy.get(interact.SPECTRUM_BUTTON_GROUP).within(() => {
+                cy.get(interact.SPECTRUM_BUTTON).contains("Done").click({ force: true })
             })
 
             // Add second component - Button
             cy.addComponent("Elements", "Button")
             // Click Revert
-            cy.get(".toprightnav").within(() => {
-                cy.get("[aria-label='Revert']").click({ force: true })
+            cy.get(interact.TOP_RIGHT_NAV).within(() => {
+                cy.get(interact.AREA_LABEL_REVERT).click({ force: true })
             })
-            cy.get(".spectrum-Dialog-grid").within(() => {
+            cy.get(interact.SPECTRUM_DIALOG_GRID).within(() => {
                 // Click Revert
-                cy.get(".spectrum-Button").contains("Revert").click({ force: true })
+                cy.get(interact.SPECTRUM_BUTTON).contains("Revert").click({ force: true })
                 cy.wait(1000)
             })
             // Confirm Paragraph component is still visible
-            cy.get(".root").contains("New Paragraph")
+            cy.get(interact.ROOT).contains("New Paragraph")
             // Confirm Button component is not visible
-            cy.get(".root").should("not.have.text", "New Button")
+            cy.get(interact.ROOT).should("not.have.text", "New Button")
             cy.wait(500)
         })
         
         it("should enter incorrect app name when reverting", () => {
             // Click Revert
-            cy.get(".toprightnav").within(() => {
-                cy.get("[aria-label='Revert']").click({ force: true })
+            cy.get(interact.TOP_RIGHT_NAV).within(() => {
+                cy.get(interact.AREA_LABEL_REVERT).click({ force: true })
             })
             // Enter incorrect app name
-            cy.get(".spectrum-Dialog-grid").within(() => {
+            cy.get(interact.SPECTRUM_DIALOG_GRID).within(() => {
                 cy.get("input").type("Cypress Tests")
                 // Revert button within modal should be disabled
-                cy.get(".spectrum-Button").eq(1).should('be.disabled')
+                cy.get(interact.SPECTRUM_BUTTON).eq(1).should('be.disabled')
             })
         })
     })

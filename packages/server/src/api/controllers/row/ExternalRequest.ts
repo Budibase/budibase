@@ -29,7 +29,10 @@ import { breakExternalTableId, isSQL } from "../../../integrations/utils"
 import { processObjectSync } from "@budibase/string-templates"
 // @ts-ignore
 import { cloneDeep } from "lodash/fp"
-import { processFormulas } from "../../../utilities/rowProcessor/utils"
+import {
+  processFormulas,
+  processDates,
+} from "../../../utilities/rowProcessor/utils"
 // @ts-ignore
 import { getAppDB } from "@budibase/backend-core/context"
 
@@ -434,7 +437,13 @@ module External {
           relationships
         )
       }
-      return processFormulas(table, Object.values(finalRows)).map((row: Row) =>
+
+      // Process some additional data types
+      let finalRowArray = Object.values(finalRows)
+      finalRowArray = processDates(table, finalRowArray)
+      finalRowArray = processFormulas(table, finalRowArray)
+
+      return finalRowArray.map((row: Row) =>
         this.squashRelationshipColumns(table, row, relationships)
       )
     }

@@ -52,7 +52,8 @@ const {
 } = require("@budibase/backend-core/context")
 import { getUniqueRows } from "../../utilities/usageQuota/rows"
 import { quotas } from "@budibase/pro"
-import { errors } from "@budibase/backend-core"
+import { errors, events, migrations } from "@budibase/backend-core"
+import { App, MigrationType } from "@budibase/types"
 
 const URL_REGEX_SLASH = /\/|\\/g
 
@@ -234,7 +235,7 @@ const performAppCreate = async (ctx: any) => {
   const apps = await getAllApps({ dev: true })
   const name = ctx.request.body.name
   checkAppName(ctx, apps, name)
-  const url = exports.getAppUrl(ctx)
+  const url = getAppUrl(ctx)
   checkAppUrl(ctx, apps, url)
 
   const { useTemplate, templateKey, templateString } = ctx.request.body
@@ -258,7 +259,7 @@ const performAppCreate = async (ctx: any) => {
   } catch (err) {
     // nothing to do
   }
-  const newApplication = {
+  const newApplication: App = {
     _id: DocumentTypes.APP_METADATA,
     _rev,
     appId: instance._id,
@@ -302,10 +303,42 @@ const performAppCreate = async (ctx: any) => {
   return newApplication
 }
 
-const appPostCreate = async (ctx: any, appId: string) => {
+const creationEvents = async (request: any, app: App) => {
+  let creationFns: ((app: App) => Promise<void>)[] = []
+
+  const body = request.body
+  if (body.useTemplate === "true") {
+    // from template
+    if (body.templateKey && body.templateKey !== "undefined") {
+      creationFns.push(a => events.app.templateImported(a, body.templateKey))
+    }
+    // from file
+    else if (request.files?.templateFile) {
+      creationFns.push(a => events.app.fileImported(a))
+    }
+    // unknown
+    else {
+      console.error("Could not determine template creation event")
+    }
+  }
+  creationFns.push(a => events.app.created(a))
+
+  for (let fn of creationFns) {
+    await fn(app)
+  }
+}
+
+const appPostCreate = async (ctx: any, app: App) => {
+  const tenantId = getTenantId()
+  await migrations.backPopulateMigrations({
+    type: MigrationType.APP,
+    tenantId,
+    appId: app.appId,
+  })
+  await creationEvents(ctx.request, app)
   // app import & template creation
   if (ctx.request.body.useTemplate === "true") {
-    const rows = await getUniqueRows([appId])
+    const rows = await getUniqueRows([app.appId])
     const rowCount = rows ? rows.length : 0
     if (rowCount) {
       try {
@@ -315,7 +348,7 @@ const appPostCreate = async (ctx: any, appId: string) => {
           // this import resulted in row usage exceeding the quota
           // delete the app
           // skip pre and post steps as no rows have been added to quotas yet
-          ctx.params.appId = appId
+          ctx.params.appId = app.appId
           await destroyApp(ctx)
         }
         throw err
@@ -326,7 +359,7 @@ const appPostCreate = async (ctx: any, appId: string) => {
 
 export const create = async (ctx: any) => {
   const newApplication = await quotas.addApp(() => performAppCreate(ctx))
-  await appPostCreate(ctx, newApplication.appId)
+  await appPostCreate(ctx, newApplication)
   await bustCache(CacheKeys.CHECKLIST)
   ctx.body = newApplication
   ctx.status = 200
@@ -341,15 +374,16 @@ export const update = async (ctx: any) => {
   if (name) {
     checkAppName(ctx, apps, name, ctx.params.appId)
   }
-  const url = await exports.getAppUrl(ctx)
+  const url = getAppUrl(ctx)
   if (url) {
     checkAppUrl(ctx, apps, url, ctx.params.appId)
     ctx.request.body.url = url
   }
 
-  const data = await updateAppPackage(ctx.request.body, ctx.params.appId)
+  const app = await updateAppPackage(ctx.request.body, ctx.params.appId)
+  await events.app.updated(app)
   ctx.status = 200
-  ctx.body = data
+  ctx.body = app
 }
 
 export const updateClient = async (ctx: any) => {
@@ -365,13 +399,15 @@ export const updateClient = async (ctx: any) => {
   }
 
   // Update versions in app package
+  const updatedToVersion = packageJson.version
   const appPackageUpdates = {
-    version: packageJson.version,
+    version: updatedToVersion,
     revertableVersion: currentVersion,
   }
-  const data = await updateAppPackage(appPackageUpdates, ctx.params.appId)
+  const app = await updateAppPackage(appPackageUpdates, ctx.params.appId)
+  await events.app.versionUpdated(app, currentVersion, updatedToVersion)
   ctx.status = 200
-  ctx.body = data
+  ctx.body = app
 }
 
 export const revertClient = async (ctx: any) => {
@@ -388,13 +424,16 @@ export const revertClient = async (ctx: any) => {
   }
 
   // Update versions in app package
+  const currentVersion = application.version
+  const revertedToVersion = application.revertableVersion
   const appPackageUpdates = {
-    version: application.revertableVersion,
+    version: revertedToVersion,
     revertableVersion: null,
   }
-  const data = await updateAppPackage(appPackageUpdates, ctx.params.appId)
+  const app = await updateAppPackage(appPackageUpdates, ctx.params.appId)
+  await events.app.versionReverted(app, currentVersion, revertedToVersion)
   ctx.status = 200
-  ctx.body = data
+  ctx.body = app
 }
 
 const destroyApp = async (ctx: any) => {
@@ -406,12 +445,15 @@ const destroyApp = async (ctx: any) => {
   }
 
   const db = isUnpublish ? getProdAppDB() : getAppDB()
+  const app = await db.get(DocumentTypes.APP_METADATA)
   const result = await db.destroy()
 
   if (isUnpublish) {
     await quotas.removePublishedApp()
+    await events.app.unpublished(app)
   } else {
     await quotas.removeApp()
+    await events.app.deleted(app)
   }
 
   /* istanbul ignore next */
@@ -524,8 +566,8 @@ const updateAppPackage = async (appPackage: any, appId: any) => {
   // Redis, shouldn't ever store it
   delete newAppPackage.lockedBy
 
-  const response = await db.put(newAppPackage)
+  await db.put(newAppPackage)
   // remove any cached metadata, so that it will be updated
   await appCache.invalidateAppMetadata(appId)
-  return response
+  return newAppPackage
 }

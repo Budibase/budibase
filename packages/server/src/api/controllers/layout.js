@@ -1,6 +1,7 @@
 const { EMPTY_LAYOUT } = require("../../constants/layouts")
 const { generateLayoutID, getScreenParams } = require("../../db/utils")
 const { getAppDB } = require("@budibase/backend-core/context")
+const { events } = require("@budibase/backend-core")
 
 exports.save = async function (ctx) {
   const db = getAppDB()
@@ -16,6 +17,7 @@ exports.save = async function (ctx) {
 
   layout._id = layout._id || generateLayoutID()
   const response = await db.put(layout)
+  await events.layout.created(layout)
   layout._rev = response.rev
 
   ctx.body = layout
@@ -39,6 +41,7 @@ exports.destroy = async function (ctx) {
   }
 
   await db.remove(layoutId, layoutRev)
+  await events.layout.deleted(layoutId)
   ctx.body = { message: "Layout deleted successfully" }
   ctx.status = 200
 }

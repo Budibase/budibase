@@ -15,7 +15,6 @@ import {
 } from "./utils"
 import { DatasourcePlus } from "./base/datasourcePlus"
 import dayjs from "dayjs"
-import { FieldTypes } from "../constants"
 const { NUMBER_REGEX } = require("../utilities")
 
 module MySQLModule {
@@ -30,6 +29,7 @@ module MySQLModule {
     database: string
     ssl?: { [key: string]: any }
     rejectUnauthorized: boolean
+    typeCast: Function
   }
 
   const SCHEMA: Integration = {
@@ -89,6 +89,8 @@ module MySQLModule {
     },
   }
 
+  const TimezoneAwareDateTypes = ["timestamp"]
+
   function bindingTypeCoerce(bindings: any[]) {
     for (let i = 0; i < bindings.length; i++) {
       const binding = bindings[i]
@@ -131,7 +133,19 @@ module MySQLModule {
       }
       // @ts-ignore
       delete config.rejectUnauthorized
-      this.config = config
+      this.config = {
+        ...config,
+        typeCast: function (field: any, next: any) {
+          if (
+            field.type == "DATETIME" ||
+            field.type === "DATE" ||
+            field.type === "TIMESTAMP"
+          ) {
+            return field.string()
+          }
+          return next()
+        },
+      }
     }
 
     getBindingIdentifier(): string {
