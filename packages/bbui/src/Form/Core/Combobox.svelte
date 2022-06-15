@@ -3,29 +3,21 @@
   import "@spectrum-css/popover/dist/index-vars.css"
   import "@spectrum-css/menu/dist/index-vars.css"
   import { fly } from "svelte/transition"
-  import { createEventDispatcher, getContext } from "svelte"
+  import { createEventDispatcher } from "svelte"
 
   export let value = null
   export let id = null
   export let placeholder = "Choose an option or type"
   export let disabled = false
   export let readonly = false
-  export let autofocus = false
   export let error = null
   export let options = []
   export let getOptionLabel = option => option
   export let getOptionValue = option => option
 
-  const context = getContext("builderFocus")
   const dispatch = createEventDispatcher()
   let open = false
   let focus = false
-  let comboInput
-
-  $: focus = autofocus && comboInput !== undefined
-  $: if (focus) {
-    comboInput.focus()
-  }
 
   const selectOption = value => {
     dispatch("change", value)
@@ -57,16 +49,10 @@
     class:is-focused={open || focus}
   >
     <input
-      bind:this={comboInput}
       {id}
       type="text"
-      on:focus={() => {
-        focus = true
-      }}
-      on:blur={() => {
-        focus = false
-        context.clear()
-      }}
+      on:focus={() => (focus = true)}
+      on:blur={() => (focus = false)}
       on:change={onType}
       value={value || ""}
       placeholder={placeholder || ""}

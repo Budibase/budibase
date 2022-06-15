@@ -73,15 +73,6 @@
 
     return true
   }
-
-  const isFocused = setting => {
-    if (!$store.builderFocus) {
-      return false
-    }
-    return (
-      setting.required === true && $store.builderFocus[0].key === setting.key
-    )
-  }
 </script>
 
 {#each sections as section, idx (section.name)}
@@ -102,10 +93,11 @@
           control={getComponentForSettingType(setting.type)}
           label={setting.label}
           key={setting.key}
-          value={componentInstance[setting.key] ??
-            componentInstance[setting.key]?.defaultValue}
+          value={componentInstance[setting.key]}
+          defaultValue={setting.defaultValue}
           nested={setting.nested}
           onChange={val => updateProp(setting.key, val)}
+          highlighted={$store.highlightedSettingKey === setting.key}
           props={{
             options: setting.options || [],
             placeholder: setting.placeholder || null,
@@ -116,7 +108,6 @@
           {componentBindings}
           {componentInstance}
           {componentDefinition}
-          autofocus={isFocused(setting)}
         />
       {/if}
     {/each}

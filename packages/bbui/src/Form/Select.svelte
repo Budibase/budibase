@@ -18,7 +18,6 @@
   export let autoWidth = false
   export let sort = false
   export let tooltip = ""
-  export let autofocus = false
 
   const dispatch = createEventDispatcher()
   const onChange = e => {
@@ -45,7 +44,6 @@
     {placeholder}
     {autoWidth}
     {sort}
-    {autofocus}
     {getOptionLabel}
     {getOptionValue}
     {getOptionIcon}
