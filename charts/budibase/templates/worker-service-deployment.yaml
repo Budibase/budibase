@@ -27,6 +27,8 @@ spec:
     spec:
       containers:
       - env:
+        - name: DEPLOYMENT_ENVIRONMENT
+          value: "kubernetes"
         - name: CLUSTER_PORT
           value: {{ .Values.services.worker.port | quote }}
         {{ if .Values.services.couchdb.enabled }}

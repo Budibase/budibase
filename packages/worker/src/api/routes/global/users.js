@@ -4,8 +4,9 @@ const joiValidator = require("../../../middleware/joi-validator")
 const adminOnly = require("../../../middleware/adminOnly")
 const Joi = require("joi")
 const cloudRestricted = require("../../../middleware/cloudRestricted")
-const { buildUserSaveValidation } = require("../../utilities/validation")
+const { users } = require("../validation")
 const selfController = require("../../controllers/global/self")
+const builderOrAdmin = require("../../../middleware/builderOrAdmin")
 
 const router = Router()
 
@@ -41,10 +42,10 @@ router
   .post(
     "/api/global/users",
     adminOnly,
-    buildUserSaveValidation(),
+    users.buildUserSaveValidation(),
     controller.save
   )
-  .get("/api/global/users", adminOnly, controller.fetch)
+  .get("/api/global/users", builderOrAdmin, controller.fetch)
   .delete("/api/global/users/:id", adminOnly, controller.destroy)
   .get("/api/global/roles/:appId")
   .post(
@@ -72,7 +73,7 @@ router
   .get("/api/global/users/self", selfController.getSelf)
   .post(
     "/api/global/users/self",
-    buildUserSaveValidation(true),
+    users.buildUserSaveValidation(true),
     selfController.updateSelf
   )
 

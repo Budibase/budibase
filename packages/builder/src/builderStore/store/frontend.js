@@ -20,6 +20,7 @@ import analytics, { Events } from "analytics"
 import {
   findComponentType,
   findComponentParent,
+  findComponentPath,
   findClosestMatchingComponent,
   findAllMatchingComponents,
   findComponent,
@@ -422,11 +423,26 @@ export const getFrontendStore = () => {
         store.update(state => {
           state.currentView = "component"
           state.selectedComponentId = componentInstance._id
+
+          const focusSetting = resolveComponentFocus(
+            asset?.props,
+            componentInstance
+          )
+          if (focusSetting) {
+            state.builderFocus = [
+              {
+                key: focusSetting.key,
+                target: state.selectedComponentId,
+                location: "component_settings",
+              },
+            ]
+          }
+
           return state
         })
 
         // Log event
-        analytics.captureEvent(Events.COMPONENT.CREATED, {
+        analytics.captureEvent(Events.COMPONENT_CREATED, {
           name: componentInstance._component,
         })
 
@@ -662,6 +678,33 @@ export const getFrontendStore = () => {
         },
       },
     },
+  }
+
+  // Determine the initial focus for newly created components
+  // Take into account the fact that data providers should be
+  // skipped if they will be inherited from the path
+  const resolveComponentFocus = (asset_props, componentInstance) => {
+    const definition = store.actions.components.getDefinition(
+      componentInstance._component
+    )
+    let providerIdx = -1
+    let required = definition.settings.filter((s, idx) => {
+      if (s.type === "dataProvider") {
+        providerIdx = idx
+      }
+      return s.required
+    })
+
+    if (providerIdx > -1) {
+      const path = findComponentPath(asset_props, componentInstance._id)
+      const providers = path.filter(c =>
+        c._component?.endsWith("/dataprovider")
+      )
+      if (providers.length) {
+        required = required.splice(providerIdx, 1)
+      }
+    }
+    return required[0]
   }
 
   return store

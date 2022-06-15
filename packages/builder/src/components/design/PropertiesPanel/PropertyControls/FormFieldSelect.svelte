@@ -10,6 +10,7 @@
   export let componentInstance
   export let value
   export let type
+  export let autofocus = false
 
   $: form = findClosestMatchingComponent(
     $currentAsset?.props,
@@ -40,4 +41,4 @@
   }
 </script>
 
-<Combobox on:change {value} {options} />
+<Combobox on:change {value} {options} {autofocus} />
