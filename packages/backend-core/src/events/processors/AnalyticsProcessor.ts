@@ -17,7 +17,7 @@ export default class AnalyticsProcessor implements EventProcessor {
   posthog: PosthogProcessor | undefined
 
   constructor() {
-    if (env.POSTHOG_TOKEN) {
+    if (env.POSTHOG_TOKEN && !env.isTest()) {
       this.posthog = new PosthogProcessor(env.POSTHOG_TOKEN)
     }
   }
