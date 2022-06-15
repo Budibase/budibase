@@ -14,6 +14,7 @@ import {
   App,
   TenantBackfillSucceededEvent,
   Event,
+  User,
 } from "@budibase/types"
 import env from "../../../environment"
 import { DEFAULT_TIMESTAMP } from "."
@@ -94,8 +95,22 @@ export const run = async (db: any) => {
     const totals: any = {}
     const errors: any = []
 
+    let allUsers: User[] = []
     try {
-      const installTimestamp = await getInstallTimestamp(db)
+      allUsers = await users.getUsers(db)
+    } catch (e: any) {
+      handleError(e, errors)
+    }
+
+    if (!allUsers || allUsers.length === 0) {
+      // first time startup - we don't need to backfill anything
+      // tenant will be identified when admin user is created
+      await events.installation.firstStartup()
+      return
+    }
+
+    try {
+      const installTimestamp = await getInstallTimestamp(db, allUsers)
       if (installTimestamp) {
         timestamp = installTimestamp
       }
@@ -175,20 +190,25 @@ export const isComplete = async (): Promise<boolean> => {
 }
 
 export const getInstallTimestamp = async (
-  globalDb: any
+  globalDb: any,
+  allUsers?: User[]
 ): Promise<number | undefined> => {
-  const allUsers = await users.getUsers(globalDb)
+  if (!allUsers) {
+    allUsers = await users.getUsers(globalDb)
+  }
 
   // get the oldest user timestamp
-  const timestamps = allUsers
-    .map(user => user.createdAt)
-    .filter(timestamp => !!timestamp)
-    .sort(
-      (a, b) =>
-        new Date(a as number).getTime() - new Date(b as number).getTime()
-    )
+  if (allUsers) {
+    const timestamps = allUsers
+      .map(user => user.createdAt)
+      .filter(timestamp => !!timestamp)
+      .sort(
+        (a, b) =>
+          new Date(a as number).getTime() - new Date(b as number).getTime()
+      )
 
-  if (timestamps.length) {
-    return timestamps[0]
+    if (timestamps.length) {
+      return timestamps[0]
+    }
   }
 }
