@@ -39,10 +39,11 @@ export enum Event {
   ORG_LOGO_UPDATED = "org:info:logo:updated",
   ORG_PLATFORM_URL_UPDATED = "org:platformurl:updated",
 
-  // VERSIONS
-  VERSION_CHECKED = "version:checked",
-  VERSION_UPGRADED = "version:upgraded",
-  VERSION_DOWNGRADED = "version:downgraded",
+  // INSTALLATION
+  INSTALLATION_VERSION_CHECKED = "installation:version:checked",
+  INSTALLATION_VERSION_UPGRADED = "installation:version:upgraded",
+  INSTALLATION_VERSION_DOWNGRADED = "installation:version:downgraded",
+  INSTALLATION_FIRST_STARTUP = "installation:firstStartup",
 
   // ORG / ANALYTICS
   ANALYTICS_OPT_OUT = "analytics:opt:out",
