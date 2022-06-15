@@ -207,10 +207,23 @@
 
     // Check if we have any missing required settings
     missingRequiredSettings = settingsDefinition.filter(setting => {
-      return (
-        setting.required &&
-        (instance[setting.key] == null || instance[setting.key] === "")
-      )
+      let empty = instance[setting.key] == null || instance[setting.key] === ""
+      let missing = setting.required && empty
+
+      // Check if this setting depends on another, as it may not be required
+      if (setting.dependsOn) {
+        const dependsOnKey = setting.dependsOn.setting || setting.dependsOn
+        const dependsOnValue = setting.dependsOn.value
+        const realDependentValue = instance[dependsOnKey]
+        if (dependsOnValue == null && realDependentValue == null) {
+          return false
+        }
+        if (dependsOnValue !== realDependentValue) {
+          return false
+        }
+      }
+
+      return missing
     })
 
     // Force an initial enrichment of the new settings
