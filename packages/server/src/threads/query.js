@@ -47,10 +47,12 @@ class QueryRunner {
     const enrichedContext = { ...enrichedParameters, ...this.ctx }
 
     // Parse global headers
-    datasource.config.defaultHeaders = enrichQueryFields(
-      datasource.config.defaultHeaders,
-      enrichedContext
-    )
+    if (datasource.config.defaultHeaders) {
+      datasource.config.defaultHeaders = enrichQueryFields(
+        datasource.config.defaultHeaders,
+        enrichedContext
+      )
+    }
 
     let query
     // handle SQL injections by interpolating the variables
