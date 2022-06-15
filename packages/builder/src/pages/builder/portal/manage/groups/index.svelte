@@ -12,30 +12,37 @@
     Tags,
     IconPicker,
   } from "@budibase/bbui"
+  import { API } from "api"
+  import { groups } from "stores/portal"
+  import { onMount } from "svelte"
+
   import UserGroupsRow from "./_components/UserGroupsRow.svelte"
+
   let modal
   let selectedColor
   let selectedIcon
+  let groupName
   let proPlan = true
 
-  let userGroupData = [
-    {
-      _id: "gr_123456",
-      color: "green",
-      icon: "Anchor",
-      name: "Core Team",
-      userCount: 5,
-      appCount: 2,
-    },
-    {
-      _id: "gr_45678",
-      color: "red",
-      icon: "Beaker",
-      name: "QA Team",
-      userCount: 3,
-      appCount: 7,
-    },
-  ]
+  async function saveConfig() {
+    try {
+      API.saveGroup({
+        color: selectedColor,
+        icon: selectedIcon,
+        name: groupName,
+      })
+    } catch (error) {
+      notifications.error(`Failed to save group`)
+    }
+  }
+
+  onMount(async () => {
+    try {
+      await groups.init()
+    } catch (error) {
+      notifications.error("Error getting User groups")
+    }
+  })
 </script>
 
 <Layout noPadding>
@@ -72,7 +79,7 @@
   </div>
 
   <div class="groupTable">
-    {#each userGroupData as group}
+    {#each $groups as group}
       <div>
         <UserGroupsRow {group} />
       </div>
@@ -81,8 +88,13 @@
 </Layout>
 
 <Modal bind:this={modal}>
-  <ModalContent size="M" title="Create User Group" confirmText="Save">
-    <Input label="Team name" />
+  <ModalContent
+    onConfirm={saveConfig}
+    size="M"
+    title="Create User Group"
+    confirmText="Save"
+  >
+    <Input bind:value={groupName} label="Team name" />
     <div class="modal-format">
       <div class="modal-inner">
         <Body size="XS">Icon</Body>

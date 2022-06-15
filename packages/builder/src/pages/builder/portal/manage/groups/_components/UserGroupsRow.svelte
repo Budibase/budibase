@@ -20,7 +20,7 @@
 <div class="desktop tableElement">
   <Icon name="User" />
   <div style="margin-left: var(--spacing-l">
-    {parseInt(userCount)} app{parseInt(userCount) === 1 ? "" : "s"}
+    {parseInt(userCount)} user{parseInt(userCount) === 1 ? "" : "s"}
   </div>
 </div>
 <div class="desktop tableElement">
