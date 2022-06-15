@@ -1,6 +1,5 @@
 <script>
   import { Select, ModalContent } from "@budibase/bbui"
-  import analytics, { Events } from "analytics"
   import { RoleUtils } from "@budibase/frontend-core"
   import { roles } from "stores/backend"
   import { get } from "svelte/store"
@@ -16,9 +15,6 @@
 
   const onChangeRole = e => {
     const roleId = e.detail
-    analytics.captureEvent(Events.SCREEN.CREATE_ROLE_UPDATED, {
-      screenAccessRole: roleId,
-    })
     if (routeExists(screenUrl, roleId)) {
       error = "This URL is already taken for this access role"
     } else {

@@ -1,5 +1,4 @@
 import { writable, get } from "svelte/store"
-import { API } from "api"
 import { devToolsStore } from "./devTools.js"
 
 const dispatchEvent = (type, data = {}) => {
@@ -13,7 +12,6 @@ const createBuilderStore = () => {
     selectedComponentId: null,
     editMode: false,
     previewId: null,
-    selectedPath: [],
     theme: null,
     customTheme: null,
     previewDevice: "desktop",
@@ -49,13 +47,6 @@ const createBuilderStore = () => {
     notifyLoaded: () => {
       dispatchEvent("preview-loaded")
     },
-    pingEndUser: async () => {
-      try {
-        await API.pingEndUser()
-      } catch (error) {
-        // Do nothing
-      }
-    },
     moveComponent: (componentId, destinationComponentId, mode) => {
       dispatchEvent("move-component", {
         componentId,
@@ -80,6 +71,9 @@ const createBuilderStore = () => {
     },
     requestAddComponent: () => {
       dispatchEvent("request-add-component")
+    },
+    highlightSetting: setting => {
+      dispatchEvent("highlight-setting", { setting })
     },
   }
   return {

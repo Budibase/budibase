@@ -176,6 +176,18 @@
         }
       } else if (type === "request-add-component") {
         $goto("./components/new")
+      } else if (type === "highlight-setting") {
+        store.actions.settings.highlight(data.setting)
+
+        // Also scroll setting into view
+        const selector = `[data-cy="${data.setting}-prop-control"`
+        const element = document.querySelector(selector)?.parentElement
+        if (element) {
+          element.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          })
+        }
       } else {
         console.warn(`Client sent unknown event type: ${type}`)
       }

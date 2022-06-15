@@ -18,6 +18,7 @@ const { logAlert } = require("@budibase/backend-core/logging")
 const { Thread } = require("./threads")
 import redis from "./utilities/redis"
 import * as migrations from "./migrations"
+import { events, installation } from "@budibase/backend-core"
 
 const app = new Koa()
 
@@ -83,6 +84,7 @@ server.on("close", async () => {
   }
   await automations.shutdown()
   await redis.shutdown()
+  await events.shutdown()
   await Thread.shutdown()
   api.shutdown()
   if (!env.isTest()) {
@@ -96,6 +98,22 @@ module.exports = server.listen(env.PORT || 0, async () => {
   eventEmitter.emitPort(env.PORT)
   fileSystem.init()
   await redis.init()
+
+  // run migrations on startup if not done via http
+  // not recommended in a clustered environment
+  if (!env.HTTP_MIGRATIONS && !env.isTest()) {
+    try {
+      await migrations.migrate()
+    } catch (e) {
+      logAlert("Error performing migrations. Exiting.", e)
+      shutdown()
+    }
+  }
+
+  // check for version updates
+  await installation.checkInstallVersion()
+
+  // done last - this will never complete
   await automations.init()
 })
 
@@ -118,12 +136,3 @@ process.on("uncaughtException", err => {
 process.on("SIGTERM", () => {
   shutdown()
 })
-
-// run migrations on startup if not done via http
-// not recommended in a clustered environment
-if (!env.HTTP_MIGRATIONS) {
-  migrations.migrate().catch(err => {
-    logAlert("Error performing migrations. Exiting.", err)
-    shutdown()
-  })
-}
