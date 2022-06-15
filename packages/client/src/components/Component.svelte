@@ -154,6 +154,7 @@
     selected,
     name,
     editing,
+    type: instance._component,
   })
 
   const initialise = instance => {

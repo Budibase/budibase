@@ -1,6 +1,6 @@
 {
   "name": "@budibase/builder",
-  "version": "1.0.192-alpha.6",
+  "version": "1.0.200-alpha.3",
   "license": "GPL-3.0",
   "private": true,
   "scripts": {
@@ -69,10 +69,10 @@
     }
   },
   "dependencies": {
-    "@budibase/bbui": "^1.0.192-alpha.6",
-    "@budibase/client": "^1.0.192-alpha.6",
-    "@budibase/frontend-core": "^1.0.192-alpha.6",
-    "@budibase/string-templates": "^1.0.192-alpha.6",
+    "@budibase/bbui": "^1.0.200-alpha.3",
+    "@budibase/client": "^1.0.200-alpha.3",
+    "@budibase/frontend-core": "^1.0.200-alpha.3",
+    "@budibase/string-templates": "^1.0.200-alpha.3",
     "@sentry/browser": "5.19.1",
     "@spectrum-css/page": "^3.0.1",
     "@spectrum-css/vars": "^3.0.1",
@@ -115,6 +115,7 @@
     "svelte": "^3.38.2",
     "svelte-jester": "^1.3.2",
     "ts-node": "^10.4.0",
+    "tsconfig-paths": "4.0.0",
     "typescript": "^4.5.5",
     "vite": "^2.1.5"
   },
