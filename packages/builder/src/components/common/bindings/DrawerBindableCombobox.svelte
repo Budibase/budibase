@@ -18,7 +18,6 @@
   export let options
   export let allowJS = true
   export let appendBindingsAsOptions = true
-  export let autofocus = false
 
   const dispatch = createEventDispatcher()
   let bindingDrawer
@@ -62,7 +61,6 @@
     on:pick={e => onChange(e.detail, true)}
     {placeholder}
     options={allOptions}
-    {autofocus}
   />
   {#if !disabled}
     <div

@@ -76,9 +76,7 @@
       {#if !formContext}
         <Placeholder text="Form components need to be wrapped in a form" />
       {:else if !fieldState}
-        {#if $builderStore.inBuilder}
-          <Placeholder />
-        {/if}
+        <Placeholder />
       {:else if schemaType && schemaType !== type && type !== "options"}
         <Placeholder
           text="This Field setting is the wrong data type for this component"

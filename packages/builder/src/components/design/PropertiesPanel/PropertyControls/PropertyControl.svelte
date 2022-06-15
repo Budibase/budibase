@@ -4,8 +4,8 @@
     readableToRuntimeBinding,
     runtimeToReadableBinding,
   } from "builderStore/dataBinding"
-  import { setContext } from "svelte"
   import { store } from "builderStore"
+  import { onDestroy } from "svelte"
 
   export let label = ""
   export let componentInstance = {}
@@ -13,15 +13,17 @@
   export let key = ""
   export let type = ""
   export let value = null
+  export let defaultValue = null
   export let props = {}
   export let onChange = () => {}
   export let bindings = []
   export let componentBindings = []
   export let nested = false
-  export let autofocus = false
+  export let highlighted = false
 
+  $: nullishValue = value == null || value === ""
   $: allBindings = getAllBindings(bindings, componentBindings, nested)
-  $: safeValue = getSafeValue(value, props.defaultValue, allBindings)
+  $: safeValue = getSafeValue(value, defaultValue, allBindings)
   $: tempValue = safeValue
   $: replaceBindings = val => readableToRuntimeBinding(allBindings, val)
 
@@ -64,30 +66,18 @@
       : enriched
   }
 
-  setContext("builderFocus", {
-    clear: () => {
-      if (!$store?.builderFocus) {
-        return
-      }
-      store.update(state => {
-        const updatedFocus = $store?.builderFocus?.filter(focus => {
-          return (
-            focus.location === "component_settings" &&
-            focus.target !== componentInstance._id
-          )
-        })
-        if (updatedFocus?.length > 0) {
-          state.builderFocus = updatedFocus
-        } else {
-          delete state.builderFocus
-        }
-        return state
-      })
-    },
+  onDestroy(() => {
+    if (highlighted) {
+      store.actions.settings.highlight(null)
+    }
   })
 </script>
 
-<div class="property-control" data-cy={`setting-${key}`}>
+<div
+  class="property-control"
+  class:highlighted={highlighted && nullishValue}
+  data-cy={`setting-${key}`}
+>
   {#if type !== "boolean" && label}
     <div class="label">
       <Label>{label}</Label>
@@ -107,7 +97,6 @@
       {key}
       {type}
       {...props}
-      {autofocus}
     />
   </div>
 </div>
@@ -119,6 +108,14 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
+    transition: background 130ms ease-out, border-color 130ms ease-out;
+    border-left: 4px solid transparent;
+    margin: -6px calc(-1 * var(--spacing-xl));
+    padding: 6px var(--spacing-xl) 6px calc(var(--spacing-xl) - 4px);
+  }
+  .property-control.highlighted {
+    background: var(--spectrum-global-color-gray-300);
+    border-color: var(--spectrum-global-color-blue-400);
   }
   .label {
     padding-bottom: var(--spectrum-global-dimension-size-65);
