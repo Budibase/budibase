@@ -11,7 +11,7 @@ const tenantsRoutes = require("./system/tenants")
 const statusRoutes = require("./system/status")
 const selfRoutes = require("./global/self")
 const licenseRoutes = require("./global/license")
-
+const userGroupRoutes = require("./global/groups")
 exports.routes = [
   configRoutes,
   userRoutes,
@@ -26,4 +26,5 @@ exports.routes = [
   statusRoutes,
   selfRoutes,
   licenseRoutes,
+  userGroupRoutes
 ]

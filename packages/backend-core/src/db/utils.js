@@ -149,6 +149,29 @@ exports.getTemplateParams = (ownerId, templateId, otherProps = {}) => {
 }
 
 /**
+ * Generates a new user group ID
+ * @returns {string} The new user group ID which info can be stored under.
+ */
+exports.generateUserGroupID = () => {
+  return `${DocumentTypes.GROUP}${SEPARATOR}${newid()}`
+}
+
+/**
+ * Gets parameters for retrieving groups.
+ */
+exports.getUserGroupsParams = (groupId, otherProps = {}) => {
+  if (!groupId) {
+    groupId = ""
+  }
+  return {
+    ...otherProps,
+    startkey: `${DocumentTypes.GROUP}${SEPARATOR}${groupId}`,
+    endkey: `${DocumentTypes.GROUP}${SEPARATOR}${groupId}${UNICODE_MAX}`,
+  }
+}
+
+
+/**
  * Generates a new role ID.
  * @returns {string} The new role ID which the role doc can be stored under.
  */

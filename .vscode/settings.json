@@ -3,5 +3,8 @@
     "editor.codeActionsOnSave": {
         "source.fixAll": true
     },
-    "editor.defaultFormatter": "svelte.svelte-vscode"
+    "editor.defaultFormatter": "svelte.svelte-vscode",
+    "[javascript]": {
+        "editor.defaultFormatter": "vscode.typescript-language-features"
+    }
 }
