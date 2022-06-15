@@ -14,10 +14,11 @@ const env = require("../../../environment")
 const { clientLibraryPath } = require("../../../utilities")
 const { upload } = require("../../../utilities/fileSystem")
 const { attachmentsRelativeURL } = require("../../../utilities")
-const { DocumentTypes } = require("../../../db/utils")
+const { DocumentTypes, isDevAppID } = require("../../../db/utils")
 const { getAppDB, getAppId } = require("@budibase/backend-core/context")
 const AWS = require("aws-sdk")
 const AWS_REGION = env.AWS_REGION ? env.AWS_REGION : "eu-west-1"
+const { events } = require("@budibase/backend-core")
 
 async function prepareUpload({ s3Key, bucket, metadata, file }) {
   const response = await upload({
@@ -41,6 +42,9 @@ async function prepareUpload({ s3Key, bucket, metadata, file }) {
 exports.serveBuilder = async function (ctx) {
   let builderPath = resolve(TOP_LEVEL_PATH, "builder")
   await send(ctx, ctx.file, { root: builderPath })
+  if (!ctx.file.includes("assets/")) {
+    await events.serve.servedBuilder()
+  }
 }
 
 exports.uploadFile = async function (ctx) {
@@ -65,25 +69,36 @@ exports.uploadFile = async function (ctx) {
 }
 
 exports.serveApp = async function (ctx) {
-  const App = require("./templates/BudibaseApp.svelte").default
   const db = getAppDB({ skip_setup: true })
   const appInfo = await db.get(DocumentTypes.APP_METADATA)
   let appId = getAppId()
 
-  const { head, html, css } = App.render({
-    title: appInfo.name,
-    production: env.isProd(),
-    appId,
-    clientLibPath: clientLibraryPath(appId, appInfo.version),
-  })
+  if (!env.isJest()) {
+    const App = require("./templates/BudibaseApp.svelte").default
+    const { head, html, css } = App.render({
+      title: appInfo.name,
+      production: env.isProd(),
+      appId,
+      clientLibPath: clientLibraryPath(appId, appInfo.version),
+    })
 
-  const appHbs = loadHandlebarsFile(`${__dirname}/templates/app.hbs`)
-  ctx.body = await processString(appHbs, {
-    head,
-    body: html,
-    style: css.code,
-    appId,
-  })
+    const appHbs = loadHandlebarsFile(`${__dirname}/templates/app.hbs`)
+    ctx.body = await processString(appHbs, {
+      head,
+      body: html,
+      style: css.code,
+      appId,
+    })
+  } else {
+    // just return the app info for jest to assert on
+    ctx.body = appInfo
+  }
+
+  if (isDevAppID(appInfo.appId)) {
+    await events.serve.servedAppPreview(appInfo)
+  } else {
+    await events.serve.servedApp(appInfo)
+  }
 }
 
 exports.serveClientLibrary = async function (ctx) {
