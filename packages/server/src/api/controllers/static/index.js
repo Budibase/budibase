@@ -114,7 +114,10 @@ exports.getSignedUploadURL = async function (ctx) {
   // Determine type of datasource and generate signed URL
   let signedUrl
   let publicUrl
-  const AWS_REGION = datasource?.config?.region ?? "eu-west-1"
+  const AWS_REGION =
+    datasource?.config?.region?.length > 0
+      ? datasource?.config?.region
+      : "eu-west-1"
   if (datasource.source === "S3") {
     const { bucket, key } = ctx.request.body || {}
     if (!bucket || !key) {
