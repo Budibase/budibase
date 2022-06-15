@@ -23,6 +23,7 @@
   import Manifest from "manifest.json"
   import { getActiveConditions, reduceConditionActions } from "utils/conditions"
   import Placeholder from "components/app/Placeholder.svelte"
+  import ComponentPlaceholder from "components/app/ComponentPlaceholder.svelte"
 
   export let instance = {}
   export let isLayout = false
@@ -81,6 +82,7 @@
   let definition
   let settingsDefinition
   let settingsDefinitionMap
+  let missingRequiredSettings = false
 
   // Set up initial state for each new component instance
   $: initialise(instance)
@@ -99,9 +101,10 @@
 
   // Derive definition properties which can all be optional, so need to be
   // coerced to booleans
-  $: editable = !!definition?.editable
   $: hasChildren = !!definition?.hasChildren
   $: showEmptyState = definition?.showEmptyState !== false
+  $: hasMissingRequiredSettings = missingRequiredSettings?.length > 0
+  $: editable = !!definition?.editable && !hasMissingRequiredSettings
 
   // Interactive components can be selected, dragged and highlighted inside
   // the builder preview
@@ -155,6 +158,7 @@
     name,
     editing,
     type: instance._component,
+    missingRequiredSettings,
   })
 
   const initialise = instance => {
@@ -200,6 +204,27 @@
     // Update the settings types
     staticSettings = instanceSettings.staticSettings
     dynamicSettings = instanceSettings.dynamicSettings
+
+    // Check if we have any missing required settings
+    missingRequiredSettings = settingsDefinition.filter(setting => {
+      let empty = instance[setting.key] == null || instance[setting.key] === ""
+      let missing = setting.required && empty
+
+      // Check if this setting depends on another, as it may not be required
+      if (setting.dependsOn) {
+        const dependsOnKey = setting.dependsOn.setting || setting.dependsOn
+        const dependsOnValue = setting.dependsOn.value
+        const realDependentValue = instance[dependsOnKey]
+        if (dependsOnValue == null && realDependentValue == null) {
+          return false
+        }
+        if (dependsOnValue !== realDependentValue) {
+          return false
+        }
+      }
+
+      return missing
+    })
 
     // Force an initial enrichment of the new settings
     enrichComponentSettings(get(context), settingsDefinitionMap, {
@@ -414,17 +439,21 @@
     data-id={id}
     data-name={name}
   >
-    <svelte:component this={constructor} bind:this={ref} {...initialSettings}>
-      {#if children.length}
-        {#each children as child (child._id)}
-          <svelte:self instance={child} />
-        {/each}
-      {:else if emptyState}
-        <Placeholder />
-      {:else if isBlock}
-        <slot />
-      {/if}
-    </svelte:component>
+    {#if hasMissingRequiredSettings}
+      <ComponentPlaceholder />
+    {:else}
+      <svelte:component this={constructor} bind:this={ref} {...initialSettings}>
+        {#if children.length}
+          {#each children as child (child._id)}
+            <svelte:self instance={child} />
+          {/each}
+        {:else if emptyState}
+          <Placeholder />
+        {:else if isBlock}
+          <slot />
+        {/if}
+      </svelte:component>
+    {/if}
   </div>
 {/if}
 
