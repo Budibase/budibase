@@ -13,6 +13,7 @@ import {
 } from "../../db/utils"
 import { createLogByAutomationView } from "../../db/views/staticViews"
 import { Automation } from "../../definitions/common"
+import * as env from "../../environment"
 
 const PAGE_SIZE = 9
 const EARLIEST_DATE = new Date(0).toISOString()
@@ -134,6 +135,10 @@ export async function storeLog(
   automation: Automation,
   results: AutomationResults
 ) {
+  // can disable this if un-needed in self host
+  if (env.DISABLE_AUTOMATION_LOGS) {
+    return
+  }
   const db = getAppDB()
   const automationId = automation._id
   const name = automation.name
