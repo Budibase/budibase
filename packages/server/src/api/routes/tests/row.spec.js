@@ -5,9 +5,6 @@ const { doInAppContext } = require("@budibase/backend-core/context")
 const { doInTenant } = require("@budibase/backend-core/tenancy")
 const { quotas, QuotaUsageType, StaticQuotaName, MonthlyQuotaName } = require("@budibase/pro")
 
-// mock the fetch for the search system
-jest.mock("node-fetch")
-
 describe("/rows", () => {
   let request = setup.getRequest()
   let config = setup.getConfig()
@@ -103,6 +100,8 @@ describe("/rows", () => {
         _id: existing._id,
         _rev: existing._rev,
         type: "row",
+        createdAt: "2020-01-01T00:00:00.000Z",
+        updatedAt: "2020-01-01T00:00:00.000Z",
       })
       await assertQueryUsage(queryUsage + 1)
     })

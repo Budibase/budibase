@@ -3,6 +3,8 @@ const { BUILTIN_PERMISSION_IDS } = require("@budibase/backend-core/permissions")
 const { createHomeScreen } = require("../../constants/screens")
 const { EMPTY_LAYOUT } = require("../../constants/layouts")
 const { cloneDeep } = require("lodash/fp")
+const { v4: uuidv4 } = require("uuid")
+const { TRIGGER_DEFINITIONS, ACTION_DEFINITIONS } = require("../../automations")
 
 exports.TENANT_ID = "default"
 
@@ -26,6 +28,75 @@ exports.basicTable = () => {
       },
     },
   }
+}
+
+exports.basicView = tableId => {
+  return {
+    tableId,
+    name: "ViewTest",
+  }
+}
+
+exports.filterView = tableId => {
+  return {
+    ...this.basicView(tableId),
+    filters: [
+      {
+        value: 0,
+        condition: "MT",
+        key: "count",
+      },
+    ],
+  }
+}
+
+exports.calculationView = tableId => {
+  return {
+    ...this.basicView(tableId),
+    field: "count",
+    calculation: "sum",
+  }
+}
+
+exports.view = tableId => {
+  return {
+    ...this.filterView(tableId),
+    ...this.calculationView(tableId),
+  }
+}
+
+exports.automationStep = (actionDefinition = ACTION_DEFINITIONS.CREATE_ROW) => {
+  return {
+    id: uuidv4(),
+    ...actionDefinition,
+  }
+}
+
+exports.automationTrigger = (
+  triggerDefinition = TRIGGER_DEFINITIONS.ROW_SAVED
+) => {
+  return {
+    id: uuidv4(),
+    ...triggerDefinition,
+  }
+}
+
+exports.newAutomation = ({ steps, trigger } = {}) => {
+  const automation = exports.basicAutomation()
+
+  if (trigger) {
+    automation.definition.trigger = trigger
+  } else {
+    automation.definition.trigger = exports.automationTrigger()
+  }
+
+  if (steps) {
+    automation.definition.steps = steps
+  } else {
+    automation.definition.steps = [exports.automationStep()]
+  }
+
+  return automation
 }
 
 exports.basicAutomation = () => {
