@@ -114,10 +114,7 @@ exports.getSignedUploadURL = async function (ctx) {
   // Determine type of datasource and generate signed URL
   let signedUrl
   let publicUrl
-  const AWS_REGION =
-    datasource?.config?.region?.length > 0
-      ? datasource?.config?.region
-      : "eu-west-1"
+  const awsRegion = datasource?.config?.region
   if (datasource.source === "S3") {
     const { bucket, key } = ctx.request.body || {}
     if (!bucket || !key) {
@@ -126,7 +123,7 @@ exports.getSignedUploadURL = async function (ctx) {
     }
     try {
       const s3 = new AWS.S3({
-        region: AWS_REGION,
+        region: awsRegion,
         accessKeyId: datasource?.config?.accessKeyId,
         secretAccessKey: datasource?.config?.secretAccessKey,
         apiVersion: "2006-03-01",
@@ -134,7 +131,7 @@ exports.getSignedUploadURL = async function (ctx) {
       })
       const params = { Bucket: bucket, Key: key }
       signedUrl = s3.getSignedUrl("putObject", params)
-      publicUrl = `https://${bucket}.s3.${AWS_REGION}.amazonaws.com/${key}`
+      publicUrl = `https://${bucket}.s3.${awsRegion}.amazonaws.com/${key}`
     } catch (error) {
       ctx.throw(400, error)
     }
