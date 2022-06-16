@@ -2,25 +2,16 @@ const {
   DocumentTypes,
   SEPARATOR,
   ViewNames,
-  generateGlobalUserID,
   getAllApps,
 } = require("./db/utils")
 const jwt = require("jsonwebtoken")
 const { options } = require("./middleware/passport/jwt")
 const { queryGlobalView } = require("./db/views")
-const { Headers, UserStatus, Cookies, MAX_VALID_DATE } = require("./constants")
-const {
-  doWithGlobalDB,
-  updateTenantId,
-  getTenantUser,
-  tryAddTenant,
-} = require("./tenancy")
-const environment = require("./environment")
-const accounts = require("./cloud/accounts")
-const { hash } = require("./hashing")
-const userCache = require("./cache/user")
+const { Headers, Cookies, MAX_VALID_DATE } = require("./constants")
 const env = require("./environment")
+const userCache = require("./cache/user")
 const { getUserSessions, invalidateSessions } = require("./security/sessions")
+const events = require("./events")
 const tenancy = require("./tenancy")
 
 const APP_PREFIX = DocumentTypes.APP + SEPARATOR
@@ -135,8 +126,8 @@ exports.setCookie = (ctx, value, name = "builder", opts = { sign: true }) => {
     overwrite: true,
   }
 
-  if (environment.COOKIE_DOMAIN) {
-    config.domain = environment.COOKIE_DOMAIN
+  if (env.COOKIE_DOMAIN) {
+    config.domain = env.COOKIE_DOMAIN
   }
 
   ctx.cookies.set(name, value, config)
@@ -159,23 +150,6 @@ exports.isClient = ctx => {
   return ctx.headers[Headers.TYPE] === "client"
 }
 
-/**
- * Given an email address this will use a view to search through
- * all the users to find one with this email address.
- * @param {string} email the email to lookup the user by.
- * @return {Promise<object|null>}
- */
-exports.getGlobalUserByEmail = async email => {
-  if (email == null) {
-    throw "Must supply an email address to view"
-  }
-
-  return queryGlobalView(ViewNames.USER_BY_EMAIL, {
-    key: email.toLowerCase(),
-    include_docs: true,
-  })
-}
-
 const getBuilders = async () => {
   const builders = await queryGlobalView(ViewNames.USER_BY_BUILDERS, {
     include_docs: false,
@@ -195,124 +169,6 @@ const getBuilders = async () => {
 exports.getBuildersCount = async () => {
   const builders = await getBuilders()
   return builders.length
-}
-
-const DEFAULT_SAVE_USER = {
-  hashPassword: true,
-  requirePassword: true,
-  bulkCreate: false,
-}
-
-exports.internalSaveUser = async (
-  user,
-  tenantId,
-  { hashPassword, requirePassword, bulkCreate } = DEFAULT_SAVE_USER
-) => {
-  if (!tenantId) {
-    throw "No tenancy specified."
-  }
-  // need to set the context for this request, as specified
-  updateTenantId(tenantId)
-  // specify the tenancy incase we're making a new admin user (public)
-  return doWithGlobalDB(tenantId, async db => {
-    let { email, password, _id } = user
-    // make sure another user isn't using the same email
-    let dbUser
-    // user can't exist in bulk creation
-    if (bulkCreate) {
-      dbUser = null
-    } else if (email) {
-      // check budibase users inside the tenant
-      dbUser = await exports.getGlobalUserByEmail(email)
-      if (dbUser != null && (dbUser._id !== _id || Array.isArray(dbUser))) {
-        throw `Email address ${email} already in use.`
-      }
-
-      // check budibase users in other tenants
-      if (env.MULTI_TENANCY) {
-        const tenantUser = await getTenantUser(email)
-        if (tenantUser != null && tenantUser.tenantId !== tenantId) {
-          throw `Email address ${email} already in use.`
-        }
-      }
-
-      // check root account users in account portal
-      if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
-        const account = await accounts.getAccount(email)
-        if (account && account.verified && account.tenantId !== tenantId) {
-          throw `Email address ${email} already in use.`
-        }
-      }
-    } else {
-      dbUser = await db.get(_id)
-    }
-
-    // get the password, make sure one is defined
-    let hashedPassword
-    if (password) {
-      hashedPassword = hashPassword ? await hash(password) : password
-    } else if (dbUser) {
-      hashedPassword = dbUser.password
-    } else if (requirePassword) {
-      throw "Password must be specified."
-    }
-
-    _id = _id || generateGlobalUserID()
-    user = {
-      createdAt: Date.now(),
-      ...dbUser,
-      ...user,
-      _id,
-      password: hashedPassword,
-      tenantId,
-    }
-    // make sure the roles object is always present
-    if (!user.roles) {
-      user.roles = {}
-    }
-    // add the active status to a user if its not provided
-    if (user.status == null) {
-      user.status = UserStatus.ACTIVE
-    }
-    try {
-      const putOpts = {
-        password: hashedPassword,
-        ...user,
-      }
-      if (bulkCreate) {
-        return putOpts
-      }
-      const response = await db.put(putOpts)
-      if (env.MULTI_TENANCY) {
-        await tryAddTenant(tenantId, _id, email)
-      }
-      await userCache.invalidateUser(response.id)
-      return {
-        _id: response.id,
-        _rev: response.rev,
-        email,
-      }
-    } catch (err) {
-      if (err.status === 409) {
-        throw "User exists already"
-      } else {
-        throw err
-      }
-    }
-  })
-}
-
-// maintained for api compat, don't want to change function signature
-exports.saveUser = async (
-  user,
-  tenantId,
-  hashPassword = true,
-  requirePassword = true
-) => {
-  return exports.internalSaveUser(user, tenantId, {
-    hashPassword,
-    requirePassword,
-  })
 }
 
 /**
@@ -338,5 +194,6 @@ exports.platformLogout = async ({ ctx, userId, keepActiveSession }) => {
     userId,
     sessions.map(({ sessionId }) => sessionId)
   )
+  await events.auth.logout()
   await userCache.invalidateUser(userId)
 }

@@ -16,7 +16,6 @@
   import { email, admin } from "stores/portal"
   import { API } from "api"
   import { cloneDeep } from "lodash/fp"
-  import analytics, { Events } from "analytics"
 
   const ConfigTypes = {
     SMTP: "smtp",
@@ -60,7 +59,6 @@
       smtpConfig._id = savedConfig._id
       await admin.getChecklist()
       notifications.success(`Settings saved`)
-      analytics.captureEvent(Events.SMTP.SAVED)
     } catch (error) {
       notifications.error(
         `Failed to save email settings, reason: ${error?.message || "Unknown"}`
@@ -80,7 +78,6 @@
       }
       await admin.getChecklist()
       notifications.success(`Settings cleared`)
-      analytics.captureEvent(Events.SMTP.SAVED)
     } catch (error) {
       notifications.error(
         `Failed to clear email settings, reason: ${error?.message || "Unknown"}`

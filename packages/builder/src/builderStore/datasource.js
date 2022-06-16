@@ -1,6 +1,5 @@
 import { datasources, tables } from "../stores/backend"
 import { IntegrationNames } from "../constants/backend"
-import analytics, { Events } from "../analytics"
 import { get } from "svelte/store"
 import cloneDeep from "lodash/cloneDeepWith"
 
@@ -31,10 +30,6 @@ export async function saveDatasource(config, skipFetch = false) {
   // update the tables incase data source plus
   await tables.fetch()
   await datasources.select(resp._id)
-  analytics.captureEvent(Events.DATASOURCE.CREATED, {
-    name: resp.name,
-    source: resp.source,
-  })
   return resp
 }
 
