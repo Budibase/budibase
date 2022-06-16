@@ -105,7 +105,9 @@ export const run = async (db: any) => {
     if (!allUsers || allUsers.length === 0) {
       // first time startup - we don't need to backfill anything
       // tenant will be identified when admin user is created
-      await events.installation.firstStartup()
+      if (env.SELF_HOSTED) {
+        await events.installation.firstStartup()
+      }
       return
     }
 
