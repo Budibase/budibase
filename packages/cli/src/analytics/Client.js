@@ -1,16 +1,10 @@
 const PostHog = require("posthog-node")
-const {
-  BUDIBASE_POSTHOG_URL,
-  BUDIBASE_POSTHOG_TOKEN,
-  AnalyticsEvents,
-} = require("../constants")
+const { POSTHOG_TOKEN, AnalyticsEvents } = require("../constants")
 const ConfigManager = require("../structures/ConfigManager")
 
 class AnalyticsClient {
   constructor() {
-    this.client = new PostHog(BUDIBASE_POSTHOG_TOKEN, {
-      host: BUDIBASE_POSTHOG_URL,
-    })
+    this.client = new PostHog(POSTHOG_TOKEN)
     this.configManager = new ConfigManager()
   }
 

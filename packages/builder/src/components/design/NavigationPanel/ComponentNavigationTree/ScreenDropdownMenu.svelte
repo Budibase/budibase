@@ -12,7 +12,6 @@
   } from "@budibase/bbui"
   import ScreenDetailsModal from "../ScreenDetailsModal.svelte"
   import sanitizeUrl from "builderStore/store/screenTemplates/utils/sanitizeUrl"
-  import analytics, { Events } from "analytics"
   import { makeComponentUnique } from "builderStore/componentUtils"
 
   export let screenId
@@ -40,13 +39,6 @@
     try {
       // Create the screen
       await store.actions.screens.save(duplicateScreen)
-
-      // Analytics
-      if (screen.template) {
-        analytics.captureEvent(Events.SCREEN.CREATED, {
-          template: "createFromScratch",
-        })
-      }
     } catch (error) {
       notifications.error("Error duplicating screen")
       console.log(error)

@@ -1,5 +1,4 @@
 import { writable, get } from "svelte/store"
-import { API } from "api"
 import { devToolsStore } from "./devTools.js"
 
 const dispatchEvent = (type, data = {}) => {
@@ -46,13 +45,6 @@ const createBuilderStore = () => {
     },
     notifyLoaded: () => {
       dispatchEvent("preview-loaded")
-    },
-    pingEndUser: async () => {
-      try {
-        await API.pingEndUser()
-      } catch (error) {
-        // Do nothing
-      }
     },
     setSelectedPath: path => {
       store.update(state => ({ ...state, selectedPath: path }))
