@@ -1,4 +1,27 @@
+FROM node:14-slim as build
+
+# install node-gyp dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends g++ make python
+
+# add pin script
+WORKDIR /
+ADD scripts/pinVersions.js scripts/cleanup.sh ./
+RUN chmod +x /cleanup.sh
+
+# build server
+WORKDIR /app
+ADD packages/server .
+RUN node /pinVersions.js && yarn && yarn build && /cleanup.sh
+
+# build worker
+WORKDIR /worker
+ADD packages/worker .
+RUN node /pinVersions.js && yarn && yarn build && /cleanup.sh
+
 FROM couchdb:3.2.1
+
+COPY --from=build /app /app
+COPY --from=build /worker /worker
 
 ENV DEPLOYMENT_ENVIRONMENT=docker \
   POSTHOG_TOKEN=phc_fg5I3nDOf6oJVMHSaycEhpPdlgS8rzXG2r6F2IpxCHS \
@@ -40,20 +63,10 @@ RUN mkdir /etc/nginx/logs && \
   touch /etc/nginx/logs/error.log && \
   touch /etc/nginx/logs/nginx.pid
 
-# add pin script
 WORKDIR /
-ADD scripts/pinVersions.js .
-
-# setup server and install client for oracle datasource
-WORKDIR /app
-ADD packages/server .
-RUN node /pinVersions.js && yarn && yarn build && \
-  /bin/bash -e scripts/integrations/oracle/instantclient/linux/x86-64/install.sh
-
-# setup worker
-WORKDIR /worker
-ADD packages/worker .
-RUN node /pinVersions.js && yarn && yarn build
+RUN mkdir -p scripts/integrations/oracle
+ADD packages/server/scripts/integrations/oracle scripts/integrations/oracle
+RUN /bin/bash -e ./scripts/integrations/oracle/instantclient/linux/x86-64/install.sh
 
 # setup clouseau
 WORKDIR /
@@ -81,10 +94,15 @@ WORKDIR /
 ADD hosting/single/runner.sh .
 RUN chmod +x ./runner.sh
 
+# cleanup cache
+RUN yarn cache clean -f
+
 EXPOSE 10000
 VOLUME /opt/couchdb/data
 VOLUME /minio
 
 # must set this just before running
 ENV NODE_ENV=production
+WORKDIR /
+
 CMD ["./runner.sh"]
