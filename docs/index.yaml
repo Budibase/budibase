@@ -3,7 +3,7 @@ entries:
   budibase:
   - apiVersion: v2
     appVersion: 1.0.48
-    created: "2022-06-13T08:26:52.829562616Z"
+    created: "2022-06-16T14:19:13.805106555Z"
     dependencies:
     - condition: services.couchdb.enabled
       name: couchdb
@@ -15,7 +15,7 @@ entries:
       version: 4.0.13
     description: Budibase is an open source low-code platform, helping thousands of
       teams build apps for their workplace in minutes.
-    digest: 7afeeef663be2a85813e66653e51c0d6c4b6eecfe718b08587d3e0582b8570a7
+    digest: 6e29f1ff83737e258f1fd8b206c1a7a65c9b8ba8725ad2b8c84bd017cf1418e3
     keywords:
     - low-code
     - database
@@ -30,7 +30,7 @@ entries:
     version: 0.2.10
   - apiVersion: v2
     appVersion: 1.0.48
-    created: "2022-06-13T08:26:52.866349272Z"
+    created: "2022-06-16T14:19:13.846189694Z"
     dependencies:
     - condition: services.couchdb.enabled
       name: couchdb
@@ -57,7 +57,7 @@ entries:
     version: 0.2.9
   - apiVersion: v2
     appVersion: 1.0.48
-    created: "2022-06-13T08:26:52.859846591Z"
+    created: "2022-06-16T14:19:13.839232019Z"
     dependencies:
     - condition: services.couchdb.enabled
       name: couchdb
@@ -84,7 +84,7 @@ entries:
     version: 0.2.8
   - apiVersion: v2
     appVersion: 1.0.48
-    created: "2022-06-13T08:26:52.854990706Z"
+    created: "2022-06-16T14:19:13.834246466Z"
     dependencies:
     - condition: services.couchdb.enabled
       name: couchdb
@@ -111,7 +111,7 @@ entries:
     version: 0.2.7
   - apiVersion: v2
     appVersion: 1.0.48
-    created: "2022-06-13T08:26:52.850523845Z"
+    created: "2022-06-16T14:19:13.826374182Z"
     dependencies:
     - condition: services.couchdb.enabled
       name: couchdb
@@ -138,7 +138,7 @@ entries:
     version: 0.2.6
   - apiVersion: v2
     appVersion: 1.0.25
-    created: "2022-06-13T08:26:52.844263278Z"
+    created: "2022-06-16T14:19:13.82050342Z"
     dependencies:
     - condition: services.couchdb.enabled
       name: couchdb
@@ -165,7 +165,7 @@ entries:
     version: 0.2.5
   - apiVersion: v2
     appVersion: 1.0.20
-    created: "2022-06-13T08:26:52.8395292Z"
+    created: "2022-06-16T14:19:13.81583997Z"
     dependencies:
     - condition: services.couchdb.enabled
       name: couchdb
@@ -192,7 +192,7 @@ entries:
     version: 0.2.4
   - apiVersion: v2
     appVersion: 0.9.169
-    created: "2022-06-13T08:26:52.835144143Z"
+    created: "2022-06-16T14:19:13.809786405Z"
     dependencies:
     - condition: services.couchdb.enabled
       name: couchdb
@@ -219,7 +219,7 @@ entries:
     version: 0.2.2
   - apiVersion: v2
     appVersion: 0.9.163
-    created: "2022-06-13T08:26:52.824725133Z"
+    created: "2022-06-16T14:19:13.799809699Z"
     dependencies:
     - condition: services.couchdb.enabled
       name: couchdb
@@ -246,7 +246,7 @@ entries:
     version: 0.2.1
   - apiVersion: v2
     appVersion: 0.9.163
-    created: "2022-06-13T08:26:52.820776401Z"
+    created: "2022-06-16T14:19:13.794846246Z"
     dependencies:
     - condition: services.couchdb.enabled
       name: couchdb
@@ -273,7 +273,7 @@ entries:
     version: 0.2.0
   - apiVersion: v2
     appVersion: 0.9.56
-    created: "2022-06-13T08:26:52.814649842Z"
+    created: "2022-06-16T14:19:13.78871348Z"
     dependencies:
     - condition: services.couchdb.enabled
       name: couchdb
@@ -299,7 +299,7 @@ entries:
     version: 0.1.1
   - apiVersion: v2
     appVersion: 0.9.56
-    created: "2022-06-13T08:26:52.809634849Z"
+    created: "2022-06-16T14:19:13.783459224Z"
     dependencies:
     - condition: services.couchdb.enabled
       name: couchdb
@@ -323,4 +323,4 @@ entries:
     urls:
     - budibase-0.1.0.tgz
     version: 0.1.0
-generated: "2022-06-13T08:26:52.804851168Z"
+generated: "2022-06-16T14:19:13.778030167Z"
