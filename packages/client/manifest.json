@@ -274,7 +274,8 @@
       {
         "type": "text",
         "label": "Text",
-        "key": "text"
+        "key": "text",
+        "defaultValue": "New Button"
       },
       {
         "type": "select",
@@ -1154,15 +1155,13 @@
       {
         "type": "text",
         "label": "Text",
-        "key": "text",
-        "required": true
+        "key": "text"
       },
       {
         "type": "url",
         "label": "URL",
         "key": "url",
-        "placeholder": "/screen",
-        "required": true
+        "placeholder": "/screen"
       },
       {
         "type": "boolean",
