@@ -190,6 +190,7 @@ export const getFrontendStore = () => {
 
         // Build array of promises to speed up bulk deletions
         const promises = []
+        let deleteUrls = []
         screensToDelete.forEach(screen => {
           // Delete the screen
           promises.push(
@@ -199,14 +200,10 @@ export const getFrontendStore = () => {
             })
           )
           // Remove links to this screen
-          promises.push(
-            store.actions.components.links.delete(
-              screen.routing.route,
-              screen.props._instanceName
-            )
-          )
+          deleteUrls.push(screen.routing.route)
         })
 
+        promises.push(store.actions.links.delete(deleteUrls))
         await Promise.all(promises)
         const deletedIds = screensToDelete.map(screen => screen._id)
         store.update(state => {
@@ -578,89 +575,38 @@ export const getFrontendStore = () => {
         })
         await store.actions.preview.saveSelected()
       },
-      links: {
-        save: async (url, title) => {
-          const layout = get(mainLayout)
-          if (!layout) {
-            return
-          }
+    },
+    links: {
+      save: async (url, title) => {
+        const layout = get(mainLayout)
+        if (!layout) {
+          return
+        }
 
-          // Add link setting to main layout
-          if (layout.props._component.endsWith("layout")) {
-            // If using a new SDK, add to the layout component settings
-            if (!layout.props.links) {
-              layout.props.links = []
-            }
-            layout.props.links.push({
-              text: title,
-              url,
-            })
-          } else {
-            // If using an old SDK, add to the navigation component
-            // TODO: remove this when we can assume everyone has updated
-            const nav = findComponentType(
-              layout.props,
-              "@budibase/standard-components/navigation"
-            )
-            if (!nav) {
-              return
-            }
+        // Add link setting to main layout
+        if (!layout.props.links) {
+          layout.props.links = []
+        }
+        layout.props.links.push({
+          text: title,
+          url,
+        })
 
-            let newLink
-            if (nav._children && nav._children.length) {
-              // Clone an existing link if one exists
-              newLink = cloneDeep(nav._children[0])
+        await store.actions.layouts.save(layout)
+      },
+      delete: async urls => {
+        const layout = get(mainLayout)
+        if (!layout?.props.links?.length) {
+          return
+        }
 
-              // Set our new props
-              newLink._id = Helpers.uuid()
-              newLink._instanceName = `${title} Link`
-              newLink.url = url
-              newLink.text = title
-            } else {
-              // Otherwise create vanilla new link
-              newLink = {
-                ...store.actions.components.createInstance("link"),
-                url,
-                text: title,
-                _instanceName: `${title} Link`,
-              }
-              nav._children = [...nav._children, newLink]
-            }
-          }
+        // Filter out the URLs to delete
+        urls = Array.isArray(urls) ? urls : [urls]
+        layout.props.links = layout.props.links.filter(
+          link => !urls.includes(link.url)
+        )
 
-          // Save layout
-          await store.actions.layouts.save(layout)
-        },
-        delete: async (url, title) => {
-          const layout = get(mainLayout)
-          if (!layout) {
-            return
-          }
-
-          // Add link setting to main layout
-          if (layout.props._component.endsWith("layout")) {
-            // If using a new SDK, add to the layout component settings
-            layout.props.links = layout.props.links.filter(
-              link => !(link.text === title && link.url === url)
-            )
-          } else {
-            // If using an old SDK, add to the navigation component
-            // TODO: remove this when we can assume everyone has updated
-            const nav = findComponentType(
-              layout.props,
-              "@budibase/standard-components/navigation"
-            )
-            if (!nav) {
-              return
-            }
-
-            nav._children = nav._children.filter(
-              child => !(child.url === url && child.text === title)
-            )
-          }
-          // Save layout
-          await store.actions.layouts.save(layout)
-        },
+        await store.actions.layouts.save(layout)
       },
     },
     settings: {
