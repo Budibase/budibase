@@ -22,10 +22,23 @@ export const backfill = async (appDb: any, timestamp: string | number) => {
   const queries: Query[] = await getQueries(appDb)
 
   for (const query of queries) {
-    const datasource: Datasource = await getDatasource(
-      appDb,
-      query.datasourceId
-    )
+    let datasource: Datasource
+
+    try {
+      datasource = await getDatasource(appDb, query.datasourceId)
+    } catch (e: any) {
+      // handle known bug where a datasource has been deleted
+      // and the query has not
+      if (e.status === 404) {
+        datasource = {
+          _id: query.datasourceId,
+          source: "unknown",
+        }
+      } else {
+        throw e
+      }
+    }
+
     await events.query.created(datasource, query, timestamp)
   }
 
