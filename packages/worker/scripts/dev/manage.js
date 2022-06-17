@@ -26,6 +26,8 @@ async function init() {
       ACCOUNT_PORTAL_API_KEY: "budibase",
       PLATFORM_URL: "http://localhost:10000",
       APPS_URL: "http://localhost:4001",
+      SERVICE: "worker-service",
+      DEPLOYMENT_ENVIRONMENT: "development",
     }
     let envFile = ""
     Object.keys(envFileJson).forEach(key => {

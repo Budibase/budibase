@@ -15,7 +15,10 @@
     "description": "This component is specific only to layouts",
     "icon": "Sandbox",
     "hasChildren": true,
-    "styles": ["padding", "background"],
+    "styles": [
+      "padding",
+      "background"
+    ],
     "settings": [
       {
         "type": "text",
@@ -31,14 +34,23 @@
         "type": "select",
         "label": "Navigation",
         "key": "navigation",
-        "options": ["Top", "Left", "None"],
+        "options": [
+          "Top",
+          "Left",
+          "None"
+        ],
         "defaultValue": "Top"
       },
       {
         "type": "select",
         "label": "Width",
         "key": "width",
-        "options": ["Small", "Medium", "Large", "Max"],
+        "options": [
+          "Small",
+          "Medium",
+          "Large",
+          "Max"
+        ],
         "defaultValue": "Large"
       },
       {
@@ -72,7 +84,13 @@
     "icon": "Sandbox",
     "hasChildren": true,
     "showSettingsBar": true,
-    "styles": ["padding", "size", "background", "border", "shadow"],
+    "styles": [
+      "padding",
+      "size",
+      "background",
+      "border",
+      "shadow"
+    ],
     "settings": [
       {
         "type": "select",
@@ -227,7 +245,9 @@
     "description": "Add a section to your application",
     "icon": "ColumnTwoB",
     "hasChildren": true,
-    "illegalChildren": ["section"],
+    "illegalChildren": [
+      "section"
+    ],
     "showEmptyState": false,
     "settings": [
       {
@@ -254,7 +274,8 @@
       {
         "type": "text",
         "label": "Text",
-        "key": "text"
+        "key": "text",
+        "defaultValue": "New Button"
       },
       {
         "type": "select",
@@ -338,7 +359,9 @@
     "name": "Divider",
     "description": "A basic divider",
     "icon": "Separator",
-    "illegalChildren": ["section"],
+    "illegalChildren": [
+      "section"
+    ],
     "settings": [
       {
         "type": "select",
@@ -371,14 +394,17 @@
     "name": "Repeater",
     "description": "A configurable data list that attaches to your backend tables.",
     "icon": "ViewList",
-    "illegalChildren": ["section"],
+    "illegalChildren": [
+      "section"
+    ],
     "hasChildren": true,
     "showSettingsBar": true,
     "settings": [
       {
         "type": "dataProvider",
         "label": "Provider",
-        "key": "dataProvider"
+        "key": "dataProvider",
+        "required": true
       },
       {
         "type": "text",
@@ -523,7 +549,9 @@
     "name": "Stacked List",
     "icon": "TaskList",
     "description": "A basic card component that can contain content and actions.",
-    "illegalChildren": ["section"],
+    "illegalChildren": [
+      "section"
+    ],
     "settings": [
       {
         "type": "text",
@@ -552,7 +580,9 @@
     "name": "Vertical Card",
     "description": "A basic card component that can contain content and actions.",
     "icon": "ViewColumn",
-    "illegalChildren": ["section"],
+    "illegalChildren": [
+      "section"
+    ],
     "settings": [
       {
         "type": "text",
@@ -596,14 +626,24 @@
         "type": "select",
         "label": "Image Height",
         "key": "imageHeight",
-        "options": ["auto", "12rem", "16rem", "20rem", "24rem"],
+        "options": [
+          "auto",
+          "12rem",
+          "16rem",
+          "20rem",
+          "24rem"
+        ],
         "defaultValue": "auto"
       },
       {
         "type": "select",
         "label": "Card Width",
         "key": "cardWidth",
-        "options": ["16rem", "20rem", "24rem"],
+        "options": [
+          "16rem",
+          "20rem",
+          "24rem"
+        ],
         "defaultValue": "20rem"
       }
     ]
@@ -612,7 +652,9 @@
     "name": "Paragraph",
     "description": "A component for displaying paragraph text.",
     "icon": "TextParagraph",
-    "illegalChildren": ["section"],
+    "illegalChildren": [
+      "section"
+    ],
     "showSettingsBar": true,
     "editable": true,
     "settings": [
@@ -732,7 +774,9 @@
     "name": "Headline",
     "icon": "TextBold",
     "description": "A component for displaying heading text",
-    "illegalChildren": ["section"],
+    "illegalChildren": [
+      "section"
+    ],
     "showSettingsBar": true,
     "editable": true,
     "settings": [
@@ -903,13 +947,18 @@
     "name": "Image",
     "description": "A basic component for displaying images",
     "icon": "Image",
-    "illegalChildren": ["section"],
-    "styles": ["size"],
+    "illegalChildren": [
+      "section"
+    ],
+    "styles": [
+      "size"
+    ],
     "settings": [
       {
         "type": "text",
         "label": "URL",
-        "key": "url"
+        "key": "url",
+        "required": true
       }
     ]
   },
@@ -917,13 +966,18 @@
     "name": "Background Image",
     "description": "A background image",
     "icon": "Images",
-    "styles": ["size"],
-    "illegalChildren": ["section"],
+    "styles": [
+      "size"
+    ],
+    "illegalChildren": [
+      "section"
+    ],
     "settings": [
       {
         "type": "text",
         "label": "URL",
-        "key": "url"
+        "key": "url",
+        "required": true
       },
       {
         "type": "select",
@@ -975,12 +1029,15 @@
     "name": "Icon",
     "description": "A basic component for displaying icons",
     "icon": "Bell",
-    "illegalChildren": ["section"],
+    "illegalChildren": [
+      "section"
+    ],
     "settings": [
       {
         "type": "icon",
         "label": "Icon",
-        "key": "icon"
+        "key": "icon",
+        "required": true
       },
       {
         "type": "select",
@@ -988,21 +1045,66 @@
         "key": "size",
         "defaultValue": "ri-1x",
         "options": [
-          { "value": "ri-xxs", "label": "XXS" },
-          { "value": "ri-xs", "label": "XS" },
-          { "value": "ri-sm", "label": "Small" },
-          { "value": "ri-1x", "label": "Medium" },
-          { "value": "ri-lg", "label": "Large" },
-          { "value": "ri-xl", "label": "XL" },
-          { "value": "ri-2x", "label": "2XL" },
-          { "value": "ri-3x", "label": "3XL" },
-          { "value": "ri-4x", "label": "4XL" },
-          { "value": "ri-5x", "label": "5XL" },
-          { "value": "ri-6x", "label": "6XL" },
-          { "value": "ri-7x", "label": "7XL" },
-          { "value": "ri-8x", "label": "8XL" },
-          { "value": "ri-9x", "label": "9XL" },
-          { "value": "ri-10x", "label": "10XL" }
+          {
+            "value": "ri-xxs",
+            "label": "XXS"
+          },
+          {
+            "value": "ri-xs",
+            "label": "XS"
+          },
+          {
+            "value": "ri-sm",
+            "label": "Small"
+          },
+          {
+            "value": "ri-1x",
+            "label": "Medium"
+          },
+          {
+            "value": "ri-lg",
+            "label": "Large"
+          },
+          {
+            "value": "ri-xl",
+            "label": "XL"
+          },
+          {
+            "value": "ri-2x",
+            "label": "2XL"
+          },
+          {
+            "value": "ri-3x",
+            "label": "3XL"
+          },
+          {
+            "value": "ri-4x",
+            "label": "4XL"
+          },
+          {
+            "value": "ri-5x",
+            "label": "5XL"
+          },
+          {
+            "value": "ri-6x",
+            "label": "6XL"
+          },
+          {
+            "value": "ri-7x",
+            "label": "7XL"
+          },
+          {
+            "value": "ri-8x",
+            "label": "8XL"
+          },
+          {
+            "value": "ri-9x",
+            "label": "9XL"
+          },
+          {
+            "value": "ri-10x",
+            "label": "10XL"
+          }
         ]
       },
       {
@@ -1022,7 +1124,9 @@
     "name": "Nav Bar",
     "description": "A component for handling the navigation within your app.",
     "icon": "BreadcrumbNavigation",
-    "illegalChildren": ["section"],
+    "illegalChildren": [
+      "section"
+    ],
     "hasChildren": true,
     "settings": [
       {
@@ -1044,7 +1148,9 @@
     "icon": "Link",
     "showSettingsBar": true,
     "editable": true,
-    "illegalChildren": ["section"],
+    "illegalChildren": [
+      "section"
+    ],
     "settings": [
       {
         "type": "text",
@@ -1157,7 +1263,9 @@
     "name": "Horizontal Card",
     "description": "A basic card component that can contain content and actions.",
     "icon": "ViewRow",
-    "illegalChildren": ["section"],
+    "illegalChildren": [
+      "section"
+    ],
     "settings": [
       {
         "type": "text",
@@ -1221,14 +1329,25 @@
         "type": "select",
         "label": "Image Width",
         "key": "imageWidth",
-        "options": ["auto", "8rem", "12rem", "16rem"],
+        "options": [
+          "auto",
+          "8rem",
+          "12rem",
+          "16rem"
+        ],
         "defaultValue": "8rem"
       },
       {
         "type": "select",
         "label": "Image Height",
         "key": "imageHeight",
-        "options": ["auto", "8rem", "12rem", "16rem", "auto"],
+        "options": [
+          "auto",
+          "8rem",
+          "12rem",
+          "16rem",
+          "auto"
+        ],
         "defaultValue": "auto"
       }
     ]
@@ -1237,7 +1356,9 @@
     "name": "Stat Card",
     "description": "A card component for displaying numbers.",
     "icon": "Card",
-    "illegalChildren": ["section"],
+    "illegalChildren": [
+      "section"
+    ],
     "settings": [
       {
         "type": "text",
@@ -1263,13 +1384,18 @@
     "name": "Embed",
     "icon": "Code",
     "description": "Embed content from 3rd party sources",
-    "illegalChildren": ["section"],
-    "styles": ["size"],
+    "illegalChildren": [
+      "section"
+    ],
+    "styles": [
+      "size"
+    ],
     "settings": [
       {
         "type": "text",
         "label": "Embed",
-        "key": "embed"
+        "key": "embed",
+        "required": true
       }
     ]
   },
@@ -1277,7 +1403,9 @@
     "name": "Bar Chart",
     "description": "Bar chart",
     "icon": "GraphBarVertical",
-    "illegalChildren": ["section"],
+    "illegalChildren": [
+      "section"
+    ],
     "settings": [
       {
         "type": "text",
@@ -1287,25 +1415,32 @@
       {
         "type": "dataProvider",
         "label": "Provider",
-        "key": "dataProvider"
+        "key": "dataProvider",
+        "required": true
       },
       {
         "type": "field",
         "label": "Label Col.",
         "key": "labelColumn",
-        "dependsOn": "dataProvider"
+        "dependsOn": "dataProvider",
+        "required": true
       },
       {
         "type": "multifield",
         "label": "Data Cols.",
         "key": "valueColumns",
-        "dependsOn": "dataProvider"
+        "dependsOn": "dataProvider",
+        "required": true
       },
       {
         "type": "select",
         "label": "Format",
         "key": "yAxisUnits",
-        "options": ["Default", "Thousands", "Millions"],
+        "options": [
+          "Default",
+          "Thousands",
+          "Millions"
+        ],
         "defaultValue": "Default"
       },
       {
@@ -1383,7 +1518,9 @@
     "name": "Line Chart",
     "description": "Line chart",
     "icon": "GraphTrend",
-    "illegalChildren": ["section"],
+    "illegalChildren": [
+      "section"
+    ],
     "settings": [
       {
         "type": "text",
@@ -1393,25 +1530,32 @@
       {
         "type": "dataProvider",
         "label": "Provider",
-        "key": "dataProvider"
+        "key": "dataProvider",
+        "required": true
       },
       {
         "type": "field",
         "label": "Label Col.",
         "key": "labelColumn",
-        "dependsOn": "dataProvider"
+        "dependsOn": "dataProvider",
+        "required": true
       },
       {
         "type": "multifield",
         "label": "Data Cols.",
         "key": "valueColumns",
-        "dependsOn": "dataProvider"
+        "dependsOn": "dataProvider",
+        "required": true
       },
       {
         "type": "select",
         "label": "Format",
         "key": "yAxisUnits",
-        "options": ["Default", "Thousands", "Millions"],
+        "options": [
+          "Default",
+          "Thousands",
+          "Millions"
+        ],
         "defaultValue": "Default"
       },
       {
@@ -1457,7 +1601,11 @@
         "type": "select",
         "label": "Curve",
         "key": "curve",
-        "options": ["Smooth", "Straight", "Stepline"],
+        "options": [
+          "Smooth",
+          "Straight",
+          "Stepline"
+        ],
         "defaultValue": "Smooth"
       },
       {
@@ -1484,7 +1632,9 @@
     "name": "Area Chart",
     "description": "Line chart",
     "icon": "GraphAreaStacked",
-    "illegalChildren": ["section"],
+    "illegalChildren": [
+      "section"
+    ],
     "settings": [
       {
         "type": "text",
@@ -1494,25 +1644,32 @@
       {
         "type": "dataProvider",
         "label": "Provider",
-        "key": "dataProvider"
+        "key": "dataProvider",
+        "required": true
       },
       {
         "type": "field",
         "label": "Label Col.",
         "key": "labelColumn",
-        "dependsOn": "dataProvider"
+        "dependsOn": "dataProvider",
+        "required": true
       },
       {
         "type": "multifield",
         "label": "Data Cols.",
         "key": "valueColumns",
-        "dependsOn": "dataProvider"
+        "dependsOn": "dataProvider",
+        "required": true
       },
       {
         "type": "select",
         "label": "Format",
         "key": "yAxisUnits",
-        "options": ["Default", "Thousands", "Millions"],
+        "options": [
+          "Default",
+          "Thousands",
+          "Millions"
+        ],
         "defaultValue": "Default"
       },
       {
@@ -1558,7 +1715,11 @@
         "type": "select",
         "label": "Curve",
         "key": "curve",
-        "options": ["Smooth", "Straight", "Stepline"],
+        "options": [
+          "Smooth",
+          "Straight",
+          "Stepline"
+        ],
         "defaultValue": "Smooth"
       },
       {
@@ -1597,7 +1758,9 @@
     "name": "Pie Chart",
     "description": "Pie chart",
     "icon": "GraphPie",
-    "illegalChildren": ["section"],
+    "illegalChildren": [
+      "section"
+    ],
     "settings": [
       {
         "type": "text",
@@ -1607,19 +1770,22 @@
       {
         "type": "dataProvider",
         "label": "Provider",
-        "key": "dataProvider"
+        "key": "dataProvider",
+        "required": true
       },
       {
         "type": "field",
         "label": "Label Col.",
         "key": "labelColumn",
-        "dependsOn": "dataProvider"
+        "dependsOn": "dataProvider",
+        "required": true
       },
       {
         "type": "field",
         "label": "Data Col.",
         "key": "valueColumn",
-        "dependsOn": "dataProvider"
+        "dependsOn": "dataProvider",
+        "required": true
       },
       {
         "type": "text",
@@ -1674,7 +1840,9 @@
     "name": "Donut Chart",
     "description": "Donut chart",
     "icon": "GraphDonut",
-    "illegalChildren": ["section"],
+    "illegalChildren": [
+      "section"
+    ],
     "settings": [
       {
         "type": "text",
@@ -1684,19 +1852,22 @@
       {
         "type": "dataProvider",
         "label": "Provider",
-        "key": "dataProvider"
+        "key": "dataProvider",
+        "required": true
       },
       {
         "type": "field",
         "label": "Label Col.",
         "key": "labelColumn",
-        "dependsOn": "dataProvider"
+        "dependsOn": "dataProvider",
+        "required": true
       },
       {
         "type": "field",
         "label": "Data Col.",
         "key": "valueColumn",
-        "dependsOn": "dataProvider"
+        "dependsOn": "dataProvider",
+        "required": true
       },
       {
         "type": "text",
@@ -1751,7 +1922,9 @@
     "name": "Candlestick Chart",
     "description": "Candlestick chart",
     "icon": "GraphBarVerticalStacked",
-    "illegalChildren": ["section"],
+    "illegalChildren": [
+      "section"
+    ],
     "settings": [
       {
         "type": "text",
@@ -1761,43 +1934,53 @@
       {
         "type": "dataProvider",
         "label": "Provider",
-        "key": "dataProvider"
+        "key": "dataProvider",
+        "required": true
       },
       {
         "type": "field",
         "label": "Date Col.",
         "key": "dateColumn",
-        "dependsOn": "dataProvider"
+        "dependsOn": "dataProvider",
+        "required": true
       },
       {
         "type": "field",
         "label": "Open Col.",
         "key": "openColumn",
-        "dependsOn": "dataProvider"
+        "dependsOn": "dataProvider",
+        "required": true
       },
       {
         "type": "field",
         "label": "Close Col.",
         "key": "closeColumn",
-        "dependsOn": "dataProvider"
+        "dependsOn": "dataProvider",
+        "required": true
       },
       {
         "type": "field",
         "label": "High Col.",
         "key": "highColumn",
-        "dependsOn": "dataProvider"
+        "dependsOn": "dataProvider",
+        "required": true
       },
       {
         "type": "field",
         "label": "Low Col.",
         "key": "lowColumn",
-        "dependsOn": "dataProvider"
+        "dependsOn": "dataProvider",
+        "required": true
       },
       {
         "type": "select",
         "label": "Format",
         "key": "yAxisUnits",
-        "options": ["Default", "Thousands", "Millions"],
+        "options": [
+          "Default",
+          "Thousands",
+          "Millions"
+        ],
         "defaultValue": "Default"
       },
       {
@@ -1833,20 +2016,28 @@
     "name": "Form",
     "icon": "Form",
     "hasChildren": true,
-    "illegalChildren": ["section", "form"],
+    "illegalChildren": [
+      "section",
+      "form"
+    ],
     "actions": [
       "ValidateForm",
       "ClearForm",
       "ChangeFormStep",
       "UpdateFieldValue"
     ],
-    "styles": ["size"],
+    "styles": [
+      "size"
+    ],
     "settings": [
       {
         "type": "select",
         "label": "Type",
         "key": "actionType",
-        "options": ["Create", "Update"],
+        "options": [
+          "Create",
+          "Update"
+        ],
         "defaultValue": "Create"
       },
       {
@@ -1912,8 +2103,14 @@
     "name": "Form Step",
     "icon": "AssetsAdded",
     "hasChildren": true,
-    "illegalChildren": ["section", "form", "form step"],
-    "styles": ["size"],
+    "illegalChildren": [
+      "section",
+      "form",
+      "form step"
+    ],
+    "styles": [
+      "size"
+    ],
     "settings": [
       {
         "type": "number",
@@ -1927,8 +2124,12 @@
   "fieldgroup": {
     "name": "Field Group",
     "icon": "Group",
-    "illegalChildren": ["section"],
-    "styles": ["size"],
+    "illegalChildren": [
+      "section"
+    ],
+    "styles": [
+      "size"
+    ],
     "hasChildren": true,
     "settings": [
       {
@@ -1956,14 +2157,19 @@
   "stringfield": {
     "name": "Text Field",
     "icon": "Text",
-    "illegalChildren": ["section"],
-    "styles": ["size"],
+    "illegalChildren": [
+      "section"
+    ],
+    "styles": [
+      "size"
+    ],
     "editable": true,
     "settings": [
       {
         "type": "field/string",
         "label": "Field",
-        "key": "field"
+        "key": "field",
+        "required": true
       },
       {
         "type": "text",
@@ -2041,14 +2247,19 @@
   "numberfield": {
     "name": "Number Field",
     "icon": "123",
-    "styles": ["size"],
+    "styles": [
+      "size"
+    ],
     "editable": true,
-    "illegalChildren": ["section"],
+    "illegalChildren": [
+      "section"
+    ],
     "settings": [
       {
         "type": "field/number",
         "label": "Field",
-        "key": "field"
+        "key": "field",
+        "required": true
       },
       {
         "type": "text",
@@ -2092,14 +2303,19 @@
   "passwordfield": {
     "name": "Password Field",
     "icon": "LockClosed",
-    "styles": ["size"],
+    "styles": [
+      "size"
+    ],
     "editable": true,
-    "illegalChildren": ["section"],
+    "illegalChildren": [
+      "section"
+    ],
     "settings": [
       {
         "type": "field/string",
         "label": "Field",
-        "key": "field"
+        "key": "field",
+        "required": true
       },
       {
         "type": "text",
@@ -2143,14 +2359,19 @@
   "optionsfield": {
     "name": "Options Picker",
     "icon": "ViewList",
-    "styles": ["size"],
+    "styles": [
+      "size"
+    ],
     "editable": true,
-    "illegalChildren": ["section"],
+    "illegalChildren": [
+      "section"
+    ],
     "settings": [
       {
         "type": "field/options",
         "label": "Field",
-        "key": "field"
+        "key": "field",
+        "required": true
       },
       {
         "type": "text",
@@ -2228,6 +2449,12 @@
       },
       {
         "type": "boolean",
+        "label": "Sort in alphabetical order",
+        "key": "sort",
+        "defaultValue": true
+      },
+      {
+        "type": "boolean",
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
@@ -2257,6 +2484,7 @@
         "type": "dataProvider",
         "label": "Options Provider",
         "key": "dataProvider",
+        "required": true,
         "dependsOn": {
           "setting": "optionsSource",
           "value": "provider"
@@ -2298,14 +2526,19 @@
   "multifieldselect": {
     "name": "Multi-select Picker",
     "icon": "ViewList",
-    "styles": ["size"],
+    "styles": [
+      "size"
+    ],
     "editable": true,
-    "illegalChildren": ["section"],
+    "illegalChildren": [
+      "section"
+    ],
     "settings": [
       {
         "type": "field/array",
         "label": "Field",
-        "key": "field"
+        "key": "field",
+        "required": true
       },
       {
         "type": "text",
@@ -2412,6 +2645,7 @@
         "type": "dataProvider",
         "label": "Options Provider",
         "key": "dataProvider",
+        "required": true,
         "dependsOn": {
           "setting": "optionsSource",
           "value": "provider"
@@ -2454,12 +2688,15 @@
     "name": "Checkbox",
     "icon": "Checkmark",
     "editable": true,
-    "illegalChildren": ["section"],
+    "illegalChildren": [
+      "section"
+    ],
     "settings": [
       {
         "type": "field/boolean",
         "label": "Field",
-        "key": "field"
+        "key": "field",
+        "required": true
       },
       {
         "type": "text",
@@ -2527,13 +2764,16 @@
   "longformfield": {
     "name": "Long Form Field",
     "icon": "TextParagraph",
-    "styles": ["size"],
+    "styles": [
+      "size"
+    ],
     "editable": true,
     "settings": [
       {
         "type": "field/longform",
         "label": "Field",
-        "key": "field"
+        "key": "field",
+        "required": true
       },
       {
         "type": "text",
@@ -2599,14 +2839,19 @@
   "datetimefield": {
     "name": "Date Picker",
     "icon": "DateInput",
-    "styles": ["size"],
+    "styles": [
+      "size"
+    ],
     "editable": true,
-    "illegalChildren": ["section"],
+    "illegalChildren": [
+      "section"
+    ],
     "settings": [
       {
         "type": "field/datetime",
         "label": "Field",
-        "key": "field"
+        "key": "field",
+        "required": true
       },
       {
         "type": "text",
@@ -2620,14 +2865,20 @@
       },
       {
         "type": "boolean",
-        "label": "Show Time",
+        "label": "Show time",
         "key": "enableTime",
         "defaultValue": true
       },
       {
         "type": "boolean",
-        "label": "Time Only",
+        "label": "Time only",
         "key": "timeOnly",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Ignore time zones",
+        "key": "ignoreTimezones",
         "defaultValue": false
       },
       {
@@ -2662,26 +2913,33 @@
   "embeddedmap": {
     "name": "Embedded Map",
     "icon": "Location",
-    "styles": ["size"],
+    "styles": [
+      "size"
+    ],
     "draggable": false,
-    "illegalChildren": ["section"],
+    "illegalChildren": [
+      "section"
+    ],
     "settings": [
       {
         "type": "dataProvider",
         "label": "Provider",
-        "key": "dataProvider"
+        "key": "dataProvider",
+        "required": true
       },
       {
         "type": "field",
         "label": "Latitude Key",
         "key": "latitudeKey",
-        "dependsOn": "dataProvider"
+        "dependsOn": "dataProvider",
+        "required": true
       },
       {
         "type": "field",
         "label": "Longitude Key",
         "key": "longitudeKey",
-        "dependsOn": "dataProvider"
+        "dependsOn": "dataProvider",
+        "required": true
       },
       {
         "type": "field",
@@ -2746,7 +3004,6 @@
         "key": "tileURL",
         "defaultValue": "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       },
-
       {
         "type": "text",
         "label": "Default Location (when empty)",
@@ -2772,14 +3029,19 @@
   "attachmentfield": {
     "name": "Attachment",
     "icon": "Attach",
-    "styles": ["size"],
+    "styles": [
+      "size"
+    ],
     "editable": true,
-    "illegalChildren": ["section"],
+    "illegalChildren": [
+      "section"
+    ],
     "settings": [
       {
         "type": "field/attachment",
         "label": "Field",
-        "key": "field"
+        "key": "field",
+        "required": true
       },
       {
         "type": "text",
@@ -2824,14 +3086,19 @@
   "relationshipfield": {
     "name": "Relationship Picker",
     "icon": "TaskList",
-    "styles": ["size"],
+    "styles": [
+      "size"
+    ],
     "editable": true,
-    "illegalChildren": ["section"],
+    "illegalChildren": [
+      "section"
+    ],
     "settings": [
       {
         "type": "field/link",
         "label": "Field",
-        "key": "field"
+        "key": "field",
+        "required": true
       },
       {
         "type": "text",
@@ -2881,13 +3148,16 @@
   "jsonfield": {
     "name": "JSON Field",
     "icon": "Brackets",
-    "styles": ["size"],
+    "styles": [
+      "size"
+    ],
     "editable": true,
     "settings": [
       {
         "type": "field/json",
         "label": "Field",
-        "key": "field"
+        "key": "field",
+        "required": true
       },
       {
         "type": "text",
@@ -2927,13 +3197,16 @@
     "name": "S3 File Upload",
     "info": "This component can't be used with S3 datasources that use custom endpoints.",
     "icon": "UploadToCloud",
-    "styles": ["size"],
+    "styles": [
+      "size"
+    ],
     "editable": true,
     "settings": [
       {
         "type": "field/attachment",
         "label": "Field",
-        "key": "field"
+        "key": "field",
+        "required": true
       },
       {
         "type": "text",
@@ -2983,14 +3256,19 @@
     "name": "Data Provider",
     "info": "Pagination is only available for data stored in tables.",
     "icon": "Data",
-    "illegalChildren": ["section"],
+    "illegalChildren": [
+      "section"
+    ],
     "hasChildren": true,
-    "actions": ["RefreshDatasource"],
+    "actions": [
+      "RefreshDatasource"
+    ],
     "settings": [
       {
         "type": "dataSource",
         "label": "Data",
-        "key": "dataSource"
+        "key": "dataSource",
+        "required": true
       },
       {
         "type": "filter",
@@ -3006,7 +3284,10 @@
         "type": "select",
         "label": "Sort Order",
         "key": "sortOrder",
-        "options": ["Ascending", "Descending"],
+        "options": [
+          "Ascending",
+          "Descending"
+        ],
         "defaultValue": "Descending"
       },
       {
@@ -3051,15 +3332,18 @@
   "table": {
     "name": "Table",
     "icon": "Table",
-    "illegalChildren": ["section"],
+    "illegalChildren": [
+      "section"
+    ],
     "hasChildren": true,
     "showEmptyState": false,
-    "info": "Row selection is only compatible with internal or SQL tables", 
+    "info": "Row selection is only compatible with internal or SQL tables",
     "settings": [
       {
         "type": "dataProvider",
         "label": "Data provider",
-        "key": "dataProvider"
+        "key": "dataProvider",
+        "required": true
       },
       {
         "type": "number",
@@ -3112,7 +3396,6 @@
         "key": "allowSelectRows",
         "defaultValue": false
       },
-
       {
         "type": "boolean",
         "label": "Link table rows",
@@ -3148,19 +3431,23 @@
   "daterangepicker": {
     "name": "Date Range",
     "icon": "Date",
-    "styles": ["size"],
+    "styles": [
+      "size"
+    ],
     "hasChildren": false,
     "info": "Your data provider will be automatically filtered to the given date range.",
     "settings": [
       {
         "type": "dataProvider",
         "label": "Provider",
-        "key": "dataProvider"
+        "key": "dataProvider",
+        "required": true
       },
       {
         "type": "field",
         "label": "Date field",
-        "key": "field"
+        "key": "field",
+        "required": true
       },
       {
         "type": "select",
@@ -3181,7 +3468,9 @@
   "spectrumcard": {
     "name": "Card",
     "icon": "Card",
-    "styles": ["size"],
+    "styles": [
+      "size"
+    ],
     "settings": [
       {
         "type": "text",
@@ -3243,7 +3532,8 @@
       {
         "type": "dataProvider",
         "label": "Provider",
-        "key": "dataProvider"
+        "key": "dataProvider",
+        "required": true
       },
       {
         "type": "multifield",
@@ -3282,7 +3572,9 @@
     "block": true,
     "name": "Table block",
     "icon": "Table",
-    "styles": ["size"],
+    "styles": [
+      "size"
+    ],
     "info": "Only the first 3 search columns will be used.",
     "settings": [
       {
@@ -3293,7 +3585,8 @@
       {
         "type": "dataSource",
         "label": "Data",
-        "key": "dataSource"
+        "key": "dataSource",
+        "required": true
       },
       {
         "type": "searchfield",
@@ -3315,7 +3608,10 @@
         "type": "select",
         "label": "Sort Order",
         "key": "sortOrder",
-        "options": ["Ascending", "Descending"],
+        "options": [
+          "Ascending",
+          "Descending"
+        ],
         "defaultValue": "Descending"
       },
       {
@@ -3441,7 +3737,9 @@
     "block": true,
     "name": "Cards block",
     "icon": "Table",
-    "styles": ["size"],
+    "styles": [
+      "size"
+    ],
     "info": "Only the first 3 search columns will be used.",
     "settings": [
       {
@@ -3452,7 +3750,8 @@
       {
         "type": "dataSource",
         "label": "Data",
-        "key": "dataSource"
+        "key": "dataSource",
+        "required": true
       },
       {
         "type": "searchfield",
@@ -3474,7 +3773,10 @@
         "type": "select",
         "label": "Sort Order",
         "key": "sortOrder",
-        "options": ["Ascending", "Descending"],
+        "options": [
+          "Ascending",
+          "Descending"
+        ],
         "defaultValue": "Descending"
       },
       {
@@ -3603,14 +3905,17 @@
   "repeaterblock": {
     "name": "Repeater block",
     "icon": "ViewList",
-    "illegalChildren": ["section"],
+    "illegalChildren": [
+      "section"
+    ],
     "hasChildren": true,
     "showSettingsBar": true,
     "settings": [
       {
         "type": "dataSource",
         "label": "Data",
-        "key": "dataSource"
+        "key": "dataSource",
+        "required": true
       },
       {
         "type": "filter",
@@ -3626,7 +3931,10 @@
         "type": "select",
         "label": "Sort Order",
         "key": "sortOrder",
-        "options": ["Ascending", "Descending"],
+        "options": [
+          "Ascending",
+          "Descending"
+        ],
         "defaultValue": "Descending"
       },
       {
@@ -3815,12 +4123,15 @@
   "markdownviewer": {
     "name": "Markdown Viewer",
     "icon": "TaskList",
-    "styles": ["size"],
+    "styles": [
+      "size"
+    ],
     "settings": [
       {
         "type": "text",
         "label": "Markdown",
-        "key": "value"
+        "key": "value",
+        "required": true
       }
     ]
   }
