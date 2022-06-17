@@ -1,6 +1,6 @@
 {
   "name": "@budibase/backend-core",
-  "version": "1.0.200-alpha.3",
+  "version": "1.0.206",
   "description": "Budibase backend core libraries used in server and worker",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -13,13 +13,13 @@
   "license": "GPL-3.0",
   "scripts": {
     "prebuild": "rimraf dist/",
+    "prepack": "cp package.json dist",
     "build": "tsc -p tsconfig.build.json",
     "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
     "test": "jest",
     "test:watch": "jest --watchAll"
   },
   "dependencies": {
-    "@budibase/types": "^1.0.200-alpha.3",
     "@techpass/passport-openidconnect": "0.3.2",
     "aws-sdk": "2.1030.0",
     "bcrypt": "5.0.1",
@@ -57,6 +57,7 @@
     ]
   },
   "devDependencies": {
+    "@budibase/types": "^1.0.206",
     "@shopify/jest-koa-mocks": "3.1.5",
     "@types/jest": "27.5.1",
     "@types/koa": "2.0.52",
