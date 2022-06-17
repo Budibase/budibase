@@ -3,15 +3,20 @@ import {
   AutomationResults,
   AutomationStatus,
 } from "../../definitions/automation"
-import { getAppDB } from "@budibase/backend-core/context"
+import { getAppId, getProdAppDB } from "@budibase/backend-core/context"
 import {
+  DocumentTypes,
   generateAutomationLogID,
   getAutomationLogParams,
   getQueryIndex,
   ViewNames,
+  SEPARATOR,
+  isProdAppID,
 } from "../../db/utils"
 import { createLogByAutomationView } from "../../db/views/staticViews"
-import { Automation } from "../../definitions/common"
+import { Automation, MetadataErrors } from "../../definitions/common"
+import { invalidateAppMetadata } from "@budibase/backend-core/cache"
+import { backOff } from "../../utilities"
 import * as env from "../../environment"
 
 const PAGE_SIZE = 9
@@ -46,18 +51,32 @@ export function oneDayAgo() {
 }
 
 async function clearOldHistory() {
-  const db = getAppDB()
+  const db = getProdAppDB()
   // TODO: handle license lookup for deletion
   const expiredEnd = oneDayAgo()
   const results = await getAllLogs(EARLIEST_DATE, expiredEnd, {
     docs: false,
+    paginate: false,
   })
   const toDelete = results.data.map((doc: any) => ({
     _id: doc.id,
-    _rev: doc.rev,
+    _rev: doc.value.rev,
     _deleted: true,
   }))
+  const errorLogIds = results.data
+    .filter((doc: any) => {
+      const parts = doc.id.split(SEPARATOR)
+      const status = parts[parts.length - 1]
+      return status === AutomationStatus.ERROR
+    })
+    .map((doc: any) => {
+      const parts = doc.id.split(SEPARATOR)
+      return `${parts[parts.length - 3]}${SEPARATOR}${parts[parts.length - 2]}`
+    })
   await db.bulkDocs(toDelete)
+  if (errorLogIds.length) {
+    await updateAppMetadataWithErrors(errorLogIds)
+  }
 }
 
 function pagination(
@@ -88,7 +107,7 @@ async function getAllLogs(
     page?: string
   } = { docs: true }
 ): Promise<AutomationLogPage> {
-  const db = getAppDB()
+  const db = getProdAppDB()
   let optional: any = { status: opts.status }
   const params = getAutomationLogParams(startDate, endDate, optional, {
     include_docs: opts.docs,
@@ -106,7 +125,7 @@ async function getLogsByView(
   endDate: string,
   viewParams: { automationId?: string; status?: string; page?: string } = {}
 ): Promise<AutomationLogPage> {
-  const db = getAppDB()
+  const db = getProdAppDB()
   let response
   try {
     let optional = {
@@ -130,21 +149,49 @@ async function getLogsByView(
   return pagination(response)
 }
 
+async function updateAppMetadataWithErrors(
+  automationIds: string[],
+  { clearing } = { clearing: false }
+) {
+  const db = getProdAppDB()
+  // this will try multiple times with a delay between to update the metadata
+  await backOff(async () => {
+    const metadata = await db.get(DocumentTypes.APP_METADATA)
+    for (let automationId of automationIds) {
+      let errors: MetadataErrors = {}
+      if (metadata.automationErrors) {
+        errors = metadata.automationErrors as MetadataErrors
+      }
+      const change = clearing ? -1 : 1
+      errors[automationId] = errors[automationId]
+        ? errors[automationId] + change
+        : 1
+      // if clearing and reach zero, this will pass and will remove the element
+      if (!errors[automationId]) {
+        delete errors[automationId]
+      }
+      metadata.automationErrors = errors
+    }
+    await db.put(metadata)
+    // don't update cache until after DB put, make sure it has been stored successfully
+    await invalidateAppMetadata(metadata.appId, metadata)
+  }, "Failed to update app metadata with automation log error")
+}
+
 export async function storeLog(
   automation: Automation,
   results: AutomationResults
 ) {
-  // can disable this if un-needed in self-host
-  if (env.DISABLE_AUTOMATION_LOGS) {
+  // can disable this if un-needed in self-host, also only do this for prod apps
+  if (env.DISABLE_AUTOMATION_LOGS || !isProdAppID(getAppId())) {
     return
   }
-  const db = getAppDB()
+  const db = getProdAppDB()
   const automationId = automation._id
   const name = automation.name
   const status = getStatus(results)
   const isoDate = new Date().toISOString()
   const id = generateAutomationLogID(isoDate, status, automationId)
-
   await db.put({
     // results contain automationId and status for view
     ...results,
@@ -154,6 +201,12 @@ export async function storeLog(
     createdAt: isoDate,
     _id: id,
   })
+
+  // need to note on the app metadata that there is an error, store what the error is
+  if (status === AutomationStatus.ERROR) {
+    await updateAppMetadataWithErrors([automation._id as string])
+  }
+
   // clear up old logging for app
   await clearOldHistory()
 }
