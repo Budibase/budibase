@@ -81,6 +81,7 @@
     "@budibase/client": "^1.0.206",
     "@budibase/pro": "1.0.206",
     "@budibase/string-templates": "^1.0.206",
+    "@budibase/types": "^1.0.206",
     "@bull-board/api": "3.7.0",
     "@bull-board/koa": "3.9.4",
     "@elastic/elasticsearch": "7.10.0",
