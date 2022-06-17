@@ -89,7 +89,7 @@ affinity: {}
 globals:
   appVersion: "latest"
   budibaseEnv: PRODUCTION
-  enableAnalytics: true
+  enableAnalytics: "1"
   sentryDSN: ""
   posthogToken: "phc_fg5I3nDOf6oJVMHSaycEhpPdlgS8rzXG2r6F2IpxCHS"
   logLevel: info

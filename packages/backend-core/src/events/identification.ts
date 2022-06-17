@@ -14,7 +14,6 @@ import {
   CloudAccount,
   UserIdentity,
   InstallationGroup,
-  isSelfHostAccount,
   UserContext,
   Group,
 } from "@budibase/types"
@@ -36,6 +35,7 @@ const pkg = require("../../package.json")
  */
 export const getCurrentIdentity = async (): Promise<Identity> => {
   let identityContext = identityCtx.getIdentity()
+  const environment = getDeploymentEnvironment()
 
   let identityType
 
@@ -47,36 +47,47 @@ export const getCurrentIdentity = async (): Promise<Identity> => {
 
   if (identityType === IdentityType.INSTALLATION) {
     const installationId = await getInstallationId()
+    const hosting = getHostingFromEnv()
     return {
       id: formatDistinctId(installationId, identityType),
+      hosting,
       type: identityType,
       installationId,
+      environment,
     }
   } else if (identityType === IdentityType.TENANT) {
     const installationId = await getInstallationId()
     const tenantId = await getEventTenantId(context.getTenantId())
+    const hosting = getHostingFromEnv()
 
     return {
       id: formatDistinctId(tenantId, identityType),
       type: identityType,
+      hosting,
       installationId,
       tenantId,
+      environment,
     }
   } else if (identityType === IdentityType.USER) {
     const userContext = identityContext as UserContext
     const tenantId = await getEventTenantId(context.getTenantId())
-    let installationId: string | undefined
+    const installationId = await getInstallationId()
 
-    // self host account users won't have installation
-    if (!userContext.account || !isSelfHostAccount(userContext.account)) {
-      installationId = await getInstallationId()
+    const account = userContext.account
+    let hosting
+    if (account) {
+      hosting = account.hosting
+    } else {
+      hosting = getHostingFromEnv()
     }
 
     return {
       id: userContext._id,
       type: identityType,
+      hosting,
       installationId,
       tenantId,
+      environment,
     }
   } else {
     throw new Error("Unknown identity type")
@@ -91,12 +102,14 @@ export const identifyInstallationGroup = async (
   const type = IdentityType.INSTALLATION
   const hosting = getHostingFromEnv()
   const version = pkg.version
+  const environment = getDeploymentEnvironment()
 
   const group: InstallationGroup = {
     id,
     type,
     hosting,
     version,
+    environment,
   }
 
   await identifyGroup(group, timestamp)
@@ -112,6 +125,8 @@ export const identifyTenantGroup = async (
 ): Promise<void> => {
   const id = await getEventTenantId(tenantId)
   const type = IdentityType.TENANT
+  const installationId = await getInstallationId()
+  const environment = getDeploymentEnvironment()
 
   let hosting: Hosting
   let profession: string | undefined
@@ -129,6 +144,8 @@ export const identifyTenantGroup = async (
     id,
     type,
     hosting,
+    environment,
+    installationId,
     profession,
     companySize,
   }
@@ -154,10 +171,13 @@ export const identifyUser = async (
   const verified =
     account && account?.budibaseUserId === user._id ? account.verified : false
   const installationId = await getInstallationId()
+  const hosting = account ? account.hosting : getHostingFromEnv()
+  const environment = getDeploymentEnvironment()
 
   const identity: UserIdentity = {
     id,
     type,
+    hosting,
     installationId,
     tenantId,
     verified,
@@ -165,6 +185,7 @@ export const identifyUser = async (
     providerType,
     builder,
     admin,
+    environment,
   }
 
   await identify(identity, timestamp)
@@ -177,6 +198,9 @@ export const identifyAccount = async (account: Account) => {
   let providerType = isSSOAccount(account) ? account.providerType : undefined
   const verified = account.verified
   const accountHolder = true
+  const hosting = account.hosting
+  const installationId = await getInstallationId()
+  const environment = getDeploymentEnvironment()
 
   if (isCloudAccount(account)) {
     if (account.budibaseUserId) {
@@ -188,10 +212,13 @@ export const identifyAccount = async (account: Account) => {
   const identity: UserIdentity = {
     id,
     type,
+    hosting,
+    installationId,
     tenantId,
     providerType,
     verified,
     accountHolder,
+    environment,
   }
 
   await identify(identity)
@@ -209,6 +236,14 @@ export const identifyGroup = async (
   timestamp?: string | number
 ) => {
   await processors.identifyGroup(group, timestamp)
+}
+
+const getDeploymentEnvironment = () => {
+  if (env.isDev()) {
+    return "development"
+  } else {
+    return env.DEPLOYMENT_ENVIRONMENT
+  }
 }
 
 const getHostingFromEnv = () => {
