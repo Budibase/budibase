@@ -301,7 +301,7 @@
             />
           </Tab>
           <Tab title="Automation History">
-            <HistoryTab appId={selectedApp?._id} />
+            <HistoryTab app={selectedApp} />
           </Tab>
           {#if false}
             <Tab title="Backups">
