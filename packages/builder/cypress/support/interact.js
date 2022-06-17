@@ -97,10 +97,11 @@ export const ACTION_SPECTRUM_ICON = ".actions .spectrum-Icon"
 export const SPECTRUM_MENU_CHILD2 = ".spectrum-Menu > :nth-child(2)"
 export const DELETE_TABLE_CONFIRM = '[data-cy="delete-table-confirm"]'
 
-//createUSerAndRoles
+//adminAndManagement Folder
 export const SPECTRUM_TABLE = ".spectrum-Table"
 export const SPECTRUM_SIDENAV = ".spectrum-SideNav"
 export const SPECTRUM_TABLE_ROW = ".spectrum-Table-row"
 export const SPECTRUM_TABLE_CELL = ".spectrum-Table-cell"
 export const FIELD = ".field"
 export const CONTAINER = ".container"
+export const REGENERATE = ".regenerate"

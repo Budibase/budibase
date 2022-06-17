@@ -222,10 +222,9 @@ filterTests(['all'], () => {
         cy.alterAppVersion(appId, "0.0.1-alpha.0")
         .then(()=>{
           cy.reload()
-          cy.wait(1000)
           cy.log("Current deployment version: " + clientPackage.version)
 
-          cy.get(".version-status a").contains("Update").click()
+          cy.get(".version-status a", { timeout: 1000 }).contains("Update").click()
           cy.get(".spectrum-Tabs-item.is-selected").contains("Settings")
 
           cy.get(".version-section .page-action button").contains("Update").click({ force: true })
@@ -273,14 +272,12 @@ filterTests(['all'], () => {
       });
 
       cy.visit(`${Cypress.config().baseUrl}/builder`)
-      cy.wait(1000)
-      cy.get(".appTable .name").eq(0).click()
+      cy.get(".appTable .name", { timeout: 1000 }).eq(0).click()
       cy.get(".spectrum-Tabs-item").contains("Settings").click()
       cy.get(".spectrum-Tabs-item.is-selected").contains("Settings")
 
       cy.get(".details-section .page-action .spectrum-Button").scrollIntoView()
-      cy.wait(1000)
-      cy.get(".details-section .page-action .spectrum-Button").should("be.disabled")
+      cy.get(".details-section .page-action .spectrum-Button", { timeout: 1000 }).should("be.disabled")
 
     })
 

@@ -18,9 +18,8 @@ filterTests(["all"], () => {
         cy.get(".spectrum-Button")
           .contains("Skip table fetch")
           .click({ force: true })
-        cy.wait(500)
         // Confirm config contains localhost
-        cy.get(".spectrum-Textfield-input")
+        cy.get(".spectrum-Textfield-input", { timeout: 500 })
           .eq(1)
           .should("have.value", "localhost")
         // Add another Oracle data source, configure & skip table fetch
@@ -140,9 +139,8 @@ filterTests(["all"], () => {
                 .eq(1)
                 .within(() => {
                   cy.get(".spectrum-Table-row").eq(0).click()
-                  cy.wait(500)
                 })
-              cy.get(".spectrum-Dialog-grid").within(() => {
+              cy.get(".spectrum-Dialog-grid", { timeout: 500 }).within(() => {
                 cy.get(".spectrum-Button")
                   .contains("Delete")
                   .click({ force: true })
@@ -221,10 +219,9 @@ filterTests(["all"], () => {
         cy.get(".spectrum-Button")
           .contains("Delete Query")
           .click({ force: true })
-        cy.wait(1000)
 
         // Confirm deletion
-        cy.get(".nav-item").should("not.contain", queryName)
+        cy.get(".nav-item", { timeout: 1000 }).should("not.contain", queryName)
       })
     }
   })

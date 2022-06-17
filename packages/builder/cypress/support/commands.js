@@ -3,7 +3,7 @@ Cypress.on("uncaught:exception", () => {
 })
 
 // ACCOUNTS & USERS
-Cypress.Commands.add("login", () => {
+Cypress.Commands.add("login", (email, password) => {
   cy.visit(`${Cypress.config().baseUrl}/builder`)
   cy.wait(2000)
   cy.url().then(url => {
@@ -17,8 +17,13 @@ Cypress.Commands.add("login", () => {
     if (url.includes("builder/auth/login") || url.includes("builder/admin")) {
       // login
       cy.contains("Sign in to Budibase").then(() => {
-        cy.get("input").first().type("test@test.com")
-        cy.get('input[type="password"]').type("test")
+        if (email == null || password == null) {
+          cy.get("input").first().type("test@test.com")
+          cy.get('input[type="password"]').type("test")
+        } else {
+          cy.get("input").first().type(email)
+          cy.get('input[type="password"]').type(password)
+        }
         cy.get("button").first().click({ force: true })
         cy.wait(1000)
       })
@@ -42,7 +47,7 @@ Cypress.Commands.add("createUser", email => {
   cy.get(".spectrum-Picker-label").click()
   cy.get(".spectrum-Menu-item:nth-child(2) > .spectrum-Menu-itemLabel").click()
 
-  //Onboarding type selector
+  // Onboarding type selector
   cy.get(
     ":nth-child(2) > .spectrum-Form-itemField > .spectrum-Textfield > .spectrum-Textfield-input"
   )
@@ -52,7 +57,9 @@ Cypress.Commands.add("createUser", email => {
 })
 
 Cypress.Commands.add("updateUserInformation", (firstName, lastName) => {
-  cy.get(".user-dropdown .avatar > .icon").click({ force: true })
+  cy.get(".user-dropdown .avatar > .icon", { timeout: 2000 }).click({
+    force: true,
+  })
 
   cy.get(".spectrum-Popover[data-cy='user-menu']").within(() => {
     cy.get("li[data-cy='user-info']").click({ force: true })
@@ -96,7 +103,7 @@ Cypress.Commands.add("createApp", (name, addDefaultTable) => {
     typeof addDefaultTable != "boolean" ? true : addDefaultTable
 
   cy.visit(`${Cypress.config().baseUrl}/builder`)
-  cy.get(`[data-cy="create-app-btn"]`, { timeout: 1000 }).click({ force: true })
+  cy.get(`[data-cy="create-app-btn"]`, { timeout: 2000 }).click({ force: true })
 
   // If apps already exist
   cy.request(`${Cypress.config().baseUrl}/api/applications?status=all`)
@@ -335,7 +342,7 @@ Cypress.Commands.add("searchForApplication", appName => {
 
 // Assumes there are no others
 Cypress.Commands.add("applicationInAppTable", appName => {
-  cy.get(".appTable").within(() => {
+  cy.get(".appTable", { timeout: 1000 }).within(() => {
     cy.get(".title").contains(appName).should("exist")
   })
 })
@@ -464,10 +471,14 @@ Cypress.Commands.add("addCustomSourceOptions", totalOptions => {
 // DESIGN AREA
 Cypress.Commands.add("addComponent", (category, component) => {
   if (category) {
-    cy.get(`[data-cy="category-${category}"]`).click({ force: true })
+    cy.get(`[data-cy="category-${category}"]`, { timeout: 1000 }).click({
+      force: true,
+    })
   }
   if (component) {
-    cy.get(`[data-cy="component-${component}"]`).click({ force: true })
+    cy.get(`[data-cy="component-${component}"]`, { timeout: 1000 }).click({
+      force: true,
+    })
   }
   cy.wait(2000)
   cy.location().then(loc => {
