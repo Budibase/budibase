@@ -3,8 +3,10 @@
   import StatusRenderer from "components/portal/overview/StatusRenderer.svelte"
   import DateTimeRenderer from "components/common/renderers/DateTimeRenderer.svelte"
   import TestDisplay from "components/automation/AutomationBuilder/TestDisplay.svelte"
+  import { goto } from "@roxi/routify"
 
   export let history
+  export let appId
   export let close
 </script>
 
@@ -23,10 +25,14 @@
       </div>
       <div class="icon">
         <Icon name="JourneyVoyager" />
-        <div>{history.name}</div>
+        <div>{history.automationName}</div>
       </div>
       <div>
-        <ActionButton icon="Edit" fullWidth={false}
+        <ActionButton
+          icon="Edit"
+          fullWidth={false}
+          on:click={() =>
+            $goto(`../../../app/${appId}/automate/${history.automationId}`)}
           >Edit automation</ActionButton
         >
       </div>
@@ -55,7 +61,7 @@
   .bottom {
     margin-top: var(--spacing-m);
     border-top: var(--border-light);
-    padding-top: var(--spacing-xl);
+    padding-top: calc(var(--spacing-xl) * 2);
     height: 100%;
   }
 

@@ -1,5 +1,4 @@
 import {
-  AutomationLog,
   AutomationLogPage,
   AutomationResults,
   AutomationStatus,
@@ -135,7 +134,7 @@ export async function storeLog(
   automation: Automation,
   results: AutomationResults
 ) {
-  // can disable this if un-needed in self host
+  // can disable this if un-needed in self-host
   if (env.DISABLE_AUTOMATION_LOGS) {
     return
   }

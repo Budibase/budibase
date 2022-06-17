@@ -6,7 +6,7 @@
   import { automationStore } from "builderStore"
   import { onMount } from "svelte"
 
-  export let appId
+  export let app
 
   let runHistory = []
   let showPanel = false
@@ -140,6 +140,7 @@
   </Layout>
   <div class="panel" class:panelShow={showPanel}>
     <HistoryDetailsPanel
+      appId={app.devId}
       bind:history={selectedHistory}
       close={() => {
         showPanel = false
