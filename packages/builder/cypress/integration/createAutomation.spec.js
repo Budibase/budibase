@@ -16,17 +16,15 @@ filterTests(['smoke', 'all'], () => {
       cy.get(interact.MODAL_INNER_WRAPPER).within(() => {
         cy.get("input").type("Add Row")
         cy.contains("Row Created").click({ force: true })
-        cy.wait(500)
-        cy.get(interact.SPECTRUM_BUTTON_CTA).click()
+        cy.get(interact.SPECTRUM_BUTTON_CTA, { timeout: 500 }).click()
       })
 
       // Setup trigger
       cy.get(interact.SPECTRUM_PICKER_LABEL).click()
       cy.wait(500)
       cy.contains("dog").click()
-      cy.wait(2000)
       // Create action
-      cy.get('[aria-label="AddCircle"]').eq(1).click()
+      cy.get('[aria-label="AddCircle"]', { timeout: 2000 }).eq(1).click()
       cy.get(interact.MODAL_INNER_WRAPPER).within(() => {
         cy.wait(1000)
         cy.contains("Create Row").trigger('mouseover').click().click()
@@ -43,11 +41,9 @@ filterTests(['smoke', 'all'], () => {
       cy.contains("Finish and test automation").click()
 
       cy.get(interact.MODAL_INNER_WRAPPER).within(() => {
-        cy.wait(1000)
-        cy.get(interact.SPECTRUM_PICKER_LABEL).click()
+        cy.get(interact.SPECTRUM_PICKER_LABEL, { timeout: 1000 }).click()
         cy.contains("dog").click()
-        cy.wait(1000)
-        cy.get(interact.SPECTRUM_TEXTFIELD_INPUT)
+        cy.get(interact.SPECTRUM_TEXTFIELD_INPUT, { timeout: 1000 })
           .first()
           .type("automationGoodboy")
         cy.get(interact.SPECTRUM_TEXTFIELD_INPUT)

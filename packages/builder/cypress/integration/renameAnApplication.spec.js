@@ -12,16 +12,13 @@ filterTests(['all'], () => {
       const appRename = "Cypress Renamed"
       // Rename app, Search for app, Confirm name was changed
       cy.visit(`${Cypress.config().baseUrl}/builder`)
-      cy.wait(500)
       renameApp(appName, appRename)
       cy.reload()
-      cy.wait(1000)
       cy.searchForApplication(appRename)
       cy.get(".appTable").find(".title").should("have.length", 1)
       cy.applicationInAppTable(appRename)
       // Set app name back to Cypress Tests
       cy.reload()
-      cy.wait(1000)
       renameApp(appRename, appName)
     })
 
@@ -39,7 +36,6 @@ filterTests(['all'], () => {
         })
       // Rename app, Search for app, Confirm name was changed
       cy.visit(`${Cypress.config().baseUrl}/builder`)
-      cy.wait(500)
       renameApp(appName, appRename, true)
       cy.get(".appTable").find(".wrapper").should("have.length", 1)
       cy.applicationInAppTable(appRename)
@@ -48,13 +44,10 @@ filterTests(['all'], () => {
     it("Should try to rename an application to have no name", () => {
       const appName = "Cypress Tests"
       cy.visit(`${Cypress.config().baseUrl}/builder`)
-      cy.wait(500)
       renameApp(appName, " ", false, true)
-      cy.wait(500)
       // Close modal and confirm name has not been changed
-      cy.get(".spectrum-Dialog-grid").contains("Cancel").click()
+      cy.get(".spectrum-Dialog-grid", { timeout: 1000 }).contains("Cancel").click()
       cy.reload()
-      cy.wait(1000)
       cy.applicationInAppTable(appName)
     })
 
@@ -62,8 +55,7 @@ filterTests(['all'], () => {
       // It is not possible to have applications with the same name
       const appName = "Cypress Tests"
       cy.visit(`${Cypress.config().baseUrl}/builder`)
-      cy.wait(500)
-      cy.get(".spectrum-Button").contains("Create app").click({ force: true })
+      cy.get(".spectrum-Button", { timeout: 500 }).contains("Create app").click({ force: true })
       cy.contains(/Start from scratch/).click()
       cy.get(".spectrum-Modal")
         .within(() => {
@@ -80,24 +72,20 @@ filterTests(['all'], () => {
       const numberName = 12345
       const specialCharName = "£$%^"
       cy.visit(`${Cypress.config().baseUrl}/builder`)
-      cy.wait(500)
       renameApp(appName, numberName)
       cy.reload()
-      cy.wait(1000)
       cy.applicationInAppTable(numberName)
       cy.reload()
-      cy.wait(1000)
       renameApp(numberName, specialCharName)
       cy.get(".error").should("have.text", "App name must be letters, numbers and spaces only")
       // Set app name back to Cypress Tests
       cy.reload()
-      cy.wait(1000)
       renameApp(numberName, appName)
     })
 
     const renameApp = (originalName, changedName, published, noName) => {
       cy.searchForApplication(originalName)
-      cy.get(".appTable")
+      cy.get(".appTable", { timeout: 1000 })
         .within(() => {
           cy.get("[aria-label='More']").eq(0).click()
         })

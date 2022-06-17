@@ -35,8 +35,7 @@ filterTests(['smoke', 'all'], () => {
             cy.get(".spectrum-ButtonGroup").within(() => {
                 cy.get(".spectrum-Button").contains("Publish").click({ force: true })
             })
-            cy.wait(1000)
-            cy.get(".spectrum-ButtonGroup").within(() => {
+            cy.get(".spectrum-ButtonGroup", { timeout: 1000 }).within(() => {
                 cy.get(".spectrum-Button").contains("Done").click({ force: true })
             })
 
@@ -49,18 +48,16 @@ filterTests(['smoke', 'all'], () => {
             cy.get(".spectrum-Dialog-grid").within(() => {
                 // Click Revert
                 cy.get(".spectrum-Button").contains("Revert").click({ force: true })
-                cy.wait(1000)
             })
             // Confirm Paragraph component is still visible
-            cy.get(".root").contains("New Paragraph")
+            cy.get(".root", { timeout: 1000 }).contains("New Paragraph")
             // Confirm Button component is not visible
             cy.get(".root").should("not.have.text", "New Button")
-            cy.wait(500)
         })
         
         it("should enter incorrect app name when reverting", () => {
             // Click Revert
-            cy.get(".toprightnav").within(() => {
+            cy.get(".toprightnav", { timeout: 1000 }).within(() => {
                 cy.get("[aria-label='Revert']").click({ force: true })
             })
             // Enter incorrect app name

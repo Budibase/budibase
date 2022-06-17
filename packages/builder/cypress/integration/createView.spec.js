@@ -68,9 +68,8 @@ filterTests(['smoke', 'all'], () => {
 
         cy.get(".spectrum-Button").contains("Save").click({ force: true })
       })
-      cy.wait(1000)
 
-      cy.get(".title").then($headers => {
+      cy.get(".title", { timeout: 1000 }).then($headers => {
         expect($headers).to.have.length(7)
         const headers = Array.from($headers).map(header =>
           header.textContent.trim()

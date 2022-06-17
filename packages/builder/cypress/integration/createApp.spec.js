@@ -49,10 +49,9 @@ filterTests(['smoke', 'all'], () => {
 
     it("should enforce a valid url before submission", () => {
       cy.visit(`${Cypress.config().baseUrl}/builder`)
-      cy.wait(500)
 
       // Start create app process. If apps already exist, click second button
-      cy.get(interact.CREATE_APP_BUTTON).click({ force: true })
+      cy.get(interact.CREATE_APP_BUTTON, { timeout: 1000 }).click({ force: true })
       cy.request(`${Cypress.config().baseUrl}/api/applications?status=all`)
         .its("body")
         .then(val => {
@@ -95,7 +94,6 @@ filterTests(['smoke', 'all'], () => {
       cy.createApp(appName)
 
       cy.visit(`${Cypress.config().baseUrl}/builder`)
-      cy.wait(1000)
 
       cy.applicationInAppTable(appName)
       cy.deleteApp(appName)
@@ -105,7 +103,6 @@ filterTests(['smoke', 'all'], () => {
       cy.createApp()
 
       cy.visit(`${Cypress.config().baseUrl}/builder`)
-      cy.wait(1000)
 
       cy.applicationInAppTable("My app")
       cy.deleteApp("My app")
@@ -119,11 +116,9 @@ filterTests(['smoke', 'all'], () => {
       cy.createApp()
 
       cy.visit(`${Cypress.config().baseUrl}/builder`)
-      cy.wait(1000)
 
       cy.applicationInAppTable("Teds app")
       cy.deleteApp("Teds app")
-      cy.wait(2000)
 
       //Accomodate names that end in 'S'
       cy.updateUserInformation("Chris", "Userman")
@@ -131,11 +126,9 @@ filterTests(['smoke', 'all'], () => {
       cy.createApp()
 
       cy.visit(`${Cypress.config().baseUrl}/builder`)
-      cy.wait(1000)
 
       cy.applicationInAppTable("Chris app")
       cy.deleteApp("Chris app")
-      cy.wait(2000)
 
       cy.updateUserInformation("", "")
     })
@@ -224,14 +217,12 @@ filterTests(['smoke', 'all'], () => {
       cy.createApp(appName)
 
       cy.visit(`${Cypress.config().baseUrl}/builder`)
-      cy.wait(500)
 
       // Create second app
       const secondAppName = "Second App Demo"
       cy.createApp(secondAppName)
 
       cy.visit(`${Cypress.config().baseUrl}/builder`)
-      cy.wait(500)
 
       //Both applications should exist and be searchable
       cy.searchForApplication(appName)
