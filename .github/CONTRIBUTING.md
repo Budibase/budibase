@@ -93,6 +93,8 @@ then `cd ` into your local copy.
 
 #### 3.  Install and Build
 
+| **NOTE**: On Windows, all yarn commands must be executed on a bash shell (e.g. git bash)
+
 To develop the Budibase platform you'll need [Docker](https://www.docker.com/) and [Docker Compose](https://docs.docker.com/compose/) installed.
 
 ##### Quick method

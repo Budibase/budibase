@@ -8,13 +8,49 @@
   import { currentAsset, store } from "builderStore"
   import { FrontendTypes } from "constants"
   import sanitizeUrl from "builderStore/store/screenTemplates/utils/sanitizeUrl"
+  import { allScreens, selectedAccessRole } from "builderStore"
 
   export let componentInstance
   export let bindings
 
-  function setAssetProps(name, value, parser) {
-    if (parser && typeof parser === "function") {
+  let errors = {}
+
+  const routeTaken = url => {
+    const roleId = get(selectedAccessRole) || "BASIC"
+    return get(allScreens).some(
+      screen =>
+        screen.routing.route.toLowerCase() === url.toLowerCase() &&
+        screen.routing.roleId === roleId
+    )
+  }
+
+  const roleTaken = roleId => {
+    const url = get(currentAsset)?.routing.route
+    return get(allScreens).some(
+      screen =>
+        screen.routing.route.toLowerCase() === url.toLowerCase() &&
+        screen.routing.roleId === roleId
+    )
+  }
+
+  const setAssetProps = (name, value, parser, validate) => {
+    if (parser) {
       value = parser(value)
+    }
+    if (validate) {
+      const error = validate(value)
+      errors = {
+        ...errors,
+        [name]: error,
+      }
+      if (error) {
+        return
+      }
+    } else {
+      errors = {
+        ...errors,
+        [name]: null,
+      }
     }
 
     const selectedAsset = get(currentAsset)
@@ -38,7 +74,6 @@
   }
 
   const screenSettings = [
-    // { key: "description", label: "Description", control: Input },
     {
       key: "routing.route",
       label: "Route",
@@ -49,8 +84,26 @@
         }
         return sanitizeUrl(val)
       },
+      validate: val => {
+        const exisingValue = get(currentAsset)?.routing.route
+        if (val !== exisingValue && routeTaken(val)) {
+          return "That URL is already in use for this role"
+        }
+        return null
+      },
     },
-    { key: "routing.roleId", label: "Access", control: RoleSelect },
+    {
+      key: "routing.roleId",
+      label: "Access",
+      control: RoleSelect,
+      validate: val => {
+        const exisingValue = get(currentAsset)?.routing.roleId
+        if (val !== exisingValue && roleTaken(val)) {
+          return "That role is already in use for this URL"
+        }
+        return null
+      },
+    },
     { key: "layoutId", label: "Layout", control: LayoutSelect },
   ]
 </script>
@@ -63,8 +116,9 @@
         label={def.label}
         key={def.key}
         value={deepGet($currentAsset, def.key)}
-        onChange={val => setAssetProps(def.key, val, def.parser)}
+        onChange={val => setAssetProps(def.key, val, def.parser, def.validate)}
         {bindings}
+        props={{ error: errors[def.key] }}
       />
     {/each}
   </DetailSummary>

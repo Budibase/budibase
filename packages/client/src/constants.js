@@ -21,6 +21,7 @@ export const UnsortableTypes = [
 
 export const ActionTypes = {
   ValidateForm: "ValidateForm",
+  UpdateFieldValue: "UpdateFieldValue",
   RefreshDatasource: "RefreshDatasource",
   AddDataProviderQueryExtension: "AddDataProviderQueryExtension",
   RemoveDataProviderQueryExtension: "RemoveDataProviderQueryExtension",

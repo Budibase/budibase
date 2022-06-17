@@ -43,24 +43,28 @@
       "component": "TriggerAutomation"
     },
     {
+      "name": "Update Field Value",
+      "component": "UpdateFieldValue"
+    },
+    {
       "name": "Validate Form",
       "component": "ValidateForm"
     },
     {
-      "name": "Log Out",
-      "component": "LogOut"
+      "name": "Change Form Step",
+      "component": "ChangeFormStep"
     },
     {
       "name": "Clear Form",
       "component": "ClearForm"
     },
     {
-      "name": "Close Screen Modal",
-      "component": "CloseScreenModal"
+      "name": "Log Out",
+      "component": "LogOut"
     },
     {
-      "name": "Change Form Step",
-      "component": "ChangeFormStep"
+      "name": "Close Screen Modal",
+      "component": "CloseScreenModal"
     },
     {
       "name": "Refresh Data Provider",

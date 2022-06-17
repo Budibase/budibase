@@ -80,8 +80,4 @@
   .active svg {
     color: var(--spectrum-global-color-blue-600);
   }
-
-  .spectrum-ActionButton-label {
-    padding-bottom: 2px;
-  }
 </style>

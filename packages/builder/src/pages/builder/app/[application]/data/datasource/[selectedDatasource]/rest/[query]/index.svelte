@@ -136,7 +136,7 @@
         notifications.success("Request sent successfully")
       }
     } catch (error) {
-      notifications.error("Error running query")
+      notifications.error(`Query Error: ${error.message}`)
     }
   }
 
@@ -299,6 +299,7 @@
   {dynamicVariables}
   bind:binding={varBinding}
   bind:this={addVariableModal}
+  on:change={saveQuery}
 />
 {#if query && queryConfig}
   <div class="inner">

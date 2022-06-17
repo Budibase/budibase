@@ -108,7 +108,7 @@
     padding-left: var(--spacing-xl);
     padding-right: var(--spacing-xl);
     position: relative;
-    border-bottom: var(--border-light);
+    border-bottom: 1px solid var(--spectrum-global-color-gray-300);
   }
   .spectrum-Tabs-content {
     margin-top: var(--spectrum-global-dimension-static-size-150);

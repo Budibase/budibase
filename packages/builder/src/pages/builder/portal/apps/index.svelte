@@ -2,7 +2,6 @@
   import {
     Heading,
     Layout,
-    Detail,
     Button,
     Input,
     Select,
@@ -11,12 +10,14 @@
     notifications,
     Body,
     Search,
-    Icon,
+    Helpers,
   } from "@budibase/bbui"
+  import TemplateDisplay from "components/common/TemplateDisplay.svelte"
   import Spinner from "components/common/Spinner.svelte"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
   import UpdateAppModal from "components/start/UpdateAppModal.svelte"
   import ChooseIconModal from "components/start/ChooseIconModal.svelte"
+  import ExportAppModal from "components/start/ExportAppModal.svelte"
 
   import { store, automationStore } from "builderStore"
   import { API } from "api"
@@ -27,7 +28,7 @@
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import AppRow from "components/start/AppRow.svelte"
   import { AppStatus } from "constants"
-  import analytics, { Events } from "analytics"
+  import analytics, { Events, EventSource } from "analytics"
   import Logo from "assets/bb-space-man.svg"
 
   let sortBy = "name"
@@ -37,18 +38,37 @@
   let updatingModal
   let deletionModal
   let unpublishModal
+  let exportModal
   let iconModal
   let creatingApp = false
-  let loaded = false
+  let loaded = $apps?.length || $templates?.length
   let searchTerm = ""
   let cloud = $admin.cloud
   let appName = ""
   let creatingFromTemplate = false
 
+  const resolveWelcomeMessage = (auth, apps) => {
+    const userWelcome = auth?.user?.firstName
+      ? `Welcome ${auth?.user?.firstName}!`
+      : "Welcome back!"
+    return apps?.length ? userWelcome : "Let's create your first app!"
+  }
+  $: welcomeHeader = resolveWelcomeMessage($auth, $apps)
+  $: welcomeBody = $apps?.length
+    ? "Manage your apps and get a head start with templates"
+    : "Start from scratch or get a head start with one of our templates"
+
+  $: createAppButtonText = $apps?.length
+    ? "Create new app"
+    : "Start from scratch"
+
   $: enrichedApps = enrichApps($apps, $auth.user, sortBy)
   $: filteredApps = enrichedApps.filter(app =>
     app?.name?.toLowerCase().includes(searchTerm.toLowerCase())
   )
+
+  $: lockedApps = filteredApps.filter(app => app?.lockedYou || app?.lockedOther)
+  $: unlocked = lockedApps?.length == 0
 
   const enrichApps = (apps, user, sortBy) => {
     const enrichedApps = apps.map(app => ({
@@ -79,9 +99,13 @@
   }
 
   const initiateAppCreation = () => {
-    template = null
-    creationModal.show()
-    creatingApp = true
+    if ($apps?.length) {
+      $goto("/builder/portal/apps/create")
+    } else {
+      template = null
+      creationModal.show()
+      creatingApp = true
+    }
   }
 
   const initiateAppsExport = () => {
@@ -116,12 +140,6 @@
 
       // Create App
       const createdApp = await API.createApp(data)
-      analytics.captureEvent(Events.APP.CREATED, {
-        name: appName,
-        appId: createdApp.instance._id,
-        template,
-        fromTemplateMarketplace: true,
-      })
 
       // Select Correct Application/DB in prep for creating user
       const pkg = await API.fetchAppPackage(createdApp.instance._id)
@@ -147,11 +165,19 @@
   }
 
   const viewApp = app => {
+    analytics.captureEvent(Events.APP_VIEW_PUBLISHED, {
+      appId: app.appId,
+      eventSource: EventSource.PORTAL,
+    })
     if (app.url) {
       window.open(`/app${app.url}`)
     } else {
       window.open(`/${app.prodId}`)
     }
+  }
+
+  const appOverview = app => {
+    $goto(`../overview/${app.devId}`)
   }
 
   const editApp = app => {
@@ -170,9 +196,8 @@
   }
 
   const exportApp = app => {
-    const id = app.deployed ? app.prodId : app.devId
-    const appName = encodeURIComponent(app.name)
-    window.location = `/api/backups/export?appId=${id}&appname=${appName}`
+    exportModal.show()
+    selectedApp = app
   }
 
   const unpublishApp = app => {
@@ -230,6 +255,11 @@
     }
   }
 
+  const copyAppId = async app => {
+    await Helpers.copyToClipboard(app.prodId)
+    notifications.success("App ID copied to clipboard.")
+  }
+
   function createAppFromTemplateUrl(templateKey) {
     // validate the template key just to make sure
     const templateParts = templateKey.split("/")
@@ -267,149 +297,138 @@
 </script>
 
 <Page wide>
-  <Layout noPadding gap="XL">
-    <div class="title">
-      <Layout noPadding gap="XS">
-        <Heading size="M">Welcome to Budibase</Heading>
-        <Body size="S">
-          Manage your apps and get a head start with templates
-        </Body>
-      </Layout>
-
-      <div class="buttons">
-        {#if cloud}
-          <Button
-            size="L"
-            icon="Export"
-            quiet
-            secondary
-            on:click={initiateAppsExport}
-          >
-            Export apps
-          </Button>
-        {/if}
-        <Button
-          icon="Import"
-          size="L"
-          quiet
-          secondary
-          on:click={initiateAppImport}
-        >
-          Import app
-        </Button>
-        <Button size="L" icon="Add" cta on:click={initiateAppCreation}>
-          Create app
-        </Button>
+  <Layout noPadding gap="M">
+    {#if loaded}
+      <div class="title">
+        <div class="welcome">
+          <Layout noPadding gap="XS">
+            <Heading size="L">{welcomeHeader}</Heading>
+            <Body size="M">
+              {welcomeBody}
+            </Body>
+          </Layout>
+          {#if !$apps?.length}
+            <div class="buttons">
+              <Button
+                dataCy="create-app-btn"
+                size="M"
+                icon="Add"
+                cta
+                on:click={initiateAppCreation}
+              >
+                {createAppButtonText}
+              </Button>
+              <Button
+                dataCy="import-app-btn"
+                icon="Import"
+                size="L"
+                quiet
+                secondary
+                on:click={initiateAppImport}
+              >
+                Import app
+              </Button>
+            </div>
+          {/if}
+        </div>
       </div>
-    </div>
 
-    <Layout noPadding gap="S">
-      <Detail size="L">Quick start templates</Detail>
-      <div class="grid">
-        {#each $templates as item}
-          <div
-            on:click={() => {
-              template = item
-              creationModal.show()
-              creatingApp = true
-            }}
-            class="template-card"
-          >
-            <a
-              href={item.url}
-              target="_blank"
-              class="external-link"
-              on:click|stopPropagation
-            >
-              <Icon name="LinkOut" size="S" />
-            </a>
-            <div class="card-body">
-              <div style="color: {item.background}" class="iconAlign">
-                <svg
-                  width="26px"
-                  height="26px"
-                  class="spectrum-Icon"
-                  style="color:{item.background};"
-                  focusable="false"
+      {#if !$apps?.length && $templates?.length}
+        <TemplateDisplay templates={$templates} />
+      {/if}
+
+      {#if enrichedApps.length}
+        <Layout noPadding gap="L">
+          <div class="title">
+            <div class="buttons">
+              <Button
+                dataCy="create-app-btn"
+                size="M"
+                icon="Add"
+                cta
+                on:click={initiateAppCreation}
+              >
+                {createAppButtonText}
+              </Button>
+              {#if $apps?.length > 0}
+                <Button
+                  icon="Experience"
+                  size="M"
+                  quiet
+                  secondary
+                  on:click={$goto("/builder/portal/apps/templates")}
                 >
-                  <use xlink:href="#spectrum-icon-18-{item.icon}" />
-                </svg>
-              </div>
-              <div class="iconAlign">
-                <Body weight="900" size="S">{item.name}</Body>
-                <div style="font-size: 10px;">
-                  <Body size="S">{item.category.toUpperCase()}</Body>
+                  Templates
+                </Button>
+              {/if}
+              {#if !$apps?.length}
+                <Button
+                  dataCy="import-app-btn"
+                  icon="Import"
+                  size="L"
+                  quiet
+                  secondary
+                  on:click={initiateAppImport}
+                >
+                  Import app
+                </Button>
+              {/if}
+            </div>
+            {#if enrichedApps.length > 1}
+              <div class="app-actions">
+                {#if cloud}
+                  <Button
+                    size="M"
+                    icon="Export"
+                    quiet
+                    secondary
+                    on:click={initiateAppsExport}
+                  >
+                    Export apps
+                  </Button>
+                {/if}
+                <div class="filter">
+                  <Select
+                    quiet
+                    autoWidth
+                    bind:value={sortBy}
+                    placeholder={null}
+                    options={[
+                      { label: "Sort by name", value: "name" },
+                      { label: "Sort by recently updated", value: "updated" },
+                      { label: "Sort by status", value: "status" },
+                    ]}
+                  />
+                  <Search placeholder="Search" bind:value={searchTerm} />
                 </div>
               </div>
-            </div>
+            {/if}
           </div>
-        {/each}
-      </div>
-    </Layout>
 
-    {#if loaded && enrichedApps.length}
-      <Layout noPadding gap="S">
-        <div class="title">
-          <Detail size="L">My apps</Detail>
-          <div class="filter">
-            <Select
-              quiet
-              autoWidth
-              bind:value={sortBy}
-              placeholder={null}
-              options={[
-                { label: "Sort by name", value: "name" },
-                { label: "Sort by recently updated", value: "updated" },
-                { label: "Sort by status", value: "status" },
-              ]}
-            />
-            <Search placeholder="Search" bind:value={searchTerm} />
+          <div class="appTable" class:unlocked>
+            {#each filteredApps as app (app.appId)}
+              <AppRow
+                {copyAppId}
+                {releaseLock}
+                {editIcon}
+                {app}
+                {unpublishApp}
+                {viewApp}
+                {editApp}
+                {exportApp}
+                {deleteApp}
+                {updateApp}
+                {appOverview}
+              />
+            {/each}
           </div>
-        </div>
-
-        <div class="appTable">
-          {#each filteredApps as app (app.appId)}
-            <AppRow
-              {releaseLock}
-              {editIcon}
-              {app}
-              {unpublishApp}
-              {viewApp}
-              {editApp}
-              {exportApp}
-              {deleteApp}
-              {updateApp}
-            />
-          {/each}
-        </div>
-      </Layout>
-    {/if}
-
-    {#if !enrichedApps.length && !creatingApp && loaded}
-      <div class="empty-wrapper">
-        <div class="centered">
-          <div class="main">
-            <Layout gap="S" justifyItems="center">
-              <img class="img-size" alt="logo" src={Logo} />
-              <div class="new-screen-text">
-                <Detail size="M">Create a business app in minutes!</Detail>
-              </div>
-              <Button on:click={() => initiateAppCreation()} size="M" cta>
-                <div class="new-screen-button">
-                  <div class="background-icon" style="color: white;">
-                    <Icon name="Add" />
-                  </div>
-                  Create App
-                </div></Button
-              >
-            </Layout>
-          </div>
-        </div>
-      </div>
+        </Layout>
+      {/if}
     {/if}
 
     {#if creatingFromTemplate}
       <div class="empty-wrapper">
+        <img class="img-logo img-size" alt="logo" src={Logo} />
         <p>Creating your Budibase app from your selected template...</p>
         <Spinner size="10" />
       </div>
@@ -428,6 +447,10 @@
 
 <Modal bind:this={updatingModal} padding={false} width="600px">
   <UpdateAppModal app={selectedApp} />
+</Modal>
+
+<Modal bind:this={exportModal} padding={false} width="600px">
+  <ExportAppModal app={selectedApp} />
 </Modal>
 
 <ConfirmDialog
@@ -452,6 +475,7 @@
   title="Confirm unpublish"
   okText="Unpublish app"
   onOk={confirmUnpublishApp}
+  dataCy={"unpublish-modal"}
 >
   Are you sure you want to unpublish the app <b>{selectedApp?.name}</b>?
 </ConfirmDialog>
@@ -459,6 +483,18 @@
 <ChooseIconModal app={selectedApp} bind:this={iconModal} />
 
 <style>
+  .appTable {
+    border-top: var(--border-light);
+  }
+  .app-actions {
+    display: flex;
+  }
+  .app-actions :global(> button) {
+    margin-right: 10px;
+  }
+  .title .welcome > .buttons {
+    padding-top: var(--spacing-l);
+  }
   .title {
     display: flex;
     flex-direction: row;
@@ -475,13 +511,11 @@
     gap: var(--spacing-xl);
     flex-wrap: wrap;
   }
-  @media (max-width: 640px) {
-    .buttons {
-      flex-direction: row-reverse;
-      justify-content: flex-end;
+  @media (max-width: 1000px) {
+    .img-logo {
+      display: none;
     }
   }
-
   .filter {
     display: flex;
     flex-direction: row;
@@ -489,55 +523,17 @@
     align-items: center;
     gap: var(--spacing-xl);
   }
-
-  .grid {
-    height: 200px;
-    display: grid;
-    overflow: hidden;
-    grid-gap: var(--spacing-xl);
-    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
-    grid-template-rows: minmax(70px, 1fr) minmax(100px, 1fr) minmax(0px, 0);
-  }
-  .template-card {
-    height: 70px;
-    border-radius: var(--border-radius-s);
-    border: 1px solid var(--spectrum-global-color-gray-300);
-    cursor: pointer;
-    display: flex;
-    position: relative;
-  }
-
-  .template-card:hover {
-    background: var(--spectrum-alias-background-color-tertiary);
-  }
-  .card-body {
-    display: flex;
-    align-items: center;
-    padding: 12px;
-  }
-
-  .external-link {
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    color: var(--spectrum-global-color-gray-300);
-    z-index: 99;
-  }
-  .external-link:hover {
-    color: var(--spectrum-global-color-gray-500);
-  }
-
-  .iconAlign {
-    padding: 0 0 0 var(--spacing-m);
-    display: inline-block;
-  }
-
   .appTable {
     display: grid;
     grid-template-rows: auto;
     grid-template-columns: 1fr 1fr 1fr 1fr auto;
     align-items: center;
   }
+
+  .appTable.unlocked {
+    grid-template-columns: 1fr 1fr auto 1fr auto;
+  }
+
   .appTable :global(> div) {
     height: 70px;
     display: grid;
@@ -557,7 +553,6 @@
       grid-template-columns: 1fr auto;
     }
   }
-
   .empty-wrapper {
     flex: 1 1 auto;
     height: 100%;
@@ -566,42 +561,8 @@
     justify-content: center;
     align-items: center;
   }
-
-  .centered {
-    width: calc(100% - 350px);
-    height: calc(100% - 100px);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-  }
-
-  .main {
-    width: 300px;
-  }
-
-  .new-screen-text {
-    width: 160px;
-    text-align: center;
-    color: #2c2c2c;
-    font-weight: 600;
-  }
-
-  .new-screen-button {
-    margin-left: 5px;
-    height: 20px;
-    width: 100px;
-    display: flex;
-    align-items: center;
-  }
-
   .img-size {
     width: 160px;
     height: 160px;
-  }
-
-  .background-icon {
-    margin-top: 4px;
-    margin-right: 4px;
   }
 </style>

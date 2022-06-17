@@ -14,13 +14,137 @@ const {
 const { getGlobalDB, getTenantId } = require("@budibase/backend-core/tenancy")
 const env = require("../../../environment")
 const { googleCallbackUrl, oidcCallbackUrl } = require("./auth")
+const {
+  withCache,
+  CacheKeys,
+  bustCache,
+} = require("@budibase/backend-core/cache")
+const { events } = require("@budibase/backend-core")
 
 const BB_TENANT_CDN = "https://tenants.cdn.budi.live"
+
+const getEventFns = async (db, config) => {
+  const fns = []
+  const type = config.type
+
+  let existing
+  if (config._id) {
+    existing = await db.get(config._id)
+  }
+
+  if (!existing) {
+    switch (config.type) {
+      case Configs.SMTP: {
+        fns.push(events.email.SMTPCreated)
+        break
+      }
+      case Configs.GOOGLE: {
+        fns.push(() => events.auth.SSOCreated(type))
+        if (config.config.activated) {
+          fns.push(() => events.auth.SSOActivated(type))
+        }
+        break
+      }
+      case Configs.OIDC: {
+        fns.push(() => events.auth.SSOCreated(type))
+        if (config.config.configs[0].activated) {
+          fns.push(() => events.auth.SSOActivated(type))
+        }
+        break
+      }
+      case Configs.SETTINGS: {
+        // company
+        const company = config.config.company
+        if (company && company !== "Budibase") {
+          fns.push(events.org.nameUpdated)
+        }
+
+        // logo
+        const logoUrl = config.config.logoUrl
+        if (logoUrl) {
+          fns.push(events.org.logoUpdated)
+        }
+
+        // platform url
+        const platformUrl = config.config.platformUrl
+        if (
+          platformUrl &&
+          platformUrl !== "http://localhost:10000" &&
+          env.SELF_HOSTED
+        ) {
+          fns.push(events.org.platformURLUpdated)
+        }
+        break
+      }
+    }
+  } else {
+    switch (config.type) {
+      case Configs.SMTP: {
+        fns.push(events.email.SMTPUpdated)
+        break
+      }
+      case Configs.GOOGLE: {
+        fns.push(() => events.auth.SSOUpdated(type))
+        if (!existing.config.activated && config.config.activated) {
+          fns.push(() => events.auth.SSOActivated(type))
+        } else if (existing.config.activated && !config.config.activated) {
+          fns.push(() => events.auth.SSODeactivated(type))
+        }
+        break
+      }
+      case Configs.OIDC: {
+        fns.push(() => events.auth.SSOUpdated(type))
+        if (
+          !existing.config.configs[0].activated &&
+          config.config.configs[0].activated
+        ) {
+          fns.push(() => events.auth.SSOActivated(type))
+        } else if (
+          existing.config.configs[0].activated &&
+          !config.config.configs[0].activated
+        ) {
+          fns.push(() => events.auth.SSODeactivated(type))
+        }
+        break
+      }
+      case Configs.SETTINGS: {
+        // company
+        const existingCompany = existing.config.company
+        const company = config.config.company
+        if (company && company !== "Budibase" && existingCompany !== company) {
+          fns.push(events.org.nameUpdated)
+        }
+
+        // logo
+        const existingLogoUrl = existing.config.logoUrl
+        const logoUrl = config.config.logoUrl
+        if (logoUrl && existingLogoUrl !== logoUrl) {
+          fns.push(events.org.logoUpdated)
+        }
+
+        // platform url
+        const existingPlatformUrl = existing.config.platformUrl
+        const platformUrl = config.config.platformUrl
+        if (
+          platformUrl &&
+          platformUrl !== "http://localhost:10000" &&
+          existingPlatformUrl !== platformUrl &&
+          env.SELF_HOSTED
+        ) {
+          fns.push(events.org.platformURLUpdated)
+        }
+        break
+      }
+    }
+  }
+
+  return fns
+}
 
 exports.save = async function (ctx) {
   const db = getGlobalDB()
   const { type, workspace, user, config } = ctx.request.body
-
+  let eventFns = await getEventFns(db, ctx.request.body)
   // Config does not exist yet
   if (!ctx.request.body._id) {
     ctx.request.body._id = generateConfigID({
@@ -29,7 +153,6 @@ exports.save = async function (ctx) {
       user,
     })
   }
-
   try {
     // verify the configuration
     switch (type) {
@@ -43,6 +166,13 @@ exports.save = async function (ctx) {
 
   try {
     const response = await db.put(ctx.request.body)
+    await bustCache(CacheKeys.CHECKLIST)
+    await bustCache(CacheKeys.ANALYTICS_ENABLED)
+
+    for (const fn of eventFns) {
+      await fn()
+    }
+
     ctx.body = {
       type,
       _id: response.id,
@@ -249,58 +379,62 @@ exports.configChecklist = async function (ctx) {
   const tenantId = getTenantId()
 
   try {
-    // TODO: Watch get started video
+    ctx.body = await withCache(
+      CacheKeys.CHECKLIST,
+      env.CHECKLIST_CACHE_TTL,
+      async () => {
+        let apps = []
+        if (!env.MULTI_TENANCY || tenantId) {
+          // Apps exist
+          apps = await getAllApps({ idsOnly: true, efficient: true })
+        }
 
-    let apps = []
-    if (!env.MULTI_TENANCY || tenantId) {
-      // Apps exist
-      apps = await getAllApps({ idsOnly: true, efficient: true })
-    }
+        // They have set up SMTP
+        const smtpConfig = await getScopedFullConfig(db, {
+          type: Configs.SMTP,
+        })
 
-    // They have set up SMTP
-    const smtpConfig = await getScopedFullConfig(db, {
-      type: Configs.SMTP,
-    })
+        // They have set up Google Auth
+        const googleConfig = await getScopedFullConfig(db, {
+          type: Configs.GOOGLE,
+        })
 
-    // They have set up Google Auth
-    const googleConfig = await getScopedFullConfig(db, {
-      type: Configs.GOOGLE,
-    })
+        // They have set up OIDC
+        const oidcConfig = await getScopedFullConfig(db, {
+          type: Configs.OIDC,
+        })
 
-    // They have set up OIDC
-    const oidcConfig = await getScopedFullConfig(db, {
-      type: Configs.OIDC,
-    })
-    // They have set up an global user
-    const users = await db.allDocs(
-      getGlobalUserParams(null, {
-        include_docs: true,
-      })
+        // They have set up an global user
+        const users = await db.allDocs(
+          getGlobalUserParams(null, {
+            include_docs: true,
+            limit: 1,
+          })
+        )
+        return {
+          apps: {
+            checked: apps.length > 0,
+            label: "Create your first app",
+            link: "/builder/portal/apps",
+          },
+          smtp: {
+            checked: !!smtpConfig,
+            label: "Set up email",
+            link: "/builder/portal/manage/email",
+          },
+          adminUser: {
+            checked: users && users.rows.length >= 1,
+            label: "Create your first user",
+            link: "/builder/portal/manage/users",
+          },
+          sso: {
+            checked: !!googleConfig || !!oidcConfig,
+            label: "Set up single sign-on",
+            link: "/builder/portal/manage/auth",
+          },
+        }
+      }
     )
-    const adminUser = users.rows.some(row => row.doc.admin)
-
-    ctx.body = {
-      apps: {
-        checked: apps.length > 0,
-        label: "Create your first app",
-        link: "/builder/portal/apps",
-      },
-      smtp: {
-        checked: !!smtpConfig,
-        label: "Set up email",
-        link: "/builder/portal/manage/email",
-      },
-      adminUser: {
-        checked: adminUser,
-        label: "Create your first user",
-        link: "/builder/portal/manage/users",
-      },
-      sso: {
-        checked: !!googleConfig || !!oidcConfig,
-        label: "Set up single sign-on",
-        link: "/builder/portal/manage/auth",
-      },
-    }
   } catch (err) {
     ctx.throw(err.status, err)
   }

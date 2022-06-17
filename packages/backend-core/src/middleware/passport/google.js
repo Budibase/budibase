@@ -2,24 +2,27 @@ const GoogleStrategy = require("passport-google-oauth").OAuth2Strategy
 
 const { authenticateThirdParty } = require("./third-party-common")
 
-async function authenticate(accessToken, refreshToken, profile, done) {
-  const thirdPartyUser = {
-    provider: profile.provider, // should always be 'google'
-    providerType: "google",
-    userId: profile.id,
-    profile: profile,
-    email: profile._json.email,
-    oauth2: {
-      accessToken: accessToken,
-      refreshToken: refreshToken,
-    },
-  }
+const buildVerifyFn = saveUserFn => {
+  return (accessToken, refreshToken, profile, done) => {
+    const thirdPartyUser = {
+      provider: profile.provider, // should always be 'google'
+      providerType: "google",
+      userId: profile.id,
+      profile: profile,
+      email: profile._json.email,
+      oauth2: {
+        accessToken,
+        refreshToken,
+      },
+    }
 
-  return authenticateThirdParty(
-    thirdPartyUser,
-    true, // require local accounts to exist
-    done
-  )
+    return authenticateThirdParty(
+      thirdPartyUser,
+      true, // require local accounts to exist
+      done,
+      saveUserFn
+    )
+  }
 }
 
 /**
@@ -27,11 +30,7 @@ async function authenticate(accessToken, refreshToken, profile, done) {
  * from couchDB rather than environment variables, using this factory is necessary for dynamically configuring passport.
  * @returns Dynamically configured Passport Google Strategy
  */
-exports.strategyFactory = async function (
-  config,
-  callbackUrl,
-  verify = authenticate
-) {
+exports.strategyFactory = async function (config, callbackUrl, saveUserFn) {
   try {
     const { clientID, clientSecret } = config
 
@@ -41,6 +40,7 @@ exports.strategyFactory = async function (
       )
     }
 
+    const verify = buildVerifyFn(saveUserFn)
     return new GoogleStrategy(
       {
         clientID: config.clientID,
@@ -51,8 +51,11 @@ exports.strategyFactory = async function (
     )
   } catch (err) {
     console.error(err)
-    throw new Error("Error constructing google authentication strategy", err)
+    throw new Error(
+      `Error constructing google authentication strategy: ${err}`,
+      err
+    )
   }
 }
 // expose for testing
-exports.authenticate = authenticate
+exports.buildVerifyFn = buildVerifyFn

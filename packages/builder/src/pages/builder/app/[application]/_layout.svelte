@@ -2,9 +2,9 @@
   import { store, automationStore } from "builderStore"
   import { roles, flags } from "stores/backend"
   import { Icon, ActionGroup, Tabs, Tab, notifications } from "@budibase/bbui"
-  import DeployModal from "components/deploy/DeployModal.svelte"
   import RevertModal from "components/deploy/RevertModal.svelte"
   import VersionModal from "components/deploy/VersionModal.svelte"
+  import DeployNavigation from "components/deploy/DeployNavigation.svelte"
   import { API } from "api"
   import { auth, admin } from "stores/portal"
   import { isActive, goto, layout, redirect } from "@roxi/routify"
@@ -24,7 +24,7 @@
     $layout.children.find(layout => $isActive(layout.path))?.title ?? "data"
   )
 
-  function previewApp() {
+  const previewApp = () => {
     window.open(`/${application}`)
   }
 
@@ -112,7 +112,7 @@
         <VersionModal />
         <RevertModal />
         <Icon name="Play" hoverable on:click={previewApp} />
-        <DeployModal />
+        <DeployNavigation {application} />
       </div>
     </div>
     <slot />
@@ -128,7 +128,6 @@
     width: 100%;
     background: var(--background);
   }
-
   .root {
     min-height: 100%;
     height: 100%;

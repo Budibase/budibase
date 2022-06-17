@@ -66,7 +66,6 @@ const createScreenStore = () => {
       }
       let children = []
       findChildrenByType(component, type, children)
-      console.log(children)
       return children
     },
   }

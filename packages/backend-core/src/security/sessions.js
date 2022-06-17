@@ -14,7 +14,40 @@ function makeSessionID(userId, sessionId) {
   return `${userId}/${sessionId}`
 }
 
+async function invalidateSessions(userId, sessionIds = null) {
+  try {
+    let sessions = []
+
+    // If no sessionIds, get all the sessions for the user
+    if (!sessionIds) {
+      sessions = await getSessionsForUser(userId)
+      sessions.forEach(
+        session =>
+          (session.key = makeSessionID(session.userId, session.sessionId))
+      )
+    } else {
+      // use the passed array of sessionIds
+      sessions = Array.isArray(sessionIds) ? sessionIds : [sessionIds]
+      sessions = sessions.map(sessionId => ({
+        key: makeSessionID(userId, sessionId),
+      }))
+    }
+
+    const client = await redis.getSessionClient()
+    const promises = []
+    for (let session of sessions) {
+      promises.push(client.delete(session.key))
+    }
+    await Promise.all(promises)
+  } catch (err) {
+    console.error(`Error invalidating sessions: ${err}`)
+  }
+}
+
 exports.createASession = async (userId, session) => {
+  // invalidate all other sessions
+  await invalidateSessions(userId)
+
   const client = await redis.getSessionClient()
   const sessionId = session.sessionId
   if (!session.csrfToken) {
@@ -29,32 +62,6 @@ exports.createASession = async (userId, session) => {
   await client.store(makeSessionID(userId, sessionId), session, EXPIRY_SECONDS)
 }
 
-exports.invalidateSessions = async (userId, sessionIds = null) => {
-  let sessions = []
-
-  // If no sessionIds, get all the sessions for the user
-  if (!sessionIds) {
-    sessions = await getSessionsForUser(userId)
-    sessions.forEach(
-      session =>
-        (session.key = makeSessionID(session.userId, session.sessionId))
-    )
-  } else {
-    // use the passed array of sessionIds
-    sessions = Array.isArray(sessionIds) ? sessionIds : [sessionIds]
-    sessions = sessions.map(sessionId => ({
-      key: makeSessionID(userId, sessionId),
-    }))
-  }
-
-  const client = await redis.getSessionClient()
-  const promises = []
-  for (let session of sessions) {
-    promises.push(client.delete(session.key))
-  }
-  await Promise.all(promises)
-}
-
 exports.updateSessionTTL = async session => {
   const client = await redis.getSessionClient()
   const key = makeSessionID(session.userId, session.sessionId)
@@ -67,14 +74,13 @@ exports.endSession = async (userId, sessionId) => {
   await client.delete(makeSessionID(userId, sessionId))
 }
 
-exports.getUserSessions = getSessionsForUser
-
 exports.getSession = async (userId, sessionId) => {
   try {
     const client = await redis.getSessionClient()
     return client.get(makeSessionID(userId, sessionId))
   } catch (err) {
     // if can't get session don't error, just don't return anything
+    console.error(err)
     return null
   }
 }
@@ -84,3 +90,6 @@ exports.getAllSessions = async () => {
   const sessions = await client.scan()
   return sessions.map(session => session.value)
 }
+
+exports.getUserSessions = getSessionsForUser
+exports.invalidateSessions = invalidateSessions

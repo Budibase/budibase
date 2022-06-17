@@ -2,6 +2,8 @@ name: Budibase Smoke Test
 
 on:
  workflow_dispatch:
+ schedule:
+  - cron: "0 5 * * *" # every day at 5AM
 
 jobs:
   release:
@@ -23,24 +25,28 @@ jobs:
           -o packages/builder/cypress.env.json \
           -L https://api.github.com/repos/budibase/budibase-infra/contents/test/cypress.env.json
           wc -l packages/builder/cypress.env.json
-      - run: yarn test:e2e:ci
-        env:
-          CI: true
-          name: Budibase CI
-      
-      # TODO: upload recordings to s3
-      # - name: Configure AWS Credentials
-      #   uses: aws-actions/configure-aws-credentials@v1
-      #   with:
-      #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      #     aws-region: eu-west-1
-        
-      # TODO look at cypress reporters
-      # - name: Discord Webhook Action
-      #   uses: tsickert/discord-webhook@v4.0.0
-      #   with:
-      #     webhook-url: ${{ secrets.PROD_DEPLOY_WEBHOOK_URL }}
-      #     content: "Production Deployment Complete: ${{ env.RELEASE_VERSION }} deployed to Budibase Cloud."
-      #     embed-title: ${{ env.RELEASE_VERSION }}
 
+      - name: Cypress run
+        id: cypress
+        continue-on-error: true
+        uses: cypress-io/github-action@v2
+        with:
+          record: true
+          install: false
+          tag: nightly
+          command: yarn test:e2e:ci:record
+        env:
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+      
+      - uses: actions/upload-artifact@v3
+        with:
+          name: Test Reports
+          path: packages/builder/cypress/reports/testReport.html
+
+      - name: Cypress Discord Notify
+        run: yarn test:e2e:ci:notify
+        env:
+          CYPRESS_WEBHOOK_URL: ${{ secrets.BUDI_QA_WEBHOOK }}
+          CYPRESS_OUTCOME: ${{ steps.cypress.outcome }}
+          CYPRESS_DASHBOARD_URL: ${{ steps.cypress.outputs.dashboardUrl }}
+          GITHUB_RUN_URL: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID

@@ -9,6 +9,8 @@ export { confirmationStore } from "./confirmation"
 export { peekStore } from "./peek"
 export { stateStore } from "./state"
 export { themeStore } from "./theme"
+export { devToolsStore } from "./devTools"
+export { componentStore } from "./components"
 export { uploadStore } from "./uploads.js"
 export { rowSelectionStore } from "./rowSelection.js"
 // Context stores are layered and duplicated, so it is not a singleton

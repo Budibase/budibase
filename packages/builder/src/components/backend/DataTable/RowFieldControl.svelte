@@ -19,13 +19,28 @@
   export let value = defaultValue || (meta.type === "boolean" ? false : "")
   export let readonly
 
+  const resolveTimeStamp = timestamp => {
+    if (!timestamp) {
+      return null
+    }
+    let maskedDate = new Date(`0-${timestamp}`)
+    if (maskedDate instanceof Date && !isNaN(maskedDate.getTime())) {
+      return maskedDate
+    } else {
+      return null
+    }
+  }
+
   $: stringVal =
     typeof value === "object" ? JSON.stringify(value, null, 2) : value
   $: type = meta?.type
   $: label = meta.name ? capitalise(meta.name) : ""
+
+  const timeStamp = resolveTimeStamp(value)
+  const isTimeStamp = !!timeStamp || meta?.timeOnly
 </script>
 
-{#if type === "options"}
+{#if type === "options" && meta.constraints.inclusion.length !== 0}
   <Select
     {label}
     data-cy="{meta.name}-select"
@@ -34,12 +49,18 @@
     sort
   />
 {:else if type === "datetime"}
-  <DatePicker {label} bind:value />
+  <DatePicker
+    {label}
+    timeOnly={isTimeStamp}
+    enableTime={!meta?.dateOnly}
+    ignoreTimezones={meta?.ignoreTimezones}
+    bind:value
+  />
 {:else if type === "attachment"}
   <Dropzone {label} bind:value />
 {:else if type === "boolean"}
   <Toggle text={label} bind:value data-cy="{meta.name}-input" />
-{:else if type === "array"}
+{:else if type === "array" && meta.constraints.inclusion.length !== 0}
   <Multiselect bind:value {label} options={meta.constraints.inclusion} />
 {:else if type === "link"}
   <LinkedRowSelector bind:linkedRows={value} schema={meta} />

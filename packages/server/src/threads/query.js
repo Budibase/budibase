@@ -2,12 +2,13 @@ const threadUtils = require("./utils")
 threadUtils.threadSetup()
 const ScriptRunner = require("../utilities/scriptRunner")
 const { integrations } = require("../integrations")
-const {
-  processStringSync,
-  findHBSBlocks,
-} = require("@budibase/string-templates")
+const { processStringSync } = require("@budibase/string-templates")
 const { doInAppContext, getAppDB } = require("@budibase/backend-core/context")
 const { isSQL } = require("../integrations/utils")
+const {
+  enrichQueryFields,
+  interpolateSQL,
+} = require("../integrations/queries/sql")
 
 class QueryRunner {
   constructor(input, flags = { noRecursiveQuery: false }) {
@@ -27,69 +28,6 @@ class QueryRunner {
     this.hasRerun = false
   }
 
-  interpolateSQL(fields, parameters, integration) {
-    let sql = fields.sql
-    if (!sql) {
-      return fields
-    }
-    const bindings = findHBSBlocks(sql)
-    let variables = [],
-      arrays = []
-    for (let binding of bindings) {
-      // look for array/list operations in the SQL statement, which will need handled later
-      const listRegex = new RegExp(`(in|IN|In|iN)( )+${binding}`)
-      const listRegexMatch = sql.match(listRegex)
-      // check if the variable was used as part of a string concat e.g. 'Hello {{binding}}'
-      const charConstRegex = new RegExp(`'[^']*${binding}[^']*'`)
-      const charConstMatch = sql.match(charConstRegex)
-      if (charConstMatch) {
-        let [part1, part2] = charConstMatch[0].split(binding)
-        part1 = `'${part1.substring(1)}'`
-        part2 = `'${part2.substring(0, part2.length - 1)}'`
-        sql = sql.replace(
-          charConstMatch[0],
-          integration.getStringConcat([
-            part1,
-            integration.getBindingIdentifier(),
-            part2,
-          ])
-        )
-      }
-      // generate SQL parameterised array
-      else if (listRegexMatch) {
-        arrays.push(binding)
-        // determine the length of the array
-        const value = this.enrichQueryFields([binding], parameters)[0].split(
-          ","
-        )
-        // build a string like ($1, $2, $3)
-        sql = sql.replace(
-          binding,
-          `(${Array.apply(null, Array(value.length))
-            .map(() => integration.getBindingIdentifier())
-            .join(",")})`
-        )
-      } else {
-        sql = sql.replace(binding, integration.getBindingIdentifier())
-      }
-      variables.push(binding)
-    }
-    // replicate the knex structure
-    fields.sql = sql
-    fields.bindings = this.enrichQueryFields(variables, parameters)
-    // check for arrays in the data
-    let updated = []
-    for (let i = 0; i < variables.length; i++) {
-      if (arrays.includes(variables[i])) {
-        updated = updated.concat(fields.bindings[i].split(","))
-      } else {
-        updated.push(fields.bindings[i])
-      }
-    }
-    fields.bindings = updated
-    return fields
-  }
-
   async execute() {
     let { datasource, fields, queryVerb, transformer } = this
     const Integration = integrations[datasource.source]
@@ -103,9 +41,9 @@ class QueryRunner {
     let query
     // handle SQL injections by interpolating the variables
     if (isSQL(datasource)) {
-      query = this.interpolateSQL(fields, parameters, integration)
+      query = interpolateSQL(fields, parameters, integration)
     } else {
-      query = this.enrichQueryFields(fields, parameters)
+      query = enrichQueryFields(fields, parameters)
     }
 
     // Add pagination values for REST queries
@@ -250,58 +188,16 @@ class QueryRunner {
     }
     return parameters
   }
-
-  enrichQueryFields(fields, parameters = {}) {
-    const enrichedQuery = Array.isArray(fields) ? [] : {}
-
-    // enrich the fields with dynamic parameters
-    for (let key of Object.keys(fields)) {
-      if (fields[key] == null) {
-        continue
-      }
-      if (typeof fields[key] === "object") {
-        // enrich nested fields object
-        enrichedQuery[key] = this.enrichQueryFields(fields[key], parameters)
-      } else if (typeof fields[key] === "string") {
-        // enrich string value as normal
-        enrichedQuery[key] = processStringSync(fields[key], parameters, {
-          noEscaping: true,
-          noHelpers: true,
-          escapeNewlines: true,
-        })
-      } else {
-        enrichedQuery[key] = fields[key]
-      }
-    }
-    if (
-      enrichedQuery.json ||
-      enrichedQuery.customData ||
-      enrichedQuery.requestBody
-    ) {
-      try {
-        enrichedQuery.json = JSON.parse(
-          enrichedQuery.json ||
-            enrichedQuery.customData ||
-            enrichedQuery.requestBody
-        )
-      } catch (err) {
-        // no json found, ignore
-      }
-      delete enrichedQuery.customData
-    }
-    return enrichedQuery
-  }
 }
 
 module.exports = (input, callback) => {
-  doInAppContext(input.appId, () => {
+  doInAppContext(input.appId, async () => {
     const Runner = new QueryRunner(input)
-    Runner.execute()
-      .then(response => {
-        callback(null, response)
-      })
-      .catch(err => {
-        callback(err)
-      })
+    try {
+      const response = await Runner.execute()
+      callback(null, response)
+    } catch (err) {
+      callback(err)
+    }
   })
 }

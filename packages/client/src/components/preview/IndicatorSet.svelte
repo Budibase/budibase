@@ -2,6 +2,7 @@
   import { onMount, onDestroy } from "svelte"
   import Indicator from "./Indicator.svelte"
   import { domDebounce } from "utils/domDebounce"
+  import { builderStore } from "stores"
 
   export let componentId
   export let color
@@ -13,6 +14,7 @@
   let interval
   let text
   $: visibleIndicators = indicators.filter(x => x.visible)
+  $: offset = $builderStore.inBuilder ? 0 : 2
 
   let updating = false
   let observers = []
@@ -88,8 +90,8 @@
 
       const elBounds = child.getBoundingClientRect()
       nextIndicators.push({
-        top: elBounds.top + scrollY - deviceBounds.top,
-        left: elBounds.left + scrollX - deviceBounds.left,
+        top: elBounds.top + scrollY - deviceBounds.top - offset,
+        left: elBounds.left + scrollX - deviceBounds.left - offset,
         width: elBounds.width + 4,
         height: elBounds.height + 4,
         visible: false,

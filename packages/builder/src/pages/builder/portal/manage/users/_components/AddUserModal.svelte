@@ -10,7 +10,6 @@
   } from "@budibase/bbui"
   import { createValidationStore, emailValidator } from "helpers/validation"
   import { users } from "stores/portal"
-  import analytics, { Events } from "analytics"
 
   const password = Math.random().toString(36).substring(2, 22)
   const options = ["Email onboarding", "Basic onboarding"]
@@ -49,7 +48,6 @@
     try {
       const res = await users.invite({ email: $email, builder, admin })
       notifications.success(res.message)
-      analytics.captureEvent(Events.USER.INVITE, { type: selected })
     } catch (error) {
       notifications.error("Error inviting user")
     }
