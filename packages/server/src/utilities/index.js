@@ -11,6 +11,8 @@ exports.wait = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 exports.isDev = env.isDev
 
+exports.NUMBER_REGEX = /^[+-]?([0-9]*[.])?[0-9]+$/g
+
 exports.removeFromArray = (array, element) => {
   const index = array.indexOf(element)
   if (index !== -1) {

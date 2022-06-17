@@ -3,7 +3,6 @@ import queryEndpoints from "./queries"
 import tableEndpoints from "./tables"
 import rowEndpoints from "./rows"
 import userEndpoints from "./users"
-import usage from "../../../middleware/usageQuota"
 import authorized from "../../../middleware/authorized"
 import publicApi from "../../../middleware/publicApi"
 import { paramResource, paramSubResource } from "../../../middleware/resourceId"
@@ -30,6 +29,7 @@ function getApiLimitPerSecond(): number {
   return parseInt(env.API_REQ_LIMIT_PER_SEC)
 }
 
+let rateLimitStore: any = null
 if (!env.isTest()) {
   const REDIS_OPTS = getRedisOptions()
   let options
@@ -48,8 +48,9 @@ if (!env.isTest()) {
       database: 1,
     }
   }
+  rateLimitStore = new Stores.Redis(options)
   RateLimit.defaultOptions({
-    store: new Stores.Redis(options),
+    store: rateLimitStore,
   })
 }
 // rate limiting, allows for 2 requests per second
@@ -114,8 +115,6 @@ function applyRoutes(
   // add the authorization middleware, using the correct perm type
   addMiddleware(endpoints.read, authorized(permType, PermissionLevels.READ))
   addMiddleware(endpoints.write, authorized(permType, PermissionLevels.WRITE))
-  // add the usage quota middleware
-  addMiddleware(endpoints.write, usage)
   // add the output mapper middleware
   addMiddleware(endpoints.read, mapperMiddleware, { output: true })
   addMiddleware(endpoints.write, mapperMiddleware, { output: true })
@@ -130,4 +129,11 @@ applyRoutes(queryEndpoints, PermissionTypes.QUERY, "queryId")
 // needs to be applied last for routing purposes, don't override other endpoints
 applyRoutes(rowEndpoints, PermissionTypes.TABLE, "tableId", "rowId")
 
-module.exports = publicRouter
+export default publicRouter
+
+export const shutdown = () => {
+  if (rateLimitStore) {
+    rateLimitStore.client.disconnect()
+    rateLimitStore = null
+  }
+}

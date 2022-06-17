@@ -1,5 +1,6 @@
 const TestConfig = require("../../../tests/utilities/TestConfiguration")
-const { getGlobalDB } = require("@budibase/backend-core/tenancy")
+const { TENANT_ID } = require("../../../tests/utilities/structures")
+const { getGlobalDB, doInTenant } = require("@budibase/backend-core/tenancy")
 
 // mock email view creation
 const coreDb = require("@budibase/backend-core/db")
@@ -9,17 +10,19 @@ coreDb.createUserEmailView = createUserEmailView
 const migration = require("../userEmailViewCasing")
 
 describe("run", () => {
-  let config = new TestConfig(false)
-  const globalDb = getGlobalDB()
+  doInTenant(TENANT_ID, () => {
+    let config = new TestConfig(false)
+    const globalDb = getGlobalDB()
 
-  beforeEach(async () => {
-    await config.init()
-  })
+    beforeEach(async () => {
+      await config.init()
+    })
 
-  afterAll(config.end)  
+    afterAll(config.end)
 
-  it("runs successfully", async () => {
-    await migration.run(globalDb)
-    expect(createUserEmailView).toHaveBeenCalledTimes(1)
+    it("runs successfully", async () => {
+      await migration.run(globalDb)
+      expect(createUserEmailView).toHaveBeenCalledTimes(1)
+    })
   })
 })

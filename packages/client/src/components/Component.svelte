@@ -9,16 +9,21 @@
 </script>
 
 <script>
-  import { getContext, setContext } from "svelte"
+  import { getContext, setContext, onMount, onDestroy } from "svelte"
   import { writable, get } from "svelte/store"
   import * as AppComponents from "components/app"
   import Router from "./Router.svelte"
-  import { enrichProps, propsAreSame } from "utils/componentProps"
-  import { builderStore } from "stores"
+  import {
+    enrichProps,
+    propsAreSame,
+    getSettingsDefinition,
+  } from "utils/componentProps"
+  import { builderStore, devToolsStore, componentStore, appStore } from "stores"
   import { Helpers } from "@budibase/bbui"
   import Manifest from "manifest.json"
   import { getActiveConditions, reduceConditionActions } from "utils/conditions"
   import Placeholder from "components/app/Placeholder.svelte"
+  import ComponentPlaceholder from "components/app/ComponentPlaceholder.svelte"
 
   export let instance = {}
   export let isLayout = false
@@ -30,8 +35,8 @@
   const insideScreenslot = !!getContext("screenslot")
 
   // Create component context
-  const componentStore = writable({})
-  setContext("component", componentStore)
+  const store = writable({})
+  setContext("component", store)
 
   // Ref to the svelte component
   let ref
@@ -77,6 +82,7 @@
   let definition
   let settingsDefinition
   let settingsDefinitionMap
+  let missingRequiredSettings = false
 
   // Set up initial state for each new component instance
   $: initialise(instance)
@@ -90,21 +96,24 @@
   // leading to the selected component
   $: selected =
     $builderStore.inBuilder && $builderStore.selectedComponentId === id
-  $: inSelectedPath = $builderStore.selectedComponentPath?.includes(id)
+  $: inSelectedPath = $componentStore.selectedComponentPath?.includes(id)
   $: inDragPath = inSelectedPath && $builderStore.editMode
 
   // Derive definition properties which can all be optional, so need to be
   // coerced to booleans
-  $: editable = !!definition?.editable
   $: hasChildren = !!definition?.hasChildren
   $: showEmptyState = definition?.showEmptyState !== false
+  $: hasMissingRequiredSettings = missingRequiredSettings?.length > 0
+  $: editable = !!definition?.editable && !hasMissingRequiredSettings
 
   // Interactive components can be selected, dragged and highlighted inside
   // the builder preview
-  $: interactive =
+  $: builderInteractive =
     $builderStore.inBuilder &&
     ($builderStore.previewType === "layout" || insideScreenslot) &&
     !isBlock
+  $: devToolsInteractive = $devToolsStore.allowSelection && !isBlock
+  $: interactive = builderInteractive || devToolsInteractive
   $: editing = editable && selected && $builderStore.editMode
   $: draggable =
     !inDragPath &&
@@ -133,7 +142,7 @@
   $: applySettings(staticSettings, enrichedSettings, conditionalSettings)
 
   // Update component context
-  $: componentStore.set({
+  $: store.set({
     id,
     children: children.length,
     styles: {
@@ -148,6 +157,8 @@
     selected,
     name,
     editing,
+    type: instance._component,
+    missingRequiredSettings,
   })
 
   const initialise = instance => {
@@ -194,6 +205,27 @@
     staticSettings = instanceSettings.staticSettings
     dynamicSettings = instanceSettings.dynamicSettings
 
+    // Check if we have any missing required settings
+    missingRequiredSettings = settingsDefinition.filter(setting => {
+      let empty = instance[setting.key] == null || instance[setting.key] === ""
+      let missing = setting.required && empty
+
+      // Check if this setting depends on another, as it may not be required
+      if (setting.dependsOn) {
+        const dependsOnKey = setting.dependsOn.setting || setting.dependsOn
+        const dependsOnValue = setting.dependsOn.value
+        const realDependentValue = instance[dependsOnKey]
+        if (dependsOnValue == null && realDependentValue == null) {
+          return false
+        }
+        if (dependsOnValue !== realDependentValue) {
+          return false
+        }
+      }
+
+      return missing
+    })
+
     // Force an initial enrichment of the new settings
     enrichComponentSettings(get(context), settingsDefinitionMap, {
       force: true,
@@ -215,22 +247,6 @@
     const prefix = "@budibase/standard-components/"
     const type = component?.replace(prefix, "")
     return type ? Manifest[type] : null
-  }
-
-  // Gets the definition of this component's settings from the manifest
-  const getSettingsDefinition = definition => {
-    if (!definition) {
-      return []
-    }
-    let settings = []
-    definition.settings?.forEach(setting => {
-      if (setting.section) {
-        settings = settings.concat(setting.settings || [])
-      } else {
-        settings.push(setting)
-      }
-    })
-    return settings
   }
 
   const getSettingsDefinitionMap = settingsDefinition => {
@@ -385,6 +401,28 @@
       })
     }
   }
+
+  onMount(() => {
+    if (
+      $appStore.isDevApp &&
+      !componentStore.actions.isComponentRegistered(id)
+    ) {
+      componentStore.actions.registerInstance(id, {
+        getSettings: () => cachedSettings,
+        getRawSettings: () => ({ ...staticSettings, ...dynamicSettings }),
+        getDataContext: () => get(context),
+      })
+    }
+  })
+
+  onDestroy(() => {
+    if (
+      $appStore.isDevApp &&
+      componentStore.actions.isComponentRegistered(id)
+    ) {
+      componentStore.actions.unregisterInstance(id)
+    }
+  })
 </script>
 
 {#if constructor && initialSettings && (visible || inSelectedPath)}
@@ -401,17 +439,21 @@
     data-id={id}
     data-name={name}
   >
-    <svelte:component this={constructor} bind:this={ref} {...initialSettings}>
-      {#if children.length}
-        {#each children as child (child._id)}
-          <svelte:self instance={child} />
-        {/each}
-      {:else if emptyState}
-        <Placeholder />
-      {:else if isBlock}
-        <slot />
-      {/if}
-    </svelte:component>
+    {#if hasMissingRequiredSettings}
+      <ComponentPlaceholder />
+    {:else}
+      <svelte:component this={constructor} bind:this={ref} {...initialSettings}>
+        {#if children.length}
+          {#each children as child (child._id)}
+            <svelte:self instance={child} />
+          {/each}
+        {:else if emptyState}
+          <Placeholder />
+        {:else if isBlock}
+          <slot />
+        {/if}
+      </svelte:component>
+    {/if}
   </div>
 {/if}
 
@@ -419,12 +461,15 @@
   .component {
     display: contents;
   }
+
   .interactive :global(*:hover) {
     cursor: pointer;
   }
+
   .draggable :global(*:hover) {
     cursor: grab;
   }
+
   .editing :global(*:hover) {
     cursor: auto;
   }

@@ -117,7 +117,6 @@ services:
     labels:
       - "com.centurylinklabs.watchtower.enable=false"
 
-
 volumes:
   couchdb3_data:
     driver: local

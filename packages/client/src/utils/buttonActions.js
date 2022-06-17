@@ -81,7 +81,7 @@ const duplicateRowHandler = async (action, context) => {
 
 const deleteRowHandler = async action => {
   const { tableId, revId, rowId } = action.parameters
-  if (tableId && revId && rowId) {
+  if (tableId && rowId) {
     try {
       await API.deleteRow({ tableId, rowId, revId })
       notificationStore.actions.success("Row deleted")
@@ -160,6 +160,19 @@ const executeActionHandler = async (
   if (fn) {
     return await fn(params)
   }
+}
+
+const updateFieldValueHandler = async (action, context) => {
+  return await executeActionHandler(
+    context,
+    action.parameters.componentId,
+    ActionTypes.UpdateFieldValue,
+    {
+      type: action.parameters.type,
+      field: action.parameters.field,
+      value: action.parameters.value,
+    }
+  )
 }
 
 const validateFormHandler = async (action, context) => {
@@ -295,6 +308,7 @@ const handlerMap = {
   ["Execute Query"]: queryExecutionHandler,
   ["Trigger Automation"]: triggerAutomationHandler,
   ["Validate Form"]: validateFormHandler,
+  ["Update Field Value"]: updateFieldValueHandler,
   ["Refresh Data Provider"]: refreshDataProviderHandler,
   ["Log Out"]: logoutHandler,
   ["Clear Form"]: clearFormHandler,
@@ -329,13 +343,13 @@ export const enrichButtonActions = (actions, context) => {
     return actions
   }
 
-  // Button context is built up as actions are executed.
-  // Inherit any previous button context which may have come from actions
-  // before a confirmable action since this breaks the chain.
-  let buttonContext = context.actions || []
-
   const handlers = actions.map(def => handlerMap[def["##eventHandlerType"]])
   return async eventContext => {
+    // Button context is built up as actions are executed.
+    // Inherit any previous button context which may have come from actions
+    // before a confirmable action since this breaks the chain.
+    let buttonContext = context.actions || []
+
     for (let i = 0; i < handlers.length; i++) {
       try {
         // Skip any non-existent action definitions
@@ -346,6 +360,7 @@ export const enrichButtonActions = (actions, context) => {
         // Built total context for this action
         const totalContext = {
           ...context,
+          state: get(stateStore),
           actions: buttonContext,
           eventContext,
         }

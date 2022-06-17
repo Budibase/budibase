@@ -1,5 +1,5 @@
 const { cloneDeep } = require("lodash/fp")
-const { BUILTIN_PERMISSION_IDS } = require("./permissions")
+const { BUILTIN_PERMISSION_IDS, PermissionLevels } = require("./permissions")
 const {
   generateRoleID,
   getRoleParams,
@@ -7,7 +7,7 @@ const {
   SEPARATOR,
 } = require("../db/utils")
 const { getAppDB } = require("../context")
-const { getDB } = require("../db")
+const { doWithDB } = require("../db")
 
 const BUILTIN_IDS = {
   ADMIN: "ADMIN",
@@ -180,44 +180,76 @@ exports.getUserRoleHierarchy = async (userRoleId, opts = { idOnly: true }) => {
   return opts.idOnly ? roles.map(role => role._id) : roles
 }
 
+// this function checks that the provided permissions are in an array format
+// some templates/older apps will use a simple string instead of array for roles
+// convert the string to an array using the theory that write is higher than read
+exports.checkForRoleResourceArray = (rolePerms, resourceId) => {
+  if (rolePerms && !Array.isArray(rolePerms[resourceId])) {
+    const permLevel = rolePerms[resourceId]
+    rolePerms[resourceId] = [permLevel]
+    if (permLevel === PermissionLevels.WRITE) {
+      rolePerms[resourceId].push(PermissionLevels.READ)
+    }
+  }
+  return rolePerms
+}
+
 /**
  * Given an app ID this will retrieve all of the roles that are currently within that app.
  * @return {Promise<object[]>} An array of the role objects that were found.
  */
 exports.getAllRoles = async appId => {
-  const db = appId ? getDB(appId) : getAppDB()
-  const body = await db.allDocs(
-    getRoleParams(null, {
-      include_docs: true,
-    })
-  )
-  let roles = body.rows.map(row => row.doc)
-  const builtinRoles = exports.getBuiltinRoles()
-
-  // need to combine builtin with any DB record of them (for sake of permissions)
-  for (let builtinRoleId of EXTERNAL_BUILTIN_ROLE_IDS) {
-    const builtinRole = builtinRoles[builtinRoleId]
-    const dbBuiltin = roles.filter(
-      dbRole => exports.getExternalRoleID(dbRole._id) === builtinRoleId
-    )[0]
-    if (dbBuiltin == null) {
-      roles.push(builtinRole || builtinRoles.BASIC)
-    } else {
-      // remove role and all back after combining with the builtin
-      roles = roles.filter(role => role._id !== dbBuiltin._id)
-      dbBuiltin._id = exports.getExternalRoleID(dbBuiltin._id)
-      roles.push(Object.assign(builtinRole, dbBuiltin))
-    }
+  if (appId) {
+    return doWithDB(appId, internal)
+  } else {
+    return internal(getAppDB())
   }
-  return roles
+  async function internal(db) {
+    const body = await db.allDocs(
+      getRoleParams(null, {
+        include_docs: true,
+      })
+    )
+    let roles = body.rows.map(row => row.doc)
+    const builtinRoles = exports.getBuiltinRoles()
+
+    // need to combine builtin with any DB record of them (for sake of permissions)
+    for (let builtinRoleId of EXTERNAL_BUILTIN_ROLE_IDS) {
+      const builtinRole = builtinRoles[builtinRoleId]
+      const dbBuiltin = roles.filter(
+        dbRole => exports.getExternalRoleID(dbRole._id) === builtinRoleId
+      )[0]
+      if (dbBuiltin == null) {
+        roles.push(builtinRole || builtinRoles.BASIC)
+      } else {
+        // remove role and all back after combining with the builtin
+        roles = roles.filter(role => role._id !== dbBuiltin._id)
+        dbBuiltin._id = exports.getExternalRoleID(dbBuiltin._id)
+        roles.push(Object.assign(builtinRole, dbBuiltin))
+      }
+    }
+    // check permissions
+    for (let role of roles) {
+      if (!role.permissions) {
+        continue
+      }
+      for (let resourceId of Object.keys(role.permissions)) {
+        role.permissions = exports.checkForRoleResourceArray(
+          role.permissions,
+          resourceId
+        )
+      }
+    }
+    return roles
+  }
 }
 
 /**
- * This retrieves the required role
- * @param permLevel
- * @param resourceId
- * @param subResourceId
- * @return {Promise<{permissions}|Object>}
+ * This retrieves the required role for a resource
+ * @param permLevel The level of request
+ * @param resourceId The resource being requested
+ * @param subResourceId The sub resource being requested
+ * @return {Promise<{permissions}|Object>} returns the permissions required to access.
  */
 exports.getRequiredResourceRole = async (
   permLevel,

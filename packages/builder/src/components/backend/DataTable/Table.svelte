@@ -25,6 +25,7 @@
   export let rowCount
   export let type
   export let disableSorting = false
+  export let customPlaceholder = false
 
   let selectedRows = []
   let editableColumn
@@ -117,10 +118,10 @@
 </script>
 
 <Layout noPadding gap="S">
-  <div>
+  <Layout noPadding gap="XS">
     {#if title}
       <div class="table-title">
-        <Heading size="S">{title}</Heading>
+        <Heading size="M">{title}</Heading>
         {#if loading}
           <div transition:fade|local>
             <Spinner size="10" />
@@ -134,7 +135,7 @@
         <DeleteRowsButton on:updaterows {selectedRows} {deleteRows} />
       {/if}
     </div>
-  </div>
+  </Layout>
   {#key tableId}
     <div class="table-wrapper">
       <Table
@@ -144,6 +145,7 @@
         {customRenderers}
         {rowCount}
         {disableSorting}
+        {customPlaceholder}
         bind:selectedRows
         allowSelectRows={allowEditing && !isUsersTable}
         allowEditRows={allowEditing}
@@ -153,7 +155,9 @@
         on:editrow={e => editRow(e.detail)}
         on:clickrelationship={e => selectRelationship(e.detail)}
         on:sort
-      />
+      >
+        <slot slot="placeholder" name="placeholder" />
+      </Table>
     </div>
   {/key}
 </Layout>
@@ -176,6 +180,7 @@
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
+    margin-top: var(--spacing-m);
   }
   .table-title > div {
     margin-left: var(--spacing-xs);

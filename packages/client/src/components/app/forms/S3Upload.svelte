@@ -10,6 +10,7 @@
   export let label
   export let disabled = false
   export let validation
+  export let onChange
 
   let fieldState
   let fieldApi
@@ -88,6 +89,13 @@
     }
   }
 
+  const handleChange = e => {
+    fieldApi.setValue(e.detail)
+    if (onChange) {
+      onChange({ value: e.detail })
+    }
+  }
+
   onMount(() => {
     uploadStore.actions.registerFileUpload($component.id, upload)
   })
@@ -113,9 +121,7 @@
         value={fieldState.value}
         disabled={loading || fieldState.disabled}
         error={fieldState.error}
-        on:change={e => {
-          fieldApi.setValue(e.detail)
-        }}
+        on:change={handleChange}
         {processFiles}
         {handleFileTooLarge}
         maximum={1}

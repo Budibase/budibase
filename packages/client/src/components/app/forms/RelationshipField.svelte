@@ -13,6 +13,7 @@
   export let validation
   export let autocomplete = false
   export let defaultValue
+  export let onChange
 
   let fieldState
   let fieldApi
@@ -62,11 +63,11 @@
   }
 
   const singleHandler = e => {
-    fieldApi.setValue(e.detail == null ? [] : [e.detail])
+    handleChange(e.detail == null ? [] : [e.detail])
   }
 
   const multiHandler = e => {
-    fieldApi.setValue(e.detail)
+    handleChange(e.detail)
   }
 
   const expand = values => {
@@ -77,6 +78,13 @@
       return values
     }
     return values.split(",").map(value => value.trim())
+  }
+
+  const handleChange = value => {
+    fieldApi.setValue(value)
+    if (onChange) {
+      onChange({ value })
+    }
   }
 </script>
 

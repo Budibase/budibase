@@ -35,7 +35,7 @@ export const buildRowEndpoints = API => ({
    * @param revId the rev of the row to delete
    */
   deleteRow: async ({ tableId, rowId, revId }) => {
-    if (!tableId || !rowId || !revId) {
+    if (!tableId || !rowId) {
       return
     }
     return await API.delete({

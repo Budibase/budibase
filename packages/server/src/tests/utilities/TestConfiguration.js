@@ -1,6 +1,4 @@
-const core = require("@budibase/backend-core")
-const CouchDB = require("../../db")
-core.init(CouchDB)
+require("../../db").init()
 const { BUILTIN_ROLE_IDS } = require("@budibase/backend-core/roles")
 const env = require("../../environment")
 const {
@@ -20,7 +18,7 @@ const supertest = require("supertest")
 const { cleanup } = require("../../utilities/fileSystem")
 const { Cookies, Headers } = require("@budibase/backend-core/constants")
 const { jwt } = require("@budibase/backend-core/auth")
-const { getGlobalDB } = require("@budibase/backend-core/tenancy")
+const { doInTenant, doWithGlobalDB } = require("@budibase/backend-core/tenancy")
 const { createASession } = require("@budibase/backend-core/sessions")
 const { user: userCache } = require("@budibase/backend-core/cache")
 const newid = require("../../db/newid")
@@ -57,87 +55,27 @@ class TestConfiguration {
     return this.appId
   }
 
-  getCouch() {
-    return CouchDB
+  getProdAppId() {
+    return this.prodAppId
   }
 
-  async _req(config, params, controlFunc) {
-    const request = {}
-    // fake cookies, we don't need them
-    request.cookies = { set: () => {}, get: () => {} }
-    request.config = { jwtSecret: env.JWT_SECRET }
-    request.appId = this.appId
-    request.user = { appId: this.appId, tenantId: TENANT_ID }
-    request.query = {}
-    request.request = {
-      body: config,
+  async doInContext(appId, task) {
+    if (!appId) {
+      appId = this.appId
     }
-    async function run() {
-      if (params) {
-        request.params = params
+    return doInTenant(TENANT_ID, () => {
+      // check if already in a context
+      if (context.getAppId() == null && appId !== null) {
+        return context.doInAppContext(appId, async () => {
+          return task()
+        })
+      } else {
+        return task()
       }
-      await controlFunc(request)
-      return request.body
-    }
-    // check if already in a context
-    if (context.getAppId() == null && this.appId !== null) {
-      return context.doInAppContext(this.appId, async () => {
-        return run()
-      })
-    } else {
-      return run()
-    }
-  }
-
-  async generateApiKey(userId = GLOBAL_USER_ID) {
-    const db = getGlobalDB(TENANT_ID)
-    const id = generateDevInfoID(userId)
-    let devInfo
-    try {
-      devInfo = await db.get(id)
-    } catch (err) {
-      devInfo = { _id: id, userId }
-    }
-    devInfo.apiKey = encrypt(`${TENANT_ID}${SEPARATOR}${newid()}`)
-    await db.put(devInfo)
-    return devInfo.apiKey
-  }
-
-  async globalUser({
-    id = GLOBAL_USER_ID,
-    builder = true,
-    email = EMAIL,
-    roles,
-  } = {}) {
-    const db = getGlobalDB(TENANT_ID)
-    let existing
-    try {
-      existing = await db.get(id)
-    } catch (err) {
-      existing = { email }
-    }
-    const user = {
-      _id: id,
-      ...existing,
-      roles: roles || {},
-      tenantId: TENANT_ID,
-    }
-    await createASession(id, {
-      sessionId: "sessionid",
-      tenantId: TENANT_ID,
-      csrfToken: CSRF_TOKEN,
     })
-    if (builder) {
-      user.builder = { global: true }
-    } else {
-      user.builder = { global: false }
-    }
-    const resp = await db.put(user)
-    return {
-      _rev: resp._rev,
-      ...user,
-    }
   }
+
+  // SETUP /  TEARDOWN
 
   // use a new id as the name to avoid name collisions
   async init(appName = newid()) {
@@ -153,6 +91,139 @@ class TestConfiguration {
       this.server.close()
     }
     cleanup(this.allApps.map(app => app.appId))
+  }
+
+  // UTILS
+
+  async _req(config, params, controlFunc) {
+    const request = {}
+    // fake cookies, we don't need them
+    request.cookies = { set: () => {}, get: () => {} }
+    request.config = { jwtSecret: env.JWT_SECRET }
+    request.appId = this.appId
+    request.user = { appId: this.appId, tenantId: TENANT_ID }
+    request.query = {}
+    request.request = {
+      body: config,
+    }
+    return this.doInContext(this.appId, async () => {
+      if (params) {
+        request.params = params
+      }
+      await controlFunc(request)
+      return request.body
+    })
+  }
+
+  // USER / AUTH
+  async globalUser({
+    id = GLOBAL_USER_ID,
+    builder = true,
+    admin = false,
+    email = EMAIL,
+    roles,
+  } = {}) {
+    return doWithGlobalDB(TENANT_ID, async db => {
+      let existing
+      try {
+        existing = await db.get(id)
+      } catch (err) {
+        existing = { email }
+      }
+      const user = {
+        _id: id,
+        ...existing,
+        roles: roles || {},
+        tenantId: TENANT_ID,
+      }
+      await createASession(id, {
+        sessionId: "sessionid",
+        tenantId: TENANT_ID,
+        csrfToken: CSRF_TOKEN,
+      })
+      if (builder) {
+        user.builder = { global: true }
+      } else {
+        user.builder = { global: false }
+      }
+      if (admin) {
+        user.admin = { global: true }
+      } else {
+        user.admin = { global: false }
+      }
+      const resp = await db.put(user)
+      return {
+        _rev: resp._rev,
+        ...user,
+      }
+    })
+  }
+
+  async createUser(
+    id = null,
+    email = EMAIL,
+    builder = true,
+    admin = false,
+    roles = {}
+  ) {
+    const globalId = !id ? `us_${Math.random()}` : `us_${id}`
+    const resp = await this.globalUser({
+      id: globalId,
+      email,
+      builder,
+      admin,
+      roles,
+    })
+    await userCache.invalidateUser(globalId)
+    return {
+      ...resp,
+      globalId,
+    }
+  }
+
+  async login({ roleId, userId, builder, prodApp = false } = {}) {
+    const appId = prodApp ? this.prodAppId : this.appId
+    return context.doInAppContext(appId, async () => {
+      userId = !userId ? `us_uuid1` : userId
+      if (!this.request) {
+        throw "Server has not been opened, cannot login."
+      }
+      // make sure the user exists in the global DB
+      if (roleId !== BUILTIN_ROLE_IDS.PUBLIC) {
+        await this.globalUser({
+          id: userId,
+          builder,
+          roles: { [this.prodAppId]: roleId },
+        })
+      }
+      await createASession(userId, {
+        sessionId: "sessionid",
+        tenantId: TENANT_ID,
+      })
+      // have to fake this
+      const auth = {
+        userId,
+        sessionId: "sessionid",
+        tenantId: TENANT_ID,
+      }
+      const app = {
+        roleId: roleId,
+        appId,
+      }
+      const authToken = jwt.sign(auth, env.JWT_SECRET)
+      const appToken = jwt.sign(app, env.JWT_SECRET)
+
+      // returning necessary request headers
+      await userCache.invalidateUser(userId)
+      return {
+        Accept: "application/json",
+        Cookie: [
+          `${Cookies.Auth}=${authToken}`,
+          `${Cookies.CurrentApp}=${appToken}`,
+        ],
+        [Headers.APP_ID]: appId,
+      }
+    })
   }
 
   defaultHeaders(extras = {}) {
@@ -203,11 +274,33 @@ class TestConfiguration {
     return this.login({ email, roleId, builder, prodApp })
   }
 
+  // API
+
+  async generateApiKey(userId = GLOBAL_USER_ID) {
+    return doWithGlobalDB(TENANT_ID, async db => {
+      const id = generateDevInfoID(userId)
+      let devInfo
+      try {
+        devInfo = await db.get(id)
+      } catch (err) {
+        devInfo = { _id: id, userId }
+      }
+      devInfo.apiKey = encrypt(`${TENANT_ID}${SEPARATOR}${newid()}`)
+      await db.put(devInfo)
+      return devInfo.apiKey
+    })
+  }
+
+  // APP
+
   async createApp(appName) {
     // create dev app
+    // clear any old app
+    this.appId = null
+    await context.updateAppId(null)
     this.app = await this._req({ name: appName }, null, controllers.app.create)
     this.appId = this.app.appId
-    context.updateAppId(this.appId)
+    await context.updateAppId(this.appId)
 
     // create production app
     this.prodApp = await this.deploy()
@@ -231,6 +324,8 @@ class TestConfiguration {
       return appPackage.application
     })
   }
+
+  // TABLE
 
   async updateTable(config = null) {
     config = config || basicTable()
@@ -280,6 +375,8 @@ class TestConfiguration {
     return this.createTable(table)
   }
 
+  // ROW
+
   async createRow(config = null) {
     if (!this.table) {
       throw "Test requires table to be configured."
@@ -300,6 +397,8 @@ class TestConfiguration {
     return this._req(null, { tableId }, controllers.row.fetch)
   }
 
+  // ROLE
+
   async createRole(config = null) {
     config = config || basicRole()
     return this._req(config, null, controllers.role.save)
@@ -317,17 +416,20 @@ class TestConfiguration {
     )
   }
 
+  // VIEW
+
   async createView(config) {
     if (!this.table) {
       throw "Test requires table to be configured."
     }
     const view = config || {
-      map: "function(doc) { emit(doc[doc.key], doc._id); } ",
       tableId: this.table._id,
       name: "ViewTest",
     }
     return this._req(view, null, controllers.view.save)
   }
+
+  // AUTOMATION
 
   async createAutomation(config) {
     config = config || basicAutomation()
@@ -355,6 +457,16 @@ class TestConfiguration {
       controllers.automation.destroy
     )
   }
+
+  async createWebhook(config = null) {
+    if (!this.automation) {
+      throw "Must create an automation before creating webhook."
+    }
+    config = config || basicWebhook(this.automation._id)
+    return (await this._req(config, null, controllers.webhook.save)).webhook
+  }
+
+  // DATASOURCE
 
   async createDatasource(config = null) {
     config = config || basicDatasource()
@@ -406,6 +518,8 @@ class TestConfiguration {
     return { datasource, query: basedOnQuery }
   }
 
+  // QUERY
+
   async previewQuery(request, config, datasource, fields) {
     return request
       .post(`/api/queries/preview`)
@@ -429,77 +543,18 @@ class TestConfiguration {
     return this._req(config, null, controllers.query.save)
   }
 
+  // SCREEN
+
   async createScreen(config = null) {
     config = config || basicScreen()
     return this._req(config, null, controllers.screen.save)
   }
 
-  async createWebhook(config = null) {
-    if (!this.automation) {
-      throw "Must create an automation before creating webhook."
-    }
-    config = config || basicWebhook(this.automation._id)
-    return (await this._req(config, null, controllers.webhook.save)).webhook
-  }
+  // LAYOUT
 
   async createLayout(config = null) {
     config = config || basicLayout()
     return await this._req(config, null, controllers.layout.save)
-  }
-
-  async createUser(id = null, email = EMAIL) {
-    const globalId = !id ? `us_${Math.random()}` : `us_${id}`
-    const resp = await this.globalUser({ id: globalId, email })
-    await userCache.invalidateUser(globalId)
-    return {
-      ...resp,
-      globalId,
-    }
-  }
-
-  async login({ roleId, userId, builder, prodApp = false } = {}) {
-    const appId = prodApp ? this.prodAppId : this.appId
-    return context.doInAppContext(appId, async () => {
-      userId = !userId ? `us_uuid1` : userId
-      if (!this.request) {
-        throw "Server has not been opened, cannot login."
-      }
-      // make sure the user exists in the global DB
-      if (roleId !== BUILTIN_ROLE_IDS.PUBLIC) {
-        await this.globalUser({
-          id: userId,
-          builder,
-          roles: { [this.prodAppId]: roleId },
-        })
-      }
-      await createASession(userId, {
-        sessionId: "sessionid",
-        tenantId: TENANT_ID,
-      })
-      // have to fake this
-      const auth = {
-        userId,
-        sessionId: "sessionid",
-        tenantId: TENANT_ID,
-      }
-      const app = {
-        roleId: roleId,
-        appId,
-      }
-      const authToken = jwt.sign(auth, env.JWT_SECRET)
-      const appToken = jwt.sign(app, env.JWT_SECRET)
-
-      // returning necessary request headers
-      await userCache.invalidateUser(userId)
-      return {
-        Accept: "application/json",
-        Cookie: [
-          `${Cookies.Auth}=${authToken}`,
-          `${Cookies.CurrentApp}=${appToken}`,
-        ],
-        [Headers.APP_ID]: appId,
-      }
-    })
   }
 }
 

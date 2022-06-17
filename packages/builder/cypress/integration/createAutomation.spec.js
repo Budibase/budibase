@@ -1,4 +1,5 @@
 import filterTests from "../support/filterTests"
+const interact = require('../support/interact')
 
 filterTests(['smoke', 'all'], () => {
   context("Create a automation", () => {
@@ -11,53 +12,51 @@ filterTests(['smoke', 'all'], () => {
       cy.createTestTableWithData()
       cy.wait(2000)
       cy.contains("Automate").click()
-      cy.get("[data-cy='new-screen'] > .spectrum-Icon").click()
-      cy.get(".modal-inner-wrapper").within(() => {
+      cy.get(interact.ADD_BUTTON_SPECTRUM).click()
+      cy.get(interact.MODAL_INNER_WRAPPER).within(() => {
         cy.get("input").type("Add Row")
         cy.contains("Row Created").click({ force: true })
         cy.wait(500)
-        cy.get(".spectrum-Button--cta").click()
+        cy.get(interact.SPECTRUM_BUTTON_CTA).click()
       })
 
       // Setup trigger
-      cy.contains("Setup").click()
-      cy.get(".spectrum-Picker-label").click()
+      cy.get(interact.SPECTRUM_PICKER_LABEL).click()
       cy.wait(500)
       cy.contains("dog").click()
       cy.wait(2000)
       // Create action
       cy.get('[aria-label="AddCircle"]').eq(1).click()
-      cy.get(".modal-inner-wrapper").within(() => {
+      cy.get(interact.MODAL_INNER_WRAPPER).within(() => {
         cy.wait(1000)
         cy.contains("Create Row").trigger('mouseover').click().click()
-        cy.get(".spectrum-Button--cta").click()
+        cy.get(interact.SPECTRUM_BUTTON_CTA).click()
       })
-      cy.contains("Setup").click()
-      cy.get(".spectrum-Picker-label").eq(1).click()
+      cy.get(interact.SPECTRUM_PICKER_LABEL).eq(1).click()
       cy.contains("dog").click()
-      cy.get(".spectrum-Textfield-input")
-      .first()
-      .type("{{ trigger.row.name }}", { parseSpecialCharSequences: false })
-      cy.get(".spectrum-Textfield-input")
+      cy.get(interact.SPECTRUM_TEXTFIELD_INPUT)
+        .first()
+        .type("{{ trigger.row.name }}", { parseSpecialCharSequences: false })
+      cy.get(interact.SPECTRUM_TEXTFIELD_INPUT)
         .eq(1)
         .type("11")
       cy.contains("Finish and test automation").click()
 
-      cy.get(".modal-inner-wrapper").within(() => {
+      cy.get(interact.MODAL_INNER_WRAPPER).within(() => {
         cy.wait(1000)
-        cy.get(".spectrum-Picker-label").click()
+        cy.get(interact.SPECTRUM_PICKER_LABEL).click()
         cy.contains("dog").click()
         cy.wait(1000)
-        cy.get(".spectrum-Textfield-input")
+        cy.get(interact.SPECTRUM_TEXTFIELD_INPUT)
           .first()
           .type("automationGoodboy")
-        cy.get(".spectrum-Textfield-input")
+        cy.get(interact.SPECTRUM_TEXTFIELD_INPUT)
           .eq(1)
           .type("11")
-        cy.get(".spectrum-Textfield-input")
+        cy.get(interact.SPECTRUM_TEXTFIELD_INPUT)
           .eq(2)
           .type("123456")
-        cy.get(".spectrum-Textfield-input")
+        cy.get(interact.SPECTRUM_TEXTFIELD_INPUT)
           .eq(3)
           .type("123456")
         cy.contains("Test").click()

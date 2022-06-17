@@ -23,7 +23,6 @@
   import { API } from "api"
   import { organisation, admin } from "stores/portal"
   import { Helpers } from "@budibase/bbui"
-  import analytics, { Events } from "analytics"
 
   const ConfigTypes = {
     Google: "google",
@@ -160,6 +159,10 @@
     }
 
     docs.forEach(element => {
+      // Delete unsupported fields
+      delete element.createdAt
+      delete element.updatedAt
+
       if (element.type === ConfigTypes.OIDC) {
         // Add a UUID here so each config is distinguishable when it arrives at the login page
         for (let config of element.config.configs) {
@@ -205,7 +208,6 @@
             providers[res.type]._id = res._id
           })
           notifications.success(`Settings saved`)
-          analytics.captureEvent(Events.SSO.SAVED)
         })
         .catch(() => {
           notifications.error("Failed to update auth settings")
@@ -293,7 +295,7 @@
     </Body>
   </Layout>
   {#if providers.google}
-    <Divider />
+    <Divider size="S" />
     <Layout gap="XS" noPadding>
       <Heading size="S">
         <div class="provider-title">
@@ -332,7 +334,7 @@
     </Layout>
   {/if}
   {#if providers.oidc}
-    <Divider />
+    <Divider size="S" />
     <Layout gap="XS" noPadding>
       <Heading size="S">
         <div class="provider-title">

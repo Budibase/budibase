@@ -1,7 +1,7 @@
 const { getAllApps } = require("@budibase/backend-core/db")
 const { updateAppId } = require("@budibase/backend-core/context")
 import { search as stringSearch } from "./utils"
-import { default as controller } from "../application"
+import * as controller from "../application"
 import { Application } from "../../../definitions/common"
 
 function fixAppID(app: Application, params: any) {
@@ -59,7 +59,7 @@ export async function destroy(ctx: any, next: any) {
   // get the app before deleting it
   await setResponseApp(ctx)
   const body = ctx.body
-  await controller.delete(ctx)
+  await controller.destroy(ctx)
   // overwrite the body again
   ctx.body = body
   await next()

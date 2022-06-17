@@ -14,6 +14,8 @@
     routeStore,
     builderStore,
     themeStore,
+    appStore,
+    devToolsStore,
   } from "stores"
   import NotificationDisplay from "components/overlay/NotificationDisplay.svelte"
   import ConfirmationDisplay from "components/overlay/ConfirmationDisplay.svelte"
@@ -28,6 +30,8 @@
   import CustomThemeWrapper from "./CustomThemeWrapper.svelte"
   import DNDHandler from "components/preview/DNDHandler.svelte"
   import KeyboardManager from "components/preview/KeyboardManager.svelte"
+  import DevToolsHeader from "components/devtools/DevToolsHeader.svelte"
+  import DevTools from "components/devtools/DevTools.svelte"
 
   // Provide contexts
   setContext("sdk", SDK)
@@ -44,8 +48,6 @@
     dataLoaded = true
     if (get(builderStore).inBuilder) {
       builderStore.actions.notifyLoaded()
-    } else {
-      builderStore.actions.pingEndUser()
     }
   })
 
@@ -55,8 +57,22 @@
       if ($authStore) {
         // There is a logged in user, so handle them
         if ($screenStore.screens.length) {
+          let firstRoute
+
+          // If using devtools, find the first screen matching our role
+          if ($devToolsStore.role) {
+            const roleRoutes = $screenStore.screens.filter(
+              screen => screen.routing?.roleId === $devToolsStore.role
+            )
+            firstRoute = roleRoutes[0]?.routing?.route || "/"
+          }
+
+          // Otherwise just use the first route
+          else {
+            firstRoute = $screenStore.screens[0]?.routing?.route ?? "/"
+          }
+
           // Screens exist so navigate back to the home screen
-          const firstRoute = $screenStore.screens[0].routing?.route ?? "/"
           routeStore.actions.navigate(firstRoute)
         } else {
           // No screens likely means the user has no permissions to view this app
@@ -70,6 +86,8 @@
       }
     }
   }
+
+  $: isDevPreview = $appStore.isDevApp && !$builderStore.inBuilder
 </script>
 
 {#if dataLoaded}
@@ -109,39 +127,49 @@
               >
                 <!-- Actual app -->
                 <div id="app-root">
-                  <CustomThemeWrapper>
-                    {#key `${$screenStore.activeLayout._id}-${$builderStore.previewType}`}
-                      <Component
-                        isLayout
-                        instance={$screenStore.activeLayout.props}
-                      />
-                    {/key}
+                  {#if isDevPreview}
+                    <DevToolsHeader />
+                  {/if}
 
-                    <!--
-                    Flatpickr needs to be inside the theme wrapper.
-                    It also needs its own container because otherwise it hijacks
-                    key events on the whole page. It is painful to work with.
-                  -->
-                    <div id="flatpickr-root" />
+                  <div id="app-body">
+                    <CustomThemeWrapper>
+                      {#key `${$screenStore.activeLayout._id}-${$builderStore.previewType}`}
+                        <Component
+                          isLayout
+                          instance={$screenStore.activeLayout.props}
+                        />
+                      {/key}
 
-                    <!-- Modal container to ensure they sit on top -->
-                    <div class="modal-container" />
+                      <!--
+                        Flatpickr needs to be inside the theme wrapper.
+                        It also needs its own container because otherwise it hijacks
+                        key events on the whole page. It is painful to work with.
+                      -->
+                      <div id="flatpickr-root" />
 
-                    <!-- Layers on top of app -->
-                    <NotificationDisplay />
-                    <ConfirmationDisplay />
-                    <PeekScreenDisplay />
-                  </CustomThemeWrapper>
+                      <!-- Modal container to ensure they sit on top -->
+                      <div class="modal-container" />
+
+                      <!-- Layers on top of app -->
+                      <NotificationDisplay />
+                      <ConfirmationDisplay />
+                      <PeekScreenDisplay />
+                    </CustomThemeWrapper>
+
+                    {#if $appStore.isDevApp && !$builderStore.inBuilder}
+                      <DevTools />
+                    {/if}
+                  </div>
                 </div>
 
-                <!-- Selection indicators should be bounded by device -->
-                <!--
-                We don't want to key these by componentID as they control their own
-                re-mounting to avoid flashes.
-              -->
-                {#if $builderStore.inBuilder}
+                <!-- Preview and dev tools utilities  -->
+                {#if $appStore.isDevApp}
                   <SelectionIndicator />
+                {/if}
+                {#if $builderStore.inBuilder || $devToolsStore.allowSelection}
                   <HoverIndicator />
+                {/if}
+                {#if $builderStore.inBuilder}
                   <DNDHandler />
                 {/if}
               </div>
@@ -167,6 +195,7 @@
     justify-content: center;
     align-items: center;
   }
+
   #clip-root {
     max-width: 100%;
     max-height: 100%;
@@ -176,10 +205,24 @@
     overflow: hidden;
     background-color: transparent;
   }
+
   #app-root {
     overflow: hidden;
     height: 100%;
     width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+  }
+
+  #app-body {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: stretch;
+    overflow: hidden;
   }
 
   .error {
@@ -192,19 +235,23 @@
     text-align: center;
     padding: 20px;
   }
+
   .error :global(svg) {
     fill: var(--spectrum-global-color-gray-500);
     width: 80px;
     height: 80px;
   }
+
   .error :global(h1),
   .error :global(p) {
     color: var(--spectrum-global-color-gray-800);
   }
+
   .error :global(p) {
     font-style: italic;
     margin-top: -0.5em;
   }
+
   .error :global(h1) {
     font-weight: 400;
   }
@@ -214,14 +261,17 @@
   #clip-root.preview {
     padding: 2px;
   }
+
   #clip-root.tablet-preview {
     width: calc(1024px + 6px);
     height: calc(768px + 6px);
   }
+
   #clip-root.mobile-preview {
     width: calc(390px + 6px);
     height: calc(844px + 6px);
   }
+
   .preview #app-root {
     border: 1px solid var(--spectrum-global-color-gray-300);
     border-radius: 4px;
@@ -231,7 +281,8 @@
   @media print {
     #spectrum-root,
     #clip-root,
-    #app-root {
+    #app-root,
+    #app-body {
       overflow: visible !important;
     }
   }

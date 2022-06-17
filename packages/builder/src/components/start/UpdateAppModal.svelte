@@ -42,11 +42,31 @@
     }
   }
 
-  // auto add slash to url
-  $: {
-    if ($values.url && !$values.url.startsWith("/")) {
-      $values.url = `/${$values.url}`
+  const resolveAppUrl = (template, name) => {
+    let parsedName
+    const resolvedName = resolveAppName(null, name)
+    parsedName = resolvedName ? resolvedName.toLowerCase() : ""
+    const parsedUrl = parsedName ? parsedName.replace(/\s+/g, "-") : ""
+    return encodeURI(parsedUrl)
+  }
+
+  const resolveAppName = (template, name) => {
+    if (template && !name) {
+      return template.name
     }
+    return name ? name.trim() : null
+  }
+
+  const tidyUrl = url => {
+    if (url && !url.startsWith("/")) {
+      url = `/${url}`
+    }
+    $values.url = url === "" ? null : url
+  }
+
+  const nameToUrl = appName => {
+    let resolvedUrl = resolveAppUrl(null, appName)
+    tidyUrl(resolvedUrl)
   }
 </script>
 
@@ -61,15 +81,17 @@
     bind:value={$values.name}
     error={$validation.touched.name && $validation.errors.name}
     on:blur={() => ($validation.touched.name = true)}
+    on:change={nameToUrl($values.name)}
     label="Name"
   />
   <Input
     bind:value={$values.url}
     error={$validation.touched.url && $validation.errors.url}
     on:blur={() => ($validation.touched.url = true)}
+    on:change={tidyUrl($values.url)}
     label="URL"
-    placeholder={$values.name
-      ? "/" + encodeURIComponent($values.name).toLowerCase()
-      : "/"}
+    placeholder={$values.url
+      ? $values.url
+      : `/${resolveAppUrl(null, $values.name)}`}
   />
 </ModalContent>

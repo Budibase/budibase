@@ -5,6 +5,7 @@
 
   export let schema
   export let filters
+  export let disabled = false
 
   const dispatch = createEventDispatcher()
   let modal
@@ -17,6 +18,7 @@
   icon="Filter"
   size="S"
   quiet
+  {disabled}
   on:click={modal.show}
   active={tempValue?.length > 0}
 >

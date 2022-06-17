@@ -1,18 +1,23 @@
 <script>
-  import { ModalContent, Input, ProgressCircle } from "@budibase/bbui"
+  import { ModalContent, Input } from "@budibase/bbui"
   import sanitizeUrl from "builderStore/store/screenTemplates/utils/sanitizeUrl"
   import { selectedAccessRole, allScreens } from "builderStore"
   import { get } from "svelte/store"
 
   export let onConfirm
   export let onCancel
-  export let showProgressCircle = false
-  export let screenName
   export let screenUrl
   export let confirmText = "Continue"
 
   let routeError
   let touched = false
+  let screenAccessRole = $selectedAccessRole + ""
+
+  const appPrefix = "/app"
+
+  $: appUrl = screenUrl
+    ? `${window.location.origin}${appPrefix}${screenUrl}`
+    : `${window.location.origin}${appPrefix}`
 
   const routeChanged = event => {
     if (!event.detail.startsWith("/")) {
@@ -38,7 +43,6 @@
 
   const confirmScreenDetails = async () => {
     await onConfirm({
-      screenName,
       screenUrl,
     })
   }
@@ -51,24 +55,25 @@
   onConfirm={confirmScreenDetails}
   {onCancel}
   cancelText={"Back"}
-  disabled={!screenName || !screenUrl || routeError || !touched}
+  disabled={!screenAccessRole || !screenUrl || routeError || !touched}
 >
-  <Input label="Name" bind:value={screenName} />
   <Input
-    label="URL"
+    label="Enter a URL for the new screen"
     error={routeError}
     bind:value={screenUrl}
     on:change={routeChanged}
   />
-  <div slot="footer">
-    {#if showProgressCircle}
-      <div class="footer-progress"><ProgressCircle size="S" /></div>
-    {/if}
+  <div class="app-server" title={appUrl}>
+    {appUrl}
   </div>
 </ModalContent>
 
 <style>
-  .footer-progress {
-    margin-top: var(--spacing-s);
+  .app-server {
+    color: var(--spectrum-global-color-gray-600);
+    width: 320px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 </style>
