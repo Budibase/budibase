@@ -3,7 +3,7 @@
   import { setContext, onMount } from "svelte"
   import { Layout, Heading, Body } from "@budibase/bbui"
   import ErrorSVG from "@budibase/frontend-core/assets/error.svg"
-  import { Constants, CookieUtils, RoleUtils } from "@budibase/frontend-core"
+  import { Constants, CookieUtils } from "@budibase/frontend-core"
   import Component from "./Component.svelte"
   import SDK from "sdk"
   import {
@@ -48,11 +48,16 @@
   $: {
     if (dataLoaded && $routeStore.routerLoaded && !$routeStore.activeRoute) {
       if ($screenStore.screens.length) {
-        // If we have some available screens, find the best route to push the
-        // user to initially
-        const route = getBestRoute($screenStore.screens)
-        permissionError = false
-        routeStore.actions.navigate(route)
+        // If we have some available screens, use the first screen which
+        // represents the best route based on rank
+        const route = $screenStore.screens[0].routing?.route
+        if (!route) {
+          permissionError = true
+          console.error("No route found but screens exist")
+        } else {
+          permissionError = false
+          routeStore.actions.navigate(route)
+        }
       } else if ($authStore) {
         // If the user is logged in but has no screens, they don't have
         // permission to use the app
@@ -65,40 +70,6 @@
         window.location = "/builder/auth/login"
       }
     }
-  }
-
-  // Assigns a rank to a potential screen route, preferring home screens
-  // and higher roles
-  const rankScreen = screen => {
-    const roleId = screen.routing.roleId
-    let rank = RoleUtils.getRolePriority(roleId)
-    if (screen.routing.homeScreen) {
-      rank += 100
-    }
-    return rank
-  }
-
-  // Determines the best route to push the user to initially from a set of
-  // available screens
-  const getBestRoute = screens => {
-    // Enrich and rank all screens, preferring all home screens
-    const enrichedScreens = screens?.map(screen => ({
-      ...screen,
-      rank: rankScreen(screen),
-    }))
-
-    // Sort ranked screens
-    const rankedScreens = enrichedScreens?.sort((a, b) => {
-      // First sort by rank
-      if (a.rank !== b.rank) {
-        return a.rank > b.rank ? -1 : 1
-      }
-      // Then sort alphabetically
-      return a.routing.route < b.routing.route ? -1 : 1
-    })
-
-    // Use the best ranking screen
-    return rankedScreens?.[0].routing?.route || "/"
   }
 
   // Load app config

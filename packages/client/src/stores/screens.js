@@ -2,6 +2,7 @@ import { derived } from "svelte/store"
 import { routeStore } from "./routes"
 import { builderStore } from "./builder"
 import { appStore } from "./app"
+import { RoleUtils } from "@budibase/frontend-core"
 
 const createScreenStore = () => {
   const store = derived(
@@ -21,7 +22,7 @@ const createScreenStore = () => {
         }
       } else {
         // Find the correct screen by matching the current route
-        screens = $appStore.screens
+        screens = $appStore.screens || []
         if ($routeStore.activeRoute) {
           activeScreen = screens.find(
             screen => screen._id === $routeStore.activeRoute.screenId
@@ -38,6 +39,26 @@ const createScreenStore = () => {
           }
         }
       }
+
+      // Assign ranks to screens, preferring higher roles and home screens
+      screens.forEach(screen => {
+        const roleId = screen.routing.roleId
+        let rank = RoleUtils.getRolePriority(roleId)
+        if (screen.routing.homeScreen) {
+          rank += 100
+        }
+        screen.rank = rank
+      })
+
+      // Sort screens so the best route is first
+      screens = screens.sort((a, b) => {
+        // First sort by rank
+        if (a.rank !== b.rank) {
+          return a.rank > b.rank ? -1 : 1
+        }
+        // Then sort alphabetically
+        return a.routing.route < b.routing.route ? -1 : 1
+      })
 
       // If we don't have a legacy custom layout, build a layout structure
       // from the screen navigation settings
