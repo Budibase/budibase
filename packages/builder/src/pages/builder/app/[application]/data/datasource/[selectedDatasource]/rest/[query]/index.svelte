@@ -96,10 +96,13 @@
     }
 
     if (cloneQuery?.fields?.requestBody) {
-      cloneQuery.fields.requestBody = runtimeToReadableBinding(
-        restBindings,
-        cloneQuery.fields.requestBody
-      )
+      cloneQuery.fields.requestBody =
+        typeof cloneQuery.fields.requestBody === "object"
+          ? runtimeToReadableMap(restBindings, cloneQuery.fields.requestBody)
+          : runtimeToReadableBinding(
+              restBindings,
+              cloneQuery.fields.requestBody
+            )
     }
 
     if (cloneQuery?.parameters) {
@@ -141,10 +144,11 @@
       restBindings,
       newQuery.fields.headers
     )
-    newQuery.fields.requestBody = readableToRuntimeBinding(
-      restBindings,
-      newQuery.fields.requestBody
-    )
+    newQuery.fields.requestBody =
+      typeof newQuery.fields.requestBody === "object"
+        ? readableToRuntimeMap(restBindings, newQuery.fields.requestBody)
+        : readableToRuntimeBinding(restBindings, newQuery.fields.requestBody)
+
     newQuery.fields.path = url.split("?")[0]
     newQuery.fields.queryString = queryString
     newQuery.fields.authConfigId = authConfigId
