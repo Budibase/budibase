@@ -47,23 +47,19 @@
   // Handle no matching route
   $: {
     if (dataLoaded && $routeStore.routerLoaded && !$routeStore.activeRoute) {
-      if ($authStore) {
-        // There is a logged in user, so handle them
-        if ($screenStore.screens.length) {
-          // Find the best route to push the user to initially
-          const route = getBestRoute(
-            $authStore,
-            $screenStore.screens,
-            $devToolsStore.role
-          )
-          permissionError = false
-          routeStore.actions.navigate(route)
-        } else {
-          // No screens likely means the user has no permissions to view this app
-          permissionError = true
-        }
+      if ($screenStore.screens.length) {
+        // If we have some available screens, find the best route to push the
+        // user to initially
+        const route = getBestRoute($screenStore.screens)
+        permissionError = false
+        routeStore.actions.navigate(route)
+      } else if ($authStore) {
+        // If the user is logged in but has no screens, they don't have
+        // permission to use the app
+        permissionError = true
       } else {
-        // The user is not logged in, redirect them to login
+        // If they have no screens and are not logged in, it probably means
+        // they should log in to gain access
         const returnUrl = `${window.location.pathname}${window.location.hash}`
         CookieUtils.setCookie(Constants.Cookies.ReturnUrl, returnUrl)
         window.location = "/builder/auth/login"
@@ -71,20 +67,27 @@
     }
   }
 
-  const getBestRoute = (user, screens) => {
-    // Rank all screens, preferring all home screens
-    const rankScreen = screen => {
-      const roleId = screen.routing.roleId
-      let rank = RoleUtils.getRolePriority(roleId)
-      if (screen.routing.homeScreen) {
-        rank += 100
-      }
-      return rank
+  // Assigns a rank to a potential screen route, preferring home screens
+  // and higher roles
+  const rankScreen = screen => {
+    const roleId = screen.routing.roleId
+    let rank = RoleUtils.getRolePriority(roleId)
+    if (screen.routing.homeScreen) {
+      rank += 100
     }
+    return rank
+  }
+
+  // Determines the best route to push the user to initially from a set of
+  // available screens
+  const getBestRoute = screens => {
+    // Enrich and rank all screens, preferring all home screens
     const enrichedScreens = screens?.map(screen => ({
       ...screen,
       rank: rankScreen(screen),
     }))
+
+    // Sort ranked screens
     const rankedScreens = enrichedScreens?.sort((a, b) => {
       // First sort by rank
       if (a.rank !== b.rank) {
