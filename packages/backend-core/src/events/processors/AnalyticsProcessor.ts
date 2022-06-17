@@ -7,14 +7,17 @@ import PosthogProcessor from "./PosthogProcessor"
 /**
  * Events that are always captured.
  */
-const EVENT_WHITELIST = [Event.VERSION_UPGRADED, Event.VERSION_DOWNGRADED]
+const EVENT_WHITELIST = [
+  Event.INSTALLATION_VERSION_UPGRADED,
+  Event.INSTALLATION_VERSION_DOWNGRADED,
+]
 const IDENTITY_WHITELIST = [IdentityType.INSTALLATION, IdentityType.TENANT]
 
 export default class AnalyticsProcessor implements EventProcessor {
   posthog: PosthogProcessor | undefined
 
   constructor() {
-    if (env.POSTHOG_TOKEN) {
+    if (env.POSTHOG_TOKEN && !env.isTest()) {
       this.posthog = new PosthogProcessor(env.POSTHOG_TOKEN)
     }
   }

@@ -17,7 +17,6 @@ const { attachmentsRelativeURL } = require("../../../utilities")
 const { DocumentTypes, isDevAppID } = require("../../../db/utils")
 const { getAppDB, getAppId } = require("@budibase/backend-core/context")
 const AWS = require("aws-sdk")
-const AWS_REGION = env.AWS_REGION ? env.AWS_REGION : "eu-west-1"
 const { events } = require("@budibase/backend-core")
 
 async function prepareUpload({ s3Key, bucket, metadata, file }) {
@@ -42,7 +41,9 @@ async function prepareUpload({ s3Key, bucket, metadata, file }) {
 exports.serveBuilder = async function (ctx) {
   let builderPath = resolve(TOP_LEVEL_PATH, "builder")
   await send(ctx, ctx.file, { root: builderPath })
-  await events.serve.servedBuilder()
+  if (!ctx.file.includes("assets/")) {
+    await events.serve.servedBuilder()
+  }
 }
 
 exports.uploadFile = async function (ctx) {
@@ -128,6 +129,7 @@ exports.getSignedUploadURL = async function (ctx) {
   // Determine type of datasource and generate signed URL
   let signedUrl
   let publicUrl
+  const awsRegion = datasource?.config?.region || "eu-west-1"
   if (datasource.source === "S3") {
     const { bucket, key } = ctx.request.body || {}
     if (!bucket || !key) {
@@ -136,7 +138,7 @@ exports.getSignedUploadURL = async function (ctx) {
     }
     try {
       const s3 = new AWS.S3({
-        region: AWS_REGION,
+        region: awsRegion,
         accessKeyId: datasource?.config?.accessKeyId,
         secretAccessKey: datasource?.config?.secretAccessKey,
         apiVersion: "2006-03-01",
@@ -144,7 +146,7 @@ exports.getSignedUploadURL = async function (ctx) {
       })
       const params = { Bucket: bucket, Key: key }
       signedUrl = s3.getSignedUrl("putObject", params)
-      publicUrl = `https://${bucket}.s3.${AWS_REGION}.amazonaws.com/${key}`
+      publicUrl = `https://${bucket}.s3.${awsRegion}.amazonaws.com/${key}`
     } catch (error) {
       ctx.throw(400, error)
     }
