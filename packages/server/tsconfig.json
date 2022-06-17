@@ -1,25 +1,30 @@
 {
+  "extends": "./tsconfig.build.json",
   "compilerOptions": {
-    "target": "es6",
-    "module": "commonjs",
-    "lib": ["es2019"],
-    "allowJs": true,
-    "outDir": "dist",
-    "strict": true,
-    "noImplicitAny": true,
-    "esModuleInterop": true,
-    "resolveJsonModule": true,
-    "incremental": true,
-    "types": [ "node", "jest"],
+    "composite": true,
+    "declaration": true,
+    "sourceMap": true,
+    "baseUrl": ".",
+    "paths": {
+      "@budibase/types": ["../types/src"],
+      "@budibase/backend-core": ["../backend-core/src"],
+      "@budibase/backend-core/*": ["../backend-core/*"]
+    }
   },
+  "ts-node": {
+    "require": ["tsconfig-paths/register"]
+  },
+  "references": [
+    { "path": "../types" },
+    { "path": "../backend-core" },
+  ],
   "include": [
-    "./src/**/*",
-    "./src/module.d.ts"
+    "src/**/*",
+    "specs",
+    "package.json"
   ],
   "exclude": [
     "node_modules",
-    "**/*.json",
-    "**/*.spec.js",
-    // "**/*.spec.ts" // don't exclude spec.ts files for editor support
+    "dist"
   ]
 }

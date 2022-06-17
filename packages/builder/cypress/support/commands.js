@@ -480,7 +480,7 @@ Cypress.Commands.add("addComponent", (category, component) => {
       force: true,
     })
   }
-  cy.wait(2000)
+  cy.wait(1000)
   cy.location().then(loc => {
     const params = loc.pathname.split("/")
     const componentId = params[params.length - 1]
@@ -495,9 +495,9 @@ Cypress.Commands.add("getComponent", componentId => {
     .its("0.contentDocument")
     .should("exist")
     .its("body")
-    .should("not.be.null")
+    .should("not.be.undefined")
     .then(cy.wrap)
-    .find(`[data-id=${componentId}]`)
+    .find(`[data-id='${componentId}']`)
 })
 
 Cypress.Commands.add("createScreen", (route, accessLevelLabel) => {

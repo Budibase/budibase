@@ -11,7 +11,6 @@
     Body,
     Icon,
   } from "@budibase/bbui"
-  import analytics, { Events } from "analytics"
 
   let name
   let selectedTrigger
@@ -47,7 +46,6 @@
       notifications.success(`Automation ${name} created`)
 
       $goto(`./${$automationStore.selectedAutomation.automation._id}`)
-      analytics.captureEvent(Events.AUTOMATION.CREATED, { name })
     } catch (error) {
       notifications.error("Error creating automation")
     }

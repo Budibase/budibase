@@ -117,9 +117,16 @@
 </script>
 
 <div bind:this={buttonAnchor}>
-  <ActionButton on:click={dropdown.show}>{displayValue}</ActionButton>
+  <ActionButton on:click={dropdown.show}>
+    {displayValue}
+  </ActionButton>
 </div>
-<Popover bind:this={dropdown} on:open={setSelectedUI} anchor={buttonAnchor}>
+<Popover
+  bind:this={dropdown}
+  on:open={setSelectedUI}
+  anchor={buttonAnchor}
+  dataCy="icon-popover"
+>
   <div class="container">
     <div class="search-area">
       <div class="alphabet-area">

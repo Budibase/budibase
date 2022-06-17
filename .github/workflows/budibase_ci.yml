@@ -11,6 +11,7 @@ on:
     branches:
       - master
       - develop 
+      - release 
  workflow_dispatch:
 
 env:

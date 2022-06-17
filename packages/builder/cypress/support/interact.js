@@ -105,3 +105,23 @@ export const SPECTRUM_TABLE_CELL = ".spectrum-Table-cell"
 export const FIELD = ".field"
 export const CONTAINER = ".container"
 export const REGENERATE = ".regenerate"
+
+//createView
+export const SPECTRUM_MENU_ITEM_LABEL = ".spectrum-Menu-itemLabel"
+
+//revertApp
+export const TOP_RIGHT_NAV = ".toprightnav"
+export const AREA_LABEL_REVERT = "[aria-label=Revert]"
+export const ROOT = ".root"
+
+//quertLevelTransformers
+export const SPECTRUM_TABS_ITEM = ".spectrum-Tabs-itemLabel"
+export const CODEMIRROR_TEXTAREA = ".CodeMirror textarea"
+
+//renemaApplication
+export const WRAPPER = ".wrapper"
+export const ERROR = ".error"
+export const AREA_LABEL_MORE = "[aria-label=More]"
+export const APP_ROW_ACTION_MENU_POPOVER =
+  '[data-cy="app-row-actions-menu-popover"]'
+export const SPECTRUM_MENU_ITEMM = ".spectrum-Menu-item"
