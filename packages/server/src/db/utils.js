@@ -373,7 +373,7 @@ exports.getMemoryViewParams = (otherProps = {}) => {
 }
 
 exports.generateAutomationLogID = (isoDate, status, automationId) => {
-  return `${DocumentTypes.AUTOMATION_LOG}${SEPARATOR}${isoDate}${SEPARATOR}${automationId}`
+  return `${DocumentTypes.AUTOMATION_LOG}${SEPARATOR}${isoDate}${SEPARATOR}${automationId}${SEPARATOR}${status}`
 }
 
 exports.getAutomationLogParams = (

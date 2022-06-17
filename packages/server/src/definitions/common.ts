@@ -1,3 +1,5 @@
+import { AutomationStatus } from "./automation"
+
 export { Query, Datasource } from "./datasource"
 
 export interface Base {
@@ -102,3 +104,5 @@ export interface Automation extends Base {
     trigger?: AutomationStep
   }
 }
+
+export type MetadataErrors = { [key: string]: number }
