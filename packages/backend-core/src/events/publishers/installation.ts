@@ -1,11 +1,11 @@
 import { publishEvent } from "../events"
 import { Event, VersionCheckedEvent, VersionChangeEvent } from "@budibase/types"
 
-export async function checked(version: string) {
+export async function versionChecked(version: string) {
   const properties: VersionCheckedEvent = {
     currentVersion: version,
   }
-  await publishEvent(Event.VERSION_CHECKED, properties)
+  await publishEvent(Event.INSTALLATION_VERSION_CHECKED, properties)
 }
 
 export async function upgraded(from: string, to: string) {
@@ -14,7 +14,7 @@ export async function upgraded(from: string, to: string) {
     to,
   }
 
-  await publishEvent(Event.VERSION_UPGRADED, properties)
+  await publishEvent(Event.INSTALLATION_VERSION_UPGRADED, properties)
 }
 
 export async function downgraded(from: string, to: string) {
@@ -22,5 +22,10 @@ export async function downgraded(from: string, to: string) {
     from,
     to,
   }
-  await publishEvent(Event.VERSION_DOWNGRADED, properties)
+  await publishEvent(Event.INSTALLATION_VERSION_DOWNGRADED, properties)
+}
+
+export async function firstStartup() {
+  const properties = {}
+  await publishEvent(Event.INSTALLATION_FIRST_STARTUP, properties)
 }
