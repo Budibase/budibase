@@ -20,6 +20,7 @@
     "test:watch": "jest --watchAll"
   },
   "dependencies": {
+    "@budibase/types": "^1.0.207-alpha.3",
     "@techpass/passport-openidconnect": "0.3.2",
     "aws-sdk": "2.1030.0",
     "bcrypt": "5.0.1",
@@ -57,7 +58,6 @@
     ]
   },
   "devDependencies": {
-    "@budibase/types": "^1.0.207-alpha.3",
     "@shopify/jest-koa-mocks": "3.1.5",
     "@types/jest": "27.5.1",
     "@types/koa": "2.0.52",

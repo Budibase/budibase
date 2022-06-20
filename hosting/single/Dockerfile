@@ -1,79 +1,84 @@
-FROM couchdb
+FROM node:14-slim as build
 
-ENV DEPLOYMENT_ENVIRONMENT=docker
-ENV POSTHOG_TOKEN=phc_fg5I3nDOf6oJVMHSaycEhpPdlgS8rzXG2r6F2IpxCHS
-ENV COUCHDB_PASSWORD=budibase
-ENV COUCHDB_USER=budibase
-ENV COUCH_DB_URL=http://budibase:budibase@localhost:5984
-ENV BUDIBASE_ENVIRONMENT=PRODUCTION
-ENV MINIO_URL=http://localhost:9000
-ENV REDIS_URL=localhost:6379
-ENV WORKER_URL=http://localhost:4002
-ENV INTERNAL_API_KEY=budibase
-ENV JWT_SECRET=testsecret
-ENV MINIO_ACCESS_KEY=budibase
-ENV MINIO_SECRET_KEY=budibase
-ENV SELF_HOSTED=1
-ENV CLUSTER_PORT=10000
-ENV REDIS_PASSWORD=budibase
-ENV ARCHITECTURE=amd
-ENV APP_PORT=4001
-ENV WORKER_PORT=4002
+# install node-gyp dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends g++ make python
 
-RUN apt-get update
-RUN apt-get install software-properties-common wget nginx -y
-RUN apt-add-repository 'deb http://security.debian.org/debian-security stretch/updates main'
-RUN apt-get update
+# add pin script
+WORKDIR /
+ADD scripts/pinVersions.js scripts/cleanup.sh ./
+RUN chmod +x /cleanup.sh
+
+# build server
+WORKDIR /app
+ADD packages/server .
+RUN node /pinVersions.js && yarn && yarn build && /cleanup.sh
+
+# build worker
+WORKDIR /worker
+ADD packages/worker .
+RUN node /pinVersions.js && yarn && yarn build && /cleanup.sh
+
+FROM couchdb:3.2.1
+
+COPY --from=build /app /app
+COPY --from=build /worker /worker
+
+ENV DEPLOYMENT_ENVIRONMENT=docker \
+  POSTHOG_TOKEN=phc_fg5I3nDOf6oJVMHSaycEhpPdlgS8rzXG2r6F2IpxCHS \
+  COUCHDB_PASSWORD=budibase \
+  COUCHDB_USER=budibase \
+  COUCH_DB_URL=http://budibase:budibase@localhost:5984 \
+  BUDIBASE_ENVIRONMENT=PRODUCTION \
+  MINIO_URL=http://localhost:9000 \
+  REDIS_URL=localhost:6379 \
+  WORKER_URL=http://localhost:4002 \
+  INTERNAL_API_KEY=budibase \
+  JWT_SECRET=testsecret \
+  MINIO_ACCESS_KEY=budibase \
+  MINIO_SECRET_KEY=budibase \
+  SELF_HOSTED=1 \
+  CLUSTER_PORT=10000 \
+  REDIS_PASSWORD=budibase \
+  ARCHITECTURE=amd \
+  APP_PORT=4001 \
+  WORKER_PORT=4002
+
+# install base dependencies
+RUN apt-get update && \
+  apt-get install software-properties-common wget -y && \
+  apt-add-repository 'deb http://security.debian.org/debian-security stretch/updates main' && \
+  apt-get update
+
+# install other dependencies, nodejs, oracle requirements, jdk8, redis, nginx
+WORKDIR /nodejs
+RUN curl -sL https://deb.nodesource.com/setup_16.x -o /tmp/nodesource_setup.sh && \
+  bash /tmp/nodesource_setup.sh && \
+  apt-get install libaio1 nodejs nginx openjdk-8-jdk redis-server unzip -y && \
+  npm install --global yarn pm2
 
 # setup nginx
 ADD hosting/single/nginx.conf /etc/nginx
-RUN mkdir /etc/nginx/logs
-RUN useradd www
-RUN touch /etc/nginx/logs/error.log
-RUN touch /etc/nginx/logs/nginx.pid
+RUN mkdir /etc/nginx/logs && \
+  useradd www && \
+  touch /etc/nginx/logs/error.log && \
+  touch /etc/nginx/logs/nginx.pid
 
-# install java
-RUN apt-get install openjdk-8-jdk -y
-
-# setup nodejs
-WORKDIR /nodejs
-RUN curl -sL https://deb.nodesource.com/setup_16.x -o /tmp/nodesource_setup.sh
-RUN bash /tmp/nodesource_setup.sh
-RUN apt-get install nodejs
-RUN npm install --global yarn
-RUN npm install --global pm2
-
-# setup redis
-RUN apt install redis-server -y
-
-# setup server
-WORKDIR /app
-ADD packages/server .
-RUN ls -al
-RUN yarn
-RUN yarn build
-# Install client for oracle datasource
-RUN apt-get install unzip libaio1
-RUN /bin/bash -e scripts/integrations/oracle/instantclient/linux/x86-64/install.sh
-
-# setup worker
-WORKDIR /worker
-ADD packages/worker .
-RUN yarn
-RUN yarn build
+WORKDIR /
+RUN mkdir -p scripts/integrations/oracle
+ADD packages/server/scripts/integrations/oracle scripts/integrations/oracle
+RUN /bin/bash -e ./scripts/integrations/oracle/instantclient/linux/x86-64/install.sh
 
 # setup clouseau
 WORKDIR /
-RUN wget https://github.com/cloudant-labs/clouseau/releases/download/2.21.0/clouseau-2.21.0-dist.zip
-RUN unzip clouseau-2.21.0-dist.zip
-RUN mv clouseau-2.21.0 /opt/clouseau
-RUN rm clouseau-2.21.0-dist.zip
+RUN wget https://github.com/cloudant-labs/clouseau/releases/download/2.21.0/clouseau-2.21.0-dist.zip && \
+  unzip clouseau-2.21.0-dist.zip && \
+  mv clouseau-2.21.0 /opt/clouseau && \
+  rm clouseau-2.21.0-dist.zip
 
 WORKDIR /opt/clouseau
 RUN mkdir ./bin
 ADD hosting/single/clouseau ./bin/
-ADD hosting/single/log4j.properties .
-ADD hosting/single/clouseau.ini .
+ADD hosting/single/log4j.properties hosting/single/clouseau.ini ./
 RUN chmod +x ./bin/clouseau
 
 # setup CouchDB
@@ -82,13 +87,15 @@ ADD hosting/single/vm.args ./etc/
 
 # setup minio
 WORKDIR /minio
-RUN wget https://dl.min.io/server/minio/release/linux-${ARCHITECTURE}64/minio
-RUN chmod +x minio
+RUN wget https://dl.min.io/server/minio/release/linux-${ARCHITECTURE}64/minio && chmod +x minio
 
 # setup runner file
 WORKDIR /
 ADD hosting/single/runner.sh .
 RUN chmod +x ./runner.sh
+
+# cleanup cache
+RUN yarn cache clean -f
 
 EXPOSE 10000
 VOLUME /opt/couchdb/data
@@ -96,4 +103,6 @@ VOLUME /minio
 
 # must set this just before running
 ENV NODE_ENV=production
+WORKDIR /
+
 CMD ["./runner.sh"]
