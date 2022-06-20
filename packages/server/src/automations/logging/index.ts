@@ -15,7 +15,7 @@ import {
 } from "../../db/utils"
 import { createLogByAutomationView } from "../../db/views/staticViews"
 import { Automation, MetadataErrors } from "../../definitions/common"
-import { invalidateAppMetadata } from "@budibase/backend-core/cache"
+import { app } from "@budibase/backend-core/cache"
 import { backOff } from "../../utilities"
 import * as env from "../../environment"
 
@@ -174,7 +174,7 @@ async function updateAppMetadataWithErrors(
     }
     await db.put(metadata)
     // don't update cache until after DB put, make sure it has been stored successfully
-    await invalidateAppMetadata(metadata.appId, metadata)
+    await app.invalidateAppMetadata(metadata.appId, metadata)
   }, "Failed to update app metadata with automation log error")
 }
 
