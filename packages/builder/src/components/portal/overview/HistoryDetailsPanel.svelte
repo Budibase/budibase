@@ -4,10 +4,15 @@
   import DateTimeRenderer from "components/common/renderers/DateTimeRenderer.svelte"
   import TestDisplay from "components/automation/AutomationBuilder/TestDisplay.svelte"
   import { goto } from "@roxi/routify"
+  import { automationStore } from "builderStore"
 
   export let history
   export let appId
   export let close
+
+  $: exists = $automationStore.automations?.find(
+    auto => auto._id === history?.automationId
+  )
 </script>
 
 {#if history}
@@ -28,13 +33,15 @@
         <div>{history.automationName}</div>
       </div>
       <div>
-        <ActionButton
-          icon="Edit"
-          fullWidth={false}
-          on:click={() =>
-            $goto(`../../../app/${appId}/automate/${history.automationId}`)}
-          >Edit automation</ActionButton
-        >
+        {#if exists}
+          <ActionButton
+            icon="Edit"
+            fullWidth={false}
+            on:click={() =>
+              $goto(`../../../app/${appId}/automate/${history.automationId}`)}
+            >Edit automation</ActionButton
+          >
+        {/if}
       </div>
     </Layout>
     <div class="bottom">

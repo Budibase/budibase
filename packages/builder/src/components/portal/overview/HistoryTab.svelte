@@ -126,7 +126,7 @@
         />
       </div>
     </div>
-    {#if runHistory}
+    {#if runHistory && runHistory.length}
       <Table
         on:click={viewDetails}
         schema={runHistorySchema}

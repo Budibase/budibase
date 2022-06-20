@@ -188,6 +188,10 @@
   })
 
   onMount(async () => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get("tab")) {
+      selectedTab = params.get("tab")
+    }
     try {
       if (!apps.length) {
         await apps.load()

@@ -129,6 +129,7 @@ const automationActions = store => ({
       page,
     })
   },
+  clearLogErrors: async () => {},
   addTestDataToAutomation: data => {
     store.update(state => {
       state.selectedAutomation.addTestData(data)
