@@ -263,6 +263,12 @@ module MongoDBModule {
           filter: FilterQuery<any>
           options: CommonOptions
         }
+        if (!json.options) {
+          json = {
+            filter: json,
+            options: {},
+          }
+        }
 
         switch (query.extra.actionTypes) {
           case "deleteOne": {
