@@ -232,6 +232,7 @@ module MySQLModule {
               autocolumn: isAuto,
               constraints,
               ...convertSqlType(column.Type),
+              externalType: column.Type,
             }
           }
           if (!tables[tableName]) {
