@@ -1,51 +1,14 @@
-name: Budibase Prerelease
-concurrency: release-prerelease
+name: Budibase Deploy Release
 
-on: 
- push:
-    branches:
-      - develop
-    paths:
-      - '.aws/**'
-      - '.github/**'
-      - 'charts/**'
-      - 'packages/**'
-      - 'scripts/**'
-      - 'package.json'
-      - 'yarn.lock'
-      - 'package.json'
-      - 'yarn.lock'
+on:
  workflow_dispatch:
 
-env:
-  # Posthog token used by ui at build time 
-  POSTHOG_TOKEN: phc_uDYOfnFt6wAbBAXkC6STjcrTpAFiWIhqgFcsC1UVO5F
-  INTERCOM_TOKEN: ${{ secrets.INTERCOM_TOKEN }}
-  PERSONAL_ACCESS_TOKEN : ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-      
 jobs:
   release:
-    runs-on: ubuntu-latest 
+    runs-on: ubuntu-latest
 
     steps:
-      - name: Fail if branch is not develop
-        if: github.ref != 'refs/heads/develop' 
-        run: | 
-          echo "Ref is not develop, you must run this job from develop."
-          exit 1
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
-        with:
-          node-version: 14.x
-
-      - name: Install Pro
-        run: yarn install:pro develop
-
-      - run: yarn 
-      - run: yarn bootstrap 
-      - run: yarn lint 
-      - run: yarn build 
-      - run: yarn test
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -54,24 +17,11 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-west-1
 
-      - name: Publish budibase packages to NPM
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Fail if branch is not develop
+        if: github.ref != 'refs/heads/develop'
         run: | 
-          # setup the username and email.
-          git config --global user.name "Budibase Staging Release Bot"
-          git config --global user.email "<>"
-          echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} >> .npmrc 
-          yarn release:develop
-
-      - name: Build/release Docker images
-        run: | 
-          docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
-          yarn build
-          yarn build:docker:develop
-        env:
-          DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
+          echo "Ref is not develop, you must run this job from develop."
+          exit 1
 
       - name: Get the latest budibase release version
         id: version

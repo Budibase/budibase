@@ -1,6 +1,6 @@
 {
   "name": "@budibase/types",
-  "version": "1.0.207-alpha.0",
+  "version": "1.0.207-alpha.3",
   "description": "Budibase types",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
