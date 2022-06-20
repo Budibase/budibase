@@ -17,6 +17,10 @@
   import { selectedScreen, store } from "builderStore"
   import sanitizeUrl from "builderStore/store/screenTemplates/utils/sanitizeUrl"
   import { goto } from "@roxi/routify"
+  import ButtonActionEditor from "components/design/settings/controls/ButtonActionEditor/ButtonActionEditor.svelte"
+  import { getBindableProperties } from "builderStore/dataBinding"
+
+  $: bindings = getBindableProperties($selectedScreen, null)
 
   let errors = {}
 
@@ -147,6 +151,11 @@
         disabled: !!$selectedScreen.layoutId,
       },
     },
+    {
+      key: "onLoad",
+      label: "On screen load",
+      control: ButtonActionEditor,
+    },
   ]
 
   const removeCustomLayout = async () => {
@@ -178,6 +187,7 @@
         value={deepGet($selectedScreen, setting.key)}
         onChange={val => setScreenSetting(setting, val)}
         props={{ ...setting.props, error: errors[setting.key] }}
+        {bindings}
       />
     {/each}
     <Button cta on:click={() => $goto("../components")}>View components</Button>

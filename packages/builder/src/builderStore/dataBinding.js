@@ -694,6 +694,13 @@ export const getAllStateVariables = () => {
     })
   })
 
+  // Add on load settings from screens
+  get(store).screens.forEach(screen => {
+    if (screen.onLoad) {
+      eventSettings.push(screen.onLoad)
+    }
+  })
+
   // Extract all state keys from any "update state" actions in each setting
   let bindingSet = new Set()
   eventSettings.forEach(setting => {
