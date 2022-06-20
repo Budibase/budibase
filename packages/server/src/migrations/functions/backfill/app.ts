@@ -20,6 +20,7 @@ const handleError = (e: any, errors?: any) => {
     }
     return
   }
+  console.trace(e)
   throw e
 }
 

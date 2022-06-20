@@ -84,9 +84,9 @@ export const checkInstallVersion = async (): Promise<void> => {
         },
         async () => {
           if (isUpgrade) {
-            await events.version.upgraded(currentVersion, newVersion)
+            await events.installation.upgraded(currentVersion, newVersion)
           } else if (isDowngrade) {
-            await events.version.downgraded(currentVersion, newVersion)
+            await events.installation.downgraded(currentVersion, newVersion)
           }
         }
       )
