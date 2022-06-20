@@ -55,7 +55,7 @@ jest.spyOn(events.org, "logoUpdated")
 jest.spyOn(events.org, "platformURLUpdated")
 jest.spyOn(events.org, "analyticsOptOut")
 
-jest.spyOn(events.version, "checked")
+jest.spyOn(events.installation, "versionChecked")
 
 jest.spyOn(events.query, "created")
 jest.spyOn(events.query, "updated")
