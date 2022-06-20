@@ -51,7 +51,7 @@
     bind:value={$email}
     error={$touched && $error}
   />
-  <Input disabled label="Password" value={password} />
+  <Input readonly label="Password" value={password} />
   <div>
     <div class="toggle">
       <Label size="L">Development access</Label>
