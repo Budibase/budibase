@@ -1,4 +1,4 @@
-name: Budibase Cloud Deploy
+name: Budibase Deploy Production
 
 on:
  workflow_dispatch:
