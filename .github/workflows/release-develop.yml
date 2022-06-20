@@ -1,5 +1,5 @@
-name: Budibase Release Staging
-concurrency: release-develop
+name: Budibase Prerelease
+concurrency: release-prerelease
 
 on: 
  push:
