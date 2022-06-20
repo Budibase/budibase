@@ -17,7 +17,7 @@ Cypress.Commands.add("login", (email, password) => {
     if (url.includes("builder/auth/login") || url.includes("builder/admin")) {
       // login
       cy.contains("Sign in to Budibase").then(() => {
-        if (email == null || password == null) {
+        if (email == null) {
           cy.get("input").first().type("test@test.com")
           cy.get('input[type="password"]').type("test")
         } else {
@@ -36,6 +36,16 @@ Cypress.Commands.add("logOut", () => {
   cy.get(".user-dropdown .avatar > .icon").click({ force: true })
   cy.get(".spectrum-Popover[data-cy='user-menu']").within(() => {
     cy.get("li[data-cy='user-logout']").click({ force: true })
+  })
+  cy.wait(2000)
+})
+
+Cypress.Commands.add("logoutNoAppGrid", () => {
+  // Logs user out when app grid is not present
+  cy.visit(`${Cypress.config().baseUrl}/builder`)
+  cy.get(".avatar > .icon").click({ force: true })
+  cy.get(".spectrum-Popover[data-cy='user-menu']").within(() => {
+    cy.get(".spectrum-Menu-item").contains("Log out").click({ force: true })
   })
   cy.wait(2000)
 })
@@ -123,7 +133,7 @@ Cypress.Commands.add("createApp", (name, addDefaultTable) => {
     cy.get(".spectrum-ButtonGroup")
       .contains("Create app")
       .click({ force: true })
-    cy.wait(10000)
+    cy.wait(5000)
   })
   if (shouldCreateDefaultTable) {
     cy.createTable("Cypress Tests", true)
