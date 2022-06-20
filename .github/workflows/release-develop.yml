@@ -4,7 +4,7 @@ concurrency: release-develop
 on: 
  push:
     branches:
-      - release
+      - develop
     paths:
       - '.aws/**'
       - '.github/**'
@@ -28,11 +28,11 @@ jobs:
     runs-on: ubuntu-latest 
 
     steps:
-      # - name: Fail if branch is not develop
-      #   if: github.ref != 'refs/heads/develop' 
-      #   run: | 
-      #     echo "Ref is not develop, you must run this job from develop."
-      #     exit 1
+      - name: Fail if branch is not develop
+        if: github.ref != 'refs/heads/develop' 
+        run: | 
+          echo "Ref is not develop, you must run this job from develop."
+          exit 1
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
         with:

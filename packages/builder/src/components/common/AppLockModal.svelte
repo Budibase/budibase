@@ -87,7 +87,7 @@
     {#if lockedByYou && getExpiryDuration(app) > 0}
       <span class="lock-expiry-body">
         {processStringSync(
-          "This lock will expire in {{ duration time 'millisecond' }} from now",
+          "This lock will expire in {{ duration time 'millisecond' }} from now.",
           {
             time: getExpiryDuration(app),
           }
@@ -140,5 +140,9 @@
     display: flex;
     gap: var(--spacing-s);
     max-width: 175px;
+  }
+  .lock-status-text {
+    font-weight: 400;
+    color: var(--spectrum-global-color-gray-800);
   }
 </style>
