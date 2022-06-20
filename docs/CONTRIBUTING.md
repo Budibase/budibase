@@ -12,7 +12,7 @@ From opening a bug report to creating a pull request: every contribution is appr
 
 ## Not Sure Where to Start?
 
-Budibase is a low-code web application builder that creates svelte based web applications.
+Budibase is a low-code web application builder that creates svelte-based web applications.
 
 Budibase is a monorepo managed by [lerna](https://github.com/lerna/lerna). Lerna manages the building and publishing of the budibase packages. At a high level, here are the packages that make up budibase.
 
@@ -23,8 +23,6 @@ Budibase is a monorepo managed by [lerna](https://github.com/lerna/lerna). Lerna
 - **packages/server** - The budibase server. This [Koa](https://koajs.com/) app is responsible for serving the JS for the builder and budibase apps, as well as providing the API for interaction with the database and file system.
 
 - **packages/worker** - This [Koa](https://koajs.com/) app is responsible for providing global apis for managing your budibase installation. Authentication, Users, Email, Org and Auth configs are all provided by the worker. 
-
-
 
 ## Contributor License Agreement (CLA)
 
@@ -138,7 +136,7 @@ To debug the budibase server and worker a VS Code launch configuration has been 
 Visit the debug window and select `Budibase Server` or `Budibase Worker` to debug the respective component. 
 Alternatively to start both components simultaneously select `Start Budibase`.
 
-In addition to the above, the remaining budibase components may be ran in dev mode using: `yarn dev:noserver`.
+In addition to the above, the remaining budibase components may be run in dev mode using: `yarn dev:noserver`.
 
 #### 6. Cleanup
 
@@ -149,7 +147,7 @@ If you wish to delete all the apps created in development and reset the environm
 
 ### Backend
 
-For the backend we run [Redis](https://redis.io/), [CouchDB](https://couchdb.apache.org/), [MinIO](https://min.io/) and [NGINX](https://www.nginx.com/) in Docker compose. This means that to develop Budibase you will need Docker and Docker compose installed. The backend services are then ran separately as Node services with nodemon so that they can be debugged outside of Docker.
+For the backend we run [Redis](https://redis.io/), [CouchDB](https://couchdb.apache.org/), [MinIO](https://min.io/) and [NGINX](https://www.nginx.com/) in Docker compose. This means that to develop Budibase you will need Docker and Docker compose installed. The backend services are then run separately as Node services with nodemon so that they can be debugged outside of Docker.
 
 ### Data Storage
 
@@ -162,10 +160,10 @@ When you are running locally, budibase stores data on disk using docker volumes.
 - `minio_data` 
   - App manifest, budibase client, static assets
 
-### Devlopment Modes
+### Development Modes
 
-A combination of environment variables controls the mode that budibase runs in. 
-Yarn commands can be used to mimic the different modes that budibase can be ran in
+A combination of environment variables controls the mode budibase runs in. 
+Yarn commands can be used to mimic the different modes as described in the sections below:
 
 #### Self Hosted
 The default mode. A single tenant installation with no usage restrictions. 
@@ -194,7 +192,7 @@ yarn mode:account
  An overview of the CI pipelines can be found [here](./workflows/README.md)
 ### Troubleshooting
 
-Sometimes, things go wrong. This can be due to incompatible updates on the budibase platform. To clear down your development environment and start again follow **Step 6. Cleanup**, then proceed from **Step 3. Install and Build** in the setup guide above. You should have a fresh Budibase installation.
+Sometimes, things go wrong. This can be due to incompatible updates on the budibase platform. To clear down your development environment and start again follow **Step 6. Cleanup**, then proceed from **Step 3. Install and Build** in the setup guide above to create a fresh Budibase installation.
 ### Running tests
 
 #### End-to-end Tests
