@@ -104,7 +104,6 @@ export const migrate = async (options?: MigrationOptions) => {
 
 const migrateWithLock = async (options?: MigrationOptions) => {
   // get a new lock client
-
   const redlock = await redis.clients.getMigrationsRedlock()
   // lock for 15 minutes
   const ttl = 1000 * 60 * 15
