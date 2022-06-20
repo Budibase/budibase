@@ -155,27 +155,22 @@ exports.validate = async () => {
 }
 
 exports.exportRows = async ctx => {
-  const { datasourceId, tableName } = breakExternalTableId(ctx.params.tableId)
+  const { datasourceId } = breakExternalTableId(ctx.params.tableId)
   const db = getAppDB()
   let format = ctx.query.format
   const datasource = await db.get(datasourceId)
   if (!datasource || !datasource.entities) {
     ctx.throw(400, "Datasource has not been configured for plus API.")
   }
-  const tables = datasource.entities
-  const table = tables[tableName]
   ctx.request.body = {
     query: {
       oneOf: {
-        [table.primaryDisplay]: ctx.request.body.rows.map(
-          id => breakRowIdField(id)[0]
-        ),
+        _id: ctx.request.body.rows.map(row => JSON.parse(decodeURI(row))[0]),
       },
     },
   }
 
   let result = await exports.search(ctx)
-
   let headers = Object.keys(result.rows[0])
   const exporter = exporters[format]
   const filename = `export.${format}`
