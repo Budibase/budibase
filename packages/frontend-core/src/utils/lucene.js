@@ -1,5 +1,5 @@
 import { Helpers } from "@budibase/bbui"
-import { OperatorOptions, SQL_NUMBER_TYPE_RANGE_MAP } from "../constants"
+import { OperatorOptions, SqlNumberTypeRangeMap } from "../constants"
 
 /**
  * Returns the valid operator options for a certain data type
@@ -107,10 +107,10 @@ export const buildLuceneQuery = filter => {
       }
       if (operator.startsWith("range")) {
         const minint =
-          SQL_NUMBER_TYPE_RANGE_MAP[externalType]?.min ||
+        SqlNumberTypeRangeMap[externalType]?.min ||
           Number.MIN_SAFE_INTEGER
         const maxint =
-          SQL_NUMBER_TYPE_RANGE_MAP[externalType]?.max ||
+        SqlNumberTypeRangeMap[externalType]?.max ||
           Number.MAX_SAFE_INTEGER
         if (!query.range[field]) {
           query.range[field] = {

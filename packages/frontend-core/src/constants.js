@@ -67,7 +67,7 @@ export const ApiVersion = "1"
 /**
  * Maximum minimum range for SQL number values
  */
-export const SQL_NUMBER_TYPE_RANGE_MAP = {
+export const SqlNumberTypeRangeMap = {
   integer: {
     max: 2147483647,
     min: -2147483648,
