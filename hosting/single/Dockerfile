@@ -20,6 +20,8 @@ RUN node /pinVersions.js && yarn && yarn build && /cleanup.sh
 
 FROM couchdb:3.2.1
 
+ARG TARGETARCH
+
 COPY --from=build /app /app
 COPY --from=build /worker /worker
 
@@ -66,7 +68,7 @@ RUN mkdir /etc/nginx/logs && \
 WORKDIR /
 RUN mkdir -p scripts/integrations/oracle
 ADD packages/server/scripts/integrations/oracle scripts/integrations/oracle
-RUN /bin/bash -e ./scripts/integrations/oracle/instantclient/linux/x86-64/install.sh
+RUN /bin/bash -e ./scripts/integrations/oracle/instantclient/linux/install.sh
 
 # setup clouseau
 WORKDIR /
