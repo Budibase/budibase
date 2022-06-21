@@ -271,6 +271,7 @@ module PostgresModule {
             autocolumn: isAuto,
             name: columnName,
             ...convertSqlType(column.data_type),
+            externalType: column.data_type,
           }
         }
 
