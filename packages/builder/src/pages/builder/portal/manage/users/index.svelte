@@ -15,7 +15,6 @@
   } from "@budibase/bbui"
   import TagsRenderer from "./_components/TagsTableRenderer.svelte"
   import AddUserModal from "./_components/AddUserModal.svelte"
-  import BasicOnboardingModal from "./_components/BasicOnboardingModal.svelte"
   import { users } from "stores/portal"
   import { onMount } from "svelte"
 
@@ -30,7 +29,6 @@
   }
 
   let search
-  let email
   $: filteredUsers = $users
     .filter(user => user.email.includes(search || ""))
     .map(user => ({
@@ -41,12 +39,6 @@
     }))
 
   let createUserModal
-  let basicOnboardingModal
-
-  function openBasicOnboardingModal() {
-    createUserModal.hide()
-    basicOnboardingModal.show()
-  }
 
   onMount(async () => {
     try {
@@ -93,9 +85,8 @@
 </Layout>
 
 <Modal bind:this={createUserModal}>
-  <AddUserModal on:change={openBasicOnboardingModal} />
+  <AddUserModal />
 </Modal>
-<Modal bind:this={basicOnboardingModal}><BasicOnboardingModal {email} /></Modal>
 
 <style>
   .field {
