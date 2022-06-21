@@ -1,5 +1,5 @@
 import { Helpers } from "@budibase/bbui"
-import { OperatorOptions } from "../constants"
+import { OperatorOptions, SqlNumberTypeRangeMap } from "../constants"
 
 /**
  * Returns the valid operator options for a certain data type
@@ -94,7 +94,7 @@ export const buildLuceneQuery = filter => {
   }
   if (Array.isArray(filter)) {
     filter.forEach(expression => {
-      let { operator, field, type, value } = expression
+      let { operator, field, type, value, externalType } = expression
       // Parse all values into correct types
       if (type === "datetime" && value) {
         value = new Date(value).toISOString()
@@ -106,16 +106,14 @@ export const buildLuceneQuery = filter => {
         value = `${value}`?.toLowerCase() === "true"
       }
       if (operator.startsWith("range")) {
+        const minint =
+          SqlNumberTypeRangeMap[externalType]?.min || Number.MIN_SAFE_INTEGER
+        const maxint =
+          SqlNumberTypeRangeMap[externalType]?.max || Number.MAX_SAFE_INTEGER
         if (!query.range[field]) {
           query.range[field] = {
-            low:
-              type === "number"
-                ? Number.MIN_SAFE_INTEGER
-                : "0000-00-00T00:00:00.000Z",
-            high:
-              type === "number"
-                ? Number.MAX_SAFE_INTEGER
-                : "9999-00-00T00:00:00.000Z",
+            low: type === "number" ? minint : "0000-00-00T00:00:00.000Z",
+            high: type === "number" ? maxint : "9999-00-00T00:00:00.000Z",
           }
         }
         if (operator === "rangeLow" && value != null && value !== "") {

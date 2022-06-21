@@ -24,14 +24,14 @@ The standard CI Build job is what runs when you raise a PR to develop or master.
 Triggers:
 - Push to develop
 
-The job responsible for building, tagging and pushing docker images out to the test and staging environments. 
+The job responsible for building, tagging and pushing docker images out to the test and release environments. 
 - Installs all dependencies
 - builds the project 
 - run the unit tests
 - publish the budibase JS packages under a prerelease tag to NPM
 - build, tag and push docker images under the `develop` tag to docker hub
 
-These images will then be pulled by the test and staging environments, updating the latest automatically. Discord notifications are sent to the #infra channel when this occurs.
+These images will then be pulled by the test and release environments, updating the latest automatically. Discord notifications are sent to the #infra channel when this occurs.
 
 ### Release Job (release.yml)
 Triggers:
@@ -57,8 +57,33 @@ This job relies on the release job to have run first, so the latest image is pus
 - Build and release the budibase helm chart for kubernetes users
 - Perform a github release with the latest version. You can see previous releases here (https://github.com/Budibase/budibase/releases)
 
+### Deploy Release (deploy-release.yml)
+Triggers:
+- Manual Workflow Dispatch Trigger
 
-### Cloud Deploy (deploy-cloud.yml)
+This job is responsible for deploying to our release, cloud kubernetes environment. You must run the release job first, to ensure that the latest images have been built and pushed to docker hub. After kicking off this job, the following will occur:
+
+- Checks out the release branch 
+- Pulls the latest `values.yaml` from budibase infra, a private repo containing budibases infrastructure configuration
+- Gets the latest budibase version from `lerna.json`, if it hasn't been specified in the workflow when you kicked it off
+- Configures AWS Credentials  
+- Deploys the helm chart in the budibase repo to our preproduction EKS cluster, injecting the `values.yaml` we pulled from budibase-infra
+- Fires off a discord webhook in the #infra channel to show that the deployment completely successfully.
+
+### Deploy Preprod (deploy-preprod.yml)
+Triggers:
+- Manual Workflow Dispatch Trigger
+
+This job is responsible for deploying to our preprod, cloud kubernetes environment. You must run the release job first, to ensure that the latest images have been built and pushed to docker hub. After kicking off this job, the following will occur:
+
+- Checks out the master branch 
+- Pulls the latest `values.yaml` from budibase infra, a private repo containing budibases infrastructure configuration
+- Gets the latest budibase version from `lerna.json`, if it hasn't been specified in the workflow when you kicked it off
+- Configures AWS Credentials  
+- Deploys the helm chart in the budibase repo to our preprod EKS cluster, injecting the `values.yaml` we pulled from budibase-infra
+- Fires off a discord webhook in the #infra channel to show that the deployment completely successfully.
+
+### Deploy Production (deploy-cloud.yml)
 Triggers:
 - Manual Workflow Dispatch Trigger
 
