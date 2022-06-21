@@ -390,11 +390,17 @@ const getUrlBindings = asset => {
     }
   })
   const safeURL = makePropSafe("url")
-  return params.map(param => ({
+  const urlParamBindings = params.map(param => ({
     type: "context",
     runtimeBinding: `${safeURL}.${makePropSafe(param)}`,
     readableBinding: `URL.${param}`,
   }))
+  const queryParamsBinding = {
+    type: "context",
+    runtimeBinding: makePropSafe("query"),
+    readableBinding: "Query params",
+  }
+  return urlParamBindings.concat([queryParamsBinding])
 }
 
 const getRoleBindings = () => {
