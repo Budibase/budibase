@@ -246,6 +246,7 @@ module MSSQLModule {
             autocolumn: !!autoColumns.find((col: string) => col === name),
             name: name,
             ...convertSqlType(def.DATA_TYPE),
+            externalType: def.DATA_TYPE,
           }
         }
         tables[tableName] = {
