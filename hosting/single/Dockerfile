@@ -41,7 +41,6 @@ ENV DEPLOYMENT_ENVIRONMENT=docker \
   SELF_HOSTED=1 \
   CLUSTER_PORT=10000 \
   REDIS_PASSWORD=budibase \
-  ARCHITECTURE=amd \
   APP_PORT=4001 \
   WORKER_PORT=4002
 
@@ -89,7 +88,7 @@ ADD hosting/single/vm.args ./etc/
 
 # setup minio
 WORKDIR /minio
-RUN wget https://dl.min.io/server/minio/release/linux-${ARCHITECTURE}64/minio && chmod +x minio
+RUN wget https://dl.min.io/server/minio/release/linux-${TARGETARCH}/minio && chmod +x minio
 
 # setup runner file
 WORKDIR /
