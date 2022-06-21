@@ -133,7 +133,7 @@ Cypress.Commands.add("createApp", (name, addDefaultTable) => {
     cy.get(".spectrum-ButtonGroup")
       .contains("Create app")
       .click({ force: true })
-    cy.wait(5000)
+    cy.wait(2000)
   })
   if (shouldCreateDefaultTable) {
     cy.createTable("Cypress Tests", true)

@@ -112,6 +112,8 @@ filterTests(["smoke", "all"], () => {
       cy.get(interact.CREATE_APP_BUTTON).should('not.exist') // No create app button
       cy.get(".app").should('not.exist') // No apps -> no roles assigned to user
       cy.get(interact.CONTAINER).should('contain', bbUserEmail) // Message containing users email
+
+      cy.logOut()
     })
 
     const bbUserLogin = () => {

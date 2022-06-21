@@ -105,6 +105,8 @@ export const SPECTRUM_TABLE_CELL = ".spectrum-Table-cell"
 export const FIELD = ".field"
 export const CONTAINER = ".container"
 export const REGENERATE = ".regenerate"
+export const SPECTRUM_DIALOG_CONTENT = ".spectrum-Dialog-content"
+export const SPECTRUM_ICON = ".spectrum-Icon"
 
 //createView
 export const SPECTRUM_MENU_ITEM_LABEL = ".spectrum-Menu-itemLabel"
@@ -114,14 +116,17 @@ export const TOP_RIGHT_NAV = ".toprightnav"
 export const AREA_LABEL_REVERT = "[aria-label=Revert]"
 export const ROOT = ".root"
 
-//quertLevelTransformers
+//queryLevelTransformers
 export const SPECTRUM_TABS_ITEM = ".spectrum-Tabs-itemLabel"
 export const CODEMIRROR_TEXTAREA = ".CodeMirror textarea"
 
-//renemaApplication
+//renameApplication
 export const WRAPPER = ".wrapper"
 export const ERROR = ".error"
 export const AREA_LABEL_MORE = "[aria-label=More]"
 export const APP_ROW_ACTION_MENU_POPOVER =
   '[data-cy="app-row-actions-menu-popover"]'
-export const SPECTRUM_MENU_ITEMM = ".spectrum-Menu-item"
+export const SPECTRUM_MENU_ITEM = ".spectrum-Menu-item"
+
+//commands
+export const HOME_LOGO = ".home-logo"
