@@ -107,11 +107,9 @@ export const buildLuceneQuery = filter => {
       }
       if (operator.startsWith("range")) {
         const minint =
-        SqlNumberTypeRangeMap[externalType]?.min ||
-          Number.MIN_SAFE_INTEGER
+          SqlNumberTypeRangeMap[externalType]?.min || Number.MIN_SAFE_INTEGER
         const maxint =
-        SqlNumberTypeRangeMap[externalType]?.max ||
-          Number.MAX_SAFE_INTEGER
+          SqlNumberTypeRangeMap[externalType]?.max || Number.MAX_SAFE_INTEGER
         if (!query.range[field]) {
           query.range[field] = {
             low: type === "number" ? minint : "0000-00-00T00:00:00.000Z",
