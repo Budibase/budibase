@@ -1,5 +1,5 @@
 <script>
-  import { screenStore, routeStore } from "stores"
+  import { screenStore, routeStore, builderStore } from "stores"
   import Component from "./Component.svelte"
   import Provider from "./context/Provider.svelte"
   import { onMount, getContext } from "svelte"
@@ -24,7 +24,7 @@
     // Enrich and execute and on load actions.
     // We manually construct the full context here as this component is the
     // one that provides the url context, so it is not available in $context yet
-    if ($screenStore.activeScreen?.onLoad) {
+    if ($screenStore.activeScreen?.onLoad && !$builderStore.inBuilder) {
       const actions = enrichButtonActions($screenStore.activeScreen.onLoad, {
         ...$context,
         url: params,
