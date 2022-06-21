@@ -72,3 +72,25 @@ export const Roles = {
   PUBLIC: "PUBLIC",
   BUILDER: "BUILDER",
 }
+
+/**
+ * Maximum minimum range for SQL number values
+ */
+export const SqlNumberTypeRangeMap = {
+  integer: {
+    max: 2147483647,
+    min: -2147483648,
+  },
+  int: {
+    max: 2147483647,
+    min: -2147483648,
+  },
+  smallint: {
+    max: 32767,
+    min: -32768,
+  },
+  mediumint: {
+    max: 8388607,
+    min: -8388608,
+  },
+}
