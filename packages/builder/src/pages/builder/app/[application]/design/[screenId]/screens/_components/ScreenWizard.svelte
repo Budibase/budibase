@@ -68,7 +68,7 @@
 
         // Add link in layout for list screens
         if (screen.props._instanceName.endsWith("List")) {
-          await store.actions.components.links.save(
+          await store.actions.links.save(
             screen.routing.route,
             screen.routing.route.split("/")[1]
           )
@@ -133,6 +133,7 @@
       const screens = selectedTemplates.map(template => {
         let screenTemplate = template.create()
         screenTemplate.datasource = template.datasource
+        screenTemplate.autoTableId = template.table
         return screenTemplate
       })
       await createScreens({ screens, screenAccessRole })
