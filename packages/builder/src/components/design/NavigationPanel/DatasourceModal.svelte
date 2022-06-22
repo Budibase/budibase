@@ -14,14 +14,14 @@
   let selectedScreens = [...initalScreens]
 
   const toggleScreenSelection = (table, datasource) => {
-    if (selectedScreens.find(s => s.table === table.name)) {
+    if (selectedScreens.find(s => s.table === table._id)) {
       selectedScreens = selectedScreens.filter(
-        screen => screen.table !== table.name
+        screen => screen.table !== table._id
       )
     } else {
       let partialTemplates = getTemplates($store, $tables.list).reduce(
         (acc, template) => {
-          if (template.table === table.name) {
+          if (template.table === table._id) {
             template.datasource = datasource.name
             acc.push(template)
           }
@@ -88,7 +88,7 @@
               <div
                 class="data-source-entry"
                 class:selected={selectedScreens.find(
-                  x => x.table === table.name
+                  x => x.table === table._id
                 )}
                 on:click={() => toggleScreenSelection(table, datasource)}
               >
@@ -102,8 +102,7 @@
                   <use xlink:href="#spectrum-icon-18-Table" />
                 </svg>
                 {table.name}
-
-                {#if selectedScreens.find(x => x.table === table.name)}
+                {#if selectedScreens.find(x => x.table === table._id)}
                   <span class="data-source-check">
                     <Icon size="S" name="CheckmarkCircle" />
                   </span>
@@ -116,7 +115,7 @@
               <div
                 class="data-source-entry"
                 class:selected={selectedScreens.find(
-                  x => x.table === datasource.entities[table_key].name
+                  x => x.table === datasource.entities[table_key]._id
                 )}
                 on:click={() =>
                   toggleScreenSelection(
@@ -134,8 +133,7 @@
                   <use xlink:href="#spectrum-icon-18-Table" />
                 </svg>
                 {datasource.entities[table_key].name}
-
-                {#if selectedScreens.find(x => x.table === datasource.entities[table_key].name)}
+                {#if selectedScreens.find(x => x.table === datasource.entities[table_key]._id)}
                   <span class="data-source-check">
                     <Icon size="S" name="CheckmarkCircle" />
                   </span>
