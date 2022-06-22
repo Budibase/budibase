@@ -390,11 +390,17 @@ const getUrlBindings = asset => {
     }
   })
   const safeURL = makePropSafe("url")
-  return params.map(param => ({
+  const urlParamBindings = params.map(param => ({
     type: "context",
     runtimeBinding: `${safeURL}.${makePropSafe(param)}`,
     readableBinding: `URL.${param}`,
   }))
+  const queryParamsBinding = {
+    type: "context",
+    runtimeBinding: makePropSafe("query"),
+    readableBinding: "Query params",
+  }
+  return urlParamBindings.concat([queryParamsBinding])
 }
 
 const getRoleBindings = () => {
@@ -692,6 +698,13 @@ export const getAllStateVariables = () => {
           eventSettings.push(component[setting.key])
         })
     })
+  })
+
+  // Add on load settings from screens
+  get(store).screens.forEach(screen => {
+    if (screen.onLoad) {
+      eventSettings.push(screen.onLoad)
+    }
   })
 
   // Extract all state keys from any "update state" actions in each setting
