@@ -89,6 +89,24 @@ function parseFilters(filters: SearchFilters | undefined): SearchFilters {
   return filters
 }
 
+function generateSelectStatement(json: QueryJson, knex: Knex): any[] {
+  const { resource, meta } = json
+  const schema = meta?.table?.schema
+  return resource.fields.map(field => {
+    const shortFieldName = field.match(/(?<=\.).*$/g)?.[0]
+    if (shortFieldName) {
+      const externalType = schema?.[shortFieldName].externalType
+      if (externalType?.includes("money")) {
+        const fieldName = field.split(/\./g)
+        return knex.raw(
+          `"${fieldName?.[0]}"."${fieldName?.[1]}"::money::numeric as "${field}"`
+        )
+      }
+    }
+    return `${field} as ${field}`
+  })
+}
+
 class InternalBuilder {
   private readonly client: string
 
@@ -323,12 +341,12 @@ class InternalBuilder {
     if (!resource) {
       resource = { fields: [] }
     }
-    let selectStatement: string | string[] = "*"
+    let selectStatement: string | any[] = "*"
     // handle select
     if (resource.fields && resource.fields.length > 0) {
       // select the resources as the format "table.columnName" - this is what is provided
       // by the resource builder further up
-      selectStatement = resource.fields.map(field => `${field} as ${field}`)
+      selectStatement = generateSelectStatement(json, knex)
     }
     let foundLimit = limit || BASE_LIMIT
     // handle pagination
