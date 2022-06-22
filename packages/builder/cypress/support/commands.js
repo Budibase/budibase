@@ -32,7 +32,7 @@ Cypress.Commands.add("login", (email, password) => {
 })
 
 Cypress.Commands.add("logOut", () => {
-  cy.visit(`${Cypress.config().baseUrl}/builder`)
+  cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 2000 })
   cy.get(".user-dropdown .avatar > .icon").click({ force: true })
   cy.get(".spectrum-Popover[data-cy='user-menu']").within(() => {
     cy.get("li[data-cy='user-logout']").click({ force: true })
@@ -54,16 +54,38 @@ Cypress.Commands.add("createUser", email => {
   // quick hacky recorded way to create a user
   cy.contains("Users").click()
   cy.get(`[data-cy="add-user"]`).click()
-  cy.get(".spectrum-Picker-label").click()
-  cy.get(".spectrum-Menu-item:nth-child(2) > .spectrum-Menu-itemLabel").click()
+  cy.get(".spectrum-Dialog-grid").within(() => {
+    cy.get(".spectrum-Picker-label").click()
+    cy.get(
+      ".spectrum-Menu-item:nth-child(2) > .spectrum-Menu-itemLabel"
+    ).click()
 
-  // Onboarding type selector
-  cy.get(
-    ":nth-child(2) > .spectrum-Form-itemField > .spectrum-Textfield > .spectrum-Textfield-input"
-  )
-    .first()
-    .type(email, { force: true })
-  cy.get(".spectrum-Button--cta").click({ force: true })
+    // Onboarding type selector
+    cy.get(".spectrum-Textfield-input")
+      .eq(0)
+      .first()
+      .type(email, { force: true })
+    cy.get(".spectrum-Button--cta").click({ force: true })
+  })
+})
+
+Cypress.Commands.add("deleteUser", email => {
+  // Assumes user has access to Users section
+  cy.contains("Users", { timeout: 2000 }).click()
+  cy.contains(email).click()
+
+  // Click Delete user button
+  cy.get(".spectrum-Button")
+    .contains("Delete user")
+    .click({ force: true })
+    .then(() => {
+      // Confirm deletion within modal
+      cy.get(".spectrum-Dialog-grid", { timeout: 500 }).within(() => {
+        cy.get(".spectrum-Button")
+          .contains("Delete user")
+          .click({ force: true })
+      })
+    })
 })
 
 Cypress.Commands.add("updateUserInformation", (firstName, lastName) => {
@@ -377,7 +399,8 @@ Cypress.Commands.add("createTable", (tableName, initialTable) => {
     cy.navigateToDataSection()
     cy.get(`[data-cy="new-table"]`).click()
   }
-  cy.get(".spectrum-Dialog-grid", { timeout: 5000 })
+  cy.wait(500)
+  cy.get(".spectrum-Dialog-grid")
     .contains("Budibase DB")
     .click({ force: true })
     .then(() => {
