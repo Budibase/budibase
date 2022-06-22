@@ -220,22 +220,7 @@ filterTests(["smoke", "all"], () => {
       })
 
     it("should delete a user", () => {
-      // Navigate to test user
-      cy.contains("Users").click()
-      cy.contains("bbuser").click()
-      
-      // Click Delete user button
-      cy.get(interact.SPECTRUM_BUTTON)
-        .contains("Delete user")
-        .click({ force: true })
-        .then(() => {
-          // Confirm deletion within modal
-          cy.get(interact.SPECTRUM_DIALOG_GRID, { timeout: 500 }).within(() => {
-            cy.get(interact.SPECTRUM_BUTTON)
-              .contains("Delete user")
-              .click({ force: true })
-          })
-        })
+      cy.deleteUser("bbuser@test.com")
       cy.get(interact.SPECTRUM_TABLE, { timeout: 4000 }).should("not.have.text", "bbuser")
     })
   })

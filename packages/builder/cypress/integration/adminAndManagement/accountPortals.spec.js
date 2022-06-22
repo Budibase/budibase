@@ -113,7 +113,7 @@ filterTests(["smoke", "all"], () => {
       cy.get(".app").should('not.exist') // No apps -> no roles assigned to user
       cy.get(interact.CONTAINER).should('contain', bbUserEmail) // Message containing users email
 
-      cy.logOut()
+      cy.logoutNoAppGrid()
     })
 
     const bbUserLogin = () => {
@@ -121,5 +121,11 @@ filterTests(["smoke", "all"], () => {
       cy.logOut()
       cy.login(bbUserEmail, "test")
     }
+
+    after(() => {
+      cy.login()
+      // Delete BB user
+      cy.deleteUser(bbUserEmail)
+    })
   })
 })
