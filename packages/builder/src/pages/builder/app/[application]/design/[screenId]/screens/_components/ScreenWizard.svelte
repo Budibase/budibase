@@ -10,6 +10,7 @@
   import getTemplates from "builderStore/store/screenTemplates"
   import { tables } from "stores/backend"
   import { Roles } from "constants/backend"
+  import { capitalise } from "helpers"
 
   let pendingScreen
 
@@ -70,7 +71,7 @@
         if (screen.props._instanceName.endsWith("List")) {
           await store.actions.links.save(
             screen.routing.route,
-            screen.routing.route.split("/")[1]
+            capitalise(screen.routing.route.split("/")[1])
           )
         }
       }
