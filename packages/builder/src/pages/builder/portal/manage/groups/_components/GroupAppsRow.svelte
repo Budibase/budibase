@@ -5,24 +5,20 @@
 </script>
 
 <div class="title">
-  <div class="name" style="display: flex; margin-left: var(--spacing-xl)">
-    <div class="app-icon" style="color: {app.icon?.color || ''}">
-      <Icon size="XL" name={app.icon?.name || "Apps"} />
-    </div>
+  <div class="name app-icon" style="color: {app.icon?.color || ''}">
+    <Icon size="XL" name={app.icon?.name || "Apps"} />
   </div>
 </div>
 <div class="desktop">
-  <div style="display: flex; align-items: center;">
+  <div class="name-content">
     <Body size="M">{app.name}</Body>
-    <div style="opacity: 0.5; margin: var(--spacing-xs) 0 0 var(--spacing-m)">
+    <div class="access">
       <Body size="XS">{app.access}</Body>
     </div>
   </div>
 </div>
 <div class="desktop" />
-<div
-  style="display: flex; align-items: baseline;     margin-right: var(--spacing-xl);"
->
+<div class="apps">
   <StatusLight purple />
   <Body size="XS">{app.access}</Body>
 </div>
@@ -33,7 +29,26 @@
     grid-template-columns: 75px 75px;
     align-items: center;
   }
+  .app-icon {
+    display: flex;
+    margin-left: var(--spacing-xl);
+  }
 
+  .apps {
+    display: flex;
+    align-items: baseline;
+    margin-right: var(--spacing-xl);
+  }
+
+  .access {
+    opacity: 0.5;
+    margin: var(--spacing-xs) 0 0 var(--spacing-m);
+  }
+
+  .name-content {
+    display: flex;
+    align-items: center;
+  }
   .name {
     text-decoration: none;
     overflow: hidden;

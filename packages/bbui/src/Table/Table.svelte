@@ -37,7 +37,7 @@
   export let autoSortColumns = true
   export let compact = false
   export let customPlaceholder = false
-
+  export let showHeaderBorder = true
   const dispatch = createEventDispatcher()
 
   // Config
@@ -300,6 +300,7 @@
           {#each fields as field}
             <div
               class="spectrum-Table-headCell"
+              class:noBorder={!showHeaderBorder}
               class:spectrum-Table-headCell--alignCenter={schema[field]
                 .align === "Center"}
               class:spectrum-Table-headCell--alignRight={schema[field].align ===
@@ -478,6 +479,13 @@
   .spectrum-Table-headCell:last-of-type {
     border-right: var(--table-border);
   }
+
+  .noBorder {
+    border-top: none !important;
+    border-right: none !important;
+    border-left: none !important;
+  }
+
   .spectrum-Table-headCell--alignCenter {
     justify-content: center;
   }
@@ -567,6 +575,7 @@
   .spectrum-Table-cell--divider + .spectrum-Table-cell {
     padding-left: var(--cell-padding);
   }
+
   .spectrum-Table-cell--edit {
     position: sticky;
     left: 0;

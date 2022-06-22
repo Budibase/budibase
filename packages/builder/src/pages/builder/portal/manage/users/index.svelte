@@ -11,6 +11,7 @@
     Label,
     Layout,
     Modal,
+    Icon,
     notifications,
   } from "@budibase/bbui"
   import TagsRenderer from "./_components/TagsTableRenderer.svelte"
@@ -28,6 +29,21 @@
     // access: {},
     // group: {}
   }
+
+  const accessTypes = [
+    {
+      icon: "User",
+      description: "App user - Only has access to published apps",
+    },
+    {
+      icon: "Hammer",
+      description: "Developer - Access to the app builder",
+    },
+    {
+      icon: "Draw",
+      description: "Admin - Full access",
+    },
+  ]
 
   let search
   let email
@@ -60,25 +76,31 @@
 <Layout noPadding>
   <Layout gap="XS" noPadding>
     <Heading>Users</Heading>
-    <Body>
-      Each user is assigned to a group that contains apps and permissions. In
-      this section, you can add users, or edit and delete an existing user.
-    </Body>
-  </Layout>
-  <Divider size="S" />
-  <Layout gap="S" noPadding>
-    <div class="users-heading">
-      <Heading size="S">Users</Heading>
-      <ButtonGroup>
-        <Button disabled secondary>Import users</Button>
-        <Button primary dataCy="add-user" on:click={createUserModal.show}
-          >Add user</Button
-        >
-      </ButtonGroup>
+    <Body>Add users and control who gets access to your published apps</Body>
+
+    <div>
+      {#each accessTypes as type}
+        <div class="access-description">
+          <Icon name={type.icon} />
+          <div class="access-text">
+            <Body size="S">{type.description}</Body>
+          </div>
+        </div>
+      {/each}
     </div>
+  </Layout>
+  <Layout gap="S" noPadding>
+    <ButtonGroup>
+      <Button
+        dataCy="add-user"
+        on:click={createUserModal.show}
+        icon="UserAdd"
+        cta>Add Users</Button
+      >
+      <Button icon="Import" primary>Import Users</Button>
+    </ButtonGroup>
     <div class="field">
       <Label size="L">Search / filter</Label>
-      <Search bind:value={search} placeholder="" />
     </div>
     <Table
       on:click={({ detail }) => $goto(`./${detail._id}`)}
@@ -87,6 +109,7 @@
       allowEditColumns={false}
       allowEditRows={false}
       allowSelectRows={false}
+      showHeaderBorder={false}
       customRenderers={[{ column: "group", component: TagsRenderer }]}
     />
   </Layout>
@@ -98,6 +121,16 @@
 <Modal bind:this={basicOnboardingModal}><BasicOnboardingModal {email} /></Modal>
 
 <style>
+  .access-description {
+    display: flex;
+    margin-top: var(--spacing-xl);
+    opacity: 0.8;
+  }
+
+  .access-text {
+    margin-left: var(--spacing-m);
+  }
+
   .field {
     display: flex;
     align-items: center;
