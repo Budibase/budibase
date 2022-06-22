@@ -26,7 +26,7 @@
     <Layout paddingX="XL" gap="S">
       <div class="icon">
         <Icon name="Clock" />
-        <DateTimeRenderer value={history.timestamp} />
+        <DateTimeRenderer value={history.createdAt} />
       </div>
       <div class="icon">
         <Icon name="JourneyVoyager" />
@@ -45,7 +45,9 @@
       </div>
     </Layout>
     <div class="bottom">
-      <TestDisplay testResults={history} width="100%" />
+      {#key history}
+        <TestDisplay testResults={history} width="100%" />
+      {/key}
     </div>
   </div>
 {:else}
@@ -54,10 +56,13 @@
 
 <style>
   .body {
+    right: 0;
     background-color: var(--background);
     border-left: var(--border-light);
-    height: 100%;
-    width: 100%;
+    width: 420px;
+    height: calc(100vh - 240px);
+    position: fixed;
+    overflow: auto;
   }
 
   .top {
@@ -69,7 +74,7 @@
     margin-top: var(--spacing-m);
     border-top: var(--border-light);
     padding-top: calc(var(--spacing-xl) * 2);
-    height: 100%;
+    padding-bottom: calc(var(--spacing-xl) * 2);
   }
 
   .icon {

@@ -6,14 +6,17 @@
   import { automationStore } from "builderStore"
   import { onMount } from "svelte"
 
+  const ERROR = "error",
+    SUCCESS = "success"
   export let app
 
-  let runHistory = []
+  let runHistory = null
   let showPanel = false
   let selectedHistory = null
   let automationOptions = []
   let automationId = null
   let status = null
+  let timeRange = null
   let prevPage,
     nextPage,
     page,
@@ -22,9 +25,17 @@
 
   $: fetchLogs(automationId, status, page)
 
+  const timeOptions = [
+    { value: "1w", label: "Past week" },
+    { value: "1d", label: "Past day" },
+    { value: "1h", label: "Past 1 hour" },
+    { value: "15m", label: "Past 15 mins" },
+    { value: "5m", label: "Past 5 mins" },
+  ]
+
   const statusOptions = [
-    { value: "success", label: "Success" },
-    { value: "error", label: "Error" },
+    { value: SUCCESS, label: "Success" },
+    { value: ERROR, label: "Error" },
   ]
 
   const runHistorySchema = {
@@ -94,8 +105,17 @@
   }
 
   onMount(async () => {
+    const params = new URLSearchParams(window.location.search)
+    const shouldOpen = params.get("open") === ERROR
+    // open with errors, open panel for latest
+    if (shouldOpen) {
+      status = ERROR
+    }
     await automationStore.actions.fetch()
-    await fetchLogs()
+    await fetchLogs(null, status)
+    if (shouldOpen) {
+      viewDetails({ detail: runHistory[0] })
+    }
     automationOptions = []
     for (let automation of $automationStore.automations) {
       automationOptions.push({ value: automation._id, label: automation.name })
@@ -115,7 +135,12 @@
         />
       </div>
       <div class="select">
-        <Select placeholder="Past 30 days" label="Date range" />
+        <Select
+          placeholder="Past 30 days"
+          label="Date range"
+          bind:value={timeRange}
+          options={timeOptions}
+        />
       </div>
       <div class="select">
         <Select
@@ -126,7 +151,7 @@
         />
       </div>
     </div>
-    {#if runHistory && runHistory.length}
+    {#if runHistory}
       <Table
         on:click={viewDetails}
         schema={runHistorySchema}
@@ -135,6 +160,7 @@
         allowEditRows={false}
         data={runHistory}
         {customRenderers}
+        placeholderText="No history found"
       />
     {/if}
   </Layout>
@@ -165,10 +191,6 @@
     height: 100%;
   }
 
-  .panelOpen {
-    grid-template-columns: auto 420px;
-  }
-
   .search {
     display: flex;
     gap: var(--spacing-l);
@@ -189,15 +211,14 @@
 
   .panel {
     display: none;
-    position: absolute;
-    right: 0;
-    height: 100%;
-    width: 420px;
-    overflow: hidden;
     background-color: var(--background);
   }
 
   .panelShow {
     display: block;
+  }
+
+  .panelOpen {
+    grid-template-columns: auto 420px;
   }
 </style>

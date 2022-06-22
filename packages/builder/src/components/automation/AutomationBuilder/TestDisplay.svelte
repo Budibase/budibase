@@ -103,6 +103,7 @@
 <style>
   .container {
     padding: 0 30px 0 30px;
+    height: 100%;
   }
 
   .tabs {
@@ -117,6 +118,7 @@
   .block {
     display: inline-block;
     width: 400px;
+    height: auto;
     font-size: 16px;
     background-color: var(--background);
     border: 1px solid var(--spectrum-global-color-gray-300);

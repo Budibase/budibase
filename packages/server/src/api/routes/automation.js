@@ -51,16 +51,21 @@ router
     automationValidator(false),
     controller.create
   )
+  .post(
+    "/api/automations/logs/search",
+    authorized(BUILDER),
+    controller.logSearch
+  )
+  .delete(
+    "/api/automations/logs",
+    authorized(BUILDER),
+    controller.clearLogError
+  )
   .delete(
     "/api/automations/:id/:rev",
     paramResource("id"),
     authorized(BUILDER),
     controller.destroy
-  )
-  .post(
-    "/api/automations/logs/search",
-    authorized(BUILDER),
-    controller.logSearch
   )
   .post(
     "/api/automations/:id/trigger",
