@@ -1,6 +1,11 @@
 import { get, writable } from "svelte/store"
 import { cloneDeep } from "lodash/fp"
-import { currentAsset, mainLayout, selectedComponent } from "builderStore"
+import {
+  currentAsset,
+  mainLayout,
+  selectedComponent,
+  selectedScreen,
+} from "builderStore"
 import {
   datasources,
   integrations,
@@ -617,35 +622,38 @@ export const getFrontendStore = () => {
     },
     links: {
       save: async (url, title) => {
-        const layout = get(mainLayout)
-        if (!layout) {
+        const navigation = get(store).navigation
+        let links = [...navigation?.links]
+
+        // Skip if we have an identical link
+        if (links.find(link => link.url === url && link.text === title)) {
           return
         }
 
-        // Add link setting to main layout
-        if (!layout.props.links) {
-          layout.props.links = []
-        }
-        layout.props.links.push({
+        links.push({
           text: title,
           url,
         })
-
-        await store.actions.layouts.save(layout)
+        await store.actions.navigation.save({
+          ...navigation,
+          links: [...links],
+        })
       },
       delete: async urls => {
-        const layout = get(mainLayout)
-        if (!layout?.props.links?.length) {
+        const navigation = get(store).navigation
+        let links = navigation?.links
+        if (!links?.length) {
           return
         }
 
         // Filter out the URLs to delete
         urls = Array.isArray(urls) ? urls : [urls]
-        layout.props.links = layout.props.links.filter(
-          link => !urls.includes(link.url)
-        )
+        links = links.filter(link => !urls.includes(link.url))
 
-        await store.actions.layouts.save(layout)
+        await store.actions.navigation.save({
+          ...navigation,
+          links,
+        })
       },
     },
     settings: {
