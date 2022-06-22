@@ -7,21 +7,26 @@ const Joi = require("joi")
 const router = Router()
 
 function buildGroupSaveValidation() {
-    // prettier-ignore
-    return joiValidator.body(Joi.object({
-        color: Joi.string().required(),
-        icon: Joi.string().required(),
-        name: Joi.string().required()
-    }).required())
+  // prettier-ignore
+  return joiValidator.body(Joi.object({
+    _id: Joi.string().optional(),
+    _rev: Joi.string().optional(),
+    color: Joi.string().required(),
+    icon: Joi.string().required(),
+    name: Joi.string().required(),
+    users: Joi.array().optional()
+  }).required())
 }
 
-router.post(
+router
+  .post(
     "/api/global/groups",
     adminOnly,
     buildGroupSaveValidation(),
     controller.save
-)
-    .get("/api/global/groups", controller.fetch)
-
+  )
+  .get("/api/global/groups", controller.fetch)
+  .delete("/api/global/groups/:id/:rev", adminOnly, controller.destroy)
+  .get("/api/global/groups/:id", adminOnly, controller.find)
 
 module.exports = router

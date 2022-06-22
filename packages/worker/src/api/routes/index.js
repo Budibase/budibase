@@ -26,5 +26,5 @@ exports.routes = [
   statusRoutes,
   selfRoutes,
   licenseRoutes,
-  userGroupRoutes
+  userGroupRoutes,
 ]

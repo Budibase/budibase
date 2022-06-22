@@ -236,6 +236,6 @@ export const createAPIClient = config => {
     ...buildViewEndpoints(API),
     ...buildSelfEndpoints(API),
     ...buildLicensingEndpoints(API),
-    ...buildGroupsEndpoints(API)
+    ...buildGroupsEndpoints(API),
   }
 }

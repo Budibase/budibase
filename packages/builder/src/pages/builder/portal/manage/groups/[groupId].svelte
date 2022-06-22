@@ -11,50 +11,66 @@
     Search,
     Divider,
     Detail,
+    notifications,
   } from "@budibase/bbui"
   import UserRow from "./_components/UserRow.svelte"
-  import { users } from "stores/portal"
+  import { users, apps, groups } from "stores/portal"
   import { onMount } from "svelte"
+  import GroupAppsRow from "./_components/GroupAppsRow.svelte"
 
+  export let groupId
   let popoverAnchor
   let popover
+  $: group = $groups.find(x => x._id === groupId)
   let searchTerm = ""
   let selectedUsers = []
-  $: filteredUsers = $users.filter(user =>
-    user?.email?.toLowerCase().includes(searchTerm.toLowerCase())
+  $: filteredUsers = $users.filter(
+    user =>
+      selectedUsers &&
+      user?.email?.toLowerCase().includes(searchTerm.toLowerCase())
   )
-
-  let group = {
-    _id: "gr_123456",
-    color: "green",
-    icon: "Anchor",
-    name: "Core Team",
-    userCount: 5,
-    appCount: 2,
-  }
-
-  let groupUsers = [
+  let app_list = [
     {
-      email: "peter@budibase.com",
       access: "Developer",
+      name: "test app",
+      icon: "Anchor",
+      color: "blue",
     },
   ]
 
-  /*
-  function getGroup() {
-    return 
+  async function addAll() {
+    selectedUsers = [...selectedUsers, ...filteredUsers]
+    group.users = selectedUsers
+    await groups.actions.save(group)
   }
-  */
-  function selectUser(id) {
-    let user = selectedUsers.find(user_id => user_id === id)
-    if (user) {
-      selectedUsers = selectedUsers.filter(id => id !== user)
+
+  async function selectUser(id) {
+    let selectedUser = selectedUsers.find(user_id => user_id === id)
+    let enrichedUser = $users.find(user => user._id === id)
+    if (selectedUser) {
+      selectedUsers = selectedUsers.filter(id => id !== selectedUser)
+      let newUsers = group.users.filter(user => user._id !== id)
+      group.users = newUsers
     } else {
       selectedUsers = [...selectedUsers, id]
+      group.users.push(enrichedUser)
     }
+    await groups.actions.save(group)
   }
-  onMount(() => {
-    console.log($users)
+
+  async function removeUser(id) {
+    let newUsers = group.users.filter(user => user._id !== id)
+    group.users = newUsers
+    await groups.actions.save(group)
+  }
+  onMount(async () => {
+    try {
+      await groups.actions.init()
+      await users.init()
+      await apps.load()
+    } catch (error) {
+      notifications.error("Error fetching User Group data")
+    }
   })
 </script>
 
@@ -66,13 +82,13 @@
   </div>
   <div class="header">
     <div class="title">
-      <div style="background: {group.color};" class="circle">
+      <div style="background: {group?.color};" class="circle">
         <div>
-          <Icon size="M" name={group.icon} />
+          <Icon size="M" name={group?.icon} />
         </div>
       </div>
       <div class="text-padding">
-        <Heading>{group.name}</Heading>
+        <Heading>{group?.name}</Heading>
       </div>
     </div>
     <div bind:this={popoverAnchor}>
@@ -90,7 +106,9 @@
             >
           </div>
           <div>
-            <ActionButton emphasized size="S">Add all</ActionButton>
+            <ActionButton on:click={addAll} emphasized size="S"
+              >Add all</ActionButton
+            >
           </div>
         </div>
         <Divider noMargin />
@@ -121,10 +139,39 @@
   </div>
 
   <div class="usersTable">
-    {#if groupUsers.length}
-      {#each groupUsers as user}
+    {#if group?.users.length}
+      {#each group.users as user}
         <div>
-          <UserRow {user} />
+          <UserRow {removeUser} {user} />
+        </div>
+      {/each}
+    {:else}
+      <div>
+        <div class="title header text-padding">
+          <Icon name="UserGroup" />
+          <div class="text-padding">
+            <Body size="S">You have no users in this team</Body>
+          </div>
+        </div>
+      </div>
+    {/if}
+  </div>
+  <div
+    style="flex-direction: column; margin-top: var(--spacing-m)"
+    class="title"
+  >
+    <Heading weight="light" size="XS">Apps</Heading>
+    <div style="margin-top: var(--spacing-xs)">
+      <Body size="S">Manage apps that this User group has been assigned to</Body
+      >
+    </div>
+  </div>
+
+  <div style="" class="usersTable">
+    {#if app_list.length}
+      {#each app_list as app}
+        <div>
+          <GroupAppsRow {app} />
         </div>
       {/each}
     {:else}

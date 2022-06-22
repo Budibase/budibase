@@ -170,7 +170,6 @@ exports.getUserGroupsParams = (groupId, otherProps = {}) => {
   }
 }
 
-
 /**
  * Generates a new role ID.
  * @returns {string} The new role ID which the role doc can be stored under.
