@@ -94,7 +94,7 @@ function generateSelectStatement(json: QueryJson, knex: Knex): any[] {
   const schema = meta?.table?.schema
   return resource.fields.map(field => {
     const shortFieldName = field.match(/(?<=\.).*$/g)?.[0]
-    if (shortFieldName) {
+    if (shortFieldName && knex.client.config.client === "pg") {
       const externalType = schema?.[shortFieldName].externalType
       if (externalType?.includes("money")) {
         const fieldName = field.split(/\./g)
