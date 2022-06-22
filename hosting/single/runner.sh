@@ -4,6 +4,10 @@ redis-server --requirepass $REDIS_PASSWORD &
 /docker-entrypoint.sh /opt/couchdb/bin/couchdb &
 /etc/init.d/nginx restart
 if [[ ! -z "${CUSTOM_DOMAIN}" ]]; then
+    # Add monthly cron job to renew certbot certificate
+    echo -n "* * 2 * * root exec /app/letsencrypt/certificate-renew.sh ${CUSTOM_DOMAIN}" >> /etc/cron.d/certificate-renew
+    chmod +x /etc/cron.d/certificate-renew
+    # Request the certbot certificate
     /app/letsencrypt/certificate-request.sh ${CUSTOM_DOMAIN}
 fi
 
