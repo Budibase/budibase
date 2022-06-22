@@ -20,7 +20,7 @@ RUN node /pinVersions.js && yarn && yarn build && /cleanup.sh
 
 FROM couchdb:3.2.1
 
-ARG TARGETARCH
+ARG TARGETARCH amd64
 
 COPY --from=build /app /app
 COPY --from=build /worker /worker
@@ -88,7 +88,8 @@ ADD hosting/single/vm.args ./etc/
 
 # setup minio
 WORKDIR /minio
-RUN wget https://dl.min.io/server/minio/release/linux-${TARGETARCH}/minio && chmod +x minio
+ADD scripts/install-minio.sh ./install.sh
+RUN chmod +x install.sh && ./install.sh
 
 # setup runner file
 WORKDIR /
