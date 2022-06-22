@@ -2,35 +2,34 @@
   import {
     Layout,
     Heading,
-    ColorPicker,
     Body,
     Button,
     Modal,
-    ModalContent,
-    Input,
     Tag,
     Tags,
-    IconPicker,
+    notifications,
   } from "@budibase/bbui"
-  import { API } from "api"
   import { groups } from "stores/portal"
   import { onMount } from "svelte"
+  import CreateEditGroupModal from "./_components/CreateEditGroupModal.svelte"
 
   import UserGroupsRow from "./_components/UserGroupsRow.svelte"
 
   let modal
-  let selectedColor
-  let selectedIcon
-  let groupName
+  let group = {}
   let proPlan = true
 
-  async function saveConfig() {
+  async function deleteGroup(group) {
     try {
-      API.saveGroup({
-        color: selectedColor,
-        icon: selectedIcon,
-        name: groupName,
-      })
+      groups.actions.delete(group)
+    } catch (error) {
+      notifications.error(`Failed to delete group`)
+    }
+  }
+
+  async function saveGroup(group) {
+    try {
+      await groups.actions.save(group)
     } catch (error) {
       notifications.error(`Failed to save group`)
     }
@@ -38,7 +37,7 @@
 
   onMount(async () => {
     try {
-      await groups.init()
+      await groups.actions.init()
     } catch (error) {
       notifications.error("Error getting User groups")
     }
@@ -81,56 +80,17 @@
   <div class="groupTable">
     {#each $groups as group}
       <div>
-        <UserGroupsRow {group} />
+        <UserGroupsRow {saveGroup} {deleteGroup} {group} />
       </div>
     {/each}
   </div>
 </Layout>
 
 <Modal bind:this={modal}>
-  <ModalContent
-    onConfirm={saveConfig}
-    size="M"
-    title="Create User Group"
-    confirmText="Save"
-  >
-    <Input bind:value={groupName} label="Team name" />
-    <div class="modal-format">
-      <div class="modal-inner">
-        <Body size="XS">Icon</Body>
-        <div class="modal-spacing">
-          <IconPicker bind:value={selectedIcon} />
-        </div>
-      </div>
-      <div class="modal-inner">
-        <Body size="XS">Color</Body>
-        <div class="modal-spacing">
-          <ColorPicker
-            bind:value={selectedColor}
-            on:change={e => (selectedColor = e.detail)}
-          />
-        </div>
-      </div>
-    </div>
-  </ModalContent>
+  <CreateEditGroupModal {group} {saveGroup} />
 </Modal>
 
 <style>
-  .modal-format {
-    display: flex;
-    justify-content: space-between;
-    width: 40%;
-  }
-
-  .modal-inner {
-    display: flex;
-    align-items: center;
-  }
-
-  .modal-spacing {
-    margin-left: var(--spacing-l);
-  }
-
   .align-buttons {
     display: flex;
     column-gap: var(--spacing-xl);

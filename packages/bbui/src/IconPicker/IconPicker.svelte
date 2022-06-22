@@ -4,6 +4,7 @@
   import clickOutside from "../Actions/click_outside"
   import { fly } from "svelte/transition"
   import Icon from "../Icon/Icon.svelte"
+  import { createEventDispatcher } from "svelte"
 
   export let value = "Anchor"
   export let size = "M"
@@ -11,7 +12,7 @@
 
   let open = false
 
-  // const dispatch = createEventDispatcher()
+  const dispatch = createEventDispatcher()
 
   const iconList = [
     {
@@ -44,12 +45,11 @@
       ],
     },
   ]
-  /*
+
   const onChange = value => {
     dispatch("change", value)
     open = false
   }
-*/
 </script>
 
 <div class="container">
@@ -76,7 +76,7 @@
             {#each icon.icons as icon}
               <div
                 on:click={() => {
-                  value = icon
+                  onChange(icon)
                 }}
               >
                 <Icon name={icon} />

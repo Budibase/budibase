@@ -1,50 +1,87 @@
 <script>
-  import { Button, Icon, Body } from "@budibase/bbui"
+  import {
+    Button,
+    Icon,
+    Body,
+    ActionMenu,
+    MenuItem,
+    Modal,
+  } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
+  import CreateEditGroupModal from "./CreateEditGroupModal.svelte"
 
   export let group
+  export let deleteGroup
+  export let saveGroup
+  let modal
 
-  let { icon, color, name, userCount, appCount } = group
+  function editGroup() {
+    modal.show()
+  }
 </script>
 
 <div class="title">
   <div class="name" style="display: flex; margin-left: var(--spacing-xl)">
-    <div style="background: {color};" class="circle">
+    <div style="background: {group.color};" class="circle">
       <div>
-        <Icon size="M" name={icon} />
+        <Icon size="M" name={group.icon} />
       </div>
     </div>
-    <div class="name" data-cy="app-name-link"><Body size="S">{name}</Body></div>
+    <div class="name" data-cy="app-name-link">
+      <Body size="S">{group.name}</Body>
+    </div>
   </div>
 </div>
 <div class="desktop tableElement">
   <Icon name="User" />
   <div style="margin-left: var(--spacing-l">
-    {parseInt(userCount)} user{parseInt(userCount) === 1 ? "" : "s"}
+    {parseInt(group.userCount) || 0} user{parseInt(group.userCount) === 1
+      ? ""
+      : "s"}
   </div>
 </div>
 <div class="desktop tableElement">
   <Icon name="WebPage" />
 
-  <div style="margin-left: var(--spacing-l">
-    {parseInt(appCount)} app{parseInt(appCount) === 1 ? "" : "s"}
+  <div style="margin-left: var(--spacing-l)">
+    {parseInt(group.appCount) || 0} app{parseInt(group.appCount) === 1
+      ? ""
+      : "s"}
   </div>
 </div>
 <div>
-  <div class="app-row-actions">
+  <div class="group-row-actions">
     <div>
       <Button on:click={() => $goto(`./${group._id}`)} size="S" cta
         >Manage</Button
       >
     </div>
+    <div class="">
+      <ActionMenu align="right">
+        <span slot="control">
+          <Icon hoverable name="More" />
+        </span>
+        <MenuItem on:click={() => deleteGroup(group)} icon="Delete"
+          >Delete</MenuItem
+        >
+        <MenuItem on:click={() => editGroup(group)} icon="Delete">Edit</MenuItem
+        >
+      </ActionMenu>
+    </div>
   </div>
 </div>
 
+<Modal bind:this={modal}>
+  <CreateEditGroupModal {group} {saveGroup} />
+</Modal>
+
 <style>
-  .app-row-actions {
+  .group-row-actions {
     display: flex;
     float: right;
     margin-right: var(--spacing-xl);
+    grid-template-columns: 75px 75px;
+    grid-gap: var(--spacing-xl);
   }
   .name {
     grid-gap: var(--spacing-xl);

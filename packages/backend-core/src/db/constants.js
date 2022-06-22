@@ -15,7 +15,7 @@ exports.DocumentTypes = {
   ROLE: "role",
   MIGRATIONS: "migrations",
   DEV_INFO: "devinfo",
-  GROUP: "gr"
+  GROUP: "gr",
 }
 
 exports.StaticDatabases = {

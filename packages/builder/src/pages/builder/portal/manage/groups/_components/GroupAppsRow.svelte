@@ -1,29 +1,30 @@
 <script>
-  import { Icon, Body, Avatar } from "@budibase/bbui"
+  import { Icon, Body, StatusLight } from "@budibase/bbui"
 
-  export let user
-  export let removeUser
-  $: console.log(user)
+  export let app
 </script>
 
 <div class="title">
   <div class="name" style="display: flex; margin-left: var(--spacing-xl)">
-    <div>
-      <Avatar size="L" initials="PC" />
+    <div class="app-icon" style="color: {app.icon?.color || ''}">
+      <Icon size="XL" name={app.icon?.name || "Apps"} />
     </div>
   </div>
 </div>
 <div class="desktop">
   <div style="display: flex; align-items: center;">
-    <Body size="M">{user.email}</Body>
+    <Body size="M">{app.name}</Body>
     <div style="opacity: 0.5; margin: var(--spacing-xs) 0 0 var(--spacing-m)">
-      <Body size="XS">{user.access}</Body>
+      <Body size="XS">{app.access}</Body>
     </div>
   </div>
 </div>
 <div class="desktop" />
-<div>
-  <Icon on:click={() => removeUser(user._id)} hoverable size="L" name="Close" />
+<div
+  style="display: flex; align-items: baseline;     margin-right: var(--spacing-xl);"
+>
+  <StatusLight purple />
+  <Body size="XS">{app.access}</Body>
 </div>
 
 <style>
