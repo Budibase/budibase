@@ -69,13 +69,10 @@ async function clearOldHistory() {
       const status = parts[parts.length - 1]
       return status === AutomationStatus.ERROR
     })
-    .map((doc: any) => {
-      const parts = doc.id.split(SEPARATOR)
-      return `${parts[parts.length - 3]}${SEPARATOR}${parts[parts.length - 2]}`
-    })
+    .map((doc: any) => doc.id)
   await db.bulkDocs(toDelete)
   if (errorLogIds.length) {
-    await updateAppMetadataWithErrors(errorLogIds)
+    await updateAppMetadataWithErrors(errorLogIds, { clearing: true })
   }
 }
 
@@ -150,25 +147,34 @@ async function getLogsByView(
 }
 
 async function updateAppMetadataWithErrors(
-  automationIds: string[],
+  logIds: string[],
   { clearing } = { clearing: false }
 ) {
   const db = getProdAppDB()
   // this will try multiple times with a delay between to update the metadata
   await backOff(async () => {
     const metadata = await db.get(DocumentTypes.APP_METADATA)
-    for (let automationId of automationIds) {
+    for (let logId of logIds) {
+      const parts = logId.split(SEPARATOR)
+      const autoId = `${parts[parts.length - 3]}${SEPARATOR}${
+        parts[parts.length - 2]
+      }`
       let errors: MetadataErrors = {}
       if (metadata.automationErrors) {
         errors = metadata.automationErrors as MetadataErrors
       }
-      const change = clearing ? -1 : 1
-      errors[automationId] = errors[automationId]
-        ? errors[automationId] + change
-        : 1
+      if (!Array.isArray(errors[autoId])) {
+        errors[autoId] = []
+      }
+      const idx = errors[autoId].indexOf(logId)
+      if (clearing && idx !== -1) {
+        errors[autoId].splice(idx, 1)
+      } else {
+        errors[autoId].push(logId)
+      }
       // if clearing and reach zero, this will pass and will remove the element
-      if (!errors[automationId]) {
-        delete errors[automationId]
+      if (errors[autoId].length === 0) {
+        delete errors[autoId]
       }
       metadata.automationErrors = errors
     }
@@ -204,7 +210,7 @@ export async function storeLog(
 
   // need to note on the app metadata that there is an error, store what the error is
   if (status === AutomationStatus.ERROR) {
-    await updateAppMetadataWithErrors([automation._id as string])
+    await updateAppMetadataWithErrors([id])
   }
 
   // clear up old logging for app

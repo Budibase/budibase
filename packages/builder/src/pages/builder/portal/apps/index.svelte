@@ -96,27 +96,30 @@
     const automationErrors = {}
     for (let app of apps) {
       if (app.automationErrors) {
-        automationErrors[app.devId] = app.automationErrors
+        if (errorCount(app.automationErrors) > 0) {
+          automationErrors[app.devId] = app.automationErrors
+        }
       }
     }
     return automationErrors
   }
 
   const goToAutomationError = appId => {
-    const params = new URLSearchParams({ tab: "Automation History" })
+    const params = new URLSearchParams({
+      tab: "Automation History",
+      open: "error",
+    })
     $goto(`../overview/${appId}?${params.toString()}`)
   }
 
-  const errorCount = appId => {
-    return Object.values(automationErrors[appId]).reduce(
-      (prev, next) => prev + next,
-      0
-    )
+  const errorCount = errors => {
+    return Object.values(errors).reduce((acc, next) => acc + next.length, 0)
   }
 
   const automationErrorMessage = appId => {
     const app = enrichedApps.find(app => app.devId === appId)
-    return `${app.name} - Automation error (${errorCount(appId)})`
+    const errors = automationErrors[appId]
+    return `${app.name} - Automation error (${errorCount(errors)})`
   }
 
   const initiateAppCreation = () => {
@@ -238,19 +241,23 @@
 <Page wide>
   <Layout noPadding gap="M">
     {#if loaded}
-      {#if automationErrors}
-        {#each Object.keys(automationErrors) as appId}
-          <Notification
-            wide
-            dismissable
-            action={() => goToAutomationError(appId)}
-            type="error"
-            icon="Alert"
-            actionMessage={errorCount(appId) > 1 ? "View errors" : "View error"}
-            message={automationErrorMessage(appId)}
-          />
-        {/each}
-      {/if}
+      {#each Object.keys(automationErrors || {}) as appId}
+        <Notification
+          wide
+          dismissable
+          action={() => goToAutomationError(appId)}
+          type="error"
+          icon="Alert"
+          actionMessage={errorCount(automationErrors[appId]) > 1
+            ? "View errors"
+            : "View error"}
+          on:dismiss={async () => {
+            await automationStore.actions.clearLogErrors({ appId })
+            await apps.load()
+          }}
+          message={automationErrorMessage(appId)}
+        />
+      {/each}
       <div class="title">
         <div class="welcome">
           <Layout noPadding gap="XS">

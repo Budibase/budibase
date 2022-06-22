@@ -396,8 +396,9 @@ exports.getAutomationLogParams = (
   }
   return {
     ...otherProps,
-    startkey: `${base}${startDate}`,
-    endkey: `${base}${endDate}${UNICODE_MAX}`,
+    descending: true,
+    startkey: `${base}${endDate}${UNICODE_MAX}`,
+    endkey: `${base}${startDate}`,
   }
 }
 

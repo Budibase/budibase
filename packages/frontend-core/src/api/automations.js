@@ -78,6 +78,8 @@ export const buildAutomationEndpoints = API => ({
    * Get the logs for the app, or by automation ID.
    * @param automationId The ID of the automation to get logs for.
    * @param startDate An ISO date string to state the start of the date range.
+   * @param status The status, error or success.
+   * @param page The page to retrieve.
    */
   getAutomationLogs: async ({ automationId, startDate, status, page }) => {
     return await API.post({
@@ -87,6 +89,22 @@ export const buildAutomationEndpoints = API => ({
         startDate,
         status,
         page,
+      },
+    })
+  },
+
+  /**
+   * Clears automation log errors (which are creating notification) for
+   * automation or the app.
+   * @param automationId optional - the ID of the automation to clear errors for.
+   * @param appId The app ID to clear errors for.
+   */
+  clearAutomationLogErrors: async ({ automationId, appId }) => {
+    return await API.delete({
+      url: "/api/automations/logs",
+      body: {
+        appId,
+        automationId,
       },
     })
   },

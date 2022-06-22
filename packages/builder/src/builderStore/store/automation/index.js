@@ -129,7 +129,12 @@ const automationActions = store => ({
       page,
     })
   },
-  clearLogErrors: async () => {},
+  clearLogErrors: async ({ automationId, appId } = {}) => {
+    return await API.clearAutomationLogErrors({
+      automationId,
+      appId,
+    })
+  },
   addTestDataToAutomation: data => {
     store.update(state => {
       state.selectedAutomation.addTestData(data)
@@ -138,11 +143,10 @@ const automationActions = store => ({
   },
   addBlockToAutomation: (block, blockIdx) => {
     store.update(state => {
-      const newBlock = state.selectedAutomation.addBlock(
+      state.selectedBlock = state.selectedAutomation.addBlock(
         cloneDeep(block),
         blockIdx
       )
-      state.selectedBlock = newBlock
       return state
     })
   },

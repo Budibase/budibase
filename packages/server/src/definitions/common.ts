@@ -105,4 +105,4 @@ export interface Automation extends Base {
   }
 }
 
-export type MetadataErrors = { [key: string]: number }
+export type MetadataErrors = { [key: string]: string[] }
