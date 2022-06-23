@@ -21,11 +21,11 @@ function makeCacheItem(value: any, lastWrite: number | null = null): CacheItem {
   return { value, lastWrite: lastWrite || Date.now() }
 }
 
-exports.put = async (
+export async function put(
   db: PouchDB.Database,
   value: any,
   writeRateMs: number = DEFAULT_WRITE_RATE_MS
-) => {
+) {
   const cache = await getCache()
   const key = value._id
   let cacheItem: CacheItem | undefined = await cache.get(key)
@@ -46,7 +46,7 @@ exports.put = async (
   return output
 }
 
-exports.get = async (db: PouchDB.Database, id: string): Promise<any> => {
+export async function get(db: PouchDB.Database, id: string): Promise<any> {
   const cache = await getCache()
   let cacheItem: CacheItem = await cache.get(id)
   if (!cacheItem) {
@@ -55,4 +55,19 @@ exports.get = async (db: PouchDB.Database, id: string): Promise<any> => {
     await cache.store(id, cacheItem)
   }
   return cacheItem.value
+}
+
+export class Writethrough {
+  db: PouchDB.Database
+  constructor(db: PouchDB.Database) {
+    this.db = db
+  }
+
+  async put(value: any, writeRateMs: number = DEFAULT_WRITE_RATE_MS) {
+    return put(this.db, value, writeRateMs)
+  }
+
+  async get(id: string) {
+    return get(this.db, id)
+  }
 }
