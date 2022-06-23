@@ -1,7 +1,7 @@
 FROM node:14-slim as build
 
 # install node-gyp dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends g++ make python
+RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends apt-utils cron g++ make python
 
 # add pin script
 WORKDIR /
@@ -25,28 +25,31 @@ ARG TARGETARCH amd64
 COPY --from=build /app /app
 COPY --from=build /worker /worker
 
-ENV DEPLOYMENT_ENVIRONMENT=docker \
-  POSTHOG_TOKEN=phc_fg5I3nDOf6oJVMHSaycEhpPdlgS8rzXG2r6F2IpxCHS \
+ENV \
+  APP_PORT=4001 \
+  ARCHITECTURE=amd \
+  BUDIBASE_ENVIRONMENT=PRODUCTION \
+  CLUSTER_PORT=80 \
   COUCHDB_PASSWORD=budibase \
   COUCHDB_USER=budibase \
   COUCH_DB_URL=http://budibase:budibase@localhost:5984 \
-  BUDIBASE_ENVIRONMENT=PRODUCTION \
-  MINIO_URL=http://localhost:9000 \
-  REDIS_URL=localhost:6379 \
-  WORKER_URL=http://localhost:4002 \
+  CUSTOM_DOMAIN=budi001.custom.com \
+  DEPLOYMENT_ENVIRONMENT=docker \
   INTERNAL_API_KEY=budibase \
   JWT_SECRET=testsecret \
   MINIO_ACCESS_KEY=budibase \
   MINIO_SECRET_KEY=budibase \
-  SELF_HOSTED=1 \
-  CLUSTER_PORT=10000 \
+  MINIO_URL=http://localhost:9000 \
+  POSTHOG_TOKEN=phc_fg5I3nDOf6oJVMHSaycEhpPdlgS8rzXG2r6F2IpxCHS \
   REDIS_PASSWORD=budibase \
-  APP_PORT=4001 \
-  WORKER_PORT=4002
+  REDIS_URL=localhost:6379 \
+  SELF_HOSTED=1 \
+  WORKER_PORT=4002 \
+  WORKER_URL=http://localhost:4002
 
 # install base dependencies
 RUN apt-get update && \
-  apt-get install software-properties-common wget -y && \
+  apt-get install -y software-properties-common wget nginx && \
   apt-add-repository 'deb http://security.debian.org/debian-security stretch/updates main' && \
   apt-get update
 
@@ -54,15 +57,14 @@ RUN apt-get update && \
 WORKDIR /nodejs
 RUN curl -sL https://deb.nodesource.com/setup_16.x -o /tmp/nodesource_setup.sh && \
   bash /tmp/nodesource_setup.sh && \
-  apt-get install libaio1 nodejs nginx openjdk-8-jdk redis-server unzip -y && \
+  apt-get install -y libaio1 nodejs nginx openjdk-8-jdk redis-server unzip && \
   npm install --global yarn pm2
 
 # setup nginx
 ADD hosting/single/nginx.conf /etc/nginx
-RUN mkdir /etc/nginx/logs && \
-  useradd www && \
-  touch /etc/nginx/logs/error.log && \
-  touch /etc/nginx/logs/nginx.pid
+RUN mkdir -p /var/log/nginx && \
+  touch /var/log/nginx/error.log && \
+  touch /var/run/nginx.pid
 
 WORKDIR /
 RUN mkdir -p scripts/integrations/oracle
@@ -95,13 +97,33 @@ RUN chmod +x install.sh && ./install.sh
 WORKDIR /
 ADD hosting/single/runner.sh .
 RUN chmod +x ./runner.sh
+ADD hosting/scripts/healthcheck.sh .
+RUN chmod +x ./healthcheck.sh
 
 # cleanup cache
 RUN yarn cache clean -f
 
-EXPOSE 10000
+EXPOSE 80
+EXPOSE 443
 VOLUME /opt/couchdb/data
 VOLUME /minio
+
+#  setup letsencrypt certificate
+RUN apt-get install -y certbot python3-certbot-nginx
+ADD hosting/letsencrypt /app/letsencrypt
+RUN chmod +x /app/letsencrypt/certificate-request.sh /app/letsencrypt/certificate-renew.sh
+# Remove cached files
+RUN rm -rf \
+  /root/.cache \
+  /root/.npm \
+  /root/.pip \
+  /usr/local/share/doc \
+  /usr/share/doc \
+  /usr/share/man \
+  /var/lib/apt/lists/* \
+  /tmp/*
+
+HEALTHCHECK --interval=15s --timeout=15s --start-period=45s CMD "/healthcheck.sh"
 
 # must set this just before running
 ENV NODE_ENV=production
