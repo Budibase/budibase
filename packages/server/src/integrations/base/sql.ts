@@ -89,7 +89,10 @@ function parseFilters(filters: SearchFilters | undefined): SearchFilters {
   return filters
 }
 
-function generateSelectStatement(json: QueryJson, knex: Knex): any[] {
+function generateSelectStatement(
+  json: QueryJson,
+  knex: Knex
+): (string | Knex.Raw)[] {
   const { resource, meta } = json
   const schema = meta?.table?.schema
   return resource.fields.map(field => {
@@ -235,9 +238,7 @@ class InternalBuilder {
   }
 
   addRelationships(
-    knex: Knex,
     query: KnexQuery,
-    fields: string | string[],
     fromTable: string,
     relationships: RelationshipsJson[] | undefined
   ): KnexQuery {
@@ -342,7 +343,7 @@ class InternalBuilder {
     if (!resource) {
       resource = { fields: [] }
     }
-    let selectStatement: string | any[] = "*"
+    let selectStatement: string | (string | Knex.Raw)[] = "*"
     // handle select
     if (resource.fields && resource.fields.length > 0) {
       // select the resources as the format "table.columnName" - this is what is provided
@@ -382,13 +383,7 @@ class InternalBuilder {
       preQuery = this.addSorting(preQuery, json)
     }
     // handle joins
-    query = this.addRelationships(
-      knex,
-      preQuery,
-      selectStatement,
-      tableName,
-      relationships
-    )
+    query = this.addRelationships(preQuery, tableName, relationships)
     return this.addFilters(query, filters, { relationship: true })
   }
 
