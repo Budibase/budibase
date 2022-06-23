@@ -4,6 +4,7 @@ const ScriptRunner = require("../utilities/scriptRunner")
 const { integrations } = require("../integrations")
 const { processStringSync } = require("@budibase/string-templates")
 const { doInAppContext, getAppDB } = require("@budibase/backend-core/context")
+// const { reUpToken } = require("@budibase/backend-core/auth")
 const { isSQL } = require("../integrations/utils")
 const {
   enrichQueryFields,
@@ -30,6 +31,11 @@ class QueryRunner {
 
   async execute() {
     let { datasource, fields, queryVerb, transformer } = this
+
+    // if(this.ctx.user.oauth2?.refreshToken){
+    //   reUpToken(this.ctx.user.oauth2?.refreshToken)
+    // }
+
     const Integration = integrations[datasource.source]
     if (!Integration) {
       throw "Integration type does not exist."
@@ -79,6 +85,7 @@ class QueryRunner {
       this.cachedVariables.length > 0 &&
       !this.hasRerun
     ) {
+      // return { info }
       this.hasRerun = true
       // invalidate the cache value
       await threadUtils.invalidateDynamicVariables(this.cachedVariables)
