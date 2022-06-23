@@ -33,7 +33,7 @@ ENV \
   COUCHDB_PASSWORD=budibase \
   COUCHDB_USER=budibase \
   COUCH_DB_URL=http://budibase:budibase@localhost:5984 \
-  CUSTOM_DOMAIN=budi001.custom.com \
+  # CUSTOM_DOMAIN=budi001.custom.com \
   DEPLOYMENT_ENVIRONMENT=docker \
   INTERNAL_API_KEY=budibase \
   JWT_SECRET=testsecret \
@@ -62,6 +62,7 @@ RUN curl -sL https://deb.nodesource.com/setup_16.x -o /tmp/nodesource_setup.sh &
 
 # setup nginx
 ADD hosting/single/nginx.conf /etc/nginx
+ADD hosting/single/default /etc/nginx/sites-enabled
 RUN mkdir -p /var/log/nginx && \
   touch /var/log/nginx/error.log && \
   touch /var/run/nginx.pid
