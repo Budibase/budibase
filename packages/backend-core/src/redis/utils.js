@@ -19,6 +19,26 @@ exports.Databases = {
   QUERY_VARS: "queryVars",
   LICENSES: "license",
   GENERIC_CACHE: "data_cache",
+  WRITE_THROUGH: "writeThrough",
+}
+
+exports.SelectableDatabases = {
+  DEFAULT: 0,
+  WRITE_THROUGH: 1,
+  UNUSED_1: 2,
+  UNUSED_2: 3,
+  UNUSED_3: 4,
+  UNUSED_4: 5,
+  UNUSED_5: 6,
+  UNUSED_6: 7,
+  UNUSED_7: 8,
+  UNUSED_8: 9,
+  UNUSED_9: 10,
+  UNUSED_10: 11,
+  UNUSED_11: 12,
+  UNUSED_12: 13,
+  UNUSED_13: 14,
+  UNUSED_14: 15,
 }
 
 exports.SEPARATOR = SEPARATOR
