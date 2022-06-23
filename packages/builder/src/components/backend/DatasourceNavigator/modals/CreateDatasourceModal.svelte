@@ -5,12 +5,14 @@
     Body,
     Layout,
     Detail,
+    Label,
+    Heading,
     notifications,
   } from "@budibase/bbui"
   import { onMount } from "svelte"
   import ICONS from "../icons"
   import { API } from "api"
-  import { IntegrationNames, IntegrationTypes } from "constants/backend"
+  import { IntegrationTypes } from "constants/backend"
   import CreateTableModal from "components/backend/TableNavigator/modals/CreateTableModal.svelte"
   import DatasourceConfigModal from "components/backend/DatasourceNavigator/modals/DatasourceConfigModal.svelte"
   import GoogleDatasourceConfigModal from "components/backend/DatasourceNavigator/modals/GoogleDatasourceConfigModal.svelte"
@@ -118,7 +120,7 @@
 <Modal bind:this={modal}>
   <ModalContent
     disabled={!Object.keys(integration).length}
-    title="Data"
+    title="Add data source"
     confirmText="Continue"
     showSecondaryButton={showImportButton}
     secondaryButtonText="Import"
@@ -129,62 +131,58 @@
       chooseNextModal()
     }}
   >
-    <Layout noPadding>
-      <Body size="S"
-        >All apps need data. You can connect to a data source below, or add data
-        to your app using Budibase's built-in database.
-      </Body>
-      <div
-        class:selected={integration.type === IntegrationTypes.INTERNAL}
-        on:click={() => selectIntegration(IntegrationTypes.INTERNAL)}
-        class="item hoverable"
-      >
-        <div class="item-body">
-          <svelte:component this={ICONS.BUDIBASE} height="18" width="18" />
-          <span class="icon-spacing"> <Body size="S">Budibase DB</Body></span>
-        </div>
-      </div>
-    </Layout>
-
-    <Layout gap="XS" noPadding>
-      <div class="title-spacing">
-        <Detail size="S">Connect to data source</Detail>
-      </div>
-      <div class="item-list">
-        {#each Object.entries(integrations).filter(([key]) => key !== IntegrationTypes.INTERNAL) as [integrationType, schema]}
-          <div
-            class:selected={integration.type === integrationType}
-            on:click={() => selectIntegration(integrationType)}
-            class="item hoverable"
-          >
-            <div class="item-body">
-              <svelte:component
-                this={ICONS[integrationType]}
-                height="18"
-                width="18"
-              />
-
-              <span class="icon-spacing">
-                <Body size="S"
-                  >{schema.name || IntegrationNames[integrationType]}</Body
-                ></span
-              >
+    <Layout noPadding gap="M">
+      <Layout noPadding>
+        <Body size="S">
+          All apps need data. You can connect to a data source below, or add
+          data to your app using Budibase's built-in database.
+        </Body>
+        <div
+          class:selected={integration.type === IntegrationTypes.INTERNAL}
+          on:click={() => selectIntegration(IntegrationTypes.INTERNAL)}
+          class="item hoverable"
+        >
+          <div class="item-body with-type">
+            <svelte:component this={ICONS.BUDIBASE} height="20" width="20" />
+            <div class="text">
+              <div class="name">Budibase DB</div>
+              <div class="type">Non-relational</div>
             </div>
           </div>
-        {/each}
-      </div>
+        </div>
+      </Layout>
+
+      <Layout gap="XS" noPadding>
+        <div class="type">Connect to data source</div>
+        <div class="item-list">
+          {#each Object.entries(integrations).filter(([key]) => key !== IntegrationTypes.INTERNAL) as [integrationType, schema]}
+            <div
+              class:selected={integration.type === integrationType}
+              on:click={() => selectIntegration(integrationType)}
+              class="item hoverable"
+            >
+              <div class="item-body" class:with-type={!!schema.type}>
+                <svelte:component
+                  this={ICONS[integrationType]}
+                  height="20"
+                  width="20"
+                />
+                <div class="text">
+                  <div class="name">{schema.friendlyName}</div>
+                  {#if schema.type}
+                    <div class="type">{schema.type || ""}</div>
+                  {/if}
+                </div>
+              </div>
+            </div>
+          {/each}
+        </div>
+      </Layout>
     </Layout>
   </ModalContent>
 </Modal>
 
 <style>
-  .icon-spacing {
-    margin-left: var(--spacing-m);
-  }
-  .item-body {
-    display: flex;
-    margin-left: var(--spacing-m);
-  }
   .item-list {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -195,21 +193,43 @@
     cursor: pointer;
     display: grid;
     grid-gap: var(--spectrum-alias-grid-margin-xsmall);
-    padding: var(--spectrum-alias-item-padding-s);
+    padding: var(--spectrum-alias-item-padding-s)
+      var(--spectrum-alias-item-padding-m);
     background: var(--spectrum-alias-background-color-secondary);
-    transition: 0.3s all;
+    transition: background 0.13s ease-out;
     border: solid var(--spectrum-alias-border-color);
     border-radius: 5px;
     box-sizing: border-box;
     border-width: 2px;
   }
-
-  .selected {
+  .item:hover,
+  .item.selected {
     background: var(--spectrum-alias-background-color-tertiary);
   }
 
-  .item:hover,
-  .selected {
-    background: var(--spectrum-alias-background-color-tertiary);
+  .item-body {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    gap: var(--spacing-m);
+  }
+  .item-body.with-type {
+    align-items: flex-start;
+  }
+  .item-body.with-type :global(svg) {
+    margin-top: 4px;
+  }
+
+  .name {
+    color: var(--spectrum-global-color-gray-900);
+    font-weight: 600;
+  }
+  .type {
+    font-weight: 600;
+    margin-top: 4px;
+    text-transform: uppercase;
+    font-size: 11px;
+    color: var(--spectrum-global-color-gray-700);
   }
 </style>
