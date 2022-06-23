@@ -5,7 +5,6 @@
     Body,
     Layout,
     Detail,
-    Label,
     Heading,
     notifications,
   } from "@budibase/bbui"
