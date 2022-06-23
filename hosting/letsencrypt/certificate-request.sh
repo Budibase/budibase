@@ -10,7 +10,6 @@ certbot certonly --webroot --webroot-path="/var/www/html" \
 
 if (($? != 0)); then
     echo "ERROR: certbot request failed for $CUSTOM_DOMAIN use http on port 80 - exiting"
-    nginx -s stop
     exit 1
 else
     cp /app/letsencrypt/options-ssl-nginx.conf /etc/letsencrypt/options-ssl-nginx.conf
@@ -20,5 +19,5 @@ else
     ln -s /etc/nginx/sites-available/nginx-ssl.conf /etc/nginx/sites-enabled/nginx-ssl.conf
 
     echo "INFO: restart nginx after certbot request"
-    nginx -s reload
+    /etc/init.d/nginx restart
 fi
