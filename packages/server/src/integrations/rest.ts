@@ -64,6 +64,7 @@ module RestModule {
     description:
       "With the REST API datasource, you can connect, query and pull data from multiple REST APIs. You can then use the retrieved data to build apps.",
     friendlyName: "REST API",
+    type: "API",
     datasource: {
       url: {
         type: DatasourceFieldTypes.STRING,
