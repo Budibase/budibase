@@ -8,6 +8,8 @@ import { QUERY_THREAD_TIMEOUT } from "../../../environment"
 import { getAppDB } from "@budibase/backend-core/context"
 import { quotas } from "@budibase/pro"
 import { events } from "@budibase/backend-core"
+import { getCookie } from "@budibase/backend-core/utils"
+import { Cookies } from "@budibase/backend-core/constants"
 
 const Runner = new Thread(ThreadType.QUERY, {
   timeoutMs: QUERY_THREAD_TIMEOUT || 10000,
@@ -119,6 +121,10 @@ export async function preview(ctx: any) {
   // this stops dynamic variables from calling the same query
   const { fields, parameters, queryVerb, transformer, queryId } = query
 
+  //check for oAuth elements here?
+  const configId = getCookie(ctx, Cookies.OIDC_CONFIG)
+  console.log(configId)
+
   try {
     const runFn = () =>
       Runner.run({
@@ -130,7 +136,6 @@ export async function preview(ctx: any) {
         transformer,
         queryId,
       })
-
     const { rows, keys, info, extra } = await quotas.addQuery(runFn)
     await events.query.previewed(datasource, query)
     ctx.body = {

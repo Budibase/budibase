@@ -1,6 +1,7 @@
 const fetch = require("node-fetch")
 const OIDCStrategy = require("@techpass/passport-openidconnect").Strategy
 const { authenticateThirdParty } = require("./third-party-common")
+const { ssoCallbackUrl } = require("./utils")
 
 const buildVerifyFn = saveUserFn => {
   /**
@@ -89,11 +90,22 @@ function validEmail(value) {
  * from couchDB rather than environment variables, using this factory is necessary for dynamically configuring passport.
  * @returns Dynamically configured Passport OIDC Strategy
  */
-exports.strategyFactory = async function (config, callbackUrl, saveUserFn) {
+exports.strategyFactory = async function (config, saveUserFn) {
+  try {
+    const verify = buildVerifyFn(saveUserFn)
+    return new OIDCStrategy(config, verify)
+  } catch (err) {
+    console.error(err)
+    throw new Error("Error constructing OIDC authentication strategy", err)
+  }
+}
+
+export const fetchOIDCStrategyConfig = async (config, callbackUrl) => {
   try {
     const { clientID, clientSecret, configUrl } = config
 
     if (!clientID || !clientSecret || !callbackUrl || !configUrl) {
+      //check for remote config and all required elements
       throw new Error(
         "Configuration invalid. Must contain clientID, clientSecret, callbackUrl and configUrl"
       )
@@ -109,23 +121,23 @@ exports.strategyFactory = async function (config, callbackUrl, saveUserFn) {
 
     const body = await response.json()
 
-    const verify = buildVerifyFn(saveUserFn)
-    return new OIDCStrategy(
-      {
-        issuer: body.issuer,
-        authorizationURL: body.authorization_endpoint,
-        tokenURL: body.token_endpoint,
-        userInfoURL: body.userinfo_endpoint,
-        clientID: clientID,
-        clientSecret: clientSecret,
-        callbackURL: callbackUrl,
-      },
-      verify
-    )
+    return {
+      issuer: body.issuer,
+      authorizationURL: body.authorization_endpoint,
+      tokenURL: body.token_endpoint,
+      userInfoURL: body.userinfo_endpoint,
+      clientID: clientID,
+      clientSecret: clientSecret,
+      callbackURL: callbackUrl,
+    }
   } catch (err) {
     console.error(err)
-    throw new Error("Error constructing OIDC authentication strategy", err)
+    throw new Error("Error constructing OIDC authentication configuration", err)
   }
+}
+
+export const oidcCallbackUrl = async (db, config) => {
+  return ssoCallbackUrl(db, config, "oidc")
 }
 
 // expose for testing

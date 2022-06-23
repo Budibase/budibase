@@ -224,7 +224,7 @@ export const googleAuth = async (ctx: any, next: any) => {
   )(ctx, next)
 }
 
-async function oidcStrategyFactory(ctx: any, configId: any) {
+export const oidcStrategyFactory = async (ctx: any, configId: any) => {
   const db = getGlobalDB()
   const config = await core.db.getScopedConfig(db, {
     type: Configs.OIDC,
@@ -234,7 +234,12 @@ async function oidcStrategyFactory(ctx: any, configId: any) {
   const chosenConfig = config.configs.filter((c: any) => c.uuid === configId)[0]
   let callbackUrl = await exports.oidcCallbackUrl(chosenConfig)
 
-  return oidc.strategyFactory(chosenConfig, callbackUrl, users.save)
+  //Remote Config
+  const enrichedConfig = await oidc.fetchOIDCStrategyConfig(
+    chosenConfig,
+    callbackUrl
+  )
+  return oidc.strategyFactory(enrichedConfig, users.save)
 }
 
 /**
@@ -249,7 +254,7 @@ export const oidcPreAuth = async (ctx: any, next: any) => {
 
   return passport.authenticate(strategy, {
     // required 'openid' scope is added by oidc strategy factory
-    scope: ["profile", "email"],
+    scope: ["profile", "email", "offline_access"], //auth0 offline_access scope required for the refresh token behaviour.
   })(ctx, next)
 }
 
