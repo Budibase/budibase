@@ -16,6 +16,7 @@ module CouchDBModule {
   const SCHEMA: Integration = {
     docs: "https://docs.couchdb.org/en/stable/",
     friendlyName: "CouchDB",
+    type: "Non-relational",
     description:
       "Apache CouchDB is an open-source document-oriented NoSQL database, implemented in Erlang.",
     datasource: {
