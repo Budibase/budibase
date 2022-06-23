@@ -93,13 +93,14 @@ function generateSelectStatement(json: QueryJson, knex: Knex): any[] {
   const { resource, meta } = json
   const schema = meta?.table?.schema
   return resource.fields.map(field => {
-    const shortFieldName = field.match(/(?<=\.).*$/g)?.[0]
-    if (shortFieldName && knex.client.config.client === "pg") {
-      const externalType = schema?.[shortFieldName].externalType
+    const fieldNames = field.split(/\./g)
+    const tableName = fieldNames[0]
+    const columnName = fieldNames[1]
+    if (columnName && knex.client.config.client === SqlClients.POSTGRES) {
+      const externalType = schema?.[columnName].externalType
       if (externalType?.includes("money")) {
-        const fieldName = field.split(/\./g)
         return knex.raw(
-          `"${fieldName?.[0]}"."${fieldName?.[1]}"::money::numeric as "${field}"`
+          `"${tableName}"."${columnName}"::money::numeric as "${field}"`
         )
       }
     }
