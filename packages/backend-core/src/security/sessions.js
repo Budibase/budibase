@@ -1,4 +1,4 @@
-const redis = require("../redis/authRedis")
+const redis = require("../redis/init")
 const { v4: uuidv4 } = require("uuid")
 
 // a week in seconds
