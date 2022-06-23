@@ -190,6 +190,21 @@ yarn mode:account
 ```
 ### CI
  An overview of the CI pipelines can be found [here](./workflows/README.md)
+
+### Pro
+
+@budibase/pro is the closed source package that supports licensed features in budibase. By default the package will be pulled from NPM and will not normally need to be touched in local development. If you require to update code inside the pro package it can be cloned to the same root level as budibase, e.g. 
+
+```
+.
+|_ budibase
+|_ budibase-pro
+```
+
+Note that only budibase maintainers will be able to access the pro repo. 
+
+The `yarn bootstrap` command can be used to replace the NPM supplied dependency with the local source aware version. This is achieved using the `yarn link` command. To see specifically how dependencies are linked see [scripts/link-dependencies.sh](../scripts/link-dependencies.sh). The same link script is used to link dependencies to account-portal in local dev. 
+
 ### Troubleshooting
 
 Sometimes, things go wrong. This can be due to incompatible updates on the budibase platform. To clear down your development environment and start again follow **Step 6. Cleanup**, then proceed from **Step 3. Install and Build** in the setup guide above to create a fresh Budibase installation.
