@@ -131,53 +131,48 @@
       chooseNextModal()
     }}
   >
-    <Layout noPadding gap="M">
-      <Layout noPadding>
-        <Body size="S">
-          All apps need data. You can connect to a data source below, or add
-          data to your app using Budibase's built-in database.
-        </Body>
-        <div
-          class:selected={integration.type === IntegrationTypes.INTERNAL}
-          on:click={() => selectIntegration(IntegrationTypes.INTERNAL)}
-          class="item hoverable"
-        >
-          <div class="item-body with-type">
-            <svelte:component this={ICONS.BUDIBASE} height="20" width="20" />
-            <div class="text">
-              <div class="name">Budibase DB</div>
-              <div class="type">Non-relational</div>
-            </div>
+    <Layout noPadding gap="XS">
+      <Body size="S">Get started with Budibase DB</Body>
+      <div
+        class:selected={integration.type === IntegrationTypes.INTERNAL}
+        on:click={() => selectIntegration(IntegrationTypes.INTERNAL)}
+        class="item hoverable"
+      >
+        <div class="item-body with-type">
+          <svelte:component this={ICONS.BUDIBASE} height="20" width="20" />
+          <div class="text">
+            <Heading size="XXS">Budibase DB</Heading>
+            <Detail size="S" class="type">Non-relational</Detail>
           </div>
         </div>
-      </Layout>
+      </div>
+    </Layout>
 
-      <Layout gap="XS" noPadding>
-        <div class="type">Connect to data source</div>
-        <div class="item-list">
-          {#each Object.entries(integrations).filter(([key]) => key !== IntegrationTypes.INTERNAL) as [integrationType, schema]}
-            <div
-              class:selected={integration.type === integrationType}
-              on:click={() => selectIntegration(integrationType)}
-              class="item hoverable"
-            >
-              <div class="item-body" class:with-type={!!schema.type}>
-                <svelte:component
-                  this={ICONS[integrationType]}
-                  height="20"
-                  width="20"
-                />
-                <div class="text">
-                  <div class="name">{schema.friendlyName}</div>
-                  {#if schema.type}
-                    <div class="type">{schema.type || ""}</div>
-                  {/if}
-                </div>
+    <Layout noPadding gap="XS">
+      <Body size="S">Connect to an external data source</Body>
+      <div class="item-list">
+        {#each Object.entries(integrations).filter(([key]) => key !== IntegrationTypes.INTERNAL) as [integrationType, schema]}
+          <div
+            class:selected={integration.type === integrationType}
+            on:click={() => selectIntegration(integrationType)}
+            class="item hoverable"
+          >
+            <div class="item-body" class:with-type={!!schema.type}>
+              <svelte:component
+                this={ICONS[integrationType]}
+                height="20"
+                width="20"
+              />
+              <div class="text">
+                <Heading size="XXS">{schema.friendlyName}</Heading>
+                {#if schema.type}
+                  <Detail size="S">{schema.type || ""}</Detail>
+                {/if}
               </div>
             </div>
-          {/each}
-        </div>
-      </Layout>
+          </div>
+        {/each}
+      </div>
     </Layout>
   </ModalContent>
 </Modal>
@@ -221,15 +216,7 @@
     margin-top: 4px;
   }
 
-  .name {
-    color: var(--spectrum-global-color-gray-900);
-    font-weight: 600;
-  }
-  .type {
-    font-weight: 600;
-    margin-top: 4px;
-    text-transform: uppercase;
-    font-size: 11px;
+  .text :global(.spectrum-Detail) {
     color: var(--spectrum-global-color-gray-700);
   }
 </style>
