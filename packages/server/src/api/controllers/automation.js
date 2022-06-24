@@ -1,6 +1,6 @@
 const actions = require("../../automations/actions")
 const triggers = require("../../automations/triggers")
-const { getLogs, oneDayAgo } = require("../../automations/logging")
+const { getLogs, oneMonthAgo } = require("../../automations/logging")
 const {
   getAutomationParams,
   generateAutomationID,
@@ -194,10 +194,11 @@ exports.destroy = async function (ctx) {
 }
 
 exports.logSearch = async function (ctx) {
-  const { automationId, status, page } = ctx.request.body
-  // TODO: check if there is a date range in the search params
-  // also check the date range vs their license, see if it is allowed
-  const startDate = oneDayAgo()
+  let { automationId, status, page, startDate } = ctx.request.body
+  // TODO: need to check maximum allowed in license
+  if (!startDate) {
+    startDate = oneMonthAgo()
+  }
   ctx.body = await getLogs(startDate, status, automationId, page)
 }
 

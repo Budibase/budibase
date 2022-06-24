@@ -5,6 +5,7 @@
   import HistoryDetailsPanel from "./HistoryDetailsPanel.svelte"
   import { automationStore } from "builderStore"
   import { onMount } from "svelte"
+  import dayjs from "dayjs"
 
   const ERROR = "error",
     SUCCESS = "success"
@@ -23,14 +24,14 @@
     hasNextPage,
     pageNumber = 1
 
-  $: fetchLogs(automationId, status, page)
+  $: fetchLogs(automationId, status, page, timeRange)
 
   const timeOptions = [
-    { value: "1w", label: "Past week" },
-    { value: "1d", label: "Past day" },
-    { value: "1h", label: "Past 1 hour" },
-    { value: "15m", label: "Past 15 mins" },
-    { value: "5m", label: "Past 5 mins" },
+    { value: "1-w", label: "Past week" },
+    { value: "1-d", label: "Past day" },
+    { value: "1-h", label: "Past 1 hour" },
+    { value: "15-m", label: "Past 15 mins" },
+    { value: "5-m", label: "Past 5 mins" },
   ]
 
   const statusOptions = [
@@ -49,11 +50,17 @@
     { column: "status", component: StatusRenderer },
   ]
 
-  async function fetchLogs(automationId, status, page) {
+  async function fetchLogs(automationId, status, page, timeRange) {
+    let startDate = null
+    if (timeRange) {
+      const [length, units] = timeRange.split("-")
+      startDate = dayjs().subtract(length, units)
+    }
     const response = await automationStore.actions.getLogs({
       automationId,
       status,
       page,
+      startDate,
     })
     nextPage = response.nextPage
     hasNextPage = response.hasNextPage

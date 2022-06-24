@@ -22,7 +22,7 @@ import * as env from "../../environment"
 const PAGE_SIZE = 9
 const EARLIEST_DATE = new Date(0).toISOString()
 const FREE_EXPIRY_SEC = 86400
-// const PRO_EXPIRY_SEC = FREE_EXPIRY_SEC * 30
+const PRO_EXPIRY_SEC = FREE_EXPIRY_SEC * 30
 
 function getStatus(results: AutomationResults) {
   let status = AutomationStatus.SUCCESS
@@ -40,11 +40,9 @@ function getStatus(results: AutomationResults) {
   return status
 }
 
-// export function oneMonthAgo() {
-//   return new Date(
-//     new Date().getTime() - PRO_EXPIRY_SEC * 1000
-//   ).toISOString()
-// }
+export function oneMonthAgo() {
+  return new Date(new Date().getTime() - PRO_EXPIRY_SEC * 1000).toISOString()
+}
 
 export function oneDayAgo() {
   return new Date(new Date().getTime() - FREE_EXPIRY_SEC * 1000).toISOString()
