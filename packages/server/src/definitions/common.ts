@@ -14,6 +14,7 @@ export interface Application extends Base {
 export interface FieldSchema {
   // TODO: replace with field types enum when done
   type: string
+  externalType?: string
   fieldName?: string
   name: string
   tableId?: string
