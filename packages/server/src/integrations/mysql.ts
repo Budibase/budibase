@@ -36,6 +36,7 @@ module MySQLModule {
     docs: "https://github.com/sidorares/node-mysql2",
     plus: true,
     friendlyName: "MySQL",
+    type: "Relational",
     description:
       "MySQL Database Service is a fully managed database service to deploy cloud-native applications. ",
     datasource: {

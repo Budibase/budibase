@@ -44,6 +44,7 @@ module MSSQLModule {
     description:
       "Microsoft SQL Server is a relational database management system developed by Microsoft. ",
     friendlyName: "MS SQL Server",
+    type: "Relational",
     datasource: {
       user: {
         type: DatasourceFieldTypes.STRING,
