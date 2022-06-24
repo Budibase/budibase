@@ -5,7 +5,7 @@ const DEFAULT_WRITE_RATE_MS = 10000
 let CACHE: BaseCache | null = null
 
 interface CacheItem {
-  value: any
+  doc: any
   lastWrite: number
 }
 
@@ -17,57 +17,85 @@ async function getCache() {
   return CACHE
 }
 
-function makeCacheItem(value: any, lastWrite: number | null = null): CacheItem {
-  return { value, lastWrite: lastWrite || Date.now() }
+function makeCacheItem(doc: any, lastWrite: number | null = null): CacheItem {
+  return { doc, lastWrite: lastWrite || Date.now() }
 }
 
 export async function put(
   db: PouchDB.Database,
-  value: any,
+  doc: any,
   writeRateMs: number = DEFAULT_WRITE_RATE_MS
 ) {
   const cache = await getCache()
-  const key = value._id
+  const key = doc._id
   let cacheItem: CacheItem | undefined = await cache.get(key)
   const updateDb = !cacheItem || cacheItem.lastWrite < Date.now() - writeRateMs
-  let output = value
+  let output = doc
   if (updateDb) {
-    // value should contain the _id and _rev
-    const response = await db.put(value)
+    // doc should contain the _id and _rev
+    const response = await db.put(doc)
     output = {
-      ...value,
+      ...doc,
       _id: response.id,
       _rev: response.rev,
     }
   }
   // if we are updating the DB then need to set the lastWrite to now
-  cacheItem = makeCacheItem(value, updateDb ? null : cacheItem?.lastWrite)
+  cacheItem = makeCacheItem(output, updateDb ? null : cacheItem?.lastWrite)
   await cache.store(key, cacheItem)
-  return output
+  return { ok: true, id: output._id, rev: output._rev }
 }
 
 export async function get(db: PouchDB.Database, id: string): Promise<any> {
   const cache = await getCache()
   let cacheItem: CacheItem = await cache.get(id)
   if (!cacheItem) {
-    const value = await db.get(id)
-    cacheItem = makeCacheItem(value)
+    const doc = await db.get(id)
+    cacheItem = makeCacheItem(doc)
     await cache.store(id, cacheItem)
   }
-  return cacheItem.value
+  return cacheItem.doc
+}
+
+export async function remove(
+  db: PouchDB.Database,
+  docOrId: any,
+  rev?: any
+): Promise<void> {
+  const cache = await getCache()
+  if (!docOrId) {
+    throw new Error("No ID/Rev provided.")
+  }
+  const id = typeof docOrId === "string" ? docOrId : docOrId._id
+  rev = typeof docOrId === "string" ? rev : docOrId._rev
+  try {
+    await cache.delete(id)
+  } finally {
+    await db.remove(id, rev)
+  }
 }
 
 export class Writethrough {
   db: PouchDB.Database
-  constructor(db: PouchDB.Database) {
+  writeRateMs: number
+
+  constructor(
+    db: PouchDB.Database,
+    writeRateMs: number = DEFAULT_WRITE_RATE_MS
+  ) {
     this.db = db
+    this.writeRateMs = writeRateMs
   }
 
-  async put(value: any, writeRateMs: number = DEFAULT_WRITE_RATE_MS) {
-    return put(this.db, value, writeRateMs)
+  async put(doc: any) {
+    return put(this.db, doc, this.writeRateMs)
   }
 
   async get(id: string) {
     return get(this.db, id)
+  }
+
+  async remove(docOrId: any, rev?: any) {
+    return remove(this.db, docOrId, rev)
   }
 }
