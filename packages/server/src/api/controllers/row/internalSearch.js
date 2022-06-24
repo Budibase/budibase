@@ -17,6 +17,7 @@ class QueryBuilder {
       notEqual: {},
       empty: {},
       notEmpty: {},
+      oneOf: {},
       ...base,
     }
     this.limit = 50
@@ -109,6 +110,11 @@ class QueryBuilder {
 
   addNotEmpty(key, value) {
     this.query.notEmpty[key] = value
+    return this
+  }
+
+  addOneOf(key, value) {
+    this.query.oneOf[key] = value
     return this
   }
 
@@ -219,6 +225,28 @@ class QueryBuilder {
     }
     if (this.query.notEmpty) {
       build(this.query.notEmpty, key => `${key}:["" TO *]`)
+    }
+    if (this.query.oneOf) {
+      build(this.query.oneOf, (key, value) => {
+        if (!Array.isArray(value)) {
+          if (typeof value === "string") {
+            value = value.replace(/(\s)*,(\s)*/g, ",").split(",")
+          } else {
+            return ""
+          }
+        }
+        const preprocess = item => {
+          return builder.preprocess(item, {
+            escape: true,
+            lowercase: true,
+          })
+        }
+        let orStatement = `"${preprocess(value[0])}"`
+        for (let i = 1; i < value.length; i++) {
+          orStatement += ` OR "${preprocess(value[i])}"`
+        }
+        return `${key}:(${orStatement})`
+      })
     }
     return query
   }
