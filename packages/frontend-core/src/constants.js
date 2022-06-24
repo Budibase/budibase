@@ -46,10 +46,6 @@ export const OperatorOptions = {
     value: "oneOf",
     label: "Is in",
   },
-  NotIn: {
-    value: "notOneOf",
-    label: "Is not in",
-  },
 }
 
 // Cookie names
