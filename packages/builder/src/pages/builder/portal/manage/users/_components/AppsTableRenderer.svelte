@@ -5,7 +5,7 @@
 
 <div class="align">
   <div class="spacing">
-    <Icon name="User" />
+    <Icon name="Apps" />
   </div>
   {#if value?.apps?.length === 0}
     <div>

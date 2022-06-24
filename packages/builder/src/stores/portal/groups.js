@@ -2,7 +2,14 @@ import { writable } from "svelte/store"
 import { API } from "api"
 
 export function createGroupsStore() {
-  const store = writable([])
+  const DEFAULT_CONFIG = {
+    name: "",
+    icon: "",
+    color: "",
+    users: [],
+  }
+
+  const store = writable([DEFAULT_CONFIG])
 
   const actions = {
     init: async () => {
