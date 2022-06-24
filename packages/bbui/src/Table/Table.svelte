@@ -285,6 +285,7 @@
         <div class="spectrum-Table-head">
           {#if showEditColumn}
             <div
+              class:noBorder={!showHeaderBorder}
               class="spectrum-Table-headCell spectrum-Table-headCell--divider spectrum-Table-headCell--edit"
             >
               {#if allowSelectRows}
@@ -352,6 +353,7 @@
           >
             {#if showEditColumn}
               <div
+                class:noBorder={!showHeaderBorder}
                 class="spectrum-Table-cell spectrum-Table-cell--divider spectrum-Table-cell--edit"
                 on:click={e => {
                   toggleSelectRow(row)

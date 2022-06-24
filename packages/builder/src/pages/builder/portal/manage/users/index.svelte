@@ -1,12 +1,9 @@
 <script>
-  import { goto } from "@roxi/routify"
   import {
     Heading,
     Body,
-    Divider,
     Button,
     ButtonGroup,
-    Search,
     Table,
     Label,
     Layout,
@@ -14,18 +11,21 @@
     Icon,
     notifications,
   } from "@budibase/bbui"
-  import TagsRenderer from "./_components/TagsTableRenderer.svelte"
   import AddUserModal from "./_components/AddUserModal.svelte"
   import BasicOnboardingModal from "./_components/BasicOnboardingModal.svelte"
-  import { users } from "stores/portal"
+  import { users, groups } from "stores/portal"
   import { onMount } from "svelte"
+  import GroupsTableRenderer from "./_components/GroupsTableRenderer.svelte"
+  import AppsTableRenderer from "./_components/AppsTableRenderer.svelte"
+  import NameTableRenderer from "./_components/NameTableRenderer.svelte"
 
   const schema = {
+    name: {},
     email: {},
-    developmentAccess: { displayName: "Development Access", type: "boolean" },
-    adminAccess: { displayName: "Admin Access", type: "boolean" },
-    // role: { type: "options" },
-    group: {},
+    role: {},
+    userGroup: { displayName: "User group" },
+    apps: {},
+    settings: { displayName: "" },
     // access: {},
     // group: {}
   }
@@ -47,6 +47,7 @@
 
   let search
   let email
+
   $: filteredUsers = $users
     .filter(user => user.email.includes(search || ""))
     .map(user => ({
@@ -67,6 +68,7 @@
   onMount(async () => {
     try {
       await users.init()
+      await groups.actions.init()
     } catch (error) {
       notifications.error("Error getting user list")
     }
@@ -99,18 +101,18 @@
       >
       <Button icon="Import" primary>Import Users</Button>
     </ButtonGroup>
-    <div class="field">
-      <Label size="L">Search / filter</Label>
-    </div>
     <Table
-      on:click={({ detail }) => $goto(`./${detail._id}`)}
       {schema}
       data={filteredUsers || $users}
       allowEditColumns={false}
       allowEditRows={false}
-      allowSelectRows={false}
+      allowSelectRows={true}
       showHeaderBorder={false}
-      customRenderers={[{ column: "group", component: TagsRenderer }]}
+      customRenderers={[
+        { column: "userGroup", component: GroupsTableRenderer },
+        { column: "apps", component: AppsTableRenderer },
+        { column: "name", component: NameTableRenderer },
+      ]}
     />
   </Layout>
 </Layout>
@@ -131,19 +133,7 @@
     margin-left: var(--spacing-m);
   }
 
-  .field {
-    display: flex;
-    align-items: center;
-    flex-direction: row;
-    grid-gap: var(--spacing-m);
-  }
   .field > :global(*) + :global(*) {
     margin-left: var(--spacing-m);
-  }
-  .users-heading {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
   }
 </style>
