@@ -15,7 +15,6 @@ export const getValidOperatorsForType = type => {
     Op.Empty,
     Op.NotEmpty,
     Op.In,
-    Op.NotIn,
   ]
   const numOps = [
     Op.Equals,
