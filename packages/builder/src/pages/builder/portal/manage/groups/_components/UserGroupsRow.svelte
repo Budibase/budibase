@@ -14,7 +14,6 @@
   export let deleteGroup
   export let saveGroup
   let modal
-
   function editGroup() {
     modal.show()
   }
@@ -35,7 +34,9 @@
 <div class="desktop tableElement">
   <Icon name="User" />
   <div style="margin-left: var(--spacing-l">
-    {parseInt(group.userCount) || 0} user{parseInt(group.userCount) === 1
+    {parseInt(group?.users?.length) || 0} user{parseInt(
+      group?.users?.length
+    ) === 1
       ? ""
       : "s"}
   </div>

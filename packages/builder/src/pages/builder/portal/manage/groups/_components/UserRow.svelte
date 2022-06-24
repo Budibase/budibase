@@ -3,7 +3,6 @@
 
   export let user
   export let removeUser
-  $: console.log(user)
 </script>
 
 <div class="title">
@@ -14,9 +13,9 @@
   </div>
 </div>
 <div class="desktop">
-  <div style="display: flex; align-items: center;">
+  <div class="align-email">
     <Body size="M">{user.email}</Body>
-    <div style="opacity: 0.5; margin: var(--spacing-xs) 0 0 var(--spacing-m)">
+    <div class="text">
       <Body size="XS">{user.access}</Body>
     </div>
   </div>
@@ -30,6 +29,16 @@
   .name {
     grid-gap: var(--spacing-xl);
     grid-template-columns: 75px 75px;
+    align-items: center;
+  }
+
+  .text {
+    opacity: 0.5;
+    margin: var(--spacing-xs) 0 0 var(--spacing-m);
+  }
+
+  .align-email {
+    display: flex;
     align-items: center;
   }
 
