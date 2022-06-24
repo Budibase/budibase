@@ -67,7 +67,7 @@ RUN curl -sL https://deb.nodesource.com/setup_16.x -o /tmp/nodesource_setup.sh &
 
 # setup nginx
 ADD hosting/single/nginx.conf /etc/nginx
-ADD hosting/single/default /etc/nginx/sites-enabled
+ADD hosting/single/nginx-default-site.conf /etc/nginx/sites-enabled/default
 RUN mkdir -p /var/log/nginx && \
   touch /var/log/nginx/error.log && \
   touch /var/run/nginx.pid
