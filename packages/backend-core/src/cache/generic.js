@@ -17,9 +17,13 @@ exports.TTL = {
   ONE_DAY: 86400,
 }
 
-exports.keys = GENERIC.keys
-exports.get = GENERIC.get
-exports.store = GENERIC.store
-exports.delete = GENERIC.delete
-exports.withCache = GENERIC.withCache
-exports.bustCache = GENERIC.bustCache
+function performExport(funcName) {
+  return (...args) => GENERIC[funcName](...args)
+}
+
+exports.keys = performExport("keys")
+exports.get = performExport("get")
+exports.store = performExport("store")
+exports.delete = performExport("delete")
+exports.withCache = performExport("withCache")
+exports.bustCache = performExport("bustCache")
