@@ -9,7 +9,8 @@ tk.freeze(START_DATE)
 const DELAY = 5000
 
 const db = dangerousGetDB("test")
-const writethrough = new Writethrough(db, DELAY)
+const db2 = dangerousGetDB("test2")
+const writethrough = new Writethrough(db, DELAY), writethrough2 = new Writethrough(db2, DELAY)
 
 describe("writethrough", () => {
   describe("put", () => {
@@ -41,6 +42,17 @@ describe("writethrough", () => {
     it("should be able to retrieve", async () => {
       const response = await writethrough.get("test")
       expect(response.value).toBe(3)
+    })
+  })
+
+  describe("same doc, different databases (tenancy)", () => {
+    it("should be able to two different databases", async () => {
+      const resp1 = await writethrough.put({ _id: "db1", value: "first" })
+      const resp2 = await writethrough2.put({ _id: "db1", value: "second" })
+      expect(resp1.rev).toBeDefined()
+      expect(resp2.rev).toBeDefined()
+      expect((await db.get("db1")).value).toBe("first")
+      expect((await db2.get("db1")).value).toBe("second")
     })
   })
 })

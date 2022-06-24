@@ -17,6 +17,10 @@ async function getCache() {
   return CACHE
 }
 
+function makeCacheKey(db: PouchDB.Database, key: string) {
+  return db.name + key
+}
+
 function makeCacheItem(doc: any, lastWrite: number | null = null): CacheItem {
   return { doc, lastWrite: lastWrite || Date.now() }
 }
@@ -28,31 +32,39 @@ export async function put(
 ) {
   const cache = await getCache()
   const key = doc._id
-  let cacheItem: CacheItem | undefined = await cache.get(key)
+  let cacheItem: CacheItem | undefined = await cache.get(makeCacheKey(db, key))
   const updateDb = !cacheItem || cacheItem.lastWrite < Date.now() - writeRateMs
   let output = doc
   if (updateDb) {
-    // doc should contain the _id and _rev
-    const response = await db.put(doc)
-    output = {
-      ...doc,
-      _id: response.id,
-      _rev: response.rev,
+    try {
+      // doc should contain the _id and _rev
+      const response = await db.put(doc)
+      output = {
+        ...doc,
+        _id: response.id,
+        _rev: response.rev,
+      }
+    } catch (err: any) {
+      // ignore 409s, some other high speed write has hit it first, just move straight to caching
+      if (err.status !== 409) {
+        throw err
+      }
     }
   }
   // if we are updating the DB then need to set the lastWrite to now
   cacheItem = makeCacheItem(output, updateDb ? null : cacheItem?.lastWrite)
-  await cache.store(key, cacheItem)
+  await cache.store(makeCacheKey(db, key), cacheItem)
   return { ok: true, id: output._id, rev: output._rev }
 }
 
 export async function get(db: PouchDB.Database, id: string): Promise<any> {
   const cache = await getCache()
-  let cacheItem: CacheItem = await cache.get(id)
+  const cacheKey = makeCacheKey(db, id)
+  let cacheItem: CacheItem = await cache.get(cacheKey)
   if (!cacheItem) {
     const doc = await db.get(id)
     cacheItem = makeCacheItem(doc)
-    await cache.store(id, cacheItem)
+    await cache.store(cacheKey, cacheItem)
   }
   return cacheItem.doc
 }
@@ -69,7 +81,7 @@ export async function remove(
   const id = typeof docOrId === "string" ? docOrId : docOrId._id
   rev = typeof docOrId === "string" ? rev : docOrId._rev
   try {
-    await cache.delete(id)
+    await cache.delete(makeCacheKey(db, id))
   } finally {
     await db.remove(id, rev)
   }
