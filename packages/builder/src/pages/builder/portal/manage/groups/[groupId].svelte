@@ -139,7 +139,7 @@
   </div>
 
   <div class="usersTable">
-    {#if group?.users.length}
+    {#if group?.users?.length}
       {#each group.users as user}
         <div>
           <UserRow {removeUser} {user} />

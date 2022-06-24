@@ -285,7 +285,7 @@
         <div class="spectrum-Table-head">
           {#if showEditColumn}
             <div
-              class:noBorder={!showHeaderBorder}
+              class:noBorderHeader={!showHeaderBorder}
               class="spectrum-Table-headCell spectrum-Table-headCell--divider spectrum-Table-headCell--edit"
             >
               {#if allowSelectRows}
@@ -301,7 +301,7 @@
           {#each fields as field}
             <div
               class="spectrum-Table-headCell"
-              class:noBorder={!showHeaderBorder}
+              class:noBorderHeader={!showHeaderBorder}
               class:spectrum-Table-headCell--alignCenter={schema[field]
                 .align === "Center"}
               class:spectrum-Table-headCell--alignRight={schema[field].align ===
@@ -353,7 +353,7 @@
           >
             {#if showEditColumn}
               <div
-                class:noBorder={!showHeaderBorder}
+                class:noBorderCheckbox={!showHeaderBorder}
                 class="spectrum-Table-cell spectrum-Table-cell--divider spectrum-Table-cell--edit"
                 on:click={e => {
                   toggleSelectRow(row)
@@ -482,10 +482,15 @@
     border-right: var(--table-border);
   }
 
-  .noBorder {
+  .noBorderHeader {
     border-top: none !important;
     border-right: none !important;
     border-left: none !important;
+  }
+
+  .noBorderCheckbox {
+    border-top: none !important;
+    border-right: none !important;
   }
 
   .spectrum-Table-headCell--alignCenter {
