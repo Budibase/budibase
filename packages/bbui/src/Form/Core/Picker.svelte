@@ -86,8 +86,12 @@
   on:mousedown={onClick}
 >
   {#if fieldIcon}
-    <span class="option-icon">
+    <span class="option-left">
       <Icon name={fieldIcon} />
+    </span>
+  {:else if fieldColour}
+    <span class="option-left">
+      <StatusLight custom color={fieldColour} />
     </span>
   {/if}
   <span
@@ -107,8 +111,8 @@
       <use xlink:href="#spectrum-icon-18-Alert" />
     </svg>
   {/if}
-  {#if fieldColour}
-    <span class="option-colour">
+  {#if fieldIcon && fieldColour}
+    <span class="option-right">
       <StatusLight custom color={fieldColour} />
     </span>
   {/if}
@@ -166,8 +170,12 @@
             on:click={() => onSelectOption(getOptionValue(option, idx))}
           >
             {#if getOptionIcon(option, idx)}
-              <span class="option-icon">
+              <span class="option-left">
                 <Icon name={getOptionIcon(option, idx)} />
+              </span>
+            {:else if getOptionColour(option, idx)}
+              <span class="option-left">
+                <StatusLight custom color={getOptionColour(option, idx)} />
               </span>
             {/if}
             <span class="spectrum-Menu-itemLabel">
@@ -180,8 +188,8 @@
             >
               <use xlink:href="#spectrum-css-icon-Checkmark100" />
             </svg>
-            {#if getOptionColour(option, idx)}
-              <span class="option-colour">
+            {#if getOptionIcon(option, idx) && getOptionColour(option, idx)}
+              <span class="option-right">
                 <StatusLight custom color={getOptionColour(option, idx)} />
               </span>
             {/if}
@@ -224,12 +232,13 @@
   .spectrum-Menu-checkmark {
     align-self: center;
     margin-top: 0;
+    margin-left: 12px;
   }
-  .option-colour {
-    padding-left: 8px;
-  }
-  .option-icon {
+  .option-left {
     padding-right: 8px;
+  }
+  .option-right {
+    padding-left: 8px;
   }
 
   .spectrum-Popover :global(.spectrum-Search) {
