@@ -16,7 +16,12 @@
   import UserGroupsRow from "./_components/UserGroupsRow.svelte"
 
   let modal
-  let group = {}
+  let group = {
+    name: "",
+    icon: "",
+    color: "",
+    users: [],
+  }
   let proPlan = true
 
   async function deleteGroup(group) {
@@ -38,6 +43,7 @@
   onMount(async () => {
     try {
       await groups.actions.init()
+      console.log($groups)
     } catch (error) {
       notifications.error("Error getting User groups")
     }

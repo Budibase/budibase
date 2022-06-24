@@ -57,7 +57,7 @@
         >Manage</Button
       >
     </div>
-    <div class="">
+    <div>
       <ActionMenu align="right">
         <span slot="control">
           <Icon hoverable name="More" />

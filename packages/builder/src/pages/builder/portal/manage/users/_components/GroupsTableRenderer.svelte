@@ -1,26 +1,31 @@
 <script>
-  import { Icon } from "@budibase/bbui"
+  import { Icon, Body } from "@budibase/bbui"
   export let value
+  $: console.log(value)
 </script>
 
 <div class="align">
   <div class="spacing">
     <Icon name="User" />
   </div>
-  {#if value?.groups?.length === 0}
-    <div>
-      <div>No groups</div>
+  {#if value.length === 0}
+    <div>0</div>
+  {:else if value.length === 1}
+    <div class="opacity">
+      <Body size="S">{value[0].name}</Body>
     </div>
-  {:else if value?.groups?.length === 1}
-    {value.groups[0]?.name}
   {:else}
-    {parseInt(value?.groups?.length) || 0}
+    {parseInt(value.length) || 0} groups
   {/if}
 </div>
 
 <style>
   .align {
     display: flex;
+  }
+
+  .opacity {
+    opacity: 0.7;
   }
 
   .spacing {
