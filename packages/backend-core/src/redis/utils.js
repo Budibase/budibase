@@ -6,6 +6,14 @@ const SEPARATOR = "-"
 const REDIS_URL = !env.REDIS_URL ? "localhost:6379" : env.REDIS_URL
 const REDIS_PASSWORD = !env.REDIS_PASSWORD ? "budibase" : env.REDIS_PASSWORD
 
+/**
+ * These Redis databases help us to segment up a Redis keyspace by prepending the
+ * specified database name onto the cache key. This means that a single real Redis database
+ * can be split up a bit; allowing us to use scans on small databases to find some particular
+ * keys within.
+ * If writing a very large volume of keys is expected (say 10K+) then it is better to keep these out
+ * of the default keyspace and use a separate one - the SelectableDatabases can be used for this.
+ */
 exports.Databases = {
   PW_RESETS: "pwReset",
   VERIFICATIONS: "verification",
@@ -22,6 +30,15 @@ exports.Databases = {
   WRITE_THROUGH: "writeThrough",
 }
 
+/**
+ * These define the numeric Redis databases that can be access with the SELECT command -
+ * (https://redis.io/commands/select/). By default a Redis server/cluster will have 16 selectable
+ * databases, increasing this count increases the amount of CPU/memory required to run the server.
+ * Ideally new Redis keyspaces should be used sparingly, only when absolutely necessary for performance
+ * to be maintained. Generally a keyspace can grow to be very large is scans are not needed or desired,
+ * but if you need to walk through all values in a database periodically then a separate selectable
+ * keyspace should be used.
+ */
 exports.SelectableDatabases = {
   DEFAULT: 0,
   WRITE_THROUGH: 1,
