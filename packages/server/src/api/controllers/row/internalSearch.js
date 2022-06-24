@@ -230,7 +230,7 @@ class QueryBuilder {
       build(this.query.oneOf, (key, value) => {
         if (!Array.isArray(value)) {
           if (typeof value === "string") {
-            value = value.replace(/(\s)*,(\s)*/g, ",").split(",")
+            value = value.split(",")
           } else {
             return ""
           }
