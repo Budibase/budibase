@@ -5,27 +5,26 @@
     Button,
     ButtonGroup,
     Table,
-    Label,
     Layout,
     Modal,
     Icon,
     notifications,
   } from "@budibase/bbui"
-  import AddUserModal from "./_components/AddUserModal.svelte"
   import BasicOnboardingModal from "./_components/BasicOnboardingModal.svelte"
   import { users, groups } from "stores/portal"
   import { onMount } from "svelte"
   import GroupsTableRenderer from "./_components/GroupsTableRenderer.svelte"
   import AppsTableRenderer from "./_components/AppsTableRenderer.svelte"
   import NameTableRenderer from "./_components/NameTableRenderer.svelte"
+  import SettingsTableRenderer from "./_components/SettingsTableRenderer.svelte"
 
   const schema = {
     name: {},
     email: {},
     role: {},
-    userGroup: { displayName: "User group" },
+    userGroups: { displayName: "User groups" },
     apps: {},
-    settings: { displayName: "" },
+    settings: { width: "50px", displayName: "", align: "Right" },
     // access: {},
     // group: {}
   }
@@ -57,10 +56,25 @@
       adminAccess: !!user.admin?.global,
     }))
 
-  let createUserModal
-  let basicOnboardingModal
+  $: enrichedUsers = $users.map(user => {
+    let userGroups = []
+    $groups.forEach(group => {
+      if (group.users) {
+        group.users?.forEach(y => {
+          if (y._id === user._id) {
+            userGroups.push(group)
+          }
+        })
+      }
+    })
+    return {
+      ...user,
+      userGroups,
+    }
+  })
 
-  function openBasicOnboardingModal() {
+  let createUserModal
+  let basicOnboardingModal = function openBasicOnboardingModal() {
     createUserModal.hide()
     basicOnboardingModal.show()
   }
@@ -103,23 +117,21 @@
     </ButtonGroup>
     <Table
       {schema}
-      data={filteredUsers || $users}
+      data={enrichedUsers}
       allowEditColumns={false}
       allowEditRows={false}
-      allowSelectRows={true}
+      allowSelectRows={false}
       showHeaderBorder={false}
       customRenderers={[
-        { column: "userGroup", component: GroupsTableRenderer },
+        { column: "userGroups", component: GroupsTableRenderer },
         { column: "apps", component: AppsTableRenderer },
         { column: "name", component: NameTableRenderer },
+        { column: "settings", component: SettingsTableRenderer },
       ]}
     />
   </Layout>
 </Layout>
 
-<Modal bind:this={createUserModal}>
-  <AddUserModal on:change={openBasicOnboardingModal} />
-</Modal>
 <Modal bind:this={basicOnboardingModal}><BasicOnboardingModal {email} /></Modal>
 
 <style>
@@ -130,10 +142,6 @@
   }
 
   .access-text {
-    margin-left: var(--spacing-m);
-  }
-
-  .field > :global(*) + :global(*) {
     margin-left: var(--spacing-m);
   }
 </style>
