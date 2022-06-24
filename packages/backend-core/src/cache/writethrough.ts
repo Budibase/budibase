@@ -36,18 +36,25 @@ export async function put(
   const updateDb = !cacheItem || cacheItem.lastWrite < Date.now() - writeRateMs
   let output = doc
   if (updateDb) {
-    try {
+    const writeDb = async (toWrite: any) => {
       // doc should contain the _id and _rev
-      const response = await db.put(doc)
+      const response = await db.put(toWrite)
       output = {
         ...doc,
         _id: response.id,
         _rev: response.rev,
       }
+    }
+    try {
+      await writeDb(doc)
     } catch (err: any) {
-      // ignore 409s, some other high speed write has hit it first, just move straight to caching
       if (err.status !== 409) {
         throw err
+      } else {
+        // get the rev, update over it - this is risky, may change in future
+        const readDoc = await db.get(doc._id)
+        doc._rev = readDoc._rev
+        await writeDb(doc)
       }
     }
   }
