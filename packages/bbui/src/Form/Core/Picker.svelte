@@ -91,7 +91,7 @@
     </span>
   {:else if fieldColour}
     <span class="option-left">
-      <StatusLight custom color={fieldColour} />
+      <StatusLight color={fieldColour} />
     </span>
   {/if}
   <span
@@ -113,7 +113,7 @@
   {/if}
   {#if fieldIcon && fieldColour}
     <span class="option-right">
-      <StatusLight custom color={fieldColour} />
+      <StatusLight color={fieldColour} />
     </span>
   {/if}
   <svg
@@ -175,7 +175,7 @@
               </span>
             {:else if getOptionColour(option, idx)}
               <span class="option-left">
-                <StatusLight custom color={getOptionColour(option, idx)} />
+                <StatusLight color={getOptionColour(option, idx)} />
               </span>
             {/if}
             <span class="spectrum-Menu-itemLabel">
@@ -190,7 +190,7 @@
             </svg>
             {#if getOptionIcon(option, idx) && getOptionColour(option, idx)}
               <span class="option-right">
-                <StatusLight custom color={getOptionColour(option, idx)} />
+                <StatusLight color={getOptionColour(option, idx)} />
               </span>
             {/if}
           </li>
