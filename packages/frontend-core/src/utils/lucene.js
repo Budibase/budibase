@@ -94,7 +94,6 @@ export const buildLuceneQuery = filter => {
     contains: {},
     notContains: {},
     oneOf: {},
-    notOneOf: {},
   }
   if (Array.isArray(filter)) {
     filter.forEach(expression => {
@@ -219,11 +218,6 @@ export const runLuceneQuery = (docs, query) => {
     return !testValue?.includes(docValue)
   })
 
-  // Process a not included match (fails if the value is included)
-  const notOneOf = match("notOneOf", (docValue, testValue) => {
-    return testValue?.includes(docValue)
-  })
-
   // Match a document against all criteria
   const docMatch = doc => {
     return (
@@ -234,8 +228,7 @@ export const runLuceneQuery = (docs, query) => {
       notEqualMatch(doc) &&
       emptyMatch(doc) &&
       notEmptyMatch(doc) &&
-      oneOf(doc) &&
-      notOneOf(doc)
+      oneOf(doc)
     )
   }
 
