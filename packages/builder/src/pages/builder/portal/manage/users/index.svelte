@@ -10,6 +10,7 @@
     Icon,
     notifications,
   } from "@budibase/bbui"
+  import AddUserModal from "./_components/AddUserModal.svelte"
   import BasicOnboardingModal from "./_components/BasicOnboardingModal.svelte"
   import { users, groups } from "stores/portal"
   import { onMount } from "svelte"
@@ -17,6 +18,7 @@
   import AppsTableRenderer from "./_components/AppsTableRenderer.svelte"
   import NameTableRenderer from "./_components/NameTableRenderer.svelte"
   import SettingsTableRenderer from "./_components/SettingsTableRenderer.svelte"
+  import RoleTableRenderer from "./_components/RoleTableRenderer.svelte"
 
   const schema = {
     name: {},
@@ -132,6 +134,9 @@
   </Layout>
 </Layout>
 
+<Modal bind:this={createUserModal}>
+  <AddUserModal />
+</Modal>
 <Modal bind:this={basicOnboardingModal}><BasicOnboardingModal {email} /></Modal>
 
 <style>
