@@ -14,6 +14,8 @@ export const getValidOperatorsForType = type => {
     Op.Like,
     Op.Empty,
     Op.NotEmpty,
+    Op.In,
+    Op.NotIn,
   ]
   const numOps = [
     Op.Equals,
@@ -91,6 +93,8 @@ export const buildLuceneQuery = filter => {
     notEmpty: {},
     contains: {},
     notContains: {},
+    oneOf: {},
+    notOneOf: {},
   }
   if (Array.isArray(filter)) {
     filter.forEach(expression => {
@@ -139,7 +143,6 @@ export const buildLuceneQuery = filter => {
       }
     })
   }
-
   return query
 }
 
@@ -211,6 +214,16 @@ export const runLuceneQuery = (docs, query) => {
     return docValue == null || docValue === ""
   })
 
+  // Process an includes match (fails if the value is not included)
+  const oneOf = match("oneOf", (docValue, testValue) => {
+    return !testValue?.includes(docValue)
+  })
+
+  // Process a not included match (fails if the value is included)
+  const notOneOf = match("notOneOf", (docValue, testValue) => {
+    return testValue?.includes(docValue)
+  })
+
   // Match a document against all criteria
   const docMatch = doc => {
     return (
@@ -220,7 +233,9 @@ export const runLuceneQuery = (docs, query) => {
       equalMatch(doc) &&
       notEqualMatch(doc) &&
       emptyMatch(doc) &&
-      notEmptyMatch(doc)
+      notEmptyMatch(doc) &&
+      oneOf(doc) &&
+      notOneOf(doc)
     )
   }
 
