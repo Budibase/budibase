@@ -12,11 +12,13 @@
     Divider,
     Detail,
     notifications,
+    List,
+    ListItem,
+    StatusLight,
   } from "@budibase/bbui"
-  import UserRow from "./_components/UserRow.svelte"
   import { users, apps, groups } from "stores/portal"
   import { onMount } from "svelte"
-  import GroupAppsRow from "./_components/GroupAppsRow.svelte"
+  import { RoleUtils } from "@budibase/frontend-core"
 
   export let groupId
   let popoverAnchor
@@ -31,7 +33,7 @@
   )
   let app_list = [
     {
-      access: "Developer",
+      access: "ADMIN",
       name: "test app",
       icon: "Anchor",
       color: "blue",
@@ -138,24 +140,22 @@
     </Popover>
   </div>
 
-  <div class="usersTable">
-    {#if group?.users?.length}
+  <List>
+    {#if group?.users.length}
       {#each group.users as user}
-        <div>
-          <UserRow {removeUser} {user} />
-        </div>
+        <ListItem subtitle={user.access} title={user.email} avatar
+          ><Icon
+            on:click={() => removeUser(user._id)}
+            hoverable
+            size="L"
+            name="Close"
+          /></ListItem
+        >
       {/each}
     {:else}
-      <div>
-        <div class="title header text-padding">
-          <Icon name="UserGroup" />
-          <div class="text-padding">
-            <Body size="S">You have no users in this team</Body>
-          </div>
-        </div>
-      </div>
+      <ListItem icon="UserGroup" title="You have no users in this team" />
     {/if}
-  </div>
+  </List>
   <div
     style="flex-direction: column; margin-top: var(--spacing-m)"
     class="title"
@@ -167,24 +167,22 @@
     </div>
   </div>
 
-  <div style="" class="usersTable">
+  <List>
     {#if app_list.length}
       {#each app_list as app}
-        <div>
-          <GroupAppsRow {app} />
-        </div>
+        <ListItem title={app.name} icon={app.icon} iconBackground={app.color}>
+          <div class="title ">
+            <StatusLight color={RoleUtils.getRoleColour(app.access)} />
+            <div style="margin-left: var(--spacing-s);">
+              <Body size="XS">{app.access}</Body>
+            </div>
+          </div>
+        </ListItem>
       {/each}
     {:else}
-      <div>
-        <div class="title header text-padding">
-          <Icon name="UserGroup" />
-          <div class="text-padding">
-            <Body size="S">You have no users in this team</Body>
-          </div>
-        </div>
-      </div>
+      <ListItem icon="UserGroup" title="You have no users in this team" />
     {/if}
-  </div>
+  </List>
 </Layout>
 
 <style>
@@ -229,30 +227,5 @@
 
   .circle > div {
     padding: calc(1.5 * var(--spacing-xs)) var(--spacing-xs);
-  }
-
-  .usersTable {
-    display: grid;
-    grid-template-rows: auto;
-    align-items: center;
-    border-bottom: 1px solid var(--spectrum-alias-border-color-mid);
-    border-left: 1px solid var(--spectrum-alias-border-color-mid);
-    background: var(--spectrum-global-color-gray-50);
-  }
-
-  .usersTable :global(> div) {
-    background: var(--bg-color);
-
-    height: 70px;
-    display: grid;
-    align-items: center;
-    grid-gap: var(--spacing-xl);
-    grid-template-columns: 0.1fr 0.6fr 2fr 0.4fr;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    padding: 0 var(--spacing-s);
-    border-top: 1px solid var(--spectrum-alias-border-color-mid);
-    border-right: 1px solid var(--spectrum-alias-border-color-mid);
   }
 </style>

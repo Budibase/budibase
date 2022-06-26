@@ -19,16 +19,20 @@
   import NameTableRenderer from "./_components/NameTableRenderer.svelte"
   import SettingsTableRenderer from "./_components/SettingsTableRenderer.svelte"
   import RoleTableRenderer from "./_components/RoleTableRenderer.svelte"
+  import { goto } from "@roxi/routify"
 
   const schema = {
     name: {},
     email: {},
-    role: {},
-    userGroups: { displayName: "User groups" },
+    role: { noPropagation: true, sortable: false },
+    userGroups: { sortable: false, displayName: "User groups" },
     apps: {},
-    settings: { width: "50px", displayName: "", align: "Right" },
-    // access: {},
-    // group: {}
+    settings: {
+      sortable: false,
+      width: "50px",
+      displayName: "",
+      align: "Right",
+    },
   }
 
   const accessTypes = [
@@ -71,6 +75,7 @@
     })
     return {
       ...user,
+      name: user.firstName ? user.firstName + " " + user.lastName : "",
       userGroups,
     }
   })
@@ -118,17 +123,19 @@
       <Button icon="Import" primary>Import Users</Button>
     </ButtonGroup>
     <Table
+      on:click={({ detail }) => $goto(`./${detail._id}`)}
       {schema}
       data={enrichedUsers}
       allowEditColumns={false}
       allowEditRows={false}
-      allowSelectRows={false}
+      allowSelectRows={true}
       showHeaderBorder={false}
       customRenderers={[
         { column: "userGroups", component: GroupsTableRenderer },
         { column: "apps", component: AppsTableRenderer },
         { column: "name", component: NameTableRenderer },
         { column: "settings", component: SettingsTableRenderer },
+        { column: "role", component: RoleTableRenderer },
       ]}
     />
   </Layout>

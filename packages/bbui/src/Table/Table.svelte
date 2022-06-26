@@ -376,6 +376,8 @@
                 class="spectrum-Table-cell"
                 class:spectrum-Table-cell--divider={!!schema[field].divider}
                 style={cellStyles[field]}
+                on:click={e =>
+                  schema[field].noPropagation && e.stopPropagation()}
               >
                 <CellRenderer
                   {customRenderers}

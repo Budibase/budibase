@@ -43,7 +43,6 @@
   onMount(async () => {
     try {
       await groups.actions.init()
-      console.log($groups)
     } catch (error) {
       notifications.error("Error getting User groups")
     }
