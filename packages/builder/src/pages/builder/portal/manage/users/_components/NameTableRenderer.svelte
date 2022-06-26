@@ -1,14 +1,21 @@
 <script>
   import { Avatar } from "@budibase/bbui"
+
   export let value
 </script>
 
 <div class="align">
-  {#if value?.name}
+  {#if value}
     <div class="spacing">
-      <Avatar size="L" initials="PC" />
+      <Avatar
+        size="L"
+        initials={value
+          .split(" ")
+          .map(x => x[0])
+          .join("")}
+      />
     </div>
-    {value.name}
+    {value}
   {:else}
     <div class="text">Invite pending...</div>
   {/if}
@@ -17,6 +24,7 @@
 <style>
   .align {
     display: flex;
+    align-items: center;
   }
 
   .spacing {
