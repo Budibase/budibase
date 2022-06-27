@@ -45,6 +45,9 @@ jobs:
     name: "test"
     runs-on: ubuntu-latest
     needs: build
+    strategy:
+      matrix:
+        node-version: [14.x]
     steps:
       - name: Test Code Coverage
         uses: codecov/codecov-action@v1
