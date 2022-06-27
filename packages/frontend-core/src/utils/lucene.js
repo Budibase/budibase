@@ -141,7 +141,6 @@ export const buildLuceneQuery = filter => {
             query[operator][field] = value
           }
         } else {
-          console.log("VAL ", value)
           query[operator][field] = value
         }
       }
@@ -223,7 +222,7 @@ export const runLuceneQuery = (docs, query) => {
     if (typeof testValue === "string") {
       testValue = testValue.split(",")
       if (typeof docValue === "number") {
-        testValue = testValue.map(item => Number(item))
+        testValue = testValue.map(item => parseFloat(item))
       }
     }
     return !testValue?.includes(docValue)
