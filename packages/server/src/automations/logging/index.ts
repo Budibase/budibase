@@ -32,7 +32,7 @@ function getStatus(results: AutomationResults) {
   return status
 }
 
-async function clearOldHistory() {
+export async function clearOldHistory() {
   const db = getProdAppDB()
   try {
     const expired = await logs.automations.getExpiredLogs()
