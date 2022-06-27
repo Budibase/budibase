@@ -133,12 +133,11 @@ exports.getBudibaseVersion = async ctx => {
 // TODO: remove as part of beta program
 exports.checkBetaAccess = async ctx => {
   const userToCheck = ctx.query.email
-  // const BETA_USERS_DB = "app_bb_f9b77d06b9db4e3ca185476ab87a2364"
-  const TEST_BETA_USERS_DB = "app_de3eaf5d6a9849c3827e529bbf833813"
+  const BETA_USERS_DB = "app_bb_f9b77d06b9db4e3ca185476ab87a2364"
   const BETA_USERS_TABLE = "ta_8c2c6df1c03f49cfb6340e85e066dd15"
 
   try {
-    const db = dangerousGetDB(TEST_BETA_USERS_DB)
+    const db = dangerousGetDB(BETA_USERS_DB)
     const betaUsers = (
       await db.allDocs(
         getRowParams(BETA_USERS_TABLE, null, {
