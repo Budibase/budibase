@@ -1,6 +1,5 @@
 const actions = require("../../automations/actions")
 const triggers = require("../../automations/triggers")
-const { getLogs, oneMonthAgo } = require("../../automations/logging")
 const {
   getAutomationParams,
   generateAutomationID,
@@ -21,6 +20,7 @@ const {
 } = require("@budibase/backend-core/context")
 const { events } = require("@budibase/backend-core")
 const { app } = require("@budibase/backend-core/cache")
+const { logs } = require("@budibase/pro")
 
 const ACTION_DEFS = removeDeprecated(actions.ACTION_DEFINITIONS)
 const TRIGGER_DEFS = removeDeprecated(triggers.TRIGGER_DEFINITIONS)
@@ -195,11 +195,12 @@ exports.destroy = async function (ctx) {
 
 exports.logSearch = async function (ctx) {
   let { automationId, status, page, startDate } = ctx.request.body
-  // TODO: need to check maximum allowed in license
-  if (!startDate) {
-    startDate = oneMonthAgo()
-  }
-  ctx.body = await getLogs(startDate, status, automationId, page)
+  ctx.body = await logs.automations.getLogs(
+    startDate,
+    status,
+    automationId,
+    page
+  )
 }
 
 exports.clearLogError = async function (ctx) {
