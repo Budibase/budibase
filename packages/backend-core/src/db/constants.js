@@ -1,7 +1,26 @@
 exports.SEPARATOR = "_"
+exports.UNICODE_MAX = "\ufff0"
 
 const PRE_APP = "app"
 const PRE_DEV = "dev"
+
+/**
+ * Can be used to create a few different forms of querying a view.
+ */
+exports.ViewModes = {
+  ALL: "all",
+  AUTOMATION: "auto",
+  STATUS: "status",
+}
+
+exports.ViewNames = {
+  USER_BY_EMAIL: "by_email",
+  BY_API_KEY: "by_api_key",
+  USER_BY_BUILDERS: "by_builders",
+  LINK: "by_link",
+  ROUTING: "screen_routes",
+  AUTO_LOGS: "auto_log",
+}
 
 exports.DocumentTypes = {
   USER: "us",
@@ -15,6 +34,7 @@ exports.DocumentTypes = {
   ROLE: "role",
   MIGRATIONS: "migrations",
   DEV_INFO: "devinfo",
+  AUTOMATION_LOG: "log_au",
 }
 
 exports.StaticDatabases = {

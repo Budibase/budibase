@@ -1,7 +1,7 @@
 import { newid } from "../hashing"
 import { DEFAULT_TENANT_ID, Configs } from "../constants"
 import env from "../environment"
-import { SEPARATOR, DocumentTypes } from "./constants"
+import { SEPARATOR, DocumentTypes, UNICODE_MAX } from "./constants"
 import { getTenantId, getGlobalDBName, getGlobalDB } from "../tenancy"
 import fetch from "node-fetch"
 import { doWithDB, allDbs } from "./index"
@@ -11,14 +11,6 @@ import { checkSlashesInUrl } from "../helpers"
 import { isDevApp, isDevAppID } from "./conversions"
 import { APP_PREFIX } from "./constants"
 import * as events from "../events"
-
-const UNICODE_MAX = "\ufff0"
-
-export const ViewNames = {
-  USER_BY_EMAIL: "by_email",
-  BY_API_KEY: "by_api_key",
-  USER_BY_BUILDERS: "by_builders",
-}
 
 export * from "./constants"
 export * from "./conversions"
@@ -61,6 +53,13 @@ export function getDocParams(
     startkey: `${docType}${SEPARATOR}${docId}`,
     endkey: `${docType}${SEPARATOR}${docId}${UNICODE_MAX}`,
   }
+}
+
+/**
+ * Retrieve the correct index for a view based on default design DB.
+ */
+export function getQueryIndex(viewName: string) {
+  return `database/${viewName}`
 }
 
 /**
