@@ -6,17 +6,17 @@ on:
       - "develop"
       - "master"
       - "main"
+env:
+  BASE_BRANCH: ${{ github.event.pull_request.base.ref}}
+  BRANCH: ${{ github.event.pull_request.head.ref }}
+  DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
+  DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
+  PERSONAL_ACCESS_TOKEN : ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+  REGISTRY_URL: registry.hub.docker.com
 jobs:
   build:
     name: "build"
     runs-on: ubuntu-latest
-    env:
-      BASE_BRANCH: ${{ github.event.pull_request.base.ref}}
-      BRANCH: ${{ github.event.pull_request.head.ref }}
-      DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
-      DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
-      PERSONAL_ACCESS_TOKEN : ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-      REGISTRY_URL: registry.hub.docker.com
     strategy:
       matrix:
         node-version: [14.x]
@@ -41,6 +41,11 @@ jobs:
         env:
           CI: true
           name: Budibase CI
+  test:
+    name: "test"
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
       - name: Test Code Coverage
         uses: codecov/codecov-action@v1
         with:
@@ -53,16 +58,22 @@ jobs:
         with:
           install: false
           command: yarn test:e2e:ci
+  deploy:
+    name: "deploy"
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
       - name: Login to Docker Hub
         run: |
           docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
-      - name: Get the latest budibase release version
+      - name: Get the latest release version
         id: version
         run: |
           release_version=$(cat lerna.json | jq -r '.version')
+          echo $release_version
           echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
       - name: Tag and release Proxy service docker image
         run: |
           yarn build:docker:single:image
-          docker tag budibase $REGISTRY_URL/budibase/single:$RELEASE_TAG
-          docker push $REGISTRY_URL/budibase/single:$RELEASE_TAG
+          docker tag budibase budibase/single:$RELEASE_TAG
+          docker push budibase/single:$RELEASE_TAG
