@@ -19,8 +19,12 @@ ADD packages/worker .
 RUN node /pinVersions.js && yarn && yarn build && /cleanup.sh
 
 FROM couchdb:3.2.1
-
+# TARGETARCH can be amd64 or arm e.g. docker build --build-arg TARGETARCH=amd64
 ARG TARGETARCH amd64
+#TARGETBUILD can be set to single (for single docker image) or aas (for azure app service)
+# e.g. docker build --build-arg TARGETBUILD=aas ....
+ARG TARGETBUILD single
+ENV TARGETBUILD $TARGETBUILD
 
 COPY --from=build /app /app
 COPY --from=build /worker /worker
@@ -33,7 +37,7 @@ ENV \
   COUCHDB_PASSWORD=budibase \
   COUCHDB_USER=budibase \
   COUCH_DB_URL=http://budibase:budibase@localhost:5984 \
-  CUSTOM_DOMAIN=budi001.custom.com \
+  # CUSTOM_DOMAIN=budi001.custom.com \
   DEPLOYMENT_ENVIRONMENT=docker \
   INTERNAL_API_KEY=budibase \
   JWT_SECRET=testsecret \
@@ -44,6 +48,7 @@ ENV \
   REDIS_PASSWORD=budibase \
   REDIS_URL=localhost:6379 \
   SELF_HOSTED=1 \
+  TARGETBUILD=$TARGETBUILD \
   WORKER_PORT=4002 \
   WORKER_URL=http://localhost:4002
 
@@ -62,6 +67,7 @@ RUN curl -sL https://deb.nodesource.com/setup_16.x -o /tmp/nodesource_setup.sh &
 
 # setup nginx
 ADD hosting/single/nginx.conf /etc/nginx
+ADD hosting/single/nginx-default-site.conf /etc/nginx/sites-enabled/default
 RUN mkdir -p /var/log/nginx && \
   touch /var/log/nginx/error.log && \
   touch /var/run/nginx.pid
@@ -99,6 +105,12 @@ ADD hosting/single/runner.sh .
 RUN chmod +x ./runner.sh
 ADD hosting/scripts/healthcheck.sh .
 RUN chmod +x ./healthcheck.sh
+
+ADD hosting/scripts/build-target-paths.sh .
+RUN chmod +x ./build-target-paths.sh
+
+# For Azure App Service install SSH & point data locations to /home
+RUN /build-target-paths.sh
 
 # cleanup cache
 RUN yarn cache clean -f
