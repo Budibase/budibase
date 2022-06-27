@@ -158,11 +158,7 @@ filterTests(["all"], () => {
         .contains("Manage")
         .eq(0)
         .click({ force: true })
-      cy.wait(1000)
-      cy.get(".app-overview-actions-icon").within(() => {
-        cy.get(".spectrum-Icon").click({ force: true })
-      })
-      cy.get(".spectrum-Menu").contains("Edit icon").click()
+      cy.get(".app-icon", { timwout: 1000 }).click({ force: true })
       // Select random icon
       cy.get(".grid").within(() => {
         cy.get(".icon-item")

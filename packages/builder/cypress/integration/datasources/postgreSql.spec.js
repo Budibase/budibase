@@ -35,6 +35,7 @@ filterTests(["all"], () => {
         // Check response from datasource after adding configuration
         cy.wait("@datasource")
         cy.get("@datasource").its("response.statusCode").should("eq", 200)
+        cy.wait(2000)
         // Confirm fetch tables was successful
         cy.get(".spectrum-Table")
           .eq(0)
@@ -113,12 +114,13 @@ filterTests(["all"], () => {
         cy.get(".spectrum-Table")
           .eq(1)
           .within(() => {
-            cy.get(".spectrum-Table-row").eq(0).click({ force: true })
+            cy.get(".spectrum-Table-cell").eq(0).click({ force: true })
           })
         cy.get(".spectrum-Dialog-grid", { timeout: 500 }).within(() => {
           cy.get(".spectrum-Button").contains("Delete").click({ force: true })
         })
         cy.reload()
+        cy.wait(500)
         // Confirm relationship was deleted
         cy.get(".spectrum-Table")
           .eq(1)
@@ -228,7 +230,10 @@ filterTests(["all"], () => {
 
         // Run and Save query
         cy.get(".spectrum-Button").contains("Run Query").click({ force: true })
+        cy.wait(500)
         cy.get(".spectrum-Button", { timeout: 500 }).contains("Save Query").click({ force: true })
+        //cy.reload()
+        //cy.wait(500)
         cy.get(".nav-item").should("contain", queryRename)
       })
 
@@ -268,6 +273,7 @@ filterTests(["all"], () => {
             .click({ force: true })
         })
         cy.reload()
+        cy.wait(1000)
       }
     }
   })

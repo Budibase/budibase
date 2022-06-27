@@ -135,7 +135,7 @@ filterTests(["all"], () => {
               cy.get(".spectrum-Table")
                 .eq(1)
                 .within(() => {
-                  cy.get(".spectrum-Table-row").eq(0).click({ force: true })
+                  cy.get(".spectrum-Table-cell").eq(0).click({ force: true })
                 })
               cy.get(".spectrum-Dialog-grid", { timeout: 500 }).within(() => {
                 cy.get(".spectrum-Button")
@@ -143,6 +143,7 @@ filterTests(["all"], () => {
                   .click({ force: true })
               })
               cy.reload()
+              cy.wait(500)
             }
             // Confirm relationships no longer exist
             cy.get(".spectrum-Body").should(

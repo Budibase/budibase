@@ -18,6 +18,7 @@ filterTests(["all"], () => {
         cy.get(".spectrum-Button")
           .contains("Skip table fetch")
           .click({ force: true })
+        cy.wait(500)
         // Confirm config contains localhost
         cy.get(".spectrum-Textfield-input", { timeout: 500 })
           .eq(1)

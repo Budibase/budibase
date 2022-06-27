@@ -650,6 +650,7 @@ Cypress.Commands.add("selectExternalDatasource", datasourceName => {
   cy.get(".spectrum-Dialog-grid").within(() => {
     cy.get(".spectrum-Button").contains("Continue").click({ force: true })
   })
+  cy.wait(500)
 })
 
 Cypress.Commands.add("addDatasourceConfig", (datasource, skipFetch) => {
