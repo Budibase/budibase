@@ -64,5 +64,5 @@ jobs:
       - name: Tag and release Proxy service docker image
         run: |
           yarn build:docker:single:image
-          docker tag budibase budibase/single:$RELEASE_TAG
-          docker push budibase/single:$RELEASE_TAG
+          docker tag budibase budibase/budibase:$RELEASE_TAG
+          docker push budibase/budibase:$RELEASE_TAG
