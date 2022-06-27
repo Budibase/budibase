@@ -4,7 +4,6 @@
 As an alternative to running several docker containers via docker-compose, the files under ./hosting/single can be used to build a docker image containing all of the Budibase components (minio, couch, clouseau etc).
 We call this the 'single image' container as the Dockerfile adds all the components to a single docker image.
 
-
 ## Usage
 
 - Amend Environment Variables
@@ -22,9 +21,9 @@ If you have other arrangements for a proxy in front of the single image containe
 We would suggest building the image with 6GB of RAM and 20GB of free disk space for build artifacts. The resulting image size will use approx 2GB of disk space.
 
 ### Build the Image
-The guidance below is based on building the Budibase single image on Debian 11. If you use another distro or OS you will need to amend the commands to suit. 
-Install Node
-Budibase requires a recent version of node (14+) than is in the base Debian repos so:
+The guidance below is based on building the Budibase single image on Debian 11 and AlmaLinux 8. If you use another distro or OS you will need to amend the commands to suit. 
+#### Install Node
+Budibase requires a more recent version of node (14+) than is available in the base Debian repos so:
 
 ```
 curl -sL https://deb.nodesource.com/setup_16.x | sudo bash -
@@ -35,25 +34,26 @@ Install yarn and lerna:
 ```
 npm install -g yarn jest lerna
 ```
-Install Docker
+#### Install Docker
+
 ```
 apt install -y docker.io
-apt install -y python3-pip
-pip3 install docker-compose
 ```
+
 Check the versions of each installed version. This process was tested with the version numbers below so YMMV using anything else:
 
 - Docker: 20.10.5
-- docker-compose: 1.29.2
 - node: 16.15.1
 - yarn: 1.22.19
 - lerna: 5.1.4
 
+#### Get the Code
 Clone the Budibase repo
 ```
 git clone https://github.com/Budibase/budibase.git
 cd budibase
 ```
+#### Setup Node
 Node setup:
 ```
 node ./hosting/scripts/setup.js
@@ -61,15 +61,20 @@ yarn
 yarn bootstrap
 yarn build
 ```
-
-Build the image from the Dockerfile:
-
+#### Build Image
+The following yarn command does some prep and then runs the docker build command:
 ```
 yarn build:docker:single
 ```
-If the docker build step fails run that step again manually with:
+If the docker build step fails try running that step again manually with:
 ```
-docker build --no-cache -t budibase:latest -f ./hosting/single/Dockerfile .
+docker build --build-arg TARGETARCH=amd --no-cache -t budibase:latest -f ./hosting/single/Dockerfile .
+```
+
+#### Azure App Services
+Azure have some specific requirements for running a container in their App Service. Specifically, installation of SSH to port 2222 and data storage under /home. If you would like to build a budibase container for Azure App Service add the build argument shown below setting it to 'aas'. You can remove the CUSTOM_DOMAIN env variable from the Dockerfile too as Azure terminate SSL before requests reach the container.
+```
+docker build --build-arg TARGETARCH=amd --build-arg TARGETBUILD=aas -t budibase:latest -f ./hosting/single/Dockerfile .
 ```
 
 ### Run the Container
@@ -85,6 +90,9 @@ When the container runs you should be able to access the container over http at 
 
 When the Budibase UI appears you will be prompted to create an account to get started.
 
+### Podman
+The single image container builds fine when using podman in place of docker. You may be prompted for the registry to use for the CouchDB image and the HEALTHCHECK parameter is not OCI compliant so is ignored.
+
 ### Check
 There are many things that could go wrong so if your container is not building or running as expected please check the following before opening a support issue.
 Verify the healthcheck status of the container:
@@ -95,7 +103,6 @@ Check the container logs:
 ```
 docker logs budibase
 ```
-
 
 ### Support
 This single image build is still a work-in-progress so if you open an issue please provide the following information:
