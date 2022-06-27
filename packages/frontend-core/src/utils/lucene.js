@@ -102,8 +102,12 @@ export const buildLuceneQuery = filter => {
       if (type === "datetime" && value) {
         value = new Date(value).toISOString()
       }
-      if (type === "number") {
-        value = parseFloat(value)
+      if (type === "number" && !Array.isArray(value)) {
+        if (operator === "oneOf") {
+          value = value.split(",").map(item => parseFloat(item))
+        } else {
+          value = parseFloat(value)
+        }
       }
       if (type === "boolean") {
         value = `${value}`?.toLowerCase() === "true"
@@ -137,6 +141,7 @@ export const buildLuceneQuery = filter => {
             query[operator][field] = value
           }
         } else {
+          console.log("VAL ", value)
           query[operator][field] = value
         }
       }
