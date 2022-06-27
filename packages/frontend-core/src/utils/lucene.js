@@ -217,6 +217,9 @@ export const runLuceneQuery = (docs, query) => {
   const oneOf = match("oneOf", (docValue, testValue) => {
     if (typeof testValue === "string") {
       testValue = testValue.split(",")
+      if (typeof docValue === "number") {
+        testValue = testValue.map(item => Number(item))
+      }
     }
     return !testValue?.includes(docValue)
   })
