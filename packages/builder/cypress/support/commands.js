@@ -400,7 +400,7 @@ Cypress.Commands.add("createTable", (tableName, initialTable) => {
     cy.get(`[data-cy="new-table"]`).click()
   }
   cy.wait(500)
-  cy.get(".spectrum-Dialog-grid")
+  cy.get(".item")
     .contains("Budibase DB")
     .click({ force: true })
     .then(() => {
