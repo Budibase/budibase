@@ -20,8 +20,10 @@ filterTests(["smoke", "all"], () => {
       cy.contains("bbuser").click()
       // Confirm development and admin access are disabled
       for (let i = 4; i < 6; i++) {
+        cy.wait(500)
         cy.get(interact.FIELD).eq(i).within(() => {
-          cy.get(interact.SPECTRUM_SWITCH_INPUT).should('be.disabled')
+          //cy.get(interact.SPECTRUM_SWITCH_INPUT).should('be.disabled')
+          cy.get(".spectrum-Switch-switch").should('not.be.checked')
         })
       }
       // Existing apps appear within the No Access table
@@ -80,6 +82,7 @@ filterTests(["smoke", "all"], () => {
                 .click({ force: true })
             })
             cy.reload()
+            cy.wait(1000)
         }
         // Confirm roles exist within Configure roles table
         cy.get(interact.SPECTRUM_TABLE, { timeout: 2000 })
@@ -171,12 +174,13 @@ filterTests(["smoke", "all"], () => {
     it("Should edit user details within user details page", () => {
       // Add First name
       cy.get(interact.FIELD, { timeout: 500 }).eq(2).within(() => {
-        cy.get(interact.SPECTRUM_TEXTFIELD_INPUT).type("bb")
+        cy.get(interact.SPECTRUM_TEXTFIELD_INPUT, { timeout: 500 }).type("bb")
       })
       // Add Last name
       cy.get(interact.FIELD).eq(3).within(() => {
         cy.get(interact.SPECTRUM_TEXTFIELD_INPUT).type("test")
       })
+      cy.get(interact.FIELD).eq(0).click()
       // Reload page
       cy.reload()
 
@@ -185,20 +189,23 @@ filterTests(["smoke", "all"], () => {
         cy.get(interact.SPECTRUM_TEXTFIELD_INPUT).should('have.value', "bb")
       })
       cy.get(interact.FIELD).eq(3).within(() => {
-        cy.get(interact.SPECTRUM_TEXTFIELD_INPUT).should('have.value', "test")
+        cy.get(interact.SPECTRUM_TEXTFIELD_INPUT, { timeout: 500 }).should('have.value', "test")
       })
     })
 
     it("should reset the users password", () => {
-      cy.get(interact.REGENERATE, { timeout: 500 }).click({ force: true })
+      cy.get(interact.REGENERATE, { timeout: 500 }).contains("Force password reset").click({ force: true })
 
       // Reset password modal
-      const newPwd = cy.get(interact.SPECTRUM_TEXTFIELD_INPUT).its('value')
+      cy.get(interact.SPECTRUM_DIALOG_GRID)
+      .find(interact.SPECTRUM_TEXTFIELD_INPUT).invoke('val').as('pwd')
       cy.get(interact.SPECTRUM_BUTTON).contains("Reset password").click({ force: true })
 
       // Logout, then login with new password
       cy.logOut()
-      cy.login("bbuser@test.com", newPwd)
+      cy.get('@pwd').then((pwd) => {
+        cy.login("bbuser@test.com", pwd)
+      })
 
       // Reset password screen
       for (let i = 0; i < 2; i++) {
@@ -207,15 +214,15 @@ filterTests(["smoke", "all"], () => {
       cy.get(interact.SPECTRUM_BUTTON).contains("Reset your password").click({ force: true })
 
       // Confirm user logged in afer password change
-      cy.get(".user-dropdown .avatar > .icon").click({ force: true })
+      cy.get(".avatar > .icon").click({ force: true })
 
-      cy.get(".spectrum-Popover[data-cy='user-menu']").within(() => {
-        cy.get("li[data-cy='user-info']").click({ force: true })
-        })
-      cy.get(interact.SPECTRUM_TEXTFIELD_INPUT).its('value').should('eq', 'bbuser@test.com')
+      cy.get(".spectrum-Menu-item").contains("Update user information").click({ force: true })
+      cy.get(interact.SPECTRUM_TEXTFIELD_INPUT)
+      .eq(0)
+      .invoke('val').should('eq', 'bbuser@test.com')
       
       // Logout and login as previous user
-      cy.logOut()
+      cy.logoutNoAppGrid()
       cy.login()
       })
 
