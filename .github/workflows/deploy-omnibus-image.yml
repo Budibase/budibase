@@ -1,0 +1,84 @@
+name: Deploy Budibase Single Container Image to DockerHub
+on:
+  push:
+    branches:
+      - "omnibus-action"
+      - "develop"
+      - "master"
+      - "main"
+jobs:
+  build:
+    name: "build"
+    runs-on: ubuntu-latest
+    env:
+      BASE_BRANCH: ${{ github.event.pull_request.base.ref}}
+      BRANCH: ${{ github.event.pull_request.head.ref }}
+      PERSONAL_ACCESS_TOKEN : ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+    strategy:
+      matrix:
+        node-version: [14.x]
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Install Pro
+        run: yarn install:pro $BRANCH $BASE_BRANCH
+      - name: Run Yarn
+        run: yarn
+      - name: Run Yarn Bootstrap
+        run: yarn bootstrap
+      - name: Runt Yarn Lint
+        run: yarn lint
+      - name: Run Yarn Build
+        run: yarn build
+      - run: yarn test
+        env:
+          CI: true
+          name: Budibase CI
+  test:
+    name: Budibase Single Image Tests
+    runs-on: ubuntu-latest
+    env: 
+      BASE_BRANCH: ${{ github.event.pull_request.base.ref}}
+      BRANCH: ${{ github.event.pull_request.head.ref }}
+      PERSONAL_ACCESS_TOKEN : ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+    steps:
+      - name: Test Code Coverage
+        uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
+          files: ./packages/server/coverage/clover.xml
+          name: codecov-umbrella
+          verbose: true 
+      - name: Test with Cypress
+        uses: cypress-io/github-action@v2
+        with:
+          install: false
+          command: yarn test:e2e:ci
+  deploy:
+    name: Deploy the Budibase Single Container Image to Docker Hub
+    runs-on: ubuntu-latest
+    env:
+      BASE_BRANCH: ${{ github.event.pull_request.base.ref}}
+      BRANCH: ${{ github.event.pull_request.head.ref }}
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
+      DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
+      PERSONAL_ACCESS_TOKEN : ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+      REGISTRY_URL: registry.hub.docker.com
+    steps:
+      - name: Login to Docker Hub
+        run: |
+          docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+      - name: Get the latest budibase release version
+        id: version
+        run: |
+          release_version=$(cat lerna.json | jq -r '.version')
+          echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
+      - name: Tag and release Proxy service docker image
+        run: |
+          yarn build:docker:single:image
+          docker tag budibase $REGISTRY_URL/budibase/single:$RELEASE_TAG
+          docker push  $REGISTRY_URL/budibase/single:$RELEASE_TAG
