@@ -33,6 +33,9 @@ export default ({ mode }) => {
         ),
         "process.env.POSTHOG_URL": JSON.stringify(process.env.POSTHOG_URL),
         "process.env.SENTRY_DSN": JSON.stringify(process.env.SENTRY_DSN),
+        "process.env.FEATURE_PREVIEW_URL": JSON.stringify(
+          process.env.FEATURE_PREVIEW_URL
+        ),
       }),
     ],
     optimizeDeps: {
