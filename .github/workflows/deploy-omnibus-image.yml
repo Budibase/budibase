@@ -13,7 +13,10 @@ jobs:
     env:
       BASE_BRANCH: ${{ github.event.pull_request.base.ref}}
       BRANCH: ${{ github.event.pull_request.head.ref }}
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
+      DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
       PERSONAL_ACCESS_TOKEN : ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+      REGISTRY_URL: registry.hub.docker.com
     strategy:
       matrix:
         node-version: [14.x]
@@ -38,14 +41,6 @@ jobs:
         env:
           CI: true
           name: Budibase CI
-  test:
-    name: Budibase Single Image Tests
-    runs-on: ubuntu-latest
-    env: 
-      BASE_BRANCH: ${{ github.event.pull_request.base.ref}}
-      BRANCH: ${{ github.event.pull_request.head.ref }}
-      PERSONAL_ACCESS_TOKEN : ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-    steps:
       - name: Test Code Coverage
         uses: codecov/codecov-action@v1
         with:
@@ -58,17 +53,6 @@ jobs:
         with:
           install: false
           command: yarn test:e2e:ci
-  deploy:
-    name: Deploy the Budibase Single Container Image to Docker Hub
-    runs-on: ubuntu-latest
-    env:
-      BASE_BRANCH: ${{ github.event.pull_request.base.ref}}
-      BRANCH: ${{ github.event.pull_request.head.ref }}
-      DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
-      DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
-      PERSONAL_ACCESS_TOKEN : ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-      REGISTRY_URL: registry.hub.docker.com
-    steps:
       - name: Login to Docker Hub
         run: |
           docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
@@ -81,4 +65,4 @@ jobs:
         run: |
           yarn build:docker:single:image
           docker tag budibase $REGISTRY_URL/budibase/single:$RELEASE_TAG
-          docker push  $REGISTRY_URL/budibase/single:$RELEASE_TAG
+          docker push $REGISTRY_URL/budibase/single:$RELEASE_TAG
