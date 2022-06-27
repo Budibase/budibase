@@ -235,15 +235,15 @@ class QueryBuilder {
             return ""
           }
         }
-        const preprocess = item => {
-          return builder.preprocess(item, {
-            escape: true,
-            lowercase: true,
-          })
-        }
-        let orStatement = `"${preprocess(value[0])}"`
+        let orStatement = `${builder.preprocess(
+          value[0],
+          allPreProcessingOpts
+        )}`
         for (let i = 1; i < value.length; i++) {
-          orStatement += ` OR "${preprocess(value[i])}"`
+          orStatement += ` OR ${builder.preprocess(
+            value[i],
+            allPreProcessingOpts
+          )}`
         }
         return `${key}:(${orStatement})`
       })
