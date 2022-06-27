@@ -23,6 +23,7 @@ export const getValidOperatorsForType = type => {
     Op.LessThan,
     Op.Empty,
     Op.NotEmpty,
+    Op.In,
   ]
   if (type === "string") {
     return stringOps
