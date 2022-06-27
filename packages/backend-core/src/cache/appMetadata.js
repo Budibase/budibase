@@ -1,4 +1,4 @@
-const redis = require("../redis/authRedis")
+const redis = require("../redis/init")
 const { doWithDB } = require("../db")
 const { DocumentTypes } = require("../db/constants")
 

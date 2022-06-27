@@ -94,6 +94,7 @@ export interface Integration {
   relationships?: boolean
   description: string
   friendlyName: string
+  type?: string
   datasource: {}
   query: {
     [key: string]: QueryDefinition
