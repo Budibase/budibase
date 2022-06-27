@@ -215,6 +215,9 @@ export const runLuceneQuery = (docs, query) => {
 
   // Process an includes match (fails if the value is not included)
   const oneOf = match("oneOf", (docValue, testValue) => {
+    if (typeof testValue === "string") {
+      testValue = testValue.split(",")
+    }
     return !testValue?.includes(docValue)
   })
 
