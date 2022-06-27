@@ -24,6 +24,7 @@
 
   // Get Package and set store
   let promise = getPackage()
+  let betaAccess = false
 
   // Sync once when you load the app
   let hasSynced = false
@@ -74,6 +75,9 @@
     if (!hasSynced && application) {
       try {
         await API.syncApp(application)
+        // check if user has beta access
+        const betaResponse = await API.checkBetaAccess($auth?.user?.email)
+        betaAccess = betaResponse.access
       } catch (error) {
         notifications.error("Failed to sync with production database")
       }
@@ -91,9 +95,14 @@
   <div class="loading" />
 {:then _}
   <div class="root">
-    <Banner extraButtonText="Try New UI (Beta)" extraButtonAction={newDesignUi}>
-      Try the <b>all new</b> budibase design interface.
-    </Banner>
+    {#if betaAccess}
+      <Banner
+        extraButtonText="Try New UI (Beta)"
+        extraButtonAction={newDesignUi}
+      >
+        Try the <b>all new</b> budibase design interface.
+      </Banner>
+    {/if}
     <div class="top-nav">
       <div class="topleftnav">
         <button class="home-logo">
