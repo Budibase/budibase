@@ -54,4 +54,13 @@ export const buildOtherEndpoints = API => ({
       url: "/api/permission/builtin",
     })
   },
+
+  /**
+   * Check if they are part of the budibase beta program.
+   */
+  checkBetaAccess: async email => {
+    return await API.get({
+      url: `${process.env.FEATURE_PREVIEW_URL}/api/beta/access?email=${email}`,
+    })
+  },
 })
