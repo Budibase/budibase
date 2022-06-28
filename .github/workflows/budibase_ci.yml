@@ -73,4 +73,5 @@ jobs:
         tar -czvf new_ui.tar.gz packages/server/assets packages/server/index.html 
         aws s3 cp new_ui.tar.gz s3://prod-budi-app-assets/beta:design_ui/
         aws s3 cp packages/client/dist/budibase-client.js s3://prod-budi-app-assets/beta:design_ui/budibase-client.js
+        aws cloudfront create-invalidation --distribution-id E3ELKP4RCEHVLW --paths "/beta:design_ui/*"
         
