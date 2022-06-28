@@ -1,77 +1,93 @@
-FROM couchdb
+FROM node:14-slim as build
 
-ENV COUCHDB_PASSWORD=budibase
-ENV COUCHDB_USER=budibase
-ENV COUCH_DB_URL=http://budibase:budibase@localhost:5984
-ENV BUDIBASE_ENVIRONMENT=PRODUCTION
-ENV MINIO_URL=http://localhost:9000
-ENV REDIS_URL=localhost:6379
-ENV WORKER_URL=http://localhost:4002
-ENV INTERNAL_API_KEY=budibase
-ENV JWT_SECRET=testsecret
-ENV MINIO_ACCESS_KEY=budibase
-ENV MINIO_SECRET_KEY=budibase
-ENV SELF_HOSTED=1
-ENV CLUSTER_PORT=10000
-ENV REDIS_PASSWORD=budibase
-ENV ARCHITECTURE=amd
-ENV APP_PORT=4001
-ENV WORKER_PORT=4002
+# install node-gyp dependencies
+RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends apt-utils cron g++ make python
 
-RUN apt-get update
-RUN apt-get install software-properties-common wget nginx -y
-RUN apt-add-repository 'deb http://security.debian.org/debian-security stretch/updates main'
-RUN apt-get update
+# add pin script
+WORKDIR /
+ADD scripts/pinVersions.js scripts/cleanup.sh ./
+RUN chmod +x /cleanup.sh
+
+# build server
+WORKDIR /app
+ADD packages/server .
+RUN node /pinVersions.js && yarn && yarn build && /cleanup.sh
+
+# build worker
+WORKDIR /worker
+ADD packages/worker .
+RUN node /pinVersions.js && yarn && yarn build && /cleanup.sh
+
+FROM couchdb:3.2.1
+# TARGETARCH can be amd64 or arm e.g. docker build --build-arg TARGETARCH=amd64
+ARG TARGETARCH amd64
+#TARGETBUILD can be set to single (for single docker image) or aas (for azure app service)
+# e.g. docker build --build-arg TARGETBUILD=aas ....
+ARG TARGETBUILD single
+ENV TARGETBUILD $TARGETBUILD
+
+COPY --from=build /app /app
+COPY --from=build /worker /worker
+
+ENV \
+  APP_PORT=4001 \
+  ARCHITECTURE=amd \
+  BUDIBASE_ENVIRONMENT=PRODUCTION \
+  CLUSTER_PORT=80 \
+  COUCHDB_PASSWORD=budibase \
+  COUCHDB_USER=budibase \
+  COUCH_DB_URL=http://budibase:budibase@localhost:5984 \
+  # CUSTOM_DOMAIN=budi001.custom.com \
+  DEPLOYMENT_ENVIRONMENT=docker \
+  INTERNAL_API_KEY=budibase \
+  JWT_SECRET=testsecret \
+  MINIO_ACCESS_KEY=budibase \
+  MINIO_SECRET_KEY=budibase \
+  MINIO_URL=http://localhost:9000 \
+  POSTHOG_TOKEN=phc_fg5I3nDOf6oJVMHSaycEhpPdlgS8rzXG2r6F2IpxCHS \
+  REDIS_PASSWORD=budibase \
+  REDIS_URL=localhost:6379 \
+  SELF_HOSTED=1 \
+  TARGETBUILD=$TARGETBUILD \
+  WORKER_PORT=4002 \
+  WORKER_URL=http://localhost:4002
+
+# install base dependencies
+RUN apt-get update && \
+  apt-get install -y software-properties-common wget nginx && \
+  apt-add-repository 'deb http://security.debian.org/debian-security stretch/updates main' && \
+  apt-get update
+
+# install other dependencies, nodejs, oracle requirements, jdk8, redis, nginx
+WORKDIR /nodejs
+RUN curl -sL https://deb.nodesource.com/setup_16.x -o /tmp/nodesource_setup.sh && \
+  bash /tmp/nodesource_setup.sh && \
+  apt-get install -y libaio1 nodejs nginx openjdk-8-jdk redis-server unzip && \
+  npm install --global yarn pm2
 
 # setup nginx
 ADD hosting/single/nginx.conf /etc/nginx
-RUN mkdir /etc/nginx/logs
-RUN useradd www
-RUN touch /etc/nginx/logs/error.log
-RUN touch /etc/nginx/logs/nginx.pid
+ADD hosting/single/nginx-default-site.conf /etc/nginx/sites-enabled/default
+RUN mkdir -p /var/log/nginx && \
+  touch /var/log/nginx/error.log && \
+  touch /var/run/nginx.pid
 
-# install java
-RUN apt-get install openjdk-8-jdk -y
-
-# setup nodejs
-WORKDIR /nodejs
-RUN curl -sL https://deb.nodesource.com/setup_16.x -o /tmp/nodesource_setup.sh
-RUN bash /tmp/nodesource_setup.sh
-RUN apt-get install nodejs
-RUN npm install --global yarn
-RUN npm install --global pm2
-
-# setup redis
-RUN apt install redis-server -y
-
-# setup server
-WORKDIR /app
-ADD packages/server .
-RUN ls -al
-RUN yarn
-RUN yarn build
-# Install client for oracle datasource
-RUN apt-get install unzip libaio1
-RUN /bin/bash -e scripts/integrations/oracle/instantclient/linux/x86-64/install.sh
-
-# setup worker
-WORKDIR /worker
-ADD packages/worker .
-RUN yarn
-RUN yarn build
+WORKDIR /
+RUN mkdir -p scripts/integrations/oracle
+ADD packages/server/scripts/integrations/oracle scripts/integrations/oracle
+RUN /bin/bash -e ./scripts/integrations/oracle/instantclient/linux/install.sh
 
 # setup clouseau
 WORKDIR /
-RUN wget https://github.com/cloudant-labs/clouseau/releases/download/2.21.0/clouseau-2.21.0-dist.zip
-RUN unzip clouseau-2.21.0-dist.zip
-RUN mv clouseau-2.21.0 /opt/clouseau
-RUN rm clouseau-2.21.0-dist.zip
+RUN wget https://github.com/cloudant-labs/clouseau/releases/download/2.21.0/clouseau-2.21.0-dist.zip && \
+  unzip clouseau-2.21.0-dist.zip && \
+  mv clouseau-2.21.0 /opt/clouseau && \
+  rm clouseau-2.21.0-dist.zip
 
 WORKDIR /opt/clouseau
 RUN mkdir ./bin
 ADD hosting/single/clouseau ./bin/
-ADD hosting/single/log4j.properties .
-ADD hosting/single/clouseau.ini .
+ADD hosting/single/log4j.properties hosting/single/clouseau.ini ./
 RUN chmod +x ./bin/clouseau
 
 # setup CouchDB
@@ -80,18 +96,49 @@ ADD hosting/single/vm.args ./etc/
 
 # setup minio
 WORKDIR /minio
-RUN wget https://dl.min.io/server/minio/release/linux-${ARCHITECTURE}64/minio
-RUN chmod +x minio
+ADD scripts/install-minio.sh ./install.sh
+RUN chmod +x install.sh && ./install.sh
 
 # setup runner file
 WORKDIR /
 ADD hosting/single/runner.sh .
 RUN chmod +x ./runner.sh
+ADD hosting/scripts/healthcheck.sh .
+RUN chmod +x ./healthcheck.sh
 
-EXPOSE 10000
+ADD hosting/scripts/build-target-paths.sh .
+RUN chmod +x ./build-target-paths.sh
+
+# For Azure App Service install SSH & point data locations to /home
+RUN /build-target-paths.sh
+
+# cleanup cache
+RUN yarn cache clean -f
+
+EXPOSE 80
+EXPOSE 443
 VOLUME /opt/couchdb/data
 VOLUME /minio
 
+#  setup letsencrypt certificate
+RUN apt-get install -y certbot python3-certbot-nginx
+ADD hosting/letsencrypt /app/letsencrypt
+RUN chmod +x /app/letsencrypt/certificate-request.sh /app/letsencrypt/certificate-renew.sh
+# Remove cached files
+RUN rm -rf \
+  /root/.cache \
+  /root/.npm \
+  /root/.pip \
+  /usr/local/share/doc \
+  /usr/share/doc \
+  /usr/share/man \
+  /var/lib/apt/lists/* \
+  /tmp/*
+
+HEALTHCHECK --interval=15s --timeout=15s --start-period=45s CMD "/healthcheck.sh"
+
 # must set this just before running
 ENV NODE_ENV=production
+WORKDIR /
+
 CMD ["./runner.sh"]

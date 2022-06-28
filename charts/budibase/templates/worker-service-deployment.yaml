@@ -27,6 +27,8 @@ spec:
     spec:
       containers:
       - env:
+        - name: DEPLOYMENT_ENVIRONMENT
+          value: "kubernetes"
         - name: CLUSTER_PORT
           value: {{ .Values.services.worker.port | quote }}
         {{ if .Values.services.couchdb.enabled }}
@@ -91,6 +93,10 @@ spec:
           value: {{ .Values.globals.selfHosted | quote }}
         - name: SENTRY_DSN
           value: {{ .Values.globals.sentryDSN }}
+        - name: ENABLE_ANALYTICS
+          value: {{ .Values.globals.enableAnalytics | quote }}
+        - name: POSTHOG_TOKEN
+          value: {{ .Values.globals.posthogToken }}
         - name: ACCOUNT_PORTAL_URL
           value: {{ .Values.globals.accountPortalUrl | quote }}
         - name: ACCOUNT_PORTAL_API_KEY
@@ -117,6 +123,8 @@ spec:
           value: {{ .Values.globals.google.clientId | quote }}
         - name: GOOGLE_CLIENT_SECRET
           value: {{ .Values.globals.google.secret | quote }}
+        - name: TENANT_FEATURE_FLAGS
+          value: {{ .Values.globals.tenantFeatureFlags | quote }}
         image: budibase/worker:{{ .Values.globals.appVersion }}
         imagePullPolicy: Always
         livenessProbe:

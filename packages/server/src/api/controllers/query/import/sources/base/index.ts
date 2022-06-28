@@ -1,4 +1,4 @@
-import { Query, QueryParameter } from "../../../../../../definitions/datasource"
+import { Query, QueryParameter } from "@budibase/types"
 import { URL } from "url"
 
 export interface ImportInfo {
@@ -17,6 +17,7 @@ export abstract class ImportSource {
   abstract isSupported(data: string): Promise<boolean>
   abstract getInfo(): Promise<ImportInfo>
   abstract getQueries(datasourceId: string): Promise<Query[]>
+  abstract getImportSource(): string
 
   constructQuery = (
     datasourceId: string,

@@ -3,6 +3,7 @@ export default class IntercomClient {
     this.token = token
   }
 
+  //
   /**
    * Instantiate intercom using their provided script.
    */

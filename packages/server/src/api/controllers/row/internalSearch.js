@@ -145,7 +145,7 @@ class QueryBuilder {
 
     function build(structure, queryFn) {
       for (let [key, value] of Object.entries(structure)) {
-        key = builder.preprocess(key.replace(/ /, "_"), {
+        key = builder.preprocess(key.replace(/ /g, "_"), {
           escape: true,
         })
         const expression = queryFn(key, value)

@@ -1,9 +1,12 @@
 const { join } = require("path")
 
 function isTest() {
+  return isCypress() || isJest()
+}
+
+function isJest() {
   return (
     process.env.NODE_ENV === "jest" ||
-    process.env.NODE_ENV === "cypress" ||
     (process.env.JEST_WORKER_ID != null &&
       process.env.JEST_WORKER_ID !== "null")
   )
@@ -67,7 +70,6 @@ module.exports = {
   AUTOMATION_MAX_ITERATIONS: process.env.AUTOMATION_MAX_ITERATIONS,
   SENDGRID_API_KEY: process.env.SENDGRID_API_KEY,
   DYNAMO_ENDPOINT: process.env.DYNAMO_ENDPOINT,
-  POSTHOG_TOKEN: process.env.POSTHOG_TOKEN,
   QUERY_THREAD_TIMEOUT: parseIntSafe(process.env.QUERY_THREAD_TIMEOUT),
   SQL_MAX_ROWS: process.env.SQL_MAX_ROWS,
   // flags
@@ -84,6 +86,7 @@ module.exports = {
     module.exports[key] = value
   },
   isTest,
+  isJest,
   isCypress,
   isDev,
   isProd: () => {

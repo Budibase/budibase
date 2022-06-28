@@ -24,6 +24,7 @@ module MongoDBModule {
   const SCHEMA: Integration = {
     docs: "https://github.com/mongodb/node-mongodb-native",
     friendlyName: "MongoDB",
+    type: "Non-relational",
     description:
       "MongoDB is a general purpose, document-based, distributed database built for modern application developers and for the cloud era.",
     datasource: {
@@ -262,6 +263,12 @@ module MongoDBModule {
         let json = this.createObjectIds(queryJson) as {
           filter: FilterQuery<any>
           options: CommonOptions
+        }
+        if (!json.options) {
+          json = {
+            filter: json,
+            options: {},
+          }
         }
 
         switch (query.extra.actionTypes) {
