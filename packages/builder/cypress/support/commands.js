@@ -188,14 +188,15 @@ Cypress.Commands.add("deleteApp", name => {
           cy.get(actionEleId).within(() => {
             cy.contains("Manage").click({ force: true })
           })
-          cy.wait(1000)
+          cy.wait(500)
 
           // Unpublish first if needed
           cy.get(`[data-cy="app-status"]`).then($status => {
-            if ($status.text().includes("Last published")) {
-              cy.contains("Unpublish").click()
+            if ($status.text().includes("- Unpublish")) {
+              // Exact match for Unpublish
+              cy.contains("Unpublish").click({ force: true })
               cy.get(".spectrum-Modal").within(() => {
-                cy.contains("Unpublish app").click()
+                cy.contains("Unpublish app").click({ force: true })
               })
             }
           })
