@@ -60,7 +60,7 @@ export const buildOtherEndpoints = API => ({
    */
   checkBetaAccess: async email => {
     return await API.get({
-      url: `${process.env.FEATURE_PREVIEW_URL}/api/beta/access?email=${email}`,
+      url: `/api/beta/access?email=${email}`,
       external: true,
     })
   },
