@@ -1,6 +1,7 @@
 export enum AutomationStatus {
   SUCCESS = "success",
   ERROR = "error",
+  STOPPED = "stopped",
 }
 
 export interface AutomationResults {

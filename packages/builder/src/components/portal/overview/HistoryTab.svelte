@@ -8,7 +8,8 @@
   import dayjs from "dayjs"
 
   const ERROR = "error",
-    SUCCESS = "success"
+    SUCCESS = "success",
+    STOPPED = "stopped"
   export let app
 
   let runHistory = null
@@ -37,6 +38,7 @@
   const statusOptions = [
     { value: SUCCESS, label: "Success" },
     { value: ERROR, label: "Error" },
+    { value: STOPPED, label: "Stopped" },
   ]
 
   const runHistorySchema = {

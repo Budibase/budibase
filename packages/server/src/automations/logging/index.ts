@@ -2,8 +2,8 @@ import { getAppId, getProdAppDB } from "@budibase/backend-core/context"
 import {
   DocumentTypes,
   generateAutomationLogID,
-  SEPARATOR,
   isProdAppID,
+  SEPARATOR,
 } from "../../db/utils"
 import { Automation, MetadataErrors } from "../../definitions/common"
 import { app } from "@budibase/backend-core/cache"
@@ -14,6 +14,7 @@ import {
   AutomationResults,
   AutomationStatus,
 } from "../../definitions/automation"
+
 const { logAlert } = require("@budibase/backend-core/logging")
 
 function getStatus(results: AutomationResults) {
@@ -27,6 +28,10 @@ function getStatus(results: AutomationResults) {
     }
     if (!step.outputs?.success) {
       status = AutomationStatus.ERROR
+      break
+    } else if (step.outputs?.status?.toLowerCase() === "stopped") {
+      status = AutomationStatus.STOPPED
+      break
     }
   }
   return status

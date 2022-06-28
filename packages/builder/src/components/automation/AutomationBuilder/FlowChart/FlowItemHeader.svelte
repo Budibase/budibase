@@ -19,12 +19,23 @@
     }
   }
   $: isTrigger = isTrigger || block.type === "TRIGGER"
+  $: status = updateStatus(testResult, isTrigger)
 
   async function onSelect(block) {
     await automationStore.update(state => {
       state.selectedBlock = block
       return state
     })
+  }
+
+  function updateStatus(results, isTrigger) {
+    if (results.outputs?.status?.toLowerCase() === "stopped") {
+      return { yellow: true, message: "Stopped" }
+    } else if (results.outputs?.success || isTrigger) {
+      return { positive: true, message: "Success" }
+    } else {
+      return { negative: true, message: "Error" }
+    }
   }
 </script>
 
@@ -69,13 +80,10 @@
       {#if showTestStatus && testResult}
         <div style="float: right;">
           <StatusLight
-            positive={isTrigger || testResult.outputs?.success}
-            negative={!testResult.outputs?.success}
-            ><Body size="XS"
-              >{testResult.outputs?.success || isTrigger
-                ? "Success"
-                : "Error"}</Body
-            ></StatusLight
+            positive={status?.positive}
+            yellow={status?.yellow}
+            negative={status?.negative}
+            ><Body size="XS">{status?.message}</Body></StatusLight
           >
         </div>
       {/if}

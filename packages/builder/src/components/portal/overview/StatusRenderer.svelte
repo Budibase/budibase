@@ -3,15 +3,28 @@
   export let value
 
   $: isError = !value || value.toLowerCase() === "error"
-  $: color = isError
-    ? "var(--spectrum-semantic-negative-color-background)"
-    : "var(--green)"
+  $: isStopped = value?.toLowerCase() === "stopped"
+  $: status = getStatus(isError, isStopped)
+
+  function getStatus(error, stopped) {
+    if (error) {
+      return { color: "var(--red)", message: "Error", icon: "Alert" }
+    } else if (stopped) {
+      return { color: "var(--yellow)", message: "Stopped", icon: "StopCircle" }
+    } else {
+      return {
+        color: "var(--green)",
+        message: "Success",
+        icon: "CheckmarkCircle",
+      }
+    }
+  }
 </script>
 
 <div class="cell">
-  <Icon {color} name={isError ? "Alert" : "CheckmarkCircle"} />
-  <div class:green={!isError} class:red={isError}>
-    {isError ? "Error" : "Success"}
+  <Icon color={status.color} name={status.icon} />
+  <div style={`color: ${status.color};`}>
+    {status.message}
   </div>
 </div>
 
@@ -21,13 +34,5 @@
     flex-direction: row;
     gap: var(--spacing-m);
     align-items: center;
-  }
-
-  .green {
-    color: var(--green);
-  }
-
-  .red {
-    color: var(--spectrum-semantic-negative-color-background);
   }
 </style>
