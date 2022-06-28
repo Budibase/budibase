@@ -54,11 +54,17 @@ exports.objectStoreUrl = () => {
  * @return {string} The URL to be inserted into appPackage response or server rendered
  * app index file.
  */
-exports.clientLibraryPath = (appId, version) => {
+exports.clientLibraryPath = (appId, version, ctx) => {
   if (env.isProd()) {
+    // TODO: remove - for beta testing UI
+    if (ctx && ctx.cookies.get("beta:design_ui")) {
+      return "https://cdn.budi.live/beta:design_ui/budibase-client.js"
+    }
+
     let url = `${exports.objectStoreUrl()}/${sanitizeKey(
       appId
     )}/budibase-client.js`
+
     // append app version to bust the cache
     if (version) {
       url += `?v=${version}`
