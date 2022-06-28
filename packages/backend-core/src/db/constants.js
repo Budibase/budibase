@@ -31,6 +31,7 @@ exports.StaticDatabases = {
     name: "global-info",
     docs: {
       tenants: "tenants",
+      install: "install",
     },
   },
 }

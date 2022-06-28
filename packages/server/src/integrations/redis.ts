@@ -17,6 +17,7 @@ module RedisModule {
     docs: "https://redis.io/docs/",
     description: "",
     friendlyName: "Redis",
+    type: "Non-relational",
     datasource: {
       host: {
         type: "string",

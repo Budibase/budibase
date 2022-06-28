@@ -13,6 +13,7 @@ import {
   getProdAppDB,
 } from "@budibase/backend-core/context"
 import { quotas } from "@budibase/pro"
+import { events } from "@budibase/backend-core"
 
 // the max time we can wait for an invalidation to complete before considering it failed
 const MAX_PENDING_TIME_MS = 30 * 60000
@@ -122,6 +123,7 @@ async function deployApp(deployment: any) {
     console.log("Deployed app initialised, setting deployment to successful")
     deployment.setStatus(DeploymentStatus.SUCCESS)
     await storeDeploymentHistory(deployment)
+    return appDoc
   } catch (err: any) {
     deployment.setStatus(DeploymentStatus.FAILURE, err.message)
     await storeDeploymentHistory(deployment)
@@ -186,12 +188,14 @@ const _deployApp = async function (ctx: any) {
 
   console.log("Deploying app...")
 
+  let app
   if (await isFirstDeploy()) {
-    await quotas.addPublishedApp(() => deployApp(deployment))
+    app = await quotas.addPublishedApp(() => deployApp(deployment))
   } else {
-    await deployApp(deployment)
+    app = await deployApp(deployment)
   }
 
+  await events.app.published(app)
   ctx.body = deployment
 }
 

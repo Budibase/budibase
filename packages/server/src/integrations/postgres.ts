@@ -47,6 +47,7 @@ module PostgresModule {
     docs: "https://node-postgres.com",
     plus: true,
     friendlyName: "PostgreSQL",
+    type: "Relational",
     description:
       "PostgreSQL, also known as Postgres, is a free and open-source relational database management system emphasizing extensibility and SQL compliance.",
     datasource: {
@@ -271,6 +272,7 @@ module PostgresModule {
             autocolumn: isAuto,
             name: columnName,
             ...convertSqlType(column.data_type),
+            externalType: column.data_type,
           }
         }
 

@@ -1,14 +1,8 @@
-// ***********************************************
-// For more comprehensive examples of custom
-// commands please read more here:
-// https://on.cypress.io/custom-commands
-// ***********************************************
-//
-
 Cypress.on("uncaught:exception", () => {
   return false
 })
 
+// ACCOUNTS & USERS
 Cypress.Commands.add("login", () => {
   cy.visit(`${Cypress.config().baseUrl}/builder`)
   cy.wait(2000)
@@ -41,43 +35,20 @@ Cypress.Commands.add("logOut", () => {
   cy.wait(2000)
 })
 
-Cypress.Commands.add("closeModal", () => {
-  cy.get(".spectrum-Modal").within(() => {
-    cy.get(".close-icon").click()
-    cy.wait(1000) // Wait for modal to close
-  })
-})
+Cypress.Commands.add("createUser", email => {
+  // quick hacky recorded way to create a user
+  cy.contains("Users").click()
+  cy.get(`[data-cy="add-user"]`).click()
+  cy.get(".spectrum-Picker-label").click()
+  cy.get(".spectrum-Menu-item:nth-child(2) > .spectrum-Menu-itemLabel").click()
 
-Cypress.Commands.add("importApp", (exportFilePath, name) => {
-  cy.visit(`${Cypress.config().baseUrl}/builder`)
-
-  cy.request(`${Cypress.config().baseUrl}/api/applications?status=all`)
-    .its("body")
-    .then(val => {
-      if (val.length > 0) {
-        cy.get(`[data-cy="create-app-btn"]`).click({ force: true })
-        cy.wait(500)
-      }
-      cy.get(`[data-cy="import-app-btn"]`).click({ force: true })
-    })
-
-  cy.get(".spectrum-Modal").within(() => {
-    cy.get("input").eq(1).should("have.focus")
-
-    cy.get(".spectrum-Dropzone").selectFile(exportFilePath, {
-      action: "drag-drop",
-    })
-
-    cy.get(".gallery .filename").contains("exported-app.txt")
-
-    if (name && name != "") {
-      cy.get("input").eq(0).type(name).should("have.value", name).blur()
-    }
-    cy.get(".confirm-wrap button")
-      .should("not.be.disabled")
-      .click({ force: true })
-    cy.wait(5000)
-  })
+  //Onboarding type selector
+  cy.get(
+    ":nth-child(2) > .spectrum-Form-itemField > .spectrum-Textfield > .spectrum-Textfield-input"
+  )
+    .first()
+    .type(email, { force: true })
+  cy.get(".spectrum-Button--cta").click({ force: true })
 })
 
 Cypress.Commands.add("updateUserInformation", (firstName, lastName) => {
@@ -111,6 +82,13 @@ Cypress.Commands.add("updateUserInformation", (firstName, lastName) => {
     }
     cy.get("button").contains("Update information").click({ force: true })
   })
+})
+
+// APPLICATIONS
+Cypress.Commands.add("createTestApp", () => {
+  const appName = "Cypress Tests"
+  cy.deleteApp(appName)
+  cy.createApp(appName, "This app is used for Cypress testing.")
 })
 
 Cypress.Commands.add("createApp", (name, addDefaultTable) => {
@@ -166,20 +144,27 @@ Cypress.Commands.add("deleteApp", name => {
             return
           }
 
+          // Go to app overview
           const appIdParsed = appId.split("_").pop()
           const actionEleId = `[data-cy=row_actions_${appIdParsed}]`
           cy.get(actionEleId).within(() => {
-            cy.get(".spectrum-Icon").eq(0).click({ force: true })
+            cy.contains("Manage").click({ force: true })
           })
-          cy.get(".spectrum-Menu").then($menu => {
-            if ($menu.text().includes("Unpublish")) {
-              cy.get(".spectrum-Menu").contains("Unpublish").click()
-              cy.get(".spectrum-Dialog-grid").contains("Unpublish app").click()
+          cy.wait(1000)
+
+          // Unpublish first if needed
+          cy.get(`[data-cy="app-status"]`).then($status => {
+            if ($status.text().includes("Last published")) {
+              cy.contains("Unpublish").click()
+              cy.get(".spectrum-Modal").within(() => {
+                cy.contains("Unpublish app").click()
+              })
             }
           })
 
-          cy.get(actionEleId).within(() => {
-            cy.get(".spectrum-Icon").eq(0).click({ force: true })
+          // Delete app
+          cy.get(".app-overview-actions-icon").within(() => {
+            cy.get(".spectrum-Icon").click({ force: true })
           })
           cy.get(".spectrum-Menu").contains("Delete").click()
           cy.get(".spectrum-Dialog-grid").within(() => {
@@ -202,71 +187,10 @@ Cypress.Commands.add("deleteAllApps", () => {
     .its("body")
     .then(val => {
       for (let i = 0; i < val.length; i++) {
-        const appIdParsed = val[i].appId.split("_").pop()
-        const actionEleId = `[data-cy=row_actions_${appIdParsed}]`
-        cy.get(actionEleId).within(() => {
-          cy.get(".spectrum-Icon").eq(0).click({ force: true })
-        })
-
-        cy.get(".spectrum-Menu").contains("Delete").click()
-        cy.get(".spectrum-Dialog-grid").within(() => {
-          cy.get("input").type(val[i].name)
-          cy.get(".spectrum-Button--warning").click()
-        })
+        cy.deleteApp(val[i].name)
         cy.reload()
       }
     })
-})
-
-Cypress.Commands.add("customiseAppIcon", () => {
-  // Select random icon
-  cy.get(".grid").within(() => {
-    cy.get(".icon-item")
-      .eq(Math.floor(Math.random() * 23) + 1)
-      .click()
-  })
-  // Select random colour
-  cy.get(".fill").click()
-  cy.get(".colors").within(() => {
-    cy.get(".color")
-      .eq(Math.floor(Math.random() * 33) + 1)
-      .click()
-  })
-  cy.intercept("**/applications/**").as("iconChange")
-  cy.get(".spectrum-Button").contains("Save").click({ force: true })
-  cy.wait("@iconChange")
-  cy.get("@iconChange").its("response.statusCode").should("eq", 200)
-  cy.wait(1000)
-})
-
-Cypress.Commands.add("alterAppVersion", (appId, version) => {
-  return cy
-    .request("put", `${Cypress.config().baseUrl}/api/applications/${appId}`, {
-      version: version || "0.0.1-alpha.0",
-    })
-    .then(resp => {
-      expect(resp.status).to.eq(200)
-    })
-})
-
-Cypress.Commands.add("updateAppName", (changedName, noName) => {
-  cy.get(".spectrum-Modal").within(() => {
-    if (noName == true) {
-      cy.get("input").clear()
-      cy.get(".spectrum-Dialog-grid")
-        .click()
-        .contains("App name must be letters, numbers and spaces only")
-      return cy
-    }
-    cy.get("input").clear()
-    cy.get("input")
-      .eq(0)
-      .type(changedName)
-      .should("have.value", changedName)
-      .blur()
-    cy.get(".spectrum-ButtonGroup").contains("Save").click({ force: true })
-    cy.wait(500)
-  })
 })
 
 Cypress.Commands.add("unlockApp", unlock_config => {
@@ -298,6 +222,26 @@ Cypress.Commands.add("unlockApp", unlock_config => {
     })
 })
 
+Cypress.Commands.add("updateAppName", (changedName, noName) => {
+  cy.get(".spectrum-Modal").within(() => {
+    if (noName == true) {
+      cy.get("input").clear()
+      cy.get(".spectrum-Dialog-grid")
+        .click()
+        .contains("App name must be letters, numbers and spaces only")
+      return cy
+    }
+    cy.get("input").clear()
+    cy.get("input")
+      .eq(0)
+      .type(changedName)
+      .should("have.value", changedName)
+      .blur()
+    cy.get(".spectrum-ButtonGroup").contains("Save").click({ force: true })
+    cy.wait(500)
+  })
+})
+
 Cypress.Commands.add("publishApp", resolvedAppPath => {
   //Assumes you have navigated to an application first
   cy.get(".toprightnav button.spectrum-Button")
@@ -321,41 +265,103 @@ Cypress.Commands.add("publishApp", resolvedAppPath => {
     })
 })
 
-Cypress.Commands.add("createTestApp", () => {
-  const appName = "Cypress Tests"
-  cy.deleteApp(appName)
-  cy.createApp(appName, "This app is used for Cypress testing.")
-  //cy.createScreen("home")
+Cypress.Commands.add("alterAppVersion", (appId, version) => {
+  return cy
+    .request("put", `${Cypress.config().baseUrl}/api/applications/${appId}`, {
+      version: version || "0.0.1-alpha.0",
+    })
+    .then(resp => {
+      expect(resp.status).to.eq(200)
+    })
 })
 
-Cypress.Commands.add("createTestTableWithData", () => {
-  cy.createTable("dog")
-  cy.addColumn("dog", "name", "Text")
-  cy.addColumn("dog", "age", "Number")
-})
+Cypress.Commands.add("importApp", (exportFilePath, name) => {
+  cy.visit(`${Cypress.config().baseUrl}/builder`)
 
-Cypress.Commands.add("publishApp", (viewApp = false) => {
-  cy.get(".toprightnav").contains("Publish").click({ force: true })
-  cy.get(".spectrum-Dialog-grid").within(() => {
-    cy.get(".spectrum-Button").contains("Publish").click({ force: true })
-  })
-  cy.wait(2000) // Wait for App to publish and modal to appear
-  cy.get(".spectrum-Dialog-grid").within(() => {
-    if (viewApp) {
-      cy.get(".spectrum-Button").contains("View App").click({ force: true })
-    } else {
-      cy.get(".spectrum-Button").contains("Done").click({ force: true })
+  cy.request(`${Cypress.config().baseUrl}/api/applications?status=all`)
+    .its("body")
+    .then(val => {
+      if (val.length > 0) {
+        cy.get(`[data-cy="create-app-btn"]`).click({ force: true })
+        cy.wait(500)
+      }
+      cy.get(`[data-cy="import-app-btn"]`).click({ force: true })
+    })
+
+  cy.get(".spectrum-Modal").within(() => {
+    cy.get("input").eq(1).should("have.focus")
+
+    cy.get(".spectrum-Dropzone").selectFile(exportFilePath, {
+      action: "drag-drop",
+    })
+
+    cy.get(".gallery .filename").contains("exported-app.txt")
+
+    if (name && name != "") {
+      cy.get("input").eq(0).type(name).should("have.value", name).blur()
     }
+    cy.get(".confirm-wrap button")
+      .should("not.be.disabled")
+      .click({ force: true })
+    cy.wait(5000)
   })
 })
 
+// Filters visible with 1 or more
+Cypress.Commands.add("searchForApplication", appName => {
+  cy.visit(`${Cypress.config().baseUrl}/builder`)
+  cy.wait(2000)
+
+  // No app filter functionality if only 1 app exists
+  cy.request(`${Cypress.config().baseUrl}/api/applications?status=all`)
+    .its("body")
+    .then(val => {
+      if (val.length < 2) {
+        return
+      } else {
+        // Searches for the app
+        cy.get(".filter").then(() => {
+          cy.get(".spectrum-Textfield").within(() => {
+            cy.get("input").eq(0).clear()
+            cy.get("input").eq(0).type(appName)
+          })
+        })
+      }
+    })
+})
+
+// Assumes there are no others
+Cypress.Commands.add("applicationInAppTable", appName => {
+  cy.get(".appTable").within(() => {
+    cy.get(".title").contains(appName).should("exist")
+  })
+})
+
+Cypress.Commands.add("createAppFromScratch", appName => {
+  cy.get(`[data-cy="create-app-btn"]`)
+    .contains("Start from scratch")
+    .click({ force: true })
+  cy.get(".spectrum-Modal").within(() => {
+    cy.get("input")
+      .eq(0)
+      .clear()
+      .type(appName)
+      .should("have.value", appName)
+      .blur()
+    cy.get(".spectrum-ButtonGroup").contains("Create app").click()
+    cy.wait(10000)
+  })
+  cy.createTable("Cypress Tests", true)
+})
+
+// TABLES
 Cypress.Commands.add("createTable", (tableName, initialTable) => {
   if (!initialTable) {
     cy.navigateToDataSection()
     cy.get(`[data-cy="new-table"]`).click()
   }
   cy.wait(5000)
-  cy.get(".spectrum-Dialog-grid")
+  cy.get(".item")
     .contains("Budibase DB")
     .click({ force: true })
     .then(() => {
@@ -367,6 +373,12 @@ Cypress.Commands.add("createTable", (tableName, initialTable) => {
     cy.get(".spectrum-ButtonGroup").contains("Create").click()
   })
   cy.contains(tableName).should("be.visible")
+})
+
+Cypress.Commands.add("createTestTableWithData", () => {
+  cy.createTable("dog")
+  cy.addColumn("dog", "name", "Text")
+  cy.addColumn("dog", "age", "Number")
 })
 
 Cypress.Commands.add(
@@ -423,22 +435,33 @@ Cypress.Commands.add("addRowMultiValue", values => {
   })
 })
 
-Cypress.Commands.add("createUser", email => {
-  // quick hacky recorded way to create a user
-  cy.contains("Users").click()
-  cy.get(`[data-cy="add-user"]`).click()
-  cy.get(".spectrum-Picker-label").click()
-  cy.get(".spectrum-Menu-item:nth-child(2) > .spectrum-Menu-itemLabel").click()
-
-  //Onboarding type selector
-  cy.get(
-    ":nth-child(2) > .spectrum-Form-itemField > .spectrum-Textfield > .spectrum-Textfield-input"
-  )
-    .first()
-    .type(email, { force: true })
-  cy.get(".spectrum-Button--cta").click({ force: true })
+Cypress.Commands.add("selectTable", tableName => {
+  cy.expandBudibaseConnection()
+  cy.contains(".nav-item", tableName).click()
 })
 
+Cypress.Commands.add("addCustomSourceOptions", totalOptions => {
+  cy.get(".spectrum-ActionButton")
+    .contains("Define Options")
+    .click()
+    .then(() => {
+      for (let i = 0; i < totalOptions; i++) {
+        // Add radio button options
+        cy.get(".spectrum-Button")
+          .contains("Add Option")
+          .click({ force: true })
+          .then(() => {
+            cy.wait(500)
+            cy.get("[placeholder='Label']").eq(i).type(i)
+            cy.get("[placeholder='Value']").eq(i).type(i)
+          })
+      }
+      // Save options
+      cy.get(".spectrum-Button").contains("Save").click({ force: true })
+    })
+})
+
+// DESIGN AREA
 Cypress.Commands.add("addComponent", (category, component) => {
   if (category) {
     cy.get(`[data-cy="category-${category}"]`).click({ force: true })
@@ -446,7 +469,7 @@ Cypress.Commands.add("addComponent", (category, component) => {
   if (component) {
     cy.get(`[data-cy="component-${component}"]`).click({ force: true })
   }
-  cy.wait(2000)
+  cy.wait(1000)
   cy.location().then(loc => {
     const params = loc.pathname.split("/")
     const componentId = params[params.length - 1]
@@ -461,27 +484,13 @@ Cypress.Commands.add("getComponent", componentId => {
     .its("0.contentDocument")
     .should("exist")
     .its("body")
-    .should("not.be.null")
+    .should("not.be.undefined")
     .then(cy.wrap)
-    .find(`[data-id=${componentId}]`)
+    .find(`[data-id='${componentId}']`)
 })
 
-Cypress.Commands.add("navigateToFrontend", () => {
-  // Clicks on Design tab and then the Home nav item
-  cy.wait(1000)
-  cy.contains("Design").click()
-  cy.get(".spectrum-Search").type("/")
-  cy.get(".nav-item").contains("home").click()
-})
-
-Cypress.Commands.add("navigateToDataSection", () => {
-  // Clicks on the Data tab
-  cy.wait(500)
-  cy.contains("Data").click()
-})
-
-//Blank
 Cypress.Commands.add("createScreen", (route, accessLevelLabel) => {
+  // Blank Screen
   cy.contains("Design").click()
   cy.get("[aria-label=AddCircle]").click()
   cy.get(".spectrum-Modal").within(() => {
@@ -541,17 +550,6 @@ Cypress.Commands.add(
   }
 )
 
-Cypress.Commands.add("navigateToAutogeneratedModal", () => {
-  // Screen name must already exist within data source
-  cy.contains("Design").click()
-  cy.get("[aria-label=AddCircle]").click()
-  cy.get(".spectrum-Modal").within(() => {
-    cy.get(".item").contains("Autogenerated screens").click()
-    cy.get(".spectrum-Button").contains("Continue").click({ force: true })
-    cy.wait(500)
-  })
-})
-
 Cypress.Commands.add(
   "createAutogeneratedScreens",
   (screenNames, accessLevelLabel) => {
@@ -573,96 +571,33 @@ Cypress.Commands.add(
   }
 )
 
-Cypress.Commands.add("addRow", values => {
-  cy.contains("Create row").click()
+// NAVIGATION
+Cypress.Commands.add("navigateToFrontend", () => {
+  // Clicks on Design tab and then the Home nav item
+  cy.wait(1000)
+  cy.contains("Design").click()
+  cy.get(".spectrum-Search").type("/")
+  cy.get(".nav-item").contains("home").click()
+})
+
+Cypress.Commands.add("navigateToDataSection", () => {
+  // Clicks on the Data tab
+  cy.wait(500)
+  cy.contains("Data").click()
+})
+
+Cypress.Commands.add("navigateToAutogeneratedModal", () => {
+  // Screen name must already exist within data source
+  cy.contains("Design").click()
+  cy.get("[aria-label=AddCircle]").click()
   cy.get(".spectrum-Modal").within(() => {
-    for (let i = 0; i < values.length; i++) {
-      cy.get("input").eq(i).type(values[i]).blur()
-    }
-    cy.get(".spectrum-ButtonGroup").contains("Create").click()
+    cy.get(".item").contains("Autogenerated screens").click()
+    cy.get(".spectrum-Button").contains("Continue").click({ force: true })
+    cy.wait(500)
   })
 })
 
-Cypress.Commands.add("expandBudibaseConnection", () => {
-  if (Cypress.$(".nav-item > .content > .opened").length === 0) {
-    // expand the Budibase DB connection string
-    cy.get(".icon.arrow").eq(0).click()
-  }
-})
-
-Cypress.Commands.add("selectTable", tableName => {
-  cy.expandBudibaseConnection()
-  cy.contains(".nav-item", tableName).click()
-})
-
-Cypress.Commands.add("addCustomSourceOptions", totalOptions => {
-  cy.get(".spectrum-ActionButton")
-    .contains("Define Options")
-    .click()
-    .then(() => {
-      for (let i = 0; i < totalOptions; i++) {
-        // Add radio button options
-        cy.get(".spectrum-Button")
-          .contains("Add Option")
-          .click({ force: true })
-          .then(() => {
-            cy.wait(500)
-            cy.get("[placeholder='Label']").eq(i).type(i)
-            cy.get("[placeholder='Value']").eq(i).type(i)
-          })
-      }
-      // Save options
-      cy.get(".spectrum-Button").contains("Save").click({ force: true })
-    })
-})
-
-//Filters visible with 1 or more
-Cypress.Commands.add("searchForApplication", appName => {
-  cy.visit(`${Cypress.config().baseUrl}/builder`)
-  cy.wait(2000)
-
-  // No app filter functionality if only 1 app exists
-  cy.request(`${Cypress.config().baseUrl}/api/applications?status=all`)
-    .its("body")
-    .then(val => {
-      if (val.length < 2) {
-        return
-      } else {
-        // Searches for the app
-        cy.get(".filter").then(() => {
-          cy.get(".spectrum-Textfield").within(() => {
-            cy.get("input").eq(0).clear()
-            cy.get("input").eq(0).type(appName)
-          })
-        })
-      }
-    })
-})
-
-//Assumes there are no others
-Cypress.Commands.add("applicationInAppTable", appName => {
-  cy.get(".appTable").within(() => {
-    cy.get(".title").contains(appName).should("exist")
-  })
-})
-
-Cypress.Commands.add("createAppFromScratch", appName => {
-  cy.get(`[data-cy="create-app-btn"]`)
-    .contains("Start from scratch")
-    .click({ force: true })
-  cy.get(".spectrum-Modal").within(() => {
-    cy.get("input")
-      .eq(0)
-      .clear()
-      .type(appName)
-      .should("have.value", appName)
-      .blur()
-    cy.get(".spectrum-ButtonGroup").contains("Create app").click()
-    cy.wait(10000)
-  })
-  cy.createTable("Cypress Tests", true)
-})
-
+// DATASOURCES
 Cypress.Commands.add("selectExternalDatasource", datasourceName => {
   // Navigates to Data Section
   cy.navigateToDataSection()
@@ -797,4 +732,19 @@ Cypress.Commands.add("createRestQuery", (method, restUrl, queryPrettyName) => {
   cy.get(".hierarchy-items-container")
     .should("contain", method)
     .and("contain", queryPrettyName)
+})
+
+// MISC
+Cypress.Commands.add("closeModal", () => {
+  cy.get(".spectrum-Modal").within(() => {
+    cy.get(".close-icon").click()
+    cy.wait(1000) // Wait for modal to close
+  })
+})
+
+Cypress.Commands.add("expandBudibaseConnection", () => {
+  if (Cypress.$(".nav-item > .content > .opened").length === 0) {
+    // expand the Budibase DB connection string
+    cy.get(".icon.arrow").eq(0).click()
+  }
 })
