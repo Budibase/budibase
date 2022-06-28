@@ -100,7 +100,8 @@
         extraButtonText="Try New UI (Beta)"
         extraButtonAction={newDesignUi}
       >
-        Try the <b>all new</b> budibase design interface.
+        Try the <b>all new</b> budibase design interface. (Not recommended for existing
+        budibase apps)
       </Banner>
     {/if}
     <div class="top-nav">
