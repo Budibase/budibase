@@ -140,6 +140,17 @@ exports.getBudibaseVersion = async ctx => {
 
 // TODO: remove as part of beta program
 exports.checkBetaAccess = async ctx => {
+  // go to the cloud platform if running self hosted
+  if (env.SELF_HOSTED || !env.MULTI_TENANCY) {
+    const baseUrl = env.ACCOUNT_PORTAL_URL.replace("account.", "")
+    const response = await fetch(
+      `${baseUrl}/api/beta/access?email=${ctx.query.email}`
+    )
+    const json = await response.json()
+    ctx.body = json
+    return
+  }
+
   const userToCheck = ctx.query.email
   const BETA_USERS_DB = "app_bb_f9b77d06b9db4e3ca185476ab87a2364"
   const BETA_USERS_TABLE = "ta_8c2c6df1c03f49cfb6340e85e066dd15"
@@ -163,6 +174,7 @@ exports.checkBetaAccess = async ctx => {
     }
     ctx.body = { access }
   } catch (err) {
+    console.error(err)
     ctx.body = { access: false }
   }
 }

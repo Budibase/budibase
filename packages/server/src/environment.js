@@ -67,6 +67,7 @@ module.exports = {
   SALT_ROUNDS: process.env.SALT_ROUNDS,
   LOGGER: process.env.LOGGER,
   LOG_LEVEL: process.env.LOG_LEVEL,
+  ACCOUNT_PORTAL_URL: process.env.ACCOUNT_PORTAL_URL,
   AUTOMATION_MAX_ITERATIONS:
     parseIntSafe(process.env.AUTOMATION_MAX_ITERATIONS) || 200,
   SENDGRID_API_KEY: process.env.SENDGRID_API_KEY,
