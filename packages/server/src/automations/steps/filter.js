@@ -51,42 +51,50 @@ exports.definition = {
       properties: {
         success: {
           type: "boolean",
+          description: "Whether the action was successful",
+        },
+        result: {
+          type: "boolean",
           description: "Whether the logic block passed",
         },
       },
-      required: ["success"],
+      required: ["success", "result"],
     },
   },
 }
 
 exports.run = async function filter({ inputs }) {
-  let { field, condition, value } = inputs
-  // coerce types so that we can use them
-  if (!isNaN(value) && !isNaN(field)) {
-    value = parseFloat(value)
-    field = parseFloat(field)
-  } else if (!isNaN(Date.parse(value)) && !isNaN(Date.parse(field))) {
-    value = Date.parse(value)
-    field = Date.parse(field)
-  }
-  let success = false
-  if (typeof field !== "object" && typeof value !== "object") {
-    switch (condition) {
-      case FilterConditions.EQUAL:
-        success = field === value
-        break
-      case FilterConditions.NOT_EQUAL:
-        success = field !== value
-        break
-      case FilterConditions.GREATER_THAN:
-        success = field > value
-        break
-      case FilterConditions.LESS_THAN:
-        success = field < value
-        break
+  try {
+    let { field, condition, value } = inputs
+    // coerce types so that we can use them
+    if (!isNaN(value) && !isNaN(field)) {
+      value = parseFloat(value)
+      field = parseFloat(field)
+    } else if (!isNaN(Date.parse(value)) && !isNaN(Date.parse(field))) {
+      value = Date.parse(value)
+      field = Date.parse(field)
     }
-  } else {
-    success = false
+    let result = false
+    if (typeof field !== "object" && typeof value !== "object") {
+      switch (condition) {
+        case FilterConditions.EQUAL:
+          result = field === value
+          break
+        case FilterConditions.NOT_EQUAL:
+          result = field !== value
+          break
+        case FilterConditions.GREATER_THAN:
+          result = field > value
+          break
+        case FilterConditions.LESS_THAN:
+          result = field < value
+          break
+      }
+    } else {
+      result = false
+    }
+    return { success: true, result }
+  } catch (err) {
+    return { success: false, result: false }
   }
-  return { success }
 }

@@ -14,7 +14,7 @@ const FILTER_STEP_ID = actions.ACTION_DEFINITIONS.FILTER.stepId
 const LOOP_STEP_ID = actions.ACTION_DEFINITIONS.LOOP.stepId
 
 const CRON_STEP_ID = triggerDefs.CRON.stepId
-const STOPPED_STATUS = { success: false, status: "STOPPED" }
+const STOPPED_STATUS = { success: true, status: "STOPPED" }
 const { cloneDeep } = require("lodash/fp")
 const env = require("../environment")
 
@@ -276,7 +276,7 @@ class Orchestrator {
           this._context.steps[stepCount] = outputs
           // if filter causes us to stop execution don't break the loop, set a var
           // so that we can finish iterating through the steps and record that it stopped
-          if (step.stepId === FILTER_STEP_ID && !outputs.success) {
+          if (step.stepId === FILTER_STEP_ID && !outputs.result) {
             stopped = true
             this.updateExecutionOutput(step.id, step.stepId, step.inputs, {
               ...outputs,
