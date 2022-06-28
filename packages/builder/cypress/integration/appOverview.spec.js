@@ -158,8 +158,9 @@ filterTests(["all"], () => {
         .contains("Manage")
         .eq(0)
         .click({ force: true })
-      cy.get(".app-icon", { timwout: 1000 }).click({ force: true })
+      cy.get(".edit-hover", { timeout: 1000 }).eq(0).click({ force: true })
       // Select random icon
+      cy.wait(400)
       cy.get(".grid").within(() => {
         cy.get(".icon-item")
           .eq(Math.floor(Math.random() * 23) + 1)
@@ -178,6 +179,7 @@ filterTests(["all"], () => {
       cy.get("@iconChange").its("response.statusCode").should("eq", 200)
       // Confirm icon has changed from default
       // Confirm colour has been applied
+      cy.get(".spectrum-ActionButton-label").contains("Back").click({ force: true })
       cy.get(".appTable", { timeout: 2000 }).within(() => {
         cy.get("[aria-label]")
           .eq(0)
@@ -368,10 +370,10 @@ filterTests(["all"], () => {
             .contains("Copy App ID")
             .click({ force: true })
         })
-
+      
       cy.get(".spectrum-Toast-content")
-        .contains("App ID copied to clipboard.")
-        .should("be.visible")
+      .contains("App ID copied to clipboard.")
+      .should("be.visible")
     })
 
     it("Should allow unpublishing of the application", () => {
@@ -380,15 +382,9 @@ filterTests(["all"], () => {
         .contains("Manage")
         .eq(0)
         .click({ force: true })
-      cy.get(".app-overview-actions-icon > .icon").click({ force: true })
 
-      cy.get("[data-cy='app-overview-menu-popover']")
-        .eq(0)
-        .within(() => {
-          cy.get(".spectrum-Menu-item")
-            .contains("Unpublish")
-            .click({ force: true })
-          cy.wait(500)
+      cy.get(`[data-cy="app-status"]`).within(() => {
+        cy.contains("Unpublish").click({ force: true })
         })
 
       cy.get("[data-cy='unpublish-modal']")
@@ -399,9 +395,8 @@ filterTests(["all"], () => {
 
       cy.get(".overview-tab [data-cy='app-status']").within(() => {
         cy.get(".status-display").contains("Unpublished")
-        cy.get(".status-display .icon svg[aria-label='GlobeStrike']").should(
-          "exist"
-        )
+        cy.get(".status-display .icon svg[aria-label='GlobeStrike']")
+        .should("exist")
       })
     })
 
