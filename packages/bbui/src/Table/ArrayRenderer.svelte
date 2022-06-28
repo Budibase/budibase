@@ -5,8 +5,12 @@
 
   const displayLimit = 5
 
-  $: badges = value?.slice(0, displayLimit) ?? []
+  $: badges = isValidType() ? value?.slice(0, displayLimit) : []
   $: leftover = (value?.length ?? 0) - badges.length
+
+  function isValidType() {
+    return Array.isArray(value) || typeof value === "string"
+  }
 </script>
 
 {#each badges as badge}
