@@ -1,7 +1,15 @@
 <script>
   import { store, automationStore } from "builderStore"
   import { roles, flags } from "stores/backend"
-  import { Icon, Tabs, Tab, Heading, notifications } from "@budibase/bbui"
+  import { auth } from "stores/portal"
+  import {
+    Icon,
+    Tabs,
+    Tab,
+    Heading,
+    notifications,
+    Banner,
+  } from "@budibase/bbui"
   import RevertModal from "components/deploy/RevertModal.svelte"
   import DeployNavigation from "components/deploy/DeployNavigation.svelte"
   import { API } from "api"
@@ -13,6 +21,7 @@
 
   // Get Package and set store
   let promise = getPackage()
+  let betaAccess = false
 
   // Sync once when you load the app
   let hasSynced = false
@@ -56,10 +65,23 @@
     })
   }
 
+  async function newDesignUi() {
+    try {
+      await flags.toggleUiFeature("design_ui")
+      window.location.reload()
+    } catch (error) {
+      notifications.error("Error enabling beta access to new design UI")
+      console.error(error)
+    }
+  }
+
   onMount(async () => {
     if (!hasSynced && application) {
       try {
         await API.syncApp(application)
+        // check if user has beta access
+        const betaResponse = await API.checkBetaAccess($auth?.user?.email)
+        betaAccess = betaResponse.access
       } catch (error) {
         notifications.error("Failed to sync with production database")
       }
@@ -80,6 +102,15 @@
   <div class="loading" />
 {:then _}
   <div class="root">
+    {#if betaAccess}
+      <Banner
+        extraButtonText="Try New UI (Beta)"
+        extraButtonAction={newDesignUi}
+      >
+        Try the <b>all new</b> budibase design interface. (Not recommended for existing
+        budibase apps)
+      </Banner>
+    {/if}
     <div class="top-nav">
       <div class="topleftnav">
         <Icon
