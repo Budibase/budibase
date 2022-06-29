@@ -445,7 +445,7 @@
     width: 100%;
     border-radius: 0;
     display: grid;
-    overflow: auto;
+    overflow: visible;
   }
 
   /* Header */
@@ -513,7 +513,7 @@
     z-index: 3;
   }
   .spectrum-Table-headCell .title {
-    overflow: hidden;
+    overflow: visible;
     text-overflow: ellipsis;
   }
   .spectrum-Table-headCell:hover .spectrum-Table-editIcon {

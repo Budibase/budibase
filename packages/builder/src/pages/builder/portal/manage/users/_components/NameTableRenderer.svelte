@@ -25,6 +25,7 @@
   .align {
     display: flex;
     align-items: center;
+    overflow: hidden;
   }
 
   .spacing {

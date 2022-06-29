@@ -21,6 +21,7 @@
 <style>
   .align {
     display: flex;
+    overflow: hidden;
   }
 
   .spacing {

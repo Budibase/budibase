@@ -2,7 +2,10 @@
   import { Icon, ActionMenu, MenuItem } from "@budibase/bbui"
 </script>
 
-<div>
+<div
+  style="    overflow: hidden;
+"
+>
   <ActionMenu align="right">
     <span slot="control">
       <Icon hoverable name="More" />
