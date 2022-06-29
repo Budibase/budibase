@@ -51,7 +51,6 @@ filterTests(["all"], () => {
       renameApp(appName, " ", false, true)
       // Close modal and confirm name has not been changed
       cy.get(interact.SPECTRUM_DIALOG_GRID, { timeout: 1000 }).contains("Cancel").click()
-      cy.reload()
       cy.applicationInAppTable(appName)
     })
 

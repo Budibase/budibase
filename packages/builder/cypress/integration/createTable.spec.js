@@ -39,8 +39,9 @@ filterTests(["smoke", "all"], () => {
 
     it("edits a row", () => {
       cy.contains("button", "Edit").click({ force: true })
-      cy.get(interact.SPECTRUM_MODAL_INPUT, { timeout: 1000 }).clear()
-      cy.get(interact.SPECTRUM_MODAL_INPUT, { timeout: 1000 }).type("Updated")
+      cy.wait(500)
+      cy.get(interact.SPECTRUM_MODAL_INPUT).clear()
+      cy.get(interact.SPECTRUM_MODAL_INPUT).type("Updated")
       cy.contains("Save").click()
       cy.contains("Updated").should("have.text", "Updated")
     })

@@ -62,6 +62,7 @@ export const GLOBESTRIKE = "svg[aria-label=GlobeStrike]"
 export const GLOBE = "svg[aria-label=Globe]"
 export const UNPUBLISH_MODAL = "[data-cy=unpublish-modal]"
 export const CONFIRM_WRAP_BUTTON = ".confirm-wrap button"
+export const DEPLOYMENT_TOP_NAV = ".deployment-top-nav"
 
 //changeAppiconAndColour
 export const APP_ROW_ACTION = ".app-row-actions-icon"

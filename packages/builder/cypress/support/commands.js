@@ -372,7 +372,8 @@ Cypress.Commands.add("searchForApplication", appName => {
 
 // Assumes there are no others
 Cypress.Commands.add("applicationInAppTable", appName => {
-  cy.get(".appTable", { timeout: 1000 }).within(() => {
+  cy.visit(`${Cypress.config().baseUrl}/builder`)
+  cy.get(".appTable", { timeout: 2000 }).within(() => {
     cy.get(".title").contains(appName).should("exist")
   })
 })
@@ -400,7 +401,7 @@ Cypress.Commands.add("createTable", (tableName, initialTable) => {
     cy.navigateToDataSection()
     cy.get(`[data-cy="new-table"]`).click()
   }
-  cy.wait(500)
+  cy.wait(2000)
   cy.get(".item")
     .contains("Budibase DB")
     .click({ force: true })
@@ -539,9 +540,10 @@ Cypress.Commands.add("createScreen", (route, accessLevelLabel) => {
     cy.get("[data-cy='blank-screen']").click()
     cy.get(".spectrum-Button").contains("Continue").click({ force: true })
   })
+  cy.wait(500)
   cy.get(".spectrum-Dialog-grid", { timeout: 500 }).within(() => {
     cy.get(".spectrum-Form-itemField").eq(0).type(route)
-    cy.get(".spectrum-Button").contains("Continue").click({ force: true })
+    cy.get(".confirm-wrap").contains("Continue").click({ force: true })
   })
 
   cy.get(".spectrum-Modal", { timeout: 1000 }).within(() => {
@@ -567,6 +569,7 @@ Cypress.Commands.add(
       timeout: 500,
     }).within(() => {
       for (let i = 0; i < datasourceNames.length; i++) {
+        cy.wait(500)
         cy.get(".data-source-entry").contains(datasourceNames[i]).click()
         //Ensure the check mark is visible
         cy.get(".data-source-entry")
