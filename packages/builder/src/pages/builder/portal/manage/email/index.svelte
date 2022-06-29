@@ -74,7 +74,10 @@
         rev: smtpConfig._rev,
       })
       smtpConfig = {
-        config: {},
+        type: ConfigTypes.SMTP,
+        config: {
+          secure: true,
+        },
       }
       await admin.getChecklist()
       notifications.success(`Settings cleared`)
