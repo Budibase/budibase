@@ -56,6 +56,30 @@ export const TableNames = {
   USERS: "ta_users",
 }
 
+export const BbRoles = [
+  { label: "App User", value: "appUser" },
+  { label: "Developer", value: "developer" },
+  { label: "Admin", value: "admin" },
+]
+
+export const BuilderRoleDescriptions = [
+  {
+    value: "appUser",
+    icon: "User",
+    label: "App user - Only has access to published apps",
+  },
+  {
+    value: "developer",
+    icon: "Hammer",
+    label: "Developer - Access to the app builder",
+  },
+  {
+    value: "admin",
+    icon: "Draw",
+    label: "Admin - Full access",
+  },
+]
+
 /**
  * API version header attached to all requests.
  * Version changelog:

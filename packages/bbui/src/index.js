@@ -23,6 +23,7 @@ export { default as Icon, directions } from "./Icon/Icon.svelte"
 export { default as Toggle } from "./Form/Toggle.svelte"
 export { default as RadioGroup } from "./Form/RadioGroup.svelte"
 export { default as Checkbox } from "./Form/Checkbox.svelte"
+export { default as InputDropdown } from "./Form/InputDropdown.svelte"
 export { default as DetailSummary } from "./DetailSummary/DetailSummary.svelte"
 export { default as Popover } from "./Popover/Popover.svelte"
 export { default as ProgressBar } from "./ProgressBar/ProgressBar.svelte"
@@ -71,6 +72,7 @@ export { default as ListItem } from "./List/ListItem.svelte"
 // Renderers
 export { default as BoldRenderer } from "./Table/BoldRenderer.svelte"
 export { default as CodeRenderer } from "./Table/CodeRenderer.svelte"
+export { default as InternalRenderer } from "./Table/InternalRenderer.svelte"
 
 // Typography
 export { default as Body } from "./Typography/Body.svelte"

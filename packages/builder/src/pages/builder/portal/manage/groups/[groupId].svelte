@@ -8,14 +8,13 @@
     Body,
     Icon,
     Popover,
-    Search,
-    Divider,
-    Detail,
     notifications,
     List,
     ListItem,
     StatusLight,
   } from "@budibase/bbui"
+  import UserGroupPicker from "components/settings/UserGroupPicker.svelte"
+
   import { users, apps, groups } from "stores/portal"
   import { onMount } from "svelte"
   import { RoleUtils } from "@budibase/frontend-core"
@@ -47,8 +46,9 @@
   }
 
   async function selectUser(id) {
-    let selectedUser = selectedUsers.find(user_id => user_id === id)
+    let selectedUser = selectedUsers.includes(id)
     let enrichedUser = $users.find(user => user._id === id)
+
     if (selectedUser) {
       selectedUsers = selectedUsers.filter(id => id !== selectedUser)
       let newUsers = group.users.filter(user => user._id !== id)
@@ -57,6 +57,7 @@
       selectedUsers = [...selectedUsers, id]
       group.users.push(enrichedUser)
     }
+
     await groups.actions.save(group)
   }
 
@@ -97,55 +98,24 @@
       <Button on:click={popover.show()} icon="UserAdd" cta>Add User</Button>
     </div>
     <Popover align="right" bind:this={popover} anchor={popoverAnchor}>
-      <div style="padding: var(--spacing-m)">
-        <Search placeholder="Search" bind:value={searchTerm} />
-        <div class="users-header header">
-          <div>
-            <Detail
-              >{filteredUsers.length} User{filteredUsers.length === 1
-                ? ""
-                : "s"}</Detail
-            >
-          </div>
-          <div>
-            <ActionButton on:click={addAll} emphasized size="S"
-              >Add all</ActionButton
-            >
-          </div>
-        </div>
-        <Divider noMargin />
-        <div>
-          {#each filteredUsers as user}
-            <div
-              on:click={selectUser(user._id)}
-              style="padding-bottom: var(--spacing-m)"
-              class="user-selection"
-            >
-              <div>
-                {user.email}
-              </div>
-
-              {#if selectedUsers.includes(user._id)}
-                <div>
-                  <Icon
-                    color="var(--spectrum-global-color-blue-600);"
-                    name="Checkmark"
-                  />
-                </div>
-              {/if}
-            </div>
-          {/each}
-        </div>
-      </div>
+      <UserGroupPicker
+        key={"email"}
+        title={"User"}
+        bind:searchTerm
+        bind:selected={selectedUsers}
+        bind:filtered={filteredUsers}
+        {addAll}
+        select={selectUser}
+      />
     </Popover>
   </div>
 
   <List>
     {#if group?.users.length}
       {#each group.users as user}
-        <ListItem subtitle={user.access} title={user.email} avatar
+        <ListItem subtitle={user?.access} title={user?.email} avatar
           ><Icon
-            on:click={() => removeUser(user._id)}
+            on:click={() => removeUser(user?._id)}
             hoverable
             size="L"
             name="Close"
@@ -180,7 +150,7 @@
         </ListItem>
       {/each}
     {:else}
-      <ListItem icon="UserGroup" title="You have no users in this team" />
+      <ListItem icon="UserGroup" title="No apps" />
     {/if}
   </List>
 </Layout>
@@ -188,24 +158,6 @@
 <style>
   .text-padding {
     margin-left: var(--spacing-l);
-  }
-
-  .users-header {
-    align-items: center;
-    padding: var(--spacing-m) 0 var(--spacing-m) 0;
-    display: flex;
-    justify-content: space-between;
-  }
-
-  .user-selection {
-    align-items: end;
-    display: flex;
-    justify-content: space-between;
-    cursor: pointer;
-  }
-
-  .user-selection > :first-child {
-    padding-top: var(--spacing-m);
   }
 
   .header {

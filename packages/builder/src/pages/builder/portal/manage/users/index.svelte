@@ -7,6 +7,7 @@
     Table,
     Layout,
     Modal,
+    ModalContent,
     Icon,
     notifications,
   } from "@budibase/bbui"
@@ -20,11 +21,17 @@
   import SettingsTableRenderer from "./_components/SettingsTableRenderer.svelte"
   import RoleTableRenderer from "./_components/RoleTableRenderer.svelte"
   import { goto } from "@roxi/routify"
+  import OnboardingTypeModal from "./_components/OnboardingTypeModal.svelte"
+  import PasswordModal from "./_components/PasswordModal.svelte"
+  import ImportUsersModal from "./_components/ImportUsersModal.svelte"
 
   const schema = {
     name: {},
     email: {},
-    role: { noPropagation: true, sortable: false },
+    role: {
+      noPropagation: true,
+      sortable: false,
+    },
     userGroups: { sortable: false, displayName: "User groups" },
     apps: {},
     settings: {
@@ -52,6 +59,12 @@
 
   let search
   let email
+  let createUserModal,
+    basicOnboardingModal,
+    inviteConfirmationModal,
+    onboardingTypeModal,
+    passwordModal,
+    importUsersModal
 
   $: filteredUsers = $users
     .filter(user => user.email.includes(search || ""))
@@ -80,10 +93,16 @@
     }
   })
 
-  let createUserModal
-  let basicOnboardingModal = function openBasicOnboardingModal() {
-    createUserModal.hide()
-    basicOnboardingModal.show()
+  function showOnboardingTypeModal() {
+    onboardingTypeModal.show()
+  }
+
+  function showConfirmationModal(onboardingType) {
+    if (onboardingType === "emailOnboarding") {
+      inviteConfirmationModal.show()
+    } else {
+      passwordModal.show()
+    }
   }
 
   onMount(async () => {
@@ -120,7 +139,9 @@
         icon="UserAdd"
         cta>Add Users</Button
       >
-      <Button icon="Import" primary>Import Users</Button>
+      <Button on:click={importUsersModal.show} icon="Import" primary
+        >Import Users</Button
+      >
     </ButtonGroup>
     <Table
       on:click={({ detail }) => $goto(`./${detail._id}`)}
@@ -142,8 +163,34 @@
 </Layout>
 
 <Modal bind:this={createUserModal}>
-  <AddUserModal />
+  <AddUserModal {showOnboardingTypeModal} />
 </Modal>
+
+<Modal bind:this={inviteConfirmationModal}>
+  <ModalContent
+    showCancelButton={false}
+    title="Invites sent!"
+    confirmText="Done"
+  >
+    <Body size="S"
+      >Your users should now recieve an email invite to get access to their
+      Budibase account</Body
+    ></ModalContent
+  >
+</Modal>
+
+<Modal bind:this={onboardingTypeModal}>
+  <OnboardingTypeModal {showConfirmationModal} />
+</Modal>
+
+<Modal bind:this={passwordModal}>
+  <PasswordModal />
+</Modal>
+
+<Modal bind:this={importUsersModal}>
+  <ImportUsersModal />
+</Modal>
+
 <Modal bind:this={basicOnboardingModal}><BasicOnboardingModal {email} /></Modal>
 
 <style>

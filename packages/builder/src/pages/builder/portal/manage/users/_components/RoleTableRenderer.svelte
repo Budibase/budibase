@@ -8,19 +8,16 @@
   ]
 </script>
 
-<div class="align">
-  <Select
-    on:click={e => e.stopPropagation()}
-    value={"Admin"}
-    quiet
-    {options}
-    placeholder="Admin"
-  />
+<div>
+  <Select value={"appUser"} {options} placeholder="Admin" autoWidth quiet />
 </div>
 
 <style>
-  .align {
-    display: flex;
+  div {
+    overflow: visible;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     z-index: 1000;
+    position: relative;
   }
 </style>
