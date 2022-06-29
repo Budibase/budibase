@@ -2,9 +2,20 @@ export const buildUserEndpoints = API => ({
   /**
    * Gets a list of users in the current tenant.
    */
-  getUsers: async () => {
+  getUsers: async page => {
+    const input = page ? { page } : {}
+    const params = new URLSearchParams(input)
     return await API.get({
-      url: "/api/global/users",
+      url: `/api/global/users?${params.toString()}`,
+    })
+  },
+
+  /**
+   * Get a single user by ID.
+   */
+  getUser: async userId => {
+    return await API.get({
+      url: `/api/global/users/${userId}`,
     })
   },
 

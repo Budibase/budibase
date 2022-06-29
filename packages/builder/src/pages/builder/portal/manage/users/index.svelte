@@ -12,25 +12,26 @@
     Layout,
     Modal,
     notifications,
+    Pagination,
   } from "@budibase/bbui"
   import TagsRenderer from "./_components/TagsTableRenderer.svelte"
   import AddUserModal from "./_components/AddUserModal.svelte"
   import { users } from "stores/portal"
+  import { PageInfo } from "helpers/pagination"
   import { onMount } from "svelte"
 
   const schema = {
     email: {},
     developmentAccess: { displayName: "Development Access", type: "boolean" },
     adminAccess: { displayName: "Admin Access", type: "boolean" },
-    // role: { type: "options" },
     group: {},
-    // access: {},
-    // group: {}
   }
 
+  let pageInfo = new PageInfo(fetchUsers)
   let search
-  $: filteredUsers = $users
-    .filter(user => user.email.includes(search || ""))
+  $: checkRefreshed($users.page)
+  $: filteredUsers = $users.data
+    ?.filter(user => user?.email?.includes(search || ""))
     .map(user => ({
       ...user,
       group: ["All users"],
@@ -40,12 +41,28 @@
 
   let createUserModal
 
-  onMount(async () => {
+  async function checkRefreshed(page) {
+    // the users have been reset, go back to first page
+    if (!page && pageInfo.page) {
+      pageInfo.reset()
+      pageInfo.pageNumber = pageInfo.pageNumber
+      pageInfo.hasNextPage = $users.hasNextPage
+      pageInfo.nextPage = $users.nextPage
+    }
+  }
+
+  async function fetchUsers(page) {
     try {
-      await users.init()
+      await users.fetch(page)
+      pageInfo.hasNextPage = $users.hasNextPage
+      pageInfo.nextPage = $users.nextPage
     } catch (error) {
       notifications.error("Error getting user list")
     }
+  }
+
+  onMount(async () => {
+    await fetchUsers()
   })
 </script>
 
@@ -75,12 +92,21 @@
     <Table
       on:click={({ detail }) => $goto(`./${detail._id}`)}
       {schema}
-      data={filteredUsers || $users}
+      data={filteredUsers || $users.data}
       allowEditColumns={false}
       allowEditRows={false}
       allowSelectRows={false}
       customRenderers={[{ column: "group", component: TagsRenderer }]}
     />
+    <div class="pagination">
+      <Pagination
+        page={pageInfo.pageNumber}
+        hasPrevPage={pageInfo.hasPrevPage}
+        hasNextPage={pageInfo.hasNextPage}
+        goToPrevPage={() => pageInfo.goToPrevPage()}
+        goToNextPage={() => pageInfo.goToNextPage()}
+      />
+    </div>
   </Layout>
 </Layout>
 

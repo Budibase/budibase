@@ -93,13 +93,17 @@ export function generateGlobalUserID(id?: any) {
 /**
  * Gets parameters for retrieving users.
  */
-export function getGlobalUserParams(globalId: any, otherProps = {}) {
+export function getGlobalUserParams(globalId: any, otherProps: any = {}) {
   if (!globalId) {
     globalId = ""
   }
+  const startkey = otherProps?.startkey
   return {
     ...otherProps,
-    startkey: `${DocumentTypes.USER}${SEPARATOR}${globalId}`,
+    // need to include this incase pagination
+    startkey: startkey
+      ? startkey
+      : `${DocumentTypes.USER}${SEPARATOR}${globalId}`,
     endkey: `${DocumentTypes.USER}${SEPARATOR}${globalId}${UNICODE_MAX}`,
   }
 }
@@ -432,6 +436,25 @@ export const getPlatformUrl = async (opts = { tenantAware: true }) => {
   }
 
   return platformUrl
+}
+
+export function pagination(
+  response: any,
+  pageSize: number,
+  paginate: boolean = true
+) {
+  const data = response.rows.map((row: any) => {
+    return row.doc ? row.doc : row
+  })
+  if (!paginate) {
+    return { data, hasNextPage: false }
+  }
+  const hasNextPage = data.length > pageSize
+  return {
+    data: data.slice(0, pageSize),
+    hasNextPage,
+    nextPage: hasNextPage ? data[pageSize]?._id : undefined,
+  }
 }
 
 export async function getScopedConfig(db: any, params: any) {
