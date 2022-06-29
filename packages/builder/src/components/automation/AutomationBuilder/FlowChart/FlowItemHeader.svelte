@@ -29,6 +29,9 @@
   }
 
   function updateStatus(results, isTrigger) {
+    if (!results) {
+      return {}
+    }
     if (results.outputs?.status?.toLowerCase() === "stopped") {
       return { yellow: true, message: "Stopped" }
     } else if (results.outputs?.success || isTrigger) {
