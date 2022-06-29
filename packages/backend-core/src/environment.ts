@@ -16,7 +16,7 @@ if (!LOADED && isDev() && !isTest()) {
   LOADED = true
 }
 
-const env: any = {
+const env = {
   isTest,
   isDev,
   JWT_SECRET: process.env.JWT_SECRET,
@@ -66,6 +66,7 @@ const env: any = {
 for (let [key, value] of Object.entries(env)) {
   // handle the edge case of "0" to disable an environment variable
   if (value === "0") {
+    // @ts-ignore
     env[key] = 0
   }
 }

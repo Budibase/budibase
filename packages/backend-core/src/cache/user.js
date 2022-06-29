@@ -1,4 +1,4 @@
-const redis = require("../redis/authRedis")
+const redis = require("../redis/init")
 const { getTenantId, lookupTenantId, doWithGlobalDB } = require("../tenancy")
 const env = require("../environment")
 const accounts = require("../cloud/accounts")
