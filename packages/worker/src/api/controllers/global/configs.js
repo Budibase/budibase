@@ -18,6 +18,7 @@ const {
   withCache,
   CacheKeys,
   bustCache,
+  cache,
 } = require("@budibase/backend-core/cache")
 const { events } = require("@budibase/backend-core")
 
@@ -365,9 +366,9 @@ exports.upload = async function (ctx) {
 exports.destroy = async function (ctx) {
   const db = getGlobalDB()
   const { id, rev } = ctx.params
-
   try {
     await db.remove(id, rev)
+    cache.delete(CacheKeys.CHECKLIST)
     ctx.body = { message: "Config deleted successfully" }
   } catch (err) {
     ctx.throw(err.status, err)
