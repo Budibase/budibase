@@ -136,7 +136,6 @@ filterTests(["all"], () => {
         .within(() => {
           cy.get(".confirm-wrap button").click({ force: true })
         })
-      cy.wait(1000)
 
       cy.visit(`${Cypress.config().baseUrl}/builder`)
       cy.get(".appTable .app-row-actions button")
@@ -376,7 +375,7 @@ filterTests(["all"], () => {
       .should("be.visible")
     })
 
-    it("Should allow unpublishing of the application", () => {
+    it("Should allow unpublishing of the application via the Unpublish link", () => {
       cy.visit(`${Cypress.config().baseUrl}/builder`)
       cy.get(".appTable .app-row-actions button")
         .contains("Manage")

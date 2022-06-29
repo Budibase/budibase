@@ -12,7 +12,7 @@ filterTests(['all'], () => {
     it("Should reflect the unpublished status correctly", () => {
       cy.visit(`${Cypress.config().baseUrl}/builder`)
 
-      cy.get(interact.APP_TABLE_STATUS, { timeout: 1000 }).eq(0)
+      cy.get(interact.APP_TABLE_STATUS, { timeout: 3000 }).eq(0)
       .within(() => {
         cy.contains("Unpublished")
         cy.get(interact.GLOBESTRIKE).should("exist")
@@ -47,7 +47,7 @@ filterTests(['all'], () => {
 
       cy.visit(`${Cypress.config().baseUrl}/builder`)
 
-      cy.get(interact.APP_TABLE_STATUS, { timeout: 1000 }).eq(0)
+      cy.get(interact.APP_TABLE_STATUS, { timeout: 3000 }).eq(0)
       .within(() => {
         cy.contains("Published")
         cy.get(interact.GLOBE).should("exist")
@@ -55,7 +55,7 @@ filterTests(['all'], () => {
 
       cy.get(interact.APP_TABLE_ROW_ACTION).eq(0)
       .within(() => {
-        cy.get(interact.SPECTRUM_BUTTON).contains("View")
+        cy.get(interact.SPECTRUM_BUTTON).contains("Manage")
         cy.get(interact.SPECTRUM_BUTTON).contains("Edit").click({ force: true })
       })
 
@@ -85,7 +85,12 @@ filterTests(['all'], () => {
         cy.get(interact.APP_TABLE_APP_NAME).click({ force: true })
       })
 
-      cy.get(interact.SPECTRUM_LINK).contains('Unpublish').click();
+      cy.get(interact.DEPLOYMENT_TOP_NAV).click()
+      cy.get(interact.PUBLISH_POPOVER_ACTION).click({ force: true })
+      cy.get(interact.UNPUBLISH_MODAL)
+        .within(() => {
+          cy.get(interact.CONFIRM_WRAP_BUTTON).click({ force: true })
+        })
 
       cy.get(interact.UNPUBLISH_MODAL).should("be.visible")
       .within(() => {
