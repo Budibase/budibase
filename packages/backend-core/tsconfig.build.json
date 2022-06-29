@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "module": "commonjs",
+    "lib": ["es2020"],
+    "allowJs": true,
+    "strict": true,
+    "noImplicitAny": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "incremental": true,
+    "sourceMap": true,
+    "declaration": true,
+    "types": [ "node", "jest" ],
+    "outDir": "dist"
+  },
+  "include": [
+    "**/*.js",
+    "**/*.ts",
+    "package.json"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.spec.ts",
+    "**/*.spec.js"
+  ]
+}

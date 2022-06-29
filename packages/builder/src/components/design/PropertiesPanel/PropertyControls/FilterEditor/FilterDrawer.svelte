@@ -54,8 +54,9 @@
   }
 
   const onFieldChange = (expression, field) => {
-    // Update the field type
+    // Update the field types
     expression.type = enrichedSchemaFields.find(x => x.name === field)?.type
+    expression.externalType = getSchema(expression)?.externalType
 
     // Ensure a valid operator is set
     const validOperators = LuceneUtils.getValidOperatorsForType(

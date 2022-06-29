@@ -184,7 +184,11 @@
     </Drawer>
   {/if}
 </div>
-<Popover bind:this={dropdownRight} anchor={anchorRight}>
+<Popover
+  bind:this={dropdownRight}
+  anchor={anchorRight}
+  dataCy={`dataSource-popover-${$store.selectedComponentId}`}
+>
   <div class="dropdown">
     <div class="title">
       <Heading size="XS">Tables</Heading>

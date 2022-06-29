@@ -9,6 +9,7 @@
     Input,
     Dropzone,
     notifications,
+    Toggle,
   } from "@budibase/bbui"
   import { auth, organisation, admin } from "stores/portal"
   import { API } from "api"
@@ -25,6 +26,7 @@
   const values = writable({
     company: $organisation.company,
     platformUrl: $organisation.platformUrl,
+    analyticsEnabled: $organisation.analyticsEnabled,
     logo: $organisation.logoUrl
       ? { url: $organisation.logoUrl, type: "image", name: "Logo" }
       : null,
@@ -54,6 +56,7 @@
       const config = {
         company: $values.company ?? "",
         platformUrl: $values.platformUrl ?? "",
+        analyticsEnabled: $values.analyticsEnabled,
       }
 
       // Remove logo if required
@@ -120,6 +123,19 @@
             >Platform URL</Label
           >
           <Input thin bind:value={$values.platformUrl} />
+        </div>
+      </div>
+    {/if}
+    {#if !$admin.cloud}
+      <Divider size="S" />
+      <Layout gap="XS" noPadding>
+        <Heading size="S">Analytics</Heading>
+        <Body size="S">Choose whether to opt-in or opt-out of analytics.</Body>
+      </Layout>
+      <div class="fields">
+        <div class="field">
+          <Label size="L">Analytics</Label>
+          <Toggle text="" bind:value={$values.analyticsEnabled} />
         </div>
       </div>
     {/if}

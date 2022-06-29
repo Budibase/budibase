@@ -11,8 +11,8 @@ const buildVerifyFn = saveUserFn => {
       profile: profile,
       email: profile._json.email,
       oauth2: {
-        accessToken: accessToken,
-        refreshToken: refreshToken,
+        accessToken,
+        refreshToken,
       },
     }
 
