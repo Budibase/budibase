@@ -141,8 +141,14 @@ exports.getBudibaseVersion = async ctx => {
 // TODO: remove as part of beta program
 exports.checkBetaAccess = async ctx => {
   // go to the cloud platform if running self hosted
-  if ((env.ACCOUNT_PORTAL_URL && env.SELF_HOSTED) || !env.MULTI_TENANCY) {
-    const baseUrl = env.ACCOUNT_PORTAL_URL.replace("account.", "")
+  if (env.SELF_HOSTED || !env.MULTI_TENANCY) {
+    let baseUrl = ""
+    if (env.ACCOUNT_PORTAL_URL) {
+      baseUrl = env.ACCOUNT_PORTAL_URL.replace("account.", "")
+    } else {
+      baseUrl = "https://budibase.app"
+    }
+
     const response = await fetch(
       `${baseUrl}/api/beta/access?email=${ctx.query.email}`
     )
