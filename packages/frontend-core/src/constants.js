@@ -42,6 +42,10 @@ export const OperatorOptions = {
     value: "notEqual",
     label: "Does Not Contain",
   },
+  In: {
+    value: "oneOf",
+    label: "Is in",
+  },
 }
 
 // Cookie names
@@ -63,3 +67,25 @@ export const TableNames = {
  *   - Coerce types for search endpoint
  */
 export const ApiVersion = "1"
+
+/**
+ * Maximum minimum range for SQL number values
+ */
+export const SqlNumberTypeRangeMap = {
+  integer: {
+    max: 2147483647,
+    min: -2147483648,
+  },
+  int: {
+    max: 2147483647,
+    min: -2147483648,
+  },
+  smallint: {
+    max: 32767,
+    min: -32768,
+  },
+  mediumint: {
+    max: 8388607,
+    min: -8388608,
+  },
+}

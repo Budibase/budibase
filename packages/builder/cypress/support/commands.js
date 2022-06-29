@@ -144,20 +144,27 @@ Cypress.Commands.add("deleteApp", name => {
             return
           }
 
+          // Go to app overview
           const appIdParsed = appId.split("_").pop()
           const actionEleId = `[data-cy=row_actions_${appIdParsed}]`
           cy.get(actionEleId).within(() => {
-            cy.get(".spectrum-Icon").eq(0).click({ force: true })
+            cy.contains("Manage").click({ force: true })
           })
-          cy.get(".spectrum-Menu").then($menu => {
-            if ($menu.text().includes("Unpublish")) {
-              cy.get(".spectrum-Menu").contains("Unpublish").click()
-              cy.get(".spectrum-Dialog-grid").contains("Unpublish app").click()
+          cy.wait(1000)
+
+          // Unpublish first if needed
+          cy.get(`[data-cy="app-status"]`).then($status => {
+            if ($status.text().includes("Last published")) {
+              cy.contains("Unpublish").click()
+              cy.get(".spectrum-Modal").within(() => {
+                cy.contains("Unpublish app").click()
+              })
             }
           })
 
-          cy.get(actionEleId).within(() => {
-            cy.get(".spectrum-Icon").eq(0).click({ force: true })
+          // Delete app
+          cy.get(".app-overview-actions-icon").within(() => {
+            cy.get(".spectrum-Icon").click({ force: true })
           })
           cy.get(".spectrum-Menu").contains("Delete").click()
           cy.get(".spectrum-Dialog-grid").within(() => {
@@ -180,17 +187,7 @@ Cypress.Commands.add("deleteAllApps", () => {
     .its("body")
     .then(val => {
       for (let i = 0; i < val.length; i++) {
-        const appIdParsed = val[i].appId.split("_").pop()
-        const actionEleId = `[data-cy=row_actions_${appIdParsed}]`
-        cy.get(actionEleId).within(() => {
-          cy.get(".spectrum-Icon").eq(0).click({ force: true })
-        })
-
-        cy.get(".spectrum-Menu").contains("Delete").click()
-        cy.get(".spectrum-Dialog-grid").within(() => {
-          cy.get("input").type(val[i].name)
-          cy.get(".spectrum-Button--warning").click()
-        })
+        cy.deleteApp(val[i].name)
         cy.reload()
       }
     })
@@ -364,7 +361,7 @@ Cypress.Commands.add("createTable", (tableName, initialTable) => {
     cy.get(`[data-cy="new-table"]`).click()
   }
   cy.wait(5000)
-  cy.get(".spectrum-Dialog-grid")
+  cy.get(".item")
     .contains("Budibase DB")
     .click({ force: true })
     .then(() => {

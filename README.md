@@ -174,6 +174,7 @@ Budibase is dedicated to providing a welcoming, diverse, and harrassment-free ex
 ## 🙌 Contributing to Budibase
 
 From opening a bug report to creating a pull request: every contribution is appreciated and welcomed. If you're planning to implement a new feature or change the API please create an issue first. This way we can ensure your work is not in vain.
+Environment setup instructions are available for [Debian](https://github.com/Budibase/budibase/tree/HEAD/docs/DEV-SETUP-DEBIAN.md) and [MacOSX](https://github.com/Budibase/budibase/tree/HEAD/docs/DEV-SETUP-MACOSX.md)
 
 ### Not Sure Where to Start?
 A good place to start contributing, is the [First time issues project](https://github.com/Budibase/budibase/projects/22).
@@ -187,7 +188,7 @@ Budibase is a monorepo managed by lerna. Lerna manages the building and publishi
 
 - [packages/server](https://github.com/Budibase/budibase/tree/HEAD/packages/server) - The budibase server. This Koa app is responsible for serving the JS for the builder and budibase apps, as well as providing the API for interaction with the database and file system.
 
-For more information, see [CONTRIBUTING.md](https://github.com/Budibase/budibase/blob/HEAD/.github/CONTRIBUTING.md)
+For more information, see [CONTRIBUTING.md](https://github.com/Budibase/budibase/blob/HEAD/docs/CONTRIBUTING.md)
 
 <br /><br />
 
@@ -202,7 +203,7 @@ Budibase is open-source, licensed as [GPL v3](https://www.gnu.org/licenses/gpl-3
 
 [![Stargazers over time](https://starchart.cc/Budibase/budibase.svg)](https://starchart.cc/Budibase/budibase)
 
-If you are having issues between updates of the builder, please use the guide [here](https://github.com/Budibase/budibase/blob/HEAD/.github/CONTRIBUTING.md#troubleshooting) to clear down your environment.
+If you are having issues between updates of the builder, please use the guide [here](https://github.com/Budibase/budibase/blob/HEAD/docs/CONTRIBUTING.md#troubleshooting) to clear down your environment.
 
 <br /><br />
 

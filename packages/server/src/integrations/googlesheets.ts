@@ -49,6 +49,7 @@ module GoogleSheetsModule {
     description:
       "Create and collaborate on online spreadsheets in real-time and from any device. ",
     friendlyName: "Google Sheets",
+    type: "Spreadsheet",
     datasource: {
       spreadsheetId: {
         display: "Google Sheet URL",
