@@ -17,6 +17,7 @@ class QueryBuilder {
       notEqual: {},
       empty: {},
       notEmpty: {},
+      oneOf: {},
       ...base,
     }
     this.limit = 50
@@ -112,6 +113,11 @@ class QueryBuilder {
     return this
   }
 
+  addOneOf(key, value) {
+    this.query.oneOf[key] = value
+    return this
+  }
+
   /**
    * Preprocesses a value before going into a lucene search.
    * Transforms strings to lowercase and wraps strings and bools in quotes.
@@ -145,7 +151,7 @@ class QueryBuilder {
 
     function build(structure, queryFn) {
       for (let [key, value] of Object.entries(structure)) {
-        key = builder.preprocess(key.replace(/ /, "_"), {
+        key = builder.preprocess(key.replace(/ /g, "_"), {
           escape: true,
         })
         const expression = queryFn(key, value)
@@ -219,6 +225,28 @@ class QueryBuilder {
     }
     if (this.query.notEmpty) {
       build(this.query.notEmpty, key => `${key}:["" TO *]`)
+    }
+    if (this.query.oneOf) {
+      build(this.query.oneOf, (key, value) => {
+        if (!Array.isArray(value)) {
+          if (typeof value === "string") {
+            value = value.split(",")
+          } else {
+            return ""
+          }
+        }
+        let orStatement = `${builder.preprocess(
+          value[0],
+          allPreProcessingOpts
+        )}`
+        for (let i = 1; i < value.length; i++) {
+          orStatement += ` OR ${builder.preprocess(
+            value[i],
+            allPreProcessingOpts
+          )}`
+        }
+        return `${key}:(${orStatement})`
+      })
     }
     return query
   }
