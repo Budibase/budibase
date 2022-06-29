@@ -162,7 +162,9 @@ module PostgresModule {
       if (!this.config.schema) {
         this.config.schema = "public"
       }
-      this.client.query(`SET search_path TO ${this.config.schema}`)
+      this.client.query(
+        `SELECT set_config('search_path',current_setting('search_path') || ',${this.config.schema}',false) WHERE current_setting('search_path') !~ '(^|,)${this.config.schema}(,|$)';`
+      )
       this.COLUMNS_SQL = `select * from information_schema.columns where table_schema = '${this.config.schema}'`
       this.open = true
     }
