@@ -17,6 +17,8 @@ import {
 } from "@budibase/backend-core"
 import { MigrationType } from "@budibase/types"
 
+const PAGE_LIMIT = 10
+
 /**
  * Retrieves all users from the current tenancy.
  */
@@ -28,6 +30,19 @@ export const allUsers = async () => {
     })
   )
   return response.rows.map((row: any) => row.doc)
+}
+
+export const paginatedUsers = async (page?: string) => {
+  const db = tenancy.getGlobalDB()
+  // get one extra document, to have the next page
+  const response = await db.allDocs(
+    dbUtils.getGlobalUserParams(null, {
+      include_docs: true,
+      limit: PAGE_LIMIT + 1,
+      startkey: page,
+    })
+  )
+  return dbUtils.pagination(response, PAGE_LIMIT)
 }
 
 /**
