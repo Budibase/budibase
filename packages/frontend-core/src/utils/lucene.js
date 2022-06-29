@@ -14,6 +14,7 @@ export const getValidOperatorsForType = type => {
     Op.Like,
     Op.Empty,
     Op.NotEmpty,
+    Op.In,
   ]
   const numOps = [
     Op.Equals,
@@ -22,6 +23,7 @@ export const getValidOperatorsForType = type => {
     Op.LessThan,
     Op.Empty,
     Op.NotEmpty,
+    Op.In,
   ]
   if (type === "string") {
     return stringOps
@@ -91,6 +93,7 @@ export const buildLuceneQuery = filter => {
     notEmpty: {},
     contains: {},
     notContains: {},
+    oneOf: {},
   }
   if (Array.isArray(filter)) {
     filter.forEach(expression => {
@@ -99,8 +102,12 @@ export const buildLuceneQuery = filter => {
       if (type === "datetime" && value) {
         value = new Date(value).toISOString()
       }
-      if (type === "number") {
-        value = parseFloat(value)
+      if (type === "number" && !Array.isArray(value)) {
+        if (operator === "oneOf") {
+          value = value.split(",").map(item => parseFloat(item))
+        } else {
+          value = parseFloat(value)
+        }
       }
       if (type === "boolean") {
         value = `${value}`?.toLowerCase() === "true"
@@ -139,7 +146,6 @@ export const buildLuceneQuery = filter => {
       }
     })
   }
-
   return query
 }
 
@@ -211,6 +217,17 @@ export const runLuceneQuery = (docs, query) => {
     return docValue == null || docValue === ""
   })
 
+  // Process an includes match (fails if the value is not included)
+  const oneOf = match("oneOf", (docValue, testValue) => {
+    if (typeof testValue === "string") {
+      testValue = testValue.split(",")
+      if (typeof docValue === "number") {
+        testValue = testValue.map(item => parseFloat(item))
+      }
+    }
+    return !testValue?.includes(docValue)
+  })
+
   // Match a document against all criteria
   const docMatch = doc => {
     return (
@@ -220,7 +237,8 @@ export const runLuceneQuery = (docs, query) => {
       equalMatch(doc) &&
       notEqualMatch(doc) &&
       emptyMatch(doc) &&
-      notEmptyMatch(doc)
+      notEmptyMatch(doc) &&
+      oneOf(doc)
     )
   }
 
