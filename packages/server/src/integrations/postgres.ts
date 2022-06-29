@@ -16,9 +16,18 @@ import {
 import { DatasourcePlus } from "./base/datasourcePlus"
 
 module PostgresModule {
-  const { Client } = require("pg")
+  const { Client, types } = require("pg")
   const Sql = require("./base/sql")
   const { escapeDangerousCharacters } = require("../utilities")
+
+  // Return "date" and "timestamp" types as plain strings.
+  // This lets us reference the original stored timezone.
+  // types is undefined when running in a test env for some reason.
+  if (types) {
+    types.setTypeParser(1114, (val: any) => val) // timestamp
+    types.setTypeParser(1082, (val: any) => val) // date
+    types.setTypeParser(1184, (val: any) => val) // timestampz
+  }
 
   const JSON_REGEX = /'{.*}'::json/s
 
@@ -38,6 +47,7 @@ module PostgresModule {
     docs: "https://node-postgres.com",
     plus: true,
     friendlyName: "PostgreSQL",
+    type: "Relational",
     description:
       "PostgreSQL, also known as Postgres, is a free and open-source relational database management system emphasizing extensibility and SQL compliance.",
     datasource: {
@@ -136,7 +146,7 @@ module PostgresModule {
           : undefined,
       }
       this.client = new Client(newConfig)
-      this.setSchema()
+      this.open = false
     }
 
     getBindingIdentifier(): string {
@@ -147,7 +157,34 @@ module PostgresModule {
       return parts.join(" || ")
     }
 
+    async openConnection() {
+      await this.client.connect()
+      if (!this.config.schema) {
+        this.config.schema = "public"
+      }
+      this.client.query(`SET search_path TO ${this.config.schema}`)
+      this.COLUMNS_SQL = `select * from information_schema.columns where table_schema = '${this.config.schema}'`
+      this.open = true
+    }
+
+    closeConnection() {
+      const pg = this
+      return new Promise<void>((resolve, reject) => {
+        this.client.end((err: any) => {
+          pg.open = false
+          if (err) {
+            reject(err)
+          } else {
+            resolve()
+          }
+        })
+      })
+    }
+
     async internalQuery(query: SqlQuery, close: boolean = true) {
+      if (!this.open) {
+        await this.openConnection()
+      }
       const client = this.client
       this.index = 1
       // need to handle a specific issue with json data types in postgres,
@@ -164,21 +201,14 @@ module PostgresModule {
       try {
         return await client.query(query.sql, query.bindings || [])
       } catch (err) {
-        await this.client.end()
+        await this.closeConnection()
         // @ts-ignore
         throw new Error(err)
       } finally {
-        if (close) await this.client.end()
+        if (close) {
+          await this.closeConnection()
+        }
       }
-    }
-
-    async setSchema() {
-      await this.client.connect()
-      if (!this.config.schema) {
-        this.config.schema = "public"
-      }
-      this.client.query(`SET search_path TO ${this.config.schema}`)
-      this.COLUMNS_SQL = `select * from information_schema.columns where table_schema = '${this.config.schema}'`
     }
 
     /**
@@ -188,6 +218,7 @@ module PostgresModule {
      */
     async buildSchema(datasourceId: string, entities: Record<string, Table>) {
       let tableKeys: { [key: string]: string[] } = {}
+      await this.openConnection()
       try {
         const primaryKeysResponse = await this.client.query(
           this.PRIMARY_KEYS_SQL
@@ -241,6 +272,7 @@ module PostgresModule {
             autocolumn: isAuto,
             name: columnName,
             ...convertSqlType(column.data_type),
+            externalType: column.data_type,
           }
         }
 
@@ -251,7 +283,7 @@ module PostgresModule {
         // @ts-ignore
         throw new Error(err)
       } finally {
-        await this.client.end()
+        await this.closeConnection()
       }
     }
 
@@ -283,7 +315,7 @@ module PostgresModule {
         for (let query of input) {
           responses.push(await this.internalQuery(query, false))
         }
-        await this.client.end()
+        await this.closeConnection()
         return responses
       } else {
         const response = await this.internalQuery(input)

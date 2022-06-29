@@ -49,6 +49,7 @@ module GoogleSheetsModule {
     description:
       "Create and collaborate on online spreadsheets in real-time and from any device. ",
     friendlyName: "Google Sheets",
+    type: "Spreadsheet",
     datasource: {
       spreadsheetId: {
         display: "Google Sheet URL",
@@ -164,11 +165,15 @@ module GoogleSheetsModule {
         }
       )
 
+      const json = await response.json()
+
       if (response.status !== 200) {
-        throw new Error("Error authenticating with google sheets.")
+        throw new Error(
+          `Error authenticating with google sheets. ${json.error_description}`
+        )
       }
 
-      return response.json()
+      return json
     }
 
     async connect() {

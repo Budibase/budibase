@@ -4,7 +4,12 @@
   import AutomationPanel from "components/automation/AutomationPanel/AutomationPanel.svelte"
   import CreateAutomationModal from "components/automation/AutomationPanel/CreateAutomationModal.svelte"
   import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
-  $: automation = $automationStore.automations[0]
+  import TestPanel from "components/automation/AutomationBuilder/TestPanel.svelte"
+
+  $: automation =
+    $automationStore.selectedAutomation?.automation ||
+    $automationStore.automations[0]
+
   let modal
   let webhookModal
 </script>
@@ -39,6 +44,12 @@
       </div>
     {/if}
   </div>
+
+  {#if automation?.showTestPanel}
+    <div class="setup">
+      <TestPanel {automation} />
+    </div>
+  {/if}
   <Modal bind:this={modal}>
     <CreateAutomationModal {webhookModal} />
   </Modal>
@@ -52,7 +63,9 @@
     flex: 1 1 auto;
     height: 0;
     display: grid;
-    grid-template-columns: 260px minmax(510px, 1fr);
+    grid-auto-flow: column dense;
+    grid-template-columns: 260px minmax(510px, 1fr) fit-content(500px);
+    overflow: hidden;
   }
 
   .nav {
@@ -64,17 +77,18 @@
     border-right: var(--border-light);
     background-color: var(--background);
     padding-bottom: 60px;
+    overflow: hidden;
   }
 
   .content {
     position: relative;
-    padding: var(--spacing-l) 40px;
+    padding-top: var(--spacing-l);
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
     gap: var(--spacing-l);
-    overflow: hidden;
+    overflow: auto;
   }
   .centered {
     top: 0;
@@ -91,5 +105,18 @@
 
   .main {
     width: 300px;
+  }
+
+  .setup {
+    padding-top: var(--spectrum-global-dimension-size-200);
+    border-left: var(--border-light);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    gap: var(--spacing-l);
+    background-color: var(--background);
+    grid-column: 3;
+    overflow: auto;
   }
 </style>

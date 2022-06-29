@@ -1,5 +1,5 @@
 import { Helpers } from "@budibase/bbui"
-import { OperatorOptions } from "../constants"
+import { OperatorOptions, SqlNumberTypeRangeMap } from "../constants"
 
 /**
  * Returns the valid operator options for a certain data type
@@ -14,6 +14,7 @@ export const getValidOperatorsForType = type => {
     Op.Like,
     Op.Empty,
     Op.NotEmpty,
+    Op.In,
   ]
   const numOps = [
     Op.Equals,
@@ -22,6 +23,7 @@ export const getValidOperatorsForType = type => {
     Op.LessThan,
     Op.Empty,
     Op.NotEmpty,
+    Op.In,
   ]
   if (type === "string") {
     return stringOps
@@ -91,31 +93,34 @@ export const buildLuceneQuery = filter => {
     notEmpty: {},
     contains: {},
     notContains: {},
+    oneOf: {},
   }
   if (Array.isArray(filter)) {
     filter.forEach(expression => {
-      let { operator, field, type, value } = expression
+      let { operator, field, type, value, externalType } = expression
       // Parse all values into correct types
       if (type === "datetime" && value) {
         value = new Date(value).toISOString()
       }
-      if (type === "number") {
-        value = parseFloat(value)
+      if (type === "number" && !Array.isArray(value)) {
+        if (operator === "oneOf") {
+          value = value.split(",").map(item => parseFloat(item))
+        } else {
+          value = parseFloat(value)
+        }
       }
       if (type === "boolean") {
         value = `${value}`?.toLowerCase() === "true"
       }
       if (operator.startsWith("range")) {
+        const minint =
+          SqlNumberTypeRangeMap[externalType]?.min || Number.MIN_SAFE_INTEGER
+        const maxint =
+          SqlNumberTypeRangeMap[externalType]?.max || Number.MAX_SAFE_INTEGER
         if (!query.range[field]) {
           query.range[field] = {
-            low:
-              type === "number"
-                ? Number.MIN_SAFE_INTEGER
-                : "0000-00-00T00:00:00.000Z",
-            high:
-              type === "number"
-                ? Number.MAX_SAFE_INTEGER
-                : "9999-00-00T00:00:00.000Z",
+            low: type === "number" ? minint : "0000-00-00T00:00:00.000Z",
+            high: type === "number" ? maxint : "9999-00-00T00:00:00.000Z",
           }
         }
         if (operator === "rangeLow" && value != null && value !== "") {
@@ -141,7 +146,6 @@ export const buildLuceneQuery = filter => {
       }
     })
   }
-
   return query
 }
 
@@ -213,6 +217,17 @@ export const runLuceneQuery = (docs, query) => {
     return docValue == null || docValue === ""
   })
 
+  // Process an includes match (fails if the value is not included)
+  const oneOf = match("oneOf", (docValue, testValue) => {
+    if (typeof testValue === "string") {
+      testValue = testValue.split(",")
+      if (typeof docValue === "number") {
+        testValue = testValue.map(item => parseFloat(item))
+      }
+    }
+    return !testValue?.includes(docValue)
+  })
+
   // Match a document against all criteria
   const docMatch = doc => {
     return (
@@ -222,7 +237,8 @@ export const runLuceneQuery = (docs, query) => {
       equalMatch(doc) &&
       notEqualMatch(doc) &&
       emptyMatch(doc) &&
-      notEmptyMatch(doc)
+      notEmptyMatch(doc) &&
+      oneOf(doc)
     )
   }
 

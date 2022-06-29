@@ -1,4 +1,5 @@
 const google = require("../google")
+const GoogleStrategy = require("passport-google-oauth").OAuth2Strategy
 const { Cookies, Configs } = require("../../../constants")
 const { clearCookie, getCookie } = require("../../../utils")
 const { getScopedConfig, getPlatformUrl } = require("../../../db/utils")
@@ -21,20 +22,12 @@ async function fetchGoogleCreds() {
   )
 }
 
-async function platformUrl() {
-  const db = getGlobalDB()
-  const publicConfig = await getScopedConfig(db, {
-    type: Configs.SETTINGS,
-  })
-  return getPlatformUrl(publicConfig)
-}
-
 async function preAuth(passport, ctx, next) {
   // get the relevant config
   const googleConfig = await fetchGoogleCreds()
-  const platUrl = await platformUrl()
+  const platformUrl = await getPlatformUrl({ tenantAware: false })
 
-  let callbackUrl = `${platUrl}/api/global/auth/datasource/google/callback`
+  let callbackUrl = `${platformUrl}/api/global/auth/datasource/google/callback`
   const strategy = await google.strategyFactory(googleConfig, callbackUrl)
 
   if (!ctx.query.appId || !ctx.query.datasourceId) {
@@ -51,22 +44,23 @@ async function preAuth(passport, ctx, next) {
 async function postAuth(passport, ctx, next) {
   // get the relevant config
   const config = await fetchGoogleCreds()
-  const platUrl = await platformUrl()
+  const platformUrl = await getPlatformUrl({ tenantAware: false })
 
-  let callbackUrl = `${platUrl}/api/global/auth/datasource/google/callback`
-  const strategy = await google.strategyFactory(
-    config,
-    callbackUrl,
-    (accessToken, refreshToken, profile, done) => {
-      clearCookie(ctx, Cookies.DatasourceAuth)
-      done(null, { refreshToken })
-    }
-  )
-
+  let callbackUrl = `${platformUrl}/api/global/auth/datasource/google/callback`
   const authStateCookie = getCookie(ctx, Cookies.DatasourceAuth)
 
   return passport.authenticate(
-    strategy,
+    new GoogleStrategy(
+      {
+        clientID: config.clientID,
+        clientSecret: config.clientSecret,
+        callbackURL: callbackUrl,
+      },
+      (accessToken, refreshToken, profile, done) => {
+        clearCookie(ctx, Cookies.DatasourceAuth)
+        done(null, { accessToken, refreshToken })
+      }
+    ),
     { successRedirect: "/", failureRedirect: "/error" },
     async (err, tokens) => {
       // update the DB for the datasource with all the user info

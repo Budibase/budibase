@@ -5,7 +5,6 @@
   import sanitizeUrl from "builderStore/store/screenTemplates/utils/sanitizeUrl"
   import { Modal, ModalContent, Select, notifications } from "@budibase/bbui"
   import { store, selectedAccessRole } from "builderStore"
-  import analytics, { Events } from "analytics"
   import { get } from "svelte/store"
   import getTemplates from "builderStore/store/screenTemplates"
   import { tables, roles } from "stores/backend"
@@ -65,18 +64,9 @@
         // Create the screen
         await store.actions.screens.save(screen)
 
-        // Analytics
-        if (screen.template) {
-          analytics.captureEvent(Events.SCREEN.CREATED, {
-            template: screen.template,
-            datasource: screen.datasource,
-            screenAccessRole,
-          })
-        }
-
         // Add link in layout for list screens
         if (screen.props._instanceName.endsWith("List")) {
-          await store.actions.components.links.save(
+          await store.actions.links.save(
             screen.routing.route,
             screen.routing.route.split("/")[1]
           )
@@ -141,6 +131,7 @@
       const screens = selectedTemplates.map(template => {
         let screenTemplate = template.create()
         screenTemplate.datasource = template.datasource
+        screenTemplate.autoTableId = template.table
         return screenTemplate
       })
       await createScreens({ screens, screenAccessRole })
@@ -208,11 +199,6 @@
     Select which level of access you want your screens to have
     <Select
       bind:value={screenAccessRole}
-      on:change={() => {
-        analytics.captureEvent(Events.SCREEN.CREATE_ROLE_UPDATED, {
-          screenAccessRole,
-        })
-      }}
       label="Access"
       getOptionLabel={role => role.name}
       getOptionValue={role => role._id}
