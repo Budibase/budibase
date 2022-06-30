@@ -185,6 +185,7 @@ export async function getAllDbs(opts = { efficient: false }) {
     }
   }
   let couchUrl = `${url}/_all_dbs`
+  console.log(couchUrl)
   let tenantId = getTenantId()
   if (!env.MULTI_TENANCY || (!efficient && tenantId === DEFAULT_TENANT_ID)) {
     // just get all DBs when:
