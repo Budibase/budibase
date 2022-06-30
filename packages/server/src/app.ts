@@ -121,15 +121,20 @@ module.exports = server.listen(env.PORT || 0, async () => {
   ) {
     const checklist = await getChecklist()
     if (!checklist?.adminUser?.checked) {
-      await createAdminUser(
-        env.BB_ADMIN_USER_EMAIL,
-        env.BB_ADMIN_USER_PASSWORD,
-        "default"
-      )
-      console.log(
-        "Admin account automatically created for",
-        env.BB_ADMIN_USER_EMAIL
-      )
+      try {
+        await createAdminUser(
+          env.BB_ADMIN_USER_EMAIL,
+          env.BB_ADMIN_USER_PASSWORD,
+          "default"
+        )
+        console.log(
+          "Admin account automatically created for",
+          env.BB_ADMIN_USER_EMAIL
+        )
+      } catch (e) {
+        logAlert("Error creating initial admin user. Exiting.", e)
+        shutdown()
+      }
     }
   }
 
