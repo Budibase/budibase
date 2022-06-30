@@ -163,7 +163,7 @@ Cypress.Commands.add("createApp", (name, addDefaultTable) => {
 })
 
 Cypress.Commands.add("deleteApp", name => {
-  cy.visit(`${Cypress.config().baseUrl}/builder`)
+  cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 5000 })
   cy.wait(2000)
   cy.request(`${Cypress.config().baseUrl}/api/applications?status=all`)
     .its("body")
