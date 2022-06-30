@@ -323,7 +323,8 @@ Cypress.Commands.add("importApp", (exportFilePath, name) => {
       if (val.length > 0) {
         cy.get(`[data-cy="create-app-btn"]`).click({ force: true })
       }
-      cy.get(`[data-cy="import-app-btn"]`, { timeout: 500 }).click({
+      cy.wait(500)
+      cy.get(`[data-cy="import-app-btn"]`).click({
         force: true,
       })
     })
@@ -372,7 +373,7 @@ Cypress.Commands.add("searchForApplication", appName => {
 
 // Assumes there are no others
 Cypress.Commands.add("applicationInAppTable", appName => {
-  cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 2000 })
+  cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 10000 })
   cy.get(".appTable", { timeout: 2000 }).within(() => {
     cy.get(".title").contains(appName).should("exist")
   })

@@ -6,7 +6,7 @@ filterTests(['smoke', 'all'], () => {
 
     before(() => {
       cy.login()
-      cy.deleteApp("Cypress Tests")
+      cy.deleteAllApps()
     })
 
     if (!(Cypress.env("TEST_ENV"))) {
@@ -48,7 +48,7 @@ filterTests(['smoke', 'all'], () => {
     })
 
     it("should enforce a valid url before submission", () => {
-      cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 5000 })
+      cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 10000 })
 
       // Start create app process. If apps already exist, click second button
       cy.get(interact.CREATE_APP_BUTTON, { timeout: 1000 }).click({ force: true })
@@ -91,7 +91,7 @@ filterTests(['smoke', 'all'], () => {
 
     it("should create the first application from scratch", () => {
       const appName = "Cypress Tests"
-      cy.createApp(appName)
+      cy.createApp(appName, false)
 
       cy.visit(`${Cypress.config().baseUrl}/builder`)
 
@@ -100,7 +100,7 @@ filterTests(['smoke', 'all'], () => {
     })
 
     it("should create the first application from scratch with a default name", () => {
-      cy.createApp()
+      cy.createApp("", false)
       cy.applicationInAppTable("My app")
       cy.deleteApp("My app")
     })
@@ -110,7 +110,7 @@ filterTests(['smoke', 'all'], () => {
 
       cy.updateUserInformation("Ted", "Userman")
       
-      cy.createApp()
+      cy.createApp("", false)
 
       cy.visit(`${Cypress.config().baseUrl}/builder`)
 
@@ -120,7 +120,7 @@ filterTests(['smoke', 'all'], () => {
       //Accomodate names that end in 'S'
       cy.updateUserInformation("Chris", "Userman")
       
-      cy.createApp()
+      cy.createApp("", false)
 
       cy.visit(`${Cypress.config().baseUrl}/builder`)
 
