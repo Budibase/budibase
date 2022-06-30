@@ -134,7 +134,7 @@ Cypress.Commands.add("createApp", (name, addDefaultTable) => {
   const shouldCreateDefaultTable =
     typeof addDefaultTable != "boolean" ? true : addDefaultTable
 
-  cy.visit(`${Cypress.config().baseUrl}/builder`)
+  cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 5000 })
   cy.get(`[data-cy="create-app-btn"]`, { timeout: 2000 }).click({ force: true })
 
   // If apps already exist
@@ -315,7 +315,7 @@ Cypress.Commands.add("alterAppVersion", (appId, version) => {
 })
 
 Cypress.Commands.add("importApp", (exportFilePath, name) => {
-  cy.visit(`${Cypress.config().baseUrl}/builder`)
+  cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 5000 })
 
   cy.request(`${Cypress.config().baseUrl}/api/applications?status=all`)
     .its("body")
@@ -343,7 +343,7 @@ Cypress.Commands.add("importApp", (exportFilePath, name) => {
     cy.get(".confirm-wrap button")
       .should("not.be.disabled")
       .click({ force: true })
-    cy.wait(5000)
+    cy.wait(3000)
   })
 })
 
@@ -372,7 +372,7 @@ Cypress.Commands.add("searchForApplication", appName => {
 
 // Assumes there are no others
 Cypress.Commands.add("applicationInAppTable", appName => {
-  cy.visit(`${Cypress.config().baseUrl}/builder`)
+  cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 2000 })
   cy.get(".appTable", { timeout: 2000 }).within(() => {
     cy.get(".title").contains(appName).should("exist")
   })
