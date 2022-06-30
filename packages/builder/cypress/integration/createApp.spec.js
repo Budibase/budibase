@@ -11,9 +11,9 @@ filterTests(['smoke', 'all'], () => {
 
     if (!(Cypress.env("TEST_ENV"))) {
       it("should show the new user UI/UX", () => {
-        cy.visit(`${Cypress.config().baseUrl}/builder/portal/apps/create`) //added /portal/apps/create
+        cy.visit(`${Cypress.config().baseUrl}/builder/portal/apps/create`, { timeout: 5000 }) //added /portal/apps/create
+        cy.wait(1000)
         cy.get(interact.CREATE_APP_BUTTON).contains('Start from scratch').should("exist")
-        cy.get(interact.CREATE_APP_BUTTON).should("exist")
         
         cy.get(interact.TEMPLATE_CATEGORY_FILTER).should("exist")
         cy.get(interact.TEMPLATE_CATEGORY).should("exist")
@@ -23,7 +23,7 @@ filterTests(['smoke', 'all'], () => {
     }
 
     it("should provide filterable templates", () => {
-      cy.visit(`${Cypress.config().baseUrl}/builder`)
+      cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 5000 })
       cy.wait(500)
 
       cy.request(`${Cypress.config().baseUrl}/api/applications?status=all`)
