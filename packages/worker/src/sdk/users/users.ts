@@ -17,32 +17,37 @@ import {
 } from "@budibase/backend-core"
 import { MigrationType } from "@budibase/types"
 
-const PAGE_LIMIT = 10
+const PAGE_LIMIT = 8
 
-/**
- * Retrieves all users from the current tenancy.
- */
-export const allUsers = async () => {
-  const db = tenancy.getGlobalDB()
-  const response = await db.allDocs(
-    dbUtils.getGlobalUserParams(null, {
-      include_docs: true,
-    })
-  )
-  return response.rows.map((row: any) => row.doc)
-}
-
-export const paginatedUsers = async (page?: string) => {
+export const paginatedUsers = async ({
+  page,
+  search,
+}: { page?: string; search?: string } = {}) => {
   const db = tenancy.getGlobalDB()
   // get one extra document, to have the next page
-  const response = await db.allDocs(
-    dbUtils.getGlobalUserParams(null, {
-      include_docs: true,
-      limit: PAGE_LIMIT + 1,
-      startkey: page,
-    })
-  )
-  return dbUtils.pagination(response, PAGE_LIMIT)
+  const opts: any = {
+    include_docs: true,
+    limit: PAGE_LIMIT + 1,
+  }
+  // add a startkey if the page was specified (anchor)
+  if (page) {
+    opts.startkey = page
+  }
+  // property specifies what to use for the page/anchor
+  let userList, property
+  // no search, query allDocs
+  if (!search) {
+    const response = await db.allDocs(dbUtils.getGlobalUserParams(null, opts))
+    userList = response.rows.map((row: any) => row.doc)
+    property = "_id"
+  } else {
+    userList = await usersCore.searchGlobalUsersByEmail(search, opts)
+    property = "email"
+  }
+  return dbUtils.pagination(userList, PAGE_LIMIT, {
+    paginate: true,
+    property,
+  })
 }
 
 /**

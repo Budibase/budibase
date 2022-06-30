@@ -17,8 +17,7 @@
   import TagsRenderer from "./_components/TagsTableRenderer.svelte"
   import AddUserModal from "./_components/AddUserModal.svelte"
   import { users } from "stores/portal"
-  import { PageInfo } from "helpers/pagination"
-  import { onMount } from "svelte"
+  import { createPaginationStore } from "helpers/pagination"
 
   const schema = {
     email: {},
@@ -27,43 +26,21 @@
     group: {},
   }
 
-  let pageInfo = new PageInfo(fetchUsers)
-  let search
-  $: checkRefreshed($users.page)
-  $: filteredUsers = $users.data
-    ?.filter(user => user?.email?.includes(search || ""))
-    .map(user => ({
-      ...user,
-      group: ["All users"],
-      developmentAccess: !!user.builder?.global,
-      adminAccess: !!user.admin?.global,
-    }))
+  let pageInfo = createPaginationStore()
+  let search = undefined
+  $: page = $pageInfo.page
+  $: fetchUsers(page, search)
 
   let createUserModal
 
-  async function checkRefreshed(page) {
-    // the users have been reset, go back to first page
-    if (!page && pageInfo.page) {
-      pageInfo.reset()
-      pageInfo.pageNumber = pageInfo.pageNumber
-      pageInfo.hasNextPage = $users.hasNextPage
-      pageInfo.nextPage = $users.nextPage
-    }
-  }
-
-  async function fetchUsers(page) {
+  async function fetchUsers(page, search) {
     try {
-      await users.fetch(page)
-      pageInfo.hasNextPage = $users.hasNextPage
-      pageInfo.nextPage = $users.nextPage
+      await users.fetch({ page, search })
+      pageInfo.fetched($users.hasNextPage, $users.nextPage)
     } catch (error) {
       notifications.error("Error getting user list")
     }
   }
-
-  onMount(async () => {
-    await fetchUsers()
-  })
 </script>
 
 <Layout noPadding>
@@ -92,7 +69,7 @@
     <Table
       on:click={({ detail }) => $goto(`./${detail._id}`)}
       {schema}
-      data={filteredUsers || $users.data}
+      data={$users.data}
       allowEditColumns={false}
       allowEditRows={false}
       allowSelectRows={false}
@@ -100,18 +77,23 @@
     />
     <div class="pagination">
       <Pagination
-        page={pageInfo.pageNumber}
-        hasPrevPage={pageInfo.hasPrevPage}
-        hasNextPage={pageInfo.hasNextPage}
-        goToPrevPage={() => pageInfo.goToPrevPage()}
-        goToNextPage={() => pageInfo.goToNextPage()}
+        page={$pageInfo.pageNumber}
+        hasPrevPage={$pageInfo.hasPrevPage}
+        hasNextPage={$pageInfo.hasNextPage}
+        goToPrevPage={pageInfo.prevPage}
+        goToNextPage={pageInfo.nextPage}
       />
     </div>
   </Layout>
 </Layout>
 
 <Modal bind:this={createUserModal}>
-  <AddUserModal />
+  <AddUserModal
+    on:created={async () => {
+      pageInfo.reset()
+      await fetchUsers()
+    }}
+  />
 </Modal>
 
 <style>

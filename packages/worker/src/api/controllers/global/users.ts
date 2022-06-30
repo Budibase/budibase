@@ -90,8 +90,7 @@ export const destroy = async (ctx: any) => {
 
 // called internally by app server user fetch
 export const fetch = async (ctx: any) => {
-  const { page } = ctx.request.query
-  const paginated = await users.paginatedUsers(page)
+  const paginated = await users.paginatedUsers(ctx.request.query)
   // user hashed password shouldn't ever be returned
   for (let user of paginated.data) {
     if (user) {

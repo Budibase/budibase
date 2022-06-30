@@ -1,10 +1,18 @@
 export const buildUserEndpoints = API => ({
   /**
    * Gets a list of users in the current tenant.
+   * @param {string} page The page to retrieve
+   * @param {string} search The starts with string to search username/email by.
    */
-  getUsers: async page => {
-    const input = page ? { page } : {}
-    const params = new URLSearchParams(input)
+  getUsers: async ({ page, search } = {}) => {
+    const opts = {}
+    if (page) {
+      opts.page = page
+    }
+    if (search) {
+      opts.search = search
+    }
+    const params = new URLSearchParams(opts)
     return await API.get({
       url: `/api/global/users?${params.toString()}`,
     })

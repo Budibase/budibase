@@ -1,31 +1,56 @@
-export class PageInfo {
-  constructor(fetch) {
-    this.reset()
-    this.fetch = fetch
+import { writable } from "svelte/store"
+
+function defaultValue() {
+  return {
+    nextPage: null,
+    page: undefined,
+    hasPrevPage: false,
+    hasNextPage: false,
+    pageNumber: 1,
+    pages: [],
+  }
+}
+
+export function createPaginationStore() {
+  const { subscribe, set, update } = writable(defaultValue())
+
+  function prevPage() {
+    update(state => {
+      state.pageNumber--
+      state.nextPage = state.pages.pop()
+      state.page = state.pages[state.pages.length - 1]
+      state.hasPrevPage = state.pageNumber > 1
+      return state
+    })
   }
 
-  async goToNextPage() {
-    this.pageNumber++
-    this.prevPage = this.page
-    this.page = this.nextPage
-    this.hasPrevPage = this.pageNumber > 1
-    await this.fetch(this.page)
+  function nextPage() {
+    update(state => {
+      state.pageNumber++
+      state.page = state.nextPage
+      state.pages.push(state.page)
+      state.hasPrevPage = state.pageNumber > 1
+      return state
+    })
   }
 
-  async goToPrevPage() {
-    this.pageNumber--
-    this.nextPage = this.page
-    this.page = this.prevPage
-    this.hasPrevPage = this.pageNumber > 1
-    await this.fetch(this.page)
+  function fetched(hasNextPage, nextPage) {
+    update(state => {
+      state.hasNextPage = hasNextPage
+      state.nextPage = nextPage
+      return state
+    })
   }
 
-  reset() {
-    this.prevPage = null
-    this.nextPage = null
-    this.page = undefined
-    this.hasPrevPage = false
-    this.hasNextPage = false
-    this.pageNumber = 1
+  function reset() {
+    set(defaultValue())
+  }
+
+  return {
+    subscribe,
+    prevPage,
+    nextPage,
+    fetched,
+    reset,
   }
 }

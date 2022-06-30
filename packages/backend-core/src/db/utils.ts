@@ -1,7 +1,7 @@
 import { newid } from "../hashing"
 import { DEFAULT_TENANT_ID, Configs } from "../constants"
 import env from "../environment"
-import { SEPARATOR, DocumentTypes } from "./constants"
+import { SEPARATOR, DocumentTypes, UNICODE_MAX } from "./constants"
 import { getTenantId, getGlobalDBName, getGlobalDB } from "../tenancy"
 import fetch from "node-fetch"
 import { doWithDB, allDbs } from "./index"
@@ -11,8 +11,6 @@ import { checkSlashesInUrl } from "../helpers"
 import { isDevApp, isDevAppID } from "./conversions"
 import { APP_PREFIX } from "./constants"
 import * as events from "../events"
-
-const UNICODE_MAX = "\ufff0"
 
 export const ViewNames = {
   USER_BY_EMAIL: "by_email",
@@ -439,21 +437,22 @@ export const getPlatformUrl = async (opts = { tenantAware: true }) => {
 }
 
 export function pagination(
-  response: any,
+  data: any[],
   pageSize: number,
-  paginate: boolean = true
+  { paginate, property } = { paginate: true, property: "_id" }
 ) {
-  const data = response.rows.map((row: any) => {
-    return row.doc ? row.doc : row
-  })
   if (!paginate) {
     return { data, hasNextPage: false }
   }
   const hasNextPage = data.length > pageSize
+  let nextPage = undefined
+  if (hasNextPage) {
+    nextPage = property ? data[pageSize]?.[property] : data[pageSize]?._id
+  }
   return {
     data: data.slice(0, pageSize),
     hasNextPage,
-    nextPage: hasNextPage ? data[pageSize]?._id : undefined,
+    nextPage,
   }
 }
 
