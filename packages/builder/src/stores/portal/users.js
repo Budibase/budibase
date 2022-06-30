@@ -6,8 +6,8 @@ export function createUsersStore() {
   const { subscribe, set } = writable({})
 
   // opts can contain page and search params
-  async function fetch(opts = {}) {
-    const paged = await API.getUsers(opts)
+  async function search(opts = {}) {
+    const paged = await API.searchUsers(opts)
     set({
       ...paged,
       ...opts,
@@ -60,8 +60,8 @@ export function createUsersStore() {
       body.admin = { global: true }
     }
     await API.saveUser(body)
-    // re-fetch from first page
-    await fetch()
+    // re-search from first page
+    await search()
   }
 
   async function del(id) {
@@ -75,7 +75,7 @@ export function createUsersStore() {
 
   return {
     subscribe,
-    fetch,
+    search,
     get,
     invite,
     acceptInvite,
