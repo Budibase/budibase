@@ -7,11 +7,13 @@
   export let props
   export let styles
   export let context
+  export let order = 0
 
   // ID is only exposed as a prop so that it can be bound to from parent
   // block components
   export let id
 
+  const component = getContext("component")
   const block = getContext("block")
   const rand = generate()
 
@@ -21,6 +23,7 @@
   $: instance = {
     _component: `@budibase/standard-components/${type}`,
     _id: id,
+    _instanceName: type,
     _styles: {
       normal: {
         ...styles,
@@ -28,6 +31,7 @@
     },
     ...props,
   }
+  $: block.registerComponent(id, order, $component?.id, instance)
 </script>
 
 <Component {instance} isBlock>

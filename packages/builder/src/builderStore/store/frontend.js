@@ -575,6 +575,14 @@ export const getFrontendStore = () => {
         })
         await store.actions.preview.saveSelected()
       },
+      ejectBlock: async (id, definition) => {
+        const asset = get(currentAsset)
+        let parent = findComponentParent(asset.props, id)
+        const childIndex = parent._children.findIndex(x => x._id === id)
+        parent._children[childIndex] = definition
+        await store.actions.preview.saveSelected()
+        await store.actions.components.select(definition)
+      },
     },
     links: {
       save: async (url, title) => {
