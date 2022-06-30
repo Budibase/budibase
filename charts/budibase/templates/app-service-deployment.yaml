@@ -122,6 +122,10 @@ spec:
           value: {{ .Values.globals.automationMaxIterations | quote }}
         - name: TENANT_FEATURE_FLAGS
           value: {{ .Values.globals.tenantFeatureFlags | quote }}
+        - name: BB_ADMIN_USER_EMAIL
+          value: { { .Values.globals.bbAdminUserEmail | quote } }
+        - name: BB_ADMIN_USER_PASSWORD
+          value: { { .Values.globals.bbAdminUserPassword | quote } }
 
         image: budibase/apps:{{ .Values.globals.appVersion }}
         imagePullPolicy: Always
