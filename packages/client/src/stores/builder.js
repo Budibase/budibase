@@ -71,6 +71,9 @@ const createBuilderStore = () => {
     highlightSetting: setting => {
       dispatchEvent("highlight-setting", { setting })
     },
+    ejectBlock: (id, definition) => {
+      dispatchEvent("eject-block", { id, definition })
+    },
   }
   return {
     ...store,

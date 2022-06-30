@@ -12,6 +12,7 @@
   $: definition = store.actions.components.getDefinition(component?._component)
   $: noChildrenAllowed = !component || !definition?.hasChildren
   $: noPaste = !$store.componentToPaste
+  $: isBlock = definition?.block === true
 
   // "editable" has been repurposed for inline text editing.
   // It remains here for legacy compatibility.
@@ -83,6 +84,8 @@
       notifications.error("Error saving component")
     }
   }
+
+  const ejectBlock = () => {}
 </script>
 
 {#if showMenu}
@@ -93,6 +96,9 @@
     <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}>
       Delete
     </MenuItem>
+    {#if isBlock}
+      <MenuItem icon="Delete" on:click={ejectBlock}>Eject block</MenuItem>
+    {/if}
     <MenuItem noClose icon="ChevronUp" on:click={moveUpComponent}>
       Move up
     </MenuItem>

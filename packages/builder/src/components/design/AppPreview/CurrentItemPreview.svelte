@@ -202,6 +202,9 @@
             block: "center",
           })
         }
+      } else if (type === "eject-block") {
+        const { id, definition } = data
+        await store.actions.components.ejectBlock(id, definition)
       } else {
         console.warn(`Client sent unknown event type: ${type}`)
       }

@@ -112,28 +112,52 @@
         props={{ dataSource, disableValidation: true }}
       >
         {#if title || enrichedSearchColumns?.length || showTitleButton}
-          <div class="header" class:mobile={$context.device.mobile}>
-            <div class="title">
-              <Heading>{title || ""}</Heading>
-            </div>
-            <div class="controls">
+          <BlockComponent
+            type="container"
+            props={{
+              direction: "row",
+              hAlign: "stretch",
+              vAlign: "middle",
+              gap: "M",
+            }}
+            styles={{
+              "margin-bottom": "20px",
+            }}
+            order={0}
+          >
+            <BlockComponent
+              type="heading"
+              props={{
+                text: title,
+              }}
+              order={0}
+            />
+            <BlockComponent
+              type="container"
+              props={{
+                direction: "row",
+                hAlign: "right",
+                vAlign: "center",
+                gap: "M",
+              }}
+              order={1}
+            >
               {#if enrichedSearchColumns?.length}
-                <div
-                  class="search"
-                  style="--cols:{enrichedSearchColumns?.length}"
-                >
-                  {#each enrichedSearchColumns as column}
-                    <BlockComponent
-                      type={column.componentType}
-                      props={{
-                        field: column.name,
-                        placeholder: column.name,
-                        text: column.name,
-                        autoWidth: true,
-                      }}
-                    />
-                  {/each}
-                </div>
+                {#each enrichedSearchColumns as column, idx}
+                  <BlockComponent
+                    type={column.componentType}
+                    props={{
+                      field: column.name,
+                      placeholder: column.name,
+                      text: column.name,
+                      autoWidth: true,
+                    }}
+                    styles={{
+                      width: "192px",
+                    }}
+                    order={idx}
+                  />
+                {/each}
               {/if}
               {#if showTitleButton}
                 <BlockComponent
@@ -143,10 +167,11 @@
                     text: titleButtonText,
                     type: "cta",
                   }}
+                  order={3}
                 />
               {/if}
-            </div>
-          </div>
+            </BlockComponent>
+          </BlockComponent>
         {/if}
         <BlockComponent
           type="dataprovider"
@@ -159,6 +184,7 @@
             paginate,
             limit: rowCount,
           }}
+          order={1}
         >
           <BlockComponent
             type="table"
@@ -185,33 +211,6 @@
 {/if}
 
 <style>
-  .header {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    gap: 20px;
-    margin-bottom: 20px;
-  }
-
-  .title {
-    overflow: hidden;
-  }
-  .title :global(.spectrum-Heading) {
-    flex: 1 1 auto;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .controls {
-    flex: 0 1 auto;
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-end;
-    align-items: center;
-    gap: 20px;
-  }
   .controls :global(.spectrum-InputGroup .spectrum-InputGroup-input) {
     width: 100%;
   }
