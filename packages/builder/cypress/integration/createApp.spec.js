@@ -48,7 +48,7 @@ filterTests(['smoke', 'all'], () => {
     })
 
     it("should enforce a valid url before submission", () => {
-      cy.visit(`${Cypress.config().baseUrl}/builder`)
+      cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 5000 })
 
       // Start create app process. If apps already exist, click second button
       cy.get(interact.CREATE_APP_BUTTON, { timeout: 1000 }).click({ force: true })
@@ -101,9 +101,6 @@ filterTests(['smoke', 'all'], () => {
 
     it("should create the first application from scratch with a default name", () => {
       cy.createApp()
-
-      cy.visit(`${Cypress.config().baseUrl}/builder`)
-
       cy.applicationInAppTable("My app")
       cy.deleteApp("My app")
     })
@@ -138,7 +135,7 @@ filterTests(['smoke', 'all'], () => {
 
       cy.importApp(exportedApp, "")
 
-      cy.visit(`${Cypress.config().baseUrl}/builder`)
+      cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 2000 })
 
       cy.applicationInAppTable("My app")
       
