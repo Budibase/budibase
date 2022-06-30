@@ -1028,10 +1028,10 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/backend-core@1.0.212":
-  version "1.0.212"
-  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.0.212.tgz#7ce8bfa8c968f4aa7558bd2dd13ad3e1e3e40c8f"
-  integrity sha512-pCrAHr54d2onSbaUoCWP83LMJnm28PNIpBAmAhi2kNdSfaGTFY/Iw1sbGOE3G/9vNaB+RRXeibKEEPFjToOgAg==
+"@budibase/backend-core@1.0.213":
+  version "1.0.213"
+  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.0.213.tgz#da10d014b5e39457413a9b7f6ead54322d482855"
+  integrity sha512-ARqPhrev/da9WNXVIYSXN5M+cYLKSBYL7pvVVcwMXewp6KCR0gdUBHxuksnrmTbxqT43h7Uc/Zg1H/jYc1xQQQ==
   dependencies:
     "@techpass/passport-openidconnect" "0.3.2"
     aws-sdk "2.1030.0"
@@ -1109,12 +1109,12 @@
     svelte-flatpickr "^3.2.3"
     svelte-portal "^1.0.0"
 
-"@budibase/pro@1.0.212":
-  version "1.0.212"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-1.0.212.tgz#d6d2528b9ec2ec47e79d3360d04feeb5d2900d1e"
-  integrity sha512-RcbDmz3pkReUHXAJDPzvgTYy0CBksw55XLbW0wNtDu2HVWP0ZXoiMMJjOxNDwMfL3q4eZitWgISa7QUDisDtMA==
+"@budibase/pro@1.0.213":
+  version "1.0.213"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-1.0.213.tgz#80e6005bec51927d373d278dd8d8672c2f25a4d5"
+  integrity sha512-zhTMPZBv0IkQsdKz1ywnWaxmt/PMrw/EkW1dS8bIOAqHgFTUgawiMGrqrzH43Iw3JemMK7AvtI1EOhs+zrMWVg==
   dependencies:
-    "@budibase/backend-core" "1.0.212"
+    "@budibase/backend-core" "1.0.213"
     node-fetch "^2.6.1"
 
 "@budibase/standard-components@^0.9.139":
