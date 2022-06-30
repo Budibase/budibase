@@ -46,6 +46,7 @@ router
     controller.save
   )
   .get("/api/global/users", builderOrAdmin, controller.fetch)
+  .post("/api/global/users/search", builderOrAdmin, controller.search)
   .delete("/api/global/users/:id", adminOnly, controller.destroy)
   .get("/api/global/roles/:appId")
   .post(

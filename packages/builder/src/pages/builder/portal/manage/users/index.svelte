@@ -35,7 +35,7 @@
 
   async function fetchUsers(page, search) {
     try {
-      await users.fetch({ page, search })
+      await users.search({ page, search })
       pageInfo.fetched($users.hasNextPage, $users.nextPage)
     } catch (error) {
       notifications.error("Error getting user list")

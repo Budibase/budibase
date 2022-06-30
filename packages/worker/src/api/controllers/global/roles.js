@@ -3,22 +3,11 @@ const {
   getAllApps,
   getProdAppID,
   DocumentTypes,
-  getGlobalUserParams,
 } = require("@budibase/backend-core/db")
 const { doInAppContext, getAppDB } = require("@budibase/backend-core/context")
 const { user: userCache } = require("@budibase/backend-core/cache")
 const { getGlobalDB } = require("@budibase/backend-core/tenancy")
-
-// TODO: this function needs to be removed and replaced
-export const allUsers = async () => {
-  const db = getGlobalDB()
-  const response = await db.allDocs(
-    getGlobalUserParams(null, {
-      include_docs: true,
-    })
-  )
-  return response.rows.map(row => row.doc)
-}
+const { allUsers } = require("../../../sdk/users")
 
 exports.fetch = async ctx => {
   const tenantId = ctx.user.tenantId

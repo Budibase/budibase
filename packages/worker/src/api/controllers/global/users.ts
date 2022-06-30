@@ -88,9 +88,8 @@ export const destroy = async (ctx: any) => {
   }
 }
 
-// called internally by app server user fetch
-export const fetch = async (ctx: any) => {
-  const paginated = await users.paginatedUsers(ctx.request.query)
+export const search = async (ctx: any) => {
+  const paginated = await users.paginatedUsers(ctx.request.body)
   // user hashed password shouldn't ever be returned
   for (let user of paginated.data) {
     if (user) {
@@ -98,6 +97,18 @@ export const fetch = async (ctx: any) => {
     }
   }
   ctx.body = paginated
+}
+
+// called internally by app server user fetch
+export const fetch = async (ctx: any) => {
+  const all = await users.allUsers()
+  // user hashed password shouldn't ever be returned
+  for (let user of all) {
+    if (user) {
+      delete user.password
+    }
+  }
+  ctx.body = all
 }
 
 // called internally by app server user find
