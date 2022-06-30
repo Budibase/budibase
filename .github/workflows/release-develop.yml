@@ -21,7 +21,7 @@ env:
   # Posthog token used by ui at build time 
   POSTHOG_TOKEN: phc_uDYOfnFt6wAbBAXkC6STjcrTpAFiWIhqgFcsC1UVO5F
   INTERCOM_TOKEN: ${{ secrets.INTERCOM_TOKEN }}
-  PERSONAL_ACCESS_TOKEN : ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+  PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
       
 jobs:
   release:
