@@ -8,16 +8,15 @@ import {
   events,
   errors,
   accounts,
-  db as dbUtils,
   users as usersCore,
   tenancy,
   cache,
 } from "@budibase/backend-core"
+import { checkAnyUserExists } from "../../../utilities/users"
 
 export const save = async (ctx: any) => {
   try {
-    const user = await users.save(ctx.request.body)
-    ctx.body = user
+    ctx.body = await users.save(ctx.request.body)
   } catch (err: any) {
     ctx.throw(err.status || 400, err)
   }
@@ -39,15 +38,8 @@ export const adminUser = async (ctx: any) => {
       ctx.throw(403, "Organisation already exists.")
     }
 
-    const response = await tenancy.doWithGlobalDB(tenantId, async (db: any) => {
-      return db.allDocs(
-        dbUtils.getGlobalUserParams(null, {
-          include_docs: true,
-        })
-      )
-    })
-
-    if (response.rows.some((row: any) => row.doc.admin)) {
+    const userExists = await checkAnyUserExists()
+    if (userExists) {
       ctx.throw(
         403,
         "You cannot initialise once an global user has been created."
