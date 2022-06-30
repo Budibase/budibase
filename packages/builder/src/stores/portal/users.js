@@ -5,11 +5,12 @@ import { update } from "lodash"
 export function createUsersStore() {
   const { subscribe, set } = writable({})
 
-  async function fetch(page) {
-    const paged = await API.getUsers(page)
+  // opts can contain page and search params
+  async function fetch(opts = {}) {
+    const paged = await API.getUsers(opts)
     set({
       ...paged,
-      page,
+      ...opts,
     })
     return paged
   }
