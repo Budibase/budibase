@@ -18,7 +18,9 @@ const { logAlert } = require("@budibase/backend-core/logging")
 const { Thread } = require("./threads")
 import redis from "./utilities/redis"
 import * as migrations from "./migrations"
-import { events, installation } from "@budibase/backend-core"
+import { events, installation, tenancy } from "@budibase/backend-core"
+import { createAdminUser, getChecklist } from "./utilities/workerRequests"
+import { DEFAULT_TENANT_ID } from "@budibase/backend-core/dist/src/constants"
 
 const app = new Koa()
 
@@ -107,6 +109,27 @@ module.exports = server.listen(env.PORT || 0, async () => {
     } catch (e) {
       logAlert("Error performing migrations. Exiting.", e)
       shutdown()
+    }
+  }
+
+  // check and create admin user if required
+  if (
+    env.SELF_HOSTED &&
+    !env.MULTI_TENANCY &&
+    env.BB_ADMIN_USER_EMAIL &&
+    env.BB_ADMIN_USER_PASSWORD
+  ) {
+    const checklist = await getChecklist()
+    if (!checklist?.adminUser?.checked) {
+      await createAdminUser(
+        env.BB_ADMIN_USER_EMAIL,
+        env.BB_ADMIN_USER_PASSWORD,
+        "default"
+      )
+      console.log(
+        "Admin account automatically created for",
+        env.BB_ADMIN_USER_EMAIL
+      )
     }
   }
 
