@@ -6,6 +6,7 @@ function defaultValue() {
     page: undefined,
     hasPrevPage: false,
     hasNextPage: false,
+    loading: false,
     pageNumber: 1,
     pages: [],
   }
@@ -38,6 +39,14 @@ export function createPaginationStore() {
     update(state => {
       state.hasNextPage = hasNextPage
       state.nextPage = nextPage
+      state.loading = false
+      return state
+    })
+  }
+
+  function loading(loading = true) {
+    update(state => {
+      state.loading = loading
       return state
     })
   }
@@ -51,6 +60,7 @@ export function createPaginationStore() {
     prevPage,
     nextPage,
     fetched,
+    loading,
     reset,
   }
 }
