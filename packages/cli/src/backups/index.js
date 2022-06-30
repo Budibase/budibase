@@ -1,41 +1,48 @@
 const Command = require("../structures/Command")
 const { CommandWords } = require("../constants")
-//const pouchdb = require("pouchdb")
 const dotenv = require("dotenv")
 const fs = require("fs")
+const { join } = require("path")
 const { string } = require("../questions")
+const { env } = require("@budibase/backend-core")
+const { getPouch, getAllDbs } = require("@budibase/backend-core/db")
+const tar = require("tar")
+const { progressBar } = require("../utils")
+
+const DEFAULT_COUCH = "http://budibase:budibase@localhost:10000/db/"
+const DEFAULT_MINIO = "http://localhost:10000/"
+const TEMP_DIR = ".temp"
 
 const REQUIRED = [
-  { value: "MAIN_PORT", key: "Budibase Port", default: "10000" },
-  {
-    value: "COUCH_DB_URL",
-    key: "CouchDB URL",
-    default: "http://budibase:budibase@localhost:10000/db/",
-  },
-  { value: "MINIO_URL", key: "MinIO URL", default: "http://localhost:10000/" },
-  { value: "MINIO_ACCESS_KEY", key: "MinIO Access Key" },
-  { value: "MINIO_SECRET_KEY", key: "MinIO Secret Key" },
+  { value: "MAIN_PORT", default: "10000" },
+  { value: "COUCH_DB_URL", default: DEFAULT_COUCH },
+  { value: "MINIO_URL", default: DEFAULT_MINIO },
+  { value: "MINIO_ACCESS_KEY" },
+  { value: "MINIO_SECRET_KEY" },
 ]
 
-function checkCouchURL(config) {
-  if (config["COUCH_DB_URL"]) {
-    return config
-  }
+function checkURLs(config) {
   const mainPort = config["MAIN_PORT"],
-    username = config["COUCH_DB_USERNAME"],
+    username = config["COUCH_DB_USER"],
     password = config["COUCH_DB_PASSWORD"]
-  if (mainPort && username && password) {
+  if (!config["COUCH_DB_URL"] && mainPort && username && password) {
     config[
       "COUCH_DB_URL"
     ] = `http://${username}:${password}@localhost:${mainPort}/db/`
+  }
+  if (!config["MINIO_URL"]) {
+    config["MINIO_URL"] = DEFAULT_MINIO
   }
   return config
 }
 
 async function askQuestions() {
+  console.log(
+    "*** NOTE: use a .env file to load these parameters repeatedly ***"
+  )
   let config = {}
   for (let property of REQUIRED) {
-    config[property.value] = await string(property.key, property.default)
+    config[property.value] = await string(property.value, property.default)
   }
   return config
 }
@@ -45,7 +52,7 @@ function loadEnvironment(path) {
     throw "Unable to file specified .env file"
   }
   const env = fs.readFileSync(path, "utf8")
-  const config = checkCouchURL(dotenv.parse(env))
+  const config = checkURLs(dotenv.parse(env))
   for (let required of REQUIRED) {
     if (!config[required.value]) {
       throw `Cannot find "${required.value}" property in .env file`
@@ -56,21 +63,110 @@ function loadEnvironment(path) {
 
 // true is the default value passed by commander
 async function getConfig(envFile = true) {
+  let config
   if (envFile !== true) {
-    return loadEnvironment(envFile)
+    config = loadEnvironment(envFile)
   } else {
-    return askQuestions()
+    config = askQuestions()
   }
+  for (let required of REQUIRED) {
+    env._set(required.value, config[required.value])
+  }
+  return config
 }
 
-async function exportBackup(envFile) {
-  const config = await getConfig(envFile)
-  console.log(config)
+function replication(from, to) {
+  return new Promise((resolve, reject) => {
+    from.replicate
+      .to(to)
+      .on("complete", () => {
+        resolve()
+      })
+      .on("error", err => {
+        reject(err)
+      })
+  })
 }
 
-async function importBackup(envFile) {
-  const config = await getConfig(envFile)
-  console.log(config)
+function getPouches() {
+  const Remote = getPouch({ replication: true })
+  const Local = getPouch({ onDisk: true, directory: TEMP_DIR })
+  return { Remote, Local }
+}
+
+async function exportBackup(opts) {
+  const envFile = opts.env || undefined
+  await getConfig(envFile)
+  let filename = opts["export"] || opts
+  if (typeof filename !== "string") {
+    filename = `backup-${new Date().toISOString()}.tar.gz`
+  }
+  await getConfig(envFile)
+  const dbList = await getAllDbs()
+  const { Remote, Local } = getPouches()
+  if (fs.existsSync(TEMP_DIR)) {
+    fs.rmSync(TEMP_DIR, { recursive: true })
+  }
+  const couchDir = join(TEMP_DIR, "couchdb")
+  fs.mkdirSync(TEMP_DIR)
+  fs.mkdirSync(couchDir)
+  const bar = progressBar(dbList.length)
+  let count = 0
+  for (let db of dbList) {
+    bar.update(++count)
+    const remote = new Remote(db)
+    const local = new Local(join(TEMP_DIR, "couchdb", db))
+    await replication(remote, local)
+  }
+  bar.stop()
+  tar.create(
+    {
+      sync: true,
+      gzip: true,
+      file: filename,
+      cwd: join(TEMP_DIR),
+    },
+    ["couchdb"]
+  )
+  fs.rmSync(TEMP_DIR, { recursive: true })
+  console.log(`Generated export file - ${filename}`)
+}
+
+async function importBackup(opts) {
+  const envFile = opts.env || undefined
+  const filename = opts["import"] || opts
+  await getConfig(envFile)
+  if (!filename || !fs.existsSync(filename)) {
+    console.error("Cannot import without specifying a valid file to import")
+    process.exit(-1)
+  }
+  fs.mkdirSync(TEMP_DIR)
+  tar.extract({
+    sync: true,
+    cwd: join(TEMP_DIR),
+    file: filename,
+  })
+  const { Remote, Local } = getPouches()
+  const dbList = fs.readdirSync(join(TEMP_DIR, "couchdb"))
+  const bar = progressBar(dbList.length)
+  let count = 0
+  for (let db of dbList) {
+    bar.update(++count)
+    const remote = new Remote(db)
+    const local = new Local(join(TEMP_DIR, "couchdb", db))
+    await replication(local, remote)
+  }
+  bar.stop()
+  console.log("Import complete")
+  fs.rmSync(TEMP_DIR, { recursive: true })
+}
+
+async function pickOne(opts) {
+  if (opts["import"]) {
+    return importBackup(opts)
+  } else if (opts["export"]) {
+    return exportBackup(opts)
+  }
 }
 
 const command = new Command(`${CommandWords.BACKUPS}`)
@@ -78,14 +174,19 @@ const command = new Command(`${CommandWords.BACKUPS}`)
     "Allows building backups of Budibase, as well as importing a backup to a new instance."
   )
   .addSubOption(
-    "--export [envFile]",
+    "--export [filename]",
     "Export a backup from an existing Budibase installation.",
     exportBackup
   )
   .addSubOption(
-    "--import [envFile]",
+    "--import [filename]",
     "Import a backup to a new Budibase installation.",
     importBackup
+  )
+  .addSubOption(
+    "--env [envFile]",
+    "Provide an environment variable file to configure the CLI.",
+    pickOne
   )
 
 exports.command = command
