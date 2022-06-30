@@ -35,6 +35,7 @@
 
   async function fetchUsers(page, search) {
     try {
+      pageInfo.loading()
       await users.search({ page, search })
       pageInfo.fetched($users.hasNextPage, $users.nextPage)
     } catch (error) {
@@ -78,8 +79,8 @@
     <div class="pagination">
       <Pagination
         page={$pageInfo.pageNumber}
-        hasPrevPage={$pageInfo.hasPrevPage}
-        hasNextPage={$pageInfo.hasNextPage}
+        hasPrevPage={$pageInfo.loading ? false : $pageInfo.hasPrevPage}
+        hasNextPage={$pageInfo.loading ? false : $pageInfo.hasNextPage}
         goToPrevPage={pageInfo.prevPage}
         goToNextPage={pageInfo.nextPage}
       />
