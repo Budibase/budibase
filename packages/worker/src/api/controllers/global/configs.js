@@ -1,7 +1,6 @@
 const {
   generateConfigID,
   getConfigParams,
-  getGlobalUserParams,
   getScopedFullConfig,
   getAllApps,
 } = require("@budibase/backend-core/db")
@@ -20,6 +19,7 @@ const {
   bustCache,
 } = require("@budibase/backend-core/cache")
 const { events } = require("@budibase/backend-core")
+const { checkAnyUserExists } = require("../../../utilities/users")
 
 const BB_TENANT_CDN = "https://tenants.cdn.budi.live"
 
@@ -405,12 +405,7 @@ exports.configChecklist = async function (ctx) {
         })
 
         // They have set up an global user
-        const users = await db.allDocs(
-          getGlobalUserParams(null, {
-            include_docs: true,
-            limit: 1,
-          })
-        )
+        const userExists = await checkAnyUserExists()
         return {
           apps: {
             checked: apps.length > 0,
@@ -423,7 +418,7 @@ exports.configChecklist = async function (ctx) {
             link: "/builder/portal/manage/email",
           },
           adminUser: {
-            checked: users && users.rows.length >= 1,
+            checked: userExists,
             label: "Create your first user",
             link: "/builder/portal/manage/users",
           },

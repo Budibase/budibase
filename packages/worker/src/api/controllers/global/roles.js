@@ -7,7 +7,7 @@ const {
 const { doInAppContext, getAppDB } = require("@budibase/backend-core/context")
 const { user: userCache } = require("@budibase/backend-core/cache")
 const { getGlobalDB } = require("@budibase/backend-core/tenancy")
-const { users } = require("../../../sdk")
+const { allUsers } = require("../../../sdk/users")
 
 exports.fetch = async ctx => {
   const tenantId = ctx.user.tenantId
@@ -49,10 +49,10 @@ exports.find = async ctx => {
 exports.removeAppRole = async ctx => {
   const { appId } = ctx.params
   const db = getGlobalDB()
-  const allUsers = await users.allUsers(ctx)
+  const users = await allUsers(ctx)
   const bulk = []
   const cacheInvalidations = []
-  for (let user of allUsers) {
+  for (let user of users) {
     if (user.roles[appId]) {
       cacheInvalidations.push(userCache.invalidateUser(user._id))
       delete user.roles[appId]
