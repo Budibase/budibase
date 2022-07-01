@@ -119,10 +119,10 @@
           hoverable
           on:click={() => $goto("../../portal/apps")}
         />
-        <Heading size="S">{$store.name || "App"}</Heading>
+        <Heading size="XS">{$store.name || "App"}</Heading>
       </div>
       <div class="topcenternav">
-        <Tabs {selected} size="L">
+        <Tabs {selected} size="M">
           {#each $layout.children as { path, title }}
             <Tab
               quiet
