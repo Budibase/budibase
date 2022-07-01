@@ -190,6 +190,8 @@
         {bindings}
       />
     {/each}
-    <Button cta on:click={() => $goto("../components")}>View components</Button>
+    <Button secondary newStyles on:click={() => $goto("../components")}>
+      View components
+    </Button>
   </Layout>
 </Panel>
