@@ -1,8 +1,7 @@
 const dotenv = require("dotenv")
 const fs = require("fs")
 const { string } = require("../questions")
-const { env } = require("@budibase/backend-core")
-const { getPouch } = require("@budibase/backend-core/db")
+const { getPouch } = require("../core/db")
 
 exports.DEFAULT_COUCH = "http://budibase:budibase@localhost:10000/db/"
 exports.DEFAULT_MINIO = "http://localhost:10000/"
@@ -66,9 +65,6 @@ exports.getConfig = async (envFile = true) => {
   } else {
     config = await exports.askQuestions()
   }
-  for (let required of REQUIRED) {
-    env._set(required.value, config[required.value])
-  }
   return config
 }
 
@@ -85,8 +81,8 @@ exports.replication = (from, to) => {
   })
 }
 
-exports.getPouches = () => {
-  const Remote = getPouch({ replication: true })
-  const Local = getPouch({ onDisk: true, directory: exports.TEMP_DIR })
+exports.getPouches = config => {
+  const Remote = getPouch(config["COUCH_DB_URL"])
+  const Local = getPouch()
   return { Remote, Local }
 }

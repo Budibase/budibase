@@ -63,3 +63,7 @@ exports.progressBar = total => {
   bar.start(total, 0)
   return bar
 }
+
+exports.checkSlashesInUrl = url => {
+  return url.replace(/(https?:\/\/)|(\/)+/g, "$1$2")
+}
