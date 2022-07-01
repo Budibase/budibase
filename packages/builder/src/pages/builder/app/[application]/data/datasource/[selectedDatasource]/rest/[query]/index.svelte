@@ -42,8 +42,9 @@
 
   import {
     getRestBindings,
-    readableToRuntimeBinding,
+    toBindingsArray,
     runtimeToReadableBinding,
+    readableToRuntimeBinding,
     runtimeToReadableMap,
     readableToRuntimeMap,
   } from "builderStore/dataBinding"
@@ -56,6 +57,25 @@
   let authConfigId
   let dynamicVariables, addVariableModal, varBinding
   let restBindings = getRestBindings()
+
+  $: staticVariables = datasource?.config?.staticVariables || {}
+  $: customRequestBindings = toBindingsArray(requestBindings, "Binding")
+  $: dynamicRequestBindings = toBindingsArray(dynamicVariables, "Dynamic")
+  $: dataSourceStaticBindings = toBindingsArray(
+    staticVariables,
+    "Datasource.Static"
+  )
+
+  $: mergedBindings = [
+    ...restBindings,
+    ...customRequestBindings,
+    ...dynamicRequestBindings,
+    ...dataSourceStaticBindings,
+  ]
+
+  $: mergedAndCompleteBindings = mergedBindings.filter(binding => {
+    return binding.runtimeBinding && binding.readableBinding
+  })
 
   $: datasourceType = datasource?.source
   $: integrationInfo = $integrations[datasourceType]
@@ -72,7 +92,10 @@
     Object.keys(schema || {}).length !== 0 ||
     Object.keys(query?.schema || {}).length !== 0
 
-  $: runtimeUrlQueries = readableToRuntimeMap(restBindings, breakQs)
+  $: runtimeUrlQueries = readableToRuntimeMap(
+    mergedAndCompleteBindings,
+    breakQs
+  )
 
   function getSelectedQuery() {
     const cloneQuery = cloneDeep(
@@ -87,32 +110,18 @@
         queryVerb: "read",
       }
     )
-
-    if (cloneQuery?.fields?.headers) {
-      cloneQuery.fields.headers = runtimeToReadableMap(
-        restBindings,
-        cloneQuery.fields.headers
-      )
-    }
-
     if (cloneQuery?.fields?.requestBody) {
       cloneQuery.fields.requestBody =
         typeof cloneQuery.fields.requestBody === "object"
-          ? runtimeToReadableMap(restBindings, cloneQuery.fields.requestBody)
+          ? runtimeToReadableMap(
+              mergedAndCompleteBindings,
+              cloneQuery.fields.requestBody
+            )
           : runtimeToReadableBinding(
-              restBindings,
+              mergedAndCompleteBindings,
               cloneQuery.fields.requestBody
             )
     }
-
-    if (cloneQuery?.parameters) {
-      const flatParams = restUtils.queryParametersToKeyValue(
-        cloneQuery.parameters
-      )
-      const updatedParams = runtimeToReadableMap(restBindings, flatParams)
-      cloneQuery.parameters = restUtils.keyValueToQueryParameters(updatedParams)
-    }
-
     return cloneQuery
   }
 
@@ -128,7 +137,7 @@
       return base
     }
     const qs = restUtils.buildQueryString(
-      runtimeToReadableMap(restBindings, qsObj)
+      runtimeToReadableMap(mergedAndCompleteBindings, qsObj)
     )
     let newUrl = base
     if (base.includes("?")) {
@@ -140,28 +149,23 @@
   function buildQuery() {
     const newQuery = cloneDeep(query)
     const queryString = restUtils.buildQueryString(runtimeUrlQueries)
-    newQuery.fields.headers = readableToRuntimeMap(
-      restBindings,
-      newQuery.fields.headers
-    )
+
     newQuery.fields.requestBody =
       typeof newQuery.fields.requestBody === "object"
-        ? readableToRuntimeMap(restBindings, newQuery.fields.requestBody)
-        : readableToRuntimeBinding(restBindings, newQuery.fields.requestBody)
+        ? readableToRuntimeMap(
+            mergedAndCompleteBindings,
+            newQuery.fields.requestBody
+          )
+        : readableToRuntimeBinding(
+            mergedAndCompleteBindings,
+            newQuery.fields.requestBody
+          )
 
     newQuery.fields.path = url.split("?")[0]
     newQuery.fields.queryString = queryString
     newQuery.fields.authConfigId = authConfigId
     newQuery.fields.disabledHeaders = restUtils.flipHeaderState(enabledHeaders)
     newQuery.schema = restUtils.fieldsToSchema(schema)
-
-    const parsedRequestBindings = readableToRuntimeMap(
-      restBindings,
-      requestBindings
-    )
-    newQuery.parameters = restUtils.keyValueToQueryParameters(
-      parsedRequestBindings
-    )
 
     return newQuery
   }
@@ -409,10 +413,20 @@
               headings
               keyPlaceholder="Binding name"
               valuePlaceholder="Default"
+              bindings={[
+                ...restBindings,
+                ...dynamicRequestBindings,
+                ...dataSourceStaticBindings,
+              ]}
             />
           </Tab>
           <Tab title="Params">
-            <KeyValueBuilder bind:object={breakQs} name="param" headings />
+            <KeyValueBuilder
+              bind:object={breakQs}
+              name="param"
+              headings
+              bindings={mergedAndCompleteBindings}
+            />
           </Tab>
           <Tab title="Headers">
             <KeyValueBuilder
@@ -421,6 +435,7 @@
               toggle
               name="header"
               headings
+              bindings={mergedAndCompleteBindings}
             />
           </Tab>
           <Tab title="Body">
