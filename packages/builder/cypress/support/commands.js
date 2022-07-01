@@ -374,6 +374,7 @@ Cypress.Commands.add("searchForApplication", appName => {
 // Assumes there are no others
 Cypress.Commands.add("applicationInAppTable", appName => {
   cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 10000 })
+  cy.wait(1000)
   cy.get(".appTable", { timeout: 2000 }).within(() => {
     cy.get(".title").contains(appName).should("exist")
   })
