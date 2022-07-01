@@ -2,7 +2,7 @@ const Command = require("../structures/Command")
 const { CommandWords } = require("../constants")
 const fs = require("fs")
 const { join } = require("path")
-const { getAllDbs } = require("@budibase/backend-core/db")
+const { getAllDbs } = require("../core/db")
 const tar = require("tar")
 const { progressBar } = require("../utils")
 const {
@@ -22,9 +22,9 @@ async function exportBackup(opts) {
   if (typeof filename !== "string") {
     filename = `backup-${new Date().toISOString()}.tar.gz`
   }
-  await getConfig(envFile)
-  const dbList = await getAllDbs()
-  const { Remote, Local } = getPouches()
+  const config = await getConfig(envFile)
+  const dbList = await getAllDbs(config["COUCH_DB_URL"])
+  const { Remote, Local } = getPouches(config)
   if (fs.existsSync(TEMP_DIR)) {
     fs.rmSync(TEMP_DIR, { recursive: true })
   }
@@ -59,7 +59,7 @@ async function exportBackup(opts) {
 async function importBackup(opts) {
   const envFile = opts.env || undefined
   const filename = opts["import"] || opts
-  await getConfig(envFile)
+  const config = await getConfig(envFile)
   if (!filename || !fs.existsSync(filename)) {
     console.error("Cannot import without specifying a valid file to import")
     process.exit(-1)
@@ -73,7 +73,7 @@ async function importBackup(opts) {
     cwd: join(TEMP_DIR),
     file: filename,
   })
-  const { Remote, Local } = getPouches()
+  const { Remote, Local } = getPouches(config)
   const dbList = fs.readdirSync(join(TEMP_DIR, COUCH_DIR))
   console.log("CouchDB Import")
   const bar = progressBar(dbList.length)
