@@ -39,7 +39,7 @@
   }
   .icon-side-nav-item:hover :global(svg),
   .active :global(svg) {
-    color: white;
+    color: var(--spectrum-global-color-gray-900);
   }
   .active {
     background: var(--spectrum-global-color-gray-300);
