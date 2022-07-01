@@ -188,6 +188,7 @@
           {#each category.children as component}
             <div
               class="component"
+              class:wide={component.name?.length > 15}
               class:selected={selectedIndex === orderMap[component.component]}
               on:click={() => addComponent(component.component)}
               on:mouseover={() => (selectedIndex = null)}
@@ -226,7 +227,7 @@
   .component {
     background-color: var(--spectrum-global-color-gray-200);
     border-radius: 4px;
-    height: 72px;
+    height: 76px;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -237,6 +238,9 @@
     padding-top: 4px;
     border: 1px solid var(--spectrum-global-color-gray-200);
     transition: border-color 130ms ease-out;
+  }
+  .component.wide {
+    grid-column: span 2;
   }
   .component.selected,
   .component:hover {

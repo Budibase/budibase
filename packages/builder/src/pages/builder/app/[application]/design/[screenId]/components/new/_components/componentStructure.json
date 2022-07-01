@@ -27,6 +27,26 @@
     ]
   },
   {
+    "name": "Basic",
+    "icon": "TextParagraph",
+    "children": [
+      "heading",
+      "text",
+      "button",
+      "tag",
+      "spectrumcard",
+      "cardstat",
+      "divider",
+      "image",
+      "link",
+      "icon",
+      "embed",
+      "markdownviewer",
+      "backgroundimage",
+      "embeddedmap"
+    ]
+  },
+  {
     "name": "Form",
     "icon": "Form",
     "children": [
@@ -39,21 +59,13 @@
       "optionsfield",
       "booleanfield",
       "longformfield",
-      "datetimefield",
       "attachmentfield",
-      "relationshipfield",
       "daterangepicker",
-      "multifieldselect",
       "jsonfield",
+      "relationshipfield",
+      "datetimefield",
+      "multifieldselect",
       "s3upload"
-    ]
-  },
-  {
-    "name": "Card",
-    "icon": "Card",
-    "children": [
-      "spectrumcard",
-      "cardstat"
     ]
   },
   {
@@ -63,27 +75,9 @@
       "bar",
       "line",
       "area",
+      "candlestick",
       "pie",
-      "donut",
-      "candlestick"
-    ]
-  },
-  {
-    "name": "Elements",
-    "icon": "TextParagraph",
-    "children": [
-      "heading",
-      "text",
-      "button",
-      "tag",
-      "divider",
-      "image",
-      "backgroundimage",
-      "link",
-      "icon",
-      "embed",
-      "markdownviewer",
-      "embeddedmap"
+      "donut"
     ]
   }
 ]
