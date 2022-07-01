@@ -45,7 +45,7 @@
 
 <style>
   .panel {
-    width: 280px;
+    width: 260px;
     background: var(--background);
     display: flex;
     flex-direction: column;
