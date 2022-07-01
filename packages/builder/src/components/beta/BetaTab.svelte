@@ -25,14 +25,15 @@
 </script>
 
 <Page maxWidth="90ch" wide={false}>
-  <Layout>
-    <Heading size="S">Beta Builder</Heading>
-    <Divider />
-    <Body>
-      Your account has been given access to the budibase beta program. We would
-      love to hear what you think and get your feedback and suggestions on the
-      new Design UI.
-    </Body>
+  <Layout noPadding>
+    <Layout noPadding gap="S">
+      <Heading size="S">Beta Builder</Heading>
+      <Body>
+        Your account has been given access to the budibase beta program. We
+        would love to hear what you think and get your feedback and suggestions
+        on the new Design UI.
+      </Body>
+    </Layout>
     <ButtonGroup>
       <Button cta on:click={openFeedbackApp}>Give Feedback</Button>
       <Button secondary on:click={revertToOldBuilder}
