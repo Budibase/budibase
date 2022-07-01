@@ -111,10 +111,9 @@ filterTests(["all"], () => {
           // Save relationship & reload page
           cy.get(".spectrum-Button").contains("Save").click({ force: true })
           cy.reload()
-          cy.wait(1000)
         })
         // Confirm table length & relationship name
-        cy.get(".spectrum-Table")
+        cy.get(".spectrum-Table", { timeout: 1000 })
           .eq(1)
           .find(".spectrum-Table-row")
           .its("length")
@@ -136,15 +135,15 @@ filterTests(["all"], () => {
               cy.get(".spectrum-Table")
                 .eq(1)
                 .within(() => {
-                  cy.get(".spectrum-Table-row").eq(0).click({ force: true })
-                  cy.wait(500)
+                  cy.get(".spectrum-Table-cell").eq(0).click({ force: true })
                 })
-              cy.get(".spectrum-Dialog-grid").within(() => {
+              cy.get(".spectrum-Dialog-grid", { timeout: 500 }).within(() => {
                 cy.get(".spectrum-Button")
                   .contains("Delete")
                   .click({ force: true })
               })
               cy.reload()
+              cy.wait(500)
             }
             // Confirm relationships no longer exist
             cy.get(".spectrum-Body").should(
@@ -217,9 +216,8 @@ filterTests(["all"], () => {
         cy.get(".spectrum-Button")
           .contains("Delete Query")
           .click({ force: true })
-        cy.wait(1000)
         // Confirm deletion
-        cy.get(".nav-item").should("not.contain", queryName)
+        cy.get(".nav-item", { timeout: 1000 }).should("not.contain", queryName)
       })
     }
   })

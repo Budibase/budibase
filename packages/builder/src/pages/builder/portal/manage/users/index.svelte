@@ -12,41 +12,36 @@
     Layout,
     Modal,
     notifications,
+    Pagination,
   } from "@budibase/bbui"
   import TagsRenderer from "./_components/TagsTableRenderer.svelte"
   import AddUserModal from "./_components/AddUserModal.svelte"
   import { users } from "stores/portal"
-  import { onMount } from "svelte"
+  import { createPaginationStore } from "helpers/pagination"
 
   const schema = {
     email: {},
     developmentAccess: { displayName: "Development Access", type: "boolean" },
     adminAccess: { displayName: "Admin Access", type: "boolean" },
-    // role: { type: "options" },
     group: {},
-    // access: {},
-    // group: {}
   }
 
-  let search
-  $: filteredUsers = $users
-    .filter(user => user.email.includes(search || ""))
-    .map(user => ({
-      ...user,
-      group: ["All users"],
-      developmentAccess: !!user.builder?.global,
-      adminAccess: !!user.admin?.global,
-    }))
+  let pageInfo = createPaginationStore()
+  let search = undefined
+  $: page = $pageInfo.page
+  $: fetchUsers(page, search)
 
   let createUserModal
 
-  onMount(async () => {
+  async function fetchUsers(page, search) {
     try {
-      await users.init()
+      pageInfo.loading()
+      await users.search({ page, search })
+      pageInfo.fetched($users.hasNextPage, $users.nextPage)
     } catch (error) {
       notifications.error("Error getting user list")
     }
-  })
+  }
 </script>
 
 <Layout noPadding>
@@ -75,17 +70,31 @@
     <Table
       on:click={({ detail }) => $goto(`./${detail._id}`)}
       {schema}
-      data={filteredUsers || $users}
+      data={$users.data}
       allowEditColumns={false}
       allowEditRows={false}
       allowSelectRows={false}
       customRenderers={[{ column: "group", component: TagsRenderer }]}
     />
+    <div class="pagination">
+      <Pagination
+        page={$pageInfo.pageNumber}
+        hasPrevPage={$pageInfo.loading ? false : $pageInfo.hasPrevPage}
+        hasNextPage={$pageInfo.loading ? false : $pageInfo.hasNextPage}
+        goToPrevPage={pageInfo.prevPage}
+        goToNextPage={pageInfo.nextPage}
+      />
+    </div>
   </Layout>
 </Layout>
 
 <Modal bind:this={createUserModal}>
-  <AddUserModal />
+  <AddUserModal
+    on:created={async () => {
+      pageInfo.reset()
+      await fetchUsers()
+    }}
+  />
 </Modal>
 
 <style>

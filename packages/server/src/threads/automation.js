@@ -219,7 +219,7 @@ class Orchestrator {
             }
           }
           if (
-            index === parseInt(env.AUTOMATION_MAX_ITERATIONS) ||
+            index === env.AUTOMATION_MAX_ITERATION ||
             index === parseInt(loopStep.inputs.iterations)
           ) {
             this.updateContextAndOutput(loopStepNumber, step, tempOutput, {

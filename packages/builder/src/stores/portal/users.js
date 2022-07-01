@@ -3,11 +3,24 @@ import { API } from "api"
 import { update } from "lodash"
 
 export function createUsersStore() {
-  const { subscribe, set } = writable([])
+  const { subscribe, set } = writable({})
 
-  async function init() {
-    const users = await API.getUsers()
-    set(users)
+  // opts can contain page and search params
+  async function search(opts = {}) {
+    const paged = await API.searchUsers(opts)
+    set({
+      ...paged,
+      ...opts,
+    })
+    return paged
+  }
+
+  async function get(userId) {
+    try {
+      return await API.getUser(userId)
+    } catch (err) {
+      return null
+    }
   }
 
   async function invite({ email, builder, admin }) {
@@ -47,7 +60,8 @@ export function createUsersStore() {
       body.admin = { global: true }
     }
     await API.saveUser(body)
-    await init()
+    // re-search from first page
+    await search()
   }
 
   async function del(id) {
@@ -61,7 +75,8 @@ export function createUsersStore() {
 
   return {
     subscribe,
-    init,
+    search,
+    get,
     invite,
     acceptInvite,
     create,
