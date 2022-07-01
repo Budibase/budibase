@@ -18,6 +18,8 @@
   export let options
   export let allowJS = true
   export let appendBindingsAsOptions = true
+  export let drawerEnabled = false
+  export let error
 
   const dispatch = createEventDispatcher()
   let bindingDrawer
@@ -59,10 +61,12 @@
     value={isJS ? "(JavaScript function)" : readableValue}
     on:type={e => onChange(e.detail, false)}
     on:pick={e => onChange(e.detail, true)}
+    on:blur={() => dispatch("blur")}
     {placeholder}
     options={allOptions}
+    {error}
   />
-  {#if !disabled}
+  {#if !disabled && drawerEnabled}
     <div
       class="icon"
       on:click={bindingDrawer.show}
@@ -72,21 +76,23 @@
     </div>
   {/if}
 </div>
-<Drawer bind:this={bindingDrawer} {title}>
-  <svelte:fragment slot="description">
-    Add the objects on the left to enrich your text.
-  </svelte:fragment>
-  <Button cta slot="buttons" on:click={handleClose}>Save</Button>
-  <svelte:component
-    this={panel}
-    slot="body"
-    value={readableValue}
-    close={handleClose}
-    on:change={event => (tempValue = event.detail)}
-    {bindings}
-    {allowJS}
-  />
-</Drawer>
+{#if !drawerEnabled}
+  <Drawer bind:this={bindingDrawer} {title}>
+    <svelte:fragment slot="description">
+      Add the objects on the left to enrich your text.
+    </svelte:fragment>
+    <Button cta slot="buttons" on:click={handleClose}>Save</Button>
+    <svelte:component
+      this={panel}
+      slot="body"
+      value={readableValue}
+      close={handleClose}
+      on:change={event => (tempValue = event.detail)}
+      {bindings}
+      {allowJS}
+    />
+  </Drawer>
+{/if}
 
 <style>
   .control {

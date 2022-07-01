@@ -36,6 +36,12 @@ class QueryRunner {
     if (!Integration) {
       throw "Integration type does not exist."
     }
+
+    datasource.config.authConfigs = enrichQueryFields(
+      datasource.config.authConfigs,
+      this.ctx
+    )
+
     const integration = new Integration(datasource.config)
 
     // pre-query, make sure datasource variables are added to parameters
