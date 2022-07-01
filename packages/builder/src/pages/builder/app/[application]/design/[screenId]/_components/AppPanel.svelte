@@ -25,7 +25,8 @@
         <DevicePreviewSelect />
       {/if}
       <Button
-        cta
+        newStyles
+        secondary
         icon="Add"
         on:click={() => $goto(`../${$selectedScreen._id}/components/new`)}
       >
