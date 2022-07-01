@@ -21,11 +21,11 @@
   }
 
   onMount(() => {
-    resizeObserver.observe(document.getElementById("spectrum-root"))
+    resizeObserver.observe(document.getElementById("clip-root"))
   })
 
   onDestroy(() => {
-    resizeObserver.unobserve(document.getElementById("spectrum-root"))
+    resizeObserver.unobserve(document.getElementById("clip-root"))
   })
 </script>
 
