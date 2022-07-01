@@ -122,7 +122,7 @@
         <Heading size="S">{$store.name || "App"}</Heading>
       </div>
       <div class="topcenternav">
-        <Tabs {selected} size="M">
+        <Tabs {selected} size="L">
           {#each $layout.children as { path, title }}
             <Tab
               quiet
@@ -198,7 +198,7 @@
     margin-bottom: -2px;
   }
   .topcenternav :global(.spectrum-Tabs-itemLabel) {
-    font-weight: bold !important;
+    font-weight: 600;
   }
 
   .toprightnav {

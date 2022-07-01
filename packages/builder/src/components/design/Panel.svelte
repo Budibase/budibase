@@ -23,7 +23,7 @@
       <Icon name={icon} />
     {/if}
     <div class="title">
-      <Heading size="XS">{title || ""}</Heading>
+      <Heading>{title || ""}</Heading>
     </div>
     {#if showExpandIcon}
       <Icon
@@ -81,6 +81,7 @@
     font-weight: 600;
     text-overflow: ellipsis;
     white-space: nowrap;
+    font-size: 15px;
   }
   .add-button {
     flex: 0 0 30px;
