@@ -4,6 +4,7 @@
   import StatusRenderer from "./StatusRenderer.svelte"
   import HistoryDetailsPanel from "./HistoryDetailsPanel.svelte"
   import { automationStore } from "builderStore"
+  import { createPaginationStore } from "helpers/pagination"
   import { onMount } from "svelte"
   import dayjs from "dayjs"
 
@@ -12,6 +13,7 @@
     STOPPED = "stopped"
   export let app
 
+  let pageInfo = createPaginationStore()
   let runHistory = null
   let showPanel = false
   let selectedHistory = null
@@ -19,12 +21,8 @@
   let automationId = null
   let status = null
   let timeRange = null
-  let prevPage,
-    nextPage,
-    page,
-    hasNextPage,
-    pageNumber = 1
 
+  $: page = $pageInfo.page
   $: fetchLogs(automationId, status, page, timeRange)
 
   const timeOptions = [
@@ -64,21 +62,8 @@
       page,
       startDate,
     })
-    nextPage = response.nextPage
-    hasNextPage = response.hasNextPage
+    pageInfo.fetched(response.hasNextPage, response.nextPage)
     runHistory = enrichHistory($automationStore.blockDefinitions, response.data)
-  }
-
-  function goToNextPage() {
-    pageNumber++
-    prevPage = page
-    page = nextPage
-  }
-
-  function goToPrevPage() {
-    pageNumber--
-    nextPage = page
-    page = prevPage
   }
 
   function enrichHistory(definitions, runHistory) {
@@ -185,11 +170,11 @@
 </div>
 <div class="pagination">
   <Pagination
-    page={pageNumber}
-    hasPrevPage={pageNumber > 1}
-    {hasNextPage}
-    {goToPrevPage}
-    {goToNextPage}
+    page={$pageInfo.pageNumber}
+    hasPrevPage={$pageInfo.loading ? false : $pageInfo.hasPrevPage}
+    hasNextPage={$pageInfo.loading ? false : $pageInfo.hasNextPage}
+    goToPrevPage={pageInfo.prevPage}
+    goToNextPage={pageInfo.nextPage}
   />
 </div>
 
