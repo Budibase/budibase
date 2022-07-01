@@ -98,8 +98,6 @@
   .spectrum-Tabs--quiet {
     border-bottom: none !important;
   }
-  .onTop {
-  }
   .spectrum-Tabs {
     padding-left: var(--spacing-xl);
     padding-right: var(--spacing-xl);
