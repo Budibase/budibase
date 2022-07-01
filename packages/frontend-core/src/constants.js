@@ -42,6 +42,10 @@ export const OperatorOptions = {
     value: "notEqual",
     label: "Does Not Contain",
   },
+  In: {
+    value: "oneOf",
+    label: "Is in",
+  },
 }
 
 // Cookie names
