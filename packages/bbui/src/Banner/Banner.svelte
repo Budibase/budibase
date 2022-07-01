@@ -1,5 +1,6 @@
 <script>
   import { createEventDispatcher } from "svelte"
+  import Button from "../Button/Button.svelte"
 
   let dispatch = createEventDispatcher()
 
@@ -68,6 +69,5 @@
   }
   .spectrum-Button {
     border: 1px solid rgba(255, 255, 255, 0.2);
-    margin: 8px 0 4px 0;
   }
 </style>
