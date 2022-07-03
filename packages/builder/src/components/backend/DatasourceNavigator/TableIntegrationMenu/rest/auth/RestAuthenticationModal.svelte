@@ -2,7 +2,7 @@
   import { onMount } from "svelte"
   import { ModalContent, Layout, Select, Body, Input } from "@budibase/bbui"
   import { AUTH_TYPE_LABELS, AUTH_TYPES } from "./authTypes"
-  import DrawerBindableCombobox from "components/common/bindings/DrawerBindableCombobox.svelte"
+  import BindableCombobox from "components/common/bindings/BindableCombobox.svelte"
   import { getAuthBindings } from "builderStore/dataBinding"
 
   export let configs
@@ -205,7 +205,7 @@
       />
     {/if}
     {#if form.type === AUTH_TYPES.BEARER}
-      <DrawerBindableCombobox
+      <BindableCombobox
         label="Token"
         value={form.bearer.token}
         bindings={getAuthBindings()}

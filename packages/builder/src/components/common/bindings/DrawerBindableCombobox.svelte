@@ -18,7 +18,6 @@
   export let options
   export let allowJS = true
   export let appendBindingsAsOptions = true
-  export let drawerEnabled = false
   export let error
 
   const dispatch = createEventDispatcher()
@@ -66,7 +65,7 @@
     options={allOptions}
     {error}
   />
-  {#if !disabled && drawerEnabled}
+  {#if !disabled}
     <div
       class="icon"
       on:click={bindingDrawer.show}
@@ -76,23 +75,22 @@
     </div>
   {/if}
 </div>
-{#if !drawerEnabled}
-  <Drawer bind:this={bindingDrawer} {title}>
-    <svelte:fragment slot="description">
-      Add the objects on the left to enrich your text.
-    </svelte:fragment>
-    <Button cta slot="buttons" on:click={handleClose}>Save</Button>
-    <svelte:component
-      this={panel}
-      slot="body"
-      value={readableValue}
-      close={handleClose}
-      on:change={event => (tempValue = event.detail)}
-      {bindings}
-      {allowJS}
-    />
-  </Drawer>
-{/if}
+
+<Drawer bind:this={bindingDrawer} {title}>
+  <svelte:fragment slot="description">
+    Add the objects on the left to enrich your text.
+  </svelte:fragment>
+  <Button cta slot="buttons" on:click={handleClose}>Save</Button>
+  <svelte:component
+    this={panel}
+    slot="body"
+    value={readableValue}
+    close={handleClose}
+    on:change={event => (tempValue = event.detail)}
+    {bindings}
+    {allowJS}
+  />
+</Drawer>
 
 <style>
   .control {

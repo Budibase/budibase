@@ -59,6 +59,7 @@
   let restBindings = getRestBindings()
 
   $: staticVariables = datasource?.config?.staticVariables || {}
+
   $: customRequestBindings = toBindingsArray(requestBindings, "Binding")
   $: dynamicRequestBindings = toBindingsArray(dynamicVariables, "Dynamic")
   $: dataSourceStaticBindings = toBindingsArray(
@@ -72,10 +73,6 @@
     ...dynamicRequestBindings,
     ...dataSourceStaticBindings,
   ]
-
-  $: mergedAndCompleteBindings = mergedBindings.filter(binding => {
-    return binding.runtimeBinding && binding.readableBinding
-  })
 
   $: datasourceType = datasource?.source
   $: integrationInfo = $integrations[datasourceType]
@@ -92,10 +89,7 @@
     Object.keys(schema || {}).length !== 0 ||
     Object.keys(query?.schema || {}).length !== 0
 
-  $: runtimeUrlQueries = readableToRuntimeMap(
-    mergedAndCompleteBindings,
-    breakQs
-  )
+  $: runtimeUrlQueries = readableToRuntimeMap(mergedBindings, breakQs)
 
   function getSelectedQuery() {
     const cloneQuery = cloneDeep(
@@ -110,18 +104,6 @@
         queryVerb: "read",
       }
     )
-    if (cloneQuery?.fields?.requestBody) {
-      cloneQuery.fields.requestBody =
-        typeof cloneQuery.fields.requestBody === "object"
-          ? runtimeToReadableMap(
-              mergedAndCompleteBindings,
-              cloneQuery.fields.requestBody
-            )
-          : runtimeToReadableBinding(
-              mergedAndCompleteBindings,
-              cloneQuery.fields.requestBody
-            )
-    }
     return cloneQuery
   }
 
@@ -137,7 +119,7 @@
       return base
     }
     const qs = restUtils.buildQueryString(
-      runtimeToReadableMap(mergedAndCompleteBindings, qsObj)
+      runtimeToReadableMap(mergedBindings, qsObj)
     )
     let newUrl = base
     if (base.includes("?")) {
@@ -150,16 +132,11 @@
     const newQuery = cloneDeep(query)
     const queryString = restUtils.buildQueryString(runtimeUrlQueries)
 
+    newQuery.parameters = restUtils.keyValueToQueryParameters(requestBindings)
     newQuery.fields.requestBody =
       typeof newQuery.fields.requestBody === "object"
-        ? readableToRuntimeMap(
-            mergedAndCompleteBindings,
-            newQuery.fields.requestBody
-          )
-        : readableToRuntimeBinding(
-            mergedAndCompleteBindings,
-            newQuery.fields.requestBody
-          )
+        ? readableToRuntimeMap(mergedBindings, newQuery.fields.requestBody)
+        : readableToRuntimeBinding(mergedBindings, newQuery.fields.requestBody)
 
     newQuery.fields.path = url.split("?")[0]
     newQuery.fields.queryString = queryString
@@ -181,6 +158,13 @@
         datasource.config.dynamicVariables = rebuildVariables(saveId)
         datasource = await datasources.save(datasource)
       }
+      prettifyQueryRequestBody(
+        query,
+        requestBindings,
+        dynamicVariables,
+        staticVariables,
+        restBindings
+      )
     } catch (err) {
       notifications.error(`Error saving query`)
     }
@@ -297,6 +281,36 @@
     }
   }
 
+  const prettifyQueryRequestBody = (
+    query,
+    requestBindings,
+    dynamicVariables,
+    staticVariables,
+    restBindings
+  ) => {
+    let customRequestBindings = toBindingsArray(requestBindings, "Binding")
+    let dynamicRequestBindings = toBindingsArray(dynamicVariables, "Dynamic")
+    let dataSourceStaticBindings = toBindingsArray(
+      staticVariables,
+      "Datasource.Static"
+    )
+
+    const prettyBindings = [
+      ...restBindings,
+      ...customRequestBindings,
+      ...dynamicRequestBindings,
+      ...dataSourceStaticBindings,
+    ]
+
+    //Parse the body here as now all bindings have been updated.
+    if (query?.fields?.requestBody) {
+      query.fields.requestBody =
+        typeof query.fields.requestBody === "object"
+          ? runtimeToReadableMap(prettyBindings, query.fields.requestBody)
+          : runtimeToReadableBinding(prettyBindings, query.fields.requestBody)
+    }
+  }
+
   onMount(async () => {
     query = getSelectedQuery()
 
@@ -311,7 +325,7 @@
     const datasourceUrl = datasource?.config.url
     const qs = query?.fields.queryString
     breakQs = restUtils.breakQueryString(qs)
-    breakQs = runtimeToReadableMap(restBindings, breakQs)
+    breakQs = runtimeToReadableMap(mergedBindings, breakQs)
 
     const path = query.fields.path
     if (
@@ -354,6 +368,14 @@
       query.fields.pagination = {}
     }
     dynamicVariables = getDynamicVariables(datasource, query._id)
+
+    prettifyQueryRequestBody(
+      query,
+      requestBindings,
+      dynamicVariables,
+      staticVariables,
+      restBindings
+    )
   })
 </script>
 
@@ -425,7 +447,7 @@
               bind:object={breakQs}
               name="param"
               headings
-              bindings={mergedAndCompleteBindings}
+              bindings={mergedBindings}
             />
           </Tab>
           <Tab title="Headers">
@@ -435,7 +457,7 @@
               toggle
               name="header"
               headings
-              bindings={mergedAndCompleteBindings}
+              bindings={mergedBindings}
             />
           </Tab>
           <Tab title="Body">

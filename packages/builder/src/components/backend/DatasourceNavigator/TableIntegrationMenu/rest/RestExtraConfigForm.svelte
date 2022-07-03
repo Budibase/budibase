@@ -53,6 +53,7 @@
   bind:object={parsedHeaders}
   on:change={evt => onDefaultHeaderUpdate(evt.detail)}
   noAddButton
+  bindings={getRestBindings()}
 />
 <div>
   <ActionButton icon="Add" on:click={() => addHeader.addEntry()}>
