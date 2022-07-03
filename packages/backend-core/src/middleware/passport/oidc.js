@@ -2,6 +2,7 @@ const fetch = require("node-fetch")
 const OIDCStrategy = require("@techpass/passport-openidconnect").Strategy
 const { authenticateThirdParty } = require("./third-party-common")
 const { ssoCallbackUrl } = require("./utils")
+const { Configs } = require("../../../constants")
 
 const buildVerifyFn = saveUserFn => {
   /**
@@ -93,14 +94,16 @@ function validEmail(value) {
 exports.strategyFactory = async function (config, saveUserFn) {
   try {
     const verify = buildVerifyFn(saveUserFn)
-    return new OIDCStrategy(config, verify)
+    const strategy = new OIDCStrategy(config, verify)
+    strategy.name = "oidc"
+    return strategy
   } catch (err) {
     console.error(err)
     throw new Error("Error constructing OIDC authentication strategy", err)
   }
 }
 
-export const fetchOIDCStrategyConfig = async (config, callbackUrl) => {
+exports.fetchStrategyConfig = async function (config, callbackUrl) {
   try {
     const { clientID, clientSecret, configUrl } = config
 
@@ -136,8 +139,8 @@ export const fetchOIDCStrategyConfig = async (config, callbackUrl) => {
   }
 }
 
-export const oidcCallbackUrl = async (db, config) => {
-  return ssoCallbackUrl(db, config, "oidc")
+exports.getCallbackUrl = async function (db, config) {
+  return ssoCallbackUrl(db, config, Configs.OIDC)
 }
 
 // expose for testing

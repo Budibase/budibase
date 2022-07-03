@@ -37,53 +37,118 @@ passport.deserializeUser(async (user, done) => {
   }
 })
 
-//requestAccessStrategy
-//refreshOAuthAccessToken
-
-//configId for google and OIDC??
-async function reUpToken(refreshToken, configId) {
-  const db = getGlobalDB()
-  console.log(refreshToken, configId)
-  const config = await getScopedConfig(db, {
-    type: Configs.OIDC,
-    group: {}, //ctx.query.group, this was an empty object when authentication initially
-  })
-
-  const chosenConfig = config.configs[0] //.filter((c) => c.uuid === configId)[0]
-  let callbackUrl = await oidc.oidcCallbackUrl(db, chosenConfig)
-
-  //Remote Config
-  const enrichedConfig = await oidc.fetchOIDCStrategyConfig(
-    chosenConfig,
-    callbackUrl
-  )
-
-  const strategy = await oidc.strategyFactory(enrichedConfig, () => {
-    console.log("saveFn RETURN ARGS", JSON.stringify(arguments))
-  })
+async function refreshOIDCAccessToken(db, chosenConfig, refreshToken) {
+  const callbackUrl = await oidc.getCallbackUrl(db, chosenConfig)
+  let enrichedConfig
+  let strategy
 
   try {
-    refresh.use(strategy, {
-      setRefreshOAuth2() {
-        return strategy._getOAuth2Client(enrichedConfig)
-      },
-    })
-    console.log("Testing")
+    enrichedConfig = await oidc.fetchStrategyConfig(chosenConfig, callbackUrl)
+    if (!enrichedConfig) {
+      throw new Error("OIDC Config contents invalid")
+    }
+    strategy = await oidc.strategyFactory(enrichedConfig)
+  } catch (err) {
+    console.error(err)
+    throw new Error("Could not refresh OAuth Token")
+  }
 
-    // By default, the strat calls itself "openidconnect"
+  refresh.use(strategy, {
+    setRefreshOAuth2() {
+      return strategy._getOAuth2Client(enrichedConfig)
+    },
+  })
 
-    // refresh.requestNewAccessToken(
-    //   'openidconnect',
-    //   refToken,
-    //   (err, accessToken, refreshToken) => {
-    //     console.log("REAUTH CB", err, accessToken, refreshToken);
-    //   })
+  return new Promise(resolve => {
+    refresh.requestNewAccessToken(
+      Configs.OIDC,
+      refreshToken,
+      (err, accessToken, refreshToken, params) => {
+        resolve({ err, accessToken, refreshToken, params })
+      }
+    )
+  })
+}
+
+async function refreshGoogleAccessToken(db, config, refreshToken) {
+  let callbackUrl = await google.getCallbackUrl(db, config)
+  const googleConfig = await google.fetchStrategyConfig(config)
+
+  let strategy
+  try {
+    strategy = await google.strategyFactory(googleConfig, callbackUrl)
   } catch (err) {
     console.error(err)
     throw new Error("Error constructing OIDC refresh strategy", err)
   }
 
-  console.log("end")
+  refresh.use(strategy)
+
+  return new Promise(resolve => {
+    refresh.requestNewAccessToken(
+      Configs.GOOGLE,
+      refreshToken,
+      (err, accessToken, refreshToken, params) => {
+        resolve({ err, accessToken, refreshToken, params })
+      }
+    )
+  })
+}
+
+async function refreshOAuthToken(refreshToken, configType, configId) {
+  const db = getGlobalDB()
+
+  const config = await getScopedConfig(db, {
+    type: configType,
+    group: {},
+  })
+
+  let chosenConfig = {}
+  let refreshResponse
+  if (configType === Configs.OIDC) {
+    // configId - retrieved from cookie.
+    chosenConfig = config.configs.filter(c => c.uuid === configId)[0]
+    if (!chosenConfig) {
+      throw new Error("Invalid OIDC configuration")
+    }
+    refreshResponse = await refreshOIDCAccessToken(
+      db,
+      chosenConfig,
+      refreshToken
+    )
+  } else {
+    chosenConfig = config
+    refreshResponse = await refreshGoogleAccessToken(
+      db,
+      chosenConfig,
+      refreshToken
+    )
+  }
+
+  console.log(JSON.stringify(refreshResponse))
+  return refreshResponse
+}
+
+async function updateUserOAuth(userId, oAuthConfig) {
+  const details = { ...oAuthConfig }
+  try {
+    const db = getGlobalDB()
+    const dbUser = db.get(userId)
+
+    //Do not overwrite the refresh token if a valid one is not provided.
+    if (typeof details.refreshToken !== "string") {
+      delete details.refreshToken
+    }
+
+    dbUser.oAuth2 = {
+      ...dbUser.oAuth2,
+      ...details,
+    }
+
+    await db.put(dbUser)
+  } catch (e) {
+    console.error("Could not update OAuth details for current user", e)
+  }
 }
 
 module.exports = {
@@ -98,5 +163,6 @@ module.exports = {
   authError,
   buildCsrfMiddleware: csrf,
   internalApi,
-  reUpToken,
+  refreshOAuthToken,
+  updateUserOAuth,
 }

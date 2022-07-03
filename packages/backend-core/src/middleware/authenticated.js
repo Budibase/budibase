@@ -128,6 +128,8 @@ module.exports = (
       }
       if (!user && tenantId) {
         user = { tenantId }
+      } else {
+        delete user.password
       }
       // be explicit
       if (authenticated !== true) {
