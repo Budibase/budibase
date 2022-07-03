@@ -125,7 +125,6 @@ async function refreshOAuthToken(refreshToken, configType, configId) {
     )
   }
 
-  console.log(JSON.stringify(refreshResponse))
   return refreshResponse
 }
 
