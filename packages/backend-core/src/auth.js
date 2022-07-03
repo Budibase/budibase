@@ -130,18 +130,22 @@ async function refreshOAuthToken(refreshToken, configType, configId) {
 }
 
 async function updateUserOAuth(userId, oAuthConfig) {
-  const details = { ...oAuthConfig }
+  const details = {
+    accessToken: oAuthConfig.accessToken,
+    refreshToken: oAuthConfig.refreshToken,
+  }
+
   try {
     const db = getGlobalDB()
-    const dbUser = db.get(userId)
+    const dbUser = await db.get(userId)
 
     //Do not overwrite the refresh token if a valid one is not provided.
     if (typeof details.refreshToken !== "string") {
       delete details.refreshToken
     }
 
-    dbUser.oAuth2 = {
-      ...dbUser.oAuth2,
+    dbUser.oauth2 = {
+      ...dbUser.oauth2,
       ...details,
     }
 
