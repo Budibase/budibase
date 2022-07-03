@@ -97,13 +97,17 @@ export const toBindingsArray = (valueMap, prefix) => {
   if (!valueMap) {
     return []
   }
-  return Object.keys(valueMap).map(binding => {
-    return {
+  return Object.keys(valueMap).reduce((acc, binding) => {
+    if (!binding || !valueMap[binding]) {
+      return acc
+    }
+    acc.push({
       type: "context",
       runtimeBinding: binding,
       readableBinding: `${prefix}.${binding}`,
-    }
-  })
+    })
+    return acc
+  }, [])
 }
 
 /**
