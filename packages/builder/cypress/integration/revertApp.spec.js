@@ -36,8 +36,8 @@ filterTests(['smoke', 'all'], () => {
             cy.get(interact.SPECTRUM_BUTTON_GROUP).within(() => {
                 cy.get(interact.SPECTRUM_BUTTON).contains("Publish").click({ force: true })
             })
-            cy.wait(1000)
-            cy.get(interact.SPECTRUM_BUTTON_GROUP).within(() => {
+            cy.wait(1000) // Wait for next modal to finish loading
+            cy.get(interact.SPECTRUM_BUTTON_GROUP, { timeout: 1000 }).within(() => {
                 cy.get(interact.SPECTRUM_BUTTON).contains("Done").click({ force: true })
             })
 
@@ -50,18 +50,17 @@ filterTests(['smoke', 'all'], () => {
             cy.get(interact.SPECTRUM_DIALOG_GRID).within(() => {
                 // Click Revert
                 cy.get(interact.SPECTRUM_BUTTON).contains("Revert").click({ force: true })
-                cy.wait(1000)
+                cy.wait(2000) // Wait for app to finish reverting
             })
             // Confirm Paragraph component is still visible
-            cy.get(interact.ROOT).contains("New Paragraph")
+            cy.get(interact.ROOT, { timeout: 1000 }).contains("New Paragraph")
             // Confirm Button component is not visible
-            cy.get(interact.ROOT).should("not.have.text", "New Button")
-            cy.wait(500)
+            cy.get(interact.ROOT, { timeout: 1000 }).should("not.have.text", "New Button")
         })
         
         it("should enter incorrect app name when reverting", () => {
             // Click Revert
-            cy.get(interact.TOP_RIGHT_NAV).within(() => {
+            cy.get(interact.TOP_RIGHT_NAV, { timeout: 1000 }).within(() => {
                 cy.get(interact.AREA_LABEL_REVERT).click({ force: true })
             })
             // Enter incorrect app name

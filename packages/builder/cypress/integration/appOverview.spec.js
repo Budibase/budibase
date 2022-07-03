@@ -136,7 +136,6 @@ filterTests(["all"], () => {
         .within(() => {
           cy.get(".confirm-wrap button").click({ force: true })
         })
-      cy.wait(1000)
 
       cy.visit(`${Cypress.config().baseUrl}/builder`)
       cy.get(".appTable .app-row-actions button")
@@ -158,12 +157,9 @@ filterTests(["all"], () => {
         .contains("Manage")
         .eq(0)
         .click({ force: true })
-      cy.wait(1000)
-      cy.get(".app-overview-actions-icon").within(() => {
-        cy.get(".spectrum-Icon").click({ force: true })
-      })
-      cy.get(".spectrum-Menu").contains("Edit icon").click()
+      cy.get(".edit-hover", { timeout: 1000 }).eq(0).click({ force: true })
       // Select random icon
+      cy.wait(400)
       cy.get(".grid").within(() => {
         cy.get(".icon-item")
           .eq(Math.floor(Math.random() * 23) + 1)
@@ -182,6 +178,7 @@ filterTests(["all"], () => {
       cy.get("@iconChange").its("response.statusCode").should("eq", 200)
       // Confirm icon has changed from default
       // Confirm colour has been applied
+      cy.get(".spectrum-ActionButton-label").contains("Back").click({ force: true })
       cy.get(".appTable", { timeout: 2000 }).within(() => {
         cy.get("[aria-label]")
           .eq(0)
@@ -265,10 +262,9 @@ filterTests(["all"], () => {
         //Downgrade the app for the test
         cy.alterAppVersion(appId, "0.0.1-alpha.0").then(() => {
           cy.reload()
-          cy.wait(1000)
           cy.log("Current deployment version: " + clientPackage.version)
 
-          cy.get(".version-status a").contains("Update").click()
+          cy.get(".version-status a", { timeout: 1000 }).contains("Update").click()
           cy.get(".spectrum-Tabs-item.is-selected").contains("Settings")
 
           cy.get(".version-section .page-action button")
@@ -336,8 +332,7 @@ filterTests(["all"], () => {
         })
 
       cy.visit(`${Cypress.config().baseUrl}/builder`)
-      cy.wait(1000)
-      cy.get(".appTable .app-row-actions button")
+      cy.get(".appTable .app-row-actions button", { timeout: 1000 })
         .contains("Manage")
         .eq(0)
         .click({ force: true })
@@ -345,8 +340,7 @@ filterTests(["all"], () => {
       cy.get(".spectrum-Tabs-item.is-selected").contains("Settings")
 
       cy.get(".details-section .page-action .spectrum-Button").scrollIntoView()
-      cy.wait(1000)
-      cy.get(".details-section .page-action .spectrum-Button").should(
+      cy.get(".details-section .page-action .spectrum-Button", { timeout: 1000 }).should(
         "be.disabled"
       )
     })
@@ -375,27 +369,21 @@ filterTests(["all"], () => {
             .contains("Copy App ID")
             .click({ force: true })
         })
-
+      
       cy.get(".spectrum-Toast-content")
-        .contains("App ID copied to clipboard.")
-        .should("be.visible")
+      .contains("App ID copied to clipboard.")
+      .should("be.visible")
     })
 
-    it("Should allow unpublishing of the application", () => {
+    it("Should allow unpublishing of the application via the Unpublish link", () => {
       cy.visit(`${Cypress.config().baseUrl}/builder`)
       cy.get(".appTable .app-row-actions button")
         .contains("Manage")
         .eq(0)
         .click({ force: true })
-      cy.get(".app-overview-actions-icon > .icon").click({ force: true })
 
-      cy.get("[data-cy='app-overview-menu-popover']")
-        .eq(0)
-        .within(() => {
-          cy.get(".spectrum-Menu-item")
-            .contains("Unpublish")
-            .click({ force: true })
-          cy.wait(500)
+      cy.get(`[data-cy="app-status"]`).within(() => {
+        cy.contains("Unpublish").click({ force: true })
         })
 
       cy.get("[data-cy='unpublish-modal']")
@@ -406,9 +394,8 @@ filterTests(["all"], () => {
 
       cy.get(".overview-tab [data-cy='app-status']").within(() => {
         cy.get(".status-display").contains("Unpublished")
-        cy.get(".status-display .icon svg[aria-label='GlobeStrike']").should(
-          "exist"
-        )
+        cy.get(".status-display .icon svg[aria-label='GlobeStrike']")
+        .should("exist")
       })
     })
 
