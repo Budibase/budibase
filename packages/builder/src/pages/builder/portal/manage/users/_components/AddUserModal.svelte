@@ -10,7 +10,9 @@
   } from "@budibase/bbui"
   import { createValidationStore, emailValidator } from "helpers/validation"
   import { users } from "stores/portal"
+  import { createEventDispatcher } from "svelte"
 
+  const dispatch = createEventDispatcher()
   const password = Math.random().toString(36).substring(2, 22)
   const options = ["Email onboarding", "Basic onboarding"]
   const [email, error, touched] = createValidationStore("", emailValidator)
@@ -39,6 +41,7 @@
         forceResetPassword: true,
       })
       notifications.success("Successfully created user")
+      dispatch("created")
     } catch (error) {
       notifications.error("Error creating user")
     }

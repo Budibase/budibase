@@ -1,7 +1,7 @@
 import { newid } from "../hashing"
 import { DEFAULT_TENANT_ID, Configs } from "../constants"
 import env from "../environment"
-import { SEPARATOR, DocumentTypes } from "./constants"
+import { SEPARATOR, DocumentTypes, UNICODE_MAX } from "./constants"
 import { getTenantId, getGlobalDBName, getGlobalDB } from "../tenancy"
 import fetch from "node-fetch"
 import { doWithDB, allDbs } from "./index"
@@ -11,8 +11,6 @@ import { checkSlashesInUrl } from "../helpers"
 import { isDevApp, isDevAppID } from "./conversions"
 import { APP_PREFIX } from "./constants"
 import * as events from "../events"
-
-const UNICODE_MAX = "\ufff0"
 
 export const ViewNames = {
   USER_BY_EMAIL: "by_email",
@@ -93,13 +91,17 @@ export function generateGlobalUserID(id?: any) {
 /**
  * Gets parameters for retrieving users.
  */
-export function getGlobalUserParams(globalId: any, otherProps = {}) {
+export function getGlobalUserParams(globalId: any, otherProps: any = {}) {
   if (!globalId) {
     globalId = ""
   }
+  const startkey = otherProps?.startkey
   return {
     ...otherProps,
-    startkey: `${DocumentTypes.USER}${SEPARATOR}${globalId}`,
+    // need to include this incase pagination
+    startkey: startkey
+      ? startkey
+      : `${DocumentTypes.USER}${SEPARATOR}${globalId}`,
     endkey: `${DocumentTypes.USER}${SEPARATOR}${globalId}${UNICODE_MAX}`,
   }
 }
@@ -438,6 +440,26 @@ export const getPlatformUrl = async (
   }
 
   return platformUrl
+}
+
+export function pagination(
+  data: any[],
+  pageSize: number,
+  { paginate, property } = { paginate: true, property: "_id" }
+) {
+  if (!paginate) {
+    return { data, hasNextPage: false }
+  }
+  const hasNextPage = data.length > pageSize
+  let nextPage = undefined
+  if (hasNextPage) {
+    nextPage = property ? data[pageSize]?.[property] : data[pageSize]?._id
+  }
+  return {
+    data: data.slice(0, pageSize),
+    hasNextPage,
+    nextPage,
+  }
 }
 
 export async function getScopedConfig(db: any, params: any) {
