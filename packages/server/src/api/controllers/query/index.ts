@@ -9,7 +9,7 @@ import { getAppDB } from "@budibase/backend-core/context"
 import { quotas } from "@budibase/pro"
 import { events } from "@budibase/backend-core"
 import { getCookie } from "@budibase/backend-core/utils"
-import { Cookies } from "@budibase/backend-core/constants"
+import { Cookies, Configs } from "@budibase/backend-core/constants"
 
 const Runner = new Thread(ThreadType.QUERY, {
   timeoutMs: QUERY_THREAD_TIMEOUT || 10000,
@@ -112,6 +112,21 @@ export async function find(ctx: any) {
   ctx.body = query
 }
 
+//Required to discern between OIDC OAuth config entries
+function getOAuthConfigCookieId(ctx: any) {
+  if (ctx.user.providerType === Configs.OIDC) {
+    return getCookie(ctx, Cookies.OIDC_CONFIG)
+  }
+}
+
+function getAuthConfig(ctx: any) {
+  const authCookie = getCookie(ctx, Cookies.Auth)
+  let authConfigCtx: any = {}
+  authConfigCtx["configId"] = getOAuthConfigCookieId(ctx)
+  authConfigCtx["sessionId"] = authCookie ? authCookie.sessionId : null
+  return authConfigCtx
+}
+
 export async function preview(ctx: any) {
   const db = getAppDB()
 
@@ -121,9 +136,7 @@ export async function preview(ctx: any) {
   // this stops dynamic variables from calling the same query
   const { fields, parameters, queryVerb, transformer, queryId } = query
 
-  //check for oAuth elements here?
-  const configId = getCookie(ctx, Cookies.OIDC_CONFIG)
-  console.log(configId)
+  const authConfigCtx: any = getAuthConfig(ctx)
 
   try {
     const runFn = () =>
@@ -135,6 +148,10 @@ export async function preview(ctx: any) {
         parameters,
         transformer,
         queryId,
+        ctx: {
+          user: ctx.user,
+          auth: { ...authConfigCtx },
+        },
       })
     const { rows, keys, info, extra } = await quotas.addQuery(runFn)
     await events.query.previewed(datasource, query)
@@ -177,6 +194,9 @@ async function execute(ctx: any, opts = { rowsOnly: false }) {
         parameters: enrichedParameters,
         transformer: query.transformer,
         queryId: ctx.params.queryId,
+        ctx: {
+          user: ctx.user,
+        },
       })
 
     const { rows, pagination, extra } = await quotas.addQuery(runFn)

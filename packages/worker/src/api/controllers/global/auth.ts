@@ -70,7 +70,7 @@ async function authInternal(ctx: any, user: any, err = null, info = null) {
 export const authenticate = async (ctx: any, next: any) => {
   return passport.authenticate(
     "local",
-    async (err: any, user: User, info: any) => {
+    async (err: any, user: any, info: any) => {
       await authInternal(ctx, user, err, info)
       await context.identity.doInUserContext(user, async () => {
         await events.auth.login("local")
@@ -197,7 +197,9 @@ export const googlePreAuth = async (ctx: any, next: any) => {
   const strategy = await google.strategyFactory(config, callbackUrl, users.save)
 
   return passport.authenticate(strategy, {
-    scope: ["profile", "email"],
+    scope: ["profile", "email", "https://www.googleapis.com/auth/spreadsheets"],
+    accessType: "offline",
+    prompt: "consent",
   })(ctx, next)
 }
 
@@ -235,7 +237,7 @@ export const oidcStrategyFactory = async (ctx: any, configId: any) => {
   let callbackUrl = await exports.oidcCallbackUrl(chosenConfig)
 
   //Remote Config
-  const enrichedConfig = await oidc.fetchOIDCStrategyConfig(
+  const enrichedConfig = await oidc.fetchStrategyConfig(
     chosenConfig,
     callbackUrl
   )

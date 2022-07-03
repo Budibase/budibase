@@ -85,12 +85,12 @@ filterTests(['all'], () => {
         cy.get(interact.APP_TABLE_APP_NAME).click({ force: true })
       })
 
-      cy.get(interact.DEPLOYMENT_TOP_NAV).click()
-      cy.get(interact.PUBLISH_POPOVER_ACTION).click({ force: true })
-      cy.get(interact.UNPUBLISH_MODAL)
-        .within(() => {
-          cy.get(interact.CONFIRM_WRAP_BUTTON).click({ force: true })
-        })
+      cy.get(interact.DEPLOYMENT_TOP_GLOBE).should("exist").click({ force: true })
+      
+      cy.get("[data-cy='publish-popover-menu']")
+      .within(() => {
+        cy.get(interact.PUBLISH_POPOVER_ACTION).click({ force: true })
+      })
 
       cy.get(interact.UNPUBLISH_MODAL).should("be.visible")
       .within(() => {

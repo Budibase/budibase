@@ -6,7 +6,7 @@ const users = require("../../users")
 const { authError } = require("./utils")
 const { newid } = require("../../hashing")
 const { createASession } = require("../../security/sessions")
-const { getTenantId } = require("../../tenancy")
+const { getTenantId, getGlobalDB } = require("../../tenancy")
 
 const INVALID_ERR = "Invalid credentials"
 const SSO_NO_PASSWORD = "SSO user does not have a password set"
@@ -55,6 +55,20 @@ exports.authenticate = async function (ctx, email, password, done) {
   if (await compare(password, dbUser.password)) {
     const sessionId = newid()
     const tenantId = getTenantId()
+
+    if (dbUser.provider || dbUser.providerType || dbUser.pictureUrl) {
+      delete dbUser.provider
+      delete dbUser.providerType
+      delete dbUser.pictureUrl
+
+      try {
+        const db = getGlobalDB()
+        await db.put(dbUser)
+      } catch (err) {
+        console.error("OAuth elements could not be purged")
+      }
+    }
+
     await createASession(dbUser._id, { sessionId, tenantId })
 
     dbUser.token = jwt.sign(
