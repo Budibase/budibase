@@ -9,7 +9,7 @@ import { Automation } from "../../definitions/common"
 import { app } from "@budibase/backend-core/cache"
 import { backOff } from "../../utilities"
 import * as env from "../../environment"
-import { logs } from "@budibase/pro"
+import { automations } from "@budibase/pro"
 import { AppMetadataErrors } from "@budibase/types"
 import { AutomationResults, AutomationStatus } from "@budibase/types"
 
@@ -38,7 +38,7 @@ function getStatus(results: AutomationResults) {
 export async function clearOldHistory() {
   const db = getProdAppDB()
   try {
-    const expired = await logs.automations.getExpiredLogs()
+    const expired = await automations.logs.getExpiredLogs()
     const toDelete = expired.data.map((doc: any) => ({
       _id: doc.id,
       _rev: doc.value.rev,
