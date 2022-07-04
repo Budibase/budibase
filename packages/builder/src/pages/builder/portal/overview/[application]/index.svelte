@@ -27,7 +27,7 @@
   import AppLockModal from "components/common/AppLockModal.svelte"
   import EditableIcon from "components/common/EditableIcon.svelte"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import HistoryTab from "components/portal/overview/HistoryTab.svelte"
+  import HistoryTab from "components/portal/overview/automation/HistoryTab.svelte"
   import { checkIncomingDeploymentStatus } from "components/deploy/utils"
   import { onDestroy, onMount } from "svelte"
 
