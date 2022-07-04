@@ -20,7 +20,7 @@ import redis from "./utilities/redis"
 import * as migrations from "./migrations"
 import { events, installation, tenancy } from "@budibase/backend-core"
 import { createAdminUser, getChecklist } from "./utilities/workerRequests"
-import { DEFAULT_TENANT_ID } from "@budibase/backend-core/dist/src/constants"
+import { tenantSucceeded } from "@budibase/backend-core/dist/src/events/publishers/backfill"
 
 const app = new Koa()
 
@@ -122,10 +122,11 @@ module.exports = server.listen(env.PORT || 0, async () => {
     const checklist = await getChecklist()
     if (!checklist?.adminUser?.checked) {
       try {
+        const tenantId = tenancy.getTenantId()
         await createAdminUser(
           env.BB_ADMIN_USER_EMAIL,
           env.BB_ADMIN_USER_PASSWORD,
-          "default"
+          tenantId
         )
         console.log(
           "Admin account automatically created for",
