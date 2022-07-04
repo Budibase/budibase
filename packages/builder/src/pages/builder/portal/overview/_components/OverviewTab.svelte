@@ -197,6 +197,7 @@
     .overview-tab .top {
       grid-template-columns: 1fr 1fr;
     }
+
     .overview-tab .bottom {
       grid-template-columns: 1fr;
     }
@@ -214,29 +215,35 @@
     align-items: center;
     gap: var(--spacing-m);
   }
+
   .status-text,
   .last-edit-text {
     color: var(--spectrum-global-color-gray-600);
   }
+
   .updated-by {
     display: flex;
     align-items: center;
     gap: var(--spacing-m);
   }
+
   .succeeded :global(.icon) {
     color: var(--spectrum-global-color-green-600);
   }
+
   .failed :global(.icon) {
     color: var(
       --spectrum-semantic-negative-color-default,
       var(--spectrum-global-color-red-500)
     );
   }
+
   .metric-info {
     display: flex;
     gap: var(--spacing-l);
     margin-top: var(--spacing-s);
   }
+
   .version-status,
   .last-edit-text,
   .status-text {

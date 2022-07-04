@@ -9,11 +9,12 @@ const { doInTenant } = require("@budibase/backend-core/tenancy")
 const { definitions: triggerDefs } = require("../automations/triggerInfo")
 const { doInAppContext, getAppDB } = require("@budibase/backend-core/context")
 const { AutomationErrors, LoopStepTypes } = require("../constants")
+const { storeLog } = require("../automations/logging")
 const FILTER_STEP_ID = actions.ACTION_DEFINITIONS.FILTER.stepId
 const LOOP_STEP_ID = actions.ACTION_DEFINITIONS.LOOP.stepId
 
 const CRON_STEP_ID = triggerDefs.CRON.stepId
-const STOPPED_STATUS = { success: false, status: "STOPPED" }
+const STOPPED_STATUS = { success: true, status: "STOPPED" }
 const { cloneDeep } = require("lodash/fp")
 const env = require("../environment")
 
@@ -275,7 +276,7 @@ class Orchestrator {
           this._context.steps[stepCount] = outputs
           // if filter causes us to stop execution don't break the loop, set a var
           // so that we can finish iterating through the steps and record that it stopped
-          if (step.stepId === FILTER_STEP_ID && !outputs.success) {
+          if (step.stepId === FILTER_STEP_ID && !outputs.result) {
             stopped = true
             this.updateExecutionOutput(step.id, step.stepId, step.inputs, {
               ...outputs,
@@ -325,6 +326,8 @@ class Orchestrator {
       }
     }
 
+    // store the logs for the automation run
+    await storeLog(this._automation, this.executionOutput)
     return this.executionOutput
   }
 }

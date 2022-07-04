@@ -72,7 +72,10 @@ router.use(async (ctx, next) => {
       error,
     }
     ctx.log.error(err)
-    console.trace(err)
+    // unauthorised errors don't provide a useful trace
+    if (!env.isTest()) {
+      console.trace(err)
+    }
   }
 })
 

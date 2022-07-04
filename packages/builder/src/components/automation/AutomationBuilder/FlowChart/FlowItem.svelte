@@ -1,6 +1,4 @@
 <script>
-  import FlowItemHeader from "./FlowItemHeader.svelte"
-
   import { automationStore } from "builderStore"
   import {
     Icon,
@@ -16,6 +14,7 @@
   import AutomationBlockSetup from "../../SetupPanel/AutomationBlockSetup.svelte"
   import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
   import ActionModal from "./ActionModal.svelte"
+  import FlowItemHeader from "./FlowItemHeader.svelte"
 
   export let block
   export let testDataModal
