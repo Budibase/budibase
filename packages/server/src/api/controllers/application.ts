@@ -45,6 +45,7 @@ const { getTenantId, isMultiTenant } = require("@budibase/backend-core/tenancy")
 import { syncGlobalUsers } from "./user"
 const { app: appCache } = require("@budibase/backend-core/cache")
 import { cleanupAutomations } from "../../automations/utils"
+import { checkAppMetadata } from "../../automations/logging"
 const {
   getAppDB,
   getProdAppDB,
@@ -193,7 +194,7 @@ export const fetch = async (ctx: any) => {
     }
   }
 
-  ctx.body = apps
+  ctx.body = await checkAppMetadata(apps)
 }
 
 export const fetchAppDefinition = async (ctx: any) => {
