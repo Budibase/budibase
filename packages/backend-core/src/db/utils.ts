@@ -1,7 +1,7 @@
 import { newid } from "../hashing"
 import { DEFAULT_TENANT_ID, Configs } from "../constants"
 import env from "../environment"
-import { SEPARATOR, DocumentTypes, UNICODE_MAX } from "./constants"
+import { SEPARATOR, DocumentTypes, UNICODE_MAX, ViewNames } from "./constants"
 import { getTenantId, getGlobalDBName, getGlobalDB } from "../tenancy"
 import fetch from "node-fetch"
 import { doWithDB, allDbs } from "./index"
@@ -58,7 +58,7 @@ export function getDocParams(
 /**
  * Retrieve the correct index for a view based on default design DB.
  */
-export function getQueryIndex(viewName: string) {
+export function getQueryIndex(viewName: ViewNames) {
   return `database/${viewName}`
 }
 

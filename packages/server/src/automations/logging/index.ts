@@ -5,15 +5,13 @@ import {
   isProdAppID,
   SEPARATOR,
 } from "../../db/utils"
-import { Automation, MetadataErrors } from "../../definitions/common"
+import { Automation } from "../../definitions/common"
 import { app } from "@budibase/backend-core/cache"
 import { backOff } from "../../utilities"
 import * as env from "../../environment"
 import { logs } from "@budibase/pro"
-import {
-  AutomationResults,
-  AutomationStatus,
-} from "../../definitions/automation"
+import { AppMetadataErrors } from "@budibase/types"
+import { AutomationResults, AutomationStatus } from "@budibase/types"
 
 const { logAlert } = require("@budibase/backend-core/logging")
 
@@ -75,9 +73,9 @@ async function updateAppMetadataWithErrors(
       const autoId = `${parts[parts.length - 3]}${SEPARATOR}${
         parts[parts.length - 2]
       }`
-      let errors: MetadataErrors = {}
+      let errors: AppMetadataErrors = {}
       if (metadata.automationErrors) {
-        errors = metadata.automationErrors as MetadataErrors
+        errors = metadata.automationErrors as AppMetadataErrors
       }
       if (!Array.isArray(errors[autoId])) {
         errors[autoId] = []
