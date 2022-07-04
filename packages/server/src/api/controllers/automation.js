@@ -20,7 +20,7 @@ const {
 } = require("@budibase/backend-core/context")
 const { events } = require("@budibase/backend-core")
 const { app } = require("@budibase/backend-core/cache")
-const { logs } = require("@budibase/pro")
+const { automations } = require("@budibase/pro")
 const { clearOldHistory } = require("../../automations/logging")
 
 const ACTION_DEFS = removeDeprecated(actions.ACTION_DEFINITIONS)
@@ -198,7 +198,7 @@ exports.logSearch = async function (ctx) {
   let { automationId, status, page, startDate } = ctx.request.body
   // before querying logs, make sure old logs are cleared out
   await clearOldHistory()
-  ctx.body = await logs.automations.getLogs(
+  ctx.body = await automations.logs.getLogs(
     startDate,
     status,
     automationId,
