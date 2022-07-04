@@ -50,6 +50,7 @@ const {
   getAppDB,
   getProdAppDB,
   updateAppId,
+  doInAppContext,
 } = require("@budibase/backend-core/context")
 import { getUniqueRows } from "../../utilities/usageQuota/rows"
 import { quotas } from "@budibase/pro"
@@ -549,22 +550,24 @@ export const sync = async (ctx: any, next: any) => {
 }
 
 const updateAppPackage = async (appPackage: any, appId: any) => {
-  const db = getAppDB()
-  const application = await db.get(DocumentTypes.APP_METADATA)
+  return doInAppContext(appId, async () => {
+    const db = getAppDB()
+    const application = await db.get(DocumentTypes.APP_METADATA)
 
-  const newAppPackage = { ...application, ...appPackage }
-  if (appPackage._rev !== application._rev) {
-    newAppPackage._rev = application._rev
-  }
+    const newAppPackage = { ...application, ...appPackage }
+    if (appPackage._rev !== application._rev) {
+      newAppPackage._rev = application._rev
+    }
 
-  // the locked by property is attached by server but generated from
-  // Redis, shouldn't ever store it
-  delete newAppPackage.lockedBy
+    // the locked by property is attached by server but generated from
+    // Redis, shouldn't ever store it
+    delete newAppPackage.lockedBy
 
-  await db.put(newAppPackage)
-  // remove any cached metadata, so that it will be updated
-  await appCache.invalidateAppMetadata(appId)
-  return newAppPackage
+    await db.put(newAppPackage)
+    // remove any cached metadata, so that it will be updated
+    await appCache.invalidateAppMetadata(appId)
+    return newAppPackage
+  })
 }
 
 const createEmptyAppPackage = async (ctx: any, app: any) => {
