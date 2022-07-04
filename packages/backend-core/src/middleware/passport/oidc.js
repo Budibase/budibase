@@ -103,9 +103,9 @@ exports.strategyFactory = async function (config, saveUserFn) {
   }
 }
 
-exports.fetchStrategyConfig = async function (config, callbackUrl) {
+exports.fetchStrategyConfig = async function (enrichedConfig, callbackUrl) {
   try {
-    const { clientID, clientSecret, configUrl } = config
+    const { clientID, clientSecret, configUrl } = enrichedConfig
 
     if (!clientID || !clientSecret || !callbackUrl || !configUrl) {
       //check for remote config and all required elements

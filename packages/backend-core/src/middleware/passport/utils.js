@@ -1,4 +1,4 @@
-const { getGlobalDB, isMultiTenant, getTenantId } = require("../../tenancy")
+const { isMultiTenant, getTenantId } = require("../../tenancy")
 const { getScopedConfig } = require("../../db/utils")
 const { Configs } = require("../../constants")
 
@@ -23,9 +23,7 @@ exports.ssoCallbackUrl = async (db, config, type) => {
   if (config && config.callbackURL) {
     return config.callbackURL
   }
-
-  const dbx = db ? db : getGlobalDB()
-  const publicConfig = await getScopedConfig(dbx, {
+  const publicConfig = await getScopedConfig(db, {
     type: Configs.SETTINGS,
   })
 
