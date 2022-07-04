@@ -170,7 +170,7 @@ export const googlePreAuth = async (ctx: any, next: any) => {
   const strategy = await google.strategyFactory(config, callbackUrl, users.save)
 
   return passport.authenticate(strategy, {
-    scope: ["profile", "email", "https://www.googleapis.com/auth/spreadsheets"],
+    scope: ["profile", "email"],
     accessType: "offline",
     prompt: "consent",
   })(ctx, next)
