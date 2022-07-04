@@ -4,7 +4,6 @@ const { sanitizeKey } = require("@budibase/backend-core/objectStore")
 const { generateMetadataID } = require("../db/utils")
 const Readable = require("stream").Readable
 const { getAppDB } = require("@budibase/backend-core/context")
-const { logAlert } = require("@budibase/backend-core/logging")
 
 const BB_CDN = "https://cdn.budi.live"
 
@@ -13,42 +12,6 @@ exports.wait = ms => new Promise(resolve => setTimeout(resolve, ms))
 exports.isDev = env.isDev
 
 exports.NUMBER_REGEX = /^[+-]?([0-9]*[.])?[0-9]+$/g
-
-exports.randomDelay = fn => {
-  return new Promise((resolve, reject) => {
-    setTimeout(async () => {
-      try {
-        resolve(await fn())
-      } catch (err) {
-        reject(err)
-      }
-    }, Math.floor(Math.random() * 1000))
-  })
-}
-
-exports.backOff = async (fn, errMsg) => {
-  let attempts = 5,
-    success = false,
-    response,
-    first = true
-  for (; attempts > 0; attempts--) {
-    try {
-      if (first) {
-        response = await fn()
-      } else {
-        response = await exports.randomDelay(fn)
-      }
-      success = true
-      break
-    } catch (err) {
-      // ignore error here
-    }
-  }
-  if (!success) {
-    logAlert("Failed to backoff - ", errMsg)
-  }
-  return response
-}
 
 exports.removeFromArray = (array, element) => {
   const index = array.indexOf(element)

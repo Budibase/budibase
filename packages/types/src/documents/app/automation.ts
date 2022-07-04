@@ -6,6 +6,7 @@ export interface Automation extends Document {
     trigger: AutomationTrigger
   }
   appId: string
+  name: string
 }
 
 export interface AutomationStep {
@@ -40,7 +41,8 @@ export interface AutomationResults {
 }
 
 export interface AutomationLog extends AutomationResults, Document {
-  _rev: string
+  automationName: string
+  _rev?: string
 }
 
 export interface AutomationLogPage {
