@@ -4,9 +4,12 @@ const { getUser } = require("../cache/user")
 const { getSession, updateSessionTTL } = require("../security/sessions")
 const { buildMatcherRegex, matches } = require("./matchers")
 const env = require("../environment")
-const { SEPARATOR, ViewNames, queryGlobalView } = require("../../db")
+const { SEPARATOR } = require("../db/constants")
+const { ViewNames } = require("../db/utils")
+const { queryGlobalView } = require("../db/views")
 const { getGlobalDB, doInTenant } = require("../tenancy")
 const { decrypt } = require("../security/encryption")
+const identity = require("../context/identity")
 
 function finalise(
   ctx,
@@ -132,7 +135,12 @@ module.exports = (
       }
       // isAuthenticated is a function, so use a variable to be able to check authed state
       finalise(ctx, { authenticated, user, internal, version, publicEndpoint })
-      return next()
+
+      if (user && user.email) {
+        return identity.doInUserContext(user, next)
+      } else {
+        return next()
+      }
     } catch (err) {
       // invalid token, clear the cookie
       if (err && err.name === "JsonWebTokenError") {

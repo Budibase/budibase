@@ -1,5 +1,4 @@
 import { writable, get } from "svelte/store"
-import { API } from "api"
 import { devToolsStore } from "./devTools.js"
 
 const dispatchEvent = (type, data = {}) => {
@@ -47,13 +46,6 @@ const createBuilderStore = () => {
     notifyLoaded: () => {
       dispatchEvent("preview-loaded")
     },
-    pingEndUser: async () => {
-      try {
-        await API.pingEndUser()
-      } catch (error) {
-        // Do nothing
-      }
-    },
     setSelectedPath: path => {
       store.update(state => ({ ...state, selectedPath: path }))
     },
@@ -75,6 +67,9 @@ const createBuilderStore = () => {
         return
       }
       store.update(state => ({ ...state, editMode: enabled }))
+    },
+    highlightSetting: setting => {
+      dispatchEvent("highlight-setting", { setting })
     },
   }
   return {

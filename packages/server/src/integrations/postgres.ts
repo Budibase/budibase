@@ -16,9 +16,18 @@ import {
 import { DatasourcePlus } from "./base/datasourcePlus"
 
 module PostgresModule {
-  const { Client } = require("pg")
+  const { Client, types } = require("pg")
   const Sql = require("./base/sql")
   const { escapeDangerousCharacters } = require("../utilities")
+
+  // Return "date" and "timestamp" types as plain strings.
+  // This lets us reference the original stored timezone.
+  // types is undefined when running in a test env for some reason.
+  if (types) {
+    types.setTypeParser(1114, (val: any) => val) // timestamp
+    types.setTypeParser(1082, (val: any) => val) // date
+    types.setTypeParser(1184, (val: any) => val) // timestampz
+  }
 
   const JSON_REGEX = /'{.*}'::json/s
 
@@ -38,6 +47,7 @@ module PostgresModule {
     docs: "https://node-postgres.com",
     plus: true,
     friendlyName: "PostgreSQL",
+    type: "Relational",
     description:
       "PostgreSQL, also known as Postgres, is a free and open-source relational database management system emphasizing extensibility and SQL compliance.",
     datasource: {
@@ -262,6 +272,7 @@ module PostgresModule {
             autocolumn: isAuto,
             name: columnName,
             ...convertSqlType(column.data_type),
+            externalType: column.data_type,
           }
         }
 

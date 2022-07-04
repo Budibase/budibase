@@ -4,10 +4,7 @@ import IntercomClient from "./IntercomClient"
 import SentryClient from "./SentryClient"
 import { Events, EventSource } from "./constants"
 
-const posthog = new PosthogClient(
-  process.env.POSTHOG_TOKEN,
-  process.env.POSTHOG_URL
-)
+const posthog = new PosthogClient(process.env.POSTHOG_TOKEN)
 const sentry = new SentryClient(process.env.SENTRY_DSN)
 const intercom = new IntercomClient(process.env.INTERCOM_TOKEN)
 
@@ -24,11 +21,8 @@ class AnalyticsHub {
     }
   }
 
-  identify(id, metadata) {
+  identify(id) {
     posthog.identify(id)
-    if (metadata) {
-      posthog.updateUser(metadata)
-    }
     sentry.identify(id)
   }
 
@@ -43,10 +37,6 @@ class AnalyticsHub {
 
   showChat(user) {
     intercom.show(user)
-  }
-
-  submitFeedback(values) {
-    posthog.npsFeedback(values)
   }
 
   async logout() {

@@ -182,8 +182,9 @@ export const IntegrationTypes = {
   ORACLE: "ORACLE",
   INTERNAL: "INTERNAL",
   GOOGLE_SHEETS: "GOOGLE_SHEETS",
-  FIREBASE: "FIREBASE",
+  FIRESTORE: "FIRESTORE",
   REDIS: "REDIS",
+  SNOWFLAKE: "SNOWFLAKE",
 }
 
 export const IntegrationNames = {
@@ -201,8 +202,9 @@ export const IntegrationNames = {
   [IntegrationTypes.ORACLE]: "Oracle",
   [IntegrationTypes.INTERNAL]: "Internal",
   [IntegrationTypes.GOOGLE_SHEETS]: "Google Sheets",
-  [IntegrationTypes.FIREBASE]: "Firebase",
+  [IntegrationTypes.FIRESTORE]: "Firestore",
   [IntegrationTypes.REDIS]: "Redis",
+  [IntegrationTypes.SNOWFLAKE]: "Snowflake",
 }
 
 export const SchemaTypeOptions = [

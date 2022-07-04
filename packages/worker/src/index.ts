@@ -12,11 +12,13 @@ const destroyable = require("server-destroy")
 const koaBody = require("koa-body")
 const koaSession = require("koa-session")
 const { passport } = require("@budibase/backend-core/auth")
+const { logAlert } = require("@budibase/backend-core/logging")
 const logger = require("koa-pino-logger")
 const http = require("http")
 const api = require("./api")
 const redis = require("./utilities/redis")
 const Sentry = require("@sentry/node")
+import { events } from "@budibase/backend-core"
 
 // this will setup http and https proxies form env variables
 bootstrap()
@@ -28,7 +30,6 @@ app.keys = ["secret", "key"]
 // set up top level koa middleware
 app.use(koaBody({ multipart: true }))
 app.use(koaSession(app))
-
 app.use(
   logger({
     prettyPrint: {
@@ -62,12 +63,27 @@ if (env.isProd()) {
 const server = http.createServer(app.callback())
 destroyable(server)
 
+let shuttingDown = false,
+  errCode = 0
 server.on("close", async () => {
-  if (env.isProd()) {
+  if (shuttingDown) {
+    return
+  }
+  shuttingDown = true
+  if (!env.isTest()) {
     console.log("Server Closed")
   }
   await redis.shutdown()
+  await events.shutdown()
+  if (!env.isTest()) {
+    process.exit(errCode)
+  }
 })
+
+const shutdown = () => {
+  server.close()
+  server.destroy()
+}
 
 module.exports = server.listen(parseInt(env.PORT || 4002), async () => {
   console.log(`Worker running on ${JSON.stringify(server.address())}`)
@@ -75,12 +91,11 @@ module.exports = server.listen(parseInt(env.PORT || 4002), async () => {
 })
 
 process.on("uncaughtException", err => {
-  console.error(err)
-  server.close()
-  server.destroy()
+  errCode = -1
+  logAlert("Uncaught exception.", err)
+  shutdown()
 })
 
 process.on("SIGTERM", () => {
-  server.close()
-  server.destroy()
+  shutdown()
 })

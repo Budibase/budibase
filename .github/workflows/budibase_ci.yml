@@ -7,10 +7,12 @@ on:
     branches:
       - master
       - develop 
+      - new-design-ui
  pull_request:
     branches:
       - master
       - develop 
+      - release 
  workflow_dispatch:
 
 env:
@@ -58,3 +60,19 @@ jobs:
       with:
         install: false
         command: yarn test:e2e:ci
+    
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: eu-west-1
+
+    - name: Upload to S3
+      if: github.ref == 'refs/heads/new-design-ui' 
+      run: | 
+        tar -czvf new_ui.tar.gz packages/server/builder/assets packages/server/builder/index.html 
+        aws s3 cp new_ui.tar.gz s3://prod-budi-app-assets/beta:design_ui/
+        aws s3 cp packages/client/dist/budibase-client.js s3://prod-budi-app-assets/beta:design_ui/budibase-client.js
+        aws cloudfront create-invalidation --distribution-id E3ELKP4RCEHVLW --paths "/beta:design_ui/*"
+        
