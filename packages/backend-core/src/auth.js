@@ -15,6 +15,7 @@ const {
   tenancy,
   appTenancy,
   authError,
+  ssoCallbackUrl,
   csrf,
   internalApi,
 } = require("./middleware")
@@ -72,11 +73,10 @@ async function refreshOIDCAccessToken(db, chosenConfig, refreshToken) {
 
 async function refreshGoogleAccessToken(db, config, refreshToken) {
   let callbackUrl = await google.getCallbackUrl(db, config)
-  const googleConfig = await google.fetchStrategyConfig(config)
 
   let strategy
   try {
-    strategy = await google.strategyFactory(googleConfig, callbackUrl)
+    strategy = await google.strategyFactory(config, callbackUrl)
   } catch (err) {
     console.error(err)
     throw new Error("Error constructing OIDC refresh strategy", err)
@@ -168,4 +168,5 @@ module.exports = {
   internalApi,
   refreshOAuthToken,
   updateUserOAuth,
+  ssoCallbackUrl,
 }

@@ -386,10 +386,9 @@ export const getScopedFullConfig = async function (
   if (type === Configs.SETTINGS) {
     if (scopedConfig && scopedConfig.doc) {
       // overrides affected by environment variables
-      scopedConfig.doc.config.platformUrl = await getPlatformUrl(
-        { tenantAware: true },
-        db
-      )
+      scopedConfig.doc.config.platformUrl = await getPlatformUrl({
+        tenantAware: true,
+      })
       scopedConfig.doc.config.analyticsEnabled =
         await events.analytics.enabled()
     } else {
@@ -398,7 +397,7 @@ export const getScopedFullConfig = async function (
         doc: {
           _id: generateConfigID({ type, user, workspace }),
           config: {
-            platformUrl: await getPlatformUrl({ tenantAware: true }, db),
+            platformUrl: await getPlatformUrl({ tenantAware: true }),
             analyticsEnabled: await events.analytics.enabled(),
           },
         },
@@ -409,10 +408,7 @@ export const getScopedFullConfig = async function (
   return scopedConfig && scopedConfig.doc
 }
 
-export const getPlatformUrl = async (
-  opts = { tenantAware: true },
-  db = null
-) => {
+export const getPlatformUrl = async (opts = { tenantAware: true }) => {
   let platformUrl = env.PLATFORM_URL || "http://localhost:10000"
 
   if (!env.SELF_HOSTED && env.MULTI_TENANCY && opts.tenantAware) {
@@ -422,11 +418,11 @@ export const getPlatformUrl = async (
       platformUrl = platformUrl.replace("://", `://${tenantId}.`)
     }
   } else if (env.SELF_HOSTED) {
-    const dbx = db ? db : getGlobalDB()
+    const db = getGlobalDB()
     // get the doc directly instead of with getScopedConfig to prevent loop
     let settings
     try {
-      settings = await dbx.get(generateConfigID({ type: Configs.SETTINGS }))
+      settings = await db.get(generateConfigID({ type: Configs.SETTINGS }))
     } catch (e: any) {
       if (e.status !== 404) {
         throw e

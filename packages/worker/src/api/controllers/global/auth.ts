@@ -1,49 +1,22 @@
 const core = require("@budibase/backend-core")
-const { getScopedConfig } = require("@budibase/backend-core/db")
-const { google } = require("@budibase/backend-core/middleware")
-const { oidc } = require("@budibase/backend-core/middleware")
 const { Configs, EmailTemplatePurpose } = require("../../../constants")
 const { sendEmail, isEmailConfigured } = require("../../../utilities/email")
 const { setCookie, getCookie, clearCookie, hash, platformLogout } = core.utils
 const { Cookies, Headers } = core.constants
-const { passport } = core.auth
+const { passport, ssoCallbackUrl, google, oidc } = core.auth
 const { checkResetPasswordCode } = require("../../../utilities/redis")
-const {
-  getGlobalDB,
-  getTenantId,
-  isMultiTenant,
-} = require("@budibase/backend-core/tenancy")
+const { getGlobalDB } = require("@budibase/backend-core/tenancy")
 const env = require("../../../environment")
 import { events, users as usersCore, context } from "@budibase/backend-core"
 import { users } from "../../../sdk"
 import { User } from "@budibase/types"
 
-const ssoCallbackUrl = async (config: any, type: any) => {
-  // incase there is a callback URL from before
-  if (config && config.callbackURL) {
-    return config.callbackURL
-  }
-
-  const db = getGlobalDB()
-  const publicConfig = await getScopedConfig(db, {
-    type: Configs.SETTINGS,
-  })
-
-  let callbackUrl = `/api/global/auth`
-  if (isMultiTenant()) {
-    callbackUrl += `/${getTenantId()}`
-  }
-  callbackUrl += `/${type}/callback`
-
-  return `${publicConfig.platformUrl}${callbackUrl}`
-}
-
 export const googleCallbackUrl = async (config: any) => {
-  return ssoCallbackUrl(config, "google")
+  return ssoCallbackUrl(getGlobalDB(), config, "google")
 }
 
 export const oidcCallbackUrl = async (config: any) => {
-  return ssoCallbackUrl(config, "oidc")
+  return ssoCallbackUrl(getGlobalDB(), config, "oidc")
 }
 
 async function authInternal(ctx: any, user: any, err = null, info = null) {
@@ -70,7 +43,7 @@ async function authInternal(ctx: any, user: any, err = null, info = null) {
 export const authenticate = async (ctx: any, next: any) => {
   return passport.authenticate(
     "local",
-    async (err: any, user: any, info: any) => {
+    async (err: any, user: User, info: any) => {
       await authInternal(ctx, user, err, info)
       await context.identity.doInUserContext(user, async () => {
         await events.auth.login("local")
