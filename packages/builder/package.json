@@ -3,7 +3,6 @@
   "version": "1.0.212-alpha.10",
   "license": "GPL-3.0",
   "private": true,
-  "type": "module",
   "scripts": {
     "build": "routify -b && vite build --emptyOutDir",
     "start": "routify -c rollup",
