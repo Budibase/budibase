@@ -55,7 +55,7 @@
       deployments = newDeployments
     } catch (err) {
       clearInterval(poll)
-      notifications.error("Error fetching deployment history")
+      notifications.error("Error fetching deployment overview")
     }
   }
 

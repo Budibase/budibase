@@ -51,7 +51,7 @@
         $automationStore.selectedAutomation?.automation,
         testData
       )
-      $automationStore.selectedAutomation.automation.showTestPanel = true
+      $automationStore.showTestPanel = true
     } catch (error) {
       notifications.error("Error testing notification")
     }
