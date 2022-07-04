@@ -10,7 +10,7 @@
     "dev:vite": "vite --host 0.0.0.0",
     "rollup": "rollup -c -w",
     "cy:setup": "ts-node ./cypress/ts/setup.ts",
-    "cy:setup:ci": "node ./cypress/setup.js",
+    "cy:setup:ci": "node ./cypress/cypress.config.ts",
     "cy:open": "cypress open",
     "cy:run": "cypress run",
     "cy:run:ci": "cypress run --headed --browser chrome --spec  cypress/e2e/createApp.spec.js",

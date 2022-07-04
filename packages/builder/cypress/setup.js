@@ -1,4 +1,4 @@
-const cypressConfig = require("../cypress.json")
+const cypressConfig = require("../cypress.config.ts")
 const path = require("path")
 
 const tmpdir = path.join(require("os").tmpdir(), ".budibase")
