@@ -82,5 +82,8 @@
     "postinstall": "husky install",
     "install:pro": "bash scripts/pro/install.sh",
     "dep:clean": "yarn clean && yarn bootstrap"
+  },
+  "dependencies": {
+    "cypress": "10.3.0"
   }
 }
