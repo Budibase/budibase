@@ -1,6 +1,6 @@
 <script>
   import { Layout, Icon, ActionButton } from "@budibase/bbui"
-  import StatusRenderer from "components/portal/overview/StatusRenderer.svelte"
+  import StatusRenderer from "./StatusRenderer.svelte"
   import DateTimeRenderer from "components/common/renderers/DateTimeRenderer.svelte"
   import TestDisplay from "components/automation/AutomationBuilder/TestDisplay.svelte"
   import { goto } from "@roxi/routify"

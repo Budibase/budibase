@@ -21,7 +21,6 @@ const {
 const { events } = require("@budibase/backend-core")
 const { app } = require("@budibase/backend-core/cache")
 const { automations } = require("@budibase/pro")
-const { clearOldHistory } = require("../../automations/logging")
 
 const ACTION_DEFS = removeDeprecated(actions.ACTION_DEFINITIONS)
 const TRIGGER_DEFS = removeDeprecated(triggers.TRIGGER_DEFINITIONS)
@@ -195,15 +194,7 @@ exports.destroy = async function (ctx) {
 }
 
 exports.logSearch = async function (ctx) {
-  let { automationId, status, page, startDate } = ctx.request.body
-  // before querying logs, make sure old logs are cleared out
-  await clearOldHistory()
-  ctx.body = await automations.logs.getLogs(
-    startDate,
-    status,
-    automationId,
-    page
-  )
+  ctx.body = await automations.logs.logSearch(ctx.request.body)
 }
 
 exports.clearLogError = async function (ctx) {

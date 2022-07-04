@@ -354,10 +354,6 @@ exports.getMemoryViewParams = (otherProps = {}) => {
   return getDocParams(DocumentTypes.MEM_VIEW, null, otherProps)
 }
 
-exports.generateAutomationLogID = (isoDate, status, automationId) => {
-  return `${DocumentTypes.AUTOMATION_LOG}${SEPARATOR}${isoDate}${SEPARATOR}${automationId}${SEPARATOR}${status}`
-}
-
 /**
  * This can be used with the db.allDocs to get a list of IDs
  */
