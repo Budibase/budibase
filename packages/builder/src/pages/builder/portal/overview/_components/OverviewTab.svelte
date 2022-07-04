@@ -1,42 +1,34 @@
 <script>
   import DashCard from "components/common/DashCard.svelte"
   import { AppStatus } from "constants"
-  import {
-    Icon,
-    Heading,
-    Link,
-    Avatar,
-    notifications,
-    Layout,
-  } from "@budibase/bbui"
+  import { Icon, Heading, Link, Avatar, Layout } from "@budibase/bbui"
   import { store } from "builderStore"
   import clientPackage from "@budibase/client/package.json"
   import { processStringSync } from "@budibase/string-templates"
   import { users, auth } from "stores/portal"
+  import { createEventDispatcher } from "svelte"
 
   export let app
   export let deployments
   export let navigateTab
+  const dispatch = createEventDispatcher()
 
-  const userInit = async () => {
-    try {
-      await users.init()
-    } catch (error) {
-      notifications.error("Error getting user list")
-    }
+  const unpublishApp = () => {
+    dispatch("unpublish", app)
   }
 
-  let userPromise = userInit()
+  let appEditor, appEditorPromise
 
   $: updateAvailable = clientPackage.version !== $store.version
   $: isPublished = app && app?.status === AppStatus.DEPLOYED
   $: appEditorId = !app?.updatedBy ? $auth.user._id : app?.updatedBy
   $: appEditorText = appEditor?.firstName || appEditor?.email
-  $: filteredUsers = !appEditorId
-    ? []
-    : $users.filter(user => user._id === appEditorId)
+  $: fetchAppEditor(appEditorId)
 
-  $: appEditor = filteredUsers.length ? filteredUsers[0] : null
+  async function fetchAppEditor(editorId) {
+    appEditorPromise = users.get(editorId)
+    appEditor = await appEditorPromise
+  }
 
   const getInitials = user => {
     let initials = ""
@@ -72,6 +64,9 @@
                     new Date(deployments[0].updatedAt).getTime(),
                 }
               )}
+              {#if isPublished}
+                - <Link on:click={unpublishApp}>Unpublish</Link>
+              {/if}
             {/if}
             {#if !deployments?.length}
               -
@@ -81,7 +76,7 @@
       </DashCard>
       <DashCard title={"Last Edited"} dataCy={"edited-by"}>
         <div class="last-edited-content">
-          {#await userPromise}
+          {#await appEditorPromise}
             <Avatar size="M" initials={"-"} />
           {:then _}
             <div class="updated-by">

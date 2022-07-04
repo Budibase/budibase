@@ -1,4 +1,5 @@
 exports.SEPARATOR = "_"
+exports.UNICODE_MAX = "\ufff0"
 
 const PRE_APP = "app"
 const PRE_DEV = "dev"
@@ -31,6 +32,7 @@ exports.StaticDatabases = {
     name: "global-info",
     docs: {
       tenants: "tenants",
+      install: "install",
     },
   },
 }

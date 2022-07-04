@@ -155,34 +155,44 @@ exports.validate = async () => {
 }
 
 exports.exportRows = async ctx => {
-  const { datasourceId, tableName } = breakExternalTableId(ctx.params.tableId)
+  const { datasourceId } = breakExternalTableId(ctx.params.tableId)
   const db = getAppDB()
-  let format = ctx.query.format
+  const format = ctx.query.format
+  const { columns } = ctx.request.body
   const datasource = await db.get(datasourceId)
   if (!datasource || !datasource.entities) {
     ctx.throw(400, "Datasource has not been configured for plus API.")
   }
-  const tables = datasource.entities
-  const table = tables[tableName]
   ctx.request.body = {
     query: {
       oneOf: {
-        [table.primaryDisplay]: ctx.request.body.rows.map(
-          id => breakRowIdField(id)[0]
-        ),
+        _id: ctx.request.body.rows.map(row => JSON.parse(decodeURI(row))[0]),
       },
     },
   }
 
   let result = await exports.search(ctx)
+  let rows = []
 
-  let headers = Object.keys(result.rows[0])
+  // Filter data to only specified columns if required
+  if (columns && columns.length) {
+    for (let i = 0; i < result.rows.length; i++) {
+      rows[i] = {}
+      for (let column of columns) {
+        rows[i][column] = result.rows[i][column]
+      }
+    }
+  } else {
+    rows = result.rows
+  }
+
+  let headers = Object.keys(rows[0])
   const exporter = exporters[format]
   const filename = `export.${format}`
 
   // send down the file
   ctx.attachment(filename)
-  return apiFileReturn(exporter(headers, result.rows))
+  return apiFileReturn(exporter(headers, rows))
 }
 
 exports.fetchEnrichedRow = async ctx => {

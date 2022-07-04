@@ -7,7 +7,7 @@ const {
 const { doInAppContext, getAppDB } = require("@budibase/backend-core/context")
 const { user: userCache } = require("@budibase/backend-core/cache")
 const { getGlobalDB } = require("@budibase/backend-core/tenancy")
-const { allUsers } = require("../../utilities")
+const { allUsers } = require("../../../sdk/users")
 
 exports.fetch = async ctx => {
   const tenantId = ctx.user.tenantId

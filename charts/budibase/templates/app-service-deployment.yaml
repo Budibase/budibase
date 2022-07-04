@@ -28,6 +28,8 @@ spec:
       - env:
         - name: BUDIBASE_ENVIRONMENT
           value: {{ .Values.globals.budibaseEnv }}
+        - name: DEPLOYMENT_ENVIRONMENT
+          value: "kubernetes"
         - name: COUCH_DB_URL
           {{ if .Values.services.couchdb.url }}
           value: {{ .Values.services.couchdb.url }}
@@ -78,6 +80,10 @@ spec:
           value: {{ .Values.services.objectStore.url }}
         - name: PORT
           value: {{ .Values.services.apps.port | quote }}
+        {{ if .Values.services.worker.publicApiRateLimitPerSecond }}
+        - name: API_REQ_LIMIT_PER_SEC
+          value: {{ .Values.globals.apps.publicApiRateLimitPerSecond | quote }}
+        {{ end }}
         - name: MULTI_TENANCY
           value: {{ .Values.globals.multiTenancy | quote }}
         - name: LOG_LEVEL
@@ -119,6 +125,12 @@ spec:
 
         image: budibase/apps:{{ .Values.globals.appVersion }}
         imagePullPolicy: Always
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: {{ .Values.services.apps.port }}
+          initialDelaySeconds: 5
+          periodSeconds: 5
         name: bbapps
         ports:
         - containerPort: {{ .Values.services.apps.port }}

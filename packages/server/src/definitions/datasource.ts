@@ -48,8 +48,9 @@ export enum SourceNames {
   REST = "REST",
   ORACLE = "ORACLE",
   GOOGLE_SHEETS = "GOOGLE_SHEETS",
-  FIREBASE = "FIREBASE",
+  FIRESTORE = "FIRESTORE",
   REDIS = "REDIS",
+  SNOWFLAKE = "SNOWFLAKE",
 }
 
 export enum IncludeRelationships {
@@ -93,6 +94,7 @@ export interface Integration {
   relationships?: boolean
   description: string
   friendlyName: string
+  type?: string
   datasource: {}
   query: {
     [key: string]: QueryDefinition

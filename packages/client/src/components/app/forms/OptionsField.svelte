@@ -17,6 +17,7 @@
   export let autocomplete = false
   export let direction = "vertical"
   export let onChange
+  export let sort = true
 
   let fieldState
   let fieldApi
@@ -64,7 +65,7 @@
         getOptionLabel={flatOptions ? x => x : x => x.label}
         getOptionValue={flatOptions ? x => x : x => x.value}
         {autocomplete}
-        sort={true}
+        {sort}
       />
     {:else if optionsType === "radio"}
       <CoreRadioGroup

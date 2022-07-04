@@ -11,12 +11,12 @@ module Firebase {
     email: string
     privateKey: string
     projectId: string
-    serviceAccount?: string
   }
 
   const SCHEMA: Integration = {
     docs: "https://firebase.google.com/docs/firestore/quickstart",
     friendlyName: "Firestore",
+    type: "Non-relational",
     description:
       "Cloud Firestore is a flexible, scalable database for mobile, web, and server development from Firebase and Google Cloud.",
     datasource: {
@@ -31,10 +31,6 @@ module Firebase {
       projectId: {
         type: DatasourceFieldTypes.STRING,
         required: true,
-      },
-      serviceAccount: {
-        type: DatasourceFieldTypes.JSON,
-        required: false,
       },
     },
     query: {
@@ -71,7 +67,6 @@ module Firebase {
             "==",
             "<",
             "<=",
-            "==",
             "!=",
             ">=",
             ">",
@@ -96,24 +91,13 @@ module Firebase {
 
     constructor(config: FirebaseConfig) {
       this.config = config
-      if (config.serviceAccount) {
-        const serviceAccount = JSON.parse(config.serviceAccount)
-        this.client = new Firestore({
-          projectId: serviceAccount.project_id,
-          credentials: {
-            client_email: serviceAccount.client_email,
-            private_key: serviceAccount.private_key,
-          },
-        })
-      } else {
-        this.client = new Firestore({
-          projectId: config.projectId,
-          credentials: {
-            client_email: config.email,
-            private_key: config.privateKey,
-          },
-        })
-      }
+      this.client = new Firestore({
+        projectId: config.projectId,
+        credentials: {
+          client_email: config.email,
+          private_key: config.privateKey?.replace(/\\n/g, "\n"),
+        },
+      })
     }
 
     async create(query: { json: object; extra: { [key: string]: string } }) {
