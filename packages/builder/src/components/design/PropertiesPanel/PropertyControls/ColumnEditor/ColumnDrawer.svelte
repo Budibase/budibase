@@ -178,7 +178,7 @@
   .column {
     gap: var(--spacing-l);
     display: grid;
-    grid-template-columns: 20px 1fr 1fr auto auto;
+    grid-template-columns: 20px 1fr 1fr 16px 16px;
     align-items: center;
     border-radius: var(--border-radius-s);
     transition: background-color ease-in-out 130ms;
