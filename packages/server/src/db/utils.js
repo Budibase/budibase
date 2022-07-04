@@ -43,12 +43,6 @@ const DocumentTypes = {
   USER_FLAG: "flag",
 }
 
-const ViewModes = {
-  ALL: "all",
-  AUTOMATION: "auto",
-  STATUS: "status",
-}
-
 const InternalTables = {
   USER_METADATA: "ta_users",
 }
@@ -75,7 +69,6 @@ exports.USER_METDATA_PREFIX = `${DocumentTypes.ROW}${SEPARATOR}${InternalTables.
 exports.LINK_USER_METADATA_PREFIX = `${DocumentTypes.LINK}${SEPARATOR}${InternalTables.USER_METADATA}${SEPARATOR}`
 exports.TABLE_ROW_PREFIX = `${DocumentTypes.ROW}${SEPARATOR}${DocumentTypes.TABLE}`
 exports.ViewNames = ViewNames
-exports.ViewModes = ViewModes
 exports.InternalTables = InternalTables
 exports.DocumentTypes = DocumentTypes
 exports.SEPARATOR = SEPARATOR
@@ -363,32 +356,6 @@ exports.getMemoryViewParams = (otherProps = {}) => {
 
 exports.generateAutomationLogID = (isoDate, status, automationId) => {
   return `${DocumentTypes.AUTOMATION_LOG}${SEPARATOR}${isoDate}${SEPARATOR}${automationId}${SEPARATOR}${status}`
-}
-
-exports.getAutomationLogParams = (
-  startDate,
-  endDate,
-  { status, automationId } = {},
-  otherProps = {}
-) => {
-  const automationBase = automationId ? `${automationId}${SEPARATOR}` : ""
-  const statusBase = status ? `${status}${SEPARATOR}` : ""
-  let base
-  if (status && automationId) {
-    base = `${ViewModes.ALL}${SEPARATOR}${statusBase}${automationBase}`
-  } else if (status) {
-    base = `${ViewModes.STATUS}${SEPARATOR}${statusBase}`
-  } else if (automationId) {
-    base = `${ViewModes.AUTOMATION}${SEPARATOR}${automationBase}`
-  } else {
-    base = `${DocumentTypes.AUTOMATION_LOG}${SEPARATOR}`
-  }
-  return {
-    ...otherProps,
-    descending: true,
-    startkey: `${base}${endDate}${UNICODE_MAX}`,
-    endkey: `${base}${startDate}`,
-  }
 }
 
 /**
