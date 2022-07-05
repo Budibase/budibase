@@ -172,6 +172,8 @@ async function execute(ctx: any, opts = { rowsOnly: false }) {
   const query = await db.get(ctx.params.queryId)
   const datasource = await db.get(query.datasourceId)
 
+  const authConfigCtx: any = getAuthConfig(ctx)
+
   const enrichedParameters = ctx.request.body.parameters || {}
   // make sure parameters are fully enriched with defaults
   if (query && query.parameters) {
@@ -196,6 +198,7 @@ async function execute(ctx: any, opts = { rowsOnly: false }) {
         queryId: ctx.params.queryId,
         ctx: {
           user: ctx.user,
+          auth: { ...authConfigCtx },
         },
       })
 

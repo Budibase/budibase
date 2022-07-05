@@ -54,8 +54,60 @@ export const getBindableProperties = (asset, componentId) => {
  */
 export const getRestBindings = () => {
   const userBindings = getUserBindings()
-  const oauthBindings = getAuthBindings()
-  return [...userBindings, ...oauthBindings]
+  return [...userBindings, ...getAuthBindings()]
+}
+
+/**
+ * Gets all rest bindable auth fields
+ */
+export const getAuthBindings = () => {
+  let bindings = []
+  const safeUser = makePropSafe("user")
+  const safeOAuth2 = makePropSafe("oauth2")
+  const safeAccessToken = makePropSafe("accessToken")
+
+  const authBindings = [
+    {
+      runtime: `${safeUser}.${safeOAuth2}.${safeAccessToken}`,
+      readable: `Current User.OAuthToken`,
+      key: "accessToken",
+    },
+  ]
+
+  bindings = Object.keys(authBindings).map(key => {
+    const fieldBinding = authBindings[key]
+    return {
+      type: "context",
+      runtimeBinding: fieldBinding.runtime,
+      readableBinding: fieldBinding.readable,
+      fieldSchema: { type: "string", name: fieldBinding.key },
+      providerId: "user",
+    }
+  })
+  return bindings
+}
+
+/**
+ * Utility - convert a key/value map to an array of custom 'context' bindings
+ * @param {object} valueMap Key/value pairings
+ * @param {string} prefix A contextual string prefix/path for a user readable binding
+ * @return {object[]} An array containing readable/runtime binding objects
+ */
+export const toBindingsArray = (valueMap, prefix) => {
+  if (!valueMap) {
+    return []
+  }
+  return Object.keys(valueMap).reduce((acc, binding) => {
+    if (!binding || !valueMap[binding]) {
+      return acc
+    }
+    acc.push({
+      type: "context",
+      runtimeBinding: binding,
+      readableBinding: `${prefix}.${binding}`,
+    })
+    return acc
+  }, [])
 }
 
 /**
@@ -336,19 +388,6 @@ const getUserBindings = () => {
     })
   })
   return bindings
-}
-
-const getAuthBindings = () => {
-  return [
-    {
-      type: "context",
-      runtimeBinding: `${makePropSafe("user")}.${makePropSafe(
-        "oauth2"
-      )}.${makePropSafe("accessToken")}`,
-      readableBinding: "OAuthToken",
-      providerId: "user",
-    },
-  ]
 }
 
 /**
