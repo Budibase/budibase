@@ -40,6 +40,7 @@ module OracleModule {
     docs: "https://github.com/oracle/node-oracledb",
     plus: true,
     friendlyName: "Oracle",
+    type: "Relational",
     description:
       "Oracle Database is an object-relational database management system developed by Oracle Corporation",
     datasource: {

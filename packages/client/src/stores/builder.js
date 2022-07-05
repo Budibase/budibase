@@ -68,6 +68,9 @@ const createBuilderStore = () => {
       }
       store.update(state => ({ ...state, editMode: enabled }))
     },
+    highlightSetting: setting => {
+      dispatchEvent("highlight-setting", { setting })
+    },
   }
   return {
     ...store,

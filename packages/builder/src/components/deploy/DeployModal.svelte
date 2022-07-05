@@ -98,7 +98,7 @@
     confirmText="Done"
     cancelText="View App"
     onCancel={viewApp}
-    dataCy={"deploy-app-success-modal"}
+    dataCy="deploy-app-success-modal"
   >
     <div slot="header" class="app-published-header">
       <svg

@@ -77,27 +77,30 @@ describe("/api/global/auth", () => {
   describe("oidc", () => {
     const auth = require("@budibase/backend-core/auth")
 
-    // mock the oidc strategy implementation and return value
-    let strategyFactory = jest.fn()
-    let mockStrategyReturn = jest.fn()
-    strategyFactory.mockReturnValue(mockStrategyReturn)
-    auth.oidc.strategyFactory = strategyFactory
-
     const passportSpy = jest.spyOn(auth.passport, "authenticate")
     let oidcConf
     let chosenConfig
     let configId
 
+    // mock the oidc strategy implementation and return value
+    let strategyFactory = jest.fn()
+    let mockStrategyReturn = jest.fn()
+    let mockStrategyConfig = jest.fn()
+    auth.oidc.fetchStrategyConfig = mockStrategyConfig
+    
+    strategyFactory.mockReturnValue(mockStrategyReturn)
+    auth.oidc.strategyFactory = strategyFactory
+
     beforeEach(async () => {
       oidcConf = await config.saveOIDCConfig()
       chosenConfig = oidcConf.config.configs[0]
       configId = chosenConfig.uuid
+      mockStrategyConfig.mockReturnValue(chosenConfig)
     })
 
     afterEach(() => {
       expect(strategyFactory).toBeCalledWith(
         chosenConfig, 
-        `http://localhost:10000/api/global/auth/${TENANT_ID}/oidc/callback`,
         expect.any(Function)
       )
     })
@@ -107,7 +110,7 @@ describe("/api/global/auth", () => {
         await request.get(`/api/global/auth/${TENANT_ID}/oidc/configs/${configId}`)
 
         expect(passportSpy).toBeCalledWith(mockStrategyReturn, {
-          scope: ["profile", "email"],
+          scope: ["profile", "email", "offline_access"]
         })
         expect(passportSpy.mock.calls.length).toBe(1);
       })

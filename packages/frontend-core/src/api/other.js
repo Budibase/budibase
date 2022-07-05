@@ -61,6 +61,7 @@ export const buildOtherEndpoints = API => ({
   checkBetaAccess: async email => {
     return await API.get({
       url: `/api/beta/access?email=${email}`,
+      external: true,
     })
   },
 })

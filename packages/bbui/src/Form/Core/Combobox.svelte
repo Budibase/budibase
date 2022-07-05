@@ -18,23 +18,6 @@
   const dispatch = createEventDispatcher()
   let open = false
   let focus = false
-  $: fieldText = getFieldText(value, options, placeholder)
-
-  const getFieldText = (value, options, placeholder) => {
-    // Always use placeholder if no value
-    if (value == null || value === "") {
-      return placeholder || "Choose an option or type"
-    }
-
-    // Wait for options to load if there is a value but no options
-    if (!options?.length) {
-      return ""
-    }
-
-    // Render the label if the selected option is found, otherwise raw value
-    const selected = options.find(option => getOptionValue(option) === value)
-    return selected ? getOptionLabel(selected) : value
-  }
 
   const selectOption = value => {
     dispatch("change", value)
@@ -69,7 +52,10 @@
       {id}
       type="text"
       on:focus={() => (focus = true)}
-      on:blur={() => (focus = false)}
+      on:blur={() => {
+        focus = false
+        dispatch("blur")
+      }}
       on:change={onType}
       value={value || ""}
       placeholder={placeholder || ""}
