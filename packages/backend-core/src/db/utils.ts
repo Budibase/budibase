@@ -387,7 +387,9 @@ export const getScopedFullConfig = async function (
   if (type === Configs.SETTINGS) {
     if (scopedConfig && scopedConfig.doc) {
       // overrides affected by environment variables
-      scopedConfig.doc.config.platformUrl = await getPlatformUrl()
+      scopedConfig.doc.config.platformUrl = await getPlatformUrl({
+        tenantAware: true,
+      })
       scopedConfig.doc.config.analyticsEnabled =
         await events.analytics.enabled()
     } else {
@@ -396,7 +398,7 @@ export const getScopedFullConfig = async function (
         doc: {
           _id: generateConfigID({ type, user, workspace }),
           config: {
-            platformUrl: await getPlatformUrl(),
+            platformUrl: await getPlatformUrl({ tenantAware: true }),
             analyticsEnabled: await events.analytics.enabled(),
           },
         },

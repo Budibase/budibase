@@ -57,7 +57,8 @@
         placeholder="Default"
         thin
         disabled={bindable}
-        bind:value={binding.default}
+        on:change={evt => onBindingChange(binding.name, evt.detail)}
+        value={runtimeToReadableBinding(bindings, binding.default)}
       />
       {#if bindable}
         <DrawerBindableInput
