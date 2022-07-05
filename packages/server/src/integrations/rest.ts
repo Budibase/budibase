@@ -287,7 +287,7 @@ module RestModule {
           input.body = form
           break
         case BodyTypes.XML:
-          if (object != null) {
+          if (object != null && Object.keys(object).length) {
             string = new XmlBuilder().buildObject(object)
           }
           input.body = string
