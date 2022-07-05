@@ -35,10 +35,7 @@
   } set`
 </script>
 
-<DetailSummary
-  name={`Conditions${conditionCount ? " *" : ""}`}
-  collapsible={false}
->
+<DetailSummary name={"Conditions"} collapsible={false}>
   <div class="conditionCount">{conditionText}</div>
   <div>
     <ActionButton on:click={openDrawer}>Configure conditions</ActionButton>
