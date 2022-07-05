@@ -1,6 +1,5 @@
 <script>
   import { createEventDispatcher } from "svelte"
-  import Button from "../Button/Button.svelte"
 
   let dispatch = createEventDispatcher()
 
