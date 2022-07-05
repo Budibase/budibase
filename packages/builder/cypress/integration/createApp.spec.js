@@ -52,13 +52,6 @@ filterTests(['smoke', 'all'], () => {
 
       // Start create app process. If apps already exist, click second button
       cy.get(interact.CREATE_APP_BUTTON, { timeout: 1000 }).click({ force: true })
-      cy.request(`${Cypress.config().baseUrl}/api/applications?status=all`)
-        .its("body")
-        .then(val => {
-          if (val.length > 0) {
-            cy.get(interact.CREATE_APP_BUTTON).click({ force: true })
-          }
-        })
 
       const appName = "Cypress Tests"
       cy.get(interact.SPECTRUM_MODAL).within(() => {

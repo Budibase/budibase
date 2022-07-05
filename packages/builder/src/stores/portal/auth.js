@@ -64,6 +64,8 @@ export function createAuthStore() {
             name: user.account?.name,
             user_id: user._id,
             tenant: user.tenantId,
+            admin: user?.admin?.global,
+            builder: user?.builder?.global,
             "Company size": user.account?.size,
             "Job role": user.account?.profession,
           })
