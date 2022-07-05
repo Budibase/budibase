@@ -27,11 +27,9 @@
   import { users, auth, groups, apps } from "stores/portal"
   import { roles } from "stores/backend"
   import { Constants } from "@budibase/frontend-core"
-
   import ForceResetPasswordModal from "./_components/ForceResetPasswordModal.svelte"
   import { RoleUtils } from "@budibase/frontend-core"
   import UserGroupPicker from "components/settings/UserGroupPicker.svelte"
-
   export let userId
   let deleteUserModal
   let resetPasswordModal
@@ -40,9 +38,7 @@
   let popover
   let selectedGroups = []
   let allAppList = []
-  $: console.log($apps)
-  $: console.log($userFetch.data)
-
+  let toggleDisabled = false
   $: allAppList = $apps
     .filter(x => {
       if ($userFetch.data?.roles) {
@@ -52,15 +48,18 @@
       }
     })
     .map(app => {
-      let roles = Object.keys($userFetch.data.roles).filter(id => {
-        return id === app.appId
-      })
+      let roles = Object.fromEntries(
+        Object.entries($userFetch.data.roles).filter(
+          ([key]) => key === app.appId
+        )
+      )
       return {
-        ...app,
+        name: app.name,
+        devId: app.devId,
+        icon: app.icon,
         roles,
       }
     })
-  $: console.log(allAppList)
   // Used for searching through groups in the add group popover
   $: filteredGroups = $groups.filter(
     group =>
@@ -73,6 +72,12 @@
       return y._id === userId
     })
   })
+
+  $: globalRole = $userFetch?.data?.admin?.global
+    ? "admin"
+    : $userFetch?.data?.builder?.global
+    ? "developer"
+    : "appUser"
 
   const userFetch = fetchData(`/api/global/users/${userId}`)
   async function deleteUser() {
@@ -88,10 +93,10 @@
   function getHighestRole(roles) {
     let highestRole
     let highestRoleNumber = 0
-    roles.forEach(role => {
-      let roleNumber = RoleUtils.getRolePriority(role._id)
+    Object.keys(roles).forEach(role => {
+      let roleNumber = RoleUtils.getRolePriority(roles[role])
       if (roleNumber > highestRoleNumber) {
-        highestRole = role
+        highestRole = roles[role]
       }
     })
     return highestRole
@@ -121,8 +126,14 @@
     }
   }
 
-  async function updateUserRole() {
-    return
+  async function updateUserRole({ detail }) {
+    if (detail === "developer") {
+      toggleFlags({ admin: { global: false }, builder: { global: true } })
+    } else if (detail === "admin") {
+      toggleFlags({ admin: { global: true }, builder: { global: false } })
+    } else if (detail === "appUser") {
+      toggleFlags({ admin: { global: false }, builder: { global: false } })
+    }
   }
 
   async function addGroup(groupId) {
@@ -142,21 +153,14 @@
     await groups.actions.save(group)
   }
 
-  function addAll() {}
-
-  /*
-  async function toggleFlag(flagName, detail) {
-    toggleDisabled = true
+  async function toggleFlags(detail) {
     try {
-      await users.save({ ...$userFetch?.data, [flagName]: { global: detail } })
+      await users.save({ ...$userFetch?.data, ...detail })
       await userFetch.refresh()
     } catch (error) {
       notifications.error("Error updating user")
     }
-    toggleDisabled = false
   }
-
-  
   async function toggleBuilderAccess({ detail }) {
     return toggleFlag("builder", detail)
   }
@@ -169,7 +173,8 @@
     selectedApp = detail
     editRolesModal.show()
   }
-*/
+
+  function addAll() {}
   onMount(async () => {
     try {
       await groups.actions.init()
@@ -240,7 +245,11 @@
       {#if userId !== $auth.user._id}
         <div class="field">
           <Label size="L">Role</Label>
-          <Select options={Constants.BbRoles} on:blur={updateUserRole} />
+          <Select
+            value={globalRole}
+            options={Constants.BbRoles}
+            on:change={updateUserRole}
+          />
         </div>
       {/if}
     </div>
@@ -304,16 +313,20 @@
     <List>
       {#if allAppList.length}
         {#each allAppList as app}
-          <div on:click={$goto(`../../overview/${app.devId}`)}>
+          <div class="pointer" on:click={$goto(`../../overview/${app.devId}`)}>
             <ListItem
               title={app.name}
               iconBackground={app?.icon?.color || ""}
               icon={app?.icon?.name || "Apps"}
             >
               <div class="title ">
-                <StatusLight />
+                <StatusLight
+                  color={RoleUtils.getRoleColour(getHighestRole(app.roles))}
+                />
                 <div style="margin-left: var(--spacing-s);">
-                  <Body size="XS">d</Body>
+                  <Body size="XS"
+                    >{Constants.Roles[getHighestRole(app.roles)]}</Body
+                  >
                 </div>
               </div>
             </ListItem>
@@ -348,6 +361,9 @@
 </Modal>
 
 <style>
+  .pointer {
+    cursor: pointer;
+  }
   .fields {
     display: grid;
     grid-gap: var(--spacing-m);

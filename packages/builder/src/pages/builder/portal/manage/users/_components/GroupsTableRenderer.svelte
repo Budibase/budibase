@@ -5,16 +5,18 @@
 
 <div class="align">
   <div class="spacing">
-    <Icon name="User" />
+    <Icon name="UserGroup" />
   </div>
   {#if value.length === 0}
-    <div>0</div>
+    <div class="opacity">0</div>
   {:else if value.length === 1}
     <div class="opacity">
       <Body size="S">{value[0].name}</Body>
     </div>
   {:else}
-    {parseInt(value.length) || 0} groups
+    <div class="opacity">
+      {parseInt(value.length) || 0} groups
+    </div>
   {/if}
 </div>
 
@@ -25,7 +27,7 @@
   }
 
   .opacity {
-    opacity: 0.7;
+    opacity: 0.8;
   }
 
   .spacing {

@@ -25,7 +25,6 @@
   import PasswordModal from "./_components/PasswordModal.svelte"
   import ImportUsersModal from "./_components/ImportUsersModal.svelte"
   import analytics, { Events } from "analytics"
-  import TriggerAutomation from "../../../../../components/design/PropertiesPanel/PropertyControls/ButtonActionEditor/actions/TriggerAutomation.svelte"
 
   const schema = {
     name: {},
@@ -35,10 +34,10 @@
       sortable: false,
     },
     userGroups: { sortable: false, displayName: "User groups" },
-    apps: {},
+    apps: { width: "120px" },
     settings: {
       sortable: false,
-      width: "50px",
+      width: "60px",
       displayName: "",
       align: "Right",
     },
@@ -81,11 +80,13 @@
 
   $: enrichedUsers = $users.map(user => {
     let userGroups = []
+    let userApps = []
     $groups.forEach(group => {
       if (group.users) {
         group.users?.forEach(y => {
           if (y._id === user._id) {
             userGroups.push(group)
+            userApps = group.apps
           }
         })
       }
@@ -94,6 +95,7 @@
       ...user,
       name: user.firstName ? user.firstName + " " + user.lastName : "",
       userGroups,
+      apps: [...new Set(Object.keys(user.roles))],
     }
   })
 

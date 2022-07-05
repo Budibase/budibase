@@ -1,21 +1,14 @@
 <script>
   import { Icon } from "@budibase/bbui"
   export let value
+  $: console.log(value)
 </script>
 
 <div class="align">
   <div class="spacing">
-    <Icon name="Apps" />
+    <Icon name="WebPage" />
   </div>
-  {#if value?.apps?.length === 0}
-    <div>
-      <div>No groups</div>
-    </div>
-  {:else if value?.apps?.length === 1}
-    {value?.groups[0]?.name}
-  {:else}
-    {parseInt(value?.apps?.length) || 0}
-  {/if}
+  {parseInt(value?.length) || 0}
 </div>
 
 <style>
