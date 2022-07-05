@@ -293,12 +293,11 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/backend-core@1.0.212-alpha.10":
-  version "1.0.212-alpha.10"
-  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.0.212-alpha.10.tgz#21c74d209c5fecea4b49e0c59db87069493169bc"
-  integrity sha512-8UcYfVC/8HYK3QkdysSVyiPUbNHXKpayoM9NMrJEA+QUSRcchQBLn1/5qhEAwfnPz55X+BlNV1whIJdMzXbP2A==
+"@budibase/backend-core@1.0.218":
+  version "1.0.218"
+  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.0.218.tgz#be101c8baf220fa3fc55d63071bb38fc6c8cf4d8"
+  integrity sha512-v9+bvQ2+OsK7eGyDHzMuPawTu2LovRCsuArFeMnaG/AbexkqnbB74w+h3vh/2npuHzrnk8RZkM2c4pp/ycqfKw==
   dependencies:
-    "@budibase/types" "^1.0.212-alpha.10"
     "@techpass/passport-openidconnect" "0.3.2"
     aws-sdk "2.1030.0"
     bcrypt "5.0.1"
@@ -325,18 +324,13 @@
     uuid "8.3.2"
     zlib "1.0.5"
 
-"@budibase/pro@1.0.212-alpha.10":
-  version "1.0.212-alpha.10"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-1.0.212-alpha.10.tgz#0a0c2e695884075db03068c93705d1bc233b0c7a"
-  integrity sha512-qNzaT7+Wyy7roS/QX/WCpyhddapbarur3uPj8SBfVql8YEvEZw/f+3aOS3Ixj5m5r5eQxphWm/dCXC3RYjXKFg==
+"@budibase/pro@1.0.218":
+  version "1.0.218"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-1.0.218.tgz#b9e5bb95cca996dc1f7f783a3a02e51cbbf3df55"
+  integrity sha512-LJpV4rYPP9DzMNkL2Y0euZplkubBKBE+gc5JBTMt1l9Fwn2Sri/Y5bQ+U8fjczjmHxYnZLrFwH+o6LCnk/QJow==
   dependencies:
-    "@budibase/backend-core" "1.0.212-alpha.10"
+    "@budibase/backend-core" "1.0.218"
     node-fetch "^2.6.1"
-
-"@budibase/types@^1.0.212-alpha.10":
-  version "1.0.214"
-  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-1.0.214.tgz#400724fb23a1ce4b80bd04ed472a376d59126069"
-  integrity sha512-KD9XkCdL+R4Nal/X2IX0Bv+AxsylGzAAmo7M6tuoM7YAegskmsX5Kfk5yasnbMnhOdICyvbJ1D6Hz7WKwdApzw==
 
 "@cspotcode/source-map-consumer@0.8.0":
   version "0.8.0"

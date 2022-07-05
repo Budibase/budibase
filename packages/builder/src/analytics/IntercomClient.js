@@ -53,7 +53,7 @@ export default class IntercomClient {
    * @returns Intercom global object
    */
   show(user = {}) {
-    if (!this.initialised) return
+    if (!this.initialised || !user?.admin) return
 
     return window.Intercom("boot", {
       app_id: this.token,
