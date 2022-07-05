@@ -94,7 +94,6 @@ module.exports = (
               user = await getUser(userId, session.tenantId)
             }
             user.csrfToken = session.csrfToken
-            delete user.password
             authenticated = true
           } catch (err) {
             error = err
@@ -128,6 +127,8 @@ module.exports = (
       }
       if (!user && tenantId) {
         user = { tenantId }
+      } else {
+        delete user.password
       }
       // be explicit
       if (authenticated !== true) {
