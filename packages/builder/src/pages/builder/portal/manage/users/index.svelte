@@ -24,6 +24,8 @@
   import OnboardingTypeModal from "./_components/OnboardingTypeModal.svelte"
   import PasswordModal from "./_components/PasswordModal.svelte"
   import ImportUsersModal from "./_components/ImportUsersModal.svelte"
+  import analytics, { Events } from "analytics"
+  import TriggerAutomation from "../../../../../components/design/PropertiesPanel/PropertyControls/ButtonActionEditor/actions/TriggerAutomation.svelte"
 
   const schema = {
     name: {},
@@ -41,6 +43,8 @@
       align: "Right",
     },
   }
+
+  $: userData = []
 
   const accessTypes = [
     {
@@ -97,10 +101,51 @@
     onboardingTypeModal.show()
   }
 
-  function showConfirmationModal(onboardingType) {
-    if (onboardingType === "emailOnboarding") {
+  async function createUserFlow() {
+    let emails = userData.map(x => x.email)
+    try {
+      const res = await users.invite({
+        emails: emails,
+        builder: true,
+        admin: true,
+      })
+      notifications.success(res.message)
+      analytics.captureEvent(Events.USER.INVITE, { type: "Email onboarding" })
       inviteConfirmationModal.show()
+    } catch (error) {
+      console.log(error)
+      notifications.error("Error inviting user")
+    }
+  }
+
+  async function createUser() {
+    try {
+      await users.create({
+        email: $email,
+        password,
+        builder,
+        admin,
+        forceResetPassword: true,
+      })
+      notifications.success("Successfully created user")
+    } catch (error) {
+      notifications.error("Error creating user")
+    }
+  }
+
+  async function chooseCreationType(onboardingType) {
+    if (onboardingType === "emailOnboarding") {
+      createUserFlow()
     } else {
+      let newUser = await users.create({
+        email: "auser5@test.com",
+        password: Math.random().toString(36).slice(2, 20),
+        builder: true,
+        admin: true,
+        forceResetPassword: true,
+      })
+      console.log(newUser)
+
       passwordModal.show()
     }
   }
@@ -163,7 +208,10 @@
 </Layout>
 
 <Modal bind:this={createUserModal}>
-  <AddUserModal {showOnboardingTypeModal} />
+  <AddUserModal
+    on:change={e => (userData = e.detail)}
+    {showOnboardingTypeModal}
+  />
 </Modal>
 
 <Modal bind:this={inviteConfirmationModal}>
@@ -180,7 +228,7 @@
 </Modal>
 
 <Modal bind:this={onboardingTypeModal}>
-  <OnboardingTypeModal {showConfirmationModal} />
+  <OnboardingTypeModal {chooseCreationType} />
 </Modal>
 
 <Modal bind:this={passwordModal}>
@@ -188,7 +236,7 @@
 </Modal>
 
 <Modal bind:this={importUsersModal}>
-  <ImportUsersModal />
+  <ImportUsersModal {showOnboardingTypeModal} />
 </Modal>
 
 <Modal bind:this={basicOnboardingModal}><BasicOnboardingModal {email} /></Modal>

@@ -22,23 +22,15 @@
   export let groupId
   let popoverAnchor
   let popover
-  $: group = $groups.find(x => x._id === groupId)
   let searchTerm = ""
   let selectedUsers = []
+  $: group = $groups.find(x => x._id === groupId)
   $: filteredUsers = $users.filter(
     user =>
       selectedUsers &&
       user?.email?.toLowerCase().includes(searchTerm.toLowerCase())
   )
-  let app_list = [
-    {
-      access: "ADMIN",
-      name: "test app",
-      icon: "Anchor",
-      color: "blue",
-    },
-  ]
-
+  $: console.log(group)
   async function addAll() {
     selectedUsers = [...selectedUsers, ...filteredUsers]
     group.users = selectedUsers
@@ -138,9 +130,13 @@
   </div>
 
   <List>
-    {#if app_list.length}
-      {#each app_list as app}
-        <ListItem title={app.name} icon={app.icon} iconBackground={app.color}>
+    {#if group?.apps}
+      {#each group.apps as app}
+        <ListItem
+          title={app.name}
+          icon={app?.icon?.name || "Apps"}
+          iconBackground={app?.icon?.color || ""}
+        >
           <div class="title ">
             <StatusLight color={RoleUtils.getRoleColour(app.access)} />
             <div style="margin-left: var(--spacing-s);">

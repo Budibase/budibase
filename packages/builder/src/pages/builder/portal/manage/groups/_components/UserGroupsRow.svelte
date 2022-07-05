@@ -45,7 +45,7 @@
   <Icon name="WebPage" />
 
   <div style="margin-left: var(--spacing-l)">
-    {parseInt(group.appCount) || 0} app{parseInt(group.appCount) === 1
+    {parseInt(group?.apps?.length) || 0} app{parseInt(group?.apps?.length) === 1
       ? ""
       : "s"}
   </div>

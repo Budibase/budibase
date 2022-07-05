@@ -187,6 +187,35 @@ export const invite = async (ctx: any) => {
   }
 }
 
+export const inviteMultiple = async (ctx: any) => {
+  let { emails, userInfo } = ctx.request.body
+  let existing = false
+  let existingEmail
+  for (let email of emails) {
+    if (await getGlobalUserByEmail(email)) {
+      existing = true
+      existingEmail = email
+      break
+    }
+  }
+
+  if (existing) {
+    ctx.throw(400, `${existingEmail} already exists`)
+  }
+  if (!userInfo) {
+    userInfo = {}
+  }
+  userInfo.tenantId = getTenantId()
+  const opts: any = {
+    subject: "{{ company }} platform invitation",
+    info: userInfo,
+  }
+  await sendEmail(emails, EmailTemplatePurpose.INVITATION, opts)
+  ctx.body = {
+    message: "Invitations have been sent.",
+  }
+}
+
 export const inviteAccept = async (ctx: any) => {
   const { inviteCode, password, firstName, lastName } = ctx.request.body
   try {

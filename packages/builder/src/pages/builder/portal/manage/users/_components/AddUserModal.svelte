@@ -5,39 +5,33 @@
     Label,
     ModalContent,
     Multiselect,
-    notifications,
     InputDropdown,
   } from "@budibase/bbui"
-  import { users, groups } from "stores/portal"
-  import analytics, { Events } from "analytics"
+  import { createEventDispatcher } from "svelte"
+  import { groups } from "stores/portal"
   import { Constants } from "@budibase/frontend-core"
 
   export let disabled
   export let showOnboardingTypeModal
-  const options = ["Email onboarding", "Basic onboarding"]
-  let selected = options[0]
-  let builder, admin
 
-  $: userData = [{ email: "", role: "", error: null }]
+  const dispatch = createEventDispatcher()
 
-  /*
-  async function createUserFlow() {
-    try {
-      const res = await users.invite({ email: "", builder, admin })
-      notifications.success(res.message)
-      analytics.captureEvent(Events.USER.INVITE, { type: selected })
-    } catch (error) {
-      notifications.error("Error inviting user")
-    }
-  }
-  */
+  $: userData = [{ email: "", role: "", groups: [], error: null }]
+
   function addNewInput() {
     userData = [...userData, { email: "", role: "" }]
+  }
+
+  function setValue(e) {
+    userData.groups = e.detail
   }
 </script>
 
 <ModalContent
-  onConfirm={showOnboardingTypeModal}
+  onConfirm={() => {
+    showOnboardingTypeModal()
+    dispatch("change", userData)
+  }}
   size="M"
   title="Add new user"
   confirmText="Add user"
@@ -64,6 +58,7 @@
 
   <Multiselect
     placeholder="Select User Groups"
+    on:change={e => setValue(e)}
     label="User Groups"
     options={$groups}
     getOptionLabel={option => option.name}

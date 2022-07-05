@@ -7,6 +7,7 @@ export function createGroupsStore() {
     icon: "",
     color: "",
     users: [],
+    apps: [],
   }
 
   const store = writable([DEFAULT_CONFIG])

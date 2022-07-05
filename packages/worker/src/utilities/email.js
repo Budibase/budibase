@@ -185,14 +185,27 @@ exports.sendEmail = async (
   // if there is a link code needed this will retrieve it
   const code = await getLinkCode(purpose, email, user, info)
   const context = await getSettingsTemplateContext(purpose, code)
-  const message = {
+
+  let message = {
     from: from || config.from,
-    to: email,
     html: await buildEmail(purpose, email, context, {
       user,
       contents,
     }),
   }
+
+  if (email.length > 1) {
+    message = {
+      ...message,
+      bcc: email,
+    }
+  } else {
+    message = {
+      ...message,
+      to: email,
+    }
+  }
+
   if (subject || config.subject) {
     message.subject = await processString(subject || config.subject, context)
   }

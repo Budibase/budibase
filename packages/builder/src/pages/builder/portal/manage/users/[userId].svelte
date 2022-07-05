@@ -24,7 +24,8 @@
   import { onMount } from "svelte"
 
   import { fetchData } from "helpers"
-  import { users, auth, groups } from "stores/portal"
+  import { users, auth, groups, apps } from "stores/portal"
+  import { roles } from "stores/backend"
   import { Constants } from "@budibase/frontend-core"
 
   import ForceResetPasswordModal from "./_components/ForceResetPasswordModal.svelte"
@@ -38,19 +39,28 @@
   let searchTerm = ""
   let popover
   let selectedGroups = []
-  $: defaultRoleId = $userFetch?.data?.builder?.global ? "ADMIN" : ""
+  let allAppList = []
+  $: console.log($apps)
+  $: console.log($userFetch.data)
 
-  // Merge the Apps list and the roles response to get something that makes sense for the table
-  $: allAppList = Object.keys($apps?.data).map(id => {
-    const roleId = $userFetch?.data?.roles?.[id] || defaultRoleId
-    const role = $apps?.data?.[id].roles.find(role => role._id === roleId)
-    return {
-      ...$apps?.data?.[id],
-      _id: id,
-      role: [role],
-    }
-  })
-
+  $: allAppList = $apps
+    .filter(x => {
+      if ($userFetch.data?.roles) {
+        return Object.keys($userFetch.data.roles).find(y => {
+          return x.appId === y
+        })
+      }
+    })
+    .map(app => {
+      let roles = Object.keys($userFetch.data.roles).filter(id => {
+        return id === app.appId
+      })
+      return {
+        ...app,
+        roles,
+      }
+    })
+  $: console.log(allAppList)
   // Used for searching through groups in the add group popover
   $: filteredGroups = $groups.filter(
     group =>
@@ -58,16 +68,13 @@
       group?.name?.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  $: appList = allAppList.filter(app => !!app.role[0])
-
   $: userGroups = $groups.filter(x => {
-    return x.users?.some(y => {
+    return x.users?.find(y => {
       return y._id === userId
     })
   })
 
   const userFetch = fetchData(`/api/global/users/${userId}`)
-  const apps = fetchData(`/api/global/roles`)
   async function deleteUser() {
     try {
       await users.delete(userId)
@@ -166,6 +173,7 @@
   onMount(async () => {
     try {
       await groups.actions.init()
+      await apps.load()
     } catch (error) {
       notifications.error("Error getting User groups")
     }
@@ -243,9 +251,7 @@
     <div class="tableTitle">
       <div>
         <Heading size="XS">User groups</Heading>
-        <Body size="S"
-          >Manage apps that this User group has been assigned to</Body
-        >
+        <Body size="S">Add or remove this user from user groups</Body>
       </div>
       <div bind:this={popoverAnchor}>
         <Button on:click={popover.show()} icon="UserGroup" cta
@@ -291,25 +297,27 @@
     <div class="appsTitle">
       <Heading weight="light" size="XS">Apps</Heading>
       <div style="margin-top: var(--spacing-xs)">
-        <Body size="S"
-          >Manage apps that this User group has been assigned to</Body
-        >
+        <Body size="S">Manage apps that this user has been assigned to</Body>
       </div>
     </div>
 
     <List>
-      {#if appList.length}
-        {#each appList as app}
-          <ListItem title={app.name} icon="Apps">
-            <div class="title ">
-              <StatusLight
-                color={RoleUtils.getRoleColour(getHighestRole(app.role)._id)}
-              />
-              <div style="margin-left: var(--spacing-s);">
-                <Body size="XS">{getHighestRole(app.role).name}</Body>
+      {#if allAppList.length}
+        {#each allAppList as app}
+          <div on:click={$goto(`../../overview/${app.devId}`)}>
+            <ListItem
+              title={app.name}
+              iconBackground={app?.icon?.color || ""}
+              icon={app?.icon?.name || "Apps"}
+            >
+              <div class="title ">
+                <StatusLight />
+                <div style="margin-left: var(--spacing-s);">
+                  <Body size="XS">d</Body>
+                </div>
               </div>
-            </div>
-          </ListItem>
+            </ListItem>
+          </div>
         {/each}
       {:else}
         <ListItem icon="Apps" title="No apps" />
