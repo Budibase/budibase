@@ -3,7 +3,6 @@
     Body,
     Button,
     ButtonGroup,
-    Divider,
     Layout,
     Heading,
     Page,
