@@ -21,6 +21,7 @@
     icon: "",
     color: "",
     users: [],
+    apps: [],
   }
   let proPlan = true
 
@@ -82,13 +83,15 @@
     {/if}
   </div>
 
-  <div class="groupTable">
-    {#each $groups as group}
-      <div>
-        <UserGroupsRow {saveGroup} {deleteGroup} {group} />
-      </div>
-    {/each}
-  </div>
+  {#if proPlan}
+    <div class="groupTable">
+      {#each $groups as group}
+        <div>
+          <UserGroupsRow {saveGroup} {deleteGroup} {group} />
+        </div>
+      {/each}
+    </div>
+  {/if}
 </Layout>
 
 <Modal bind:this={modal}>

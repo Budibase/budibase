@@ -78,6 +78,7 @@ export function createAppStore() {
     subscribe: store.subscribe,
     load,
     update,
+    extractAppId,
   }
 }
 

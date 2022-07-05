@@ -33,7 +33,9 @@
 
   <Table
     {schema}
-    data={[{ email: "test", password: "§xz§§zvzxvxzv" }]}
+    data={[
+      { email: "test", password: Math.random().toString(36).slice(2, 20) },
+    ]}
     allowEditColumns={false}
     allowEditRows={false}
     allowSelectRows={false}

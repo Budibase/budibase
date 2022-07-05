@@ -3,21 +3,20 @@ import { API } from "api"
 import { update } from "lodash"
 
 export function createUsersStore() {
-  const { subscribe, set } = writable([])
+  const store = writable([])
 
   async function init() {
     const users = await API.getUsers()
-    set(users)
+    store.set(users)
   }
 
-  async function invite({ email, builder, admin }) {
-    return API.inviteUser({
-      email,
+  async function invite({ emails, builder, admin }) {
+    return API.inviteUsers({
+      emails,
       builder,
       admin,
     })
   }
-
   async function acceptInvite(inviteCode, password) {
     return API.acceptInvite({
       inviteCode,
@@ -55,12 +54,23 @@ export function createUsersStore() {
     update(users => users.filter(user => user._id !== id))
   }
 
-  async function save(data) {
-    await API.saveUser(data)
+  async function save(user) {
+    const response = await API.saveUser(user)
+    user._id = response._id
+    user._rev = response._rev
+    store.update(state => {
+      const currentIdx = state.findIndex(user => user._id === user._id)
+      if (currentIdx >= 0) {
+        state.splice(currentIdx, 1, user)
+      } else {
+        state.push(user)
+      }
+      return state
+    })
   }
 
   return {
-    subscribe,
+    subscribe: store.subscribe,
     init,
     invite,
     acceptInvite,

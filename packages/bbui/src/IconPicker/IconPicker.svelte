@@ -6,7 +6,7 @@
   import Icon from "../Icon/Icon.svelte"
   import { createEventDispatcher } from "svelte"
 
-  export let value = "Anchor"
+  export let value
   export let size = "M"
   export let alignRight = false
 
@@ -59,7 +59,7 @@
       style={value ? `background: ${value};` : ""}
       class:placeholder={!value}
     >
-      <Icon name={value} />
+      <Icon name={value || "UserGroup"} />
     </div>
   </div>
   {#if open}

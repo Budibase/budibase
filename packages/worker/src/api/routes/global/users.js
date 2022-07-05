@@ -29,6 +29,14 @@ function buildInviteValidation() {
   }).required())
 }
 
+function buildInviteMultipleValidation() {
+  // prettier-ignore
+  return joiValidator.body(Joi.object({
+    emails: Joi.array().required(),
+    userInfo: Joi.object().optional(),
+  }).required())
+}
+
 function buildInviteAcceptValidation() {
   // prettier-ignore
   return joiValidator.body(Joi.object({
@@ -53,6 +61,19 @@ router
     buildInviteValidation(),
     controller.invite
   )
+  .post(
+    "/api/global/users/invite",
+    adminOnly,
+    buildInviteValidation(),
+    controller.invite
+  )
+  .post(
+    "/api/global/users/inviteMultiple",
+    adminOnly,
+    buildInviteMultipleValidation(),
+    controller.inviteMultiple
+  )
+
   // non-global endpoints
   .post(
     "/api/global/users/invite/accept",

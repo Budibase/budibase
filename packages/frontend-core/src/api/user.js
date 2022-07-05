@@ -82,6 +82,25 @@ export const buildUserEndpoints = API => ({
   },
 
   /**
+   * Invites multiple users to the current tenant.
+   * @param email An array of email addresses
+   * @param builder whether the user should be a global builder
+   * @param admin whether the user should be a global admin
+   */
+  inviteUsers: async ({ emails, builder, admin }) => {
+    return await API.post({
+      url: "/api/global/users/inviteMultiple",
+      body: {
+        emails,
+        userInfo: {
+          admin: admin ? { global: true } : undefined,
+          builder: builder ? { global: true } : undefined,
+        },
+      },
+    })
+  },
+
+  /**
    * Accepts an invite to join the platform and creates a user.
    * @param inviteCode the invite code sent in the email
    * @param password the password for the newly created user

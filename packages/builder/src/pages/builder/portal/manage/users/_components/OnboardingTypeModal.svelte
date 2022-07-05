@@ -1,6 +1,7 @@
 <script>
   import { ModalContent, Body, Layout, Icon } from "@budibase/bbui"
-  export let showConfirmationModal
+
+  export let chooseCreationType
   let emailOnboardingKey = "emailOnboarding"
   let basicOnboaridngKey = "basicOnboarding"
 
@@ -13,7 +14,7 @@
   confirmText="Done"
   cancelText="Cancel"
   showCloseIcon={false}
-  onConfirm={() => showConfirmationModal(selectedOnboardingType)}
+  onConfirm={() => chooseCreationType(selectedOnboardingType)}
   disabled={!selectedOnboardingType}
 >
   <Layout noPadding gap="S">
