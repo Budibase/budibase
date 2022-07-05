@@ -61,8 +61,8 @@ jobs:
           release_version=$(cat lerna.json | jq -r '.version')
           echo $release_version
           echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
-      - name: Tag and release Proxy service docker image
+      - name: Tag and release Budibase service docker image
         run: |
           yarn build:docker:single:image
-          docker tag budibase budibase/budibase:$RELEASE_TAG
-          docker push budibase/budibase:$RELEASE_TAG
+          docker tag budibase budibase/budibase:v${{ env.RELEASE_VERSION }}
+          docker push budibase/budibase:v${{ env.RELEASE_VERSION }}
