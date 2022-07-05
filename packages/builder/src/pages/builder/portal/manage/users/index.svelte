@@ -27,13 +27,23 @@
   }
 
   let pageInfo = createPaginationStore()
-  let search = undefined
+  let prevSearch = undefined,
+    search = undefined
   $: page = $pageInfo.page
   $: fetchUsers(page, search)
 
   let createUserModal
 
   async function fetchUsers(page, search) {
+    if ($pageInfo.loading) {
+      return
+    }
+    // need to remove the page if they've started searching
+    if (search && !prevSearch) {
+      pageInfo.reset()
+      page = undefined
+    }
+    prevSearch = search
     try {
       pageInfo.loading()
       await users.search({ page, search })
