@@ -256,6 +256,84 @@ export interface paths {
       };
     };
   };
+  "/tables/{tableId}/rows/search": {
+    post: {
+      parameters: {
+        path: {
+          /** The ID of the table which this request is targeting. */
+          tableId: components["parameters"]["tableId"];
+        };
+        header: {
+          /** The ID of the app which this request is targeting. */
+          "x-budibase-app-id": components["parameters"]["appId"];
+        };
+      };
+      responses: {
+        /** The response will contain an array of rows that match the search parameters. */
+        200: {
+          content: {
+            "application/json": components["schemas"]["searchOutput"];
+          };
+        };
+      };
+      requestBody: {
+        content: {
+          "application/json": {
+            query: {
+              /** @description Specifies that a row should be returned if it satisfies any of the specified options, rather than requiring it to fulfill all the search parameters. This defaults to false, meaning AND logic will be used. */
+              allOr?: boolean;
+              /**
+               * @description A map of field name to the string to search for, this will look for rows that have a value starting with the string value.
+               * @example [object Object]
+               */
+              string?: { [key: string]: string };
+              /** @description A fuzzy search, only supported by internal tables. */
+              fuzzy?: { [key: string]: unknown };
+              /**
+               * @description Searches within a range, the format of this must be in the format of an object with a "low" and "high" property.
+               * @example [object Object]
+               */
+              range?: { [key: string]: unknown };
+              /** @description Searches for rows that have a column value that is exactly the value set. */
+              equal?: { [key: string]: unknown };
+              /** @description Searches for any row which does not contain the specified column value. */
+              notEqual?: { [key: string]: unknown };
+              /**
+               * @description Searches for rows which do not contain the specified column. The object should simply contain keys of the column names, these can map to any value.
+               * @example [object Object]
+               */
+              empty?: { [key: string]: unknown };
+              /** @description Searches for rows which have the specified column. */
+              notEmpty?: { [key: string]: unknown };
+              /** @description Searches for rows which have a column value that is any of the specified values. The format of this must be columnName -> [value1, value2]. */
+              oneOf?: { [key: string]: unknown };
+            };
+            /** @description Enables pagination, by default this is disabled. */
+            paginate?: boolean;
+            /** @description If retrieving another page, the bookmark from the previous request must be supplied. */
+            bookmark?: string | number;
+            /** @description The maximum number of rows to return, useful when paginating, for internal tables this will be limited to 1000, for SQL tables it will be 5000. */
+            limit?: number;
+            /** @description A set of parameters describing the sort behaviour of the search. */
+            sort?: {
+              /**
+               * @description The order of the sort, by default this is ascending.
+               * @enum {string}
+               */
+              order?: "ascending" | "descending";
+              /** @description The name of the column by which the rows will be sorted. */
+              column?: string;
+              /**
+               * @description Defines whether the column should be treated as a string or as numbers when sorting.
+               * @enum {string}
+               */
+              type?: "string" | "number";
+            };
+          };
+        };
+      };
+    };
+  };
   "/tables": {
     /** Create a table, this could be internal or external. */
     post: {
