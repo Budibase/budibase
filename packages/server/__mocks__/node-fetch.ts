@@ -15,6 +15,15 @@ module FetchMock {
           },
         },
         json: async () => {
+          //x-www-form-encoded body is a URLSearchParams
+          //The call to stringify it leaves it blank
+          if (body?.opts?.body instanceof URLSearchParams) {
+            const paramArray = Array.from(body.opts.body.entries())
+            body.opts.body = paramArray.reduce((acc: any, pair: any) => {
+              acc[pair[0]] = pair[1]
+              return acc
+            }, {})
+          }
           return body
         },
       }
