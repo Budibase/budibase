@@ -10,6 +10,7 @@
     ModalContent,
     Icon,
     notifications,
+    Pagination,
   } from "@budibase/bbui"
   import AddUserModal from "./_components/AddUserModal.svelte"
   import BasicOnboardingModal from "./_components/BasicOnboardingModal.svelte"
@@ -25,6 +26,7 @@
   import PasswordModal from "./_components/PasswordModal.svelte"
   import ImportUsersModal from "./_components/ImportUsersModal.svelte"
   import analytics, { Events } from "analytics"
+  import { createPaginationStore } from "helpers/pagination"
 
   const schema = {
     name: {},
@@ -60,7 +62,6 @@
     },
   ]
 
-  let search
   let email
   let createUserModal,
     basicOnboardingModal,
@@ -68,6 +69,12 @@
     onboardingTypeModal,
     passwordModal,
     importUsersModal
+
+  let pageInfo = createPaginationStore()
+  let prevSearch = undefined,
+    search = undefined
+  $: page = $pageInfo.page
+  $: fetchUsers(page, search)
 
   $: filteredUsers = $users
     .filter(user => user.email.includes(search || ""))
@@ -146,20 +153,29 @@
         admin: true,
         forceResetPassword: true,
       })
-      console.log(newUser)
 
       passwordModal.show()
     }
   }
 
-  onMount(async () => {
+  async function fetchUsers(page, search) {
+    if ($pageInfo.loading) {
+      return
+    }
+    // need to remove the page if they've started searching
+    if (search && !prevSearch) {
+      pageInfo.reset()
+      page = undefined
+    }
+    prevSearch = search
     try {
-      await users.init()
-      await groups.actions.init()
+      pageInfo.loading()
+      await users.search({ page, search })
+      pageInfo.fetched($users.hasNextPage, $users.nextPage)
     } catch (error) {
       notifications.error("Error getting user list")
     }
-  })
+  }
 </script>
 
 <Layout noPadding>
@@ -193,7 +209,7 @@
     <Table
       on:click={({ detail }) => $goto(`./${detail._id}`)}
       {schema}
-      data={enrichedUsers}
+      data={$users.data}
       allowEditColumns={false}
       allowEditRows={false}
       allowSelectRows={true}
@@ -206,12 +222,25 @@
         { column: "role", component: RoleTableRenderer },
       ]}
     />
+    <div class="pagination">
+      <Pagination
+        page={$pageInfo.pageNumber}
+        hasPrevPage={$pageInfo.loading ? false : $pageInfo.hasPrevPage}
+        hasNextPage={$pageInfo.loading ? false : $pageInfo.hasNextPage}
+        goToPrevPage={pageInfo.prevPage}
+        goToNextPage={pageInfo.nextPage}
+      />
+    </div>
   </Layout>
 </Layout>
 
 <Modal bind:this={createUserModal}>
   <AddUserModal
     on:change={e => (userData = e.detail)}
+    on:created={async () => {
+      pageInfo.reset()
+      await fetchUsers()
+    }}
     {showOnboardingTypeModal}
   />
 </Modal>

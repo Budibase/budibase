@@ -71,8 +71,9 @@ router.use(async (ctx, next) => {
       validationErrors: err.validation,
       error,
     }
-    if (env.NODE_ENV !== "jest") {
-      ctx.log.error(err)
+    ctx.log.error(err)
+    // unauthorised errors don't provide a useful trace
+    if (!env.isTest()) {
       console.trace(err)
     }
   }

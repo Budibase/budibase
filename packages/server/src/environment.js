@@ -1,9 +1,12 @@
 const { join } = require("path")
 
 function isTest() {
+  return isCypress() || isJest()
+}
+
+function isJest() {
   return (
     process.env.NODE_ENV === "jest" ||
-    process.env.NODE_ENV === "cypress" ||
     (process.env.JEST_WORKER_ID != null &&
       process.env.JEST_WORKER_ID !== "null")
   )
@@ -64,16 +67,18 @@ module.exports = {
   SALT_ROUNDS: process.env.SALT_ROUNDS,
   LOGGER: process.env.LOGGER,
   LOG_LEVEL: process.env.LOG_LEVEL,
-  AUTOMATION_MAX_ITERATIONS: process.env.AUTOMATION_MAX_ITERATIONS,
+  ACCOUNT_PORTAL_URL: process.env.ACCOUNT_PORTAL_URL,
+  AUTOMATION_MAX_ITERATIONS:
+    parseIntSafe(process.env.AUTOMATION_MAX_ITERATIONS) || 200,
   SENDGRID_API_KEY: process.env.SENDGRID_API_KEY,
   DYNAMO_ENDPOINT: process.env.DYNAMO_ENDPOINT,
-  POSTHOG_TOKEN: process.env.POSTHOG_TOKEN,
   QUERY_THREAD_TIMEOUT: parseIntSafe(process.env.QUERY_THREAD_TIMEOUT),
   SQL_MAX_ROWS: process.env.SQL_MAX_ROWS,
   // flags
   ALLOW_DEV_AUTOMATIONS: process.env.ALLOW_DEV_AUTOMATIONS,
   DISABLE_THREADING: process.env.DISABLE_THREADING,
   DISABLE_DEVELOPER_LICENSE: process.env.DISABLE_DEVELOPER_LICENSE,
+  DISABLE_AUTOMATION_LOGS: process.env.DISABLE_AUTOMATION_LOGS,
   MULTI_TENANCY: process.env.MULTI_TENANCY,
   ENABLE_ANALYTICS: process.env.ENABLE_ANALYTICS,
   SELF_HOSTED: process.env.SELF_HOSTED,
@@ -84,6 +89,7 @@ module.exports = {
     module.exports[key] = value
   },
   isTest,
+  isJest,
   isCypress,
   isDev,
   isProd: () => {

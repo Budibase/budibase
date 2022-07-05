@@ -8,6 +8,7 @@
   export let disabled = false
   export let enableTime = false
   export let timeOnly = false
+  export let ignoreTimezones = false
   export let validation
   export let defaultValue
   export let onChange
@@ -43,6 +44,7 @@
       appendTo={document.getElementById("flatpickr-root")}
       {enableTime}
       {timeOnly}
+      {ignoreTimezones}
       {placeholder}
     />
   {/if}

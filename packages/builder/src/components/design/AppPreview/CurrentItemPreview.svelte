@@ -68,7 +68,7 @@
     customTheme: $store.customTheme,
     previewDevice: $store.previewDevice,
     messagePassing: $store.clientFeatures.messagePassing,
-    isBudibaseEvent: true
+    isBudibaseEvent: true,
   }
   $: json = JSON.stringify(previewData)
 
@@ -189,6 +189,18 @@
         if (source && destination) {
           store.actions.components.copy(source, true)
           await store.actions.components.paste(destination, data.mode)
+        }
+      } else if (type === "highlight-setting") {
+        store.actions.settings.highlight(data.setting)
+
+        // Also scroll setting into view
+        const selector = `[data-cy="${data.setting}-prop-control"`
+        const element = document.querySelector(selector)?.parentElement
+        if (element) {
+          element.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          })
         }
       } else {
         console.warn(`Client sent unknown event type: ${type}`)

@@ -1,8 +1,8 @@
 class BudibaseError extends Error {
-  constructor(message, type, code) {
+  constructor(message, code, type) {
     super(message)
-    this.type = type
     this.code = code
+    this.type = type
   }
 }
 

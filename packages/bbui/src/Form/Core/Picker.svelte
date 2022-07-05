@@ -214,6 +214,7 @@
   }
   .spectrum-Picker {
     width: 100%;
+    box-shadow: none;
   }
   .spectrum-Picker-label:not(.auto-width) {
     overflow: hidden;
