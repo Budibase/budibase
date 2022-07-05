@@ -28,7 +28,7 @@
   export let rowCount = 0
   export let quiet = false
   export let loading = false
-  export let allowSelectRows = true
+  export let allowSelectRows
   export let allowEditRows = true
   export let allowEditColumns = true
   export let selectedRows = []
@@ -38,6 +38,8 @@
   export let compact = false
   export let customPlaceholder = false
   export let showHeaderBorder = true
+  export let placeholderText = "No rows found"
+
   const dispatch = createEventDispatcher()
 
   // Config
@@ -346,11 +348,7 @@
       {/if}
       {#if sortedRows?.length}
         {#each sortedRows as row, idx}
-          <div
-            class="spectrum-Table-row"
-            on:click={() => dispatch("click", row)}
-            on:click={() => toggleSelectRow(row)}
-          >
+          <div class="spectrum-Table-row">
             {#if showEditColumn}
               <div
                 class:noBorderCheckbox={!showHeaderBorder}
@@ -376,8 +374,12 @@
                 class="spectrum-Table-cell"
                 class:spectrum-Table-cell--divider={!!schema[field].divider}
                 style={cellStyles[field]}
-                on:click={e =>
-                  schema[field].noPropagation && e.stopPropagation()}
+                on:click={() => {
+                  if (!schema[field]?.preventSelectRow) {
+                    dispatch("click", row)
+                    toggleSelectRow(row)
+                  }
+                }}
               >
                 <CellRenderer
                   {customRenderers}
@@ -408,7 +410,7 @@
               >
                 <use xlink:href="#spectrum-icon-18-Table" />
               </svg>
-              <div>No rows found</div>
+              <div>{placeholderText}</div>
             </div>
           {/if}
         </div>

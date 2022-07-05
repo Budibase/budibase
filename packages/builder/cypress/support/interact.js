@@ -62,3 +62,72 @@ export const GLOBESTRIKE = "svg[aria-label=GlobeStrike]"
 export const GLOBE = "svg[aria-label=Globe]"
 export const UNPUBLISH_MODAL = "[data-cy=unpublish-modal]"
 export const CONFIRM_WRAP_BUTTON = ".confirm-wrap button"
+export const DEPLOYMENT_TOP_NAV = ".deployment-top-nav"
+
+//changeAppiconAndColour
+export const APP_ROW_ACTION = ".app-row-actions-icon"
+export const SPECTRUM_MENU = ".spectrum-Menu"
+export const ICON_ITEM = ".icon-item"
+export const FILL = ".fill"
+export const COLOURSS = ".colors"
+export const AREA_LABEL = "[aria-label]"
+export const TITLE = ".title"
+export const GRID = ".grid"
+export const COLOUR = ".color"
+
+//createAutomation
+export const ADD_BUTTON_SPECTRUM = ".add-button .spectrum-Icon"
+export const MODAL_INNER_WRAPPER = ".modal-inner-wrapper"
+export const SPECTRUM_BUTTON_CTA = ".spectrum-Button--cta"
+export const SPECTRUM_TEXTFIELD_INPUT = ".spectrum-Textfield-input"
+
+//createTable
+export const TABLE_TITLE_H1 = ".table-title h1"
+export const TABLE_TITLE = ".title"
+export const SPECTRUM_TABLE_EDIT = ".spectrum-Table-editIcon > use"
+export const SPECTRUM_SWITCH_INPUT = ".spectrum-Switch-input"
+export const SPECTRUM_CHECKBOX_INPUT = ".spectrum-Checkbox-input"
+export const SPECTRUM_PAGINATION = ".spectrum-Pagination"
+export const SPECTRUM_ACTION_BUTTON = ".spectrum-ActionButton"
+export const SPECTRUM_BODY_SECOND = ".spectrum-Body--secondary"
+export const POPOVERS = ".popovers"
+export const SPECTRUM_DIALOG_GRID = ".spectrum-Dialog-grid"
+export const DELETE_COLUMN_CONFIRM = '[data-cy="delete-column-confirm"]'
+export const NAV_ITEM = ".nav-item"
+export const ACTION_SPECTRUM_ICON = ".actions .spectrum-Icon"
+export const SPECTRUM_MENU_CHILD2 = ".spectrum-Menu > :nth-child(2)"
+export const DELETE_TABLE_CONFIRM = '[data-cy="delete-table-confirm"]'
+
+//adminAndManagement Folder
+export const SPECTRUM_TABLE = ".spectrum-Table"
+export const SPECTRUM_SIDENAV = ".spectrum-SideNav"
+export const SPECTRUM_TABLE_ROW = ".spectrum-Table-row"
+export const SPECTRUM_TABLE_CELL = ".spectrum-Table-cell"
+export const FIELD = ".field"
+export const CONTAINER = ".container"
+export const REGENERATE = ".regenerate"
+export const SPECTRUM_DIALOG_CONTENT = ".spectrum-Dialog-content"
+export const SPECTRUM_ICON = ".spectrum-Icon"
+
+//createView
+export const SPECTRUM_MENU_ITEM_LABEL = ".spectrum-Menu-itemLabel"
+
+//revertApp
+export const TOP_RIGHT_NAV = ".toprightnav"
+export const AREA_LABEL_REVERT = "[aria-label=Revert]"
+export const ROOT = ".root"
+
+//queryLevelTransformers
+export const SPECTRUM_TABS_ITEM = ".spectrum-Tabs-itemLabel"
+export const CODEMIRROR_TEXTAREA = ".CodeMirror textarea"
+
+//renameApplication
+export const WRAPPER = ".wrapper"
+export const ERROR = ".error"
+export const AREA_LABEL_MORE = "[aria-label=More]"
+export const APP_ROW_ACTION_MENU_POPOVER =
+  '[data-cy="app-row-actions-menu-popover"]'
+export const SPECTRUM_MENU_ITEM = ".spectrum-Menu-item"
+
+//commands
+export const HOME_LOGO = ".home-logo"

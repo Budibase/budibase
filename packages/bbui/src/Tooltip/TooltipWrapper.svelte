@@ -39,7 +39,6 @@
     position: relative;
     display: flex;
     justify-content: center;
-    margin-top: 1px;
     margin-left: 5px;
     margin-right: 5px;
   }

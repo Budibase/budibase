@@ -48,8 +48,6 @@
     dataLoaded = true
     if (get(builderStore).inBuilder) {
       builderStore.actions.notifyLoaded()
-    } else {
-      builderStore.actions.pingEndUser()
     }
   })
 

@@ -1,5 +1,5 @@
-name: Budibase Release Staging
-concurrency: release-develop
+name: Budibase Prerelease
+concurrency: release-prerelease
 
 on: 
  push:
@@ -18,10 +18,11 @@ on:
  workflow_dispatch:
 
 env:
-  POSTHOG_TOKEN: ${{ secrets.POSTHOG_TOKEN }}
+  # Posthog token used by ui at build time 
+  POSTHOG_TOKEN: phc_uDYOfnFt6wAbBAXkC6STjcrTpAFiWIhqgFcsC1UVO5F
   INTERCOM_TOKEN: ${{ secrets.INTERCOM_TOKEN }}
-  POSTHOG_URL: ${{ secrets.POSTHOG_URL }}
-  PERSONAL_ACCESS_TOKEN : ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+  PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+  FEATURE_PREVIEW_URL: https://budirelease.live
       
 jobs:
   release:

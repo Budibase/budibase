@@ -28,6 +28,7 @@
   import AppLockModal from "components/common/AppLockModal.svelte"
   import EditableIcon from "components/common/EditableIcon.svelte"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+  import HistoryTab from "components/portal/overview/automation/HistoryTab.svelte"
   import { checkIncomingDeploymentStatus } from "components/deploy/utils"
   import { onDestroy, onMount } from "svelte"
 
@@ -116,7 +117,7 @@
 
   const viewApp = () => {
     if (isPublished) {
-      analytics.captureEvent(Events.APP.VIEW_PUBLISHED, {
+      analytics.captureEvent(Events.APP_VIEW_PUBLISHED, {
         appId: $store.appId,
         eventSource: EventSource.PORTAL,
       })
@@ -155,9 +156,6 @@
       return
     }
     try {
-      analytics.captureEvent(Events.APP.UNPUBLISHED, {
-        appId: selectedApp.appId,
-      })
       await API.unpublishApp(selectedApp.prodId)
       await apps.load()
       notifications.success("App unpublished successfully")
@@ -191,6 +189,10 @@
   })
 
   onMount(async () => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get("tab")) {
+      selectedTab = params.get("tab")
+    }
     try {
       if (!apps.length) {
         await apps.load()
@@ -215,7 +217,7 @@
         <ProgressCircle size="XL" />
       </div>
     {:then _}
-      <Layout paddingX="XXL" paddingY="XXL" gap="XL">
+      <Layout paddingX="XXL" paddingY="XL" gap="L">
         <span class="page-header" class:loaded>
           <ActionButton secondary icon={"ArrowLeft"} on:click={backToAppList}>
             Back
@@ -305,11 +307,10 @@
           </Tab>
           <Tab title="Access">
             <AccessTab app={selectedApp} />
+          <Tab title="Automation History">
+            <HistoryTab app={selectedApp} />
           </Tab>
           {#if false}
-            <Tab title="Automation History">
-              <div class="container">Automation History contents</div>
-            </Tab>
             <Tab title="Backups">
               <div class="container">Backups contents</div>
             </Tab>

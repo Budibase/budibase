@@ -1,5 +1,10 @@
 const { getTable } = require("../api/controllers/table/utils")
-const { findHBSBlocks } = require("@budibase/string-templates")
+const {
+  findHBSBlocks,
+  decodeJSBinding,
+  isJSBinding,
+  encodeJSBinding,
+} = require("@budibase/string-templates")
 
 /**
  * When values are input to the system generally they will be of type string as this is required for template strings.
@@ -77,11 +82,21 @@ exports.getError = err => {
 }
 
 exports.substituteLoopStep = (hbsString, substitute) => {
-  let blocks = findHBSBlocks(hbsString)
+  let blocks = []
+  let checkForJS = isJSBinding(hbsString)
+  if (checkForJS) {
+    hbsString = decodeJSBinding(hbsString)
+    blocks.push(hbsString)
+  } else {
+    blocks = findHBSBlocks(hbsString)
+  }
   for (let block of blocks) {
-    let oldBlock = block
     block = block.replace(/loop/, substitute)
-    hbsString = hbsString.replace(new RegExp(oldBlock, "g"), block)
+    if (checkForJS) {
+      hbsString = encodeJSBinding(block)
+    } else {
+      hbsString = block
+    }
   }
 
   return hbsString

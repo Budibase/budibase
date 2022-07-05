@@ -4,6 +4,12 @@ const ScriptRunner = require("../utilities/scriptRunner")
 const { integrations } = require("../integrations")
 const { processStringSync } = require("@budibase/string-templates")
 const { doInAppContext, getAppDB } = require("@budibase/backend-core/context")
+const {
+  refreshOAuthToken,
+  updateUserOAuth,
+} = require("@budibase/backend-core/auth")
+const { getGlobalIDFromUserMetadataID } = require("../db/utils")
+
 const { isSQL } = require("../integrations/utils")
 const {
   enrichQueryFields,
@@ -21,29 +27,56 @@ class QueryRunner {
     this.queryId = input.queryId
     this.noRecursiveQuery = flags.noRecursiveQuery
     this.cachedVariables = []
+    // Additional context items for enrichment
+    this.ctx = input.ctx
     // allows the response from a query to be stored throughout this
     // execution so that if it needs to be re-used for another variable
     // it can be
     this.queryResponse = {}
     this.hasRerun = false
+    this.hasRefreshedOAuth = false
   }
 
   async execute() {
     let { datasource, fields, queryVerb, transformer } = this
+
     const Integration = integrations[datasource.source]
     if (!Integration) {
       throw "Integration type does not exist."
     }
+
+    if (datasource.config.authConfigs) {
+      datasource.config.authConfigs = datasource.config.authConfigs.map(
+        config => {
+          return enrichQueryFields(config, this.ctx)
+        }
+      )
+    }
+
     const integration = new Integration(datasource.config)
 
     // pre-query, make sure datasource variables are added to parameters
     const parameters = await this.addDatasourceVariables()
+
+    // Enrich the parameters with the addition context items.
+    // 'user' is now a reserved variable key in mapping parameters
+    const enrichedParameters = enrichQueryFields(parameters, this.ctx)
+    const enrichedContext = { ...enrichedParameters, ...this.ctx }
+
+    // Parse global headers
+    if (datasource.config.defaultHeaders) {
+      datasource.config.defaultHeaders = enrichQueryFields(
+        datasource.config.defaultHeaders,
+        enrichedContext
+      )
+    }
+
     let query
     // handle SQL injections by interpolating the variables
     if (isSQL(datasource)) {
-      query = interpolateSQL(fields, parameters, integration)
+      query = interpolateSQL(fields, enrichedParameters, integration)
     } else {
-      query = enrichQueryFields(fields, parameters)
+      query = enrichQueryFields(fields, enrichedContext)
     }
 
     // Add pagination values for REST queries
@@ -67,20 +100,30 @@ class QueryRunner {
     if (transformer) {
       const runner = new ScriptRunner(transformer, {
         data: rows,
-        params: parameters,
+        params: enrichedParameters,
       })
       rows = runner.execute()
     }
 
     // if the request fails we retry once, invalidating the cached value
-    if (
-      info &&
-      info.code >= 400 &&
-      this.cachedVariables.length > 0 &&
-      !this.hasRerun
-    ) {
+    if (info && info.code >= 400 && !this.hasRerun) {
+      if (
+        this.ctx.user?.provider &&
+        info.code === 401 &&
+        !this.hasRefreshedOAuth
+      ) {
+        // Attempt to refresh the access token from the provider
+        this.hasRefreshedOAuth = true
+        const authResponse = await this.refreshOAuth2(this.ctx)
+
+        if (!authResponse || authResponse.err) {
+          // In this event the user may have oAuth issues that
+          // could require re-authenticating with their provider.
+          throw new Error("OAuth2 access token could not be refreshed")
+        }
+      }
+
       this.hasRerun = true
-      // invalidate the cache value
       await threadUtils.invalidateDynamicVariables(this.cachedVariables)
       return this.execute()
     }
@@ -124,6 +167,31 @@ class QueryRunner {
       },
       { noRecursiveQuery: true }
     ).execute()
+  }
+
+  async refreshOAuth2(ctx) {
+    const { oauth2, providerType, _id } = ctx.user
+    const { configId } = ctx.auth
+
+    if (!providerType || !oauth2?.refreshToken) {
+      console.error("No refresh token found for authenticated user")
+      return
+    }
+
+    const resp = await refreshOAuthToken(
+      oauth2.refreshToken,
+      providerType,
+      configId
+    )
+
+    // Refresh session flow. Should be in same location as refreshOAuthToken
+    // There are several other properties available in 'resp'
+    if (!resp.error) {
+      const globalUserId = getGlobalIDFromUserMetadataID(_id)
+      await updateUserOAuth(globalUserId, resp)
+    }
+
+    return resp
   }
 
   async getDynamicVariable(variable) {
