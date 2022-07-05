@@ -129,6 +129,9 @@ export async function preview(ctx: any) {
         parameters,
         transformer,
         queryId,
+        ctx: {
+          user: ctx.user,
+        },
       })
 
     const { rows, keys, info, extra } = await quotas.addQuery(runFn)
@@ -172,6 +175,9 @@ async function execute(ctx: any, opts = { rowsOnly: false }) {
         parameters: enrichedParameters,
         transformer: query.transformer,
         queryId: ctx.params.queryId,
+        ctx: {
+          user: ctx.user,
+        },
       })
 
     const { rows, pagination, extra } = await quotas.addQuery(runFn)
