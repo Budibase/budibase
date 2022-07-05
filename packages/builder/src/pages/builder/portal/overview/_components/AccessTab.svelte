@@ -22,7 +22,7 @@
   let appUsers = []
 
   $: appUsers = $users.filter(x => {
-    return Object.keys(x.roles).some(y => {
+    return Object.keys(x.roles).find(y => {
       return extractAppId(y) === extractAppId(app.appId)
     })
   })
@@ -54,7 +54,7 @@
 
         let newUser = {
           ...matchedUser,
-          roles: { [app.appId]: data.role },
+          roles: { [app.appId]: data.role, ...matchedUser.roles },
         }
 
         await users.save(newUser)
