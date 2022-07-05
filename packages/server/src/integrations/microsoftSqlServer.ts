@@ -44,6 +44,7 @@ module MSSQLModule {
     description:
       "Microsoft SQL Server is a relational database management system developed by Microsoft. ",
     friendlyName: "MS SQL Server",
+    type: "Relational",
     datasource: {
       user: {
         type: DatasourceFieldTypes.STRING,
@@ -246,6 +247,7 @@ module MSSQLModule {
             autocolumn: !!autoColumns.find((col: string) => col === name),
             name: name,
             ...convertSqlType(def.DATA_TYPE),
+            externalType: def.DATA_TYPE,
           }
         }
         tables[tableName] = {

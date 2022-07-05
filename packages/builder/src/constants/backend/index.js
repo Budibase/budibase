@@ -180,6 +180,7 @@ export const IntegrationTypes = {
   GOOGLE_SHEETS: "GOOGLE_SHEETS",
   FIRESTORE: "FIRESTORE",
   REDIS: "REDIS",
+  SNOWFLAKE: "SNOWFLAKE",
 }
 
 export const IntegrationNames = {
@@ -199,6 +200,7 @@ export const IntegrationNames = {
   [IntegrationTypes.GOOGLE_SHEETS]: "Google Sheets",
   [IntegrationTypes.FIRESTORE]: "Firestore",
   [IntegrationTypes.REDIS]: "Redis",
+  [IntegrationTypes.SNOWFLAKE]: "Snowflake",
 }
 
 export const SchemaTypeOptions = [
