@@ -172,7 +172,7 @@ read.push(new Endpoint("get", "/tables/:tableId/rows/:rowId", controller.read))
  *                   range:
  *                     type: object
  *                     description: Searches within a range, the format of this must be
- *                       columnName -> { low: value1, high: value2 }.
+ *                       in the format of an object with a "low" and "high" property.
  *                     example:
  *                       columnName1: { low: 10, high: 20 }
  *                   equal:
@@ -197,7 +197,6 @@ read.push(new Endpoint("get", "/tables/:tableId/rows/:rowId", controller.read))
  *                     type: object
  *                     description: Searches for rows which have a column value that is any
  *                       of the specified values. The format of this must be columnName -> [value1, value2].
- *                       Note this is only supported for SQL based tables.
  *               paginate:
  *                 type: boolean
  *                 description: Enables pagination, by default this is disabled.
