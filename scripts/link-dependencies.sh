@@ -29,6 +29,9 @@ if [ -d "../budibase-pro" ]; then
   echo "Linking backend-core to pro"
   yarn link '@budibase/backend-core'
 
+  echo "Linking types to pro"
+  yarn link '@budibase/types'
+
   cd ../../../budibase
 
   echo "Linking pro to worker"
