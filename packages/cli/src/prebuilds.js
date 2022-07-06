@@ -8,10 +8,10 @@ const PREBUILD_DIR = join(process.execPath, "..", PREBUILDS, ARCH)
 checkForBinaries()
 
 function checkForBinaries() {
-  if (fs.existsSync(PREBUILD_DIR)) {
+  const readDir = join(__filename, "..", "..", PREBUILDS, ARCH)
+  if (fs.existsSync(PREBUILD_DIR) || !fs.existsSync(readDir)) {
     return
   }
-  const readDir = join(__filename, "..", "..", PREBUILDS, ARCH)
   const natives = fs.readdirSync(readDir)
   if (fs.existsSync(readDir)) {
     fs.mkdirSync(PREBUILD_DIR, { recursive: true })
@@ -22,8 +22,13 @@ function checkForBinaries() {
   }
 }
 
-process.on("exit", () => {
+function cleanup() {
   if (fs.existsSync(PREBUILD_DIR)) {
     fs.rmSync(PREBUILD_DIR, { recursive: true })
   }
+}
+
+const events = ["exit", "SIGINT", "SIGUSR1", "SIGUSR2", "uncaughtException"]
+events.forEach(event => {
+  process.on(event, cleanup)
 })

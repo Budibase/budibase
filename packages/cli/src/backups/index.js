@@ -17,7 +17,6 @@ const { exportObjects, importObjects } = require("./objectStore")
 
 async function exportBackup(opts) {
   const envFile = opts.env || undefined
-  await getConfig(envFile)
   let filename = opts["export"] || opts
   if (typeof filename !== "string") {
     filename = `backup-${new Date().toISOString()}.tar.gz`
