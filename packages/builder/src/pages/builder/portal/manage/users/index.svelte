@@ -76,34 +76,29 @@
   $: fetchUsers(page, search)
 
   $: {
-    if ($users.data) {
-      enrichedUsers = $users.data.map(user => {
-        let userGroups = []
-        let userApps = []
-        $groups.forEach(group => {
-          console.log(group)
-          if (group.users) {
-            group.users?.forEach(y => {
-              if (y._id === user._id) {
-                console.log("hello")
-                userGroups.push(group)
-                userApps = group.apps
-              }
-            })
-          }
-        })
-        return {
-          ...user,
-          name: user.firstName ? user.firstName + " " + user.lastName : "",
-          userGroups,
-          apps: [...new Set(Object.keys(user.roles))],
+    enrichedUsers = $users.data?.map(user => {
+      let userGroups = []
+      let userApps = []
+      $groups.forEach(group => {
+        console.log(group)
+        if (group.users) {
+          group.users?.forEach(y => {
+            if (y._id === user._id) {
+              console.log("hello")
+              userGroups.push(group)
+              userApps = group.apps
+            }
+          })
         }
       })
-    } else {
-      enrichedUsers = []
-    }
+      return {
+        ...user,
+        name: user.firstName ? user.firstName + " " + user.lastName : "",
+        userGroups,
+        apps: [...new Set(Object.keys(user.roles))],
+      }
+    })
   }
-  $: console.log(enrichedUsers)
   function showOnboardingTypeModal() {
     onboardingTypeModal.show()
   }
