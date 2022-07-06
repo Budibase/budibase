@@ -7,6 +7,7 @@
     Modal,
     Page,
     notifications,
+    Notification,
     Body,
     Search,
   } from "@budibase/bbui"
@@ -37,6 +38,7 @@
   let searchTerm = ""
   let cloud = $admin.cloud
   let creatingFromTemplate = false
+  let automationErrors
 
   const resolveWelcomeMessage = (auth, apps) => {
     const userWelcome = auth?.user?.firstName
@@ -59,7 +61,8 @@
   )
 
   $: lockedApps = filteredApps.filter(app => app?.lockedYou || app?.lockedOther)
-  $: unlocked = lockedApps?.length == 0
+  $: unlocked = lockedApps?.length === 0
+  $: automationErrors = getAutomationErrors(enrichedApps)
 
   const enrichApps = (apps, user, sortBy) => {
     const enrichedApps = apps.map(app => ({
@@ -87,6 +90,36 @@
         return a.name?.toLowerCase() < b.name?.toLowerCase() ? -1 : 1
       })
     }
+  }
+
+  const getAutomationErrors = apps => {
+    const automationErrors = {}
+    for (let app of apps) {
+      if (app.automationErrors) {
+        if (errorCount(app.automationErrors) > 0) {
+          automationErrors[app.devId] = app.automationErrors
+        }
+      }
+    }
+    return automationErrors
+  }
+
+  const goToAutomationError = appId => {
+    const params = new URLSearchParams({
+      tab: "Automation History",
+      open: "error",
+    })
+    $goto(`../overview/${appId}?${params.toString()}`)
+  }
+
+  const errorCount = errors => {
+    return Object.values(errors).reduce((acc, next) => acc + next.length, 0)
+  }
+
+  const automationErrorMessage = appId => {
+    const app = enrichedApps.find(app => app.devId === appId)
+    const errors = automationErrors[appId]
+    return `${app.name} - Automation error (${errorCount(errors)})`
   }
 
   const initiateAppCreation = () => {
@@ -208,6 +241,23 @@
 <Page wide>
   <Layout noPadding gap="M">
     {#if loaded}
+      {#each Object.keys(automationErrors || {}) as appId}
+        <Notification
+          wide
+          dismissable
+          action={() => goToAutomationError(appId)}
+          type="error"
+          icon="Alert"
+          actionMessage={errorCount(automationErrors[appId]) > 1
+            ? "View errors"
+            : "View error"}
+          on:dismiss={async () => {
+            await automationStore.actions.clearLogErrors({ appId })
+            await apps.load()
+          }}
+          message={automationErrorMessage(appId)}
+        />
+      {/each}
       <div class="title">
         <div class="welcome">
           <Layout noPadding gap="XS">
