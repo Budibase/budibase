@@ -5,6 +5,7 @@ filterTests(["all"], () => {
   context("Application Overview screen", () => {
     before(() => {
       cy.login()
+      cy.deleteAllApps()
       cy.createTestApp()
     })
 
