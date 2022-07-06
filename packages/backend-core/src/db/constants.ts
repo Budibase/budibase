@@ -12,6 +12,7 @@ export enum AutomationViewModes {
 
 export enum ViewNames {
   USER_BY_EMAIL = "by_email",
+  USER_BY_APP = "by_app",
   BY_API_KEY = "by_api_key",
   USER_BY_BUILDERS = "by_builders",
   LINK = "by_link",

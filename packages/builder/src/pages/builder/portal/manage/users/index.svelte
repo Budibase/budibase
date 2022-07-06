@@ -11,6 +11,8 @@
     Icon,
     notifications,
     Pagination,
+    Search,
+    Label,
   } from "@budibase/bbui"
   import AddUserModal from "./_components/AddUserModal.svelte"
   import { users, groups } from "stores/portal"
@@ -70,10 +72,10 @@
     importUsersModal
 
   let pageInfo = createPaginationStore()
-  let prevSearch = undefined,
-    search = undefined
+  let prevEmail = undefined,
+    searchEmail = undefined
   $: page = $pageInfo.page
-  $: fetchUsers(page, search)
+  $: fetchUsers(page, searchEmail)
 
   $: {
     enrichedUsers = $users.data?.map(user => {
@@ -160,19 +162,19 @@
     }
   })
 
-  async function fetchUsers(page, search) {
+  async function fetchUsers(page, email) {
     if ($pageInfo.loading) {
       return
     }
     // need to remove the page if they've started searching
-    if (search && !prevSearch) {
+    if (email && !prevEmail) {
       pageInfo.reset()
       page = undefined
     }
-    prevSearch = search
+    prevEmail = email
     try {
       pageInfo.loading()
-      await users.search({ page, search })
+      await users.search({ page, email })
       pageInfo.fetched($users.hasNextPage, $users.nextPage)
     } catch (error) {
       notifications.error("Error getting user list")
@@ -207,6 +209,10 @@
       <Button on:click={importUsersModal.show} icon="Import" primary
         >Import Users</Button
       >
+      <div class="field">
+        <Label size="L">Search email</Label>
+        <Search bind:value={searchEmail} placeholder="" />
+      </div>
     </ButtonGroup>
     <Table
       on:click={({ detail }) => $goto(`./${detail._id}`)}
@@ -273,6 +279,18 @@
 </Modal>
 
 <style>
+  .field {
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    grid-gap: var(--spacing-m);
+    margin-left: auto;
+  }
+
+  .field > :global(*) + :global(*) {
+    margin-left: var(--spacing-m);
+  }
+
   .access-description {
     display: flex;
     margin-top: var(--spacing-xl);

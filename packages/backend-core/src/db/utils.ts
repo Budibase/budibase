@@ -8,7 +8,7 @@ import { doWithDB, allDbs } from "./index"
 import { getCouchInfo } from "./pouch"
 import { getAppMetadata } from "../cache/appMetadata"
 import { checkSlashesInUrl } from "../helpers"
-import { isDevApp, isDevAppID } from "./conversions"
+import { isDevApp, isDevAppID, getProdAppID } from "./conversions"
 import { APP_PREFIX } from "./constants"
 import * as events from "../events"
 
@@ -104,6 +104,15 @@ export function getGlobalUserParams(globalId: any, otherProps: any = {}) {
       ? startkey
       : `${DocumentTypes.USER}${SEPARATOR}${globalId}`,
     endkey: `${DocumentTypes.USER}${SEPARATOR}${globalId}${UNICODE_MAX}`,
+  }
+}
+
+export function getUsersByAppParams(appId: any, otherProps: any = {}) {
+  const prodAppId = getProdAppID(appId)
+  return {
+    ...otherProps,
+    startkey: prodAppId,
+    endkey: `${prodAppId}${UNICODE_MAX}`,
   }
 }
 
@@ -464,15 +473,29 @@ export const getPlatformUrl = async (opts = { tenantAware: true }) => {
 export function pagination(
   data: any[],
   pageSize: number,
-  { paginate, property } = { paginate: true, property: "_id" }
+  {
+    paginate,
+    property,
+    getKey,
+  }: {
+    paginate: boolean
+    property: string
+    getKey?: (doc: any) => string | undefined
+  } = {
+    paginate: true,
+    property: "_id",
+  }
 ) {
   if (!paginate) {
     return { data, hasNextPage: false }
   }
   const hasNextPage = data.length > pageSize
   let nextPage = undefined
+  if (!getKey) {
+    getKey = (doc: any) => (property ? doc?.[property] : doc?._id)
+  }
   if (hasNextPage) {
-    nextPage = property ? data[pageSize]?.[property] : data[pageSize]?._id
+    nextPage = getKey(data[pageSize])
   }
   return {
     data: data.slice(0, pageSize),
