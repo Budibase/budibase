@@ -6,7 +6,8 @@ filterTests(['all'], () => {
   context("Publish Application Workflow", () => {
     before(() => {
       cy.login()
-      cy.createTestApp()
+      cy.deleteAllApps()
+      cy.createApp("Cypress Tests", false)
     })
 
     it("Should reflect the unpublished status correctly", () => {
