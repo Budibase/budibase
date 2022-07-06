@@ -43,20 +43,6 @@ jobs:
         run: yarn lint
       - name: Run Yarn Build
         run: yarn build
-      - name: Yarn Test
-        run: yarn test
-      - name: Test Code Coverage
-        uses: codecov/codecov-action@v1
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
-          files: ./packages/server/coverage/clover.xml
-          name: codecov-umbrella
-          verbose: true 
-      - name: Test with Cypress
-        uses: cypress-io/github-action@v2
-        with:
-          install: false
-          command: yarn test:e2e:ci
       - name: Login to Docker Hub
         run: |
           docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
