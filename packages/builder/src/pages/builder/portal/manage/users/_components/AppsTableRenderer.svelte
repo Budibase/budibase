@@ -1,7 +1,6 @@
 <script>
   import { Icon } from "@budibase/bbui"
   export let value
-  $: console.log(value)
 </script>
 
 <div class="align">

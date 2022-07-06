@@ -14,7 +14,7 @@
     StatusLight,
   } from "@budibase/bbui"
   import UserGroupPicker from "components/settings/UserGroupPicker.svelte"
-
+  import { createPaginationStore } from "helpers/pagination"
   import { users, apps, groups } from "stores/portal"
   import { onMount } from "svelte"
   import { RoleUtils } from "@budibase/frontend-core"
@@ -24,24 +24,23 @@
   let popover
   let searchTerm = ""
   let selectedUsers = []
+  let prevSearch = undefined,
+    search = undefined
+  $: page = $pageInfo.page
+  $: fetchUsers(page, search)
   $: group = $groups.find(x => x._id === groupId)
-  $: filteredUsers = $users.filter(
-    user =>
-      selectedUsers &&
-      user?.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  )
-  $: console.log(group)
+  let pageInfo = createPaginationStore()
+
   async function addAll() {
-    selectedUsers = [...selectedUsers, ...filteredUsers]
     group.users = selectedUsers
     await groups.actions.save(group)
   }
 
   async function selectUser(id) {
     let selectedUser = selectedUsers.includes(id)
-    let enrichedUser = $users.find(user => user._id === id)
-
+    let enrichedUser = $users.data.find(user => user._id === id)
     if (selectedUser) {
+      console.log
       selectedUsers = selectedUsers.filter(id => id !== selectedUser)
       let newUsers = group.users.filter(user => user._id !== id)
       group.users = newUsers
@@ -52,16 +51,43 @@
 
     await groups.actions.save(group)
   }
+  $: filtered =
+    $users.data?.filter(x => !group?.users.map(y => y._id).includes(x._id)) ||
+    []
 
+  $: console.log(filtered)
   async function removeUser(id) {
     let newUsers = group.users.filter(user => user._id !== id)
     group.users = newUsers
     await groups.actions.save(group)
   }
+
+  async function fetchUsers(page, search) {
+    if ($pageInfo.loading) {
+      return
+    }
+    // need to remove the page if they've started searching
+    if (search && !prevSearch) {
+      pageInfo.reset()
+      page = undefined
+    }
+    prevSearch = search
+    try {
+      pageInfo.loading()
+      await users.search({ page, search })
+      pageInfo.fetched($users.hasNextPage, $users.nextPage)
+    } catch (error) {
+      notifications.error("Error getting user list")
+    }
+  }
+
+  function onChange(e) {
+    console.log(e)
+  }
+
   onMount(async () => {
     try {
       await groups.actions.init()
-      await users.init()
       await apps.load()
     } catch (error) {
       notifications.error("Error fetching User Group data")
@@ -91,11 +117,12 @@
     </div>
     <Popover align="right" bind:this={popover} anchor={popoverAnchor}>
       <UserGroupPicker
+        on:change={onChange}
         key={"email"}
         title={"User"}
         bind:searchTerm
         bind:selected={selectedUsers}
-        bind:filtered={filteredUsers}
+        bind:filtered
         {addAll}
         select={selectUser}
       />

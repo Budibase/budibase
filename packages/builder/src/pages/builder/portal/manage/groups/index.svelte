@@ -96,7 +96,7 @@
 </Layout>
 
 <Modal bind:this={modal}>
-  <CreateEditGroupModal {group} {saveGroup} />
+  <CreateEditGroupModal bind:group {saveGroup} />
 </Modal>
 
 <style>

@@ -22,13 +22,19 @@
     <div class="modal-inner">
       <Body size="XS">Icon</Body>
       <div class="modal-spacing">
-        <IconPicker on:change={e => (group.icon = e.detail)} />
+        <IconPicker
+          bind:value={group.icon}
+          on:change={e => (group.icon = e.detail)}
+        />
       </div>
     </div>
     <div class="modal-inner">
       <Body size="XS">Color</Body>
       <div class="modal-spacing">
-        <ColorPicker on:change={e => (group.color = e.detail)} />
+        <ColorPicker
+          bind:value={group.color}
+          on:change={e => (group.color = e.detail)}
+        />
       </div>
     </div>
   </div>

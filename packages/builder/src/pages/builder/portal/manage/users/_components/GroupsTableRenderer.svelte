@@ -1,21 +1,22 @@
 <script>
   import { Icon, Body } from "@budibase/bbui"
   export let value
+  console.log(value)
 </script>
 
 <div class="align">
   <div class="spacing">
     <Icon name="UserGroup" />
   </div>
-  {#if value.length === 0}
+  {#if value?.length === 0}
     <div class="opacity">0</div>
-  {:else if value.length === 1}
+  {:else if value?.length === 1}
     <div class="opacity">
-      <Body size="S">{value[0].name}</Body>
+      <Body size="S">{value[0]?.name}</Body>
     </div>
   {:else}
     <div class="opacity">
-      {parseInt(value.length) || 0} groups
+      {parseInt(value?.length) || 0} groups
     </div>
   {/if}
 </div>
