@@ -150,7 +150,7 @@ exports.generateUserGroupID = () => {
 /**
  * Gets parameters for retrieving groups.
  */
-exports.getUserGroupsParams = (groupId, otherProps = {}) => {
+exports.getUserGroupsParams = (groupId: any, otherProps = {}) => {
   if (!groupId) {
     groupId = ""
   }

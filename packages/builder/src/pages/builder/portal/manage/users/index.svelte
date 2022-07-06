@@ -13,7 +13,6 @@
     Pagination,
   } from "@budibase/bbui"
   import AddUserModal from "./_components/AddUserModal.svelte"
-  import BasicOnboardingModal from "./_components/BasicOnboardingModal.svelte"
   import { users, groups } from "stores/portal"
   import { onMount } from "svelte"
   import GroupsTableRenderer from "./_components/GroupsTableRenderer.svelte"
@@ -75,36 +74,7 @@
     search = undefined
   $: page = $pageInfo.page
   $: fetchUsers(page, search)
-
-  $: filteredUsers = $users
-    .filter(user => user.email.includes(search || ""))
-    .map(user => ({
-      ...user,
-      group: ["All users"],
-      developmentAccess: !!user.builder?.global,
-      adminAccess: !!user.admin?.global,
-    }))
-
-  $: enrichedUsers = $users.map(user => {
-    let userGroups = []
-    let userApps = []
-    $groups.forEach(group => {
-      if (group.users) {
-        group.users?.forEach(y => {
-          if (y._id === user._id) {
-            userGroups.push(group)
-            userApps = group.apps
-          }
-        })
-      }
-    })
-    return {
-      ...user,
-      name: user.firstName ? user.firstName + " " + user.lastName : "",
-      userGroups,
-      apps: [...new Set(Object.keys(user.roles))],
-    }
-  })
+  $: console.log(page)
 
   function showOnboardingTypeModal() {
     onboardingTypeModal.show()
@@ -206,22 +176,6 @@
         >Import Users</Button
       >
     </ButtonGroup>
-    <Table
-      on:click={({ detail }) => $goto(`./${detail._id}`)}
-      {schema}
-      data={$users.data}
-      allowEditColumns={false}
-      allowEditRows={false}
-      allowSelectRows={true}
-      showHeaderBorder={false}
-      customRenderers={[
-        { column: "userGroups", component: GroupsTableRenderer },
-        { column: "apps", component: AppsTableRenderer },
-        { column: "name", component: NameTableRenderer },
-        { column: "settings", component: SettingsTableRenderer },
-        { column: "role", component: RoleTableRenderer },
-      ]}
-    />
     <div class="pagination">
       <Pagination
         page={$pageInfo.pageNumber}
@@ -269,8 +223,6 @@
 <Modal bind:this={importUsersModal}>
   <ImportUsersModal {showOnboardingTypeModal} />
 </Modal>
-
-<Modal bind:this={basicOnboardingModal}><BasicOnboardingModal {email} /></Modal>
 
 <style>
   .access-description {
