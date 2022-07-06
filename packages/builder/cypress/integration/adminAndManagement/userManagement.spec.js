@@ -10,7 +10,7 @@ filterTests(["smoke", "all"], () => {
     })
 
     it("should create a user via basic onboarding", () => {
-      cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 1000})
+      cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 5000})
       cy.createUser("bbuser@test.com")
       cy.get(interact.SPECTRUM_TABLE).should("contain", "bbuser")
     })
