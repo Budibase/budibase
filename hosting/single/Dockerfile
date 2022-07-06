@@ -50,7 +50,8 @@ ENV \
   SELF_HOSTED=1 \
   TARGETBUILD=$TARGETBUILD \
   WORKER_PORT=4002 \
-  WORKER_URL=http://localhost:4002
+  WORKER_URL=http://localhost:4002 \
+  APPS_URL=http://localhost:4001
 
 # install base dependencies
 RUN apt-get update && \
