@@ -180,14 +180,14 @@ class QueryRunner {
 
     // Refresh session flow. Should be in same location as refreshOAuthToken
     // There are several other properties available in 'resp'
-    if (!resp.error) {
+    if (!resp.err) {
       const globalUserId = getGlobalIDFromUserMetadataID(_id)
       await updateUserOAuth(globalUserId, resp)
       this.ctx.user = await userCache.getUser(globalUserId)
     } else {
       // In this event the user may have oAuth issues that
       // could require re-authenticating with their provider.
-      throw new Error("OAuth2 access token could not be refreshed")
+      throw new Error("OAuth2 access token could not be refreshed: " + resp.err.toString())
     }
 
     return resp
