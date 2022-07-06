@@ -21,6 +21,7 @@ export enum ViewNames {
 
 export enum DocumentTypes {
   USER = "us",
+  GROUP = "gr",
   WORKSPACE = "workspace",
   CONFIG = "config",
   TEMPLATE = "template",

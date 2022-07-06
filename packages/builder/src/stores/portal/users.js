@@ -69,18 +69,7 @@ export function createUsersStore() {
   }
 
   async function save(user) {
-    const response = await API.saveUser(user)
-    user._id = response._id
-    user._rev = response._rev
-    store.update(state => {
-      const currentIdx = state.findIndex(user => user._id === user._id)
-      if (currentIdx >= 0) {
-        state.splice(currentIdx, 1, user)
-      } else {
-        state.push(user)
-      }
-      return state
-    })
+    return await API.saveUser(user)
   }
 
   return {

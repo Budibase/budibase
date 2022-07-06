@@ -152,7 +152,7 @@ export const inviteMultiple = async (ctx: any) => {
   let existing = false
   let existingEmail
   for (let email of emails) {
-    if (await getGlobalUserByEmail(email)) {
+    if (await usersCore.getGlobalUserByEmail(email)) {
       existing = true
       existingEmail = email
       break

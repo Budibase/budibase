@@ -307,6 +307,7 @@
           </Tab>
           <Tab title="Access">
             <AccessTab app={selectedApp} />
+          </Tab>
           <Tab title="Automation History">
             <HistoryTab app={selectedApp} />
           </Tab>

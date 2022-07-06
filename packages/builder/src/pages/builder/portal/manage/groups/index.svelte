@@ -18,8 +18,8 @@
   let modal
   let group = {
     name: "",
-    icon: "",
-    color: "",
+    icon: "UserGroup",
+    color: "var(--spectrum-global-color-blue-600)",
     users: [],
     apps: [],
   }
@@ -34,6 +34,7 @@
   }
 
   async function saveGroup(group) {
+    console.log(group)
     try {
       await groups.actions.save(group)
     } catch (error) {

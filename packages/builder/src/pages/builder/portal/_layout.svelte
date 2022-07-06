@@ -127,7 +127,6 @@
       } else {
         try {
           await organisation.init()
-          await roles.fetch()
         } catch (error) {
           notifications.error("Error getting org config")
         }
