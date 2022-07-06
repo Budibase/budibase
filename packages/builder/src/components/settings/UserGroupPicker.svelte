@@ -1,13 +1,19 @@
 <script>
   import { ActionButton, Icon, Search, Divider, Detail } from "@budibase/bbui"
+  import { createEventDispatcher } from "svelte"
 
   export let searchTerm = ""
   export let selected
-  export let filtered
+  export let filtered = []
   export let addAll
   export let select
   export let title
   export let key
+  const dispatch = createEventDispatcher()
+
+  function onChange(e) {
+    dispatch("change", e.detail)
+  }
 </script>
 
 <div style="padding: var(--spacing-m)">
@@ -26,7 +32,9 @@
   <div>
     {#each filtered as item}
       <div
-        on:click={select(item._id)}
+        on:click={() => {
+          select(item._id)
+        }}
         style="padding-bottom: var(--spacing-m)"
         class="selection"
       >

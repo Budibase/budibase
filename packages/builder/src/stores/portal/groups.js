@@ -19,6 +19,7 @@ export function createGroupsStore() {
     },
 
     save: async group => {
+      console.log(group)
       const response = await API.saveGroup(group)
       group._id = response._id
       group._rev = response._rev

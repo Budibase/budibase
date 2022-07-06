@@ -62,8 +62,8 @@
   ]
 
   let email
+  let enrichedUsers = []
   let createUserModal,
-    basicOnboardingModal,
     inviteConfirmationModal,
     onboardingTypeModal,
     passwordModal,
@@ -74,8 +74,36 @@
     search = undefined
   $: page = $pageInfo.page
   $: fetchUsers(page, search)
-  $: console.log(page)
 
+  $: {
+    if ($users.data) {
+      enrichedUsers = $users.data.map(user => {
+        let userGroups = []
+        let userApps = []
+        $groups.forEach(group => {
+          console.log(group)
+          if (group.users) {
+            group.users?.forEach(y => {
+              if (y._id === user._id) {
+                console.log("hello")
+                userGroups.push(group)
+                userApps = group.apps
+              }
+            })
+          }
+        })
+        return {
+          ...user,
+          name: user.firstName ? user.firstName + " " + user.lastName : "",
+          userGroups,
+          apps: [...new Set(Object.keys(user.roles))],
+        }
+      })
+    } else {
+      enrichedUsers = []
+    }
+  }
+  $: console.log(enrichedUsers)
   function showOnboardingTypeModal() {
     onboardingTypeModal.show()
   }
@@ -128,6 +156,15 @@
     }
   }
 
+  onMount(async () => {
+    try {
+      await groups.actions.init()
+    } catch (error) {
+      console.log(error)
+      notifications.error("Error fetching User Group data")
+    }
+  })
+
   async function fetchUsers(page, search) {
     if ($pageInfo.loading) {
       return
@@ -176,6 +213,22 @@
         >Import Users</Button
       >
     </ButtonGroup>
+    <Table
+      on:click={({ detail }) => $goto(`./${detail._id}`)}
+      {schema}
+      data={enrichedUsers}
+      allowEditColumns={false}
+      allowEditRows={false}
+      allowSelectRows={true}
+      showHeaderBorder={false}
+      customRenderers={[
+        { column: "userGroups", component: GroupsTableRenderer },
+        { column: "apps", component: AppsTableRenderer },
+        { column: "name", component: NameTableRenderer },
+        { column: "settings", component: SettingsTableRenderer },
+        { column: "role", component: RoleTableRenderer },
+      ]}
+    />
     <div class="pagination">
       <Pagination
         page={$pageInfo.pageNumber}

@@ -15,7 +15,9 @@ function buildGroupSaveValidation() {
     icon: Joi.string().required(),
     name: Joi.string().required(),
     users: Joi.array().optional(),
-    apps: Joi.array().optional()
+    apps: Joi.array().optional(),
+    createdAt: Joi.string().optional(),
+    updatedAt: Joi.string().optional(),
   }).required())
 }
 
