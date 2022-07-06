@@ -65,7 +65,7 @@
           <ActionButton
             disabled={!$automationStore.selectedAutomation?.testResults}
             on:click={() => {
-              $automationStore.selectedAutomation.automation.showTestPanel = true
+              $automationStore.showTestPanel = true
             }}
             size="M">Test Details</ActionButton
           >

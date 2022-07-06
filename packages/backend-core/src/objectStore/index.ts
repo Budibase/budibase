@@ -294,6 +294,16 @@ export const uploadDirectory = async (
   await Promise.all(uploads)
 }
 
+exports.downloadTarballDirect = async (url: string, path: string) => {
+  path = sanitizeKey(path)
+  const response = await fetch(url)
+  if (!response.ok) {
+    throw new Error(`unexpected response ${response.statusText}`)
+  }
+
+  await streamPipeline(response.body, zlib.Unzip(), tar.extract(path))
+}
+
 export const downloadTarball = async (url: any, bucketName: any, path: any) => {
   bucketName = sanitizeBucket(bucketName)
   path = sanitizeKey(path)

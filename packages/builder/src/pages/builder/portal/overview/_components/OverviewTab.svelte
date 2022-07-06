@@ -1,14 +1,7 @@
 <script>
   import DashCard from "components/common/DashCard.svelte"
   import { AppStatus } from "constants"
-  import {
-    Icon,
-    Heading,
-    Link,
-    Avatar,
-    notifications,
-    Layout,
-  } from "@budibase/bbui"
+  import { Icon, Heading, Link, Avatar, Layout } from "@budibase/bbui"
   import { store } from "builderStore"
   import clientPackage from "@budibase/client/package.json"
   import { processStringSync } from "@budibase/string-templates"
@@ -20,29 +13,22 @@
   export let navigateTab
   const dispatch = createEventDispatcher()
 
-  const userInit = async () => {
-    try {
-      await users.init()
-    } catch (error) {
-      notifications.error("Error getting user list")
-    }
-  }
-
   const unpublishApp = () => {
     dispatch("unpublish", app)
   }
 
-  let userPromise = userInit()
+  let appEditor, appEditorPromise
 
   $: updateAvailable = clientPackage.version !== $store.version
   $: isPublished = app && app?.status === AppStatus.DEPLOYED
   $: appEditorId = !app?.updatedBy ? $auth.user._id : app?.updatedBy
   $: appEditorText = appEditor?.firstName || appEditor?.email
-  $: filteredUsers = !appEditorId
-    ? []
-    : $users.filter(user => user._id === appEditorId)
+  $: fetchAppEditor(appEditorId)
 
-  $: appEditor = filteredUsers.length ? filteredUsers[0] : null
+  async function fetchAppEditor(editorId) {
+    appEditorPromise = users.get(editorId)
+    appEditor = await appEditorPromise
+  }
 
   const getInitials = user => {
     let initials = ""
@@ -90,7 +76,7 @@
       </DashCard>
       <DashCard title={"Last Edited"} dataCy={"edited-by"}>
         <div class="last-edited-content">
-          {#await userPromise}
+          {#await appEditorPromise}
             <Avatar size="M" initials={"-"} />
           {:then _}
             <div class="updated-by">
@@ -211,6 +197,7 @@
     .overview-tab .top {
       grid-template-columns: 1fr 1fr;
     }
+
     .overview-tab .bottom {
       grid-template-columns: 1fr;
     }
@@ -228,29 +215,35 @@
     align-items: center;
     gap: var(--spacing-m);
   }
+
   .status-text,
   .last-edit-text {
     color: var(--spectrum-global-color-gray-600);
   }
+
   .updated-by {
     display: flex;
     align-items: center;
     gap: var(--spacing-m);
   }
+
   .succeeded :global(.icon) {
     color: var(--spectrum-global-color-green-600);
   }
+
   .failed :global(.icon) {
     color: var(
       --spectrum-semantic-negative-color-default,
       var(--spectrum-global-color-red-500)
     );
   }
+
   .metric-info {
     display: flex;
     gap: var(--spacing-l);
     margin-top: var(--spacing-s);
   }
+
   .version-status,
   .last-edit-text,
   .status-text {
