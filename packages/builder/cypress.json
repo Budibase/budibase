@@ -13,7 +13,7 @@
     "HOST_IP": ""
   },
   "retries": {
-    "runMode": 1,
+    "runMode": 0,
     "openMode": 0
   }
 }

@@ -174,14 +174,16 @@ filterTests(["smoke", "all"], () => {
 
     it("Should edit user details within user details page", () => {
       // Add First name
-      cy.get(interact.FIELD, { timeout: 500 }).eq(2).within(() => {
-        cy.get(interact.SPECTRUM_TEXTFIELD_INPUT, { timeout: 500 }).type("bb")
+      cy.get(interact.FIELD, { timeout: 1000 }).eq(2).within(() => {
+        cy.wait(500)
+        cy.get(interact.SPECTRUM_TEXTFIELD_INPUT, { timeout: 1000 }).click().type("bb")
       })
       // Add Last name
-      cy.get(interact.FIELD).eq(3).within(() => {
-        cy.get(interact.SPECTRUM_TEXTFIELD_INPUT).type("test")
+      cy.get(interact.FIELD, { timeout: 1000 }).eq(3).within(() => {
+        cy.wait(500)
+        cy.get(interact.SPECTRUM_TEXTFIELD_INPUT, { timeout: 1000 }).click().type("test")
       })
-      cy.get(interact.FIELD).eq(0).click()
+      cy.get(interact.FIELD, { timeout: 1000 }).eq(0).click()
       // Reload page
       cy.reload()
 
@@ -189,8 +191,8 @@ filterTests(["smoke", "all"], () => {
       cy.get(interact.FIELD, { timeout: 1000 }).eq(2).within(() => {
         cy.get(interact.SPECTRUM_TEXTFIELD_INPUT).should('have.value', "bb")
       })
-      cy.get(interact.FIELD).eq(3).within(() => {
-        cy.get(interact.SPECTRUM_TEXTFIELD_INPUT, { timeout: 500 }).should('have.value', "test")
+      cy.get(interact.FIELD, { timeout: 1000 }).eq(3).within(() => {
+        cy.get(interact.SPECTRUM_TEXTFIELD_INPUT, { timeout: 1000 }).should('have.value', "test")
       })
     })
 

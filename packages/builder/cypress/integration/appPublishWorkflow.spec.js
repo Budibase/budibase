@@ -11,7 +11,7 @@ filterTests(['all'], () => {
     })
 
     it("Should reflect the unpublished status correctly", () => {
-      cy.visit(`${Cypress.config().baseUrl}/builder`)
+      cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 5000 })
 
       cy.get(interact.APP_TABLE_STATUS, { timeout: 3000 }).eq(0)
       .within(() => {
@@ -30,6 +30,7 @@ filterTests(['all'], () => {
 
     it("Should publish an application and correctly reflect that", () => {
       //Assuming the previous test was run and the unpublished app is open in edit mode.
+      cy.closeModal()
       cy.get(interact.TOPRIGHTNAV_BUTTON_SPECTRUM).contains("Publish").click({ force : true })
 
       cy.get(interact.DEPLOY_APP_MODAL).should("be.visible")
@@ -73,7 +74,7 @@ filterTests(['all'], () => {
     it("Should unpublish an application using the link and reflect the status change", () => {
       //Assuming the previous test app exists and is published
 
-      cy.visit(`${Cypress.config().baseUrl}/builder`)
+      cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 5000 })
 
       cy.get(interact.APP_TABLE_STATUS).eq(0)
       .within(() => {
@@ -86,6 +87,7 @@ filterTests(['all'], () => {
         cy.get(interact.APP_TABLE_APP_NAME).click({ force: true })
       })
 
+      cy.closeModal()
       cy.get(interact.DEPLOYMENT_TOP_GLOBE).should("exist").click({ force: true })
       
       cy.get("[data-cy='publish-popover-menu']")
@@ -98,7 +100,8 @@ filterTests(['all'], () => {
         cy.get(interact.CONFIRM_WRAP_BUTTON).click({ force: true }
       )})
 
-      cy.visit(`${Cypress.config().baseUrl}/builder`)
+      cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 6000 })
+      cy.wait(500)
       cy.get(interact.APP_TABLE_STATUS, { timeout: 1000 }).eq(0).contains("Unpublished")
 
     })
