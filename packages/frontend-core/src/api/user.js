@@ -13,13 +13,16 @@ export const buildUserEndpoints = API => ({
    * @param {string} page The page to retrieve
    * @param {string} search The starts with string to search username/email by.
    */
-  searchUsers: async ({ page, search } = {}) => {
+  searchUsers: async ({ page, email, appId } = {}) => {
     const opts = {}
     if (page) {
       opts.page = page
     }
-    if (search) {
-      opts.search = search
+    if (email) {
+      opts.email = email
+    }
+    if (appId) {
+      opts.appId = appId
     }
     return await API.post({
       url: `/api/global/users/search`,

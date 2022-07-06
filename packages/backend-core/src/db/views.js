@@ -1,4 +1,4 @@
-const { DocumentTypes, ViewNames } = require("./utils")
+const { DocumentTypes, ViewNames, SEPARATOR } = require("./constants")
 const { getGlobalDB } = require("../tenancy")
 
 function DesignDoc() {
@@ -30,6 +30,33 @@ exports.createUserEmailView = async () => {
   designDoc.views = {
     ...designDoc.views,
     [ViewNames.USER_BY_EMAIL]: view,
+  }
+  await db.put(designDoc)
+}
+
+exports.createUserAppView = async () => {
+  const db = getGlobalDB()
+  let designDoc
+  try {
+    designDoc = await db.get("_design/database")
+  } catch (err) {
+    // no design doc, make one
+    designDoc = DesignDoc()
+  }
+  const view = {
+    // if using variables in a map function need to inject them before use
+    map: `function(doc) {
+      if (doc._id.startsWith("${DocumentTypes.USER}${SEPARATOR}") && doc.roles) {
+        for (let prodAppId of Object.keys(doc.roles)) {
+          let emitted = prodAppId + "${SEPARATOR}" + doc._id
+          emit(emitted, null)
+        }
+      }
+    }`,
+  }
+  designDoc.views = {
+    ...designDoc.views,
+    [ViewNames.USER_BY_APP]: view,
   }
   await db.put(designDoc)
 }
@@ -84,6 +111,7 @@ exports.queryGlobalView = async (viewName, params, db = null) => {
     [ViewNames.USER_BY_EMAIL]: exports.createUserEmailView,
     [ViewNames.BY_API_KEY]: exports.createApiKeyView,
     [ViewNames.USER_BY_BUILDERS]: exports.createUserBuildersView,
+    [ViewNames.USER_BY_APP]: exports.createUserAppView,
   }
   // can pass DB in if working with something specific
   if (!db) {
