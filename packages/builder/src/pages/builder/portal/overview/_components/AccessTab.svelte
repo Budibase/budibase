@@ -14,18 +14,27 @@
   import RoleSelect from "components/common/RoleSelect.svelte"
   import { users, groups, apps } from "stores/portal"
   import AssignmentModal from "./AssignmentModal.svelte"
+  import { createPaginationStore } from "helpers/pagination"
 
   export let app
 
   let assignmentModal
   let appGroups = []
   let appUsers = []
+  let pageInfo = createPaginationStore()
+  let prevSearch = undefined,
+    search = undefined
 
-  $: appUsers = $users.filter(x => {
-    return Object.keys(x.roles).find(y => {
-      return extractAppId(y) === extractAppId(app.appId)
-    })
-  })
+  $: page = $pageInfo.page
+  $: fetchUsers(page, search)
+
+  $: appUsers =
+    $users.data?.filter(x => {
+      return Object.keys(x.roles).find(y => {
+        return extractAppId(y) === extractAppId(app.appId)
+      })
+    }) || []
+
   $: appGroups = $groups.filter(x => {
     return x.apps.find(y => {
       return y.appId === app.appId
@@ -48,7 +57,7 @@
 
         groups.actions.save(matchedGroup)
       } else if (data.id.startsWith(us_prefix)) {
-        let matchedUser = $users.find(user => {
+        let matchedUser = $users.data.find(user => {
           return user._id === data.id
         })
 
@@ -60,10 +69,30 @@
         await users.save(newUser)
       }
     })
+    await pageInfo.reset()
   }
+
+  async function fetchUsers(page, search) {
+    if ($pageInfo.loading) {
+      return
+    }
+    // need to remove the page if they've started searching
+    if (search && !prevSearch) {
+      pageInfo.reset()
+      page = undefined
+    }
+    prevSearch = search
+    try {
+      pageInfo.loading()
+      await users.search({ page, search })
+      pageInfo.fetched($users.hasNextPage, $users.nextPage)
+    } catch (error) {
+      notifications.error("Error getting user list")
+    }
+  }
+
   onMount(async () => {
     try {
-      await users.init()
       await groups.actions.init()
       await apps.load()
     } catch (error) {
@@ -115,7 +144,7 @@
 </div>
 
 <Modal bind:this={assignmentModal}>
-  <AssignmentModal {addData} />
+  <AssignmentModal userData={$users.data} {addData} />
 </Modal>
 
 <style>

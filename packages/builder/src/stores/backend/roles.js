@@ -7,6 +7,7 @@ export function createRolesStore() {
   const actions = {
     fetch: async () => {
       const roles = await API.getRoles()
+      console.log(roles)
       set(roles)
     },
     delete: async role => {

@@ -5,6 +5,7 @@
   import { RoleUtils } from "@budibase/frontend-core"
 
   export let addData
+  export let userData = []
   $: optionSections = {
     groups: {
       data: $groups,
@@ -14,7 +15,7 @@
       getColour: group => group.color,
     },
     users: {
-      data: $users,
+      data: userData,
       getLabel: user => user.email,
       getValue: user => user._id,
       getIcon: user => user.icon,
@@ -27,8 +28,6 @@
   function addNewInput() {
     appData = [...appData, { id: "", role: "" }]
   }
-
-  $: console.log(appData)
 </script>
 
 <ModalContent

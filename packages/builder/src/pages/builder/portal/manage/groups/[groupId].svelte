@@ -26,10 +26,11 @@
   let selectedUsers = []
   let prevSearch = undefined,
     search = undefined
+  let pageInfo = createPaginationStore()
+
   $: page = $pageInfo.page
   $: fetchUsers(page, search)
   $: group = $groups.find(x => x._id === groupId)
-  let pageInfo = createPaginationStore()
 
   async function addAll() {
     group.users = selectedUsers
