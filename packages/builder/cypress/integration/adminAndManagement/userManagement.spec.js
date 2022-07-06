@@ -6,7 +6,7 @@ filterTests(["smoke", "all"], () => {
     before(() => {
       cy.login()
       cy.deleteApp("Cypress Tests")
-      cy.createApp("Cypress Tests")
+      cy.createApp("Cypress Tests", false)
     })
 
     it("should create a user via basic onboarding", () => {
@@ -45,7 +45,8 @@ filterTests(["smoke", "all"], () => {
                 if(i < 1){
                   cy.createApp(name)
                 } else {
-                  cy.visit(`${Cypress.config().baseUrl}/builder`)
+                  cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 5000})
+                  cy.wait(500)
                   cy.get(interact.CREATE_APP_BUTTON, { timeout: 1000 }).click({ force: true })
                   cy.createAppFromScratch(name)
                 }
@@ -53,7 +54,7 @@ filterTests(["smoke", "all"], () => {
             }
           })
         // Navigate back to the user
-        cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 500})
+        cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 5000})
         cy.get(interact.SPECTRUM_SIDENAV).contains("Users").click()
         cy.get(interact.SPECTRUM_TABLE, { timeout: 500 }).contains("bbuser").click()
         for (let i = 0; i < 3; i++) {
