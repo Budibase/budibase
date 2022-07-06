@@ -1,10 +1,10 @@
 const NonErrors = ["AccountError"]
 
-function isSuppressed(e) {
+function isSuppressed(e?: any) {
   return e && e["suppressAlert"]
 }
 
-module.exports.logAlert = (message, e = null) => {
+export function logAlert(message: string, e?: any) {
   if (e && NonErrors.includes(e.name) && isSuppressed(e)) {
     return
   }
@@ -13,4 +13,8 @@ module.exports.logAlert = (message, e = null) => {
     errorJson = ": " + JSON.stringify(e, Object.getOwnPropertyNames(e))
   }
   console.error(`bb-alert: ${message} ${errorJson}`)
+}
+
+export default {
+  logAlert,
 }
