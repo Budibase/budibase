@@ -41,7 +41,6 @@
       await store.actions.screens.save(duplicateScreen)
     } catch (error) {
       notifications.error("Error duplicating screen")
-      console.log(error)
     }
   }
 

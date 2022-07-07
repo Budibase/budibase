@@ -8,7 +8,6 @@
   export let inputType = "text"
   export let label = null
   export let labelPosition = "above"
-  export let primaryPlaceholder = "test"
   export let secondaryPlaceholder = null
   export let autocomplete
   export let placeholder = null
@@ -72,15 +71,12 @@
   }
 
   const onPickPrimary = e => {
-    console.log("hello")
-
     primaryLabel = e.detail.label
     primaryValue = e.detail.value
     dispatch("pickprimary", e.detail.value)
   }
 
   const onPickSecondary = e => {
-    console.log("hello222")
     secondaryValue = e.detail
     dispatch("picksecondary", e.detail)
   }

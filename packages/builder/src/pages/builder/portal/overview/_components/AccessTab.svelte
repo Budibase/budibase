@@ -40,6 +40,7 @@
       return y.appId === app.appId
     })
   })
+
   function extractAppId(id) {
     const split = id?.split("_") || []
     return split.length ? split[split.length - 1] : null
@@ -71,7 +72,11 @@
     })
     await pageInfo.reset()
   }
-
+  /*
+  async function updateRole(user) {
+    console.log(user)
+  }
+*/
   async function fetchUsers(page, search) {
     if ($pageInfo.loading) {
       return
@@ -103,43 +108,61 @@
 
 <div class="access-tab">
   <Layout>
-    <div>
-      <Heading>Access</Heading>
-      <div class="subtitle">
-        <Body size="S">
-          Assign users to your app and define their access here</Body
-        >
-        <Button on:click={assignmentModal.show} icon="User" cta
-          >Assign users</Button
-        >
+    {#if appGroups.length || appUsers.length}
+      <div>
+        <Heading>Access</Heading>
+        <div class="subtitle">
+          <Body size="S">
+            Assign users to your app and define their access here</Body
+          >
+          <Button on:click={assignmentModal.show} icon="User" cta
+            >Assign users</Button
+          >
+        </div>
       </div>
-    </div>
-    <List title="User Groups">
-      {#each appGroups as group}
-        <ListItem
-          title={group.name}
-          icon={group.icon}
-          iconBackground={group.color}
-        >
-          <RoleSelect autoWidth quiet value={group.role} />
-        </ListItem>
-      {/each}
-    </List>
-    <List title="Users">
-      {#each appUsers as user}
-        <ListItem title={user.email} avatar>
-          <RoleSelect
-            autoWidth
-            quiet
-            value={user.roles[
-              Object.keys(user.roles).find(
-                x => extractAppId(x) === extractAppId(app.appId)
-              )
-            ]}
-          />
-        </ListItem>
-      {/each}
-    </List>
+      <List title="User Groups">
+        {#each appGroups as group}
+          <ListItem
+            title={group.name}
+            icon={group.icon}
+            iconBackground={group.color}
+          >
+            <RoleSelect autoWidth quiet value={group.role} />
+          </ListItem>
+        {/each}
+      </List>
+      <List title="Users">
+        {#each appUsers as user}
+          <ListItem title={user.email} avatar>
+            <RoleSelect
+              autoWidth
+              quiet
+              value={user.roles[
+                Object.keys(user.roles).find(
+                  x => extractAppId(x) === extractAppId(app.appId)
+                )
+              ]}
+            />
+          </ListItem>
+        {/each}
+      </List>
+    {:else}
+      <div class="align">
+        <Layout gap="S">
+          <Heading>No users assigned</Heading>
+          <div class="opacity">
+            <Body size="S"
+              >Assign users to your app and set their access here</Body
+            >
+          </div>
+          <div class="padding">
+            <Button on:click={() => assignmentModal.show()} cta icon="UserArrow"
+              >Assign Users</Button
+            >
+          </div>
+        </Layout>
+      </div>
+    {/if}
   </Layout>
 </div>
 
@@ -152,6 +175,17 @@
     max-width: 600px;
     margin: 0 auto;
     padding: 40px;
+  }
+
+  .padding {
+    margin-top: var(--spacing-m);
+  }
+  .opacity {
+    opacity: 0.8;
+  }
+
+  .align {
+    text-align: center;
   }
   .subtitle {
     display: flex;

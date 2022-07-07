@@ -165,7 +165,7 @@ export const inviteMultiple = async (ctx: any) => {
   if (!userInfo) {
     userInfo = {}
   }
-  userInfo.tenantId = getTenantId()
+  userInfo.tenantId = tenancy.getTenantId()
   const opts: any = {
     subject: "{{ company }} platform invitation",
     info: userInfo,

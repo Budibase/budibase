@@ -18,8 +18,9 @@
 
   let csvString = undefined
 
+  /*
   function parseCsv() {}
-
+*/
   async function handleFile(evt) {
     const fileArray = Array.from(evt.target.files)
     if (fileArray.some(file => file.size >= FILE_SIZE_LIMIT)) {
@@ -72,25 +73,8 @@
 </ModalContent>
 
 <style>
-  .inner {
-    display: flex;
-  }
-
   :global(.spectrum-Picker) {
     border-top-left-radius: 0px;
-  }
-
-  .container {
-    width: 100%;
-    height: var(--spectrum-alias-item-height-l);
-    background: var(--spectrum-global-color-gray-200);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-
-  .error {
-    color: var(--red);
   }
 
   .dropzone {

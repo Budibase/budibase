@@ -34,7 +34,6 @@
   }
 
   async function saveGroup(group) {
-    console.log(group)
     try {
       await groups.actions.save(group)
     } catch (error) {

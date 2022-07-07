@@ -5,7 +5,6 @@
   import { fly } from "svelte/transition"
   import { createEventDispatcher } from "svelte"
   import clickOutside from "../../Actions/click_outside"
-  import Search from "./Search.svelte"
   import Icon from "../../Icon/Icon.svelte"
   import StatusLight from "../../StatusLight/StatusLight.svelte"
   import Detail from "../../Typography/Detail.svelte"
@@ -61,14 +60,6 @@
     dispatch("change", newValue)
   }
 
-  const onClickPrimary = () => {
-    dispatch("click")
-    if (readonly) {
-      return
-    }
-    primaryOpen = true
-  }
-
   const onClickSecondary = () => {
     dispatch("click")
     if (readonly) {
@@ -83,16 +74,8 @@
   }
 
   const onPickSecondary = newValue => {
-    console.log(newValue)
     dispatch("picksecondary", newValue)
     secondaryOpen = false
-  }
-
-  const onFocus = () => {
-    if (readonly) {
-      return
-    }
-    focus = true
   }
 
   const onBlur = event => {
@@ -354,11 +337,6 @@
     border-bottom-left-radius: 0px;
   }
 
-  .override-borders-left {
-    border-top-right-radius: 0px;
-    border-bottom-right-radius: 0px;
-    border-right: 0px;
-  }
   .spectrum-Popover {
     max-height: 240px;
     z-index: 999;

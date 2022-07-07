@@ -65,6 +65,8 @@ function buildConfigSaveValidation() {
     _rev: Joi.string().optional(),
     workspace: Joi.string().optional(),
     type: Joi.string().valid(...Object.values(Configs)).required(),
+    createdAt: Joi.string().optional(),
+    updatedAt: Joi.string().optional(),
     config: Joi.alternatives()
       .conditional("type", {
         switch: [

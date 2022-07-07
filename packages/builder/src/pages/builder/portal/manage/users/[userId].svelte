@@ -25,12 +25,13 @@
 
   import { fetchData } from "helpers"
   import { users, auth, groups, apps } from "stores/portal"
-  import { roles } from "stores/backend"
   import { Constants } from "@budibase/frontend-core"
   import ForceResetPasswordModal from "./_components/ForceResetPasswordModal.svelte"
   import { RoleUtils } from "@budibase/frontend-core"
   import UserGroupPicker from "components/settings/UserGroupPicker.svelte"
+
   export let userId
+
   let deleteUserModal
   let resetPasswordModal
   let popoverAnchor
@@ -38,7 +39,7 @@
   let popover
   let selectedGroups = []
   let allAppList = []
-  let toggleDisabled = false
+
   $: allAppList = $apps
     .filter(x => {
       if ($userFetch.data?.roles) {
@@ -160,18 +161,6 @@
     } catch (error) {
       notifications.error("Error updating user")
     }
-  }
-  async function toggleBuilderAccess({ detail }) {
-    return toggleFlag("builder", detail)
-  }
-
-  async function toggleAdminAccess({ detail }) {
-    return toggleFlag("admin", detail)
-  }
-
-  async function openUpdateRolesModal({ detail }) {
-    selectedApp = detail
-    editRolesModal.show()
   }
 
   function addAll() {}

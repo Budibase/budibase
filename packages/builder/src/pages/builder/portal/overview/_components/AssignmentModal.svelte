@@ -1,6 +1,6 @@
 <script>
   import { ModalContent, PickerDropdown, ActionButton } from "@budibase/bbui"
-  import { users, groups, apps } from "stores/portal"
+  import { groups } from "stores/portal"
   import { roles } from "stores/backend"
   import { RoleUtils } from "@budibase/frontend-core"
 
