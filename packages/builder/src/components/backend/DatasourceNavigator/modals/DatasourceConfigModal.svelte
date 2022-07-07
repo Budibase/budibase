@@ -13,6 +13,7 @@
   // kill the reference so the input isn't saved
   let datasource = cloneDeep(integration)
   let skipFetch = false
+  let isValid = false
 
   async function saveDatasource() {
     try {
@@ -47,6 +48,7 @@
     return true
   }}
   size="L"
+  disabled={!isValid}
 >
   <Layout noPadding>
     <Body size="XS"
@@ -57,5 +59,6 @@
     schema={datasource.schema}
     bind:datasource
     creating={true}
+    on:valid={e => (isValid = e.detail)}
   />
 </ModalContent>
