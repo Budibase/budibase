@@ -58,5 +58,5 @@ jobs:
           context: .
           push: true
           platforms: linux/amd64,linux/arm64
-          tags: budibase,budibase/budibase:v${{ env.RELEASE_VERSION }}
+          tags: budibase/budibase,budibase/budibase:v${{ env.RELEASE_VERSION }}
           file: ./hosting/single/Dockerfile
