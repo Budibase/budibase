@@ -8,6 +8,7 @@ const {
   refreshOAuthToken,
   updateUserOAuth,
 } = require("@budibase/backend-core/auth")
+const { user: userCache } = require("@budibase/backend-core/cache")
 const { getGlobalIDFromUserMetadataID } = require("../db/utils")
 
 const { isSQL } = require("../integrations/utils")
@@ -112,15 +113,9 @@ class QueryRunner {
         info.code === 401 &&
         !this.hasRefreshedOAuth
       ) {
+        await this.refreshOAuth2(this.ctx)
         // Attempt to refresh the access token from the provider
         this.hasRefreshedOAuth = true
-        const authResponse = await this.refreshOAuth2(this.ctx)
-
-        if (!authResponse || authResponse.err) {
-          // In this event the user may have oAuth issues that
-          // could require re-authenticating with their provider.
-          throw new Error("OAuth2 access token could not be refreshed")
-        }
       }
 
       this.hasRerun = true
@@ -174,8 +169,7 @@ class QueryRunner {
     const { configId } = ctx.auth
 
     if (!providerType || !oauth2?.refreshToken) {
-      console.error("No refresh token found for authenticated user")
-      return
+      throw new Error("No refresh token found for authenticated user")
     }
 
     const resp = await refreshOAuthToken(
@@ -186,9 +180,16 @@ class QueryRunner {
 
     // Refresh session flow. Should be in same location as refreshOAuthToken
     // There are several other properties available in 'resp'
-    if (!resp.error) {
+    if (!resp.err) {
       const globalUserId = getGlobalIDFromUserMetadataID(_id)
       await updateUserOAuth(globalUserId, resp)
+      this.ctx.user = await userCache.getUser(globalUserId)
+    } else {
+      // In this event the user may have oAuth issues that
+      // could require re-authenticating with their provider.
+      throw new Error(
+        "OAuth2 access token could not be refreshed: " + resp.err.toString()
+      )
     }
 
     return resp

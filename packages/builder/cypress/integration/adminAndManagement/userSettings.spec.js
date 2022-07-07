@@ -103,6 +103,8 @@ filterTests(["smoke", "all"], () => {
               }
             cy.get("button").contains("Update password").click({ force: true })
         })
+        // Remove users name
+        cy.updateUserInformation()
       })
   })
 })
