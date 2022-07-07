@@ -333,8 +333,8 @@ filterTests(["all"], () => {
           cy.wait(1000)
         })
 
-      cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 5000 })
-      cy.get(".appTable .app-row-actions button", { timeout: 1000 })
+      cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 10000 })
+      cy.get(".appTable .app-row-actions button", { timeout: 5000 })
         .contains("Manage")
         .eq(0)
         .click({ force: true })
