@@ -56,7 +56,6 @@
     $users.data?.filter(x => !group?.users.map(y => y._id).includes(x._id)) ||
     []
 
-  $: console.log(filtered)
   async function removeUser(id) {
     let newUsers = group.users.filter(user => user._id !== id)
     group.users = newUsers
@@ -80,10 +79,6 @@
     } catch (error) {
       notifications.error("Error getting user list")
     }
-  }
-
-  function onChange(e) {
-    console.log(e)
   }
 
   onMount(async () => {
@@ -118,7 +113,6 @@
     </div>
     <Popover align="right" bind:this={popover} anchor={popoverAnchor}>
       <UserGroupPicker
-        on:change={onChange}
         key={"email"}
         title={"User"}
         bind:searchTerm

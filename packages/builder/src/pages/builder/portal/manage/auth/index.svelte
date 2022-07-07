@@ -219,7 +219,6 @@
     try {
       await organisation.init()
     } catch (error) {
-      console.log("hello1")
       notifications.error("Error getting org config")
     }
 

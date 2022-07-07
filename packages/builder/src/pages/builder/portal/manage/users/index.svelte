@@ -63,7 +63,7 @@
     },
   ]
 
-  let email
+  //let email
   let enrichedUsers = []
   let createUserModal,
     inviteConfirmationModal,
@@ -80,15 +80,11 @@
   $: {
     enrichedUsers = $users.data?.map(user => {
       let userGroups = []
-      let userApps = []
       $groups.forEach(group => {
-        console.log(group)
         if (group.users) {
           group.users?.forEach(y => {
             if (y._id === user._id) {
-              console.log("hello")
               userGroups.push(group)
-              userApps = group.apps
             }
           })
         }
@@ -121,7 +117,7 @@
       notifications.error("Error inviting user")
     }
   }
-
+  /*
   async function createUser() {
     try {
       await users.create({
@@ -136,12 +132,12 @@
       notifications.error("Error creating user")
     }
   }
-
+*/
   async function chooseCreationType(onboardingType) {
     if (onboardingType === "emailOnboarding") {
       createUserFlow()
     } else {
-      let newUser = await users.create({
+      await users.create({
         email: "auser5@test.com",
         password: Math.random().toString(36).slice(2, 20),
         builder: true,
@@ -157,7 +153,6 @@
     try {
       await groups.actions.init()
     } catch (error) {
-      console.log(error)
       notifications.error("Error fetching User Group data")
     }
   })

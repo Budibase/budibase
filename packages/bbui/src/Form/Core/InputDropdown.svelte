@@ -5,7 +5,6 @@
   import { fly } from "svelte/transition"
   import { createEventDispatcher } from "svelte"
   import clickOutside from "../../Actions/click_outside"
-  import StatusLight from "../../StatusLight/StatusLight.svelte"
 
   export let inputValue
   export let dropdownValue
@@ -19,7 +18,6 @@
   export let options = []
   export let getOptionLabel = option => extractProperty(option, "label")
   export let getOptionValue = option => extractProperty(option, "value")
-  export let getOptionColour = option => extractProperty(option, "colour")
 
   export let isOptionSelected = () => false
 

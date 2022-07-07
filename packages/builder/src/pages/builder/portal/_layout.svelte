@@ -126,11 +126,10 @@
         $redirect("../")
       } else {
         try {
-          await organisation.init()
           await roles.fetch()
+          await organisation.init()
         } catch (error) {
           console.log(error)
-
           notifications.error("Error getting org config")
         }
         loaded = true

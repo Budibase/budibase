@@ -5,15 +5,9 @@
     ModalContent,
     Multiselect,
     InputDropdown,
-    Body,
-    Input,
-    notifications,
-    Select,
-    Toggle,
     Layout,
   } from "@budibase/bbui"
-  import { createValidationStore, emailValidator } from "helpers/validation"
-  import { users, groups } from "stores/portal"
+  import { groups } from "stores/portal"
   import { createEventDispatcher } from "svelte"
   import { Constants } from "@budibase/frontend-core"
 
@@ -21,8 +15,6 @@
 
   const dispatch = createEventDispatcher()
   let disabled
-
-  let selected = "Email onboarding"
 
   $: userData = [{ email: "", role: "", groups: [], error: null }]
 
