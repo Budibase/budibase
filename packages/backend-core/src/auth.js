@@ -20,6 +20,8 @@ const {
   internalApi,
 } = require("./middleware")
 
+const { invalidateUser } = require("./cache/user")
+
 // Strategies
 passport.use(new LocalStrategy(local.options, local.authenticate))
 passport.use(new JwtStrategy(jwt.options, jwt.authenticate))
@@ -149,6 +151,8 @@ async function updateUserOAuth(userId, oAuthConfig) {
     }
 
     await db.put(dbUser)
+
+    await invalidateUser(userId)
   } catch (e) {
     console.error("Could not update OAuth details for current user", e)
   }

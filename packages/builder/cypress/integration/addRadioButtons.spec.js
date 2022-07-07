@@ -36,5 +36,9 @@ filterTests(['all'], () => {
             })
             cy.addCustomSourceOptions(totalRadioButtons)
         }
+
+    after(() => {
+        cy.deleteAllApps()
+        })
     })
 })
