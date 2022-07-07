@@ -151,7 +151,7 @@ filterTests(["all"], () => {
         cy.get("@query").its("response.body").should("not.be.empty")
         // Save query
         cy.get(".spectrum-Button").contains("Save Query").click({ force: true })
-        cy.get(".hierarchy-items-container").should("contain", queryName)
+        cy.get(".spectrum-Tabs-content", { timeout: 2000 }).should("contain", queryName)
       })
 
       it("should switch to schema with no tables", () => {
