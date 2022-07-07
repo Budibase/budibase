@@ -9,10 +9,11 @@ filterTests(["smoke", "all"], () => {
     before(() => {
       cy.login()
       cy.deleteApp("Cypress Tests")
-      cy.createApp("Cypress Tests")
+      cy.createApp("Cypress Tests", false)
       
       // Create new user
-      cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 1000})
+      cy.wait(500)
+      cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 5000})
       cy.createUser(bbUserEmail)
       cy.contains("bbuser").click()
       cy.wait(500)
