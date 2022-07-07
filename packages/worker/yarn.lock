@@ -293,12 +293,11 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/backend-core@1.0.212-alpha.15":
-  version "1.0.212-alpha.15"
-  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.0.212-alpha.15.tgz#90ad9fed55a1e08c3ae69069e5d01e51477afd13"
-  integrity sha512-auIkpv9/W6iA1brt4vUtZivTS/8baqgPATOb+CCGzCukcDvrxkBQEEepAz0DYonKlFznsKSMkjOvgAY70wcm2Q==
+"@budibase/backend-core@1.0.218":
+  version "1.0.218"
+  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.0.218.tgz#be101c8baf220fa3fc55d63071bb38fc6c8cf4d8"
+  integrity sha512-v9+bvQ2+OsK7eGyDHzMuPawTu2LovRCsuArFeMnaG/AbexkqnbB74w+h3vh/2npuHzrnk8RZkM2c4pp/ycqfKw==
   dependencies:
-    "@budibase/types" "^1.0.212-alpha.15"
     "@techpass/passport-openidconnect" "0.3.2"
     aws-sdk "2.1030.0"
     bcrypt "5.0.1"
@@ -326,24 +325,13 @@
     uuid "8.3.2"
     zlib "1.0.5"
 
-"@budibase/pro@1.0.212-alpha.15":
-  version "1.0.212-alpha.15"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-1.0.212-alpha.15.tgz#b1fe270960828ee5e096b7f958114c3782303deb"
-  integrity sha512-sAUeauSROZiTdQUB8PSjVrGi+C//sMvxs5B4kSBgu0+pJ5kDaa6jOd291dMfDFgVTlHQJvzGM0Z+FXooYIHLAQ==
-  dependencies:
-    "@budibase/backend-core" "1.0.212-alpha.15"
-    "@budibase/types" "1.0.212-alpha.12"
-    node-fetch "^2.6.1"
-
-"@budibase/types@1.0.212-alpha.12":
-  version "1.0.212-alpha.12"
-  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-1.0.212-alpha.12.tgz#d45aa03d18f9ddc20d66e034072c0dc759eaf1ed"
-  integrity sha512-o4ZXUuqW6ryLj9/LptXBRwPPofl6PB5eo+HDt7KNMq7beVSC48uS+N/cQEF325OKrrulZRAGEStnUaLkFz3M9A==
-
-"@budibase/types@^1.0.212-alpha.15":
+"@budibase/pro@1.0.218":
   version "1.0.218"
-  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-1.0.218.tgz#534dd41c4a42a9061256c75b46bd78ec27ce47cd"
-  integrity sha512-X5mNdkHZtjEp/B+5mrtcTTUAj76XkF1U6/kEA9sQ9XHano9b22u/gbXTm/VdSuwqTXwN9abh5xAHhZDNSCrgiw==
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-1.0.218.tgz#b9e5bb95cca996dc1f7f783a3a02e51cbbf3df55"
+  integrity sha512-LJpV4rYPP9DzMNkL2Y0euZplkubBKBE+gc5JBTMt1l9Fwn2Sri/Y5bQ+U8fjczjmHxYnZLrFwH+o6LCnk/QJow==
+  dependencies:
+    "@budibase/backend-core" "1.0.218"
+    node-fetch "^2.6.1"
 
 "@cspotcode/source-map-consumer@0.8.0":
   version "0.8.0"
