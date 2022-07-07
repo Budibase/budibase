@@ -134,15 +134,18 @@ Cypress.Commands.add("createApp", (name, addDefaultTable) => {
   const shouldCreateDefaultTable =
     typeof addDefaultTable != "boolean" ? true : addDefaultTable
 
-  cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 5000 })
-  cy.get(`[data-cy="create-app-btn"]`, { timeout: 2000 }).click({ force: true })
+  cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 10000 })
+  cy.wait(1000)
+  cy.get(`[data-cy="create-app-btn"]`, { timeout: 5000 }).click({ force: true })
 
   // If apps already exist
   cy.request(`${Cypress.config().baseUrl}/api/applications?status=all`)
     .its("body")
     .then(val => {
       if (val.length > 0) {
-        cy.get(`[data-cy="create-app-btn"]`).click({ force: true })
+        cy.get(`[data-cy="create-app-btn"]`, { timeout: 5000 }).click({
+          force: true,
+        })
       }
     })
 
