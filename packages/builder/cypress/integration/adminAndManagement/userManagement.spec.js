@@ -46,8 +46,8 @@ filterTests(["smoke", "all"], () => {
                   cy.createApp(name)
                 } else {
                   cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 5000})
-                  cy.wait(500)
-                  cy.get(interact.CREATE_APP_BUTTON, { timeout: 1000 }).click({ force: true })
+                  cy.wait(1000)
+                  cy.get(interact.CREATE_APP_BUTTON, { timeout: 2000 }).click({ force: true })
                   cy.createAppFromScratch(name)
                 }
               }
