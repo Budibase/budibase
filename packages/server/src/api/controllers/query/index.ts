@@ -166,12 +166,15 @@ export async function preview(ctx: any) {
   }
 }
 
-async function execute(ctx: any, opts = { rowsOnly: false, isAutomation: false }) {
+async function execute(
+  ctx: any,
+  opts = { rowsOnly: false, isAutomation: false }
+) {
   const db = getAppDB()
 
   const query = await db.get(ctx.params.queryId)
   const datasource = await db.get(query.datasourceId)
-  
+
   let authConfigCtx: any = {}
   if (!opts.isAutomation) {
     authConfigCtx = getAuthConfig(ctx)
