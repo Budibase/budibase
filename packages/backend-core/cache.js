@@ -5,4 +5,5 @@ module.exports = {
   app: require("./src/cache/appMetadata"),
   writethrough: require("./src/cache/writethrough"),
   ...generic,
+  cache: generic,
 }
