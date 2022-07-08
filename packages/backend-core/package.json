@@ -1,6 +1,6 @@
 {
   "name": "@budibase/backend-core",
-  "version": "1.0.218",
+  "version": "1.0.219",
   "description": "Budibase backend core libraries used in server and worker",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -57,7 +57,7 @@
     ]
   },
   "devDependencies": {
-    "@budibase/types": "^1.0.218",
+    "@budibase/types": "^1.0.219",
     "@shopify/jest-koa-mocks": "3.1.5",
     "@types/jest": "27.5.1",
     "@types/koa": "2.0.52",
