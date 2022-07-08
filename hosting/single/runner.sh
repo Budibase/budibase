@@ -1,6 +1,6 @@
 redis-server --requirepass $REDIS_PASSWORD &
 /opt/clouseau/bin/clouseau &
-/minio/minio server /minio &
+/minio/minio server /data/minio &
 /docker-entrypoint.sh /opt/couchdb/bin/couchdb &
 /etc/init.d/nginx restart
 if [[ ! -z "${CUSTOM_DOMAIN}" ]]; then

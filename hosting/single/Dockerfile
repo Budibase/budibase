@@ -67,8 +67,8 @@ RUN curl -sL https://deb.nodesource.com/setup_16.x -o /tmp/nodesource_setup.sh &
   npm install --global yarn pm2
 
 # setup nginx
-ADD hosting/single/nginx.conf /etc/nginx
-ADD hosting/single/nginx-default-site.conf /etc/nginx/sites-enabled/default
+ADD hosting/single/nginx/nginx.conf /etc/nginx
+ADD hosting/single/nginx/nginx-default-site.conf /etc/nginx/sites-enabled/default
 RUN mkdir -p /var/log/nginx && \
   touch /var/log/nginx/error.log && \
   touch /var/run/nginx.pid
@@ -87,13 +87,15 @@ RUN wget https://github.com/cloudant-labs/clouseau/releases/download/2.21.0/clou
 
 WORKDIR /opt/clouseau
 RUN mkdir ./bin
-ADD hosting/single/clouseau ./bin/
-ADD hosting/single/log4j.properties hosting/single/clouseau.ini ./
+ADD hosting/single/clouseau/clouseau ./bin/
+ADD hosting/single/clouseau/log4j.properties hosting/single/clouseau/clouseau.ini ./
 RUN chmod +x ./bin/clouseau
 
 # setup CouchDB
 WORKDIR /opt/couchdb
-ADD hosting/single/vm.args ./etc/
+ADD hosting/single/couch/vm.args hosting/single/couch/local.ini ./etc/
+RUN mkdir -p /data/couch/dbs /data/couch/views
+RUN chown couchdb:couchdb /data/couch /data/couch/dbs /data/couch/views
 
 # setup minio
 WORKDIR /minio
