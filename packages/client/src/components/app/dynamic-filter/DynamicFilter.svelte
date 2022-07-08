@@ -61,7 +61,9 @@
       clonedSchema = schema
     } else {
       allowedFields?.forEach(field => {
-        clonedSchema[field] = schema[field]
+        if (schema[field]) {
+          clonedSchema[field] = schema[field]
+        }
       })
     }
     return Object.values(clonedSchema || {})
