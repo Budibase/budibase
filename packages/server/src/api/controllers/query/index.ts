@@ -168,7 +168,7 @@ export async function preview(ctx: any) {
 
 async function execute(
   ctx: any,
-  opts = { rowsOnly: false, isAutomation: false }
+  opts: any = { rowsOnly: false, isAutomation: false }
 ) {
   const db = getAppDB()
 
@@ -219,10 +219,13 @@ async function execute(
 }
 
 export async function executeV1(ctx: any) {
-  return execute(ctx, { rowsOnly: true, isAutomation: false })
+  return execute(ctx, { rowsOnly: true })
 }
 
-export async function executeV2(ctx: any, isAutomation?: any) {
+export async function executeV2(
+  ctx: any,
+  { isAutomation }: { isAutomation?: boolean } = {}
+) {
   return execute(ctx, { rowsOnly: false, isAutomation })
 }
 
