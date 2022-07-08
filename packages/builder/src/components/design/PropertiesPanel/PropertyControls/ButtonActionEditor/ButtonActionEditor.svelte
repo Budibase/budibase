@@ -69,9 +69,15 @@
       notifications.error("Error creating automation")
     }
   }
+
+  $: actionCount = value?.length
+  $: actionText = `${actionCount || "No"} action${
+    actionCount !== 1 ? "s" : ""
+  } set`
 </script>
 
 <ActionButton on:click={openDrawer}>Define actions</ActionButton>
+<div class="action-count">{actionText}</div>
 <Drawer bind:this={drawer} title={"Actions"}>
   <svelte:fragment slot="description">
     Define what actions to run.
@@ -85,3 +91,9 @@
     {key}
   />
 </Drawer>
+
+<style>
+  .action-count {
+    padding-top: var(--spacing-s);
+  }
+</style>
