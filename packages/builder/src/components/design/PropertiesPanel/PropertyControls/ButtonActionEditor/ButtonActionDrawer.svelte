@@ -6,8 +6,8 @@
     Button,
     Layout,
     DrawerContent,
-    ActionMenu,
-    MenuItem,
+    ActionButton,
+    Search,
   } from "@budibase/bbui"
   import { getAvailableActions } from "./index"
   import { generate } from "shortid"
@@ -22,7 +22,23 @@
   export let actions
   export let bindings = []
 
+  let showAvailableActions = false
+
+  let actionQuery
+  $: parsedQuery =
+    typeof actionQuery === "string" ? actionQuery.toLowerCase().trim() : ""
+
   let selectedAction = actions?.length ? actions[0] : null
+
+  $: mappedActionTypes = actionTypes.reduce((acc, action) => {
+    let parsedName = action.name.toLowerCase().trim()
+    if (parsedQuery.length && parsedName.indexOf(parsedQuery) < 0) {
+      return acc
+    }
+    acc[action.type] = acc[action.type] || []
+    acc[action.type].push(action)
+    return acc
+  }, {})
 
   // These are ephemeral bindings which only exist while executing actions
   $: buttonContextBindings = getButtonContextBindings(
@@ -61,7 +77,12 @@
     actions = actions
   }
 
-  const addAction = actionType => () => {
+  const toggleActionList = () => {
+    actionQuery = null
+    showAvailableActions = !showAvailableActions
+  }
+
+  const addAction = actionType => {
     const newAction = {
       parameters: {},
       [EVENT_TYPE_KEY]: actionType.name,
@@ -78,6 +99,11 @@
     selectedAction = action
   }
 
+  const onAddAction = actionType => {
+    addAction(actionType)
+    toggleActionList()
+  }
+
   function handleDndConsider(e) {
     actions = e.detail.items
   }
@@ -88,7 +114,29 @@
 
 <DrawerContent>
   <Layout noPadding gap="S" slot="sidebar">
-    {#if actions && actions.length > 0}
+    {#if showAvailableActions}
+      <div>
+        <ActionButton secondary icon={"ArrowLeft"} on:click={toggleActionList}>
+          Back
+        </ActionButton>
+      </div>
+      <Search placeholder="Search" bind:value={actionQuery} />
+      {#each Object.entries(mappedActionTypes) as [categoryId, category]}
+        <div class="heading">{categoryId}</div>
+        <ul>
+          {#each category as actionType}
+            <li on:click={onAddAction(actionType)}>
+              <span class="binding__label">{actionType.name}</span>
+            </li>
+          {/each}
+        </ul>
+      {/each}
+    {/if}
+
+    {#if actions && actions.length > 0 && !showAvailableActions}
+      <div>
+        <Button secondary on:click={toggleActionList}>Add Action</Button>
+      </div>
       <div
         class="actions"
         use:dndzone={{
@@ -120,17 +168,9 @@
         {/each}
       </div>
     {/if}
-    <ActionMenu>
-      <Button slot="control" secondary>Add Action</Button>
-      {#each actionTypes as actionType}
-        <MenuItem on:click={addAction(actionType)}>
-          {actionType.name}
-        </MenuItem>
-      {/each}
-    </ActionMenu>
   </Layout>
   <Layout noPadding>
-    {#if selectedActionComponent}
+    {#if selectedActionComponent && !showAvailableActions}
       {#key selectedAction.id}
         <div class="selected-action-container">
           <svelte:component
@@ -152,13 +192,10 @@
     align-items: stretch;
     gap: var(--spacing-s);
   }
-
   .action-header {
     color: var(--spectrum-global-color-gray-700);
-
     flex: 1 1 auto;
   }
-
   .action-container {
     background-color: var(--background);
     padding: var(--spacing-s) var(--spacing-m);
@@ -181,5 +218,46 @@
   .action-container:hover .action-header,
   .action-container.selected .action-header {
     color: var(--spectrum-global-color-gray-900);
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  li {
+    font-size: var(--font-size-s);
+    padding: var(--spacing-m);
+    border-radius: 4px;
+    border: var(--border-light);
+    transition: background-color 130ms ease-in-out, color 130ms ease-in-out,
+      border-color 130ms ease-in-out;
+    word-wrap: break-word;
+  }
+  li:not(:last-of-type) {
+    margin-bottom: var(--spacing-s);
+  }
+  li :global(*) {
+    transition: color 130ms ease-in-out;
+  }
+  li:hover {
+    color: var(--spectrum-global-color-gray-900);
+    background-color: var(--spectrum-global-color-gray-50);
+    border-color: var(--spectrum-global-color-gray-500);
+    cursor: pointer;
+  }
+  li:hover :global(*) {
+    color: var(--spectrum-global-color-gray-900) !important;
+  }
+  .binding__label {
+    font-weight: 600;
+    text-transform: capitalize;
+  }
+  .heading {
+    font-size: var(--font-size-s);
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--spectrum-global-color-gray-600);
   }
 </style>
