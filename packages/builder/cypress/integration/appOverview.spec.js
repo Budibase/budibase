@@ -5,6 +5,7 @@ filterTests(["all"], () => {
   context("Application Overview screen", () => {
     before(() => {
       cy.login()
+      cy.deleteAllApps()
       cy.createTestApp()
     })
 
@@ -300,7 +301,7 @@ filterTests(["all"], () => {
     })
 
     it("Should allow editing of the app details.", () => {
-      cy.visit(`${Cypress.config().baseUrl}/builder`)
+      cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 5000 })
       cy.get(".appTable .app-row-actions button")
         .contains("Manage")
         .eq(0)
@@ -315,7 +316,8 @@ filterTests(["all"], () => {
       cy.updateAppName("sample name")
 
       //publish and check its disabled
-      cy.visit(`${Cypress.config().baseUrl}/builder`)
+      cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 5000 })
+      cy.wait(500)
       cy.get(".appTable .app-row-actions button")
         .contains("Edit")
         .eq(0)
@@ -331,8 +333,8 @@ filterTests(["all"], () => {
           cy.wait(1000)
         })
 
-      cy.visit(`${Cypress.config().baseUrl}/builder`)
-      cy.get(".appTable .app-row-actions button", { timeout: 1000 })
+      cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 10000 })
+      cy.get(".appTable .app-row-actions button", { timeout: 5000 })
         .contains("Manage")
         .eq(0)
         .click({ force: true })

@@ -111,6 +111,7 @@ filterTests(["all"], () => {
           // Save relationship & reload page
           cy.get(".spectrum-Button").contains("Save").click({ force: true })
           cy.reload()
+          cy.wait(1000)
         })
         // Confirm table length & relationship name
         cy.get(".spectrum-Table", { timeout: 1000 })

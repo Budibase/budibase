@@ -151,7 +151,7 @@ filterTests(["all"], () => {
         cy.get("@query").its("response.body").should("not.be.empty")
         // Save query
         cy.get(".spectrum-Button").contains("Save Query").click({ force: true })
-        cy.get(".hierarchy-items-container").should("contain", queryName)
+        cy.get(".spectrum-Tabs-content", { timeout: 2000 }).should("contain", queryName)
       })
 
       it("should switch to schema with no tables", () => {
@@ -231,10 +231,9 @@ filterTests(["all"], () => {
         // Run and Save query
         cy.get(".spectrum-Button").contains("Run Query").click({ force: true })
         cy.wait(500)
-        cy.get(".spectrum-Button", { timeout: 500 }).contains("Save Query").click({ force: true })
-        //cy.reload()
-        //cy.wait(500)
-        cy.get(".nav-item").should("contain", queryRename)
+        cy.get(".spectrum-Button", { timeout: 2000 }).contains("Save Query").click({ force: true })
+        cy.reload({ timeout: 5000 })
+        cy.get(".nav-item", { timeout: 2000 }).should("contain", queryRename)
       })
 
       it("should delete a query", () => {
