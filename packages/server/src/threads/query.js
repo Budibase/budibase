@@ -10,6 +10,7 @@ const {
 } = require("@budibase/backend-core/auth")
 const { user: userCache } = require("@budibase/backend-core/cache")
 const { getGlobalIDFromUserMetadataID } = require("../db/utils")
+const { cloneDeep } = require("lodash/fp")
 
 const { isSQL } = require("../integrations/utils")
 const {
@@ -41,20 +42,22 @@ class QueryRunner {
   async execute() {
     let { datasource, fields, queryVerb, transformer } = this
 
-    const Integration = integrations[datasource.source]
+    let datasourceClone = cloneDeep(datasource)
+    let fieldsClone = cloneDeep(fields)
+
+    const Integration = integrations[datasourceClone.source]
     if (!Integration) {
       throw "Integration type does not exist."
     }
 
-    if (datasource.config.authConfigs) {
-      datasource.config.authConfigs = datasource.config.authConfigs.map(
-        config => {
+    if (datasourceClone.config.authConfigs) {
+      datasourceClone.config.authConfigs =
+        datasourceClone.config.authConfigs.map(config => {
           return enrichQueryFields(config, this.ctx)
-        }
-      )
+        })
     }
 
-    const integration = new Integration(datasource.config)
+    const integration = new Integration(datasourceClone.config)
 
     // pre-query, make sure datasource variables are added to parameters
     const parameters = await this.addDatasourceVariables()
@@ -65,19 +68,19 @@ class QueryRunner {
     const enrichedContext = { ...enrichedParameters, ...this.ctx }
 
     // Parse global headers
-    if (datasource.config.defaultHeaders) {
-      datasource.config.defaultHeaders = enrichQueryFields(
-        datasource.config.defaultHeaders,
+    if (datasourceClone.config.defaultHeaders) {
+      datasourceClone.config.defaultHeaders = enrichQueryFields(
+        datasourceClone.config.defaultHeaders,
         enrichedContext
       )
     }
 
     let query
     // handle SQL injections by interpolating the variables
-    if (isSQL(datasource)) {
-      query = interpolateSQL(fields, enrichedParameters, integration)
+    if (isSQL(datasourceClone)) {
+      query = interpolateSQL(fieldsClone, enrichedParameters, integration)
     } else {
-      query = enrichQueryFields(fields, enrichedContext)
+      query = enrichQueryFields(fieldsClone, enrichedContext)
     }
 
     // Add pagination values for REST queries
@@ -116,9 +119,10 @@ class QueryRunner {
         await this.refreshOAuth2(this.ctx)
         // Attempt to refresh the access token from the provider
         this.hasRefreshedOAuth = true
+      } else {
+        this.hasRerun = true
       }
 
-      this.hasRerun = true
       await threadUtils.invalidateDynamicVariables(this.cachedVariables)
       return this.execute()
     }
