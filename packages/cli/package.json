@@ -1,6 +1,6 @@
 {
   "name": "@budibase/cli",
-  "version": "1.0.219-alpha.11",
+  "version": "1.0.219-alpha.12",
   "description": "Budibase CLI, for developers, self hosting and migrations.",
   "main": "src/index.js",
   "bin": {
