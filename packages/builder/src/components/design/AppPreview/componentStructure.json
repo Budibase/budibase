@@ -23,7 +23,8 @@
       "dataprovider",
       "repeater",
       "table",
-      "dynamicfilter"
+      "dynamicfilter",
+      "daterangepicker"
     ]
   },
   {
@@ -42,7 +43,6 @@
       "datetimefield",
       "attachmentfield",
       "relationshipfield",
-      "daterangepicker",
       "multifieldselect",
       "jsonfield",
       "s3upload"
