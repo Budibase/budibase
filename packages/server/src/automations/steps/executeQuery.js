@@ -71,8 +71,9 @@ exports.run = async function ({ inputs, appId, emitter }) {
     },
   })
 
+  const isAutomation = true
   try {
-    await queryController.executeV2(ctx)
+    await queryController.executeV2(ctx, isAutomation)
     const { data, ...rest } = ctx.body
     return {
       response: data,

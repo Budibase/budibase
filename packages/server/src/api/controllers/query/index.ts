@@ -166,14 +166,16 @@ export async function preview(ctx: any) {
   }
 }
 
-async function execute(ctx: any, opts = { rowsOnly: false }) {
+async function execute(ctx: any, opts = { rowsOnly: false, isAutomation: false }) {
   const db = getAppDB()
 
   const query = await db.get(ctx.params.queryId)
   const datasource = await db.get(query.datasourceId)
-
-  const authConfigCtx: any = getAuthConfig(ctx)
-
+  
+  let authConfigCtx: any = {}
+  if (!opts.isAutomation) {
+    authConfigCtx = getAuthConfig(ctx)
+  }
   const enrichedParameters = ctx.request.body.parameters || {}
   // make sure parameters are fully enriched with defaults
   if (query && query.parameters) {
@@ -214,11 +216,11 @@ async function execute(ctx: any, opts = { rowsOnly: false }) {
 }
 
 export async function executeV1(ctx: any) {
-  return execute(ctx, { rowsOnly: true })
+  return execute(ctx, { rowsOnly: true, isAutomation: false })
 }
 
-export async function executeV2(ctx: any) {
-  return execute(ctx, { rowsOnly: false })
+export async function executeV2(ctx: any, isAutomation?: any) {
+  return execute(ctx, { rowsOnly: false, isAutomation })
 }
 
 const removeDynamicVariables = async (queryId: any) => {
