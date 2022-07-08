@@ -191,8 +191,9 @@ class QueryRunner {
     } else {
       // In this event the user may have oAuth issues that
       // could require re-authenticating with their provider.
+      let errorMessage = resp.err.data ? resp.err.data : resp.err.toString()
       throw new Error(
-        "OAuth2 access token could not be refreshed: " + resp.err.toString()
+        "OAuth2 access token could not be refreshed: " + errorMessage
       )
     }
 
