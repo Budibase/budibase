@@ -1,10 +1,10 @@
 <script>
-  import { goto } from "@roxi/routify"
+  import { redirect } from "@roxi/routify"
   import { onMount } from "svelte"
   import { tables } from "stores/backend"
 
   onMount(async () => {
-    $tables.list.length > 0 && $goto(`./${$tables.list[0]._id}`)
+    $tables.list.length > 0 && $redirect(`./${$tables.list[0]._id}`)
   })
 </script>
 
