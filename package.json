@@ -25,7 +25,7 @@
     "bootstrap": "lerna bootstrap && lerna link && ./scripts/link-dependencies.sh",
     "build": "lerna run build",
     "build:dev": "lerna run prebuild && tsc --build --watch --preserveWatchOutput",
-    "release": "lerna publish patch --yes --force-publish && yarn release:pro",
+    "release": "lerna publish ${RELEASE_VERSION_TYPE:-patch} --yes --force-publish && yarn release:pro",
     "release:develop": "lerna publish prerelease --yes --force-publish --dist-tag develop && yarn release:pro:develop",
     "release:pro": "bash scripts/pro/release.sh",
     "release:pro:develop": "bash scripts/pro/release.sh develop",
