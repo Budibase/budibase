@@ -1,5 +1,7 @@
 import { Document } from "../document"
 
+export type AppMetadataErrors = { [key: string]: string[] }
+
 export interface App extends Document {
   appId: string
   type: string
@@ -19,6 +21,7 @@ export interface App extends Document {
   }
   revertableVersion?: string
   navigation?: AppNavigation
+  automationErrors?: AppMetadataErrors
 }
 
 export interface AppInstance {

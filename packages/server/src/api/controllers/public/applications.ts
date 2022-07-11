@@ -1,6 +1,6 @@
 const { getAllApps } = require("@budibase/backend-core/db")
 const { updateAppId } = require("@budibase/backend-core/context")
-import { search as stringSearch } from "./utils"
+import { search as stringSearch, addRev } from "./utils"
 import * as controller from "../application"
 import { Application } from "../../../definitions/common"
 
@@ -47,7 +47,7 @@ export async function read(ctx: any, next: any) {
 }
 
 export async function update(ctx: any, next: any) {
-  ctx.request.body = fixAppID(ctx.request.body, ctx.params)
+  ctx.request.body = await addRev(fixAppID(ctx.request.body, ctx.params))
   updateAppId(ctx.params.appId)
   await controller.update(ctx)
   await setResponseApp(ctx)

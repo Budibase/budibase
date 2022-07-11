@@ -28,6 +28,7 @@
   import EditableIcon from "components/common/EditableIcon.svelte"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import BetaTab from "components/beta/BetaTab.svelte"
+  import HistoryTab from "components/portal/overview/automation/HistoryTab.svelte"
   import { checkIncomingDeploymentStatus } from "components/deploy/utils"
   import { onDestroy, onMount } from "svelte"
 
@@ -188,6 +189,10 @@
   })
 
   onMount(async () => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get("tab")) {
+      selectedTab = params.get("tab")
+    }
     try {
       if (!apps.length) {
         await apps.load()
@@ -212,7 +217,7 @@
         <ProgressCircle size="XL" />
       </div>
     {:then _}
-      <Layout paddingX="XXL" paddingY="XXL" gap="XL">
+      <Layout paddingX="XXL" paddingY="XL" gap="L">
         <span class="page-header" class:loaded>
           <ActionButton secondary icon={"ArrowLeft"} on:click={backToAppList}>
             Back
@@ -300,10 +305,12 @@
               on:unpublish={e => unpublishApp(e.detail)}
             />
           </Tab>
-          {#if false}
+          {#if isPublished}
             <Tab title="Automation History">
-              <div class="container">Automation History contents</div>
+              <HistoryTab app={selectedApp} />
             </Tab>
+          {/if}
+          {#if false}
             <Tab title="Backups">
               <div class="container">Backups contents</div>
             </Tab>
