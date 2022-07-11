@@ -1,23 +1,15 @@
 <script>
   import { store, automationStore } from "builderStore"
   import { roles, flags } from "stores/backend"
-  import {
-    Icon,
-    ActionGroup,
-    Tabs,
-    Tab,
-    notifications,
-    Banner,
-  } from "@budibase/bbui"
+  import { Icon, ActionGroup, Tabs, Tab, notifications } from "@budibase/bbui"
   import RevertModal from "components/deploy/RevertModal.svelte"
   import VersionModal from "components/deploy/VersionModal.svelte"
   import DeployNavigation from "components/deploy/DeployNavigation.svelte"
   import { API } from "api"
-  import { auth, admin } from "stores/portal"
+  import { auth } from "stores/portal"
   import { isActive, goto, layout, redirect } from "@roxi/routify"
   import Logo from "assets/bb-emblem.svg"
   import { capitalise } from "helpers"
-  import UpgradeModal from "components/upgrade/UpgradeModal.svelte"
   import { onMount, onDestroy } from "svelte"
 
   export let application
@@ -66,11 +58,6 @@
     })
   }
 
-  async function newDesignUi() {
-    await flags.toggleUiFeature("design_ui")
-    window.location.reload()
-  }
-
   onMount(async () => {
     if (!hasSynced && application) {
       try {
@@ -95,15 +82,6 @@
   <div class="loading" />
 {:then _}
   <div class="root">
-    {#if betaAccess}
-      <Banner
-        extraButtonText="Try New UI (Beta)"
-        extraButtonAction={newDesignUi}
-      >
-        Try the <b>all new</b> budibase design interface. (Not recommended for existing
-        budibase apps)
-      </Banner>
-    {/if}
     <div class="top-nav">
       <div class="topleftnav">
         <button class="home-logo">
@@ -131,9 +109,6 @@
         <ActionGroup />
       </div>
       <div class="toprightnav">
-        {#if $admin.cloud && $auth.user.account}
-          <UpgradeModal />
-        {/if}
         <VersionModal />
         <RevertModal />
         <Icon name="Play" hoverable on:click={previewApp} />
