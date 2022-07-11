@@ -71,9 +71,9 @@
   }
 
   const onPickPrimary = e => {
-    primaryLabel = e.detail.label
-    primaryValue = e.detail.value
-    dispatch("pickprimary", e.detail.value)
+    primaryLabel = e?.detail?.label || null
+    primaryValue = e?.detail?.value || null
+    dispatch("pickprimary", e?.detail?.value || {})
   }
 
   const onPickSecondary = e => {
