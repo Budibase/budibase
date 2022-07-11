@@ -229,11 +229,7 @@ export const fetchAppPackage = async (ctx: any) => {
     application,
     screens,
     layouts,
-    clientLibPath: clientLibraryPath(
-      ctx.params.appId,
-      application.version,
-      ctx
-    ),
+    clientLibPath: clientLibraryPath(ctx.params.appId, application.version),
   }
 }
 
