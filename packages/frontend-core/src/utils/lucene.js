@@ -170,7 +170,10 @@ export const runLuceneQuery = (docs, query) => {
     const filters = Object.entries(query[type] || {})
     for (let i = 0; i < filters.length; i++) {
       const [key, testValue] = filters[i]
-      const docValue = Helpers.deepGet(doc, key)
+      let docValue = Helpers.deepGet(doc, key)
+      if (typeof docValue !== "string" && typeof testValue === "string") {
+        docValue = docValue.toString()
+      }
       if (failFn(docValue, testValue)) {
         return false
       }
