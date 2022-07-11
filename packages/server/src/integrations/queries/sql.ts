@@ -9,7 +9,9 @@ export function enrichQueryFields(
   parameters = {}
 ) {
   const enrichedQuery: { [key: string]: any } = Array.isArray(fields) ? [] : {}
-
+  if (!fields || !parameters) {
+    return enrichedQuery
+  }
   // enrich the fields with dynamic parameters
   for (let key of Object.keys(fields)) {
     if (fields[key] == null) {

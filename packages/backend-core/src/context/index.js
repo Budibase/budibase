@@ -314,6 +314,7 @@ function getContextDB(key, opts) {
       toUseAppId = getDevelopmentAppID(appId)
       break
   }
+
   db = dangerousGetDB(toUseAppId, opts)
   try {
     cls.setOnContext(key, db)

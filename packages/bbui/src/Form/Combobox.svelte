@@ -40,5 +40,6 @@
     on:change={onChange}
     on:pick
     on:type
+    on:blur
   />
 </Field>

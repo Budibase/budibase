@@ -65,6 +65,7 @@ async function getLinksForRows(rows) {
   // return duplicates, could be querying for both tables in a relation
   return getUniqueByProp(
     responses
+      .filter(el => el != null)
       // create a unique ID which we can use for getting only unique ones
       .map(el => ({ ...el, unique: el.id + el.thisId + el.fieldName })),
     "unique"

@@ -5,6 +5,7 @@
   import CreateAutomationModal from "components/automation/AutomationPanel/CreateAutomationModal.svelte"
   import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
   import TestPanel from "components/automation/AutomationBuilder/TestPanel.svelte"
+  import { onMount } from "svelte"
 
   $: automation =
     $automationStore.selectedAutomation?.automation ||
@@ -12,6 +13,9 @@
 
   let modal
   let webhookModal
+  onMount(() => {
+    $automationStore.showTestPanel = false
+  })
 </script>
 
 <!-- routify:options index=3 -->
@@ -45,7 +49,7 @@
     {/if}
   </div>
 
-  {#if automation?.showTestPanel}
+  {#if $automationStore.showTestPanel}
     <div class="setup">
       <TestPanel {automation} />
     </div>

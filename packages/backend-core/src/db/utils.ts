@@ -1,7 +1,7 @@
 import { newid } from "../hashing"
 import { DEFAULT_TENANT_ID, Configs } from "../constants"
 import env from "../environment"
-import { SEPARATOR, DocumentTypes, UNICODE_MAX } from "./constants"
+import { SEPARATOR, DocumentTypes, UNICODE_MAX, ViewNames } from "./constants"
 import { getTenantId, getGlobalDBName, getGlobalDB } from "../tenancy"
 import fetch from "node-fetch"
 import { doWithDB, allDbs } from "./index"
@@ -11,12 +11,6 @@ import { checkSlashesInUrl } from "../helpers"
 import { isDevApp, isDevAppID } from "./conversions"
 import { APP_PREFIX } from "./constants"
 import * as events from "../events"
-
-export const ViewNames = {
-  USER_BY_EMAIL: "by_email",
-  BY_API_KEY: "by_api_key",
-  USER_BY_BUILDERS: "by_builders",
-}
 
 export * from "./constants"
 export * from "./conversions"
@@ -59,6 +53,13 @@ export function getDocParams(
     startkey: `${docType}${SEPARATOR}${docId}`,
     endkey: `${docType}${SEPARATOR}${docId}${UNICODE_MAX}`,
   }
+}
+
+/**
+ * Retrieve the correct index for a view based on default design DB.
+ */
+export function getQueryIndex(viewName: ViewNames) {
+  return `database/${viewName}`
 }
 
 /**
@@ -386,7 +387,9 @@ export const getScopedFullConfig = async function (
   if (type === Configs.SETTINGS) {
     if (scopedConfig && scopedConfig.doc) {
       // overrides affected by environment variables
-      scopedConfig.doc.config.platformUrl = await getPlatformUrl()
+      scopedConfig.doc.config.platformUrl = await getPlatformUrl({
+        tenantAware: true,
+      })
       scopedConfig.doc.config.analyticsEnabled =
         await events.analytics.enabled()
     } else {
@@ -395,7 +398,7 @@ export const getScopedFullConfig = async function (
         doc: {
           _id: generateConfigID({ type, user, workspace }),
           config: {
-            platformUrl: await getPlatformUrl(),
+            platformUrl: await getPlatformUrl({ tenantAware: true }),
             analyticsEnabled: await events.analytics.enabled(),
           },
         },
