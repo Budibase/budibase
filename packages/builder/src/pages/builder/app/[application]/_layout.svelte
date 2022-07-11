@@ -1,14 +1,7 @@
 <script>
   import { store, automationStore } from "builderStore"
   import { roles, flags } from "stores/backend"
-  import {
-    Icon,
-    Tabs,
-    Tab,
-    Heading,
-    notifications,
-    // Banner,
-  } from "@budibase/bbui"
+  import { Icon, Tabs, Tab, Heading, notifications } from "@budibase/bbui"
   import RevertModal from "components/deploy/RevertModal.svelte"
   import DeployNavigation from "components/deploy/DeployNavigation.svelte"
   import { API } from "api"
@@ -91,15 +84,6 @@
   <div class="loading" />
 {:then _}
   <div class="root">
-    <!-- {#if betaAccess}
-      <Banner
-        extraButtonText="Try New UI (Beta)"
-        extraButtonAction={newDesignUi}
-      >
-        Try the <b>all new</b> budibase design interface. (Not recommended for existing
-        budibase apps)
-      </Banner>
-    {/if} -->
     <div class="top-nav">
       <div class="topleftnav">
         <Icon
