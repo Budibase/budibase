@@ -133,6 +133,11 @@
       },
     },
     {
+      key: "onLoad",
+      label: "On screen load",
+      control: ButtonActionEditor,
+    },
+    {
       key: "showNavigation",
       label: "Navigation",
       control: Toggle,
@@ -150,11 +155,6 @@
         placeholder: "Default",
         disabled: !!$selectedScreen.layoutId,
       },
-    },
-    {
-      key: "onLoad",
-      label: "On screen load",
-      control: ButtonActionEditor,
     },
   ]
 
