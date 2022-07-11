@@ -26,7 +26,6 @@
   import OnboardingTypeModal from "./_components/OnboardingTypeModal.svelte"
   import PasswordModal from "./_components/PasswordModal.svelte"
   import ImportUsersModal from "./_components/ImportUsersModal.svelte"
-  import analytics, { Events } from "analytics"
   import { createPaginationStore } from "helpers/pagination"
 
   const schema = {
@@ -74,6 +73,7 @@
   let pageInfo = createPaginationStore()
   let prevEmail = undefined,
     searchEmail = undefined
+
   $: page = $pageInfo.page
   $: fetchUsers(page, searchEmail)
 
@@ -110,42 +110,30 @@
         admin: true,
       })
       notifications.success(res.message)
-      analytics.captureEvent(Events.USER.INVITE, { type: "Email onboarding" })
       inviteConfirmationModal.show()
     } catch (error) {
       console.log(error)
       notifications.error("Error inviting user")
     }
   }
-  /*
+
   async function createUser() {
     try {
-      await users.create({
-        email: $email,
-        password,
-        builder,
-        admin,
-        forceResetPassword: true,
-      })
+      await users.create(userData)
       notifications.success("Successfully created user")
+      await groups.actions.init()
+      passwordModal.show()
     } catch (error) {
+      console.log(error)
       notifications.error("Error creating user")
     }
   }
-*/
+
   async function chooseCreationType(onboardingType) {
     if (onboardingType === "emailOnboarding") {
       createUserFlow()
     } else {
-      await users.create({
-        email: "auser5@test.com",
-        password: Math.random().toString(36).slice(2, 20),
-        builder: true,
-        admin: true,
-        forceResetPassword: true,
-      })
-
-      passwordModal.show()
+      await createUser()
     }
   }
 
@@ -266,7 +254,7 @@
 </Modal>
 
 <Modal bind:this={passwordModal}>
-  <PasswordModal />
+  <PasswordModal userData={userData.users} />
 </Modal>
 
 <Modal bind:this={importUsersModal}>

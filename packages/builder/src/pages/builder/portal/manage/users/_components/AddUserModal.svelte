@@ -12,25 +12,36 @@
   import { Constants } from "@budibase/frontend-core"
 
   export let showOnboardingTypeModal
-
+  const password = Math.random().toString(36).substring(2, 22)
   const dispatch = createEventDispatcher()
   let disabled
+  let userGroups = []
 
-  $: userData = [{ email: "", role: "", groups: [], error: null }]
-
+  $: userData = [
+    {
+      email: "",
+      role: "appUser",
+      password,
+      forceResetPassword: true,
+    },
+  ]
   function addNewInput() {
-    userData = [...userData, { email: "", role: "" }]
-  }
-
-  function setValue(e) {
-    userData.groups = e.detail
+    userData = [
+      ...userData,
+      {
+        email: "",
+        role: "appUser",
+        password: Math.random().toString(36).substring(2, 22),
+        forceResetPassword: true,
+      },
+    ]
   }
 </script>
 
 <ModalContent
   onConfirm={() => {
     showOnboardingTypeModal()
-    dispatch("change", userData)
+    dispatch("change", { users: userData, groups: userGroups })
   }}
   size="M"
   title="Add new user"
@@ -57,12 +68,12 @@
   </Layout>
 
   <Multiselect
+    bind:value={userGroups}
     placeholder="Select User Groups"
-    on:change={e => setValue(e)}
     label="User Groups"
     options={$groups}
     getOptionLabel={option => option.name}
-    getOptionValue={option => option.name}
+    getOptionValue={option => option._id}
   />
 </ModalContent>
 

@@ -2,6 +2,16 @@
   import { Body, ModalContent, Table, Icon } from "@budibase/bbui"
   import PasswordCopyRenderer from "./PasswordCopyRenderer.svelte"
 
+  export let userData
+
+  $: mappedData = userData.map(user => {
+    return {
+      email: user.email,
+      password: user.password,
+    }
+  })
+
+  $: console.log(mappedData)
   const schema = {
     email: {},
     password: {},
@@ -33,9 +43,7 @@
 
   <Table
     {schema}
-    data={[
-      { email: "test", password: Math.random().toString(36).slice(2, 20) },
-    ]}
+    data={mappedData}
     allowEditColumns={false}
     allowEditRows={false}
     allowSelectRows={false}

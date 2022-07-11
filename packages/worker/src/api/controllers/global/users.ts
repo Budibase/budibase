@@ -22,6 +22,48 @@ export const save = async (ctx: any) => {
   }
 }
 
+export const bulkSave = async (ctx: any) => {
+  let { users: newUsers, groups } = ctx.request.body
+  let usersToSave: any[] = []
+  let groupsToSave: any[] = []
+  const db = tenancy.getGlobalDB()
+
+  newUsers.forEach((user: any) => {
+    usersToSave.push(
+      users.save(user, {
+        hashPassword: false,
+        requirePassword: user.requirePassword,
+        bulkCreate: true,
+      })
+    )
+
+    if (groups.length) {
+      groups.forEach(async (groupId: string) => {
+        let oldGroup = await db.get(groupId)
+        groupsToSave.push(oldGroup)
+      })
+    }
+  })
+  try {
+    const allUsers = await Promise.all(usersToSave)
+    let response = await db.bulkDocs(allUsers)
+
+    // delete passwords and add to group
+    allUsers.forEach(user => {
+      delete user.password
+    })
+
+    groupsToSave.forEach(async group => {
+      group.users = [...group.users, ...allUsers]
+      await db.put(group)
+    })
+
+    ctx.body = response
+  } catch (err: any) {
+    ctx.throw(err.status || 400, err)
+  }
+}
+
 const parseBooleanParam = (param: any) => {
   return !(param && param === "false")
 }

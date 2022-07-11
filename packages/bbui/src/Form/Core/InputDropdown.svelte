@@ -144,8 +144,10 @@
       on:mousedown={onClick}
     >
       <span class="spectrum-Picker-label">
-        {fieldText}
-      </span>
+        <div>
+          {fieldText}
+        </div></span
+      >
       <svg
         class="spectrum-Icon spectrum-UIIcon-ChevronDown100 spectrum-Picker-menuIcon"
         focusable="false"
