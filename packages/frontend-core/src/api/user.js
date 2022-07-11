@@ -84,6 +84,20 @@ export const buildUserEndpoints = API => ({
   },
 
   /**
+   * Creates multiple users.
+   * @param users the array of user objects to create
+   */
+  saveUsers: async ({ users, groups }) => {
+    return await API.post({
+      url: "/api/global/users/bulkSave",
+      body: {
+        users,
+        groups,
+      },
+    })
+  },
+
+  /**
    * Deletes a user from the curernt tenant.
    * @param userId the ID of the user to delete
    */

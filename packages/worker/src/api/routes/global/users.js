@@ -53,6 +53,13 @@ router
     users.buildUserSaveValidation(),
     controller.save
   )
+  .post(
+    "/api/global/users/bulkSave",
+    adminOnly,
+    users.buildUserBulkSaveValidation(),
+    controller.bulkSave
+  )
+
   .get("/api/global/users", builderOrAdmin, controller.fetch)
   .post("/api/global/users/search", builderOrAdmin, controller.search)
   .delete("/api/global/users/:id", adminOnly, controller.destroy)

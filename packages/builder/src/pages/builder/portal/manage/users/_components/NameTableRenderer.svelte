@@ -2,7 +2,6 @@
   import { Avatar } from "@budibase/bbui"
 
   export let value
-  console.log(value)
 </script>
 
 <div class="align">

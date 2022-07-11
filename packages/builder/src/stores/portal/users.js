@@ -37,28 +37,35 @@ export function createUsersStore() {
     })
   }
 
-  async function create({
-    email,
-    password,
-    admin,
-    builder,
-    forceResetPassword,
-  }) {
-    const body = {
-      email,
-      password,
-      roles: {},
-    }
-    if (forceResetPassword) {
-      body.forceResetPassword = forceResetPassword
-    }
-    if (builder) {
-      body.builder = { global: true }
-    }
-    if (admin) {
-      body.admin = { global: true }
-    }
-    await API.saveUser(body)
+  async function create(data) {
+    let mappedUsers = data.users.map(user => {
+      console.log(user)
+      const body = {
+        email: user.email,
+        password: user.password,
+        roles: {},
+      }
+      if (user.forceResetPassword) {
+        body.forceResetPassword = user.forceResetPassword
+      }
+
+      switch (user.role) {
+        case "appUser":
+          body.builder = { global: false }
+          body.admin = { global: false }
+          break
+        case "developer":
+          body.builder = { global: true }
+          break
+        case "admin":
+          body.admin = { global: true }
+          break
+      }
+
+      return body
+    })
+    await API.saveUsers({ users: mappedUsers, groups: data.groups })
+
     // re-search from first page
     await search()
   }
