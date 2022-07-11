@@ -36,10 +36,11 @@ cd ../budibase-pro
 # Install NPM credentials
 echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} >> .npmrc 
 
-# Sync backend-core version in packages/pro/package.json
+# Sync budibase dependency versions in packages/pro/package.json
 # Ensures pro does not use out of date dependency
 cd packages/pro
 jq '.dependencies."@budibase/backend-core"="'$VERSION'"' package.json > package.json.tmp && mv package.json.tmp package.json
+jq '.dependencies."@budibase/types"="'$VERSION'"' package.json > package.json.tmp && mv package.json.tmp package.json
 
 # Go back to pro repo root
 cd -

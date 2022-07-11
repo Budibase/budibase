@@ -2,22 +2,50 @@
   import {
     Body,
     Input,
-    Select,
+    Label,
     ModalContent,
     notifications,
+    Select,
     Toggle,
-    Label,
   } from "@budibase/bbui"
   import { createValidationStore, emailValidator } from "helpers/validation"
   import { users } from "stores/portal"
+  import { createEventDispatcher } from "svelte"
 
-  export let disabled
-
+  const dispatch = createEventDispatcher()
+  const password = Math.random().toString(36).substring(2, 22)
   const options = ["Email onboarding", "Basic onboarding"]
-  let selected = options[0]
-  let builder, admin
-
   const [email, error, touched] = createValidationStore("", emailValidator)
+  let disabled
+  let builder
+  let admin
+  let selected = "Email onboarding"
+
+  $: basic = selected === "Basic onboarding"
+
+  function addUser() {
+    if (basic) {
+      createUser()
+    } else {
+      createUserFlow()
+    }
+  }
+
+  async function createUser() {
+    try {
+      await users.create({
+        email: $email,
+        password,
+        builder,
+        admin,
+        forceResetPassword: true,
+      })
+      notifications.success("Successfully created user")
+      dispatch("created")
+    } catch (error) {
+      notifications.error("Error creating user")
+    }
+  }
 
   async function createUserFlow() {
     try {
@@ -30,7 +58,7 @@
 </script>
 
 <ModalContent
-  onConfirm={createUserFlow}
+  onConfirm={addUser}
   size="M"
   title="Add new user"
   confirmText="Add user"
@@ -47,17 +75,22 @@
   <Select
     placeholder={null}
     bind:value={selected}
-    on:change
     {options}
     label="Add new user via:"
   />
+
   <Input
     type="email"
+    label="Email"
     bind:value={$email}
     error={$touched && $error}
     placeholder="john@doe.com"
-    label="Email"
   />
+
+  {#if basic}
+    <Input disabled label="Password" value={password} />
+  {/if}
+
   <div>
     <div class="toggle">
       <Label size="L">Development access</Label>

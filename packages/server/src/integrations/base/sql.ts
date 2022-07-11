@@ -89,6 +89,32 @@ function parseFilters(filters: SearchFilters | undefined): SearchFilters {
   return filters
 }
 
+function generateSelectStatement(
+  json: QueryJson,
+  knex: Knex
+): (string | Knex.Raw)[] {
+  const { resource, meta } = json
+  const schema = meta?.table?.schema
+  return resource.fields.map(field => {
+    const fieldNames = field.split(/\./g)
+    const tableName = fieldNames[0]
+    const columnName = fieldNames[1]
+    if (
+      columnName &&
+      schema?.[columnName] &&
+      knex.client.config.client === SqlClients.POSTGRES
+    ) {
+      const externalType = schema[columnName].externalType
+      if (externalType?.includes("money")) {
+        return knex.raw(
+          `"${tableName}"."${columnName}"::money::numeric as "${field}"`
+        )
+      }
+    }
+    return `${field} as ${field}`
+  })
+}
+
 class InternalBuilder {
   private readonly client: string
 
@@ -216,9 +242,7 @@ class InternalBuilder {
   }
 
   addRelationships(
-    knex: Knex,
     query: KnexQuery,
-    fields: string | string[],
     fromTable: string,
     relationships: RelationshipsJson[] | undefined
   ): KnexQuery {
@@ -323,12 +347,12 @@ class InternalBuilder {
     if (!resource) {
       resource = { fields: [] }
     }
-    let selectStatement: string | string[] = "*"
+    let selectStatement: string | (string | Knex.Raw)[] = "*"
     // handle select
     if (resource.fields && resource.fields.length > 0) {
       // select the resources as the format "table.columnName" - this is what is provided
       // by the resource builder further up
-      selectStatement = resource.fields.map(field => `${field} as ${field}`)
+      selectStatement = generateSelectStatement(json, knex)
     }
     let foundLimit = limit || BASE_LIMIT
     // handle pagination
@@ -363,13 +387,7 @@ class InternalBuilder {
       preQuery = this.addSorting(preQuery, json)
     }
     // handle joins
-    query = this.addRelationships(
-      knex,
-      preQuery,
-      selectStatement,
-      tableName,
-      relationships
-    )
+    query = this.addRelationships(preQuery, tableName, relationships)
     return this.addFilters(query, filters, { relationship: true })
   }
 

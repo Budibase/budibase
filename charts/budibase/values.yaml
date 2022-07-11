@@ -103,7 +103,7 @@ globals:
   google:
     clientId: ""
     secret: ""
-  automationMaxIterations: "500"
+  automationMaxIterations: "200"
 
   createSecrets: true # creates an internal API key, JWT secrets and redis password for you
 

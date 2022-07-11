@@ -21,6 +21,7 @@ module DynamoModule {
     description:
       "Amazon DynamoDB is a key-value and document database that delivers single-digit millisecond performance at any scale.",
     friendlyName: "DynamoDB",
+    type: "Non-relational",
     datasource: {
       region: {
         type: DatasourceFieldTypes.STRING,
