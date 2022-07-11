@@ -27,6 +27,7 @@
   import AppLockModal from "components/common/AppLockModal.svelte"
   import EditableIcon from "components/common/EditableIcon.svelte"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+  import BetaTab from "components/beta/BetaTab.svelte"
   import HistoryTab from "components/portal/overview/automation/HistoryTab.svelte"
   import { checkIncomingDeploymentStatus } from "components/deploy/utils"
   import { onDestroy, onMount } from "svelte"
@@ -316,6 +317,9 @@
           {/if}
           <Tab title="Settings">
             <SettingsTab app={selectedApp} />
+          </Tab>
+          <Tab title="Beta">
+            <BetaTab />
           </Tab>
         </Tabs>
       </div>
