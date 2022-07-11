@@ -7,20 +7,38 @@
     notifications,
   } from "@budibase/bbui"
   import { groups } from "stores/portal"
+  import { emailValidator } from "../../../../../../helpers/validation"
 
   import { Constants } from "@budibase/frontend-core"
 
   const BYTES_IN_MB = 1000000
   const FILE_SIZE_LIMIT = BYTES_IN_MB * 5
 
-  export let showOnboardingTypeModal
+  export let createUsersFromCsv
+
   let files = []
-
   let csvString = undefined
+  let userEmails = []
+  let userGroups = []
+  let usersRole = null
+  $: invalidEmails = []
 
-  /*
-  function parseCsv() {}
-*/
+  const validEmails = userEmails => {
+    for (const email of userEmails) {
+      if (emailValidator(email) !== true) invalidEmails.push(email)
+    }
+
+    if (!invalidEmails.length) return true
+
+    notifications.error(
+      `Error, please check the following email${
+        invalidEmails.length > 1 ? "s" : ""
+      }: ${invalidEmails.join(", ")}`
+    )
+
+    return false
+  }
+
   async function handleFile(evt) {
     const fileArray = Array.from(evt.target.files)
     if (fileArray.some(file => file.size >= FILE_SIZE_LIMIT)) {
@@ -37,6 +55,8 @@
     reader.addEventListener("load", function (e) {
       csvString = e.target.result
       files = fileArray
+
+      userEmails = csvString.split("\n")
     })
     reader.readAsText(fileArray[0])
   }
@@ -49,8 +69,8 @@
   showCancelButton={false}
   cancelText="Cancel"
   showCloseIcon={false}
-  onConfirm={showOnboardingTypeModal}
-  disabled={!files.length}
+  onConfirm={() => createUsersFromCsv({ userEmails, usersRole, userGroups })}
+  disabled={!userEmails.length || !validEmails(userEmails) || !usersRole}
 >
   <Body size="S">Import your users email addrresses from a CSV</Body>
 
@@ -61,14 +81,18 @@
     </label>
   </div>
 
-  <RadioGroup options={Constants.BuilderRoleDescriptions} />
+  <RadioGroup
+    bind:value={usersRole}
+    options={Constants.BuilderRoleDescriptions}
+  />
 
   <Multiselect
+    bind:value={userGroups}
     placeholder="Select User Groups"
     label="User Groups"
     options={$groups}
     getOptionLabel={option => option.name}
-    getOptionValue={option => option.name}
+    getOptionValue={option => option._id}
   />
 </ModalContent>
 

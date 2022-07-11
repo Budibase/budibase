@@ -117,6 +117,25 @@
     }
   }
 
+  const createUsersFromCsv = async userCsvData => {
+    const { userEmails, usersRole, userGroups } = userCsvData
+
+    const users = []
+    for (const email of userEmails) {
+      const newUser = {
+        email: email,
+        role: usersRole,
+        password: Math.random().toString(36).substring(2, 22),
+        forceResetPassword: true,
+      }
+
+      users.push(newUser)
+    }
+
+    userData = { groups: userGroups, users: users }
+    return createUser()
+  }
+
   async function createUser() {
     try {
       await users.create(userData)
@@ -258,7 +277,7 @@
 </Modal>
 
 <Modal bind:this={importUsersModal}>
-  <ImportUsersModal {showOnboardingTypeModal} />
+  <ImportUsersModal {createUsersFromCsv} />
 </Modal>
 
 <style>
