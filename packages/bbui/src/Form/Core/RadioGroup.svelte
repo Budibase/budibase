@@ -10,6 +10,7 @@
   export let disabled = false
   export let getOptionLabel = option => option
   export let getOptionValue = option => option
+  export let getOptionTitle = option => option
 
   const dispatch = createEventDispatcher()
   const onChange = e => dispatch("change", e.target.value)
@@ -19,7 +20,7 @@
   {#if options && Array.isArray(options)}
     {#each options as option}
       <div
-        title={getOptionLabel(option)}
+        title={getOptionTitle(option)}
         class="spectrum-Radio spectrum-FieldGroup-item spectrum-Radio--emphasized"
         class:is-invalid={!!error}
       >
