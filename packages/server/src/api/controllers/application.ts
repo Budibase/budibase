@@ -276,15 +276,25 @@ const performAppCreate = async (ctx: any) => {
     updatedAt: new Date().toISOString(),
     createdAt: new Date().toISOString(),
     status: AppStatus.DEV,
+    navigation: {
+      navigation: "Top",
+      title: name,
+      navWidth: "Large",
+      navBackground: "var(--spectrum-global-color-gray-100)",
+      links: [
+        {
+          url: "/home",
+          text: "Home",
+        },
+      ],
+    },
+    theme: "spectrum--light",
+    customTheme: {
+      buttonBorderRadius: "16px",
+    },
   }
   const response = await db.put(newApplication, { force: true })
   newApplication._rev = response.rev
-
-  // Only create the default home screens and layout if we aren't importing
-  // an app
-  if (useTemplate !== "true") {
-    await createEmptyAppPackage(ctx, newApplication)
-  }
 
   /* istanbul ignore next */
   if (!env.isTest()) {
@@ -564,16 +574,4 @@ const updateAppPackage = async (appPackage: any, appId: any) => {
     await appCache.invalidateAppMetadata(appId)
     return newAppPackage
   })
-}
-
-const createEmptyAppPackage = async (ctx: any, app: any) => {
-  const db = getAppDB()
-
-  let screensAndLayouts = []
-  for (let layout of BASE_LAYOUTS) {
-    const cloned = cloneDeep(layout)
-    screensAndLayouts.push(await processObject(cloned, app))
-  }
-
-  await db.bulkDocs(screensAndLayouts)
 }

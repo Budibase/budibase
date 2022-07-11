@@ -13,6 +13,8 @@
   let indicators = []
   let interval
   let text
+  let icon
+
   $: visibleIndicators = indicators.filter(x => x.visible)
   $: offset = $builderStore.inBuilder ? 0 : 2
 
@@ -56,6 +58,9 @@
       text = parents[0].dataset.name
       if (prefix) {
         text = `${prefix} ${text}`
+      }
+      if (parents[0].dataset.icon) {
+        icon = parents[0].dataset.icon
       }
     }
 
@@ -121,6 +126,7 @@
       width={indicator.width}
       height={indicator.height}
       text={idx === 0 ? text : null}
+      icon={idx === 0 ? icon : null}
       {transition}
       {zIndex}
       {color}
