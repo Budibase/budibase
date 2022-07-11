@@ -42,7 +42,7 @@
     <PickerDropdown
       autocomplete
       primaryOptions={optionSections}
-      primaryPlaceholder={"Search Users"}
+      placeholder={"Search Users"}
       secondaryOptions={$roles}
       bind:primaryValue={input.id}
       bind:secondaryValue={input.role}
