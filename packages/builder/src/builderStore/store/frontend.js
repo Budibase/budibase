@@ -1,12 +1,6 @@
 import { get, writable } from "svelte/store"
 import { cloneDeep } from "lodash/fp"
-import {
-  allScreens,
-  currentAsset,
-  mainLayout,
-  selectedComponent,
-  selectedAccessRole,
-} from "builderStore"
+import { currentAsset, mainLayout, selectedComponent } from "builderStore"
 import {
   datasources,
   integrations,
@@ -15,7 +9,6 @@ import {
   tables,
 } from "stores/backend"
 import { API } from "api"
-import { FrontendTypes } from "constants"
 import analytics, { Events } from "analytics"
 import {
   findComponentType,
@@ -27,6 +20,7 @@ import {
   makeComponentUnique,
 } from "../componentUtils"
 import { Helpers } from "@budibase/bbui"
+import { DefaultAppTheme, LAYOUT_NAMES } from "../../constants"
 
 const INITIAL_FRONTEND_STATE = {
   apps: [],
@@ -47,10 +41,6 @@ const INITIAL_FRONTEND_STATE = {
     messagePassing: false,
     continueIfAction: false,
   },
-  currentFrontEndType: "none",
-  selectedScreenId: "",
-  selectedLayoutId: "",
-  selectedComponentId: "",
   errors: [],
   hasAppPackage: false,
   libraries: null,
@@ -60,6 +50,12 @@ const INITIAL_FRONTEND_STATE = {
   theme: "",
   customTheme: {},
   previewDevice: "desktop",
+  highlightedSettingKey: null,
+
+  // URL params
+  selectedScreenId: null,
+  selectedComponentId: null,
+  selectedLayoutId: null,
 }
 
 export const getFrontendStore = () => {
@@ -99,6 +95,7 @@ export const getFrontendStore = () => {
         previousTopNavPath: {},
         version: application.version,
         revertableVersion: application.revertableVersion,
+        navigation: application.navigation || {},
       }))
 
       // Initialise backend stores
@@ -107,6 +104,35 @@ export const getFrontendStore = () => {
       await integrations.init()
       await queries.init()
       await tables.init()
+
+      // Add navigation settings to old apps
+      if (!application.navigation) {
+        const layout = layouts.find(x => x._id === LAYOUT_NAMES.MASTER.PRIVATE)
+        const customTheme = application.customTheme
+        let navigationSettings = {
+          navigation: "Top",
+          title: application.name,
+          navWidth: "Large",
+          navBackground:
+            customTheme?.navBackground || DefaultAppTheme.navBackground,
+          navTextColor:
+            customTheme?.navTextColor || DefaultAppTheme.navTextColor,
+        }
+        if (layout) {
+          navigationSettings.hideLogo = layout.props.hideLogo
+          navigationSettings.hideTitle = layout.props.hideTitle
+          navigationSettings.title = layout.props.title || application.name
+          navigationSettings.logoUrl = layout.props.logoUrl
+          navigationSettings.links = layout.props.links
+          navigationSettings.navigation = layout.props.navigation || "Top"
+          navigationSettings.sticky = layout.props.sticky
+          navigationSettings.navWidth = layout.props.width || "Large"
+          if (navigationSettings.navigation === "None") {
+            navigationSettings.navigation = "Top"
+          }
+        }
+        await store.actions.navigation.save(navigationSettings)
+      }
     },
     theme: {
       save: async theme => {
@@ -134,6 +160,19 @@ export const getFrontendStore = () => {
         })
       },
     },
+    navigation: {
+      save: async navigation => {
+        const appId = get(store).appId
+        await API.saveAppMetadata({
+          appId,
+          metadata: { navigation },
+        })
+        store.update(state => {
+          state.navigation = navigation
+          return state
+        })
+      },
+    },
     routing: {
       fetch: async () => {
         const response = await API.fetchAppRoutes()
@@ -146,18 +185,12 @@ export const getFrontendStore = () => {
     screens: {
       select: screenId => {
         store.update(state => {
-          let screens = get(allScreens)
+          let screens = state.screens
           let screen =
             screens.find(screen => screen._id === screenId) || screens[0]
           if (!screen) return state
 
-          // Update role to the screen's role setting so that it will always
-          // be visible
-          selectedAccessRole.set(screen.routing.roleId)
-
-          state.currentFrontEndType = FrontendTypes.SCREEN
           state.selectedScreenId = screen._id
-          state.currentView = "detail"
           state.selectedComponentId = screen.props?._id
           return state
         })
@@ -189,6 +222,7 @@ export const getFrontendStore = () => {
 
         // Build array of promises to speed up bulk deletions
         const promises = []
+        let deleteUrls = []
         screensToDelete.forEach(screen => {
           // Delete the screen
           promises.push(
@@ -198,14 +232,10 @@ export const getFrontendStore = () => {
             })
           )
           // Remove links to this screen
-          promises.push(
-            store.actions.components.links.delete(
-              screen.routing.route,
-              screen.props._instanceName
-            )
-          )
+          deleteUrls.push(screen.routing.route)
         })
 
+        promises.push(store.actions.links.delete(deleteUrls))
         await Promise.all(promises)
         const deletedIds = screensToDelete.map(screen => screen._id)
         store.update(state => {
@@ -223,16 +253,44 @@ export const getFrontendStore = () => {
         // Refresh routes
         await store.actions.routing.fetch()
       },
+      updateHomeScreen: async (screen, makeHomeScreen = true) => {
+        let promises = []
+
+        // Find any existing home screen for this role so we can remove it,
+        // if we are setting this to be the new home screen
+        if (makeHomeScreen) {
+          const roleId = screen.routing.roleId
+          let existingHomeScreen = get(store).screens.find(s => {
+            return (
+              s.routing.roleId === roleId &&
+              s.routing.homeScreen &&
+              s._id !== screen._id
+            )
+          })
+          if (existingHomeScreen) {
+            existingHomeScreen.routing.homeScreen = false
+            promises.push(store.actions.screens.save(existingHomeScreen))
+          }
+        }
+
+        // Update the passed in screen
+        screen.routing.homeScreen = makeHomeScreen
+        promises.push(store.actions.screens.save(screen))
+        return await Promise.all(promises)
+      },
+      removeCustomLayout: async screen => {
+        // Pull relevant settings from old layout, if required
+        const layout = get(store).layouts.find(x => x._id === screen.layoutId)
+        screen.layoutId = null
+        screen.showNavigation = layout?.props.navigation !== "None"
+        screen.width = layout?.props.width || "Large"
+        await store.actions.screens.save(screen)
+      },
     },
     preview: {
       saveSelected: async () => {
-        const state = get(store)
         const selectedAsset = get(currentAsset)
-        if (state.currentFrontEndType !== FrontendTypes.LAYOUT) {
-          return await store.actions.screens.save(selectedAsset)
-        } else {
-          return await store.actions.layouts.save(selectedAsset)
-        }
+        return await store.actions.screens.save(selectedAsset)
       },
       setDevice: device => {
         store.update(state => {
@@ -247,8 +305,6 @@ export const getFrontendStore = () => {
           const layout =
             store.actions.layouts.find(layoutId) || get(store).layouts[0]
           if (!layout) return
-          state.currentFrontEndType = FrontendTypes.LAYOUT
-          state.currentView = "detail"
           state.selectedLayoutId = layout._id
           state.selectedComponentId = layout.props?._id
           return state
@@ -299,32 +355,6 @@ export const getFrontendStore = () => {
       },
     },
     components: {
-      select: component => {
-        const asset = get(currentAsset)
-        if (!asset || !component) {
-          return
-        }
-
-        // If this is the root component, select the asset instead
-        const parent = findComponentParent(asset.props, component._id)
-        if (parent == null) {
-          const state = get(store)
-          const isLayout = state.currentFrontEndType === FrontendTypes.LAYOUT
-          if (isLayout) {
-            store.actions.layouts.select(asset._id)
-          } else {
-            store.actions.screens.select(asset._id)
-          }
-          return
-        }
-
-        // Otherwise select the component
-        store.update(state => {
-          state.selectedComponentId = component._id
-          state.currentView = "component"
-          return state
-        })
-      },
       getDefinition: componentName => {
         if (!componentName) {
           return null
@@ -420,7 +450,6 @@ export const getFrontendStore = () => {
         // Save components and update UI
         await store.actions.preview.saveSelected()
         store.update(state => {
-          state.currentView = "component"
           state.selectedComponentId = componentInstance._id
           return state
         })
@@ -463,11 +492,14 @@ export const getFrontendStore = () => {
           parent._children = parent._children.filter(
             child => child._id !== component._id
           )
-          store.actions.components.select(parent)
+          store.update(state => {
+            state.selectedComponentId = parent._id
+            return state
+          })
         }
         await store.actions.preview.saveSelected()
       },
-      copy: (component, cut = false) => {
+      copy: (component, cut = false, selectParent = true) => {
         const selectedAsset = get(currentAsset)
         if (!selectedAsset) {
           return null
@@ -487,7 +519,12 @@ export const getFrontendStore = () => {
             parent._children = parent._children.filter(
               child => child._id !== component._id
             )
-            store.actions.components.select(parent)
+            if (selectParent) {
+              store.update(state => {
+                state.selectedComponentId = parent._id
+                return state
+              })
+            }
           }
         }
       },
@@ -538,7 +575,7 @@ export const getFrontendStore = () => {
 
           // Save and select the new component
           promises.push(store.actions.preview.saveSelected())
-          store.actions.components.select(componentToPaste)
+          state.selectedComponentId = componentToPaste._id
           return state
         })
         await Promise.all(promises)
@@ -577,89 +614,49 @@ export const getFrontendStore = () => {
         })
         await store.actions.preview.saveSelected()
       },
-      links: {
-        save: async (url, title) => {
-          const layout = get(mainLayout)
-          if (!layout) {
-            return
-          }
+    },
+    links: {
+      save: async (url, title) => {
+        const navigation = get(store).navigation
+        let links = [...navigation?.links]
 
-          // Add link setting to main layout
-          if (layout.props._component.endsWith("layout")) {
-            // If using a new SDK, add to the layout component settings
-            if (!layout.props.links) {
-              layout.props.links = []
-            }
-            layout.props.links.push({
-              text: title,
-              url,
-            })
-          } else {
-            // If using an old SDK, add to the navigation component
-            // TODO: remove this when we can assume everyone has updated
-            const nav = findComponentType(
-              layout.props,
-              "@budibase/standard-components/navigation"
-            )
-            if (!nav) {
-              return
-            }
+        // Skip if we have an identical link
+        if (links.find(link => link.url === url && link.text === title)) {
+          return
+        }
 
-            let newLink
-            if (nav._children && nav._children.length) {
-              // Clone an existing link if one exists
-              newLink = cloneDeep(nav._children[0])
+        links.push({
+          text: title,
+          url,
+        })
+        await store.actions.navigation.save({
+          ...navigation,
+          links: [...links],
+        })
+      },
+      delete: async urls => {
+        const navigation = get(store).navigation
+        let links = navigation?.links
+        if (!links?.length) {
+          return
+        }
 
-              // Set our new props
-              newLink._id = Helpers.uuid()
-              newLink._instanceName = `${title} Link`
-              newLink.url = url
-              newLink.text = title
-            } else {
-              // Otherwise create vanilla new link
-              newLink = {
-                ...store.actions.components.createInstance("link"),
-                url,
-                text: title,
-                _instanceName: `${title} Link`,
-              }
-              nav._children = [...nav._children, newLink]
-            }
-          }
+        // Filter out the URLs to delete
+        urls = Array.isArray(urls) ? urls : [urls]
+        links = links.filter(link => !urls.includes(link.url))
 
-          // Save layout
-          await store.actions.layouts.save(layout)
-        },
-        delete: async (url, title) => {
-          const layout = get(mainLayout)
-          if (!layout) {
-            return
-          }
-
-          // Add link setting to main layout
-          if (layout.props._component.endsWith("layout")) {
-            // If using a new SDK, add to the layout component settings
-            layout.props.links = layout.props.links.filter(
-              link => !(link.text === title && link.url === url)
-            )
-          } else {
-            // If using an old SDK, add to the navigation component
-            // TODO: remove this when we can assume everyone has updated
-            const nav = findComponentType(
-              layout.props,
-              "@budibase/standard-components/navigation"
-            )
-            if (!nav) {
-              return
-            }
-
-            nav._children = nav._children.filter(
-              child => !(child.url === url && child.text === title)
-            )
-          }
-          // Save layout
-          await store.actions.layouts.save(layout)
-        },
+        await store.actions.navigation.save({
+          ...navigation,
+          links,
+        })
+      },
+    },
+    settings: {
+      highlight: key => {
+        store.update(state => ({
+          ...state,
+          highlightedSettingKey: key,
+        }))
       },
     },
   }

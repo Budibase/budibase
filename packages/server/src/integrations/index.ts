@@ -12,6 +12,7 @@ const rest = require("./rest")
 const googlesheets = require("./googlesheets")
 const firebase = require("./firebase")
 const redis = require("./redis")
+const snowflake = require("./snowflake")
 const { SourceNames } = require("../definitions/datasource")
 const environment = require("../environment")
 
@@ -29,6 +30,7 @@ const DEFINITIONS = {
   [SourceNames.REST]: rest.schema,
   [SourceNames.FIRESTORE]: firebase.schema,
   [SourceNames.REDIS]: redis.schema,
+  [SourceNames.SNOWFLAKE]: snowflake.schema,
 }
 
 const INTEGRATIONS = {
@@ -46,6 +48,8 @@ const INTEGRATIONS = {
   [SourceNames.FIRESTORE]: firebase.integration,
   [SourceNames.GOOGLE_SHEETS]: googlesheets.integration,
   [SourceNames.REDIS]: redis.integration,
+  [SourceNames.FIREBASE]: firebase.integration,
+  [SourceNames.SNOWFLAKE]: snowflake.integration,
 }
 
 // optionally add oracle integration if the oracle binary can be installed

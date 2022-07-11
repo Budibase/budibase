@@ -55,7 +55,7 @@
   }
 </script>
 
-<Button secondary on:click={publishModal.show}>Publish</Button>
+<Button cta on:click={publishModal.show}>Publish</Button>
 <Modal bind:this={feedbackModal}>
   <ModalContent
     title="Enjoying Budibase?"
@@ -98,7 +98,7 @@
     confirmText="Done"
     cancelText="View App"
     onCancel={viewApp}
-    dataCy={"deploy-app-success-modal"}
+    dataCy="deploy-app-success-modal"
   >
     <div slot="header" class="app-published-header">
       <svg

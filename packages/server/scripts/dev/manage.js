@@ -56,6 +56,8 @@ async function init() {
       DISABLE_THREADING: 1,
       SERVICE: "app-service",
       DEPLOYMENT_ENVIRONMENT: "development",
+      BB_ADMIN_USER_EMAIL: "",
+      BB_ADMIN_USER_PASSWORD: "",
     }
     let envFile = ""
     Object.keys(envFileJson).forEach(key => {

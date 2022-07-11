@@ -1,5 +1,5 @@
 <script>
-  import { goto, params } from "@roxi/routify"
+  import { redirect, params } from "@roxi/routify"
   import { Icon, Tabs, Tab } from "@budibase/bbui"
   import { BUDIBASE_INTERNAL_DB } from "constants"
   import DatasourceNavigator from "components/backend/DatasourceNavigator/DatasourceNavigator.svelte"
@@ -14,11 +14,11 @@
     $params.selectedDatasource !== BUDIBASE_INTERNAL_DB
 
   function selectFirstDatasource() {
-    $goto("./table")
+    $redirect("./table")
   }
 </script>
 
-<!-- routify:options index=0 -->
+<!-- routify:options index=1 -->
 <div class="root">
   <div class="nav">
     <Tabs {selected} on:select={selectFirstDatasource}>
