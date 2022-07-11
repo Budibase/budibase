@@ -73,7 +73,8 @@ exports.toggleBetaUiFeature = async function (ctx) {
 }
 
 exports.serveBuilder = async function (ctx) {
-  await send(ctx, ctx.file, { root: TOP_LEVEL_PATH })
+  const builderPath = resolve(TOP_LEVEL_PATH, "builder")
+  await send(ctx, ctx.file, { root: builderPath })
   if (!ctx.file.includes("assets/")) {
     await events.serve.servedBuilder()
   }
