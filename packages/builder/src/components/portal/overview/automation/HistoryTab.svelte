@@ -157,6 +157,7 @@
           data={runHistory}
           {customRenderers}
           placeholderText="No history found"
+          border={false}
         />
         <div class="pagination">
           <Pagination
@@ -186,7 +187,8 @@
     display: grid;
     grid-template-columns: 1fr;
     height: 100%;
-    padding: var(--spacing-xl) var(--spectrum-alias-grid-gutter-large);
+    padding: var(--spectrum-alias-grid-gutter-medium)
+      var(--spectrum-alias-grid-gutter-large);
   }
 
   .search {
@@ -209,7 +211,7 @@
 
   .panel {
     display: none;
-    margin-top: calc(-1 * var(--spacing-xl));
+    margin-top: calc(-1 * var(--spectrum-alias-grid-gutter-medium));
   }
 
   .panelShow {
