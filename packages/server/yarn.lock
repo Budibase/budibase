@@ -1080,12 +1080,11 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/backend-core@1.0.219-alpha.17":
-  version "1.0.219-alpha.17"
-  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.0.219-alpha.17.tgz#eacb5feb851f6a20771d9505d38f123398e5dc06"
-  integrity sha512-cR0MLkXOuVht/1cqXspFaduGeaEroe/JfIkidss1OVvi2E5YjcUjDgZIYvlNiUTnh1ggGv7ql4AI4CZDk5LaHw==
+"@budibase/backend-core@1.0.219":
+  version "1.0.219"
+  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.0.219.tgz#430d23f25c9c6b275d3448f6d88a26a8c6196e3e"
+  integrity sha512-nU1nAkW7Pi8LLx9UfTff+kgDUV/IC64+iurVoQ7WKPI580M5RDCdHjig8R03OStRSCdcP1xRdUb1Ge2IpByfMg==
   dependencies:
-    "@budibase/types" "^1.0.219-alpha.17"
     "@techpass/passport-openidconnect" "0.3.2"
     aws-sdk "2.1030.0"
     bcrypt "5.0.1"
@@ -1101,7 +1100,6 @@
     passport-google-oauth "2.0.0"
     passport-jwt "4.0.0"
     passport-local "1.0.0"
-    passport-oauth2-refresh "^2.1.0"
     posthog-node "1.3.0"
     pouchdb "7.3.0"
     pouchdb-find "7.2.2"
@@ -1162,13 +1160,12 @@
     svelte-flatpickr "^3.2.3"
     svelte-portal "^1.0.0"
 
-"@budibase/pro@1.0.219-alpha.17":
-  version "1.0.219-alpha.17"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-1.0.219-alpha.17.tgz#bedf4b9e84e8225855e22526b0b1dcc760c6ccfe"
-  integrity sha512-bQGkeqzZL+fzQ69oFYnEIwGJ3v8kCXxl6jlMqLEW3r2MQQlsS53c7Z4keRQ0bSOclTLg7eYTj6lDvy+0UI0Wpg==
+"@budibase/pro@1.0.219":
+  version "1.0.219"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-1.0.219.tgz#a8406aaf7137db43c290f0a3eb005650330ca6fb"
+  integrity sha512-BH7sBHuGEz9UP6bCt/a22pZskvvyk/lqMdLYSKGAEcoj7AnJB6MW2QKSIXPmLpT1OmdrYGM+49X0wtm9qWx/Lg==
   dependencies:
-    "@budibase/backend-core" "1.0.219-alpha.17"
-    "@budibase/types" "1.0.219-alpha.17"
+    "@budibase/backend-core" "1.0.219"
     node-fetch "^2.6.1"
 
 "@budibase/standard-components@^0.9.139":
@@ -1188,16 +1185,6 @@
     dayjs "^1.10.5"
     svelte-apexcharts "^1.0.2"
     svelte-flatpickr "^3.1.0"
-
-"@budibase/types@1.0.219-alpha.17":
-  version "1.0.219-alpha.17"
-  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-1.0.219-alpha.17.tgz#f91c820e8be9bbc7a588fb5ede22f0494012947e"
-  integrity sha512-pWXdKMINgtb5usaKnTPZ5EdE0e8jiegF0zg1460ULVFuYH4Ibs94N1VVyHT/UuqEeTjQXhrGGIcRFUQF88KvBQ==
-
-"@budibase/types@^1.0.219-alpha.17":
-  version "1.0.219"
-  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-1.0.219.tgz#817fd90f0604048c222b9a0a1059acf3407c88ff"
-  integrity sha512-aPYpwEBsP60oKZzz1gP4j+SaiVxebUe/ZExQqdnhzl9qAj8PzXVD8dKR/oozXqZHJ37hgkgai7i83eXDqeU/qQ==
 
 "@bull-board/api@3.7.0":
   version "3.7.0"
@@ -10576,11 +10563,6 @@ passport-oauth1@1.x.x:
     oauth "0.9.x"
     passport-strategy "1.x.x"
     utils-merge "1.x.x"
-
-passport-oauth2-refresh@^2.1.0:
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/passport-oauth2-refresh/-/passport-oauth2-refresh-2.1.0.tgz#c31cd133826383f5539d16ad8ab4f35ca73ce4a4"
-  integrity sha512-4ML7ooCESCqiTgdDBzNUFTBcPR8zQq9iM6eppEUGMMvLdsjqRL93jKwWm4Az3OJcI+Q2eIVyI8sVRcPFvxcF/A==
 
 passport-oauth2@1.x.x:
   version "1.6.1"
