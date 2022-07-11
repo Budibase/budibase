@@ -43,7 +43,10 @@
   let permissionError = false
 
   // Determine if we should show devtools or not
-  $: showDevTools = $devToolsStore.enabled && !$routeStore.queryParams?.peek
+  $: showDevTools =
+    !$builderStore.inBuilder &&
+    $devToolsStore.enabled &&
+    !$routeStore.queryParams?.peek
 
   // Handle no matching route
   $: {
