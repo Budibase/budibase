@@ -207,11 +207,6 @@
 <span class="overview-wrap">
   <Page wide noPadding>
     {#await promise}
-      <span class="page-header">
-        <ActionButton secondary icon={"ArrowLeft"} on:click={backToAppList}>
-          Back
-        </ActionButton>
-      </span>
       <div class="loading">
         <ProgressCircle size="XL" />
       </div>
