@@ -10,6 +10,7 @@ const { getAppId } = require("@budibase/backend-core/context")
 class QueryBuilder {
   constructor(base) {
     this.query = {
+      allOr: false,
       string: {},
       fuzzy: {},
       range: {},
@@ -146,8 +147,22 @@ class QueryBuilder {
 
   buildSearchQuery() {
     const builder = this
-    let query = "*:*"
+    let allOr = this.query && this.query.allOr
+    let query = allOr ? "" : "*:*"
     const allPreProcessingOpts = { escape: true, lowercase: true, wrap: true }
+    let tableId
+    if (this.query.equal.tableId) {
+      tableId = this.query.equal.tableId
+      delete this.query.equal.tableId
+    }
+
+    const equal = (key, value) => {
+      // 0 evaluates to false, which means we would return all rows if we don't check it
+      if (!value && value !== 0) {
+        return null
+      }
+      return `${key}:${builder.preprocess(value, allPreProcessingOpts)}`
+    }
 
     function build(structure, queryFn) {
       for (let [key, value] of Object.entries(structure)) {
@@ -158,7 +173,10 @@ class QueryBuilder {
         if (expression == null) {
           continue
         }
-        query += ` AND ${expression}`
+        if (query.length > 0) {
+          query += ` ${allOr ? "OR" : "AND"} `
+        }
+        query += expression
       }
     }
 
@@ -204,13 +222,7 @@ class QueryBuilder {
       })
     }
     if (this.query.equal) {
-      build(this.query.equal, (key, value) => {
-        // 0 evaluates to false, which means we would return all rows if we don't check it
-        if (!value && value !== 0) {
-          return null
-        }
-        return `${key}:${builder.preprocess(value, allPreProcessingOpts)}`
-      })
+      build(this.query.equal, equal)
     }
     if (this.query.notEqual) {
       build(this.query.notEqual, (key, value) => {
@@ -247,6 +259,12 @@ class QueryBuilder {
         }
         return `${key}:(${orStatement})`
       })
+    }
+    // make sure table ID is always added as an AND
+    if (tableId) {
+      query = `(${query})`
+      allOr = false
+      build({ tableId }, equal)
     }
     return query
   }
