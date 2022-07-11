@@ -119,7 +119,7 @@
 </script>
 
 <div class="root" class:panelOpen={showPanel}>
-  <Layout paddingX="XL" gap="S" alignContent="start">
+  <Layout noPadding gap="M" alignContent="start">
     <div class="search">
       <div class="select">
         <Select
@@ -147,16 +147,27 @@
       </div>
     </div>
     {#if runHistory}
-      <Table
-        on:click={viewDetails}
-        schema={runHistorySchema}
-        allowSelectRows={false}
-        allowEditColumns={false}
-        allowEditRows={false}
-        data={runHistory}
-        {customRenderers}
-        placeholderText="No history found"
-      />
+      <div>
+        <Table
+          on:click={viewDetails}
+          schema={runHistorySchema}
+          allowSelectRows={false}
+          allowEditColumns={false}
+          allowEditRows={false}
+          data={runHistory}
+          {customRenderers}
+          placeholderText="No history found"
+        />
+        <div class="pagination">
+          <Pagination
+            page={$pageInfo.pageNumber}
+            hasPrevPage={$pageInfo.loading ? false : $pageInfo.hasPrevPage}
+            hasNextPage={$pageInfo.loading ? false : $pageInfo.hasNextPage}
+            goToPrevPage={pageInfo.prevPage}
+            goToNextPage={pageInfo.nextPage}
+          />
+        </div>
+      </div>
     {/if}
   </Layout>
   <div class="panel" class:panelShow={showPanel}>
@@ -169,26 +180,18 @@
     />
   </div>
 </div>
-<div class="pagination">
-  <Pagination
-    page={$pageInfo.pageNumber}
-    hasPrevPage={$pageInfo.loading ? false : $pageInfo.hasPrevPage}
-    hasNextPage={$pageInfo.loading ? false : $pageInfo.hasNextPage}
-    goToPrevPage={pageInfo.prevPage}
-    goToNextPage={pageInfo.nextPage}
-  />
-</div>
 
 <style>
   .root {
     display: grid;
     grid-template-columns: 1fr;
     height: 100%;
+    padding: var(--spacing-xl) var(--spectrum-alias-grid-gutter-large);
   }
 
   .search {
     display: flex;
-    gap: var(--spacing-l);
+    gap: var(--spacing-xl);
     width: 100%;
     align-items: flex-end;
   }
@@ -198,15 +201,15 @@
   }
 
   .pagination {
-    position: absolute;
-    bottom: 0;
-    margin-bottom: var(--spacing-xl);
-    margin-left: var(--spacing-l);
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    margin-top: var(--spacing-xl);
   }
 
   .panel {
     display: none;
-    background-color: var(--background);
+    margin-top: calc(-1 * var(--spacing-xl));
   }
 
   .panelShow {
