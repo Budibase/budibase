@@ -37,12 +37,7 @@
 
 <Panel title={$selectedLayout?.name} icon="Experience" borderLeft>
   <Layout paddingX="L" paddingY="XL" gap="S">
-    <Banner
-      type="warning"
-      showCloseButton={false}
-      extraButtonText="View details"
-      extraButtonAction={() => {}}
-    >
+    <Banner type="warning" showCloseButton={false}>
       Custom layouts are being deprecated. They will be removed in a future
       release.
     </Banner>
