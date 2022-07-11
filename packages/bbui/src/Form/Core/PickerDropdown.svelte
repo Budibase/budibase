@@ -10,6 +10,7 @@
   import Detail from "../../Typography/Detail.svelte"
 
   export let primaryLabel = ""
+  export let primaryValue = null
   export let id = null
   export let placeholder = "Choose an option or type"
   export let disabled = false
@@ -73,6 +74,11 @@
     primaryOpen = false
   }
 
+  const onClearPrimary = () => {
+    dispatch("pickprimary", null)
+    primaryOpen = false
+  }
+
   const onPickSecondary = newValue => {
     dispatch("picksecondary", newValue)
     secondaryOpen = false
@@ -123,7 +129,7 @@
     class:is-invalid={!!error}
     class:is-disabled={disabled}
     class:is-focused={focus}
-    style="width: 70%"
+    class:is-full-width={!secondaryOptions.length}
   >
     {#if iconData}
       <svg
@@ -153,6 +159,21 @@
       class="spectrum-Textfield-input spectrum-InputGroup-input"
       class:labelPadding={iconData}
     />
+    {#if primaryValue}
+      <button
+        on:click={() => onClearPrimary()}
+        type="reset"
+        class="spectrum-ClearButton spectrum-Search-clearButton"
+      >
+        <svg
+          class="spectrum-Icon spectrum-UIIcon-Cross75"
+          focusable="false"
+          aria-hidden="true"
+        >
+          <use xlink:href="#spectrum-css-icon-Cross75" />
+        </svg>
+      </button>
+    {/if}
   </div>
   {#if primaryOpen}
     <div
@@ -160,7 +181,7 @@
       transition:fly|local={{ y: -20, duration: 200 }}
       class="spectrum-Popover spectrum-Popover--bottom spectrum-Picker-popover is-open"
       class:auto-width={autoWidth}
-      style="width: 70%"
+      class:is-full-width={!secondaryOptions.length}
     >
       <ul class="spectrum-Menu" role="listbox">
         {#if placeholderOption}
@@ -250,78 +271,82 @@
       </ul>
     </div>
   {/if}
-  <div style="width: 30%">
-    <button
-      {id}
-      class="spectrum-Picker spectrum-Picker--sizeM override-borders"
-      {disabled}
-      class:is-open={secondaryOpen}
-      aria-haspopup="listbox"
-      on:mousedown={onClickSecondary}
-    >
-      {#if secondaryFieldIcon}
-        <span class="option-left">
-          <Icon name={secondaryFieldIcon} />
-        </span>
-      {:else if secondaryFieldColour}
-        <span class="option-left">
-          <StatusLight color={secondaryFieldColour} />
-        </span>
-      {/if}
-
-      <span class:auto-width={autoWidth} class="spectrum-Picker-label">
-        {secondaryFieldText}
-      </span>
-      <svg
-        class="spectrum-Icon spectrum-UIIcon-ChevronDown100 spectrum-Picker-menuIcon"
-        focusable="false"
-        aria-hidden="true"
+  {#if secondaryOptions.length}
+    <div style="width: 30%">
+      <button
+        {id}
+        class="spectrum-Picker spectrum-Picker--sizeM override-borders"
+        {disabled}
+        class:is-open={secondaryOpen}
+        aria-haspopup="listbox"
+        on:mousedown={onClickSecondary}
       >
-        <use xlink:href="#spectrum-css-icon-Chevron100" />
-      </svg>
-    </button>
-    {#if secondaryOpen}
-      <div
-        use:clickOutside={() => (secondaryOpen = false)}
-        transition:fly|local={{ y: -20, duration: 200 }}
-        class="spectrum-Popover spectrum-Popover--bottom spectrum-Picker-popover is-open"
-        style="width: 30%"
-      >
-        <ul class="spectrum-Menu" role="listbox">
-          {#each secondaryOptions as option, idx}
-            <li
-              class="spectrum-Menu-item"
-              class:is-selected={isOptionSelected(
-                getSecondaryOptionValue(option, idx)
-              )}
-              role="option"
-              aria-selected="true"
-              tabindex="0"
-              on:click={() =>
-                onPickSecondary(getSecondaryOptionValue(option, idx))}
-            >
-              {#if getSecondaryOptionColour(option, idx)}
-                <span class="option-left">
-                  <StatusLight color={getSecondaryOptionColour(option, idx)} />
-                </span>
-              {/if}
+        {#if secondaryFieldIcon}
+          <span class="option-left">
+            <Icon name={secondaryFieldIcon} />
+          </span>
+        {:else if secondaryFieldColour}
+          <span class="option-left">
+            <StatusLight color={secondaryFieldColour} />
+          </span>
+        {/if}
 
-              <span class="spectrum-Menu-itemLabel">
-                {getSecondaryOptionLabel(option, idx)}
-              </span>
-              <svg
-                class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"
-                focusable="false"
-                aria-hidden="true"
+        <span class:auto-width={autoWidth} class="spectrum-Picker-label">
+          {secondaryFieldText}
+        </span>
+        <svg
+          class="spectrum-Icon spectrum-UIIcon-ChevronDown100 spectrum-Picker-menuIcon"
+          focusable="false"
+          aria-hidden="true"
+        >
+          <use xlink:href="#spectrum-css-icon-Chevron100" />
+        </svg>
+      </button>
+      {#if secondaryOpen}
+        <div
+          use:clickOutside={() => (secondaryOpen = false)}
+          transition:fly|local={{ y: -20, duration: 200 }}
+          class="spectrum-Popover spectrum-Popover--bottom spectrum-Picker-popover is-open"
+          style="width: 30%"
+        >
+          <ul class="spectrum-Menu" role="listbox">
+            {#each secondaryOptions as option, idx}
+              <li
+                class="spectrum-Menu-item"
+                class:is-selected={isOptionSelected(
+                  getSecondaryOptionValue(option, idx)
+                )}
+                role="option"
+                aria-selected="true"
+                tabindex="0"
+                on:click={() =>
+                  onPickSecondary(getSecondaryOptionValue(option, idx))}
               >
-                <use xlink:href="#spectrum-css-icon-Checkmark100" />
-              </svg>
-            </li>
-          {/each}
-        </ul>
-      </div>
-    {/if}
-  </div>
+                {#if getSecondaryOptionColour(option, idx)}
+                  <span class="option-left">
+                    <StatusLight
+                      color={getSecondaryOptionColour(option, idx)}
+                    />
+                  </span>
+                {/if}
+
+                <span class="spectrum-Menu-itemLabel">
+                  {getSecondaryOptionLabel(option, idx)}
+                </span>
+                <svg
+                  class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"
+                  focusable="false"
+                  aria-hidden="true"
+                >
+                  <use xlink:href="#spectrum-css-icon-Checkmark100" />
+                </svg>
+              </li>
+            {/each}
+          </ul>
+        </div>
+      {/if}
+    </div>
+  {/if}
 </div>
 
 <style>
@@ -380,5 +405,26 @@
 
   .labelPadding {
     padding-left: calc(1em + 10px + 8px);
+  }
+
+  .spectrum-Textfield.spectrum-InputGroup-textfield {
+    width: 70%;
+  }
+  .spectrum-Textfield.spectrum-InputGroup-textfield.is-full-width {
+    width: 100%;
+  }
+  .spectrum-Textfield.spectrum-InputGroup-textfield.is-full-width input {
+    border-right-width: thin;
+  }
+
+  .spectrum-Popover.spectrum-Popover--bottom.spectrum-Picker-popover.is-open {
+    width: 70%;
+  }
+  .spectrum-Popover.spectrum-Popover--bottom.spectrum-Picker-popover.is-open.is-full-width {
+    width: 100%;
+  }
+
+  .spectrum-Search-clearButton {
+    position: absolute;
   }
 </style>
