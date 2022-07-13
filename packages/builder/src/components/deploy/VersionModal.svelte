@@ -69,7 +69,14 @@
 
 {#if !hideIcon}
   <div class="icon-wrapper" class:highlight={updateAvailable}>
-    <Icon name="Refresh" hoverable on:click={updateModal.show} />
+    <Icon
+      name="Refresh"
+      hoverable
+      on:click={updateModal.show}
+      tooltip={updateAvailable
+        ? "An update is available"
+        : "No updates are available"}
+    />
   </div>
 {/if}
 <Modal bind:this={updateModal}>
