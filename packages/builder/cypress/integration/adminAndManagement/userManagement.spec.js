@@ -6,11 +6,11 @@ filterTests(["smoke", "all"], () => {
     before(() => {
       cy.login()
       cy.deleteApp("Cypress Tests")
-      cy.createApp("Cypress Tests")
+      cy.createApp("Cypress Tests", false)
     })
 
     it("should create a user via basic onboarding", () => {
-      cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 1000})
+      cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 5000})
       cy.createUser("bbuser@test.com")
       cy.get(interact.SPECTRUM_TABLE).should("contain", "bbuser")
     })
@@ -43,19 +43,20 @@ filterTests(["smoke", "all"], () => {
                 const uuid = () => Cypress._.random(0, 1e6)
                 const name = uuid()
                 if(i < 1){
-                  cy.createApp(name)
+                  cy.createApp(name, false)
                 } else {
-                  cy.visit(`${Cypress.config().baseUrl}/builder`)
-                  cy.get(interact.CREATE_APP_BUTTON, { timeout: 1000 }).click({ force: true })
+                  cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 5000})
+                  cy.wait(1000)
+                  cy.get(interact.CREATE_APP_BUTTON, { timeout: 2000 }).click({ force: true })
                   cy.createAppFromScratch(name)
                 }
               }
             }
           })
         // Navigate back to the user
-        cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 500})
+        cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 5000})
         cy.get(interact.SPECTRUM_SIDENAV).contains("Users").click()
-        cy.get(interact.SPECTRUM_TABLE, { timeout: 500 }).contains("bbuser").click()
+        cy.get(interact.SPECTRUM_TABLE, { timeout: 1000 }).contains("bbuser").click()
         for (let i = 0; i < 3; i++) {
           cy.get(interact.SPECTRUM_TABLE, { timeout: 3000})
             .eq(1)
@@ -64,24 +65,24 @@ filterTests(["smoke", "all"], () => {
             .find(interact.SPECTRUM_TABLE_CELL)
             .eq(0)
             .click()
-          cy.get(interact.SPECTRUM_DIALOG_GRID, { timeout: 500 })
+          cy.get(interact.SPECTRUM_DIALOG_GRID, { timeout: 1000 })
             .contains("Choose an option")
             .click()
             .then(() => {
               if (i == 0) {
-                cy.get(interact.SPECTRUM_MENU, { timeout: 1000 }).contains("Admin").click({ force: true })
+                cy.get(interact.SPECTRUM_MENU, { timeout: 2000 }).contains("Admin").click({ force: true })
               }
               else if (i == 1) {
-                cy.get(interact.SPECTRUM_MENU, { timeout: 1000 }).contains("Power").click({ force: true })
+                cy.get(interact.SPECTRUM_MENU, { timeout: 2000 }).contains("Power").click({ force: true })
               }
               else if (i == 2) {
-                cy.get(interact.SPECTRUM_MENU, { timeout: 1000 }).contains("Basic").click({ force: true })
+                cy.get(interact.SPECTRUM_MENU, { timeout: 2000 }).contains("Basic").click({ force: true })
               }
-              cy.get(interact.SPECTRUM_BUTTON, { timeout: 1000 })
+              cy.get(interact.SPECTRUM_BUTTON, { timeout: 2000 })
                 .contains("Update role")
                 .click({ force: true })
             })
-            cy.reload()
+            cy.reload({ timeout: 5000 })
             cy.wait(1000)
         }
         // Confirm roles exist within Configure roles table
@@ -173,14 +174,16 @@ filterTests(["smoke", "all"], () => {
 
     it("Should edit user details within user details page", () => {
       // Add First name
-      cy.get(interact.FIELD, { timeout: 500 }).eq(2).within(() => {
-        cy.get(interact.SPECTRUM_TEXTFIELD_INPUT, { timeout: 500 }).type("bb")
+      cy.get(interact.FIELD, { timeout: 1000 }).eq(2).within(() => {
+        cy.wait(500)
+        cy.get(interact.SPECTRUM_TEXTFIELD_INPUT, { timeout: 1000 }).wait(500).clear().click().type("bb")
       })
       // Add Last name
-      cy.get(interact.FIELD).eq(3).within(() => {
-        cy.get(interact.SPECTRUM_TEXTFIELD_INPUT).type("test")
+      cy.get(interact.FIELD, { timeout: 1000 }).eq(3).within(() => {
+        cy.wait(500)
+        cy.get(interact.SPECTRUM_TEXTFIELD_INPUT, { timeout: 1000 }).click().wait(500).clear().type("test")
       })
-      cy.get(interact.FIELD).eq(0).click()
+      cy.get(interact.FIELD, { timeout: 1000 }).eq(0).click()
       // Reload page
       cy.reload()
 
@@ -188,8 +191,8 @@ filterTests(["smoke", "all"], () => {
       cy.get(interact.FIELD, { timeout: 1000 }).eq(2).within(() => {
         cy.get(interact.SPECTRUM_TEXTFIELD_INPUT).should('have.value', "bb")
       })
-      cy.get(interact.FIELD).eq(3).within(() => {
-        cy.get(interact.SPECTRUM_TEXTFIELD_INPUT, { timeout: 500 }).should('have.value', "test")
+      cy.get(interact.FIELD, { timeout: 1000 }).eq(3).within(() => {
+        cy.get(interact.SPECTRUM_TEXTFIELD_INPUT, { timeout: 1000 }).should('have.value', "test")
       })
     })
 

@@ -8,7 +8,9 @@ const {
   refreshOAuthToken,
   updateUserOAuth,
 } = require("@budibase/backend-core/auth")
+const { user: userCache } = require("@budibase/backend-core/cache")
 const { getGlobalIDFromUserMetadataID } = require("../db/utils")
+const { cloneDeep } = require("lodash/fp")
 
 const { isSQL } = require("../integrations/utils")
 const {
@@ -40,20 +42,22 @@ class QueryRunner {
   async execute() {
     let { datasource, fields, queryVerb, transformer } = this
 
-    const Integration = integrations[datasource.source]
+    let datasourceClone = cloneDeep(datasource)
+    let fieldsClone = cloneDeep(fields)
+
+    const Integration = integrations[datasourceClone.source]
     if (!Integration) {
       throw "Integration type does not exist."
     }
 
-    if (datasource.config.authConfigs) {
-      datasource.config.authConfigs = datasource.config.authConfigs.map(
-        config => {
+    if (datasourceClone.config.authConfigs) {
+      datasourceClone.config.authConfigs =
+        datasourceClone.config.authConfigs.map(config => {
           return enrichQueryFields(config, this.ctx)
-        }
-      )
+        })
     }
 
-    const integration = new Integration(datasource.config)
+    const integration = new Integration(datasourceClone.config)
 
     // pre-query, make sure datasource variables are added to parameters
     const parameters = await this.addDatasourceVariables()
@@ -64,19 +68,19 @@ class QueryRunner {
     const enrichedContext = { ...enrichedParameters, ...this.ctx }
 
     // Parse global headers
-    if (datasource.config.defaultHeaders) {
-      datasource.config.defaultHeaders = enrichQueryFields(
-        datasource.config.defaultHeaders,
+    if (datasourceClone.config.defaultHeaders) {
+      datasourceClone.config.defaultHeaders = enrichQueryFields(
+        datasourceClone.config.defaultHeaders,
         enrichedContext
       )
     }
 
     let query
     // handle SQL injections by interpolating the variables
-    if (isSQL(datasource)) {
-      query = interpolateSQL(fields, enrichedParameters, integration)
+    if (isSQL(datasourceClone)) {
+      query = interpolateSQL(fieldsClone, enrichedParameters, integration)
     } else {
-      query = enrichQueryFields(fields, enrichedContext)
+      query = enrichQueryFields(fieldsClone, enrichedContext)
     }
 
     // Add pagination values for REST queries
@@ -112,18 +116,13 @@ class QueryRunner {
         info.code === 401 &&
         !this.hasRefreshedOAuth
       ) {
+        await this.refreshOAuth2(this.ctx)
         // Attempt to refresh the access token from the provider
         this.hasRefreshedOAuth = true
-        const authResponse = await this.refreshOAuth2(this.ctx)
-
-        if (!authResponse || authResponse.err) {
-          // In this event the user may have oAuth issues that
-          // could require re-authenticating with their provider.
-          throw new Error("OAuth2 access token could not be refreshed")
-        }
+      } else {
+        this.hasRerun = true
       }
 
-      this.hasRerun = true
       await threadUtils.invalidateDynamicVariables(this.cachedVariables)
       return this.execute()
     }
@@ -174,8 +173,7 @@ class QueryRunner {
     const { configId } = ctx.auth
 
     if (!providerType || !oauth2?.refreshToken) {
-      console.error("No refresh token found for authenticated user")
-      return
+      throw new Error("No refresh token found for authenticated user")
     }
 
     const resp = await refreshOAuthToken(
@@ -186,9 +184,17 @@ class QueryRunner {
 
     // Refresh session flow. Should be in same location as refreshOAuthToken
     // There are several other properties available in 'resp'
-    if (!resp.error) {
+    if (!resp.err) {
       const globalUserId = getGlobalIDFromUserMetadataID(_id)
       await updateUserOAuth(globalUserId, resp)
+      this.ctx.user = await userCache.getUser(globalUserId)
+    } else {
+      // In this event the user may have oAuth issues that
+      // could require re-authenticating with their provider.
+      let errorMessage = resp.err.data ? resp.err.data : resp.err.toString()
+      throw new Error(
+        "OAuth2 access token could not be refreshed: " + errorMessage
+      )
     }
 
     return resp
