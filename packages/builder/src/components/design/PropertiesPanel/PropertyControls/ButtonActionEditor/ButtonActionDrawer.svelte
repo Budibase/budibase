@@ -22,7 +22,7 @@
   export let actions
   export let bindings = []
 
-  let showAvailableActions = false
+  $: showAvailableActions = !actions?.length
 
   let actionQuery
   $: parsedQuery =
@@ -114,12 +114,18 @@
 
 <DrawerContent>
   <Layout noPadding gap="S" slot="sidebar">
-    {#if showAvailableActions}
-      <div>
-        <ActionButton secondary icon={"ArrowLeft"} on:click={toggleActionList}>
-          Back
-        </ActionButton>
-      </div>
+    {#if showAvailableActions || !actions?.length}
+      {#if actions?.length > 0}
+        <div>
+          <ActionButton
+            secondary
+            icon={"ArrowLeft"}
+            on:click={toggleActionList}
+          >
+            Back
+          </ActionButton>
+        </div>
+      {/if}
       <Search placeholder="Search" bind:value={actionQuery} />
       {#each Object.entries(mappedActionTypes) as [categoryId, category]}
         <div class="heading">{categoryId}</div>
