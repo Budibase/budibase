@@ -8,17 +8,18 @@ const dispatchEvent = (type, data = {}) => {
 const createBuilderStore = () => {
   const initialState = {
     inBuilder: false,
-    layout: null,
     screen: null,
     selectedComponentId: null,
     editMode: false,
     previewId: null,
-    previewType: null,
-    selectedPath: [],
     theme: null,
     customTheme: null,
     previewDevice: "desktop",
     isDragging: false,
+    navigation: null,
+
+    // Legacy - allow the builder to specify a layout
+    layout: null,
   }
   const store = writable(initialState)
   const actions = {
@@ -46,9 +47,6 @@ const createBuilderStore = () => {
     notifyLoaded: () => {
       dispatchEvent("preview-loaded")
     },
-    setSelectedPath: path => {
-      store.update(state => ({ ...state, selectedPath: path }))
-    },
     moveComponent: (componentId, destinationComponentId, mode) => {
       dispatchEvent("move-component", {
         componentId,
@@ -67,6 +65,12 @@ const createBuilderStore = () => {
         return
       }
       store.update(state => ({ ...state, editMode: enabled }))
+    },
+    clickNav: () => {
+      dispatchEvent("click-nav")
+    },
+    requestAddComponent: () => {
+      dispatchEvent("request-add-component")
     },
     highlightSetting: setting => {
       dispatchEvent("highlight-setting", { setting })

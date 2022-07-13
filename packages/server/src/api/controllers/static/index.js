@@ -73,12 +73,7 @@ exports.toggleBetaUiFeature = async function (ctx) {
 }
 
 exports.serveBuilder = async function (ctx) {
-  // Temporary: New Design UI
-  const designUiCookie = ctx.cookies.get("beta:design_ui")
-  // TODO: get this from the tmp Dir that we downloaded from MinIO
-  const uiPath = designUiCookie ? "new_design_ui" : "builder"
-
-  let builderPath = resolve(TOP_LEVEL_PATH, uiPath)
+  const builderPath = resolve(TOP_LEVEL_PATH, "builder")
   await send(ctx, ctx.file, { root: builderPath })
   if (!ctx.file.includes("assets/")) {
     await events.serve.servedBuilder()

@@ -79,4 +79,10 @@
   .emphasized {
     color: var(--spectrum-global-color-blue-600);
   }
+  .spectrum-Tabs-item {
+    color: var(--spectrum-global-color-gray-600);
+  }
+  .spectrum-Tabs-item.is-selected {
+    color: var(--spectrum-global-color-gray-900);
+  }
 </style>
