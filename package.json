@@ -66,7 +66,7 @@
     "build:digitalocean": "cd hosting/digitalocean && ./build.sh && cd -",
     "build:docker:single:multiarch": "docker buildx build --platform linux/arm64,linux/amd64 -f hosting/single/Dockerfile -t budibase:latest .",
     "build:docker:single:image": "docker build -f hosting/single/Dockerfile -t budibase:latest .",
-    "build:docker:single": "yarn build:docker:pre && npm run build:docker:single:image",
+    "build:docker:single": "npm run build:docker:pre && npm run build:docker:single:image",
     "build:docs": "lerna run build:docs",
     "release:helm": "node scripts/releaseHelmChart",
     "env:multi:enable": "lerna run env:multi:enable",
