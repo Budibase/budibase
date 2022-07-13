@@ -115,28 +115,32 @@
 <DrawerContent>
   <Layout noPadding gap="S" slot="sidebar">
     {#if showAvailableActions || !actions?.length}
-      {#if actions?.length > 0}
-        <div>
-          <ActionButton
-            secondary
-            icon={"ArrowLeft"}
-            on:click={toggleActionList}
-          >
-            Back
-          </ActionButton>
+      <div class="actions-list">
+        {#if actions?.length > 0}
+          <div>
+            <ActionButton
+              secondary
+              icon={"ArrowLeft"}
+              on:click={toggleActionList}
+            >
+              Back
+            </ActionButton>
+          </div>
+        {/if}
+        <div class="search-wrap">
+          <Search placeholder="Search" bind:value={actionQuery} />
         </div>
-      {/if}
-      <Search placeholder="Search" bind:value={actionQuery} />
-      {#each Object.entries(mappedActionTypes) as [categoryId, category]}
-        <div class="heading">{categoryId}</div>
-        <ul>
-          {#each category as actionType}
-            <li on:click={onAddAction(actionType)}>
-              <span class="binding__label">{actionType.name}</span>
-            </li>
-          {/each}
-        </ul>
-      {/each}
+        {#each Object.entries(mappedActionTypes) as [categoryId, category], idx}
+          <div class="heading" class:top-entry={idx === 0}>{categoryId}</div>
+          <ul>
+            {#each category as actionType}
+              <li on:click={onAddAction(actionType)}>
+                <span class="action-name">{actionType.name}</span>
+              </li>
+            {/each}
+          </ul>
+        {/each}
+      </div>
     {/if}
 
     {#if actions && actions.length > 0 && !showAvailableActions}
@@ -226,6 +230,19 @@
     color: var(--spectrum-global-color-gray-900);
   }
 
+  .actions-list > * {
+    padding-bottom: var(--spectrum-global-dimension-static-size-200);
+  }
+
+  .actions-list .heading {
+    padding-bottom: var(--spectrum-global-dimension-static-size-100);
+    padding-top: var(--spectrum-global-dimension-static-size-50);
+  }
+
+  .actions-list .heading.top-entry {
+    padding-top: 0px;
+  }
+
   ul {
     list-style: none;
     padding: 0;
@@ -236,7 +253,7 @@
     font-size: var(--font-size-s);
     padding: var(--spacing-m);
     border-radius: 4px;
-    border: var(--border-light);
+    background-color: var(--spectrum-global-color-gray-200);
     transition: background-color 130ms ease-in-out, color 130ms ease-in-out,
       border-color 130ms ease-in-out;
     word-wrap: break-word;
@@ -250,13 +267,10 @@
   li:hover {
     color: var(--spectrum-global-color-gray-900);
     background-color: var(--spectrum-global-color-gray-50);
-    border-color: var(--spectrum-global-color-gray-500);
     cursor: pointer;
   }
-  li:hover :global(*) {
-    color: var(--spectrum-global-color-gray-900) !important;
-  }
-  .binding__label {
+
+  .action-name {
     font-weight: 600;
     text-transform: capitalize;
   }
