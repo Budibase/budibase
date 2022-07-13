@@ -8,12 +8,10 @@
     Layout,
   } from "@budibase/bbui"
   import { groups } from "stores/portal"
-  import { createEventDispatcher } from "svelte"
   import { Constants } from "@budibase/frontend-core"
 
   export let showOnboardingTypeModal
   const password = Math.random().toString(36).substring(2, 22)
-  const dispatch = createEventDispatcher()
   let disabled
   let userGroups = []
 
@@ -39,10 +37,8 @@
 </script>
 
 <ModalContent
-  onConfirm={() => {
-    showOnboardingTypeModal()
-    dispatch("change", { users: userData, groups: userGroups })
-  }}
+  onConfirm={async () =>
+    showOnboardingTypeModal({ users: userData, groups: userGroups })}
   size="M"
   title="Add new user"
   confirmText="Add user"
