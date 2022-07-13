@@ -35,6 +35,7 @@ filterTests(["all"], () => {
         // Check response from datasource after adding configuration
         cy.wait("@datasource")
         cy.get("@datasource").its("response.statusCode").should("eq", 200)
+        cy.wait(2000)
         // Confirm fetch tables was successful
         cy.get(".spectrum-Table")
           .eq(0)
@@ -113,13 +114,13 @@ filterTests(["all"], () => {
         cy.get(".spectrum-Table")
           .eq(1)
           .within(() => {
-            cy.get(".spectrum-Table-row").eq(0).click({ force: true })
-            cy.wait(500)
+            cy.get(".spectrum-Table-cell").eq(0).click({ force: true })
           })
-        cy.get(".spectrum-Dialog-grid").within(() => {
+        cy.get(".spectrum-Dialog-grid", { timeout: 500 }).within(() => {
           cy.get(".spectrum-Button").contains("Delete").click({ force: true })
         })
         cy.reload()
+        cy.wait(500)
         // Confirm relationship was deleted
         cy.get(".spectrum-Table")
           .eq(1)
@@ -150,7 +151,7 @@ filterTests(["all"], () => {
         cy.get("@query").its("response.body").should("not.be.empty")
         // Save query
         cy.get(".spectrum-Button").contains("Save Query").click({ force: true })
-        cy.get(".hierarchy-items-container").should("contain", queryName)
+        cy.get(".spectrum-Tabs-content", { timeout: 2000 }).should("contain", queryName)
       })
 
       it("should switch to schema with no tables", () => {
@@ -159,7 +160,7 @@ filterTests(["all"], () => {
         switchSchema("randomText")
 
         // No tables displayed
-        cy.get(".spectrum-Body").eq(2).should("contain", "No tables found")
+        cy.get(".spectrum-Body", { timeout: 5000 }).eq(2).should("contain", "No tables found")
 
         // Previously created query should be visible
         cy.get(".spectrum-Table").should("contain", queryName)
@@ -170,7 +171,7 @@ filterTests(["all"], () => {
         switchSchema("1")
 
         // Confirm tables exist - Check for specific one
-        cy.get(".spectrum-Table").eq(0).should("contain", "test")
+        cy.get(".spectrum-Table", { timeout: 5000 }).eq(0).should("contain", "test")
         cy.get(".spectrum-Table")
           .eq(0)
           .find(".spectrum-Table-row")
@@ -184,7 +185,7 @@ filterTests(["all"], () => {
         switchSchema("public")
 
         // Confirm tables exist - again
-        cy.get(".spectrum-Table").eq(0).should("contain", "REGIONS")
+        cy.get(".spectrum-Table", { timeout: 5000 }).eq(0).should("contain", "REGIONS")
         cy.get(".spectrum-Table")
           .eq(0)
           .find(".spectrum-Table-row")
@@ -216,22 +217,24 @@ filterTests(["all"], () => {
 
       it("should edit a query name", () => {
         // Access query
-        cy.get(".hierarchy-items-container")
+        cy.get(".hierarchy-items-container", { timeout: 2000 })
           .contains(queryName + " (1)")
           .click()
 
         // Rename query
-        cy.get(".spectrum-Form-item")
+        cy.wait(1000)
+        cy.get(".spectrum-Form-item", { timeout: 2000 })
           .eq(0)
           .within(() => {
             cy.get("input").clear().type(queryRename)
           })
 
         // Run and Save query
-        cy.get(".spectrum-Button").contains("Run Query").click({ force: true })
-        cy.wait(500)
-        cy.get(".spectrum-Button").contains("Save Query").click({ force: true })
-        cy.get(".nav-item").should("contain", queryRename)
+        cy.get(".spectrum-Button", { timeout: 2000 }).contains("Run Query").click({ force: true })
+        cy.wait(1000)
+        cy.get(".spectrum-Button", { timeout: 2000 }).contains("Save Query").click({ force: true })
+        cy.reload({ timeout: 5000 })
+        cy.get(".nav-item", { timeout: 2000 }).should("contain", queryRename)
       })
 
       it("should delete a query", () => {
@@ -247,9 +250,9 @@ filterTests(["all"], () => {
         cy.get(".spectrum-Button")
           .contains("Delete Query")
           .click({ force: true })
-        cy.wait(1000)
         // Confirm deletion
-        cy.get(".nav-item").should("not.contain", queryName)
+        cy.reload({ timeout: 5000 })
+        cy.get(".nav-item", { timeout: 1000 }).should("not.contain", queryName)
       })
 
       const switchSchema = schema => {
@@ -271,7 +274,7 @@ filterTests(["all"], () => {
             .click({ force: true })
         })
         cy.reload()
-        cy.wait(5000)
+        cy.wait(1000)
       }
     }
   })

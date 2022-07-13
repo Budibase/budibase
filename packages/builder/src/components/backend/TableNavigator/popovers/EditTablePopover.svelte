@@ -1,6 +1,6 @@
 <script>
   import { goto } from "@roxi/routify"
-  import { allScreens, store } from "builderStore"
+  import { store } from "builderStore"
   import { tables, datasources } from "stores/backend"
   import {
     ActionMenu,
@@ -27,7 +27,7 @@
   $: allowDeletion = !external || table?.created
 
   function showDeleteModal() {
-    templateScreens = $allScreens.filter(
+    templateScreens = $store.screens.filter(
       screen => screen.autoTableId === table._id
     )
     willBeDeleted = ["All table data"].concat(

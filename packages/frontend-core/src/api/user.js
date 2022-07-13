@@ -9,6 +9,34 @@ export const buildUserEndpoints = API => ({
   },
 
   /**
+   * Gets a list of users in the current tenant.
+   * @param {string} page The page to retrieve
+   * @param {string} search The starts with string to search username/email by.
+   */
+  searchUsers: async ({ page, search } = {}) => {
+    const opts = {}
+    if (page) {
+      opts.page = page
+    }
+    if (search) {
+      opts.search = search
+    }
+    return await API.post({
+      url: `/api/global/users/search`,
+      body: opts,
+    })
+  },
+
+  /**
+   * Get a single user by ID.
+   */
+  getUser: async userId => {
+    return await API.get({
+      url: `/api/global/users/${userId}`,
+    })
+  },
+
+  /**
    * Creates a user for an app.
    * @param user the user to create
    */

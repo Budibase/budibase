@@ -81,7 +81,7 @@
   "container": {
     "name": "Container",
     "description": "This component contains things within itself",
-    "icon": "Sandbox",
+    "icon": "Selection",
     "hasChildren": true,
     "showSettingsBar": true,
     "styles": [
@@ -393,7 +393,7 @@
   "repeater": {
     "name": "Repeater",
     "description": "A configurable data list that attaches to your backend tables.",
-    "icon": "ViewList",
+    "icon": "JourneyData",
     "illegalChildren": [
       "section"
     ],
@@ -894,7 +894,7 @@
   },
   "tag": {
     "name": "Tag",
-    "icon": "TextParagraph",
+    "icon": "Label",
     "showSettingsBar": true,
     "settings": [
       {
@@ -1028,7 +1028,7 @@
   "icon": {
     "name": "Icon",
     "description": "A basic component for displaying icons",
-    "icon": "Bell",
+    "icon": "Shapes",
     "illegalChildren": [
       "section"
     ],
@@ -2358,7 +2358,7 @@
   },
   "optionsfield": {
     "name": "Options Picker",
-    "icon": "ViewList",
+    "icon": "Menu",
     "styles": [
       "size"
     ],
@@ -2686,7 +2686,7 @@
   },
   "booleanfield": {
     "name": "Checkbox",
-    "icon": "Checkmark",
+    "icon": "SelectBox",
     "editable": true,
     "illegalChildren": [
       "section"
@@ -2763,7 +2763,7 @@
   },
   "longformfield": {
     "name": "Long Form Field",
-    "icon": "TextParagraph",
+    "icon": "AlignLeft",
     "styles": [
       "size"
     ],
@@ -2838,7 +2838,7 @@
   },
   "datetimefield": {
     "name": "Date Picker",
-    "icon": "DateInput",
+    "icon": "Date",
     "styles": [
       "size"
     ],
@@ -3430,7 +3430,7 @@
   },
   "daterangepicker": {
     "name": "Date Range",
-    "icon": "Date",
+    "icon": "Calendar",
     "styles": [
       "size"
     ],
@@ -3467,7 +3467,7 @@
   },
   "spectrumcard": {
     "name": "Card",
-    "icon": "Card",
+    "icon": "PersonalizationField",
     "styles": [
       "size"
     ],
@@ -3526,7 +3526,7 @@
   },
   "dynamicfilter": {
     "name": "Dynamic Filter",
-    "icon": "FilterEdit",
+    "icon": "Filter",
     "showSettingsBar": true,
     "settings": [
       {
@@ -4122,7 +4122,7 @@
   },
   "markdownviewer": {
     "name": "Markdown Viewer",
-    "icon": "TaskList",
+    "icon": "Preview",
     "styles": [
       "size"
     ],

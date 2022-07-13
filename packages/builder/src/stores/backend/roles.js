@@ -1,5 +1,6 @@
 import { writable } from "svelte/store"
 import { API } from "api"
+import { RoleUtils } from "@budibase/frontend-core"
 
 export function createRolesStore() {
   const { subscribe, update, set } = writable([])
@@ -7,7 +8,13 @@ export function createRolesStore() {
   const actions = {
     fetch: async () => {
       const roles = await API.getRoles()
-      set(roles)
+      set(
+        roles.sort((a, b) => {
+          const priorityA = RoleUtils.getRolePriority(a._id)
+          const priorityB = RoleUtils.getRolePriority(b._id)
+          return priorityA > priorityB ? -1 : 1
+        })
+      )
     },
     delete: async role => {
       await API.deleteRole({

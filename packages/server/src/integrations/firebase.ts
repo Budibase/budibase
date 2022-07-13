@@ -16,6 +16,7 @@ module Firebase {
   const SCHEMA: Integration = {
     docs: "https://firebase.google.com/docs/firestore/quickstart",
     friendlyName: "Firestore",
+    type: "Non-relational",
     description:
       "Cloud Firestore is a flexible, scalable database for mobile, web, and server development from Firebase and Google Cloud.",
     datasource: {

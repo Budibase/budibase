@@ -1,18 +1,20 @@
 <script>
   import { fade } from "svelte/transition"
+  import { Icon } from "@budibase/bbui"
 
   export let top
   export let left
   export let width
   export let height
   export let text
+  export let icon
   export let color
   export let zIndex
   export let transition = false
   export let line = false
   export let alignRight = false
 
-  $: flipped = top < 20
+  $: flipped = top < 24
 </script>
 
 <div
@@ -26,14 +28,22 @@
   style="top: {top}px; left: {left}px; width: {width}px; height: {height}px; --color: {color}; --zIndex: {zIndex};"
   class:withText={!!text}
 >
-  {#if text}
-    <div class="text" class:flipped class:line class:right={alignRight}>
-      {text}
+  {#if text || icon}
+    <div class="label" class:flipped class:line class:right={alignRight}>
+      {#if icon}
+        <Icon name={icon} size="S" color="white" />
+      {/if}
+      {#if text}
+        <div class="text">
+          {text}
+        </div>
+      {/if}
     </div>
   {/if}
 </div>
 
 <style>
+  /* Indicator styles */
   .indicator {
     right: 0;
     position: absolute;
@@ -51,16 +61,16 @@
   .indicator.line {
     border-radius: 4px !important;
   }
-  .text {
+
+  /* Label styles */
+  .label {
     background-color: var(--color);
-    color: white;
     position: absolute;
     top: 0;
     left: -2px;
-    height: 20px;
-    padding: 0 8px 2px 8px;
+    height: 24px;
+    padding: 0 6px 0 6px;
     transform: translateY(-100%);
-    font-size: 11px;
     border-top-left-radius: 4px;
     border-top-right-radius: 4px;
     border-bottom-right-radius: 4px;
@@ -69,18 +79,30 @@
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
+    gap: 6px;
   }
-  .text.line {
+  .label.line {
     transform: translateY(-50%);
     border-radius: 4px;
   }
-  .text.flipped {
+  .label.flipped {
     border-radius: 4px;
     transform: translateY(0%);
-    top: -2px;
+    top: -1px;
   }
-  .text.right {
+  .label.right {
     right: -2px;
     left: auto;
+  }
+
+  /* Text styles */
+  .text {
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  /* Icon styles */
+  .label :global(.spectrum-Icon + .text) {
   }
 </style>

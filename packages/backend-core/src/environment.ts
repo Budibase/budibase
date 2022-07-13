@@ -16,7 +16,7 @@ if (!LOADED && isDev() && !isTest()) {
   LOADED = true
 }
 
-const env: any = {
+const env = {
   isTest,
   isDev,
   JWT_SECRET: process.env.JWT_SECRET,
@@ -40,7 +40,7 @@ const env: any = {
   DISABLE_ACCOUNT_PORTAL: process.env.DISABLE_ACCOUNT_PORTAL,
   SELF_HOSTED: !!parseInt(process.env.SELF_HOSTED || ""),
   COOKIE_DOMAIN: process.env.COOKIE_DOMAIN,
-  PLATFORM_URL: process.env.PLATFORM_URL,
+  PLATFORM_URL: process.env.PLATFORM_URL || "",
   POSTHOG_TOKEN: process.env.POSTHOG_TOKEN,
   ENABLE_ANALYTICS: process.env.ENABLE_ANALYTICS,
   TENANT_FEATURE_FLAGS: process.env.TENANT_FEATURE_FLAGS,
@@ -66,6 +66,7 @@ const env: any = {
 for (let [key, value] of Object.entries(env)) {
   // handle the edge case of "0" to disable an environment variable
   if (value === "0") {
+    // @ts-ignore
     env[key] = 0
   }
 }
