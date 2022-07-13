@@ -4,7 +4,7 @@ const nodemailer = require("nodemailer")
 const fetch = require("node-fetch")
 
 // for the real email tests give them a long time to try complete/fail
-jest.setTimeout(30000)
+jest.setTimeout(60000)
 
 describe("/api/global/email", () => {
 
