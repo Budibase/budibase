@@ -76,8 +76,9 @@
   } set`
 </script>
 
-<ActionButton on:click={openDrawer}>Define actions</ActionButton>
 <div class="action-count">{actionText}</div>
+<ActionButton on:click={openDrawer}>Define actions</ActionButton>
+
 <Drawer bind:this={drawer} title={"Actions"}>
   <svelte:fragment slot="description">
     Define what actions to run.
@@ -94,6 +95,7 @@
 
 <style>
   .action-count {
-    padding-top: var(--spacing-s);
+    padding-bottom: var(--spacing-s);
+    font-weight: 600;
   }
 </style>
