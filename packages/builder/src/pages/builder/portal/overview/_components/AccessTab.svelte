@@ -8,13 +8,15 @@
     ListItem,
     Modal,
     notifications,
+    Pagination,
   } from "@budibase/bbui"
   import { onMount } from "svelte"
 
   import RoleSelect from "components/common/RoleSelect.svelte"
-  import { users, groups, apps } from "stores/portal"
+  import { users, groups, apps, auth } from "stores/portal"
   import AssignmentModal from "./AssignmentModal.svelte"
   import { createPaginationStore } from "helpers/pagination"
+  import { Constants } from "@budibase/frontend-core"
 
   export let app
 
@@ -22,11 +24,11 @@
   let appGroups = []
   let appUsers = []
   let pageInfo = createPaginationStore()
-  let prevSearch = undefined,
-    search = undefined
 
   $: page = $pageInfo.page
-  $: fetchUsers(page, search)
+  $: fetchUsers(page)
+
+  $: isProPlan = $auth.user?.license.plan.type === Constants.PlanType.FREE
 
   $: appUsers =
     $users.data?.filter(x => {
@@ -37,6 +39,19 @@
 
   $: appGroups = $groups.filter(x => {
     return x.apps.find(y => {
+      return y.appId === app.appId
+    })
+  })
+
+  $: filteredUsers =
+    $users.data?.filter(x => {
+      return !Object.keys(x.roles).find(y => {
+        return extractAppId(y) === extractAppId(app.appId)
+      })
+    }) || []
+
+  $: filteredGroups = $groups.filter(element => {
+    return !element.apps.find(y => {
       return y.appId === app.appId
     })
   })
@@ -70,26 +85,27 @@
         await users.save(newUser)
       }
     })
-    await pageInfo.reset()
+    await groups.actions.init()
+    await users.search({ page, appId: app.appId })
   }
-  /*
-  async function updateRole(user) {
-    console.log(user)
+
+  async function updateUserRole(role, user) {
+    user.roles[app.appId] = role
+    users.save(user)
   }
-*/
-  async function fetchUsers(page, search) {
+
+  async function updateGroupRole(role, group) {
+    group.role = role
+    groups.actions.save(group)
+  }
+
+  async function fetchUsers(page) {
     if ($pageInfo.loading) {
       return
     }
-    // need to remove the page if they've started searching
-    if (search && !prevSearch) {
-      pageInfo.reset()
-      page = undefined
-    }
-    prevSearch = search
     try {
       pageInfo.loading()
-      await users.search({ page, search })
+      await users.search({ page, appId: app.appId })
       pageInfo.fetched($users.hasNextPage, $users.nextPage)
     } catch (error) {
       notifications.error("Error getting user list")
@@ -120,21 +136,29 @@
           >
         </div>
       </div>
-      <List title="User Groups">
-        {#each appGroups as group}
-          <ListItem
-            title={group.name}
-            icon={group.icon}
-            iconBackground={group.color}
-          >
-            <RoleSelect autoWidth quiet value={group.role} />
-          </ListItem>
-        {/each}
-      </List>
+      {#if isProPlan}
+        <List title="User Groups">
+          {#each appGroups as group}
+            <ListItem
+              title={group.name}
+              icon={group.icon}
+              iconBackground={group.color}
+            >
+              <RoleSelect
+                on:change={e => updateGroupRole(e.detail, group)}
+                autoWidth
+                quiet
+                value={group.role}
+              />
+            </ListItem>
+          {/each}
+        </List>
+      {/if}
       <List title="Users">
         {#each appUsers as user}
           <ListItem title={user.email} avatar>
             <RoleSelect
+              on:change={e => updateUserRole(e.detail, user)}
               autoWidth
               quiet
               value={user.roles[
@@ -146,6 +170,15 @@
           </ListItem>
         {/each}
       </List>
+      <div class="pagination">
+        <Pagination
+          page={$pageInfo.pageNumber}
+          hasPrevPage={$pageInfo.loading ? false : $pageInfo.hasPrevPage}
+          hasNextPage={$pageInfo.loading ? false : $pageInfo.hasNextPage}
+          goToPrevPage={pageInfo.prevPage}
+          goToNextPage={pageInfo.nextPage}
+        />
+      </div>
     {:else}
       <div class="align">
         <Layout gap="S">
@@ -167,7 +200,11 @@
 </div>
 
 <Modal bind:this={assignmentModal}>
-  <AssignmentModal userData={$users.data} {addData} />
+  <AssignmentModal
+    userData={filteredUsers.length ? filteredUsers : $users.data}
+    groups={isProPlan ? filteredGroups : []}
+    {addData}
+  />
 </Modal>
 
 <style>

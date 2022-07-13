@@ -84,6 +84,13 @@ export const BuilderRoleDescriptions = [
   },
 ]
 
+export const PlanType = {
+  FREE: "free",
+  TEAM: "team",
+  BUSINESS: "business",
+  ENTERPRISE: "enterprise",
+}
+
 /**
  * API version header attached to all requests.
  * Version changelog:

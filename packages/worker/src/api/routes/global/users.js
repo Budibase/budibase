@@ -63,6 +63,7 @@ router
   .get("/api/global/users", builderOrAdmin, controller.fetch)
   .post("/api/global/users/search", builderOrAdmin, controller.search)
   .delete("/api/global/users/:id", adminOnly, controller.destroy)
+  .post("/api/global/users/bulkDelete", adminOnly, controller.bulkDelete)
   .get("/api/global/roles/:appId")
   .post(
     "/api/global/users/invite",

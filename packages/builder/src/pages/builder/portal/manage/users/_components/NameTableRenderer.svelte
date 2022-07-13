@@ -17,7 +17,7 @@
     </div>
     {value}
   {:else}
-    <div class="text">Invite pending...</div>
+    <div class="text">Not Available</div>
   {/if}
 </div>
 
