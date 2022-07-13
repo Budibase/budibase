@@ -68,6 +68,7 @@
     "@types/semver": "7.3.7",
     "@types/tar-fs": "2.0.1",
     "@types/uuid": "8.3.4",
+    "@types/lodash": "4.14.180",
     "ioredis-mock": "5.8.0",
     "jest": "27.5.1",
     "koa": "2.7.0",

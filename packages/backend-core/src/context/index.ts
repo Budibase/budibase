@@ -1,33 +1,49 @@
-const env = require("../environment")
-const { SEPARATOR, DocumentTypes } = require("../db/constants")
-const { DEFAULT_TENANT_ID } = require("../constants")
-const cls = require("./FunctionContext")
-const { dangerousGetDB, closeDB } = require("../db")
-const { getProdAppID, getDevelopmentAppID } = require("../db/conversions")
-const { baseGlobalDBName } = require("../tenancy/utils")
-const { isEqual } = require("lodash")
+import env from "../environment"
+import { SEPARATOR, DocumentTypes } from "../db/constants"
+import cls from "./FunctionContext"
+import { dangerousGetDB, closeDB } from "../db"
+import { getProdAppID, getDevelopmentAppID } from "../db/conversions"
+import { baseGlobalDBName } from "../tenancy/utils"
+import { IdentityContext } from "@budibase/types"
+import { isEqual } from "lodash"
+import { DEFAULT_TENANT_ID as _DEFAULT_TENANT_ID } from "../constants"
+
+export const DEFAULT_TENANT_ID = _DEFAULT_TENANT_ID
 
 // some test cases call functions directly, need to
 // store an app ID to pretend there is a context
-let TEST_APP_ID = null
+let TEST_APP_ID: string | null = null
 
-const ContextKeys = {
-  TENANT_ID: "tenantId",
-  GLOBAL_DB: "globalDb",
-  APP_ID: "appId",
-  IDENTITY: "identity",
+enum ContextKeys {
+  TENANT_ID = "tenantId",
+  GLOBAL_DB = "globalDb",
+  APP_ID = "appId",
+  IDENTITY = "identity",
   // whatever the request app DB was
-  CURRENT_DB: "currentDb",
+  CURRENT_DB = "currentDb",
   // get the prod app DB from the request
-  PROD_DB: "prodDb",
+  PROD_DB = "prodDb",
   // get the dev app DB from the request
-  DEV_DB: "devDb",
-  DB_OPTS: "dbOpts",
+  DEV_DB = "devDb",
+  DB_OPTS = "dbOpts",
   // check if something else is using the context, don't close DB
-  IN_USE: "inUse",
+  TENANCY_IN_USE = "tenancyInUse",
+  APP_IN_USE = "appInUse",
+  IDENTITY_IN_USE = "identityInUse",
 }
 
-exports.DEFAULT_TENANT_ID = DEFAULT_TENANT_ID
+let openAppCount = 0
+let closeAppCount = 0
+let openTenancyCount = 0
+let closeTenancyCount = 0
+
+setInterval(function () {
+  console.log("openAppCount: " + openAppCount)
+  console.log("closeAppCount: " + closeAppCount)
+  console.log("openTenancyCount: " + openTenancyCount)
+  console.log("closeTenancyCount: " + closeTenancyCount)
+  console.log("------------------ ")
+}, 5000)
 
 // this function makes sure the PouchDB objects are closed and
 // fully deleted when finished - this protects against memory leaks
@@ -42,6 +58,7 @@ async function closeAppDBs() {
     if (!db) {
       continue
     }
+    closeAppCount++
     await closeDB(db)
     // clear the DB from context, incase someone tries to use it again
     cls.setOnContext(dbKey, null)
@@ -55,67 +72,29 @@ async function closeAppDBs() {
   }
 }
 
-exports.closeTenancy = async () => {
+export const closeTenancy = async () => {
+  closeTenancyCount++
   if (env.USE_COUCH) {
-    await closeDB(exports.getGlobalDB())
+    await closeDB(getGlobalDB())
   }
   // clear from context now that database is closed/task is finished
   cls.setOnContext(ContextKeys.TENANT_ID, null)
   cls.setOnContext(ContextKeys.GLOBAL_DB, null)
 }
 
-exports.isDefaultTenant = () => {
-  return exports.getTenantId() === exports.DEFAULT_TENANT_ID
-}
+// export const isDefaultTenant = () => {
+//   return getTenantId() === DEFAULT_TENANT_ID
+// }
 
-exports.isMultiTenant = () => {
+export const isMultiTenant = () => {
   return env.MULTI_TENANCY
-}
-
-// used for automations, API endpoints should always be in context already
-exports.doInTenant = (tenantId, task, { forceNew } = {}) => {
-  // the internal function is so that we can re-use an existing
-  // context - don't want to close DB on a parent context
-  async function internal(opts = { existing: false }) {
-    // set the tenant id
-    if (!opts.existing) {
-      exports.updateTenantId(tenantId)
-    }
-
-    try {
-      // invoke the task
-      return await task()
-    } finally {
-      const using = cls.getFromContext(ContextKeys.IN_USE)
-      if (!using || using <= 1) {
-        await exports.closeTenancy()
-      } else {
-        cls.setOnContext(using - 1)
-      }
-    }
-  }
-
-  const using = cls.getFromContext(ContextKeys.IN_USE)
-  if (
-    !forceNew &&
-    using &&
-    cls.getFromContext(ContextKeys.TENANT_ID) === tenantId
-  ) {
-    cls.setOnContext(ContextKeys.IN_USE, using + 1)
-    return internal({ existing: true })
-  } else {
-    return cls.run(async () => {
-      cls.setOnContext(ContextKeys.IN_USE, 1)
-      return internal()
-    })
-  }
 }
 
 /**
  * Given an app ID this will attempt to retrieve the tenant ID from it.
  * @return {null|string} The tenant ID found within the app ID.
  */
-exports.getTenantIDFromAppID = appId => {
+export const getTenantIDFromAppID = (appId: string) => {
   if (!appId) {
     return null
   }
@@ -131,18 +110,54 @@ exports.getTenantIDFromAppID = appId => {
   }
 }
 
-const setAppTenantId = appId => {
-  const appTenantId =
-    exports.getTenantIDFromAppID(appId) || exports.DEFAULT_TENANT_ID
-  exports.updateTenantId(appTenantId)
+const setAppTenantId = (appId: string) => {
+  const appTenantId = getTenantIDFromAppID(appId) || DEFAULT_TENANT_ID
+  updateTenantId(appTenantId)
 }
 
-exports.doInAppContext = (appId, task, { forceNew } = {}) => {
+// used for automations, API endpoints should always be in context already
+export const doInTenant = (tenantId: string | null, task: any) => {
+  // the internal function is so that we can re-use an existing
+  // context - don't want to close DB on a parent context
+  async function internal(opts = { existing: false }) {
+    // set the tenant id + global db if this is a new context
+    if (!opts.existing) {
+      updateTenantId(tenantId)
+    }
+
+    try {
+      // invoke the task
+      return await task()
+    } finally {
+      const using = cls.getFromContext(ContextKeys.TENANCY_IN_USE)
+      if (!using || using <= 1) {
+        await closeTenancy()
+      } else {
+        cls.setOnContext(using - 1)
+      }
+    }
+  }
+
+  const using = cls.getFromContext(ContextKeys.TENANCY_IN_USE)
+  if (using && cls.getFromContext(ContextKeys.TENANT_ID) === tenantId) {
+    // the tenant id of the current context matches the one we want to use
+    // don't create a new context, just use the existing one
+    cls.setOnContext(ContextKeys.TENANCY_IN_USE, using + 1)
+    return internal({ existing: true })
+  } else {
+    return cls.run(async () => {
+      cls.setOnContext(ContextKeys.TENANCY_IN_USE, 1)
+      return internal()
+    })
+  }
+}
+
+export const doInAppContext = (appId: string, task: any) => {
   if (!appId) {
     throw new Error("appId is required")
   }
 
-  const identity = exports.getIdentity()
+  const identity = getIdentity()
 
   // the internal function is so that we can re-use an existing
   // context - don't want to close DB on a parent context
@@ -153,33 +168,38 @@ exports.doInAppContext = (appId, task, { forceNew } = {}) => {
     }
     // set the app ID
     cls.setOnContext(ContextKeys.APP_ID, appId)
+    setAppTenantId(appId)
+
     // preserve the identity
-    exports.setIdentity(identity)
+    if (identity) {
+      setIdentity(identity)
+    }
     try {
       // invoke the task
       return await task()
     } finally {
-      const using = cls.getFromContext(ContextKeys.IN_USE)
+      const using = cls.getFromContext(ContextKeys.APP_IN_USE)
       if (!using || using <= 1) {
         await closeAppDBs()
+        await closeTenancy()
       } else {
         cls.setOnContext(using - 1)
       }
     }
   }
-  const using = cls.getFromContext(ContextKeys.IN_USE)
-  if (!forceNew && using && cls.getFromContext(ContextKeys.APP_ID) === appId) {
-    cls.setOnContext(ContextKeys.IN_USE, using + 1)
+  const using = cls.getFromContext(ContextKeys.APP_IN_USE)
+  if (using && cls.getFromContext(ContextKeys.APP_ID) === appId) {
+    cls.setOnContext(ContextKeys.APP_IN_USE, using + 1)
     return internal({ existing: true })
   } else {
     return cls.run(async () => {
-      cls.setOnContext(ContextKeys.IN_USE, 1)
+      cls.setOnContext(ContextKeys.APP_IN_USE, 1)
       return internal()
     })
   }
 }
 
-exports.doInIdentityContext = (identity, task) => {
+export const doInIdentityContext = (identity: IdentityContext, task: any) => {
   if (!identity) {
     throw new Error("identity is required")
   }
@@ -189,7 +209,7 @@ exports.doInIdentityContext = (identity, task) => {
       cls.setOnContext(ContextKeys.IDENTITY, identity)
       // set the tenant so that doInTenant will preserve identity
       if (identity.tenantId) {
-        exports.updateTenantId(identity.tenantId)
+        updateTenantId(identity.tenantId)
       }
     }
 
@@ -197,9 +217,10 @@ exports.doInIdentityContext = (identity, task) => {
       // invoke the task
       return await task()
     } finally {
-      const using = cls.getFromContext(ContextKeys.IN_USE)
+      const using = cls.getFromContext(ContextKeys.IDENTITY_IN_USE)
       if (!using || using <= 1) {
-        exports.setIdentity(null)
+        setIdentity(null)
+        await closeTenancy()
       } else {
         cls.setOnContext(using - 1)
       }
@@ -207,23 +228,23 @@ exports.doInIdentityContext = (identity, task) => {
   }
 
   const existing = cls.getFromContext(ContextKeys.IDENTITY)
-  const using = cls.getFromContext(ContextKeys.IN_USE)
+  const using = cls.getFromContext(ContextKeys.IDENTITY_IN_USE)
   if (using && existing && existing._id === identity._id) {
-    cls.setOnContext(ContextKeys.IN_USE, using + 1)
+    cls.setOnContext(ContextKeys.IDENTITY_IN_USE, using + 1)
     return internal({ existing: true })
   } else {
     return cls.run(async () => {
-      cls.setOnContext(ContextKeys.IN_USE, 1)
+      cls.setOnContext(ContextKeys.IDENTITY_IN_USE, 1)
       return internal({ existing: false })
     })
   }
 }
 
-exports.setIdentity = identity => {
+const setIdentity = (identity: IdentityContext | null) => {
   cls.setOnContext(ContextKeys.IDENTITY, identity)
 }
 
-exports.getIdentity = () => {
+export const getIdentity = (): IdentityContext | undefined => {
   try {
     return cls.getFromContext(ContextKeys.IDENTITY)
   } catch (e) {
@@ -231,14 +252,14 @@ exports.getIdentity = () => {
   }
 }
 
-exports.updateTenantId = tenantId => {
+export const updateTenantId = (tenantId: string | null) => {
   cls.setOnContext(ContextKeys.TENANT_ID, tenantId)
   if (env.USE_COUCH) {
-    exports.setGlobalDB(tenantId)
+    setGlobalDB(tenantId)
   }
 }
 
-exports.updateAppId = async appId => {
+export const updateAppId = async (appId: string) => {
   try {
     // have to close first, before removing the databases from context
     await closeAppDBs()
@@ -252,14 +273,15 @@ exports.updateAppId = async appId => {
   }
 }
 
-exports.setGlobalDB = tenantId => {
+export const setGlobalDB = (tenantId: string | null) => {
   const dbName = baseGlobalDBName(tenantId)
+  openTenancyCount++
   const db = dangerousGetDB(dbName)
   cls.setOnContext(ContextKeys.GLOBAL_DB, db)
   return db
 }
 
-exports.getGlobalDB = () => {
+export const getGlobalDB = () => {
   const db = cls.getFromContext(ContextKeys.GLOBAL_DB)
   if (!db) {
     throw new Error("Global DB not found")
@@ -267,14 +289,14 @@ exports.getGlobalDB = () => {
   return db
 }
 
-exports.isTenantIdSet = () => {
+export const isTenantIdSet = () => {
   const tenantId = cls.getFromContext(ContextKeys.TENANT_ID)
   return !!tenantId
 }
 
-exports.getTenantId = () => {
-  if (!exports.isMultiTenant()) {
-    return exports.DEFAULT_TENANT_ID
+export const getTenantId = () => {
+  if (!isMultiTenant()) {
+    return DEFAULT_TENANT_ID
   }
   const tenantId = cls.getFromContext(ContextKeys.TENANT_ID)
   if (!tenantId) {
@@ -283,7 +305,7 @@ exports.getTenantId = () => {
   return tenantId
 }
 
-exports.getAppId = () => {
+export const getAppId = () => {
   const foundId = cls.getFromContext(ContextKeys.APP_ID)
   if (!foundId && env.isTest() && TEST_APP_ID) {
     return TEST_APP_ID
@@ -292,7 +314,7 @@ exports.getAppId = () => {
   }
 }
 
-function getContextDB(key, opts) {
+function getContextDB(key: string, opts: any) {
   const dbOptsKey = `${key}${ContextKeys.DB_OPTS}`
   let storedOpts = cls.getFromContext(dbOptsKey)
   let db = cls.getFromContext(key)
@@ -300,7 +322,7 @@ function getContextDB(key, opts) {
     return db
   }
 
-  const appId = exports.getAppId()
+  const appId = getAppId()
   let toUseAppId
 
   switch (key) {
@@ -314,6 +336,7 @@ function getContextDB(key, opts) {
       toUseAppId = getDevelopmentAppID(appId)
       break
   }
+  openAppCount++
   db = dangerousGetDB(toUseAppId, opts)
   try {
     cls.setOnContext(key, db)
@@ -332,7 +355,7 @@ function getContextDB(key, opts) {
  * Opens the app database based on whatever the request
  * contained, dev or prod.
  */
-exports.getAppDB = (opts = null) => {
+export const getAppDB = (opts?: any) => {
   return getContextDB(ContextKeys.CURRENT_DB, opts)
 }
 
@@ -340,7 +363,7 @@ exports.getAppDB = (opts = null) => {
  * This specifically gets the prod app ID, if the request
  * contained a development app ID, this will open the prod one.
  */
-exports.getProdAppDB = (opts = null) => {
+export const getProdAppDB = (opts?: any) => {
   return getContextDB(ContextKeys.PROD_DB, opts)
 }
 
@@ -348,6 +371,6 @@ exports.getProdAppDB = (opts = null) => {
  * This specifically gets the dev app ID, if the request
  * contained a prod app ID, this will open the dev one.
  */
-exports.getDevAppDB = (opts = null) => {
+export const getDevAppDB = (opts?: any) => {
   return getContextDB(ContextKeys.DEV_DB, opts)
 }
