@@ -31,7 +31,7 @@ export const bulkSave = async (ctx: any) => {
   newUsers.forEach((user: any) => {
     usersToSave.push(
       users.save(user, {
-        hashPassword: false,
+        hashPassword: true,
         requirePassword: user.requirePassword,
         bulkCreate: true,
       })
@@ -53,10 +53,11 @@ export const bulkSave = async (ctx: any) => {
       delete user.password
     })
 
-    groupsToSave.forEach(async group => {
-      group.users = [...group.users, ...allUsers]
-      await db.put(group)
-    })
+    if (groupsToSave.length)
+      groupsToSave.forEach(async group => {
+        group.users = [...group.users, ...allUsers]
+        await db.put(group)
+      })
 
     ctx.body = response
   } catch (err: any) {
@@ -127,6 +128,19 @@ export const destroy = async (ctx: any) => {
   await users.destroy(id, ctx.user)
   ctx.body = {
     message: `User ${id} deleted.`,
+  }
+}
+
+export const bulkDelete = async (ctx: any) => {
+  const { userIds } = ctx.request.body
+
+  let deleted = 0
+  userIds.forEach(async (id: any) => {
+    await users.destroy(id, ctx.user)
+    deleted++
+  })
+  ctx.body = {
+    message: `${deleted} user(s) deleted`,
   }
 }
 

@@ -9,11 +9,13 @@
     Tags,
     notifications,
   } from "@budibase/bbui"
-  import { groups } from "stores/portal"
+  import { groups, auth } from "stores/portal"
   import { onMount } from "svelte"
+  import { Constants } from "@budibase/frontend-core"
   import CreateEditGroupModal from "./_components/CreateEditGroupModal.svelte"
-
   import UserGroupsRow from "./_components/UserGroupsRow.svelte"
+
+  $: isProPlan = $auth.user?.license.plan.type !== Constants.PlanType.FREE
 
   let modal
   let group = {
@@ -23,7 +25,6 @@
     users: [],
     apps: [],
   }
-  let proPlan = true
 
   async function deleteGroup(group) {
     try {
@@ -54,7 +55,7 @@
   <Layout gap="XS" noPadding>
     <div style="display: flex;">
       <Heading size="M">User groups</Heading>
-      {#if !proPlan}
+      {#if !isProPlan}
         <Tags>
           <div class="tags">
             <div class="tag">
@@ -68,13 +69,15 @@
   </Layout>
   <div class="align-buttons">
     <Button
-      icon={proPlan ? "UserGroup" : ""}
-      cta={proPlan}
+      newStyles
+      icon={isProPlan ? "UserGroup" : ""}
+      cta={isProPlan}
       on:click={() => modal.show()}
-      >{proPlan ? "Create user group" : "Upgrade Account"}</Button
+      >{isProPlan ? "Create user group" : "Upgrade Account"}</Button
     >
-    {#if !proPlan}
+    {#if !isProPlan}
       <Button
+        newStyles
         secondary
         on:click={() => {
           window.open("https://budibase.com/pricing/", "_blank")
@@ -83,7 +86,7 @@
     {/if}
   </div>
 
-  {#if proPlan}
+  {#if isProPlan}
     <div class="groupTable">
       {#each $groups as group}
         <div>

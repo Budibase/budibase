@@ -40,6 +40,8 @@
   let selectedGroups = []
   let allAppList = []
 
+  $: isProPlan = $auth.user?.license.plan.type !== Constants.PlanType.FREE
+
   $: allAppList = $apps
     .filter(x => {
       if ($userFetch.data?.roles) {
@@ -244,52 +246,53 @@
     </div>
   </Layout>
 
-  <!-- User groups -->
-  <Layout gap="XS" noPadding>
-    <div class="tableTitle">
-      <div>
-        <Heading size="XS">User groups</Heading>
-        <Body size="S">Add or remove this user from user groups</Body>
-      </div>
-      <div bind:this={popoverAnchor}>
-        <Button on:click={popover.show()} icon="UserGroup" cta
-          >Add User Group</Button
-        >
-      </div>
-      <Popover align="right" bind:this={popover} anchor={popoverAnchor}>
-        <UserGroupPicker
-          key={"name"}
-          title={"Group"}
-          bind:searchTerm
-          bind:selected={selectedGroups}
-          bind:filtered={filteredGroups}
-          {addAll}
-          select={addGroup}
-        />
-      </Popover>
-    </div>
-
-    <List>
-      {#if userGroups.length}
-        {#each userGroups as group}
-          <ListItem
-            title={group.name}
-            icon={group.icon}
-            iconBackground={group.color}
-            ><Icon
-              on:click={removeGroup(group._id)}
-              hoverable
-              size="L"
-              name="Close"
-            /></ListItem
+  {#if isProPlan}
+    <!-- User groups -->
+    <Layout gap="XS" noPadding>
+      <div class="tableTitle">
+        <div>
+          <Heading size="XS">User groups</Heading>
+          <Body size="S">Add or remove this user from user groups</Body>
+        </div>
+        <div bind:this={popoverAnchor}>
+          <Button on:click={popover.show()} icon="UserGroup" cta
+            >Add User Group</Button
           >
-        {/each}
-      {:else}
-        <ListItem icon="UserGroup" title="No groups" />
-      {/if}
-    </List>
-  </Layout>
+        </div>
+        <Popover align="right" bind:this={popover} anchor={popoverAnchor}>
+          <UserGroupPicker
+            key={"name"}
+            title={"Group"}
+            bind:searchTerm
+            bind:selected={selectedGroups}
+            bind:filtered={filteredGroups}
+            {addAll}
+            select={addGroup}
+          />
+        </Popover>
+      </div>
 
+      <List>
+        {#if userGroups.length}
+          {#each userGroups as group}
+            <ListItem
+              title={group.name}
+              icon={group.icon}
+              iconBackground={group.color}
+              ><Icon
+                on:click={removeGroup(group._id)}
+                hoverable
+                size="L"
+                name="Close"
+              /></ListItem
+            >
+          {/each}
+        {:else}
+          <ListItem icon="UserGroup" title="No groups" />
+        {/if}
+      </List>
+    </Layout>
+  {/if}
   <!-- User Apps -->
   <Layout gap="S" noPadding>
     <div class="appsTitle">

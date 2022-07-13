@@ -7,7 +7,7 @@
     InputDropdown,
     Layout,
   } from "@budibase/bbui"
-  import { groups } from "stores/portal"
+  import { groups, auth } from "stores/portal"
   import { createEventDispatcher } from "svelte"
   import { Constants } from "@budibase/frontend-core"
 
@@ -16,6 +16,8 @@
   const dispatch = createEventDispatcher()
   let disabled
   let userGroups = []
+
+  $: isProPlan = $auth.user?.license.plan.type !== Constants.PlanType.FREE
 
   $: userData = [
     {
@@ -67,14 +69,16 @@
     </div>
   </Layout>
 
-  <Multiselect
-    bind:value={userGroups}
-    placeholder="Select User Groups"
-    label="User Groups"
-    options={$groups}
-    getOptionLabel={option => option.name}
-    getOptionValue={option => option._id}
-  />
+  {#if isProPlan}
+    <Multiselect
+      bind:value={userGroups}
+      placeholder="Select User Groups"
+      label="User Groups"
+      options={$groups}
+      getOptionLabel={option => option.name}
+      getOptionValue={option => option._id}
+    />
+  {/if}
 </ModalContent>
 
 <style>

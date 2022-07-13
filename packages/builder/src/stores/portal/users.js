@@ -75,6 +75,10 @@ export function createUsersStore() {
     update(users => users.filter(user => user._id !== id))
   }
 
+  async function bulkDelete(userIds) {
+    await API.deleteUsers(userIds)
+  }
+
   async function save(user) {
     return await API.saveUser(user)
   }
@@ -87,6 +91,7 @@ export function createUsersStore() {
     acceptInvite,
     create,
     save,
+    bulkDelete,
     delete: del,
   }
 }

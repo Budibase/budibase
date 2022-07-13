@@ -27,6 +27,7 @@
   import { AppStatus } from "constants"
   import Logo from "assets/bb-space-man.svg"
   import AccessFilter from "./_components/AcessFilter.svelte"
+  import { Constants } from "@budibase/frontend-core"
 
   let sortBy = "name"
   let template
@@ -67,6 +68,8 @@
   $: lockedApps = filteredApps.filter(app => app?.lockedYou || app?.lockedOther)
   $: unlocked = lockedApps?.length === 0
   $: automationErrors = getAutomationErrors(enrichedApps)
+
+  $: isProPlan = $auth.user?.license.plan.type !== Constants.PlanType.FREE
 
   const enrichApps = (apps, user, sortBy) => {
     const enrichedApps = apps.map(app => ({
@@ -355,7 +358,7 @@
                   </Button>
                 {/if}
                 <div class="filter">
-                  {#if $groups.length}
+                  {#if isProPlan && $groups.length}
                     <AccessFilter on:change={accessFilterAction} />
                   {/if}
                   <Select

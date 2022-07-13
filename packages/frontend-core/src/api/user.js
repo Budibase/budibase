@@ -108,6 +108,19 @@ export const buildUserEndpoints = API => ({
   },
 
   /**
+   * Deletes multiple users
+   * @param userId the ID of the user to delete
+   */
+  deleteUsers: async userIds => {
+    return await API.post({
+      url: `/api/global/users/bulkDelete`,
+      body: {
+        userIds,
+      },
+    })
+  },
+
+  /**
    * Invites a user to the current tenant.
    * @param email the email address to send the invitation to
    * @param builder whether the user should be a global builder

@@ -1,19 +1,22 @@
 <script>
   import { ModalContent, PickerDropdown, ActionButton } from "@budibase/bbui"
-  import { groups } from "stores/portal"
   import { roles } from "stores/backend"
   import { RoleUtils } from "@budibase/frontend-core"
 
   export let addData
   export let userData = []
+  export let groups = []
+
   $: optionSections = {
-    groups: {
-      data: $groups,
-      getLabel: group => group.name,
-      getValue: group => group._id,
-      getIcon: group => group.icon,
-      getColour: group => group.color,
-    },
+    ...(groups.length && {
+      groups: {
+        data: groups,
+        getLabel: group => group.name,
+        getValue: group => group._id,
+        getIcon: group => group.icon,
+        getColour: group => group.color,
+      },
+    }),
     users: {
       data: userData,
       getLabel: user => user.email,

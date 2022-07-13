@@ -15,8 +15,9 @@
     Label,
   } from "@budibase/bbui"
   import AddUserModal from "./_components/AddUserModal.svelte"
-  import { users, groups } from "stores/portal"
+  import { users, groups, auth } from "stores/portal"
   import { onMount } from "svelte"
+  import DeleteRowsButton from "components/backend/DataTable/buttons/DeleteRowsButton.svelte"
   import GroupsTableRenderer from "./_components/GroupsTableRenderer.svelte"
   import AppsTableRenderer from "./_components/AppsTableRenderer.svelte"
   import NameTableRenderer from "./_components/NameTableRenderer.svelte"
@@ -27,25 +28,7 @@
   import PasswordModal from "./_components/PasswordModal.svelte"
   import ImportUsersModal from "./_components/ImportUsersModal.svelte"
   import { createPaginationStore } from "helpers/pagination"
-
-  const schema = {
-    name: {},
-    email: {},
-    role: {
-      noPropagation: true,
-      sortable: false,
-    },
-    userGroups: { sortable: false, displayName: "User groups" },
-    apps: { width: "120px" },
-    settings: {
-      sortable: false,
-      width: "60px",
-      displayName: "",
-      align: "Right",
-    },
-  }
-
-  $: userData = []
+  import { Constants } from "@budibase/frontend-core"
 
   const accessTypes = [
     {
@@ -73,6 +56,38 @@
   let pageInfo = createPaginationStore()
   let prevEmail = undefined,
     searchEmail = undefined
+
+  let selectedRows = []
+  let customRenderers = [
+    { column: "userGroups", component: GroupsTableRenderer },
+    { column: "apps", component: AppsTableRenderer },
+    { column: "name", component: NameTableRenderer },
+    { column: "settings", component: SettingsTableRenderer },
+    { column: "role", component: RoleTableRenderer },
+  ]
+
+  $: isProPlan = $auth.user?.license.plan.type !== Constants.PlanType.FREE
+
+  $: schema = {
+    name: {},
+    email: {},
+    role: {
+      noPropagation: true,
+      sortable: false,
+    },
+    ...(isProPlan && {
+      userGroups: { sortable: false, displayName: "User groups" },
+    }),
+    apps: { width: "120px" },
+    settings: {
+      sortable: false,
+      width: "60px",
+      displayName: "",
+      align: "Right",
+    },
+  }
+
+  $: userData = []
 
   $: page = $pageInfo.page
   $: fetchUsers(page, searchEmail)
@@ -164,6 +179,19 @@
     }
   })
 
+  const deleteRows = async () => {
+    try {
+      let ids = selectedRows.map(user => user._id)
+      await users.bulkDelete(ids)
+      notifications.success(`Successfully deleted ${selectedRows.length} rows`)
+      selectedRows = []
+      await fetchUsers(page, searchEmail)
+    } catch (error) {
+      console.log(error)
+      notifications.error("Error deleting rows")
+    }
+  }
+
   async function fetchUsers(page, email) {
     if ($pageInfo.loading) {
       return
@@ -211,26 +239,25 @@
       <Button on:click={importUsersModal.show} icon="Import" primary
         >Import Users</Button
       >
+
       <div class="field">
         <Label size="L">Search email</Label>
         <Search bind:value={searchEmail} placeholder="" />
       </div>
+      {#if selectedRows.length > 0}
+        <DeleteRowsButton on:updaterows {selectedRows} {deleteRows} />
+      {/if}
     </ButtonGroup>
     <Table
       on:click={({ detail }) => $goto(`./${detail._id}`)}
       {schema}
+      bind:selectedRows
       data={enrichedUsers}
       allowEditColumns={false}
       allowEditRows={false}
       allowSelectRows={true}
       showHeaderBorder={false}
-      customRenderers={[
-        { column: "userGroups", component: GroupsTableRenderer },
-        { column: "apps", component: AppsTableRenderer },
-        { column: "name", component: NameTableRenderer },
-        { column: "settings", component: SettingsTableRenderer },
-        { column: "role", component: RoleTableRenderer },
-      ]}
+      {customRenderers}
     />
     <div class="pagination">
       <Pagination

@@ -6,9 +6,8 @@
     Multiselect,
     notifications,
   } from "@budibase/bbui"
-  import { groups } from "stores/portal"
+  import { groups, auth } from "stores/portal"
   import { emailValidator } from "../../../../../../helpers/validation"
-
   import { Constants } from "@budibase/frontend-core"
 
   const BYTES_IN_MB = 1000000
@@ -21,7 +20,9 @@
   let userEmails = []
   let userGroups = []
   let usersRole = null
+
   $: invalidEmails = []
+  $: isProPlan = $auth.user?.license.plan.type !== Constants.PlanType.FREE
 
   const validEmails = userEmails => {
     for (const email of userEmails) {
@@ -86,14 +87,16 @@
     options={Constants.BuilderRoleDescriptions}
   />
 
-  <Multiselect
-    bind:value={userGroups}
-    placeholder="Select User Groups"
-    label="User Groups"
-    options={$groups}
-    getOptionLabel={option => option.name}
-    getOptionValue={option => option._id}
-  />
+  {#if isProPlan}
+    <Multiselect
+      bind:value={userGroups}
+      placeholder="Select User Groups"
+      label="User Groups"
+      options={$groups}
+      getOptionLabel={option => option.name}
+      getOptionValue={option => option._id}
+    />
+  {/if}
 </ModalContent>
 
 <style>
