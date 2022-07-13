@@ -9,7 +9,7 @@ import {
   getGlobalDBName,
   getTenantId,
 } from "../tenancy"
-import context from "../context"
+import * as context from "../context"
 import { DEFINITIONS } from "."
 import {
   Migration,
