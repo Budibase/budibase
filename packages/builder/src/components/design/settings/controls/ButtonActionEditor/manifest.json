@@ -29,7 +29,7 @@
     },
     {
       "name": "Navigate To",
-      "type": "ui/ux",
+      "type": "application",
       "component": "NavigateTo"
     },
     {
@@ -45,7 +45,7 @@
     },
     {
       "name": "Trigger Automation",
-      "type": "ui/ux",
+      "type": "application",
       "component": "TriggerAutomation"
     },
     {
@@ -70,12 +70,12 @@
     },
     {
       "name": "Log Out",
-      "type": "ui/ux",
+      "type": "application",
       "component": "LogOut"
     },
     {
       "name": "Close Screen Modal",
-      "type": "ui/ux",
+      "type": "application",
       "component": "CloseScreenModal"
     },
     {
@@ -107,7 +107,7 @@
     },
     {
       "name": "Continue if / Stop if",
-      "type": "ui/ux",
+      "type": "logic",
       "component": "ContinueIf",
       "dependsOnFeature": "continueIfAction"
     }
