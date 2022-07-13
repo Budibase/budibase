@@ -96,7 +96,7 @@
           onSelect(block)
         }}
       >
-        <Icon name={blockComplete ? "ChevronUp" : "ChevronDown"} />
+        <Icon hoverable name={blockComplete ? "ChevronUp" : "ChevronDown"} />
       </div>
     </div>
   </div>
