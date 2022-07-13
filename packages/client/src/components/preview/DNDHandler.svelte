@@ -175,6 +175,7 @@
       dropInfo = {
         target,
         name: element.dataset.name,
+        icon: element.dataset.icon,
         droppableInside: element.classList.contains("empty"),
         bounds,
       }

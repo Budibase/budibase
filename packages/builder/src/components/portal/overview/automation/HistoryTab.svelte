@@ -99,6 +99,7 @@
   }
 
   onMount(async () => {
+    await automationStore.actions.fetch()
     const params = new URLSearchParams(window.location.search)
     const shouldOpen = params.get("open") === ERROR
     // open with errors, open panel for latest

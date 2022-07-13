@@ -134,15 +134,18 @@ Cypress.Commands.add("createApp", (name, addDefaultTable) => {
   const shouldCreateDefaultTable =
     typeof addDefaultTable != "boolean" ? true : addDefaultTable
 
-  cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 5000 })
-  cy.get(`[data-cy="create-app-btn"]`, { timeout: 2000 }).click({ force: true })
+  cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 10000 })
+  cy.wait(1000)
+  cy.get(`[data-cy="create-app-btn"]`, { timeout: 5000 }).click({ force: true })
 
   // If apps already exist
   cy.request(`${Cypress.config().baseUrl}/api/applications?status=all`)
     .its("body")
     .then(val => {
       if (val.length > 0) {
-        cy.get(`[data-cy="create-app-btn"]`).click({ force: true })
+        cy.get(`[data-cy="create-app-btn"]`, { timeout: 5000 }).click({
+          force: true,
+        })
       }
     })
 
@@ -400,17 +403,19 @@ Cypress.Commands.add("createAppFromScratch", appName => {
 Cypress.Commands.add("createTable", (tableName, initialTable) => {
   if (!initialTable) {
     cy.navigateToDataSection()
-    cy.get(`[data-cy="new-table"]`).click()
+    cy.get(`[data-cy="new-table"]`, { timeout: 2000 }).click()
   }
   cy.wait(2000)
-  cy.get(".item")
+  cy.get(".item", { timeout: 2000 })
     .contains("Budibase DB")
     .click({ force: true })
     .then(() => {
-      cy.get(".spectrum-Button").contains("Continue").click({ force: true })
+      cy.get(".spectrum-Button", { timeout: 2000 })
+        .contains("Continue")
+        .click({ force: true })
     })
-  cy.get(".spectrum-Modal").within(() => {
-    cy.get("input", { timeout: 1000 }).first().type(tableName).blur()
+  cy.get(".spectrum-Modal", { timeout: 2000 }).within(() => {
+    cy.get("input", { timeout: 2000 }).first().type(tableName).blur()
     cy.get(".spectrum-ButtonGroup").contains("Create").click()
   })
   cy.contains(tableName).should("be.visible")
@@ -504,12 +509,13 @@ Cypress.Commands.add("addCustomSourceOptions", totalOptions => {
 // DESIGN AREA
 Cypress.Commands.add("addComponent", (category, component) => {
   if (category) {
-    cy.get(`[data-cy="category-${category}"]`, { timeout: 1000 }).click({
+    cy.get(`[data-cy="category-${category}"]`, { timeout: 3000 }).click({
       force: true,
     })
   }
+  cy.wait(500)
   if (component) {
-    cy.get(`[data-cy="component-${component}"]`, { timeout: 1000 }).click({
+    cy.get(`[data-cy="component-${component}"]`, { timeout: 3000 }).click({
       force: true,
     })
   }
@@ -517,7 +523,7 @@ Cypress.Commands.add("addComponent", (category, component) => {
   cy.location().then(loc => {
     const params = loc.pathname.split("/")
     const componentId = params[params.length - 1]
-    cy.getComponent(componentId).should("exist")
+    cy.getComponent(componentId, { timeout: 3000 }).should("exist")
     return cy.wrap(componentId)
   })
 })
@@ -621,8 +627,8 @@ Cypress.Commands.add("navigateToFrontend", () => {
   // Clicks on Design tab and then the Home nav item
   cy.wait(500)
   cy.contains("Design").click()
-  cy.get(".spectrum-Search").type("/")
-  cy.get(".nav-item").contains("home").click()
+  cy.get(".spectrum-Search", { timeout: 2000 }).type("/")
+  cy.get(".nav-item", { timeout: 2000 }).contains("home").click()
 })
 
 Cypress.Commands.add("navigateToDataSection", () => {
@@ -782,7 +788,7 @@ Cypress.Commands.add("createRestQuery", (method, restUrl, queryPrettyName) => {
 
 // MISC
 Cypress.Commands.add("closeModal", () => {
-  cy.get(".spectrum-Modal").within(() => {
+  cy.get(".spectrum-Modal", { timeout: 2000 }).within(() => {
     cy.get(".close-icon").click()
     cy.wait(1000) // Wait for modal to close
   })

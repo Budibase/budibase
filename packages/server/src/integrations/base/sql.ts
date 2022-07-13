@@ -99,8 +99,12 @@ function generateSelectStatement(
     const fieldNames = field.split(/\./g)
     const tableName = fieldNames[0]
     const columnName = fieldNames[1]
-    if (columnName && knex.client.config.client === SqlClients.POSTGRES) {
-      const externalType = schema?.[columnName].externalType
+    if (
+      columnName &&
+      schema?.[columnName] &&
+      knex.client.config.client === SqlClients.POSTGRES
+    ) {
+      const externalType = schema[columnName].externalType
       if (externalType?.includes("money")) {
         return knex.raw(
           `"${tableName}"."${columnName}"::money::numeric as "${field}"`
