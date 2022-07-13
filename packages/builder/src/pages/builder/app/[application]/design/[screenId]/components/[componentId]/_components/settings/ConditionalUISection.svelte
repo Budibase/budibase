@@ -52,5 +52,6 @@
 <style>
   .conditionCount {
     font-weight: 600;
+    margin-top: -5px;
   }
 </style>
