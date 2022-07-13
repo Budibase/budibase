@@ -12,17 +12,14 @@ filterTests(["all"], () => {
       const appName = "Cypress Tests"
       const appRename = "Cypress Renamed"
       // Rename app, Search for app, Confirm name was changed
-      cy.visit(`${Cypress.config().baseUrl}/builder`)
-      cy.wait(500)
+      cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 5000 })
       renameApp(appName, appRename)
       cy.reload()
-      cy.wait(1000)
       cy.searchForApplication(appRename)
       cy.get(interact.APP_TABLE).find(interact.TITLE).should("have.length", 1)
       cy.applicationInAppTable(appRename)
       // Set app name back to Cypress Tests
       cy.reload()
-      cy.wait(1000)
       renameApp(appRename, appName)
     })
 
@@ -42,8 +39,7 @@ filterTests(["all"], () => {
           .click({ force: true })
       })
       // Rename app, Search for app, Confirm name was changed
-      cy.visit(`${Cypress.config().baseUrl}/builder`)
-      cy.wait(500)
+      cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 5000 })
       renameApp(appName, appRename, true)
       cy.get(interact.APP_TABLE).find(interact.WRAPPER).should("have.length", 1)
       cy.applicationInAppTable(appRename)
@@ -51,23 +47,18 @@ filterTests(["all"], () => {
 
     it("Should try to rename an application to have no name", () => {
       const appName = "Cypress Tests"
-      cy.visit(`${Cypress.config().baseUrl}/builder`)
-      cy.wait(500)
+      cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 5000 })
       renameApp(appName, " ", false, true)
-      cy.wait(500)
       // Close modal and confirm name has not been changed
-      cy.get(interact.SPECTRUM_DIALOG_GRID).contains("Cancel").click()
-      cy.reload()
-      cy.wait(1000)
+      cy.get(interact.SPECTRUM_DIALOG_GRID, { timeout: 1000 }).contains("Cancel").click()
       cy.applicationInAppTable(appName)
     })
 
     xit("Should create two applications with the same name", () => {
       // It is not possible to have applications with the same name
       const appName = "Cypress Tests"
-      cy.visit(`${Cypress.config().baseUrl}/builder`)
-      cy.wait(500)
-      cy.get(interact.SPECTRUM_BUTTON)
+      cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 5000 })
+      cy.get(interact.SPECTRUM_BUTTON), { timeout: 500 }
         .contains("Create app")
         .click({ force: true })
       cy.contains(/Start from scratch/).click()
@@ -89,28 +80,21 @@ filterTests(["all"], () => {
       const appName = "Cypress Tests"
       const numberName = 12345
       const specialCharName = "£$%^"
-      cy.visit(`${Cypress.config().baseUrl}/builder`)
-      cy.wait(500)
+      cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 5000 })
       renameApp(appName, numberName)
-      cy.reload()
-      cy.wait(1000)
       cy.applicationInAppTable(numberName)
-      cy.reload()
-      cy.wait(1000)
       renameApp(numberName, specialCharName)
       cy.get(interact.ERROR).should(
         "have.text",
         "App name must be letters, numbers and spaces only"
       )
       // Set app name back to Cypress Tests
-      cy.reload()
-      cy.wait(1000)
       renameApp(numberName, appName)
     })
 
     const renameApp = (originalName, changedName, published, noName) => {
       cy.searchForApplication(originalName)
-      cy.get(interact.APP_TABLE).within(() => {
+      cy.get(interact.APP_TABLE, { timeout: 1000 }).within(() => {
         cy.get(".app-row-actions button")
           .contains("Manage")
           .eq(0)

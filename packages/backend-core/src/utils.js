@@ -197,3 +197,7 @@ exports.platformLogout = async ({ ctx, userId, keepActiveSession }) => {
   await events.auth.logout()
   await userCache.invalidateUser(userId)
 }
+
+exports.timeout = timeMs => {
+  return new Promise(resolve => setTimeout(resolve, timeMs))
+}

@@ -59,6 +59,7 @@ exports.clientLibraryPath = (appId, version) => {
     let url = `${exports.objectStoreUrl()}/${sanitizeKey(
       appId
     )}/budibase-client.js`
+
     // append app version to bust the cache
     if (version) {
       url += `?v=${version}`

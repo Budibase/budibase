@@ -25,6 +25,13 @@ if [[ $(redis-cli -a $REDIS_PASSWORD --no-auth-warning  ping) != 'PONG' ]]; then
     healthy=false
 fi
 # mino, clouseau, 
+nginx -t -q
+NGINX_STATUS=$?
+
+if [[ $NGINX_STATUS -gt 0 ]]; then
+    echo 'ERROR: Nginx config problem';
+    healthy=false
+fi
 
 if [ $healthy == true ]; then
   exit 0

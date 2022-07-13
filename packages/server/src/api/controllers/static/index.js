@@ -16,8 +16,14 @@ const { upload } = require("../../../utilities/fileSystem")
 const { attachmentsRelativeURL } = require("../../../utilities")
 const { DocumentTypes, isDevAppID } = require("../../../db/utils")
 const { getAppDB, getAppId } = require("@budibase/backend-core/context")
+const { setCookie, clearCookie } = require("@budibase/backend-core/utils")
 const AWS = require("aws-sdk")
 const { events } = require("@budibase/backend-core")
+
+const fs = require("fs")
+const {
+  downloadTarballDirect,
+} = require("../../../utilities/fileSystem/utilities")
 
 async function prepareUpload({ s3Key, bucket, metadata, file }) {
   const response = await upload({
@@ -38,8 +44,36 @@ async function prepareUpload({ s3Key, bucket, metadata, file }) {
   }
 }
 
+exports.toggleBetaUiFeature = async function (ctx) {
+  const cookieName = `beta:${ctx.params.feature}`
+
+  if (ctx.cookies.get(cookieName)) {
+    clearCookie(ctx, cookieName)
+    ctx.body = {
+      message: `${ctx.params.feature} disabled`,
+    }
+    return
+  }
+
+  let builderPath = resolve(TOP_LEVEL_PATH, "new_design_ui")
+
+  // // download it from S3
+  if (!fs.existsSync(builderPath)) {
+    fs.mkdirSync(builderPath)
+  }
+  await downloadTarballDirect(
+    "https://cdn.budi.live/beta:design_ui/new_ui.tar.gz",
+    builderPath
+  )
+  setCookie(ctx, {}, cookieName)
+
+  ctx.body = {
+    message: `${ctx.params.feature} enabled`,
+  }
+}
+
 exports.serveBuilder = async function (ctx) {
-  let builderPath = resolve(TOP_LEVEL_PATH, "builder")
+  const builderPath = resolve(TOP_LEVEL_PATH, "builder")
   await send(ctx, ctx.file, { root: builderPath })
   if (!ctx.file.includes("assets/")) {
     await events.serve.servedBuilder()
@@ -78,7 +112,7 @@ exports.serveApp = async function (ctx) {
       title: appInfo.name,
       production: env.isProd(),
       appId,
-      clientLibPath: clientLibraryPath(appId, appInfo.version),
+      clientLibPath: clientLibraryPath(appId, appInfo.version, ctx),
     })
 
     const appHbs = loadHandlebarsFile(`${__dirname}/templates/app.hbs`)

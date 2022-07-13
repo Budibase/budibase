@@ -77,7 +77,7 @@ export class Thread {
     })
   }
 
-  static shutdown() {
+  static stopThreads() {
     return new Promise<void>(resolve => {
       if (Thread.workerRefs.length === 0) {
         resolve()
@@ -94,5 +94,9 @@ export class Thread {
       }
       Thread.workerRefs = []
     })
+  }
+
+  static async shutdown() {
+    await Thread.stopThreads()
   }
 }
