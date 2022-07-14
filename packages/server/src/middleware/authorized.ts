@@ -73,7 +73,6 @@ const checkAuthorizedResource = async (
 
 export = (permType: any, permLevel: any = null, opts = { schema: false }) =>
   async (ctx: any, next: any) => {
-    console.log(ctx)
     // webhooks don't need authentication, each webhook unique
     // also internal requests (between services) don't need authorized
     if (isWebhookEndpoint(ctx) || ctx.internal) {
