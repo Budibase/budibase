@@ -333,7 +333,7 @@ export const getFrontendStore = () => {
       select: layoutId => {
         // Check this layout exists
         const state = get(store)
-        const layout = store.actions.layouts.find(layoutId)
+        const layout = state.layouts.find(layout => layout._id === layoutId)
         if (!layout) {
           return
         }
@@ -353,32 +353,6 @@ export const getFrontendStore = () => {
           return state
         })
       },
-      save: async layout => {
-        const creatingNewLayout = layout._id === undefined
-        const savedLayout = await API.saveLayout(layout)
-        store.update(state => {
-          const idx = state.layouts.findIndex(x => x._id === savedLayout._id)
-          if (idx !== -1) {
-            state.layouts.splice(idx, 1, savedLayout)
-          } else {
-            state.layouts.push(savedLayout)
-          }
-          return state
-        })
-
-        // Select layout if creating a new one
-        if (creatingNewLayout) {
-          store.actions.layouts.select(savedLayout._id)
-        }
-        return savedLayout
-      },
-      find: layoutId => {
-        if (!layoutId) {
-          return get(mainLayout)
-        }
-        const storeContents = get(store)
-        return storeContents.layouts.find(layout => layout._id === layoutId)
-      },
       delete: async layout => {
         if (!layout?._id) {
           return
@@ -388,10 +362,6 @@ export const getFrontendStore = () => {
           layoutRev: layout._rev,
         })
         store.update(state => {
-          // Select main layout if we deleted the selected layout
-          if (layout._id === state.selectedLayoutId) {
-            state.selectedLayoutId = get(mainLayout)._id
-          }
           state.layouts = state.layouts.filter(x => x._id !== layout._id)
           return state
         })
