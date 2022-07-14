@@ -30,8 +30,8 @@
   $: page = $pageInfo.page
   $: fetchUsers(page, search)
 
-  $: isProPlan = $auth.user?.license.plan.type === Constants.PlanType.FREE
-
+  $: isProPlan = $auth.user?.license.plan.type !== Constants.PlanType.FREE
+  $: console.log(isProPlan)
   $: appUsers =
     $users.data?.filter(x => {
       return Object.keys(x.roles).find(y => {

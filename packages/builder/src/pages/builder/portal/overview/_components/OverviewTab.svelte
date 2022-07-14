@@ -19,7 +19,7 @@
   }
 
   let appEditor, appEditorPromise
-  $: console.log($users.data)
+
   $: updateAvailable = clientPackage.version !== $store.version
   $: isPublished = app && app?.status === AppStatus.DEPLOYED
   $: appEditorId = !app?.updatedBy ? $auth.user._id : app?.updatedBy
