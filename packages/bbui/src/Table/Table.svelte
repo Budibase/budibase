@@ -578,7 +578,7 @@
     gap: 4px;
     border-bottom: 1px solid var(--spectrum-alias-border-color-mid);
     background-color: var(--table-bg);
-    z-index: 1;
+    z-index: auto;
   }
   .spectrum-Table-cell--divider {
     padding-right: var(--cell-padding);
