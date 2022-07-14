@@ -11,7 +11,6 @@
     }
   })
 
-  $: console.log(mappedData)
   const schema = {
     email: {},
     password: {},

@@ -43,7 +43,6 @@ export function createUsersStore() {
 
   async function create(data) {
     let mappedUsers = data.users.map(user => {
-      console.log(user)
       const body = {
         email: user.email,
         password: user.password,

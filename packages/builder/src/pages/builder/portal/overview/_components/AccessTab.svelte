@@ -28,7 +28,6 @@
   let pageInfo = createPaginationStore()
 
   $: page = $pageInfo.page
-  $: console.log(page)
   $: fetchUsers(page, search)
 
   $: isProPlan = $auth.user?.license.plan.type === Constants.PlanType.FREE

@@ -130,7 +130,6 @@
       notifications.success(res.message)
       inviteConfirmationModal.show()
     } catch (error) {
-      console.log(error)
       notifications.error("Error inviting user")
     }
   }
@@ -184,7 +183,6 @@
       await groups.actions.init()
       passwordModal.show()
     } catch (error) {
-      console.log(error)
       notifications.error("Error creating user")
     }
   }
@@ -213,7 +211,6 @@
       selectedRows = []
       await fetchUsers(page, searchEmail)
     } catch (error) {
-      console.log(error)
       notifications.error("Error deleting rows")
     }
   }
