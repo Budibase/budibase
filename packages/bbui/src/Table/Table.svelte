@@ -447,7 +447,7 @@
     width: 100%;
     border-radius: 0;
     display: grid;
-    overflow: visible;
+    overflow: auto;
   }
 
   /* Header */
