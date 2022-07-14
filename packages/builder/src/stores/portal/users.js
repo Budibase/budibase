@@ -86,10 +86,14 @@ export function createUsersStore() {
     return await API.saveUser(user)
   }
 
+  const getUserRole = ({ admin, builder }) =>
+    admin?.global ? "admin" : builder?.global ? "developer" : "appUser"
+
   return {
     subscribe,
     search,
     get,
+    getUserRole,
     fetch,
     invite,
     acceptInvite,
