@@ -228,6 +228,14 @@ export const getFrontendStore = () => {
         })
         return savedScreen
       },
+      patch: async (screenId, patch) => {
+        const state = get(store)
+        const screen = state.screens.find(screen => screen._id === screenId)
+        if (!screen) {
+          return
+        }
+        return store.actions.screens.save({ ...screen, ...patch })
+      },
       delete: async screens => {
         const screensToDelete = Array.isArray(screens) ? screens : [screens]
 
@@ -249,20 +257,24 @@ export const getFrontendStore = () => {
         promises.push(store.actions.links.delete(deleteUrls))
         await Promise.all(promises)
         const deletedIds = screensToDelete.map(screen => screen._id)
+        const routesResponse = await API.fetchAppRoutes()
         store.update(state => {
           // Remove deleted screens from state
           state.screens = state.screens.filter(screen => {
             return !deletedIds.includes(screen._id)
           })
+
           // Deselect the current screen if it was deleted
           if (deletedIds.includes(state.selectedScreenId)) {
             state.selectedScreenId = null
+            state.selectedComponentId = null
           }
+
+          // Update routing
+          state.routes = routesResponse.routes
+
           return state
         })
-
-        // Refresh routes
-        await store.actions.routing.fetch()
       },
       updateHomeScreen: async (screen, makeHomeScreen = true) => {
         let promises = []
