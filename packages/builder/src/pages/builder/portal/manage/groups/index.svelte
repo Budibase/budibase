@@ -72,7 +72,9 @@
       newStyles
       icon={isProPlan ? "UserGroup" : ""}
       cta={isProPlan}
-      on:click={() => modal.show()}
+      on:click={isProPlan
+        ? () => modal.show()
+        : window.open("https://budibase.com/pricing/", "_blank")}
       >{isProPlan ? "Create user group" : "Upgrade Account"}</Button
     >
     {#if !isProPlan}
