@@ -23,10 +23,23 @@ export const save = async (ctx: any) => {
 }
 
 export const bulkSave = async (ctx: any) => {
-  let { users: newUsers, groups } = ctx.request.body
+  let { users: newUsersRequested, groups } = ctx.request.body
   let usersToSave: any[] = []
   let groupsToSave: any[] = []
+  const newUsers: any[] = []
   const db = tenancy.getGlobalDB()
+  const currentUserEmails =
+    (await users.allUsers())?.map((x: any) => x.email) || []
+
+  for (const newUser of newUsersRequested) {
+    if (
+      newUsers.find((x: any) => x.email === newUser.email) ||
+      currentUserEmails.includes(newUser.email)
+    )
+      continue
+
+    newUsers.push(newUser)
+  }
 
   newUsers.forEach((user: any) => {
     usersToSave.push(
