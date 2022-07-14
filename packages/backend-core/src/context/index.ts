@@ -2,11 +2,18 @@ import env from "../environment"
 import { SEPARATOR, DocumentTypes } from "../db/constants"
 import cls from "./FunctionContext"
 import { dangerousGetDB, closeDB } from "../db"
-import { getProdAppID, getDevelopmentAppID } from "../db/conversions"
 import { baseGlobalDBName } from "../tenancy/utils"
 import { IdentityContext } from "@budibase/types"
-import { isEqual } from "lodash"
 import { DEFAULT_TENANT_ID as _DEFAULT_TENANT_ID } from "../constants"
+import { ContextKeys } from "./constants"
+import {
+  updateUsing,
+  closeWithUsing,
+  setAppTenantId,
+  setIdentity,
+  closeAppDBs,
+  getContextDB,
+} from "./utils"
 
 export const DEFAULT_TENANT_ID = _DEFAULT_TENANT_ID
 
@@ -14,69 +21,17 @@ export const DEFAULT_TENANT_ID = _DEFAULT_TENANT_ID
 // store an app ID to pretend there is a context
 let TEST_APP_ID: string | null = null
 
-enum ContextKeys {
-  TENANT_ID = "tenantId",
-  GLOBAL_DB = "globalDb",
-  APP_ID = "appId",
-  IDENTITY = "identity",
-  // whatever the request app DB was
-  CURRENT_DB = "currentDb",
-  // get the prod app DB from the request
-  PROD_DB = "prodDb",
-  // get the dev app DB from the request
-  DEV_DB = "devDb",
-  DB_OPTS = "dbOpts",
-  // check if something else is using the context, don't close DB
-  TENANCY_IN_USE = "tenancyInUse",
-  APP_IN_USE = "appInUse",
-  IDENTITY_IN_USE = "identityInUse",
-}
-
-let openAppCount = 0
-let closeAppCount = 0
-let openTenancyCount = 0
-let closeTenancyCount = 0
-
-setInterval(function () {
-  console.log("openAppCount: " + openAppCount)
-  console.log("closeAppCount: " + closeAppCount)
-  console.log("openTenancyCount: " + openTenancyCount)
-  console.log("closeTenancyCount: " + closeTenancyCount)
-  console.log("------------------ ")
-}, 5000)
-
-// this function makes sure the PouchDB objects are closed and
-// fully deleted when finished - this protects against memory leaks
-async function closeAppDBs() {
-  const dbKeys = [
-    ContextKeys.CURRENT_DB,
-    ContextKeys.PROD_DB,
-    ContextKeys.DEV_DB,
-  ]
-  for (let dbKey of dbKeys) {
-    const db = cls.getFromContext(dbKey)
-    if (!db) {
-      continue
-    }
-    closeAppCount++
-    await closeDB(db)
-    // clear the DB from context, incase someone tries to use it again
-    cls.setOnContext(dbKey, null)
-  }
-  // clear the app ID now that the databases are closed
-  if (cls.getFromContext(ContextKeys.APP_ID)) {
-    cls.setOnContext(ContextKeys.APP_ID, null)
-  }
-  if (cls.getFromContext(ContextKeys.DB_OPTS)) {
-    cls.setOnContext(ContextKeys.DB_OPTS, null)
-  }
-}
-
 export const closeTenancy = async () => {
-  closeTenancyCount++
-  if (env.USE_COUCH) {
-    await closeDB(getGlobalDB())
+  let db
+  try {
+    if (env.USE_COUCH) {
+      db = getGlobalDB()
+    }
+  } catch (err) {
+    // no DB found - skip closing
+    return
   }
+  await closeDB(db)
   // clear from context now that database is closed/task is finished
   cls.setOnContext(ContextKeys.TENANT_ID, null)
   cls.setOnContext(ContextKeys.GLOBAL_DB, null)
@@ -110,11 +65,6 @@ export const getTenantIDFromAppID = (appId: string) => {
   }
 }
 
-const setAppTenantId = (appId: string) => {
-  const appTenantId = getTenantIDFromAppID(appId) || DEFAULT_TENANT_ID
-  updateTenantId(appTenantId)
-}
-
 // used for automations, API endpoints should always be in context already
 export const doInTenant = (tenantId: string | null, task: any) => {
   // the internal function is so that we can re-use an existing
@@ -129,27 +79,14 @@ export const doInTenant = (tenantId: string | null, task: any) => {
       // invoke the task
       return await task()
     } finally {
-      const using = cls.getFromContext(ContextKeys.TENANCY_IN_USE)
-      if (!using || using <= 1) {
-        await closeTenancy()
-      } else {
-        cls.setOnContext(using - 1)
-      }
+      await closeWithUsing(ContextKeys.TENANCY_IN_USE, () => {
+        return closeTenancy()
+      })
     }
   }
 
-  const using = cls.getFromContext(ContextKeys.TENANCY_IN_USE)
-  if (using && cls.getFromContext(ContextKeys.TENANT_ID) === tenantId) {
-    // the tenant id of the current context matches the one we want to use
-    // don't create a new context, just use the existing one
-    cls.setOnContext(ContextKeys.TENANCY_IN_USE, using + 1)
-    return internal({ existing: true })
-  } else {
-    return cls.run(async () => {
-      cls.setOnContext(ContextKeys.TENANCY_IN_USE, 1)
-      return internal()
-    })
-  }
+  const existing = cls.getFromContext(ContextKeys.TENANT_ID) === tenantId
+  return updateUsing(ContextKeys.TENANCY_IN_USE, existing, internal)
 }
 
 export const doInAppContext = (appId: string, task: any) => {
@@ -168,7 +105,6 @@ export const doInAppContext = (appId: string, task: any) => {
     }
     // set the app ID
     cls.setOnContext(ContextKeys.APP_ID, appId)
-    setAppTenantId(appId)
 
     // preserve the identity
     if (identity) {
@@ -178,25 +114,14 @@ export const doInAppContext = (appId: string, task: any) => {
       // invoke the task
       return await task()
     } finally {
-      const using = cls.getFromContext(ContextKeys.APP_IN_USE)
-      if (!using || using <= 1) {
+      await closeWithUsing(ContextKeys.APP_IN_USE, async () => {
         await closeAppDBs()
         await closeTenancy()
-      } else {
-        cls.setOnContext(using - 1)
-      }
+      })
     }
   }
-  const using = cls.getFromContext(ContextKeys.APP_IN_USE)
-  if (using && cls.getFromContext(ContextKeys.APP_ID) === appId) {
-    cls.setOnContext(ContextKeys.APP_IN_USE, using + 1)
-    return internal({ existing: true })
-  } else {
-    return cls.run(async () => {
-      cls.setOnContext(ContextKeys.APP_IN_USE, 1)
-      return internal()
-    })
-  }
+  const existing = cls.getFromContext(ContextKeys.APP_ID) === appId
+  return updateUsing(ContextKeys.APP_IN_USE, existing, internal)
 }
 
 export const doInIdentityContext = (identity: IdentityContext, task: any) => {
@@ -217,31 +142,15 @@ export const doInIdentityContext = (identity: IdentityContext, task: any) => {
       // invoke the task
       return await task()
     } finally {
-      const using = cls.getFromContext(ContextKeys.IDENTITY_IN_USE)
-      if (!using || using <= 1) {
+      await closeWithUsing(ContextKeys.IDENTITY_IN_USE, async () => {
         setIdentity(null)
         await closeTenancy()
-      } else {
-        cls.setOnContext(using - 1)
-      }
+      })
     }
   }
 
   const existing = cls.getFromContext(ContextKeys.IDENTITY)
-  const using = cls.getFromContext(ContextKeys.IDENTITY_IN_USE)
-  if (using && existing && existing._id === identity._id) {
-    cls.setOnContext(ContextKeys.IDENTITY_IN_USE, using + 1)
-    return internal({ existing: true })
-  } else {
-    return cls.run(async () => {
-      cls.setOnContext(ContextKeys.IDENTITY_IN_USE, 1)
-      return internal({ existing: false })
-    })
-  }
-}
-
-const setIdentity = (identity: IdentityContext | null) => {
-  cls.setOnContext(ContextKeys.IDENTITY, identity)
+  return updateUsing(ContextKeys.IDENTITY_IN_USE, existing, internal)
 }
 
 export const getIdentity = (): IdentityContext | undefined => {
@@ -275,7 +184,6 @@ export const updateAppId = async (appId: string) => {
 
 export const setGlobalDB = (tenantId: string | null) => {
   const dbName = baseGlobalDBName(tenantId)
-  openTenancyCount++
   const db = dangerousGetDB(dbName)
   cls.setOnContext(ContextKeys.GLOBAL_DB, db)
   return db
@@ -312,43 +220,6 @@ export const getAppId = () => {
   } else {
     return foundId
   }
-}
-
-function getContextDB(key: string, opts: any) {
-  const dbOptsKey = `${key}${ContextKeys.DB_OPTS}`
-  let storedOpts = cls.getFromContext(dbOptsKey)
-  let db = cls.getFromContext(key)
-  if (db && isEqual(opts, storedOpts)) {
-    return db
-  }
-
-  const appId = getAppId()
-  let toUseAppId
-
-  switch (key) {
-    case ContextKeys.CURRENT_DB:
-      toUseAppId = appId
-      break
-    case ContextKeys.PROD_DB:
-      toUseAppId = getProdAppID(appId)
-      break
-    case ContextKeys.DEV_DB:
-      toUseAppId = getDevelopmentAppID(appId)
-      break
-  }
-  openAppCount++
-  db = dangerousGetDB(toUseAppId, opts)
-  try {
-    cls.setOnContext(key, db)
-    if (opts) {
-      cls.setOnContext(dbOptsKey, opts)
-    }
-  } catch (err) {
-    if (!env.isTest()) {
-      throw err
-    }
-  }
-  return db
 }
 
 /**

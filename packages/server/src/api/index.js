@@ -71,8 +71,11 @@ router.use(async (ctx, next) => {
       validationErrors: err.validation,
       error,
     }
-    ctx.log.error(err)
-    console.trace(err)
+    // spams test logs - not useful
+    if (!env.isTest()) {
+      ctx.log.error(err)
+      console.trace(err)
+    }
   }
 })
 
