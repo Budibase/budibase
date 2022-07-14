@@ -59,7 +59,6 @@
     ]
   },
   "devDependencies": {
-    "@budibase/types": "^1.0.219",
     "@shopify/jest-koa-mocks": "3.1.5",
     "@types/jest": "27.5.1",
     "@types/koa": "2.0.52",
