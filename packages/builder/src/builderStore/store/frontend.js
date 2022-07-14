@@ -21,6 +21,7 @@ import {
 } from "../componentUtils"
 import { Helpers } from "@budibase/bbui"
 import { DefaultAppTheme, LAYOUT_NAMES } from "../../constants"
+import { Utils } from "@budibase/frontend-core"
 
 const INITIAL_FRONTEND_STATE = {
   apps: [],
@@ -228,14 +229,16 @@ export const getFrontendStore = () => {
         })
         return savedScreen
       },
-      patch: async (screenId, patch) => {
+      patch: Utils.sequential(async (screenId, patchFn) => {
         const state = get(store)
         const screen = state.screens.find(screen => screen._id === screenId)
         if (!screen) {
           return
         }
-        return store.actions.screens.save({ ...screen, ...patch })
-      },
+        let clone = cloneDeep(screen)
+        patchFn(clone)
+        return await store.actions.screens.save(clone)
+      }),
       delete: async screens => {
         const screensToDelete = Array.isArray(screens) ? screens : [screens]
 
@@ -291,14 +294,16 @@ export const getFrontendStore = () => {
             )
           })
           if (existingHomeScreen) {
-            existingHomeScreen.routing.homeScreen = false
-            promises.push(store.actions.screens.save(existingHomeScreen))
+            const patchFn = screen => (screen.routing.homeScreen = false)
+            promises.push(
+              store.actions.screens.patch(existingHomeScreen._id, patchFn)
+            )
           }
         }
 
         // Update the passed in screen
-        screen.routing.homeScreen = makeHomeScreen
-        promises.push(store.actions.screens.save(screen))
+        const patchFn = screen => (screen.routing.homeScreen = makeHomeScreen)
+        promises.push(store.actions.screens.patch(screen._id, patchFn))
         return await Promise.all(promises)
       },
       removeCustomLayout: async screen => {
