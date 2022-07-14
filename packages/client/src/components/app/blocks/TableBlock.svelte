@@ -89,7 +89,7 @@
         })
       }
     })
-    return enrichedColumns.slice(0, 3)
+    return enrichedColumns.slice(0, 5)
   }
 
   // Load the datasource schema so we can determine column types

@@ -98,7 +98,7 @@
         })
       }
     })
-    return enrichedColumns.slice(0, 3)
+    return enrichedColumns.slice(0, 5)
   }
 
   // Builds a full details page URL for the card title
