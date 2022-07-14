@@ -17,9 +17,9 @@
   import AssignmentModal from "./AssignmentModal.svelte"
   import { createPaginationStore } from "helpers/pagination"
   import { Constants } from "@budibase/frontend-core"
+  import { roles } from "stores/backend"
 
   export let app
-
   let assignmentModal
   let appGroups = []
   let appUsers = []
@@ -31,11 +31,11 @@
   $: fetchUsers(page, search)
 
   $: isProPlan = $auth.user?.license.plan.type !== Constants.PlanType.FREE
-  $: console.log(isProPlan)
+  $: console.log($users.data)
   $: appUsers =
     $users.data?.filter(x => {
       return Object.keys(x.roles).find(y => {
-        return extractAppId(y) === extractAppId(app.appId)
+        return y === app.prodId
       })
     }) || []
 
@@ -45,20 +45,17 @@
     })
   })
 
-  function extractAppId(id) {
-    const split = id?.split("_") || []
-    return split.length ? split[split.length - 1] : null
-  }
-
   async function addData(appData) {
     let gr_prefix = "gr"
     let us_prefix = "us"
+    console.log(appData)
     appData.forEach(async data => {
       if (data.id.startsWith(gr_prefix)) {
         let matchedGroup = $groups.find(group => {
           return group._id === data.id
         })
         matchedGroup.apps.push(app)
+        matchedGroup.roles[app.prodId] = data.role
 
         groups.actions.save(matchedGroup)
       } else if (data.id.startsWith(us_prefix)) {
@@ -68,23 +65,23 @@
 
         let newUser = {
           ...matchedUser,
-          roles: { [app.appId]: data.role, ...matchedUser.roles },
+          roles: { [app.prodId]: data.role, ...matchedUser.roles },
         }
 
         await users.save(newUser)
       }
     })
     await groups.actions.init()
-    await users.search({ page, appId: app.appId })
+    await users.search({ page, appId: app.prodId })
   }
 
   async function updateUserRole(role, user) {
-    user.roles[app.appId] = role
+    user.roles[app.prodId] = role
     users.save(user)
   }
 
   async function updateGroupRole(role, group) {
-    group.role = role
+    group.roles[app.prodId] = role
     groups.actions.save(group)
   }
 
@@ -100,7 +97,7 @@
     prevSearch = search
     try {
       pageInfo.loading()
-      await users.search({ page, appId: app.appId })
+      await users.search({ page, appId: app.prodId })
       pageInfo.fetched($users.hasNextPage, $users.nextPage)
     } catch (error) {
       notifications.error("Error getting user list")
@@ -111,6 +108,7 @@
     try {
       await groups.actions.init()
       await apps.load()
+      await roles.fetch()
     } catch (error) {
       notifications.error("Error")
     }
@@ -143,7 +141,9 @@
                 on:change={e => updateGroupRole(e.detail, group)}
                 autoWidth
                 quiet
-                value={group.role}
+                value={group.roles[
+                  Object.keys(group.roles).find(x => x === app.prodId)
+                ]}
               />
             </ListItem>
           {/each}
@@ -158,9 +158,7 @@
                 autoWidth
                 quiet
                 value={user.roles[
-                  Object.keys(user.roles).find(
-                    x => extractAppId(x) === extractAppId(app.appId)
-                  )
+                  Object.keys(user.roles).find(x => x === app.prodId)
                 ]}
               />
             </ListItem>
