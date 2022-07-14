@@ -61,6 +61,10 @@ const INITIAL_FRONTEND_STATE = {
 export const getFrontendStore = () => {
   const store = writable({ ...INITIAL_FRONTEND_STATE })
 
+  store.subscribe(state => {
+    console.log("new state")
+  })
+
   store.actions = {
     reset: () => {
       store.set({ ...INITIAL_FRONTEND_STATE })
@@ -184,12 +188,24 @@ export const getFrontendStore = () => {
     },
     screens: {
       select: screenId => {
-        store.update(state => {
-          let screens = state.screens
-          let screen =
-            screens.find(screen => screen._id === screenId) || screens[0]
-          if (!screen) return state
+        // Check this screen exists
+        const state = get(store)
+        const screen = state.screens.find(screen => screen._id === screenId)
+        console.log(screen)
+        if (!screen) {
+          return
+        }
 
+        // Check screen isn't already selected
+        if (
+          state.selectedScreenId === screen._id &&
+          state.selectedComponentId === screen.props?._id
+        ) {
+          return
+        }
+
+        // Select new screen
+        store.update(state => {
           state.selectedScreenId = screen._id
           state.selectedComponentId = screen.props?._id
           return state
