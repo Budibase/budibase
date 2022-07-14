@@ -13,11 +13,4 @@
 </div>
 
 <style>
-  div {
-    overflow: visible;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    z-index: 1000;
-    position: relative;
-  }
 </style>
