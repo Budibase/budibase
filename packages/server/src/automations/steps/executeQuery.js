@@ -75,7 +75,6 @@ exports.run = async function ({ inputs, appId, emitter }) {
     await queryController.executeV2(ctx, true)
 
     const { data, ...rest } = ctx.body
-    console.log(data)
 
     return {
       response: data,
@@ -83,7 +82,6 @@ exports.run = async function ({ inputs, appId, emitter }) {
       success: true,
     }
   } catch (err) {
-    console.log(err)
     return {
       success: false,
       info: {},

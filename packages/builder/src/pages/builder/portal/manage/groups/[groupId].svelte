@@ -41,7 +41,6 @@
     let selectedUser = selectedUsers.includes(id)
     let enrichedUser = $users.data.find(user => user._id === id)
     if (selectedUser) {
-      console.log
       selectedUsers = selectedUsers.filter(id => id !== selectedUser)
       let newUsers = group.users.filter(user => user._id !== id)
       group.users = newUsers
@@ -152,7 +151,7 @@
   </div>
 
   <List>
-    {#if group?.apps}
+    {#if group?.apps.length}
       {#each group.apps as app}
         <ListItem
           title={app.name}
@@ -160,9 +159,9 @@
           iconBackground={app?.icon?.color || ""}
         >
           <div class="title ">
-            <StatusLight color={RoleUtils.getRoleColour(app.access)} />
+            <StatusLight color={RoleUtils.getRoleColour(group.role)} />
             <div style="margin-left: var(--spacing-s);">
-              <Body size="XS">{app.access}</Body>
+              <Body size="XS">{group.role}</Body>
             </div>
           </div>
         </ListItem>
