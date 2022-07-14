@@ -5,7 +5,8 @@ filterTests(["all"], () => {
   context("Application Overview screen", () => {
     before(() => {
       cy.login()
-      cy.createTestApp()
+      cy.deleteAllApps()
+      cy.createApp("Cypress Tests")
     })
 
     it("Should be accessible from the applications list", () => {
@@ -81,13 +82,14 @@ filterTests(["all"], () => {
     })
 
     it("Should reflect the app deployment state", () => {
-      cy.visit(`${Cypress.config().baseUrl}/builder`)
+      cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 5000 })
       cy.get(".appTable .app-row-actions button")
         .contains("Edit")
         .eq(0)
         .click({ force: true })
 
-      cy.get(".toprightnav button.spectrum-Button")
+      cy.wait(500)
+      cy.get(".toprightnav button.spectrum-Button", { timeout: 2000 })
         .contains("Publish")
         .click({ force: true })
       cy.get(".spectrum-Modal [data-cy='deploy-app-modal']")
@@ -300,7 +302,7 @@ filterTests(["all"], () => {
     })
 
     it("Should allow editing of the app details.", () => {
-      cy.visit(`${Cypress.config().baseUrl}/builder`)
+      cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 5000 })
       cy.get(".appTable .app-row-actions button")
         .contains("Manage")
         .eq(0)
@@ -315,7 +317,8 @@ filterTests(["all"], () => {
       cy.updateAppName("sample name")
 
       //publish and check its disabled
-      cy.visit(`${Cypress.config().baseUrl}/builder`)
+      cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 5000 })
+      cy.wait(500)
       cy.get(".appTable .app-row-actions button")
         .contains("Edit")
         .eq(0)
@@ -331,8 +334,8 @@ filterTests(["all"], () => {
           cy.wait(1000)
         })
 
-      cy.visit(`${Cypress.config().baseUrl}/builder`)
-      cy.get(".appTable .app-row-actions button", { timeout: 1000 })
+      cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 10000 })
+      cy.get(".appTable .app-row-actions button", { timeout: 5000 })
         .contains("Manage")
         .eq(0)
         .click({ force: true })

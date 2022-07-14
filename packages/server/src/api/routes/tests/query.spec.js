@@ -218,7 +218,6 @@ describe("/queries", () => {
       expect(res.body.schemaFields).toEqual(["a", "b"])
       expect(res.body.rows.length).toEqual(1)
       expect(events.query.previewed).toBeCalledTimes(1)
-      datasource.config = { schema: "public" }
       expect(events.query.previewed).toBeCalledWith(datasource, query)
     })
 

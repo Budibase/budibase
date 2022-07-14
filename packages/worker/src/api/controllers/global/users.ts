@@ -116,11 +116,13 @@ export const adminUser = async (ctx: any) => {
       tenantId,
     }
     try {
+      // always bust checklist beforehand, if an error occurs but can proceed, don't get
+      // stuck in a cycle
+      await cache.bustCache(cache.CacheKeys.CHECKLIST)
       const finalUser = await users.save(user, {
         hashPassword,
         requirePassword,
       })
-      await cache.bustCache(cache.CacheKeys.CHECKLIST)
 
       // events
       let account: CloudAccount | undefined

@@ -18,9 +18,9 @@ const createComponentStore = () => {
 
       // Derive the selected component instance and definition
       let asset
-      const { layout, screen, previewType, selectedComponentId } = $builderState
+      const { screen, selectedComponentId } = $builderState
       if ($builderState.inBuilder) {
-        asset = previewType === "layout" ? layout : screen
+        asset = screen
       } else {
         asset = $screenState.activeScreen
       }
@@ -67,6 +67,12 @@ const createComponentStore = () => {
     return findComponentById(asset?.props, id)
   }
 
+  const getComponentDefinition = type => {
+    const prefix = "@budibase/standard-components/"
+    type = type?.replace(prefix, "")
+    return type ? Manifest[type] : null
+  }
+
   return {
     ...derivedStore,
     actions: {
@@ -74,6 +80,7 @@ const createComponentStore = () => {
       unregisterInstance,
       isComponentRegistered,
       getComponentById,
+      getComponentDefinition,
     },
   }
 }

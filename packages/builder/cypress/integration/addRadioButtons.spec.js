@@ -10,6 +10,7 @@ filterTests(['all'], () => {
 
     it("should add Radio Buttons options picker on form, add data, and confirm", () => {
         cy.navigateToFrontend()
+        cy.wait(500)
         cy.addComponent("Form", "Form")
         cy.addComponent("Form", "Options Picker").then((componentId) => {
             // Provide field setting
@@ -36,5 +37,9 @@ filterTests(['all'], () => {
             })
             cy.addCustomSourceOptions(totalRadioButtons)
         }
+
+    after(() => {
+        cy.deleteAllApps()
+        })
     })
 })
