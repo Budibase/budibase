@@ -1,7 +1,3 @@
-const {
-  generateUserGroupID,
-  getUserGroupsParams,
-} = require("@budibase/backend-core/db")
 const { Configs } = require("../../../constants")
 const email = require("../../../utilities/email")
 const { getGlobalDB, getTenantId } = require("@budibase/backend-core/tenancy")
@@ -11,13 +7,14 @@ const {
   CacheKeys,
   bustCache,
 } = require("@budibase/backend-core/cache")
+const { groups } = require("@budibase/pro")
 
 exports.save = async function (ctx: any) {
   const db = getGlobalDB()
 
   // Config does not exist yet
   if (!ctx.request.body._id) {
-    ctx.request.body._id = generateUserGroupID(ctx.request.body.name)
+    ctx.request.body._id = groups.generateUserGroupID(ctx.request.body.name)
   }
 
   try {
@@ -34,7 +31,7 @@ exports.save = async function (ctx: any) {
 exports.fetch = async function (ctx: any) {
   const db = getGlobalDB()
   const response = await db.allDocs(
-    getUserGroupsParams(null, {
+    groups.getUserGroupsParams(null, {
       include_docs: true,
     })
   )

@@ -1,16 +1,54 @@
 <script>
-  import { ModalContent, PickerDropdown, ActionButton } from "@budibase/bbui"
+  import {
+    ModalContent,
+    PickerDropdown,
+    ActionButton,
+    notifications,
+  } from "@budibase/bbui"
   import { roles } from "stores/backend"
+  import { groups, users } from "stores/portal"
   import { RoleUtils } from "@budibase/frontend-core"
+  import { createPaginationStore } from "helpers/pagination"
 
+  export let app
   export let addData
-  export let userData = []
-  export let groups = []
+  export let appUsers = []
+
+  let prevSearch = undefined,
+    search = undefined
+  let pageInfo = createPaginationStore()
+
+  $: page = $pageInfo.page
+  $: fetchUsers(page, search)
+  async function fetchUsers(page, search) {
+    if ($pageInfo.loading) {
+      return
+    }
+    // need to remove the page if they've started searching
+    if (search && !prevSearch) {
+      pageInfo.reset()
+      page = undefined
+    }
+    prevSearch = search
+    try {
+      pageInfo.loading()
+      await users.search({ page, search })
+      pageInfo.fetched($users.hasNextPage, $users.nextPage)
+    } catch (error) {
+      notifications.error("Error getting user list")
+    }
+  }
+
+  $: filteredGroups = $groups.filter(element => {
+    return !element.apps.find(y => {
+      return y.appId === app.appId
+    })
+  })
 
   $: optionSections = {
-    ...(groups.length && {
+    ...(filteredGroups.length && {
       groups: {
-        data: groups,
+        data: filteredGroups,
         getLabel: group => group.name,
         getValue: group => group._id,
         getIcon: group => group.icon,
@@ -18,7 +56,7 @@
       },
     }),
     users: {
-      data: userData,
+      data: $users.data.filter(u => !appUsers.find(x => x._id === u._id)),
       getLabel: user => user.email,
       getValue: user => user._id,
       getIcon: user => user.icon,
