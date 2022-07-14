@@ -1,11 +1,8 @@
 name: Deploy Budibase Single Container Image to DockerHub
+
 on:
-  push:
-    branches:
-      - "omnibus-action"
-      - "develop"
-      - "master"
-      - "main"
+  workflow_dispatch:
+
 env:
   BASE_BRANCH: ${{ github.event.pull_request.base.ref}}
   BRANCH: ${{ github.event.pull_request.head.ref }}
