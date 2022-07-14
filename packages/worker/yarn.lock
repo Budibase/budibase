@@ -291,11 +291,12 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/backend-core@1.0.218":
-  version "1.0.218"
-  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.0.218.tgz#be101c8baf220fa3fc55d63071bb38fc6c8cf4d8"
-  integrity sha512-v9+bvQ2+OsK7eGyDHzMuPawTu2LovRCsuArFeMnaG/AbexkqnbB74w+h3vh/2npuHzrnk8RZkM2c4pp/ycqfKw==
+"@budibase/backend-core@1.1.7":
+  version "1.1.7"
+  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.1.7.tgz#371048be47828da1f13e03b6d808bccb7114cdb5"
+  integrity sha512-FZnGTQihKugHnaim5osfITwTfIeachtO3ZERRqU68CpoJVI52oyzPixK1oUP2HYFGCcttqIJN90XD/keC1LzQQ==
   dependencies:
+    "@budibase/types" "^1.1.7"
     "@techpass/passport-openidconnect" "0.3.2"
     aws-sdk "2.1030.0"
     bcrypt "5.0.1"
@@ -311,6 +312,7 @@
     passport-google-oauth "2.0.0"
     passport-jwt "4.0.0"
     passport-local "1.0.0"
+    passport-oauth2-refresh "^2.1.0"
     posthog-node "1.3.0"
     pouchdb "7.3.0"
     pouchdb-find "7.2.2"
@@ -322,13 +324,19 @@
     uuid "8.3.2"
     zlib "1.0.5"
 
-"@budibase/pro@1.0.218":
-  version "1.0.218"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-1.0.218.tgz#b9e5bb95cca996dc1f7f783a3a02e51cbbf3df55"
-  integrity sha512-LJpV4rYPP9DzMNkL2Y0euZplkubBKBE+gc5JBTMt1l9Fwn2Sri/Y5bQ+U8fjczjmHxYnZLrFwH+o6LCnk/QJow==
+"@budibase/pro@1.1.7":
+  version "1.1.7"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-1.1.7.tgz#b9120c60a38d4bbc87dc99ef219a8f23418b9d82"
+  integrity sha512-APMPIWbxPWzAWWKBglGa1csbVxllAsF5Lt7e5hrNVfN51rzJ3TvQ56iIUru0xGOWpelDQWd4FXe1/dpN0hSvEA==
   dependencies:
-    "@budibase/backend-core" "1.0.218"
+    "@budibase/backend-core" "1.1.7"
+    "@budibase/types" "1.1.7"
     node-fetch "^2.6.1"
+
+"@budibase/types@1.1.7", "@budibase/types@^1.1.7":
+  version "1.1.7"
+  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-1.1.7.tgz#d1da67c6c6b09de639130775ed80290148434be0"
+  integrity sha512-WkR9bS4DdVAAzIgzHDsfMLPBcXs+RVwzOXp2eSFrun1fZQfkiAnMO7+EYhYx4+zF6RLBXiF6iYXPDJLzviufGQ==
 
 "@cspotcode/source-map-consumer@0.8.0":
   version "0.8.0"
@@ -5046,6 +5054,11 @@ passport-oauth1@1.x.x:
     oauth "0.9.x"
     passport-strategy "1.x.x"
     utils-merge "1.x.x"
+
+passport-oauth2-refresh@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/passport-oauth2-refresh/-/passport-oauth2-refresh-2.1.0.tgz#c31cd133826383f5539d16ad8ab4f35ca73ce4a4"
+  integrity sha512-4ML7ooCESCqiTgdDBzNUFTBcPR8zQq9iM6eppEUGMMvLdsjqRL93jKwWm4Az3OJcI+Q2eIVyI8sVRcPFvxcF/A==
 
 passport-oauth2@1.x.x:
   version "1.6.1"
