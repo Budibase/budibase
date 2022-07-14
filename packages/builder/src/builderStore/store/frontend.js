@@ -534,13 +534,10 @@ export const getFrontendStore = () => {
           return state
         })
 
-        // Remove the component from its parent if we're cutting
+        // Select the parent if cutting
         if (cut) {
           const parent = findComponentParent(selectedAsset.props, component._id)
           if (parent) {
-            parent._children = parent._children.filter(
-              child => child._id !== component._id
-            )
             if (selectParent) {
               store.update(state => {
                 state.selectedComponentId = parent._id
@@ -551,23 +548,41 @@ export const getFrontendStore = () => {
         }
       },
       paste: async (targetComponent, mode) => {
-        let promises = []
-        store.update(state => {
-          // Stop if we have nothing to paste
-          if (!state.componentToPaste) {
-            return state
+        const state = get(store)
+        if (!state.componentToPaste) {
+          return
+        }
+        let newComponentId
+
+        // Patch screen
+        const patch = screen => {
+          // Get up to date ref to target
+          targetComponent = findComponent(screen.props, targetComponent._id)
+          if (!targetComponent) {
+            return
           }
           const cut = state.componentToPaste.isCut
-
-          // Clone the component to paste and make unique if copying
-          delete state.componentToPaste.isCut
+          const originalId = state.componentToPaste._id
           let componentToPaste = cloneDeep(state.componentToPaste)
-          if (cut) {
-            state.componentToPaste = null
-          } else {
+          delete componentToPaste.isCut
+
+          // Make new component unique if copying
+          if (!cut) {
             makeComponentUnique(componentToPaste)
           }
+          newComponentId = componentToPaste._id
 
+          // Delete old component if cutting
+          if (cut) {
+            const parent = findComponentParent(screen.props, originalId)
+            if (parent?._children) {
+              parent._children = parent._children.filter(
+                component => component._id !== originalId
+              )
+            }
+          }
+
+          // Paste new component
           if (mode === "inside") {
             // Paste inside target component if chosen
             if (!targetComponent._children) {
@@ -575,32 +590,29 @@ export const getFrontendStore = () => {
             }
             targetComponent._children.push(componentToPaste)
           } else {
-            // Otherwise find the parent so we can paste in the correct order
-            // in the parents child components
-            const selectedAsset = get(currentAsset)
-            if (!selectedAsset) {
-              return state
-            }
+            // Otherwise paste in the correct order in the parent's children
             const parent = findComponentParent(
-              selectedAsset.props,
+              screen.props,
               targetComponent._id
             )
-            if (!parent) {
-              return state
+            if (!parent?._children) {
+              return false
             }
-
-            // Insert the component in the correct position
-            const targetIndex = parent._children.indexOf(targetComponent)
+            const targetIndex = parent._children.findIndex(component => {
+              return component._id === targetComponent._id
+            })
             const index = mode === "above" ? targetIndex : targetIndex + 1
-            parent._children.splice(index, 0, cloneDeep(componentToPaste))
+            parent._children.splice(index, 0, componentToPaste)
           }
+        }
+        await store.actions.screens.patch(state.selectedScreenId, patch)
 
-          // Save and select the new component
-          promises.push(store.actions.preview.saveSelected())
-          state.selectedComponentId = componentToPaste._id
+        // Update state
+        store.update(state => {
+          delete state.componentToPaste
+          state.selectedComponentId = newComponentId
           return state
         })
-        await Promise.all(promises)
       },
       updateStyle: async (name, value) => {
         const selected = get(selectedComponent)
