@@ -8,7 +8,7 @@
   ]
 </script>
 
-<div>
+<div on:click|stopPropagation>
   <Select value={"appUser"} {options} placeholder="Admin" autoWidth quiet />
 </div>
 
