@@ -11,6 +11,6 @@
       <Icon hoverable name="More" />
     </span>
     <MenuItem icon="Delete">Delete</MenuItem>
-    <MenuItem icon="Delete">Edit</MenuItem>
+    <MenuItem icon="Edit">Edit</MenuItem>
   </ActionMenu>
 </div>

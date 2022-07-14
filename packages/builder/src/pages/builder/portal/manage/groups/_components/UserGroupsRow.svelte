@@ -65,8 +65,7 @@
         <MenuItem on:click={() => deleteGroup(group)} icon="Delete"
           >Delete</MenuItem
         >
-        <MenuItem on:click={() => editGroup(group)} icon="Delete">Edit</MenuItem
-        >
+        <MenuItem on:click={() => editGroup(group)} icon="Edit">Edit</MenuItem>
       </ActionMenu>
     </div>
   </div>
