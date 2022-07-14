@@ -294,25 +294,27 @@ export const getFrontendStore = () => {
             )
           })
           if (existingHomeScreen) {
-            const patchFn = screen => (screen.routing.homeScreen = false)
+            const patch = screen => (screen.routing.homeScreen = false)
             promises.push(
-              store.actions.screens.patch(existingHomeScreen._id, patchFn)
+              store.actions.screens.patch(existingHomeScreen._id, patch)
             )
           }
         }
 
         // Update the passed in screen
-        const patchFn = screen => (screen.routing.homeScreen = makeHomeScreen)
-        promises.push(store.actions.screens.patch(screen._id, patchFn))
+        const patch = screen => (screen.routing.homeScreen = makeHomeScreen)
+        promises.push(store.actions.screens.patch(screen._id, patch))
         return await Promise.all(promises)
       },
       removeCustomLayout: async screen => {
         // Pull relevant settings from old layout, if required
         const layout = get(store).layouts.find(x => x._id === screen.layoutId)
-        screen.layoutId = null
-        screen.showNavigation = layout?.props.navigation !== "None"
-        screen.width = layout?.props.width || "Large"
-        await store.actions.screens.save(screen)
+        const patch = screen => {
+          screen.layoutId = null
+          screen.showNavigation = layout?.props.navigation !== "None"
+          screen.width = layout?.props.width || "Large"
+        }
+        await store.actions.screens.patch(screen._id, patch)
       },
     },
     preview: {
