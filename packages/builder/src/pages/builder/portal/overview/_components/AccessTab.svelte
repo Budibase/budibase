@@ -23,10 +23,13 @@
   let assignmentModal
   let appGroups = []
   let appUsers = []
+  let prevSearch = undefined,
+    search = undefined
   let pageInfo = createPaginationStore()
 
   $: page = $pageInfo.page
-  $: fetchUsers(page)
+  $: console.log(page)
+  $: fetchUsers(page, search)
 
   $: isProPlan = $auth.user?.license.plan.type === Constants.PlanType.FREE
 
@@ -39,19 +42,6 @@
 
   $: appGroups = $groups.filter(x => {
     return x.apps.find(y => {
-      return y.appId === app.appId
-    })
-  })
-
-  $: filteredUsers =
-    $users.data?.filter(x => {
-      return !Object.keys(x.roles).find(y => {
-        return extractAppId(y) === extractAppId(app.appId)
-      })
-    }) || []
-
-  $: filteredGroups = $groups.filter(element => {
-    return !element.apps.find(y => {
       return y.appId === app.appId
     })
   })
@@ -99,10 +89,16 @@
     groups.actions.save(group)
   }
 
-  async function fetchUsers(page) {
+  async function fetchUsers(page, search) {
     if ($pageInfo.loading) {
       return
     }
+    // need to remove the page if they've started searching
+    if (search && !prevSearch) {
+      pageInfo.reset()
+      page = undefined
+    }
+    prevSearch = search
     try {
       pageInfo.loading()
       await users.search({ page, appId: app.appId })
@@ -136,7 +132,7 @@
           >
         </div>
       </div>
-      {#if isProPlan}
+      {#if isProPlan && appGroups.length}
         <List title="User Groups">
           {#each appGroups as group}
             <ListItem
@@ -154,31 +150,33 @@
           {/each}
         </List>
       {/if}
-      <List title="Users">
-        {#each appUsers as user}
-          <ListItem title={user.email} avatar>
-            <RoleSelect
-              on:change={e => updateUserRole(e.detail, user)}
-              autoWidth
-              quiet
-              value={user.roles[
-                Object.keys(user.roles).find(
-                  x => extractAppId(x) === extractAppId(app.appId)
-                )
-              ]}
-            />
-          </ListItem>
-        {/each}
-      </List>
-      <div class="pagination">
-        <Pagination
-          page={$pageInfo.pageNumber}
-          hasPrevPage={$pageInfo.loading ? false : $pageInfo.hasPrevPage}
-          hasNextPage={$pageInfo.loading ? false : $pageInfo.hasNextPage}
-          goToPrevPage={pageInfo.prevPage}
-          goToNextPage={pageInfo.nextPage}
-        />
-      </div>
+      {#if appUsers.length}
+        <List title="Users">
+          {#each appUsers as user}
+            <ListItem title={user.email} avatar>
+              <RoleSelect
+                on:change={e => updateUserRole(e.detail, user)}
+                autoWidth
+                quiet
+                value={user.roles[
+                  Object.keys(user.roles).find(
+                    x => extractAppId(x) === extractAppId(app.appId)
+                  )
+                ]}
+              />
+            </ListItem>
+          {/each}
+        </List>
+        <div class="pagination">
+          <Pagination
+            page={$pageInfo.pageNumber}
+            hasPrevPage={$pageInfo.loading ? false : $pageInfo.hasPrevPage}
+            hasNextPage={$pageInfo.loading ? false : $pageInfo.hasNextPage}
+            goToPrevPage={pageInfo.prevPage}
+            goToNextPage={pageInfo.nextPage}
+          />
+        </div>
+      {/if}
     {:else}
       <div class="align">
         <Layout gap="S">
@@ -200,11 +198,7 @@
 </div>
 
 <Modal bind:this={assignmentModal}>
-  <AssignmentModal
-    userData={filteredUsers.length ? filteredUsers : $users.data}
-    groups={isProPlan ? filteredGroups : []}
-    {addData}
-  />
+  <AssignmentModal {app} {appUsers} {addData} />
 </Modal>
 
 <style>
