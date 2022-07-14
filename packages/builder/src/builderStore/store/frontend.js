@@ -1,6 +1,6 @@
 import { get, writable } from "svelte/store"
 import { cloneDeep } from "lodash/fp"
-import { currentAsset, mainLayout, selectedComponent } from "builderStore"
+import { currentAsset, selectedScreen, selectedComponent } from "builderStore"
 import {
   datasources,
   integrations,
@@ -183,7 +183,6 @@ export const getFrontendStore = () => {
         // Check this screen exists
         const state = get(store)
         const screen = state.screens.find(screen => screen._id === screenId)
-        console.log(screen)
         if (!screen) {
           return
         }
@@ -236,7 +235,10 @@ export const getFrontendStore = () => {
           return
         }
         let clone = cloneDeep(screen)
-        patchFn(clone)
+        const result = patchFn(clone)
+        if (result === false) {
+          return
+        }
         return await store.actions.screens.save(clone)
       }),
       delete: async screens => {
@@ -420,48 +422,60 @@ export const getFrontendStore = () => {
         }
       },
       create: async (componentName, presetProps) => {
-        const selected = get(selectedComponent)
-        const asset = get(currentAsset)
-
-        // Create new component
+        const state = get(store)
         const componentInstance = store.actions.components.createInstance(
           componentName,
           presetProps
         )
-        if (!componentInstance || !asset) {
+        if (!componentInstance) {
           return
         }
 
-        // Find parent node to attach this component to
-        let parentComponent
-        if (selected) {
-          // Use current screen or layout as parent if no component is selected
-          const definition = store.actions.components.getDefinition(
-            selected._component
+        // Create screen patch function
+        const patch = screen => {
+          // Find the selected component
+          const currentComponent = findComponent(
+            screen.props,
+            state.selectedComponentId
           )
-          if (definition?.hasChildren) {
-            // Use selected component if it allows children
-            parentComponent = selected
-          } else {
-            // Otherwise we need to use the parent of this component
-            parentComponent = findComponentParent(asset?.props, selected._id)
+          if (!currentComponent) {
+            return false
           }
-        } else {
-          // Use screen or layout if no component is selected
-          parentComponent = asset?.props
-        }
 
-        // Attach component
-        if (!parentComponent) {
-          return
-        }
-        if (!parentComponent._children) {
-          parentComponent._children = []
-        }
-        parentComponent._children.push(componentInstance)
+          // Find parent node to attach this component to
+          let parentComponent
+          if (currentComponent) {
+            // Use selected component as parent if one is selected
+            const definition = store.actions.components.getDefinition(
+              currentComponent._component
+            )
+            if (definition?.hasChildren) {
+              // Use selected component if it allows children
+              parentComponent = currentComponent
+            } else {
+              // Otherwise we need to use the parent of this component
+              parentComponent = findComponentParent(
+                screen.props,
+                currentComponent._id
+              )
+            }
+          } else {
+            // Use screen or layout if no component is selected
+            parentComponent = screen.props
+          }
 
-        // Save components and update UI
-        await store.actions.preview.saveSelected()
+          // Attach new component
+          if (!parentComponent) {
+            return false
+          }
+          if (!parentComponent._children) {
+            parentComponent._children = []
+          }
+          parentComponent._children.push(componentInstance)
+        }
+        await store.actions.screens.patch(state.selectedScreenId, patch)
+
+        // Select new component
         store.update(state => {
           state.selectedComponentId = componentInstance._id
           return state
