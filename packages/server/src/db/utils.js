@@ -11,6 +11,8 @@ const {
   isProdAppID,
   getDevelopmentAppID,
   generateAppID,
+  getQueryIndex,
+  ViewNames,
 } = require("@budibase/backend-core/db")
 
 const UNICODE_MAX = "\ufff0"
@@ -22,11 +24,7 @@ const AppStatus = {
 }
 
 const DocumentTypes = {
-  APP: CoreDocTypes.APP,
-  DEV: CoreDocTypes.DEV,
-  APP_DEV: CoreDocTypes.APP_DEV,
-  APP_METADATA: CoreDocTypes.APP_METADATA,
-  ROLE: CoreDocTypes.ROLE,
+  ...CoreDocTypes,
   TABLE: "ta",
   ROW: "ro",
   USER: "us",
@@ -43,11 +41,6 @@ const DocumentTypes = {
   METADATA: "metadata",
   MEM_VIEW: "view",
   USER_FLAG: "flag",
-}
-
-const ViewNames = {
-  LINK: "by_link",
-  ROUTING: "screen_routes",
 }
 
 const InternalTables = {
@@ -74,6 +67,7 @@ exports.isDevAppID = isDevAppID
 exports.isProdAppID = isProdAppID
 exports.USER_METDATA_PREFIX = `${DocumentTypes.ROW}${SEPARATOR}${InternalTables.USER_METADATA}${SEPARATOR}`
 exports.LINK_USER_METADATA_PREFIX = `${DocumentTypes.LINK}${SEPARATOR}${InternalTables.USER_METADATA}${SEPARATOR}`
+exports.TABLE_ROW_PREFIX = `${DocumentTypes.ROW}${SEPARATOR}${DocumentTypes.TABLE}`
 exports.ViewNames = ViewNames
 exports.InternalTables = InternalTables
 exports.DocumentTypes = DocumentTypes
@@ -88,9 +82,7 @@ exports.generateDevAppID = getDevelopmentAppID
 exports.generateRoleID = generateRoleID
 exports.getRoleParams = getRoleParams
 
-exports.getQueryIndex = viewName => {
-  return `database/${viewName}`
-}
+exports.getQueryIndex = getQueryIndex
 
 /**
  * If creating DB allDocs/query params with only a single top level ID this can be used, this

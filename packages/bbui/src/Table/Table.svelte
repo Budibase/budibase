@@ -37,6 +37,7 @@
   export let autoSortColumns = true
   export let compact = false
   export let customPlaceholder = false
+  export let placeholderText = "No rows found"
 
   const dispatch = createEventDispatcher()
 
@@ -405,7 +406,7 @@
               >
                 <use xlink:href="#spectrum-icon-18-Table" />
               </svg>
-              <div>No rows found</div>
+              <div>{placeholderText}</div>
             </div>
           {/if}
         </div>

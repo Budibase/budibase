@@ -19,8 +19,14 @@ describe("/api/global/email", () => {
   async function sendRealEmail(purpose) {
     let response, text
     try {
-      await config.saveEtherealSmtpConfig()
-      await config.saveSettingsConfig()
+      const timeout = () => new Promise((resolve, reject) =>
+        setTimeout(() => reject({
+          status: 301,
+          errno: "ETIME"
+        }), 20000)
+      )
+      await Promise.race([config.saveEtherealSmtpConfig(), timeout()])
+      await Promise.race([config.saveSettingsConfig(), timeout()])
       const user = await config.getUser("test@test.com")
       const res = await request
         .post(`/api/global/email/send`)

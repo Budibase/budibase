@@ -22,9 +22,6 @@ const {
   BUILTIN_ROLE_IDS,
   AccessController,
 } = require("@budibase/backend-core/roles")
-import { BASE_LAYOUTS } from "../../constants/layouts"
-import { cloneDeep } from "lodash/fp"
-const { processObject } = require("@budibase/string-templates")
 const { CacheKeys, bustCache } = require("@budibase/backend-core/cache")
 const {
   getAllApps,
@@ -46,6 +43,7 @@ import { syncGlobalUsers } from "./user"
 const { app: appCache } = require("@budibase/backend-core/cache")
 import { cleanupAutomations } from "../../automations/utils"
 import { context } from "@budibase/backend-core"
+import { checkAppMetadata } from "../../automations/logging"
 import { getUniqueRows } from "../../utilities/usageQuota/rows"
 import { quotas } from "@budibase/pro"
 import { errors, events, migrations } from "@budibase/backend-core"
@@ -188,7 +186,7 @@ export const fetch = async (ctx: any) => {
     }
   }
 
-  ctx.body = apps
+  ctx.body = await checkAppMetadata(apps)
 }
 
 export const fetchAppDefinition = async (ctx: any) => {
@@ -223,11 +221,7 @@ export const fetchAppPackage = async (ctx: any) => {
     application,
     screens,
     layouts,
-    clientLibPath: clientLibraryPath(
-      ctx.params.appId,
-      application.version,
-      ctx
-    ),
+    clientLibPath: clientLibraryPath(ctx.params.appId, application.version),
   }
 }
 
@@ -274,15 +268,25 @@ const performAppCreate = async (ctx: any) => {
     updatedAt: new Date().toISOString(),
     createdAt: new Date().toISOString(),
     status: AppStatus.DEV,
+    navigation: {
+      navigation: "Top",
+      title: name,
+      navWidth: "Large",
+      navBackground: "var(--spectrum-global-color-gray-100)",
+      links: [
+        {
+          url: "/home",
+          text: "Home",
+        },
+      ],
+    },
+    theme: "spectrum--light",
+    customTheme: {
+      buttonBorderRadius: "16px",
+    },
   }
   const response = await db.put(newApplication, { force: true })
   newApplication._rev = response.rev
-
-  // Only create the default home screens and layout if we aren't importing
-  // an app
-  if (useTemplate !== "true") {
-    await createEmptyAppPackage(ctx, newApplication)
-  }
 
   /* istanbul ignore next */
   if (!env.isTest()) {
@@ -544,32 +548,22 @@ export const sync = async (ctx: any, next: any) => {
 }
 
 const updateAppPackage = async (appPackage: any, appId: any) => {
-  const db = context.getAppDB()
-  const application = await db.get(DocumentTypes.APP_METADATA)
+  return context.doInAppContext(appId, async () => {
+    const db = context.getAppDB()
+    const application = await db.get(DocumentTypes.APP_METADATA)
 
-  const newAppPackage = { ...application, ...appPackage }
-  if (appPackage._rev !== application._rev) {
-    newAppPackage._rev = application._rev
-  }
+    const newAppPackage = { ...application, ...appPackage }
+    if (appPackage._rev !== application._rev) {
+      newAppPackage._rev = application._rev
+    }
 
-  // the locked by property is attached by server but generated from
-  // Redis, shouldn't ever store it
-  delete newAppPackage.lockedBy
+    // the locked by property is attached by server but generated from
+    // Redis, shouldn't ever store it
+    delete newAppPackage.lockedBy
 
-  await db.put(newAppPackage)
-  // remove any cached metadata, so that it will be updated
-  await appCache.invalidateAppMetadata(appId)
-  return newAppPackage
-}
-
-const createEmptyAppPackage = async (ctx: any, app: any) => {
-  const db = context.getAppDB()
-
-  let screensAndLayouts = []
-  for (let layout of BASE_LAYOUTS) {
-    const cloned = cloneDeep(layout)
-    screensAndLayouts.push(await processObject(cloned, app))
-  }
-
-  await db.bulkDocs(screensAndLayouts)
+    await db.put(newAppPackage)
+    // remove any cached metadata, so that it will be updated
+    await appCache.invalidateAppMetadata(appId)
+    return newAppPackage
+  })
 }

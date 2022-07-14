@@ -6,14 +6,14 @@ filterTests(['smoke', 'all'], () => {
 
     before(() => {
       cy.login()
-      cy.deleteApp("Cypress Tests")
+      cy.deleteAllApps()
     })
 
     if (!(Cypress.env("TEST_ENV"))) {
       it("should show the new user UI/UX", () => {
-        cy.visit(`${Cypress.config().baseUrl}/builder/portal/apps/create`) //added /portal/apps/create
+        cy.visit(`${Cypress.config().baseUrl}/builder/portal/apps/create`, { timeout: 5000 }) //added /portal/apps/create
+        cy.wait(1000)
         cy.get(interact.CREATE_APP_BUTTON).contains('Start from scratch').should("exist")
-        cy.get(interact.CREATE_APP_BUTTON).should("exist")
         
         cy.get(interact.TEMPLATE_CATEGORY_FILTER).should("exist")
         cy.get(interact.TEMPLATE_CATEGORY).should("exist")
@@ -23,7 +23,7 @@ filterTests(['smoke', 'all'], () => {
     }
 
     it("should provide filterable templates", () => {
-      cy.visit(`${Cypress.config().baseUrl}/builder`)
+      cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 5000 })
       cy.wait(500)
 
       cy.request(`${Cypress.config().baseUrl}/api/applications?status=all`)
@@ -48,18 +48,11 @@ filterTests(['smoke', 'all'], () => {
     })
 
     it("should enforce a valid url before submission", () => {
-      cy.visit(`${Cypress.config().baseUrl}/builder`)
-      cy.wait(500)
+      cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 10000 })
 
       // Start create app process. If apps already exist, click second button
-      cy.get(interact.CREATE_APP_BUTTON).click({ force: true })
-      cy.request(`${Cypress.config().baseUrl}/api/applications?status=all`)
-        .its("body")
-        .then(val => {
-          if (val.length > 0) {
-            cy.get(interact.CREATE_APP_BUTTON).click({ force: true })
-          }
-        })
+      cy.wait(1000)
+      cy.get(interact.CREATE_APP_BUTTON, { timeout: 3000 }).click({ force: true })
 
       const appName = "Cypress Tests"
       cy.get(interact.SPECTRUM_MODAL).within(() => {
@@ -92,21 +85,16 @@ filterTests(['smoke', 'all'], () => {
 
     it("should create the first application from scratch", () => {
       const appName = "Cypress Tests"
-      cy.createApp(appName)
+      cy.createApp(appName, false)
 
-      cy.visit(`${Cypress.config().baseUrl}/builder`)
-      cy.wait(1000)
+      cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 5000 })
 
       cy.applicationInAppTable(appName)
       cy.deleteApp(appName)
     })
 
     it("should create the first application from scratch with a default name", () => {
-      cy.createApp()
-
-      cy.visit(`${Cypress.config().baseUrl}/builder`)
-      cy.wait(1000)
-
+      cy.createApp("", false)
       cy.applicationInAppTable("My app")
       cy.deleteApp("My app")
     })
@@ -116,26 +104,22 @@ filterTests(['smoke', 'all'], () => {
 
       cy.updateUserInformation("Ted", "Userman")
       
-      cy.createApp()
+      cy.createApp("", false)
 
       cy.visit(`${Cypress.config().baseUrl}/builder`)
-      cy.wait(1000)
 
       cy.applicationInAppTable("Teds app")
       cy.deleteApp("Teds app")
-      cy.wait(2000)
 
       //Accomodate names that end in 'S'
       cy.updateUserInformation("Chris", "Userman")
       
-      cy.createApp()
+      cy.createApp("", false)
 
       cy.visit(`${Cypress.config().baseUrl}/builder`)
-      cy.wait(1000)
 
       cy.applicationInAppTable("Chris app")
       cy.deleteApp("Chris app")
-      cy.wait(2000)
 
       cy.updateUserInformation("", "")
     })
@@ -145,7 +129,7 @@ filterTests(['smoke', 'all'], () => {
 
       cy.importApp(exportedApp, "")
 
-      cy.visit(`${Cypress.config().baseUrl}/builder`)
+      cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 2000 })
 
       cy.applicationInAppTable("My app")
       
@@ -224,14 +208,12 @@ filterTests(['smoke', 'all'], () => {
       cy.createApp(appName)
 
       cy.visit(`${Cypress.config().baseUrl}/builder`)
-      cy.wait(500)
 
       // Create second app
       const secondAppName = "Second App Demo"
       cy.createApp(secondAppName)
 
       cy.visit(`${Cypress.config().baseUrl}/builder`)
-      cy.wait(500)
 
       //Both applications should exist and be searchable
       cy.searchForApplication(appName)

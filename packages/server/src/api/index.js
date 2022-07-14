@@ -71,9 +71,9 @@ router.use(async (ctx, next) => {
       validationErrors: err.validation,
       error,
     }
-    // spams test logs - not useful
+    ctx.log.error(err)
+    // unauthorised errors don't provide a useful trace
     if (!env.isTest()) {
-      ctx.log.error(err)
       console.trace(err)
     }
   }

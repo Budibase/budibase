@@ -46,6 +46,7 @@ router
     controller.save
   )
   .get("/api/global/users", builderOrAdmin, controller.fetch)
+  .post("/api/global/users/search", builderOrAdmin, controller.search)
   .delete("/api/global/users/:id", adminOnly, controller.destroy)
   .get("/api/global/roles/:appId")
   .post(
@@ -68,7 +69,7 @@ router
   )
   .get("/api/global/users/tenant/:id", controller.tenantUserLookup)
   // global endpoint but needs to come at end (blocks other endpoints otherwise)
-  .get("/api/global/users/:id", adminOnly, controller.find)
+  .get("/api/global/users/:id", builderOrAdmin, controller.find)
   // DEPRECATED - use new versions with self API
   .get("/api/global/users/self", selfController.getSelf)
   .post(
