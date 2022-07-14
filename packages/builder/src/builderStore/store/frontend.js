@@ -331,10 +331,23 @@ export const getFrontendStore = () => {
     },
     layouts: {
       select: layoutId => {
+        // Check this layout exists
+        const state = get(store)
+        const layout = store.actions.layouts.find(layoutId)
+        if (!layout) {
+          return
+        }
+
+        // Check layout isn't already selected
+        if (
+          state.selectedLayoutId === layout._id &&
+          state.selectedComponentId === layout.props?._id
+        ) {
+          return
+        }
+
+        // Select new layout
         store.update(state => {
-          const layout =
-            store.actions.layouts.find(layoutId) || get(store).layouts[0]
-          if (!layout) return
           state.selectedLayoutId = layout._id
           state.selectedComponentId = layout.props?._id
           return state
