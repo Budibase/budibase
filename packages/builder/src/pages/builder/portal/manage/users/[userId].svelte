@@ -17,7 +17,6 @@
     Popover,
     Select,
     Modal,
-    ModalContent,
     notifications,
     StatusLight,
   } from "@budibase/bbui"
@@ -29,10 +28,11 @@
   import ForceResetPasswordModal from "./_components/ForceResetPasswordModal.svelte"
   import { RoleUtils } from "@budibase/frontend-core"
   import UserGroupPicker from "components/settings/UserGroupPicker.svelte"
+  import DeleteUserModal from "./_components/DeleteUserModal.svelte"
 
   export let userId
 
-  let deleteUserModal
+  let deleteModal
   let resetPasswordModal
   let popoverAnchor
   let searchTerm = ""
@@ -83,15 +83,6 @@
     : "appUser"
 
   const userFetch = fetchData(`/api/global/users/${userId}`)
-  async function deleteUser() {
-    try {
-      await users.delete(userId)
-      notifications.success(`User ${$userFetch?.data?.email} deleted.`)
-      $goto("./")
-    } catch (error) {
-      notifications.error("Error deleting user")
-    }
-  }
 
   function getHighestRole(roles) {
     let highestRole
@@ -207,9 +198,7 @@
           <MenuItem on:click={resetPasswordModal.show} icon="Refresh"
             >Force Password Reset</MenuItem
           >
-          <MenuItem on:click={deleteUserModal.show} icon="Delete"
-            >Delete</MenuItem
-          >
+          <MenuItem on:click={deleteModal.show} icon="Delete">Delete</MenuItem>
         </ActionMenu>
       </div>
     </div>
@@ -331,19 +320,8 @@
   </Layout>
 </Layout>
 
-<Modal bind:this={deleteUserModal}>
-  <ModalContent
-    warning
-    onConfirm={deleteUser}
-    title="Delete User"
-    confirmText="Delete user"
-    cancelText="Cancel"
-    showCloseIcon={false}
-  >
-    <Body>
-      Are you sure you want to delete <strong>{$userFetch?.data?.email}</strong>
-    </Body>
-  </ModalContent>
+<Modal bind:this={deleteModal}>
+  <DeleteUserModal user={$userFetch.data} />
 </Modal>
 <Modal bind:this={resetPasswordModal}>
   <ForceResetPasswordModal
