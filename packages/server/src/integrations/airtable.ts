@@ -18,6 +18,7 @@ module AirtableModule {
     description:
       "Airtable is a spreadsheet-database hybrid, with the features of a database but applied to a spreadsheet.",
     friendlyName: "Airtable",
+    type: "Spreadsheet",
     datasource: {
       apiKey: {
         type: DatasourceFieldTypes.PASSWORD,

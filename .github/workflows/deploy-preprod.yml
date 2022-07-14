@@ -1,4 +1,4 @@
-name: Budibase Release Preprod
+name: Budibase Deploy Preprod
 
 on:
  workflow_dispatch:

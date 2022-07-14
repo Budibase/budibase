@@ -12,49 +12,46 @@
     Layout,
     Modal,
     notifications,
+    Pagination,
   } from "@budibase/bbui"
   import TagsRenderer from "./_components/TagsTableRenderer.svelte"
   import AddUserModal from "./_components/AddUserModal.svelte"
-  import BasicOnboardingModal from "./_components/BasicOnboardingModal.svelte"
   import { users } from "stores/portal"
-  import { onMount } from "svelte"
+  import { createPaginationStore } from "helpers/pagination"
 
   const schema = {
     email: {},
     developmentAccess: { displayName: "Development Access", type: "boolean" },
     adminAccess: { displayName: "Admin Access", type: "boolean" },
-    // role: { type: "options" },
     group: {},
-    // access: {},
-    // group: {}
   }
 
-  let search
-  let email
-  $: filteredUsers = $users
-    .filter(user => user.email.includes(search || ""))
-    .map(user => ({
-      ...user,
-      group: ["All users"],
-      developmentAccess: !!user.builder?.global,
-      adminAccess: !!user.admin?.global,
-    }))
+  let pageInfo = createPaginationStore()
+  let prevSearch = undefined,
+    search = undefined
+  $: page = $pageInfo.page
+  $: fetchUsers(page, search)
 
   let createUserModal
-  let basicOnboardingModal
 
-  function openBasicOnboardingModal() {
-    createUserModal.hide()
-    basicOnboardingModal.show()
-  }
-
-  onMount(async () => {
+  async function fetchUsers(page, search) {
+    if ($pageInfo.loading) {
+      return
+    }
+    // need to remove the page if they've started searching
+    if (search && !prevSearch) {
+      pageInfo.reset()
+      page = undefined
+    }
+    prevSearch = search
     try {
-      await users.init()
+      pageInfo.loading()
+      await users.search({ page, search })
+      pageInfo.fetched($users.hasNextPage, $users.nextPage)
     } catch (error) {
       notifications.error("Error getting user list")
     }
-  })
+  }
 </script>
 
 <Layout noPadding>
@@ -83,19 +80,32 @@
     <Table
       on:click={({ detail }) => $goto(`./${detail._id}`)}
       {schema}
-      data={filteredUsers || $users}
+      data={$users.data}
       allowEditColumns={false}
       allowEditRows={false}
       allowSelectRows={false}
       customRenderers={[{ column: "group", component: TagsRenderer }]}
     />
+    <div class="pagination">
+      <Pagination
+        page={$pageInfo.pageNumber}
+        hasPrevPage={$pageInfo.loading ? false : $pageInfo.hasPrevPage}
+        hasNextPage={$pageInfo.loading ? false : $pageInfo.hasNextPage}
+        goToPrevPage={pageInfo.prevPage}
+        goToNextPage={pageInfo.nextPage}
+      />
+    </div>
   </Layout>
 </Layout>
 
 <Modal bind:this={createUserModal}>
-  <AddUserModal on:change={openBasicOnboardingModal} />
+  <AddUserModal
+    on:created={async () => {
+      pageInfo.reset()
+      await fetchUsers()
+    }}
+  />
 </Modal>
-<Modal bind:this={basicOnboardingModal}><BasicOnboardingModal {email} /></Modal>
 
 <style>
   .field {

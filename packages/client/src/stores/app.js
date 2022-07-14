@@ -1,5 +1,5 @@
 import { API } from "api"
-import { get, writable } from "svelte/store"
+import { get, writable, derived } from "svelte/store"
 
 const initialState = {
   appId: null,
@@ -9,6 +9,12 @@ const initialState = {
 
 const createAppStore = () => {
   const store = writable(initialState)
+  const derivedStore = derived(store, $store => {
+    return {
+      ...$store,
+      isDevApp: $store.appId?.startsWith("app_dev"),
+    }
+  })
 
   // Fetches the app definition including screens, layouts and theme
   const fetchAppDefinition = async () => {
@@ -22,7 +28,6 @@ const createAppStore = () => {
         ...initialState,
         ...appDefinition,
         appId: appDefinition?.application?.appId,
-        isDevApp: appId.startsWith("app_dev"),
       })
     } catch (error) {
       store.set(initialState)
@@ -30,7 +35,7 @@ const createAppStore = () => {
   }
 
   // Sets the initial app ID
-  const setAppID = id => {
+  const setAppId = id => {
     store.update(state => {
       if (state) {
         state.appId = id
@@ -42,8 +47,8 @@ const createAppStore = () => {
   }
 
   return {
-    subscribe: store.subscribe,
-    actions: { setAppID, fetchAppDefinition },
+    subscribe: derivedStore.subscribe,
+    actions: { setAppId, fetchAppDefinition },
   }
 }
 

@@ -28,6 +28,8 @@ const { encrypt } = require("@budibase/backend-core/encryption")
 
 const GLOBAL_USER_ID = "us_uuid1"
 const EMAIL = "babs@babs.com"
+const FIRSTNAME = "Barbara"
+const LASTNAME = "Barbington"
 const CSRF_TOKEN = "e3727778-7af0-4226-b5eb-f43cbe60a306"
 
 class TestConfiguration {
@@ -57,6 +59,15 @@ class TestConfiguration {
 
   getProdAppId() {
     return this.prodAppId
+  }
+
+  getUserDetails() {
+    return {
+      globalId: GLOBAL_USER_ID,
+      email: EMAIL,
+      firstName: FIRSTNAME,
+      lastName: LASTNAME,
+    }
   }
 
   async doInContext(appId, task) {
@@ -128,6 +139,8 @@ class TestConfiguration {
   // USER / AUTH
   async globalUser({
     id = GLOBAL_USER_ID,
+    firstName = FIRSTNAME,
+    lastName = LASTNAME,
     builder = true,
     admin = false,
     email = EMAIL,
@@ -145,6 +158,8 @@ class TestConfiguration {
         ...existing,
         roles: roles || {},
         tenantId: TENANT_ID,
+        firstName,
+        lastName,
       }
       await createASession(id, {
         sessionId: "sessionid",
@@ -171,6 +186,8 @@ class TestConfiguration {
 
   async createUser(
     id = null,
+    firstName = FIRSTNAME,
+    lastName = LASTNAME,
     email = EMAIL,
     builder = true,
     admin = false,
@@ -179,6 +196,8 @@ class TestConfiguration {
     const globalId = !id ? `us_${Math.random()}` : `us_${id}`
     const resp = await this.globalUser({
       id: globalId,
+      firstName,
+      lastName,
       email,
       builder,
       admin,
@@ -531,14 +550,14 @@ class TestConfiguration {
 
   // QUERY
 
-  async previewQuery(request, config, datasource, fields) {
+  async previewQuery(request, config, datasource, fields, params, verb) {
     return request
       .post(`/api/queries/preview`)
       .send({
         datasourceId: datasource._id,
-        parameters: {},
+        parameters: params || {},
         fields,
-        queryVerb: "read",
+        queryVerb: verb || "read",
         name: datasource.name,
       })
       .set(config.defaultHeaders())

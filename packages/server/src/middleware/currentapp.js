@@ -74,6 +74,10 @@ module.exports = async (ctx, next) => {
       try {
         await getRole(roleHeader)
         roleId = roleHeader
+
+        // Delete admin and builder flags so that the specified role is honoured
+        delete ctx.user.builder
+        delete ctx.user.admin
       } catch (error) {
         // Swallow error and do nothing
       }
