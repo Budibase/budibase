@@ -47,7 +47,7 @@
       return
     }
     searchTerm = null
-    open = true
+    open = !open
   }
 
   const getSortedOptions = (options, getLabel, sort) => {
@@ -75,112 +75,77 @@
   }
 </script>
 
-<button
-  {id}
-  class="spectrum-Picker spectrum-Picker--sizeM"
-  class:spectrum-Picker--quiet={quiet}
-  {disabled}
-  class:is-invalid={!!error}
-  class:is-open={open}
-  aria-haspopup="listbox"
-  on:mousedown={onClick}
->
-  {#if fieldIcon}
-    <span class="option-left">
-      <Icon name={fieldIcon} />
-    </span>
-  {:else if fieldColour}
-    <span class="option-left">
-      <StatusLight color={fieldColour} />
-    </span>
-  {/if}
-  <span
-    class="spectrum-Picker-label"
-    class:is-placeholder={isPlaceholder}
-    class:auto-width={autoWidth}
+<div use:clickOutside={() => (open = false)}>
+  <button
+    {id}
+    class="spectrum-Picker spectrum-Picker--sizeM"
+    class:spectrum-Picker--quiet={quiet}
+    {disabled}
+    class:is-invalid={!!error}
+    class:is-open={open}
+    aria-haspopup="listbox"
+    on:mousedown={onClick}
   >
-    {fieldText}
-  </span>
-  {#if error}
+    {#if fieldIcon}
+      <span class="option-icon">
+        <Icon name={fieldIcon} />
+      </span>
+    {/if}
+    <span
+      class="spectrum-Picker-label"
+      class:is-placeholder={isPlaceholder}
+      class:auto-width={autoWidth}
+    >
+      {fieldText}
+    </span>
+    {#if error}
+      <svg
+        class="spectrum-Icon spectrum-Icon--sizeM spectrum-Picker-validationIcon"
+        focusable="false"
+        aria-hidden="true"
+        aria-label="Folder"
+      >
+        <use xlink:href="#spectrum-icon-18-Alert" />
+      </svg>
+    {/if}
+    {#if fieldColour}
+      <span class="option-colour">
+        <StatusLight size="L" color={fieldColour} />
+      </span>
+    {/if}
     <svg
-      class="spectrum-Icon spectrum-Icon--sizeM spectrum-Picker-validationIcon"
+      class="spectrum-Icon spectrum-UIIcon-ChevronDown100 spectrum-Picker-menuIcon"
       focusable="false"
       aria-hidden="true"
-      aria-label="Folder"
     >
-      <use xlink:href="#spectrum-icon-18-Alert" />
+      <use xlink:href="#spectrum-css-icon-Chevron100" />
     </svg>
-  {/if}
-  {#if fieldIcon && fieldColour}
-    <span class="option-right">
-      <StatusLight color={fieldColour} />
-    </span>
-  {/if}
-  <svg
-    class="spectrum-Icon spectrum-UIIcon-ChevronDown100 spectrum-Picker-menuIcon"
-    focusable="false"
-    aria-hidden="true"
-  >
-    <use xlink:href="#spectrum-css-icon-Chevron100" />
-  </svg>
-</button>
-{#if open}
-  <div
-    use:clickOutside={() => (open = false)}
-    transition:fly|local={{ y: -20, duration: 200 }}
-    class="spectrum-Popover spectrum-Popover--bottom spectrum-Picker-popover is-open"
-    class:auto-width={autoWidth}
-  >
-    {#if autocomplete}
-      <Search
-        value={searchTerm}
-        on:change={event => (searchTerm = event.detail)}
-        {disabled}
-        placeholder="Search"
-      />
-    {/if}
-    <ul class="spectrum-Menu" role="listbox">
-      {#if placeholderOption}
-        <li
-          class="spectrum-Menu-item placeholder"
-          class:is-selected={isPlaceholder}
-          role="option"
-          aria-selected="true"
-          tabindex="0"
-          on:click={() => onSelectOption(null)}
-        >
-          <span class="spectrum-Menu-itemLabel">{placeholderOption}</span>
-          <svg
-            class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"
-            focusable="false"
-            aria-hidden="true"
-          >
-            <use xlink:href="#spectrum-css-icon-Checkmark100" />
-          </svg>
-        </li>
+  </button>
+  {#if open}
+    <div
+      transition:fly|local={{ y: -20, duration: 200 }}
+      class="spectrum-Popover spectrum-Popover--bottom spectrum-Picker-popover is-open"
+      class:auto-width={autoWidth}
+    >
+      {#if autocomplete}
+        <Search
+          value={searchTerm}
+          on:change={event => (searchTerm = event.detail)}
+          {disabled}
+          placeholder="Search"
+        />
       {/if}
-      {#if filteredOptions.length}
-        {#each filteredOptions as option, idx}
+      <ul class="spectrum-Menu" role="listbox">
+        {#if placeholderOption}
           <li
-            class="spectrum-Menu-item"
-            class:is-selected={isOptionSelected(getOptionValue(option, idx))}
+            class="spectrum-Menu-item placeholder"
+            class:is-selected={isPlaceholder}
             role="option"
             aria-selected="true"
             tabindex="0"
-            on:click={() => onSelectOption(getOptionValue(option, idx))}
+            on:click={() => onSelectOption(null)}
           >
-            {#if getOptionIcon(option, idx)}
-              <span class="option-left">
-                <Icon name={getOptionIcon(option, idx)} />
-              </span>
-            {:else if getOptionColour(option, idx)}
-              <span class="option-left">
-                <StatusLight color={getOptionColour(option, idx)} />
-              </span>
-            {/if}
-            <span class="spectrum-Menu-itemLabel">
-              {getOptionLabel(option, idx)}
-            </span>
+            <span class="spectrum-Menu-itemLabel">{placeholderOption}</span>
             <svg
               class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"
               focusable="false"
@@ -188,17 +153,45 @@
             >
               <use xlink:href="#spectrum-css-icon-Checkmark100" />
             </svg>
-            {#if getOptionIcon(option, idx) && getOptionColour(option, idx)}
-              <span class="option-right">
-                <StatusLight color={getOptionColour(option, idx)} />
-              </span>
-            {/if}
           </li>
-        {/each}
-      {/if}
-    </ul>
-  </div>
-{/if}
+        {/if}
+        {#if filteredOptions.length}
+          {#each filteredOptions as option, idx}
+            <li
+              class="spectrum-Menu-item"
+              class:is-selected={isOptionSelected(getOptionValue(option, idx))}
+              role="option"
+              aria-selected="true"
+              tabindex="0"
+              on:click={() => onSelectOption(getOptionValue(option, idx))}
+            >
+              {#if getOptionIcon(option, idx)}
+                <span class="option-icon">
+                  <Icon name={getOptionIcon(option, idx)} />
+                </span>
+              {/if}
+              <span class="spectrum-Menu-itemLabel">
+                {getOptionLabel(option, idx)}
+              </span>
+              <svg
+                class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"
+                focusable="false"
+                aria-hidden="true"
+              >
+                <use xlink:href="#spectrum-css-icon-Checkmark100" />
+              </svg>
+              {#if getOptionColour(option, idx)}
+                <span class="option-colour">
+                  <StatusLight size="L" color={getOptionColour(option, idx)} />
+                </span>
+              {/if}
+            </li>
+          {/each}
+        {/if}
+      </ul>
+    </div>
+  {/if}
+</div>
 
 <style>
   .spectrum-Popover {
@@ -233,13 +226,12 @@
   .spectrum-Menu-checkmark {
     align-self: center;
     margin-top: 0;
-    margin-left: 12px;
   }
-  .option-left {
-    padding-right: 8px;
-  }
-  .option-right {
+  .option-colour {
     padding-left: 8px;
+  }
+  .option-icon {
+    padding-right: 8px;
   }
 
   .spectrum-Popover :global(.spectrum-Search) {

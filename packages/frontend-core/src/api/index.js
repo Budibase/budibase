@@ -58,6 +58,7 @@ export const createAPIClient = config => {
     ...defaultAPIClientConfig,
     ...config,
   }
+  let cache = {}
 
   // Generates an error object from an API response
   const makeErrorFromResponse = async (response, method) => {
@@ -140,6 +141,7 @@ export const createAPIClient = config => {
         credentials: "same-origin",
       })
     } catch (error) {
+      delete cache[url]
       throw makeError("Failed to send request", { url, method })
     }
 
@@ -152,9 +154,11 @@ export const createAPIClient = config => {
           return await response.json()
         }
       } catch (error) {
+        delete cache[url]
         return null
       }
     } else {
+      delete cache[url]
       throw await makeErrorFromResponse(response, method)
     }
   }
@@ -162,7 +166,6 @@ export const createAPIClient = config => {
   // Performs an API call to the server and caches the response.
   // Future invocation for this URL will return the cached result instead of
   // hitting the server again.
-  let cache = {}
   const makeCachedApiCall = async params => {
     const identifier = params.url
     if (!identifier) {
@@ -206,6 +209,9 @@ export const createAPIClient = config => {
     put: requestApiCall("PUT"),
     error: message => {
       throw makeError(message)
+    },
+    invalidateCache: () => {
+      cache = {}
     },
   }
 

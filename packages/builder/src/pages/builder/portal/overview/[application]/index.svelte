@@ -308,9 +308,11 @@
           <Tab title="Access">
             <AccessTab app={selectedApp} />
           </Tab>
-          <Tab title="Automation History">
-            <HistoryTab app={selectedApp} />
-          </Tab>
+          {#if isPublished}
+            <Tab title="Automation History">
+              <HistoryTab app={selectedApp} />
+            </Tab>
+          {/if}
           {#if false}
             <Tab title="Backups">
               <div class="container">Backups contents</div>
