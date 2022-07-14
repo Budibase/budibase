@@ -148,12 +148,13 @@ export const destroy = async (ctx: any) => {
 
 export const bulkDelete = async (ctx: any) => {
   const { userIds } = ctx.request.body
-
   let deleted = 0
-  userIds.forEach(async (id: any) => {
+
+  for (const id of userIds) {
     await users.destroy(id, ctx.user)
     deleted++
-  })
+  }
+
   ctx.body = {
     message: `${deleted} user(s) deleted`,
   }
