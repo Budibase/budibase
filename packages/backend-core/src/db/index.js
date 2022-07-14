@@ -1,9 +1,18 @@
 const pouch = require("./pouch")
 const env = require("../environment")
 
+const MEMORY_LEAK_CHECK = 0
+const openDbs = []
 let PouchDB
 let initialised = false
 const dbList = new Set()
+
+if (MEMORY_LEAK_CHECK) {
+  setInterval(() => {
+    console.log("--- OPEN DBS ---")
+    console.log(openDbs)
+  }, 5000)
+}
 
 const put =
   dbPut =>
@@ -35,6 +44,9 @@ exports.dangerousGetDB = (dbName, opts) => {
     dbList.add(dbName)
   }
   const db = new PouchDB(dbName, opts)
+  if (MEMORY_LEAK_CHECK) {
+    openDbs.push(db.name)
+  }
   const dbPut = db.put
   db.put = put(dbPut)
   return db
@@ -45,6 +57,9 @@ exports.dangerousGetDB = (dbName, opts) => {
 exports.closeDB = async db => {
   if (!db || env.isTest()) {
     return
+  }
+  if (MEMORY_LEAK_CHECK) {
+    openDbs.splice(openDbs.indexOf(db.name), 1)
   }
   try {
     // specifically await so that if there is an error, it can be ignored
