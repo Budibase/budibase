@@ -17,6 +17,7 @@ function buildGroupSaveValidation() {
     role: Joi.string().optional(),
     users: Joi.array().optional(),
     apps: Joi.array().optional(),
+    roles: Joi.object().optional(),
     createdAt: Joi.string().optional(),
     updatedAt: Joi.string().optional(),
   }).required())

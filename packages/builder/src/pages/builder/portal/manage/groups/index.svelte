@@ -24,6 +24,7 @@
     color: "var(--spectrum-global-color-blue-600)",
     users: [],
     apps: [],
+    roles: {},
   }
 
   async function deleteGroup(group) {

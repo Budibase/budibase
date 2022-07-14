@@ -14,7 +14,6 @@
   } from "@budibase/bbui"
   import ConfigChecklist from "components/common/ConfigChecklist.svelte"
   import { organisation, auth } from "stores/portal"
-  import { roles } from "stores/backend"
   import { admin as adminStore } from "stores/portal"
   import { onMount } from "svelte"
   import UpdateUserInfoModal from "components/settings/UpdateUserInfoModal.svelte"
@@ -126,7 +125,6 @@
         $redirect("../")
       } else {
         try {
-          await roles.fetch()
           await organisation.init()
         } catch (error) {
           notifications.error("Error getting org config")

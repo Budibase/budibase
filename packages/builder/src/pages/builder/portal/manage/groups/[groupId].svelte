@@ -50,6 +50,15 @@
     }
 
     await groups.actions.save(group)
+
+    let user = await users.get(id)
+
+    let userGroups = user.groups || []
+    userGroups.push(groupId)
+    await users.save({
+      ...user,
+      userGroups,
+    })
   }
   $: filtered =
     $users.data?.filter(x => !group?.users.map(y => y._id).includes(x._id)) ||
