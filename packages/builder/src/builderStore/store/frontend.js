@@ -431,7 +431,7 @@ export const getFrontendStore = () => {
           return
         }
 
-        // Create screen patch function
+        // Patch screen
         const patch = screen => {
           // Find the selected component
           const currentComponent = findComponent(
@@ -492,39 +492,34 @@ export const getFrontendStore = () => {
         if (!component) {
           return
         }
-        const asset = get(currentAsset)
-        if (!asset) {
-          return
-        }
+        const state = get(store)
+        let parentId
 
-        // Fetch full definition
-        component = findComponent(asset.props, component._id)
+        // Patch screen
+        const patch = screen => {
+          // Check component exists
+          component = findComponent(screen.props, component._id)
+          if (!component) {
+            return false
+          }
 
-        // Ensure we aren't deleting the screen slot
-        if (component._component?.endsWith("/screenslot")) {
-          throw "You can't delete the screen slot"
-        }
-
-        // Ensure we aren't deleting something that contains the screen slot
-        const screenslot = findComponentType(
-          component,
-          "@budibase/standard-components/screenslot"
-        )
-        if (screenslot != null) {
-          throw "You can't delete a component that contains the screen slot"
-        }
-
-        const parent = findComponentParent(asset.props, component._id)
-        if (parent) {
+          // Check component has a valid parent
+          const parent = findComponentParent(screen.props, component._id)
+          if (!parent) {
+            return false
+          }
+          parentId = parent._id
           parent._children = parent._children.filter(
             child => child._id !== component._id
           )
-          store.update(state => {
-            state.selectedComponentId = parent._id
-            return state
-          })
         }
-        await store.actions.preview.saveSelected()
+        await store.actions.screens.patch(state.selectedScreenId, patch)
+
+        // Select the deleted component's parent
+        store.update(state => {
+          state.selectedComponentId = parentId
+          return state
+        })
       },
       copy: (component, cut = false, selectParent = true) => {
         const selectedAsset = get(currentAsset)
