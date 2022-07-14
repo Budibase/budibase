@@ -23,6 +23,10 @@ export function createUsersStore() {
     }
   }
 
+  const fetch = async () => {
+    return await API.getUsers()
+  }
+
   async function invite({ emails, builder, admin }) {
     return API.inviteUsers({
       emails,
@@ -87,6 +91,7 @@ export function createUsersStore() {
     subscribe,
     search,
     get,
+    fetch,
     invite,
     acceptInvite,
     create,

@@ -112,12 +112,15 @@
       }
     })
   }
-  function showOnboardingTypeModal() {
+  const showOnboardingTypeModal = async addUsersData => {
+    userData = await removingDuplicities(addUsersData)
+    if (!userData?.users?.length) return
+
     onboardingTypeModal.show()
   }
 
   async function createUserFlow() {
-    let emails = userData.map(x => x.email)
+    let emails = userData?.users?.map(x => x.email) || []
     try {
       const res = await users.invite({
         emails: emails,
@@ -132,8 +135,29 @@
     }
   }
 
+  const removingDuplicities = async userData => {
+    const currentUserEmails = (await users.fetch())?.map(x => x.email) || []
+    const newUsers = []
+
+    for (const user of userData?.users) {
+      const { email } = user
+
+      if (
+        newUsers.find(x => x.email === email) ||
+        currentUserEmails.includes(email)
+      )
+        continue
+
+      newUsers.push(user)
+    }
+
+    if (!newUsers.length)
+      notifications.info("Duplicated! There is no new users to add.")
+    return { ...userData, users: newUsers }
+  }
+
   const createUsersFromCsv = async userCsvData => {
-    const { userEmails, usersRole, userGroups } = userCsvData
+    const { userEmails, usersRole, userGroups: groups } = userCsvData
 
     const users = []
     for (const email of userEmails) {
@@ -147,13 +171,15 @@
       users.push(newUser)
     }
 
-    userData = { groups: userGroups, users: users }
+    userData = await removingDuplicities({ groups, users })
+    if (!userData.users.length) return
+
     return createUser()
   }
 
   async function createUser() {
     try {
-      await users.create(userData)
+      await users.create(await removingDuplicities(userData))
       notifications.success("Successfully created user")
       await groups.actions.init()
       passwordModal.show()
@@ -272,14 +298,7 @@
 </Layout>
 
 <Modal bind:this={createUserModal}>
-  <AddUserModal
-    on:change={e => (userData = e.detail)}
-    on:created={async () => {
-      pageInfo.reset()
-      await fetchUsers()
-    }}
-    {showOnboardingTypeModal}
-  />
+  <AddUserModal {showOnboardingTypeModal} />
 </Modal>
 
 <Modal bind:this={inviteConfirmationModal}>
