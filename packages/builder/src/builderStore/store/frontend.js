@@ -177,15 +177,6 @@ export const getFrontendStore = () => {
         })
       },
     },
-    routing: {
-      fetch: async () => {
-        const response = await API.fetchAppRoutes()
-        store.update(state => {
-          state.routes = response.routes
-          return state
-        })
-      },
-    },
     screens: {
       select: screenId => {
         // Check this screen exists
@@ -214,23 +205,27 @@ export const getFrontendStore = () => {
       save: async screen => {
         const creatingNewScreen = screen._id === undefined
         const savedScreen = await API.saveScreen(screen)
+        const routesResponse = await API.fetchAppRoutes()
         store.update(state => {
+          // Update screen object
           const idx = state.screens.findIndex(x => x._id === savedScreen._id)
           if (idx !== -1) {
             state.screens.splice(idx, 1, savedScreen)
           } else {
             state.screens.push(savedScreen)
           }
+
+          // Select the new screen if creating a new one
+          if (creatingNewScreen) {
+            state.selectedScreenId = savedScreen._id
+            state.selectedComponentId = savedScreen.props._id
+          }
+
+          // Update routes
+          state.routes = routesResponse.routes
+
           return state
         })
-
-        // Refresh routes
-        await store.actions.routing.fetch()
-
-        // Select the new screen if creating a new one
-        if (creatingNewScreen) {
-          store.actions.screens.select(savedScreen._id)
-        }
         return savedScreen
       },
       delete: async screens => {
