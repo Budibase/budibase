@@ -21,7 +21,6 @@
   import GroupsTableRenderer from "./_components/GroupsTableRenderer.svelte"
   import AppsTableRenderer from "./_components/AppsTableRenderer.svelte"
   import NameTableRenderer from "./_components/NameTableRenderer.svelte"
-  import SettingsTableRenderer from "./_components/SettingsTableRenderer.svelte"
   import RoleTableRenderer from "./_components/RoleTableRenderer.svelte"
   import { goto } from "@roxi/routify"
   import OnboardingTypeModal from "./_components/OnboardingTypeModal.svelte"
@@ -62,7 +61,6 @@
     { column: "userGroups", component: GroupsTableRenderer },
     { column: "apps", component: AppsTableRenderer },
     { column: "name", component: NameTableRenderer },
-    { column: "settings", component: SettingsTableRenderer },
     { column: "role", component: RoleTableRenderer },
   ]
 
