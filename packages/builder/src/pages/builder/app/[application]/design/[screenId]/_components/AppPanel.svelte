@@ -17,7 +17,8 @@
         getOptionValue={x => x._id}
         getOptionIcon={x => (x.routing.homeScreen ? "Home" : "WebPage")}
         getOptionColour={x => RoleUtils.getRoleColour(x.routing.roleId)}
-        bind:value={$store.selectedScreenId}
+        value={$store.selectedScreenId}
+        on:change={e => store.actions.screens.select(e.detail)}
       />
     </div>
     <div class="header-right">
