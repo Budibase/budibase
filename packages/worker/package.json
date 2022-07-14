@@ -38,6 +38,7 @@
     "@budibase/backend-core": "^1.1.9",
     "@budibase/pro": "1.1.9",
     "@budibase/string-templates": "^1.1.9",
+    "@budibase/types": "^1.1.9",
     "@koa/router": "8.0.8",
     "@sentry/node": "6.17.7",
     "@techpass/passport-openidconnect": "0.3.2",
@@ -67,7 +68,6 @@
     "server-destroy": "1.0.1"
   },
   "devDependencies": {
-    "@budibase/types": "^1.1.9",
     "@types/jest": "26.0.23",
     "@types/koa": "2.13.4",
     "@types/koa-router": "7.4.4",
