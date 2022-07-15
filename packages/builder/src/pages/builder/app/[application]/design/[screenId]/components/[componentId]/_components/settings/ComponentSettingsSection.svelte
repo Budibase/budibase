@@ -29,13 +29,13 @@
     ]
   }
 
-  const updateProp = Utils.sequential(async (key, value) => {
+  const updateProp = async (key, value) => {
     try {
       await store.actions.components.updateProp(key, value)
     } catch (error) {
       notifications.error("Error updating component prop")
     }
-  })
+  }
 
   const canRenderControl = setting => {
     const control = getComponentForSetting(setting)
