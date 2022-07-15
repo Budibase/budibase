@@ -11,7 +11,6 @@ import {
 import { API } from "api"
 import analytics, { Events } from "analytics"
 import {
-  findComponentType,
   findComponentParent,
   findClosestMatchingComponent,
   findAllMatchingComponents,
@@ -62,7 +61,21 @@ const INITIAL_FRONTEND_STATE = {
 export const getFrontendStore = () => {
   const store = writable({ ...INITIAL_FRONTEND_STATE })
 
-  store.subscribe(state => {
+  const sequentialScreenPatch = Utils.sequential(async (patchFn, screenId) => {
+    const state = get(store)
+    const screen = state.screens.find(screen => screen._id === screenId)
+    if (!screen) {
+      return
+    }
+    let clone = cloneDeep(screen)
+    const result = patchFn(clone)
+    if (result === false) {
+      return
+    }
+    return await store.actions.screens.save(clone)
+  })
+
+  store.subscribe(() => {
     console.log("new state")
   })
 
@@ -228,19 +241,17 @@ export const getFrontendStore = () => {
         })
         return savedScreen
       },
-      patch: Utils.sequential(async (screenId, patchFn) => {
-        const state = get(store)
-        const screen = state.screens.find(screen => screen._id === screenId)
-        if (!screen) {
+      patch: async (patchFn, screenId) => {
+        // Default to the currently selected screen
+        if (!screenId) {
+          const state = get(store)
+          screenId = state.selectedScreenId
+        }
+        if (!screenId || !patchFn) {
           return
         }
-        let clone = cloneDeep(screen)
-        const result = patchFn(clone)
-        if (result === false) {
-          return
-        }
-        return await store.actions.screens.save(clone)
-      }),
+        return await sequentialScreenPatch(patchFn, screenId)
+      },
       delete: async screens => {
         const screensToDelete = Array.isArray(screens) ? screens : [screens]
 
@@ -282,7 +293,9 @@ export const getFrontendStore = () => {
         })
       },
       updateHomeScreen: async (screen, makeHomeScreen = true) => {
-        let promises = []
+        if (!screen) {
+          return
+        }
 
         // Find any existing home screen for this role so we can remove it,
         // if we are setting this to be the new home screen
@@ -297,16 +310,13 @@ export const getFrontendStore = () => {
           })
           if (existingHomeScreen) {
             const patch = screen => (screen.routing.homeScreen = false)
-            promises.push(
-              store.actions.screens.patch(existingHomeScreen._id, patch)
-            )
+            await store.actions.screens.patch(patch, existingHomeScreen._id)
           }
         }
 
         // Update the passed in screen
         const patch = screen => (screen.routing.homeScreen = makeHomeScreen)
-        promises.push(store.actions.screens.patch(screen._id, patch))
-        return await Promise.all(promises)
+        await store.actions.screens.patch(patch, screen._id)
       },
       removeCustomLayout: async screen => {
         // Pull relevant settings from old layout, if required
@@ -316,14 +326,10 @@ export const getFrontendStore = () => {
           screen.showNavigation = layout?.props.navigation !== "None"
           screen.width = layout?.props.width || "Large"
         }
-        await store.actions.screens.patch(screen._id, patch)
+        await store.actions.screens.patch(patch, screen._id)
       },
     },
     preview: {
-      saveSelected: async () => {
-        const selectedAsset = get(currentAsset)
-        return await store.actions.screens.save(selectedAsset)
-      },
       setDevice: device => {
         store.update(state => {
           state.previewDevice = device
@@ -431,8 +437,8 @@ export const getFrontendStore = () => {
           return
         }
 
-        // Patch screen
-        const patch = screen => {
+        // Patch selected screen
+        await store.actions.screens.patch(screen => {
           // Find the selected component
           const currentComponent = findComponent(
             screen.props,
@@ -472,8 +478,7 @@ export const getFrontendStore = () => {
             parentComponent._children = []
           }
           parentComponent._children.push(componentInstance)
-        }
-        await store.actions.screens.patch(state.selectedScreenId, patch)
+        })
 
         // Select new component
         store.update(state => {
@@ -488,15 +493,34 @@ export const getFrontendStore = () => {
 
         return componentInstance
       },
+      patch: async (patchFn, componentId, screenId) => {
+        // Use selected component by default
+        if (!componentId && !screenId) {
+          const state = get(store)
+          componentId = state.selectedComponentId
+          screenId = state.selectedScreenId
+        }
+        // Invalid if only a screen or component ID provided
+        if (!componentId || !screenId || !patchFn) {
+          return
+        }
+        const patchScreen = screen => {
+          let component = findComponent(screen.props, componentId)
+          if (!component) {
+            return false
+          }
+          return patchFn(component, screen)
+        }
+        await store.actions.screens.patch(patchScreen, screenId)
+      },
       delete: async component => {
         if (!component) {
           return
         }
-        const state = get(store)
         let parentId
 
         // Patch screen
-        const patch = screen => {
+        await store.actions.screens.patch(screen => {
           // Check component exists
           component = findComponent(screen.props, component._id)
           if (!component) {
@@ -512,8 +536,7 @@ export const getFrontendStore = () => {
           parent._children = parent._children.filter(
             child => child._id !== component._id
           )
-        }
-        await store.actions.screens.patch(state.selectedScreenId, patch)
+        })
 
         // Select the deleted component's parent
         store.update(state => {
@@ -522,11 +545,6 @@ export const getFrontendStore = () => {
         })
       },
       copy: (component, cut = false, selectParent = true) => {
-        const selectedAsset = get(currentAsset)
-        if (!selectedAsset) {
-          return null
-        }
-
         // Update store with copied component
         store.update(state => {
           state.componentToPaste = cloneDeep(component)
@@ -536,7 +554,8 @@ export const getFrontendStore = () => {
 
         // Select the parent if cutting
         if (cut) {
-          const parent = findComponentParent(selectedAsset.props, component._id)
+          const screen = get(selectedScreen)
+          const parent = findComponentParent(screen?.props, component._id)
           if (parent) {
             if (selectParent) {
               store.update(state => {
@@ -555,7 +574,7 @@ export const getFrontendStore = () => {
         let newComponentId
 
         // Patch screen
-        const patch = screen => {
+        await store.actions.screens.patch(screen => {
           // Get up to date ref to target
           targetComponent = findComponent(screen.props, targetComponent._id)
           if (!targetComponent) {
@@ -604,8 +623,7 @@ export const getFrontendStore = () => {
             const index = mode === "above" ? targetIndex : targetIndex + 1
             parent._children.splice(index, 0, componentToPaste)
           }
-        }
-        await store.actions.screens.patch(state.selectedScreenId, patch)
+        })
 
         // Update state
         store.update(state => {
@@ -614,39 +632,78 @@ export const getFrontendStore = () => {
           return state
         })
       },
+      moveUp: async component => {
+        await store.actions.screens.patch(screen => {
+          const componentId = component?._id
+          const parent = findComponentParent(screen.props, componentId)
+          if (!parent?._children?.length) {
+            return false
+          }
+          const currentIndex = parent._children.findIndex(
+            child => child._id === componentId
+          )
+          if (currentIndex === 0) {
+            return false
+          }
+          const originalComponent = cloneDeep(parent._children[currentIndex])
+          const newChildren = parent._children.filter(
+            component => component._id !== componentId
+          )
+          newChildren.splice(currentIndex - 1, 0, originalComponent)
+          parent._children = newChildren
+        })
+      },
+      moveDown: async component => {
+        await store.actions.screens.patch(screen => {
+          const componentId = component?._id
+          const parent = findComponentParent(screen.props, componentId)
+          if (!parent?._children?.length) {
+            return false
+          }
+          const currentIndex = parent._children.findIndex(
+            child => child._id === componentId
+          )
+          if (currentIndex === parent._children.length - 1) {
+            return false
+          }
+          const originalComponent = cloneDeep(parent._children[currentIndex])
+          const newChildren = parent._children.filter(
+            component => component._id !== componentId
+          )
+          newChildren.splice(currentIndex + 1, 0, originalComponent)
+          parent._children = newChildren
+        })
+      },
       updateStyle: async (name, value) => {
-        const selected = get(selectedComponent)
-        if (value == null || value === "") {
-          delete selected._styles.normal[name]
-        } else {
-          selected._styles.normal[name] = value
-        }
-        await store.actions.preview.saveSelected()
+        await store.actions.components.patch(component => {
+          if (value == null || value === "") {
+            delete component._styles.normal[name]
+          } else {
+            component._styles.normal[name] = value
+          }
+        })
       },
       updateCustomStyle: async style => {
-        const selected = get(selectedComponent)
-        selected._styles.custom = style
-        await store.actions.preview.saveSelected()
+        await store.actions.components.patch(component => {
+          component._styles.custom = style
+        })
       },
       updateConditions: async conditions => {
-        const selected = get(selectedComponent)
-        selected._conditions = conditions
-        await store.actions.preview.saveSelected()
+        await store.actions.components.patch(component => {
+          component._conditions = conditions
+        })
       },
       updateProp: async (name, value) => {
-        let component = get(selectedComponent)
-        if (!name || !component) {
-          return
-        }
-        if (component[name] === value) {
-          return
-        }
-        component[name] = value
-        store.update(state => {
-          state.selectedComponentId = component._id
-          return state
+        await store.actions.components.patch(component => {
+          if (!name || !component) {
+            return false
+          }
+          // Skip update if the value is the same
+          if (component[name] === value) {
+            return false
+          }
+          component[name] = value
         })
-        await store.actions.preview.saveSelected()
       },
     },
     links: {
