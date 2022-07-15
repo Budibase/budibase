@@ -42,7 +42,7 @@
     )
   }
 
-  const setScreenSetting = (setting, value) => {
+  const setScreenSetting = async (setting, value) => {
     const { key, parser, validate } = setting
 
     // Parse value if required
@@ -69,26 +69,16 @@
 
     // Home screen changes need to be handled manually
     if (key === "routing.homeScreen") {
-      store.actions.screens.updateHomeScreen(get(selectedScreen), value)
+      console.log(value)
+      await store.actions.screens.updateHomeScreen(get(selectedScreen), value)
       return
     }
 
-    // Update screen object in store
-    // If there are 2 home screens after this change, remove this screen as a
-    // home screen
-    const screen = get(selectedScreen)
-    setWith(screen, key.split("."), value, Object)
-    const roleId = screen.routing.roleId
-    const homeScreens = get(store).screens.filter(screen => {
-      return screen.routing.roleId === roleId && screen.routing.homeScreen
-    })
-    if (homeScreens.length > 1) {
-      screen.routing.homeScreen = false
-    }
-
-    // Save new definition
+    // Update screen setting
     try {
-      store.actions.screens.save(screen)
+      await store.actions.screens.patch(screen => {
+        setWith(screen, key.split("."), value, Object)
+      })
     } catch (error) {
       notifications.error("Error saving screen settings")
     }
