@@ -52,13 +52,13 @@ export default class IntercomClient {
    * @param {Object} user - user to identify
    * @returns Intercom global object
    */
-  show(user = {}) {
-    if (this.initialised && user?.admin && user?.cloud) {
-      return window.Intercom("boot", {
-        app_id: this.token,
-        ...user,
-      })
-    }
+  show(user = {}, enabled) {
+    if (!this.initialised || !enabled) return
+
+    return window.Intercom("boot", {
+      app_id: this.token,
+      ...user,
+    })
   }
 
   /**
