@@ -9,7 +9,7 @@ export const sequential = fn => {
   return async (...params) => {
     queue.push(async () => {
       await fn(...params)
-      queue.pop()
+      queue.shift()
       if (queue.length) {
         await queue[0]()
       }
