@@ -399,7 +399,7 @@
   }
 
   const scrollIntoView = () => {
-    const node = document.getElementsByClassName(id)?.[0]?.childNodes[0]
+    const node = document.getElementsByClassName(id)?.[0]?.children[0]
     if (!node) {
       return
     }
