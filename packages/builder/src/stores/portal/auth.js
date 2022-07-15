@@ -54,23 +54,24 @@ export function createAuthStore() {
     })
 
     if (user) {
-      const adminStore = get(admin)
       analytics
         .activate()
         .then(() => {
           analytics.identify(user._id)
-          analytics.showChat({
-            email: user.email,
-            created_at: (user.createdAt || Date.now()) / 1000,
-            name: user.account?.name,
-            user_id: user._id,
-            tenant: user.tenantId,
-            admin: user?.admin?.global,
-            builder: user?.builder?.global,
-            "Company size": user.account?.size,
-            "Job role": user.account?.profession,
-            cloud: adminStore.cloud,
-          })
+          analytics.showChat(
+            {
+              email: user.email,
+              created_at: (user.createdAt || Date.now()) / 1000,
+              name: user.account?.name,
+              user_id: user._id,
+              tenant: user.tenantId,
+              admin: user?.admin?.global,
+              builder: user?.builder?.global,
+              "Company size": user.account?.size,
+              "Job role": user.account?.profession,
+            },
+            !!user?.account
+          )
         })
         .catch(() => {
           // This request may fail due to browser extensions blocking requests
