@@ -67,6 +67,13 @@
   async function removeUser(id) {
     let newUsers = group.users.filter(user => user._id !== id)
     group.users = newUsers
+    let user = await users.get(id)
+
+    await users.save({
+      ...user,
+      userGroups: [],
+    })
+
     await groups.actions.save(group)
   }
 

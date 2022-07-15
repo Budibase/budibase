@@ -46,15 +46,15 @@
     .filter(x => {
       if ($userFetch.data?.roles) {
         return Object.keys($userFetch.data.roles).find(y => {
-          return x.appId === y
+          return x.appId === apps.extractAppId(y)
         })
       }
     })
     .map(app => {
       let roles = Object.fromEntries(
-        Object.entries($userFetch.data.roles).filter(
-          ([key]) => key === app.appId
-        )
+        Object.entries($userFetch.data.roles).filter(([key]) => {
+          return apps.extractAppId(key) === app.appId
+        })
       )
       return {
         name: app.name,
@@ -90,6 +90,7 @@
     Object.keys(roles).forEach(role => {
       let roleNumber = RoleUtils.getRolePriority(roles[role])
       if (roleNumber > highestRoleNumber) {
+        highestRoleNumber = roleNumber
         highestRole = roles[role]
       }
     })

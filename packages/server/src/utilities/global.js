@@ -12,8 +12,9 @@ const {
 } = require("@budibase/backend-core/tenancy")
 const env = require("../environment")
 const { getAppId } = require("@budibase/backend-core/context")
+const { groups } = require("@budibase/pro")
 
-exports.updateAppRole = (user, { appId } = {}) => {
+exports.updateAppRole = async (user, { appId } = {}) => {
   appId = appId || getAppId()
   if (!user || !user.roles) {
     return user
@@ -32,6 +33,9 @@ exports.updateAppRole = (user, { appId } = {}) => {
     user.roleId = BUILTIN_ROLE_IDS.ADMIN
   } else if (!user.roleId) {
     user.roleId = BUILTIN_ROLE_IDS.PUBLIC
+  } else if (user?.userGroups?.length) {
+    let roleId = await groups.getGroupRoleId(user, appId)
+    user.roleId = roleId
   }
   delete user.roles
   return user
