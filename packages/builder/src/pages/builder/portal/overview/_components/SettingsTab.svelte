@@ -58,16 +58,16 @@
         </Layout>
       </span>
       <span class="version-section">
-        <Layout gap="XS" paddingY="XXL" paddingX="">
+        <Layout gap="XS" noPadding>
           <Heading size="S">App version</Heading>
           <Divider />
           <Body>
             {#if updateAvailable}
-              <p class="version-status">
+              <Body>
                 The app is currently using version
                 <strong>{$store.version}</strong>
                 but version <strong>{clientPackage.version}</strong> is available.
-              </p>
+              </Body>
             {:else}
               <p class="version-status">
                 The app is currently using version
