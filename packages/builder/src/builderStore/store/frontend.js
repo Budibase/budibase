@@ -642,9 +642,11 @@ export const getFrontendStore = () => {
           }
         })
 
-        // Update state
         store.update(state => {
-          delete state.componentToPaste
+          // Remove copied component if cutting
+          if (state.componentToPaste.isCut) {
+            delete state.componentToPaste
+          }
           state.selectedComponentId = newComponentId
           return state
         })
