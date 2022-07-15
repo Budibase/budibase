@@ -39,7 +39,7 @@
     "sanitize-html": "^2.7.0",
     "screenfull": "^6.0.1",
     "shortid": "^2.2.15",
-    "svelte": "^3.38.2",
+    "svelte": "^3.49.0",
     "svelte-apexcharts": "^1.0.2",
     "svelte-flatpickr": "^3.1.0",
     "svelte-spa-router": "^3.0.5"
