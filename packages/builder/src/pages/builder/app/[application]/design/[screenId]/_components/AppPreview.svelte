@@ -85,6 +85,10 @@
     previewDevice: $store.previewDevice,
     messagePassing: $store.clientFeatures.messagePassing,
     navigation: $store.navigation,
+    hiddenComponentIds:
+      $store.componentToPaste?._id && $store.componentToPaste?.isCut
+        ? [$store.componentToPaste?._id]
+        : [],
     isBudibaseEvent: true,
   }
 

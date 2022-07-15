@@ -20,6 +20,7 @@ const loadBudibase = () => {
     customTheme: window["##BUDIBASE_PREVIEW_CUSTOM_THEME##"],
     previewDevice: window["##BUDIBASE_PREVIEW_DEVICE##"],
     navigation: window["##BUDIBASE_PREVIEW_NAVIGATION##"],
+    hiddenComponentIds: window["##BUDIBASE_HIDDEN_COMPONENT_IDS##"],
   })
 
   // Set app ID - this window flag is set by both the preview and the real
