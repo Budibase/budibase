@@ -1,5 +1,5 @@
 <script>
-  import { Layout, Table, Select, Pagination } from "@budibase/bbui"
+  import { Layout, Table, Select, Pagination, Link } from "@budibase/bbui"
   import DateTimeRenderer from "components/common/renderers/DateTimeRenderer.svelte"
   import StatusRenderer from "./StatusRenderer.svelte"
   import HistoryDetailsPanel from "./HistoryDetailsPanel.svelte"
@@ -7,11 +7,16 @@
   import { createPaginationStore } from "helpers/pagination"
   import { onMount } from "svelte"
   import dayjs from "dayjs"
+  import { auth, admin } from "stores/portal"
 
   const ERROR = "error",
     SUCCESS = "success",
     STOPPED = "stopped"
   export let app
+
+  $: licensePlan = $auth.user?.license?.plan
+  $: console.log($auth.user?.license)
+  $: upgradeUrl = `${$admin.accountPortalUrl}/portal/upgrade`
 
   let pageInfo = createPaginationStore()
   let runHistory = null
@@ -32,6 +37,20 @@
     { value: "15-m", label: "Past 15 mins" },
     { value: "5-m", label: "Past 5 mins" },
   ]
+
+  $: allowedTimeOptions = timeOptions.filter(option => {
+    option.value === "1-d" && licensePlan.type === "free"
+  })
+  $: console.log(allowedTimeOptions)
+
+  $: parsedOptions = timeOptions.reduce((acc, ele) => {
+    if (ele.value !== "1-d" && licensePlan.type === "free") {
+      ele = { ...ele, disabled: true }
+    }
+    acc.push(ele)
+    return acc
+  }, [])
+  $: console.log(parsedOptions)
 
   const statusOptions = [
     { value: SUCCESS, label: "Success" },
@@ -121,6 +140,12 @@
 <div class="root" class:panelOpen={showPanel}>
   <Layout paddingX="XL" gap="S" alignContent="start">
     <div class="search">
+      {#if licensePlan.type === "free"}
+        <div>
+          Upgrade your budibase installation to unlock additional features.
+          <Link size="L" href={upgradeUrl}>Pro</Link>
+        </div>
+      {/if}
       <div class="select">
         <Select
           placeholder="All automations"
@@ -131,10 +156,10 @@
       </div>
       <div class="select">
         <Select
-          placeholder="Past 30 days"
+          placeholder={allowedTimeOptions[0]?.label}
           label="Date range"
           bind:value={timeRange}
-          options={timeOptions}
+          options={parsedOptions}
         />
       </div>
       <div class="select">
