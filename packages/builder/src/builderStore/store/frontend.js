@@ -61,6 +61,12 @@ const INITIAL_FRONTEND_STATE = {
 export const getFrontendStore = () => {
   const store = writable({ ...INITIAL_FRONTEND_STATE })
 
+  // This is a fake implementation of a "patch" API endpoint to try and prevent
+  // 409s. All screen doc mutations (aside from creation) use this function,
+  // which queues up invocations sequentially and ensures pending mutations are
+  // always applied to the most up-to-date doc revision.
+  // This is slightly better than just a traditional "patch" endpoint and this
+  // supports deeply mutating the current doc rather than just appending data.
   const sequentialScreenPatch = Utils.sequential(async (patchFn, screenId) => {
     const state = get(store)
     const screen = state.screens.find(screen => screen._id === screenId)
@@ -73,10 +79,6 @@ export const getFrontendStore = () => {
       return
     }
     return await store.actions.screens.save(clone)
-  })
-
-  store.subscribe(() => {
-    console.log("new state")
   })
 
   store.actions = {
