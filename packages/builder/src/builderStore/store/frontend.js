@@ -292,35 +292,46 @@ export const getFrontendStore = () => {
           return state
         })
       },
-      updateHomeScreen: async (screen, makeHomeScreen = true) => {
-        if (!screen) {
+      updateSetting: async (screen, name, value) => {
+        if (!screen || !name) {
           return
         }
 
-        // Find any existing home screen for this role so we can remove it,
-        // if we are setting this to be the new home screen
-        if (makeHomeScreen) {
-          const roleId = screen.routing.roleId
-          let existingHomeScreen = get(store).screens.find(s => {
-            return (
-              s.routing.roleId === roleId &&
-              s.routing.homeScreen &&
-              s._id !== screen._id
-            )
-          })
-          if (existingHomeScreen) {
-            const patch = screen => {
-              screen.routing.homeScreen = false
-            }
-            await store.actions.screens.patch(patch, existingHomeScreen._id)
-          }
-        }
-
-        // Update the passed in screen
+        // Apply setting update
         const patch = screen => {
-          screen.routing.homeScreen = makeHomeScreen
+          if (!screen) {
+            return false
+          }
+          // Skip update if the value is the same
+          if (Helpers.deepGet(screen, name) === value) {
+            return false
+          }
+          Helpers.deepSet(screen, name, value)
         }
         await store.actions.screens.patch(patch, screen._id)
+
+        // Ensure we don't have more than one home screen for this new role.
+        // This could happen after updating multiple different settings.
+        const state = get(store)
+        const updatedScreen = state.screens.find(s => s._id === screen._id)
+        if (!updatedScreen) {
+          return
+        }
+        const otherHomeScreens = state.screens.filter(s => {
+          return (
+            s.routing.roleId === updatedScreen.routing.roleId &&
+            s.routing.homeScreen &&
+            s._id !== screen._id
+          )
+        })
+        if (otherHomeScreens.length) {
+          const patch = screen => {
+            screen.routing.homeScreen = false
+          }
+          for (let otherHomeScreen of otherHomeScreens) {
+            await store.actions.screens.patch(patch, otherHomeScreen._id)
+          }
+        }
       },
       removeCustomLayout: async screen => {
         // Pull relevant settings from old layout, if required
@@ -697,7 +708,7 @@ export const getFrontendStore = () => {
           component._conditions = conditions
         })
       },
-      updateProp: async (name, value) => {
+      updateSetting: async (name, value) => {
         await store.actions.components.patch(component => {
           if (!name || !component) {
             return false

@@ -138,7 +138,7 @@
           $goto("./components")
         }
       } else if (type === "update-prop") {
-        await store.actions.components.updateProp(data.prop, data.value)
+        await store.actions.components.updateSetting(data.prop, data.value)
       } else if (type === "delete-component" && data.id) {
         confirmDeleteComponent(data.id)
       } else if (type === "duplicate-component" && data.id) {

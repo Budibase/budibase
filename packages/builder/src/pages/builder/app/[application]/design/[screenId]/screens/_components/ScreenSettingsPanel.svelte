@@ -1,7 +1,7 @@
 <script>
   import Panel from "components/design/Panel.svelte"
   import { get } from "svelte/store"
-  import { get as deepGet, setWith } from "lodash"
+  import { Helpers } from "@budibase/bbui"
   import {
     Input,
     Layout,
@@ -67,19 +67,11 @@
       }
     }
 
-    // Home screen changes need to be handled manually
-    if (key === "routing.homeScreen") {
-      console.log(value)
-      await store.actions.screens.updateHomeScreen(get(selectedScreen), value)
-      return
-    }
-
     // Update screen setting
     try {
-      await store.actions.screens.patch(screen => {
-        setWith(screen, key.split("."), value, Object)
-      })
+      await store.actions.screens.updateSetting(get(selectedScreen), key, value)
     } catch (error) {
+      console.log(error)
       notifications.error("Error saving screen settings")
     }
   }
@@ -174,7 +166,7 @@
         control={setting.control}
         label={setting.label}
         key={setting.key}
-        value={deepGet($selectedScreen, setting.key)}
+        value={Helpers.deepGet($selectedScreen, setting.key)}
         onChange={val => setScreenSetting(setting, val)}
         props={{ ...setting.props, error: errors[setting.key] }}
         {bindings}
