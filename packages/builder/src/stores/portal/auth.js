@@ -54,6 +54,7 @@ export function createAuthStore() {
     })
 
     if (user) {
+      const adminStore = get(admin)
       analytics
         .activate()
         .then(() => {
@@ -68,6 +69,7 @@ export function createAuthStore() {
             builder: user?.builder?.global,
             "Company size": user.account?.size,
             "Job role": user.account?.profession,
+            cloud: adminStore.cloud,
           })
         })
         .catch(() => {
