@@ -1,6 +1,6 @@
 import { get, writable } from "svelte/store"
 import { cloneDeep } from "lodash/fp"
-import { currentAsset, selectedScreen, selectedComponent } from "builderStore"
+import { selectedScreen, selectedComponent } from "builderStore"
 import {
   datasources,
   integrations,
@@ -155,12 +155,12 @@ export const getFrontendStore = () => {
     theme: {
       save: async theme => {
         const appId = get(store).appId
-        await API.saveAppMetadata({
+        const app = await API.saveAppMetadata({
           appId,
           metadata: { theme },
         })
         store.update(state => {
-          state.theme = theme
+          state.theme = app.theme
           return state
         })
       },
@@ -168,12 +168,12 @@ export const getFrontendStore = () => {
     customTheme: {
       save: async customTheme => {
         const appId = get(store).appId
-        await API.saveAppMetadata({
+        const app = await API.saveAppMetadata({
           appId,
           metadata: { customTheme },
         })
         store.update(state => {
-          state.customTheme = customTheme
+          state.customTheme = app.customTheme
           return state
         })
       },
@@ -181,12 +181,12 @@ export const getFrontendStore = () => {
     navigation: {
       save: async navigation => {
         const appId = get(store).appId
-        await API.saveAppMetadata({
+        const app = await API.saveAppMetadata({
           appId,
           metadata: { navigation },
         })
         store.update(state => {
-          state.navigation = navigation
+          state.navigation = app.navigation
           return state
         })
       },
@@ -407,7 +407,7 @@ export const getFrontendStore = () => {
         }
         if (componentName.endsWith("/formstep")) {
           const parentForm = findClosestMatchingComponent(
-            get(currentAsset).props,
+            get(selectedScreen).props,
             get(selectedComponent)._id,
             component => component._component.endsWith("/form")
           )
