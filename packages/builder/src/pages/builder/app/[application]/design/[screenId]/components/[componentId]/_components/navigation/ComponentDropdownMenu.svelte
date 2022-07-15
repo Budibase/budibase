@@ -1,8 +1,6 @@
 <script>
-  import { get } from "svelte/store"
-  import { store, currentAsset } from "builderStore"
+  import { store } from "builderStore"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import { findComponentParent } from "builderStore/componentUtils"
   import { ActionMenu, MenuItem, Icon, notifications } from "@budibase/bbui"
 
   export let component
