@@ -583,7 +583,7 @@ export const getFrontendStore = () => {
           }
         }
       },
-      paste: async (targetComponent, mode) => {
+      paste: async (targetComponent, mode, targetScreen) => {
         const state = get(store)
         if (!state.componentToPaste) {
           return
@@ -591,7 +591,7 @@ export const getFrontendStore = () => {
         let newComponentId
 
         // Patch screen
-        await store.actions.screens.patch(screen => {
+        const patch = screen => {
           // Get up to date ref to target
           targetComponent = findComponent(screen.props, targetComponent._id)
           if (!targetComponent) {
@@ -640,13 +640,16 @@ export const getFrontendStore = () => {
             const index = mode === "above" ? targetIndex : targetIndex + 1
             parent._children.splice(index, 0, componentToPaste)
           }
-        })
+        }
+        const targetScreenId = targetScreen?._id || state.selectedScreenId
+        await store.actions.screens.patch(patch, targetScreenId)
 
         store.update(state => {
           // Remove copied component if cutting
           if (state.componentToPaste.isCut) {
             delete state.componentToPaste
           }
+          state.selectedScreenId = targetScreenId
           state.selectedComponentId = newComponentId
           return state
         })
