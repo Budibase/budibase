@@ -309,13 +309,17 @@ export const getFrontendStore = () => {
             )
           })
           if (existingHomeScreen) {
-            const patch = screen => (screen.routing.homeScreen = false)
+            const patch = screen => {
+              screen.routing.homeScreen = false
+            }
             await store.actions.screens.patch(patch, existingHomeScreen._id)
           }
         }
 
         // Update the passed in screen
-        const patch = screen => (screen.routing.homeScreen = makeHomeScreen)
+        const patch = screen => {
+          screen.routing.homeScreen = makeHomeScreen
+        }
         await store.actions.screens.patch(patch, screen._id)
       },
       removeCustomLayout: async screen => {
