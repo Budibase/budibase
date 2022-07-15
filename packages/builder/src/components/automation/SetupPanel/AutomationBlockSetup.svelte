@@ -41,7 +41,6 @@
   let fillWidth = true
   let codeBindingOpen = false
 
-  $: console.log(block)
   $: stepId = block.stepId
   $: bindings = getAvailableBindings(
     block || $automationStore.selectedBlock,
