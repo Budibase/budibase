@@ -41,6 +41,7 @@
   let fillWidth = true
   let codeBindingOpen = false
 
+  $: console.log(block)
   $: stepId = block.stepId
   $: bindings = getAvailableBindings(
     block || $automationStore.selectedBlock,
@@ -54,6 +55,7 @@
   $: schema = getSchemaForTable(tableId, { searchableSchema: true }).schema
   $: schemaFields = Object.values(schema || {})
   $: queryLimit = tableId?.includes("datasource") ? "∞" : "1000"
+  $: isTrigger = block?.type === "TRIGGER"
 
   const onChange = Utils.sequential(async (e, key) => {
     try {
@@ -261,6 +263,7 @@
         />
       {:else if value.customType === "table"}
         <TableSelector
+          {isTrigger}
           value={inputData[key]}
           on:change={e => onChange(e, key)}
         />
