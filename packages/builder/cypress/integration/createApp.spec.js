@@ -100,24 +100,18 @@ filterTests(['smoke', 'all'], () => {
     })
 
     it("should create the first application from scratch, using the users first name as the default app name", () => {
-      cy.visit(`${Cypress.config().baseUrl}/builder`)
+      cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 5000 })
 
       cy.updateUserInformation("Ted", "Userman")
       
       cy.createApp("", false)
-
-      cy.visit(`${Cypress.config().baseUrl}/builder`)
-
       cy.applicationInAppTable("Teds app")
       cy.deleteApp("Teds app")
 
-      //Accomodate names that end in 'S'
+      // Accomodate names that end in 'S'
       cy.updateUserInformation("Chris", "Userman")
       
       cy.createApp("", false)
-
-      cy.visit(`${Cypress.config().baseUrl}/builder`)
-
       cy.applicationInAppTable("Chris app")
       cy.deleteApp("Chris app")
 
