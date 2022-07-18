@@ -161,7 +161,7 @@ class Orchestrator {
         let originalStepInput = cloneDeep(step.inputs)
 
         // Handle if the user has set a max iteration count or if it reaches the max limit set by us
-        if (loopStep) {
+        if (loopStep && input.binding) {
           let newInput = await processObject(
             loopStep.inputs,
             cloneDeep(this._context)
