@@ -43,7 +43,7 @@ filterTests(["smoke", "all"], () => {
                 const uuid = () => Cypress._.random(0, 1e6)
                 const name = uuid()
                 if(i < 1){
-                  cy.createApp(name)
+                  cy.createApp(name, false)
                 } else {
                   cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 5000})
                   cy.wait(1000)
@@ -56,7 +56,7 @@ filterTests(["smoke", "all"], () => {
         // Navigate back to the user
         cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 5000})
         cy.get(interact.SPECTRUM_SIDENAV).contains("Users").click()
-        cy.get(interact.SPECTRUM_TABLE, { timeout: 500 }).contains("bbuser").click()
+        cy.get(interact.SPECTRUM_TABLE, { timeout: 1000 }).contains("bbuser").click()
         for (let i = 0; i < 3; i++) {
           cy.get(interact.SPECTRUM_TABLE, { timeout: 3000})
             .eq(1)
@@ -65,24 +65,24 @@ filterTests(["smoke", "all"], () => {
             .find(interact.SPECTRUM_TABLE_CELL)
             .eq(0)
             .click()
-          cy.get(interact.SPECTRUM_DIALOG_GRID, { timeout: 500 })
+          cy.get(interact.SPECTRUM_DIALOG_GRID, { timeout: 1000 })
             .contains("Choose an option")
             .click()
             .then(() => {
               if (i == 0) {
-                cy.get(interact.SPECTRUM_MENU, { timeout: 1000 }).contains("Admin").click({ force: true })
+                cy.get(interact.SPECTRUM_MENU, { timeout: 2000 }).contains("Admin").click({ force: true })
               }
               else if (i == 1) {
-                cy.get(interact.SPECTRUM_MENU, { timeout: 1000 }).contains("Power").click({ force: true })
+                cy.get(interact.SPECTRUM_MENU, { timeout: 2000 }).contains("Power").click({ force: true })
               }
               else if (i == 2) {
-                cy.get(interact.SPECTRUM_MENU, { timeout: 1000 }).contains("Basic").click({ force: true })
+                cy.get(interact.SPECTRUM_MENU, { timeout: 2000 }).contains("Basic").click({ force: true })
               }
-              cy.get(interact.SPECTRUM_BUTTON, { timeout: 1000 })
+              cy.get(interact.SPECTRUM_BUTTON, { timeout: 2000 })
                 .contains("Update role")
                 .click({ force: true })
             })
-            cy.reload()
+            cy.reload({ timeout: 5000 })
             cy.wait(1000)
         }
         // Confirm roles exist within Configure roles table

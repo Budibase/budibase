@@ -2,7 +2,7 @@ import PostHog from "posthog-node"
 import { Event, Identity, Group, BaseEvent } from "@budibase/types"
 import { EventProcessor } from "./types"
 import env from "../../environment"
-import context from "../../context"
+import * as context from "../../context"
 const pkg = require("../../../package.json")
 
 export default class PosthogProcessor implements EventProcessor {

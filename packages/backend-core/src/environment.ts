@@ -40,7 +40,7 @@ const env = {
   DISABLE_ACCOUNT_PORTAL: process.env.DISABLE_ACCOUNT_PORTAL,
   SELF_HOSTED: !!parseInt(process.env.SELF_HOSTED || ""),
   COOKIE_DOMAIN: process.env.COOKIE_DOMAIN,
-  PLATFORM_URL: process.env.PLATFORM_URL,
+  PLATFORM_URL: process.env.PLATFORM_URL || "",
   POSTHOG_TOKEN: process.env.POSTHOG_TOKEN,
   ENABLE_ANALYTICS: process.env.ENABLE_ANALYTICS,
   TENANT_FEATURE_FLAGS: process.env.TENANT_FEATURE_FLAGS,
@@ -54,6 +54,7 @@ const env = {
   DISABLE_DEVELOPER_LICENSE: process.env.DISABLE_DEVELOPER_LICENSE,
   DEFAULT_LICENSE: process.env.DEFAULT_LICENSE,
   SERVICE: process.env.SERVICE || "budibase",
+  MEMORY_LEAK_CHECK: process.env.MEMORY_LEAK_CHECK || false,
   DEPLOYMENT_ENVIRONMENT:
     process.env.DEPLOYMENT_ENVIRONMENT || "docker-compose",
   _set(key: any, value: any) {

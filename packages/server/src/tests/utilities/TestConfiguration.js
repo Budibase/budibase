@@ -106,21 +106,31 @@ class TestConfiguration {
 
   // UTILS
 
-  async _req(config, params, controlFunc) {
+  async _req(body, params, controlFunc, opts = { prodApp: false }) {
+    // create a fake request ctx
     const request = {}
+
+    // set the app id
+    let appId
+    if (opts.prodApp) {
+      appId = this.prodAppId
+    } else {
+      appId = this.appId
+    }
+    request.appId = appId
+
     // fake cookies, we don't need them
     request.cookies = { set: () => {}, get: () => {} }
     request.config = { jwtSecret: env.JWT_SECRET }
-    request.appId = this.appId
-    request.user = { appId: this.appId, tenantId: TENANT_ID }
+    request.user = { appId, tenantId: TENANT_ID }
     request.query = {}
     request.request = {
-      body: config,
+      body,
     }
-    return this.doInContext(this.appId, async () => {
-      if (params) {
-        request.params = params
-      }
+    if (params) {
+      request.params = params
+    }
+    return this.doInContext(appId, async () => {
       await controlFunc(request)
       return request.body
     })
@@ -323,7 +333,6 @@ class TestConfiguration {
 
     // create production app
     this.prodApp = await this.deploy()
-    this.prodAppId = this.prodApp.appId
 
     this.allApps.push(this.prodApp)
     this.allApps.push(this.app)
@@ -334,11 +343,13 @@ class TestConfiguration {
   async deploy() {
     await this._req(null, null, controllers.deploy.deployApp)
     const prodAppId = this.getAppId().replace("_dev", "")
+    this.prodAppId = prodAppId
     return context.doInAppContext(prodAppId, async () => {
       const appPackage = await this._req(
         null,
         { appId: prodAppId },
-        controllers.app.fetchAppPackage
+        controllers.app.fetchAppPackage,
+        { prodApp: true }
       )
       return appPackage.application
     })

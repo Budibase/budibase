@@ -55,7 +55,7 @@
   }
 </script>
 
-<Button secondary on:click={publishModal.show}>Publish</Button>
+<Button cta on:click={publishModal.show}>Publish</Button>
 <Modal bind:this={feedbackModal}>
   <ModalContent
     title="Enjoying Budibase?"

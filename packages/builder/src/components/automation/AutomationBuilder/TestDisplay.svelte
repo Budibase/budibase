@@ -67,27 +67,20 @@
           {/if}
 
           <div class="tabs">
-            <Tabs quiet noPadding selected="Input">
+            <Tabs noHorizPadding selected="Input">
               <Tab title="Input">
-                <div style="padding: 10px 10px 10px 10px;">
-                  <TextArea
-                    minHeight="80px"
-                    disabled
-                    value={textArea(filteredResults?.[idx]?.inputs, "No input")}
-                  />
-                </div></Tab
-              >
+                <TextArea
+                  minHeight="80px"
+                  disabled
+                  value={textArea(filteredResults?.[idx]?.inputs, "No input")}
+                />
+              </Tab>
               <Tab title="Output">
-                <div style="padding: 10px 10px 10px 10px;">
-                  <TextArea
-                    minHeight="100px"
-                    disabled
-                    value={textArea(
-                      filteredResults?.[idx]?.outputs,
-                      "No output"
-                    )}
-                  />
-                </div>
+                <TextArea
+                  minHeight="100px"
+                  disabled
+                  value={textArea(filteredResults?.[idx]?.outputs, "No output")}
+                />
               </Tab>
             </Tabs>
           </div>
@@ -113,6 +106,7 @@
     align-items: stretch;
     position: relative;
     flex: 1 1 auto;
+    padding: 0 var(--spacing-xl) var(--spacing-xl) var(--spacing-xl);
   }
 
   .block {
