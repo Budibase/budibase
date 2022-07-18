@@ -31,9 +31,8 @@ export const allUsers = async () => {
 
 export const paginatedUsers = async ({
   page,
-  email,
-  appId,
-}: { page?: string; email?: string; appId?: string } = {}) => {
+  search,
+}: { page?: string; search?: string } = {}) => {
   const db = tenancy.getGlobalDB()
   // get one extra document, to have the next page
   const opts: any = {
@@ -45,24 +44,19 @@ export const paginatedUsers = async ({
     opts.startkey = page
   }
   // property specifies what to use for the page/anchor
-  let userList,
-    property = "_id",
-    getKey
-  if (appId) {
-    userList = await usersCore.searchGlobalUsersByApp(appId, opts)
-    getKey = (doc: any) => usersCore.getGlobalUserByAppPage(appId, doc)
-  } else if (email) {
-    userList = await usersCore.searchGlobalUsersByEmail(email, opts)
-    property = "email"
-  } else {
-    // no search, query allDocs
+  let userList, property
+  // no search, query allDocs
+  if (!search) {
     const response = await db.allDocs(dbUtils.getGlobalUserParams(null, opts))
     userList = response.rows.map((row: any) => row.doc)
+    property = "_id"
+  } else {
+    userList = await usersCore.searchGlobalUsersByEmail(search, opts)
+    property = "email"
   }
   return dbUtils.pagination(userList, PAGE_LIMIT, {
     paginate: true,
     property,
-    getKey,
   })
 }
 
