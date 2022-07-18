@@ -18,8 +18,6 @@
 
   let versionModal
   let updatingModal
-  let selfHostPath =
-    "https://docs.budibase.com/docs/hosting-methods#self-host-budibase"
 
   $: updateAvailable = clientPackage.version !== $store.version
   $: appUrl = `${window.origin}/app${app?.url}`
@@ -60,16 +58,16 @@
         </Layout>
       </span>
       <span class="version-section">
-        <Layout gap="XS" paddingY="XXL" paddingX="">
+        <Layout gap="XS" noPadding>
           <Heading size="S">App version</Heading>
           <Divider />
           <Body>
             {#if updateAvailable}
-              <p class="version-status">
+              <Body>
                 The app is currently using version
                 <strong>{$store.version}</strong>
                 but version <strong>{clientPackage.version}</strong> is available.
-              </p>
+              </Body>
             {:else}
               <p class="version-status">
                 The app is currently using version
@@ -82,24 +80,6 @@
 
             <div class="page-action">
               <Button cta on:click={versionModal.show()}>Update app</Button>
-            </div>
-          </Body>
-        </Layout>
-      </span>
-      <span class="selfhost-section">
-        <Layout gap="XS" paddingY="XXL" paddingX="">
-          <Heading size="S">Self-host Budibase</Heading>
-          <Divider />
-          <Body>
-            Self-host Budibase for free to get unlimited apps and more - and it
-            only takes a few minutes!
-            <div class="page-action">
-              <Button
-                secondary
-                on:click={() => {
-                  window.open(selfHostPath, "_blank")
-                }}>Self-host Budibase</Button
-              >
             </div>
           </Body>
         </Layout>

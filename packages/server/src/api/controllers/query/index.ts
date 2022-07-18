@@ -1,5 +1,5 @@
 import { generateQueryID, getQueryParams, isProdAppID } from "../../../db/utils"
-import { BaseQueryVerbs } from "../../../constants"
+import { BaseQueryVerbs, FieldTypes } from "../../../constants"
 import { Thread, ThreadType } from "../../../threads"
 import { save as saveDatasource } from "../datasource"
 import { RestImporter } from "./import"
@@ -154,10 +154,37 @@ export async function preview(ctx: any) {
         },
       })
     const { rows, keys, info, extra } = await quotas.addQuery(runFn)
+    const schemaFields: any = {}
+    if (rows?.length > 0) {
+      for (let key of [...new Set(keys)] as string[]) {
+        const field = rows[0][key]
+        let type = typeof field,
+          fieldType = FieldTypes.STRING
+        if (field)
+          switch (type) {
+            case "boolean":
+              schemaFields[key] = FieldTypes.BOOLEAN
+              break
+            case "object":
+              if (field instanceof Date) {
+                fieldType = FieldTypes.DATETIME
+              } else if (Array.isArray(field)) {
+                fieldType = FieldTypes.ARRAY
+              } else {
+                fieldType = FieldTypes.JSON
+              }
+              break
+            case "number":
+              fieldType = FieldTypes.NUMBER
+              break
+          }
+        schemaFields[key] = fieldType
+      }
+    }
     await events.query.previewed(datasource, query)
     ctx.body = {
       rows,
-      schemaFields: [...new Set(keys)],
+      schemaFields,
       info,
       extra,
     }
@@ -166,14 +193,19 @@ export async function preview(ctx: any) {
   }
 }
 
-async function execute(ctx: any, opts = { rowsOnly: false }) {
+async function execute(
+  ctx: any,
+  opts: any = { rowsOnly: false, isAutomation: false }
+) {
   const db = getAppDB()
 
   const query = await db.get(ctx.params.queryId)
   const datasource = await db.get(query.datasourceId)
 
-  const authConfigCtx: any = getAuthConfig(ctx)
-
+  let authConfigCtx: any = {}
+  if (!opts.isAutomation) {
+    authConfigCtx = getAuthConfig(ctx)
+  }
   const enrichedParameters = ctx.request.body.parameters || {}
   // make sure parameters are fully enriched with defaults
   if (query && query.parameters) {
@@ -217,8 +249,11 @@ export async function executeV1(ctx: any) {
   return execute(ctx, { rowsOnly: true })
 }
 
-export async function executeV2(ctx: any) {
-  return execute(ctx, { rowsOnly: false })
+export async function executeV2(
+  ctx: any,
+  { isAutomation }: { isAutomation?: boolean } = {}
+) {
+  return execute(ctx, { rowsOnly: false, isAutomation })
 }
 
 const removeDynamicVariables = async (queryId: any) => {

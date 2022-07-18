@@ -11,12 +11,19 @@ export enum AutomationViewModes {
 }
 
 export enum ViewNames {
-  USER_BY_EMAIL = "by_email",
+  USER_BY_EMAIL = "by_email2",
   BY_API_KEY = "by_api_key",
   USER_BY_BUILDERS = "by_builders",
   LINK = "by_link",
   ROUTING = "screen_routes",
   AUTOMATION_LOGS = "automation_logs",
+}
+
+export const DeprecatedViews = {
+  [ViewNames.USER_BY_EMAIL]: [
+    // removed due to inaccuracy in view doc filter logic
+    "by_email",
+  ],
 }
 
 export enum DocumentTypes {
