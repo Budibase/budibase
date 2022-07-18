@@ -5,13 +5,17 @@
  * @return {Promise} a sequential version of the function
  */
 export const sequential = fn => {
-  let promise
+  let queue = []
   return async (...params) => {
-    if (promise) {
-      await promise
+    queue.push(async () => {
+      await fn(...params)
+      queue.shift()
+      if (queue.length) {
+        await queue[0]()
+      }
+    })
+    if (queue.length === 1) {
+      await queue[0]()
     }
-    promise = fn(...params)
-    await promise
-    promise = null
   }
 }
