@@ -7,13 +7,13 @@
   resolved "https://registry.yarnpkg.com/@adobe/spectrum-css-workflow-icons/-/spectrum-css-workflow-icons-1.5.4.tgz#0e09ff519c36139176c3ba3ce617a995c9032f67"
   integrity sha512-sZ19YOLGw5xTZzCEkVXPjf53lXVzo063KmDTJjpSjy/XLVsF+RaX0b436SfSM4hsIUZ7n27+UsbOvzFaFjcYXw==
 
-"@budibase/bbui@^1.1.10-alpha.3":
-  version "1.1.11"
-  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-1.1.11.tgz#513e4fd496fb25660e9edd970c2638c8ad54efc4"
-  integrity sha512-iRToMtMyfW3atUtNYYtec59tTw6mFFvv4DKcUBWfGqxbeh2+mR5Iy3jmW9eGOFqd8yU/7ml6o7F6cI6J75WGUw==
+"@budibase/bbui@^1.1.15-alpha.1":
+  version "1.1.15"
+  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-1.1.15.tgz#043ece1537e0810a3c71ab5fd13382f74c88181d"
+  integrity sha512-Cta9kVmgbd3PBxu3HiCthovpx08IotdYv5tVQutqsRKOh4xhCArdk9u2xYSI8iXQoi7U+2aevpH/U4XGAg6huA==
   dependencies:
     "@adobe/spectrum-css-workflow-icons" "^1.2.1"
-    "@budibase/string-templates" "^1.1.11"
+    "@budibase/string-templates" "^1.1.15"
     "@spectrum-css/actionbutton" "^1.0.1"
     "@spectrum-css/actiongroup" "^1.0.1"
     "@spectrum-css/avatar" "^3.0.2"
@@ -85,10 +85,10 @@
     to-gfm-code-block "^0.1.1"
     year "^0.2.1"
 
-"@budibase/string-templates@^1.1.11":
-  version "1.1.11"
-  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-1.1.11.tgz#7466b7e10f96e4eb45ccf39bafd4a511abba2e49"
-  integrity sha512-yDj4rkmzWs0yn8r3cUYEkpJX3yqK2zHrBw0cNN7L3cUwX+MJsOgLAt9J7sub0nUmQJR2+ookjP3bysYc7N7v3Q==
+"@budibase/string-templates@^1.1.15":
+  version "1.1.15"
+  resolved "https://registry.yarnpkg.com/@budibase/string-templates/-/string-templates-1.1.15.tgz#14e7e0c84f08c091049fa6bed1cd527b8c199975"
+  integrity sha512-hXMIohvVlpj/l/jrWIlNb1Hqyjmbi95yvOiFigTq9Js6xfV7ugmuP0c4IOQB8hb4zYhud4A+WqhxC5WVUebYiA==
   dependencies:
     "@budibase/handlebars-helpers" "^0.11.8"
     dayjs "^1.10.4"
