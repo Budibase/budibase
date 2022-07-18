@@ -13,7 +13,7 @@ import deprovisioning from "./context/deprovision"
 import auth from "./auth"
 import constants from "./constants"
 import * as dbConstants from "./db/constants"
-import logging from "./logging"
+import * as logging from "./logging"
 
 // mimic the outer package exports
 import * as db from "./pkg/db"

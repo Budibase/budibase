@@ -26,6 +26,11 @@ export const DeprecatedViews = {
   ],
 }
 
+export type GlobalViewName =
+  | ViewNames.USER_BY_EMAIL
+  | ViewNames.BY_API_KEY
+  | ViewNames.USER_BY_BUILDERS
+
 export enum DocumentTypes {
   USER = "us",
   WORKSPACE = "workspace",

@@ -56,6 +56,7 @@ router
   )
   .use(currentApp)
   .use(pro.licensing())
+  .use(pro.activity())
   .use(auditLog)
 
 // error handling middleware
