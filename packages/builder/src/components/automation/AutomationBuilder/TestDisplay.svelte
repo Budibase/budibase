@@ -1,6 +1,7 @@
 <script>
   import { Icon, Divider, Tabs, Tab, TextArea, Label } from "@budibase/bbui"
   import FlowItemHeader from "./FlowChart/FlowItemHeader.svelte"
+  import { ActionStepID } from "constants/backend/automations"
 
   export let automation
   export let testResults
@@ -10,7 +11,7 @@
   let blocks
 
   function prepTestResults(results) {
-    return results?.steps.filter(x => x.stepId !== "LOOP" || [])
+    return results?.steps.filter(x => x.stepId !== ActionStepID.LOOP || [])
   }
 
   function textArea(results, message) {
@@ -30,7 +31,7 @@
       }
       blocks = blocks
         .concat(automation.definition.steps || [])
-        .filter(x => x.stepId !== "LOOP")
+        .filter(x => x.stepId !== ActionStepID.LOOP)
     } else if (filteredResults) {
       blocks = filteredResults || []
       // make sure there is an ID for each block being displayed
@@ -45,7 +46,7 @@
 <div class="container">
   {#each blocks as block, idx}
     <div class="block" style={width ? `width: ${width}` : ""}>
-      {#if block.stepId !== "LOOP"}
+      {#if block.stepId !== ActionStepID.LOOP}
         <FlowItemHeader
           showTestStatus={true}
           bind:showParameters
