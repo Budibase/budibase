@@ -63,7 +63,7 @@
 
 <style>
   .spectrum-Popover {
-    min-width: var(--spectrum-global-dimension-size-2000) !important;
+    min-width: var(--spectrum-global-dimension-size-2000);
   }
   .spectrum-Popover.is-open.spectrum-Popover--withTip {
     margin-top: var(--spacing-xs);
