@@ -15,7 +15,7 @@ import {
   accounts,
   migrations,
 } from "@budibase/backend-core"
-import { MigrationType } from "@budibase/types"
+import { MigrationType, User } from "@budibase/types"
 
 const PAGE_LIMIT = 8
 
@@ -88,7 +88,7 @@ interface SaveUserOpts {
 }
 
 export const save = async (
-  user: any,
+  user: User,
   opts: SaveUserOpts = {
     hashPassword: true,
     requirePassword: true,
@@ -99,9 +99,9 @@ export const save = async (
   const db = tenancy.getGlobalDB()
   let { email, password, _id } = user
   // make sure another user isn't using the same email
-  let dbUser: any
+  let dbUser: User | undefined
   if (opts.bulkCreate) {
-    dbUser = null
+    dbUser = undefined
   } else if (email) {
     // check budibase users inside the tenant
     dbUser = await usersCore.getGlobalUserByEmail(email)

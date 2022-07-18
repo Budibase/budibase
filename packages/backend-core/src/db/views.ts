@@ -1,10 +1,13 @@
-const {
+import {
   DocumentTypes,
   ViewNames,
+  GlobalViewName,
   DeprecatedViews,
   SEPARATOR,
-} = require("./utils")
-const { getGlobalDB } = require("../tenancy")
+} from "./utils"
+import { getGlobalDB } from "../tenancy"
+import PouchDB from "pouchdb"
+import { Document } from "@budibase/types"
 
 const DESIGN_DB = "_design/database"
 
@@ -17,12 +20,18 @@ function DesignDoc() {
   }
 }
 
-async function removeDeprecated(db, viewName) {
+interface DesignDocument {
+  views: any
+}
+
+async function removeDeprecated(db: PouchDB.Database, viewName: ViewNames) {
+  // @ts-ignore
   if (!DeprecatedViews[viewName]) {
     return
   }
   try {
-    const designDoc = await db.get(DESIGN_DB)
+    const designDoc = await db.get<DesignDocument>(DESIGN_DB)
+    // @ts-ignore
     for (let deprecatedNames of DeprecatedViews[viewName]) {
       delete designDoc.views[deprecatedNames]
     }
@@ -32,7 +41,7 @@ async function removeDeprecated(db, viewName) {
   }
 }
 
-exports.createNewUserEmailView = async () => {
+export const createNewUserEmailView = async () => {
   const db = getGlobalDB()
   let designDoc
   try {
@@ -56,7 +65,7 @@ exports.createNewUserEmailView = async () => {
   await db.put(designDoc)
 }
 
-exports.createApiKeyView = async () => {
+export const createApiKeyView = async () => {
   const db = getGlobalDB()
   let designDoc
   try {
@@ -78,7 +87,7 @@ exports.createApiKeyView = async () => {
   await db.put(designDoc)
 }
 
-exports.createUserBuildersView = async () => {
+export const createUserBuildersView = async () => {
   const db = getGlobalDB()
   let designDoc
   try {
@@ -101,28 +110,32 @@ exports.createUserBuildersView = async () => {
   await db.put(designDoc)
 }
 
-exports.queryGlobalView = async (viewName, params, db = null) => {
+export const queryGlobalView = async <T extends Document>(
+  viewName: GlobalViewName,
+  params: PouchDB.Query.Options<T, T>,
+  db?: PouchDB.Database
+): Promise<T[] | T | undefined> => {
   const CreateFuncByName = {
-    [ViewNames.USER_BY_EMAIL]: exports.createNewUserEmailView,
-    [ViewNames.BY_API_KEY]: exports.createApiKeyView,
-    [ViewNames.USER_BY_BUILDERS]: exports.createUserBuildersView,
+    [ViewNames.USER_BY_EMAIL]: createNewUserEmailView,
+    [ViewNames.BY_API_KEY]: createApiKeyView,
+    [ViewNames.USER_BY_BUILDERS]: createUserBuildersView,
   }
   // can pass DB in if working with something specific
   if (!db) {
-    db = getGlobalDB()
+    db = getGlobalDB() as PouchDB.Database
   }
+
   try {
-    let response = (await db.query(`database/${viewName}`, params)).rows
-    response = response.map(resp =>
-      params.include_docs ? resp.doc : resp.value
-    )
-    return response.length <= 1 ? response[0] : response
-  } catch (err) {
+    const response = await db.query<T, T>(`database/${viewName}`, params)
+    const rows = response.rows
+    const docs = rows.map(row => (params.include_docs ? row.doc : row.value))
+    return docs.length <= 1 ? docs[0] : docs
+  } catch (err: any) {
     if (err != null && err.name === "not_found") {
       const createFunc = CreateFuncByName[viewName]
       await removeDeprecated(db, viewName)
       await createFunc()
-      return exports.queryGlobalView(viewName, params)
+      return queryGlobalView(viewName, params)
     } else {
       throw err
     }

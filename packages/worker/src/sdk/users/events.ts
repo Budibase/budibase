@@ -1,6 +1,7 @@
 import env from "../../environment"
 import { events, accounts, tenancy } from "@budibase/backend-core"
 import { User, UserRoles, CloudAccount } from "@budibase/types"
+import { users as pro } from "@budibase/pro"
 
 export const handleDeleteEvents = async (user: any) => {
   await events.user.deleted(user)
@@ -51,7 +52,10 @@ const handleAppRoleEvents = async (user: any, existingUser: any) => {
   await unassignAppRoleEvents(user, roles, existingRoles)
 }
 
-export const handleSaveEvents = async (user: any, existingUser: any) => {
+export const handleSaveEvents = async (
+  user: User,
+  existingUser: User | undefined
+) => {
   const tenantId = tenancy.getTenantId()
   let tenantAccount: CloudAccount | undefined
   if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
@@ -79,6 +83,7 @@ export const handleSaveEvents = async (user: any, existingUser: any) => {
     }
   } else {
     await events.user.created(user)
+    await pro.createAccountUser(user)
   }
 
   if (isAddingBuilder(user, existingUser)) {
