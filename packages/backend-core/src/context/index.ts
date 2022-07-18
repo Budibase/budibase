@@ -67,6 +67,7 @@ export const getTenantIDFromAppID = (appId: string) => {
 
 // used for automations, API endpoints should always be in context already
 export const doInTenant = (tenantId: string | null, task: any) => {
+  tenantId = tenantId || DEFAULT_TENANT_ID
   // the internal function is so that we can re-use an existing
   // context - don't want to close DB on a parent context
   async function internal(opts = { existing: false }) {
