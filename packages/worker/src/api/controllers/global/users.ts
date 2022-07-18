@@ -3,7 +3,7 @@ import { checkInviteCode } from "../../../utilities/redis"
 import { sendEmail } from "../../../utilities/email"
 import { users } from "../../../sdk"
 import env from "../../../environment"
-import { User, CloudAccount } from "@budibase/types"
+import { User, CloudAccount, UserGroup } from "@budibase/types"
 import {
   events,
   errors,
@@ -24,53 +24,54 @@ export const save = async (ctx: any) => {
 
 export const bulkSave = async (ctx: any) => {
   let { users: newUsersRequested, groups } = ctx.request.body
-  let usersToSave: any[] = []
   let groupsToSave: any[] = []
   const newUsers: any[] = []
   const db = tenancy.getGlobalDB()
   const currentUserEmails =
     (await users.allUsers())?.map((x: any) => x.email) || []
-
   for (const newUser of newUsersRequested) {
     if (
       newUsers.find((x: any) => x.email === newUser.email) ||
       currentUserEmails.includes(newUser.email)
     )
       continue
-
+    newUser.userGroups = groups
     newUsers.push(newUser)
   }
 
-  newUsers.forEach((user: any) => {
-    usersToSave.push(
-      users.save(user, {
+  if (groups.length) {
+    groups.forEach(async (groupId: string) => {
+      let oldGroup = await db.get(groupId)
+      groupsToSave.push(oldGroup)
+    })
+  }
+
+  try {
+    let response = []
+    for (const user of newUsers) {
+      response = await users.save(user, {
         hashPassword: true,
         requirePassword: user.requirePassword,
-        bulkCreate: true,
-      })
-    )
-
-    if (groups.length) {
-      groups.forEach(async (groupId: string) => {
-        let oldGroup = await db.get(groupId)
-        groupsToSave.push(oldGroup)
+        bulkCreate: false,
       })
     }
-  })
-  try {
-    const allUsers = await Promise.all(usersToSave)
-    let response = await db.bulkDocs(allUsers)
 
     // delete passwords and add to group
-    allUsers.forEach(user => {
+    newUsers.forEach(user => {
       delete user.password
     })
 
-    if (groupsToSave.length)
-      groupsToSave.forEach(async group => {
-        group.users = [...group.users, ...allUsers]
-        await db.put(group)
+    if (groupsToSave.length) {
+      groupsToSave.forEach(async (userGroup: UserGroup) => {
+        userGroup.users = [...userGroup.users, ...newUsers]
+        await db.put(userGroup)
+        events.group.usersAdded(
+          newUsers.map(u => u.email),
+          userGroup
+        )
+        events.group.createdOnboarding(userGroup._id as string)
       })
+    }
 
     ctx.body = response
   } catch (err: any) {

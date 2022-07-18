@@ -13,6 +13,7 @@ export interface User extends Document {
   providerType?: string
   password?: string
   status?: string
+
   createdAt?: number // override the default createdAt behaviour - users sdk historically set this to Date.now()
 }
 

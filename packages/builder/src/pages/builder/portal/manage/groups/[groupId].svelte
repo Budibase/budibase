@@ -53,7 +53,7 @@
 
     let user = await users.get(id)
 
-    let userGroups = user.groups || []
+    let userGroups = user.userGroups || []
     userGroups.push(groupId)
     await users.save({
       ...user,
