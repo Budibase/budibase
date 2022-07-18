@@ -4,7 +4,7 @@ Cypress.on("uncaught:exception", () => {
 
 // ACCOUNTS & USERS
 Cypress.Commands.add("login", (email, password) => {
-  cy.visit(`${Cypress.config().baseUrl}/builder`)
+  cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 5000 })
   cy.wait(2000)
   cy.url().then(url => {
     if (url.includes("builder/admin")) {
@@ -223,9 +223,11 @@ Cypress.Commands.add("deleteApp", name => {
 })
 
 Cypress.Commands.add("deleteAllApps", () => {
-  cy.visit(`${Cypress.config().baseUrl}/builder`)
+  cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 5000 })
   cy.wait(500)
-  cy.request(`${Cypress.config().baseUrl}/api/applications?status=all`)
+  cy.request(`${Cypress.config().baseUrl}/api/applications?status=all`, {
+    timeout: 5000,
+  })
     .its("body")
     .then(val => {
       for (let i = 0; i < val.length; i++) {
