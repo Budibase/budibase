@@ -1,6 +1,7 @@
 <script>
   import { Body, ModalContent, Table, Icon } from "@budibase/bbui"
   import PasswordCopyRenderer from "./PasswordCopyRenderer.svelte"
+  import { parseToCsv } from "helpers/data/utils"
 
   export let userData
 
@@ -14,6 +15,29 @@
   const schema = {
     email: {},
     password: {},
+  }
+
+  const downloadCsvFile = () => {
+    const fileName = "passwords.csv"
+    const content = parseToCsv(["email", "password"], mappedData)
+
+    download(fileName, content)
+  }
+
+  const download = (filename, text) => {
+    const element = document.createElement("a")
+    element.setAttribute(
+      "href",
+      "data:text/csv;charset=utf-8," + encodeURIComponent(text)
+    )
+    element.setAttribute("download", filename)
+
+    element.style.display = "none"
+    document.body.appendChild(element)
+
+    element.click()
+
+    document.body.removeChild(element)
   }
 </script>
 
@@ -30,7 +54,7 @@
     Make not of these passwords or download the csv</Body
   >
 
-  <div class="container">
+  <div class="container" on:click={downloadCsvFile}>
     <div class="inner">
       <Icon name="Download" />
 
