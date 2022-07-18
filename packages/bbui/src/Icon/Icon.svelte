@@ -47,7 +47,7 @@
   </svg>
   {#if tooltip && showTooltip}
     <div class="tooltip" in:fade={{ duration: 130, delay: 250 }}>
-      <Tooltip textWrapping direction={"bottom"} text={tooltip} />
+      <Tooltip textWrapping direction="bottom" text={tooltip} />
     </div>
   {/if}
 </div>

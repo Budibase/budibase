@@ -20,7 +20,7 @@ import {
 } from "@budibase/string-templates"
 import { TableNames } from "../constants"
 import { JSONUtils } from "@budibase/frontend-core"
-import ActionDefinitions from "components/design/PropertiesPanel/PropertyControls/ButtonActionEditor/manifest.json"
+import ActionDefinitions from "components/design/settings/controls/ButtonActionEditor/manifest.json"
 
 // Regex to match all instances of template strings
 const CAPTURE_VAR_INSIDE_TEMPLATE = /{{([^}]+)}}/g
@@ -478,11 +478,17 @@ const getUrlBindings = asset => {
     }
   })
   const safeURL = makePropSafe("url")
-  return params.map(param => ({
+  const urlParamBindings = params.map(param => ({
     type: "context",
     runtimeBinding: `${safeURL}.${makePropSafe(param)}`,
     readableBinding: `URL.${param}`,
   }))
+  const queryParamsBinding = {
+    type: "context",
+    runtimeBinding: makePropSafe("query"),
+    readableBinding: "Query params",
+  }
+  return urlParamBindings.concat([queryParamsBinding])
 }
 
 const getRoleBindings = () => {
@@ -780,6 +786,13 @@ export const getAllStateVariables = () => {
           eventSettings.push(component[setting.key])
         })
     })
+  })
+
+  // Add on load settings from screens
+  get(store).screens.forEach(screen => {
+    if (screen.onLoad) {
+      eventSettings.push(screen.onLoad)
+    }
   })
 
   // Extract all state keys from any "update state" actions in each setting

@@ -215,10 +215,12 @@ describe("/queries", () => {
         .expect("Content-Type", /json/)
         .expect(200)
       // these responses come from the mock
-      expect(res.body.schemaFields).toEqual(["a", "b"])
+      expect(res.body.schemaFields).toEqual({
+        "a": "string",
+        "b": "number",
+      })
       expect(res.body.rows.length).toEqual(1)
       expect(events.query.previewed).toBeCalledTimes(1)
-      datasource.config = { schema: "public" }
       expect(events.query.previewed).toBeCalledWith(datasource, query)
     })
 
@@ -290,7 +292,11 @@ describe("/queries", () => {
         queryString: "test={{ variable2 }}",
       })
       // these responses come from the mock
-      expect(res.body.schemaFields).toEqual(["url", "opts", "value"])
+      expect(res.body.schemaFields).toEqual({
+        "opts": "json",
+        "url": "string",
+        "value": "string",
+      })
       expect(res.body.rows[0].url).toEqual("http://www.google.com?test=1")
     })
 
@@ -300,7 +306,11 @@ describe("/queries", () => {
         path: "www.google.com",
         queryString: "test={{ variable3 }}",
       })
-      expect(res.body.schemaFields).toEqual(["url", "opts", "value"])
+      expect(res.body.schemaFields).toEqual({
+        "opts": "json",
+        "url": "string",
+        "value": "string"
+      })
       expect(res.body.rows[0].url).toContain("doctype html")
     })
 
@@ -319,7 +329,11 @@ describe("/queries", () => {
         path: "www.failonce.com",
         queryString: "test={{ variable3 }}",
       })
-      expect(res.body.schemaFields).toEqual(["fails", "url", "opts"])
+      expect(res.body.schemaFields).toEqual({
+        "fails": "number",
+        "opts": "json",
+        "url": "string"
+      })
       expect(res.body.rows[0].fails).toEqual(1)
     })
 
