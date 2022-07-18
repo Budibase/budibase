@@ -30,6 +30,7 @@
   import { LuceneUtils } from "@budibase/frontend-core"
   import { getSchemaForTable } from "builderStore/dataBinding"
   import { Utils } from "@budibase/frontend-core"
+  import { TriggerStepID, ActionStepID } from "constants/backend/automations"
 
   export let block
   export let testData
@@ -54,12 +55,13 @@
   $: schema = getSchemaForTable(tableId, { searchableSchema: true }).schema
   $: schemaFields = Object.values(schema || {})
   $: queryLimit = tableId?.includes("datasource") ? "∞" : "1000"
+  $: isTrigger = block?.type === "TRIGGER"
 
   const onChange = Utils.sequential(async (e, key) => {
     try {
       if (isTestModal) {
         // Special case for webhook, as it requires a body, but the schema already brings back the body's contents
-        if (stepId === "WEBHOOK") {
+        if (stepId === TriggerStepID.WEBHOOK) {
           automationStore.actions.addTestDataToAutomation({
             body: {
               [key]: e.detail,
@@ -100,9 +102,9 @@
     // Extract all outputs from all previous steps as available bindins
     let bindings = []
     for (let idx = 0; idx < blockIdx; idx++) {
-      let wasLoopBlock = allSteps[idx]?.stepId === "LOOP"
+      let wasLoopBlock = allSteps[idx]?.stepId === ActionStepID.LOOP
       let isLoopBlock =
-        allSteps[idx]?.stepId === "LOOP" &&
+        allSteps[idx]?.stepId === ActionStepID.LOOP &&
         allSteps.find(x => x.blockToLoop === block.id)
 
       // If the previous block was a loop block, decerement the index so the following
@@ -261,6 +263,7 @@
         />
       {:else if value.customType === "table"}
         <TableSelector
+          {isTrigger}
           value={inputData[key]}
           on:change={e => onChange(e, key)}
         />
@@ -343,7 +346,7 @@
   <CreateWebhookModal />
 </Modal>
 
-{#if stepId === "WEBHOOK"}
+{#if stepId === TriggerStepID.WEBHOOK}
   <Button secondary on:click={() => webhookModal.show()}>Set Up Webhook</Button>
 {/if}
 

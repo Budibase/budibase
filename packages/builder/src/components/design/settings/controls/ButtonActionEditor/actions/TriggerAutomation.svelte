@@ -2,6 +2,7 @@
   import { Select, Label, Input, Checkbox } from "@budibase/bbui"
   import { automationStore } from "builderStore"
   import SaveFields from "./SaveFields.svelte"
+  import { TriggerStepID } from "constants/backend/automations"
 
   export let parameters = {}
   export let bindings = []
@@ -16,7 +17,7 @@
     : AUTOMATION_STATUS.NEW
 
   $: automations = $automationStore.automations
-    .filter(a => a.definition.trigger?.stepId === "APP")
+    .filter(a => a.definition.trigger?.stepId === TriggerStepID.APP)
     .map(automation => {
       const schema = Object.entries(
         automation.definition.trigger.inputs.fields || {}
