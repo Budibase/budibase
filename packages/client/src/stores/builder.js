@@ -17,6 +17,7 @@ const createBuilderStore = () => {
     previewDevice: "desktop",
     isDragging: false,
     navigation: null,
+    hiddenComponentIds: [],
 
     // Legacy - allow the builder to specify a layout
     layout: null,
