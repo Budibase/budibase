@@ -19,8 +19,8 @@ class QueryBuilder {
       empty: {},
       notEmpty: {},
       oneOf: {},
-      contains: {},
-      ...base
+      contains: {} ,
+      ...base,
     }
     this.limit = 50
     this.sortOrder = "ascending"
