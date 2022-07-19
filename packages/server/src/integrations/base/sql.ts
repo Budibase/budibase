@@ -235,7 +235,9 @@ class InternalBuilder {
           const tableName = fieldNames[0]
           const columnName = fieldNames[1]
           // @ts-ignore
-          query = query[rawFnc](`"${tableName}"."${columnName}"::jsonb @> '["${value}"]'`)
+          query = query[rawFnc](
+            `"${tableName}"."${columnName}"::jsonb @> '["${value}"]'`
+          )
         })
       } else if (this.client === SqlClients.MY_SQL) {
         iterate(filters.contains, (key: string, value: any) => {
