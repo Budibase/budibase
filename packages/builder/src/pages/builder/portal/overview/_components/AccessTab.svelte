@@ -9,6 +9,7 @@
     Modal,
     notifications,
     Pagination,
+    Icon,
   } from "@budibase/bbui"
   import { onMount } from "svelte"
 
@@ -31,7 +32,7 @@
   $: fetchUsers(page, search)
 
   $: isProPlan = $auth.user?.license.plan.type !== Constants.PlanType.FREE
-  $: console.log($users.data)
+
   $: appUsers =
     $users.data?.filter(x => {
       return Object.keys(x.roles).find(y => {
@@ -48,7 +49,6 @@
   async function addData(appData) {
     let gr_prefix = "gr"
     let us_prefix = "us"
-    console.log(appData)
     appData.forEach(async data => {
       if (data.id.startsWith(gr_prefix)) {
         let matchedGroup = $groups.find(group => {
@@ -72,6 +72,35 @@
       }
     })
     await groups.actions.init()
+    await users.search({ page, appId: app.prodId })
+  }
+
+  async function removeUser(user) {
+    // Remove the user role
+    const filteredRoles = { ...user.roles }
+    delete filteredRoles[app?.prodId]
+    await users.save({
+      ...user,
+      roles: {
+        ...filteredRoles,
+      },
+    })
+    await users.search({ page, appId: app.prodId })
+  }
+
+  async function removeGroup(group) {
+    // Remove the user role
+
+    let filteredApps = group.apps.filter(x => x.appId !== app.appId)
+    const filteredRoles = { ...group.roles }
+    delete filteredRoles[app?.prodId]
+
+    await groups.actions.save({
+      ...group,
+      apps: filteredApps,
+      roles: { ...filteredRoles },
+    })
+
     await users.search({ page, appId: app.prodId })
   }
 
@@ -145,6 +174,12 @@
                   Object.keys(group.roles).find(x => x === app.prodId)
                 ]}
               />
+              <Icon
+                on:click={() => removeGroup(group)}
+                hoverable
+                size="S"
+                name="Close"
+              />
             </ListItem>
           {/each}
         </List>
@@ -160,6 +195,12 @@
                 value={user.roles[
                   Object.keys(user.roles).find(x => x === app.prodId)
                 ]}
+              />
+              <Icon
+                on:click={() => removeUser(user)}
+                hoverable
+                size="S"
+                name="Close"
               />
             </ListItem>
           {/each}

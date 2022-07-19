@@ -31,9 +31,9 @@ exports.updateAppRole = async (user, { appId } = {}) => {
   // if a role wasn't found then either set as admin (builder) or public (everyone else)
   if (!user.roleId && user.builder && user.builder.global) {
     user.roleId = BUILTIN_ROLE_IDS.ADMIN
-  } else if (!user.roleId) {
+  } else if (!user.roleId && !user?.userGroups?.length) {
     user.roleId = BUILTIN_ROLE_IDS.PUBLIC
-  } else if (user?.userGroups?.length) {
+  } else if (!user.roleId && user?.userGroups?.length) {
     let roleId = await groups.getGroupRoleId(user, appId)
     user.roleId = roleId
   }

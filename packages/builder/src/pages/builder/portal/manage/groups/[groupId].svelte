@@ -31,7 +31,7 @@
   $: page = $pageInfo.page
   $: fetchUsers(page, search)
   $: group = $groups.find(x => x._id === groupId)
-
+  $: console.log(group.users)
   async function addAll() {
     group.users = selectedUsers
     await groups.actions.save(group)
@@ -175,9 +175,11 @@
           iconBackground={app?.icon?.color || ""}
         >
           <div class="title ">
-            <StatusLight color={RoleUtils.getRoleColour(group.role)} />
+            <StatusLight
+              color={RoleUtils.getRoleColour(group.roles[app.prodId])}
+            />
             <div style="margin-left: var(--spacing-s);">
-              <Body size="XS">{group.role}</Body>
+              <Body size="XS">{group.roles[app.prodId]}</Body>
             </div>
           </div>
         </ListItem>

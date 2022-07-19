@@ -40,6 +40,7 @@
   let selectedGroups = []
   let allAppList = []
 
+  $: user = users.get(userId)
   $: isProPlan = $auth.user?.license.plan.type !== Constants.PlanType.FREE
 
   $: allAppList = $apps
@@ -69,7 +70,7 @@
       selectedGroups &&
       group?.name?.toLowerCase().includes(searchTerm.toLowerCase())
   )
-
+  $: console.log($groups)
   $: userGroups = $groups.filter(x => {
     return x.users?.find(y => {
       return y._id === userId
@@ -133,16 +134,15 @@
 
   async function addGroup(groupId) {
     let selectedGroup = selectedGroups.includes(groupId)
-    let newUser = $users.find(user => user._id === userId)
     let group = $groups.find(group => group._id === groupId)
 
     if (selectedGroup) {
       selectedGroups = selectedGroups.filter(id => id === selectedGroup)
-      let newUsers = group.users.filter(user => user._id !== newUser._id)
+      let newUsers = group.users.filter(groupUser => user._id !== groupUser._id)
       group.users = newUsers
     } else {
       selectedGroups = [...selectedGroups, groupId]
-      group.users.push(newUser)
+      group.users.push(user)
     }
 
     await groups.actions.save(group)
