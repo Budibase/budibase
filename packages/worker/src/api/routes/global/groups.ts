@@ -1,10 +1,10 @@
-const Router = require("@koa/router")
-const controller = require("../../controllers/global/groups")
-const joiValidator = require("../../../middleware/joi-validator")
-const adminOnly = require("../../../middleware/adminOnly")
-const Joi = require("joi")
+import { groups } from "@budibase/pro"
+import Router from "@koa/router"
+import joiValidator from "../../../middleware/joi-validator"
+import adminOnly from "../../../middleware/adminOnly"
+import Joi from "joi"
 
-const router = Router()
+const router = new Router()
 
 function buildGroupSaveValidation() {
   // prettier-ignore
@@ -28,10 +28,10 @@ router
     "/api/global/groups",
     adminOnly,
     buildGroupSaveValidation(),
-    controller.save
+    groups.save
   )
-  .get("/api/global/groups", controller.fetch)
-  .delete("/api/global/groups/:id/:rev", adminOnly, controller.destroy)
-  .get("/api/global/groups/:id", adminOnly, controller.find)
+  .get("/api/global/groups", groups.fetch)
+  .delete("/api/global/groups/:id/:rev", adminOnly, groups.destroy)
+  .get("/api/global/groups/:id", adminOnly, groups.find)
 
 module.exports = router
