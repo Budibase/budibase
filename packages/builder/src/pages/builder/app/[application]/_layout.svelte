@@ -3,6 +3,7 @@
   import { roles, flags } from "stores/backend"
   import { Icon, Tabs, Tab, Heading, notifications } from "@budibase/bbui"
   import RevertModal from "components/deploy/RevertModal.svelte"
+  import VersionModal from "components/deploy/VersionModal.svelte"
   import DeployNavigation from "components/deploy/DeployNavigation.svelte"
   import { API } from "api"
   import { isActive, goto, layout, redirect } from "@roxi/routify"
@@ -107,6 +108,7 @@
         </Tabs>
       </div>
       <div class="toprightnav">
+        <VersionModal />
         <RevertModal />
         <Icon
           name="Visibility"

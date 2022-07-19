@@ -1,5 +1,5 @@
 import { generateQueryID, getQueryParams, isProdAppID } from "../../../db/utils"
-import { BaseQueryVerbs } from "../../../constants"
+import { BaseQueryVerbs, FieldTypes } from "../../../constants"
 import { Thread, ThreadType } from "../../../threads"
 import { save as saveDatasource } from "../datasource"
 import { RestImporter } from "./import"
@@ -154,10 +154,37 @@ export async function preview(ctx: any) {
         },
       })
     const { rows, keys, info, extra } = await quotas.addQuery(runFn)
+    const schemaFields: any = {}
+    if (rows?.length > 0) {
+      for (let key of [...new Set(keys)] as string[]) {
+        const field = rows[0][key]
+        let type = typeof field,
+          fieldType = FieldTypes.STRING
+        if (field)
+          switch (type) {
+            case "boolean":
+              schemaFields[key] = FieldTypes.BOOLEAN
+              break
+            case "object":
+              if (field instanceof Date) {
+                fieldType = FieldTypes.DATETIME
+              } else if (Array.isArray(field)) {
+                fieldType = FieldTypes.ARRAY
+              } else {
+                fieldType = FieldTypes.JSON
+              }
+              break
+            case "number":
+              fieldType = FieldTypes.NUMBER
+              break
+          }
+        schemaFields[key] = fieldType
+      }
+    }
     await events.query.previewed(datasource, query)
     ctx.body = {
       rows,
-      schemaFields: [...new Set(keys)],
+      schemaFields,
       info,
       extra,
     }

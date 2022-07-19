@@ -2,6 +2,7 @@
   "actions": [
     {
       "name": "Save Row",
+      "type": "data",
       "component": "SaveRow",
       "context": [
         {
@@ -12,6 +13,7 @@
     },
     {
       "name": "Duplicate Row",
+      "type": "data",
       "component": "DuplicateRow",
       "context": [
         {
@@ -22,14 +24,17 @@
     },
     {
       "name": "Delete Row",
+      "type": "data",
       "component": "DeleteRow"
     },
     {
       "name": "Navigate To",
+      "type": "application",
       "component": "NavigateTo"
     },
     {
       "name": "Execute Query",
+      "type": "data",
       "component": "ExecuteQuery",
       "context": [
         {
@@ -40,43 +45,53 @@
     },
     {
       "name": "Trigger Automation",
+      "type": "application",
       "component": "TriggerAutomation"
     },
     {
       "name": "Update Field Value",
+      "type": "form",
       "component": "UpdateFieldValue"
     },
     {
       "name": "Validate Form",
+      "type": "form",
       "component": "ValidateForm"
     },
     {
       "name": "Change Form Step",
+      "type": "form",
       "component": "ChangeFormStep"
     },
     {
       "name": "Clear Form",
+      "type": "form",
       "component": "ClearForm"
     },
     {
       "name": "Log Out",
+      "type": "application",
       "component": "LogOut"
     },
     {
       "name": "Close Screen Modal",
+      "type": "application",
       "component": "CloseScreenModal"
     },
     {
       "name": "Refresh Data Provider",
+      "type": "data",
       "component": "RefreshDataProvider"
     },
     {
       "name": "Update State",
+      "type": "data",
       "component": "UpdateState",
       "dependsOnFeature": "state"
     },
     {
       "name": "Upload File to S3",
+      "type": "data",
       "component": "S3Upload",
       "context": [
         {
@@ -87,10 +102,12 @@
     },
     {
       "name": "Export Data",
+      "type": "data",
       "component": "ExportData"
     },
     {
       "name": "Continue if / Stop if",
+      "type": "logic",
       "component": "ContinueIf",
       "dependsOnFeature": "continueIfAction"
     }

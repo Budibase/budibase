@@ -1,6 +1,7 @@
 <script>
   import { Icon, Divider, Tabs, Tab, TextArea, Label } from "@budibase/bbui"
   import FlowItemHeader from "./FlowChart/FlowItemHeader.svelte"
+  import { ActionStepID } from "constants/backend/automations"
 
   export let automation
   export let testResults
@@ -10,7 +11,7 @@
   let blocks
 
   function prepTestResults(results) {
-    return results?.steps.filter(x => x.stepId !== "LOOP" || [])
+    return results?.steps.filter(x => x.stepId !== ActionStepID.LOOP || [])
   }
 
   function textArea(results, message) {
@@ -30,7 +31,7 @@
       }
       blocks = blocks
         .concat(automation.definition.steps || [])
-        .filter(x => x.stepId !== "LOOP")
+        .filter(x => x.stepId !== ActionStepID.LOOP)
     } else if (filteredResults) {
       blocks = filteredResults || []
       // make sure there is an ID for each block being displayed
@@ -45,7 +46,7 @@
 <div class="container">
   {#each blocks as block, idx}
     <div class="block" style={width ? `width: ${width}` : ""}>
-      {#if block.stepId !== "LOOP"}
+      {#if block.stepId !== ActionStepID.LOOP}
         <FlowItemHeader
           showTestStatus={true}
           bind:showParameters
@@ -67,27 +68,20 @@
           {/if}
 
           <div class="tabs">
-            <Tabs quiet noPadding selected="Input">
+            <Tabs noHorizPadding selected="Input">
               <Tab title="Input">
-                <div style="padding: 10px 10px 10px 10px;">
-                  <TextArea
-                    minHeight="80px"
-                    disabled
-                    value={textArea(filteredResults?.[idx]?.inputs, "No input")}
-                  />
-                </div></Tab
-              >
+                <TextArea
+                  minHeight="80px"
+                  disabled
+                  value={textArea(filteredResults?.[idx]?.inputs, "No input")}
+                />
+              </Tab>
               <Tab title="Output">
-                <div style="padding: 10px 10px 10px 10px;">
-                  <TextArea
-                    minHeight="100px"
-                    disabled
-                    value={textArea(
-                      filteredResults?.[idx]?.outputs,
-                      "No output"
-                    )}
-                  />
-                </div>
+                <TextArea
+                  minHeight="100px"
+                  disabled
+                  value={textArea(filteredResults?.[idx]?.outputs, "No output")}
+                />
               </Tab>
             </Tabs>
           </div>
@@ -113,6 +107,7 @@
     align-items: stretch;
     position: relative;
     flex: 1 1 auto;
+    padding: 0 var(--spacing-xl) var(--spacing-xl) var(--spacing-xl);
   }
 
   .block {

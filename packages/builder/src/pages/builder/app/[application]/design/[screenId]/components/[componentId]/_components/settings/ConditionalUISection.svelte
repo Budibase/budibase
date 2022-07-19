@@ -28,12 +28,15 @@
     }
     drawer.hide()
   }
+
+  $: conditionCount = componentInstance?._conditions?.length
+  $: conditionText = `${conditionCount || "No"} condition${
+    conditionCount !== 1 ? "s" : ""
+  } set`
 </script>
 
-<DetailSummary
-  name={`Conditions${componentInstance?._conditions ? " *" : ""}`}
-  collapsible={false}
->
+<DetailSummary name={"Conditions"} collapsible={false}>
+  <div class="conditionCount">{conditionText}</div>
   <div>
     <ActionButton on:click={openDrawer}>Configure conditions</ActionButton>
   </div>
@@ -45,3 +48,10 @@
   <Button cta slot="buttons" on:click={() => save()}>Save</Button>
   <ConditionalUIDrawer slot="body" bind:conditions={tempValue} {bindings} />
 </Drawer>
+
+<style>
+  .conditionCount {
+    font-weight: 600;
+    margin-top: -5px;
+  }
+</style>
