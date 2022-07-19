@@ -60,7 +60,7 @@
       indentLevel={0}
       selected={$store.selectedScreenId === screen._id}
       text={screen.routing.route}
-      on:click={() => ($store.selectedScreenId = screen._id)}
+      on:click={() => store.actions.screens.select(screen._id)}
       color={RoleUtils.getRoleColour(screen.routing.roleId)}
     >
       <ScreenDropdownMenu screenId={screen._id} />

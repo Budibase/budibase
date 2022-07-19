@@ -5,7 +5,6 @@
   import PropertyControl from "components/design/settings/controls/PropertyControl.svelte"
   import ResetFieldsButton from "components/design/settings/controls/ResetFieldsButton.svelte"
   import { getComponentForSetting } from "components/design/settings/componentSettings"
-  import { Utils } from "@budibase/frontend-core"
 
   export let componentDefinition
   export let componentInstance
@@ -29,13 +28,13 @@
     ]
   }
 
-  const updateProp = Utils.sequential(async (key, value) => {
+  const updateSetting = async (key, value) => {
     try {
-      await store.actions.components.updateProp(key, value)
+      await store.actions.components.updateSetting(key, value)
     } catch (error) {
       notifications.error("Error updating component prop")
     }
-  })
+  }
 
   const canRenderControl = setting => {
     const control = getComponentForSetting(setting)
@@ -84,7 +83,7 @@
         label="Name"
         key="_instanceName"
         value={componentInstance._instanceName}
-        onChange={val => updateProp("_instanceName", val)}
+        onChange={val => updateSetting("_instanceName", val)}
       />
     {/if}
     {#each section.settings as setting (setting.key)}
@@ -97,7 +96,7 @@
           value={componentInstance[setting.key]}
           defaultValue={setting.defaultValue}
           nested={setting.nested}
-          onChange={val => updateProp(setting.key, val)}
+          onChange={val => updateSetting(setting.key, val)}
           highlighted={$store.highlightedSettingKey === setting.key}
           props={{
             // Generic settings

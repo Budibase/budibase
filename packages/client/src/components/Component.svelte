@@ -121,6 +121,8 @@
     !isScreen &&
     definition?.draggable !== false
   $: droppable = interactive && !isLayout && !isScreen
+  $: builderHidden =
+    $builderStore.inBuilder && $builderStore.hiddenComponentIds?.includes(id)
 
   // Empty components are those which accept children but do not have any.
   // Empty states can be shown for these components, but can be disabled
@@ -434,7 +436,7 @@
   })
 </script>
 
-{#if constructor && initialSettings && (visible || inSelectedPath)}
+{#if constructor && initialSettings && (visible || inSelectedPath) && !builderHidden}
   <!-- The ID is used as a class because getElementsByClassName is O(1) -->
   <!-- and the performance matters for the selection indicators -->
   <div

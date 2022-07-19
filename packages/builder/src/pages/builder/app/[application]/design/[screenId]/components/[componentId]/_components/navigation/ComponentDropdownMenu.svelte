@@ -1,8 +1,6 @@
 <script>
-  import { get } from "svelte/store"
-  import { store, currentAsset } from "builderStore"
+  import { store } from "builderStore"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import { findComponentParent } from "builderStore/componentUtils"
   import { ActionMenu, MenuItem, Icon, notifications } from "@budibase/bbui"
 
   export let component
@@ -19,43 +17,19 @@
   // not show a context menu.
   $: showMenu = definition?.editable !== false && definition?.static !== true
 
-  const moveUpComponent = () => {
-    const asset = get(currentAsset)
-    const parent = findComponentParent(asset?.props, component._id)
-    if (!parent) {
-      return
-    }
-    const currentIndex = parent._children.indexOf(component)
-    if (currentIndex === 0) {
-      return
-    }
+  const moveUpComponent = async () => {
     try {
-      const newChildren = parent._children.filter(c => c !== component)
-      newChildren.splice(currentIndex - 1, 0, component)
-      parent._children = newChildren
-      store.actions.preview.saveSelected()
+      await store.actions.components.moveUp(component)
     } catch (error) {
-      notifications.error("Error saving screen")
+      notifications.error("Error moving component up")
     }
   }
 
-  const moveDownComponent = () => {
-    const asset = get(currentAsset)
-    const parent = findComponentParent(asset?.props, component._id)
-    if (!parent) {
-      return
-    }
-    const currentIndex = parent._children.indexOf(component)
-    if (currentIndex === parent._children.length - 1) {
-      return
-    }
+  const moveDownComponent = async () => {
     try {
-      const newChildren = parent._children.filter(c => c !== component)
-      newChildren.splice(currentIndex + 1, 0, component)
-      parent._children = newChildren
-      store.actions.preview.saveSelected()
+      await store.actions.components.moveDown(component)
     } catch (error) {
-      notifications.error("Error saving screen")
+      notifications.error("Error moving component down")
     }
   }
 
