@@ -22,9 +22,6 @@ const {
   BUILTIN_ROLE_IDS,
   AccessController,
 } = require("@budibase/backend-core/roles")
-import { BASE_LAYOUTS } from "../../constants/layouts"
-import { cloneDeep } from "lodash/fp"
-const { processObject } = require("@budibase/string-templates")
 const { CacheKeys, bustCache } = require("@budibase/backend-core/cache")
 const {
   getAllApps,
@@ -45,13 +42,8 @@ const { getTenantId, isMultiTenant } = require("@budibase/backend-core/tenancy")
 import { syncGlobalUsers } from "./user"
 const { app: appCache } = require("@budibase/backend-core/cache")
 import { cleanupAutomations } from "../../automations/utils"
+import { context } from "@budibase/backend-core"
 import { checkAppMetadata } from "../../automations/logging"
-const {
-  getAppDB,
-  getProdAppDB,
-  updateAppId,
-  doInAppContext,
-} = require("@budibase/backend-core/context")
 import { getUniqueRows } from "../../utilities/usageQuota/rows"
 import { quotas } from "@budibase/pro"
 import { errors, events, migrations } from "@budibase/backend-core"
@@ -61,7 +53,7 @@ const URL_REGEX_SLASH = /\/|\\/g
 
 // utility function, need to do away with this
 async function getLayouts() {
-  const db = getAppDB()
+  const db = context.getAppDB()
   return (
     await db.allDocs(
       getLayoutParams(null, {
@@ -72,7 +64,7 @@ async function getLayouts() {
 }
 
 async function getScreens() {
-  const db = getAppDB()
+  const db = context.getAppDB()
   return (
     await db.allDocs(
       getScreenParams(null, {
@@ -135,9 +127,9 @@ async function createInstance(template: any) {
   const tenantId = isMultiTenant() ? getTenantId() : null
   const baseAppId = generateAppID(tenantId)
   const appId = generateDevAppID(baseAppId)
-  await updateAppId(appId)
+  await context.updateAppId(appId)
 
-  const db = getAppDB()
+  const db = context.getAppDB()
   await db.put({
     _id: "_design/database",
     // view collation information, read before writing any complex views:
@@ -213,7 +205,7 @@ export const fetchAppDefinition = async (ctx: any) => {
 }
 
 export const fetchAppPackage = async (ctx: any) => {
-  const db = getAppDB()
+  const db = context.getAppDB()
   const application = await db.get(DocumentTypes.APP_METADATA)
   const layouts = await getLayouts()
   let screens = await getScreens()
@@ -252,7 +244,7 @@ const performAppCreate = async (ctx: any) => {
   const instance = await createInstance(instanceConfig)
   const appId = instance._id
 
-  const db = getAppDB()
+  const db = context.getAppDB()
   let _rev
   try {
     // if template there will be an existing doc
@@ -390,7 +382,7 @@ export const update = async (ctx: any) => {
 
 export const updateClient = async (ctx: any) => {
   // Get current app version
-  const db = getAppDB()
+  const db = context.getAppDB()
   const application = await db.get(DocumentTypes.APP_METADATA)
   const currentVersion = application.version
 
@@ -414,7 +406,7 @@ export const updateClient = async (ctx: any) => {
 
 export const revertClient = async (ctx: any) => {
   // Check app can be reverted
-  const db = getAppDB()
+  const db = context.getAppDB()
   const application = await db.get(DocumentTypes.APP_METADATA)
   if (!application.revertableVersion) {
     ctx.throw(400, "There is no version to revert to")
@@ -446,7 +438,7 @@ const destroyApp = async (ctx: any) => {
     appId = getProdAppID(appId)
   }
 
-  const db = isUnpublish ? getProdAppDB() : getAppDB()
+  const db = isUnpublish ? context.getProdAppDB() : context.getAppDB()
   const app = await db.get(DocumentTypes.APP_METADATA)
   const result = await db.destroy()
 
@@ -514,7 +506,7 @@ export const sync = async (ctx: any, next: any) => {
 
   try {
     // specific case, want to make sure setup is skipped
-    const prodDb = getProdAppDB({ skip_setup: true })
+    const prodDb = context.getProdAppDB({ skip_setup: true })
     const info = await prodDb.info()
     if (info.error) throw info.error
   } catch (err) {
@@ -556,8 +548,8 @@ export const sync = async (ctx: any, next: any) => {
 }
 
 const updateAppPackage = async (appPackage: any, appId: any) => {
-  return doInAppContext(appId, async () => {
-    const db = getAppDB()
+  return context.doInAppContext(appId, async () => {
+    const db = context.getAppDB()
     const application = await db.get(DocumentTypes.APP_METADATA)
 
     const newAppPackage = { ...application, ...appPackage }

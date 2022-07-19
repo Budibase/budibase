@@ -24,8 +24,8 @@ if [ ! -f "/data/.env" ]; then
 fi
 
 # make these directories in runner, incase of mount
-mkdir -p /data/couch/dbs /data/couch/views
-chown couchdb:couchdb /data/couch /data/couch/dbs /data/couch/views
+mkdir -p /data/couch/{dbs,views} /home/couch/{dbs,views}
+chown -R couchdb:couchdb /data/couch /home/couch
 redis-server --requirepass $REDIS_PASSWORD &
 /opt/clouseau/bin/clouseau &
 /minio/minio server /data/minio &

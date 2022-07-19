@@ -23,7 +23,7 @@
         <ActionButton noPadding size="S" icon="Close" quiet on:click={close} />
       </div>
     </div>
-    <Layout paddingX="XL" gap="S">
+    <Layout paddingY="XL" paddingX="XL" gap="S">
       <div class="icon">
         <Icon name="Clock" />
         <DateTimeRenderer value={history.createdAt} />
@@ -71,7 +71,6 @@
   }
 
   .bottom {
-    margin-top: var(--spacing-m);
     border-top: var(--border-light);
     padding-top: calc(var(--spacing-xl) * 2);
     padding-bottom: calc(var(--spacing-xl) * 2);

@@ -2,6 +2,7 @@
   import { Icon, Divider } from "@budibase/bbui"
   import TestDisplay from "./TestDisplay.svelte"
   import { automationStore } from "builderStore"
+  import { ActionStepID } from "constants/backend/automations"
 
   export let automation
   export let testResults
@@ -16,7 +17,7 @@
       }
       blocks = blocks
         .concat(automation.definition.steps || [])
-        .filter(x => x.stepId !== "LOOP")
+        .filter(x => x.stepId !== ActionStepID.LOOP)
     } else if (testResults) {
       blocks = testResults.steps || []
     }

@@ -20,7 +20,6 @@ import redis from "./utilities/redis"
 import * as migrations from "./migrations"
 import { events, installation, tenancy } from "@budibase/backend-core"
 import { createAdminUser, getChecklist } from "./utilities/workerRequests"
-import { tenantSucceeded } from "@budibase/backend-core/dist/src/events/publishers/backfill"
 
 const app = new Koa()
 

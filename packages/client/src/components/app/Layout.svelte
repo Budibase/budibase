@@ -323,6 +323,9 @@
     position: relative;
     padding: 32px;
   }
+  .main.size--max {
+    padding: 0;
+  }
   .layout--none .main {
     padding: 0;
   }
@@ -464,6 +467,9 @@
   /* Reduce padding */
   .mobile:not(.layout--none) .main {
     padding: 16px;
+  }
+  .mobile .main.size--max {
+    padding: 0;
   }
 
   /* Transform links into drawer */

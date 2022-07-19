@@ -97,7 +97,7 @@ export async function enableCronTrigger(appId: any, automation: any) {
     )
   }
   // need to create cron job
-  if (isCronTrigger(automation)) {
+  if (isCronTrigger(automation) && trigger?.inputs.cron) {
     // make a job id rather than letting Bull decide, makes it easier to handle on way out
     const jobId = `${appId}_cron_${newid()}`
     const job: any = await queue.add(

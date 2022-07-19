@@ -208,11 +208,6 @@
 <span class="overview-wrap">
   <Page wide noPadding>
     {#await promise}
-      <span class="page-header">
-        <ActionButton secondary icon={"ArrowLeft"} on:click={backToAppList}>
-          Back
-        </ActionButton>
-      </span>
       <div class="loading">
         <ProgressCircle size="XL" />
       </div>
@@ -404,7 +399,7 @@
     line-height: 1em;
     margin-bottom: var(--spacing-s);
   }
-  .tab-wrap :global(.spectrum-Tabs) {
+  .tab-wrap :global(> .spectrum-Tabs) {
     padding-left: var(--spectrum-alias-grid-gutter-large);
     padding-right: var(--spectrum-alias-grid-gutter-large);
   }

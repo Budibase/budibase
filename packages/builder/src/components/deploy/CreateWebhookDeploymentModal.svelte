@@ -3,6 +3,7 @@
   import { ModalContent } from "@budibase/bbui"
   import { onMount } from "svelte"
   import WebhookDisplay from "../automation/Shared/WebhookDisplay.svelte"
+  import { TriggerStepID } from "constants/backend/automations"
 
   let webhookUrls = []
 
@@ -11,7 +12,7 @@
   onMount(() => {
     webhookUrls = automations.map(automation => {
       const trigger = automation.definition.trigger
-      if (trigger?.stepId === "WEBHOOK" && trigger.inputs) {
+      if (trigger?.stepId === TriggerStepID.WEBHOOK && trigger.inputs) {
         return {
           type: "Automation",
           name: automation.name,
