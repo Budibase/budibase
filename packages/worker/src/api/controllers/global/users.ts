@@ -47,13 +47,15 @@ export const bulkSave = async (ctx: any) => {
   }
 
   try {
-    let response = []
+    let response: any[] = []
     for (const user of newUsers) {
-      response = await users.save(user, {
-        hashPassword: true,
-        requirePassword: user.requirePassword,
-        bulkCreate: false,
-      })
+      response.push(
+        await users.save(user, {
+          hashPassword: true,
+          requirePassword: user.requirePassword,
+          bulkCreate: false,
+        })
+      )
     }
 
     // delete passwords and add to group
@@ -63,7 +65,7 @@ export const bulkSave = async (ctx: any) => {
 
     if (groupsToSave.length) {
       groupsToSave.forEach(async (userGroup: UserGroup) => {
-        userGroup.users = [...userGroup.users, ...newUsers]
+        userGroup.users = [...userGroup.users, ...response]
         await db.put(userGroup)
         events.group.usersAdded(
           newUsers.map(u => u.email),
@@ -141,7 +143,24 @@ export const adminUser = async (ctx: any) => {
 
 export const destroy = async (ctx: any) => {
   const id = ctx.params.id
+  const db = tenancy.getGlobalDB()
+  let user: User = await db.get(id)
+  let groups = user.userGroups
+
   await users.destroy(id, ctx.user)
+
+  // Remove asssosicated groups
+  if (groups) {
+    for (const groupId of groups) {
+      let group = await db.get(groupId)
+      let updatedUsersGroup = group.users.filter(
+        (groupUser: any) => groupUser.email !== user.email
+      )
+      group.users = updatedUsersGroup
+      await db.put(group)
+    }
+  }
+
   ctx.body = {
     message: `User ${id} deleted.`,
   }
@@ -149,10 +168,27 @@ export const destroy = async (ctx: any) => {
 
 export const bulkDelete = async (ctx: any) => {
   const { userIds } = ctx.request.body
+  const db = tenancy.getGlobalDB()
+
   let deleted = 0
 
   for (const id of userIds) {
+    let user: User = await db.get(id)
+    let groups = user.userGroups
+
     await users.destroy(id, ctx.user)
+
+    if (groups) {
+      for (const groupId of groups) {
+        let group = await db.get(groupId)
+        let updatedUsersGroup = group.users.filter(
+          (groupUser: any) => groupUser.email !== user.email
+        )
+        console.log(updatedUsersGroup)
+        group.users = updatedUsersGroup
+        await db.put(group)
+      }
+    }
     deleted++
   }
 

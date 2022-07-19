@@ -17,7 +17,8 @@ export function createUsersStore() {
 
   async function get(userId) {
     try {
-      return await API.getUser(userId)
+      let user = await API.getUser(userId)
+      return user
     } catch (err) {
       return null
     }
