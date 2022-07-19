@@ -3,9 +3,7 @@ const actions = require("../automations/actions")
 const automationUtils = require("../automations/automationUtils")
 const AutomationEmitter = require("../events/AutomationEmitter")
 const { processObject } = require("@budibase/string-templates")
-const { DEFAULT_TENANT_ID } = require("@budibase/backend-core/constants")
 const { DocumentTypes } = require("../db/utils")
-const { doInTenant } = require("@budibase/backend-core/tenancy")
 const { definitions: triggerDefs } = require("../automations/triggerInfo")
 const { doInAppContext, getAppDB } = require("@budibase/backend-core/context")
 const { AutomationErrors, LoopStepTypes } = require("../constants")
@@ -134,7 +132,6 @@ class Orchestrator {
 
   async execute() {
     let automation = this._automation
-    const app = await this.getApp()
     let stopped = false
     let loopStep = null
 
@@ -161,7 +158,7 @@ class Orchestrator {
         let originalStepInput = cloneDeep(step.inputs)
 
         // Handle if the user has set a max iteration count or if it reaches the max limit set by us
-        if (loopStep) {
+        if (loopStep && input.binding) {
           let newInput = await processObject(
             loopStep.inputs,
             cloneDeep(this._context)
@@ -264,14 +261,11 @@ class Orchestrator {
         inputs = automationUtils.cleanInputValues(inputs, step.schema.inputs)
         try {
           // appId is always passed
-          let tenantId = app.tenantId || DEFAULT_TENANT_ID
-          const outputs = await doInTenant(tenantId, () => {
-            return stepFn({
-              inputs: inputs,
-              appId: this._appId,
-              emitter: this._emitter,
-              context: this._context,
-            })
+          const outputs = await stepFn({
+            inputs: inputs,
+            appId: this._appId,
+            emitter: this._emitter,
+            context: this._context,
           })
           this._context.steps[stepCount] = outputs
           // if filter causes us to stop execution don't break the loop, set a var
