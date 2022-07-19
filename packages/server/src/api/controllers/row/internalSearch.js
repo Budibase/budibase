@@ -20,7 +20,7 @@ class QueryBuilder {
       notEmpty: {},
       oneOf: {},
       contains: {},
-      ...base,
+      ...base
     }
     this.limit = 50
     this.sortOrder = "ascending"
