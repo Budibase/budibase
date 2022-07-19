@@ -23,7 +23,7 @@
 
   const pasteComponent = mode => {
     try {
-      store.actions.components.paste(screen.props, mode)
+      store.actions.components.paste(screen.props, mode, screen)
     } catch (error) {
       notifications.error("Error saving component")
     }

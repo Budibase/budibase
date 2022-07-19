@@ -82,6 +82,7 @@
   }
 
   .fillWidth {
+    left: 260px !important;
     width: calc(100% - 260px) !important;
   }
 
