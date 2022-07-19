@@ -19,7 +19,7 @@ class QueryBuilder {
       empty: {},
       notEmpty: {},
       oneOf: {},
-      contains: {} ,
+      contains: {},
       ...base,
     }
     this.limit = 50
