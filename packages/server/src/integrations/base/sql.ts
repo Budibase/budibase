@@ -234,9 +234,12 @@ class InternalBuilder {
           const fieldNames = key.split(/\./g)
           const tableName = fieldNames[0]
           const columnName = fieldNames[1]
+          if (typeof value === "string") {
+            value = `"${value}"`
+          }
           // @ts-ignore
           query = query[rawFnc](
-            `"${tableName}"."${columnName}"::jsonb @> '["${value}"]'`
+            `"${tableName}"."${columnName}"::jsonb @> '[${value}]'`
           )
         })
       } else if (this.client === SqlClients.MY_SQL) {
