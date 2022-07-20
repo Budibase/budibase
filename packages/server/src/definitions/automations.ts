@@ -1,4 +1,9 @@
-import { Automation, AutomationResults, AutomationStep } from "@budibase/types"
+import {
+  Automation,
+  AutomationResults,
+  AutomationStep,
+  Document,
+} from "@budibase/types"
 
 export enum LoopStepTypes {
   ARRAY = "Array",
@@ -32,4 +37,8 @@ export interface AutomationEvent {
 export interface AutomationContext extends AutomationResults {
   steps: any[]
   trigger: any
+}
+
+export interface AutomationMetadata extends Document {
+  errorCount?: number
 }
