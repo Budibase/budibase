@@ -12,6 +12,14 @@ export interface Automation extends Document {
 export interface AutomationStep {
   id: string
   stepId: string
+  inputs: {
+    [key: string]: any
+  }
+  schema: {
+    inputs: {
+      [key: string]: any
+    }
+  }
 }
 
 export interface AutomationTrigger {
@@ -26,8 +34,8 @@ export enum AutomationStatus {
 }
 
 export interface AutomationResults {
-  automationId: string
-  status: string
+  automationId?: string
+  status?: string
   trigger?: any
   steps: {
     stepId: string

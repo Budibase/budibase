@@ -208,10 +208,5 @@ exports.AutomationErrors = {
   FAILURE_CONDITION: "FAILURE_CONDITION_MET",
 }
 
-exports.LoopStepTypes = {
-  ARRAY: "Array",
-  STRING: "String",
-}
-
 // pass through the list from the auth/core lib
 exports.ObjectStoreBuckets = ObjectStoreBuckets
