@@ -8,9 +8,10 @@ const createNotificationStore = () => {
   let timeout
   let block = false
 
-  const store = writable(null, () => {
+  const store = writable([], () => {
     return () => {
       clearTimeout(timeout)
+      store.set([])
     }
   })
 
@@ -37,15 +38,17 @@ const createNotificationStore = () => {
       })
       return
     }
-
-    store.set({
+    store.update(state => {
+      return [...state,
+      {
       id: generate(),
       type,
       message,
       icon,
       dismissable: !autoDismiss,
       delay: get(store) != null,
-    })
+    }
+  ]})
     clearTimeout(timeout)
     if (autoDismiss) {
       timeout = setTimeout(() => {
@@ -54,9 +57,11 @@ const createNotificationStore = () => {
     }
   }
 
-  const dismiss = () => {
+  const dismiss = id => {
     clearTimeout(timeout)
-    store.set(null)
+    store.update(state => {
+      return state.filter(n => n.id !== id)
+    })
   }
 
   return {
