@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "@budibase/backend-core": "^1.1.18-alpha.0",
-    "axios": "0.21.1",
+    "axios": "0.21.2",
     "chalk": "4.1.0",
     "cli-progress": "3.11.2",
     "commander": "7.1.0",
