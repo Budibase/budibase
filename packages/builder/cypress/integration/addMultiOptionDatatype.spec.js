@@ -17,7 +17,7 @@ filterTests(['all'], () => {
   it("should add form with multi select picker, containing 5 options", () => {
     cy.navigateToFrontend()
     // Add data provider
-    cy.get(interact.CATEGORY_DATA, { timeout: 500 }).click()
+    cy.get(interact.CATEGORY_DATA, { timeout: 2000 }).click()
     cy.get(interact.COMPONENT_DATA_PROVIDER).click()
     cy.get(interact.DATASOURCE_PROP_CONTROL).click()
     cy.get(interact.DROPDOWN).contains("Multi Data").click()
