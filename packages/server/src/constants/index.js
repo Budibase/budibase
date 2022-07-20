@@ -210,3 +210,5 @@ exports.AutomationErrors = {
 
 // pass through the list from the auth/core lib
 exports.ObjectStoreBuckets = ObjectStoreBuckets
+
+exports.MAX_AUTOMATION_RECURRING_ERRORS = 5

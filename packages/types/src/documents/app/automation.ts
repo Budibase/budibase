@@ -35,7 +35,7 @@ export enum AutomationStatus {
 
 export interface AutomationResults {
   automationId?: string
-  status?: string
+  status?: AutomationStatus
   trigger?: any
   steps: {
     stepId: string

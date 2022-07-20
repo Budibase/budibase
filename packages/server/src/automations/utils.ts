@@ -10,6 +10,7 @@ import { cloneDeep } from "lodash/fp"
 import { getAppDB, getAppId } from "@budibase/backend-core/context"
 import { tenancy } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
+import { Automation } from "@budibase/types"
 
 const WH_STEP_ID = definitions.WEBHOOK.stepId
 const CRON_STEP_ID = definitions.CRON.stepId
@@ -203,4 +204,13 @@ export async function checkForWebhooks({ oldAuto, newAuto }: any) {
  */
 export async function cleanupAutomations(appId: any) {
   await disableAllCrons(appId)
+}
+
+/**
+ * Checks if the supplied automation is of a recurring type.
+ * @param automation The automation to check.
+ * @return {boolean} if it is recurring (cron).
+ */
+export function isRecurring(automation: Automation) {
+  return automation.definition.trigger.stepId === definitions.CRON.stepId
 }
