@@ -61,7 +61,9 @@ export const API = createAPIClient({
         const validationErrors = error?.json?.validationErrors
         if (validationErrors) {
           for (let field in validationErrors) {
-            notificationStore.actions.error(`${field} ${validationErrors[field]}`)
+            notificationStore.actions.error(
+              `${field} ${validationErrors[field]}`
+            )
           }
         } else {
           notificationStore.actions.error(message)
