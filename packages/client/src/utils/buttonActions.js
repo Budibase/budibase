@@ -179,7 +179,7 @@ const validateFormHandler = async (action, context) => {
   return await executeActionHandler(
     context,
     action.parameters.componentId,
-    ActionTypes.ValidateForm,
+    ActionTypes.ValidateForm
   )
 }
 
