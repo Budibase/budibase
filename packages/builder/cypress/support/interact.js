@@ -51,7 +51,7 @@ export const LABEL_ADD_CIRCLE = "[aria-label=AddCircle]"
 export const ITEM_DISABLED = ".item.disabled"
 export const CONFIRM_WRAP_SPE_BUTTON = ".confirm-wrap .spectrum-Button"
 export const DATA_SOURCE_ENTRY = ".data-source-entry"
-export const NAV_ITEMS_CONTAINER = ".nav-items-container"
+export const BODY = ".body"
 
 //publishWorkFlow
 export const DEPLOY_APP_MODAL = ".spectrum-Modal [data-cy=deploy-app-modal]"
