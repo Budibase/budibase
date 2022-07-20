@@ -6,7 +6,7 @@
 
 <div class="notifications">
   {#if $notificationStore}
-    {#key $notificationStore.id}
+    {#each $notificationStore as { type, icon, message, id, dismissable } (id)}
       <div
         in:fly={{
           duration: 300,
@@ -16,14 +16,14 @@
         out:fly={{ y: -20, duration: 150 }}
       >
         <Notification
-          type={$notificationStore.type}
-          message={$notificationStore.message}
-          icon={$notificationStore.icon}
-          dismissable={$notificationStore.dismissable}
-          on:dismiss={notificationStore.actions.dismiss}
+          {type}
+          {message}
+          {icon}
+          {dismissable}
+          on:dismiss={() => notificationStore.actions.dismiss(id)}
         />
       </div>
-    {/key}
+    {/each}
   {/if}
 </div>
 
@@ -31,6 +31,8 @@
   .notifications {
     position: fixed;
     top: 20px;
+    bottom: 40px;
+    width: 25%;
     left: 0;
     right: 0;
     margin: 0 auto;
@@ -39,7 +41,8 @@
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
-    align-items: center;
+    align-items: end;
     pointer-events: none;
+    gap: 10px;
   }
 </style>
