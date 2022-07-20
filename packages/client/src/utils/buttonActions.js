@@ -180,7 +180,6 @@ const validateFormHandler = async (action, context) => {
     context,
     action.parameters.componentId,
     ActionTypes.ValidateForm,
-    action.parameters.onlyCurrentStep
   )
 }
 
