@@ -50,8 +50,9 @@ const createNotificationStore = () => {
           icon,
           dismissable: !autoDismiss,
           delay: get(store) != null,
-        }
-      ]})
+        },
+      ]
+    })
     if (autoDismiss) {
       const timeoutId = setTimeout(() => {
         dismiss(_id)
