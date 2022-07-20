@@ -638,6 +638,43 @@ Cypress.Commands.add("filterScreensAccessLevel", accessLevel => {
   })
 })
 
+Cypress.Commands.add("deleteScreen", screen => {
+  // Navigates to Design section and deletes specified screen
+  cy.contains("Design").click()
+  cy.get(".body").within(() => {
+    cy.contains(screen)
+      .siblings(".actions")
+      .within(() => {
+        cy.get(".spectrum-Icon").click({ force: true })
+      })
+  })
+  cy.get(".spectrum-Menu > .spectrum-Menu-item > .spectrum-Menu-itemLabel")
+    .contains("Delete")
+    .click()
+
+  cy.get(
+    ".spectrum-Dialog-grid > .spectrum-ButtonGroup > .confirm-wrap > .spectrum-Button"
+  ).click({ force: true })
+  cy.get(".spectrum-Dialog-grid", { timeout: 10000 }).should("not.exist")
+})
+
+Cypress.Commands.add("deleteAllScreens", () => {
+  // Deletes all screens
+  cy.get(".body")
+    .find(".nav-item")
+    .its("length")
+    .then(len => {
+      for (let i = 0; i < len; i++) {
+        cy.get(".body > .nav-item")
+          .eq(0)
+          .invoke("text")
+          .then(text => {
+            cy.deleteScreen(text.trim())
+          })
+      }
+    })
+})
+
 // NAVIGATION
 Cypress.Commands.add("navigateToFrontend", () => {
   // Clicks on Design tab and then the Home nav item
