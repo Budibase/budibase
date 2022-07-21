@@ -1,3 +1,4 @@
+const { api } = require("@budibase/pro")
 const userRoutes = require("./global/users")
 const configRoutes = require("./global/configs")
 const workspaceRoutes = require("./global/workspaces")
@@ -11,7 +12,6 @@ const tenantsRoutes = require("./system/tenants")
 const statusRoutes = require("./system/status")
 const selfRoutes = require("./global/self")
 const licenseRoutes = require("./global/license")
-const { api } = require("@budibase/pro")
 
 let userGroupRoutes = api.groups
 exports.routes = [
