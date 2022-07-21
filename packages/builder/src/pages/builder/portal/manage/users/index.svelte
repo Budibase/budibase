@@ -64,7 +64,9 @@
     { column: "role", component: RoleTableRenderer },
   ]
 
-  $: isProPlan = $auth.user?.license.plan.type !== Constants.PlanType.FREE
+  $: hasGroupsLicense = $auth.user?.license.features.includes(
+    Constants.Features.USER_GROUPS
+  )
 
   $: schema = {
     name: {},
@@ -73,7 +75,7 @@
       noPropagation: true,
       sortable: false,
     },
-    ...(isProPlan && {
+    ...(hasGroupsLicense && {
       userGroups: { sortable: false, displayName: "User groups" },
     }),
     apps: { width: "120px" },

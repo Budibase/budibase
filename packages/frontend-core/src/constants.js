@@ -99,6 +99,10 @@ export const PlanType = {
  */
 export const ApiVersion = "1"
 
+export const Features = {
+  USER_GROUPS: "userGroups",
+}
+
 // Role IDs
 export const Roles = {
   ADMIN: "ADMIN",

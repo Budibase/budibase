@@ -15,7 +15,9 @@
   import CreateEditGroupModal from "./_components/CreateEditGroupModal.svelte"
   import UserGroupsRow from "./_components/UserGroupsRow.svelte"
 
-  $: isProPlan = $auth.user?.license.plan.type !== Constants.PlanType.FREE
+  $: hasGroupsLicense = $auth.user?.license.features.includes(
+    Constants.Features.USER_GROUPS
+  )
 
   let modal
   let group = {
@@ -45,7 +47,9 @@
 
   onMount(async () => {
     try {
-      await groups.actions.init()
+      if (hasGroupsLicense) {
+        await groups.actions.init()
+      }
     } catch (error) {
       notifications.error("Error getting User groups")
     }
@@ -56,7 +60,7 @@
   <Layout gap="XS" noPadding>
     <div style="display: flex;">
       <Heading size="M">User groups</Heading>
-      {#if !isProPlan}
+      {#if !hasGroupsLicense}
         <Tags>
           <div class="tags">
             <div class="tag">
@@ -71,14 +75,14 @@
   <div class="align-buttons">
     <Button
       newStyles
-      icon={isProPlan ? "UserGroup" : ""}
-      cta={isProPlan}
-      on:click={isProPlan
+      icon={hasGroupsLicense ? "UserGroup" : ""}
+      cta={hasGroupsLicense}
+      on:click={hasGroupsLicense
         ? () => modal.show()
         : window.open("https://budibase.com/pricing/", "_blank")}
-      >{isProPlan ? "Create user group" : "Upgrade Account"}</Button
+      >{hasGroupsLicense ? "Create user group" : "Upgrade Account"}</Button
     >
-    {#if !isProPlan}
+    {#if !hasGroupsLicense}
       <Button
         newStyles
         secondary
@@ -89,7 +93,7 @@
     {/if}
   </div>
 
-  {#if isProPlan}
+  {#if hasGroupsLicense}
     <div class="groupTable">
       {#each $groups as group}
         <div>

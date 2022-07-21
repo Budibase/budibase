@@ -69,7 +69,9 @@
   $: unlocked = lockedApps?.length === 0
   $: automationErrors = getAutomationErrors(enrichedApps)
 
-  $: isProPlan = $auth.user?.license.plan.type !== Constants.PlanType.FREE
+  $: hasGroupsLicense = $auth.user?.license.features.includes(
+    Constants.Features.USER_GROUPS
+  )
 
   const enrichApps = (apps, user, sortBy) => {
     const enrichedApps = apps.map(app => ({
@@ -358,7 +360,7 @@
                   </Button>
                 {/if}
                 <div class="filter">
-                  {#if isProPlan && $groups.length}
+                  {#if hasGroupsLicense && $groups.length}
                     <AccessFilter on:change={accessFilterAction} />
                   {/if}
                   <Select

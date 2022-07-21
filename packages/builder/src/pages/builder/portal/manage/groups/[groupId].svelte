@@ -31,7 +31,7 @@
   $: page = $pageInfo.page
   $: fetchUsers(page, search)
   $: group = $groups.find(x => x._id === groupId)
-  $: console.log(group.users)
+
   async function addAll() {
     group.users = selectedUsers
     await groups.actions.save(group)

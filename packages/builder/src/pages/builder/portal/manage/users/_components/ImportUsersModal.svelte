@@ -22,7 +22,9 @@
   let usersRole = null
 
   $: invalidEmails = []
-  $: isProPlan = $auth.user?.license.plan.type !== Constants.PlanType.FREE
+  $: hasGroupsLicense = $auth.user?.license.features.includes(
+    Constants.Features.USER_GROUPS
+  )
 
   const validEmails = userEmails => {
     for (const email of userEmails) {
@@ -87,7 +89,7 @@
     options={Constants.BuilderRoleDescriptions}
   />
 
-  {#if isProPlan}
+  {#if hasGroupsLicense}
     <Multiselect
       bind:value={userGroups}
       placeholder="Select User Groups"

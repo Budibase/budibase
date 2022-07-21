@@ -41,7 +41,9 @@
   let allAppList = []
 
   $: user = users.get(userId)
-  $: isProPlan = $auth.user?.license.plan.type !== Constants.PlanType.FREE
+  $: hasGroupsLicense = $auth.user?.license.features.includes(
+    Constants.Features.USER_GROUPS
+  )
 
   $: allAppList = $apps
     .filter(x => {
@@ -70,7 +72,6 @@
       selectedGroups &&
       group?.name?.toLowerCase().includes(searchTerm.toLowerCase())
   )
-  $: console.log($groups)
   $: userGroups = $groups.filter(x => {
     return x.users?.find(y => {
       return y._id === userId
@@ -236,7 +237,7 @@
     </div>
   </Layout>
 
-  {#if isProPlan}
+  {#if hasGroupsLicense}
     <!-- User groups -->
     <Layout gap="XS" noPadding>
       <div class="tableTitle">
