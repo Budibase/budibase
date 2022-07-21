@@ -32,7 +32,6 @@
     position: fixed;
     top: 20px;
     bottom: 40px;
-    width: 25%;
     left: 0;
     right: 0;
     margin: 0 auto;
@@ -41,8 +40,12 @@
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
-    align-items: end;
+    align-items: center;
     pointer-events: none;
     gap: 10px;
+  }
+  .notifications :global(.spectrum-Toast) {
+    width: 400px;
+    max-width: 100vw;
   }
 </style>
