@@ -15,7 +15,9 @@
   let disabled
   let userGroups = []
 
-  $: isProPlan = $auth.user?.license.plan.type !== Constants.PlanType.FREE
+  $: hasGroupsLicense = $auth.user?.license.features.includes(
+    Constants.Features.USER_GROUPS
+  )
 
   $: userData = [
     {
@@ -65,7 +67,7 @@
     </div>
   </Layout>
 
-  {#if isProPlan}
+  {#if hasGroupsLicense}
     <Multiselect
       bind:value={userGroups}
       placeholder="Select User Groups"

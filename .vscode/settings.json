@@ -8,15 +8,12 @@
         "editor.defaultFormatter": "vscode.json-language-features"
     },
     "[javascript]": {
-        "editor.defaultFormatter": "vscode.typescript-language-features"
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
     "debug.javascript.terminalOptions": {
         "skipFiles": [
             "${workspaceFolder}/packages/backend-core/node_modules/**",
             "<node_internals>/**"
         ]
-    },
-    "[typescript]": {
-        "editor.defaultFormatter": "vscode.typescript-language-features"
     },
 }

@@ -33,6 +33,7 @@ describe("/users", () => {
         .expect(200)
 
       expect(res.body.length).toBe(3)
+      console.debug('test: ' + JSON.stringify(res.body))
       expect(res.body.find(u => u._id === `ro_ta_users_us_uuidx`)).toBeDefined()
       expect(res.body.find(u => u._id === `ro_ta_users_us_uuidy`)).toBeDefined()
     })

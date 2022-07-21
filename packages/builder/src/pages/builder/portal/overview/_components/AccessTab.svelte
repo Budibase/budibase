@@ -31,7 +31,9 @@
   $: page = $pageInfo.page
   $: fetchUsers(page, search)
 
-  $: isProPlan = $auth.user?.license.plan.type !== Constants.PlanType.FREE
+  $: hasGroupsLicense = $auth.user?.license.features.includes(
+    Constants.Features.USER_GROUPS
+  )
 
   $: appUsers =
     $users.data?.filter(x => {
@@ -158,7 +160,7 @@
           >
         </div>
       </div>
-      {#if isProPlan && appGroups.length}
+      {#if hasGroupsLicense && appGroups.length}
         <List title="User Groups">
           {#each appGroups as group}
             <ListItem
