@@ -50,14 +50,14 @@
         ? publishedApps
         : publishedApps.filter(app => {
             return userGroups.find(group => {
-              return Object.keys(group.roles).includes(app.prodId)
+              return Object.keys(group.roles).includes(app.appId)
             })
           })
     } else {
       userApps = $auth.user?.builder?.global
         ? publishedApps
         : publishedApps.filter(app =>
-            Object.keys($auth.user?.roles).includes(app.prodId)
+            Object.keys($auth.user?.roles).includes(app.appId)
           )
     }
   }

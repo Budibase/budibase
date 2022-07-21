@@ -93,7 +93,7 @@
     {/if}
   </div>
 
-  {#if hasGroupsLicense}
+  {#if hasGroupsLicense && $groups.length}
     <div class="groupTable">
       {#each $groups as group}
         <div>
