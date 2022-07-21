@@ -1,8 +1,8 @@
 jest.mock("nodemailer")
+jest.mock("@budibase/pro")
 const { config, request, mocks, structures } = require("../../../tests")
 const sendMailMock = mocks.email.mock()
 const { events } = require("@budibase/backend-core")
-
 describe("/api/global/users", () => {
 
   beforeAll(async () => {
