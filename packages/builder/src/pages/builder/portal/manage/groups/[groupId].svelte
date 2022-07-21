@@ -176,10 +176,10 @@
         >
           <div class="title ">
             <StatusLight
-              color={RoleUtils.getRoleColour(group.roles[app.prodId])}
+              color={RoleUtils.getRoleColour(group.roles[app.appId])}
             />
             <div style="margin-left: var(--spacing-s);">
-              <Body size="XS">{group.roles[app.prodId]}</Body>
+              <Body size="XS">{group.roles[app.appId]}</Body>
             </div>
           </div>
         </ListItem>

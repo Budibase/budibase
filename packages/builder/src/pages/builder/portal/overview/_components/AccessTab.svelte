@@ -21,6 +21,7 @@
   import { roles } from "stores/backend"
 
   export let app
+  $: console.log(app._id)
   let assignmentModal
   let appGroups = []
   let appUsers = []
@@ -38,7 +39,7 @@
   $: appUsers =
     $users.data?.filter(x => {
       return Object.keys(x.roles).find(y => {
-        return y === app.prodId
+        return y === app.appId
       })
     }) || []
 
@@ -57,7 +58,7 @@
           return group._id === data.id
         })
         matchedGroup.apps.push(app)
-        matchedGroup.roles[app.prodId] = data.role
+        matchedGroup.roles[app.appId] = data.role
 
         groups.actions.save(matchedGroup)
       } else if (data.id.startsWith(us_prefix)) {
@@ -67,27 +68,27 @@
 
         let newUser = {
           ...matchedUser,
-          roles: { [app.prodId]: data.role, ...matchedUser.roles },
+          roles: { [app.appId]: data.role, ...matchedUser.roles },
         }
 
         await users.save(newUser)
       }
     })
     await groups.actions.init()
-    await users.search({ page, appId: app.prodId })
+    await users.search({ page, appId: app.appId })
   }
 
   async function removeUser(user) {
     // Remove the user role
     const filteredRoles = { ...user.roles }
-    delete filteredRoles[app?.prodId]
+    delete filteredRoles[app?.appId]
     await users.save({
       ...user,
       roles: {
         ...filteredRoles,
       },
     })
-    await users.search({ page, appId: app.prodId })
+    await users.search({ page, appId: app.appId })
   }
 
   async function removeGroup(group) {
@@ -95,7 +96,7 @@
 
     let filteredApps = group.apps.filter(x => x.appId !== app.appId)
     const filteredRoles = { ...group.roles }
-    delete filteredRoles[app?.prodId]
+    delete filteredRoles[app?.appId]
 
     await groups.actions.save({
       ...group,
@@ -103,16 +104,16 @@
       roles: { ...filteredRoles },
     })
 
-    await users.search({ page, appId: app.prodId })
+    await users.search({ page, appId: app.appId })
   }
 
   async function updateUserRole(role, user) {
-    user.roles[app.prodId] = role
+    user.roles[app.appId] = role
     users.save(user)
   }
 
   async function updateGroupRole(role, group) {
-    group.roles[app.prodId] = role
+    group.roles[app.appId] = role
     groups.actions.save(group)
   }
 
@@ -128,7 +129,7 @@
     prevSearch = search
     try {
       pageInfo.loading()
-      await users.search({ page, appId: app.prodId })
+      await users.search({ page, appId: app.appId })
       pageInfo.fetched($users.hasNextPage, $users.nextPage)
     } catch (error) {
       notifications.error("Error getting user list")
@@ -173,7 +174,7 @@
                 autoWidth
                 quiet
                 value={group.roles[
-                  Object.keys(group.roles).find(x => x === app.prodId)
+                  Object.keys(group.roles).find(x => x === app.appId)
                 ]}
               />
               <Icon
@@ -195,7 +196,7 @@
                 autoWidth
                 quiet
                 value={user.roles[
-                  Object.keys(user.roles).find(x => x === app.prodId)
+                  Object.keys(user.roles).find(x => x === app.appId)
                 ]}
               />
               <Icon
