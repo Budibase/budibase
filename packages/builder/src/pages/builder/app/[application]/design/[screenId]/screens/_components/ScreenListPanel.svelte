@@ -1,5 +1,5 @@
 <script>
-  import { Search, Layout, Select, Body } from "@budibase/bbui"
+  import { Search, Layout, Select, Body, Button } from "@budibase/bbui"
   import Panel from "components/design/Panel.svelte"
   import { roles } from "stores/backend"
   import { store, sortedScreens } from "builderStore"
@@ -28,13 +28,9 @@
   }
 </script>
 
-<Panel
-  title="Screens"
-  showAddButton
-  onClickAddButton={showNewScreenModal}
-  borderRight
->
+<Panel title="Screens" borderRight>
   <Layout paddingX="L" paddingY="XL" gap="S">
+    <Button on:click={showNewScreenModal} cta>Add screen</Button>
     <Search
       placeholder="Search"
       value={searchString}
