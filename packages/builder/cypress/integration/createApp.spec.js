@@ -13,7 +13,7 @@ filterTests(['smoke', 'all'], () => {
       it("should show the new user UI/UX", () => {
         cy.visit(`${Cypress.config().baseUrl}/builder/portal/apps/create`, { timeout: 5000 }) //added /portal/apps/create
         cy.wait(1000)
-        cy.get(interact.CREATE_APP_BUTTON).contains('Start from scratch').should("exist")
+        cy.get(interact.CREATE_APP_BUTTON, { timeout: 10000 }).contains('Start from scratch').should("exist")
         
         cy.get(interact.TEMPLATE_CATEGORY_FILTER).should("exist")
         cy.get(interact.TEMPLATE_CATEGORY).should("exist")
