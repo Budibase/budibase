@@ -5,6 +5,7 @@ Cypress.on("uncaught:exception", () => {
 // ACCOUNTS & USERS
 Cypress.Commands.add("login", (email, password) => {
   cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 10000 })
+  cy.wait(2000)
   cy.url().then(url => {
     if (url.includes("builder/admin")) {
       // create admin user
