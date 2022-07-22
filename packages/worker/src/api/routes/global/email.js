@@ -1,8 +1,8 @@
 const Router = require("@koa/router")
 const controller = require("../../controllers/global/email")
 const { EmailTemplatePurpose } = require("../../../constants")
-const joiValidator = require("../../../middleware/joi-validator")
-const adminOnly = require("../../../middleware/adminOnly")
+const { joiValidator } = require("@budibase/backend-core/auth")
+const { adminOnly } = require("@budibase/backend-core/auth")
 const Joi = require("joi")
 
 const router = Router()
