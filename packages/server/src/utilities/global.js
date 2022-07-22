@@ -15,7 +15,6 @@ const { getAppId } = require("@budibase/backend-core/context")
 const { groups } = require("@budibase/pro")
 
 exports.updateAppRole = async (user, { appId } = {}) => {
-  console.log(appId)
   appId = appId || getAppId()
   if (!user || !user.roles) {
     return user
@@ -38,8 +37,6 @@ exports.updateAppRole = async (user, { appId } = {}) => {
     let roleId = await groups.getGroupRoleId(user, appId)
     user.roleId = roleId
   }
-  console.log(user.roleId)
-
   delete user.roles
   return user
 }

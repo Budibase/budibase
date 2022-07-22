@@ -7,6 +7,17 @@ const extractAppId = id => {
   return split.length ? split[split.length - 1] : null
 }
 
+const getProdAppID = appId => {
+  if (!appId || !appId.startsWith("app_dev")) {
+    return appId
+  }
+  // split to take off the app_dev element, then join it together incase any other app_ exist
+  const split = appId.split("app_dev")
+  split.shift()
+  const rest = split.join("app_dev")
+  return `${"app"}${rest}`
+}
+
 export function createAppStore() {
   const store = writable([])
 
@@ -79,6 +90,7 @@ export function createAppStore() {
     load,
     update,
     extractAppId,
+    getProdAppID,
   }
 }
 

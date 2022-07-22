@@ -35,13 +35,8 @@
     Constants.Features.USER_GROUPS
   )
 
-  $: {
-    if (!app.tenantId) {
-      fixedAppId = `app_${app.appId}`
-    } else {
-      fixedAppId = `app_${app.tenantId}_${app.appId}`
-    }
-  }
+  $: fixedAppId = apps.getProdAppID(app.devId)
+
   $: appUsers =
     $users.data?.filter(x => {
       return Object.keys(x.roles).find(y => {
