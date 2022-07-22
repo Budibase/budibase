@@ -38,9 +38,9 @@
 
     return initials == "" ? user.email[0] : initials
   }
-
+  $: console.log("app_" + app.appId)
   onMount(async () => {
-    await users.search({ page: undefined, appId: app.appId })
+    await users.search({ page: undefined, appId: "app_" + app.appId })
   })
 </script>
 
