@@ -1,4 +1,5 @@
 const Sql = require("../base/sql")
+const { SqlClients } = require("../utils")
 
 const TABLE_NAME = "test"
 
@@ -46,7 +47,7 @@ function generateDeleteJson(table = TABLE_NAME, filters = {}) {
 
 describe("SQL query builder", () => {
   const limit = 500
-  const client = "pg"
+  const client = SqlClients.POSTGRES
   let sql
 
   beforeEach(() => {
@@ -173,15 +174,15 @@ describe("SQL query builder", () => {
   })
 
   it("should work with MS-SQL", () => {
-    const query = new Sql("mssql", 10)._query(generateReadJson())
+    const query = new Sql(SqlClients.MS_SQL, 10)._query(generateReadJson())
     expect(query).toEqual({
       bindings: [10],
       sql: `select * from (select top (@p0) * from [${TABLE_NAME}]) as [${TABLE_NAME}]`
     })
   })
 
-  it("should work with mySQL", () => {
-    const query = new Sql("mysql", 10)._query(generateReadJson())
+  it("should work with MySQL", () => {
+    const query = new Sql(SqlClients.MY_SQL, 10)._query(generateReadJson())
     expect(query).toEqual({
       bindings: [10],
       sql: `select * from (select * from \`${TABLE_NAME}\` limit ?) as \`${TABLE_NAME}\``
@@ -236,6 +237,51 @@ describe("SQL query builder", () => {
     expect(query).toEqual({
       bindings: [date, limit],
       sql: `select * from (select * from "${TABLE_NAME}" where "${TABLE_NAME}"."property" > $1 limit $2) as "${TABLE_NAME}"`
+    })
+  })
+
+  it("should use like expression for MS-SQL when filter is contains", () => {
+    const query = new Sql(SqlClients.MS_SQL, 10)._query(generateReadJson({
+      filters: {
+        contains: {
+          age: 20,
+          name: "John"
+        }
+      }
+    }))
+    expect(query).toEqual({
+      bindings: [10, "%20%", "%John%"],
+      sql: `select * from (select top (@p0) * from [${TABLE_NAME}] where LOWER(${TABLE_NAME}.age) LIKE @p1 and LOWER(${TABLE_NAME}.name) LIKE @p2) as [${TABLE_NAME}]`
+    })
+  })
+
+  it("should use JSON_CONTAINS expression for MySQL when filter is contains", () => {
+    const query = new Sql(SqlClients.MY_SQL, 10)._query(generateReadJson({
+      filters: {
+        contains: {
+          age: 20,
+          name: "John"
+        }
+      }
+    }))
+    expect(query).toEqual({
+      bindings: [10],
+      sql: `select * from (select * from \`${TABLE_NAME}\` where JSON_CONTAINS(${TABLE_NAME}.age, '20') and JSON_CONTAINS(${TABLE_NAME}.name, '"John"') limit ?) as \`${TABLE_NAME}\``
+    })
+  })
+
+  it("should use jsonb operator expression for PostgreSQL when filter is contains", () => {
+    const query = new Sql(SqlClients.POSTGRES, 10)._query(generateReadJson({
+      filters: {
+        contains: {
+          age: 20,
+          name: "John"
+        }
+      }
+    }))
+    expect(query).toEqual({
+      bindings: [10],
+      sql: `select * from (select * from \"${TABLE_NAME}\" where \"${TABLE_NAME}\".\"age\"::jsonb @> '[20]' and \"${TABLE_NAME}\".\"name\"::jsonb @> '["John"]' limit $1) as \"${TABLE_NAME}\"`
     })
   })
 })
