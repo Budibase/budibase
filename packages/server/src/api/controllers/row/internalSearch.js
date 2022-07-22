@@ -19,6 +19,7 @@ class QueryBuilder {
       empty: {},
       notEmpty: {},
       oneOf: {},
+      contains: {},
       ...base,
     }
     this.limit = 50
@@ -119,6 +120,11 @@ class QueryBuilder {
     return this
   }
 
+  addContains(key, value) {
+    this.query.contains[key] = value
+    return this
+  }
+
   /**
    * Preprocesses a value before going into a lucene search.
    * Transforms strings to lowercase and wraps strings and bools in quotes.
@@ -162,6 +168,31 @@ class QueryBuilder {
         return null
       }
       return `${key}:${builder.preprocess(value, allPreProcessingOpts)}`
+    }
+
+    const contains = (key, value) => {
+      if (!value && value !== 0) {
+        return null
+      }
+      return `${key}:${builder.preprocess(value, { escape: true })}`
+    }
+
+    const oneOf = (key, value) => {
+      if (!Array.isArray(value)) {
+        if (typeof value === "string") {
+          value = value.split(",")
+        } else {
+          return ""
+        }
+      }
+      let orStatement = `${builder.preprocess(value[0], allPreProcessingOpts)}`
+      for (let i = 1; i < value.length; i++) {
+        orStatement += ` OR ${builder.preprocess(
+          value[i],
+          allPreProcessingOpts
+        )}`
+      }
+      return `${key}:(${orStatement})`
     }
 
     function build(structure, queryFn) {
@@ -239,26 +270,10 @@ class QueryBuilder {
       build(this.query.notEmpty, key => `${key}:["" TO *]`)
     }
     if (this.query.oneOf) {
-      build(this.query.oneOf, (key, value) => {
-        if (!Array.isArray(value)) {
-          if (typeof value === "string") {
-            value = value.split(",")
-          } else {
-            return ""
-          }
-        }
-        let orStatement = `${builder.preprocess(
-          value[0],
-          allPreProcessingOpts
-        )}`
-        for (let i = 1; i < value.length; i++) {
-          orStatement += ` OR ${builder.preprocess(
-            value[i],
-            allPreProcessingOpts
-          )}`
-        }
-        return `${key}:(${orStatement})`
-      })
+      build(this.query.oneOf, oneOf)
+    }
+    if (this.query.contains) {
+      build(this.query.contains, contains)
     }
     // make sure table ID is always added as an AND
     if (tableId) {
