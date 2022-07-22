@@ -12,7 +12,7 @@ export const APP_NAME_INPUT = "input" // we need to update this with atribute cy
 export const SPECTRUM_BUTTON_GROUP = ".spectrum-ButtonGroup"
 export const SPECTRUM_MODAL_INPUT = ".spectrum-Modal input"
 
-//AddMultiOptionDatatype test
+//AddMultiOptionDatatype
 export const CATEGORY_DATA = '[data-cy="category-Data"]'
 export const COMPONENT_DATA_PROVIDER = '[data-cy="component-Data Provider"]'
 export const DATASOURCE_PROP_CONTROL = '[data-cy="dataSource-prop-control"]'

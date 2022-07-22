@@ -4,8 +4,7 @@ Cypress.on("uncaught:exception", () => {
 
 // ACCOUNTS & USERS
 Cypress.Commands.add("login", (email, password) => {
-  cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 5000 })
-  cy.wait(2000)
+  cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 10000 })
   cy.url().then(url => {
     if (url.includes("builder/admin")) {
       // create admin user
@@ -210,7 +209,7 @@ Cypress.Commands.add("deleteApp", name => {
           cy.get(".app-overview-actions-icon").within(() => {
             cy.get(".spectrum-Icon").click({ force: true })
           })
-          cy.get(".spectrum-Menu").contains("Delete").click()
+          cy.get(".spectrum-Menu").contains("Delete").click({ force: true })
           cy.get(".spectrum-Dialog-grid").within(() => {
             cy.get("input").type(name)
           })
@@ -491,29 +490,45 @@ Cypress.Commands.add("selectTable", tableName => {
 })
 
 Cypress.Commands.add("addCustomSourceOptions", totalOptions => {
-  cy.get(".spectrum-ActionButton")
-    .contains("Define Options")
-    .click()
-    .then(() => {
-      for (let i = 0; i < totalOptions; i++) {
-        // Add radio button options
-        cy.get(".spectrum-Button")
-          .contains("Add Option")
-          .click({ force: true })
-          .then(() => {
-            cy.get("[placeholder='Label']", { timeout: 500 }).eq(i).type(i)
-            cy.get("[placeholder='Value']").eq(i).type(i)
-          })
-      }
-      // Save options
-      cy.get(".spectrum-Button").contains("Save").click({ force: true })
-    })
+  cy.get('[data-cy="customOptions-prop-control"]').within(() => {
+    cy.get(".spectrum-ActionButton-label").click({ force: true })
+  })
+  for (let i = 0; i < totalOptions; i++) {
+    // Add radio button options
+    cy.get(".spectrum-Button-label", { timeout: 1000 })
+      .contains("Add Option")
+      .click({ force: true })
+      .then(() => {
+        cy.get("[placeholder='Label']", { timeout: 500 }).eq(i).type(i)
+        cy.get("[placeholder='Value']").eq(i).type(i)
+      })
+  }
+  // Save options
+  cy.get(".spectrum-Button").contains("Save").click({ force: true })
 })
 
 // DESIGN SECTION
-Cypress.Commands.add("addComponent", (category, component) => {
-  cy.get(".spectrum-Button").contains("Component").click()
+Cypress.Commands.add("searchAndAddComponent", component => {
+  // Open component menu
+  cy.get(".spectrum-Button").contains("Component").click({ force: true })
 
+  // Search and add component
+  cy.get(".spectrum-Textfield-input").wait(500).clear().type(component)
+  cy.get(".body").within(() => {
+    cy.get(".component")
+      .contains(new RegExp("^" + component + "$"), { timeout: 3000 })
+      .click({ force: true })
+  })
+  cy.wait(1000)
+  cy.location().then(loc => {
+    const params = loc.pathname.split("/")
+    const componentId = params[params.length - 1]
+    cy.getComponent(componentId, { timeout: 3000 }).should("exist")
+    return cy.wrap(componentId)
+  })
+})
+
+Cypress.Commands.add("addComponent", (category, component) => {
   if (category) {
     cy.get(`[data-cy="category-${category}"]`, { timeout: 3000 }).click({
       force: true,
