@@ -16,7 +16,7 @@
     // Get root li element
     const el = document.getElementById(`component-${component?._id}`)
     // Get inner nav item content element
-    const child = el?.childNodes[0]?.childNodes[0]
+    const child = el?.children[0]?.children[0]
     if (!el) {
       return
     }
