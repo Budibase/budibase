@@ -1,7 +1,7 @@
 const Router = require("@koa/router")
 const controller = require("../../controllers/global/configs")
-const joiValidator = require("../../../middleware/joi-validator")
-const adminOnly = require("../../../middleware/adminOnly")
+const { joiValidator } = require("@budibase/backend-core/auth")
+const { adminOnly } = require("@budibase/backend-core/auth")
 const Joi = require("joi")
 const { Configs } = require("../../../constants")
 
@@ -77,7 +77,7 @@ function buildConfigSaveValidation() {
           { is: Configs.OIDC, then: oidcValidation() }
         ],
       }),
-    }).required().unknown(true),
+  }).required().unknown(true),
   )
 }
 
