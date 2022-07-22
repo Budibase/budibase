@@ -4,6 +4,7 @@
   import BlockComponent from "components/BlockComponent.svelte"
   import { Heading } from "@budibase/bbui"
   import { makePropSafe as safe } from "@budibase/string-templates"
+  import { enrichSearchColumns, enrichFilter } from "utils/blocks.js"
 
   export let title
   export let dataSource
@@ -31,14 +32,6 @@
   const { fetchDatasourceSchema, styleable } = getContext("sdk")
   const context = getContext("context")
   const component = getContext("component")
-  const schemaComponentMap = {
-    string: "stringfield",
-    options: "optionsfield",
-    number: "numberfield",
-    datetime: "datetimefield",
-    boolean: "booleanfield",
-    formula: "stringfield",
-  }
 
   let formId
   let dataProviderId
@@ -58,40 +51,6 @@
     },
   ]
 
-  // Enrich the default filter with the specified search fields
-  const enrichFilter = (filter, columns, formId) => {
-    let enrichedFilter = [...(filter || [])]
-    columns?.forEach(column => {
-      const safePath = column.name.split(".").map(safe).join(".")
-      const stringType = column.type === "string" || column.type === "formula"
-      enrichedFilter.push({
-        field: column.name,
-        type: column.type,
-        operator: stringType ? "string" : "equal",
-        valueType: "Binding",
-        value: `{{ ${safe(formId)}.${safePath} }}`,
-      })
-    })
-    return enrichedFilter
-  }
-
-  // Determine data types for search fields and only use those that are valid
-  const enrichSearchColumns = (searchColumns, schema) => {
-    let enrichedColumns = []
-    searchColumns?.forEach(column => {
-      const schemaType = schema?.[column]?.type
-      const componentType = schemaComponentMap[schemaType]
-      if (componentType) {
-        enrichedColumns.push({
-          name: column,
-          componentType,
-          type: schemaType,
-        })
-      }
-    })
-    return enrichedColumns.slice(0, 5)
-  }
-
   // Load the datasource schema so we can determine column types
   const fetchSchema = async dataSource => {
     if (dataSource) {
@@ -109,7 +68,7 @@
       <BlockComponent
         type="form"
         bind:id={formId}
-        props={{ dataSource, disableValidation: true }}
+        props={{ dataSource, disableValidation: true, editAutoColumns: true }}
       >
         {#if title || enrichedSearchColumns?.length || showTitleButton}
           <div class="header" class:mobile={$context.device.mobile}>
