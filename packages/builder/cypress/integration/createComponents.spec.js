@@ -31,13 +31,13 @@ filterTests(["all"], () => {
     }
 
     it("should add a container", () => {
-      cy.addComponent("Layout", "Container").then(componentId => {
+      cy.searchAndAddComponent("Container").then(componentId => {
         cy.getComponent(componentId).should("exist")
       })
     })
 
     it("should add a headline", () => {
-      cy.addComponent("Elements", "Headline").then(componentId => {
+      cy.searchAndAddComponent("Headline").then(componentId => {
         headlineId = componentId
         cy.getComponent(headlineId).should("exist")
       })
@@ -63,11 +63,11 @@ filterTests(["all"], () => {
     })
 
     it("should create a form and reset to match schema", () => {
-      cy.addComponent("Form", "Form").then(() => {
+      cy.searchAndAddComponent("Form").then(() => {
         cy.get("[data-cy=setting-dataSource]").contains("Custom").click()
         cy.get(interact.DROPDOWN).contains("dog").click()
         cy.wait(500)
-        cy.addComponent("Form", "Field Group").then(fieldGroupId => {
+        cy.searchAndAddComponent("Field Group").then(fieldGroupId => {
           cy.contains("Update form fields").click()
           cy.get(".spectrum-Modal")
             .get(".confirm-wrap .spectrum-Button")
@@ -88,7 +88,7 @@ filterTests(["all"], () => {
     })
 
     it("deletes a component", () => {
-      cy.addComponent("Elements", "Paragraph").then(componentId => {
+      cy.searchAndAddComponent("Paragraph").then(componentId => {
         cy.get("[data-cy=setting-_instanceName] input").type(componentId).blur()
         cy.get(
           ".nav-items-container .nav-item.selected .actions > div > .icon"
@@ -104,7 +104,7 @@ filterTests(["all"], () => {
     })
 
     it("should clear the iframe place holder when a form field has been set", () => {
-      cy.addComponent("Form", "Form").then(formId => {
+      cy.searchAndAddComponent("Form").then(formId => {
         //For deletion
         cy.get("[data-cy=setting-_instanceName] input")
           .clear()
@@ -123,10 +123,7 @@ filterTests(["all"], () => {
 
         const testFieldFocusOnCreate = componentLabel => {
           cy.log("Adding: " + componentLabel)
-          return cy.addComponent("Form", componentLabel).then(componentId => {
-            cy.getComponent(componentId)
-              .find(".component-placeholder")
-              .should("exist")
+          return cy.searchAndAddComponent(componentLabel).then(componentId => {
             cy.get("[data-cy=setting-field] button.spectrum-Picker").click()
 
             //Click the first appropriate field. They are filtered by type
@@ -157,7 +154,7 @@ filterTests(["all"], () => {
     })
 
     it("should populate the provider for charts with a data provider in its path", () => {
-      cy.addComponent("Data", "Data Provider").then(providerId => {
+      cy.searchAndAddComponent("Data Provider").then(providerId => {
         //For deletion
         cy.get("[data-cy=setting-_instanceName] input")
           .clear()
@@ -181,7 +178,7 @@ filterTests(["all"], () => {
 
         const testFocusOnCreate = chartLabel => {
           cy.log("Adding: " + chartLabel)
-          cy.addComponent("Chart", chartLabel).then(componentId => {
+          cy.searchAndAddComponent(chartLabel).then(componentId => {
             cy.get(
               "[data-cy=dataProvider-prop-control] .spectrum-Picker"
             ).should("not.have.class", "is-focused")
@@ -207,7 +204,7 @@ filterTests(["all"], () => {
     })
 
     it("should replace the placeholder when a url is set on an image", () => {
-      cy.addComponent("Elements", "Image").then(imageId => {
+      cy.searchAndAddComponent("Image").then(imageId => {
         cy.get("[data-cy=setting-_instanceName] input")
           .clear()
           .type(imageId)
@@ -229,7 +226,7 @@ filterTests(["all"], () => {
     })
 
     it("should add a markdown component.", () => {
-      cy.addComponent("Elements", "Markdown Viewer").then(markdownId => {
+      cy.searchAndAddComponent("Markdown Viewer").then(markdownId => {
         cy.get("[data-cy=setting-_instanceName] input")
           .clear()
           .type(markdownId)
@@ -253,8 +250,7 @@ filterTests(["all"], () => {
     })
 
     it("should direct the user when adding an Icon component.", () => {
-      cy.addComponent("Elements", "Icon").then(iconId => {
-        cy.getComponent(iconId).find(".component-placeholder").should("exist")
+      cy.searchAndAddComponent("Icon").then(iconId => {
         cy.get("[data-cy=setting-_instanceName] input")
           .clear()
           .type(iconId)
