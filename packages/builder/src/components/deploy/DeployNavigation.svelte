@@ -56,6 +56,10 @@
     }
   }
 
+  const previewApp = () => {
+    window.open(`/${application}`)
+  }
+
   const viewApp = () => {
     analytics.captureEvent(Events.APP_VIEW_PUBLISHED, {
       appId: selectedApp.appId,
@@ -174,7 +178,10 @@
   Are you sure you want to unpublish the app <b>{selectedApp?.name}</b>?
 </ConfirmDialog>
 
-<DeployModal onOk={completePublish} />
+<div class="buttons">
+  <Button on:click={previewApp} newStyles secondary>Preview</Button>
+  <DeployModal onOk={completePublish} />
+</div>
 
 <style>
   .publish-popover-actions :global([data-cy="publish-popover-action"]) {
@@ -182,5 +189,12 @@
   }
   :global([data-cy="publish-popover-menu"]) {
     padding: 10px;
+  }
+  .buttons {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: center;
+    gap: var(--spacing-m);
   }
 </style>
