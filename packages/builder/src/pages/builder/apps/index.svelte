@@ -45,19 +45,23 @@
   $: publishedApps = $apps.filter(publishedAppsOnly)
 
   $: {
-    if (!Object.keys($auth.user?.roles).length) {
+    if (!Object.keys($auth.user?.roles).length && $auth.user?.userGroups) {
       userApps = $auth.user?.builder?.global
         ? publishedApps
         : publishedApps.filter(app => {
             return userGroups.find(group => {
-              return Object.keys(group.roles).includes(app.appId)
+              return Object.keys(group.roles)
+                .map(role => apps.extractAppId(role))
+                .includes(app.appId)
             })
           })
     } else {
       userApps = $auth.user?.builder?.global
         ? publishedApps
         : publishedApps.filter(app =>
-            Object.keys($auth.user?.roles).includes(app.appId)
+            Object.keys($auth.user?.roles)
+              .map(x => apps.extractAppId(x))
+              .includes(app.appId)
           )
     }
   }

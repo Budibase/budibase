@@ -21,28 +21,33 @@
   import { roles } from "stores/backend"
 
   export let app
-  $: console.log(app._id)
   let assignmentModal
   let appGroups = []
   let appUsers = []
   let prevSearch = undefined,
     search = undefined
   let pageInfo = createPaginationStore()
-
+  let fixedAppId
   $: page = $pageInfo.page
   $: fetchUsers(page, search)
-
+  $: console.log(app)
   $: hasGroupsLicense = $auth.user?.license.features.includes(
     Constants.Features.USER_GROUPS
   )
 
+  $: {
+    if (!app.tenantId) {
+      fixedAppId = `app_${app.appId}`
+    } else {
+      fixedAppId = `app_${app.tenantId}_${app.appId}`
+    }
+  }
   $: appUsers =
     $users.data?.filter(x => {
       return Object.keys(x.roles).find(y => {
-        return y === app.appId
+        return y === fixedAppId
       })
     }) || []
-
   $: appGroups = $groups.filter(x => {
     return x.apps.find(y => {
       return y.appId === app.appId
@@ -58,7 +63,7 @@
           return group._id === data.id
         })
         matchedGroup.apps.push(app)
-        matchedGroup.roles[app.appId] = data.role
+        matchedGroup.roles[fixedAppId] = data.role
 
         groups.actions.save(matchedGroup)
       } else if (data.id.startsWith(us_prefix)) {
@@ -68,35 +73,36 @@
 
         let newUser = {
           ...matchedUser,
-          roles: { [app.appId]: data.role, ...matchedUser.roles },
+          roles: { [fixedAppId]: data.role, ...matchedUser.roles },
         }
 
-        await users.save(newUser)
+        await users.save(newUser, { opts: { appId: fixedAppId } })
+        await fetchUsers(page, search)
       }
     })
     await groups.actions.init()
-    await users.search({ page, appId: app.appId })
   }
 
   async function removeUser(user) {
     // Remove the user role
     const filteredRoles = { ...user.roles }
-    delete filteredRoles[app?.appId]
+    delete filteredRoles[fixedAppId]
     await users.save({
       ...user,
       roles: {
         ...filteredRoles,
       },
     })
-    await users.search({ page, appId: app.appId })
+    await fetchUsers(page, search)
   }
 
   async function removeGroup(group) {
     // Remove the user role
-
-    let filteredApps = group.apps.filter(x => x.appId !== app.appId)
+    let filteredApps = group.apps.filter(
+      x => apps.extractAppId(x) !== app.appId
+    )
     const filteredRoles = { ...group.roles }
-    delete filteredRoles[app?.appId]
+    delete filteredRoles[fixedAppId]
 
     await groups.actions.save({
       ...group,
@@ -104,16 +110,16 @@
       roles: { ...filteredRoles },
     })
 
-    await users.search({ page, appId: app.appId })
+    await fetchUsers(page, search)
   }
 
   async function updateUserRole(role, user) {
-    user.roles[app.appId] = role
+    user.roles[fixedAppId] = role
     users.save(user)
   }
 
   async function updateGroupRole(role, group) {
-    group.roles[app.appId] = role
+    group.roles[fixedAppId] = role
     groups.actions.save(group)
   }
 
@@ -129,7 +135,7 @@
     prevSearch = search
     try {
       pageInfo.loading()
-      await users.search({ page, appId: app.appId })
+      await users.search({ page, appId: fixedAppId })
       pageInfo.fetched($users.hasNextPage, $users.nextPage)
     } catch (error) {
       notifications.error("Error getting user list")
@@ -142,7 +148,7 @@
       await apps.load()
       await roles.fetch()
     } catch (error) {
-      notifications.error("Error")
+      notifications.error(error)
     }
   })
 </script>
@@ -174,7 +180,7 @@
                 autoWidth
                 quiet
                 value={group.roles[
-                  Object.keys(group.roles).find(x => x === app.appId)
+                  Object.keys(group.roles).find(x => x === fixedAppId)
                 ]}
               />
               <Icon
@@ -196,7 +202,7 @@
                 autoWidth
                 quiet
                 value={user.roles[
-                  Object.keys(user.roles).find(x => x === app.appId)
+                  Object.keys(user.roles).find(x => x === fixedAppId)
                 ]}
               />
               <Icon

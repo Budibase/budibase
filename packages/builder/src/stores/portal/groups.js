@@ -4,16 +4,7 @@ import { auth } from "stores/portal"
 import { Constants } from "@budibase/frontend-core"
 
 export function createGroupsStore() {
-  const DEFAULT_CONFIG = {
-    name: "",
-    icon: "",
-    color: "",
-    users: [],
-    apps: [],
-    roles: {},
-  }
-
-  const store = writable([DEFAULT_CONFIG])
+  const store = writable([])
 
   const actions = {
     init: async () => {
