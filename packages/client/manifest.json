@@ -3509,17 +3509,18 @@
       },
       {
         "type": "boolean",
-        "label": "Show button",
+        "label": "Use button for click action",
         "key": "showButton"
       },
       {
         "type": "text",
         "key": "buttonText",
-        "label": "Button text"
+        "label": "Button text",
+        "dependsOn": "showButton"
       },
       {
         "type": "event",
-        "label": "Button action",
+        "label": "Click action",
         "key": "buttonOnClick"
       }
     ]
@@ -3841,18 +3842,19 @@
           },
           {
             "type": "boolean",
-            "label": "Show button",
+            "label": "Use button for click action",
             "key": "showCardButton"
           },
           {
             "type": "text",
             "key": "cardButtonText",
             "label": "Button text",
-            "nested": true
+            "nested": true,
+            "dependsOn": "showCardButton"
           },
           {
             "type": "event",
-            "label": "Button action",
+            "label": "Click action",
             "key": "cardButtonOnClick",
             "nested": true
           }

@@ -246,6 +246,7 @@
             {bindings}
             allowJS={false}
             updateOnChange={false}
+            drawerLeft="260px"
           />
         {/if}
       {:else if value.customType === "query"}
@@ -335,6 +336,7 @@
               {bindings}
               updateOnChange={false}
               placeholder={value.customType === "queryLimit" ? queryLimit : ""}
+              drawerLeft="260px"
             />
           </div>
         {/if}
