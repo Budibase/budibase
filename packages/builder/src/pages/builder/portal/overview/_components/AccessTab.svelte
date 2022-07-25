@@ -30,7 +30,7 @@
   let fixedAppId
   $: page = $pageInfo.page
   $: fetchUsers(page, search)
-  $: console.log(app)
+
   $: hasGroupsLicense = $auth.user?.license.features.includes(
     Constants.Features.USER_GROUPS
   )

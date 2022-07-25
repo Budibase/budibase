@@ -291,21 +291,12 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-<<<<<<< HEAD
-"@budibase/backend-core@1.1.18-alpha.0":
-  version "1.1.18-alpha.0"
-  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.1.18-alpha.0.tgz#1b946ceccb798f3641fa35f11b2dda3ae0239d7a"
-  integrity sha512-dpRmrcjs63tmljlfKZABhjV9E9GqmFaiCa7+wyobgB90TPfs3RVJD1lxk4R15jjTEUn/G518cK05+xZhTVi7TQ==
+"@budibase/backend-core@1.1.22-alpha.0":
+  version "1.1.22-alpha.0"
+  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.1.22-alpha.0.tgz#2a090a723d35ce4a2e377ac0927fe127213bcbb3"
+  integrity sha512-77gxcPrjejdqaMaMkbrCS0glYA1jdGo74NpCxdadWx+suU4SMTmOt2jgnEZg20aeKcky2xTpVbjDxIq+Fb2J+g==
   dependencies:
-    "@budibase/types" "^1.1.18-alpha.0"
-=======
-"@budibase/backend-core@1.1.21":
-  version "1.1.21"
-  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.1.21.tgz#660e0023f674189b25ca5eabbaff67aebcdf03b8"
-  integrity sha512-qEf9ggMX6NpVOTe1xfp6NZnbdBV0h0ls9qGGTcMjPakhatB4+3YKSTEDSYYRzY/OLNoKPhcd3aErXuFRR7WKrg==
-  dependencies:
-    "@budibase/types" "^1.1.21"
->>>>>>> origin/develop
+    "@budibase/types" "^1.1.22-alpha.0"
     "@techpass/passport-openidconnect" "0.3.2"
     aws-sdk "2.1030.0"
     bcrypt "5.0.1"
@@ -333,40 +324,19 @@
     uuid "8.3.2"
     zlib "1.0.5"
 
-<<<<<<< HEAD
-"@budibase/pro@1.1.18-alpha.0":
-  version "1.1.18-alpha.0"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-1.1.18-alpha.0.tgz#b0e6c2bec10139373e3c02be7ed239adc34e53a9"
-  integrity sha512-zHdI1RjNqSAE4h4tSH3WCCtGSGc1QZuQ7zUf6MvhduhCSm06dLMUdgbXB5iMbUcorokeIONXvKFHfPZ2JsctSw==
+"@budibase/pro@1.1.22-alpha.0":
+  version "1.1.22-alpha.0"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-1.1.22-alpha.0.tgz#5718188fbc76ce3c3cf3c633c99c6e59f5846310"
+  integrity sha512-QL5bhT/BJnoKVV5XH5+s3jSCBzV/JGOy8YQObEjZgCrtTWUjdvMrm5pFinflFGriCfoArmvR3Q51FBpNJQfaag==
   dependencies:
-    "@budibase/backend-core" "1.1.18-alpha.0"
-    "@budibase/types" "1.1.18-alpha.0"
+    "@budibase/backend-core" "1.1.22-alpha.0"
+    "@budibase/types" "1.1.22-alpha.0"
     node-fetch "^2.6.1"
 
-"@budibase/types@1.1.18-alpha.0":
-  version "1.1.18-alpha.0"
-  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-1.1.18-alpha.0.tgz#73fb24d304ea18e04605e22aafea41094ebeb10c"
-  integrity sha512-B/4PgNu/yxsUcrLZMafU5dxPrJ3G2N2ajUDOtOv2fIwNATZRMXEacYe8cpndKxKriIOE4A8zGKwpKO7rIPqHvA==
-
-"@budibase/types@^1.1.18-alpha.0":
-  version "1.1.19"
-  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-1.1.19.tgz#770b83f971e3e949a43b7d3564cbaed4462dd834"
-  integrity sha512-rFGe/RvcpV40CJ6Ng3RZSqj07GFAlzDyo116o/jQIskOew/SfBrIPaENEqk0wFPVL2pcZMpySXHNa86asqmUiw==
-=======
-"@budibase/pro@1.1.21":
-  version "1.1.21"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-1.1.21.tgz#c9d21bc82740e9407673088dc8451273368943d9"
-  integrity sha512-aE20qZmVg/sPp4bV++xwdUnp8+c9wq7Df34P9hYvlhklgh+fxd+2RyautOAfMADRMIZIbtP4/gal95bE/KTPNQ==
-  dependencies:
-    "@budibase/backend-core" "1.1.21"
-    "@budibase/types" "1.1.21"
-    node-fetch "^2.6.1"
-
-"@budibase/types@1.1.21", "@budibase/types@^1.1.21":
-  version "1.1.21"
-  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-1.1.21.tgz#4f46cd52f3e52c804e5dba06b0520825da81f84e"
-  integrity sha512-fR8783evr6SKZggu/QZRgcZfd8SAuG2U+xO8lL0x/pLNZI1vOeTyQXASoPLLzj6uA8bWnPIy8BGd9PK4Mw3XVQ==
->>>>>>> origin/develop
+"@budibase/types@1.1.22-alpha.0", "@budibase/types@^1.1.22-alpha.0":
+  version "1.1.22-alpha.0"
+  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-1.1.22-alpha.0.tgz#85fb7f37773c710e8232c95104095c26a8dd22ca"
+  integrity sha512-1gRwAtjEl7Ug1jrYwD9Iudbfgs37nndEBEB6yVdNPKA5SpjG+Fwx30zp6R961zlx1vsSu4iMdwM8IbMsCM8p1g==
 
 "@cspotcode/source-map-consumer@0.8.0":
   version "0.8.0"
@@ -1072,9 +1042,9 @@
   integrity sha512-YATxVxgRqNH6nHEIsvg6k2Boc1JHI9ZbH5iWFFv/MTkchz3b1ieGDa5T0a9RznNdI0KhVbdbWSN+KWWrQZRxTw==
 
 "@types/node@*":
-  version "18.0.6"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-18.0.6.tgz#0ba49ac517ad69abe7a1508bc9b3a5483df9d5d7"
-  integrity sha512-/xUq6H2aQm261exT6iZTMifUySEt4GR5KX8eYyY+C4MSNPqSh9oNIP7tz2GLKTlFaiBbgZNxffoR3CVRG+cljw==
+  version "18.6.1"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-18.6.1.tgz#828e4785ccca13f44e2fb6852ae0ef11e3e20ba5"
+  integrity sha512-z+2vB6yDt1fNwKOeGbckpmirO+VBDuQqecXkgeIqDlaOtmKn6hPR/viQ8cxCfqLU4fTlvM3+YjM367TukWdxpg==
 
 "@types/node@14.18.20":
   version "14.18.20"
@@ -1267,9 +1237,9 @@ acorn@^7.1.1:
   integrity sha512-nQyp0o1/mNdbTO1PO6kHkwSrmgZ0MT/jCCpNiwbUjGoRN4dlBhqJtoQuCnEOKzgTVwg0ZWiCoQy6SxMebQVh8A==
 
 acorn@^8.2.4, acorn@^8.4.1:
-  version "8.7.1"
-  resolved "https://registry.yarnpkg.com/acorn/-/acorn-8.7.1.tgz#0197122c843d1bf6d0a5e83220a788f278f63c30"
-  integrity sha512-Xx54uLJQZ19lKygFXOWsscKUbsBZW0CPykPhVQdhIeIwrbPmJzqeASDInc8nKBnp/JT6igTs82qPXz069H8I/A==
+  version "8.8.0"
+  resolved "https://registry.yarnpkg.com/acorn/-/acorn-8.8.0.tgz#88c0187620435c7f6015803f5539dae05a9dbea8"
+  integrity sha512-QOxyigPVrpZ2GXT+PFyZTl6TtOFc5egxHIP9IlQ+RbupQuX4RkT/Bee4/kQuC02Xkzg84JcT7oLYtDIQxp+v7w==
 
 agent-base@6:
   version "6.0.2"
@@ -1761,9 +1731,9 @@ camelcase@^6.2.0:
   integrity sha512-Gmy6FhYlCY7uOElZUSbxo2UCDH8owEk996gkbrpsgGtrJLM3J7jGxl9Ic7Qwwj4ivOE5AWZWRMecDdF7hqGjFA==
 
 caniuse-lite@^1.0.30001366:
-  version "1.0.30001367"
-  resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30001367.tgz#2b97fe472e8fa29c78c5970615d7cd2ee414108a"
-  integrity sha512-XDgbeOHfifWV3GEES2B8rtsrADx4Jf+juKX2SICJcaUhjYBO3bR96kvEIHa15VU6ohtOhBZuPGGYGbXMRn0NCw==
+  version "1.0.30001370"
+  resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30001370.tgz#0a30d4f20d38b9e108cc5ae7cc62df9fe66cd5ba"
+  integrity sha512-3PDmaP56wz/qz7G508xzjx8C+MC2qEm4SYhSEzC9IBROo+dGXFWRuaXkWti0A9tuI00g+toiriVqxtWMgl350g==
 
 caseless@~0.12.0:
   version "0.12.0"
@@ -2382,9 +2352,9 @@ ee-first@1.1.1:
   integrity sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow==
 
 electron-to-chromium@^1.4.188:
-  version "1.4.194"
-  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.4.194.tgz#2f83fcec5067907044a3d502ac7c3efb1fe6430b"
-  integrity sha512-ola5UH0xAP1oYY0FFUsPvwtucEzCQHucXnT7PQ1zjHJMccZhCDktEugI++JUR3YuIs7Ff7afz+OVEhVAIMhLAQ==
+  version "1.4.199"
+  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.4.199.tgz#e0384fde79fdda89880e8be58196a9153e04db3b"
+  integrity sha512-WIGME0Cs7oob3mxsJwHbeWkH0tYkIE/sjkJ8ML2BYmuRcjhRl/q5kVDXG7W9LOOKwzPU5M0LBlXRq9rlSgnNlg==
 
 emitter-listener@1.1.2:
   version "1.1.2"

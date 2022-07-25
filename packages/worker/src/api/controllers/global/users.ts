@@ -22,59 +22,48 @@ export const save = async (ctx: any) => {
   }
 }
 
-export const bulkSave = async (ctx: any) => {
+export const bulkCreate = async (ctx: any) => {
   let { users: newUsersRequested, groups } = ctx.request.body
-  let groupsToSave: any[] = []
-  const newUsers: any[] = []
   const db = tenancy.getGlobalDB()
-  const currentUserEmails =
-    (await users.allUsers())?.map((x: any) => x.email) || []
-  for (const newUser of newUsersRequested) {
-    if (
-      newUsers.find((x: any) => x.email === newUser.email) ||
-      currentUserEmails.includes(newUser.email)
-    )
-      continue
-    newUser.userGroups = groups
-    newUsers.push(newUser)
-  }
+  let groupsToSave: any[] = []
 
   if (groups.length) {
-    groups.forEach(async (groupId: string) => {
+    for (const groupId of groups) {
       let oldGroup = await db.get(groupId)
       groupsToSave.push(oldGroup)
-    })
+    }
   }
 
   try {
-    let response: any[] = []
-    for (const user of newUsers) {
-      response.push(
-        await users.save(user, {
-          hashPassword: true,
-          requirePassword: user.requirePassword,
-          bulkCreate: false,
-        })
-      )
-    }
-
-    // delete passwords and add to group
-    newUsers.forEach(user => {
-      delete user.password
-    })
+    let response = await users.bulkCreate(newUsersRequested, groups)
 
     if (groupsToSave.length) {
+      let groupsPromises: any = []
       groupsToSave.forEach(async (userGroup: UserGroup) => {
         userGroup.users = [...userGroup.users, ...response]
-        await db.put(userGroup)
-        events.group.usersAdded(
-          newUsers.map(u => u.email),
-          userGroup
-        )
-        events.group.createdOnboarding(userGroup._id as string)
+        groupsPromises.push(db.put(userGroup))
       })
-    }
 
+      const groupResults = await Promise.all(groupsPromises)
+      await db.bulkDocs(groupResults)
+
+      let eventFns = []
+      for (const group of groupResults) {
+        eventFns.push(() => {
+          events.group.usersAdded(
+            response.map(u => u.email),
+            group
+          )
+        })
+        eventFns.push(() => {
+          events.group.createdOnboarding(group._id as string)
+        })
+      }
+
+      for (const fn of eventFns) {
+        await fn()
+      }
+    }
     ctx.body = response
   } catch (err: any) {
     ctx.throw(err.status || 400, err)
@@ -169,31 +158,31 @@ export const destroy = async (ctx: any) => {
 export const bulkDelete = async (ctx: any) => {
   const { userIds } = ctx.request.body
   const db = tenancy.getGlobalDB()
+  try {
+    let { groupsToModify, usersResponse } = await users.bulkDelete(userIds)
 
-  let deleted = 0
-
-  for (const id of userIds) {
-    let user: User = await db.get(id)
-    let groups = user.userGroups
-
-    await users.destroy(id, ctx.user)
-
-    if (groups) {
-      for (const groupId of groups) {
-        let group = await db.get(groupId)
+    // if there are groups to delete, do it here
+    if (Object.keys(groupsToModify).length) {
+      let groups = (
+        await db.allDocs({
+          include_docs: true,
+          keys: Object.keys(groupsToModify),
+        })
+      ).rows.map((group: any) => group.doc)
+      for (const group of groups) {
         let updatedUsersGroup = group.users.filter(
-          (groupUser: any) => groupUser.email !== user.email
+          (groupUser: any) => !groupsToModify[group._id].includes(groupUser._id)
         )
-        console.log(updatedUsersGroup)
         group.users = updatedUsersGroup
         await db.put(group)
       }
     }
-    deleted++
-  }
 
-  ctx.body = {
-    message: `${deleted} user(s) deleted`,
+    ctx.body = {
+      message: `${usersResponse.length} user(s) deleted`,
+    }
+  } catch (err) {
+    ctx.throw(err)
   }
 }
 

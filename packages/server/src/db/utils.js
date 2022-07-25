@@ -28,7 +28,6 @@ const DocumentTypes = {
   TABLE: "ta",
   ROW: "ro",
   USER: "us",
-  GROUP: "gr",
   AUTOMATION: "au",
   LINK: "li",
   WEBHOOK: "wh",
