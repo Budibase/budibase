@@ -1,10 +1,9 @@
 <script>
   import DevicePreviewSelect from "./DevicePreviewSelect.svelte"
   import AppPreview from "./AppPreview.svelte"
-  import { store, selectedScreen, sortedScreens } from "builderStore"
-  import { Button, Select } from "@budibase/bbui"
+  import { store, sortedScreens } from "builderStore"
+  import { Select } from "@budibase/bbui"
   import { RoleUtils } from "@budibase/frontend-core"
-  import { goto } from "@roxi/routify"
 </script>
 
 <div class="app-panel">
@@ -15,10 +14,11 @@
         options={$sortedScreens}
         getOptionLabel={x => x.routing.route}
         getOptionValue={x => x._id}
-        getOptionIcon={x => (x.routing.homeScreen ? "Home" : "WebPage")}
         getOptionColour={x => RoleUtils.getRoleColour(x.routing.roleId)}
         value={$store.selectedScreenId}
         on:change={e => store.actions.screens.select(e.detail)}
+        quiet
+        autoWidth
       />
     </div>
     <div class="header-right">
@@ -62,7 +62,8 @@
     gap: var(--spacing-l);
   }
   .header-left :global(.spectrum-Picker) {
-    width: 250px;
+    font-weight: 600;
+    color: var(--spectrum-global-color-gray-900);
   }
   .content {
     flex: 1 1 auto;
