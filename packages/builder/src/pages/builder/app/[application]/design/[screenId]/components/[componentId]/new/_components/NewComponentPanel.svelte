@@ -187,11 +187,10 @@
       {#if filteredStructure.length}
         {#each filteredStructure as category}
           <DetailSummary name={category.name} collapsible={false}>
-            <div class="component-grid">
+            <Layout noPadding gap="XS">
               {#each category.children as component}
                 <div
                   class="component"
-                  class:wide={component.name?.length > 15}
                   class:selected={selectedIndex ===
                     orderMap[component.component]}
                   on:click={() => addComponent(component.component)}
@@ -201,7 +200,7 @@
                   <Body size="XS">{component.name}</Body>
                 </div>
               {/each}
-            </div>
+            </Layout>
           </DetailSummary>
         {/each}
       {:else}
@@ -217,7 +216,7 @@
         <Layout noPadding gap="XS">
           {#each blocks as block}
             <div
-              class="component block"
+              class="component"
               on:click={() => addComponent(block.component)}
             >
               <Icon name={block.icon} />
@@ -240,28 +239,18 @@
     flex-direction: row;
     align-items: stretch;
   }
-  .component-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: var(--spacing-s);
-  }
   .component {
     background-color: var(--spectrum-global-color-gray-200);
     border-radius: 4px;
-    height: 76px;
     display: flex;
-    flex-direction: column;
-    justify-content: center;
     align-items: center;
-    text-align: center;
-    padding: 0 var(--spacing-s);
-    gap: var(--spacing-s);
-    padding-top: 4px;
     border: 1px solid var(--spectrum-global-color-gray-200);
     transition: border-color 130ms ease-out;
-  }
-  .component.wide {
-    grid-column: span 2;
+    flex-direction: row;
+    justify-content: flex-start;
+    padding: var(--spacing-s) var(--spacing-l);
+    gap: var(--spacing-m);
+    overflow: hidden;
   }
   .component.selected,
   .component:hover {
@@ -272,13 +261,7 @@
   }
   .component :global(.spectrum-Body) {
     line-height: 1.2 !important;
-  }
-
-  .block {
-    flex-direction: row;
-    justify-content: flex-start;
-    height: 48px;
-    padding: 0 var(--spacing-l);
-    gap: var(--spacing-m);
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 </style>
