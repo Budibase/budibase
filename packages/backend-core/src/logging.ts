@@ -16,7 +16,7 @@ export function logAlert(message: string, e?: any) {
 }
 
 export function logInfo(message: string) {
-  console.warn(`bb-info: ${message}`)
+  console.log(`bb-info: ${message}`)
 }
 
 export default {
