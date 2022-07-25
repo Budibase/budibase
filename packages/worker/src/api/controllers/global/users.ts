@@ -140,14 +140,17 @@ export const destroy = async (ctx: any) => {
 
   // Remove asssosicated groups
   if (groups) {
+    let groupsPromises = []
     for (const groupId of groups) {
       let group = await db.get(groupId)
       let updatedUsersGroup = group.users.filter(
         (groupUser: any) => groupUser.email !== user.email
       )
       group.users = updatedUsersGroup
-      await db.put(group)
+      groupsPromises.push(db.put(group))
     }
+
+    await db.bulkDocs(groupsPromises)
   }
 
   ctx.body = {
@@ -169,13 +172,17 @@ export const bulkDelete = async (ctx: any) => {
           keys: Object.keys(groupsToModify),
         })
       ).rows.map((group: any) => group.doc)
+
+      let groupsPromises = []
       for (const group of groups) {
         let updatedUsersGroup = group.users.filter(
           (groupUser: any) => !groupsToModify[group._id].includes(groupUser._id)
         )
         group.users = updatedUsersGroup
-        await db.put(group)
+        groupsPromises.push(db.put(group))
       }
+
+      await db.bulkDocs(groupsPromises)
     }
 
     ctx.body = {
