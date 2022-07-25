@@ -1,6 +1,6 @@
 import BaseCache from "./base"
 import { getWritethroughClient } from "../redis/init"
-import { logInfo } from "../logging"
+import { logWarn } from "../logging"
 
 const DEFAULT_WRITE_RATE_MS = 10000
 let CACHE: BaseCache | null = null
@@ -53,7 +53,7 @@ export async function put(
         throw err
       } else {
         // Swallow 409s but log them
-        logInfo(`Ignoring conflict in write-through cache`)
+        logWarn(`Ignoring conflict in write-through cache`)
       }
     }
   }
