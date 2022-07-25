@@ -100,7 +100,6 @@ export const buildUser = async (
   opts: SaveUserOpts = {
     hashPassword: true,
     requirePassword: true,
-    bulkCreate: false,
   },
   tenantId: string,
   dbUser?: any
@@ -116,16 +115,16 @@ export const buildUser = async (
   }
 
   _id = _id || dbUtils.generateGlobalUserID()
+
   user = {
     createdAt: Date.now(),
+    ...dbUser,
     ...user,
-    ...(dbUser && {
-      ...dbUser,
-    }),
     _id,
     password: hashedPassword,
     tenantId,
   }
+
   // make sure the roles object is always present
   if (!user.roles) {
     user.roles = {}
@@ -184,7 +183,6 @@ export const save = async (
     {
       hashPassword: true,
       requirePassword: user.requirePassword,
-      bulkCreate: true,
     },
     tenantId,
     dbUser
