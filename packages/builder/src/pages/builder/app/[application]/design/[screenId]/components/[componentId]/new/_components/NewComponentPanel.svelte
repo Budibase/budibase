@@ -179,15 +179,11 @@
           >
         </ActionGroup>
       {/if}
-    </Layout>
-    <div>
-      <Divider noMargin noGrid />
-    </div>
-    {#if searchString || section === "components"}
-      {#if filteredStructure.length}
-        {#each filteredStructure as category}
-          <DetailSummary name={category.name} collapsible={false}>
+      {#if searchString || section === "components"}
+        {#if filteredStructure.length}
+          {#each filteredStructure as category}
             <Layout noPadding gap="XS">
+              <div class="category-label">{category.name}</div>
               {#each category.children as component}
                 <div
                   class="component"
@@ -201,17 +197,13 @@
                 </div>
               {/each}
             </Layout>
-          </DetailSummary>
-        {/each}
-      {:else}
-        <Layout paddingY="M" paddingX="L">
+          {/each}
+        {:else}
           <Body size="S">
             There aren't any components matching the current filter
           </Body>
-        </Layout>
-      {/if}
-    {:else}
-      <Layout paddingX="L" paddingY="XL" gap="S">
+        {/if}
+      {:else}
         <Body size="S">Blocks are collections of pre-built components</Body>
         <Layout noPadding gap="XS">
           {#each blocks as block}
@@ -224,8 +216,8 @@
             </div>
           {/each}
         </Layout>
-      </Layout>
-    {/if}
+      {/if}
+    </Layout>
   </Panel>
 </div>
 
@@ -238,6 +230,13 @@
     display: flex;
     flex-direction: row;
     align-items: stretch;
+  }
+  .category-label {
+    color: var(--spectrum-global-color-gray-600);
+    text-transform: uppercase;
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: var(--spacing-xs);
   }
   .component {
     background-color: var(--spectrum-global-color-gray-200);
