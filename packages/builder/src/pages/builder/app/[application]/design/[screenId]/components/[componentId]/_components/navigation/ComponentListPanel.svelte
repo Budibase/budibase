@@ -9,7 +9,7 @@
   import { setContext } from "svelte"
   import DNDPositionIndicator from "./DNDPositionIndicator.svelte"
   import { DropPosition } from "./dndStore"
-  import { Button, Layout } from "@budibase/bbui"
+  import { Button } from "@budibase/bbui"
 
   let scrollRef
 
@@ -64,7 +64,7 @@
 
 <Panel title="Components" showExpandIcon borderRight>
   <div class="add-component">
-    <Button on:click={() => $goto("../new")} cta>Add component</Button>
+    <Button on:click={() => $goto("./new")} cta>Add component</Button>
   </div>
   <div class="nav-items-container" bind:this={scrollRef}>
     <ul>
