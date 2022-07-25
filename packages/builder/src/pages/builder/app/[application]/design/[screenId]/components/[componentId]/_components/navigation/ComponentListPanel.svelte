@@ -24,7 +24,7 @@
     let newOffsets = {}
 
     // Calculate left offset
-    const offsetX = bounds.left + bounds.width + scrollLeft - 58
+    const offsetX = bounds.left + bounds.width + scrollLeft - 39
     if (offsetX > sidebarWidth) {
       newOffsets.left = offsetX - sidebarWidth
     } else {
