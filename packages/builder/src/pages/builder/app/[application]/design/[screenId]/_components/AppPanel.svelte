@@ -25,14 +25,6 @@
       {#if $store.clientFeatures.devicePreview}
         <DevicePreviewSelect />
       {/if}
-      <Button
-        newStyles
-        secondary
-        icon="Add"
-        on:click={() => $goto(`../${$selectedScreen._id}/components/new`)}
-      >
-        Component
-      </Button>
     </div>
   </div>
   <div class="content">
@@ -59,6 +51,7 @@
     justify-content: space-between;
     align-items: flex-start;
     gap: var(--spacing-l);
+    margin: 0 2px;
   }
   .header-left,
   .header-right {
