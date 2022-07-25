@@ -30,7 +30,7 @@ filterTests(['smoke', 'all'], () => {
             cy.navigateToFrontend()
 
             // Add initial component - Paragraph
-            cy.addComponent("Elements", "Paragraph")
+            cy.searchAndAddComponent("Paragraph")
             // Publish app
             cy.get(interact.SPECTRUM_BUTTON).contains("Publish").click({ force: true })
             cy.get(interact.SPECTRUM_BUTTON_GROUP).within(() => {
@@ -42,7 +42,7 @@ filterTests(['smoke', 'all'], () => {
             })
 
             // Add second component - Button
-            cy.addComponent("Elements", "Button")
+            cy.searchAndAddComponent("Button")
             // Click Revert
             cy.get(interact.TOP_RIGHT_NAV).within(() => {
                 cy.get(interact.AREA_LABEL_REVERT).click({ force: true })

@@ -108,7 +108,7 @@ filterTests(["all"], () => {
       })
 
       it("should delete a relationship", () => {
-        cy.get(".hierarchy-items-container").contains("PostgreSQL").click()
+        cy.get(".hierarchy-items-container").contains("PostgreSQL").click({ force: true })
         cy.reload()
         // Delete one relationship
         cy.get(".spectrum-Table")
@@ -156,7 +156,7 @@ filterTests(["all"], () => {
 
       it("should switch to schema with no tables", () => {
         // Switch Schema - To one without any tables
-        cy.get(".hierarchy-items-container").contains("PostgreSQL").click()
+        cy.get(".hierarchy-items-container").contains("PostgreSQL").click({ force: true })
         switchSchema("randomText")
 
         // No tables displayed
@@ -219,7 +219,7 @@ filterTests(["all"], () => {
         // Access query
         cy.get(".hierarchy-items-container", { timeout: 2000 })
           .contains(queryName + " (1)")
-          .click()
+          .click({ force: true })
 
         // Rename query
         cy.wait(1000)
