@@ -1,10 +1,10 @@
-import { threadSetup } from "./utils"
-threadSetup()
-import { isRecurring } from "../automations/utils"
+import { default as threadUtils } from "./utils"
+threadUtils.threadSetup()
+import { isRecurring, disableCron, isErrorInOutput } from "../automations/utils"
 import { default as actions } from "../automations/actions"
 import { default as automationUtils } from "../automations/automationUtils"
 import { default as AutomationEmitter } from "../events/AutomationEmitter"
-import { generateAutomationMetadataID } from "../db/utils"
+import { generateAutomationMetadataID, isProdAppID } from "../db/utils"
 import { definitions as triggerDefs } from "../automations/triggerInfo"
 import { AutomationErrors, MAX_AUTOMATION_RECURRING_ERRORS } from "../constants"
 import { storeLog } from "../automations/logging"
@@ -18,8 +18,9 @@ import {
   AutomationContext,
   AutomationMetadata,
 } from "../definitions/automations"
+import { WorkerCallback } from "./definitions"
 const { doInAppContext, getAppDB } = require("@budibase/backend-core/context")
-const { logAlertWithInfo } = require("@budibase/backend-core/logging")
+const { logAlertWithInfo, logAlert } = require("@budibase/backend-core/logging")
 const { processObject } = require("@budibase/string-templates")
 const FILTER_STEP_ID = actions.ACTION_DEFINITIONS.FILTER.stepId
 const LOOP_STEP_ID = actions.ACTION_DEFINITIONS.LOOP.stepId
@@ -72,12 +73,19 @@ class Orchestrator {
   _automation: Automation
   _emitter: any
   _context: AutomationContext
+  _repeat?: { jobId: string; jobKey: string }
   executionOutput: AutomationContext
 
-  constructor(automation: Automation, triggerOutput: TriggerOutput) {
+  constructor(automation: Automation, triggerOutput: TriggerOutput, opts: any) {
     const metadata = triggerOutput.metadata
     this._chainCount = metadata ? metadata.automationChainCount : 0
     this._appId = triggerOutput.appId as string
+    if (opts?.repeat) {
+      this._repeat = {
+        jobId: opts.repeat.jobId,
+        jobKey: opts.repeat.key,
+      }
+    }
     const triggerStepId = automation.definition.trigger.stepId
     triggerOutput = this.cleanupTriggerOutputs(triggerStepId, triggerOutput)
     // remove from context
@@ -126,13 +134,16 @@ class Orchestrator {
   }
 
   async checkIfShouldStop(metadata: AutomationMetadata): Promise<boolean> {
-    if (!metadata.errorCount) {
+    if (!metadata.errorCount || !this._repeat) {
       return false
     }
     const automation = this._automation
     const trigger = automation.definition.trigger
     if (metadata.errorCount >= MAX_AUTOMATION_RECURRING_ERRORS) {
-      // TODO: need to disable the recurring here
+      logAlert(
+        `CRON disabled due to errors - ${this._appId}/${this._automation._id}`
+      )
+      await disableCron(this._repeat?.jobId, this._repeat?.jobKey)
       this.updateExecutionOutput(trigger.id, trigger.stepId, {}, STOPPED_STATUS)
       await storeLog(automation, this.executionOutput)
       return true
@@ -147,7 +158,7 @@ class Orchestrator {
       return
     }
     const count = metadata.errorCount
-    const isError = output.status === AutomationStatus.ERROR
+    const isError = isErrorInOutput(output)
     // nothing to do in this scenario, escape
     if (!count && !isError) {
       return
@@ -216,7 +227,7 @@ class Orchestrator {
     let metadata
 
     // check if this is a recurring automation,
-    if (isRecurring(automation)) {
+    if (isProdAppID(this._appId) && isRecurring(automation)) {
       metadata = await this.getMetadata()
       const shouldStop = await this.checkIfShouldStop(metadata)
       if (shouldStop) {
@@ -411,22 +422,20 @@ class Orchestrator {
 
     // store the logs for the automation run
     await storeLog(this._automation, this.executionOutput)
-    if (isRecurring(automation) && metadata) {
+    if (isProdAppID(this._appId) && isRecurring(automation) && metadata) {
       await this.updateMetadata(metadata)
     }
     return this.executionOutput
   }
 }
 
-export default (
-  input: AutomationEvent,
-  callback: (error: any, response?: any) => void
-) => {
+export function execute(input: AutomationEvent, callback: WorkerCallback) {
   const appId = input.data.event.appId
   doInAppContext(appId, async () => {
     const automationOrchestrator = new Orchestrator(
       input.data.automation,
-      input.data.event
+      input.data.event,
+      input.opts
     )
     try {
       const response = await automationOrchestrator.execute()
