@@ -32,6 +32,11 @@ export interface AutomationEvent {
     automation: Automation
     event: any
   }
+  opts?: {
+    repeat?: {
+      jobId: string
+    }
+  }
 }
 
 export interface AutomationContext extends AutomationResults {

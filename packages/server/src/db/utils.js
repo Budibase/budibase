@@ -321,6 +321,13 @@ exports.generateAutomationMetadataID = automationId => {
 }
 
 /**
+ * Retrieve all automation metadata in an app database.
+ */
+exports.getAutomationMetadataParams = (otherProps = {}) => {
+  return getDocParams(DocumentTypes.AUTOMATION_METADATA, null, otherProps)
+}
+
+/**
  * Gets parameters for retrieving a query, this is a utility function for the getDocParams function.
  */
 exports.getQueryParams = (datasourceId = null, otherProps = {}) => {
