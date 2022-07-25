@@ -99,7 +99,9 @@
   $: refreshContent(json)
 
   // Determine if the add component menu is active
-  $: isAddingComponent = $isActive(`./components/${$selectedComponent._id}/new`)
+  $: isAddingComponent = $isActive(
+    `./components/${$selectedComponent?._id}/new`
+  )
 
   // Update the iframe with the builder info to render the correct preview
   const refreshContent = message => {
@@ -226,10 +228,10 @@
 
   const toggleAddComponent = () => {
     if (isAddingComponent) {
-      $goto(`../${$selectedScreen._id}/components/${$selectedComponent._id}`)
+      $goto(`../${$selectedScreen._id}/components/${$selectedComponent?._id}`)
     } else {
       $goto(
-        `../${$selectedScreen._id}/components/${$selectedComponent._id}/new`
+        `../${$selectedScreen._id}/components/${$selectedComponent?._id}/new`
       )
     }
   }
