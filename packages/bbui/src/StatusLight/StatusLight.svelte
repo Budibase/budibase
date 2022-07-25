@@ -18,11 +18,13 @@
   export let disabled = false
   export let active = false
   export let color = null
+  export let square = false
 </script>
 
 <div
   class="spectrum-StatusLight spectrum-StatusLight--size{size}"
   class:custom={!!color}
+  class:square
   style={`--color: ${color};`}
   class:spectrum-StatusLight--celery={celery}
   class:spectrum-StatusLight--yellow={yellow}
@@ -60,5 +62,11 @@
   }
   .custom::before {
     background: var(--color) !important;
+  }
+  .square::before {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    margin: 0;
   }
 </style>
