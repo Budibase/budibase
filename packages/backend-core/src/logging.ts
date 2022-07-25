@@ -15,11 +15,11 @@ export function logAlert(message: string, e?: any) {
   console.error(`bb-alert: ${message} ${errorJson}`)
 }
 
-export function logInfo(message: string) {
-  console.log(`bb-info: ${message}`)
+export function logWarn(message: string) {
+  console.warn(`bb-warn: ${message}`)
 }
 
 export default {
   logAlert,
-  logInfo,
+  logWarn,
 }
