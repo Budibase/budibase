@@ -4,10 +4,16 @@ const type = "license_error"
 
 const codes = {
   USAGE_LIMIT_EXCEEDED: "usage_limit_exceeded",
+  FEATURE_DISABLED: "feature_disabled",
 }
 
 const context = {
   [codes.USAGE_LIMIT_EXCEEDED]: err => {
+    return {
+      limitName: err.limitName,
+    }
+  },
+  [codes.FEATURE_DISABLED]: err => {
     return {
       limitName: err.limitName,
     }
@@ -21,9 +27,17 @@ class UsageLimitError extends HTTPError {
   }
 }
 
+class FeatureDisabledError extends HTTPError {
+  constructor(message, limitName) {
+    super(message, 400, codes.FEATURE_DISABLED, type)
+    this.limitName = limitName
+  }
+}
+
 module.exports = {
   type,
   codes,
   context,
   UsageLimitError,
+  FeatureDisabledError,
 }
