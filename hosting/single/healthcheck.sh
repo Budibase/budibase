@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 healthy=true
 
+if [ -f "/data/.env" ]; then
+  export $(cat /data/.env | xargs)
+fi
+
 if [[ $(curl -Lfk -s -w "%{http_code}\n" http://localhost/ -o /dev/null) -ne 200 ]]; then
   echo 'ERROR: Budibase is not running';
   healthy=false

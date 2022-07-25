@@ -71,8 +71,7 @@
     // Extract valid children
     // Sanity limit of 100 active indicators
     const children = Array.from(parents)
-      .map(parent => parent?.childNodes?.[0])
-      .filter(node => node?.nodeType === 1)
+      .map(parent => parent?.children?.[0])
       .slice(0, 100)
 
     // If there aren't any nodes then reset
