@@ -151,7 +151,7 @@
   })
 </script>
 
-<div class="new-component" transition:fly|local={{ x: 260, duration: 300 }}>
+<div class="container" transition:fly|local={{ x: 260, duration: 300 }}>
   <Panel
     title="Add component"
     showCloseButton
@@ -222,7 +222,7 @@
 </div>
 
 <style>
-  .new-component {
+  .container {
     position: fixed;
     right: 0;
     z-index: 1;
