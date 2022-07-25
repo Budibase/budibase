@@ -100,6 +100,7 @@ export const buildUser = async (
   opts: SaveUserOpts = {
     hashPassword: true,
     requirePassword: true,
+    bulkCreate: false,
   },
   tenantId: string,
   dbUser?: any
@@ -297,7 +298,6 @@ export const bulkCreate = async (newUsersRequested: any[], groups: any) => {
     delete user.password
     await eventHelpers.handleSaveEvents(user, null)
     await apps.syncUserInApps(user._id)
-    await addTenant(tenantId, user._id, user.email)
   }
 
   return usersToBulkSave

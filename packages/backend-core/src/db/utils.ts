@@ -124,6 +124,10 @@ export function generateTemplateID(ownerId: any) {
   return `${DocumentTypes.TEMPLATE}${SEPARATOR}${ownerId}${SEPARATOR}${newid()}`
 }
 
+export function generateAppUserID(prodAppId: string, userId: string) {
+  return `${prodAppId}${SEPARATOR}${userId}`
+}
+
 /**
  * Gets parameters for retrieving templates. Owner ID must be specified, either global or a workspace level.
  */

@@ -1,6 +1,11 @@
-const { ViewNames, getUsersByAppParams, getProdAppID } = require("./db/utils")
+const {
+  ViewNames,
+  getUsersByAppParams,
+  getProdAppID,
+  generateAppUserID,
+} = require("./db/utils")
 const { queryGlobalView } = require("./db/views")
-const { UNICODE_MAX, SEPARATOR } = require("./db/constants")
+const { UNICODE_MAX } = require("./db/constants")
 
 /**
  * Given an email address this will use a view to search through
@@ -38,7 +43,7 @@ exports.getGlobalUserByAppPage = (appId, user) => {
   if (!user) {
     return
   }
-  return `${getProdAppID(appId)}${SEPARATOR}${user._id}`
+  return generateAppUserID(getProdAppID(appId), user._id)
 }
 
 /**
