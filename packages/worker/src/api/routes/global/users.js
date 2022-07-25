@@ -54,10 +54,10 @@ router
     controller.save
   )
   .post(
-    "/api/global/users/bulkSave",
+    "/api/global/users/bulkCreate",
     adminOnly,
     users.buildUserBulkSaveValidation(),
-    controller.bulkSave
+    controller.bulkCreate
   )
 
   .get("/api/global/users", builderOrAdmin, controller.fetch)

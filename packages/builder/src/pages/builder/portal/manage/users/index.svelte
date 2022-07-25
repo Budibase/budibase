@@ -91,7 +91,6 @@
 
   $: page = $pageInfo.page
   $: fetchUsers(page, searchEmail)
-
   $: {
     enrichedUsers = $users.data?.map(user => {
       let userGroups = []

@@ -87,9 +87,9 @@ export const buildUserEndpoints = API => ({
    * Creates multiple users.
    * @param users the array of user objects to create
    */
-  saveUsers: async ({ users, groups }) => {
+  createUsers: async ({ users, groups }) => {
     return await API.post({
-      url: "/api/global/users/bulkSave",
+      url: "/api/global/users/bulkCreate",
       body: {
         users,
         groups,

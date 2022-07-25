@@ -39,8 +39,8 @@
   let popover
   let selectedGroups = []
   let allAppList = []
-
-  $: user = users.get(userId)
+  let user
+  $: fetchUser(userId)
   $: hasGroupsLicense = $auth.user?.license.features.includes(
     Constants.Features.USER_GROUPS
   )
@@ -147,6 +147,11 @@
     }
 
     await groups.actions.save(group)
+  }
+
+  async function fetchUser(userId) {
+    let userPromise = users.get(userId)
+    user = await userPromise
   }
 
   async function toggleFlags(detail) {

@@ -17,13 +17,11 @@ export function createUsersStore() {
 
   async function get(userId) {
     try {
-      let user = await API.getUser(userId)
-      return user
+      return await API.getUser(userId)
     } catch (err) {
       return null
     }
   }
-
   const fetch = async () => {
     return await API.getUsers()
   }
@@ -68,7 +66,7 @@ export function createUsersStore() {
 
       return body
     })
-    await API.saveUsers({ users: mappedUsers, groups: data.groups })
+    await API.createUsers({ users: mappedUsers, groups: data.groups })
 
     // re-search from first page
     await search()

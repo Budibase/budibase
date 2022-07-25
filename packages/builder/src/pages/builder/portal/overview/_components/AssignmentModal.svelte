@@ -69,8 +69,6 @@
   function addNewInput() {
     appData = [...appData, { id: "", role: "" }]
   }
-
-  $: console.log(optionSections)
 </script>
 
 <ModalContent
