@@ -14,6 +14,8 @@ import {
 } from "@budibase/backend-core"
 import { checkAnyUserExists } from "../../../utilities/users"
 
+const MAX_USERS_UPLOAD_LIMIT = 1000
+
 export const save = async (ctx: any) => {
   try {
     ctx.body = await users.save(ctx.request.body)
@@ -24,6 +26,14 @@ export const save = async (ctx: any) => {
 
 export const bulkCreate = async (ctx: any) => {
   let { users: newUsersRequested, groups } = ctx.request.body
+
+  if (!env.SELF_HOSTED && newUsersRequested.length > MAX_USERS_UPLOAD_LIMIT) {
+    ctx.throw(
+      400,
+      "Max limit for upload is 1000 users. Please reduce file size and try again."
+    )
+  }
+
   const db = tenancy.getGlobalDB()
   let groupsToSave: any[] = []
 
@@ -275,7 +285,11 @@ export const inviteMultiple = async (ctx: any) => {
     subject: "{{ company }} platform invitation",
     info: userInfo,
   }
-  await sendEmail(emails, EmailTemplatePurpose.INVITATION, opts)
+
+  for (let i = 0; i < emails.length; i++) {
+    await sendEmail(emails[i], EmailTemplatePurpose.INVITATION, opts)
+  }
+
   ctx.body = {
     message: "Invitations have been sent.",
   }
@@ -300,6 +314,7 @@ export const inviteAccept = async (ctx: any) => {
       return saved
     })
   } catch (err: any) {
+    console.log(err)
     if (err.code === errors.codes.USAGE_LIMIT_EXCEEDED) {
       // explicitly re-throw limit exceeded errors
       ctx.throw(400, err)

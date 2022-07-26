@@ -194,16 +194,9 @@ exports.sendEmail = async (
     }),
   }
 
-  if (email.length > 1) {
-    message = {
-      ...message,
-      bcc: email,
-    }
-  } else {
-    message = {
-      ...message,
-      to: email,
-    }
+  message = {
+    ...message,
+    to: email,
   }
 
   if (subject || config.subject) {

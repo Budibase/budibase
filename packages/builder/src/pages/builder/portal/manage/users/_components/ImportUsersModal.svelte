@@ -12,7 +12,7 @@
 
   const BYTES_IN_MB = 1000000
   const FILE_SIZE_LIMIT = BYTES_IN_MB * 5
-
+  const MAX_USERS_UPLOAD_LIMIT = 1000
   export let createUsersFromCsv
 
   let files = []
@@ -27,6 +27,12 @@
   )
 
   const validEmails = userEmails => {
+    if (userEmails.length > MAX_USERS_UPLOAD_LIMIT) {
+      notifications.error(
+        `Max limit for upload is 1000 users. Please reduce file size and try again.`
+      )
+      return false
+    }
     for (const email of userEmails) {
       if (emailValidator(email) !== true) invalidEmails.push(email)
     }

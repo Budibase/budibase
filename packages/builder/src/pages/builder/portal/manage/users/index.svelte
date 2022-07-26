@@ -123,8 +123,8 @@
     try {
       const res = await users.invite({
         emails: emails,
-        builder: true,
-        admin: true,
+        builder: false,
+        admin: false,
       })
       notifications.success(res.message)
       inviteConfirmationModal.show()
