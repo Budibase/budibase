@@ -271,7 +271,7 @@
                 on:click={() => exportApp(selectedApp, { published: false })}
                 icon="DownloadFromCloud"
               >
-                Export
+                Export latest
               </MenuItem>
               {#if isPublished}
                 <MenuItem
