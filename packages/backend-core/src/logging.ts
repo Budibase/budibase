@@ -25,7 +25,12 @@ export function logAlertWithInfo(
   logAlert(message, error)
 }
 
+export function logWarn(message: string) {
+  console.warn(`bb-warn: ${message}`)
+}
+
 export default {
   logAlert,
   logAlertWithInfo,
+  logWarn,
 }

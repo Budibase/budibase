@@ -20,7 +20,7 @@ import {
 } from "../definitions/automations"
 import { WorkerCallback } from "./definitions"
 const { doInAppContext, getAppDB } = require("@budibase/backend-core/context")
-const { logAlertWithInfo, logAlert } = require("@budibase/backend-core/logging")
+const { logAlertWithInfo, logWarn } = require("@budibase/backend-core/logging")
 const { processObject } = require("@budibase/string-templates")
 const FILTER_STEP_ID = actions.ACTION_DEFINITIONS.FILTER.stepId
 const LOOP_STEP_ID = actions.ACTION_DEFINITIONS.LOOP.stepId
@@ -140,7 +140,7 @@ class Orchestrator {
     const automation = this._automation
     const trigger = automation.definition.trigger
     if (metadata.errorCount >= MAX_AUTOMATION_RECURRING_ERRORS) {
-      logAlert(
+      logWarn(
         `CRON disabled due to errors - ${this._appId}/${this._automation._id}`
       )
       await disableCron(this._repeat?.jobId, this._repeat?.jobKey)
