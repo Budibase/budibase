@@ -57,6 +57,7 @@ filterTests(["smoke", "all"], () => {
         cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 5000})
         cy.get(interact.SPECTRUM_SIDENAV).contains("Users").click()
         cy.get(interact.SPECTRUM_TABLE, { timeout: 1000 }).contains("bbuser").click()
+        cy.get(interact.SPECTRUM_HEADING).contains("bbuser", { timeout: 2000})
         for (let i = 0; i < 3; i++) {
           cy.get(interact.SPECTRUM_TABLE, { timeout: 3000})
             .eq(1)
