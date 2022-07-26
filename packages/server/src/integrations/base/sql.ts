@@ -229,28 +229,28 @@ class InternalBuilder {
     if (filters.contains) {
       const fnc = allOr ? "orWhere" : "where"
       const rawFnc = `${fnc}Raw`
+      function stringifyArray(value: Array<any>): string {
+        for (let i in value) {
+          if (typeof value[i] === "string") {
+            value[i] = `"${value[i]}"`
+          }
+        }
+        return `'[${value.join(",")}]'`
+      }
       if (this.client === SqlClients.POSTGRES) {
         iterate(filters.contains, (key: string, value: Array<any>) => {
           const fieldNames = key.split(/\./g)
           const tableName = fieldNames[0]
           const columnName = fieldNames[1]
-          for (let i in value) {
-            if (typeof value[i] === "string") {
-              value[i] = `"${value[i]}"`
-            }
-          }
           // @ts-ignore
           query = query[rawFnc](
-            `"${tableName}"."${columnName}"::jsonb @> '[${value.join(",")}]'`
+            `"${tableName}"."${columnName}"::jsonb @> ${stringifyArray(value)}`
           )
         })
       } else if (this.client === SqlClients.MY_SQL) {
-        iterate(filters.contains, (key: string, value: any) => {
-          if (typeof value === "string") {
-            value = `"${value}"`
-          }
+        iterate(filters.contains, (key: string, value: Array<any>) => {
           // @ts-ignore
-          query = query[rawFnc](`JSON_CONTAINS(${key}, '${value}')`)
+          query = query[rawFnc](`JSON_CONTAINS(${key}, ${stringifyArray(value)})`)
         })
       } else {
         iterate(filters.contains, like)
