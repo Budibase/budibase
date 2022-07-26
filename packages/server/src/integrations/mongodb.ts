@@ -92,12 +92,12 @@ module MongoDBModule {
           if (json[field] instanceof Object) {
             json[field] = self.createObjectIds(json[field])
           }
-          if (field === "_id" && typeof json[field] === "string") {
-            const id = json["_id"].match(
+          if ((field === "_id" || field?.startsWith("$")) && typeof json[field] === "string") {
+            const id = json[field].match(
               /(?<=objectid\(['"]).*(?=['"]\))/gi
             )?.[0]
             if (id) {
-              json["_id"] = ObjectID.createFromHexString(id)
+              json[field] = ObjectID.createFromHexString(id)
             }
           }
         }
