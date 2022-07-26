@@ -111,20 +111,12 @@ exports.apiFileReturn = contents => {
 }
 
 exports.defineFilter = excludeRows => {
+  const ids = [USER_METDATA_PREFIX, LINK_USER_METADATA_PREFIX]
   if (excludeRows) {
-    return doc =>
-      !(
-        doc._id.includes(USER_METDATA_PREFIX) ||
-        doc._id.includes(LINK_USER_METADATA_PREFIX) ||
-        doc._id.includes(TABLE_ROW_PREFIX)
-      )
-  } else if (!excludeRows) {
-    return doc =>
-      !(
-        doc._id.includes(USER_METDATA_PREFIX) ||
-        doc._id.includes(LINK_USER_METADATA_PREFIX)
-      )
+    ids.push(TABLE_ROW_PREFIX)
   }
+  return doc =>
+    !ids.map(key => doc._id.includes(key)).reduce((prev, curr) => prev || curr)
 }
 
 /**
@@ -132,6 +124,7 @@ exports.defineFilter = excludeRows => {
  * data or user relationships.
  * @param {string} appId The app to backup
  * @param {object} config Config to send to export DB
+ * @param {boolean} includeRows Flag to state whether the export should include data.
  * @returns {*} either a string or a stream of the backup
  */
 const backupAppData = async (appId, config, includeRows) => {
@@ -154,6 +147,7 @@ exports.performBackup = async (appId, backupName) => {
 /**
  * Streams a backup of the database state for an app
  * @param {string} appId The ID of the app which is to be backed up.
+ * @param {boolean} includeRows Flag to state whether the export should include data.
  * @returns {*} a readable stream of the backup which is written in real time
  */
 exports.streamBackup = async (appId, includeRows) => {
