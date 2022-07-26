@@ -260,8 +260,12 @@ class InternalBuilder {
           for (let i in value) {
             if (typeof value[i] === "string") {
               value[i] = `%"${value[i]}"%`
+            } else {
+              value[i] = `%${value[i]}%`
             }
-            andStatement += (andStatement ? " AND " : "") + `LOWER(${likeKey(this.client, key)}) LIKE ?`
+            andStatement +=
+              (andStatement ? " AND " : "") +
+              `LOWER(${likeKey(this.client, key)}) LIKE ?`
           }
           // @ts-ignore
           query = query[rawFnc](andStatement, value)

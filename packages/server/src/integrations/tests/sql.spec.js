@@ -244,13 +244,13 @@ describe("SQL query builder", () => {
     const query = new Sql(SqlClients.MS_SQL, 10)._query(generateReadJson({
       filters: {
         contains: {
-          age: 20,
-          name: "John"
+          age: [20],
+          name: ["John"]
         }
       }
     }))
     expect(query).toEqual({
-      bindings: [10, "%20%", "%John%"],
+      bindings: [10, "%20%", `%"John"%`],
       sql: `select * from (select top (@p0) * from [${TABLE_NAME}] where LOWER(${TABLE_NAME}.age) LIKE @p1 and LOWER(${TABLE_NAME}.name) LIKE @p2) as [${TABLE_NAME}]`
     })
   })
@@ -259,14 +259,14 @@ describe("SQL query builder", () => {
     const query = new Sql(SqlClients.MY_SQL, 10)._query(generateReadJson({
       filters: {
         contains: {
-          age: 20,
-          name: "John"
+          age: [20],
+          name: ["John"]
         }
       }
     }))
     expect(query).toEqual({
       bindings: [10],
-      sql: `select * from (select * from \`${TABLE_NAME}\` where JSON_CONTAINS(${TABLE_NAME}.age, '20') and JSON_CONTAINS(${TABLE_NAME}.name, '"John"') limit ?) as \`${TABLE_NAME}\``
+      sql: `select * from (select * from \`${TABLE_NAME}\` where JSON_CONTAINS(${TABLE_NAME}.age, '[20]') and JSON_CONTAINS(${TABLE_NAME}.name, '["John"]') limit ?) as \`${TABLE_NAME}\``
     })
   })
 
@@ -274,8 +274,8 @@ describe("SQL query builder", () => {
     const query = new Sql(SqlClients.POSTGRES, 10)._query(generateReadJson({
       filters: {
         contains: {
-          age: 20,
-          name: "John"
+          age: [20],
+          name: ["John"]
         }
       }
     }))
