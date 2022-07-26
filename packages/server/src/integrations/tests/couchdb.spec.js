@@ -2,8 +2,10 @@ jest.mock("pouchdb", () => function CouchDBMock() {
   this.post = jest.fn()
   this.allDocs = jest.fn(() => ({ rows: [] }))
   this.put = jest.fn()
+  this.get = jest.fn()
   this.remove = jest.fn()
   this.plugin = jest.fn()
+  this.close = jest.fn()
 })
 
 const CouchDBIntegration = require("../couchdb")
@@ -62,6 +64,7 @@ describe("CouchDB Integration", () => {
   it("calls the delete method with the correct params", async () => {
     const id = "1234"
     const response = await config.integration.delete({ id })
-    expect(config.integration.client.remove).toHaveBeenCalledWith(id)
+    expect(config.integration.client.get).toHaveBeenCalledWith(id)
+    expect(config.integration.client.remove).toHaveBeenCalled()
   })
 })

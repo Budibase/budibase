@@ -1,6 +1,6 @@
 const { SearchIndexes } = require("../../../db/utils")
 const fetch = require("node-fetch")
-const { getCouchUrl } = require("@budibase/backend-core/db")
+const { getCouchInfo } = require("@budibase/backend-core/db")
 const { getAppId } = require("@budibase/backend-core/context")
 
 /**
@@ -10,6 +10,7 @@ const { getAppId } = require("@budibase/backend-core/context")
 class QueryBuilder {
   constructor(base) {
     this.query = {
+      allOr: false,
       string: {},
       fuzzy: {},
       range: {},
@@ -17,6 +18,7 @@ class QueryBuilder {
       notEqual: {},
       empty: {},
       notEmpty: {},
+      oneOf: {},
       ...base,
     }
     this.limit = 50
@@ -112,6 +114,11 @@ class QueryBuilder {
     return this
   }
 
+  addOneOf(key, value) {
+    this.query.oneOf[key] = value
+    return this
+  }
+
   /**
    * Preprocesses a value before going into a lucene search.
    * Transforms strings to lowercase and wraps strings and bools in quotes.
@@ -140,19 +147,36 @@ class QueryBuilder {
 
   buildSearchQuery() {
     const builder = this
-    let query = "*:*"
+    let allOr = this.query && this.query.allOr
+    let query = allOr ? "" : "*:*"
     const allPreProcessingOpts = { escape: true, lowercase: true, wrap: true }
+    let tableId
+    if (this.query.equal.tableId) {
+      tableId = this.query.equal.tableId
+      delete this.query.equal.tableId
+    }
+
+    const equal = (key, value) => {
+      // 0 evaluates to false, which means we would return all rows if we don't check it
+      if (!value && value !== 0) {
+        return null
+      }
+      return `${key}:${builder.preprocess(value, allPreProcessingOpts)}`
+    }
 
     function build(structure, queryFn) {
       for (let [key, value] of Object.entries(structure)) {
-        key = builder.preprocess(key.replace(/ /, "_"), {
+        key = builder.preprocess(key.replace(/ /g, "_"), {
           escape: true,
         })
         const expression = queryFn(key, value)
         if (expression == null) {
           continue
         }
-        query += ` AND ${expression}`
+        if (query.length > 0) {
+          query += ` ${allOr ? "OR" : "AND"} `
+        }
+        query += expression
       }
     }
 
@@ -198,13 +222,7 @@ class QueryBuilder {
       })
     }
     if (this.query.equal) {
-      build(this.query.equal, (key, value) => {
-        // 0 evaluates to false, which means we would return all rows if we don't check it
-        if (!value && value !== 0) {
-          return null
-        }
-        return `${key}:${builder.preprocess(value, allPreProcessingOpts)}`
-      })
+      build(this.query.equal, equal)
     }
     if (this.query.notEqual) {
       build(this.query.notEqual, (key, value) => {
@@ -219,6 +237,34 @@ class QueryBuilder {
     }
     if (this.query.notEmpty) {
       build(this.query.notEmpty, key => `${key}:["" TO *]`)
+    }
+    if (this.query.oneOf) {
+      build(this.query.oneOf, (key, value) => {
+        if (!Array.isArray(value)) {
+          if (typeof value === "string") {
+            value = value.split(",")
+          } else {
+            return ""
+          }
+        }
+        let orStatement = `${builder.preprocess(
+          value[0],
+          allPreProcessingOpts
+        )}`
+        for (let i = 1; i < value.length; i++) {
+          orStatement += ` OR ${builder.preprocess(
+            value[i],
+            allPreProcessingOpts
+          )}`
+        }
+        return `${key}:(${orStatement})`
+      })
+    }
+    // make sure table ID is always added as an AND
+    if (tableId) {
+      query = `(${query})`
+      allOr = false
+      build({ tableId }, equal)
     }
     return query
   }
@@ -242,11 +288,10 @@ class QueryBuilder {
 
   async run() {
     const appId = getAppId()
-    const url = `${getCouchUrl()}/${appId}/_design/database/_search/${
-      SearchIndexes.ROWS
-    }`
+    const { url, cookie } = getCouchInfo()
+    const fullPath = `${url}/${appId}/_design/database/_search/${SearchIndexes.ROWS}`
     const body = this.buildSearchBody()
-    return await runQuery(url, body)
+    return await runQuery(fullPath, body, cookie)
   }
 }
 
@@ -254,12 +299,16 @@ class QueryBuilder {
  * Executes a lucene search query.
  * @param url The query URL
  * @param body The request body defining search criteria
+ * @param cookie The auth cookie for CouchDB
  * @returns {Promise<{rows: []}>}
  */
-const runQuery = async (url, body) => {
+const runQuery = async (url, body, cookie) => {
   const response = await fetch(url, {
     body: JSON.stringify(body),
     method: "POST",
+    headers: {
+      Authorization: cookie,
+    },
   })
   const json = await response.json()
 

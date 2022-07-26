@@ -11,6 +11,8 @@ const arangodb = require("./arangodb")
 const rest = require("./rest")
 const googlesheets = require("./googlesheets")
 const firebase = require("./firebase")
+const redis = require("./redis")
+const snowflake = require("./snowflake")
 const { SourceNames } = require("../definitions/datasource")
 const environment = require("../environment")
 
@@ -26,6 +28,9 @@ const DEFINITIONS = {
   [SourceNames.MYSQL]: mysql.schema,
   [SourceNames.ARANGODB]: arangodb.schema,
   [SourceNames.REST]: rest.schema,
+  [SourceNames.FIRESTORE]: firebase.schema,
+  [SourceNames.REDIS]: redis.schema,
+  [SourceNames.SNOWFLAKE]: snowflake.schema,
 }
 
 const INTEGRATIONS = {
@@ -40,12 +45,15 @@ const INTEGRATIONS = {
   [SourceNames.MYSQL]: mysql.integration,
   [SourceNames.ARANGODB]: arangodb.integration,
   [SourceNames.REST]: rest.integration,
-  [SourceNames.FIREBASE]: firebase.integration,
+  [SourceNames.FIRESTORE]: firebase.integration,
   [SourceNames.GOOGLE_SHEETS]: googlesheets.integration,
+  [SourceNames.REDIS]: redis.integration,
+  [SourceNames.FIREBASE]: firebase.integration,
+  [SourceNames.SNOWFLAKE]: snowflake.integration,
 }
 
 // optionally add oracle integration if the oracle binary can be installed
-if (!(process.arch === "arm64" && process.platform === "darwin")) {
+if (process.arch && !process.arch.startsWith("arm")) {
   const oracle = require("./oracle")
   DEFINITIONS[SourceNames.ORACLE] = oracle.schema
   INTEGRATIONS[SourceNames.ORACLE] = oracle.integration

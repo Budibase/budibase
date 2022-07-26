@@ -1,5 +1,5 @@
 import { createAPIClient } from "@budibase/frontend-core"
-import { notificationStore, authStore } from "../stores"
+import { notificationStore, authStore, devToolsStore } from "../stores"
 import { get } from "svelte/store"
 
 export const API = createAPIClient({
@@ -21,6 +21,12 @@ export const API = createAPIClient({
     if (auth?.csrfToken) {
       headers["x-csrf-token"] = auth.csrfToken
     }
+
+    // Add role header
+    const devToolsState = get(devToolsStore)
+    if (devToolsState.enabled && devToolsState.role) {
+      headers["x-budibase-role"] = devToolsState.role
+    }
   },
 
   // Show an error notification for all API failures.
@@ -28,6 +34,11 @@ export const API = createAPIClient({
   // Or we could check error.status and redirect to login on a 403 etc.
   onError: error => {
     const { status, method, url, message, handled } = error || {}
+    const ignoreErrorUrls = [
+      "bbtel",
+      "/api/global/self",
+      "/api/tables/ta_users",
+    ]
 
     // Log any errors that we haven't manually handled
     if (!handled) {
@@ -39,7 +50,14 @@ export const API = createAPIClient({
     if (message) {
       // Don't notify if the URL contains the word analytics as it may be
       // blocked by browser extensions
-      if (!url?.includes("analytics")) {
+      let ignore = false
+      for (let ignoreUrl of ignoreErrorUrls) {
+        if (url?.includes(ignoreUrl)) {
+          ignore = true
+          break
+        }
+      }
+      if (!ignore) {
         notificationStore.actions.error(message)
       }
     }

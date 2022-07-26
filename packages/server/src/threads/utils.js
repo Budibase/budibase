@@ -1,6 +1,5 @@
 const env = require("../environment")
-const CouchDB = require("../db")
-const { init } = require("@budibase/backend-core")
+const db = require("../db")
 const redis = require("@budibase/backend-core/redis")
 const { SEPARATOR } = require("@budibase/backend-core/db")
 
@@ -25,7 +24,7 @@ exports.threadSetup = () => {
   }
   // when thread starts, make sure it is recorded
   env.setInThread()
-  init(CouchDB)
+  db.init()
 }
 
 function makeVariableKey(queryId, variable) {
@@ -72,6 +71,7 @@ exports.hasExtraData = response => {
   return (
     typeof response === "object" &&
     !Array.isArray(response) &&
+    response &&
     response.data != null &&
     response.info != null
   )

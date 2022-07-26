@@ -21,6 +21,7 @@ module DynamoModule {
     description:
       "Amazon DynamoDB is a key-value and document database that delivers single-digit millisecond performance at any scale.",
     friendlyName: "DynamoDB",
+    type: "Non-relational",
     datasource: {
       region: {
         type: DatasourceFieldTypes.STRING,
@@ -131,11 +132,12 @@ module DynamoModule {
 
     constructor(config: DynamoDBConfig) {
       this.config = config
-      if (!this.config.endpoint) {
+      if (this.config.endpoint && !this.config.endpoint.includes("localhost")) {
         this.connect()
       }
       let options = {
         correctClockSkew: true,
+        region: this.config.region || AWS_REGION,
         endpoint: config.endpoint ? config.endpoint : undefined,
       }
       this.client = new AWS.DynamoDB.DocumentClient(options)

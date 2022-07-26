@@ -16,6 +16,7 @@ module CouchDBModule {
   const SCHEMA: Integration = {
     docs: "https://docs.couchdb.org/en/stable/",
     friendlyName: "CouchDB",
+    type: "Non-relational",
     description:
       "Apache CouchDB is an open-source document-oriented NoSQL database, implemented in Erlang.",
     datasource: {
@@ -53,51 +54,55 @@ module CouchDBModule {
 
   class CouchDBIntegration implements IntegrationBase {
     private config: CouchDBConfig
-    private client: any
+    private readonly client: any
 
     constructor(config: CouchDBConfig) {
       this.config = config
       this.client = new PouchDB(`${config.url}/${config.database}`)
     }
 
-    async create(query: { json: object }) {
+    async query(
+      command: string,
+      errorMsg: string,
+      query: { json?: object; id?: string }
+    ) {
       try {
-        return this.client.post(query.json)
+        const response = await this.client[command](query.id || query.json)
+        await this.client.close()
+        return response
       } catch (err) {
-        console.error("Error writing to couchDB", err)
+        console.error(errorMsg, err)
         throw err
       }
+    }
+
+    async create(query: { json: object }) {
+      return this.query("post", "Error writing to couchDB", query)
     }
 
     async read(query: { json: object }) {
-      try {
-        const result = await this.client.allDocs({
+      const result = await this.query("allDocs", "Error querying couchDB", {
+        json: {
           include_docs: true,
           ...query.json,
-        })
-        return result.rows.map((row: { doc: object }) => row.doc)
-      } catch (err) {
-        console.error("Error querying couchDB", err)
-        throw err
-      }
+        },
+      })
+      return result.rows.map((row: { doc: object }) => row.doc)
     }
 
     async update(query: { json: object }) {
-      try {
-        return this.client.put(query.json)
-      } catch (err) {
-        console.error("Error updating couchDB document", err)
-        throw err
-      }
+      return this.query("put", "Error updating couchDB document", query)
     }
 
     async delete(query: { id: string }) {
-      try {
-        return await this.client.remove(query.id)
-      } catch (err) {
-        console.error("Error deleting couchDB document", err)
-        throw err
-      }
+      const doc = await this.query(
+        "get",
+        "Cannot find doc to be deleted",
+        query
+      )
+      return this.query("remove", "Error deleting couchDB document", {
+        json: doc,
+      })
     }
   }
 

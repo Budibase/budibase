@@ -35,7 +35,7 @@ export const buildRowEndpoints = API => ({
    * @param revId the rev of the row to delete
    */
   deleteRow: async ({ tableId, rowId, revId }) => {
-    if (!tableId || !rowId || !revId) {
+    if (!tableId || !rowId) {
       return
     }
     return await API.delete({
@@ -65,12 +65,15 @@ export const buildRowEndpoints = API => ({
    * Exports rows.
    * @param tableId the table ID to export the rows from
    * @param rows the array of rows to export
+   * @param format the format to export (csv or json)
+   * @param columns which columns to export (all if undefined)
    */
-  exportRows: async ({ tableId, rows, format }) => {
+  exportRows: async ({ tableId, rows, format, columns }) => {
     return await API.post({
       url: `/api/${tableId}/rows/exportRows?format=${format}`,
       body: {
         rows,
+        columns,
       },
       parseResponse: async response => {
         return await response.text()

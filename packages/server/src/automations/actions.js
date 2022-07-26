@@ -13,6 +13,7 @@ const integromat = require("./steps/integromat")
 let filter = require("./steps/filter")
 let delay = require("./steps/delay")
 let queryRow = require("./steps/queryRows")
+let loop = require("./steps/loop")
 const env = require("../environment")
 
 const ACTION_IMPLS = {
@@ -27,6 +28,7 @@ const ACTION_IMPLS = {
   DELAY: delay.run,
   FILTER: filter.run,
   QUERY_ROWS: queryRow.run,
+  LOOP: loop.run,
   // these used to be lowercase step IDs, maintain for backwards compat
   discord: discord.run,
   slack: slack.run,
@@ -45,6 +47,7 @@ const ACTION_DEFINITIONS = {
   DELAY: delay.definition,
   FILTER: filter.definition,
   QUERY_ROWS: queryRow.definition,
+  LOOP: loop.definition,
   // these used to be lowercase step IDs, maintain for backwards compat
   discord: discord.definition,
   slack: slack.definition,

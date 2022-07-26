@@ -2,7 +2,11 @@ const { budibaseTempDir } = require("../budibaseDir")
 const fs = require("fs")
 const { join } = require("path")
 const uuid = require("uuid/v4")
-const CouchDB = require("../../db")
+const {
+  doWithDB,
+  dangerousGetDB,
+  closeDB,
+} = require("@budibase/backend-core/db")
 const { ObjectStoreBuckets } = require("../../constants")
 const {
   upload,
@@ -17,6 +21,7 @@ const env = require("../../environment")
 const {
   USER_METDATA_PREFIX,
   LINK_USER_METADATA_PREFIX,
+  TABLE_ROW_PREFIX,
 } = require("../../db/utils")
 const MemoryStream = require("memorystream")
 const { getAppId } = require("@budibase/backend-core/context")
@@ -105,6 +110,23 @@ exports.apiFileReturn = contents => {
   return fs.createReadStream(path)
 }
 
+exports.defineFilter = excludeRows => {
+  if (excludeRows) {
+    return doc =>
+      !(
+        doc._id.includes(USER_METDATA_PREFIX) ||
+        doc._id.includes(LINK_USER_METADATA_PREFIX) ||
+        doc._id.includes(TABLE_ROW_PREFIX)
+      )
+  } else if (!excludeRows) {
+    return doc =>
+      !(
+        doc._id.includes(USER_METDATA_PREFIX) ||
+        doc._id.includes(LINK_USER_METADATA_PREFIX)
+      )
+  }
+}
+
 /**
  * Local utility to back up the database state for an app, excluding global user
  * data or user relationships.
@@ -112,14 +134,10 @@ exports.apiFileReturn = contents => {
  * @param {object} config Config to send to export DB
  * @returns {*} either a string or a stream of the backup
  */
-const backupAppData = async (appId, config) => {
+const backupAppData = async (appId, config, includeRows) => {
   return await exports.exportDB(appId, {
     ...config,
-    filter: doc =>
-      !(
-        doc._id.includes(USER_METDATA_PREFIX) ||
-        doc._id.includes(LINK_USER_METADATA_PREFIX)
-      ),
+    filter: exports.defineFilter(includeRows),
   })
 }
 
@@ -138,8 +156,8 @@ exports.performBackup = async (appId, backupName) => {
  * @param {string} appId The ID of the app which is to be backed up.
  * @returns {*} a readable stream of the backup which is written in real time
  */
-exports.streamBackup = async appId => {
-  return await backupAppData(appId, { stream: true })
+exports.streamBackup = async (appId, includeRows) => {
+  return await backupAppData(appId, { stream: true }, includeRows)
 }
 
 /**
@@ -151,41 +169,45 @@ exports.streamBackup = async appId => {
  * @return {*} either a readable stream or a string
  */
 exports.exportDB = async (dbName, { stream, filter, exportName } = {}) => {
-  const instanceDb = new CouchDB(dbName)
-
-  // Stream the dump if required
+  // streaming a DB dump is a bit more complicated, can't close DB
   if (stream) {
+    const db = dangerousGetDB(dbName)
     const memStream = new MemoryStream()
-    instanceDb.dump(memStream, { filter })
+    memStream.on("end", async () => {
+      await closeDB(db)
+    })
+    db.dump(memStream, { filter })
     return memStream
   }
 
-  // Write the dump to file if required
-  if (exportName) {
-    const path = join(budibaseTempDir(), exportName)
-    const writeStream = fs.createWriteStream(path)
-    await instanceDb.dump(writeStream, { filter })
+  return doWithDB(dbName, async db => {
+    // Write the dump to file if required
+    if (exportName) {
+      const path = join(budibaseTempDir(), exportName)
+      const writeStream = fs.createWriteStream(path)
+      await db.dump(writeStream, { filter })
 
-    // Upload the dump to the object store if self hosted
-    if (env.SELF_HOSTED) {
-      await streamUpload(
-        ObjectStoreBuckets.BACKUPS,
-        join(dbName, exportName),
-        fs.createReadStream(path)
-      )
+      // Upload the dump to the object store if self hosted
+      if (env.SELF_HOSTED) {
+        await streamUpload(
+          ObjectStoreBuckets.BACKUPS,
+          join(dbName, exportName),
+          fs.createReadStream(path)
+        )
+      }
+
+      return fs.createReadStream(path)
     }
 
-    return fs.createReadStream(path)
-  }
-
-  // Stringify the dump in memory if required
-  const memStream = new MemoryStream()
-  let appString = ""
-  memStream.on("data", chunk => {
-    appString += chunk.toString()
+    // Stringify the dump in memory if required
+    const memStream = new MemoryStream()
+    let appString = ""
+    memStream.on("data", chunk => {
+      appString += chunk.toString()
+    })
+    await db.dump(memStream, { filter })
+    return appString
   })
-  await instanceDb.dump(memStream, { filter })
-  return appString
 }
 
 /**

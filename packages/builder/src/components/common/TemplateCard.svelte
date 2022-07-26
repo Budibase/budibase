@@ -6,14 +6,9 @@
   export let overlayEnabled = true
 
   let imageError = false
-  let imageLoaded = false
 
   const imageRenderError = () => {
     imageError = true
-  }
-
-  const imageLoadSuccess = () => {
-    imageLoaded = true
   }
 </script>
 
@@ -23,8 +18,7 @@
       alt={name}
       src={imageSrc}
       on:error={imageRenderError}
-      on:load={imageLoadSuccess}
-      class={`${imageLoaded ? "loaded" : ""}`}
+      class:error={imageError}
     />
     <div style={`display:${imageError ? "block" : "none"}`}>
       <svg
@@ -104,14 +98,13 @@
     width: 100%;
   }
 
-  .template-card img.loaded {
-    display: block;
-  }
-
   .template-card img {
-    display: none;
+    display: block;
     max-width: 100%;
     border-radius: var(--border-radius-s) 0px var(--border-radius-s) 0px;
+  }
+  .template-card img.error {
+    display: none;
   }
 
   .template-card:hover {

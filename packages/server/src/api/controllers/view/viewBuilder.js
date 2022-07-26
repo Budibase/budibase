@@ -10,6 +10,12 @@ const TOKEN_MAP = {
   OR: "||",
 }
 
+const CONDITIONS = {
+  EMPTY: "EMPTY",
+  NOT_EMPTY: "NOT_EMPTY",
+  CONTAINS: "CONTAINS",
+}
+
 const isEmptyExpression = key => {
   return `(
       doc["${key}"] === undefined ||
@@ -77,13 +83,13 @@ function parseFilterExpression(filters) {
       expression.push(TOKEN_MAP[filter.conjunction])
     }
 
-    if (filter.condition === "CONTAINS") {
+    if (filter.condition === CONDITIONS.CONTAINS) {
       expression.push(
         `doc["${filter.key}"].${TOKEN_MAP[filter.condition]}("${filter.value}")`
       )
-    } else if (filter.condition === "EMPTY") {
+    } else if (filter.condition === CONDITIONS.EMPTY) {
       expression.push(isEmptyExpression(filter.key))
-    } else if (filter.condition === "NOT_EMPTY") {
+    } else if (filter.condition === CONDITIONS.NOT_EMPTY) {
       expression.push(`!${isEmptyExpression(filter.key)}`)
     } else {
       const value =
@@ -125,21 +131,36 @@ function viewTemplate({ field, tableId, groupBy, filters = [], calculation }) {
   if (filters && filters.length > 0 && filters[0].conjunction) {
     delete filters[0].conjunction
   }
-  const parsedFilters = parseFilterExpression(filters)
-  const filterExpression = parsedFilters ? `&& (${parsedFilters})` : ""
 
-  const emitExpression = parseEmitExpression(field, groupBy)
-
-  const reduction = field && calculation ? { reduce: `_${calculation}` } : {}
-
-  let schema = null
+  let schema = null,
+    statFilter = null
 
   if (calculation) {
     schema = {
       ...(groupBy ? GROUP_PROPERTY : FIELD_PROPERTY),
       ...SCHEMA_MAP[calculation],
     }
+    if (
+      !filters.find(
+        filter =>
+          filter.key === field && filter.condition === CONDITIONS.NOT_EMPTY
+      )
+    ) {
+      statFilter = parseFilterExpression([
+        { key: field, condition: CONDITIONS.NOT_EMPTY },
+      ])
+    }
   }
+
+  const parsedFilters = parseFilterExpression(filters)
+  const filterExpression = parsedFilters ? `&& (${parsedFilters})` : ""
+
+  const emitExpression = parseEmitExpression(field, groupBy)
+  const tableExpression = `doc.tableId === "${tableId}"`
+  const coreExpression = statFilter
+    ? `(${tableExpression} && ${statFilter})`
+    : tableExpression
+  const reduction = field && calculation ? { reduce: `_${calculation}` } : {}
 
   return {
     meta: {
@@ -151,7 +172,7 @@ function viewTemplate({ field, tableId, groupBy, filters = [], calculation }) {
       calculation,
     },
     map: `function (doc) {
-      if (doc.tableId === "${tableId}" ${filterExpression}) {
+      if (${coreExpression} ${filterExpression}) {
         ${emitExpression}
       }
     }`,

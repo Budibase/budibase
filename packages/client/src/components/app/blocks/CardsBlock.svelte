@@ -98,7 +98,7 @@
         })
       }
     })
-    return enrichedColumns.slice(0, 3)
+    return enrichedColumns.slice(0, 5)
   }
 
   // Builds a full details page URL for the card title
@@ -125,7 +125,11 @@
 {#if schemaLoaded}
   <Block>
     <div class="card-list" use:styleable={$component.styles}>
-      <BlockComponent type="form" bind:id={formId} props={{ dataSource }}>
+      <BlockComponent
+        type="form"
+        bind:id={formId}
+        props={{ dataSource, disableValidation: true }}
+      >
         {#if title || enrichedSearchColumns?.length || showTitleButton}
           <div class="header" class:mobile={$context.device.mobile}>
             <div class="title">

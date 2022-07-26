@@ -4,6 +4,7 @@ const {
 } = require("@budibase/backend-core/permissions")
 const setup = require("./utilities")
 const { basicRole } = setup.structures
+const { events } = require("@budibase/backend-core")
 
 describe("/roles", () => {
   let request = setup.getRequest()
@@ -15,20 +16,48 @@ describe("/roles", () => {
     await config.init()
   })
 
+  const createRole = async (role) => {
+    if (!role) {
+      role =  basicRole()
+    }
+
+    return request
+      .post(`/api/roles`)
+      .send(role)
+      .set(config.defaultHeaders())
+      .expect("Content-Type", /json/)
+      .expect(200)
+  }
+
   describe("create", () => {
     it("returns a success message when role is successfully created", async () => {
-      const res = await request
-        .post(`/api/roles`)
-        .send(basicRole())
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+      const res = await createRole()
 
       expect(res.res.statusMessage).toEqual(
         "Role 'NewRole' created successfully."
       )
       expect(res.body._id).toBeDefined()
       expect(res.body._rev).toBeDefined()
+      expect(events.role.updated).not.toBeCalled()
+      expect(events.role.created).toBeCalledTimes(1)
+      expect(events.role.created).toBeCalledWith(res.body)
+    })
+  })
+
+  describe("update", () => {
+    it("updates a role", async () => {
+      let res = await createRole()
+      jest.clearAllMocks()
+      res = await createRole(res.body)
+
+      expect(res.res.statusMessage).toEqual(
+        "Role 'NewRole' created successfully."
+      )
+      expect(res.body._id).toBeDefined()
+      expect(res.body._rev).toBeDefined()
+      expect(events.role.created).not.toBeCalled()
+      expect(events.role.updated).toBeCalledTimes(1)
+      expect(events.role.updated).toBeCalledWith(res.body)
     })
   })
 
@@ -80,8 +109,10 @@ describe("/roles", () => {
     it("should delete custom roles", async () => {
       const customRole = await config.createRole({
         name: "user",
-        permissionId: BUILTIN_PERMISSION_IDS.READ_ONLY
+        permissionId: BUILTIN_PERMISSION_IDS.READ_ONLY,
+        inherits: BUILTIN_ROLE_IDS.BASIC,
       })
+      delete customRole._rev_tree
       await request
         .delete(`/api/roles/${customRole._id}/${customRole._rev}`)
         .set(config.defaultHeaders())
@@ -90,6 +121,8 @@ describe("/roles", () => {
         .get(`/api/roles/${customRole._id}`)
         .set(config.defaultHeaders())
         .expect(404)
+      expect(events.role.deleted).toBeCalledTimes(1)
+      expect(events.role.deleted).toBeCalledWith(customRole)
     })
   })
 })

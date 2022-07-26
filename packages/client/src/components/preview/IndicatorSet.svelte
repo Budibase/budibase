@@ -2,6 +2,7 @@
   import { onMount, onDestroy } from "svelte"
   import Indicator from "./Indicator.svelte"
   import { domDebounce } from "utils/domDebounce"
+  import { builderStore } from "stores"
 
   export let componentId
   export let color
@@ -12,7 +13,10 @@
   let indicators = []
   let interval
   let text
+  let icon
+
   $: visibleIndicators = indicators.filter(x => x.visible)
+  $: offset = $builderStore.inBuilder ? 0 : 2
 
   let updating = false
   let observers = []
@@ -55,6 +59,9 @@
       if (prefix) {
         text = `${prefix} ${text}`
       }
+      if (parents[0].dataset.icon) {
+        icon = parents[0].dataset.icon
+      }
     }
 
     // Batch reads to minimize reflow
@@ -64,8 +71,7 @@
     // Extract valid children
     // Sanity limit of 100 active indicators
     const children = Array.from(parents)
-      .map(parent => parent?.childNodes?.[0])
-      .filter(node => node?.nodeType === 1)
+      .map(parent => parent?.children?.[0])
       .slice(0, 100)
 
     // If there aren't any nodes then reset
@@ -88,8 +94,8 @@
 
       const elBounds = child.getBoundingClientRect()
       nextIndicators.push({
-        top: elBounds.top + scrollY - deviceBounds.top,
-        left: elBounds.left + scrollX - deviceBounds.left,
+        top: elBounds.top + scrollY - deviceBounds.top - offset,
+        left: elBounds.left + scrollX - deviceBounds.left - offset,
         width: elBounds.width + 4,
         height: elBounds.height + 4,
         visible: false,
@@ -119,6 +125,7 @@
       width={indicator.width}
       height={indicator.height}
       text={idx === 0 ? text : null}
+      icon={idx === 0 ? icon : null}
       {transition}
       {zIndex}
       {color}

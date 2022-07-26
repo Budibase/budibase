@@ -4,7 +4,6 @@ filterTests(["smoke", "all"], () => {
   context("REST Datasource Testing", () => {
     before(() => {
       cy.login()
-      cy.deleteAllApps()
       cy.createTestApp()
     })
 
@@ -15,8 +14,7 @@ filterTests(["smoke", "all"], () => {
       // Select REST data source
       cy.selectExternalDatasource(datasource)
       // Enter incorrect api & attempt to send query
-      cy.wait(500)
-      cy.get(".spectrum-Button").contains("Add query").click({ force: true })
+      cy.get(".spectrum-Button", { timeout: 500 }).contains("Add query").click({ force: true })
       cy.intercept("**/preview").as("queryError")
       cy.get("input").clear().type("random text")
       cy.get(".spectrum-Button").contains("Send").click({ force: true })
@@ -37,8 +35,7 @@ filterTests(["smoke", "all"], () => {
       // createRestQuery confirms query creation
       cy.createRestQuery("GET", restUrl, "/breweries")
       // Confirm status code response within REST datasource
-      cy.wait(1000)
-      cy.get(".stats").within(() => {
+      cy.get(".stats", { timeout: 1000 }).within(() => {
         cy.get(".spectrum-FieldLabel")
         .eq(0)
         .should("contain", 200)
