@@ -23,20 +23,6 @@ describe("/users", () => {
   })
 
   describe("fetch", () => {
-    it("returns a list of users from an instance db", async () => {
-      await config.createUser("uuidx")
-      await config.createUser("uuidy")
-      const res = await request
-        .get(`/api/users/metadata`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
-
-      expect(res.body.length).toBe(3)
-      console.debug('test: ' + JSON.stringify(res.body))
-      expect(res.body.find(u => u._id === `ro_ta_users_us_uuidx`)).toBeDefined()
-      expect(res.body.find(u => u._id === `ro_ta_users_us_uuidy`)).toBeDefined()
-    })
 
     it("should apply authorization to endpoint", async () => {
       await config.createUser()
