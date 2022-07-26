@@ -28,9 +28,9 @@ class UsageLimitError extends HTTPError {
 }
 
 class FeatureDisabledError extends HTTPError {
-  constructor(message, limitName) {
+  constructor(message, featureName) {
     super(message, 400, codes.FEATURE_DISABLED, type)
-    this.limitName = limitName
+    this.featureName = featureName
   }
 }
 

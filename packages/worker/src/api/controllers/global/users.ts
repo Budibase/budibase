@@ -13,7 +13,7 @@ import {
   cache,
 } from "@budibase/backend-core"
 import { checkAnyUserExists } from "../../../utilities/users"
-
+import { groups as groupUtils } from "@budibase/pro"
 const MAX_USERS_UPLOAD_LIMIT = 1000
 
 export const save = async (ctx: any) => {
@@ -46,34 +46,8 @@ export const bulkCreate = async (ctx: any) => {
 
   try {
     let response = await users.bulkCreate(newUsersRequested, groups)
+    await groupUtils.bulkSaveGroupUsers(groupsToSave, response)
 
-    if (groupsToSave.length) {
-      let groupsPromises: any = []
-      groupsToSave.forEach(async (userGroup: UserGroup) => {
-        userGroup.users = [...userGroup.users, ...response]
-        groupsPromises.push(db.put(userGroup))
-      })
-
-      const groupResults = await Promise.all(groupsPromises)
-      await db.bulkDocs(groupResults)
-
-      let eventFns = []
-      for (const group of groupResults) {
-        eventFns.push(() => {
-          events.group.usersAdded(
-            response.map(u => u.email),
-            group
-          )
-        })
-        eventFns.push(() => {
-          events.group.createdOnboarding(group._id as string)
-        })
-      }
-
-      for (const fn of eventFns) {
-        await fn()
-      }
-    }
     ctx.body = response
   } catch (err: any) {
     ctx.throw(err.status || 400, err)
@@ -142,26 +116,8 @@ export const adminUser = async (ctx: any) => {
 
 export const destroy = async (ctx: any) => {
   const id = ctx.params.id
-  const db = tenancy.getGlobalDB()
-  let user: User = await db.get(id)
-  let groups = user.userGroups
 
   await users.destroy(id, ctx.user)
-
-  // Remove asssosicated groups
-  if (groups) {
-    let groupsPromises = []
-    for (const groupId of groups) {
-      let group = await db.get(groupId)
-      let updatedUsersGroup = group.users.filter(
-        (groupUser: any) => groupUser.email !== user.email
-      )
-      group.users = updatedUsersGroup
-      groupsPromises.push(db.put(group))
-    }
-
-    await db.bulkDocs(groupsPromises)
-  }
 
   ctx.body = {
     message: `User ${id} deleted.`,
@@ -170,30 +126,9 @@ export const destroy = async (ctx: any) => {
 
 export const bulkDelete = async (ctx: any) => {
   const { userIds } = ctx.request.body
-  const db = tenancy.getGlobalDB()
   try {
     let { groupsToModify, usersResponse } = await users.bulkDelete(userIds)
-
-    // if there are groups to delete, do it here
-    if (Object.keys(groupsToModify).length) {
-      let groups = (
-        await db.allDocs({
-          include_docs: true,
-          keys: Object.keys(groupsToModify),
-        })
-      ).rows.map((group: any) => group.doc)
-
-      let groupsPromises = []
-      for (const group of groups) {
-        let updatedUsersGroup = group.users.filter(
-          (groupUser: any) => !groupsToModify[group._id].includes(groupUser._id)
-        )
-        group.users = updatedUsersGroup
-        groupsPromises.push(db.put(group))
-      }
-
-      await db.bulkDocs(groupsPromises)
-    }
+    await groupUtils.bulkDeleteGroupUsers(groupsToModify)
 
     ctx.body = {
       message: `${usersResponse.length} user(s) deleted`,
@@ -314,7 +249,6 @@ export const inviteAccept = async (ctx: any) => {
       return saved
     })
   } catch (err: any) {
-    console.log(err)
     if (err.code === errors.codes.USAGE_LIMIT_EXCEEDED) {
       // explicitly re-throw limit exceeded errors
       ctx.throw(400, err)

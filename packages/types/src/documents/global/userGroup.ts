@@ -5,7 +5,7 @@ export interface UserGroup extends Document {
   icon: string
   color: string
   users: User[]
-  apps: any
+  apps: any[]
   roles: UserGroupRoles
   createdAt?: number
 }

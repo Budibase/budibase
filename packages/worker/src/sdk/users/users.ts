@@ -3,7 +3,6 @@ import { quotas } from "@budibase/pro"
 import * as apps from "../../utilities/appService"
 import * as eventHelpers from "./events"
 import {
-  events,
   tenancy,
   utils,
   db as dbUtils,
@@ -16,8 +15,8 @@ import {
   accounts,
   migrations,
 } from "@budibase/backend-core"
-import { MigrationType, UserGroup } from "@budibase/types"
-import { build } from "joi"
+import { MigrationType, User } from "@budibase/types"
+import { groups as groupUtils } from "@budibase/pro/"
 
 const PAGE_LIMIT = 8
 
@@ -107,10 +106,11 @@ export const buildUser = async (
 ) => {
   let { password, _id } = user
 
-  // get the password, make sure one is defined
   let hashedPassword
   if (password) {
     hashedPassword = opts.hashPassword ? await utils.hash(password) : password
+  } else if (dbUser) {
+    hashedPassword = dbUser.password
   } else if (opts.requirePassword) {
     throw "Password must be specified."
   }
@@ -125,7 +125,6 @@ export const buildUser = async (
     password: hashedPassword,
     tenantId,
   }
-
   // make sure the roles object is always present
   if (!user.roles) {
     user.roles = {}
@@ -202,6 +201,7 @@ export const save = async (
     const putUserFn = () => {
       return db.put(builtUser)
     }
+    console.log(builtUser)
     if (eventHelpers.isAddingBuilder(builtUser, dbUser)) {
       response = await quotas.addDeveloper(putUserFn)
     } else {
@@ -244,7 +244,10 @@ export const addTenant = async (
   }
 }
 
-export const bulkCreate = async (newUsersRequested: any[], groups: any) => {
+export const bulkCreate = async (
+  newUsersRequested: User[],
+  groups: string[]
+) => {
   const db = tenancy.getGlobalDB()
   const tenantId = tenancy.getTenantId()
 
@@ -291,16 +294,18 @@ export const bulkCreate = async (newUsersRequested: any[], groups: any) => {
   })
 
   const usersToBulkSave = await Promise.all(usersToSave)
-  await quotas.addDevelopers(() => db.bulkDocs(usersToBulkSave), builderCount)
+  const response = await quotas.addDevelopers(
+    () => db.bulkDocs(usersToBulkSave),
+    builderCount
+  )
 
   // Post processing of bulk added users, i.e events and cache operations
   for (const user of usersToBulkSave) {
-    delete user.password
-    await eventHelpers.handleSaveEvents(user, null)
-    await apps.syncUserInApps(user._id)
+    //await eventHelpers.handleSaveEvents(user, null)
+    //await apps.syncUserInApps(user._id)
   }
 
-  return usersToBulkSave
+  return response
 }
 
 export const bulkDelete = async (userIds: any) => {
@@ -356,6 +361,7 @@ export const bulkDelete = async (userIds: any) => {
 export const destroy = async (id: string, currentUser: any) => {
   const db = tenancy.getGlobalDB()
   const dbUser = await db.get(id)
+  let groups = dbUser.userGroups
 
   if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
     // root account holder can't be deleted from inside budibase
@@ -371,7 +377,13 @@ export const destroy = async (id: string, currentUser: any) => {
   }
 
   await deprovisioning.removeUserFromInfoDB(dbUser)
+
   await db.remove(dbUser._id, dbUser._rev)
+
+  if (groups) {
+    await groupUtils.deleteGroupUsers(groups, dbUser)
+  }
+
   await eventHelpers.handleDeleteEvents(dbUser)
   await quotas.removeUser(dbUser)
   await cache.user.invalidateUser(dbUser._id)
