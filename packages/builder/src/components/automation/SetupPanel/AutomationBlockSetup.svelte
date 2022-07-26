@@ -53,7 +53,7 @@
 
   $: getInputData(testData, block.inputs)
   const getInputData = (testData, blockInputs) => {
-    let newInputData = testData ? testData : blockInputs
+    let newInputData = testData || blockInputs
 
     if (block.event === "app:trigger" && !newInputData?.fields) {
       newInputData = cloneDeep(blockInputs)

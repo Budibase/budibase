@@ -87,8 +87,6 @@
   }
 </script>
 
-FieldSelector
-
 {#if schemaFields.length && isTestModal}
   <div class="schema-fields">
     {#each schemaFields as [field, schema]}
