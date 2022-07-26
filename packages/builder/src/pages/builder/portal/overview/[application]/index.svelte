@@ -139,9 +139,10 @@
     notifications.success("App ID copied to clipboard.")
   }
 
-  const exportApp = app => {
-    const id = isPublished ? app.prodId : app.devId
+  const exportApp = (app, opts = { published: false }) => {
     const appName = encodeURIComponent(app.name)
+    const id = opts?.published ? app.prodId : app.devId
+    // always export the development version
     window.location = `/api/backups/export?appId=${id}&appname=${appName}`
   }
 
@@ -266,12 +267,21 @@
               <span slot="control" class="app-overview-actions-icon">
                 <Icon hoverable name="More" />
               </span>
-              <MenuItem on:click={() => exportApp(selectedApp)} icon="Download">
-                Export
+              <MenuItem
+                on:click={() => exportApp(selectedApp, { published: false })}
+                icon="DownloadFromCloud"
+              >
+                Export latest
               </MenuItem>
               {#if isPublished}
+                <MenuItem
+                  on:click={() => exportApp(selectedApp, { published: true })}
+                  icon="DownloadFromCloudOutline"
+                >
+                  Export published
+                </MenuItem>
                 <MenuItem on:click={() => copyAppId(selectedApp)} icon="Copy">
-                  Copy App ID
+                  Copy app ID
                 </MenuItem>
               {/if}
               {#if !isPublished}
