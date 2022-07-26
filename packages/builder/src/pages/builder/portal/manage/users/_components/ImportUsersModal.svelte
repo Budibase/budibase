@@ -6,7 +6,7 @@
     Multiselect,
     notifications,
   } from "@budibase/bbui"
-  import { groups, auth } from "stores/portal"
+  import { groups, auth, admin } from "stores/portal"
   import { emailValidator } from "../../../../../../helpers/validation"
   import { Constants } from "@budibase/frontend-core"
 
@@ -27,7 +27,7 @@
   )
 
   const validEmails = userEmails => {
-    if (userEmails.length > MAX_USERS_UPLOAD_LIMIT) {
+    if ($admin.cloud && userEmails.length > MAX_USERS_UPLOAD_LIMIT) {
       notifications.error(
         `Max limit for upload is 1000 users. Please reduce file size and try again.`
       )
