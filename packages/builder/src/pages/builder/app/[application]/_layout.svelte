@@ -111,7 +111,9 @@
         </Tabs>
       </div>
       <div class="toprightnav">
-        <VersionModal />
+        <div class="version">
+          <VersionModal />
+        </div>
         <RevertModal />
         <DeployNavigation {application} />
       </div>
@@ -179,5 +181,9 @@
     justify-content: flex-end;
     align-items: center;
     gap: var(--spacing-xl);
+  }
+
+  .version {
+    margin-right: var(--spacing-s);
   }
 </style>
