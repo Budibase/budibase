@@ -15,7 +15,7 @@ filterTests(['smoke', 'all'], () => {
             })
             cy.get(interact.SPECTRUM_MODAL).within(() => {
                 // Enter app name before revert
-                cy.get("input").type("Cypress Tests")
+                cy.get(interact.SPECTRUM_TEXTFIELD_INPUT).type("Cypress Tests")
                 cy.intercept('**/revert').as('revertApp')
                 // Click Revert
                 cy.get(interact.SPECTRUM_BUTTON).contains("Revert").click({ force: true })
