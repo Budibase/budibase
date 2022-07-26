@@ -13,18 +13,16 @@ export interface GroupDeletedEvent extends BaseEvent {
 }
 
 export interface GroupUsersAddedEvent extends BaseEvent {
-  emails: string[]
   count: number
   groupId: string
 }
 
 export interface GroupUsersDeletedEvent extends BaseEvent {
-  emails: string[]
   count: number
   groupId: string
 }
 
-export interface GroupsAddedOnboarding extends BaseEvent {
+export interface GroupAddedOnboardingEvent extends BaseEvent {
   groupId: string
   onboarding: boolean
 }

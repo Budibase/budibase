@@ -7,7 +7,7 @@ import {
   GroupUpdatedEvent,
   GroupUsersAddedEvent,
   GroupUsersDeletedEvent,
-  GroupsAddedOnboarding,
+  GroupAddedOnboardingEvent,
   UserGroupRoles,
 } from "@budibase/types"
 
@@ -34,24 +34,22 @@ export async function deleted(group: UserGroup) {
 
 export async function usersAdded(emails: string[], group: UserGroup) {
   const properties: GroupUsersAddedEvent = {
-    emails,
     count: emails.length,
     groupId: group._id as string,
   }
-  await publishEvent(Event.USER_GROUP_USER_ADDED, properties)
+  await publishEvent(Event.USER_GROUP_USERS_ADDED, properties)
 }
 
 export async function usersDeleted(emails: string[], group: UserGroup) {
   const properties: GroupUsersDeletedEvent = {
-    emails,
     count: emails.length,
     groupId: group._id as string,
   }
-  await publishEvent(Event.USER_GROUP_USER_REMOVED, properties)
+  await publishEvent(Event.USER_GROUP_USERS_REMOVED, properties)
 }
 
 export async function createdOnboarding(groupId: string) {
-  const properties: GroupsAddedOnboarding = {
+  const properties: GroupAddedOnboardingEvent = {
     groupId: groupId,
     onboarding: true,
   }
