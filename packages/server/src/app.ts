@@ -1,9 +1,8 @@
 // need to load environment first
 import { ExtendableContext } from "koa"
-
 import * as env from "./environment"
-const CouchDB = require("./db")
-require("@budibase/backend-core").init(CouchDB)
+import db from "./db"
+db.init()
 const Koa = require("koa")
 const destroyable = require("server-destroy")
 const koaBody = require("koa-body")
@@ -15,8 +14,12 @@ const automations = require("./automations/index")
 const Sentry = require("@sentry/node")
 const fileSystem = require("./utilities/fileSystem")
 const bullboard = require("./automations/bullboard")
-const redis = require("./utilities/redis")
+const { logAlert } = require("@budibase/backend-core/logging")
+const { Thread } = require("./threads")
+import redis from "./utilities/redis"
 import * as migrations from "./migrations"
+import { events, installation, tenancy } from "@budibase/backend-core"
+import { createAdminUser, getChecklist } from "./utilities/workerRequests"
 
 const app = new Koa()
 
@@ -50,7 +53,7 @@ app.context.eventEmitter = eventEmitter
 app.context.auth = {}
 
 // api routes
-app.use(api.routes())
+app.use(api.router.routes())
 
 if (env.isProd()) {
   env._set("NODE_ENV", "production")
@@ -69,11 +72,25 @@ if (env.isProd()) {
 const server = http.createServer(app.callback())
 destroyable(server)
 
+let shuttingDown = false,
+  errCode = 0
 server.on("close", async () => {
-  if (env.NODE_ENV !== "jest") {
+  // already in process
+  if (shuttingDown) {
+    return
+  }
+  shuttingDown = true
+  if (!env.isTest()) {
     console.log("Server Closed")
   }
+  await automations.shutdown()
   await redis.shutdown()
+  await events.shutdown()
+  await Thread.shutdown()
+  api.shutdown()
+  if (!env.isTest()) {
+    process.exit(errCode)
+  }
 })
 
 module.exports = server.listen(env.PORT || 0, async () => {
@@ -82,6 +99,49 @@ module.exports = server.listen(env.PORT || 0, async () => {
   eventEmitter.emitPort(env.PORT)
   fileSystem.init()
   await redis.init()
+
+  // run migrations on startup if not done via http
+  // not recommended in a clustered environment
+  if (!env.HTTP_MIGRATIONS && !env.isTest()) {
+    try {
+      await migrations.migrate()
+    } catch (e) {
+      logAlert("Error performing migrations. Exiting.", e)
+      shutdown()
+    }
+  }
+
+  // check and create admin user if required
+  if (
+    env.SELF_HOSTED &&
+    !env.MULTI_TENANCY &&
+    env.BB_ADMIN_USER_EMAIL &&
+    env.BB_ADMIN_USER_PASSWORD
+  ) {
+    const checklist = await getChecklist()
+    if (!checklist?.adminUser?.checked) {
+      try {
+        const tenantId = tenancy.getTenantId()
+        await createAdminUser(
+          env.BB_ADMIN_USER_EMAIL,
+          env.BB_ADMIN_USER_PASSWORD,
+          tenantId
+        )
+        console.log(
+          "Admin account automatically created for",
+          env.BB_ADMIN_USER_EMAIL
+        )
+      } catch (e) {
+        logAlert("Error creating initial admin user. Exiting.", e)
+        shutdown()
+      }
+    }
+  }
+
+  // check for version updates
+  await installation.checkInstallVersion()
+
+  // done last - this will never complete
   await automations.init()
 })
 
@@ -91,19 +151,16 @@ const shutdown = () => {
 }
 
 process.on("uncaughtException", err => {
-  console.error(err)
+  // @ts-ignore
+  // don't worry about this error, comes from zlib isn't important
+  if (err && err["code"] === "ERR_INVALID_CHAR") {
+    return
+  }
+  errCode = -1
+  logAlert("Uncaught exception.", err)
   shutdown()
 })
 
 process.on("SIGTERM", () => {
   shutdown()
 })
-
-// run migrations on startup if not done via http
-// not recommended in a clustered environment
-if (!env.HTTP_MIGRATIONS) {
-  migrations.migrate().catch(err => {
-    console.error("Error performing migrations. Exiting.\n", err)
-    shutdown()
-  })
-}

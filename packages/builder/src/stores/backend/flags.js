@@ -16,6 +16,9 @@ export function createFlagsStore() {
       })
       await actions.fetch()
     },
+    toggleUiFeature: async feature => {
+      await API.toggleUiFeature({ value: feature })
+    },
   }
 
   return {

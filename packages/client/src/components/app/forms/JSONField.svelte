@@ -8,6 +8,7 @@
   export let placeholder
   export let disabled = false
   export let defaultValue = ""
+  export let onChange
 
   const component = getContext("component")
   const validation = [
@@ -33,6 +34,14 @@
       return value
     }
   }
+
+  const handleChange = e => {
+    const value = parseValue(e.detail)
+    fieldApi.setValue(value)
+    if (onChange) {
+      onChange({ value })
+    }
+  }
 </script>
 
 <Field
@@ -49,7 +58,7 @@
     <div style="--height: {height};">
       <CoreTextArea
         value={serialiseValue(fieldState.value)}
-        on:change={e => fieldApi.setValue(parseValue(e.detail))}
+        on:change={handleChange}
         disabled={fieldState.disabled}
         error={fieldState.error}
         id={fieldState.fieldId}

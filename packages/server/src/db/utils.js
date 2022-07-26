@@ -9,6 +9,10 @@ const {
   StaticDatabases,
   isDevAppID,
   isProdAppID,
+  getDevelopmentAppID,
+  generateAppID,
+  getQueryIndex,
+  ViewNames,
 } = require("@budibase/backend-core/db")
 
 const UNICODE_MAX = "\ufff0"
@@ -20,11 +24,7 @@ const AppStatus = {
 }
 
 const DocumentTypes = {
-  APP: CoreDocTypes.APP,
-  DEV: CoreDocTypes.DEV,
-  APP_DEV: CoreDocTypes.APP_DEV,
-  APP_METADATA: CoreDocTypes.APP_METADATA,
-  ROLE: CoreDocTypes.ROLE,
+  ...CoreDocTypes,
   TABLE: "ta",
   ROW: "ro",
   USER: "us",
@@ -41,11 +41,6 @@ const DocumentTypes = {
   METADATA: "metadata",
   MEM_VIEW: "view",
   USER_FLAG: "flag",
-}
-
-const ViewNames = {
-  LINK: "by_link",
-  ROUTING: "screen_routes",
 }
 
 const InternalTables = {
@@ -72,6 +67,7 @@ exports.isDevAppID = isDevAppID
 exports.isProdAppID = isProdAppID
 exports.USER_METDATA_PREFIX = `${DocumentTypes.ROW}${SEPARATOR}${InternalTables.USER_METADATA}${SEPARATOR}`
 exports.LINK_USER_METADATA_PREFIX = `${DocumentTypes.LINK}${SEPARATOR}${InternalTables.USER_METADATA}${SEPARATOR}`
+exports.TABLE_ROW_PREFIX = `${DocumentTypes.ROW}${SEPARATOR}${DocumentTypes.TABLE}`
 exports.ViewNames = ViewNames
 exports.InternalTables = InternalTables
 exports.DocumentTypes = DocumentTypes
@@ -80,13 +76,13 @@ exports.UNICODE_MAX = UNICODE_MAX
 exports.SearchIndexes = SearchIndexes
 exports.AppStatus = AppStatus
 exports.BudibaseInternalDB = BudibaseInternalDB
+exports.generateAppID = generateAppID
+exports.generateDevAppID = getDevelopmentAppID
 
 exports.generateRoleID = generateRoleID
 exports.getRoleParams = getRoleParams
 
-exports.getQueryIndex = viewName => {
-  return `database/${viewName}`
-}
+exports.getQueryIndex = getQueryIndex
 
 /**
  * If creating DB allDocs/query params with only a single top level ID this can be used, this
@@ -241,28 +237,6 @@ exports.generateLinkID = (
  */
 exports.getLinkParams = (otherProps = {}) => {
   return getDocParams(DocumentTypes.LINK, null, otherProps)
-}
-
-/**
- * Generates a new app ID.
- * @returns {string} The new app ID which the app doc can be stored under.
- */
-exports.generateAppID = (tenantId = null) => {
-  let id = `${DocumentTypes.APP}${SEPARATOR}`
-  if (tenantId) {
-    id += `${tenantId}${SEPARATOR}`
-  }
-  return `${id}${newid()}`
-}
-
-/**
- * Generates a development app ID from a real app ID.
- * @returns {string} the dev app ID which can be used for dev database.
- */
-exports.generateDevAppID = appId => {
-  const prefix = `${DocumentTypes.APP}${SEPARATOR}`
-  const rest = appId.split(prefix)[1]
-  return `${DocumentTypes.APP_DEV}${SEPARATOR}${rest}`
 }
 
 /**

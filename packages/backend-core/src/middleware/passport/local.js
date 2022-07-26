@@ -2,7 +2,7 @@ const jwt = require("jsonwebtoken")
 const { UserStatus } = require("../../constants")
 const { compare } = require("../../hashing")
 const env = require("../../environment")
-const { getGlobalUserByEmail } = require("../../utils")
+const users = require("../../users")
 const { authError } = require("./utils")
 const { newid } = require("../../hashing")
 const { createASession } = require("../../security/sessions")
@@ -28,9 +28,9 @@ exports.authenticate = async function (ctx, email, password, done) {
   if (!email) return authError(done, "Email Required")
   if (!password) return authError(done, "Password Required")
 
-  const dbUser = await getGlobalUserByEmail(email)
+  const dbUser = await users.getGlobalUserByEmail(email)
   if (dbUser == null) {
-    return authError(done, "User not found")
+    return authError(done, `User not found: [${email}]`)
   }
 
   // check that the user is currently inactive, if this is the case throw invalid
@@ -55,6 +55,7 @@ exports.authenticate = async function (ctx, email, password, done) {
   if (await compare(password, dbUser.password)) {
     const sessionId = newid()
     const tenantId = getTenantId()
+
     await createASession(dbUser._id, { sessionId, tenantId })
 
     dbUser.token = jwt.sign(

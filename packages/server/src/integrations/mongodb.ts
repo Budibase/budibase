@@ -4,10 +4,18 @@ import {
   QueryTypes,
 } from "../definitions/datasource"
 import { IntegrationBase } from "./base/IntegrationBase"
+import {
+  MongoClient,
+  ObjectID,
+  FilterQuery,
+  UpdateQuery,
+  FindOneAndUpdateOption,
+  UpdateOneOptions,
+  UpdateManyOptions,
+  CommonOptions,
+} from "mongodb"
 
 module MongoDBModule {
-  const { MongoClient } = require("mongodb")
-
   interface MongoDBConfig {
     connectionString: string
     db: string
@@ -16,6 +24,7 @@ module MongoDBModule {
   const SCHEMA: Integration = {
     docs: "https://github.com/mongodb/node-mongodb-native",
     friendlyName: "MongoDB",
+    type: "Non-relational",
     description:
       "MongoDB is a general purpose, document-based, distributed database built for modern application developers and for the cloud era.",
     datasource: {
@@ -76,20 +85,67 @@ module MongoDBModule {
       return this.client.connect()
     }
 
+    createObjectIds(json: any): object {
+      const self = this
+      function interpolateObjectIds(json: any) {
+        for (let field of Object.keys(json)) {
+          if (json[field] instanceof Object) {
+            json[field] = self.createObjectIds(json[field])
+          }
+          if (field === "_id" && typeof json[field] === "string") {
+            const id = json["_id"].match(
+              /(?<=objectid\(['"]).*(?=['"]\))/gi
+            )?.[0]
+            if (id) {
+              json["_id"] = ObjectID.createFromHexString(id)
+            }
+          }
+        }
+        return json
+      }
+
+      if (Array.isArray(json)) {
+        for (let i = 0; i < json.length; i++) {
+          json[i] = interpolateObjectIds(json[i])
+        }
+        return json
+      }
+      return interpolateObjectIds(json)
+    }
+
+    parseQueryParams(params: string, mode: string) {
+      let queryParams = params.split(/(?<=}),[\n\s]*(?={)/g)
+      let group1 = queryParams[0] ? JSON.parse(queryParams[0]) : {}
+      let group2 = queryParams[1] ? JSON.parse(queryParams[1]) : {}
+      let group3 = queryParams[2] ? JSON.parse(queryParams[2]) : {}
+      if (mode === "update") {
+        return {
+          filter: group1,
+          update: group2,
+          options: group3,
+        }
+      }
+      return {
+        filter: group1,
+        options: group2,
+      }
+    }
+
     async create(query: { json: object; extra: { [key: string]: string } }) {
       try {
         await this.connect()
         const db = this.client.db(this.config.db)
         const collection = db.collection(query.extra.collection)
+        let json = this.createObjectIds(query.json)
 
         // For mongodb we add an extra actionType to specify
         // which method we want to call on the collection
         switch (query.extra.actionTypes) {
           case "insertOne": {
-            return await collection.insertOne(query.json)
+            return await collection.insertOne(json)
           }
           case "insertMany": {
-            return await collection.insertOne(query.json).toArray()
+            return await collection.insertMany(json)
           }
           default: {
             throw new Error(
@@ -110,22 +166,32 @@ module MongoDBModule {
         await this.connect()
         const db = this.client.db(this.config.db)
         const collection = db.collection(query.extra.collection)
+        let json = this.createObjectIds(query.json)
 
         switch (query.extra.actionTypes) {
           case "find": {
-            return await collection.find(query.json).toArray()
+            return await collection.find(json).toArray()
           }
           case "findOne": {
-            return await collection.findOne(query.json)
+            return await collection.findOne(json)
           }
           case "findOneAndUpdate": {
-            return await collection.findOneAndUpdate(query.json)
+            let findAndUpdateJson = json as {
+              filter: FilterQuery<any>
+              update: UpdateQuery<any>
+              options: FindOneAndUpdateOption<any>
+            }
+            return await collection.findOneAndUpdate(
+              findAndUpdateJson.filter,
+              findAndUpdateJson.update,
+              findAndUpdateJson.options
+            )
           }
           case "count": {
-            return await collection.countDocuments(query.json)
+            return await collection.countDocuments(json)
           }
           case "distinct": {
-            return await collection.distinct(query.json)
+            return await collection.distinct(json)
           }
           default: {
             throw new Error(
@@ -146,13 +212,30 @@ module MongoDBModule {
         await this.connect()
         const db = this.client.db(this.config.db)
         const collection = db.collection(query.extra.collection)
+        let queryJson = query.json
+        if (typeof queryJson === "string") {
+          queryJson = this.parseQueryParams(queryJson, "update")
+        }
+        let json = this.createObjectIds(queryJson) as {
+          filter: FilterQuery<any>
+          update: UpdateQuery<any>
+          options: object
+        }
 
         switch (query.extra.actionTypes) {
           case "updateOne": {
-            return await collection.updateOne(query.json)
+            return await collection.updateOne(
+              json.filter,
+              json.update,
+              json.options as UpdateOneOptions
+            )
           }
           case "updateMany": {
-            return await collection.updateMany(query.json).toArray()
+            return await collection.updateMany(
+              json.filter,
+              json.update,
+              json.options as UpdateManyOptions
+            )
           }
           default: {
             throw new Error(
@@ -173,13 +256,27 @@ module MongoDBModule {
         await this.connect()
         const db = this.client.db(this.config.db)
         const collection = db.collection(query.extra.collection)
+        let queryJson = query.json
+        if (typeof queryJson === "string") {
+          queryJson = this.parseQueryParams(queryJson, "delete")
+        }
+        let json = this.createObjectIds(queryJson) as {
+          filter: FilterQuery<any>
+          options: CommonOptions
+        }
+        if (!json.options) {
+          json = {
+            filter: json,
+            options: {},
+          }
+        }
 
         switch (query.extra.actionTypes) {
           case "deleteOne": {
-            return await collection.deleteOne(query.json)
+            return await collection.deleteOne(json.filter, json.options)
           }
           case "deleteMany": {
-            return await collection.deleteMany(query.json).toArray()
+            return await collection.deleteMany(json.filter, json.options)
           }
           default: {
             throw new Error(

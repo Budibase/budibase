@@ -16,9 +16,18 @@ import {
 import { DatasourcePlus } from "./base/datasourcePlus"
 
 module PostgresModule {
-  const { Pool } = require("pg")
+  const { Client, types } = require("pg")
   const Sql = require("./base/sql")
   const { escapeDangerousCharacters } = require("../utilities")
+
+  // Return "date" and "timestamp" types as plain strings.
+  // This lets us reference the original stored timezone.
+  // types is undefined when running in a test env for some reason.
+  if (types) {
+    types.setTypeParser(1114, (val: any) => val) // timestamp
+    types.setTypeParser(1082, (val: any) => val) // date
+    types.setTypeParser(1184, (val: any) => val) // timestampz
+  }
 
   const JSON_REGEX = /'{.*}'::json/s
 
@@ -38,6 +47,7 @@ module PostgresModule {
     docs: "https://node-postgres.com",
     plus: true,
     friendlyName: "PostgreSQL",
+    type: "Relational",
     description:
       "PostgreSQL, also known as Postgres, is a free and open-source relational database management system emphasizing extensibility and SQL compliance.",
     datasource: {
@@ -104,7 +114,6 @@ module PostgresModule {
   }
 
   class PostgresIntegration extends Sql implements DatasourcePlus {
-    static pool: any
     private readonly client: any
     private readonly config: PostgresConfig
     private index: number = 1
@@ -136,12 +145,8 @@ module PostgresModule {
             }
           : undefined,
       }
-      if (!this.pool) {
-        this.pool = new Pool(newConfig)
-      }
-
-      this.client = this.pool
-      this.setSchema()
+      this.client = new Client(newConfig)
+      this.open = false
     }
 
     getBindingIdentifier(): string {
@@ -152,7 +157,34 @@ module PostgresModule {
       return parts.join(" || ")
     }
 
-    async internalQuery(query: SqlQuery) {
+    async openConnection() {
+      await this.client.connect()
+      if (!this.config.schema) {
+        this.config.schema = "public"
+      }
+      this.client.query(`SET search_path TO ${this.config.schema}`)
+      this.COLUMNS_SQL = `select * from information_schema.columns where table_schema = '${this.config.schema}'`
+      this.open = true
+    }
+
+    closeConnection() {
+      const pg = this
+      return new Promise<void>((resolve, reject) => {
+        this.client.end((err: any) => {
+          pg.open = false
+          if (err) {
+            reject(err)
+          } else {
+            resolve()
+          }
+        })
+      })
+    }
+
+    async internalQuery(query: SqlQuery, close: boolean = true) {
+      if (!this.open) {
+        await this.openConnection()
+      }
       const client = this.client
       this.index = 1
       // need to handle a specific issue with json data types in postgres,
@@ -169,19 +201,14 @@ module PostgresModule {
       try {
         return await client.query(query.sql, query.bindings || [])
       } catch (err) {
+        await this.closeConnection()
         // @ts-ignore
         throw new Error(err)
+      } finally {
+        if (close) {
+          await this.closeConnection()
+        }
       }
-    }
-
-    setSchema() {
-      if (!this.config.schema) {
-        this.config.schema = "public"
-      }
-      this.client.on("connect", (client: any) => {
-        client.query(`SET search_path TO ${this.config.schema}`)
-      })
-      this.COLUMNS_SQL = `select * from information_schema.columns where table_schema = '${this.config.schema}'`
     }
 
     /**
@@ -191,6 +218,7 @@ module PostgresModule {
      */
     async buildSchema(datasourceId: string, entities: Record<string, Table>) {
       let tableKeys: { [key: string]: string[] } = {}
+      await this.openConnection()
       try {
         const primaryKeysResponse = await this.client.query(
           this.PRIMARY_KEYS_SQL
@@ -210,45 +238,53 @@ module PostgresModule {
         tableKeys = {}
       }
 
-      const columnsResponse = await this.client.query(this.COLUMNS_SQL)
-      const tables: { [key: string]: Table } = {}
+      try {
+        const columnsResponse = await this.client.query(this.COLUMNS_SQL)
 
-      for (let column of columnsResponse.rows) {
-        const tableName: string = column.table_name
-        const columnName: string = column.column_name
+        const tables: { [key: string]: Table } = {}
 
-        // table key doesn't exist yet
-        if (!tables[tableName] || !tables[tableName].schema) {
-          tables[tableName] = {
-            _id: buildExternalTableId(datasourceId, tableName),
-            primary: tableKeys[tableName] || [],
-            name: tableName,
-            schema: {},
+        for (let column of columnsResponse.rows) {
+          const tableName: string = column.table_name
+          const columnName: string = column.column_name
+
+          // table key doesn't exist yet
+          if (!tables[tableName] || !tables[tableName].schema) {
+            tables[tableName] = {
+              _id: buildExternalTableId(datasourceId, tableName),
+              primary: tableKeys[tableName] || [],
+              name: tableName,
+              schema: {},
+            }
+          }
+
+          const identity = !!(
+            column.identity_generation ||
+            column.identity_start ||
+            column.identity_increment
+          )
+          const hasDefault =
+            typeof column.column_default === "string" &&
+            column.column_default.startsWith("nextval")
+          const isGenerated =
+            column.is_generated && column.is_generated !== "NEVER"
+          const isAuto: boolean = hasDefault || identity || isGenerated
+          tables[tableName].schema[columnName] = {
+            autocolumn: isAuto,
+            name: columnName,
+            ...convertSqlType(column.data_type),
+            externalType: column.data_type,
           }
         }
 
-        const type: string = convertSqlType(column.data_type)
-        const identity = !!(
-          column.identity_generation ||
-          column.identity_start ||
-          column.identity_increment
-        )
-        const hasDefault =
-          typeof column.column_default === "string" &&
-          column.column_default.startsWith("nextval")
-        const isGenerated =
-          column.is_generated && column.is_generated !== "NEVER"
-        const isAuto: boolean = hasDefault || identity || isGenerated
-        tables[tableName].schema[columnName] = {
-          autocolumn: isAuto,
-          name: columnName,
-          type,
-        }
+        const final = finaliseExternalTables(tables, entities)
+        this.tables = final.tables
+        this.schemaErrors = final.errors
+      } catch (err) {
+        // @ts-ignore
+        throw new Error(err)
+      } finally {
+        await this.closeConnection()
       }
-
-      const final = finaliseExternalTables(tables, entities)
-      this.tables = final.tables
-      this.schemaErrors = final.errors
     }
 
     async create(query: SqlQuery | string) {
@@ -277,8 +313,9 @@ module PostgresModule {
       if (Array.isArray(input)) {
         const responses = []
         for (let query of input) {
-          responses.push(await this.internalQuery(query))
+          responses.push(await this.internalQuery(query, false))
         }
+        await this.closeConnection()
         return responses
       } else {
         const response = await this.internalQuery(input)

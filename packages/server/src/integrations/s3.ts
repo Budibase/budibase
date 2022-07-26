@@ -17,6 +17,7 @@ module S3Module {
     description:
       "Amazon Simple Storage Service (Amazon S3) is an object storage service that offers industry-leading scalability, data availability, security, and performance.",
     friendlyName: "Amazon S3",
+    type: "Object store",
     datasource: {
       region: {
         type: "string",

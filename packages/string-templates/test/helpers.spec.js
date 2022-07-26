@@ -360,6 +360,13 @@ describe("Test the literal helper", () => {
   })
 })
 
+describe("Test that JSONpase helper", () => {
+  it("should state that the JSONparse helper is valid", async () => {
+    const output = isValid(`{{ JSONparse input }}`)
+    expect(output).toBe(true)
+  })
+})
+
 describe("Cover a few complex use cases", () => {
   it("should allow use of three different collection helpers", async () => {
     const output = await processString(

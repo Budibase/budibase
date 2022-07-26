@@ -1,4 +1,3 @@
-jest.mock("../../utilities/usageQuota")
 jest.mock("../../threads/automation")
 jest.mock("../../utilities/redis", () => ({
   init: jest.fn(),

@@ -10,6 +10,7 @@
   export let size
   export let schema
   export let table
+  export let disableValidation = false
 
   const component = getContext("component")
   const { styleable, Provider, ActionTypes } = getContext("sdk")
@@ -141,12 +142,14 @@
 
       // Create validation function based on field schema
       const schemaConstraints = schema?.[field]?.constraints
-      const validator = createValidatorFromConstraints(
-        schemaConstraints,
-        validationRules,
-        field,
-        table
-      )
+      const validator = disableValidation
+        ? null
+        : createValidatorFromConstraints(
+            schemaConstraints,
+            validationRules,
+            field,
+            table
+          )
 
       // If we've already registered this field then keep some existing state
       let initialValue = Helpers.deepGet(initialValues, field) ?? defaultValue
@@ -164,7 +167,7 @@
         // If this field has already been registered and we previously had an
         // error set, then re-run the validator to see if we can unset it
         if (fieldState.error) {
-          initialError = validator(initialValue)
+          initialError = validator?.(initialValue)
         }
       }
 
@@ -216,10 +219,10 @@
       })
       return valid
     },
-    clear: () => {
-      // Clear the form by clearing each individual field
+    reset: () => {
+      // Reset the form by resetting each individual field
       fields.forEach(field => {
-        get(field).fieldApi.clearValue()
+        get(field).fieldApi.reset()
       })
     },
     changeStep: ({ type, number }) => {
@@ -238,6 +241,22 @@
         currentStep.set(step)
       }
     },
+    setFieldValue: (fieldName, value) => {
+      const field = getField(fieldName)
+      if (!field) {
+        return
+      }
+      const { fieldApi } = get(field)
+      fieldApi.setValue(value)
+    },
+    resetField: fieldName => {
+      const field = getField(fieldName)
+      if (!field) {
+        return
+      }
+      const { fieldApi } = get(field)
+      fieldApi.reset()
+    },
   }
 
   // Creates an API for a specific field
@@ -254,7 +273,7 @@
       }
 
       // Update field state
-      const error = validator ? validator(value) : null
+      const error = validator?.(value)
       fieldInfo.update(state => {
         state.fieldState.value = value
         state.fieldState.error = error
@@ -265,11 +284,11 @@
       return !error
     }
 
-    // Clears the value of a certain field back to the initial value
-    const clearValue = () => {
+    // Clears the value of a certain field back to the default value
+    const reset = () => {
       const fieldInfo = getField(field)
       const { fieldState } = get(fieldInfo)
-      const newValue = initialValues[field] ?? fieldState.defaultValue
+      const newValue = fieldState.defaultValue
 
       // Update field state
       fieldInfo.update(state => {
@@ -288,12 +307,14 @@
 
       // Create new validator
       const schemaConstraints = schema?.[field]?.constraints
-      const validator = createValidatorFromConstraints(
-        schemaConstraints,
-        validationRules,
-        field,
-        table
-      )
+      const validator = disableValidation
+        ? null
+        : createValidatorFromConstraints(
+            schemaConstraints,
+            validationRules,
+            field,
+            table
+          )
 
       // Update validator
       fieldInfo.update(state => {
@@ -306,6 +327,17 @@
       if (error) {
         setValue(value, true)
       }
+    }
+
+    // We don't want to actually remove the field state when deregistering, just
+    // remove any errors and validation
+    const deregister = () => {
+      const fieldInfo = getField(field)
+      fieldInfo.update(state => {
+        state.fieldState.validator = null
+        state.fieldState.error = null
+        return state
+      })
     }
 
     // Updates the disabled state of a certain field
@@ -324,9 +356,10 @@
 
     return {
       setValue,
-      clearValue,
+      reset,
       updateValidation,
       setDisabled,
+      deregister,
       validate: () => {
         // Validate the field by force setting the same value again
         const { fieldState } = get(getField(field))
@@ -349,11 +382,20 @@
   // register their fields to step 1
   setContext("form-step", writable(1))
 
+  const handleUpdateFieldValue = ({ type, field, value }) => {
+    if (type === "set") {
+      formApi.setFieldValue(field, value)
+    } else {
+      formApi.resetField(field)
+    }
+  }
+
   // Action context to pass to children
   const actions = [
     { type: ActionTypes.ValidateForm, callback: formApi.validate },
-    { type: ActionTypes.ClearForm, callback: formApi.clear },
+    { type: ActionTypes.ClearForm, callback: formApi.reset },
     { type: ActionTypes.ChangeFormStep, callback: formApi.changeStep },
+    { type: ActionTypes.UpdateFieldValue, callback: handleUpdateFieldValue },
   ]
 </script>
 

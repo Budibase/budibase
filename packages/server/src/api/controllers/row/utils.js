@@ -64,8 +64,14 @@ exports.validate = async ({ tableId, row, table }) => {
     // Validate.js doesn't seem to handle array
     if (type === FieldTypes.ARRAY && row[fieldName]) {
       if (row[fieldName].length) {
+        if (!Array.isArray(row[fieldName])) {
+          row[fieldName] = row[fieldName].split(",")
+        }
         row[fieldName].map(val => {
-          if (!constraints.inclusion.includes(val)) {
+          if (
+            !constraints.inclusion.includes(val) &&
+            constraints.inclusion.length !== 0
+          ) {
             errors[fieldName] = "Field not in list"
           }
         })

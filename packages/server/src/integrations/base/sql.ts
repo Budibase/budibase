@@ -21,6 +21,31 @@ type KnexQuery = Knex.QueryBuilder | Knex
 const MIN_ISO_DATE = "0000-00-00T00:00:00.000Z"
 const MAX_ISO_DATE = "9999-00-00T00:00:00.000Z"
 
+function likeKey(client: string, key: string): string {
+  if (!key.includes(" ")) {
+    return key
+  }
+  let start: string, end: string
+  switch (client) {
+    case SqlClients.MY_SQL:
+      start = end = "`"
+      break
+    case SqlClients.ORACLE:
+    case SqlClients.POSTGRES:
+      start = end = '"'
+      break
+    case SqlClients.MS_SQL:
+      start = "["
+      end = "]"
+      break
+    default:
+      throw "Unknown client"
+  }
+  const parts = key.split(".")
+  key = parts.map(part => `${start}${part}${end}`).join(".")
+  return key
+}
+
 function parse(input: any) {
   if (Array.isArray(input)) {
     return JSON.stringify(input)
@@ -62,6 +87,32 @@ function parseFilters(filters: SearchFilters | undefined): SearchFilters {
     filters[key] = parsed
   }
   return filters
+}
+
+function generateSelectStatement(
+  json: QueryJson,
+  knex: Knex
+): (string | Knex.Raw)[] {
+  const { resource, meta } = json
+  const schema = meta?.table?.schema
+  return resource.fields.map(field => {
+    const fieldNames = field.split(/\./g)
+    const tableName = fieldNames[0]
+    const columnName = fieldNames[1]
+    if (
+      columnName &&
+      schema?.[columnName] &&
+      knex.client.config.client === SqlClients.POSTGRES
+    ) {
+      const externalType = schema[columnName].externalType
+      if (externalType?.includes("money")) {
+        return knex.raw(
+          `"${tableName}"."${columnName}"::money::numeric as "${field}"`
+        )
+      }
+    }
+    return `${field} as ${field}`
+  })
 }
 
 class InternalBuilder {
@@ -125,7 +176,9 @@ class InternalBuilder {
         } else {
           const rawFnc = `${fnc}Raw`
           // @ts-ignore
-          query = query[rawFnc](`LOWER(${key}) LIKE ?`, [`%${value}%`])
+          query = query[rawFnc](`LOWER(${likeKey(this.client, key)}) LIKE ?`, [
+            `%${value}%`,
+          ])
         }
       })
     }
@@ -189,9 +242,7 @@ class InternalBuilder {
   }
 
   addRelationships(
-    knex: Knex,
     query: KnexQuery,
-    fields: string | string[],
     fromTable: string,
     relationships: RelationshipsJson[] | undefined
   ): KnexQuery {
@@ -296,12 +347,12 @@ class InternalBuilder {
     if (!resource) {
       resource = { fields: [] }
     }
-    let selectStatement: string | string[] = "*"
+    let selectStatement: string | (string | Knex.Raw)[] = "*"
     // handle select
     if (resource.fields && resource.fields.length > 0) {
       // select the resources as the format "table.columnName" - this is what is provided
       // by the resource builder further up
-      selectStatement = resource.fields.map(field => `${field} as ${field}`)
+      selectStatement = generateSelectStatement(json, knex)
     }
     let foundLimit = limit || BASE_LIMIT
     // handle pagination
@@ -336,13 +387,7 @@ class InternalBuilder {
       preQuery = this.addSorting(preQuery, json)
     }
     // handle joins
-    query = this.addRelationships(
-      knex,
-      preQuery,
-      selectStatement,
-      tableName,
-      relationships
-    )
+    query = this.addRelationships(preQuery, tableName, relationships)
     return this.addFilters(query, filters, { relationship: true })
   }
 

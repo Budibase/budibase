@@ -9,6 +9,10 @@
   export let disabled = false
   export let actionType = "Create"
 
+  // Not exposed as a builder setting. Used internally to disable validation
+  // for fields rendered in things like search blocks.
+  export let disableValidation = false
+
   const context = getContext("context")
   const { API, fetchDatasourceSchema } = getContext("sdk")
 
@@ -76,7 +80,7 @@
   }
 
   const fetchTable = async dataSource => {
-    if (dataSource?.tableId) {
+    if (dataSource?.tableId && dataSource?.type !== "query") {
       try {
         table = await API.fetchTableDefinition(dataSource.tableId)
       } catch (error) {
@@ -102,6 +106,7 @@
       {schema}
       {table}
       {initialValues}
+      {disableValidation}
     >
       <slot />
     </InnerForm>

@@ -14,10 +14,16 @@ const env = require("../../../environment")
 const { clientLibraryPath } = require("../../../utilities")
 const { upload } = require("../../../utilities/fileSystem")
 const { attachmentsRelativeURL } = require("../../../utilities")
-const { DocumentTypes } = require("../../../db/utils")
+const { DocumentTypes, isDevAppID } = require("../../../db/utils")
 const { getAppDB, getAppId } = require("@budibase/backend-core/context")
+const { setCookie, clearCookie } = require("@budibase/backend-core/utils")
 const AWS = require("aws-sdk")
-const AWS_REGION = env.AWS_REGION ? env.AWS_REGION : "eu-west-1"
+const { events } = require("@budibase/backend-core")
+
+const fs = require("fs")
+const {
+  downloadTarballDirect,
+} = require("../../../utilities/fileSystem/utilities")
 
 async function prepareUpload({ s3Key, bucket, metadata, file }) {
   const response = await upload({
@@ -38,9 +44,40 @@ async function prepareUpload({ s3Key, bucket, metadata, file }) {
   }
 }
 
+exports.toggleBetaUiFeature = async function (ctx) {
+  const cookieName = `beta:${ctx.params.feature}`
+
+  if (ctx.cookies.get(cookieName)) {
+    clearCookie(ctx, cookieName)
+    ctx.body = {
+      message: `${ctx.params.feature} disabled`,
+    }
+    return
+  }
+
+  let builderPath = resolve(TOP_LEVEL_PATH, "new_design_ui")
+
+  // // download it from S3
+  if (!fs.existsSync(builderPath)) {
+    fs.mkdirSync(builderPath)
+  }
+  await downloadTarballDirect(
+    "https://cdn.budi.live/beta:design_ui/new_ui.tar.gz",
+    builderPath
+  )
+  setCookie(ctx, {}, cookieName)
+
+  ctx.body = {
+    message: `${ctx.params.feature} enabled`,
+  }
+}
+
 exports.serveBuilder = async function (ctx) {
-  let builderPath = resolve(TOP_LEVEL_PATH, "builder")
+  const builderPath = resolve(TOP_LEVEL_PATH, "builder")
   await send(ctx, ctx.file, { root: builderPath })
+  if (!ctx.file.includes("assets/")) {
+    await events.serve.servedBuilder()
+  }
 }
 
 exports.uploadFile = async function (ctx) {
@@ -65,25 +102,36 @@ exports.uploadFile = async function (ctx) {
 }
 
 exports.serveApp = async function (ctx) {
-  const App = require("./templates/BudibaseApp.svelte").default
   const db = getAppDB({ skip_setup: true })
   const appInfo = await db.get(DocumentTypes.APP_METADATA)
   let appId = getAppId()
 
-  const { head, html, css } = App.render({
-    title: appInfo.name,
-    production: env.isProd(),
-    appId,
-    clientLibPath: clientLibraryPath(appId, appInfo.version),
-  })
+  if (!env.isJest()) {
+    const App = require("./templates/BudibaseApp.svelte").default
+    const { head, html, css } = App.render({
+      title: appInfo.name,
+      production: env.isProd(),
+      appId,
+      clientLibPath: clientLibraryPath(appId, appInfo.version, ctx),
+    })
 
-  const appHbs = loadHandlebarsFile(`${__dirname}/templates/app.hbs`)
-  ctx.body = await processString(appHbs, {
-    head,
-    body: html,
-    style: css.code,
-    appId,
-  })
+    const appHbs = loadHandlebarsFile(`${__dirname}/templates/app.hbs`)
+    ctx.body = await processString(appHbs, {
+      head,
+      body: html,
+      style: css.code,
+      appId,
+    })
+  } else {
+    // just return the app info for jest to assert on
+    ctx.body = appInfo
+  }
+
+  if (isDevAppID(appInfo.appId)) {
+    await events.serve.servedAppPreview(appInfo)
+  } else {
+    await events.serve.servedApp(appInfo)
+  }
 }
 
 exports.serveClientLibrary = async function (ctx) {
@@ -115,6 +163,7 @@ exports.getSignedUploadURL = async function (ctx) {
   // Determine type of datasource and generate signed URL
   let signedUrl
   let publicUrl
+  const awsRegion = datasource?.config?.region || "eu-west-1"
   if (datasource.source === "S3") {
     const { bucket, key } = ctx.request.body || {}
     if (!bucket || !key) {
@@ -123,7 +172,7 @@ exports.getSignedUploadURL = async function (ctx) {
     }
     try {
       const s3 = new AWS.S3({
-        region: AWS_REGION,
+        region: awsRegion,
         accessKeyId: datasource?.config?.accessKeyId,
         secretAccessKey: datasource?.config?.secretAccessKey,
         apiVersion: "2006-03-01",
@@ -131,7 +180,7 @@ exports.getSignedUploadURL = async function (ctx) {
       })
       const params = { Bucket: bucket, Key: key }
       signedUrl = s3.getSignedUrl("putObject", params)
-      publicUrl = `https://${bucket}.s3.${AWS_REGION}.amazonaws.com/${key}`
+      publicUrl = `https://${bucket}.s3.${awsRegion}.amazonaws.com/${key}`
     } catch (error) {
       ctx.throw(400, error)
     }

@@ -36,6 +36,14 @@
     padding-left: var(--spacing-l);
     padding-right: var(--spacing-l);
   }
+  .paddingX-XL {
+    padding-left: var(--spacing-xl);
+    padding-right: var(--spacing-xl);
+  }
+  .paddingX-XXL {
+    padding-left: var(--spectrum-alias-grid-gutter-large);
+    padding-right: var(--spectrum-alias-grid-gutter-large);
+  }
   .paddingY-S {
     padding-top: var(--spacing-s);
     padding-bottom: var(--spacing-s);
@@ -47,6 +55,14 @@
   .paddingY-L {
     padding-top: var(--spacing-l);
     padding-bottom: var(--spacing-l);
+  }
+  .paddingY-XL {
+    padding-top: var(--spacing-xl);
+    padding-bottom: var(--spacing-xl);
+  }
+  .paddingY-XXL {
+    padding-top: var(--spectrum-alias-grid-gutter-large);
+    padding-bottom: var(--spectrum-alias-grid-gutter-large);
   }
   .gap-XXS {
     grid-gap: var(--spacing-xs);

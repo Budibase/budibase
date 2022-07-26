@@ -1,17 +1,8 @@
-
-const bulkDocs = jest.fn()
-const db = jest.fn(() => {
-  return {
-    bulkDocs
-  }
-})
-jest.mock("../../../../../db", () => db)
-require("@budibase/backend-core").init(require("../../../../../db"))
-
+const TestConfig = require("../../../../../tests/utilities/TestConfiguration")
 const { RestImporter } = require("../index")
-
 const fs = require("fs")
 const path = require('path')
+const { events} = require("@budibase/backend-core")
 
 const getData = (file) => {
   return fs.readFileSync(path.join(__dirname, `../sources/tests/${file}`), "utf8")
@@ -48,6 +39,12 @@ const datasets = {
 }
 
 describe("Rest Importer", () => {
+  const config = new TestConfig(false)
+
+  beforeEach(async () => {
+    await config.init()
+  })
+
   let restImporter 
 
   const init = async (data) => {
@@ -56,9 +53,11 @@ describe("Rest Importer", () => {
   }
 
   const runTest = async (test, assertions) => {
-    for (let [key, data] of Object.entries(datasets)) {
-      await test(key, data, assertions)
-    }
+    await config.doInContext(config.appId, async () => {
+      for (let [key, data] of Object.entries(datasets)) {
+        await test(key, data, assertions)
+      }
+    })
   }
 
   const testGetInfo = async (key, data, assertions) => {
@@ -105,11 +104,12 @@ describe("Rest Importer", () => {
 
   const testImportQueries = async (key, data, assertions) => {
     await init(data)
-    bulkDocs.mockReturnValue([])
-    const importResult = await restImporter.importQueries("datasourceId")
+    const datasource = await config.createDatasource()
+    const importResult = await restImporter.importQueries(datasource._id)
     expect(importResult.errorQueries.length).toBe(0)
     expect(importResult.queries.length).toBe(assertions[key].count)
-    expect(bulkDocs).toHaveBeenCalledTimes(1)
+    expect(events.query.imported).toBeCalledTimes(1)
+    expect(events.query.imported).toBeCalledWith(datasource, assertions[key].source, assertions[key].count)
     jest.clearAllMocks()
   }
 
@@ -120,32 +120,41 @@ describe("Rest Importer", () => {
       // openapi2 (swagger)
       "oapi2CrudJson" : {
         count: 6,
+        source: "openapi2.0",
       },
       "oapi2CrudYaml" :{
         count: 6,
+        source: "openapi2.0"
       },
       "oapi2PetstoreJson" : {
         count: 20,
+        source: "openapi2.0"
       },
       "oapi2PetstoreYaml" :{
         count: 20,
+        source: "openapi2.0"
       },
       // openapi3
       "oapi3CrudJson" : {
         count: 6,
+        source: "openapi3.0"
       },
       "oapi3CrudYaml" :{
         count: 6,
+        source: "openapi3.0"
       },
       "oapi3PetstoreJson" : {
         count: 19,
+        source: "openapi3.0"
       },
       "oapi3PetstoreYaml" :{
         count: 19,
+        source: "openapi3.0"
       },
       // curl
       "curl": {
-        count: 1
+        count: 1,
+        source: "curl"
       }
     }
     await runTest(testImportQueries, assertions)

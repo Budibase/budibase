@@ -12,7 +12,7 @@
 </script>
 
 {#if $auth.isAdmin}
-  <Page wide={$page.path.includes("email/:template")}>
+  <Page maxWidth="90ch" wide={$page.path.includes("email/:template")}>
     <slot />
   </Page>
 {/if}

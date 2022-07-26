@@ -20,7 +20,7 @@ filterTests(["all"], () => {
           .click({ force: true })
         cy.wait(500)
         // Confirm config contains localhost
-        cy.get(".spectrum-Textfield-input")
+        cy.get(".spectrum-Textfield-input", { timeout: 500 })
           .eq(1)
           .should("have.value", "localhost")
         // Add another Oracle data source, configure & skip table fetch
@@ -46,9 +46,10 @@ filterTests(["all"], () => {
         cy.get("@datasource")
           .its("response.body")
           .should("have.property", "status", 500)
+        cy.get(".spectrum-Button").contains("Skip table fetch").click({ force: true })
       })
 
-      it("should add Oracle data source and fetch tables", () => {
+      xit("should add Oracle data source and fetch tables", () => {
         // Add & configure Oracle data source
         cy.selectExternalDatasource(datasource)
         cy.intercept("**/datasources").as("datasource")
@@ -64,7 +65,7 @@ filterTests(["all"], () => {
           .should("be.gt", 0)
       })
 
-      it("should define a One relationship type", () => {
+      xit("should define a One relationship type", () => {
         // Select relationship type & configure
         cy.get(".spectrum-Button")
           .contains("Define relationship")
@@ -93,7 +94,7 @@ filterTests(["all"], () => {
         cy.get(".spectrum-Table-cell").should("contain", "COUNTRIES to REGIONS")
       })
 
-      it("should define a Many relationship type", () => {
+      xit("should define a Many relationship type", () => {
         // Select relationship type & configure
         cy.get(".spectrum-Button")
           .contains("Define relationship")
@@ -127,7 +128,7 @@ filterTests(["all"], () => {
         )
       })
 
-      it("should delete relationships", () => {
+      xit("should delete relationships", () => {
         // Delete both relationships
         cy.get(".spectrum-Table")
           .eq(1)
@@ -139,9 +140,8 @@ filterTests(["all"], () => {
                 .eq(1)
                 .within(() => {
                   cy.get(".spectrum-Table-row").eq(0).click()
-                  cy.wait(500)
                 })
-              cy.get(".spectrum-Dialog-grid").within(() => {
+              cy.get(".spectrum-Dialog-grid", { timeout: 500 }).within(() => {
                 cy.get(".spectrum-Button")
                   .contains("Delete")
                   .click({ force: true })
@@ -156,7 +156,7 @@ filterTests(["all"], () => {
           })
       })
 
-      it("should add a query", () => {
+      xit("should add a query", () => {
         // Add query
         cy.get(".spectrum-Button").contains("Add query").click({ force: true })
         cy.get(".spectrum-Form-item")
@@ -181,7 +181,7 @@ filterTests(["all"], () => {
         cy.get(".nav-item").should("contain", queryName)
       })
 
-      it("should duplicate a query", () => {
+      xit("should duplicate a query", () => {
         // Get query nav item
         cy.get(".nav-item")
           .contains(queryName)
@@ -194,7 +194,7 @@ filterTests(["all"], () => {
         cy.get(".nav-item").should("contain", queryName + " (1)")
       })
 
-      it("should edit a query name", () => {
+      xit("should edit a query name", () => {
         // Rename query
         cy.get(".spectrum-Form-item")
           .eq(0)
@@ -206,7 +206,7 @@ filterTests(["all"], () => {
         cy.get(".nav-item").should("contain", queryRename)
       })
 
-      it("should delete a query", () => {
+      xit("should delete a query", () => {
         // Get query nav item - QueryName
         cy.get(".nav-item")
           .contains(queryName)
@@ -220,10 +220,9 @@ filterTests(["all"], () => {
         cy.get(".spectrum-Button")
           .contains("Delete Query")
           .click({ force: true })
-        cy.wait(1000)
 
         // Confirm deletion
-        cy.get(".nav-item").should("not.contain", queryName)
+        cy.get(".nav-item", { timeout: 1000 }).should("not.contain", queryName)
       })
     }
   })

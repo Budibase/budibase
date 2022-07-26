@@ -12,6 +12,7 @@ export interface Application extends Base {
 export interface FieldSchema {
   // TODO: replace with field types enum when done
   type: string
+  externalType?: string
   fieldName?: string
   name: string
   tableId?: string
@@ -19,11 +20,13 @@ export interface FieldSchema {
   through?: string
   foreignKey?: string
   autocolumn?: boolean
+  subtype?: string
   throughFrom?: string
   throughTo?: string
   formula?: string
   formulaType?: string
   main?: boolean
+  ignoreTimezones?: boolean
   meta?: {
     toTable: string
     toKey: string

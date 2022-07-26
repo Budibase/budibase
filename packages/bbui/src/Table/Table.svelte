@@ -28,7 +28,7 @@
   export let rowCount = 0
   export let quiet = false
   export let loading = false
-  export let allowSelectRows = true
+  export let allowSelectRows
   export let allowEditRows = true
   export let allowEditColumns = true
   export let selectedRows = []
@@ -36,6 +36,8 @@
   export let disableSorting = false
   export let autoSortColumns = true
   export let compact = false
+  export let customPlaceholder = false
+  export let placeholderText = "No rows found"
 
   const dispatch = createEventDispatcher()
 
@@ -343,11 +345,7 @@
       {/if}
       {#if sortedRows?.length}
         {#each sortedRows as row, idx}
-          <div
-            class="spectrum-Table-row"
-            on:click={() => dispatch("click", row)}
-            on:click={() => toggleSelectRow(row)}
-          >
+          <div class="spectrum-Table-row">
             {#if showEditColumn}
               <div
                 class="spectrum-Table-cell spectrum-Table-cell--divider spectrum-Table-cell--edit"
@@ -372,6 +370,12 @@
                 class="spectrum-Table-cell"
                 class:spectrum-Table-cell--divider={!!schema[field].divider}
                 style={cellStyles[field]}
+                on:click={() => {
+                  if (!schema[field]?.preventSelectRow) {
+                    dispatch("click", row)
+                    toggleSelectRow(row)
+                  }
+                }}
               >
                 <CellRenderer
                   {customRenderers}
@@ -387,13 +391,24 @@
           </div>
         {/each}
       {:else}
-        <div class="placeholder" class:placeholder--no-fields={!fields?.length}>
-          <div class="placeholder-content">
-            <svg class="spectrum-Icon spectrum-Icon--sizeXXL" focusable="false">
-              <use xlink:href="#spectrum-icon-18-Table" />
-            </svg>
-            <div>No rows found</div>
-          </div>
+        <div
+          class="placeholder"
+          class:placeholder--custom={customPlaceholder}
+          class:placeholder--no-fields={!fields?.length}
+        >
+          {#if customPlaceholder}
+            <slot name="placeholder" />
+          {:else}
+            <div class="placeholder-content">
+              <svg
+                class="spectrum-Icon spectrum-Icon--sizeXXL"
+                focusable="false"
+              >
+                <use xlink:href="#spectrum-icon-18-Table" />
+              </svg>
+              <div>{placeholderText}</div>
+            </div>
+          {/if}
         </div>
       {/if}
     </div>
@@ -458,6 +473,13 @@
     justify-content: flex-start;
     align-items: center;
     user-select: none;
+    border-top: var(--table-border);
+  }
+  .spectrum-Table-headCell:first-of-type {
+    border-left: var(--table-border);
+  }
+  .spectrum-Table-headCell:last-of-type {
+    border-right: var(--table-border);
   }
   .spectrum-Table-headCell--alignCenter {
     justify-content: center;
@@ -576,16 +598,19 @@
     border-top: none;
     grid-column: 1 / -1;
     background-color: var(--table-bg);
+    padding: 40px;
   }
   .placeholder--no-fields {
     border-top: var(--table-border);
+  }
+  .placeholder--custom {
+    justify-content: flex-start;
   }
   .wrapper--quiet .placeholder {
     border-left: none;
     border-right: none;
   }
   .placeholder-content {
-    padding: 40px;
     display: flex;
     flex-direction: column;
     justify-content: center;
