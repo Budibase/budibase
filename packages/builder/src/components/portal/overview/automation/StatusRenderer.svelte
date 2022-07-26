@@ -3,7 +3,8 @@
   export let value
 
   $: isError = !value || value.toLowerCase() === "error"
-  $: isStopped = value?.toLowerCase() === "stopped"
+  $: isStoppedError = value?.toLowerCase() === "stopped_error"
+  $: isStopped = value?.toLowerCase() === "stopped" || isStoppedError
   $: status = getStatus(isError, isStopped)
 
   function getStatus(error, stopped) {

@@ -144,7 +144,15 @@ class Orchestrator {
         `CRON disabled due to errors - ${this._appId}/${this._automation._id}`
       )
       await disableCron(this._repeat?.jobId, this._repeat?.jobKey)
-      this.updateExecutionOutput(trigger.id, trigger.stepId, {}, STOPPED_STATUS)
+      this.updateExecutionOutput(
+        trigger.id,
+        trigger.stepId,
+        {},
+        {
+          status: AutomationStatus.STOPPED_ERROR,
+          success: false,
+        }
+      )
       await storeLog(automation, this.executionOutput)
       return true
     }
@@ -183,8 +191,20 @@ class Orchestrator {
 
   updateExecutionOutput(id: string, stepId: string, inputs: any, outputs: any) {
     const stepObj = { id, stepId, inputs, outputs }
+    // replacing trigger when disabling CRON
+    if (
+      stepId === CRON_STEP_ID &&
+      outputs.status === AutomationStatus.STOPPED_ERROR
+    ) {
+      this.executionOutput.trigger = stepObj
+      this.executionOutput.steps = [stepObj]
+      return
+    }
     // first entry is always the trigger (constructor)
-    if (this.executionOutput.steps.length === 0) {
+    if (
+      this.executionOutput.steps.length === 0 ||
+      this.executionOutput.trigger.id === id
+    ) {
       this.executionOutput.trigger = stepObj
     }
     this.executionOutput.steps.push(stepObj)
