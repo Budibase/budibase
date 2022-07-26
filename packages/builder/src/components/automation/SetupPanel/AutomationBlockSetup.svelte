@@ -197,11 +197,13 @@
 <div class="fields">
   {#each schemaProperties as [key, value]}
     <div class="block-field">
-      <Label
-        tooltip={value.title === "Binding / Value"
-          ? "If using the String input type, please use a comma or newline separated string"
-          : null}>{value.title || (key === "row" ? "Table" : key)}</Label
-      >
+      {#if key !== "fields"}
+        <Label
+          tooltip={value.title === "Binding / Value"
+            ? "If using the String input type, please use a comma or newline separated string"
+            : null}>{value.title || (key === "row" ? "Table" : key)}</Label
+        >
+      {/if}
       {#if value.type === "string" && value.enum}
         <Select
           on:change={e => onChange(e, key)}
