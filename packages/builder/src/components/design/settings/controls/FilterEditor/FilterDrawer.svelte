@@ -3,6 +3,7 @@
     Body,
     Button,
     Combobox,
+    Multiselect,
     DatePicker,
     DrawerContent,
     Icon,
@@ -139,7 +140,13 @@
               />
             {:else if ["string", "longform", "number", "formula"].includes(filter.type)}
               <Input disabled={filter.noValue} bind:value={filter.value} />
-            {:else if ["options", "array"].includes(filter.type)}
+            {:else if filter.type === "array"}
+              <Multiselect
+                disabled={filter.noValue}
+                options={getFieldOptions(filter.field)}
+                bind:value={filter.value}
+              />
+            {:else if filter.type === "options"}
               <Combobox
                 disabled={filter.noValue}
                 options={getFieldOptions(filter.field)}
