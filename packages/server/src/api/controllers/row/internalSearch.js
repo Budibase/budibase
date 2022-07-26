@@ -20,6 +20,7 @@ class QueryBuilder {
       notEmpty: {},
       oneOf: {},
       contains: {},
+      notContains: {},
       ...base,
     }
     this.limit = 50
@@ -125,6 +126,11 @@ class QueryBuilder {
     return this
   }
 
+  addNotContains(key, value) {
+    this.query.notContains[key] = value
+    return this
+  }
+
   /**
    * Preprocesses a value before going into a lucene search.
    * Transforms strings to lowercase and wraps strings and bools in quotes.
@@ -179,6 +185,10 @@ class QueryBuilder {
         andStatement += ` AND ${builder.preprocess(value[i], { escape: true })}`
       }
       return `${key}:(${andStatement})`
+    }
+
+    const notContains = (key, value) => {
+      return "*:* AND NOT " + contains(key, value)
     }
 
     const oneOf = (key, value) => {
@@ -278,6 +288,9 @@ class QueryBuilder {
     }
     if (this.query.contains) {
       build(this.query.contains, contains)
+    }
+    if (this.query.notContains) {
+      build(this.query.notContains, notContains)
     }
     // make sure table ID is always added as an AND
     if (tableId) {
