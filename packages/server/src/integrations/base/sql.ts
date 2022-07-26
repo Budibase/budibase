@@ -230,16 +230,18 @@ class InternalBuilder {
       const fnc = allOr ? "orWhere" : "where"
       const rawFnc = `${fnc}Raw`
       if (this.client === SqlClients.POSTGRES) {
-        iterate(filters.contains, (key: string, value: any) => {
+        iterate(filters.contains, (key: string, value: Array<any>) => {
           const fieldNames = key.split(/\./g)
           const tableName = fieldNames[0]
           const columnName = fieldNames[1]
-          if (typeof value === "string") {
-            value = `"${value}"`
+          for (let i in value) {
+            if (typeof value[i] === "string") {
+              value[i] = `"${value[i]}"`
+            }
           }
           // @ts-ignore
           query = query[rawFnc](
-            `"${tableName}"."${columnName}"::jsonb @> '[${value}]'`
+            `"${tableName}"."${columnName}"::jsonb @> '[${value.join(",")}]'`
           )
         })
       } else if (this.client === SqlClients.MY_SQL) {

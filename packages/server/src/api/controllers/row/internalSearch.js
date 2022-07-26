@@ -176,10 +176,7 @@ class QueryBuilder {
       }
       let andStatement = `${builder.preprocess(value[0], { escape: true })}`
       for (let i = 1; i < value.length; i++) {
-        andStatement += ` AND ${builder.preprocess(
-          value[i],
-          { escape: true }
-        )}`
+        andStatement += ` AND ${builder.preprocess(value[i], { escape: true })}`
       }
       return `${key}:(${andStatement})`
     }
