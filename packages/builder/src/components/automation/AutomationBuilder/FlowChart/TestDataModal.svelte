@@ -15,8 +15,6 @@
   let trigger = {}
   let schemaProperties = {}
 
-  $: trigger
-  $: schemaProperties
   $: {
     // clone the trigger so we're not mutating the reference
     trigger = cloneDeep(
@@ -27,7 +25,7 @@
     let schema = Object.entries(trigger.schema?.outputs?.properties || {})
 
     if (trigger?.event === "app:trigger") {
-      schema = Object.entries({ fields: { customType: "fields" } })
+      schema = [["fields", { customType: "fields" }]]
     }
 
     schemaProperties = schema
