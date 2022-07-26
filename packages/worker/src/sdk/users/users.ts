@@ -301,8 +301,9 @@ export const bulkCreate = async (
 
   // Post processing of bulk added users, i.e events and cache operations
   for (const user of usersToBulkSave) {
-    //await eventHelpers.handleSaveEvents(user, null)
-    //await apps.syncUserInApps(user._id)
+    delete user.password
+    await eventHelpers.handleSaveEvents(user, null)
+    await apps.syncUserInApps(user._id)
   }
 
   return response
