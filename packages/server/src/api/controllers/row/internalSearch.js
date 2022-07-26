@@ -171,10 +171,17 @@ class QueryBuilder {
     }
 
     const contains = (key, value) => {
-      if (!value && value !== 0) {
+      if (!Array.isArray(value) || value.length === 0) {
         return null
       }
-      return `${key}:${builder.preprocess(value, { escape: true })}`
+      let andStatement = `${builder.preprocess(value[0], { escape: true })}`
+      for (let i = 1; i < value.length; i++) {
+        andStatement += ` AND ${builder.preprocess(
+          value[i],
+          { escape: true }
+        )}`
+      }
+      return `${key}:(${andStatement})`
     }
 
     const oneOf = (key, value) => {
