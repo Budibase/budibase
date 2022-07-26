@@ -150,7 +150,9 @@ filterTests(["all"], () => {
         cy.get("@query").its("response.statusCode").should("eq", 200)
         cy.get("@query").its("response.body").should("not.be.empty")
         // Save query
+        cy.intercept("**/queries").as("saveQuery")
         cy.get(".spectrum-Button").contains("Save Query").click({ force: true })
+        cy.wait("@saveQuery")
         cy.get(".spectrum-Tabs-content", { timeout: 2000 }).should("contain", queryName)
       })
 

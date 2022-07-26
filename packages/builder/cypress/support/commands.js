@@ -422,7 +422,12 @@ Cypress.Commands.add("createTable", (tableName, initialTable) => {
     cy.get("input", { timeout: 2000 }).first().type(tableName).blur()
     cy.get(".spectrum-ButtonGroup").contains("Create").click()
   })
-  cy.contains(tableName).should("be.visible")
+  // Ensure modal has closed and table is created
+  cy.get(".spectrum-Modal").should("not.exist")
+  cy.get(".spectrum-Tabs-content", { timeout: 1000 }).should(
+    "contain",
+    tableName
+  )
 })
 
 Cypress.Commands.add("createTestTableWithData", () => {
