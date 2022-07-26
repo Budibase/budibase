@@ -15,7 +15,7 @@ const context = {
   },
   [codes.FEATURE_DISABLED]: err => {
     return {
-      limitName: err.limitName,
+      featureName: err.featureName,
     }
   },
 }
