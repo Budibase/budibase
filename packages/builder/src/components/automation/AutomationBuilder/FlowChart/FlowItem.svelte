@@ -52,8 +52,9 @@
       x => x.blockToLoop === block.id
     )
 
-  $: setPermissions(role)
-  $: getPermissions(automationId)
+  $: isAppAction = block?.stepId === TriggerStepID.APP
+  $: isAppAction && setPermissions(role)
+  $: isAppAction && getPermissions(automationId)
 
   async function setPermissions(role) {
     if (!role || !automationId) {
@@ -238,7 +239,7 @@
           </div>
         {/if}
 
-        {#if block.stepId === TriggerStepID.APP}
+        {#if isAppAction}
           <Label>Role</Label>
           <RoleSelect bind:value={role} />
         {/if}
