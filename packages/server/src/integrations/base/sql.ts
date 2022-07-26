@@ -250,10 +250,22 @@ class InternalBuilder {
       } else if (this.client === SqlClients.MY_SQL) {
         iterate(filters.contains, (key: string, value: Array<any>) => {
           // @ts-ignore
-          query = query[rawFnc](`JSON_CONTAINS(${key}, ${stringifyArray(value)})`)
+          query = query[rawFnc](
+            `JSON_CONTAINS(${key}, ${stringifyArray(value)})`
+          )
         })
       } else {
-        iterate(filters.contains, like)
+        iterate(filters.contains, (key: string, value: Array<any>) => {
+          let andStatement = ""
+          for (let i in value) {
+            if (typeof value[i] === "string") {
+              value[i] = `%"${value[i]}"%`
+            }
+            andStatement += (andStatement ? " AND " : "") + `LOWER(${likeKey(this.client, key)}) LIKE ?`
+          }
+          // @ts-ignore
+          query = query[rawFnc](andStatement, value)
+        })
       }
     }
     return query
