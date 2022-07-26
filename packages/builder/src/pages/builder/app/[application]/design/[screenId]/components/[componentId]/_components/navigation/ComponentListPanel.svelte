@@ -9,6 +9,7 @@
   import { setContext } from "svelte"
   import DNDPositionIndicator from "./DNDPositionIndicator.svelte"
   import { DropPosition } from "./dndStore"
+  import { notifications } from "@budibase/bbui"
 
   let scrollRef
 
@@ -55,6 +56,15 @@
     })
   }
 
+  const onDrop = async () => {
+    try {
+      await dndStore.actions.drop()
+    } catch (error) {
+      console.error(error)
+      notifications.error("Error saving component")
+    }
+  }
+
   // Set scroll context so components can invoke scrolling when selected
   setContext("scroll", {
     scrollTo,
@@ -83,6 +93,7 @@
           opened
           scrollable
           icon="WebPage"
+          on:drop={onDrop}
         >
           <ScreenslotDropdownMenu component={$selectedScreen?.props} />
         </NavItem>
