@@ -19,12 +19,15 @@
   export let active = false
   export let color = null
   export let square = false
+  export let hoverable = false
 </script>
 
 <div
+  on:click
   class="spectrum-StatusLight spectrum-StatusLight--size{size}"
   class:custom={!!color}
   class:square
+  class:hoverable
   style={`--color: ${color};`}
   class:spectrum-StatusLight--celery={celery}
   class:spectrum-StatusLight--yellow={yellow}
@@ -56,6 +59,7 @@
     min-height: 0;
     padding-top: 0;
     padding-bottom: 0;
+    transition: color ease-out 130ms;
   }
   .spectrum-StatusLight.withText::before {
     margin-right: 10px;
@@ -68,5 +72,9 @@
     height: 16px;
     border-radius: 4px;
     margin: 0;
+  }
+  .hoverable:hover {
+    cursor: pointer;
+    color: var(--spectrum-global-color-gray-900);
   }
 </style>
