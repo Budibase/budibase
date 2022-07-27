@@ -176,7 +176,9 @@ class InternalBuilder {
           const columnName = fieldNames[1]
           // @ts-ignore
           query = query[rawFnc](
-            `${not}"${tableName}"."${columnName}"::jsonb @> ${stringifyArray(value)}`
+            `${not}"${tableName}"."${columnName}"::jsonb @> ${stringifyArray(
+              value
+            )}`
           )
         })
       } else if (this.client === SqlClients.MY_SQL) {
@@ -200,7 +202,7 @@ class InternalBuilder {
               `LOWER(${likeKey(this.client, key)}) LIKE ?`
           }
           // @ts-ignore
-          query = query[rawFnc](andStatement, value)
+          query = query[rawFnc](`${not}(${andStatement})`, value)
         })
       }
     }
