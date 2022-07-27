@@ -137,6 +137,9 @@ export interface SearchFilters {
   notContains?: {
     [key: string]: any[]
   }
+  containsAny?: {
+    [key: string]: any[]
+  }
 }
 
 export interface SortJson {

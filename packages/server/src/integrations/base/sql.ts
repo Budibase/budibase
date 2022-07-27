@@ -157,7 +157,7 @@ class InternalBuilder {
       }
     }
 
-    const contains = (mode: object) => {
+    const contains = (mode: object, any: boolean = false) => {
       const fnc = allOr ? "orWhere" : "where"
       const rawFnc = `${fnc}Raw`
       const not = mode === filters?.notContains ? "NOT " : ""
@@ -182,10 +182,11 @@ class InternalBuilder {
           )
         })
       } else if (this.client === SqlClients.MY_SQL) {
+        const jsonFnc = any ? "JSON_OVERLAPS" : "JSON_CONTAINS"
         iterate(mode, (key: string, value: Array<any>) => {
           // @ts-ignore
           query = query[rawFnc](
-            `${not}JSON_CONTAINS(${key}, ${stringifyArray(value)})`
+            `${not}${jsonFnc}(${key}, ${stringifyArray(value)})`
           )
         })
       } else {
@@ -281,6 +282,9 @@ class InternalBuilder {
     }
     if (filters.notContains) {
       contains(filters.notContains)
+    }
+    if (filters.containsAny) {
+      contains(filters.containsAny, true)
     }
     return query
   }
