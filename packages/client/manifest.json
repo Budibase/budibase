@@ -2763,7 +2763,7 @@
   },
   "longformfield": {
     "name": "Long Form Field",
-    "icon": "AlignLeft",
+    "icon": "TextAlignLeft",
     "styles": [
       "size"
     ],
