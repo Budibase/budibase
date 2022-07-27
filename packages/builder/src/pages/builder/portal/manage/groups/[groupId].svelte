@@ -39,12 +39,19 @@
 
   async function selectUser(id) {
     let selectedUser = selectedUsers.includes(id)
-    let enrichedUser = $users.data.find(user => user._id === id)
     if (selectedUser) {
       selectedUsers = selectedUsers.filter(id => id !== selectedUser)
       let newUsers = group.users.filter(user => user._id !== id)
       group.users = newUsers
     } else {
+      let enrichedUser = $users.data
+        .filter(user => user._id === id)
+        .map(u => {
+          return {
+            _id: u._id,
+            email: u.email,
+          }
+        })[0]
       selectedUsers = [...selectedUsers, id]
       group.users.push(enrichedUser)
     }
@@ -64,6 +71,7 @@
     $users.data?.filter(x => !group?.users.map(y => y._id).includes(x._id)) ||
     []
 
+  $: groupApps = $apps.filter(x => group.apps.includes(x.appId))
   async function removeUser(id) {
     let newUsers = group.users.filter(user => user._id !== id)
     group.users = newUsers
@@ -142,7 +150,7 @@
   <List>
     {#if group?.users.length}
       {#each group.users as user}
-        <ListItem subtitle={user?.access} title={user?.email} avatar
+        <ListItem title={user?.email} avatar
           ><Icon
             on:click={() => removeUser(user?._id)}
             hoverable
@@ -167,8 +175,8 @@
   </div>
 
   <List>
-    {#if group?.apps.length}
-      {#each group.apps as app}
+    {#if groupApps.length}
+      {#each groupApps as app}
         <ListItem
           title={app.name}
           icon={app?.icon?.name || "Apps"}

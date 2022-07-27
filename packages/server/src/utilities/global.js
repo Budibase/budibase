@@ -106,7 +106,6 @@ exports.getGlobalUsers = async (users = null) => {
   if (!appId) {
     return globalUsers
   }
-  console.log("maybe??")
 
   return globalUsers.map(user => exports.updateAppRole(user))
 }

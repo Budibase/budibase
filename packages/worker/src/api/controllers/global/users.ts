@@ -127,8 +127,7 @@ export const destroy = async (ctx: any) => {
 export const bulkDelete = async (ctx: any) => {
   const { userIds } = ctx.request.body
   try {
-    let { groupsToModify, usersResponse } = await users.bulkDelete(userIds)
-    await groupUtils.bulkDeleteGroupUsers(groupsToModify)
+    let usersResponse = await users.bulkDelete(userIds)
 
     ctx.body = {
       message: `${usersResponse.length} user(s) deleted`,
