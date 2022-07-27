@@ -121,6 +121,9 @@ export const buildLuceneQuery = filter => {
       if (type === "boolean") {
         value = `${value}`?.toLowerCase() === "true"
       }
+      if (["contains", "notContains", "containsAny"].includes(operator) && type === "array" && typeof value === "string") {
+        value = value.split(",")
+      }
       if (operator.startsWith("range")) {
         const minint =
           SqlNumberTypeRangeMap[externalType]?.min || Number.MIN_SAFE_INTEGER
