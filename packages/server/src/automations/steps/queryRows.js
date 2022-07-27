@@ -96,12 +96,14 @@ exports.run = async function ({ inputs, appId }) {
       tableId,
     },
     body: {
-      sortOrder,
       sortType,
+      limit,
       sort: sortColumn,
       query: filters || {},
-      limit,
+      // default to ascending, like data tab
+      sortOrder: sortOrder || SortOrders.ASCENDING,
     },
+    version: "1",
   })
   try {
     await rowController.search(ctx)
