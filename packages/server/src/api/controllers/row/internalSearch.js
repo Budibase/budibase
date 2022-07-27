@@ -21,6 +21,7 @@ class QueryBuilder {
       oneOf: {},
       contains: {},
       notContains: {},
+      containsAny: {},
       ...base,
     }
     this.limit = 50
@@ -131,6 +132,11 @@ class QueryBuilder {
     return this
   }
 
+  addContainsAny(key, value) {
+    this.query.containsAny[key] = value
+    return this
+  }
+
   /**
    * Preprocesses a value before going into a lucene search.
    * Transforms strings to lowercase and wraps strings and bools in quotes.
@@ -176,19 +182,23 @@ class QueryBuilder {
       return `${key}:${builder.preprocess(value, allPreProcessingOpts)}`
     }
 
-    const contains = (key, value) => {
+    const contains = (key, value, mode = "AND") => {
       if (!Array.isArray(value) || value.length === 0) {
         return null
       }
-      let andStatement = `${builder.preprocess(value[0], { escape: true })}`
+      let statement = `${builder.preprocess(value[0], { escape: true })}`
       for (let i = 1; i < value.length; i++) {
-        andStatement += ` AND ${builder.preprocess(value[i], { escape: true })}`
+        statement += ` ${mode} ${builder.preprocess(value[i], { escape: true })}`
       }
-      return `${key}:(${andStatement})`
+      return `${key}:(${statement})`
     }
 
     const notContains = (key, value) => {
       return "*:* AND NOT " + contains(key, value)
+    }
+
+    const containsAny = (key, value) => {
+      return contains(key, value, "OR")
     }
 
     const oneOf = (key, value) => {
@@ -291,6 +301,9 @@ class QueryBuilder {
     }
     if (this.query.notContains) {
       build(this.query.notContains, notContains)
+    }
+    if (this.query.containsAny) {
+      build(this.query.containsAny, containsAny)
     }
     // make sure table ID is always added as an AND
     if (tableId) {
