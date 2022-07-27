@@ -284,4 +284,49 @@ describe("SQL query builder", () => {
       sql: `select * from (select * from \"${TABLE_NAME}\" where \"${TABLE_NAME}\".\"age\"::jsonb @> '[20]' and \"${TABLE_NAME}\".\"name\"::jsonb @> '["John"]' limit $1) as \"${TABLE_NAME}\"`
     })
   })
+
+  it("should use like expression for MS-SQL when filter is notContains", () => {
+    const query = new Sql(SqlClients.MS_SQL, 10)._query(generateReadJson({
+      filters: {
+        notContains: {
+          age: [20],
+          name: ["John"]
+        }
+      }
+    }))
+    expect(query).toEqual({
+      bindings: [10, "%20%", `%"John"%`],
+      sql: `select * from (select top (@p0) * from [${TABLE_NAME}] where LOWER(${TABLE_NAME}.age) LIKE @p1 and LOWER(${TABLE_NAME}.name) LIKE @p2) as [${TABLE_NAME}]`
+    })
+  })
+
+  it("should use NOT JSON_CONTAINS expression for MySQL when filter is notContains", () => {
+    const query = new Sql(SqlClients.MY_SQL, 10)._query(generateReadJson({
+      filters: {
+        notContains: {
+          age: [20],
+          name: ["John"]
+        }
+      }
+    }))
+    expect(query).toEqual({
+      bindings: [10],
+      sql: `select * from (select * from \`${TABLE_NAME}\` where NOT JSON_CONTAINS(${TABLE_NAME}.age, '[20]') and NOT JSON_CONTAINS(${TABLE_NAME}.name, '["John"]') limit ?) as \`${TABLE_NAME}\``
+    })
+  })
+
+  it("should use jsonb operator expression for PostgreSQL when filter is notContains", () => {
+    const query = new Sql(SqlClients.POSTGRES, 10)._query(generateReadJson({
+      filters: {
+        notContains: {
+          age: [20],
+          name: ["John"]
+        }
+      }
+    }))
+    expect(query).toEqual({
+      bindings: [10],
+      sql: `select * from (select * from \"${TABLE_NAME}\" where \"${TABLE_NAME}\".\"age\"::jsonb @> '[20]' and \"${TABLE_NAME}\".\"name\"::jsonb @> '["John"]' limit $1) as \"${TABLE_NAME}\"`
+    })
+  })
 })
