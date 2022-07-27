@@ -186,7 +186,7 @@
 
   .text {
     font-weight: 600;
-    font-size: 14px;
+    font-size: 12px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;

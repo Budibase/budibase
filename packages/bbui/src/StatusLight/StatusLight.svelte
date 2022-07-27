@@ -68,8 +68,8 @@
     background: var(--color) !important;
   }
   .square::before {
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
     border-radius: 4px;
     margin: 0;
   }
