@@ -45,6 +45,10 @@ jq '.dependencies."@budibase/types"="'$VERSION'"' package.json > package.json.tm
 # Go back to pro repo root
 cd -
 
+# Update lockfile with new dependency versions
+yarn bootstrap
+git add packages/pro/yarn.lock
+
 #############################################
 #                  PUBLISH                  #
 #############################################
