@@ -1,4 +1,4 @@
-const joiValidator = require("../../../middleware/joi-validator")
+const { joiValidator } = require("@budibase/backend-core/auth")
 const Joi = require("joi")
 
 const OPTIONAL_STRING = Joi.string().optional().allow(null).allow("")

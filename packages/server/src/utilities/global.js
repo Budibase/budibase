@@ -12,9 +12,11 @@ const {
 } = require("@budibase/backend-core/tenancy")
 const env = require("../environment")
 const { getAppId } = require("@budibase/backend-core/context")
+const { groups } = require("@budibase/pro")
 
 exports.updateAppRole = (user, { appId } = {}) => {
   appId = appId || getAppId()
+
   if (!user || !user.roles) {
     return user
   }
@@ -33,15 +35,30 @@ exports.updateAppRole = (user, { appId } = {}) => {
   } else if (!user.roleId) {
     user.roleId = BUILTIN_ROLE_IDS.PUBLIC
   }
+
   delete user.roles
   return user
 }
 
-function processUser(user, { appId } = {}) {
+async function checkGroupRoles(user, { appId } = {}) {
+  if (!user.roleId) {
+    let roleId = await groups.getGroupRoleId(user, appId)
+    user.roleId = roleId
+  }
+
+  return user
+}
+
+async function processUser(user, { appId } = {}) {
   if (user) {
     delete user.password
   }
-  return exports.updateAppRole(user, { appId })
+  user = await exports.updateAppRole(user, { appId })
+  if (user?.userGroups?.length) {
+    user = await checkGroupRoles(user, { appId })
+  }
+
+  return user
 }
 
 exports.getCachedSelf = async (ctx, appId) => {
@@ -89,6 +106,7 @@ exports.getGlobalUsers = async (users = null) => {
   if (!appId) {
     return globalUsers
   }
+
   return globalUsers.map(user => exports.updateAppRole(user))
 }
 

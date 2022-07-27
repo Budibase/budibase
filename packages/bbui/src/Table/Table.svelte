@@ -37,6 +37,7 @@
   export let autoSortColumns = true
   export let compact = false
   export let customPlaceholder = false
+  export let showHeaderBorder = true
   export let placeholderText = "No rows found"
 
   const dispatch = createEventDispatcher()
@@ -286,6 +287,7 @@
         <div class="spectrum-Table-head">
           {#if showEditColumn}
             <div
+              class:noBorderHeader={!showHeaderBorder}
               class="spectrum-Table-headCell spectrum-Table-headCell--divider spectrum-Table-headCell--edit"
             >
               {#if allowSelectRows}
@@ -301,6 +303,7 @@
           {#each fields as field}
             <div
               class="spectrum-Table-headCell"
+              class:noBorderHeader={!showHeaderBorder}
               class:spectrum-Table-headCell--alignCenter={schema[field]
                 .align === "Center"}
               class:spectrum-Table-headCell--alignRight={schema[field].align ===
@@ -348,6 +351,7 @@
           <div class="spectrum-Table-row">
             {#if showEditColumn}
               <div
+                class:noBorderCheckbox={!showHeaderBorder}
                 class="spectrum-Table-cell spectrum-Table-cell--divider spectrum-Table-cell--edit"
                 on:click={e => {
                   toggleSelectRow(row)
@@ -481,6 +485,18 @@
   .spectrum-Table-headCell:last-of-type {
     border-right: var(--table-border);
   }
+
+  .noBorderHeader {
+    border-top: none !important;
+    border-right: none !important;
+    border-left: none !important;
+  }
+
+  .noBorderCheckbox {
+    border-top: none !important;
+    border-right: none !important;
+  }
+
   .spectrum-Table-headCell--alignCenter {
     justify-content: center;
   }
@@ -499,7 +515,7 @@
     z-index: 3;
   }
   .spectrum-Table-headCell .title {
-    overflow: hidden;
+    overflow: visible;
     text-overflow: ellipsis;
   }
   .spectrum-Table-headCell:hover .spectrum-Table-editIcon {
@@ -562,7 +578,7 @@
     gap: 4px;
     border-bottom: 1px solid var(--spectrum-alias-border-color-mid);
     background-color: var(--table-bg);
-    z-index: 1;
+    z-index: auto;
   }
   .spectrum-Table-cell--divider {
     padding-right: var(--cell-padding);
@@ -570,6 +586,7 @@
   .spectrum-Table-cell--divider + .spectrum-Table-cell {
     padding-left: var(--cell-padding);
   }
+
   .spectrum-Table-cell--edit {
     position: sticky;
     left: 0;

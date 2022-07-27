@@ -1,5 +1,6 @@
 mockAuthWithNoCookie()
 mockWorker()
+mockUserGroups()
 
 jest.mock("@budibase/backend-core/db", () => {
   const coreDb = jest.requireActual("@budibase/backend-core/db")
@@ -27,6 +28,16 @@ function mockWorker() {
 function mockReset() {
   jest.resetModules()
   mockWorker()
+}
+
+function mockUserGroups() {
+  jest.mock("@budibase/pro", () => ({
+    groups: {
+      getGroupRoleId: () => {
+        return "BASIC"
+      },
+    },
+  }))
 }
 
 function mockAuthWithNoCookie() {
