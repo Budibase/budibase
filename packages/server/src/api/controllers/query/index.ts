@@ -246,7 +246,7 @@ async function execute(
 }
 
 export async function executeV1(ctx: any) {
-  return execute(ctx, { rowsOnly: true })
+  return execute(ctx, { rowsOnly: true, isAutomation: false })
 }
 
 export async function executeV2(

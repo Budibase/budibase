@@ -1,7 +1,7 @@
 const Router = require("@koa/router")
 const controller = require("../../controllers/global/workspaces")
-const joiValidator = require("../../../middleware/joi-validator")
-const adminOnly = require("../../../middleware/adminOnly")
+const { joiValidator } = require("@budibase/backend-core/auth")
+const { adminOnly } = require("@budibase/backend-core/auth")
 const Joi = require("joi")
 
 const router = Router()
@@ -17,9 +17,9 @@ function buildWorkspaceSaveValidation() {
     roles: Joi.object({
       default: Joi.string().optional(),
       app: Joi.object()
-      .pattern(/.*/, Joi.string())
-      .required()
-      .unknown(true),
+        .pattern(/.*/, Joi.string())
+        .required()
+        .unknown(true),
     }).unknown(true).optional(),
   }).required().unknown(true))
 }

@@ -50,3 +50,8 @@ exports.getProdAppID = appId => {
   const rest = split.join(APP_DEV_PREFIX)
   return `${APP_PREFIX}${rest}`
 }
+
+exports.extractAppUUID = id => {
+  const split = id?.split("_") || []
+  return split.length ? split[split.length - 1] : null
+}
