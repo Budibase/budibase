@@ -177,8 +177,10 @@ class InternalBuilder {
           const tableName = fieldNames[0]
           const columnName = fieldNames[1]
           // @ts-ignore
-          query = query[rawFnc](`${not}"${tableName}"."${columnName}"::jsonb ${containsOp} ${wrap}${stringifyArray(
-              value, any ? "'" : '"'
+          query = query[rawFnc](
+            `${not}"${tableName}"."${columnName}"::jsonb ${containsOp} ${wrap}${stringifyArray(
+              value,
+              any ? "'" : '"'
             )}${wrap}`
           )
         })
