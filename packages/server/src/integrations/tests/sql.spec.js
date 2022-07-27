@@ -251,7 +251,7 @@ describe("SQL query builder", () => {
     }))
     expect(query).toEqual({
       bindings: [10, "%20%", `%"John"%`],
-      sql: `select * from (select top (@p0) * from [${TABLE_NAME}] where LOWER(${TABLE_NAME}.age) LIKE @p1 and LOWER(${TABLE_NAME}.name) LIKE @p2) as [${TABLE_NAME}]`
+      sql: `select * from (select top (@p0) * from [${TABLE_NAME}] where (LOWER(${TABLE_NAME}.age) LIKE @p1) and (LOWER(${TABLE_NAME}.name) LIKE @p2)) as [${TABLE_NAME}]`
     })
   })
 
@@ -360,18 +360,18 @@ describe("SQL query builder", () => {
     })
   })
 
-  it("should use OR jsonb operator expression for PostgreSQL when filter is containsAny", () => {
+  it("should use ?| operator expression for PostgreSQL when filter is containsAny", () => {
     const query = new Sql(SqlClients.POSTGRES, 10)._query(generateReadJson({
       filters: {
         containsAny: {
-          age: [20],
-          name: ["John"]
+          age: [20, 25],
+          name: ["John", "Mary"]
         }
       }
     }))
     expect(query).toEqual({
       bindings: [10],
-      sql: `select * from (select * from \"${TABLE_NAME}\" where \"${TABLE_NAME}\".\"age\"::jsonb @> '[20]' and \"${TABLE_NAME}\".\"name\"::jsonb @> '["John"]' limit $1) as \"${TABLE_NAME}\"`
+      sql: `select * from (select * from \"${TABLE_NAME}\" where \"${TABLE_NAME}\".\"age\"::jsonb ?| array [20,25] and \"${TABLE_NAME}\".\"name\"::jsonb ?| array ['John','Mary'] limit $1) as \"${TABLE_NAME}\"`
     })
   })
 })
