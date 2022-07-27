@@ -156,18 +156,6 @@ describe("/api/global/users", () => {
       expect(events.user.permissionAdminAssigned).toBeCalledTimes(1)
     })
 
-    it("should be able to create an admin user", async () => {
-      jest.clearAllMocks()
-      const user = structures.users.adminUser({ email: "admin@test.com" })
-      await createUser(user)
-
-      expect(events.user.created).toBeCalledTimes(1)
-      expect(events.user.updated).not.toBeCalled()
-      expect(events.user.permissionBuilderAssigned).not.toBeCalled()
-      expect(events.user.permissionAdminAssigned).toBeCalledTimes(1)
-    })
-
-
     it("should be able to create a builder user", async () => {
       jest.clearAllMocks()
       const user = structures.users.builderUser({ email: "builder@test.com" })
