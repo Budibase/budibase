@@ -157,6 +157,54 @@ class InternalBuilder {
       }
     }
 
+    const contains = (mode: object) => {
+      const fnc = allOr ? "orWhere" : "where"
+      const rawFnc = `${fnc}Raw`
+      const not = mode === filters?.notContains ? "NOT " : ""
+      function stringifyArray(value: Array<any>): string {
+        for (let i in value) {
+          if (typeof value[i] === "string") {
+            value[i] = `"${value[i]}"`
+          }
+        }
+        return `'[${value.join(",")}]'`
+      }
+      if (this.client === SqlClients.POSTGRES) {
+        iterate(mode, (key: string, value: Array<any>) => {
+          const fieldNames = key.split(/\./g)
+          const tableName = fieldNames[0]
+          const columnName = fieldNames[1]
+          // @ts-ignore
+          query = query[rawFnc](
+            `"${tableName}"."${columnName}"::jsonb @> ${stringifyArray(value)}`
+          )
+        })
+      } else if (this.client === SqlClients.MY_SQL) {
+        iterate(mode, (key: string, value: Array<any>) => {
+          // @ts-ignore
+          query = query[rawFnc](
+            `${not}JSON_CONTAINS(${key}, ${stringifyArray(value)})`
+          )
+        })
+      } else {
+        iterate(mode, (key: string, value: Array<any>) => {
+          let andStatement = ""
+          for (let i in value) {
+            if (typeof value[i] === "string") {
+              value[i] = `%"${value[i]}"%`
+            } else {
+              value[i] = `%${value[i]}%`
+            }
+            andStatement +=
+              (andStatement ? " AND " : "") +
+              `LOWER(${likeKey(this.client, key)}) LIKE ?`
+          }
+          // @ts-ignore
+          query = query[rawFnc](andStatement, value)
+        })
+      }
+    }
+
     if (!filters) {
       return query
     }
@@ -227,50 +275,10 @@ class InternalBuilder {
       })
     }
     if (filters.contains) {
-      const fnc = allOr ? "orWhere" : "where"
-      const rawFnc = `${fnc}Raw`
-      function stringifyArray(value: Array<any>): string {
-        for (let i in value) {
-          if (typeof value[i] === "string") {
-            value[i] = `"${value[i]}"`
-          }
-        }
-        return `'[${value.join(",")}]'`
-      }
-      if (this.client === SqlClients.POSTGRES) {
-        iterate(filters.contains, (key: string, value: Array<any>) => {
-          const fieldNames = key.split(/\./g)
-          const tableName = fieldNames[0]
-          const columnName = fieldNames[1]
-          // @ts-ignore
-          query = query[rawFnc](
-            `"${tableName}"."${columnName}"::jsonb @> ${stringifyArray(value)}`
-          )
-        })
-      } else if (this.client === SqlClients.MY_SQL) {
-        iterate(filters.contains, (key: string, value: Array<any>) => {
-          // @ts-ignore
-          query = query[rawFnc](
-            `JSON_CONTAINS(${key}, ${stringifyArray(value)})`
-          )
-        })
-      } else {
-        iterate(filters.contains, (key: string, value: Array<any>) => {
-          let andStatement = ""
-          for (let i in value) {
-            if (typeof value[i] === "string") {
-              value[i] = `%"${value[i]}"%`
-            } else {
-              value[i] = `%${value[i]}%`
-            }
-            andStatement +=
-              (andStatement ? " AND " : "") +
-              `LOWER(${likeKey(this.client, key)}) LIKE ?`
-          }
-          // @ts-ignore
-          query = query[rawFnc](andStatement, value)
-        })
-      }
+      contains(filters.contains)
+    }
+    if (filters.notContains) {
+      contains(filters.notContains)
     }
     return query
   }
