@@ -1,5 +1,4 @@
 <script>
-  import TooltipWrapper from "../Tooltip/TooltipWrapper.svelte"
   import Link from "../Link/Link.svelte"
 
   export let value
