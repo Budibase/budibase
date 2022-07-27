@@ -121,7 +121,11 @@ export const buildLuceneQuery = filter => {
       if (type === "boolean") {
         value = `${value}`?.toLowerCase() === "true"
       }
-      if (["contains", "notContains", "containsAny"].includes(operator) && type === "array" && typeof value === "string") {
+      if (
+        ["contains", "notContains", "containsAny"].includes(operator) &&
+        type === "array" &&
+        typeof value === "string"
+      ) {
         value = value.split(",")
       }
       if (operator.startsWith("range")) {
@@ -240,6 +244,18 @@ export const runLuceneQuery = (docs, query) => {
     return !testValue?.includes(docValue)
   })
 
+  const containsAny = match("containsAny", (docValue, testValue) => {
+    return !docValue?.includes(...testValue)
+  })
+
+  const contains = match("contains", (docValue, testValue) => {
+    return !testValue?.every(item => docValue?.includes(item))
+  })
+
+  const notContains = match("notContains", (docValue, testValue) => {
+    return testValue?.every(item => docValue?.includes(item))
+  })
+
   // Match a document against all criteria
   const docMatch = doc => {
     return (
@@ -250,7 +266,10 @@ export const runLuceneQuery = (docs, query) => {
       notEqualMatch(doc) &&
       emptyMatch(doc) &&
       notEmptyMatch(doc) &&
-      oneOf(doc)
+      oneOf(doc) &&
+      contains(doc) &&
+      containsAny(doc) &&
+      notContains(doc)
     )
   }
 
