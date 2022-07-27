@@ -285,7 +285,7 @@ describe("SQL query builder", () => {
     })
   })
 
-  it("should use like expression for MS-SQL when filter is notContains", () => {
+  it("should use NOT like expression for MS-SQL when filter is notContains", () => {
     const query = new Sql(SqlClients.MS_SQL, 10)._query(generateReadJson({
       filters: {
         notContains: {
@@ -296,7 +296,7 @@ describe("SQL query builder", () => {
     }))
     expect(query).toEqual({
       bindings: [10, "%20%", `%"John"%`],
-      sql: `select * from (select top (@p0) * from [${TABLE_NAME}] where LOWER(${TABLE_NAME}.age) LIKE @p1 and LOWER(${TABLE_NAME}.name) LIKE @p2) as [${TABLE_NAME}]`
+      sql: `select * from (select top (@p0) * from [${TABLE_NAME}] where NOT (LOWER(${TABLE_NAME}.age) LIKE @p1) and NOT (LOWER(${TABLE_NAME}.name) LIKE @p2)) as [${TABLE_NAME}]`
     })
   })
 
