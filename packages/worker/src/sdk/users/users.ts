@@ -396,7 +396,7 @@ export const destroy = async (id: string, currentUser: any) => {
   await apps.syncUserInApps(dbUser._id)
 }
 
-const bulkDeleteProcessing = async (dbUser: any) => {
+const bulkDeleteProcessing = async (dbUser: User) => {
   await deprovisioning.removeUserFromInfoDB(dbUser)
   await eventHelpers.handleDeleteEvents(dbUser)
   await cache.user.invalidateUser(dbUser._id)
