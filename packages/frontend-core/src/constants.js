@@ -46,6 +46,10 @@ export const OperatorOptions = {
     value: "oneOf",
     label: "Is in",
   },
+  ContainsAny: {
+    value: "containsAny",
+    label: "Has any"
+  },
 }
 
 // Cookie names

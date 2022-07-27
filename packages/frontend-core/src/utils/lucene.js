@@ -32,7 +32,7 @@ export const getValidOperatorsForType = type => {
   } else if (type === "options") {
     return [Op.Equals, Op.NotEquals, Op.Empty, Op.NotEmpty]
   } else if (type === "array") {
-    return [Op.Contains, Op.NotContains, Op.Empty, Op.NotEmpty]
+    return [Op.Contains, Op.NotContains, Op.Empty, Op.NotEmpty, Op.ContainsAny]
   } else if (type === "boolean") {
     return [Op.Equals, Op.NotEquals, Op.Empty, Op.NotEmpty]
   } else if (type === "longform") {
@@ -94,6 +94,7 @@ export const buildLuceneQuery = filter => {
     contains: {},
     notContains: {},
     oneOf: {},
+    containsAny: {},
   }
   if (Array.isArray(filter)) {
     filter.forEach(expression => {
