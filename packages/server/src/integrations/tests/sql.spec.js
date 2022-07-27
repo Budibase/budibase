@@ -315,7 +315,7 @@ describe("SQL query builder", () => {
     })
   })
 
-  it("should use jsonb operator expression for PostgreSQL when filter is notContains", () => {
+  it("should use jsonb operator NOT expression for PostgreSQL when filter is notContains", () => {
     const query = new Sql(SqlClients.POSTGRES, 10)._query(generateReadJson({
       filters: {
         notContains: {
@@ -326,7 +326,7 @@ describe("SQL query builder", () => {
     }))
     expect(query).toEqual({
       bindings: [10],
-      sql: `select * from (select * from \"${TABLE_NAME}\" where \"${TABLE_NAME}\".\"age\"::jsonb @> '[20]' and \"${TABLE_NAME}\".\"name\"::jsonb @> '["John"]' limit $1) as \"${TABLE_NAME}\"`
+      sql: `select * from (select * from \"${TABLE_NAME}\" where NOT \"${TABLE_NAME}\".\"age\"::jsonb @> '[20]' and NOT \"${TABLE_NAME}\".\"name\"::jsonb @> '["John"]' limit $1) as \"${TABLE_NAME}\"`
     })
   })
 })

@@ -176,7 +176,7 @@ class InternalBuilder {
           const columnName = fieldNames[1]
           // @ts-ignore
           query = query[rawFnc](
-            `"${tableName}"."${columnName}"::jsonb @> ${stringifyArray(value)}`
+            `${not}"${tableName}"."${columnName}"::jsonb @> ${stringifyArray(value)}`
           )
         })
       } else if (this.client === SqlClients.MY_SQL) {
