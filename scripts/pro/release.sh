@@ -88,8 +88,13 @@ jq '.dependencies."@budibase/pro"="'$VERSION'"' package.json > package.json.tmp 
 # Go back to budibase repo root
 cd -
 
+# Update lockfile with new pro version
+yarn bootstrap
+
 # Commit and push changes
 git add packages/server/package.json
+git add packages/server/yarn.lock
 git add packages/worker/package.json
+git add packages/worker/yarn.lock
 git commit -m "Update pro version to $VERSION"
 git push
