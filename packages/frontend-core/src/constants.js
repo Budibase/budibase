@@ -98,3 +98,12 @@ export const SqlNumberTypeRangeMap = {
     min: -8388608,
   },
 }
+
+export const ThemeOptions = [
+  "lightest",
+  "light",
+  "dark",
+  "darkest",
+  "nord",
+  "midnight",
+]

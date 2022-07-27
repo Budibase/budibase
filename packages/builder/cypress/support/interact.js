@@ -108,6 +108,7 @@ export const CONTAINER = ".container"
 export const REGENERATE = ".regenerate"
 export const SPECTRUM_DIALOG_CONTENT = ".spectrum-Dialog-content"
 export const SPECTRUM_ICON = ".spectrum-Icon"
+export const SPECTRUM_HEADING = ".spectrum-Heading"
 
 //createView
 export const SPECTRUM_MENU_ITEM_LABEL = ".spectrum-Menu-itemLabel"

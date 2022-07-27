@@ -289,7 +289,7 @@ Cypress.Commands.add("updateAppName", (changedName, noName) => {
 })
 
 Cypress.Commands.add("publishApp", resolvedAppPath => {
-  //Assumes you have navigated to an application first
+  // Assumes you have navigated to an application first
   cy.get(".toprightnav button.spectrum-Button")
     .contains("Publish")
     .click({ force: true })
@@ -301,7 +301,7 @@ Cypress.Commands.add("publishApp", resolvedAppPath => {
       cy.wait(1000)
     })
 
-  //Verify that the app url is presented correctly to the user
+  // Verify that the app url is presented correctly to the user
   cy.get(".spectrum-Modal [data-cy='deploy-app-success-modal']")
     .should("be.visible")
     .within(() => {
@@ -422,7 +422,12 @@ Cypress.Commands.add("createTable", (tableName, initialTable) => {
     cy.get("input", { timeout: 2000 }).first().type(tableName).blur()
     cy.get(".spectrum-ButtonGroup").contains("Create").click()
   })
-  cy.contains(tableName).should("be.visible")
+  // Ensure modal has closed and table is created
+  cy.get(".spectrum-Modal").should("not.exist")
+  cy.get(".spectrum-Tabs-content", { timeout: 1000 }).should(
+    "contain",
+    tableName
+  )
 })
 
 Cypress.Commands.add("createTestTableWithData", () => {
@@ -514,7 +519,8 @@ Cypress.Commands.add("searchAndAddComponent", component => {
   cy.get(".spectrum-Button").contains("Component").click({ force: true })
 
   // Search and add component
-  cy.get(".spectrum-Textfield-input").wait(500).clear().type(component)
+  cy.wait(500)
+  cy.get(".spectrum-Textfield-input").clear().type(component)
   cy.get(".body").within(() => {
     cy.get(".component")
       .contains(new RegExp("^" + component + "$"), { timeout: 3000 })
