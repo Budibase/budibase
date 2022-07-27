@@ -16,7 +16,7 @@ import {
   migrations,
 } from "@budibase/backend-core"
 import { MigrationType, User } from "@budibase/types"
-import { groups as groupUtils } from "@budibase/pro/"
+import { groups as groupUtils } from "@budibase/pro"
 
 const PAGE_LIMIT = 8
 
@@ -201,7 +201,7 @@ export const save = async (
     const putUserFn = () => {
       return db.put(builtUser)
     }
-    console.log(builtUser)
+
     if (eventHelpers.isAddingBuilder(builtUser, dbUser)) {
       response = await quotas.addDeveloper(putUserFn)
     } else {
@@ -294,19 +294,20 @@ export const bulkCreate = async (
   })
 
   const usersToBulkSave = await Promise.all(usersToSave)
-  const response = await quotas.addDevelopers(
-    () => db.bulkDocs(usersToBulkSave),
-    builderCount
-  )
+  await quotas.addDevelopers(() => db.bulkDocs(usersToBulkSave), builderCount)
 
   // Post processing of bulk added users, i.e events and cache operations
   for (const user of usersToBulkSave) {
-    delete user.password
     await eventHelpers.handleSaveEvents(user, null)
     await apps.syncUserInApps(user._id)
   }
 
-  return response
+  return usersToBulkSave.map(user => {
+    return {
+      _id: user._id,
+      email: user.email,
+    }
+  })
 }
 
 export const bulkDelete = async (userIds: any) => {
@@ -349,6 +350,8 @@ export const bulkDelete = async (userIds: any) => {
     }))
   )
 
+  await groupUtils.bulkDeleteGroupUsers(groupsToModify)
+
   //Deletion post processing
   for (let user of usersToDelete) {
     await bulkDeleteProcessing(user)
@@ -356,7 +359,7 @@ export const bulkDelete = async (userIds: any) => {
 
   await quotas.removeDevelopers(builderCount)
 
-  return { groupsToModify, usersResponse: response }
+  return response
 }
 
 export const destroy = async (id: string, currentUser: any) => {

@@ -44,9 +44,7 @@
       })
     }) || []
   $: appGroups = $groups.filter(x => {
-    return x.apps.find(y => {
-      return y.appId === app.appId
-    })
+    return x.apps.includes(app.appId)
   })
 
   async function addData(appData) {
@@ -57,7 +55,7 @@
         let matchedGroup = $groups.find(group => {
           return group._id === data.id
         })
-        matchedGroup.apps.push(app)
+        matchedGroup.apps.push(app.appId)
         matchedGroup.roles[fixedAppId] = data.role
 
         groups.actions.save(matchedGroup)

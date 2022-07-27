@@ -156,9 +156,9 @@ export enum Event {
   USER_GROUP_UPDATED = "user_group:updated",
   USER_GROUP_DELETED = "user_group:deleted",
   USER_GROUP_USERS_ADDED = "user_group:user_added",
-  USER_GROUP_USERS_REMOVED = "user_group_:users_deleted",
-  USER_GROUP_PERMISSIONS_EDITED = "user_group_:permissions_edited",
-  USER_GROUP_ONBOARDING = "user_group_:onboarding_added",
+  USER_GROUP_USERS_REMOVED = "user_group:users_deleted",
+  USER_GROUP_PERMISSIONS_EDITED = "user_group:permissions_edited",
+  USER_GROUP_ONBOARDING = "user_group:onboarding_added",
 }
 
 // properties added at the final stage of the event pipeline

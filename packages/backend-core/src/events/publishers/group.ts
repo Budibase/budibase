@@ -32,9 +32,9 @@ export async function deleted(group: UserGroup) {
   await publishEvent(Event.USER_GROUP_DELETED, properties)
 }
 
-export async function usersAdded(emails: string[], group: UserGroup) {
+export async function usersAdded(count: number, group: UserGroup) {
   const properties: GroupUsersAddedEvent = {
-    count: emails.length,
+    count,
     groupId: group._id as string,
   }
   await publishEvent(Event.USER_GROUP_USERS_ADDED, properties)
@@ -57,6 +57,8 @@ export async function createdOnboarding(groupId: string) {
 }
 
 export async function permissionsEdited(roles: UserGroupRoles) {
-  const properties: UserGroupRoles = roles
+  const properties: UserGroupRoles = {
+    ...roles,
+  }
   await publishEvent(Event.USER_GROUP_PERMISSIONS_EDITED, properties)
 }
