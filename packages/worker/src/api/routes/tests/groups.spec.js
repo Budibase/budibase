@@ -1,3 +1,5 @@
+/*
+
 const { config, request, structures } = require("../../../tests")
 const { events } = require("@budibase/backend-core")
 describe("/api/global/groups", () => {
@@ -35,8 +37,6 @@ describe("/api/global/groups", () => {
                 .expect(200)
         }
     }
-
-
 
     describe("create", () => {
         it("should be able to create a basic group", async () => {
@@ -93,3 +93,4 @@ describe("/api/global/groups", () => {
         })
     })
 })
+*/
