@@ -6,10 +6,8 @@
     ActionGroup,
     ActionButton,
     Search,
-    DetailSummary,
     Icon,
     Body,
-    Divider,
     notifications,
   } from "@budibase/bbui"
   import structure from "./componentStructure.json"
