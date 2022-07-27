@@ -13,7 +13,7 @@
     notifications,
   } from "@budibase/bbui"
   import { onMount } from "svelte"
-  import { apps, organisation, auth } from "stores/portal"
+  import { apps, organisation, auth, groups } from "stores/portal"
   import { goto } from "@roxi/routify"
   import { AppStatus } from "constants"
   import { gradient } from "actions"
@@ -30,20 +30,41 @@
     try {
       await organisation.init()
       await apps.load()
+      await groups.actions.init()
     } catch (error) {
       notifications.error("Error loading apps")
     }
     loaded = true
   })
-
   const publishedAppsOnly = app => app.status === AppStatus.DEPLOYED
 
+  $: userGroups = $groups.filter(group =>
+    group.users.find(user => user._id === $auth.user?._id)
+  )
+  let userApps = []
   $: publishedApps = $apps.filter(publishedAppsOnly)
-  $: userApps = $auth.user?.builder?.global
-    ? publishedApps
-    : publishedApps.filter(app =>
-        Object.keys($auth.user?.roles).includes(app.prodId)
-      )
+
+  $: {
+    if (!Object.keys($auth.user?.roles).length && $auth.user?.userGroups) {
+      userApps = $auth.user?.builder?.global
+        ? publishedApps
+        : publishedApps.filter(app => {
+            return userGroups.find(group => {
+              return Object.keys(group.roles)
+                .map(role => apps.extractAppId(role))
+                .includes(app.appId)
+            })
+          })
+    } else {
+      userApps = $auth.user?.builder?.global
+        ? publishedApps
+        : publishedApps.filter(app =>
+            Object.keys($auth.user?.roles)
+              .map(x => apps.extractAppId(x))
+              .includes(app.appId)
+          )
+    }
+  }
 
   function getUrl(app) {
     if (app.url) {

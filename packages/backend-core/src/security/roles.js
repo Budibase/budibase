@@ -76,7 +76,7 @@ function isBuiltin(role) {
 /**
  * Works through the inheritance ranks to see how far up the builtin stack this ID is.
  */
-function builtinRoleToNumber(id) {
+exports.builtinRoleToNumber = id => {
   const builtins = exports.getBuiltinRoles()
   const MAX = Object.values(BUILTIN_IDS).length + 1
   if (id === BUILTIN_IDS.ADMIN || id === BUILTIN_IDS.BUILDER) {
@@ -104,7 +104,8 @@ exports.lowerBuiltinRoleID = (roleId1, roleId2) => {
   if (!roleId2) {
     return roleId1
   }
-  return builtinRoleToNumber(roleId1) > builtinRoleToNumber(roleId2)
+  return exports.builtinRoleToNumber(roleId1) >
+    exports.builtinRoleToNumber(roleId2)
     ? roleId2
     : roleId1
 }
