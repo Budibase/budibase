@@ -237,23 +237,23 @@
     margin-top: var(--spacing-xs);
   }
   .component {
-    background-color: var(--spectrum-global-color-gray-200);
+    background: var(--spectrum-global-color-gray-200);
     border-radius: 4px;
     display: flex;
     align-items: center;
     border: 1px solid var(--spectrum-global-color-gray-200);
-    transition: border-color 130ms ease-out;
+    transition: background 130ms ease-out, border-color 130ms ease-out;
     flex-direction: row;
     justify-content: flex-start;
     padding: var(--spacing-s) var(--spacing-l);
     gap: var(--spacing-m);
     overflow: hidden;
   }
-  .component.selected,
-  .component:hover {
+  .component.selected {
     border-color: var(--spectrum-global-color-blue-400);
   }
   .component:hover {
+    background: var(--spectrum-global-color-gray-300);
     cursor: pointer;
   }
   .component :global(.spectrum-Body) {
