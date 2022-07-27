@@ -99,11 +99,31 @@ export const SqlNumberTypeRangeMap = {
   },
 }
 
-export const ThemeOptions = [
-  "lightest",
-  "light",
-  "dark",
-  "darkest",
-  "nord",
-  "midnight",
+export const Themes = [
+  {
+    class: "lightest",
+    name: "Lightest",
+  },
+  {
+    class: "light",
+    name: "Light",
+  },
+  {
+    class: "dark",
+    name: "Dark",
+  },
+  {
+    class: "darkest",
+    name: "Darkest",
+  },
+  {
+    class: "nord",
+    name: "Nord",
+    base: "darkest",
+  },
+  {
+    class: "midnight",
+    name: "Midnight",
+    base: "darkest",
+  },
 ]
