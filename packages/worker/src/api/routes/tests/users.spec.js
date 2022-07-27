@@ -1,6 +1,5 @@
 jest.mock("nodemailer")
 const { config, request, mocks, structures } = require("../../../tests")
-const { cr } = require("./groups.spec")
 const sendMailMock = mocks.email.mock()
 const { events } = require("@budibase/backend-core")
 describe("/api/global/users", () => {
@@ -132,9 +131,9 @@ describe("/api/global/users", () => {
 
     it("should be able to bulkCreate users with different permissions", async () => {
       jest.clearAllMocks()
-      const builder = structures.users.builderUser({ email: "basic@test.com" })
-      const admin = structures.users.adminUser({ email: "admin@test.com" })
-      const user = structures.users.user({ email: "user@test.com" })
+      const builder = structures.users.builderUser({ email: "bulkbasic@test.com" })
+      const admin = structures.users.adminUser({ email: "bulkadmin@test.com" })
+      const user = structures.users.user({ email: "bulkuser@test.com" })
 
       let toCreate = { users: [builder, admin, user], groups: [] }
       await bulkCreateUsers(toCreate)
