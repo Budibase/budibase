@@ -2,6 +2,7 @@ export interface SaveAccountUser {
   accountId: string
   userId: string
   createdAt: number
+  deletedAt?: number
 }
 
 export interface AccountUser extends SaveAccountUser {
