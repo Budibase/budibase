@@ -161,24 +161,25 @@ class InternalBuilder {
       const fnc = allOr ? "orWhere" : "where"
       const rawFnc = `${fnc}Raw`
       const not = mode === filters?.notContains ? "NOT " : ""
-      function stringifyArray(value: Array<any>): string {
+      function stringifyArray(value: Array<any>, quoteStyle = '"'): string {
         for (let i in value) {
           if (typeof value[i] === "string") {
-            value[i] = `"${value[i]}"`
+            value[i] = `${quoteStyle}${value[i]}${quoteStyle}`
           }
         }
-        return `'[${value.join(",")}]'`
+        return `[${value.join(",")}]`
       }
       if (this.client === SqlClients.POSTGRES) {
         iterate(mode, (key: string, value: Array<any>) => {
+          const wrap = any ? "" : "'"
+          const containsOp = any ? "\\?| array" : "@>"
           const fieldNames = key.split(/\./g)
           const tableName = fieldNames[0]
           const columnName = fieldNames[1]
           // @ts-ignore
-          query = query[rawFnc](
-            `${not}"${tableName}"."${columnName}"::jsonb @> ${stringifyArray(
-              value
-            )}`
+          query = query[rawFnc](`${not}"${tableName}"."${columnName}"::jsonb ${containsOp} ${wrap}${stringifyArray(
+              value, any ? "'" : '"'
+            )}${wrap}`
           )
         })
       } else if (this.client === SqlClients.MY_SQL) {
@@ -186,7 +187,7 @@ class InternalBuilder {
         iterate(mode, (key: string, value: Array<any>) => {
           // @ts-ignore
           query = query[rawFnc](
-            `${not}${jsonFnc}(${key}, ${stringifyArray(value)})`
+            `${not}${jsonFnc}(${key}, '${stringifyArray(value)}')`
           )
         })
       } else {
