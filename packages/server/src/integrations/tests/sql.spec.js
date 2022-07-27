@@ -329,4 +329,49 @@ describe("SQL query builder", () => {
       sql: `select * from (select * from \"${TABLE_NAME}\" where NOT \"${TABLE_NAME}\".\"age\"::jsonb @> '[20]' and NOT \"${TABLE_NAME}\".\"name\"::jsonb @> '["John"]' limit $1) as \"${TABLE_NAME}\"`
     })
   })
+
+  it("should use OR like expression for MS-SQL when filter is containsAny", () => {
+    const query = new Sql(SqlClients.MS_SQL, 10)._query(generateReadJson({
+      filters: {
+        containsAny: {
+          age: [20, 25],
+          name: ["John", "Mary"]
+        }
+      }
+    }))
+    expect(query).toEqual({
+      bindings: [10, "%20%", "%25%", `%"John"%`, `%"Mary"%`],
+      sql: `select * from (select top (@p0) * from [${TABLE_NAME}] where LOWER(${TABLE_NAME}.age) LIKE @p1 and LOWER(${TABLE_NAME}.name) LIKE @p2) as [${TABLE_NAME}]`
+    })
+  })
+
+  it("should use JSON_OVERLAPS expression for MySQL when filter is containsAny", () => {
+    const query = new Sql(SqlClients.MY_SQL, 10)._query(generateReadJson({
+      filters: {
+        containsAny: {
+          age: [20, 25],
+          name: ["John", "Mary"]
+        }
+      }
+    }))
+    expect(query).toEqual({
+      bindings: [10],
+      sql: `select * from (select * from \`${TABLE_NAME}\` where JSON_OVERLAPS(${TABLE_NAME}.age, '[20,25]') and JSON_OVERLAPS(${TABLE_NAME}.name, '["John","Mary"]') limit ?) as \`${TABLE_NAME}\``
+    })
+  })
+
+  it("should use OR jsonb operator expression for PostgreSQL when filter is containsAny", () => {
+    const query = new Sql(SqlClients.POSTGRES, 10)._query(generateReadJson({
+      filters: {
+        containsAny: {
+          age: [20],
+          name: ["John"]
+        }
+      }
+    }))
+    expect(query).toEqual({
+      bindings: [10],
+      sql: `select * from (select * from \"${TABLE_NAME}\" where \"${TABLE_NAME}\".\"age\"::jsonb @> '[20]' and \"${TABLE_NAME}\".\"name\"::jsonb @> '["John"]' limit $1) as \"${TABLE_NAME}\"`
+    })
+  })
 })

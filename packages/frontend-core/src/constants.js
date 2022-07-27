@@ -48,7 +48,7 @@ export const OperatorOptions = {
   },
   ContainsAny: {
     value: "containsAny",
-    label: "Has any"
+    label: "Has any",
   },
 }
 
