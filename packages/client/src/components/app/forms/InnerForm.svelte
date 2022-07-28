@@ -204,14 +204,11 @@
 
       return fieldInfo
     },
-    validate: (onlyCurrentStep = false) => {
+    validate: () => {
       let valid = true
       let validationFields = fields
 
-      // Reduce fields to only the current step if required
-      if (onlyCurrentStep) {
-        validationFields = fields.filter(f => get(f).step === get(currentStep))
-      }
+      validationFields = fields.filter(f => get(f).step === get(currentStep))
 
       // Validate fields and check if any are invalid
       validationFields.forEach(field => {
