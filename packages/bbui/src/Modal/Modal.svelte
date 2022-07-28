@@ -11,6 +11,8 @@
 
   const dispatch = createEventDispatcher()
   let visible = fixed || inline
+  let modal
+
   $: dispatch(visible ? "show" : "hide")
 
   export function show() {
@@ -41,11 +43,21 @@
     }
   }
 
-  async function focusFirstInput(node) {
+  async function focusModal(node) {
+    await tick()
+
+    // Try to focus first input
     const inputs = node.querySelectorAll("input")
     if (inputs?.length) {
-      await tick()
       inputs[0].focus()
+    }
+
+    // Otherwise try to focus confirmation button
+    else if (modal) {
+      const confirm = modal.querySelector(".confirm-wrap .spectrum-Button")
+      if (confirm) {
+        confirm.focus()
+      }
     }
   }
 
@@ -56,7 +68,7 @@
 
 {#if inline}
   {#if visible}
-    <div use:focusFirstInput class="spectrum-Modal inline is-open">
+    <div use:focusModal bind:this={modal} class="spectrum-Modal inline is-open">
       <slot />
     </div>
   {/if}
@@ -80,7 +92,8 @@
           <div class="modal-inner-wrapper" on:mousedown|self={cancel}>
             <slot name="outside" />
             <div
-              use:focusFirstInput
+              use:focusModal
+              bind:this={modal}
               class="spectrum-Modal is-open"
               in:fly={{ y: 30, duration: 200 }}
               out:fly|local={{ y: 30, duration: 200 }}
