@@ -188,7 +188,9 @@ class QueryBuilder {
       }
       let statement = `${builder.preprocess(value[0], { escape: true })}`
       for (let i = 1; i < value.length; i++) {
-        statement += ` ${mode} ${builder.preprocess(value[i], { escape: true })}`
+        statement += ` ${mode} ${builder.preprocess(value[i], {
+          escape: true,
+        })}`
       }
       return `${key}:(${statement})`
     }
