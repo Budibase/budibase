@@ -240,18 +240,18 @@ describe("SQL query builder", () => {
     })
   })
 
-  it("should use like expression for MS-SQL when filter is contains", () => {
+  it("should use AND like expression for MS-SQL when filter is contains", () => {
     const query = new Sql(SqlClients.MS_SQL, 10)._query(generateReadJson({
       filters: {
         contains: {
-          age: [20],
-          name: ["John"]
+          age: [20, 25],
+          name: ["John", "Mary"]
         }
       }
     }))
     expect(query).toEqual({
-      bindings: [10, "%20%", `%"John"%`],
-      sql: `select * from (select top (@p0) * from [${TABLE_NAME}] where (LOWER(${TABLE_NAME}.age) LIKE @p1) and (LOWER(${TABLE_NAME}.name) LIKE @p2)) as [${TABLE_NAME}]`
+      bindings: [10, "%20%", "%25%", `%"John"%`, `%"Mary"%`],
+      sql: `select * from (select top (@p0) * from [${TABLE_NAME}] where (LOWER(${TABLE_NAME}.age) LIKE @p1 AND LOWER(${TABLE_NAME}.age) LIKE @p2) and (LOWER(${TABLE_NAME}.name) LIKE @p3 AND LOWER(${TABLE_NAME}.name) LIKE @p4)) as [${TABLE_NAME}]`
     })
   })
 
@@ -330,18 +330,18 @@ describe("SQL query builder", () => {
     })
   })
 
-  it("should use like expression for MS-SQL when filter is containsAny", () => {
+  it("should use OR like expression for MS-SQL when filter is containsAny", () => {
     const query = new Sql(SqlClients.MS_SQL, 10)._query(generateReadJson({
       filters: {
         containsAny: {
-          age: [20],
-          name: ["John"]
+          age: [20, 25],
+          name: ["John", "Mary"]
         }
       }
     }))
     expect(query).toEqual({
-      bindings: [10, "%20%", `%"John"%`],
-      sql: `select * from (select top (@p0) * from [${TABLE_NAME}] where (LOWER(${TABLE_NAME}.age) LIKE @p1) and (LOWER(${TABLE_NAME}.name) LIKE @p2)) as [${TABLE_NAME}]`
+      bindings: [10, "%20%", "%25%", `%"John"%`, `%"Mary"%`],
+      sql: `select * from (select top (@p0) * from [${TABLE_NAME}] where (LOWER(${TABLE_NAME}.age) LIKE @p1 OR LOWER(${TABLE_NAME}.age) LIKE @p2) and (LOWER(${TABLE_NAME}.name) LIKE @p3 OR LOWER(${TABLE_NAME}.name) LIKE @p4)) as [${TABLE_NAME}]`
     })
   })
 

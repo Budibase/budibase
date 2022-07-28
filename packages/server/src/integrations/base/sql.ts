@@ -193,20 +193,21 @@ class InternalBuilder {
           )
         })
       } else {
+        const andOr = mode === filters?.containsAny ? " OR " : " AND "
         iterate(mode, (key: string, value: Array<any>) => {
-          let andStatement = ""
+          let statement = ""
           for (let i in value) {
             if (typeof value[i] === "string") {
               value[i] = `%"${value[i]}"%`
             } else {
               value[i] = `%${value[i]}%`
             }
-            andStatement +=
-              (andStatement ? " AND " : "") +
+            statement +=
+              (statement ? andOr : "") +
               `LOWER(${likeKey(this.client, key)}) LIKE ?`
           }
           // @ts-ignore
-          query = query[rawFnc](`${not}(${andStatement})`, value)
+          query = query[rawFnc](`${not}(${statement})`, value)
         })
       }
     }
