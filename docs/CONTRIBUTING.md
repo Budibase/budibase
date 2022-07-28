@@ -32,6 +32,9 @@ All contributors must sign an [Individual Contributor License Agreement](https:/
 
 If contributing on behalf of your company, your company must sign a [Corporate Contributor License Agreement](https://github.com/budibase/budibase/blob/next/.github/cla/corporate-cla.md). If so, please contact us via community@budibase.com.
 
+If for any reason, your first contribution is in a PR created by other contributor, please just add a comment to the PR
+with the following text to agree our CLA: "I have read the CLA Document and I hereby sign the CLA".
+
 ## Glossary of Terms
 
 To understand the budibase API, it can be helpful to understand the top level entities that make up Budibase.
