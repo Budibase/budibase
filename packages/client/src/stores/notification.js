@@ -4,17 +4,9 @@ import { routeStore } from "./routes"
 const NOTIFICATION_TIMEOUT = 3000
 
 const createNotificationStore = () => {
-  const timeoutIds = new Set()
   let block = false
 
-  const store = writable([], () => {
-    return () => {
-      timeoutIds.forEach(timeoutId => {
-        clearTimeout(timeoutId)
-      })
-      store.set([])
-    }
-  })
+  const store = writable([])
 
   const blockNotifications = (timeout = 1000) => {
     block = true
@@ -54,10 +46,9 @@ const createNotificationStore = () => {
       ]
     })
     if (autoDismiss) {
-      const timeoutId = setTimeout(() => {
+      setTimeout(() => {
         dismiss(_id)
       }, NOTIFICATION_TIMEOUT)
-      timeoutIds.add(timeoutId)
     }
   }
 
