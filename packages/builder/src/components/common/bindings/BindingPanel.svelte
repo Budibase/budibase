@@ -8,6 +8,7 @@
     Tab,
     Body,
     Layout,
+    Button,
   } from "@budibase/bbui"
   import { createEventDispatcher, onMount } from "svelte"
   import {
@@ -15,10 +16,14 @@
     decodeJSBinding,
     encodeJSBinding,
   } from "@budibase/string-templates"
-  import { readableToRuntimeBinding } from "builderStore/dataBinding"
+  import {
+    readableToRuntimeBinding,
+    runtimeToReadableBinding,
+  } from "builderStore/dataBinding"
   import { handlebarsCompletions } from "constants/completions"
   import { addHBSBinding, addJSBinding } from "./utils"
   import CodeMirrorEditor from "components/common/CodeMirrorEditor.svelte"
+  import { convertToJS } from "@budibase/string-templates"
 
   const dispatch = createEventDispatcher()
 
@@ -57,6 +62,7 @@
 
   const updateValue = val => {
     valid = isValid(readableToRuntimeBinding(bindings, val))
+    console.log(decodeJSBinding(readableToRuntimeBinding(bindings, val)))
     if (valid) {
       dispatch("change", val)
     }
@@ -69,8 +75,8 @@
   }
 
   // Adds a data binding to the expression
-  const addBinding = binding => {
-    if (usingJS) {
+  const addBinding = (binding, { forceJS } = {}) => {
+    if (usingJS || forceJS) {
       let js = decodeJSBinding(jsValue)
       js = addJSBinding(js, getCaretPosition(), binding.readableBinding)
       jsValue = encodeJSBinding(js)
@@ -98,6 +104,16 @@
   const onChangeJSValue = e => {
     jsValue = encodeJSBinding(e.detail)
     updateValue(jsValue)
+  }
+
+  const convert = () => {
+    const runtime = readableToRuntimeBinding(bindings, hbsValue)
+    console.log(runtime)
+    const runtimeJs = encodeJSBinding(convertToJS(runtime))
+    jsValue = runtimeToReadableBinding(bindings, runtimeJs)
+    hbsValue = null
+    mode = "JavaScript"
+    addBinding("", { forceJS: true })
   }
 
   onMount(() => {
@@ -172,6 +188,9 @@
               for more details.
             </p>
           {/if}
+          <div class="convert">
+            <Button secondary on:click={convert}>Convert to JS</Button>
+          </div>
         </div>
       </Tab>
       {#if allowJS}
@@ -305,5 +324,9 @@
   .syntax-error a {
     color: var(--red);
     text-decoration: underline;
+  }
+
+  .convert {
+    padding-top: var(--spacing-m);
   }
 </style>
