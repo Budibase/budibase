@@ -42,8 +42,8 @@
 
   const resolveWelcomeMessage = (auth, apps) => {
     const userWelcome = auth?.user?.firstName
-      ? `Welcome ${auth?.user?.firstName}!`
-      : "Welcome back!"
+      ? `Welcome ${auth?.user?.firstName} 👋`
+      : "Welcome back 👋"
     return apps?.length ? userWelcome : "Let's create your first app!"
   }
   $: welcomeHeader = resolveWelcomeMessage($auth, $apps)
