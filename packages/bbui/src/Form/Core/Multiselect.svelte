@@ -13,6 +13,7 @@
   export let readonly = false
   export let autocomplete = false
   export let sort = false
+  export let autoWidth = false
 
   const dispatch = createEventDispatcher()
   $: selectedLookupMap = getSelectedLookupMap(value)
@@ -85,4 +86,5 @@
   {getOptionValue}
   onSelectOption={toggleOption}
   {sort}
+  {autoWidth}
 />

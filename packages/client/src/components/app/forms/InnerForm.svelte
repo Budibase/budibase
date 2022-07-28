@@ -11,6 +11,7 @@
   export let schema
   export let table
   export let disableValidation = false
+  export let editAutoColumns = false
 
   const component = getContext("component")
   const { styleable, Provider, ActionTypes } = getContext("sdk")
@@ -183,7 +184,8 @@
           fieldId,
           value: initialValue,
           error: initialError,
-          disabled: disabled || fieldDisabled || isAutoColumn,
+          disabled:
+            disabled || fieldDisabled || (isAutoColumn && !editAutoColumns),
           defaultValue,
           validator,
           lastUpdate: Date.now(),

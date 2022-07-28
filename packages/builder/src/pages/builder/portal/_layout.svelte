@@ -52,6 +52,11 @@
           href: "/builder/portal/manage/users",
           heading: "Manage",
         },
+        {
+          title: "User Groups",
+          href: "/builder/portal/manage/groups",
+        },
+
         { title: "Auth", href: "/builder/portal/manage/auth" },
         { title: "Email", href: "/builder/portal/manage/email" },
         {
