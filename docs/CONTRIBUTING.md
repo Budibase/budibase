@@ -4,10 +4,10 @@ From opening a bug report to creating a pull request: every contribution is appr
 
 ## Table of contents
 
-- [Quick start](#quick-start)
-- [Status](#status)
-- [What's included](#whats-included)
-- [Bugs and feature requests](#bugs-and-feature-requests)
+- [Where to start](#not-sure-where-to-start)
+- [Contributor Licence Agreement](#contributor-license-agreement-cla)
+- [Glossary of Terms](#glossary-of-terms)
+- [Contributing to Budibase](#contributing-to-budibase)
 
 
 ## Not Sure Where to Start?
