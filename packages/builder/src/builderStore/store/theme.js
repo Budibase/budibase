@@ -16,16 +16,19 @@ export const getThemeStore = () => {
       return
     }
 
-    Constants.ThemeOptions.forEach(option => {
+    // Update global class names to use the new theme and remove others
+    Constants.Themes.forEach(option => {
       themeElement.classList.toggle(
-        `spectrum--${option}`,
-        option === state.theme
+        `spectrum--${option.class}`,
+        option.class === state.theme
       )
-
-      // Ensure darkest is always added as this is the base class for custom
-      // themes
-      themeElement.classList.add("spectrum--darkest")
     })
+
+    // Add base theme if required
+    const selectedTheme = Constants.Themes.find(x => x.class === state.theme)
+    if (selectedTheme?.base) {
+      themeElement.classList.add(`spectrum--${selectedTheme.base}`)
+    }
   })
 
   return store
