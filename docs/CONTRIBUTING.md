@@ -162,7 +162,10 @@ When you are running locally, budibase stores data on disk using docker volumes.
 
 ### Development Modes
 
-A combination of environment variables controls the mode budibase runs in. 
+A combination of environment variables controls the mode budibase runs in.
+
+| **NOTE**: You need to clean your browser cookies when you change between different modes.
+
 Yarn commands can be used to mimic the different modes as described in the sections below:
 
 #### Self Hosted
