@@ -126,4 +126,9 @@ export const Themes = [
     name: "Midnight",
     base: "darkest",
   },
+  {
+    class: "greatwave",
+    name: "Great Wave",
+    base: "lightest",
+  },
 ]

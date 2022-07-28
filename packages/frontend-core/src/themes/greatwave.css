@@ -1,0 +1,41 @@
+.spectrum--greatwave {
+    --spectrum-global-color-gray-50: #ffffff;
+    --spectrum-global-color-gray-75: #fffefc;
+    --spectrum-global-color-gray-100: rgb(252, 250, 249);
+    --spectrum-global-color-gray-200: rgba(241, 236, 228, 0.4);
+    --spectrum-global-color-gray-300: rgb(241, 236, 228);
+    --spectrum-global-color-gray-400: #e3e3e0;
+    --spectrum-global-color-gray-500: #E0DDDA;
+    --spectrum-global-color-gray-600: #BAB7B5;
+    --spectrum-global-color-gray-700: #90908c;
+    --spectrum-global-color-gray-800: rgb(38, 38, 39);
+    --spectrum-global-color-gray-900: rgb(17, 17, 17);
+    --spectrum-global-color-blue-600: #89A4D6;
+    --spectrum-global-color-blue-500: #89A4D6;
+    --spectrum-button-cta-m-background-color: #89A4D6;
+    --spectrum-button-cta-m-border-color: #819AC9;
+    --spectrum-button-cta-m-background-color-hover: #89A4D6;
+    --spectrum-button-cta-m-border-color-hover: #819AC9;
+    --spectrum-button-cta-s-background-color: #89A4D6;
+    --spectrum-button-cta-s-border-color: #819AC9;
+    --spectrum-button-cta-s-background-color-hover: #819AC9;
+    --spectrum-button-cta-s-border-color-hover: #819AC9;
+    --spectrum-button-cta-l-background-color: #89A4D6;
+    --spectrum-button-cta-l-border-color: #819AC9;
+    --spectrum-button-cta-l-background-color-hover: #819AC9;
+    --spectrum-button-cta-l-border-color-hover: #819AC9;
+    --spectrum-button-primary-border-radius: 4px !important;
+    --spectrum-button-primary-m-border-radius: 4px;
+    --spectrum-alias-item-rounded-border-radius-m: 4px;
+    --spectrum-button-primary-s-border-radius: 4px;
+    --spectrum-alias-item-rounded-border-radius-s: 4px;
+    --spectrum-sidenav-item-background-color-selected: var(--spectrum-global-color-gray-200);
+    --spectrum-global-font-family-base: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
+    --font-sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
+    --spectrum-global-font-family-base: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
+    --spectrum-button-secondary-m-text-color: var(--spectrum-global-color-gray-900);
+    --spectrum-button-secondary-m-border-color: var(--spectrum-global-color-gray-400);
+    --spectrum-dialog-confirm-title-text-size: 22px;
+    --spectrum-tabs-m-texticon-tabitem-text-size: 16px;
+}
+
