@@ -119,6 +119,8 @@ This job is responsible for deploying to our production, cloud kubernetes enviro
 
 ## Pro
 
+| **NOTE**: When developing for both pro / budibase repositories, your branch names need to match, or else the correct pro image doesn't get run within your CI job.
+
 ### Installing Pro
 
 The pro package is always installed from source in our CI jobs. 
