@@ -2,6 +2,7 @@
   import { Layout, Heading, Body, Divider, Label, Select } from "@budibase/bbui"
   import { themeStore } from "builderStore"
   import { capitalise } from "helpers"
+  import { Constants } from "@budibase/frontend-core"
 </script>
 
 <Layout noPadding>
@@ -14,7 +15,7 @@
     <div class="field">
       <Label size="L">Builder theme</Label>
       <Select
-        options={$themeStore.options}
+        options={Constants.ThemeOptions}
         bind:value={$themeStore.theme}
         placeholder={null}
         getOptionLabel={capitalise}

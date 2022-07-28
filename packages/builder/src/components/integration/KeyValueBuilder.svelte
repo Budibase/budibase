@@ -32,6 +32,7 @@
   export let menuItems
   export let showMenu = false
   export let bindings = []
+  export let bindingDrawerLeft
 
   let fields = Object.entries(object || {}).map(([name, value]) => ({
     name,
@@ -119,6 +120,7 @@
           value={field.value}
           allowJS={false}
           fillWidth={true}
+          drawerLeft={bindingDrawerLeft}
         />
       {:else}
         <Input
