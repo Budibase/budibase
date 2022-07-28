@@ -90,12 +90,24 @@
     const component = get(selectedComponent)
     try {
       if (e.key === "Delete") {
+        // Don't show confirmation for the screen itself
+        if (component._id === get(selectedScreen).props._id) {
+          return
+        }
         e.preventDefault()
         confirmDeleteDialog.show()
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault()
+        await store.actions.components.selectPrevious()
+      } else if (e.key === "ArrowDown") {
+        e.preventDefault()
+        await store.actions.components.selectNext()
+      } else if (e.key === "Escape" && $isActive("./new")) {
+        e.preventDefault()
+        $goto("./")
       } else if (e.ctrlKey) {
         if (e.key === "ArrowUp") {
           e.preventDefault()
-          e.stopPropagation()
           await store.actions.components.moveUp(component)
         } else if (e.key === "ArrowDown") {
           e.preventDefault()
@@ -113,15 +125,6 @@
           e.preventDefault()
           $goto("./new")
         }
-      } else if (e.key === "ArrowUp") {
-        e.preventDefault()
-        await store.actions.components.selectPrevious()
-      } else if (e.key === "ArrowDown") {
-        e.preventDefault()
-        await store.actions.components.selectNext()
-      } else if (e.key === "Escape" && $isActive("./new")) {
-        e.preventDefault()
-        $goto("./")
       }
     } catch (error) {
       console.log(error)
