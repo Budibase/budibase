@@ -192,7 +192,7 @@ To enable this mode, use:
 yarn mode:account
 ```
 ### CI
- An overview of the CI pipelines can be found [here](./workflows/README.md)
+ An overview of the CI pipelines can be found [here](../.github/workflows/README.md)
 
 ### Pro
 
