@@ -1,5 +1,5 @@
 <script>
-  import { Body, Button, Heading, Icon, Input, Layout } from "@budibase/bbui"
+  import { Body, Button, Heading, Icon, Input, Layout, Divider } from "@budibase/bbui"
   import {
     readableToRuntimeBinding,
     runtimeToReadableBinding,
@@ -27,59 +27,65 @@
     customParams[param] = readableToRuntimeBinding(bindings, valueToParse)
   }
 </script>
-
-<Layout noPadding={bindable} gap="S">
-  <div class="controls" class:height={!bindable}>
-    <Heading size="XS">Bindings</Heading>
-    {#if !bindable}
-      <Button secondary on:click={newQueryBinding}>Add Binding</Button>
-    {/if}
-  </div>
-  <Body size="S">
-    {#if !bindable}
-      Bindings come in two parts: the binding name, and a default/fallback
-      value. These bindings can be used as Handlebars expressions throughout the
-      query.
-    {:else}
-      Enter a value for each binding. The default values will be used for any
-      values left blank.
-    {/if}
-  </Body>
-  <div class="bindings" class:bindable>
-    {#each queryBindings as binding, idx}
-      <Input
-        placeholder="Binding Name"
-        thin
-        disabled={bindable}
-        bind:value={binding.name}
-      />
-      <Input
-        placeholder="Default"
-        thin
-        disabled={bindable}
-        on:change={evt => onBindingChange(binding.name, evt.detail)}
-        bind:value={binding.default}
-      />
-      {#if bindable}
-        <DrawerBindableInput
-          title={`Query binding "${binding.name}"`}
-          placeholder="Value"
-          thin
-          on:change={evt => onBindingChange(binding.name, evt.detail)}
-          value={runtimeToReadableBinding(
-            bindings,
-            customParams?.[binding.name]
-          )}
-          {bindings}
-        />
-      {:else}
-        <Icon hoverable name="Close" on:click={() => deleteQueryBinding(idx)} />
+<section>
+  <Divider />
+  <Layout noPadding gap="S">
+    <div class="controls" class:height={!bindable}>
+      <Heading size="S">Bindings</Heading>
+      {#if !bindable}
+        <Button secondary on:click={newQueryBinding}>Add Binding</Button>
       {/if}
-    {/each}
-  </div>
-</Layout>
-
+    </div>
+    <Body size="S">
+      {#if !bindable}
+        Bindings come in two parts: the binding name, and a default/fallback
+        value. These bindings can be used as Handlebars expressions throughout the
+        query.
+      {:else}
+        Enter a value for each binding. The default values will be used for any
+        values left blank.
+      {/if}
+    </Body>
+    <div class="bindings" class:bindable>
+      {#each queryBindings as binding, idx}
+        <Input
+          placeholder="Binding Name"
+          thin
+          disabled={bindable}
+          bind:value={binding.name}
+        />
+        <Input
+          placeholder="Default"
+          thin
+          disabled={bindable}
+          on:change={evt => onBindingChange(binding.name, evt.detail)}
+          bind:value={binding.default}
+        />
+        {#if bindable}
+          <DrawerBindableInput
+            title={`Query binding "${binding.name}"`}
+            placeholder="Value"
+            thin
+            on:change={evt => onBindingChange(binding.name, evt.detail)}
+            value={runtimeToReadableBinding(
+              bindings,
+              customParams?.[binding.name]
+            )}
+            {bindings}
+          />
+        {:else}
+          <Icon hoverable name="Close" on:click={() => deleteQueryBinding(idx)} />
+        {/if}
+      {/each}
+    </div>
+  </Layout>
+</section>
 <style>
+
+  section {
+    margin-top: var(--layout-m);
+  }
+
   .bindings.bindable {
     grid-template-columns: 1fr 1fr 1fr;
   }
@@ -88,6 +94,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    padding-top: var(--spacing-m);
   }
 
   .bindings {

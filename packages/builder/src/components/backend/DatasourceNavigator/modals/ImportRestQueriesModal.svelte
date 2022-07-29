@@ -88,8 +88,8 @@
 >
   <Layout noPadding>
     <Heading size="S">Import</Heading>
-    <Body size="XS"
-      >Import your rest collection using one of the options below</Body
+    <Body size="M"
+      >Import your rest collection using one of the options below:</Body
     >
     <Tabs selected="File">
       <!-- Commenting until nginx csp issue resolved -->

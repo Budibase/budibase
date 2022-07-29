@@ -125,30 +125,30 @@
     secondaryButtonText="Import"
     secondaryAction={() => showImportModal()}
     showCancelButton={false}
-    size="M"
+    size="XL"
     onConfirm={() => {
       chooseNextModal()
     }}
   >
     <Layout noPadding gap="XS">
-      <Body size="S">Get started with Budibase DB</Body>
+      <Body size="M">Get started with Budibase DB</Body>
       <div
         class:selected={integration.type === IntegrationTypes.INTERNAL}
         on:click={() => selectIntegration(IntegrationTypes.INTERNAL)}
         class="item hoverable"
       >
         <div class="item-body with-type">
-          <svelte:component this={ICONS.BUDIBASE} height="20" width="20" />
+          <svelte:component this={ICONS.BUDIBASE} height="34" width="34" />
           <div class="text">
-            <Heading size="XXS">Budibase DB</Heading>
+            <Heading size="XS">Budibase DB</Heading>
             <Detail size="S" class="type">Non-relational</Detail>
           </div>
         </div>
       </div>
     </Layout>
 
-    <Layout noPadding gap="XS">
-      <Body size="S">Connect to an external data source</Body>
+    <Layout class="items-container" noPadding gap="XS">
+      <Body size="M">Connect to an external data source</Body>
       <div class="item-list">
         {#each Object.entries(integrations).filter(([key]) => key !== IntegrationTypes.INTERNAL) as [integrationType, schema]}
           <div
@@ -159,11 +159,11 @@
             <div class="item-body" class:with-type={!!schema.type}>
               <svelte:component
                 this={ICONS[integrationType]}
-                height="20"
-                width="20"
+                height="34"
+                width="34"
               />
               <div class="text">
-                <Heading size="XXS">{schema.friendlyName}</Heading>
+                <Heading size="XS">{schema.friendlyName}</Heading>
                 {#if schema.type}
                   <Detail size="S">{schema.type || ""}</Detail>
                 {/if}
@@ -179,22 +179,25 @@
 <style>
   .item-list {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    grid-gap: var(--spectrum-alias-grid-baseline);
+    grid-template-columns: repeat(auto-fit, minmax(150px, 290px));
+    grid-gap: .85rem;
+    justify-content: space-between;
   }
 
   .item {
     cursor: pointer;
     display: grid;
     grid-gap: var(--spectrum-alias-grid-margin-xsmall);
-    padding: var(--spectrum-alias-item-padding-s)
-      var(--spectrum-alias-item-padding-m);
+    padding: var(--spectrum-alias-item-padding-m)
+      var(--spectrum-alias-item-padding-l);
     background: var(--spectrum-alias-background-color-secondary);
     transition: background 0.13s ease-out;
-    border: solid var(--spectrum-alias-border-color);
-    border-radius: 5px;
+    border: solid 1px var(--spectrum-alias-border-color);
+    border-radius: 4px;
     box-sizing: border-box;
-    border-width: 2px;
+    align-items: center;
+    max-width: 290px;
+    line-height: 0;
   }
   .item:hover,
   .item.selected {
@@ -205,17 +208,21 @@
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
-    align-items: center;
-    gap: var(--spacing-m);
+    align-items: center !important;
+    gap: var(--spacing-l);
   }
   .item-body.with-type {
     align-items: flex-start;
   }
-  .item-body.with-type :global(svg) {
-    margin-top: 4px;
-  }
+
 
   .text :global(.spectrum-Detail) {
     color: var(--spectrum-global-color-gray-700);
   }
+
+  .text {
+    display: flex;
+    flex-direction: column;
+  }
+
 </style>

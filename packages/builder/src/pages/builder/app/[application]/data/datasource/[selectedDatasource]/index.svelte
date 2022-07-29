@@ -166,6 +166,7 @@
     display: flex;
     gap: var(--spacing-l);
     align-items: center;
+    margin: var(--spacing-l) 0;
   }
 
   .config-header {

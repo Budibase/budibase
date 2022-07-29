@@ -66,19 +66,19 @@
 </script>
 
 <ModalContent
-  title="Create Automation"
+  title="Add action"
   confirmText="Save"
-  size="M"
+  size="L"
   disabled={!selectedAction}
   onConfirm={() => {
     blockComplete = true
     addBlockToAutomation()
   }}
 >
-  <Body size="XS">Select an app or event.</Body>
+  <Body size="S">Select an app or action.</Body>
 
   <Layout noPadding>
-    <Body size="S">Apps</Body>
+    <Detail size="S">Apps</Detail>
 
     <div class="item-list">
       {#each Object.entries(external) as [idx, action]}
@@ -89,13 +89,13 @@
         >
           <div class="item-body">
             <img
-              width="20"
-              height="20"
+              width="24"
+              height="24"
               src={externalActions[action.stepId].icon}
               alt="zapier"
             />
             <span class="icon-spacing">
-              <Body size="XS">{idx.charAt(0).toUpperCase() + idx.slice(1)}</Body
+              <Body size="S">{idx.charAt(0).toUpperCase() + idx.slice(1)}</Body
               ></span
             >
           </div>
@@ -118,7 +118,7 @@
               <div class="item-body">
                 <Icon name={action.icon} />
                 <span class="icon-spacing">
-                  <Body size="XS">{action.name}</Body></span
+                  <Body size="S">{action.name}</Body></span
                 >
               </div>
             </div>
@@ -132,7 +132,7 @@
             <div class="item-body">
               <Icon name={action.icon} />
               <span class="icon-spacing">
-                <Body size="XS">{action.name}</Body></span
+                <Body size="S">{action.name}</Body></span
               >
             </div>
           </div>
@@ -156,7 +156,8 @@
   }
   .item-list {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(150px, 270px));
+    justify-content: space-between;
     grid-gap: var(--spectrum-alias-grid-baseline);
   }
 
@@ -166,10 +167,12 @@
     padding: var(--spectrum-alias-item-padding-s);
     background: var(--spectrum-alias-background-color-secondary);
     transition: 0.3s all;
-    border: solid var(--spectrum-alias-border-color);
+    border: solid 1px var(--spectrum-alias-border-color);
     border-radius: 5px;
     box-sizing: border-box;
-    border-width: 2px;
+    min-height: 48px;
+    display: flex;
+    align-items: center
   }
   .item:hover,
   .selected {

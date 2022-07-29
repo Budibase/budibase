@@ -31,7 +31,7 @@
   }
 </script>
 
-<ModalContent title="Export Data" confirmText="Export" onConfirm={exportView}>
+<ModalContent title="Export data" confirmText="Export" onConfirm={exportView}>
   <Select
     label="Format"
     bind:value={exportFormat}

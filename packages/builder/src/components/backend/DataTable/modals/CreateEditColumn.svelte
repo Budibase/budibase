@@ -329,8 +329,8 @@
 </script>
 
 <ModalContent
-  title={originalName ? "Edit Column" : "Create Column"}
-  confirmText="Save Column"
+  title={originalName ? "Edit column" : "Create column"}
+  confirmText="Save column"
   onConfirm={saveColumn}
   onCancel={cancelEdit}
   disabled={invalid}

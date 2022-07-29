@@ -7,6 +7,7 @@
     Page,
     Button,
     Modal,
+    Detail,
   } from "@budibase/bbui"
   import { store } from "builderStore"
   import clientPackage from "@budibase/client/package.json"
@@ -27,18 +28,24 @@
 <div class="settings-tab">
   <Page wide={false}>
     <Layout gap="XL" paddingY="XXL" paddingX="">
+      <Layout gap="XS" noPadding>
+        <Heading size="M">App settings</Heading>
+        <Body>General information about your app</Body>
+      </Layout>
+      <Divider />
       <span class="details-section">
         <Layout gap="XS" noPadding>
-          <Heading size="S">Name and URL</Heading>
-          <Divider />
+          <Heading size="S">App details</Heading>
           <Body>
+          Update your app's name and URL.
+
             <div class="app-details">
-              <div class="app-name">
-                <div class="name-title detail-title">Name</div>
+              <div class="app-detail">
+                <Detail size="S">Name</Detail>
                 <div class="name">{app?.name}</div>
               </div>
-              <div class="app-url">
-                <div class="url-title detail-title">Url Path</div>
+              <div class="app-detail">
+                <Detail size="S">URL path</Detail>
                 <div class="url">{appUrl}</div>
               </div>
             </div>
@@ -57,10 +64,11 @@
           </Body>
         </Layout>
       </span>
+      <Divider />
       <span class="version-section">
         <Layout gap="XS" noPadding>
           <Heading size="S">App version</Heading>
-          <Divider />
+
           <Body>
             {#if updateAvailable}
               <Body>
@@ -104,13 +112,20 @@
   .app-details {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-m);
+    gap: var(--spacing-xl);
+    margin: var(--spacing-xl) 0 0 0;
   }
   .detail-title {
-    color: var(--spectrum-global-color-gray-600);
+    color: var(--spectrum-global-color-gray-700);
     font-size: var(
       --spectrum-alias-font-size-default,
       var(--spectrum-global-dimension-font-size-100)
     );
+  }
+
+  .app-detail {
+   display: flex;
+   flex-direction: column;
+   gap: 0.5rem;
   }
 </style>

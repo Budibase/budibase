@@ -34,7 +34,7 @@
 </script>
 
 <ModalContent
-  title="Import Data"
+  title="Import data"
   confirmText="Import"
   onConfirm={importData}
   disabled={!valid}

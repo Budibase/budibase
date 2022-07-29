@@ -17,7 +17,7 @@
     <Layout gap="XS" noPadding>
       <header>
         <svelte:component this={ICONS.BUDIBASE} height="26" width="26" />
-        <Heading size="M">Budibase Internal</Heading>
+        <Heading size="M">Budibase DB</Heading>
       </header>
       <Body size="M">
         Budibase internal tables are part of your app, so the data will be
@@ -32,7 +32,7 @@
           class="table-list-item"
           on:click={$goto(`../../table/${table._id}`)}
         >
-          <Body size="S">{table.name}</Body>
+          <Heading size="XXS">{table.name}</Heading>
           {#if table.primaryDisplay}
             <Body size="S">Display column: {table.primaryDisplay}</Body>
           {/if}
@@ -55,6 +55,7 @@
     display: flex;
     gap: var(--spacing-l);
     align-items: center;
+    margin: var(--spacing-l) 0;
   }
 
   .table-list {
@@ -64,13 +65,13 @@
   }
 
   .table-list-item {
-    border-radius: var(--border-radius-m);
+    border-radius: var(--border-radius-s);
     background: var(--background);
     border: var(--border-dark);
     display: grid;
     grid-template-columns: 2fr 0.75fr 20px;
     align-items: center;
-    padding: var(--spacing-m);
+    padding: var(--spacing-m) var(--spacing-xl);
     gap: var(--layout-xs);
     transition: 200ms background ease;
   }

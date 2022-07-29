@@ -74,7 +74,7 @@
 </script>
 
 <ModalContent
-  title="Create Table"
+  title="Create table"
   confirmText="Create"
   onConfirm={saveTable}
   disabled={error || !name || (dataImport && !dataImport.valid)}
@@ -86,6 +86,7 @@
     on:input={checkValid}
     bind:value={name}
     {error}
+    size="large"
   />
   <div class="autocolumns">
     <Label extraSmall grey>Auto Columns</Label>
@@ -104,7 +105,7 @@
   </div>
   <div>
     <Layout gap="XS" noPadding>
-      <Label grey extraSmall>Create Table from CSV (Optional)</Label>
+      <Label grey >Create Table from CSV (Optional)</Label>
       <TableDataImport bind:dataImport />
     </Layout>
   </div>

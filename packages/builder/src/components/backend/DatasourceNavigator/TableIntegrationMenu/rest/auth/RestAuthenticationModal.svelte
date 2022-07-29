@@ -157,7 +157,7 @@
 </script>
 
 <ModalContent
-  title={currentConfig ? "Update Authentication" : "Add Authentication"}
+  title={currentConfig ? "Update authentication" : "Add authentication"}
   onConfirm={onConfirmInternal}
   confirmText={currentConfig ? "Update" : "Add"}
   disabled={hasErrors || !hasChanged}
@@ -168,7 +168,7 @@
   secondaryAction={onRemove}
   secondaryButtonWarning={true}
 >
-  <Layout gap="S">
+  <Layout noPadding gap="S">
     <Body size="S">
       The authorization header will be automatically generated when you send the
       request.

@@ -52,5 +52,10 @@
     --spectrum-semantic-positive-icon-color: #2d9d78;
     --spectrum-semantic-negative-icon-color: #e34850;
     min-width: 100px;
+    --spectrum-inlinealert-neutral-border-width: 1px;
+  }
+
+  .spectrum-InLineAlert-header {
+    line-height: 1.2;
   }
 </style>

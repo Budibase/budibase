@@ -83,14 +83,14 @@
 </script>
 
 <ModalContent
-  title={creating ? "Create User" : "Edit User"}
-  confirmText={creating ? "Create User" : "Save User"}
+  title={creating ? "Create user" : "Edit user"}
+  confirmText={creating ? "Create user" : "Save user"}
   onConfirm={saveRow}
 >
   <ErrorsBox {errors} />
   <!-- need to explain to the user the readonly fields -->
   {#if !creating}
-    <div>
+    <div class="edit-user-info-text">
       A user's email, role, first and last names cannot be changed from within
       the app builder. Please go to the <Link
         on:click={$goto("/builder/portal/manage/users")}>user portal</Link
@@ -129,3 +129,9 @@
     {/if}
   {/each}
 </ModalContent>
+
+<style>
+.edit-user-info-text {
+  font-size: 16px;
+}
+</style>

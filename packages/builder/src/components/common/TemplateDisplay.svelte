@@ -55,8 +55,8 @@
 </script>
 
 <div class="template-header">
-  <Layout noPadding gap="S">
-    <Heading size="S">Templates</Heading>
+  <Layout noPadding gap="L">
+    <Heading size="M">Templates</Heading>
     <div class="template-category-filters spectrum-ActionGroup">
       <ActionGroup>
         <ActionButton
@@ -135,7 +135,7 @@
     padding-top: 10px;
     display: grid;
     grid-gap: var(--spacing-xl);
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   }
 
   a:hover.spectrum-Button.spectrum-Button--secondary.overlay-preview-link {
@@ -145,7 +145,7 @@
   }
 
   a.spectrum-Button--secondary.overlay-preview-link {
-    margin-top: 20px;
+    margin-top: 12px;
     border-color: #c8c8c8;
     color: #c8c8c8;
   }

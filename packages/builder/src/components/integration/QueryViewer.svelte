@@ -101,115 +101,129 @@
     }
   }
 </script>
-
-<Layout gap="S" noPadding>
-  <Heading size="M">Query {integrationInfo?.friendlyName}</Heading>
-  <Divider />
-  <Heading size="S">Config</Heading>
-  <div class="config">
-    <div class="config-field">
-      <Label>Query Name</Label>
-      <Input bind:value={query.name} />
-    </div>
-    {#if queryConfig}
-      <div class="config-field">
-        <Label>Function</Label>
-        <Select
-          bind:value={query.queryVerb}
-          on:change={resetDependentFields}
-          options={Object.keys(queryConfig)}
-          getOptionLabel={verb =>
-            queryConfig[verb]?.displayName || capitalise(verb)}
-        />
-      </div>
-      <div class="config-field">
-        <AccessLevelSelect {saveId} {query} label="Access Level" />
-      </div>
-      {#if integrationInfo?.extra && query.queryVerb}
-        <ExtraQueryConfig
-          {query}
-          {populateExtraQuery}
-          config={integrationInfo.extra}
-        />
-      {/if}
-      <BindingBuilder bind:queryBindings={query.parameters} bindable={false} />
-    {/if}
-  </div>
-  {#if shouldShowQueryConfig}
-    <Divider />
-    <div class="config">
-      <Heading size="S">Fields</Heading>
-      <Body size="S">Fill in the fields specific to this query.</Body>
-      <IntegrationQueryEditor
-        {datasource}
-        {query}
-        height={200}
-        schema={queryConfig[query.queryVerb]}
-        bind:parameters
-      />
+<section>
+  <Layout>
+    <Layout gap="S" noPadding>
+      <header>  
+        <Heading size="M">Query {integrationInfo?.friendlyName}</Heading>
+      </header>
       <Divider />
-    </div>
-    <div class="config">
-      <div class="help-heading">
-        <Heading size="S">Transformer</Heading>
-        <Icon
-          on:click={() => window.open(transformerDocs)}
-          hoverable
-          name="Help"
-          size="L"
-        />
-      </div>
-      <Body size="S"
-        >Add a JavaScript function to transform the query result.</Body
-      >
-      <CodeMirrorEditor
-        height={200}
-        label="Transformer"
-        value={query.transformer}
-        resize="vertical"
-        on:change={e => (query.transformer = e.detail)}
-      />
-      <Divider />
-    </div>
-    <div class="viewer-controls">
-      <Heading size="S">Results</Heading>
-      <ButtonGroup gap="M">
-        <Button cta disabled={queryInvalid} on:click={saveQuery}>
-          Save Query
-        </Button>
-        <Button secondary on:click={previewQuery}>Run Query</Button>
-      </ButtonGroup>
-    </div>
-    <Body size="S">
-      Below, you can preview the results from your query and change the schema.
-    </Body>
-    <section class="viewer">
-      {#if data}
-        <Tabs selected="JSON">
-          <Tab title="JSON">
-            <JSONPreview data={data[0]} minHeight="120" />
-          </Tab>
-          <Tab title="Schema">
-            <KeyValueBuilder
-              bind:object={fields}
-              name="field"
-              headings
-              options={SchemaTypeOptions}
+      <Heading size="S">Config</Heading>
+      <div class="config">
+        <div class="config-field">
+          <Label>Query Name</Label>
+          <Input bind:value={query.name} />
+        </div>
+        {#if queryConfig}
+          <div class="config-field">
+            <Label>Function</Label>
+            <Select
+              bind:value={query.queryVerb}
+              on:change={resetDependentFields}
+              options={Object.keys(queryConfig)}
+              getOptionLabel={verb =>
+                queryConfig[verb]?.displayName || capitalise(verb)}
             />
-          </Tab>
-          <Tab title="Preview">
-            <ExternalDataSourceTable {query} {data} />
-          </Tab>
-        </Tabs>
+          </div>
+          <div class="config-field">
+            <AccessLevelSelect {saveId} {query} label="Access Level" />
+          </div>
+          {#if integrationInfo?.extra && query.queryVerb}
+            <ExtraQueryConfig
+              {query}
+              {populateExtraQuery}
+              config={integrationInfo.extra}
+            />
+          {/if}
+          <BindingBuilder bind:queryBindings={query.parameters} bindable={false} />
+        {/if}
+      </div>
+      {#if shouldShowQueryConfig}
+        <Divider />
+        <div class="config">
+          <Heading size="S">Fields</Heading>
+          <Body size="S">Fill in the fields specific to this query.</Body>
+          <IntegrationQueryEditor
+            {datasource}
+            {query}
+            height={200}
+            schema={queryConfig[query.queryVerb]}
+            bind:parameters
+          />
+          <Divider />
+        </div>
+        <div class="config">
+          <div class="help-heading">
+            <Heading size="S">Transformer</Heading>
+            <Icon
+              on:click={() => window.open(transformerDocs)}
+              hoverable
+              name="Help"
+              size="L"
+            />
+          </div>
+          <Body size="S"
+            >Add a JavaScript function to transform the query result.</Body
+          >
+          <CodeMirrorEditor
+            height={200}
+            label="Transformer"
+            value={query.transformer}
+            resize="vertical"
+            on:change={e => (query.transformer = e.detail)}
+          />
+          <Divider />
+        </div>
+        <div class="viewer-controls">
+          <Heading size="S">Results</Heading>
+          <ButtonGroup gap="M">
+            <Button cta disabled={queryInvalid} on:click={saveQuery}>
+              Save Query
+            </Button>
+            <Button secondary on:click={previewQuery}>Run Query</Button>
+          </ButtonGroup>
+        </div>
+        <Body size="S">
+          Below, you can preview the results from your query and change the schema.
+        </Body>
+        <section class="viewer">
+          {#if data}
+            <Tabs selected="JSON">
+              <Tab title="JSON">
+                <JSONPreview data={data[0]} minHeight="120" />
+              </Tab>
+              <Tab title="Schema">
+                <KeyValueBuilder
+                  bind:object={fields}
+                  name="field"
+                  headings
+                  options={SchemaTypeOptions}
+                />
+              </Tab>
+              <Tab title="Preview">
+                <ExternalDataSourceTable {query} {data} />
+              </Tab>
+            </Tabs>
+          {/if}
+        </section>
       {/if}
-    </section>
-  {/if}
-</Layout>
+    </Layout>
+  </Layout>
+</section>
 
 <style>
+
+  section {
+    margin: 0 auto;
+  }
+
   .config {
     display: grid;
     grid-gap: var(--spacing-s);
+  }
+
+  header {
+    margin: var(--spacing-l) 0;
   }
 
   .config-field {

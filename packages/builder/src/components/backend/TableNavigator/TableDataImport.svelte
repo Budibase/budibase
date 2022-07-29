@@ -130,7 +130,7 @@
 <div class="dropzone">
   <input id="file-upload" accept=".csv" type="file" on:change={handleFile} />
   <label for="file-upload" class:uploaded={files[0]}>
-    {#if files[0]}{files[0].name}{:else}Upload{/if}
+    {#if files[0]}{files[0].name}{:else}⤒ Upload CSV{/if}
   </label>
 </div>
 {#if fields.length}
@@ -198,7 +198,7 @@
   }
 
   .uploaded {
-    color: var(--blue);
+    color: var(--spectrum-global-color-blue-600);
   }
 
   input[type="file"] {
@@ -217,7 +217,7 @@
     overflow: hidden;
     border-radius: var(--border-radius-s);
     color: var(--ink);
-    padding: var(--spacing-m) var(--spacing-l);
+    padding: var(--spacing-l) var(--spacing-l);
     transition: all 0.2s ease 0s;
     display: inline-flex;
     text-rendering: optimizeLegibility;
@@ -230,10 +230,14 @@
     align-items: center;
     justify-content: center;
     width: 100%;
-    background-color: var(--grey-2);
-    font-size: var(--font-size-xs);
+    background-color: var(--grey-3);
+    font-size: var(--font-size-l);
     line-height: normal;
     border: var(--border-transparent);
+  }
+
+  label:hover {
+    background-color: var(--spectrum-global-color-gray-200);
   }
 
   .omit-button {

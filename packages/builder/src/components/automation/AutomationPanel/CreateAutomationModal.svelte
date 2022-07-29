@@ -60,7 +60,7 @@
 </script>
 
 <ModalContent
-  title="Create Automation"
+  title="Create automation"
   confirmText="Save"
   size="M"
   onConfirm={createAutomation}
@@ -70,20 +70,20 @@
     header="You must publish your app to activate your automations."
     message="To test your automation before publishing, you can use the 'Run Test' functionality on the next screen."
   />
-  <Body size="XS"
+  <Body size="S"
     >Please name your automation, then select a trigger. Every automation must
     start with a trigger.
   </Body>
   <Input
     bind:value={name}
     on:change={() => (nameTouched = true)}
+    placeholder="Name"
     bind:error={nameError}
     label="Name"
   />
 
   <Layout noPadding>
     <Body size="S">Triggers</Body>
-
     <div class="item-list">
       {#each triggers as [idx, trigger]}
         <div
@@ -124,10 +124,9 @@
     padding: var(--spectrum-alias-item-padding-s);
     background: var(--spectrum-alias-background-color-secondary);
     transition: 0.3s all;
-    border: solid var(--spectrum-alias-border-color);
+    border: solid 1px var(--spectrum-alias-border-color);
     border-radius: 5px;
     box-sizing: border-box;
-    border-width: 2px;
   }
   .selected {
     background: var(--spectrum-alias-background-color-tertiary);

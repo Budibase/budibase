@@ -29,7 +29,7 @@
 </script>
 
 <ModalContent
-  title="Create View"
+  title="Create view"
   confirmText="Create View"
   onConfirm={saveView}
 >

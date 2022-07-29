@@ -39,6 +39,36 @@
     "GraphDonut",
     "GraphBarHorizontal",
     "Demographic",
+    "Amusementpark",
+    "App",
+    "Audio",
+    "Beaker",
+    "Book",
+    "Browse",
+    "Building",
+    "Campaign",
+    "Circle",
+    "Clock",
+    "ColorPalette",
+    "Contrast",
+    "Document",
+    "Education",
+    "Email",
+    "Game",
+    "GlobeOutline",
+    "Hammer",
+    "HotFixes",
+    "Image",
+    "Journey",
+    "Location",
+    "PeopleGroup",
+    "Promote",
+    "Star",
+    "Shapes",
+    "Teapot",
+    "Trophy",
+    "Watch",
+    "TrendInspect",
   ]
   export const show = () => {
     modal.show()
@@ -76,6 +106,7 @@
     title={"Edit Icon"}
     confirmText={"Save"}
     onConfirm={() => save()}
+    size="L"
   >
     <div class="scrollable-icons">
       <div class="title-spacing">
@@ -88,7 +119,7 @@
             class:selected={item === selectedIcon}
             on:click={() => (selectedIcon = item)}
           >
-            <Icon name={item} />
+            <Icon size="L" name={item} />
           </div>
         {/each}
       </div>
@@ -109,19 +140,19 @@
 
 <style>
   .scrollable-icons {
-    overflow-y: auto;
-    height: 230px;
+    height: auto;
   }
 
   .grid {
     display: grid;
-    grid-gap: 20px;
-    grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+    grid-gap: 16px;
+    grid-template-columns: repeat(9, 1fr);
   }
 
   .color-selection {
     display: flex;
     align-items: center;
+    margin-top: 16px;
   }
 
   .color-selection-item {

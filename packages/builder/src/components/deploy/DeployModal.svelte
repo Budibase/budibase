@@ -67,7 +67,7 @@
 
 <Modal bind:this={publishModal}>
   <ModalContent
-    title="Publish to Production"
+    title="Publish to production"
     confirmText="Publish"
     onConfirm={deployApp}
     dataCy={"deploy-app-modal"}
@@ -109,7 +109,7 @@
       >
         <use xlink:href="#spectrum-icon-18-GlobeCheck" />
       </svg>
-      <span class="app-published-header-text">App Published!</span>
+      <span class="app-published-header-text">App published 🎉</span>
     </div>
     <CopyInput
       value={publishedUrl}
