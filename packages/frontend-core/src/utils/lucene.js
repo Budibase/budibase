@@ -30,7 +30,7 @@ export const getValidOperatorsForType = type => {
   } else if (type === "number") {
     return numOps
   } else if (type === "options") {
-    return [Op.Equals, Op.NotEquals, Op.Empty, Op.NotEmpty]
+    return [Op.Equals, Op.NotEquals, Op.Empty, Op.NotEmpty, Op.In]
   } else if (type === "array") {
     return [Op.Contains, Op.NotContains, Op.Empty, Op.NotEmpty, Op.ContainsAny]
   } else if (type === "boolean") {
