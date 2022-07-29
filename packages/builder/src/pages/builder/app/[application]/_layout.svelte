@@ -23,10 +23,6 @@
     $layout.children.find(layout => $isActive(layout.path))?.title ?? "data"
   )
 
-  const previewApp = () => {
-    window.open(`/${application}`)
-  }
-
   async function getPackage() {
     try {
       store.actions.reset()
@@ -108,14 +104,10 @@
         </Tabs>
       </div>
       <div class="toprightnav">
-        <VersionModal />
+        <div class="version">
+          <VersionModal />
+        </div>
         <RevertModal />
-        <Icon
-          name="Visibility"
-          tooltip="Open app preview"
-          hoverable
-          on:click={previewApp}
-        />
         <DeployNavigation {application} />
       </div>
     </div>
@@ -182,5 +174,9 @@
     justify-content: flex-end;
     align-items: center;
     gap: var(--spacing-xl);
+  }
+
+  .version {
+    margin-right: var(--spacing-s);
   }
 </style>
