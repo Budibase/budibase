@@ -24,6 +24,12 @@
     if (["input", "textarea"].indexOf(activeTag) !== -1) {
       return
     }
+
+    // Need to manually block certain keys from propagating to the browser
+    if (e.ctrlKey && e.key === "d") {
+      e.preventDefault()
+    }
+
     builderStore.actions.keyDown(e.key, e.ctrlKey)
   }
 </script>

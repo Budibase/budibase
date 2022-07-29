@@ -64,44 +64,54 @@
     <div slot="control" class="icon">
       <Icon size="S" hoverable name="MoreSmallList" />
     </div>
-    <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}>
+    <MenuItem icon="Delete" keyBind="Del" on:click={confirmDeleteDialog.show}>
       Delete
     </MenuItem>
-    <MenuItem noClose icon="ChevronUp" on:click={moveUpComponent}>
+    <MenuItem
+      noClose
+      icon="ChevronUp"
+      keyBind="Ctrl+↑"
+      on:click={moveUpComponent}
+    >
       Move up
     </MenuItem>
-    <MenuItem noClose icon="ChevronDown" on:click={moveDownComponent}>
+    <MenuItem
+      noClose
+      icon="ChevronDown"
+      keyBind="Ctrl+↓"
+      on:click={moveDownComponent}
+    >
       Move down
     </MenuItem>
-    <MenuItem noClose icon="Duplicate" on:click={duplicateComponent}>
+    <MenuItem
+      noClose
+      icon="Duplicate"
+      keyBind="Ctrl+D"
+      on:click={duplicateComponent}
+    >
       Duplicate
     </MenuItem>
-    <MenuItem icon="Cut" on:click={() => storeComponentForCopy(true)}>
+    <MenuItem
+      icon="Cut"
+      keyBind="Ctrl+X"
+      on:click={() => storeComponentForCopy(true)}
+    >
       Cut
     </MenuItem>
-    <MenuItem icon="Copy" on:click={() => storeComponentForCopy(false)}>
+    <MenuItem
+      icon="Copy"
+      keyBind="Ctrl+C"
+      on:click={() => storeComponentForCopy(false)}
+    >
       Copy
     </MenuItem>
     <MenuItem
-      icon="LayersBringToFront"
-      on:click={() => pasteComponent("above")}
-      disabled={noPaste}
-    >
-      Paste above
-    </MenuItem>
-    <MenuItem
       icon="LayersSendToBack"
-      on:click={() => pasteComponent("below")}
+      keyBind="Ctrl+V"
+      on:click={() => pasteComponent("inside")}
       disabled={noPaste}
     >
-      Paste below
-    </MenuItem>
-    <MenuItem
-      icon="ShowOneLayer"
-      on:click={() => pasteComponent("inside")}
-      disabled={noPaste || noChildrenAllowed}
-    >
-      Paste inside
+      Paste
     </MenuItem>
   </ActionMenu>
   <ConfirmDialog
