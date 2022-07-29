@@ -8,6 +8,7 @@
   import Icon from "../../Icon/Icon.svelte"
   import StatusLight from "../../StatusLight/StatusLight.svelte"
   import Detail from "../../Typography/Detail.svelte"
+  import Search from "./Search.svelte"
 
   export let primaryLabel = ""
   export let primaryValue = null
@@ -43,17 +44,12 @@
   let searchTerm = null
 
   $: groupTitles = Object.keys(primaryOptions)
-  $: filteredOptions = getFilteredOptions(
-    primaryOptions,
-    searchTerm,
-    getPrimaryOptionLabel
-  )
   let iconData
-  /*
-  $: iconData = primaryOptions?.find(x => {
-    return x.name === primaryFieldText
-  })
-  */
+
+  const updateSearch = e => {
+    dispatch("search", e.detail)
+  }
+
   const updateValue = newValue => {
     if (readonly) {
       return
@@ -106,16 +102,6 @@
     if (event.key === "Enter") {
       updateValue(event.target.value)
     }
-  }
-
-  const getFilteredOptions = (options, term, getLabel) => {
-    if (autocomplete && term) {
-      const lowerCaseTerm = term.toLowerCase()
-      return options.filter(option => {
-        return `${getLabel(option)}`.toLowerCase().includes(lowerCaseTerm)
-      })
-    }
-    return options
   }
 </script>
 
@@ -183,6 +169,15 @@
       class:auto-width={autoWidth}
       class:is-full-width={!secondaryOptions.length}
     >
+      {#if autocomplete}
+        <Search
+          value={searchTerm}
+          on:change={event => updateSearch(event)}
+          {disabled}
+          placeholder="Search"
+        />
+      {/if}
+
       <ul class="spectrum-Menu" role="listbox">
         {#if placeholderOption}
           <li
