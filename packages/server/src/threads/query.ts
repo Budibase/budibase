@@ -1,5 +1,6 @@
-const threadUtils = require("./utils")
+import { default as threadUtils } from "./utils"
 threadUtils.threadSetup()
+import { WorkerCallback, QueryEvent, QueryVariable } from "./definitions"
 const ScriptRunner = require("../utilities/scriptRunner")
 const { integrations } = require("../integrations")
 const { processStringSync } = require("@budibase/string-templates")
@@ -19,7 +20,22 @@ const {
 } = require("../integrations/queries/sql")
 
 class QueryRunner {
-  constructor(input, flags = { noRecursiveQuery: false }) {
+  datasource: any
+  queryVerb: string
+  queryId: string
+  fields: any
+  parameters: any
+  pagination: any
+  transformer: any
+  cachedVariables: any[]
+  ctx: any
+  queryResponse: any
+  noRecursiveQuery: boolean
+  hasRerun: boolean
+  hasRefreshedOAuth: boolean
+  hasDynamicVariables: boolean
+
+  constructor(input: QueryEvent, flags = { noRecursiveQuery: false }) {
     this.datasource = input.datasource
     this.queryVerb = input.queryVerb
     this.fields = input.fields
@@ -37,9 +53,10 @@ class QueryRunner {
     this.queryResponse = {}
     this.hasRerun = false
     this.hasRefreshedOAuth = false
+    this.hasDynamicVariables = false
   }
 
-  async execute() {
+  async execute(): Promise<any> {
     let { datasource, fields, queryVerb, transformer } = this
 
     let datasourceClone = cloneDeep(datasource)
@@ -52,7 +69,7 @@ class QueryRunner {
 
     if (datasourceClone.config.authConfigs) {
       datasourceClone.config.authConfigs =
-        datasourceClone.config.authConfigs.map(config => {
+        datasourceClone.config.authConfigs.map((config: any) => {
           return enrichQueryFields(config, this.ctx)
         })
     }
@@ -138,8 +155,8 @@ class QueryRunner {
     }
 
     // map into JSON if just raw primitive here
-    if (rows.find(row => typeof row !== "object")) {
-      rows = rows.map(value => ({ value }))
+    if (rows.find((row: any) => typeof row !== "object")) {
+      rows = rows.map((value: any) => ({ value }))
     }
 
     // get all the potential fields in the schema
@@ -152,7 +169,7 @@ class QueryRunner {
     return { rows, keys, info, extra, pagination }
   }
 
-  async runAnotherQuery(queryId, parameters) {
+  async runAnotherQuery(queryId: string, parameters: any) {
     const db = getAppDB()
     const query = await db.get(queryId)
     const datasource = await db.get(query.datasourceId)
@@ -163,12 +180,13 @@ class QueryRunner {
         fields: query.fields,
         parameters,
         transformer: query.transformer,
+        queryId,
       },
       { noRecursiveQuery: true }
     ).execute()
   }
 
-  async refreshOAuth2(ctx) {
+  async refreshOAuth2(ctx: any) {
     const { oauth2, providerType, _id } = ctx.user
     const { configId } = ctx.auth
 
@@ -200,7 +218,7 @@ class QueryRunner {
     return resp
   }
 
-  async getDynamicVariable(variable) {
+  async getDynamicVariable(variable: QueryVariable) {
     let { parameters } = this
     const queryId = variable.queryId,
       name = variable.name
@@ -233,7 +251,7 @@ class QueryRunner {
     if (!this.noRecursiveQuery) {
       // need to see if this uses any variables
       const stringFields = JSON.stringify(fields)
-      const foundVars = dynamicVars.filter(variable => {
+      const foundVars = dynamicVars.filter((variable: QueryVariable) => {
         // don't allow a query to use its own dynamic variable (loop)
         if (variable.queryId === this.queryId) {
           return false
@@ -242,7 +260,9 @@ class QueryRunner {
         const regex = new RegExp(`{{[ ]*${variable.name}[ ]*}}`)
         return regex.test(stringFields)
       })
-      const dynamics = foundVars.map(dynVar => this.getDynamicVariable(dynVar))
+      const dynamics = foundVars.map((dynVar: QueryVariable) =>
+        this.getDynamicVariable(dynVar)
+      )
       const responses = await Promise.all(dynamics)
       for (let i = 0; i < foundVars.length; i++) {
         const variable = foundVars[i]
@@ -264,7 +284,7 @@ class QueryRunner {
   }
 }
 
-module.exports = (input, callback) => {
+export function execute(input: QueryEvent, callback: WorkerCallback) {
   doInAppContext(input.appId, async () => {
     const Runner = new QueryRunner(input)
     try {
