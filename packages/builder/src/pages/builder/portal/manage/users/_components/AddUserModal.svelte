@@ -9,6 +9,7 @@
   } from "@budibase/bbui"
   import { groups, auth } from "stores/portal"
   import { Constants } from "@budibase/frontend-core"
+  import { emailValidator } from "helpers/validation"
 
   export let showOnboardingTypeModal
   const password = Math.random().toString(36).substring(2, 22)
@@ -38,6 +39,12 @@
       },
     ]
   }
+
+  function validateInput(email) {
+    if (email) {
+      return emailValidator(email) === true ? null : emailValidator(email)
+    }
+  }
 </script>
 
 <ModalContent
@@ -59,7 +66,7 @@
         bind:inputValue={input.email}
         bind:dropdownValue={input.role}
         options={Constants.BbRoles}
-        error={input.error}
+        error={validateInput(input.email)}
       />
     {/each}
     <div>
