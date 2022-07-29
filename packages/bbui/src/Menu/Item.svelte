@@ -8,6 +8,7 @@
   export let icon = undefined
   export let disabled = undefined
   export let noClose = false
+  export let keyBind = undefined
 
   const onClick = () => {
     if (actionMenu && !noClose) {
@@ -36,10 +37,22 @@
     </svg>
   {/if}
   <span class="spectrum-Menu-itemLabel"><slot /></span>
+  {#if keyBind}
+    <div class="keyBind">
+      {keyBind}
+    </div>
+  {/if}
 </li>
 
 <style>
   .spectrum-Menu-itemIcon {
     align-self: center;
+  }
+  .keyBind {
+    margin-left: var(--spacing-xl);
+    color: var(--spectrum-global-color-gray-600);
+    text-transform: uppercase;
+    font-size: 12px;
+    font-weight: 600;
   }
 </style>

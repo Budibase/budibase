@@ -105,6 +105,10 @@
         } else if (e.key === "v") {
           e.preventDefault()
           await store.actions.components.paste(component, "inside")
+        } else if (e.key === "d") {
+          e.preventDefault()
+          await store.actions.components.copy(component)
+          await store.actions.components.paste(component, "below")
         } else if (e.key === "Enter") {
           e.preventDefault()
           $goto("./new")
