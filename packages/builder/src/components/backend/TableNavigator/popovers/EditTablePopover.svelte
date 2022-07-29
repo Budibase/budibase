@@ -102,10 +102,10 @@
 </Modal>
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
-  okText="Delete Table"
+  okText="Delete table"
   onOk={deleteTable}
   onCancel={hideDeleteDialog}
-  title="Confirm Deletion"
+  title="Confirm deletion"
   disabled={deleteTableName !== table.name}
 >
   <p>

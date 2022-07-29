@@ -48,9 +48,9 @@
 
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
-  okText="Delete Datasource"
+  okText="Delete datasource"
   onOk={deleteDatasource}
-  title="Confirm Deletion"
+  title="Confirm deletion"
 >
   Are you sure you wish to delete the datasource
   <i>{datasource.name}?</i>
