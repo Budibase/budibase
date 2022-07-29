@@ -61,6 +61,7 @@ export function createUsersStore() {
           break
         case "admin":
           body.admin = { global: true }
+          body.builder = { global: true }
           break
       }
 
@@ -75,6 +76,10 @@ export function createUsersStore() {
   async function del(id) {
     await API.deleteUser(id)
     update(users => users.filter(user => user._id !== id))
+  }
+
+  async function getUserCountByApp({ appId }) {
+    return await API.getUserCountByApp({ appId })
   }
 
   async function bulkDelete(userIds) {
@@ -99,6 +104,7 @@ export function createUsersStore() {
     create,
     save,
     bulkDelete,
+    getUserCountByApp,
     delete: del,
   }
 }
