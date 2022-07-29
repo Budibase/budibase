@@ -31,9 +31,9 @@
 
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
-  okText="Delete Automation"
+  okText="Delete automation"
   onOk={deleteAutomation}
-  title="Confirm Deletion"
+  title="Confirm deletion"
 >
   Are you sure you wish to delete the automation
   <i>{automation.name}?</i>

@@ -25,7 +25,7 @@
   bind:this={modal}
   okText="Delete"
   onOk={confirmDeletion}
-  title="Confirm Deletion"
+  title="Confirm deletion"
 >
   Are you sure you want to delete
   {selectedRows.length}

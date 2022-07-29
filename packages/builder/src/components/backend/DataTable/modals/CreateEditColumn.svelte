@@ -531,10 +531,10 @@
 </Modal>
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
-  okText="Delete Column"
+  okText="Delete column"
   onOk={deleteColumn}
   onCancel={hideDeleteDialog}
-  title="Confirm Deletion"
+  title="Confirm deletion"
   disabled={deleteColName !== originalName}
 >
   <p>

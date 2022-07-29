@@ -103,7 +103,7 @@
 
 <Modal bind:this={modal} on:hide={onCancel}>
   <ModalContent
-    title={"Edit Icon"}
+    title={"Edit icon"}
     confirmText={"Save"}
     onConfirm={() => save()}
     size="L"

@@ -106,9 +106,9 @@
   </ActionMenu>
   <ConfirmDialog
     bind:this={confirmDeleteDialog}
-    title="Confirm Deletion"
+    title="Confirm deletion"
     body={`Are you sure you wish to delete this '${definition?.name}' component?`}
-    okText="Delete Component"
+    okText="Delete component"
     onOk={deleteComponent}
   />
 {/if}

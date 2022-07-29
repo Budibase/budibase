@@ -48,9 +48,9 @@
 
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
-  okText="Delete Query"
+  okText="Delete query"
   onOk={deleteQuery}
-  title="Confirm Deletion"
+  title="Confirm deletion"
 >
   Are you sure you wish to delete this query? This action cannot be undone.
 </ConfirmDialog>
