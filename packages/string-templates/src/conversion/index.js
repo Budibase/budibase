@@ -22,7 +22,29 @@ function getLayers(fullBlock) {
 }
 
 function getVariable(variableName) {
-  return isNaN(parseFloat(variableName)) ? `$("${variableName}")` : variableName
+  if (!variableName || typeof variableName !== "string") {
+    return variableName
+  }
+  // it is an array
+  const arrayOrObject = [",", "{", ":"]
+  let contains = false
+  arrayOrObject.forEach(char => {
+    if (variableName.includes(char)) {
+      contains = true
+    }
+  })
+  if (variableName.startsWith("[") && contains) {
+    return variableName
+  }
+  // it is just a number
+  if (!isNaN(parseFloat(variableName))) {
+    return variableName
+  }
+  if (variableName.startsWith("'") || variableName.startsWith('"')) {
+    return variableName
+  }
+  // extract variable
+  return `$("${variableName}")`
 }
 
 function buildList(parts, value) {
@@ -41,17 +63,34 @@ function buildList(parts, value) {
 function splitBySpace(layer) {
   const parts = []
   let started = null,
+    endChar = null,
     last = 0
+  function add(str) {
+    const startsWith = ["]"]
+    while (startsWith.indexOf(str.substring(0, 1)) !== -1) {
+      str = str.substring(1, str.length)
+    }
+    if (str.length > 0) {
+      parts.push(str.trim())
+    }
+  }
+  const continuationChars = ["[", "'", '"']
   for (let index = 0; index < layer.length; index++) {
     const char = layer[index]
-    if (char === "[" && started == null) {
+    if (continuationChars.indexOf(char) !== -1 && started == null) {
       started = index
-    } else if (char === "]" && started != null && layer[index + 1] !== ".") {
-      parts.push(layer.substring(started, index + 1).trim())
+      endChar = char === "[" ? "]" : char
+    } else if (
+      char === endChar &&
+      started != null &&
+      layer[index + 1] !== "."
+    ) {
+      add(layer.substring(started, index + 1))
       started = null
-      last = index
-    } else if (started == null && char === " " && last !== index - 1) {
-      parts.push(layer.substring(last, index).trim())
+      endChar = null
+      last = index + 1
+    } else if (started == null && char === " ") {
+      add(layer.substring(last, index))
       last = index
     }
   }
@@ -59,7 +98,7 @@ function splitBySpace(layer) {
     (!layer.startsWith("[") || parts.length === 0) &&
     last !== layer.length - 1
   ) {
-    parts.push(layer.substring(last, layer.length).trim())
+    add(layer.substring(last, layer.length))
   }
   return parts
 }

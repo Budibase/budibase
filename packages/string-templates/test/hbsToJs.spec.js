@@ -41,11 +41,43 @@ describe("Test that the string processing works correctly", () => {
     ])
   })
 
-  it("Should handle many square brackets in helpers", () => {
+  it("should handle many square brackets in helpers", () => {
     const response = convertToJS("Hello {{ avg [user].[_id] [user].[_rev] }}")
     checkLines(response, [
       "const var1 = helpers.avg($(\"[user].[_id]\"), $(\"[user].[_rev]\"));",
-      "return `Hello ${var1}`;"
+      "return `Hello ${var1}`;",
+    ])
+  })
+
+  it("should handle one of the examples (after)", () => {
+    const response = convertToJS("{{ after [1, 2, 3] 1}}")
+    checkLines(response, [
+      "const var1 = helpers.after([1, 2, 3], 1);",
+      "return `${var1}`;",
+    ])
+  })
+
+  it("should handle one of the examples (equalsLength)", () => {
+    const response = convertToJS("{{equalsLength '[1,2,3]' 3}}")
+    checkLines(response, [
+      "const var1 = helpers.equalsLength('[1,2,3]', 3);",
+      "return `${var1}`;"
+    ])
+  })
+
+  it("should handle one of the examples (pluck)", () => {
+    const response = convertToJS("{{pluck [{ 'name': 'Bob' }] 'name' }}")
+    checkLines(response, [
+      "const var1 = helpers.pluck([{ 'name': 'Bob' }], 'name');",
+      "return `${var1}`;",
+    ])
+  })
+
+  it("should handle sorting an array", () => {
+    const response = convertToJS("{{ sort ['b', 'a', 'c'] }}")
+    checkLines(response, [
+      "const var1 = helpers.sort(['b', 'a', 'c']);",
+      "return `${var1}`;",
     ])
   })
 
