@@ -64,7 +64,7 @@
     {#if version}
       <div>
         <Label size="L">Current version</Label>
-        <Heading size="XS">
+        <Heading size="L">
           {version}
         </Heading>
       </div>

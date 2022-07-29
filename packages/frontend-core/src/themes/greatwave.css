@@ -33,6 +33,7 @@
     --spectrum-alias-item-rounded-border-radius-m: 4px;
     --spectrum-button-primary-s-border-radius: 4px;
     --spectrum-alias-item-rounded-border-radius-s: 4px;
+    --spectrum-button-primary-m-border-size: 1px;
     --spectrum-sidenav-item-background-color-selected: var(--spectrum-global-color-gray-200);
     --spectrum-global-font-family-base: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
     --font-sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
