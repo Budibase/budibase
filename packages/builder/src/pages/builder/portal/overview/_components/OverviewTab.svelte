@@ -1,16 +1,17 @@
 <script>
   import DashCard from "components/common/DashCard.svelte"
   import { AppStatus } from "constants"
-  import { Icon, Heading, Link, Avatar, Layout } from "@budibase/bbui"
+  import { Icon, Heading, Link, Avatar, Layout, Body } from "@budibase/bbui"
   import { store } from "builderStore"
   import clientPackage from "@budibase/client/package.json"
   import { processStringSync } from "@budibase/string-templates"
   import { users, auth } from "stores/portal"
-  import { createEventDispatcher } from "svelte"
+  import { createEventDispatcher, onMount } from "svelte"
 
   export let app
   export let deployments
   export let navigateTab
+
   const dispatch = createEventDispatcher()
 
   const unpublishApp = () => {
@@ -37,6 +38,10 @@
 
     return initials == "" ? user.email[0] : initials
   }
+
+  onMount(async () => {
+    await users.search({ page: undefined, appId: "app_" + app.appId })
+  })
 </script>
 
 <div class="overview-tab">
@@ -132,6 +137,37 @@
           {/if}
         </div>
       </DashCard>
+      <DashCard
+        title={"Access"}
+        showIcon={true}
+        action={() => {
+          navigateTab("Access")
+        }}
+        dataCy={"access"}
+      >
+        <div class="last-edited-content">
+          {#if $users?.data?.length}
+            <Layout noPadding gap="S">
+              <div class="users-tab">
+                {#each $users?.data as user}
+                  <Avatar size="M" initials={getInitials(user)} />
+                {/each}
+              </div>
+
+              <div class="users-text">
+                {$users?.data.length} users have access to this app
+              </div>
+            </Layout>
+          {:else}
+            <Layout noPadding gap="S">
+              <Body>No users</Body>
+              <div class="users-text">
+                No users have been assigned to this app
+              </div>
+            </Layout>
+          {/if}
+        </div>
+      </DashCard>
     </div>
     {#if false}
       <div class="bottom">
@@ -186,6 +222,14 @@
     grid-template-columns: repeat(auto-fill, minmax(30%, 1fr));
   }
 
+  .users-tab {
+    display: flex;
+    gap: var(--spacing-m);
+  }
+
+  .users-text {
+    color: var(--spectrum-global-color-gray-600);
+  }
   .overview-tab .bottom,
   .automation-metrics {
     display: grid;

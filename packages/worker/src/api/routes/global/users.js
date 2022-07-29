@@ -1,7 +1,7 @@
 const Router = require("@koa/router")
 const controller = require("../../controllers/global/users")
-const joiValidator = require("../../../middleware/joi-validator")
-const adminOnly = require("../../../middleware/adminOnly")
+const { joiValidator } = require("@budibase/backend-core/auth")
+const { adminOnly } = require("@budibase/backend-core/auth")
 const Joi = require("joi")
 const cloudRestricted = require("../../../middleware/cloudRestricted")
 const { users } = require("../validation")
@@ -30,6 +30,14 @@ function buildInviteValidation() {
   }).required())
 }
 
+function buildInviteMultipleValidation() {
+  // prettier-ignore
+  return joiValidator.body(Joi.object({
+    emails: Joi.array().required(),
+    userInfo: Joi.object().optional(),
+  }).required())
+}
+
 function buildInviteAcceptValidation() {
   // prettier-ignore
   return joiValidator.body(Joi.object({
@@ -45,9 +53,17 @@ router
     users.buildUserSaveValidation(),
     controller.save
   )
+  .post(
+    "/api/global/users/bulkCreate",
+    adminOnly,
+    users.buildUserBulkSaveValidation(),
+    controller.bulkCreate
+  )
+
   .get("/api/global/users", builderOrAdmin, controller.fetch)
   .post("/api/global/users/search", builderOrAdmin, controller.search)
   .delete("/api/global/users/:id", adminOnly, controller.destroy)
+  .post("/api/global/users/bulkDelete", adminOnly, controller.bulkDelete)
   .get("/api/global/roles/:appId")
   .post(
     "/api/global/users/invite",
@@ -55,6 +71,19 @@ router
     buildInviteValidation(),
     controller.invite
   )
+  .post(
+    "/api/global/users/invite",
+    adminOnly,
+    buildInviteValidation(),
+    controller.invite
+  )
+  .post(
+    "/api/global/users/inviteMultiple",
+    adminOnly,
+    buildInviteMultipleValidation(),
+    controller.inviteMultiple
+  )
+
   // non-global endpoints
   .post(
     "/api/global/users/invite/accept",

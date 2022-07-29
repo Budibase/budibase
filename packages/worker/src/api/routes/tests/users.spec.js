@@ -2,7 +2,6 @@ jest.mock("nodemailer")
 const { config, request, mocks, structures } = require("../../../tests")
 const sendMailMock = mocks.email.mock()
 const { events } = require("@budibase/backend-core")
-
 describe("/api/global/users", () => {
 
   beforeAll(async () => {
@@ -24,9 +23,9 @@ describe("/api/global/users", () => {
       .set(config.defaultHeaders())
       .expect("Content-Type", /json/)
       .expect(200)
-    
-      const emailCall = sendMailMock.mock.calls[0][0]
-      // after this URL there should be a code
+
+    const emailCall = sendMailMock.mock.calls[0][0]
+    // after this URL there should be a code
     const parts = emailCall.html.split("http://localhost:10000/builder/invite?code=")
     const code = parts[1].split("\"")[0].split("&")[0]
     return { code, res }
@@ -60,7 +59,7 @@ describe("/api/global/users", () => {
     expect(events.user.inviteAccepted).toBeCalledWith(user)
   })
 
-  const createUser = async (user) => { 
+  const createUser = async (user) => {
     const existing = await config.getUser(user.email)
     if (existing) {
       await deleteUser(existing._id)
@@ -84,14 +83,37 @@ describe("/api/global/users", () => {
     return res.body
   }
 
+
+  const bulkCreateUsers = async (users) => {
+    const res = await request
+      .post(`/api/global/users/bulkCreate`)
+      .send(users)
+      .set(config.defaultHeaders())
+      .expect("Content-Type", /json/)
+      .expect(200)
+    return res.body
+  }
+
+  const bulkDeleteUsers = async (users) => {
+    const res = await request
+      .post(`/api/global/users/bulkDelete`)
+      .send(users)
+      .set(config.defaultHeaders())
+      .expect("Content-Type", /json/)
+      .expect(200)
+    return res.body
+  }
+
+
+
   const deleteUser = async (email) => {
     const user = await config.getUser(email)
     if (user) {
       await request
-      .delete(`/api/global/users/${user._id}`)
-      .set(config.defaultHeaders())
-      .expect("Content-Type", /json/)
-      .expect(200)
+        .delete(`/api/global/users/${user._id}`)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
     }
   }
 
@@ -107,10 +129,25 @@ describe("/api/global/users", () => {
       expect(events.user.permissionAdminAssigned).not.toBeCalled()
     })
 
+    it("should be able to bulkCreate users with different permissions", async () => {
+      jest.clearAllMocks()
+      const builder = structures.users.builderUser({ email: "bulkbasic@test.com" })
+      const admin = structures.users.adminUser({ email: "bulkadmin@test.com" })
+      const user = structures.users.user({ email: "bulkuser@test.com" })
+
+      let toCreate = { users: [builder, admin, user], groups: [] }
+      await bulkCreateUsers(toCreate)
+
+      expect(events.user.created).toBeCalledTimes(3)
+      expect(events.user.permissionAdminAssigned).toBeCalledTimes(1)
+      expect(events.user.permissionBuilderAssigned).toBeCalledTimes(1)
+    })
+
+
     it("should be able to create an admin user", async () => {
       jest.clearAllMocks()
       const user = structures.users.adminUser({ email: "admin@test.com" })
-      await createUser(user)      
+      await createUser(user)
 
       expect(events.user.created).toBeCalledTimes(1)
       expect(events.user.updated).not.toBeCalled()
@@ -333,5 +370,21 @@ describe("/api/global/users", () => {
       expect(events.user.permissionBuilderRemoved).toBeCalledTimes(1)
       expect(events.user.permissionAdminRemoved).not.toBeCalled()
     })
+
+    it("should be able to bulk delete users with different permissions", async () => {
+      jest.clearAllMocks()
+      const builder = structures.users.builderUser({ email: "basic@test.com" })
+      const admin = structures.users.adminUser({ email: "admin@test.com" })
+      const user = structures.users.user({ email: "user@test.com" })
+
+      let toCreate = { users: [builder, admin, user], groups: [] }
+      let createdUsers = await bulkCreateUsers(toCreate)
+      await bulkDeleteUsers({ userIds: [createdUsers[0]._id, createdUsers[1]._id, createdUsers[2]._id] })
+      expect(events.user.deleted).toBeCalledTimes(3)
+      expect(events.user.permissionAdminRemoved).toBeCalledTimes(1)
+      expect(events.user.permissionBuilderRemoved).toBeCalledTimes(1)
+
+    })
+
   })
 })

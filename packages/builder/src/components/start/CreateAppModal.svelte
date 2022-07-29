@@ -111,7 +111,6 @@
       await admin.init()
 
       // Create user
-      await API.updateOwnMetadata({ roleId: $values.roleId })
       await auth.setInitInfo({})
 
       // Create a default home screen if no template was selected

@@ -19,6 +19,7 @@
   } from "@budibase/bbui"
   import OverviewTab from "../_components/OverviewTab.svelte"
   import SettingsTab from "../_components/SettingsTab.svelte"
+  import AccessTab from "../_components/AccessTab.svelte"
   import { API } from "api"
   import { store } from "builderStore"
   import { apps, auth } from "stores/portal"
@@ -308,6 +309,9 @@
               navigateTab={handleTabChange}
               on:unpublish={e => unpublishApp(e.detail)}
             />
+          </Tab>
+          <Tab title="Access">
+            <AccessTab app={selectedApp} />
           </Tab>
           {#if isPublished}
             <Tab title="Automation History">
