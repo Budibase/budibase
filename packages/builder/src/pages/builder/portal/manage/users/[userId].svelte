@@ -41,6 +41,11 @@
   let allAppList = []
   let user
   $: fetchUser(userId)
+
+  $: fullName = $userFetch?.data?.firstName
+    ? $userFetch?.data?.firstName + " " + $userFetch?.data?.lastName
+    : ""
+
   $: hasGroupsLicense = $auth.user?.license.features.includes(
     Constants.Features.USER_GROUPS
   )
@@ -127,7 +132,7 @@
     if (detail === "developer") {
       toggleFlags({ admin: { global: false }, builder: { global: true } })
     } else if (detail === "admin") {
-      toggleFlags({ admin: { global: true }, builder: { global: false } })
+      toggleFlags({ admin: { global: true }, builder: { global: true } })
     } else if (detail === "appUser") {
       toggleFlags({ admin: { global: false }, builder: { global: false } })
     }
@@ -186,15 +191,25 @@
     <div class="title">
       <div>
         <div style="display: flex;">
-          <Avatar size="XXL" initials="PC" />
-          <div class="subtitle">
-            <Heading size="S"
-              >{$userFetch?.data?.firstName +
-                " " +
-                $userFetch?.data?.lastName}</Heading
-            >
-            <Body size="XS">{$userFetch?.data?.email}</Body>
-          </div>
+          <Avatar
+            size="XXL"
+            initials={user?.email
+              .split(" ")
+              .map(x => x[0])
+              .join("")}
+          />
+
+          {#if fullName}
+            <div class="subtitle">
+              <Heading size="S">{fullName}</Heading>
+
+              <Body size="XS">{$userFetch?.data?.email}</Body>
+            </div>
+          {:else}
+            <div class="alignEmail">
+              <Heading size="S">{$userFetch?.data?.email}</Heading>
+            </div>
+          {/if}
         </div>
       </div>
       <div>
@@ -371,5 +386,11 @@
   .appsTitle {
     display: flex;
     flex-direction: column;
+  }
+
+  .alignEmail {
+    display: flex;
+    align-items: center;
+    margin-left: var(--spacing-m);
   }
 </style>
