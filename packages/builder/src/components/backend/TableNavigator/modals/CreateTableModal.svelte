@@ -105,7 +105,7 @@
   </div>
   <div>
     <Layout gap="XS" noPadding>
-      <Label grey >Create Table from CSV (Optional)</Label>
+      <Label grey>Create Table from CSV (Optional)</Label>
       <TableDataImport bind:dataImport />
     </Layout>
   </div>

@@ -1,5 +1,13 @@
 <script>
-  import { Body, Button, Heading, Icon, Input, Layout, Divider } from "@budibase/bbui"
+  import {
+    Body,
+    Button,
+    Heading,
+    Icon,
+    Input,
+    Layout,
+    Divider,
+  } from "@budibase/bbui"
   import {
     readableToRuntimeBinding,
     runtimeToReadableBinding,
@@ -27,6 +35,7 @@
     customParams[param] = readableToRuntimeBinding(bindings, valueToParse)
   }
 </script>
+
 <section>
   <Divider />
   <Layout noPadding gap="S">
@@ -39,8 +48,8 @@
     <Body size="S">
       {#if !bindable}
         Bindings come in two parts: the binding name, and a default/fallback
-        value. These bindings can be used as Handlebars expressions throughout the
-        query.
+        value. These bindings can be used as Handlebars expressions throughout
+        the query.
       {:else}
         Enter a value for each binding. The default values will be used for any
         values left blank.
@@ -74,14 +83,18 @@
             {bindings}
           />
         {:else}
-          <Icon hoverable name="Close" on:click={() => deleteQueryBinding(idx)} />
+          <Icon
+            hoverable
+            name="Close"
+            on:click={() => deleteQueryBinding(idx)}
+          />
         {/if}
       {/each}
     </div>
   </Layout>
 </section>
-<style>
 
+<style>
   section {
     margin-top: var(--layout-m);
   }

@@ -30,7 +30,12 @@
   }
 </script>
 
-<ModalContent title="Manage access" showCancelButton={false} confirmText="Done" size="M">
+<ModalContent
+  title="Manage access"
+  showCancelButton={false}
+  confirmText="Done"
+  size="M"
+>
   <Body size="S">Specify the minimum access level role for this data.</Body>
   <div class="row">
     <Label extraSmall grey>Level</Label>

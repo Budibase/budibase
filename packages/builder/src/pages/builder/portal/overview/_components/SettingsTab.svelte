@@ -37,7 +37,7 @@
         <Layout gap="XS" noPadding>
           <Heading size="S">App details</Heading>
           <Body>
-          Update your app's name and URL.
+            Update your app's name and URL.
 
             <div class="app-details">
               <div class="app-detail">
@@ -124,8 +124,8 @@
   }
 
   .app-detail {
-   display: flex;
-   flex-direction: column;
-   gap: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
   }
 </style>

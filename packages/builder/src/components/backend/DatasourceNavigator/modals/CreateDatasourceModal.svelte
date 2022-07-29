@@ -180,7 +180,7 @@
   .item-list {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 290px));
-    grid-gap: .85rem;
+    grid-gap: 0.85rem;
     justify-content: space-between;
   }
 
@@ -215,7 +215,6 @@
     align-items: flex-start;
   }
 
-
   .text :global(.spectrum-Detail) {
     color: var(--spectrum-global-color-gray-700);
   }
@@ -224,5 +223,4 @@
     display: flex;
     flex-direction: column;
   }
-
 </style>

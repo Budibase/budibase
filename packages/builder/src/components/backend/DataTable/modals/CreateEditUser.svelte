@@ -131,7 +131,7 @@
 </ModalContent>
 
 <style>
-.edit-user-info-text {
-  font-size: 16px;
-}
+  .edit-user-info-text {
+    font-size: 16px;
+  }
 </style>

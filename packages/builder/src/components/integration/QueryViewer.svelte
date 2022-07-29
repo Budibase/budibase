@@ -101,10 +101,11 @@
     }
   }
 </script>
+
 <section>
   <Layout>
     <Layout gap="S" noPadding>
-      <header>  
+      <header>
         <Heading size="M">Query {integrationInfo?.friendlyName}</Heading>
       </header>
       <Divider />
@@ -135,7 +136,10 @@
               config={integrationInfo.extra}
             />
           {/if}
-          <BindingBuilder bind:queryBindings={query.parameters} bindable={false} />
+          <BindingBuilder
+            bind:queryBindings={query.parameters}
+            bindable={false}
+          />
         {/if}
       </div>
       {#if shouldShowQueryConfig}
@@ -184,7 +188,8 @@
           </ButtonGroup>
         </div>
         <Body size="S">
-          Below, you can preview the results from your query and change the schema.
+          Below, you can preview the results from your query and change the
+          schema.
         </Body>
         <section class="viewer">
           {#if data}
@@ -212,7 +217,6 @@
 </section>
 
 <style>
-
   section {
     margin: 0 auto;
   }

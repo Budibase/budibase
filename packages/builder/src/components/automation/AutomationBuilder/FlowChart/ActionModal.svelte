@@ -172,7 +172,7 @@
     box-sizing: border-box;
     min-height: 48px;
     display: flex;
-    align-items: center
+    align-items: center;
   }
   .item:hover,
   .selected {
