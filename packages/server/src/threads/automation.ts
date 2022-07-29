@@ -1,36 +1,47 @@
-require("./utils").threadSetup()
-const actions = require("../automations/actions")
-const automationUtils = require("../automations/automationUtils")
-const AutomationEmitter = require("../events/AutomationEmitter")
-const { processObject } = require("@budibase/string-templates")
-const { DocumentTypes } = require("../db/utils")
-const { definitions: triggerDefs } = require("../automations/triggerInfo")
+import { default as threadUtils } from "./utils"
+threadUtils.threadSetup()
+import { isRecurring, disableCron, isErrorInOutput } from "../automations/utils"
+import { default as actions } from "../automations/actions"
+import { default as automationUtils } from "../automations/automationUtils"
+import { default as AutomationEmitter } from "../events/AutomationEmitter"
+import { generateAutomationMetadataID, isProdAppID } from "../db/utils"
+import { definitions as triggerDefs } from "../automations/triggerInfo"
+import { AutomationErrors, MAX_AUTOMATION_RECURRING_ERRORS } from "../constants"
+import { storeLog } from "../automations/logging"
+import { Automation, AutomationStep, AutomationStatus } from "@budibase/types"
+import {
+  LoopStep,
+  LoopStepTypes,
+  LoopInput,
+  AutomationEvent,
+  TriggerOutput,
+  AutomationContext,
+  AutomationMetadata,
+} from "../definitions/automations"
+import { WorkerCallback } from "./definitions"
 const { doInAppContext, getAppDB } = require("@budibase/backend-core/context")
-const { AutomationErrors, LoopStepTypes } = require("../constants")
-const { storeLog } = require("../automations/logging")
+const { logAlertWithInfo, logWarn } = require("@budibase/backend-core/logging")
+const { processObject } = require("@budibase/string-templates")
 const FILTER_STEP_ID = actions.ACTION_DEFINITIONS.FILTER.stepId
 const LOOP_STEP_ID = actions.ACTION_DEFINITIONS.LOOP.stepId
-
 const CRON_STEP_ID = triggerDefs.CRON.stepId
-const STOPPED_STATUS = { success: true, status: "STOPPED" }
+const STOPPED_STATUS = { success: true, status: AutomationStatus.STOPPED }
 const { cloneDeep } = require("lodash/fp")
 const env = require("../environment")
 
-function typecastForLooping(loopStep, input) {
+function typecastForLooping(loopStep: LoopStep, input: LoopInput) {
   if (!input || !input.binding) {
     return null
   }
-  const isArray = Array.isArray(input.binding),
-    isString = typeof input.binding === "string"
   try {
     switch (loopStep.inputs.option) {
       case LoopStepTypes.ARRAY:
-        if (isString) {
+        if (typeof input.binding === "string") {
           return JSON.parse(input.binding)
         }
         break
       case LoopStepTypes.STRING:
-        if (isArray) {
+        if (Array.isArray(input.binding)) {
           return input.binding.join(",")
         }
         break
@@ -41,7 +52,7 @@ function typecastForLooping(loopStep, input) {
   return input.binding
 }
 
-function getLoopIterations(loopStep, input) {
+function getLoopIterations(loopStep: LoopStep, input: LoopInput) {
   const binding = typecastForLooping(loopStep, input)
   if (!loopStep || !binding) {
     return 1
@@ -57,11 +68,24 @@ function getLoopIterations(loopStep, input) {
  * inputs and handles any outputs.
  */
 class Orchestrator {
-  constructor(automation, triggerOutput = {}) {
-    this._metadata = triggerOutput.metadata
-    this._chainCount = this._metadata ? this._metadata.automationChainCount : 0
-    this._appId = triggerOutput.appId
-    this._app = null
+  _chainCount: number
+  _appId: string
+  _automation: Automation
+  _emitter: any
+  _context: AutomationContext
+  _repeat?: { jobId: string; jobKey: string }
+  executionOutput: AutomationContext
+
+  constructor(automation: Automation, triggerOutput: TriggerOutput, opts: any) {
+    const metadata = triggerOutput.metadata
+    this._chainCount = metadata ? metadata.automationChainCount : 0
+    this._appId = triggerOutput.appId as string
+    if (opts?.repeat) {
+      this._repeat = {
+        jobId: opts.repeat.jobId,
+        jobKey: opts.repeat.key,
+      }
+    }
     const triggerStepId = automation.definition.trigger.stepId
     triggerOutput = this.cleanupTriggerOutputs(triggerStepId, triggerOutput)
     // remove from context
@@ -79,14 +103,14 @@ class Orchestrator {
     this.updateExecutionOutput(triggerId, triggerStepId, null, triggerOutput)
   }
 
-  cleanupTriggerOutputs(stepId, triggerOutput) {
+  cleanupTriggerOutputs(stepId: string, triggerOutput: TriggerOutput) {
     if (stepId === CRON_STEP_ID) {
       triggerOutput.timestamp = Date.now()
     }
     return triggerOutput
   }
 
-  async getStepFunctionality(stepId) {
+  async getStepFunctionality(stepId: string) {
     let step = await actions.getAction(stepId)
     if (step == null) {
       throw `Cannot find automation step by name ${stepId}`
@@ -94,25 +118,107 @@ class Orchestrator {
     return step
   }
 
-  async getApp() {
-    if (this._app) {
-      return this._app
-    }
+  async getMetadata(): Promise<AutomationMetadata> {
+    const metadataId = generateAutomationMetadataID(this._automation._id)
     const db = getAppDB()
-    this._app = await db.get(DocumentTypes.APP_METADATA)
-    return this._app
+    let metadata: AutomationMetadata
+    try {
+      metadata = await db.get(metadataId)
+    } catch (err) {
+      metadata = {
+        _id: metadataId,
+        errorCount: 0,
+      }
+    }
+    return metadata
   }
 
-  updateExecutionOutput(id, stepId, inputs, outputs) {
+  async checkIfShouldStop(metadata: AutomationMetadata): Promise<boolean> {
+    if (!metadata.errorCount || !this._repeat) {
+      return false
+    }
+    const automation = this._automation
+    const trigger = automation.definition.trigger
+    if (metadata.errorCount >= MAX_AUTOMATION_RECURRING_ERRORS) {
+      logWarn(
+        `CRON disabled due to errors - ${this._appId}/${this._automation._id}`
+      )
+      await disableCron(this._repeat?.jobId, this._repeat?.jobKey)
+      this.updateExecutionOutput(
+        trigger.id,
+        trigger.stepId,
+        {},
+        {
+          status: AutomationStatus.STOPPED_ERROR,
+          success: false,
+        }
+      )
+      await storeLog(automation, this.executionOutput)
+      return true
+    }
+    return false
+  }
+
+  async updateMetadata(metadata: AutomationMetadata) {
+    const output = this.executionOutput,
+      automation = this._automation
+    if (!output || !isRecurring(automation)) {
+      return
+    }
+    const count = metadata.errorCount
+    const isError = isErrorInOutput(output)
+    // nothing to do in this scenario, escape
+    if (!count && !isError) {
+      return
+    }
+    if (isError) {
+      metadata.errorCount = count ? count + 1 : 1
+    } else {
+      metadata.errorCount = 0
+    }
+    const db = getAppDB()
+    try {
+      await db.put(metadata)
+    } catch (err) {
+      logAlertWithInfo(
+        "Failed to write automation metadata",
+        db.name,
+        automation._id,
+        err
+      )
+    }
+  }
+
+  updateExecutionOutput(id: string, stepId: string, inputs: any, outputs: any) {
     const stepObj = { id, stepId, inputs, outputs }
+    // replacing trigger when disabling CRON
+    if (
+      stepId === CRON_STEP_ID &&
+      outputs.status === AutomationStatus.STOPPED_ERROR
+    ) {
+      this.executionOutput.trigger = stepObj
+      this.executionOutput.steps = [stepObj]
+      return
+    }
     // first entry is always the trigger (constructor)
-    if (this.executionOutput.steps.length === 0) {
+    if (
+      this.executionOutput.steps.length === 0 ||
+      this.executionOutput.trigger.id === id
+    ) {
       this.executionOutput.trigger = stepObj
     }
     this.executionOutput.steps.push(stepObj)
   }
 
-  updateContextAndOutput(loopStepNumber, step, output, result) {
+  updateContextAndOutput(
+    loopStepNumber: number | undefined,
+    step: AutomationStep,
+    output: any,
+    result: { success: boolean; status: string }
+  ) {
+    if (!loopStepNumber) {
+      throw new Error("No loop step number provided.")
+    }
     this.executionOutput.steps.splice(loopStepNumber, 0, {
       id: step.id,
       stepId: step.stepId,
@@ -133,11 +239,22 @@ class Orchestrator {
   async execute() {
     let automation = this._automation
     let stopped = false
-    let loopStep = null
+    let loopStep: AutomationStep | undefined = undefined
 
     let stepCount = 0
-    let loopStepNumber = null
-    let loopSteps = []
+    let loopStepNumber: any = undefined
+    let loopSteps: LoopStep[] | undefined = []
+    let metadata
+
+    // check if this is a recurring automation,
+    if (isProdAppID(this._appId) && isRecurring(automation)) {
+      metadata = await this.getMetadata()
+      const shouldStop = await this.checkIfShouldStop(metadata)
+      if (shouldStop) {
+        return
+      }
+    }
+
     for (let step of automation.definition.steps) {
       stepCount++
       let input,
@@ -151,7 +268,7 @@ class Orchestrator {
 
       if (loopStep) {
         input = await processObject(loopStep.inputs, this._context)
-        iterations = getLoopIterations(loopStep, input)
+        iterations = getLoopIterations(loopStep as LoopStep, input)
       }
 
       for (let index = 0; index < iterations; index++) {
@@ -166,14 +283,17 @@ class Orchestrator {
 
           let tempOutput = { items: loopSteps, iterations: iterationCount }
           try {
-            newInput.binding = typecastForLooping(loopStep, newInput)
+            newInput.binding = typecastForLooping(
+              loopStep as LoopStep,
+              newInput
+            )
           } catch (err) {
             this.updateContextAndOutput(loopStepNumber, step, tempOutput, {
               status: AutomationErrors.INCORRECT_TYPE,
               success: false,
             })
-            loopSteps = null
-            loopStep = null
+            loopSteps = undefined
+            loopStep = undefined
             break
           }
 
@@ -223,8 +343,8 @@ class Orchestrator {
               status: AutomationErrors.MAX_ITERATIONS,
               success: true,
             })
-            loopSteps = null
-            loopStep = null
+            loopSteps = undefined
+            loopStep = undefined
             break
           }
 
@@ -232,7 +352,7 @@ class Orchestrator {
           const currentItem = this._context.steps[loopStepNumber]?.currentItem
           if (currentItem && typeof currentItem === "object") {
             isFailure = Object.keys(currentItem).some(value => {
-              return currentItem[value] === loopStep.inputs.failure
+              return currentItem[value] === loopStep?.inputs.failure
             })
           } else {
             isFailure = currentItem && currentItem === loopStep.inputs.failure
@@ -243,8 +363,8 @@ class Orchestrator {
               status: AutomationErrors.FAILURE_CONDITION,
               success: false,
             })
-            loopSteps = null
-            loopStep = null
+            loopSteps = undefined
+            loopStep = undefined
             break
           }
         }
@@ -295,7 +415,7 @@ class Orchestrator {
         if (loopStep) {
           iterationCount++
           if (index === iterations - 1) {
-            loopStep = null
+            loopStep = undefined
             this._context.steps.splice(loopStepNumber, 1)
             break
           }
@@ -316,22 +436,26 @@ class Orchestrator {
         })
 
         this._context.steps.splice(loopStepNumber, 0, tempOutput)
-        loopSteps = null
+        loopSteps = undefined
       }
     }
 
     // store the logs for the automation run
     await storeLog(this._automation, this.executionOutput)
+    if (isProdAppID(this._appId) && isRecurring(automation) && metadata) {
+      await this.updateMetadata(metadata)
+    }
     return this.executionOutput
   }
 }
 
-module.exports = (input, callback) => {
+export function execute(input: AutomationEvent, callback: WorkerCallback) {
   const appId = input.data.event.appId
   doInAppContext(appId, async () => {
     const automationOrchestrator = new Orchestrator(
       input.data.automation,
-      input.data.event
+      input.data.event,
+      input.opts
     )
     try {
       const response = await automationOrchestrator.execute()

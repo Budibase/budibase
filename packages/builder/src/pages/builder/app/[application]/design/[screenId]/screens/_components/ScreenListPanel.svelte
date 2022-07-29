@@ -1,11 +1,12 @@
 <script>
-  import { Search, Layout, Select, Body } from "@budibase/bbui"
+  import { Search, Layout, Select, Body, Button } from "@budibase/bbui"
   import Panel from "components/design/Panel.svelte"
   import { roles } from "stores/backend"
   import { store, sortedScreens } from "builderStore"
   import NavItem from "components/common/NavItem.svelte"
   import ScreenDropdownMenu from "./ScreenDropdownMenu.svelte"
   import ScreenWizard from "./ScreenWizard.svelte"
+  import RoleIndicator from "./RoleIndicator.svelte"
   import { RoleUtils } from "@budibase/frontend-core"
 
   let searchString
@@ -28,13 +29,9 @@
   }
 </script>
 
-<Panel
-  title="Screens"
-  showAddButton
-  onClickAddButton={showNewScreenModal}
-  borderRight
->
+<Panel title="Screens" borderRight>
   <Layout paddingX="L" paddingY="XL" gap="S">
+    <Button on:click={showNewScreenModal} cta>Add screen</Button>
     <Search
       placeholder="Search"
       value={searchString}
@@ -56,14 +53,15 @@
   </Layout>
   {#each filteredScreens as screen (screen._id)}
     <NavItem
-      icon={screen.routing.homeScreen ? "Home" : "WebPage"}
+      icon={screen.routing.homeScreen ? "Home" : null}
       indentLevel={0}
       selected={$store.selectedScreenId === screen._id}
       text={screen.routing.route}
       on:click={() => store.actions.screens.select(screen._id)}
-      color={RoleUtils.getRoleColour(screen.routing.roleId)}
+      rightAlignIcon
     >
       <ScreenDropdownMenu screenId={screen._id} />
+      <RoleIndicator slot="right" roleId={screen.routing.roleId} />
     </NavItem>
   {/each}
   {#if !filteredScreens?.length}
