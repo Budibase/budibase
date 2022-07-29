@@ -24,6 +24,7 @@
   import { addHBSBinding, addJSBinding } from "./utils"
   import CodeMirrorEditor from "components/common/CodeMirrorEditor.svelte"
   import { convertToJS } from "@budibase/string-templates"
+  import { admin } from "stores/portal"
 
   const dispatch = createEventDispatcher()
 
@@ -62,16 +63,24 @@
 
   const updateValue = val => {
     valid = isValid(readableToRuntimeBinding(bindings, val))
-    console.log(readableToRuntimeBinding(bindings, val))
     if (valid) {
       dispatch("change", val)
     }
   }
 
-  // Adds a HBS helper to the expression
-  const addHelper = helper => {
-    hbsValue = addHBSBinding(hbsValue, getCaretPosition(), helper.text)
-    updateValue(hbsValue)
+  // Adds a JS/HBS helper to the expression
+  const addHelper = (helper, js) => {
+    let value
+    const pos = getCaretPosition()
+    if (js) {
+      const decoded = decodeJSBinding(jsValue)
+      value = jsValue = encodeJSBinding(
+        addJSBinding(decoded, pos, helper.text, { helper: true })
+      )
+    } else {
+      value = hbsValue = addHBSBinding(hbsValue, pos, helper.text)
+    }
+    updateValue(value)
   }
 
   // Adds a data binding to the expression
@@ -108,12 +117,22 @@
 
   const convert = () => {
     const runtime = readableToRuntimeBinding(bindings, hbsValue)
-    console.log(runtime)
     const runtimeJs = encodeJSBinding(convertToJS(runtime))
     jsValue = runtimeToReadableBinding(bindings, runtimeJs)
     hbsValue = null
     mode = "JavaScript"
     addBinding("", { forceJS: true })
+  }
+
+  const getHelperExample = (helper, js) => {
+    let example = helper.example || ""
+    if (js) {
+      example = convertToJS(example).split("\n")[0].split("= ")[1]
+      if (example === "null;") {
+        example = ""
+      }
+    }
+    return example || ""
   }
 
   onMount(() => {
@@ -151,18 +170,21 @@
           </section>
         {/if}
       {/each}
-      {#if filteredHelpers?.length && !usingJS}
+      {#if filteredHelpers?.length}
         <section>
           <div class="heading">Helpers</div>
           <ul>
             {#each filteredHelpers as helper}
-              <li on:click={() => addHelper(helper)}>
+              <li on:click={() => addHelper(helper, usingJS)}>
                 <div class="helper">
                   <div class="helper__name">{helper.displayText}</div>
                   <div class="helper__description">
                     {@html helper.description}
                   </div>
-                  <pre class="helper__example">{helper.example || ""}</pre>
+                  <pre class="helper__example">{getHelperExample(
+                      helper,
+                      usingJS
+                    )}</pre>
                 </div>
               </li>
             {/each}
@@ -188,9 +210,11 @@
               for more details.
             </p>
           {/if}
-          <div class="convert">
-            <Button secondary on:click={convert}>Convert to JS</Button>
-          </div>
+          {#if $admin.isDev}
+            <div class="convert">
+              <Button secondary on:click={convert}>Convert to JS</Button>
+            </div>
+          {/if}
         </div>
       </Tab>
       {#if allowJS}
