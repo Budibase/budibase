@@ -54,7 +54,7 @@
 <View name="Simple Confirmation Modal">
   <Button primary on:click={modal1.show}>Delete Record</Button>
   <Modal bind:this={modal1}>
-    <ModalContent title="Confirm Deletion" confirmText="Delete">
+    <ModalContent title="Confirm deletion" confirmText="Delete">
       <span>Are you sure you want to delete this record?</span>
     </ModalContent>
   </Modal>

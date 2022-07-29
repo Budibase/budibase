@@ -54,7 +54,7 @@
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
   body={`Are you sure you wish to delete the view '${view.name}'? Your data will be deleted and this action cannot be undone.`}
-  okText="Delete View"
+  okText="Delete view"
   onOk={deleteView}
   title="Confirm deletion"
 />
