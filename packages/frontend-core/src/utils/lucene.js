@@ -1,6 +1,8 @@
 import { Helpers } from "@budibase/bbui"
 import { OperatorOptions, SqlNumberTypeRangeMap } from "../constants"
 
+const HBS_REGEX = /{{([^{].*?)}}/g
+
 /**
  * Returns the valid operator options for a certain data type
  * @param type the data type
@@ -98,6 +100,8 @@ export const buildLuceneQuery = filter => {
   if (Array.isArray(filter)) {
     filter.forEach(expression => {
       let { operator, field, type, value, externalType } = expression
+      const isHbs =
+        typeof value === "string" && value.match(HBS_REGEX)?.length > 0
       // Parse all values into correct types
       if (type === "datetime" && value) {
         value = new Date(value).toISOString()
@@ -105,7 +109,7 @@ export const buildLuceneQuery = filter => {
       if (type === "number" && !Array.isArray(value)) {
         if (operator === "oneOf") {
           value = value.split(",").map(item => parseFloat(item))
-        } else {
+        } else if (!isHbs) {
           value = parseFloat(value)
         }
       }
