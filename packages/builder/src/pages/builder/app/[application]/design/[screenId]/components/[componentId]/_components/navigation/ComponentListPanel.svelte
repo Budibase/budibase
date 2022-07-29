@@ -10,8 +10,8 @@
   import { get } from "svelte/store"
   import DNDPositionIndicator from "./DNDPositionIndicator.svelte"
   import { DropPosition } from "./dndStore"
-  import { notifications } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+  import { notifications, Button } from "@budibase/bbui"
 
   let scrollRef
   let confirmDeleteDialog
@@ -27,7 +27,7 @@
     let newOffsets = {}
 
     // Calculate left offset
-    const offsetX = bounds.left + bounds.width + scrollLeft - 58
+    const offsetX = bounds.left + bounds.width + scrollLeft - 36
     if (offsetX > sidebarWidth) {
       newOffsets.left = offsetX - sidebarWidth
     } else {
@@ -144,13 +144,10 @@
   })
 </script>
 
-<Panel
-  title="Components"
-  showAddButton
-  onClickAddButton={() => $goto("../new")}
-  showExpandIcon
-  borderRight
->
+<Panel title="Components" showExpandIcon borderRight>
+  <div class="add-component">
+    <Button on:click={() => $goto("./new")} cta>Add component</Button>
+  </div>
   <div class="nav-items-container" bind:this={scrollRef}>
     <ul>
       <li
@@ -201,6 +198,13 @@
 />
 
 <style>
+  .add-component {
+    padding: var(--spacing-xl) var(--spacing-l);
+    padding-bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
   .nav-items-container {
     padding: var(--spacing-xl) 0;
     flex: 1 1 auto;
