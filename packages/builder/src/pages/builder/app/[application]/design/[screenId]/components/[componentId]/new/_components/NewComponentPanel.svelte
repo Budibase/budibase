@@ -6,15 +6,14 @@
     ActionGroup,
     ActionButton,
     Search,
-    DetailSummary,
     Icon,
     Body,
-    Divider,
     notifications,
   } from "@budibase/bbui"
   import structure from "./componentStructure.json"
   import { store, selectedComponent } from "builderStore"
   import { onMount } from "svelte"
+  import { fly } from "svelte/transition"
 
   let section = "components"
   let searchString
@@ -150,114 +149,116 @@
   })
 </script>
 
-<Panel
-  title="Add component"
-  showBackButton
-  onClickBackButton={() => $goto("../slot")}
-  borderRight
->
-  <Layout paddingX="L" paddingY="XL" gap="S">
-    <Search
-      placeholder="Search"
-      value={searchString}
-      on:change={e => (searchString = e.detail)}
-      bind:inputRef={searchRef}
-    />
-    {#if !searchString}
-      <ActionGroup compact justified>
-        <ActionButton
-          fullWidth
-          selected={section === "components"}
-          on:click={() => (section = "components")}>Components</ActionButton
-        >
-        <ActionButton
-          fullWidth
-          selected={section === "blocks"}
-          on:click={() => (section = "blocks")}>Blocks</ActionButton
-        >
-      </ActionGroup>
-    {/if}
-  </Layout>
-  <div>
-    <Divider noMargin noGrid />
-  </div>
-  {#if searchString || section === "components"}
-    {#each filteredStructure as category}
-      <DetailSummary name={category.name} collapsible={false}>
-        <div class="component-grid">
-          {#each category.children as component}
+<div class="container" transition:fly|local={{ x: 260, duration: 300 }}>
+  <Panel
+    title="Add component"
+    showCloseButton
+    onClickCloseButton={() => $goto("../")}
+    borderLeft
+  >
+    <Layout paddingX="L" paddingY="XL" gap="S">
+      <Search
+        placeholder="Search"
+        value={searchString}
+        on:change={e => (searchString = e.detail)}
+        bind:inputRef={searchRef}
+      />
+      {#if !searchString}
+        <ActionGroup compact justified>
+          <ActionButton
+            fullWidth
+            selected={section === "components"}
+            on:click={() => (section = "components")}>Components</ActionButton
+          >
+          <ActionButton
+            fullWidth
+            selected={section === "blocks"}
+            on:click={() => (section = "blocks")}>Blocks</ActionButton
+          >
+        </ActionGroup>
+      {/if}
+      {#if searchString || section === "components"}
+        {#if filteredStructure.length}
+          {#each filteredStructure as category}
+            <Layout noPadding gap="XS">
+              <div class="category-label">{category.name}</div>
+              {#each category.children as component}
+                <div
+                  class="component"
+                  class:selected={selectedIndex ===
+                    orderMap[component.component]}
+                  on:click={() => addComponent(component.component)}
+                  on:mouseover={() => (selectedIndex = null)}
+                >
+                  <Icon name={component.icon} />
+                  <Body size="XS">{component.name}</Body>
+                </div>
+              {/each}
+            </Layout>
+          {/each}
+        {:else}
+          <Body size="S">
+            There aren't any components matching the current filter
+          </Body>
+        {/if}
+      {:else}
+        <Body size="S">Blocks are collections of pre-built components</Body>
+        <Layout noPadding gap="XS">
+          {#each blocks as block}
             <div
               class="component"
-              class:wide={component.name?.length > 15}
-              class:selected={selectedIndex === orderMap[component.component]}
-              on:click={() => addComponent(component.component)}
-              on:mouseover={() => (selectedIndex = null)}
+              on:click={() => addComponent(block.component)}
             >
-              <Icon name={component.icon} />
-              <Body size="XS">{component.name}</Body>
+              <Icon name={block.icon} />
+              <Body size="XS">{block.name}</Body>
             </div>
           {/each}
-        </div>
-      </DetailSummary>
-    {/each}
-  {:else}
-    <Layout paddingX="L" paddingY="XL" gap="S">
-      <Body size="S">Blocks are collections of pre-built components</Body>
-      <Layout noPadding gap="XS">
-        {#each blocks as block}
-          <div
-            class="component block"
-            on:click={() => addComponent(block.component)}
-          >
-            <Icon name={block.icon} />
-            <Body size="XS">{block.name}</Body>
-          </div>
-        {/each}
-      </Layout>
+        </Layout>
+      {/if}
     </Layout>
-  {/if}
-</Panel>
+  </Panel>
+</div>
 
 <style>
-  .component-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: var(--spacing-s);
+  .container {
+    position: fixed;
+    right: 0;
+    z-index: 1;
+    height: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+  }
+  .category-label {
+    color: var(--spectrum-global-color-gray-600);
+    text-transform: uppercase;
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: var(--spacing-xs);
   }
   .component {
-    background-color: var(--spectrum-global-color-gray-200);
+    background: var(--spectrum-global-color-gray-200);
     border-radius: 4px;
-    height: 76px;
     display: flex;
-    flex-direction: column;
-    justify-content: center;
     align-items: center;
-    text-align: center;
-    padding: 0 var(--spacing-s);
-    gap: var(--spacing-s);
-    padding-top: 4px;
     border: 1px solid var(--spectrum-global-color-gray-200);
-    transition: border-color 130ms ease-out;
+    transition: background 130ms ease-out, border-color 130ms ease-out;
+    flex-direction: row;
+    justify-content: flex-start;
+    padding: var(--spacing-s) var(--spacing-l);
+    gap: var(--spacing-m);
+    overflow: hidden;
   }
-  .component.wide {
-    grid-column: span 2;
-  }
-  .component.selected,
-  .component:hover {
+  .component.selected {
     border-color: var(--spectrum-global-color-blue-400);
   }
   .component:hover {
+    background: var(--spectrum-global-color-gray-300);
     cursor: pointer;
   }
   .component :global(.spectrum-Body) {
     line-height: 1.2 !important;
-  }
-
-  .block {
-    flex-direction: row;
-    justify-content: flex-start;
-    height: 48px;
-    padding: 0 var(--spacing-l);
-    gap: var(--spacing-m);
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 </style>

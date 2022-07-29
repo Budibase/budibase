@@ -2763,7 +2763,7 @@
   },
   "longformfield": {
     "name": "Long Form Field",
-    "icon": "AlignLeft",
+    "icon": "TextAlignLeft",
     "styles": [
       "size"
     ],
@@ -3737,7 +3737,7 @@
   "cardsblock": {
     "block": true,
     "name": "Cards block",
-    "icon": "Table",
+    "icon": "PersonalizationField",
     "styles": [
       "size"
     ],
