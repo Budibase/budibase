@@ -4,6 +4,8 @@
   import * as routify from "@roxi/routify"
   import { onDestroy } from "svelte"
   import { findComponent } from "builderStore/componentUtils"
+  import ComponentListPanel from "./_components/navigation/ComponentListPanel.svelte"
+  import ComponentSettingsPanel from "./_components/settings/ComponentSettingsPanel.svelte"
 
   // Keep URL and state in sync for selected component ID
   const stopSyncing = syncURLToState({
@@ -18,4 +20,6 @@
   onDestroy(stopSyncing)
 </script>
 
+<ComponentListPanel />
+<ComponentSettingsPanel />
 <slot />

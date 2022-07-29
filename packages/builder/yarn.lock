@@ -5732,7 +5732,7 @@ svelte-portal@0.1.0:
   resolved "https://registry.yarnpkg.com/svelte-portal/-/svelte-portal-0.1.0.tgz#cc2821cc84b05ed5814e0218dcdfcbebc53c1742"
   integrity sha512-kef+ksXVKun224mRxat+DdO4C+cGHla+fEcZfnBAvoZocwiaceOfhf5azHYOPXSSB1igWVFTEOF3CDENPnuWxg==
 
-svelte@^3.49.0:
+svelte@^3.48.0:
   version "3.49.0"
   resolved "https://registry.yarnpkg.com/svelte/-/svelte-3.49.0.tgz#5baee3c672306de1070c3b7888fc2204e36a4029"
   integrity sha512-+lmjic1pApJWDfPCpUUTc1m8azDqYCG1JN9YEngrx/hUyIcFJo6VZhj0A1Ai0wqoHcEIuQy+e9tk+4uDgdtsFA==
