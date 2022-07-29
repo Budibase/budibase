@@ -55,4 +55,7 @@
     font-size: 12px;
     font-weight: 600;
   }
+  .is-disabled .keyBind {
+    color: var(--spectrum-global-color-gray-300);
+  }
 </style>
