@@ -27,7 +27,7 @@
     {error}
     {disabled}
     {readonly}
-    {value}
+    value={Array.isArray(value) ? value : [value]}
     {options}
     {placeholder}
     {sort}
