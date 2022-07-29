@@ -45,16 +45,21 @@
         },
       ])
     }
+    if (isEnabled(FEATURE_FLAGS.USER_GROUPS)) {
+      menu = menu.concat([
+        {
+          title: "User Groups",
+          href: "/builder/portal/manage/groups",
+        },
+      ])
+    }
+
     if (admin) {
       menu = menu.concat([
         {
           title: "Users",
           href: "/builder/portal/manage/users",
           heading: "Manage",
-        },
-        {
-          title: "User Groups",
-          href: "/builder/portal/manage/groups",
         },
 
         { title: "Auth", href: "/builder/portal/manage/auth" },
