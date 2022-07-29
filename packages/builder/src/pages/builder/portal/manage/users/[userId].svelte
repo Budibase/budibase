@@ -44,6 +44,8 @@
   $: hasGroupsLicense = $auth.user?.license.features.includes(
     Constants.Features.USER_GROUPS
   )
+  $: nameLabel = getNameLabel($userFetch)
+  $: initials = getInitials(nameLabel, $userFetch)
 
   $: allAppList = $apps
     .filter(x => {
@@ -85,6 +87,38 @@
     : "appUser"
 
   const userFetch = fetchData(`/api/global/users/${userId}`)
+
+  const getNameLabel = userFetch => {
+    const { firstName, lastName } = userFetch?.data || {}
+    if (!firstName && !lastName) {
+      return "Name unavailable"
+    }
+    let label
+    if (firstName) {
+      label = firstName
+      if (lastName) {
+        label += ` ${lastName}`
+      }
+    } else {
+      label = lastName
+    }
+    return label
+  }
+
+  const getInitials = (nameLabel, userFetch) => {
+    if (nameLabel !== "Name unavailable") {
+      return nameLabel
+        .split(" ")
+        .slice(0, 2)
+        .map(x => x[0])
+        .join("")
+    }
+    const { email } = userFetch?.data || {}
+    if (!email) {
+      return "PC"
+    }
+    return email.substring(0, 2)
+  }
 
   function getHighestRole(roles) {
     let highestRole
@@ -186,13 +220,9 @@
     <div class="title">
       <div>
         <div style="display: flex;">
-          <Avatar size="XXL" initials="PC" />
+          <Avatar size="XXL" {initials} />
           <div class="subtitle">
-            <Heading size="S"
-              >{$userFetch?.data?.firstName +
-                " " +
-                $userFetch?.data?.lastName}</Heading
-            >
+            <Heading size="S">{nameLabel}</Heading>
             <Body size="XS">{$userFetch?.data?.email}</Body>
           </div>
         </div>
