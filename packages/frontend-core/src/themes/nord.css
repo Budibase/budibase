@@ -32,7 +32,7 @@
   --spectrum-global-color-gray-50: #2e3440;
   --spectrum-global-color-gray-75: #353b4a;
   --spectrum-global-color-gray-100: #3b4252;
-  --spectrum-global-color-gray-200: #4a5367;
+  --spectrum-global-color-gray-200: #424a5c;
   --spectrum-global-color-gray-300: #4c566a;
   --spectrum-global-color-gray-400: #5a657d;
   --spectrum-global-color-gray-500: #677590;
@@ -41,6 +41,6 @@
   --spectrum-global-color-gray-800: #bac1cd;
   --spectrum-global-color-gray-900: #eceff4;
 
-  --spectrum-alias-highlight-hover: rgba(169, 177, 193, 0.06);
+  --spectrum-alias-highlight-hover: rgba(169, 177, 193, 0.1);
   --spectrum-alias-highlight-active: rgba(169, 177, 193, 0.1);
 }
