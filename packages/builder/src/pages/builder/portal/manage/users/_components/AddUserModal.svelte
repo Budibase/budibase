@@ -78,9 +78,3 @@
     />
   {/if}
 </ModalContent>
-
-<style>
-  :global(.spectrum-Picker) {
-    border-top-left-radius: 0px;
-  }
-</style>
