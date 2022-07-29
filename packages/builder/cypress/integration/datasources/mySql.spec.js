@@ -179,7 +179,7 @@ filterTests(["all"], () => {
         cy.get(".nav-item").should("contain", queryName)
       })
 
-      it("should duplicate a query", () => {
+      xit("should duplicate a query", () => {
         /// Get query nav item - QueryName
         cy.get(".nav-item")
           .contains(queryName)
@@ -199,15 +199,16 @@ filterTests(["all"], () => {
           .within(() => {
             cy.get("input").clear().type(queryRename)
           })
-        // Save query
-        cy.get(".spectrum-Button").contains("Save Query").click({ force: true })
+        // Click on a nav item
+        cy.get(".nav-item").first().click()
+        // Confirm name change
         cy.get(".nav-item").should("contain", queryRename)
       })
 
       it("should delete a query", () => {
         // Get query nav item - QueryName
         cy.get(".nav-item")
-          .contains(queryName)
+          .contains(queryRename)
           .parent()
           .within(() => {
             cy.get(".spectrum-Icon").eq(1).click({ force: true })
@@ -218,7 +219,7 @@ filterTests(["all"], () => {
           .contains("Delete Query")
           .click({ force: true })
         // Confirm deletion
-        cy.get(".nav-item", { timeout: 1000 }).should("not.contain", queryName)
+        cy.get(".nav-item", { timeout: 1000 }).should("not.contain", queryRename)
       })
     }
   })
