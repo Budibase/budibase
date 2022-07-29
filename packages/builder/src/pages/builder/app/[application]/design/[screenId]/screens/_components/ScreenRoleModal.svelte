@@ -40,7 +40,7 @@
 </script>
 
 <ModalContent
-  title={"Create CRUD Screens"}
+  title={"Create CRUD screens"}
   confirmText={"Done"}
   cancelText={"Back"}
   {onConfirm}

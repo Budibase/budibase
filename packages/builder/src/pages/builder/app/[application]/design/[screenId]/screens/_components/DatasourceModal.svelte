@@ -68,7 +68,7 @@
 
 <span data-cy="data-source-modal">
   <ModalContent
-    title="Create CRUD Screens"
+    title="Create CRUD screens"
     confirmText="Confirm"
     cancelText="Back"
     onConfirm={confirmDatasourceSelection}
