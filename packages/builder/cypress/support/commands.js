@@ -5,30 +5,31 @@ Cypress.on("uncaught:exception", () => {
 // ACCOUNTS & USERS
 Cypress.Commands.add("login", (email, password) => {
   cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 10000 })
-  cy.wait(2000)
-  cy.url().then(url => {
-    if (url.includes("builder/admin")) {
-      // create admin user
-      cy.get("input").first().type("test@test.com")
-      cy.get('input[type="password"]').first().type("test")
-      cy.get('input[type="password"]').eq(1).type("test")
-      cy.contains("Create super admin user").click({ force: true })
-    }
-    if (url.includes("builder/auth/login") || url.includes("builder/admin")) {
-      // login
-      cy.contains("Sign in to Budibase").then(() => {
-        if (email == null) {
-          cy.get("input").first().type("test@test.com")
-          cy.get('input[type="password"]').type("test")
-        } else {
-          cy.get("input").first().type(email)
-          cy.get('input[type="password"]').type(password)
-        }
-        cy.get("button").first().click({ force: true })
-        cy.wait(1000)
-      })
-    }
-  })
+  cy.url()
+    .should("include", "/builder/")
+    .then(url => {
+      if (url.includes("builder/admin")) {
+        // create admin user
+        cy.get("input").first().type("test@test.com")
+        cy.get('input[type="password"]').first().type("test")
+        cy.get('input[type="password"]').eq(1).type("test")
+        cy.contains("Create super admin user").click({ force: true })
+      }
+      if (url.includes("builder/auth") || url.includes("builder/admin")) {
+        // login
+        cy.contains("Sign in to Budibase").then(() => {
+          if (email == null) {
+            cy.get("input").first().type("test@test.com")
+            cy.get('input[type="password"]').type("test")
+          } else {
+            cy.get("input").first().type(email)
+            cy.get('input[type="password"]').type(password)
+          }
+          cy.get("button").first().click({ force: true })
+          cy.wait(1000)
+        })
+      }
+    })
 })
 
 Cypress.Commands.add("logOut", () => {
@@ -50,23 +51,36 @@ Cypress.Commands.add("logoutNoAppGrid", () => {
   cy.wait(2000)
 })
 
-Cypress.Commands.add("createUser", email => {
-  // quick hacky recorded way to create a user
+Cypress.Commands.add("createUser", (email, permission) => {
   cy.contains("Users").click()
   cy.get(`[data-cy="add-user"]`).click()
   cy.get(".spectrum-Dialog-grid").within(() => {
-    cy.get(".spectrum-Picker-label").click()
-    cy.get(
-      ".spectrum-Menu-item:nth-child(2) > .spectrum-Menu-itemLabel"
-    ).click()
+    // Enter email
+    cy.get(".spectrum-Textfield-input").clear().click().type(email)
 
-    // Onboarding type selector
-    cy.get(".spectrum-Textfield-input")
-      .eq(0)
-      .first()
-      .type(email, { force: true })
-    cy.get(".spectrum-Button--cta").click({ force: true })
+    // Select permission, if applicable
+    // Default is App User
+    if (permission != null) {
+      cy.get(".spectrum-Picker-label").click()
+      cy.get(".spectrum-Menu").within(() => {
+        cy.get(".spectrum-Menu-item")
+          .contains(permission)
+          .click({ force: true })
+      })
+    }
+    // Add user and wait for modal to change
+    cy.get(".spectrum-Button").contains("Add user").click({ force: true })
+    cy.get(".spectrum-ActionButton").contains("Add email").should("not.exist")
   })
+  // Onboarding modal
+  cy.get(".spectrum-Dialog-grid").within(() => {
+    cy.get(".onboarding-type").eq(1).click()
+    cy.get(".spectrum-Button").contains("Done").click({ force: true })
+    cy.get(".spectrum-Button").contains("Cancel").should("not.exist")
+  })
+
+  // Accounts created modal - Click Done button
+  cy.get(".spectrum-Button").contains("Done").click({ force: true })
 })
 
 Cypress.Commands.add("deleteUser", email => {
@@ -74,18 +88,13 @@ Cypress.Commands.add("deleteUser", email => {
   cy.contains("Users", { timeout: 2000 }).click()
   cy.contains(email).click()
 
-  // Click Delete user button
-  cy.get(".spectrum-Button")
-    .contains("Delete user")
-    .click({ force: true })
-    .then(() => {
-      // Confirm deletion within modal
-      cy.get(".spectrum-Dialog-grid", { timeout: 500 }).within(() => {
-        cy.get(".spectrum-Button")
-          .contains("Delete user")
-          .click({ force: true })
-      })
-    })
+  cy.get(".title").within(() => {
+    cy.get(".spectrum-Icon").click({ force: true })
+  })
+  cy.get(".spectrum-Menu").within(() => {
+    cy.get(".spectrum-Menu-item").contains("Delete").click({ force: true })
+  })
+  cy.get(".spectrum-Dialog-grid").contains("Delete user").click({ force: true })
 })
 
 Cypress.Commands.add("updateUserInformation", (firstName, lastName) => {
@@ -120,7 +129,25 @@ Cypress.Commands.add("updateUserInformation", (firstName, lastName) => {
         .blur()
     }
     cy.get("button").contains("Update information").click({ force: true })
+    cy.get(".spectrum-Dialog-grid").should("not.exist")
   })
+})
+
+Cypress.Commands.add("setUserRole", (user, role) => {
+  cy.contains("Users").click()
+  cy.contains(user).click()
+
+  // Set Role
+  cy.wait(500)
+  cy.get(".spectrum-Form-itemField")
+    .eq(2)
+    .within(() => {
+      cy.get(".spectrum-Picker-label").click({ force: true })
+    })
+  cy.get(".spectrum-Menu").within(() => {
+    cy.get(".spectrum-Menu-itemLabel").contains(role).click({ force: true })
+  })
+  cy.get(".spectrum-Form-itemField").eq(2).should("contain", role)
 })
 
 // APPLICATIONS
