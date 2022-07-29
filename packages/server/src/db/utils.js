@@ -41,6 +41,7 @@ const DocumentTypes = {
   METADATA: "metadata",
   MEM_VIEW: "view",
   USER_FLAG: "flag",
+  AUTOMATION_METADATA: "meta_au",
 }
 
 const InternalTables = {
@@ -309,6 +310,21 @@ exports.generateQueryID = datasourceId => {
   return `${
     DocumentTypes.QUERY
   }${SEPARATOR}${datasourceId}${SEPARATOR}${newid()}`
+}
+
+/**
+ * Generates a metadata ID for automations, used to track errors in recurring
+ * automations etc.
+ */
+exports.generateAutomationMetadataID = automationId => {
+  return `${DocumentTypes.AUTOMATION_METADATA}${SEPARATOR}${automationId}`
+}
+
+/**
+ * Retrieve all automation metadata in an app database.
+ */
+exports.getAutomationMetadataParams = (otherProps = {}) => {
+  return getDocParams(DocumentTypes.AUTOMATION_METADATA, null, otherProps)
 }
 
 /**
