@@ -534,7 +534,16 @@ export const getFrontendStore = () => {
         if (!component) {
           return
         }
-        let parentId
+
+        // Determine the next component to select after deletion
+        const state = get(store)
+        let nextSelectedComponentId
+        if (state.selectedComponentId === component._id) {
+          nextSelectedComponentId = store.actions.components.getNext()
+          if (!nextSelectedComponentId) {
+            nextSelectedComponentId = store.actions.components.getPrevious()
+          }
+        }
 
         // Patch screen
         await store.actions.screens.patch(screen => {
@@ -549,17 +558,18 @@ export const getFrontendStore = () => {
           if (!parent) {
             return false
           }
-          parentId = parent._id
           parent._children = parent._children.filter(
             child => child._id !== component._id
           )
         })
 
-        // Select the deleted component's parent
-        store.update(state => {
-          state.selectedComponentId = parentId
-          return state
-        })
+        // Update selected component if required
+        if (nextSelectedComponentId) {
+          store.update(state => {
+            state.selectedComponentId = nextSelectedComponentId
+            return state
+          })
+        }
       },
       copy: (component, cut = false, selectParent = true) => {
         // Update store with copied component
@@ -664,17 +674,16 @@ export const getFrontendStore = () => {
           return state
         })
       },
-      selectPrevious: () => {
+      getPrevious: () => {
         const state = get(store)
         const componentId = state.selectedComponentId
         const screen = get(selectedScreen)
         const parent = findComponentParent(screen.props, componentId)
-        let newComponentId = componentId
 
         // Check we aren't right at the top of the tree
         const index = parent?._children.findIndex(x => x._id === componentId)
         if (!parent || componentId === screen.props._id) {
-          return
+          return null
         }
 
         // If we have siblings above us, choose the sibling or a descendant
@@ -686,75 +695,72 @@ export const getFrontendStore = () => {
             while (target._children?.length) {
               target = target._children[target._children.length - 1]
             }
-            newComponentId = target._id
+            return target._id
           }
 
           // Otherwise just select sibling
-          else {
-            newComponentId = previousSibling._id
-          }
+          return previousSibling._id
         }
 
         // If no siblings above us, select the parent
-        else {
-          newComponentId = parent._id
-        }
-
-        // Only update state if component changed
-        if (newComponentId !== componentId) {
-          store.update(state => {
-            state.selectedComponentId = newComponentId
-            return state
-          })
-        }
+        return parent._id
       },
-      selectNext: () => {
+      getNext: () => {
         const component = get(selectedComponent)
         const componentId = component?._id
         const screen = get(selectedScreen)
         const parent = findComponentParent(screen.props, componentId)
         const index = parent?._children.findIndex(x => x._id === componentId)
-        let newComponentId = componentId
 
         // If we have children, select first child
         if (component._children?.length) {
-          newComponentId = component._children[0]._id
+          return component._children[0]._id
         } else if (!parent) {
           return null
         }
 
         // Otherwise select the next sibling if we have one
-        else if (index < parent._children.length - 1) {
+        if (index < parent._children.length - 1) {
           const nextSibling = parent._children[index + 1]
-          newComponentId = nextSibling._id
+          return nextSibling._id
         }
 
         // Last child, select our parents next sibling
-        else {
-          let target = parent
-          let targetParent = findComponentParent(screen.props, target._id)
-          let targetIndex = targetParent?._children.findIndex(
+        let target = parent
+        let targetParent = findComponentParent(screen.props, target._id)
+        let targetIndex = targetParent?._children.findIndex(
+          child => child._id === target._id
+        )
+        while (
+          targetParent != null &&
+          targetIndex === targetParent._children?.length - 1
+        ) {
+          target = targetParent
+          targetParent = findComponentParent(screen.props, target._id)
+          targetIndex = targetParent?._children.findIndex(
             child => child._id === target._id
           )
-          while (
-            targetParent != null &&
-            targetIndex === targetParent._children?.length - 1
-          ) {
-            target = targetParent
-            targetParent = findComponentParent(screen.props, target._id)
-            targetIndex = targetParent?._children.findIndex(
-              child => child._id === target._id
-            )
-          }
-          if (targetParent) {
-            newComponentId = targetParent._children[targetIndex + 1]._id
-          }
         }
-
-        // Only update state if component ID is different
-        if (newComponentId !== componentId) {
+        if (targetParent) {
+          return targetParent._children[targetIndex + 1]._id
+        } else {
+          return null
+        }
+      },
+      selectPrevious: () => {
+        const previousId = store.actions.components.getPrevious()
+        if (previousId) {
           store.update(state => {
-            state.selectedComponentId = newComponentId
+            state.selectedComponentId = previousId
+            return state
+          })
+        }
+      },
+      selectNext: () => {
+        const nextId = store.actions.components.getNext()
+        if (nextId) {
+          store.update(state => {
+            state.selectedComponentId = nextId
             return state
           })
         }
