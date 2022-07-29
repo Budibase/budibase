@@ -62,7 +62,7 @@
 
   const updateValue = val => {
     valid = isValid(readableToRuntimeBinding(bindings, val))
-    console.log(decodeJSBinding(readableToRuntimeBinding(bindings, val)))
+    console.log(readableToRuntimeBinding(bindings, val))
     if (valid) {
       dispatch("change", val)
     }

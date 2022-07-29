@@ -32,9 +32,9 @@ function buildList(parts, value) {
       .join(", ")
   }
   if (!value) {
-    return parts.length > 1 ? `...[${build()}]` : build()
+    return parts.length > 1 ? `${build()}` : build()
   } else {
-    return parts.length === 0 ? value : `...[${value}, ${build()}]`
+    return parts.length === 0 ? value : `${value}, ${build()}`
   }
 }
 
@@ -50,12 +50,15 @@ function splitBySpace(layer) {
       parts.push(layer.substring(started, index + 1).trim())
       started = null
       last = index
-    } else if (started == null && char === " ") {
+    } else if (started == null && char === " " && last !== index - 1) {
       parts.push(layer.substring(last, index).trim())
       last = index
     }
   }
-  if (!layer.startsWith("[")) {
+  if (
+    (!layer.startsWith("[") || parts.length === 0) &&
+    last !== layer.length - 1
+  ) {
     parts.push(layer.substring(last, layer.length).trim())
   }
   return parts
