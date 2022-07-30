@@ -6,6 +6,7 @@
     Multiselect,
     InputDropdown,
     Layout,
+    Icon,
   } from "@budibase/bbui"
   import { groups, auth } from "stores/portal"
   import { Constants } from "@budibase/frontend-core"
@@ -15,7 +16,7 @@
   const password = Math.random().toString(36).substring(2, 22)
   let disabled
   let userGroups = []
-
+  $: errors = []
   $: hasGroupsLicense = $auth.user?.license.features.includes(
     Constants.Features.USER_GROUPS
   )
@@ -28,6 +29,10 @@
       forceResetPassword: true,
     },
   ]
+
+  function removeInput(idx) {
+    userData = userData.filter((e, i) => i !== idx)
+  }
   function addNewInput() {
     userData = [
       ...userData,
@@ -40,9 +45,15 @@
     ]
   }
 
-  function validateInput(email) {
+  function validateInput(email, index) {
     if (email) {
-      return emailValidator(email) === true ? null : emailValidator(email)
+      if (emailValidator(email) === true) {
+        errors[index] = true
+        return null
+      } else {
+        errors[index] = false
+        return emailValidator(email)
+      }
     }
   }
 </script>
@@ -56,18 +67,40 @@
   confirmDisabled={disabled}
   cancelText="Cancel"
   showCloseIcon={false}
+  disabled={errors.some(x => x === false) ||
+    userData.some(x => x.email === "" || x.email === null)}
 >
   <Layout noPadding gap="XS">
     <Label>Email Address</Label>
 
     {#each userData as input, index}
-      <InputDropdown
-        inputType="email"
-        bind:inputValue={input.email}
-        bind:dropdownValue={input.role}
-        options={Constants.BbRoles}
-        error={validateInput(input.email)}
-      />
+      <div
+        style="display: flex;
+        align-items: center;
+        flex-direction: row;"
+      >
+        <div style="width: 90%">
+          <InputDropdown
+            inputType="email"
+            bind:inputValue={input.email}
+            bind:dropdownValue={input.role}
+            options={Constants.BbRoles}
+            error={validateInput(input.email, index)}
+          />
+        </div>
+        <div
+          class:fix-height={errors.length && !errors[index]}
+          class:normal-height={errors.length && !!errors[index]}
+          style="width: 10% "
+        >
+          <Icon
+            name="Close"
+            hoverable
+            size="S"
+            on:click={() => removeInput(index)}
+          />
+        </div>
+      </div>
     {/each}
     <div>
       <ActionButton on:click={addNewInput} icon="Add">Add email</ActionButton>
@@ -87,6 +120,14 @@
 </ModalContent>
 
 <style>
+  .fix-height {
+    margin-bottom: 5%;
+  }
+
+  .normal-height {
+    margin-bottom: 0%;
+  }
+
   :global(.spectrum-Picker) {
     border-top-left-radius: 0px;
   }

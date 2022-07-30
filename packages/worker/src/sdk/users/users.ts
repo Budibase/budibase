@@ -31,9 +31,7 @@ export const allUsers = async () => {
 }
 
 export const countUsersByApp = async (appId: string) => {
-  let response: any = await usersCore.searchGlobalUsersByApp(appId, {
-    include_docs: true,
-  })
+  let response: any = await usersCore.searchGlobalUsersByApp(appId)
   return {
     userCount: response.length,
   }
@@ -65,7 +63,7 @@ export const paginatedUsers = async ({
     userList = await usersCore.searchGlobalUsersByEmail(email, opts)
     property = "email"
   } else {
-    // no search, query allDcso
+    // no search, query allDocs
     const response = await db.allDocs(dbUtils.getGlobalUserParams(null, opts))
     userList = response.rows.map((row: any) => row.doc)
   }
