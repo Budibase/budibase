@@ -14,13 +14,9 @@
   import { Constants } from "@budibase/frontend-core"
   import CreateEditGroupModal from "./_components/CreateEditGroupModal.svelte"
   import UserGroupsRow from "./_components/UserGroupsRow.svelte"
+  import { cloneDeep } from "lodash/fp"
 
-  $: hasGroupsLicense = $auth.user?.license.features.includes(
-    Constants.Features.USER_GROUPS
-  )
-
-  let modal
-  let group = {
+  const DefaultGroup = {
     name: "",
     icon: "UserGroup",
     color: "var(--spectrum-global-color-blue-600)",
@@ -28,6 +24,12 @@
     apps: [],
     roles: {},
   }
+  let modal
+  let group = cloneDeep(DefaultGroup)
+
+  $: hasGroupsLicense = $auth.user?.license.features.includes(
+    Constants.Features.USER_GROUPS
+  )
 
   async function deleteGroup(group) {
     try {
@@ -43,6 +45,11 @@
     } catch (error) {
       notifications.error(`Failed to save group`)
     }
+  }
+
+  const showCreateGroupModal = () => {
+    group = cloneDeep(DefaultGroup)
+    modal?.show()
   }
 
   onMount(async () => {
@@ -78,10 +85,11 @@
       icon={hasGroupsLicense ? "UserGroup" : ""}
       cta={hasGroupsLicense}
       on:click={hasGroupsLicense
-        ? () => modal.show()
+        ? showCreateGroupModal
         : window.open("https://budibase.com/pricing/", "_blank")}
-      >{hasGroupsLicense ? "Create user group" : "Upgrade Account"}</Button
     >
+      {hasGroupsLicense ? "Create user group" : "Upgrade Account"}
+    </Button>
     {#if !hasGroupsLicense}
       <Button
         newStyles
@@ -130,7 +138,7 @@
   .groupTable :global(> div) {
     background: var(--bg-color);
 
-    height: 70px;
+    height: 55px;
     display: grid;
     align-items: center;
     grid-gap: var(--spacing-xl);
