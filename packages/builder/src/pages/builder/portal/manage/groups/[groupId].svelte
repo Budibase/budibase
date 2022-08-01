@@ -18,6 +18,7 @@
   import { users, apps, groups } from "stores/portal"
   import { onMount } from "svelte"
   import { RoleUtils } from "@budibase/frontend-core"
+  import { roles } from "../../../../../stores/backend"
 
   export let groupId
   let popoverAnchor
@@ -104,10 +105,17 @@
     }
   }
 
+  const getRoleLabel = appId => {
+    const roleId = group?.roles?.[`app_${appId}`]
+    const role = $roles.find(x => x._id === roleId)
+    return role?.name || "Custom role"
+  }
+
   onMount(async () => {
     try {
       await groups.actions.init()
       await apps.load()
+      await roles.fetch()
     } catch (error) {
       notifications.error("Error fetching User Group data")
     }
@@ -184,11 +192,11 @@
         >
           <div class="title ">
             <StatusLight
+              square
               color={RoleUtils.getRoleColour(group.roles[app.appId])}
-            />
-            <div style="margin-left: var(--spacing-s);">
-              <Body size="XS">{group.roles[app.appId]}</Body>
-            </div>
+            >
+              {getRoleLabel(app.appId)}
+            </StatusLight>
           </div>
         </ListItem>
       {/each}
