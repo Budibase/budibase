@@ -142,6 +142,21 @@ class InternalBuilder {
         }
       }
     }
+
+    const like = (key: string, value: any) => {
+      const fnc = allOr ? "orWhere" : "where"
+      // postgres supports ilike, nothing else does
+      if (this.client === SqlClients.POSTGRES) {
+        query = query[fnc](key, "ilike", `%${value}%`)
+      } else {
+        const rawFnc = `${fnc}Raw`
+        // @ts-ignore
+        query = query[rawFnc](`LOWER(${likeKey(this.client, key)}) LIKE ?`, [
+          `%${value}%`,
+        ])
+      }
+    }
+
     if (!filters) {
       return query
     }
@@ -168,19 +183,7 @@ class InternalBuilder {
       })
     }
     if (filters.fuzzy) {
-      iterate(filters.fuzzy, (key, value) => {
-        const fnc = allOr ? "orWhere" : "where"
-        // postgres supports ilike, nothing else does
-        if (this.client === SqlClients.POSTGRES) {
-          query = query[fnc](key, "ilike", `%${value}%`)
-        } else {
-          const rawFnc = `${fnc}Raw`
-          // @ts-ignore
-          query = query[rawFnc](`LOWER(${likeKey(this.client, key)}) LIKE ?`, [
-            `%${value}%`,
-          ])
-        }
-      })
+      iterate(filters.fuzzy, like)
     }
     if (filters.range) {
       iterate(filters.range, (key, value) => {
@@ -222,6 +225,34 @@ class InternalBuilder {
         const fnc = allOr ? "orWhereNotNull" : "whereNotNull"
         query = query[fnc](key)
       })
+    }
+    if (filters.contains) {
+      const fnc = allOr ? "orWhere" : "where"
+      const rawFnc = `${fnc}Raw`
+      if (this.client === SqlClients.POSTGRES) {
+        iterate(filters.contains, (key: string, value: any) => {
+          const fieldNames = key.split(/\./g)
+          const tableName = fieldNames[0]
+          const columnName = fieldNames[1]
+          if (typeof value === "string") {
+            value = `"${value}"`
+          }
+          // @ts-ignore
+          query = query[rawFnc](
+            `"${tableName}"."${columnName}"::jsonb @> '[${value}]'`
+          )
+        })
+      } else if (this.client === SqlClients.MY_SQL) {
+        iterate(filters.contains, (key: string, value: any) => {
+          if (typeof value === "string") {
+            value = `"${value}"`
+          }
+          // @ts-ignore
+          query = query[rawFnc](`JSON_CONTAINS(${key}, '${value}')`)
+        })
+      } else {
+        iterate(filters.contains, like)
+      }
     }
     return query
   }

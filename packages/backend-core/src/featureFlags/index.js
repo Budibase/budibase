@@ -50,4 +50,5 @@ exports.getTenantFeatureFlags = tenantId => {
 exports.FeatureFlag = {
   LICENSING: "LICENSING",
   GOOGLE_SHEETS: "GOOGLE_SHEETS",
+  USER_GROUPS: "USER_GROUPS",
 }

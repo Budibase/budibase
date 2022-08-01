@@ -68,7 +68,19 @@ const automationActions = store => ({
       return state
     })
   },
-
+  duplicate: async automation => {
+    const response = await API.createAutomation({
+      ...automation,
+      name: `${automation.name} - copy`,
+      _id: undefined,
+      _ref: undefined,
+    })
+    store.update(state => {
+      state.automations = [...state.automations, response.automation]
+      store.actions.select(response.automation)
+      return state
+    })
+  },
   save: async automation => {
     const response = await API.updateAutomation(automation)
     store.update(state => {

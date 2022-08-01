@@ -4,31 +4,32 @@ Cypress.on("uncaught:exception", () => {
 
 // ACCOUNTS & USERS
 Cypress.Commands.add("login", (email, password) => {
-  cy.visit(`${Cypress.config().baseUrl}/builder`)
-  cy.wait(2000)
-  cy.url().then(url => {
-    if (url.includes("builder/admin")) {
-      // create admin user
-      cy.get("input").first().type("test@test.com")
-      cy.get('input[type="password"]').first().type("test")
-      cy.get('input[type="password"]').eq(1).type("test")
-      cy.contains("Create super admin user").click({ force: true })
-    }
-    if (url.includes("builder/auth/login") || url.includes("builder/admin")) {
-      // login
-      cy.contains("Sign in to Budibase").then(() => {
-        if (email == null) {
-          cy.get("input").first().type("test@test.com")
-          cy.get('input[type="password"]').type("test")
-        } else {
-          cy.get("input").first().type(email)
-          cy.get('input[type="password"]').type(password)
-        }
-        cy.get("button").first().click({ force: true })
-        cy.wait(1000)
-      })
-    }
-  })
+  cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 10000 })
+  cy.url()
+    .should("include", "/builder/")
+    .then(url => {
+      if (url.includes("builder/admin")) {
+        // create admin user
+        cy.get("input").first().type("test@test.com")
+        cy.get('input[type="password"]').first().type("test")
+        cy.get('input[type="password"]').eq(1).type("test")
+        cy.contains("Create super admin user").click({ force: true })
+      }
+      if (url.includes("builder/auth") || url.includes("builder/admin")) {
+        // login
+        cy.contains("Sign in to Budibase").then(() => {
+          if (email == null) {
+            cy.get("input").first().type("test@test.com")
+            cy.get('input[type="password"]').type("test")
+          } else {
+            cy.get("input").first().type(email)
+            cy.get('input[type="password"]').type(password)
+          }
+          cy.get("button").first().click({ force: true })
+          cy.wait(1000)
+        })
+      }
+    })
 })
 
 Cypress.Commands.add("logOut", () => {
@@ -50,23 +51,36 @@ Cypress.Commands.add("logoutNoAppGrid", () => {
   cy.wait(2000)
 })
 
-Cypress.Commands.add("createUser", email => {
-  // quick hacky recorded way to create a user
+Cypress.Commands.add("createUser", (email, permission) => {
   cy.contains("Users").click()
   cy.get(`[data-cy="add-user"]`).click()
   cy.get(".spectrum-Dialog-grid").within(() => {
-    cy.get(".spectrum-Picker-label").click()
-    cy.get(
-      ".spectrum-Menu-item:nth-child(2) > .spectrum-Menu-itemLabel"
-    ).click()
+    // Enter email
+    cy.get(".spectrum-Textfield-input").clear().click().type(email)
 
-    // Onboarding type selector
-    cy.get(".spectrum-Textfield-input")
-      .eq(0)
-      .first()
-      .type(email, { force: true })
-    cy.get(".spectrum-Button--cta").click({ force: true })
+    // Select permission, if applicable
+    // Default is App User
+    if (permission != null) {
+      cy.get(".spectrum-Picker-label").click()
+      cy.get(".spectrum-Menu").within(() => {
+        cy.get(".spectrum-Menu-item")
+          .contains(permission)
+          .click({ force: true })
+      })
+    }
+    // Add user and wait for modal to change
+    cy.get(".spectrum-Button").contains("Add user").click({ force: true })
+    cy.get(".spectrum-ActionButton").contains("Add email").should("not.exist")
   })
+  // Onboarding modal
+  cy.get(".spectrum-Dialog-grid").within(() => {
+    cy.get(".onboarding-type").eq(1).click()
+    cy.get(".spectrum-Button").contains("Done").click({ force: true })
+    cy.get(".spectrum-Button").contains("Cancel").should("not.exist")
+  })
+
+  // Accounts created modal - Click Done button
+  cy.get(".spectrum-Button").contains("Done").click({ force: true })
 })
 
 Cypress.Commands.add("deleteUser", email => {
@@ -74,18 +88,13 @@ Cypress.Commands.add("deleteUser", email => {
   cy.contains("Users", { timeout: 2000 }).click()
   cy.contains(email).click()
 
-  // Click Delete user button
-  cy.get(".spectrum-Button")
-    .contains("Delete user")
-    .click({ force: true })
-    .then(() => {
-      // Confirm deletion within modal
-      cy.get(".spectrum-Dialog-grid", { timeout: 500 }).within(() => {
-        cy.get(".spectrum-Button")
-          .contains("Delete user")
-          .click({ force: true })
-      })
-    })
+  cy.get(".title").within(() => {
+    cy.get(".spectrum-Icon").click({ force: true })
+  })
+  cy.get(".spectrum-Menu").within(() => {
+    cy.get(".spectrum-Menu-item").contains("Delete").click({ force: true })
+  })
+  cy.get(".spectrum-Dialog-grid").contains("Delete user").click({ force: true })
 })
 
 Cypress.Commands.add("updateUserInformation", (firstName, lastName) => {
@@ -120,7 +129,25 @@ Cypress.Commands.add("updateUserInformation", (firstName, lastName) => {
         .blur()
     }
     cy.get("button").contains("Update information").click({ force: true })
+    cy.get(".spectrum-Dialog-grid").should("not.exist")
   })
+})
+
+Cypress.Commands.add("setUserRole", (user, role) => {
+  cy.contains("Users").click()
+  cy.contains(user).click()
+
+  // Set Role
+  cy.wait(500)
+  cy.get(".spectrum-Form-itemField")
+    .eq(2)
+    .within(() => {
+      cy.get(".spectrum-Picker-label").click({ force: true })
+    })
+  cy.get(".spectrum-Menu").within(() => {
+    cy.get(".spectrum-Menu-itemLabel").contains(role).click({ force: true })
+  })
+  cy.get(".spectrum-Form-itemField").eq(2).should("contain", role)
 })
 
 // APPLICATIONS
@@ -139,7 +166,9 @@ Cypress.Commands.add("createApp", (name, addDefaultTable) => {
   cy.get(`[data-cy="create-app-btn"]`, { timeout: 5000 }).click({ force: true })
 
   // If apps already exist
-  cy.request(`${Cypress.config().baseUrl}/api/applications?status=all`)
+  cy.request(`${Cypress.config().baseUrl}/api/applications?status=all`, {
+    timeout: 5000,
+  })
     .its("body")
     .then(val => {
       if (val.length > 0) {
@@ -208,7 +237,7 @@ Cypress.Commands.add("deleteApp", name => {
           cy.get(".app-overview-actions-icon").within(() => {
             cy.get(".spectrum-Icon").click({ force: true })
           })
-          cy.get(".spectrum-Menu").contains("Delete").click()
+          cy.get(".spectrum-Menu").contains("Delete").click({ force: true })
           cy.get(".spectrum-Dialog-grid").within(() => {
             cy.get("input").type(name)
           })
@@ -223,9 +252,11 @@ Cypress.Commands.add("deleteApp", name => {
 })
 
 Cypress.Commands.add("deleteAllApps", () => {
-  cy.visit(`${Cypress.config().baseUrl}/builder`)
+  cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 5000 })
   cy.wait(500)
-  cy.request(`${Cypress.config().baseUrl}/api/applications?status=all`)
+  cy.request(`${Cypress.config().baseUrl}/api/applications?status=all`, {
+    timeout: 5000,
+  })
     .its("body")
     .then(val => {
       for (let i = 0; i < val.length; i++) {
@@ -285,7 +316,7 @@ Cypress.Commands.add("updateAppName", (changedName, noName) => {
 })
 
 Cypress.Commands.add("publishApp", resolvedAppPath => {
-  //Assumes you have navigated to an application first
+  // Assumes you have navigated to an application first
   cy.get(".toprightnav button.spectrum-Button")
     .contains("Publish")
     .click({ force: true })
@@ -297,7 +328,7 @@ Cypress.Commands.add("publishApp", resolvedAppPath => {
       cy.wait(1000)
     })
 
-  //Verify that the app url is presented correctly to the user
+  // Verify that the app url is presented correctly to the user
   cy.get(".spectrum-Modal [data-cy='deploy-app-success-modal']")
     .should("be.visible")
     .within(() => {
@@ -377,7 +408,7 @@ Cypress.Commands.add("searchForApplication", appName => {
 // Assumes there are no others
 Cypress.Commands.add("applicationInAppTable", appName => {
   cy.visit(`${Cypress.config().baseUrl}/builder`, { timeout: 10000 })
-  cy.get(".appTable", { timeout: 2000 }).within(() => {
+  cy.get(".appTable", { timeout: 5000 }).within(() => {
     cy.get(".title").contains(appName).should("exist")
   })
 })
@@ -418,7 +449,12 @@ Cypress.Commands.add("createTable", (tableName, initialTable) => {
     cy.get("input", { timeout: 2000 }).first().type(tableName).blur()
     cy.get(".spectrum-ButtonGroup").contains("Create").click()
   })
-  cy.contains(tableName).should("be.visible")
+  // Ensure modal has closed and table is created
+  cy.get(".spectrum-Modal").should("not.exist")
+  cy.get(".spectrum-Tabs-content", { timeout: 1000 }).should(
+    "contain",
+    tableName
+  )
 })
 
 Cypress.Commands.add("createTestTableWithData", () => {
@@ -487,26 +523,52 @@ Cypress.Commands.add("selectTable", tableName => {
 })
 
 Cypress.Commands.add("addCustomSourceOptions", totalOptions => {
-  cy.get(".spectrum-ActionButton")
-    .contains("Define Options")
-    .click()
-    .then(() => {
-      for (let i = 0; i < totalOptions; i++) {
-        // Add radio button options
-        cy.get(".spectrum-Button")
-          .contains("Add Option")
-          .click({ force: true })
-          .then(() => {
-            cy.get("[placeholder='Label']", { timeout: 500 }).eq(i).type(i)
-            cy.get("[placeholder='Value']").eq(i).type(i)
-          })
-      }
-      // Save options
-      cy.get(".spectrum-Button").contains("Save").click({ force: true })
-    })
+  cy.get('[data-cy="customOptions-prop-control"]').within(() => {
+    cy.get(".spectrum-ActionButton-label").click({ force: true })
+  })
+  for (let i = 0; i < totalOptions; i++) {
+    // Add radio button options
+    cy.get(".spectrum-Button-label", { timeout: 1000 })
+      .contains("Add Option")
+      .click({ force: true })
+      .then(() => {
+        cy.get("[placeholder='Label']", { timeout: 500 }).eq(i).type(i)
+        cy.get("[placeholder='Value']").eq(i).type(i)
+      })
+  }
+  // Save options
+  cy.get(".spectrum-Button").contains("Save").click({ force: true })
 })
 
-// DESIGN AREA
+// DESIGN SECTION
+Cypress.Commands.add("searchAndAddComponent", component => {
+  // Open component menu
+  cy.get(".icon-side-nav").within(() => {
+    cy.get(".icon-side-nav-item").eq(1).click()
+  })
+  cy.get(".add-component > .spectrum-Button")
+    .contains("Add component")
+    .click({ force: true })
+  cy.get(".container", { timeout: 1000 }).within(() => {
+    cy.get(".title").should("contain", "Add component")
+
+    // Search and add component
+    cy.get(".spectrum-Textfield-input").clear().type(component)
+    cy.get(".body").within(() => {
+      cy.get(".component")
+        .contains(new RegExp("^" + component + "$"), { timeout: 3000 })
+        .click({ force: true })
+    })
+  })
+  cy.wait(1000)
+  cy.location().then(loc => {
+    const params = loc.pathname.split("/")
+    const componentId = params[params.length - 1]
+    cy.getComponent(componentId, { timeout: 3000 }).should("exist")
+    return cy.wrap(componentId)
+  })
+})
+
 Cypress.Commands.add("addComponent", (category, component) => {
   if (category) {
     cy.get(`[data-cy="category-${category}"]`, { timeout: 3000 }).click({
@@ -542,7 +604,7 @@ Cypress.Commands.add("getComponent", componentId => {
 Cypress.Commands.add("createScreen", (route, accessLevelLabel) => {
   // Blank Screen
   cy.contains("Design").click()
-  cy.get("[aria-label=AddCircle]").click()
+  cy.get(".spectrum-Button").contains("Add screen").click({ force: true })
   cy.get(".spectrum-Modal").within(() => {
     cy.get("[data-cy='blank-screen']").click()
     cy.get(".spectrum-Button").contains("Continue").click({ force: true })
@@ -567,7 +629,7 @@ Cypress.Commands.add(
   "createDatasourceScreen",
   (datasourceNames, accessLevelLabel) => {
     cy.contains("Design").click()
-    cy.get("[aria-label=AddCircle]").click()
+    cy.get(".spectrum-Button").contains("Add screen").click({ force: true })
     cy.get(".spectrum-Modal").within(() => {
       cy.get(".item").contains("Autogenerated screens").click()
       cy.get(".spectrum-Button").contains("Continue").click({ force: true })
@@ -622,13 +684,60 @@ Cypress.Commands.add(
   }
 )
 
+Cypress.Commands.add("filterScreensAccessLevel", accessLevel => {
+  // Filters screens by access level dropdown
+  cy.get(".body").within(() => {
+    cy.get(".spectrum-Form-item").eq(1).click()
+  })
+  cy.get(".spectrum-Menu").within(() => {
+    cy.contains(accessLevel).click()
+  })
+})
+
+Cypress.Commands.add("deleteScreen", screen => {
+  // Navigates to Design section and deletes specified screen
+  cy.contains("Design").click()
+  cy.get(".body").within(() => {
+    cy.contains(screen)
+      .siblings(".actions")
+      .within(() => {
+        cy.get(".spectrum-Icon").click({ force: true })
+      })
+  })
+  cy.get(".spectrum-Menu > .spectrum-Menu-item > .spectrum-Menu-itemLabel")
+    .contains("Delete")
+    .click()
+
+  cy.get(
+    ".spectrum-Dialog-grid > .spectrum-ButtonGroup > .confirm-wrap > .spectrum-Button"
+  ).click({ force: true })
+  cy.get(".spectrum-Dialog-grid", { timeout: 10000 }).should("not.exist")
+})
+
+Cypress.Commands.add("deleteAllScreens", () => {
+  // Deletes all screens
+  cy.get(".body")
+    .find(".nav-item")
+    .its("length")
+    .then(len => {
+      for (let i = 0; i < len; i++) {
+        cy.get(".body > .nav-item")
+          .eq(0)
+          .invoke("text")
+          .then(text => {
+            cy.deleteScreen(text.trim())
+          })
+      }
+    })
+})
+
 // NAVIGATION
 Cypress.Commands.add("navigateToFrontend", () => {
   // Clicks on Design tab and then the Home nav item
   cy.wait(500)
   cy.contains("Design").click()
   cy.get(".spectrum-Search", { timeout: 2000 }).type("/")
-  cy.get(".nav-item", { timeout: 2000 }).contains("home").click()
+  cy.get(".nav-item", { timeout: 2000 }).contains("home").click({ force: true })
 })
 
 Cypress.Commands.add("navigateToDataSection", () => {
@@ -640,9 +749,11 @@ Cypress.Commands.add("navigateToDataSection", () => {
 Cypress.Commands.add("navigateToAutogeneratedModal", () => {
   // Screen name must already exist within data source
   cy.contains("Design").click()
-  cy.get("[aria-label=AddCircle]").click()
+  cy.get(".spectrum-Button").contains("Add screen").click({ force: true })
   cy.get(".spectrum-Modal").within(() => {
-    cy.get(".item").contains("Autogenerated screens").click()
+    cy.get(".item", { timeout: 2000 })
+      .contains("Autogenerated screens")
+      .click({ force: true })
     cy.get(".spectrum-Button").contains("Continue").click({ force: true })
     cy.wait(500)
   })

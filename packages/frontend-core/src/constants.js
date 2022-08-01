@@ -35,7 +35,7 @@ export const OperatorOptions = {
     label: "Less than",
   },
   Contains: {
-    value: "equal",
+    value: "contains",
     label: "Contains",
   },
   NotContains: {
@@ -60,6 +60,37 @@ export const TableNames = {
   USERS: "ta_users",
 }
 
+export const BbRoles = [
+  { label: "App User", value: "appUser" },
+  { label: "Developer", value: "developer" },
+  { label: "Admin", value: "admin" },
+]
+
+export const BuilderRoleDescriptions = [
+  {
+    value: "appUser",
+    icon: "User",
+    label: "App user - Only has access to published apps",
+  },
+  {
+    value: "developer",
+    icon: "Hammer",
+    label: "Developer - Access to the app builder",
+  },
+  {
+    value: "admin",
+    icon: "Draw",
+    label: "Admin - Full access",
+  },
+]
+
+export const PlanType = {
+  FREE: "free",
+  TEAM: "team",
+  BUSINESS: "business",
+  ENTERPRISE: "enterprise",
+}
+
 /**
  * API version header attached to all requests.
  * Version changelog:
@@ -67,6 +98,10 @@ export const TableNames = {
  *   - Coerce types for search endpoint
  */
 export const ApiVersion = "1"
+
+export const Features = {
+  USER_GROUPS: "userGroups",
+}
 
 // Role IDs
 export const Roles = {
@@ -76,7 +111,6 @@ export const Roles = {
   PUBLIC: "PUBLIC",
   BUILDER: "BUILDER",
 }
-
 /**
  * Maximum minimum range for SQL number values
  */
