@@ -3,7 +3,6 @@
     ModalContent,
     PickerDropdown,
     ActionButton,
-    Layout,
     notifications,
   } from "@budibase/bbui"
   import { roles } from "stores/backend"
@@ -14,7 +13,6 @@
   export let app
   export let addData
   export let appUsers = []
-
   let prevSearch = undefined,
     search = undefined
   let pageInfo = createPaginationStore()
@@ -33,7 +31,7 @@
     prevSearch = search
     try {
       pageInfo.loading()
-      await users.search({ page, search })
+      await users.search({ page, email: search })
       pageInfo.fetched($users.hasNextPage, $users.nextPage)
     } catch (error) {
       notifications.error("Error getting user list")
@@ -80,26 +78,23 @@
   onConfirm={() => addData(appData)}
   showCloseIcon={false}
 >
-  <Layout noPadding gap="XS">
-    {#each appData as input, index}
-      <PickerDropdown
-        autocomplete
-        primaryOptions={optionSections}
-        placeholder={"Search users"}
-        secondaryPlaceholder="Access"
-        secondaryOptions={$roles}
-        bind:primaryValue={input.id}
-        bind:secondaryValue={input.role}
-        getPrimaryOptionLabel={group => group.name}
-        getPrimaryOptionValue={group => group.name}
-        getPrimaryOptionIcon={group => group.icon}
-        getPrimaryOptionColour={group => group.colour}
-        getSecondaryOptionLabel={role => role.name}
-        getSecondaryOptionValue={role => role._id}
-        getSecondaryOptionColour={role => RoleUtils.getRoleColour(role._id)}
-      />
-    {/each}
-  </Layout>
+  {#each appData as input, index}
+    <PickerDropdown
+      autocomplete
+      primaryOptions={optionSections}
+      secondaryOptions={$roles}
+      bind:primaryValue={input.id}
+      bind:secondaryValue={input.role}
+      bind:searchTerm={search}
+      getPrimaryOptionLabel={group => group.name}
+      getPrimaryOptionValue={group => group.name}
+      getPrimaryOptionIcon={group => group.icon}
+      getPrimaryOptionColour={group => group.colour}
+      getSecondaryOptionLabel={role => role.name}
+      getSecondaryOptionValue={role => role._id}
+      getSecondaryOptionColour={role => RoleUtils.getRoleColour(role._id)}
+    />
+  {/each}
   <div>
     <ActionButton on:click={addNewInput} icon="Add">Add email</ActionButton>
   </div>
