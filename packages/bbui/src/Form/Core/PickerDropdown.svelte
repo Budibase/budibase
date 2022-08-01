@@ -356,6 +356,13 @@
     min-width: 0;
     width: 100%;
   }
+  .spectrum-InputGroup :global(.spectrum-Search-input) {
+    border: none;
+    border-bottom: 1px solid var(--spectrum-global-color-gray-300);
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
   .override-borders {
     border-top-left-radius: 0px;
     border-bottom-left-radius: 0px;
