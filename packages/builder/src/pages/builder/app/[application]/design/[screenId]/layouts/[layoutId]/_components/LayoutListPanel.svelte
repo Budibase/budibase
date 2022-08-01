@@ -13,7 +13,7 @@
         indentLevel={0}
         selected={$store.selectedLayoutId === layout._id}
         text={layout.name}
-        on:click={() => ($store.selectedLayoutId = layout._id)}
+        on:click={() => store.actions.layouts.select(layout._id)}
       >
         <LayoutDropdownMenu {layout} />
       </NavItem>

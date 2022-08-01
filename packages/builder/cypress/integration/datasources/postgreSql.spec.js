@@ -108,7 +108,7 @@ filterTests(["all"], () => {
       })
 
       it("should delete a relationship", () => {
-        cy.get(".hierarchy-items-container").contains("PostgreSQL").click()
+        cy.get(".hierarchy-items-container").contains("PostgreSQL").click({ force: true })
         cy.reload()
         // Delete one relationship
         cy.get(".spectrum-Table")
@@ -150,13 +150,15 @@ filterTests(["all"], () => {
         cy.get("@query").its("response.statusCode").should("eq", 200)
         cy.get("@query").its("response.body").should("not.be.empty")
         // Save query
+        cy.intercept("**/queries").as("saveQuery")
         cy.get(".spectrum-Button").contains("Save Query").click({ force: true })
+        cy.wait("@saveQuery")
         cy.get(".spectrum-Tabs-content", { timeout: 2000 }).should("contain", queryName)
       })
 
       it("should switch to schema with no tables", () => {
         // Switch Schema - To one without any tables
-        cy.get(".hierarchy-items-container").contains("PostgreSQL").click()
+        cy.get(".hierarchy-items-container").contains("PostgreSQL").click({ force: true })
         switchSchema("randomText")
 
         // No tables displayed
@@ -202,7 +204,7 @@ filterTests(["all"], () => {
         cy.get(".spectrum-Table").eq(1).should("contain", queryName)
       })
 
-      it("should duplicate a query", () => {
+      xit("should duplicate a query", () => {
         // Locate previously created query
         cy.get(".nav-item")
           .contains(queryName)
@@ -218,8 +220,9 @@ filterTests(["all"], () => {
       it("should edit a query name", () => {
         // Access query
         cy.get(".hierarchy-items-container", { timeout: 2000 })
-          .contains(queryName + " (1)")
-          .click()
+          //.contains(queryName + " (1)")
+          .contains(queryName)
+          .click({ force: true })
 
         // Rename query
         cy.wait(1000)
@@ -229,18 +232,16 @@ filterTests(["all"], () => {
             cy.get("input").clear().type(queryRename)
           })
 
-        // Run and Save query
-        cy.get(".spectrum-Button", { timeout: 2000 }).contains("Run Query").click({ force: true })
-        cy.wait(1000)
-        cy.get(".spectrum-Button", { timeout: 2000 }).contains("Save Query").click({ force: true })
-        cy.reload({ timeout: 5000 })
-        cy.get(".nav-item", { timeout: 2000 }).should("contain", queryRename)
+        // Click on a nav item and confirm name change
+        cy.get(".nav-item").first().click()
+        // Confirm name change
+        cy.get(".nav-item").should("contain", queryRename)
       })
 
       it("should delete a query", () => {
         // Get query nav item - QueryName
         cy.get(".nav-item")
-          .contains(queryName)
+          .contains(queryRename)
           .parent()
           .within(() => {
             cy.get(".spectrum-Icon").eq(1).click({ force: true })
@@ -252,7 +253,7 @@ filterTests(["all"], () => {
           .click({ force: true })
         // Confirm deletion
         cy.reload({ timeout: 5000 })
-        cy.get(".nav-item", { timeout: 1000 }).should("not.contain", queryName)
+        cy.get(".nav-item", { timeout: 1000 }).should("not.contain", queryRename)
       })
 
       const switchSchema = schema => {
