@@ -16,7 +16,6 @@
   export let getOptionIcon = option => option?.icon
   export let getOptionColour = option => option?.colour
   export let isOptionEnabled
-  export let getBadgeLabel
   export let quiet = false
   export let autoWidth = false
   export let sort = false
@@ -52,7 +51,6 @@
     {getOptionIcon}
     {getOptionColour}
     {isOptionEnabled}
-    {getBadgeLabel}
     on:change={onChange}
     on:click
   />
