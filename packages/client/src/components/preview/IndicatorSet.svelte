@@ -72,6 +72,7 @@
     // Sanity limit of 100 active indicators
     const children = Array.from(parents)
       .map(parent => parent?.children?.[0])
+      .filter(x => x != null)
       .slice(0, 100)
 
     // If there aren't any nodes then reset
