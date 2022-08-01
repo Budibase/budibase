@@ -15,6 +15,8 @@
   export let getOptionValue = option => extractProperty(option, "value")
   export let getOptionIcon = option => option?.icon
   export let getOptionColour = option => option?.colour
+  export let isOptionEnabled
+  export let getBadgeLabel
   export let quiet = false
   export let autoWidth = false
   export let sort = false
@@ -49,6 +51,8 @@
     {getOptionValue}
     {getOptionIcon}
     {getOptionColour}
+    {isOptionEnabled}
+    {getBadgeLabel}
     on:change={onChange}
     on:click
   />

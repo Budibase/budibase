@@ -106,12 +106,3 @@
     {/if}
   </ModalContent>
 </Modal>
-
-<style>
-  .icon-wrapper {
-    display: contents;
-  }
-  .icon-wrapper.highlight :global(svg) {
-    color: var(--spectrum-global-color-blue-600);
-  }
-</style>

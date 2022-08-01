@@ -1,5 +1,5 @@
 <script>
-  import { Layout, Table, Select, Pagination, Link } from "@budibase/bbui"
+  import { Layout, Table, Select, Pagination, Banner } from "@budibase/bbui"
   import DateTimeRenderer from "components/common/renderers/DateTimeRenderer.svelte"
   import StatusRenderer from "./StatusRenderer.svelte"
   import HistoryDetailsPanel from "./HistoryDetailsPanel.svelte"
@@ -14,8 +14,7 @@
     STOPPED = "stopped"
   export let app
 
-  $: licensePlan = $auth.user?.license?.plan
-  $: console.log($auth.user?.license)
+  let licensePlan = $auth.user?.license?.plan
   $: upgradeUrl = `${$admin.accountPortalUrl}/portal/upgrade`
 
   let pageInfo = createPaginationStore()
@@ -38,19 +37,17 @@
     { value: "5-m", label: "Past 5 mins" },
   ]
 
-  $: allowedTimeOptions = timeOptions.filter(option => {
-    option.value === "1-d" && licensePlan.type === "free"
-  })
-  $: console.log(allowedTimeOptions)
+  const allowedFilters = ["1-d", "1-h", "15-m", "5-m"]
 
-  $: parsedOptions = timeOptions.reduce((acc, ele) => {
-    if (ele.value !== "1-d" && licensePlan.type === "free") {
-      ele = { ...ele, disabled: true }
-    }
-    acc.push(ele)
-    return acc
-  }, [])
-  $: console.log(parsedOptions)
+  let parsedOptions = timeOptions.filter(ele => {
+    return allowedFilters.indexOf(ele.value) >= 0
+  })
+
+  if (parsedOptions.length && timeRange === null) {
+    timeRange = parsedOptions[0].value
+  }
+
+  $: console.log("parsed options", parsedOptions)
 
   const statusOptions = [
     { value: SUCCESS, label: "Success" },
@@ -138,14 +135,25 @@
 </script>
 
 <div class="root" class:panelOpen={showPanel}>
+  <!-- {#if licensePlan?.type === "free"}
+    <Layout noPadding>
+      <div class="pro-banner">
+        <Banner
+          type="info"
+          showCloseButton={false}
+          extraButtonText={"Check it out!"}
+          extraButtonAction={() => {
+            window.open(upgradeUrl)
+          }}
+        >
+          24 hrs of logs currently available. Upgrade your budibase installation
+          to unlock additional features.
+        </Banner>
+      </div>
+    </Layout>
+  {/if} -->
   <Layout noPadding gap="M" alignContent="start">
     <div class="search">
-      {#if licensePlan.type === "free"}
-        <div>
-          Upgrade your budibase installation to unlock additional features.
-          <Link size="L" href={upgradeUrl}>Pro</Link>
-        </div>
-      {/if}
       <div class="select">
         <Select
           placeholder="All automations"
@@ -156,10 +164,27 @@
       </div>
       <div class="select">
         <Select
-          placeholder={allowedTimeOptions[0]?.label}
+          placeholder={parsedOptions[0]?.label}
           label="Date range"
           bind:value={timeRange}
-          options={parsedOptions}
+          options={timeOptions}
+          isOptionEnabled={x => {
+            if (licensePlan?.type === "free") {
+              return allowedFilters.indexOf(x.value) >= 0
+            }
+            return true
+          }}
+          getBadgeLabel={x => {
+            console.log("Running label change", licensePlan)
+            if (
+              licensePlan?.type === "free" &&
+              allowedFilters.indexOf(x.value) < 0
+            ) {
+              return "Pro"
+            } else {
+              return ""
+            }
+          }}
         />
       </div>
       <div class="select">
@@ -245,5 +270,9 @@
 
   .panelOpen {
     grid-template-columns: auto 420px;
+  }
+
+  .pro-banner {
+    margin-bottom: var(--spectrum-global-dimension-static-size-300);
   }
 </style>
