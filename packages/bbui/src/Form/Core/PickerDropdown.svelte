@@ -23,7 +23,6 @@
   export let secondaryFieldText = ""
   export let secondaryFieldIcon = ""
   export let secondaryFieldColour = ""
-  export let getPrimaryOptionLabel = option => option
   export let getPrimaryOptionValue = option => option
   export let getPrimaryOptionColour = () => null
   export let getPrimaryOptionIcon = () => null
