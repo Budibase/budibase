@@ -51,7 +51,7 @@
     Constants.Features.USER_GROUPS
   )
   $: nameLabel = getNameLabel($userFetch)
-  $: initials = getInitials(nameLabel, $userFetch)
+  $: initials = getInitials(nameLabel)
 
   $: allAppList = $apps
     .filter(x => {
@@ -95,9 +95,9 @@
   const userFetch = fetchData(`/api/global/users/${userId}`)
 
   const getNameLabel = userFetch => {
-    const { firstName, lastName } = userFetch?.data || {}
+    const { firstName, lastName, email } = userFetch?.data || {}
     if (!firstName && !lastName) {
-      return "Name unavailable"
+      return email || ""
     }
     let label
     if (firstName) {
@@ -111,19 +111,15 @@
     return label
   }
 
-  const getInitials = (nameLabel, userFetch) => {
-    if (nameLabel !== "Name unavailable") {
-      return nameLabel
-        .split(" ")
-        .slice(0, 2)
-        .map(x => x[0])
-        .join("")
+  const getInitials = nameLabel => {
+    if (!nameLabel) {
+      return "?"
     }
-    const { email } = userFetch?.data || {}
-    if (!email) {
-      return "PC"
-    }
-    return email.substring(0, 2)
+    return nameLabel
+      .split(" ")
+      .slice(0, 2)
+      .map(x => x[0])
+      .join("")
   }
 
   const getRoleLabel = roleId => {
@@ -235,7 +231,9 @@
             <Avatar size="XXL" {initials} />
             <div class="subtitle">
               <Heading size="S">{nameLabel}</Heading>
-              <Body size="XS">{$userFetch?.data?.email}</Body>
+              {#if nameLabel !== $userFetch?.data?.email}
+                <Body size="XS">{$userFetch?.data?.email}</Body>
+              {/if}
             </div>
           </div>
         </div>
@@ -410,7 +408,10 @@
 
   .subtitle {
     padding: 0 0 0 var(--spacing-m);
-    display: inline-block;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: stretch;
   }
 
   .appsTitle {
