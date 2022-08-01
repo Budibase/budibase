@@ -1,12 +1,6 @@
 <script>
   import Panel from "components/design/Panel.svelte"
-  import {
-    Layout,
-    Label,
-    ColorPicker,
-    Button,
-    notifications,
-  } from "@budibase/bbui"
+  import { Layout, Label, ColorPicker, notifications } from "@budibase/bbui"
   import { store } from "builderStore"
   import { get } from "svelte/store"
   import { DefaultAppTheme } from "constants"
