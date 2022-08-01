@@ -72,19 +72,12 @@
     name: {},
     email: {},
     role: {
-      noPropagation: true,
       sortable: false,
     },
     ...(hasGroupsLicense && {
       userGroups: { sortable: false, displayName: "User groups" },
     }),
-    apps: { width: "120px" },
-    settings: {
-      sortable: false,
-      width: "60px",
-      displayName: "",
-      align: "Right",
-    },
+    apps: {},
   }
 
   $: userData = []
@@ -256,10 +249,10 @@
         dataCy="add-user"
         on:click={createUserModal.show}
         icon="UserAdd"
-        cta>Add Users</Button
+        cta>Add users</Button
       >
       <Button on:click={importUsersModal.show} icon="Import" primary
-        >Import Users</Button
+        >Import users</Button
       >
 
       <div class="field">
@@ -323,6 +316,13 @@
 </Modal>
 
 <style>
+  .pagination {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    margin-top: var(--spacing-xl);
+  }
+
   .field {
     display: flex;
     align-items: center;

@@ -20,7 +20,7 @@ import { groups as groupUtils } from "@budibase/pro"
 
 const PAGE_LIMIT = 8
 
-export const allUsers = async (newDb?: any) => {
+export const allUsers = async () => {
   const db = tenancy.getGlobalDB()
   const response = await db.allDocs(
     dbUtils.getGlobalUserParams(null, {
@@ -28,6 +28,13 @@ export const allUsers = async (newDb?: any) => {
     })
   )
   return response.rows.map((row: any) => row.doc)
+}
+
+export const countUsersByApp = async (appId: string) => {
+  let response: any = await usersCore.searchGlobalUsersByApp(appId, {})
+  return {
+    userCount: response.length,
+  }
 }
 
 export const paginatedUsers = async ({
