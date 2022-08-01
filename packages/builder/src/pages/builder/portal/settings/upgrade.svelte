@@ -71,6 +71,7 @@
   })
 </script>
 
+{"is adming" + $auth.isAdmin}
 {#if $auth.isAdmin}
   <Layout noPadding>
     <Layout gap="XS" noPadding>

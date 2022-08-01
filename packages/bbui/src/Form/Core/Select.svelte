@@ -12,6 +12,8 @@
   export let getOptionValue = option => option
   export let getOptionIcon = () => null
   export let getOptionColour = () => null
+  export let isOptionEnabled
+  export let getBadgeLabel
   export let readonly = false
   export let quiet = false
   export let autoWidth = false
@@ -66,6 +68,8 @@
   {getOptionValue}
   {getOptionIcon}
   {getOptionColour}
+  {isOptionEnabled}
+  {getBadgeLabel}
   {autocomplete}
   {sort}
   isPlaceholder={value == null || value === ""}
