@@ -8,7 +8,6 @@
   import Search from "./Search.svelte"
   import Icon from "../../Icon/Icon.svelte"
   import StatusLight from "../../StatusLight/StatusLight.svelte"
-  import Badge from "../../Badge/Badge.svelte"
 
   export let id = null
   export let disabled = false
@@ -21,7 +20,6 @@
   export let options = []
   export let isOptionSelected = () => false
   export let isOptionEnabled = () => true
-  export let getBadgeLabel = () => ""
   export let onSelectOption = () => {}
   export let getOptionLabel = option => option
   export let getOptionValue = option => option
@@ -177,11 +175,6 @@
               {#if getOptionColour(option, idx)}
                 <span class="option-extra">
                   <StatusLight square color={getOptionColour(option, idx)} />
-                </span>
-              {/if}
-              {#if getBadgeLabel(option)}
-                <span class="badge-pro">
-                  <Badge grey quiet size="S">{getBadgeLabel(option)}</Badge>
                 </span>
               {/if}
               <span class="spectrum-Menu-itemLabel">

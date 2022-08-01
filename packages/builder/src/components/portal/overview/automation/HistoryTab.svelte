@@ -14,7 +14,7 @@
     STOPPED = "stopped"
   export let app
 
-  let licensePlan = $auth.user?.license?.plan
+  $: licensePlan = $auth.user?.license?.plan
   $: upgradeUrl = `${$admin.accountPortalUrl}/portal/upgrade`
 
   let pageInfo = createPaginationStore()
@@ -28,6 +28,7 @@
 
   $: page = $pageInfo.page
   $: fetchLogs(automationId, status, page, timeRange)
+  $: cloudHosted = !$admin.cloud
 
   const timeOptions = [
     { value: "1-w", label: "Past week" },
@@ -37,17 +38,13 @@
     { value: "5-m", label: "Past 5 mins" },
   ]
 
-  const allowedFilters = ["1-d", "1-h", "15-m", "5-m"]
-
-  let parsedOptions = timeOptions.filter(ele => {
-    return allowedFilters.indexOf(ele.value) >= 0
+  $: parsedOptions = timeOptions.filter(ele => {
+    return !cloudHosted || (licensePlan?.type === "free" && "1-w" !== ele.value)
   })
 
-  if (parsedOptions.length && timeRange === null) {
+  $: if (parsedOptions.length && timeRange === null) {
     timeRange = parsedOptions[0].value
   }
-
-  $: console.log("parsed options", parsedOptions)
 
   const statusOptions = [
     { value: SUCCESS, label: "Success" },
@@ -135,23 +132,6 @@
 </script>
 
 <div class="root" class:panelOpen={showPanel}>
-  <!-- {#if licensePlan?.type === "free"}
-    <Layout noPadding>
-      <div class="pro-banner">
-        <Banner
-          type="info"
-          showCloseButton={false}
-          extraButtonText={"Check it out!"}
-          extraButtonAction={() => {
-            window.open(upgradeUrl)
-          }}
-        >
-          24 hrs of logs currently available. Upgrade your budibase installation
-          to unlock additional features.
-        </Banner>
-      </div>
-    </Layout>
-  {/if} -->
   <Layout noPadding gap="M" alignContent="start">
     <div class="search">
       <div class="select">
@@ -169,21 +149,10 @@
           bind:value={timeRange}
           options={timeOptions}
           isOptionEnabled={x => {
-            if (licensePlan?.type === "free") {
-              return allowedFilters.indexOf(x.value) >= 0
+            if (cloudHosted) {
+              return licensePlan?.type === "free" && "1-w" !== x.value
             }
             return true
-          }}
-          getBadgeLabel={x => {
-            console.log("Running label change", licensePlan)
-            if (
-              licensePlan?.type === "free" &&
-              allowedFilters.indexOf(x.value) < 0
-            ) {
-              return "Pro"
-            } else {
-              return ""
-            }
           }}
         />
       </div>
