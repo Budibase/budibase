@@ -146,7 +146,7 @@
         </div>
       </div>
       <div bind:this={popoverAnchor}>
-        <Button on:click={popover.show()} icon="UserAdd" cta>Add User</Button>
+        <Button on:click={popover.show()} icon="UserAdd" cta>Add user</Button>
       </div>
       <Popover align="right" bind:this={popover} anchor={popoverAnchor}>
         <UserGroupPicker
