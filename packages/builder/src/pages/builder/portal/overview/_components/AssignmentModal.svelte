@@ -39,9 +39,9 @@
     }
   }
 
-  $: filteredGroups = $groups.filter(element => {
-    return !element.apps.find(y => {
-      return y.appId === app.appId
+  $: filteredGroups = $groups.filter(group => {
+    return !group.apps.find(appId => {
+      return appId === app.appId
     })
   })
 
