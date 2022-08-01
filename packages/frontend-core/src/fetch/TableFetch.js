@@ -37,6 +37,7 @@ export default class TableFetch extends DataFetch {
       return {
         rows: [],
         hasNextPage: false,
+        error,
       }
     }
   }

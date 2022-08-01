@@ -224,6 +224,7 @@ function shouldCopySpecialColumn(
     FieldTypes.ARRAY,
     FieldTypes.FORMULA,
   ]
+  // column has been deleted, remove
   if (column && !fetchedColumn) {
     return false
   }
