@@ -11,6 +11,7 @@ export enum AutomationViewModes {
 }
 
 export enum ViewNames {
+  USER_BY_APP = "by_app",
   USER_BY_EMAIL = "by_email2",
   BY_API_KEY = "by_api_key",
   USER_BY_BUILDERS = "by_builders",
@@ -28,6 +29,7 @@ export const DeprecatedViews = {
 
 export enum DocumentTypes {
   USER = "us",
+  GROUP = "gr",
   WORKSPACE = "workspace",
   CONFIG = "config",
   TEMPLATE = "template",

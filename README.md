@@ -135,12 +135,17 @@ You can learn more about the Budibase API at the following places:
 
 ## 🏁 Get started
 
-<a href="https://docs.budibase.com/docs/hosting-methods"><img src="https://res.cloudinary.com/daog6scxm/image/upload/v1634808888/logo/deploy_npl9za.png" /></a>
-
 Deploy Budibase self-hosted in your existing infrastructure, using Docker, Kubernetes, and Digital Ocean.
 Or use Budibase Cloud if you don't need to self-host, and would like to get started quickly.
 
 ### [Get started with self-hosting Budibase](https://docs.budibase.com/docs/hosting-methods)
+
+- [Docker - single ARM compatible image](https://docs.budibase.com/docs/docker)
+- [Docker Compose](https://docs.budibase.com/docs/docker-compose)
+- [Kubernetes](https://docs.budibase.com/docs/kubernetes-k8s)
+- [Digital Ocean](https://docs.budibase.com/docs/digitalocean)
+- [Portainer](https://docs.budibase.com/docs/portainer)
+
 
 ### [Get started with Budibase Cloud](https://budibase.com)
 

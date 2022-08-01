@@ -150,6 +150,15 @@ export enum Event {
   TENANT_BACKFILL_FAILED = "tenant:backfill:failed",
   INSTALLATION_BACKFILL_SUCCEEDED = "installation:backfill:succeeded",
   INSTALLATION_BACKFILL_FAILED = "installation:backfill:failed",
+
+  // USER
+  USER_GROUP_CREATED = "user_group:created",
+  USER_GROUP_UPDATED = "user_group:updated",
+  USER_GROUP_DELETED = "user_group:deleted",
+  USER_GROUP_USERS_ADDED = "user_group:user_added",
+  USER_GROUP_USERS_REMOVED = "user_group:users_deleted",
+  USER_GROUP_PERMISSIONS_EDITED = "user_group:permissions_edited",
+  USER_GROUP_ONBOARDING = "user_group:onboarding_added",
 }
 
 // properties added at the final stage of the event pipeline

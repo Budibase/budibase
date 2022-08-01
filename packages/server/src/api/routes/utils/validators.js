@@ -1,4 +1,4 @@
-const joiValidator = require("../../../middleware/joi-validator")
+const { joiValidator } = require("@budibase/backend-core/auth")
 const { DataSourceOperation } = require("../../../constants")
 const { WebhookType } = require("../../../constants")
 const {

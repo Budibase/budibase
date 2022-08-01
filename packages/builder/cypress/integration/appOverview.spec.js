@@ -205,7 +205,7 @@ filterTests(["all"], () => {
 
       cy.navigateToFrontend()
 
-      cy.addComponent("Elements", "Headline").then(componentId => {
+      cy.searchAndAddComponent("Headline").then(componentId => {
         cy.getComponent(componentId).should("exist")
       })
 

@@ -45,6 +45,7 @@
         },
       ])
     }
+
     if (admin) {
       menu = menu.concat([
         {
@@ -64,6 +65,15 @@
           href: "/builder/portal/settings/theming",
         },
       ])
+
+      if (isEnabled(FEATURE_FLAGS.USER_GROUPS)) {
+        let item = {
+          title: "User Groups",
+          href: "/builder/portal/manage/groups",
+        }
+
+        menu.splice(2, 0, item)
+      }
 
       if (!$adminStore.cloud) {
         menu = menu.concat([

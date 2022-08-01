@@ -1,4 +1,9 @@
-const { ViewNames } = require("./db/utils")
+const {
+  ViewNames,
+  getUsersByAppParams,
+  getProdAppID,
+  generateAppUserID,
+} = require("./db/utils")
 const { queryGlobalView } = require("./db/views")
 const { UNICODE_MAX } = require("./db/constants")
 
@@ -13,12 +18,32 @@ exports.getGlobalUserByEmail = async email => {
     throw "Must supply an email address to view"
   }
 
-  const response = await queryGlobalView(ViewNames.USER_BY_EMAIL, {
+  return await queryGlobalView(ViewNames.USER_BY_EMAIL, {
     key: email.toLowerCase(),
     include_docs: true,
   })
+}
 
-  return response
+exports.searchGlobalUsersByApp = async (appId, opts) => {
+  if (typeof appId !== "string") {
+    throw new Error("Must provide a string based app ID")
+  }
+  const params = getUsersByAppParams(appId, {
+    include_docs: true,
+  })
+  params.startkey = opts && opts.startkey ? opts.startkey : params.startkey
+  let response = await queryGlobalView(ViewNames.USER_BY_APP, params)
+  if (!response) {
+    response = []
+  }
+  return Array.isArray(response) ? response : [response]
+}
+
+exports.getGlobalUserByAppPage = (appId, user) => {
+  if (!user) {
+    return
+  }
+  return generateAppUserID(getProdAppID(appId), user._id)
 }
 
 /**
