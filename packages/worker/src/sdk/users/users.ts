@@ -31,7 +31,7 @@ export const allUsers = async () => {
 }
 
 export const countUsersByApp = async (appId: string) => {
-  let response: any = await usersCore.searchGlobalUsersByApp(appId)
+  let response: any = await usersCore.searchGlobalUsersByApp(appId, {})
   return {
     userCount: response.length,
   }

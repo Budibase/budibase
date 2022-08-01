@@ -53,10 +53,6 @@
           href: "/builder/portal/manage/users",
           heading: "Manage",
         },
-        isEnabled(FEATURE_FLAGS.USER_GROUPS) && {
-          title: "User Groups",
-          href: "/builder/portal/manage/groups",
-        },
         { title: "Auth", href: "/builder/portal/manage/auth" },
         { title: "Email", href: "/builder/portal/manage/email" },
         {
@@ -69,6 +65,15 @@
           href: "/builder/portal/settings/theming",
         },
       ])
+
+      if (isEnabled(FEATURE_FLAGS.USER_GROUPS)) {
+        let item = {
+          title: "User Groups",
+          href: "/builder/portal/manage/groups",
+        }
+
+        menu.splice(1, 0, item)
+      }
 
       if (!$adminStore.cloud) {
         menu = menu.concat([
