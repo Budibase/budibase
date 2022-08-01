@@ -43,7 +43,7 @@
   )
   let userApps = []
   $: publishedApps = $apps.filter(publishedAppsOnly)
-  $: console.log($auth.user)
+
   $: {
     if (!Object.keys($auth.user?.roles).length && $auth.user?.userGroups) {
       userApps =
