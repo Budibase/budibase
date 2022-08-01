@@ -26,18 +26,36 @@
   let popover
   let searchTerm = ""
   let selectedUsers = []
-  let prevSearch = undefined,
-    search = undefined
+  let prevSearch = undefined
   let pageInfo = createPaginationStore()
   let loaded = false
 
   $: page = $pageInfo.page
-  $: fetchUsers(page, search)
+  $: fetchUsers(page, searchTerm)
   $: group = $groups.find(x => x._id === groupId)
 
   async function addAll() {
-    group.users = selectedUsers
+    selectedUsers = [...selectedUsers, ...filtered.map(u => u._id)]
+
+    let reducedUserObjects = filtered.map(u => {
+      return {
+        _id: u._id,
+        email: u.email,
+      }
+    })
+    group.users = [...reducedUserObjects, ...group.users]
+
     await groups.actions.save(group)
+
+    $users.data.forEach(async user => {
+      let userToEdit = await users.get(user._id)
+      let userGroups = userToEdit.userGroups || []
+      userGroups.push(groupId)
+      await users.save({
+        ...userToEdit,
+        userGroups,
+      })
+    })
   }
 
   async function selectUser(id) {
@@ -100,7 +118,7 @@
     prevSearch = search
     try {
       pageInfo.loading()
-      await users.search({ page, search })
+      await users.search({ page, email: search })
       pageInfo.fetched($users.hasNextPage, $users.nextPage)
     } catch (error) {
       notifications.error("Error getting user list")
