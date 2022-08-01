@@ -131,6 +131,9 @@ export interface SearchFilters {
   oneOf?: {
     [key: string]: any[]
   }
+  contains?: {
+    [key: string]: any
+  }
 }
 
 export interface SortJson {

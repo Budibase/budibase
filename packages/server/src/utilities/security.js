@@ -13,6 +13,7 @@ const { DocumentTypes } = require("../db/utils")
 const CURRENTLY_SUPPORTED_LEVELS = [
   PermissionLevels.WRITE,
   PermissionLevels.READ,
+  PermissionLevels.EXECUTE,
 ]
 
 exports.getPermissionType = resourceId => {

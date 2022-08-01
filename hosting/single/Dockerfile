@@ -108,7 +108,7 @@ RUN chmod +x install.sh && ./install.sh
 WORKDIR /
 ADD hosting/single/runner.sh .
 RUN chmod +x ./runner.sh
-ADD hosting/scripts/healthcheck.sh .
+ADD hosting/single/healthcheck.sh .
 RUN chmod +x ./healthcheck.sh
 
 ADD hosting/scripts/build-target-paths.sh .
@@ -122,8 +122,7 @@ RUN yarn cache clean -f
 
 EXPOSE 80
 EXPOSE 443
-VOLUME /opt/couchdb/data
-VOLUME /minio
+VOLUME /data
 
 #  setup letsencrypt certificate
 RUN apt-get install -y certbot python3-certbot-nginx

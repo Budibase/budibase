@@ -9,7 +9,8 @@ const tenancy = require("./tenancy")
 const internalApi = require("./internalApi")
 const datasourceGoogle = require("./passport/datasource/google")
 const csrf = require("./csrf")
-
+const adminOnly = require("./adminOnly")
+const joiValidator = require("./joi-validator")
 module.exports = {
   google,
   oidc,
@@ -25,4 +26,6 @@ module.exports = {
     google: datasourceGoogle,
   },
   csrf,
+  adminOnly,
+  joiValidator,
 }

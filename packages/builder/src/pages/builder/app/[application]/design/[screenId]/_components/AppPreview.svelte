@@ -3,6 +3,7 @@
   import { onMount, onDestroy } from "svelte"
   import {
     store,
+    selectedComponent,
     selectedScreen,
     selectedLayout,
     currentAsset,
@@ -14,6 +15,7 @@
     Layout,
     Heading,
     Body,
+    Icon,
     notifications,
   } from "@budibase/bbui"
   import ErrorSVG from "@budibase/frontend-core/assets/error.svg?raw"
@@ -85,12 +87,21 @@
     previewDevice: $store.previewDevice,
     messagePassing: $store.clientFeatures.messagePassing,
     navigation: $store.navigation,
+    hiddenComponentIds:
+      $store.componentToPaste?._id && $store.componentToPaste?.isCut
+        ? [$store.componentToPaste?._id]
+        : [],
     isBudibaseEvent: true,
   }
 
   // Refresh the preview when required
   $: json = JSON.stringify(previewData)
   $: refreshContent(json)
+
+  // Determine if the add component menu is active
+  $: isAddingComponent = $isActive(
+    `./components/${$selectedComponent?._id}/new`
+  )
 
   // Update the iframe with the builder info to render the correct preview
   const refreshContent = message => {
@@ -138,7 +149,7 @@
           $goto("./components")
         }
       } else if (type === "update-prop") {
-        await store.actions.components.updateProp(data.prop, data.value)
+        await store.actions.components.updateSetting(data.prop, data.value)
       } else if (type === "delete-component" && data.id) {
         confirmDeleteComponent(data.id)
       } else if (type === "duplicate-component" && data.id) {
@@ -215,6 +226,16 @@
     idToDelete = null
   }
 
+  const toggleAddComponent = () => {
+    if (isAddingComponent) {
+      $goto(`../${$selectedScreen._id}/components/${$selectedComponent?._id}`)
+    } else {
+      $goto(
+        `../${$selectedScreen._id}/components/${$selectedComponent?._id}/new`
+      )
+    }
+  }
+
   onMount(() => {
     window.addEventListener("message", receiveMessage)
     if (!$store.clientFeatures.messagePassing) {
@@ -278,6 +299,13 @@
     class:tablet={$store.previewDevice === "tablet"}
     class:mobile={$store.previewDevice === "mobile"}
   />
+  <div
+    class="add-component"
+    class:active={isAddingComponent}
+    on:click={toggleAddComponent}
+  >
+    <Icon size="XL" name="Add">Component</Icon>
+  </div>
 </div>
 <ConfirmDialog
   bind:this={confirmDeleteDialog}
@@ -338,5 +366,27 @@
   iframe {
     width: 100%;
     height: 100%;
+  }
+
+  .add-component {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: var(--spectrum-global-color-blue-500);
+    display: grid;
+    place-items: center;
+    color: white;
+    box-shadow: 1px 3px 8px 0 rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    transition: transform ease-out 300ms, background ease-out 130ms;
+  }
+  .add-component:hover {
+    background: var(--spectrum-global-color-blue-600);
+  }
+  .add-component.active {
+    transform: rotate(-45deg);
   }
 </style>

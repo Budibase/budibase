@@ -5,7 +5,11 @@ import {
   getDevelopmentAppID,
 } from "@budibase/backend-core/db"
 import { DocumentTypes, getAutomationParams } from "../../../db/utils"
-import { disableAllCrons, enableCronTrigger } from "../../../automations/utils"
+import {
+  disableAllCrons,
+  enableCronTrigger,
+  clearMetadata,
+} from "../../../automations/utils"
 import { app as appCache } from "@budibase/backend-core/cache"
 import {
   getAppId,
@@ -80,6 +84,7 @@ async function initDeployedApp(prodAppId: any) {
       })
     )
   ).rows.map((row: any) => row.doc)
+  await clearMetadata()
   console.log("You have " + automations.length + " automations")
   const promises = []
   console.log("Disabling prod crons..")

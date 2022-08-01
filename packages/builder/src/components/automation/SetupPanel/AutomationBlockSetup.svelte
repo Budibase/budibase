@@ -1,6 +1,7 @@
 <script>
   import TableSelector from "./TableSelector.svelte"
   import RowSelector from "./RowSelector.svelte"
+  import FieldSelector from "./FieldSelector.svelte"
   import SchemaSetup from "./SchemaSetup.svelte"
   import {
     Button,
@@ -30,6 +31,8 @@
   import { LuceneUtils } from "@budibase/frontend-core"
   import { getSchemaForTable } from "builderStore/dataBinding"
   import { Utils } from "@budibase/frontend-core"
+  import { TriggerStepID, ActionStepID } from "constants/backend/automations"
+  import { cloneDeep } from "lodash/fp"
 
   export let block
   export let testData
@@ -40,13 +43,25 @@
   let tempFilters = lookForFilters(schemaProperties) || []
   let fillWidth = true
   let codeBindingOpen = false
+  let inputData
 
   $: stepId = block.stepId
   $: bindings = getAvailableBindings(
     block || $automationStore.selectedBlock,
     $automationStore.selectedAutomation?.automation?.definition
   )
-  $: inputData = testData ? testData : block.inputs
+
+  $: getInputData(testData, block.inputs)
+  const getInputData = (testData, blockInputs) => {
+    let newInputData = testData || blockInputs
+
+    if (block.event === "app:trigger" && !newInputData?.fields) {
+      newInputData = cloneDeep(blockInputs)
+    }
+
+    inputData = newInputData
+  }
+
   $: tableId = inputData ? inputData.tableId : null
   $: table = tableId
     ? $tables.list.find(table => table._id === inputData.tableId)
@@ -54,12 +69,13 @@
   $: schema = getSchemaForTable(tableId, { searchableSchema: true }).schema
   $: schemaFields = Object.values(schema || {})
   $: queryLimit = tableId?.includes("datasource") ? "∞" : "1000"
+  $: isTrigger = block?.type === "TRIGGER"
 
   const onChange = Utils.sequential(async (e, key) => {
     try {
       if (isTestModal) {
         // Special case for webhook, as it requires a body, but the schema already brings back the body's contents
-        if (stepId === "WEBHOOK") {
+        if (stepId === TriggerStepID.WEBHOOK) {
           automationStore.actions.addTestDataToAutomation({
             body: {
               [key]: e.detail,
@@ -71,15 +87,13 @@
           [key]: e.detail,
         })
         testData[key] = e.detail
-        await automationStore.actions.save(
-          $automationStore.selectedAutomation?.automation
-        )
       } else {
         block.inputs[key] = e.detail
-        await automationStore.actions.save(
-          $automationStore.selectedAutomation?.automation
-        )
       }
+
+      await automationStore.actions.save(
+        $automationStore.selectedAutomation?.automation
+      )
     } catch (error) {
       notifications.error("Error saving automation")
     }
@@ -100,9 +114,9 @@
     // Extract all outputs from all previous steps as available bindins
     let bindings = []
     for (let idx = 0; idx < blockIdx; idx++) {
-      let wasLoopBlock = allSteps[idx]?.stepId === "LOOP"
+      let wasLoopBlock = allSteps[idx]?.stepId === ActionStepID.LOOP
       let isLoopBlock =
-        allSteps[idx]?.stepId === "LOOP" &&
+        allSteps[idx]?.stepId === ActionStepID.LOOP &&
         allSteps.find(x => x.blockToLoop === block.id)
 
       // If the previous block was a loop block, decerement the index so the following
@@ -183,11 +197,13 @@
 <div class="fields">
   {#each schemaProperties as [key, value]}
     <div class="block-field">
-      <Label
-        tooltip={value.title === "Binding / Value"
-          ? "If using the String input type, please use a comma or newline separated string"
-          : null}>{value.title || (key === "row" ? "Table" : key)}</Label
-      >
+      {#if key !== "fields"}
+        <Label
+          tooltip={value.title === "Binding / Value"
+            ? "If using the String input type, please use a comma or newline separated string"
+            : null}>{value.title || (key === "row" ? "Table" : key)}</Label
+        >
+      {/if}
       {#if value.type === "string" && value.enum}
         <Select
           on:change={e => onChange(e, key)}
@@ -244,6 +260,7 @@
             {bindings}
             allowJS={false}
             updateOnChange={false}
+            drawerLeft="260px"
           />
         {/if}
       {:else if value.customType === "query"}
@@ -261,6 +278,7 @@
         />
       {:else if value.customType === "table"}
         <TableSelector
+          {isTrigger}
           value={inputData[key]}
           on:change={e => onChange(e, key)}
         />
@@ -276,6 +294,14 @@
         <WebhookDisplay
           on:change={e => onChange(e, key)}
           value={inputData[key]}
+        />
+      {:else if value.customType === "fields"}
+        <FieldSelector
+          {block}
+          value={inputData[key]}
+          on:change={e => onChange(e, key)}
+          {bindings}
+          {isTestModal}
         />
       {:else if value.customType === "triggerSchema"}
         <SchemaSetup on:change={e => onChange(e, key)} value={inputData[key]} />
@@ -332,6 +358,7 @@
               {bindings}
               updateOnChange={false}
               placeholder={value.customType === "queryLimit" ? queryLimit : ""}
+              drawerLeft="260px"
             />
           </div>
         {/if}
@@ -343,7 +370,7 @@
   <CreateWebhookModal />
 </Modal>
 
-{#if stepId === "WEBHOOK"}
+{#if stepId === TriggerStepID.WEBHOOK}
   <Button secondary on:click={() => webhookModal.show()}>Set Up Webhook</Button>
 {/if}
 

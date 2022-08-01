@@ -1,10 +1,11 @@
+import { QueryVariable } from "./definitions"
 const env = require("../environment")
 const db = require("../db")
 const redis = require("@budibase/backend-core/redis")
 const { SEPARATOR } = require("@budibase/backend-core/db")
 
 const VARIABLE_TTL_SECONDS = 3600
-let client
+let client: any
 
 async function getClient() {
   if (!client) {
@@ -14,10 +15,16 @@ async function getClient() {
 }
 
 process.on("exit", async () => {
-  if (client) await client.finish()
+  if (client) {
+    await client.finish()
+  }
 })
 
-exports.threadSetup = () => {
+function makeVariableKey(queryId: string, variable: string) {
+  return `${queryId}${SEPARATOR}${variable}`
+}
+
+export function threadSetup() {
   // don't run this if not threading
   if (env.isTest() || env.DISABLE_THREADING) {
     return
@@ -27,16 +34,15 @@ exports.threadSetup = () => {
   db.init()
 }
 
-function makeVariableKey(queryId, variable) {
-  return `${queryId}${SEPARATOR}${variable}`
-}
-
-exports.checkCacheForDynamicVariable = async (queryId, variable) => {
+export async function checkCacheForDynamicVariable(
+  queryId: string,
+  variable: string
+) {
   const cache = await getClient()
   return cache.get(makeVariableKey(queryId, variable))
 }
 
-exports.invalidateDynamicVariables = async cachedVars => {
+export async function invalidateDynamicVariables(cachedVars: QueryVariable[]) {
   const cache = await getClient()
   let promises = []
   for (let variable of cachedVars) {
@@ -47,7 +53,11 @@ exports.invalidateDynamicVariables = async cachedVars => {
   await Promise.all(promises)
 }
 
-exports.storeDynamicVariable = async (queryId, variable, value) => {
+export async function storeDynamicVariable(
+  queryId: string,
+  variable: string,
+  value: any
+) {
   const cache = await getClient()
   await cache.store(
     makeVariableKey(queryId, variable),
@@ -56,7 +66,7 @@ exports.storeDynamicVariable = async (queryId, variable, value) => {
   )
 }
 
-exports.formatResponse = resp => {
+export function formatResponse(resp: any) {
   if (typeof resp === "string") {
     try {
       resp = JSON.parse(resp)
@@ -67,7 +77,7 @@ exports.formatResponse = resp => {
   return resp
 }
 
-exports.hasExtraData = response => {
+export function hasExtraData(response: any) {
   return (
     typeof response === "object" &&
     !Array.isArray(response) &&
@@ -75,4 +85,13 @@ exports.hasExtraData = response => {
     response.data != null &&
     response.info != null
   )
+}
+
+export default {
+  hasExtraData,
+  formatResponse,
+  storeDynamicVariable,
+  invalidateDynamicVariables,
+  checkCacheForDynamicVariable,
+  threadSetup,
 }

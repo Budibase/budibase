@@ -1,5 +1,5 @@
 <script>
-  import { Button, Select, Input } from "@budibase/bbui"
+  import { Button, Select, Input, Label } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   const dispatch = createEventDispatcher()
 
@@ -9,6 +9,7 @@
     dispatch("change", e.detail)
   }
 
+  let touched = false
   let presets = false
 
   const CRON_EXPRESSIONS = [
@@ -36,8 +37,10 @@
 </script>
 
 <div class="block-field">
-  <Input on:change={onChange} {value} />
-
+  <Input on:change={onChange} {value} on:blur={() => (touched = true)} />
+  {#if touched && !value}
+    <Label><div class="error">Please specify a CRON expression</div></Label>
+  {/if}
   <div class="presets">
     <Button on:click={() => (presets = !presets)}
       >{presets ? "Hide" : "Show"} Presets</Button
@@ -61,5 +64,9 @@
   }
   .block-field {
     padding-top: var(--spacing-s);
+  }
+  .error {
+    padding-top: var(--spacing-xs);
+    color: var(--spectrum-global-color-red-500);
   }
 </style>
