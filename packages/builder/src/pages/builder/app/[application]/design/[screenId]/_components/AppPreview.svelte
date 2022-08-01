@@ -20,7 +20,7 @@
   } from "@budibase/bbui"
   import ErrorSVG from "@budibase/frontend-core/assets/error.svg?raw"
   import { findComponent, findComponentPath } from "builderStore/componentUtils"
-  import { isActive, goto, url } from "@roxi/routify"
+  import { isActive, goto } from "@roxi/routify"
   import { Screen } from "builderStore/store/screenTemplates/utils/Screen"
 
   let iframe
