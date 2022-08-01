@@ -13,13 +13,16 @@ export const buildUserEndpoints = API => ({
    * @param {string} page The page to retrieve
    * @param {string} search The starts with string to search username/email by.
    */
-  searchUsers: async ({ page, search } = {}) => {
+  searchUsers: async ({ page, email, appId } = {}) => {
     const opts = {}
     if (page) {
       opts.page = page
     }
-    if (search) {
-      opts.search = search
+    if (email) {
+      opts.email = email
+    }
+    if (appId) {
+      opts.appId = appId
     }
     return await API.post({
       url: `/api/global/users/search`,
@@ -81,12 +84,39 @@ export const buildUserEndpoints = API => ({
   },
 
   /**
+   * Creates multiple users.
+   * @param users the array of user objects to create
+   */
+  createUsers: async ({ users, groups }) => {
+    return await API.post({
+      url: "/api/global/users/bulkCreate",
+      body: {
+        users,
+        groups,
+      },
+    })
+  },
+
+  /**
    * Deletes a user from the curernt tenant.
    * @param userId the ID of the user to delete
    */
   deleteUser: async userId => {
     return await API.delete({
       url: `/api/global/users/${userId}`,
+    })
+  },
+
+  /**
+   * Deletes multiple users
+   * @param userId the ID of the user to delete
+   */
+  deleteUsers: async userIds => {
+    return await API.post({
+      url: `/api/global/users/bulkDelete`,
+      body: {
+        userIds,
+      },
     })
   },
 
@@ -110,6 +140,25 @@ export const buildUserEndpoints = API => ({
   },
 
   /**
+   * Invites multiple users to the current tenant.
+   * @param email An array of email addresses
+   * @param builder whether the user should be a global builder
+   * @param admin whether the user should be a global admin
+   */
+  inviteUsers: async ({ emails, builder, admin }) => {
+    return await API.post({
+      url: "/api/global/users/inviteMultiple",
+      body: {
+        emails,
+        userInfo: {
+          admin: admin ? { global: true } : undefined,
+          builder: builder ? { global: true } : undefined,
+        },
+      },
+    })
+  },
+
+  /**
    * Accepts an invite to join the platform and creates a user.
    * @param inviteCode the invite code sent in the email
    * @param password the password for the newly created user
@@ -121,6 +170,17 @@ export const buildUserEndpoints = API => ({
         inviteCode,
         password,
       },
+    })
+  },
+
+  /**
+   * Accepts an invite to join the platform and creates a user.
+   * @param inviteCode the invite code sent in the email
+   * @param password the password for the newly created user
+   */
+  getUserCountByApp: async ({ appId }) => {
+    return await API.get({
+      url: `/api/global/users/count/${appId}`,
     })
   },
 })

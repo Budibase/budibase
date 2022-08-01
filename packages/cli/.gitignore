@@ -4,3 +4,4 @@ nginx.conf
 build/
 docker-error.log
 envoy.yaml
+*.tar.gz
