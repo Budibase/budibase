@@ -249,10 +249,10 @@
         dataCy="add-user"
         on:click={createUserModal.show}
         icon="UserAdd"
-        cta>Add Users</Button
+        cta>Add users</Button
       >
       <Button on:click={importUsersModal.show} icon="Import" primary
-        >Import Users</Button
+        >Import users</Button
       >
 
       <div class="field">

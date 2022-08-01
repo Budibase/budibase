@@ -72,7 +72,7 @@
           href: "/builder/portal/manage/groups",
         }
 
-        menu.splice(1, 0, item)
+        menu.splice(2, 0, item)
       }
 
       if (!$adminStore.cloud) {

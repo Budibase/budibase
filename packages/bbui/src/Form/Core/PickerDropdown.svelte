@@ -233,7 +233,10 @@
                   </div>
                 {:else if getPrimaryOptionColour(option, idx)}
                   <span class="option-left">
-                    <StatusLight color={getPrimaryOptionColour(option, idx)} />
+                    <StatusLight
+                      square
+                      color={getPrimaryOptionColour(option, idx)}
+                    />
                   </span>
                 {/if}
                 <span class="spectrum-Menu-itemLabel">
@@ -253,6 +256,7 @@
                   {#if getPrimaryOptionIcon(option, idx) && getPrimaryOptionColour(option, idx)}
                     <span class="option-right">
                       <StatusLight
+                        square
                         color={getPrimaryOptionColour(option, idx)}
                       />
                     </span>
@@ -281,7 +285,7 @@
           </span>
         {:else if secondaryFieldColour}
           <span class="option-left">
-            <StatusLight color={secondaryFieldColour} />
+            <StatusLight square color={secondaryFieldColour} />
           </span>
         {/if}
 
@@ -319,6 +323,7 @@
                 {#if getSecondaryOptionColour(option, idx)}
                   <span class="option-left">
                     <StatusLight
+                      square
                       color={getSecondaryOptionColour(option, idx)}
                     />
                   </span>
@@ -351,6 +356,13 @@
     min-width: 0;
     width: 100%;
   }
+  .spectrum-InputGroup :global(.spectrum-Search-input) {
+    border: none;
+    border-bottom: 1px solid var(--spectrum-global-color-gray-300);
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
   .override-borders {
     border-top-left-radius: 0px;
     border-bottom-left-radius: 0px;
