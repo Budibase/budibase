@@ -127,7 +127,7 @@ module.exports = (
       }
       if (!user && tenantId) {
         user = { tenantId }
-      } else {
+      } else if (user) {
         delete user.password
       }
       // be explicit

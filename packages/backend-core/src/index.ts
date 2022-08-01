@@ -3,6 +3,7 @@ const errorClasses = errors.errors
 import * as events from "./events"
 import * as migrations from "./migrations"
 import * as users from "./users"
+import * as roles from "./security/roles"
 import * as accounts from "./cloud/accounts"
 import * as installation from "./installation"
 import env from "./environment"
@@ -51,6 +52,7 @@ const core = {
   installation,
   errors,
   logging,
+  roles,
   ...errorClasses,
 }
 

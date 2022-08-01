@@ -20,12 +20,14 @@
   import { store, automationStore } from "builderStore"
   import { API } from "api"
   import { onMount } from "svelte"
-  import { apps, auth, admin, templates } from "stores/portal"
+  import { apps, auth, admin, templates, groups } from "stores/portal"
   import download from "downloadjs"
   import { goto } from "@roxi/routify"
   import AppRow from "components/start/AppRow.svelte"
   import { AppStatus } from "constants"
   import Logo from "assets/bb-space-man.svg"
+  import AccessFilter from "./_components/AcessFilter.svelte"
+  import { Constants } from "@budibase/frontend-core"
 
   let sortBy = "name"
   let template
@@ -39,6 +41,7 @@
   let cloud = $admin.cloud
   let creatingFromTemplate = false
   let automationErrors
+  let accessFilterList = null
 
   const resolveWelcomeMessage = (auth, apps) => {
     const userWelcome = auth?.user?.firstName
@@ -56,13 +59,19 @@
     : "Start from scratch"
 
   $: enrichedApps = enrichApps($apps, $auth.user, sortBy)
-  $: filteredApps = enrichedApps.filter(app =>
-    app?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+  $: filteredApps = enrichedApps.filter(
+    app =>
+      app?.name?.toLowerCase().includes(searchTerm.toLowerCase()) &&
+      (accessFilterList !== null ? accessFilterList.includes(app?.appId) : true)
   )
 
   $: lockedApps = filteredApps.filter(app => app?.lockedYou || app?.lockedOther)
   $: unlocked = lockedApps?.length === 0
   $: automationErrors = getAutomationErrors(enrichedApps)
+
+  $: hasGroupsLicense = $auth.user?.license.features.includes(
+    Constants.Features.USER_GROUPS
+  )
 
   const enrichApps = (apps, user, sortBy) => {
     const enrichedApps = apps.map(app => ({
@@ -200,6 +209,10 @@
       return
     }
     $goto(`../../app/${app.devId}`)
+  }
+
+  const accessFilterAction = accessFilter => {
+    accessFilterList = accessFilter.detail
   }
 
   function createAppFromTemplateUrl(templateKey) {
@@ -347,6 +360,9 @@
                   </Button>
                 {/if}
                 <div class="filter">
+                  {#if hasGroupsLicense && $groups.length}
+                    <AccessFilter on:change={accessFilterAction} />
+                  {/if}
                   <Select
                     quiet
                     autoWidth
