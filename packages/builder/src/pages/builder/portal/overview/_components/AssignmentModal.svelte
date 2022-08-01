@@ -13,7 +13,6 @@
   export let app
   export let addData
   export let appUsers = []
-
   let prevSearch = undefined,
     search = undefined
   let pageInfo = createPaginationStore()
@@ -32,7 +31,7 @@
     prevSearch = search
     try {
       pageInfo.loading()
-      await users.search({ page, search })
+      await users.search({ page, email: search })
       pageInfo.fetched($users.hasNextPage, $users.nextPage)
     } catch (error) {
       notifications.error("Error getting user list")
@@ -83,10 +82,10 @@
     <PickerDropdown
       autocomplete
       primaryOptions={optionSections}
-      placeholder={"Search Users"}
       secondaryOptions={$roles}
       bind:primaryValue={input.id}
       bind:secondaryValue={input.role}
+      bind:searchTerm={search}
       getPrimaryOptionLabel={group => group.name}
       getPrimaryOptionValue={group => group.name}
       getPrimaryOptionIcon={group => group.icon}

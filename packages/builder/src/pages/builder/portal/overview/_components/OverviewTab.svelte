@@ -11,7 +11,7 @@
   export let app
   export let deployments
   export let navigateTab
-
+  let userCount
   const dispatch = createEventDispatcher()
 
   const unpublishApp = () => {
@@ -40,7 +40,9 @@
   }
 
   onMount(async () => {
-    await users.search({ page: undefined, appId: "app_" + app.appId })
+    let resp = await users.getUserCountByApp({ appId: "app_" + app.appId })
+    userCount = resp.userCount
+    await users.search({ appId: "app_" + app.appId, limit: 4 })
   })
 </script>
 
@@ -155,7 +157,8 @@
               </div>
 
               <div class="users-text">
-                {$users?.data.length} users have access to this app
+                {userCount}
+                {userCount > 1 ? `users have` : `user has`} access to this app
               </div>
             </Layout>
           {:else}

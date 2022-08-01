@@ -26,6 +26,7 @@
   export let autofocus
   export let primaryOptions = []
   export let secondaryOptions = []
+  export let searchTerm
 
   let primaryLabel
   let secondaryLabel
@@ -87,10 +88,15 @@
     }
     return value
   }
+
+  const updateSearchTerm = e => {
+    searchTerm = e.detail
+  }
 </script>
 
 <Field {label} {labelPosition} {error}>
   <PickerDropdown
+    {searchTerm}
     {autocomplete}
     {dataCy}
     {updateOnChange}
@@ -116,6 +122,7 @@
     {secondaryLabel}
     on:pickprimary={onPickPrimary}
     on:picksecondary={onPickSecondary}
+    on:search={updateSearchTerm}
     on:click
     on:input
     on:blur
