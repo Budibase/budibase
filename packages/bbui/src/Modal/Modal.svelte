@@ -82,12 +82,12 @@
   -->
   <Portal target=".modal-container">
     {#if visible}
-      <div
-        class="spectrum-Underlay is-open"
-        in:fade={{ duration: 200 }}
-        out:fade|local={{ duration: 200 }}
-        on:mousedown|self={cancel}
-      >
+      <div class="spectrum-Underlay is-open" on:mousedown|self={cancel}>
+        <div
+          class="background"
+          in:fade={{ duration: 200 }}
+          out:fade|local={{ duration: 200 }}
+        />
         <div class="modal-wrapper" on:mousedown|self={cancel}>
           <div class="modal-inner-wrapper" on:mousedown|self={cancel}>
             <slot name="outside" />
@@ -116,7 +116,17 @@
     z-index: 999;
     overflow: auto;
     overflow-x: hidden;
-    background: rgba(0, 0, 0, 0.75);
+    background: transparent;
+  }
+  .background {
+    background: var(--modal-background, rgba(0, 0, 0, 0.75));
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 100vw;
+    opacity: 0.65;
+    pointer-events: none;
   }
 
   .modal-wrapper {
