@@ -225,7 +225,7 @@ function shouldCopySpecialColumn(
     FieldTypes.FORMULA,
   ]
   if (column && !fetchedColumn) {
-    return true
+    return false
   }
   const fetchedIsNumber =
     !fetchedColumn || fetchedColumn.type === FieldTypes.NUMBER
