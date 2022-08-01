@@ -43,26 +43,28 @@
   )
   let userApps = []
   $: publishedApps = $apps.filter(publishedAppsOnly)
-
+  $: console.log($auth.user)
   $: {
     if (!Object.keys($auth.user?.roles).length && $auth.user?.userGroups) {
-      userApps = $auth.user?.builder?.global
-        ? publishedApps
-        : publishedApps.filter(app => {
-            return userGroups.find(group => {
-              return Object.keys(group.roles)
-                .map(role => apps.extractAppId(role))
-                .includes(app.appId)
+      userApps =
+        $auth.user?.builder?.global || $auth.user?.admin?.global
+          ? publishedApps
+          : publishedApps.filter(app => {
+              return userGroups.find(group => {
+                return Object.keys(group.roles)
+                  .map(role => apps.extractAppId(role))
+                  .includes(app.appId)
+              })
             })
-          })
     } else {
-      userApps = $auth.user?.builder?.global
-        ? publishedApps
-        : publishedApps.filter(app =>
-            Object.keys($auth.user?.roles)
-              .map(x => apps.extractAppId(x))
-              .includes(app.appId)
-          )
+      userApps =
+        $auth.user?.builder?.global || $auth.user?.admin?.global
+          ? publishedApps
+          : publishedApps.filter(app =>
+              Object.keys($auth.user?.roles)
+                .map(x => apps.extractAppId(x))
+                .includes(app.appId)
+            )
     }
   }
 
