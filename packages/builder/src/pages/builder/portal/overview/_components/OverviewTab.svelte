@@ -5,7 +5,7 @@
   import { store } from "builderStore"
   import clientPackage from "@budibase/client/package.json"
   import { processStringSync } from "@budibase/string-templates"
-  import { users, auth } from "stores/portal"
+  import { users, auth, apps } from "stores/portal"
   import { createEventDispatcher, onMount } from "svelte"
 
   export let app
@@ -40,9 +40,11 @@
   }
 
   onMount(async () => {
-    let resp = await users.getUserCountByApp({ appId: "app_" + app.appId })
+    let resp = await users.getUserCountByApp({
+      appId: apps.getProdAppID(app.devId),
+    })
     userCount = resp.userCount
-    await users.search({ appId: "app_" + app.appId, limit: 4 })
+    await users.search({ appId: apps.getProdAppID(app.devId), limit: 4 })
   })
 </script>
 
