@@ -79,10 +79,6 @@
     display: flex;
   }
 
-  :global(.spectrum-Picker) {
-    border-top-left-radius: 0px;
-  }
-
   .container {
     width: 100%;
     height: var(--spectrum-alias-item-height-l);

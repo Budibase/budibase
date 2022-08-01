@@ -123,12 +123,7 @@
   .fix-height {
     margin-bottom: 5%;
   }
-
   .normal-height {
     margin-bottom: 0%;
-  }
-
-  :global(.spectrum-Picker) {
-    border-top-left-radius: 0px;
   }
 </style>
