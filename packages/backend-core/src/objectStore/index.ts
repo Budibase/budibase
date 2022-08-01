@@ -75,9 +75,11 @@ export const ObjectStore = (bucket: any) => {
     s3ForcePathStyle: true,
     signatureVersion: "v4",
     apiVersion: "2006-03-01",
-    params: {
+  }
+  if (bucket) {
+    config.params = {
       Bucket: sanitizeBucket(bucket),
-    },
+    }
   }
   if (env.MINIO_URL) {
     config.endpoint = env.MINIO_URL
@@ -292,6 +294,7 @@ export const uploadDirectory = async (
     }
   }
   await Promise.all(uploads)
+  return files
 }
 
 exports.downloadTarballDirect = async (url: string, path: string) => {

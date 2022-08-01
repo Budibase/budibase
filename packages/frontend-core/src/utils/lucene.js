@@ -103,8 +103,16 @@ export const buildLuceneQuery = filter => {
       const isHbs =
         typeof value === "string" && value.match(HBS_REGEX)?.length > 0
       // Parse all values into correct types
-      if (type === "datetime" && value) {
-        value = new Date(value).toISOString()
+      if (type === "datetime") {
+        // Ensure date value is a valid date and parse into correct format
+        if (!value) {
+          return
+        }
+        try {
+          value = new Date(value).toISOString()
+        } catch (error) {
+          return
+        }
       }
       if (type === "number" && !Array.isArray(value)) {
         if (operator === "oneOf") {

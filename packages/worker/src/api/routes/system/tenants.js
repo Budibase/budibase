@@ -1,6 +1,6 @@
 const Router = require("@koa/router")
 const controller = require("../../controllers/system/tenants")
-const adminOnly = require("../../../middleware/adminOnly")
+const { adminOnly } = require("@budibase/backend-core/auth")
 
 const router = Router()
 

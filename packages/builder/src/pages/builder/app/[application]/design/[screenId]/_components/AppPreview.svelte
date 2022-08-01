@@ -186,7 +186,7 @@
           $goto("./navigation")
         }
       } else if (type === "request-add-component") {
-        $goto("./components/new")
+        $goto(`./components/${$selectedComponent?._id}/new`)
       } else if (type === "highlight-setting") {
         store.actions.settings.highlight(data.setting)
 
