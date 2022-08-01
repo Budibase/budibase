@@ -15,25 +15,16 @@ filterTests(["smoke", "all"], () => {
       cy.get(interact.SPECTRUM_TABLE).should("contain", "bbuser")
     })
 
-    it("should confirm basic permission for a New User", () => {
-      // Basic permission = development & administraton disabled
+    it("should confirm App User role for a New User", () => {
       cy.contains("bbuser").click()
-      // Confirm development and admin access are disabled
-      for (let i = 4; i < 6; i++) {
-        cy.wait(500)
-        cy.get(interact.FIELD).eq(i).within(() => {
-          //cy.get(interact.SPECTRUM_SWITCH_INPUT).should('be.disabled')
-          cy.get(".spectrum-Switch-switch").should('not.be.checked')
-        })
-      }
-      // Existing apps appear within the No Access table
-      cy.get(interact.SPECTRUM_TABLE, { timeout: 500 }).eq(1).should("not.contain", "No rows found")
-      // Configure roles table should not contain apps
-      cy.get(interact.SPECTRUM_TABLE).eq(0).contains("No rows found")
+      cy.get(".spectrum-Form-itemField").eq(2).should('contain', 'App User')
+
+      // User should not have app access
+      cy.get(interact.LIST_ITEMS, { timeout: 500 }).should("contain", "No apps")
     })
 
     if (Cypress.env("TEST_ENV")) {
-      it("should assign role types", () => {
+      xit("should assign role types", () => {
         // 3 apps minimum required - to assign an app to each role type
         cy.request(`${Cypress.config().baseUrl}/api/applications?status=all`)
           .its("body")
@@ -96,7 +87,7 @@ filterTests(["smoke", "all"], () => {
           })
       })
   
-      it("should unassign role types", () => {
+      xit("should unassign role types", () => {
         // Set each app within Configure roles table to 'No Access'
         cy.get(interact.SPECTRUM_TABLE)
           .eq(0)
@@ -125,7 +116,7 @@ filterTests(["smoke", "all"], () => {
       })
     }
 
-    it("should enable Developer access and verify application access", () => {
+    xit("should enable Developer access and verify application access", () => {
       // Enable Developer access
       cy.get(interact.FIELD)
         .eq(4)
@@ -157,7 +148,7 @@ filterTests(["smoke", "all"], () => {
         })
     })
 
-    it("should disable Developer access and verify application access", () => {
+    xit("should disable Developer access and verify application access", () => {
       // Disable Developer access
       cy.get(interact.FIELD)
         .eq(4)
@@ -175,12 +166,12 @@ filterTests(["smoke", "all"], () => {
 
     it("Should edit user details within user details page", () => {
       // Add First name
-      cy.get(interact.FIELD, { timeout: 1000 }).eq(2).within(() => {
+      cy.get(interact.FIELD, { timeout: 1000 }).eq(0).within(() => {
         cy.wait(500)
         cy.get(interact.SPECTRUM_TEXTFIELD_INPUT, { timeout: 1000 }).wait(500).clear().click().type("bb")
       })
       // Add Last name
-      cy.get(interact.FIELD, { timeout: 1000 }).eq(3).within(() => {
+      cy.get(interact.FIELD, { timeout: 1000 }).eq(1).within(() => {
         cy.wait(500)
         cy.get(interact.SPECTRUM_TEXTFIELD_INPUT, { timeout: 1000 }).click().wait(500).clear().type("test")
       })
@@ -189,16 +180,21 @@ filterTests(["smoke", "all"], () => {
       cy.reload()
 
       // Confirm details have been saved
-      cy.get(interact.FIELD, { timeout: 1000 }).eq(2).within(() => {
+      cy.get(interact.FIELD, { timeout: 1000 }).eq(0).within(() => {
         cy.get(interact.SPECTRUM_TEXTFIELD_INPUT).should('have.value', "bb")
       })
-      cy.get(interact.FIELD, { timeout: 1000 }).eq(3).within(() => {
+      cy.get(interact.FIELD, { timeout: 1000 }).eq(1).within(() => {
         cy.get(interact.SPECTRUM_TEXTFIELD_INPUT, { timeout: 1000 }).should('have.value', "test")
       })
     })
 
     it("should reset the users password", () => {
-      cy.get(interact.REGENERATE, { timeout: 500 }).contains("Force password reset").click({ force: true })
+      cy.get(".title").within(() => {
+        cy.get(interact.SPECTRUM_ICON).click({ force: true })
+      })
+      cy.get(interact.SPECTRUM_MENU).within(() => {
+        cy.get(interact.SPECTRUM_MENU_ITEM).contains("Force Password Reset").click({ force: true })
+      })
 
       // Reset password modal
       cy.get(interact.SPECTRUM_DIALOG_GRID)

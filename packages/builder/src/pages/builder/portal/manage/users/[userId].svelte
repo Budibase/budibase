@@ -41,6 +41,11 @@
   let allAppList = []
   let user
   $: fetchUser(userId)
+
+  $: fullName = $userFetch?.data?.firstName
+    ? $userFetch?.data?.firstName + " " + $userFetch?.data?.lastName
+    : ""
+
   $: hasGroupsLicense = $auth.user?.license.features.includes(
     Constants.Features.USER_GROUPS
   )
@@ -161,7 +166,7 @@
     if (detail === "developer") {
       toggleFlags({ admin: { global: false }, builder: { global: true } })
     } else if (detail === "admin") {
-      toggleFlags({ admin: { global: true }, builder: { global: false } })
+      toggleFlags({ admin: { global: true }, builder: { global: true } })
     } else if (detail === "appUser") {
       toggleFlags({ admin: { global: false }, builder: { global: false } })
     }

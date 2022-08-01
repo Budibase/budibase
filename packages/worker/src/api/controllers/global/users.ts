@@ -3,7 +3,7 @@ import { checkInviteCode } from "../../../utilities/redis"
 import { sendEmail } from "../../../utilities/email"
 import { users } from "../../../sdk"
 import env from "../../../environment"
-import { User, CloudAccount, UserGroup } from "@budibase/types"
+import { User, CloudAccount } from "@budibase/types"
 import {
   events,
   errors,
@@ -112,6 +112,16 @@ export const adminUser = async (ctx: any) => {
       ctx.throw(err.status || 400, err)
     }
   })
+}
+
+export const countByApp = async (ctx: any) => {
+  const appId = ctx.params.appId
+  try {
+    const response = await users.countUsersByApp(appId)
+    ctx.body = response
+  } catch (err: any) {
+    ctx.throw(err.status || 400, err)
+  }
 }
 
 export const destroy = async (ctx: any) => {

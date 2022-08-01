@@ -17,7 +17,7 @@
     </div>
     {value}
   {:else}
-    <div class="text">Name unavailable</div>
+    <div class="text">-</div>
   {/if}
 </div>
 
