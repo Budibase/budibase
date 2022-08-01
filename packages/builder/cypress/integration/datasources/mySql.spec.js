@@ -179,7 +179,7 @@ filterTests(["all"], () => {
         cy.get(".nav-item").should("contain", queryName)
       })
 
-      xit("should duplicate a query", () => {
+      it("should duplicate a query", () => {
         /// Get query nav item - QueryName
         cy.get(".nav-item")
           .contains(queryName)

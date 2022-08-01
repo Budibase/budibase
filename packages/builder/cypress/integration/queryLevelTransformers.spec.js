@@ -2,7 +2,7 @@ import filterTests from "../support/filterTests"
 const interact = require('../support/interact')
 
 filterTests(["smoke", "all"], () => {
-  xcontext("Query Level Transformers", () => {
+  context("Query Level Transformers", () => {
     before(() => {
       cy.login()
       cy.createTestApp()
