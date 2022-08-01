@@ -292,9 +292,9 @@
             <Body size="S">Add or remove this user from user groups</Body>
           </div>
           <div bind:this={popoverAnchor}>
-            <Button on:click={popover.show()} icon="UserGroup" cta
-              >Add User Group</Button
-            >
+            <Button on:click={popover.show()} icon="UserGroup" cta>
+              Add user group
+            </Button>
           </div>
           <Popover align="right" bind:this={popover} anchor={popoverAnchor}>
             <UserGroupPicker
