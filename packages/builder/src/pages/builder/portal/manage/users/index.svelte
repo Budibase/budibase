@@ -240,7 +240,12 @@
     <div class="controls-right">
       <Search bind:value={searchEmail} placeholder="Search email" />
       {#if selectedRows.length > 0}
-        <DeleteRowsButton on:updaterows {selectedRows} {deleteRows} />
+        <DeleteRowsButton
+          item="user"
+          on:updaterows
+          {selectedRows}
+          {deleteRows}
+        />
       {/if}
     </div>
   </div>
