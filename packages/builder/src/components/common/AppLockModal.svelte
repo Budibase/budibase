@@ -31,7 +31,6 @@
     lockedBy && lockedByYou ? "Locked by you" : `Locked by ${lockIdentifer}`
 
   const getExpiryDuration = app => {
-    console.log("Testing")
     if (!app?.lockedBy?.lockedAt) {
       return -1
     }
