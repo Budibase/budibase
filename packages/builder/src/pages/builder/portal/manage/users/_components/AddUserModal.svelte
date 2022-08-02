@@ -72,8 +72,8 @@
 <ModalContent
   {onConfirm}
   size="M"
-  title="Add new user"
-  confirmText="Add user"
+  title="Add new users"
+  confirmText="Add users"
   confirmDisabled={disabled}
   cancelText="Cancel"
   showCloseIcon={false}

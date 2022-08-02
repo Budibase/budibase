@@ -319,4 +319,7 @@
     align-items: center;
     gap: var(--spacing-xl);
   }
+  .controls-right :global(.spectrum-Search) {
+    width: 200px;
+  }
 </style>
