@@ -3,8 +3,11 @@ const { cloneDeep } = require("lodash/fp")
 const { InternalTables } = require("../../../db/utils")
 const userController = require("../user")
 const { FieldTypes } = require("../../../constants")
-const { makeExternalQuery } = require("../../../integrations/base/utils")
 const { getAppDB } = require("@budibase/backend-core/context")
+const {
+  makeExternalQuery,
+  removeKeyNumbering,
+} = require("../../../integrations/base/utils")
 
 validateJs.extend(validateJs.validators.datetime, {
   parse: function (value) {
@@ -15,6 +18,8 @@ validateJs.extend(validateJs.validators.datetime, {
     return new Date(value).toISOString()
   },
 })
+
+exports.removeKeyNumbering = removeKeyNumbering
 
 exports.getDatasourceAndQuery = async json => {
   const datasourceId = json.endpoint.datasourceId

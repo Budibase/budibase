@@ -1,4 +1,5 @@
 const { SearchIndexes } = require("../../../db/utils")
+const { removeKeyNumbering } = require("./utils")
 const fetch = require("node-fetch")
 const { getCouchInfo } = require("@budibase/backend-core/db")
 const { getAppId } = require("@budibase/backend-core/context")
@@ -197,6 +198,8 @@ class QueryBuilder {
 
     function build(structure, queryFn) {
       for (let [key, value] of Object.entries(structure)) {
+        // check for new format - remove numbering if needed
+        key = removeKeyNumbering(key)
         key = builder.preprocess(key.replace(/ /g, "_"), {
           escape: true,
         })

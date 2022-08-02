@@ -9,19 +9,26 @@
     Input,
     Layout,
     Select,
+    Toggle,
+    Label,
   } from "@budibase/bbui"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
   import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
   import { generate } from "shortid"
   import { LuceneUtils, Constants } from "@budibase/frontend-core"
   import { getFields } from "helpers/searchFields"
+  import { createEventDispatcher } from "svelte"
+
+  const dispatch = createEventDispatcher()
 
   export let schemaFields
   export let filters = []
   export let bindings = []
   export let panel = ClientBindingPanel
   export let allowBindings = true
+  export let allOr = false
 
+  $: dispatch("change", filters)
   $: enrichedSchemaFields = getFields(schemaFields || [])
   $: fieldOptions = enrichedSchemaFields.map(field => field.name) || []
   $: valueTypeOptions = allowBindings ? ["Value", "Binding"] : ["Value"]
@@ -69,7 +76,7 @@
     }
 
     // if changed to an array, change default value to empty array
-    const idx = filters.findIndex(x => x.field === field)
+    const idx = filters.findIndex(x => x.id === expression.id)
     if (expression.type === "array") {
       filters[idx].value = []
     } else {
@@ -179,10 +186,16 @@
           {/each}
         </div>
       {/if}
-      <div>
+      <div class="bottom">
         <Button icon="AddCircle" size="M" secondary on:click={addFilter}>
           Add filter
         </Button>
+        <div class="toggle">
+          <Toggle
+            value={allOr}
+            on:change={event => (allOr = event.detail)}
+          /><Label size="L">OR conditions</Label>
+        </div>
       </div>
     </Layout>
   </div>
@@ -201,5 +214,17 @@
     row-gap: var(--spacing-s);
     align-items: center;
     grid-template-columns: 1fr 120px 120px 1fr auto auto;
+  }
+
+  .toggle {
+    display: flex;
+    align-items: center;
+    padding-right: var(--spacing-s);
+  }
+
+  .bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
 </style>
