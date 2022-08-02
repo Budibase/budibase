@@ -3,17 +3,18 @@ import { checkInviteCode } from "../../../utilities/redis"
 import { sendEmail } from "../../../utilities/email"
 import { users } from "../../../sdk"
 import env from "../../../environment"
-import { User, CloudAccount } from "@budibase/types"
+import { CloudAccount, User } from "@budibase/types"
 import {
-  events,
-  errors,
   accounts,
-  users as usersCore,
-  tenancy,
   cache,
+  errors,
+  events,
+  tenancy,
+  users as usersCore,
 } from "@budibase/backend-core"
 import { checkAnyUserExists } from "../../../utilities/users"
 import { groups as groupUtils } from "@budibase/pro"
+
 const MAX_USERS_UPLOAD_LIMIT = 1000
 
 export const save = async (ctx: any) => {
@@ -117,8 +118,7 @@ export const adminUser = async (ctx: any) => {
 export const countByApp = async (ctx: any) => {
   const appId = ctx.params.appId
   try {
-    const response = await users.countUsersByApp(appId)
-    ctx.body = response
+    ctx.body = await users.countUsersByApp(appId)
   } catch (err: any) {
     ctx.throw(err.status || 400, err)
   }
@@ -126,6 +126,9 @@ export const countByApp = async (ctx: any) => {
 
 export const destroy = async (ctx: any) => {
   const id = ctx.params.id
+  if (id === ctx.user._id) {
+    ctx.throw(400, "Unable to delete self.")
+  }
 
   await users.destroy(id, ctx.user)
 
@@ -136,6 +139,10 @@ export const destroy = async (ctx: any) => {
 
 export const bulkDelete = async (ctx: any) => {
   const { userIds } = ctx.request.body
+  if (userIds?.indexOf(ctx.user._id) !== -1) {
+    ctx.throw(400, "Unable to delete self.")
+  }
+
   try {
     let usersResponse = await users.bulkDelete(userIds)
 
