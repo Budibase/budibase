@@ -5,6 +5,22 @@ import env from "../../environment"
 import * as context from "../../context"
 const pkg = require("../../../package.json")
 
+const EXCLUDED_EVENTS: Event[] = [
+  Event.USER_UPDATED,
+  Event.EMAIL_SMTP_UPDATED,
+  Event.AUTH_SSO_UPDATED,
+  Event.APP_UPDATED,
+  Event.ROLE_UPDATED,
+  Event.DATASOURCE_UPDATED,
+  Event.QUERY_UPDATED,
+  Event.TABLE_UPDATED,
+  Event.VIEW_UPDATED,
+  Event.VIEW_FILTER_UPDATED,
+  Event.VIEW_CALCULATION_UPDATED,
+  Event.AUTOMATION_TRIGGER_UPDATED,
+  Event.USER_GROUP_UPDATED,
+]
+
 export default class PosthogProcessor implements EventProcessor {
   posthog: PostHog
 
@@ -21,6 +37,11 @@ export default class PosthogProcessor implements EventProcessor {
     properties: BaseEvent,
     timestamp?: string | number
   ): Promise<void> {
+    // don't send excluded events
+    if (EXCLUDED_EVENTS.includes(event)) {
+      return
+    }
+
     properties.version = pkg.version
     properties.service = env.SERVICE
     properties.environment = identity.environment
