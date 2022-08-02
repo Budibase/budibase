@@ -345,25 +345,22 @@
       <List>
         {#if allAppList.length}
           {#each allAppList as app}
-            <div
-              class="pointer"
+            <ListItem
+              title={app.name}
+              iconBackground={app?.icon?.color || ""}
+              icon={app?.icon?.name || "Apps"}
+              hoverable
               on:click={$goto(`../../overview/${app.devId}`)}
             >
-              <ListItem
-                title={app.name}
-                iconBackground={app?.icon?.color || ""}
-                icon={app?.icon?.name || "Apps"}
-              >
-                <div class="title ">
-                  <StatusLight
-                    square
-                    color={RoleUtils.getRoleColour(getHighestRole(app.roles))}
-                  >
-                    {getRoleLabel(getHighestRole(app.roles))}
-                  </StatusLight>
-                </div>
-              </ListItem>
-            </div>
+              <div class="title ">
+                <StatusLight
+                  square
+                  color={RoleUtils.getRoleColour(getHighestRole(app.roles))}
+                >
+                  {getRoleLabel(getHighestRole(app.roles))}
+                </StatusLight>
+              </div>
+            </ListItem>
           {/each}
         {:else}
           <ListItem icon="Apps" title="No apps" />
@@ -384,9 +381,6 @@
 </Modal>
 
 <style>
-  .pointer {
-    cursor: pointer;
-  }
   .fields {
     display: grid;
     grid-gap: var(--spacing-m);
