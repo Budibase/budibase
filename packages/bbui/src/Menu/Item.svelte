@@ -10,6 +10,21 @@
   export let noClose = false
   export let keyBind = undefined
 
+  $: keys = getKeys(keyBind)
+
+  const getKeys = keyBind => {
+    let keys = keyBind?.split("+") || []
+    for (let i = 0; i < keys.length; i++) {
+      if (
+        keys[i].toLowerCase() === "ctrl" &&
+        navigator.platform.startsWith("Mac")
+      ) {
+        keys[i] = "⌘"
+      }
+    }
+    return keys
+  }
+
   const onClick = () => {
     if (actionMenu && !noClose) {
       actionMenu.hide()
@@ -37,9 +52,13 @@
     </svg>
   {/if}
   <span class="spectrum-Menu-itemLabel"><slot /></span>
-  {#if keyBind}
-    <div class="keyBind">
-      {keyBind}
+  {#if keys?.length}
+    <div class="keys">
+      {#each keys as key}
+        <div class="key">
+          {key}
+        </div>
+      {/each}
     </div>
   {/if}
 </li>
@@ -48,14 +67,26 @@
   .spectrum-Menu-itemIcon {
     align-self: center;
   }
-  .keyBind {
-    margin-left: var(--spacing-xl);
-    color: var(--spectrum-global-color-gray-600);
-    text-transform: uppercase;
+  .keys {
+    margin-left: 30px;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 4px;
+  }
+  .key {
+    color: var(--spectrum-global-color-gray-900);
+    padding: 2px 4px;
     font-size: 12px;
     font-weight: 600;
+    background-color: var(--spectrum-global-color-gray-300);
+    border-radius: 4px;
+    min-width: 12px;
+    text-align: center;
+    margin: -1px 0;
   }
-  .is-disabled .keyBind {
-    color: var(--spectrum-global-color-gray-300);
+  .is-disabled .key {
+    color: var(--spectrum-global-color-gray-600);
   }
 </style>
