@@ -11,6 +11,7 @@
     Search,
     notifications,
     Pagination,
+    Divider,
   } from "@budibase/bbui"
   import AddUserModal from "./_components/AddUserModal.svelte"
   import { users, groups, auth } from "stores/portal"
@@ -18,7 +19,6 @@
   import DeleteRowsButton from "components/backend/DataTable/buttons/DeleteRowsButton.svelte"
   import GroupsTableRenderer from "./_components/GroupsTableRenderer.svelte"
   import AppsTableRenderer from "./_components/AppsTableRenderer.svelte"
-  import NameTableRenderer from "./_components/NameTableRenderer.svelte"
   import RoleTableRenderer from "./_components/RoleTableRenderer.svelte"
   import { goto } from "@roxi/routify"
   import OnboardingTypeModal from "./_components/OnboardingTypeModal.svelte"
@@ -44,7 +44,6 @@
   let customRenderers = [
     { column: "userGroups", component: GroupsTableRenderer },
     { column: "apps", component: AppsTableRenderer },
-    { column: "name", component: NameTableRenderer },
     { column: "role", component: RoleTableRenderer },
   ]
 
@@ -53,7 +52,6 @@
   )
 
   $: schema = {
-    name: {},
     email: {},
     role: {
       sortable: false,
@@ -215,11 +213,13 @@
   }
 </script>
 
-<Layout noPadding>
+<Layout noPadding gap="M">
   <Layout gap="XS" noPadding>
     <Heading>Users</Heading>
     <Body>Add users and control who gets access to your published apps</Body>
   </Layout>
+  <Divider size="S" />
+
   <div class="controls">
     <ButtonGroup>
       <Button
@@ -249,7 +249,6 @@
       {/if}
     </div>
   </div>
-
   <Table
     on:click={({ detail }) => $goto(`./${detail._id}`)}
     {schema}
