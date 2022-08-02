@@ -27,6 +27,7 @@
     "dotenv": "16.0.1",
     "emitter-listener": "1.1.2",
     "ioredis": "4.28.0",
+    "joi": "17.6.0",
     "jsonwebtoken": "8.5.1",
     "koa-passport": "4.1.4",
     "lodash": "4.17.21",
