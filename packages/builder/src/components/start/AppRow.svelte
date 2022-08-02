@@ -6,6 +6,7 @@
   export let app
   export let editApp
   export let appOverview
+  export let idx
 </script>
 
 <div class="title" data-cy={`${app.devId}`}>
@@ -29,8 +30,8 @@
     Never updated
   {/if}
 </div>
-<div class="desktop">
-  <AppLockModal {app} buttonSize="M" />
+<div class="desktop check">
+  <span><AppLockModal {app} buttonSize="M" /></span>
 </div>
 <div class="desktop">
   <div class="app-status">
