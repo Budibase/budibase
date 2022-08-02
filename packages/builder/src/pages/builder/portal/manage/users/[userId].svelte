@@ -216,15 +216,13 @@
 </script>
 
 {#if loaded}
-  <Layout gap="L" noPadding>
-    <Layout gap="XS" noPadding>
-      <div>
-        <ActionButton on:click={() => $goto("./")} icon="ArrowLeft">
-          Back
-        </ActionButton>
-      </div>
-    </Layout>
-    <Layout gap="XS" noPadding>
+  <Layout gap="XL" noPadding>
+    <div>
+      <ActionButton on:click={() => $goto("./")} icon="ArrowLeft">
+        Back
+      </ActionButton>
+    </div>
+    <Layout noPadding gap="S">
       <div class="title">
         <div>
           <div style="display: flex;">
@@ -253,8 +251,6 @@
           </div>
         {/if}
       </div>
-    </Layout>
-    <Layout gap="S" noPadding>
       <div class="fields">
         <div class="field">
           <Label size="L">First name</Label>
@@ -291,7 +287,7 @@
       <Layout gap="S" noPadding>
         <div class="tableTitle">
           <div>
-            <Heading size="XS">User groups</Heading>
+            <Heading size="S">User groups</Heading>
             <Body size="S">Add or remove this user from user groups</Body>
           </div>
           <div bind:this={popoverAnchor}>
@@ -337,7 +333,7 @@
     <!-- User Apps -->
     <Layout gap="S" noPadding>
       <div>
-        <Heading size="XS">Apps</Heading>
+        <Heading size="S">Apps</Heading>
         <Body size="S">Manage apps that this user has been assigned to</Body>
       </div>
       <List>
