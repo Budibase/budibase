@@ -1,5 +1,5 @@
 <script>
-  import { Layout, Table, Select, Pagination, Banner } from "@budibase/bbui"
+  import { Layout, Table, Select, Pagination } from "@budibase/bbui"
   import DateTimeRenderer from "components/common/renderers/DateTimeRenderer.svelte"
   import StatusRenderer from "./StatusRenderer.svelte"
   import HistoryDetailsPanel from "./HistoryDetailsPanel.svelte"
@@ -15,7 +15,7 @@
   export let app
 
   $: licensePlan = $auth.user?.license?.plan
-  $: upgradeUrl = `${$admin.accountPortalUrl}/portal/upgrade`
+  // $: upgradeUrl = `${$admin.accountPortalUrl}/portal/upgrade`
 
   let pageInfo = createPaginationStore()
   let runHistory = null
@@ -239,9 +239,5 @@
 
   .panelOpen {
     grid-template-columns: auto 420px;
-  }
-
-  .pro-banner {
-    margin-bottom: var(--spectrum-global-dimension-static-size-300);
   }
 </style>

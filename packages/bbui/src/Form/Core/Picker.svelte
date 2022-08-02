@@ -196,9 +196,6 @@
 </div>
 
 <style>
-  .badge-pro {
-    padding-right: var(--spacing-s);
-  }
   .spectrum-Popover {
     max-height: 240px;
     z-index: 999;
