@@ -21,12 +21,6 @@ export async function downgraded(license: License) {
 }
 
 // TODO
-export async function updated(license: License) {
-  const properties: LicenseUpdatedEvent = {}
-  await publishEvent(Event.LICENSE_UPDATED, properties)
-}
-
-// TODO
 export async function activated(license: License) {
   const properties: LicenseActivatedEvent = {}
   await publishEvent(Event.LICENSE_ACTIVATED, properties)
