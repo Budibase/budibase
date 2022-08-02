@@ -6,7 +6,6 @@
   export let app
   export let editApp
   export let appOverview
-  export let idx
 </script>
 
 <div class="title" data-cy={`${app.devId}`}>
