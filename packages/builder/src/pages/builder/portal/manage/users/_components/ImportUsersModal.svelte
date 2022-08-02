@@ -7,7 +7,7 @@
     notifications,
   } from "@budibase/bbui"
   import { groups, auth, admin } from "stores/portal"
-  import { emailValidator } from "../../../../../../helpers/validation"
+  import { emailValidator } from "helpers/validation"
   import { Constants } from "@budibase/frontend-core"
 
   const BYTES_IN_MB = 1000000
@@ -22,9 +22,6 @@
   let usersRole = null
 
   $: invalidEmails = []
-  $: hasGroupsLicense = $auth.user?.license.features.includes(
-    Constants.Features.USER_GROUPS
-  )
 
   const validEmails = userEmails => {
     if ($admin.cloud && userEmails.length > MAX_USERS_UPLOAD_LIMIT) {
@@ -95,7 +92,7 @@
     options={Constants.BuilderRoleDescriptions}
   />
 
-  {#if hasGroupsLicense}
+  {#if $auth.groupsEnabled}
     <Multiselect
       bind:value={userGroups}
       placeholder="No groups"

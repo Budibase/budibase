@@ -25,21 +25,17 @@
   import PasswordModal from "./_components/PasswordModal.svelte"
   import ImportUsersModal from "./_components/ImportUsersModal.svelte"
   import { createPaginationStore } from "helpers/pagination"
-  import { Constants } from "@budibase/frontend-core"
   import { get } from "svelte/store"
 
-  //let email
   let enrichedUsers = []
   let createUserModal,
     inviteConfirmationModal,
     onboardingTypeModal,
     passwordModal,
     importUsersModal
-
   let pageInfo = createPaginationStore()
   let prevEmail = undefined,
     searchEmail = undefined
-
   let selectedRows = []
   let customRenderers = [
     { column: "userGroups", component: GroupsTableRenderer },
@@ -47,23 +43,17 @@
     { column: "role", component: RoleTableRenderer },
   ]
 
-  $: hasGroupsLicense = $auth.user?.license.features.includes(
-    Constants.Features.USER_GROUPS
-  )
-
   $: schema = {
     email: {},
     role: {
       sortable: false,
     },
-    ...(hasGroupsLicense && {
-      userGroups: { sortable: false, displayName: "User groups" },
+    ...($auth.groupsEnabled && {
+      userGroups: { sortable: false, displayName: "Groups" },
     }),
     apps: {},
   }
-
   $: userData = []
-
   $: page = $pageInfo.page
   $: fetchUsers(page, searchEmail)
   $: {
@@ -86,6 +76,7 @@
       }
     })
   }
+
   const showOnboardingTypeModal = async addUsersData => {
     userData = await removingDuplicities(addUsersData)
     if (!userData?.users?.length) return

@@ -18,9 +18,6 @@
   let disabled
   let userGroups = []
 
-  $: hasGroupsLicense = $auth.user?.license.features.includes(
-    Constants.Features.USER_GROUPS
-  )
   $: userData = [
     {
       email: "",
@@ -112,7 +109,7 @@
     </div>
   </Layout>
 
-  {#if hasGroupsLicense}
+  {#if $auth.groupsEnabled}
     <Multiselect
       bind:value={userGroups}
       placeholder="No groups"

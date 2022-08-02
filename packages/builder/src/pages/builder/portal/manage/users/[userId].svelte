@@ -42,18 +42,13 @@
   let allAppList = []
   let user
   let loaded = false
-  $: fetchUser(userId)
 
+  $: fetchUser(userId)
   $: fullName = $userFetch?.data?.firstName
     ? $userFetch?.data?.firstName + " " + $userFetch?.data?.lastName
     : ""
-
-  $: hasGroupsLicense = $auth.user?.license.features.includes(
-    Constants.Features.USER_GROUPS
-  )
   $: nameLabel = getNameLabel($userFetch)
   $: initials = getInitials(nameLabel)
-
   $: allAppList = $apps
     .filter(x => {
       if ($userFetch.data?.roles) {
@@ -86,7 +81,6 @@
       return y._id === userId
     })
   })
-
   $: globalRole = $userFetch?.data?.admin?.global
     ? "admin"
     : $userFetch?.data?.builder?.global
@@ -290,7 +284,7 @@
       </Layout>
     </Layout>
 
-    {#if hasGroupsLicense}
+    {#if $auth.groupsEnabled}
       <!-- User groups -->
       <Layout gap="S" noPadding>
         <div class="tableTitle">
