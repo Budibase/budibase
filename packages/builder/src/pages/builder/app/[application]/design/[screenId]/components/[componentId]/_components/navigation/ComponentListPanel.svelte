@@ -89,7 +89,7 @@
     }
     const component = get(selectedComponent)
     try {
-      if (e.ctrlKey) {
+      if (e.ctrlKey || e.metaKey) {
         if (e.key === "ArrowUp") {
           e.preventDefault()
           await store.actions.components.moveUp(component)
