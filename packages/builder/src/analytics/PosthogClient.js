@@ -1,5 +1,7 @@
 import posthog from "posthog-js"
 import { Events } from "./constants"
+import { get } from "svelte/store"
+import { admin } from "../stores/portal"
 
 export default class PosthogClient {
   constructor(token) {
@@ -9,9 +11,15 @@ export default class PosthogClient {
   init() {
     if (!this.token) return
 
+    // enable page views in cloud only
+    let capturePageViews = false
+    if (get(admin).cloud) {
+      capturePageViews = true
+    }
+
     posthog.init(this.token, {
       autocapture: false,
-      capture_pageview: true,
+      capture_pageview: capturePageViews,
     })
     posthog.set_config({ persistence: "cookie" })
 
