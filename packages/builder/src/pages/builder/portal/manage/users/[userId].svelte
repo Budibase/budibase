@@ -232,7 +232,7 @@
             <div class="subtitle">
               <Heading size="S">{nameLabel}</Heading>
               {#if nameLabel !== $userFetch?.data?.email}
-                <Body size="XS">{$userFetch?.data?.email}</Body>
+                <Body size="S">{$userFetch?.data?.email}</Body>
               {/if}
             </div>
           </div>
@@ -319,13 +319,14 @@
                 title={group.name}
                 icon={group.icon}
                 iconBackground={group.color}
-                ><Icon
+              >
+                <Icon
                   on:click={removeGroup(group._id)}
                   hoverable
-                  size="L"
+                  size="S"
                   name="Close"
-                /></ListItem
-              >
+                />
+              </ListItem>
             {/each}
           {:else}
             <ListItem icon="UserGroup" title="No groups" />
@@ -336,7 +337,7 @@
     <!-- User Apps -->
     <Layout gap="S" noPadding>
       <div class="appsTitle">
-        <Heading weight="light" size="XS">Apps</Heading>
+        <Heading size="XS">Apps</Heading>
         <div style="margin-top: var(--spacing-xs)">
           <Body size="S">Manage apps that this user has been assigned to</Body>
         </div>
