@@ -8,11 +8,9 @@
     Layout,
     Modal,
     ModalContent,
-    Icon,
+    Search,
     notifications,
     Pagination,
-    Search,
-    Label,
   } from "@budibase/bbui"
   import AddUserModal from "./_components/AddUserModal.svelte"
   import { users, groups, auth } from "stores/portal"
@@ -29,21 +27,6 @@
   import { createPaginationStore } from "helpers/pagination"
   import { Constants } from "@budibase/frontend-core"
   import { get } from "svelte/store"
-
-  const accessTypes = [
-    {
-      icon: "User",
-      description: "App user - Only has access to published apps",
-    },
-    {
-      icon: "Hammer",
-      description: "Developer - Access to the app builder",
-    },
-    {
-      icon: "Draw",
-      description: "Admin - Full access",
-    },
-  ]
 
   //let email
   let enrichedUsers = []
@@ -236,19 +219,8 @@
   <Layout gap="XS" noPadding>
     <Heading>Users</Heading>
     <Body>Add users and control who gets access to your published apps</Body>
-
-    <div>
-      {#each accessTypes as type}
-        <div class="access-description">
-          <Icon name={type.icon} />
-          <div class="access-text">
-            <Body size="S">{type.description}</Body>
-          </div>
-        </div>
-      {/each}
-    </div>
   </Layout>
-  <Layout gap="S" noPadding>
+  <div class="controls">
     <ButtonGroup>
       <Button
         dataCy="add-user"
@@ -256,39 +228,43 @@
         icon="UserAdd"
         cta>Add users</Button
       >
-      <Button on:click={importUsersModal.show} icon="Import" primary
-        >Import users</Button
+      <Button
+        on:click={importUsersModal.show}
+        icon="Import"
+        secondary
+        newStyles
       >
-
-      <div class="field">
-        <Label size="L">Search email</Label>
-        <Search bind:value={searchEmail} placeholder="" />
-      </div>
+        Import users
+      </Button>
+    </ButtonGroup>
+    <div class="controls-right">
+      <Search bind:value={searchEmail} placeholder="Search email" />
       {#if selectedRows.length > 0}
         <DeleteRowsButton on:updaterows {selectedRows} {deleteRows} />
       {/if}
-    </ButtonGroup>
-    <Table
-      on:click={({ detail }) => $goto(`./${detail._id}`)}
-      {schema}
-      bind:selectedRows
-      data={enrichedUsers}
-      allowEditColumns={false}
-      allowEditRows={false}
-      allowSelectRows={true}
-      showHeaderBorder={false}
-      {customRenderers}
-    />
-    <div class="pagination">
-      <Pagination
-        page={$pageInfo.pageNumber}
-        hasPrevPage={$pageInfo.loading ? false : $pageInfo.hasPrevPage}
-        hasNextPage={$pageInfo.loading ? false : $pageInfo.hasNextPage}
-        goToPrevPage={pageInfo.prevPage}
-        goToNextPage={pageInfo.nextPage}
-      />
     </div>
-  </Layout>
+  </div>
+
+  <Table
+    on:click={({ detail }) => $goto(`./${detail._id}`)}
+    {schema}
+    bind:selectedRows
+    data={enrichedUsers}
+    allowEditColumns={false}
+    allowEditRows={false}
+    allowSelectRows={true}
+    showHeaderBorder={false}
+    {customRenderers}
+  />
+  <div class="pagination">
+    <Pagination
+      page={$pageInfo.pageNumber}
+      hasPrevPage={$pageInfo.loading ? false : $pageInfo.hasPrevPage}
+      hasNextPage={$pageInfo.loading ? false : $pageInfo.hasNextPage}
+      goToPrevPage={pageInfo.prevPage}
+      goToNextPage={pageInfo.nextPage}
+    />
+  </div>
 </Layout>
 
 <Modal bind:this={createUserModal}>
@@ -325,28 +301,19 @@
     display: flex;
     flex-direction: row;
     justify-content: flex-end;
-    margin-top: var(--spacing-xl);
   }
 
-  .field {
+  .controls {
     display: flex;
-    align-items: center;
     flex-direction: row;
-    grid-gap: var(--spacing-m);
-    margin-left: auto;
+    justify-content: space-between;
+    align-items: center;
   }
-
-  .field > :global(*) + :global(*) {
-    margin-left: var(--spacing-m);
-  }
-
-  .access-description {
+  .controls-right {
     display: flex;
-    margin-top: var(--spacing-xl);
-    opacity: 0.8;
-  }
-
-  .access-text {
-    margin-left: var(--spacing-m);
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: center;
+    gap: var(--spacing-xl);
   }
 </style>
