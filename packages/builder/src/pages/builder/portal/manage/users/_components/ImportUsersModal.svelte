@@ -81,7 +81,7 @@
   onConfirm={() => createUsersFromCsv({ userEmails, usersRole, userGroups })}
   disabled={!userEmails.length || !validEmails(userEmails) || !usersRole}
 >
-  <Body size="S">Import your users email addresses from a CSV</Body>
+  <Body size="S">Import your users email addresses from a CSV file</Body>
 
   <div class="dropzone">
     <input id="file-upload" accept=".csv" type="file" on:change={handleFile} />
@@ -98,8 +98,8 @@
   {#if hasGroupsLicense}
     <Multiselect
       bind:value={userGroups}
-      placeholder="Select User Groups"
-      label="User Groups"
+      placeholder="No groups"
+      label="Groups"
       options={$groups}
       getOptionLabel={option => option.name}
       getOptionValue={option => option._id}
@@ -122,14 +122,12 @@
 
   label {
     font-family: var(--font-sans);
-    cursor: pointer;
     font-weight: 600;
     box-sizing: border-box;
     overflow: hidden;
     border-radius: var(--border-radius-s);
     color: var(--ink);
     padding: var(--spacing-m) var(--spacing-l);
-    transition: all 0.2s ease 0s;
     display: inline-flex;
     text-rendering: optimizeLegibility;
     min-width: auto;
@@ -141,10 +139,15 @@
     align-items: center;
     justify-content: center;
     width: 100%;
-    background-color: var(--grey-2);
-    font-size: var(--font-size-xs);
+    background: var(--spectrum-global-color-gray-200);
+    font-size: 12px;
     line-height: normal;
     border: var(--border-transparent);
+    transition: background-color 130ms ease-out;
+  }
+  label:hover {
+    background: var(--spectrum-global-color-gray-300);
+    cursor: pointer;
   }
 
   input[type="file"] {
