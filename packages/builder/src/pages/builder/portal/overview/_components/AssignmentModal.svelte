@@ -7,19 +7,21 @@
     notifications,
   } from "@budibase/bbui"
   import { roles } from "stores/backend"
-  import { groups, users } from "stores/portal"
+  import { groups, users, auth } from "stores/portal"
   import { RoleUtils } from "@budibase/frontend-core"
   import { createPaginationStore } from "helpers/pagination"
 
   export let app
   export let addData
   export let appUsers = []
+
   let prevSearch = undefined,
     search = undefined
   let pageInfo = createPaginationStore()
 
   $: page = $pageInfo.page
   $: fetchUsers(page, search)
+
   async function fetchUsers(page, search) {
     if ($pageInfo.loading) {
       return
@@ -46,15 +48,16 @@
   })
 
   $: optionSections = {
-    ...(filteredGroups.length && {
-      groups: {
-        data: filteredGroups,
-        getLabel: group => group.name,
-        getValue: group => group._id,
-        getIcon: group => group.icon,
-        getColour: group => group.color,
-      },
-    }),
+    ...($auth.groupsEnabled &&
+      filteredGroups.length && {
+        groups: {
+          data: filteredGroups,
+          getLabel: group => group.name,
+          getValue: group => group._id,
+          getIcon: group => group.icon,
+          getColour: group => group.color,
+        },
+      }),
     users: {
       data: $users.data.filter(u => !appUsers.find(x => x._id === u._id)),
       getLabel: user => user.email,
