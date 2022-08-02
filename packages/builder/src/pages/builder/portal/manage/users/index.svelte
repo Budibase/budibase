@@ -28,6 +28,7 @@
   import ImportUsersModal from "./_components/ImportUsersModal.svelte"
   import { createPaginationStore } from "helpers/pagination"
   import { Constants } from "@budibase/frontend-core"
+  import { get } from "svelte/store"
 
   const accessTypes = [
     {
@@ -198,6 +199,10 @@
   const deleteRows = async () => {
     try {
       let ids = selectedRows.map(user => user._id)
+      if (ids.includes(get(auth).user._id)) {
+        notifications.error("You cannot delete yourself")
+        return
+      }
       await users.bulkDelete(ids)
       notifications.success(`Successfully deleted ${selectedRows.length} rows`)
       selectedRows = []
