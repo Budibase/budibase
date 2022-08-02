@@ -219,7 +219,7 @@
   <Layout gap="L" noPadding>
     <Layout gap="XS" noPadding>
       <div>
-        <ActionButton on:click={() => $goto("./")} size="S" icon="ArrowLeft">
+        <ActionButton on:click={() => $goto("./")} icon="ArrowLeft">
           Back
         </ActionButton>
       </div>
@@ -288,7 +288,7 @@
 
     {#if hasGroupsLicense}
       <!-- User groups -->
-      <Layout gap="XS" noPadding>
+      <Layout gap="S" noPadding>
         <div class="tableTitle">
           <div>
             <Heading size="XS">User groups</Heading>
@@ -336,13 +336,10 @@
     {/if}
     <!-- User Apps -->
     <Layout gap="S" noPadding>
-      <div class="appsTitle">
+      <div>
         <Heading size="XS">Apps</Heading>
-        <div style="margin-top: var(--spacing-xs)">
-          <Body size="S">Manage apps that this user has been assigned to</Body>
-        </div>
+        <Body size="S">Manage apps that this user has been assigned to</Body>
       </div>
-
       <List>
         {#if allAppList.length}
           {#each allAppList as app}
@@ -388,7 +385,7 @@
   }
   .field {
     display: grid;
-    grid-template-columns: 32% 1fr;
+    grid-template-columns: 100px 1fr;
     align-items: center;
   }
 
@@ -401,7 +398,6 @@
   .tableTitle {
     display: flex;
     justify-content: space-between;
-    margin-bottom: var(--spacing-m);
   }
 
   .subtitle {
@@ -410,10 +406,5 @@
     flex-direction: column;
     justify-content: center;
     align-items: stretch;
-  }
-
-  .appsTitle {
-    display: flex;
-    flex-direction: column;
   }
 </style>
