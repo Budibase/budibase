@@ -30,7 +30,7 @@
     Never updated
   {/if}
 </div>
-<div class="desktop check">
+<div class="desktop">
   <span><AppLockModal {app} buttonSize="M" /></span>
 </div>
 <div class="desktop">
