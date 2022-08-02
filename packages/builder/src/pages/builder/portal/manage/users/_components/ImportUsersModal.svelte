@@ -81,7 +81,7 @@
   onConfirm={() => createUsersFromCsv({ userEmails, usersRole, userGroups })}
   disabled={!userEmails.length || !validEmails(userEmails) || !usersRole}
 >
-  <Body size="S">Import your users email addrresses from a CSV</Body>
+  <Body size="S">Import your users email addresses from a CSV</Body>
 
   <div class="dropzone">
     <input id="file-upload" accept=".csv" type="file" on:change={handleFile} />
