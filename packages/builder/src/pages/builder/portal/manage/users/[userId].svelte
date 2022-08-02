@@ -237,18 +237,21 @@
             </div>
           </div>
         </div>
-        <div>
-          <ActionMenu align="right">
-            <span slot="control">
-              <Icon hoverable name="More" />
-            </span>
-            <MenuItem on:click={resetPasswordModal.show} icon="Refresh"
-              >Force Password Reset</MenuItem
-            >
-            <MenuItem on:click={deleteModal.show} icon="Delete">Delete</MenuItem
-            >
-          </ActionMenu>
-        </div>
+        {#if userId !== $auth.user._id}
+          <div>
+            <ActionMenu align="right">
+              <span slot="control">
+                <Icon hoverable name="More" />
+              </span>
+              <MenuItem on:click={resetPasswordModal.show} icon="Refresh">
+                Force password reset
+              </MenuItem>
+              <MenuItem on:click={deleteModal.show} icon="Delete">
+                Delete
+              </MenuItem>
+            </ActionMenu>
+          </div>
+        {/if}
       </div>
     </Layout>
     <Layout gap="S" noPadding>
