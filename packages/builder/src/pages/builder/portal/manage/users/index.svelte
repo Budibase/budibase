@@ -219,7 +219,6 @@
     <Body>Add users and control who gets access to your published apps</Body>
   </Layout>
   <Divider size="S" />
-
   <div class="controls">
     <ButtonGroup>
       <Button

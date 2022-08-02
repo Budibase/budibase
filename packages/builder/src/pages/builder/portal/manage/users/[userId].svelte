@@ -18,6 +18,7 @@
     Select,
     Modal,
     notifications,
+    Divider,
     StatusLight,
   } from "@budibase/bbui"
   import { onMount } from "svelte"
@@ -222,7 +223,8 @@
         Back
       </ActionButton>
     </div>
-    <Layout noPadding gap="S">
+
+    <Layout noPadding gap="M">
       <div class="title">
         <div>
           <div style="display: flex;">
@@ -251,48 +253,56 @@
           </div>
         {/if}
       </div>
-      <div class="fields">
-        <div class="field">
-          <Label size="L">First name</Label>
-          <Input
-            thin
-            value={$userFetch?.data?.firstName}
-            on:blur={updateUserFirstName}
-          />
-        </div>
-        <div class="field">
-          <Label size="L">Last name</Label>
-          <Input
-            thin
-            value={$userFetch?.data?.lastName}
-            on:blur={updateUserLastName}
-          />
-        </div>
-        <!-- don't let a user remove the privileges that let them be here -->
-        {#if userId !== $auth.user._id}
+      <Divider size="S" />
+      <Layout noPadding gap="S">
+        <Heading size="S">Details</Heading>
+        <div class="fields">
           <div class="field">
-            <Label size="L">Role</Label>
-            <Select
-              value={globalRole}
-              options={Constants.BbRoles}
-              on:change={updateUserRole}
+            <Label size="L">Email</Label>
+            <Input disabled value={$userFetch?.data?.email} />
+          </div>
+          <div class="field">
+            <Label size="L">First name</Label>
+            <Input
+              value={$userFetch?.data?.firstName}
+              on:blur={updateUserFirstName}
             />
           </div>
-        {/if}
-      </div>
+          <div class="field">
+            <Label size="L">Last name</Label>
+            <Input
+              value={$userFetch?.data?.lastName}
+              on:blur={updateUserLastName}
+            />
+          </div>
+          <!-- don't let a user remove the privileges that let them be here -->
+          {#if userId !== $auth.user._id}
+            <div class="field">
+              <Label size="L">Role</Label>
+              <Select
+                value={globalRole}
+                options={Constants.BbRoles}
+                on:change={updateUserRole}
+              />
+            </div>
+          {/if}
+        </div>
+      </Layout>
     </Layout>
 
     {#if hasGroupsLicense}
       <!-- User groups -->
       <Layout gap="S" noPadding>
         <div class="tableTitle">
-          <div>
-            <Heading size="S">User groups</Heading>
-            <Body size="S">Add or remove this user from user groups</Body>
-          </div>
+          <Heading size="S">Groups</Heading>
           <div bind:this={popoverAnchor}>
-            <Button on:click={popover.show()} icon="UserGroup" cta>
-              Add user group
+            <Button
+              on:click={popover.show()}
+              icon="UserGroup"
+              secondary
+              newStyles
+            >
+              Add to group
             </Button>
           </div>
           <Popover align="right" bind:this={popover} anchor={popoverAnchor}>
@@ -307,7 +317,6 @@
             />
           </Popover>
         </div>
-
         <List>
           {#if userGroups.length}
             {#each userGroups as group}
@@ -315,6 +324,8 @@
                 title={group.name}
                 icon={group.icon}
                 iconBackground={group.color}
+                hoverable
+                on:click={() => $goto(`../groups/${group._id}`)}
               >
                 <Icon
                   on:click={removeGroup(group._id)}
@@ -330,12 +341,9 @@
         </List>
       </Layout>
     {/if}
-    <!-- User Apps -->
+
     <Layout gap="S" noPadding>
-      <div>
-        <Heading size="S">Apps</Heading>
-        <Body size="S">Manage apps that this user has been assigned to</Body>
-      </div>
+      <Heading size="S">Apps</Heading>
       <List>
         {#if allAppList.length}
           {#each allAppList as app}
@@ -344,7 +352,7 @@
               iconBackground={app?.icon?.color || ""}
               icon={app?.icon?.name || "Apps"}
               hoverable
-              on:click={$goto(`../../overview/${app.devId}`)}
+              on:click={() => $goto(`../../overview/${app.devId}`)}
             >
               <div class="title ">
                 <StatusLight
@@ -381,7 +389,7 @@
   }
   .field {
     display: grid;
-    grid-template-columns: 100px 1fr;
+    grid-template-columns: 120px 1fr;
     align-items: center;
   }
 
@@ -394,6 +402,7 @@
   .tableTitle {
     display: flex;
     justify-content: space-between;
+    align-items: flex-end;
   }
 
   .subtitle {
