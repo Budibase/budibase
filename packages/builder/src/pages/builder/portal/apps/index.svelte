@@ -381,13 +381,8 @@
           </div>
 
           <div class="appTable" class:unlocked>
-            {#each filteredApps as app, idx}
-              <AppRow
-                {app}
-                {editApp}
-                {appOverview}
-                idx={`${idx}_${app.appId}`}
-              />
+            {#each filteredApps as app (app.appId)}
+              <AppRow {app} {editApp} {appOverview} />
             {/each}
           </div>
         </Layout>
