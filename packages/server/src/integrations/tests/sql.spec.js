@@ -1,4 +1,4 @@
-const Sql = require("../base/sql")
+const Sql = require("../base/sql").default
 const { SqlClients } = require("../utils")
 
 const TABLE_NAME = "test"

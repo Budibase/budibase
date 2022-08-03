@@ -584,4 +584,3 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
 }
 
 export default SqlQueryBuilder
-module.exports = SqlQueryBuilder

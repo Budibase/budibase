@@ -4,10 +4,8 @@ const { InternalTables } = require("../../../db/utils")
 const userController = require("../user")
 const { FieldTypes } = require("../../../constants")
 const { getAppDB } = require("@budibase/backend-core/context")
-const {
-  makeExternalQuery,
-  removeKeyNumbering,
-} = require("../../../integrations/base/utils")
+const { makeExternalQuery } = require("../../../integrations/base/query")
+const { removeKeyNumbering } = require("../../../integrations/base/utils")
 
 validateJs.extend(validateJs.validators.datetime, {
   parse: function (value) {
