@@ -38,14 +38,6 @@
     { value: "5-m", label: "Past 5 mins" },
   ]
 
-  $: parsedOptions = timeOptions.filter(ele => {
-    return !cloudHosted || (licensePlan?.type === "free" && "1-w" !== ele.value)
-  })
-
-  $: if (parsedOptions.length && timeRange === null) {
-    timeRange = parsedOptions[0].value
-  }
-
   const statusOptions = [
     { value: SUCCESS, label: "Success" },
     { value: ERROR, label: "Error" },
@@ -144,7 +136,7 @@
       </div>
       <div class="select">
         <Select
-          placeholder={parsedOptions[0]?.label}
+          placeholder="All"
           label="Date range"
           bind:value={timeRange}
           options={timeOptions}
