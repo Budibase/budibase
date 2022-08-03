@@ -26,6 +26,7 @@
   import ImportUsersModal from "./_components/ImportUsersModal.svelte"
   import { createPaginationStore } from "helpers/pagination"
   import { get } from "svelte/store"
+  import { Constants } from "@budibase/frontend-core"
 
   let enrichedUsers = []
   let createUserModal,
@@ -85,13 +86,13 @@
   }
 
   async function createUserFlow() {
-    let emails = userData?.users?.map(x => x.email) || []
+    const payload = userData?.users?.map(user => ({
+      email: user.email,
+      builder: user.role === Constants.BudibaseRoles.Developer,
+      admin: user.role === Constants.BudibaseRoles.Admin,
+    }))
     try {
-      const res = await users.invite({
-        emails: emails,
-        builder: false,
-        admin: false,
-      })
+      const res = await users.invite(payload)
       notifications.success(res.message)
       inviteConfirmationModal.show()
     } catch (error) {

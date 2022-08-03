@@ -47,7 +47,11 @@
   function validateInput(email, index) {
     if (email) {
       const res = emailValidator(email)
-      userData[index].error = res === true ? null : res
+      if (res === true) {
+        delete userData[index].error
+      } else {
+        userData[index].error = res
+      }
     } else {
       userData[index].error = "Please enter an email address"
     }
@@ -89,7 +93,7 @@
             inputType="email"
             bind:inputValue={input.email}
             bind:dropdownValue={input.role}
-            options={Constants.BbRoles}
+            options={Constants.BudibaseRoleOptions}
             error={input.error}
             on:blur={() => validateInput(input.email, index)}
           />

@@ -10,7 +10,9 @@
     admin: "Full access",
   }
 
-  $: role = Constants.BbRoles.find(x => x.value === users.getUserRole(row))
+  $: role = Constants.BudibaseRoleOptions.find(
+    x => x.value === users.getUserRole(row)
+  )
   $: value = role?.label || "Not available"
   $: tooltip = TooltipMap[role?.value] || ""
 </script>

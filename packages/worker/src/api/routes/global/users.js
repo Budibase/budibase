@@ -32,10 +32,12 @@ function buildInviteValidation() {
 
 function buildInviteMultipleValidation() {
   // prettier-ignore
-  return joiValidator.body(Joi.object({
-    emails: Joi.array().required(),
-    userInfo: Joi.object().optional(),
-  }).required())
+  return joiValidator.body(Joi.array().required().items(
+    Joi.object({
+      email: Joi.string(),
+      userInfo: Joi.object().optional(),
+    })
+  ))
 }
 
 function buildInviteAcceptValidation() {
