@@ -21,9 +21,9 @@
     StatusLight,
   } from "@budibase/bbui"
   import { onMount } from "svelte"
-
   import { fetchData } from "helpers"
   import { users, auth, groups, apps } from "stores/portal"
+  import { roles } from "stores/backend"
   import { Constants } from "@budibase/frontend-core"
   import ForceResetPasswordModal from "./_components/ForceResetPasswordModal.svelte"
   import { RoleUtils } from "@budibase/frontend-core"
@@ -40,10 +40,18 @@
   let selectedGroups = []
   let allAppList = []
   let user
+  let loaded = false
   $: fetchUser(userId)
+
+  $: fullName = $userFetch?.data?.firstName
+    ? $userFetch?.data?.firstName + " " + $userFetch?.data?.lastName
+    : ""
+
   $: hasGroupsLicense = $auth.user?.license.features.includes(
     Constants.Features.USER_GROUPS
   )
+  $: nameLabel = getNameLabel($userFetch)
+  $: initials = getInitials(nameLabel)
 
   $: allAppList = $apps
     .filter(x => {
@@ -86,6 +94,39 @@
 
   const userFetch = fetchData(`/api/global/users/${userId}`)
 
+  const getNameLabel = userFetch => {
+    const { firstName, lastName, email } = userFetch?.data || {}
+    if (!firstName && !lastName) {
+      return email || ""
+    }
+    let label
+    if (firstName) {
+      label = firstName
+      if (lastName) {
+        label += ` ${lastName}`
+      }
+    } else {
+      label = lastName
+    }
+    return label
+  }
+
+  const getInitials = nameLabel => {
+    if (!nameLabel) {
+      return "?"
+    }
+    return nameLabel
+      .split(" ")
+      .slice(0, 2)
+      .map(x => x[0])
+      .join("")
+  }
+
+  const getRoleLabel = roleId => {
+    const role = $roles.find(x => x._id === roleId)
+    return role?.name || "Custom role"
+  }
+
   function getHighestRole(roles) {
     let highestRole
     let highestRoleNumber = 0
@@ -127,7 +168,7 @@
     if (detail === "developer") {
       toggleFlags({ admin: { global: false }, builder: { global: true } })
     } else if (detail === "admin") {
-      toggleFlags({ admin: { global: true }, builder: { global: false } })
+      toggleFlags({ admin: { global: true }, builder: { global: true } })
     } else if (detail === "appUser") {
       toggleFlags({ admin: { global: false }, builder: { global: false } })
     }
@@ -166,166 +207,168 @@
   function addAll() {}
   onMount(async () => {
     try {
-      await groups.actions.init()
-      await apps.load()
+      await Promise.all([groups.actions.init(), apps.load(), roles.fetch()])
+      loaded = true
     } catch (error) {
-      notifications.error("Error getting User groups")
+      notifications.error("Error getting user groups")
     }
   })
 </script>
 
-<Layout gap="L" noPadding>
-  <Layout gap="XS" noPadding>
-    <div>
-      <ActionButton on:click={() => $goto("./")} size="S" icon="ArrowLeft">
-        Back
-      </ActionButton>
-    </div>
-  </Layout>
-  <Layout gap="XS" noPadding>
-    <div class="title">
+{#if loaded}
+  <Layout gap="L" noPadding>
+    <Layout gap="XS" noPadding>
       <div>
-        <div style="display: flex;">
-          <Avatar size="XXL" initials="PC" />
-          <div class="subtitle">
-            <Heading size="S"
-              >{$userFetch?.data?.firstName +
-                " " +
-                $userFetch?.data?.lastName}</Heading
-            >
-            <Body size="XS">{$userFetch?.data?.email}</Body>
+        <ActionButton on:click={() => $goto("./")} size="S" icon="ArrowLeft">
+          Back
+        </ActionButton>
+      </div>
+    </Layout>
+    <Layout gap="XS" noPadding>
+      <div class="title">
+        <div>
+          <div style="display: flex;">
+            <Avatar size="XXL" {initials} />
+            <div class="subtitle">
+              <Heading size="S">{nameLabel}</Heading>
+              {#if nameLabel !== $userFetch?.data?.email}
+                <Body size="XS">{$userFetch?.data?.email}</Body>
+              {/if}
+            </div>
           </div>
         </div>
-      </div>
-      <div>
-        <ActionMenu align="right">
-          <span slot="control">
-            <Icon hoverable name="More" />
-          </span>
-          <MenuItem on:click={resetPasswordModal.show} icon="Refresh"
-            >Force Password Reset</MenuItem
-          >
-          <MenuItem on:click={deleteModal.show} icon="Delete">Delete</MenuItem>
-        </ActionMenu>
-      </div>
-    </div>
-  </Layout>
-  <Layout gap="S" noPadding>
-    <div class="fields">
-      <div class="field">
-        <Label size="L">First name</Label>
-        <Input
-          thin
-          value={$userFetch?.data?.firstName}
-          on:blur={updateUserFirstName}
-        />
-      </div>
-      <div class="field">
-        <Label size="L">Last name</Label>
-        <Input
-          thin
-          value={$userFetch?.data?.lastName}
-          on:blur={updateUserLastName}
-        />
-      </div>
-      <!-- don't let a user remove the privileges that let them be here -->
-      {#if userId !== $auth.user._id}
-        <div class="field">
-          <Label size="L">Role</Label>
-          <Select
-            value={globalRole}
-            options={Constants.BbRoles}
-            on:change={updateUserRole}
-          />
-        </div>
-      {/if}
-    </div>
-  </Layout>
-
-  {#if hasGroupsLicense}
-    <!-- User groups -->
-    <Layout gap="XS" noPadding>
-      <div class="tableTitle">
         <div>
-          <Heading size="XS">User groups</Heading>
-          <Body size="S">Add or remove this user from user groups</Body>
+          <ActionMenu align="right">
+            <span slot="control">
+              <Icon hoverable name="More" />
+            </span>
+            <MenuItem on:click={resetPasswordModal.show} icon="Refresh"
+              >Force Password Reset</MenuItem
+            >
+            <MenuItem on:click={deleteModal.show} icon="Delete">Delete</MenuItem
+            >
+          </ActionMenu>
         </div>
-        <div bind:this={popoverAnchor}>
-          <Button on:click={popover.show()} icon="UserGroup" cta
-            >Add User Group</Button
-          >
-        </div>
-        <Popover align="right" bind:this={popover} anchor={popoverAnchor}>
-          <UserGroupPicker
-            key={"name"}
-            title={"Group"}
-            bind:searchTerm
-            bind:selected={selectedGroups}
-            bind:filtered={filteredGroups}
-            {addAll}
-            select={addGroup}
+      </div>
+    </Layout>
+    <Layout gap="S" noPadding>
+      <div class="fields">
+        <div class="field">
+          <Label size="L">First name</Label>
+          <Input
+            thin
+            value={$userFetch?.data?.firstName}
+            on:blur={updateUserFirstName}
           />
-        </Popover>
+        </div>
+        <div class="field">
+          <Label size="L">Last name</Label>
+          <Input
+            thin
+            value={$userFetch?.data?.lastName}
+            on:blur={updateUserLastName}
+          />
+        </div>
+        <!-- don't let a user remove the privileges that let them be here -->
+        {#if userId !== $auth.user._id}
+          <div class="field">
+            <Label size="L">Role</Label>
+            <Select
+              value={globalRole}
+              options={Constants.BbRoles}
+              on:change={updateUserRole}
+            />
+          </div>
+        {/if}
+      </div>
+    </Layout>
+
+    {#if hasGroupsLicense}
+      <!-- User groups -->
+      <Layout gap="XS" noPadding>
+        <div class="tableTitle">
+          <div>
+            <Heading size="XS">User groups</Heading>
+            <Body size="S">Add or remove this user from user groups</Body>
+          </div>
+          <div bind:this={popoverAnchor}>
+            <Button on:click={popover.show()} icon="UserGroup" cta>
+              Add user group
+            </Button>
+          </div>
+          <Popover align="right" bind:this={popover} anchor={popoverAnchor}>
+            <UserGroupPicker
+              key={"name"}
+              title={"Group"}
+              bind:searchTerm
+              bind:selected={selectedGroups}
+              bind:filtered={filteredGroups}
+              {addAll}
+              select={addGroup}
+            />
+          </Popover>
+        </div>
+
+        <List>
+          {#if userGroups.length}
+            {#each userGroups as group}
+              <ListItem
+                title={group.name}
+                icon={group.icon}
+                iconBackground={group.color}
+                ><Icon
+                  on:click={removeGroup(group._id)}
+                  hoverable
+                  size="L"
+                  name="Close"
+                /></ListItem
+              >
+            {/each}
+          {:else}
+            <ListItem icon="UserGroup" title="No groups" />
+          {/if}
+        </List>
+      </Layout>
+    {/if}
+    <!-- User Apps -->
+    <Layout gap="S" noPadding>
+      <div class="appsTitle">
+        <Heading weight="light" size="XS">Apps</Heading>
+        <div style="margin-top: var(--spacing-xs)">
+          <Body size="S">Manage apps that this user has been assigned to</Body>
+        </div>
       </div>
 
       <List>
-        {#if userGroups.length}
-          {#each userGroups as group}
-            <ListItem
-              title={group.name}
-              icon={group.icon}
-              iconBackground={group.color}
-              ><Icon
-                on:click={removeGroup(group._id)}
-                hoverable
-                size="L"
-                name="Close"
-              /></ListItem
+        {#if allAppList.length}
+          {#each allAppList as app}
+            <div
+              class="pointer"
+              on:click={$goto(`../../overview/${app.devId}`)}
             >
+              <ListItem
+                title={app.name}
+                iconBackground={app?.icon?.color || ""}
+                icon={app?.icon?.name || "Apps"}
+              >
+                <div class="title ">
+                  <StatusLight
+                    square
+                    color={RoleUtils.getRoleColour(getHighestRole(app.roles))}
+                  >
+                    {getRoleLabel(getHighestRole(app.roles))}
+                  </StatusLight>
+                </div>
+              </ListItem>
+            </div>
           {/each}
         {:else}
-          <ListItem icon="UserGroup" title="No groups" />
+          <ListItem icon="Apps" title="No apps" />
         {/if}
       </List>
     </Layout>
-  {/if}
-  <!-- User Apps -->
-  <Layout gap="S" noPadding>
-    <div class="appsTitle">
-      <Heading weight="light" size="XS">Apps</Heading>
-      <div style="margin-top: var(--spacing-xs)">
-        <Body size="S">Manage apps that this user has been assigned to</Body>
-      </div>
-    </div>
-
-    <List>
-      {#if allAppList.length}
-        {#each allAppList as app}
-          <div class="pointer" on:click={$goto(`../../overview/${app.devId}`)}>
-            <ListItem
-              title={app.name}
-              iconBackground={app?.icon?.color || ""}
-              icon={app?.icon?.name || "Apps"}
-            >
-              <div class="title ">
-                <StatusLight
-                  color={RoleUtils.getRoleColour(getHighestRole(app.roles))}
-                />
-                <div style="margin-left: var(--spacing-s);">
-                  <Body size="XS"
-                    >{Constants.Roles[getHighestRole(app.roles)]}</Body
-                  >
-                </div>
-              </div>
-            </ListItem>
-          </div>
-        {/each}
-      {:else}
-        <ListItem icon="Apps" title="No apps" />
-      {/if}
-    </List>
   </Layout>
-</Layout>
+{/if}
 
 <Modal bind:this={deleteModal}>
   <DeleteUserModal user={$userFetch.data} />
@@ -365,7 +408,10 @@
 
   .subtitle {
     padding: 0 0 0 var(--spacing-m);
-    display: inline-block;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: stretch;
   }
 
   .appsTitle {

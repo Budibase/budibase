@@ -172,4 +172,15 @@ export const buildUserEndpoints = API => ({
       },
     })
   },
+
+  /**
+   * Accepts an invite to join the platform and creates a user.
+   * @param inviteCode the invite code sent in the email
+   * @param password the password for the newly created user
+   */
+  getUserCountByApp: async ({ appId }) => {
+    return await API.get({
+      url: `/api/global/users/count/${appId}`,
+    })
+  },
 })

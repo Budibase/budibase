@@ -204,7 +204,7 @@ filterTests(["all"], () => {
         cy.get(".spectrum-Table").eq(1).should("contain", queryName)
       })
 
-      xit("should duplicate a query", () => {
+      it("should duplicate a query", () => {
         // Locate previously created query
         cy.get(".nav-item")
           .contains(queryName)

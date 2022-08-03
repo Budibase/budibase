@@ -115,6 +115,16 @@
     class:is-disabled={disabled}
     class:is-focused={focus}
   >
+    {#if error}
+      <svg
+        class="spectrum-Icon spectrum-Icon--sizeM spectrum-Textfield-validationIcon"
+        focusable="false"
+        aria-hidden="true"
+      >
+        <use xlink:href="#spectrum-icon-18-Alert" />
+      </svg>
+    {/if}
+
     <input
       {id}
       on:click
