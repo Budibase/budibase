@@ -5,13 +5,13 @@
   import { store } from "builderStore"
   import clientPackage from "@budibase/client/package.json"
   import { processStringSync } from "@budibase/string-templates"
-  import { users, auth } from "stores/portal"
+  import { users, auth, apps } from "stores/portal"
   import { createEventDispatcher, onMount } from "svelte"
 
   export let app
   export let deployments
   export let navigateTab
-
+  let userCount
   const dispatch = createEventDispatcher()
 
   const unpublishApp = () => {
@@ -40,7 +40,11 @@
   }
 
   onMount(async () => {
-    await users.search({ page: undefined, appId: "app_" + app.appId })
+    let resp = await users.getUserCountByApp({
+      appId: apps.getProdAppID(app.devId),
+    })
+    userCount = resp.userCount
+    await users.search({ appId: apps.getProdAppID(app.devId), limit: 4 })
   })
 </script>
 
@@ -155,7 +159,8 @@
               </div>
 
               <div class="users-text">
-                {$users?.data.length} users have access to this app
+                {userCount}
+                {userCount > 1 ? `users have` : `user has`} access to this app
               </div>
             </Layout>
           {:else}

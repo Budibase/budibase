@@ -29,7 +29,6 @@
   let pageInfo = createPaginationStore()
   let fixedAppId
   $: page = $pageInfo.page
-  $: fetchUsers(page, search)
 
   $: hasGroupsLicense = $auth.user?.license.features.includes(
     Constants.Features.USER_GROUPS
@@ -37,12 +36,6 @@
 
   $: fixedAppId = apps.getProdAppID(app.devId)
 
-  $: appUsers =
-    $users.data?.filter(x => {
-      return Object.keys(x.roles).find(y => {
-        return y === fixedAppId
-      })
-    }) || []
   $: appGroups = $groups.filter(x => {
     return x.apps.includes(app.appId)
   })
@@ -130,6 +123,12 @@
       pageInfo.loading()
       await users.search({ page, appId: fixedAppId })
       pageInfo.fetched($users.hasNextPage, $users.nextPage)
+      appUsers =
+        $users.data?.filter(x => {
+          return Object.keys(x.roles).find(y => {
+            return y === fixedAppId
+          })
+        }) || []
     } catch (error) {
       notifications.error("Error getting user list")
     }
@@ -137,6 +136,8 @@
 
   onMount(async () => {
     try {
+      await fetchUsers(page, search)
+
       await groups.actions.init()
       await apps.load()
       await roles.fetch()
@@ -212,8 +213,14 @@
             page={$pageInfo.pageNumber}
             hasPrevPage={$pageInfo.loading ? false : $pageInfo.hasPrevPage}
             hasNextPage={$pageInfo.loading ? false : $pageInfo.hasNextPage}
-            goToPrevPage={pageInfo.prevPage}
-            goToNextPage={pageInfo.nextPage}
+            goToPrevPage={async () => {
+              await pageInfo.prevPage()
+              fetchUsers(page, search)
+            }}
+            goToNextPage={async () => {
+              await pageInfo.nextPage()
+              fetchUsers(page, search)
+            }}
           />
         </div>
       {/if}
@@ -263,5 +270,12 @@
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
+  }
+
+  .pagination {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    margin-top: var(--spacing-xl);
   }
 </style>
