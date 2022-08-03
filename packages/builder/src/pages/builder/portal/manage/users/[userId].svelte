@@ -275,7 +275,7 @@
               <Label size="L">Role</Label>
               <Select
                 value={globalRole}
-                options={Constants.BbRoles}
+                options={Constants.BudibaseRoleOptions}
                 on:change={updateUserRole}
               />
             </div>
