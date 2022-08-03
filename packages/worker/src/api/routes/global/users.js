@@ -81,7 +81,7 @@ router
     controller.invite
   )
   .post(
-    "/api/global/users/inviteMultiple",
+    "/api/global/users/multi/invite",
     adminOnly,
     buildInviteMultipleValidation(),
     controller.inviteMultiple

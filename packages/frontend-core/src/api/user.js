@@ -145,7 +145,7 @@ export const buildUserEndpoints = API => ({
    */
   inviteUsers: async users => {
     return await API.post({
-      url: "/api/global/users/inviteMultiple",
+      url: "/api/global/users/multi/invite",
       body: users.map(user => ({
         email: user.email,
         userInfo: {
