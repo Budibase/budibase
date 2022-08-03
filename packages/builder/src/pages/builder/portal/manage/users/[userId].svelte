@@ -288,7 +288,7 @@
       <!-- User groups -->
       <Layout gap="S" noPadding>
         <div class="tableTitle">
-          <Heading size="S">Groups</Heading>
+          <Heading size="S">User groups</Heading>
           <div bind:this={popoverAnchor}>
             <Button
               on:click={popover.show()}
@@ -296,13 +296,13 @@
               secondary
               newStyles
             >
-              Add to group
+              Add to user group
             </Button>
           </div>
           <Popover align="right" bind:this={popover} anchor={popoverAnchor}>
             <UserGroupPicker
               key={"name"}
-              title={"Group"}
+              title={"User group"}
               bind:searchTerm
               bind:selected={selectedGroups}
               bind:filtered={filteredGroups}

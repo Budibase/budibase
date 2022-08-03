@@ -32,7 +32,7 @@
   $: optionSections = {
     ...($auth.groupsEnabled &&
       filteredGroups.length && {
-        groups: {
+        ["User groups"]: {
           data: filteredGroups,
           getLabel: group => group.name,
           getValue: group => group._id,
@@ -97,7 +97,6 @@
     {#each appData as input, index}
       <PickerDropdown
         autocomplete
-        readonly
         primaryOptions={optionSections}
         secondaryOptions={$roles}
         secondaryPlaceholder="Access"
