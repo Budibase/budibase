@@ -239,7 +239,6 @@ export const inviteMultiple = async (ctx: any) => {
       subject: "{{ company }} platform invitation",
       info: userInfo,
     }
-    console.log(userInfo)
     await sendEmail(users[i].email, EmailTemplatePurpose.INVITATION, opts)
   }
 
