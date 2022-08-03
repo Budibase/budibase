@@ -1,5 +1,5 @@
 <script>
-  import { Layout, Table, Select, Pagination } from "@budibase/bbui"
+  import { Layout, Table, Select, Pagination, Button } from "@budibase/bbui"
   import DateTimeRenderer from "components/common/renderers/DateTimeRenderer.svelte"
   import StatusRenderer from "./StatusRenderer.svelte"
   import HistoryDetailsPanel from "./HistoryDetailsPanel.svelte"
@@ -15,7 +15,7 @@
   export let app
 
   $: licensePlan = $auth.user?.license?.plan
-  // $: upgradeUrl = `${$admin.accountPortalUrl}/portal/upgrade`
+  $: upgradeUrl = `${$admin.accountPortalUrl}/portal/upgrade`
 
   let pageInfo = createPaginationStore()
   let runHistory = null
@@ -28,7 +28,7 @@
 
   $: page = $pageInfo.page
   $: fetchLogs(automationId, status, page, timeRange)
-  $: cloudHosted = !$admin.cloud
+  $: cloudHosted = $admin.cloud
 
   const timeOptions = [
     { value: "1-w", label: "Past week" },
@@ -164,6 +164,18 @@
           options={statusOptions}
         />
       </div>
+      {#if cloudHosted && licensePlan?.type === "free"}
+        <div class="pro-upgrade">
+          <div class="pro-copy">Store up to 30 days of automations</div>
+          <Button
+            primary
+            newStyles
+            on:click={window.open(upgradeUrl, "_blank")}
+          >
+            Upgrade
+          </Button>
+        </div>
+      {/if}
     </div>
     {#if runHistory}
       <div>
@@ -239,5 +251,16 @@
 
   .panelOpen {
     grid-template-columns: auto 420px;
+  }
+
+  .pro-upgrade {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex: 1;
+  }
+
+  .pro-copy {
+    margin-right: var(--spacing-l);
   }
 </style>
