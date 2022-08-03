@@ -34,6 +34,7 @@
   export let isOptionSelected = () => false
   export let isPlaceholder = false
   export let placeholderOption = null
+  export let showClearIcon = true
 
   const dispatch = createEventDispatcher()
   let primaryOpen = false
@@ -129,7 +130,7 @@
       class:labelPadding={iconData}
       class:open={primaryOpen}
     />
-    {#if primaryValue}
+    {#if primaryValue && showClearIcon}
       <button
         on:click={() => onClearPrimary()}
         type="reset"

@@ -4,6 +4,7 @@
     PickerDropdown,
     ActionButton,
     Layout,
+    Icon,
     notifications,
   } from "@budibase/bbui"
   import { roles } from "stores/backend"
@@ -28,7 +29,8 @@
       return appId === app.appId
     })
   })
-
+  $: valid =
+    appData?.length && !appData?.some(x => !x.id?.length || !x.role?.length)
   $: optionSections = {
     ...($auth.groupsEnabled &&
       filteredGroups.length && {
@@ -83,6 +85,10 @@
   function addNewInput() {
     appData = [...appData, { id: "", role: "" }]
   }
+
+  const removeItem = index => {
+    appData = appData.filter((x, idx) => idx !== index)
+  }
 </script>
 
 <ModalContent
@@ -92,28 +98,61 @@
   cancelText="Cancel"
   onConfirm={() => addData(appData)}
   showCloseIcon={false}
+  disabled={!valid}
 >
-  <Layout noPadding gap="XS">
-    {#each appData as input, index}
-      <PickerDropdown
-        autocomplete
-        primaryOptions={optionSections}
-        secondaryOptions={$roles}
-        secondaryPlaceholder="Access"
-        bind:primaryValue={input.id}
-        bind:secondaryValue={input.role}
-        bind:searchTerm={search}
-        getPrimaryOptionLabel={group => group.name}
-        getPrimaryOptionValue={group => group.name}
-        getPrimaryOptionIcon={group => group.icon}
-        getPrimaryOptionColour={group => group.colour}
-        getSecondaryOptionLabel={role => role.name}
-        getSecondaryOptionValue={role => role._id}
-        getSecondaryOptionColour={role => RoleUtils.getRoleColour(role._id)}
-      />
-    {/each}
-  </Layout>
+  {#if appData?.length}
+    <Layout noPadding gap="XS">
+      {#each appData as input, index}
+        <div class="item">
+          <div class="picker">
+            <PickerDropdown
+              autocomplete
+              showClearIcon={false}
+              primaryOptions={optionSections}
+              secondaryOptions={$roles}
+              secondaryPlaceholder="Access"
+              bind:primaryValue={input.id}
+              bind:secondaryValue={input.role}
+              bind:searchTerm={search}
+              getPrimaryOptionLabel={group => group.name}
+              getPrimaryOptionValue={group => group.name}
+              getPrimaryOptionIcon={group => group.icon}
+              getPrimaryOptionColour={group => group.colour}
+              getSecondaryOptionLabel={role => role.name}
+              getSecondaryOptionValue={role => role._id}
+              getSecondaryOptionColour={role =>
+                RoleUtils.getRoleColour(role._id)}
+            />
+          </div>
+          <div class="icon">
+            <Icon
+              name="Close"
+              hoverable
+              size="S"
+              on:click={() => removeItem(index)}
+            />
+          </div>
+        </div>
+      {/each}
+    </Layout>
+  {/if}
   <div>
     <ActionButton on:click={addNewInput} icon="Add">Add email</ActionButton>
   </div>
 </ModalContent>
+
+<style>
+  .item {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .picker {
+    width: calc(100% - 30px);
+  }
+  .icon {
+    width: 20px;
+  }
+</style>
