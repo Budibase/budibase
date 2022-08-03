@@ -30,6 +30,17 @@ spec:
         name: proxy-service
         ports:
         - containerPort: {{ .Values.services.proxy.port }}
+        env:
+        - name: ENABLE_DYNAMIC_CONFIG
+          value: 'true'
+        - name: APPS_UPSTREAM_URL
+          value: {{ tpl .Values.services.proxy.upstreams.apps . | quote }}
+        - name: WORKER_UPSTREAM_URL
+          value: {{ tpl .Values.services.proxy.upstreams.worker . | quote }}
+        - name: MINIO_UPSTREAM_URL
+          value: {{ tpl .Values.services.proxy.upstreams.minio . | quote }}
+        - name: RESOLVER
+          value: kube-dns.kube-system.svc.{{ .Values.services.dns }}
         resources: {}
         volumeMounts:
     {{- with .Values.affinity }}

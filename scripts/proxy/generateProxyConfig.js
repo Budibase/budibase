@@ -78,14 +78,16 @@ const Commands = {
 async function init(managementCommand) {
   const config = Configs[managementCommand]
   const hostingPath = path.join(process.cwd(), "hosting")
-  const nginxHbsPath = path.join(hostingPath, "nginx.prod.conf.hbs")
-  const nginxOutputPath = path.join(
-    hostingPath,
-    "proxy",
-    ".generated-nginx.prod.conf"
-  )
-  const contents = fs.readFileSync(nginxHbsPath, "utf8")
-  fs.writeFileSync(nginxOutputPath, processStringSync(contents, config))
+  for (const nginxConfName of ['nginx.prod.conf', 'nginx-dyn.prod.conf']) {
+    const nginxHbsPath = path.join(hostingPath, `${nginxConfName}.hbs`)
+    const nginxOutputPath = path.join(
+        hostingPath,
+        "proxy",
+        `.generated-${nginxConfName}`
+    )
+    const contents = fs.readFileSync(nginxHbsPath, "utf8")
+    fs.writeFileSync(nginxOutputPath, processStringSync(contents, config))
+  }
 }
 
 const managementCommand = process.argv.slice(2)[0]
