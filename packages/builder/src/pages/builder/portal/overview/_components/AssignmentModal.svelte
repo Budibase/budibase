@@ -18,9 +18,48 @@
   let prevSearch = undefined,
     search = undefined
   let pageInfo = createPaginationStore()
+  let appData = [{ id: "", role: "" }]
 
   $: page = $pageInfo.page
   $: fetchUsers(page, search)
+  $: availableUsers = getAvailableUsers($users, appUsers, appData)
+  $: filteredGroups = $groups.filter(group => {
+    return !group.apps.find(appId => {
+      return appId === app.appId
+    })
+  })
+
+  $: optionSections = {
+    ...($auth.groupsEnabled &&
+      filteredGroups.length && {
+        groups: {
+          data: filteredGroups,
+          getLabel: group => group.name,
+          getValue: group => group._id,
+          getIcon: group => group.icon,
+          getColour: group => group.color,
+        },
+      }),
+    users: {
+      data: availableUsers,
+      getLabel: user => user.email,
+      getValue: user => user._id,
+      getIcon: user => user.icon,
+      getColour: user => user.color,
+    },
+  }
+
+  const getAvailableUsers = (allUsers, appUsers, newUsers) => {
+    return (allUsers.data || []).filter(user => {
+      // Filter out assigned users
+      if (appUsers.find(x => x._id === user._id)) {
+        return false
+      }
+
+      // Filter out new users which are going to be assigned
+      return !newUsers.find(x => x.id === user._id)
+    })
+  }
 
   async function fetchUsers(page, search) {
     if ($pageInfo.loading) {
@@ -41,34 +80,6 @@
     }
   }
 
-  $: filteredGroups = $groups.filter(group => {
-    return !group.apps.find(appId => {
-      return appId === app.appId
-    })
-  })
-
-  $: optionSections = {
-    ...($auth.groupsEnabled &&
-      filteredGroups.length && {
-        groups: {
-          data: filteredGroups,
-          getLabel: group => group.name,
-          getValue: group => group._id,
-          getIcon: group => group.icon,
-          getColour: group => group.color,
-        },
-      }),
-    users: {
-      data: $users.data.filter(u => !appUsers.find(x => x._id === u._id)),
-      getLabel: user => user.email,
-      getValue: user => user._id,
-      getIcon: user => user.icon,
-      getColour: user => user.color,
-    },
-  }
-
-  $: appData = [{ id: "", role: "" }]
-
   function addNewInput() {
     appData = [...appData, { id: "", role: "" }]
   }
@@ -86,6 +97,7 @@
     {#each appData as input, index}
       <PickerDropdown
         autocomplete
+        readonly
         primaryOptions={optionSections}
         secondaryOptions={$roles}
         secondaryPlaceholder="Access"
