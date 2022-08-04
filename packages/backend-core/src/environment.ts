@@ -43,7 +43,7 @@ const env = {
   PLATFORM_URL: process.env.PLATFORM_URL || "",
   POSTHOG_TOKEN: process.env.POSTHOG_TOKEN,
   ENABLE_ANALYTICS: process.env.ENABLE_ANALYTICS,
-  TENANT_FEATURE_FLAGS: "default:USER_GROUPS",
+  TENANT_FEATURE_FLAGS: process.env.TENANT_FEATURE_FLAGS,
   BACKUPS_BUCKET_NAME: process.env.BACKUPS_BUCKET_NAME || "backups",
   APPS_BUCKET_NAME: process.env.APPS_BUCKET_NAME || "prod-budi-app-assets",
   TEMPLATES_BUCKET_NAME: process.env.TEMPLATES_BUCKET_NAME || "templates",
