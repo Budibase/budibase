@@ -6,7 +6,7 @@ const Joi = require("joi")
 const cloudRestricted = require("../../../middleware/cloudRestricted")
 const { users } = require("../validation")
 const selfController = require("../../controllers/global/self")
-const builderOrAdmin = require("../../../middleware/builderOrAdmin")
+const { builderOrAdmin } = require("@budibase/backend-core/auth")
 
 const router = Router()
 
