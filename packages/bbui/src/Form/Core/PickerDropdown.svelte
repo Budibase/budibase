@@ -8,6 +8,7 @@
   import Icon from "../../Icon/Icon.svelte"
   import StatusLight from "../../StatusLight/StatusLight.svelte"
   import Detail from "../../Typography/Detail.svelte"
+  import Search from "./Search.svelte"
 
   export let primaryLabel = ""
   export let primaryValue = null
@@ -22,7 +23,6 @@
   export let secondaryFieldText = ""
   export let secondaryFieldIcon = ""
   export let secondaryFieldColour = ""
-  export let getPrimaryOptionLabel = option => option
   export let getPrimaryOptionValue = option => option
   export let getPrimaryOptionColour = () => null
   export let getPrimaryOptionIcon = () => null
@@ -43,17 +43,12 @@
   let searchTerm = null
 
   $: groupTitles = Object.keys(primaryOptions)
-  $: filteredOptions = getFilteredOptions(
-    primaryOptions,
-    searchTerm,
-    getPrimaryOptionLabel
-  )
   let iconData
-  /*
-  $: iconData = primaryOptions?.find(x => {
-    return x.name === primaryFieldText
-  })
-  */
+
+  const updateSearch = e => {
+    dispatch("search", e.detail)
+  }
+
   const updateValue = newValue => {
     if (readonly) {
       return
@@ -106,16 +101,6 @@
     if (event.key === "Enter") {
       updateValue(event.target.value)
     }
-  }
-
-  const getFilteredOptions = (options, term, getLabel) => {
-    if (autocomplete && term) {
-      const lowerCaseTerm = term.toLowerCase()
-      return options.filter(option => {
-        return `${getLabel(option)}`.toLowerCase().includes(lowerCaseTerm)
-      })
-    }
-    return options
   }
 </script>
 
@@ -183,6 +168,15 @@
       class:auto-width={autoWidth}
       class:is-full-width={!secondaryOptions.length}
     >
+      {#if autocomplete}
+        <Search
+          value={searchTerm}
+          on:change={event => updateSearch(event)}
+          {disabled}
+          placeholder="Search"
+        />
+      {/if}
+
       <ul class="spectrum-Menu" role="listbox">
         {#if placeholderOption}
           <li
@@ -239,7 +233,10 @@
                   </div>
                 {:else if getPrimaryOptionColour(option, idx)}
                   <span class="option-left">
-                    <StatusLight color={getPrimaryOptionColour(option, idx)} />
+                    <StatusLight
+                      square
+                      color={getPrimaryOptionColour(option, idx)}
+                    />
                   </span>
                 {/if}
                 <span class="spectrum-Menu-itemLabel">
@@ -259,6 +256,7 @@
                   {#if getPrimaryOptionIcon(option, idx) && getPrimaryOptionColour(option, idx)}
                     <span class="option-right">
                       <StatusLight
+                        square
                         color={getPrimaryOptionColour(option, idx)}
                       />
                     </span>
@@ -287,7 +285,7 @@
           </span>
         {:else if secondaryFieldColour}
           <span class="option-left">
-            <StatusLight color={secondaryFieldColour} />
+            <StatusLight square color={secondaryFieldColour} />
           </span>
         {/if}
 
@@ -325,6 +323,7 @@
                 {#if getSecondaryOptionColour(option, idx)}
                   <span class="option-left">
                     <StatusLight
+                      square
                       color={getSecondaryOptionColour(option, idx)}
                     />
                   </span>
@@ -357,6 +356,13 @@
     min-width: 0;
     width: 100%;
   }
+  .spectrum-InputGroup :global(.spectrum-Search-input) {
+    border: none;
+    border-bottom: 1px solid var(--spectrum-global-color-gray-300);
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
   .override-borders {
     border-top-left-radius: 0px;
     border-bottom-left-radius: 0px;

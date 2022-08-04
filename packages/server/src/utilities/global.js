@@ -32,8 +32,10 @@ exports.updateAppRole = (user, { appId } = {}) => {
   // if a role wasn't found then either set as admin (builder) or public (everyone else)
   if (!user.roleId && user.builder && user.builder.global) {
     user.roleId = BUILTIN_ROLE_IDS.ADMIN
-  } else if (!user.roleId) {
+  } else if (!user.roleId && !user?.userGroups?.length) {
     user.roleId = BUILTIN_ROLE_IDS.PUBLIC
+  } else if (user?.userGroups?.length) {
+    user.roleId = null
   }
 
   delete user.roles
@@ -41,10 +43,8 @@ exports.updateAppRole = (user, { appId } = {}) => {
 }
 
 async function checkGroupRoles(user, { appId } = {}) {
-  if (!user.roleId) {
-    let roleId = await groups.getGroupRoleId(user, appId)
-    user.roleId = roleId
-  }
+  let roleId = await groups.getGroupRoleId(user, appId)
+  user.roleId = roleId
 
   return user
 }
@@ -54,7 +54,7 @@ async function processUser(user, { appId } = {}) {
     delete user.password
   }
   user = await exports.updateAppRole(user, { appId })
-  if (user?.userGroups?.length) {
+  if (!user.roleId && user?.userGroups?.length) {
     user = await checkGroupRoles(user, { appId })
   }
 
