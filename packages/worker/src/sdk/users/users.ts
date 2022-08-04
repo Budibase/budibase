@@ -101,7 +101,7 @@ interface SaveUserOpts {
   bulkCreate?: boolean
 }
 
-export const buildUser = async (
+const buildUser = async (
   user: any,
   opts: SaveUserOpts = {
     hashPassword: true,
@@ -195,6 +195,11 @@ export const save = async (
     dbUser
   )
 
+  // make sure we set the _id field for a new user
+  if (!_id) {
+    _id = builtUser._id
+  }
+
   try {
     const putOpts = {
       password: builtUser.password,
@@ -220,7 +225,7 @@ export const save = async (
     await addTenant(tenantId, _id, email)
     await cache.user.invalidateUser(response.id)
     // let server know to sync user
-    await apps.syncUserInApps(builtUser._id)
+    await apps.syncUserInApps(_id)
 
     return {
       _id: response.id,
@@ -305,6 +310,9 @@ export const bulkCreate = async (
 
   // Post processing of bulk added users, i.e events and cache operations
   for (const user of usersToBulkSave) {
+    // TODO: Refactor to bulk insert users into the info db
+    // instead of relying on looping tenant creation
+    await addTenant(tenantId, user._id, user.email)
     await eventHelpers.handleSaveEvents(user, null)
     await apps.syncUserInApps(user._id)
   }
