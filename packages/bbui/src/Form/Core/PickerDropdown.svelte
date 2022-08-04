@@ -15,7 +15,6 @@
   export let id = null
   export let placeholder = "Choose an option or type"
   export let disabled = false
-  export let readonly = false
   export let updateOnChange = true
   export let error = null
   export let secondaryOptions = []
@@ -35,6 +34,7 @@
   export let isOptionSelected = () => false
   export let isPlaceholder = false
   export let placeholderOption = null
+  export let showClearIcon = true
 
   const dispatch = createEventDispatcher()
   let primaryOpen = false
@@ -50,17 +50,11 @@
   }
 
   const updateValue = newValue => {
-    if (readonly) {
-      return
-    }
     dispatch("change", newValue)
   }
 
   const onClickSecondary = () => {
     dispatch("click")
-    if (readonly) {
-      return
-    }
     secondaryOpen = true
   }
 
@@ -80,24 +74,15 @@
   }
 
   const onBlur = event => {
-    if (readonly) {
-      return
-    }
     focus = false
     updateValue(event.target.value)
   }
 
   const onInput = event => {
-    if (readonly || !updateOnChange) {
-      return
-    }
     updateValue(event.target.value)
   }
 
   const updateValueOnEnter = event => {
-    if (readonly) {
-      return
-    }
     if (event.key === "Enter") {
       updateValue(event.target.value)
     }
@@ -140,11 +125,12 @@
       value={primaryLabel || ""}
       placeholder={placeholder || ""}
       {disabled}
-      {readonly}
+      readonly
       class="spectrum-Textfield-input spectrum-InputGroup-input"
       class:labelPadding={iconData}
+      class:open={primaryOpen}
     />
-    {#if primaryValue}
+    {#if primaryValue && showClearIcon}
       <button
         on:click={() => onClearPrimary()}
         type="reset"
@@ -198,7 +184,7 @@
           </li>
         {/if}
         {#each groupTitles as title}
-          <div class="spectrum-Menu-item">
+          <div class="spectrum-Menu-item title">
             <Detail>{title}</Detail>
           </div>
           {#if primaryOptions}
@@ -432,5 +418,19 @@
 
   .spectrum-Search-clearButton {
     position: absolute;
+  }
+
+  /* Fix focus borders to show only when opened */
+  .spectrum-Textfield-input {
+    border-color: var(--spectrum-global-color-gray-400) !important;
+    border-right-width: 1px;
+  }
+  .spectrum-Textfield-input.open {
+    border-color: var(--spectrum-global-color-blue-400) !important;
+  }
+
+  /* Fix being able to hover and select titles */
+  .spectrum-Menu-item.title {
+    pointer-events: none;
   }
 </style>

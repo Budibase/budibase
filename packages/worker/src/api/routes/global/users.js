@@ -6,7 +6,7 @@ const Joi = require("joi")
 const cloudRestricted = require("../../../middleware/cloudRestricted")
 const { users } = require("../validation")
 const selfController = require("../../controllers/global/self")
-const builderOrAdmin = require("../../../middleware/builderOrAdmin")
+const { builderOrAdmin } = require("@budibase/backend-core/auth")
 
 const router = Router()
 
@@ -32,10 +32,12 @@ function buildInviteValidation() {
 
 function buildInviteMultipleValidation() {
   // prettier-ignore
-  return joiValidator.body(Joi.object({
-    emails: Joi.array().required(),
-    userInfo: Joi.object().optional(),
-  }).required())
+  return joiValidator.body(Joi.array().required().items(
+    Joi.object({
+      email: Joi.string(),
+      userInfo: Joi.object().optional(),
+    })
+  ))
 }
 
 function buildInviteAcceptValidation() {
@@ -64,7 +66,7 @@ router
   .post("/api/global/users/search", builderOrAdmin, controller.search)
   .delete("/api/global/users/:id", adminOnly, controller.destroy)
   .post("/api/global/users/bulkDelete", adminOnly, controller.bulkDelete)
-  .get("/api/global/users/count/:appId", adminOnly, controller.countByApp)
+  .get("/api/global/users/count/:appId", builderOrAdmin, controller.countByApp)
   .get("/api/global/roles/:appId")
   .post(
     "/api/global/users/invite",
@@ -79,7 +81,7 @@ router
     controller.invite
   )
   .post(
-    "/api/global/users/inviteMultiple",
+    "/api/global/users/multi/invite",
     adminOnly,
     buildInviteMultipleValidation(),
     controller.inviteMultiple
