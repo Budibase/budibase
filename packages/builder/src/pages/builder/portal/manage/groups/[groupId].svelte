@@ -45,6 +45,11 @@
     $users.data?.filter(x => !group?.users.map(y => y._id).includes(x._id)) ||
     []
   $: groupApps = $apps.filter(x => group?.apps.includes(x.appId))
+  $: {
+    if (loaded && !group?._id) {
+      $goto("./")
+    }
+  }
 
   async function addAll() {
     selectedUsers = [...selectedUsers, ...filtered.map(u => u._id)]
