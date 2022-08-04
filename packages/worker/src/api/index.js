@@ -106,7 +106,10 @@ router
     if (ctx.publicEndpoint) {
       return next()
     }
-    if ((!ctx.isAuthenticated || !ctx.user.budibaseAccess) && !ctx.internal) {
+    if (
+      (!ctx.isAuthenticated || (ctx.user && !ctx.user.budibaseAccess)) &&
+      !ctx.internal
+    ) {
       ctx.throw(403, "Unauthorized - no public worker access")
     }
     return next()
