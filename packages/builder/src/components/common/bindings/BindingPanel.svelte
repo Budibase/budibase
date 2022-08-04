@@ -70,17 +70,17 @@
 
   // Adds a JS/HBS helper to the expression
   const addHelper = (helper, js) => {
-    let value
+    let tempVal
     const pos = getCaretPosition()
     if (js) {
       const decoded = decodeJSBinding(jsValue)
-      value = jsValue = encodeJSBinding(
+      tempVal = jsValue = encodeJSBinding(
         addJSBinding(decoded, pos, helper.text, { helper: true })
       )
     } else {
-      value = hbsValue = addHBSBinding(hbsValue, pos, helper.text)
+      tempVal = hbsValue = addHBSBinding(hbsValue, pos, helper.text)
     }
-    updateValue(value)
+    updateValue(tempVal)
   }
 
   // Adds a data binding to the expression
