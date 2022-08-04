@@ -50,7 +50,7 @@
       sortable: false,
     },
     ...($auth.groupsEnabled && {
-      userGroups: { sortable: false, displayName: "Groups" },
+      userGroups: { sortable: false, displayName: "User groups" },
     }),
     apps: {},
   }
@@ -229,7 +229,7 @@
       </Button>
     </ButtonGroup>
     <div class="controls-right">
-      <Search bind:value={searchEmail} placeholder="Search email" />
+      <Search bind:value={searchEmail} placeholder="Search" />
       {#if selectedRows.length > 0}
         <DeleteRowsButton
           item="user"

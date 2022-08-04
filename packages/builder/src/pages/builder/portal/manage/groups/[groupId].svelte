@@ -239,10 +239,7 @@
               </ListItem>
             {/each}
           {:else}
-            <ListItem
-              icon="UserGroup"
-              title="You have no users in this user group"
-            />
+            <ListItem icon="UserGroup" title="This user group has no users" />
           {/if}
         </List>
       </Layout>
@@ -273,7 +270,10 @@
             </ListItem>
           {/each}
         {:else}
-          <ListItem icon="UserGroup" title="This group has access to no apps" />
+          <ListItem
+            icon="UserGroup"
+            title="This user group has access to no apps"
+          />
         {/if}
       </List>
     </Layout>

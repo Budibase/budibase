@@ -94,7 +94,7 @@
         </div>
       </Tags>
     {/if}
-    <Body>Easily assign and manage your users access with User Groups</Body>
+    <Body>Easily assign and manage your users' access with user groups</Body>
   </Layout>
   <Divider />
   <div class="controls">
