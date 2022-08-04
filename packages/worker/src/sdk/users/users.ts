@@ -106,7 +106,6 @@ const buildUser = async (
   opts: SaveUserOpts = {
     hashPassword: true,
     requirePassword: true,
-    bulkCreate: false,
   },
   tenantId: string,
   dbUser?: any
@@ -185,15 +184,7 @@ export const save = async (
     dbUser = await db.get(_id)
   }
 
-  let builtUser = await buildUser(
-    user,
-    {
-      hashPassword: true,
-      requirePassword: user.requirePassword,
-    },
-    tenantId,
-    dbUser
-  )
+  let builtUser = await buildUser(user, opts, tenantId, dbUser)
 
   // make sure we set the _id field for a new user
   if (!_id) {
@@ -298,7 +289,6 @@ export const bulkCreate = async (
         {
           hashPassword: true,
           requirePassword: user.requirePassword,
-          bulkCreate: false,
         },
         tenantId
       )

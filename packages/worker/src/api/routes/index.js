@@ -12,6 +12,7 @@ const tenantsRoutes = require("./system/tenants")
 const statusRoutes = require("./system/status")
 const selfRoutes = require("./global/self")
 const licenseRoutes = require("./global/license")
+const migrationRoutes = require("./system/migrations")
 
 let userGroupRoutes = api.groups
 exports.routes = [
@@ -29,4 +30,5 @@ exports.routes = [
   selfRoutes,
   licenseRoutes,
   userGroupRoutes,
+  migrationRoutes,
 ]
