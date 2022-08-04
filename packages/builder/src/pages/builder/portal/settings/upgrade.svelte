@@ -88,7 +88,7 @@
         {/if}
       </Body>
     </Layout>
-    <Divider size="S" />
+    <Divider />
     <Layout gap="XS" noPadding>
       <Heading size="S">Activate</Heading>
       <Body size="S">Enter your license key below to activate your plan</Body>
@@ -111,7 +111,7 @@
         >
       </div>
     </Layout>
-    <Divider size="S" />
+    <Divider />
     <Layout gap="L" noPadding>
       <Layout gap="S" noPadding>
         <Heading size="S">Plan</Heading>

@@ -105,7 +105,7 @@
       </div>
     </div>
 
-    <Divider size="S" />
+    <Divider />
 
     {#if loaded && $templates?.length}
       <TemplateDisplay templates={$templates} />

@@ -21,11 +21,6 @@
 
 <div class="title">
   <div class="name" style="display: flex; margin-left: var(--spacing-xl)">
-    <div style="background: {group.color};" class="circle">
-      <div>
-        <Icon size="M" name={group.icon} />
-      </div>
-    </div>
     <div class="name" data-cy="app-name-link">
       <Body size="S">{group.name}</Body>
     </div>
@@ -50,31 +45,12 @@
       : "s"}
   </div>
 </div>
-<div>
-  <div class="group-row-actions">
-    <div>
-      <Button on:click={() => $goto(`./${group._id}`)} size="S" cta
-        >Manage</Button
-      >
-    </div>
-    <div>
-      <ActionMenu align="right">
-        <span slot="control">
-          <Icon hoverable name="More" />
-        </span>
-        <MenuItem on:click={() => deleteGroup(group)} icon="Delete"
-          >Delete</MenuItem
-        >
-        <MenuItem on:click={() => editGroup(group)} icon="Edit">Edit</MenuItem>
-      </ActionMenu>
-    </div>
-  </div>
-</div>
 
-<Modal bind:this={modal}>
-  <CreateEditGroupModal {group} {saveGroup} />
-</Modal>
+<!--        <MenuItem on:click={() => deleteGroup(group)} icon="Delete"-->
+<!--          >Delete</MenuItem-->
+<!--        >-->
 
+<!--        <MenuItem on:click={() => editGroup(group)} icon="Edit">Edit</MenuItem>-->
 <style>
   .group-row-actions {
     display: flex;
@@ -88,23 +64,7 @@
     grid-template-columns: 75px 75px;
     align-items: center;
   }
-  .circle {
-    border-radius: 50%;
-    height: 30px;
-    color: white;
-    font-weight: bold;
-    display: inline-block;
-    font-size: 1.2em;
-    width: 30px;
-  }
 
-  .tableElement {
-    display: flex;
-  }
-
-  .circle > div {
-    padding: calc(1.5 * var(--spacing-xs)) var(--spacing-xs);
-  }
   .name {
     text-decoration: none;
     overflow: hidden;

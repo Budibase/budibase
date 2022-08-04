@@ -15,7 +15,6 @@
     display: flex;
     overflow: hidden;
   }
-
   .spacing {
     margin-right: var(--spacing-m);
   }
