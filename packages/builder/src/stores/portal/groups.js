@@ -1,6 +1,6 @@
 import { writable, get } from "svelte/store"
 import { API } from "api"
-import { auth } from "stores/portal"
+import { auth, users } from "stores/portal"
 
 export function createGroupsStore() {
   const store = writable([])
@@ -10,8 +10,8 @@ export function createGroupsStore() {
       // only init if these is a groups license, just to be sure but the feature will be blocked
       // on the backend anyway
       if (get(auth).groupsEnabled) {
-        const users = await API.getGroups()
-        store.set(users)
+        const groups = await API.getGroups()
+        store.set(groups)
       }
     },
 
@@ -39,6 +39,55 @@ export function createGroupsStore() {
       store.update(state => {
         state = state.filter(state => state._id !== group._id)
         return state
+      })
+    },
+
+    addUser: async (groupId, userId) => {
+      // Sanity check
+      const user = await users.get(userId)
+      const group = get(store).find(x => x._id === groupId)
+      if (!group?._id || !user?._id) {
+        return
+      }
+
+      // Check we haven't already been added
+      if (group.users?.find(x => x._id === userId)) {
+        return
+      }
+
+      // Update group
+      await actions.save({
+        ...group,
+        users: [...group.users, { _id: userId, email: user.email }],
+      })
+
+      // Update user
+      let userGroups = user.userGroups || []
+      userGroups.push(groupId)
+      await users.save({
+        ...user,
+        userGroups,
+      })
+    },
+
+    removeUser: async (groupId, userId) => {
+      // Sanity check
+      const user = await users.get(userId)
+      const group = get(store).find(x => x._id === groupId)
+      if (!group?._id || !user?._id) {
+        return
+      }
+
+      // Update group
+      await actions.save({
+        ...group,
+        users: group.users.filter(x => x._id !== userId),
+      })
+
+      // Update user
+      await users.save({
+        ...user,
+        userGroups: user.userGroups.filter(x => x !== groupId),
       })
     },
   }

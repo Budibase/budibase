@@ -22,7 +22,6 @@
     StatusLight,
   } from "@budibase/bbui"
   import { onMount } from "svelte"
-  import { fetchData } from "helpers"
   import { users, auth, groups, apps } from "stores/portal"
   import { roles } from "stores/backend"
   import { Constants } from "@budibase/frontend-core"
@@ -38,28 +37,23 @@
   let popoverAnchor
   let searchTerm = ""
   let popover
-  let selectedGroups = []
   let allAppList = []
   let user
   let loaded = false
 
-  $: fetchUser(userId)
-  $: fullName = $userFetch?.data?.firstName
-    ? $userFetch?.data?.firstName + " " + $userFetch?.data?.lastName
-    : ""
-  $: nameLabel = getNameLabel($userFetch)
+  $: fullName = user?.firstName ? user?.firstName + " " + user?.lastName : ""
+  $: nameLabel = getNameLabel(user)
   $: initials = getInitials(nameLabel)
+  $: filteredGroups = getFilteredGroups($groups, searchTerm)
   $: allAppList = $apps
     .filter(x => {
-      if ($userFetch.data?.roles) {
-        return Object.keys($userFetch.data.roles).find(y => {
-          return x.appId === apps.extractAppId(y)
-        })
-      }
+      return Object.keys(user?.roles || {}).find(y => {
+        return x.appId === apps.extractAppId(y)
+      })
     })
     .map(app => {
       let roles = Object.fromEntries(
-        Object.entries($userFetch.data.roles).filter(([key]) => {
+        Object.entries(user?.roles).filter(([key]) => {
           return apps.extractAppId(key) === app.appId
         })
       )
@@ -70,27 +64,27 @@
         roles,
       }
     })
-  // Used for searching through groups in the add group popover
-  $: filteredGroups = $groups.filter(
-    group =>
-      selectedGroups &&
-      group?.name?.toLowerCase().includes(searchTerm.toLowerCase())
-  )
   $: userGroups = $groups.filter(x => {
     return x.users?.find(y => {
       return y._id === userId
     })
   })
-  $: globalRole = $userFetch?.data?.admin?.global
+  $: globalRole = user?.admin?.global
     ? "admin"
-    : $userFetch?.data?.builder?.global
+    : user?.builder?.global
     ? "developer"
     : "appUser"
 
-  const userFetch = fetchData(`/api/global/users/${userId}`)
+  const getFilteredGroups = (groups, search) => {
+    if (!search) {
+      return groups
+    }
+    search = search.toLowerCase()
+    return groups.filter(group => group.name?.toLowerCase().includes(search))
+  }
 
-  const getNameLabel = userFetch => {
-    const { firstName, lastName, email } = userFetch?.data || {}
+  const getNameLabel = user => {
+    const { firstName, lastName, email } = user || {}
     if (!firstName && !lastName) {
       return email || ""
     }
@@ -136,24 +130,17 @@
   }
   async function updateUserFirstName(evt) {
     try {
-      await users.save({ ...$userFetch?.data, firstName: evt.target.value })
-      await userFetch.refresh()
+      await users.save({ ...user, firstName: evt.target.value })
+      await fetchUser()
     } catch (error) {
       notifications.error("Error updating user")
     }
   }
 
-  async function removeGroup(id) {
-    let updatedGroup = $groups.find(x => x._id === id)
-    let newUsers = updatedGroup.users.filter(user => user._id !== userId)
-    updatedGroup.users = newUsers
-    groups.actions.save(updatedGroup)
-  }
-
   async function updateUserLastName(evt) {
     try {
-      await users.save({ ...$userFetch?.data, lastName: evt.target.value })
-      await userFetch.refresh()
+      await users.save({ ...user, lastName: evt.target.value })
+      await fetchUser()
     } catch (error) {
       notifications.error("Error updating user")
     }
@@ -169,25 +156,8 @@
     }
   }
 
-  async function addGroup(groupId) {
-    let selectedGroup = selectedGroups.includes(groupId)
-    let group = $groups.find(group => group._id === groupId)
-
-    if (selectedGroup) {
-      selectedGroups = selectedGroups.filter(id => id === selectedGroup)
-      let newUsers = group.users.filter(groupUser => user._id !== groupUser._id)
-      group.users = newUsers
-    } else {
-      selectedGroups = [...selectedGroups, groupId]
-      group.users.push(user)
-    }
-
-    await groups.actions.save(group)
-  }
-
-  async function fetchUser(userId) {
-    let userPromise = users.get(userId)
-    user = await userPromise
+  async function fetchUser() {
+    user = await users.get(userId)
     if (!user?._id) {
       $goto("./")
     }
@@ -195,17 +165,31 @@
 
   async function toggleFlags(detail) {
     try {
-      await users.save({ ...$userFetch?.data, ...detail })
-      await userFetch.refresh()
+      await users.save({ ...user, ...detail })
+      await fetchUser()
     } catch (error) {
       notifications.error("Error updating user")
     }
   }
 
-  function addAll() {}
+  const addGroup = async groupId => {
+    await groups.actions.addUser(groupId, userId)
+    await fetchUser()
+  }
+
+  const removeGroup = async groupId => {
+    await groups.actions.removeUser(groupId, userId)
+    await fetchUser()
+  }
+
   onMount(async () => {
     try {
-      await Promise.all([groups.actions.init(), apps.load(), roles.fetch()])
+      await Promise.all([
+        fetchUser(),
+        groups.actions.init(),
+        apps.load(),
+        roles.fetch(),
+      ])
       loaded = true
     } catch (error) {
       notifications.error("Error getting user groups")
@@ -228,8 +212,8 @@
             <Avatar size="XXL" {initials} />
             <div class="subtitle">
               <Heading size="S">{nameLabel}</Heading>
-              {#if nameLabel !== $userFetch?.data?.email}
-                <Body size="S">{$userFetch?.data?.email}</Body>
+              {#if nameLabel !== user?.email}
+                <Body size="S">{user?.email}</Body>
               {/if}
             </div>
           </div>
@@ -256,21 +240,15 @@
         <div class="fields">
           <div class="field">
             <Label size="L">Email</Label>
-            <Input disabled value={$userFetch?.data?.email} />
+            <Input disabled value={user?.email} />
           </div>
           <div class="field">
             <Label size="L">First name</Label>
-            <Input
-              value={$userFetch?.data?.firstName}
-              on:blur={updateUserFirstName}
-            />
+            <Input value={user?.firstName} on:blur={updateUserFirstName} />
           </div>
           <div class="field">
             <Label size="L">Last name</Label>
-            <Input
-              value={$userFetch?.data?.lastName}
-              on:blur={updateUserLastName}
-            />
+            <Input value={user?.lastName} on:blur={updateUserLastName} />
           </div>
           <!-- don't let a user remove the privileges that let them be here -->
           {#if userId !== $auth.user._id}
@@ -304,13 +282,12 @@
           </div>
           <Popover align="right" bind:this={popover} anchor={popoverAnchor}>
             <UserGroupPicker
-              key={"name"}
-              title={"User group"}
+              labelKey="name"
               bind:searchTerm
-              bind:selected={selectedGroups}
-              bind:filtered={filteredGroups}
-              {addAll}
-              select={addGroup}
+              list={filteredGroups}
+              selected={user.userGroups}
+              on:select={e => addGroup(e.detail)}
+              on:deselect={e => removeGroup(e.detail)}
             />
           </Popover>
         </div>
@@ -325,7 +302,10 @@
                 on:click={() => $goto(`../groups/${group._id}`)}
               >
                 <Icon
-                  on:click={removeGroup(group._id)}
+                  on:click={e => {
+                    removeGroup(group._id)
+                    e.stopPropagation()
+                  }}
                   hoverable
                   size="S"
                   name="Close"
@@ -370,13 +350,10 @@
 {/if}
 
 <Modal bind:this={deleteModal}>
-  <DeleteUserModal user={$userFetch.data} />
+  <DeleteUserModal {user} />
 </Modal>
 <Modal bind:this={resetPasswordModal}>
-  <ForceResetPasswordModal
-    user={$userFetch.data}
-    on:update={userFetch.refresh}
-  />
+  <ForceResetPasswordModal {user} on:update={fetchUser} />
 </Modal>
 
 <style>

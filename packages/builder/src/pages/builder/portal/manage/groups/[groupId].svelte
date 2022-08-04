@@ -48,51 +48,6 @@
     }
   }
 
-  const adduserToGroup = async id => {
-    const user = await users.get(id)
-    if (!user?._id) {
-      return
-    }
-
-    // Check we haven't already been added
-    if (group.users?.find(x => x._id === user._id)) {
-      return
-    }
-
-    // Update group
-    await groups.actions.save({
-      ...group,
-      users: [...group.users, { _id: user._id, email: user.email }],
-    })
-
-    // Update user
-    let userGroups = user.userGroups || []
-    userGroups.push(groupId)
-    await users.save({
-      ...user,
-      userGroups,
-    })
-  }
-
-  const removeUserFromGroup = async id => {
-    const user = await users.get(id)
-    if (!user?._id) {
-      return
-    }
-
-    // Update group
-    await groups.actions.save({
-      ...group,
-      users: group.users.filter(x => x._id !== id),
-    })
-
-    // Update user
-    await users.save({
-      ...user,
-      userGroups: user.userGroups.filter(x => x !== groupId),
-    })
-  }
-
   async function fetchUsers(page, search) {
     if ($pageInfo.loading) {
       return
@@ -191,10 +146,10 @@
             <UserGroupPicker
               bind:searchTerm
               labelKey="email"
-              selected={group.users}
+              selected={group.users?.map(user => user._id)}
               list={$users.data}
-              on:select={e => adduserToGroup(e.detail)}
-              on:deselect={e => removeUserFromGroup(e.detail)}
+              on:select={e => groups.actions.addUser(groupId, e.detail)}
+              on:deselect={e => groups.actions.removeUser(groupId, e.detail)}
             />
           </Popover>
         </div>
@@ -209,7 +164,7 @@
               >
                 <Icon
                   on:click={e => {
-                    removeUserFromGroup(user._id)
+                    groups.actions.removeUser(groupId, user._id)
                     e.stopPropagation()
                   }}
                   hoverable
