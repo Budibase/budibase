@@ -73,9 +73,7 @@
 
   onMount(async () => {
     try {
-      if ($auth.groupsEnabled) {
-        await groups.actions.init()
-      }
+      await groups.actions.init()
     } catch (error) {
       notifications.error("Error getting user groups")
     }
