@@ -31,7 +31,6 @@
   let popoverAnchor
   let popover
   let searchTerm = ""
-  let selectedUsers = []
   let prevSearch = undefined
   let pageInfo = createPaginationStore()
   let loaded = false
@@ -41,9 +40,7 @@
   $: page = $pageInfo.page
   $: fetchUsers(page, searchTerm)
   $: group = $groups.find(x => x._id === groupId)
-  $: filtered =
-    $users.data?.filter(x => !group?.users.map(y => y._id).includes(x._id)) ||
-    []
+  $: filtered = $users.data
   $: groupApps = $apps.filter(x => group?.apps.includes(x.appId))
   $: {
     if (loaded && !group?._id) {
@@ -51,53 +48,24 @@
     }
   }
 
-  async function addAll() {
-    selectedUsers = [...selectedUsers, ...filtered.map(u => u._id)]
-
-    let reducedUserObjects = filtered.map(u => {
-      return {
-        _id: u._id,
-        email: u.email,
-      }
-    })
-    group.users = [...reducedUserObjects, ...group.users]
-
-    await groups.actions.save(group)
-
-    $users.data.forEach(async user => {
-      let userToEdit = await users.get(user._id)
-      let userGroups = userToEdit.userGroups || []
-      userGroups.push(groupId)
-      await users.save({
-        ...userToEdit,
-        userGroups,
-      })
-    })
-  }
-
-  async function selectUser(id) {
-    let selectedUser = selectedUsers.includes(id)
-    if (selectedUser) {
-      selectedUsers = selectedUsers.filter(id => id !== selectedUser)
-      let newUsers = group.users.filter(user => user._id !== id)
-      group.users = newUsers
-    } else {
-      let enrichedUser = $users.data
-        .filter(user => user._id === id)
-        .map(u => {
-          return {
-            _id: u._id,
-            email: u.email,
-          }
-        })[0]
-      selectedUsers = [...selectedUsers, id]
-      group.users.push(enrichedUser)
+  const adduserToGroup = async id => {
+    const user = await users.get(id)
+    if (!user?._id) {
+      return
     }
 
-    await groups.actions.save(group)
+    // Check we haven't already been added
+    if (group.users?.find(x => x._id === user._id)) {
+      return
+    }
 
-    let user = await users.get(id)
+    // Update group
+    await groups.actions.save({
+      ...group,
+      users: [...group.users, { _id: user._id, email: user.email }],
+    })
 
+    // Update user
     let userGroups = user.userGroups || []
     userGroups.push(groupId)
     await users.save({
@@ -106,17 +74,23 @@
     })
   }
 
-  async function removeUser(id) {
-    let newUsers = group.users.filter(user => user._id !== id)
-    group.users = newUsers
-    let user = await users.get(id)
+  const removeUserFromGroup = async id => {
+    const user = await users.get(id)
+    if (!user?._id) {
+      return
+    }
 
-    await users.save({
-      ...user,
-      userGroups: [],
+    // Update group
+    await groups.actions.save({
+      ...group,
+      users: group.users.filter(x => x._id !== id),
     })
 
-    await groups.actions.save(group)
+    // Update user
+    await users.save({
+      ...user,
+      userGroups: user.userGroups.filter(x => x !== groupId),
+    })
   }
 
   async function fetchUsers(page, search) {
@@ -150,7 +124,6 @@
       notifications.success("User group deleted successfully")
       $goto("./")
     } catch (error) {
-      console.log(error)
       notifications.error(`Failed to delete user group`)
     }
   }
@@ -216,13 +189,12 @@
           </div>
           <Popover align="right" bind:this={popover} anchor={popoverAnchor}>
             <UserGroupPicker
-              key={"email"}
-              title={"User"}
               bind:searchTerm
-              bind:selected={selectedUsers}
-              bind:filtered
-              {addAll}
-              select={selectUser}
+              labelKey="email"
+              selected={group.users}
+              list={$users.data}
+              on:select={e => adduserToGroup(e.detail)}
+              on:deselect={e => removeUserFromGroup(e.detail)}
             />
           </Popover>
         </div>
@@ -236,7 +208,7 @@
                 hoverable
               >
                 <Icon
-                  on:click={() => removeUser(user._id)}
+                  on:click={() => removeUserFromGroup(user._id)}
                   hoverable
                   size="S"
                   name="Close"
