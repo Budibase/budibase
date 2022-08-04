@@ -19,6 +19,8 @@ const {
   csrf,
   internalApi,
   adminOnly,
+  builderOnly,
+  builderOrAdmin,
   joiValidator,
 } = require("./middleware")
 
@@ -176,5 +178,7 @@ module.exports = {
   updateUserOAuth,
   ssoCallbackUrl,
   adminOnly,
+  builderOnly,
+  builderOrAdmin,
   joiValidator,
 }
