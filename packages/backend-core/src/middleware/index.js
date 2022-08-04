@@ -10,6 +10,8 @@ const internalApi = require("./internalApi")
 const datasourceGoogle = require("./passport/datasource/google")
 const csrf = require("./csrf")
 const adminOnly = require("./adminOnly")
+const builderOrAdmin = require("./builderOrAdmin")
+const builderOnly = require("./builderOnly")
 const joiValidator = require("./joi-validator")
 module.exports = {
   google,
@@ -27,5 +29,7 @@ module.exports = {
   },
   csrf,
   adminOnly,
+  builderOnly,
+  builderOrAdmin,
   joiValidator,
 }

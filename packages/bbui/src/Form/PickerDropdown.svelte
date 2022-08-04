@@ -27,6 +27,7 @@
   export let primaryOptions = []
   export let secondaryOptions = []
   export let searchTerm
+  export let showClearIcon = true
 
   let primaryLabel
   let secondaryLabel
@@ -120,6 +121,7 @@
     {secondaryValue}
     {primaryLabel}
     {secondaryLabel}
+    {showClearIcon}
     on:pickprimary={onPickPrimary}
     on:picksecondary={onPickSecondary}
     on:search={updateSearchTerm}

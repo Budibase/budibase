@@ -15,6 +15,7 @@ import auth from "./auth"
 import constants from "./constants"
 import * as dbConstants from "./db/constants"
 import logging from "./logging"
+import pino from "./pino"
 
 // mimic the outer package exports
 import * as db from "./pkg/db"
@@ -53,6 +54,7 @@ const core = {
   errors,
   logging,
   roles,
+  ...pino,
   ...errorClasses,
 }
 
