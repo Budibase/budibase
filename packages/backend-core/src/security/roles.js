@@ -203,15 +203,24 @@ exports.getAllRoles = async appId => {
   if (appId) {
     return doWithDB(appId, internal)
   } else {
-    return internal(getAppDB())
+    let appDB
+    try {
+      appDB = getAppDB()
+    } catch (error) {
+      // We don't have any apps, so we'll just use the built-in roles
+    }
+    return internal(appDB)
   }
   async function internal(db) {
-    const body = await db.allDocs(
-      getRoleParams(null, {
-        include_docs: true,
-      })
-    )
-    let roles = body.rows.map(row => row.doc)
+    let roles = []
+    if (db) {
+      const body = await db.allDocs(
+        getRoleParams(null, {
+          include_docs: true,
+        })
+      )
+      roles = body.rows.map(row => row.doc)
+    }
     const builtinRoles = exports.getBuiltinRoles()
 
     // need to combine builtin with any DB record of them (for sake of permissions)

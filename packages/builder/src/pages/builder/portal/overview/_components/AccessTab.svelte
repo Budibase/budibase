@@ -17,10 +17,10 @@
   import { users, groups, apps, auth } from "stores/portal"
   import AssignmentModal from "./AssignmentModal.svelte"
   import { createPaginationStore } from "helpers/pagination"
-  import { Constants } from "@budibase/frontend-core"
   import { roles } from "stores/backend"
 
   export let app
+
   let assignmentModal
   let appGroups = []
   let appUsers = []
@@ -28,14 +28,9 @@
     search = undefined
   let pageInfo = createPaginationStore()
   let fixedAppId
+
   $: page = $pageInfo.page
-
-  $: hasGroupsLicense = $auth.user?.license.features.includes(
-    Constants.Features.USER_GROUPS
-  )
-
   $: fixedAppId = apps.getProdAppID(app.devId)
-
   $: appGroups = $groups.filter(x => {
     return x.apps.includes(app.appId)
   })
@@ -161,7 +156,7 @@
           >
         </div>
       </div>
-      {#if hasGroupsLicense && appGroups.length}
+      {#if $auth.groupsEnabled && appGroups.length}
         <List title="User Groups">
           {#each appGroups as group}
             <ListItem

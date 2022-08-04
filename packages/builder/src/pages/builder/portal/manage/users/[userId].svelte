@@ -18,6 +18,7 @@
     Select,
     Modal,
     notifications,
+    Divider,
     StatusLight,
   } from "@budibase/bbui"
   import { onMount } from "svelte"
@@ -41,18 +42,13 @@
   let allAppList = []
   let user
   let loaded = false
-  $: fetchUser(userId)
 
+  $: fetchUser(userId)
   $: fullName = $userFetch?.data?.firstName
     ? $userFetch?.data?.firstName + " " + $userFetch?.data?.lastName
     : ""
-
-  $: hasGroupsLicense = $auth.user?.license.features.includes(
-    Constants.Features.USER_GROUPS
-  )
   $: nameLabel = getNameLabel($userFetch)
   $: initials = getInitials(nameLabel)
-
   $: allAppList = $apps
     .filter(x => {
       if ($userFetch.data?.roles) {
@@ -85,7 +81,6 @@
       return y._id === userId
     })
   })
-
   $: globalRole = $userFetch?.data?.admin?.global
     ? "admin"
     : $userFetch?.data?.builder?.global
@@ -216,15 +211,14 @@
 </script>
 
 {#if loaded}
-  <Layout gap="L" noPadding>
-    <Layout gap="XS" noPadding>
-      <div>
-        <ActionButton on:click={() => $goto("./")} size="S" icon="ArrowLeft">
-          Back
-        </ActionButton>
-      </div>
-    </Layout>
-    <Layout gap="XS" noPadding>
+  <Layout gap="XL" noPadding>
+    <div>
+      <ActionButton on:click={() => $goto("./")} icon="ArrowLeft">
+        Back
+      </ActionButton>
+    </div>
+
+    <Layout noPadding gap="M">
       <div class="title">
         <div>
           <div style="display: flex;">
@@ -232,7 +226,7 @@
             <div class="subtitle">
               <Heading size="S">{nameLabel}</Heading>
               {#if nameLabel !== $userFetch?.data?.email}
-                <Body size="XS">{$userFetch?.data?.email}</Body>
+                <Body size="S">{$userFetch?.data?.email}</Body>
               {/if}
             </div>
           </div>
@@ -253,56 +247,62 @@
           </div>
         {/if}
       </div>
-    </Layout>
-    <Layout gap="S" noPadding>
-      <div class="fields">
-        <div class="field">
-          <Label size="L">First name</Label>
-          <Input
-            thin
-            value={$userFetch?.data?.firstName}
-            on:blur={updateUserFirstName}
-          />
-        </div>
-        <div class="field">
-          <Label size="L">Last name</Label>
-          <Input
-            thin
-            value={$userFetch?.data?.lastName}
-            on:blur={updateUserLastName}
-          />
-        </div>
-        <!-- don't let a user remove the privileges that let them be here -->
-        {#if userId !== $auth.user._id}
+      <Divider size="S" />
+      <Layout noPadding gap="S">
+        <Heading size="S">Details</Heading>
+        <div class="fields">
           <div class="field">
-            <Label size="L">Role</Label>
-            <Select
-              value={globalRole}
-              options={Constants.BbRoles}
-              on:change={updateUserRole}
+            <Label size="L">Email</Label>
+            <Input disabled value={$userFetch?.data?.email} />
+          </div>
+          <div class="field">
+            <Label size="L">First name</Label>
+            <Input
+              value={$userFetch?.data?.firstName}
+              on:blur={updateUserFirstName}
             />
           </div>
-        {/if}
-      </div>
+          <div class="field">
+            <Label size="L">Last name</Label>
+            <Input
+              value={$userFetch?.data?.lastName}
+              on:blur={updateUserLastName}
+            />
+          </div>
+          <!-- don't let a user remove the privileges that let them be here -->
+          {#if userId !== $auth.user._id}
+            <div class="field">
+              <Label size="L">Role</Label>
+              <Select
+                value={globalRole}
+                options={Constants.BudibaseRoleOptions}
+                on:change={updateUserRole}
+              />
+            </div>
+          {/if}
+        </div>
+      </Layout>
     </Layout>
 
-    {#if hasGroupsLicense}
+    {#if $auth.groupsEnabled}
       <!-- User groups -->
-      <Layout gap="XS" noPadding>
+      <Layout gap="S" noPadding>
         <div class="tableTitle">
-          <div>
-            <Heading size="XS">User groups</Heading>
-            <Body size="S">Add or remove this user from user groups</Body>
-          </div>
+          <Heading size="S">User groups</Heading>
           <div bind:this={popoverAnchor}>
-            <Button on:click={popover.show()} icon="UserGroup" cta>
-              Add user group
+            <Button
+              on:click={popover.show()}
+              icon="UserGroup"
+              secondary
+              newStyles
+            >
+              Add to user group
             </Button>
           </div>
           <Popover align="right" bind:this={popover} anchor={popoverAnchor}>
             <UserGroupPicker
               key={"name"}
-              title={"Group"}
+              title={"User group"}
               bind:searchTerm
               bind:selected={selectedGroups}
               bind:filtered={filteredGroups}
@@ -311,7 +311,6 @@
             />
           </Popover>
         </div>
-
         <List>
           {#if userGroups.length}
             {#each userGroups as group}
@@ -319,13 +318,16 @@
                 title={group.name}
                 icon={group.icon}
                 iconBackground={group.color}
-                ><Icon
+                hoverable
+                on:click={() => $goto(`../groups/${group._id}`)}
+              >
+                <Icon
                   on:click={removeGroup(group._id)}
                   hoverable
-                  size="L"
+                  size="S"
                   name="Close"
-                /></ListItem
-              >
+                />
+              </ListItem>
             {/each}
           {:else}
             <ListItem icon="UserGroup" title="No groups" />
@@ -333,37 +335,28 @@
         </List>
       </Layout>
     {/if}
-    <!-- User Apps -->
-    <Layout gap="S" noPadding>
-      <div class="appsTitle">
-        <Heading weight="light" size="XS">Apps</Heading>
-        <div style="margin-top: var(--spacing-xs)">
-          <Body size="S">Manage apps that this user has been assigned to</Body>
-        </div>
-      </div>
 
+    <Layout gap="S" noPadding>
+      <Heading size="S">Apps</Heading>
       <List>
         {#if allAppList.length}
           {#each allAppList as app}
-            <div
-              class="pointer"
-              on:click={$goto(`../../overview/${app.devId}`)}
+            <ListItem
+              title={app.name}
+              iconBackground={app?.icon?.color || ""}
+              icon={app?.icon?.name || "Apps"}
+              hoverable
+              on:click={() => $goto(`../../overview/${app.devId}`)}
             >
-              <ListItem
-                title={app.name}
-                iconBackground={app?.icon?.color || ""}
-                icon={app?.icon?.name || "Apps"}
-              >
-                <div class="title ">
-                  <StatusLight
-                    square
-                    color={RoleUtils.getRoleColour(getHighestRole(app.roles))}
-                  >
-                    {getRoleLabel(getHighestRole(app.roles))}
-                  </StatusLight>
-                </div>
-              </ListItem>
-            </div>
+              <div class="title ">
+                <StatusLight
+                  square
+                  color={RoleUtils.getRoleColour(getHighestRole(app.roles))}
+                >
+                  {getRoleLabel(getHighestRole(app.roles))}
+                </StatusLight>
+              </div>
+            </ListItem>
           {/each}
         {:else}
           <ListItem icon="Apps" title="No apps" />
@@ -384,16 +377,13 @@
 </Modal>
 
 <style>
-  .pointer {
-    cursor: pointer;
-  }
   .fields {
     display: grid;
     grid-gap: var(--spacing-m);
   }
   .field {
     display: grid;
-    grid-template-columns: 32% 1fr;
+    grid-template-columns: 120px 1fr;
     align-items: center;
   }
 
@@ -406,7 +396,7 @@
   .tableTitle {
     display: flex;
     justify-content: space-between;
-    margin-bottom: var(--spacing-m);
+    align-items: flex-end;
   }
 
   .subtitle {
@@ -415,10 +405,5 @@
     flex-direction: column;
     justify-content: center;
     align-items: stretch;
-  }
-
-  .appsTitle {
-    display: flex;
-    flex-direction: column;
   }
 </style>

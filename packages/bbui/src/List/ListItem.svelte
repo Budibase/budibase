@@ -9,11 +9,12 @@
   export let avatar = false
   export let title = null
   export let subtitle = null
+  export let hoverable = false
 
   $: initials = avatar ? title?.[0] : null
 </script>
 
-<div class="list-item">
+<div class="list-item" class:hoverable on:click>
   <div class="left">
     {#if icon}
       <div class="icon" style="background: {iconBackground || `transparent`};">
@@ -39,11 +40,12 @@
   .list-item {
     padding: 0 16px;
     height: 56px;
-    background: var(--spectrum-alias-background-color-tertiary);
+    background: var(--spectrum-global-color-gray-50);
     display: flex;
     flex-direction: row;
     justify-content: space-between;
     border: 1px solid var(--spectrum-global-color-gray-300);
+    transition: background 130ms ease-out;
   }
   .list-item:not(:first-child) {
     border-top: none;
@@ -55,6 +57,10 @@
   .list-item:last-child {
     border-bottom-left-radius: 4px;
     border-bottom-right-radius: 4px;
+  }
+  .hoverable:hover {
+    cursor: pointer;
+    background: var(--spectrum-global-color-gray-75);
   }
   .left,
   .right {

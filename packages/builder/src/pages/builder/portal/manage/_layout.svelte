@@ -12,7 +12,6 @@
 
   $: wide =
     $page.path.includes("email/:template") ||
-    ($page.path.includes("users") && !$page.path.includes(":userId")) ||
     ($page.path.includes("groups") && !$page.path.includes(":groupId"))
 </script>
 

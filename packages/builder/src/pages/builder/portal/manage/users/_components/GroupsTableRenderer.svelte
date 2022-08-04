@@ -1,5 +1,6 @@
 <script>
-  import { Icon, Body } from "@budibase/bbui"
+  import { Icon } from "@budibase/bbui"
+
   export let value
 </script>
 
@@ -7,17 +8,9 @@
   <div class="spacing">
     <Icon name="UserGroup" />
   </div>
-  {#if value?.length === 0}
-    <div class="opacity">0</div>
-  {:else if value?.length === 1}
-    <div class="opacity">
-      <Body size="S">{value[0]?.name}</Body>
-    </div>
-  {:else}
-    <div class="opacity">
-      {parseInt(value?.length) || 0} groups
-    </div>
-  {/if}
+  <div class="opacity">
+    {value?.length || 0}
+  </div>
 </div>
 
 <style>

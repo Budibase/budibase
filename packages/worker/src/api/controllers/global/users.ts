@@ -214,13 +214,13 @@ export const invite = async (ctx: any) => {
 }
 
 export const inviteMultiple = async (ctx: any) => {
-  let { emails, userInfo } = ctx.request.body
+  let users = ctx.request.body
   let existing = false
   let existingEmail
-  for (let email of emails) {
-    if (await usersCore.getGlobalUserByEmail(email)) {
+  for (let user of users) {
+    if (await usersCore.getGlobalUserByEmail(user.email)) {
       existing = true
-      existingEmail = email
+      existingEmail = user.email
       break
     }
   }
@@ -228,17 +228,18 @@ export const inviteMultiple = async (ctx: any) => {
   if (existing) {
     ctx.throw(400, `${existingEmail} already exists`)
   }
-  if (!userInfo) {
-    userInfo = {}
-  }
-  userInfo.tenantId = tenancy.getTenantId()
-  const opts: any = {
-    subject: "{{ company }} platform invitation",
-    info: userInfo,
-  }
 
-  for (let i = 0; i < emails.length; i++) {
-    await sendEmail(emails[i], EmailTemplatePurpose.INVITATION, opts)
+  for (let i = 0; i < users.length; i++) {
+    let userInfo = users[i].userInfo
+    if (!userInfo) {
+      userInfo = {}
+    }
+    userInfo.tenantId = tenancy.getTenantId()
+    const opts: any = {
+      subject: "{{ company }} platform invitation",
+      info: userInfo,
+    }
+    await sendEmail(users[i].email, EmailTemplatePurpose.INVITATION, opts)
   }
 
   ctx.body = {

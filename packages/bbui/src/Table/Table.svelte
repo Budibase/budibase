@@ -503,12 +503,6 @@
   .spectrum-Table-headCell--alignRight {
     justify-content: flex-end;
   }
-  .spectrum-Table-headCell--divider {
-    padding-right: var(--cell-padding);
-  }
-  .spectrum-Table-headCell--divider + .spectrum-Table-headCell {
-    padding-left: var(--cell-padding);
-  }
   .spectrum-Table-headCell--edit {
     position: sticky;
     left: 0;
@@ -580,13 +574,6 @@
     background-color: var(--table-bg);
     z-index: auto;
   }
-  .spectrum-Table-cell--divider {
-    padding-right: var(--cell-padding);
-  }
-  .spectrum-Table-cell--divider + .spectrum-Table-cell {
-    padding-left: var(--cell-padding);
-  }
-
   .spectrum-Table-cell--edit {
     position: sticky;
     left: 0;
