@@ -1,5 +1,6 @@
 const redis = require("../redis/init")
 const { v4: uuidv4 } = require("uuid")
+const { logWarn } = require("../logging")
 
 // a week in seconds
 const EXPIRY_SECONDS = 86400 * 7
@@ -38,6 +39,11 @@ async function invalidateSessions(userId, sessionIds = null) {
     for (let session of sessions) {
       promises.push(client.delete(session.key))
     }
+    logWarn(
+      `Invalidating sessions for ${userId} - ${sessions
+        .map(session => session.key)
+        .join(", ")}`
+    )
     await Promise.all(promises)
   } catch (err) {
     console.error(`Error invalidating sessions: ${err}`)
