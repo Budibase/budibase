@@ -37,33 +37,15 @@
   let popoverAnchor
   let searchTerm = ""
   let popover
-  let allAppList = []
   let user
   let loaded = false
 
   $: fullName = user?.firstName ? user?.firstName + " " + user?.lastName : ""
+  $: privileged = user?.admin?.global || user?.builder?.global
   $: nameLabel = getNameLabel(user)
   $: initials = getInitials(nameLabel)
   $: filteredGroups = getFilteredGroups($groups, searchTerm)
-  $: allAppList = $apps
-    .filter(x => {
-      return Object.keys(user?.roles || {}).find(y => {
-        return x.appId === apps.extractAppId(y)
-      })
-    })
-    .map(app => {
-      let roles = Object.fromEntries(
-        Object.entries(user?.roles).filter(([key]) => {
-          return apps.extractAppId(key) === app.appId
-        })
-      )
-      return {
-        name: app.name,
-        devId: app.devId,
-        icon: app.icon,
-        roles,
-      }
-    })
+  $: availableApps = getAvailableApps($apps, privileged, user?.roles)
   $: userGroups = $groups.filter(x => {
     return x.users?.find(y => {
       return y._id === userId
@@ -74,6 +56,25 @@
     : user?.builder?.global
     ? "developer"
     : "appUser"
+
+  const getAvailableApps = (appList, privileged, roles) => {
+    let availableApps = appList.slice()
+    if (!privileged) {
+      availableApps = availableApps.filter(x => {
+        return Object.keys(roles || {}).find(y => {
+          return x.appId === apps.extractAppId(y)
+        })
+      })
+    }
+    return availableApps.map(app => {
+      return {
+        name: app.name,
+        devId: app.devId,
+        icon: app.icon,
+        role: privileged ? Constants.Roles.ADMIN : roles[app.appId],
+      }
+    })
+  }
 
   const getFilteredGroups = (groups, search) => {
     if (!search) {
@@ -116,18 +117,6 @@
     return role?.name || "Custom role"
   }
 
-  function getHighestRole(roles) {
-    let highestRole
-    let highestRoleNumber = 0
-    Object.keys(roles).forEach(role => {
-      let roleNumber = RoleUtils.getRolePriority(roles[role])
-      if (roleNumber > highestRoleNumber) {
-        highestRoleNumber = roleNumber
-        highestRole = roles[role]
-      }
-    })
-    return highestRole
-  }
   async function updateUserFirstName(evt) {
     try {
       await users.save({ ...user, firstName: evt.target.value })
@@ -320,10 +309,15 @@
     {/if}
 
     <Layout gap="S" noPadding>
-      <Heading size="S">Apps</Heading>
+      <div>
+        <Heading size="S">Apps</Heading>
+        {#if privileged}
+          <Body size="S">This user's role grants admin access to all apps</Body>
+        {/if}
+      </div>
       <List>
-        {#if allAppList.length}
-          {#each allAppList as app}
+        {#if availableApps.length}
+          {#each availableApps as app}
             <ListItem
               title={app.name}
               iconBackground={app?.icon?.color || ""}
@@ -332,11 +326,8 @@
               on:click={() => $goto(`../../overview/${app.devId}`)}
             >
               <div class="title ">
-                <StatusLight
-                  square
-                  color={RoleUtils.getRoleColour(getHighestRole(app.roles))}
-                >
-                  {getRoleLabel(getHighestRole(app.roles))}
+                <StatusLight square color={RoleUtils.getRoleColour(app.role)}>
+                  {getRoleLabel(app.role)}
                 </StatusLight>
               </div>
             </ListItem>
