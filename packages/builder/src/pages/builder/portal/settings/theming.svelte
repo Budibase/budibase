@@ -9,7 +9,7 @@
     <Heading size="M">Theming</Heading>
     <Body>Customize how Budibase looks and feels.</Body>
   </Layout>
-  <Divider size="S" />
+  <Divider />
   <div class="fields">
     <div class="field">
       <Label size="L">Builder theme</Label>

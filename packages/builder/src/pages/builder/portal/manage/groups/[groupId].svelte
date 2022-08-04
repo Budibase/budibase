@@ -5,13 +5,16 @@
     Button,
     Layout,
     Heading,
-    Body,
     Icon,
     Popover,
     notifications,
     List,
     ListItem,
     StatusLight,
+    Divider,
+    ActionMenu,
+    MenuItem,
+    Modal,
   } from "@budibase/bbui"
   import UserGroupPicker from "components/settings/UserGroupPicker.svelte"
   import { createPaginationStore } from "helpers/pagination"
@@ -19,6 +22,9 @@
   import { onMount } from "svelte"
   import { RoleUtils } from "@budibase/frontend-core"
   import { roles } from "stores/backend"
+  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+  import CreateEditGroupModal from "./_components/CreateEditGroupModal.svelte"
+  import GroupIcon from "./_components/GroupIcon.svelte"
 
   export let groupId
 
@@ -29,10 +35,16 @@
   let prevSearch = undefined
   let pageInfo = createPaginationStore()
   let loaded = false
+  let editModal
+  let deleteModal
 
   $: page = $pageInfo.page
   $: fetchUsers(page, searchTerm)
   $: group = $groups.find(x => x._id === groupId)
+  $: filtered =
+    $users.data?.filter(x => !group?.users.map(y => y._id).includes(x._id)) ||
+    []
+  $: groupApps = $apps.filter(x => group?.apps.includes(x.appId))
 
   async function addAll() {
     selectedUsers = [...selectedUsers, ...filtered.map(u => u._id)]
@@ -88,11 +100,7 @@
       userGroups,
     })
   }
-  $: filtered =
-    $users.data?.filter(x => !group?.users.map(y => y._id).includes(x._id)) ||
-    []
 
-  $: groupApps = $apps.filter(x => group.apps.includes(x.appId))
   async function removeUser(id) {
     let newUsers = group.users.filter(user => user._id !== id)
     group.users = newUsers
@@ -131,6 +139,25 @@
     return role?.name || "Custom role"
   }
 
+  async function deleteGroup() {
+    try {
+      await groups.actions.delete(group)
+      notifications.success("User group deleted successfully")
+      $goto("./")
+    } catch (error) {
+      console.log(error)
+      notifications.error(`Failed to delete user group`)
+    }
+  }
+
+  async function saveGroup(group) {
+    try {
+      await groups.actions.save(group)
+    } catch (error) {
+      notifications.error(`Failed to save user group`)
+    }
+  }
+
   onMount(async () => {
     try {
       await Promise.all([groups.actions.init(), apps.load(), roles.fetch()])
@@ -142,119 +169,132 @@
 </script>
 
 {#if loaded}
-  <Layout noPadding>
+  <Layout noPadding gap="XL">
     <div>
-      <ActionButton
-        on:click={() => $goto("../groups")}
-        size="S"
-        icon="ArrowLeft"
-      >
+      <ActionButton on:click={() => $goto("../groups")} icon="ArrowLeft">
         Back
       </ActionButton>
     </div>
-    <div class="header">
-      <div class="title">
-        <div style="background: {group?.color};" class="circle">
-          <div>
-            <Icon size="M" name={group?.icon} />
+
+    <Layout noPadding gap="M">
+      <div class="header">
+        <div class="title">
+          <GroupIcon {group} />
+          <div class="text-padding">
+            <Heading>{group?.name}</Heading>
           </div>
         </div>
-        <div class="text-padding">
-          <Heading>{group?.name}</Heading>
+        <div>
+          <ActionMenu align="right">
+            <span slot="control">
+              <Icon hoverable name="More" />
+            </span>
+            <MenuItem icon="Refresh" on:click={() => editModal.show()}>
+              Edit
+            </MenuItem>
+            <MenuItem icon="Delete" on:click={() => deleteModal.show()}>
+              Delete
+            </MenuItem>
+          </ActionMenu>
         </div>
       </div>
-      <div bind:this={popoverAnchor}>
-        <Button on:click={popover.show()} icon="UserAdd" cta>Add user</Button>
-      </div>
-      <Popover align="right" bind:this={popover} anchor={popoverAnchor}>
-        <UserGroupPicker
-          key={"email"}
-          title={"User"}
-          bind:searchTerm
-          bind:selected={selectedUsers}
-          bind:filtered
-          {addAll}
-          select={selectUser}
-        />
-      </Popover>
-    </div>
 
-    <List>
-      {#if group?.users.length}
-        {#each group.users as user}
-          <ListItem title={user?.email} avatar
-            ><Icon
-              on:click={() => removeUser(user?._id)}
-              hoverable
-              size="L"
-              name="Close"
-            /></ListItem
-          >
-        {/each}
-      {:else}
-        <ListItem icon="UserGroup" title="You have no users in this team" />
-      {/if}
-    </List>
-    <div
-      style="flex-direction: column; margin-top: var(--spacing-m)"
-      class="title"
-    >
-      <Heading weight="light" size="XS">Apps</Heading>
-      <div style="margin-top: var(--spacing-xs)">
-        <Body size="S"
-          >Manage apps that this User group has been assigned to</Body
-        >
-      </div>
-    </div>
+      <Divider />
 
-    <List>
-      {#if groupApps.length}
-        {#each groupApps as app}
-          <ListItem
-            title={app.name}
-            icon={app?.icon?.name || "Apps"}
-            iconBackground={app?.icon?.color || ""}
-          >
-            <div class="title ">
-              <StatusLight
-                square
-                color={RoleUtils.getRoleColour(group.roles[`app_${app.appId}`])}
-              >
-                {getRoleLabel(app.appId)}
-              </StatusLight>
-            </div>
-          </ListItem>
-        {/each}
-      {:else}
-        <ListItem icon="UserGroup" title="No apps" />
-      {/if}
-    </List>
+      <Layout noPadding gap="S">
+        <div class="header">
+          <Heading size="S">Users</Heading>
+          <div bind:this={popoverAnchor}>
+            <Button on:click={popover.show()} icon="UserAdd" cta>
+              Add user
+            </Button>
+          </div>
+          <Popover align="right" bind:this={popover} anchor={popoverAnchor}>
+            <UserGroupPicker
+              key={"email"}
+              title={"User"}
+              bind:searchTerm
+              bind:selected={selectedUsers}
+              bind:filtered
+              {addAll}
+              select={selectUser}
+            />
+          </Popover>
+        </div>
+        <List>
+          {#if group?.users.length}
+            {#each group.users as user}
+              <ListItem title={user?.email} avatar>
+                <Icon
+                  on:click={() => removeUser(user?._id)}
+                  hoverable
+                  size="S"
+                  name="Close"
+                />
+              </ListItem>
+            {/each}
+          {:else}
+            <ListItem
+              icon="UserGroup"
+              title="You have no users in this user group"
+            />
+          {/if}
+        </List>
+      </Layout>
+    </Layout>
+
+    <Layout noPadding gap="S">
+      <Heading size="S">Apps</Heading>
+      <List>
+        {#if groupApps.length}
+          {#each groupApps as app}
+            <ListItem
+              title={app.name}
+              icon={app?.icon?.name || "Apps"}
+              iconBackground={app?.icon?.color || ""}
+            >
+              <div class="title ">
+                <StatusLight
+                  square
+                  color={RoleUtils.getRoleColour(
+                    group.roles[`app_${app.appId}`]
+                  )}
+                >
+                  {getRoleLabel(app.appId)}
+                </StatusLight>
+              </div>
+            </ListItem>
+          {/each}
+        {:else}
+          <ListItem icon="UserGroup" title="This group has access to no apps" />
+        {/if}
+      </List>
+    </Layout>
   </Layout>
 {/if}
 
-<style>
-  .text-padding {
-    margin-left: var(--spacing-l);
-  }
+<Modal bind:this={editModal}>
+  <CreateEditGroupModal {group} {saveGroup} />
+</Modal>
+<ConfirmDialog
+  bind:this={deleteModal}
+  title="Delete user group"
+  okText="Delete user group"
+  onOk={deleteGroup}
+>
+  Are you sure you wish to delete <b>{group?.name}?</b>
+</ConfirmDialog>
 
+<style>
   .header {
     display: flex;
     justify-content: space-between;
+    align-items: flex-end;
   }
   .title {
     display: flex;
-  }
-  .circle {
-    border-radius: 50%;
-    height: 30px;
-    color: white;
-    font-weight: bold;
-    display: inline-block;
-    font-size: 1.2em;
-    width: 30px;
-  }
-
-  .circle > div {
-    padding: calc(1.5 * var(--spacing-xs)) var(--spacing-xs);
+    justify-content: flex-start;
+    align-items: center;
+    gap: var(--spacing-m);
   }
 </style>

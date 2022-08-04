@@ -210,7 +210,7 @@
     <Heading>Users</Heading>
     <Body>Add users and control who gets access to your published apps</Body>
   </Layout>
-  <Divider size="S" />
+  <Divider />
   <div class="controls">
     <ButtonGroup>
       <Button

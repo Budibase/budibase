@@ -200,7 +200,7 @@
       {/each}
     </ul>
     {#if views?.length}
-      <Divider size="S" />
+      <Divider />
       <div class="title">
         <Heading size="XS">Views</Heading>
       </div>
@@ -211,7 +211,7 @@
       </ul>
     {/if}
     {#if queries?.length}
-      <Divider size="S" />
+      <Divider />
       <div class="title">
         <Heading size="XS">Queries</Heading>
       </div>
@@ -227,7 +227,7 @@
       </ul>
     {/if}
     {#if links?.length}
-      <Divider size="S" />
+      <Divider />
       <div class="title">
         <Heading size="XS">Relationships</Heading>
       </div>
@@ -238,7 +238,7 @@
       </ul>
     {/if}
     {#if fields?.length}
-      <Divider size="S" />
+      <Divider />
       <div class="title">
         <Heading size="XS">Fields</Heading>
       </div>
@@ -249,7 +249,7 @@
       </ul>
     {/if}
     {#if jsonArrays?.length}
-      <Divider size="S" />
+      <Divider />
       <div class="title">
         <Heading size="XS">JSON Arrays</Heading>
       </div>
@@ -260,7 +260,7 @@
       </ul>
     {/if}
     {#if showDataProviders && dataProviders?.length}
-      <Divider size="S" />
+      <Divider />
       <div class="title">
         <Heading size="XS">Data Providers</Heading>
       </div>
@@ -276,7 +276,7 @@
       </ul>
     {/if}
     {#if otherSources?.length}
-      <Divider size="S" />
+      <Divider />
       <div class="title">
         <Heading size="XS">Other</Heading>
       </div>

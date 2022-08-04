@@ -60,7 +60,7 @@
         latest features, security updates and much more.
       </Body>
     </Layout>
-    <Divider size="S" />
+    <Divider />
     {#if version}
       <div>
         <Label size="L">Current version</Label>

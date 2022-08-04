@@ -96,7 +96,7 @@
     </Body>
   </Layout>
   <Layout gap="S">
-    <Divider size="S" />
+    <Divider />
   </Layout>
   <Layout gap="S" noPadding>
     <Layout gap="XS">

@@ -247,7 +247,7 @@
           </div>
         {/if}
       </div>
-      <Divider size="S" />
+      <Divider />
       <Layout noPadding gap="S">
         <Heading size="S">Details</Heading>
         <div class="fields">
