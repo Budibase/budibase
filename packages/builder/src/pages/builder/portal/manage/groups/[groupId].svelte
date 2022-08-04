@@ -224,9 +224,14 @@
         <List>
           {#if group?.users.length}
             {#each group.users as user}
-              <ListItem title={user?.email} avatar>
+              <ListItem
+                title={user.email}
+                avatar
+                on:click={() => $goto(`../users/${user._id}`)}
+                hoverable
+              >
                 <Icon
-                  on:click={() => removeUser(user?._id)}
+                  on:click={() => removeUser(user._id)}
                   hoverable
                   size="S"
                   name="Close"
@@ -252,6 +257,8 @@
               title={app.name}
               icon={app?.icon?.name || "Apps"}
               iconBackground={app?.icon?.color || ""}
+              on:click={() => $goto(`../../overview/${app.devId}`)}
+              hoverable
             >
               <div class="title ">
                 <StatusLight
