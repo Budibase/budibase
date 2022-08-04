@@ -13,13 +13,10 @@
   import { emailValidator } from "helpers/validation"
 
   export let showOnboardingTypeModal
+
   const password = Math.random().toString(36).substring(2, 22)
   let disabled
   let userGroups = []
-  $: errors = []
-  $: hasGroupsLicense = $auth.user?.license.features.includes(
-    Constants.Features.USER_GROUPS
-  )
 
   $: userData = [
     {
@@ -29,6 +26,7 @@
       forceResetPassword: true,
     },
   ]
+  $: hasError = userData.find(x => x.error != null)
 
   function removeInput(idx) {
     userData = userData.filter((e, i) => i !== idx)
@@ -41,38 +39,49 @@
         role: "appUser",
         password: Math.random().toString(36).substring(2, 22),
         forceResetPassword: true,
+        error: null,
       },
     ]
   }
 
   function validateInput(email, index) {
     if (email) {
-      if (emailValidator(email) === true) {
-        errors[index] = true
-        return null
+      const res = emailValidator(email)
+      if (res === true) {
+        delete userData[index].error
       } else {
-        errors[index] = false
-        return emailValidator(email)
+        userData[index].error = res
       }
+    } else {
+      userData[index].error = "Please enter an email address"
     }
+    return userData[index].error == null
+  }
+
+  const onConfirm = () => {
+    let valid = true
+    userData.forEach((input, index) => {
+      valid = validateInput(input.email, index) && valid
+    })
+    if (!valid) {
+      return false
+    }
+    showOnboardingTypeModal({ users: userData, groups: userGroups })
   }
 </script>
 
 <ModalContent
-  onConfirm={async () =>
-    showOnboardingTypeModal({ users: userData, groups: userGroups })}
+  {onConfirm}
   size="M"
-  title="Add new user"
-  confirmText="Add user"
+  title="Add new users"
+  confirmText="Add users"
   confirmDisabled={disabled}
   cancelText="Cancel"
   showCloseIcon={false}
-  disabled={errors.some(x => x === false) ||
-    userData.some(x => x.email === "" || x.email === null)}
+  disabled={hasError || !userData.length}
 >
   <Layout noPadding gap="XS">
-    <Label>Email Address</Label>
-
+    <Label>Email address</Label>
     {#each userData as input, index}
       <div
         style="display: flex;
@@ -84,15 +93,12 @@
             inputType="email"
             bind:inputValue={input.email}
             bind:dropdownValue={input.role}
-            options={Constants.BbRoles}
-            error={validateInput(input.email, index)}
+            options={Constants.BudibaseRoleOptions}
+            error={input.error}
+            on:blur={() => validateInput(input.email, index)}
           />
         </div>
-        <div
-          class:fix-height={errors.length && !errors[index]}
-          class:normal-height={errors.length && !!errors[index]}
-          style="width: 10% "
-        >
+        <div class="icon">
           <Icon
             name="Close"
             hoverable
@@ -107,11 +113,11 @@
     </div>
   </Layout>
 
-  {#if hasGroupsLicense}
+  {#if $auth.groupsEnabled}
     <Multiselect
       bind:value={userGroups}
-      placeholder="Select User Groups"
-      label="User Groups"
+      placeholder="No groups"
+      label="Groups"
       options={$groups}
       getOptionLabel={option => option.name}
       getOptionValue={option => option._id}
@@ -120,10 +126,9 @@
 </ModalContent>
 
 <style>
-  .fix-height {
-    margin-bottom: 5%;
-  }
-  .normal-height {
-    margin-bottom: 0%;
+  .icon {
+    width: 10%;
+    align-self: flex-start;
+    margin-top: 8px;
   }
 </style>

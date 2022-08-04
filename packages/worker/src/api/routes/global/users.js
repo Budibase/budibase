@@ -32,10 +32,12 @@ function buildInviteValidation() {
 
 function buildInviteMultipleValidation() {
   // prettier-ignore
-  return joiValidator.body(Joi.object({
-    emails: Joi.array().required(),
-    userInfo: Joi.object().optional(),
-  }).required())
+  return joiValidator.body(Joi.array().required().items(
+    Joi.object({
+      email: Joi.string(),
+      userInfo: Joi.object().optional(),
+    })
+  ))
 }
 
 function buildInviteAcceptValidation() {
@@ -79,7 +81,7 @@ router
     controller.invite
   )
   .post(
-    "/api/global/users/inviteMultiple",
+    "/api/global/users/multi/invite",
     adminOnly,
     buildInviteMultipleValidation(),
     controller.inviteMultiple
