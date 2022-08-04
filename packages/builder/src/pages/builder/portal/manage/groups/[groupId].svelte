@@ -208,7 +208,10 @@
                 hoverable
               >
                 <Icon
-                  on:click={() => removeUserFromGroup(user._id)}
+                  on:click={e => {
+                    removeUserFromGroup(user._id)
+                    e.stopPropagation()
+                  }}
                   hoverable
                   size="S"
                   name="Close"
