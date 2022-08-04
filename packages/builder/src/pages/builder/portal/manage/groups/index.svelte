@@ -59,7 +59,8 @@
 
   async function saveGroup(group) {
     try {
-      await groups.actions.save(group)
+      group = await groups.actions.save(group)
+      $goto(`./${group._id}`)
       notifications.success(`User group created successfully`)
     } catch (error) {
       notifications.error(`Failed to save user group`)

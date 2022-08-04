@@ -28,6 +28,7 @@ export function createGroupsStore() {
         }
         return state
       })
+      return group
     },
 
     delete: async group => {
