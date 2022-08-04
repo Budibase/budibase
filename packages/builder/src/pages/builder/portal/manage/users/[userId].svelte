@@ -188,6 +188,9 @@
   async function fetchUser(userId) {
     let userPromise = users.get(userId)
     user = await userPromise
+    if (!user?._id) {
+      $goto("./")
+    }
   }
 
   async function toggleFlags(detail) {
