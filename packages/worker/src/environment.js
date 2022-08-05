@@ -61,6 +61,7 @@ module.exports = {
   SMTP_FROM_ADDRESS: process.env.SMTP_FROM_ADDRESS,
   // other
   CHECKLIST_CACHE_TTL: parseIntSafe(process.env.CHECKLIST_CACHE_TTL) || 3600,
+  SESSION_UPDATE_PERIOD: process.env.SESSION_UPDATE_PERIOD,
   _set(key, value) {
     process.env[key] = value
     module.exports[key] = value
