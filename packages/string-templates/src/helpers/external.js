@@ -23,6 +23,9 @@ const ADDED_HELPERS = {
   duration: duration,
 }
 
+exports.externalCollections = EXTERNAL_FUNCTION_COLLECTIONS
+exports.addedHelpers = ADDED_HELPERS
+
 exports.registerAll = handlebars => {
   for (let [name, helper] of Object.entries(ADDED_HELPERS)) {
     handlebars.registerHelper(name, helper)
