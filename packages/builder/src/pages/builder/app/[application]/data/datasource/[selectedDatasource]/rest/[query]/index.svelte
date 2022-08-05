@@ -231,13 +231,10 @@
   ]
 
   // convert dynamic variables list to simple key/val object
-  const getDynamicVariables = (datasource, queryId) => {
+  const getDynamicVariables = datasource => {
     const variablesList = datasource?.config?.dynamicVariables
     if (variablesList && variablesList.length > 0) {
-      const filtered = queryId
-        ? variablesList.filter(variable => variable.queryId === queryId)
-        : variablesList
-      return filtered.reduce(
+      return variablesList.reduce(
         (acc, next) => ({ ...acc, [next.name]: next.value }),
         {}
       )
@@ -367,7 +364,7 @@
     if (query && !query.fields.pagination) {
       query.fields.pagination = {}
     }
-    dynamicVariables = getDynamicVariables(datasource, query._id)
+    dynamicVariables = getDynamicVariables(datasource)
 
     prettifyQueryRequestBody(
       query,
