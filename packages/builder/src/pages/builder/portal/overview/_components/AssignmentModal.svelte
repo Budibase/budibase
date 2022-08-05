@@ -9,7 +9,7 @@
   } from "@budibase/bbui"
   import { roles } from "stores/backend"
   import { groups, users, auth } from "stores/portal"
-  import { RoleUtils } from "@budibase/frontend-core"
+  import { Constants, RoleUtils } from "@budibase/frontend-core"
   import { createPaginationStore } from "helpers/pagination"
 
   export let app
@@ -109,7 +109,9 @@
               autocomplete
               showClearIcon={false}
               primaryOptions={optionSections}
-              secondaryOptions={$roles}
+              secondaryOptions={$roles.filter(
+                x => x._id !== Constants.Roles.PUBLIC
+              )}
               secondaryPlaceholder="Access"
               bind:primaryValue={input.id}
               bind:secondaryValue={input.role}
