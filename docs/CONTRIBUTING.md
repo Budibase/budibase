@@ -209,7 +209,7 @@ yarn mode:account
 
 Note that only budibase maintainers will be able to access the pro repo. 
 
-The `yarn clean && yarn bootstrap` command can be used to replace the NPM supplied dependency with the local source aware version. This is achieved using the `yarn link` command. To see specifically how dependencies are linked see [scripts/link-dependencies.sh](../scripts/link-dependencies.sh). The same link script is used to link dependencies to account-portal in local dev. 
+The `yarn bootstrap` command can be used to replace the NPM supplied dependency with the local source aware version. This is achieved using the `yarn link` command. To see specifically how dependencies are linked see [scripts/link-dependencies.sh](../scripts/link-dependencies.sh). The same link script is used to link dependencies to account-portal in local dev. 
 
 ### Troubleshooting
 
