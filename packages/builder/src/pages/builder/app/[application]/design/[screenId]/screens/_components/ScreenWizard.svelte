@@ -59,7 +59,6 @@
 
         // Use the currently selected role
         if (!screenAccessRole) {
-          console.log("NO ROLE")
           return
         }
         screen.routing.roleId = screenAccessRole

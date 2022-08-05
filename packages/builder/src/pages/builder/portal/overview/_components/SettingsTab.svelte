@@ -21,7 +21,7 @@
 
   $: updateAvailable = clientPackage.version !== $store.version
   $: appUrl = `${window.origin}/app${app?.url}`
-  $: appDeployed = app.status === AppStatus.DEPLOYED
+  $: appDeployed = app?.status === AppStatus.DEPLOYED
 </script>
 
 <div class="settings-tab">
