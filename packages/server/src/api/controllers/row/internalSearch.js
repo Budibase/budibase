@@ -423,6 +423,7 @@ exports.paginatedSearch = async (query, params) => {
   // Try fetching 1 row in the next page to see if another page of results
   // exists or not
   const nextResults = await search
+    .setTable(params.tableId)
     .setBookmark(searchResults.bookmark)
     .setLimit(1)
     .run()
