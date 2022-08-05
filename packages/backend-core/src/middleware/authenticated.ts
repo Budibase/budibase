@@ -11,7 +11,7 @@ import { decrypt } from "../security/encryption"
 const identity = require("../context/identity")
 const env = require("../environment")
 
-const ONE_MINUTE = 60 * 1000
+const ONE_MINUTE = env.SESSION_UPDATE_PERIOD || 60 * 1000
 
 interface FinaliseOpts {
   authenticated?: boolean
@@ -86,9 +86,9 @@ module.exports = (
       const authCookie = getCookie(ctx, Cookies.Auth) || openJwt(headerToken)
       let authenticated = false,
         user = null,
-        internal = false
+        internal = false,
+        error = null
       if (authCookie) {
-        let error = null
         const sessionId = authCookie.sessionId
         const userId = authCookie.userId
 
@@ -144,7 +144,7 @@ module.exports = (
         delete user.password
       }
       // be explicit
-      if (authenticated !== true) {
+      if (error || authenticated !== true) {
         authenticated = false
       }
       // isAuthenticated is a function, so use a variable to be able to check authed state
