@@ -171,6 +171,7 @@
                 value={group.roles[
                   Object.keys(group.roles).find(x => x === fixedAppId)
                 ]}
+                allowPublic={false}
               />
               <Icon
                 on:click={() => removeGroup(group)}
@@ -193,6 +194,7 @@
                 value={user.roles[
                   Object.keys(user.roles).find(x => x === fixedAppId)
                 ]}
+                allowPublic={false}
               />
               <Icon
                 on:click={() => removeUser(user)}
@@ -224,14 +226,18 @@
         <Layout gap="S">
           <Heading>No users assigned</Heading>
           <div class="opacity">
-            <Body size="S"
-              >Assign users to your app and set their access here</Body
-            >
+            <Body size="S">
+              Assign users to your app and set their access here
+            </Body>
           </div>
           <div class="padding">
-            <Button on:click={() => assignmentModal.show()} cta icon="UserArrow"
-              >Assign Users</Button
+            <Button
+              on:click={() => assignmentModal.show()}
+              cta
+              icon="UserArrow"
             >
+              Assign Users
+            </Button>
           </div>
         </Layout>
       </div>
