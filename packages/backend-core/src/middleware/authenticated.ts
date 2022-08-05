@@ -1,28 +1,39 @@
-const { Cookies, Headers } = require("../constants")
-const { getCookie, clearCookie, openJwt } = require("../utils")
-const { getUser } = require("../cache/user")
-const { getSession, updateSessionTTL } = require("../security/sessions")
-const { buildMatcherRegex, matches } = require("./matchers")
-const env = require("../environment")
-const { SEPARATOR } = require("../db/constants")
-const { ViewNames } = require("../db/utils")
-const { queryGlobalView } = require("../db/views")
-const { getGlobalDB, doInTenant } = require("../tenancy")
-const { decrypt } = require("../security/encryption")
+import { Cookies, Headers } from "../constants"
+import { getCookie, clearCookie, openJwt } from "../utils"
+import { getUser } from "../cache/user"
+import { getSession, updateSessionTTL } from "../security/sessions"
+import { buildMatcherRegex, matches } from "./matchers"
+import { SEPARATOR } from "../db/constants"
+import { ViewNames } from "../db/utils"
+import { queryGlobalView } from "../db/views"
+import { getGlobalDB, doInTenant } from "../tenancy"
+import { decrypt } from "../security/encryption"
 const identity = require("../context/identity")
+const env = require("../environment")
 
-function finalise(
-  ctx,
-  { authenticated, user, internal, version, publicEndpoint } = {}
-) {
-  ctx.publicEndpoint = publicEndpoint || false
-  ctx.isAuthenticated = authenticated || false
-  ctx.user = user
-  ctx.internal = internal || false
-  ctx.version = version
+const ONE_MINUTE = 60 * 1000
+
+interface FinaliseOpts {
+  authenticated?: boolean
+  internal?: boolean
+  publicEndpoint?: boolean
+  version?: string
+  user?: any
 }
 
-async function checkApiKey(apiKey, populateUser) {
+function timeMinusOneMinute() {
+  return new Date(Date.now() - ONE_MINUTE).toISOString()
+}
+
+function finalise(ctx: any, opts: FinaliseOpts = {}) {
+  ctx.publicEndpoint = opts.publicEndpoint || false
+  ctx.isAuthenticated = opts.authenticated || false
+  ctx.user = opts.user
+  ctx.internal = opts.internal || false
+  ctx.version = opts.version
+}
+
+async function checkApiKey(apiKey: string, populateUser?: Function) {
   if (apiKey === env.INTERNAL_API_KEY) {
     return { valid: true }
   }
@@ -56,10 +67,12 @@ async function checkApiKey(apiKey, populateUser) {
  */
 module.exports = (
   noAuthPatterns = [],
-  opts = { publicAllowed: false, populateUser: null }
+  opts: { publicAllowed: boolean; populateUser?: Function } = {
+    publicAllowed: false,
+  }
 ) => {
   const noAuthOptions = noAuthPatterns ? buildMatcherRegex(noAuthPatterns) : []
-  return async (ctx, next) => {
+  return async (ctx: any, next: any) => {
     let publicEndpoint = false
     const version = ctx.request.headers[Headers.API_VER]
     // the path is not authenticated
@@ -103,7 +116,7 @@ module.exports = (
           console.error("Auth Error", error)
           // remove the cookie as the user does not exist anymore
           clearCookie(ctx, Cookies.Auth)
-        } else {
+        } else if (session?.lastAccessedAt < timeMinusOneMinute()) {
           // make sure we denote that the session is still in use
           await updateSessionTTL(session)
         }
@@ -142,7 +155,7 @@ module.exports = (
       } else {
         return next()
       }
-    } catch (err) {
+    } catch (err: any) {
       // invalid token, clear the cookie
       if (err && err.name === "JsonWebTokenError") {
         clearCookie(ctx, Cookies.Auth)
