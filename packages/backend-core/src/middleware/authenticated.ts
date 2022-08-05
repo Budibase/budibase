@@ -84,45 +84,40 @@ module.exports = (
       // check the actual user is authenticated first, try header or cookie
       const headerToken = ctx.request.headers[Headers.TOKEN]
       const authCookie = getCookie(ctx, Cookies.Auth) || openJwt(headerToken)
-      let authenticated = false,
-        user = null,
-        internal = false,
-        error = null
-      if (authCookie) {
-        const sessionId = authCookie.sessionId
-        const userId = authCookie.userId
-
-        const session = await getSession(userId, sessionId)
-        if (!session) {
-          error = `Session not found - ${userId} - ${sessionId}`
-        } else {
-          try {
-            if (opts && opts.populateUser) {
-              user = await getUser(
-                userId,
-                session.tenantId,
-                opts.populateUser(ctx)
-              )
-            } else {
-              user = await getUser(userId, session.tenantId)
-            }
-            user.csrfToken = session.csrfToken
-            authenticated = true
-          } catch (err) {
-            error = err
-          }
-        }
-        if (error) {
-          console.error("Auth Error", error)
-          // remove the cookie as the user does not exist anymore
-          clearCookie(ctx, Cookies.Auth)
-        } else if (session?.lastAccessedAt < timeMinusOneMinute()) {
-          // make sure we denote that the session is still in use
-          await updateSessionTTL(session)
-        }
-      }
       const apiKey = ctx.request.headers[Headers.API_KEY]
       const tenantId = ctx.request.headers[Headers.TENANT_ID]
+      let authenticated = false,
+        user = null,
+        internal = false
+      if (authCookie && !apiKey) {
+        const sessionId = authCookie.sessionId
+        const userId = authCookie.userId
+        let session
+        try {
+          // getting session handles error checking (if session exists etc)
+          session = await getSession(userId, sessionId)
+          if (opts && opts.populateUser) {
+            user = await getUser(
+              userId,
+              session.tenantId,
+              opts.populateUser(ctx)
+            )
+          } else {
+            user = await getUser(userId, session.tenantId)
+          }
+          user.csrfToken = session.csrfToken
+          if (session?.lastAccessedAt < timeMinusOneMinute()) {
+            // make sure we denote that the session is still in use
+            await updateSessionTTL(session)
+          }
+          authenticated = true
+        } catch (err: any) {
+          authenticated = false
+          console.error("Auth Error", err?.message || err)
+          // remove the cookie as the user does not exist anymore
+          clearCookie(ctx, Cookies.Auth)
+        }
+      }
       // this is an internal request, no user made it
       if (!authenticated && apiKey) {
         const populateUser = opts.populateUser ? opts.populateUser(ctx) : null
@@ -144,7 +139,7 @@ module.exports = (
         delete user.password
       }
       // be explicit
-      if (error || authenticated !== true) {
+      if (authenticated !== true) {
         authenticated = false
       }
       // isAuthenticated is a function, so use a variable to be able to check authed state

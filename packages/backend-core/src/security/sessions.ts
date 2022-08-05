@@ -38,7 +38,7 @@ export async function invalidateSessions(
     let sessions: SessionKey
 
     // If no sessionIds, get all the sessions for the user
-    if (!sessionIds) {
+    if (sessionIds.length === 0) {
       sessions = await getSessionsForUser(userId)
       sessions.forEach(
         (session: any) =>
@@ -103,18 +103,13 @@ export async function endSession(userId: string, sessionId: string) {
 }
 
 export async function getSession(userId: string, sessionId: string) {
-  try {
-    const client = await redis.getSessionClient()
-    return client.get(makeSessionID(userId, sessionId))
-  } catch (err) {
-    // if can't get session don't error, just don't return anything
-    console.error(err)
-    return null
+  if (!userId || !sessionId) {
+    throw new Error(`Invalid session details - ${userId} - ${sessionId}`)
   }
-}
-
-export async function getAllSessions() {
   const client = await redis.getSessionClient()
-  const sessions = await client.scan()
-  return sessions.map((session: Session) => session.value)
+  const session = await client.get(makeSessionID(userId, sessionId))
+  if (!session) {
+    throw new Error(`Session not found - ${userId} - ${sessionId}`)
+  }
+  return session
 }
