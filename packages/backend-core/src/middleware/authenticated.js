@@ -81,7 +81,7 @@ module.exports = (
 
         const session = await getSession(userId, sessionId)
         if (!session) {
-          error = "No session found"
+          error = `Session not found - ${userId} - ${sessionId}`
         } else {
           try {
             if (opts && opts.populateUser) {
