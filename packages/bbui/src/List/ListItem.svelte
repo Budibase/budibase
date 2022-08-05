@@ -1,11 +1,12 @@
 <script>
   import Body from "../Typography/Body.svelte"
-  import Icon from "../Icon/Icon.svelte"
+  import IconAvatar from "../Icon/IconAvatar.svelte"
   import Label from "../Label/Label.svelte"
   import Avatar from "../Avatar/Avatar.svelte"
 
   export let icon = null
   export let iconBackground = null
+  export let iconColor = null
   export let avatar = false
   export let title = null
   export let subtitle = null
@@ -17,9 +18,7 @@
 <div class="list-item" class:hoverable on:click>
   <div class="left">
     {#if icon}
-      <div class="icon" style="background: {iconBackground || `transparent`};">
-        <Icon name={icon} size="S" color={iconBackground ? "white" : null} />
-      </div>
+      <IconAvatar {icon} color={iconColor} background={iconBackground} />
     {/if}
     {#if avatar}
       <Avatar {initials} />
@@ -87,12 +86,5 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-  }
-  .icon {
-    width: var(--spectrum-alias-avatar-size-400);
-    height: var(--spectrum-alias-avatar-size-400);
-    display: grid;
-    place-items: center;
-    border-radius: 50%;
   }
 </style>

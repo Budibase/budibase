@@ -29,6 +29,7 @@
   import { RoleUtils } from "@budibase/frontend-core"
   import UserGroupPicker from "components/settings/UserGroupPicker.svelte"
   import DeleteUserModal from "./_components/DeleteUserModal.svelte"
+  import GroupIcon from "../groups/_components/GroupIcon.svelte"
 
   export let userId
 
@@ -207,7 +208,7 @@
             </div>
           </div>
         </div>
-        {#if userId !== $auth.user._id}
+        {#if userId !== $auth.user?._id}
           <div>
             <ActionMenu align="right">
               <span slot="control">
@@ -277,6 +278,8 @@
               selected={user.userGroups}
               on:select={e => addGroup(e.detail)}
               on:deselect={e => removeGroup(e.detail)}
+              iconComponent={GroupIcon}
+              extractIconProps={item => ({ group: item, size: "S" })}
             />
           </Popover>
         </div>
@@ -320,7 +323,7 @@
           {#each availableApps as app}
             <ListItem
               title={app.name}
-              iconBackground={app?.icon?.color || ""}
+              iconColor={app?.icon?.color}
               icon={app?.icon?.name || "Apps"}
               hoverable
               on:click={() => $goto(`../../overview/${app.devId}`)}

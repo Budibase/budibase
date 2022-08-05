@@ -112,7 +112,7 @@
     <Layout noPadding gap="M">
       <div class="header">
         <div class="title">
-          <GroupIcon {group} />
+          <GroupIcon {group} size="L" />
           <div class="text-padding">
             <Heading>{group?.name}</Heading>
           </div>
@@ -158,7 +158,6 @@
             {#each group.users as user}
               <ListItem
                 title={user.email}
-                avatar
                 on:click={() => $goto(`../users/${user._id}`)}
                 hoverable
               >
@@ -188,7 +187,7 @@
             <ListItem
               title={app.name}
               icon={app?.icon?.name || "Apps"}
-              iconBackground={app?.icon?.color || ""}
+              iconColor={app?.icon?.color || ""}
               on:click={() => $goto(`../../overview/${app.devId}`)}
               hoverable
             >

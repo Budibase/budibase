@@ -6,6 +6,8 @@
   export let selected
   export let list = []
   export let labelKey
+  export let iconComponent = null
+  export let extractIconProps = x => x
 
   const dispatch = createEventDispatcher()
 
@@ -42,7 +44,6 @@
     <div class="header">
       <Search placeholder="Search" bind:value={searchTerm} />
     </div>
-    <Divider noMargin />
     <div class="items">
       {#each sortedList as item}
         <div
@@ -51,6 +52,12 @@
           }}
           class="item"
         >
+          {#if iconComponent}
+            <svelte:component
+              this={iconComponent}
+              {...extractIconProps(item)}
+            />
+          {/if}
           <div class="text">
             {item[labelKey]}
           </div>
@@ -86,14 +93,14 @@
     margin-top: -8px;
   }
   .item {
-    align-items: end;
     display: flex;
     justify-content: space-between;
     cursor: pointer;
     padding: var(--spacing-s) var(--spacing-l);
     background: var(--spectrum-global-color-gray-50);
     transition: background 130ms ease-out;
-    gap: var(--spacing-xl);
+    gap: var(--spacing-m);
+    align-items: center;
   }
   .item:hover {
     background: var(--spectrum-global-color-gray-100);
