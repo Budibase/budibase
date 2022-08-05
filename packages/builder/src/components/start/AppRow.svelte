@@ -1,5 +1,5 @@
 <script>
-  import { Heading, Button, Icon, IconAvatar } from "@budibase/bbui"
+  import { Heading, Button, Icon } from "@budibase/bbui"
   import AppLockModal from "../common/AppLockModal.svelte"
   import { processStringSync } from "@budibase/string-templates"
 
@@ -10,7 +10,9 @@
 
 <div class="title" data-cy={`${app.devId}`}>
   <div style="display: flex;">
-    <IconAvatar icon={app.icon?.name || "Apps"} color={app.icon?.color} />
+    <div class="app-icon" style="color: {app.icon?.color || ''}">
+      <Icon size="XL" name={app.icon?.name || "Apps"} />
+    </div>
     <div class="name" data-cy="app-name-link" on:click={() => editApp(app)}>
       <Heading size="XS">
         {app.name}
