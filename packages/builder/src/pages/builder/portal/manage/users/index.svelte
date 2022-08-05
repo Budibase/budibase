@@ -24,41 +24,53 @@
   import OnboardingTypeModal from "./_components/OnboardingTypeModal.svelte"
   import PasswordModal from "./_components/PasswordModal.svelte"
   import ImportUsersModal from "./_components/ImportUsersModal.svelte"
-  import { createPaginationStore } from "helpers/pagination"
   import { get } from "svelte/store"
-  import { Constants } from "@budibase/frontend-core"
+  import { Constants, Utils, fetchData } from "@budibase/frontend-core"
+  import { API } from "api"
 
+  const fetch = fetchData({
+    API,
+    datasource: {
+      type: "user",
+    },
+  })
+
+  let loaded = false
   let enrichedUsers = []
   let createUserModal,
     inviteConfirmationModal,
     onboardingTypeModal,
     passwordModal,
     importUsersModal
-  let pageInfo = createPaginationStore()
-  let prevEmail = undefined,
-    searchEmail = undefined
+  let searchEmail = undefined
   let selectedRows = []
   let customRenderers = [
     { column: "userGroups", component: GroupsTableRenderer },
     { column: "apps", component: AppsTableRenderer },
     { column: "role", component: RoleTableRenderer },
   ]
+  let userData = []
 
+  $: debouncedUpdateFetch(searchEmail)
   $: schema = {
-    email: {},
+    email: {
+      sortable: false,
+    },
     role: {
       sortable: false,
     },
     ...($auth.groupsEnabled && {
-      userGroups: { sortable: false, displayName: "User groups" },
+      userGroups: {
+        sortable: false,
+        displayName: "User groups",
+      },
     }),
-    apps: {},
+    apps: {
+      sortable: false,
+    },
   }
-  $: userData = []
-  $: page = $pageInfo.page
-  $: fetchUsers(page, searchEmail)
   $: {
-    enrichedUsers = $users.data?.map(user => {
+    enrichedUsers = $fetch.rows?.map(user => {
       let userGroups = []
       $groups.forEach(group => {
         if (group.users) {
@@ -77,6 +89,18 @@
       }
     })
   }
+
+  const updateFetch = email => {
+    if (email == null && $fetch.query.email == null) {
+      return
+    }
+    fetch.update({
+      query: {
+        email,
+      },
+    })
+  }
+  const debouncedUpdateFetch = Utils.debounce(updateFetch, 250)
 
   const showOnboardingTypeModal = async addUsersData => {
     userData = await removingDuplicities(addUsersData)
@@ -161,14 +185,6 @@
     }
   }
 
-  onMount(async () => {
-    try {
-      await groups.actions.init()
-    } catch (error) {
-      notifications.error("Error fetching User Group data")
-    }
-  })
-
   const deleteRows = async () => {
     try {
       let ids = selectedRows.map(user => user._id)
@@ -179,88 +195,81 @@
       await users.bulkDelete(ids)
       notifications.success(`Successfully deleted ${selectedRows.length} rows`)
       selectedRows = []
-      await fetchUsers(page, searchEmail)
+      await fetch.refresh()
     } catch (error) {
       notifications.error("Error deleting rows")
     }
   }
 
-  async function fetchUsers(page, email) {
-    if ($pageInfo.loading) {
-      return
-    }
-    // need to remove the page if they've started searching
-    if (email && !prevEmail) {
-      pageInfo.reset()
-      page = undefined
-    }
-    prevEmail = email
+  onMount(async () => {
     try {
-      pageInfo.loading()
-      await users.search({ page, email })
-      pageInfo.fetched($users.hasNextPage, $users.nextPage)
+      loaded = false
+      await groups.actions.init()
+      loaded = true
     } catch (error) {
-      notifications.error("Error getting user list")
+      notifications.error("Error fetching User Group data")
     }
-  }
+  })
 </script>
 
-<Layout noPadding gap="M">
-  <Layout gap="XS" noPadding>
-    <Heading>Users</Heading>
-    <Body>Add users and control who gets access to your published apps</Body>
-  </Layout>
-  <Divider />
-  <div class="controls">
-    <ButtonGroup>
-      <Button
-        dataCy="add-user"
-        on:click={createUserModal.show}
-        icon="UserAdd"
-        cta>Add users</Button
-      >
-      <Button
-        on:click={importUsersModal.show}
-        icon="Import"
-        secondary
-        newStyles
-      >
-        Import users
-      </Button>
-    </ButtonGroup>
-    <div class="controls-right">
-      <Search bind:value={searchEmail} placeholder="Search" />
-      {#if selectedRows.length > 0}
-        <DeleteRowsButton
-          item="user"
-          on:updaterows
-          {selectedRows}
-          {deleteRows}
-        />
-      {/if}
+{#if loaded && $fetch.loaded}
+  <Layout noPadding gap="M">
+    <Layout gap="XS" noPadding>
+      <Heading>Users</Heading>
+      <Body>Add users and control who gets access to your published apps</Body>
+    </Layout>
+    <Divider />
+    <div class="controls">
+      <ButtonGroup>
+        <Button
+          dataCy="add-user"
+          on:click={createUserModal.show}
+          icon="UserAdd"
+          cta>Add users</Button
+        >
+        <Button
+          on:click={importUsersModal.show}
+          icon="Import"
+          secondary
+          newStyles
+        >
+          Import users
+        </Button>
+      </ButtonGroup>
+      <div class="controls-right">
+        <Search bind:value={searchEmail} placeholder="Search" />
+        {#if selectedRows.length > 0}
+          <DeleteRowsButton
+            item="user"
+            on:updaterows
+            {selectedRows}
+            {deleteRows}
+          />
+        {/if}
+      </div>
     </div>
-  </div>
-  <Table
-    on:click={({ detail }) => $goto(`./${detail._id}`)}
-    {schema}
-    bind:selectedRows
-    data={enrichedUsers}
-    allowEditColumns={false}
-    allowEditRows={false}
-    allowSelectRows={true}
-    showHeaderBorder={false}
-    {customRenderers}
-  />
-  <div class="pagination">
-    <Pagination
-      page={$pageInfo.pageNumber}
-      hasPrevPage={$pageInfo.loading ? false : $pageInfo.hasPrevPage}
-      hasNextPage={$pageInfo.loading ? false : $pageInfo.hasNextPage}
-      goToPrevPage={pageInfo.prevPage}
-      goToNextPage={pageInfo.nextPage}
+    <Table
+      on:click={({ detail }) => $goto(`./${detail._id}`)}
+      {schema}
+      bind:selectedRows
+      data={enrichedUsers}
+      allowEditColumns={false}
+      allowEditRows={false}
+      allowSelectRows={true}
+      showHeaderBorder={false}
+      {customRenderers}
     />
-  </div>
-</Layout>
+    <div class="pagination">
+      <Pagination
+        page={$fetch.pageNumber + 1}
+        hasPrevPage={$fetch.loading ? false : $fetch.hasPrevPage}
+        hasNextPage={$fetch.loading ? false : $fetch.hasNextPage}
+        goToPrevPage={fetch.prevPage}
+        goToNextPage={fetch.nextPage}
+      />
+    </div>
+  </Layout>
+{/if}
 
 <Modal bind:this={createUserModal}>
   <AddUserModal {showOnboardingTypeModal} />
@@ -272,11 +281,11 @@
     title="Invites sent!"
     confirmText="Done"
   >
-    <Body size="S"
-      >Your users should now recieve an email invite to get access to their
-      Budibase account</Body
-    ></ModalContent
-  >
+    <Body size="S">
+      Your users should now recieve an email invite to get access to their
+      Budibase account
+    </Body>
+  </ModalContent>
 </Modal>
 
 <Modal bind:this={onboardingTypeModal}>
