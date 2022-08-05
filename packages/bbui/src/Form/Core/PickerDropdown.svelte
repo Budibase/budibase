@@ -9,6 +9,7 @@
   import StatusLight from "../../StatusLight/StatusLight.svelte"
   import Detail from "../../Typography/Detail.svelte"
   import Search from "./Search.svelte"
+  import IconAvatar from "../../Icon/IconAvatar.svelte"
 
   export let primaryLabel = ""
   export let primaryValue = null
@@ -204,19 +205,11 @@
                   })}
               >
                 {#if primaryOptions[title].getIcon(option)}
-                  <div
-                    style="background: {primaryOptions[title].getColour(
-                      option
-                    )};"
-                    class="circle"
-                  >
-                    <div>
-                      <Icon
-                        size="S"
-                        name={primaryOptions[title].getIcon(option)}
-                      />
-                    </div>
-                  </div>
+                  <IconAvatar
+                    size="S"
+                    icon={primaryOptions[title].getIcon(option)}
+                    background={primaryOptions[title].getColour(option)}
+                  />
                 {:else if getPrimaryOptionColour(option, idx)}
                   <span class="option-left">
                     <StatusLight
@@ -226,12 +219,13 @@
                   </span>
                 {/if}
                 <span class="spectrum-Menu-itemLabel">
-                  <span
+                  <div
+                    class="primary-text"
                     class:spacing-group={primaryOptions[title].getIcon(option)}
                   >
                     {primaryOptions[title].getLabel(option)}
                     <span />
-                  </span>
+                  </div>
                   <svg
                     class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"
                     focusable="false"
@@ -335,6 +329,11 @@
 </div>
 
 <style>
+  .primary-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
   .spacing-group {
     margin-left: var(--spacing-m);
   }
