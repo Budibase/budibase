@@ -6,7 +6,6 @@ const templateRoutes = require("./global/templates")
 const emailRoutes = require("./global/email")
 const authRoutes = require("./global/auth")
 const roleRoutes = require("./global/roles")
-const sessionRoutes = require("./global/sessions")
 const environmentRoutes = require("./system/environment")
 const tenantsRoutes = require("./system/tenants")
 const statusRoutes = require("./system/status")
@@ -23,7 +22,6 @@ exports.routes = [
   templateRoutes,
   tenantsRoutes,
   emailRoutes,
-  sessionRoutes,
   roleRoutes,
   environmentRoutes,
   statusRoutes,
