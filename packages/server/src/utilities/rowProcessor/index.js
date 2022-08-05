@@ -278,7 +278,7 @@ exports.outputProcessing = async (table, rows, opts = { squash: true }) => {
   for (let [property, column] of Object.entries(table.schema)) {
     if (column.type === FieldTypes.ATTACHMENT) {
       for (let row of enriched) {
-        if (row[property] == null || row[property].length === 0) {
+        if (row[property] == null || !Array.isArray(row[property])) {
           continue
         }
         row[property].forEach(attachment => {
