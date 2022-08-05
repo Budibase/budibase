@@ -8,6 +8,7 @@
     Tab,
     Body,
     Layout,
+    Button,
   } from "@budibase/bbui"
   import { createEventDispatcher, onMount } from "svelte"
   import {
@@ -15,10 +16,15 @@
     decodeJSBinding,
     encodeJSBinding,
   } from "@budibase/string-templates"
-  import { readableToRuntimeBinding } from "builderStore/dataBinding"
+  import {
+    readableToRuntimeBinding,
+    runtimeToReadableBinding,
+  } from "builderStore/dataBinding"
   import { handlebarsCompletions } from "constants/completions"
   import { addHBSBinding, addJSBinding } from "./utils"
   import CodeMirrorEditor from "components/common/CodeMirrorEditor.svelte"
+  import { convertToJS } from "@budibase/string-templates"
+  import { admin } from "stores/portal"
 
   const dispatch = createEventDispatcher()
 
@@ -62,15 +68,24 @@
     }
   }
 
-  // Adds a HBS helper to the expression
-  const addHelper = helper => {
-    hbsValue = addHBSBinding(hbsValue, getCaretPosition(), helper.text)
-    updateValue(hbsValue)
+  // Adds a JS/HBS helper to the expression
+  const addHelper = (helper, js) => {
+    let tempVal
+    const pos = getCaretPosition()
+    if (js) {
+      const decoded = decodeJSBinding(jsValue)
+      tempVal = jsValue = encodeJSBinding(
+        addJSBinding(decoded, pos, helper.text, { helper: true })
+      )
+    } else {
+      tempVal = hbsValue = addHBSBinding(hbsValue, pos, helper.text)
+    }
+    updateValue(tempVal)
   }
 
   // Adds a data binding to the expression
-  const addBinding = binding => {
-    if (usingJS) {
+  const addBinding = (binding, { forceJS } = {}) => {
+    if (usingJS || forceJS) {
       let js = decodeJSBinding(jsValue)
       js = addJSBinding(js, getCaretPosition(), binding.readableBinding)
       jsValue = encodeJSBinding(js)
@@ -98,6 +113,26 @@
   const onChangeJSValue = e => {
     jsValue = encodeJSBinding(e.detail)
     updateValue(jsValue)
+  }
+
+  const convert = () => {
+    const runtime = readableToRuntimeBinding(bindings, hbsValue)
+    const runtimeJs = encodeJSBinding(convertToJS(runtime))
+    jsValue = runtimeToReadableBinding(bindings, runtimeJs)
+    hbsValue = null
+    mode = "JavaScript"
+    addBinding("", { forceJS: true })
+  }
+
+  const getHelperExample = (helper, js) => {
+    let example = helper.example || ""
+    if (js) {
+      example = convertToJS(example).split("\n")[0].split("= ")[1]
+      if (example === "null;") {
+        example = ""
+      }
+    }
+    return example || ""
   }
 
   onMount(() => {
@@ -135,18 +170,21 @@
           </section>
         {/if}
       {/each}
-      {#if filteredHelpers?.length && !usingJS}
+      {#if filteredHelpers?.length}
         <section>
           <div class="heading">Helpers</div>
           <ul>
             {#each filteredHelpers as helper}
-              <li on:click={() => addHelper(helper)}>
+              <li on:click={() => addHelper(helper, usingJS)}>
                 <div class="helper">
                   <div class="helper__name">{helper.displayText}</div>
                   <div class="helper__description">
                     {@html helper.description}
                   </div>
-                  <pre class="helper__example">{helper.example || ""}</pre>
+                  <pre class="helper__example">{getHelperExample(
+                      helper,
+                      usingJS
+                    )}</pre>
                 </div>
               </li>
             {/each}
@@ -171,6 +209,11 @@
               <a href="https://handlebarsjs.com/guide/">here</a>
               for more details.
             </p>
+          {/if}
+          {#if $admin.isDev}
+            <div class="convert">
+              <Button secondary on:click={convert}>Convert to JS</Button>
+            </div>
           {/if}
         </div>
       </Tab>
@@ -305,5 +348,9 @@
   .syntax-error a {
     color: var(--red);
     text-decoration: underline;
+  }
+
+  .convert {
+    padding-top: var(--spacing-m);
   }
 </style>

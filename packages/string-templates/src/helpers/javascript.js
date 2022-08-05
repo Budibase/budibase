@@ -1,6 +1,7 @@
 const { atob } = require("../utilities")
 const { cloneDeep } = require("lodash/fp")
 const { LITERAL_MARKER } = require("../helpers/constants")
+const { getHelperList } = require("./list")
 
 // The method of executing JS scripts depends on the bundle being built.
 // This setter is used in the entrypoint (either index.cjs or index.mjs).
@@ -45,6 +46,7 @@ module.exports.processJS = (handlebars, context) => {
     // app context.
     const sandboxContext = {
       $: path => getContextValue(path, cloneDeep(context)),
+      helpers: getHelperList(),
     }
 
     // Create a sandbox with our context and run the JS

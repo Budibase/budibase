@@ -74,7 +74,7 @@
         "b"
       ],
       "numArgs": 2,
-      "example": "{{ product 10 5 }} -> 50",
+      "example": "{{ multiply 10 5 }} -> 50",
       "description": "<p>Return the product of <code>a</code> times <code>b</code>.</p>\n"
     },
     "plus": {
