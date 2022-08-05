@@ -56,6 +56,7 @@ const env = {
   SERVICE: process.env.SERVICE || "budibase",
   MEMORY_LEAK_CHECK: process.env.MEMORY_LEAK_CHECK || false,
   LOG_LEVEL: process.env.LOG_LEVEL,
+  SESSION_UPDATE_PERIOD: process.env.SESSION_UPDATE_PERIOD,
   DEPLOYMENT_ENVIRONMENT:
     process.env.DEPLOYMENT_ENVIRONMENT || "docker-compose",
   _set(key: any, value: any) {
