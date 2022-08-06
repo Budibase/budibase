@@ -87,6 +87,16 @@
     if (expression.noValue) {
       expression.value = null
     }
+    if (
+      operator === Constants.OperatorOptions.In.value &&
+      !Array.isArray(expression.value)
+    ) {
+      if (expression.value) {
+        expression.value = [expression.value]
+      } else {
+        expression.value = []
+      }
+    }
   }
 
   const getFieldOptions = field => {
