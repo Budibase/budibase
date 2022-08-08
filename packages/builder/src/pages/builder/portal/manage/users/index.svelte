@@ -91,9 +91,6 @@
   }
 
   const updateFetch = email => {
-    if (email == null && $fetch.query.email == null) {
-      return
-    }
     fetch.update({
       query: {
         email,
