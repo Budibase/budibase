@@ -3,7 +3,7 @@ import { checkInviteCode } from "../../../utilities/redis"
 import { sendEmail } from "../../../utilities/email"
 import { users } from "../../../sdk"
 import env from "../../../environment"
-import { CloudAccount, User } from "@budibase/types"
+import { CloudAccount, groupUser, User, UserGroup } from "@budibase/types"
 import {
   accounts,
   cache,
@@ -263,6 +263,24 @@ export const inviteAccept = async (ctx: any) => {
       const db = tenancy.getGlobalDB()
       const user = await db.get(saved._id)
       await events.user.inviteAccepted(user)
+
+      // add user to groups if required
+      if (info.groups?.length) {
+        let groups: UserGroup[] = []
+        for (const groupId of info.groups) {
+          try {
+            let group: UserGroup = await db.get(groupId)
+            if (group) {
+              groups.push(group)
+            }
+          } catch (error) {
+            // group was probably deleted
+          }
+        }
+        const groupUser: groupUser = { _id: saved._id, email: saved.email }
+        await groupUtils.bulkSaveGroupUsers(groups, [groupUser])
+      }
+
       return saved
     })
   } catch (err: any) {
