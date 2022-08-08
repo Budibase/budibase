@@ -179,7 +179,10 @@ module MongoDBModule {
             return await collection.findOne(json)
           }
           case "findOneAndUpdate": {
-            let findAndUpdateJson = json as {
+            if (typeof query.json === "string") {
+              json = this.parseQueryParams(query.json, "update")
+            }
+            let findAndUpdateJson = this.createObjectIds(json) as {
               filter: FilterQuery<any>
               update: UpdateQuery<any>
               options: FindOneAndUpdateOption<any>
