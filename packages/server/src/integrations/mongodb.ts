@@ -124,10 +124,10 @@ module MongoDBModule {
           const closeCount = queryParams[i].match(/}/g)?.length ?? 0
           if ((openCount + closeCount) % 2 !== 0) {
             if (openCount > closeCount) {
-              queryParams[i] += `, ${queryParams[i+1]}`
-              queryParams.splice(i+1, 1)
+              queryParams[i] += `, ${queryParams[i + 1]}`
+              queryParams.splice(i + 1, 1)
             } else {
-              queryParams[i-1] += `, ${queryParams[i]}`
+              queryParams[i - 1] += `, ${queryParams[i]}`
               queryParams.splice(i, 1)
               i--
             }
