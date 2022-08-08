@@ -1,9 +1,10 @@
 import PostHog from "posthog-node"
 import { Event, Identity, Group, BaseEvent } from "@budibase/types"
-import { EventProcessor } from "./types"
-import env from "../../environment"
-import * as context from "../../context"
-const pkg = require("../../../package.json")
+import { EventProcessor } from "../types"
+import env from "../../../environment"
+import * as context from "../../../context"
+import * as rateLimiting from "./rateLimiting"
+const pkg = require("../../../../package.json")
 
 const EXCLUDED_EVENTS: Event[] = [
   Event.USER_UPDATED,
@@ -39,6 +40,10 @@ export default class PosthogProcessor implements EventProcessor {
   ): Promise<void> {
     // don't send excluded events
     if (EXCLUDED_EVENTS.includes(event)) {
+      return
+    }
+
+    if (await rateLimiting.limited(event)) {
       return
     }
 
