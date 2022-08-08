@@ -102,4 +102,70 @@ describe("MongoDB Integration", () => {
     expect(error).toBeDefined()
     restore()
   })
+
+  it("creates ObjectIds if the _id fields contains a match on ObjectId", async () => {
+    const query = {
+      json: {
+        filter: {
+          _id: "ObjectId('ACBD12345678ABCD12345678')",
+          name: "ObjectId('name')"
+        },
+        update: {
+          _id: "ObjectId('FFFF12345678ABCD12345678')",
+          name: "ObjectId('updatedName')",
+        },
+        options: {
+          upsert: false,
+        },
+      },
+      extra: { collection: "testCollection", actionTypes: "updateOne" },
+    }
+    await config.integration.update(query)
+    expect(config.integration.client.updateOne).toHaveBeenCalled()
+    
+    const args = config.integration.client.updateOne.mock.calls[0]
+    expect(args[0]).toEqual({
+      _id: mongo.ObjectID.createFromHexString("ACBD12345678ABCD12345678"),
+      name: "ObjectId('name')",
+    })
+    expect(args[1]).toEqual({
+      _id: mongo.ObjectID.createFromHexString("FFFF12345678ABCD12345678"),
+      name: "ObjectId('updatedName')",
+    })
+  })
+
+  it("creates ObjectIds if the $ operator fields contains a match on ObjectId", async () => {
+    const query = {
+      json: {
+        filter: {
+          _id: {
+            $eq: "ObjectId('ACBD12345678ABCD12345678')",
+          }
+        },
+        update: {
+          $set: {
+            _id: "ObjectId('FFFF12345678ABCD12345678')",
+          },
+        },
+        options: {
+          upsert: false,
+        },
+      },
+      extra: { collection: "testCollection", actionTypes: "updateOne" },
+    }
+    await config.integration.update(query)
+    expect(config.integration.client.updateOne).toHaveBeenCalled()
+    
+    const args = config.integration.client.updateOne.mock.calls[0]
+    expect(args[0]).toEqual({
+      _id: {
+        $eq: mongo.ObjectID.createFromHexString("ACBD12345678ABCD12345678"),
+      }
+    })
+    expect(args[1]).toEqual({
+      $set: {
+        _id: mongo.ObjectID.createFromHexString("FFFF12345678ABCD12345678"),
+      }
+    })
+  })
 })

@@ -31,5 +31,7 @@ module MongoMock {
     })
   }
 
+  mongodb.ObjectID = require("mongodb").ObjectID
+
   module.exports = mongodb
 }
