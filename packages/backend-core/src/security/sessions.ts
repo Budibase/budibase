@@ -23,6 +23,10 @@ function makeSessionID(userId: string, sessionId: string) {
 }
 
 export async function getSessionsForUser(userId: string) {
+  if (!userId) {
+    console.trace("Cannot get sessions for undefined userId")
+    return []
+  }
   const client = await redis.getSessionClient()
   const sessions = await client.scan(userId)
   return sessions.map((session: Session) => session.value)
