@@ -107,7 +107,7 @@ exports.loadHandlebarsFile = path => {
 exports.apiFileReturn = contents => {
   const path = join(budibaseTempDir(), uuid())
   fs.writeFileSync(path, "\ufeff" + contents)
-  let readerStream = fs.createReadStream(path)
+  const readerStream = fs.createReadStream(path)
   readerStream.setEncoding("binary")
   return readerStream
 }
