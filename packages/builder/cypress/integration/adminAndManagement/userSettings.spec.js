@@ -19,10 +19,10 @@ filterTests(["smoke", "all"], () => {
         cy.contains("Users").click()
         cy.contains("test@test.com").click()
 
-        cy.get(interact.FIELD, { timeout: 1000 }).eq(2).within(() => {
+        cy.get(interact.FIELD, { timeout: 1000 }).eq(0).within(() => {
             cy.get(interact.SPECTRUM_TEXTFIELD_INPUT).should('have.value', fname)
           })
-        cy.get(interact.FIELD).eq(3).within(() => {
+        cy.get(interact.FIELD).eq(1).within(() => {
             cy.get(interact.SPECTRUM_TEXTFIELD_INPUT).should('have.value', lname)
           })
     })

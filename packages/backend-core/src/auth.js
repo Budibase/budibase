@@ -18,6 +18,10 @@ const {
   ssoCallbackUrl,
   csrf,
   internalApi,
+  adminOnly,
+  builderOnly,
+  builderOrAdmin,
+  joiValidator,
 } = require("./middleware")
 
 const { invalidateUser } = require("./cache/user")
@@ -173,4 +177,8 @@ module.exports = {
   refreshOAuthToken,
   updateUserOAuth,
   ssoCallbackUrl,
+  adminOnly,
+  builderOnly,
+  builderOrAdmin,
+  joiValidator,
 }
