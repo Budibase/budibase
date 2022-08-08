@@ -1,5 +1,5 @@
 <script>
-  import { Layout, Icon, ActionButton } from "@budibase/bbui"
+  import { Layout, Icon, ActionButton, InlineAlert } from "@budibase/bbui"
   import StatusRenderer from "./StatusRenderer.svelte"
   import DateTimeRenderer from "components/common/renderers/DateTimeRenderer.svelte"
   import TestDisplay from "components/automation/AutomationBuilder/TestDisplay.svelte"
@@ -9,6 +9,7 @@
   export let history
   export let appId
   export let close
+  const STOPPED_ERROR = "stopped_error"
 
   $: exists = $automationStore.automations?.find(
     auto => auto._id === history?.automationId
@@ -32,6 +33,15 @@
         <Icon name="JourneyVoyager" />
         <div>{history.automationName}</div>
       </div>
+      {#if history.status === STOPPED_ERROR}
+        <div class="cron-error">
+          <InlineAlert
+            type="error"
+            header="CRON automation disabled"
+            message="Fix the error and re-publish your app to re-activate."
+          />
+        </div>
+      {/if}
       <div>
         {#if exists}
           <ActionButton
@@ -86,5 +96,11 @@
     display: grid;
     grid-template-columns: 1fr auto;
     gap: var(--spacing-s);
+  }
+
+  .cron-error {
+    display: flex;
+    width: 100%;
+    justify-content: center;
   }
 </style>

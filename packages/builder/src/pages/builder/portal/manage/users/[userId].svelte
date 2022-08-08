@@ -2,79 +2,138 @@
   import { goto } from "@roxi/routify"
   import {
     ActionButton,
+    ActionMenu,
+    Avatar,
     Button,
     Layout,
     Heading,
     Body,
-    Divider,
     Label,
+    List,
+    ListItem,
+    Icon,
     Input,
+    MenuItem,
+    Popover,
     Select,
-    Toggle,
     Modal,
-    Table,
-    ModalContent,
     notifications,
+    Divider,
+    StatusLight,
   } from "@budibase/bbui"
+  import { onMount } from "svelte"
   import { fetchData } from "helpers"
-  import { users, auth } from "stores/portal"
-
-  import TagsRenderer from "./_components/RolesTagsTableRenderer.svelte"
-
-  import UpdateRolesModal from "./_components/UpdateRolesModal.svelte"
+  import { users, auth, groups, apps } from "stores/portal"
+  import { roles } from "stores/backend"
+  import { Constants } from "@budibase/frontend-core"
   import ForceResetPasswordModal from "./_components/ForceResetPasswordModal.svelte"
+  import { RoleUtils } from "@budibase/frontend-core"
+  import UserGroupPicker from "components/settings/UserGroupPicker.svelte"
+  import DeleteUserModal from "./_components/DeleteUserModal.svelte"
 
   export let userId
-  let deleteUserModal
-  let editRolesModal
+
+  let deleteModal
   let resetPasswordModal
+  let popoverAnchor
+  let searchTerm = ""
+  let popover
+  let selectedGroups = []
+  let allAppList = []
+  let user
+  let loaded = false
 
-  const roleSchema = {
-    name: { displayName: "App" },
-    role: {},
-  }
-
-  const noRoleSchema = {
-    name: { displayName: "App" },
-  }
-
-  $: defaultRoleId = $userFetch?.data?.builder?.global ? "ADMIN" : ""
-  // Merge the Apps list and the roles response to get something that makes sense for the table
-  $: allAppList = Object.keys($apps?.data).map(id => {
-    const roleId = $userFetch?.data?.roles?.[id] || defaultRoleId
-    const role = $apps?.data?.[id].roles.find(role => role._id === roleId)
-    return {
-      ...$apps?.data?.[id],
-      _id: id,
-      role: [role],
-    }
-  })
-
-  $: appList = allAppList.filter(app => !!app.role[0])
-  $: noRoleAppList = allAppList
-    .filter(app => !app.role[0])
-    .map(app => {
-      delete app.role
-      return app
+  $: fetchUser(userId)
+  $: fullName = $userFetch?.data?.firstName
+    ? $userFetch?.data?.firstName + " " + $userFetch?.data?.lastName
+    : ""
+  $: nameLabel = getNameLabel($userFetch)
+  $: initials = getInitials(nameLabel)
+  $: allAppList = $apps
+    .filter(x => {
+      if ($userFetch.data?.roles) {
+        return Object.keys($userFetch.data.roles).find(y => {
+          return x.appId === apps.extractAppId(y)
+        })
+      }
     })
-
-  let selectedApp
+    .map(app => {
+      let roles = Object.fromEntries(
+        Object.entries($userFetch.data.roles).filter(([key]) => {
+          return apps.extractAppId(key) === app.appId
+        })
+      )
+      return {
+        name: app.name,
+        devId: app.devId,
+        icon: app.icon,
+        roles,
+      }
+    })
+  // Used for searching through groups in the add group popover
+  $: filteredGroups = $groups.filter(
+    group =>
+      selectedGroups &&
+      group?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+  )
+  $: userGroups = $groups.filter(x => {
+    return x.users?.find(y => {
+      return y._id === userId
+    })
+  })
+  $: globalRole = $userFetch?.data?.admin?.global
+    ? "admin"
+    : $userFetch?.data?.builder?.global
+    ? "developer"
+    : "appUser"
 
   const userFetch = fetchData(`/api/global/users/${userId}`)
-  const apps = fetchData(`/api/global/roles`)
 
-  async function deleteUser() {
-    try {
-      await users.delete(userId)
-      notifications.success(`User ${$userFetch?.data?.email} deleted.`)
-      $goto("./")
-    } catch (error) {
-      notifications.error("Error deleting user")
+  const getNameLabel = userFetch => {
+    const { firstName, lastName, email } = userFetch?.data || {}
+    if (!firstName && !lastName) {
+      return email || ""
     }
+    let label
+    if (firstName) {
+      label = firstName
+      if (lastName) {
+        label += ` ${lastName}`
+      }
+    } else {
+      label = lastName
+    }
+    return label
   }
 
-  let toggleDisabled = false
+  const getInitials = nameLabel => {
+    if (!nameLabel) {
+      return "?"
+    }
+    return nameLabel
+      .split(" ")
+      .slice(0, 2)
+      .map(x => x[0])
+      .join("")
+  }
 
+  const getRoleLabel = roleId => {
+    const role = $roles.find(x => x._id === roleId)
+    return role?.name || "Custom role"
+  }
+
+  function getHighestRole(roles) {
+    let highestRole
+    let highestRoleNumber = 0
+    Object.keys(roles).forEach(role => {
+      let roleNumber = RoleUtils.getRolePriority(roles[role])
+      if (roleNumber > highestRoleNumber) {
+        highestRoleNumber = roleNumber
+        highestRole = roles[role]
+      }
+    })
+    return highestRole
+  }
   async function updateUserFirstName(evt) {
     try {
       await users.save({ ...$userFetch?.data, firstName: evt.target.value })
@@ -82,6 +141,13 @@
     } catch (error) {
       notifications.error("Error updating user")
     }
+  }
+
+  async function removeGroup(id) {
+    let updatedGroup = $groups.find(x => x._id === id)
+    let newUsers = updatedGroup.users.filter(user => user._id !== userId)
+    updatedGroup.users = newUsers
+    groups.actions.save(updatedGroup)
   }
 
   async function updateUserLastName(evt) {
@@ -93,167 +159,215 @@
     }
   }
 
-  async function toggleFlag(flagName, detail) {
-    toggleDisabled = true
+  async function updateUserRole({ detail }) {
+    if (detail === "developer") {
+      toggleFlags({ admin: { global: false }, builder: { global: true } })
+    } else if (detail === "admin") {
+      toggleFlags({ admin: { global: true }, builder: { global: true } })
+    } else if (detail === "appUser") {
+      toggleFlags({ admin: { global: false }, builder: { global: false } })
+    }
+  }
+
+  async function addGroup(groupId) {
+    let selectedGroup = selectedGroups.includes(groupId)
+    let group = $groups.find(group => group._id === groupId)
+
+    if (selectedGroup) {
+      selectedGroups = selectedGroups.filter(id => id === selectedGroup)
+      let newUsers = group.users.filter(groupUser => user._id !== groupUser._id)
+      group.users = newUsers
+    } else {
+      selectedGroups = [...selectedGroups, groupId]
+      group.users.push(user)
+    }
+
+    await groups.actions.save(group)
+  }
+
+  async function fetchUser(userId) {
+    let userPromise = users.get(userId)
+    user = await userPromise
+  }
+
+  async function toggleFlags(detail) {
     try {
-      await users.save({ ...$userFetch?.data, [flagName]: { global: detail } })
+      await users.save({ ...$userFetch?.data, ...detail })
       await userFetch.refresh()
     } catch (error) {
       notifications.error("Error updating user")
     }
-    toggleDisabled = false
   }
 
-  async function toggleBuilderAccess({ detail }) {
-    return toggleFlag("builder", detail)
-  }
-
-  async function toggleAdminAccess({ detail }) {
-    return toggleFlag("admin", detail)
-  }
-
-  async function openUpdateRolesModal({ detail }) {
-    selectedApp = detail
-    editRolesModal.show()
-  }
+  function addAll() {}
+  onMount(async () => {
+    try {
+      await Promise.all([groups.actions.init(), apps.load(), roles.fetch()])
+      loaded = true
+    } catch (error) {
+      notifications.error("Error getting user groups")
+    }
+  })
 </script>
 
-<Layout noPadding>
-  <Layout gap="XS" noPadding>
+{#if loaded}
+  <Layout gap="XL" noPadding>
     <div>
-      <ActionButton
-        on:click={() => $goto("./")}
-        quiet
-        size="S"
-        icon="BackAndroid"
-      >
-        Back to users
+      <ActionButton on:click={() => $goto("./")} icon="ArrowLeft">
+        Back
       </ActionButton>
     </div>
-    <Heading>User: {$userFetch?.data?.email}</Heading>
-    <Body>
-      Change user settings and update their app roles. Also contains the ability
-      to delete the user as well as force reset their password.
-    </Body>
-  </Layout>
-  <Divider size="S" />
-  <Layout gap="S" noPadding>
-    <Heading size="S">General</Heading>
-    <div class="fields">
-      <div class="field">
-        <Label size="L">Email</Label>
-        <Input disabled thin value={$userFetch?.data?.email} />
-      </div>
-      <div class="field">
-        <Label size="L">Group(s)</Label>
-        <Select disabled options={["All users"]} value="All users" />
-      </div>
-      <div class="field">
-        <Label size="L">First name</Label>
-        <Input
-          thin
-          value={$userFetch?.data?.firstName}
-          on:blur={updateUserFirstName}
-        />
-      </div>
-      <div class="field">
-        <Label size="L">Last name</Label>
-        <Input
-          thin
-          value={$userFetch?.data?.lastName}
-          on:blur={updateUserLastName}
-        />
-      </div>
-      <!-- don't let a user remove the privileges that let them be here -->
-      {#if userId !== $auth.user._id}
-        <div class="field">
-          <Label size="L">Development access</Label>
-          <Toggle
-            text=""
-            value={$userFetch?.data?.builder?.global}
-            on:change={toggleBuilderAccess}
-            disabled={toggleDisabled}
-          />
-        </div>
-        <div class="field">
-          <Label size="L">Administration access</Label>
-          <Toggle
-            text=""
-            value={$userFetch?.data?.admin?.global}
-            on:change={toggleAdminAccess}
-            disabled={toggleDisabled}
-          />
-        </div>
-      {/if}
-    </div>
-    <div class="regenerate">
-      <ActionButton
-        size="S"
-        icon="Refresh"
-        quiet
-        on:click={resetPasswordModal.show}>Force password reset</ActionButton
-      >
-    </div>
-  </Layout>
-  <Divider size="S" />
-  <Layout gap="S" noPadding>
-    <Heading size="S">Configure roles</Heading>
-    <Body>Specify a role to grant access to an app.</Body>
-    <Table
-      on:click={openUpdateRolesModal}
-      schema={roleSchema}
-      data={appList}
-      allowEditColumns={false}
-      allowEditRows={false}
-      allowSelectRows={false}
-      customRenderers={[{ column: "role", component: TagsRenderer }]}
-    />
-  </Layout>
-  <Layout gap="S" noPadding>
-    <Heading size="XS">No Access</Heading>
-    <Body
-      >Apps do not appear in the users portal. Public pages may still be viewed
-      if visited directly.</Body
-    >
-    <Table
-      on:click={openUpdateRolesModal}
-      schema={noRoleSchema}
-      data={noRoleAppList}
-      allowEditColumns={false}
-      allowEditRows={false}
-      allowSelectRows={false}
-    />
-  </Layout>
-  <Divider size="S" />
-  <Layout gap="XS" noPadding>
-    <Heading size="S">Delete user</Heading>
-    <Body>Deleting a user completely removes them from your account.</Body>
-  </Layout>
-  <div class="delete-button">
-    <Button warning on:click={deleteUserModal.show}>Delete user</Button>
-  </div>
-</Layout>
 
-<Modal bind:this={deleteUserModal}>
-  <ModalContent
-    warning
-    onConfirm={deleteUser}
-    title="Delete User"
-    confirmText="Delete user"
-    cancelText="Cancel"
-    showCloseIcon={false}
-  >
-    <Body>
-      Are you sure you want to delete <strong>{$userFetch?.data?.email}</strong>
-    </Body>
-  </ModalContent>
-</Modal>
-<Modal bind:this={editRolesModal}>
-  <UpdateRolesModal
-    app={selectedApp}
-    user={$userFetch.data}
-    on:update={userFetch.refresh}
-  />
+    <Layout noPadding gap="M">
+      <div class="title">
+        <div>
+          <div style="display: flex;">
+            <Avatar size="XXL" {initials} />
+            <div class="subtitle">
+              <Heading size="S">{nameLabel}</Heading>
+              {#if nameLabel !== $userFetch?.data?.email}
+                <Body size="S">{$userFetch?.data?.email}</Body>
+              {/if}
+            </div>
+          </div>
+        </div>
+        {#if userId !== $auth.user._id}
+          <div>
+            <ActionMenu align="right">
+              <span slot="control">
+                <Icon hoverable name="More" />
+              </span>
+              <MenuItem on:click={resetPasswordModal.show} icon="Refresh">
+                Force password reset
+              </MenuItem>
+              <MenuItem on:click={deleteModal.show} icon="Delete">
+                Delete
+              </MenuItem>
+            </ActionMenu>
+          </div>
+        {/if}
+      </div>
+      <Divider size="S" />
+      <Layout noPadding gap="S">
+        <Heading size="S">Details</Heading>
+        <div class="fields">
+          <div class="field">
+            <Label size="L">Email</Label>
+            <Input disabled value={$userFetch?.data?.email} />
+          </div>
+          <div class="field">
+            <Label size="L">First name</Label>
+            <Input
+              value={$userFetch?.data?.firstName}
+              on:blur={updateUserFirstName}
+            />
+          </div>
+          <div class="field">
+            <Label size="L">Last name</Label>
+            <Input
+              value={$userFetch?.data?.lastName}
+              on:blur={updateUserLastName}
+            />
+          </div>
+          <!-- don't let a user remove the privileges that let them be here -->
+          {#if userId !== $auth.user._id}
+            <div class="field">
+              <Label size="L">Role</Label>
+              <Select
+                value={globalRole}
+                options={Constants.BudibaseRoleOptions}
+                on:change={updateUserRole}
+              />
+            </div>
+          {/if}
+        </div>
+      </Layout>
+    </Layout>
+
+    {#if $auth.groupsEnabled}
+      <!-- User groups -->
+      <Layout gap="S" noPadding>
+        <div class="tableTitle">
+          <Heading size="S">User groups</Heading>
+          <div bind:this={popoverAnchor}>
+            <Button
+              on:click={popover.show()}
+              icon="UserGroup"
+              secondary
+              newStyles
+            >
+              Add to user group
+            </Button>
+          </div>
+          <Popover align="right" bind:this={popover} anchor={popoverAnchor}>
+            <UserGroupPicker
+              key={"name"}
+              title={"User group"}
+              bind:searchTerm
+              bind:selected={selectedGroups}
+              bind:filtered={filteredGroups}
+              {addAll}
+              select={addGroup}
+            />
+          </Popover>
+        </div>
+        <List>
+          {#if userGroups.length}
+            {#each userGroups as group}
+              <ListItem
+                title={group.name}
+                icon={group.icon}
+                iconBackground={group.color}
+                hoverable
+                on:click={() => $goto(`../groups/${group._id}`)}
+              >
+                <Icon
+                  on:click={removeGroup(group._id)}
+                  hoverable
+                  size="S"
+                  name="Close"
+                />
+              </ListItem>
+            {/each}
+          {:else}
+            <ListItem icon="UserGroup" title="No groups" />
+          {/if}
+        </List>
+      </Layout>
+    {/if}
+
+    <Layout gap="S" noPadding>
+      <Heading size="S">Apps</Heading>
+      <List>
+        {#if allAppList.length}
+          {#each allAppList as app}
+            <ListItem
+              title={app.name}
+              iconBackground={app?.icon?.color || ""}
+              icon={app?.icon?.name || "Apps"}
+              hoverable
+              on:click={() => $goto(`../../overview/${app.devId}`)}
+            >
+              <div class="title ">
+                <StatusLight
+                  square
+                  color={RoleUtils.getRoleColour(getHighestRole(app.roles))}
+                >
+                  {getRoleLabel(getHighestRole(app.roles))}
+                </StatusLight>
+              </div>
+            </ListItem>
+          {/each}
+        {:else}
+          <ListItem icon="Apps" title="No apps" />
+        {/if}
+      </List>
+    </Layout>
+  </Layout>
+{/if}
+
+<Modal bind:this={deleteModal}>
+  <DeleteUserModal user={$userFetch.data} />
 </Modal>
 <Modal bind:this={resetPasswordModal}>
   <ForceResetPasswordModal
@@ -269,12 +383,27 @@
   }
   .field {
     display: grid;
-    grid-template-columns: 32% 1fr;
+    grid-template-columns: 120px 1fr;
     align-items: center;
   }
-  .regenerate {
-    position: absolute;
-    top: 0;
-    right: 0;
+
+  .title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .tableTitle {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+
+  .subtitle {
+    padding: 0 0 0 var(--spacing-m);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: stretch;
   }
 </style>

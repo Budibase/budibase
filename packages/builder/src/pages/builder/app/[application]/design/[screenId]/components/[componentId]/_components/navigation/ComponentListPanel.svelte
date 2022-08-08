@@ -9,6 +9,7 @@
   import { setContext } from "svelte"
   import DNDPositionIndicator from "./DNDPositionIndicator.svelte"
   import { DropPosition } from "./dndStore"
+  import { notifications, Button } from "@budibase/bbui"
 
   let scrollRef
 
@@ -23,7 +24,7 @@
     let newOffsets = {}
 
     // Calculate left offset
-    const offsetX = bounds.left + bounds.width + scrollLeft - 58
+    const offsetX = bounds.left + bounds.width + scrollLeft - 36
     if (offsetX > sidebarWidth) {
       newOffsets.left = offsetX - sidebarWidth
     } else {
@@ -55,19 +56,25 @@
     })
   }
 
+  const onDrop = async () => {
+    try {
+      await dndStore.actions.drop()
+    } catch (error) {
+      console.error(error)
+      notifications.error("Error saving component")
+    }
+  }
+
   // Set scroll context so components can invoke scrolling when selected
   setContext("scroll", {
     scrollTo,
   })
 </script>
 
-<Panel
-  title="Components"
-  showAddButton
-  onClickAddButton={() => $goto("../new")}
-  showExpandIcon
-  borderRight
->
+<Panel title="Components" showExpandIcon borderRight>
+  <div class="add-component">
+    <Button on:click={() => $goto("./new")} cta>Add component</Button>
+  </div>
   <div class="nav-items-container" bind:this={scrollRef}>
     <ul>
       <li
@@ -83,6 +90,7 @@
           opened
           scrollable
           icon="WebPage"
+          on:drop={onDrop}
         >
           <ScreenslotDropdownMenu component={$selectedScreen?.props} />
         </NavItem>
@@ -110,6 +118,13 @@
 </Panel>
 
 <style>
+  .add-component {
+    padding: var(--spacing-xl) var(--spacing-l);
+    padding-bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
   .nav-items-container {
     padding: var(--spacing-xl) 0;
     flex: 1 1 auto;

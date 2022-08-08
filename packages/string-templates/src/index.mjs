@@ -19,6 +19,7 @@ export const doesContainStrings = templates.doesContainStrings
 export const doesContainString = templates.doesContainString
 export const disableEscaping = templates.disableEscaping
 export const findHBSBlocks = templates.findHBSBlocks
+export const convertToJS = templates.convertToJS
 
 /**
  * Use polyfilled vm to run JS scripts in a browser Env
