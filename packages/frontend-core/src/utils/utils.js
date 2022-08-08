@@ -35,7 +35,6 @@ export const debounce = (callback, minDelay = 1000) => {
         clearTimeout(timeout)
       }
       timeout = setTimeout(async () => {
-        console.log("timeout reached!")
         resolve(await callback(...params))
       }, minDelay)
     })
