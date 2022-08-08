@@ -370,6 +370,7 @@ export const bulkDelete = async (userIds: any) => {
 export const destroy = async (id: string, currentUser: any) => {
   const db = tenancy.getGlobalDB()
   const dbUser = await db.get(id)
+  const userId = dbUser._id as string
   let groups = dbUser.userGroups
 
   if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
@@ -387,7 +388,7 @@ export const destroy = async (id: string, currentUser: any) => {
 
   await deprovisioning.removeUserFromInfoDB(dbUser)
 
-  await db.remove(dbUser._id, dbUser._rev)
+  await db.remove(userId, dbUser._rev)
 
   if (groups) {
     await groupUtils.deleteGroupUsers(groups, dbUser)
@@ -395,17 +396,18 @@ export const destroy = async (id: string, currentUser: any) => {
 
   await eventHelpers.handleDeleteEvents(dbUser)
   await quotas.removeUser(dbUser)
-  await cache.user.invalidateUser(dbUser._id)
-  await sessions.invalidateSessions(dbUser._id)
+  await cache.user.invalidateUser(userId)
+  await sessions.invalidateSessions(userId, { reason: "deletion" })
   // let server know to sync user
-  await apps.syncUserInApps(dbUser._id)
+  await apps.syncUserInApps(userId)
 }
 
 const bulkDeleteProcessing = async (dbUser: User) => {
+  const userId = dbUser._id as string
   await deprovisioning.removeUserFromInfoDB(dbUser)
   await eventHelpers.handleDeleteEvents(dbUser)
-  await cache.user.invalidateUser(dbUser._id)
-  await sessions.invalidateSessions(dbUser._id)
+  await cache.user.invalidateUser(userId)
+  await sessions.invalidateSessions(userId, { reason: "bulk-deletion" })
   // let server know to sync user
-  await apps.syncUserInApps(dbUser._id)
+  await apps.syncUserInApps(userId)
 }
