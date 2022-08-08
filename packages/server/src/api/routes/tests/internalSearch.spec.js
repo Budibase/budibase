@@ -133,4 +133,16 @@ describe("internal search", () => {
     }, PARAMS)
     checkLucene(response, `*:* AND column:a`, PARAMS)
   })
+
+  it("test multiple of same column", async () => {
+    const response = await search.paginatedSearch({
+      allOr: true,
+      equal: {
+        "1:column": "a",
+        "2:column": "b",
+        "3:column": "c",
+      },
+    }, PARAMS)
+    checkLucene(response, `column:"a" OR column:"b" OR column:"c"`, PARAMS)
+  })
 })
