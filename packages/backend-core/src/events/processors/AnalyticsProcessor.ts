@@ -2,7 +2,7 @@ import { Event, Identity, Group, IdentityType } from "@budibase/types"
 import { EventProcessor } from "./types"
 import env from "../../environment"
 import * as analytics from "../analytics"
-import PosthogProcessor from "./PosthogProcessor"
+import PosthogProcessor from "./posthog"
 
 /**
  * Events that are always captured.
