@@ -6,10 +6,16 @@ import newid from "../db/newid"
 import { updateEntityMetadata } from "../utilities"
 import { MetadataTypes, WebhookType } from "../constants"
 import { getProdAppID, doWithDB } from "@budibase/backend-core/db"
+import { getAutomationMetadataParams } from "../db/utils"
 import { cloneDeep } from "lodash/fp"
-import { getAppDB, getAppId } from "@budibase/backend-core/context"
+import {
+  getAppDB,
+  getAppId,
+  getProdAppDB,
+} from "@budibase/backend-core/context"
 import { tenancy } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
+import { Automation } from "@budibase/types"
 
 const WH_STEP_ID = definitions.WEBHOOK.stepId
 const CRON_STEP_ID = definitions.CRON.stepId
@@ -80,6 +86,26 @@ export async function disableAllCrons(appId: any) {
     }
   }
   return Promise.all(promises)
+}
+
+export async function disableCron(jobId: string, jobKey: string) {
+  await queue.removeRepeatableByKey(jobKey)
+  await queue.removeJobs(jobId)
+}
+
+export async function clearMetadata() {
+  const db = getProdAppDB()
+  const automationMetadata = (
+    await db.allDocs(
+      getAutomationMetadataParams({
+        include_docs: true,
+      })
+    )
+  ).rows.map((row: any) => row.doc)
+  for (let metadata of automationMetadata) {
+    metadata._deleted = true
+  }
+  await db.bulkDocs(automationMetadata)
 }
 
 /**
@@ -203,4 +229,31 @@ export async function checkForWebhooks({ oldAuto, newAuto }: any) {
  */
 export async function cleanupAutomations(appId: any) {
   await disableAllCrons(appId)
+}
+
+/**
+ * Checks if the supplied automation is of a recurring type.
+ * @param automation The automation to check.
+ * @return {boolean} if it is recurring (cron).
+ */
+export function isRecurring(automation: Automation) {
+  return automation.definition.trigger.stepId === definitions.CRON.stepId
+}
+
+export function isErrorInOutput(output: {
+  steps: { outputs?: { success: boolean } }[]
+}) {
+  let first = true,
+    error = false
+  for (let step of output.steps) {
+    // skip the trigger, its always successful if automation ran
+    if (first) {
+      first = false
+      continue
+    }
+    if (!step.outputs?.success) {
+      error = true
+    }
+  }
+  return error
 }

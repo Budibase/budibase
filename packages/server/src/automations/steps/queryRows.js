@@ -82,6 +82,27 @@ async function getTable(appId, tableId) {
   return ctx.body
 }
 
+function typeCoercion(filters, table) {
+  if (!filters || !table) {
+    return filters
+  }
+  for (let key of Object.keys(filters)) {
+    if (typeof filters[key] === "object") {
+      for (let [property, value] of Object.entries(filters[key])) {
+        const column = table.schema[property]
+        // convert string inputs
+        if (!column || typeof value !== "string") {
+          continue
+        }
+        if (column.type === FieldTypes.NUMBER) {
+          filters[key][property] = parseFloat(value)
+        }
+      }
+    }
+  }
+  return filters
+}
+
 exports.run = async function ({ inputs, appId }) {
   const { tableId, filters, sortColumn, sortOrder, limit } = inputs
   const table = await getTable(appId, tableId)
@@ -96,12 +117,14 @@ exports.run = async function ({ inputs, appId }) {
       tableId,
     },
     body: {
-      sortOrder,
       sortType,
-      sort: sortColumn,
-      query: filters || {},
       limit,
+      sort: sortColumn,
+      query: typeCoercion(filters || {}, table),
+      // default to ascending, like data tab
+      sortOrder: sortOrder || SortOrders.ASCENDING,
     },
+    version: "1",
   })
   try {
     await rowController.search(ctx)

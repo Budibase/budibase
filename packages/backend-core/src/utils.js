@@ -10,7 +10,10 @@ const { queryGlobalView } = require("./db/views")
 const { Headers, Cookies, MAX_VALID_DATE } = require("./constants")
 const env = require("./environment")
 const userCache = require("./cache/user")
-const { getUserSessions, invalidateSessions } = require("./security/sessions")
+const {
+  getSessionsForUser,
+  invalidateSessions,
+} = require("./security/sessions")
 const events = require("./events")
 const tenancy = require("./tenancy")
 
@@ -178,7 +181,7 @@ exports.platformLogout = async ({ ctx, userId, keepActiveSession }) => {
   if (!ctx) throw new Error("Koa context must be supplied to logout.")
 
   const currentSession = exports.getCookie(ctx, Cookies.Auth)
-  let sessions = await getUserSessions(userId)
+  let sessions = await getSessionsForUser(userId)
 
   if (keepActiveSession) {
     sessions = sessions.filter(
@@ -190,10 +193,8 @@ exports.platformLogout = async ({ ctx, userId, keepActiveSession }) => {
     exports.clearCookie(ctx, Cookies.CurrentApp)
   }
 
-  await invalidateSessions(
-    userId,
-    sessions.map(({ sessionId }) => sessionId)
-  )
+  const sessionIds = sessions.map(({ sessionId }) => sessionId)
+  await invalidateSessions(userId, { sessionIds, reason: "logout" })
   await events.auth.logout()
   await userCache.invalidateUser(userId)
 }

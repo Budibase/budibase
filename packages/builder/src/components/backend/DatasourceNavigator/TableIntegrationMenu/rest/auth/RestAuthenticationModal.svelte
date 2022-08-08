@@ -211,7 +211,6 @@
         bindings={getAuthBindings()}
         on:change={e => {
           form.bearer.token = e.detail
-          console.log(e.detail)
           onFieldChange()
         }}
         on:blur={() => {
