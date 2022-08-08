@@ -27,22 +27,26 @@
     },
   })
 
-  let appEditor, appEditorPromise
+  let appEditor
 
   $: updateAvailable = clientPackage.version !== $store.version
-  $: isPublished = app && app?.status === AppStatus.DEPLOYED
+  $: isPublished = app?.status === AppStatus.DEPLOYED
   $: appEditorId = !app?.updatedBy ? $auth.user._id : app?.updatedBy
   $: appEditorText = appEditor?.firstName || appEditor?.email
   $: fetchAppEditor(appEditorId)
   $: appUsers = $appUsersFetch.rows || []
+  $: appUsersFetch.update({
+    query: {
+      appId: apps.getProdAppID(app.devId),
+    },
+  })
 
   const unpublishApp = () => {
     dispatch("unpublish", app)
   }
 
   async function fetchAppEditor(editorId) {
-    appEditorPromise = users.get(editorId)
-    appEditor = await appEditorPromise
+    appEditor = await users.get(editorId)
   }
 
   const getInitials = user => {
@@ -89,11 +93,9 @@
           </div>
         </div>
       </DashCard>
-      <DashCard title={"Last Edited"} dataCy={"edited-by"}>
-        <div class="last-edited-content">
-          {#await appEditorPromise}
-            <Avatar size="M" initials={"-"} />
-          {:then _}
+      {#if appEditor}
+        <DashCard title={"Last Edited"} dataCy={"edited-by"}>
+          <div class="last-edited-content">
             <div class="updated-by">
               {#if appEditor}
                 <Avatar size="M" initials={getInitials(appEditor)} />
@@ -102,22 +104,20 @@
                 </div>
               {/if}
             </div>
-          {:catch error}
-            <p>Could not fetch user: {error.message}</p>
-          {/await}
-          <div class="last-edit-text">
-            {#if app}
-              {processStringSync(
-                "Last edited {{ duration time 'millisecond' }} ago",
-                {
-                  time:
-                    new Date().getTime() - new Date(app?.updatedAt).getTime(),
-                }
-              )}
-            {/if}
+            <div class="last-edit-text">
+              {#if app}
+                {processStringSync(
+                  "Last edited {{ duration time 'millisecond' }} ago",
+                  {
+                    time:
+                      new Date().getTime() - new Date(app?.updatedAt).getTime(),
+                  }
+                )}
+              {/if}
+            </div>
           </div>
-        </div>
-      </DashCard>
+        </DashCard>
+      {/if}
       <DashCard
         title={"App Version"}
         showIcon={true}
