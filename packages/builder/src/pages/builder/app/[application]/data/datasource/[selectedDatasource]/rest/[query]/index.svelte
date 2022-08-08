@@ -55,13 +55,16 @@
   let saveId, url
   let response, schema, enabledHeaders
   let authConfigId
-  let dynamicVariables, addVariableModal, varBinding
+  let dynamicVariables, addVariableModal, varBinding, globalDynamicBindings
   let restBindings = getRestBindings()
 
   $: staticVariables = datasource?.config?.staticVariables || {}
 
   $: customRequestBindings = toBindingsArray(requestBindings, "Binding")
-  $: dynamicRequestBindings = toBindingsArray(dynamicVariables, "Dynamic")
+  $: globalDynamicRequestBindings = toBindingsArray(
+    globalDynamicBindings,
+    "Dynamic"
+  )
   $: dataSourceStaticBindings = toBindingsArray(
     staticVariables,
     "Datasource.Static"
@@ -70,7 +73,7 @@
   $: mergedBindings = [
     ...restBindings,
     ...customRequestBindings,
-    ...dynamicRequestBindings,
+    ...globalDynamicRequestBindings,
     ...dataSourceStaticBindings,
   ]
 
@@ -231,10 +234,13 @@
   ]
 
   // convert dynamic variables list to simple key/val object
-  const getDynamicVariables = datasource => {
+  const getDynamicVariables = (datasource, queryId, matchFn) => {
     const variablesList = datasource?.config?.dynamicVariables
     if (variablesList && variablesList.length > 0) {
-      return variablesList.reduce(
+      const filtered = queryId
+        ? variablesList.filter(variable => matchFn(variable, queryId))
+        : variablesList
+      return filtered.reduce(
         (acc, next) => ({ ...acc, [next.name]: next.value }),
         {}
       )
@@ -364,12 +370,21 @@
     if (query && !query.fields.pagination) {
       query.fields.pagination = {}
     }
-    dynamicVariables = getDynamicVariables(datasource)
+    dynamicVariables = getDynamicVariables(
+      datasource,
+      query._id,
+      (variable, queryId) => variable.queryId === queryId
+    )
+    globalDynamicBindings = getDynamicVariables(
+      datasource,
+      query._id,
+      (variable, queryId) => variable.queryId !== queryId
+    )
 
     prettifyQueryRequestBody(
       query,
       requestBindings,
-      dynamicVariables,
+      globalDynamicBindings,
       staticVariables,
       restBindings
     )
@@ -434,7 +449,7 @@
               valuePlaceholder="Default"
               bindings={[
                 ...restBindings,
-                ...dynamicRequestBindings,
+                ...globalDynamicRequestBindings,
                 ...dataSourceStaticBindings,
               ]}
               bindingDrawerLeft="260px"
