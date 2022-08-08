@@ -19,6 +19,7 @@
     Modal,
     notifications,
     Divider,
+    Banner,
     StatusLight,
   } from "@budibase/bbui"
   import { onMount } from "svelte"
@@ -312,14 +313,13 @@
     {/if}
 
     <Layout gap="S" noPadding>
-      <div>
-        <Heading size="S">Apps</Heading>
-        {#if privileged}
-          <Body size="S">This user's role grants admin access to all apps</Body>
-        {/if}
-      </div>
+      <Heading size="S">Apps</Heading>
       <List>
-        {#if availableApps.length}
+        {#if privileged}
+          <Banner showCloseButton={false}>
+            This user's role grants admin access to all apps
+          </Banner>
+        {:else if availableApps.length}
           {#each availableApps as app}
             <ListItem
               title={app.name}
