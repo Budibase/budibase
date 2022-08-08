@@ -145,4 +145,13 @@ describe("internal search", () => {
     }, PARAMS)
     checkLucene(response, `column:"a" OR column:"b" OR column:"c"`, PARAMS)
   })
+
+  it("check a weird case for lucene building", async () => {
+    const response = await search.paginatedSearch({
+      equal: {
+        "1:1:column": "a",
+      },
+    }, PARAMS)
+    checkLucene(response, `*:* AND 1\\:column:"a"`, PARAMS)
+  })
 })
