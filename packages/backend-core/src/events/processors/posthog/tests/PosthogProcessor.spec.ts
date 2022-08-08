@@ -1,7 +1,10 @@
+import "../../../../../tests/utilities/TestConfiguration"
 import PosthogProcessor from "../PosthogProcessor"
 import { Event, IdentityType, Hosting } from "@budibase/types"
 const tk = require("timekeeper")
-import * as Cache from "../../../../cache/generic"
+import * as cache from "../../../../cache/generic"
+import { CacheKeys } from "../../../../cache/generic"
+import * as context from "../../../../context"
 
 const newIdentity = () => {
   return {
@@ -13,8 +16,11 @@ const newIdentity = () => {
 }
 
 describe("PosthogProcessor", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks()
+    await cache.bustCache(
+      `${CacheKeys.EVENTS_RATE_LIMIT}:${Event.SERVED_BUILDER}`
+    )
   })
 
   describe("processEvent", () => {
@@ -71,7 +77,7 @@ describe("PosthogProcessor", () => {
         tk.freeze(new Date(2022, 0, 3, 6, 0))
         await processor.processEvent(Event.SERVED_BUILDER, identity, properties)
 
-        expect(processor.posthog.capture).toHaveBeenCalledTimes(4)
+        expect(processor.posthog.capture).toHaveBeenCalledTimes(3)
       })
 
       it("sends event again after cache expires", async () => {
@@ -82,14 +88,57 @@ describe("PosthogProcessor", () => {
         tk.freeze(new Date(2022, 0, 1, 14, 0))
         await processor.processEvent(Event.SERVED_BUILDER, identity, properties)
 
-        await Cache.bustCache(
-          `${Cache.CacheKeys.EVENTS_RATE_LIMIT}:${Event.SERVED_BUILDER}`
+        await cache.bustCache(
+          `${CacheKeys.EVENTS_RATE_LIMIT}:${Event.SERVED_BUILDER}`
         )
 
         tk.freeze(new Date(2022, 0, 1, 14, 0))
         await processor.processEvent(Event.SERVED_BUILDER, identity, properties)
 
         expect(processor.posthog.capture).toHaveBeenCalledTimes(2)
+      })
+
+      it("sends per app events once per day per app", async () => {
+        const processor = new PosthogProcessor("test")
+        const identity = newIdentity()
+        const properties = {}
+
+        const runAppEvents = async (appId: string) => {
+          await context.doInAppContext(appId, async () => {
+            tk.freeze(new Date(2022, 0, 1, 14, 0))
+            await processor.processEvent(Event.SERVED_APP, identity, properties)
+            await processor.processEvent(
+              Event.SERVED_APP_PREVIEW,
+              identity,
+              properties
+            )
+
+            // go forward one hour - should be ignored
+            tk.freeze(new Date(2022, 0, 1, 15, 0))
+            await processor.processEvent(Event.SERVED_APP, identity, properties)
+            await processor.processEvent(
+              Event.SERVED_APP_PREVIEW,
+              identity,
+              properties
+            )
+
+            // go forward into next day
+            tk.freeze(new Date(2022, 0, 2, 9, 0))
+
+            await processor.processEvent(Event.SERVED_APP, identity, properties)
+            await processor.processEvent(
+              Event.SERVED_APP_PREVIEW,
+              identity,
+              properties
+            )
+          })
+        }
+
+        await runAppEvents("app_1")
+        expect(processor.posthog.capture).toHaveBeenCalledTimes(4)
+
+        await runAppEvents("app_2")
+        expect(processor.posthog.capture).toHaveBeenCalledTimes(8)
       })
     })
   })
