@@ -18,8 +18,9 @@ on:
  workflow_dispatch:
 
 env:
-  # Posthog token used by ui at build time 
-  POSTHOG_TOKEN: phc_uDYOfnFt6wAbBAXkC6STjcrTpAFiWIhqgFcsC1UVO5F
+  # Posthog token used by ui at build time
+  # disable unless needed for testing
+  # POSTHOG_TOKEN: phc_uDYOfnFt6wAbBAXkC6STjcrTpAFiWIhqgFcsC1UVO5F
   INTERCOM_TOKEN: ${{ secrets.INTERCOM_TOKEN }}
   PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
   FEATURE_PREVIEW_URL: https://budirelease.live
