@@ -132,6 +132,9 @@ describe("MongoDB Integration", () => {
       _id: mongo.ObjectID.createFromHexString("FFFF12345678ABCD12345678"),
       name: "ObjectId('updatedName')",
     })
+    expect(args[2]).toEqual({
+      upsert: false
+    })
   })
 
   it("creates ObjectIds if the $ operator fields contains a match on ObjectId", async () => {
@@ -148,7 +151,7 @@ describe("MongoDB Integration", () => {
           },
         },
         options: {
-          upsert: false,
+          upsert: true,
         },
       },
       extra: { collection: "testCollection", actionTypes: "updateOne" },
@@ -166,6 +169,49 @@ describe("MongoDB Integration", () => {
       $set: {
         _id: mongo.ObjectID.createFromHexString("FFFF12345678ABCD12345678"),
       }
+    })
+    expect(args[2]).toEqual({
+      upsert: true
+    })
+  })
+
+  it("supports findOneAndUpdate", async () => {
+    const query = {
+      json: {
+        filter: {
+          _id: {
+            $eq: "ObjectId('ACBD12345678ABCD12345678')",
+          }
+        },
+        update: {
+          $set: {
+            name: "UPDATED",
+            age: 99
+          },
+        },
+        options: {
+          upsert: false,
+        },
+      },
+      extra: { collection: "testCollection", actionTypes: "findOneAndUpdate" },
+    }
+    await config.integration.read(query)
+    expect(config.integration.client.findOneAndUpdate).toHaveBeenCalled()
+    
+    const args = config.integration.client.findOneAndUpdate.mock.calls[0]
+    expect(args[0]).toEqual({
+      _id: {
+        $eq: mongo.ObjectID.createFromHexString("ACBD12345678ABCD12345678"),
+      }
+    })
+    expect(args[1]).toEqual({
+      $set: {
+        name: "UPDATED",
+        age: 99
+      }
+    })
+    expect(args[2]).toEqual({
+      upsert: false
     })
   })
 })

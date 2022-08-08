@@ -8,6 +8,7 @@ module MongoMock {
     this.insertMany = jest.fn(() => ({ toArray: () => [] }))
     this.find = jest.fn(() => ({ toArray: () => [] }))
     this.findOne = jest.fn()
+    this.findOneAndUpdate = jest.fn()
     this.count = jest.fn()
     this.deleteOne = jest.fn()
     this.deleteMany = jest.fn(() => ({ toArray: () => [] }))
@@ -19,6 +20,7 @@ module MongoMock {
       find: this.find,
       insertMany: this.insertMany,
       findOne: this.findOne,
+      findOneAndUpdate: this.findOneAndUpdate,
       count: this.count,
       deleteOne: this.deleteOne,
       deleteMany: this.deleteMany,
