@@ -313,6 +313,9 @@ class QueryBuilder {
   }
 }
 
+// exported for unit testing
+exports.QueryBuilder = QueryBuilder
+
 /**
  * Executes a lucene search query.
  * @param url The query URL
