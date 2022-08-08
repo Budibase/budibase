@@ -37,6 +37,7 @@
     border-bottom: 1px solid var(--spectrum-global-color-gray-300);
     display: flex;
     justify-content: space-between;
+    transition: background-color 130ms ease-out;
   }
   .dash-card-body {
     padding: var(--spacing-xl) calc(var(--spacing-xl) * 2);
