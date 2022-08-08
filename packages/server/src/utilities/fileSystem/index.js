@@ -106,8 +106,10 @@ exports.loadHandlebarsFile = path => {
  */
 exports.apiFileReturn = contents => {
   const path = join(budibaseTempDir(), uuid())
-  fs.writeFileSync(path, contents)
-  return fs.createReadStream(path)
+  fs.writeFileSync(path, "\ufeff" + contents)
+  let readerStream = fs.createReadStream(path)
+  readerStream.setEncoding("binary")
+  return readerStream
 }
 
 exports.defineFilter = excludeRows => {
