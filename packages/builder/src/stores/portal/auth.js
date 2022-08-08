@@ -139,11 +139,6 @@ export function createAuthStore() {
       await setOrganisation(tenantId)
     },
     getSelf: async () => {
-      // for analytics, we need to make sure the environment has been loaded
-      // before setting the user
-      if (!get(admin).loaded) {
-        await admin.init()
-      }
       // We need to catch this locally as we never want this to fail, even
       // though normally we never want to swallow API errors at the store level.
       // We're either logged in or we aren't.
