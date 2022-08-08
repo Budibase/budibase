@@ -91,7 +91,7 @@ globals:
   budibaseEnv: PRODUCTION
   enableAnalytics: "1"
   sentryDSN: ""
-  posthogToken: "phc_fg5I3nDOf6oJVMHSaycEhpPdlgS8rzXG2r6F2IpxCHS"
+  posthogToken: "phc_bIjZL7oh2GEUd2vqvTBH8WvrX0fWTFQMs6H5KQxiUxU"
   logLevel: info
   selfHosted: "1" # set to 0 for budibase cloud environment, set to 1 for self-hosted setup
   multiTenancy: "0" # set to 0 to disable multiple orgs, set to 1 to enable multiple orgs
