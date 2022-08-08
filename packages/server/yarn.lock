@@ -1094,18 +1094,19 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/backend-core@1.2.19":
-  version "1.2.19"
-  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.2.19.tgz#8606f41eb02530ff84cc1cd1e3580dd952879103"
-  integrity sha512-WN1y7NDWhUWzwl4ek+8XejEncZckmYheWqWod1l0JI93apiRfhMfxxPxW1/9Hi473Ofd5LG5qZbFuu8BfZGSVQ==
+"@budibase/backend-core@1.2.20-alpha.0":
+  version "1.2.20-alpha.0"
+  resolved "https://registry.yarnpkg.com/@budibase/backend-core/-/backend-core-1.2.20-alpha.0.tgz#a7b660785f96a34bff214b505caad3a18a6fbc88"
+  integrity sha512-s0LwhDyfrmBwmwReNrkbmYu6s81FsWnt9qCvJsB3kQottCLVmo7yS+ruHa1CKoTLeJX6IIG4OxgkDqXFR107/A==
   dependencies:
-    "@budibase/types" "^1.2.19"
+    "@budibase/types" "1.2.20-alpha.0"
     "@techpass/passport-openidconnect" "0.3.2"
     aws-sdk "2.1030.0"
     bcrypt "5.0.1"
     dotenv "16.0.1"
     emitter-listener "1.1.2"
     ioredis "4.28.0"
+    joi "17.6.0"
     jsonwebtoken "8.5.1"
     koa-passport "4.1.4"
     lodash "4.17.21"
@@ -1177,13 +1178,13 @@
     svelte-flatpickr "^3.2.3"
     svelte-portal "^1.0.0"
 
-"@budibase/pro@1.2.19":
-  version "1.2.19"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-1.2.19.tgz#bfe9305e7dabe3ed239ad494838ba1fa7b4da37b"
-  integrity sha512-bdD/Y+zpeFe06bBxg6c2fX0C5xm4vwn3BLUelovLBr9CTyrkGEr40NkoEAligWkHZ5awSTiVhHaFkzFceJkjVQ==
+"@budibase/pro@1.2.20-alpha.0":
+  version "1.2.20-alpha.0"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-1.2.20-alpha.0.tgz#9fff53db95fee7ee26c38179915abc73e5b9b7a2"
+  integrity sha512-a3CmmHnZys5bdw4lODxd8x+sub1z9mVZMxQwi/QaaAYBtJT/yb9p/zic2OHIsybx9b6geyE6khC5zN1MZY7nKw==
   dependencies:
-    "@budibase/backend-core" "1.2.19"
-    "@budibase/types" "1.2.19"
+    "@budibase/backend-core" "1.2.20-alpha.0"
+    "@budibase/types" "1.2.20-alpha.0"
     "@koa/router" "8.0.8"
     joi "17.6.0"
     node-fetch "^2.6.1"
@@ -1206,10 +1207,10 @@
     svelte-apexcharts "^1.0.2"
     svelte-flatpickr "^3.1.0"
 
-"@budibase/types@1.2.19", "@budibase/types@^1.2.19":
-  version "1.2.19"
-  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-1.2.19.tgz#f2dade0f25f4fa55c3a7a99b3195f655db6c9cf5"
-  integrity sha512-+FKv29hJ3FXldmihdfn8omfEVp2WsB7nm7gbZPJs7mD+yP+AYGnuZinCYJ8PcX1CjoIgzcYE27OOQuxy+9cDmQ==
+"@budibase/types@1.2.20-alpha.0":
+  version "1.2.20-alpha.0"
+  resolved "https://registry.yarnpkg.com/@budibase/types/-/types-1.2.20-alpha.0.tgz#495482859a44eab065b9e5a670a984ad027caaa6"
+  integrity sha512-HmGXXpxj0cnJZlQ69B2TQ/+otBioVqHG/mYugvkYcqqPWSX3mKdgwXmj7RRZdhWjJY+QiSnTFw6O7HjjXuoCNQ==
 
 "@bull-board/api@3.7.0":
   version "3.7.0"
