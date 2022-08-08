@@ -118,6 +118,22 @@ module MongoDBModule {
 
     parseQueryParams(params: string, mode: string) {
       let queryParams = params.split(/(?<=}),[\n\s]*(?={)/g)
+      if (queryParams.length > 3) {
+        for (let i = 0; i < queryParams.length; i++) {
+          const openCount = queryParams[i].match(/{/g)?.length ?? 0
+          const closeCount = queryParams[i].match(/}/g)?.length ?? 0
+          if ((openCount + closeCount) % 2 !== 0) {
+            if (openCount > closeCount) {
+              queryParams[i] += `, ${queryParams[i+1]}`
+              queryParams.splice(i+1, 1)
+            } else {
+              queryParams[i-1] += `, ${queryParams[i]}`
+              queryParams.splice(i, 1)
+              i--
+            }
+          }
+        }
+      }
       let group1 = queryParams[0] ? JSON.parse(queryParams[0]) : {}
       let group2 = queryParams[1] ? JSON.parse(queryParams[1]) : {}
       let group3 = queryParams[2] ? JSON.parse(queryParams[2]) : {}

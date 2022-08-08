@@ -214,4 +214,56 @@ describe("MongoDB Integration", () => {
       upsert: false
     })
   })
+
+  it("can parse nested objects with arrays", async () => {
+    const query = {
+      json: `{
+          "_id": {
+            "$eq": "ObjectId('ACBD12345678ABCD12345678')"
+          }
+        },
+        {
+          "$set": {
+            "value": {
+              "data": [
+                { "cid": 1 },
+                { "cid": 2 },
+                { "nested": {
+                  "name": "test"
+                }}
+              ]
+            }
+          }
+        },
+        {
+          "upsert": true
+        }`,
+      extra: { collection: "testCollection", actionTypes: "updateOne" },
+    }
+    await config.integration.update(query)
+    expect(config.integration.client.updateOne).toHaveBeenCalled()
+    
+    const args = config.integration.client.updateOne.mock.calls[0]
+    expect(args[0]).toEqual({
+      _id: {
+        $eq: mongo.ObjectID.createFromHexString("ACBD12345678ABCD12345678"),
+      }
+    })
+    expect(args[1]).toEqual({
+      $set: {
+        value: {
+          data: [
+            { cid: 1 },
+            { cid: 2 },
+            { nested: {
+              name: "test"
+            }}
+          ]
+        },
+      },
+    })
+    expect(args[2]).toEqual({
+      upsert: true
+    })
+  })
 })
