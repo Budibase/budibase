@@ -1,6 +1,7 @@
 import { Event } from "@budibase/types"
 import { CacheKeys, TTL } from "../../../cache/generic"
 import * as cache from "../../../cache/generic"
+import * as context from "../../../context"
 
 type RateLimitedEvent =
   | Event.SERVED_BUILDER
@@ -13,6 +14,10 @@ const isRateLimited = (event: Event): event is RateLimitedEvent => {
     event === Event.SERVED_APP_PREVIEW ||
     event === Event.SERVED_APP
   )
+}
+
+const isPerApp = (event: RateLimitedEvent) => {
+  return event === Event.SERVED_APP_PREVIEW || event === Event.SERVED_APP
 }
 
 interface EventProperties {
@@ -69,7 +74,11 @@ export const limited = async (event: Event): Promise<boolean> => {
 }
 
 const eventKey = (event: RateLimitedEvent) => {
-  return `${CacheKeys.EVENTS_RATE_LIMIT}:${event}`
+  let key = `${CacheKeys.EVENTS_RATE_LIMIT}:${event}`
+  if (isPerApp(event)) {
+    key = key + context.getAppId()
+  }
+  return key
 }
 
 const readEvent = async (event: RateLimitedEvent) => {
@@ -81,8 +90,7 @@ const recordEvent = async (
   event: RateLimitedEvent,
   properties: EventProperties
 ) => {
-  const key = `${CacheKeys.EVENTS_RATE_LIMIT}:${event}`
-
+  const key = eventKey(event)
   const limit = RATE_LIMITS[event]
   let ttl
   switch (limit) {
