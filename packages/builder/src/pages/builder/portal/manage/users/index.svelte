@@ -111,6 +111,7 @@
       email: user.email,
       builder: user.role === Constants.BudibaseRoles.Developer,
       admin: user.role === Constants.BudibaseRoles.Admin,
+      groups: userData.groups,
     }))
     try {
       const res = await users.invite(payload)

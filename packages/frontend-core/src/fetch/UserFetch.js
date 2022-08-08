@@ -20,6 +20,12 @@ export default class UserFetch extends DataFetch {
     }
   }
 
+  async getDefinition() {
+    return {
+      schema: {},
+    }
+  }
+
   async getData() {
     const { cursor, query } = get(this.store)
     try {
