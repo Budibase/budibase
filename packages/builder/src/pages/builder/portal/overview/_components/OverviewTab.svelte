@@ -6,17 +6,26 @@
   import clientPackage from "@budibase/client/package.json"
   import { processStringSync } from "@budibase/string-templates"
   import { users, auth, apps } from "stores/portal"
-  import { createEventDispatcher, onMount } from "svelte"
+  import { createEventDispatcher } from "svelte"
+  import { fetchData } from "@budibase/frontend-core"
+  import { API } from "api"
 
   export let app
   export let deployments
   export let navigateTab
-  let userCount
-  const dispatch = createEventDispatcher()
 
-  const unpublishApp = () => {
-    dispatch("unpublish", app)
-  }
+  const dispatch = createEventDispatcher()
+  const appUsersFetch = fetchData({
+    API,
+    datasource: {
+      type: "user",
+    },
+    options: {
+      query: {
+        appId: apps.getProdAppID(app.devId),
+      },
+    },
+  })
 
   let appEditor, appEditorPromise
 
@@ -25,6 +34,11 @@
   $: appEditorId = !app?.updatedBy ? $auth.user._id : app?.updatedBy
   $: appEditorText = appEditor?.firstName || appEditor?.email
   $: fetchAppEditor(appEditorId)
+  $: appUsers = $appUsersFetch.rows || []
+
+  const unpublishApp = () => {
+    dispatch("unpublish", app)
+  }
 
   async function fetchAppEditor(editorId) {
     appEditorPromise = users.get(editorId)
@@ -36,16 +50,8 @@
     initials += user.firstName ? user.firstName[0] : ""
     initials += user.lastName ? user.lastName[0] : ""
 
-    return initials == "" ? user.email[0] : initials
+    return initials === "" ? user.email[0] : initials
   }
-
-  onMount(async () => {
-    let resp = await users.getUserCountByApp({
-      appId: apps.getProdAppID(app.devId),
-    })
-    userCount = resp.userCount
-    await users.search({ appId: apps.getProdAppID(app.devId), limit: 4 })
-  })
 </script>
 
 <div class="overview-tab">
@@ -141,38 +147,41 @@
           {/if}
         </div>
       </DashCard>
-      <DashCard
-        title={"Access"}
-        showIcon={true}
-        action={() => {
-          navigateTab("Access")
-        }}
-        dataCy={"access"}
-      >
-        <div class="last-edited-content">
-          {#if $users?.data?.length}
-            <Layout noPadding gap="S">
-              <div class="users-tab">
-                {#each $users?.data as user}
-                  <Avatar size="M" initials={getInitials(user)} />
-                {/each}
-              </div>
+      {#if $appUsersFetch.loaded}
+        <DashCard
+          title={"Access"}
+          showIcon={true}
+          action={() => {
+            navigateTab("Access")
+          }}
+          dataCy={"access"}
+        >
+          <div class="last-edited-content">
+            {#if appUsers.length}
+              <Layout noPadding gap="S">
+                <div class="users-tab">
+                  {#each appUsers.slice(0, 4) as user}
+                    <Avatar size="M" initials={getInitials(user)} />
+                  {/each}
+                </div>
 
-              <div class="users-text">
-                {userCount}
-                {userCount > 1 ? `users have` : `user has`} access to this app
-              </div>
-            </Layout>
-          {:else}
-            <Layout noPadding gap="S">
-              <Body>No users</Body>
-              <div class="users-text">
-                No users have been assigned to this app
-              </div>
-            </Layout>
-          {/if}
-        </div>
-      </DashCard>
+                <div class="users-text">
+                  {appUsers.length}
+                  {appUsers.length > 1 ? `users have` : `user has`} access to this
+                  app
+                </div>
+              </Layout>
+            {:else}
+              <Layout noPadding gap="S">
+                <Body>No users</Body>
+                <div class="users-text">
+                  No users have been assigned to this app
+                </div>
+              </Layout>
+            {/if}
+          </div>
+        </DashCard>
+      {/if}
     </div>
     {#if false}
       <div class="bottom">
@@ -229,7 +238,7 @@
 
   .users-tab {
     display: flex;
-    gap: var(--spacing-m);
+    gap: var(--spacing-s);
   }
 
   .users-text {
