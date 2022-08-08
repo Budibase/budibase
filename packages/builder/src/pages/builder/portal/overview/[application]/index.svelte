@@ -34,15 +34,19 @@
 
   export let application
 
-  let promise = getPackage()
   let loaded = false
   let deletionModal
   let unpublishModal
   let appName = ""
+  let deployments = []
 
   // App
   $: filteredApps = $apps.filter(app => app.devId === application)
   $: selectedApp = filteredApps?.length ? filteredApps[0] : null
+  $: loaded && !selectedApp && backToAppList()
+  $: isPublished =
+    selectedApp?.status === AppStatus.DEPLOYED && latestDeployments?.length > 0
+  $: appUrl = `${window.origin}/app${selectedApp?.url}`
 
   // Locking
   $: lockedBy = selectedApp?.lockedBy
@@ -54,18 +58,11 @@
   }`
 
   // App deployments
-  $: deployments = []
   $: latestDeployments = deployments
-    .filter(
-      deployment =>
-        deployment.status === "SUCCESS" && application === deployment.appId
-    )
+    .filter(x => x.status === "SUCCESS" && application === x.appId)
     .sort((a, b) => a.updatedAt > b.updatedAt)
 
-  $: isPublished =
-    selectedApp?.status === AppStatus.DEPLOYED && latestDeployments?.length > 0
-
-  $: appUrl = `${window.origin}/app${selectedApp?.url}`
+  // Tabs
   $: tabs = ["Overview", "Automation History", "Backups", "Settings", "Access"]
   $: selectedTab = "Overview"
 
@@ -80,17 +77,6 @@
       selectedTab = tabKey
     } else {
       notifications.error("Invalid tab key")
-    }
-  }
-
-  async function getPackage() {
-    try {
-      const pkg = await API.fetchAppPackage(application)
-      await store.actions.initialise(pkg)
-      loaded = true
-      return pkg
-    } catch (error) {
-      notifications.error(`Error initialising app: ${error?.message}`)
     }
   }
 
@@ -185,185 +171,190 @@
     appName = null
   }
 
-  onDestroy(() => {
-    store.actions.reset()
-  })
-
   onMount(async () => {
     const params = new URLSearchParams(window.location.search)
     if (params.get("tab")) {
       selectedTab = params.get("tab")
     }
+
+    // Check app exists
     try {
+      const pkg = await API.fetchAppPackage(application)
+      await store.actions.initialise(pkg)
+    } catch (error) {
+      // Swallow
+      backToAppList()
+    }
+
+    // Initialise application
+    try {
+      await API.syncApp(application)
+      deployments = await fetchDeployments()
       if (!apps.length) {
         await apps.load()
       }
-      await API.syncApp(application)
-      deployments = await fetchDeployments()
     } catch (error) {
       notifications.error("Error initialising app overview")
     }
+    loaded = true
+  })
+
+  onDestroy(() => {
+    store.actions.reset()
   })
 </script>
 
-{#if selectedApp}
-  <span class="overview-wrap">
-    <Page wide noPadding>
-      {#await promise}
-        <div class="loading">
-          <ProgressCircle size="XL" />
-        </div>
-      {:then _}
-        <Layout paddingX="XXL" paddingY="XL" gap="L">
-          <span class="page-header" class:loaded>
-            <ActionButton secondary icon={"ArrowLeft"} on:click={backToAppList}>
-              Back
-            </ActionButton>
-          </span>
-          <div class="overview-header">
-            <div class="app-title">
-              <div class="app-logo">
-                <div
-                  class="app-icon"
-                  style="color: {selectedApp?.icon?.color || ''}"
-                >
-                  <EditableIcon
-                    app={selectedApp}
-                    size="XL"
-                    name={selectedApp?.icon?.name || "Apps"}
-                  />
-                </div>
-              </div>
-              <div class="app-details">
-                <Heading size="M">{selectedApp?.name}</Heading>
-                <div class="app-url">{appUrl}</div>
+<span class="overview-wrap">
+  <Page wide noPadding>
+    {#if !loaded || !selectedApp}
+      <div class="loading">
+        <ProgressCircle size="XL" />
+      </div>
+    {:else}
+      <Layout paddingX="XXL" paddingY="XL" gap="L">
+        <span class="page-header" class:loaded>
+          <ActionButton secondary icon={"ArrowLeft"} on:click={backToAppList}>
+            Back
+          </ActionButton>
+        </span>
+        <div class="overview-header">
+          <div class="app-title">
+            <div class="app-logo">
+              <div
+                class="app-icon"
+                style="color: {selectedApp?.icon?.color || ''}"
+              >
+                <EditableIcon
+                  app={selectedApp}
+                  size="XL"
+                  name={selectedApp?.icon?.name || "Apps"}
+                />
               </div>
             </div>
-            <div class="header-right">
-              <AppLockModal app={selectedApp} />
-              <ButtonGroup gap="XS">
-                <Button
-                  size="M"
-                  quiet
-                  secondary
-                  icon="Globe"
-                  disabled={!isPublished}
-                  on:click={viewApp}
-                  dataCy="view-app"
-                >
-                  View app
-                </Button>
-                <Button
-                  size="M"
-                  cta
-                  icon="Edit"
-                  disabled={lockedBy && !lockedByYou}
-                  on:click={() => {
-                    editApp(selectedApp)
-                  }}
-                >
-                  <span>Edit</span>
-                </Button>
-              </ButtonGroup>
-              <ActionMenu align="right" dataCy="app-overview-menu-popover">
-                <span slot="control" class="app-overview-actions-icon">
-                  <Icon hoverable name="More" />
-                </span>
-                <MenuItem
-                  on:click={() => exportApp(selectedApp, { published: false })}
-                  icon="DownloadFromCloud"
-                >
-                  Export latest
-                </MenuItem>
-                {#if isPublished}
-                  <MenuItem
-                    on:click={() => exportApp(selectedApp, { published: true })}
-                    icon="DownloadFromCloudOutline"
-                  >
-                    Export published
-                  </MenuItem>
-                  <MenuItem on:click={() => copyAppId(selectedApp)} icon="Copy">
-                    Copy app ID
-                  </MenuItem>
-                {/if}
-                {#if !isPublished}
-                  <MenuItem
-                    on:click={() => deleteApp(selectedApp)}
-                    icon="Delete"
-                  >
-                    Delete
-                  </MenuItem>
-                {/if}
-              </ActionMenu>
+            <div class="app-details">
+              <Heading size="M">{selectedApp?.name}</Heading>
+              <div class="app-url">{appUrl}</div>
             </div>
           </div>
-        </Layout>
-        <div class="tab-wrap">
-          <Tabs
-            selected={selectedTab}
-            noPadding
-            on:select={e => {
-              selectedTab = e.detail
-            }}
-          >
-            <Tab title="Overview">
-              <OverviewTab
-                app={selectedApp}
-                deployments={latestDeployments}
-                navigateTab={handleTabChange}
-                on:unpublish={e => unpublishApp(e.detail)}
-              />
-            </Tab>
-            <Tab title="Access">
-              <AccessTab app={selectedApp} />
-            </Tab>
-            {#if isPublished}
-              <Tab title="Automation History">
-                <HistoryTab app={selectedApp} />
-              </Tab>
-            {/if}
-            {#if false}
-              <Tab title="Backups">
-                <div class="container">Backups contents</div>
-              </Tab>
-            {/if}
-            <Tab title="Settings">
-              <SettingsTab app={selectedApp} />
-            </Tab>
-          </Tabs>
+          <div class="header-right">
+            <AppLockModal app={selectedApp} />
+            <ButtonGroup gap="XS">
+              <Button
+                size="M"
+                quiet
+                secondary
+                icon="Globe"
+                disabled={!isPublished}
+                on:click={viewApp}
+                dataCy="view-app"
+              >
+                View app
+              </Button>
+              <Button
+                size="M"
+                cta
+                icon="Edit"
+                disabled={lockedBy && !lockedByYou}
+                on:click={() => {
+                  editApp(selectedApp)
+                }}
+              >
+                <span>Edit</span>
+              </Button>
+            </ButtonGroup>
+            <ActionMenu align="right" dataCy="app-overview-menu-popover">
+              <span slot="control" class="app-overview-actions-icon">
+                <Icon hoverable name="More" />
+              </span>
+              <MenuItem
+                on:click={() => exportApp(selectedApp, { published: false })}
+                icon="DownloadFromCloud"
+              >
+                Export latest
+              </MenuItem>
+              {#if isPublished}
+                <MenuItem
+                  on:click={() => exportApp(selectedApp, { published: true })}
+                  icon="DownloadFromCloudOutline"
+                >
+                  Export published
+                </MenuItem>
+                <MenuItem on:click={() => copyAppId(selectedApp)} icon="Copy">
+                  Copy app ID
+                </MenuItem>
+              {/if}
+              {#if !isPublished}
+                <MenuItem on:click={() => deleteApp(selectedApp)} icon="Delete">
+                  Delete
+                </MenuItem>
+              {/if}
+            </ActionMenu>
+          </div>
         </div>
-        <ConfirmDialog
-          bind:this={deletionModal}
-          title="Confirm deletion"
-          okText="Delete app"
-          onOk={confirmDeleteApp}
-          onCancel={() => (appName = null)}
-          disabled={appName !== selectedApp?.name}
+      </Layout>
+      <div class="tab-wrap">
+        <Tabs
+          selected={selectedTab}
+          noPadding
+          on:select={e => {
+            selectedTab = e.detail
+          }}
         >
-          Are you sure you want to delete the app <b>{selectedApp?.name}</b>?
+          <Tab title="Overview">
+            <OverviewTab
+              app={selectedApp}
+              deployments={latestDeployments}
+              navigateTab={handleTabChange}
+              on:unpublish={e => unpublishApp(e.detail)}
+            />
+          </Tab>
+          <Tab title="Access">
+            <AccessTab app={selectedApp} />
+          </Tab>
+          {#if isPublished}
+            <Tab title="Automation History">
+              <HistoryTab app={selectedApp} />
+            </Tab>
+          {/if}
+          {#if false}
+            <Tab title="Backups">
+              <div class="container">Backups contents</div>
+            </Tab>
+          {/if}
+          <Tab title="Settings">
+            <SettingsTab app={selectedApp} />
+          </Tab>
+        </Tabs>
+      </div>
+      <ConfirmDialog
+        bind:this={deletionModal}
+        title="Confirm deletion"
+        okText="Delete app"
+        onOk={confirmDeleteApp}
+        onCancel={() => (appName = null)}
+        disabled={appName !== selectedApp?.name}
+      >
+        Are you sure you want to delete the app <b>{selectedApp?.name}</b>?
 
-          <p>Please enter the app name below to confirm.</p>
-          <Input
-            bind:value={appName}
-            data-cy="delete-app-confirmation"
-            placeholder={selectedApp?.name}
-          />
-        </ConfirmDialog>
-        <ConfirmDialog
-          bind:this={unpublishModal}
-          title="Confirm unpublish"
-          okText="Unpublish app"
-          onOk={confirmUnpublishApp}
-          dataCy={"unpublish-modal"}
-        >
-          Are you sure you want to unpublish the app <b>{selectedApp?.name}</b>?
-        </ConfirmDialog>
-      {:catch error}
-        <p>Something went wrong: {error.message}</p>
-      {/await}
-    </Page>
-  </span>
-{/if}
+        <p>Please enter the app name below to confirm.</p>
+        <Input
+          bind:value={appName}
+          data-cy="delete-app-confirmation"
+          placeholder={selectedApp?.name}
+        />
+      </ConfirmDialog>
+      <ConfirmDialog
+        bind:this={unpublishModal}
+        title="Confirm unpublish"
+        okText="Unpublish app"
+        onOk={confirmUnpublishApp}
+        dataCy={"unpublish-modal"}
+      >
+        Are you sure you want to unpublish the app <b>{selectedApp?.name}</b>?
+      </ConfirmDialog>
+    {/if}
+  </Page>
+</span>
 
 <style>
   .app-url {
