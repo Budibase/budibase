@@ -266,4 +266,58 @@ describe("MongoDB Integration", () => {
       upsert: true
     })
   })
+
+  it("ignores braces within strings when parsing nested objects", async () => {
+    const query = {
+      json: `{
+          "_id": {
+            "$eq": "ObjectId('ACBD12345678ABCD12345678')"
+          }
+        },
+        {
+          "$set": {
+            "value": {
+              "data": [
+                { "cid": 1 },
+                { "cid": 2 },
+                { "nested": {
+                  "name": "te}st"
+                }}
+              ]
+            }
+          }
+        },
+        {
+          "upsert": true,
+          "extra": "ad{d"
+        }`,
+      extra: { collection: "testCollection", actionTypes: "updateOne" },
+    }
+    await config.integration.update(query)
+    expect(config.integration.client.updateOne).toHaveBeenCalled()
+    
+    const args = config.integration.client.updateOne.mock.calls[0]
+    expect(args[0]).toEqual({
+      _id: {
+        $eq: mongo.ObjectID.createFromHexString("ACBD12345678ABCD12345678"),
+      }
+    })
+    expect(args[1]).toEqual({
+      $set: {
+        value: {
+          data: [
+            { cid: 1 },
+            { cid: 2 },
+            { nested: {
+              name: "te}st"
+            }}
+          ]
+        },
+      },
+    })
+    expect(args[2]).toEqual({
+      upsert: true,
+      extra: "ad{d"
+    })
+  })
 })
